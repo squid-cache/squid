@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.432 2004/10/10 02:45:11 hno Exp $
+ * $Id: http.cc,v 1.433 2004/10/10 03:06:17 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -558,6 +558,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     vary.clean();
 #if X_ACCELERATOR_VARY
 
+    pos = NULL;
     vary = httpHeaderGetList(&reply->header, HDR_X_ACCELERATOR_VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
