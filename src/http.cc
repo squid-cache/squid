@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.198 1997/10/23 23:27:19 wessels Exp $
+ * $Id: http.cc,v 1.199 1997/10/24 18:10:39 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -637,7 +637,7 @@ httpReadReply(int fd, void *data)
 	    if (clen == 0) {
 		err = xcalloc(1, sizeof(ErrorState));
 		err->type = ERR_READ_ERROR;
-		err->errno = errno;
+		err->xerrno = errno;
 		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
 		err->request = requestLink(httpState->request);
 		errorAppendEntry(entry, err);
@@ -654,7 +654,7 @@ httpReadReply(int fd, void *data)
 	    httpState->eof = 1;
 	    err = xcalloc(1, sizeof(ErrorState));
 	    err->type = ERR_ZERO_SIZE_OBJECT;
-	    err->errno = errno;
+	    err->xerrno = errno;
 	    err->http_status = HTTP_SERVICE_UNAVAILABLE;
 	    err->request = requestLink(httpState->request);
 	    errorAppendEntry(entry, err);
@@ -703,7 +703,7 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_WRITE_ERROR;
 	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
-	err->errno = errno;
+	err->xerrno = errno;
 	err->request = requestLink(httpState->request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
@@ -953,7 +953,7 @@ httpSocketOpen(StoreEntry * entry, request_t * request)
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_SOCKET_FAILURE;
 	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
-	err->errno = errno;
+	err->xerrno = errno;
 	if (request)
 	    err->request = requestLink(request);
 	errorAppendEntry(entry, err);
@@ -1082,7 +1082,7 @@ httpConnectDone(int fd, int status, void *data)
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_CONNECT_FAIL;
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
-	err->errno = errno;
+	err->xerrno = errno;
 	err->host = xstrdup(request->host);
 	err->port = request->port;
 	err->request = requestLink(request);

@@ -855,7 +855,7 @@ struct _ErrorState {
     http_status http_status;
     request_t *request;
     char *url;
-    int errno;
+    int xerrno;
     char *host;
     u_short port;
     char *dnsserver_msg;

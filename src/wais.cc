@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.88 1997/10/23 16:38:16 wessels Exp $
+ * $Id: wais.cc,v 1.89 1997/10/24 18:10:41 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -219,7 +219,7 @@ waisReadReply(int fd, void *data)
 	ErrorState *err;
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_ZERO_SIZE_OBJECT;
-	err->errno = errno;
+	err->xerrno = errno;
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
@@ -253,7 +253,7 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	ErrorState *err;
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_CONNECT_FAIL;
-	err->errno = errno;
+	err->xerrno = errno;
 	err->host = xstrdup(waisState->relayhost);
 	err->port = waisState->relayport;
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
@@ -387,7 +387,7 @@ waisConnectDone(int fd, int status, void *data)
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_CONNECT_FAIL;
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
-	err->errno = errno;
+	err->xerrno = errno;
 	err->host = xstrdup(waisState->relayhost);
 	err->port = waisState->relayport;
 	err->request = urlParse(METHOD_CONNECT, request);
