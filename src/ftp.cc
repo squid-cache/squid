@@ -1,4 +1,8 @@
-/* $Id: ftp.cc,v 1.14 1996/03/28 20:42:46 wessels Exp $ */
+/* $Id: ftp.cc,v 1.15 1996/03/29 21:19:19 wessels Exp $ */
+
+/*
+ * DEBUG: Section 9           ftp: FTP
+ */
 
 #include "squid.h"
 
@@ -111,7 +115,7 @@ void ftpLifetimeExpire(fd, data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
-    debug(0, 4, "ftpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
+    debug(9, 4, "ftpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     if (data->icp_page_ptr) {
 	put_free_8k_page(data->icp_page_ptr);
 	data->icp_page_ptr = NULL;
@@ -143,8 +147,8 @@ int ftpReadReply(fd, data)
 	    clen = entry->mem_obj->e_current_len;
 	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > FTP_DELETE_GAP) {
-		debug(0, 3, "ftpReadReply: Read deferred for Object: %s\n", entry->key);
-		debug(0, 3, "--> Current Gap: %d bytes\n", clen - off);
+		debug(9, 3, "ftpReadReply: Read deferred for Object: %s\n", entry->key);
+		debug(9, 3, "--> Current Gap: %d bytes\n", clen - off);
 		/* reschedule, so it will automatically be reactivated when
 		 * Gap is big enough. */
 		comm_set_select_handler(fd,
@@ -164,11 +168,11 @@ int ftpReadReply(fd, data)
     }
     errno = 0;
     len = read(fd, buf, READBUFSIZ);
-    debug(0, 5, "ftpReadReply: FD %d, Read %d bytes\n", fd, len);
+    debug(9, 5, "ftpReadReply: FD %d, Read %d bytes\n", fd, len);
 
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	if (len < 0)
-	    debug(0, 1, "ftpReadReply: read error: %s\n", xstrerror());
+	    debug(9, 1, "ftpReadReply: read error: %s\n", xstrerror());
 	if (errno == ECONNRESET) {
 	    /* Connection reset by peer */
 	    /* consider it as a EOF */
@@ -196,7 +200,7 @@ int ftpReadReply(fd, data)
 	if (!data->got_marker) {
 	    /* If we didn't see the magic marker, assume the transfer failed and arrange
 	     * so the object gets ejected and never gets to disk. */
-	    debug(0, 1, "ftpReadReply: Didn't see magic marker, purging <URL:%s>.\n", entry->url);
+	    debug(9, 1, "ftpReadReply: Didn't see magic marker, purging <URL:%s>.\n", entry->url);
 	    entry->expires = cached_curtime + getNegativeTTL();
 	    BIT_RESET(entry->flag, CACHABLE);
 	    BIT_SET(entry->flag, RELEASE_REQUEST);
@@ -254,7 +258,7 @@ void ftpSendComplete(fd, buf, size, errflag, data)
     StoreEntry *entry = NULL;
 
     entry = data->entry;
-    debug(0, 5, "ftpSendComplete: FD %d: size %d: errflag %d.\n",
+    debug(9, 5, "ftpSendComplete: FD %d: size %d: errflag %d.\n",
 	fd, size, errflag);
 
     if (buf) {
@@ -299,7 +303,7 @@ void ftpSendRequest(fd, data)
     int got_negttl = 0;
     int buflen;
 
-    debug(0, 5, "ftpSendRequest: FD %d\n", fd);
+    debug(9, 5, "ftpSendRequest: FD %d\n", fd);
 
     buflen = strlen(data->request) + 256;
     buf = (char *) get_free_8k_page();
@@ -362,7 +366,7 @@ void ftpSendRequest(fd, data)
     strcat(buf, space);
     strcat(buf, data->password);
     strcat(buf, space);
-    debug(0, 5, "ftpSendRequest: FD %d: buf '%s'\n", fd, buf);
+    debug(9, 5, "ftpSendRequest: FD %d: buf '%s'\n", fd, buf);
     data->icp_rwd_ptr = icpWrite(fd, buf, strlen(buf), 30, ftpSendComplete, (caddr_t) data);
 }
 
@@ -372,7 +376,7 @@ void ftpConnInProgress(fd, data)
 {
     StoreEntry *entry = data->entry;
 
-    debug(0, 5, "ftpConnInProgress: FD %d\n", fd);
+    debug(9, 5, "ftpConnInProgress: FD %d\n", fd);
 
     if (comm_connect(fd, "localhost", 3131) != COMM_OK)
 	switch (errno) {
@@ -385,7 +389,7 @@ void ftpConnInProgress(fd, data)
 		(caddr_t) data);
 	    return;
 	case EISCONN:
-	    debug(0, 5, "ftpConnInProgress: FD %d is now connected.", fd);
+	    debug(9, 5, "ftpConnInProgress: FD %d is now connected.", fd);
 	    break;		/* cool, we're connected */
 	default:
 	    comm_close(fd);
@@ -409,7 +413,7 @@ int ftpStart(unusedfd, url, entry)
     FtpData *data = NULL;
     int status;
 
-    debug(0, 3, "FtpStart: FD %d <URL:%s>\n", unusedfd, url);
+    debug(9, 3, "FtpStart: FD %d <URL:%s>\n", unusedfd, url);
 
     data = (FtpData *) xcalloc(1, sizeof(FtpData));
     data->entry = entry;
@@ -420,7 +424,7 @@ int ftpStart(unusedfd, url, entry)
 	safe_free(data);
 	return COMM_ERROR;
     }
-    debug(0, 5, "FtpStart: FD %d, host=%s, request=%s, user=%s, passwd=%s\n",
+    debug(9, 5, "FtpStart: FD %d, host=%s, request=%s, user=%s, passwd=%s\n",
 	unusedfd, data->host, data->request, data->user, data->password);
 
     data->ftp_fd = comm_open(COMM_NONBLOCKING, 0, 0, url);
@@ -439,7 +443,7 @@ int ftpStart(unusedfd, url, entry)
 	    safe_free(data);
 	    return COMM_ERROR;
 	} else {
-	    debug(0, 5, "ftpStart: FD %d: EINPROGRESS.\n", data->ftp_fd);
+	    debug(9, 5, "ftpStart: FD %d: EINPROGRESS.\n", data->ftp_fd);
 	    comm_set_select_handler(data->ftp_fd, COMM_SELECT_LIFETIME,
 		(PF) ftpLifetimeExpire, (caddr_t) data);
 	    comm_set_select_handler(data->ftp_fd, COMM_SELECT_WRITE,
@@ -476,11 +480,11 @@ int ftpInitialize()
     char *ftpget = getFtpProgram();
 
     if (pipe(p) < 0) {
-	debug(0, 0, "ftpInitialize: pipe: %s\n", xstrerror());
+	debug(9, 0, "ftpInitialize: pipe: %s\n", xstrerror());
 	return -1;
     }
     if ((pid = fork()) < 0) {
-	debug(0, 0, "ftpInitialize: fork: %s\n", xstrerror());
+	debug(9, 0, "ftpInitialize: fork: %s\n", xstrerror());
 	return -1;
     }
     if (pid != 0) {		/* parent */
@@ -500,7 +504,7 @@ int ftpInitialize()
 	(void) close(fd);
     sprintf(pbuf, "%d", 3131);
     execlp(ftpget, ftpget, "-D26,1", "-S", pbuf, NULL);
-    debug(0, 0, "ftpInitialize: %s: %s\n", ftpget, xstrerror());
+    debug(9, 0, "ftpInitialize: %s: %s\n", ftpget, xstrerror());
     _exit(1);
     return (1);			/* eliminate compiler warning */
 }

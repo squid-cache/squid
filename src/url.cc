@@ -1,11 +1,15 @@
-/* $Id: url.cc,v 1.4 1996/03/27 18:15:57 wessels Exp $ */
+/* $Id: url.cc,v 1.5 1996/03/29 21:19:28 wessels Exp $ */
+
+/* 
+ * DEBUG: Section 23          url
+ */
 
 #include "squid.h"
 
 
-int url_acceptable[256];
-int url_acceptable_init = 0;
-char hex[17] = "0123456789abcdef";
+static int url_acceptable[256];
+static int url_acceptable_init = 0;
+static char hex[17] = "0123456789abcdef";
 
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
@@ -41,7 +45,7 @@ char *url_convert_hex(org_url)
 
 /* INIT Acceptable table. 
  * Borrow from libwww2 with Mosaic2.4 Distribution   */
-void init_url_acceptable()
+static void init_url_acceptable()
 {
     unsigned int i;
     char *good =
@@ -80,6 +84,7 @@ char *url_escape(url)
 }
 
 
+#ifdef NOT_YET_USED
 /*
  * Strip the url from e->key, return a pointer to a static copy of it.
  * Planning ahead for removing e->url from meta-data
@@ -125,8 +130,9 @@ char *the_url(e)
 	/* discard "/head/" or "head/" from the key and get url */
 	return URL;
     } else {
-	debug(0, 0, "Should not be here. Unknown format of the key: %s\n",
+	debug(23, 0, "Should not be here. Unknown format of the key: %s\n",
 	    e->key);
 	return (NULL);
     }
 }
+#endif

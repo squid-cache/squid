@@ -1,5 +1,5 @@
 
-/* $Id: mime.cc,v 1.5 1996/03/29 01:07:37 wessels Exp $ */
+/* $Id: mime.cc,v 1.6 1996/03/29 21:19:23 wessels Exp $ */
 
 #include "squid.h"
 #include "mime_table.h"
@@ -16,8 +16,7 @@ int mime_refresh_request(mime)
     return 0;
 }
 
-ext_table_entry *
-                mime_ext_to_type(extension)
+ext_table_entry *mime_ext_to_type(extension)
      char *extension;
 {
     int i, low, high, comp;

@@ -1,4 +1,8 @@
-/* $Id: stmem.cc,v 1.4 1996/03/27 18:15:54 wessels Exp $ */
+/* $Id: stmem.cc,v 1.5 1996/03/29 21:19:26 wessels Exp $ */
+
+/* 
+ * DEBUG: Section 19          stmem:
+ */
 
 #include "squid.h"
 
@@ -83,8 +87,8 @@ int memFreeDataUpto(mem, target_offset)
 	return current_offset;
     }
     if (current_offset != target_offset) {
-	debug(0, 1, "memFreeDataBehind: This shouldn't happen. Some odd condition.\n");
-	debug(0, 1, "   Current offset: %d  Target offset: %d  p: %p\n",
+	debug(19, 1, "memFreeDataBehind: This shouldn't happen. Some odd condition.\n");
+	debug(19, 1, "   Current offset: %d  Target offset: %d  p: %p\n",
 	    current_offset, target_offset, p);
     }
     return current_offset;
@@ -102,7 +106,7 @@ int memAppend(mem, data, len)
     int avail_len;
     int len_to_copy;
 
-    debug(0, 6, "memAppend: len %d\n", len);
+    debug(19, 6, "memAppend: len %d\n", len);
 
     /* Does the last block still contain empty space? 
      * If so, fill out the block before dropping into the
@@ -148,14 +152,14 @@ int memGrep(mem, string, nbytes)
     char *str_i, *mem_i;
     int i = 0, blk_idx = 0, state, goal;
 
-    debug(0, 6, "memGrep: looking for %s in less than %d bytes.\n",
+    debug(19, 6, "memGrep: looking for %s in less than %d bytes.\n",
 	string, nbytes);
 
     if (!p)
 	return 0;
 
     if (mem->origin_offset != 0) {
-	debug(0, 1, "memGrep: Some lower chunk of data has been erased. Can't do memGrep!\n");
+	debug(19, 1, "memGrep: Some lower chunk of data has been erased. Can't do memGrep!\n");
 	return 0;
     }
     str_i = string;
@@ -203,7 +207,7 @@ int memCopy(mem, offset, buf, size)
     int bytes_from_this_packet = 0;
     int bytes_into_this_packet = 0;
 
-    debug(0, 6, "memCopy: offset %d: size %d\n", offset, size);
+    debug(19, 6, "memCopy: offset %d: size %d\n", offset, size);
 
     if (size <= 0)
 	return size;
@@ -214,7 +218,7 @@ int memCopy(mem, offset, buf, size)
 	if (p->next)
 	    p = p->next;
 	else {
-	    debug(0, 1, "memCopy: Offset: %d is off limit of current object of %d\n", t_off, offset);
+	    debug(19, 1, "memCopy: Offset: %d is off limit of current object of %d\n", t_off, offset);
 	    return 0;
 	}
     }
@@ -286,7 +290,7 @@ char *
     }
     sm_stats.n_pages_in_use++;
     if (page == NULL) {
-	debug(0, 0, "Null page pointer?");
+	debug(19, 0, "Null page pointer?");
 	fatal_dump(NULL);
     }
     return (page);
@@ -299,14 +303,14 @@ void put_free_4k_page(page)
 
 #if USE_MEMALIGN
     if ((int) page % SM_PAGE_SIZE) {
-	debug(0, 0, "Someone tossed a string into the 4k page pool\n");
+	debug(19, 0, "Someone tossed a string into the 4k page pool\n");
 	fatal_dump(NULL);
     }
 #endif
     if (full_stack(&sm_stats.free_page_stack)) {
 	sm_stats.total_pages_allocated--;
 	if (!stack_overflow_warning_toggle) {
-	    debug(0, 0, "Stack of free stmem pages overflowed.  Resize it?");
+	    debug(19, 0, "Stack of free stmem pages overflowed.  Resize it?");
 	    stack_overflow_warning_toggle++;
 	}
     }
@@ -334,7 +338,7 @@ char *get_free_8k_page()
     }
     disk_stats.n_pages_in_use++;
     if (page == NULL) {
-	debug(0, 0, "Null page pointer?");
+	debug(19, 0, "Null page pointer?");
 	fatal_dump(NULL);
     }
     return (page);
@@ -347,7 +351,7 @@ void put_free_8k_page(page)
 
 #if USE_MEMALIGN
     if ((int) page % DISK_PAGE_SIZE) {
-	debug(0, 0, "Someone tossed a string into the 8k page pool\n");
+	debug(19, 0, "Someone tossed a string into the 8k page pool\n");
 	fatal_dump(NULL);
     }
 #endif
@@ -355,7 +359,7 @@ void put_free_8k_page(page)
     if (full_stack(&disk_stats.free_page_stack)) {
 	disk_stats.total_pages_allocated--;
 	if (!stack_overflow_warning_toggle) {
-	    debug(0, 0, "Stack of free disk pages overflowed.  Resize it?");
+	    debug(19, 0, "Stack of free disk pages overflowed.  Resize it?");
 	    stack_overflow_warning_toggle++;
 	}
     }
