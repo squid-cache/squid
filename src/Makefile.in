@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.43 1996/09/20 23:26:54 wessels Exp $
+#  $Id: Makefile.in,v 1.44 1996/09/20 23:39:53 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -98,7 +98,7 @@ ftpget: ftpget.o
 	$(CC) -o $@ $(LDFLAGS) ftpget.o $(LIBS)
 
 pinger: pinger.o
-	$(CC) -o debug.o $@ $(LDFLAGS) pinger.o $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o $(LIBS)
 
 squid.conf: squid.conf.pre Makefile
 	sed "\
