@@ -10,6 +10,8 @@ Changes to squid-1.1.beta4 ():
 	- Added trap for STORE_PENDING objects when lock_count == 0.
 	- Replaced 'cache_hot_vm_factor' with 'max_hotvm_obj_size'.
 	- Moved ICMP socket to external 'pinger' program.
+	- Moved tvSubMsec() to lib/util.c.
+	- Moved accessLogTime() to debug.c.
 
 Changes to squid-1.1.beta3 (September 16, 1996):
 
