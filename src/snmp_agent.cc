@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.78 2001/01/12 00:37:20 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.79 2001/01/24 22:38:25 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -296,7 +296,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 	break;
     case PERF_SYS_CURRESERVED_FD:
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-	    (snint) Number_FD,
+	    (snint) RESERVED_FD,
 	    SMI_GAUGE32);
 	break;
     case PERF_SYS_NUMOBJCNT:
