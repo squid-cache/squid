@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.26 1996/07/11 22:43:44 wessels Exp $
+ * $Id: neighbors.cc,v 1.27 1996/07/12 17:40:27 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -415,7 +415,6 @@ void neighbors_open(fd)
 	    safe_free(e);
 	    continue;
 	}
-	ipcacheLockEntry(e->host);
 	e->n_addresses = 0;
 	for (j = 0; *list && j < EDGE_MAX_ADDRESSES; j++) {
 	    ina = &e->addresses[j];
