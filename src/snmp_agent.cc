@@ -14,6 +14,9 @@
 enum {
     HTTP_SVC, ICP_SVC, DNS_SVC
 };
+#ifdef _SQUID_OSF_
+typedef long int ;
+#endif
 
 void snmpAclCheckDone(int answer, void *);
 static struct snmp_pdu *snmp_agent_response(struct snmp_pdu *PDU);
