@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.8 1999/01/08 21:12:19 wessels Exp $
+ * $Id: whois.cc,v 1.9 1999/01/15 06:11:47 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -104,7 +104,10 @@ whoisReadReply(int fd, void *data)
 	if (ignoreErrno(errno)) {
 	    commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
 	} else if (entry->mem_obj->inmem_hi == 0) {
-	    fwdFail(p->fwd, ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, errno);
+	    ErrorState *err;
+	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+	    err->xerrno = errno;
+	    fwdFail(p->fwd, err);
 	    comm_close(fd);
 	} else {
 	    comm_close(fd);

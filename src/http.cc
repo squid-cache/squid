@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.339 1999/01/13 05:54:48 wessels Exp $
+ * $Id: http.cc,v 1.340 1999/01/15 06:11:44 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -92,7 +92,8 @@ httpTimeout(int fd, void *data)
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     assert(entry->store_status == STORE_PENDING);
     if (entry->mem_obj->inmem_hi == 0) {
-	fwdFail(httpState->fwd, ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, 0);
+	fwdFail(httpState->fwd,
+	    errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
     }
     comm_close(fd);
 }
@@ -468,13 +469,19 @@ httpReadReply(int fd, void *data)
 	if (ignoreErrno(errno)) {
 	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
 	} else if (entry->mem_obj->inmem_hi == 0) {
-	    fwdFail(httpState->fwd, ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, errno);
+	    ErrorState *err;
+	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+	    err->xerrno = errno;
+	    fwdFail(httpState->fwd, err);
 	    comm_close(fd);
 	} else {
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
-	fwdFail(httpState->fwd, ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, errno);
+	ErrorState *err;
+	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
+	err->xerrno = errno;
+	fwdFail(httpState->fwd, err);
 	httpState->eof = 1;
 	comm_close(fd);
     } else if (len == 0) {
@@ -824,7 +831,6 @@ httpStart(FwdState * fwd)
     httpState->fwd = fwd;
     httpState->entry = fwd->entry;
     httpState->fd = fd;
-    EBIT_SET(httpState->entry->flags, ENTRY_FWD_HDR_WAIT);
     if (fwd->servers)
 	httpState->peer = fwd->servers->peer;	/* might be NULL */
     if (httpState->peer) {

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.144 1999/01/12 23:37:45 wessels Exp $
+ * $Id: gopher.cc,v 1.145 1999/01/15 06:11:43 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -187,6 +187,7 @@ gopherMimeCreate(GopherStateData * gopherState)
 	break;
     }
     memBufPrintf(&mb, "\r\n");
+    EBIT_CLR(gopherState->entry->flags, ENTRY_FWD_HDR_WAIT);
     storeAppend(gopherState->entry, mb.buf, mb.size);
     memBufClean(&mb);
 }
