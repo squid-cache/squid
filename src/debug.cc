@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.58 1998/02/20 18:47:22 wessels Exp $
+ * $Id: debug.cc,v 1.59 1998/02/20 21:02:10 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -107,6 +107,7 @@
 #include "squid.h"
 
 static char *debug_log_file = NULL;
+static const char *debugLogTime(time_t);
 
 #ifdef __STDC__
 void
@@ -142,7 +143,7 @@ _db_print(va_alist)
     if (debug_log == NULL)
 	return;
     snprintf(f, BUFSIZ, "%s| %s",
-	accessLogTime(squid_curtime),
+	debugLogTime(squid_curtime),
 	format);
 #if HAVE_SYSLOG
     /* level 0 go to syslog */
@@ -161,7 +162,7 @@ _db_print(va_alist)
 #endif
     if (!Config.onoff.buffered_logs)
 	fflush(debug_log);
-    if (opt_debug_stderr && debug_log != stderr) {
+    if (opt_debug_stderr >= _db_level && debug_log != stderr) {
 #if defined(__QNX__)
 	vfprintf(stderr, f, eargs);
 #else
@@ -280,3 +281,18 @@ _db_rotate_log(void)
     if (debug_log != stderr)
 	debugOpenLog(Config.Log.log);
 }
+
+static const char *
+debugLogTime(time_t t)
+{
+    struct tm *tm;
+    static char buf[128];
+    static time_t last_t = 0;
+    if (t != last_t) {
+        tm = localtime(&t);
+        strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
+        last_t = t;
+    }
+    return buf;
+}
+
