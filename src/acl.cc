@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.37 1996/09/15 08:04:57 wessels Exp $
+ * $Id: acl.cc,v 1.38 1996/09/16 17:21:36 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,16 +41,16 @@ struct _acl_access *ICPAccessList = NULL;
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
 
-static void aclDestroyAclList __P((struct _acl_list *list));
-static void aclDestroyIpList __P((struct _acl_ip_data *data));
-static void aclDestroyRegexList __P((struct _relist *data));
-static void aclDestroyTimeList __P((struct _acl_time_data *data));
+static void aclDestroyAclList __P((struct _acl_list * list));
+static void aclDestroyIpList __P((struct _acl_ip_data * data));
+static void aclDestroyRegexList __P((struct _relist * data));
+static void aclDestroyTimeList __P((struct _acl_time_data * data));
 static int aclMatchDomainList __P((wordlist *, char *));
 static int aclMatchAclList __P((struct _acl_list *, aclCheck_t *));
 static int aclMatchInteger __P((intlist * data, int i));
-static int aclMatchIp __P((struct _acl_ip_data *data, struct in_addr c));
+static int aclMatchIp __P((struct _acl_ip_data * data, struct in_addr c));
 static int aclMatchRegex __P((relist * data, char *word));
-static int aclMatchTime __P((struct _acl_time_data *data, time_t when));
+static int aclMatchTime __P((struct _acl_time_data * data, time_t when));
 static intlist *aclParseIntlist __P((void));
 static struct _acl_ip_data *aclParseIpList __P((void));
 static intlist *aclParseMethodList __P((void));

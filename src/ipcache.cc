@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.58 1996/09/16 16:28:39 wessels Exp $
+ * $Id: ipcache.cc,v 1.59 1996/09/16 17:21:42 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -148,7 +148,7 @@ static void ipcache_call_pending __P((ipcache_entry *));
 static void ipcache_add __P((char *, ipcache_entry *, struct hostent *, int));
 static int ipcacheHasPending __P((ipcache_entry *));
 static ipcache_entry *ipcache_get __P((char *));
-static int dummy_handler __P((int, struct hostent *hp, void *));
+static int dummy_handler __P((int, struct hostent * hp, void *));
 static int ipcacheExpiredEntry __P((ipcache_entry *));
 static void ipcacheAddPending __P((ipcache_entry *, int fd, IPH, void *));
 static void ipcacheEnqueue __P((ipcache_entry *));

@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.16 1996/09/15 07:04:01 wessels Exp $
+ * $Id: util.h,v 1.17 1996/09/16 17:22:02 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -127,18 +127,18 @@ extern char *strdup __P((char *));
 extern char *xstrdup __P((char *));	/* Duplicate a string */
 
 /* from xmalloc.c */
-void *xmalloc __P((size_t));		/* Wrapper for malloc(3) */
+void *xmalloc __P((size_t));	/* Wrapper for malloc(3) */
 void *xrealloc __P((void *, size_t));	/* Wrapper for realloc(3) */
 void *xcalloc __P((int, size_t));	/* Wrapper for calloc(3) */
-void xfree __P((void *));		/* Wrapper for free(3) */
-void xxfree __P((void *));		/* Wrapper for free(3) */
+void xfree __P((void *));	/* Wrapper for free(3) */
+void xxfree __P((void *));	/* Wrapper for free(3) */
 char *xstrdup __P((char *));
 char *xstrerror __P((void));
 char *getfullhostname __P((void));
 void xmemcpy __P((void *, void *, int));
 
 #if XMALLOC_STATISTICS
-void malloc_statistics __P((void (*) __P((int, int, void *)), void *));
+void malloc_statistics __P((void (*)__P((int, int, void *)), void *));
 #endif
 
 /* from debug.c */
