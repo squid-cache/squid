@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.162 2004/12/20 16:30:35 robertc Exp $
+ * $Id: fqdncache.cc,v 1.163 2005/02/13 15:49:50 serassio Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -368,7 +368,10 @@ fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *err
         if (answers[k]._class != RFC1035_CLASS_IN)
             continue;
 
-        f->names[f->name_count++] = xstrndup(answers[k].rdata, answers[k].rdlength);
+        if (!answers[k].rdata[0])
+            continue;
+
+        f->names[f->name_count++] = xstrdup(answers[k].rdata);
 
         if (ttl == 0 || (int) answers[k].ttl < ttl)
             ttl = answers[k].ttl;
