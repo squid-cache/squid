@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.38 1996/07/25 07:10:37 wessels Exp $
+ * $Id: ipcache.cc,v 1.39 1996/08/19 22:44:53 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -362,8 +362,8 @@ static int ipcache_purgelru()
     /* sort LRU candidate list */
     qsort((char *) LRU_list,
 	LRU_list_count,
-	sizeof(i),
-	(int (*)(const void *, const void *)) ipcache_compareLastRef);
+	sizeof(ipcache_entry *),
+	(QS) ipcache_compareLastRef);
     for (k = 0; LRU_list[k] && (meta_data.ipcache_count > ipcache_low)
 	&& k < LRU_list_count;
 	++k) {

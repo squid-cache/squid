@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.11 1996/07/25 07:10:32 wessels Exp $
+ * $Id: dnsserver.cc,v 1.12 1996/08/19 22:44:51 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -228,7 +228,8 @@ int main(argc, argv)
 	/* point stdout to fd */
 	dup2(fd, 1);
 	dup2(fd, 0);
-	close(fd);
+	if (fd > 1)
+	    close(fd);
     }
     while (1) {
 	int retry_count = 0;

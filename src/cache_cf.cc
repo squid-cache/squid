@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.67 1996/07/27 07:07:41 wessels Exp $
+ * $Id: cache_cf.cc,v 1.68 1996/08/19 22:44:50 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -154,6 +154,7 @@ struct SquidConfig Config;
 #define DefaultEffectiveUser	(char *)NULL	/* default NONE */
 #define DefaultEffectiveGroup	(char *)NULL	/* default NONE */
 #define DefaultAppendDomain	(char *)NULL	/* default NONE */
+#define DefaultErrHtmlText	(char *)NULL	/* default NONE */
 
 #define DefaultDebugOptions	"ALL,1"		/* All sections at level 1 */
 #define DefaultAccelHost	(char *)NULL	/* default NONE */
@@ -845,7 +846,6 @@ static void parseLocalDomainLine()
     }
 }
 
-
 static void parseInsideFirewallLine()
 {
     char *token;
@@ -978,6 +978,12 @@ static void parseIntegerValue(iptr)
     *iptr = i;
 }
 
+static void parseErrHtmlLine()
+{
+    char *token;
+    if ((token = strtok(NULL, "")))
+	Config.errHtmlText = xstrdup(token);
+}
 
 int parseConfigFile(file_name)
      char *file_name;
@@ -1235,6 +1241,9 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "ssl_proxy"))
 	    parseSslProxyLine();
 
+	else if (!strcmp(token, "err_html_text"))
+	    parseErrHtmlLine();
+
 	else {
 	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
 		config_lineno,
@@ -1311,7 +1320,6 @@ u_short setIcpPortNum(port)
     return (Config.Port.icp = port);
 }
 
-
 static char *safe_xstrdup(p)
      char *p;
 {
@@ -1340,6 +1348,7 @@ static void configFreeMemory()
     safe_free(Config.ftpUser);
     safe_free(Config.Announce.host);
     safe_free(Config.Announce.file);
+    safe_free(Config.errHtmlText);
     wordlistDestroy(&Config.cache_dirs);
     wordlistDestroy(&Config.hierarchy_stoplist);
     wordlistDestroy(&Config.local_domain_list);
@@ -1393,6 +1402,7 @@ static void configSetFactoryDefaults()
     Config.effectiveUser = safe_xstrdup(DefaultEffectiveUser);
     Config.effectiveGroup = safe_xstrdup(DefaultEffectiveGroup);
     Config.appendDomain = safe_xstrdup(DefaultAppendDomain);
+    Config.errHtmlText = safe_xstrdup(DefaultErrHtmlText);
 
     Config.Port.http = DefaultHttpPortNum;
     Config.Port.icp = DefaultIcpPortNum;

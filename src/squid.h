@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.36 1996/08/14 22:57:13 wessels Exp $
+ * $Id: squid.h,v 1.37 1996/08/19 22:44:56 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -170,15 +170,12 @@
 #ifndef SA_NODEFER
 #define SA_NODEFER 0
 #endif
-
 #ifndef SA_RESETHAND
-#ifdef SA_ONESHOT
-#define SA_RESETHAND SA_ONESHOT
-#else
 #define SA_RESETHAND 0
-#define HAVE_SIGACTION 0
-#endif /* SA_ONESHOT */
-#endif /* SA_RESETHAND */
+#endif
+#if SA_RESETHAND == 0 && defined(SA_ONESHOT)
+#define SA_RESETHAND SA_ONESHOT
+#endif
 
 typedef struct sentry StoreEntry;
 typedef struct mem_hdr *mem_ptr;
@@ -214,6 +211,7 @@ typedef unsigned long u_num32;
 #include "ansihelp.h"
 
 typedef void (*SIH) _PARAMS((int, void *));	/* swap in */
+typedef int (*QS) _PARAMS((const void *, const void *));
 
 #include "cache_cf.h"
 #include "comm.h"
@@ -269,6 +267,7 @@ extern int opt_reload_hit_only;	/* main.c */
 extern int opt_dns_tests;	/* main.c */
 extern int opt_foreground_rebuild;	/* main.c */
 extern int opt_zap_disk_store;	/* main.c */
+extern int opt_syslog_enable;	/* main.c */
 extern int vhost_mode;		/* main.c */
 extern char version_string[];	/* main.c */
 extern char appname[];		/* main.c */

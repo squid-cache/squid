@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.82 1996/08/17 05:10:28 wessels Exp $
+ * $Id: store.cc,v 1.83 1996/08/19 22:45:31 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -212,7 +212,9 @@ static int storeCheckPurgeMem _PARAMS((StoreEntry * e));
 static void storeSwapLog _PARAMS((StoreEntry *));
 static int storeHashDelete _PARAMS((StoreEntry *));
 static char *storeDescribeStatus _PARAMS((StoreEntry *));
-
+static int compareLastRef _PARAMS((StoreEntry ** e1, StoreEntry ** e2));
+static int compareSize _PARAMS((StoreEntry ** e1, StoreEntry ** e2));
+static int storeClientListSearch _PARAMS((MemObject *, int fd));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -280,10 +282,8 @@ static void destroy_MemObject(mem)
     destroy_MemObjectData(mem);
     safe_free(mem->pending);
     if (mem->client_list) {
-	for (i = 0; i < mem->client_list_size; ++i) {
-	    if (mem->client_list[i])
-		safe_free(mem->client_list[i]);
-	}
+	for (i = 0; i < mem->client_list_size; i++)
+	    safe_free(mem->client_list[i]);
 	safe_free(mem->client_list);
     }
     safe_free(mem->mime_hdr);
@@ -509,14 +509,14 @@ int storeLockObject(e, handler, data)
 
     if (e->mem_status != NOT_IN_MEMORY)
 	/* ok, its either IN_MEMORY or SWAPPING_IN */
-	debug(20,5,"storeLockObject: OK: mem_status is %s\n", memStatusStr[e->mem_status]);
+	debug(20, 5, "storeLockObject: OK: mem_status is %s\n", memStatusStr[e->mem_status]);
     else if (e->swap_status == SWAP_OK)
 	/* ok, its NOT_IN_MEMORY, but its swapped out */
-	debug(20,5,"storeLockObject: OK: swap_status is %s\n", swapStatusStr[e->swap_status]);
+	debug(20, 5, "storeLockObject: OK: swap_status is %s\n", swapStatusStr[e->swap_status]);
     else if (e->store_status == STORE_PENDING)
 	/* ok, we're reading it in right now */
-	debug(20,5,"storeLockObject: OK: store_status is %s\n", storeStatusStr[e->store_status]);
-    else 
+	debug(20, 5, "storeLockObject: OK: store_status is %s\n", storeStatusStr[e->store_status]);
+    else
 	fatal_dump(storeDescribeStatus(e));
     e->lastref = squid_curtime;
 
@@ -689,7 +689,7 @@ void storeSetPrivateKey(e)
 	fatal_dump("Private key already exists.");
     }
     if (e->key)
-	storeHashDelete(e);
+	storeHashDelete((hash_link *) e);
     if (e->key && !BIT_TEST(e->flag, KEY_URL))
 	safe_free(e->key);
     e->key = xstrdup(newkey);
@@ -721,7 +721,7 @@ void storeSetPublicKey(e)
 	newkey = storeGeneratePublicKey(e->url, e->method);
     }
     if (e->key)
-	storeHashDelete(e);
+	storeHashDelete((hash_link *) e);
     if (e->key && !BIT_TEST(e->flag, KEY_URL))
 	safe_free(e->key);
     if (e->method == METHOD_GET) {
@@ -794,11 +794,10 @@ StoreEntry *storeCreateEntry(url, req_hdr, flags, method)
 
     /* allocate client list */
     mem->client_list_size = MIN_CLIENT;
-    mem->client_list = (ClientStatusEntry **)
+    mem->client_list =
 	xcalloc(mem->client_list_size, sizeof(ClientStatusEntry *));
     /* storeLog(STORE_LOG_CREATE, e); */
     return e;
-
 }
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
@@ -898,7 +897,6 @@ int storeRegister(e, fd, handler, data)
 
 	debug(20, 9, "storeRegister: grew pending list to %d for slot %d.\n",
 	    mem->pending_list_size, i);
-
     }
     mem->pending[i] = pe;
     return 0;
@@ -913,29 +911,24 @@ int storeUnregister(e, fd)
 {
     int i;
     int freed = 0;
-
+    MemObject *mem = e->mem_obj;
     debug(20, 9, "storeUnregister: called for FD %d '%s'\n", fd, e->key);
-
     /* look for entry in client_list */
-    if (e->mem_obj->client_list) {
-	for (i = 0; i < e->mem_obj->client_list_size; ++i) {
-	    if (e->mem_obj->client_list[i] && (e->mem_obj->client_list[i]->fd == fd)) {
-		/* reset fd to zero as a mark for empty slot */
-		safe_free(e->mem_obj->client_list[i]);
-		e->mem_obj->client_list[i] = NULL;
-	    }
-	}
+    if ((i = storeClientListSearch(mem, fd)) > -1) {
+	safe_free(mem->client_list[i]);
+	mem->client_list[i] = NULL;
     }
     /* walk the entire list looking for matched fd */
-    for (i = 0; i < (int) e->mem_obj->pending_list_size; i++) {
-	if (e->mem_obj->pending[i] && (e->mem_obj->pending[i]->fd == fd)) {
-	    /* found the match fd */
-	    safe_free(e->mem_obj->pending[i]);
-	    e->mem_obj->pending[i] = NULL;
-	    freed++;
-	}
+    for (i = 0; i < (int) mem->pending_list_size; i++) {
+	if (mem->pending[i] == NULL)
+	    continue;
+	if (mem->pending[i]->fd != fd)
+	    continue;
+	/* found the match fd */
+	safe_free(mem->pending[i]);
+	mem->pending[i] = NULL;
+	freed++;
     }
-
     debug(20, 9, "storeUnregister: returning %d\n", freed);
     return freed;
 }
@@ -1130,6 +1123,9 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
     MemObject *mem = e->mem_obj;
     debug(20, 2, "storeSwapInHandle: '%s'\n", e->key);
 
+    if (mem == NULL)		/* XXX remove later */
+	fatal_dump(NULL);
+
     if ((flag < 0) && (flag != DISK_EOF)) {
 	debug(20, 0, "storeSwapInHandle: SwapIn failure (err code = %d).\n", flag);
 	put_free_8k_page(mem->e_swap_buf);
@@ -1147,6 +1143,9 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
     debug(20, 5, "storeSwapInHandle: len              = %d\n", len);
     debug(20, 5, "storeSwapInHandle: e->e_current_len = %d\n", mem->e_current_len);
     debug(20, 5, "storeSwapInHandle: e->object_len    = %d\n", e->object_len);
+
+    if (len < 0)		/* XXX remove later */
+	fatal_dump(NULL);
 
     /* always call these, even if len == 0 */
     mem->swap_offset += len;
@@ -1198,14 +1197,13 @@ static int storeSwapInStart(e, swapin_complete_handler, swapin_complete_data)
     MemObject *mem = NULL;
 
     /* sanity check! */
-    if ((e->swap_status != SWAP_OK) || (e->swap_file_number < 0)) {
-	debug(20, 0, "storeSwapInStart: <No filename:%d> ? <URL:%s>\n",
-	    e->swap_file_number, e->url);
-	if (e->mem_obj)
-	    e->mem_obj->swapin_fd = -1;
-	return -1;
-    }
-    /* create additional structure for object in memory */
+    if (e->swap_status != SWAP_OK)
+	fatal_dump("storeSwapInStart: bad swap_status");
+    if (e->swap_file_number < 0)
+	fatal_dump("storeSwapInStart: bad swap_file_number");
+    if (e->mem_obj)
+	fatal_dump("storeSwapInStart: mem_obj already present");
+
     e->mem_obj = mem = new_MemObject();
 
     path = storeSwapFullPath(e->swap_file_number, NULL);
@@ -1218,7 +1216,6 @@ static int storeSwapInStart(e, swapin_complete_handler, swapin_complete_data)
     mem->swapin_fd = (short) fd;
     debug(20, 5, "storeSwapInStart: initialized swap file '%s' for <URL:%s>\n",
 	path, e->url);
-
     storeSetMemStatus(e, SWAPPING_IN);
     mem->data = new_MemObjectData();
     mem->swap_offset = 0;
@@ -1347,8 +1344,8 @@ static int storeSwapOutStart(e)
      StoreEntry *e;
 {
     int fd;
-    LOCAL_ARRAY(char, swapfilename, MAX_FILE_NAME_LEN);
     int x;
+    LOCAL_ARRAY(char, swapfilename, MAX_FILE_NAME_LEN);
     MemObject *mem = e->mem_obj;
     /* Suggest a new swap file number */
     swapfileno = (swapfileno + 1) % (MAX_SWAP_FILE);
@@ -1596,7 +1593,7 @@ void storeStartRebuildFromDisk()
     }
     data = xcalloc(1, sizeof(*data));
 
-    for (i = 0; i < ncache_dirs; ++i)
+    for (i = 0; i < ncache_dirs; i++)
 	debug(20, 1, "Rebuilding storage from disk image in %s\n", swappath(i));
     data->start = getCurrentTime();
 
@@ -1694,7 +1691,6 @@ void storeComplete(e)
      StoreEntry *e;
 {
     debug(20, 3, "storeComplete: '%s'\n", e->key);
-
     e->object_len = e->mem_obj->e_current_len;
     InvokeHandlers(e);
     e->lastref = squid_curtime;
@@ -1720,6 +1716,9 @@ int storeAbort(e, msg)
     LOCAL_ARRAY(char, mime_hdr, 300);
     LOCAL_ARRAY(char, abort_msg, 2000);
     MemObject *mem = e->mem_obj;
+
+    if (mem == NULL)		/* XXX remove later */
+	fatal_dump("storeAbort: null mem");
 
     debug(20, 6, "storeAbort: '%s'\n", e->key);
     e->expires = squid_curtime + Config.negativeTtl;
@@ -1905,7 +1904,6 @@ int storeGetMemSpace(size, check_vm_number)
     int compareLastRef();
     int compareSize();
 
-
     if (!check_vm_number && ((store_mem_size + size) < store_mem_high))
 	return 0;
 
@@ -1957,13 +1955,16 @@ int storeGetMemSpace(size, check_vm_number)
     debug(20, 5, "storeGetMemSpace: Can't purge size: %7d bytes\n", locked_bytes);
     debug(20, 5, "storeGetMemSpace: Sorting LRU_list: %7d items\n", LRU_list->index);
 #endif
-    qsort((char *) LRU_list->collection, LRU_list->index, sizeof(e), (int (*)(const void *, const void *)) compareLastRef);
+    qsort((char *) LRU_list->collection,
+	LRU_list->index,
+	sizeof(StoreEntry *),
+	(QS) compareLastRef);
 
     /* Kick LRU out until we have enough memory space */
 
     if (check_vm_number) {
 	/* look for vm slot */
-	for (i = 0; (i < LRU_list->index) && (meta_data.hot_vm > store_hotobj_low); ++i) {
+	for (i = 0; (i < LRU_list->index) && (meta_data.hot_vm > store_hotobj_low); i++) {
 	    if ((LRU = (StoreEntry *) LRU_list->collection[i]))
 		if ((LRU->store_status != STORE_PENDING) && (LRU->swap_status == NO_SWAP)) {
 		    n_released++;
@@ -1975,7 +1976,7 @@ int storeGetMemSpace(size, check_vm_number)
 	}
     } else {
 	/* look for space */
-	for (i = 0; (i < LRU_list->index) && ((store_mem_size + size) > store_mem_low); ++i) {
+	for (i = 0; (i < LRU_list->index) && ((store_mem_size + size) > store_mem_low); i++) {
 	    if ((LRU = (StoreEntry *) LRU_list->collection[i]))
 		if ((LRU->store_status != STORE_PENDING) && (LRU->swap_status == NO_SWAP)) {
 		    n_released++;
@@ -2033,8 +2034,11 @@ int storeGetMemSpace(size, check_vm_number)
     }
 
     /* sort the stuff by size */
-    qsort((char *) pending_entry_list->collection, pending_entry_list->index, sizeof(e), (int (*)(const void *, const void *)) compareSize);
-    for (i = 0; (i < pending_entry_list->index) && (i < entry_to_delete_behind); ++i)
+    qsort((char *) pending_entry_list->collection,
+	pending_entry_list->index,
+	sizeof(StoreEntry *),
+	(QS) compareSize);
+    for (i = 0; (i < pending_entry_list->index) && (i < entry_to_delete_behind); i++)
 	if (pending_entry_list->collection[i]) {
 	    n_deleted_behind++;
 	    storeStartDeleteBehind(pending_entry_list->collection[i]);
@@ -2048,34 +2052,27 @@ int storeGetMemSpace(size, check_vm_number)
     return 0;
 }
 
-int compareSize(e1, e2)
-     StoreEntry **e1, **e2;
-{
-    if (!e1 || !e2) {
-	debug(20, 1, "compareSize: Called with at least one null argument, shouldn't happen.\n");
-	return 0;
-    }
-    if ((*e1)->mem_obj->e_current_len > (*e2)->mem_obj->e_current_len)
-	return (1);
-
-    if ((*e1)->mem_obj->e_current_len < (*e2)->mem_obj->e_current_len)
-	return (-1);
-
-    return (0);
-}
-
-int compareLastRef(e1, e2)
+static int compareSize(e1, e2)
      StoreEntry **e1, **e2;
 {
     if (!e1 || !e2)
 	fatal_dump(NULL);
+    if ((*e1)->mem_obj->e_current_len > (*e2)->mem_obj->e_current_len)
+	return (1);
+    if ((*e1)->mem_obj->e_current_len < (*e2)->mem_obj->e_current_len)
+	return (-1);
+    return (0);
+}
 
+static int compareLastRef(e1, e2)
+     StoreEntry **e1, **e2;
+{
+    if (!e1 || !e2)
+	fatal_dump(NULL);
     if ((*e1)->lastref > (*e2)->lastref)
 	return (1);
-
     if ((*e1)->lastref < (*e2)->lastref)
 	return (-1);
-
     return (0);
 }
 
@@ -2085,7 +2082,6 @@ int compareLastRef(e1, e2)
 unsigned int storeGetBucketNum()
 {
     static unsigned int bucket = 0;
-
     if (bucket >= STORE_BUCKETS)
 	bucket = 0;
     return (bucket++);
@@ -2134,7 +2130,7 @@ int storeGetSwapSpace(size)
 
     LRU_list = create_dynamic_array(LRU_cur_size, LRU_cur_size);
     /* remove expired objects until recover enough space or no expired objects */
-    for (i = 0; i < STORE_BUCKETS; ++i) {
+    for (i = 0; i < STORE_BUCKETS; i++) {
 	int expired_in_one_bucket = 0;
 
 	link_ptr = hash_get_bucket(store_table, storeGetBucketNum());
@@ -2179,7 +2175,10 @@ int storeGetSwapSpace(size)
 		expired);
 	    return 0;
 	}
-	qsort((char *) LRU_list->collection, LRU_list->index, sizeof(e), (int (*)(const void *, const void *)) compareLastRef);
+	qsort((char *) LRU_list->collection,
+	    LRU_list->index,
+	    sizeof(StoreEntry *),
+	    (QS) compareLastRef);
 	/* keep the first n LRU objects only */
 	cut_dynamic_array(LRU_list, SWAP_LRU_REMOVE_COUNT);
 
@@ -2216,7 +2215,7 @@ int storeGetSwapSpace(size)
 
     /* Although all expired objects removed, still didn't recover enough */
     /* space.  Kick LRU out until we have enough swap space */
-    for (i = 0; i < LRU_list->index; ++i) {
+    for (i = 0; i < LRU_list->index; i++) {
 	if (store_swap_size + kb_size <= store_swap_low) {
 	    fReduceSwap = 0;
 	    break;
@@ -2400,16 +2399,16 @@ int storeClientWaiting(e)
      StoreEntry *e;
 {
     int i;
-
-    if (e->mem_obj->client_list) {
-	for (i = 0; i < e->mem_obj->client_list_size; ++i) {
-	    if (e->mem_obj->client_list[i])
+    MemObject *mem = e->mem_obj;
+    if (mem->client_list) {
+	for (i = 0; i < mem->client_list_size; i++) {
+	    if (mem->client_list[i])
 		return 1;
 	}
     }
-    if (e->mem_obj->pending) {
-	for (i = 0; i < (int) e->mem_obj->pending_list_size; ++i) {
-	    if (e->mem_obj->pending[i])
+    if (mem->pending) {
+	for (i = 0; i < (int) mem->pending_list_size; i++) {
+	    if (mem->pending[i])
 		return 1;
 	}
     }
@@ -2417,18 +2416,19 @@ int storeClientWaiting(e)
 }
 
 /* return index to matched clientstatus in client_list, -1 on NOT_FOUND */
-int storeClientListSearch(e, fd)
-     StoreEntry *e;
+static int storeClientListSearch(mem, fd)
+     MemObject *mem;
      int fd;
 {
     int i;
-
-    if (!e->mem_obj->client_list)
-	return -1;
-    for (i = 0; i < e->mem_obj->client_list_size; ++i) {
-	if (e->mem_obj->client_list[i] &&
-	    (fd == e->mem_obj->client_list[i]->fd))
+    if (mem->client_list) {
+	for (i = 0; i < mem->client_list_size; i++) {
+	    if (mem->client_list[i] == NULL)
+		continue;
+	    if (mem->client_list[i]->fd != fd)
+		continue;
 	    return i;
+	}
     }
     return -1;
 }
@@ -2440,26 +2440,34 @@ void storeClientListAdd(e, fd, last_offset)
      int last_offset;
 {
     int i;
+    MemObject *mem = e->mem_obj;
+    ClientStatusEntry **oldlist = NULL;
+    int oldsize;
     /* look for empty slot */
-
-    if (e->mem_obj->client_list) {
-	for (i = 0; (i < e->mem_obj->client_list_size)
-	    && (e->mem_obj->client_list[i] != NULL); ++i);
-
-	if (i == e->mem_obj->client_list_size) {
-	    /* have to expand client_list */
-	    e->mem_obj->client_list_size += MIN_CLIENT;
-	    e->mem_obj->client_list = xrealloc(e->mem_obj->client_list, e->mem_obj->client_list_size * sizeof(ClientStatusEntry *));
-	}
-    } else {
-	e->mem_obj->client_list_size += MIN_CLIENT;
-	e->mem_obj->client_list = xcalloc(e->mem_obj->client_list_size, sizeof(ClientStatusEntry *));
-	i = 0;
+    if (mem->client_list == NULL) {
+	mem->client_list_size = MIN_CLIENT;
+	mem->client_list =
+	    xcalloc(mem->client_list_size, sizeof(ClientStatusEntry *));
     }
-
-    e->mem_obj->client_list[i] = xcalloc(1, sizeof(ClientStatusEntry));
-    e->mem_obj->client_list[i]->fd = fd;
-    e->mem_obj->client_list[i]->last_offset = last_offset;
+    for (i = 0; i < mem->client_list_size; i++) {
+	if (mem->client_list[i] == NULL)
+	    break;
+    }
+    if (i == mem->client_list_size) {
+	debug(20, 3, "storeClientListAdd: FD %d Growing client_list for '%s'\n",
+	    fd, e->url);
+	oldlist = mem->client_list;
+	oldsize = mem->client_list_size;
+	mem->client_list_size <<= 1;
+	mem->client_list =
+	    xcalloc(mem->client_list_size, sizeof(ClientStatusEntry *));
+	for (i = 0; i < oldsize; i++)
+	    mem->client_list[i] = oldlist[i];
+	safe_free(oldlist);
+    }
+    mem->client_list[i] = xcalloc(1, sizeof(ClientStatusEntry));
+    mem->client_list[i]->fd = fd;
+    mem->client_list[i]->last_offset = last_offset;
 }
 
 /* same to storeCopy but also register client fd and last requested offset
@@ -2475,32 +2483,32 @@ int storeClientCopy(e, stateoffset, maxSize, buf, size, fd)
     int next_offset;
     int client_list_index;
     int available_to_write = e->mem_obj->e_current_len - stateoffset;
+    MemObject *mem = e->mem_obj;
 
-    if (stateoffset < e->mem_obj->e_lowest_offset) {
+    if (stateoffset < mem->e_lowest_offset) {
 	/* this should not happen. Logic race !!! */
 	debug(20, 1, "storeClientCopy: Client Request a chunk of data in area lower than the lowest_offset\n");
 	debug(20, 1, "                              fd : %d\n", fd);
-	debug(20, 1, "           Current Lowest offset : %d\n", e->mem_obj->e_lowest_offset);
+	debug(20, 1, "           Current Lowest offset : %d\n", mem->e_lowest_offset);
 	debug(20, 1, "           Requested offset      : %d\n", stateoffset);
 	/* can't really do anything here. Client may hang until lifetime runout. */
 	return 0;
     }
-    *size = (available_to_write >= maxSize) ?
-	maxSize : available_to_write;
+    *size = (available_to_write >= maxSize) ? maxSize : available_to_write;
 
     debug(20, 6, "storeCopy: avail_to_write=%d, store_offset=%d\n",
 	*size, stateoffset);
 
     /* update the lowest requested offset */
     next_offset = (stateoffset + *size);
-    if ((client_list_index = storeClientListSearch(e, fd)) >= 0) {
-	e->mem_obj->client_list[client_list_index]->last_offset = next_offset;
+    if ((client_list_index = storeClientListSearch(mem, fd)) >= 0) {
+	mem->client_list[client_list_index]->last_offset = next_offset;
     } else {
 	storeClientListAdd(e, fd, next_offset);
     }
 
     if (*size > 0)
-	(void) e->mem_obj->data->mem_copy(e->mem_obj->data, stateoffset, buf, *size);
+	(void) mem->data->mem_copy(mem->data, stateoffset, buf, *size);
 
     /* see if we can get rid of some data if we are in "delete behind" mode . */
     if (e->flag & DELETE_BEHIND) {
@@ -2580,7 +2588,7 @@ static int storeVerifySwapDirs(clean)
     int directory_created = 0;
     char *cmdbuf = NULL;
 
-    for (inx = 0; inx < ncache_dirs; ++inx) {
+    for (inx = 0; inx < ncache_dirs; inx++) {
 	path = swappath(inx);
 	debug(20, 9, "storeVerifySwapDirs: Creating swap space in %s\n", path);
 	if (stat(path, &sb) < 0) {

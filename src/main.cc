@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.59 1996/08/14 22:57:11 wessels Exp $
+ * $Id: main.cc,v 1.60 1996/08/19 22:44:54 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -117,6 +117,7 @@ int catch_signals = 1;
 int opt_dns_tests = 1;
 int opt_foreground_rebuild = 0;
 int opt_zap_disk_store = 0;
+int opt_syslog_enable = 0;	/* disabled by default */
 int vhost_mode = 0;
 int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
@@ -147,7 +148,7 @@ Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port]\n\
                  %s\n\
        -h        Print help message.\n\
        -s        Enable logging to syslog.\n\
-       -u port   Specify UDP port number (default: %d), disable with 0.\n\
+       -u port   Specify ICP port number (default: %d), disable with 0.\n\
        -v        Print version.\n\
        -z        Zap disk storage -- deletes all objects in disk cache.\n\
        -C        Do not catch fatal signals.\n\
@@ -213,7 +214,7 @@ static void mainParseOptions(argc, argv)
 	    fatal("Need to add -DMALLOC_DBG when compiling to use -m option");
 #endif
 	case 's':
-	    syslog_enable = 0;
+	    opt_syslog_enable = 1;
 	    break;
 	case 'u':
 	    icpPortNumOverride = atoi(optarg);
@@ -265,6 +266,10 @@ void shut_down(sig)
     debug(21, 1, "Waiting %d seconds for active connections to finish\n",
 	Config.lifetimeShutdown);
     shutdown_pending = 1;
+#if SA_RESETHAND == 0
+    signal(SIGTERM, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
+#endif
 }
 
 void serverConnectionsOpen()
@@ -523,9 +528,6 @@ int main(argc, argv)
     fd_note(0, "STDIN");
     fd_note(1, "STDOUT");
     fd_note(2, "STDERR");
-
-    /* enable syslog by default */
-    syslog_enable = 0;
 
     /* preinit for debug module */
     debug_log = stderr;

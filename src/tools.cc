@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.46 1996/07/25 07:10:44 wessels Exp $
+ * $Id: tools.cc,v 1.47 1996/08/19 22:44:57 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -130,30 +130,20 @@ static char *dead_msg()
 void mail_warranty()
 {
     FILE *fp = NULL;
-    LOCAL_ARRAY(char, filename, 256);
-    LOCAL_ARRAY(char, command, 256);
-
-    sprintf(filename, "/tmp/mailin%d", (int) getpid());
-    fp = fopen(filename, "w");
-    if (fp != NULL) {
-	fprintf(fp, "From: %s\n", appname);
-	fprintf(fp, "To: %s\n", Config.adminEmail);
-	fprintf(fp, "Subject: %s\n", dead_msg());
-	fclose(fp);
-	sprintf(command, "mail %s < %s", Config.adminEmail, filename);
-	system(command);	/* XXX should avoid system(3) */
-	unlink(filename);
-    }
+    char *filename;
+    static char command[256];
+    if ((filename = tempnam(NULL, appname)) == NULL)
+	return;
+    if ((fp = fopen(filename, "w")) == NULL)
+	return;
+    fprintf(fp, "From: %s\n", appname);
+    fprintf(fp, "To: %s\n", getAdminEmail());
+    fprintf(fp, "Subject: %s\n", dead_msg());
+    fclose(fp);
+    sprintf(command, "mail %s < %s", getAdminEmail(), filename);
+    system(command);		/* XXX should avoid system(3) */
+    unlink(filename);
 }
-
-void print_warranty()
-{
-    if (Config.adminEmail)
-	mail_warranty();
-    else
-	puts(dead_msg());
-}
-
 
 static void dumpMallocStats(f)
      FILE *f;
@@ -233,17 +223,23 @@ void death(sig)
     if (sig == SIGSEGV)
 	fprintf(debug_log, "FATAL: Received Segment Violation...dying.\n");
     else if (sig == SIGBUS)
-	fprintf(debug_log, "FATAL: Received bus error...dying.\n");
+	fprintf(debug_log, "FATAL: Received Bus Error...dying.\n");
     else
 	fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
-#if !HAVE_SIGACTION
+#if SA_RESETHAND == 0
     signal(SIGSEGV, SIG_DFL);
     signal(SIGBUS, SIG_DFL);
     signal(sig, SIG_DFL);
 #endif
     storeWriteCleanLog();
     PrintRusage(NULL, debug_log);
-    print_warranty();
+    if (squid_curtime - SQUID_RELEASE_TIME < 864000) {
+	/* skip if more than 10 days old */
+	if (getAdminEmail())
+	    mail_warranty();
+	else
+	    puts(dead_msg());
+    }
     abort();
 }
 
@@ -303,7 +299,7 @@ void fatal_common(message)
      char *message;
 {
 #if HAVE_SYSLOG
-    if (syslog_enable)
+    if (opt_syslog_enable)
 	syslog(LOG_ALERT, message);
 #endif
     fprintf(debug_log, "FATAL: %s\n", message);

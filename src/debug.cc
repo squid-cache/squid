@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.20 1996/07/25 07:10:30 wessels Exp $
+ * $Id: debug.cc,v 1.21 1996/08/19 22:44:51 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -108,7 +108,6 @@
 char *_db_file = __FILE__;
 int _db_line = 0;
 
-int syslog_enable = 0;
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
 static time_t last_squid_curtime = 0;
@@ -165,7 +164,7 @@ void _db_print(va_alist)
 
 #if HAVE_SYSLOG
     /* level 0 go to syslog */
-    if ((level == 0) && syslog_enable) {
+    if ((level == 0) && opt_syslog_enable) {
 	tmpbuf[0] = '\0';
 	vsprintf(tmpbuf, f, args);
 	syslog(LOG_ERR, tmpbuf);
@@ -246,7 +245,7 @@ void _db_init(logfile, options)
     debugOpenLog(logfile);
 
 #if HAVE_SYSLOG && defined(LOG_LOCAL4)
-    if (syslog_enable)
+    if (opt_syslog_enable)
 	openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 #endif /* HAVE_SYSLOG */
 
