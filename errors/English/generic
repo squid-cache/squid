@@ -6,7 +6,7 @@
 <HR>
 <P>
 While trying to retrieve the URL:
-<A HREF="%u">%u</A>
+<A HREF="%U">%U</A>
 <P>
 The following error was encountered:
 <UL>
@@ -18,7 +18,7 @@ The following error was encountered:
 
 <P>
 The system returned:
-<PRE><I>    @XSTRERROR@</I></PRE>
+<PRE><I>    %E</I></PRE>
 
 <P>
 This means that:
