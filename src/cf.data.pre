@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.214 2001/02/10 16:40:40 hno Exp $
+# $Id: cf.data.pre,v 1.215 2001/02/20 22:49:23 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3490,6 +3490,16 @@ DOC_START
 	default, Squid uses persistent connections (when allowed)
 	with its clients and servers.  You can use these options to
 	disable persistent connections with clients and/or servers.
+DOC_END
+
+NAME: pipeline_prefetch
+TYPE: onoff
+LOC: Config.onoff.pipeline_prefetch
+DEFAULT: on
+DOC_START
+	To boost the performance of pipelined requests to closer
+	match that of a non-proxied environment Squid tries to fetch
+	up to two requests in parallell from a pipeline.
 DOC_END
 
 NAME: extension_methods
