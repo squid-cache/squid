@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.33 2003/04/24 06:35:04 hno Exp $
+ * $Id: rfc1123.c,v 1.34 2005/03/09 20:02:06 serassio Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -103,7 +103,7 @@ make_month(const char *s)
     for (i = 0; i < 12; i++)
 	if (!strncmp(month_names[i], month, 3))
 	    return i;
-    return 0;
+    return -1;
 }
 
 static int
@@ -125,105 +125,80 @@ tmSaneValues(struct tm *tm)
 }
 
 static struct tm *
-parse_date1(const char *str)
+parse_date_elements(const char *day, const char *month, const char *year,
+	const char *time, const char *zone)
 {
-    /* Thursday, 10-Jun-93 01:29:59 GMT */
-    const char *s;
     static struct tm tm;
-    assert(NULL != str);
-    memset(&tm, '\0', sizeof(struct tm));
-    s = strchr(str, ',');
-    if (NULL == s)
+    char *t;
+    memset(&tm, 0, sizeof(tm));
+
+    if (!day || !month || !year || !time)
 	return NULL;
-    s++;
-    while (*s == ' ')
-	s++;
-    /* backup if month is only one digit */
-    if (xisdigit(*s) && !xisdigit(*(s + 1)))
-	s--;
-    if (!strchr(s, '-'))
+    tm.tm_mday = atoi(day);
+    tm.tm_mon = make_month(month);
+    if (tm.tm_mon < 0)
 	return NULL;
-    if ((int) strlen(s) < 18)
-	return NULL;
-    memset(&tm, '\0', sizeof(tm));
-    tm.tm_mday = make_num(s);
-    tm.tm_mon = make_month(s + 3);
-    tm.tm_year = make_num(s + 7);
-    /*
-     * Y2K: Arjan de Vet <Arjan.deVet@adv.IAEhv.nl>
-     * if tm.tm_year < 70, assume it's after the year 2000.
-     */
-    if (tm.tm_year < 70)
+    tm.tm_year = atoi(year);
+    if (strlen(year) == 4)
+	tm.tm_year -= 1900;
+    else if (tm.tm_year < 70)
 	tm.tm_year += 100;
-    tm.tm_hour = make_num(s + 10);
-    tm.tm_min = make_num(s + 13);
-    tm.tm_sec = make_num(s + 16);
+    else if (tm.tm_year > 19000)
+	tm.tm_year -= 19000;
+    tm.tm_hour = make_num(time);
+    t = strchr(time, ':');
+    if (!t)
+	return NULL;
+    t++;
+    tm.tm_min = atoi(t);
+    t = strchr(t, ':');
+    if (t)
+	tm.tm_sec = atoi(t + 1);
     return tmSaneValues(&tm) ? &tm : NULL;
 }
 
 static struct tm *
-parse_date2(const char *str)
+parse_date(const char *str)
 {
-    /* Thu, 10 Jan 1993 01:29:59 GMT */
-    const char *s;
-    static struct tm tm;
-    assert(NULL != str);
-    memset(&tm, '\0', sizeof(struct tm));
-    s = strchr(str, ',');
-    if (NULL == s)
-	return NULL;
-    s++;
-    while (*s == ' ')
-	s++;
-    /* backup if month is only one digit */
-    if (xisdigit(*s) && !xisdigit(*(s + 1)))
-	s--;
-    if (strchr(s, '-'))
-	return NULL;
-    if ((int) strlen(s) < 20)
-	return NULL;
-    memset(&tm, '\0', sizeof(tm));
-    tm.tm_mday = make_num(s);
-    tm.tm_mon = make_month(s + 3);
-    tm.tm_year = (100 * make_num(s + 7) - 1900) + make_num(s + 9);
-    tm.tm_hour = make_num(s + 12);
-    tm.tm_min = make_num(s + 15);
-    tm.tm_sec = make_num(s + 18);
-    return tmSaneValues(&tm) ? &tm : NULL;
-}
+    struct tm *tm;
+    char *tmp = xstrdup(str);
+    char *t;
+    char *wday = NULL;
+    char *day = NULL;
+    char *month = NULL;
+    char *year = NULL;
+    char *time = NULL;
+    char *zone = NULL;
 
-static struct tm *
-parse_date3(const char *str)
-{
-    /* Wed Jun  9 01:29:59 1993 GMT */
-    static struct tm tm;
-    char *s;
-    static char buf[128];
-    while (*str && *str == ' ')
-	str++;
-    xstrncpy(buf, str, 128);
-    if (NULL == (s = strtok(buf, w_space)))
-	return NULL;
-    if (NULL == (s = strtok(NULL, w_space)))
-	return NULL;
-    tm.tm_mon = make_month(s);
-    if (NULL == (s = strtok(NULL, w_space)))
-	return NULL;
-    tm.tm_mday = atoi(s);
-    if (NULL == (s = strtok(NULL, ":")))
-	return NULL;
-    tm.tm_hour = atoi(s);
-    if (NULL == (s = strtok(NULL, ":")))
-	return NULL;
-    tm.tm_min = atoi(s);
-    if (NULL == (s = strtok(NULL, w_space)))
-	return NULL;
-    tm.tm_sec = atoi(s);
-    if (NULL == (s = strtok(NULL, w_space)))
-	return NULL;
-    /* Y2K fix, richard.kettlewell@kewill.com */
-    tm.tm_year = atoi(s) - 1900;
-    return tmSaneValues(&tm) ? &tm : NULL;
+    for (t = strtok(tmp, ", "); t; t = strtok(NULL, ", ")) {
+	if (xisdigit(*t)) {
+	    if (!day) {
+		day = t;
+		t = strchr(t, '-');
+		if (t) {
+		    *t++ = '\0';
+		    month = t;
+		    t = strchr(t, '-');
+		    if (!t)
+			return NULL;
+		    *t++ = '\0';
+		    year = t;
+		}
+	    } else if (strchr(t, ':'))
+		time = t;
+	    else if (!year)
+		year = t;
+	} else if (!wday)
+	    wday = t;
+	else if (!month)
+	    month = t;
+	else if (!zone)
+	    zone = t;
+    }
+    tm = parse_date_elements(day, month, year, time, zone);
+
+    xfree(tmp);
+    return tm;
 }
 
 time_t
@@ -233,15 +208,9 @@ parse_rfc1123(const char *str)
     time_t t;
     if (NULL == str)
 	return -1;
-    tm = parse_date1(str);
-    if (NULL == tm) {
-	tm = parse_date2(str);
-	if (NULL == tm) {
-	    tm = parse_date3(str);
-	    if (NULL == tm)
-		return -1;
-	}
-    }
+    tm = parse_date(str);
+    if (!tm)
+	return -1;
     tm->tm_isdst = -1;
 #ifdef HAVE_TIMEGM
     t = timegm(tm);
