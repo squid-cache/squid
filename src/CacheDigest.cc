@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.12 1998/04/14 15:16:23 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.13 1998/04/14 16:38:21 rousskov Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -131,10 +131,33 @@ cacheDigestAdd(CacheDigest * cd, const cache_key * key)
     /* hash */
     cacheDigestHashKey(cd, key);
     /* turn on corresponding bits */
+#if CD_FAST_ADD
     CBIT_SET(cd->mask, hashed_keys[0]);
     CBIT_SET(cd->mask, hashed_keys[1]);
     CBIT_SET(cd->mask, hashed_keys[2]);
     CBIT_SET(cd->mask, hashed_keys[3]);
+#else
+    {
+	int on_xition_cnt = 0;
+	if (!CBIT_TEST(cd->mask, hashed_keys[0])) {
+	    CBIT_SET(cd->mask, hashed_keys[0]);
+	    on_xition_cnt++;
+	}
+	if (!CBIT_TEST(cd->mask, hashed_keys[1])) {
+	    CBIT_SET(cd->mask, hashed_keys[1]);
+	    on_xition_cnt++;
+	}
+	if (!CBIT_TEST(cd->mask, hashed_keys[2])) {
+	    CBIT_SET(cd->mask, hashed_keys[2]);
+	    on_xition_cnt++;
+	}
+	if (!CBIT_TEST(cd->mask, hashed_keys[3])) {
+	    CBIT_SET(cd->mask, hashed_keys[3]);
+	    on_xition_cnt++;
+	}
+	statHistCount(&Counter.cd.on_xition_count, on_xition_cnt);
+    }
+#endif
     cd->count++;
 }
 

@@ -1222,8 +1222,9 @@ struct _StatCounters {
         cd_guess_stats guess;
 	StatHist client_svc_time;
 	StatHist server_svc_time;
-	StatHist peer_choice_count;
-	StatHist peer_ichoice_count;
+	StatHist peer_choice_count;  /* #peer select choices in peerSelectFoo */
+	StatHist peer_ichoice_count; /* #peer select choices with rtt > 0 */
+	StatHist on_xition_count;    /* #(0->1) transitions during cacheDigestAdd */
     } cd;
 #endif
     int page_faults;
