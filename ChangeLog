@@ -60,6 +60,8 @@ Changes to Squid ():
 	  manager.
 	- Fixed a bogous MD5 mismatch warning sometimes seen when using
 	  aufs or diskd stores
+	- Added --enable-stacktraces configure option to set PRINT_STACK_TRACE,
+	  and extended support for this to Linux/GNU libc.
 
 Changes to Squid-2.4.DEVEL3 ():
 

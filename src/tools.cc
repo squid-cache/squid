@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.191 2000/05/16 07:06:07 wessels Exp $
+ * $Id: tools.cc,v 1.192 2000/05/30 09:30:10 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -254,6 +254,14 @@ death(int sig)
 	fflush(stdout);
     }
 #endif /* _SQUID_SOLARIS_ */
+#if HAVE_BACKTRACE_SYMBOLS_FD
+    {
+	static void *(callarray[8192]);
+	int n;
+	n = backtrace(callarray, 8192);
+	backtrace_symbols_fd(callarray, n, fileno(debug_log));
+    }
+#endif
 #endif /* PRINT_STACK_TRACE */
 
 #if SA_RESETHAND == 0
