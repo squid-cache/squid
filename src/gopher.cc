@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.54 1996/10/11 23:11:55 wessels Exp $
+ * $Id: gopher.cc,v 1.55 1996/10/25 02:15:17 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -258,7 +258,7 @@ HTTP/1.0 200 OK Gatewaying\r\n\
 Server: Squid/%s\r\n\
 Date: %s\r\n\
 MIME-version: 1.0\r\n",
-	version_string, mkrfc850(squid_curtime));
+	version_string, mkrfc1123(squid_curtime));
 
     switch (data->type_id) {
 
