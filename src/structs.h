@@ -600,7 +600,7 @@ struct _icpUdpData {
     struct timeval start;
 #endif
     log_type logcode;
-    protocol_t proto;
+    struct timeval queue_time;
 };
 
 struct _icp_ping_data {
@@ -1134,6 +1134,7 @@ struct _StatCounters {
 	int hits_sent;
 	int hits_recv;
 	int replies_queued;
+	int replies_dropped;
 	kb_t kbytes_sent;
 	kb_t kbytes_recv;
 	StatHist query_svc_time;

@@ -108,7 +108,7 @@ extern int comm_select(time_t);
 extern void commSetSelect(int, unsigned int, PF *, void *, time_t);
 extern void comm_add_close_handler(int fd, PF *, void *);
 extern void comm_remove_close_handler(int fd, PF *, void *);
-extern int comm_udp_sendto(int fd, const struct sockaddr_in *, int size, const char *buf, int len);
+extern int comm_udp_sendto(int, const struct sockaddr_in *, int, const void *, int);
 extern void comm_write(int fd,
     char *buf,
     int size,
@@ -378,11 +378,7 @@ extern void *icpCreateMessage(icp_opcode opcode,
     const char *url,
     int reqnum,
     int pad);
-extern void icpUdpSend(int fd,
-    const struct sockaddr_in *,
-    icp_common_t * msg,
-    log_type,
-    protocol_t);
+extern int icpUdpSend(int, const struct sockaddr_in *, icp_common_t *, log_type, int);
 extern PF icpHandleUdp;
 extern PF httpAccept;
 extern DEFER httpAcceptDefer;
@@ -401,8 +397,6 @@ extern void snmpTokenize(char *, char **, int);
 extern int snmpCompare(oid * name1, int len1, oid * name2, int len2);
 #endif /* SQUID_SNMP */
 
-extern void AppendUdp(icpUdpData *);
-extern PF icpUdpReply;
 extern void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
 extern int icpCheckUdpHit(StoreEntry *, request_t * request);
 extern void icpConnectionsOpen(void);
