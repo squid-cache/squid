@@ -6,6 +6,7 @@ Changes to squid-1.1.alpha11:
 	- Call ipcache_purgelru() during an idle timeout.
 	- Changed fqdnFromAddr() to copy inet_ntoa() result into a 
 	  static buffer.
+	- Fixed storeDirClean() printf format.
 
 Changes to squid-1.1.alpha10:
 
