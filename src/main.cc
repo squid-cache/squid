@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.110 1996/11/12 22:37:10 wessels Exp $
+ * $Id: main.cc,v 1.111 1996/11/13 06:52:24 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -130,6 +130,8 @@ const char *const version_string = SQUID_VERSION;
 const char *const appname = "squid";
 const char *const localhost = "127.0.0.1";
 struct in_addr local_addr;
+struct in_addr no_addr;
+struct in_addr any_addr;
 struct in_addr theOutICPAddr;
 const char *const dash_str = "-";
 const char *const null_string = "";
@@ -541,7 +543,8 @@ mainInitialize(void)
 	eventAdd("storePurgeOld", storePurgeOld, NULL, Config.cleanRate);
 	eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
 	eventAdd("storeDirClean", storeDirClean, NULL, 15);
-	eventAdd("send_announce", send_announce, NULL, 3600);
+	if (Config.Announce.on)
+	    eventAdd("send_announce", send_announce, NULL, 3600);
 	eventAdd("ipcache_purgelru", (EVH) ipcache_purgelru, NULL, 10);
     }
     first_time = 0;
@@ -572,6 +575,10 @@ main(int argc, char **argv)
 
     memset(&local_addr, '\0', sizeof(struct in_addr));
     local_addr.s_addr = inet_addr(localhost);
+    memset(&any_addr, '\0', sizeof(struct in_addr));
+    any_addr.s_addr = inet_addr("0.0.0.0");
+    memset(&no_addr, '\0', sizeof(struct in_addr));
+    no_addr.s_addr = inet_addr("255.255.255.255");
 
     errorInitialize();
 

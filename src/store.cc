@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.160 1996/11/12 22:37:17 wessels Exp $
+ * $Id: store.cc,v 1.161 1996/11/13 06:52:29 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -919,6 +919,10 @@ InvokeHandlers(StoreEntry * e)
     PIF handler = NULL;
     void *data = NULL;
     struct _store_client *sc;
+    if (mem->clients == NULL) {
+	debug_trap("InvokeHandlers: NULL mem->clients");
+	return;
+    }
     /* walk the entire list looking for valid handlers */
     for (i = 0; i < mem->nclients; i++) {
 	sc = &mem->clients[i];
