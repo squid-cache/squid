@@ -14,5 +14,6 @@ extern void fdc_open(int fd, unsigned int type, char *desc);
 extern int comm_recvfrom(int fd, void *buf, size_t len, int flags,
   struct sockaddr *from, socklen_t *fromlen);
 extern int comm_recv(int fd, void *buf, size_t len, int flags);
+extern ssize_t comm_send(int s, const void *buf, size_t len, int flags);
 
 #endif
