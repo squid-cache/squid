@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.56 2003/03/10 04:55:35 robertc Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.57 2004/08/11 19:23:21 wessels Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -3062,7 +3062,7 @@ sub check {
 
 	<P>
 	There are two classes involved in the automatic refcouting - a
-	'RefCountable' class that provides the mechanics for reference
+	<em/RefCountable/ class that provides the mechanics for reference
 	counting a given derived class. And a 'RefCount' class that is the
 	smart pointer, and handles const correctness, and tells the RefCountable
 	class of references and dereferences.
