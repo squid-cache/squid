@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.231 2001/10/04 12:47:59 hno Exp $
+# $Id: cf.data.pre,v 1.232 2001/10/10 15:17:40 adrian Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -94,7 +94,7 @@ DOC_START
 
         The socket address where Squid will listen for HTTPS client
         requests.
-	
+
         This is really only useful for situations where you are running
         squid in accelerator mode and you want to do the SSL work at the
         accelerator level.
@@ -173,12 +173,6 @@ DOC_START
 DOC_END
 
 
-NAME: tcp_outgoing_address outbound_address
-TYPE: address
-LOC: Config.Addrs.tcp_outgoing
-DEFAULT: 255.255.255.255
-DOC_NONE
-
 NAME: udp_incoming_address
 TYPE: address
 LOC:Config.Addrs.udp_incoming
@@ -193,8 +187,6 @@ DOC_START
 	Usage: tcp_incoming_address 10.20.30.40
 	       udp_outgoing_address fully.qualified.domain.name
 
-	tcp_outgoing_address	is used for connections made to remote
-				servers and other caches.
 	udp_incoming_address	is used for the ICP socket receiving packets
 				from other caches.
 	udp_outgoing_address	is used for ICP packets sent out to other
@@ -2100,6 +2092,60 @@ DOC_START
 	the configure script.
 DOC_END
 
+NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoin_dscp
+TYPE: acl_tos
+DEFAULT: none
+LOC: Config.accessList.outgoing_tos
+DOC_START
+	Allows you to select a TOS/Diffserv value to mark outgoing
+	connections with, based on the username or source address
+	making the request.
+
+	tcp_outgoing_tos ds-field [!]aclname ...
+
+	Example where normal_service_net uses the TOS value 0x00
+	and normal_service_net uses 0x20
+
+	acl normal_service_net src 10.0.0.0/255.255.255.0
+	acl good_service_net src 10.0.1.0/255.255.255.0
+	tcp_outgoing_tos 0x00 normal_service_net 0x00
+	tcp_outgoing_tos 0x20 good_service_net
+
+	TOS/DSCP values really only have local significance - so you should
+	know what you're specifying. For more, see RFC 2474
+
+	The TOS/DSCP byte must be exactly that - a byte, value  0 - 255, or
+	"default" to use whatever default your host has.
+
+	Processing proceeds in the order specified, and stops at first fully
+	matching line.
+DOC_END
+
+NAME: tcp_outgoing_address
+TYPE: acl_address
+DEFAULT: none
+LOC: Config.accessList.outgoing_address
+DOC_START
+	Allows you to map requests to different outgoing IP addresses
+	based on the username or sourceaddress of the user making
+	the request.
+	
+	tcp_outgoing_address ipaddr [[!]aclname] ...
+
+	Example where requests from 10.0.0.0/24 will be forwareded
+	with source address 10.1.0.1, 10.0.2.0/24 forwarded with 
+	source address 10.1.0.2 and the rest will be forwarded with
+	source address 10.1.0.3.
+
+	acl normal_service_net src 10.0.0.0/255.255.255.0
+	acl good_service_net src 10.0.1.0/255.255.255.0
+	tcp_outgoing_address 10.0.0.1 normal_service_net
+	tcp_outgoing_address 10.0.0.2 good_service_net
+	tcp_outgoing_address 10.0.0.3
+
+	Processing proceeds in the order specified, and stops at first fully
+	matching line.
+DOC_END
 
 NAME: reply_body_max_size
 COMMENT: bytes allow|deny acl acl...
