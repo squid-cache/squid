@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.1 1996/09/20 23:26:58 wessels Exp $
+ * $Id: pinger.cc,v 1.2 1996/09/23 22:13:43 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -29,10 +29,19 @@
  *  
  */
 
-#if USE_ICMP
-
 #include "squid.h"
 #include "pinger.h"
+
+/* Junk so we can link with debug.o */
+int opt_syslog_enable = 0;
+int unbuffered_logs = 1;
+char w_space[] = " \t\n\r";
+char appname[] = "pinger";
+struct timeval current_time;
+time_t squid_curtime;
+struct SquidConfig Config;
+
+#if USE_ICMP
 
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
@@ -123,15 +132,6 @@ pingerOpen(void)
     icmp_ident = getpid() & 0xffff;
     debug(37, 0, "ICMP socket opened on FD %d\n", icmp_sock);
 }
-
-/* Junk so we can link with debug.o */
-int opt_syslog_enable = 0;
-int unbuffered_logs = 1;
-char w_space[] = " \t\n\r";
-char appname[] = "pinger";
-struct timeval current_time;
-time_t squid_curtime;
-struct SquidConfig Config;
 
 void
 pingerClose(void)
@@ -285,6 +285,7 @@ pingerReadRequest(void)
     static pingerEchoData pecho;
     int n;
     int guess_size;
+    memset((char *) &pecho, '\0', sizeof(pecho));
     n = recv(0, (char *) &pecho, sizeof(pecho), 0);
     if (n < 0) {
 	perror("recv");
@@ -327,7 +328,7 @@ main(int argc, char *argv[])
     fd_set R;
     int x;
     getCurrentTime();
-    _db_init(NULL, "ALL,9");
+    _db_init(NULL, "ALL,1");
     pingerOpen();
     for (;;) {
 	FD_ZERO(&R);
