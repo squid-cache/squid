@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.97 2002/06/14 17:51:39 hno Exp $
+ * $Id: client.cc,v 1.98 2002/07/15 21:18:32 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -75,7 +75,11 @@ usage(const char *progname)
 	"    -g count     Ping mode, \"count\" iterations (0 to loop until interrupted).\n"
 	"    -I interval  Ping interval in seconds (default 1 second).\n"
 	"    -H 'string'  Extra headers to send. Use '\\n' for new lines.\n"
-	"    -T timeout   Timeout value (seconds) for read/write operations.\n",
+	"    -T timeout   Timeout value (seconds) for read/write operations.\n"
+	"    -u user      Proxy authentication username\n"
+	"    -w password  Proxy authentication password\n"
+	"    -U user      WWW authentication username\n"
+	"    -W password  WWW authentication password\n",
 	progname, CACHE_HTTP_PORT);
     exit(1);
 }
@@ -101,6 +105,10 @@ main(int argc, char *argv[])
     int i = 0, loops;
     long ping_int;
     long ping_min = 0, ping_max = 0, ping_sum = 0, ping_mean = 0;
+    char *proxy_user = NULL;
+    char *proxy_password = NULL;
+    char *www_user = NULL;
+    char *www_password = NULL;
 
     /* set the defaults */
     hostname = "localhost";
@@ -119,7 +127,7 @@ main(int argc, char *argv[])
 	strcpy(url, argv[argc - 1]);
 	if (url[0] == '-')
 	    usage(argv[0]);
-	while ((c = getopt(argc, argv, "ah:l:P:i:km:p:rsvt:g:p:I:H:T:?")) != -1)
+	while ((c = getopt(argc, argv, "ah:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:?")) != -1)
 	    switch (c) {
 	    case 'a':
 		opt_noaccept = 1;
@@ -179,6 +187,18 @@ main(int argc, char *argv[])
 	    case 'T':
 		io_timeout = atoi(optarg);
 		break;
+	    case 'u':
+		proxy_user = optarg;
+		break;
+	    case 'w':
+		proxy_password = optarg;
+		break;
+	    case 'U':
+		www_user = optarg;
+		break;
+	    case 'W':
+		www_password = optarg;
+		break;
 	    case 'v':
 		/* undocumented: may increase verb-level by giving more -v's */
 		opt_verbose++;
@@ -228,6 +248,28 @@ main(int argc, char *argv[])
     if (max_forwards > -1) {
 	snprintf(buf, BUFSIZ, "Max-Forwards: %d\r\n", max_forwards);
 	strcat(msg, buf);
+    }
+    if (proxy_user) {
+	char *user = proxy_user;
+	char *password = proxy_password;
+	if (!password)
+	    password = getpass("Proxy password: ");
+	if (password) {
+	    snprintf(buf, BUFSIZ, "%s:%s", user, password);
+	    snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %s\n", base64_encode(buf));
+	    strcat(msg, buf);
+	}
+    }
+    if (www_user) {
+	char *user = www_user;
+	char *password = www_password;
+	if (!password)
+	    password = getpass("WWW password: ");
+	if (password) {
+	    snprintf(buf, BUFSIZ, "%s:%s", user, password);
+	    snprintf(buf, BUFSIZ, "Authorization: Basic %s\n", base64_encode(buf));
+	    strcat(msg, buf);
+	}
     }
     if (keep_alive) {
 	if (port != 80)
