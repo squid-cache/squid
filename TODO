@@ -20,8 +20,6 @@ Our Todo List
 		- Make sure the lib/*.c files do not use printf/fprintf.
 		- Replace bzero with memset
 		- Replace bcopy with xmemcpy
-(2) **  Fix cachemgr.cgi.  It doesn't understand some of the new
-        output formats. (??)
 
 (3) **	request-range (AR)
 (3)	hit metering
@@ -37,11 +35,28 @@ Our Todo List
 (3)	Resource limits.
 (3)	LDAP support.  See http://miso.wwa.com/~donley/ and
 	Clayton Donley <qa1049@ilms04.cig.mot.com>
-(3) **  Store cache key and other metadata in swap files (KA)
-(3) **  Make sure every squid.conf option has documentation (??)
-(3) **  Finish implementing the *_dump() functions in cache_cf.c (DW)
 (3)	'no_cache' access list for specifing objects which should not
 	be cached.
+(3)	What to do about ACL's and URL escaping?
+(3)	Alex's HTTP Header todo list
+	- http_request will be replaced with HttpRequest with changes
+	  similar to (http_reply -> HttpReply) transition.
+	- Http replies and request will be parsed once on
+	  receiver(reader) end and will remain in compiled form after
+	  that. No "raw" header buffer will be preserved.
+	- Request and reply headers (with start-lines) are likely to be
+	  written in compiled form as metadata to swap files.
+	- Dynamic memory allocation will be revised once again. Most of
+	  xstrdup calls and local buffers will be replaced with better
+	  alternatives with static pre-allocation of resources. This work
+	  has  been started already.
+	- Statistics collected on Http* objects and memory management
+	  routines will be enhanced.
+	- A lot of current oddities with freshly added code should go
+	  away as we debug and polish things. For example, MemPool object
+	  will be merged with mem.c module. Duplicate Stack objects will
+	  be merged into one. Comments discussing current code problems
+	  will be deleted; hopefully, along with the problems.
 
 (4) **	FTP PUT (KA)
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
@@ -89,4 +104,9 @@ DONE:
 (2) **  copy over -z semantics from 1.1; don't automatically wipeout
 	cache (DW)
 (3) **	Make swap.state binary with fixed-size cache keys (AR)
+(3) **  Make sure every squid.conf option has documentation (??)
+(3) **  Store cache key and other metadata in swap files (KA)
+(3) **  Finish implementing the *_dump() functions in cache_cf.c (DW)
+(2) **  Fix cachemgr.cgi.  It doesn't understand some of the new
+        output formats. (??)
 (2) **	Add "Squid" trailer to all error messages. (AR)
