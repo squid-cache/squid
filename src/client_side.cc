@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.277 1998/04/14 15:16:24 rousskov Exp $
+ * $Id: client_side.cc,v 1.278 1998/04/16 18:06:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -833,11 +833,20 @@ clientCachable(clientHttpRequest * http)
     const char *url = http->uri;
     request_t *req = http->request;
     method_t method = req->method;
-    const wordlist *p;
-    for (p = Config.cache_stoplist; p; p = p->next) {
-	if (strstr(url, p->key))
+    aclCheck_t ch;
+    memset(&ch, '\0', sizeof(ch));
+    /*
+     * Hopefully, nobody really wants 'no_cache' by client's IP
+     * address, but if they do, this should work if they use IP
+     * addresses in their ACLs, or if the client's address is in
+     * the FQDN cache.
+     *
+     * This may not work yet for 'dst' and 'dst_domain' ACLs.
+     */
+    ch.src_addr = http->conn->peer.sin_addr;
+    ch.request = http->request;
+    if (0 == aclCheckFast(Config.accessList.noCache, &ch))
 	    return 0;
-    }
     if (Config.cache_stop_relist)
 	if (aclMatchRegex(Config.cache_stop_relist, url))
 	    return 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.159 1998/04/08 05:33:27 wessels Exp $
+ * $Id: acl.cc,v 1.160 1998/04/16 18:06:32 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -186,6 +186,8 @@ aclStrToType(const char *s)
 	return ACL_DST_ASN;
     if (!strcmp(s, "snmp_community"))
 	return ACL_SNMP_COMM;
+    if (!strcmp(s, "src_rtt"))
+	return ACL_NETDB_SRC_RTT;
 #if USE_ARP_ACL
     if (!strcmp(s, "arp"))
 	return ACL_SRC_ARP;
@@ -232,6 +234,8 @@ aclTypeToStr(squid_acl type)
 	return "dst_as";
     if (type == ACL_SNMP_COMM)
 	return "snmp_community";
+    if (type == ACL_NETDB_SRC_RTT)
+	return "src_rtt";
 #if USE_ARP_ACL
     if (type == ACL_SRC_ARP)
 	return "arp";
@@ -757,6 +761,7 @@ aclParseAclLine(acl ** head)
     case ACL_URL_PORT:
     case ACL_SRC_ASN:
     case ACL_DST_ASN:
+    case ACL_NETDB_SRC_RTT:
 	aclParseIntlist(&A->data);
 	break;
     case ACL_USER:

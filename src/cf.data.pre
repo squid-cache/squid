@@ -321,21 +321,21 @@ hierarchy_stoplist cgi-bin ?
 DOC_END
 
 
-NAME: cache_stoplist
-TYPE: wordlist
-DEFAULT: cgi-bin ?
-LOC: Config.cache_stoplist
+NAME: no_cache
+TYPE: acl_access
+DEFAULT: none
+LOC: Config.accessList.noCache
 DOC_START
-	A list of words which, if found in a URL, cause the object to
+	A list of ACL elements which, if matched, cause the reply to
 	immediately removed from the cache.  In other words, use this
-	to force certain objects to never be cached.  You may list this
-	option multiple times.
+	to force certain objects to never be cached.
 
-	The default is to not cache URLs containing 'cgi-bin' or '?'.
+	There is no default.  We recommend you uncomment the following
+	two lines.
 
-cache_stoplist cgi-bin ?
+acl QUERY urlpath_regex cgi-bin \?
+no_cache QUERY
 DOC_END
-
 
 NAME: cache_stoplist_pattern
 TYPE: regexlist

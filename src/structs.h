@@ -93,11 +93,11 @@ typedef struct _communityEntry {
     char name[64];
     int readView;
     int writeView;
-    struct _acl_access *acls;
-    struct _communityEntry *next;
+    acl_access *acls;
+    communityEntry *next;
 } communityEntry;
 
-typedef struct _usecEntry {
+typedef usecEntry {
     u_char userName[32];
     int userLen;
     int qoS;
@@ -107,7 +107,7 @@ typedef struct _usecEntry {
     int noauthWriteView;
     int authReadView;
     int authWriteView;
-    struct _usecEntry *next;
+    usecEntry *next;
 } usecEntry;
 
 #endif
@@ -117,24 +117,24 @@ struct _acl {
     squid_acl type;
     void *data;
     char *cfgline;
-    struct _acl *next;
+    acl *next;
 };
 
 struct _acl_list {
     int op;
-    struct _acl *acl;
-    struct _acl_list *next;
+    acl *acl;
+    acl_list *next;
 };
 
 struct _acl_access {
     int allow;
-    struct _acl_list *acl_list;
+    acl_list *acl_list;
     char *cfgline;
-    struct _acl_access *next;
+    acl_access *next;
 };
 
 struct _aclCheck_t {
-    const struct _acl_access *access_list;
+    const acl_access *access_list;
     struct in_addr src_addr;
     struct in_addr dst_addr;
     request_t *request;
@@ -152,23 +152,23 @@ struct _aio_result_t {
 
 struct _wordlist {
     char *key;
-    struct _wordlist *next;
+    wordlist *next;
 };
 
 struct _intlist {
     int i;
-    struct _intlist *next;
+    intlist *next;
 };
 
 struct _ushortlist {
     u_short i;
-    struct _ushortlist *next;
+    ushortlist *next;
 };
 
 struct _relist {
     char *pattern;
     regex_t regex;
-    struct _relist *next;
+    relist *next;
 };
 
 struct _SquidConfig {
@@ -276,7 +276,6 @@ struct _SquidConfig {
     } Addrs;
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
-    wordlist *cache_stoplist;
     wordlist *hierarchy_stoplist;
     wordlist *mcast_group_list;
     wordlist *dns_testname_list;
@@ -322,16 +321,17 @@ struct _SquidConfig {
 	int mem_pools;
 	int test_reachability;
     } onoff;
-    struct _acl *aclList;
+    acl *aclList;
     struct {
-	struct _acl_access *http;
-	struct _acl_access *icp;
-	struct _acl_access *miss;
-	struct _acl_access *NeverDirect;
-	struct _acl_access *AlwaysDirect;
-	struct _acl_access *ASlists;
+	acl_access *http;
+	acl_access *icp;
+	acl_access *miss;
+	acl_access *NeverDirect;
+	acl_access *AlwaysDirect;
+	acl_access *ASlists;
+	acl_access *noCache;
     } accessList;
-    struct _acl_deny_info_list *denyInfoList;
+    acl_deny_info_list *denyInfoList;
     struct {
 	size_t list_width;
 	int list_wrap;
@@ -404,7 +404,7 @@ struct _dwrite_q {
     char *buf;
     int len;
     off_t buf_offset;
-    struct _dwrite_q *next;
+    dwrite_q *next;
     FREE *free_func;
 };
 
@@ -450,7 +450,7 @@ struct _fileMap {
 
 struct _hash_link {
     char *key;
-    struct _hash_link *next;
+    hash_link *next;
     void *item;
 };
 
@@ -650,7 +650,7 @@ struct _AccessLogEntry {
     struct {
 	const char *method_str;
     } private;
-    struct _HierarchyLogEntry hier;
+    HierarchyLogEntry hier;
 };
 
 struct _clientHttpRequest {
@@ -675,7 +675,7 @@ struct _clientHttpRequest {
     int redirect_state;
     aclCheck_t *acl_checklist;	/* need ptr back so we can unreg if needed */
     clientHttpRequest *next;
-    struct _AccessLogEntry al;
+    AccessLogEntry al;
 };
 
 struct _ConnStateData {
@@ -733,7 +733,7 @@ struct _ip_pending {
 struct _ipcache_entry {
     /* first two items must be equivalent to hash_link */
     char *name;
-    struct _ipcache_entry *next;
+    ipcache_entry *next;
     time_t lastref;
     time_t expires;
     ipcache_addrs addrs;
@@ -754,7 +754,7 @@ struct _fqdn_pending {
 struct _fqdncache_entry {
     /* first two items must be equivalent to hash_link */
     char *name;
-    struct _fqdncache_entry *next;
+    fqdncache_entry *next;
     time_t lastref;
     time_t expires;
     unsigned char name_count;
@@ -769,13 +769,13 @@ struct _fqdncache_entry {
 struct _domain_ping {
     char *domain;
     int do_ping;		/* boolean */
-    struct _domain_ping *next;
+    domain_ping *next;
 };
 
 struct _domain_type {
     char *domain;
     peer_t type;
-    struct _domain_type *next;
+    domain_type *next;
 };
 
 struct _Version {
@@ -847,9 +847,9 @@ struct _peer {
     u_short icp_port;
     u_short http_port;
     int icp_version;
-    struct _domain_ping *pinglist;
-    struct _domain_type *typelist;
-    struct _acl_list *acls;
+    domain_ping *pinglist;
+    domain_type *typelist;
+    acl_list *acls;
     int options;
     int weight;
     struct {
@@ -866,7 +866,7 @@ struct _peer {
     struct in_addr addresses[10];
     int n_addresses;
     int rr_count;
-    struct _peer *next;
+    peer *next;
     int ck_conn_event_pend;
     int test_fd;
 };
@@ -999,7 +999,7 @@ struct _store_client {
     StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
     int swapin_fd;
     int disk_op_in_progress;
-    struct _store_client *next;
+    store_client *next;
 };
 
 
@@ -1010,7 +1010,7 @@ struct _MemObject {
     mem_hdr *data;
     off_t inmem_hi;
     off_t inmem_lo;
-    struct _store_client *clients;
+    store_client *clients;
     int nclients;
     struct {
 	off_t queue_offset;	/* relative to in-mem data */
@@ -1038,7 +1038,7 @@ struct _MemObject {
 struct _StoreEntry {
     /* first two items must be same as hash_link */
     const cache_key *key;
-    struct _StoreEntry *next;
+    StoreEntry *next;
     MemObject *mem_obj;
     time_t timestamp;
     time_t lastref;
@@ -1089,14 +1089,14 @@ struct _request_t {
     size_t headers_sz;
     char *body;
     size_t body_sz;
-    struct _HierarchyLogEntry hier;
+    HierarchyLogEntry hier;
     err_type err_type;
 };
 
 struct _cachemgr_passwd {
     char *passwd;
     wordlist *actions;
-    struct _cachemgr_passwd *next;
+    cachemgr_passwd *next;
 };
 
 struct _refresh_t {
@@ -1105,7 +1105,7 @@ struct _refresh_t {
     time_t min;
     int pct;
     time_t max;
-    struct _refresh_t *next;
+    refresh_t *next;
 };
 
 struct _CommWriteStateData {
@@ -1237,7 +1237,7 @@ struct _tlv {
     char type;
     int length;
     void *value;
-    struct _tlv *next;
+    tlv *next;
 };
 
 struct _storeSwapLogData {
