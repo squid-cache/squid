@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.168 2002/07/20 00:18:15 hno Exp $
+ * $Id: gopher.cc,v 1.169 2002/07/21 17:12:22 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -243,7 +243,7 @@ gopherHTMLHeader(StoreEntry * e, const char *title, const char *substring)
     storeAppendPrintf(e, "<HTML><HEAD><TITLE>");
     storeAppendPrintf(e, title, substring);
     storeAppendPrintf(e, "</TITLE>");
-    storeAppendPrintf(e, "<STYLE type= \"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
+    storeAppendPrintf(e, "<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
     storeAppendPrintf(e, "</HEAD>\n<BODY><H1>");
     storeAppendPrintf(e, title, substring);
     storeAppendPrintf(e, "</H1>\n");

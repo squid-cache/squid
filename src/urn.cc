@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.71 2002/07/18 23:43:14 hno Exp $
+ * $Id: urn.cc,v 1.72 2002/07/21 17:12:22 hno Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -260,7 +260,7 @@ urnHandleReply(void *data, char *unused_buf, ssize_t size)
     memBufDefInit(&mb);
     memBufPrintf(&mb,
 	"<TITLE>Select URL for %s</TITLE>\n"
-	"<STYLE type= \"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n"
+	"<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n"
 	"<H2>Select URL for %s</H2>\n"
 	"<TABLE BORDER=\"0\" WIDTH=\"100%%\">\n", storeUrl(e), storeUrl(e));
     for (i = 0; i < urlcnt; i++) {
