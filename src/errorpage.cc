@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.91 1997/10/29 04:39:30 wessels Exp $
+ * $Id: errorpage.cc,v 1.92 1997/10/29 05:19:57 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -67,7 +67,7 @@ errorInitialize(void)
     int fd;
     char path[MAXPATHLEN];
     struct stat sb;
-    assert(sizeof(err_string) == (ERR_MAX + 1) * 4);
+    assert(sizeof(err_string) == (ERR_MAX + 1) * sizeof(char *));
     for (i = ERR_NONE + 1; i < ERR_MAX; i++) {
 	snprintf(path, MAXPATHLEN, "%s/%s",
 	    Config.errorDirectory, err_string[i]);
