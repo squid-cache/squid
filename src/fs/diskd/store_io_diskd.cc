@@ -129,8 +129,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     diskdstate->id = diskd_stats.sio_id++;
 
     buf = storeDiskdShmGet(SD, &shm_offset);
-    /* XXX WRONG!!! :) */
-    strcpy(buf, storeDiskdDirFullPath(SD, f, NULL));
+    xstrncpy(buf, storeDiskdDirFullPath(SD, f, NULL), SHMBUF_BLKSZ);
     x = storeDiskdSend(_MQD_OPEN,
 	SD,
 	diskdstate->id,
@@ -259,7 +258,7 @@ storeDiskdUnlink(SwapDir * SD, StoreEntry * e)
     }
     /* We can attempt a diskd unlink */
     buf = storeDiskdShmGet(SD, &shm_offset);
-    strcpy(buf, storeDiskdDirFullPath(SD, e->swap_filen, NULL));
+    xstrncpy(buf, storeDiskdDirFullPath(SD, e->swap_filen, NULL), SHMBUF_BLKSZ);
     x = storeDiskdSend(_MQD_UNLINK,
 	SD,
 	e->swap_filen,
