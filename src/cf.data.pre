@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.371 2005/01/03 16:08:25 robertc Exp $
+# $Id: cf.data.pre,v 1.372 2005/01/25 00:14:34 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3191,9 +3191,8 @@ DOC_START
 	memory_pools_limit to a reasonably high value even if your
 	configuration will use less memory.
 
-	If not set (default) or set to zero, Squid will keep all memory it
-	can. That is, there will be no limit on the total amount of memory
-	used for safe-keeping.
+	If set to zero, Squid will keep all memory it can. That is, there
+	will be no limit on the total amount of memory used for safe-keeping.
 
 	To disable memory allocation optimization, do not set
 	memory_pools_limit to 0. Set memory_pools to "off" instead.
