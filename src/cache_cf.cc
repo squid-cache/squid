@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.48 1996/04/16 18:31:32 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.49 1996/04/16 20:53:33 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -174,6 +174,7 @@ int emulate_httpd_log = DefaultCommonLogFormat;		/* for fast access */
 time_t neighbor_timeout = DefaultNeighborTimeout;	/* for fast access */
 int single_parent_bypass = 0;
 int DnsPositiveTtl = DefaultPositiveDnsTtl;
+char *DefaultSwapDir = DEFAULT_SWAP_DIR;
 char *config_file = DEFAULT_CONFIG_FILE;
 char *cfg_filename = NULL;	/* just the last part */
 

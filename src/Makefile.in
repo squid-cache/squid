@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.21 1996/04/16 18:28:31 wessels Exp $
+#  $Id: Makefile.in,v 1.22 1996/04/16 20:53:32 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -56,7 +56,8 @@ DEFAULTS        = \
 	-DDEFAULT_CACHE_LOG=\"$(prefix)/logs/cache.log\" \
 	-DDEFAULT_ACCESS_LOG=\"$(prefix)/logs/access.log\" \
 	-DDEFAULT_HIERARCHY_LOG=\"$(prefix)/logs/hierarchy.log\" \
-	-DDEFAULT_STORE_LOG=\"$(prefix)/logs/store.log\"
+	-DDEFAULT_STORE_LOG=\"$(prefix)/logs/store.log\" \
+	-DDEFAULT_SWAP_DIR=\"$(prefix)/cache\"
 
 all:	$(PROGS) $(UTILS) $(CGIPROGS)
 
