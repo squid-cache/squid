@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.199 1998/08/21 08:41:57 wessels Exp $
+ * $Id: ipcache.cc,v 1.200 1998/09/04 23:04:54 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -393,6 +393,7 @@ ipcache_dnsHandleRead(int fd, void *data)
     ipcache_entry *i = NULL;
     ipcache_entry *x = NULL;
 
+    Counter.syscalls.sock.reads++;
     len = read(fd,
 	dnsData->ip_inbuf + dnsData->offset,
 	dnsData->size - dnsData->offset);

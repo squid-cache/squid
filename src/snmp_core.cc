@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.9 1998/08/18 19:14:08 wessels Exp $
+ * $Id: snmp_core.cc,v 1.10 1998/09/04 23:04:59 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Kostas Anagnostakis
@@ -132,6 +132,7 @@ snmpHandleUdp(int sock, void *not_used)
     commSetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
     from_len = sizeof(struct sockaddr_in);
     memset(&from, '\0', from_len);
+    Counter.syscalls.sock.recvfroms++;
     len = recvfrom(sock,
 	buf,
 	SNMP_REQUEST_SIZE,

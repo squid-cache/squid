@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.117 1998/08/17 16:44:14 wessels Exp $
+ * $Id: wais.cc,v 1.118 1998/09/04 23:05:06 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -103,6 +103,7 @@ waisReadReply(int fd, void *data)
 #if DELAY_POOLS
     read_sz = delayBytesWanted(delay_id, 1, read_sz);
 #endif
+    Counter.syscalls.sock.reads++;
     len = read(fd, buf, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);

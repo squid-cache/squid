@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.216 1998/09/03 03:48:37 wessels Exp $
+ * $Id: structs.h,v 1.217 1998/09/04 23:05:04 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -966,15 +966,15 @@ struct _peer {
 	int logged_state;	/* so we can print dead/revived msgs */
     } stats;
     struct {
-        int version;
+	int version;
 	int counts[ICP_END];
-        u_short port;
+	u_short port;
     } icp;
 #if USE_HTCP
     struct {
 	double version;
 	int counts[2];
-        u_short port;
+	u_short port;
     } htcp;
 #endif
     u_short http_port;
@@ -1212,7 +1212,7 @@ struct _request_flags {
     unsigned int used_proxy_auth:1;
     unsigned int redirected:1;
 #if HTTP_VIOLATIONS
-    unsigned int nocache_hack:1;		/* for changing/ignoring no-cache requests */
+    unsigned int nocache_hack:1;	/* for changing/ignoring no-cache requests */
 #endif
 };
 
@@ -1393,6 +1393,31 @@ struct _StatCounters {
     StatHist comm_icp_incoming;
     StatHist comm_http_incoming;
     StatHist select_fds_hist;
+    struct {
+	struct {
+	    int opens;
+	    int closes;
+	    int reads;
+	    int writes;
+	    int seeks;
+	} disk;
+	struct {
+	    int accepts;
+	    int sockets;
+	    int connects;
+	    int binds;
+	    int closes;
+	    int reads;
+	    int writes;
+	    int recvfroms;
+	    int sendtos;
+	} sock;
+#if HAVE_POLL
+	int polls;
+#else
+	int selects;
+#endif
+    } syscalls;
 };
 
 /* per header statistics */
@@ -1507,15 +1532,16 @@ struct _FwdServer {
 
 #if USE_HTCP
 struct _htcpReplyData {
-	int hit;
-	HttpHeader hdr;
-	u_num32 msg_id;
-	double version;
-	struct {
+    int hit;
+    HttpHeader hdr;
+    u_num32 msg_id;
+    double version;
+    struct {
 	/* cache-to-origin */
-		double rtt;
-		int samp;
-		int hops;
-	} cto;
+	double rtt;
+	int samp;
+	int hops;
+    } cto;
 };
+
 #endif

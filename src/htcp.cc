@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.21 1998/09/01 23:32:44 wessels Exp $
+ * $Id: htcp.cc,v 1.22 1998/09/04 23:04:48 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -527,7 +527,7 @@ htcpUnpackDetail(char *buf, int sz)
 }
 
 static void
-htcpTstReply(htcpDataHeader *dhdr, StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
+htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
 {
     htcpStuff stuff;
     char *pkt;
@@ -558,7 +558,7 @@ htcpTstReply(htcpDataHeader *dhdr, StoreEntry * e, htcpSpecifier * spec, struct 
 	    squid_curtime - e->timestamp : 0);
 	httpHeaderPackInto(&hdr, &p);
 	stuff.D.resp_hdrs = xstrdup(mb.buf);
-	debug(31,1)("htcpTstReply: resp_hdrs = {%s}\n", stuff.D.resp_hdrs);
+	debug(31, 1) ("htcpTstReply: resp_hdrs = {%s}\n", stuff.D.resp_hdrs);
 	memBufReset(&mb);
 	httpHeaderReset(&hdr);
 	if (e->expires > -1)
@@ -567,20 +567,20 @@ htcpTstReply(htcpDataHeader *dhdr, StoreEntry * e, htcpSpecifier * spec, struct 
 	    httpHeaderPutTime(&hdr, HDR_LAST_MODIFIED, e->lastmod);
 	httpHeaderPackInto(&hdr, &p);
 	stuff.D.entity_hdrs = xstrdup(mb.buf);
-	debug(31,1)("htcpTstReply: entity_hdrs = {%s}\n", stuff.D.entity_hdrs);
+	debug(31, 1) ("htcpTstReply: entity_hdrs = {%s}\n", stuff.D.entity_hdrs);
 	memBufReset(&mb);
 	httpHeaderReset(&hdr);
 	if ((host = urlHostname(spec->uri))) {
 	    netdbHostData(host, &samp, &rtt, &hops);
 	    if (rtt || hops) {
 		snprintf(cto_buf, 128, "%s %d %f %d",
-			host, samp, 0.001 * rtt, hops);
+		    host, samp, 0.001 * rtt, hops);
 		httpHeaderPutExt(&hdr, "Cache-to-Origin", cto_buf);
 	    }
 	}
 	httpHeaderPackInto(&hdr, &p);
 	stuff.D.cache_hdrs = xstrdup(mb.buf);
-	debug(31,1)("htcpTstReply: cache_hdrs = {%s}\n", stuff.D.cache_hdrs);
+	debug(31, 1) ("htcpTstReply: cache_hdrs = {%s}\n", stuff.D.cache_hdrs);
 	memBufClean(&mb);
 	httpHeaderClean(&hdr);
 	packerClean(&p);
@@ -618,13 +618,13 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
     htcpDetail *d = NULL;
     char *t;
     if (hdr->F1 == 1) {
-	debug(31,1)("htcpHandleTstResponse: error condition, F1/MO == 1\n");
+	debug(31, 1) ("htcpHandleTstResponse: error condition, F1/MO == 1\n");
 	return;
     }
     memset(&htcpReply, '\0', sizeof(htcpReply));
     httpHeaderInit(&htcpReply.hdr, hoHtcpReply);
     htcpReply.msg_id = hdr->msg_id;
-    debug(31,1)("htcpHandleTstResponse: msg_id = %d\n", (int) htcpReply.msg_id);
+    debug(31, 1) ("htcpHandleTstResponse: msg_id = %d\n", (int) htcpReply.msg_id);
     htcpReply.hit = hdr->response ? 0 : 1;
     if (hdr->F1) {
 	debug(31, 1) ("htcpHandleTstResponse: MISS\n");
@@ -643,14 +643,14 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
 	    httpHeaderParse(&htcpReply.hdr, t, t + strlen(t));
     }
     key = queried_keys[htcpReply.msg_id % N_QUERIED_KEYS];
-    debug(31,1)("htcpHandleTstResponse: key (%p) %s\n", key, storeKeyText(key));
+    debug(31, 1) ("htcpHandleTstResponse: key (%p) %s\n", key, storeKeyText(key));
     neighborsHtcpReply(key, &htcpReply, from);
     if (d)
-        htcpFreeDetail(d);
+	htcpFreeDetail(d);
 }
 
 static void
-htcpHandleTstRequest(htcpDataHeader *dhdr, char *buf, int sz, struct sockaddr_in *from)
+htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_in *from)
 {
     /* buf should be a SPECIFIER */
     htcpSpecifier *s;
@@ -790,6 +790,7 @@ htcpRecv(int fd, void *data)
     static struct sockaddr_in from;
     int flen = sizeof(struct sockaddr_in);
     memset(&from, '\0', flen);
+    Counter.syscalls.sock.recvfroms++;
     len = recvfrom(fd, buf, 8192, 0, (struct sockaddr *) &from, &flen);
     debug(31, 1) ("htcpRecv: FD %d, %d bytes from %s:%d\n",
 	fd, len, inet_ntoa(from.sin_addr), ntohs(from.sin_port));
@@ -874,7 +875,7 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     htcpSend(pkt, (int) pktlen, &p->in_addr);
     save_key = queried_keys[stuff.msg_id % N_QUERIED_KEYS];
     storeKeyCopy(save_key, e->key);
-    debug(31,1)("htcpQuery: key (%p) %s\n", save_key, storeKeyText(save_key));
+    debug(31, 1) ("htcpQuery: key (%p) %s\n", save_key, storeKeyText(save_key));
     xfree(pkt);
 }
 

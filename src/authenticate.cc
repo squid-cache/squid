@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.2 1998/08/20 22:29:54 wessels Exp $
+ * $Id: authenticate.cc,v 1.3 1998/09/04 23:04:38 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -90,6 +90,7 @@ authenticateHandleRead(int fd, void *data)
     char *t = NULL;
     int n;
 
+    Counter.syscalls.sock.reads++;
     len = read(fd,
 	authenticator->inbuf + authenticator->offset,
 	authenticator->size - authenticator->offset);

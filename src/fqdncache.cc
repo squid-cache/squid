@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.113 1998/08/30 05:21:41 wessels Exp $
+ * $Id: fqdncache.cc,v 1.114 1998/09/04 23:04:44 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -344,6 +344,7 @@ fqdncache_dnsHandleRead(int fd, void *data)
     fqdncache_entry *f = NULL;
     fqdncache_entry *x = NULL;
 
+    Counter.syscalls.sock.reads++;
     len = read(fd,
 	dnsData->ip_inbuf + dnsData->offset,
 	dnsData->size - dnsData->offset);

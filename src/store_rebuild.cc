@@ -1,5 +1,6 @@
+
 /*
- * $Id: store_rebuild.cc,v 1.46 1998/08/24 22:06:48 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.47 1998/09/04 23:05:03 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -143,6 +144,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    debug(20, 1) ("  %7d files opened so far.\n",
 		RebuildState.statcount);
 	debug(20, 9) ("file_in: fd=%d %08X\n", fd, sfileno);
+	Counter.syscalls.disk.reads++;
 	if (read(fd, hdr_buf, DISK_PAGE_SIZE) < 0) {
 	    debug(20, 1) ("storeRebuildFromDirectory: read(FD %d): %s\n",
 		fd, xstrerror());

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.133 1998/08/24 22:06:44 wessels Exp $
+ * $Id: disk.cc,v 1.134 1998/09/04 23:04:43 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -95,7 +95,7 @@ fileOpenComplete(int unused, void *data, int fd, int errcode)
     open_ctrl_t *ctrlp = (open_ctrl_t *) data;
     debug(6, 5) ("fileOpenComplete: fd %d, data %p, errcode %d\n",
 	fd, data, errcode);
-
+    Counter.syscalls.disk.opens++;
     if (fd == -2 && errcode == -2) {	/* Cancelled - clean up */
 	if (ctrlp->callback)
 	    (ctrlp->callback) (ctrlp->callback_data, fd, errcode);
@@ -162,6 +162,7 @@ file_close(int fd)
     debug(6, F->flags.close_request ? 2 : 5)
 	("file_close: FD %d, really closing\n", fd);
     fd_close(fd);
+    Counter.syscalls.disk.closes++;
 }
 
 /*
@@ -255,6 +256,7 @@ diskHandleWriteComplete(int fd, void *data, int len, int errcode)
     int do_close;
     errno = errcode;
     debug(6, 3) ("diskHandleWriteComplete: FD %d len = %d\n", fd, len);
+    Counter.syscalls.disk.writes++;
 #if USE_ASYNC_IO
 /*
  * From:    "Michael O'Reilly" <michael@metal.iinet.net.au>
@@ -476,6 +478,7 @@ diskHandleRead(int fd, void *data)
 	debug(6, 3) ("diskHandleRead: FD %d seeking to offset %d\n",
 	    fd, (int) ctrl_dat->offset);
 	lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
+	Counter.syscalls.disk.seeks++;
 	F->disk.offset = ctrl_dat->offset;
     }
     len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
@@ -493,6 +496,7 @@ diskHandleReadComplete(int fd, void *data, int len, int errcode)
 #ifdef OPTIMISTIC_IO
     fde *F = &fd_table[fd];
 #endif /* OPTIMISTIC_IO */
+    Counter.syscalls.disk.reads++;
     errno = errcode;
     if (len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
 	cbdataUnlock(ctrl_dat->client_data);
