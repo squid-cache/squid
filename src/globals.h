@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.59 1998/06/02 21:38:08 rousskov Exp $
+ * $Id: globals.h,v 1.60 1998/07/14 22:56:00 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -106,3 +106,4 @@ extern const char *StoreDigestUrlPath;	/* "store_digest" */
 extern const char *StoreDigestMimeStr;	/* "application/cache-digest" */
 extern const Version CacheDigestVer;	/* { 3, 3 } */
 extern const char *MultipartMsgBoundaryStr; /* "Unique-Squid-Separator" */
+extern icpUdpData *IcpQueueHead; /* NULL */

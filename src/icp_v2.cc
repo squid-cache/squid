@@ -3,11 +3,13 @@
 
 static void icpLogIcp(struct in_addr, log_type, int, const char *, int);
 static void icpHandleIcpV2(int, struct sockaddr_in, char *, int);
-static PF icpUdpSendQueue;
 static void icpCount(void *, int, size_t, int);
 
-static icpUdpData *UdpQueueHead = NULL;
-static icpUdpData *UdpQueueTail = NULL;
+/*
+ * IcpQueueHead is global so comm_incoming() knows whether or not
+ * to call icpUdpSendQueue.
+ */
+static icpUdpData *IcpQueueTail = NULL;
 
 static void
 icpLogIcp(struct in_addr caddr, log_type logcode, int len, const char *url, int delay)
@@ -30,17 +32,17 @@ icpLogIcp(struct in_addr caddr, log_type logcode, int len, const char *url, int 
     accessLogLog(&al);
 }
 
-static void
+void
 icpUdpSendQueue(int fd, void *unused)
 {
     icpUdpData *q;
     int x;
     int delay;
-    while ((q = UdpQueueHead) != NULL) {
+    while ((q = IcpQueueHead) != NULL) {
 	delay = tvSubUsec(q->queue_time, current_time);
 	/* increment delay to prevent looping */
 	x = icpUdpSend(fd, &q->address, q->msg, q->logcode, ++delay);
-	UdpQueueHead = q->next;
+	IcpQueueHead = q->next;
 	safe_free(q);
 	if (x < 0)
 	    break;
@@ -109,15 +111,15 @@ icpUdpSend(int fd,
 	queue->len = (int) ntohs(msg->length);
 	queue->queue_time = current_time;
 	queue->logcode = logcode;
-	if (UdpQueueHead == NULL) {
-	    UdpQueueHead = queue;
-	    UdpQueueTail = queue;
-	} else if (UdpQueueTail == UdpQueueHead) {
-	    UdpQueueTail = queue;
-	    UdpQueueHead->next = queue;
+	if (IcpQueueHead == NULL) {
+	    IcpQueueHead = queue;
+	    IcpQueueTail = queue;
+	} else if (IcpQueueTail == IcpQueueHead) {
+	    IcpQueueTail = queue;
+	    IcpQueueHead->next = queue;
 	} else {
-	    UdpQueueTail->next = queue;
-	    UdpQueueTail = queue;
+	    IcpQueueTail->next = queue;
+	    IcpQueueTail = queue;
 	}
 	commSetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
 	Counter.icp.replies_queued++;
