@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.566 2002/04/01 05:59:50 wessels Exp $
+ * $Id: client_side.cc,v 1.567 2002/04/01 06:02:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1530,6 +1530,9 @@ clientSendMoreData(void *data, char *retbuf, ssize_t retsize)
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
 	debug(33, 2) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
+	return;
+    } else if (http->request->flags.reset_tcp) {
+	comm_reset_close(fd);
 	return;
     } else if (entry && EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	/* call clientWriteComplete so the client socket gets closed */

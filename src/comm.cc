@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.327 2002/04/01 05:59:50 wessels Exp $
+ * $Id: comm.cc,v 1.328 2002/04/01 06:02:15 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -613,6 +613,21 @@ comm_lingering_close(int fd)
     commSetSelect(fd, COMM_SELECT_READ, commLingerClose, NULL, 0);
 }
 #endif
+
+/*
+ * enable linger with time of 0 so that when the socket is
+ * closed, TCP generates a RESET
+ */
+void
+comm_reset_close(int fd)
+{
+    struct linger L;
+    L.l_onoff = 1;
+    L.l_linger = 0;
+    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
+	debug(50, 0) ("commResetTCPClose: FD %d: %s\n", fd, xstrerror());
+    comm_close(fd);
+}
 
 void
 comm_close(int fd)

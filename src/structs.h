@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.411 2002/04/01 05:59:50 wessels Exp $
+ * $Id: structs.h,v 1.412 2002/04/01 06:02:16 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1607,6 +1607,7 @@ struct _request_flags {
     unsigned int accelerated:1;
     unsigned int internal:1;
     unsigned int body_sent:1;
+    unsigned int reset_tcp:1;
 };
 
 struct _link_list {
