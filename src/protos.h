@@ -217,6 +217,7 @@ extern char *httpReplyHeader(double ver,
     int clen,
     time_t lmt,
     time_t expires);
+extern void httpInit(void);
 
 
 extern void icmpOpen(void);
@@ -329,10 +330,9 @@ extern int netdbHostHops(const char *host);
 extern int netdbHostRtt(const char *host);
 extern void netdbUpdatePeer(request_t *, peer * e, int rtt, int hops);
 
-extern void objcachePasswdAdd(cachemgr_passwd **, char *, wordlist *);
-extern void objcachePasswdDestroy(cachemgr_passwd ** a);
-extern void objcacheStart(int fd, StoreEntry *);
-extern void objcacheInit(void);
+extern void cachemgrStart(int fd, StoreEntry *);
+extern void cachemgrRegister(const char *, const char *, OBJH *, int);
+extern void cachemgrInit(void);
 
 extern void peerSelect(request_t *, StoreEntry *, PSC *, PSC *, void *data);
 extern peer *peerGetSomeParent(request_t *, hier_code *);

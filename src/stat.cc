@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.200 1998/02/18 22:55:44 wessels Exp $
+ * $Id: stat.cc,v 1.201 1998/02/19 23:10:00 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -119,7 +119,7 @@ static void statLogHistInit(StatLogHist *, double, double);
 static int statLogHistBin(StatLogHist *, double);
 static double statLogHistVal(StatLogHist *, double);
 static double statLogHistDeltaMedian(StatLogHist * A, StatLogHist * B);
-static void statLogHistDump(StoreEntry *sentry, StatLogHist * H);
+static void statLogHistDump(StoreEntry * sentry, StatLogHist * H);
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
@@ -135,12 +135,6 @@ int server_pconn_hist[PCONN_HIST_SZ];
 #define N_COUNT_HIST 61
 static StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
-
-void
-stat_utilization_get(StoreEntry * e)
-{
-    /* MAKE SOMETHING UP */
-}
 
 void
 stat_io_get(StoreEntry * sentry)
@@ -276,7 +270,7 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	if (vm_or_not && mem == NULL)
 	    continue;
 	if ((++N & 0xFF) == 0) {
-	    debug(18, 3) ("stat_objects_get:  Processed %d objects...\n", N);
+	    debug(18, 3) ("statObjects:  Processed %d objects...\n", N);
 	}
 	storeBuffer(sentry);
 	storeAppendPrintf(sentry, "KEY %s\n", storeKeyText(entry->key));
@@ -765,6 +759,33 @@ statInit(void)
 	statCounterInit(&CountHist[i]);
     statCounterInit(&Counter);
     eventAdd("statAvgTick", statAvgTick, NULL, 60);
+    cachemgrRegister("info",
+	"General Runtime Information",
+	info_get, 0);
+    cachemgrRegister("filedescriptors",
+	"Process Filedescriptor Allocation",
+	statFiledescriptors, 0);
+    cachemgrRegister("objects",
+	"All Cache Objects",
+	stat_objects_get, 0);
+    cachemgrRegister("vm_objects",
+	"In-Memory and In-Transit Objects",
+	stat_vmobjects_get, 0);
+    cachemgrRegister("io",
+	"Server-side network read() size histograms",
+	stat_io_get, 0);
+    cachemgrRegister("counters",
+	"Traffic and Resource Counters",
+	statCounters, 0);
+    cachemgrRegister("5min",
+	"5 Minute Average of Counters",
+	statAvg5min, 0);
+    cachemgrRegister("60min",
+	"60 Minute Average of Counters",
+	statAvg60min, 0);
+    cachemgrRegister("server_list",
+	"Neighbor Cache Stats",
+	server_list, 0);
 }
 
 void
@@ -932,15 +953,15 @@ statLogHistVal(StatLogHist * H, double bin)
 }
 
 static void
-statLogHistDump(StoreEntry *sentry, StatLogHist * H)
+statLogHistDump(StoreEntry * sentry, StatLogHist * H)
 {
-	int i;
-	for (i=0; i<STAT_LOG_HIST_BINS; i++) {
-		if (H->bins[i] == 0)
-			continue;
-		storeAppendPrintf(sentry, "\t%3d/%f\t%d\n",
-			i,
-			statLogHistVal(H, 0.5 + i),
-			H->bins[i]);
-	}
+    int i;
+    for (i = 0; i < STAT_LOG_HIST_BINS; i++) {
+	if (H->bins[i] == 0)
+	    continue;
+	storeAppendPrintf(sentry, "\t%3d/%f\t%d\n",
+	    i,
+	    statLogHistVal(H, 0.5 + i),
+	    H->bins[i]);
+    }
 }

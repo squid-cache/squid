@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.3 1998/02/10 22:17:54 wessels Exp $
+ * $Id: mem.cc,v 1.4 1998/02/19 23:09:54 wessels Exp $
  *
  * DEBUG: section 13    Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -227,6 +227,9 @@ memInit(void)
 	 */
 	assert(m->size);
     }
+    cachemgrRegister("mem",
+	"Memory Utilization",
+	memStats, 0);
 }
 
 void

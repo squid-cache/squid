@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.222 1998/02/18 01:00:43 wessels Exp $
+ * $Id: main.cc,v 1.223 1998/02/19 23:09:53 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -451,9 +451,10 @@ mainInitialize(void)
     if (!configured_once) {
 	unlinkdInit();
 	urlInitialize();
-	objcacheInit();
+	cachemgrInit();
 	statInit();
 	storeInit();
+	httpInit();
 	asnAclInitialize(Config.aclList);
 	if (Config.effectiveUser) {
 	    /* we were probably started as root, so cd to a swap

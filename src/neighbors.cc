@@ -1,5 +1,6 @@
+
 /*
- * $Id: neighbors.cc,v 1.174 1998/02/17 19:05:27 wessels Exp $
+ * $Id: neighbors.cc,v 1.175 1998/02/19 23:09:55 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -388,6 +389,9 @@ neighbors_open(int fd)
 	echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
     }
     first_ping = Config.peers;
+    cachemgrRegister("non_peers",
+	"List of Unknown sites sending ICP messages",
+	neighborDumpNonPeers, 0);
 }
 
 int
