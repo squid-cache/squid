@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.65 1996/09/12 16:59:43 wessels Exp $
+ * $Id: comm.cc,v 1.66 1996/09/12 22:17:58 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -205,7 +205,7 @@ u_short comm_local_port(fd)
 }
 
 #ifdef __STDC__
-static int commBind (int s, struct in_addr in_addr, u_short port)
+static int commBind(int s, struct in_addr in_addr, u_short port)
 #else /* K&R C */
 static int commBind(s, in_addr, port)
      int s;
@@ -532,8 +532,7 @@ int comm_cleanup_fd_entry(fd)
 
 /* Send a udp datagram to specified PORT at HOST. */
 #ifdef __STDC__
-int
-comm_udp_send(int fd, char *host, u_short port, char *buf, int len)
+int comm_udp_send(int fd, char *host, u_short port, char *buf, int len)
 #else /* K&R C */
 int comm_udp_send(fd, host, port, buf, len)
      int fd;

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.70 1996/09/12 03:24:06 wessels Exp $
+ * $Id: main.cc,v 1.71 1996/09/12 22:17:59 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -118,7 +118,7 @@ int opt_foreground_rebuild = 0;
 int opt_zap_disk_store = 0;
 int opt_syslog_enable = 0;	/* disabled by default */
 int opt_no_ipcache = 0;		/* use ipcache by default */
-static int opt_send_signal = -1;/* no signal to send */
+static int opt_send_signal = -1;	/* no signal to send */
 int vhost_mode = 0;
 int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
@@ -240,7 +240,7 @@ static void mainParseOptions(argc, argv)
 	    else if (!strncmp(optarg, "kill", strlen(optarg)))
 		opt_send_signal = SIGKILL;
 	    else if (!strncmp(optarg, "check", strlen(optarg)))
-		opt_send_signal = 0;  /* SIGNULL */
+		opt_send_signal = 0;	/* SIGNULL */
 	    else
 		usage();
 	    break;
@@ -594,7 +594,6 @@ int main(argc, argv)
 	sendSignal();
 	/* NOTREACHED */
     }
-
     setMaxFD();
 
     if (opt_catch_signals)
@@ -675,25 +674,25 @@ int main(argc, argv)
 
 static void sendSignal()
 {
-	int pid;
-	debug_log = stderr;
-	if (ConfigFile == NULL)
-	    ConfigFile = xstrdup(DefaultConfigFile);
-	parseConfigFile(ConfigFile);
-	pid = readPidFile();
-	if (pid > 1) {
-	    if (kill(pid, opt_send_signal) &&
-		/* ignore permissions if just running check */
-		!(opt_send_signal == 0 && errno == EPERM)) {
-		fprintf(stderr, "%s: ERROR: Could not send ", appname);
-		fprintf(stderr, "signal %d to process %d: %s\n",
-			opt_send_signal, pid, xstrerror());
-		exit(1);
-	    }
-	} else {
-	    fprintf(stderr, "%s: ERROR: No running copy\n", appname);
+    int pid;
+    debug_log = stderr;
+    if (ConfigFile == NULL)
+	ConfigFile = xstrdup(DefaultConfigFile);
+    parseConfigFile(ConfigFile);
+    pid = readPidFile();
+    if (pid > 1) {
+	if (kill(pid, opt_send_signal) &&
+	/* ignore permissions if just running check */
+	    !(opt_send_signal == 0 && errno == EPERM)) {
+	    fprintf(stderr, "%s: ERROR: Could not send ", appname);
+	    fprintf(stderr, "signal %d to process %d: %s\n",
+		opt_send_signal, pid, xstrerror());
 	    exit(1);
 	}
-	/* signal successfully sent */
-	exit(0);
+    } else {
+	fprintf(stderr, "%s: ERROR: No running copy\n", appname);
+	exit(1);
     }
+    /* signal successfully sent */
+    exit(0);
+}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.105 1996/09/12 17:33:00 wessels Exp $
+ * $Id: store.cc,v 1.106 1996/09/12 22:18:00 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1036,7 +1036,6 @@ void storeAppend(e, data, len)
 	debug_trap("storeAppend: NULL entry->mem_obj->data");
 	return;
     }
-
     if (len) {
 	debug(20, 5, "storeAppend: appending %d bytes for '%s'\n", len, e->key);
 	(void) storeGetMemSpace(len, 0);
@@ -1085,12 +1084,12 @@ int storeAddSwapDisk(path)
     if (CacheDirsAllocated == ncache_dirs) {
 	CacheDirsAllocated <<= 1;
 	tmp = xcalloc(CacheDirsAllocated, sizeof(char *));
-	for (i=0; i<ncache_dirs; i++)
-		*(tmp+i) = *(CacheDirs+i);
+	for (i = 0; i < ncache_dirs; i++)
+	    *(tmp + i) = *(CacheDirs + i);
 	xfree(CacheDirs);
 	CacheDirs = tmp;
     }
-    *(CacheDirs+ncache_dirs) = xstrdup(path);
+    *(CacheDirs + ncache_dirs) = xstrdup(path);
     return ++ncache_dirs;
 }
 
@@ -1098,7 +1097,7 @@ int storeAddSwapDisk(path)
 char *swappath(n)
      int n;
 {
-    return *(CacheDirs+(n % ncache_dirs));
+    return *(CacheDirs + (n % ncache_dirs));
 }
 
 
@@ -1213,7 +1212,6 @@ static int storeSwapInStart(e, swapin_complete_handler, swapin_complete_data)
 	debug_trap("storeSwapInStart: mem_obj already present");
 	return -1;
     }
-
     e->mem_obj = mem = new_MemObject();
 
     path = storeSwapFullPath(e->swap_file_number, NULL);
@@ -1726,11 +1724,10 @@ void storeAbort(e, msg)
     if (e->store_status != STORE_PENDING) {	/* XXX remove later */
 	debug_trap("storeAbort: bad store_status");
 	return;
-    } else if (mem == NULL) {		/* XXX remove later */
+    } else if (mem == NULL) {	/* XXX remove later */
 	debug_trap("storeAbort: null mem");
 	return;
     }
-
     debug(20, 6, "storeAbort: '%s'\n", e->key);
     storeNegativeCache(e);
     e->store_status = STORE_ABORTED;
@@ -2044,7 +2041,7 @@ int storeGetSwapSpace(size)
 		++expired_in_one_bucket;
 		storeRelease(e);
 	    } else if (!storeEntryLocked(e)) {
-		*(LRU_list+list_count) = e;
+		*(LRU_list + list_count) = e;
 		list_count++;
 		scan_count++;
 	    } else {
@@ -2068,7 +2065,7 @@ int storeGetSwapSpace(size)
 	    sizeof(StoreEntry *),
 	    (QS) compareLastRef);
 	if (list_count > SWAP_LRU_REMOVE_COUNT)
-	    list_count = SWAP_LRU_REMOVE_COUNT;	/* chop list */
+	    list_count = SWAP_LRU_REMOVE_COUNT;		/* chop list */
 	if (scan_count > SWAP_LRUSCAN_COUNT)
 	    break;
     }				/* for */
@@ -2101,11 +2098,11 @@ int storeGetSwapSpace(size)
 
     /* Kick LRU out until we have enough swap space */
     for (i = 0; i < list_count; i++) {
-	if (storeRelease(*(LRU_list+i)) == 0)
+	if (storeRelease(*(LRU_list + i)) == 0)
 	    removed++;
     }
     if (store_swap_size + kb_size <= store_swap_low)
-        fReduceSwap = 0;
+	fReduceSwap = 0;
     debug(20, 2, "storeGetSwapSpace: After Freeing Size:   %7d kbytes\n",
 	store_swap_size);
     /* free the list */
