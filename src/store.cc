@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.177 1996/12/06 21:49:36 wessels Exp $
+ * $Id: store.cc,v 1.178 1996/12/06 23:27:49 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -250,6 +250,7 @@ static HashID in_mem_table = 0;
 /* current memory storage size */
 unsigned long store_mem_size = 0;
 
+static int store_pages_max = 0;
 static int store_pages_high = 0;
 static int store_pages_low = 0;
 
@@ -1825,10 +1826,10 @@ storeGetMemSpace(int size)
     }
 
     i = 3;
-    if (sm_stats.n_pages_in_use > sm_stats.max_pages) {
+    if (sm_stats.n_pages_in_use > store_pages_max) {
 	if (squid_curtime - last_warning > 600) {
 	    debug(20, 0, "WARNING: Exceeded 'cache_mem' size (%dK > %dK)\n",
-		sm_stats.n_pages_in_use * 4, sm_stats.max_pages * 4);
+		sm_stats.n_pages_in_use * 4, store_pages_max * 4);
 	    last_warning = squid_curtime;
 	    debug(20, 0, "Perhaps you should increase cache_mem?\n");
 	    i = 0;
@@ -2454,6 +2455,7 @@ storeConfigure(void)
     store_swap_low = (long) (((float) Config.Swap.maxSize *
 	    (float) Config.Swap.lowWaterMark) / (float) 100);
 
+    store_pages_max = Config.Mem.maxSize / SM_PAGE_SIZE;
     store_pages_high = store_mem_high / SM_PAGE_SIZE;
     store_pages_low = store_mem_low / SM_PAGE_SIZE;
 }
