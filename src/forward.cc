@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.92 2003/01/28 01:29:34 robertc Exp $
+ * $Id: forward.cc,v 1.93 2003/02/06 00:02:51 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -132,6 +132,8 @@ fwdStateFree(FwdState * fwdState)
 static int
 fwdCheckRetry(FwdState * fwdState)
 {
+    if (shutting_down)
+	return 0;
     if (fwdState->entry->store_status != STORE_PENDING)
 	return 0;
     if (!fwdState->entry->isEmpty())
@@ -176,9 +178,13 @@ fwdServerClosed(int fd, void *data)
 	}
 	/* use eventAdd to break potential call sequence loops */
 	eventAdd("fwdConnectStart", fwdConnectStart, fwdState, 0.0, 0);
-    } else {
-	fwdStateFree(fwdState);
+	return;
     }
+    if (!fwdState->err && shutting_down) {
+	fwdState->err =errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE);
+	fwdState->err->request = requestLink(fwdState->request);
+    }
+    fwdStateFree(fwdState);
 }
 
 #if USE_SSL
