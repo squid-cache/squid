@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.595 2002/09/26 13:33:08 robertc Exp $
+ * $Id: client_side.cc,v 1.596 2002/09/27 11:21:09 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1031,7 +1031,7 @@ prepareAcceleratedUrl(clientHttpRequest * http, char *url, char *req_hdr)
 	    vport = (int) ntohs(http->conn->me.sin_port);
 	else
 	    vport = (int) Config.Accel.port;
-	rewriteURIwithInterceptedDetails(url, http->uri, url_sz,
+	rewriteURIwithInterceptedDetails(url, http->uri, url_sz, http->conn->fd, 
 	    http->conn->me, http->conn->peer, vport);
 	debug(33, 5) ("VHOST REWRITE: '%s'\n", http->uri);
     } else {
