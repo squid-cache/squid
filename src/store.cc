@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.252 1997/06/04 06:16:11 wessels Exp $
+ * $Id: store.cc,v 1.253 1997/06/04 07:00:34 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1552,7 +1552,7 @@ storeRebuiltFromDisk(struct storeRebuildState *data)
 {
     time_t r;
     time_t stop;
-    stop = getCurrentTime();
+    stop = squid_curtime;
     r = stop - data->start;
     debug(20, 1) ("Finished rebuilding storage from disk image.\n");
     debug(20, 1) ("  %7d Lines read from previous logfile.\n", data->linecount);
@@ -1757,7 +1757,6 @@ storePurgeOld(void *unused)
     eventAdd("storePurgeOld", storePurgeOld, NULL, Config.cleanRate);
     for (e = storeGetFirst(); e; e = storeGetNext()) {
 	if ((++n & 0xFF) == 0) {
-	    getCurrentTime();
 	    if (shutdown_pending || reconfigure_pending)
 		break;
 	}
@@ -2023,8 +2022,6 @@ storeGetSwapSpace(int size)
     } else {
 	swap_help = 0;
     }
-
-    getCurrentTime();		/* we may have taken more than one second */
     debug(20, 2) ("Removed %d objects\n", removed);
     return 0;
 }
@@ -2437,7 +2434,7 @@ storeWriteCleanLogs(void)
 	return 0;
     }
     debug(20, 1) ("storeWriteCleanLogs: Starting...\n");
-    start = getCurrentTime();
+    start = squid_curtime;
     fd = xcalloc(ncache_dirs, sizeof(int));
     cur = xcalloc(ncache_dirs, sizeof(char *));
     new = xcalloc(ncache_dirs, sizeof(char *));
@@ -2496,7 +2493,6 @@ storeWriteCleanLogs(void)
 	    continue;
 	}
 	if ((++n & 0x3FFF) == 0) {
-	    getCurrentTime();
 	    debug(20, 1) ("  %7d lines written so far.\n", n);
 	}
     }
@@ -2511,7 +2507,7 @@ storeWriteCleanLogs(void)
     }
     storeDirCloseSwapLogs();
     storeDirOpenSwapLogs();
-    stop = getCurrentTime();
+    stop = squid_curtime;
     r = stop - start;
     debug(20, 1) ("  Finished.  Wrote %d lines.\n", n);
     debug(20, 1) ("  Took %d seconds (%6.1lf lines/sec).\n",
