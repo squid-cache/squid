@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.30 1998/08/17 19:19:35 wessels Exp $
+ * $Id: refresh.cc,v 1.31 1998/08/17 21:27:32 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -100,6 +100,8 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
     time_t min = REFRESH_DEFAULT_MIN;
     double pct = REFRESH_DEFAULT_PCT;
     time_t max = REFRESH_DEFAULT_MAX;
+    int override_expire = 0;
+    int override_lastmod = 0;
     const char *pattern = ".";
     time_t age;
     double factor;
@@ -125,6 +127,8 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	pct = R->pct;
 	max = R->max;
 	pattern = R->pattern;
+	override_expire = R->flags.override_expire;
+	override_lastmod = R->flags.override_lastmod;
     }
     debug(22, 3) ("refreshCheck: Matched '%s %d %d%% %d'\n",
 	pattern, (int) min, (int) (100.0 * pct), (int) max);
@@ -138,6 +142,10 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	    refreshCounts.request_max_age_stale++;
 	    return 1;
 	}
+    }
+    if (override_expire && age <= min) {
+	debug(22, 3) ("refreshCheck: NO: age < min && override_expire\n");
+	return 0;
     }
     if (entry->expires > -1) {
 	if (entry->expires <= check_time) {
@@ -154,6 +162,10 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	debug(22, 3) ("refreshCheck: YES: age > max\n");
 	refreshCounts.conf_max_age_stale++;
 	return 1;
+    }
+    if (override_lastmod && age <= min) {
+	debug(22, 3) ("refreshCheck: NO: age < min && override_lastmod\n");
+	return 0;
     }
     if (entry->lastmod > -1 && entry->timestamp > entry->lastmod) {
 	factor = (double) age / (double) (entry->timestamp - entry->lastmod);
