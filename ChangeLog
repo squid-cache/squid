@@ -1,4 +1,4 @@
-Changes to squid-1.1.beta2 ():
+Changes to squid-1.1.beta2 (September 16, 1996):
 
 	- Switched to ANSI style coding.
 	- Fixed UDP_HIT_OBJ objects ignoring 'proxy-only' setting.
@@ -18,6 +18,8 @@ Changes to squid-1.1.beta2 ():
 	- Fixed aclDestroyDenyInfoList() to NULL free'd lists.
 	- Fixed storeDirClean() to unlink files which should be
 	  directories (Cord Beerman).
+	- Added ICMP support.  Source ping will use ICMP packets if
+	  compiled with -DUSE_ICMP=1 and started with root privleges.
 
 Changes to squid-1.1.beta1 (September 12, 1996):
 
