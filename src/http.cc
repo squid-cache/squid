@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.111 1996/11/22 08:37:00 wessels Exp $
+ * $Id: http.cc,v 1.112 1996/11/24 02:37:35 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -178,6 +178,7 @@ httpStateFree(int fd, void *data)
 	httpState->reply_hdr = NULL;
     }
     requestUnlink(httpState->request);
+    requestUnlink(httpState->orig_request);
     xfree(httpState);
 }
 
@@ -597,11 +598,13 @@ httpSendRequest(int fd, void *data)
     char *xbuf = NULL;
     char *ybuf = NULL;
     char *buf = NULL;
+    char *viabuf = NULL;
     char *t = NULL;
     const char *const crlf = "\r\n";
     int len = 0;
     int buflen;
     request_t *req = httpState->request;
+    request_t *orig_req;
     const char *Method = RequestMethodStr[req->method];
     int buftype = 0;
     StoreEntry *entry = httpState->entry;
@@ -610,6 +613,7 @@ httpSendRequest(int fd, void *data)
     int saw_max_age = 0;
 
     debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
+    orig_req = httpState->orig_request ? httpState->orig_request : req;
     buflen = strlen(Method) + strlen(req->urlpath);
     if (httpState->req_hdr)
 	buflen += httpState->req_hdr_sz + 1;
@@ -652,6 +656,12 @@ httpSendRequest(int fd, void *data)
 		saw_host = 1;
 	    if (strncasecmp(t, "Cache-control: Max-age", 5) == 0)
 		saw_max_age = 1;
+	    if (strncasecmp(t, "Via:", 4) == 0) {
+		viabuf = get_free_4k_page();
+		xstrncpy(viabuf, t, 4096);
+		strcat(viabuf, ", ");
+		continue;
+	    }
 	    if (did_ims && !strncasecmp(t, "If-Modified-Since:", 18))
 		continue;
 	    if (len + (int) strlen(t) > buflen - 10)
@@ -663,15 +673,23 @@ httpSendRequest(int fd, void *data)
 	xfree(xbuf);
     }
     /* Add Via: header */
-    strcat(buf, ViaString);
-    len += strlen(ViaString);
+    if (viabuf == NULL) {
+	viabuf = get_free_4k_page();
+	strcpy(viabuf, "Via: ");
+    }
+    ybuf = get_free_4k_page();
+    sprintf(ybuf, "%3.1f %s:%d (Squid/%s)\r\n",
+	orig_req->http_ver,
+	getMyHostname(),
+	(int) Config.Port.http,
+	SQUID_VERSION);
+    strcat(viabuf, ybuf);
+    strcat(buf, viabuf);
+    len += strlen(viabuf);
 
-    /* Add Host: header */
-    /* Don't add Host: if proxying, mainly because req->host is
-     * the name of the proxy, not the origin :-( */
-    if (!saw_host && !BIT_TEST(req->flags, REQ_PROXYING)) {
+    if (!saw_host) {
 	ybuf = get_free_4k_page();
-	sprintf(ybuf, "Host: %s\r\n", req->host);
+	sprintf(ybuf, "Host: %s\r\n", orig_req->host);
 	strcat(buf, ybuf);
 	len += strlen(ybuf);
 	put_free_4k_page(ybuf);
@@ -694,10 +712,15 @@ httpSendRequest(int fd, void *data)
 	httpSendComplete,
 	httpState,
 	buftype == BUF_TYPE_8K ? put_free_8k_page : xfree);
+    requestUnlink(httpState->orig_request);
+    httpState->orig_request = NULL;
 }
 
 int
-proxyhttpStart(edge * e, const char *url, StoreEntry * entry)
+proxyhttpStart(const char *url,
+    request_t * orig_request,
+    StoreEntry * entry,
+    edge * e)
 {
     int sock;
     HttpStateData *httpState = NULL;
@@ -730,6 +753,7 @@ proxyhttpStart(edge * e, const char *url, StoreEntry * entry)
     request = get_free_request_t();
     httpState->request = requestLink(request);
     httpState->neighbor = e;
+    httpState->orig_request = requestLink(orig_request);
     /* register the handler to free HTTP state data when the FD closes */
     comm_add_close_handler(sock,
 	httpStateFree,
@@ -796,8 +820,7 @@ httpConnectDone(int fd, int status, void *data)
 }
 
 int
-httpStart(int unusedfd,
-    char *url,
+httpStart(char *url,
     request_t * request,
     char *req_hdr,
     int req_hdr_sz,
