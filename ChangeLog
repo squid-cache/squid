@@ -28,6 +28,7 @@
 	- Fixed 'fake a recent reply' hack for detecting DEAD
 	  and ALIVE neighbors (Joe Ramey).
 	- Fixed FTP directory parsing bugs.
+	- Fixed daylight savings time bug (again).
 
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
