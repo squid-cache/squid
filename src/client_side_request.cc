@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.31 2003/08/10 11:00:42 robertc Exp $
+ * $Id: client_side_request.cc,v 1.32 2003/08/13 00:17:26 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -158,7 +158,7 @@ ClientHttpRequest::operator delete (void *address)
     cbdataReferenceDone (temp);
 }
 
-ClientHttpRequest::ClientHttpRequest()
+ClientHttpRequest::ClientHttpRequest() : loggingEntry_(NULL)
 {
     /* reset range iterator */
     start = current_time;
@@ -253,6 +253,8 @@ ClientHttpRequest::~ClientHttpRequest()
     assert(logType < LOG_TYPE_MAX);
 
     logRequest();
+
+    loggingEntry(NULL);
 
     if (request)
         checkFailureRatio(request->errType, al.hier.code);
@@ -899,6 +901,17 @@ ClientHttpRequest::storeEntry(StoreEntry *newEntry)
     entry_ = newEntry;
 }
 
+void
+ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
+{
+    if (loggingEntry_)
+        storeUnlockObject(loggingEntry_);
+
+    loggingEntry_ = newEntry;
+
+    if (loggingEntry_)
+        storeLockObject(loggingEntry_);
+}
 
 #ifndef _USE_INLINE_
 #include "client_side_request.cci"

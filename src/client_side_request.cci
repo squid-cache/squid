@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cci,v 1.3 2003/07/11 01:40:36 robertc Exp $
+ * $Id: client_side_request.cci,v 1.4 2003/08/13 00:17:26 robertc Exp $
  *
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins 
@@ -66,4 +66,10 @@ ClientHttpRequest::setConn(ConnStateData::Pointer aConn)
 {
     assert (conn_.getRaw() == NULL || aConn.getRaw() == NULL);
     conn_ = aConn;
+}
+
+StoreEntry *
+ClientHttpRequest::loggingEntry() const
+{
+    return loggingEntry_;
 }

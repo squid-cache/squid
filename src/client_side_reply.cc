@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.64 2003/08/10 11:00:42 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.65 2003/08/13 00:17:26 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1881,11 +1881,17 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
         return;
     }
 
+    /* Ok, the reply is allowed, */
+    http->loggingEntry(http->storeEntry());
+
     ssize_t body_size = reqofs - rep->hdr_sz;
+
     assert(body_size >= 0);
+
     debug(88,3)
     ("clientReplyContext::sendMoreData: Appending %d bytes after %d bytes of headers\n",
      (int) body_size, rep->hdr_sz);
+
 #if ESI
 
     if (http->flags.accel && rep->sline.status != HTTP_FORBIDDEN &&
