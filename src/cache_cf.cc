@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.19 1996/04/05 21:51:45 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.20 1996/04/06 00:53:03 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -29,6 +29,7 @@ static struct {
     int ageMaxDefault;
     int cleanRate;
     int dnsChildren;
+    int maxRequestSize;
     double hotVmFactor;
     struct {
 	int ascii;
@@ -94,6 +95,7 @@ static struct {
 #define DefaultCleanRate	-1	/* disabled */
 #define DefaultDnsChildren	5	/* 3 processes */
 #define DefaultDnsChildrenMax	32	/* 32 processes */
+#define DefaultMaxRequestSize	(102400)	/* 100Kb */
 #define DefaultHotVmFactor	0.0	/* disabled */
 
 #define DefaultAsciiPortNum	CACHE_HTTP_PORT
@@ -180,7 +182,7 @@ ip_access_type ip_access_check(address, list)
      ip_acl *list;
 {
     static struct in_addr localhost =
-    {0};
+    {};				/* Initialized to all zero */
     ip_acl *p = NULL;
     struct in_addr naddr;	/* network byte-order IP addr */
 
@@ -696,6 +698,15 @@ static void parseDnsChildrenLine(line_in)
     int i;
     GetInteger(i);
     Config.dnsChildren = i;
+}
+
+static void parseRequestSizeLine(line_in)
+     char *line_in;
+{
+    char *token;
+    int i;
+    GetInteger(i);
+    Config.maxRequestSize = i * 1024;
 }
 
 static void parseMgrLine(line_in)
@@ -1300,6 +1311,10 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "client_lifetime"))
 	    parseLifetimeLine(line_in);
 
+	/* Parse a request_size line */
+	else if (!strcmp(token, "request_size"))
+	    parseRequestSizeLine(line_in);
+
 	/* Parse a connect_timeout line */
 	else if (!strcmp(token, "connect_timeout"))
 	    parseConnectTimeout(line_in);
@@ -1523,6 +1538,10 @@ int getClientLifetime()
 {
     return Config.lifetimeDefault;
 }
+int getMaxRequestSize()
+{
+    return Config.maxRequestSize;
+}
 int getConnectTimeout()
 {
     return Config.connectTimeout;
@@ -1672,6 +1691,7 @@ static void configSetFactoryDefaults()
     Config.negativeTtl = DefaultNegativeTtl;
     Config.readTimeout = DefaultReadTimeout;
     Config.lifetimeDefault = DefaultLifetimeDefault;
+    Config.maxRequestSize = DefaultMaxRequestSize;
     Config.connectTimeout = DefaultConnectTimeout;
     Config.ageMaxDefault = DefaultDefaultAgeMax;
     Config.cleanRate = DefaultCleanRate;
