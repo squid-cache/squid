@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.91 1997/01/07 20:31:23 wessels Exp $
+ * $Id: squid.h,v 1.92 1997/01/20 18:47:52 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -170,6 +170,10 @@
 
 #if HAVE_SHADOW_H
 #include <shadow.h>
+#endif
+
+#if HAVE_MATH_H
+#include <math.h>
 #endif
 
 #if !defined(MAXHOSTNAMELEN) || (MAXHOSTNAMELEN < 128)
