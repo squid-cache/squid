@@ -8,6 +8,13 @@ Changes to squid-1.1.beta14 ():
 	- Fixed asciiConnLifetimeHandle() to force storeAbort() for
 	  pending objects.
 	- Made lots of variables and args 'const' (Markus Gyger).
+	- Added cachemgr password support in squid.conf (Yaroslav M.
+	  Levchenko).  Each cachemgr operation may have a separate
+	  password.  Shutdown and all "log" operations must be
+	  password-protected.
+	- Removed debug_trap() calls in squid_error_entry().
+	- Removed InvokeHandlers() call from StoreAbort().
+	- Added icpFinishAbort() to deliver abort messages, if at all.
 
 Changes to squid-1.1.beta13 (November 1, 1996):
 
