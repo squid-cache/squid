@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.44 1998/02/10 00:58:44 wessels Exp $
+ * $Id: dnsserver.cc,v 1.45 1998/02/17 18:59:36 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -296,6 +296,9 @@ main(int argc, char *argv[])
 	case 'D':
 #ifdef RES_DEFNAMES
 	    _res.options |= RES_DEFNAMES;
+#endif
+#ifdef RES_DNSRCH
+	    _res.options |= RES_DNSRCH;
 #endif
 	    break;
 	case 'h':
