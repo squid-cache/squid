@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.23 2001/05/21 04:50:57 hno Exp $
+ * $Id: authenticate.cc,v 1.24 2001/07/12 22:30:25 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -414,7 +414,7 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 	    || (rep->sline.status == HTTP_UNAUTHORIZED)) && internal)
 	/* this is a authenticate-needed response */
     {
-	if ((auth_user_request != NULL) && (auth_user_request->auth_user->auth_module > 0))
+	if ((auth_user_request != NULL) && (auth_user_request->auth_user->auth_module > 0) &! authenticateUserAuthenticated(auth_user_request))
 	    authscheme_list[auth_user_request->auth_user->auth_module - 1].authFixHeader(auth_user_request, rep, type, request);
 	else {
 	    int i;
@@ -423,7 +423,7 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 	    for (i = 0; i < Config.authConfig.n_configured; i++) {
 		scheme = Config.authConfig.schemes + i;
 		if (authscheme_list[scheme->Id].Active())
-		    authscheme_list[scheme->Id].authFixHeader(auth_user_request, rep, type,
+		    authscheme_list[scheme->Id].authFixHeader(NULL, rep, type,
 			request);
 		else
 		    debug(29, 4) ("authenticateFixHeader: Configured scheme %s not Active\n", scheme->typestr);
