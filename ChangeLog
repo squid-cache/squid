@@ -8,6 +8,8 @@
 	- Removed icpDetectClientClose().  Some of that functionality
 	  goes into clientReadRequest() and the rest into
 	  httpRequestFree().
+	- Moved IP lookups to commConnect stuff.
+	- Added support for retrying connect().
 
 Changes to squid-1.2.alpha3 ():
 
