@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.84 2002/10/13 20:35:03 robertc Exp $
+ * $Id: snmp_agent.cc,v 1.85 2003/01/17 05:49:34 robertc Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -300,7 +300,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 	break;
     case PERF_SYS_NUMOBJCNT:
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-	    (snint) _StoreEntry::inUseCount(),
+	    (snint) StoreEntry::inUseCount(),
 	    SMI_COUNTER32);
 	break;
     default:

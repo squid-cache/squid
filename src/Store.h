@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.4 2002/12/27 10:26:33 robertc Exp $
+ * $Id: Store.h,v 1.5 2003/01/17 05:49:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,7 +38,7 @@
 class StoreClient;
 #endif
 
-struct _StoreEntry : public hash_link {
+class StoreEntry : public hash_link {
 public:
     virtual const char *getMD5Text() const;
   
@@ -77,7 +77,7 @@ private:
 };
 
 #ifdef __cplusplus
-class NullStoreEntry:public _StoreEntry
+class NullStoreEntry:public StoreEntry
 {
 public:
     static NullStoreEntry *getInstance();

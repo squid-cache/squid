@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.552 2002/12/27 10:26:33 robertc Exp $
+ * $Id: store.cc,v 1.553 2003/01/17 05:49:34 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -97,12 +97,12 @@ static EVH storeLateRelease;
  * local variables
  */
 static Stack LateReleaseStack;
-MemPool *_StoreEntry::pool = NULL;
+MemPool *StoreEntry::pool = NULL;
 
 void *
-_StoreEntry::operator new (size_t bytecount)
+StoreEntry::operator new (size_t bytecount)
 {
-    assert (bytecount == sizeof (_StoreEntry));
+    assert (bytecount == sizeof (StoreEntry));
     if (!pool) {
 	pool = memPoolCreate ("StoreEntry", bytecount);
 	memPoolSetChunkSize(pool, 2048 * 1024);
@@ -111,13 +111,13 @@ _StoreEntry::operator new (size_t bytecount)
 }
 
 void
-_StoreEntry::operator delete (void *address)
+StoreEntry::operator delete (void *address)
 {
     memPoolFree(pool, address);
 }
 
 size_t
-_StoreEntry::inUseCount()
+StoreEntry::inUseCount()
 {
     if (!pool)
 	return 0;
@@ -127,7 +127,7 @@ _StoreEntry::inUseCount()
 }
 
 const char *
-_StoreEntry::getMD5Text() const
+StoreEntry::getMD5Text() const
 {
     return storeKeyText((const cache_key *)key);
 }
@@ -135,7 +135,7 @@ _StoreEntry::getMD5Text() const
 size_t
 storeEntryInUse ()
 {
-    return _StoreEntry::inUseCount();
+    return StoreEntry::inUseCount();
 }
 
 
@@ -175,7 +175,7 @@ StoreEntry *
 new_StoreEntry(int mem_obj_flag, const char *url, const char *log_url)
 {
     StoreEntry *e = NULL;
-    e = new _StoreEntry;
+    e = new StoreEntry;
     if (mem_obj_flag)
 	e->mem_obj = new_MemObject(url, log_url);
     debug(20, 3) ("new_StoreEntry: returning %p\n", e);
@@ -360,10 +360,10 @@ storeGet(const cache_key * key)
 }
 
 void
-_StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, request_t * request, const method_t method)
+StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, request_t * request, const method_t method)
 {
     assert (aClient);
-    _StoreEntry *result = storeGetPublicByRequestMethod( request, method);
+    StoreEntry *result = storeGetPublicByRequestMethod( request, method);
     if (!result)
 	aClient->created (NullStoreEntry::getInstance());
     else
@@ -371,20 +371,20 @@ _StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, request_t * reques
 }
 
 void
-_StoreEntry::getPublicByRequest (StoreClient *aClient, request_t * request)
+StoreEntry::getPublicByRequest (StoreClient *aClient, request_t * request)
 {
     assert (aClient);
-    _StoreEntry *result = storeGetPublicByRequest (request);
+    StoreEntry *result = storeGetPublicByRequest (request);
     if (!result)
 	result = NullStoreEntry::getInstance();
     aClient->created (result);
 }
 
 void
-_StoreEntry::getPublic (StoreClient *aClient, const char *uri, const method_t method)
+StoreEntry::getPublic (StoreClient *aClient, const char *uri, const method_t method)
 {
     assert (aClient);
-    _StoreEntry *result = storeGetPublic (uri, method);
+    StoreEntry *result = storeGetPublic (uri, method);
     if (!result)
 	result = NullStoreEntry::getInstance();
     aClient->created (result);

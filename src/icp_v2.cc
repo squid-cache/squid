@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.72 2002/10/21 14:00:02 adrian Exp $
+ * $Id: icp_v2.cc,v 1.73 2003/01/17 05:49:34 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -388,7 +388,7 @@ doV2Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
     state->flags = flags;
     state->rtt = rtt;
     state->src_rtt = src_rtt;
-    _StoreEntry::getPublic (state, url, METHOD_GET);
+    StoreEntry::getPublic (state, url, METHOD_GET);
 }
 
 void
