@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.12 1998/04/01 07:25:47 rousskov Exp $
+ * $Id: test_cache_digest.cc,v 1.13 1998/04/01 08:15:45 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -541,11 +541,15 @@ main(int argc, char *argv[])
     for (i = 1; i < fi_count; ++i) {
 	FileIterator *fi = fis[i];
 	while (fi->inner_time > 0) {
-	    ready_time = fi->inner_time;
-	    if (((storeSwapLogData*)fi->entry)->op == SWAP_LOG_DEL)
-		break;
-	    assert(((storeSwapLogData*)fi->entry)->op == SWAP_LOG_ADD);
-	    cacheStore(them, fi->entry, 0);
+	    if (((storeSwapLogData*)fi->entry)->op == SWAP_LOG_DEL) {
+		cachePurge(them, fi->entry, 0);
+		if (ready_time < 0)
+	    	    ready_time = fi->inner_time;
+	    } else {
+		if (ready_time > 0 && fi->inner_time > ready_time)
+		    break;
+		cacheStore(them, fi->entry, 0);
+	    }
 	    fileIteratorAdvance(fi);
 	}
     }
