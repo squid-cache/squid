@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.290 1998/09/19 17:06:10 wessels Exp $
+ * $Id: stat.cc,v 1.291 1998/09/21 06:43:10 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -57,6 +57,7 @@ static void statCountersInit(StatCounters *);
 static void statCountersInitSpecial(StatCounters *);
 static void statCountersClean(StatCounters *);
 static void statCountersCopy(StatCounters * dest, const StatCounters * orig);
+static double statMedianSvc(int, int);
 static void statStoreEntry(StoreEntry * s, StoreEntry * e);
 static double statCPUUsage(int minutes);
 static OBJH stat_io_get;
@@ -199,29 +200,30 @@ const char *
 storeEntryFlags(const StoreEntry * entry)
 {
     LOCAL_ARRAY(char, buf, 256);
+    int flags = (int) entry->flag;
     char *t;
     buf[0] = '\0';
-    if (EBIT_TEST(entry->flags, ENTRY_SPECIAL))
+    if (EBIT_TEST(flags, ENTRY_SPECIAL))
 	strcat(buf, "SPECIAL,");
-    if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE))
+    if (EBIT_TEST(flags, ENTRY_REVALIDATE))
 	strcat(buf, "REVALIDATE,");
-    if (EBIT_TEST(entry->flags, DELAY_SENDING))
+    if (EBIT_TEST(flags, DELAY_SENDING))
 	strcat(buf, "DELAY_SENDING,");
-    if (EBIT_TEST(entry->flags, RELEASE_REQUEST))
+    if (EBIT_TEST(flags, RELEASE_REQUEST))
 	strcat(buf, "RELEASE_REQUEST,");
-    if (EBIT_TEST(entry->flags, REFRESH_REQUEST))
+    if (EBIT_TEST(flags, REFRESH_REQUEST))
 	strcat(buf, "REFRESH_REQUEST,");
-    if (EBIT_TEST(entry->flags, ENTRY_CACHABLE))
+    if (EBIT_TEST(flags, ENTRY_CACHABLE))
 	strcat(buf, "CACHABLE,");
-    if (EBIT_TEST(entry->flags, ENTRY_DISPATCHED))
+    if (EBIT_TEST(flags, ENTRY_DISPATCHED))
 	strcat(buf, "DISPATCHED,");
-    if (EBIT_TEST(entry->flags, KEY_PRIVATE))
+    if (EBIT_TEST(flags, KEY_PRIVATE))
 	strcat(buf, "PRIVATE,");
-    if (EBIT_TEST(entry->flags, ENTRY_NEGCACHED))
+    if (EBIT_TEST(flags, ENTRY_NEGCACHED))
 	strcat(buf, "NEGCACHED,");
-    if (EBIT_TEST(entry->flags, ENTRY_VALIDATED))
+    if (EBIT_TEST(flags, ENTRY_VALIDATED))
 	strcat(buf, "VALIDATED,");
-    if (EBIT_TEST(entry->flags, ENTRY_BAD_LENGTH))
+    if (EBIT_TEST(flags, ENTRY_BAD_LENGTH))
 	strcat(buf, "BAD_LENGTH,");
     if ((t = strrchr(buf, ',')))
 	*t = '\0';
@@ -1177,7 +1179,7 @@ statAvg60min(StoreEntry * e)
     statAvgDump(e, 60, 0);
 }
 
-double
+static double
 statMedianSvc(int interval, int which)
 {
     StatCounters *f;
