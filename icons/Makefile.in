@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.2 1997/07/19 04:52:55 wessels Exp $
+# $Id: Makefile.in,v 1.3 1997/07/19 05:01:39 wessels Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -57,7 +57,7 @@ $(SHARFILE):
 install: install-mkdirs anthony-xpm.gif
 	@for f in $(ICONS); do \
 		if test -f $(DEFAULT_ICON_DIR)/$$f ; then \
-			echo "$@ will not overwrite existing $(DEFAULT_ICON_DIR)/$$f" ; \
+			:; \
 		else \
 			echo "$(INSTALL_FILE) $$f $(DEFAULT_ICON_DIR)"; \
 			$(INSTALL_FILE) $$f $(DEFAULT_ICON_DIR); \
