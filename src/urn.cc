@@ -159,6 +159,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     StoreEntry *e = urnState->entry;
     StoreEntry *urlres_e = urnState->urlres_e;
     char *s = NULL;
+    size_t k;
     HttpReply *rep;
     wordlist *w;
     wordlist *urls;
@@ -191,12 +192,13 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	return;
     }
     /* we know its STORE_OK */
-    s = mime_headers_end(buf);
-    if (s == NULL) {
+    k = headersEnd(buf, size);
+    if (0 == k) {
 	debug(52, 1) ("urnHandleReply: didn't find end-of-headers for %s\n",
 	    storeUrl(e));
 	return;
     }
+    s = buf + k;
     assert(urlres_e->mem_obj->reply);
     httpReplyParse(urlres_e->mem_obj->reply, buf);
     debug(52, 3) ("mem->reply exists, code=%d.\n",

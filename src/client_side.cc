@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.240 1998/03/31 03:57:15 wessels Exp $
+ * $Id: client_side.cc,v 1.241 1998/03/31 05:35:22 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -52,7 +52,7 @@ static void CheckQuickAbort(clientHttpRequest *);
 static void checkFailureRatio(err_type, hier_code);
 static void clientProcessMiss(clientHttpRequest *);
 static void clientAppendReplyHeader(char *, const char *, size_t *, size_t);
-size_t clientBuildReplyHeader(clientHttpRequest *, char *, size_t *, char *, size_t);
+size_t clientBuildReplyHeader(clientHttpRequest *, char *, size_t, size_t *, char *, size_t);
 static clientHttpRequest *parseHttpRequest(ConnStateData *, method_t *, int *, char **, size_t *);
 static RH clientRedirectDone;
 static STCB clientHandleIMSReply;
@@ -814,6 +814,7 @@ clientAppendReplyHeader(char *hdr, const char *line, size_t * sz, size_t max)
 size_t
 clientBuildReplyHeader(clientHttpRequest * http,
     char *hdr_in,
+    size_t hdr_in_sz,
     size_t * in_len,
     char *hdr_out,
     size_t out_sz)
@@ -822,25 +823,25 @@ clientBuildReplyHeader(clientHttpRequest * http,
     char *xbuf;
     char *ybuf;
     char *t = NULL;
-    char *end = NULL;
+    char *end;
     size_t len = 0;
     size_t hdr_len = 0;
     size_t l;
     if (0 != strncmp(hdr_in, "HTTP/", 5))
 	return 0;
-    end = mime_headers_end(hdr_in);
-    if (end == NULL) {
+    hdr_len = headersEnd(hdr_in, hdr_in_sz);
+    if (hdr_len < 0) {
 	debug(33, 3) ("clientBuildReplyHeader: DIDN'T FIND END-OF-HEADERS\n");
 	return 0;
     }
     xbuf = memAllocate(MEM_4K_BUF);
     ybuf = memAllocate(MEM_4K_BUF);
+    end = hdr_in + hdr_len;
     for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
-	hdr_len = t - hdr_in;
 	l = strcspn(t, crlf) + 1;
 	xstrncpy(xbuf, t, l > 4096 ? 4096 : l);
 	/* enforce 1.0 reply version, this hack will be rewritten */
-	if (!hdr_len && !strncasecmp(xbuf, "HTTP/", 5) && l > 8 &&
+	if (t == hdr_in && !strncasecmp(xbuf, "HTTP/", 5) && l > 8 &&
 	    (isspace(xbuf[8]) || isspace(xbuf[9])))
 	    xmemmove(xbuf + 5, "1.0 ", 4);
 #if DONT_FILTER_THESE
@@ -866,7 +867,6 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	if (!handleConnectionHeader(1, no_forward, xbuf))
 	    clientAppendReplyHeader(hdr_out, xbuf, &len, out_sz - 512);
     }
-    hdr_len = end - hdr_in;
     /* Append X-Cache: */
     snprintf(ybuf, 4096, "X-Cache: %s from %s",
 	isTcpHit(http->log_type) ? "HIT" : "MISS",
@@ -922,14 +922,11 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     StoreEntry *entry = http->entry;
     ConnStateData *conn = http->conn;
     int fd = conn->fd;
-    char *p = NULL;
     size_t hdrlen;
     size_t l = 0;
     size_t writelen;
     char *newbuf;
     FREE *freefunc = memFree4K;
-    int hack = 0;
-    char C = '\0';
     debug(33, 5) ("clientSendMoreData: %s, %d bytes\n", http->uri, (int) size);
     assert(size <= SM_PAGE_SIZE);
     assert(http->request != NULL);
@@ -959,25 +956,16 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     writelen = size;
     if (http->out.offset == 0) {
 	if (Config.onoff.log_mime_hdrs) {
-	    if ((p = mime_headers_end(buf))) {
+	    size_t k;
+	    if ((k = headersEnd(buf, size))) {
 		safe_free(http->al.headers.reply);
-		http->al.headers.reply = xcalloc(1 + p - buf, 1);
-		xstrncpy(http->al.headers.reply, buf, p - buf);
+		http->al.headers.reply = xcalloc(k+1, 1);
+		xstrncpy(http->al.headers.reply, buf, k);
 	    }
 	}
-	/* make sure 'buf' is null terminated somewhere */
-	if (size == SM_PAGE_SIZE) {
-	    hack = 1;
-	    size--;
-	    C = *(buf + size);
-	}
-	*(buf + size) = '\0';
 	newbuf = memAllocate(MEM_8K_BUF);
 	hdrlen = 0;
-
-	l = clientBuildReplyHeader(http, buf, &hdrlen, newbuf, 8192);
-	if (hack)
-	    *(buf + size++) = C;
+	l = clientBuildReplyHeader(http, buf, size, &hdrlen, newbuf, 8192);
 	if (l != 0) {
 	    writelen = l + size - hdrlen;
 	    assert(writelen <= 8192);
@@ -1019,9 +1007,9 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
      * ick, this is gross
      */
     if (http->request->method == METHOD_HEAD) {
-	if ((p = mime_headers_end(buf))) {
-	    *p = '\0';
-	    writelen = p - buf;
+	size_t k;
+	if ((k = headersEnd(buf, size))) {
+	    writelen = k;
 	    /* force end */
 	    if (entry->store_status == STORE_PENDING)
 		http->out.offset = entry->mem_obj->inmem_hi;
@@ -1462,7 +1450,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     float http_ver;
     char *token = NULL;
     char *t = NULL;
-    char *end = NULL;
+    char *end;
     int free_request = 0;
     size_t header_sz;		/* size of headers, not including first line */
     size_t req_sz;		/* size of whole request */
@@ -1556,20 +1544,24 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     } else
 	http_ver = (float) atof(token + 5);
 
+    /*
+     * Skip whitespace at the end of the frist line, up to the
+     * first newline.
+     */
+    while (isspace(*t))
+	if (*(t++) == '\n')
+	    break;
+
     /* Check if headers are received */
-    if ((end = mime_headers_end(t)) == NULL) {
+    header_sz = headersEnd(t, conn->in.offset);
+    if (0 == header_sz) {
 	xfree(inbuf);
 	*status = 0;
 	return NULL;
     }
     req_hdr = t;
-    /*
-     * Skip whitespace at the end of the frist line, up to the
-     * first newline.
-     */
-    while (isspace(*req_hdr))
-	if (*(req_hdr++) == '\n')
-	    break;
+    end = req_hdr + header_sz;
+
     if (end <= req_hdr) {
 	/* Invalid request */
 	debug(33, 3) ("parseHttpRequest: No request headers?\n");
@@ -1585,7 +1577,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*status = -1;
 	return http;
     }
-    header_sz = end - req_hdr;
     req_sz = end - inbuf;
 
     /* Ok, all headers are received */
