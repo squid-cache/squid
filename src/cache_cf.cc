@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.338 2000/05/02 18:32:40 hno Exp $
+ * $Id: cache_cf.cc,v 1.339 2000/05/02 18:51:50 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1005,6 +1005,8 @@ parse_peer(peer ** head)
 	} else if (!strncasecmp(token, "digest-url=", 11)) {
 	    p->digest_url = xstrdup(token + 11);
 #endif
+	} else if (!strcasecmp(token, "allow-miss")) {
+	    p->options.allow_miss = 1;
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
 	    self_destruct();

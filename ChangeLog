@@ -19,6 +19,8 @@ Changes to Squid-2.4.DEVEL3 ():
 	  differences between parents and siblings.
 	- No longer starts to swap out objects which are known to be above
 	  the maximum allowed size.
+	- allow-miss cache_peer option disabling the use of "only-if-cached".
+	  Meant to be used in conjunction with icp_hit_stale.
 
 Changes to Squid-2.4.DEVEL2 ():
 
