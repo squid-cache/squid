@@ -134,7 +134,6 @@ extern int file_read(int fd,
     int offset,
     DRCB * handler,
     void *client_data);
-extern int file_walk(int fd, FILE_WALK_HD *, void *, FILE_WALK_LHD *, void *);
 extern int disk_init(void);
 extern int diskWriteIsComplete(int);
 
@@ -143,17 +142,6 @@ extern void dnsOpenServers(void);
 extern dnsserver_t *dnsGetFirstAvailable(void);
 extern void dnsStats(StoreEntry *);
 extern void dnsFreeMemory(void);
-
-extern char *squid_error_url(const char *, int, int, const char *, int, const char *);
-extern char *squid_error_request(const char *, int, int);
-extern char *access_denied_msg(int, int, const char *, const char *);
-extern char *access_denied_redirect(int, int, const char *, const char *, const char *);
-#if USE_PROXY_AUTH
-extern char *proxy_denied_msg(int, int, const char *, const char *);
-#endif /* USE_PROXY_AUTH */
-extern char *authorization_needed_msg(const request_t *, const char *);
-extern void errorpageFreeMemory(void);
-
 
 extern void eventAdd(const char *name, EVH * func, void *arg, time_t when);
 extern void eventRun(void);
@@ -258,11 +246,6 @@ extern DEFER httpAcceptDefer;
 #ifdef SQUID_SNMP
 extern PF snmpAccept;
 #endif /* SQUID_SNMP */
-extern void icpSendERROR(int fd,
-    log_type errorCode,
-    const char *text,
-    clientHttpRequest *,
-    int httpCode);
 extern void AppendUdp(icpUdpData *);
 extern PF icpUdpReply;
 extern void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
