@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.65 2003/03/10 04:56:36 robertc Exp $
+#  $Id: Makefile.am,v 1.66 2003/03/11 22:11:38 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -134,8 +134,8 @@ else
 ARP_ACL_SOURCE =
 endif
 
-AM_CFLAGS = -Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments
-AM_CXXFLAGS = -Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments
+AM_CFLAGS = @SQUID_CFLAGS@
+AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 SUBDIRS		= fs repl auth
 
