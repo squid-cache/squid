@@ -11,6 +11,11 @@ draft-wilson-wrec-wccp-v2-01.txt
 draft-vinod-carp-v1-03.txt
 	Microsoft CARP peering algorithm
 
+draft-coar-cgi-v11-04.txt
+	CGI/1.1 specification
+	used by cachemgr to get it's request arguments from the
+	web server where it is hosted
+
 rfc1738.txt
 	Uniform Resource Locators (URL)
 
@@ -37,3 +42,7 @@ rfc3310.txt
 	Updated Digest specification
 	Most likely not in use for HTTP. Title says HTTP but all examples
 	is SIP.
+
+rfc2507.txt
+	Internet Content Adaptation Protocol (ICAP/1.0)
+	Common protocol for plugging into the datastream of a HTTP proxy
