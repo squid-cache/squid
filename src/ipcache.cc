@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.168 1998/03/19 19:13:12 wessels Exp $
+ * $Id: ipcache.cc,v 1.169 1998/03/19 19:14:49 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -828,8 +828,14 @@ void
 ipcacheReleaseInvalid(const char *name)
 {
     ipcache_entry *i;
-    assert(NULL != name);
-    assert(0 < strlen(name));
+    if (NULL == name) {
+	debug(14, 1) ("ipcacheReleaseInvalid: NULL name\n");
+	return;
+    }
+    if (0 == strlen(name)) {
+	debug(14, 1) ("ipcacheReleaseInvalid: Empty name\n");
+	return;
+    }
     if ((i = ipcache_get(name)) == NULL)
 	return;
     if (i->status != IP_NEGATIVE_CACHED)
