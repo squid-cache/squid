@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.170 1997/02/06 18:02:08 wessels Exp $
+ * $Id: cache_cf.cc,v 1.171 1997/02/06 18:44:23 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -491,6 +491,8 @@ parseCacheHostLine(void)
 	    options |= NEIGHBOR_PROXY_ONLY;
 	} else if (!strcasecmp(token, "no-query")) {
 	    options |= NEIGHBOR_NO_QUERY;
+	} else if (!strcasecmp(token, "multicast-responder")) {
+	    options |= NEIGHBOR_MCAST_RESPONDER;
 	} else if (!strncasecmp(token, "weight=", 7)) {
 	    weight = atoi(token + 7);
 	} else if (!strncasecmp(token, "ttl=", 4)) {
