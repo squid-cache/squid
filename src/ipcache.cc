@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.138 1997/10/27 22:48:56 wessels Exp $
+ * $Id: ipcache.cc,v 1.139 1997/10/28 20:42:53 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1143,8 +1143,7 @@ ipcache_restart(void)
 {
     ipcache_entry *this;
     ipcache_entry *next;
-    if (ip_table == 0)
-	fatal_dump("ipcache_restart: ip_table == 0\n");
+    assert(ip_table != NULL);
     while (ipcacheDequeue());
     next = (ipcache_entry *) hash_first(ip_table);
     while ((this = next)) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.87 1997/10/26 02:35:30 wessels Exp $
+ * $Id: errorpage.cc,v 1.88 1997/10/28 20:42:50 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -92,6 +92,7 @@ errorStateFree(ErrorState * err)
     requestUnlink(err->request);
     safe_free(err->redirect_url);
     safe_free(err->url);
+    safe_free(err->host);
     cbdataFree(err);
 }
 
@@ -274,6 +275,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     storeAppend(entry, buf, len);
     if (mem)
 	mem->reply->code = err->http_status;
+    errorStateFree(err);
 }
 
 /* If there is a callback, the callback is responsible to close
