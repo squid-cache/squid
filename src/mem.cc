@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.19 1998/03/20 18:06:45 rousskov Exp $
+ * $Id: mem.cc,v 1.20 1998/03/29 08:51:01 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -37,15 +37,24 @@ static MemPool *MemPools[MEM_MAX];
 
 /* string pools */
 #define mem_str_pool_count 3
-static const struct { 
-    const char *name; 
+static const struct {
+    const char *name;
     size_t obj_size;
-} StrPoolsAttrs[mem_str_pool_count] = { 
-    { "Short Strings",   36, },   /* to fit rfc1123 and similar */
-    { "Medium Strings", 128, },   /* to fit most urls */
-    { "Long Strings",   512 }     /* other */
+} StrPoolsAttrs[mem_str_pool_count] = {
+
+    {
+	"Short Strings", 36,
+    },				/* to fit rfc1123 and similar */
+    {
+	"Medium Strings", 128,
+    },				/* to fit most urls */
+    {
+	"Long Strings", 512
+    }				/* other */
 };
-static struct { MemPool *pool; } StrPools[mem_str_pool_count];
+static struct {
+    MemPool *pool;
+} StrPools[mem_str_pool_count];
 static MemMeter StrCountMeter;
 static MemMeter StrVolumeMeter;
 
@@ -71,25 +80,25 @@ memStringStats(StoreEntry * sentry)
     int pooled_count = 0;
     size_t pooled_volume = 0;
     /* heading */
-    storeAppendPrintf(sentry, 
+    storeAppendPrintf(sentry,
 	"String Pool\t Impact\t\t\n"
 	" \t (%%strings)\t (%%volume)\n");
     /* table body */
     for (i = 0; i < mem_str_pool_count; i++) {
 	const MemPool *pool = StrPools[i].pool;
 	const int plevel = pool->meter.inuse.level;
-  	storeAppendPrintf(sentry, pfmt,
+	storeAppendPrintf(sentry, pfmt,
 	    pool->label,
 	    xpercentInt(plevel, StrCountMeter.level),
-	    xpercentInt(plevel*pool->obj_size, StrVolumeMeter.level));
+	    xpercentInt(plevel * pool->obj_size, StrVolumeMeter.level));
 	pooled_count += plevel;
-	pooled_volume += plevel*pool->obj_size;
+	pooled_volume += plevel * pool->obj_size;
     }
     /* malloc strings */
     storeAppendPrintf(sentry, pfmt,
 	"Other Strings",
-	xpercentInt(StrCountMeter.level-pooled_count, StrCountMeter.level),
-	xpercentInt(StrVolumeMeter.level-pooled_volume, StrVolumeMeter.level));
+	xpercentInt(StrCountMeter.level - pooled_count, StrCountMeter.level),
+	xpercentInt(StrVolumeMeter.level - pooled_volume, StrVolumeMeter.level));
 }
 
 static void
@@ -123,14 +132,14 @@ memFree(mem_type type, void *p)
 
 /* allocate a variable size buffer using best-fit pool */
 void *
-memAllocBuf(size_t net_size, size_t *gross_size)
+memAllocBuf(size_t net_size, size_t * gross_size)
 {
     int i;
     MemPool *pool = NULL;
     assert(gross_size);
     for (i = 0; i < mem_str_pool_count; i++) {
 	if (net_size <= StrPoolsAttrs[i].obj_size) {
-	    pool =  StrPools[i].pool;
+	    pool = StrPools[i].pool;
 	    break;
 	}
     }
@@ -187,6 +196,8 @@ memInit(void)
     memDataInit(MEM_ACL_LIST, "acl_list", sizeof(acl_list), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
     memDataInit(MEM_ACL_TIME_DATA, "acl_time_data", sizeof(acl_time_data), 0);
+    memDataInit(MEM_ACL_PROXY_AUTH_USER, "acl_proxy_auth_user",
+	sizeof(acl_proxy_auth_user), 0);
     memDataInit(MEM_AIO_RESULT_T, "aio_result_t", sizeof(aio_result_t), 0);
     memDataInit(MEM_CACHEMGR_PASSWD, "cachemgr_passwd",
 	sizeof(cachemgr_passwd), 0);

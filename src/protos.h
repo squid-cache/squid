@@ -69,7 +69,7 @@ extern int cbdataValid(const void *p);
 extern void cbdataDump(StoreEntry *);
 
 extern void clientdbInit(void);
-extern void clientdbUpdate(struct in_addr, log_type, protocol_t,size_t);
+extern void clientdbUpdate(struct in_addr, log_type, protocol_t, size_t);
 extern int clientdbCutoffDenied(struct in_addr);
 extern void clientdbDump(StoreEntry *);
 extern void clientdbFreeMemory(void);
@@ -200,21 +200,16 @@ extern int gopherCachable(const char *);
 
 extern void whoisStart(request_t * req, StoreEntry *);
 
-/* init */
 extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
-extern void hash_insert(hash_table *, const char *, void *);
-extern int hash_delete(hash_table *, const char *);
-extern int hash_delete_link(hash_table *, hash_link *);
 extern void hash_join(hash_table *, hash_link *);
 extern int hash_remove_link(hash_table *, hash_link *);
 extern int hashPrime(int n);
-
-/* searching, accessing */
-extern hash_link *hash_lookup(hash_table *, const void *);
-extern hash_link *hash_first(hash_table *);
-extern hash_link *hash_next(hash_table *);
+extern void *hash_lookup(hash_table *, const void *);
+extern void *hash_first(hash_table *);
+extern void *hash_next(hash_table *);
 extern hash_link *hash_get_bucket(hash_table *, unsigned int);
 extern void hashFreeMemory(hash_table *);
+extern void hashFreeItems(hash_table *, FREE *);
 extern HASHHASH hash_string;
 extern HASHHASH hash_url;
 extern HASHHASH hash4;
@@ -296,8 +291,8 @@ extern void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p
 extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
 extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
 extern int httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end);
-extern void httpHeaderMaskInit(HttpHeaderMask *mask);
-extern void httpHeaderCalcMask(HttpHeaderMask *mask, const int *enums, int count);
+extern void httpHeaderMaskInit(HttpHeaderMask * mask);
+extern void httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count);
 extern int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
 extern const char *getStringPrefix(const char *str, const char *end);
 extern int httpHeaderParseInt(const char *start, int *val);
@@ -310,7 +305,7 @@ extern void httpHeaderCleanModule();
 extern void httpHeaderInit(HttpHeader * hdr);
 extern void httpHeaderClean(HttpHeader * hdr);
 /* clone */
-extern void httpHeaderUpdate(HttpHeader *old, const HttpHeader *fresh);
+extern void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh);
 /* parse/pack */
 extern int httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end);
 extern void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
@@ -555,7 +550,7 @@ void statHistLogInit(StatHist * H, int capacity, double min, double max);
 void statHistEnumInit(StatHist * H, int last_enum);
 
 /* MemMeter */
-extern void memMeterSyncHWater(MemMeter *m);
+extern void memMeterSyncHWater(MemMeter * m);
 #define memMeterCheckHWater(m) { if ((m).hwater_level < (m).level) memMeterSyncHWater(&(m)); }
 #define memMeterInc(m) { (m).level++; memMeterCheckHWater(m); }
 #define memMeterDec(m) { (m).level--; }

@@ -29,6 +29,13 @@ struct _acl_proxy_auth {
     hash_table *hash;
 };
 
+struct _acl_proxy_auth_user {
+    /* first two items must be same as hash_link */
+    char *user;
+    acl_proxy_auth_user *next;
+    char *passwd;
+};
+
 struct _acl_deny_info_list {
     int err_page_id;
     char *err_page_name;
@@ -119,7 +126,6 @@ struct _acl_access {
     char *cfgline;
     struct _acl_access *next;
 };
-
 
 struct _aclCheck_t {
     const struct _acl_access *access_list;
@@ -444,13 +450,13 @@ struct _hash_link {
 };
 
 struct _hash_table {
-    int valid;
     hash_link **buckets;
     HASHCMP *cmp;
     HASHHASH *hash;
     unsigned int size;
     unsigned int current_slot;
     hash_link *current_ptr;
+    int count;
 };
 
 /* http status line */
@@ -537,8 +543,8 @@ struct _HttpHeaderEntry {
 
 struct _HttpHeader {
     /* protected, do not use these, use interface functions instead */
-    Array entries;              /* parsed fields in raw format */
-    HttpHeaderMask mask;        /* bit set <=> entry present */
+    Array entries;		/* parsed fields in raw format */
+    HttpHeaderMask mask;	/* bit set <=> entry present */
 };
 
 struct _HttpReply {
@@ -550,7 +556,7 @@ struct _HttpReply {
     time_t date;
     time_t last_modified;
     time_t expires;
-    String content_type; 
+    String content_type;
     HttpHdrCc *cache_control;
     HttpHdrContRange *content_range;
     short int pconn_keep_alive;
@@ -711,7 +717,7 @@ struct _ip_pending {
 };
 
 struct _ipcache_entry {
-    /* first two items must be equivalent to hash_link in hash.h */
+    /* first two items must be equivalent to hash_link */
     char *name;
     struct _ipcache_entry *next;
     time_t lastref;
@@ -731,7 +737,7 @@ struct _fqdn_pending {
 };
 
 struct _fqdncache_entry {
-    /* first two items must be equivalent to hash_link in hash.h */
+    /* first two items must be equivalent to hash_link */
     char *name;
     struct _fqdncache_entry *next;
     time_t lastref;
@@ -815,7 +821,7 @@ struct _net_db_peer {
 };
 
 struct _netdbEntry {
-    /* first two items must be equivalent to hash_link in hash.h */
+    /* first two items must be equivalent to hash_link */
     char *key;
     netdbEntry *next;
     char network[16];
@@ -965,7 +971,7 @@ struct _MemObject {
 };
 
 struct _StoreEntry {
-    /* first two items must be same as hash_link in hash.h */
+    /* first two items must be same as hash_link */
     const cache_key *key;
     struct _StoreEntry *next;
     MemObject *mem_obj;
@@ -1007,7 +1013,7 @@ struct _request_t {
     String urlpath;
     int link_count;		/* free when zero */
     int flags;
-    HttpHdrCc *cache_control;   /* not used yet */
+    HttpHdrCc *cache_control;	/* not used yet */
     time_t max_age;
     float http_ver;
     time_t ims;
@@ -1175,16 +1181,16 @@ struct _MemPool {
 };
 
 struct _ClientInfo {
-    /* first two items must be equivalent to hash_link in hash.h */
+    /* first two items must be equivalent to hash_link */
     char *key;
     ClientInfo *next;
     struct in_addr addr;
     struct {
 	int result_hist[LOG_TYPE_MAX];
 	int n_requests;
-        kb_t kbytes_in;
-        kb_t kbytes_out;
-        kb_t hit_kbytes_out;
+	kb_t kbytes_in;
+	kb_t kbytes_out;
+	kb_t hit_kbytes_out;
     } Http, Icp;
     struct {
 	time_t time;

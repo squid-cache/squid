@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.398 1998/03/28 23:24:51 wessels Exp $
+ * $Id: store.cc,v 1.399 1998/03/29 08:51:03 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -156,7 +156,7 @@ static void storeHashDelete(StoreEntry *);
 static MemObject *new_MemObject(const char *, const char *);
 static void destroy_MemObject(StoreEntry *);
 static void destroy_MemObjectData(MemObject *);
-static void destroy_StoreEntry(StoreEntry *);
+static FREE destroy_StoreEntry;
 static void storePurgeMem(StoreEntry *);
 static unsigned int getKeyCounter(method_t);
 static int storeKeepInMemory(const StoreEntry *);
@@ -220,8 +220,9 @@ destroy_MemObject(StoreEntry * e)
 }
 
 static void
-destroy_StoreEntry(StoreEntry * e)
+destroy_StoreEntry(void *data)
 {
+    StoreEntry *e = data;
     debug(20, 3) ("destroy_StoreEntry: destroying %p\n", e);
     assert(e != NULL);
     if (e->mem_obj)
@@ -927,20 +928,7 @@ storeNegativeCache(StoreEntry * e)
 void
 storeFreeMemory(void)
 {
-    StoreEntry *e;
-    StoreEntry **list;
-    int i = 0;
-    int j;
-    list = xcalloc(memInUse(MEM_STOREENTRY), sizeof(StoreEntry *));
-    e = (StoreEntry *) hash_first(store_table);
-    while (e && i < memInUse(MEM_STOREENTRY)) {
-	*(list + i) = e;
-	i++;
-	e = (StoreEntry *) hash_next(store_table);
-    }
-    for (j = 0; j < i; j++)
-	destroy_StoreEntry(*(list + j));
-    xfree(list);
+    hashFreeItems(store_table, destroy_StoreEntry);
     hashFreeMemory(store_table);
     store_table = NULL;
 }

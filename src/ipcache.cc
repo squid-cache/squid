@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.172 1998/03/28 23:24:48 wessels Exp $
+ * $Id: ipcache.cc,v 1.173 1998/03/29 08:51:00 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -146,6 +146,7 @@ static void ipcacheUnlockEntry(ipcache_entry *);
 static void ipcacheLockEntry(ipcache_entry *);
 static void ipcacheNudgeQueue(void);
 static void ipcacheChangeKey(ipcache_entry * i);
+static FREE ipcacheFreeEntry;
 
 static ipcache_addrs static_addrs;
 static hash_table *ip_table = NULL;
@@ -978,30 +979,21 @@ ipcacheMarkGoodAddr(const char *name, struct in_addr addr)
     }
 }
 
+static void
+ipcacheFreeEntry(void *data)
+{
+    ipcache_entry *i = data;
+    safe_free(i->addrs.in_addrs);
+    safe_free(i->addrs.bad_mask);
+    safe_free(i->name);
+    safe_free(i->error_message);
+    memFree(MEM_IPCACHE_ENTRY, i);
+}
+
 void
 ipcacheFreeMemory(void)
 {
-    ipcache_entry *i;
-    ipcache_entry **list;
-    int k = 0;
-    int j;
-    int n = memInUse(MEM_IPCACHE_ENTRY);
-    list = xcalloc(n, sizeof(ipcache_entry *));
-    i = (ipcache_entry *) hash_first(ip_table);
-    while (i != NULL && k < n) {
-	*(list + k) = i;
-	k++;
-	i = (ipcache_entry *) hash_next(ip_table);
-    }
-    for (j = 0; j < k; j++) {
-	i = *(list + j);
-	safe_free(i->addrs.in_addrs);
-	safe_free(i->addrs.bad_mask);
-	safe_free(i->name);
-	safe_free(i->error_message);
-	memFree(MEM_IPCACHE_ENTRY, i);
-    }
-    xfree(list);
+    hashFreeItems(ip_table, ipcacheFreeEntry);
     hashFreeMemory(ip_table);
     ip_table = NULL;
 }
@@ -1072,7 +1064,7 @@ ipcache_getMax()
 }
 
 variable_list *
-snmp_ipcacheFn(variable_list * Var, snint *ErrP)
+snmp_ipcacheFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
     ipcache_entry *IPc = NULL;
