@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.46 1998/09/14 22:18:46 wessels Exp $
+ * $Id: urn.cc,v 1.45 1998/09/14 22:18:04 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -35,6 +35,10 @@
  */
 
 #include "squid.h"
+
+enum {
+    URN_FORCE_MENU
+};
 
 typedef struct {
     StoreEntry *entry;
