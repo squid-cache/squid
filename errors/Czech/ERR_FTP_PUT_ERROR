@@ -1,0 +1,18 @@
+<HTML><HEAD> <meta http-equiv="Content-Type" content="text/html;
+charset=iso-8859-2"> <TITLE>CHYBA: neuspesny FTP upload </TITLE>
+</HEAD><BODY> <H1>CHYBA</H1> <H2>FTP PUT/upload neúspì¹ný</H2> <HR> <P> Pøi
+pokusu o PUT následujícího URL: <A HREF="%U">%U</A> <P> odeslal Squid
+následující FTP pøíkaz: <PRE><STRONG>
+        %f
+</STRONG></PRE>
+a obdr¾el tuto odpovìï
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+Zkuste:
+<PRE>
+zkontrolovat cestu, pøístupová práva, volné místo na disku a zkuste to znova.
+</PRE>
+</P>
+

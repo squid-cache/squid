@@ -1,0 +1,34 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pristup ke cache serveru odmitnut</TITLE>
+</HEAD>
+<BODY>
+<H1>CHYBA</H1>
+<H2>Přístup ke cache serveru zamítnut</H2>
+<HR>
+<P>
+Při pokusu o přístup k:
+<A HREF="%U">%U</A>
+<P>
+se objevila následující chyba:
+<UL>
+<LI>
+<STRONG>
+Cache Access Denied.
+</STRONG>
+</UL>
+</P>
+
+<P>Olouváme se, ale  přístup k:
+<PRE>    %U</PRE>
+je povolen až po autorizaci.
+</P>
+
+<P>
+
+Pro úspěšnou autorizaci potřebujete prohlížeče NETSCAPE 2.0 a vyšší,
+Microsoft Internet Explorer 3.0 nebo prohlížeč podporující protokol
+HTTP/1.1. V případě problému se prosím obraťte na<A HREF="mailto:%w">cache
+administratora</a> nebo si změňte  
+<A HREF="http://%h/cgi-bin/chpasswd.cgi\">heslo</a>.
+</P>
