@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.39 1998/09/23 20:13:47 wessels Exp $
+ * $Id: client_db.cc,v 1.40 1998/09/23 21:22:50 glenn Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -236,8 +236,8 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 
-    snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[11], Var->name[12],
-	Var->name[13], Var->name[14]);
+    snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[LEN_SQ_NET + 3], Var->name[LEN_SQ_NET + 4],
+	Var->name[LEN_SQ_NET + 5], Var->name[LEN_SQ_NET + 6]);
     debug(49, 5) ("snmp_meshCtblFn: [%s] requested!\n", key);
     c = (ClientInfo *) hash_lookup(client_table, key);
     if (c == NULL) {
@@ -246,7 +246,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	snmp_var_free(Answer);
 	return (NULL);
     }
-    switch (Var->name[10]) {
+    switch (Var->name[LEN_SQ_NET+2]) {
     case MESH_CTBL_ADDR:
 	Answer->type = SMI_IPADDRESS;
 	Answer->val_len = sizeof(snint);
@@ -256,13 +256,13 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     case MESH_CTBL_HTBYTES:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_INTEGER;
+	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Http.kbytes_out.kb;
 	break;
     case MESH_CTBL_HTREQ:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_INTEGER;
+	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Http.n_requests;
 	break;
     case MESH_CTBL_HTHITS:
@@ -273,41 +273,40 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	}
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_INTEGER;
+	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) aggr;
 	break;
     case MESH_CTBL_HTHITBYTES:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_INTEGER;
+	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Http.hit_kbytes_out.kb;
 	break;
     case MESH_CTBL_ICPBYTES:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_INTEGER;
+	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Icp.kbytes_out.kb;
 	break;
     case MESH_CTBL_ICPREQ:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_INTEGER;
+	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Icp.n_requests;
 	break;
     case MESH_CTBL_ICPHITS:
 	aggr = c->Icp.result_hist[LOG_UDP_HIT];
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_INTEGER;
+	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) aggr;
 	break;
     case MESH_CTBL_ICPHITBYTES:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_INTEGER;
+	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Icp.hit_kbytes_out.kb;
 	break;
-
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	snmp_var_free(Answer);
@@ -317,4 +316,4 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     return Answer;
 }
 
-#endif
+#endif /*SQUID_SNMP*/
