@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.413 1998/10/15 23:40:05 wessels Exp $
+ * $Id: client_side.cc,v 1.414 1998/10/15 23:44:37 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -230,9 +230,9 @@ clientRedirectDone(void *data, char *result)
 	    char *t = result;
 	    if ((t = strchr(result, ':')) != NULL) {
 		http->redirect.status = status;
-		http->redirect.location = xstrdup(t+1);
+		http->redirect.location = xstrdup(t + 1);
 	    } else {
-		debug(33,1)("clientRedirectDone: bad input: %s\n", result);
+		debug(33, 1) ("clientRedirectDone: bad input: %s\n", result);
 	    }
 	}
 	if (strcmp(result, http->uri))
@@ -1524,8 +1524,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     memFree(MEM_CLIENT_SOCK_BUF, buf);
 }
 
-static
-void
+static void
 clientKeepaliveNextRequest(clientHttpRequest * http)
 {
     ConnStateData *conn = http->conn;
@@ -1533,10 +1532,26 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
     debug(33, 3) ("clientKeepaliveNextRequest: FD %d\n", conn->fd);
     conn->defer.until = 0;	/* Kick it to read a new request */
     httpRequestFree(http);
-    if ((http = conn->chr) != NULL) {
+    if ((http = conn->chr) == NULL) {
+	debug(33, 5) ("clientKeepaliveNextRequest: FD %d reading next req\n",
+	    conn->fd);
+	fd_note(conn->fd, "Reading next request");
+	/*
+	 * Set the timeout BEFORE calling clientReadRequest().
+	 */
+	commSetTimeout(conn->fd, 15, requestTimeout, conn);
+	clientReadRequest(conn->fd, conn);	/* Read next request */
+	/*
+	 * Note, the FD may be closed at this point.
+	 */
+    } else if ((entry = http->entry) == NULL) {
+	/*
+	 * this request is in progress, maybe doing an ACL or a redirect,
+	 * execution will resume after the operation completes.
+	 */
+    } else {
 	debug(33, 1) ("clientKeepaliveNextRequest: FD %d Sending next\n",
 	    conn->fd);
-	entry = http->entry;
 	assert(entry);
 	if (0 == storeClientCopyPending(entry, http)) {
 	    if (entry->store_status == STORE_ABORTED)
@@ -1549,18 +1564,6 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 		clientSendMoreData,
 		http);
 	}
-    } else {
-	debug(33, 5) ("clientKeepaliveNextRequest: FD %d reading next request\n",
-	    conn->fd);
-	fd_note(conn->fd, "Reading next request");
-	/*
-	 * Set the timeout BEFORE calling clientReadRequest().
-	 */
-	commSetTimeout(conn->fd, 15, requestTimeout, conn);
-	clientReadRequest(conn->fd, conn);	/* Read next request */
-	/*
-	 * Note, the FD may be closed at this point.
-	 */
     }
 }
 
