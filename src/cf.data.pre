@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.215 2001/02/20 22:49:23 hno Exp $
+# $Id: cf.data.pre,v 1.216 2001/04/03 20:22:10 adrian Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1081,6 +1081,16 @@ DOC_START
 	set to 'none', it won't be checked.  If append_domain is
 	used, that domain will be added to domain-local (i.e. not
 	containing any dot character) host definitions.
+DOC_END
+
+NAME: diskd_program
+TYPE: string
+DEFAULT: @DEFAULT_DISKD@
+LOC: Config.Program.diskd
+DOC_START
+	Specify the location of the diskd executable.
+	Note that this is only useful if you have compiled in
+	diskd as one of the store io modules.
 DOC_END
 
 NAME: unlinkd_program

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.384 2001/02/20 22:49:24 hno Exp $
+ * $Id: structs.h,v 1.385 2001/04/03 20:22:10 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -427,6 +427,7 @@ struct _SquidConfig {
 #if USE_UNLINKD
 	char *unlinkd;
 #endif
+	char *diskd;
     } Program;
 #if USE_DNSSERVERS
     int dnsChildren;
