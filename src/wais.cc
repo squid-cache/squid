@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.145 2003/01/23 00:37:29 robertc Exp $
+ * $Id: wais.cc,v 1.146 2003/02/05 10:36:56 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -36,6 +36,9 @@
 #include "squid.h"
 #include "Store.h"
 #include "HttpRequest.h"
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 class WaisStateData {
 public:
@@ -94,7 +97,7 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
     int bin;
     size_t read_sz;
 #if DELAY_POOLS
-    delay_id delayId = delayMostBytesAllowed(entry->mem_obj);
+    DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
@@ -110,13 +113,13 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
     read_sz = BUFSIZ;
     if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
-	delayBytesIn(delayId, len);
+	delayId.bytesIn(len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.other.kbytes_in, len);
     }
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delayId, 1, read_sz);
+    read_sz = delayId.bytesWanted(1, read_sz);
 #endif
     debug(24, 5) ("waisReadReply: FD %d read len:%d\n", fd, (int)len);
     if (flag == COMM_OK && len > 0) {

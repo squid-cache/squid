@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.462 2003/01/28 06:18:13 robertc Exp $
+ * $Id: protos.h,v 1.463 2003/02/05 10:36:54 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,17 +52,17 @@ SQUIDCEXTERN char *log_quote(const char *header);
 SQUIDCEXTERN int logTypeIsATcpHit(log_type);
 
 /* acl.c */
-SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const struct _acl_access *,
+SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
     request_t *,
     const char *ident);
 SQUIDCEXTERN void aclNBCheck(ACLChecklist *, PF *, void *);
-SQUIDCEXTERN int aclCheckFast(const struct _acl_access *A, ACLChecklist *);
+SQUIDCEXTERN int aclCheckFast(const acl_access *A, ACLChecklist *);
 SQUIDCEXTERN void aclChecklistFree(ACLChecklist *);
 SQUIDCEXTERN int aclMatchAclList(const acl_list * list, ACLChecklist * checklist);
-SQUIDCEXTERN void aclDestroyAccessList(struct _acl_access **list);
+SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
 SQUIDCEXTERN void aclDestroyAcls(acl **);
 SQUIDCEXTERN void aclDestroyAclList(acl_list **);
-SQUIDCEXTERN void aclParseAccessLine(struct _acl_access **);
+SQUIDCEXTERN void aclParseAccessLine(acl_access **);
 SQUIDCEXTERN void aclParseAclList(acl_list **);
 SQUIDCEXTERN void aclParseAclLine(acl **);
 SQUIDCEXTERN int aclIsProxyAuth(const char *name);
@@ -980,28 +980,6 @@ SQUIDCEXTERN int internalHostnameIs(const char *);
 #if USE_CARP
 SQUIDCEXTERN void carpInit(void);
 SQUIDCEXTERN peer *carpSelectParent(request_t *);
-#endif
-
-#if DELAY_POOLS
-SQUIDCEXTERN void delayPoolsInit(void);
-SQUIDCEXTERN void delayInitDelayData(unsigned short pools);
-SQUIDCEXTERN void delayFreeDelayData(unsigned short pools);
-SQUIDCEXTERN void delayCreateDelayPool(unsigned short pool, u_char delay_class);
-SQUIDCEXTERN void delayInitDelayPool(unsigned short pool, u_char delay_class, delaySpecSet * rates);
-SQUIDCEXTERN void delayFreeDelayPool(unsigned short pool);
-SQUIDCEXTERN void delayPoolsReconfigure(void);
-SQUIDCEXTERN void delaySetNoDelay(int fd);
-SQUIDCEXTERN void delayClearNoDelay(int fd);
-SQUIDCEXTERN int delayIsNoDelay(int fd);
-SQUIDCEXTERN EVH delayPoolsUpdate;
-SQUIDCEXTERN int delayBytesWanted(delay_id d, int min, int max);
-SQUIDCEXTERN void delayBytesIn(delay_id, int qty);
-class MemObject;
-SQUIDCEXTERN int delayMostBytesWanted(const MemObject * mem, int max);
-SQUIDCEXTERN delay_id delayMostBytesAllowed(const MemObject * mem);
-SQUIDCEXTERN void delaySetStoreClient(store_client * sc, delay_id delay_id);
-SQUIDCEXTERN void delayRegisterDelayIdPtr(delay_id * loc);
-SQUIDCEXTERN void delayUnregisterDelayIdPtr(delay_id * loc);
 #endif
 
 /* helper.c */

@@ -1,5 +1,5 @@
 /*
- * $Id: splay.c,v 1.15 2003/01/23 00:37:01 robertc Exp $
+ * $Id: Splay.cc,v 1.1 2003/02/05 10:36:40 robertc Exp $
  *
  * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
  * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl
@@ -25,26 +25,26 @@ int splayLastResult = 0;
 splayNode *
 splay_insert(void *data, splayNode * top, SPLAYCMP * compare)
 {
-    splayNode *new = xcalloc(sizeof(splayNode), 1);
-    new->data = data;
+    splayNode *newNode = new splayNode;
+    newNode->data = data;
     if (top == NULL) {
-	new->left = new->right = NULL;
-	return new;
+	newNode->left = newNode->right = NULL;
+	return newNode;
     }
     top = splay_splay(data, top, compare);
     if (splayLastResult < 0) {
-	new->left = top->left;
-	new->right = top;
+	newNode->left = top->left;
+	newNode->right = top;
 	top->left = NULL;
-	return new;
+	return newNode;
     } else if (splayLastResult > 0) {
-	new->right = top->right;
-	new->left = top;
+	newNode->right = top->right;
+	newNode->left = top;
 	top->right = NULL;
-	return new;
+	return newNode;
     } else {
 	/* duplicate entry */
-	xfree(new);
+	xfree(newNode);
 	return top;
     }
 }
@@ -168,40 +168,3 @@ splay_dump(splayNode * top, void printfunc(void *data, int depth))
 
 
 #endif
-
-#ifdef DRIVER
-
-typedef struct {
-    int i;
-} intnode;
-
-int
-compareint(void *a, splayNode * n)
-{
-    intnode *A = a;
-    intnode *B = n->data;
-    return A->i - B->i;
-}
-
-void
-printint(void *a, void *state)
-{
-    intnode *A = a;
-    printf("%d\n", "", A->i);
-}
-
-main(int argc, char *argv[])
-{
-    int i;
-    intnode *I;
-    splayNode *top = NULL;
-    srandom(time(NULL));
-    for (i = 0; i < 100; i++) {
-	I = xcalloc(sizeof(intnode), 1);
-	I->i = random();
-	top = splay_insert(I, top, compareint);
-    }
-    splay_walk(top, printint, NULL);
-    return 0;
-}
-#endif /* DRIVER */

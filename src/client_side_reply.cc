@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.35 2003/02/05 01:27:11 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.36 2003/02/05 10:36:49 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -44,6 +44,9 @@
 #include "MemObject.h"
 #include "client_side_request.h"
 #include "ACLChecklist.h"
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 static STCB clientHandleIMSReply;
 static STCB clientSendMoreData;
@@ -325,7 +328,7 @@ clientProcessExpired(clientReplyContext * context)
     context->sc = storeClientListAdd(entry, context);
 #if DELAY_POOLS
     /* delay_id is already set on original store client */
-    delaySetStoreClient(context->sc, delayClient(http));
+    context->sc->setDelayId(DelayId::DelayClient(http));
 #endif
     http->request->lastmod = http->old_entry->lastmod;
     debug(88, 5)("clientProcessExpired : lastmod %ld",
@@ -1637,7 +1640,7 @@ clientReplyContext::doGetMoreData()
 	}
 	sc = storeClientListAdd(http->entry, this);
 #if DELAY_POOLS
-	delaySetStoreClient(sc, delayClient(http));
+	sc->setDelayId(DelayId::DelayClient(http));
 #endif
 	assert(http->logType == LOG_TCP_HIT);
 	reqofs = 0;
@@ -2017,7 +2020,7 @@ clientCreateStoreEntry(clientReplyContext * context, method_t m,
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     context->sc = storeClientListAdd(e, context);
 #if DELAY_POOLS
-    delaySetStoreClient(context->sc, delayClient(h));
+    context->sc->setDelayId(DelayId::DelayClient(h));
 #endif
     context->reqofs = 0;
     context->reqsize = 0;

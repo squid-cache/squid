@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.53 2003/02/02 13:12:36 robertc Exp $
+#  $Id: Makefile.am,v 1.54 2003/02/05 10:36:48 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -21,7 +21,28 @@ SNMPSOURCE =
 endif
 
 if USE_DELAY_POOLS
-DELAY_POOL_SOURCE = delay_pools.cc
+DELAY_POOL_SOURCE = \
+	CommonPool.h \
+	CompositePoolNode.h \
+	delay_pools.cc \
+	DelayId.cc \
+	DelayId.h \
+	DelayIdComposite.h \
+	DelayBucket.cc \
+	DelayBucket.h \
+	DelayConfig.cc \
+	DelayConfig.h \
+	DelayPool.cc \
+	DelayPool.h \
+	DelayPools.h \
+	DelaySpec.cc \
+	DelaySpec.h \
+	DelayUser.cc \
+	DelayUser.h \
+	DelayVector.cc \
+	DelayVector.h \
+	NullDelayId.cc \
+	NullDelayId.h
 else
 DELAY_POOL_SOURCE = 
 endif
@@ -105,7 +126,7 @@ squidclient_SOURCES = client.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
 
 EXTRA_squid_SOURCES = \
-	delay_pools.cc \
+	$(DELAY_POOL_SOURCE) \
 	dns.cc \
 	dnsserver.cc \
 	dns_internal.cc \
@@ -122,6 +143,7 @@ EXTRA_squid_SOURCES = \
 squid_SOURCES = \
 	access_log.cc \
 	acl.cc \
+	ACL.h \
 	ACLChecklist.h \
 	asn.cc \
 	authenticate.cc \
@@ -143,6 +165,7 @@ squid_SOURCES = \
 	comm_select.cc \
 	comm_poll.cc \
 	comm_kqueue.cc \
+	Config.h \
 	debug.cc \
 	Debug.h \
 	defines.h \

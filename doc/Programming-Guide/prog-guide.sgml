@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.54 2003/01/23 00:34:54 robertc Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.55 2003/02/05 10:35:30 robertc Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -459,6 +459,14 @@ Squid consists of the following major components
 	see <url        url="http://squid.nlanr.net/Squid/urn-support.html"
 	name="URN support in Squid">.
 
+<sect1>Delay Pools
+
+	<P>
+	Delay pools provide bandwidth regulation by restricting the rate
+	at which squid reads from a server before sending to a client. They
+	do not prevent cache hits from being sent at maximal capacity. Delay
+	pools can aggregate the bandwidth from multiple machines and users
+	to provide more or less general restrictions.
 
 <sect>External Programs
 
@@ -564,7 +572,8 @@ Squid consists of the following major components
 	reply data is read, it is appended to the <em/StoreEntry/.
 	Every time data is appended to the <em/StoreEntry/, the
 	client-side is notified of the new data via a callback
-	function.
+	function. The rate at which reading occurs is regulated by
+	the delay pools routines, via the deferred read mechanism.
 
 	<item>
 	As the client-side is notified of new data, it copies the
@@ -850,7 +859,56 @@ this must be done separately. Thus Abort may ONLY be called by the tail node.
 
 	<P>
 	To be written...
+	
+<!-- %%%% Chapter : DELAY POOLS %%%% -->
+<sect>Delay Pools
+<sect1>Introduction
+	<P>A DelayPool is a Composite used to manage bandwidth for any request
+	assigned to the pool by an access expression. DelayId's are a used
+	to manage the bandwith on a given request, whereas a DelayPool 
+	manages the bandwidth availability and assigned DelayId's.
+<sect1>Extending Delay Pools
 
+	<P>A CompositePoolNode is the base type for all members of a DelayPool.
+	Any child must implement the RefCounting primitives, as well as five
+	delay pool functions:
+	<enum>
+	<item>stats() - provide cachemanager statistics for itself.
+	<item>dump() - generate squid.conf syntax for the current configuration
+	of the item.
+	<item>update() - allocate more bandwith to all buckets in the item.
+	<item>parse() - accept squid.conf syntax for the item, and configure
+	for use appropriately.
+	<item>id() - return a DelayId entry for the current item.
+	</enum>
+	<P>A DelayIdComposite is the base type for all delay Id's. Concrete
+	Delay Id's must implement the refcounting primitives, as well as two
+	delay id functions:
+	<enum>
+	<item>bytesWanted() - return the largest amount of bytes that this 
+	delay id allows by policy.
+	<item>bytesIn() - record the use of bandwidth by the request(s) that
+	this delayId is monitoring.
+	</enum>
+	<P> Composite creation is currently under design review, so see the
+	DelayPool class and follow the parse() code path for details.
+	
+<sect1>Neat things that could be done.
+
+	<P>With the composite structure, some neat things have become possible.
+	For instance:
+	<enum>
+	<item>Dynamically defined pool arrangements - for instance an
+	aggregate (class 1) combined with the per-class-C-net tracking of a 
+	class 3 pool, without the individual host tracking. This differs
+	from a class 3 pool with -1/-1 in the host bucket, because no memory
+	or cpu would be used on hosts, whereas with a class 3 pool, they are
+	allocated and used.
+	<item>Per request bandwidth limits - a delayId that contains it's own
+	bucket could limit each request independently to a given policy, with
+	no aggregate restrictions.
+	</enum>
+	
 <!-- %%%% Chapter : STORAGE MANAGER %%%% -->
 <sect>Storage Manager
 

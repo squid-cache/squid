@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.363 2003/02/01 13:36:09 hno Exp $
+ * $Id: main.cc,v 1.364 2003/02/05 10:36:53 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -441,6 +441,10 @@ mainSetCwd(void)
     }
 }
 
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
+
 static void
 mainInitialize(void)
 {
@@ -514,7 +518,7 @@ mainInitialize(void)
 	pconnInit();
 	refreshInit();
 #if DELAY_POOLS
-	delayPoolsInit();
+	DelayPools::Init();
 #endif
 	fwdInit();
     }
@@ -947,6 +951,7 @@ SquidShutdown(void *unused)
 #endif
     releaseServerSockets();
     commCloseAllSockets();
+    DelayPools::FreePools();
     authenticateShutdown();
 #if USE_UNLINKD
     unlinkdClose();

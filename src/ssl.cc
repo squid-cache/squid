@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.133 2003/01/28 01:29:35 robertc Exp $
+ * $Id: ssl.cc,v 1.134 2003/02/05 10:36:54 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -39,6 +39,9 @@
 #include "comm.h"
 #include "client_side_request.h"
 #include "ACLChecklist.h"
+#if DELAY_POOLS
+#include "DelayId.h"
+#endif
 
 typedef struct {
     char *url;
@@ -54,7 +57,7 @@ typedef struct {
     size_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
     int *status_ptr;		/* pointer to status for logging */
 #if DELAY_POOLS
-    delay_id delayId;
+    DelayId delayId;
 #endif
 } SslStateData;
 
@@ -113,9 +116,6 @@ sslStateFree(SslStateData * sslState)
     sslState->host = NULL;
     requestUnlink(sslState->request);
     sslState->request = NULL;
-#if DELAY_POOLS
-    delayUnregisterDelayIdPtr(&sslState->delayId);
-#endif
     cbdataFree(sslState);
 }
 
@@ -124,7 +124,7 @@ static int
 sslDeferServerRead(int fdnotused, void *data)
 {
     SslStateData *s = (SslStateData *)data;
-    int i = delayBytesWanted(s->delayId, 0, INT_MAX);
+    int i = s->delayId.bytesWanted(0, INT_MAX);
     if (i == INT_MAX)
 	return 0;
     if (i == 0)
@@ -143,7 +143,7 @@ sslReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
     assert(fd == sslState->server.fd);
     errno = 0;
 #if DELAY_POOLS
-    len = delayBytesWanted(sslState->delayId, 1, len);
+    len = sslState->delayId.bytesWanted(1, len);
 #endif
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
     if (errcode == COMM_ERR_CLOSING) {
@@ -152,7 +152,7 @@ sslReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
     debug(26, 3) ("sslReadServer: FD %d, read   %d bytes\n", fd, (int)len);
     if (len > 0) {
 #if DELAY_POOLS
-	delayBytesIn(sslState->delayId, len);
+	sslState->delayId.bytesIn(len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.other.kbytes_in, len);
@@ -483,8 +483,7 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
     CBDATA_INIT_TYPE(SslStateData);
     sslState = cbdataAlloc(SslStateData);
 #if DELAY_POOLS
-    sslState->delayId = delayClient(http);
-    delayRegisterDelayIdPtr(&sslState->delayId);
+    sslState->delayId = DelayId::DelayClient(http);
 #endif
     sslState->url = xstrdup(url);
     sslState->request = requestLink(request);
@@ -588,8 +587,7 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
 #if DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since ssl is nice and simple */
     if (g && g->options.no_delay && sslState->delayId) {
-	delayUnregisterDelayIdPtr(&sslState->delayId);
-	sslState->delayId = 0;
+	sslState->delayId = DelayId();
     }
 #endif
     commConnectStart(sslState->server.fd,

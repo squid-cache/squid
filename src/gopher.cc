@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.178 2003/01/23 00:37:21 robertc Exp $
+ * $Id: gopher.cc,v 1.179 2003/02/05 10:36:51 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -37,6 +37,9 @@
 #include "Store.h"
 #include "HttpRequest.h"
 #include "comm.h"
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 /* gopher type code from rfc. Anawat. */
 #define GOPHER_FILE         '0'
@@ -627,7 +630,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
     size_t read_sz = BUFSIZ;
     int do_next_read = 0;
 #if DELAY_POOLS
-    delay_id delayId = delayMostBytesAllowed(entry->mem_obj);
+    DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
@@ -643,13 +646,13 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
 
     errno = 0;
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delayId, 1, read_sz);
+    read_sz = delayId.bytesWanted(1, read_sz);
 #endif
 
     /* leave one space for \0 in gopherToHTML */
     if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
-	delayBytesIn(delayId, len);
+	delayId.bytesIn(len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.other.kbytes_in, len);

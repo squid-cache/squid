@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.1 2003/01/23 00:37:14 robertc Exp $
+ * $Id: MemObject.cc,v 1.2 2003/02/05 10:36:48 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -40,6 +40,9 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "Generic.h"
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 /* TODO: make this global or private */
 #if URL_CHECKSUM_DEBUG
@@ -358,3 +361,53 @@ MemObject::isContiguous() const
 				result ? "true" : "false");
     return result;
 }
+
+int
+MemObject::mostBytesWanted(int max) const
+{
+#if DELAY_POOLS
+#if 0
+    int i = -1;
+    for (dlink_node *node = clients.head; node; node = node->next) {
+	store_client *sc = (store_client *) node->data;
+	if (!sc->callbackPending())
+	    /* not waiting for more data */
+	    continue;
+	if (sc->getType() != STORE_MEM_CLIENT)
+	    continue;
+	i = sc->delayId.bytesWanted(i, XMIN(sc->copyInto.length, (size_t)max));
+    }
+    return XMAX(i, 0);
+#endif
+    /* identify delay id with largest allowance */
+    DelayId largestAllowance = mostBytesAllowed ();
+    return largestAllowance.bytesWanted(0, max);
+#else
+    return max;
+#endif
+}
+
+#if DELAY_POOLS
+DelayId
+MemObject::mostBytesAllowed() const
+{
+    int j;
+    int jmax = -1;
+    DelayId result;
+    for (dlink_node *node = clients.head; node; node = node->next) {
+	store_client *sc = (store_client *) node->data;
+	if (!sc->callbackPending())
+	    /* not waiting for more data */
+	    continue;
+	if (sc->getType() != STORE_MEM_CLIENT)
+	    /* reading off disk */
+	    continue;
+	j = sc->delayId.bytesWanted(0, sc->copyInto.length);
+	if (j > jmax) {
+	    jmax = j;
+	    result = sc->delayId;
+	}
+    }
+    return result;
+}
+#endif

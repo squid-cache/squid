@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.5 2003/01/28 06:18:13 robertc Exp $
+ * $Id: client_side_request.h,v 1.6 2003/02/05 10:36:50 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -108,9 +108,5 @@ SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 SQUIDCEXTERN void redirectStart(clientHttpRequest *, RH *, void *);
 
 SQUIDCEXTERN void sslStart(clientHttpRequest *, size_t *, int *);
-
-#if DELAY_POOLS
-SQUIDCEXTERN delay_id delayClient(clientHttpRequest *);
-#endif
 
 #endif /* SQUID_CLIENTSIDEREQUEST_H */

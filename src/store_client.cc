@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.120 2003/01/23 00:37:26 robertc Exp $
+ * $Id: store_client.cc,v 1.121 2003/02/05 10:36:55 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -40,6 +40,9 @@
 #include "MemObject.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 CBDATA_TYPE(store_client);
 
@@ -159,7 +162,12 @@ storeClientCopyEvent(void *data)
     storeClientCopy2(sc->entry, sc);
 }
 
-store_client::store_client(StoreEntry *e) : entry (e), type (e->storeClientType()), object_ok(true)
+store_client::store_client(StoreEntry *e) : entry (e)
+#if DELAY_POOLS
+  , delayId()
+#endif
+  , type (e->storeClientType())
+  ,  object_ok(true)
 {
     cmp_offset = 0;
     flags.disk_io_pending = 0;
@@ -168,9 +176,6 @@ store_client::store_client(StoreEntry *e) : entry (e), type (e->storeClientType(
 	/* assert we'll be able to get the data we want */
 	/* maybe we should open swapin_fd here */
 	assert(entry->swap_filen > -1 || storeSwapOutAble(entry));
-#if DELAY_POOLS
-    delayId = 0;
-#endif
 #if STORE_CLIENT_LIST_DEBUG
     owner = cbdataReference(data);
 #endif
@@ -551,9 +556,6 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 	    mem->url);
 	sc->fail();
     }
-#if DELAY_POOLS
-    delayUnregisterDelayIdPtr(&sc->delayId);
-#endif
 #if STORE_CLIENT_LIST_DEBUG
     cbdataReferenceDone(sc->owner);
 #endif
@@ -697,3 +699,9 @@ store_client::callbackPending() const
 }
 
 store_client::Callback::Callback(STCB *function, void *data) : callback_handler(function), callback_data (data) {}
+
+void
+store_client::setDelayId(DelayId delay_id)
+{
+    delayId = delay_id;
+}
