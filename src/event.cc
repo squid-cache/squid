@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.3 1996/12/14 18:54:59 wessels Exp $
+ * $Id: event.cc,v 1.4 1997/01/07 21:49:51 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -86,5 +86,5 @@ eventNextTime(void)
 {
     if (!tasks)
 	return (time_t) 10;
-    return tasks->when > squid_curtime;
+    return tasks->when - squid_curtime;
 }
