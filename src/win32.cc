@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.8 2003/04/21 12:54:10 hno Exp $
+ * $Id: win32.cc,v 1.9 2003/04/22 15:06:11 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -40,21 +40,19 @@
 
 #include "squid.h"
 
-/* This code compiles only on Cygwin & Windows NT Port */
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
 #include "squid_windows.h"
 
 static unsigned int GetOSVersion();
 void WIN32_svcstatusupdate(DWORD, DWORD);
 void WINAPI WIN32_svcHandler(DWORD);
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
 static int WIN32_StoreKey(const char *, DWORD, unsigned char *, int);
 static int WIN32_create_key(void);
 static void WIN32_build_argv (char *);
 #endif
 extern "C" void WINAPI SquidMain(DWORD, char **);
 
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
 static SERVICE_STATUS svcStatus;
 static SERVICE_STATUS_HANDLE svcHandle;
 static int WIN32_argc;
@@ -80,7 +78,7 @@ typedef BOOL (WINAPI * PFChangeServiceConfig2) (SC_HANDLE, DWORD, LPVOID);
 #else
 #define CHANGESERVICECONFIG2 "ChangeServiceConfig2A"
 #endif
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
 static SC_ACTION Squid_SCAction[] = { { SC_ACTION_RESTART, 60000 } };
 static char Squid_ServiceDescriptionString[] = SOFTWARENAME " " VERSION " WWW Proxy Server";
 static SERVICE_DESCRIPTION Squid_ServiceDescription = { Squid_ServiceDescriptionString };
@@ -100,7 +98,7 @@ static char *keys[] = {
 /* LOCAL FUNCTIONS */
 /* ====================================================================== */
 
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
 static int
 WIN32_create_key(void)
 {
@@ -308,7 +306,7 @@ GetOSVersion()
     return _WIN_OS_UNKNOWN;
 }
 
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
 /* Build argv, argc from string passed from Windows.  */
 static void WIN32_build_argv(char *cmd)
 {
@@ -363,7 +361,7 @@ static void WIN32_build_argv(char *cmd)
 void
 WIN32_Abort(int sig)
 {
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
     svcStatus.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;
     svcStatus.dwServiceSpecificExitCode = 1;
 #endif
@@ -375,7 +373,7 @@ WIN32_Abort(int sig)
 void
 WIN32_Exit()
 {
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
 
     if (!Squid_Aborting) {
         svcStatus.dwCurrentState = SERVICE_STOPPED;
@@ -387,7 +385,7 @@ WIN32_Exit()
     _exit(0);
 }
 
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
 int WIN32_Subsystem_Init(int * argc, char *** argv)
 #else
 int
@@ -402,7 +400,7 @@ WIN32_Subsystem_Init()
     if (atexit(WIN32_Exit) != 0)
         return 1;
 
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
 
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE)
     {
@@ -488,7 +486,7 @@ WIN32_Subsystem_Init()
     return 0;
 }
 
-#ifdef USE_WIN32_SERVICE
+#if USE_WIN32_SERVICE
 void
 WIN32_svcstatusupdate(DWORD svcstate, DWORD WaitHint)
 {
@@ -833,6 +831,7 @@ int main(int argc, char **argv)
 
     if ((argc == 2) && strstr(argv[1], _WIN_SQUID_SERVICE_OPTION)) {
         WIN32_run_mode = _WIN_SQUID_RUN_MODE_SERVICE;
+        opt_no_daemon = 1;
 
         if (!(c=strchr(argv[1],':'))) {
             fprintf(stderr, "Bad Service Parameter: %s\n", argv[1]);
@@ -858,7 +857,5 @@ int main(int argc, char **argv)
 }
 
 #endif /* USE_WIN32_SERVICE */
-
-#endif /* defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_) */
 
 #endif /* WIN32_C */

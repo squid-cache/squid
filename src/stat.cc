@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.372 2003/03/15 04:17:41 robertc Exp $
+ * $Id: stat.cc,v 1.373 2003/04/22 15:06:10 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -455,6 +455,17 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
                       version_string);
 
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+
+    if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
+        storeAppendPrintf(sentry,"\nRunning as %s Windows System Service on %s\n",
+                          WIN32_Service_name, WIN32_OS_string);
+        storeAppendPrintf(sentry,"Service command line is: %s\n", WIN32_Service_Command_Line);
+    } else
+        storeAppendPrintf(sentry,"Running on %s\n",WIN32_OS_string);
+
+#endif
+
     storeAppendPrintf(sentry, "Start Time:\t%s\n",
                       mkrfc1123(squid_start.tv_sec));
 
@@ -671,7 +682,6 @@ info_get(StoreEntry * sentry)
                       statMemoryAccounted() >> 10);
 
 #endif
-
     {
         MemPoolGlobalStats mp_stats;
         memPoolGetGlobalStats(&mp_stats);

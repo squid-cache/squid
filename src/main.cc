@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.371 2003/04/21 12:52:40 hno Exp $
+ * $Id: main.cc,v 1.372 2003/04/22 15:06:10 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -42,11 +42,24 @@
 #include "ACLASN.h"
 #include "ACL.h"
 
+#if USE_WIN32_SERVICE
+
+#include "squid_windows.h"
+#include <process.h>
+
+static int opt_install_service = FALSE;
+static int opt_remove_service = FALSE;
+static int opt_signal_service = FALSE;
+static int opt_command_line = FALSE;
+extern void WIN32_svcstatusupdate(DWORD, DWORD);
+void WINAPI WIN32_svcHandler(DWORD);
+
+#endif
+
 /* for error reporting from xmalloc and friends */
 SQUIDCEXTERN void (*failure_notify) (const char *);
 
 static int opt_send_signal = -1;
-static int opt_no_daemon = 0;
 static int opt_parse_cfg_only = 0;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int configured_once = 0;
@@ -281,6 +294,12 @@ mainParseOptions(int argc, char *argv[])
 
         case 'v':
             printf("Squid Cache: Version %s\nconfigure options: %s\n", version_string, SQUID_CONFIGURE_OPTIONS);
+
+#if USE_WIN32_SERVICE
+
+            printf("Compiled as Windows System Service.\n");
+
+#endif
 
             exit(0);
 
@@ -1269,9 +1288,9 @@ SquidShutdown(void *unused)
 #endif
 
     storeDirSync();		/* Flush log close */
+    storeFsDone();
 #if PURIFY || XMALLOC_TRACE
 
-    storeFsDone();
     configFreeMemory();
     storeFreeMemory();
     /*stmemFreeMemory(); */
