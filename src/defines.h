@@ -220,3 +220,6 @@
 
 #define AUTH_MSG_SZ 4096
 #define HTTP_REPLY_BUF_SZ 4096
+
+#define HTTP_PROXYING		(1<<0)
+#define HTTP_KEEPALIVE		(1<<1)

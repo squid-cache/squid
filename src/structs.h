@@ -113,6 +113,7 @@ struct _SquidConfig {
 	time_t lifetime;
 	time_t connect;
 	time_t request;
+	time_t pconn;
     } Timeout;
     size_t maxRequestSize;
     struct {
@@ -382,6 +383,7 @@ struct _HttpStateData {
     int eof;			/* reached end-of-object? */
     request_t *orig_request;
     int fd;			/* needed as identifier for ipcache */
+    int flags;
 };
 
 struct _icpUdpData {

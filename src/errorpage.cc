@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.61 1997/07/28 06:40:54 wessels Exp $
+ * $Id: errorpage.cc,v 1.62 1997/08/10 04:42:37 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -185,7 +185,7 @@ errorSend(int fd, ErrorState * err)
 }
 
 void
-errorAppendEntry(StoreEntry * entry, ErrorState * err)
+errorAppendEntry(const StoreEntry * entry, ErrorState * err)
 {
     char *buf;
     int len;

@@ -75,7 +75,7 @@ typedef struct _ErrorState ErrorState;
 
 typedef void AIOCB _PARAMS((void *, int aio_return, int aio_errno));
 typedef void CWCB _PARAMS((int fd, char *, int size, int errflag, void *data));
-typedef void CNCB _PARAMS((int fd, int status, void *data));
+typedef void CNCB _PARAMS((int fd, int status, void *));
 typedef void FREE _PARAMS((void *));
 typedef void FOCB _PARAMS((void *, int fd));
 typedef void EVH _PARAMS((void *));
