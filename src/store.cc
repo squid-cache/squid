@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.405 1998/04/17 04:24:25 wessels Exp $
+ * $Id: store.cc,v 1.406 1998/04/20 23:26:17 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -593,7 +593,7 @@ storeAbort(StoreEntry * e, int cbflag)
 	    aioCancel(mem->swapout.fd, NULL);
 #endif
 	/* we have to close the disk file if there is no write pending */
-	if (mem->swapout.queue_offset == mem->swapout.done_offset)
+	if (!storeSwapOutWriteQueued(mem))
 	    storeSwapOutFileClose(e);
     }
     storeUnlockObject(e);	/* unlock */
