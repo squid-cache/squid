@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.176 1997/12/02 00:17:35 wessels Exp $
+ * $Id: ftp.cc,v 1.177 1997/12/03 09:00:17 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -263,8 +263,9 @@ ftpTimeout(int fd, void *data)
 	    err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	    err->request = requestLink(ftpState->request);
 	    errorAppendEntry(entry, err);
+	} else {
+	    storeAbort(entry, 0);
 	}
-	storeAbort(entry, 0);
     }
     if (ftpState->data.fd >= 0) {
 	comm_close(ftpState->data.fd);
@@ -722,8 +723,9 @@ ftpReadData(int fd, void *data)
 		err->xerrno = errno;
 		err->request = requestLink(ftpState->request);
 		errorAppendEntry(entry, err);
+	    } else {
+	        storeAbort(entry, 0);
 	    }
-	    storeAbort(entry, 0);
 	    ftpDataTransferDone(ftpState);
 	}
     } else if (len == 0 && mem->inmem_hi == 0) {
@@ -731,7 +733,6 @@ ftpReadData(int fd, void *data)
 	err->xerrno = errno;
 	err->request = requestLink(ftpState->request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	ftpDataTransferDone(ftpState);
     } else if (len == 0) {
 	ftpReadComplete(ftpState);
@@ -899,7 +900,6 @@ ftpStart(request_t * request, StoreEntry * entry)
 	err->xerrno = errno;
 	err->request = requestLink(ftpState->request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	return;
     }
     ftpState->ctrl.fd = fd;
@@ -926,7 +926,6 @@ ftpConnectDone(int fd, int status, void *data)
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = requestLink(request);
 	errorAppendEntry(ftpState->entry, err);
-	storeAbort(ftpState->entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
 	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
@@ -935,7 +934,6 @@ ftpConnectDone(int fd, int status, void *data)
 	err->port = request->port;
 	err->request = requestLink(request);
 	errorAppendEntry(ftpState->entry, err);
-	storeAbort(ftpState->entry, 0);
 	comm_close(fd);
     } else {
 	ftpState->state = BEGIN;
@@ -1427,7 +1425,6 @@ ftpPasvCallback(int fd, int status, void *data)
 	err->port = ftpState->data.port;
 	err->request = requestLink(request);
 	errorAppendEntry(ftpState->entry, err);
-	storeAbort(ftpState->entry, 0);
 	comm_close(fd);
 	return;
     }
@@ -1671,7 +1668,6 @@ ftpFail(FtpStateData * ftpState)
     else
 	err->ftp.reply = ftpState->ctrl.last_reply;
     errorAppendEntry(ftpState->entry, err);
-    storeAbort(ftpState->entry, 0);
     comm_close(ftpState->ctrl.fd);
 }
 
