@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.16 1996/10/15 23:32:48 wessels Exp $
+#  $Id: Makefile.in,v 1.17 1996/10/22 03:38:10 wessels Exp $
 #
 prefix		= @prefix@
 srcdir		= @srcdir@
@@ -11,6 +11,7 @@ VPATH		= @srcdir@
 
 
 CC		= @CC@
+MAKEDEPEND	= @MAKEDEPEND@
 INSTALL		= @INSTALL@
 INSTALL_BIN 	= @INSTALL_PROGRAM@
 INSTALL_FILE 	= @INSTALL_DATA@
@@ -53,3 +54,7 @@ realclean: clean
 	-rm -f Makefile
 
 install: all
+
+depend:
+	$(MAKEDEPEND) -I../include -I. -fMakefile *.c
+
