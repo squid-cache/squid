@@ -8,14 +8,6 @@
 #define	COSS_MEMBUF_SZ	1048576
 #endif
 
-#ifndef	COSS_BLOCK_SZ
-#define	COSS_BLOCK_SZ	512
-#endif
-
-/* Macros to help block<->offset transiting */
-#define	COSS_OFS_TO_BLK(ofs)		((ofs) / COSS_BLOCK_SZ)
-#define	COSS_BLK_TO_OFS(ofs)		((ofs) * COSS_BLOCK_SZ)
-
 /* Note that swap_filen in sio/e are actually disk offsets too! */
 
 /* What we're doing in storeCossAllocate() */
@@ -24,6 +16,34 @@
 #define COSS_ALLOC_REALLOC		2
 
 class CossSwapDir;
+
+struct _coss_stats
+{
+    int stripes;
+
+    struct
+    {
+        int alloc;
+        int realloc;
+        int collisions;
+    }
+
+    alloc;
+    int disk_overflows;
+    int stripe_overflows;
+    int open_mem_hits;
+    int open_mem_misses;
+
+    struct
+    {
+        int ops;
+        int success;
+        int fail;
+    }
+
+    open, create, close, unlink, read, write, stripe_write;
+};
+
 
 struct _cossmembuf
 {
@@ -85,6 +105,8 @@ unsigned int writing:
     }
 
     flags;
+
+    struct _cossmembuf *locked_membuf;
     size_t st_size;
     void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
     void write(char const *buf, size_t size, off_t offset, FREE * free_func);
@@ -128,6 +150,14 @@ public:
     virtual void logEntry(const StoreEntry & e, int op) const;
     virtual void parse (int index, char *path);
     virtual void reconfigure (int, char *);
+    virtual off_t storeCossFilenoToDiskOffset(sfileno);
+    virtual sfileno storeCossDiskOffsetToFileno(off_t);
+    virtual CossMemBuf *storeCossFilenoToMembuf(sfileno f);
+    virtual SwapDirOption *CossSwapDir::getOptionTree() const;
+    virtual void CossSwapDir::optionBlockSizeDump(StoreEntry *) const;
+    virtual bool CossSwapDir::optionBlockSizeParse(const char *, const char *, int);
+
+
     //private:
     int fd;
     int swaplog_fd;
@@ -139,10 +169,13 @@ public:
     int numcollisions;
     dlink_list cossindex;
     async_queue_t aq;
+    unsigned int blksz_bits;
+    unsigned int blksz_mask;  /* just 1<<blksz_bits - 1*/
 };
 
-extern off_t storeCossAllocate(CossSwapDir * SD, const StoreEntry * e, int which);
 extern void storeCossAdd(CossSwapDir *, StoreEntry *);
 extern void storeCossRemove(CossSwapDir *, StoreEntry *);
 extern void storeCossStartMembuf(CossSwapDir * SD);
+
+extern struct _coss_stats coss_stats;
 #endif

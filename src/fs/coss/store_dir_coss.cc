@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.47 2003/08/10 07:43:42 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.48 2003/08/27 21:19:38 wessels Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -48,6 +48,9 @@ int n_coss_dirs = 0;
 MemPool *coss_index_pool = NULL;
 
 typedef struct _RebuildState RebuildState;
+
+void storeCossDirParseBlkSize(SwapDir *, const char *, const char *, int);
+void storeCossDirDumpBlkSize(StoreEntry *, const char *, const SwapDir *);
 
 struct _RebuildState
 {
@@ -162,11 +165,17 @@ CossSwapDir::init()
 
     if (fd < 0) {
         debug(47, 1) ("%s: %s\n", path, xstrerror());
-        fatal("storeCossDirInit: Failed to open a COSS directory.");
+        fatal("storeCossDirInit: Failed to open a COSS file.");
     }
 
     n_coss_dirs++;
-    (void) storeDirGetBlkSize(path, &fs.blksize);
+    /*
+     * fs.blksize is normally determined by calling statvfs() etc,
+     * but we just set it here.  It is used in accounting the
+     * total store size, and is reported in cachemgr 'storedir'
+     * page.
+     */
+    fs.blksize = 1 << blksz_bits;
 }
 
 void
@@ -357,7 +366,12 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     storeHashInsert(e, key);	/* do it after we clear KEY_PRIVATE */
     storeCossAdd(SD, e);
+#if USE_COSS_ALLOC_NOTIFY
+
     e->swap_filen = storeCossAllocate(SD, e, COSS_ALLOC_NOTIFY);
+#endif
+
+    assert(e->swap_filen >= 0);
     return e;
 }
 
@@ -816,6 +830,7 @@ CossSwapDir::parse(int anIndex, char *aPath)
 {
     unsigned int i;
     unsigned int size;
+    off_t max_offset;
 
     i = GetInteger();
     size = i << 10;		/* Mbytes to Kbytes */
@@ -829,11 +844,27 @@ CossSwapDir::parse(int anIndex, char *aPath)
 
     max_size = size;
 
-    parseOptions(0);
-
     /* Enforce maxobjsize being set to something */
     if (max_objsize == -1)
         fatal("COSS requires max-size to be set to something other than -1!\n");
+
+    if (max_objsize > COSS_MEMBUF_SZ)
+        fatalf("COSS max-size option must be less than COSS_MEMBUF_SZ (%d)\n",
+               COSS_MEMBUF_SZ);
+
+    /*
+     * check that we won't overflow sfileno later.  0xFFFFFF is the
+     * largest possible sfileno, assuming sfileno is a 25-bit
+     * signed integer, as defined in structs.h.
+     */
+    max_offset = (off_t) 0xFFFFFF << blksz_bits;
+
+    if (max_size > (max_offset>>10)) {
+        debug(47,0)("COSS block-size = %d bytes\n", 1<<blksz_bits);
+        debug(47,0)("COSS largest file offset = %llu KB\n", max_offset >> 10);
+        debug(47,0)("COSS cache_dir size = %d KB\n", max_size);
+        fatal("COSS cache_dir size exceeds largest offset\n");
+    }
 }
 
 
@@ -856,9 +887,7 @@ CossSwapDir::reconfigure(int index, char *path)
         max_size = size;
     }
 
-    parseOptions(1);
     /* Enforce maxobjsize being set to something */
-
     if (max_objsize == -1)
         fatal("COSS requires max-size to be set to something other than -1!\n");
 }
@@ -870,57 +899,73 @@ CossSwapDir::dump(StoreEntry &entry)const
     dumpOptions(&entry);
 }
 
-#if OLD_UNUSED_CODE
-SwapDir *
-storeCossDirPick(void)
-{
-    int i, choosenext = 0;
-    SwapDir *SD;
 
-    if (n_coss_dirs == 0)
-        return NULL;
-
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        SD = &Config.cacheSwap.swapDirs[i];
-
-        if (SD->type == SWAPDIR_COSS) {
-            if ((last_coss_pick_index == -1) || (n_coss_dirs == 1)) {
-                last_coss_pick_index = i;
-                return SD;
-            } else if (choosenext) {
-                last_coss_pick_index = i;
-                return SD;
-            } else if (last_coss_pick_index == i) {
-                choosenext = 1;
-            }
-        }
-    }
-
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        SD = &Config.cacheSwap.swapDirs[i];
-
-        if (SD->type == SWAPDIR_COSS) {
-            if ((last_coss_pick_index == -1) || (n_coss_dirs == 1)) {
-                last_coss_pick_index = i;
-                return SD;
-            } else if (choosenext) {
-                last_coss_pick_index = i;
-                return SD;
-            } else if (last_coss_pick_index == i) {
-                choosenext = 1;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-#endif
 CossSwapDir::CossSwapDir() : SwapDir ("coss"), fd (-1), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0)
 {
     membufs.head = NULL;
     membufs.tail = NULL;
     cossindex.head = NULL;
     cossindex.tail = NULL;
+    blksz_mask = (1 << blksz_bits) - 1;
 }
 
+bool
+CossSwapDir::optionBlockSizeParse(const char *option, const char *value, int reconfiguring)
+{
+    int blksz = atoi(value);
+
+    if (blksz == (1 << blksz_bits))
+        /* no change */
+        return true;
+
+    if (reconfiguring) {
+        debug(47, 0) ("WARNING: cannot change COSS block-size while"
+                      " Squid is running\n");
+        return false;
+    }
+
+    int nbits = 0;
+    int check = blksz;
+
+    while (check > 1) {
+        nbits++;
+        check >>= 1;
+    }
+
+    check = 1 << nbits;
+
+    if (check != blksz)
+        fatal("COSS block-size must be a power of 2\n");
+
+    if (nbits > 13)
+        fatal("COSS block-size must be 8192 or smaller\n");
+
+    blksz_bits = nbits;
+
+    blksz_mask = (1 << blksz_bits) - 1;
+
+    return true;
+}
+
+void
+CossSwapDir::optionBlockSizeDump(StoreEntry * e) const
+{
+    storeAppendPrintf(e, " block-size=%d", 1 << blksz_bits);
+}
+
+SwapDirOption *
+CossSwapDir::getOptionTree() const
+{
+    SwapDirOption *parentResult = SwapDir::getOptionTree();
+
+    SwapDirOptionVector *result = new SwapDirOptionVector();
+
+    result->options.push_back(parentResult);
+
+    result->options.push_back(
+        new SwapDirOptionAdapter<CossSwapDir>(*const_cast<CossSwapDir *>(this),
+                                              &CossSwapDir::optionBlockSizeParse,
+                                              &CossSwapDir::optionBlockSizeDump));
+
+    return result;
+}
