@@ -1,0 +1,34 @@
+<HTML><HEAD><meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
+<TITLE>GREŠKA: Tražena adresa (URL) ne može da se dovuče </TITLE>
+</HEAD><BODY>
+<H1>GREŠKA</H1>
+<H2>Tražena adresa (URL) ne može da se dovuče</H2>
+<HR>
+<P>
+Za vreme obrade sledećeg zahteva:
+<PRE>
+%R
+</PRE>
+<P>
+Desila se greška:
+<UL>
+<LI>
+<STRONG>
+Neispravan zahtev.
+</STRONG>
+</UL>
+
+<P>
+Neki aspekt HTTP zahteva nije ispravan. Mogući problemi:
+<UL>
+<LI>Metod zahteva je nepoznat ili nedostaje
+<LI>Nedostaje adresa (URL)
+<LI>Nedostaje  HTTP identifikator (HTTP/1.0)
+<LI>Zahtev je predug
+<LI>Nedostaje dužina zahteva (Content-Length) za POST ili PUT zahteva
+<LI>Nedozvoljeni karakteri u imenu računara; donja crta (_) nije dozvoljena
+</UL>
+
+<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w">%w</A>. 
+
+</UL>

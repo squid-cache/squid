@@ -1,0 +1,30 @@
+<HTML><HEAD><meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
+<TITLE>GREŠKA: FTP PUT/upload nije uspeo </TITLE>
+</HEAD><BODY>
+<H1>GREŠKA</H1>
+<H2>FTP upload nije uspeo </H2>
+<HR>
+<P>
+Tokom pokušaja da se PRENESE strana sa sledećom adresom (URL):
+<A HREF="%U">%U</A>
+<P>
+Dok je pokušavao da prenese (PUT) sledeći URL:
+<A HREF="%U">%U</A>
+<P>
+Squid je zadao sledeću komandu:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+da bi dobio odgovor:
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+
+<P>
+što znači da:
+<PRE>
+treba da proverite putanju, privilegije, raspoloživ prostor na disku i pokušate ponovo.
+</PRE>
+
+<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w">%w</A>. 
+

@@ -1,0 +1,30 @@
+<HTML><HEAD><meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
+<TITLE>GREŠKA: Tražena adresa (URL) ne može da se dovuče </TITLE>
+</HEAD><BODY>
+<H1>GREŠKA</H1>
+<H2>Tražena adresa (URL) ne može da se dovuče</H2>
+<HR>
+<P>
+Tokom pokušaja da se dovuče strana sa sledećom adresom (URL):
+<A HREF="%U">%U</A>
+<P>
+dogodila se sledeća greška:
+<UL>
+<LI>
+<STRONG>
+@SHORT_DESCRIPTION@
+</STRONG>
+</UL>
+
+<P>
+Sistem je dao povratnu informaciju:
+<PRE><I>Konekcija je raskinuta.</I></PRE>
+
+<P>
+što znači:
+<PRE>
+    Udaljeni računar ili mreža nisu operativni. Molimo pokušajte kasnije.
+</PRE>
+</P>
+<P>Vaš cache administrator je <A HREF="mailto:%w">%w</A>.
+

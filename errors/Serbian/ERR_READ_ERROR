@@ -1,0 +1,28 @@
+<HTML><HEAD><meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
+<TITLE>GREŠKA: Tražena adresa (URL) ne može da se dovuče </TITLE>
+</HEAD><BODY>
+<H1>GREŠKA</H1>
+<H2>Tražena adresa (URL) ne može da se dovuče</H2>
+<HR>
+<P>
+Tokom pokušaja da se dovuče strana sa sledećom adresom (URL):
+<A HREF="%U">%U</A>
+<P>
+dogodila se sledeća greška:
+<UL>
+<LI>
+<STRONG>
+Greška u čitanju.
+</STRONG>
+</UL>
+
+<P>
+Sistem je dao povratnu informaciju:
+<PRE><I>    %E</I></PRE>
+
+<P>
+<PRE>
+Desila se greška prilikom isčitavanja podataka sa mreže.
+Molimo pokušajte ponovo.
+</PRE>
+</P>

@@ -1,0 +1,25 @@
+<TITLE>GREŠKA: Tražena adresa (URL) ne može da se dovuèe </TITLE>
+</HEAD><BODY>
+<H1>GREŠKA</H1>
+<H2>Tražena adresa (URL) ne može da se dovuèe</H2>
+<HR>
+<P>
+Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
+<A HREF="%U">%U</A>
+<P>
+dogodila se sledeæa greška:
+<UL>
+<LI>
+<STRONG>
+FTP nije omoguæen.
+</STRONG>
+</UL>
+
+<P>
+što znaèi:
+<PRE>
+    Ovaj proksi server ne omoguèava FTP saobraæaj.
+</PRE>
+</P>
+
+<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w">%w</A>. 
