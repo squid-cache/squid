@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.47 1998/09/01 23:31:22 wessels Exp $
+ * $Id: asn.cc,v 1.48 1998/09/10 22:30:19 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -57,7 +57,7 @@ struct radix_node_head *AS_tree_head;
  */
 struct _as_info {
     intlist *as_number;
-    time_t expires;
+    time_t expires;		/* NOTUSED */
 };
 
 struct _ASState {
@@ -85,12 +85,12 @@ static int asnAddNet(char *, int);
 static void asnCacheStart(int as);
 static STCB asHandleReply;
 static int destroyRadixNode(struct radix_node *rn, void *w);
+static int printRadixNode(struct radix_node *rn, void *w);
 static void asnAclInitialize(acl * acls);
 static void asStateFree(void *data);
-
 static void destroyRadixNodeInfo(as_info *);
+static OBJH asnStats;
 
-/*static int destroyRadixNode(struct radix_node *,caddr_t); */
 extern struct radix_node *rn_lookup(void *, void *, void *);
 
 
@@ -152,6 +152,7 @@ asnInit(void)
     rn_init();
     rn_inithead((void **) &AS_tree_head, 8);
     asnAclInitialize(Config.aclList);
+    cachemgrRegister("asndb", "AS Number Database", asnStats, 0, 1);
 }
 
 void
@@ -159,6 +160,13 @@ asnFreeMemory(void)
 {
     rn_walktree(AS_tree_head, destroyRadixNode, AS_tree_head);
     destroyRadixNode((struct radix_node *) 0, (void *) AS_tree_head);
+}
+
+static void
+asnStats(StoreEntry * sentry)
+{
+    storeAppendPrintf(sentry, "Address    \tAS Numbers\n");
+    rn_walktree(AS_tree_head, printRadixNode, sentry);
 }
 
 /* PRIVATE */
@@ -317,7 +325,7 @@ asnAddNet(char *as_string, int as_number)
     xstrncpy(dbg1, inet_ntoa(in_a), 32);
     xstrncpy(dbg2, inet_ntoa(in_m), 32);
     addr = ntohl(addr);
-    mask = ntohl(mask);
+    /*mask = ntohl(mask); */
     debug(53, 3) ("asnAddNet: called for %s/%s\n", dbg1, dbg2);
     memset(e, '\0', sizeof(rtentry));
     store_m_int(addr, e->e_addr);
@@ -382,4 +390,37 @@ destroyRadixNodeInfo(as_info * e_info)
 	xfree(prev);
     }
     xfree(data);
+}
+
+int
+mask_len(int mask)
+{
+    int len = 32;
+    while ((mask & 1) == 0) {
+	len--;
+	mask >>= 1;
+    }
+    return len;
+}
+
+static int
+printRadixNode(struct radix_node *rn, void *w)
+{
+    StoreEntry *sentry = w;
+    rtentry *e = (rtentry *) rn;
+    intlist *q;
+    as_info *as_info;
+    struct in_addr addr;
+    struct in_addr mask;
+    assert(e);
+    (void) get_m_int(addr.s_addr, e->e_addr);
+    (void) get_m_int(mask.s_addr, e->e_mask);
+    storeAppendPrintf(sentry, "%15s/%d\t",
+	inet_ntoa(addr), mask_len(ntohl(mask.s_addr)));
+    assert(as_info = e->e_info);
+    assert(as_info->as_number);
+    for (q = as_info->as_number; q; q = q->next)
+	storeAppendPrintf(sentry, " %d", q->i);
+    storeAppendPrintf(sentry, "\n");
+    return 0;
 }
