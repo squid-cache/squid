@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.454 1998/09/09 16:47:08 wessels Exp $
+ * $Id: store.cc,v 1.455 1998/09/09 20:05:52 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -456,7 +456,7 @@ struct _store_check_cachable_hist {
 	int negative_cached;
 	int too_big;
 	int private_key;
-	int http_median_too_high;
+	int too_many_open_files;
 	int lru_age_too_low;
     } no;
     struct {
@@ -492,12 +492,9 @@ storeCheckCachable(StoreEntry * e)
     } else if (EBIT_TEST(e->flag, KEY_PRIVATE)) {
 	debug(20, 3) ("storeCheckCachable: NO: private key\n");
 	store_check_cachable_hist.no.private_key++;
-#if WIP
-    } else if (statMedianSvc(5, MEDIAN_HTTP) > 2000.0) {
-	debug(20, 2) ("storeCheckCachable: NO: median HTTP svc time = %d\n",
-	    statMedianSvc(5, MEDIAN_HTTP));
-	store_check_cachable_hist.no.http_median_too_high++;
-#endif
+    } else if (Config.max_open_disk_fds && open_disk_fd > Config.max_open_disk_fds) {
+	debug(20, 2) ("storeCheckCachable: NO: too many disk files open\n");
+	store_check_cachable_hist.no.too_many_open_files++;
     } else if (storeExpiredReferenceAge() < 300) {
 	debug(20, 2) ("storeCheckCachable: NO: LRU Age = %d\n",
 	    storeExpiredReferenceAge());
@@ -528,8 +525,8 @@ storeCheckCachableStats(StoreEntry * sentry)
 	store_check_cachable_hist.no.too_big);
     storeAppendPrintf(sentry, "no.private_key\t%d\n",
 	store_check_cachable_hist.no.private_key);
-    storeAppendPrintf(sentry, "no.http_median_too_high\t%d\n",
-	store_check_cachable_hist.no.http_median_too_high);
+    storeAppendPrintf(sentry, "no.too_many_open_files\t%d\n",
+	store_check_cachable_hist.no.too_many_open_files);
     storeAppendPrintf(sentry, "no.lru_age_too_low\t%d\n",
 	store_check_cachable_hist.no.lru_age_too_low);
     storeAppendPrintf(sentry, "yes.default\t%d\n",
