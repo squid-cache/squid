@@ -1,8 +1,8 @@
 
 /*
  * MSNT - Microsoft Windows NT domain squid authenticator module
- * Version 1.2 by Stellar-X Pty Ltd, Antonino Iannella
- * Fri Sep 22 00:56:05 CST 2000
+ * Version 2.0 by Stellar-X Pty Ltd, Antonino Iannella
+ * Sun Sep  2 14:39:53 CST 2001
  * 
  * Modified to act as a Squid authenticator module.
  * Removed all Pike stuff.
@@ -12,7 +12,7 @@
  * Andrew Tridgell 1997
  * Richard Sharpe 1996
  * Bill Welliver 1999
- * Duane Wessels 2000
+ * Duane Wessels 2000 (wessels@squid-cache.org)
  * 
  * Released under GNU Public License
  * 
@@ -36,6 +36,8 @@
 #include <syslog.h>
 #include <sys/time.h>
 
+#define  MSNTVERSION "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella."
+
 extern int OpenConfigFile();
 extern int QueryServers(char *, char *);
 extern void Checktimer();
@@ -55,6 +57,10 @@ main()
     char username[256];
     char password[256];
     char wstr[256];
+    char ver[100];
+
+    /* Hidden way to imbed the authenticator release version */
+    strcpy(ver, MSNTVERSION);
 
     /* Read configuration file. Abort wildly if error. */
     if (OpenConfigFile() == 1)
@@ -82,10 +88,11 @@ main()
 	if (fgets(wstr, 255, stdin) == NULL)
 	    break;
 
-	/* Clear any current settings */
+	/* Clear any current settings. Read new ones. Use \n as a 
+	 * convenient EOL marker which is not even there. */
 	username[0] = '\0';
 	password[0] = '\0';
-	sscanf(wstr, "%s %s", username, password);	/* Extract parameters */
+	sscanf(wstr, "%s %[^\n]", username, password);	/* Extract parameters */
 
 	/* Check for invalid or blank entries */
 	if ((username[0] == '\0') || (password[0] == '\0')) {

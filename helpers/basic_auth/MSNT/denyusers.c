@@ -127,6 +127,7 @@ int
 Check_ifuserdenied(char *ConnectingUser)
 {
     static char CUBuf[NAMELEN + 1];
+    static char CUBuf1[NAMELEN + 1];
     static int x;
     static char DenyMsg[256];
 
@@ -142,8 +143,8 @@ Check_ifuserdenied(char *ConnectingUser)
      * If so, deny. If not, allow. Reconstruct the username
      * to have whitespace, to avoid finding wrong string subsets. */
 
-    sscanf(ConnectingUser, " %s ", CUBuf);
-    sprintf(CUBuf, " %s ", CUBuf);
+    sscanf(ConnectingUser, " %s ", CUBuf1);
+    sprintf(CUBuf, " %s ", CUBuf1);
 
     for (x = 0; x <= strlen(CUBuf); x++)
 	CUBuf[x] = toupper(CUBuf[x]);
@@ -151,7 +152,7 @@ Check_ifuserdenied(char *ConnectingUser)
     if (strstr(DeniedUsers, CUBuf) == NULL)
 	return 0;
     else {
-	sprintf(DenyMsg, "Denied access to user '%s'.", CUBuf);
+	sprintf(DenyMsg, "Denied access to user '%s'.", CUBuf1);
 	syslog(LOG_USER | LOG_ERR, DenyMsg);
 	return 1;
     }

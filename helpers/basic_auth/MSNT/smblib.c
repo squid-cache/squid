@@ -37,7 +37,6 @@ int SMBlib_SMB_Error;
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
-
 #include <signal.h>
 
 SMB_State_Types SMBlib_State;

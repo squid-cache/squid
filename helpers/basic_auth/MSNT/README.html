@@ -6,14 +6,14 @@
 
 <!--
 If you require this document in text form, download the 
-HTML-text package from http://members.tripod.com/~stellarx.
+HTML-text package from http://members.tripod.com/stellarx.
 -->
 
 <H1>
-MSNT Auth v2.0.1<BR>
-Squid web proxy Authentication module<BR>
+MSNT Auth v2.0.3<BR>
+Squid web proxy NT authentication module<BR>
 Antonino Iannella, Stellar-X Pty Ltd<BR>
-Fri Sep 29 15:53:33 CST 2000
+Sun Sep  2 15:01:58 CST 2001
 </H1>
 
 <H2>Contents</H2>
@@ -21,7 +21,7 @@ Fri Sep 29 15:53:33 CST 2000
 <UL>
 <LI> <A HREF="#introduction">Introduction</A>
 <LI> <A HREF="#installation">Installation</A>
-<LI> <A HREF="#compiling">Other compiling issues</A>
+<LI> <A HREF="#compiling">Issues when compiling</A>
 <LI> <A HREF="#configuration">Configuration file</A>
 <LI> <A HREF="#denying">Denying users</A>
 <LI> <A HREF="#allowing">Allowing users</A>
@@ -29,8 +29,7 @@ Fri Sep 29 15:53:33 CST 2000
 <LI> <A HREF="#testing">Testing</A>
 <LI> <A HREF="#contact">Contact details</A>
 <LI> <A HREF="#reported">Reported problem</A>
-<LI> <A HREF="#known">Known limitation</A>
-<LI> <A HREF="#changes">Changes since last revision</A>
+<LI> <A HREF="#changes">Revision history</A>
 </UL>
 
 <A NAME="introduction"><H2>Introduction</H2>
@@ -45,19 +44,36 @@ and Richard Sharpe. This version is sourced from the Pike
 authentication module by William Welliver (hwellive@intersil.com).
 
 <P>
-Usage is simple. It accepts a username and password on standard input
-and will return OK if the username/password is valid for the domain,
+Usage is simple. It accepts a username and password on standard input.
+It will return OK if the username/password is valid for the domain,
 or ERR if there was some problem.
 Check syslog messages for reported problems.
 
 <P>
 Msntauth is released under the GNU General Public License and
-is available from http://stellarx.tripod.com.
+is available from 
+<A HREF="http://www.tripod.com/stellarx">http://www.tripod.com/stellarx</A>.
+It also ships with the Squid web proxy, 
+<A HREF="http://www.squid-proxy.org">http://www.squid-proxy.org</A>.
+
+<P>
+Msntauth has not been tested with Windows 2000 domains yet.
 
 <A NAME="installation"><H2>Installation</H2>
 
 <P>
 Make any changes to the source code you need.
+
+<P>
+If you are using the source provided with Squid, then Msntauth
+will be compiled when you compile Squid. Refer to Squid documentation
+for details.
+
+<P>
+If you have downloaded Msntauth from the Stellar-X website, then
+copy <CODE>Makefile.MSNT</CODE> to <CODE>Makefile</CODE>.
+Review the Makefile, and modify based on target platform or
+site requirements.
 
 <P>
 Type 'make', then 'make install', then 'make clean'.
@@ -73,17 +89,16 @@ To avoid using the makefile, it may compile with
 
 <P>
 Hopefully nobody has problems compiling msntauth.
-In the future I plan to use GNU automake.
 
-<A NAME="compiling"><H2>Other compiling issues</H2>
+<A NAME="compiling"><H2>Issues when compiling</H2>
 
 <P>
 The Makefile uses the GCC compiler, and assumes that it is in the current PATH.
 Msntauth is known to compile properly on Redhat Linux 6, and FreeBSD 3.1
 without problems. Other operating systems are untested,
 but use a recent copy of the GNU C compiler.
-Smbencrypt.c has the '#include <sys/vfs.h>' line commented out.
-Remove the comment for S5R4 systems, like Solaris.
+In Smbencrypt.c, '#include <sys/vfs.h>' only gets included when
+compiled with Solaris.
 
 <P>
 When compiling under Solaris, the socket libraries must be linked to.
@@ -91,12 +106,19 @@ In the Makefile, hash the default CFLAGS line, and unhash the Solaris
 CFLAGS line. It always helps to have /usr/ccs/bin in your path
 prior to compiling.
 
+<P>
+For Digital Unix/Tru64, review the INSTALL line in the makefile.
+
 <A NAME="configuration"><H2>Configuration file</H2>
 
 <P>
-Msntauth uses a configuration file which is a break from previous
-releases. The file is /usr/local/squid/etc/msntauth.conf.
-If this needs to be changed, it is defined in confload.h.
+Msntauth uses a configuration file as of version 2.
+The file is /usr/local/squid/etc/msntauth.conf.
+If this path needs to be changed, it is defined in confload.c -
+
+<PRE>
+  #define CONFIGFILE   "/usr/local/squid/etc/msntauth.conf"
+</PRE>
 
 <P>
 An example configuration file is provided. It looks like
@@ -119,10 +141,14 @@ All comments start with '#'.
 <P>
 NT servers are used to query user accounts. The 'server' lines
 are used for this, with the PDC, BDC, and NT domain as parameters.
-Up to 5 servers/domains can be queried. If this is not enough
-modify the MAXSERVERS define in confload.h.
+Up to 5 servers/domains can be queried. If this is not enough,
+modify the MAXSERVERS define in confload.c.
 At least one server must be specified, or msntauth will not
 run.
+Server names must be resolvable by the system. If not, msntauth
+reports an error. If you can't ping it, you might have a host
+resolution problem.
+You can't use NetBIOS hostnames, nor IP addresses.
 
 <P>
 When a user provides a username/password, each of these
@@ -204,11 +230,16 @@ your access list -
   http_access allow password
   http_access allow <yourACL>
   http_access deny all
-
 </PRE>
 
 <P>
-You will also need to review the following directives -
+You will also need to review the following directives. The number of
+msntauth children spawned is set with authenticate_children.
+The number of children needed is site-dependent, so some
+experimentation may be required to find the best number.
+There should be no visible delay in performance with Squid once
+msntauth is in use. As an example, a firm with 1500 users and a T1
+internet connection required a value of 30.-
 
 <PRE>
   proxy_auth_realm enterprise web gateway
@@ -245,12 +276,23 @@ It should behave in the following way -
 If the above didn't work as expected, you may need to modify the main()
 function in msntauth.c. Inform the maintainer of any problems.
 
+<P>
+Usernames cannot have whitespace in them, but passwords can.
+
+<P>
+As of version 2.0.3, the msntauth version can be found in the executable.
+Type this to retrieve it -
+
+<PRE>
+  strings msntauth | grep -i msntauth
+</PRE>
+
 <A NAME="contact"><H2>Contact details</H2>
 
 <P>
 To contact the maintainer of this package, email Antonino Iannella
-at antonino@usa.net, antonino.iannella@usa.net, or
-antonino.iannella@camtech.com.au.
+at antonino@rager.com.au, or antonino.iannella@santos.com.au, or ring
++61 8408 800 007.
 
 <P>
 The latest version may be found on http://members.tripod.com/stellarx.
@@ -275,23 +317,10 @@ Apply the provided patch before compiling, using
   patch smblib.c < smblib.c.patch
 </PRE>
 
-<A NAME="known"><H2>Known limitation</H2>
+<A NAME="changes"><H2>Revision history</H2>
 
 <P>
-Usernames are checked if they are allowed or denied. If a username
-is found as a substring of a different username in these files, 
-the user will be affected somehow. For example, if 'jpeterman' has
-been explicitly denied in the denyusers file, then 'jpeter' who
-is trying to use the proxy, will be denied. If this causes anyone 
-any problems, then I'll fix it.
-
-<P>
-As of version 2.0.1, this problem has been fixed.
-
-<A NAME="changes"><H2>Changes since last revision</H2>
-
-<P>
-The following list of changes have been made to improve msntauth.
+The following sequence of changes have been made to improve msntauth.
 I have not had a chance to do too much testing due
 to lack of resources. There should be no problems, though.
 
@@ -305,12 +334,21 @@ to lack of resources. There should be no problems, though.
 <LI>Added the use of a configuration file, instead of hard-coding NT server details
 <LI>Allowed for querying multiple NT servers and domains (this was a hot issue)
 <LI>Changed README into an HTML document to improve readability
-<LI>Didn't make use of GNU autoconf. I will in future, I promise.
-<LI>Removed denied/allowed username substring search limitation.
+<LI>Removed denied/allowed username substring search limitation
+<LI>Fixed a bug which occurred when reading denied/allowed usernames
+<LI>Allows whitespace in passwords
+<LI>To check user list changes, doesn't use an alarm every minute.
+<LI>Fixed a sigaction compilation error, causing problems on FreeBSD and HPUX
+<LI>Removed a problem of finding a valid username as a substring in the denied user list.
+<LI>Support email address change from antonino@usa.net to antonino@rager.com.au.
+<LI>Msntauth was successfully tested on Tru64.
+<LI>PDC and BDC hostnames are now checked if they are resolvable.
+<LI>Smbencrypt.c does not have to be checked for Solaris systems any more.
+<LI>Imbedded version information in the executable.
 </UL>
 
 <P>
-Hopefully msntauth and Squid is now a more valuable product.
+Hopefully msntauth and Squid prove to be a valuable auditing combination.
 Feel free to send me success or problem stories.
 
 </BODY>

@@ -16,6 +16,7 @@
 #include <syslog.h>
 #include <errno.h>
 #include <sys/param.h>
+#include <netdb.h>
 
 #define CONFIGFILE   "/usr/local/squid/etc/msntauth.conf"	/* Path to configuration file */
 #define DENYUSERSDEFAULT   "/usr/local/squid/etc/denyusers"
@@ -154,6 +155,7 @@ ProcessLine(char *Linebuf)
 
 /*
  * Adds a server to query to the server array.
+ * Checks if the server IP is resolvable.
  * Checks if the number of servers to query is not exceeded.
  * Does not allow parameters longer than NTHOSTLEN.
  */
@@ -161,8 +163,18 @@ ProcessLine(char *Linebuf)
 void
 AddServer(char *ParamPDC, char *ParamBDC, char *ParamDomain)
 {
+    struct hostent *hstruct;
+
     if (Serversqueried + 1 > MAXSERVERS) {
-	syslog(LOG_USER | LOG_ERR, "ProcessLine: Ignoring '%s' server line; too many servers.", ParamPDC);
+	syslog(LOG_USER | LOG_ERR, "AddServer: Ignoring '%s' server line; too many servers.", ParamPDC);
+	return;
+    }
+    if (gethostbyname(ParamPDC) == (struct hostent *) NULL) {
+	syslog(LOG_USER | LOG_ERR, "AddServer: Ignoring host '%s'. Cannot resolve its address.", ParamPDC);
+	return;
+    }
+    if (gethostbyname(ParamBDC) == (struct hostent *) NULL) {
+	syslog(LOG_USER | LOG_ERR, "AddServer: Ignoring host '%s'. Cannot resolve its address.", ParamBDC);
 	return;
     }
     Serversqueried++;
@@ -201,6 +213,11 @@ QueryServers(char *username, char *password)
  * Logs syslog messages for different errors.
  * Returns 0 on success, non-zero on failure.
  */
+
+/* Define for systems which don't support it, like Solaris */
+#ifndef LOG_AUTHPRIV
+#define LOG_AUTHPRIV LOG_AUTH
+#endif
 
 int
 QueryServerForUser(int x, char *username, char *password)
