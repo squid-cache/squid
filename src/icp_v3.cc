@@ -19,7 +19,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     header.length = ntohs(headerp->length);
     header.reqnum = ntohl(headerp->reqnum);
     header.flags = ntohl(headerp->flags);
-    header.shostid = ntohl(headerp->shostid);
+    header.shostid = headerp->shostid;
 
     switch (header.opcode) {
     case ICP_QUERY:
