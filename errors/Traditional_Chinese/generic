@@ -1,0 +1,29 @@
+<HTML><HEAD>
+<TITLE>錯誤：欲連結之網站/網頁位置無法正確的傳回</TITLE>
+</HEAD><BODY>
+<H1>錯誤</H1>
+<H2>欲連結之網站/網頁位置無法正確的傳回</H2>
+<HR>
+<P>
+當嘗試傳回下面的位置時：
+<A HREF="%U">%U</A>
+<P>
+發生了下列的錯誤：
+<UL>
+<LI>
+<STRONG>
+@SHORT_DESCRIPTION@
+</STRONG>
+</UL>
+
+<P>
+系統回應下列訊息：
+<PRE><I>    %E</I></PRE>
+
+<P>
+這表示：
+<PRE>
+    @LONG_DESCRIPTION@
+</PRE>
+</P>
+

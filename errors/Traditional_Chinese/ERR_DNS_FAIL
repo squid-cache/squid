@@ -1,0 +1,34 @@
+<HTML><HEAD>
+<TITLE>錯誤：欲連結之網站/網頁位置無法正確的傳回</TITLE>
+</HEAD><BODY>
+<H2>欲連結之網站/網頁位置無法正確的傳回</H2>
+<HR>
+<P>
+當嘗試傳回下面的位置時：
+<A HREF="%U">%U</A>
+<P>
+發生了下列的錯誤：
+<BLOCKQUOTE>
+Unable to determine IP address from host name for
+<BR>
+無法正確轉譯下列您輸入的網站位置成正確的 IP 位置：
+<I>%H</I>
+</BLOCKQUOTE>
+</UL>
+
+<P>
+領域名稱伺服器回應下列錯誤訊息：
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+這表示：
+<PRE>
+ The cache was not able to resolve the hostname presented in the URL. 
+ Check if the address is correct. 
+<BR>
+ PROXY 伺服器沒有辦法辨識您輸入的網站位置，請檢查您輸入的位置是正確的。
+</PRE>
+</P>
+

@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<TITLE>錯誤：欲連結之網站/網頁位置無法正確的傳回</TITLE>
+</HEAD><BODY>
+<H1>錯誤</H1>
+<H2>欲連結之網站/網頁位置無法正確的傳回</H2>
+<HR>
+<P>
+當嘗試傳回下面的位置時：
+<A HREF="%U">%U</A>
+<P>
+發生了下列的錯誤：
+<UL>
+<LI>
+<STRONG>
+Forwarding Denied.
+<BR>
+轉送要求被拒
+</STRONG>
+</UL>
+
+<P>
+This cache will not forward your request because it is trying to enforce a
+sibling relationship.  Perhaps the client at %i is a cache which has been
+misconfigured.
+<BR>
+本 PROXY 伺服器拒絕替您服務，因為您使用的 PROXY 伺服器（%i）並未被本 PROXY 伺服器
+准許進行存取。
+</P>

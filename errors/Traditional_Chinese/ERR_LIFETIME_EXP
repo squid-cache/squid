@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>錯誤：欲連結之網站/網頁位置無法正確的傳回</TITLE>
+</HEAD><BODY>
+<H1>錯誤</H1>
+<H2>欲連結之網站/網頁位置無法正確的傳回</H2>
+<HR>
+<P>
+當嘗試傳回下面的位置時：
+<A HREF="%U">%U</A>
+<P>
+發生了下列的錯誤：
+<UL>
+<LI>
+<STRONG>
+Connection Lifetime Expired
+<BR>
+超過連線等待時限
+</STRONG>
+</UL>
+
+<P>
+Squid has terminated the request because it has exceeded the maximum
+connection lifetime.
+<BR>
+PROXY 伺服器終止連線要求，因為已經超過連線等待時限。
+</P>
