@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.20 1996/04/16 16:35:25 wessels Exp $
+#  $Id: Makefile.in,v 1.21 1996/04/16 18:28:31 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -113,6 +113,7 @@ install: all install-mkdirs
 		echo $(INSTALL_BIN) $$f $(bindir); \
 		$(INSTALL_BIN) $$f $(bindir); \
 	done
+	$(INSTALL_FILE) squid.conf $(sysconfdir)/squid.conf.default
 	@if test -f $(sysconfdir)/squid.conf ; then \
 		echo "$@ will not overwrite existing $(sysconfdir)/squid.conf" ; \
 	else \
