@@ -88,7 +88,7 @@ while (<>) {
                 $myip,          # a4 shostid
                 $_);            # a%d payload
 	die "send: $!\n" unless
-		send($sock, $request, 0, $them);
+		send($sock, $request, 0);
 	$nsent++;
         $rin = '';
         vec($rin,fileno($sock),1) = 1;
