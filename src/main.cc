@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.92 1996/10/11 23:11:16 wessels Exp $
+ * $Id: main.cc,v 1.93 1996/10/13 06:19:48 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -704,7 +704,7 @@ main(int argc, char **argv)
 static void
 sendSignal(void)
 {
-    int pid;
+    pid_t pid;
     debug_log = stderr;
     if (ConfigFile == NULL)
 	ConfigFile = xstrdup(DefaultConfigFile);

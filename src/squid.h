@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.58 1996/10/09 15:34:36 wessels Exp $
+ * $Id: squid.h,v 1.59 1996/10/13 06:19:50 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -158,8 +158,8 @@
 #define INADDR_NONE ((unsigned long) -1)
 #endif
 
-#if !defined(HAVE_RUSAGE) && defined(_SQUID_HPUX_)
-#define HAVE_RUSAGE
+#if !defined(HAVE_GETRUSAGE) && defined(_SQUID_HPUX_)
+#define HAVE_GETRUSAGE
 #define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
 #endif
 

@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.19 1996/10/09 22:49:31 wessels Exp $
+ * $Id: dns.cc,v 1.20 1996/10/13 06:19:44 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -121,7 +121,7 @@ struct _dnsStats DnsStats;
 static int
 dnsOpenServer(char *command)
 {
-    int pid;
+    pid_t pid;
     struct sockaddr_in S;
     int cfd;
     int sfd;

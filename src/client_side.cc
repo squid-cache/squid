@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.41 1996/10/11 23:11:06 wessels Exp $
+ * $Id: client_side.cc,v 1.42 1996/10/13 06:19:42 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -305,7 +305,7 @@ proxyAuthenticate(char *headers)
 
 		passwords = xmalloc((size_t) buf.st_size + 2);
 		f = fopen(Config.proxyAuthFile, "r");
-		fread(passwords, buf.st_size, 1, f);
+		fread(passwords, (size_t) buf.st_size, 1, f);
 		*(passwords + buf.st_size) = '\0';
 		strcat(passwords, "\n");
 		fclose(f);
