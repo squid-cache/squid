@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.26 2000/11/07 23:37:35 wessels Exp $
+ * $Id: rfc1123.c,v 1.27 2000/11/08 20:22:16 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -135,6 +135,7 @@ parse_date1(const char *str)
     s = strchr(str, ',');
     if (NULL == s)
 	return NULL;
+    s++;
     while (*s == ' ')
 	s++;
     /* backup if month is only one digit */
@@ -165,12 +166,13 @@ parse_date2(const char *str)
 {
     /* Thu, 10 Jan 1993 01:29:59 GMT */
     const char *s;
-    struct tm tm;
+    static struct tm tm;
     assert(NULL != str);
     memset(&tm, '\0', sizeof(struct tm));
     s = strchr(str, ',');
     if (NULL == s)
 	return NULL;
+    s++;
     while (*s == ' ')
 	s++;
     /* backup if month is only one digit */
