@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.235 2003/04/24 06:35:09 hno Exp $
+ * $Id: tools.cc,v 1.236 2003/04/29 16:08:19 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -254,6 +254,9 @@ rusage_maxrss(struct rusage *r)
 
     return r->ru_maxrss;
 #elif defined(_SQUID_OSF_)
+
+    return r->ru_maxrss;
+#elif defined(_SQUID_AIX_)
 
     return r->ru_maxrss;
 #elif defined(BSD4_4)
