@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.158 1997/10/17 00:00:01 wessels Exp $
+ * $Id: stat.cc,v 1.159 1997/10/17 00:00:46 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -276,7 +276,7 @@ static const char *
 describeStatuses(const StoreEntry * entry)
 {
     LOCAL_ARRAY(char, buf, 256);
-    snprintf(buf,256, "%-13s %-13s %-12s %-12s",
+    snprintf(buf, 256, "%-13s %-13s %-12s %-12s",
 	storeStatusStr[entry->store_status],
 	memStatusStr[entry->mem_status],
 	swapStatusStr[entry->swap_status],
@@ -322,7 +322,7 @@ static const char *
 describeTimestamps(const StoreEntry * entry)
 {
     LOCAL_ARRAY(char, buf, 256);
-    snprintf(buf,256, "LV:%-9d LU:%-9d LM:%-9d EX:%-9d",
+    snprintf(buf, 256, "LV:%-9d LU:%-9d LM:%-9d EX:%-9d",
 	(int) entry->timestamp,
 	(int) entry->lastref,
 	(int) entry->lastmod,

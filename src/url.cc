@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.64 1997/10/13 22:09:25 kostas Exp $
+ * $Id: url.cc,v 1.65 1997/10/17 00:00:49 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -280,12 +280,12 @@ urlCanonical(const request_t * request, char *buf)
 	buf = urlbuf;
     switch (request->method) {
     case METHOD_CONNECT:
-	snprintf(buf,MAX_URL, "%s:%d", request->host, request->port);
+	snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
 	break;
     default:
 	portbuf[0] = '\0';
 	if (request->port != urlDefaultPort(request->protocol))
-	    snprintf(portbuf,32,  ":%d", request->port);
+	    snprintf(portbuf, 32, ":%d", request->port);
 	snprintf(buf, MAX_URL, "%s://%s%s%s%s%s",
 	    ProtocolStr[request->protocol],
 	    request->login,
@@ -311,8 +311,8 @@ urlCanonicalClean(const request_t * request)
     default:
 	portbuf[0] = '\0';
 	if (request->port != urlDefaultPort(request->protocol))
-	    snprintf(portbuf,32, ":%d", request->port);
-	snprintf(buf,MAX_URL, "%s://%s%s%s",
+	    snprintf(portbuf, 32, ":%d", request->port);
+	snprintf(buf, MAX_URL, "%s://%s%s%s",
 	    ProtocolStr[request->protocol],
 	    request->host,
 	    portbuf,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.36 1997/10/16 23:59:53 wessels Exp $
+ * $Id: dnsserver.cc,v 1.37 1997/10/17 00:00:34 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -365,7 +365,7 @@ main(int argc, char *argv[])
 	msg[0] = '\0';
 	if (!result) {
 	    if (h_errno == TRY_AGAIN) {
-		snprintf(msg, 1024,  "Name Server for domain '%s' is unavailable.\n",
+		snprintf(msg, 1024, "Name Server for domain '%s' is unavailable.\n",
 		    request);
 	    } else {
 		snprintf(msg, 1024, "DNS Domain '%s' is invalid: %s.\n",

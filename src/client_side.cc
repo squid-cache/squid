@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.126 1997/10/13 22:09:05 kostas Exp $
+ * $Id: client_side.cc,v 1.127 1997/10/17 00:00:32 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -333,7 +333,7 @@ clientConstructTraceEcho(clientHttpRequest * http)
     size_t len;
     memset(buf, '\0', 8192);
     snprintf(buf, 8192, "HTTP/1.0 200 OK\r\n");
-    snprintf(line, 256,  "Date: %s\r\n", mkrfc1123(squid_curtime));
+    snprintf(line, 256, "Date: %s\r\n", mkrfc1123(squid_curtime));
     strcat(buf, line);
     snprintf(line, 256, "Server: Squid/%s\r\n", SQUID_VERSION);
     strcat(buf, line);
