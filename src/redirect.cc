@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.7 1996/07/25 07:10:40 wessels Exp $
+ * $Id: redirect.cc,v 1.8 1996/08/14 21:38:29 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -38,6 +38,9 @@ typedef struct {
     int fd;
     void *data;
     char *orig_url;
+    struct in_addr client_addr;
+    char *client_ident;
+    char *method_s;
     RH handler;
 } redirectStateData;
 
@@ -80,6 +83,7 @@ static int NRedirectors = 0;
 static int NRedirectorsOpen = 0;
 static struct redirectQueueData *redirectQueueHead = NULL;
 static struct redirectQueueData **redirectQueueTailP = &redirectQueueHead;
+static char *dash_str = "-";
 
 static int redirectCreateRedirector(command)
      char *command;
@@ -169,7 +173,7 @@ static int redirectHandleRead(fd, redirector)
 	    fd, redirector->index + 1);
 	redirector->flags = 0;
 	comm_close(fd);
-	if (--NRedirectorsOpen == 0)
+	if (--NRedirectorsOpen == 0 && !shutdown_pending && !reread_pending)
 	    fatal_dump("All redirectors have exited!");
 	return 0;
     }
@@ -183,6 +187,8 @@ static int redirectHandleRead(fd, redirector)
     if ((t = strchr(redirector->inbuf, '\n'))) {
 	/* end of record found */
 	*t = '\0';
+	if ((t = strchr(redirector->inbuf, ' ')))
+	    *t = '\0';		/* terminate at space */
 	debug(29, 5, "redirectHandleRead: reply: '%s'\n", redirector->inbuf);
 	if (r->handler) {
 	    r->handler(r->data,
@@ -248,6 +254,7 @@ static void redirectDispatch(redirect, r)
      redirectStateData *r;
 {
     char *buf = NULL;
+    char *fqdn = NULL;
     int len;
     if (r->handler == NULL) {
 	debug(29, 1, "redirectDispatch: skipping '%s' because no handler\n",
@@ -258,16 +265,23 @@ static void redirectDispatch(redirect, r)
     redirect->flags |= REDIRECT_FLAG_BUSY;
     redirect->redirectState = r;
     redirect->dispatch_time = current_time;
-    len = strlen(r->orig_url) + 1;
-    buf = xmalloc(len + 1);
-    sprintf(buf, "%s\n", r->orig_url);
+    if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
+	fqdn = dash_str;
+    buf = get_free_8k_page();
+    sprintf(buf, "%s %s/%s %s %s\n",
+	r->orig_url,
+	inet_ntoa(r->client_addr),
+	dash_str,
+	r->client_ident,
+	r->method_s);
+    len = strlen(buf);
     comm_write(redirect->fd,
 	buf,
 	len,
 	0,			/* timeout */
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
-	xfree);
+	put_free_8k_page);
     debug(29, 5, "redirectDispatch: Request sent to Redirector #%d, %d bytes\n",
 	redirect->index + 1, len);
     RedirectStats.use_hist[redirect->index]++;
@@ -278,9 +292,9 @@ static void redirectDispatch(redirect, r)
 /**** PUBLIC FUNCTIONS ****/
 
 
-void redirectStart(url, fd, handler, data)
-     char *url;
-     int fd;
+void redirectStart(cfd, icpState, handler, data)
+     int cfd;
+     icpStateData *icpState;
      RH handler;
      void *data;
 {
@@ -288,13 +302,22 @@ void redirectStart(url, fd, handler, data)
     redirector_t *redirector = NULL;
     if (!handler)
 	fatal_dump("redirectStart: NULL handler");
+    if (!icpState)
+	fatal_dump("redirectStart: NULL icpState");
     if (Config.Program.redirect == NULL) {
 	(*handler) (data, NULL);
 	return;
     }
     r = xcalloc(1, sizeof(redirectStateData));
-    r->fd = fd;
-    r->orig_url = url;
+    r->fd = cfd;
+    r->orig_url = icpState->url;
+    r->client_addr = icpState->log_addr;
+    if (icpState->ident == NULL || *icpState->ident == '\0') {
+	r->client_ident = dash_str;
+    } else {
+	r->client_ident = icpState->ident;
+    }
+    r->method_s = RequestMethodStr[icpState->request->method];
     r->handler = handler;
     r->data = data;
     if ((redirector = GetFirstAvailable()))
