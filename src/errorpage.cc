@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.168 2002/01/01 21:24:25 hno Exp $
+ * $Id: errorpage.cc,v 1.169 2002/04/01 06:02:15 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -273,6 +273,12 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 	assert(mem->nclients == 0);
 	errorStateFree(err);
 	return;
+    }
+    if (0 == strncmp(error_text[err->page_id], "reset", 5)) {
+	if (err->request) {
+	    debug(0, 0) ("RSTing this reply\n");
+	    err->request->flags.reset_tcp = 1;
+	}
     }
     storeLockObject(entry);
     storeBuffer(entry);

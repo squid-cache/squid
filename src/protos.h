@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.429 2002/04/01 05:59:50 wessels Exp $
+ * $Id: protos.h,v 1.430 2002/04/01 06:02:16 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -148,6 +148,7 @@ extern int commUnsetNonBlocking(int fd);
 extern void commSetCloseOnExec(int fd);
 extern int comm_accept(int fd, struct sockaddr_in *, struct sockaddr_in *);
 extern void comm_close(int fd);
+extern void comm_reset_close(int fd);
 #if LINGERING_CLOSE
 extern void comm_lingering_close(int fd);
 #endif
