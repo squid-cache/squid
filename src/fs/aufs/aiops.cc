@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.20 2003/01/09 11:45:49 hno Exp $
+ * $Id: aiops.cc,v 1.21 2003/01/09 12:27:18 robertc Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -46,6 +46,7 @@
 #if HAVE_SCHED_H
 #include	<sched.h>
 #endif
+#include "comm.h"
 
 #define RIDICULOUS_LENGTH	4096
 
@@ -146,9 +147,6 @@ static struct {
 
     NULL, &done_requests.head
 };
-static int done_fd = 0;
-static int done_fd_read = 0;
-static int done_signalled = 0;
 static pthread_attr_t globattr;
 #if HAVE_SCHED_H
 static struct sched_param globsched;
@@ -225,18 +223,9 @@ squidaio_xstrfree(char *str)
 }
 
 static void
-squidaio_fdhandler(int fd, void *data)
-{
-    char junk[256];
-    read(done_fd_read, junk, sizeof(junk));
-    commSetSelect(fd, COMM_SELECT_READ, squidaio_fdhandler, NULL, 0);
-}
-
-static void
 squidaio_init(void)
 {
     int i;
-    int done_pipe[2];
     squidaio_thread_t *threadp;
 
     if (squidaio_initialised)
@@ -279,16 +268,6 @@ squidaio_init(void)
     done_queue.tailp = &done_queue.head;
     done_queue.requests = 0;
     done_queue.blocked = 0;
-
-    /* Initialize done pipe signal */
-    pipe(done_pipe);
-    done_fd = done_pipe[1];
-    done_fd_read = done_pipe[0];
-    fd_open(done_pipe[0], FD_PIPE, "async-io completetion event: main");
-    fd_open(done_pipe[1], FD_PIPE, "async-io completetion event: threads");
-    commSetNonBlocking(done_pipe[0]);
-    commSetNonBlocking(done_pipe[1]);
-    commSetSelect(done_pipe[0], COMM_SELECT_READ, squidaio_fdhandler, NULL, 0);
 
     /* Create threads and get them to sit in their wait loop */
     squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));
@@ -411,10 +390,7 @@ squidaio_thread_loop(void *ptr)
 	*done_queue.tailp = request;
 	done_queue.tailp = &request->next;
 	pthread_mutex_unlock(&done_queue.mutex);
-	if (!done_signalled) {
-	    done_signalled = 1;
-	    write(done_fd, "!", 1);
-	}
+	CommIO::NotifyIOCompleted();
 	threadp->requests++;
     }				/* while forever */
     return NULL;
@@ -829,11 +805,7 @@ squidaio_poll_done(void)
   AIO_REPOLL:
     request = done_requests.head;
     if (request == NULL && !polled) {
-	if (done_signalled) {
-	    char junk[256];
-	    read(done_fd_read, junk, sizeof(junk));
-	    done_signalled = 0;
-	}
+	CommIO::ResetNotifications();
 	squidaio_poll_queues();
 	polled = 1;
 	request = done_requests.head;

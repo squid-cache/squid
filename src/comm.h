@@ -20,4 +20,30 @@ extern void comm_accept_setcheckperiod(int fd, int mdelay);
 
 extern void comm_write(int s, const char *buf, size_t len, IOWCB *callback, void *callback_data);
 
+/* Where should this belong? */
+class CommIO {
+public:
+  static inline void NotifyIOCompleted();
+  static void ResetNotifications();
+  static void Initialise();
+private:
+  static void NULLFDHandler(int, void *);
+  static void FlushPipe();
+  static bool Initialised;
+  static bool DoneSignalled;
+  static int DoneFD;
+  static int DoneReadFD;
+};
+
+/* Inline code. TODO: make structued approach to inlining */
+void
+CommIO::NotifyIOCompleted() {
+    if (!Initialised)
+	Initialise();
+    if (!DoneSignalled) {
+	DoneSignalled = true;
+	write(DoneFD, "!", 1);
+    }
+};
+
 #endif

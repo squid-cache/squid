@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.360 2002/12/06 23:19:15 hno Exp $
+ * $Id: comm.cc,v 1.361 2003/01/09 12:27:14 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1884,4 +1884,47 @@ comm_accept(int fd, IOACB *handler, void *handler_data)
 #else
 	commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
 #endif
+}
+
+void CommIO::Initialise()
+{
+    /* Initialize done pipe signal */
+    int DonePipe[2];
+    pipe(DonePipe);
+    DoneFD = DonePipe[1];
+    DoneReadFD = DonePipe[0];
+    fd_open(DonePipe[0], FD_PIPE, "async-io completetion event: main");
+    fd_open(DonePipe[1], FD_PIPE, "async-io completetion event: threads");
+    commSetNonBlocking(DonePipe[0]);
+    commSetNonBlocking(DonePipe[1]);
+    commSetSelect(DonePipe[0], COMM_SELECT_READ, NULLFDHandler, NULL, 0);
+    Initialised = true;
+}
+
+bool CommIO::Initialised = false;
+bool CommIO::DoneSignalled = false;
+int CommIO::DoneFD = -1;
+int CommIO::DoneReadFD = -1;
+
+void
+CommIO::FlushPipe()
+{
+    char buf[256];
+    read(DoneReadFD, buf, sizeof(buf));
+}
+
+void
+CommIO::NULLFDHandler(int fd, void *data)
+{
+    FlushPipe();
+    commSetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
+}
+
+void
+CommIO::ResetNotifications() 
+{
+    if (DoneSignalled) {
+	FlushPipe();
+	DoneSignalled = false;
+    }
 }
