@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.382 1998/02/19 23:10:02 wessels Exp $
+ * $Id: store.cc,v 1.383 1998/02/20 16:03:20 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -641,24 +641,17 @@ storeMaintainSwapSpace(void *datanotused)
     int expired = 0;
     int max_scan;
     int max_remove;
-    int bigclean = 0;
-    int level = 3;
     static time_t last_warn_time = 0;
     eventAdd("storeMaintainSwapSpace", storeMaintainSwapSpace, NULL, 1);
     /* We can't delete objects while rebuilding swap */
     if (store_rebuilding)
 	return;
-
-    if (store_swap_size > store_swap_high)
-	bigclean = 1;
-    if (store_swap_size > Config.Swap.maxSize)
-	bigclean = 1;
-
-    if (bigclean) {
-	max_scan = 2500;
-	max_remove = 250;
+    if (store_swap_size < store_swap_high) {
+	max_scan = 100;
+	max_remove = 10;
     } else {
-	return;
+	max_scan = 500;
+	max_remove = 50;
     }
     debug(20, 3) ("storeMaintainSwapSpace\n");
     for (m = store_list.tail; m; m = prev) {
@@ -666,10 +659,6 @@ storeMaintainSwapSpace(void *datanotused)
 	e = m->data;
 	if (storeEntryLocked(e)) {
 	    locked++;
-	    continue;
-	} else if (bigclean) {
-	    expired++;
-	    storeRelease(e);
 	} else if (storeCheckExpired(e, 1)) {
 	    expired++;
 	    storeRelease(e);
@@ -679,13 +668,11 @@ storeMaintainSwapSpace(void *datanotused)
 	if (++scanned > max_scan)
 	    break;
     }
-    if (bigclean)
-	level = 1;
-    debug(20, level) ("storeMaintainSwapSpace stats:\n");
-    debug(20, level) ("  %6d objects\n", memInUse(MEM_STOREENTRY));
-    debug(20, level) ("  %6d were scanned\n", scanned);
-    debug(20, level) ("  %6d were locked\n", locked);
-    debug(20, level) ("  %6d were expired\n", expired);
+    debug(20, 3) ("storeMaintainSwapSpace stats:\n");
+    debug(20, 3) ("  %6d objects\n", memInUse(MEM_STOREENTRY));
+    debug(20, 3) ("  %6d were scanned\n", scanned);
+    debug(20, 3) ("  %6d were locked\n", locked);
+    debug(20, 3) ("  %6d were expired\n", expired);
     if (store_swap_size < Config.Swap.maxSize)
 	return;
     if (squid_curtime - last_warn_time < 10)
@@ -842,7 +829,7 @@ storeInit(void)
     store_list.head = store_list.tail = NULL;
     inmem_list.head = inmem_list.tail = NULL;
     storeRebuildStart();
-    cachemgrRegister("store_dir",
+    cachemgrRegister("storedir",
 	"Store Directory Stats",
 	storeDirStats, 0);
 }
