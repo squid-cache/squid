@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.193 1998/02/13 17:47:38 wessels Exp $
+ * $Id: ftp.cc,v 1.194 1998/02/18 00:38:54 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1184,6 +1184,9 @@ ftpReadWelcome(FtpStateData * ftpState)
 	    if (strstr(ftpState->ctrl.message->key, "NetWare"))
 		EBIT_SET(ftpState->flags, FTP_SKIP_WHITESPACE);
 	ftpSendUser(ftpState);
+    } else if (code == 120) {
+	debug(9, 3) ("FTP server is busy: %s\n", ftpState->ctrl.message);
+	return;
     } else {
 	ftpFail(ftpState);
     }
@@ -1435,19 +1438,27 @@ static void
 ftpSendPasv(FtpStateData * ftpState)
 {
     int fd;
+    struct sockaddr_in addr;
+    int addr_len;
     if (ftpState->data.fd >= 0) {
 	/* We are already connected, reuse this connection. */
 	ftpRestOrList(ftpState);
 	return;
     }
-    assert(ftpState->data.fd < 0);
     if (!EBIT_TEST(ftpState->flags, FTP_PASV_SUPPORTED)) {
 	ftpSendPort(ftpState);
 	return;
     }
+    addr_len = sizeof(addr);
+    if (getsockname(ftpState->ctrl.fd, (struct sockaddr *) &addr, &addr_len)) {
+	debug(9, 0) ("ftpSendPasv: getsockname(%d,..): %s\n",
+	    ftpState->ctrl.fd, xstrerror());
+	addr.sin_addr = Config.Addrs.tcp_outgoing;
+    }
+    /* Open data channel with the same local address as control channel */
     fd = comm_open(SOCK_STREAM,
 	0,
-	Config.Addrs.tcp_outgoing,
+	addr.sin_addr,
 	0,
 	COMM_NONBLOCKING,
 	storeUrl(ftpState->entry));
@@ -1482,7 +1493,8 @@ ftpReadPasv(FtpStateData * ftpState)
     debug(9, 3) ("This is ftpReadPasv\n");
     if (code != 227) {
 	debug(9, 3) ("PASV not supported by remote end\n");
-	/* XXX Shouldn't we get rid of the PASV socket? */
+	comm_close(ftpState->data.fd);
+	ftpState->data.fd = -1;
 	ftpSendPort(ftpState);
 	return;
     }
@@ -1535,19 +1547,114 @@ ftpPasvCallback(int fd, int status, void *data)
     ftpRestOrList(ftpState);
 }
 
-static void
-ftpSendPort(FtpStateData * ftpState)
+static int
+ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
-    debug(9, 3) ("This is ftpSendPort\n");
-    EBIT_CLR(ftpState->flags, FTP_PASV_SUPPORTED);
-    /* XXX Not implemented? ftpFail??? */
+    int fd;
+    struct sockaddr_in addr;
+    int addr_len;
+    int on = 1;
+    u_short port = 0;
+    /* Set up a listen socket on the same local address as the control connection. */
+    addr_len = sizeof(addr);
+    if (getsockname(ftpState->ctrl.fd, (struct sockaddr *) &addr, &addr_len)) {
+	debug(9, 0) ("ftpOpenListenSocket: getsockname(%d,..): %s\n",
+	    ftpState->ctrl.fd, xstrerror());
+	return -1;
+    }
+    /* REUSEADDR is needed in fallback mode, since the same port is used for both
+     * control and data
+     */
+    if (fallback) {
+	setsockopt(ftpState->ctrl.fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
+	port = ntohs(addr.sin_port);
+    }
+    fd = comm_open(SOCK_STREAM,
+	0,
+	addr.sin_addr,
+	port,
+	COMM_NONBLOCKING | (fallback ? COMM_REUSEADDR : 0),
+	storeUrl(ftpState->entry));
+    if (fd < 0) {
+	debug(9, 0) ("ftpOpenListenSocket: comm_open failed\n");
+	return -1;
+    }
+    if (comm_listen(fd) < 0) {
+	comm_close(fd);
+	return -1;
+    }
+    ftpState->data.fd = fd;
+    ftpState->data.port = comm_local_port(fd);;
+    ftpState->data.host = NULL;
+    return fd;
 }
 
 static void
-ftpReadPort(FtpStateData * ftpStateNotUsed)
+ftpSendPort(FtpStateData * ftpState)
 {
+    int fd;
+    struct sockaddr_in addr;
+    int addr_len;
+    unsigned char *addrptr;
+    unsigned char *portptr;
+    debug(9, 3) ("This is ftpSendPort\n");
+    EBIT_CLR(ftpState->flags, FTP_PASV_SUPPORTED);
+    fd = ftpOpenListenSocket(ftpState, 0);
+    addr_len = sizeof(addr);
+    if (getsockname(fd, (struct sockaddr *) &addr, &addr_len)) {
+	debug(9, 0) ("ftpSendPort: getsockname(%d,..): %s\n", fd, xstrerror());
+	/* XXX Need to set error message */
+	ftpFail(ftpState);
+	return;
+    }
+    addrptr = (unsigned char *) &addr.sin_addr.s_addr;
+    portptr = (unsigned char *) &addr.sin_port;
+    snprintf(cbuf, 1024, "PORT %d,%d,%d,%d,%d,%d\r\n",
+	addrptr[0], addrptr[1], addrptr[2], addrptr[3],
+	portptr[0], portptr[1]);
+    ftpWriteCommand(cbuf, ftpState);
+    ftpState->state = SENT_PORT;
+}
+
+static void
+ftpReadPort(FtpStateData * ftpState)
+{
+    int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadPort\n");
-    /* XXX Not implemented? */
+    if (code != 200) {
+	/* Fall back on using the same port as the control connection */
+	debug(9, 3) ("PORT not supported by remote end\n");
+	comm_close(ftpState->data.fd);
+	ftpOpenListenSocket(ftpState, 1);
+    }
+    ftpRestOrList(ftpState);
+}
+
+/* "read" handler to accept data connection */
+static void
+ftpAcceptDataConnection(int fd, void *data)
+{
+    FtpStateData *ftpState = data;
+    struct sockaddr_in peer, me;
+    debug(9, 3) ("ftpAcceptDataConnection\n");
+
+    fd = comm_accept(fd, &peer, &me);
+    if (fd < 0) {
+	debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s", fd, xstrerror());
+	/* XXX Need to set error message */
+	ftpFail(ftpState);
+	return;
+    }
+    comm_close(ftpState->data.fd);	/* Listen socket replaced by data socket */
+    ftpState->data.fd = fd;
+    ftpState->data.port = ntohs(peer.sin_port);
+    ftpState->data.host = xstrdup(inet_ntoa(peer.sin_addr));
+    /* XXX We should have a flag to track connect state...
+     *    host NULL -> not connected, port == local port
+     *    host set  -> connected, port == remote port
+     */
+    /* Restart state (SENT_NLST/LIST/RETR) */
+    FTP_SM_FUNCS[ftpState->state] (ftpState);
 }
 
 static void
@@ -1623,7 +1730,8 @@ ftpReadList(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadList\n");
-    if (code == 150 || code == 125) {
+    if (code == 125 || (code == 150 && ftpState->data.host)) {
+	/* Begin data transfer */
 	ftpAppendSuccessHeader(ftpState);
 	commSetSelect(ftpState->data.fd,
 	    COMM_SELECT_READ,
@@ -1637,7 +1745,15 @@ ftpReadList(FtpStateData * ftpState)
 	commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
 	commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout, ftpState);
 	return;
-    } else if (!EBIT_TEST(ftpState->flags, FTP_TRIED_NLST)) {
+    } else if (code == 150) {
+	/* Accept data channel */
+	commSetSelect(ftpState->data.fd,
+	    COMM_SELECT_READ,
+	    ftpAcceptDataConnection,
+	    ftpState,
+	    Config.Timeout.read);
+	return;
+    } else if (!EBIT_TEST(ftpState->flags, FTP_TRIED_NLST) && code > 300) {
 	ftpSendNlst(ftpState);
     } else {
 	ftpFail(ftpState);
@@ -1659,7 +1775,8 @@ ftpReadRetr(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadRetr\n");
-    if (code >= 100 && code < 200) {
+    if (code == 125 || (code == 150 && ftpState->data.host)) {
+	/* Begin data transfer */
 	debug(9, 3) ("ftpReadRetr: reading data channel\n");
 	ftpAppendSuccessHeader(ftpState);
 	commSetSelect(ftpState->data.fd,
@@ -1673,13 +1790,23 @@ ftpReadRetr(FtpStateData * ftpState)
 	 * on the data socket */
 	commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
 	commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout, ftpState);
-    } else {
+    } else if (code == 150) {
+	/* Accept data channel */
+	commSetSelect(ftpState->data.fd,
+	    COMM_SELECT_READ,
+	    ftpAcceptDataConnection,
+	    ftpState,
+	    Config.Timeout.read);
+	return;
+    } else if (code >= 300) {
 	if (!EBIT_TEST(ftpState->flags, FTP_TRY_SLASH_HACK)) {
 	    /* Try this as a directory missing trailing slash... */
 	    ftpHackShortcut(ftpState, ftpSendCwd);
 	} else {
 	    ftpFail(ftpState);
 	}
+    } else {
+	ftpFail(ftpState);
     }
 }
 
