@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.22 1999/01/24 03:25:22 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.23 1999/01/29 23:39:11 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -44,9 +44,6 @@ requestCreate(method_t method, protocol_t protocol, const char *urlpath)
     if (urlpath)
 	stringReset(&req->urlpath, urlpath);
     req->max_forwards = -1;
-#if DELAY_POOLS
-    req->delay_id = 0;
-#endif
     httpHeaderInit(&req->header, hoRequest);
     return req;
 }

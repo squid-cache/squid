@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.85 1999/01/24 02:23:00 wessels Exp $
+ * $Id: typedefs.h,v 1.86 1999/01/29 23:39:25 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -167,6 +167,12 @@ typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
 typedef struct _snmp_request_t snmp_request_t;
 #endif
 
+#if DELAY_POOLS
+typedef struct _delayConfig delayConfig;
+typedef struct _delaySpecSet delaySpecSet;
+typedef struct _delaySpec delaySpec;
+#endif
+
 /* define AIOCB even without USE_ASYNC_IO */
 typedef void AIOCB(int fd, void *, int aio_return, int aio_errno);
 typedef void CWCB(int fd, char *, size_t size, int flag, void *data);
@@ -232,7 +238,7 @@ typedef char HttpHeaderMask[8];
 typedef void (*ObjPackMethod) (void *obj, Packer * p);
 
 #if DELAY_POOLS
-typedef int delay_id;
+typedef unsigned int delay_id;
 #endif
 
 #if USE_HTCP

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.275 1999/01/29 23:01:07 wessels Exp $
+ * $Id: structs.h,v 1.276 1999/01/29 23:39:24 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -190,9 +190,26 @@ struct _relist {
 };
 
 #if DELAY_POOLS
-struct _delay_spec {
+struct _delaySpec {
     int restore_bps;
     int max_bytes;
+};
+
+/* malloc()'d only as far as used (class * sizeof(delaySpec)!
+ * order of elements very important!
+ */
+struct _delaySpecSet {
+    delaySpec aggregate;
+    delaySpec individual;
+    delaySpec network;
+};
+
+struct _delayConfig {
+    unsigned short pools;
+    unsigned short initial;
+    unsigned char *class;
+    delaySpecSet **rates;
+    acl_access **access;
 };
 
 #endif
@@ -403,23 +420,7 @@ struct _SquidConfig {
 	size_t limit;
     } MemPools;
 #if DELAY_POOLS
-    struct {
-	struct {
-	    struct _delay_spec aggregate;
-	    acl_access *access;
-	} class1;
-	struct {
-	    struct _delay_spec aggregate;
-	    struct _delay_spec individual;
-	    acl_access *access;
-	} class2;
-	struct {
-	    struct _delay_spec aggregate;
-	    struct _delay_spec individual;
-	    struct _delay_spec network;
-	    acl_access *access;
-	} class3;
-    } Delay;
+    delayConfig Delay;
 #endif
     struct {
 	int icp_average;
@@ -1307,9 +1308,6 @@ struct _request_t {
     size_t body_sz;
     HierarchyLogEntry hier;
     err_type err_type;
-#if DELAY_POOLS
-    delay_id delay_id;
-#endif
     char *peer_login;		/* Configured peer login:password */
 };
 

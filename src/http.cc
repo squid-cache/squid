@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.345 1999/01/21 23:58:45 wessels Exp $
+ * $Id: http.cc,v 1.346 1999/01/29 23:39:19 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -58,9 +58,12 @@ static int httpCachableReply(HttpStateData *);
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 
 static void
-httpStateFree(int fdnotused, void *data)
+httpStateFree(int fd, void *data)
 {
     HttpStateData *httpState = data;
+#if DELAY_POOLS
+    delayClearNoDelay(fd);
+#endif
     if (httpState == NULL)
 	return;
     storeUnlockObject(httpState->entry);
@@ -437,7 +440,13 @@ httpReadReply(int fd, void *data)
     int clen;
     size_t read_sz;
 #if DELAY_POOLS
-    delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
+    delay_id delay_id;
+
+    /* special "if" only for http (for nodelay proxy conns) */
+    if (delayIsNoDelay(fd))
+	delay_id = 0;
+    else
+	delay_id = delayMostBytesAllowed(entry->mem_obj);
 #endif
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(fd);
@@ -539,7 +548,7 @@ httpReadReply(int fd, void *data)
 	    pconnPush(fd, request->host, request->port);
 	    fwdComplete(httpState->fwd);
 	    httpState->fd = -1;
-	    httpStateFree(-1, httpState);
+	    httpStateFree(fd, httpState);
 	} else {
 	    /* Wait for EOF condition */
 	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
@@ -863,11 +872,9 @@ httpStart(FwdState * fwd)
 	if (httpState->peer->options.proxy_only)
 	    storeReleaseRequest(httpState->entry);
 #if DELAY_POOLS
-	if (httpState->peer->options.no_delay) {
-	    proxy_req->delay_id = 0;
-	} else {
-	    proxy_req->delay_id = orig_req->delay_id;
-	}
+	assert(delayIsNoDelay(fd) == 0);
+	if (httpState->peer->options.no_delay)
+	    delaySetNoDelay(fd);
 #endif
     } else {
 	httpState->request = requestLink(orig_req);
