@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.60 1996/04/17 21:03:15 wessels Exp $ */
-#ident "$Id: store.cc,v 1.60 1996/04/17 21:03:15 wessels Exp $"
+/* $Id: store.cc,v 1.61 1996/04/17 23:18:49 wessels Exp $ */
+#ident "$Id: store.cc,v 1.61 1996/04/17 23:18:49 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -1338,8 +1338,7 @@ static int storeDoRebuildFromDisk(data)
 	    data->linecount,
 	    sfileno);
 	debug(20, 3, "storeRebuildFromDisk: --> <URL:%s>\n", url);
-	if (opt_unlink_on_reload)
-	    safeunlink(swapfile, 1);
+	/* don't unlink the file!  just skip this log entry */
 	data->clashcount++;
 	return 1;
     }
