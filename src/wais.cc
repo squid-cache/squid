@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.92 1997/10/28 21:59:14 wessels Exp $
+ * $Id: wais.cc,v 1.93 1997/10/30 02:41:09 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -143,9 +143,7 @@ waisTimeout(int fd, void *data)
     ErrorState *err;
     StoreEntry *entry = waisState->entry;
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, entry->url);
-    err = xcalloc(1, sizeof(ErrorState));
-    err->type = ERR_READ_TIMEOUT;
-    err->http_status = HTTP_GATEWAY_TIMEOUT;
+    err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
     err->request = urlParse(METHOD_CONNECT, waisState->request);
     errorAppendEntry(entry, err);
     storeAbort(entry, 0);
@@ -168,11 +166,11 @@ waisReadReply(int fd, void *data)
     int bin;
     if (protoAbortFetch(entry)) {
 	ErrorState *err;
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_CLIENT_ABORT;
-	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+
+	err = errorCon(ERR_CLIENT_ABORT, HTTP_INTERNAL_SERVER_ERROR);
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
@@ -201,9 +199,8 @@ waisReadReply(int fd, void *data)
 	    ErrorState *err;
 	    BIT_CLR(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
-	    err = xcalloc(1, sizeof(ErrorState));
-	    err->type = ERR_READ_ERROR;
-	    err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+	    err->xerrno = errno;
 	    err->request = urlParse(METHOD_CONNECT, waisState->request);
 	    errorAppendEntry(entry, err);
 
@@ -212,12 +209,11 @@ waisReadReply(int fd, void *data)
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
 	ErrorState *err;
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_ZERO_SIZE_OBJECT;
+	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (len == 0) {
@@ -247,12 +243,10 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	return;
     if (errflag) {
 	ErrorState *err;
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_CONNECT_FAIL;
+	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->host = xstrdup(waisState->relayhost);
 	err->port = waisState->relayport;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
@@ -312,9 +306,7 @@ waisStart(request_t * request, StoreEntry * entry)
     if (!Config.Wais.relayHost) {
 	ErrorState *err;
 	debug(24, 0) ("waisStart: Failed because no relay host defined!\n");
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_NO_RELAY;
-	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	err = errorCon(ERR_NO_RELAY, HTTP_INTERNAL_SERVER_ERROR);
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
 
@@ -330,9 +322,7 @@ waisStart(request_t * request, StoreEntry * entry)
     if (fd == COMM_ERROR) {
 	ErrorState *err;
 	debug(24, 4) ("waisStart: Failed because we're out of sockets.\n");
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_SOCKET_FAILURE;
-	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
@@ -366,18 +356,14 @@ waisConnectDone(int fd, int status, void *data)
     ErrorState *err;
 
     if (status == COMM_ERR_DNS) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_DNS_FAIL;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = urlParse(METHOD_CONNECT, request);
 	errorAppendEntry(waisState->entry, err);
 	storeAbort(waisState->entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_CONNECT_FAIL;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->host = xstrdup(waisState->relayhost);
 	err->port = waisState->relayport;

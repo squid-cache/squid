@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.206 1997/10/28 21:59:08 wessels Exp $
+ * $Id: http.cc,v 1.207 1997/10/30 02:41:02 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -252,9 +252,7 @@ httpTimeout(int fd, void *data)
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, entry->url);
     assert(entry->store_status == STORE_PENDING);
     if (entry->mem_obj->inmem_hi == 0) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_READ_TIMEOUT;
-	err->http_status = HTTP_GATEWAY_TIMEOUT;
+	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	err->request = requestLink(httpState->request);
 	errorAppendEntry(entry, err);
     }
@@ -619,10 +617,8 @@ httpReadReply(int fd, void *data)
 	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
 	} else {
 	    if (clen == 0) {
-		err = xcalloc(1, sizeof(ErrorState));
-		err->type = ERR_READ_ERROR;
+		err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 		err->xerrno = errno;
-		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
 		err->request = requestLink(httpState->request);
 		errorAppendEntry(entry, err);
 	    }
@@ -636,12 +632,12 @@ httpReadReply(int fd, void *data)
 	    httpRestart(httpState);
 	} else {
 	    httpState->eof = 1;
-	    err = xcalloc(1, sizeof(ErrorState));
-	    err->type = ERR_ZERO_SIZE_OBJECT;
+
+	    err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	    err->xerrno = errno;
-	    err->http_status = HTTP_SERVICE_UNAVAILABLE;
 	    err->request = requestLink(httpState->request);
 	    errorAppendEntry(entry, err);
+
 	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
@@ -685,12 +681,11 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
     if (errflag == COMM_ERR_CLOSING)
 	return;
     if (errflag) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_WRITE_ERROR;
-	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	err = errorCon(ERR_WRITE_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	err->xerrno = errno;
 	err->request = requestLink(httpState->request);
 	errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
@@ -935,13 +930,13 @@ httpSocketOpen(StoreEntry * entry, request_t * request)
 	entry->url);
     if (fd < 0) {
 	debug(11, 4) ("httpSocketOpen: Failed because we're out of sockets.\n");
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_SOCKET_FAILURE;
-	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+
+	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->xerrno = errno;
 	if (request)
 	    err->request = requestLink(request);
 	errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
     }
     return fd;
@@ -1055,23 +1050,23 @@ httpConnectDone(int fd, int status, void *data)
     ErrorState *err;
     if (status == COMM_ERR_DNS) {
 	debug(11, 4) ("httpConnectDone: Unknown host: %s\n", request->host);
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_DNS_FAIL;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+
+	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = requestLink(request);
 	errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_CONNECT_FAIL;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+
+	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->host = xstrdup(request->host);
 	err->port = request->port;
 	err->request = requestLink(request);
 	errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	if (httpState->neighbor)
 	    peerCheckConnectStart(httpState->neighbor);

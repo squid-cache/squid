@@ -542,6 +542,7 @@ extern peer_t parseNeighborType(const char *s);
 extern void errorSend(int fd, ErrorState *);
 extern void errorAppendEntry(StoreEntry *, ErrorState *);
 extern void errorInitialize(void);
+extern ErrorState *errorCon(err_type, http_status);
 
 extern OBJH stat_io_get;
 extern OBJH stat_objects_get;
@@ -560,3 +561,4 @@ extern void dump_peers(StoreEntry *, peer *);
 extern void pconnPush(int, const char *host, u_short port);
 extern int pconnPop(const char *host, u_short port);
 extern void pconnInit(void);
+

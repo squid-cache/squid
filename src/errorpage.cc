@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.94 1997/10/30 00:51:04 wessels Exp $
+ * $Id: errorpage.cc,v 1.95 1997/10/30 02:40:58 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -29,9 +29,16 @@
  *  
  */
 
+/*
+ * Abstract:	These routines are used to generate error messages to be
+ *		sent to clients.  The error type is used to select between
+ *		the various message formats. (formats are stored in the
+ *		Config.errorDirectory)
+ */
+
 #include "squid.h"
 
-const char *err_string[] =
+static const char *err_string[] =
 {
     "ERR_NONE",
     "ERR_READ_TIMEOUT",
@@ -57,10 +64,19 @@ const char *err_string[] =
 static char *error_text[ERR_MAX];
 
 static void errorStateFree(ErrorState * err);
-static char *errorConvert(char token, ErrorState * err);
-static char *errorBuildBuf(ErrorState * err, int *len);
+static const char *errorConvert(char token, ErrorState * err);
+static const char *errorBuildBuf(ErrorState * err, int *len);
 static CWCB errorSendComplete;
 
+/*
+ * Function:  errorInitialize
+ *
+ * Abstract:  This function reads in the error messages formats, and stores
+ *            them in error_text[];
+ *
+ * Global effects:
+ *            error_text[] - is modified
+ */
 void
 errorInitialize(void)
 {
@@ -78,13 +94,100 @@ errorInitialize(void)
 	    fatal("Failed to open error text file");
 	}
 	if (fstat(fd, &sb) < 0)
-	    fatal_dump("stat() failed on error text file");
+	    fatal("fstat() failed on error text file");
 	safe_free(error_text[i]);
 	error_text[i] = xcalloc(sb.st_size + 1, 1);
 	if (read(fd, error_text[i], sb.st_size) != sb.st_size)
-	    fatal_dump("failed to fully read error text file");
+	    fatal("failed to fully read error text file");
 	file_close(fd);
     }
+}
+
+/*
+ * Function:  errorCon
+ *
+ * Abstract:  This function creates a ErrorState object.
+ */
+ErrorState *
+errorCon(err_type type, http_status status)
+{
+    ErrorState *err = xcalloc(1, sizeof(ErrorState));
+    err->type = type;
+    err->http_status = status;
+    return err;
+}
+
+/*
+ * Function:  errorAppendEntry
+ *
+ * Arguments: err - This object is destroyed after use in this function.
+ *
+ * Abstract:  This function generates a error page from the info contained
+ *            by 'err' and then attaches it to the specified 'entry'
+ *
+ * Note:      The above abstract is should be check for correctness!!!!
+ */
+void
+errorAppendEntry(StoreEntry * entry, ErrorState * err)
+{
+    const char *buf;
+    MemObject *mem = entry->mem_obj;
+    int len;
+    assert(entry->store_status == STORE_PENDING);
+    buf = errorBuildBuf(err, &len);
+    storeAppend(entry, buf, len);
+    if (mem)
+	mem->reply->code = err->http_status;
+    errorStateFree(err);
+    xfree(err);
+}
+
+/*
+ * Function:  errorSend
+ *
+ * Arguments: err - This object is destroyed after use in this function.
+ *
+ * Abstract:  This function generates a error page from the info contained
+ *            by 'err' and then sends it to the client.
+ *
+ * Note:      The callback function errorSendComplete() cleans up 'err'
+ *
+ * Note:      I don't think we need to add 'err' to the callback table
+ *            since the only path ends up a errorSendComplete().
+ */
+void
+errorSend(int fd, ErrorState * err)
+{
+    const char *buf;
+    int len;
+    debug(4, 3) ("errorSend: FD %d, err=%p\n", fd, err);
+    assert(fd >= 0);
+    buf = errorBuildBuf(err, &len);
+    cbdataAdd(err);
+    comm_write(fd, xstrdup(buf), len, errorSendComplete, err, xfree);
+}
+
+/*
+ * Function:  errorSendComplete
+ *
+ * Abstract:  This function 
+ *
+ * Note:      If there is a callback, the callback is responsible for
+ *            closeing the FD, otherwise we do it ourseves.
+ */
+static void
+errorSendComplete(int fd, char *buf, int size, int errflag, void *data)
+{
+    ErrorState *err = data;
+    debug(4, 3) ("errorSendComplete: FD %d, size=%d\n", fd, size);
+    if (errflag != COMM_ERR_CLOSING) {
+	if (err->callback)
+	    err->callback(fd, err->callback_data, size);
+	else
+	    comm_close(fd);
+    }
+    errorStateFree(err);
+    cbdataFree(err);
 }
 
 static void
@@ -102,83 +205,39 @@ errorStateFree(ErrorState * err)
 }
 
 #define CVT_BUF_SZ 512
-static char *
+
+/*
+ * c - Squid error code
+ * d - seconds elapsed since request received
+ * e - errno                                    x
+ * E - strerror()                               x
+ * F - FTP reply line                           x
+ * f - FTP request line                         x
+ * h - cache hostname                           x
+ * i - client IP address                        x
+ * I - server IP address                        x
+ * L - HREF link for more info/contact          x
+ * M - Request Method                           x
+ * p - URL port #                               x
+ * P - Protocol                                 x
+ * t - local time                               x
+ * T - UTC                                      x
+ * w - cachemgr email address                   x
+ * z - dns server error message                 x
+ */
+
+static const char *
 errorConvert(char token, ErrorState * err)
 {
-    char *p = NULL;
     request_t *r = err->request;
     static char buf[CVT_BUF_SZ];
+    const char *p = buf;
     switch (token) {
-    case 'U':
-	p = r ? urlCanonicalClean(r) : err->url;
-	break;
-    case 'H':
-	p = r ? r->host : "[unknown host]";
-	break;
-    case 'p':
-	if (r) {
-	    snprintf(buf, CVT_BUF_SZ, "%d", (int) r->port);
-	    p = buf;
-	} else {
-	    p = "[unknown port]";
-	}
-	break;
-    case 'P':
-	p = r ? (char *) ProtocolStr[r->protocol] : "[unkown protocol]";
-	break;
-    case 'M':
-	p = r ? (char *) RequestMethodStr[r->method] : "[unkown method]";
-	break;
-    case 'z':
-	if (err->dnsserver_msg)
-	    p = err->dnsserver_msg;
-	else
-	    p = "UNKNOWN\n";
-	break;
     case 'e':
 	snprintf(buf, CVT_BUF_SZ, "%d", err->xerrno);
-	p = buf;
 	break;
     case 'E':
 	snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->xerrno, strerror(err->xerrno));
-	p = buf;
-	break;
-    case 'w':
-	if (Config.adminEmail) {
-	    snprintf(buf, CVT_BUF_SZ, "%s", Config.adminEmail);
-	    p = buf;
-	} else
-	    p = "UNKNOWN";
-	break;
-    case 'h':
-	snprintf(buf, CVT_BUF_SZ, "%s", getMyHostname());
-	p = buf;
-	break;
-    case 't':
-	xstrncpy(buf, mkhttpdlogtime(&squid_curtime), 128);
-	p = buf;
-	break;
-    case 'L':
-	if (Config.errHtmlText) {
-	    snprintf(buf, CVT_BUF_SZ, "%s", Config.errHtmlText);
-	    p = buf;
-	} else
-	    p = "[not available]";
-	break;
-    case 'i':
-	snprintf(buf, CVT_BUF_SZ, "%s", inet_ntoa(err->src_addr));
-	p = buf;
-	break;
-    case 'I':
-	if (err->host) {
-	    snprintf(buf, CVT_BUF_SZ, "%s", err->host);
-	    p = buf;
-	} else
-	    p = "unknown\n";
-	break;
-    case 'T':
-	snprintf(buf, CVT_BUF_SZ, "%s", mkrfc1123(squid_curtime));
-	p = buf;
 	break;
     case 'f':
 	/* FTP REQUEST LINE */
@@ -194,22 +253,61 @@ errorConvert(char token, ErrorState * err)
 	else
 	    p = "<none>";
 	break;
-/*
- * e - errno                                    x
- * E - strerror()                               x
- * t - local time                               x
- * T - UTC                                      x
- * c - Squid error code
- * I - server IP address                        x
- * i - client IP address                        x
- * L - HREF link for more info/contact          x
- * w - cachemgr email address                   x
- * h - cache hostname                           x
- * d - seconds elapsed since request received
- * p - URL port #                               x
- * f - FTP request line                         x
- * F - FTP reply line                           x
- */
+    case 'h':
+	snprintf(buf, CVT_BUF_SZ, "%s", getMyHostname());
+	break;
+    case 'H':
+	p = r ? r->host : "[unknown host]";
+	break;
+    case 'i':
+	snprintf(buf, CVT_BUF_SZ, "%s", inet_ntoa(err->src_addr));
+	break;
+    case 'I':
+	if (err->host) {
+	    snprintf(buf, CVT_BUF_SZ, "%s", err->host);
+	} else
+	    p = "[unknown]";
+	break;
+    case 'L':
+	if (Config.errHtmlText) {
+	    snprintf(buf, CVT_BUF_SZ, "%s", Config.errHtmlText);
+	} else
+	    p = "[not available]";
+	break;
+    case 'M':
+	p = r ? RequestMethodStr[r->method] : "[unkown method]";
+	break;
+    case 'p':
+	if (r) {
+	    snprintf(buf, CVT_BUF_SZ, "%d", (int) r->port);
+	} else {
+	    p = "[unknown port]";
+	}
+	break;
+    case 'P':
+	p = r ? ProtocolStr[r->protocol] : "[unkown protocol]";
+	break;
+    case 't':
+	xstrncpy(buf, mkhttpdlogtime(&squid_curtime), 128);
+	break;
+    case 'T':
+	snprintf(buf, CVT_BUF_SZ, "%s", mkrfc1123(squid_curtime));
+	break;
+    case 'U':
+	p = r ? urlCanonicalClean(r) : err->url;
+	break;
+    case 'w':
+	if (Config.adminEmail) {
+	    snprintf(buf, CVT_BUF_SZ, "%s", Config.adminEmail);
+	} else
+	    p = "[unknown]";
+	break;
+    case 'z':
+	if (err->dnsserver_msg)
+	    p = err->dnsserver_msg;
+	else
+	    p = "[unknown]";
+	break;
     default:
 	p = "%UNKNOWN%";
 	break;
@@ -220,7 +318,7 @@ errorConvert(char token, ErrorState * err)
     return p;
 }
 
-static char *
+static const char *
 errorBuildBuf(ErrorState * err, int *len)
 {
     LOCAL_ARRAY(char, buf, ERROR_BUF_SZ);
@@ -231,7 +329,7 @@ errorBuildBuf(ErrorState * err, int *len)
     char *m;
     char *mx;
     char *p;
-    char *t;
+    const char *t;
     assert(err != NULL);
     assert(err->type > ERR_NONE && err->type < ERR_MAX);
     mx = m = xstrdup(error_text[err->type]);
@@ -270,49 +368,4 @@ errorBuildBuf(ErrorState * err, int *len)
 	*len = tlen;
     xfree(mx);
     return buf;
-}
-
-void
-errorSend(int fd, ErrorState * err)
-{
-    char *buf;
-    int len;
-    debug(4, 3) ("errorSend: FD %d, err=%p\n", fd, err);
-    assert(fd >= 0);
-    buf = errorBuildBuf(err, &len);
-    cbdataAdd(err);
-    cbdataLock(err);
-    BIT_SET(err->flags, ERR_FLAG_CBDATA);
-    comm_write(fd, xstrdup(buf), len, errorSendComplete, err, xfree);
-}
-
-void
-errorAppendEntry(StoreEntry * entry, ErrorState * err)
-{
-    char *buf;
-    MemObject *mem = entry->mem_obj;
-    int len;
-    assert(entry->store_status == STORE_PENDING);
-    buf = errorBuildBuf(err, &len);
-    storeAppend(entry, buf, len);
-    if (mem)
-	mem->reply->code = err->http_status;
-    errorStateFree(err);
-}
-
-/* If there is a callback, the callback is responsible to close
- * the FD, otherwise we do it ourseves. */
-static void
-errorSendComplete(int fd, char *buf, int size, int errflag, void *data)
-{
-    ErrorState *err = data;
-    debug(4, 3) ("errorSendComplete: FD %d, size=%d\n", fd, size);
-    if (errflag != COMM_ERR_CLOSING) {
-	if (err->callback)
-	    err->callback(fd, err->callback_data, size);
-	else
-	    comm_close(fd);
-    }
-    cbdataUnlock(err);
-    errorStateFree(err);
 }
