@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.118 2004/04/04 13:46:49 hno Exp $
+ * $Id: forward.cc,v 1.119 2004/09/25 15:52:59 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -863,7 +863,7 @@ fwdStart(int fd, StoreEntry * e, HttpRequest * r)
      * be allowed.  yuck, I know.
      */
 
-    if (r->client_addr.s_addr != no_addr.s_addr) {
+    if (r->client_addr.s_addr != no_addr.s_addr && r->protocol != PROTO_INTERNAL && r->protocol != PROTO_CACHEOBJ) {
         /*
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
