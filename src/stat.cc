@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.201 1998/02/19 23:10:00 wessels Exp $
+ * $Id: stat.cc,v 1.202 1998/02/19 23:28:42 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -120,14 +120,18 @@ static int statLogHistBin(StatLogHist *, double);
 static double statLogHistVal(StatLogHist *, double);
 static double statLogHistDeltaMedian(StatLogHist * A, StatLogHist * B);
 static void statLogHistDump(StoreEntry * sentry, StatLogHist * H);
+static OBJH stat_io_get;
+static OBJH stat_objects_get;
+static OBJH stat_vmobjects_get;
+static OBJH info_get;
+static OBJH statFiledescriptors;
+static OBJH statCounters;
+static OBJH statAvg5min;
+static OBJH statAvg60min;
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
 #endif
-
-#define PCONN_HIST_SZ 256
-int client_pconn_hist[PCONN_HIST_SZ];
-int server_pconn_hist[PCONN_HIST_SZ];
 
 /*
  * An hour's worth, plus the 'current' counter
@@ -323,70 +327,6 @@ void
 stat_vmobjects_get(StoreEntry * e)
 {
     statObjects(e, 1);
-}
-
-void
-server_list(StoreEntry * sentry)
-{
-    dump_peers(sentry, Config.peers);
-}
-
-void
-dump_peers(StoreEntry * sentry, peer * peers)
-{
-    peer *e = NULL;
-    struct _domain_ping *d = NULL;
-    icp_opcode op;
-    if (peers == NULL)
-	storeAppendPrintf(sentry, "There are no neighbors installed.\n");
-    for (e = peers; e; e = e->next) {
-	assert(e->host != NULL);
-	storeAppendPrintf(sentry, "\n%-11.11s: %s/%d/%d\n",
-	    neighborTypeStr(e),
-	    e->host,
-	    e->http_port,
-	    e->icp_port);
-	storeAppendPrintf(sentry, "Status     : %s\n",
-	    neighborUp(e) ? "Up" : "Down");
-	storeAppendPrintf(sentry, "AVG RTT    : %d msec\n", e->stats.rtt);
-	storeAppendPrintf(sentry, "LAST QUERY : %8d seconds ago\n",
-	    (int) (squid_curtime - e->stats.last_query));
-	storeAppendPrintf(sentry, "LAST REPLY : %8d seconds ago\n",
-	    (int) (squid_curtime - e->stats.last_reply));
-	storeAppendPrintf(sentry, "PINGS SENT : %8d\n", e->stats.pings_sent);
-	storeAppendPrintf(sentry, "PINGS ACKED: %8d %3d%%\n",
-	    e->stats.pings_acked,
-	    percent(e->stats.pings_acked, e->stats.pings_sent));
-	storeAppendPrintf(sentry, "FETCHES    : %8d %3d%%\n",
-	    e->stats.fetches,
-	    percent(e->stats.fetches, e->stats.pings_acked));
-	storeAppendPrintf(sentry, "IGNORED    : %8d %3d%%\n",
-	    e->stats.ignored_replies,
-	    percent(e->stats.ignored_replies, e->stats.pings_acked));
-	storeAppendPrintf(sentry, "Histogram of PINGS ACKED:\n");
-	for (op = ICP_INVALID; op < ICP_END; op++) {
-	    if (e->stats.counts[op] == 0)
-		continue;
-	    storeAppendPrintf(sentry, "    %12.12s : %8d %3d%%\n",
-		icp_opcode_str[op],
-		e->stats.counts[op],
-		percent(e->stats.counts[op], e->stats.pings_acked));
-	}
-	if (e->last_fail_time) {
-	    storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
-		mkhttpdlogtime(&(e->last_fail_time)));
-	}
-	if (e->pinglist != NULL)
-	    storeAppendPrintf(sentry, "DOMAIN LIST: ");
-	for (d = e->pinglist; d; d = d->next) {
-	    if (d->do_ping)
-		storeAppendPrintf(sentry, "%s ", d->domain);
-	    else
-		storeAppendPrintf(sentry, "!%s ", d->domain);
-	}
-	storeAppendPrintf(sentry, "Keep-Alive Ratio: %d%%\n",
-	    percent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
-    }
 }
 
 #ifdef XMALLOC_STATISTICS
@@ -750,10 +690,6 @@ statInit(void)
 {
     int i;
     debug(18, 5) ("statInit: Initializing...\n");
-    for (i = 0; i < PCONN_HIST_SZ; i++) {
-	client_pconn_hist[i] = 0;
-	server_pconn_hist[i] = 0;
-    }
     memset(CountHist, '\0', N_COUNT_HIST * sizeof(StatCounters));
     for (i = 0; i < N_COUNT_HIST; i++)
 	statCounterInit(&CountHist[i]);
@@ -783,52 +719,6 @@ statInit(void)
     cachemgrRegister("60min",
 	"60 Minute Average of Counters",
 	statAvg60min, 0);
-    cachemgrRegister("server_list",
-	"Neighbor Cache Stats",
-	server_list, 0);
-}
-
-void
-pconnHistCount(int what, int i)
-{
-    if (i >= PCONN_HIST_SZ)
-	i = PCONN_HIST_SZ - 1;
-    /* what == 0 for client, 1 for server */
-    if (what == 0)
-	client_pconn_hist[i]++;
-    else if (what == 1)
-	server_pconn_hist[i]++;
-    else
-	assert(0);
-}
-
-void
-pconnHistDump(StoreEntry * e)
-{
-    int i;
-    storeAppendPrintf(e,
-	"Client-side persistent connection counts:\n"
-	"\n"
-	"\treq/\n"
-	"\tconn      count\n"
-	"\t----  ---------\n");
-    for (i = 0; i < PCONN_HIST_SZ; i++) {
-	if (client_pconn_hist[i] == 0)
-	    continue;
-	storeAppendPrintf(e, "\t%4d  %9d\n", i, client_pconn_hist[i]);
-    }
-    storeAppendPrintf(e,
-	"\n"
-	"Server-side persistent connection counts:\n"
-	"\n"
-	"\treq/\n"
-	"\tconn      count\n"
-	"\t----  ---------\n");
-    for (i = 0; i < PCONN_HIST_SZ; i++) {
-	if (server_pconn_hist[i] == 0)
-	    continue;
-	storeAppendPrintf(e, "\t%4d  %9d\n", i, server_pconn_hist[i]);
-    }
 }
 
 static void

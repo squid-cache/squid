@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.4 1998/02/19 23:09:54 wessels Exp $
+ * $Id: mem.cc,v 1.5 1998/02/19 23:28:39 wessels Exp $
  *
  * DEBUG: section 13    Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -48,6 +48,13 @@ typedef struct {
 } memData;
 
 static memData MemData[MEM_MAX];
+
+static void * stackPop(Stack * s);
+static int stackFull(Stack * s);
+static int stackEmpty(Stack * s);
+static void stackPush(Stack * s, void *p);
+static void memDataInit(mem_type , const char *, size_t , int );
+static OBJH memStats;
 
 static int
 stackEmpty(Stack * s)
@@ -248,7 +255,7 @@ memFreeMemory(void)
     }
 }
 
-void
+static void
 memStats(StoreEntry * sentry)
 {
     mem_type t;
