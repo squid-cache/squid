@@ -37,6 +37,7 @@ Changes to Squid-2.4.DEVEL3 ():
 	- proxy_auth_regex and ident_regex ACL types
 	- Fixed a StoreEntry memory leak during "dirty" rebuild
 	- Helper processes no longer hold unrelated filedescriptors open
+	- Helpers are now restarted when the logs are rotated
 
 Changes to Squid-2.4.DEVEL2 ():
 

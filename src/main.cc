@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.308 2000/03/06 16:23:32 wessels Exp $
+ * $Id: main.cc,v 1.309 2000/05/02 20:13:58 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -377,12 +377,18 @@ static void
 mainRotate(void)
 {
     icmpClose();
+    dnsShutdown();
+    redirectShutdown();
+    authenticateShutdown();
     _db_rotate_log();		/* cache.log */
     storeDirWriteCleanLogs(1);
     storeLogRotate();		/* store.log */
     accessLogRotate();		/* access.log */
     useragentRotateLog();	/* useragent.log */
     icmpOpen();
+    dnsInit();
+    redirectInit();
+    authenticateInit();
 }
 
 static void
