@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.449 1998/08/21 08:40:59 wessels Exp $
+ * $Id: store.cc,v 1.450 1998/08/21 08:57:07 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -237,7 +237,7 @@ storeReleaseRequest(StoreEntry * e)
      * anyone else even looks at the cachability flag.  Also, this
      * prevents httpMakePublic from really setting a public key.
      */
-    EBIT_CLR(entry->flag, ENTRY_CACHABLE);
+    EBIT_CLR(e->flag, ENTRY_CACHABLE);
     storeSetPrivateKey(e);
 }
 
