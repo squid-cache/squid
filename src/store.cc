@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.205 1997/01/31 23:59:56 wessels Exp $
+ * $Id: store.cc,v 1.206 1997/02/05 04:40:45 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -216,7 +216,7 @@ static int storeEntryValidLength _PARAMS((const StoreEntry *));
 static void storeGetMemSpace _PARAMS((int));
 static int storeHashDelete _PARAMS((StoreEntry *));
 static int storeShouldPurgeMem _PARAMS((const StoreEntry *));
-static int storeSwapInHandle _PARAMS((int, const char *, int, int, StoreEntry *, int));
+static int storeSwapInHandle _PARAMS((int, const char *, int, int, StoreEntry *));
 static int storeSwapInStart _PARAMS((StoreEntry *, SIH, void *));
 static int swapInError _PARAMS((int, StoreEntry *));
 static mem_ptr new_MemObjectData _PARAMS((void));
@@ -262,7 +262,6 @@ static int store_swap_size = 0;	/* kilobytes !! */
 static int store_swap_high = 0;
 static int store_swap_low = 0;
 static int swaplog_fd = -1;
-static int swaplog_lock = 0;
 static int storelog_fd = -1;
 
 /* key temp buffer */
@@ -495,7 +494,6 @@ storeLog(int tag, const StoreEntry * e)
     file_write(storelog_fd,
 	xstrdup(logmsg),
 	strlen(logmsg),
-	0,
 	NULL,
 	NULL,
 	xfree);
@@ -1077,7 +1075,7 @@ storeSwapFullPath(int fn, char *fullpath)
 
 /* swapping in handle */
 static int
-storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry * e, int offset_notused)
+storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     SIH handler = NULL;
@@ -1099,7 +1097,6 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
 	return -1;
     }
     debug(20, 5, "storeSwapInHandle: e->swap_offset   = %d\n", mem->swap_offset);
-    debug(20, 5, "storeSwapInHandle: len              = %d\n", len);
     debug(20, 5, "storeSwapInHandle: e->e_current_len = %d\n", mem->e_current_len);
     debug(20, 5, "storeSwapInHandle: e->object_len    = %d\n", e->object_len);
 
@@ -1217,7 +1214,6 @@ storeSwapLog(const StoreEntry * e)
     file_write(swaplog_fd,
 	xstrdup(logmsg),
 	strlen(logmsg),
-	swaplog_lock,
 	NULL,
 	NULL,
 	xfree);
@@ -1294,7 +1290,6 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
     file_write(mem->swapout_fd,
 	mem->e_swap_buf,
 	mem->e_swap_buf_len,
-	mem->e_swap_access,
 	storeSwapOutHandle,
 	e,
 	NULL);
@@ -1327,13 +1322,6 @@ storeSwapOutStart(StoreEntry * e)
     debug(20, 5, "storeSwapOutStart: Begin SwapOut '%s' to FD %d FILE %s.\n",
 	e->url, fd, swapfilename);
     e->swap_file_number = swapfileno;
-    if ((mem->e_swap_access = file_write_lock(mem->swapout_fd)) < 0) {
-	debug(20, 0, "storeSwapOutStart: Unable to lock swapfile: %s\n",
-	    swapfilename);
-	file_map_bit_reset(e->swap_file_number);
-	e->swap_file_number = -1;
-	return -1;
-    }
     e->swap_status = SWAPPING_OUT;
     mem->swap_offset = 0;
     mem->e_swap_buf = get_free_8k_page();
@@ -1347,7 +1335,6 @@ storeSwapOutStart(StoreEntry * e)
     x = file_write(mem->swapout_fd,
 	mem->e_swap_buf,
 	mem->e_swap_buf_len,
-	mem->e_swap_access,
 	storeSwapOutHandle,
 	e,
 	NULL);
@@ -1517,12 +1504,9 @@ storeRebuiltFromDisk(struct storeRebuild_data *data)
 	    tmp_filename, swaplog_file, xstrerror());
 	fatal_dump("storeRebuiltFromDisk: rename failed");
     }
-    if (file_write_unlock(swaplog_fd, swaplog_lock) != DISK_OK)
-	fatal_dump("storeRebuiltFromDisk: swaplog unlock failed");
     file_close(swaplog_fd);
     if ((swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT)) < 0)
 	fatal_dump("storeRebuiltFromDisk: file_open(swaplog_file) failed");
-    swaplog_lock = file_write_lock(swaplog_fd);
 }
 
 static void
@@ -1556,8 +1540,6 @@ storeStartRebuildFromDisk(void)
     safeunlink(tmp_filename, 1);
     /* close the existing write-only swaplog, and open a temporary
      * write-only swaplog  */
-    if (file_write_unlock(swaplog_fd, swaplog_lock) != DISK_OK)
-	fatal_dump("storeStartRebuildFromDisk: swaplog unlock failed");
     if (swaplog_fd > -1)
 	file_close(swaplog_fd);
     sprintf(tmp_filename, "%s.new", swaplog_file);
@@ -1568,7 +1550,6 @@ storeStartRebuildFromDisk(void)
 	    tmp_filename, xstrerror());
 	fatal("storeStartRebuildFromDisk: Can't open tmp swaplog");
     }
-    swaplog_lock = file_write_lock(swaplog_fd);
     /* Open the existing swap log for reading */
     if ((data->log = fopen(swaplog_file, "r")) == (FILE *) NULL) {
 	sprintf(tmp_error_buf, "storeRebuildFromDisk: %s: %s",
@@ -2468,7 +2449,6 @@ storeInit(void)
 	sprintf(tmp_error_buf, "Cannot open swap logfile: %s", swaplog_file);
 	fatal(tmp_error_buf);
     }
-    swaplog_lock = file_write_lock(swaplog_fd);
     if (!opt_zap_disk_store)
 	storeStartRebuildFromDisk();
     else
@@ -2665,11 +2645,6 @@ storeWriteCleanLog(void)
 	safeunlink(tmp_filename, 0);
 	return 0;
     }
-    if (file_write_unlock(swaplog_fd, swaplog_lock) != DISK_OK) {
-	debug(20, 0, "storeWriteCleanLog: Failed to unlock swaplog!\n");
-	debug(20, 0, "storeWriteCleanLog: Current swap logfile not replaced.\n");
-	return 0;
-    }
     if (rename(tmp_filename, swaplog_file) < 0) {
 	debug(50, 0, "storeWriteCleanLog: rename failed: %s\n",
 	    xstrerror());
@@ -2681,7 +2656,6 @@ storeWriteCleanLog(void)
 	sprintf(tmp_error_buf, "Cannot open swap logfile: %s", swaplog_file);
 	fatal(tmp_error_buf);
     }
-    swaplog_lock = file_write_lock(swaplog_fd);
 
     stop = getCurrentTime();
     r = stop - start;
