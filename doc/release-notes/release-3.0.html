@@ -1,13 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.21">
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.16">
  <TITLE>Squid 3.0 release notes</TITLE>
 </HEAD>
 <BODY>
 <H1>Squid 3.0 release notes</H1>
 
-<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.1 2003/04/20 03:35:38 robertc Exp $
+<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.2 2003/09/06 10:55:57 hno Exp $
 <HR>
 <EM>This document contains the release notes for version 3.0 of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
@@ -17,70 +17,40 @@ for Applied Network Research and members of the Web Caching community.</EM>
 
 <P>
 <UL>
-<LI>Clean up the squid code to consistenly use [u_]int&lt;len&gt;_t throughout, rather than some [u_]num&lt;len&gt; and some [u_]&lt;len&gt;_t instances. (Robert Collins).</LI>
-<LI>Escapes Basic auth login and password information when sent to the helpers, to allow for spaces and other odd characters (Henrik Nordstrom).</LI>
-<LI>New option ftp_sanitycheck (Henrik Nordstrom).</LI>
-<LI>Gopher improvements (Henrik Nordstrom).</LI>
-<LI>CARP enabled by default (Henrik Nordstrom).</LI>
-<LI>Documented no_cache change (not new, but rather important) (Henrik)</LI>
-<LI>Make http_port optional, allowing for SSL-only operation. Squid will refuse to start unless at least one port is defined. (Henrik).</LI>
-<LI>Ability to read the configuration file from an external program pipe (Henrik).</LI>
-<LI>Major cleanup or CARP. Now plays well with the other peering algorithms as just another non-ICP peering method. (Henrik)</LI>
-<LI>Spelling corrections by Reuben Farrelly.</LI>
-<LI>SASL auth helper by Ian Castle.</LI>
-<LI>SNMP leak fix (Henrik).</LI>
-<LI>Object reference counting supported to ease some programming tasks (Robert Collins).</LI>
-<LI>EXEEXT cleanups, to hopefully allow pinger to install cleanly on cygwin etc.. (Henrik)</LI>
-<LI>epoll support (David Nicklay)</LI>
-<LI>Deferred reads removed from comms layer, implemented a layer above, allowing more efficent comms layers (such as epoll). (Robert Collins).</LI>
-<LI>ACL Source code extracted into multiple separate classes, allowing great flexability in future development, and also for custom squid builds today. (Robert Collins)</LI>
-<LI>Delay classes heavily refactored to allow easier extension and reuse. (Robert Collins).</LI>
-<LI>Class 4 delay pools - user specific buckets. (Robert Collins).</LI>
 <LI>Convert core squid source to C++ (Robert Collins).</LI>
-<LI>clientStreams, rationalising the client side logic to allow plugin output streams, and providing a simple interface to the store. See the programmers guide for details. (Robert Collins).</LI>
-<LI>Andres Kroonmaa's chunked memory pool allocator included. (Squid 2.5 ?)</LI>
+<LI>http_port optional, allowing for SSL-only operation. Squid will refuse to start unless at least one port is defined. (Henrik Nordstr&ouml;m).</LI>
+<LI>Ability to read the configuration file from an external program pipe (Henrik Nordstr&ouml;m).</LI>
+<LI>Major cleanup or CARP. Now plays well with the other peering algorithms as just another non-ICP peering method. This also allows CARP support to be compiled by default with no need to recompile Squid to use CARP (Henrik Nordstr&ouml;m)</LI>
+<LI>Class 4 delay pools - user specific buckets. (Robert Collins).</LI>
 <LI>Comms layer refactored to increase efficiency (Adrian Chadd).</LI>
+<LI>epoll support (David Nicklay)</LI>
+<LI>kqueue support (Adrian Chadd)</LI>
 <LI>Range processing moved from client side to both client and server (Robert Collins).</LI>
-<LI>autoconf 2.5 support (Robert Collins).</LI>
-<LI>Added support for sys/bitypes.h, apparently needed for some of the bittypes on tru64 and possibly others. (Henrik Nordstrom)</LI>
+<LI>Added support for sys/bitypes.h, apparently needed for some of the bittypes on tru64 and possibly others. (Henrik Nordstr&ouml;m)</LI>
 <LI>Edge Side Include implementation (www.esi.org). (Robert Collins).</LI>
 <LI>Reduce the depth of recursion in make, improving make -j performance. (Robert Collins)</LI>
-<LI>Hi-resolution CPU profiling from Andres Kroonma, for single-threaded use only.</LI>
-<LI>kqueue support (Adrian Chadd).</LI>
 <LI>Cleanup of the relation between accelerated request and transparently intercepted request. The two are now handled separately from each other. 
 This fixes two issues:
 <UL>
 <LI>Transparently intercepted requests is no longer under the restrictions of accelerated requests in peering relations etc..</LI>
 <LI>No risk of confusion in authentication. Authentication is now allowed for accelerated requests but not transparently intercepted requests.</LI>
 </UL>
- (Henrik Nordstrom)</LI>
-<LI>--enable-auth-on-accel configure option to enable authentication in accelerator setups (Henrik Nordstrom)</LI>
-<LI>Cleaned up module/helper configure checks to use the same logics everywhere. (Henrik Nordstrom)</LI>
-<LI>Added a small trap detecting incorrect --with-aufs-threads arguments (Henrik Nordstrom)</LI>
-<LI>Change --disable-hostname-checks to --enable-hostname-checks, default to not verify hostname sanity. (Henrik Nordstrom)</LI>
-<LI>also removed the dot magics. These are more evil than helpful and breaks semantic transparency in certain configurations. (Henrik Nordstrom)</LI>
+ (Henrik Nordstr&ouml;m)</LI>
+<LI>Change --disable-hostname-checks to --enable-hostname-checks, default to not verify hostname sanity. (Henrik Nordstr&ouml;m)</LI>
+<LI>also removed the dot magics from hostname parsing. These are more evil than helpful and breaks semantic transparency in certain configurations. (Henrik Nordstr&ouml;m)</LI>
 <LI>added reporting of "Process Data Segment Size via sbrk()" when sbrk() call exists.  According to the sbrk() man page, calling sbrk(0) returns the end of the data segment.  By storing the data segment offset when Squid starts, we can report the size of the data segment at any time.  This might be a better metric than getrusage()'s MAX RSS, which, in my experience, is often less than the process size reported by 'ps' (presumably because some of the processes memory is swapped to disk).  However, initial tests show that the sbrk() trick reports a value slightly smaller than reported by 'ps'. (Duane Wessels)</LI>
 <LI>failure_ratio is a ratio, not a percentage.  Removed %% from printf. (Duane Wessels)</LI>
 <LI>Start using inline C and C++ code via .cci source files. This defaults to inlined, with a configure option to disable for troubleshooting or development. (Robert Collins).</LI>
-<LI>Unify much of the IO logic, shrinking the code base for diskd/aufs/ufs. (Robert Collins).</LI>
-<LI>Introduce 'make check' support to provide an automated test suite for squid. (Robert Collins).</LI>
-<LI>Fix --disable-... options to default to be enabled.. (CARP, WCCP, IDENT, ..) (Henrik Nordstrom)</LI>
-<LI>pthreads detection and compilation bugfixes. (Henrik Nordstrom, Robert Collins)</LI>
-<LI>Better MacOSX support (Robert Collins, Adrian Chadd, Henrik Nordstrom)</LI>
+<LI>Better MacOSX support (Robert Collins, Adrian Chadd, Henrik Nordstr&ouml;m)</LI>
 <LI>--with-filedescriptors=XX configure option (Francesco Chemolli)</LI>
-<LI>Killed the remains of ALARM_UPDATES_TIME (--enable-time-hack) (Henrik Nordstrom)</LI>
-<LI>Not all systems support the 'obsolete' getpass() function (Henrik Nordstrom)</LI>
-<LI>UNIX domain IPC sockets support - Centralised the IPC type selection to defines.h by the defines IPC_STREAM and IPC_DGRAM. (Henrik Nordstrom)</LI>
-<LI>Removed potentially dangerous debugging options. Developers know how to edit configure.in or set defines. configure --help lineups. (Henrik Nordstrom)</LI>
-<LI>--enable-large-files to enable support for large files (>2GB) on 32-bit GNU libc systems. (Henrik Nordstrom)</LI>
-<LI>Astyle is the code formatter of choice for squid-3 C++ code. See http://www.squid-cache.org/&nbsp;robertc/squid-3-style.txt for the squid 3 style conventions.</LI>
-<LI>WIN32 port update by Guido - Fix the problems on Windows related to open file renaming and text/binary file issues.</LI>
-<LI>LDAP basic auth helper improvements (Henrik, David Begley, Christoph Lechleitner, Juerg Michel)</LI>
+<LI>UNIX domain IPC now used by default for helpers, no loger relying on TCP/IP sockets via loopback. (Henrik Nordstr&ouml;m)</LI>
+<LI>Removed potentially dangerous debugging related configure options. Developers know how to edit configure.in or set defines. (Henrik Nordstr&ouml;m)</LI>
+<LI>--enable-large-files to enable support for large files (&gt;2GB) on 32-bit GNU libc systems. (Henrik Nordstr&ouml;m)</LI>
 <LI>Digest auth helper improvements (Robert Collins, Sean Burford)</LI>
 <LI>Digest authentication scheme bugfixs &amp; improvements (Robert Collins)</LI>
-<LI>Merge of http(s)_port and accelerator directive updates from rproxy
+<LI>accelerator mode cleaned up, using the design from the rproxy development branch
 <UL>
-<LI>The httpd_accel_* directives is now gone, replaced by http(s)_port options</LI>
+<LI>The httpd_accel_* directives is now gone, replaced by http(s)_port options and cache_peer based request forwarding.</LI>
 <LI>The http(s)_port options has a list of new options for controlling the type and mode of port created with respect to
 <UL>
 <LI>transparent proxying</LI>
@@ -91,7 +61,7 @@ This fixes two issues:
 </LI>
 <LI>To enforce a reasonable level of security in accelerators, accelerated requests are denied to go direct unless forced by always_direct.</LI>
 </UL>
-(Henrik Nordstrom)</LI>
+(Henrik Nordstr&ouml;m)</LI>
 <LI>Cache manager auth helper output tidyup (Duane Wessels).</LI>
 <LI>Native Windows port enhancements:
 <UL>
@@ -110,28 +80,35 @@ This fixes two issues:
 By Guido Serassio.</LI>
 <LI>SSL support update
 <UL>
-<LI>Support for outgoing SSL connections</LI>
 <LI>SSL encrypted peers</LI>
-<LI>https:// gatewaying for clients not supporting SSL or URLs rewritten via a redirector to https://...</LI>
+<LI>https:// gatewaying/proxying for clients not supporting SSL or URLs rewritten via a redirector to https://...</LI>
 <LI>Client certificate support</LI>
 <LI>Hardware crypto SSL acceleration support via OpenSSL engine</LI>
-<LI>SSL key/certificate now read while parsing squid.conf to support secure key protection and chroot.</LI>
+<LI>SSL key/certificate now read while parsing squid.conf to support secure key protection in combination with chroot..</LI>
 <LI>A few minor bugfixes/optimizations</LI>
 </UL>
-(Henrik Nordstrom)</LI>
+(Henrik Nordstr&ouml;m)</LI>
 <LI>--enable-default-hostsfile configure option by Guido Serassio. Tells the default /etc/hosts file location</LI>
-<LI>Fix "access_log none" (and "forward_log none")  (Arkadi E. Shishlov).</LI>
-<LI>New squid.conf directive to disable hostname verifications. It isn't really our business to enforce what characters is used in hostnames. (Henrik Nordstrom).</LI>
-<LI>ftp_sanitycheck option (default on) to make Squid sanity check the FTP data connection.
-<UL>
-<LI>Ignore "BAD" PASV replies, asking Squid to connect to another server than requested.</LI>
-<LI>Ignore PORT and default connections coming from another address than expected.</LI>
-</UL>
-(Henrik Nordstrom)</LI>
+<LI>New squid.conf directive to disable hostname verifications. It isn't really our business to enforce what characters is used in hostnames. (Henrik Nordstr&ouml;m).</LI>
 <LI>Peering enhancement options for satellite or other high latency links by Robert Cohen.</LI>
-<LI>Cleanup of authentication forwarding, and added gatewaying proxy->reverseproxy when the same Squid is acting as both proxy and reverseproxy with authentication. (Henrik Nordstrom)</LI>
-<LI>The mailto links on Squid's ERR pages now contain data about the cccurred error by default, so that the email will contain this data in its body. This feature can be disabled via the email_err_data directive. (Clemens Löser)</LI>
-<LI>Disable pipeline_prefetch in HEAD as it is known to be broken due to the store_client_copy() api change (Henrik)</LI>
+<LI>Cleanup of authentication forwarding, and added authentication gatewaying proxy-&gt;reverseproxy when the same Squid is acting as both proxy and reverseproxy with authentication. (Henrik Nordstr&ouml;m)</LI>
+<LI>The mailto links on Squid's ERR pages now contain data about the cccurred error by default, so that the email will contain this data in its body. This feature can be disabled via the email_err_data directive. (Clemens L&ouml;ser)</LI>
+<LI>pipeline_prefetch is disabled and known to be broken due to internal store_client_copy() change (Henrik Nordstr&ouml;m)</LI>
+<LI>ncsa_auth extened with support for MD5 hashes. (Henrik Nordstr&ouml;m)</LI>
+<LI>Complain if open of /dev/null fails; avoids infinite loop in ipcCreate() and gives a correct error message should this occur.</LI>
+<LI>Properly quote the quoting character '%' in log_quote() and username_quote().</LI>
+<LI>in icmpRecv(), Handle the case when recv() returns EAGAIN and do not treat it like an error.</LI>
+<LI>Update squid to build with gcc/g++ 3.3 with no warnings.</LI>
+<LI>wb_group updated to support domain qualified groups (Guido Serassio)</LI>
+<LI>most helper interfaces now support multiple overlapping requests (external_acl_type, redirect_program, basic auth).</LI>
+<LI>custom log formats, and the ability to log different requests to different log files.</LI>
+<LI>ext_user acl type added for matching the user name returned by external acls. Not longer abusing the ident acl for this purpose</LI>
+<LI>external_acl extended with soft timeouts</LI>
+<LI>external_acl can optionally return information to be logged in access.log</LI>
+<LI>Requests denied due to 'http_reply_access' are now logged with TCP_DENIED_REPLY.</LI>
+<LI>Added counters for HTCP messages sent and received, reported in 'info' cache manager page.</LI>
+<LI>Fixed 'ICP dynamic timeout algorithm ignores multicast' bug</LI>
+<LI>Bug #743: "#ifdef HTTP_VIOLATIONS" should be "#if HTTP_VIOLATIONS"</LI>
 </UL>
 </P>
 
@@ -140,7 +117,7 @@ By Guido Serassio.</LI>
 <P>
 <DL>
 <DT><B>read_ahead_gap</B><DD><P>Config directive by Jeffrey D. Wheelhouse. Allows the read-ahead gap to be configured from squid.conf (previously hardcoded at 16 KB)</P>
-<DT><B>request_entities</B><DD><P>New squid.conf directive "request_entities on/off".If set to "on" then Squid will allow GET/HEAD requests with request entities, even if such entites are "undefined" in the HTTP specification.  (Henrik Nordstrom)</P>
+<DT><B>request_entities</B><DD><P>New squid.conf directive "request_entities on/off".If set to "on" then Squid will allow GET/HEAD requests with request entities, even if such entites are "undefined" in the HTTP specification.  (Henrik Nordstr&ouml;m)</P>
 <DT><B>cache_peer</B><DD><P>New options for reverse proxy setups
 <UL>
 <LI>originserver</LI>
@@ -148,10 +125,22 @@ By Guido Serassio.</LI>
 <LI>forceddomain=XXX</LI>
 </UL>
 </P>
-<DT><B>https_port</B><DD><P>New option : dhparams=/path/to/file.pem https_port option to specify DH parameters for forward-secrecy in encryption (practically denies decryption even if the private key is known from what I understand). (Henrik Nordstrom)</P>
-<DT><B>header_replace</B><DD><P>This is now dependent on --disable-http-violations (Henrik Nordstrom) </P>
+<DT><B>https_port</B><DD><P>Many new SSL options
+<DL>
+<DT><B>dhparams=/path/to/file.pem</B><DD><P>https_port option to specify DH parameters for forward-secrecy in encryption. (Henrik Nordstr&ouml;m)</P>
+<DT><B>clientca= etc</B><DD><P>specifies which CA to accept client certificates from</P>
+<DT><B>defaultsite</B><DD><P>specifies the accelerated site name</P>
+</DL>
+</P>
+<DT><B>http(s)_port</B><DD><P>Many new options to control acceleration, transparent proxying etc</P>
+<DT><B>header_replace</B><DD><P>This is now dependent on --disable-http-violations (Henrik Nordstr&ouml;m) </P>
 <DT><B>email_err_data</B><DD><P>Allow disabling the data now embedded in the mailto links on Squid's ERR pages.</P>
-<DT><B>refresh_pattern</B><DD><P>Make the default refresh_pattern merely a suggested default. This is consistent with older Squid versions due to a bug in the "DEFAULT-IF-NONE" processing of refresh_pattern.  (Henrik)</P>
+<DT><B>reply_body_max_size</B><DD><P>No longer uses allow/deny. Instead it is specified as a size followed by acl elements. The size "none" can be used for no limit (the default)</P>
+<DT><B>external_acl_type</B><DD><P>The argument which was named concurrenty= in Squid-2.5 is now named children=. concurrency= has a different meaing in Squid-3.0 and your external acls will not work until updated.</P>
+<DT><B>ext_user acl</B><DD><P>this acl matches the username returned by external acl. ident can no longer be used for this purpose.</P>
+<DT><B>access_log</B><DD><P>The access_log directive now optionally includes specifications on what log format to use and acls matching which requests to log. Can be specified multiple times to log different requests to different files.</P>
+<DT><B>logformat</B><DD><P>new directive to define custom log formats</P>
+<DT><B>httpd_accel_*</B><DD><P>These directives have been replaced by http(s)_port options and cache_peer based request forwarding. Note that you can no longer run proxy and acceleration mode on the same port. If you previously did this you now need to define two ports, one for acceleration, one for proxying.</P>
 </DL>
 </P>
 
@@ -160,6 +149,33 @@ By Guido Serassio.</LI>
 <P>
 <UL>
 <LI>SSL Acceleration Support - CRL's are not currently supported. The design has been completed, but time to implement is missing - contact squid-dev@squid-cache.org for more details.</LI>
+<LI>tcp_outgoing_addr/tos uses "fast" ACL checks and is somewhat limited in what kind of acl types you may use. Probably only src/my_port/my_addr/dstdomain/method/port/url* acl types is reliable.</LI>
+<LI>reply_body_max_size is uses "fast" ACL checks and may occationally fail on acls which may require external lookups (dst/srcdomain/external).</LI>
+</UL>
+</P>
+
+<H2><A NAME="s4">4. Other internal changes mostly of interest to developers</A></H2>
+
+<P>
+<UL>
+<LI>Andres Kroonmaa's chunked memory pool allocator included.</LI>
+<LI>clientStreams, rationalising the client side logic to allow plugin output streams, and providing a simple interface to the store. See the programmers guide for details. (Robert Collins).</LI>
+<LI>Clean up the squid code to consistenly use [u_]int&lt;len&gt;_t throughout, rather than some [u_]num&lt;len&gt; and some [u_]&lt;len&gt;_t instances. (Robert Collins).</LI>
+<LI>Spelling corrections by Reuben Farrelly.</LI>
+<LI>Object reference counting supported to ease some programming tasks (Robert Collins).</LI>
+<LI>Deferred reads removed from comms layer, implemented a layer above, allowing more efficent comms layers (such as epoll). (Robert Collins).</LI>
+<LI>ACL Source code extracted into multiple separate classes, allowing great flexability in future development, and also for custom squid builds today. (Robert Collins)</LI>
+<LI>Delay classes heavily refactored to allow easier extension and reuse. (Robert Collins).</LI>
+<LI>autoconf 2.5 support (Robert Collins).</LI>
+<LI>Hi-resolution CPU profiling from Andres Kroonma, for single-threaded use only.</LI>
+<LI>Cleaned up module/helper configure checks to use the same logics everywhere. (Henrik Nordstr&ouml;m)</LI>
+<LI>Unify much of the IO logic, shrinking the code base for diskd/aufs/ufs. (Robert Collins).</LI>
+<LI>Introduce 'make check' support to provide an automated test suite for squid. (Robert Collins).</LI>
+<LI>pthreads detection and compilation bugfixes. (Henrik Nordstr&ouml;m, Robert Collins)</LI>
+<LI>Killed the remains of ALARM_UPDATES_TIME (--enable-time-hack) (Henrik Nordstr&ouml;m)</LI>
+<LI>Centralised the IPC type selection to defines.h by the defines IPC_STREAM and IPC_DGRAM. (Henrik Nordstr&ouml;m)</LI>
+<LI>Astyle is the code formatter of choice for squid-3 C++ code. See http://www.squid-cache.org/&nbsp;robertc/squid-3-style.txt for the squid 3 style conventions.</LI>
+<LI>Fix "access_log none" (and "forward_log none")  (Arkadi E. Shishlov).</LI>
 </UL>
 </P>
 
