@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.63 1998/04/16 17:18:53 wessels Exp $
+ * $Id: store_dir.cc,v 1.64 1998/04/16 17:47:15 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -507,8 +507,9 @@ storeDirStats(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "Current Size: %d KB\n", SD->cur_size);
 	storeAppendPrintf(sentry, "Percent Used: %0.2f%%\n",
 	    100.0 * SD->cur_size / SD->max_size);
-	storeAppendPrintf(sentry, "Filemap bits in use: %d\n",
-	    SD->map->n_files_in_map);
+	storeAppendPrintf(sentry, "Filemap bits in use: %d of %d (%d%%)\n",
+	    SD->map->n_files_in_map, SD->map->max_n_files,
+	    percent(SD->map->n_files_in_map, SD->map->max_n_files));
     }
 }
 
