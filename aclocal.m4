@@ -32,6 +32,9 @@ AC_DEFUN(SQUID_DEFAULT_INCLUDES,[[
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 ]])     
 
 dnl and this is for AC_CHECK_SIZEOF
