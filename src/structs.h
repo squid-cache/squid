@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.255 1999/01/08 21:12:18 wessels Exp $
+ * $Id: structs.h,v 1.256 1999/01/11 22:23:08 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1294,7 +1294,6 @@ struct _request_t {
     request_flags flags;
     HttpHdrCc *cache_control;
     HttpHdrRange *range;
-    time_t max_age;
     float http_ver;
     time_t ims;
     int imslen;

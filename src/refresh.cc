@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.45 1998/11/13 20:50:56 wessels Exp $
+ * $Id: refresh.cc,v 1.46 1999/01/11 22:23:07 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -187,8 +187,8 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
 	    rc->negative_age_stale++;
 	    return 1;
 	}
-	if (request->max_age > -1) {
-	    if (age > request->max_age) {
+	if (request->cache_control && request->cache_control->max_age > -1) {
+	    if (age > request->cache_control->max_age) {
 		debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");
 		rc->request_max_age_stale++;
 		return 1;
