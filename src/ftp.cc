@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.29 1996/04/10 03:52:23 wessels Exp $ */
+/* $Id: ftp.cc,v 1.30 1996/04/10 03:54:43 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -72,7 +72,7 @@ int ftp_url_parser(url, data)
     request[0] = host[0] = user[0] = password[0] = '\0';
 
     t = sscanf(url, "%[a-zA-Z]://%[^/]%s", proto, hostbuf, request);
-    if (t < 2) 
+    if (t < 2)
 	return -1;
     if (strcasecmp(proto, "ftp") && strcasecmp(proto, "file"))
 	return -1;
@@ -86,21 +86,18 @@ int ftp_url_parser(url, data)
     if ((s = strchr(hostbuf, '@'))) {
 	*s = '\0';
 	strcpy(user, hostbuf);
-	strcpy(hostbuf, s+1);
+	strcpy(hostbuf, s + 1);
     }
-
     /* separate into user and password */
     if ((s = strchr(user, ':'))) {
-        *s = '\0';
-	strcpy(password, s+1);
+	*s = '\0';
+	strcpy(password, s + 1);
     }
-
     /* separate into host and port */
     if ((s = strchr(hostbuf, ':'))) {
 	*s = '\0';
-	data->port = atoi(s+1);
+	data->port = atoi(s + 1);
     }
-
     strncpy(host, hostbuf, SQUIDHOSTNAMELEN);
     if (*user == '\0')
 	strcpy(user, "anonymous");
@@ -112,11 +109,11 @@ int ftp_url_parser(url, data)
 
     (void) url_convert_hex(password, 0);
 
-    debug(9,1,"ftp_url_parser: proto = %s\n", proto);
-    debug(9,1,"ftp_url_parser:  user = %s\n", data->user);
-    debug(9,1,"ftp_url_parser:  pass = %s\n", data->password);
-    debug(9,1,"ftp_url_parser:  host = %s\n", data->host);
-    debug(9,1,"ftp_url_parser:  port = %d\n", data->port);
+    debug(9, 1, "ftp_url_parser: proto = %s\n", proto);
+    debug(9, 1, "ftp_url_parser:  user = %s\n", data->user);
+    debug(9, 1, "ftp_url_parser:  pass = %s\n", data->password);
+    debug(9, 1, "ftp_url_parser:  host = %s\n", data->host);
+    debug(9, 1, "ftp_url_parser:  port = %d\n", data->port);
 
     return 0;
 }
