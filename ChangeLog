@@ -1,6 +1,7 @@
 Changes to squid-1.novm.4 (January XX, 1996):
 
 	- Fixed storeRegister loop in icpHandleIMSReply().
+	- Merged squid-1.1.4 changes.
 
 Changes to squid-1.1.4 (January 13, 1997):
 
