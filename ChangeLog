@@ -1,16 +1,24 @@
 TODO LIST before official squid-1.1:
 
-	- Changes to 'TTL' handling:
-		- Basically get away from thinking in TTLs.  Instead think
-		  about refresh times.  
-		- change ttl_pattern to refresh_pattern
-		- remove 'http', 'gopher', and 'ftp' config options
-		  and instead have a single default refresh rate
-		  and a single max object size?
-		- Don't do TTL calculation whn object is fetched.  Instead
-		  do refresh time calculation when object is requested.
-		- lose 'max_expire_age' business?
+Changes to squid-1.1.beta11 (October 24, 1996):
 
+	- Fixed rfc1123() to use actual RFC1123 time format.
+	- Made Store Hash parameters configurable
+		- store_objects_per_bucket
+		- store_avg_objects_size
+	- Fundamental changes to object TTLs; now think in terms of
+	  refresh times.  Replaced 'ttl_pattern' with 'refresh_pattern'.
+	- Dropped 'http', 'ftp', and 'gopher' config options.
+	- Added a single 'maximum_object_size' value.
+	- Moved storeStartDeleteBehind() calls from http/ftp/gopher to
+	  storeAppend().
+	- Moved storeClientListAdd() call from store to client/icp
+	  because of storeClientCopy() race condition between IMS
+	  replies and objects in delete behind mode.
+	- renamed TCP_EXPIRED* to TCP_REFRESH*.
+	- Stopped appending error messages to partially delivered
+	  objects.
+	
 Changes to squid-1.1.beta10 (October 24, 1996):
 
 	- Fixed neighborsUdpAck() coredump bug and made debug messages
