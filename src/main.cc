@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.211 1998/02/03 22:08:12 wessels Exp $
+ * $Id: main.cc,v 1.212 1998/02/04 23:35:33 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -131,6 +131,7 @@ static void sendSignal(void);
 static void serverConnectionsOpen(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
+static void normal_shutdown(void);
 
 static void
 usage(void)
@@ -439,10 +440,7 @@ mainInitialize(void)
 #endif
 
     if (!configured_once) {
-#if !USE_ASYNC_IO
 	unlinkdInit();
-#endif
-	/* module initialization */
 	urlInitialize();
 	objcacheInit();
 	statInit();
@@ -703,4 +701,42 @@ watch_child(char *argv[])
 	sleep(3);
     }
     /* NOTREACHED */
+}
+
+void
+normal_shutdown(void)
+{
+    debug(1, 1) ("Shutting down...\n");
+    if (Config.pidFilename && strcmp(Config.pidFilename, "none")) {
+	enter_suid();
+	safeunlink(Config.pidFilename, 0);
+	leave_suid();
+    }
+    releaseServerSockets();
+    unlinkdClose();
+    storeDirWriteCleanLogs(0);
+    PrintRusage();
+    dumpMallocStats();
+    storeLogClose();
+    accessLogClose();
+#if PURIFY
+    configFreeMemory();
+    storeFreeMemory();
+    dnsFreeMemory();
+    redirectFreeMemory();
+    stmemFreeMemory();
+    netdbFreeMemory();
+    ipcacheFreeMemory();
+    fqdncacheFreeMemory();
+    asnFreeMemory();
+#endif
+    file_close(0);
+    file_close(1);
+    file_close(2);
+    fdDumpOpen();
+    fdFreeMemory();
+    debug(1, 0) ("Squid Cache (Version %s): Exiting normally.\n",
+	version_string);
+    fclose(debug_log);
+    exit(0);
 }
