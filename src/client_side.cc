@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.54 1996/10/30 09:27:26 wessels Exp $
+ * $Id: client_side.cc,v 1.55 1996/10/30 21:56:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -218,11 +218,13 @@ clientRedirectDone(void *data, char *result)
     }
     icpParseRequestHeaders(icpState);
     fd_note(fd, icpState->url);
-    commSetSelect(fd,
-	COMM_SELECT_READ,
-	(PF) icpDetectClientClose,
-	(void *) icpState,
-	0);
+    if (!BIT_TEST(icpState->request->flags, REQ_PROXY_KEEPALIVE)) {
+	commSetSelect(fd,
+	    COMM_SELECT_READ,
+	    icpDetectClientClose,
+	    (void *) icpState,
+	    0);
+    }
     icpProcessRequest(fd, icpState);
 }
 
