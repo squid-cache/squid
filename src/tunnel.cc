@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.37 1997/02/19 00:03:59 wessels Exp $
+ * $Id: tunnel.cc,v 1.38 1997/02/19 23:53:43 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -508,6 +508,8 @@ sslSelectNeighbor(int fd, const ipcache_addrs * ia, void *data)
 	hierarchyNote(request, HIER_ROUNDROBIN_PARENT, 0, e->host);
     } else if ((e = getFirstUpParent(request))) {
 	hierarchyNote(request, HIER_FIRSTUP_PARENT, 0, e->host);
+    } else {
+	hierarchyNote(request, HIER_DIRECT, 0, request->host);
     }
     sslState->proxying = e ? 1 : 0;
     sslState->host = e ? e->host : request->host;
