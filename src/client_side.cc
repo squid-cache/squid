@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.136 1997/10/30 02:40:57 wessels Exp $
+ * $Id: client_side.cc,v 1.137 1997/10/30 03:31:19 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -100,7 +100,6 @@ clientAccessCheckDone(int answer, void *data)
 	    err->src_addr = http->conn->peer.sin_addr;
 	    err->redirect_url = xstrdup(redirectUrl);
 	    errorSend(fd, err);
-
 	} else {
 	    /* NOTE: don't use HTTP_UNAUTHORIZED because then the
 	     * stupid browser wants us to authenticate */

@@ -512,7 +512,7 @@ conv_p2(register u_wide_int num, register int nbits,
 /*
  * Do format conversion placing the output in buffer
  */
-static int 
+static int
 format_converter(register buffy * odp, const char *fmt,
     va_list ap)
 {
@@ -879,7 +879,7 @@ format_converter(register buffy * odp, const char *fmt,
 /*
  * This is the general purpose conversion function.
  */
-static void 
+static void
 strx_printv(int *ccp, char *buf, size_t len, const char *format,
     va_list ap)
 {
@@ -906,7 +906,7 @@ strx_printv(int *ccp, char *buf, size_t len, const char *format,
 #endif
 
 #if !HAVE_SNPRINTF
-int 
+int
 snprintf(char *buf, size_t len, const char *format,...)
 {
     int cc;
@@ -919,7 +919,7 @@ snprintf(char *buf, size_t len, const char *format,...)
 #endif
 
 #if !HAVE_VSNPRINTF
-int 
+int
 vsnprintf(char *buf, size_t len, const char *format,
     va_list ap)
 {
