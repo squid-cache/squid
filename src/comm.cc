@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.35 1996/07/09 04:47:16 wessels Exp $
+ * $Id: comm.cc,v 1.36 1996/07/09 22:58:27 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -376,13 +376,13 @@ int comm_connect_addr(sock, address)
 		xstrerror());
 	    return COMM_ERROR;
 	}
+    strcpy(conn->ipaddr, inet_ntoa(address->sin_addr));
+    conn->remote_port = ntohs(address->sin_port);
     /* set the lifetime for this client */
     if (status == COMM_OK) {
 	lft = comm_set_fd_lifetime(sock, getClientLifetime());
-	strcpy(conn->ipaddr, inet_ntoa(address->sin_addr));
-	conn->remote_port = ntohs(address->sin_port);
-	debug(5, 10, "comm_connect_addr: FD %d (lifetime %d): connected to %s:%d.\n",
-	    sock, lft, conn->ipaddr, conn->remote_port);
+	debug(5, 10, "comm_connect_addr: FD %d connected to %s:%d, lifetime %d.\n",
+	    sock, conn->ipaddr, conn->remote_port, lft);
     } else if (status == EINPROGRESS) {
 	lft = comm_set_fd_lifetime(sock, getConnectTimeout());
 	debug(5, 10, "comm_connect_addr: FD %d connection pending, lifetime %d\n",
@@ -459,7 +459,7 @@ int comm_close(fd)
     if (fd < 0)
 	return -1;
 
-    if (fdstat_type(fd) == FD_FILE) {
+    if (fdstatGetType(fd) == FD_FILE) {
 	debug(5, 0, "FD %d: Someone called comm_close() on a File\n", fd);
 	fatal_dump(NULL);
     }
@@ -670,7 +670,7 @@ int comm_select(sec, failtime)
 	for (i = 0; i < maxfd; i++) {
 #if USE_ASYNC_IO
 	    /* Using async IO for disk handle, so don't select on them */
-	    if (fdstat_type(i) == FD_FILE)
+	    if (fdstatGetType(i) == FD_FILE)
 		continue;
 #endif
 	    /* Check each open socket for a handler. */
