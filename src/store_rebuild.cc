@@ -559,7 +559,7 @@ storeCleanup(void *datanotused)
 	    continue;
 	if (EBIT_TEST(e->flag, RELEASE_REQUEST)) {
 	    if (e->swap_file_number > -1)
-		debug(20, 1) ("storeCleanup: WARNING: swap_file_number = %d for RELEASE_REQUEST entry\n",
+		debug(20, 1) ("storeCleanup: WARNING: swap_file_number = %08X for RELEASE_REQUEST entry\n",
 		    e->swap_file_number);
 	    /*
 	     * I don't think it safe to call storeRelease()
