@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.88 2001/03/03 10:39:33 hno Exp $
+ * $Id: redirect.cc,v 1.89 2002/04/04 23:59:25 hno Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -158,7 +158,7 @@ redirectInit(void)
 	redirectors = helperCreate("redirector");
     redirectors->cmdline = Config.Program.redirect;
     redirectors->n_to_start = Config.redirectChildren;
-    redirectors->ipc_type = IPC_TCP_SOCKET;
+    redirectors->ipc_type = IPC_STREAM;
     helperOpenServers(redirectors);
     if (!init) {
 	cachemgrRegister("redirector",

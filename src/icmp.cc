@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.74 2002/03/31 14:50:21 hno Exp $
+ * $Id: icmp.cc,v 1.75 2002/04/04 23:59:25 hno Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -196,7 +196,7 @@ icmpOpen(void)
     int wfd;
     args[0] = "(pinger)";
     args[1] = NULL;
-    x = ipcCreate(IPC_UDP_SOCKET,
+    x = ipcCreate(IPC_DGRAM,
 	Config.Program.pinger,
 	args,
 	"Pinger Socket",
@@ -206,6 +206,7 @@ icmpOpen(void)
 	return;
     assert(rfd == wfd);
     icmp_sock = rfd;
+    fd_note(icmp_sock, "pinger");
     commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
     commSetTimeout(icmp_sock, -1, NULL, NULL);
     debug(29, 1) ("Pinger socket opened on FD %d\n", icmp_sock);

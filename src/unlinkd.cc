@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.45 2001/12/24 15:33:44 adrian Exp $
+ * $Id: unlinkd.cc,v 1.46 2002/04/04 23:59:26 hno Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -165,8 +165,9 @@ unlinkdInit(void)
     args[1] = NULL;
 #if USE_POLL && defined(_SQUID_OSF_)
     /* pipes and poll() don't get along on DUNIX -DW */
-    x = ipcCreate(IPC_TCP_SOCKET,
+    x = ipcCreate(IPC_STREAM,
 #else
+    /* We currently need to use FIFO.. see below */
     x = ipcCreate(IPC_FIFO,
 #endif
 	Config.Program.unlinkd,
