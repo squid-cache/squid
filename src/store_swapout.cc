@@ -260,3 +260,25 @@ storeSwapOutFileOpened(void *data, int fd, int errcode)
 	ctrlp,
 	xfree);
 }
+
+/*
+ * Return 1 if we have some data queued.  If there is no data queued,
+ * then 'done_offset' equals 'queued_offset' + 'swap_hdr_sz'
+ *
+ * done_offset represents data written to disk (including the swap meta
+ * header), but queued_offset is relative to the in-memory data, and
+ * does not include the meta header.
+ */
+int
+storeSwapOutWriteQueued(MemObject *mem)
+{
+    /*
+     * this function doesn't get called much, so I'm using
+     * local variables to improve readability.  pphhbbht.
+     */
+    off_t queued = mem->swapout.queue_offset;
+    off_t done = mem->swapout.done_offset;
+    size_t hdr = mem->swap_hdr_sz;
+    assert(queued + hdr >= done);
+    return (queued + hdr == done);
+}
