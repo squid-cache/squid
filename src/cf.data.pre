@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.249 2002/02/23 01:36:31 hno Exp $
+# $Id: cf.data.pre,v 1.250 2002/02/25 03:11:04 adrian Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2127,7 +2127,7 @@ DOC_START
 	the correct result.
 DOC_END
 
-NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoin_dscp
+NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
 TYPE: acl_tos
 DEFAULT: none
 LOC: Config.accessList.outgoing_tos
