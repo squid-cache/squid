@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.89 1998/05/05 23:08:15 wessels Exp $
+ * $Id: net_db.cc,v 1.90 1998/05/05 23:27:29 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -34,13 +34,13 @@
 #if USE_ICMP
 
 typedef struct {
-	peer *p;
-	StoreEntry *e;
-	request_t *r;
-	off_t seen;
-	off_t used;
-	size_t buf_sz;
-	char *buf;
+    peer *p;
+    StoreEntry *e;
+    request_t *r;
+    off_t seen;
+    off_t used;
+    size_t buf_sz;
+    char *buf;
 } netdbExchangeState;
 
 static hash_table *addr_table = NULL;
@@ -917,32 +917,32 @@ netdbBinaryExchange(StoreEntry * s)
 void
 netdbExchangeStart(void *data)
 {
-	peer *p = data;
-	char *uri;
-	netdbExchangeState *ex = xcalloc(1, sizeof(*ex));
-	cbdataAdd(ex, MEM_NONE);
-	cbdataLock(p);
-	ex->p = p;
-	uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");
-	debug(0,0)("netdbExchangeStart: Requesting '%s'\n", uri);
-	assert(NULL != uri);
-	ex->r = urlParse(METHOD_GET, uri);
-	if (NULL == ex->r) {
-	    debug(0,1)("netdbExchangeStart: Bad URI %s\n", uri);
-	    return;
-	}
-	requestLink(ex->r);
-	assert(NULL != ex->r);
-	ex->r->headers = xstrdup("\r\n");
-	ex->r->headers_sz = strlen(ex->r->headers);
-	ex->e = storeCreateEntry(uri, uri, 0, METHOD_GET);
-	ex->buf_sz = SQUID_TCP_SO_RCVBUF;
-	ex->buf = xmalloc(ex->buf_sz);
-	assert(NULL != ex->e);
-	storeClientListAdd(ex->e, ex);
-	storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
-		ex->buf, netdbExchangeHandleReply, ex);
-	httpStart(ex->r, ex->e, NULL);
+    peer *p = data;
+    char *uri;
+    netdbExchangeState *ex = xcalloc(1, sizeof(*ex));
+    cbdataAdd(ex, MEM_NONE);
+    cbdataLock(p);
+    ex->p = p;
+    uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");
+    debug(37, 1) ("netdbExchangeStart: Requesting '%s'\n", uri);
+    assert(NULL != uri);
+    ex->r = urlParse(METHOD_GET, uri);
+    if (NULL == ex->r) {
+	debug(37, 1) ("netdbExchangeStart: Bad URI %s\n", uri);
+	return;
+    }
+    requestLink(ex->r);
+    assert(NULL != ex->r);
+    ex->r->headers = xstrdup("\r\n");
+    ex->r->headers_sz = strlen(ex->r->headers);
+    ex->e = storeCreateEntry(uri, uri, 0, METHOD_GET);
+    ex->buf_sz = SQUID_TCP_SO_RCVBUF;
+    ex->buf = xmalloc(ex->buf_sz);
+    assert(NULL != ex->e);
+    storeClientListAdd(ex->e, ex);
+    storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
+	ex->buf, netdbExchangeHandleReply, ex);
+    httpStart(ex->r, ex->e, NULL);
 }
 
 static void
@@ -963,7 +963,7 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
     ex->seen = ex->used + size;
-    debug(0, 0) ("netdbExchangeHandleReply: %d bytes\n", (int) size);
+    debug(37, 3) ("netdbExchangeHandleReply: %d bytes\n", (int) size);
     if (!cbdataValid(ex->p)) {
 	netdbExchangeDone(ex);
 	return;
@@ -1018,7 +1018,6 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 	size -= rec_sz;
 	p += rec_sz;
     }
-debug(0,0)("SEEN %d, USED %d\n", (int) ex->seen, (int) ex->used);
     if (ex->e->store_status != STORE_OK) {
 	storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
 	    ex->buf, netdbExchangeHandleReply, ex);
@@ -1026,12 +1025,12 @@ debug(0,0)("SEEN %d, USED %d\n", (int) ex->seen, (int) ex->used);
 }
 
 static void
-netdbExchangeDone(netdbExchangeState *ex)
+netdbExchangeDone(netdbExchangeState * ex)
 {
-	safe_free(ex->buf);
-	requestUnlink(ex->r);
-	storeUnregister(ex->e, ex);
-	storeUnlockObject(ex->e);
-	cbdataUnlock(ex->p);
-	cbdataFree(ex);
+    safe_free(ex->buf);
+    requestUnlink(ex->r);
+    storeUnregister(ex->e, ex);
+    storeUnlockObject(ex->e);
+    cbdataUnlock(ex->p);
+    cbdataFree(ex);
 }
