@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.37 1996/09/23 22:14:43 wessels Exp $
+ * $Id: client_side.cc,v 1.38 1996/10/07 22:04:57 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -108,11 +108,18 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
     int answer = 1;
     request_t *r = icpState->request;
     aclCheck_t *ch = NULL;
+    char *browser = NULL;
 
     if (icpState->aclChecklist == NULL) {
 	icpState->aclChecklist = xcalloc(1, sizeof(aclCheck_t));
 	icpState->aclChecklist->src_addr = icpState->peer.sin_addr;
 	icpState->aclChecklist->request = requestLink(icpState->request);
+	browser = mime_get_header(icpState->request_hdr, "User-Agent");
+	if (browser != NULL) {
+	    strncpy(icpState->aclChecklist->browser, browser, BROWSERNAMELEN);
+	} else {
+	    icpState->aclChecklist->browser[0] = '\0';
+	}
     }
 #if USE_PROXY_AUTH
     if (clientProxyAuthCheck(icpState) == 0) {
