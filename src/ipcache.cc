@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.192 1998/07/20 17:19:49 wessels Exp $
+ * $Id: ipcache.cc,v 1.193 1998/07/20 20:21:00 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -678,7 +678,7 @@ ipcache_init(void)
     ip_table = hash_create(urlcmp, n, hash4);
     cachemgrRegister("ipcache",
 	"IP Cache Stats and Contents",
-	stat_ipcache_get, 0);
+	stat_ipcache_get, 0, 1);
 }
 
 int

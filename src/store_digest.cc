@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.23 1998/07/20 17:20:15 wessels Exp $
+ * $Id: store_digest.cc,v 1.24 1998/07/20 20:21:13 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -111,7 +111,7 @@ storeDigestInit(void)
 	StoreDigestRebuildPeriod, StoreDigestRewritePeriod);
     memset(&sd_state, 0, sizeof(sd_state));
     cachemgrRegister("store_digest", "Store Digest",
-	storeDigestReport, 0);
+	storeDigestReport, 0, 1);
 #else
     store_digest = NULL;
     debug(71, 3) ("Local cache digest is 'off'\n");

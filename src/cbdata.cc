@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.22 1998/07/20 17:19:24 wessels Exp $
+ * $Id: cbdata.cc,v 1.23 1998/07/20 20:20:54 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -102,7 +102,7 @@ cbdataInit(void)
     htable = hash_create(cbdata_cmp, 1 << 8, cbdata_hash);
     cachemgrRegister("cbdata",
 	"Callback Data Registry Contents",
-	cbdataDump, 0);
+	cbdataDump, 0, 1);
 }
 
 void

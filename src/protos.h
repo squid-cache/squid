@@ -576,7 +576,7 @@ extern void netdbExchangeUpdatePeer(struct in_addr, peer *, double, double);
 extern peer *netdbClosestParent(request_t *);
 
 extern void cachemgrStart(int fd, request_t * request, StoreEntry * entry);
-extern void cachemgrRegister(const char *, const char *, OBJH *, int);
+extern void cachemgrRegister(const char *, const char *, OBJH *, int, int);
 extern void cachemgrInit(void);
 
 extern void peerSelect(request_t *, StoreEntry *, PSC *, PSC *, void *data);

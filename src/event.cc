@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.20 1998/07/20 17:19:36 wessels Exp $
+ * $Id: event.cc,v 1.21 1998/07/20 20:20:58 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -154,7 +154,7 @@ eventInit(void)
 {
     cachemgrRegister("events",
 	"Event Queue",
-	eventDump, 0);
+	eventDump, 0, 1);
 }
 
 static void

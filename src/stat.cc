@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.261 1998/07/20 17:20:10 wessels Exp $
+ * $Id: stat.cc,v 1.262 1998/07/20 20:21:09 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -109,6 +109,13 @@
 
 #define DEBUG_OPENFD 1
 
+typedef int STOBJFLT(const StoreEntry *);
+typedef struct {
+    StoreEntry *sentry;
+    int bucket;
+    STOBJFLT *filter;
+} StatObjectsState;
+
 /* LOCALS */
 static const char *describeStatuses(const StoreEntry *);
 static const char *describeFlags(const StoreEntry *);
@@ -130,6 +137,7 @@ static OBJH stat_vmobjects_get;
 #if DEBUG_OPENFD
 static OBJH statOpenfdObj;
 #endif
+static EVH statObjects;
 static OBJH info_get;
 static OBJH statFiledescriptors;
 static OBJH statCountersDump;
@@ -355,47 +363,78 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 
 /* process objects list */
 static void
-statObjects(StoreEntry * sentry, int vm_or_not)
+statObjects(void *data)
 {
-    StoreEntry *entry = NULL;
-    int N = 0;
-    hash_first(store_table);
-    while ((entry = (StoreEntry *) hash_next(store_table))) {
-	if (vm_or_not && entry->mem_obj == NULL)
-	    continue;
-	if ((++N & 0xFF) == 0) {
-	    debug(18, 3) ("statObjects:  Processed %d objects...\n", N);
-	}
-	statStoreEntry(sentry, entry);
+    StatObjectsState *state = data;
+    StoreEntry *e;
+    hash_link *link_ptr = NULL;
+    hash_link *link_next = NULL;
+    if (++state->bucket >= store_hash_buckets) {
+	storeComplete(state->sentry);
+	storeUnlockObject(state->sentry);
+	cbdataFree(state);
+	return;
     }
+    storeBuffer(state->sentry);
+    debug(49, 3) ("statObjects: Bucket #%d\n", state->bucket);
+    link_next = hash_get_bucket(store_table, state->bucket);
+    while (NULL != (link_ptr = link_next)) {
+	link_next = link_ptr->next;
+	e = (StoreEntry *) link_ptr;
+	if (state->filter && 0 == state->filter(e))
+	    continue;
+	statStoreEntry(state->sentry, e);
+    }
+    eventAdd("statObjects", statObjects, state, 0.0, 1);
+    storeBufferFlush(state->sentry);
 }
 
 static void
-stat_objects_get(StoreEntry * e)
+statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
 {
-    statObjects(e, 0);
+    StatObjectsState *state = xcalloc(1, sizeof(*state));
+    state->sentry = sentry;
+    state->filter = filter;
+    storeLockObject(sentry);
+    cbdataAdd(state, MEM_NONE);
+    eventAdd("statObjects", statObjects, state, 0.0, 1);
 }
 
 static void
-stat_vmobjects_get(StoreEntry * e)
+stat_objects_get(StoreEntry * sentry)
 {
-    statObjects(e, 1);
+    statObjectsStart(sentry, NULL);
+}
+
+static int
+statObjectsVmFilter(const StoreEntry * e)
+{
+    return e->mem_obj ? 1 : 0;
+}
+
+static void
+stat_vmobjects_get(StoreEntry * sentry)
+{
+    statObjectsStart(sentry, statObjectsVmFilter);
 }
 
 #if DEBUG_OPENFD
+static int
+statObjectsOpenfdFilter(const StoreEntry * e)
+{
+    if (e->mem_obj == NULL)
+	return 0;
+    if (e->mem_obj->swapout.fd < 0)
+	return 0;;
+    return 1;
+}
+
 static void
 statOpenfdObj(StoreEntry * sentry)
 {
-    StoreEntry *entry = NULL;
-    hash_first(store_table);
-    while ((entry = (StoreEntry *) hash_next(store_table))) {
-	if (entry->mem_obj == NULL)
-	    continue;
-	if (entry->mem_obj->swapout.fd < 0)
-	    continue;
-	statStoreEntry(sentry, entry);
-    }
+    statObjectsStart(sentry, statObjectsOpenfdFilter);
 }
+
 #endif
 
 #ifdef XMALLOC_STATISTICS
@@ -775,50 +814,50 @@ statInit(void)
     eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
     cachemgrRegister("info",
 	"General Runtime Information",
-	info_get, 0);
+	info_get, 0, 1);
     cachemgrRegister("filedescriptors",
 	"Process Filedescriptor Allocation",
-	statFiledescriptors, 0);
+	statFiledescriptors, 0, 1);
     cachemgrRegister("objects",
 	"All Cache Objects",
-	stat_objects_get, 0);
+	stat_objects_get, 0, 0);
     cachemgrRegister("vm_objects",
 	"In-Memory and In-Transit Objects",
-	stat_vmobjects_get, 0);
+	stat_vmobjects_get, 0, 0);
 #if DEBUG_OPENFD
     cachemgrRegister("openfd_objects",
 	"Objects with Swapout files open",
-	statOpenfdObj, 0);
+	statOpenfdObj, 0, 0);
 #endif
     cachemgrRegister("io",
 	"Server-side network read() size histograms",
-	stat_io_get, 0);
+	stat_io_get, 0, 1);
     cachemgrRegister("counters",
 	"Traffic and Resource Counters",
-	statCountersDump, 0);
+	statCountersDump, 0, 1);
     cachemgrRegister("peer_select",
 	"Peer Selection Algorithms",
-	statPeerSelect, 0);
+	statPeerSelect, 0, 1);
     cachemgrRegister("digest_stats",
 	"Cache Digest and ICP blob",
-	statDigestBlob, 0);
+	statDigestBlob, 0, 1);
     cachemgrRegister("5min",
 	"5 Minute Average of Counters",
-	statAvg5min, 0);
+	statAvg5min, 0, 1);
     cachemgrRegister("60min",
 	"60 Minute Average of Counters",
-	statAvg60min, 0);
+	statAvg60min, 0, 1);
     cachemgrRegister("utilization",
 	"Cache Utilization",
-	statUtilization, 0);
+	statUtilization, 0, 1);
 #if STAT_GRAPHS
     cachemgrRegister("graph_variables",
 	"Display cache metrics graphically",
-	statGraphDump, 0);
+	statGraphDump, 0, 1);
 #endif
     cachemgrRegister("histograms",
 	"Full Histogram Counts",
-	statCountersHistograms, 0);
+	statCountersHistograms, 0, 1);
 }
 
 static void

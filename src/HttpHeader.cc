@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.49 1998/07/20 17:19:05 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.50 1998/07/20 20:20:50 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -244,7 +244,7 @@ httpHeaderInitModule()
     httpHdrCcInitModule();
     /* register with cache manager */
     cachemgrRegister("http_headers",
-	"HTTP Header Statistics", httpHeaderStoreReport, 0);
+	"HTTP Header Statistics", httpHeaderStoreReport, 0, 1);
 }
 
 void

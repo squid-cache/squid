@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.17 1998/07/20 17:19:57 wessels Exp $
+ * $Id: pconn.cc,v 1.18 1998/07/20 20:21:06 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -163,7 +163,7 @@ pconnInit(void)
     }
     cachemgrRegister("pconn",
 	"Persistent Connection Utilization Histograms",
-	pconnHistDump, 0);
+	pconnHistDump, 0, 1);
     debug(48, 3) ("persistent connection module initialized\n");
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.428 1998/07/20 17:20:13 wessels Exp $
+ * $Id: store.cc,v 1.429 1998/07/20 20:21:11 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -855,7 +855,7 @@ storeInit(void)
     storeRebuildStart();
     cachemgrRegister("storedir",
 	"Store Directory Stats",
-	storeDirStats, 0);
+	storeDirStats, 0, 1);
 }
 
 void

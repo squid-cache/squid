@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.226 1998/07/20 17:19:55 wessels Exp $
+ * $Id: neighbors.cc,v 1.227 1998/07/20 20:21:04 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -395,10 +395,10 @@ neighbors_open(int fd)
     first_ping = Config.peers;
     cachemgrRegister("server_list",
 	"Peer Cache Statistics",
-	neighborDumpPeers, 0);
+	neighborDumpPeers, 0, 1);
     cachemgrRegister("non_peers",
 	"List of Unknown sites sending ICP messages",
-	neighborDumpNonPeers, 0);
+	neighborDumpNonPeers, 0, 1);
 }
 
 int

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.36 1998/07/20 17:19:27 wessels Exp $
+ * $Id: client_db.cc,v 1.37 1998/07/20 20:20:55 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -56,7 +56,7 @@ clientdbInit(void)
     cachemgrRegister("client_list",
 	"Cache Client List",
 	clientdbDump,
-	0);
+	0, 1);
 }
 
 void
