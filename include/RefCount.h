@@ -1,6 +1,6 @@
 
 /*
- * $Id: RefCount.h,v 1.6 2003/06/23 11:14:52 robertc Exp $
+ * $Id: RefCount.h,v 1.7 2003/07/12 23:44:27 robertc Exp $
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins
@@ -95,7 +95,7 @@ private:
 	 * we may be freed ourselves as a result of
 	 * p_->deleteSelf();
 	 */
-        C const *tempP_ (p_);
+        C const (*tempP_) (p_);
 	p_ = newP;
         if (tempP_ && tempP_->RefCountDereference() == 0)
             tempP_->deleteSelf();
