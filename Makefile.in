@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.22 2002/07/07 21:34:14 hno Exp $
+# $Id: Makefile.in,v 1.23 2002/09/01 00:10:37 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -478,6 +478,7 @@ dist-hook:
 	    rm -f $(distdir)/$$subdir/autoconf.h; \
 	  fi; \
 	done
+	cp $(top_srcdir)/doc/release-notes/release-2.5.html $(distdir)/RELEASENOTES.html
 
 install-pinger:
 	chown root $(libexecdir)/pinger$(EXEEXT)
