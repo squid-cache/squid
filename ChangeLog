@@ -8,6 +8,8 @@
 	  disable their read handlers.
 	- For comm_poll(), use the fast 50 msec timeout only when
 	  USE_ASYNC_IO is defined.
+	- Fixed pointer bug when freeing AS# ACL entries.
+	- Fixed forgetting to reset Config.npeers to zero in free_peer().
 
 Changes to squid-1.2.beta10 (Jan 1, 1998):
 
