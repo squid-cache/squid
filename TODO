@@ -1,26 +1,38 @@
 Squid-3.0:
-  - Update automake and autoconf on squid-cache.org for the squid-3 CVS snapshot generation. 
+  
+  Feature freeze:
+
+  - overlapping helper feature implementation (plain or stateful or both). 
+  - reply_body_max_size syntax cleanups. 
+  - always/never direct syntax cleanups. 
   - Someone other than Robert to review the draft squid 3 release notes (in CVS already).
+
+  Other?
 
   - epoll linkage.
   - Windows port (Merging in process, won't delay 3.0).
+  - Generalize socket binding to allow for multipe ICP/HTCP/SNMP sockets
+    (get rid of udp_incoming_address) (???)
+
+  Done items:
+
+  - Other sponsored work that needs to get into mainline sooner rather
+    than later (None known of - RC).
+  - Update automake and autoconf on squid-cache.org for the squid-3 CVS snapshot generation.  (done)
   - ESI client side streams support framework (done).
   - ESI (done).
   - Authentication tidyups in proxy_auth acl managagement (Done).
   - Appropriate parts of rproxy (Done).
   - Some kind of Range support to at least the level of 2.5 and earlier (Done).
-  - ETag caching (???)
-  - Other sponsored work that needs to get into mainline sooner rather
-    than later (None known of - RC).
+
+
+Squid-3.1
+  
   - Go over the old TODO (below) and sort out what has
      o) Been done
      o) Needs to be done, and when
      o) Can be ignored
-  - Generalize socket binding to allow for multipe ICP/HTCP/SNMP sockets
-    (get rid of udp_incoming_address) (???)
-
-Squid-3.1
-  
+  - ETag caching (???)
   - Customized logging capabilities
   - External logging
   - IPv6
