@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.217 1998/05/26 19:08:56 wessels Exp $
+ * $Id: neighbors.cc,v 1.218 1998/05/28 20:47:53 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -208,18 +208,11 @@ peerAllowedToUse(const peer * p, request_t * request)
 	}
 	do_ping = !d->do_ping;
     }
-    if (0 == do_ping)
+    if (p->pinglist && 0 == do_ping)
 	return do_ping;
     checklist.src_addr = request->client_addr;
     checklist.request = request;
-    for (a = p->acls; a; a = a->next) {
-	if (aclMatchAcl(a->acl, &checklist)) {
-	    do_ping = a->op;
-	    break;
-	}
-	do_ping = !a->op;
-    }
-    return do_ping;
+    return aclMatchAclList(p->acls, &checklist);
 }
 
 /* Return TRUE if it is okay to send an ICP request to this peer.   */
@@ -341,6 +334,7 @@ getDefaultParent(request_t * request)
 	debug(15, 3) ("getDefaultParent: returning %s\n", p->host);
 	return p;
     }
+    debug(15, 3) ("getDefaultParent: returning NULL\n");
     return NULL;
 }
 
