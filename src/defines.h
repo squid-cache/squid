@@ -62,7 +62,6 @@
 
 #define FQDN_LOOKUP_IF_MISS	0x01
 #define FQDN_MAX_NAMES 5
-#define FQDNCACHE_AV_FACTOR 1000
 
 /*  
  *  Here are some good prime number choices.  It's important not to
@@ -100,8 +99,6 @@
 #define IDENT_DONE 2
 
 #define IP_LOOKUP_IF_MISS	0x01
-
-#define IPCACHE_AV_FACTOR 1000
 
 #define MAX_MIME 4096
 

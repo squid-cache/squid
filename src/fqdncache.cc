@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.80 1998/02/07 08:13:37 wessels Exp $
+ * $Id: fqdncache.cc,v 1.81 1998/02/18 22:53:59 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -131,7 +131,6 @@ static struct {
     int pending_hits;
     int negative_hits;
     int errors;
-    int avg_svc_time;
     int ghba_calls;		/* # calls to blocking gethostbyaddr() */
 } FqdncacheStats;
 
@@ -469,10 +468,8 @@ fqdncache_dnsHandleRead(int fd, void *data)
 	fatal_dump("fqdncache_dnsHandleRead: bad status");
     if (strstr(dnsData->ip_inbuf, "$end\n")) {
 	/* end of record found */
-	FqdncacheStats.avg_svc_time =
-	    intAverage(FqdncacheStats.avg_svc_time,
-	    tvSubMsec(dnsData->dispatch_time, current_time),
-	    n, FQDNCACHE_AV_FACTOR);
+        statLogHistCount(&Counter.dns.svc_time,
+            tvSubMsec(dnsData->dispatch_time, current_time));
 	if ((x = fqdncache_parsebuffer(dnsData->ip_inbuf, dnsData)) == NULL) {
 	    debug(35, 0) ("fqdncache_dnsHandleRead: fqdncache_parsebuffer failed?!\n");
 	} else {
@@ -729,8 +726,6 @@ fqdnStats(StoreEntry * sentry)
 	FqdncacheStats.misses);
     storeAppendPrintf(sentry, "Blocking calls to gethostbyaddr(): %d\n",
 	FqdncacheStats.ghba_calls);
-    storeAppendPrintf(sentry, "dnsserver avg service time: %d msec\n",
-	FqdncacheStats.avg_svc_time);
     storeAppendPrintf(sentry, "FQDN Cache Contents:\n\n");
 
     next = (fqdncache_entry *) hash_first(fqdn_table);
@@ -747,6 +742,7 @@ fqdnStats(StoreEntry * sentry)
 	    (int) f->name_count);
 	for (k = 0; k < (int) f->name_count; k++)
 	    storeAppendPrintf(sentry, " %s", f->names[k]);
+        storeAppendPrintf(sentry, "\n");
     }
 }
 
