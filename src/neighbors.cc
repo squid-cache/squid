@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.58 1996/10/07 14:59:05 wessels Exp $
+ * $Id: neighbors.cc,v 1.59 1996/10/07 16:47:40 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -167,6 +167,18 @@ hierarchyNote(request_t * request, hier_code code, int timeout, char *cache_host
     }
 }
 
+static neighbor_t
+neighborType(edge * e, request_t * request)
+{
+    dom_list *d = NULL;
+    for (d = e->domains; d; d = d->next) {
+	if (matchDomainName(d->domain, request->host))
+	    if (d->neighbor_type != EDGE_NONE)
+	        return d->neighbor_type;
+    }
+    return e->type;
+}
+
 static int
 edgeWouldBePinged(edge * e, request_t * request)
 {
@@ -175,8 +187,9 @@ edgeWouldBePinged(edge * e, request_t * request)
     struct _acl_list *a = NULL;
     aclCheck_t checklist;
 
-    if (e->type == EDGE_SIBLING && BIT_TEST(request->flags, REQ_NOCACHE))
-	return 0;
+    if (BIT_TEST(request->flags, REQ_NOCACHE))
+        if (neighborType(e, request) == EDGE_SIBLING)
+	    return 0;
     if (e->domains == NULL && e->acls == NULL)
 	return do_ping;
     do_ping = 0;
@@ -208,7 +221,7 @@ getSingleParent(request_t * request, int *n)
 	if (!edgeWouldBePinged(e, request))
 	    continue;
 	count++;
-	if (e->type != EDGE_PARENT) {
+	if (neighborType(e, request) != EDGE_PARENT) {
 	    /* we matched a neighbor, not a parent.  There
 	     * can be no single parent */
 	    if (n == NULL)
@@ -242,7 +255,7 @@ getFirstUpParent(request_t * request)
     for (e = friends->edges_head; e; e = e->next) {
 	if (!e->neighbor_up)
 	    continue;
-	if (e->type != EDGE_PARENT)
+	if (neighborType(e, request) != EDGE_PARENT)
 	    continue;
 	if (edgeWouldBePinged(e, request))
 	    return e;
@@ -368,17 +381,7 @@ neighbors_open(int fd)
 	ap->sin_addr = e->addresses[0];
 	ap->sin_port = htons(e->icp_port);
 
-	if (e->type == EDGE_PARENT) {
-	    debug(15, 3, "parent_install: host %s addr %s port %d\n",
-		e->host, inet_ntoa(ap->sin_addr),
-		e->icp_port);
-	    e->neighbor_up = 1;
-	} else {
-	    debug(15, 3, "neighbor_install: host %s addr %s port %d\n",
-		e->host, inet_ntoa(ap->sin_addr),
-		e->icp_port);
-	    e->neighbor_up = 1;
-	}
+	e->neighbor_up = 1;
 	E = &e->next;
     }
 
@@ -547,6 +550,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
     int rtt;
     int n;
     HttpStateData *httpState = NULL;
+    neighbor_t ntype = EDGE_NONE;
 
     debug(15, 6, "neighborsUdpAck: opcode %d '%s'\n",
 	(int) header->opcode, url);
@@ -557,10 +561,11 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	return;
     }
     if ((e = whichEdge(header, from))) {
+	ntype = neighborType(e, entry->mem_obj->request);
 	/* Neighbor is alive, reset the ack deficit */
 	if (e->stats.ack_deficit >= HIER_MAX_DEFICIT) {
 	    debug(15, 0, "neighborsUdpAck: Detected REVIVED %s: %s\n",
-		e->type == EDGE_SIBLING ? "SIBLING" : "PARENT",
+		e->type == EDGE_PARENT ? "PARENT" : "SIBLING",
 		e->host);
 	}
 	e->neighbor_up = 1;
@@ -617,7 +622,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	    httpProcessReplyHeader(httpState, data, data_sz);
 	    storeAppend(entry, data, data_sz);
 	    hierarchyNote(entry->mem_obj->request,
-		e->type == EDGE_PARENT ? HIER_PARENT_UDP_HIT_OBJ : HIER_SIBLING_UDP_HIT_OBJ,
+		ntype == EDGE_PARENT ? HIER_PARENT_UDP_HIT_OBJ : HIER_SIBLING_UDP_HIT_OBJ,
 		0,
 		e->host);
 	    storeComplete(entry);	/* This might release entry! */
@@ -632,7 +637,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 		inet_ntoa(from->sin_addr));
 	} else {
 	    hierarchyNote(entry->mem_obj->request,
-		e->type == EDGE_SIBLING ? HIER_SIBLING_HIT : HIER_PARENT_HIT,
+		ntype == EDGE_PARENT ? HIER_PARENT_HIT : HIER_SIBLING_HIT,
 		0,
 		e->host);
 	    entry->ping_status = PING_DONE;
@@ -643,7 +648,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring DECHO from non-neighbor %s\n",
 		inet_ntoa(from->sin_addr));
-	} else if (e->type == EDGE_SIBLING) {
+	} else if (ntype == EDGE_SIBLING) {
 	    debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
 	    debug_trap("neighborsUdpAck: non-ICP neighbors must be a PARENT\n");
 	} else {
@@ -657,7 +662,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring MISS from non-neighbor %s\n",
 		inet_ntoa(from->sin_addr));
-	} else if (e->type == EDGE_PARENT) {
+	} else if (ntype == EDGE_PARENT) {
 	    w_rtt = tvSubMsec(mem->start_ping, current_time) / e->weight;
 	    if (mem->w_rtt == 0 || w_rtt < mem->w_rtt) {
 		mem->e_pings_first_miss = e;
@@ -715,7 +720,7 @@ neighbors_cf_add(char *host, char *type, int http_port, int icp_port, int option
 }
 
 void
-neighbors_cf_domain(char *host, char *domain)
+neighbors_cf_domain(char *host, char *domain, neighbor_t type)
 {
     struct neighbor_cf *t = NULL;
     dom_list *l = NULL;
@@ -737,6 +742,7 @@ neighbors_cf_domain(char *host, char *domain)
 	domain++;
     }
     l->domain = xstrdup(domain);
+    l->neighbor_type = type;
     l->next = NULL;
     for (L = &(t->domains); *L; L = &((*L)->next));
     *L = l;
