@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.628 2003/03/04 01:40:26 robertc Exp $
+ * $Id: client_side.cc,v 1.629 2003/03/06 20:11:51 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -593,6 +593,8 @@ ConnStateData::~ConnStateData()
     authenticateOnCloseConnection(this);
 
     pconnHistCount(0, nrequests);
+
+    cbdataReferenceDone(port);
 }
 
 /*
