@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.268 2002/06/26 21:11:39 hno Exp $
+# $Id: cf.data.pre,v 1.269 2002/07/03 06:56:15 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1500,9 +1500,6 @@ DOC_START
 			to service external acl lookups of this type.
 	  cache=n	result cache size, 0 is unbounded (default)
 	
-	The helper receives lines per the FORMAT specification, and returns
-	OK or ERR indicating the validity of the request.
-
 	FORMAT specifications
 
 	  %LOGIN	Authenticated user login name
@@ -1523,6 +1520,22 @@ DOC_START
 	included in the helper request line, after the specified formats
 	(see the acl directive)
 
+	The helper receives lines per the above FORMAT specification, and
+	returns OK or ERR indicating the validity of the request, and
+	optionally additional keywords with additional details.
+
+	General result syntax:
+	
+	  OK/ERR keyword=value ...
+
+	Keywords:
+
+	  user=		The users name (login)
+	  error=	Error description (only defined for ERR results)
+
+	Keyword values need to be enclosed in quotes if they may contain
+	whitespace, or the whitespace escaped using \. Any quotes or \
+	characters in the result must be \ escaped.
 DOC_END
 
 COMMENT_START
