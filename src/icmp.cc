@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.4 1996/09/16 21:50:24 wessels Exp $
+ * $Id: icmp.cc,v 1.5 1996/09/17 05:16:57 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -245,12 +245,12 @@ icmpRecv(int unused1, void *unused2)
     ip = (struct iphdr *) pkt;
     iphdrlen = ip->ip_hl << 2;
     icmp = (struct icmphdr *) (pkt + iphdrlen);
-    if (icmp->icmp_type != ICMP_ECHOREPLY)
-	return;
-    if (icmp->icmp_id != icmp_ident)
-	return;
-    hops = ipHops(ip->ip_ttl);
-    icmpProcessReply(&from, icmp, hops);
+    if (icmp->icmp_type == ICMP_ECHOREPLY) {
+	if (icmp->icmp_id == icmp_ident) {
+	    hops = ipHops(ip->ip_ttl);
+	    icmpProcessReply(&from, icmp, hops);
+	}
+    }
     put_free_8k_page(pkt);
 }
 
