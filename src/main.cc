@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.378 2003/05/06 00:17:06 hno Exp $
+ * $Id: main.cc,v 1.379 2003/05/06 00:29:45 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -520,6 +520,10 @@ mainReconfigure(void)
     authenticateShutdown();
     externalAclShutdown();
     storeDirCloseSwapLogs();
+    storeLogClose();
+    accessLogClose();
+    useragentLogClose();
+    refererCloseLog();
     errorClean();
     enter_suid();		/* root to read config file */
     parseConfigFile(ConfigFile);
@@ -530,6 +534,10 @@ mainReconfigure(void)
     fqdncache_restart();	/* sigh, fqdncache too */
     parseEtcHosts();
     errorInitialize();		/* reload error pages */
+    accessLogInit();
+    storeLogOpen();
+    useragentOpenLog();
+    refererOpenLog();
 #if USE_DNSSERVERS
 
     dnsInit();
