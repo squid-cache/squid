@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.10 1998/12/05 00:54:09 wessels Exp $
+ * $Id: HttpHdrContRange.cc,v 1.11 1999/10/04 05:04:54 wessels Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -81,7 +81,7 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
     p++;
     /* do we have last-pos ? */
     if (p - field < flen) {
-	size_t last_pos;
+	ssize_t last_pos;
 	if (!httpHeaderParseSize(p, &last_pos))
 	    return 0;
 	spec->length = size_diff(last_pos + 1, spec->offset);
@@ -110,7 +110,7 @@ httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
  */
 
 HttpHdrContRange *
-httpHdrContRangeCreate()
+httpHdrContRangeCreate(void)
 {
     HttpHdrContRange *r = memAllocate(MEM_HTTP_HDR_CONTENT_RANGE);
     r->spec.offset = r->spec.length = range_spec_unknown;
@@ -187,7 +187,7 @@ httpHdrContRangePackInto(const HttpHdrContRange * range, Packer * p)
 }
 
 void
-httpHdrContRangeSet(HttpHdrContRange * cr, HttpHdrRangeSpec spec, size_t ent_len)
+httpHdrContRangeSet(HttpHdrContRange * cr, HttpHdrRangeSpec spec, ssize_t ent_len)
 {
     assert(cr && ent_len >= 0);
     cr->spec = spec;

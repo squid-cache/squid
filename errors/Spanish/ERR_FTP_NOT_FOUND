@@ -1,21 +1,21 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H2>El URL solicitado no se ha podido conseguir</H2>
 <HR>
 <P>
-The following URL could not be retrieved:
+El siguiente URL no pudo ser obtenido:
 <A HREF="%U">%U</A>
 <P>
-Squid sent the following FTP command:
-<blockquote><strong><pre>%f</pre></strong></blockquote>
-and then received this reply
-<blockquote><strong><pre>%F</pre></strong></blockquote>
-<blockquote><strong><pre>%g</pre></strong></blockquote>
+Squid envi&oacute; el siguiente comando FTP:
+<blockquote><pre><strong>%f</strong></pre></blockquote>
+y recibi&oacute; esta respuesta
+<blockquote><pre><strong>%F</strong></pre></blockquote>
+<blockquote><pre><strong>%g</strong></pre></blockquote>
 <P>
-This might be caused by an FTP URL with an absolute path (which does
-not comply with RFC 1738).  If this is the cause, then the file
-can be found at <A HREF="%B">%B</A>.
+Esto puede ser causado por un URL FTP con un camino absoluto (y por
+lo tanto no cumple con RFC 1738). Si este es la causa, entonces el 
+archivo puede ser obtenido en <A HREF="%B">%B</A>.
 </P>
 

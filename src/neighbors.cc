@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.275 1999/06/16 22:10:40 wessels Exp $
+ * $Id: neighbors.cc,v 1.276 1999/10/04 05:05:19 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -102,7 +102,7 @@ neighborType(const peer * p, const request_t * request)
 {
     const struct _domain_type *d = NULL;
     for (d = p->typelist; d; d = d->next) {
-	if (matchDomainName(d->domain, request->host))
+	if (0 == matchDomainName(d->domain, request->host))
 	    if (d->type != PEER_NONE)
 		return d->type;
     }
@@ -136,7 +136,7 @@ peerAllowedToUse(const peer * p, request_t * request)
 	return do_ping;
     do_ping = 0;
     for (d = p->peer_domain; d; d = d->next) {
-	if (matchDomainName(d->domain, request->host)) {
+	if (0 == matchDomainName(d->domain, request->host)) {
 	    do_ping = d->do_ping;
 	    break;
 	}
@@ -1306,7 +1306,7 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const struct soc
 	neighborCountIgnored(p);
 	return;
     }
-    debug(15, 1) ("neighborsHtcpReply: e = %p\n", e);
+    debug(15, 3) ("neighborsHtcpReply: e = %p\n", e);
     mem->ping_reply_callback(p, ntype, PROTO_HTCP, htcp, mem->ircb_data);
 }
 #endif

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.150 1999/01/31 15:58:54 wessels Exp $
+ * $Id: gopher.cc,v 1.151 1999/10/04 05:05:13 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -430,7 +430,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 				port[0] = 0;	/* 0 means none */
 			}
 			/* escape a selector here */
-			escaped_selector = xstrdup(rfc1738_escape(selector));
+			escaped_selector = xstrdup(rfc1738_escape_part(selector));
 
 			switch (gtype) {
 			case GOPHER_DIRECTORY:

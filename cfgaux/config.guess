@@ -555,6 +555,9 @@ EOF
     news*:NEWS-OS:[56].*:*)
 	echo mips-sony-newsos${UNAME_RELEASE}
 	exit 0 ;;
+    *:Rhapsody:*:*)
+	echo `arch`-apple-rhapsody${UNAME_RELEASE}
+	exit 0;;
     i?86:OS/2:*:*)
 	echo ${UNAME_MACHINE}-ibm-os2
 	exit 0 ;;

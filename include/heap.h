@@ -1,5 +1,5 @@
 /*
- * $Id: heap.h,v 1.1 1999/06/24 20:17:03 wessels Exp $
+ * $Id: heap.h,v 1.2 1999/10/04 05:04:48 wessels Exp $
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *
@@ -28,6 +28,8 @@
  */
 
 /****************************************************************************
+ * Copyright (C) 1999 by Hewlett Packard
+ *
  * Heap data structure.  Used to store objects for cache replacement.  The
  * heap is implemented as a contiguous array in memory.  Heap sort and heap
  * update are done in-place.  The heap is ordered with the smallest value at

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.353 1999/09/29 00:22:14 wessels Exp $
+ * $Id: http.cc,v 1.354 1999/10/04 05:05:15 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -291,81 +291,80 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     char *t = NULL;
     StoreEntry *entry = httpState->entry;
     int room;
-    int hdr_len;
+    size_t hdr_len;
     HttpReply *reply = entry->mem_obj->reply;
+    Ctx ctx;
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
 	storeKeyText(entry->key));
     if (httpState->reply_hdr == NULL)
 	httpState->reply_hdr = memAllocate(MEM_8K_BUF);
-    if (httpState->reply_hdr_state == 0) {
-	hdr_len = strlen(httpState->reply_hdr);
-	room = 8191 - hdr_len;
-	strncat(httpState->reply_hdr, buf, room < size ? room : size);
-	hdr_len += room < size ? room : size;
-	if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
-	    debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", httpState->reply_hdr);
-	    httpState->reply_hdr_state += 2;
-	    reply->sline.status = HTTP_INVALID_HEADER;
-	    return;
-	}
-	t = httpState->reply_hdr + hdr_len;
-	/* headers can be incomplete only if object still arriving */
-	if (!httpState->eof) {
-	    size_t k = headersEnd(httpState->reply_hdr, 8192);
-	    if (0 == k)
-		return;		/* headers not complete */
-	    t = httpState->reply_hdr + k;
-	}
-	*t = '\0';
-	httpState->reply_hdr_state++;
+    assert(httpState->reply_hdr_state == 0);
+    hdr_len = strlen(httpState->reply_hdr);
+    room = 8191 - hdr_len;
+    strncat(httpState->reply_hdr, buf, room < size ? room : size);
+    hdr_len += room < size ? room : size;
+    if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
+	debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", httpState->reply_hdr);
+	httpState->reply_hdr_state += 2;
+	reply->sline.status = HTTP_INVALID_HEADER;
+	return;
     }
-    if (httpState->reply_hdr_state == 1) {
-	const Ctx ctx = ctx_enter(entry->mem_obj->url);
-	httpState->reply_hdr_state++;
-	debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
-	    httpState->reply_hdr);
-	/* Parse headers into reply structure */
-	/* what happens if we fail to parse here? */
-	httpReplyParse(reply, httpState->reply_hdr);	/* httpState->eof); */
-	storeTimestampsSet(entry);
-	/* Check if object is cacheable or not based on reply code */
-	debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->sline.status);
-	if (neighbors_do_private_keys)
-	    httpMaybeRemovePublic(entry, reply->sline.status);
-	switch (httpCachableReply(httpState)) {
-	case 1:
-	    httpMakePublic(entry);
-	    break;
-	case 0:
-	    httpMakePrivate(entry);
-	    break;
-	case -1:
-	    httpCacheNegatively(entry);
-	    break;
-	default:
-	    assert(0);
-	    break;
-	}
-	if (reply->cache_control) {
-	    if (EBIT_TEST(reply->cache_control->mask, CC_PROXY_REVALIDATE))
-		EBIT_SET(entry->flags, ENTRY_REVALIDATE);
-	    else if (EBIT_TEST(reply->cache_control->mask, CC_MUST_REVALIDATE))
-		EBIT_SET(entry->flags, ENTRY_REVALIDATE);
-	}
-	if (httpState->flags.keepalive)
-	    if (httpState->peer)
-		httpState->peer->stats.n_keepalives_sent++;
-	if (reply->keep_alive)
-	    if (httpState->peer)
-		httpState->peer->stats.n_keepalives_recv++;
-	ctx_exit(ctx);
-	if (reply->date > -1 && !httpState->peer) {
-	    int skew = abs(reply->date - squid_curtime);
-	    if (skew > 86400)
-		debug(11, 3) ("%s's clock is skewed by %d seconds!\n",
-		    httpState->request->host, skew);
-	}
+    t = httpState->reply_hdr + hdr_len;
+    /* headers can be incomplete only if object still arriving */
+    if (!httpState->eof) {
+	size_t k = headersEnd(httpState->reply_hdr, 8192);
+	if (0 == k)
+	    return;		/* headers not complete */
+	t = httpState->reply_hdr + k;
     }
+    *t = '\0';
+    httpState->reply_hdr_state++;
+    assert(httpState->reply_hdr_state == 1);
+    ctx = ctx_enter(entry->mem_obj->url);
+    httpState->reply_hdr_state++;
+    debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
+	httpState->reply_hdr);
+    /* Parse headers into reply structure */
+    /* what happens if we fail to parse here? */
+    httpReplyParse(reply, httpState->reply_hdr, hdr_len);
+    storeTimestampsSet(entry);
+    /* Check if object is cacheable or not based on reply code */
+    debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->sline.status);
+    if (neighbors_do_private_keys)
+	httpMaybeRemovePublic(entry, reply->sline.status);
+    switch (httpCachableReply(httpState)) {
+    case 1:
+	httpMakePublic(entry);
+	break;
+    case 0:
+	httpMakePrivate(entry);
+	break;
+    case -1:
+	httpCacheNegatively(entry);
+	break;
+    default:
+	assert(0);
+	break;
+    }
+    if (reply->cache_control) {
+	if (EBIT_TEST(reply->cache_control->mask, CC_PROXY_REVALIDATE))
+	    EBIT_SET(entry->flags, ENTRY_REVALIDATE);
+	else if (EBIT_TEST(reply->cache_control->mask, CC_MUST_REVALIDATE))
+	    EBIT_SET(entry->flags, ENTRY_REVALIDATE);
+    }
+    if (httpState->flags.keepalive)
+	if (httpState->peer)
+	    httpState->peer->stats.n_keepalives_sent++;
+    if (reply->keep_alive)
+	if (httpState->peer)
+	    httpState->peer->stats.n_keepalives_recv++;
+    if (reply->date > -1 && !httpState->peer) {
+	int skew = abs(reply->date - squid_curtime);
+	if (skew > 86400)
+	    debug(11, 3) ("%s's clock is skewed by %d seconds!\n",
+		httpState->request->host, skew);
+    }
+    ctx_exit(ctx);
 }
 
 static int
@@ -616,8 +615,8 @@ httpBuildRequestHeader(request_t * request,
     HttpHeaderPos pos = HttpHeaderInitPos;
     httpHeaderInit(hdr_out, hoRequest);
     /* append our IMS header */
-    if (entry && entry->lastmod > -1 && request->method == METHOD_GET)
-	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, entry->lastmod);
+    if (request->lastmod > -1 && request->method == METHOD_GET)
+	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, request->lastmod);
 
     /* decide if we want to do Ranges ourselves 
      * (and fetch the whole object now)
@@ -764,7 +763,7 @@ httpBuildRequestHeader(request_t * request,
 
 /* build request prefix and append it to a given MemBuf; 
  * return the length of the prefix */
-size_t
+mb_size_t
 httpBuildRequestPrefix(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
@@ -863,6 +862,7 @@ httpStart(FwdState * fwd)
 	xstrncpy(proxy_req->host, httpState->peer->host, SQUIDHOSTNAMELEN);
 	proxy_req->port = httpState->peer->http_port;
 	proxy_req->flags = orig_req->flags;
+	proxy_req->lastmod = orig_req->lastmod;
 	httpState->request = requestLink(proxy_req);
 	httpState->orig_request = requestLink(orig_req);
 	proxy_req->flags.proxying = 1;

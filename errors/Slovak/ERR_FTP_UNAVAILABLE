@@ -1,16 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovane URL je nedostupne</TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>CHYBA</H1>
+<H2>Požadované URL je nedostupné</H2>
 <HR>
 <P>
-The FTP server was too busy while trying to retrieve the URL:
+FTP server bol príliš zaneprázdnený pri pokuse získat nasledovné URL:
 <A HREF="%U">%U</A>
 <P>
-Squid sent the following FTP command:
+Squid zaslal nasledujúci FTP príkaz:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-and then received this reply
+a obdržal nasledovnú opoveď:
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 </P>

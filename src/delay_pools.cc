@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.10 1999/05/19 19:57:41 wessels Exp $
+ * $Id: delay_pools.cc,v 1.11 1999/10/04 05:05:08 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -149,7 +149,7 @@ delayIdZero(void *hlink)
 }
 
 void
-delayFreeDelayData()
+delayFreeDelayData(void)
 {
     safe_free(delay_data);
     if (!delay_id_ptr_hash)

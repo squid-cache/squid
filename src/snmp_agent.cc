@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.71 1999/06/17 22:20:42 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.72 1999/10/04 05:05:25 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -280,7 +280,11 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 	break;
     case PERF_SYS_CURLRUEXP:
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+#if !HEAP_REPLACEMENT
 	    (snint) (storeExpiredReferenceAge() * 100),
+#else
+	    0,
+#endif
 	    SMI_TIMETICKS);
 	break;
     case PERF_SYS_CURUNLREQ:

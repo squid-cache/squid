@@ -12,18 +12,18 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-Imposibilidad de enviar la petición en este momento.
+Imposibilidad de enviar la petici&oacute;n en este momento.
 </STRONG>
 </UL>
 
 <P>
-La petición no ha podido ser enviada al servidor origen o a alguna
-de las cachés padres. Las razones más probables de que haya ocurrido
-este error son:
+La petici&oacute;n no ha podido ser enviada al servidor origen o a alguna
+de las cach&eacute;s padres. Las razones m&aacute;s probables de que haya 
+ocurrido este error son:
 <UL>
-<LI>El administrador de la caché no permite que esta
-    caché realice conexiones directas a los servidores
+<LI>El administrador de la cach&eacute; no permite que esta
+    cach&eacute; realice conexiones directas a los servidores
     origen, y
-<LI>Todas las cachés configuradas como padres son inalcanzables
-en este momento.
+<LI>Todas las cach&eacute;s configuradas como padres son inalcanzables
+    en este momento.
 </UL>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.19 1999/01/19 23:16:48 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.20 1999/10/04 05:04:54 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -55,7 +55,7 @@
 
 
 /* local constants */
-#define range_spec_unknown ((size_t)-1)
+#define range_spec_unknown ((ssize_t)-1)
 
 /* local routines */
 #define known_spec(s) ((s) != range_spec_unknown)
@@ -73,7 +73,7 @@ static int RangeParsedCount = 0;
  */
 
 static HttpHdrRangeSpec *
-httpHdrRangeSpecCreate()
+httpHdrRangeSpecCreate(void)
 {
     return memAllocate(MEM_HTTP_HDR_RANGE_SPEC);
 }
@@ -102,7 +102,7 @@ httpHdrRangeSpecParseCreate(const char *field, int flen)
 	p++;
 	/* do we have last-pos ? */
 	if (p - field < flen) {
-	    size_t last_pos;
+	    ssize_t last_pos;
 	    if (!httpHeaderParseSize(p, &last_pos))
 		return NULL;
 	    spec.length = size_diff(last_pos + 1, spec.offset);
@@ -209,7 +209,7 @@ httpHdrRangeSpecMergeWith(HttpHdrRangeSpec * recep, const HttpHdrRangeSpec * don
  */
 
 HttpHdrRange *
-httpHdrRangeCreate()
+httpHdrRangeCreate(void)
 {
     HttpHdrRange *r = memAllocate(MEM_HTTP_HDR_RANGE);
     stackInit(&r->specs);
@@ -303,7 +303,7 @@ httpHdrRangePackInto(const HttpHdrRange * range, Packer * p)
  *   - there is at least one range spec
  */
 int
-httpHdrRangeCanonize(HttpHdrRange * range, size_t clen)
+httpHdrRangeCanonize(HttpHdrRange * range, ssize_t clen)
 {
     int i;
     HttpHdrRangeSpec *spec;
@@ -386,8 +386,10 @@ httpHdrRangeIsComplex(const HttpHdrRange * range)
     return 0;
 }
 
-/* hack: returns true if range specs may be too "complex" when "canonized" */
-/* see also: httpHdrRangeIsComplex */
+/*
+ * hack: returns true if range specs may be too "complex" when "canonized".
+ * see also: httpHdrRangeIsComplex.
+ */
 int
 httpHdrRangeWillBeComplex(const HttpHdrRange * range)
 {
@@ -409,12 +411,14 @@ httpHdrRangeWillBeComplex(const HttpHdrRange * range)
     return 0;
 }
 
-/* Returns lowest known offset in range spec(s), or range_spec_unknown */
-/* this is used for size limiting */
-size_t
+/*
+ * Returns lowest known offset in range spec(s), or range_spec_unknown
+ * this is used for size limiting
+ */
+ssize_t
 httpHdrRangeFirstOffset(const HttpHdrRange * range)
 {
-    size_t offset = range_spec_unknown;
+    ssize_t offset = range_spec_unknown;
     HttpHdrRangePos pos = HttpHdrRangeInitPos;
     const HttpHdrRangeSpec *spec;
     assert(range);
@@ -425,16 +429,17 @@ httpHdrRangeFirstOffset(const HttpHdrRange * range)
     return offset;
 }
 
-/* Returns lowest offset in range spec(s), 0 if unknown */
-/* This is used for finding out where we need to start if all
+/*
+ * Returns lowest offset in range spec(s), 0 if unknown.
+ * This is used for finding out where we need to start if all
  * ranges are combined into one, for example FTP REST.
  * Use 0 for size if unknown
  */
-size_t
-httpHdrRangeLowestOffset(const HttpHdrRange * range, size_t size)
+ssize_t
+httpHdrRangeLowestOffset(const HttpHdrRange * range, ssize_t size)
 {
-    size_t offset = range_spec_unknown;
-    size_t current;
+    ssize_t offset = range_spec_unknown;
+    ssize_t current;
     HttpHdrRangePos pos = HttpHdrRangeInitPos;
     const HttpHdrRangeSpec *spec;
     assert(range);

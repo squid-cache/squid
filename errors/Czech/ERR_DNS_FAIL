@@ -10,7 +10,7 @@ Pøi pokusu o pøístup k:
 <P>
 se objevila následující chyba:
 <BLOCKQUOTE>
-Jméno serveru není mo¾no pøevést na IP adresu
+Jméno serveru není mo¾no pøevést na IP adresu.
 <I>%H</I>
 </BLOCKQUOTE>
 </UL>
@@ -23,9 +23,11 @@ DNS server odpovìdìl:
 
 <P>
 To znamená ¾e:
-<PRE>
+<P>
+<UL>
+<LI>
 Cache server nebyl schopen získat adresu serveru uvedeného v URL.
 Zkontrolujte prosím adresu.
-</PRE>
+</UL>
 </P>
 

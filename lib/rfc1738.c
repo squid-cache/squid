@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.19 1999/05/04 21:20:40 wessels Exp $
+ * $Id: rfc1738.c,v 1.20 1999/10/04 05:04:51 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -54,7 +54,9 @@ static char rfc1738_unsafe_chars[] =
     (char) 0x3E,		/* > */
     (char) 0x22,		/* " */
     (char) 0x23,		/* # */
+#if 0				/* done in code */
     (char) 0x25,		/* % */
+#endif
     (char) 0x7B,		/* { */
     (char) 0x7D,		/* } */
     (char) 0x7C,		/* | */
@@ -68,12 +70,23 @@ static char rfc1738_unsafe_chars[] =
     (char) 0x20			/* space */
 };
 
+static char rfc1738_reserved_chars[] =
+{
+    (char) 0x3b,		/* ; */
+    (char) 0x2f,		/* / */
+    (char) 0x3f,		/* ? */
+    (char) 0x3a,		/* : */
+    (char) 0x40,		/* @ */
+    (char) 0x3d,		/* = */
+    (char) 0x26			/* & */
+};
+
 /*
  *  rfc1738_escape - Returns a static buffer contains the RFC 1738 
  *  compliant, escaped version of the given url.
  */
-char *
-rfc1738_escape(const char *url)
+static char *
+rfc1738_do_escape(const char *url, int encode_reserved)
 {
     static char *buf;
     static size_t bufsize = 0;
@@ -92,6 +105,16 @@ rfc1738_escape(const char *url)
 	/* RFC 1738 defines these chars as unsafe */
 	for (i = 0; i < sizeof(rfc1738_unsafe_chars); i++) {
 	    if (*p == rfc1738_unsafe_chars[i]) {
+		do_escape = 1;
+		break;
+	    }
+	}
+	/* Handle % separately */
+	if (encode_reserved >= 0 && *p == '%')
+	    do_escape = 1;
+	/* RFC 1738 defines these chars as reserved */
+	for (i = 0; i < sizeof(rfc1738_reserved_chars) && encode_reserved > 0; i++) {
+	    if (*p == rfc1738_reserved_chars[i]) {
 		do_escape = 1;
 		break;
 	    }
@@ -122,6 +145,36 @@ rfc1738_escape(const char *url)
     }
     *q = '\0';
     return (buf);
+}
+
+/*
+ * rfc1738_escape - Returns a static buffer that contains the RFC
+ * 1738 compliant, escaped version of the given url.
+ */
+char *
+rfc1738_escape(const char *url)
+{
+    return rfc1738_do_escape(url, 0);
+}
+
+/*
+ * rfc1738_escape_unescaped - Returns a static buffer that contains
+ * the RFC 1738 compliant, escaped version of the given url.
+ */
+char *
+rfc1738_escape_unescaped(const char *url)
+{
+    return rfc1738_do_escape(url, -1);
+}
+
+/*
+ * rfc1738_escape_part - Returns a static buffer that contains the
+ * RFC 1738 compliant, escaped version of the given url segment.
+ */
+char *
+rfc1738_escape_part(const char *url)
+{
+    return rfc1738_do_escape(url, 1);
 }
 
 /*

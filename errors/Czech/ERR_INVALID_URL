@@ -13,7 +13,7 @@ se objevila následující chyba:
 <UL>
 <LI>
 <STRONG>
-Invalid URL
+Invalid URL.
 </STRONG>
 </UL>
 
@@ -23,6 +23,6 @@ Nìkterá èást URL je chybná. Mo¾né problémy:
 <LI>Chybný nebo chybìjící protokol (http:// ..)
 <LI>Chybìjící hostname
 <LI>Chybný double-escape v URL cestì
-<LI>Chybný znak v hostname (podtr¾ítko _)
+<LI>Chybný znak v hostname (podtr¾ítko ??)
 </UL>
 </P>

@@ -47,9 +47,9 @@ while (<>) {
 
 print  '       HOSTNAME: '. `hostname`;
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdat) = localtime($first);
-printf "FIRST LOG ENTRY: %s/%s/%s %.2d:%.2d:%.2d\n", $year,$mon+1,$mday, $hour,$min,$sec;
+printf "FIRST LOG ENTRY: %04d/%02d/%02d %.2d:%.2d:%.2d\n", $year+1900,$mon+1,$mday, $hour,$min,$sec;
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdat) = localtime($last);
-printf " LAST LOG ENTRY: %s/%s/%s %.2d:%.2d:%.2d\n", $year,$mon+1,$mday, $hour,$min,$sec;
+printf " LAST LOG ENTRY: %04d/%02d/%02d %.2d:%.2d:%.2d\n", $year+1900,$mon+1,$mday, $hour,$min,$sec;
 print "\n";
 
 printf ("%25.25s %5s %5s %5s %5s %5s %5s %5s %5s\n",

@@ -12,7 +12,7 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-Se acabó el tiempo máximo para lectura de datos de la red.
+Se acab&oacute; el tiempo m&aacute;ximo para lectura de datos de la red.
 </STRONG>
 </UL>
 
@@ -21,6 +21,7 @@ El sistema ha devuelto el siguiente mensaje:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Se acabó el tiempo máximo de lectura mientras se leían datos de la red.
-La red o el servidor pueden estar congestionados. Por favor, inténtelo de nuevo
+Se acab&oacute; el tiempo m&aacute;ximo de lectura mientras se le&iacute;an
+datos de la red. La red o el servidor pueden estar congestionados. Por 
+favor, int&eacute;ntelo de nuevo
 </P>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.63 1999/05/04 19:43:17 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.64 1999/10/04 05:04:55 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -141,6 +141,7 @@ static http_hdr_type ListHeadersArr[] =
     HDR_CONNECTION,
     HDR_IF_MATCH, HDR_IF_NONE_MATCH,
     HDR_LINK, HDR_PRAGMA,
+    HDR_PROXY_CONNECTION,
     /* HDR_TRANSFER_ENCODING, */
     HDR_UPGRADE,
     HDR_VARY,
@@ -227,7 +228,7 @@ static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
  */
 
 void
-httpHeaderInitModule()
+httpHeaderInitModule(void)
 {
     int i;
     /* check that we have enough space for masks */
@@ -264,7 +265,7 @@ httpHeaderInitModule()
 }
 
 void
-httpHeaderCleanModule()
+httpHeaderCleanModule(void)
 {
     httpHeaderDestroyFieldsInfo(Headers, HDR_ENUM_END);
     Headers = NULL;

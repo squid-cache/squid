@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.31 1999/07/13 14:51:29 wessels Exp $
+ * $Id: unlinkd.cc,v 1.32 1999/10/04 05:05:38 wessels Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -45,15 +45,21 @@ main(int argc, char *argv[])
 {
     char buf[UNLINK_BUF_LEN];
     char *t;
+    int x;
     setbuf(stdin, NULL);
+    setbuf(stdout, NULL);
     while (fgets(buf, UNLINK_BUF_LEN, stdin)) {
 	if ((t = strchr(buf, '\n')))
 	    *t = '\0';
 #if USE_TRUNCATE
-	truncate(buf, 0);
+	x = truncate(buf, 0);
 #else
-	unlink(buf);
+	x = unlink(buf);
 #endif
+	if (x < 0)
+	    printf("ERR\n");
+	else
+	    printf("OK\n");
     }
     exit(0);
 }
@@ -67,29 +73,74 @@ static int unlinkd_wfd = -1;
 static int unlinkd_rfd = -1;
 #endif
 
+#define UNLINKD_QUEUE_LIMIT 20
+
 void
 unlinkdUnlink(const char *path)
 {
 #if USE_UNLINKD
-    char *buf;
+    char buf[MAXPATHLEN];
     int l;
+    int x;
+    static int queuelen = 0;
     if (unlinkd_wfd < 0) {
 	debug_trap("unlinkdUnlink: unlinkd_wfd < 0");
 	safeunlink(path, 0);
 	return;
     }
-    l = strlen(path) + 1;
-    buf = xcalloc(1, l + 1);
-    strcpy(buf, path);
-    strcat(buf, "\n");
-    file_write(unlinkd_wfd,
-	-1,
-	buf,
-	l,
-	NULL,			/* Handler */
-	NULL,			/* Handler-data */
-	xfree);
+    /*
+     * If the queue length is greater than our limit, then
+     * we pause for up to 100ms, hoping that unlinkd
+     * has some feedback for us.  Maybe it just needs a slice
+     * of the CPU's time.
+     */
+    if (queuelen >= UNLINKD_QUEUE_LIMIT) {
+	struct timeval to;
+	fd_set R;
+	int x;
+	FD_ZERO(&R);
+	FD_SET(unlinkd_rfd, &R);
+	to.tv_sec = 0;
+	to.tv_usec = 100000;
+	x = select(unlinkd_rfd + 1, &R, NULL, NULL, &to);
+    }
+    /*
+     * If there is at least one outstanding unlink request, then
+     * try to read a response.  If there's nothing to read we'll
+     * get an EWOULDBLOCK or whatever.  If we get a response, then
+     * decrement the queue size by the number of newlines read.
+     */
+    if (queuelen > 0) {
+	int x;
+	int i;
+	char rbuf[512];
+	x = read(unlinkd_rfd, rbuf, 511);
+	if (x > 0) {
+	    rbuf[x] = '\0';
+	    for (i = 0; i < x; i++)
+		if ('\n' == rbuf[i])
+		    queuelen--;
+	    assert(queuelen >= 0);
+	}
+    }
+    l = strlen(path);
+    assert(l < MAXPATHLEN);
+    xstrncpy(buf, path, MAXPATHLEN);
+    buf[l++] = '\n';
+    x = write(unlinkd_wfd, buf, l);
+    if (x < 0) {
+	debug(50, 1) ("unlinkdUnlink: write FD %d failed: %s\n",
+	    unlinkd_wfd, xstrerror());
+	safeunlink(path, 0);
+	return;
+    } else if (x != l) {
+	debug(50, 1) ("unlinkdUnlink: FD %d only wrote %d of %d bytes\n",
+	    unlinkd_wfd, x, l);
+	safeunlink(path, 0);
+	return;
+    }
     Counter.unlink.requests++;
+    queuelen++;
 #endif
 }
 
@@ -136,9 +187,15 @@ unlinkdInit(void)
     fd_note(unlinkd_rfd, "unlinkd -> squid");
     commSetTimeout(unlinkd_rfd, -1, NULL, NULL);
     commSetTimeout(unlinkd_wfd, -1, NULL, NULL);
-    commSetNonBlocking(unlinkd_wfd);
+    /*
+     * We leave unlinkd_wfd blocking, because we never want to lose an
+     * unlink request, and we don't have code to retry if we get
+     * EWOULDBLOCK.
+     */
     commSetNonBlocking(unlinkd_rfd);
     debug(12, 1) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
+#else
+    debug(12, 1) ("Unlinkd is disabled\n");
 #endif
 }
 

@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<TITLE>ERROR: Acceso Denegado al Cache</TITLE>
+</HEAD>
+<BODY>
+<H1>ERROR</H1>
+<H2>Acceso Denegado al Cache</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+Acceso denegado al cache.
+</STRONG>
+</UL>
+
+<P>
+Disculpe, Ud. no est&aacute; autorizado a acceder a:
+<PRE>    %U</PRE>
+desde este cache hasta que se haya autenticado.
+
+
+<P>
+Ud. necesita utilizar Netscape version 2.0 o superior, o Microsoft Internet
+Explorer 3.0, o un navegador que cumpla con HTTP/1.1 para que funcione.
+Por favor contacte al <A HREF="mailto:%w">administrador del cache</a> si 
+tiene dificultad para autenticarse o <A HREF="http://%h/cgi-bin/chpasswd.cgi\">
+cambie</a> su password.
+</P>

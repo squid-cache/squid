@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.39 1999/06/17 22:20:43 wessels Exp $
+ * $Id: snmp_core.cc,v 1.40 1999/10/04 05:05:26 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -483,7 +483,7 @@ snmpHandleUdp(int sock, void *not_used)
 /*
  * Turn SNMP packet into a PDU, check available ACL's
  */
-void
+static void
 snmpDecodePacket(snmp_request_t * rq)
 {
     struct snmp_pdu *PDU;
@@ -519,7 +519,7 @@ snmpDecodePacket(snmp_request_t * rq)
 /*
  * Packet OK, ACL Check OK, Create reponse.
  */
-void
+static void
 snmpConstructReponse(snmp_request_t * rq)
 {
     struct snmp_session Session;
@@ -546,7 +546,7 @@ snmpConstructReponse(snmp_request_t * rq)
  * 
  * If configured forward any reponses which are not for this agent.
  */
-struct snmp_pdu *
+static struct snmp_pdu *
 snmpAgentResponse(struct snmp_pdu *PDU)
 {
     struct snmp_pdu *Answer = NULL;
@@ -632,7 +632,7 @@ snmpAgentResponse(struct snmp_pdu *PDU)
     return (Answer);
 }
 
-oid_ParseFn *
+static oid_ParseFn *
 snmpTreeGet(oid * Current, snint CurrentLen)
 {
     oid_ParseFn *Fn = NULL;
@@ -659,7 +659,7 @@ snmpTreeGet(oid * Current, snint CurrentLen)
     return (Fn);
 }
 
-oid_ParseFn *
+static oid_ParseFn *
 snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 {
     oid_ParseFn *Fn = NULL;
@@ -725,7 +725,7 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     return (Fn);
 }
 
-oid *
+static oid *
 static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = NULL;
@@ -740,7 +740,7 @@ static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
     return (instance);
 }
 
-oid *
+static oid *
 time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = NULL;
@@ -767,7 +767,7 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     return (instance);
 }
 
-oid *
+static oid *
 peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = NULL;
@@ -826,7 +826,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     return (instance);
 }
 
-oid *
+static oid *
 client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = NULL;
@@ -874,7 +874,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 /* 
  * Returns a the sibling object in the tree
  */
-mib_tree_entry *
+static mib_tree_entry *
 snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current)
 {
     mib_tree_entry *next = NULL;
@@ -897,7 +897,7 @@ snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current)
 /* 
  * Returns the requested child object or NULL if it does not exist
  */
-mib_tree_entry *
+static mib_tree_entry *
 snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
 {
     mib_tree_entry *next = NULL;
@@ -915,7 +915,7 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
 /*
  * Adds a node to the MIB tree structure and adds the appropriate children
  */
-mib_tree_entry *
+static mib_tree_entry *
 #if STDC_HEADERS
 snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * instancefunction, int children,...)
 #else
@@ -968,7 +968,7 @@ snmpAddNode(va_alist)
 /* 
  * Returns the list of parameters in an oid
  */
-oid *
+static oid *
 #if STDC_HEADERS
 snmpCreateOid(int length,...)
 #else
@@ -1002,7 +1002,7 @@ snmpCreateOid(va_alist)
 /*
  * Allocate space for, and copy, an OID.  Returns new oid.
  */
-oid *
+static oid *
 snmpOidDup(oid * A, snint ALen)
 {
     oid *Ans = xmalloc(sizeof(oid) * ALen);

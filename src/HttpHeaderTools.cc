@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.25 1999/04/15 06:15:41 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.26 1999/10/04 05:04:56 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -97,17 +97,18 @@ httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count)
 }
 
 /* same as httpHeaderPutStr, but formats the string using snprintf first */
-#if STDC_HEADERS
 void
+#if STDC_HEADERS
 httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...)
+#else
+httpHeaderPutStrf(va_alist)
+     va_dcl
+#endif
 {
+#if STDC_HEADERS
     va_list args;
     va_start(args, fmt);
 #else
-void
-httpHeaderPutStrf(va_alist)
-     va_dcl
-{
     va_list args;
     HttpHeader *hdr = NULL;
     http_hdr_type id = HDR_ENUM_END;
@@ -135,7 +136,7 @@ httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list 
 
 /* wrapper arrounf PutContRange */
 void
-httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, size_t ent_len)
+httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, ssize_t ent_len)
 {
     HttpHdrContRange *cr = httpHdrContRangeCreate();
     assert(hdr && ent_len >= 0);
@@ -146,23 +147,28 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, size_t ent_len)
 
 
 /*
- * return true if a given directive is found in at least one of the "connection" header-fields
- * note: if HDR_PROXY_CONNECTION is present we ignore HDR_CONNECTION
+ * return true if a given directive is found in at least one of
+ * the "connection" header-fields note: if HDR_PROXY_CONNECTION is
+ * present we ignore HDR_CONNECTION.
  */
 int
 httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
 {
-    if (httpHeaderHas(hdr, HDR_PROXY_CONNECTION)) {
-	const char *str = httpHeaderGetStr(hdr, HDR_PROXY_CONNECTION);
-	return str && !strcasecmp(str, directive);
-    }
-    if (httpHeaderHas(hdr, HDR_CONNECTION)) {
-	String str = httpHeaderGetList(hdr, HDR_CONNECTION);
-	const int res = strListIsMember(&str, directive, ',');
-	stringClean(&str);
-	return res;
-    }
-    return 0;
+    String list;
+    http_hdr_type ht;
+    int res;
+    /* what type of header do we have? */
+    if (httpHeaderHas(hdr, HDR_PROXY_CONNECTION))
+	ht = HDR_PROXY_CONNECTION;
+    else if (httpHeaderHas(hdr, HDR_CONNECTION))
+	ht = HDR_CONNECTION;
+    else
+	return 0;
+
+    list = httpHeaderGetList(hdr, ht);
+    res = strListIsMember(&list, directive, ',');
+    stringClean(&list);
+    return res;
 }
 
 /* returns true iff "m" is a member of the list */
@@ -171,9 +177,12 @@ strListIsMember(const String * list, const char *m, char del)
 {
     const char *pos = NULL;
     const char *item;
+    int ilen = 0;
+    int mlen;
     assert(list && m);
-    while (strListGetItem(list, del, &item, NULL, &pos)) {
-	if (!strcasecmp(item, m))
+    mlen = strlen(m);
+    while (strListGetItem(list, del, &item, &ilen, &pos)) {
+	if (mlen == ilen && !strncasecmp(item, m, ilen))
 	    return 1;
     }
     return 0;
@@ -183,6 +192,18 @@ strListIsMember(const String * list, const char *m, char del)
 int
 strListIsSubstr(const String * list, const char *s, char del)
 {
+    assert(list && del);
+    return strStr(*list, s) != 0;
+
+    /*
+     * Note: the original code with a loop is broken because it uses strstr()
+     * instead of strnstr(). If 's' contains a 'del', strListIsSubstr() may
+     * return true when it should not. If 's' does not contain a 'del', the
+     * implementaion is equavalent to strstr()! Thus, we replace the loop with
+     * strstr() above until strnstr() is available.
+     */
+
+#ifdef BROKEN_CODE
     const char *pos = NULL;
     const char *item;
     assert(list && s);
@@ -191,6 +212,7 @@ strListIsSubstr(const String * list, const char *s, char del)
 	    return 1;
     }
     return 0;
+#endif
 }
 
 /* appends an item to the list */
@@ -276,7 +298,7 @@ httpHeaderParseInt(const char *start, int *value)
 }
 
 int
-httpHeaderParseSize(const char *start, size_t * value)
+httpHeaderParseSize(const char *start, ssize_t * value)
 {
     int v;
     const int res = httpHeaderParseInt(start, &v);
@@ -366,5 +388,6 @@ httpHeaderStrCmp(const char *h1, const char *h2, int len)
 	if (c2)
 	    len2++;
     }
+    /* NOTREACHED */
     return 0;
 }

@@ -12,12 +12,12 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-Ha expirado el tiempo de vida de la conexión
+Ha expirado el tiempo de vida de la conexi&oacute;n
 </STRONG>
 </UL>
 
 <P>
-Squid ha dado por terminada la petición porque se ha excedido
-el tiempo de vida máximo para una conexión.
+Squid ha dado por terminada la petici&oacute;n porque se ha excedido
+el tiempo de vida m&aacute;ximo para una conexi&oacute;n.
 </P>
 

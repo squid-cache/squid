@@ -1,6 +1,5 @@
 <HTML><HEAD>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
-<A HREF="http://%h/cgi-bin/chpasswd.cgi\">heslo</a>.
 <TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
@@ -14,7 +13,7 @@ se objevila následující chyba:
 <UL>
 <LI>
 <STRONG>
-FTP is Disabled
+FTP is Disabled.
 </STRONG>
 </UL>
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.20 1999/08/02 06:18:46 wessels Exp $
+ * $Id: store_swapin.cc,v 1.21 1999/10/04 05:05:34 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -71,8 +71,14 @@ static void
 storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
 {
     store_client *sc = data;
+    STCB *callback;
     debug(20, 3) ("storeSwapInFileClosed: sio=%p, errflag=%d\n",
 	sio, errflag);
     cbdataUnlock(sio);
     sc->swapin_sio = NULL;
+    if ((callback = sc->callback)) {
+	assert(errflag <= 0);
+	sc->callback = NULL;
+	callback(sc->callback_data, sc->copy_buf, errflag);
+    }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.65 1999/09/29 00:22:13 wessels Exp $
+ * $Id: forward.cc,v 1.66 1999/10/04 05:05:11 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -525,7 +525,7 @@ fwdFail(FwdState * fwdState, ErrorState * errorState)
 /*
  * Called when someone else calls StoreAbort() on this entry
  */
-void
+static void
 fwdAbort(void *data)
 {
     FwdState *fwdState = data;

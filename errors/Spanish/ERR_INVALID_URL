@@ -17,12 +17,12 @@ URL incorrecta.
 </UL>
 
 <P>
-Algún aspecto del URL solicitado es incorrecto. Posibles problemas:
+Alg&uacute;n aspecto del URL solicitado es incorrecto. Posibles problemas:
 <UL>
-<LI>Falta o es incorrecto el protocolo de acceso (debe ser `http://'' o similar)
-<LI>Falta el nombre de la máquina
-<LI>Hay un doble-escape ilegas en la ruta de la URL
-<LI>Hay caracteres ilegales en el nombre de máquina;
-    el caracter de subrayado no está permitido
+<LI>Falta o es incorrecto el protocolo de acceso (debe ser ``http://'' o 
+    similar)
+<LI>Falta el nombre de la m&aacute;quina
+<LI>Hay un doble-escape ilegal en la ruta de la URL
+<LI>Hay caracteres ilegales en el nombre de m&aacute;quina;
+    el caracter de subrayado (_) no est&aacute; permitido
 </UL>
-</P>

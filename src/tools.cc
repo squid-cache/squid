@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.186 1999/08/02 06:18:49 wessels Exp $
+ * $Id: tools.cc,v 1.187 1999/10/04 05:05:36 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -305,9 +305,9 @@ fatal_common(const char *message)
 #if HAVE_SYSLOG
     syslog(LOG_ALERT, "%s", message);
 #endif
-    fprintf(debug_log, "FATAL: pid %d %s\n", (int) getpid(), message);
-    if (opt_debug_stderr && debug_log != stderr)
-	fprintf(stderr, "FATAL: pid %d %s\n", (int) getpid(), message);
+    fprintf(debug_log, "FATAL: %s\n", message);
+    if (opt_debug_stderr > 0 && debug_log != stderr)
+	fprintf(stderr, "FATAL: %s\n", message);
     fprintf(debug_log, "Squid Cache (Version %s): Terminated abnormally.\n",
 	version_string);
     fflush(debug_log);
@@ -867,7 +867,6 @@ linklistShift(link_list ** L)
     return p;
 }
 
-
 /*
  * Same as rename(2) but complains if something goes wrong;
  * the caller is responsible for handing and explaining the 
@@ -882,4 +881,17 @@ xrename(const char *from, const char *to)
     debug(21, errno == ENOENT ? 2 : 1) ("xrename: Cannot rename %s to %s: %s\n",
 	from, to, xstrerror());
     return -1;
+}
+
+int
+stringHasCntl(const char *s)
+{
+    unsigned char c;
+    while ((c = (unsigned char) *s++) != '\0') {
+	if (c <= 0x1f)
+	    return 1;
+	if (c >= 0x7f && c <= 0x9f)
+	    return 1;
+    }
+    return 0;
 }

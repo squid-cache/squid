@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.55 1999/05/04 21:58:46 wessels Exp $
+ * $Id: urn.cc,v 1.56 1999/10/04 05:05:39 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -217,7 +217,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     }
     s = buf + k;
     assert(urlres_e->mem_obj->reply);
-    httpReplyParse(urlres_e->mem_obj->reply, buf);
+    httpReplyParse(urlres_e->mem_obj->reply, buf, k);
     debug(52, 3) ("mem->reply exists, code=%d.\n",
 	urlres_e->mem_obj->reply->sline.status);
     if (urlres_e->mem_obj->reply->sline.status != HTTP_OK) {

@@ -13,15 +13,9 @@ se objevila následující chyba:
 <UL>
 <LI>
 <STRONG>
-Po¾adovaný dokument se nenachází  v cachi pøièm¾ byla specifikována direktiva
-<code>only-if-cached</code>.
+Po¾adovaný dokument se nenachází v cachi, pøièem¾ byla specifikována direktiva
+<code><u>only-if-cached</u></code>.
 </STRONG>
 </UL>
-
-<P>
-
-You have issued a request with a <code>only-if-cached</code> cache control
-directive. The document was not found in the cache, <em>or</em> it required
-revalidation prohibited by <code>only-if-cached</code> directive.
 
 </P>

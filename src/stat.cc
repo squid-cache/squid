@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.320 1999/07/13 14:51:19 wessels Exp $
+ * $Id: stat.cc,v 1.321 1999/10/04 05:05:29 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -79,7 +79,7 @@ static OBJH statCountersHistograms;
 static OBJH statClientRequests;
 
 #ifdef XMALLOC_STATISTICS
-static void info_get_mallstat(int, int, StoreEntry *);
+static void info_get_mallstat(int, int, void *);
 #endif
 
 StatCounters CountHist[N_COUNT_HIST];
@@ -383,8 +383,9 @@ statOpenfdObj(StoreEntry * sentry)
 
 #ifdef XMALLOC_STATISTICS
 static void
-info_get_mallstat(int size, int number, StoreEntry * sentry)
+info_get_mallstat(int size, int number, void *data)
 {
+    StoreEntry * sentry = data;
     if (number > 0)
 	storeAppendPrintf(sentry, "\t%d = %d\n", size, number);
 }
