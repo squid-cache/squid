@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.250 2002/02/25 03:11:04 adrian Exp $
+# $Id: cf.data.pre,v 1.251 2002/04/02 11:38:02 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2526,6 +2526,7 @@ LOC: Config.denyInfoList
 DEFAULT: none
 DOC_START
 	Usage:   deny_info err_page_name acl
+	or       deny_info http://... acl
 	Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
 	This can be used to return a ERR_ page for requests which
@@ -2535,6 +2536,13 @@ DOC_START
 
 	You may use ERR_ pages that come with Squid or create your own pages
 	and put them into the configured errors/ directory.
+
+	Alternatively you can specify an error URL. The browsers will then
+	get redirected (302) to the specified URL. %s in the redirection
+	URL will be replaced by the requested URL.
+
+	Alternatively you can tell Squid to reset the TCP connection
+	by specifying TCP_RESET.
 DOC_END
 
 NAME: memory_pools
