@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.25 2001/01/12 00:37:14 wessels Exp $
+ * $Id: StatHist.cc,v 1.26 2001/10/24 08:19:08 hno Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -121,8 +121,8 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
     assert(Dest->val_in == Orig->val_in);
     assert(Dest->val_out == Orig->val_out);
     /* actual copy */
-    debug(62, 3) ("statHistCopy: copying %d bytes to %p from %p\n",
-	Dest->capacity * sizeof(*Dest->bins),
+    debug(62, 3) ("statHistCopy: copying %ld bytes to %p from %p\n",
+	(long int) Dest->capacity * sizeof(*Dest->bins),
 	Dest->bins,
 	Orig->bins);
     xmemcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));

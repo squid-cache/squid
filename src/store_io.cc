@@ -41,7 +41,7 @@ storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, voi
 	store_io_stats.create.select_fail++;
 	return NULL;
     }
-    debug(20, 2) ("storeCreate: Selected dir '%d' for obj size '%d'\n", dirn, objsize);
+    debug(20, 2) ("storeCreate: Selected dir '%d' for obj size '%ld'\n", dirn, (long int) objsize);
     SD = &Config.cacheSwap.swapDirs[dirn];
 
     /* Now that we have a fs to use, call its storeCreate function */

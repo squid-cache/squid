@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.115 2001/10/10 15:17:42 adrian Exp $
+ * $Id: tunnel.cc,v 1.116 2001/10/24 08:19:08 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -194,7 +194,7 @@ sslReadServer(int fd, void *data)
     size_t read_sz = SQUID_TCP_SO_RCVBUF - sslState->server.len;
     assert(fd == sslState->server.fd);
     debug(26, 3) ("sslReadServer: FD %d, reading %d bytes at offset %d\n",
-	fd, read_sz, sslState->server.len);
+	fd, (int) read_sz, sslState->server.len);
     errno = 0;
 #if DELAY_POOLS
     read_sz = delayBytesWanted(sslState->delay_id, 1, read_sz);

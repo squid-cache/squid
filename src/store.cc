@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.543 2001/10/24 06:16:17 hno Exp $
+ * $Id: store.cc,v 1.544 2001/10/24 08:19:08 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -828,8 +828,8 @@ storeMaintainSwapSpace(void *datanotused)
     }
     if (store_swap_size > Config.Swap.maxSize) {
 	if (squid_curtime - last_warn_time > 10) {
-	    debug(20, 0) ("WARNING: Disk space over limit: %d KB > %d KB\n",
-		store_swap_size, Config.Swap.maxSize);
+	    debug(20, 0) ("WARNING: Disk space over limit: %ld KB > %ld KB\n",
+		(long int) store_swap_size, (long int) Config.Swap.maxSize);
 	    last_warn_time = squid_curtime;
 	}
     }
@@ -975,19 +975,19 @@ storeEntryValidLength(const StoreEntry * e)
 static void
 storeInitHashValues(void)
 {
-    int i;
+    long int i;
     /* Calculate size of hash table (maximum currently 64k buckets).  */
     i = Config.Swap.maxSize / Config.Store.avgObjectSize;
-    debug(20, 1) ("Swap maxSize %d KB, estimated %d objects\n",
-	Config.Swap.maxSize, i);
+    debug(20, 1) ("Swap maxSize %ld KB, estimated %ld objects\n",
+	(long int) Config.Swap.maxSize, i);
     i /= Config.Store.objectsPerBucket;
-    debug(20, 1) ("Target number of buckets: %d\n", i);
+    debug(20, 1) ("Target number of buckets: %ld\n", i);
     /* ideally the full scan period should be configurable, for the
      * moment it remains at approximately 24 hours.  */
     store_hash_buckets = storeKeyHashBuckets(i);
     debug(20, 1) ("Using %d Store buckets\n", store_hash_buckets);
-    debug(20, 1) ("Max Mem  size: %d KB\n", Config.memMaxSize >> 10);
-    debug(20, 1) ("Max Swap size: %d KB\n", Config.Swap.maxSize);
+    debug(20, 1) ("Max Mem  size: %ld KB\n", (long int) Config.memMaxSize >> 10);
+    debug(20, 1) ("Max Swap size: %ld KB\n", (long int) Config.Swap.maxSize);
 }
 
 void

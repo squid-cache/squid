@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.104 2001/10/24 06:55:44 hno Exp $
+ * $Id: store_client.cc,v 1.105 2001/10/24 08:19:09 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -361,7 +361,7 @@ storeClientReadBody(void *data, const char *buf, ssize_t len)
     assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
-    debug(20, 3) ("storeClientReadBody: len %d\n", len);
+    debug(20, 3) ("storeClientReadBody: len %d\n", (int) len);
     if (sc->copy_offset == 0 && len > 0 && mem->reply->sline.status == 0)
 	httpReplyParse(mem->reply, sc->copy_buf, headersEnd(sc->copy_buf, len));
     storeClientCallback(sc, len);
@@ -383,7 +383,7 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
     assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
-    debug(20, 3) ("storeClientReadHeader: len %d\n", len);
+    debug(20, 3) ("storeClientReadHeader: len %d\n", (int) len);
     if (len < 0) {
 	debug(20, 3) ("storeClientReadHeader: %s\n", xstrerror());
 	storeClientCallback(sc, len);
@@ -465,7 +465,7 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	 */
 	copy_sz = XMIN(sc->copy_size, body_sz);
 	debug(20, 3) ("storeClientReadHeader: copying %d bytes of body\n",
-	    copy_sz);
+	    (int) copy_sz);
 	xmemmove(sc->copy_buf, sc->copy_buf + swap_hdr_sz, copy_sz);
 	if (sc->copy_offset == 0 && len > 0 && mem->reply->sline.status == 0)
 	    httpReplyParse(mem->reply, sc->copy_buf,

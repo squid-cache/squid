@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.25 2001/02/07 18:56:51 hno Exp $
+ * $Id: HttpHdrRange.cc,v 1.26 2001/10/24 08:19:07 hno Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -136,12 +136,12 @@ static void
 httpHdrRangeSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
 {
     if (!known_spec(spec->offset))	/* suffix */
-	packerPrintf(p, "-%d", spec->length);
+	packerPrintf(p, "-%ld", (long int) spec->length);
     else if (!known_spec(spec->length))		/* trailer */
-	packerPrintf(p, "%d-", spec->offset);
+	packerPrintf(p, "%ld-", (long int) spec->offset);
     else			/* range */
-	packerPrintf(p, "%d-%d",
-	    spec->offset, spec->offset + spec->length - 1);
+	packerPrintf(p, "%ld-%ld",
+	    (long int) spec->offset, (long int) spec->offset + spec->length - 1);
 }
 
 /* fills "absent" positions in range specification based on response body size 
@@ -151,8 +151,8 @@ httpHdrRangeSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
 static int
 httpHdrRangeSpecCanonize(HttpHdrRangeSpec * spec, size_t clen)
 {
-    debug(64, 5) ("httpHdrRangeSpecCanonize: have: [%d, %d) len: %d\n",
-	spec->offset, spec->offset + spec->length, spec->length);
+    debug(64, 5) ("httpHdrRangeSpecCanonize: have: [%ld, %ld) len: %ld\n",
+	(long int) spec->offset, (long int) spec->offset + spec->length, (long int) spec->length);
     if (!known_spec(spec->offset))	/* suffix */
 	spec->offset = size_diff(clen, spec->length);
     else if (!known_spec(spec->length))		/* trailer */
@@ -162,8 +162,8 @@ httpHdrRangeSpecCanonize(HttpHdrRangeSpec * spec, size_t clen)
     assert(known_spec(spec->offset));
     spec->length = size_min(size_diff(clen, spec->offset), spec->length);
     /* check range validity */
-    debug(64, 5) ("httpHdrRangeSpecCanonize: done: [%d, %d) len: %d\n",
-	spec->offset, spec->offset + spec->length, spec->length);
+    debug(64, 5) ("httpHdrRangeSpecCanonize: done: [%ld, %ld) len: %ld\n",
+	(long int) spec->offset, (long int) spec->offset + (long int) spec->length, (long int) spec->length);
     return spec->length > 0;
 }
 
@@ -312,7 +312,7 @@ httpHdrRangeCanonize(HttpHdrRange * range, ssize_t clen)
     assert(range);
     assert(clen >= 0);
     stackInit(&goods);
-    debug(64, 3) ("httpHdrRangeCanonize: started with %d specs, clen: %d\n", range->specs.count, clen);
+    debug(64, 3) ("httpHdrRangeCanonize: started with %d specs, clen: %ld\n", range->specs.count, (long int) clen);
 
     /* canonize each entry and destroy bad ones if any */
     while ((spec = httpHdrRangeGetSpec(range, &pos))) {
