@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.25 1999/01/11 21:55:40 wessels Exp $
+ * $Id: snmp_core.cc,v 1.26 1999/01/12 23:38:37 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -552,7 +552,7 @@ snmpDecodePacket(snmp_request_t * rq)
     debug(49, 5) ("snmpDecodePacket: Called.\n");
     /* Now that we have the data, turn it into a PDU */
     PDU = snmp_pdu_create(0);
-    Session.Version = SNMP_VERSION_1; 
+    Session.Version = SNMP_VERSION_1;
     Community = snmp_parse(&Session, PDU, buf, len);
 
     checklist.src_addr = rq->from.sin_addr;
