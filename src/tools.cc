@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.22 1996/04/04 19:03:11 wessels Exp $ */
+/* $Id: tools.cc,v 1.23 1996/04/04 19:03:36 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -153,7 +153,7 @@ void shut_down(sig)
 {
     debug(21, 1, "Shutting down...\n");
     if (getPidFilename())
-        safeunlink(getPidFilename(), 0);
+	safeunlink(getPidFilename(), 0);
     storeWriteCleanLog();
     PrintRusage(NULL, debug_log);
     debug(21, 0, "Harvest Cache (Version %s): Exiting due to signal %d.\n",
