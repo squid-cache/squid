@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.38 1998/05/30 19:43:01 rousskov Exp $
+ * $Id: asn.cc,v 1.39 1998/06/04 18:57:07 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -45,11 +45,6 @@ typedef u_char m_int[1 + sizeof(unsigned int)];		/* int in memory with length */
 /* Head for ip to asn radix tree */
 struct radix_node_head *AS_tree_head;
 
-struct _whoisState {
-    StoreEntry *entry;
-    request_t *request;
-};
-
 /*
  * Structure for as number information. it could be simply 
  * an intlist but it's coded as a structure for future
@@ -70,7 +65,6 @@ struct _ASState {
 
 typedef struct _ASState ASState;
 typedef struct _as_info as_info;
-typedef struct _whoisState whoisState;
 
 /* entry into the radix tree */
 struct _rtentry {
@@ -84,10 +78,6 @@ typedef struct _rtentry rtentry;
 
 static int asnAddNet(char *, int);
 static void asnCacheStart(int as);
-static PF whoisClose;
-static PF whoisTimeout;
-static CNCB whoisConnectDone;
-static PF whoisReadReply;
 static STCB asHandleReply;
 static int destroyRadixNode(struct radix_node *rn, void *w);
 static void asnAclInitialize(acl * acls);
@@ -192,7 +182,7 @@ asnCacheStart(int as)
     if ((e = storeGet(k)) == NULL) {
 	e = storeCreateEntry(asres, asres, 0, METHOD_GET);
 	storeClientListAdd(e, asState);
-	protoDispatch(-1, e, asState->request);
+	fwdStart(-1, e, asState->request);
     } else {
 	storeLockObject(e);
 	storeClientListAdd(e, asState);
@@ -391,84 +381,4 @@ destroyRadixNodeInfo(as_info * e_info)
 	xfree(prev);
     }
     xfree(data);
-}
-
-
-void
-whoisStart(request_t * request, StoreEntry * entry)
-{
-    int fd;
-    whoisState *p = xcalloc(1, sizeof(whoisState));
-    p->request = request;
-    p->entry = entry;
-    cbdataAdd(p, MEM_NONE);
-    storeLockObject(p->entry);
-
-    fd = comm_open(SOCK_STREAM, 0, any_addr, 0, COMM_NONBLOCKING, "whois");
-    if (fd == COMM_ERROR) {
-	debug(53, 0) ("whoisStart: failed to open a socket\n");
-	return;
-    }
-    comm_add_close_handler(fd, whoisClose, p);
-    commConnectStart(fd, request->host, request->port, whoisConnectDone, p);
-}
-
-static void
-whoisConnectDone(int fd, int status, void *data)
-{
-    whoisState *p = data;
-    char buf[128];
-    if (status != COMM_OK) {
-	debug(53, 1) ("whoisConnectDone: connect: %s: %s\n",
-	    p->request->host, xstrerror());
-	comm_close(fd);
-	return;
-    }
-    snprintf(buf, sizeof(buf), "%s\r\n", strBuf(p->request->urlpath) + 1);
-    debug(53, 3) ("whoisConnectDone: FD %d, '%s'\n", fd, strBuf(p->request->urlpath) + 1);
-    comm_write(fd, xstrdup(buf), strlen(buf), NULL, p, xfree);
-    commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, 0);
-    commSetTimeout(fd, Config.Timeout.read, whoisTimeout, p);
-}
-
-static void
-whoisTimeout(int fd, void *data)
-{
-    whoisState *p = data;
-    debug(53, 1) ("whoisTimeout: %s\n", storeUrl(p->entry));
-    whoisClose(fd, p);
-}
-
-static void
-whoisReadReply(int fd, void *data)
-{
-    whoisState *p = data;
-    StoreEntry *entry = p->entry;
-    char *buf = memAllocate(MEM_4K_BUF);
-    int len;
-
-    len = read(fd, buf, 4095);
-    buf[len] = '\0';
-    debug(53, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
-    debug(53, 5) ("{%s}\n", buf);
-    if (len <= 0) {
-	storeComplete(entry);
-	debug(53, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));
-	comm_close(fd);
-	memFree(MEM_4K_BUF, buf);
-	return;
-    }
-    storeAppend(entry, buf, len);
-    memFree(MEM_4K_BUF, buf);
-    fd_bytes(fd, len, FD_READ);
-    commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
-}
-
-static void
-whoisClose(int fd, void *data)
-{
-    whoisState *p = data;
-    debug(53, 3) ("whoisClose: FD %d\n", fd);
-    storeUnlockObject(p->entry);
-    cbdataFree(p);
 }

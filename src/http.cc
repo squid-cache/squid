@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.281 1998/06/03 22:33:02 rousskov Exp $
+ * $Id: http.cc,v 1.282 1998/06/04 18:57:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -438,7 +438,7 @@ httpReadReply(int fd, void *data)
     int bin;
     int clen;
     ErrorState *err;
-    if (protoAbortFetch(entry)) {
+    if (fwdAbortFetch(entry)) {
 	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
@@ -560,7 +560,7 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	    COMM_SELECT_READ,
 	    httpReadReply,
 	    httpState, 0);
-	commSetDefer(fd, protoCheckDeferRead, entry);
+	commSetDefer(fd, fwdCheckDeferRead, entry);
     }
 }
 
@@ -857,51 +857,18 @@ httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
 }
 
 void
-httpStart(request_t * request, StoreEntry * entry, peer * e)
+httpStart(request_t * request, StoreEntry * entry, peer * e, int fd)
 {
     HttpStateData *httpState;
-    int fd;
     debug(11, 3) ("httpStart: \"%s %s\"\n",
 	RequestMethodStr[request->method], storeUrl(entry));
     Counter.server.all.requests++;
     Counter.server.http.requests++;
-    if (e) {
+    if (e)
 	if (EBIT_TEST(e->options, NEIGHBOR_PROXY_ONLY))
 	    storeReleaseRequest(entry);
-	if ((fd = pconnPop(e->host, e->http_port)) >= 0) {
-	    debug(11, 3) ("httpStart: reusing pconn FD %d\n", fd);
-	    httpState = httpBuildState(fd, entry, request, e);
-	    commSetTimeout(httpState->fd,
-		Config.Timeout.connect,
-		httpTimeout,
-		httpState);
-	    httpConnectDone(fd, COMM_OK, httpState);
-	    return;
-	}
-    } else {
-	if ((fd = pconnPop(request->host, request->port)) >= 0) {
-	    debug(11, 3) ("httpStart: reusing pconn FD %d\n", fd);
-	    httpState = httpBuildState(fd, entry, request, e);
-	    commSetTimeout(httpState->fd,
-		Config.Timeout.connect,
-		httpTimeout,
-		httpState);
-	    httpConnectDone(fd, COMM_OK, httpState);
-	    return;
-	}
-    }
-    if ((fd = httpSocketOpen(entry, request)) < 0)
-	return;
     httpState = httpBuildState(fd, entry, request, e);
-    commSetTimeout(httpState->fd,
-	Config.Timeout.connect,
-	httpTimeout,
-	httpState);
-    commConnectStart(httpState->fd,
-	httpState->request->host,
-	httpState->request->port,
-	httpConnectDone,
-	httpState);
+    httpConnectDone(fd, COMM_OK, httpState);
 }
 
 static int

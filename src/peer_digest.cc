@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.37 1998/06/04 16:09:37 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.38 1998/06/04 18:57:16 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -289,9 +289,9 @@ peerDigestRequest(peer * p)
     if (old_e)
 	e->lastmod = old_e->lastmod;
     fetch->offset = 0;
-    debug(72, 3) ("peerDigestRequest: forwarding to protoDispatch...\n");
+    debug(72, 3) ("peerDigestRequest: forwarding to fwdStart...\n");
     /* push towards peer cache */
-    protoDispatch(-1, e, req);
+    fwdStart(-1, e, req);
     storeClientCopy(e, 0, 0, SM_PAGE_SIZE, memAllocate(MEM_4K_BUF),
 	peerDigestFetchReply, fetch);
 }

@@ -202,14 +202,14 @@ extern void fqdncacheFreeMemory(void);
 extern void fqdncache_restart(void);
 extern EVH fqdncache_purgelru;
 
-extern void ftpStart(request_t * req, StoreEntry * entry);
+extern void ftpStart(request_t * req, StoreEntry * entry, int);
 extern char *ftpUrlWith2f(const request_t *);
 
-extern void gopherStart(StoreEntry *);
+extern void gopherStart(StoreEntry *, int fd);
 extern int gopherCachable(const char *);
 
 
-extern void whoisStart(request_t * req, StoreEntry *);
+extern void whoisStart(request_t * req, StoreEntry *, int fd);
 
 extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
 extern void hash_join(hash_table *, hash_link *);
@@ -226,7 +226,7 @@ extern HASHHASH hash_url;
 extern HASHHASH hash4;
 
 extern int httpCachable(method_t);
-extern void httpStart(request_t *, StoreEntry *, peer *);
+extern void httpStart(request_t *, StoreEntry *, peer *, int);
 extern void httpParseReplyHeaders(const char *, http_reply *);
 extern void httpProcessReplyHeader(HttpStateData *, const char *, int);
 extern size_t httpBuildRequestPrefix(request_t * request,
@@ -584,11 +584,11 @@ extern void peerSelectInit(void);
 /* peer_digest.c */
 extern EVH peerDigestInit;
 
-extern void protoDispatch(int, StoreEntry *, request_t *);
-
-extern int protoUnregister(StoreEntry *, request_t *);
-extern int protoAbortFetch(StoreEntry * entry);
-extern DEFER protoCheckDeferRead;
+/* forward.c */
+extern void fwdStart(int, StoreEntry *, request_t *);
+extern int fwdUnregister(StoreEntry *, request_t *);
+extern int fwdAbortFetch(StoreEntry * entry);
+extern DEFER fwdCheckDeferRead;
 
 extern void urnStart(request_t *, StoreEntry *);
 
@@ -610,7 +610,7 @@ extern void shut_down(int);
 
 extern void start_announce(void *unused);
 extern void sslStart(int fd, const char *, request_t *, size_t * sz);
-extern void waisStart(request_t *, StoreEntry *);
+extern void waisStart(request_t *, StoreEntry *, int fd);
 extern void passStart(int, const char *, request_t *, size_t *);
 extern void identStart(int, ConnStateData *, IDCB * callback, void *);
 

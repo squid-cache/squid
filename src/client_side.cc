@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.329 1998/06/04 05:46:01 rousskov Exp $
+ * $Id: client_side.cc,v 1.330 1998/06/04 18:57:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -278,7 +278,7 @@ clientProcessExpired(void *data)
     entry->refcount++;		/* EXPIRED CASE */
     http->entry = entry;
     http->out.offset = 0;
-    protoDispatch(http->conn->fd, http->entry, http->request);
+    fwdStart(http->conn->fd, http->entry, http->request);
     /* Register with storage manager to receive updates when data comes in. */
     if (entry->store_status == STORE_ABORTED)
 	debug(33, 0) ("clientProcessExpired: entry->swap_status == STORE_ABORTED\n");
@@ -617,7 +617,7 @@ httpRequestFree(void *data)
 	entry = http->entry;	/* reset, IMS might have changed it */
 	if (entry && entry->ping_status == PING_WAITING)
 	    storeReleaseRequest(entry);
-	protoUnregister(entry, request);
+	fwdUnregister(entry, request);
     }
     assert(http->log_type < LOG_TYPE_MAX);
     if (entry)
@@ -2061,7 +2061,7 @@ clientProcessMiss(clientHttpRequest * http)
     http->entry->refcount++;
     if (http->flags.internal)
 	r->protocol = PROTO_INTERNAL;
-    protoDispatch(http->conn->fd, http->entry, r);
+    fwdStart(http->conn->fd, http->entry, r);
 }
 
 static clientHttpRequest *
