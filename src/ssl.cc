@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.26 1996/11/14 18:38:48 wessels Exp $
+ * $Id: ssl.cc,v 1.27 1996/11/22 08:38:20 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -64,6 +64,7 @@ static void sslClose _PARAMS((SslStateData * sslState));
 static void sslClientClosed _PARAMS((int fd, void *));
 static void sslConnectDone _PARAMS((int fd, int status, void *data));
 static void sslStateFree _PARAMS((int fd, void *data));
+static void sslSelectForwarding _PARAMS((int fd, const ipcache_addrs *, void *));
 
 static void
 sslClose(SslStateData * sslState)
@@ -380,7 +381,7 @@ sslConnectDone(int fd, int status, void *data)
     }
     if (opt_no_ipcache)
 	ipcacheInvalidate(sslState->host);
-    if (Config.sslProxy.host)
+    if (Config.sslProxy.host == sslState->host)
 	sslProxyConnected(sslState->server.fd, sslState);
     else
 	sslConnected(sslState->server.fd, sslState);
@@ -395,7 +396,6 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
     SslStateData *sslState = NULL;
     int sock;
     char *buf = NULL;
-    edge *e = NULL;
 
     debug(26, 3, "sslStart: '%s %s'\n",
 	RequestMethodStr[request->method], url);
@@ -434,27 +434,26 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
     sslState->server.fd = sock;
     sslState->server.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
     sslState->client.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
-    if ((sslState->host = Config.sslProxy.host)) {
-	if ((sslState->port = Config.sslProxy.port) == 0) {
-	    if ((e = neighborFindByName(Config.sslProxy.host)))
-		sslState->port = e->http_port;
-	    else
-		sslState->port = CACHE_HTTP_PORT;
-	}
-    } else {
-	sslState->host = request->host;
-	sslState->port = request->port;
-    }
     comm_add_close_handler(sslState->server.fd,
 	sslStateFree,
 	(void *) sslState);
     comm_add_close_handler(sslState->client.fd,
 	sslClientClosed,
 	(void *) sslState);
-    ipcache_nbgethostbyname(sslState->host,
-	sslState->server.fd,
-	sslConnect,
-	sslState);
+
+    if (Config.sslProxy.host) {
+	ipcache_nbgethostbyname(request->host,
+	    sslState->server.fd,
+	    sslSelectForwarding,
+	    sslState);
+    } else {
+	sslState->host = request->host;
+	sslState->port = request->port;
+	ipcache_nbgethostbyname(request->host,
+	    sslState->server.fd,
+	    sslConnect,
+	    sslState);
+    }
     return COMM_OK;
 }
 
@@ -476,4 +475,49 @@ sslProxyConnected(int fd, void *data)
 	COMM_SELECT_READ,
 	sslReadServer,
 	(void *) sslState, 0);
+}
+
+static int
+sslCheckFirewallIP(const ipcache_addrs * ia)
+{
+    if (ia == NULL)
+	return IP_ALLOW;	/* no match */
+    if (Config.firewall_ip_list == NULL)
+	return IP_ALLOW;	/* no match */
+    return ip_access_check(ia->in_addrs[ia->cur], Config.firewall_ip_list);
+}
+
+static void
+sslSelectForwarding(int fd, const ipcache_addrs * ia, void *data)
+{
+    SslStateData *sslState = data;
+    request_t *request = sslState->request;
+    edge *e = NULL;
+    int go_direct = 1;
+    if (ia == NULL) {
+	/* unresolvable, must be outside the firewall */
+	go_direct = 0;
+    } else if (matchInsideFirewall(request->host)) {
+	go_direct = 1;
+    } else if (sslCheckFirewallIP(ia) == IP_DENY) {
+	go_direct = 1;
+    } else {
+	go_direct = 0;
+    }
+    if (go_direct) {
+	sslState->host = request->host;
+	sslState->port = request->port;
+    } else {
+	sslState->host = Config.sslProxy.host;
+	if ((sslState->port = Config.sslProxy.port) == 0) {
+	    if ((e = neighborFindByName(Config.sslProxy.host)))
+		sslState->port = e->http_port;
+	    else
+		sslState->port = CACHE_HTTP_PORT;
+	}
+    }
+    ipcache_nbgethostbyname(sslState->host,
+	sslState->server.fd,
+	sslConnect,
+	sslState);
 }
