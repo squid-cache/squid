@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.400 1998/04/02 17:11:26 rousskov Exp $
+ * $Id: store.cc,v 1.401 1998/04/07 23:59:26 rousskov Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1121,4 +1121,14 @@ contentLen(const StoreEntry * e)
     assert(e->mem_obj != NULL);
     assert(e->mem_obj->reply != NULL);
     return e->mem_obj->object_sz - e->mem_obj->reply->hdr_sz;
+}
+
+HttpReply *
+storeEntryReply(StoreEntry * e)
+{
+    if (NULL == e)
+       return NULL;
+    if (NULL == e->mem_obj)
+       return NULL;
+    return e->mem_obj->reply;
 }
