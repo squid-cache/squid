@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.398 2001/09/03 10:33:02 robertc Exp $
+ * $Id: structs.h,v 1.399 2001/09/07 18:02:48 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1373,7 +1373,7 @@ struct _iostats {
 };
 
 struct _mem_node {
-    char *data;
+    char data[SM_PAGE_SIZE];
     int len;
     mem_node *next;
 };
