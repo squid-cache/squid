@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.219 2001/05/04 13:37:41 hno Exp $
+# $Id: cf.data.pre,v 1.220 2001/06/10 22:08:52 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -267,6 +267,7 @@ DOC_START
 		     connect-timeout=nn
 		     digest-url=url
 		     allow-miss
+		     max-conn
 
 		     use 'proxy-only' to specify that objects fetched
 		     from this cache should not be saved locally.
@@ -350,6 +351,9 @@ DOC_START
 		     with this option. (for example to deny peer usage on
 		     requests from peer by denying cache_peer_access if the
 		     source is a peer)
+
+		     use 'max-conn' to limit the amount of connections Squid
+		     may open to this peer.
 
 	NOTE: non-ICP neighbors must be specified as 'parent'.
 DOC_END
