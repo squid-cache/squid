@@ -1,4 +1,18 @@
-Changes to squid-1.novm.2 (January 7, 1996):
+Changes to squid-1.1.4 (January XX, 1997):
+
+	- Created USE_GNUREGEX define to fix forcing GNU regex on 
+	  Solaris and NeXTStep.
+	- Changed SQUID_MAXFD to be a C variable.
+	- Added QUICKSTART file.
+	- Fixed ident so the identd request comes from the same IP
+	  address as the original connection was made to (Russell
+	  Street).
+	- Added '!' condition feature for the 'firewall_ip' list
+	  (Hiroyuki Inoue).
+	- Added 'udp_hit_obj_size' option (Mark Treacy).
+	- Fixed cachemgr.cgi to print 'NEVER' instead of '27Y ago'.
+
+Changes to squid-1.novm.3 (January 7, 1996):
 
 	- Merged squid-1.1.3 changes.
 
