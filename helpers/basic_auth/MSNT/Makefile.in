@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.15 2002/06/26 10:37:33 hno Exp $
+#  $Id: Makefile.in,v 1.16 2002/06/26 11:03:49 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -129,7 +129,8 @@ msnt_auth_SOURCES = md4.c rfcnb-io.c rfcnb-util.c session.c msntauth.c \
 		usersfile.c \
 		byteorder.h rfcnb-common.h rfcnb-error.h rfcnb.h \
 		rfcnb-io.h rfcnb-priv.h rfcnb-util.h smblib-common.h \
-		smblib.h smblib-priv.h std-defines.h std-includes.h valid.h
+		smblib.h smblib-priv.h std-defines.h std-includes.h valid.h \
+		md4.h  smbdes.h smbencrypt.h usersfile.h
 
 
 EXTRA_DIST = \
