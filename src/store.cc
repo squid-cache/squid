@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.567 2003/06/23 10:07:36 robertc Exp $
+ * $Id: store.cc,v 1.568 2003/06/23 16:49:13 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -912,12 +912,12 @@ storeCheckCachable(StoreEntry * e)
         store_check_cachable_hist.no.non_get++;
     } else
 #endif
-        if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
-            debug(20, 2) ("storeCheckCachable: NO: not cachable\n");
-            store_check_cachable_hist.no.not_entry_cachable++;
-        } else if (e->store_status == STORE_OK && EBIT_TEST(e->flags, ENTRY_BAD_LENGTH)) {
+        if (e->store_status == STORE_OK && EBIT_TEST(e->flags, ENTRY_BAD_LENGTH)) {
             debug(20, 2) ("storeCheckCachable: NO: wrong content-length\n");
             store_check_cachable_hist.no.wrong_content_length++;
+        } else if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
+            debug(20, 2) ("storeCheckCachable: NO: not cachable\n");
+            store_check_cachable_hist.no.not_entry_cachable++;
         } else if (EBIT_TEST(e->flags, ENTRY_NEGCACHED)) {
             debug(20, 3) ("storeCheckCachable: NO: negative cached\n");
             store_check_cachable_hist.no.negative_cached++;
