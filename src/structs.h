@@ -974,7 +974,7 @@ struct _StatHist {
 
 /*
  * if you add a field to StatCounters, 
- * you MUST sync statCountersInit, statCountersClean, and statCountersCopy
+ * you MUST sync statCountersInitSpecial, statCountersClean, and statCountersCopy
  */
 struct _StatCounters {
     struct {

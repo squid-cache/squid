@@ -209,3 +209,6 @@
 #if 0
 #define STAT_LOG_HIST_BINS 300
 #endif
+
+/* were to look for errors if config path fails */
+#define DEFAULT_SQUID_ERROR_DIR "/usr/local/squid/etc/errors"

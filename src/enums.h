@@ -45,6 +45,7 @@ typedef enum {
     ERR_ACCESS_DENIED,
     ERR_CACHE_ACCESS_DENIED,
     ERR_CACHE_MGR_ACCESS_DENIED,
+    ERR_SQUID_SIGNATURE, /* not really an error */
     ERR_MAX
 } err_type;
 

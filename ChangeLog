@@ -1,3 +1,11 @@
+	- Added Squid "signature" to all ERR_ pages. The signature is hard-
+	  -coded and is added on-the-fly. The signature may use %-escapes.
+	  Added interface to add more hard-coded responses if needed (see
+	  errorpage.c::error_hard_text).
+	- Both default and configured directories are searched for ERR_ pages
+	  now. Configured directory is, of course, searched first. This allows
+	  you to customize a subset of ERR_ pages (in a separate directory)
+	  without danger of getting other copies out of sync.
 	- Security controls for the SNMP agent added. Besides communities
           (like password) and views (part of tree accessible), the snmp_acl
 	  config option can be used to do acl based access checks per
