@@ -1,0 +1,87 @@
+.TH pam_auth 8 "7 January 2002" "Squid PAM Auth"
+.
+.SH NAME
+pam_auth - Squid PAM authentication helper
+.
+.SH SYNOPSIS
+squid_pam_auth [-n "service name"] [-t TTL] [-1]
+.
+.SH COPYRIGHT
+
+.SH DESCRIPTION
+This helper allows Squid to connect to a mostly any available PAM
+database to validate the user name and password of Basic HTTP
+authentication.
+.
+.TP
+.BI "-s " "service-name"
+Specifies the PAM service name Squid uses, defaults to "squid"
+.
+.TP
+.BI "-t " TTL
+Unless the -1 option is used, this specified for how long
+the connection to the PAM database should be kept open and
+reused for new logins. Defaults to 60 seconds.
+.
+.TP
+.BI "-1"
+Specifies "One shot" mode, where a new PAM connection will
+be opened for each new user. This is how PAM is normally
+used and may be required by some backend databases.
+The default is to reuse the PAM connection to maximize
+performance. (see -t above)
+.
+.SH CONFIGURATION
+.
+The program needs a PAM service to be configured in 
+.B /etc/pam.conf
+or
+.B /etc/pam.d/<servicename>
+.P
+The default service name is "squid", and the program makes use
+of the
+.BR "" ' auth "' and '" account '
+management groups to verify the password and the accounts validity.
+.P
+For details on how to configure PAM services, see the PAM
+documentation for your system. This manual does not cover PAM
+configuration details.
+.
+.SH NOTES
+.
+When used for authenticating to local UNIX shadow password databases
+the program must be running as root or else it won't have sufficient
+permissions to access the user password database. Such use of this
+program is not recommended, but if you absolutely need to then make
+the program setuid root
+.RS
+.P
+.B chown root pam_auth
+.br
+.B chmod u+s pam_auth
+.RE
+.P
+Please note that in such configurations it is also strongly recommended
+that the program is moved into a directory where normal users cannot
+access it, as this mode of operation will allow any local user to
+brute-force other users passwords. Also note the program has not been
+fully audited and the author cannot be held responsible for any security
+issues due to such installations.
+.
+.SH AUTHOR
+Squid pam_auth and this manual is written by
+.I Henrik Nordstrom <hno@squid-cache.org>
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users <squid-users@squid-cache.org>
+mailing list.
+.
+.SH REPORTING BUGS
+Report bugs or bug-fixes to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+or ideas for new improvements to 
+.I Squid Developers <squid-dev@squid-cache.org>
+.
+.SH "SEE ALSO"
+.BR pam (8), " PAM Systems Administrator Guide"
