@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.18 2003/03/06 11:51:55 robertc Exp $
+ * $Id: splay.h,v 1.19 2003/06/09 03:39:08 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -98,17 +98,17 @@ SplayNode<V>::destroy(SPLAYFREE * free_func)
 
 template<class V>
 SplayNode<V> *
-SplayNode<V>::remove(Value const data, SPLAYCMP * compare)
+SplayNode<V>::remove(Value const dataToRemove, SPLAYCMP * compare)
 {
     if (this == NULL)
 	return NULL;
-    SplayNode<V> *result = splay(data, compare);
+    SplayNode<V> *result = splay(dataToRemove, compare);
     if (splayLastResult == 0) {	/* found it */
 	SplayNode<V> *newTop;
 	if (result->left == NULL) {
 	    newTop = result->right;
 	} else {
-	    newTop = result->left->splay(data, compare);
+	    newTop = result->left->splay(dataToRemove, compare);
 	    /* temporary */
 	    newTop->right = result->right;
 	    result->right = NULL;
@@ -121,18 +121,18 @@ SplayNode<V>::remove(Value const data, SPLAYCMP * compare)
 
 template<class V>
 SplayNode<V> *
-SplayNode<V>::insert(Value data, SPLAYCMP * compare)
+SplayNode<V>::insert(Value dataToInsert, SPLAYCMP * compare)
 {
     /* create node to insert */
     SplayNode<V> *newNode = new SplayNode<V>;
-    newNode->data = data;
+    newNode->data = dataToInsert;
     if (this == NULL) {
 	splayLastResult = -1;
 	newNode->left = newNode->right = NULL;
 	return newNode;
     }
     
-    SplayNode<V> *newTop = splay(data, compare);
+    SplayNode<V> *newTop = splay(dataToInsert, compare);
     if (splayLastResult < 0) {
 	newNode->left = newTop->left;
 	newNode->right = newTop;
@@ -152,7 +152,7 @@ SplayNode<V>::insert(Value data, SPLAYCMP * compare)
 
 template<class V>
 SplayNode<V> *
-SplayNode<V>::splay(Value const &data, SPLAYCMP * compare) const
+SplayNode<V>::splay(Value const &dataToFind, SPLAYCMP * compare) const
 {
     if (this == NULL) {
 	/* can't have compared successfully :} */
@@ -168,11 +168,11 @@ SplayNode<V>::splay(Value const &data, SPLAYCMP * compare) const
 
     SplayNode<V> *top = const_cast<SplayNode<V> *>(this);
     for (;;) {
-	splayLastResult = compare(data, top->data);
+	splayLastResult = compare(dataToFind, top->data);
 	if (splayLastResult < 0) {
 	    if (top->left == NULL)
 		break;
-	    if ((splayLastResult = compare(data, top->left->data)) < 0) {
+	    if ((splayLastResult = compare(dataToFind, top->left->data)) < 0) {
 		y = top->left;	/* rotate right */
 		top->left = y->right;
 		y->right = top;
@@ -186,7 +186,7 @@ SplayNode<V>::splay(Value const &data, SPLAYCMP * compare) const
 	} else if (splayLastResult > 0) {
 	    if (top->right == NULL)
 		break;
-	    if ((splayLastResult = compare(data, top->right->data)) > 0) {
+	    if ((splayLastResult = compare(dataToFind, top->right->data)) > 0) {
 		y = top->right;	/* rotate left */
 		top->right = y->left;
 		y->left = top;
