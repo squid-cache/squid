@@ -85,7 +85,7 @@ storeVerifyOrCreateDir(const char *path)
     struct stat sb;
     if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode))
 	return 0;
-    safeunlink(path, 0);
+    safeunlink(path, 1);
     if (mkdir(path, 0777) < 0) {
 	if (errno != EEXIST) {
 	    sprintf(tmp_error_buf, "Failed to create swap directory %s: %s",
@@ -95,7 +95,7 @@ storeVerifyOrCreateDir(const char *path)
 	}
     }
     debug(20, 1, "Created directory %s\n", path);
-    if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode) != 0) {
+    if (stat(path, &sb) < 0 || !S_ISDIR(sb.st_mode)) {
 	sprintf(tmp_error_buf,
 	    "Failed to create directory %s: %s", path, xstrerror());
 	fatal(tmp_error_buf);
