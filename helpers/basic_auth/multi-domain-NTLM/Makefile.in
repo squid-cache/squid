@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.10 2002/05/20 02:05:34 hno Exp $
+#  $Id: Makefile.in,v 1.11 2002/06/26 10:37:38 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -44,7 +44,7 @@ oldincludedir = /usr/include
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ../../../../..
+top_builddir = ../../..
 
 ACLOCAL = @ACLOCAL@
 AUTOCONF = @AUTOCONF@
@@ -129,7 +129,7 @@ EXTRA_DIST = \
 	smb_auth.pl \
 	README.txt
 
-subdir = src/auth/basic/helpers/multi-domain-NTLM
+subdir = helpers/basic_auth/multi-domain-NTLM
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
@@ -142,7 +142,7 @@ all: all-am
 .SUFFIXES:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  src/auth/basic/helpers/multi-domain-NTLM/Makefile
+	  $(AUTOMAKE) --foreign  helpers/basic_auth/multi-domain-NTLM/Makefile
 Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && \
 	  CONFIG_HEADERS= CONFIG_LINKS= \
@@ -175,7 +175,7 @@ TAGS:
 
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 
-top_distdir = ../../../../..
+top_distdir = ../../..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)

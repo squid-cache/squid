@@ -113,7 +113,7 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
-SUBDIRS = helpers
+SUBDIRS = 
 subdir = src/auth/basic
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h

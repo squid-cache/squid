@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.17 2002/06/23 14:53:34 hno Exp $
+# $Id: Makefile.in,v 1.18 2002/06/26 10:37:30 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -118,8 +118,8 @@ install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
-DIST_SUBDIRS = lib snmplib scripts src icons errors contrib doc
-SUBDIRS = lib @makesnmplib@ scripts src icons errors doc
+DIST_SUBDIRS = lib snmplib scripts src icons errors contrib doc helpers
+SUBDIRS = lib @makesnmplib@ scripts src icons errors doc helpers
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
 

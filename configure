@@ -179,19 +179,19 @@ ac_help="$ac_help
                           This option selects which basic scheme proxy_auth
                           helpers to build and install as part of the normal 
                           build process. For a list of available
-                          helpers see the src/auth/basic/helpers directory."
+                          helpers see the helpers/basic_auth directory."
 ac_help="$ac_help
   --enable-ntlm-auth-helpers=\"list of helpers\"
                           This option selects which proxy_auth ntlm helpers
                           to build and install as part of the normal build 
-                          process. For a list of available modules see
-                          the src/auth/ntlm/helpers directory."
+                          process. For a list of available helpers see
+                          the helpers/ntlm_auth directory."
 ac_help="$ac_help
   --enable-digest-auth-helpers=\"list of helpers\"
                           This option selects which digest scheme authentication
                           helpers to build and install as part of the normal build
-                          process. For a list of available modules see the
-                          src/auth/digest/helpers directory."
+                          process. For a list of available helpers see the
+                          helpers/digest_auth directory."
 ac_help="$ac_help
   --enable-ntlm-fail-open Enable NTLM fail open, where a helper that fails one of the
                           Authentication steps can allow squid to still authenticate
@@ -1027,7 +1027,7 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
   
 
-# From configure.in Revision: 1.273 
+# From configure.in Revision
 echo $ac_n "checking whether to enable maintainer-specific portions of Makefiles""... $ac_c" 1>&6
 echo "configure:1033: checking whether to enable maintainer-specific portions of Makefiles" >&5
     # Check whether --enable-maintainer-mode or --disable-maintainer-mode was given.
@@ -3031,7 +3031,7 @@ if test "${enable_auth_modules+set}" = set; then
   sleep 5
   case "$enableval" in
   yes) 
-    for helper in $srcdir/src/auth/basic/helpers/*; do
+    for helper in $srcdir/helpers/basic_auth/*; do
 	if test -f $helper/Makefile.in; then
 	    BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS `basename $helper`"
 	fi
@@ -3051,7 +3051,7 @@ if test "${enable_basic_auth_helpers+set}" = set; then
    case "$enableval" in
   yes) 
     BASIC_AUTH_HELPERS=""
-    for helper in $srcdir/src/auth/basic/helpers/*; do
+    for helper in $srcdir/helpers/basic_auth/*; do
 	if test -f $helper/Makefile.in; then
 	    BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS `basename $helper`"
 	fi
@@ -3076,7 +3076,7 @@ if test "${enable_ntlm_auth_helpers+set}" = set; then
   enableval="$enable_ntlm_auth_helpers"
    case "$enableval" in
   yes) 
-    for helper in $srcdir/src/auth/ntlm/helpers/*; do
+    for helper in $srcdir/helpers/ntlm_auth/*; do
 	if test -f $helper/Makefile.in; then
 	    NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS `basename $helper`"
 	fi
@@ -3101,7 +3101,7 @@ if test "${enable_digest_auth_helpers+set}" = set; then
   enableval="$enable_digest_auth_helpers"
    case "$enableval" in
   yes)
-    for helper in $srcdir/src/auth/digest/helpers/*; do
+    for helper in $srcdir/helpers/digest_auth/*; do
         if test -f $helper/Makefile.in; then
             DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS `basename $helper`"
         fi
@@ -8743,27 +8743,8 @@ trap 'rm -fr `echo "\
 	src/repl/Makefile \
 	src/auth/Makefile \
 	src/auth/basic/Makefile \
-	src/auth/basic/helpers/Makefile \
-	src/auth/basic/helpers/LDAP/Makefile \
-	src/auth/basic/helpers/MSNT/Makefile \
-	src/auth/basic/helpers/NCSA/Makefile \
-	src/auth/basic/helpers/PAM/Makefile \
-	src/auth/basic/helpers/SMB/Makefile \
-	src/auth/basic/helpers/YP/Makefile \
-	src/auth/basic/helpers/getpwnam/Makefile \
-	src/auth/basic/helpers/multi-domain-NTLM/Makefile \
-	src/auth/basic/helpers/SASL/Makefile \
-	src/auth/basic/helpers/winbind/Makefile \
 	src/auth/digest/Makefile \
-	src/auth/digest/helpers/Makefile \
-	src/auth/digest/helpers/password/Makefile \
 	src/auth/ntlm/Makefile \
-	src/auth/ntlm/helpers/Makefile \
-	src/auth/ntlm/helpers/fakeauth/Makefile \
-	src/auth/ntlm/helpers/no_check/Makefile \
-	src/auth/ntlm/helpers/SMB/Makefile \
-	src/auth/ntlm/helpers/SMB/smbval/Makefile \
-	src/auth/ntlm/helpers/winbind/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \
@@ -8776,6 +8757,26 @@ trap 'rm -fr `echo "\
 	src/repl/heap/Makefile \
 	src/repl/lru/Makefile \
 	doc/Makefile \
+	helpers/Makefile \
+	helpers/basic_auth/Makefile \
+	helpers/basic_auth/LDAP/Makefile \
+	helpers/basic_auth/MSNT/Makefile \
+	helpers/basic_auth/NCSA/Makefile \
+	helpers/basic_auth/PAM/Makefile \
+	helpers/basic_auth/SMB/Makefile \
+	helpers/basic_auth/YP/Makefile \
+	helpers/basic_auth/getpwnam/Makefile \
+	helpers/basic_auth/multi-domain-NTLM/Makefile \
+	helpers/basic_auth/SASL/Makefile \
+	helpers/basic_auth/winbind/Makefile \
+	helpers/digest_auth/Makefile \
+	helpers/digest_auth/password/Makefile \
+	helpers/ntlm_auth/Makefile \
+	helpers/ntlm_auth/fakeauth/Makefile \
+	helpers/ntlm_auth/no_check/Makefile \
+	helpers/ntlm_auth/SMB/Makefile \
+	helpers/ntlm_auth/SMB/smbval/Makefile \
+	helpers/ntlm_auth/winbind/Makefile \
  include/autoconf.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -8957,27 +8958,8 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	src/repl/Makefile \
 	src/auth/Makefile \
 	src/auth/basic/Makefile \
-	src/auth/basic/helpers/Makefile \
-	src/auth/basic/helpers/LDAP/Makefile \
-	src/auth/basic/helpers/MSNT/Makefile \
-	src/auth/basic/helpers/NCSA/Makefile \
-	src/auth/basic/helpers/PAM/Makefile \
-	src/auth/basic/helpers/SMB/Makefile \
-	src/auth/basic/helpers/YP/Makefile \
-	src/auth/basic/helpers/getpwnam/Makefile \
-	src/auth/basic/helpers/multi-domain-NTLM/Makefile \
-	src/auth/basic/helpers/SASL/Makefile \
-	src/auth/basic/helpers/winbind/Makefile \
 	src/auth/digest/Makefile \
-	src/auth/digest/helpers/Makefile \
-	src/auth/digest/helpers/password/Makefile \
 	src/auth/ntlm/Makefile \
-	src/auth/ntlm/helpers/Makefile \
-	src/auth/ntlm/helpers/fakeauth/Makefile \
-	src/auth/ntlm/helpers/no_check/Makefile \
-	src/auth/ntlm/helpers/SMB/Makefile \
-	src/auth/ntlm/helpers/SMB/smbval/Makefile \
-	src/auth/ntlm/helpers/winbind/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \
@@ -8990,6 +8972,26 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	src/repl/heap/Makefile \
 	src/repl/lru/Makefile \
 	doc/Makefile \
+	helpers/Makefile \
+	helpers/basic_auth/Makefile \
+	helpers/basic_auth/LDAP/Makefile \
+	helpers/basic_auth/MSNT/Makefile \
+	helpers/basic_auth/NCSA/Makefile \
+	helpers/basic_auth/PAM/Makefile \
+	helpers/basic_auth/SMB/Makefile \
+	helpers/basic_auth/YP/Makefile \
+	helpers/basic_auth/getpwnam/Makefile \
+	helpers/basic_auth/multi-domain-NTLM/Makefile \
+	helpers/basic_auth/SASL/Makefile \
+	helpers/basic_auth/winbind/Makefile \
+	helpers/digest_auth/Makefile \
+	helpers/digest_auth/password/Makefile \
+	helpers/ntlm_auth/Makefile \
+	helpers/ntlm_auth/fakeauth/Makefile \
+	helpers/ntlm_auth/no_check/Makefile \
+	helpers/ntlm_auth/SMB/Makefile \
+	helpers/ntlm_auth/SMB/smbval/Makefile \
+	helpers/ntlm_auth/winbind/Makefile \
 "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
