@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.304 1998/05/13 21:30:14 wessels Exp $
+ * $Id: client_side.cc,v 1.305 1998/05/13 23:09:47 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1978,7 +1978,7 @@ clientReadRequest(int fd, void *data)
     conn->in.buf[conn->in.offset] = '\0';	/* Terminate the string */
     while (conn->in.offset > 0) {
 	int nrequests;
-	int req_line_sz;
+	size_t req_line_sz;
 	/* Limit the number of concurrent requests to 2 */
 	for (H = &conn->chr, nrequests = 0; *H; H = &(*H)->next, nrequests++);
 	if (nrequests >= 2) {
