@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.124 1998/11/12 06:27:57 wessels Exp $
+# $Id: cf.data.pre,v 1.125 1998/11/12 06:33:31 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2692,5 +2692,20 @@ DOC_START
 	makes Squid work with broken HTTP servers which expect the
 	additional CRLF pair from broken web clients.
 persistent_client_posts on
+DOC_END
+
+NAME: prefer_direct
+TYPE: onoff
+LOC: Config.onoff.prefer_direct
+DEFAULT: on
+DOC_START
+	By default, if the ICP, HTCP, Cache Digest, etc. techniques
+	do not yield a parent cache, Squid gives higher preference
+	to forwarding the request direct to origin servers, rather
+	than selecting a parent cache anyway.
+
+	If you want Squid to give higher precedence to a parent
+	cache, instead of going direct, then turn this option off.
+prefer_direct on
 DOC_END
 EOF
