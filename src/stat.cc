@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.92 1996/10/24 23:31:17 wessels Exp $
+ * $Id: stat.cc,v 1.93 1996/10/25 02:15:20 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -737,9 +737,9 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
     storeAppendPrintf(sentry, open_bracket);
     storeAppendPrintf(sentry, "{Squid Object Cache: Version %s}\n",
 	version_string);
-    tod = mkrfc850(squid_starttime);
+    tod = mkrfc1123(squid_starttime);
     storeAppendPrintf(sentry, "{Start Time:\t%s}\n", tod);
-    tod = mkrfc850(squid_curtime);
+    tod = mkrfc1123(squid_curtime);
     storeAppendPrintf(sentry, "{Current Time:\t%s}\n", tod);
     storeAppendPrintf(sentry, "{Connection information for %s:}\n",
 	appname);

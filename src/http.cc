@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.86 1996/10/24 20:58:08 wessels Exp $
+ * $Id: http.cc,v 1.87 1996/10/25 02:15:18 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -277,9 +277,9 @@ httpParseHeaders(char *buf, struct _http_reply *reply)
 #if LOG_TIMESTAMPS
     fprintf(timestamp_log, "T %9d D %9d L %9d E %9d\n",
 	squid_curtime,
-	parse_rfc850(reply->date),
-	parse_rfc850(reply->last_modified),
-	parse_rfc850(reply->expires));
+	parse_rfc1123(reply->date),
+	parse_rfc1123(reply->last_modified),
+	parse_rfc1123(reply->expires));
 #endif /* LOG_TIMESTAMPS */
     safe_free(headers);
 }
@@ -640,9 +640,9 @@ httpSendRequest(int fd, void *data)
     /* Add IMS header */
     if (entry->lastmod && req->method == METHOD_GET) {
 	debug(11, 3, "httpSendRequest: Adding IMS: %s\r\n",
-	    mkrfc850(entry->lastmod));
+	    mkrfc1123(entry->lastmod));
 	ybuf = get_free_4k_page();
-	sprintf(ybuf, "If-Modified-Since: %s\r\n", mkrfc850(entry->lastmod));
+	sprintf(ybuf, "If-Modified-Since: %s\r\n", mkrfc1123(entry->lastmod));
 	strcat(buf, ybuf);
 	len += strlen(ybuf);
 	put_free_4k_page(ybuf);

@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.18 1996/10/22 03:39:00 wessels Exp $
+#  $Id: Makefile.in,v 1.19 1996/10/25 02:15:15 wessels Exp $
 #
 prefix		= @prefix@
 srcdir		= @srcdir@
@@ -23,7 +23,7 @@ RM		= @RM@
 LIBOBJS		= @LIBOBJS@
 
 INCLUDE		= -I../include -I$(srcdir)/../include
-UTILOBJS	= rfc850.o \
+UTILOBJS	= rfc1123.o \
 		  rfc1738.o \
 		  util.o \
 		  getfullhostname.o \
