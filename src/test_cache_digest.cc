@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.11 1998/04/01 07:14:06 rousskov Exp $
+ * $Id: test_cache_digest.cc,v 1.12 1998/04/01 07:25:47 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -542,12 +542,11 @@ main(int argc, char *argv[])
 	FileIterator *fi = fis[i];
 	while (fi->inner_time > 0) {
 	    ready_time = fi->inner_time;
-	    if (((storeSwapLogData*)fi->entry)->op != SWAP_LOG_ADD) {
+	    if (((storeSwapLogData*)fi->entry)->op == SWAP_LOG_DEL)
 		break;
-	    } else {
-		cacheStore(them, fi->entry, 0);
-		fileIteratorAdvance(fi);
-	    }
+	    assert(((storeSwapLogData*)fi->entry)->op == SWAP_LOG_ADD);
+	    cacheStore(them, fi->entry, 0);
+	    fileIteratorAdvance(fi);
 	}
     }
     /* digest peer cache content */
