@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.90 1996/12/03 20:26:52 wessels Exp $
+ * $Id: ftp.cc,v 1.91 1996/12/03 23:30:47 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -202,7 +202,7 @@ ftpProcessReplyHeader(FtpStateData * data, const char *buf, int size)
     StoreEntry *entry = data->entry;
     int room;
     int hdr_len;
-    struct _http_reply *reply = NULL;
+    struct _http_reply *reply = entry->mem_obj->reply;
 
     debug(11, 3, "ftpProcessReplyHeader: key '%s'\n", entry->key);
 
@@ -221,14 +221,10 @@ ftpProcessReplyHeader(FtpStateData * data, const char *buf, int size)
 	    return;
 	}
 	/* Find the end of the headers */
-	t = mime_headers_end(data->reply_hdr);
-	if (!t)
+	if ((t = mime_headers_end(data->reply_hdr)) == NULL)
 	    return;		/* headers not complete */
 	/* Cut after end of headers */
 	*t = '\0';
-	reply = entry->mem_obj->reply;
-	reply->hdr_sz = t - data->reply_hdr;
-	debug(11, 7, "ftpProcessReplyHeader: hdr_sz = %d\n", reply->hdr_sz);
 	data->reply_hdr_state++;
     }
     if (data->reply_hdr_state == 1) {
