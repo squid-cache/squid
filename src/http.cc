@@ -1,4 +1,8 @@
-/* $Id: http.cc,v 1.14 1996/03/29 01:07:36 wessels Exp $ */
+/* $Id: http.cc,v 1.15 1996/03/29 21:19:21 wessels Exp $ */
+
+/*
+ * DEBUG: Section 11          http: HTTP
+ */
 
 #include "squid.h"
 
@@ -107,7 +111,7 @@ void httpReadReplyTimeout(fd, data)
     StoreEntry *entry = NULL;
 
     entry = data->entry;
-    debug(0, 4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
+    debug(11, 4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
     cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
@@ -127,7 +131,7 @@ void httpLifetimeExpire(fd, data)
     StoreEntry *entry = NULL;
 
     entry = data->entry;
-    debug(0, 4, "httpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
+    debug(11, 4, "httpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
 
     cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     if (data->icp_page_ptr) {
@@ -166,7 +170,7 @@ void httpProcessReplyHeader(data, buf)
     }
     if (data->reply_hdr_state == 1) {
 	data->reply_hdr_state++;
-	debug(0, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
+	debug(11, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
 	    data->reply_hdr);
 	t = strtok(data->reply_hdr, "\r\n");
 	while (t) {
@@ -189,9 +193,9 @@ void httpProcessReplyHeader(data, buf)
 	    t = strtok(NULL, "\r\n");
 	}
 	if (data->http_code)
-	    debug(0, 0, "httpReadReply: HTTP CODE: %d\n", data->http_code);
+	    debug(11, 0, "httpReadReply: HTTP CODE: %d\n", data->http_code);
 	if (data->content_length)
-	    debug(0, 0, "httpReadReply: Content Length: %d\n", data->content_length);
+	    debug(11, 0, "httpReadReply: Content Length: %d\n", data->content_length);
 	/* If we know this is cachable we can unchange the key */
 	switch (data->http_code) {
 	case 200:		/* OK */
@@ -232,8 +236,8 @@ void httpReadReply(fd, data)
 	    clen = entry->mem_obj->e_current_len;
 	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > HTTP_DELETE_GAP) {
-		debug(0, 3, "httpReadReply: Read deferred for Object: %s\n", entry->key);
-		debug(0, 3, "                Current Gap: %d bytes\n", clen - off);
+		debug(11, 3, "httpReadReply: Read deferred for Object: %s\n", entry->key);
+		debug(11, 3, "                Current Gap: %d bytes\n", clen - off);
 		/* reschedule, so it will be automatically reactivated
 		 * when Gap is big enough. */
 		comm_set_select_handler(fd,
@@ -266,11 +270,11 @@ void httpReadReply(fd, data)
     }
     errno = 0;
     len = read(fd, buf, READBUFSIZ);
-    debug(0, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
+    debug(11, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
 
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	/* XXX we we should log when len==0 and current_len==0 */
-	debug(0, 2, "httpReadReply: FD %d: read failure: %s.\n",
+	debug(11, 2, "httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
 	if (errno == ECONNRESET) {
 	    /* Connection reset by peer */
@@ -337,7 +341,7 @@ void httpSendComplete(fd, buf, size, errflag, data)
     StoreEntry *entry = NULL;
 
     entry = data->entry;
-    debug(0, 5, "httpSendComplete: FD %d: size %d: errflag %d.\n",
+    debug(11, 5, "httpSendComplete: FD %d: size %d: errflag %d.\n",
 	fd, size, errflag);
 
     if (buf) {
@@ -353,12 +357,16 @@ void httpSendComplete(fd, buf, size, errflag, data)
 	return;
     } else {
 	/* Schedule read reply. */
-	comm_set_select_handler(fd, COMM_SELECT_READ,
-	    (PF) httpReadReply, (caddr_t) data);
-	comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-	    (PF) httpReadReplyTimeout, (caddr_t) data, getReadTimeout());
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) httpReadReply,
+	    (caddr_t) data);
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) httpReadReplyTimeout,
+	    (caddr_t) data,
+	    getReadTimeout());
 	comm_set_fd_lifetime(fd, -1);	/* disable lifetime DPW */
-
     }
 }
 
@@ -377,7 +385,7 @@ void httpSendRequest(fd, data)
     int len = 0;
     int buflen;
 
-    debug(0, 5, "httpSendRequest: FD %d: data %p.\n", fd, data);
+    debug(11, 5, "httpSendRequest: FD %d: data %p.\n", fd, data);
     buflen = strlen(data->type) + strlen(data->request);
     if (data->req_hdr)
 	buflen += strlen(data->req_hdr);
@@ -394,7 +402,7 @@ void httpSendRequest(fd, data)
     buf = (char *) get_free_8k_page();
     data->icp_page_ptr = buf;
     if (buflen > DISK_PAGE_SIZE) {
-	debug(0, 0, "Mime header length %d is breaking ICP code\n", buflen);
+	debug(11, 0, "Mime header length %d is breaking ICP code\n", buflen);
     }
     memset(buf, '\0', buflen);
 
@@ -432,7 +440,7 @@ void httpSendRequest(fd, data)
 	len += strlen(post_buf);
 	xfree(post_buf);
     }
-    debug(0, 6, "httpSendRequest: FD %d: buf '%s'\n", fd, buf);
+    debug(11, 6, "httpSendRequest: FD %d: buf '%s'\n", fd, buf);
     data->icp_rwd_ptr = icpWrite(fd, buf, len, 30, httpSendComplete, (caddr_t) data);
 }
 
@@ -473,8 +481,8 @@ int proxyhttpStart(e, url, entry)
     int status;
     HttpData *data = NULL;
 
-    debug(0, 3, "proxyhttpStart: <URL:%s>\n", url);
-    debug(0, 10, "proxyhttpStart: HTTP request header:\n%s\n",
+    debug(11, 3, "proxyhttpStart: <URL:%s>\n", url);
+    debug(11, 10, "proxyhttpStart: HTTP request header:\n%s\n",
 	entry->mem_obj->mime_hdr);
 
     data = (HttpData *) xcalloc(1, sizeof(HttpData));
@@ -492,7 +500,7 @@ int proxyhttpStart(e, url, entry)
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
-	debug(0, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
+	debug(11, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
 	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
@@ -501,7 +509,7 @@ int proxyhttpStart(e, url, entry)
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->host)) {
-	debug(0, 4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
+	debug(11, 4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	httpCloseAndFree(sock, data);
 	return COMM_ERROR;
@@ -515,7 +523,7 @@ int proxyhttpStart(e, url, entry)
 	    e->neighbor_up = 0;
 	    return COMM_ERROR;
 	} else {
-	    debug(0, 5, "proxyhttpStart: FD %d: EINPROGRESS.\n", sock);
+	    debug(11, 5, "proxyhttpStart: FD %d: EINPROGRESS.\n", sock);
 	    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
 		(PF) httpLifetimeExpire, (caddr_t) data);
 	    comm_set_select_handler(sock, COMM_SELECT_WRITE,
@@ -544,8 +552,8 @@ int httpStart(unusedfd, url, type, req_hdr, entry)
     int sock, status;
     HttpData *data = NULL;
 
-    debug(0, 3, "httpStart: %s <URL:%s>\n", type, url);
-    debug(0, 10, "httpStart: req_hdr '%s'\n", req_hdr);
+    debug(11, 3, "httpStart: %s <URL:%s>\n", type, url);
+    debug(11, 10, "httpStart: req_hdr '%s'\n", req_hdr);
 
     data = (HttpData *) xcalloc(1, sizeof(HttpData));
     data->entry = entry;
@@ -561,7 +569,7 @@ int httpStart(unusedfd, url, type, req_hdr, entry)
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
-	debug(0, 4, "httpStart: Failed because we're out of sockets.\n");
+	debug(11, 4, "httpStart: Failed because we're out of sockets.\n");
 	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
@@ -570,7 +578,7 @@ int httpStart(unusedfd, url, type, req_hdr, entry)
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->host)) {
-	debug(0, 4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
+	debug(11, 4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	httpCloseAndFree(sock, data);
 	return COMM_ERROR;
@@ -582,7 +590,7 @@ int httpStart(unusedfd, url, type, req_hdr, entry)
 	    httpCloseAndFree(sock, data);
 	    return COMM_ERROR;
 	} else {
-	    debug(0, 5, "httpStart: FD %d: EINPROGRESS.\n", sock);
+	    debug(11, 5, "httpStart: FD %d: EINPROGRESS.\n", sock);
 	    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
 		(PF) httpLifetimeExpire, (caddr_t) data);
 	    comm_set_select_handler(sock, COMM_SELECT_WRITE,

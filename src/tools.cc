@@ -1,5 +1,9 @@
 
-/* $Id: tools.cc,v 1.17 1996/03/28 06:10:04 wessels Exp $ */
+/* $Id: tools.cc,v 1.18 1996/03/29 21:19:27 wessels Exp $ */
+
+/*
+ * DEBUG: Section 21          tools
+ */
 
 #include "squid.h"
 
@@ -24,7 +28,7 @@ static char *dead_msg()
 
 void mail_warranty()
 {
-    FILE *fp;
+    FILE *fp = NULL;
     static char filename[256];
     static char command[256];
 
@@ -131,7 +135,7 @@ void death(sig)
 void rotate_logs(sig)
      int sig;
 {
-    debug(0, 1, "rotate_logs: SIGHUP received.\n");
+    debug(21, 1, "rotate_logs: SIGHUP received.\n");
 
     storeWriteCleanLog();
     neighbors_rotate_log();
@@ -145,10 +149,10 @@ void rotate_logs(sig)
 void shut_down(sig)
      int sig;
 {
-    debug(0, 1, "Shutting down...\n");
+    debug(21, 1, "Shutting down...\n");
     storeWriteCleanLog();
     PrintRusage(NULL, stderr);
-    debug(0, 0, "Harvest Cache (Version %s): Exiting due to signal %d.\n",
+    debug(21, 0, "Harvest Cache (Version %s): Exiting due to signal %d.\n",
 	SQUID_VERSION, sig);
     exit(1);
 }
@@ -166,8 +170,8 @@ void fatal_common(message)
     fflush(stderr);
     PrintRusage(NULL, stderr);
     if (debug_log != stderr) {
-	debug(0, 0, "FATAL: %s\n", message);
-	debug(0, 0, "Harvest Cache (Version %s): Terminated abnormally.\n",
+	debug(21, 0, "FATAL: %s\n", message);
+	debug(21, 0, "Harvest Cache (Version %s): Terminated abnormally.\n",
 	    SQUID_VERSION);
     }
 }
@@ -212,7 +216,7 @@ void sig_child(sig)
     int pid;
 
     if ((pid = waitpid(-1, &status, WNOHANG)) > 0)
-	debug(0, 3, "sig_child: Ate pid %d\n", pid);
+	debug(21, 3, "sig_child: Ate pid %d\n", pid);
 
 #if defined(_SQUID_SYSV_SIGNALS_)
     signal(sig, sig_child);
@@ -240,7 +244,7 @@ int getMaxFD()
 #else
 	i = 64;			/* 64 is a safe default */
 #endif
-	debug(0, 10, "getMaxFD set MaxFD at %d\n", i);
+	debug(21, 10, "getMaxFD set MaxFD at %d\n", i);
     }
     return (i);
 }
@@ -250,12 +254,16 @@ char *getMyHostname()
     static char host[SQUIDHOSTNAMELEN + 1];
     static int present = 0;
     struct hostent *h = NULL;
+    char *t = NULL;
+
+    if ((t = getVisibleHostname()))
+	return t;
 
     /* Get the host name and store it in host to return */
     if (!present) {
 	host[0] = '\0';
 	if (gethostname(host, SQUIDHOSTNAMELEN) == -1) {
-	    debug(0, 1, "comm_hostname: gethostname failed: %s\n",
+	    debug(21, 1, "getMyHostname: gethostname failed: %s\n",
 		xstrerror());
 	    return NULL;
 	} else {
@@ -277,7 +285,7 @@ int safeunlink(s, quiet)
     int err;
     if ((err = unlink(s)) < 0)
 	if (!quiet)
-	    debug(0, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
+	    debug(21, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
     return (err);
 }
 
@@ -315,7 +323,7 @@ void check_suid()
 	return;
     /* change current directory to swap space so we can get core */
     if (chdir(swappath(0))) {
-	debug(0, 1, "Chdir Failed: Cached cannot write core file when it crash: %s\n",
+	debug(21, 1, "Chdir Failed: Cached cannot write core file when it crash: %s\n",
 	    xstrerror());
     }
     if (getEffectiveGroup() && (grp = getgrnam(getEffectiveGroup()))) {
@@ -334,8 +342,8 @@ void writePidFile()
     if ((f = getPidFilename()) == NULL)
 	return;
     if ((pid_fp = fopen(f, "w")) == NULL) {
-	debug(0, 0, "WARNING: Could not write pid file\n");
-	debug(0, 0, "         %s: %s\n", f, xstrerror());
+	debug(21, 0, "WARNING: Could not write pid file\n");
+	debug(21, 0, "         %s: %s\n", f, xstrerror());
 	return;
     }
     fprintf(pid_fp, "%d\n", (int) getpid());
@@ -368,8 +376,8 @@ void setMaxFD()
 	}
     }
 #endif
-    debug(0, 1, "setMaxFD: Using %d file descriptors\n", rl.rlim_max);
+    debug(21, 1, "setMaxFD: Using %d file descriptors\n", rl.rlim_max);
 #else /* HAVE_SETRLIMIT */
-    debug(0, 1, "setMaxFD: Cannot increase: setrlimit() not supported on this system");
+    debug(21, 1, "setMaxFD: Cannot increase: setrlimit() not supported on this system");
 #endif
 }

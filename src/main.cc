@@ -1,4 +1,6 @@
-/* $Id: main.cc,v 1.15 1996/03/28 03:02:10 wessels Exp $ */
+/* $Id: main.cc,v 1.16 1996/03/29 21:19:22 wessels Exp $ */
+
+/* DEBUG: Section 1             main: startup and main loop */
 
 #include "squid.h"
 
@@ -169,7 +171,7 @@ int main(argc, argv)
     fdstat_open(fileno(debug_log), LOG);
     fd_note(fileno(debug_log), getCacheLogFile());
 
-    debug(0, 0, "Starting Harvest Cache (version %s)...\n", SQUID_VERSION);
+    debug(1, 0, "Starting Harvest Cache (version %s)...\n", SQUID_VERSION);
 
     /* init ipcache */
     ipcache_init();
@@ -198,7 +200,7 @@ int main(argc, argv)
 	COMM_SELECT_READ,
 	asciiHandleConn,
 	0);
-    debug(0, 1, "Accepting HTTP (ASCII) connections on FD %d.\n",
+    debug(1, 1, "Accepting HTTP (ASCII) connections on FD %d.\n",
 	theAsciiConnection);
 
     if (!httpd_accel_mode || getAccelWithProxy()) {
@@ -215,7 +217,7 @@ int main(argc, argv)
 		COMM_SELECT_READ,
 		icpHandleUdp,
 		0);
-	    debug(0, 1, "Accepting ICP (UDP) connections on FD %d.\n",
+	    debug(1, 1, "Accepting ICP (UDP) connections on FD %d.\n",
 		theUdpConnection);
 	}
     }
@@ -237,7 +239,7 @@ int main(argc, argv)
 
     /* after this point we want to see the mallinfo() output */
     do_mallinfo = 1;
-    debug(0, 0, "Ready to serve requests.\n");
+    debug(1, 0, "Ready to serve requests.\n");
 
     /* main loop */
     if (getCleanRate() > 0)
@@ -254,7 +256,7 @@ int main(argc, argv)
 	    break;
 	case COMM_ERROR:
 	    errcount++;
-	    debug(0, 0, "Select loop Error. Retry. %d\n", errcount);
+	    debug(1, 0, "Select loop Error. Retry. %d\n", errcount);
 	    if (errcount == 10)
 		fatal_dump("Select Loop failed.!\n");
 	    break;
@@ -263,15 +265,15 @@ int main(argc, argv)
 	     * when next_cleaning has arrived */
 	    /* garbage collection */
 	    if (getCleanRate() > 0 && cached_curtime >= next_cleaning) {
-		debug(0, 1, "Performing a garbage collection...\n");
+		debug(1, 1, "Performing a garbage collection...\n");
 		n = storePurgeOld();
-		debug(0, 1, "Garbage collection done, %d objects removed\n", n);
+		debug(1, 1, "Garbage collection done, %d objects removed\n", n);
 		next_cleaning = cached_curtime + getCleanRate();
 	    }
 	    /* house keeping */
 	    break;
 	default:
-	    debug(0, 0, "MAIN: Internal error -- this should never happen.\n");
+	    fatal_dump("MAIN: Internal error -- this should never happen.\n");
 	    break;
 	}
     }
