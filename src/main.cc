@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.103 1996/10/24 23:18:23 wessels Exp $
+ * $Id: main.cc,v 1.104 1996/10/24 23:29:39 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -130,7 +130,8 @@ char version_string[] = SQUID_VERSION;
 char appname[] = "squid";
 char localhost[] = "127.0.0.1";
 struct in_addr local_addr;
-char *dash_str = "-";
+char dash_str[] = "-";
+char null_string[] = "";
 
 /* for error reporting from xmalloc and friends */
 extern void (*failure_notify) _PARAMS((char *));
