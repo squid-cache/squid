@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.80 2003/06/27 22:32:30 hno Exp $
+#  $Id: Makefile.am,v 1.81 2003/07/07 22:44:28 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -381,6 +381,7 @@ squid_SOURCES = \
 	send-announce.cc \
 	$(SNMPSOURCE) \
 	squid.h \
+	SquidNew.cc \
 	tunnel.cc \
 	$(SSL_SOURCE) \
 	stat.cc \
@@ -466,15 +467,16 @@ squid_LDADD = \
 	@EPOLL_LIBS@
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@
 
-unlinkd_SOURCES = unlinkd.cc
+unlinkd_SOURCES = unlinkd.cc SquidNew.cc
 unlinkd_CXXFLAGS = -DUNLINK_DAEMON
 
 pinger_SOURCES = \
 	pinger.cc \
-	debug.cc
+	debug.cc \
+	SquidNew.cc 
 
-dnsserver_SOURCES = dnsserver.cc
-recv_announce_SOURCES = recv-announce.cc
+dnsserver_SOURCES = dnsserver.cc SquidNew.cc
+recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 
 ufsdump_SOURCES = debug.cc \
 	int.cc \
@@ -586,6 +588,7 @@ ufsdump_SOURCES = debug.cc \
 	squid.h \
 	$(SSL_SOURCE) \
 	tunnel.cc \
+	SquidNew.cc \
 	stat.cc \
 	StatHist.cc \
 	String.cc \

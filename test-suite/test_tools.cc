@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_tools.cc,v 1.1 2003/06/24 12:31:02 robertc Exp $
+ * $Id: test_tools.cc,v 1.2 2003/07/07 22:44:28 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -33,8 +33,10 @@
  * Copyright (c) 2003 Robert Collins <robertc@squid-cache.org>
  */
 
+#define _SQUID_EXTERNNEW_
 #include "squid.h"
 #include <iostream>
+#include <sstream>
 
 void
 xassert(const char *msg, const char *file, int line)
@@ -118,3 +120,21 @@ fatal(const char *message) {
     debug (0,0) ("Fatal: %s",message);
     exit (1);
 }
+
+std::ostream &
+Debug::getDebugOut()
+{
+    assert (currentDebug == NULL);
+    currentDebug = new std::ostringstream();
+    return *currentDebug;
+}
+
+void
+Debug::finishDebug()
+{
+    _db_print("%s\n", currentDebug->str().c_str());
+    delete currentDebug;
+    currentDebug = NULL;
+}
+
+std::ostringstream *Debug::currentDebug (NULL);

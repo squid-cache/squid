@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.91 2003/07/06 12:12:28 hno Exp $
+ * $Id: debug.cc,v 1.92 2003/07/07 22:44:28 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include <sstream>
 
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::level;
@@ -521,3 +522,20 @@ ctx_get_descr(Ctx ctx) {
 
     return Ctx_Descrs[ctx] ? Ctx_Descrs[ctx] : "<null>";
 }
+
+std::ostream &
+Debug::getDebugOut() {
+    assert (currentDebug == NULL);
+    currentDebug = new std::ostringstream();
+    return *currentDebug;
+}
+
+void
+Debug::finishDebug() {
+    _db_print("%s\n", currentDebug->str().c_str());
+    delete currentDebug;
+    currentDebug = NULL;
+}
+
+std::ostringstream *Debug::currentDebug (NULL);
+#

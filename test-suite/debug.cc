@@ -1,9 +1,9 @@
 
 /*
- * $Id: Debug.h,v 1.4 2003/07/07 22:44:28 robertc Exp $
+ * $Id: debug.cc,v 1.1 2003/07/07 22:44:28 robertc Exp $
  *
- * DEBUG: section 0     Debug Routines
- * AUTHOR: Harvest Derived
+ * DEBUG: section 19    Store Memory Primitives
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -31,34 +31,60 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003  Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_DEBUG
-#define SQUID_DEBUG
-
+#include "squid.h"
+#include "stmem.h"
+#include "mem_node.h"
 #include <iostream>
-#include <sstream>
 
-class Debug
-{
-
-public:
-    static int Levels[MAX_DEBUG_SECTIONS];
-    static int level;
-    static std::ostream &getDebugOut();
-    static void finishDebug();
-
-private:
-    static std::ostringstream *currentDebug;
+class StreamTest {
+  public:
+    std::ostream &serialise(std::ostream &);
+    char const *getAnInt() const;
+    char const *getACString() const;
 };
 
-/* Debug stream */
-#define debugs(SECTION, LEVEL, CONTENT) \
-   do { \
-        if ((Debug::level = (LEVEL)) <= Debug::Levels[SECTION]) { \
-                Debug::getDebugOut() << CONTENT; \
-                Debug::finishDebug(); \
-        } \
-   } while (/*CONSTCOND*/ 0)
+std::ostream &operator << (std::ostream &aStream, StreamTest &anObject)
+{
+    return anObject.serialise(aStream);
+}
 
-#endif /* SQUID_DEBUG */
+std::ostream&
+StreamTest::serialise(std::ostream &aStream)
+{
+    aStream << "stream test";
+    return aStream;
+}
+
+char const *
+StreamTest::getAnInt() const
+{
+    return "5";
+}
+
+char const *
+StreamTest::getACString() const
+{
+    return "ThisIsAStreamTest";
+}
+
+int
+main (int argc, char *argv)
+{
+    Debug::Levels[1] = 8;
+    debugs (1,1,"test" << "string");
+    debugs (1,9,"dont show this" << "string");
+    debugs (1,1,"test" << "string");
+    debugs (1,1,"test" << "string");
+    if (true)
+	debugs(1,9,"this won't compile if the macro is broken.");
+    else
+	debugs(1,1,"bar");
+    StreamTest aStreamObject;
+    StreamTest *streamPointer (&aStreamObject);
+    debugs(1,1,aStreamObject);
+    debugs(1,1,streamPointer->getAnInt() << " " << aStreamObject.getACString());
+    return 0;
+}

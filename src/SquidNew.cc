@@ -1,9 +1,9 @@
 
 /*
- * $Id: Debug.h,v 1.4 2003/07/07 22:44:28 robertc Exp $
+ * $Id: SquidNew.cc,v 1.1 2003/07/07 22:44:28 robertc Exp $
  *
- * DEBUG: section 0     Debug Routines
- * AUTHOR: Harvest Derived
+ * DEBUG: section ??? 		Memory Allocation
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,32 +33,5 @@
  *
  */
 
-#ifndef SQUID_DEBUG
-#define SQUID_DEBUG
-
-#include <iostream>
-#include <sstream>
-
-class Debug
-{
-
-public:
-    static int Levels[MAX_DEBUG_SECTIONS];
-    static int level;
-    static std::ostream &getDebugOut();
-    static void finishDebug();
-
-private:
-    static std::ostringstream *currentDebug;
-};
-
-/* Debug stream */
-#define debugs(SECTION, LEVEL, CONTENT) \
-   do { \
-        if ((Debug::level = (LEVEL)) <= Debug::Levels[SECTION]) { \
-                Debug::getDebugOut() << CONTENT; \
-                Debug::finishDebug(); \
-        } \
-   } while (/*CONSTCOND*/ 0)
-
-#endif /* SQUID_DEBUG */
+#define _SQUID_EXTERNNEW_
+#include "squid.h"

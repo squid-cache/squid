@@ -1,8 +1,6 @@
-
 /*
- * $Id: Debug.h,v 1.4 2003/07/07 22:44:28 robertc Exp $
+ * $Id: SquidNew.h,v 1.1 2003/07/07 22:44:28 robertc Exp $
  *
- * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -30,35 +28,33 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ *  
  */
 
-#ifndef SQUID_DEBUG
-#define SQUID_DEBUG
+#ifndef SQUID_NEW_H
+#define SQUID_NEW_H
 
-#include <iostream>
-#include <sstream>
-
-class Debug
+/* Any code using libstdc++ must have externally resolvable overloads
+ * for void * operator new - which means in the .o for the binary,
+ * or in a shared library. static libs don't propogate the symbol
+ * so, look in the translation unit containing main() in squid
+ * for the extern version in squid
+ */
+#include <new>
+_SQUID_EXTERNNEW_ void *operator new(size_t size) throw (std::bad_alloc)
 {
-
-public:
-    static int Levels[MAX_DEBUG_SECTIONS];
-    static int level;
-    static std::ostream &getDebugOut();
-    static void finishDebug();
-
-private:
-    static std::ostringstream *currentDebug;
-};
-
-/* Debug stream */
-#define debugs(SECTION, LEVEL, CONTENT) \
-   do { \
-        if ((Debug::level = (LEVEL)) <= Debug::Levels[SECTION]) { \
-                Debug::getDebugOut() << CONTENT; \
-                Debug::finishDebug(); \
-        } \
-   } while (/*CONSTCOND*/ 0)
-
-#endif /* SQUID_DEBUG */
+    return xmalloc(size);
+}
+_SQUID_EXTERNNEW_ void operator delete (void *address) throw()
+{
+    xfree (address);
+}
+_SQUID_EXTERNNEW_ void *operator new[] (size_t size) throw (std::bad_alloc)
+{
+    return xmalloc(size);
+}
+_SQUID_EXTERNNEW_ void operator delete[] (void *address) throw()
+{
+    xfree (address);
+}
+#endif /* SQUID_NEW_H */
