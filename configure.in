@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.319 2003/02/08 14:40:03 hno Exp $
+dnl  $Id: configure.in,v 1.320 2003/02/08 17:06:58 hno Exp $
 dnl
 dnl
 dnl
@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 3.0-DEVEL)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.319 $)dnl
+AC_REVISION($Revision: 1.320 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -369,15 +369,17 @@ AC_ARG_ENABLE(storeio,
                           for details on how to build your custom store module],
 [ case $enableval in
   yes)
-	for module in $srcdir/src/fs/*; do
-	    if test -f $module/Makefile.in; then
-		STORE_MODULES="$STORE_MODULES `basename $module`"
+	for dir in $srcdir/src/fs/*; do
+	    module="`basename $dir`"
+	    if test -d "$dir" && test "$module" != CVS; then
+		STORE_MODULES="$STORE_MODULES $module"
 	    fi
 	done
   	;;
   no)
   	;;
-  *)	STORE_MODULES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+  *)
+	STORE_MODULES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
   esac
 ],
@@ -385,26 +387,37 @@ AC_ARG_ENABLE(storeio,
     STORE_MODULES="ufs"
   fi
 ])
-echo "Store modules built: $STORE_MODULES"
-STORE_OBJS="fs/lib`echo $STORE_MODULES|sed -e 's% %.a fs/lib%g'`.a"
-AC_SUBST(STORE_OBJS)
-STORE_LIBS="`echo $STORE_OBJS|sed -e 's%fs/%%g'`"
-AC_SUBST(STORE_LIBS)
+if test -n "$STORE_MODULES"; then
+    for module in $STORE_MODULES; do
+	if test -d $srcdir/src/fs/$module; then
+	    :
+	else
+	    echo "ERROR: storeio $module does not exists"
+	    exit 1
+	fi
+    done
+    echo "Store modules built: $STORE_MODULES"
+    STORE_OBJS="fs/lib`echo $STORE_MODULES|sed -e 's% %.a fs/lib%g'`.a"
+    STORE_LIBS="`echo $STORE_OBJS|sed -e 's%fs/%%g'`"
+fi
 dnl remove all but diskd - its the only module that needs to recurse
 dnl into the sub directory
 STORE_MODULE_SUBDIRS=
 UFS_FOUND=
+NEED_UFS=
 for fs in $STORE_MODULES none; do
     case "$fs" in
     diskd)
         STORE_MODULE_SUBDIRS="$STORE_MODULE_SUBDIRS $fs"
 	STORE_PROGRAMS="$STORE_PROGRAMS diskd/diskd"
+	NEED_UFS="true"
 	;;
     aufs)
 	if test -z "$with_pthreads"; then
 	    echo "aufs store used, pthreads support automatically enabled"
 	    with_pthreads=yes
 	fi
+	NEED_UFS="true"
 	;;
     coss)
 	if test -z "$with_aio"; then
@@ -417,31 +430,18 @@ for fs in $STORE_MODULES none; do
     esac
 done
 
-if test -z "$UFS_FOUND"; then
+if test -z "$UFS_FOUND" && test -n "$NEED_UFS"; then
    echo "adding UFS, as it contains core logic for diskd and aufs"
    STORE_OBJS="$STORE_OBJS fs/libufs.a"
-   AC_SUBST(STORE_OBJS)
    STORE_LIBS="$STORE_LIBS libufs.a"
-   AC_SUBST(STORE_LIBS)
    STORE_MODULES="$STORE_MODULES ufs"
 fi
   
+AC_SUBST(STORE_OBJS)
+AC_SUBST(STORE_LIBS)
 AC_SUBST(STORE_MODULES)
 AC_SUBST(STORE_PROGRAMS)
 AC_SUBST(STORE_MODULE_SUBDIRS)
-
-dnl --enable-heap-replacement compability option
-AC_ARG_ENABLE(heap-replacement,
-[  --enable-heap-replacement
-                          Backwards compability option. Please use the
-			  new --enable-removal-policies directive instead.],
-[ if test "$enableval" = "yes" ; then
-    echo "--enable-heap-replacement is obsolete. please use the new"
-    echo "--enable-removal-policies directive instead"
-    sleep 5
-    REPL_POLICIES="heap"
-  fi
-])
 
 AC_ARG_ENABLE(removal-policies,
 [  --enable-removal-policies=\"list of policies\"
@@ -452,16 +452,17 @@ AC_ARG_ENABLE(removal-policies,
 			  to build your custom policy],
 [ case $enableval in
   yes)
-	for module in $srcdir/src/repl/*; do
-	    if test -d $module; then
-		REPL_POLICIES="$REPL_POLICIES `basename $module`"
+	for dir in $srcdir/src/repl/*; do
+	    module="`basename $dir`"
+	    if test -d "$dir" && test "$module" != CVS; then
+		REPL_POLICIES="$REPL_POLICIES $module"
 	    fi
-	    REPL_POLICIES="`echo $REPL_POLICIES|sed -e 's/CVS//g'`"
 	done
   	;;
   no)
   	;;
-  *)	REPL_POLICIES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+  *)
+ 	REPL_POLICIES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
   esac
 ],
@@ -469,11 +470,21 @@ AC_ARG_ENABLE(removal-policies,
     REPL_POLICIES="lru"
   fi
 ])
-echo "Removal policies built: $REPL_POLICIES"
+if test -n "$REPL_POLICIES"; then
+    for module in $REPL_POLICIES; do
+	if test -d $srcdir/src/repl/$module; then
+	    :
+	else
+	    echo "ERROR: Removal policy $module does not exists"
+	    exit 1
+	fi
+    done
+    echo "Removal policies built: $REPL_POLICIES"
+    REPL_OBJS="repl/lib`echo $REPL_POLICIES|sed -e 's% %.a repl/lib%g'`.a"
+    REPL_LIBS="`echo $REPL_OBJS|sed -e 's%repl/%%g'`"
+fi
 AC_SUBST(REPL_POLICIES)
-REPL_OBJS="repl/lib`echo $REPL_POLICIES|sed -e 's% %.a repl/lib%g'`.a"
 AC_SUBST(REPL_OBJS)
-REPL_LIBS="`echo $REPL_OBJS|sed -e 's%repl/%%g'`"
 AC_SUBST(REPL_LIBS)
 
 AM_CONDITIONAL(ENABLE_PINGER, false)
@@ -978,51 +989,41 @@ AC_ARG_ENABLE(auth,
   yes)
         for dir in $srcdir/src/auth/*; do
 	    module="`basename $dir`"
-            if test -f $dir/auth_${module}.cc; then
+            if test -d "$dir" && test "$module" != CVS; then
                 AUTH_MODULES="$AUTH_MODULES $module"
             fi
         done
         ;;
   no)
         ;;
-  *)    AUTH_MODULES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
-        ;;
+  *)
+	AUTH_MODULES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+  	;;
   esac
 ],
 [ if test -z "$AUTH_MODULES"; then
     AUTH_MODULES="basic"
   fi
 ])
-echo "Auth scheme modules built: $AUTH_MODULES"
+if test -n "$AUTH_MODULES"; then
+    for module in $AUTH_MODULES; do
+	if test -d $srcdir/src/auth/$module; then
+	    :
+	else
+	    echo "ERROR: Auth scheme $module does not exists"
+	    exit 1
+	fi
+    done
+    echo "Auth scheme modules built: $AUTH_MODULES"
+    AUTH_OBJS="auth/lib`echo $AUTH_MODULES|sed -e 's% %.a auth/lib%g'`.a"
+    AUTH_LIBS="`echo $AUTH_OBJS|sed -e 's%auth/%%g'`"
+fi
 AC_SUBST(AUTH_MODULES)
-AUTH_OBJS="auth/lib`echo $AUTH_MODULES|sed -e 's% %.a auth/lib%g'`.a"
 AC_SUBST(AUTH_OBJS)
-AUTH_LIBS="`echo $AUTH_OBJS|sed -e 's%auth/%%g'`"
 AC_SUBST(AUTH_LIBS)
 
 dnl Select basic auth scheme helpers to build
 BASIC_AUTH_HELPERS=""
-AC_ARG_ENABLE(auth-modules,
-[  --enable-auth-modules=\"list of helpers\"
-                          Backwards compability alias for
-                          --enable-basic-auth-helpers],
-[ echo "--enable-auth-modules is obsolete. Please use the new"
-  echo "option --enable-basic-auth-helpers"
-  sleep 5
-  case "$enableval" in
-  yes) 
-    for helper in $srcdir/helpers/basic_auth/*; do
-	if test -f $helper/Makefile.in; then
-	    BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS `basename $helper`"
-	fi
-    done
-    ;;
-  no)
-    ;;
-  *)
-    BASIC_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
-  esac
-])
 AC_ARG_ENABLE(basic-auth-helpers,
 [  --enable-basic-auth-helpers=\"list of helpers\"
                           This option selects which basic scheme proxy_auth
@@ -1031,26 +1032,27 @@ AC_ARG_ENABLE(basic-auth-helpers,
                           helpers see the helpers/basic_auth directory.],
 [ case "$enableval" in
   yes) 
-    BASIC_AUTH_HELPERS=""
-    for helper in $srcdir/helpers/basic_auth/*; do
-	if test -f $helper/Makefile.in; then
-	    BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS `basename $helper`"
-	fi
-    done
-    ;;
+	for dir in $srcdir/helpers/basic_auth/*; do
+	    helper="`basename $dir`"
+	    if test -d "$dir" && test "$helper" != CVS; then
+		BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
+	    fi
+	done
+	;;
   no)
-    ;;
+	;;
   *)
-    BASIC_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	BASIC_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	;;
   esac
 ])
 if test -n "$BASIC_AUTH_HELPERS"; then
     for helper in $BASIC_AUTH_HELPERS; do
-	if test -f $srcdir/helpers/basic_auth/$helper/Makefile.in; then
-		:
+	if test -d $srcdir/helpers/basic_auth/$helper; then
+	    :
 	else
-		echo "ERROR: Basic auth helper $helper does not exists"
-		exit 1
+	    echo "ERROR: Basic auth helper $helper does not exists"
+	    exit 1
 	fi
     done
     echo "Basic auth helpers built: $BASIC_AUTH_HELPERS"
@@ -1067,25 +1069,27 @@ AC_ARG_ENABLE(ntlm-auth-helpers,
                           the helpers/ntlm_auth directory.],
 [ case "$enableval" in
   yes) 
-    for helper in $srcdir/helpers/ntlm_auth/*; do
-	if test -f $helper/Makefile.in; then
-	    NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS `basename $helper`"
-	fi
-    done
-    ;;
+	for dir in $srcdir/helpers/ntlm_auth/*; do
+	    helper="`basename $dir`"
+	    if test -d "$dir" && test "$helper" != CVS; then
+		NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
+	    fi
+	done
+	;;
   no)
-    ;;
+	;;
   *)
-    NTLM_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	NTLM_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	;;
   esac
 ])
 if test -n "$NTLM_AUTH_HELPERS"; then
     for helper in $NTLM_AUTH_HELPERS; do
-	if test -f $srcdir/helpers/ntlm_auth/$helper/Makefile.in; then
-		:
+	if test -d $srcdir/helpers/ntlm_auth/$helper; then
+	    :
 	else
-		echo "ERROR: NTLM auth helper $helper does not exists"
-		exit 1
+	    echo "ERROR: NTLM Auth helper $helper does not exists"
+	    exit 1
 	fi
     done
     echo "NTLM auth helpers built: $NTLM_AUTH_HELPERS"
@@ -1102,16 +1106,18 @@ AC_ARG_ENABLE(digest-auth-helpers,
                           helpers/digest_auth directory.],
 [ case "$enableval" in
   yes)
-    for helper in $srcdir/helpers/digest_auth/*; do
-        if test -f $helper/Makefile.in; then
-            DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS `basename $helper`"
-        fi
-    done
-    ;;
+	for dir in $srcdir/helpers/digest_auth/*; do
+	    helper="`basename $dir`"
+	    if test -d "$dir" && test "$helper" != CVS; then
+		DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
+	    fi
+	done
+	;;
   no)
-    ;;
+	;;
   *)
-    DIGEST_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	DIGEST_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	;;
   esac
 ])
 if test -n "$DIGEST_AUTH_HELPERS"; then
@@ -1147,16 +1153,18 @@ AC_ARG_ENABLE(external-acl-helpers,
                           helpers/external_acl directory.],
 [ case "$enableval" in
   yes)
-    for helper in $srcdir/helpers/external_acl/*; do
-        if test -f $helper/Makefile.in; then
-            EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS `basename $helper`"
-        fi
-    done
-    ;;
+	for dir in $srcdir/helpers/external_acl/*; do
+	    helper="`basename $dir`"
+	    if test -d "$dir" && test "$helper" != CVS; then
+		EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
+	    fi
+	done
+	;;
   no)
-    ;;
+	;;
   *)
-    EXTERNAL_ACL_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+ 	EXTERNAL_ACL_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	;;
   esac
 ])
 if test -n "$EXTERNAL_ACL_HELPERS"; then
