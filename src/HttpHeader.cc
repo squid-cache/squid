@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.76 2002/06/16 19:48:04 hno Exp $
+ * $Id: HttpHeader.cc,v 1.77 2002/06/16 20:05:53 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -658,6 +658,63 @@ httpHeaderGetByName(const HttpHeader * hdr, const char *name)
 	    strListAdd(&result, strBuf(e->value), ',');
 	}
     }
+    return result;
+}
+
+/*
+ * returns a pointer to a specified entry if any 
+ * note that we return one entry so it does not make much sense to ask for
+ * "list" headers
+ */
+String
+httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator)
+{
+    String result = StringNull;
+    String header;
+    const char *pos = NULL;
+    const char *item;
+    int ilen;
+    int mlen = strlen(member);
+
+    assert(hdr);
+    assert(name);
+
+    header = httpHeaderGetByName(hdr, name);
+
+    while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
+	if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {
+	    stringAppend(&result, item + mlen + 1, ilen - mlen - 1);
+	    break;
+	}
+    }
+    return result;
+}
+
+/*
+ * returns a the value of the specified list member, if any.
+ */
+String
+httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator)
+{
+    String result = StringNull;
+    String header;
+    const char *pos = NULL;
+    const char *item;
+    int ilen;
+    int mlen = strlen(member);
+
+    assert(hdr);
+    assert(id >= 0);
+
+    header = httpHeaderGetStrOrList(hdr, id);
+
+    while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
+	if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {
+	    stringAppend(&result, item + mlen + 1, ilen - mlen - 1);
+	    break;
+	}
+    }
+    stringClean(&header);
     return result;
 }
 

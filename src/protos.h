@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.438 2002/06/16 17:46:26 hno Exp $
+ * $Id: protos.h,v 1.439 2002/06/16 20:05:53 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -453,6 +453,8 @@ extern const char *httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, c
 extern String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id);
 extern String httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id);
 extern String httpHeaderGetByName(const HttpHeader * hdr, const char *name);
+extern String httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator);
+extern String httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 extern int httpHeaderDelByName(HttpHeader * hdr, const char *name);
 extern int httpHeaderDelById(HttpHeader * hdr, http_hdr_type id);
 extern void httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos);
