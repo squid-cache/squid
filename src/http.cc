@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.178 1997/07/16 20:32:07 wessels Exp $
+ * $Id: http.cc,v 1.179 1997/07/26 04:48:29 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -672,10 +672,10 @@ httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, in
     if (n >= max)
 	return;
     if (check) {
-	if (Config.Options.anonymizer == ANONYMIZER_PARANOID) {
+	if (Config.onoff.anonymizer == ANONYMIZER_PARANOID) {
 	    if (!httpAnonAllowed(line))
 		return;
-	} else if (Config.Options.anonymizer == ANONYMIZER_STANDARD) {
+	} else if (Config.onoff.anonymizer == ANONYMIZER_STANDARD) {
 	    if (httpAnonDenied(line))
 		return;
 	}

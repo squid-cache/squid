@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.216 1997/07/19 07:20:00 wessels Exp $
+ * $Id: cache_cf.cc,v 1.217 1997/07/26 04:48:23 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -179,7 +179,7 @@ parseConfigFile(const char *file_name)
     }
     if (Config.Announce.period < 1) {
 	Config.Announce.period = 86400 * 365;	/* one year */
-	Config.Announce.on = 0;
+	Config.onoff.announce = 0;
     }
     if (Config.dnsChildren < 0)
 	Config.dnsChildren = 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.104 1997/07/15 23:23:14 wessels Exp $
+ * $Id: acl.cc,v 1.105 1997/07/26 04:48:22 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -216,7 +216,7 @@ aclParseMethodList(void *curlist)
 	q = xcalloc(1, sizeof(intlist));
 	q->i = (int) urlParseMethod(t);
 	if (q->i == METHOD_PURGE)
-	    Config.Options.enable_purge = 1;
+	    Config.onoff.enable_purge = 1;
 	*(Tail) = q;
 	Tail = &q->next;
     }
@@ -635,7 +635,7 @@ aclParseAclLine(acl ** head)
 	aclParseIntlist(&A->data);
 	break;
     case ACL_USER:
-	Config.identLookup = 1;
+	Config.onoff.ident_lookup = 1;
 	aclParseWordList(&A->data);
 	break;
     case ACL_PROTO:

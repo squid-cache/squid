@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.168 1997/07/21 07:20:58 wessels Exp $
+ * $Id: main.cc,v 1.169 1997/07/26 04:48:32 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -332,7 +332,7 @@ serverConnectionsOpen(void)
     }
     if (NHttpSockets < 1)
 	fatal("Cannot open HTTP Port");
-    if (!Config2.Accel.on || Config.Accel.withProxy) {
+    if (!Config2.Accel.on || Config.onoff.accel_with_proxy) {
 	if ((port = Config.Port.icp) > (u_short) 0) {
 	    enter_suid();
 	    theInIcpConnection = comm_open(SOCK_DGRAM,
@@ -439,7 +439,7 @@ mainReconfigure(void)
     dnsOpenServers();
     redirectOpenServers();
     serverConnectionsOpen();
-    if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.Accel.withProxy))
+    if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.onoff.accel_with_proxy))
 	neighbors_open(theOutIcpConnection);
     debug(1, 0) ("Ready to serve requests.\n");
 }
@@ -518,7 +518,7 @@ mainInitialize(void)
 	mimeInit(Config.mimeTablePathname);
     }
     serverConnectionsOpen();
-    if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.Accel.withProxy))
+    if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.onoff.accel_with_proxy))
 	neighbors_open(theOutIcpConnection);
 
     if (!configured_once)
@@ -536,7 +536,7 @@ mainInitialize(void)
     if (!configured_once) {
 	eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
 	eventAdd("storeDirClean", storeDirClean, NULL, 15);
-	if (Config.Announce.on)
+	if (Config.onoff.announce)
 	    eventAdd("start_announce", start_announce, NULL, 3600);
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
     }

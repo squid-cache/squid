@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.153 1997/07/16 20:32:12 wessels Exp $
+ * $Id: neighbors.cc,v 1.154 1997/07/26 04:48:33 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -480,7 +480,7 @@ neighborsUdpPing(request_t * request,
 		if (!BIT_TEST(request->flags, REQ_NOCACHE))
 		    if (p->icp_version == ICP_VERSION_2)
 			flags |= ICP_FLAG_HIT_OBJ;
-	    if (Config.Options.query_icmp)
+	    if (Config.onoff.query_icmp)
 		if (p->icp_version == ICP_VERSION_2)
 		    flags |= ICP_FLAG_SRC_RTT;
 	    query = icpCreateMessage(ICP_OP_QUERY, flags, url, reqnum, 0);
@@ -517,7 +517,7 @@ neighborsUdpPing(request_t * request,
 
     /* only do source_ping if we have neighbors */
     if (Config.npeers) {
-	if (!Config.sourcePing) {
+	if (!Config.onoff.source_ping) {
 	    debug(15, 6) ("neighborsUdpPing: Source Ping is disabled.\n");
 	} else if ((ia = ipcache_gethostbyname(host, 0))) {
 	    debug(15, 6) ("neighborsUdpPing: Source Ping: to %s for '%s'\n",
@@ -686,7 +686,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	if (p) {
 	    debug(15, 1) ("Ignoring SECHO from neighbor %s\n", p->host);
 	    neighborCountIgnored(p, opcode);
-	} else if (!Config.sourcePing) {
+	} else if (!Config.onoff.source_ping) {
 	    debug(15, 1) ("Unsolicited SECHO from %s\n", inet_ntoa(from->sin_addr));
 	} else {
 	    mem->icp_reply_callback(NULL, ntype, opcode, mem->ircb_data);
