@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.241 1998/07/22 20:37:22 wessels Exp $
+ * $Id: ftp.cc,v 1.242 1998/07/23 23:52:35 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -906,9 +906,12 @@ ftpCheckUrlpath(FtpStateData * ftpState)
 	ftpState->flags.isdir = 1;
 	ftpState->flags.root_dir = 1;
     } else if (!strCmp(request->urlpath, "/%2f/")) {
+	/* UNIX root directory */
+	ftpState->flags.use_base = 0;
 	ftpState->flags.isdir = 1;
 	ftpState->flags.root_dir = 1;
     } else if ((l >= 1) && (*(strBuf(request->urlpath) + l - 1) == '/')) {
+	/* Directory URL, ending in / */
 	ftpState->flags.isdir = 1;
 	ftpState->flags.use_base = 0;
 	if (l == 1)
