@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.25 2002/03/29 05:49:23 wessels Exp $
+ * $Id: rfc1035.c,v 1.26 2002/04/10 21:16:17 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -299,7 +299,7 @@ rfc1035HeaderUnpack(const char *buf, size_t sz, off_t * off, rfc1035_header * h)
  * Returns 0 (success) or 1 (error)
  */
 static int
-rfc1035NameUnpack(const char *buf, size_t sz, off_t * off, char *name, size_t ns, int rflag)
+rfc1035NameUnpack(const char *buf, size_t sz, off_t * off, char *name, size_t ns, int rdepth)
 {
     off_t no = 0;
     unsigned char c;
@@ -312,7 +312,7 @@ rfc1035NameUnpack(const char *buf, size_t sz, off_t * off, char *name, size_t ns
 	    /* blasted compression */
 	    unsigned short s;
 	    off_t ptr;
-	    if (rflag)		/* pointer loop */
+	    if (rdepth > 64)		/* infinite pointer loop */
 		return 1;
 	    memcpy(&s, buf + (*off), sizeof(s));
 	    s = ntohs(s);
@@ -324,7 +324,7 @@ rfc1035NameUnpack(const char *buf, size_t sz, off_t * off, char *name, size_t ns
 	    /* Make sure the pointer is inside this message */
 	    if (ptr >= sz)
 		return 1;
-	    return rfc1035NameUnpack(buf, sz, &ptr, name + no, ns - no, rflag + 1);
+	    return rfc1035NameUnpack(buf, sz, &ptr, name + no, ns - no, rdepth + 1);
 	} else if (c > RFC1035_MAXLABELSZ) {
 	    /*
 	     * "(The 10 and 01 combinations are reserved for future use.)"
