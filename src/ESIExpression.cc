@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpression.cc,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id: ESIExpression.cc,v 1.2 2003/06/09 05:22:33 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -723,7 +723,7 @@ getsymbol (const char *s, char const **endptr)
 
     if (('0' <= *s && *s <= '9') || *s == '-') {
         size_t length = strspn (s, "0123456789.");
-        char *point;
+        char const *point;
 
         if ((point = strchr (s, '.')) && point - s < (ssize_t)length) {
             /* floating point */
