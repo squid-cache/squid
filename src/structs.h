@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.359 2000/11/09 03:09:47 wessels Exp $
+ * $Id: structs.h,v 1.360 2000/11/10 09:04:51 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1839,6 +1839,8 @@ struct _store_rebuild_data {
     int cancelcount;		/* # SWAP_LOG_DEL objects purged */
     int invalid;		/* # bad lines */
     int badflags;		/* # bad e->flags */
+    int missingcount;		/* # swapfiles not on disk */
+    int filesizemismatchcount;  /* # swapfiles with a wrong size */
     int bad_log_op;
     int zero_object_sz;
 };
