@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.264 1999/01/19 17:41:09 wessels Exp $
+ * $Id: structs.h,v 1.265 1999/01/19 20:43:46 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1538,6 +1538,7 @@ struct _MemPoolMeter {
     MemMeter inuse;
     MemMeter idle;
     gb_t saved;
+    gb_t total;
 };
 
 /* a pool is a [growing] space for objects of the same size */
