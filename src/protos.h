@@ -360,9 +360,9 @@ extern void httpReplyInit(HttpReply * rep);
 extern void httpReplyClean(HttpReply * rep);
 extern void httpReplyDestroy(HttpReply * rep);
 /* reset: clean, then init */
-void httpReplyReset(HttpReply * rep);
+extern void httpReplyReset(HttpReply * rep);
 /* absorb: copy the contents of a new reply to the old one, destroy new one */
-void httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep);
+extern void httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep);
 /* parse returns -1,0,+1 on error,need-more-data,success */
 extern int httpReplyParse(HttpReply * rep, const char *buf);	/*, int atEnd); */
 extern void httpReplyPackInto(const HttpReply * rep, Packer * p);
@@ -474,7 +474,7 @@ extern FREE *memBufFreeFunc(MemBuf * mb);
 extern void memBufReport(MemBuf * mb);
 
 extern char *mime_get_header(const char *mime, const char *header);
-char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
+extern char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
 #if OLD_CODE
 extern char *mime_headers_end(const char *mime);
 #endif
@@ -548,7 +548,7 @@ extern peer *peerGetSomeParent(request_t *, hier_code *);
 extern void peerSelectInit(void);
 
 /* peer_digest.c */
-void peerDigestInit(peer * p);
+extern void peerDigestInit(peer * p);
 
 extern void protoDispatch(int, StoreEntry *, request_t *);
 
@@ -776,10 +776,10 @@ extern int storeDirMapBitsInUse(void);
 /*
  * store_swapmeta.c
  */
-char *storeSwapMetaPack(tlv * tlv_list, int *length);
-tlv *storeSwapMetaBuild(StoreEntry * e);
-tlv *storeSwapMetaUnpack(const char *buf, int *hdrlen);
-void storeSwapTLVFree(tlv * n);
+extern char *storeSwapMetaPack(tlv * tlv_list, int *length);
+extern tlv *storeSwapMetaBuild(StoreEntry * e);
+extern tlv *storeSwapMetaUnpack(const char *buf, int *hdrlen);
+extern void storeSwapTLVFree(tlv * n);
 
 /*
  * store_rebuild.c
@@ -803,7 +803,7 @@ extern void storeSwapOutStart(StoreEntry * e);
 extern void storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data);
 extern void storeCheckSwapOut(StoreEntry * e);
 extern void storeSwapOutFileClose(StoreEntry * e);
-int storeSwapOutWriteQueued(MemObject * mem);
+extern int storeSwapOutWriteQueued(MemObject * mem);
 
 /*
  * store_client.c
@@ -905,8 +905,8 @@ extern void gb_flush(gb_t *);	/* internal, do not use this */
 #if USE_HTCP
 extern void htcpInit(void);
 extern void htcpQuery(StoreEntry * e, request_t * req, peer * p);
-void htcpSocketShutdown(void);
-void htcpSocketClose(void);
+extern void htcpSocketShutdown(void);
+extern void htcpSocketClose(void);
 #endif
 
 /* String */
@@ -965,7 +965,7 @@ extern char *internalRemoteUri(const char *, u_short, const char *, const char *
  */
 
 #ifdef _SQUID_SOLARIS_
-int getrusage(int, struct rusage *);
-int getpagesize(void);
-int gethostname(char *, int);
+extern int getrusage(int, struct rusage *);
+extern int getpagesize(void);
+extern int gethostname(char *, int);
 #endif
