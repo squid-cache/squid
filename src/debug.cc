@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.25 1996/09/17 16:32:36 wessels Exp $
+ * $Id: debug.cc,v 1.26 1996/09/18 22:44:49 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -114,7 +114,7 @@ static char *debug_log_file = NULL;
 #define MAX_DEBUG_SECTIONS 50
 static int debugLevels[MAX_DEBUG_SECTIONS];
 
-#if defined(__STRICT_ANSI__)
+#if __STDC__ 
 void
 _db_print(int section, int level, char *format,...)
 {
@@ -135,7 +135,7 @@ _db_print(va_alist)
     if (debug_log == NULL)
 	return;
 
-#if defined(__STRICT_ANSI__)
+#if __STDC__ 
     va_start(args, format);
 #else
     va_start(args);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.55 1996/09/18 21:39:41 wessels Exp $
+ * $Id: squid.h,v 1.56 1996/09/18 22:44:51 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -132,7 +132,7 @@
 #include <aio.h>
 #endif
 
-#if defined(__STRICT_ANSI__)
+#if __STDC__ 
 #include <stdarg.h>
 #else
 #include <varargs.h>
