@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.248 1998/02/19 23:09:47 wessels Exp $
+ * $Id: cache_cf.cc,v 1.249 1998/02/19 23:28:38 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -72,6 +72,7 @@ static void parseBytesLine(size_t * bptr, const char *units);
 static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 static void requirePathnameExists(const char *name, const char *path);
+static OBJH dump_config;
 
 static void
 self_destruct(void)

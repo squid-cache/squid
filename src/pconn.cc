@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.11 1998/02/19 23:09:57 wessels Exp $
+ * $Id: pconn.cc,v 1.12 1998/02/19 23:28:40 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -40,6 +40,10 @@ struct _pconn {
     int nfds;
 };
 
+#define PCONN_HIST_SZ 256
+int client_pconn_hist[PCONN_HIST_SZ];
+int server_pconn_hist[PCONN_HIST_SZ];
+
 static PF pconnRead;
 static PF pconnTimeout;
 static const char *pconnKey(const char *host, u_short port);
@@ -47,7 +51,7 @@ static hash_table *table = NULL;
 static struct _pconn *pconnNew(const char *key);
 static void pconnDelete(struct _pconn *p);
 static void pconnRemoveFD(struct _pconn *p, int fd);
-
+static OBJH pconnHistDump;
 
 static const char *
 pconnKey(const char *host, u_short port)
@@ -122,8 +126,13 @@ pconnRead(int fd, void *data)
 void
 pconnInit(void)
 {
+    int i;
     assert(table == NULL);
     table = hash_create((HASHCMP *) strcmp, 229, hash_string);
+    for (i = 0; i < PCONN_HIST_SZ; i++) {
+        client_pconn_hist[i] = 0;
+        server_pconn_hist[i] = 0;
+    }
     cachemgrRegister("pconn",
 	"Persistent Connection Utilization Histograms",
 	pconnHistDump, 0);
@@ -174,4 +183,47 @@ pconnPop(const char *host, u_short port)
 	commSetTimeout(fd, -1, NULL, NULL);
     }
     return fd;
+}
+
+void
+pconnHistCount(int what, int i)
+{
+    if (i >= PCONN_HIST_SZ)
+        i = PCONN_HIST_SZ - 1;
+    /* what == 0 for client, 1 for server */
+    if (what == 0)
+        client_pconn_hist[i]++;
+    else if (what == 1)
+        server_pconn_hist[i]++;
+    else
+        assert(0);
+}
+
+static void
+pconnHistDump(StoreEntry * e)
+{
+    int i;
+    storeAppendPrintf(e,
+        "Client-side persistent connection counts:\n"
+        "\n"
+        "\treq/\n"
+        "\tconn      count\n"
+        "\t----  ---------\n");
+    for (i = 0; i < PCONN_HIST_SZ; i++) {
+        if (client_pconn_hist[i] == 0)
+            continue;
+        storeAppendPrintf(e, "\t%4d  %9d\n", i, client_pconn_hist[i]);
+    }
+    storeAppendPrintf(e,
+        "\n"
+        "Server-side persistent connection counts:\n"
+        "\n"
+        "\treq/\n"
+        "\tconn      count\n"
+        "\t----  ---------\n");
+    for (i = 0; i < PCONN_HIST_SZ; i++) {
+        if (server_pconn_hist[i] == 0)
+            continue;
+        storeAppendPrintf(e, "\t%4d  %9d\n", i, server_pconn_hist[i]);
+    }
 }
