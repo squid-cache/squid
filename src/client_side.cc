@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.251 1998/04/02 06:35:51 wessels Exp $
+ * $Id: client_side.cc,v 1.252 1998/04/02 07:37:16 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -40,7 +40,6 @@ static const char *const proxy_auth_challenge =
 
 /* Local functions */
 
-static CWCB clientHandleIMSComplete;
 static CWCB clientWriteComplete;
 static PF clientReadRequest;
 static PF connStateFree;
@@ -435,7 +434,6 @@ clientConstructTraceEcho(clientHttpRequest * http)
 void
 clientPurgeRequest(clientHttpRequest * http)
 {
-    int fd = http->conn->fd;
     StoreEntry *entry;
     ErrorState *err = NULL;
     const cache_key *k;
@@ -458,8 +456,17 @@ clientPurgeRequest(clientHttpRequest * http)
 	storeRelease(entry);
 	http->http_code = HTTP_OK;
     }
+    debug(33, 4) ("clientGetHeadersForIMS: Not modified '%s'\n",
+	storeUrl(entry));
+    /*
+     * Make a new entry to hold the reply to be written
+     * to the client.
+     */
     mb = httpPackedReply(1.0, http->http_code, NULL, 0, 0, -1);
-    comm_write_mbuf(fd, mb, clientWriteComplete, http);
+    http->entry = clientCreateStoreEntry(http, http->request->method, 0);
+    httpReplyParse(http->entry->mem_obj->reply, mb.buf);
+    storeAppend(http->entry, mb.buf, mb.size);
+    storeComplete(http->entry);
 }
 
 int
@@ -1118,6 +1125,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
     MemObject *mem;
+    MemBuf mb;
     debug(33, 3) ("clientGetHeadersForIMS: %s, %d bytes\n",
 	http->uri, (int) size);
     assert(size <= SM_PAGE_SIZE);
@@ -1200,33 +1208,20 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	    http);
 	return;
     }
-    debug(33, 4) ("clientGetHeadersForIMS: Not modified '%s'\n", storeUrl(entry));
-    comm_write_mbuf(http->conn->fd, httpPacked304Reply(mem->reply),
-	clientHandleIMSComplete, http);
-}
-
-static void
-clientHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *data)
-{
-    clientHttpRequest *http = data;
-    StoreEntry *entry = http->entry;
-    debug(33, 5) ("clientHandleIMSComplete: Not Modified sent '%s'\n", storeUrl(entry));
-    /* Set up everything for the logging */
+    debug(33, 4) ("clientGetHeadersForIMS: Not modified '%s'\n",
+	storeUrl(entry));
+    /*
+     * Create the Not-Modified reply from the existing entry,
+     * Then make a new entry to hold the reply to be written
+     * to the client.
+     */
+    mb = httpPacked304Reply(mem->reply);
     storeUnregister(entry, http);
     storeUnlockObject(entry);
-    http->entry = NULL;
-    http->out.size += size;
-    http->al.http.code = 304;
-    if (flag == COMM_ERR_CLOSING) {
-	(void) 0;
-    } else if (flag != COMM_OK) {
-	comm_close(fd);
-    } else if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
-	debug(33, 5) ("clientHandleIMSComplete: FD %d Keeping Alive\n", fd);
-	clientKeepaliveNextRequest(http);
-    } else {
-	comm_close(fd);
-    }
+    http->entry = clientCreateStoreEntry(http, http->request->method, 0);
+    httpReplyParse(http->entry->mem_obj->reply, mb.buf);
+    storeAppend(http->entry, mb.buf, mb.size);
+    storeComplete(http->entry);
 }
 
 /*
