@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.53 1996/10/24 20:56:33 wessels Exp $
+ * $Id: acl.cc,v 1.54 1996/10/24 23:31:11 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -905,7 +905,7 @@ aclMatchAclList(struct _acl_list *list, aclCheck_t * checklist)
     while (list) {
 	AclMatchedName = list->acl->name;
 	debug(28, 3, "aclMatchAclList: checking %s%s\n",
-	    list->op ? "" : "!", list->acl->name);
+	    list->op ? null_string : "!", list->acl->name);
 	if (aclMatchAcl(list->acl, checklist) != list->op) {
 	    debug(28, 3, "aclMatchAclList: returning 0\n");
 	    return 0;

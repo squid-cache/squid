@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.35 1996/10/09 15:34:41 wessels Exp $
+ * $Id: url.cc,v 1.36 1996/10/24 23:31:19 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -265,7 +265,7 @@ urlCanonical(request_t * request, char *buf)
 	sprintf(buf, "%s://%s%s%s%s%s",
 	    ProtocolStr[request->protocol],
 	    request->login,
-	    *request->login ? "@" : "",
+	    *request->login ? "@" : null_string,
 	    request->host,
 	    portbuf,
 	    request->urlpath);
