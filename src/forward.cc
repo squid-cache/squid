@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.48 1999/01/19 05:24:48 wessels Exp $
+ * $Id: forward.cc,v 1.49 1999/01/19 06:31:42 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -76,14 +76,15 @@ fwdStateFree(FwdState * fwdState)
 {
     StoreEntry *e = fwdState->entry;
     int sfd;
-    static int loop_detect = 0;
     debug(17, 3) ("fwdStateFree: %p\n", fwdState);
-    assert(loop_detect++ == 0);
     assert(e->mem_obj);
     if (e->store_status == STORE_PENDING) {
 	if (e->mem_obj->inmem_hi == 0) {
 	    assert(fwdState->err);
 	    errorAppendEntry(e, fwdState->err);
+	} else {
+	    storeComplete(e);
+    	    storeReleaseRequest(e);
 	}
     }
     assert(!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT));
@@ -101,7 +102,6 @@ fwdStateFree(FwdState * fwdState)
 	comm_close(sfd);
     }
     cbdataFree(fwdState);
-    loop_detect--;
 }
 
 static int
@@ -177,6 +177,7 @@ fwdConnectDone(int server_fd, int status, void *data)
 	    peerCheckConnectStart(fs->peer);
 	comm_close(server_fd);
     } else {
+        debug(17, 3) ("fwdConnectDone: FD %d: '%s'\n", server_fd, storeUrl(fwdState->entry));
 	fd_note(server_fd, storeUrl(fwdState->entry));
 	fd_table[server_fd].uses++;
 	fwdDispatch(fwdState);
@@ -259,6 +260,7 @@ static void
 fwdStartComplete(FwdServer * servers, void *data)
 {
     FwdState *fwdState = data;
+    debug(17,3)("fwdStartComplete: %s\n", storeUrl(fwdState->entry));
     if (servers != NULL) {
 	fwdState->servers = servers;
 	fwdConnectStart(fwdState);
@@ -271,6 +273,7 @@ static void
 fwdStartFail(FwdState * fwdState)
 {
     ErrorState *err;
+    debug(17,3)("fwdStartFail: %s\n", storeUrl(fwdState->entry));
     err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
     err->request = requestLink(fwdState->request);
     err->xerrno = errno;
@@ -284,7 +287,7 @@ fwdDispatch(FwdState * fwdState)
     peer *p;
     request_t *request = fwdState->request;
     StoreEntry *entry = fwdState->entry;
-    debug(17, 5) ("fwdDispatch: FD %d: Fetching '%s %s'\n",
+    debug(17, 3) ("fwdDispatch: FD %d: Fetching '%s %s'\n",
 	fwdState->client_fd,
 	RequestMethodStr[request->method],
 	storeUrl(entry));
@@ -342,6 +345,7 @@ fwdReforward(FwdState * fwdState)
     http_status s;
     assert(e->store_status == STORE_PENDING);
     assert(e->mem_obj);
+    debug(17, 3) ("fwdReforward: %s?\n", storeUrl(e));
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
 	debug(17, 3) ("fwdReforward: No, ENTRY_FWD_HDR_WAIT isn't set\n");
 	return 0;
