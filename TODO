@@ -30,6 +30,7 @@ Our Todo List
 	#    x milliseconds, then deny.
 	distant_peer_deny   200  75  10
 (3)	Resource limits.
+(3)     deny/allow tags for HTTP header fields (AR)
 (3)	LDAP support.  See http://miso.wwa.com/~donley/ and
 	Clayton Donley <qa1049@ilms04.cig.mot.com>
 (3)	'no_cache' access list for specifing objects which should not
