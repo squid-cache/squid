@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.117 1997/02/23 09:05:20 wessels Exp $
+ * $Id: neighbors.cc,v 1.118 1997/02/24 20:21:38 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -233,7 +233,7 @@ peerAllowedToUse(const peer * e, request_t * request)
 	    return d->do_ping;
 	do_ping = !d->do_ping;
     }
-    checklist.src_addr = any_addr;	/* XXX bogus! */
+    checklist.src_addr = request->client_addr;
     checklist.request = request;
     for (a = e->acls; a; a = a->next) {
 	if (aclMatchAcl(a->acl, &checklist))
@@ -919,13 +919,15 @@ neighborAddAcl(const char *host, const char *aclname)
 	xfree(L);
 	return;
     }
+#ifdef NOW_SUPPORTED
     if (a->type == ACL_SRC_IP) {
 	debug(15, 0, "%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(15, 0, "neighborAddAcl: 'src' ALC's not supported for 'cache_host_acl'\n");
+	debug(15, 0, "neighborAddAcl: 'src' ACL's not supported for 'cache_host_acl'\n");
 	xfree(L);
 	return;
     }
+#endif
     L->acl = a;
     for (Tail = &(e->acls); *Tail; Tail = &((*Tail)->next));
     *Tail = L;

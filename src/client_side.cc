@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.89 1997/02/13 18:38:28 wessels Exp $
+ * $Id: client_side.cc,v 1.90 1997/02/24 20:21:37 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -159,6 +159,8 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
 	    icpState->ident.ident,
 	    ICP_IDENT_SZ);
     }
+    /* This so we can have SRC ACLs for cache_host_acl. */
+    icpState->request->client_addr = icpState->peer.sin_addr;
 #if USE_PROXY_AUTH
     if (clientProxyAuthCheck(icpState) == 0) {
 	char *wbuf = NULL;
