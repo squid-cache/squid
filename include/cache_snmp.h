@@ -2,7 +2,7 @@
 #ifndef CACHE_SNMP_H
 #define CACHE_SNMP_H
 
-#ifdef _SQUID_OSF_
+#if SIZEOF_LONG == 8
 #define snint int
 #else
 #define snint long
