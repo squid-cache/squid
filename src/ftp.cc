@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.174 1997/11/24 18:27:16 wessels Exp $
+ * $Id: ftp.cc,v 1.175 1997/11/30 03:08:38 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1782,5 +1782,34 @@ ftpAuthRequired(const request_t * request, const char *realm)
 	"WWW-Authenticate: Basic realm=\"%s\"\r\n",
 	realm);
     l += snprintf(buf + l, s - l, "\r\n%s", content);
+    return buf;
+}
+
+char *
+ftpUrlWith2f(const request_t * request)
+{
+    LOCAL_ARRAY(char, buf, MAX_URL);
+    LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);
+    LOCAL_ARRAY(char, portbuf, 32);
+    char *t;
+    portbuf[0] = '\0';
+    if (request->port != urlDefaultPort(request->protocol))
+	snprintf(portbuf, 32, ":%d", request->port);
+    loginbuf[0] = '\0';
+    if (strlen(request->login) > 0) {
+	strcpy(loginbuf, request->login);
+	if ((t = strchr(loginbuf, ':')))
+	    *t = '\0';
+	strcat(loginbuf, "@");
+    }
+    snprintf(buf, MAX_URL, "%s://%s%s%s%s%s",
+	ProtocolStr[request->protocol],
+	loginbuf,
+	request->host,
+	portbuf,
+	"/%2f",
+	request->urlpath);
+    if ((t = strchr(buf, '?')))
+	*t = '\0';
     return buf;
 }

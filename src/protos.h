@@ -179,6 +179,7 @@ extern void fqdncacheFreeMemory(void);
 extern void fqdncache_restart(void);
 
 extern void ftpStart(request_t * req, StoreEntry * entry);
+extern char *ftpUrlWith2f(const request_t *);
 
 extern void gopherStart(StoreEntry *);
 extern int gopherCachable(const char *);
