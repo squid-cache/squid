@@ -26,6 +26,7 @@
 #include "nsswitch/winbind_nss_config.h"
 #include "nsswitch/winbindd_nss.h"
 #include "config.h"
+#include "wb_common.h"
 
 
 /* Global variables.  These are effectively the client state information */
