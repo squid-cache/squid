@@ -821,6 +821,10 @@ struct _PeerDigest {
     struct {
 	cd_guess_stats guess;
 	int used_count;
+	int msgs_sent;
+	int msgs_recv;
+	kb_t kbytes_sent;
+	kb_t kbytes_recv;
     } stats;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.229 1998/04/09 20:42:07 rousskov Exp $
+ * $Id: stat.cc,v 1.230 1998/04/09 21:15:02 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -996,14 +996,14 @@ statCountersDump(StoreEntry * sentry)
 	f->cd.msgs_sent);
     storeAppendPrintf(sentry, "cd.msgs_recv = %d\n",
 	f->cd.msgs_recv);
-    storeAppendPrintf(sentry, "cd.memory = %d\n",
-	(int)f->cd.memory.kb);
-    storeAppendPrintf(sentry, "cd.local_memory = %d\n",
-	store_digest ? store_digest->mask_size/1024 : 0);
     storeAppendPrintf(sentry, "cd.kbytes_sent = %d\n",
 	(int) f->cd.kbytes_sent.kb);
     storeAppendPrintf(sentry, "cd.kbytes_recv = %d\n",
 	(int) f->cd.kbytes_recv.kb);
+    storeAppendPrintf(sentry, "cd.memory = %d\n",
+	(int)f->cd.memory.kb);
+    storeAppendPrintf(sentry, "cd.local_memory = %d\n",
+	store_digest ? store_digest->mask_size/1024 : 0);
 #endif
 
 #if TOO_MUCH_OUTPUT
@@ -1041,6 +1041,16 @@ statPeerSelect(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
     for (peer = getFirstPeer(); peer; peer = getNextPeer(peer)) {
 	cacheDigestGuessStatsReport(&peer->digest.stats.guess, sentry, peer->host);
+	storeAppendPrintf(sentry, "peer.msgs_sent = %d\n",
+	    peer->digest.stats.msgs_sent);
+	storeAppendPrintf(sentry, "peer.msgs_recv = %d\n",
+	    peer->digest.stats.msgs_recv);
+	storeAppendPrintf(sentry, "peer.kbytes_sent = %d\n",
+	    (int) peer->digest.stats.kbytes_sent.kb);
+	storeAppendPrintf(sentry, "peer.kbytes_recv = %d\n",
+	    (int) peer->digest.stats.kbytes_recv.kb);
+	storeAppendPrintf(sentry, "peer.local_memory = %d\n",
+	    peer->digest.cd ? peer->digest.cd->mask_size/1024 : 0);
 	storeAppendPrintf(sentry, "\n");
     }
 
@@ -1130,8 +1140,10 @@ statDigestBlob(StoreEntry * sentry)
 	(int) f->cd.memory.kb);
     storeAppendPrintf(sentry, "cd.store_memory = %d\n",
 	(int) (store_digest ? store_digest->mask_size/1024 : 0));
+    storeAppendPrintf(sentry, "\n");
 #endif
     statPeerSelect(sentry);
+    storeAppendPrintf(sentry, "\n");
     storeDigestReport(sentry);
 }
 
