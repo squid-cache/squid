@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.19 1996/04/01 18:25:47 wessels Exp $ */
+/* $Id: store.cc,v 1.20 1996/04/01 23:34:45 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -41,6 +41,9 @@
 #define DEFAULT_SWAP_DIR	"/tmp/cache"
 #endif
 
+#define WITH_MEMOBJ	1
+#define WITHOUT_MEMOBJ	0
+
 /* rate of checking expired objects in main loop */
 #define STORE_MAINTAIN_RATE	(20)
 
@@ -77,7 +80,6 @@ static int swaplog_lock;
 FILE *swaplog_stream = NULL;
 
 /* counter for uncachable objects */
-static int uncache_count = 0;
 static int keychange_count = 0;
 
 /* key temp buffer */
@@ -88,68 +90,82 @@ static char swaplog_file[MAX_FILE_NAME_LEN];
 dynamic_array *cache_dirs = NULL;
 int ncache_dirs = 0;
 
-/* Allocate memory for a new store structure */
-StoreEntry *create_StoreEntry()
+static MemObject *new_MemObject()
+{
+    MemObject *m = NULL;
+    m = xcalloc(1, sizeof(MemObject));
+    meta_data.store_in_mem_objects++;
+    debug(20, 3, "new_MemObject: returning %p\n", m);
+    return m;
+}
+
+static StoreEntry *new_StoreEntry(mem_obj_flag)
 {
     StoreEntry *e = NULL;
 
     e = (StoreEntry *) xcalloc(1, sizeof(StoreEntry));
-    e->mem_obj = (MemObject *) xcalloc(1, sizeof(MemObject));
-    meta_data.store_in_mem_objects++;
-
-    return (e);
+    meta_data.store_entries++;
+    if (mem_obj_flag)
+	e->mem_obj = new_MemObject();
+    debug(20, 3, "new_StoreEntry: returning %p\n", e);
+    return e;
 }
 
-StoreEntry *create_StoreEntry_only()
+static void destroy_MemObject(m)
+     MemObject *m;
 {
-    return ((StoreEntry *) xcalloc(1, sizeof(StoreEntry)));
+    debug(20, 3, "destroy_MemObject: destroying %p\n", m);
+    xfree(m);
+    if (m->mime_hdr)
+	xfree(m->mime_hdr);
+    meta_data.store_in_mem_objects--;
 }
 
-/* Free memory of a store structure */
-/* free a StoreEntry */
-void destroy_StoreEntry(e)
+static void destroy_StoreEntry(e)
      StoreEntry *e;
 {
-    if (e) {
-	if (e->mem_obj) {
-	    meta_data.store_in_mem_objects--;
-	    xfree(e->mem_obj);
-	}
-	safe_free(e);
-    }
+    debug(20, 3, "destroy_StoreEntry: destroying %p\n", e);
+    if (!e)
+	fatal_dump("destroy_StoreEntry: NULL Entry\n");
+    if (e->mem_obj)
+	destroy_MemObject(e->mem_obj);
+    xfree(e);
+    meta_data.store_entries--;
 }
 
-
-/* free unused memory while object is not in memory */
-void destroy_store_mem_obj(e)
-     StoreEntry *e;
+static mem_ptr new_MemObjectData()
 {
-    if (e && e->mem_obj) {
-	safe_free(e->mem_obj->mime_hdr);
-	safe_free(e->mem_obj);
-	meta_data.store_in_mem_objects--;
+    debug(20, 3, "new_MemObjectData: calling memInit()\n");
+    meta_data.hot_vm++;
+    return memInit();
+}
+
+static void destroy_MemObjectData(m)
+     MemObject *m;
+{
+    debug(20, 3, "destroy_MemObjectData: destroying %p\n", m->data);
+    store_mem_size -= m->e_current_len - m->e_lowest_offset;
+    debug(20, 8, "destroy_MemObjectData: Freeing %d in-memory bytes\n",
+	m->e_current_len);
+    debug(20, 8, "destroy_MemObjectData: store_mem_size = %d\n",
+	store_mem_size);
+    if (m->data) {
+	m->data->mem_free(m->data);
+	m->data = NULL;
+	meta_data.hot_vm--;
     }
+    m->e_current_len = 0;
 }
 
 /* Check if there is memory allocated for object in memory */
 int has_mem_obj(e)
      StoreEntry *e;
 {
-    if (e && e->mem_obj)
-	return (TRUE);
-    return (FALSE);
-}
-
-/* allocate memory for swapping object in memory */
-void create_store_mem_obj(e)
-     StoreEntry *e;
-{
-    if (e) {
-	if (has_mem_obj(e))
-	    debug(20, 1, "create_store_mem_obj: old memory not released\n");
-	e->mem_obj = (MemObject *) xcalloc(1, sizeof(MemObject));
-	meta_data.store_in_mem_objects++;
-    }
+    if (!e)
+	fatal_dump("has_mem_obj: NULL Entry\n");
+    if (e->mem_obj)
+	return 1;
+    return 0;
 }
 
 /* ----- INTERFACE BETWEEN STORAGE MANAGER AND HASH TABLE FUNCTIONS --------- */
@@ -174,6 +190,8 @@ HashID storeCreateHashTable(cmp_func)
 int storeHashInsert(e)
      StoreEntry *e;
 {
+    debug(20, 3, "storeHashInsert: Inserting Entry %p key '%s'\n",
+	e, e->key);
     if (e->mem_status == IN_MEMORY)
 	hash_insert(in_mem_table, e->key, e);
     return (hash_join(table, (hash_link *) e));
@@ -208,15 +226,14 @@ void storeSetMemStatus(e, status)
 {
     hash_link *ptr = NULL;
 
-    if (e->mem_status == IN_MEMORY && status != IN_MEMORY) {
-	if (e->key == NULL) {
-	    debug(20, 0, "storeSetMemStatus: NULL key for %s\n", e->url);
-	    return;
+    /* It is not an error to call this with a NULL e->key */
+    if (e->key != NULL) {
+	if (e->mem_status == IN_MEMORY && status != IN_MEMORY) {
+	    if ((ptr = hash_lookup(in_mem_table, e->key)))
+		hash_delete_link(in_mem_table, ptr);
+	} else if (status == IN_MEMORY && e->mem_status != IN_MEMORY) {
+	    hash_insert(in_mem_table, e->key, e);
 	}
-	if ((ptr = hash_lookup(in_mem_table, e->key)))
-	    hash_delete_link(in_mem_table, ptr);
-    } else if (status == IN_MEMORY && e->mem_status != IN_MEMORY) {
-	hash_insert(in_mem_table, e->key, e);
     }
     e->mem_status = status;
 }
@@ -227,23 +244,16 @@ void storeSetMemStatus(e, status)
 void storeFreeEntry(e)
      StoreEntry *e;
 {
-    meta_data.store_entries--;
+    int i;
 
-    if (e == (StoreEntry *) NULL)
-	return;
+    if (!e)
+	fatal_dump("storeFreeEntry: NULL Entry\n");
 
     debug(20, 5, "storeFreeEntry: Freeing %s\n", e->url);
 
     if (has_mem_obj(e)) {
-	store_mem_size -= e->mem_obj->e_current_len - e->mem_obj->e_lowest_offset;
-	debug(20, 8, "storeFreeEntry: Freeing %d in-memory bytes\n",
-	    e->mem_obj->e_current_len);
-	debug(20, 8, "storeFreeEntry: store_mem_size = %d\n", store_mem_size);
-	if (e->mem_obj->data) {
-	    e->mem_obj->data->mem_free(e->mem_obj->data);
-	    e->mem_obj->data = NULL;
-	    --meta_data.hot_vm;
-	}
+	destroy_MemObjectData(e->mem_obj);
+	e->mem_obj->data = NULL;
     }
     meta_data.url_strings -= strlen(e->url);
     safe_free(e->url);
@@ -257,7 +267,6 @@ void storeFreeEntry(e)
 	safe_free(e->mem_obj->pending);
 	/* look up to free client_list */
 	if (e->mem_obj->client_list) {
-	    int i;
 	    for (i = 0; i < e->mem_obj->client_list_size; ++i) {
 		if (e->mem_obj->client_list[i])
 		    safe_free(e->mem_obj->client_list[i]);
@@ -266,24 +275,6 @@ void storeFreeEntry(e)
 	}
     }
     destroy_StoreEntry(e);
-}
-
-/* free only data buffer, let the rest of structure stay. 
- * For Negative cache purpose. */
-void storeFreeEntryData(e)
-     StoreEntry *e;
-{
-    debug(20, 5, "storeFreeEntryData: Freeing data-buffer only %s\n", e->url);
-    store_mem_size -= e->mem_obj->e_current_len - e->mem_obj->e_lowest_offset;
-    debug(20, 8, "storeFreeEntryData: Freeing %d in-memory bytes\n",
-	e->mem_obj->e_current_len);
-    debug(20, 8, "storeFreeEntryData: store_mem_size = %d\n", store_mem_size);
-    e->object_len = 0;
-    e->mem_obj->e_current_len = 0;
-    if (e->mem_obj->data) {
-	e->mem_obj->data->mem_free(e->mem_obj->data);
-	e->mem_obj->data = NULL;
-    }
 }
 
 
@@ -300,13 +291,8 @@ void storePurgeMem(e)
 	debug(20, 0, "%s", storeToString(e));
 	fatal_dump(NULL);
     }
-    /* free up memory data */
-    if (e->mem_obj->data) {
-	e->mem_obj->data->mem_free(e->mem_obj->data);
-	e->mem_obj->data = NULL;
-	--meta_data.hot_vm;
-    }
-    store_mem_size -= e->object_len - e->mem_obj->e_lowest_offset;
+    destroy_MemObjectData(e->mem_obj);
+    e->mem_obj->data = NULL;
     debug(20, 8, "storePurgeMem: Freeing %d in-memory bytes\n",
 	e->object_len);
     debug(20, 8, "storePurgeMem: store_mem_size = %d\n", store_mem_size);
@@ -324,7 +310,8 @@ void storePurgeMem(e)
 	}
 	safe_free(e->mem_obj->client_list);
     }
-    destroy_store_mem_obj(e);
+    destroy_MemObject(e->mem_obj);
+    e->mem_obj = NULL;
 }
 
 /* lock the object for reading, start swapping in if necessary */
@@ -388,8 +375,9 @@ int storeUnlockObject(e)
 	    /* This is where the negative cache gets storeAppended */
 	    /* Briefly lock to replace content with abort message */
 	    e->lock_count++;
-	    storeFreeEntryData(e);
-	    e->mem_obj->data = memInit();
+	    destroy_MemObjectData(e->mem_obj);
+	    e->object_len = 0;
+	    e->mem_obj->data = new_MemObjectData();
 	    storeAppend(e, e->mem_obj->e_abort_msg, strlen(e->mem_obj->e_abort_msg));
 	    e->object_len = e->mem_obj->e_current_len
 		= strlen(e->mem_obj->e_abort_msg);
@@ -410,10 +398,8 @@ StoreEntry *storeGet(url)
 
     debug(20, 5, "storeGet: looking up %s\n", url);
 
-    if (table != (HashID) 0) {
-	if ((hptr = hash_lookup(table, url)) != NULL)
-	    return (StoreEntry *) hptr;
-    }
+    if ((hptr = hash_lookup(table, url)) != NULL)
+	return (StoreEntry *) hptr;
     return NULL;
 }
 
@@ -422,17 +408,109 @@ char *storeGenerateKey(url, request_type_id)
      int request_type_id;
 {
     debug(20, 5, "storeGenerateKey: type=%d %s\n", request_type_id, url);
-    if (request_type_id == REQUEST_OP_POST) {
+    switch (request_type_id) {
+    case REQUEST_OP_GET:
+	return url;
+	break;
+    case REQUEST_OP_POST:
 	sprintf(key_temp_buffer, "/post/%s", url);
 	return key_temp_buffer;
-    }
-    if (request_type_id == REQUEST_OP_HEAD) {
+	break;
+    case REQUEST_OP_HEAD:
 	sprintf(key_temp_buffer, "/head/%s", url);
 	return key_temp_buffer;
+	break;
+    default:
+	fatal_dump("storeGenerateKey: Unsupported request_type_id\n");
+	break;
     }
-    return url;
+    return NULL;
 }
 
+StoreEntry *storeCreateEntry(url, req_hdr, cachable, html_req, method)
+     char *url;
+     char *req_hdr;
+     int cachable;
+     int html_req;
+     int method;
+{
+    StoreEntry *e = NULL;
+    MemObject *m = NULL;
+    debug(20, 5, "storeCreateEntry: '%s'\n", url);
+
+    if (meta_data.hot_vm > store_hotobj_high)
+	storeGetMemSpace(0, 1);
+    e = new_StoreEntry(WITH_MEMOBJ);
+    m = e->mem_obj;
+    e->url = xstrdup(url);
+    meta_data.url_strings += strlen(url);
+    e->type_id = method;
+    if (req_hdr) {
+	m->mime_hdr = xstrdup(req_hdr);
+	if (mime_refresh_request(req_hdr))
+	    BIT_SET(e->flag, REFRESH_REQUEST);
+    }
+    if (cachable)
+	BIT_SET(e->flag, CACHABLE);
+    else
+	BIT_SET(e->flag, RELEASE_REQUEST);
+
+    if (html_req)
+	BIT_SET(e->flag, REQ_HTML);
+
+    e->status = STORE_PENDING;
+    storeSetMemStatus(e, NOT_IN_MEMORY);
+    e->swap_status = NO_SWAP;
+    e->swap_file_number = -1;
+    e->lock_count = 0;
+    m->data = new_MemObjectData();
+    e->refcount = 0;
+    e->lastref = cached_curtime;
+    e->timestamp = 0;		/* set in storeSwapOutHandle() */
+    e->ping_status = NOPING;
+
+    /* allocate pending list */
+    m->pending_list_size = MIN_PENDING;
+    m->pending = (struct pentry **)
+	xcalloc(m->pending_list_size, sizeof(struct pentry *));
+
+    /* allocate client list */
+    m->client_list_size = MIN_CLIENT;
+    m->client_list = (ClientStatusEntry **)
+	xcalloc(m->client_list_size, sizeof(ClientStatusEntry *));
+
+    return e;
+
+}
+
+static void storeSetKey(e)
+     StoreEntry *e;
+{
+    debug(20, 3, "storeSetKey: '%s'\n", e->url);
+    if (e->type_id == REQUEST_OP_GET) {
+	e->key = e->url;
+	BIT_SET(e->flag, KEY_URL);
+	return;
+    }
+    e->key = xstrdup(storeGenerateKey(e->url, e->type_id));
+    BIT_RESET(e->flag, KEY_URL);
+}
+
+void storeAddEntry(e)
+     StoreEntry *e;
+{
+    debug(20, 3, "storeAddEntry: '%s'\n", e->url);
+    if (!BIT_TEST(e->flag, CACHABLE)) {
+	debug(20, 0, "storeAddEntry: Called for UN-CACHABLE '%s'\n",
+	    e->url);
+	return;
+    }
+    storeSetKey(e);
+    storeHashInsert(e);
+}
+
+
+#ifdef OLD_CODE
 /*
  * Add a new object to the cache.
  * 
@@ -495,6 +573,7 @@ StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, reques
     e->lastref = cached_curtime;
     e->timestamp = 0;		/* set in storeSwapOutHandle() */
     e->ping_status = NOPING;
+
     if (e->flag & CACHABLE) {
 	if (request_type_id == REQUEST_OP_GET) {
 	    e->key = e->url;
@@ -531,6 +610,7 @@ StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, reques
 
     return e;
 }
+#endif
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
@@ -555,7 +635,7 @@ StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
     meta_data.store_entries++;
     meta_data.url_strings += strlen(url);
 
-    e = create_StoreEntry_only();
+    e = new_StoreEntry(WITHOUT_MEMOBJ);
     e->url = xstrdup(url);
     e->key = NULL;
     e->flag = 0;
@@ -923,7 +1003,7 @@ int storeSwapInStart(e)
 	return -1;
     }
     /* create additional structure for object in memory */
-    create_store_mem_obj(e);
+    e->mem_obj = new_MemObject();
 
     e->mem_obj->swap_fd = fd =
 	file_open(storeSwapFullPath(e->swap_file_number, NULL), NULL, O_RDONLY);
@@ -937,8 +1017,7 @@ int storeSwapInStart(e)
     debug(20, 5, "storeSwapInStart: initialized swap file '%s' for <URL:%s>\n",
 	storeSwapFullPath(e->swap_file_number, NULL), e->url);
 
-    e->mem_obj->data = memInit();
-    ++meta_data.hot_vm;
+    e->mem_obj->data = new_MemObjectData();
 
     storeSetMemStatus(e, SWAPPING_IN);
     e->mem_obj->swap_offset = 0;
@@ -1123,6 +1202,9 @@ void storeRebuildFromDisk()
     FILE *new_log = NULL;
     char *new_log_name = NULL;
 
+    if (stat(swaplog_file, &sb) < 0)
+	return;
+
     for (i = 0; i < ncache_dirs; ++i)
 	debug(20, 1, "Rebuilding storage from disk image in %s\n", swappath(i));
     start = getCurrentTime();
@@ -1298,7 +1380,7 @@ void storeComplete(e)
 {
     debug(20, 5, "storeComplete: <URL:%s>\n", e->url);
 
-    if (e->flag & KEY_CHANGE) {
+    if (!e->key || e->flag & KEY_CHANGE) {
 	/* Never cache private objects */
 	BIT_SET(e->flag, RELEASE_REQUEST);
 	BIT_RESET(e->flag, CACHABLE);
@@ -1309,9 +1391,8 @@ void storeComplete(e)
     e->status = STORE_OK;
     storeSetMemStatus(e, IN_MEMORY);
     e->swap_status = NO_SWAP;
-    /* start writing it to disk, exclude cache_object */
-    if ((strncmp("cache_obj", e->url, 9) != 0) &&
-	(e->flag & CACHABLE) &&
+    /* start writing it to disk */
+    if ((e->flag & CACHABLE) &&
 	!(e->flag & RELEASE_REQUEST) &&
 	(e->type_id == REQ_GET)) {
 	storeSwapOutStart(e);
@@ -1882,6 +1963,7 @@ int storeRelease(e)
     StoreEntry *result = NULL;
     StoreEntry *head_result = NULL;
     hash_link *hptr = NULL;
+    hash_link *head_table_entry = NULL;
 
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
@@ -1890,34 +1972,27 @@ int storeRelease(e)
 	BIT_SET(e->flag, RELEASE_REQUEST);
 	return -1;
     }
-    debug(20, 5, "storeRelease: Releasing: %s\n", e->url);
+    debug(20, 3, "storeRelease: Releasing: %s\n", e->url);
 
-    if (table == (HashID) 0)
-	fatal_dump("storeRelease: Hash table 'table' is zero!\n");
-
-    if (e->key == NULL) {
-	debug(20, 0, "storeRelease: NULL key for %s\n", e->url);
-	debug(20, 0, "Dump of Entry 'e':\n %s\n", storeToString(e));
-	fatal_dump(NULL);
-    }
-    if ((hptr = hash_lookup(table, e->key)) == NULL) {
-	debug(20, 0, "storeRelease: Not Found: %s\n", e->url);
-	debug(20, 0, "Dump of Entry 'e':\n %s\n", storeToString(e));
-	fatal_dump(NULL);
-    }
-    result = (StoreEntry *) hptr;
-
-    if (result != e) {
-	debug(20, 0, "storeRelease: Duplicated entry? <URL:%s>\n",
-	    result->url ? result->url : "NULL");
-	debug(20, 0, "Dump of Entry 'e':\n%s", storeToString(e));
-	debug(20, 0, "Dump of Entry 'result':\n%s", storeToString(result));
-	fatal_dump(NULL);
+    if (e->key != NULL) {
+	if ((hptr = hash_lookup(table, e->key)) == NULL) {
+	    debug(20, 0, "storeRelease: Not Found: %s\n", e->url);
+	    debug(20, 0, "Dump of Entry 'e':\n %s\n", storeToString(e));
+	    fatal_dump(NULL);
+	}
+	result = (StoreEntry *) hptr;
+	if (result != e) {
+	    debug(20, 0, "storeRelease: Duplicated entry? <URL:%s>\n",
+		result->url ? result->url : "NULL");
+	    debug(20, 0, "Dump of Entry 'e':\n%s", storeToString(e));
+	    debug(20, 0, "Dump of Entry 'result':\n%s", storeToString(result));
+	    fatal_dump(NULL);
+	}
     }
     if (e->type_id == REQUEST_OP_GET) {
 	/* check if coresponding HEAD object exists. */
-	hash_link *head_table_entry = NULL;
-	head_table_entry = hash_lookup(table, storeGenerateKey(e->url, REQUEST_OP_HEAD));
+	head_table_entry = hash_lookup(table,
+	    storeGenerateKey(e->url, REQUEST_OP_HEAD));
 	if (head_table_entry) {
 	    head_result = (StoreEntry *) head_table_entry;
 	    if (head_result) {
@@ -1926,7 +2001,10 @@ int storeRelease(e)
 	    }
 	}
     }
-    debug(20, 3, "storeRelease: Release object key: %s \n", e->key);
+    if (e->key)
+	debug(20, 5, "storeRelease: Release object key: %s\n", e->key);
+    else
+	debug(20, 5, "storeRelease: Release anonymous object\n");
 
     if (e->swap_status == SWAP_OK && (e->swap_file_number > -1)) {
 	(void) safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 0);
@@ -1938,7 +2016,8 @@ int storeRelease(e)
     CacheInfo->proto_purgeobject(CacheInfo,
 	CacheInfo->proto_id(e->url),
 	e->object_len);
-    storeHashDelete(hptr);
+    if (hptr)
+	storeHashDelete(hptr);
     storeFreeEntry(e);
     return 0;
 }
@@ -1959,8 +2038,6 @@ void storeChangeKey(e)
 	debug(25, 0, "storeChangeKey: NULL key for %s\n", e->url);
 	return;
     }
-    if (table == (HashID) 0)
-	fatal_dump("storeChangeKey: Hash table 'table' is zero!\n");
 
     if ((table_entry = hash_lookup(table, e->key)))
 	result = (StoreEntry *) table_entry;
@@ -1979,6 +2056,7 @@ void storeChangeKey(e)
     BIT_RESET(result->flag, KEY_URL);
 }
 
+#ifdef OLD_CODE
 void storeUnChangeKey(e)
      StoreEntry *e;
 {
@@ -1995,8 +2073,6 @@ void storeUnChangeKey(e)
 	debug(25, 0, "storeUnChangeKey: NULL key for %s\n", e->url);
 	return;
     }
-    if (table == (HashID) 0)
-	fatal_dump("storeUnChangeKey: Hash table 'table' is zero!\n");
 
     if ((table_entry = hash_lookup(table, e->key)))
 	E1 = (StoreEntry *) table_entry;
@@ -2033,6 +2109,7 @@ void storeUnChangeKey(e)
     BIT_SET(E1->flag, KEY_URL);
     debug(25, 1, "storeUnChangeKey: Changed back to '%s'\n", key);
 }
+#endif
 
 /* return if the current key is the original one. */
 int storeOriginalKey(e)
@@ -2455,9 +2532,6 @@ int storeMaintainSwapSpace()
     hash_link *link_ptr = NULL, *next = NULL;
     StoreEntry *e = NULL;
     int rm_obj = 0;
-
-    if (table == (HashID) 0)
-	fatal_dump("storeMaintainSwapSpace: Hash table 'table' is zero!\n");
 
     /* Scan row of hash table each second and free storage if we're
      * over the high-water mark */

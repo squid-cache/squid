@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.21 1996/04/01 18:23:13 wessels Exp $ */
+/* $Id: http.cc,v 1.22 1996/04/01 23:34:44 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -210,7 +210,7 @@ static void httpProcessReplyHeader(data, buf)
 	case 410:		/* Gone */
 	    /* These can be cached for a long time, make the key public */
 	    entry->expires = cached_curtime + ttlSet(entry);
-	    storeUnChangeKey(entry);
+	    storeAddEntry(entry);
 	    break;
 	case 401:		/* Unauthorized */
 	case 407:		/* Proxy Authentication Required */
@@ -222,7 +222,7 @@ static void httpProcessReplyHeader(data, buf)
 	default:
 	    /* These can be negative cached, make key public */
 	    entry->expires = cached_curtime + getNegativeTTL();
-	    storeUnChangeKey(entry);
+	    storeAddEntry(entry);
 	    break;
 	}
     }

@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.15 1996/03/29 21:19:19 wessels Exp $ */
+/* $Id: ftp.cc,v 1.16 1996/04/01 23:34:43 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -467,6 +467,7 @@ int ftpStart(unusedfd, url, entry)
 	COMM_SELECT_LIFETIME,
 	(PF) ftpLifetimeExpire,
 	(caddr_t) data);
+    storeAddEntry(entry);	/* Make it public */
 
     return COMM_OK;
 }
