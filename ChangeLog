@@ -6,6 +6,7 @@ Changes to squid-1.1.alpha9:
 	- Don't swap negative-cache objects to disk (storeCheckSwappable())
 	- Only purge MemObject if entry is swapped to disk.
 	- Includes all squid-1.0 changes up to squid-1.0.7
+	- Fixed purify free memory errors in clientAccessCheck().
 
 Changes to squid-1.1.alpha8:
 
