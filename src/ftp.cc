@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.260 1999/01/11 20:09:38 wessels Exp $
+ * $Id: ftp.cc,v 1.261 1999/01/11 20:28:02 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -50,7 +50,9 @@ typedef enum {
     SENT_CWD,
     SENT_LIST,
     SENT_NLST,
+#if RESTART_UNSUPPORTED
     SENT_REST,
+#endif
     SENT_RETR,
     SENT_STOR,
     SENT_QUIT,
@@ -95,7 +97,9 @@ typedef struct _Ftpdata {
     int size;
     wordlist *pathcomps;
     char *filepath;
+#if RESTART_UNSUPPORTED
     int restart_offset;
+#endif
     int rest_att;
     char *proxy_host;
     size_t list_width;
@@ -189,8 +193,10 @@ static FTPSM ftpReadCwd;
 static FTPSM ftpSendList;
 static FTPSM ftpSendNlst;
 static FTPSM ftpReadList;
+#if RESTART_UNSUPPORTED
 static FTPSM ftpSendRest;
 static FTPSM ftpReadRest;
+#endif
 static FTPSM ftpSendRetr;
 static FTPSM ftpReadRetr;
 static FTPSM ftpReadTransferDone;
@@ -242,7 +248,9 @@ FTPSM *FTP_SM_FUNCS[] =
     ftpReadCwd,
     ftpReadList,		/* SENT_LIST */
     ftpReadList,		/* SENT_NLST */
+#if RESTART_UNSUPPORTED
     ftpReadRest,
+#endif
     ftpReadRetr,
     ftpReadStor,
     ftpReadQuit,
@@ -1847,8 +1855,10 @@ ftpRestOrList(FtpStateData * ftpState)
 	ftpState->flags.use_base = 1;
     } else if (ftpState->flags.isdir)
 	ftpSendList(ftpState);
+#if RESTART_UNSUPPORTED
     else if (ftpState->restart_offset > 0)
 	ftpSendRest(ftpState);
+#endif
     else
 	ftpSendRetr(ftpState);
 }
@@ -1888,6 +1898,7 @@ ftpReadStor(FtpStateData * ftpState)
     }
 }
 
+#if RESTART_UNSUPPORTED
 static void
 ftpSendRest(FtpStateData * ftpState)
 {
@@ -1911,6 +1922,7 @@ ftpReadRest(FtpStateData * ftpState)
 	ftpFail(ftpState);
     }
 }
+#endif
 
 static void
 ftpSendList(FtpStateData * ftpState)
