@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.21 2001/01/02 01:41:35 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.22 2001/01/04 03:42:38 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -322,7 +322,7 @@ storeUfsDirOpenSwapLog(SwapDir * sd)
     char *path;
     int fd;
     path = storeUfsDirSwapLogFile(sd, NULL);
-    fd = file_open(path, O_WRONLY | O_CREAT);
+    fd = file_open(path, O_WRONLY | O_CREAT | O_BINARY);
     if (fd < 0) {
 	debug(50, 1) ("%s: %s\n", path, xstrerror());
 	fatal("storeUfsDirOpenSwapLog: Failed to open swap log.");
@@ -756,7 +756,7 @@ storeUfsDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
 	    snprintf(rb->fullfilename, SQUID_MAXPATHLEN, "%s/%s",
 		rb->fullpath, rb->entry->d_name);
 	    debug(20, 3) ("storeUfsDirGetNextFile: Opening %s\n", rb->fullfilename);
-	    fd = file_open(rb->fullfilename, O_RDONLY);
+	    fd = file_open(rb->fullfilename, O_RDONLY | O_BINARY);
 	    if (fd < 0)
 		debug(50, 1) ("storeUfsDirGetNextFile: %s: %s\n", rb->fullfilename, xstrerror());
 	    else
@@ -862,7 +862,7 @@ storeUfsDirCloseTmpSwapLog(SwapDir * sd)
     char *new_path = xstrdup(storeUfsDirSwapLogFile(sd, ".new"));
     int fd;
     file_close(ufsinfo->swaplog_fd);
-#ifdef _SQUID_OS2_
+#if defined (_SQUID_OS2_) || defined (_SQUID_CYGWIN_)
     if (unlink(swaplog_path) < 0) {
 	debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
 	fatal("storeUfsDirCloseTmpSwapLog: unlink failed");
@@ -871,7 +871,7 @@ storeUfsDirCloseTmpSwapLog(SwapDir * sd)
     if (xrename(new_path, swaplog_path) < 0) {
 	fatal("storeUfsDirCloseTmpSwapLog: rename failed");
     }
-    fd = file_open(swaplog_path, O_WRONLY | O_CREAT);
+    fd = file_open(swaplog_path, O_WRONLY | O_CREAT | O_BINARY);
     if (fd < 0) {
 	debug(50, 1) ("%s: %s\n", swaplog_path, xstrerror());
 	fatal("storeUfsDirCloseTmpSwapLog: Failed to open swap log.");
@@ -905,7 +905,7 @@ storeUfsDirOpenTmpSwapLog(SwapDir * sd, int *clean_flag, int *zero_flag)
     if (ufsinfo->swaplog_fd >= 0)
 	file_close(ufsinfo->swaplog_fd);
     /* open a write-only FD for the new log */
-    fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC);
+    fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
     if (fd < 0) {
 	debug(50, 1) ("%s: %s\n", new_path, xstrerror());
 	fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");
@@ -917,6 +917,9 @@ storeUfsDirOpenTmpSwapLog(SwapDir * sd, int *clean_flag, int *zero_flag)
 	debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
 	fatal("Failed to open swap log for reading");
     }
+#if defined(_SQUID_CYGWIN_)
+    setmode(fileno(fp), O_BINARY);
+#endif
     memset(&clean_sb, '\0', sizeof(struct stat));
     if (stat(clean_path, &clean_sb) < 0)
 	*clean_flag = 0;
@@ -955,7 +958,7 @@ storeUfsDirWriteCleanStart(SwapDir * sd)
     sd->log.clean.write = NULL;
     sd->log.clean.state = NULL;
     state->new = xstrdup(storeUfsDirSwapLogFile(sd, ".clean"));
-    state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
+    state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
     if (state->fd < 0) {
 	xfree(state->new);
 	xfree(state);
@@ -966,7 +969,9 @@ storeUfsDirWriteCleanStart(SwapDir * sd)
     state->outbuf = xcalloc(CLEAN_BUF_SZ, 1);
     state->outbuf_offset = 0;
     state->walker = sd->repl->WalkInit(sd->repl);
+#if !(defined(_SQUID_OS2_) || defined (_SQUID_CYGWIN_))
     unlink(state->new);
+#endif
     unlink(state->cln);
     debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
 	state->new, state->fd);
@@ -1034,6 +1039,7 @@ storeUfsDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
 static void
 storeUfsDirWriteCleanDone(SwapDir * sd)
 {
+    int fd;
     struct _clean_state *state = sd->log.clean.state;
     if (NULL == state)
 	return;
@@ -1055,24 +1061,26 @@ storeUfsDirWriteCleanDone(SwapDir * sd)
      * so we have to close before renaming.
      */
     storeUfsDirCloseSwapLog(sd);
+    /* save the fd value for a later test */
+    fd = state->fd;
     /* rename */
     if (state->fd >= 0) {
-#ifdef _SQUID_OS2_
+#if defined(_SQUID_OS2_) || defined (_SQUID_CYGWIN_)
 	file_close(state->fd);
 	state->fd = -1;
-	if (unlink(cur) < 0)
+	if (unlink(state->cur) < 0)
 	    debug(50, 0) ("storeDirWriteCleanLogs: unlinkd failed: %s, %s\n",
-		xstrerror(), cur);
+		xstrerror(), state->cur);
 #endif
 	xrename(state->new, state->cur);
     }
     /* touch a timestamp file if we're not still validating */
     if (store_dirs_rebuilding)
 	(void) 0;
-    else if (state->fd < 0)
+    else if (fd < 0)
 	(void) 0;
     else
-	file_close(file_open(state->cln, O_WRONLY | O_CREAT | O_TRUNC));
+	file_close(file_open(state->cln, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY));
     /* close */
     safe_free(state->cur);
     safe_free(state->new);

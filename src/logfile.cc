@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.6 2000/10/10 18:15:30 wessels Exp $
+ * $Id: logfile.cc,v 1.7 2001/01/04 03:42:34 wessels Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -41,7 +41,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 {
     int fd;
     Logfile *lf;
-    fd = file_open(path, O_WRONLY | O_CREAT);
+    fd = file_open(path, O_WRONLY | O_CREAT | O_TEXT);
     if (DISK_ERROR == fd) {
 	if (ENOENT == errno && fatal_flag) {
 	    fatalf("Cannot open '%s' because\n"
@@ -108,7 +108,7 @@ logfileRotate(Logfile * lf)
 	xrename(lf->path, to);
     }
     /* Reopen the log.  It may have been renamed "manually" */
-    lf->fd = file_open(lf->path, O_WRONLY | O_CREAT);
+    lf->fd = file_open(lf->path, O_WRONLY | O_CREAT | O_TEXT);
     if (DISK_ERROR == lf->fd && lf->flags.fatal) {
 	debug(50, 1) ("logfileRotate: %s: %s\n", lf->path, xstrerror());
 	fatalf("Cannot open %s: %s", lf->path, xstrerror());

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.97 2001/01/01 16:24:39 hno Exp $
+ * $Id: mime.cc,v 1.98 2001/01/04 03:42:35 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -297,6 +297,9 @@ mimeInit(char *filename)
 	debug(50, 1) ("mimeInit: %s: %s\n", filename, xstrerror());
 	return;
     }
+#if defined (_SQUID_CYGWIN_)
+    setmode(fileno(fp), O_TEXT);
+#endif
     mimeFreeMemory();
     while (fgets(buf, BUFSIZ, fp)) {
 	if ((t = strchr(buf, '#')))
@@ -406,7 +409,7 @@ mimeLoadIconFile(const char *icon)
     if (storeGetPublic(url, METHOD_GET))
 	return;
     snprintf(path, MAXPATHLEN, "%s/%s", Config.icons.directory, icon);
-    fd = file_open(path, O_RDONLY);
+    fd = file_open(path, O_RDONLY | O_BINARY);
     if (fd < 0) {
 	debug(25, 0) ("mimeLoadIconFile: %s: %s\n", path, xstrerror());
 	return;

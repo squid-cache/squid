@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.201 2000/12/31 23:53:08 wessels Exp $
+ * $Id: tools.cc,v 1.202 2001/01/04 03:42:35 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -578,7 +578,7 @@ writePidFile(void)
 	return;
     enter_suid();
     old_umask = umask(022);
-    fd = file_open(f, O_WRONLY | O_CREAT | O_TRUNC);
+    fd = file_open(f, O_WRONLY | O_CREAT | O_TRUNC | O_TEXT);
     umask(old_umask);
     leave_suid();
     if (fd < 0) {
@@ -955,6 +955,9 @@ parseEtcHosts(void)
 	    Config.etcHostsPath, xstrerror());
 	return;
     }
+#if defined(_SQUID_CYGWIN_)
+    setmode(fileno(fp), O_TEXT);
+#endif
     while (fgets(buf, 1024, fp)) {	/* for each line */
 	wordlist *hosts = NULL;
 	if (buf[0] == '#')	/* MS-windows likes to add comments */

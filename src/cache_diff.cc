@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_diff.cc,v 1.13 2000/10/31 23:48:13 wessels Exp $
+ * $Id: cache_diff.cc,v 1.14 2001/01/04 03:42:34 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -137,6 +137,9 @@ cacheIndexAddLog(CacheIndex * idx, const char *fname)
 	fprintf(stderr, "cannot open %s: %s\n", fname, strerror(errno));
 	return 0;
     }
+#if defined(_SQUID_CYGWIN_)
+    setmode(fileno(file), O_BINARY);
+#endif
     scanned_count = cacheIndexScan(idx, fname, file);
 
     fclose(file);

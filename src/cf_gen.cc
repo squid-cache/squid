@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.37 2000/11/25 16:02:14 adrian Exp $
+ * $Id: cf_gen.cc,v 1.38 2001/01/04 03:42:34 wessels Exp $
  *
  * DEBUG: none          Generate squid.conf and cf_parser.c
  * AUTHOR: Max Okumoto
@@ -65,6 +65,12 @@
 #endif
 #if HAVE_ASSERT_H
 #include <assert.h>
+#endif
+#if defined(_SQUID_CYGWIN_)
+#include <io.h>
+#endif
+#if HAVE_FCNTL_H
+#include <fcntl.h>
 #endif
 
 #include "util.h"
@@ -145,6 +151,9 @@ main(int argc, char *argv[])
 	perror(input_filename);
 	exit(1);
     }
+#if defined(_SQUID_CYGWIN_)
+    setmode(fileno(fp), O_TEXT);
+#endif
     state = sSTART;
     while (feof(fp) == 0 && state != sEXIT) {
 	char buff[MAX_LINE];
@@ -318,6 +327,9 @@ main(int argc, char *argv[])
 	perror(output_filename);
 	exit(1);
     }
+#if defined(_SQUID_CYGWIN_)
+    setmode(fileno(fp), O_TEXT);
+#endif
     fprintf(fp,
 	"/*\n"
 	" * Generated automatically from %s by %s\n"
@@ -340,6 +352,9 @@ main(int argc, char *argv[])
 	perror(conf_filename);
 	exit(1);
     }
+#if defined(_SQUID_CYGWIN_)
+    setmode(fileno(fp), O_TEXT);
+#endif
     gen_conf(entries, fp);
     fclose(fp);
 

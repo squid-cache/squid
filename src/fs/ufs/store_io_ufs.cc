@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.3 2000/06/26 20:17:13 adrian Exp $
+ * $Id: store_io_ufs.cc,v 1.4 2001/01/04 03:42:38 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -54,7 +54,7 @@ storeUfsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     struct stat sb;
     int fd;
     debug(79, 3) ("storeUfsOpen: fileno %08X\n", f);
-    fd = file_open(path, O_RDONLY);
+    fd = file_open(path, O_RDONLY | O_BINARY);
     if (fd < 0) {
 	debug(79, 3) ("storeUfsOpen: got failure (%d)\n", errno);
 	return NULL;
@@ -88,7 +88,7 @@ storeUfsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * ca
 {
     storeIOState *sio;
     int fd;
-    int mode = (O_WRONLY | O_CREAT | O_TRUNC);
+    int mode = (O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
     char *path;
     ufsinfo_t *ufsinfo = (ufsinfo_t *) SD->fsdata;
     sfileno filn;
