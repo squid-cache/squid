@@ -17,7 +17,7 @@
 int splayLastResult = 0;
 
 splayNode *
-splay_insert(void *data, splayNode * top, SPCMP * compare)
+splay_insert(void *data, splayNode * top, SPLAYCMP * compare)
 {
     splayNode *new = xcalloc(sizeof(splayNode), 1);
     new->data = data;
@@ -44,7 +44,7 @@ splay_insert(void *data, splayNode * top, SPCMP * compare)
 }
 
 splayNode *
-splay_splay(const void *data, splayNode * top, SPCMP * compare)
+splay_splay(const void *data, splayNode * top, SPLAYCMP * compare)
 {
     splayNode N;
     splayNode *l;
@@ -97,7 +97,7 @@ splay_splay(const void *data, splayNode * top, SPCMP * compare)
 }
 
 void
-splay_destroy(splayNode * top, void (*free_func) (void *))
+splay_destroy(splayNode * top, SPLAYFREE *free_func)
 {
     if (top->left)
 	splay_destroy(top->left, free_func);
@@ -106,6 +106,17 @@ splay_destroy(splayNode * top, void (*free_func) (void *))
     free_func(top->data);
     xfree(top);
 }
+
+void
+splay_walk(splayNode *top, SPLAYWALKEE *walkee, void *state)
+{
+    if (top->left)
+	splay_walk(top->left, walkee, state);
+    if (top->right)
+	splay_walk(top->right, walkee, state);
+    walkee(top->data, state);
+}
+
 
 
 #ifdef DRIVER
