@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.200 1997/07/07 05:29:39 wessels Exp $
+ * $Id: cache_cf.cc,v 1.201 1997/07/14 04:27:37 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -423,7 +423,17 @@ parse_cachedir(struct _cacheSwap *swap)
 static void
 free_cachedir(struct _cacheSwap *swap)
 {
-	assert(0);
+	SwapDir *s;
+	int i;
+	for (i = 0; i<swap->n_configured; i++) {
+		s = swap->swapDirs+i;
+		xfree(s->path);	
+		filemapFreeMemory(s->map);
+	}
+	safe_free(swap->swapDirs);
+	swap->swapDirs = NULL;
+	swap->n_allocated = 0;
+	swap->n_configured = 0;
 }
 
 static void
@@ -518,7 +528,12 @@ parse_cachemgrpasswd(cachemgr_passwd **head)
 static void
 free_cachemgrpasswd(cachemgr_passwd **head)
 {
-	assert(0);
+	cachemgr_passwd *p;
+	while ((p = *head)) {
+		*head = p->next;
+		xfree(p->passwd);
+		xfree(p);
+	}
 }
 
 
@@ -534,12 +549,23 @@ parse_denyinfo(struct _acl_deny_info_list **var)
     aclParseDenyInfoLine(var);
 }
 
-static void
-free_denyinfo(acl_deny_info_list **head)
+void
+free_denyinfo(acl_deny_info_list **list)
 {
-	assert(0);
+    struct _acl_deny_info_list *a = NULL;
+    struct _acl_deny_info_list *a_next = NULL;
+    struct _acl_name_list *l = NULL;
+    struct _acl_name_list *l_next = NULL;
+    for (a = *list; a; a = a_next) {
+        for (l = a->acl_list; l; l = l_next) {
+            l_next = l->next;
+            safe_free(l);
+        }
+        a_next = a->next;
+        safe_free(a);
+    }
+    *list = NULL;
 }
-
 
 static void
 parse_peeracl(void)

@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.4 1997/07/07 05:29:41 wessels Exp $
+ * $Id: cf_gen.cc,v 1.5 1997/07/14 04:27:38 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -290,6 +290,7 @@ gen_default(Entry * head, FILE * fp)
 	"void\n"
 	"default_all(void)\n"
 	"{\n"
+	"\tcfg_filename = \"Default Configuration\";\n"
 	);
     for (entry = head; entry != NULL; entry = entry->next) {
 	assert(entry->name);
@@ -312,6 +313,7 @@ gen_default(Entry * head, FILE * fp)
 		entry->default_value);
 	}
     }
+    fprintf(fp, "\tcfg_filename = NULL;\n");
     fprintf(fp, "}\n\n");
     return rc;
 }
@@ -327,7 +329,7 @@ gen_parse(Entry * head, FILE * fp)
 	"{\n"
 	"\tint\tresult = 1;\n"
 	"\tchar\t*token;\n"
-	"\n"
+	"\tdebug(0,10)(\"parse_line: %%s\\n\", buff);\n"
 	"\tif ((token = strtok(buff, w_space)) == NULL) {\n"
 	"\t\t/* ignore empty lines */\n"
 	);

@@ -30,7 +30,7 @@ DOC_END
 NAME: mcast_groups
 TYPE: wordlist
 LOC: Config.mcast_group_list
-DEFAULT: NULL
+DEFAULT: none
 DOC_START
 	This tag specifies a list of multicast groups which your
 	server should join to receive multicasted ICP requests.
@@ -109,7 +109,7 @@ DOC_END
 
 NAME: cache_peer cache_host
 TYPE: cache_peer
-DEFAULT: NULL
+DEFAULT: none
 LOC: Config.peers
 DOC_START
 	To specify other caches in a hierarchy, use the format:
@@ -309,7 +309,7 @@ DOC_END
 
 NAME: hierarchy_stoplist
 TYPE: wordlist
-DEFAULT: NULL
+DEFAULT: none
 LOC: Config.hierarchy_stoplist
 DOC_START
 	A list of words which, if found in a URL, cause the object to
@@ -325,7 +325,7 @@ DOC_END
 
 NAME: cache_stoplist
 TYPE: wordlist
-DEFAULT: NULL
+DEFAULT: none
 LOC: Config.cache_stoplist
 DOC_START
 	A list of words which, if found in a URL, cause the object to
@@ -342,7 +342,7 @@ DOC_END
 NAME: cache_stoplist_pattern
 TYPE: regexlist
 LOC: Config.cache_stop_relist
-DEFAULT: NULL
+DEFAULT: none
 DOC_START
 	Just like 'cache_stoplist' but you can use regular expressions
 	instead of simple string matching.  There is no default.
@@ -534,7 +534,7 @@ DOC_END
 NAME: cache_swap_log
 TYPE: string
 LOC: Config.Log.swap
-DEFAULT: NULL
+DEFAULT: none
 DOC_START
 	Location for the cache "swap log."  This log file holds the
 	metadata of objects saved on disk.  It is used to rebuild the
@@ -810,7 +810,7 @@ DOC_END
 #-----------------------------------------------------------------------------
 NAME: wais_relay_host
 TYPE: string
-DEFAULT: NULL
+DEFAULT: none
 LOC: Config.Wais.relayHost
 DOC_NONE
 
@@ -842,7 +842,7 @@ DOC_END
 NAME: refresh_pattern
 TYPE: refreshpattern
 LOC: Config.Refresh
-DEFAULT: NONE
+DEFAULT: none
 DOC_START
 	usage: refresh_pattern regex min percent max
 
@@ -1247,13 +1247,13 @@ DOC_END
 
 NAME: cache_effective_user
 TYPE: string
-DEFAULT: NONE
+DEFAULT: none
 LOC: Config.effectiveUser
 DOC_NONE
 
 NAME: cache_effective_group
 TYPE: string
-DEFAULT: NONE
+DEFAULT: none
 LOC: Config.effectiveGroup
 DOC_START
 	If the cache is run as root, it will change its effective/real
@@ -1462,7 +1462,7 @@ DOC_END
 NAME: ssl_proxy
 TYPE: cache_peer
 LOC: Config.sslProxy
-DEFAULT: NULL
+DEFAULT: none
 DOC_START
 	Specify a hostname and port number where all SSL requests
 	should be forwarded to.
@@ -1480,7 +1480,7 @@ DOC_END
 NAME: passthrough_proxy
 TYPE: cache_peer
 LOC: Config.passProxy
-DEFAULT: NULL
+DEFAULT: none
 DOC_START
 	Specify a hostname and port number where all non-GET (i.e.
 	POST, PUT) requests should be forwarded to.
@@ -1498,13 +1498,13 @@ DOC_END
 NAME: proxy_auth_passwd
 TYPE: string
 LOC: Config.proxyAuth.File
-DEFAULT: NULL
+DEFAULT: none
 DOC_NONE
 
 NAME: proxy_auth_ignore
 TYPE: regexlist
 LOC: Config.proxyAuth.IgnoreDomains
-DEFAULT: NULL
+DEFAULT: none
 DOC_START
 	'passwd_file' is an apache-style file of passwords for
 	authenticated proxy access Looks like user:password, with the
