@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.544 2001/10/24 08:19:08 hno Exp $
+ * $Id: store.cc,v 1.545 2002/08/15 18:11:48 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -416,8 +416,11 @@ storeSetPublicKey(StoreEntry * e)
 		    storeRelease(pe);
 	    }
 	    /* Make sure the request knows the variance status */
-	    if (!request->vary_headers)
-		request->vary_headers = xstrdup(httpMakeVaryMark(request, mem->reply));
+	    if (!request->vary_headers) {
+		const char *vary = httpMakeVaryMark(request, mem->reply);
+		if (vary)
+		    request->vary_headers = xstrdup(vary);
+	    }
 	}
 	if (mem->vary_headers && !storeGetPublic(mem->url, mem->method)) {
 	    /* Create "vary" base object */
