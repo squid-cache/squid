@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.231 1998/03/20 05:07:39 wessels Exp $
+ * $Id: client_side.cc,v 1.232 1998/03/20 18:02:08 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -63,6 +63,7 @@ static STCB clientCacheHit;
 static void clientParseRequestHeaders(clientHttpRequest *);
 static void clientProcessRequest(clientHttpRequest *);
 static void clientProcessExpired(void *data);
+static void clientProcessOnlyIfCachedMiss(clientHttpRequest * http);
 static HttpReply *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
@@ -117,7 +118,7 @@ clientConstructProxyAuthReply(clientHttpRequest * http)
     rep = errorBuildReply(err);
     errorStateFree(err);
     /* add Authenticate header */
-    httpHeaderSetStr(&rep->hdr, HDR_PROXY_AUTHENTICATE, proxy_auth_challenge);
+    httpHeaderPutStr(&rep->header, HDR_PROXY_AUTHENTICATE, proxy_auth_challenge);
     return rep;
 }
 
@@ -381,7 +382,7 @@ modifiedSince(StoreEntry * entry, request_t * request)
     if (entry->lastmod < 0)
 	return 1;
     /* Find size of the object */
-    object_length = httpReplyContentLen(mem->reply);
+    object_length = mem->reply->content_length;
     if (object_length < 0)
 	object_length = contentLen(entry);
     if (entry->lastmod > request->ims) {
@@ -543,7 +544,7 @@ httpRequestFree(void *data)
 	debug(33, 9) ("httpRequestFree: al.url='%s'\n", http->al.url);
 	if (mem) {
 	    http->al.http.code = mem->reply->sline.status;
-	    http->al.http.content_type = httpReplyContentType(mem->reply);
+	    http->al.http.content_type = strBuf(mem->reply->content_type);
 	}
 	http->al.cache.caddr = conn->log_addr;
 	http->al.cache.size = http->out.size;
@@ -878,6 +879,12 @@ clientBuildReplyHeader(clientHttpRequest * http,
     debug(33, 3) ("clientBuildReplyHeader: OUTPUT:\n%s\n", hdr_out);
     memFree(MEM_4K_BUF, xbuf);
     memFree(MEM_4K_BUF, ybuf);
+    /* temporary kludge to test headers, remove it @?@ @?@ */
+    {
+        extern void httpHeaderTestParser(const char *hstr);
+        httpHeaderTestParser(hdr_out);
+    }
+    /* end of kludge */
     return len;
 }
 
@@ -1030,7 +1037,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     } else if ((done = clientCheckTransferDone(http)) != 0 || size == 0) {
 	debug(33, 5) ("clientWriteComplete: FD %d transfer is DONE\n", fd);
 	/* We're finished case */
-	if (httpReplyContentLen(http->entry->mem_obj->reply) < 0 || !done ||
+	if (http->entry->mem_obj->reply->content_length < 0 || !done ||
 	    EBIT_TEST(entry->flag, ENTRY_BAD_LENGTH)) {
 	    /* 
 	     * Client connection closed due to unknown or invalid
@@ -1195,6 +1202,29 @@ clientHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *d
 	comm_close(fd);
 }
 
+/*
+ * client issued a request with an only-if-cached cache-control directive
+ * we did not find a cached object that can be returned without
+ *     contacting other servers
+ * respond with a 504 (Gateway Timeout) as suggested in [RFC 2068]
+ */
+static void
+clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
+{
+    char *url = http->uri;
+    request_t *r = http->request;
+    ErrorState *err = NULL;
+    debug(33, 4) ("clientProcessOnlyIfCachedMiss: '%s %s'\n",
+	RequestMethodStr[r->method], url);
+    debug(33, 10) ("clientProcessMiss: request_hdr:\n%s\n", r->headers);
+    http->al.http.code = HTTP_GATEWAY_TIMEOUT;
+    err = errorCon(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT);
+    err->request = requestLink(r);
+    err->src_addr = http->conn->peer.sin_addr;
+    http->entry = clientCreateStoreEntry(http, r->method, 0);
+    errorAppendEntry(http->entry, err);
+}
+
 static log_type
 clientProcessRequest2(clientHttpRequest * http)
 {
@@ -1298,6 +1328,7 @@ clientProcessRequest(clientHttpRequest * http)
 	storeClientListAdd(entry, http);
     }
     http->out.offset = 0;
+    /* "pure" hit? (will not contact other servers) */
     switch (http->log_type) {
     case LOG_TCP_HIT:
     case LOG_TCP_NEGATIVE_HIT:
@@ -1312,7 +1343,18 @@ clientProcessRequest(clientHttpRequest * http)
 	    memAllocate(MEM_4K_BUF),
 	    clientCacheHit,
 	    http);
+	return;
+    default:
 	break;
+    }
+    /* ok, it is a miss or a "dirty" hit (will contact other servers) */
+    /* are we allowed to contact other servers? */
+    if (r->cache_control && EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED)) {
+	/* nope, bailing out */
+	clientProcessOnlyIfCachedMiss(http);
+	return;
+    }
+    switch (http->log_type) {
     case LOG_TCP_IMS_MISS:
 	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientProcessRequest 2: entry->swap_status == STORE_ABORTED\n");
@@ -1533,6 +1575,12 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     *(*headers_p + header_sz) = '\0';
 
     debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", *headers_p);
+    /* temporary kludge to test headers, remove it @?@ @?@ */
+    {
+        extern void httpHeaderTestParser(const char *hstr);
+        httpHeaderTestParser(*headers_p);
+    }
+    /* end of kludge */
 
     /* Assign http->uri */
     if ((t = strchr(url, '\n')))	/* remove NL */
@@ -1896,7 +1944,7 @@ CheckQuickAbort2(const clientHttpRequest * http)
 	return 1;
     if (http->entry->mem_obj == NULL)
 	return 1;
-    expectlen = httpReplyContentLen(http->entry->mem_obj->reply);
+    expectlen = http->entry->mem_obj->reply->content_length;
     curlen = http->entry->mem_obj->inmem_hi;
     minlen = Config.quickAbort.min;
     if (minlen < 0)
@@ -1946,7 +1994,6 @@ clientCheckTransferDone(clientHttpRequest * http)
     MemObject *mem;
     http_reply *reply;
     int sendlen;
-    int clen;
     if (entry == NULL)
 	return 0;
     /*
@@ -1986,13 +2033,12 @@ clientCheckTransferDone(clientHttpRequest * http)
      * then we must wait for the object to become STORE_OK or
      * STORE_ABORTED.
      */
-    clen = httpReplyContentLen(reply);
     if (sending == SENDING_HDRSONLY)
 	sendlen = reply->hdr_sz;
-    else if (clen < 0)
+    else if (reply->content_length < 0)
 	return 0;
     else
-	sendlen = clen + reply->hdr_sz;
+	sendlen = reply->content_length + reply->hdr_sz;
     /*
      * Now that we have the expected length, did we send it all?
      */
