@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.102 1997/02/19 17:08:19 wessels Exp $
+ * $Id: ipcache.cc,v 1.103 1997/02/19 17:11:06 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -712,7 +712,7 @@ ipcache_nbgethostbyname(const char *name, int fd, IPH handler, void *handlerData
     if (addrs != NULL)		/* TEMPORARY */
 	debug_trap("ipcache_nbgethostbyname: Stack Trashed");
     if (NDnsServersAlloc)
-        debug(14, 0, "WARNING: blocking on gethostbyname() for '%s'\n", name);
+	debug(14, 0, "WARNING: blocking on gethostbyname() for '%s'\n", name);
     ipcache_gethostbyname(name, IP_BLOCKING_LOOKUP);
     ipcache_call_pending(i);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.30 1997/02/19 17:09:16 wessels Exp $
+ * $Id: net_db.cc,v 1.31 1997/02/19 17:11:07 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -370,7 +370,7 @@ netdbDump(StoreEntry * sentry)
 	*(list + i++) = n;
     if (i != meta_data.netdb_addrs)
 	debug(37, 0, "WARNING: netdb_addrs count off, found %d, expected %d\n",
-		i, meta_data.netdb_addrs);
+	    i, meta_data.netdb_addrs);
     qsort((char *) list,
 	i,
 	sizeof(netdbEntry *),
