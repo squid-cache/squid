@@ -5,6 +5,13 @@ UPCOMING CHANGES:
 	- Experiment with returning network probe measurments in ICP
 	  replies.
 
+Changes to squid-1.1.beta18 (November 13, 1996):
+
+	- Fixed 'void *buf' bug icpCreateMessage() (Jean-Hugues ROYER).
+	- Fixed more NULL 'friends' bugs.
+	- Added debug_trap for NULL mem->clients in InvokeHandlers()
+	  (Mark Treacy).
+
 Changes to squid-1.1.beta17 (November 12, 1996):
 
 	- Fixed NULL friends coredump in neighbors_open().
