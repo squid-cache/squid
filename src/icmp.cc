@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.15 1996/10/10 18:48:49 wessels Exp $
+ * $Id: icmp.cc,v 1.16 1996/10/10 22:20:28 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -42,7 +42,7 @@ typedef struct _icmpQueueData {
     char *msg;
     int len;
     struct _icmpQueueData *next;
-    void (*free) _PARAMS((void *));
+    void (*free_func) _PARAMS((void *));
 } icmpQueueData;
 
 static icmpQueueData *IcmpQueueHead = NULL;
@@ -52,7 +52,7 @@ int icmp_sock = -1;
 static void icmpRecv _PARAMS((int, void *));
 static void icmpQueueSend _PARAMS((pingerEchoData * pkt,
 	int len,
-	void          (*free) _PARAMS((void *))));
+	void          (*free_func) _PARAMS((void *))));
 static void icmpSend _PARAMS((int fd, icmpQueueData * queue));
 static void icmpHandleSourcePing _PARAMS((struct sockaddr_in * from, char *buf));
 
@@ -124,10 +124,15 @@ icmpClose(void)
     icmpQueueData *queue;
     debug(29,0,"Closing ICMP socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
+    comm_set_select_handler(icmp_sock,
+	COMM_SELECT_READ,
+	NULL,
+	NULL);
+    icmp_sock = -1;
     while ((queue = IcmpQueueHead)) {
 	IcmpQueueHead = queue->next;
-	if (queue->free)
-	    queue->free(queue->msg);
+	if (queue->free_func)
+	    queue->free_func(queue->msg);
 	safe_free(queue);
     }
 }
@@ -189,15 +194,20 @@ icmpRecv(int unused1, void *unused2)
 static void
 icmpQueueSend(pingerEchoData * pkt,
     int len,
-    void (*free) _PARAMS((void *)))
+    void (*free_func) _PARAMS((void *)))
 {
     icmpQueueData *q = NULL;
     icmpQueueData **H = NULL;
+    if (icmp_sock < 0) {
+	if (free_func)
+	    free_func(pkt);
+	return;
+    }
     debug(37, 3, "icmpQueueSend: Queueing %d bytes\n", len);
     q = xcalloc(1, sizeof(icmpQueueData));
     q->msg = (char *) pkt;
     q->len = len;
-    q->free = free;
+    q->free_func = free_func;
     for (H = &IcmpQueueHead; *H; H = &(*H)->next);
     *H = q;
     comm_set_select_handler(icmp_sock,
@@ -224,8 +234,8 @@ icmpSend(int fd, icmpQueueData * queue)
 	    debug(37, 0, "icmpSend: Wrote %d of %d bytes\n", x, queue->len);
 	}
 	IcmpQueueHead = queue->next;
-	if (queue->free)
-	    queue->free(queue->msg);
+	if (queue->free_func)
+	    queue->free_func(queue->msg);
 	safe_free(queue);
     }
     /* Reinstate handler if needed */
