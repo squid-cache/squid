@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.26 1996/07/23 04:59:33 wessels Exp $
+ * $Id: acl.cc,v 1.27 1996/08/19 22:44:48 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -75,6 +75,10 @@ static squid_acl aclType(s)
     if (!strcmp(s, "time"))
 	return ACL_TIME;
     if (!strcmp(s, "pattern"))
+	return ACL_URLPATH_REGEX;
+    if (!strcmp(s, "urlpath_regex"))
+	return ACL_URLPATH_REGEX;
+    if (!strcmp(s, "url_regex"))
 	return ACL_URL_REGEX;
     if (!strcmp(s, "port"))
 	return ACL_URL_PORT;
@@ -435,6 +439,7 @@ void aclParseAclLine()
 	A->data = (void *) aclParseTimeSpec();
 	break;
     case ACL_URL_REGEX:
+    case ACL_URLPATH_REGEX:
 	A->data = (void *) aclParseRegexList();
 	break;
     case ACL_URL_PORT:
@@ -717,8 +722,11 @@ int aclMatchAcl(acl, checklist)
     case ACL_TIME:
 	return aclMatchTime(acl->data, squid_curtime);
 	/* NOTREACHED */
-    case ACL_URL_REGEX:
+    case ACL_URLPATH_REGEX:
 	return aclMatchRegex(acl->data, r->urlpath);
+	/* NOTREACHED */
+    case ACL_URL_REGEX:
+	return aclMatchRegex(acl->data, urlCanonical(r, NULL));
 	/* NOTREACHED */
     case ACL_URL_PORT:
 	return aclMatchInteger(acl->data, r->port);
@@ -830,6 +838,7 @@ void aclDestroyAcls()
 	    aclDestroyTimeList(a->data);
 	    break;
 	case ACL_URL_REGEX:
+	case ACL_URLPATH_REGEX:
 	    aclDestroyRegexList(a->data);
 	    break;
 	case ACL_URL_PORT:
