@@ -1,0 +1,167 @@
+#!/bin/csh -f
+#
+#  RunCache - runs cached so that whenever it exits, it restarts.  
+#             Must compile cached *without* the -DDAEMON flag.
+#
+#  Usage: RunCache [cachedir]
+#
+#  Darren Hardy, University of Colorado - Boulder, August 1994
+#
+#  $Id: RunCache.in,v 1.1 1996/02/22 06:23:57 wessels Exp $
+#
+#######################################################################
+#
+#  Copyright (c) 1994, 1995.  All rights reserved.
+#  
+#    The Harvest software was developed by the Internet Research Task
+#    Force Research Group on Resource Discovery (IRTF-RD):
+#  
+#          Mic Bowman of Transarc Corporation.
+#          Peter Danzig of the University of Southern California.
+#          Darren R. Hardy of the University of Colorado at Boulder.
+#          Udi Manber of the University of Arizona.
+#          Michael F. Schwartz of the University of Colorado at Boulder.
+#          Duane Wessels of the University of Colorado at Boulder.
+#  
+#    This copyright notice applies to software in the Harvest
+#    ``src/'' directory only.  Users should consult the individual
+#    copyright notices in the ``components/'' subdirectories for
+#    copyright information about other software bundled with the
+#    Harvest source code distribution.
+#  
+#  TERMS OF USE
+#    
+#    The Harvest software may be used and re-distributed without
+#    charge, provided that the software origin and research team are
+#    cited in any use of the system.  Most commonly this is
+#    accomplished by including a link to the Harvest Home Page
+#    (http://harvest.cs.colorado.edu/) from the query page of any
+#    Broker you deploy, as well as in the query result pages.  These
+#    links are generated automatically by the standard Broker
+#    software distribution.
+#    
+#    The Harvest software is provided ``as is'', without express or
+#    implied warranty, and with no support nor obligation to assist
+#    in its use, correction, modification or enhancement.  We assume
+#    no liability with respect to the infringement of copyrights,
+#    trade secrets, or any patents, and are not responsible for
+#    consequential damages.  Proper use of the Harvest software is
+#    entirely the responsibility of the user.
+#  
+#  DERIVATIVE WORKS
+#  
+#    Users may make derivative works from the Harvest software, subject 
+#    to the following constraints:
+#  
+#      - You must include the above copyright notice and these 
+#        accompanying paragraphs in all forms of derivative works, 
+#        and any documentation and other materials related to such 
+#        distribution and use acknowledge that the software was 
+#        developed at the above institutions.
+#  
+#      - You must notify IRTF-RD regarding your distribution of 
+#        the derivative work.
+#  
+#      - You must clearly notify users that your are distributing 
+#        a modified version and not the original Harvest software.
+#  
+#      - Any derivative product is also subject to these copyright 
+#        and use restrictions.
+#  
+#    Note that the Harvest software is NOT in the public domain.  We
+#    retain copyright, as specified above.
+#  
+#  HISTORY OF FREE SOFTWARE STATUS
+#  
+#    Originally we required sites to license the software in cases
+#    where they were going to build commercial products/services
+#    around Harvest.  In June 1995 we changed this policy.  We now
+#    allow people to use the core Harvest software (the code found in
+#    the Harvest ``src/'' directory) for free.  We made this change
+#    in the interest of encouraging the widest possible deployment of
+#    the technology.  The Harvest software is really a reference
+#    implementation of a set of protocols and formats, some of which
+#    we intend to standardize.  We encourage commercial
+#    re-implementations of code complying to this set of standards.  
+#  
+#
+if ($?HARVEST_HOME == 0) then
+	setenv HARVEST_HOME @INSTALL_TOPDIR@
+endif
+
+limit coredumpsize unlimited >&/dev/null
+
+set path = ($HARVEST_HOME/bin $HARVEST_HOME/lib $path)
+set conf = $HARVEST_HOME/lib/cached.conf
+
+if ($#argv == 1) then
+	set cachedir = "$1"
+else
+	set cachedir = `grep ^cache_dir $conf | head -1 | awk '{print $2}'`
+	if (x$cachedir == x) then
+		set cachedir = "/tmp/cache"
+	endif
+endif
+
+echo ""
+echo "            HARVEST_HOME = $HARVEST_HOME"
+echo "Cache Configuration File = $conf"
+echo "         Cache Directory = $cachedir"
+
+# Try to find 'dnsserver' and 'ftpget' on the PATH, or as 
+# absolute pathnames
+#
+set dnsserver = `grep ^cache_dns_program $conf | awk '{print $2}'`
+if (x$dnsserver == x) then
+	set dnsserver = 'dnsserver'
+endif
+
+set ftpget = `grep ^cache_ftp_program $conf | awk '{print $2}'`
+if (x$ftpget == x) then
+	set ftpget = 'ftpget'
+endif
+
+foreach p ( cached $dnsserver $ftpget ) 
+        echo -n "        External Program: "
+	if ! { $p -v } then
+		echo ""
+		echo ""
+		echo "Unable to locate required program '$p' on the PATH."
+		echo "Please edit either $conf"
+		echo "or $0 to remedy this situation."
+		exit 1
+	endif
+end
+
+echo ""
+
+@ failcount = 0
+while (1) 
+	if ! ( -d $cachedir ) then
+		echo "mkdir $cachedir"; mkdir $cachedir
+	endif
+	echo "cd $cachedir"; cd $cachedir
+
+# NOTE: cached -s option disables logging important messages to syslog.  
+
+	# Send a UDP announcement if enabled in the config file
+	#
+	send-announce $conf >& /dev/null
+
+	echo "Running: cached -s -f $conf >>& cached.out"
+	set start=`date '+%d%H%M%S'`
+	cached -s -f $conf >>& cached.out
+	set stop=`date '+%d%H%M%S'`
+	@ t = $stop - $start
+	if ( 0 <= $t && $t < 5 ) then
+		@ failcount = $failcount + 1
+	else
+		@ failcount = 0
+	endif
+	if ( $failcount > 5 ) then
+		echo "RunCache: EXITING DUE TO REPEATED, FREQUENT FAILURES"
+		exit 1
+	endif
+		
+	sleep 10
+end
