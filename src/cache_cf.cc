@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.317 1998/12/16 00:07:17 wessels Exp $
+ * $Id: cache_cf.cc,v 1.318 1999/01/19 20:26:33 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -259,6 +259,14 @@ configDoConfigure(void)
     if (Config.Port.http == NULL)
 	fatal("No http_port specified!");
     snprintf(ThisCache, sizeof(ThisCache), "%s:%d (%s)",
+	uniqueHostname(),
+	(int) Config.Port.http->i,
+	full_appname_string);
+    /*
+     * the extra space is for loop detection in client_side.c -- we search
+     * for substrings in the Via header.
+     */
+    snprintf(ThisCache2, sizeof(ThisCache), " %s:%d (%s)",
 	uniqueHostname(),
 	(int) Config.Port.http->i,
 	full_appname_string);

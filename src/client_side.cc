@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.432 1999/01/19 02:24:23 wessels Exp $
+ * $Id: client_side.cc,v 1.433 1999/01/19 20:26:35 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -739,8 +739,12 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	request->flags.auth = 1;
     if (httpHeaderHas(req_hdr, HDR_VIA)) {
 	String s = httpHeaderGetList(req_hdr, HDR_VIA);
-	/* ThisCache cannot be a member of Via header, "1.0 ThisCache" can */
-	if (strListIsSubstr(&s, ThisCache, ',')) {
+	/*
+	 * ThisCache cannot be a member of Via header, "1.0 ThisCache" can.
+	 * Note ThisCache2 has a space prepended to the hostname so we don't
+	 * accidentally match super-domains.
+	 */
+	if (strListIsSubstr(&s, ThisCache2, ',')) {
 	    debugObj(33, 1, "WARNING: Forwarding loop detected for:\n",
 		request, (ObjPackMethod) & httpRequestPack);
 	    request->flags.loopdetect = 1;
