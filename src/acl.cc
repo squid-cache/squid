@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.184 1998/09/18 22:37:53 wessels Exp $
+ * $Id: acl.cc,v 1.185 1998/10/13 23:33:29 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1151,123 +1151,123 @@ aclMatchTime(acl_time_data * data, time_t when)
 }
 
 static int
-aclMatchAcl(acl * acl, aclCheck_t * checklist)
+aclMatchAcl(acl * ae, aclCheck_t * checklist)
 {
     request_t *r = checklist->request;
     const ipcache_addrs *ia = NULL;
     const char *fqdn = NULL;
     char *esc_buf;
     int k;
-    if (!acl)
+    if (!ae)
 	return 0;
-    debug(28, 3) ("aclMatchAcl: checking '%s'\n", acl->cfgline);
-    switch (acl->type) {
+    debug(28, 3) ("aclMatchAcl: checking '%s'\n", ae->cfgline);
+    switch (ae->type) {
     case ACL_SRC_IP:
-	return aclMatchIp(&acl->data, checklist->src_addr);
+	return aclMatchIp(&ae->data, checklist->src_addr);
 	/* NOTREACHED */
     case ACL_DST_IP:
 	ia = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
 	if (ia) {
 	    for (k = 0; k < (int) ia->count; k++) {
-		if (aclMatchIp(&acl->data, ia->in_addrs[k]))
+		if (aclMatchIp(&ae->data, ia->in_addrs[k]))
 		    return 1;
 	    }
 	    return 0;
 	} else if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		acl->name, r->host);
+		ae->name, r->host);
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	} else {
-	    return aclMatchIp(&acl->data, no_addr);
+	    return aclMatchIp(&ae->data, no_addr);
 	}
 	/* NOTREACHED */
     case ACL_DST_DOMAIN:
 	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
-	    return aclMatchDomainList(&acl->data, r->host);
+	    return aclMatchDomainList(&ae->data, r->host);
 	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
 	if (fqdn)
-	    return aclMatchDomainList(&acl->data, fqdn);
+	    return aclMatchDomainList(&ae->data, fqdn);
 	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		acl->name, inet_ntoa(ia->in_addrs[0]));
+		ae->name, inet_ntoa(ia->in_addrs[0]));
 	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchDomainList(&acl->data, "none");
+	return aclMatchDomainList(&ae->data, "none");
 	/* NOTREACHED */
     case ACL_SRC_DOMAIN:
 	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
 	if (fqdn) {
-	    return aclMatchDomainList(&acl->data, fqdn);
+	    return aclMatchDomainList(&ae->data, fqdn);
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		acl->name, inet_ntoa(checklist->src_addr));
+		ae->name, inet_ntoa(checklist->src_addr));
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchDomainList(&acl->data, "none");
+	return aclMatchDomainList(&ae->data, "none");
 	/* NOTREACHED */
     case ACL_DST_DOM_REGEX:
 	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
-	    return aclMatchRegex(acl->data, r->host);
+	    return aclMatchRegex(ae->data, r->host);
 	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
 	if (fqdn)
-	    return aclMatchRegex(acl->data, fqdn);
+	    return aclMatchRegex(ae->data, fqdn);
 	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		acl->name, inet_ntoa(ia->in_addrs[0]));
+		ae->name, inet_ntoa(ia->in_addrs[0]));
 	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchRegex(acl->data, "none");
+	return aclMatchRegex(ae->data, "none");
 	/* NOTREACHED */
     case ACL_SRC_DOM_REGEX:
 	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
 	if (fqdn) {
-	    return aclMatchRegex(acl->data, fqdn);
+	    return aclMatchRegex(ae->data, fqdn);
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		acl->name, inet_ntoa(checklist->src_addr));
+		ae->name, inet_ntoa(checklist->src_addr));
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchRegex(acl->data, "none");
+	return aclMatchRegex(ae->data, "none");
 	/* NOTREACHED */
     case ACL_TIME:
-	return aclMatchTime(acl->data, squid_curtime);
+	return aclMatchTime(ae->data, squid_curtime);
 	/* NOTREACHED */
     case ACL_URLPATH_REGEX:
 	esc_buf = xstrdup(strBuf(r->urlpath));
 	rfc1738_unescape(esc_buf);
-	k = aclMatchRegex(acl->data, esc_buf);
+	k = aclMatchRegex(ae->data, esc_buf);
 	safe_free(esc_buf);
 	return k;
 	/* NOTREACHED */
     case ACL_URL_REGEX:
 	esc_buf = xstrdup(urlCanonical(r));
 	rfc1738_unescape(esc_buf);
-	k = aclMatchRegex(acl->data, esc_buf);
+	k = aclMatchRegex(ae->data, esc_buf);
 	safe_free(esc_buf);
 	return k;
 	/* NOTREACHED */
     case ACL_URL_PORT:
-	return aclMatchIntegerRange(acl->data, r->port);
+	return aclMatchIntegerRange(ae->data, r->port);
 	/* NOTREACHED */
     case ACL_USER:
-	return aclMatchIdent(acl->data, checklist->ident);
+	return aclMatchIdent(ae->data, checklist->ident);
 	/* NOTREACHED */
     case ACL_PROTO:
-	return aclMatchInteger(acl->data, r->protocol);
+	return aclMatchInteger(ae->data, r->protocol);
 	/* NOTREACHED */
     case ACL_METHOD:
-	return aclMatchInteger(acl->data, r->method);
+	return aclMatchInteger(ae->data, r->method);
 	/* NOTREACHED */
     case ACL_BROWSER:
-	return aclMatchRegex(acl->data, checklist->browser);
+	return aclMatchRegex(ae->data, checklist->browser);
 	/* NOTREACHED */
     case ACL_PROXY_AUTH:
-	k = aclMatchProxyAuth(acl->data, checklist);
+	k = aclMatchProxyAuth(ae->data, checklist);
 	if (k == 0) {
 	    /* no such user OR we need a proxy authentication header */
 	    checklist->state[ACL_PROXY_AUTH] = ACL_PROXY_AUTH_NEEDED;
@@ -1284,33 +1284,33 @@ aclMatchAcl(acl * acl, aclCheck_t * checklist)
 	}
 	/* NOTREACHED */
     case ACL_SNMP_COMM:
-	return asnMatchIp(acl->data, checklist->src_addr);
+	return asnMatchIp(ae->data, checklist->src_addr);
     case ACL_SRC_ASN:
-	return asnMatchIp(acl->data, checklist->src_addr);
+	return asnMatchIp(ae->data, checklist->src_addr);
     case ACL_DST_ASN:
 	ia = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
 	if (ia) {
 	    for (k = 0; k < (int) ia->count; k++) {
-		if (asnMatchIp(acl->data, ia->in_addrs[k]))
+		if (asnMatchIp(ae->data, ia->in_addrs[k]))
 		    return 1;
 	    }
 	    return 0;
 	} else if (checklist->state[ACL_DST_ASN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("asnMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		acl->name, r->host);
+		ae->name, r->host);
 	    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_NEEDED;
 	} else {
-	    return asnMatchIp(acl->data, no_addr);
+	    return asnMatchIp(ae->data, no_addr);
 	}
 	return 0;
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
-	return aclMatchArp(&acl->data, checklist->src_addr);
+	return aclMatchArp(&ae->data, checklist->src_addr);
 #endif
     case ACL_NONE:
     default:
 	debug(28, 0) ("aclMatchAcl: '%s' has bad type %d\n",
-	    acl->name, acl->type);
+	    ae->name, ae->type);
 	return 0;
     }
     /* NOTREACHED */

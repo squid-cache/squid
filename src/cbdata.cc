@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.24 1998/07/22 20:37:05 wessels Exp $
+ * $Id: cbdata.cc,v 1.25 1998/10/13 23:33:31 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -113,7 +113,7 @@ void
 #if CBDATA_DEBUG
 cbdataAddDbg(const void *p, mem_type mem_type, const char *file, int line)
 #else
-cbdataAdd(const void *p, mem_type mem_type)
+cbdataAdd(const void *p, mem_type mtype)
 #endif
 {
     cbdata *c;
@@ -124,7 +124,7 @@ cbdataAdd(const void *p, mem_type mem_type)
     c = xcalloc(1, sizeof(cbdata));
     c->key = p;
     c->valid = 1;
-    c->mem_type = mem_type;
+    c->mem_type = mtype;
 #if CBDATA_DEBUG
     c->file = file;
     c->line = line;
@@ -136,18 +136,18 @@ cbdataAdd(const void *p, mem_type mem_type)
 static void
 cbdataReallyFree(cbdata * c)
 {
-    mem_type mem_type = c->mem_type;
+    mem_type mtype = c->mem_type;
     void *p = (void *) c->key;
     hash_remove_link(htable, (hash_link *) c);
     cbdataCount--;
     xfree(c);
-    if (mem_type == MEM_DONTFREE)
+    if (mtype == MEM_DONTFREE)
 	return;
     debug(45, 3) ("cbdataReallyFree: Freeing %p\n", p);
-    if (mem_type == MEM_NONE)
+    if (mtype == MEM_NONE)
 	xfree(p);
     else
-	memFree(mem_type, p);
+	memFree(mtype, p);
 }
 
 void
