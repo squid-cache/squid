@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.377 2003/06/23 12:27:12 robertc Exp $
+ * $Id: comm.cc,v 1.378 2003/06/23 14:13:03 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1009,10 +1009,10 @@ comm_accept_check_event(void *data)
 static void
 CommWriteStateCallbackAndFree(int fd, comm_err_t code)
 {
-    CommWriteStateData *CommWriteState = fd_table[fd].rwstate;
+    CommWriteStateData *CommWriteState = fd_table[fd].wstate;
     CWCB *callback = NULL;
     void *cbdata;
-    fd_table[fd].rwstate = NULL;
+    fd_table[fd].wstate = NULL;
 
     if (CommWriteState == NULL)
         return;
@@ -2146,8 +2146,6 @@ commHandleWrite(int fd, void *data) {
     PROF_stop(commHandleWrite);
 }
 
-
-
 /*
  * Queue a write. handler/handler_data are called when the write
  * completes, on error, or on file descriptor close.
@@ -2156,7 +2154,7 @@ commHandleWrite(int fd, void *data) {
  */
 void
 comm_old_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func) {
-    CommWriteStateData *state = fd_table[fd].rwstate;
+    CommWriteStateData *state = fd_table[fd].wstate;
 
     assert(!fd_table[fd].flags.closing);
 
@@ -2164,12 +2162,15 @@ comm_old_write(int fd, const char *buf, int size, CWCB * handler, void *handler_
                  fd, size, handler, handler_data);
 
     if (NULL != state) {
-        debug(5, 1) ("comm_write: fd_table[%d].rwstate != NULL\n", fd);
+        /* This means that the write has been scheduled, but has not
+         * triggered yet 
+         */
+        fatalf ("comm_write: fd_table[%d].wstate != NULL\n", fd);
         memPoolFree(comm_write_pool, state);
-        fd_table[fd].rwstate = NULL;
+        fd_table[fd].wstate = NULL;
     }
 
-    fd_table[fd].rwstate = state = (CommWriteStateData *)memPoolAlloc(comm_write_pool);
+    fd_table[fd].wstate = state = (CommWriteStateData *)memPoolAlloc(comm_write_pool);
     state->buf = (char *) buf;
     state->size = size;
     state->offset = 0;
