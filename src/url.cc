@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.58 1997/06/04 06:16:16 wessels Exp $
+ * $Id: url.cc,v 1.59 1997/06/21 02:38:19 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -313,7 +313,6 @@ requestUnlink(request_t * request)
     request->link_count--;
     if (request->link_count)
 	return;
-    safe_free(request->hierarchy.host);
     safe_free(request->headers);
     put_free_request_t(request);
 }

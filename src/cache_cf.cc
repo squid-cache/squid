@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.196 1997/06/04 06:15:46 wessels Exp $
+ * $Id: cache_cf.cc,v 1.197 1997/06/21 02:38:04 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -167,9 +167,7 @@ struct SquidConfig Config;
 #define DefaultAccelWithProxy	0	/* default off */
 #define DefaultSourcePing	0	/* default off */
 #define DefaultCommonLogFormat	0	/* default off */
-#if LOG_FULL_HEADERS
 #define DefaultLogMimeHdrs	0	/* default off */
-#endif /* LOG_FULL_HEADERS */
 #define DefaultIdentLookup	0	/* default off */
 #define DefaultQuickAbortMin	-1	/* default off */
 #define DefaultQuickAbortPct	0	/* default off */
@@ -1065,10 +1063,8 @@ parseConfigFile(const char *file_name)
 	else if (!strcmp(token, "emulate_httpd_log"))
 	    parseOnOff(&Config.commonLogFormat);
 
-#if LOG_FULL_HEADERS
 	else if (!strcmp(token, "log_mime_hdrs"))
 	    parseOnOff(&Config.logMimeHdrs);
-#endif /* LOG_FULL_HEADERS */
 
 	else if (!strcmp(token, "ident_lookup"))
 	    parseOnOff(&Config.identLookup);
@@ -1329,9 +1325,7 @@ configSetFactoryDefaults(void)
     Config.quickAbort.pct = DefaultQuickAbortPct;
     Config.quickAbort.max = DefaultQuickAbortMax;
     Config.commonLogFormat = DefaultCommonLogFormat;
-#if LOG_FULL_HEADERS
     Config.logMimeHdrs = DefaultLogMimeHdrs;
-#endif /* LOG_FULL_HEADERS */
     Config.identLookup = DefaultIdentLookup;
     Config.debugOptions = safe_xstrdup(DefaultDebugOptions);
     Config.neighborTimeout = DefaultNeighborTimeout;

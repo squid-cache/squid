@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.14 1997/06/18 00:20:01 wessels Exp $
+ * $Id: peer_select.cc,v 1.15 1997/06/21 02:38:13 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -245,7 +245,7 @@ peerSelectFoo(ps_state * psstate)
     debug(44, 3) ("peerSelect: direct = %d\n", direct);
     if (direct == DIRECT_YES) {
 	debug(44, 3) ("peerSelect: DIRECT\n");
-	hierarchyNote(request, DIRECT, &psstate->icp, request->host);
+	hierarchyNote(&request->hier, DIRECT, &psstate->icp, request->host);
 	peerSelectCallback(psstate, NULL);
 	return;
     }
@@ -271,20 +271,20 @@ peerSelectFoo(ps_state * psstate)
     if ((p = psstate->first_parent_miss)) {
 	code = FIRST_PARENT_MISS;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-	hierarchyNote(request, code, &psstate->icp, p->host);
+	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
     } else if (direct != DIRECT_NO) {
 	code = DIRECT;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
-	hierarchyNote(request, code, &psstate->icp, request->host);
+	hierarchyNote(&request->hier, code, &psstate->icp, request->host);
 	peerSelectCallback(psstate, NULL);
     } else if ((p = peerGetSomeParent(request, &code))) {
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-	hierarchyNote(request, code, &psstate->icp, p->host);
+	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
     } else {
 	code = NO_DIRECT_FAIL;
-	hierarchyNote(request, code, &psstate->icp, NULL);
+	hierarchyNote(&request->hier, code, &psstate->icp, NULL);
 	peerSelectCallbackFail(psstate);
     }
 }
@@ -324,14 +324,14 @@ peerHandleIcpReply(peer * p, peer_t type, icp_opcode op, void *data)
 	    }
 	}
     } else if (op == ICP_OP_HIT || op == ICP_OP_HIT_OBJ) {
-	hierarchyNote(request,
+	hierarchyNote(&request->hier,
 	    type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT,
 	    &psstate->icp,
 	    p->host);
 	peerSelectCallback(psstate, p);
 	return;
     } else if (op == ICP_OP_SECHO) {
-	hierarchyNote(request,
+	hierarchyNote(&request->hier,
 	    SOURCE_FASTEST,
 	    &psstate->icp,
 	    request->host);

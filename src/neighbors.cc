@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.146 1997/06/18 00:19:58 wessels Exp $
+ * $Id: neighbors.cc,v 1.147 1997/06/21 02:38:10 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -169,21 +169,6 @@ whichPeer(const struct sockaddr_in *from)
 	}
     }
     return NULL;
-}
-
-void
-hierarchyNote(request_t * request,
-    hier_code code,
-    icp_ping_data * icpdata,
-    const char *cache_host)
-{
-    if (request == NULL)
-	return;
-    request->hierarchy.code = code;
-    if (icpdata)
-	request->hierarchy.icp = *icpdata;
-    request->hierarchy.host = xstrdup(cache_host);
-    request->hierarchy.icp.stop = current_time;
 }
 
 static peer_t

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.123 1997/06/20 00:00:14 wessels Exp $
+ * $Id: squid.h,v 1.124 1997/06/21 02:38:15 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -236,6 +236,8 @@ typedef struct _cachemgr_passwd cachemgr_passwd;
 typedef struct _fileMap fileMap;
 typedef struct _cwstate CommWriteStateData;
 typedef struct _ipcache_addrs ipcache_addrs;
+typedef struct _AccessLogEntry AccessLogEntry;
+typedef struct _HierarchyLogEntry HierarchyLogEntry;
 
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4
@@ -271,6 +273,7 @@ typedef void SIH _PARAMS((void *, int));	/* swap in */
 typedef int QS _PARAMS((const void *, const void *));	/* qsort */
 typedef void STCB _PARAMS((void *, char *, ssize_t));	/* store callback */
 
+#include "enums.h"
 #include "cache_cf.h"
 #include "fd.h"
 #include "comm.h"
@@ -281,6 +284,7 @@ typedef void STCB _PARAMS((void *, char *, ssize_t));	/* store callback */
 #include "proto.h"		/* must go before neighbors.h */
 #include "peer_select.h"	/* must go before neighbors.h */
 #include "neighbors.h"		/* must go before url.h */
+#include "access_log.h"
 #include "url.h"
 #include "icp.h"
 #include "errorpage.h"		/* must go after icp.h */
