@@ -122,7 +122,7 @@ extern void _db_print();
 
 extern int file_open(const char *path, int mode, FOCB *, void *callback_data, void *tag);
 extern void file_close(int fd);
-extern void file_write(int, off_t, char *, int len, DWCB *, void *, FREE *);
+extern void file_write(int, off_t, void *, int len, DWCB *, void *, FREE *);
 extern int file_read(int, char *, int, off_t, DRCB *, void *);
 extern int disk_init(void);
 extern int diskWriteIsComplete(int);
@@ -493,7 +493,7 @@ extern void storeDirCloseTmpSwapLog(int dirn);
 extern void storeDirOpenSwapLogs(void);
 extern void storeDirCloseSwapLogs(void);
 extern char *storeDirSwapLogFile(int, const char *);
-extern void storeDirSwapLog(const StoreEntry *);
+extern void storeDirSwapLog(const StoreEntry *, int op);
 extern int storeDirNumber(int fileno);
 extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
 extern int storeDirProperFileno(int dirn, int fn);
@@ -506,16 +506,15 @@ extern int storeDirValidFileno(int fn);
 /*
  * store_swapmeta.c
  */
-char *storeSwapMetaPack(tlv *tlv_list, int *length);
+char *storeSwapMetaPack(tlv * tlv_list, int *length);
 tlv *storeSwapMetaBuild(StoreEntry * e);
 tlv *storeSwapMetaUnpack(const char *buf, int *hdrlen);
-void storeSwapTLVFree(tlv *n);
+void storeSwapTLVFree(tlv * n);
 
 /*
  * store_rebuild.c
  */
 extern void storeDoRebuildFromSwapFiles(void *data);
-extern void storeConvert(void);
 extern void storeConvertFile(const cache_key * key,
     int file_number,
     int size,
@@ -526,8 +525,7 @@ extern void storeConvertFile(const cache_key * key,
     u_short refcount,
     u_short flags,
     int clean);
-extern int storeGetNextFile(int *sfileno, int *size);
-extern StoreEntry * storeAddDiskRestore(const cache_key * key,
+extern StoreEntry *storeAddDiskRestore(const cache_key * key,
     int file_number,
     int size,
     time_t expires,
@@ -537,11 +535,10 @@ extern StoreEntry * storeAddDiskRestore(const cache_key * key,
     u_num32 refcount,
     u_num32 flags,
     int clean);
-extern void storeDoConvertFromLog(void *data);
 extern void storeCleanup(void *datanotused);
 extern void storeValidate(StoreEntry *, STVLDCB, void *callback_data, void *tag);
 extern void storeValidateComplete(void *data, int retcode, int errcode);
-extern void storeStartRebuildFromDisk(void);
+extern void storeRebuildStart(void);
 
 
 /*
@@ -563,9 +560,9 @@ extern void storeSwapOutFileClose(StoreEntry * e);
 /*
  * store_client.c
  */
-extern store_client * storeClientListSearch(const MemObject * mem, void *data);
+extern store_client *storeClientListSearch(const MemObject * mem, void *data);
 extern void storeClientListAdd(StoreEntry * e, void *data);
-extern void storeClientCopy(StoreEntry *, off_t , off_t , size_t , char *, STCB *, void *);
+extern void storeClientCopy(StoreEntry *, off_t, off_t, size_t, char *, STCB *, void *);
 extern int storeClientCopyPending(StoreEntry * e, void *data);
 extern int storeUnregister(StoreEntry * e, void *data);
 extern off_t storeLowestMemReaderOffset(const StoreEntry * entry);
