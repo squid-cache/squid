@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.22 1996/04/09 23:28:37 wessels Exp $ */
+/* $Id: wais.cc,v 1.23 1996/04/10 00:18:50 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -12,9 +12,8 @@ typedef struct _waisdata {
     StoreEntry *entry;
     char host[SQUIDHOSTNAMELEN + 1];
     int port;
-    char *type;
+    int method;
     char *mime_hdr;
-    char type_id;
     char request[MAX_URL];
 } WAISData;
 
@@ -210,21 +209,22 @@ void waisSendRequest(fd, data)
 {
     int len = strlen(data->request) + 4;
     char *buf = NULL;
+    char *Method = RequestMethodStr[data->method];
 
     debug(24, 5, "waisSendRequest - fd: %d\n", fd);
 
-    if (data->type)
-	len += strlen(data->type);
+    if (Method)
+	len += strlen(Method);
     if (data->mime_hdr)
 	len += strlen(data->mime_hdr);
 
     buf = (char *) xcalloc(1, len + 1);
 
     if (data->mime_hdr)
-	sprintf(buf, "%s %s %s\r\n", data->type, data->request,
+	sprintf(buf, "%s %s %s\r\n", Method, data->request,
 	    data->mime_hdr);
     else
-	sprintf(buf, "%s %s\r\n", data->type, data->request);
+	sprintf(buf, "%s %s\r\n", Method, data->request);
     debug(24, 6, "waisSendRequest - buf:%s\n", buf);
     icpWrite(fd,
 	buf,
@@ -236,10 +236,10 @@ void waisSendRequest(fd, data)
 	storeSetPublicKey(data->entry);		/* Make it public */
 }
 
-int waisStart(unusedfd, url, type, mime_hdr, entry)
+int waisStart(unusedfd, url, method, mime_hdr, entry)
      int unusedfd;
      char *url;
-     char *type;
+     int method;
      char *mime_hdr;
      StoreEntry *entry;
 {
@@ -247,7 +247,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     int sock, status;
     WAISData *data = NULL;
 
-    debug(24, 3, "waisStart - url:%s, type:%s\n", url, type);
+    debug(24, 3, "waisStart - url:%s, type:%s\n", url, RequestMethodStr[method]);
     debug(24, 4, "            header: %s\n", mime_hdr);
 
     data = (WAISData *) xcalloc(1, sizeof(WAISData));
@@ -261,7 +261,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     }
     /* Parse url. */
     (void) wais_url_parser(url, data->host, &data->port, data->request);
-    data->type = type;
+    data->method = method;
     data->mime_hdr = mime_hdr;
 
     /* Create socket. */

@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.34 1996/04/09 23:28:33 wessels Exp $ */
+/* $Id: http.cc,v 1.35 1996/04/10 00:18:49 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -14,9 +14,8 @@ typedef struct _httpdata {
     StoreEntry *entry;
     char host[SQUIDHOSTNAMELEN + 1];
     int port;
-    char *type;
+    int method;
     char *req_hdr;
-    char type_id;
     char request[MAX_URL + 1];
     char *icp_page_ptr;		/* Used to send proxy-http request: 
 				 * put_free_8k_page(me) if the lifetime
@@ -227,7 +226,7 @@ static void httpProcessReplyHeader(data, buf, size)
 	    t = strtok(NULL, "\n");
 	}
 	if (reply->code)
-	    debug(11, 3, "httpReadReply: HTTP CODE: %d\n", reply->code);
+	    debug(11, 3, "httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
 	switch (reply->code) {
 	case 200:		/* OK */
 	case 203:		/* Non-Authoritative Information */
@@ -424,14 +423,15 @@ static void httpSendRequest(fd, data)
     static char *HARVEST_PROXY_TEXT = "via Harvest Cache version";
     int len = 0;
     int buflen;
+    char *Method = RequestMethodStr[data->method];
 
     debug(11, 5, "httpSendRequest: FD %d: data %p.\n", fd, data);
-    buflen = strlen(data->type) + strlen(data->request);
+    buflen = strlen(Method) + strlen(data->request);
     if (data->req_hdr)
 	buflen += strlen(data->req_hdr);
     buflen += 512;		/* lots of extra */
 
-    if (!strcasecmp(data->type, "POST") && data->req_hdr) {
+    if (data->method == METHOD_POST && data->req_hdr) {
 	if ((t = strstr(data->req_hdr, "\r\n\r\n"))) {
 	    post_buf = xstrdup(t + 4);
 	    *(t + 4) = '\0';
@@ -446,7 +446,7 @@ static void httpSendRequest(fd, data)
     }
     memset(buf, '\0', buflen);
 
-    sprintf(buf, "%s %s HTTP/1.0\r\n", data->type, data->request);
+    sprintf(buf, "%s %s HTTP/1.0\r\n", Method, data->request);
     len = strlen(buf);
     if (data->req_hdr) {	/* we have to parse the request header */
 	xbuf = xstrdup(data->req_hdr);
@@ -534,7 +534,7 @@ int proxyhttpStart(e, url, entry)
     data->entry = entry;
 
     strncpy(data->request, url, sizeof(data->request) - 1);
-    data->type = RequestMethodStr[entry->type_id];
+    data->method = entry->type_id;
     data->port = e->ascii_port;
     data->req_hdr = entry->mem_obj->mime_hdr;
     strncpy(data->host, e->host, sizeof(data->host) - 1);
@@ -586,10 +586,10 @@ int proxyhttpStart(e, url, entry)
 
 }
 
-int httpStart(unusedfd, url, type, req_hdr, entry)
+int httpStart(unusedfd, url, method, req_hdr, entry)
      int unusedfd;
      char *url;
-     char *type;
+     int method;
      char *req_hdr;
      StoreEntry *entry;
 {
@@ -597,12 +597,12 @@ int httpStart(unusedfd, url, type, req_hdr, entry)
     int sock, status;
     HttpData *data = NULL;
 
-    debug(11, 3, "httpStart: %s <URL:%s>\n", type, url);
+    debug(11, 3, "httpStart: %s <URL:%s>\n", RequestMethodStr[method], url);
     debug(11, 10, "httpStart: req_hdr '%s'\n", req_hdr);
 
     data = (HttpData *) xcalloc(1, sizeof(HttpData));
     data->entry = entry;
-    data->type = type;
+    data->method = method;
     data->req_hdr = req_hdr;
 
     /* Parse url. */
