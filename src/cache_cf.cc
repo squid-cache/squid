@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.167 1997/01/22 17:01:23 wessels Exp $
+ * $Id: cache_cf.cc,v 1.168 1997/01/31 21:03:09 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -497,6 +497,8 @@ parseCacheHostLine(void)
 	    mcast_ttl = atoi(token + 4);
 	} else if (!strncasecmp(token, "default", 7)) {
 	    options |= NEIGHBOR_DEFAULT_PARENT;
+	} else if (!strncasecmp(token, "round-robin", 11)) {
+	    options |= NEIGHBOR_ROUNDROBIN;
 	} else {
 	    debug(3, 0, "parseCacheHostLine: token='%s'\n", token);
 	    self_destruct();
