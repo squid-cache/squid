@@ -1,5 +1,5 @@
 /*
- * $Id: HttpReply.cc,v 1.4 1998/02/22 07:45:16 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.5 1998/02/26 08:10:54 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -175,16 +175,7 @@ httpPacked304Reply(const HttpReply *rep)
     MemBuf mb;
     assert(rep);
 
-#if 0
-    /* construct reply */
-    assert(0); /* implement: rep304 = httpReply304Create(rep); */
-    
-    mb = httpReplyPack(rep304);
-    httpReplyDestroy(rep304);
-#endif
-
     memBufDefInit(&mb);
-
     memBufPrintf(&mb, "%s", "HTTP/1.0 304 Not Modified\r\n");
 
     if (httpHeaderHas(&rep->hdr, HDR_DATE))
@@ -231,6 +222,24 @@ httpReplySetHeaders(HttpReply *reply, double ver, http_status status, const char
     if (lmt > 0) /* this used to be lmt != 0 @?@ */
   	httpHeaderSetTime(hdr, HDR_LAST_MODIFIED, lmt);
 }
+
+/*
+ * header manipulation 
+ *
+ * never go to header directly if you can use these:
+ *
+ * our interpretation of headers often changes and you may get into trouble
+ *    if you, for example, assume that HDR_EXPIRES contains expire info
+ *
+ * if you think about it, in most cases, you are not looking for the information
+ *    in the header, but rather for current state of the reply, which may or maynot
+ *    depend on headers. 
+ *
+ * For example, the _real_ question is
+ *        "when does this object expire?" 
+ *     not 
+ *        "what is the value of the 'Expires:' header?"
+ */
 
 void
 httpReplyUpdateOnNotModified(HttpReply *rep, HttpReply *freshRep)

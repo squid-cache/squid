@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.216 1998/02/26 06:42:29 rousskov Exp $
+ * $Id: client_side.cc,v 1.217 1998/02/26 08:10:57 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -864,6 +864,7 @@ clientAppendReplyHeader(char *hdr, const char *line, size_t * sz, size_t max)
     *sz = n;
 }
 
+/* this entire function has to be rewriten using new interfaces @?@ @?@ */
 size_t
 clientBuildReplyHeader(clientHttpRequest * http,
     char *hdr_in,

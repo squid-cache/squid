@@ -444,6 +444,26 @@ struct _hash_table {
     hash_link *current_ptr;
 };
 
+/* http status line */
+struct _HttpStatusLine {
+    /* public, read only */
+    double version;
+    const char *reason; /* points to a _constant_ string (default or supplied), never free()d */
+    http_status status;
+};
+
+/*
+ * Note: HttpBody is used only for messages with a small text content that is
+ * known a priory (e.g., error messages).
+ */
+struct _HttpBody {
+    /* private, never dereference these */
+    char *buf;      /* null terminating _text_ buffer, not for binary stuff */
+    FREE *freefunc; /* used to free() .buf */
+    int size;
+};
+
+
 /* server cache control */
 struct _HttpScc {
     int mask;
@@ -471,8 +491,18 @@ struct _HttpHeader {
 };
 
 
-#include "HttpReply.h"
+struct _HttpReply {
+    /* unsupported, writable, may disappear/change in the future */
+    int hdr_sz;   /* sums _stored_ status-line, headers, and <CRLF> */
 
+    /* public, readable */
+    HttpMsgParseState pstate; /* the current parsing state */
+
+    /* public, writable, but use interfaces below when possible */
+    HttpStatusLine sline;
+    HttpHeader hdr;
+    HttpBody body;  /* used for small constant memory-resident text bodies only */
+};
 
 
 struct _HttpStateData {
@@ -809,6 +839,14 @@ struct _MemBuf {
     FREE *freefunc;  /* what to use to free the buffer, NULL after memBufFreeFunc() is called */
 };
 
+/* see Packer.c for description */
+struct _Packer {
+    /* protected, use interface functions instead */
+    append_f append;
+    vprintf_f vprintf;
+    void *real_handler; /* first parameter to real append and vprintf */
+};
+
 
 struct _mem_node {
     char *data;
@@ -837,7 +875,6 @@ struct _store_client {
     struct _store_client *next;
 };
 
-#include "Packer.h"
 
 /* This structure can be freed while object is purged out from memory */
 struct _MemObject {

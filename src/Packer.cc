@@ -1,5 +1,5 @@
 /*
- * $Id: Packer.cc,v 1.3 1998/02/21 18:46:35 rousskov Exp $
+ * $Id: Packer.cc,v 1.4 1998/02/26 08:10:55 rousskov Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -28,7 +28,38 @@
  *  
  */
 
-/* see Packer.h for documentation */
+/*
+    Rationale:
+    ----------
+
+    OK, we have to major interfaces comm.c and store.c.
+
+    Store.c has a nice storeAppend[Printf] capability which makes "storing"
+    things easy and painless. 
+
+    Comm.c lacks commAppend[Printf] because comm does not handle its own
+    buffers (no mem_obj equivalent for comm.c).
+
+    Thus, if one wants to be able to store _and_ comm_write an object, s/he
+    has to implement two almost identical functions.
+
+    Packer
+    ------
+
+    Packer provides for a more uniform interface to store and comm modules.
+    Packer has its own append and printf routines that "know" where to send
+    incoming data. In case of store interface, Packer sends data to
+    storeAppend.  Otherwise, Packer uses a MemBuf that can be flushed later to
+    comm_write.
+
+    Thus, one can write just one function that will either "pack" things for
+    comm_write or "append" things to store, depending on actual packer
+    supplied.
+
+    It is amasing how much work a tiny object can save. :)
+
+*/
+
 
 /*
  * To-Do:
@@ -64,6 +95,9 @@ static void (*const store_vprintf)(StoreEntry *, const char *, va_list ap) = &st
 static void (*const memBuf_vprintf)(MemBuf *, const char *, va_list ap) = &memBufVPrintf;
 
 
+/* init/clean */
+
+/* init with this to forward data to StoreEntry */
 void
 packerToStoreInit(Packer *p, StoreEntry *e)
 {
@@ -73,6 +107,7 @@ packerToStoreInit(Packer *p, StoreEntry *e)
     p->real_handler = e;
 }
 
+/* init with this to accumulate data in MemBuf */
 void
 packerToMemInit(Packer *p, MemBuf *mb)
 {
@@ -82,6 +117,7 @@ packerToMemInit(Packer *p, MemBuf *mb)
     p->real_handler = mb;
 }
 
+/* call this when you are done */
 void
 packerClean(Packer *p)
 {

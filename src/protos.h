@@ -114,6 +114,17 @@ extern int commSetTimeout(int fd, int, PF *, void *);
 extern void commSetDefer(int fd, DEFER * func, void *);
 extern int ignoreErrno(int);
 
+extern void packerToStoreInit(Packer *p, StoreEntry *e);
+extern void packerToMemInit(Packer *p, MemBuf *mb);
+extern void packerClean(Packer *p);
+extern void packerAppend(Packer *p, const char *buf, int size);
+#ifdef __STDC__
+extern void packerPrintf(Packer *p, const char *fmt, ...);
+#else
+extern void packerPrintf();
+#endif
+
+
 /* see debug.c for info on context-based debugging */
 extern Ctx ctx_enter(const char *descr);
 extern void ctx_exit(Ctx ctx);
@@ -218,6 +229,34 @@ extern int httpAnonAllowed(const char *line);
 extern int httpAnonDenied(const char *line);
 extern void httpInit(void);
 
+/* Http Status Line */
+/* init/clean */
+extern void httpStatusLineInit(HttpStatusLine *sline);
+extern void httpStatusLineClean(HttpStatusLine *sline);
+/* set values */
+extern void httpStatusLineSet(HttpStatusLine *sline, double version, 
+    http_status status, const char *reason);
+/* parse/pack */
+/* parse a 0-terminating buffer and fill internal structires; returns true on success */
+extern int httpStatusLineParse(HttpStatusLine *sline, const char *start,
+    const char *end);
+/* pack fields using Packer */
+extern void httpStatusLinePackInto(const HttpStatusLine *sline, Packer *p);
+
+/* Http Body */
+/* init/clean */
+extern void httpBodyInit(HttpBody *body);
+extern void httpBodyClean(HttpBody *body);
+/* get body ptr (always use this) */
+extern const char *httpBodyPtr(const HttpBody *body);
+/* set body, if freefunc is NULL the content will be copied, otherwise not */
+extern void httpBodySet(HttpBody *body, const char *content, int size,
+    FREE *freefunc);
+
+/* pack */
+extern void httpBodyPackInto(const HttpBody *body, Packer *p);
+
+
 /* Http Header */
 extern void httpHeaderInitModule();
 /* create/init/clean/destroy */
@@ -245,6 +284,40 @@ extern field_store httpHeaderGet(const HttpHeader *hdr, http_hdr_type id);
 int httpHeaderDelFields(HttpHeader *hdr, const char *name);
 /* store report about current header usage and other stats */
 extern void httpHeaderStoreReport(StoreEntry *e);
+
+/* Http Reply */
+extern HttpReply *httpReplyCreate();
+extern void httpReplyInit(HttpReply *rep);
+extern void httpReplyClean(HttpReply *rep);
+extern void httpReplyDestroy(HttpReply *rep);
+/* reset: clean, then init */
+void httpReplyReset(HttpReply *rep);
+/* absorb: copy the contents of a new reply to the old one, destroy new one */
+void httpReplyAbsorb(HttpReply *rep, HttpReply *new_rep);
+/* parse returns -1,0,+1 on error,need-more-data,success */
+extern int httpReplyParse(HttpReply *rep, const char *buf); /*, int atEnd); */
+extern void httpReplyPackInto(const HttpReply *rep, Packer *p);
+/* ez-routines */
+/* mem-pack: returns a ready to use mem buffer with a packed reply */
+extern MemBuf httpReplyPack(const HttpReply *rep);
+/* swap: create swap-based packer, pack, destroy packer */
+extern void httpReplySwapOut(const HttpReply *rep, StoreEntry *e);
+/* set commonly used info with one call */
+extern void httpReplySetHeaders(HttpReply *rep, double ver, http_status status,
+    const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
+/* do everything in one call: init, set, pack, clean, return MemBuf */
+extern MemBuf httpPackedReply(double ver, http_status status, const char *ctype, 
+    int clen, time_t lmt, time_t expires);
+/* construct 304 reply and pack it into MemBuf, return MemBuf */
+extern MemBuf httpPacked304Reply(const HttpReply *rep);
+/* update when 304 reply is received for a cached object */
+extern void httpReplyUpdateOnNotModified(HttpReply *rep, HttpReply *freshRep);
+/* header manipulation, see HttpReply.c for caveats */
+extern int httpReplyContentLen(const HttpReply *rep);
+extern const char *httpReplyContentType(const HttpReply *rep);
+extern time_t httpReplyExpires(const HttpReply *rep);
+extern int httpReplyHasScc(const HttpReply *rep, http_scc_type type);
+
 
 extern void icmpOpen(void);
 extern void icmpClose(void);

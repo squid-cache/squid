@@ -40,7 +40,8 @@
 	  as argument.  Debugging equal-to or less-than the argument
 	  will be written to stderr.
 	- Removed unused urlClean() function from url.c.	
-	- Fixed a bug that allow '?' parts of urls to be recorded in
+
+	- Fixed a bug that allowed '?' parts of urls to be recorded in
 	  store.log.  Logged urls are now "clean".
 	- Cache Manager got new Web interface (cachemgr.cgi). New .cgi
 	  script forwards basic authentication from browser to squid.

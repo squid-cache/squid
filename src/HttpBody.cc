@@ -1,5 +1,5 @@
 /*
- * $Id: HttpBody.cc,v 1.3 1998/02/21 18:46:32 rousskov Exp $
+ * $Id: HttpBody.cc,v 1.4 1998/02/26 08:10:53 rousskov Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -56,6 +56,7 @@ httpBodyClean(HttpBody *body)
     body->size = 0;
 }
 
+/* set body, if freefunc is NULL the content will be copied, otherwise not */
 void
 httpBodySet(HttpBody *body, const char *buf, int size, FREE *freefunc)
 {

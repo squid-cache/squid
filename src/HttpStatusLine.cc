@@ -1,5 +1,5 @@
 /*
- * $Id: HttpStatusLine.cc,v 1.3 1998/02/21 18:46:34 rousskov Exp $
+ * $Id: HttpStatusLine.cc,v 1.4 1998/02/26 08:10:55 rousskov Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -37,6 +37,8 @@ const char *HttpStatusLineFormat = "HTTP/%3.1f %3d %s\r\n";
 /* local routines */
 static const char *httpStatusString(http_status status);
 
+
+
 void
 httpStatusLineInit(HttpStatusLine *sline) {
     httpStatusLineSet(sline, 0.0, 0, NULL);
@@ -47,6 +49,7 @@ httpStatusLineClean(HttpStatusLine *sline) {
     httpStatusLineSet(sline, 0.0, 500, NULL);
 }
 
+/* set values */
 void httpStatusLineSet(HttpStatusLine *sline, double version, http_status status, const char *reason) {
     assert(sline);
     sline->version = version;
@@ -55,6 +58,7 @@ void httpStatusLineSet(HttpStatusLine *sline, double version, http_status status
     sline->reason = reason;
 }
 
+/* parse a 0-terminating buffer and fill internal structires; returns true on success */
 void
 httpStatusLinePackInto(const HttpStatusLine *sline, Packer *p)
 {
@@ -67,6 +71,7 @@ httpStatusLinePackInto(const HttpStatusLine *sline, Packer *p)
 	sline->reason ? sline->reason : httpStatusString(sline->status));
 }
 
+/* pack fields using Packer */
 int
 httpStatusLineParse(HttpStatusLine *sline, const char *start, const char *end) {
     assert(sline);
