@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.321 1999/01/24 02:26:21 wessels Exp $
+ * $Id: cache_cf.cc,v 1.322 1999/01/24 05:27:36 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1372,6 +1372,12 @@ static int
 check_null_wordlist(wordlist * w)
 {
     return w == NULL;
+}
+
+static int
+check_null_acl_access(acl_access *a)
+{
+    return a == NULL;
 }
 
 #define free_wordlist wordlistDestroy
