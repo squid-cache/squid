@@ -1,5 +1,5 @@
 /*
- * $Id: peer_select.cc,v 1.2 1997/02/26 19:46:19 wessels Exp $
+ * $Id: peer_select.cc,v 1.3 1997/02/26 20:49:12 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -30,53 +30,26 @@
 
 #include "squid.h"
 
-#define OUTSIDE_FIREWALL 0
-#define INSIDE_FIREWALL  1
-#define NO_FIREWALL      2
-
-/* for debugging */
-static char *firewall_desc_str[] =
-{
-    "OUTSIDE_FIREWALL",
-    "INSIDE_FIREWALL",
-    "NO_FIREWALL"
-};
-
-int
-matchIpList(const ipcache_addrs * ia, ip_acl * ip_list)
-{
-    int i;
-    if (ip_list == NULL)
-	return 0;
-    for (i = 0; i < ia->count; i++) {
-	if (ip_access_check(ia->in_addrs[i], ip_list) == IP_DENY)
-	    return 1;
-    }
-    return 0;
-}
-
-static int
-matchLocalDomain(const char *host)
-{
-    const wordlist *s = NULL;
-    for (s = Config.local_domain_list; s; s = s->next) {
-	if (matchDomainName(s->key, host))
-	    return 1;
-    }
-    return 0;
-}
+static struct {
+	int timeouts;
+} PeerStats;
 
 int
 peerSelectDirect(request_t * request)
 {
+    int answer;
+    aclCheck_t ch;
     const ipcache_addrs *ia = ipcache_gethostbyname(request->host, 0);
-    if (ia && matchIpList(ia, Config.firewall_ip_list))
-	return DIRECT_MAYBE;	/* or DIRECT_YES */
-    if (!matchInsideFirewall(request->host))
+    memset(&ch, '\0', sizeof(aclCheck_t));
+    ch.request = requestLink(request);
+    ch.dst_addr = ia->in_addrs[ia->cur];
+    ch.src_addr = request->client_addr;
+    answer = aclCheck(Config.accessList.NeverDirect, &ch);
+    requestUnlink(ch.request);
+    if (answer)
 	return DIRECT_NO;
-    if (ia && matchIpList(ia, Config.local_ip_list))
-	return DIRECT_YES;
-    if (matchLocalDomain(request->host))
+    answer = aclCheck(Config.accessList.AlwaysDirect, &ch);
+    if (answer)
 	return DIRECT_YES;
     if (ia == NULL)
 	return DIRECT_NO;
@@ -155,7 +128,7 @@ peerSelect(int fd, request_t * request, StoreEntry * entry)
 	    entry->ping_status = PING_WAITING;
 	    commSetSelect(fd,
 		COMM_SELECT_TIMEOUT,
-		(PF) getFromDefaultSource,
+		peerPingTimeout,
 		(void *) entry,
 		Config.neighborTimeout);
 	    return;
@@ -170,42 +143,17 @@ peerSelect(int fd, request_t * request, StoreEntry * entry)
     }
 }
 
-/*
- * return 0 if the host is outside the firewall (no domains matched), and
- * return 1 if the host is inside the firewall or no domains at all.
- */
-int
-matchInsideFirewall(const char *host)
+void
+peerPingTimeout(int fd, void *data)
 {
-    const wordlist *s = Config.inside_firewall_list;
-    const char *key = NULL;
-    int result = NO_FIREWALL;
-    struct in_addr addr;
-    if (!s && !Config.firewall_ip_list)
-	/* no firewall goop, all hosts are "inside" the firewall */
-	return NO_FIREWALL;
-    for (; s; s = s->next) {
-	key = s->key;
-	if (!strcasecmp(key, "none"))
-	    /* no domains are inside the firewall, all domains are outside */
-	    return OUTSIDE_FIREWALL;
-	if (*key == '!') {
-	    key++;
-	    result = OUTSIDE_FIREWALL;
-	} else {
-	    result = INSIDE_FIREWALL;
-	}
-	if (matchDomainName(key, host))
-	    return result;
-    }
-    /* Check for dotted-quads */
-    if (Config.firewall_ip_list) {
-	if ((addr.s_addr = inet_addr(host)) != inaddr_none) {
-	    if (ip_access_check(addr, Config.firewall_ip_list) == IP_DENY)
-		return INSIDE_FIREWALL;
-	}
-    }
-    /* all through the list and no domains matched, this host must
-     * not be inside the firewall, it must be outside */
-    return OUTSIDE_FIREWALL;
+	StoreEntry *entry = data;
+	debug(44,3,"peerPingTimeout: '%s'\n", entry->url);
+	PeerStats.timeouts++;
+	peerSelect(fd, entry->mem_obj->request, entry);
+}
+
+void
+peerSelectInit(void)
+{
+	memset(&PeerStats, '\0', sizeof(PeerStats));
 }

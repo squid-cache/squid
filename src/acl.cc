@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.85 1997/02/20 21:03:09 wessels Exp $
+ * $Id: acl.cc,v 1.86 1997/02/26 20:49:05 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -44,15 +44,6 @@ const char *AclMatchedName = NULL;
 /* for reading ACL's from files */
 int aclFromFile = 0;
 FILE *aclFile;
-
-/* These should never be referenced directly in this file! */
-struct _acl_deny_info_list *DenyInfoList = NULL;
-struct _acl_access *HTTPAccessList = NULL;
-struct _acl_access *ICPAccessList = NULL;
-struct _acl_access *MISSAccessList = NULL;
-#if DELAY_HACK
-struct _acl_access *DelayAccessList = NULL;
-#endif
 
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
