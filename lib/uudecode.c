@@ -24,10 +24,10 @@ char *
 uudecode(char *bufcoded)
 {
     int nbytesdecoded;
-    register unsigned char *bufin;
-    register char *bufplain;
-    register unsigned char *bufout;
-    register int nprbytes;
+    unsigned char *bufin;
+    char *bufplain;
+    unsigned char *bufout;
+    int nprbytes;
 
     /* Strip leading whitespace. */
 

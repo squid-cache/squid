@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1123.c,v 1.1 1996/10/25 02:15:15 wessels Exp $
+ * $Id: rfc1123.c,v 1.2 1996/10/25 17:35:22 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -132,6 +132,9 @@
 #include "ansiproto.h"
 #include "util.h"
 
+#define RFC850_STRFTIME "%A, %d-%b-%y %H:%M:%S GMT"
+#define RFC1123_STRFTIME "%a, %d %b %Y %H:%M:%S GMT"
+
 static int make_month _PARAMS((char *s));
 static int make_num _PARAMS((char *s));
 
@@ -259,7 +262,7 @@ mkrfc1123(time_t t)
     struct tm *gmt = gmtime(&t);
 
     buf[0] = '\0';
-    (void) strftime(buf, 127, "%A, %d-%b-%y %H:%M:%S GMT", gmt);
+    strftime(buf, 127, RFC1123_STRFTIME, gmt);
     return buf;
 }
 
@@ -293,12 +296,12 @@ mkhttpdlogtime(time_t * t)
 	day_offset = 1;
 
     len = strftime(buf, 127 - 5, "%d/%b/%Y:%H:%M:%S ", lt);
-    (void) sprintf(buf + len, "%+03d%02d",
+    sprintf(buf + len, "%+03d%02d",
 	(min_offset / 60) % 24,
 	min_offset % 60);
 #else /* USE_GMT */
     buf[0] = '\0';
-    (void) strftime(buf, 127, "%d/%b/%Y:%H:%M:%S -000", gmt);
+    strftime(buf, 127, "%d/%b/%Y:%H:%M:%S -000", gmt);
 #endif /* USE_GMT */
 
     return buf;
