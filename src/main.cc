@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.319 2000/10/20 23:51:00 hno Exp $
+ * $Id: main.cc,v 1.320 2000/11/01 03:58:52 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -848,8 +848,11 @@ watch_child(char *argv[])
 #endif
 
 
-/* RBCOLLINS - if cygwin stackdumps when squid is run without -N, check the cygwin1.dll version, it needs to be AT LEAST 1.1.3. execvp had a bit overflow error in a loop.. 
-*/
+    /*
+     * RBCOLLINS - if cygwin stackdumps when squid is run without
+     * -N, check the cygwin1.dll version, it needs to be AT LEAST
+     * 1.1.3.  execvp had a bit overflow error in a loop..
+     */
     /* Connect stdio to /dev/null in daemon mode */
     nullfd = open("/dev/null", O_RDWR);
     dup2(nullfd, 0);
