@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.3 1998/06/09 05:22:04 wessels Exp $
+ * $Id: forward.cc,v 1.4 1998/06/09 05:57:34 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -42,10 +42,11 @@ static PF fwdServerClosed;
 static CNCB fwdConnectDone;
 
 static void
-fwdStateFree(FwdState *fwdState)
+fwdStateFree(FwdState * fwdState)
 {
     FwdServer *s;
     FwdServer *n = fwdState->servers;
+    assert(cbdataValid(fwdState));
     while ((s = n)) {
 	n = s->next;
 	xfree(s->host);
@@ -53,16 +54,19 @@ fwdStateFree(FwdState *fwdState)
     }
     fwdState->servers = NULL;
     requestUnlink(fwdState->request);
+    fwdState->request = NULL;
+    storeUnlockObject(fwdState->entry);
+    fwdState->entry = NULL;
     cbdataFree(fwdState);
 }
 
 static void
 fwdServerClosed(int fd, void *data)
 {
-	FwdState *fwdState = data;
-	debug(17,3)("fwdServerClosed: FD %d %s\n", fd,
-		storeUrl(fwdState->entry));
-	fwdStateFree(fwdState);
+    FwdState *fwdState = data;
+    debug(17, 3) ("fwdServerClosed: FD %d %s\n", fd,
+	storeUrl(fwdState->entry));
+    fwdStateFree(fwdState);
 }
 
 static void
@@ -70,6 +74,10 @@ fwdConnectDone(int server_fd, int status, void *data)
 {
     FwdState *fwdState = data;
     ErrorState *err;
+    int valid = cbdataValid(fwdState);
+    cbdataUnlock(fwdState);
+    if (!valid)
+	return;
     if (status == COMM_ERR_DNS) {
 	debug(17, 4) ("fwdConnectDone: Unknown host: %s\n",
 	    fwdState->request->host);
@@ -122,6 +130,7 @@ fwdConnectStart(FwdState * fwdState)
     FwdServer *srv = fwdState->servers;
     assert(srv);
     debug(17, 3) ("fwdConnectStart: %s\n", url);
+    cbdataLock(fwdState);
     if ((fd = pconnPop(srv->host, srv->port)) >= 0) {
 	debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
 	comm_add_close_handler(fd, fwdServerClosed, fwdState);
@@ -140,6 +149,7 @@ fwdConnectStart(FwdState * fwdState)
 	err->xerrno = errno;
 	err->request = requestLink(fwdState->request);
 	errorAppendEntry(fwdState->entry, err);
+	cbdataUnlock(fwdState);
 	fwdStateFree(fwdState);
 	return;
     }
@@ -160,10 +170,10 @@ fwdStartComplete(peer * p, void *data)
 {
     FwdState *fwdState = data;
     FwdServer *s;
-    if (!storeUnlockObject(fwdState->entry)) {
-	fwdStateFree(fwdState);
+    int valid = cbdataValid(fwdState);
+    cbdataUnlock(fwdState);
+    if (!valid)
 	return;
-    }
     s = xcalloc(1, sizeof(*s));
     if (NULL != p) {
 	s->host = xstrdup(p->host);
@@ -182,10 +192,10 @@ fwdStartFail(peer * peernotused, void *data)
 {
     FwdState *fwdState = data;
     ErrorState *err;
-    if (!storeUnlockObject(fwdState->entry)) {
-	fwdStateFree(fwdState);
+    int valid = cbdataValid(fwdState);
+    cbdataUnlock(fwdState);
+    if (!valid)
 	return;
-    }
     err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
     err->request = requestLink(fwdState->request);
     errorAppendEntry(fwdState->entry, err);
@@ -205,6 +215,7 @@ fwdDispatch(FwdState * fwdState, int server_fd)
 	storeUrl(entry));
     assert(!EBIT_TEST(entry->flag, ENTRY_DISPATCHED));
     assert(entry->ping_status != PING_WAITING);
+    assert(entry->lock_count);
     EBIT_SET(entry->flag, ENTRY_DISPATCHED);
     netdbPingSite(request->host);
     if (fwdState->servers && (p = fwdState->servers->peer)) {
@@ -286,6 +297,7 @@ fwdStart(int fd, StoreEntry * entry, request_t * request)
     fwdState->entry = entry;
     fwdState->client_fd = fd;
     fwdState->request = requestLink(request);
+    storeLockObject(entry);
     switch (request->protocol) {
     case PROTO_CACHEOBJ:
     case PROTO_WAIS:
@@ -294,8 +306,8 @@ fwdStart(int fd, StoreEntry * entry, request_t * request)
 	return;
     default:
 	break;
-    }				/* Keep the StoreEntry locked during peer selection phase */
-    storeLockObject(entry);
+    }
+    cbdataLock(fwdState);
     peerSelect(request,
 	entry,
 	fwdStartComplete,
@@ -341,13 +353,13 @@ fwdCheckDeferRead(int fdnotused, void *data)
 }
 
 void
-fwdFail(FwdState *fwdState, int err_code, http_status http_code, int xerrno)
+fwdFail(FwdState * fwdState, int err_code, http_status http_code, int xerrno)
 {
-	debug(17, 1)("fwdFail: %s \"%s\"\n\t%s\n",
-		err_type_str[err_code],
-		httpStatusString(http_code),
-		storeUrl(fwdState->entry));
-	fwdState->fail.err_code = err_code;
-	fwdState->fail.http_code = http_code;
-	fwdState->fail.xerrno = xerrno;
+    debug(17, 1) ("fwdFail: %s \"%s\"\n\t%s\n",
+	err_type_str[err_code],
+	httpStatusString(http_code),
+	storeUrl(fwdState->entry));
+    fwdState->fail.err_code = err_code;
+    fwdState->fail.http_code = http_code;
+    fwdState->fail.xerrno = xerrno;
 }
