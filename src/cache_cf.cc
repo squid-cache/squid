@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.18 1996/04/04 18:51:02 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.19 1996/04/05 21:51:45 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -22,6 +22,7 @@ static struct {
 	int relayPort;
     } Wais;
     int negativeTtl;
+    int negativeDnsTtl;
     int readTimeout;
     int lifetimeDefault;
     int connectTimeout;
@@ -85,6 +86,7 @@ static struct {
 #define DefaultWaisRelayPort	-1
 
 #define DefaultNegativeTtl	(5 * 60)	/* 5 min */
+#define DefaultNegativeDnsTtl	(2 * 60)	/* 2 min */
 #define DefaultReadTimeout	(15 * 60)	/* 15 min */
 #define DefaultLifetimeDefault	(200 * 60)	/* 3+ hours */
 #define DefaultConnectTimeout	(2 * 60)	/* 2 min */
@@ -640,6 +642,15 @@ static void parseNegativeLine(line_in)
     int i;
     GetInteger(i);
     Config.negativeTtl = i * 60;
+}
+
+static void parseNegativeDnsLine(line_in)
+     char *line_in;
+{
+    char *token;
+    int i;
+    GetInteger(i);
+    Config.negativeDnsTtl = i * 60;
 }
 
 static void parseReadTimeoutLine(line_in)
@@ -1273,6 +1284,10 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "negative_ttl"))
 	    parseNegativeLine(line_in);
 
+	/* Parse a negative_dns_ttl line */
+	else if (!strcmp(token, "negative_dns_ttl"))
+	    parseNegativeDnsLine(line_in);
+
 	/* Parse a read_timeout line */
 	else if (!strcmp(token, "read_timeout"))
 	    parseReadTimeoutLine(line_in);
@@ -1461,6 +1476,10 @@ int getFtpTTL()
 int getNegativeTTL()
 {
     return Config.negativeTtl;
+}
+int getNegativeDNSTTL()
+{
+    return Config.negativeDnsTtl;
 }
 int getCacheMemMax()
 {
