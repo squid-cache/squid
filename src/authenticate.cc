@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.40 2002/09/26 13:33:08 robertc Exp $
+ * $Id: authenticate.cc,v 1.41 2002/10/08 03:07:00 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -265,7 +265,7 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
 	tempnode = (auth_user_ip_t *) ipdata->node.next;
 	/* walk the ip list */
 	if (ipdata->ipaddr.s_addr == ipaddr.s_addr) {
-	    /* This ip has alreadu been seen. */
+	    /* This ip has already been seen. */
 	    found = 1;
 	    /* update IP ttl */
 	    ipdata->ip_expiretime = squid_curtime;

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.287 2002/10/07 05:06:43 wessels Exp $
+# $Id: cf.data.pre,v 1.288 2002/10/08 03:07:00 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1493,8 +1493,8 @@ DOC_START
 	will be bound to a specific IP address. If a request using
 	the same user name is received during this time then access
 	will be denied and both users are required to reauthenticate
-	them selves.  The idea behind this is to make it annoying
-	for people to share their password to their friends, but
+	themselves.  The idea behind this is to make it annoying
+	for people to share their password with their friends, but
 	yet allow a dialup user to reconnect on a different dialup
 	port.
 
@@ -2042,15 +2042,15 @@ DOC_START
 
 	acl aclname max_user_ip [-s] number
 	  # This will be matched when the user attempts to log in from more
-	  # than <number> different ip address's. The authenticate_ip_ttl
+	  # than <number> different ip addresses. The authenticate_ip_ttl
 	  # parameter controls the timeout on the ip entries.
 	  # If -s is specified then the limit is strict, denying browsing
 	  # from any further IP addresses until the ttl has expired. Without
-	  # -s Squid will just annoy the user by "randomly" deny requests.
+	  # -s Squid will just annoy the user by "randomly" denying requests.
 	  # (the counter is then reset each time the limit is reached and a
 	  # request is denied)
 	  # NOTE: in acceleration mode or where there is mesh of child proxies,
-	  # clients may appear to come from multiple address's if they are
+	  # clients may appear to come from multiple addresses if they are
 	  # going through proxy farms, so a limit of 1 may cause user problems.
 
 	acl aclname req_mime_type mime-type1 ...
