@@ -58,6 +58,10 @@ mkdir -p cfgaux
 amver=`find_version automake ${amversions}`
 acver=`find_version autoconf ${acversions}`
 
+# Set environment variable to tell automake which autoconf to use.
+AUTOCONF="autoconf${acver}" ; export AUTOCONF
+
+
 for dir in \
 	"" \
 	lib/libTrie
