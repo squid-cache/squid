@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.13 1996/04/15 03:58:32 wessels Exp $ */
+/* $Id: url.cc,v 1.14 1996/04/15 22:55:02 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -6,6 +6,24 @@
 
 #include "squid.h"
 
+char *RequestMethodStr[] =
+{
+    "NONE",
+    "GET",
+    "POST",
+    "HEAD",
+    "CONNECT"
+};
+
+char *ProtocolStr[] =
+{
+    "NONE",
+    "http",
+    "ftp",
+    "wais",
+    "cache_object",
+    "TOTAL"
+};
 
 static int url_acceptable[256];
 static int url_acceptable_init = 0;
@@ -138,24 +156,6 @@ char *the_url(e)
 }
 #endif
 
-char *RequestMethodStr[] =
-{
-    "NONE",
-    "GET",
-    "POST",
-    "HEAD"
-};
-
-char *ProtocolStr[] =
-{
-    "NONE",
-    "http",
-    "ftp",
-    "wais",
-    "cache_object",
-    "TOTAL"
-};
-
 method_t urlParseMethod(s)
      char *s;
 {
@@ -165,6 +165,8 @@ method_t urlParseMethod(s)
 	return METHOD_POST;
     } else if (strcasecmp(s, "HEAD") == 0) {
 	return METHOD_HEAD;
+    } else if (strcasecmp(s, "CONNECT") == 0) {
+	return METHOD_CONNECT;
     }
     return METHOD_NONE;
 }
@@ -183,6 +185,8 @@ protocol_t urlParseProtocol(s)
 	return PROTO_CACHEOBJ;
     if (strncasecmp(s, "file", 4) == 0)
 	return PROTO_FTP;
+    if (strncasecmp(s, "connect", 7) == 0)
+	return PROTO_CONNECT;
     return PROTO_NONE;
 }
 
