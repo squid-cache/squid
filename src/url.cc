@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.51 1996/12/17 07:16:59 wessels Exp $
+ * $Id: url.cc,v 1.52 1997/02/03 23:03:08 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -39,7 +39,8 @@ const char *RequestMethodStr[] =
     "PUT",
     "HEAD",
     "CONNECT",
-    "TRACE"
+    "TRACE",
+    "PURGE"
 };
 
 static char *ProtocolStr[] =
@@ -143,6 +144,8 @@ urlParseMethod(const char *s)
 	return METHOD_CONNECT;
     } else if (strcasecmp(s, "TRACE") == 0) {
 	return METHOD_TRACE;
+    } else if (strcasecmp(s, "PURGE") == 0) {
+	return METHOD_PURGE;
     }
     return METHOD_NONE;
 }

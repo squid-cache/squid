@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.80 1997/02/03 22:05:11 wessels Exp $
+ * $Id: acl.cc,v 1.81 1997/02/03 23:03:04 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -196,6 +196,8 @@ aclParseMethodList(void *curlist)
     while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = (int) urlParseMethod(t);
+	if (q->i == METHOD_PURGE)
+		Config.Options.enable_purge = 1;
 	*(Tail) = q;
 	Tail = &q->next;
     }
@@ -351,10 +353,6 @@ aclSplayIpCompare(struct in_addr addr, struct _acl_ip_data *data)
 	else
 	    rc = 0;
     }
-    debug(28,0,"aclSplayIpCompare:   key=%s\n", inet_ntoa(addr));
-    debug(28,0,"aclSplayIpCompare: addr1=%s\n", inet_ntoa(data->addr1));
-    debug(28,0,"aclSplayIpCompare: addr2=%s\n", inet_ntoa(data->addr2));
-    debug(28,0,"aclSplayIpCompare: returning %d\n", rc);
     return rc;
 }
 
