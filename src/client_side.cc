@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.31 1996/09/18 20:12:17 wessels Exp $
+ * $Id: client_side.cc,v 1.32 1996/09/18 20:13:03 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -409,7 +409,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	return 0;
     }
     if (mem->reply->code == 0) {
-	debug(33,0,"icpHandleIMSReply: Incomplete headers for '%s'\n",
+	debug(33, 0, "icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
 	storeRegister(entry,
 	    fd,

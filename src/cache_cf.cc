@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.92 1996/09/18 20:12:16 wessels Exp $
+ * $Id: cache_cf.cc,v 1.93 1996/09/18 20:13:02 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -833,7 +833,7 @@ parseIPLine(ip_acl ** list)
 }
 
 static void
-parseWordlist(wordlist **list)
+parseWordlist(wordlist ** list)
 {
     char *token;
     while ((token = strtok(NULL, w_space)))
