@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.240 2001/11/20 12:26:58 hno Exp $
+# $Id: cf.data.pre,v 1.241 2001/11/23 23:38:52 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -329,11 +329,13 @@ DOC_START
 		     spaces). This also means that % must be written as %%.
 
 		     use 'login=PASS' if users must authenticate against
-		     the upstream proxy. Note: To combine this with
-		     proxy_auth both proxies must share the same user
+		     the upstream proxy. This will pass the users credentials
+		     as they are to the peer proxy. This only works for the
+		     Basic HTTP authentication sheme. Note: To combine this
+		     with proxy_auth both proxies must share the same user
 		     database as HTTP only allows for one proxy login.
 		     Also be warned that this will expose your users proxy
-		     password to the parent. USE WITH CAUTION
+		     password to the peer. USE WITH CAUTION
 
 		     use 'login=*:password' to pass the username to the
 		     upstream cache, but with a fixed password. This is meant
