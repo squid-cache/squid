@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.25 2002/11/15 13:26:59 hno Exp $
+ * $Id: client_side_reply.cc,v 1.26 2002/11/15 14:18:30 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1257,7 +1257,7 @@ clientBuildReplyHeader(clientReplyContext *context, HttpReply * rep)
 		squid_curtime - http->entry->timestamp);
     }
     /* Filter unproxyable authentication types */
-    if (http->log_type != LOG_TCP_DENIED &&
+    if (http->logType != LOG_TCP_DENIED &&
 	(httpHeaderHas(hdr, HDR_WWW_AUTHENTICATE) || httpHeaderHas(hdr, HDR_PROXY_AUTHENTICATE))) {
 	HttpHeaderPos pos = HttpHeaderInitPos;
 	HttpHeaderEntry *e;
