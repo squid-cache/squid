@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.281 1998/10/17 04:34:11 rousskov Exp $
+ * $Id: protos.h,v 1.282 1998/10/21 06:54:20 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -107,7 +107,7 @@ extern int cbdataValid(const void *p);
 extern void cbdataDump(StoreEntry *);
 
 extern void clientdbInit(void);
-extern void clientdbUpdate(struct in_addr, log_type, protocol_t, size_t);
+extern void clientdbUpdate(struct in_addr, log_type, protocol_t, size_t, request_flags);
 extern int clientdbCutoffDenied(struct in_addr);
 extern void clientdbDump(StoreEntry *);
 extern void clientdbFreeMemory(void);
@@ -213,6 +213,7 @@ extern void eventRun(void);
 extern time_t eventNextTime(void);
 extern void eventDelete(EVH * func, void *arg);
 extern void eventInit(void);
+extern void eventFreeMemory(void);
 
 extern void fd_close(int fd);
 extern void fd_open(int fd, unsigned int type, const char *);

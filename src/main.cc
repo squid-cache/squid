@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.273 1998/10/10 14:57:41 wessels Exp $
+ * $Id: main.cc,v 1.274 1998/10/21 06:54:19 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -723,6 +723,7 @@ SquidShutdown(void *unused)
     clientdbFreeMemory();
     httpHeaderCleanModule();
     statFreeMemory();
+    eventFreeMemory();
 #endif
     memClean();
 #if !XMALLOC_TRACE

@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.22 1998/07/22 20:37:17 wessels Exp $
+ * $Id: event.cc,v 1.23 1998/10/21 06:54:21 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -173,4 +173,16 @@ eventDump(StoreEntry * sentry)
 	    e->name, e->when - current_dtime);
 	e = e->next;
     }
+}
+
+void
+eventFreeMemory(void)
+{
+    struct ev_entry *event;
+    while ((event = tasks)) {
+	if (NULL != event->arg)
+	    cbdataUnlock(event->arg);
+	xfree(event);
+    }
+    tasks = NULL;
 }

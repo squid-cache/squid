@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.49 1998/09/21 06:49:39 wessels Exp $
+ * $Id: asn.cc,v 1.50 1998/10/21 06:54:18 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -148,8 +148,10 @@ void
 asnInit(void)
 {
     extern int max_keylen;
+    static int inited = 0;
     max_keylen = 40;
-    rn_init();
+    if (0 == inited++)
+        rn_init();
     rn_inithead((void **) &AS_tree_head, 8);
     asnAclInitialize(Config.aclList);
     cachemgrRegister("asndb", "AS Number Database", asnStats, 0, 1);
