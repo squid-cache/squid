@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.198 1997/10/27 21:58:48 wessels Exp $
+ * $Id: comm.cc,v 1.199 1997/10/27 23:30:22 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -824,11 +824,11 @@ comm_poll(time_t sec)
     int poll_time;
     static int incoming_counter = 0;
     time_t timeout;
-    /* assume all process are very fast (less than 1 second). Call
-     * time() only once */
-    /* use only 1 second granularity */
     timeout = squid_curtime + sec;
     do {
+#if !ALARM_UPDATES_TIME
+	getCurrentTime();
+#endif
 	if (shutdown_pending || reconfigure_pending) {
 	    serverConnectionsClose();
 	    dnsShutdownServers();
@@ -974,6 +974,9 @@ comm_select(time_t sec)
     timeout = squid_curtime + sec;
 
     do {
+#if !ALARM_UPDATES_TIME
+	getCurrentTime();
+#endif
 	FD_ZERO(&readfds);
 	FD_ZERO(&writefds);
 	if (shutdown_pending || reconfigure_pending) {
