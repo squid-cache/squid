@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.27 2003/07/11 01:40:36 robertc Exp $
+ * $Id: client_side_request.cc,v 1.28 2003/07/14 15:07:21 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -555,7 +555,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     request_t *request = http->request;
     const HttpHeader *req_hdr = &request->header;
     int no_cache = 0;
-#if !defined(ESI) || defined(USE_USERAGENT_LOG) || defined(USE_REFERER_LOG)
+#if !(ESI) || defined(USE_USERAGENT_LOG) || defined(USE_REFERER_LOG)
 
     const char *str;
 #endif
