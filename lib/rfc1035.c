@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.23 2002/03/11 22:04:53 wessels Exp $
+ * $Id: rfc1035.c,v 1.24 2002/03/19 03:03:12 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -323,7 +323,7 @@ rfc1035NameUnpack(const char *buf, size_t sz, off_t * off, char *name, size_t ns
 	    if (ptr >= sz)
 		return 1;
 	    return rfc1035NameUnpack(buf, sz, &ptr, name + no, ns - no);
-	} else if (c > 63) {
+	} else if (c > RFC1035_MAXLABELSZ) {
 	    /*
 	     * "(The 10 and 01 combinations are reserved for future use.)"
 	     */
@@ -364,6 +364,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t * off, rfc1035_rr * RR)
 {
     unsigned short s;
     unsigned int i;
+    off_t rdata_off;
     if (rfc1035NameUnpack(buf, sz, off, RR->name, RFC1035_MAXHOSTNAMESZ)) {
 	RFC1035_UNPACK_DEBUG;
 	memset(RR, '\0', sizeof(*RR));
@@ -398,21 +399,31 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t * off, rfc1035_rr * RR)
 	memset(RR, '\0', sizeof(*RR));
 	return 1;
     }
+    RR->rdlength = ntohs(s);
     switch (RR->type) {
     case RFC1035_TYPE_PTR:
 	RR->rdata = malloc(RFC1035_MAXHOSTNAMESZ);
-	if (rfc1035NameUnpack(buf, sz, off, RR->rdata, RFC1035_MAXHOSTNAMESZ))
+	rdata_off = *off;
+	if (rfc1035NameUnpack(buf, sz, &rdata_off, RR->rdata, RFC1035_MAXHOSTNAMESZ))
 	    return 1;
-	RR->rdlength = strlen(RR->rdata);
+	if (rdata_off != ((*off) + RR->rdlength)) {
+	    /*
+	     * This probably doesn't happen for valid packets, but
+	     * I want to make sure that NameUnpack doesn't go beyond
+	     * the RDATA area.
+	     */
+	    RFC1035_UNPACK_DEBUG;
+	    memset(RR, '\0', sizeof(*RR));
+	    return 1;
+	}
 	break;
     case RFC1035_TYPE_A:
     default:
-	RR->rdlength = ntohs(s);
 	RR->rdata = malloc(RR->rdlength);
 	memcpy(RR->rdata, buf + (*off), RR->rdlength);
 	break;
     }
-    (*off) += ntohs(s);
+    (*off) += RR->rdlength;
     assert((*off) <= sz);
     return 0;
 }
@@ -519,9 +530,14 @@ rfc1035AnswersUnpack(const char *buf,
 	do {
 	    l = (int) (unsigned char) *(buf + off);
 	    off++;
-	    if (l > RFC1035_MAXLABELSZ) {	/* compression */
+	    if (l > 191) {	/* compression */
 		off++;
 		break;
+	    } else if (l > RFC1035_MAXLABELSZ) {
+		/* illegal combination of compression bits */
+		RFC1035_UNPACK_DEBUG;
+		rfc1035SetErrno(rfc1035_unpack_error);
+		return -rfc1035_unpack_error;
 	    } else {
 		off += l;
 	    }
