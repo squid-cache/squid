@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.146 1997/05/15 06:55:46 wessels Exp $
+ * $Id: main.cc,v 1.147 1997/05/15 23:33:43 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -124,6 +124,7 @@ int opt_udp_hit_obj = 0;	/* ask for HIT_OBJ's */
 int opt_mem_pools = 1;
 int opt_forwarded_for = 1;
 int opt_accel_uses_host = 0;
+int opt_debug_stderr = 0;
 int vhost_mode = 0;
 int Squid_MaxFD = SQUID_MAXFD;
 int Biggest_FD = -1;
@@ -169,6 +170,7 @@ usage(void)
 	"Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port] [-k signal]\n"
 	"       -a port   Specify ASCII port number (default: %d).\n"
 	"       -b        Buffer log output (default is unbuffered).\n"
+	"       -d        Write debugging to stderr also.\n"
 	"       -f file   Use given config-file instead of\n"
 	"                 %s\n"
 	"       -h        Print help message.\n"
@@ -196,7 +198,7 @@ mainParseOptions(int argc, char *argv[])
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFRVYXa:bf:hik:m:su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFRVYXa:bdf:hik:m:su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -225,6 +227,9 @@ mainParseOptions(int argc, char *argv[])
 	    break;
 	case 'b':
 	    unbuffered_logs = 0;
+	    break;
+	case 'd':
+	    opt_debug_stderr = 1;
 	    break;
 	case 'f':
 	    xfree(ConfigFile);
@@ -337,21 +342,21 @@ serverConnectionsOpen(void)
     int len;
     int x;
     int fd;
-    for (x = 0; x< Config.Port.n_http; x++) {
-        enter_suid();
-        fd = comm_open(SOCK_STREAM,
+    for (x = 0; x < Config.Port.n_http; x++) {
+	enter_suid();
+	fd = comm_open(SOCK_STREAM,
 	    0,
 	    Config.Addrs.tcp_incoming,
 	    Config.Port.http[x],
 	    COMM_NONBLOCKING,
 	    "HTTP Socket");
-        leave_suid();
+	leave_suid();
 	if (fd < 0)
-		continue;
-        comm_listen(fd);
-        commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
-        debug(1, 1, "Accepting HTTP connections on port %d, FD %d.\n",
-    	    (int) Config.Port.http[x], fd);
+	    continue;
+	comm_listen(fd);
+	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
+	debug(1, 1, "Accepting HTTP connections on port %d, FD %d.\n",
+	    (int) Config.Port.http[x], fd);
 	HttpSockets[NHttpSockets++] = fd;
     }
     if (NHttpSockets < 1)
@@ -392,8 +397,8 @@ serverConnectionsOpen(void)
 		    COMM_SELECT_READ,
 		    icpHandleUdp,
 		    NULL, 0);
-	        debug(1, 1, "Accepting ICP connections on port %d, FD %d.\n",
-	    		(int) port, theInIcpConnection);
+		debug(1, 1, "Accepting ICP connections on port %d, FD %d.\n",
+		    (int) port, theInIcpConnection);
 		fd_note(theOutIcpConnection, "Outgoing ICP socket");
 		fd_note(theInIcpConnection, "Incoming ICP socket");
 	    } else {
@@ -468,18 +473,14 @@ serverConnectionsClose(void)
     /* NOTE, this function will be called repeatedly while shutdown
      * is pending */
     int i;
-    for (i=0; i<NHttpSockets; i++) {
-        if (HttpSockets[i] >= 0) {
+    for (i = 0; i < NHttpSockets; i++) {
+	if (HttpSockets[i] >= 0) {
 	    debug(1, 1, "FD %d Closing HTTP connection\n", HttpSockets[i]);
 	    comm_close(HttpSockets[i]);
-	    commSetSelect(HttpSockets[i],
-	        COMM_SELECT_READ,
-	        NULL,
-	        NULL, 0);
 	    HttpSockets[i] = -1;
 	}
-	NHttpSockets = 0;
     }
+    NHttpSockets = 0;
     if (theInIcpConnection >= 0) {
 	/* NOTE, don't close outgoing ICP connection, we need to write to
 	 * it during shutdown */
