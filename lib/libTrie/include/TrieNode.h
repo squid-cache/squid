@@ -39,6 +39,11 @@
 #include <sys/types.h>
 #include <utility>
 
+/* MinGW needs NULL definition */
+#ifndef NULL
+#define NULL 0
+#endif
+
 /* TODO: parameterize this to be more generic -
 * i.e. M-ary internal node sizes etc
 */
