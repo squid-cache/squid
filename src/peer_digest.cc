@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.35 1998/06/02 04:18:24 wessels Exp $
+ * $Id: peer_digest.cc,v 1.36 1998/06/04 15:54:08 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -171,7 +171,7 @@ peerDigestValidate(void *data)
 	p->host, p->digest.last_dis_delay ? "" : "not");
     if (1 /* p->digest.cd */ ) {
 	const cache_key *key;
-	const char *u = internalRemoteUri(p->host, p->http_port, NULL, StoreDigestUrlPath);
+	const char *u = internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", StoreDigestUrlPath);
 	key = storeKeyPublic(u, METHOD_GET);
 	e = storeGet(key);
 	debug(72, 3) ("peerDigestValidate: %s store entry, key: %s, exp: %s\n",
@@ -312,7 +312,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	assert(reply);
 	httpReplyParse(reply, buf);
 	status = reply->sline.status;
-	debug(72, 3) ("peerDigestFetchHeaders: %s status: %d, expires: %s\n",
+	debug(72, 3) ("peerDigestFetchReply: %s status: %d, expires: %s\n",
 	    peer->host, status, mkrfc1123(reply->expires));
 	/* this "if" is based on clientHandleIMSReply() */
 	if (status == HTTP_NOT_MODIFIED) {
