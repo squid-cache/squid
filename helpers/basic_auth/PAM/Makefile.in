@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid PAM authentication helper
 #
-#  $Id: Makefile.in,v 1.15 2002/07/06 12:24:33 hno Exp $
+#  $Id: Makefile.in,v 1.16 2002/08/12 01:15:20 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -123,14 +123,12 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
-INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		  -I$(top_srcdir)/src/
-
+INCLUDES = -I$(top_srcdir)/include
 
 man_MANS = pam_auth.8
 EXTRA_DIST = pam_auth.8
 libexec_PROGRAMS = pam_auth
-LDADD = -lpam $(XTRA_LIBS)
+LDADD = -L$(top_builddir)/lib -lmiscutil -lpam $(XTRA_LIBS)
 subdir = helpers/basic_auth/PAM
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h

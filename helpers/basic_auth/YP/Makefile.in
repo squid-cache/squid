@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.16 2002/07/06 12:24:36 hno Exp $
+#  $Id: Makefile.in,v 1.17 2002/08/12 01:15:25 hno Exp $
 #
 #
 
@@ -125,9 +125,7 @@ makesnmplib = @makesnmplib@
 libexec_PROGRAMS = yp_auth
 yp_auth_SOURCES = yp_auth.c nis_support.h nis_support.c
 LDADD = -L$(top_builddir)/lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
-INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		  -I$(top_srcdir)/src/
-
+INCLUDES = -I$(top_srcdir)/include
 subdir = helpers/basic_auth/YP
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
