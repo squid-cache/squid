@@ -1,11 +1,11 @@
 #!/usr/local/bin/perl
 
-# $Id: upgrade-1.0-store.pl,v 1.1 1996/10/11 19:53:09 wessels Exp $
+# $Id: upgrade-1.0-store.pl,v 1.2 1996/10/11 19:56:06 wessels Exp $
 
 select(STDERR); $|=1;
 select(STDOUT); $|=1;
 
-$USAGE="$0: swaplog cachedir1 cachedir2 ...\n";
+$USAGE="Usage: $0 swaplog cachedir1 cachedir2 ...\n";
 
 $dry_run = 0;
 
@@ -41,10 +41,10 @@ foreach $c (@cachedirs) {
 	$cn = "$c.new";
 	&my_mkdir ($cn);
 	foreach $d1 (0..($NEW_SWAP_DIRECTORIES_L1-1)) {
-		$p1 = sprintf "$cn/%02X", $d1;
+		$p1 = sprintf ("$cn/%02X", $d1);
 		&my_mkdir ($p1);
 		foreach $d2 (0..($NEW_SWAP_DIRECTORIES_L2-1)) {
-			$p2 = sprintf "$p1/%02X", $d2;
+			$p2 = sprintf ("$p1/%02X", $d2);
 			&my_mkdir ($p2);
 		}
 	}
@@ -107,19 +107,19 @@ exit(0);
 
 sub old_fileno_to_path {
 	local($fn) = @_;
-	sprintf "%s/%02d/%d",
+	sprintf ("%s/%02d/%d",
 		$cachedirs[$fn % $ncache_dirs],
 		($fn / $ncache_dirs) % $OLD_SWAP_DIRECTORIES,
-		$fn;
+		$fn);
 }
 
 sub new_fileno_to_path {
 	local($fn) = @_;
-	sprintf "%s.new/%02X/%02X/%08X",
+	sprintf ("%s.new/%02X/%02X/%08X",
 		$cachedirs[$fn % $ncache_dirs],
 		($fn / $ncache_dirs) % $NEW_SWAP_DIRECTORIES_L1,
 		($fn / $ncache_dirs) / $NEW_SWAP_DIRECTORIES_L1 % $NEW_SWAP_DIRECTORIES_L2,
-		$fn;
+		$fn);
 }
 
 sub my_mkdir {
