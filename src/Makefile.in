@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.52 1996/11/01 07:53:00 wessels Exp $
+#  $Id: Makefile.in,v 1.53 1996/11/05 20:43:50 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -61,15 +61,50 @@ PROGS           = squid client
 UTILS           = dnsserver ftpget pinger
 CGIPROGS	= cachemgr.cgi
 OBJS	 	= \
-		acl.o async_io.o background.o cache_cf.o client_db.o \
-		client_side.o comm.o debug.o disk.o dns.o errorpage.o \
-		fdstat.o filemap.o fqdncache.o ftp.o gopher.o hash.o \
-		http.o icmp.o icp.o ident.o ipcache.o main.o mime.o \
-		neighbors.o net_db.o objcache.o proto.o redirect.o \
+		acl.o \
+		async_io.o \
+		background.o \
+		cache_cf.o \
+		client_db.o \
+		client_side.o \
+		comm.o \
+		debug.o \
+		disk.o \
+		dns.o \
+		errorpage.o \
+		fdstat.o \
+		filemap.o \
+		fqdncache.o \
+		ftp.o \
+		gopher.o \
+		hash.o \
+		http.o \
+		icmp.o \
+		icp.o \
+		ident.o \
+		ipcache.o \
+		main.o \
+		mime.o \
+		neighbors.o \
+		net_db.o \
+		objcache.o \
+		pass.o \
+		proto.o \
+		redirect.o \
 		refresh.o \
-		send-announce.o ssl.o stack.o stat.o stmem.o store.o \
-		store_clean.o storetoString.o tools.o timestamps.o \
-		url.o wais.o $(XTRA_OBJS)
+		send-announce.o \
+		ssl.o \
+		stack.o \
+		stat.o \
+		stmem.o \
+		store.o \
+		store_clean.o \
+		storetoString.o \
+		tools.o \
+		timestamps.o \
+		url.o \
+		wais.o \
+		$(XTRA_OBJS)
 
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
