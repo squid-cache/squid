@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.39 2002/04/13 23:07:50 hno Exp $
+ * $Id: htcp.cc,v 1.40 2002/04/30 07:59:49 hno Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -155,6 +155,9 @@ static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
 #define N_QUERIED_KEYS 256
 static cache_key queried_keys[N_QUERIED_KEYS][MD5_DIGEST_CHARS];
+static MemPool *htcpSpecifierPool = NULL;
+static MemPool *htcpDetailPool = NULL;
+
 
 static char *htcpBuildPacket(htcpStuff * stuff, ssize_t * len);
 static htcpSpecifier *htcpUnpackSpecifier(char *buf, int sz);
@@ -418,7 +421,7 @@ htcpFreeSpecifier(htcpSpecifier * s)
     safe_free(s->uri);
     safe_free(s->version);
     safe_free(s->req_hdrs);
-    memFree(s, MEM_HTCP_SPECIFIER);
+    memPoolFree(htcpSpecifierPool, s);
 }
 
 static void
@@ -427,7 +430,7 @@ htcpFreeDetail(htcpDetail * d)
     safe_free(d->resp_hdrs);
     safe_free(d->entity_hdrs);
     safe_free(d->cache_hdrs);
-    memFree(d, MEM_HTCP_DETAIL);
+    memPoolFree(htcpDetailPool, d);
 }
 
 static int
@@ -460,7 +463,7 @@ htcpUnpackCountstr(char *buf, int sz, char **str)
 static htcpSpecifier *
 htcpUnpackSpecifier(char *buf, int sz)
 {
-    htcpSpecifier *s = memAllocate(MEM_HTCP_SPECIFIER);
+    htcpSpecifier *s = memPoolAlloc(htcpSpecifierPool);
     int o;
     debug(31, 3) ("htcpUnpackSpecifier: %d bytes\n", (int) sz);
     o = htcpUnpackCountstr(buf, sz, &s->method);
@@ -502,7 +505,7 @@ htcpUnpackSpecifier(char *buf, int sz)
 static htcpDetail *
 htcpUnpackDetail(char *buf, int sz)
 {
-    htcpDetail *d = memAllocate(MEM_HTCP_DETAIL);
+    htcpDetail *d = memPoolAlloc(htcpDetailPool);
     int o;
     debug(31, 3) ("htcpUnpackDetail: %d bytes\n", (int) sz);
     o = htcpUnpackCountstr(buf, sz, &d->resp_hdrs);
@@ -847,14 +850,6 @@ void
 htcpInit(void)
 {
     if (Config.Port.htcp <= 0) {
-	/*
-	 *      Need to allocate a bit of memory anyway, otherwise
-	 *      mem.c::memCheckInit() will bail out.
-	 */
-	memDataInit(MEM_HTCP_SPECIFIER, "htcpSpecifier",
-	    sizeof(htcpSpecifier), 0);
-	memDataInit(MEM_HTCP_DETAIL, "htcpDetail", sizeof(htcpDetail), 0);
-	htcpInSocket = -1;
 	debug(31, 1) ("HTCP Disabled.\n");
 	return;
     }
@@ -889,8 +884,10 @@ htcpInit(void)
     } else {
 	htcpOutSocket = htcpInSocket;
     }
-    memDataInit(MEM_HTCP_SPECIFIER, "htcpSpecifier", sizeof(htcpSpecifier), 0);
-    memDataInit(MEM_HTCP_DETAIL, "htcpDetail", sizeof(htcpDetail), 0);
+    if (!htcpSpecifierPool) {
+	htcpSpecifierPool = memPoolCreate("htcpSpecifier", sizeof(htcpSpecifier));
+	htcpDetailPool = memPoolCreate("htcpDetail", sizeof(htcpDetail));
+    }
 }
 
 void
@@ -966,6 +963,9 @@ htcpSocketShutdown(void)
      * to that specific interface.  During shutdown, we must
      * disable reading on the outgoing socket.
      */
+    /* XXX Don't we need this handler to read replies while shutting down?
+     * I think there should be a separate hander for reading replies..
+     */
     assert(htcpOutSocket > -1);
     commSetSelect(htcpOutSocket, COMM_SELECT_READ, NULL, NULL, 0);
 }
@@ -977,5 +977,6 @@ htcpSocketClose(void)
     if (htcpOutSocket > -1) {
 	debug(12, 1) ("FD %d Closing HTCP socket\n", htcpOutSocket);
 	comm_close(htcpOutSocket);
+	htcpOutSocket = -1;
     }
 }

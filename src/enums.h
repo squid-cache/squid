@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.206 2002/04/02 11:38:03 hno Exp $
+ * $Id: enums.h,v 1.207 2002/04/30 07:59:49 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -584,10 +584,6 @@ typedef enum {
     MEM_FWD_SERVER,
     MEM_HELPER_REQUEST,
     MEM_HELPER_STATEFUL_REQUEST,
-#if USE_HTCP
-    MEM_HTCP_SPECIFIER,
-    MEM_HTCP_DETAIL,
-#endif
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_CONTENT_RANGE,
     MEM_HTTP_HDR_ENTRY,
