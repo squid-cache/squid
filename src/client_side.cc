@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.576 2002/04/14 22:08:36 hno Exp $
+ * $Id: client_side.cc,v 1.577 2002/04/21 21:23:15 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1056,7 +1056,6 @@ clientCheckContentLength(request_t * r)
 static int
 clientCachable(clientHttpRequest * http)
 {
-    const char *url = http->uri;
     request_t *req = http->request;
     method_t method = req->method;
     if (req->protocol == PROTO_HTTP)
@@ -1073,7 +1072,7 @@ clientCachable(clientHttpRequest * http)
     if (method == METHOD_POST)
 	return 0;		/* XXX POST may be cached sometimes.. ignored for now */
     if (req->protocol == PROTO_GOPHER)
-	return gopherCachable(url);
+	return gopherCachable(req);
     if (req->protocol == PROTO_CACHEOBJ)
 	return 0;
     return 1;
@@ -1107,7 +1106,7 @@ clientHierarchical(clientHttpRequest * http)
     if (request->protocol == PROTO_HTTP)
 	return httpCachable(method);
     if (request->protocol == PROTO_GOPHER)
-	return gopherCachable(url);
+	return gopherCachable(request);
     if (request->protocol == PROTO_WAIS)
 	return 0;
     if (request->protocol == PROTO_CACHEOBJ)
@@ -1762,7 +1761,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     if (http->out.size > 0x7FFF0000) {
 	debug(33, 1) ("WARNING: closing FD %d to prevent counter overflow\n", fd);
 	debug(33, 1) ("\tclient %s\n", inet_ntoa(http->conn->peer.sin_addr));
-	debug(33, 1) ("\treceived %d bytes\n", (int)http->out.size);
+	debug(33, 1) ("\treceived %d bytes\n", (int) http->out.size);
 	debug(33, 1) ("\tURI %s\n", http->log_uri);
 	comm_close(fd);
     } else
@@ -1771,8 +1770,8 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     if (http->out.offset > 0x7FFF0000) {
 	debug(33, 1) ("WARNING: closing FD %d to prevent counter overflow\n", fd);
 	debug(33, 1) ("\tclient %s\n", inet_ntoa(http->conn->peer.sin_addr));
-	debug(33, 1) ("\treceived %d bytes (offset %d)\n", (int)http->out.size,
-	    (int)http->out.offset);
+	debug(33, 1) ("\treceived %d bytes (offset %d)\n", (int) http->out.size,
+	    (int) http->out.offset);
 	debug(33, 1) ("\tURI %s\n", http->log_uri);
 	comm_close(fd);
     } else
