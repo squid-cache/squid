@@ -1,5 +1,13 @@
 Changes to squid-1.1.alpha4:
 
+	- Cleaned up diskHandleWrite()
+	- Added free() handler to struct dwrite_q so diskHandleWrite()
+	  can free memory after its been written.
+	- Changed file_open() to not allow files to be opened O_RDWR.
+	- Changed file_open() to always set O_APPEND for O_WRONLY files.
+
+Changes to squid-1.1.alpha4:
+
 	- Fixed Asynchronous Disk I/O routines to basically work.
 	- Fixed memory write bugs when using the redirector.
 	- Added support for non-anonymous FTP urls without needing a
