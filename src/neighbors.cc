@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.173 1998/02/06 23:57:30 wessels Exp $
+ * $Id: neighbors.cc,v 1.174 1998/02/17 19:05:27 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -520,7 +520,7 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 {
     int rtt;
     int n;
-    if (p->stats.logged_state == PEER_DEAD) {
+    if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
 	debug(15, 0) ("Detected REVIVED %s: %s/%d/%d\n",
 	    neighborTypeStr(p),
 	    p->host, p->http_port, p->icp_port);
