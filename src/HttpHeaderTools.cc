@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.11 1998/05/11 18:44:27 rousskov Exp $
+ * $Id: HttpHeaderTools.cc,v 1.12 1998/05/21 00:57:35 rousskov Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -134,6 +134,20 @@ strListIsMember(const String *list, const char *m, char del)
     assert(list && m);
     while (strListGetItem(list, del, &item, NULL, &pos)) {
 	if (!strcasecmp(item, m))
+	    return 1;
+    }
+    return 0;
+}
+
+/* returns true iff "s" is a substring of a member of the list */
+int
+strListIsSubstr(const String *list, const char *s, char del)
+{
+    const char *pos = NULL;
+    const char *item;
+    assert(list && s);
+    while (strListGetItem(list, del, &item, NULL, &pos)) {
+	if (strstr(item, s))
 	    return 1;
     }
     return 0;
