@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.165 2001/05/21 04:50:57 hno Exp $
+ * $Id: errorpage.cc,v 1.166 2001/08/29 14:57:34 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -372,6 +372,7 @@ errorStateFree(ErrorState * err)
     safe_free(err->ftp.reply);
     if (err->auth_user_request)
 	authenticateAuthUserRequestUnlock(err->auth_user_request);
+    err->auth_user_request = NULL;
     cbdataFree(err);
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.27 2001/08/09 11:00:10 adrian Exp $
+ * $Id: authenticate.cc,v 1.28 2001/08/29 14:57:34 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -111,6 +111,10 @@ authenticateOnCloseConnection(ConnStateData * conn)
     assert(conn != NULL);
     if (conn->auth_user_request != NULL) {
 	auth_user_request = conn->auth_user_request;
+	/* if the auth type gets reset, the connection shouldn't 
+	 * remain linked to it - the next type might not be conn based
+	 */
+	assert(auth_user_request->auth_user->auth_module);
 	if (authscheme_list[auth_user_request->auth_user->auth_module - 1].oncloseconnection) {
 	    authscheme_list[auth_user_request->auth_user->auth_module - 1].oncloseconnection(conn);
 	}
@@ -359,7 +363,7 @@ authenticateAuthUserRequestIPCount(auth_user_request_t * auth_user_request)
  * Proxy Auth (or Auth) header. It may be a cached Auth User or a new
  * Unauthenticated structure. The structure is given an inital lock here.
  */
-auth_user_request_t *
+static auth_user_request_t *
 authenticateGetAuthUser(const char *proxy_auth)
 {
     auth_user_request_t *auth_user_request = authenticateAuthUserRequestNew();
@@ -444,7 +448,10 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 	conn->auth_type = AUTH_UNKNOWN;
 	debug(28, 4) ("authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.\n");
 	/* something wrong with the AUTH credentials. Force a new attempt */
-	conn->auth_user_request = NULL;
+	if (conn->auth_user_request) {
+	    authenticateAuthUserRequestUnlock(conn->auth_user_request);
+	    conn->auth_user_request = NULL;
+	}
 	if (*auth_user_request) {
 	    /* unlock the ACL lock */
 	    authenticateAuthUserRequestUnlock(*auth_user_request);
@@ -460,7 +467,7 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
     if (proxy_auth && conn->auth_user_request &&
 	authenticateUserAuthenticated(conn->auth_user_request) &&
 	strcmp(proxy_auth, authscheme_list[conn->auth_user_request->auth_user->auth_module - 1].authConnLastHeader(conn->auth_user_request))) {
-	debug(28, 1) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. Current user '%s' proxy_auth %s\n", authenticateUserRequestUsername(conn->auth_user_request), proxy_auth);
+	debug(28, 1) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %x, Current user '%s' proxy_auth %s\n", conn->auth_user_request, authenticateUserRequestUsername(conn->auth_user_request), proxy_auth);
 	/* remove this request struct - the link is already authed and it can't be to 
 	 * reauth.
 	 */
@@ -494,9 +501,9 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 		    /* lock the user for the request structure link */
 		    authenticateAuthUserRequestLock(*auth_user_request);
 		    request->auth_user_request = *auth_user_request;
-		    /* unlock the ACL reference. */
-		    authenticateAuthUserRequestUnlock(*auth_user_request);
 		}
+		/* unlock the ACL reference granted by ...GetAuthUser. */
+		authenticateAuthUserRequestUnlock(*auth_user_request);
 		*auth_user_request = NULL;
 		return AUTH_ACL_CHALLENGE;
 	    }
@@ -526,6 +533,7 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 	    conn, headertype);
 	switch (authenticateDirection(*auth_user_request)) {
 	case 1:
+	case -2:
 	    /* this ACL check is finished. Unlock. */
 	    authenticateAuthUserRequestUnlock(*auth_user_request);
 	    *auth_user_request = NULL;
@@ -535,14 +543,9 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 	     * the *auth_user_request variables stores the auth_user_request
 	     * for the callback to here - Do not Unlock */
 	    return AUTH_ACL_HELPER;
-	case -2:
-	    /* this ACL check is finished. Unlock. */
-	    authenticateAuthUserRequestUnlock(*auth_user_request);
-	    *auth_user_request = NULL;
-	    return AUTH_ACL_CHALLENGE;
 	}
 	/* on 0 the authentication is finished - fallthrough */
-	/* See of user authentication failed for some reason */
+	/* See if user authentication failed for some reason */
 	if (!authenticateUserAuthenticated(*auth_user_request)) {
 	    if ((authenticateUserRequestUsername(*auth_user_request))) {
 		if (!request->auth_user_request) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.410 2001/08/16 00:16:17 hno Exp $
+ * $Id: protos.h,v 1.411 2001/08/29 14:57:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -737,7 +737,6 @@ extern void authenticateInit(authConfig *);
 extern void authenticateShutdown(void);
 extern void authenticateFixHeader(HttpReply *, auth_user_request_t *, request_t *, int, int);
 extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, request_t *, int);
-extern auth_user_request_t *authenticateGetAuthUser(const char *proxy_auth);
 extern auth_acl_t authenticateAuthenticate(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData *, struct in_addr);
 extern void authenticateAuthUserUnlock(auth_user_t * auth_user);
 extern void authenticateAuthUserLock(auth_user_t * auth_user);

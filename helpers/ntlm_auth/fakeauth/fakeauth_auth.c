@@ -4,8 +4,8 @@
  *
  * Example ntlm authentication program for Squid, based on the
  * original proxy_auth code from client_side.c, written by
- * Jon Thackray <jrmt@uk.gdscorp.com>. and the inital ntlm code
- * Andy Doran.
+ * Jon Thackray <jrmt@uk.gdscorp.com>. Initial ntlm code by
+ * Andrew Doran <ad@interlude.eu.org>.
  *
  * This code gets the username and returns it. No validation is done.
  * and by the way: it is a complete patch-up. Use the "real thing" NTLMSSP
@@ -48,7 +48,7 @@
 #endif
 static char *authenticate_ntlm_domain = "LIFELESSWKS";
 
-/* NTLM authentication by ad@netbsd.org - 07/1999 */
+/* NTLM authentication by ad@interlude.eu.org - 07/1999 */
 /* XXX this is not done cleanly... */
 
 /* makes a null-terminated string lower-case. Changes CONTENTS! */

@@ -1,10 +1,10 @@
 /*
- * $Id: ntlmauth.c,v 1.2 2001/02/07 18:56:50 hno Exp $
+ * $Id: ntlmauth.c,v 1.3 2001/08/29 14:57:34 robertc Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
  * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>,
- *   inspired by previous work by Andy Doran.
+ *   inspired by previous work by Andrew Doran <ad@interlude.eu.org>.
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.544 2001/08/26 22:17:23 hno Exp $
+ * $Id: client_side.cc,v 1.545 2001/08/29 14:57:34 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -856,13 +856,16 @@ connStateFree(int fd, void *data)
     clientHttpRequest *http;
     debug(33, 3) ("connStateFree: FD %d\n", fd);
     assert(connState != NULL);
-    authenticateOnCloseConnection(connState);
     clientdbEstablished(connState->peer.sin_addr, -1);	/* decrement */
     while ((http = connState->chr) != NULL) {
 	assert(http->conn == connState);
 	assert(connState->chr != connState->chr->next);
 	httpRequestFree(http);
     }
+    if (connState->auth_user_request)
+	authenticateAuthUserRequestUnlock(connState->auth_user_request);
+    connState->auth_user_request = NULL;
+    authenticateOnCloseConnection(connState);
     if (connState->in.size == CLIENT_REQ_BUF_SZ)
 	memFree(connState->in.buf, MEM_CLIENT_REQ_BUF);
     else

@@ -121,14 +121,14 @@ init_challenge(char *domain, char *domain_controller)
 	debug("Couldn't connect to SMB Server. Error:%s\n", errstr);
 	return 1;
     }
-    if (SMB_Negotiate(handle, SMB_Prots) < 0) {		/* An error */
+    if (SMB_Negotiate(handle, SMB_Prots) < 0) { /* An error */
 	debug("Error negotiating protocol with SMB Server\n");
 	SMB_Discon(handle, 0);
 	handle = NULL;
 	return 2;
     }
     if (handle->Security == 0) {	/* share-level security, unuseable */
-	debug("SMB Server uses share-level security .. we need user sercurity.\n");
+	debug("SMB Server uses share-level security .. we need user security.\n");
 	SMB_Discon(handle, 0);
 	handle = NULL;
 	return 3;

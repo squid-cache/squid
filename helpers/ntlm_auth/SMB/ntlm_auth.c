@@ -22,6 +22,9 @@
 #include "smbval/smblib-common.h"
 #include "smbval/rfcnb-error.h"
 
+#include <signal.h>
+#include <unistd.h>
+
 /* these are part of rfcnb-priv.h and smblib-priv.h */
 extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
 extern int SMB_Get_Last_Error();
@@ -52,7 +55,10 @@ extern int RFCNB_Get_Last_Error();
 char error_messages_buffer[BUFFER_SIZE];
 #endif
 
-char load_balance = 0, failover_enabled = 0, protocol_pedantic = 0, last_ditch_enabled = 0;
+char load_balance = 0, protocol_pedantic = 0;
+#ifdef NTLM_FAIL_OPEN
+char last_ditch_enabled = 0;
+#endif
 
 dc *controllers = NULL;
 int numcontrollers = 0;
@@ -60,18 +66,12 @@ dc *current_dc;
 
 char smb_error_buffer[1000];
 
-/* housekeeping cycle and periodic operations */
-static unsigned char need_dc_resurrection = 0;
+/* signal handler to be invoked when the authentication operation
+	 times out */
+static char got_timeout=0;
 static void
-resurrect_dead_dc()
-{
-    int j;
-    dc *c = controllers;
-
-    need_dc_resurrection = 0;
-    for (j = 0; j < numcontrollers; j++)
-	if (c->status != DC_OK && is_dc_ok(c->domain, c->controller))
-	    c->status = DC_OK;
+timeout_during_auth(int signum) {
+	dc_disconnect();
 }
 
 /* makes a null-terminated string upper-case. Changes CONTENTS! */
@@ -101,6 +101,7 @@ void
 send_bh_or_ld(char *bhmessage, ntlm_authenticate * failedauth, int authlen)
 {
     char *creds = NULL;
+#ifdef NTLM_FAIL_OPEN
     if (last_ditch_enabled) {
 	creds = fetch_credentials(failedauth, authlen);
 	if (creds) {
@@ -110,14 +111,18 @@ send_bh_or_ld(char *bhmessage, ntlm_authenticate * failedauth, int authlen)
 	    SEND("NA last-ditch on, but no credentials");
 	}
     } else {
+#endif
 	SEND2("BH %s", bhmessage);
+#ifdef NTLM_FAIL_OPEN
     }
+#endif
 }
 
 /*
  * options:
  * -b try load-balancing the domain-controllers
  * -f fail-over to another DC if DC connection fails.
+ *    DEPRECATED and VERBOSELY IGNORED. This is on by default now.
  * -l last-ditch-mode
  * domain\controller ...
  */
@@ -127,7 +132,7 @@ void
 usage()
 {
     fprintf(stderr,
-	"%s usage:\n%s [-b] [-f] domain\\controller [domain\\controller ...]\n-b, if specified, enables load-balancing among controllers\n-f, if specified, enables failover among controllers\n-l, if specified, changes behavior on domain controller failyures to\tlast-ditch\n\nYou MUST specify at least one Domain Controller.\nYou can use either \\ or / as separator between the domain name \n\tand the controller name\n",
+	"%s usage:\n%s [-b] [-f] domain\\controller [domain\\controller ...]\n-b, if specified, enables load-balancing among controllers\n-f, if specified, enables failover among controllers (DEPRECATED and always active)\n-l, if specified, changes behavior on domain controller failyures to\tlast-ditch\n\nYou MUST specify at least one Domain Controller.\nYou can use either \\ or / as separator between the domain name \n\tand the controller name\n",
 	my_program_name, my_program_name);
 }
 
@@ -143,11 +148,14 @@ process_options(int argc, char *argv[])
 	    load_balance = 1;
 	    break;
 	case 'f':
-	    failover_enabled = 1;
+	    fprintf(stderr,
+		"WARNING. The -f flag is DEPRECATED and always active.\n");
 	    break;
+#ifdef NTLM_FAIL_OPEN
 	case 'l':
 	    last_ditch_enabled = 1;
 	    break;
+#endif
 	default:
 	    fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
 	    usage();
@@ -189,7 +197,7 @@ process_options(int argc, char *argv[])
 	numcontrollers++;
 	new_dc->domain = d;
 	new_dc->controller = c;
-	new_dc->status = DC_OK;
+	new_dc->dead = 0;
 	if (controllers == NULL) {	/* first controller */
 	    controllers = new_dc;
 	    last_dc = new_dc;
@@ -214,32 +222,35 @@ obtain_challenge()
 {
     int j = 0;
     const char *ch = NULL;
-    debug("obtain_challenge: getting new challenge\n");
     for (j = 0; j < numcontrollers; j++) {
-	if (current_dc->status == DC_OK) {
-	    debug("getting challenge from %s\\%s (attempt no. %d)\n",
-		current_dc->domain, current_dc->controller, j + 1);
-	    ch = make_challenge(current_dc->domain, current_dc->controller);
-	    debug("make_challenge retuned %p\n", ch);
-	    if (ch) {
-		debug("Got it\n");
-		return ch;	/* All went OK, returning */
+	debug("obtain_challenge: selecting %s\\%s (attempt #%d)\n",
+	    current_dc->domain, current_dc->controller, j + 1);
+	if (current_dc->dead != 0) {
+	    if (time(NULL) - current_dc->dead >= DEAD_DC_RETRY_INTERVAL) {
+		/* mark helper as retry-worthy if it's so. */
+		debug("Reviving DC\n");
+		current_dc->dead = 0;
+	    } else {		/* skip it */
+		debug("Skipping it\n");
+		continue;
 	    }
-	    /* Huston, we've got a problem. Take this DC out of the loop */
-	    debug("Marking DC as DEAD\n");
-	    current_dc->status = DC_DEAD;
-	    need_dc_resurrection = 1;
-	} else {
-	    debug("controller %s\\%s not OK, skipping\n", current_dc->domain,
-		current_dc->controller);
 	}
-	if (failover_enabled == 0)	/* No failover. Just return */
-	    return NULL;
+	/* else branch. Here we KNOW that the DC is fine */
+	debug("attempting challenge retrieval\n");
+	ch = make_challenge(current_dc->domain, current_dc->controller);
+	debug("make_challenge retuned %p\n", ch);
+	if (ch) {
+	    debug("Got it\n");
+	    return ch;		/* All went OK, returning */
+	}
+	/* Huston, we've got a problem. Take this DC out of the loop */
+	debug("Marking DC as DEAD\n");
+	current_dc->dead = time(NULL);
 	/* Try with the next */
 	debug("moving on to next controller\n");
 	current_dc = current_dc->next;
     }
-    /* DC (all DCs if failover is enabled) failed. */
+    /* all DCs failed. */
     return NULL;
 }
 
@@ -256,7 +267,6 @@ manage_request()
     if (fgets(buf, BUFFER_SIZE, stdin) == NULL) {
 	fprintf(stderr, "fgets() failed! dying..... errno=%d (%s)\n", errno,
 	    strerror(errno));
-	abort();
 	exit(1);		/* BIIG buffer */
     }
     debug("managing request\n");
@@ -298,8 +308,18 @@ manage_request()
 	    /* notreached */
 	case NTLM_AUTHENTICATE:
 	    /* check against the DC */
-	    plen = strlen(buf) * 3 / 4;		/* we only need it here. Optimization */
+	    plen = strlen(buf) * 3 / 4; /* we only need it here. Optimization */
+	    signal(SIGALRM,timeout_during_auth);
+	    alarm(30);
 	    cred = ntlm_check_auth((ntlm_authenticate *) decoded, plen);
+	    alarm(0);
+	    signal(SIGALRM,SIG_DFL);
+	    if (got_timeout != 0) {
+		fprintf(stderr,"ntlm-auth[%d]: Timeout during authentication.\n", getpid());
+		SEND("BH Timeout during authentication");
+		got_timeout=0;
+		return;
+	    }
 	    if (cred == NULL) {
 		int smblib_err, smb_errorclass, smb_errorcode, nb_error;
 		/* there was an error. We have two errno's to look at.
@@ -310,8 +330,7 @@ manage_request()
 		smb_errorclass = SMBlib_Error_Class(SMB_Get_Last_SMB_Err());
 		smb_errorcode = SMBlib_Error_Code(SMB_Get_Last_SMB_Err());
 		nb_error = RFCNB_Get_Last_Error();
-		debug
-		    ("No creds. SMBlib error %d, SMB error class %d, SMB error code %d, NB error %d\n",
+		debug("No creds. SMBlib error %d, SMB error class %d, SMB error code %d, NB error %d\n",
 		    smblib_err, smb_errorclass, smb_errorcode, nb_error);
 		/* Should I use smblib_err? Actually it seems I can do as well
 		 * without it.. */
@@ -400,8 +419,6 @@ manage_request()
 	    ch = obtain_challenge();
 	}
 	SEND2("TT %s", ch);
-	if (need_dc_resurrection)	/* looks like a good moment... */
-	    resurrect_dead_dc();
 	return;
     }
     SEND("BH Helper detected protocol error");
