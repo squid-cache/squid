@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.10 2001/10/17 14:59:34 hno Exp $
+ * $Id: async_io.cc,v 1.11 2002/01/10 07:46:06 adrian Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -166,7 +166,7 @@ aioCancel(int fd)
 	    their_data = curr->done_handler_data;
 	    curr->done_handler = NULL;
 	    curr->done_handler_data = NULL;
-	    debug(0, 0) ("this be aioCancel\n");
+	    debug(32, 2) ("this be aioCancel\n");
 	    if (cbdataValid(their_data))
 		done_handler(fd, their_data, -2, -2);
 	    cbdataUnlock(their_data);
