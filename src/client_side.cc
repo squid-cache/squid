@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.560 2001/12/01 18:03:10 hno Exp $
+ * $Id: client_side.cc,v 1.561 2001/12/12 23:44:18 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1841,7 +1841,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	fd, storeUrl(entry), (long int) http->out.offset);
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
-	debug(33, 1) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
+	debug(33, 2) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
 	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     } else if (entry && EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
@@ -2044,7 +2044,7 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	 * execution will resume after the operation completes.
 	 */
     } else {
-	debug(33, 1) ("clientKeepaliveNextRequest: FD %d Sending next\n",
+	debug(33, 2) ("clientKeepaliveNextRequest: FD %d Sending next\n",
 	    conn->fd);
 	assert(entry);
 	if (0 == storeClientCopyPending(http->sc, entry, http)) {
