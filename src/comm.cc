@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.201 1997/11/05 05:29:21 wessels Exp $
+ * $Id: comm.cc,v 1.202 1997/11/12 00:08:46 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -265,7 +265,7 @@ comm_open(int sock_type,
     debug(5, 5) ("comm_open: FD %d is a new socket\n", new_socket);
     fd_open(new_socket, FD_SOCKET, note);
     F = &fd_table[new_socket];
-    if (!BIT_TEST(flags, COMM_NOCLOEXEC))
+    if (!(flags & COMM_NOCLOEXEC))
 	commSetCloseOnExec(new_socket);
     if (port > (u_short) 0) {
 	commSetNoLinger(new_socket);
@@ -280,7 +280,7 @@ comm_open(int sock_type,
     }
     F->local_port = port;
 
-    if (BIT_TEST(flags, COMM_NONBLOCKING))
+    if (flags & COMM_NONBLOCKING)
 	if (commSetNonBlocking(new_socket) == COMM_ERROR)
 	    return -1;
 #ifdef TCP_NODELAY
@@ -604,11 +604,11 @@ comm_close(int fd)
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
-    if (BIT_TEST(F->flags, FD_CLOSING))
+    if (EBIT_TEST(F->flags, FD_CLOSING))
 	return;
     assert(F->open);
     assert(F->type != FD_FILE);
-    BIT_SET(F->flags, FD_CLOSING);
+    EBIT_SET(F->flags, FD_CLOSING);
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
     commCallCloseHandlers(fd);
     if (F->uses)		/* assume persistent connect count */

@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.166 1997/11/10 19:42:04 wessels Exp $
+ * $Id: ftp.cc,v 1.167 1997/11/12 00:08:50 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -634,6 +634,22 @@ ftpParseListing(FtpStateData * ftpState, int len)
 }
 
 static void
+ftpReadComplete(FtpStateData * ftpState)
+{
+    /* Connection closed; retrieval done. */
+    if (EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
+	ftpListingFinish(ftpState);
+    storeTimestampsSet(ftpState->entry);
+    storeComplete(ftpState->entry);
+    /* expect the "transfer complete" message on the control socket */
+    commSetSelect(ftpState->ctrl.fd,
+	COMM_SELECT_READ,
+	ftpReadControlReply,
+	ftpState,
+	Config.Timeout.read);
+}
+
+static void
 ftpReadData(int fd, void *data)
 {
     FtpStateData *ftpState = data;
@@ -641,6 +657,7 @@ ftpReadData(int fd, void *data)
     int clen;
     int bin;
     StoreEntry *entry = ftpState->entry;
+    MemObject *mem = entry->mem_obj;
     ErrorState *err;
     assert(fd == ftpState->data.fd);
     if (protoAbortFetch(entry)) {
@@ -649,7 +666,7 @@ ftpReadData(int fd, void *data)
 	return;
     }
     /* check if we want to defer reading */
-    clen = entry->mem_obj->inmem_hi;
+    clen = mem->inmem_hi;
     if (EBIT_TEST(ftpState->flags, FTP_ISDIR))
 	if (!EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
 	    ftpListingStart(ftpState);
@@ -672,7 +689,7 @@ ftpReadData(int fd, void *data)
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, Config.Timeout.read);
 	} else {
-	    if (entry->mem_obj->inmem_hi == 0) {
+	    if (mem->inmem_hi == 0) {
 		err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 		err->xerrno = errno;
 		err->request = requestLink(ftpState->request);
@@ -681,7 +698,7 @@ ftpReadData(int fd, void *data)
 	    storeAbort(entry, 0);
 	    ftpDataTransferDone(ftpState);
 	}
-    } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
+    } else if (len == 0 && mem->inmem_hi == 0) {
 	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->request = requestLink(ftpState->request);
@@ -689,17 +706,7 @@ ftpReadData(int fd, void *data)
 	storeAbort(entry, 0);
 	ftpDataTransferDone(ftpState);
     } else if (len == 0) {
-	/* Connection closed; retrieval done. */
-	if (EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
-	    ftpListingFinish(ftpState);
-	storeTimestampsSet(entry);
-	storeComplete(entry);
-	/* expect the "transfer complete" message on the control socket */
-	commSetSelect(ftpState->ctrl.fd,
-	    COMM_SELECT_READ,
-	    ftpReadControlReply,
-	    ftpState,
-	    Config.Timeout.read);
+	ftpReadComplete(ftpState);
     } else {
 	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	    ftpParseListing(ftpState, len);
@@ -707,7 +714,14 @@ ftpReadData(int fd, void *data)
 	    assert(ftpState->data.offset == 0);
 	    storeAppend(entry, ftpState->data.buf, len);
 	}
-	commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, Config.Timeout.read);
+	if (mem->inmem_hi >= ftpState->size + mem->reply->hdr_sz)
+	    ftpReadComplete(ftpState);
+	else
+	    commSetSelect(fd,
+		COMM_SELECT_READ,
+		ftpReadData,
+		data,
+		Config.Timeout.read);
     }
 }
 
@@ -999,7 +1013,7 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
 }
 
 static void
-ftpWriteCommandCallback(int fd, char *bufnotused, int size, int errflag, void *data)
+ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
@@ -1592,7 +1606,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	mime_type = mimeGetContentType(filename);
 	mime_enc = mimeGetContentEncoding(filename);
     }
-    BIT_SET(e->flag, DELAY_SENDING);
+    EBIT_SET(e->flag, DELAY_SENDING);
     storeAppendPrintf(e, "HTTP/1.0 200 Gatewaying\r\n");
     reply->code = 200;
     reply->version = 1.0;
@@ -1614,7 +1628,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	storeAppendPrintf(e, "Last-Modified: %s\r\n", mkrfc1123(ftpState->mdtm));
 	reply->last_modified = ftpState->mdtm;
     }
-    BIT_CLR(e->flag, DELAY_SENDING);
+    EBIT_CLR(e->flag, DELAY_SENDING);
     storeAppendPrintf(e, "\r\n");
     reply->hdr_sz = e->mem_obj->inmem_hi;
     storeTimestampsSet(e);

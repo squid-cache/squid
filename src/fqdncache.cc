@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.65 1997/11/05 05:29:23 wessels Exp $
+ * $Id: fqdncache.cc,v 1.66 1997/11/12 00:08:50 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -544,7 +544,7 @@ fqdncache_dnsHandleRead(int fd, void *data)
 		dnsData, 0);
 	    return;
 	}
-	debug(35, dnsData->flags & DNS_FLAG_CLOSING ? 5 : 1)
+	debug(35, EBIT_TEST(dnsData->flags, HELPER_CLOSING) ? 5 : 1)
 	    ("FD %d: Connection from DNSSERVER #%d is closed, disabling\n",
 	    fd, dnsData->id);
 	dnsData->flags = 0;
@@ -586,7 +586,7 @@ fqdncache_dnsHandleRead(int fd, void *data)
     }
     if (dnsData->offset == 0) {
 	dnsData->data = NULL;
-	dnsData->flags &= ~DNS_FLAG_BUSY;
+	EBIT_CLR(dnsData->flags, HELPER_BUSY);
     }
     /* reschedule */
     commSetSelect(dnsData->inpipe,
@@ -680,8 +680,7 @@ static void
 fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 {
     char *buf = NULL;
-    if (!BIT_TEST(dns->flags, DNS_FLAG_ALIVE))
-	debug_trap("Dispatching a dead DNS server");
+    assert(EBIT_TEST(dns->flags, HELPER_ALIVE));
     if (!fqdncacheHasPending(f)) {
 	debug(35, 0) ("fqdncache_dnsDispatch: skipping '%s' because no handler.\n",
 	    f->name);
@@ -693,7 +692,7 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 	debug_trap("fqdncache_dnsDispatch: status != FQDN_PENDING");
     buf = xcalloc(1, 256);
     snprintf(buf, 256, "%s\n", f->name);
-    dns->flags |= DNS_FLAG_BUSY;
+    EBIT_SET(dns->flags, HELPER_BUSY);
     dns->data = f;
     f->status = FQDN_DISPATCHED;
     comm_write(dns->outpipe,

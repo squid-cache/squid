@@ -189,7 +189,7 @@ icpCheckUdpHit(StoreEntry * e, request_t * request)
 int
 icpCheckUdpHitObj(StoreEntry * e, request_t * r, icp_common_t * h, int len)
 {
-    if (!BIT_TEST(h->flags, ICP_FLAG_HIT_OBJ))	/* not requested */
+    if (!(h->flags & ICP_FLAG_HIT_OBJ))	/* not requested */
 	return 0;
     if (len > Config.udpMaxHitObjsz)	/* too big */
 	return 0;

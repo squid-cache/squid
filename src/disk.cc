@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.91 1997/11/05 05:29:22 wessels Exp $
+ * $Id: disk.cc,v 1.92 1997/11/12 00:08:47 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -193,12 +193,12 @@ file_close(int fd)
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->open);
-    if (BIT_TEST(F->flags, FD_WRITE_DAEMON)) {
-	BIT_SET(F->flags, FD_CLOSE_REQUEST);
+    if (EBIT_TEST(F->flags, FD_WRITE_DAEMON)) {
+	EBIT_SET(F->flags, FD_CLOSE_REQUEST);
 	return;
     }
-    if (BIT_TEST(F->flags, FD_WRITE_PENDING)) {
-	BIT_SET(F->flags, FD_CLOSE_REQUEST);
+    if (EBIT_TEST(F->flags, FD_WRITE_PENDING)) {
+	EBIT_SET(F->flags, FD_CLOSE_REQUEST);
 	return;
     }
     fd_close(fd);
@@ -313,16 +313,16 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     if (fdd->write_q == NULL) {
 	/* no more data */
 	fdd->write_q_tail = NULL;
-	BIT_CLR(F->flags, FD_WRITE_PENDING);
-	BIT_CLR(F->flags, FD_WRITE_DAEMON);
+	EBIT_CLR(F->flags, FD_WRITE_PENDING);
+	EBIT_CLR(F->flags, FD_WRITE_DAEMON);
     } else {
 	/* another block is queued */
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
-	BIT_SET(F->flags, FD_WRITE_DAEMON);
+	EBIT_SET(F->flags, FD_WRITE_DAEMON);
     }
     if (fdd->wrt_handle)
 	fdd->wrt_handle(fd, status, len, fdd->wrt_handle_data);
-    if (BIT_TEST(F->flags, FD_CLOSE_REQUEST))
+    if (EBIT_TEST(F->flags, FD_CLOSE_REQUEST))
 	file_close(fd);
 }
 
@@ -352,7 +352,7 @@ file_write(int fd,
     F->disk.wrt_handle = handle;
     F->disk.wrt_handle_data = handle_data;
     /* add to queue */
-    BIT_SET(F->flags, FD_WRITE_PENDING);
+    EBIT_SET(F->flags, FD_WRITE_PENDING);
     if (F->disk.write_q == NULL) {
 	/* empty queue */
 	F->disk.write_q = F->disk.write_q_tail = wq;
@@ -360,13 +360,13 @@ file_write(int fd,
 	F->disk.write_q_tail->next = wq;
 	F->disk.write_q_tail = wq;
     }
-    if (!BIT_TEST(F->flags, FD_WRITE_DAEMON)) {
+    if (!EBIT_TEST(F->flags, FD_WRITE_DAEMON)) {
 #if USE_ASYNC_IO
 	diskHandleWrite(fd, NULL);
 #else
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
 #endif
-	BIT_SET(F->flags, FD_WRITE_DAEMON);
+	EBIT_SET(F->flags, FD_WRITE_DAEMON);
     }
     return DISK_OK;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.69 1997/11/05 05:29:36 wessels Exp $
+ * $Id: ssl.cc,v 1.70 1997/11/12 00:09:05 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -306,7 +306,7 @@ sslConnected(int fd, void *data)
 }
 
 static void
-sslErrorComplete(int fdnotused, void *sslState, int sizenotused)
+sslErrorComplete(int fdnotused, void *sslState, size_t sizenotused)
 {
     assert(sslState != NULL);
     sslClose(sslState);

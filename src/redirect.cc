@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.48 1997/10/25 17:22:57 wessels Exp $
+ * $Id: redirect.cc,v 1.49 1997/11/12 00:09:03 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -29,10 +29,6 @@
  */
 
 #include "squid.h"
-
-#define REDIRECT_FLAG_ALIVE		0x01
-#define REDIRECT_FLAG_BUSY		0x02
-#define REDIRECT_FLAG_CLOSING		0x04
 
 typedef struct {
     void *data;
@@ -180,7 +176,7 @@ redirectHandleRead(int fd, void *data)
     if (len <= 0) {
 	if (len < 0)
 	    debug(50, 1) ("redirectHandleRead: FD %d read: %s\n", fd, xstrerror());
-	debug(29, redirector->flags & REDIRECT_FLAG_CLOSING ? 5 : 1)
+	debug(29, EBIT_TEST(redirector->flags, HELPER_CLOSING) ? 5 : 1)
 	    ("FD %d: Connection from Redirector #%d is closed, disabling\n",
 	    fd, redirector->index + 1);
 	redirector->flags = 0;
@@ -223,7 +219,7 @@ redirectHandleRead(int fd, void *data)
 	    }
 	    redirectStateFree(r);
 	    redirector->redirectState = NULL;
-	    redirector->flags &= ~REDIRECT_FLAG_BUSY;
+	    EBIT_CLR(redirector->flags, HELPER_BUSY);
 	    redirector->offset = 0;
 	    n = ++RedirectStats.replies;
 	    RedirectStats.avg_svc_time =
@@ -270,9 +266,9 @@ GetFirstAvailable(void)
     redirector_t *redirect = NULL;
     for (k = 0; k < NRedirectors; k++) {
 	redirect = *(redirect_child_table + k);
-	if (BIT_TEST(redirect->flags, REDIRECT_FLAG_BUSY))
+	if (EBIT_TEST(redirect->flags, HELPER_BUSY))
 	    continue;
-	if (!BIT_TEST(redirect->flags, REDIRECT_FLAG_ALIVE))
+	if (!EBIT_TEST(redirect->flags, HELPER_ALIVE))
 	    continue;
 	return redirect;
     }
@@ -299,7 +295,7 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
 	redirectStateFree(r);
 	return;
     }
-    redirect->flags |= REDIRECT_FLAG_BUSY;
+    EBIT_SET(redirect->flags, HELPER_BUSY);
     redirect->redirectState = r;
     redirect->dispatch_time = current_time;
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
@@ -396,9 +392,9 @@ redirectOpenServers(void)
 	redirect_child_table[k] = xcalloc(1, sizeof(redirector_t));
 	if ((redirectsocket = redirectCreateRedirector(prg)) < 0) {
 	    debug(29, 1) ("WARNING: Cannot run '%s' process.\n", prg);
-	    redirect_child_table[k]->flags &= ~REDIRECT_FLAG_ALIVE;
+	    EBIT_CLR(redirect_child_table[k]->flags, HELPER_ALIVE);
 	} else {
-	    redirect_child_table[k]->flags |= REDIRECT_FLAG_ALIVE;
+	    EBIT_SET(redirect_child_table[k]->flags, HELPER_ALIVE);
 	    redirect_child_table[k]->index = k;
 	    redirect_child_table[k]->fd = redirectsocket;
 	    redirect_child_table[k]->inbuf = get_free_8k_page();
@@ -443,17 +439,17 @@ redirectShutdownServers(void)
     }
     for (k = 0; k < NRedirectors; k++) {
 	redirect = *(redirect_child_table + k);
-	if (!(redirect->flags & REDIRECT_FLAG_ALIVE))
+	if (!EBIT_TEST(redirect->flags, HELPER_ALIVE))
 	    continue;
-	if (redirect->flags & REDIRECT_FLAG_BUSY)
+	if (EBIT_TEST(redirect->flags, HELPER_BUSY))
 	    continue;
-	if (redirect->flags & REDIRECT_FLAG_CLOSING)
+	if (EBIT_TEST(redirect->flags, HELPER_CLOSING))
 	    continue;
 	debug(29, 3) ("redirectShutdownServers: closing redirector #%d, FD %d\n",
 	    redirect->index + 1, redirect->fd);
 	comm_close(redirect->fd);
-	redirect->flags |= REDIRECT_FLAG_CLOSING;
-	redirect->flags |= REDIRECT_FLAG_BUSY;
+	EBIT_SET(redirect->flags, HELPER_CLOSING);
+	EBIT_SET(redirect->flags, HELPER_BUSY);
     }
 }
 

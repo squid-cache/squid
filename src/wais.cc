@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.96 1997/11/05 05:29:41 wessels Exp $
+ * $Id: wais.cc,v 1.97 1997/11/12 00:09:13 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -193,7 +193,7 @@ waisReadReply(int fd, void *data)
 		waisReadReply, waisState, 0);
 	} else {
 	    ErrorState *err;
-	    BIT_CLR(entry->flag, ENTRY_CACHABLE);
+	    EBIT_CLR(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->xerrno = errno;
@@ -227,7 +227,7 @@ waisReadReply(int fd, void *data)
 /* This will be called when request write is complete. Schedule read of
  * reply. */
 static void
-waisSendComplete(int fd, char *bufnotused, int size, int errflag, void *data)
+waisSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
     WaisStateData *waisState = data;
     StoreEntry *entry = waisState->entry;
@@ -276,7 +276,7 @@ waisSendRequest(int fd, void *data)
 	snprintf(buf, len + 1, "%s %s\r\n", Method, waisState->request);
     debug(24, 6) ("waisSendRequest: buf: %s\n", buf);
     comm_write(fd, buf, len, waisSendComplete, waisState, xfree);
-    if (BIT_TEST(waisState->entry->flag, ENTRY_CACHABLE))
+    if (EBIT_TEST(waisState->entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }
 
