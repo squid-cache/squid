@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.23 1996/09/15 08:05:09 wessels Exp $
+ * $Id: cachemgr.cc,v 1.24 1996/09/16 17:07:49 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -546,15 +546,19 @@ main(int argc, char *argv[])
 
     if ((qs = getenv("QUERY_STRING")) != NULL) {
 	s = strchr(qs, ':');	/* A colon separates the port from the host */
-	if (!s)
+	if (s != NULL)
+	    query_port = atoi(s + 1);	/* port */
+	else {
+	    query_port = CACHE_HTTP_PORT;	/* Assume the default */
 	    s = qs + strlen(qs);
+	}
 	strncpy(query_host, qs, (s - qs));	/* host */
 	query_host[s - qs] = '\0';
-	query_port = atoi(s + 1);	/* port */
-    } else {
+    } else {			/* Use the defaults */
 	strcpy(query_host, CACHEMGR_HOSTNAME);
 	query_port = CACHE_HTTP_PORT;
     }
+
     if ((s = getenv("SCRIPT_NAME")) != NULL) {
 	script_name = strdup(s);
     }
