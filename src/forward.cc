@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.10 1998/06/26 21:54:48 wessels Exp $
+ * $Id: forward.cc,v 1.11 1998/06/28 03:24:34 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -53,7 +53,9 @@ fwdStateFree(FwdState * fwdState)
     static int loop_detect = 0;
     assert(loop_detect++ == 0);
     assert(e->mem_obj);
-    if (e->mem_obj->inmem_hi == 0) {
+    if (e->store_status == STORE_ABORTED) {
+	;
+    } else if (e->mem_obj->inmem_hi == 0) {
 	assert(fwdState->fail.err_code);
 	err = errorCon(fwdState->fail.err_code, fwdState->fail.http_code);
 	err->request = requestLink(fwdState->request);
@@ -396,6 +398,7 @@ fwdAbort(void *data)
 void
 fwdUnregister(int fd, FwdState *fwdState)
 {
+	debug(17,1)("fwdUnregister: %s\n", storeUrl(fwdState->entry));
 	assert(fd = fwdState->server_fd);
 	comm_remove_close_handler(fd, fwdServerClosed, fwdState);
 	fwdState->server_fd = -1;
