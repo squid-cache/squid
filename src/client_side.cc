@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.34 1996/09/18 21:41:08 wessels Exp $
+ * $Id: client_side.cc,v 1.35 1996/09/20 06:28:30 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -31,10 +31,10 @@
 
 #include "squid.h"
 
-static void clientRedirectDone __P((void *data, char *result));
-static int icpHandleIMSReply __P((int fd, StoreEntry * entry, void *data));
-static void clientLookupDstIPDone __P((int fd, struct hostent * hp, void *data));
-static void clientLookupSrcFQDNDone __P((int fd, char *fqdn, void *data));
+static void clientRedirectDone _PARAMS((void *data, char *result));
+static int icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
+static void clientLookupDstIPDone _PARAMS((int fd, struct hostent * hp, void *data));
+static void clientLookupSrcFQDNDone _PARAMS((int fd, char *fqdn, void *data));
 
 
 static void

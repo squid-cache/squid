@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.56 1996/09/18 22:44:51 wessels Exp $
+ * $Id: squid.h,v 1.57 1996/09/20 06:29:06 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -132,7 +132,7 @@
 #include <aio.h>
 #endif
 
-#if __STDC__ 
+#if __STDC__
 #include <stdarg.h>
 #else
 #include <varargs.h>
@@ -259,8 +259,8 @@ typedef int (*QS) (const void *, const void *);
 #include "tempnam.h"
 #endif
 
-extern void serverConnectionsClose __P((void));
-extern void shut_down __P((int));
+extern void serverConnectionsClose _PARAMS((void));
+extern void shut_down _PARAMS((int));
 
 
 extern time_t squid_starttime;	/* main.c */
@@ -294,14 +294,14 @@ extern int opt_forwarded_for;	/* main.c */
 
 #define  CONNECT_PORT        443
 
-extern int objcacheStart __P((int, char *, StoreEntry *));
-extern void send_announce __P((void));
-extern int sslStart __P((int fd, char *, request_t *, char *, int *sz));
-extern char *storeToString __P((StoreEntry *));
-extern void ttlSet __P((StoreEntry *));
-extern void ttlFreeList __P((void));
-extern void ttlAddToList __P((char *, int, int, time_t, int, time_t));
-extern void ttlAddToForceList __P((char *, time_t, time_t));
-extern int waisStart __P((int, char *, method_t, char *, StoreEntry *));
-extern void storeDirClean __P((void));
+extern int objcacheStart _PARAMS((int, char *, StoreEntry *));
+extern void send_announce _PARAMS((void));
+extern int sslStart _PARAMS((int fd, char *, request_t *, char *, int *sz));
+extern char *storeToString _PARAMS((StoreEntry *));
+extern void ttlSet _PARAMS((StoreEntry *));
+extern void ttlFreeList _PARAMS((void));
+extern void ttlAddToList _PARAMS((char *, int, int, time_t, int, time_t));
+extern void ttlAddToForceList _PARAMS((char *, time_t, time_t));
+extern int waisStart _PARAMS((int, char *, method_t, char *, StoreEntry *));
+extern void storeDirClean _PARAMS((void));
 extern char *dash_str;

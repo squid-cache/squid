@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.73 1996/09/18 20:12:23 wessels Exp $
+ * $Id: stat.cc,v 1.74 1996/09/20 06:29:09 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -123,50 +123,49 @@ Meta_data meta_data;
 volatile unsigned long ntcpconn = 0;
 volatile unsigned long nudpconn = 0;
 struct _iostats IOStats;
-
-char *stat_describe();
-char *mem_describe();
-char *ttl_describe();
-char *flags_describe();
-char *elapsed_time();
-char *diskFileName();
-
-/* LOCALS */
 char *open_bracket = "{\n";
 char *close_bracket = "}\n";
 
-static void dummyhandler __P((cacheinfo *, StoreEntry *));
-static void info_get __P((cacheinfo *, StoreEntry *));
-static void logReadEndHandler __P((int, int, log_read_data_t *));
-static void log_clear __P((cacheinfo *, StoreEntry *));
-static void log_disable __P((cacheinfo *, StoreEntry *));
-static void log_enable __P((cacheinfo *, StoreEntry *));
-static void log_get_start __P((cacheinfo *, StoreEntry *));
-static void log_status_get __P((cacheinfo *, StoreEntry *));
-static void parameter_get __P((cacheinfo *, StoreEntry *));
-static void proto_count __P((cacheinfo *, protocol_t, log_type));
-static void proto_newobject __P((cacheinfo *, protocol_t, int, int));
-static void proto_purgeobject __P((cacheinfo *, protocol_t, int));
-static void proto_touchobject __P((cacheinfo *, protocol_t, int));
-static void server_list __P((cacheinfo *, StoreEntry *));
-static void squidReadEndHandler __P((int, int, squid_read_data_t *));
-static void squid_get_start __P((cacheinfo *, StoreEntry *));
-static void statFiledescriptors __P((StoreEntry *));
-static void stat_get __P((cacheinfo *, char *req, StoreEntry *));
-static void stat_io_get __P((StoreEntry *));
-static void stat_objects_get __P((cacheinfo *, StoreEntry *, int vm_or_not));
-static void stat_utilization_get __P((cacheinfo *, StoreEntry *, char *desc));
-static int cache_size_get __P((cacheinfo *));
-static int logReadHandler __P((int, char *, int, log_read_data_t *));
-static int squidReadHandler __P((int, char *, int, squid_read_data_t *));
-static int memoryAccounted __P((void));
+extern char *diskFileName _PARAMS((int));
+
+/* LOCALS */
+static char *stat_describe _PARAMS((StoreEntry * entry));
+static char *mem_describe _PARAMS((StoreEntry * entry));
+static char *ttl_describe _PARAMS((StoreEntry * entry));
+static char *flags_describe _PARAMS((StoreEntry * entry));
+static char *elapsed_time _PARAMS((StoreEntry * entry, int since, char *TTL));
+static void dummyhandler _PARAMS((cacheinfo *, StoreEntry *));
+static void info_get _PARAMS((cacheinfo *, StoreEntry *));
+static void logReadEndHandler _PARAMS((int, int, log_read_data_t *));
+static void log_clear _PARAMS((cacheinfo *, StoreEntry *));
+static void log_disable _PARAMS((cacheinfo *, StoreEntry *));
+static void log_enable _PARAMS((cacheinfo *, StoreEntry *));
+static void log_get_start _PARAMS((cacheinfo *, StoreEntry *));
+static void log_status_get _PARAMS((cacheinfo *, StoreEntry *));
+static void parameter_get _PARAMS((cacheinfo *, StoreEntry *));
+static void proto_count _PARAMS((cacheinfo *, protocol_t, log_type));
+static void proto_newobject _PARAMS((cacheinfo *, protocol_t, int, int));
+static void proto_purgeobject _PARAMS((cacheinfo *, protocol_t, int));
+static void proto_touchobject _PARAMS((cacheinfo *, protocol_t, int));
+static void server_list _PARAMS((cacheinfo *, StoreEntry *));
+static void squidReadEndHandler _PARAMS((int, int, squid_read_data_t *));
+static void squid_get_start _PARAMS((cacheinfo *, StoreEntry *));
+static void statFiledescriptors _PARAMS((StoreEntry *));
+static void stat_get _PARAMS((cacheinfo *, char *req, StoreEntry *));
+static void stat_io_get _PARAMS((StoreEntry *));
+static void stat_objects_get _PARAMS((cacheinfo *, StoreEntry *, int vm_or_not));
+static void stat_utilization_get _PARAMS((cacheinfo *, StoreEntry *, char *desc));
+static int cache_size_get _PARAMS((cacheinfo *));
+static int logReadHandler _PARAMS((int, char *, int, log_read_data_t *));
+static int squidReadHandler _PARAMS((int, char *, int, squid_read_data_t *));
+static int memoryAccounted _PARAMS((void));
 
 #ifdef UNUSED_CODE
-static int mallinfoTotal __P((void));
+static int mallinfoTotal _PARAMS((void));
 #endif
 
 #ifdef XMALLOC_STATISTICS
-static void info_get_mallstat __P((int, int, StoreEntry *));
+static void info_get_mallstat _PARAMS((int, int, StoreEntry *));
 #endif
 
 /* process utilization information */
@@ -378,6 +377,10 @@ stat_get(cacheinfo * obj, char *req, StoreEntry * sentry)
 	httpReplyHeaderStats(sentry);
     } else if (strcmp(req, "filedescriptors") == 0) {
 	statFiledescriptors(sentry);
+#if USE_ICMP
+    } else if (strcmp(req, "netdb") == 0) {
+	netdbDump(sentry);
+#endif
     }
 }
 
@@ -1267,7 +1270,7 @@ stat_init(cacheinfo ** object, char *logfilename)
     *object = obj;
 }
 
-char *
+static char *
 stat_describe(StoreEntry * entry)
 {
     LOCAL_ARRAY(char, state, 256);
@@ -1279,7 +1282,7 @@ stat_describe(StoreEntry * entry)
     return (state);
 }
 
-char *
+static char *
 mem_describe(StoreEntry * entry)
 {
     LOCAL_ARRAY(char, where, 100);
@@ -1293,7 +1296,7 @@ mem_describe(StoreEntry * entry)
 }
 
 
-char *
+static char *
 ttl_describe(StoreEntry * entry)
 {
     int hh, mm, ss;
@@ -1318,7 +1321,7 @@ ttl_describe(StoreEntry * entry)
     return (TTL);
 }
 
-char *
+static char *
 elapsed_time(StoreEntry * entry, int since, char *TTL)
 {
     int hh, mm, ss, ttl;
@@ -1342,7 +1345,7 @@ elapsed_time(StoreEntry * entry, int since, char *TTL)
 }
 
 
-char *
+static char *
 flags_describe(StoreEntry * entry)
 {
     LOCAL_ARRAY(char, FLAGS, 32);

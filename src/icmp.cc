@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.6 1996/09/17 16:32:40 wessels Exp $
+ * $Id: icmp.cc,v 1.7 1996/09/20 06:28:51 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -72,7 +72,7 @@ typedef struct _icmpQueueData {
     char *msg;
     int len;
     struct _icmpQueueData *next;
-    void (*free) __P((void *));
+    void (*free) _PARAMS((void *));
 } icmpQueueData;
 
 #define MAX_PAYLOAD (8192 - sizeof(struct icmphdr) - sizeof (char) - sizeof(struct timeval) - 1)
@@ -112,22 +112,22 @@ static char *icmpPktStr[] =
     "Out of Range Type"
 };
 
-static int in_cksum __P((unsigned short *ptr, int size));
-static void icmpRecv __P((int, void *));
-static void icmpQueueSend __P((struct in_addr,
+static int in_cksum _PARAMS((unsigned short *ptr, int size));
+static void icmpRecv _PARAMS((int, void *));
+static void icmpQueueSend _PARAMS((struct in_addr,
 	char *msg,
 	int len,
-	void          (*free) __P((void *))));
-static void icmpSend __P((int fd, icmpQueueData * queue));
-static void icmpLog __P((struct icmphdr * icmp,
+	void          (*free) _PARAMS((void *))));
+static void icmpSend _PARAMS((int fd, icmpQueueData * queue));
+static void icmpLog _PARAMS((struct icmphdr * icmp,
 	struct in_addr addr,
 	int rtt,
 	int hops));
-static int ipHops __P((int ttl));
-static void icmpProcessReply __P((struct sockaddr_in * from,
+static int ipHops _PARAMS((int ttl));
+static void icmpProcessReply _PARAMS((struct sockaddr_in * from,
 	struct icmphdr * icmp,
 	int hops));
-static void icmpHandleSourcePing __P((struct sockaddr_in * from, char *buf));
+static void icmpHandleSourcePing _PARAMS((struct sockaddr_in * from, char *buf));
 
 void
 icmpOpen(void)
@@ -211,6 +211,7 @@ icmpProcessReply(struct sockaddr_in *from, struct icmphdr *icmp, int hops)
 	icmpHandleSourcePing(from, echo->payload);
 	break;
     case S_ICMP_DOM:
+	netdbHandlePingReply(from, hops, rtt);
 	break;
     default:
 	debug(37, 0, "icmpProcessReply: Bad opcode: %d\n", (int) echo->opcode);
@@ -282,7 +283,7 @@ static void
 icmpQueueSend(struct in_addr to,
     char *pkt,
     int len,
-    void (*free) __P((void *)))
+    void (*free) _PARAMS((void *)))
 {
     icmpQueueData *q = NULL;
     icmpQueueData **H = NULL;

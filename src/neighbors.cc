@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.56 1996/09/18 21:39:37 wessels Exp $
+ * $Id: neighbors.cc,v 1.57 1996/09/20 06:28:58 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -105,9 +105,9 @@
 
 #include "squid.h"
 
-static int edgeWouldBePinged __P((edge *, request_t *));
-static void neighborRemove __P((edge *));
-static edge *whichEdge __P((icp_common_t *, struct sockaddr_in *));
+static int edgeWouldBePinged _PARAMS((edge *, request_t *));
+static void neighborRemove _PARAMS((edge *));
+static edge *whichEdge _PARAMS((icp_common_t *, struct sockaddr_in *));
 
 static neighbors *friends = NULL;
 static struct neighbor_cf *Neighbor_cf = NULL;

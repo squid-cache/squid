@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.43 1996/09/18 20:12:25 wessels Exp $
+ * $Id: wais.cc,v 1.44 1996/09/20 06:29:19 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -118,14 +118,14 @@ typedef struct {
     char request[MAX_URL + 1];
 } WaisStateData;
 
-static int waisStateFree __P((int, WaisStateData *));
-static void waisReadReplyTimeout __P((int, WaisStateData *));
-static void waisLifetimeExpire __P((int, WaisStateData *));
-static void waisReadReply __P((int, WaisStateData *));
-static void waisSendComplete __P((int, char *, int, int, void *));
-static void waisSendRequest __P((int, WaisStateData *));
-static void waisConnInProgress __P((int, WaisStateData *));
-static void waisConnect __P((int, struct hostent *, void *));
+static int waisStateFree _PARAMS((int, WaisStateData *));
+static void waisReadReplyTimeout _PARAMS((int, WaisStateData *));
+static void waisLifetimeExpire _PARAMS((int, WaisStateData *));
+static void waisReadReply _PARAMS((int, WaisStateData *));
+static void waisSendComplete _PARAMS((int, char *, int, int, void *));
+static void waisSendRequest _PARAMS((int, WaisStateData *));
+static void waisConnInProgress _PARAMS((int, WaisStateData *));
+static void waisConnect _PARAMS((int, struct hostent *, void *));
 
 static int
 waisStateFree(int fd, WaisStateData * waisState)

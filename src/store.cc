@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.116 1996/09/18 22:44:53 wessels Exp $
+ * $Id: store.cc,v 1.117 1996/09/20 06:29:13 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -202,25 +202,25 @@ struct storeRebuild_data {
 int store_rebuilding = STORE_REBUILDING_SLOW;
 
 /* Static Functions */
-static int storeSwapInStart __P((StoreEntry *, SIH, void *));
-static void destroy_MemObject __P((MemObject *));
-static void destroy_MemObjectData __P((MemObject *));
-static void destroy_StoreEntry __P((StoreEntry *));
-static MemObject *new_MemObject __P((void));
-static mem_ptr new_MemObjectData __P((void));
-static StoreEntry *new_StoreEntry __P((int mem_obj_flag));
-static int storeCheckPurgeMem __P((StoreEntry * e));
-static int storeCheckExpired __P((StoreEntry * e));
-static void storeSwapLog __P((StoreEntry *));
-static int storeHashDelete __P((StoreEntry *));
-static char *storeDescribeStatus __P((StoreEntry *));
-static int compareLastRef __P((StoreEntry ** e1, StoreEntry ** e2));
-static int compareSize __P((StoreEntry ** e1, StoreEntry ** e2));
-static int storeClientListSearch __P((MemObject *, int fd));
-static void storeHashMemInsert __P((StoreEntry *));
-static void storeHashMemDelete __P((StoreEntry *));
-static int storeCopy __P((StoreEntry *, int, int, char *, int *));
-static int storeGetMemSpace __P((int size));
+static int storeSwapInStart _PARAMS((StoreEntry *, SIH, void *));
+static void destroy_MemObject _PARAMS((MemObject *));
+static void destroy_MemObjectData _PARAMS((MemObject *));
+static void destroy_StoreEntry _PARAMS((StoreEntry *));
+static MemObject *new_MemObject _PARAMS((void));
+static mem_ptr new_MemObjectData _PARAMS((void));
+static StoreEntry *new_StoreEntry _PARAMS((int mem_obj_flag));
+static int storeCheckPurgeMem _PARAMS((StoreEntry * e));
+static int storeCheckExpired _PARAMS((StoreEntry * e));
+static void storeSwapLog _PARAMS((StoreEntry *));
+static int storeHashDelete _PARAMS((StoreEntry *));
+static char *storeDescribeStatus _PARAMS((StoreEntry *));
+static int compareLastRef _PARAMS((StoreEntry ** e1, StoreEntry ** e2));
+static int compareSize _PARAMS((StoreEntry ** e1, StoreEntry ** e2));
+static int storeClientListSearch _PARAMS((MemObject *, int fd));
+static void storeHashMemInsert _PARAMS((StoreEntry *));
+static void storeHashMemDelete _PARAMS((StoreEntry *));
+static int storeCopy _PARAMS((StoreEntry *, int, int, char *, int *));
+static int storeGetMemSpace _PARAMS((int size));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -1023,7 +1023,7 @@ storeAppend(StoreEntry * e, char *data, int len)
 	InvokeHandlers(e);
 }
 
-#if __STDC__ 
+#if __STDC__
 void
 storeAppendPrintf(StoreEntry * e, char *fmt,...)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.19 1996/09/18 22:44:39 wessels Exp $
+ * $Id: util.h,v 1.20 1996/09/20 06:28:18 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -122,23 +122,23 @@
 #endif
 
 #if !HAVE_STRDUP
-extern char *strdup __P((char *));
+extern char *strdup _PARAMS((char *));
 #endif
-extern char *xstrdup __P((char *));	/* Duplicate a string */
+extern char *xstrdup _PARAMS((char *));	/* Duplicate a string */
 
 /* from xmalloc.c */
-void *xmalloc __P((size_t));	/* Wrapper for malloc(3) */
-void *xrealloc __P((void *, size_t));	/* Wrapper for realloc(3) */
-void *xcalloc __P((int, size_t));	/* Wrapper for calloc(3) */
-void xfree __P((void *));	/* Wrapper for free(3) */
-void xxfree __P((void *));	/* Wrapper for free(3) */
-char *xstrdup __P((char *));
-char *xstrerror __P((void));
-char *getfullhostname __P((void));
-void xmemcpy __P((void *, void *, int));
+void *xmalloc _PARAMS((size_t));	/* Wrapper for malloc(3) */
+void *xrealloc _PARAMS((void *, size_t));	/* Wrapper for realloc(3) */
+void *xcalloc _PARAMS((int, size_t));	/* Wrapper for calloc(3) */
+void xfree _PARAMS((void *));	/* Wrapper for free(3) */
+void xxfree _PARAMS((void *));	/* Wrapper for free(3) */
+char *xstrdup _PARAMS((char *));
+char *xstrerror _PARAMS((void));
+char *getfullhostname _PARAMS((void));
+void xmemcpy _PARAMS((void *, void *, int));
 
 #if XMALLOC_STATISTICS
-void malloc_statistics __P((void (*)__P((int, int, void *)), void *));
+void malloc_statistics _PARAMS((void (*)_PARAMS((int, int, void *)), void *));
 #endif
 
 /* from debug.c */
@@ -172,25 +172,25 @@ extern int Harvest_debug_levels[];
         {if (debug_ok_fast((section),(level))) {Log X;}}
 #endif
 
-void debug_flag __P((char *));
+void debug_flag _PARAMS((char *));
 
-char *mkhttpdlogtime __P((time_t *));
-extern char *mkrfc850 __P((time_t));
-extern time_t parse_rfc850 __P((char *str));
-extern void init_log3 __P((char *pn, FILE * a, FILE * b));
-extern void debug_init __P((void));
-extern void log_errno2 __P((char *, int, char *));
+char *mkhttpdlogtime _PARAMS((time_t *));
+extern char *mkrfc850 _PARAMS((time_t));
+extern time_t parse_rfc850 _PARAMS((char *str));
+extern void init_log3 _PARAMS((char *pn, FILE * a, FILE * b));
+extern void debug_init _PARAMS((void));
+extern void log_errno2 _PARAMS((char *, int, char *));
 
 #if __STDC__
-extern void Log __P((char *,...));
-extern void errorlog __P((char *,...));
+extern void Log _PARAMS((char *,...));
+extern void errorlog _PARAMS((char *,...));
 #else
-extern void Log __P(());
-extern void errorlog __P(());
+extern void Log _PARAMS(());
+extern void errorlog _PARAMS(());
 #endif /* __STDC__ */
 
-extern void Tolower __P((char *));
+extern void Tolower _PARAMS((char *));
 
-extern char *uudecode __P((char *));
+extern char *uudecode _PARAMS((char *));
 
 #endif /* ndef _UTIL_H_ */
