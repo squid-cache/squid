@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.43 2001/03/01 21:59:30 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.44 2001/03/01 22:28:22 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1149,12 +1149,6 @@ storeDiskdDirWriteCleanStart(SwapDir * sd)
     sd->log.clean.write = NULL;
     sd->log.clean.state = NULL;
     state->new = xstrdup(storeDiskdDirSwapLogFile(sd, ".clean"));
-    state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
-    if (state->fd < 0) {
-	xfree(state->new);
-	xfree(state);
-	return -1;
-    }
     state->cur = xstrdup(storeDiskdDirSwapLogFile(sd, NULL));
     state->cln = xstrdup(storeDiskdDirSwapLogFile(sd, ".last-clean"));
     state->outbuf = xcalloc(CLEAN_BUF_SZ, 1);
@@ -1163,8 +1157,13 @@ storeDiskdDirWriteCleanStart(SwapDir * sd)
     unlink(state->new);
     unlink(state->cln);
     state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
-    if (state->fd < 0)
+    if (state->fd < 0) {
+	xfree(state->new);
+	xfree(state->cur);
+	xfree(state->cln);
+	xfree(state);
 	return -1;
+    }
     debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
 	state->new, state->fd);
 #if HAVE_FCHMOD
