@@ -1,5 +1,5 @@
 /*
- * $Id: GNUregex.c,v 1.15 2003/06/20 00:05:11 hno Exp $
+ * $Id: GNUregex.c,v 1.16 2003/08/03 22:53:47 hno Exp $
  */
 
 /* Extended regular expression matching and search library,
@@ -37,19 +37,6 @@
 #if !HAVE_ALLOCA
 #define REGEX_MALLOC 1
 #endif
-
-/* The `emacs' switch turns on certain matching commands
- * that make sense only in Emacs. */
-#ifdef emacs
-
-#include "lisp.h"
-#include "buffer.h"
-#include "syntax.h"
-
-/* Emacs uses `NULL' as a predicate.  */
-#undef NULL
-
-#else /* not emacs */
 
 /* We used to test for `BSTRING' here, but only GCC and Emacs define
  * `BSTRING', as far as I know, and neither of them use this code.  */
@@ -115,10 +102,41 @@ init_syntax_once(void)
 
 #define SYNTAX(c) re_syntax_table[c]
 
-#endif /* not emacs */
 
 /* Get the interface, including the syntax bits.  */
 #include "GNUregex.h"
+
+/* Compile a fastmap for the compiled pattern in BUFFER; used to
+ * accelerate searches.  Return 0 if successful and -2 if was an
+ * internal error.  */
+static int re_compile_fastmap _RE_ARGS((struct re_pattern_buffer * buffer));
+
+
+/* Search in the string STRING (with length LENGTH) for the pattern
+ * compiled into BUFFER.  Start searching at position START, for RANGE
+ * characters.  Return the starting position of the match, -1 for no
+ * match, or -2 for an internal error.  Also return register
+ * information in REGS (if REGS and BUFFER->no_sub are nonzero).  */
+static int re_search
+    _RE_ARGS((struct re_pattern_buffer * buffer, const char *string,
+	int length, int start, int range, struct re_registers * regs));
+
+
+/* Like `re_search', but search in the concatenation of STRING1 and
+ * STRING2.  Also, stop searching at index START + STOP.  */
+static int re_search_2
+    _RE_ARGS((struct re_pattern_buffer * buffer, const char *string1,
+	int length1, const char *string2, int length2,
+	int start, int range, struct re_registers * regs, int stop));
+
+
+/* Like `re_search_2', but return how many characters in STRING the regexp
+ * in BUFFER matched, starting at position START.  */
+static int re_match_2
+    _RE_ARGS((struct re_pattern_buffer * buffer, const char *string1,
+	int length1, const char *string2, int length2,
+	int start, struct re_registers * regs, int stop));
+
 
 /* isalpha etc. are used for the character classes.  */
 #include <ctype.h>
@@ -291,8 +309,7 @@ typedef enum {
     /* Fail unless at end of line.  */
     endline,
 
-    /* Succeeds if at beginning of buffer (if emacs) or at beginning
-     * of string to be matched (if not).  */
+    /* Succeeds if or at beginning of string to be matched.  */
     begbuf,
 
     /* Analogously, for end of buffer/string.  */
@@ -358,18 +375,6 @@ typedef enum {
     wordbound,			/* Succeeds if at a word boundary.  */
     notwordbound		/* Succeeds if not at a word boundary.  */
 
-#ifdef emacs
-    ,before_dot,		/* Succeeds if before point.  */
-    at_dot,			/* Succeeds if at point.  */
-    after_dot,			/* Succeeds if after point.  */
-
-    /* Matches any character whose syntax is specified.  Followed by
-     * a byte which contains a syntax code, e.g., Sword.  */
-    syntaxspec,
-
-    /* Matches any character whose syntax is not that specified.  */
-    notsyntaxspec
-#endif				/* emacs */
 } re_opcode_t;
 
 /* Common operations on the compiled pattern.  */
@@ -657,32 +662,6 @@ print_partial_compiled_pattern(start, end)
 	case wordend:
 	    printf("/wordend");
 
-#ifdef emacs
-	case before_dot:
-	    printf("/before_dot");
-	    break;
-
-	case at_dot:
-	    printf("/at_dot");
-	    break;
-
-	case after_dot:
-	    printf("/after_dot");
-	    break;
-
-	case syntaxspec:
-	    printf("/syntaxspec");
-	    mcnt = *p++;
-	    printf("/%d", mcnt);
-	    break;
-
-	case notsyntaxspec:
-	    printf("/notsyntaxspec");
-	    mcnt = *p++;
-	    printf("/%d", mcnt);
-	    break;
-#endif /* emacs */
-
 	case wordchar:
 	    printf("/wordchar");
 	    break;
@@ -770,29 +749,6 @@ print_double_string(where, string1, size1, string2, size2)
 #define DEBUG_PRINT_DOUBLE_STRING(w, s1, sz1, s2, sz2)
 
 #endif /* not DEBUG */
-
-/* Set by `re_set_syntax' to the current regexp syntax to recognize.  Can
- * also be assigned to arbitrarily: each pattern buffer stores its own
- * syntax, so it can be changed between regex compilations.  */
-reg_syntax_t re_syntax_options = RE_SYNTAX_EMACS;
-
-
-/* Specify the precise syntax of regexps for compilation.  This provides
- * for compatibility for various utilities which historically have
- * different, incompatible syntaxes.
- * 
- * The argument SYNTAX is a bit mask comprised of the various bits
- * defined in regex.h.  We return the old syntax.  */
-
-reg_syntax_t
-re_set_syntax(syntax)
-     reg_syntax_t syntax;
-{
-    reg_syntax_t ret = re_syntax_options;
-
-    re_syntax_options = syntax;
-    return ret;
-}
 
 /* This table gives an error message for each of the error codes listed
  * in regex.h.  Obviously the order here has to be same as there.  */
@@ -1122,7 +1078,7 @@ regex_compile(const char *pattern, int size, reg_syntax_t syntax, struct re_patt
     /* Always count groups, whether or not bufp->no_sub is set.  */
     bufp->re_nsub = 0;
 
-#if !defined (emacs) && !defined (SYNTAX_TABLE)
+#if !defined (SYNTAX_TABLE)
     /* Initialize the syntax table.  */
     init_syntax_once();
 #endif
@@ -1826,26 +1782,6 @@ regex_compile(const char *pattern, int size, reg_syntax_t syntax, struct re_patt
 			goto normal_backslash;
 		}
 		goto normal_char;
-
-#ifdef emacs
-		/* There is no way to specify the before_dot and after_dot
-		 * operators.  rms says this is ok.  --karl  */
-	    case '=':
-		BUF_PUSH(at_dot);
-		break;
-
-	    case 's':
-		laststart = b;
-		PATFETCH(c);
-		BUF_PUSH_2(syntaxspec, syntax_spec_code[c]);
-		break;
-
-	    case 'S':
-		laststart = b;
-		PATFETCH(c);
-		BUF_PUSH_2(notsyntaxspec, syntax_spec_code[c]);
-		break;
-#endif /* emacs */
 
 
 	    case 'w':
@@ -2553,34 +2489,6 @@ re_compile_fastmap(bufp)
 	    break;
 
 
-#ifdef emacs
-	case syntaxspec:
-	    k = *p++;
-	    for (j = 0; j < (1 << BYTEWIDTH); j++)
-		if (SYNTAX(j) == (enum syntaxcode) k)
-		    fastmap[j] = 1;
-	    break;
-
-
-	case notsyntaxspec:
-	    k = *p++;
-	    for (j = 0; j < (1 << BYTEWIDTH); j++)
-		if (SYNTAX(j) != (enum syntaxcode) k)
-		    fastmap[j] = 1;
-	    break;
-
-
-	    /* All cases after this match the empty string.  These end with
-	     * `continue'.  */
-
-
-	case before_dot:
-	case at_dot:
-	case after_dot:
-	    continue;
-#endif /* not emacs */
-
-
 	case no_op:
 	case begline:
 	case endline:
@@ -2696,44 +2604,12 @@ re_compile_fastmap(bufp)
     return 0;
 }				/* re_compile_fastmap */
 
-/* Set REGS to hold NUM_REGS registers, storing them in STARTS and
- * ENDS.  Subsequent matches using PATTERN_BUFFER and REGS will use
- * this memory for recording register information.  STARTS and ENDS
- * must be allocated using the malloc library routine, and must each
- * be at least NUM_REGS * sizeof (regoff_t) bytes long.
- * 
- * If NUM_REGS == 0, then subsequent matches should allocate their own
- * register data.
- * 
- * Unless this function is called, the first search or match using
- * PATTERN_BUFFER will allocate its own register data, without
- * freeing the old data.  */
-
-void
-re_set_registers(bufp, regs, num_regs, starts, ends)
-     struct re_pattern_buffer *bufp;
-     struct re_registers *regs;
-     unsigned num_regs;
-     regoff_t *starts, *ends;
-{
-    if (num_regs) {
-	bufp->regs_allocated = REGS_REALLOCATE;
-	regs->num_regs = num_regs;
-	regs->start = starts;
-	regs->end = ends;
-    } else {
-	bufp->regs_allocated = REGS_UNALLOCATED;
-	regs->num_regs = 0;
-	regs->start = regs->end = (regoff_t) 0;
-    }
-}
-
 /* Searching routines.  */
 
 /* Like re_search_2, below, but only one string is specified, and
  * doesn't let you say where to stop matching. */
 
-int
+static int
 re_search(bufp, string, size, startpos, range, regs)
      struct re_pattern_buffer *bufp;
      const char *string;
@@ -2766,7 +2642,7 @@ re_search(bufp, string, size, startpos, range, regs)
  * found, -1 if no match, or -2 if error (such as failure
  * stack overflow).  */
 
-int
+static int
 re_search_2(bufp, string1, size1, string2, size2, startpos, range, regs, stop)
      struct re_pattern_buffer *bufp;
      const char *string1, *string2;
@@ -3007,21 +2883,6 @@ static boolean group_match_null_string_p(unsigned char **p, unsigned char *end, 
 #define NO_LOWEST_ACTIVE_REG (NO_HIGHEST_ACTIVE_REG + 1)
 
 /* Matching routines.  */
-
-#ifndef emacs			/* Emacs never uses this.  */
-/* re_match is like re_match_2 except it takes only a single string.  */
-
-int
-re_match(bufp, string, size, pos, regs)
-     struct re_pattern_buffer *bufp;
-     const char *string;
-     int size, pos;
-     struct re_registers *regs;
-{
-    return re_match_2(bufp, NULL, 0, string, size, pos, regs, size);
-}
-#endif /* not emacs */
-
 
 /* re_match_2 matches the compiled pattern in BUFP against the
  * the (virtual) concatenation of STRING1 and STRING2 (of length SIZE1
@@ -4011,64 +3872,6 @@ re_match_2(bufp, string1, size1, string2, size2, pos, regs, stop)
 		break;
 	    goto fail;
 
-#ifdef emacs
-#ifdef emacs19
-	case before_dot:
-	    DEBUG_PRINT1("EXECUTING before_dot.\n");
-	    if (PTR_CHAR_POS((unsigned char *) d) >= point)
-		goto fail;
-	    break;
-
-	case at_dot:
-	    DEBUG_PRINT1("EXECUTING at_dot.\n");
-	    if (PTR_CHAR_POS((unsigned char *) d) != point)
-		goto fail;
-	    break;
-
-	case after_dot:
-	    DEBUG_PRINT1("EXECUTING after_dot.\n");
-	    if (PTR_CHAR_POS((unsigned char *) d) <= point)
-		goto fail;
-	    break;
-#else /* not emacs19 */
-	case at_dot:
-	    DEBUG_PRINT1("EXECUTING at_dot.\n");
-	    if (PTR_CHAR_POS((unsigned char *) d) + 1 != point)
-		goto fail;
-	    break;
-#endif /* not emacs19 */
-
-	case syntaxspec:
-	    DEBUG_PRINT2("EXECUTING syntaxspec %d.\n", mcnt);
-	    mcnt = *p++;
-	    goto matchsyntax;
-
-	case wordchar:
-	    DEBUG_PRINT1("EXECUTING Emacs wordchar.\n");
-	    mcnt = (int) Sword;
-	  matchsyntax:
-	    PREFETCH();
-	    if (SYNTAX(*d++) != (enum syntaxcode) mcnt)
-		goto fail;
-	    SET_REGS_MATCHED();
-	    break;
-
-	case notsyntaxspec:
-	    DEBUG_PRINT2("EXECUTING notsyntaxspec %d.\n", mcnt);
-	    mcnt = *p++;
-	    goto matchnotsyntax;
-
-	case notwordchar:
-	    DEBUG_PRINT1("EXECUTING Emacs notwordchar.\n");
-	    mcnt = (int) Sword;
-	  matchnotsyntax:
-	    PREFETCH();
-	    if (SYNTAX(*d++) == (enum syntaxcode) mcnt)
-		goto fail;
-	    SET_REGS_MATCHED();
-	    break;
-
-#else /* not emacs */
 	case wordchar:
 	    DEBUG_PRINT1("EXECUTING non-Emacs wordchar.\n");
 	    PREFETCH();
@@ -4086,7 +3889,6 @@ re_match_2(bufp, string1, size1, string2, size2, pos, regs, stop)
 	    SET_REGS_MATCHED();
 	    d++;
 	    break;
-#endif /* not emacs */
 
 	default:
 	    abort();
@@ -4311,11 +4113,6 @@ common_op_match_null_string_p( unsigned char **p, unsigned char *end, register_i
     case wordend:
     case wordbound:
     case notwordbound:
-#ifdef emacs
-    case before_dot:
-    case at_dot:
-    case after_dot:
-#endif
 	break;
 
     case start_memory:
@@ -4390,96 +4187,8 @@ bcmp_translate(unsigned char const *s1, unsigned char const*s2, register int len
 
 /* Entry points for GNU code.  */
 
-/* re_compile_pattern is the GNU regular expression compiler: it
- * compiles PATTERN (of length SIZE) and puts the result in BUFP.
- * Returns 0 if the pattern was valid, otherwise an error string.
- * 
- * Assumes the `allocated' (and perhaps `buffer') and `translate' fields
- * are set in BUFP on entry.
- * 
- * We call regex_compile to do the actual compilation.  */
-
-const char *
-re_compile_pattern(pattern, length, bufp)
-     const char *pattern;
-     int length;
-     struct re_pattern_buffer *bufp;
-{
-    reg_errcode_t ret;
-
-    /* GNU code is written to assume at least RE_NREGS registers will be set
-     * (and at least one extra will be -1).  */
-    bufp->regs_allocated = REGS_UNALLOCATED;
-
-    /* And GNU code determines whether or not to get register information
-     * by passing null for the REGS argument to re_match, etc., not by
-     * setting no_sub.  */
-    bufp->no_sub = 0;
-
-    /* Match anchors at newline.  */
-    bufp->newline_anchor = 1;
-
-    ret = regex_compile(pattern, length, re_syntax_options, bufp);
-
-    return re_error_msg[(int) ret];
-}
 
-/* Entry points compatible with 4.2 BSD regex library.  We don't define
- * them if this is an Emacs or POSIX compilation.  */
-
-#if !defined (emacs) && !defined (_POSIX_SOURCE)
-
-/* BSD has one and only one pattern buffer.  */
-static struct re_pattern_buffer re_comp_buf;
-
-char *
-re_comp(s)
-     const char *s;
-{
-    reg_errcode_t ret;
-
-    if (!s) {
-	if (!re_comp_buf.buffer)
-	    return "No previous regular expression";
-	return 0;
-    }
-    if (!re_comp_buf.buffer) {
-	re_comp_buf.buffer = (unsigned char *) malloc(200);
-	if (re_comp_buf.buffer == NULL)
-	    return "Memory exhausted";
-	re_comp_buf.allocated = 200;
-
-	re_comp_buf.fastmap = (char *) malloc(1 << BYTEWIDTH);
-	if (re_comp_buf.fastmap == NULL)
-	    return "Memory exhausted";
-    }
-    /* Since `re_exec' always passes NULL for the `regs' argument, we
-     * don't need to initialize the pattern buffer fields which affect it.  */
-
-    /* Match anchors at newlines.  */
-    re_comp_buf.newline_anchor = 1;
-
-    ret = regex_compile(s, strlen(s), re_syntax_options, &re_comp_buf);
-
-    /* Yes, we're discarding `const' here.  */
-    return (char *) re_error_msg[(int) ret];
-}
-
-
-int
-re_exec(s)
-     const char *s;
-{
-    const int len = strlen(s);
-    return
-	0 <= re_search(&re_comp_buf, s, len, 0, len, (struct re_registers *) 0);
-}
-
-#endif /* not emacs and not _POSIX_SOURCE */
-
-/* POSIX.2 functions.  Don't define these for Emacs.  */
-
-#ifndef emacs
+/* POSIX.2 functions */
 
 /* regcomp takes a regular expression as a string and compiles it.
  * 
@@ -4705,8 +4414,6 @@ regfree(preg)
 	free(preg->translate);
     preg->translate = NULL;
 }
-
-#endif /* not emacs  */
 
 /*
  * Local variables:
