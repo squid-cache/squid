@@ -224,6 +224,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	    continue;
 	if (s.op >= SWAP_LOG_MAX)
 	    continue;
+	s.swap_file_number = storeDirProperFileno(d->dirn, s.swap_file_number);
 	debug(20, 3) ("storeRebuildFromSwapLog: %s %s %08X\n",
 	    swap_log_op_str[(int) s.op],
 	    storeKeyText(s.key),
