@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+</HEAD><BODY>
+<H1>FEL</H1>
+<H2>Begärd URL kunde inte hämtas</H2>
+<HR>
+<P>
+Följande URL kunde inte hämtas:
+<A HREF="%U">%U</A>
+<P>
+Squid sände följande FTP kommando:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+och fick till svar
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+Detta kan orsakas av en FTP URL med en absolut sökväg (vilket inte 
+överensstämmer med RFC 1738). Om detta är orsaken, kan filen 
+återfinnas vid <A HREF="%B">%B</A>.
+</P>
+

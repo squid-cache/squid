@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>FEL: Begärd URL kunde ej hämtas</TITLE>
+</HEAD><BODY>
+<H1>FEL</H1>
+<H2>Begärd URL kunde ej hämtas</H2>
+<HR>
+<P>
+Vid försöket att hämta URL:
+<A HREF="%U">%U</A>
+<P>
+Mottogs följande fel:
+<UL>
+<LI>
+<STRONG>
+Anslutningen Misslyckades
+</STRONG>
+</UL>
+
+<P>
+Systemet returnerade:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Begärd värd eller nätverk kan vara nere.  Vänligen försök igen.
+</P>

@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+</HEAD><BODY>
+<H1>FEL</H1>
+<H2>Begärd URL kunde inte hämtas</H2>
+<HR>
+<P>
+Vid försöket att hämta URL:
+<A HREF="%U">%U</A>
+<P>
+Mottogs följande fel:
+<UL>
+<LI>
+<STRONG>
+Senaste dokumentet återfanns inte i cachen och <code>bara-om-i-cache</code>
+direktivet är satt.
+</STRONG>
+</UL>
+
+<P>
+
+Du har begärt ett dokument med <code>bara-om-i-cache</code> cache kontroll 
+direktivet. Dokumentet återfanns inte i cache databasen, <em>eller</em> det krävs en uppdatering av cache databasen, men förhindras av 
+<code>bara-om-i-cache</code> direktivet.
+
+</P>
