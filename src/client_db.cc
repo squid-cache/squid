@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.27 1998/03/25 09:23:19 kostas Exp $
+ * $Id: client_db.cc,v 1.28 1998/03/27 04:15:37 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -72,27 +72,16 @@ clientdbUpdate(struct in_addr addr, log_type log_type, protocol_t p, size_t size
 	debug_trap("clientdbUpdate: Failed to add entry");
     if (p == PROTO_HTTP) {
 	c->Http.n_requests++;
-	kb_incr(&(c->Http.kbytes_out), size);
 	c->Http.result_hist[log_type]++;
+	kb_incr(&c->Http.kbytes_out, size);
+	if (isTcpHit(log_type))
+	    kb_incr(&c->Http.hit_kbytes_out, size);
     } else if (p == PROTO_ICP) {
 	c->Icp.n_requests++;
-	kb_incr(&(c->Icp.kbytes_out), size);
 	c->Icp.result_hist[log_type]++;
-    }
-    switch (log_type) {
-    case LOG_TCP_HIT:
-    case LOG_TCP_REFRESH_HIT:
-    case LOG_TCP_REFRESH_FAIL_HIT:
-    case LOG_TCP_IMS_HIT:
-    case LOG_TCP_NEGATIVE_HIT:
-    case LOG_TCP_MEM_HIT:
-    case LOG_UDP_HIT:
-	if (p == PROTO_ICP)
-	    kb_incr(&(c->Icp.hit_kbytes_out), size);
-	else
-	    kb_incr(&(c->Http.hit_kbytes_out), size);
-	break;
-    default:
+	kb_incr(&c->Icp.kbytes_out, size);
+	if (LOG_UDP_HIT == log_type)
+	    kb_incr(&c->Icp.hit_kbytes_out, size);
     }
 }
 
@@ -229,6 +218,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     static char key[15];
     ClientInfo *c = NULL;
     int aggr = 0;
+    log_type l;
 #if 0
     int cnt;
 #endif
@@ -273,14 +263,11 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	*(Answer->val.integer) = (snint) c->Http.n_requests;
 	break;
     case MESH_CTBL_HTHITS:
-	aggr = c->Http.result_hist[LOG_TCP_HIT] +
-	    c->Http.result_hist[LOG_TCP_REFRESH_HIT] +
-	    c->Http.result_hist[LOG_TCP_REFRESH_FAIL_HIT] +
-	    c->Http.result_hist[LOG_TCP_REFRESH_FAIL_HIT] +
-	    c->Http.result_hist[LOG_TCP_IMS_HIT] +
-	    c->Http.result_hist[LOG_TCP_NEGATIVE_HIT] +
-	    c->Http.result_hist[LOG_TCP_MEM_HIT] +
-	    c->Http.result_hist[LOG_UDP_HIT];
+	aggr = 0;
+	for (l = 0; l<LOG_TYPE_MAX; l++) {
+	    if (isTcpHit(l))
+		aggr += c->Http.result_hist[l];
+	}
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = ASN_INTEGER;
@@ -305,14 +292,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	*(Answer->val.integer) = (snint) c->Icp.n_requests;
 	break;
     case MESH_CTBL_ICPHITS:
-	aggr = c->Icp.result_hist[LOG_TCP_HIT] +
-	    c->Icp.result_hist[LOG_TCP_REFRESH_HIT] +
-	    c->Icp.result_hist[LOG_TCP_REFRESH_FAIL_HIT] +
-	    c->Icp.result_hist[LOG_TCP_REFRESH_FAIL_HIT] +
-	    c->Icp.result_hist[LOG_TCP_IMS_HIT] +
-	    c->Icp.result_hist[LOG_TCP_NEGATIVE_HIT] +
-	    c->Icp.result_hist[LOG_TCP_MEM_HIT] +
-	    c->Icp.result_hist[LOG_UDP_HIT];
+	aggr = c->Icp.result_hist[LOG_UDP_HIT];
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = ASN_INTEGER;
