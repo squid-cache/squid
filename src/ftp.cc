@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.66 1996/10/15 16:40:06 wessels Exp $
+ * $Id: ftp.cc,v 1.67 1996/10/15 18:06:23 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -567,7 +567,6 @@ ftpStart(int unusedfd, char *url, request_t * request, StoreEntry * entry)
 	squid_error_entry(entry, ERR_FTP_DISABLED, NULL);
 	return COMM_ERROR;
     }
-
     ftpData = xcalloc(1, sizeof(FtpStateData));
     storeLockObject(ftpData->entry = entry, NULL, NULL);
     ftpData->request = requestLink(request);
@@ -706,7 +705,7 @@ ftpInitialize(void)
     struct timeval slp;
 
     if (!strcmp(ftpget, "none")) {
-        debug(9, 1, "ftpInitialize: ftpget is disabled.\n");
+	debug(9, 1, "ftpInitialize: ftpget is disabled.\n");
 	return -1;
     }
     debug(9, 5, "ftpInitialize: Initializing...\n");
