@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.330 2002/04/18 16:09:37 hno Exp $
+ * $Id: comm.cc,v 1.331 2002/04/19 06:26:26 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -442,18 +442,15 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 	cbdataReferenceDone(F->timeout_data);
 	F->timeout_handler = NULL;
 	F->timeout = 0;
-	return F->timeout;
+    } else {
+	assert(handler || F->timeout_handler);
+	if (handler) {
+	    cbdataReferenceDone(F->timeout_data);
+	    F->timeout_handler = handler;
+	    F->timeout_data = cbdataReference(data);
+	}
+	F->timeout = squid_curtime + (time_t) timeout;
     }
-    assert(handler || F->timeout_handler);
-    if (handler || data) {
-	/* new timeout handler installed. If NULL then the timeout
-	 * is only extended
-	 */
-	cbdataReferenceDone(F->timeout_data);
-	F->timeout_handler = handler;
-	F->timeout_data = cbdataReference(data);
-    }
-    F->timeout = squid_curtime + (time_t) timeout;
     return F->timeout;
 }
 
