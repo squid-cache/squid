@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.204 1997/10/27 22:53:10 wessels Exp $
+ * $Id: http.cc,v 1.205 1997/10/28 18:10:38 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -212,6 +212,7 @@ static STABH httpAbort;
 static HttpStateData *httpBuildState(int, StoreEntry *, request_t *, peer *);
 static int httpSocketOpen(StoreEntry *, request_t *);
 static void httpRestart(HttpStateData *);
+static int httpCachableReply(HttpStateData *);
 
 static void
 httpStateFree(int fd, void *data)
@@ -415,16 +416,22 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     put_free_4k_page(line);
 }
 
-/* httpCheckPublic
- *
- *  Return 1 if the entry can be made public
- *         0 if the entry must be made private
- *        -1 if the entry should be negatively cached
- */
-int
-httpCheckPublic(struct _http_reply *reply, HttpStateData * httpState)
+static int
+httpCachableReply(HttpStateData * httpState)
 {
-    request_t *request = httpState->request;
+    struct _http_reply *reply = httpState->entry->mem_obj->reply;
+    if (EBIT_TEST(reply->cache_control, SCC_PRIVATE))
+	return 0;
+    if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
+	return 0;
+    /*
+     * Dealing with cookies is quite a bit more complicated
+     * than this.  Ideally we should strip the cookie
+     * header from the reply but still cache the reply body.
+     * More confusion at draft-ietf-http-state-mgmt-05.txt.
+     */
+    if (EBIT_TEST(reply->misc_headers, HDR_SET_COOKIE))
+	return 0;
     switch (reply->code) {
 	/* Responses that are cacheable */
     case 200:			/* OK */
@@ -433,28 +440,13 @@ httpCheckPublic(struct _http_reply *reply, HttpStateData * httpState)
     case 301:			/* Moved Permanently */
     case 410:			/* Gone */
 	/* don't cache objects from neighbors w/o LMT, Date, or Expires */
-	if (EBIT_TEST(reply->cache_control, SCC_PRIVATE))
-	    return 0;
-	if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
-	    return 0;
-	if (BIT_TEST(request->flags, REQ_AUTH))
-	    if (!EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
-		return 0;
-	/*
-	 * Dealing with cookies is quite a bit more complicated
-	 * than this.  Ideally we should strip the cookie
-	 * header from the reply but still cache the reply body.
-	 * More confusion at draft-ietf-http-state-mgmt-05.txt.
-	 */
-	if (EBIT_TEST(reply->misc_headers, HDR_SET_COOKIE))
-	    return 0;
 	if (reply->date > -1)
 	    return 1;
-	if (reply->last_modified > -1)
+	else if (reply->last_modified > -1)
 	    return 1;
-	if (!httpState->neighbor)
+	else if (!httpState->neighbor)
 	    return 1;
-	if (reply->expires > -1)
+	else if (reply->expires > -1)
 	    return 1;
 	else
 	    return 0;
@@ -534,7 +526,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
-	switch (httpCheckPublic(reply, httpState)) {
+	switch (httpCachableReply(httpState)) {
 	case 1:
 	    httpMakePublic(entry);
 	    break;
