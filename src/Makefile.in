@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.151 1998/05/28 22:57:55 wessels Exp $
+#  $Id: Makefile.in,v 1.152 1998/06/03 22:32:59 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -92,6 +92,7 @@ OBJS	 	= \
 		disk.o \
 		dns.o \
 		errorpage.o \
+		ETag.o \
 		event.o \
 		fd.o \
 		filemap.o \

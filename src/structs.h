@@ -409,6 +409,16 @@ struct _dwrite_q {
     FREE *free_func;
 };
 
+
+/* ETag support is rudimantal;
+ * this struct is likely to change
+ * Note: "str" points to memory in HttpHeaderEntry (for now)
+ *       so ETags should be used as tmp variables only (for now) */
+struct _ETag {
+    const char *str; /* quoted-string */
+    int weak;        /* true if it is a weak validator */
+};
+
 struct _fde {
     unsigned int type;
     unsigned int open;
@@ -520,6 +530,13 @@ struct _HttpHdrRange {
 struct _HttpHdrContRange {
     HttpHdrRangeSpec spec;
     size_t elength;		/* entity length, not content length */
+};
+
+/* some fields can hold either time or etag specs (e.g. If-Range) */
+struct _TimeOrTag {
+    ETag tag;		/* entity tag */
+    time_t time;
+    int valid;		/* true if struct is usable */
 };
 
 /* data for iterating thru range specs */

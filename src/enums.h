@@ -258,9 +258,11 @@ typedef enum {
     ftInt,
     ftStr,
     ftDate_1123,
+    ftETag,
     ftPCc,
+    ftPContRange,
     ftPRange,
-    ftPContRange
+    ftDate_1123_or_ETag
 } field_type;
 
 /* possible owners of http header */

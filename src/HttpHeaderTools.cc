@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.18 1998/06/02 21:38:06 rousskov Exp $
+ * $Id: HttpHeaderTools.cc,v 1.19 1998/06/03 22:32:59 rousskov Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -153,6 +153,7 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, size_t ent_len)
     httpHeaderPutContRange(hdr, cr);
     httpHdrContRangeDestroy(cr);
 }
+
 
 /*
  * return true if a given directive is found in at least one of the "connection" header-fields

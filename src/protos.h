@@ -240,6 +240,10 @@ extern int httpAnonHdrAllowed(http_hdr_type hdr_id);
 extern int httpAnonHdrDenied(http_hdr_type hdr_id);
 extern void httpBuildRequestHeader(request_t *, request_t *, StoreEntry *, HttpHeader *, int, int);
 
+/* ETag */
+extern int etagParseInit(ETag *etag, const char *str);
+extern int etagIsEqual(const ETag *tag1, const ETag *tag2);
+
 /* Http Status Line */
 /* init/clean */
 extern void httpStatusLineInit(HttpStatusLine * sline);
@@ -350,12 +354,14 @@ extern void httpHeaderPutTime(HttpHeader * hdr, http_hdr_type type, time_t time)
 extern void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str);
 extern void httpHeaderPutAuth(HttpHeader * hdr, const char *authScheme, const char *realm);
 extern void httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc);
-extern void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr);
-extern void httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range);
+extern void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange *cr);
+extern void httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange *range);
 extern void httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value);
 extern int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
 extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
+extern TimeOrTag httpHeaderGetTimeOrTag(const HttpHeader * hdr, http_hdr_type id);
 extern HttpHdrCc *httpHeaderGetCc(const HttpHeader * hdr);
+extern ETag httpHeaderGetETag(const HttpHeader * hdr, http_hdr_type id);
 extern HttpHdrRange *httpHeaderGetRange(const HttpHeader * hdr);
 extern HttpHdrContRange *httpHeaderGetContRange(const HttpHeader * hdr);
 extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
