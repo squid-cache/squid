@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.196 1998/04/10 22:57:34 rousskov Exp $
+ * $Id: neighbors.cc,v 1.197 1998/04/21 16:40:50 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -485,15 +485,15 @@ neighborsUdpPing(request_t * request,
 	     */
 	    p->stats.last_reply = squid_curtime;
 	    (*exprep) += p->mcast.n_replies_expected;
-	} else if (neighborUp(p)) {
-	    /* its alive, expect a reply from it */
-	    (*exprep)++;
 	} else if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer) {
 	    /*
 	     * fake a recent reply if its been a long time since our
 	     * last query
 	     */
 	    p->stats.last_reply = squid_curtime;
+	} else if (neighborUp(p)) {
+	    /* its alive, expect a reply from it */
+	    (*exprep)++;
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
