@@ -364,6 +364,7 @@ storeRebuildADirectory(void *unused)
 	eventAdd("storeRebuild", storeRebuildADirectory, NULL, 0);
 }
 
+#if TEMP_UNUSED_CODE
 static void
 storeConvertFile(const cache_key * key,
     int file_number,
@@ -407,6 +408,7 @@ storeConvertFile(const cache_key * key,
     xfree(buf);
     storeSwapTLVFree(tlv_list);
 }
+#endif
 
 static int
 storeGetNextFile(rebuild_dir * d, int *sfileno, int *size)
@@ -593,20 +595,6 @@ storeCleanup(void *datanotused)
     }
     eventAdd("storeCleanup", storeCleanup, NULL, 0);
 }
-
-#if OLD_CODE
-void
-storeCleanupComplete(void *data, int retcode, int errcode)
-{
-    StoreEntry *e = data;
-    storeUnlockObject(e);
-    outvalid--;
-    if (retcode == -2 && errcode == -2)
-	return;
-    if (!EBIT_TEST(e->flag, ENTRY_VALIDATED))
-	storeRelease(e);
-}
-#endif
 
 void
 storeValidate(StoreEntry * e, STVLDCB * callback, void *callback_data, void *tag)
