@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.17 2004/08/30 03:28:56 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.18 2004/10/18 12:12:54 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -255,6 +255,7 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
             changeState(NullState::Instance());
 
         if (!nodeMatched || state_ != NullState::Instance()) {
+            finished_ = false;
             debug(28, 3) ("aclmatchAclList: %p returning false (AND list entry failed to match)\n", this);
             checkForAsync();
             PROF_stop(aclMatchAclList);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.96 2003/10/16 21:40:16 robertc Exp $
+ * $Id: access_log.cc,v 1.97 2004/10/18 12:12:54 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1336,7 +1336,7 @@ accessLogLog(AccessLogEntry * al, ACLChecklist * checklist)
         xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
-        if (checklist && log->aclList && checklist->matchAclListFast(log->aclList))
+        if(checklist && log->aclList && !checklist->matchAclListFast(log->aclList))
             continue;
 
         switch (log->type) {
