@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.375 2003/06/20 01:01:01 robertc Exp $
+ * $Id: stat.cc,v 1.376 2003/06/22 21:31:24 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1089,6 +1089,9 @@ statAvgTick(void *notused)
 
         struct mallinfo mp = mallinfo();
         i = mp.arena;
+#elif HAVE_SBRK
+
+        i = (size_t) ((char *) sbrk(0) - (char *) sbrk_start);
 #endif
 
         if (Config.warnings.high_memory < i)
