@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.130 1997/03/29 04:45:21 wessels Exp $
+ * $Id: stat.cc,v 1.131 1997/04/25 20:15:33 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -757,7 +757,7 @@ info_get(const cacheinfo * obj, StoreEntry * sentry)
     storeAppendPrintf(sentry, "{Cache information for %s:}\n",
 	appname);
     storeAppendPrintf(sentry, "{\tStorage Swap size:\t%d MB}\n",
-	storeGetSwapSize() >> 10);
+	store_swap_size >> 10);
     storeAppendPrintf(sentry, "{\tStorage Mem size:\t%d KB}\n",
 	store_mem_size >> 10);
     storeAppendPrintf(sentry, "{\tStorage LRU Expiration Age:\t%6.2f days}\n",

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.218 1997/04/25 06:38:22 wessels Exp $
+ * $Id: store.cc,v 1.219 1997/04/25 20:15:34 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -320,7 +320,7 @@ static int store_pages_low = 0;
 
 /* current file name, swap file, use number as a filename */
 static int swapfileno = 0;
-static int store_swap_size = 0;	/* kilobytes !! */
+int store_swap_size = 0;	/* kilobytes !! */
 static int store_swap_high = 0;
 static int store_swap_low = 0;
 static int storelog_fd = -1;
@@ -1248,7 +1248,7 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
     debug(20, 6, "storeSwapOutHandle: store_swap_size   = %dk\n", store_swap_size);
     mem->swap_offset += mem->e_swap_buf_len;
     /* round up */
-    store_swap_size += ((mem->e_swap_buf_len + 1023) >> 10);
+    storeDirUpdateSwapSize(e->swap_file_number, mem->e_swap_buf_len);
     if (mem->swap_offset >= e->object_len) {
 	/* swapping complete */
 	e->swap_status = SWAP_OK;
@@ -1412,6 +1412,7 @@ storeDoRebuildFromDisk(void *data)
 		storeDirCloseTmpSwapLog(d->dirn);
 		RB->rebuild_dir = d->next;
 		safe_free(d);
+    		eventAdd("storeRebuild", storeDoRebuildFromDisk, RB, 0);
 		return;
 	}
 	if ((++RB->linecount & 0x3FFF) == 0)
@@ -1473,7 +1474,7 @@ storeDoRebuildFromDisk(void *data)
 	    continue;
 	}
 	/* update store_swap_size */
-	store_swap_size += (int) ((size + 1023) >> 10);
+	storeDirUpdateSwapSize(sfileno, size);
 	RB->objcount++;
 	e = storeAddDiskRestore(url,
 	    sfileno,
@@ -1488,7 +1489,7 @@ storeDoRebuildFromDisk(void *data)
 	    TRUE);
     }
     RB->rebuild_dir = d->next;
-    for (D = &RB->rebuild_dir; (*D)->next; D = &(*D)->next);
+    for (D = &RB->rebuild_dir; *D; D = &(*D)->next);
     *D = d;
     d->next = NULL;
     eventAdd("storeRebuild", storeDoRebuildFromDisk, RB, 0);
@@ -1658,13 +1659,6 @@ storeStartRebuildFromDisk(void)
     } else {
 	eventAdd("storeRebuild", storeDoRebuildFromDisk, RB, 0);
     }
-}
-
-/* return current swap size in kilo-bytes */
-int
-storeGetSwapSize(void)
-{
-    return store_swap_size;
 }
 
 static int
@@ -2169,9 +2163,9 @@ storeRelease(StoreEntry * e)
 
     if (e->swap_status == SWAP_OK && (e->swap_file_number > -1)) {
 	(void) safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
+	storeDirUpdateSwapSize(e->swap_file_number, -(e->object_len));
 	storeDirMapBitReset(e->swap_file_number);
 	e->swap_file_number = -1;
-	store_swap_size -= (e->object_len + 1023) >> 10;
 	HTTPCacheInfo->proto_purgeobject(HTTPCacheInfo,
 	    urlParseProtocol(e->url),
 	    e->object_len);

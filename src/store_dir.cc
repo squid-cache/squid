@@ -76,12 +76,6 @@ storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
     tmp->l2 = l2;
     tmp->read_only = read_only;
     tmp->map = file_map_create(MAX_FILES_PER_DIR);
-    debug(20,0,"storeAddSwapDisk: #%d: %s\n", ncache_dirs, path);
-    debug(20,0,"storeAddSwapDisk: l1=%d\n", tmp->l1);
-    debug(20,0,"storeAddSwapDisk: l2=%d\n", tmp->l2);
-    debug(20,0,"storeAddSwapDisk: sz=%d\n", tmp->max_size);
-    debug(20,0,"storeAddSwapDisk: ro=%d\n", tmp->read_only);
-    debug(20,0,"storeAddSwapDisk: mp=%d\n", tmp->map);
     return ++ncache_dirs;
 }
 
@@ -153,6 +147,8 @@ storeMostFreeSwapDir(void)
     int i;
     for (i = 0; i < ncache_dirs; i++) {
 	this_free = SwapDirs[i].max_size - SwapDirs[i].cur_size;
+debug(20,0,"storeMostFreeSwapDir: most free = #%d with %d\n", dirn, most_free);
+debug(20,0,"storeMostFreeSwapDir: #%d has %d free\n", i, this_free);
 	if (this_free <= most_free)
 	    continue;
 	if (SwapDirs[i].read_only)
@@ -160,6 +156,8 @@ storeMostFreeSwapDir(void)
 	most_free = this_free;
 	dirn = i;
     }
+debug(20,0,"storeMostFreeSwapDir: most free = #%d with %d\n", dirn, most_free);
+debug(20,0,"storeMostFreeSwapDir: returning %d\n", dirn);
     return dirn;
 }
 
@@ -351,4 +349,13 @@ storeDirCloseTmpSwapLog(int dirn)
 	fatal("storeDirCloseTmpSwapLog: Failed to open swap log.");
     }
     SD->swaplog_fd = fd;
+}
+
+void
+storeDirUpdateSwapSize(int fn, size_t size)
+{
+    int dirn = (fn >> SWAP_DIR_SHIFT) % ncache_dirs;
+    int k = ((size + 1023) >> 10);
+    SwapDirs[dirn].cur_size += k;
+    store_swap_size += k;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.177 1997/03/29 04:45:13 wessels Exp $
+ * $Id: cache_cf.cc,v 1.178 1997/04/25 20:15:31 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -245,7 +245,6 @@ static void parseMcastGroupLine _PARAMS((void));
 static void parseMemLine _PARAMS((void));
 static void parseMgrLine _PARAMS((void));
 static void parseKilobytes _PARAMS((int *));
-static void parseSwapLine _PARAMS((void));
 static void parseRefreshPattern _PARAMS((int icase));
 static void parseVisibleHostnameLine _PARAMS((void));
 static void parseWAISRelayLine _PARAMS((void));
@@ -420,14 +419,6 @@ parseMemLine(void)
     Config.Mem.maxSize = i << 20;
 }
 
-static void
-parseSwapLine(void)
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.Swap.maxSize = i << 10;
-}
 
 static void
 parseRefreshPattern(int icase)
@@ -867,7 +858,8 @@ parseCacheDir(void)
 	self_destruct();
     dir = token;
     GetInteger(i);
-    size = i;
+    size = i << 10;	/* Mbytes to kbytes */
+    Config.Swap.maxSize += size;
     GetInteger(i);
     l1 = i;
     GetInteger(i);
@@ -984,9 +976,6 @@ parseConfigFile(const char *file_name)
 
 	else if (!strcmp(token, "cache_mem"))
 	    parseMemLine();
-
-	else if (!strcmp(token, "cache_swap"))
-	    parseSwapLine();
 
 	else if (!strcmp(token, "cache_mgr"))
 	    parseMgrLine();
