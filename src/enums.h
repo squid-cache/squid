@@ -294,26 +294,20 @@ typedef enum {
     HTTP_HTTP_VERSION_NOT_SUPPORTED = 505
 } http_status;
 
+/* These are for StoreEntry->flag, which is defined as a SHORT */
 enum {
     ENTRY_SPECIAL,
-    ENTRY_UNUSED01,
     ENTRY_REVALIDATE,
     DELAY_SENDING,
-    ENTRY_UNUSED04,
     RELEASE_REQUEST,
     REFRESH_REQUEST,
     ENTRY_CACHABLE,
-    ENTRY_UNUSED08,
-    ENTRY_UNUSED09,
-    ENTRY_UNUSED10,
     ENTRY_DISPATCHED,
     KEY_PRIVATE,
     HIERARCHICAL,
     ENTRY_NEGCACHED,
-    ENTRY_UNUSED15,
     ENTRY_VALIDATED
 };
-
 
 enum {
     HTTP_PROXYING,
