@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.376 2003/06/23 10:39:52 robertc Exp $
+ * $Id: comm.cc,v 1.377 2003/06/23 12:27:12 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -86,6 +86,7 @@ static PF commHandleWrite;
 static IPH commConnectDnsHandle;
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
+static void requireOpenAndActive(int const fd);
 CBDATA_TYPE(ConnectStateData);
 
 static PF comm_accept_try;
@@ -760,6 +761,12 @@ comm_empty_os_read_buffers(int fd)
 #endif
 }
 
+void
+requireOpenAndActive(int const fd)
+{
+    assert(fd_table[fd].flags.open == 1);
+    assert(fdc_table[fd].active == 1);
+}
 
 /*
  * Return whether a file descriptor has any pending read request callbacks
@@ -772,8 +779,7 @@ comm_has_pending_read_callback(int fd)
     dlink_node *node;
     CommCallbackData *cd;
 
-    assert(fd_table[fd].flags.open == 1);
-    assert(fdc_table[fd].active == 1);
+    requireOpenAndActive(fd);
 
     /*
      * XXX I don't like having to walk the list!
@@ -806,9 +812,7 @@ comm_has_pending_read_callback(int fd)
 bool
 comm_has_pending_read(int fd)
 {
-    assert(fd_table[fd].flags.open == 1);
-    assert(fdc_table[fd].active == 1);
-
+    requireOpenAndActive(fd);
     return (fdc_table[fd].read.hasCallback());
 }
 
@@ -819,8 +823,7 @@ comm_has_pending_read(int fd)
 void
 comm_read_cancel(int fd, IOCB *callback, void *data)
 {
-    assert(fd_table[fd].flags.open == 1);
-    assert(fdc_table[fd].active == 1);
+    requireOpenAndActive(fd);
 
     assert(fdc_table[fd].read.callback == CallBack<IOCB>(callback,data));
 
@@ -2400,8 +2403,7 @@ void
 comm_accept(int fd, IOACB *handler, void *handler_data) {
     fdc_t *Fc;
 
-    assert(fd_table[fd].flags.open == 1);
-    assert(fdc_table[fd].active == 1);
+    requireOpenAndActive(fd);
 
     /* make sure we're not pending! */
     assert(fdc_table[fd].accept.accept.callback.handler == NULL);
