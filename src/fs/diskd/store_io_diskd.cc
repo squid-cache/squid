@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.31 2003/01/23 00:38:15 robertc Exp $
+ * $Id: store_io_diskd.cc,v 1.32 2003/02/19 21:23:53 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -170,14 +170,14 @@ DiskdFile::operator new (size_t)
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
     cbdataReference(result);
-    debug (0,0)("diskdFile with base %p allocating\n", result);
+    debug (79,3)("diskdFile with base %p allocating\n", result);
     return result;
 }
  
 void
 DiskdFile::operator delete (void *address)
 {
-    debug (0,0)("diskdFile with base %p deleting\n",address);
+    debug (79,3)("diskdFile with base %p deleting\n",address);
     DiskdFile *t = static_cast<DiskdFile *>(address);
     cbdataFree(address);
     /* And allow the memory to be freed */
@@ -190,7 +190,7 @@ DiskdFile::deleteSelf() const {delete this;}
 DiskdFile::DiskdFile (char const *aPath, DiskdIO *anIO) : errorOccured (false), IO(anIO)
 {
     assert (aPath);
-    debug (79,0)("DiskdFile::DiskdFile: %s\n", aPath);
+    debug (79,3)("DiskdFile::DiskdFile: %s\n", aPath);
     path_ = xstrdup (aPath);
     id = diskd_stats.sio_id++;
 }
@@ -203,7 +203,7 @@ DiskdFile::~DiskdFile()
 void
 DiskdFile::open (int flags, mode_t aMode, IORequestor::Pointer callback)
 {
-    debug (79,0)("DiskdFile::open: %p opening for %p\n", this, callback.getRaw());
+    debug (79,3)("DiskdFile::open: %p opening for %p\n", this, callback.getRaw());
     assert (ioRequestor.getRaw() == NULL);
     ioRequestor = callback;
     assert (callback.getRaw());
@@ -229,7 +229,7 @@ DiskdFile::open (int flags, mode_t aMode, IORequestor::Pointer callback)
 
 void
 DiskdFile::create (int flags, mode_t aMode, IORequestor::Pointer callback){
-    debug (79,0)("DiskdFile::create: %p creating for %p\n", this, callback.getRaw());
+    debug (79,3)("DiskdFile::create: %p creating for %p\n", this, callback.getRaw());
     assert (ioRequestor.getRaw() == NULL);
     ioRequestor = callback;
     assert (callback.getRaw());
@@ -283,7 +283,7 @@ DiskdFile::read(char *buf, off_t offset, size_t size)
 void
 DiskdFile::close()
 {
-    debug (79,0)("DiskdFile::close: %p closing for %p\n", this, ioRequestor.getRaw());
+    debug (79,3)("DiskdFile::close: %p closing for %p\n", this, ioRequestor.getRaw());
     assert (ioRequestor.getRaw());
     int x = storeDiskdSend(_MQD_CLOSE,
 	IO,
@@ -399,14 +399,14 @@ diskdstate_t::operator new (size_t)
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
     cbdataReference(result);
-    debug (0,0)("diskdstate with base %p allocating\n", result);
+    debug (79,3)("diskdstate with base %p allocating\n", result);
     return result;
 }
 
 void
 diskdstate_t::operator delete (void *address)
 {
-    debug (0,0)("diskdstate with base %p deleting\n",address);
+    debug (79,3)("diskdstate with base %p deleting\n",address);
     diskdstate_t *t = static_cast<diskdstate_t *>(address);
     cbdataFree(address);
     /* And allow the memory to be freed */
