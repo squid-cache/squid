@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.2 2003/03/04 06:02:12 robertc Exp $
+ * $Id: comm_epoll.cc,v 1.3 2003/04/22 07:38:30 robertc Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -56,7 +56,7 @@
 #include "Store.h"
 #include "fde.h"
 
-#ifdef USE_EPOLL
+#if USE_EPOLL
 #define DEBUG_EPOLL 0
 
 #include <sys/epoll.h>
