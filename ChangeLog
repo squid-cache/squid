@@ -1,6 +1,10 @@
 	- -D_REENTRANT when linking with -lpthreads (Henrik Nordstrom)
 	- Show symlink destinations as a hyperlink in FTP listings
 	  (Henrik Nordstrom)
+	- Fixed not allocating enough space for rewriting URLs with
+	  the Host: header (Eric Stern).
+	- Year-2000 fixes (Arjan de Vet).
+	- Fixed looping for cache hits on HEAD requests.
 
 Changes to squid-1.2.beta11 (Jan 6, 1998):
 
