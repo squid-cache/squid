@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.89 1996/10/28 07:44:22 wessels Exp $
+ * $Id: http.cc,v 1.90 1996/10/29 02:39:09 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -380,10 +380,7 @@ httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
 	case 502:		/* Bad Gateway */
 	case 503:		/* Service Unavailable */
 	case 504:		/* Gateway Timeout */
-	    if (*reply->expires)
-		httpMakePublic(entry);
-	    else
-		httpCacheNegatively(entry);
+	    httpCacheNegatively(entry);
 	    break;
 	    /* Some responses can never be cached */
 	case 303:		/* See Other */
