@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.142 1999/01/11 23:29:41 wessels Exp $
+ * $Id: enums.h,v 1.143 1999/01/12 16:42:17 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -130,11 +130,6 @@ enum {
 enum {
     FD_READ,
     FD_WRITE
-};
-
-enum {
-    FD_CLOSE,
-    FD_OPEN
 };
 
 enum {

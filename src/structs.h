@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.256 1999/01/11 22:23:08 wessels Exp $
+ * $Id: structs.h,v 1.257 1999/01/12 16:42:20 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -491,12 +491,13 @@ struct _ETag {
 
 struct _fde {
     unsigned int type;
-    unsigned int open;
+    unsigned int mode;		/* FD_READ|FD_WRITE */
     u_short local_port;
     u_short remote_port;
     char ipaddr[16];		/* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
     struct {
+	unsigned int open:1;
 	unsigned int close_request:1;
 	unsigned int write_daemon:1;
 	unsigned int closing:1;

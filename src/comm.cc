@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.296 1999/01/11 22:46:16 wessels Exp $
+ * $Id: comm.cc,v 1.297 1999/01/12 16:42:15 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -107,7 +107,7 @@ comm_local_port(int fd)
     fde *F = &fd_table[fd];
 
     /* If the fd is closed already, just return */
-    if (!F->open) {
+    if (!F->flags.open) {
 	debug(5, 0) ("comm_local_port: FD %d has been closed.\n", fd);
 	return 0;
     }
@@ -398,7 +398,7 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
-    assert(F->open);
+    assert(F->flags.open);
     if (timeout < 0) {
 	F->timeout_handler = NULL;
 	F->timeout_data = NULL;
@@ -580,13 +580,13 @@ comm_close(int fd)
     F = &fd_table[fd];
     if (F->flags.closing)
 	return;
-    if (shutting_down && (!F->open || F->type == FD_FILE))
+    if (shutting_down && (!F->flags.open || F->type == FD_FILE))
 	return;
     if (fd == current_hdl_fd) {
 	F->flags.delayed_comm_close = 1;
 	return;
     }
-    assert(F->open);
+    assert(F->flags.open);
     assert(F->type != FD_FILE);
 #ifdef USE_ASYNC_IO
     if (F->flags.nolinger && F->flags.nonblocking)
@@ -653,7 +653,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
-    assert(F->open == FD_OPEN);
+    assert(F->flags.open);
     debug(5, 5) ("commSetSelect: FD %d type %d\n", fd, type);
     if (type & COMM_SELECT_READ) {
 	F->read_handler = handler;
@@ -916,7 +916,7 @@ commCloseAllSockets(void)
     PF *callback;
     for (fd = 0; fd <= Biggest_FD; fd++) {
 	F = &fd_table[fd];
-	if (F->open != FD_OPEN)
+	if (!F->flags.open)
 	    continue;
 	if (F->type != FD_SOCKET)
 	    continue;

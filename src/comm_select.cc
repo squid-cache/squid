@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.25 1999/01/11 19:40:29 wessels Exp $
+ * $Id: comm_select.cc,v 1.26 1999/01/12 16:42:15 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -825,7 +825,7 @@ checkTimeouts(void)
     PF *callback;
     for (fd = 0; fd <= Biggest_FD; fd++) {
 	F = &fd_table[fd];
-	if (F->open != FD_OPEN)
+	if (!F->flags.open)
 	    continue;
 	if (F->timeout == 0)
 	    continue;
