@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.35 1996/07/09 03:41:41 wessels Exp $
+ * $Id: stat.cc,v 1.36 1996/07/09 04:47:24 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -577,9 +577,9 @@ void info_get(obj, sentry)
 #if HAVE_MALLINFO
     mp = mallinfo();
     storeAppendPrintf(sentry, "{Memory usage for %s via mallinfo():}\n", appname
-);
+	);
     storeAppendPrintf(sentry, "{\tTotal space in arena:  %6d KB}\n",
-        mp.arena >> 10);
+	mp.arena >> 10);
     storeAppendPrintf(sentry, "{\tOrdinary blocks:       %6d KB %6d blks}\n",
 	mp.uordblks >> 10, mp.ordblks);
     storeAppendPrintf(sentry, "{\tSmall blocks:          %6d KB %6d blks}\n",

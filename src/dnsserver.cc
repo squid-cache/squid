@@ -1,5 +1,6 @@
+
 /*
- * $Id: dnsserver.cc,v 1.7 1996/07/09 03:41:22 wessels Exp $
+ * $Id: dnsserver.cc,v 1.8 1996/07/09 04:47:18 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived

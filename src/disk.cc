@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.14 1996/07/09 04:46:51 wessels Exp $
+ * $Id: disk.cc,v 1.15 1996/07/09 04:47:16 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -443,7 +443,7 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
     comm_set_select_handler(fd,
 	COMM_SELECT_WRITE,
 	(PF) diskHandleWrite,
-        (void *) &file_table[fd]);
+	(void *) &file_table[fd]);
     return DISK_OK;
 #endif
 }

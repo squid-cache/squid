@@ -1,5 +1,6 @@
+
 /*
- * $Id: squid.h,v 1.24 1996/07/09 04:46:52 wessels Exp $
+ * $Id: squid.h,v 1.25 1996/07/09 04:47:23 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -260,7 +261,7 @@ extern struct in_addr any_addr;	/* comm.c */
 
 
 /* Prototypes and definitions which don't really deserve a seaprate
-   include file */
+ * include file */
 
 #define  CONNECT_PORT        443
 
