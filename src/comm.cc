@@ -1,7 +1,6 @@
 
-
 /*
- * $Id: comm.cc,v 1.288 1998/10/08 02:40:06 wessels Exp $
+ * $Id: comm.cc,v 1.289 1998/10/08 20:10:19 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived

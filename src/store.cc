@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.465 1998/10/03 03:56:56 wessels Exp $
+ * $Id: store.cc,v 1.466 1998/10/08 20:10:24 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -340,6 +340,9 @@ storeSetPublicKey(StoreEntry * e)
      * the object.  If we're not swapping out, then subsequent
      * store clients won't be able to access object data which has
      * been freed from memory.
+     *
+     * If RELEASE_REQUEST is set, then ENTRY_CACHABLE should not
+     * be set, and storeSetPublicKey() should not be called.
      */
     assert(!EBIT_TEST(e->flags, RELEASE_REQUEST));
     newkey = storeKeyPublic(mem->url, mem->method);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.14 1998/10/08 02:40:04 wessels Exp $
+ * $Id: StatHist.cc,v 1.15 1998/10/08 20:10:14 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -243,7 +243,7 @@ Null(double x)
 void
 statHistEnumInit(StatHist * H, int last_enum)
 {
-    statHistInit(H, last_enum + 3, &Null, &Null, -1, last_enum + 1 + 1);
+    statHistInit(H, last_enum + 3, &Null, &Null, (double) -1, (double) (last_enum + 1 + 1));
 }
 
 void
