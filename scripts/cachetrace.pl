@@ -3,7 +3,7 @@
 require 'sys/socket.ph';
 
 $url = shift || die "usage: $0: url\n";
-$host = 'localhost';
+$proxy = 'localhost';
 $port = 3128;
 
 $url = "http://$url/" if ($url =~ /^[-\w\.]+$/);
@@ -12,7 +12,7 @@ $host = $1 if ($url =~ /^[^:]+:\/\/([^\/:])+/);
 
 $sockaddr = 'S n a4 x8';
 ($name, $aliases, $proto) = getprotobyname("tcp");
-($fqdn, $aliases, $type, $len, $thataddr) = gethostbyname($host);
+($fqdn, $aliases, $type, $len, $thataddr) = gethostbyname($proxy);
 $thissock = pack($sockaddr, &AF_INET, 0, "\0\0\0\0");
 $that = pack($sockaddr, &AF_INET, $port, $thataddr);
 
@@ -29,7 +29,7 @@ sub try_http_11 {
                 socket (SOCK, &AF_INET, &SOCK_STREAM, $proto);
         die "bind: $!\n" unless
                 bind (SOCK, $thissock);
-        die "$host:$port: $!\n" unless
+        die "$proxy:$port: $!\n" unless
                 connect (SOCK, $that);
         select (SOCK); $| = 1;
         select (STDOUT);
