@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.288 1999/01/22 19:07:04 glenn Exp $
+ * $Id: main.cc,v 1.289 1999/01/24 02:22:57 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -413,6 +413,7 @@ mainInitialize(void)
     httpReplyInitModule();	/* must go before accepting replies */
     errorInitialize();
     accessLogInit();
+    identInit();
 #ifdef SQUID_SNMP
     snmpInit();
 #endif

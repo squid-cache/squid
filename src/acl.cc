@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.194 1999/01/13 22:13:38 wessels Exp $
+ * $Id: acl.cc,v 1.195 1999/01/24 02:22:53 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -68,6 +68,7 @@ static squid_acl aclStrToType(const char *s);
 static int decode_addr(const char *, struct in_addr *, struct in_addr *);
 static void aclCheck(aclCheck_t * checklist);
 static void aclCheckCallback(aclCheck_t * checklist, allow_t answer);
+static IDCB aclLookupIdentDone;
 static IPH aclLookupDstIPDone;
 static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
@@ -689,7 +690,6 @@ aclParseAclLine(acl ** head)
 	aclParseIntRange(&A->data);
 	break;
     case ACL_IDENT:
-	Config.onoff.ident_lookup = 1;
 	aclParseWordList(&A->data);
 	break;
     case ACL_PROTO:
@@ -959,7 +959,7 @@ aclMatchUser(wordlist * data, const char *user)
     debug(28, 3) ("aclMatchUser: checking '%s'\n", user);
     while (data) {
 	debug(28, 3) ("aclMatchUser: looking for '%s'\n", data->key);
-	if (strcmp(data->key, "REQUIRED") == 0 && *user != '\0')
+	if (strcmp(data->key, "REQUIRED") == 0 && *user != '\0' && strcmp(user, "-") != 0)
 	    return 1;
 	if (strcmp(data->key, user) == 0)
 	    return 1;
@@ -1310,7 +1310,12 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	return aclMatchIntegerRange(ae->data, r->port);
 	/* NOTREACHED */
     case ACL_IDENT:
-	return aclMatchUser(ae->data, checklist->ident);
+	if (*checklist->ident) {
+	    return aclMatchUser(ae->data, checklist->ident);
+	} else {
+	    checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
+	    return 0;
+	}
 	/* NOTREACHED */
     case ACL_PROTO:
 	return aclMatchInteger(ae->data, r->protocol);
@@ -1502,9 +1507,18 @@ aclCheck(aclCheck_t * checklist)
 	    match = -1;
 	} else if (checklist->state[ACL_IDENT] == ACL_LOOKUP_NEEDED) {
 	    debug(28, 3) ("aclCheck: Doing ident lookup\n");
-	    /* XXX how to do ident lookup? */
-	    checklist->state[ACL_IDENT] = ACL_LOOKUP_PENDING;
-	    return;
+	    if (cbdataValid(checklist->conn)) {
+		identStart(&checklist->conn->me, &checklist->conn->peer,
+		    aclLookupIdentDone, checklist);
+		checklist->state[ACL_IDENT] = ACL_LOOKUP_PENDING;
+		return;
+	    } else {
+		debug(28, 1) ("aclCheck: Can't start ident lookup. No client connection\n");
+		cbdataUnlock(checklist->conn);
+		checklist->conn = NULL;
+		allow = 0;
+		match = -1;
+	    }
 	}
 	/*
 	 * We are done with this _acl_access entry.  Either the request
@@ -1540,6 +1554,10 @@ aclChecklistFree(aclCheck_t * checklist)
     if (checklist->request)
 	requestUnlink(checklist->request);
     checklist->request = NULL;
+    if (checklist->conn) {
+	cbdataUnlock(checklist->conn);
+	checklist->conn = NULL;
+    }
     cbdataFree(checklist);
 }
 
@@ -1553,6 +1571,24 @@ aclCheckCallback(aclCheck_t * checklist, allow_t answer)
     checklist->callback = NULL;
     checklist->callback_data = NULL;
     aclChecklistFree(checklist);
+}
+
+static void
+aclLookupIdentDone(const char *ident, void *data)
+{
+    aclCheck_t *checklist = data;
+    if (ident) {
+	xstrncpy(checklist->ident, ident, sizeof(checklist->ident));
+	xstrncpy(checklist->request->user_ident, ident, sizeof(checklist->request->user_ident));
+    } else {
+	xstrncpy(checklist->ident, "-", sizeof(checklist->ident));
+    }
+    /* Cache the ident result in the connection, to avoid redoing ident lookup
+     * over and over on persistent connections
+     */
+    if (cbdataValid(checklist->conn) && !*checklist->conn->ident)
+	xstrncpy(checklist->conn->ident, checklist->ident, sizeof(checklist->conn->ident));
+    aclCheck(checklist);
 }
 
 static void

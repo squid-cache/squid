@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.310 1999/01/22 19:07:05 glenn Exp $
+ * $Id: protos.h,v 1.311 1999/01/24 02:22:58 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -683,7 +683,10 @@ extern void shut_down(int);
 extern void start_announce(void *unused);
 extern void sslStart(int fd, const char *, request_t *, size_t * sz);
 extern void waisStart(FwdState *);
-extern void identStart(int, ConnStateData *, IDCB * callback, void *);
+
+/* ident.c */
+extern void identStart(struct sockaddr_in *me, struct sockaddr_in *peer, IDCB * callback, void *cbdata);
+extern void identInit(void);
 
 extern void statInit(void);
 extern void statFreeMemory(void);

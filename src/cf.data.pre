@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.134 1999/01/22 19:07:03 glenn Exp $
+# $Id: cf.data.pre,v 1.135 1999/01/24 02:22:54 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1349,6 +1349,18 @@ DOC_START
 	Timeout for idle persistent connections to servers and other
 	proxies.
 pconn_timeout 120 seconds
+DOC_END
+
+NAME: ident_timeout
+TYPE: time_t
+LOC: Config.Timeout.ident
+DEFAULT: 10 seconds
+DOC_START
+	Maximum time to wait for IDENT requests.  If this is too high,
+	and you enabled 'ident_lookup', then you might be susceptible
+	to denial-of-service by having many ident requests going at
+	once.
+ident_timeout 10 seconds
 DOC_END
 
 
