@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.25 1998/09/11 17:07:44 wessels Exp $
+ * $Id: icp_v3.cc,v 1.26 1998/09/21 06:52:16 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -90,8 +90,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    break;
 	}
 	/* The peer is allowed to use this cache */
-	key = storeKeyPublic(url, METHOD_GET);
-	entry = storeGet(key);
+	entry = storeGetPublic(url, METHOD_GET);
 	debug(12, 5) ("icpHandleIcpV3: OPCODE %s\n",
 	    icp_opcode_str[header.opcode]);
 	if (icpCheckUdpHit(entry, icp_request)) {
