@@ -55,7 +55,6 @@ struct _whoisState {
  * enhancements (e.g. expires)
  */
 struct _as_info {
-    void *x;
     intlist *as_number;
     time_t expires;
 };
