@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.85 1996/11/22 05:07:17 wessels Exp $
+ * $Id: tools.cc,v 1.86 1996/11/22 08:38:52 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -244,15 +244,15 @@ death(int sig)
 #ifdef PRINT_STACK_TRACE
 #ifdef _SQUID_HPUX_
     {
-	extern void U_STACK_TRACE(void);  /* link with -lcl */
+	extern void U_STACK_TRACE(void);	/* link with -lcl */
 	fflush(debug_log);
 	dup2(fileno(debug_log), 2);
 	U_STACK_TRACE();
     }
 #endif /* _SQUID_HPUX_ */
 #ifdef _SQUID_SOLARIS_
-    {   /* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
-	extern void opcom_stack_trace(void);  /* link with -lopcom_stack */
+    {				/* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
+	extern void opcom_stack_trace(void);	/* link with -lopcom_stack */
 	fflush(debug_log);
 	dup2(fileno(debug_log), fileno(stdout));
 	opcom_stack_trace();

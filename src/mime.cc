@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.22 1996/11/18 18:21:33 wessels Exp $
+ * $Id: mime.cc,v 1.23 1996/11/22 08:38:51 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -131,7 +131,7 @@ mime_get_header(const char *mime, const char *name)
 	    continue;
 	if (!isspace(p[namelen]) && p[namelen] != ':')
 	    continue;
-	xstrncpy(header, p, strcspn(p, "\n\r")+1);
+	xstrncpy(header, p, strcspn(p, "\n\r") + 1);
 	debug(25, 5, "mime_get_header: checking '%s'\n", header);
 	q = header;
 	q += namelen;
