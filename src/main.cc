@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.235 1998/03/12 21:19:46 wessels Exp $
+ * $Id: main.cc,v 1.236 1998/03/13 05:41:37 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -375,7 +375,7 @@ mainReconfigure(void)
     snmpConnectionClose();
 #endif
     dnsShutdownServers();
-    asnCleanup();
+    asnFreeMemory();
     redirectShutdownServers();
     storeDirCloseSwapLogs();
     errorFree();
@@ -743,23 +743,20 @@ normal_shutdown(void)
     ipcacheFreeMemory();
     fqdncacheFreeMemory();
     asnFreeMemory();
+    clientdbFreeMemory();
     httpHeaderCleanModule();
 #endif
-#if WHY_DO_THIS
+    memClean();
+#if !XMALLOC_TRACE
     file_close(0);
     file_close(1);
     file_close(2);
 #endif
     fdDumpOpen();
     fdFreeMemory();
-    memClean();
 #if XMALLOC_TRACE
-    {
-	extern int xmalloc_total;
-	extern void xmalloc_find_leaks(void);
-	xmalloc_find_leaks();
-	debug(1, 0) ("Memory used after shutdown: %d\n", xmalloc_total);
-    }
+    xmalloc_find_leaks();
+    debug(1, 0) ("Memory used after shutdown: %d\n", xmalloc_total);
 #endif
 #if MEM_GEN_TRACE
     log_trace_done();
