@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.211 1997/11/30 04:59:05 wessels Exp $
+ * $Id: comm.cc,v 1.212 1997/12/02 00:15:50 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -438,7 +438,7 @@ commConnectHandle(int fd, void *data)
     }
     switch (comm_connect_addr(fd, &cs->S)) {
     case COMM_INPROGRESS:
-	debug(5, 5) ("FD %d: COMM_INPROGRESS\n", fd);
+	debug(5, 5) ("commConnectHandle: FD %d: COMM_INPROGRESS\n", fd);
 	commSetSelect(fd, COMM_SELECT_WRITE, commConnectHandle, cs, 0);
 	break;
     case COMM_OK:
@@ -898,10 +898,13 @@ comm_poll(time_t sec)
 	    int revents;
 	    if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
 		continue;
-	    if ((incoming_counter++ & (lastinc > 0 ? 1 : 7)) == 0)
-		comm_poll_incoming();
-	    if (fdIsHttpOrIcp(fd))
+	    if (fdIsHttpOrIcp(fd)) {
+		if (num < 7)
+		    comm_poll_incoming();
 		continue;
+	    } else if ((incoming_counter++ & (lastinc > 0 ? 1 : 7)) == 0) {
+		comm_poll_incoming();
+	    }
 	    if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
 		debug(5, 6) ("comm_poll: FD %d ready for reading\n", fd);
 		if ((hdl = fd_table[fd].read_handler)) {
@@ -1047,10 +1050,13 @@ comm_select(time_t sec)
 	for (fd = 0; fd < maxfd; fd++) {
 	    if (!FD_ISSET(fd, &readfds) && !FD_ISSET(fd, &writefds))
 		continue;
-	    if ((incoming_counter++ & (lastinc > 0 ? 1 : 7)) == 0)
-		comm_select_incoming();
-	    if (fdIsHttpOrIcp(fd))
+	    if (fdIsHttpOrIcp(fd)) {
+		if (num < 7)
+		    comm_select_incoming();
 		continue;
+	    } else if ((incoming_counter++ & (lastinc > 0 ? 1 : 7)) == 0) {
+		comm_select_incoming();
+	    }
 	    if (FD_ISSET(fd, &readfds)) {
 		debug(5, 6) ("comm_select: FD %d ready for reading\n", fd);
 		if (fd_table[fd].read_handler) {
