@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.279 1998/08/20 22:30:02 wessels Exp $
+ * $Id: stat.cc,v 1.280 1998/08/21 07:37:24 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -269,8 +269,7 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 	    (int) mem->swapout.done_offset,
 	    (int) mem->swapout.queue_offset,
 	    mem->swapout.fd);
-	for (i = 0; i < mem->nclients; i++) {
-	    sc = &mem->clients[i];
+	for (i=0, sc = &mem->clients[i]; sc != NULL; sc = sc->next, i++) {
 	    if (sc->callback_data == NULL)
 		continue;
 	    storeAppendPrintf(s, "\tClient #%d\n", i);
