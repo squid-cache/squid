@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.72 2001/10/17 12:41:49 hno Exp $
+ * $Id: HttpHeader.cc,v 1.73 2001/10/17 21:37:28 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -688,7 +688,7 @@ httpHeaderPutTime(HttpHeader * hdr, http_hdr_type id, time_t htime)
 {
     assert_eid(id);
     assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
-    assert(time >= 0);
+    assert(htime >= 0);
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, mkrfc1123(htime)));
 }
 
