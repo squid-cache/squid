@@ -3,7 +3,7 @@
 #define HELPER_MAX_ARGS 64
 
 static PF helperHandleRead;
-static PF helperStateFree;
+static PF helperServerFree;
 static void Enqueue(helper * hlp, helper_request *);
 static helper_request *Dequeue(helper * hlp);
 static helper_server *GetFirstAvailable(helper * hlp);
@@ -69,6 +69,7 @@ helperOpenServers(helper * hlp)
 	srv->buf_sz = 8192;
 	srv->offset = 0;
 	srv->parent = hlp;
+	cbdataLock(hlp);	/* lock because of the parent backlink */
 	dlinkAddTail(srv, &srv->link, &hlp->servers);
 	if (rfd == wfd) {
 	    snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", shortname, k + 1);
@@ -82,7 +83,7 @@ helperOpenServers(helper * hlp)
 	commSetNonBlocking(rfd);
 	if (wfd != rfd)
 	    commSetNonBlocking(wfd);
-	comm_add_close_handler(rfd, helperStateFree, srv);
+	comm_add_close_handler(rfd, helperServerFree, srv);
     }
     safe_free(shortname);
     safe_free(procname);
@@ -158,10 +159,10 @@ helperShutdown(helper * hlp)
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
+	srv->flags.shutdown = 1;	/* request it to shut itself down */
 	if (srv->flags.busy) {
 	    debug(34, 3) ("helperShutdown: %s #%d is BUSY.\n",
 		hlp->id_name, srv->index + 1);
-	    srv->flags.shutdown = 1;
 	    continue;
 	}
 	if (srv->flags.closing) {
@@ -169,9 +170,25 @@ helperShutdown(helper * hlp)
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
-	comm_close(srv->wfd);
 	srv->flags.closing = 1;
+	comm_close(srv->wfd);
     }
+}
+
+helper *
+helperCreate(const char *name)
+{
+    helper *hlp = xcalloc(1, sizeof(*hlp));
+    cbdataAdd(hlp, MEM_NONE);
+    hlp->id_name = name;
+    return hlp;
+}
+
+void
+helperFree(helper * hlp)
+{
+    /* note, don't free hlp->name, it probably points to static memory */
+    cbdataFree(hlp);
 }
 
 /* ====================================================================== */
@@ -179,7 +196,7 @@ helperShutdown(helper * hlp)
 /* ====================================================================== */
 
 static void
-helperStateFree(int fd, void *data)
+helperServerFree(int fd, void *data)
 {
     helper_server *srv = data;
     helper *hlp = srv->parent;
@@ -193,12 +210,14 @@ helperStateFree(int fd, void *data)
     dlinkDelete(&srv->link, &hlp->servers);
     hlp->n_running--;
     assert(hlp->n_running >= 0);
-    if (!shutting_down && !reconfiguring) {
-        debug(34, 0) ("WARNING: %s #%d (FD %d) exited\n",
+    if (!srv->flags.shutdown) {
+	debug(34, 0) ("WARNING: %s #%d (FD %d) exited\n",
 	    hlp->id_name, srv->index + 1, fd);
-        if (hlp->n_running < hlp->n_to_start / 2)
+	assert(hlp->n_running >= hlp->n_to_start / 2);
+	if (hlp->n_running < hlp->n_to_start / 2)
 	    fatalf("Too few %s processes are running", hlp->id_name);
     }
+    cbdataUnlock(srv->parent);
     cbdataFree(srv);
 }
 

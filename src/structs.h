@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.242 1998/10/15 23:40:07 wessels Exp $
+ * $Id: structs.h,v 1.243 1998/10/16 20:02:49 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1622,7 +1622,7 @@ struct _helper {
     wordlist *cmdline;
     dlink_list servers;
     dlink_list queue;
-    char *id_name;
+    const char *id_name;
     int n_to_start;
     int n_running;
     int ipc_type;
