@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.436 2002/04/21 21:23:15 hno Exp $
+ * $Id: protos.h,v 1.437 2002/04/21 21:52:47 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -886,7 +886,6 @@ extern StoreEntry *storeCreateEntry(const char *, const char *, request_flags, m
 extern void storeSetPublicKey(StoreEntry *);
 extern void storeComplete(StoreEntry *);
 extern void storeInit(void);
-extern int storeClientWaiting(const StoreEntry *);
 extern void storeAbort(StoreEntry *);
 extern void storeAppend(StoreEntry *, const char *, int);
 extern void storeLockObject(StoreEntry *);
