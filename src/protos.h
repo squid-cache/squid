@@ -556,6 +556,7 @@ extern char *neighborTypeStr(const peer * e);
 extern void peerCheckConnectStart(peer *);
 extern void dump_peer_options(StoreEntry *, peer *);
 extern int peerHTTPOkay(const peer *, request_t *);
+extern peer *whichPeer(const struct sockaddr_in *from);
 
 extern void netdbInit(void);
 extern void netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.223 1998/06/26 04:23:34 wessels Exp $
+ * $Id: neighbors.cc,v 1.224 1998/07/13 21:37:45 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -112,7 +112,6 @@
 static int peerAllowedToUse(const peer *, request_t *);
 static int peerWouldBePinged(const peer *, request_t *);
 static void neighborRemove(peer *);
-static peer *whichPeer(const struct sockaddr_in *from);
 static void neighborAlive(peer *, const MemObject *, const icp_common_t *);
 static void neighborCountIgnored(peer *, icp_opcode op_unused);
 static void peerRefreshDNS(void *);
@@ -148,7 +147,7 @@ neighborTypeStr(const peer * p)
 }
 
 
-static peer *
+peer *
 whichPeer(const struct sockaddr_in *from)
 {
     int j;
