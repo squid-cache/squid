@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.8 1999/04/19 03:31:30 wessels Exp $
+ * $Id: dns_internal.cc,v 1.9 1999/04/19 04:45:03 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -44,12 +44,27 @@
 
 #define IDNS_MAX_TRIES 20
 
+typedef struct _idns_query idns_query;
 typedef struct _ns ns;
+
+struct _idns_query {
+    char buf[512];
+    size_t sz;
+    unsigned short id;
+    int nsends;
+    struct timeval start_t;
+    struct timeval sent_t;
+    dlink_node lru;
+    IDNSCB *callback;
+    void *callback_data;
+};
+
 struct _ns {
     struct sockaddr_in S;
     int nqueries;
     int nreplies;
 };
+
 static ns *nameservers = NULL;
 static int nns = 0;
 static int nns_alloc = 0;
@@ -332,6 +347,7 @@ void
 idnsInit(void)
 {
     static int init = 0;
+    memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
     if (DnsSocket < 0) {
 	DnsSocket = comm_open(SOCK_DGRAM,
 	    0,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.292 1999/04/15 06:16:00 wessels Exp $
+ * $Id: main.cc,v 1.293 1999/04/19 04:45:05 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -498,8 +498,8 @@ mainInitialize(void)
     squid_signal(SIGALRM, time_tick, SA_RESTART);
     alarm(1);
 #endif
+    memCheckInit();
     debug(1, 1) ("Ready to serve requests.\n");
-
     if (!configured_once) {
 	eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1.0, 1);
 	eventAdd("storeDirClean", storeDirClean, NULL, 15.0, 1);
