@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.682 2005/03/18 14:41:21 hno Exp $
+ * $Id: client_side.cc,v 1.683 2005/03/18 16:06:10 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2912,8 +2912,33 @@ clientNegotiateSSL(int fd, void *data)
             commSetSelect(fd, COMM_SELECT_WRITE, clientNegotiateSSL, conn, 0);
             return;
 
+        case SSL_ERROR_SYSCALL:
+
+            if (ret == 0) {
+                debug(83, 2) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: Aborted by client\n", fd);
+                comm_close(fd);
+                return;
+            } else {
+                int hard = 1;
+
+                if (errno == ECONNRESET)
+                    hard = 0;
+
+                debug(83, hard ? 1 : 2) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s (%d)\n",
+                                         fd, strerror(errno), errno);
+
+                comm_close(fd);
+
+                return;
+            }
+
+        case SSL_ERROR_ZERO_RETURN:
+            debug(83, 1) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: Closed by client\n", fd);
+            comm_close(fd);
+            return;
+
         default:
-            debug(81, 1) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s (%d/%d)\n",
+            debug(83, 1) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s (%d/%d)\n",
                           fd, ERR_error_string(ERR_get_error(), NULL), ssl_error, ret);
             comm_close(fd);
             return;
@@ -2922,16 +2947,30 @@ clientNegotiateSSL(int fd, void *data)
         /* NOTREACHED */
     }
 
-    debug(83, 5) ("clientNegotiateSSL: FD %d negotiated cipher %s\n", fd,
-                  SSL_get_cipher(fd_table[fd].ssl));
+    if (SSL_session_reused(ssl)) {
+        debug(83, 2) ("clientNegotiateSSL: Session %p reused on FD %d (%s:%d)\n", SSL_get_session(ssl), fd, fd_table[fd].ipaddr, (int)fd_table[fd].remote_port);
+    } else {
+        if (do_debug(83, 4)) {
+            /* Write out the SSL session details.. actually the call below, but
+             * OpenSSL headers do strange typecasts confusing GCC.. */
+            /* PEM_write_SSL_SESSION(debug_log, SSL_get_session(ssl)); */
+            PEM_ASN1_write(i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
+            /* Note: This does not automatically fflush the log file.. */
+        }
 
-    client_cert = SSL_get_peer_certificate(fd_table[fd].ssl);
+        debug(83, 2) ("clientNegotiateSSL: New session %p on FD %d (%s:%d)\n", SSL_get_session(ssl), fd, fd_table[fd].ipaddr, (int)fd_table[fd].remote_port);
+    }
+
+    debug(83, 3) ("clientNegotiateSSL: FD %d negotiated cipher %s\n", fd,
+                  SSL_get_cipher(ssl));
+
+    client_cert = SSL_get_peer_certificate(ssl);
 
     if (client_cert != NULL) {
-        debug(83, 5) ("clientNegotiateSSL: FD %d client certificate: subject: %s\n",
+        debug(83, 3) ("clientNegotiateSSL: FD %d client certificate: subject: %s\n",
                       fd, X509_NAME_oneline(X509_get_subject_name(client_cert), 0, 0));
 
-        debug(83, 5) ("clientNegotiateSSL: FD %d client certificate: issuer: %s\n",
+        debug(83, 3) ("clientNegotiateSSL: FD %d client certificate: issuer: %s\n",
                       fd, X509_NAME_oneline(X509_get_issuer_name(client_cert), 0, 0));
 
         X509_free(client_cert);

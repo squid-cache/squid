@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.24 2005/03/18 15:36:08 hno Exp $
+ * $Id: ssl_support.cc,v 1.25 2005/03/18 16:06:11 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -781,11 +781,21 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 int
 ssl_read_method(int fd, char *buf, int len)
 {
+    SSL *ssl = fd_table[fd].ssl;
     int i;
 
-    i = SSL_read(fd_table[fd].ssl, buf, len);
+#if DONT_DO_THIS
 
-    if (i > 0 && SSL_pending(fd_table[fd].ssl) > 0) {
+    if (!SSL_is_init_finished(ssl)) {
+        errno = ENOTCONN;
+        return -1;
+    }
+
+#endif
+
+    i = SSL_read(ssl, buf, len);
+
+    if (i > 0 && SSL_pending(ssl) > 0) {
         debug(83, 2) ("SSL fd %d is pending\n", fd);
         fd_table[fd].flags.read_pending = 1;
     } else
@@ -797,7 +807,17 @@ ssl_read_method(int fd, char *buf, int len)
 int
 ssl_write_method(int fd, const char *buf, int len)
 {
-    return (SSL_write(fd_table[fd].ssl, buf, len));
+    SSL *ssl = fd_table[fd].ssl;
+    int i;
+
+    if (!SSL_is_init_finished(ssl)) {
+        errno = ENOTCONN;
+        return -1;
+    }
+
+    i = SSL_write(ssl, buf, len);
+
+    return i;
 }
 
 void
