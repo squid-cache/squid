@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.2 2001/03/03 10:39:36 hno Exp $
+ * $Id: auth_digest.cc,v 1.3 2001/08/03 15:13:10 adrian Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -456,7 +456,8 @@ authDigestUserShutdown()
     hash_first(proxy_auth_username_cache);
     while ((usernamehash = ((auth_user_hash_pointer *) hash_next(proxy_auth_username_cache)))) {
 	auth_user = usernamehash->auth_user;
-	if (strcmp(authscheme_list[auth_user->auth_module - 1].typestr, "digest") == 0)
+	if (authscheme_list[auth_user->auth_module - 1].typestr &&
+	    strcmp(authscheme_list[auth_user->auth_module - 1].typestr, "digest") == 0)
 	    /* it's digest */
 	    authenticateAuthUserUnlock(auth_user);
     }
@@ -597,6 +598,7 @@ authSchemeSetup_digest(authscheme_entry_t * authscheme)
     authscheme->decodeauth = authenticateDigestDecodeAuth;
     authscheme->donefunc = authDigestDone;
     authscheme->requestFree = authDigestAURequestFree;
+    authscheme->authConnLastHeader = NULL;
 }
 
 int
@@ -686,7 +688,6 @@ authenticateDigestAuthenticateUser(auth_user_request_t * auth_user_request, requ
     /* auth_user is now linked, we reset these values
      * after external auth occurs anyway */
     auth_user->expiretime = current_time.tv_sec;
-    auth_user->ip_expiretime = squid_curtime;
     return;
 }
 

@@ -1,6 +1,5 @@
-
 /*
- * $Id: auth_basic.cc,v 1.8 2001/03/21 23:41:13 hno Exp $
+ * $Id: auth_basic.cc,v 1.9 2001/08/03 15:13:06 adrian Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -104,6 +103,7 @@ authSchemeSetup_basic(authscheme_entry_t * authscheme)
     authscheme->oncloseconnection = NULL;
     authscheme->decodeauth = authenticateBasicDecodeAuth;
     authscheme->donefunc = authBasicDone;
+    authscheme->authConnLastHeader = NULL;
 }
 
 /* internal functions */
@@ -193,7 +193,6 @@ authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, reque
     /* Decode now takes care of finding the auth_user struct in the cache */
     /* after external auth occurs anyway */
     auth_user->expiretime = current_time.tv_sec;
-    auth_user->ip_expiretime = squid_curtime;
     return;
 }
 
@@ -385,17 +384,14 @@ static auth_user_t *
 authBasicAuthUserFindUsername(const char *username)
 {
     auth_user_hash_pointer *usernamehash;
-    auth_user_t *auth_user;
     debug(29, 9) ("authBasicAuthUserFindUsername: Looking for user '%s'\n", username);
     if (username && (usernamehash = hash_lookup(proxy_auth_username_cache, username))) {
-	while ((usernamehash->auth_user->auth_type != AUTH_BASIC) &&
-	    (usernamehash->next))
+	while (usernamehash) {
+	    if ((usernamehash->auth_user->auth_type == AUTH_BASIC) &&
+		!strcmp(username, usernamehash->key))
+		return usernamehash->auth_user;
 	    usernamehash = usernamehash->next;
-	auth_user = NULL;
-	if (usernamehash->auth_user->auth_type == AUTH_BASIC) {
-	    auth_user = usernamehash->auth_user;
 	}
-	return auth_user;
     }
     return NULL;
 }
@@ -503,7 +499,6 @@ authenticateBasicDecodeAuth(auth_user_request_t * auth_user_request, const char 
 	auth_user->auth_type = AUTH_BASIC;
 	/* current time for timeouts */
 	auth_user->expiretime = current_time.tv_sec;
-	auth_user->ip_expiretime = squid_curtime;
 
 	/* this auth_user struct is the 'lucky one' to get added to the username cache */
 	/* the requests after this link to the auth_user */

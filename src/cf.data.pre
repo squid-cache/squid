@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.222 2001/07/28 09:21:31 hno Exp $
+# $Id: cf.data.pre,v 1.223 2001/08/03 15:13:03 adrian Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1403,18 +1403,7 @@ DOC_START
 	the user to redial without hassle. If all your users are
 	stationary then higher values may be used.
 
-	See also authenticate_ip_ttl_is_strict
-DOC_END
-
-NAME: authenticate_ip_ttl_is_strict
-TYPE: onoff
-LOC: Config.onoff.authenticateIpTTLStrict
-DEFAULT: on
-DOC_START
-	This option makes authenticate_ip_ttl a bit stricter. With this
-	enabled authenticate_ip_ttl will deny all access from other IP
-	addresses until the TTL has expired, and the IP address "owning"
-	the userid will not be forced to reauthenticate.
+	See also the acl max_user_ip.
 DOC_END
 
 COMMENT_START
@@ -1897,6 +1886,15 @@ DOC_START
 	acl aclname maxconn number
 	  # This will be matched when the client's IP address has
 	  # more than <number> HTTP connections established.
+
+	acl aclname max_user_ip
+	  # This will be matched when the user attempts to log in from more 
+	  # than <number> different ip address's. The authenticate_ip_ttl
+	  # parameter controls the timeout on the ip entries.
+	  # NOTE: in acceleration mode, clients may appear to come from 
+	  # multiple address's if they are going through proxy farms,
+	  # so a limit of 1 may cause user problems.
+
 
 	acl aclname req_mime_type mime-type1 ...
 	  # regex match agains the mime type of the request generated

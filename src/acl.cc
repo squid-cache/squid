@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.255 2001/06/28 20:16:30 wessels Exp $
+ * $Id: acl.cc,v 1.256 2001/08/03 15:13:03 adrian Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -67,6 +67,10 @@ static int aclMatchIntegerRange(intrange * data, int i);
 #if SQUID_SNMP
 static int aclMatchWordList(wordlist *, const char *);
 #endif
+static void aclParseUserMaxIP(void *data);
+static void aclDestroyUserMaxIP(void *data);
+static wordlist *aclDumpUserMaxIP(void *data);
+static int aclMatchUserMaxIP(void *, auth_user_request_t *, struct in_addr);
 static squid_acl aclStrToType(const char *s);
 static int decode_addr(const char *, struct in_addr *, struct in_addr *);
 static void aclCheck(aclCheck_t * checklist);
@@ -220,6 +224,8 @@ aclStrToType(const char *s)
 	return ACL_REQ_MIME_TYPE;
     if (!strcmp(s, "rep_mime_type"))
 	return ACL_REP_MIME_TYPE;
+    if (!strcmp(s, "max_user_ip"))
+	return ACL_MAX_USER_IP;
     return ACL_NONE;
 }
 
@@ -288,6 +294,8 @@ aclTypeToStr(squid_acl type)
 	return "req_mime_type";
     if (type == ACL_REP_MIME_TYPE)
 	return "rep_mime_type";
+    if (type == ACL_MAX_USER_IP)
+	return "max_user_ip";
     return "ERROR";
 }
 
@@ -784,6 +792,9 @@ aclParseAclLine(acl ** head)
     case ACL_DST_ASN:
 	aclParseIntlist(&A->data);
 	break;
+    case ACL_MAX_USER_IP:
+	aclParseUserMaxIP(&A->data);
+	break;
 #if SRC_RTT_NOT_YET_FINISHED
     case ACL_NETDB_SRC_RTT:
 	aclParseIntlist(&A->data);
@@ -1088,14 +1099,14 @@ aclMatchUser(void *proxyauth_acl, char *user)
     if (user == NULL)
 	return 0;
 
-    if (data->flags.case_insensitive)
-	Tolower(user);
-
     if (data->flags.required) {
 	debug(28, 7) ("aclMatchUser: user REQUIRED and auth-info present.\n");
 	return 1;
     }
-    Top = splay_splay(user, Top, (SPLAYCMP *) strcmp);
+    if (data->flags.case_insensitive)
+	Top = splay_splay(user, Top, (SPLAYCMP *) strcasecmp);
+    else
+	Top = splay_splay(user, Top, (SPLAYCMP *) strcmp);
     /* Top=splay_splay(user,Top,(SPLAYCMP *)dumping_strcmp); */
     debug(28, 7) ("aclMatchUser: returning %d,Top is %p, Top->data is %s\n",
 	!splayLastResult, Top, (Top ? Top->data : "Unavailable"));
@@ -1171,11 +1182,9 @@ aclCacheMatchFlush(dlink_list * cache)
     }
 }
 
-/* aclMatchProxyAuth can return four exit codes:
- * 0 : Authenticated OK, Authorisation for this ACL failed. 
- * 1 : Authenticated OK, Authorisation OK.
- * -1 : send data to an external authenticator
- * -2 : send data to the client
+/* aclMatchProxyAuth can return two exit codes:
+ * 0 : Authorisation for this ACL failed. (Did not match)
+ * 1 : Authorisation OK. (Matched)
  */
 static int
 aclMatchProxyAuth(void *data, http_hdr_type headertype,
@@ -1183,9 +1192,6 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
     squid_acl acltype)
 {
     /* checklist is used to register user name when identified, nothing else */
-    const char *proxy_auth;
-    /* consistent parameters ? */
-    assert(auth_user_request == checklist->auth_user_request);
 
     /* General program flow in proxy_auth acls
      * 1. Consistency checks: are we getting sensible data
@@ -1194,147 +1200,108 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
      *     username
      */
 
-    assert(headertype != 0);
-    proxy_auth = httpHeaderGetStr(&checklist->request->header, headertype);
+    /* for completeness */
+    authenticateAuthUserRequestLock(auth_user_request);
 
-    if (checklist->conn == NULL) {
-	debug(28, 1) ("aclMatchProxyAuth: no connection data, cannot process authentication\n");
-	/*
-	 * deny access: clientreadrequest requires conn data, and it is always
-	 * compiled in so we should have it too.
-	 */
-	return 0;
-    }
-    /*
-     * a note on proxy_auth logix here:
-     * proxy_auth==NULL -> unauthenticated request || already authenticated connection
-     * so we test for an authenticated connection when we recieve no authentication
-     * header.
-     */
-    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(auth_user_request ? auth_user_request : checklist->conn->auth_user_request)))
-	|| (checklist->conn->auth_type == AUTH_BROKEN)) {
-	/* no header or authentication failed/got corrupted - restart */
-	checklist->conn->auth_type = AUTH_UNKNOWN;
-	debug(28, 4) ("aclMatchProxyAuth: broken auth or no proxy_auth header. Requesting auth header.\n");
-	/* something wrong with the AUTH credentials. Force a new attempt */
-	checklist->auth_user_request = NULL;
-	checklist->conn->auth_user_request = NULL;
-	if (auth_user_request) {
-	    /* unlock the ACL lock */
-	    authenticateAuthUserRequestUnlock(auth_user_request);
-	}
-	return -2;
-    }
-    /* we have a proxy auth header and as far as we know this connection has
-     * not had bungled connection oriented authentication happen on it. */
-    debug(28, 9) ("aclMatchProxyAuth: header %s.\n", proxy_auth);
-    if (auth_user_request == NULL) {
-	debug(28, 9) ("aclMatchProxyAuth: This is a new request on FD:%d\n",
-	    checklist->conn->fd);
-	if ((!checklist->request->auth_user_request)
-	    && (checklist->conn->auth_type == AUTH_UNKNOWN)) {
-	    /* beginning of a new request check */
-	    debug(28, 4) ("aclMatchProxyAuth: no connection authentication type\n");
-	    if (!authenticateValidateUser(auth_user_request =
-		    authenticateGetAuthUser(proxy_auth))) {
-		/* the decode might have left a username for logging, or a message to
-		 * the user */
-		if (authenticateUserRequestUsername(auth_user_request)) {
-		    /* lock the user for the request structure link */
-		    authenticateAuthUserRequestLock(auth_user_request);
-		    checklist->request->auth_user_request = auth_user_request;
-		    /* unlock the ACL reference. */
-		    authenticateAuthUserRequestUnlock(auth_user_request);
-		}
-		return -2;
-	    }
-	    /* the user_request comes prelocked for the caller to GetAuthUser (us) */
-	} else if (checklist->request->auth_user_request) {
-	    auth_user_request = checklist->request->auth_user_request;
-	    /* lock the user request for this ACL processing */
-	    authenticateAuthUserRequestLock(auth_user_request);
-	} else {
-	    if (checklist->conn->auth_user_request != NULL) {
-		auth_user_request = checklist->conn->auth_user_request;
-		/* lock the user request for this ACL processing */
-		authenticateAuthUserRequestLock(auth_user_request);
-	    } else {
-		/* failed connection based authentication */
-		debug(28, 4) ("aclMatchProxyAuth: Auth user request %d conn-auth user request %d conn type %d authentication failed.\n",
-		    auth_user_request, checklist->conn->auth_user_request,
-		    checklist->conn->auth_type);
-		return -2;
-	    }
-	}
-    }
-    /* Clear the reference in the checklist */
-    checklist->auth_user_request = NULL;
-    if (!authenticateUserAuthenticated(auth_user_request)) {
-	/* User not logged in. Log them in */
-	authenticateAuthUserRequestSetIp(auth_user_request,
-	    checklist->src_addr);
-	authenticateAuthenticateUser(auth_user_request, checklist->request,
-	    checklist->conn, headertype);
-	switch (authenticateDirection(auth_user_request)) {
-	case 1:
-	    /* this ACL check is finished. Unlock. */
-	    authenticateAuthUserRequestUnlock(auth_user_request);
-	    return -2;
-	case -1:
-	    /* we are partway through authentication within squid
-	     * store the auth_user for the callback to here */
-	    checklist->auth_user_request = auth_user_request;
-	    /* we will be called back here. Do not Unlock */
-	    return -1;
-	case -2:
-	    /* this ACL check is finished. Unlock. */
-	    authenticateAuthUserRequestUnlock(auth_user_request);
-	    return -2;
-	}			/* on 0 the authentication is finished - fallthrough */
-	/* See of user authentication failed for some reason */
-	if (!authenticateUserAuthenticated(auth_user_request)) {
-	    if ((!checklist->rfc931[0]) &&
-		(authenticateUserRequestUsername(auth_user_request))) {
-		if (!checklist->request->auth_user_request) {
-		    /* lock the user for the request structure link */
-		    authenticateAuthUserRequestLock(auth_user_request);
-		    checklist->request->auth_user_request = auth_user_request;
-		}
-	    }
-	    /* this ACL check is finished. Unlock. */
-	    authenticateAuthUserRequestUnlock(auth_user_request);
-	    return -2;
-
-	}
-    }
-    /* User authenticated ok */
+    /* consistent parameters ? */
     assert(authenticateUserAuthenticated(auth_user_request));
-
-    /* copy username to request for logging on client-side */
-    /* the credentials are correct at this point */
-    if (!checklist->request->auth_user_request) {
-	/* lock the user for the request structure link */
-	authenticateAuthUserRequestLock(auth_user_request);
-	checklist->request->auth_user_request = auth_user_request;
-    }
-    if (authenticateCheckAuthUserIP(checklist->src_addr, auth_user_request)) {
-	/* Once the match is completed we have finished with the
-	 * auth_user structure */
-	/* this ACL check completed */
-	authenticateAuthUserRequestUnlock(auth_user_request);
-	/* check to see if we have matched the user-acl before */
-	return aclCacheMatchAcl(&auth_user_request->auth_user->
-	    proxy_match_cache, acltype, data,
-	    authenticateUserRequestUsername(auth_user_request));
-    } else {
-	debug(28, 1) ("XXX authenticateCheckAuthUserIP returned 0, somebody "
-	    "make sure the username gets logged to access.log.\n");
-	debug(28, 1) ("XXX if it works, tell developers to remove this "
-	    "message\n");
-    }
-    /* this acl check completed */
+    /* this ACL check completed */
     authenticateAuthUserRequestUnlock(auth_user_request);
-    return 0;
+    /* check to see if we have matched the user-acl before */
+    return aclCacheMatchAcl(&auth_user_request->auth_user->
+	proxy_match_cache, acltype, data,
+	authenticateUserRequestUsername(auth_user_request));
+}
+
+CBDATA_TYPE(acl_user_ip_data);
+
+void
+aclParseUserMaxIP(void *data)
+{
+    acl_user_ip_data **acldata = data;
+    char *t = NULL;
+    CBDATA_INIT_TYPE(acl_user_ip_data);
+    if (*acldata) {
+	debug(28, 1) ("Attempting to alter already set User max IP acl\n");
+	return;
+    }
+    *acldata = cbdataAlloc(acl_user_ip_data);
+    if ((t = strtokFile())) {
+	debug(28, 5) ("aclParseUserMaxIP: First token is %s\n", t);
+	if (strcmp("-s", t) == 0) {
+	    debug(28, 5) ("aclParseUserMaxIP: Going strict\n");
+	    (*acldata)->flags.strict = 1;
+	} else {
+	    (*acldata)->max = atoi(t);
+	    debug(28, 5) ("aclParseUserMaxIP: Max IP address's %d\n", (*acldata)->max);
+	}
+    } else
+	fatal("aclParseUserMaxIP: Malformed ACL %d\n");
+}
+
+void
+aclDestroyUserMaxIP(void *data)
+{
+    acl_user_ip_data **acldata = data;
+    if (*acldata)
+	cbdataFree(*acldata);
+    *acldata = NULL;
+}
+
+wordlist *
+aclDumpUserMaxIP(void *data)
+{
+    acl_user_ip_data *acldata = data;
+    wordlist *W = NULL;
+    char buf[128];
+    if (acldata->flags.strict)
+	wordlistAdd(&W, "-s");
+    snprintf(buf, sizeof(buf), "%d", acldata->max);
+    wordlistAdd(&W, buf);
+    return W;
+}
+
+/* aclMatchUserMaxIP - check for users logging in from multiple IP's 
+ * 0 : No match
+ * 1 : Match 
+ */
+int
+aclMatchUserMaxIP(void *data, auth_user_request_t * auth_user_request,
+    struct in_addr src_addr)
+{
+/*
+ * > the logic for flush the ip list when the limit is hit vs keep it sorted in most recent access order and just drop the oldest one off is currently undecided
+ */
+    acl_user_ip_data *acldata = data;
+
+    if (authenticateAuthUserRequestIPCount(auth_user_request) <= acldata->max)
+	return 0;
+
+    /* this is a match */
+    if (acldata->flags.strict) {
+	/* simply deny access - the user name is already associated with
+	 * the request 
+	 */
+	/* remove _this_ ip, as it is the culprit for going over the limit */
+	authenticateAuthUserRequestRemoveIp(auth_user_request, src_addr);
+	debug(28, 4) ("aclMatchUserMaxIP: Denying access in strict mode\n");
+    } else {
+	/* non-strict - remove some/all of the cached entries 
+	 * ie to allow the user to move machines easily
+	 */
+	authenticateAuthUserRequestClearIp(auth_user_request);
+	debug(28, 4) ("aclMatchUserMaxIP: Denying access in non-strict mode - flushing the user ip cache\n");
+    }
+    /* We had reports about the username being lost when denying due to 
+     * IP limits. That should be fixed in the new lazy-proxy code, but
+     * This note note is a reminder!
+     */
+    debug(28, 1) ("XXX aclMatchUserMaxIP returned 0, somebody "
+	"make sure the username gets logged to access.log.\n");
+    debug(28, 1) ("XXX if it works, tell developers to remove this "
+	"message\n");
+
+    return 1;
 }
 
 static void
@@ -1443,7 +1410,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     char *esc_buf;
     const char *header;
     const char *browser;
-    int k;
+    int k, ti;
     http_hdr_type headertype;
     if (!ae)
 	return 0;
@@ -1602,6 +1569,8 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	/* NOTREACHED */
     case ACL_PROXY_AUTH:
     case ACL_PROXY_AUTH_REGEX:
+    case ACL_MAX_USER_IP:
+	/* ALL authentication predicated ACL's live here */
 	if (NULL == r) {
 	    return -1;
 	} else if (!r->flags.accelerated) {
@@ -1619,9 +1588,46 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	    return -1;
 #endif
 	}
+	/* get authed here */
+	if ((ti = authenticateAuthenticate(&checklist->auth_user_request, headertype, checklist->request, checklist->conn, checklist->src_addr)) != AUTH_AUTHENTICATED) {
+	    switch (ti) {
+	    case 0:
+		/* Authenticated but not Authorised for this ACL */
+		debug(28, 4) ("aclMatchAcl: returning  0 user authenticated but not authorised.\n");
+		return 0;
+	    case 1:
+		fatal("AUTH_AUTHENTICATED == 1\n");
+		break;
+	    case -1:
+		/* Send data to the helper */
+		debug(28, 4) ("aclMatchAcl: returning 0 sending authentication challenge.\n");
+		checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_NEEDED;
+		return 0;
+	    case -2:
+		/* Send a challenge to the client */
+		debug(28, 4) ("aclMatchAcl: returning 0 sending credentials to helper.\n");
+		checklist->state[ACL_PROXY_AUTH] = ACL_PROXY_AUTH_NEEDED;
+		return 0;
+	    }
+	}
+	/* then, switch on type again to do the correct match routine :> */
+	switch (ae->type) {
+	case ACL_PROXY_AUTH:
+	case ACL_PROXY_AUTH_REGEX:
+	    ti = aclMatchProxyAuth(ae->data, headertype,
+		checklist->auth_user_request, checklist, ae->type);
+	    break;
+	case ACL_MAX_USER_IP:
+	    ti = aclMatchUserMaxIP(ae->data, checklist->auth_user_request,
+		checklist->src_addr);
+	    break;
+	default:
+	    /* Keep GCC happy */
+	    break;
+	}
+	checklist->auth_user_request = NULL;
 	/* Check the credentials */
-	switch (aclMatchProxyAuth(ae->data, headertype,
-		checklist->auth_user_request, checklist, ae->type)) {
+	switch (ti) {
 	case 0:
 	    debug(28, 4) ("aclMatchAcl: returning  0 user authenticated but not authorised.\n");
 	    /* Authenticated but not Authorised for this ACL */
@@ -1631,20 +1637,11 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	    /* Authenticated and Authorised for this ACL */
 	    return 1;
 	case -2:
-	    debug(28, 4) ("aclMatchAcl: returning 0 sending authentication challenge.\n");
-	    /* Authentication credentials invalid or missing. */
-	    /* Or partway through NTLM handshake. A proxy_Authenticate header
-	     * gets sent to the client. */
-	    checklist->state[ACL_PROXY_AUTH] = ACL_PROXY_AUTH_NEEDED;
-	    return 0;
 	case -1:
-	    debug(28, 4) ("aclMatchAcl: returning 0 sending credentials to helper.\n");
-	    /*
-	     * we need to validate the password
-	     */
-	    checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_NEEDED;
-	    return 0;
+	    fatal("Invalid response from match routine\n");
+	    break;
 	}
+
 	/* NOTREACHED */
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
@@ -1919,12 +1916,11 @@ aclLookupProxyAuthDone(void *data, char *result)
     checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_DONE;
     if (result != NULL)
 	fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
-    /* state info check */
-    assert(checklist->conn != NULL);
     auth_user_request = checklist->auth_user_request;
-    if (!authenticateValidateUser(auth_user_request)) {
+    if (!authenticateValidateUser(auth_user_request) || checklist->conn == NULL) {
 	/* credentials could not be checked either way
 	 * restart the whole process */
+	/* OR the connection was closed, there's no way to continue */
 	checklist->conn->auth_user_request = NULL;
 	checklist->conn->auth_type = AUTH_BROKEN;
 	checklist->auth_user_request = NULL;
@@ -2079,6 +2075,9 @@ aclDestroyAcls(acl ** head)
 #endif
 	case ACL_MAXCONN:
 	    intlistDestroy((intlist **) & a->data);
+	    break;
+	case ACL_MAX_USER_IP:
+	    aclDestroyUserMaxIP(&a->data);
 	    break;
 	case ACL_URL_PORT:
 	case ACL_MY_PORT:
@@ -2417,6 +2416,8 @@ aclDumpGeneric(const acl * a)
     case ACL_MAXCONN:
     case ACL_DST_ASN:
 	return aclDumpIntlistList(a->data);
+    case ACL_MAX_USER_IP:
+	return aclDumpUserMaxIP(a->data);
     case ACL_URL_PORT:
     case ACL_MY_PORT:
 	return aclDumpIntRangeList(a->data);
