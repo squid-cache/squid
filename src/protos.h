@@ -209,7 +209,7 @@ extern void gopherStart(StoreEntry *, int fd);
 extern int gopherCachable(const char *);
 
 
-extern void whoisStart(request_t * req, StoreEntry *, int fd);
+extern void whoisStart(FwdState *, int fd);
 
 extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
 extern void hash_join(hash_table *, hash_link *);
