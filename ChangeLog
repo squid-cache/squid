@@ -61,6 +61,15 @@ Changes to squid-1.2.beta23 (June 22, 1998):
 	- Modified configure to allow using pre-installed libdlmalloc.a
 	  (Masashi Fujita).
 	- Fixed cachemgr 'objects' implementation.
+	- Changed refreshCheck() algorithm.   For cached objects, we
+	  now check, in the following order:
+		* request max-age
+		* response Expires (if present)
+		* refresh_pattern max-age
+		* response Last-Modified compared to refresh_pattern
+		  LM-factor (only if Last-Modified is present)
+		* refresh_pattern min-age
+	- Changed Copyrights.
 
 Changes to squid-1.2.beta22 (June 1, 1998):
 
