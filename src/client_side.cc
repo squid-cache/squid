@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.158 1997/11/24 22:32:36 wessels Exp $
+ * $Id: client_side.cc,v 1.159 1997/11/28 08:04:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -54,7 +54,7 @@ static void CheckQuickAbort(clientHttpRequest *);
 #if CHECK_FAILURE_IS_BROKE
 static void checkFailureRatio(log_type, hier_code);
 #endif
-static void clientProcessMISS(int, clientHttpRequest *);
+static void clientProcessMiss(int, clientHttpRequest *);
 static void clientAppendReplyHeader(char *, const char *, size_t *, size_t);
 size_t clientBuildReplyHeader(clientHttpRequest *, char *, size_t *, char *, size_t);
 static clientHttpRequest *parseHttpRequest(ConnStateData *, method_t *, int *, char **, size_t *);
@@ -65,11 +65,11 @@ static int checkAccelOnly(clientHttpRequest *);
 static ERCB clientErrorComplete;
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
-static void icpParseRequestHeaders(clientHttpRequest *);
-static void icpProcessRequest(int, clientHttpRequest *);
+static void clientParseRequestHeaders(clientHttpRequest *);
+static void clientProcessRequest(int, clientHttpRequest *);
 static char *clientConstructProxyAuthReply(clientHttpRequest * http);
-
-
+static int clientCachable(clientHttpRequest * http);
+static int clientHierarchical(clientHttpRequest * http);
 
 static int
 checkAccelOnly(clientHttpRequest * http)
@@ -235,19 +235,19 @@ clientRedirectDone(void *data, char *result)
 	http->request = requestLink(new_request);
 	urlCanonical(http->request, http->url);
     }
-    icpParseRequestHeaders(http);
+    clientParseRequestHeaders(http);
     fd_note(fd, http->url);
-    icpProcessRequest(fd, http);
+    clientProcessRequest(fd, http);
 }
 
 void
-icpProcessExpired(int fd, void *data)
+clientProcessExpired(int fd, void *data)
 {
     clientHttpRequest *http = data;
     char *url = http->url;
     StoreEntry *entry = NULL;
 
-    debug(33, 3) ("icpProcessExpired: FD %d '%s'\n", fd, http->url);
+    debug(33, 3) ("clientProcessExpired: FD %d '%s'\n", fd, http->url);
 
     EBIT_SET(http->request->flags, REQ_REFRESH);
     http->old_entry = http->entry;
@@ -260,7 +260,7 @@ icpProcessExpired(int fd, void *data)
     storeClientListAdd(http->old_entry, http);
 
     entry->lastmod = http->old_entry->lastmod;
-    debug(33, 5) ("icpProcessExpired: setting lmt = %d\n",
+    debug(33, 5) ("clientProcessExpired: setting lmt = %d\n",
 	entry->lastmod);
 
     entry->refcount++;		/* EXPIRED CASE */
@@ -591,7 +591,7 @@ connStateFree(int fd, void *data)
 }
 
 static void
-icpParseRequestHeaders(clientHttpRequest * http)
+clientParseRequestHeaders(clientHttpRequest * http)
 {
     request_t *request = http->request;
     char *request_hdr = request->headers;
@@ -648,10 +648,20 @@ icpParseRequestHeaders(clientHttpRequest * http)
 	if ((t = mime_get_header(request_hdr, "Max-Forwards")))
 	    request->max_forwards = atoi(t);
     }
+    if (clientCachable(http))
+	EBIT_SET(request->flags, REQ_CACHABLE);
+    if (clientHierarchical(http))
+	EBIT_SET(request->flags, REQ_HIERARCHICAL);
+    debug(12, 5) ("clientParseRequestHeaders: REQ_NOCACHE = %s\n",
+	EBIT_TEST(request->flags, REQ_NOCACHE) ? "SET" : "NOT SET");
+    debug(12, 5) ("clientParseRequestHeaders: REQ_CACHABLE = %s\n",
+	EBIT_TEST(request->flags, REQ_CACHABLE) ? "SET" : "NOT SET");
+    debug(12, 5) ("clientParseRequestHeaders: REQ_HIERARCHICAL = %s\n",
+	EBIT_TEST(request->flags, REQ_HIERARCHICAL) ? "SET" : "NOT SET");
 }
 
 static int
-icpCachable(clientHttpRequest * http)
+clientCachable(clientHttpRequest * http)
 {
     const char *url = http->url;
     request_t *req = http->request;
@@ -682,7 +692,7 @@ icpCachable(clientHttpRequest * http)
 
 /* Return true if we can query our neighbors for this object */
 static int
-icpHierarchical(clientHttpRequest * http)
+clientHierarchical(clientHttpRequest * http)
 {
     const char *url = http->url;
     request_t *request = http->request;
@@ -832,7 +842,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     } else {
 	/* swap in failure */
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
-	clientProcessMISS(http->conn->fd, http);
+	clientProcessMiss(http->conn->fd, http);
     }
 }
 
@@ -1015,13 +1025,13 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	debug(12, 1) ("icpGetHeadersForIMS: storeClientCopy failed for '%s'\n",
 	    storeKeyText(entry->key));
 	put_free_4k_page(buf);
-	clientProcessMISS(fd, http);
+	clientProcessMiss(fd, http);
 	return;
     }
     if (mem->reply->code == 0) {
 	if (entry->mem_status == IN_MEMORY) {
 	    put_free_4k_page(buf);
-	    clientProcessMISS(fd, http);
+	    clientProcessMiss(fd, http);
 	    return;
 	}
 	/* All headers are not yet available, wait for more data */
@@ -1040,7 +1050,7 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
      * problem with ICP.  We will return a HIT for any public, cached
      * object.  This includes other responses like 301, 410, as coded in
      * http.c.  It is Bad(tm) to return UDP_HIT and then, if the reply
-     * code is not 200, hand off to clientProcessMISS(), which may disallow
+     * code is not 200, hand off to clientProcessMiss(), which may disallow
      * the request based on 'miss_access' rules.  Alternatively, we might
      * consider requiring returning UDP_HIT only for 200's.  This
      * problably means an entry->flag bit, which would be lost during
@@ -1053,7 +1063,7 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	debug(12, 4) ("icpGetHeadersForIMS: Reply code %d!=200\n",
 	    mem->reply->code);
 	put_free_4k_page(buf);
-	clientProcessMISS(fd, http);
+	clientProcessMiss(fd, http);
 	return;
     }
     +
@@ -1108,30 +1118,79 @@ clientShortWriteComplete(int fd, char *bufnotused, size_t size, int flag, void *
 	comm_close(fd);
 }
 
-/*
- * Below, we check whether the object is a hit or a miss.  If it's a hit,
- * we check whether the object is still valid or whether it is a MISS_TTL.
- */
+static log_type
+clientProcessRequest2(clientHttpRequest * http)
+{
+    const request_t *r = http->request;
+    const cache_key *key = storeKeyPublic(http->url, r->method);
+    StoreEntry *e;
+    if ((e = http->entry = storeGet(key)) == NULL) {
+	/* this object isn't in the cache */
+	return LOG_TCP_MISS;
+    } else if (EBIT_TEST(e->flag, ENTRY_SPECIAL)) {
+	if (e->mem_status == IN_MEMORY)
+	    return LOG_TCP_MEM_HIT;
+	else
+	    return LOG_TCP_HIT;
+    } else if (!storeEntryValidToSend(e)) {
+	storeRelease(e);
+	http->entry = NULL;
+	return LOG_TCP_MISS;
+    } else if (EBIT_TEST(r->flags, REQ_NOCACHE)) {
+	/* NOCACHE should always eject a negative cached object */
+	if (EBIT_TEST(e->flag, ENTRY_NEGCACHED))
+	    storeRelease(e);
+	/* NOCACHE+IMS should not eject a valid object */
+	else if (EBIT_TEST(r->flags, REQ_IMS))
+	    (void) 0;
+	/* Request-Range should not eject a valid object */
+	else if (EBIT_TEST(r->flags, REQ_RANGE))
+	    (void) 0;
+	else
+	    storeRelease(e);
+	ipcacheReleaseInvalid(r->host);
+	http->entry = NULL;
+	return LOG_TCP_CLIENT_REFRESH;
+    } else if (checkNegativeHit(e)) {
+	return LOG_TCP_NEGATIVE_HIT;
+    } else if (refreshCheck(e, r, 0)) {
+	/* The object is in the cache, but it needs to be validated.  Use
+	 * LOG_TCP_REFRESH_MISS for the time being, maybe change it to
+	 * _HIT later in icpHandleIMSReply() */
+	if (r->protocol == PROTO_HTTP)
+	    return LOG_TCP_REFRESH_MISS;
+	else
+	    return LOG_TCP_MISS;	/* XXX zoinks */
+    } else if (EBIT_TEST(r->flags, REQ_IMS)) {
+	/* User-initiated IMS request for something we think is valid */
+	return LOG_TCP_IMS_MISS;
+    } else if (e->mem_status == IN_MEMORY) {
+	return LOG_TCP_MEM_HIT;
+    } else {
+	return LOG_TCP_HIT;
+    }
+}
+
 static void
-icpProcessRequest(int fd, clientHttpRequest * http)
+clientProcessRequest(int fd, clientHttpRequest * http)
 {
     char *url = http->url;
-    const cache_key *pubkey;
     StoreEntry *entry = NULL;
-    request_t *request = http->request;
+    request_t *r = http->request;
     char *reply;
-    debug(12, 4) ("icpProcessRequest: %s '%s'\n",
-	RequestMethodStr[http->request->method],
+    debug(12, 4) ("clientProcessRequest: %s '%s'\n",
+	RequestMethodStr[r->method],
 	url);
-    if (http->request->method == METHOD_CONNECT) {
+    switch (r->method) {
+    case METHOD_CONNECT:
 	http->log_type = LOG_TCP_MISS;
-	sslStart(fd, url, http->request, &http->out.size);
+	sslStart(fd, url, r, &http->out.size);
 	return;
-    } else if (request->method == METHOD_PURGE) {
+    case METHOD_PURGE:
 	clientPurgeRequest(http);
 	return;
-    } else if (request->method == METHOD_TRACE) {
-	if (request->max_forwards == 0) {
+    case METHOD_TRACE:
+	if (r->max_forwards == 0) {
 	    reply = clientConstructTraceEcho(http);
 	    comm_write(fd,
 		xstrdup(reply),
@@ -1142,87 +1201,23 @@ icpProcessRequest(int fd, clientHttpRequest * http)
 	    return;
 	}
 	/* yes, continue */
-    } else if (request->method != METHOD_GET) {
+	break;
+    case METHOD_POST:
 	http->log_type = LOG_TCP_MISS;
-	passStart(fd, url, http->request, &http->out.size);
+	passStart(fd, url, r, &http->out.size);
 	return;
+    default:
+	http->log_type = clientProcessRequest2(http);
+	break;
     }
-    if (icpCachable(http))
-	EBIT_SET(request->flags, REQ_CACHABLE);
-    if (icpHierarchical(http))
-	EBIT_SET(request->flags, REQ_HIERARCHICAL);
-    debug(12, 5) ("icpProcessRequest: REQ_NOCACHE = %s\n",
-	EBIT_TEST(request->flags, REQ_NOCACHE) ? "SET" : "NOT SET");
-    debug(12, 5) ("icpProcessRequest: REQ_CACHABLE = %s\n",
-	EBIT_TEST(request->flags, REQ_CACHABLE) ? "SET" : "NOT SET");
-    debug(12, 5) ("icpProcessRequest: REQ_HIERARCHICAL = %s\n",
-	EBIT_TEST(request->flags, REQ_HIERARCHICAL) ? "SET" : "NOT SET");
-
-    /* NOTE on HEAD requests: We currently don't cache HEAD reqeusts
-     * at all, so look for the corresponding GET object, or just go
-     * directly. The only way to get a TCP_HIT on a HEAD reqeust is
-     * if someone already did a GET.  Maybe we should turn HEAD
-     * misses into full GET's?  */
-    if (http->request->method == METHOD_HEAD)
-	pubkey = storeKeyPublic(http->url, METHOD_GET);
-    else
-	pubkey = storeKeyPublic(http->url, http->request->method);
-
-    if ((entry = storeGet(pubkey)) == NULL) {
-	/* this object isn't in the cache */
-	http->log_type = LOG_TCP_MISS;
-    } else if (EBIT_TEST(entry->flag, ENTRY_SPECIAL)) {
-	if (entry->mem_status == IN_MEMORY)
-	    http->log_type = LOG_TCP_MEM_HIT;
-	else
-	    http->log_type = LOG_TCP_HIT;
-    } else if (!storeEntryValidToSend(entry)) {
-	http->log_type = LOG_TCP_MISS;
-	storeRelease(entry);
-	entry = NULL;
-    } else if (EBIT_TEST(request->flags, REQ_NOCACHE)) {
-	/* NOCACHE should always eject a negative cached object */
-	if (EBIT_TEST(entry->flag, ENTRY_NEGCACHED))
-	    storeRelease(entry);
-	/* NOCACHE+IMS should not eject a valid object */
-	else if (EBIT_TEST(request->flags, REQ_IMS))
-	    (void) 0;
-	/* Request-Range should not eject a valid object */
-	else if (EBIT_TEST(request->flags, REQ_RANGE))
-	    (void) 0;
-	else
-	    storeRelease(entry);
-	ipcacheReleaseInvalid(http->request->host);
-	entry = NULL;
-	http->log_type = LOG_TCP_CLIENT_REFRESH;
-    } else if (checkNegativeHit(entry)) {
-	http->log_type = LOG_TCP_NEGATIVE_HIT;
-    } else if (refreshCheck(entry, request, 0)) {
-	/* The object is in the cache, but it needs to be validated.  Use
-	 * LOG_TCP_REFRESH_MISS for the time being, maybe change it to
-	 * _HIT later in icpHandleIMSReply() */
-	if (request->protocol == PROTO_HTTP)
-	    http->log_type = LOG_TCP_REFRESH_MISS;
-	else
-	    http->log_type = LOG_TCP_MISS;	/* XXX zoinks */
-    } else if (EBIT_TEST(request->flags, REQ_IMS)) {
-	/* User-initiated IMS request for something we think is valid */
-	http->log_type = LOG_TCP_IMS_MISS;
-    } else {
-	if (entry->mem_status == IN_MEMORY)
-	    http->log_type = LOG_TCP_MEM_HIT;
-	else
-	    http->log_type = LOG_TCP_HIT;
-    }
-    debug(12, 4) ("icpProcessRequest: %s for '%s'\n",
+    debug(12, 4) ("clientProcessRequest: %s for '%s'\n",
 	log_tags[http->log_type],
 	http->url);
-    if (entry) {
+    if ((entry = http->entry) != NULL) {
 	storeLockObject(entry);
 	storeCreateMemObject(entry, http->url, http->log_url);
 	storeClientListAdd(entry, http);
     }
-    http->entry = entry;	/* Save a reference to the object */
     http->out.offset = 0;
     switch (http->log_type) {
     case LOG_TCP_HIT:
@@ -1247,10 +1242,10 @@ icpProcessRequest(int fd, clientHttpRequest * http)
 	    http);
 	break;
     case LOG_TCP_REFRESH_MISS:
-	icpProcessExpired(fd, http);
+	clientProcessExpired(fd, http);
 	break;
     default:
-	clientProcessMISS(fd, http);
+	clientProcessMiss(fd, http);
 	break;
     }
 }
@@ -1259,7 +1254,7 @@ icpProcessRequest(int fd, clientHttpRequest * http)
  * Prepare to fetch the object as it's a cache miss of some kind.
  */
 static void
-clientProcessMISS(int fd, clientHttpRequest * http)
+clientProcessMiss(int fd, clientHttpRequest * http)
 {
     char *url = http->url;
     char *request_hdr = http->request->headers;
@@ -1267,9 +1262,9 @@ clientProcessMISS(int fd, clientHttpRequest * http)
     aclCheck_t ch;
     int answer;
     ErrorState *err = NULL;
-    debug(12, 4) ("clientProcessMISS: '%s %s'\n",
+    debug(12, 4) ("clientProcessMiss: '%s %s'\n",
 	RequestMethodStr[http->request->method], url);
-    debug(12, 10) ("clientProcessMISS: request_hdr:\n%s\n", request_hdr);
+    debug(12, 10) ("clientProcessMiss: request_hdr:\n%s\n", request_hdr);
 
     /* Check if this host is allowed to fetch MISSES from us */
     memset(&ch, '\0', sizeof(aclCheck_t));
