@@ -1,4 +1,8 @@
-Changes to squid-1.1.7 (February @@@, 1997):
+Changes to squid-1.2.alpha1 ():
+
+	- Unified peer selection algorithm.
+
+Changes to squid-1.1.7 (February 25 1997):
 
 	- Fixed urlParse to leave trailing slashes on FTP URLs.  Although
 	  stripping the slashes offers a slight hit rate increase, it

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.65 1997/02/20 23:54:13 wessels Exp $
+#  $Id: Makefile.in,v 1.66 1997/02/25 19:18:19 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -101,6 +101,7 @@ OBJS	 	= \
 		net_db.o \
 		objcache.o \
 		pass.o \
+		peer_select.o \
 		proto.o \
 		redirect.o \
 		refresh.o \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.95 1997/02/23 09:02:21 wessels Exp $
+ * $Id: squid.h,v 1.96 1997/02/25 19:18:24 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -300,6 +300,7 @@ typedef int (*QS) (const void *, const void *);
 #include "client_db.h"
 #include "objcache.h"
 #include "refresh.h"
+#include "peer_select.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"
