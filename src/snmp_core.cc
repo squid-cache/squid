@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.49 2001/05/27 23:24:44 hno Exp $
+ * $Id: snmp_core.cc,v 1.50 2001/05/27 23:37:51 hno Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -73,7 +73,6 @@ static oid_ParseFn *snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, s
 static oid_ParseFn *snmpTreeGet(oid * Current, snint CurrentLen);
 static mib_tree_entry *snmpTreeEntry(oid entry, snint len, mib_tree_entry * current);
 static mib_tree_entry *snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current);
-static oid *snmpOidDup(oid * A, snint ALen);
 static void snmpSnmplibDebug(int lvl, char *buf);
 
 
@@ -1007,6 +1006,7 @@ snmpCreateOid(va_alist)
     return (new_oid);
 }
 
+#if UNUSED_CODE
 /*
  * Allocate space for, and copy, an OID.  Returns new oid.
  */
@@ -1017,6 +1017,7 @@ snmpOidDup(oid * A, snint ALen)
     xmemcpy(Ans, A, (sizeof(oid) * ALen));
     return Ans;
 }
+#endif
 
 /*
  * Debug calls, prints out the OID for debugging purposes.
