@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.55 2001/01/12 00:37:20 wessels Exp $
+ * $Id: refresh.cc,v 1.56 2001/07/12 19:40:32 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -339,7 +339,7 @@ refreshIsCachable(const StoreEntry * entry)
     if (entry->mem_obj == NULL)
 	/* no mem_obj? */
 	return 1;
-    if (entry->mem_obj->reply)
+    if (entry->mem_obj->reply == NULL)
 	/* no reply? */
 	return 1;
     if (entry->mem_obj->reply->content_length == 0)
