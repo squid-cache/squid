@@ -25,6 +25,7 @@
 
 #include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
 
 int RFCNB_errno = 0;
 int RFCNB_saved_errno = 0;
