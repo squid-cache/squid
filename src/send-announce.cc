@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.28 1997/02/04 17:50:46 wessels Exp $
+ * $Id: send-announce.cc,v 1.29 1997/02/26 19:46:20 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -72,7 +72,7 @@ send_announce(void *unused)
     l = strlen(sndbuf);
 
     if ((file = Config.Announce.file)) {
-	fd = file_open(file, NULL, O_RDONLY);
+	fd = file_open(file, NULL, O_RDONLY, NULL, NULL);
 	if (fd > -1 && (n = read(fd, sndbuf + l, BUFSIZ - l - 1)) > 0) {
 	    l += n;
 	    sndbuf[l] = '\0';

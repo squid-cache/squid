@@ -1,5 +1,5 @@
 /*
- * $Id: peer_select.cc,v 1.1 1997/02/26 03:08:52 wessels Exp $
+ * $Id: peer_select.cc,v 1.2 1997/02/26 19:46:19 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -141,15 +141,15 @@ peerSelect(int fd, request_t * request, StoreEntry * entry)
     peer *p;
     hier_code code;
     int direct = peerSelectDirect(request);
-    debug(44,3,"peerSelect: '%s'\n", entry->url);
+    debug(44, 3, "peerSelect: '%s'\n", entry->url);
     if (direct == DIRECT_YES) {
-        debug(44,3,"peerSelect: direct == DIRECT_YES --> HIER_DIRECT\n");
+	debug(44, 3, "peerSelect: direct == DIRECT_YES --> HIER_DIRECT\n");
 	hierarchyNote(request, HIER_DIRECT, 0, request->host);
 	protoStart(fd, entry, NULL, request);
 	return;
     }
     if (peerSelectIcpPing(request, direct, entry)) {
-        debug(44,3,"peerSelect: Doing ICP pings\n");
+	debug(44, 3, "peerSelect: Doing ICP pings\n");
 	/* call neighborUdpPing and start timeout routine */
 	if (neighborsUdpPing(request, entry)) {
 	    entry->ping_status = PING_WAITING;
@@ -163,8 +163,8 @@ peerSelect(int fd, request_t * request, StoreEntry * entry)
 	debug_trap("peerSelect: neighborsUdpPing returned 0");
     }
     if ((p = peerGetSomeParent(request, &code))) {
-        debug(44,3,"peerSelect: Got some parent %s/%s\n",
-		hier_strings[code], p->host);
+	debug(44, 3, "peerSelect: Got some parent %s/%s\n",
+	    hier_strings[code], p->host);
 	hierarchyNote(request, code, 0, p->host);
 	protoStart(fd, entry, p, request);
     }

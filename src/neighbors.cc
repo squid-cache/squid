@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.123 1997/02/25 19:18:21 wessels Exp $
+ * $Id: neighbors.cc,v 1.124 1997/02/26 19:46:18 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -121,7 +121,7 @@ static u_short echo_port;
 
 static int NLateReplies = 0;
 static int NObjectsQueried = 0;
-static int MulticastFudgeFactor = 0;
+static int MulticastFudgeFactor = 1;
 
 static struct {
     int n;
@@ -221,6 +221,8 @@ peerAllowedToUse(const peer * e, request_t * request)
     const struct _acl_list *a = NULL;
     aclCheck_t checklist;
 
+    if (request == NULL)
+	fatal_dump("peerAllowedToUse: NULL request");
     if (BIT_TEST(request->flags, REQ_NOCACHE))
 	if (neighborType(e, request) == PEER_SIBLING)
 	    return 0;
@@ -433,7 +435,7 @@ neighbors_open(int fd)
 }
 
 int
-neighborsUdpPing(request_t *request, StoreEntry *entry)
+neighborsUdpPing(request_t * request, StoreEntry * entry)
 {
     char *host = request->host;
     char *url = entry->url;
@@ -447,6 +449,7 @@ neighborsUdpPing(request_t *request, StoreEntry *entry)
     icp_common_t *query;
     int ICP_queries_sent = 0;
     int ICP_mcasts_sent = 0;
+    int peers_pinged = 0;
 
     if (Peers.peers_head == NULL)
 	return 0;
@@ -471,6 +474,7 @@ neighborsUdpPing(request_t *request, StoreEntry *entry)
 	debug(15, 5, "neighborsUdpPing: Peer %s\n", e->host);
 	if (!peerWouldBePinged(e, request))
 	    continue;		/* next peer */
+	peers_pinged++;
 	debug(15, 4, "neighborsUdpPing: pinging peer %s for '%s'\n",
 	    e->host, url);
 	if (e->type == PEER_MULTICAST)
@@ -532,7 +536,7 @@ neighborsUdpPing(request_t *request, StoreEntry *entry)
     if (Peers.n) {
 	if (Config.sourcePing) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
-	} else if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP))) {
+	} else if ((ia = ipcache_gethostbyname(host, 0))) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping: to %s for '%s'\n",
 		host, url);
 	    echo_hdr.reqnum = reqnum;
@@ -559,7 +563,7 @@ neighborsUdpPing(request_t *request, StoreEntry *entry)
 	NObjectsQueried++;
     if ((ICP_mcasts_sent))
 	mem->e_pings_n_pings += MulticastFudgeFactor;
-    return mem->e_pings_n_pings;
+    return peers_pinged;
 }
 
 static void
@@ -639,7 +643,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	neighborCountIgnored(e, opcode);
 	return;
     }
-    if (BIT_TEST(e->options, NEIGHBOR_MCAST_RESPONDER)) {
+    if (e && BIT_TEST(e->options, NEIGHBOR_MCAST_RESPONDER)) {
 	if (!peerHTTPOkay(e, mem->request)) {
 	    neighborCountIgnored(e, opcode);
 	    return;

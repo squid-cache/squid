@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.96 1997/02/24 23:43:15 wessels Exp $
+ * $Id: tools.cc,v 1.97 1997/02/26 19:46:26 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -122,6 +122,9 @@ Thanks!\n"
 
 static void fatal_common _PARAMS((const char *));
 static void mail_warranty _PARAMS((void));
+#if USE_ASYNC_IO
+static void safeunlinkComplete _PARAMS((void *data, int retcode, int errcode));
+#endif
 
 #ifdef _SQUID_SOLARIS_
 int getrusage _PARAMS((int, struct rusage *));
@@ -459,15 +462,32 @@ getMyHostname(void)
     return host;
 }
 
-int
+void
 safeunlink(const char *s, int quiet)
 {
-    int err;
-    if ((err = unlink(s)) < 0)
-	if (!quiet)
-	    debug(50, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
-    return (err);
+#if USE_ASYNC_IO
+    aioUnlink(s,
+	quiet ? NULL : safeunlinkComplete,
+	quiet ? NULL : xstrdup(s));
+#else
+    if (unlink(s) < 0 && !quiet)
+	debug(50, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
+#endif
 }
+
+#if USE_ASYNC_IO
+static void
+safeunlinkComplete(void *data, int retcode, int errcode)
+{
+    char *s = data;
+    if (retcode < 0) {
+	errno = errcode;
+	debug(50, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
+	errno = 0;
+    }
+    xfree(s);
+}
+#endif
 
 /* leave a privilegied section. (Give up any privilegies)
  * Routines that need privilegies can rap themselves in enter_suid()

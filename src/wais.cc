@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.59 1996/11/30 23:09:57 wessels Exp $
+ * $Id: wais.cc,v 1.60 1997/02/26 19:46:28 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -120,6 +120,7 @@ typedef struct {
 } WaisStateData;
 
 static int waisStateFree _PARAMS((int, WaisStateData *));
+static void waisStartComplete _PARAMS((void *, int));
 static void waisReadReplyTimeout _PARAMS((int, WaisStateData *));
 static void waisLifetimeExpire _PARAMS((int, WaisStateData *));
 static void waisReadReply _PARAMS((int, WaisStateData *));
@@ -230,7 +231,7 @@ waisReadReply(int fd, WaisStateData * waisState)
     }
     if (len < 0) {
 	debug(50, 1, "waisReadReply: FD %d: read failure: %s.\n", xstrerror());
-	if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    commSetSelect(fd, COMM_SELECT_READ,
@@ -333,7 +334,6 @@ waisStart(int unusedfd, const char *url, method_t method, char *mime_hdr, StoreE
 {
     WaisStateData *waisState = NULL;
     int fd;
-
     debug(24, 3, "waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
     debug(24, 4, "            header: %s\n", mime_hdr);
     if (!Config.Wais.relayHost) {
@@ -353,13 +353,23 @@ waisStart(int unusedfd, const char *url, method_t method, char *mime_hdr, StoreE
 	return COMM_ERROR;
     }
     waisState = xcalloc(1, sizeof(WaisStateData));
-    storeLockObject(waisState->entry = entry, NULL, NULL);
     waisState->method = method;
     waisState->relayhost = Config.Wais.relayHost;
     waisState->relayport = Config.Wais.relayPort;
     waisState->mime_hdr = mime_hdr;
     waisState->fd = fd;
+    waisState->entry = entry;
     xstrncpy(waisState->request, url, MAX_URL);
+    storeLockObject(entry, waisStartComplete, waisState);
+    return COMM_OK;
+}
+
+
+static void
+waisStartComplete(void *data, int status)
+{
+    WaisStateData *waisState = (WaisStateData *) data;
+
     comm_add_close_handler(waisState->fd,
 	(PF) waisStateFree,
 	(void *) waisState);
@@ -367,7 +377,6 @@ waisStart(int unusedfd, const char *url, method_t method, char *mime_hdr, StoreE
 	waisState->fd,
 	waisConnect,
 	waisState);
-    return COMM_OK;
 }
 
 

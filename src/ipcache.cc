@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.106 1997/02/24 23:42:00 wessels Exp $
+ * $Id: ipcache.cc,v 1.107 1997/02/26 19:46:17 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -572,6 +572,13 @@ ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
     debug(14, 5, "ipcache_dnsHandleRead: Result from DNS ID %d (%d bytes)\n",
 	dnsData->id, len);
     if (len <= 0) {
+	if (len < 0 && (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)) {
+	    commSetSelect(fd,
+		COMM_SELECT_READ,
+		(PF) ipcache_dnsHandleRead,
+		dnsData, 0);
+	    return 0;
+	}
 	debug(14, dnsData->flags & DNS_FLAG_CLOSING ? 5 : 1,
 	    "FD %d: Connection from DNSSERVER #%d is closed, disabling\n",
 	    fd, dnsData->id);
