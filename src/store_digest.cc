@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.7 1998/04/14 15:16:26 rousskov Exp $
+ * $Id: store_digest.cc,v 1.8 1998/04/22 05:54:28 rousskov Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -303,7 +303,7 @@ storeDigestCalcCap()
     if (cap > hi_cap)
 	cap = hi_cap;
     cap = 1 + (int) (StoreDigestFudgeFactor * cap);
-    return cap;
+    return hi_cap;
 }
 
 /* returns true if we actually resized the digest */
