@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.37 1996/08/19 22:44:56 wessels Exp $
+ * $Id: squid.h,v 1.38 1996/08/26 19:15:41 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -255,7 +255,6 @@ extern void shut_down _PARAMS((int));
 
 extern time_t squid_starttime;	/* main.c */
 extern time_t next_cleaning;	/* main.c */
-extern int catch_signals;	/* main.c */
 extern int do_reuse;		/* main.c */
 extern int theHttpConnection;	/* main.c */
 extern int theInIcpConnection;	/* main.c */
@@ -268,6 +267,8 @@ extern int opt_dns_tests;	/* main.c */
 extern int opt_foreground_rebuild;	/* main.c */
 extern int opt_zap_disk_store;	/* main.c */
 extern int opt_syslog_enable;	/* main.c */
+extern int opt_catch_signals;	/* main.c */
+extern int opt_no_ipcache;	/* main.c */
 extern int vhost_mode;		/* main.c */
 extern char version_string[];	/* main.c */
 extern char appname[];		/* main.c */
