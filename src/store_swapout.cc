@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.54 1999/06/24 20:20:17 wessels Exp $
+ * $Id: store_swapout.cc,v 1.55 1999/06/25 23:37:34 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -199,11 +199,10 @@ storeSwapOutFileClose(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     assert(mem != NULL);
     debug(20, 3) ("storeSwapOutFileClose: %s\n", storeKeyText(e->key));
+    debug(20, 3) ("storeSwapOutFileClose: sio = %p\n", mem->swapout.sio);
     if (mem->swapout.sio == NULL)
 	return;
     storeClose(mem->swapout.sio);
-    mem->swapout.sio = NULL;
-    storeUnlockObject(e);
 }
 
 static void
@@ -217,7 +216,6 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
     if (errflag) {
 	debug(20, 1) ("storeSwapOutFileClosed: swapfile %08X, errflag=%d\n\t%s\n",
 	    e->swap_file_number, errflag, xstrerror());
-	storeDirMapBitReset(e->swap_file_number);
 	/*
 	 * yuck.  don't clear the filemap bit for some errors so that
 	 * we don't try re-using it over and over
@@ -229,9 +227,9 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
 	    storeDirConfigure();
 	    storeConfigure();
 	}
+	storeReleaseRequest(e);
 	e->swap_file_number = -1;
 	e->swap_status = SWAPOUT_NONE;
-	return;
     } else {
 	/* swapping complete */
 	debug(20, 3) ("storeSwapOutFileClosed: SwapOut complete: '%s' to %08X\n",
@@ -247,7 +245,10 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
 	    storeDirSwapLog(e, SWAP_LOG_ADD);
 	}
     }
+    debug(20, 3) ("storeSwapOutFileClosed: %s:%d\n", __FILE__, __LINE__);
+    mem->swapout.sio = NULL;
     cbdataUnlock(sio);
+    storeUnlockObject(e);
 }
 
 /*

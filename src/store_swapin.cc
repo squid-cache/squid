@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.18 1999/05/03 21:55:13 wessels Exp $
+ * $Id: store_swapin.cc,v 1.19 1999/06/25 23:37:33 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -55,8 +55,15 @@ storeSwapInStart(StoreEntry * e)
     }
     debug(20, 3) ("storeSwapInStart: called for %08X %s \n",
 	e->swap_file_number, storeKeyText(e->key));
-    assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
-    assert(e->swap_file_number >= 0);
+    if (e->swap_status != SWAPOUT_WRITING && e->swap_status != SWAPOUT_DONE) {
+	debug(20, 1) ("storeSwapInStart: bad swap_status (%s)\n",
+	    swapStatusStr[e->swap_status]);
+	return NULL;
+    }
+    if (e->swap_file_number < 0) {
+	debug(20, 1) ("storeSwapInStart: swap_file_number < 0\n");
+	return NULL;
+    }
     assert(e->mem_obj != NULL);
     debug(20, 3) ("storeSwapInStart: Opening fileno %08X\n",
 	e->swap_file_number);
