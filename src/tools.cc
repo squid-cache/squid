@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.178 1999/05/04 21:58:45 wessels Exp $
+ * $Id: tools.cc,v 1.179 1999/05/19 19:57:56 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -807,6 +807,8 @@ gb_to_str(const gb_t * g)
     static int call_id = 0;
     double value = gb_to_double(g);
     char *buf = bufs[call_id++];
+    if (call_id >= max_cc_calls)
+	call_id = 0;
     /* select format */
     if (value < 1e9)
 	snprintf(buf, sizeof(GbBuf), "%.2f MB", value / 1e6);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.95 1999/05/04 21:58:37 wessels Exp $
+ * $Id: ssl.cc,v 1.96 1999/05/19 19:57:50 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -529,8 +529,10 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
     }
 #if DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since ssl is nice and simple */
-    if (g && g->options.no_delay)
+    if (g && g->options.no_delay && sslState->delay_id) {
+	delayUnregisterDelayIdPtr(&sslState->delay_id);
 	sslState->delay_id = 0;
+    }
 #endif
     commConnectStart(sslState->server.fd,
 	sslState->host,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.455 1999/05/11 18:51:47 wessels Exp $
+ * $Id: client_side.cc,v 1.456 1999/05/19 19:57:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1336,6 +1336,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    debug(33, 4) ("clientCacheHit: Reply code %d != 200\n",
 		mem->reply->sline.status);
 	    memFree(buf, MEM_CLIENT_SOCK_BUF);
+	    http->log_type = LOG_TCP_MISS;
 	    clientProcessMiss(http);
 	} else if (modifiedSince(e, http->request)) {
 	    http->log_type = LOG_TCP_IMS_HIT;
