@@ -1,3 +1,7 @@
+Changes to squid-1.novm.4 (January XX, 1996):
+
+	- Fixed storeRegister loop in icpHandleIMSReply().
+
 Changes to squid-1.1.4 (January 13, 1997):
 
 	- Created USE_GNUREGEX define to fix forcing GNU regex on 
