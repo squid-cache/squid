@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.42 1996/04/12 21:15:33 wessels Exp $ */
+/* $Id: http.cc,v 1.43 1996/04/12 21:22:55 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -461,16 +461,15 @@ static void httpSendRequest(fd, data)
 	    ybuf = NULL;
 	}
     }
-
     /* Add Forwarded: header */
-    ybuf = get_free_4k_page(__FILE__,__LINE__);
+    ybuf = get_free_4k_page(__FILE__, __LINE__);
     if (data->entry->mem_obj)
 	cfd = data->entry->mem_obj->fd_of_first_client;
     if (cfd < 0) {
-        sprintf(ybuf, "Forwarded: by http://%s:%d/\r\n",
+	sprintf(ybuf, "Forwarded: by http://%s:%d/\r\n",
 	    getMyHostname(), getAsciiPortNum());
     } else {
-        sprintf(ybuf, "Forwarded: by http://%s:%d/ for %s\r\n",
+	sprintf(ybuf, "Forwarded: by http://%s:%d/ for %s\r\n",
 	    getMyHostname(), getAsciiPortNum(), fd_table[cfd].ipaddr);
     }
     strcat(buf, ybuf);

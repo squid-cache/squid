@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.22 1996/04/12 21:14:39 wessels Exp $ */
+/* $Id: comm.cc,v 1.23 1996/04/12 21:22:54 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -921,10 +921,10 @@ static int examine_select(readfds, writefds, exceptfds)
 		    fd_table[fd].write_handler,
 		    fd_table[fd].except_handler);
 		if ((tmp = fd_table[fd].lifetime_handler)) {
-		    debug(5,0,"examine_select: Calling Lifetime Handler\n");
+		    debug(5, 0, "examine_select: Calling Lifetime Handler\n");
 		    tmp(fd, fd_table[fd].lifetime_data);
 		} else if ((tmp = fd_table[fd].timeout_handler)) {
-		    debug(5,0,"examine_select: Calling Timeout Handler\n");
+		    debug(5, 0, "examine_select: Calling Timeout Handler\n");
 		    tmp(fd, fd_table[fd].timeout_data);
 		}
 		fd_table[fd].lifetime_handler = 0;
@@ -986,7 +986,7 @@ static void checkLifetimes()
     for (fd = 0; fd < max_fd; fd++) {
 	lft = comm_get_fd_lifetime(fd);
 	if ((lft != -1) && (lft < cached_curtime)) {
-            if (fd_table[fd].lifetime_handler != NULL) {
+	    if (fd_table[fd].lifetime_handler != NULL) {
 		use_lifetime_handler = 1;
 		tmp_local = fd_table[fd].lifetime_handler;
 		fd_table[fd].lifetime_handler = 0;	/* reset it */

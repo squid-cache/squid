@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.47 1996/04/12 21:22:16 wessels Exp $ */
-#ident "$Id: store.cc,v 1.47 1996/04/12 21:22:16 wessels Exp $"
+/* $Id: store.cc,v 1.48 1996/04/12 21:22:58 wessels Exp $ */
+#ident "$Id: store.cc,v 1.48 1996/04/12 21:22:58 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -490,10 +490,10 @@ StoreEntry *storeGet(url)
 
 unsigned int getKeyCounter()
 {
-	static unsigned int key_counter = 0;
-	if (++key_counter == 0)
-	   ++key_counter;
-	return key_counter;
+    static unsigned int key_counter = 0;
+    if (++key_counter == 0)
+	++key_counter;
+    return key_counter;
 }
 
 char *storeGeneratePrivateKey(url, method, num)
@@ -2657,24 +2657,23 @@ void storeRotateLog()
     static char to[MAXPATHLEN];
 
     if ((fname = getStoreLogFile()) == NULL)
-        return;
+	return;
 
     debug(20, 1, "storeRotateLog: Rotating.\n");
 
     /* Rotate numbers 0 through N up one */
     for (i = getLogfileRotateNumber(); i > 1;) {
-        i--;
-        sprintf(from, "%s.%d", fname, i - 1);
-        sprintf(to, "%s.%d", fname, i);
-        rename(from, to);
+	i--;
+	sprintf(from, "%s.%d", fname, i - 1);
+	sprintf(to, "%s.%d", fname, i);
+	rename(from, to);
     }
     /* Rotate the current log to .0 */
     if (getLogfileRotateNumber() > 0) {
-        sprintf(to, "%s.%d", fname, 0);
-        rename(fname, to);
+	sprintf(to, "%s.%d", fname, 0);
+	rename(fname, to);
     }
     if (storelog_fd > -1)
-    	file_close(storelog_fd);
+	file_close(storelog_fd);
     storelog_fd = file_open(getStoreLogFile(), NULL, O_WRONLY | O_APPEND | O_CREAT);
 }
-
