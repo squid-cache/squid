@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.107 2000/05/02 18:35:09 hno Exp $
+ * $Id: peer_select.cc,v 1.108 2000/05/02 18:37:59 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -209,6 +209,8 @@ peerCheckNetdbDirect(ps_state * psstate)
     int myrtt;
     int myhops;
     if (p == NULL)
+	return 0;
+    if (psstate->direct == DIRECT_NO)
 	return 0;
     myrtt = netdbHostRtt(psstate->request->host);
     debug(44, 3) ("peerCheckNetdbDirect: MY RTT = %d msec\n", myrtt);
