@@ -24,6 +24,23 @@
 	- Changed URN menu output to be sorted.
 	- Added fast select(2) timeouts when using ASYNC_IO.
 	- Added ARP ACL support for Linux (David Luyer).
+        - Added binary http headers to requests
+        - request_t objects are now created and destroyed in a consistent way
+        - Fixed cache control printf bug
+        - Added a lot of new http header ids
+        - Improved Connection: header handling; now both Connection and
+          Proxy-Connection headers are checked
+        - Connection request header is now handled correctly regardless
+          of its position and the number of entries
+        - Better handling of persistent connection "clues" in HTTP headers
+        - Removed handling of "length=" directive in IMS headers;
+          the directive is not in the HTTP/1.1 standard;
+          standing by for objections
+        - allowed/denied headers are now checked using bit masks instead of
+          strcmp loops
+        - removed Uri: from allowed headers; Uri is deprecated in RFC 2068
+	- removed processing of Request-Range header (no in specs?)
+	
 
 Changes to squid-1.2.beta20 (April 24, 1998):
 

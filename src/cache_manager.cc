@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.11 1998/05/04 21:43:09 wessels Exp $
+ * $Id: cache_manager.cc,v 1.12 1998/05/11 18:44:32 rousskov Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -125,9 +125,10 @@ static void
 cachemgrParseHeaders(cachemgrStateData * mgr, const request_t * request)
 {
     const char *basic_cookie;	/* base 64 _decoded_ user:passwd pair */
-    const char *authField;
     const char *passwd_del;
     assert(mgr && request);
+#if OLD_CODE
+    const char *authField;
     /* this parsing will go away when hdrs are added to request_t @?@ */
     basic_cookie = mime_get_auth(request->headers, "Basic", &authField);
     debug(16, 9) ("cachemgrParseHeaders: got auth: '%s'\n", authField ? authField : "<none>");
@@ -137,8 +138,13 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const request_t * request)
 	debug(16, 1) ("cachemgrParseHeaders: unknown auth format in '%s'\n", authField);
 	return;
     }
+#else
+    basic_cookie = httpHeaderGetAuth(&request->header, HDR_AUTHORIZATION, "Basic");
+    if (!basic_cookie)
+	return;
+#endif
     if (!(passwd_del = strchr(basic_cookie, ':'))) {
-	debug(16, 1) ("cachemgrParseHeaders: unknown basic_cookie '%s' format in '%s'\n", basic_cookie, authField);
+	debug(16, 1) ("cachemgrParseHeaders: unknown basic_cookie format '%s'\n", basic_cookie);
 	return;
     }
     /* found user:password pair, reset old values */

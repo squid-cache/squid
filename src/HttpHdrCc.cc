@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.9 1998/03/23 22:17:46 wessels Exp $
+ * $Id: HttpHdrCc.cc,v 1.10 1998/05/11 18:44:25 rousskov Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -51,7 +51,7 @@ HttpHeaderFieldInfo *CcFieldsInfo = NULL;
 static int CcParsedCount = 0;
 
 /* local prototypes */
-static int httpHdrCcParseInit(HttpHdrCc * cc, const char *str);
+static int httpHdrCcParseInit(HttpHdrCc * cc, const String *str);
 
 
 /* module initialization */
@@ -81,7 +81,7 @@ httpHdrCcCreate()
 
 /* creates an cc object from a 0-terminating string */
 HttpHdrCc *
-httpHdrCcParseCreate(const char *str)
+httpHdrCcParseCreate(const String *str)
 {
     HttpHdrCc *cc = httpHdrCcCreate();
     if (!httpHdrCcParseInit(cc, str)) {
@@ -93,7 +93,7 @@ httpHdrCcParseCreate(const char *str)
 
 /* parses a 0-terminating string and inits cc */
 static int
-httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
+httpHdrCcParseInit(HttpHdrCc * cc, const String *str)
 {
     const char *item;
     const char *p;		/* '=' parameter */
@@ -112,12 +112,12 @@ httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
 	type = httpHeaderIdByName(item, ilen,
 	    CcFieldsInfo, CC_ENUM_END);
 	if (type < 0) {
-	    debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, str);
+	    debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, strBuf(*str));
 	    type = CC_OTHER;
 	}
 	if (EBIT_TEST(cc->mask, type)) {
 	    if (type != CC_OTHER)
-		debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
+		debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, strBuf(*str));
 	    CcFieldsInfo[type].stat.repCount++;
 	    continue;
 	}
@@ -164,13 +164,13 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     http_hdr_cc_type flag;
     int pcount = 0;
     assert(cc && p);
-    if (cc->max_age >= 0) {
-	packerPrintf(p, "max-age=%d", (int) cc->max_age);
-	pcount++;
-    }
     for (flag = 0; flag < CC_ENUM_END; flag++) {
+	if (flag == CC_MAX_AGE && cc->max_age >= 0) {
+	    packerPrintf(p, "max-age=%d", (int) cc->max_age);
+	    pcount++;
+	} else
 	if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
-	    packerPrintf(p, pcount ? ", %s" : "%s", CcFieldsInfo[flag].name);
+	    packerPrintf(p, (pcount ? ", %s" : "%s"), strBuf(CcFieldsInfo[flag].name));
 	    pcount++;
 	}
     }
@@ -183,6 +183,18 @@ httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc)
     if (cc->max_age < 0)
 	cc->max_age = new_cc->max_age;
     cc->mask |= new_cc->mask;
+}
+
+/* negative max_age will clean old max_Age setting */
+void
+httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age)
+{
+    assert(cc);
+    cc->max_age = max_age;
+    if (max_age >= 0)
+	EBIT_SET(cc->mask, CC_MAX_AGE);
+    else
+	EBIT_CLR(cc->mask, CC_MAX_AGE);
 }
 
 void

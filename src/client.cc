@@ -1,7 +1,6 @@
 
-
 /*
- * $Id: client.cc,v 1.65 1998/04/24 07:09:29 wessels Exp $
+ * $Id: client.cc,v 1.66 1998/05/11 18:44:33 rousskov Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -141,7 +140,7 @@ usage(const char *progname)
 	"    -t count     Trace count cache-hops\n"
 	"    -g count     Ping mode, \"count\" iterations (0 to loop until interrupted).\n"
 	"    -I interval  Ping interval in seconds (default 1 second).\n"
-	"    -H 'string'  Extra headers to send. Use quotes to protect new lines.\n",
+	"    -H 'string'  Extra headers to send. Use '\\n' for new lines.\n",
 	progname, CACHE_HTTP_PORT);
     exit(1);
 }
@@ -288,9 +287,9 @@ main(int argc, char *argv[])
     }
     if (keep_alive) {
 	if (port != 80)
-	    snprintf(buf, BUFSIZ, "Proxy-Connection: Keep-Alive\r\n");
+	    snprintf(buf, BUFSIZ, "Proxy-Connection: keep-alive\r\n");
 	else
-	    snprintf(buf, BUFSIZ, "Connection: Keep-Alive\r\n");
+	    snprintf(buf, BUFSIZ, "Connection: keep-alive\r\n");
 	strcat(msg, buf);
     }
     strcat(msg, extra_hdrs);

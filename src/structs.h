@@ -465,7 +465,7 @@ struct _hash_table {
 /* http status line */
 struct _HttpStatusLine {
     /* public, read only */
-    double version;
+    float version;
     const char *reason;		/* points to a _constant_ string (default or supplied), never free()d */
     http_status status;
 };
@@ -1095,8 +1095,20 @@ struct _request_t {
     int imslen;
     int max_forwards;
     struct in_addr client_addr;
+#if OLD_CODE
     char *headers;
     size_t headers_sz;
+#else
+#if TEST_STAGE_CODE
+    const char *prefix;
+    const size_t prefix_sz;
+    const HttpHeader header;
+#else
+    char *prefix;
+    size_t prefix_sz;
+    HttpHeader header;
+#endif
+#endif
     char *body;
     size_t body_sz;
     HierarchyLogEntry hier;

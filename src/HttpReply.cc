@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.17 1998/04/27 20:03:56 wessels Exp $
+ * $Id: HttpReply.cc,v 1.18 1998/05/11 18:44:27 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -41,7 +41,6 @@ static void httpReplyHdrCacheClean(HttpReply * rep);
 static int httpReplyParseStep(HttpReply * rep, const char *parse_start, int atEnd);
 static int httpReplyParseError(HttpReply * rep);
 static int httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end);
-static int httpReplyIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);
 
 
 HttpReply *
@@ -270,17 +269,7 @@ httpReplyHdrCacheInit(HttpReply * rep)
 	rep->content_type = StringNull;
     rep->cache_control = httpHeaderGetCc(hdr);
     rep->content_range = httpHeaderGetContRange(hdr);
-    str = httpHeaderGetStr(hdr, HDR_PROXY_CONNECTION);
-    if (NULL == str)
-	str = httpHeaderGetStr(hdr, HDR_CONNECTION);	/* @?@ FIX ME */
-    if (str) {
-	rep->keep_alive = (strcasecmp(str, "Keep-Alive") == 0);
-    } else {
-	if (rep->sline.version >= 1.1)
-	    rep->keep_alive = 1;	/* 1.1+ defaults to keep-alive */
-	else
-	    rep->keep_alive = 0;	/* pre 1.1 default to non-keep-alive */
-    }
+    rep->keep_alive = httpMsgIsPersistent(rep->sline.version, &rep->header);
     /* final adjustments */
     /* The max-age directive takes priority over Expires, check it first */
     if (rep->cache_control && rep->cache_control->max_age >= 0)
@@ -334,12 +323,12 @@ httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
 	rep->pstate++;
     }
     if (rep->pstate == psReadyToParseHeaders) {
-	if (!httpReplyIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
+	if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
 	    if (atEnd)
 		blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
 	    else
 		return 0;
-	}
+        }
 	if (!httpHeaderParse(&rep->header, blk_start, blk_end))
 	    return httpReplyParseError(rep);
 
@@ -351,7 +340,6 @@ httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
     }
     return 1;
 }
-
 
 /* handy: resets and returns -1 */
 static int
@@ -385,8 +373,8 @@ httpReplyIsolateStart(const char **parse_start, const char **blk_start, const ch
 }
 
 /* find end of headers */
-static int
-httpReplyIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end)
+int
+httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end)
 {
     /* adopted with mods from mime_headers_end() */
     const char *p1 = strstr(*parse_start, "\n\r\n");
@@ -402,6 +390,36 @@ httpReplyIsolateHeaders(const char **parse_start, const char **blk_start, const 
 	*blk_start = *parse_start;
 	*blk_end = end + 1;
 	*parse_start = end + (end == p1 ? 3 : 2);
+	return 1;
     }
-    return end != NULL;
+    /* no headers, case 1 */
+    if ((*parse_start)[0] == '\r' && (*parse_start)[1] == '\n') {
+	*blk_start = *parse_start;
+	*blk_end = *blk_start;
+	*parse_start += 2;
+	return 1;
+    }
+    /* no headers, case 2 */
+    if ((*parse_start)[0] == '\n') {
+	/* no headers */
+	*blk_start = *parse_start;
+	*blk_end = *blk_start;
+	*parse_start += 1;
+	return 1;
+    }
+    /* failure */
+    return 0;
+}
+
+/* returns true if connection should be "persistent" after processing this message */
+int
+httpMsgIsPersistent(float http_ver, const HttpHeader *hdr)
+{
+    if (http_ver >= 1.1) {
+	/* for modern versions: persistent if not "close"d */
+	return !httpHeaderHasConnDir(hdr, "close");
+    } else {
+	/* for old versions: persistent if has "keep-alive" */
+	return httpHeaderHasConnDir(hdr, "keep-alive");
+    }
 }

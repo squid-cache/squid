@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.223 1998/05/04 17:13:35 wessels Exp $
+ * $Id: ftp.cc,v 1.224 1998/05/11 18:44:37 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -854,7 +854,7 @@ ftpDataRead(int fd, void *data)
  * Return 0 if something is missing.
  */
 static int
-ftpCheckAuth(FtpStateData * ftpState, char *req_hdr)
+ftpCheckAuth(FtpStateData * ftpState, const HttpHeader *req_hdr)
 {
     char *orig_user;
     const char *auth;
@@ -866,7 +866,11 @@ ftpCheckAuth(FtpStateData * ftpState, char *req_hdr)
     if (ftpState->password[0])
 	return 1;		/* passwd with no name? */
     /* URL has name, but no passwd */
+#if OLD_CODE
     if (!(auth = mime_get_auth(req_hdr, "Basic", NULL)))
+#else
+    if (!(auth = httpHeaderGetAuth(req_hdr, HDR_AUTHORIZATION, "Basic")))
+#endif
 	return 0;		/* need auth header */
     orig_user = xstrdup(ftpState->user);
     ftpLoginParser(auth, ftpState);
@@ -955,7 +959,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     EBIT_SET(ftpState->flags, FTP_REST_SUPPORTED);
     if (ftpState->request->method == METHOD_PUT)
 	EBIT_SET(ftpState->flags, FTP_PUT);
-    if (!ftpCheckAuth(ftpState, request->headers)) {
+    if (!ftpCheckAuth(ftpState, &request->header)) {
 	/* This request is not fully authenticated */
 	if (request->port == 21) {
 	    snprintf(realm, 8192, "ftp %s", ftpState->user);

@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.32 1998/05/09 04:49:12 wessels Exp $
+ * $Id: urn.cc,v 1.33 1998/05/11 18:44:48 rousskov Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -134,8 +134,12 @@ urnStart(request_t * r, StoreEntry * e)
 	errorAppendEntry(e, err);
 	return;
     }
+#if OLD_CODE
     urlres_r->headers = xstrdup("Accept: text/plain\r\n\r\n");
     urlres_r->headers_sz = strlen(urlres_r->headers);
+#else
+    httpRequestSetHeaders(urlres_r, METHOD_GET, urlres, "Accept: text/plain\r\n");
+#endif
     if ((urlres_e = storeGet(k)) == NULL) {
 	urlres_e = storeCreateEntry(urlres, urlres, 0, METHOD_GET);
 	storeClientListAdd(urlres_e, urnState);
