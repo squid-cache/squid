@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.212 1998/08/27 06:28:58 wessels Exp $
+ * $Id: structs.h,v 1.213 1998/08/27 22:01:12 rousskov Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -492,15 +492,15 @@ struct _fde {
     char ipaddr[16];		/* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
     struct {
-	int close_request:1;
-	int write_daemon:1;
-	int closing:1;
-	int socket_eof:1;
-	int nolinger:1;
-	int nonblocking:1;
-	int ipc:1;
+	unsigned int close_request:1;
+	unsigned int write_daemon:1;
+	unsigned int closing:1;
+	unsigned int socket_eof:1;
+	unsigned int nolinger:1;
+	unsigned int nonblocking:1;
+	unsigned int ipc:1;
 #ifdef OPTIMISTIC_IO
-	int calling_io_handler:1;
+	unsigned int calling_io_handler:1;
 #endif
     } flags;
     int bytes_read;
@@ -786,9 +786,9 @@ struct _clientHttpRequest {
     clientHttpRequest *next;
     AccessLogEntry al;
     struct {
-	int accel:1;
-	int internal:1;
-	int done_copying:1;
+	unsigned int accel:1;
+	unsigned int internal:1;
+	unsigned int done_copying:1;
     } flags;
 };
 
@@ -1119,9 +1119,9 @@ struct _store_client {
     StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
     int swapin_fd;
     struct {
-	int disk_io_pending:1;
-	int store_copying:1;
-	int copy_event_pending:1;
+	unsigned int disk_io_pending:1;
+	unsigned int store_copying:1;
+	unsigned int copy_event_pending:1;
     } flags;
     store_client *next;
 #if DELAY_POOLS
@@ -1196,20 +1196,20 @@ struct _SwapDir {
 };
 
 struct _request_flags {
-    int range:1;
-    int nocache:1;
-    int ims:1;
-    int auth:1;
-    int cachable:1;
-    int hierarchical:1;
-    int loopdetect:1;
-    int proxy_keepalive:1;
-    int proxying:1;
-    int refresh:1;
-    int used_proxy_auth:1;
-    int redirected:1;
+    unsigned int range:1;
+    unsigned int nocache:1;
+    unsigned int ims:1;
+    unsigned int auth:1;
+    unsigned int cachable:1;
+    unsigned int hierarchical:1;
+    unsigned int loopdetect:1;
+    unsigned int proxy_keepalive:1;
+    unsigned int proxying:1;
+    unsigned int refresh:1;
+    unsigned int used_proxy_auth:1;
+    unsigned int redirected:1;
 #if HTTP_VIOLATIONS
-    int nocache_hack:1;		/* for changing/ignoring no-cache requests */
+    unsigned int nocache_hack:1;		/* for changing/ignoring no-cache requests */
 #endif
 };
 
