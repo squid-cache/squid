@@ -124,7 +124,7 @@ int Line = 1;
 #define COUNTER	    9
 #define GAUGE	    10
 #define TIMETICKS   11
-#define OPAQUE	    12
+#define SNMP_OPAQUE	    12
 #define NUL	    13
 #define SEQUENCE    14
 #define OF	    15		/* SEQUENCE OF */
@@ -137,7 +137,7 @@ int Line = 1;
 #define NOACCESS    21
 #define STATUS	    22
 #define MANDATORY   23
-#define OPTIONAL    24
+#define SNMP_OPTIONAL    24
 #define OBSOLETE    25
 #define RECOMMENDED 26
 #define PUNCT	    27
@@ -165,9 +165,9 @@ struct tok {
 struct tok tokens[] =
 {
     {"obsolete", sizeof("obsolete") - 1, OBSOLETE},
-    {"Opaque", sizeof("Opaque") - 1, OPAQUE},
+    {"Opaque", sizeof("Opaque") - 1, SNMP_OPAQUE},
     {"recommended", sizeof("recommended") - 1, RECOMMENDED},
-    {"optional", sizeof("optional") - 1, OPTIONAL},
+    {"optional", sizeof("optional") - 1, SNMP_OPTIONAL},
     {"mandatory", sizeof("mandatory") - 1, MANDATORY},
     {"current", sizeof("current") - 1, MANDATORY},
     {"not-accessible", sizeof("not-accessible") - 1, NOACCESS},
@@ -328,7 +328,7 @@ build_translation_table(void)
 	case TIMETICKS:
 	    translation_table[count] = TYPE_TIMETICKS;
 	    break;
-	case OPAQUE:
+	case SNMP_OPAQUE:
 	    translation_table[count] = TYPE_OPAQUE;
 	    break;
 	case NUL:
@@ -844,7 +844,7 @@ parse_objecttype(register FILE *fp, char *name)
     case COUNTER:
     case GAUGE:
     case TIMETICKS:
-    case OPAQUE:
+    case SNMP_OPAQUE:
     case NUL:
     case LABEL:
 	strcpy(syntax, token);
@@ -873,7 +873,7 @@ parse_objecttype(register FILE *fp, char *name)
 	return 0;
     }
     type = get_token(fp, token);
-    if (type != MANDATORY && type != OPTIONAL && type != OBSOLETE && type != RECOMMENDED) {
+    if (type != MANDATORY && type != SNMP_OPTIONAL && type != OBSOLETE && type != RECOMMENDED) {
 	print_error("Bad status", token, type);
 	free_node(np);
 	return 0;
