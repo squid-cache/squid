@@ -852,6 +852,11 @@ extern double gb_to_double(const gb_t *);
 extern const char *gb_to_str(const gb_t *);
 extern void gb_flush(gb_t *);	/* internal, do not use this */
 
+#if USE_HTCP
+extern void htcpInit(void);
+extern void htcpQuery(StoreEntry * e, request_t * req, peer * p);
+#endif
+
 /* String */
 #define strLen(s)     ((const int)(s).len)
 #define strBuf(s)     ((const char*)(s).buf)
