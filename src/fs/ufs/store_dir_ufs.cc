@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.3 2000/05/29 01:54:02 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.4 2000/05/29 03:10:42 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -537,6 +537,15 @@ storeUfsDirRebuildFromSwapLog(void *data)
 	    continue;
 	if (s.op >= SWAP_LOG_MAX)
 	    continue;
+	/*
+	 * BC: during 2.4 development, we changed the way swap file
+	 * numbers are assigned and stored.  The high 16 bits used
+	 * to encode the SD index number.  There used to be a call
+	 * to storeDirProperFileno here that re-assigned the index 
+	 * bits.  Now, for backwards compatibility, we just need
+	 * to mask it off.
+	 */
+	s.swap_filen &= 0x00FFFFFF;
 	debug(20, 3) ("storeUfsDirRebuildFromSwapLog: %s %s %08X\n",
 	    swap_log_op_str[(int) s.op],
 	    storeKeyText(s.key),
