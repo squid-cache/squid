@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.545 2001/08/29 14:57:34 robertc Exp $
+ * $Id: client_side.cc,v 1.546 2001/09/23 22:17:51 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -204,7 +204,7 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     h->sc = storeClientListAdd(e, h);
 #if DELAY_POOLS
-    delaySetStoreClient(h->sc, delayClient(h));
+    delaySetStoreClient(h->sc, delayClient(h->request));
 #endif
     storeClientCopy(h->sc, e, 0, 0, CLIENT_SOCK_SZ,
 	memAllocate(MEM_CLIENT_SOCK_BUF), clientSendMoreData, h);
@@ -385,7 +385,7 @@ clientProcessExpired(void *data)
     http->sc = storeClientListAdd(entry, http);
 #if DELAY_POOLS
     /* delay_id is already set on original store client */
-    delaySetStoreClient(http->sc, delayClient(http));
+    delaySetStoreClient(http->sc, delayClient(http->request));
 #endif
     http->request->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: lastmod %d\n", (int) entry->lastmod);
@@ -1763,7 +1763,7 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
 }
 
 static int
-clientReplyBodyTooLarge(HttpReply * rep, int clen)
+clientReplyBodyTooLarge(HttpReply *rep, int clen)
 {
     if (0 == rep->maxBodySize)
 	return 0;		/* disabled */
@@ -1873,16 +1873,16 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    int rv;
 	    httpReplyBodyBuildSize(http->request, rep, &Config.ReplyBodySize);
 	    if (clientReplyBodyTooLarge(rep, rep->content_length)) {
-		ErrorState *err = errorCon(ERR_TOO_BIG, HTTP_FORBIDDEN);
-		err->request = requestLink(http->request);
-		storeUnregister(http->sc, http->entry, http);
-		http->sc = NULL;
-		storeUnlockObject(http->entry);
-		http->entry = clientCreateStoreEntry(http, http->request->method,
+	    	ErrorState *err = errorCon(ERR_TOO_BIG, HTTP_FORBIDDEN);
+	    	err->request = requestLink(http->request);
+	    	storeUnregister(http->sc, http->entry, http);
+	    	http->sc = NULL;
+	    	storeUnlockObject(http->entry);
+	    	http->entry = clientCreateStoreEntry(http, http->request->method,
 		    null_request_flags);
-		errorAppendEntry(http->entry, err);
-		httpReplyDestroy(rep);
-		return;
+	    	errorAppendEntry(http->entry, err);
+	    	httpReplyDestroy(rep);
+	    return;
 	    }
 	    body_size = size - rep->hdr_sz;
 	    assert(body_size >= 0);
@@ -2308,7 +2308,7 @@ clientProcessRequest(clientHttpRequest * http)
 	http->entry->mem_obj->method = r->method;
 	http->sc = storeClientListAdd(http->entry, http);
 #if DELAY_POOLS
-	delaySetStoreClient(http->sc, delayClient(http));
+	delaySetStoreClient(http->sc, delayClient(r));
 #endif
 	storeClientCopy(http->sc, http->entry,
 	    http->out.offset,
@@ -2719,7 +2719,7 @@ clientReadRequest(int fd, void *data)
 	    conn->in.buf = xrealloc(conn->in.buf, conn->in.size);
 	/* XXX account conn->in.buf */
 	debug(33, 2) ("growing request buffer: offset=%ld size=%ld\n",
-	    (long) conn->in.offset, (long) conn->in.size);
+	      (long) conn->in.offset, (long) conn->in.size);
 	len = conn->in.size - conn->in.offset - 1;
     }
     statCounter.syscalls.sock.reads++;
