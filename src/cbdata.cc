@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.19 1998/03/31 05:37:36 wessels Exp $
+ * $Id: cbdata.cc,v 1.20 1998/05/12 20:16:32 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -137,6 +137,8 @@ cbdataReallyFree(cbdata * c)
     hash_remove_link(htable, (hash_link *) c);
     cbdataCount--;
     xfree(c);
+    if (mem_type == MEM_DONTFREE)
+	return;
     debug(45, 3) ("cbdataReallyFree: Freeing %p\n", p);
     if (mem_type == MEM_NONE)
 	xfree(p);
