@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.221 1997/08/25 05:29:55 wessels Exp $
+ * $Id: cache_cf.cc,v 1.222 1997/08/25 15:55:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -653,7 +653,7 @@ parse_peeracl(void)
 	acl_list **Tail = NULL;
 	acl *a = NULL;
 	if ((p = peerFindByName(host)) == NULL) {
-	    debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
+	    debug(15, 0) ("%s, line %d: No cache_peer '%s'\n",
 		cfg_filename, config_lineno, host);
 	    return;
 	}
@@ -690,7 +690,7 @@ parse_hostdomain(void)
 	domain_ping **L = NULL;
 	peer *p;
 	if ((p = peerFindByName(host)) == NULL) {
-	    debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
+	    debug(15, 0) ("%s, line %d: No cache_peer '%s'\n",
 		cfg_filename, config_lineno, host);
 	    continue;
 	}
@@ -721,7 +721,7 @@ parse_hostdomaintype(void)
 	domain_type **L = NULL;
 	peer *p;
 	if ((p = peerFindByName(host)) == NULL) {
-	    debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
+	    debug(15, 0) ("%s, line %d: No cache_peer '%s'\n",
 		cfg_filename, config_lineno, host);
 	    return;
 	}

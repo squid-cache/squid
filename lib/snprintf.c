@@ -15,7 +15,6 @@
 /* Original RCS tag:
  * Id: snprintf.c,v 1.1 1995/08/19 20:36:09 papowell Exp */
 
-static void dopr();
 static char *end;
 
 #include "config.h"
@@ -61,9 +60,11 @@ XX **NO VARARGS ** XX
 #ifdef HAVE_STDARGS
 int snprintf(char *str, size_t count, const char *fmt,...);
 int vsnprintf(char *str, size_t count, const char *fmt, va_list arg);
+static void dopr(char *, const char *, va_list);
 #else
 int snprintf();
 int vsnprintf();
+static void dopr();
 #endif
 
 int
@@ -120,10 +121,7 @@ static char *output;
 static void dopr_outch(int c);
 
 static void
-dopr(buffer, format, args)
-     char *buffer;
-     char *format;
-     va_list args;
+dopr(char *buffer, const char *format, va_list args)
 {
     int ch;
     long value;

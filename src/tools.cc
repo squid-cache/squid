@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.118 1997/08/25 15:49:04 wessels Exp $
+ * $Id: tools.cc,v 1.119 1997/08/25 15:55:25 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -173,7 +173,7 @@ mail_warranty(void)
 }
 
 static void
-dumpMallocStats()
+dumpMallocStats(void)
 {
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
     struct mstats ms = mstats();

@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.3 1997/07/19 05:01:39 wessels Exp $
+# $Id: Makefile.in,v 1.4 1997/08/25 15:55:20 wessels Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -80,3 +80,6 @@ install-mkdirs:
 
 clean:
 	$(RM) -f $(ICONS)
+
+distclean: clean
+	-rm -f Makefile
