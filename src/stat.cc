@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.117 1997/01/15 18:41:48 wessels Exp $
+ * $Id: stat.cc,v 1.118 1997/01/19 08:10:51 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -761,6 +761,9 @@ info_get(const cacheinfo * obj, StoreEntry * sentry)
 	storeGetSwapSize() >> 10);
     storeAppendPrintf(sentry, "{\tStorage Mem size:\t%d KB}\n",
 	store_mem_size >> 10);
+    if (Config.referenceAge < 0)
+        storeAppendPrintf(sentry, "{\tStorage LRU Expiration Age:\t%d days}\n",
+    	    (int) storeExpiredReferenceAge());
 
 #if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
     storeAppendPrintf(sentry, "{Resource usage for %s:}\n", appname);
