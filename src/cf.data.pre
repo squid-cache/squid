@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.229 2001/10/03 23:00:07 hno Exp $
+# $Id: cf.data.pre,v 1.230 2001/10/03 23:11:05 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2402,6 +2402,10 @@ DEFAULT: none
 DOC_START
 	Appends local domain name to hostnames without any dots in
 	them.  append_domain must begin with a period.
+
+	Be warned that there today is Internet names with no dots in
+	them using only top-domain names, so setting this may
+	cause some Internet sites to become unavailable.
 
 Example:
  append_domain .yourdomain.com
