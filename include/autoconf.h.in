@@ -803,5 +803,11 @@
 /* Enable support for the X-Accelerator-Vary HTTP header */
 #undef X_ACCELERATOR_VARY
 
+/* Keyword used by squid for inlining methods */
+#undef _SQUID_INLINE_
+
+/* Include inline methods into header file */
+#undef _USE_INLINE_
+
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
