@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.137 2000/10/03 22:57:30 wessels Exp $
+ * $Id: fqdncache.cc,v 1.138 2000/10/03 23:01:31 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -208,14 +208,14 @@ fqdncacheParse(const char *inbuf)
     char *token;
     static fqdncache_entry f;
     int ttl;
-    xstrncpy(buf, inbuf, DNS_INBUF_SZ);
-    debug(35, 5) ("fqdncacheParse: parsing: {%s}\n", buf);
     f.expires = squid_curtime;
     f.flags.negcached = 1;
     if (inbuf == NULL) {
 	debug(35, 1) ("fqdncacheParse: Got <NULL> reply\n");
 	return &f;
     }
+    xstrncpy(buf, inbuf, DNS_INBUF_SZ);
+    debug(35, 5) ("fqdncacheParse: parsing: {%s}\n", buf);
     token = strtok(buf, w_space);
     if (NULL == token) {
 	debug(35, 1) ("fqdncacheParse: Got <NULL>, expecting '$name'\n");
