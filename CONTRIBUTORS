@@ -59,7 +59,7 @@ Special thanks go to people who have volunteered their time, effort, and ideas t
 	Max Okumoto <okumoto@ucsd.edu>
 	Pierre-Louis BRENAC <brenacp@esiee.fr>
 	Dale <dale@server.ctam.bitmcnit.bryansk.su>
-
+	Masashi Fujita <objectx@bandit.co.jp>
 
 Development of this caching software is funded by the National Science
 Foundation (grant NCR-9521745).  Paid staff members on the caching
@@ -67,5 +67,6 @@ project are:
 
 	Duane Wessels <wessels@nlanr.net>
 	Kostas Anagnostakis <kostas@nlanr.net>
+	Alex Rousskov <rousskov@nlanr.net>
 	K Claffy <kc@nlanr.net>
 	Hans-Werner Braun <hwb@nlanr.net>
