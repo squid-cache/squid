@@ -35,7 +35,7 @@ extern int aio_write _PARAMS((int, char *, int, off_t, int, aio_result_t *));
 extern int aio_close _PARAMS((int, aio_result_t *));
 extern int aio_stat _PARAMS((const char *, struct stat *, aio_result_t *));
 extern int aio_unlink _PARAMS((const char *, aio_result_t *));
-extern int aio_opendir _PARAMS((void));
+extern int aio_opendir _PARAMS((const char *, aio_result_t *));
 extern aio_result_t *aio_poll_done _PARAMS((void));
 
 
