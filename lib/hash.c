@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.1 1998/08/17 23:01:25 wessels Exp $
+ * $Id: hash.c,v 1.2 1998/08/17 23:26:28 wessels Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -256,7 +256,7 @@ hash_remove_link(hash_table * hid, hash_link * hl)
 	hid->count--;
 	return;
     }
-    fatal("hash_remove_link: could not find entry");
+    assert(0);
 }
 
 /*
