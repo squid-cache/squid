@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.246 2004/10/18 12:20:10 hno Exp $
+ * $Id: ipcache.cc,v 1.247 2004/12/10 00:54:04 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -490,11 +490,13 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 
     if (name == NULL || name[0] == '\0') {
         debug(14, 4) ("ipcache_nbgethostbyname: Invalid name!\n");
+        dns_error_message = "Invalid hostname";
         handler(NULL, handlerData);
         return;
     }
 
     if ((addrs = ipcacheCheckNumeric(name))) {
+        dns_error_message = NULL;
         handler(addrs, handlerData);
         return;
     }
@@ -599,8 +601,11 @@ ipcache_gethostbyname(const char *name, int flags)
     } else {
         IpcacheStats.hits++;
         i->lastref = squid_curtime;
+        dns_error_message = i->error_message;
         return &i->addrs;
     }
+
+    dns_error_message = NULL;
 
     if ((addrs = ipcacheCheckNumeric(name)))
         return addrs;
