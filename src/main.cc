@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.218 1998/02/12 23:35:59 wessels Exp $
+ * $Id: main.cc,v 1.219 1998/02/13 18:26:58 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -167,7 +167,7 @@ mainParseOptions(int argc, char *argv[])
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFNRSVYXa:df:hk:m:su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFNRSVYXa:df:hk:m::su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -231,14 +231,22 @@ mainParseOptions(int argc, char *argv[])
 		usage();
 	    break;
 	case 'm':
+	    if (optarg) {
 #if MALLOC_DBG
-	    malloc_debug_level = atoi(optarg);
-	    /* NOTREACHED */
-	    break;
+		malloc_debug_level = atoi(optarg);
+		/* NOTREACHED */
+		break;
 #else
-	    fatal("Need to add -DMALLOC_DBG when compiling to use -m option");
-	    /* NOTREACHED */
+		fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
+		/* NOTREACHED */
 #endif
+	    } else {
+#if XMALLOC_TRACE
+		xmalloc_trace = !xmalloc_trace;
+#else
+		fatal("Need to configure --enable-xmalloc-debug-trace to use -m option");
+#endif
+	    }
 	case 's':
 	    opt_syslog_enable = 1;
 	    break;
@@ -719,22 +727,34 @@ normal_shutdown(void)
     dumpMallocStats();
     storeLogClose();
     accessLogClose();
-#if PURIFY
+#if PURIFY || XMALLOC_TRACE
     configFreeMemory();
     storeFreeMemory();
     dnsFreeMemory();
     redirectFreeMemory();
-    stmemFreeMemory();
+    /*stmemFreeMemory(); */
     netdbFreeMemory();
     ipcacheFreeMemory();
     fqdncacheFreeMemory();
     asnFreeMemory();
 #endif
+#if WHY_DO_THIS
     file_close(0);
     file_close(1);
     file_close(2);
+#endif
     fdDumpOpen();
     fdFreeMemory();
+#if XMALLOC_TRACE
+    {
+	extern int xmalloc_total;
+	extern void xmalloc_find_leaks(void);
+	extern void xmalloc_dump_map(void);
+	xmalloc_find_leaks();
+	xmalloc_dump_map();
+	debug(1, 0) ("Memory used after shutdown: %d\n", xmalloc_total);
+    }
+#endif
     debug(1, 0) ("Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     fclose(debug_log);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.41 1998/02/06 00:54:59 wessels Exp $
+ * $Id: util.c,v 1.42 1998/02/13 18:26:57 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -175,10 +175,12 @@ malloc_statistics(void (*func) (int, int, void *), void *data)
 
 
 #if XMALLOC_TRACE
-char *xmalloc_file="";
-int xmalloc_line=0;
-char *xmalloc_func="";
-static int xmalloc_count=0;
+char *xmalloc_file = "";
+int xmalloc_line = 0;
+char *xmalloc_func = "";
+static int xmalloc_count = 0;
+int xmalloc_trace = 0;		/* Enable with -m option */
+size_t xmalloc_total = 0;
 #undef xmalloc
 #undef xfree
 #undef xxfree
@@ -190,22 +192,21 @@ static int xmalloc_count=0;
 #if XMALLOC_DEBUG
 #define DBG_ARRY_SZ (1<<10)
 #define DBG_ARRY_BKTS (1<<8)
-static void *malloc_ptrs[DBG_ARRY_BKTS][DBG_ARRY_SZ];
+static void *(*malloc_ptrs)[DBG_ARRY_SZ];
 static int malloc_size[DBG_ARRY_BKTS][DBG_ARRY_SZ];
 #if XMALLOC_TRACE
-static void *malloc_file[DBG_ARRY_BKTS][DBG_ARRY_SZ];
-static int malloc_line[DBG_ARRY_BKTS][DBG_ARRY_SZ];
+static char *malloc_file[DBG_ARRY_BKTS][DBG_ARRY_SZ];
+static short malloc_line[DBG_ARRY_BKTS][DBG_ARRY_SZ];
 static int malloc_count[DBG_ARRY_BKTS][DBG_ARRY_SZ];
 #endif
 static int dbg_initd = 0;
-static int B = 0;
-static int I = 0;
-static void *P;
-static void *Q;
 
 static void
 check_init(void)
 {
+    int B = 0, I = 0;
+    /* calloc the ptrs so that we don't see them when hunting lost memory */
+    malloc_ptrs = calloc(DBG_ARRY_BKTS, sizeof(*malloc_ptrs));
     for (B = 0; B < DBG_ARRY_BKTS; B++) {
 	for (I = 0; I < DBG_ARRY_SZ; I++) {
 	    malloc_ptrs[B][I] = NULL;
@@ -223,6 +224,7 @@ check_init(void)
 static void
 check_free(void *s)
 {
+    int B, I;
     B = (((int) s) >> 4) & 0xFF;
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] != s)
@@ -230,9 +232,9 @@ check_free(void *s)
 	malloc_ptrs[B][I] = NULL;
 	malloc_size[B][I] = 0;
 #if XMALLOC_TRACE
-	    malloc_file[B][I] = NULL;
-	    malloc_line[B][I] = 0;
-	    malloc_count[B][I] = 0;
+	malloc_file[B][I] = NULL;
+	malloc_line[B][I] = 0;
+	malloc_count[B][I] = 0;
 #endif
 	break;
     }
@@ -245,11 +247,13 @@ check_free(void *s)
 static void
 check_malloc(void *p, size_t sz)
 {
+    void *P, *Q;
+    int B, I;
     if (!dbg_initd)
 	check_init();
     B = (((int) p) >> 4) & 0xFF;
     for (I = 0; I < DBG_ARRY_SZ; I++) {
-	if ((P = malloc_ptrs[B][I]) == NULL)
+	if (!(P = malloc_ptrs[B][I]))
 	    continue;
 	Q = P + malloc_size[B][I];
 	if (P <= p && p < Q) {
@@ -259,7 +263,7 @@ check_malloc(void *p, size_t sz)
 	}
     }
     for (I = 0; I < DBG_ARRY_SZ; I++) {
-	if ((P = malloc_ptrs[B][I]))
+	if (malloc_ptrs[B][I])
 	    continue;
 	malloc_ptrs[B][I] = p;
 	malloc_size[B][I] = (int) sz;
@@ -279,6 +283,7 @@ check_malloc(void *p, size_t sz)
 int
 mallocblksize(void *p)
 {
+    int B, I;
     B = (((int) p) >> 4) & 0xFF;
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
@@ -292,6 +297,7 @@ mallocblksize(void *p)
 static char *
 malloc_file_name(void *p)
 {
+    int B, I;
     B = (((int) p) >> 4) & 0xFF;
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
@@ -302,6 +308,7 @@ malloc_file_name(void *p)
 int
 malloc_line_number(void *p)
 {
+    int B, I;
     B = (((int) p) >> 4) & 0xFF;
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
@@ -312,6 +319,7 @@ malloc_line_number(void *p)
 int
 malloc_number(void *p)
 {
+    int B, I;
     B = (((int) p) >> 4) & 0xFF;
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
@@ -320,7 +328,7 @@ malloc_number(void *p)
     return 0;
 }
 static void
-xmalloc_trace(void *p, int sign)
+xmalloc_show_trace(void *p, int sign)
 {
     int statMemoryAccounted();
     static size_t last_total = 0, last_accounted = 0, last_mallinfo = 0;
@@ -328,25 +336,110 @@ xmalloc_trace(void *p, int sign)
     size_t accounted = statMemoryAccounted();
     size_t mi = mp.uordblks + mp.usmblks + mp.hblkhd;
     size_t sz;
-    static size_t total = 0;
     sz = mallocblksize(p) * sign;
-    total += sz;
-    xmalloc_count += sign>0;
-    fprintf(stderr, "%c%8p size=%5d/%d acc=%5d/%d mallinfo=%5d/%d %s:%d %s",
-	sign>0 ? '+':'-',p,
-	(int) total - last_total, (int) total,
-	(int) accounted - last_accounted, (int) accounted,
-	(int) mi - last_mallinfo, (int) mi,
-	xmalloc_file, xmalloc_line, xmalloc_func);
-    if (sign<0)
-	fprintf(stderr," (%d %s:%d)\n",malloc_number(p),malloc_file_name(p),malloc_line_number(p));
-    else
-	fprintf(stderr," %d\n",xmalloc_count);
-    last_total = total;
+    xmalloc_total += sz;
+    xmalloc_count += sign > 0;
+    if (xmalloc_trace) {
+	fprintf(stderr, "%c%8p size=%5d/%d acc=%5d/%d mallinfo=%5d/%d %s:%d %s",
+	    sign > 0 ? '+' : '-', p,
+	    (int) xmalloc_total - last_total, (int) xmalloc_total,
+	    (int) accounted - last_accounted, (int) accounted,
+	    (int) mi - last_mallinfo, (int) mi,
+	    xmalloc_file, xmalloc_line, xmalloc_func);
+	if (sign < 0)
+	    fprintf(stderr, " (%d %s:%d)\n", malloc_number(p), malloc_file_name(p), malloc_line_number(p));
+	else
+	    fprintf(stderr, " %d\n", xmalloc_count);
+    }
+    last_total = xmalloc_total;
     last_accounted = accounted;
     last_mallinfo = mi;
 }
-
+short (*malloc_refs)[DBG_ARRY_SZ];
+char **xmalloc_leak_test;
+#define XMALLOC_LEAK_CHECKED (1<<15)
+#define XMALLOC_LEAK_ALIGN (4)
+static int
+xmalloc_scan_region(void *start, int size)
+{
+    int B, I;
+    char *ptr = start;
+    char *end = ptr + size - XMALLOC_LEAK_ALIGN;
+    int found = 0;
+    while (ptr <= end) {
+	void *p = *(void **) ptr;
+	if (p && p != start) {
+	    B = (((int) p) >> 4) & 0xFF;
+	    for (I = 0; I < DBG_ARRY_SZ; I++) {
+		if (malloc_ptrs[B][I] == p) {
+		    if (!malloc_refs[B][I])
+			found++;
+		    malloc_refs[B][I]++;
+		}
+	    }
+	}
+	ptr += XMALLOC_LEAK_ALIGN;
+    }
+    return found;
+}
+extern void _etext;
+void
+xmalloc_find_leaks(void)
+{
+    int B, I;
+    int found;
+    int leak_sum = 0;
+    fprintf(stderr, "Searching for memory references...\n");
+    malloc_refs = xcalloc(DBG_ARRY_BKTS, sizeof(*malloc_refs));
+    found = xmalloc_scan_region(&_etext, (void *) sbrk(0) - (void *) &_etext);
+    while (found) {
+	found = 0;
+	for (I = 0; I < DBG_ARRY_SZ && !found; I++) {
+	    for (B = 0; B < DBG_ARRY_BKTS; B++) {
+		if (malloc_refs[B][I] > 0) {
+		    malloc_refs[B][I] |= XMALLOC_LEAK_CHECKED;
+		    found += xmalloc_scan_region(malloc_ptrs[B][I],
+			malloc_size[B][I]);
+		}
+	    }
+	}
+    }
+    for (B = 0; B < DBG_ARRY_BKTS; B++) {
+	for (I = 0; I < DBG_ARRY_SZ; I++) {
+	    if (malloc_ptrs[B][I] && malloc_refs[B][I] == 0) {
+		/* Found a leak... */
+		fprintf(stderr, "Leak found: %p", malloc_ptrs[B][I]);
+		fprintf(stderr, " %s", malloc_file[B][I]);
+		fprintf(stderr, ":%d", malloc_line[B][I]);
+		fprintf(stderr, " size %d\n", malloc_size[B][I]);
+		fprintf(stderr, " allocation %d", malloc_count[B][I]);
+		leak_sum += malloc_size[B][I];
+	    }
+	}
+    }
+    if (leak_sum) {
+	fprintf(stderr, "Total leaked memory: %d\n", leak_sum);
+    } else {
+	fprintf(stderr, "No memory leaks detected\n");
+    }
+}
+void
+xmalloc_dump_map(void)
+{
+    int B, I;
+    fprintf(stderr, "----- Memory map ----\n");
+    for (B = 0; B < DBG_ARRY_BKTS; B++) {
+	for (I = 0; I < DBG_ARRY_SZ; I++) {
+	    if (malloc_ptrs[B][I]) {
+		printf("%p %s:%d size %d allocation %d references %d\n",
+		    malloc_ptrs[B][I], malloc_file[B][I], malloc_line[B][I],
+		    malloc_size[B][I], malloc_count[B][I],
+		    malloc_refs[B][I] & (XMALLOC_LEAK_CHECKED - 1));
+	    }
+	}
+    }
+    fprintf(stderr, "----------------------\n");
+}
 #endif /* XMALLOC_TRACE */
 
 /*
@@ -377,7 +470,7 @@ xmalloc(size_t sz)
     malloc_stat(sz);
 #endif
 #if XMALLOC_TRACE
-    xmalloc_trace(p, 1);
+    xmalloc_show_trace(p, 1);
 #endif
     return (p);
 }
@@ -389,7 +482,7 @@ void
 xfree(void *s)
 {
 #if XMALLOC_TRACE
-    xmalloc_trace(s, -1);
+    xmalloc_show_trace(s, -1);
 #endif
 #if XMALLOC_DEBUG
     check_free(s);
@@ -403,7 +496,7 @@ void
 xxfree(void *s)
 {
 #if XMALLOC_TRACE
-    xmalloc_trace(s, -1);
+    xmalloc_show_trace(s, -1);
 #endif
 #if XMALLOC_DEBUG
     check_free(s);
@@ -421,7 +514,7 @@ xrealloc(void *s, size_t sz)
     static void *p;
 
 #if XMALLOC_TRACE
-    xmalloc_trace(s, -1);
+    xmalloc_show_trace(s, -1);
 #endif
 
     if (sz < 1)
@@ -443,7 +536,7 @@ xrealloc(void *s, size_t sz)
     malloc_stat(sz);
 #endif
 #if XMALLOC_TRACE
-    xmalloc_trace(p, 1);
+    xmalloc_show_trace(p, 1);
 #endif
     return (p);
 }
@@ -478,7 +571,7 @@ xcalloc(int n, size_t sz)
     malloc_stat(sz);
 #endif
 #if XMALLOC_TRACE
-    xmalloc_trace(p, 1);
+    xmalloc_show_trace(p, 1);
 #endif
     return (p);
 }
