@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.7 1999/04/18 22:39:54 wessels Exp $
+ * $Id: dns_internal.cc,v 1.8 1999/04/19 03:31:30 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -132,13 +132,15 @@ idnsStats(StoreEntry * sentry)
     int i;
     storeAppendPrintf(sentry, "Internal DNS Statistics:\n");
     storeAppendPrintf(sentry, "\nThe Queue:\n");
-    storeAppendPrintf(sentry, "  ID   SIZE SENDS   DELAY\n");
-    storeAppendPrintf(sentry, "------ ---- ----- --------\n");
+    storeAppendPrintf(sentry, "                       DELAY SINCE\n");
+    storeAppendPrintf(sentry, "  ID   SIZE SENDS FIRST SEND LAST SEND\n");
+    storeAppendPrintf(sentry, "------ ---- ----- ---------- ---------\n");
     for (n = lru_list.head; n; n = n->next) {
 	q = n->data;
-	storeAppendPrintf(sentry, "%#06x %4d %5d %8.3f\n",
+	storeAppendPrintf(sentry, "%#06x %4d %5d %10.3f %9.3f\n",
 	    (int) q->id, q->sz, q->nsends,
-	    tvSubDsec(q->start_t, current_time));
+	    tvSubDsec(q->start_t, current_time),
+	    tvSubDsec(q->sent_t, current_time));
     }
     storeAppendPrintf(sentry, "\nNameservers:\n");
     storeAppendPrintf(sentry, "IP ADDRESS      # QUERIES # REPLIES\n");
@@ -156,6 +158,10 @@ idnsSendQuery(idns_query * q)
 {
     int x;
     int ns;
+    if (DnsSocket < 0) {
+	debug(78, 1) ("idnsSendQuery: Can't send query, no DNS socket!\n");
+	return;
+    }
     /* XXX Select nameserver */
     assert(nns > 0);
     assert(q->lru.next == NULL);
@@ -166,6 +172,12 @@ idnsSendQuery(idns_query * q)
 	sizeof(nameservers[ns].S),
 	q->buf,
 	q->sz);
+    if (x < 0) {
+	debug(50, 1) ("idnsSendQuery: FD %d: sendto: %s\n",
+	    DnsSocket, xstrerror());
+    } else {
+	fd_bytes(DnsSocket, x, FD_WRITE);
+    }
     q->nsends++;
     q->sent_t = current_time;
     nameservers[ns].nqueries++;
@@ -270,6 +282,7 @@ idnsRead(int fd, void *data)
 		    fd, xstrerror());
 	    break;
 	}
+	fd_bytes(DnsSocket, len, FD_READ);
 	(*N)++;
 	debug(78, 3) ("idnsRead: FD %d: received %d bytes from %s.\n",
 	    fd,
