@@ -1,8 +1,10 @@
-Changes to squid-1.1.6 (February @@, 1997):
+Changes to squid-1.1.6 (February 7, 1997):
 
 	- Fix redirector to make sure the redirector child process is 
 	  is alive and not busy before using it (Brent Foster).
 	- Fixed ACL joining bug.
+	- Fixed up support for multicast; see Release Notes for 
+	  details.
 	- Fixed ftpget to properly handle multi-line replies that
 	  don't begin with "NNN-".
 	- Changed store maintenance to randomize bucket order
@@ -14,7 +16,8 @@ Changes to squid-1.1.6 (February @@, 1997):
 	- Changed HTTP anonmyizing to remove 'denied' headers
 	  by default.  Define USE_PARANOID_ANONYMIZER to only pass
 	  'allowed' headers instead (Bernd Ernesti).
-	- Added 'Splay' trees for fast IP access checking (Ed Knowles).
+	- Added 'Splay' trees (in #ifdefs) for fast IP access checking
+	  (Ed Knowles).
 	- Fixed 'COMM_INPROGRESS' typo bug (Balint Nagy Endre).
 	- Added support for PURGE method to remove cached objects.
 	- Upgraded scripts/check_cache.pl for v1.1 (Bertold Kolics).
@@ -23,10 +26,9 @@ Changes to squid-1.1.6 (February @@, 1997):
 	- Upgrade to autoconf-2.12
 	- Added 'dns_defnames' option to allow dnsserver to interpret
 	  single-component hostnames.
-- Added multicast options
 	- Refuse to run as root without defining 'cache_effective_user'.
 
-Changes to squid-1.novm.5 (February XX, 1997):
+Changes to squid-1.novm.5 (February 6, 1997):
 
 	- Fixed stuck objects (and FD leak) due to not unlocking
 	  objects in storeAbort().
