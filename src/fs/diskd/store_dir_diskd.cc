@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.11 2000/06/08 18:05:38 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.12 2000/06/21 07:32:13 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -699,7 +699,32 @@ storeDiskdDirRebuildFromSwapLog(void *data)
 	    storeKeyText(s.key),
 	    s.swap_filen);
 	if (s.op == SWAP_LOG_ADD) {
-	    (void) 0;
+	    /*
+	     * Here we have some special checks for large files.
+	     * I've been seeing a system crash followed by a reboot
+	     * that seems to corrupt the swap log.  Squid believes
+	     * that the disk holds some really large files.  It
+	     * complains about using being over the high water mark
+	     * and proceeds to delete files as fast as it can.  To
+	     * prevent that, we call stat() on sufficiently large
+	     * files (>128KB) and reject those that are missing or
+	     * have the wrong size.
+	     */
+	    struct stat sb;
+	    char *p = storeDiskdDirFullPath(SD, s.swap_filen, NULL);
+	    if (s.swap_file_sz < (1 << 17)) {
+		(void) 0;
+	    } else if (stat(p, &sb) < 0) {
+		debug(47, 2) ("its missing!: %s\n", p);
+		continue;
+	    } else if (sb.st_size != s.swap_file_sz) {
+		debug(47, 2) ("size mismatch!: stat=%d, log=%d\n",
+		    (int) sb.st_size, (int) s.swap_file_sz);
+		continue;
+	    } else {
+		debug(47, 2) ("big file (%d bytes) checks out\n",
+		    (int) s.swap_file_sz);
+	    }
 	} else if (s.op == SWAP_LOG_DEL) {
 	    if ((e = storeGet(s.key)) != NULL) {
 		/*
