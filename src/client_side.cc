@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.293 1998/04/24 23:47:38 wessels Exp $
+ * $Id: client_side.cc,v 1.294 1998/04/27 19:55:10 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1938,6 +1938,11 @@ clientReadRequest(int fd, void *data)
 	size = 0;
     }
     conn->in.offset += size;
+    /* Skip leading (and trailing) whitespace */
+    while (conn->in.offset > 0 && isspace(conn->in.buf[0])) {
+	xmemmove(conn->in.buf, conn->in.buf + 1, conn->in.offset - 1);
+	conn->in.offset--;
+    }
     conn->in.buf[conn->in.offset] = '\0';	/* Terminate the string */
     while (conn->in.offset > 0) {
 	int nrequests;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.266 1998/04/27 19:52:48 wessels Exp $
+ * $Id: http.cc,v 1.267 1998/04/27 19:54:01 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -457,6 +457,16 @@ httpReadReply(int fd, void *data)
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
 	IOStats.Http.read_hist[bin]++;
+    }
+    if (!httpState->reply_hdr && len > 0) {
+	/* Skip whitespace */
+	while (len > 0 && isspace(*buf))
+	    xmemmove(buf, buf + 1, len--);
+	if (len == 0) {
+	    /* Continue to read... */
+	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
+	    return;
+	}
     }
     if (len < 0) {
 	debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
