@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.8 1996/03/29 21:19:24 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.9 1996/04/04 01:30:49 wessels Exp $ */
 
 /*
  * DEBUG: Section 15          neighbors:
@@ -405,7 +405,10 @@ int neighborsUdpPing(proto)
 	debug(15, 4, "neighborsUdpPing: pinging cache %s for <URL:%s>\n",
 	    e->host, url);
 
-	e->header.reqnum++;
+	/* e->header.reqnum++; */
+	e->header.reqnum = atoi(entry->key);
+	debug(15, 1, "neighborsUdpPing: key = '%s'\n", entry->key);
+	debug(15, 1, "neighborsUdpPing: reqnum = %d\n", e->header.reqnum);
 
 	if (e->udp_port == echo_port) {
 	    debug(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
@@ -512,18 +515,18 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	e->pings_acked++;
     }
     /* check if someone is already fetching it */
-    if (BIT_TEST(entry->flag, REQ_DISPATCHED) || (entry->ping_status != WAITING)) {
+    if (BIT_TEST(entry->flag, ENTRY_DISPATCHED) || (entry->ping_status != WAITING)) {
 	if (entry->ping_status == DONE) {
 	    debug(15, 5, "There is already a cache/source dispatched for this object\n");
 	    debug(15, 5, "--> <URL:%s>\n", entry->url);
-	    debug(15, 5, "--> entry->flag & REQ_DISPATCHED = %d\n",
-		BIT_TEST(entry->flag, REQ_DISPATCHED));
+	    debug(15, 5, "--> entry->flag & ENTRY_DISPATCHED = %d\n",
+		BIT_TEST(entry->flag, ENTRY_DISPATCHED));
 	    debug(15, 5, "--> entry->ping_status = %d\n", entry->ping_status);
 	} else {
 	    debug(15, 5, "The ping already timed out.\n");
 	    debug(15, 5, "--> <URL:%s>\n", entry->url);
-	    debug(15, 5, "--> entry->flag & REQ_DISPATCHED = %lx\n",
-		BIT_TEST(entry->flag, REQ_DISPATCHED));
+	    debug(15, 5, "--> entry->flag & ENTRY_DISPATCHED = %lx\n",
+		BIT_TEST(entry->flag, ENTRY_DISPATCHED));
 	    debug(15, 5, "--> entry->ping_status = %d\n", entry->ping_status);
 	}
 	return;
@@ -545,7 +548,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 		HIER_SOURCE_FASTEST,
 		0,
 		inet_ntoa(from->sin_addr));
-	    BIT_SET(entry->flag, REQ_DISPATCHED);
+	    BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	    entry->ping_status = DONE;
 	    getFromOrgSource(0, entry);
 	}
@@ -565,7 +568,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	} else {
 	    hierarchy_log_append(entry->url, HIER_PARENT_HIT, 0, e->host);
 	}
-	BIT_SET(entry->flag, REQ_DISPATCHED);
+	BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	entry->ping_status = DONE;
 	getFromCache(0, entry, e);
 	e->hits++;
@@ -609,7 +612,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	}
 
 	if (entry->mem_obj->e_pings_n_acks == entry->mem_obj->e_pings_n_pings) {
-	    BIT_SET(entry->flag, REQ_DISPATCHED);
+	    BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	    entry->ping_status = DONE;
 	    debug(15, 6, "Receive MISSes from all neighbors and parents\n");
 	    /* pass in fd=0 here so getFromCache() looks up the real FD

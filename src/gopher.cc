@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.13 1996/04/02 00:51:54 wessels Exp $ */
+/* $Id: gopher.cc,v 1.14 1996/04/04 01:30:44 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -224,10 +224,8 @@ int gopher_url_parser(url, host, port, type_id, request)
     return 0;
 }
 
-int gopherCachable(url, type, mime_hdr)
+int gopherCachable(url)
      char *url;
-     char *type;
-     char *mime_hdr;
 {
     stoplist *p = NULL;
     GopherData *data = NULL;
@@ -772,7 +770,7 @@ void gopherSendComplete(fd, buf, size, errflag, data)
      */
     gopherMimeCreate(data);
 
-    if (!BIT_TEST(entry->flag, REQ_HTML))
+    if (!BIT_TEST(entry->flag, ENTRY_HTML))
 	data->conversion = NORMAL;
     else
 	switch (data->type_id) {
@@ -899,7 +897,7 @@ int gopherStart(unusedfd, url, entry)
     }
     if (((data->type_id == GOPHER_INDEX) || (data->type_id == GOPHER_CSO))
 	&& (strchr(data->request, '?') == NULL)
-	&& (BIT_TEST(entry->flag, REQ_HTML))) {
+	&& (BIT_TEST(entry->flag, ENTRY_HTML))) {
 	/* Index URL without query word */
 	/* We have to generate search page back to client. No need for connection */
 	gopherMimeCreate(data);
@@ -937,7 +935,8 @@ int gopherStart(unusedfd, url, entry)
 	COMM_SELECT_WRITE,
 	(PF) gopherSendRequest,
 	(caddr_t) data);
-    storeAddEntry(entry);	/* Make it public */
+    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
+	storeSetPublicKey(entry);	/* Make it public */
 
     return COMM_OK;
 }

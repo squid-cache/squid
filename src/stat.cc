@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.14 1996/04/02 21:50:24 wessels Exp $ */
+/* $Id: stat.cc,v 1.15 1996/04/04 01:30:51 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -348,7 +348,7 @@ void server_list(obj, sentry)
     }
     for (e = getFirstEdge(); e; e = getNextEdge(e)) {
 	if (e->host == NULL)
-	    fatal_dump("Found an edge without a hostname!\n");
+	    fatal_dump("Found an edge without a hostname!");
 	sprintf(tempbuf, "\n{Hostname:    %s}\n", e->host);
 	storeAppend(sentry, tempbuf, strlen(tempbuf));
 	sprintf(tempbuf, "{Edge type:   %s}\n",
@@ -781,6 +781,8 @@ void log_append(obj, url, id, size, action, method, http_code, msec)
 
     if (!method)
 	method = "-";
+    if (!url)
+	url = "-";
 
     if (obj->logfile_status == LOG_ENABLE) {
 	if (emulate_httpd_log)
@@ -989,7 +991,7 @@ void stat_init(object, logfilename)
     if (obj->logfile_fd == DISK_ERROR) {
 	debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	obj->logfile_status = LOG_DISABLE;
-	fatal("Cannot open logfile.\n");
+	fatal("Cannot open logfile.");
     }
     obj->logfile_access = file_write_lock(obj->logfile_fd);
 
@@ -1232,7 +1234,7 @@ void stat_rotate_log()
     if (CacheInfo->logfile_fd == DISK_ERROR) {
 	debug(18, 0, "rotate_logs: Cannot open logfile: %s\n", fname);
 	CacheInfo->logfile_status = LOG_DISABLE;
-	fatal("Cannot open logfile.\n");
+	fatal("Cannot open logfile.");
     }
     CacheInfo->logfile_access = file_write_lock(CacheInfo->logfile_fd);
 }

@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.23 1996/04/02 21:50:25 wessels Exp $ */
+/* $Id: store.cc,v 1.24 1996/04/04 01:30:52 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -11,7 +11,7 @@
  * 
  * Routine                  mem_status      swap_status         status 
  * ---------------------------------------------------------------------------
- * storeAdd                 NOT_IN_MEMORY   NO_SWAP
+ * storeCreateEntry         NOT_IN_MEMORY   NO_SWAP
  * storeComplete            IN_MEMORY       NO_SWAP
  * storeSwapOutStart                        SWAPPING_OUT
  * storeSwapOutHandle(fail)                 NO_SWAP
@@ -80,7 +80,7 @@ static int swaplog_lock;
 FILE *swaplog_stream = NULL;
 
 /* counter for uncachable objects */
-static int keychange_count = 0;
+static int key_counter = 0;
 
 /* key temp buffer */
 static char key_temp_buffer[MAX_URL];
@@ -127,7 +127,7 @@ static void destroy_StoreEntry(e)
 {
     debug(20, 3, "destroy_StoreEntry: destroying %p\n", e);
     if (!e)
-	fatal_dump("destroy_StoreEntry: NULL Entry\n");
+	fatal_dump("destroy_StoreEntry: NULL Entry");
     if (e->mem_obj)
 	destroy_MemObject(e->mem_obj);
     xfree(e);
@@ -163,7 +163,7 @@ int has_mem_obj(e)
      StoreEntry *e;
 {
     if (!e)
-	fatal_dump("has_mem_obj: NULL Entry\n");
+	fatal_dump("has_mem_obj: NULL Entry");
     if (e->mem_obj)
 	return 1;
     return 0;
@@ -227,14 +227,14 @@ void storeSetMemStatus(e, status)
 {
     hash_link *ptr = NULL;
 
-    /* It is not an error to call this with a NULL e->key */
-    if (e->key != NULL) {
-	if (status != IN_MEMORY && e->mem_status == IN_MEMORY) {
-	    if ((ptr = hash_lookup(in_mem_table, e->key)))
-		hash_delete_link(in_mem_table, ptr);
-	} else if (status == IN_MEMORY && e->mem_status != IN_MEMORY) {
-	    hash_insert(in_mem_table, e->key, e);
-	}
+    if (e->key == NULL)
+	fatal_dump("storeSetMemStatus: NULL key");
+
+    if (status != IN_MEMORY && e->mem_status == IN_MEMORY) {
+	if ((ptr = hash_lookup(in_mem_table, e->key)))
+	    hash_delete_link(in_mem_table, ptr);
+    } else if (status == IN_MEMORY && e->mem_status != IN_MEMORY) {
+	hash_insert(in_mem_table, e->key, e);
     }
     e->mem_status = status;
 }
@@ -248,7 +248,7 @@ void storeFreeEntry(e)
     int i;
 
     if (!e)
-	fatal_dump("storeFreeEntry: NULL Entry\n");
+	fatal_dump("storeFreeEntry: NULL Entry");
 
     debug(20, 5, "storeFreeEntry: Freeing %s\n", e->url);
 
@@ -404,41 +404,118 @@ StoreEntry *storeGet(url)
     return NULL;
 }
 
-char *storeGenerateKey(url, request_type_id)
+char *storeGeneratePrivateKey(url, type_id, num)
+     char *url;
+     int type_id;
+     int num;
+{
+    if (key_counter == 0)
+	key_counter++;
+    if (num == 0)
+	num = key_counter++;
+    debug(20, 3, "storeGeneratePrivateKey: '%s'\n", url);
+    key_temp_buffer[0] = '\0';
+    sprintf(key_temp_buffer, "%d/%s/%s",
+	num,
+	RequestMethodStr[type_id],
+	url);
+    return key_temp_buffer;
+}
+
+char *storeGeneratePublicKey(url, request_type_id)
      char *url;
      int request_type_id;
 {
-    debug(20, 5, "storeGenerateKey: type=%d %s\n", request_type_id, url);
+    debug(20, 5, "storeGeneratePublicKey: type=%d %s\n", request_type_id, url);
     switch (request_type_id) {
-    case REQUEST_OP_GET:
+    case METHOD_GET:
 	return url;
 	break;
-    case REQUEST_OP_POST:
+    case METHOD_POST:
 	sprintf(key_temp_buffer, "/post/%s", url);
 	return key_temp_buffer;
 	break;
-    case REQUEST_OP_HEAD:
+    case METHOD_HEAD:
 	sprintf(key_temp_buffer, "/head/%s", url);
 	return key_temp_buffer;
 	break;
     default:
-	fatal_dump("storeGenerateKey: Unsupported request_type_id\n");
+	fatal_dump("storeGeneratePublicKey: Unsupported request method");
 	break;
     }
     return NULL;
 }
 
-StoreEntry *storeCreateEntry(url, req_hdr, cachable, html_req, method)
+void storeSetPrivateKey(e)
+     StoreEntry *e;
+{
+    StoreEntry *e2 = NULL;
+    hash_link *table_entry = NULL;
+
+    if (e->key && BIT_TEST(e->flag, KEY_PRIVATE))
+	return;			/* is already private */
+
+    if (e->key) {
+	if ((table_entry = hash_lookup(table, e->key)))
+	    e2 = (StoreEntry *) table_entry;
+	if (e2 != e) {
+	    debug(20, 0, "storeSetPrivateKey: non-unique key: '%s'\n", e->key);
+	    return;
+	}
+	storeHashDelete(table_entry);
+	if (!BIT_TEST(e->flag, KEY_URL))
+	    safe_free(e->key);
+    }
+    e->key = xstrdup(storeGeneratePrivateKey(e->url, e->type_id, 0));
+    storeHashInsert(e);
+    BIT_RESET(e->flag, KEY_URL);
+    BIT_SET(e->flag, KEY_CHANGE);
+    BIT_SET(e->flag, KEY_PRIVATE);
+}
+
+void storeSetPublicKey(e)
+     StoreEntry *e;
+{
+    StoreEntry *e2 = NULL;
+    hash_link *table_entry = NULL;
+
+    if (e->key && !BIT_TEST(e->flag, KEY_PRIVATE))
+	return;			/* is already public */
+
+    if (e->key) {
+	if ((table_entry = hash_lookup(table, e->key)))
+	    e2 = (StoreEntry *) table_entry;
+	if (e2 != e) {
+	    debug(20, 0, "storeSetPublicKey: non-unique key: '%s'\n", e->key);
+	    return;
+	}
+	storeHashDelete(table_entry);
+	if (!BIT_TEST(e->flag, KEY_URL))
+	    safe_free(e->key);
+    }
+    if (e->type_id == METHOD_GET) {
+	e->key = e->url;
+	BIT_SET(e->flag, KEY_URL);
+	BIT_RESET(e->flag, KEY_CHANGE);
+    } else {
+	e->key = xstrdup(storeGeneratePublicKey(e->url, e->type_id));
+	BIT_RESET(e->flag, KEY_URL);
+	BIT_SET(e->flag, KEY_CHANGE);
+    }
+    storeHashInsert(e);
+}
+
+StoreEntry *storeCreateEntry(url, req_hdr, flags, method)
      char *url;
      char *req_hdr;
-     int cachable;
-     int html_req;
+     int flags;
      int method;
 {
     StoreEntry *e = NULL;
     MemObject *m = NULL;
     debug(20, 5, "storeCreateEntry: '%s'\n", url);
-    debug(20, 5, "storeCreateEntry: cachable=%d\n", cachable);
+    debug(20, 5, "storeCreateEntry: public=%d\n",
+	BIT_TEST(flags, REQ_PUBLIC) ? 1 : 0);
 
     if (meta_data.hot_vm > store_hotobj_high)
 	storeGetMemSpace(0, 1);
@@ -447,18 +524,25 @@ StoreEntry *storeCreateEntry(url, req_hdr, cachable, html_req, method)
     e->url = xstrdup(url);
     meta_data.url_strings += strlen(url);
     e->type_id = method;
-    if (req_hdr) {
+    if (req_hdr)
 	m->mime_hdr = xstrdup(req_hdr);
-	if (mime_refresh_request(req_hdr))
-	    BIT_SET(e->flag, REFRESH_REQUEST);
-    }
-    if (cachable)
+    if (BIT_TEST(flags, REQ_NOCACHE))
+	BIT_SET(e->flag, REFRESH_REQUEST);
+    if (BIT_TEST(flags, REQ_PUBLIC)) {
 	BIT_SET(e->flag, CACHABLE);
-    else
+	BIT_RESET(e->flag, RELEASE_REQUEST);
+	BIT_RESET(e->flag, ENTRY_PRIVATE);
+    } else {
+	BIT_RESET(e->flag, CACHABLE);
 	BIT_SET(e->flag, RELEASE_REQUEST);
-
-    if (html_req)
-	BIT_SET(e->flag, REQ_HTML);
+	BIT_SET(e->flag, ENTRY_PRIVATE);
+    }
+    if (neighbors_do_private_keys || !BIT_TEST(flags, REQ_PUBLIC))
+	storeSetPrivateKey(e);
+    else
+	storeSetPublicKey(e);
+    if (BIT_TEST(flags, REQ_HTML))
+	BIT_SET(e->flag, ENTRY_HTML);
 
     e->status = STORE_PENDING;
     storeSetMemStatus(e, NOT_IN_MEMORY);
@@ -480,139 +564,9 @@ StoreEntry *storeCreateEntry(url, req_hdr, cachable, html_req, method)
     m->client_list_size = MIN_CLIENT;
     m->client_list = (ClientStatusEntry **)
 	xcalloc(m->client_list_size, sizeof(ClientStatusEntry *));
-
     return e;
 
 }
-
-static void storeSetKey(e)
-     StoreEntry *e;
-{
-    debug(20, 3, "storeSetKey: '%s'\n", e->url);
-    if (e->type_id == REQUEST_OP_GET) {
-	e->key = e->url;
-	BIT_SET(e->flag, KEY_URL);
-	return;
-    }
-    e->key = xstrdup(storeGenerateKey(e->url, e->type_id));
-    BIT_RESET(e->flag, KEY_URL);
-}
-
-void storeAddEntry(e)
-     StoreEntry *e;
-{
-    debug(20, 3, "storeAddEntry: '%s'\n", e->url);
-    if (!BIT_TEST(e->flag, CACHABLE)) {
-	debug(20, 0, "storeAddEntry: Called for UN-CACHABLE '%s'\n",
-	    e->url);
-	return;
-    }
-    storeSetKey(e);
-    storeHashInsert(e);
-}
-
-
-#ifdef OLD_CODE
-/*
- * Add a new object to the cache.
- * 
- * storeAdd() is only called by icpProcessMISS()
- */
-StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, request_type_id)
-     char *url;
-     char *type_notused;
-     char *mime_hdr;
-     int cachable;
-     int html_request;
-     int request_type_id;
-{
-    static char key[MAX_URL + 16];
-    StoreEntry *e = NULL;
-
-    debug(20, 5, "storeAdd: %s\n", url);
-
-    meta_data.store_entries++;
-    meta_data.url_strings += strlen(url);
-
-    if (meta_data.hot_vm > store_hotobj_high)
-	storeGetMemSpace(0, 1);
-    e = create_StoreEntry();
-    e->url = xstrdup(url);
-    e->key = NULL;
-    e->flag = 0;
-    e->type_id = request_type_id;
-    if (mime_hdr) {
-	e->mem_obj->mime_hdr = xstrdup(mime_hdr);
-	if (mime_refresh_request(mime_hdr))
-	    BIT_SET(e->flag, REFRESH_REQUEST);
-	else
-	    BIT_RESET(e->flag, REFRESH_REQUEST);
-    }
-    if (cachable) {
-	BIT_SET(e->flag, CACHABLE);
-	BIT_RESET(e->flag, RELEASE_REQUEST);
-    } else {
-	BIT_RESET(e->flag, CACHABLE);
-	BIT_SET(e->flag, RELEASE_REQUEST);
-	/*after a lock is release, it will be released by storeUnlock */
-    }
-
-    if (html_request)
-	BIT_SET(e->flag, REQ_HTML);
-    else
-	BIT_RESET(e->flag, REQ_HTML);
-
-    e->status = STORE_PENDING;
-    storeSetMemStatus(e, NOT_IN_MEMORY);
-    e->swap_status = NO_SWAP;
-    e->swap_file_number = -1;
-    e->lock_count = 0;
-    BIT_RESET(e->flag, KEY_CHANGE);
-    BIT_RESET(e->flag, CLIENT_ABORT_REQUEST);
-    e->mem_obj->data = memInit();
-    meta_data.hot_vm++;
-    e->refcount = 0;
-    e->lastref = cached_curtime;
-    e->timestamp = 0;		/* set in storeSwapOutHandle() */
-    e->ping_status = NOPING;
-
-    if (e->flag & CACHABLE) {
-	if (request_type_id == REQUEST_OP_GET) {
-	    e->key = e->url;
-	    BIT_SET(e->flag, KEY_URL);
-	} else {
-	    e->key = xstrdup(storeGenerateKey(e->url, request_type_id));
-	    BIT_RESET(e->flag, KEY_URL);
-	}
-    } else {
-	/* prepend a uncache count number to url for a key */
-	key[0] = '\0';
-	sprintf(key, "/%d/%s", uncache_count, url);
-	uncache_count++;
-	e->key = xstrdup(key);
-	BIT_RESET(e->flag, KEY_URL);
-    }
-
-    /* allocate pending list */
-    e->mem_obj->pending_list_size = MIN_PENDING;
-    e->mem_obj->pending = (struct pentry **)
-	xcalloc(e->mem_obj->pending_list_size, sizeof(struct pentry *));
-
-    /* allocate client list */
-    e->mem_obj->client_list_size = MIN_CLIENT;
-    e->mem_obj->client_list = (ClientStatusEntry **)
-	xcalloc(e->mem_obj->client_list_size, sizeof(ClientStatusEntry *));
-
-    storeHashInsert(e);
-
-    /* Change the key to something private until we know it is safe
-     * to share */
-    if (!strncmp(url, "http", 4))
-	storeChangeKey(e);
-
-    return e;
-}
-#endif
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
@@ -639,12 +593,13 @@ StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
 
     e = new_StoreEntry(WITHOUT_MEMOBJ);
     e->url = xstrdup(url);
-    e->key = NULL;
+    BIT_RESET(e->flag, ENTRY_PRIVATE);
+    e->type_id = METHOD_GET;
+    storeSetPublicKey(e);
     e->flag = 0;
-    e->type_id = REQUEST_OP_GET;
     BIT_SET(e->flag, CACHABLE);
     BIT_RESET(e->flag, RELEASE_REQUEST);
-    BIT_SET(e->flag, REQ_HTML);
+    BIT_SET(e->flag, ENTRY_HTML);
     e->status = STORE_OK;
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAP_OK;
@@ -652,18 +607,12 @@ StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
     file_map_bit_set(file_number);
     e->object_len = size;
     e->lock_count = 0;
-    BIT_RESET(e->flag, KEY_CHANGE);
     BIT_RESET(e->flag, CLIENT_ABORT_REQUEST);
     e->refcount = 0;
     e->lastref = cached_curtime;
     e->timestamp = (u_num32) timestamp;
     e->expires = (u_num32) expires;
     e->ping_status = NOPING;
-
-    e->key = e->url;
-    BIT_SET(e->flag, KEY_URL);
-
-    storeHashInsert(e);
     return e;
 }
 
@@ -825,8 +774,7 @@ static void InvokeHandlers(e)
 
 }
 
-/* Mark object as expired
- */
+/* Mark object as expired */
 void storeExpireNow(e)
      StoreEntry *e;
 {
@@ -834,9 +782,8 @@ void storeExpireNow(e)
     e->expires = cached_curtime;
 }
 
-/* switch object to deleting behind mode 
- * call by retrieval module when object gets too big.
- */
+/* switch object to deleting behind mode call by
+ * retrieval module when object gets too big.  */
 void storeStartDeleteBehind(e)
      StoreEntry *e;
 {
@@ -847,7 +794,7 @@ void storeStartDeleteBehind(e)
     }
     debug(20, 2, "storeStartDeleteBehind:\tis now in delete behind mode.\n");
     /* change its key, so it couldn't be found by other client */
-    storeChangeKey(e);
+    storeSetPrivateKey(e);
     BIT_SET(e->flag, DELETE_BEHIND);
     BIT_SET(e->flag, RELEASE_REQUEST);
     BIT_RESET(e->flag, CACHABLE);
@@ -1384,8 +1331,8 @@ void storeComplete(e)
 {
     debug(20, 5, "storeComplete: <URL:%s>\n", e->url);
 
-    if (!e->key || e->flag & KEY_CHANGE) {
-	debug(20, 5, "storeComplete: No key, setting RELEASE_REQUEST\n");
+    if (e->flag & ENTRY_PRIVATE) {
+	debug(20, 5, "storeComplete: Private object, set RELEASE_REQUEST\n");
 	/* Never cache private objects */
 	BIT_SET(e->flag, RELEASE_REQUEST);
 	BIT_RESET(e->flag, CACHABLE);
@@ -1399,7 +1346,7 @@ void storeComplete(e)
     /* start writing it to disk */
     if ((e->flag & CACHABLE) &&
 	!(e->flag & RELEASE_REQUEST) &&
-	(e->type_id == REQ_GET)) {
+	(e->type_id == METHOD_GET)) {
 	storeSwapOutStart(e);
     }
     /* free up incoming MIME */
@@ -1432,7 +1379,7 @@ int storeAbort(e, msg)
      * tries to restart the fetch, say that it's been
      * dispatched already.
      */
-    BIT_SET(e->flag, REQ_DISPATCHED);
+    BIT_SET(e->flag, ENTRY_DISPATCHED);
 
     storeLockObject(e);
 
@@ -1994,10 +1941,10 @@ int storeRelease(e)
 	    fatal_dump(NULL);
 	}
     }
-    if (e->type_id == REQUEST_OP_GET) {
+    if (e->type_id == METHOD_GET) {
 	/* check if coresponding HEAD object exists. */
 	head_table_entry = hash_lookup(table,
-	    storeGenerateKey(e->url, REQUEST_OP_HEAD));
+	    storeGeneratePublicKey(e->url, METHOD_HEAD));
 	if (head_table_entry) {
 	    head_result = (StoreEntry *) head_table_entry;
 	    if (head_result) {
@@ -2027,92 +1974,6 @@ int storeRelease(e)
     return 0;
 }
 
-
-/* store change key */
-void storeChangeKey(e)
-     StoreEntry *e;
-{
-    StoreEntry *result = NULL;
-    static char key[MAX_URL + 32];
-    hash_link *table_entry = NULL;
-
-    if (!e)
-	return;
-
-    if (e->key == NULL) {
-	debug(25, 0, "storeChangeKey: NULL key for %s\n", e->url);
-	return;
-    }
-    if ((table_entry = hash_lookup(table, e->key)))
-	result = (StoreEntry *) table_entry;
-    if (result != e) {
-	debug(25, 1, "storeChangeKey: Key is not unique for key: %s\n", e->key);
-	return;
-    }
-    storeHashDelete(table_entry);
-    key[0] = '\0';
-    sprintf(key, "/x%d/%s", keychange_count++, e->key);
-    if (!(result->flag & KEY_URL))
-	safe_free(result->key);
-    result->key = xstrdup(key);
-    storeHashInsert(e);
-    BIT_SET(result->flag, KEY_CHANGE);
-    BIT_RESET(result->flag, KEY_URL);
-}
-
-#ifdef OLD_CODE
-void storeUnChangeKey(e)
-     StoreEntry *e;
-{
-    StoreEntry *E1 = NULL;
-    StoreEntry *E2 = NULL;
-    static char key[MAX_URL + 32];
-    hash_link *table_entry = NULL;
-    char *t = NULL;
-
-    if (!e)
-	return;
-
-    if (e->key == NULL) {
-	debug(25, 0, "storeUnChangeKey: NULL key for %s\n", e->url);
-	return;
-    }
-    if ((table_entry = hash_lookup(table, e->key)))
-	E1 = (StoreEntry *) table_entry;
-    if (E1 != e) {
-	debug(25, 1, "storeUnChangeKey: Key is not unique for key: %s\n",
-	    e->key);
-	return;
-    }
-    storeHashDelete(table_entry);
-    key[0] = '\0';
-    /* find second slash */
-    t = strchr(e->key + 1, '/');
-    if (t == NULL)
-	fatal_dump("storeUnChangeKey: Can't find a second slash.\n");
-    strcpy(key, t + 1);
-    if ((table_entry = hash_lookup(table, key))) {
-	debug(25, 0, "storeUnChangeKey: '%s' already exists!  Releasing/Moving.\n",
-	    key);
-	E2 = (StoreEntry *) table_entry;
-	/* get rid of the old entry */
-	if (storeEntryLocked(E2)) {
-	    /* change original hash key to get out of the new object's way */
-	    storeChangeKey(E2);
-	    BIT_SET(E2->flag, RELEASE_REQUEST);
-	} else {
-	    storeRelease(E2);
-	}
-    }
-    if (!(E1->flag & KEY_URL))
-	safe_free(E1->key);
-    E1->key = xstrdup(key);
-    storeHashInsert(e);
-    BIT_RESET(E1->flag, KEY_CHANGE);
-    BIT_SET(E1->flag, KEY_URL);
-    debug(25, 1, "storeUnChangeKey: Changed back to '%s'\n", key);
-}
-#endif
 
 /* return if the current key is the original one. */
 int storeOriginalKey(e)
@@ -2502,7 +2363,7 @@ int urlcmp(url1, url2)
      char *url1, *url2;
 {
     if (!url1 || !url2)
-	fatal_dump("urlcmp: Got a NULL url pointer.\n");
+	fatal_dump("urlcmp: Got a NULL url pointer.");
     return (strcmp(url1, url2));
 }
 

@@ -1,41 +1,50 @@
 
-/* $Id: mime.cc,v 1.10 1996/04/01 04:56:50 wessels Exp $ */
+/* $Id: mime.cc,v 1.11 1996/04/04 01:30:48 wessels Exp $ */
+
+/*
+ * DEBUG: Section 25          mime
+ */
 
 #include "squid.h"
 #include "mime_table.h"
 
 #define GET_HDR_SZ 1024
 
-/* XXX This function frightens me for performance reasons.  It uses
- * lots of strcmp, strlen, and strcspn.  Can there be a better way? - DPW */
-
 char *mime_get_header(char *mime, char *name)
 {
     static char header[GET_HDR_SZ];
     char *p = NULL;
+    char *q = NULL;
     char got = 0;
+    int namelen = strlen(name);
 
     if (!mime || !name)
 	return NULL;
+
+    debug(25, 5, "mime_get_header: looking for '%s'\n", name);
 
     for (p = mime; *p; p += strcspn(p, "\n\r")) {
 	if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
 	    return NULL;
 	while (isspace(*p))
 	    p++;
-	if (strncasecmp(p, name, strlen(name)) == 0 &&
-	    (isspace(p[strlen(name)]) || p[strlen(name)] == ':')) {
-	    strncpy(header, p, GET_HDR_SZ);
-	    header[GET_HDR_SZ - 1] = 0;
-	    header[strcspn(header, "\n\r")] = 0;
-	    p = header;
-	    p += strlen(name);
-	    if (*p == ':')
-		p++, got = 1;
-	    while (isspace(*p))
-		p++, got = 1;
-	    if (got)
-		return p;
+	if (strncasecmp(p, name, namelen))
+	    continue;
+	if (!isspace(p[namelen]) && p[namelen] != ':')
+	    continue;
+	strncpy(header, p, GET_HDR_SZ);
+	debug(25, 5, "mime_get_header: checking '%s'\n", header);
+	header[GET_HDR_SZ - 1] = 0;
+	header[strcspn(header, "\n\r")] = 0;
+	q = header;
+	q += namelen;
+	if (*q == ':')
+	    q++, got = 1;
+	while (isspace(*q))
+	    q++, got = 1;
+	if (got) {
+	    debug(25, 5, "mime_get_header: returning '%s'\n", q);
+	    return q;
 	}
     }
     return NULL;
@@ -50,8 +59,7 @@ int mime_refresh_request(mime)
     if (mime_get_header(mime, "If-Modified-Since"))
 	return 1;
     if ((pr = mime_get_header(mime, "pragma"))) {
-	/* why strstr and not strcmp? -DPW */
-	if (strstr(pr, "no-cache"))
+	if (strcasecmp(pr, "no-cache"))
 	    return 1;
     }
     return 0;
