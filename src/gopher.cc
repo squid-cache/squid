@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.9 1996/03/27 18:15:45 wessels Exp $ */
+/* $Id: gopher.cc,v 1.10 1996/03/28 20:42:47 wessels Exp $ */
 
 #include "squid.h"
 
@@ -651,15 +651,35 @@ int gopherReadReply(fd, data)
 	}
     }
     buf = get_free_4k_page();
+    errno = 0;
     len = read(fd, buf, TEMP_BUF_SIZE - 1);	/* leave one space for \0 in gopherToHTML */
-    debug(0, 5, "gopherReadReply - fd: %d read len:%d\n", fd, len);
+    debug(0, 5, "gopherReadReply: FD %d read len=%d\n", fd, len);
 
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
-	debug(0, 1, "gopherReadReply - error reading: %s\n",
+	debug(0, 1, "gopherReadReply: error reading: %s\n",
 	    xstrerror());
-	cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
-	comm_close(fd);
-	freeGopherData(data);
+	if (errno == ECONNRESET) {
+	    /* Connection reset by peer */
+	    /* consider it as a EOF */
+	    if (!(entry->flag & DELETE_BEHIND))
+		entry->expires = cached_curtime + ttlSet(entry);
+	    sprintf(tmp_error_buf, "\nWarning: The Remote Server sent RESET at the end of transmission.\n");
+	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
+	    storeComplete(entry);
+	    comm_close(fd);
+	    freeGopherData(data);
+	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	    /* reinstall handlers */
+	    /* XXX This may loop forever */
+	    comm_set_select_handler(fd, COMM_SELECT_READ,
+		(PF) gopherReadReply, (caddr_t) data);
+	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
+		(PF) gopherReadReplyTimeout, (caddr_t) data, getReadTimeout());
+	} else {
+	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    comm_close(fd);
+	    freeGopherData(data);
+	}
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	/* flush the rest of data in temp buf if there is one. */
@@ -671,7 +691,6 @@ int gopherReadReply(fd, data)
 	storeComplete(entry);
 	comm_close(fd);
 	freeGopherData(data);
-
     } else if (((entry->mem_obj->e_current_len + len) > getGopherMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
@@ -724,7 +743,7 @@ void gopherSendComplete(fd, buf, size, errflag, data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
-    debug(0, 5, "gopherSendComplete - fd: %d size: %d errflag: %d\n",
+    debug(0, 5, "gopherSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
 	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
@@ -818,7 +837,7 @@ int gopherSendRequest(fd, data)
 	sprintf(buf, "%s%c%c", data->request, CR, LF);
     }
 
-    debug(0, 5, "gopherSendRequest - fd: %d\n", fd);
+    debug(0, 5, "gopherSendRequest: FD %d\n", fd);
     data->icp_rwd_ptr = icpWrite(fd,
 	buf,
 	len,
@@ -839,7 +858,7 @@ int gopherStart(unusedfd, url, entry)
 
     data->entry = entry;
 
-    debug(0, 3, "gopherStart - url: %s\n", url);
+    debug(0, 3, "gopherStart: url: %s\n", url);
 
     /* Parse url. */
     if (gopher_url_parser(url, data->host, &data->port,
@@ -896,7 +915,7 @@ int gopherStart(unusedfd, url, entry)
 	    freeGopherData(data);
 	    return COMM_ERROR;
 	} else {
-	    debug(0, 5, "startGopher - conn %d EINPROGRESS\n", sock);
+	    debug(0, 5, "startGopher: conn %d EINPROGRESS\n", sock);
 	}
     }
     /* Install connection complete handler. */

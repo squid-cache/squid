@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.12 1996/03/28 05:39:21 wessels Exp $ */
+/* $Id: wais.cc,v 1.13 1996/03/28 20:42:48 wessels Exp $ */
 
 #include "squid.h"
 
@@ -121,16 +121,25 @@ void waisReadReply(fd, data)
 	if (errno == ECONNRESET) {
 	    /* Connection reset by peer */
 	    /* consider it as a EOF */
-	    entry->expires = cached_curtime;
-
-	    sprintf(tmp_error_buf, "\n<p>Warning: The Remote Server sent RESET at the end of transmission.\n");
+	    if (!(entry->flag & DELETE_BEHIND))
+		entry->expires = cached_curtime + ttlSet(entry);
+	    sprintf(tmp_error_buf, "\nWarning: The Remote Server sent RESET at the end of transmission.\n");
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
 	    storeComplete(entry);
+	    comm_close(fd);
+	    safe_free(data);
+	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	    /* reinstall handlers */
+	    /* XXX This may loop forever */
+	    comm_set_select_handler(fd, COMM_SELECT_READ,
+		(PF) waisReadReply, (caddr_t) data);
+	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
+		(PF) waisReadReplyTimeout, (caddr_t) data, getReadTimeout());
 	} else {
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    comm_close(fd);
+	    safe_free(data);
 	}
-	comm_close(fd);
-	safe_free(data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	entry->expires = cached_curtime;
@@ -143,15 +152,26 @@ void waisReadReply(fd, data)
 	storeStartDeleteBehind(entry);
 
 	storeAppend(entry, buf, len);
-	comm_set_select_handler(fd, COMM_SELECT_READ, (PF) waisReadReply, (caddr_t) data);
-	comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT, (PF) waisReadReplyTimeout,
-	    (caddr_t) data, getReadTimeout());
-
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) waisReadReply,
+	    (caddr_t) data);
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) waisReadReplyTimeout,
+	    (caddr_t) data,
+	    getReadTimeout());
     } else {
 	storeAppend(entry, buf, len);
-	comm_set_select_handler(fd, COMM_SELECT_READ, (PF) waisReadReply, (caddr_t) data);
-	comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT, (PF) waisReadReplyTimeout,
-	    (caddr_t) data, getReadTimeout());
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) waisReadReply,
+	    (caddr_t) data);
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) waisReadReplyTimeout,
+	    (caddr_t) data,
+	    getReadTimeout());
     }
 }
 
@@ -174,9 +194,15 @@ void waisSendComplete(fd, buf, size, errflag, data)
 	safe_free(data);
     } else {
 	/* Schedule read reply. */
-	comm_set_select_handler(fd, COMM_SELECT_READ, (PF) waisReadReply, (caddr_t) data);
-	comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT, (PF) waisReadReplyTimeout,
-	    (caddr_t) data, getReadTimeout());
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) waisReadReply,
+	    (caddr_t) data);
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) waisReadReplyTimeout,
+	    (caddr_t) data,
+	    getReadTimeout());
     }
     safe_free(buf);		/* Allocated by waisSendRequest. */
 }

@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.13 1996/03/27 18:15:45 wessels Exp $ */
+/* $Id: ftp.cc,v 1.14 1996/03/28 20:42:46 wessels Exp $ */
 
 #include "squid.h"
 
@@ -169,9 +169,28 @@ int ftpReadReply(fd, data)
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	if (len < 0)
 	    debug(0, 1, "ftpReadReply: read error: %s\n", xstrerror());
-	cached_error_entry(entry, ERR_READ_ERROR, NULL);
-	comm_close(fd);
-	safe_free(data);
+	if (errno == ECONNRESET) {
+	    /* Connection reset by peer */
+	    /* consider it as a EOF */
+	    if (!(entry->flag & DELETE_BEHIND))
+		entry->expires = cached_curtime + ttlSet(entry);
+	    sprintf(tmp_error_buf, "\nWarning: The Remote Server sent RESET at the end of transmission.\n");
+	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
+	    storeComplete(entry);
+	    comm_close(fd);
+	    safe_free(data);
+	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	    /* reinstall handlers */
+	    /* XXX This may loop forever */
+	    comm_set_select_handler(fd, COMM_SELECT_READ,
+		(PF) ftpReadReply, (caddr_t) data);
+	    /* note there is no ftpReadReplyTimeout.  Timeouts are handled
+	     * by `ftpget'. */
+	} else {
+	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    comm_close(fd);
+	    safe_free(data);
+	}
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	if (!data->got_marker) {
