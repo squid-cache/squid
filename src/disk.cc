@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.88 1997/10/27 22:53:09 wessels Exp $
+ * $Id: disk.cc,v 1.89 1997/10/28 21:59:03 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -315,8 +315,8 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     if (fdd->write_q == NULL) {
 	/* no more data */
 	fdd->write_q_tail = NULL;
-	BIT_RESET(F->flags, FD_WRITE_PENDING);
-	BIT_RESET(F->flags, FD_WRITE_DAEMON);
+	BIT_CLR(F->flags, FD_WRITE_PENDING);
+	BIT_CLR(F->flags, FD_WRITE_DAEMON);
     } else {
 	/* another block is queued */
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);

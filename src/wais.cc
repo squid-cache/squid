@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.91 1997/10/28 20:42:55 wessels Exp $
+ * $Id: wais.cc,v 1.92 1997/10/28 21:59:14 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -199,7 +199,7 @@ waisReadReply(int fd, void *data)
 		waisReadReply, waisState, 0);
 	} else {
 	    ErrorState *err;
-	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
+	    BIT_CLR(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
 	    err = xcalloc(1, sizeof(ErrorState));
 	    err->type = ERR_READ_ERROR;

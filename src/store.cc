@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.323 1997/10/28 21:56:08 wessels Exp $
+ * $Id: store.cc,v 1.324 1997/10/28 21:59:13 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -594,7 +594,7 @@ storeSetPrivateKey(StoreEntry * e)
 	safe_free(e->key);
     e->key = xstrdup(newkey);
     storeHashInsert(e);
-    BIT_RESET(e->flag, KEY_URL);
+    BIT_CLR(e->flag, KEY_URL);
     BIT_SET(e->flag, KEY_CHANGE);
     BIT_SET(e->flag, KEY_PRIVATE);
 }
@@ -624,13 +624,13 @@ storeSetPublicKey(StoreEntry * e)
     if (e->method == METHOD_GET) {
 	e->key = e->url;
 	BIT_SET(e->flag, KEY_URL);
-	BIT_RESET(e->flag, KEY_CHANGE);
+	BIT_CLR(e->flag, KEY_CHANGE);
     } else {
 	e->key = xstrdup(newkey);
-	BIT_RESET(e->flag, KEY_URL);
+	BIT_CLR(e->flag, KEY_URL);
 	BIT_SET(e->flag, KEY_CHANGE);
     }
-    BIT_RESET(e->flag, KEY_PRIVATE);
+    BIT_CLR(e->flag, KEY_PRIVATE);
     storeHashInsert(e);
 }
 
@@ -653,15 +653,15 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
 	storeSetPublicKey(e);
     if (BIT_TEST(flags, REQ_CACHABLE)) {
 	BIT_SET(e->flag, ENTRY_CACHABLE);
-	BIT_RESET(e->flag, RELEASE_REQUEST);
+	BIT_CLR(e->flag, RELEASE_REQUEST);
     } else {
-	BIT_RESET(e->flag, ENTRY_CACHABLE);
+	BIT_CLR(e->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(e);
     }
     if (BIT_TEST(flags, REQ_HIERARCHICAL))
 	BIT_SET(e->flag, HIERARCHICAL);
     else
-	BIT_RESET(e->flag, HIERARCHICAL);
+	BIT_CLR(e->flag, HIERARCHICAL);
     e->store_status = STORE_PENDING;
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_NONE;
@@ -713,8 +713,8 @@ storeAddDiskRestore(const char *url,
     e->refcount = refcount;
     e->flag = flags;
     BIT_SET(e->flag, ENTRY_CACHABLE);
-    BIT_RESET(e->flag, RELEASE_REQUEST);
-    BIT_RESET(e->flag, KEY_PRIVATE);
+    BIT_CLR(e->flag, RELEASE_REQUEST);
+    BIT_CLR(e->flag, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     if (clean) {
 	BIT_SET(e->flag, ENTRY_VALIDATED);
@@ -722,7 +722,7 @@ storeAddDiskRestore(const char *url,
 	/* otherwise, set it in the validation procedure */
 	storeDirMapBitSet(file_number);
     } else {
-	BIT_RESET(e->flag, ENTRY_VALIDATED);
+	BIT_CLR(e->flag, ENTRY_VALIDATED);
     }
     return e;
 }
@@ -1356,7 +1356,7 @@ storeValidate(StoreEntry * e, VCB callback, void *callback_data)
 #endif
     assert(!BIT_TEST(e->flag, ENTRY_VALIDATED));
     if (e->swap_file_number < 0) {
-	BIT_RESET(e->flag, ENTRY_VALIDATED);
+	BIT_CLR(e->flag, ENTRY_VALIDATED);
 	callback(callback_data);
 	return;
     }
@@ -1391,7 +1391,7 @@ storeValidateComplete(void *data, int retcode, int errcode)
 	retcode = stat(path, sb);
     }
     if (retcode < 0 || sb->st_size == 0 || sb->st_size != e->object_len) {
-	BIT_RESET(e->flag, ENTRY_VALIDATED);
+	BIT_CLR(e->flag, ENTRY_VALIDATED);
     } else {
 	BIT_SET(e->flag, ENTRY_VALIDATED);
 	storeDirMapBitSet(e->swap_file_number);
@@ -1488,7 +1488,7 @@ storeCheckCachable(StoreEntry * e)
 	return 1;
     }
     storeReleaseRequest(e);
-    BIT_RESET(e->flag, ENTRY_CACHABLE);
+    BIT_CLR(e->flag, ENTRY_CACHABLE);
     return 0;
 }
 
