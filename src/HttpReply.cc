@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.22 1998/05/22 22:38:42 wessels Exp $
+ * $Id: HttpReply.cc,v 1.23 1998/05/22 23:13:44 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -430,7 +430,7 @@ httpMsgIsPersistent(float http_ver, const HttpHeader * hdr)
 	 * return false if it is a browser connection.  If there is a
 	 * VIA header, then we assume this is NOT a browser connection.
 	 */
-        const char *agent; = httpHeaderGetStr(hdr, HDR_USER_AGENT);
+        const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
 	if (agent && !httpHeaderHas(hdr, HDR_VIA)) {
 	    if (!strncasecmp(agent, "Mozilla/3.", 10))
 		return 0;
