@@ -1,6 +1,6 @@
 
 /*
- * $Id: Range.h,v 1.4 2003/06/09 03:10:00 robertc Exp $
+ * $Id: Range.h,v 1.5 2003/09/22 08:50:51 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,8 @@
 #ifndef SQUID_RANGE_H
 #define SQUID_RANGE_H
 
+#include <iosfwd>
+
 /* represents [start, end) */
 
 template <class C>
@@ -49,6 +51,13 @@ public:
     Range intersection (Range const &);
     size_t size() const;
 };
+
+template <class C>
+std::ostream& operator << (std::ostream &os, Range<C> const &aRange)
+{
+    os << "[" << aRange.start << "," << aRange.end << ")";
+    return os;
+}
 
 template<class C>
 Range<C>::Range () : start(), end() {}

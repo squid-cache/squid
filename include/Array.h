@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.15 2003/07/15 06:50:38 robertc Exp $
+ * $Id: Array.h,v 1.16 2003/09/22 08:50:51 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -210,6 +210,18 @@ Vector<E>::preAppend(int app_count)
 {
     if (size() + app_count > capacity)
         reserve(size() + app_count);
+}
+
+template<class E>
+Vector<E>::Vector<E> (Vector const &rhs)
+{
+    items = NULL;
+    capacity = 0;
+    count = 0;
+    reserve (rhs.size());
+
+    for (size_t counter = 0; counter < rhs.size(); ++counter)
+        push_back (rhs.items[counter]);
 }
 
 template<class E>
