@@ -14,7 +14,8 @@ void
 storeClose(storeIOState * sio)
 {
     SwapDir *SD = &Config.cacheSwap.swapDirs[sio->swap_file_number >> SWAP_DIR_SHIFT];
-    assert(!sio->flags.closing);
+    if (sio->flags.closing)
+	return;
     sio->flags.closing = 1;
     SD->obj.close(sio);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.95 1999/05/27 03:21:43 wessels Exp $
+ * $Id: typedefs.h,v 1.96 1999/06/25 23:37:35 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -198,7 +198,7 @@ typedef void UH(void *data, wordlist *);
 typedef int DEFER(int fd, void *data);
 
 typedef void STIOCB(void *their_data, int errflag, storeIOState *);
-typedef void STRCB(void *their_data, const char *buf, size_t len);
+typedef void STRCB(void *their_data, const char *buf, ssize_t len);
 
 typedef void SIH(storeIOState *, void *);	/* swap in */
 typedef int QS(const void *, const void *);	/* qsort */
