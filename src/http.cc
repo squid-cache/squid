@@ -1,5 +1,6 @@
+
 /*
- * $Id: http.cc,v 1.193 1997/10/22 05:50:30 wessels Exp $
+ * $Id: http.cc,v 1.194 1997/10/23 05:13:40 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -616,28 +617,6 @@ httpReadReply(int fd, void *data)
     /* check if we want to defer reading */
     clen = entry->mem_obj->inmem_hi;
     off = storeLowestMemReaderOffset(entry);
-    if ((clen - off) > READ_AHEAD_GAP) {
-	IOStats.Http.reads_deferred++;
-	debug(11, 3) ("httpReadReply: Read deferred for Object: %s\n",
-	    entry->url);
-	debug(11, 3) ("                Current Gap: %d bytes\n", clen - off);
-	/* reschedule, so it will be automatically reactivated
-	 * when Gap is big enough. */
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    httpReadReply,
-	    httpState, 0);
-	/* disable read timeout until we are below the GAP */
-	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
-	    commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
-	    BIT_SET(entry->flag, READ_DEFERRED);
-	}
-	/* dont try reading again for a while */
-	comm_set_stall(fd, 1);
-	return;
-    } else {
-	BIT_RESET(entry->flag, READ_DEFERRED);
-    }
     errno = 0;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     fd_bytes(fd, len, FD_READ);
@@ -730,6 +709,7 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	    COMM_SELECT_READ,
 	    httpReadReply,
 	    httpState, 0);
+	commSetDefer(fd, protoCheckDeferRead);
     }
 }
 

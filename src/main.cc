@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.175 1997/10/20 22:59:47 wessels Exp $
+ * $Id: main.cc,v 1.176 1997/10/23 05:13:42 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -326,6 +326,7 @@ serverConnectionsOpen(void)
 	    continue;
 	comm_listen(fd);
 	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
+	commSetDefer(fd, httpAcceptDefer);
 	debug(1, 1) ("Accepting HTTP connections on port %d, FD %d.\n",
 	    (int) u->i, fd);
 	HttpSockets[NHttpSockets++] = fd;

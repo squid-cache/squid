@@ -1034,24 +1034,6 @@ read_timeout 15 minutes
 DOC_END
 
 
-NAME: defer_timeout
-COMMENT: (in minutes)
-TYPE: time_t
-LOC: Config.Timeout.defer
-DEFAULT: 1 hour
-DOC_START
-	If your clients are behind slow (e.g. PPP/SLIP) connections,
-	then data may come in from the server-side faster than it can
-	be written to the client-side.  When the server side gets too
-	far ahead of the client-side, subsequent reads will be deferred
-	until the client catches up.  This timeout determines how long
-	to wait while in "deferred read mode." The default is one
-	hour.
-
-defer_timeout 1 hour
-DOC_END
-
-
 NAME: request_timeout
 TYPE: time_t
 LOC: Config.Timeout.request

@@ -116,7 +116,6 @@ struct _SquidConfig {
     time_t neighborTimeout;
     struct {
 	time_t read;
-	time_t defer;
 	time_t lifetime;
 	time_t connect;
 	time_t request;
@@ -327,7 +326,7 @@ struct _fde {
     void *timeout_data;
     void *lifetime_data;
     close_handler *close_handler;	/* linked list */
-    time_t stall_until;		/* don't select for read until this time */
+    DEFER *defer_check;		/* check if we should defer read */
     CommWriteStateData *rwstate;	/* State data for comm_write */
 };
 
@@ -496,6 +495,10 @@ struct _ConnStateData {
     CommWriteStateData *commWriteState;
     int nrequests;
     int persistent;
+    struct {
+	int n;
+	time_t until;
+    } defer;
 };
 
 struct _ipcache_addrs {

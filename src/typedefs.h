@@ -92,6 +92,7 @@ typedef void IPH _PARAMS((const ipcache_addrs *, void *));
 typedef void IRCB _PARAMS((peer *, peer_t, icp_common_t *, void *data));
 typedef void PSC _PARAMS((peer *, void *));
 typedef void RH _PARAMS((void *data, char *result));
+typedef int DEFER(int fd, void *data);
 
 typedef void SIH _PARAMS((int fd, void *));	/* swap in */
 typedef int QS _PARAMS((const void *, const void *));	/* qsort */
