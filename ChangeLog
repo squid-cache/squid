@@ -1,3 +1,6 @@
+	- Fixed hash_first/hash_next bugs with **Current pointer.
+	  Replaced with *next pointer.
+
 Changes to squid-1.2.beta21 (May 22, 1998):
 
 	- Added Italian error pages by Alessio Bragadini.
