@@ -59,11 +59,11 @@ storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
 	fatal_dump("cache_dir pathname is too long");
     if (SwapDirs == NULL) {
 	SwapDirsAllocated = 4;
-	SwapDirs = xcalloc(SwapDirsAllocated, sizeof(SwapDir *));
+	SwapDirs = xcalloc(SwapDirsAllocated, sizeof(SwapDir));
     }
     if (SwapDirsAllocated == ncache_dirs) {
 	SwapDirsAllocated <<= 1;
-	tmp = xcalloc(SwapDirsAllocated, sizeof(SwapDir *));
+	tmp = xcalloc(SwapDirsAllocated, sizeof(SwapDir));
 	for (i = 0; i < ncache_dirs; i++)
 	    tmp[i] = SwapDirs[i];
 	xfree(SwapDirs);
