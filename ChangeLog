@@ -12,6 +12,13 @@
 	  requests, such as for peer digests.
 	- Completed initial HTCP implementation.  It works, but is not
 	  tested much.
+	- Added counters for I/O syscalls.
+	- Fixed httpMaybeRemovePublic.  With broken ICP neighbors
+	  (netapp) Squid doesn't use private keys.  This caused us
+	  to remove almost every object from the cache.
+	- Added 'asndb' cachemgr stats to show AS Number tree.
+	- Fixed comm_incoming calling rate for high loads (Stewart
+	  Forster).
 
 Changes to squid-1.2.beta24 (August 21, 1998):
 
