@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.322 1997/10/28 20:42:54 wessels Exp $
+ * $Id: store.cc,v 1.323 1997/10/28 21:56:08 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -179,11 +179,6 @@ struct storeRebuildState {
     size_t line_in_sz;
 };
 
-struct _bucketOrder {
-    unsigned int bucket;
-    int index;
-};
-
 typedef struct storeCleanList {
     char *key;
     struct storeCleanList *next;
@@ -220,7 +215,6 @@ typedef struct swapout_ctrl_t {
 
 /* Static Functions */
 static int compareLastRef(StoreEntry **, StoreEntry **);
-static int compareBucketOrder(struct _bucketOrder *, struct _bucketOrder *);
 static int storeCheckExpired(const StoreEntry *, int flag);
 static store_client *storeClientListSearch(const MemObject *, void *);
 static int storeEntryLocked(const StoreEntry *);
@@ -297,7 +291,6 @@ static int store_buckets;
 static int store_maintain_rate;
 static int store_maintain_buckets;
 static int scan_revolutions;
-static struct _bucketOrder *MaintBucketsOrder = NULL;
 
 static MemObject *
 new_MemObject(const char *log_url)
@@ -1625,12 +1618,6 @@ compareLastRef(StoreEntry ** e1, StoreEntry ** e2)
     return (0);
 }
 
-static int
-compareBucketOrder(struct _bucketOrder *a, struct _bucketOrder *b)
-{
-    return a->index - b->index;
-}
-
 /* returns the bucket number to work on,
  * pointer to next bucket after each calling
  */
@@ -1642,16 +1629,19 @@ storeGetBucketNum(void)
 	bucket = 0;
     return (bucket++);
 }
-
-#define SWAP_MAX_HELP (store_buckets/2)
-
 /* The maximum objects to scan for maintain storage space */
-#define SWAP_LRUSCAN_COUNT	1024
-#define SWAP_LRU_REMOVE_COUNT	64
+#define MAINTAIN_MAX_SCAN	1024
+#define MAINTAIN_MAX_REMOVE	64
 
-/* Clear Swap storage to accommodate the given object len */
+/* 
+ * This routine is to be called by main loop in main.c.
+ * It removes expired objects on only one bucket for each time called.
+ * returns the number of objects removed
+ *
+ * This should get called 1/s from main().
+ */
 void
-storeGetSwapSpace(int size)
+storeMaintainSwapSpace(void *NOTUSED)
 {
     dlink_node *m;
     dlink_node *prev;
@@ -1661,34 +1651,37 @@ storeGetSwapSpace(int size)
     int expired = 0;
     int purged = 0;
     static time_t last_warn_time = 0;
-    int kb_size = ((size + 1023) >> 10);
-    if (store_swap_size + kb_size <= store_swap_high)
+    eventAdd("storeMaintainSwapSpace", storeMaintainSwapSpace, NULL, 1);
+    /* We can't delete objects while rebuilding swap */
+    if (store_rebuilding)
 	return;
-    debug(20, 1) ("storeGetSwapSpace: Need %d bytes...\n", size);
+    debug(20, 3) ("storeMaintainSwapSpace\n");
     for (m = all_list.tail; m; m = prev) {
 	prev = m->prev;
 	e = m->data;
 	if (storeEntryLocked(e)) {
 	    locked++;
-	} else if (storeCheckExpired(e, 0)) {
+	} else if (storeCheckExpired(e, 1)) {
 	    expired++;
 	    storeRelease(e);
 	} else {
-	    storeRelease(e);
 	    purged++;
+	    storeRelease(e);
 	}
-	if (store_swap_size + kb_size <= store_swap_high)
+	if (store_swap_size <= store_swap_high)
 	    break;
-	if (++scanned > SWAP_LRUSCAN_COUNT)
+	if (expired + purged > MAINTAIN_MAX_REMOVE)
+	    break;
+	if (++scanned > MAINTAIN_MAX_SCAN)
 	    break;
     }
-    debug(20, 1) ("storeGetSwapSpace stats:\n");
-    debug(20, 1) ("  %6d objects\n", meta_data.store_entries);
-    debug(20, 1) ("  %6d were scanned\n", scanned);
-    debug(20, 1) ("  %6d were locked\n", locked);
-    debug(20, 1) ("  %6d were expired\n", expired);
-    debug(20, 1) ("  %6d were purged\n", purged);
-    if (store_swap_size + kb_size < Config.Swap.maxSize)
+    debug(20, 3) ("storeMaintainSwapSpace stats:\n");
+    debug(20, 3) ("  %6d objects\n", meta_data.store_entries);
+    debug(20, 3) ("  %6d were scanned\n", scanned);
+    debug(20, 3) ("  %6d were locked\n", locked);
+    debug(20, 3) ("  %6d were expired\n", expired);
+    debug(20, 3) ("  %6d were purged\n", purged);
+    if (store_swap_size < Config.Swap.maxSize)
 	return;
     if (squid_curtime - last_warn_time < 10)
 	return;
@@ -1973,24 +1966,6 @@ storeEntryValidLength(const StoreEntry * e)
 #endif
 
 static void
-storeRandomizeBuckets(void)
-{
-    int i;
-    struct _bucketOrder *b;
-    if (MaintBucketsOrder == NULL)
-	MaintBucketsOrder = xcalloc(store_buckets, sizeof(struct _bucketOrder));
-    for (i = 0; i < store_buckets; i++) {
-	b = MaintBucketsOrder + i;
-	b->bucket = (unsigned int) i;
-	b->index = (int) squid_random();
-    }
-    qsort((char *) MaintBucketsOrder,
-	store_buckets,
-	sizeof(struct _bucketOrder),
-	             (QS *) compareBucketOrder);
-}
-
-static void
 storeInitHashValues(void)
 {
     int i;
@@ -2013,7 +1988,6 @@ storeInitHashValues(void)
     else
 	store_buckets = 65357, store_maintain_rate = 1;
     store_maintain_buckets = 1;
-    storeRandomizeBuckets();
     debug(20, 1) ("Using %d Store buckets, maintain %d bucket%s every %d second%s\n",
 	store_buckets,
 	store_maintain_buckets,
@@ -2073,65 +2047,6 @@ urlcmp(const char *url1, const char *url2)
 	fatal_dump("urlcmp: Got a NULL url pointer.");
     return (strcmp(url1, url2));
 }
-
-/* 
- * This routine is to be called by main loop in main.c.
- * It removes expired objects on only one bucket for each time called.
- * returns the number of objects removed
- *
- * This should get called 1/s from main().
- */
-void
-storeMaintainSwapSpace(void *unused)
-{
-    static time_t last_time = 0;
-    static int bucket_index = 0;
-    hash_link *link_ptr = NULL, *next = NULL;
-    StoreEntry *e = NULL;
-    int rm_obj = 0;
-    int scan_buckets = 0;
-    int scan_obj = 0;
-    static struct _bucketOrder *b;
-
-    eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
-    /* We can't delete objects while rebuilding swap */
-    if (store_rebuilding)
-	return;
-
-    /* Purges expired objects, check one bucket on each calling */
-    if (squid_curtime - last_time >= store_maintain_rate) {
-	for (;;) {
-	    if (scan_obj && scan_buckets >= store_maintain_buckets)
-		break;
-	    if (++scan_buckets > 100)
-		break;
-	    last_time = squid_curtime;
-	    if (bucket_index >= store_buckets) {
-		bucket_index = 0;
-		scan_revolutions++;
-		debug(51, 1) ("Completed %d full expiration scans of store table\n",
-		    scan_revolutions);
-		storeRandomizeBuckets();
-	    }
-	    b = MaintBucketsOrder + bucket_index++;
-	    next = hash_get_bucket(store_table, b->bucket);
-	    while ((link_ptr = next)) {
-		scan_obj++;
-		next = link_ptr->next;
-		e = (StoreEntry *) link_ptr;
-		if (!storeCheckExpired(e, 1))
-		    continue;
-		rm_obj += storeRelease(e);
-	    }
-	}
-    }
-    debug(51, rm_obj ? 2 : 9) ("Removed %d of %d objects from bucket %d\n",
-	rm_obj, scan_obj, (int) b->bucket);
-    /* Scan row of hash table each second and free storage if we're
-     * over the high-water mark */
-    storeGetSwapSpace(0);
-}
-
 
 /*
  *  storeWriteCleanLogs
@@ -2332,16 +2247,13 @@ storeKeepInMemory(const StoreEntry * e)
 static int
 storeCheckExpired(const StoreEntry * e, int check_lru_age)
 {
-    time_t max_age;
     if (storeEntryLocked(e))
 	return 0;
     if (BIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
 	return 1;
     if (!check_lru_age)
 	return 0;
-    if ((max_age = storeExpiredReferenceAge()) <= 0)
-	return 0;
-    if (squid_curtime - e->lastref > max_age)
+    if (squid_curtime - e->lastref > storeExpiredReferenceAge())
 	return 1;
     return 0;
 }
@@ -2363,8 +2275,6 @@ storeExpiredReferenceAge(void)
     double x;
     double z;
     time_t age;
-    if (Config.referenceAge == 0)
-	return 0;
     x = (double) (store_swap_high - store_swap_size) / (store_swap_high - store_swap_low);
     x = x < 0.0 ? 0.0 : x > 1.0 ? 1.0 : x;
     z = pow((double) Config.referenceAge, x);
@@ -2409,7 +2319,6 @@ storeFreeMemory(void)
     xfree(list);
     hashFreeMemory(store_table);
     store_table = NULL;
-    safe_free(MaintBucketsOrder);
 }
 
 int
