@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.87 1997/10/23 05:13:46 wessels Exp $
+ * $Id: wais.cc,v 1.88 1997/10/23 16:38:16 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -268,7 +268,7 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	    COMM_SELECT_READ,
 	    waisReadReply,
 	    waisState, 0);
-	commSetDefer(fd, protoCheckDeferRead);
+	commSetDefer(fd, protoCheckDeferRead, entry);
     }
 }
 
