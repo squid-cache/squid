@@ -28,8 +28,8 @@
 struct _aio_result_t {
     int aio_return;
     int aio_errno;
-    void *_data; /* Internal housekeeping */
-    void *data; /* Available to the caller */
+    void *_data;		/* Internal housekeeping */
+    void *data;			/* Available to the caller */
 };
 
 typedef struct _aio_result_t aio_result_t;

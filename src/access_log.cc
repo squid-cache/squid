@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.63 2000/12/17 13:27:37 hno Exp $
+ * $Id: access_log.cc,v 1.64 2001/01/02 00:09:55 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -328,7 +328,7 @@ void
 accessLogInit(void)
 {
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
-    if (strcasecmp (Config.Log.access, "none") == 0)
+    if (strcasecmp(Config.Log.access, "none") == 0)
 	return;
     logfile = logfileOpen(Config.Log.access, MAX_URL << 1, 1);
     LogfileStatus = LOG_ENABLE;

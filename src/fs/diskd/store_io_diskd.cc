@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.17 2000/11/27 00:03:33 adrian Exp $
+ * $Id: store_io_diskd.cc,v 1.18 2001/01/02 00:11:54 wessels Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -364,14 +364,14 @@ storeDiskdReadDone(diomsg * M)
     sio->read.callback = NULL;
     sio->read.callback_data = NULL;
     if (valid) {
-        assert(!diskdstate->flags.close_request);
-        /*
-         * Only copy the data if the callback is still valid,
-         * if it isn't valid then the request should have been
-         * aborted.
-         *   -- adrian
-         */
-        xmemcpy(their_buf, sbuf, len);	/* yucky copy */
+	assert(!diskdstate->flags.close_request);
+	/*
+	 * Only copy the data if the callback is still valid,
+	 * if it isn't valid then the request should have been
+	 * aborted.
+	 *   -- adrian
+	 */
+	xmemcpy(their_buf, sbuf, len);	/* yucky copy */
 	callback(their_data, their_buf, len);
     }
 }

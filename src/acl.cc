@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.227 2001/01/01 22:03:55 wessels Exp $
+ * $Id: acl.cc,v 1.228 2001/01/02 00:09:55 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1795,7 +1795,7 @@ aclLookupProxyAuthDone(void *data, char *result)
 	checklist->auth_user->passwd_ok = 1;
     else {
 	if (strlen(result) > sizeof("ERR "))
-	    checklist->auth_user->message = xstrdup(result+4);
+	    checklist->auth_user->message = xstrdup(result + 4);
 	checklist->auth_user->passwd_ok = 0;
     }
     aclCheck(checklist);

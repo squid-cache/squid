@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.19 2000/12/09 01:47:23 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.20 2001/01/02 00:11:55 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -670,19 +670,19 @@ storeUfsDirRebuildFromSwapLog(void *data)
 	    /* load new */
 	    (void) 0;
 	}
-       /* update store_swap_size */
-       rb->counts.objcount++;
-       e = storeUfsDirAddDiskRestore(SD, s.key,
-           s.swap_filen,
-           s.swap_file_sz,
-           s.expires,
-           s.timestamp,
-           s.lastref,
-           s.lastmod,
-           s.refcount,
-           s.flags,
-           (int) rb->flags.clean);
-       storeDirSwapLog(e, SWAP_LOG_ADD);
+	/* update store_swap_size */
+	rb->counts.objcount++;
+	e = storeUfsDirAddDiskRestore(SD, s.key,
+	    s.swap_filen,
+	    s.swap_file_sz,
+	    s.expires,
+	    s.timestamp,
+	    s.lastref,
+	    s.lastmod,
+	    s.refcount,
+	    s.flags,
+	    (int) rb->flags.clean);
+	storeDirSwapLog(e, SWAP_LOG_ADD);
     }
     eventAdd("storeRebuild", storeUfsDirRebuildFromSwapLog, rb, 0.0, 1);
 }

@@ -339,7 +339,7 @@ storeAufsReadDone(int fd, int errflag, size_t len, void *my_data)
 	errflag = DISK_OK;
 #else
     if (errflag == DISK_EOF)
-	errflag = DISK_OK; /* EOF is signalled by len == 0, not errors... */
+	errflag = DISK_OK;	/* EOF is signalled by len == 0, not errors... */
 #endif
     assert(callback);
     assert(their_data);
