@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.50 2004/04/03 14:25:59 hno Exp $
+ * $Id: fd.cc,v 1.51 2004/12/27 10:25:32 robertc Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -82,7 +82,7 @@ fdUpdateBiggest(int fd, int opening)
      */
     assert(!opening);
 
-    while (!fd_table[Biggest_FD].flags.open)
+    while (Biggest_FD >= 0 && !fd_table[Biggest_FD].flags.open)
         Biggest_FD--;
 }
 
