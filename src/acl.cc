@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.127 1998/01/02 23:39:54 wessels Exp $
+ * $Id: acl.cc,v 1.128 1998/01/05 21:44:39 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -304,6 +304,12 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
     return 1;
 }
 
+
+#define SCAN_ACL1       "%[0123456789.]-%[0123456789.]/%[0123456789.]"
+#define SCAN_ACL2       "%[0123456789.]-%[0123456789.]"
+#define SCAN_ACL3       "%[0123456789.]/%[0123456789.]"
+#define SCAN_ACL4       "%[0123456789.]"
+
 static struct _acl_ip_data *
 aclParseIpData(const char *t)
 {
@@ -318,13 +324,13 @@ aclParseIpData(const char *t)
 	q->mask.s_addr = 0;
 	return q;
     }
-    if (sscanf(t, "%[0-9.]-%[0-9.]/%[0-9.]", addr1, addr2, mask) == 3) {
+    if (sscanf(t, SCAN_ACL1, addr1, addr2, mask) == 3) {
 	(void) 0;
-    } else if (sscanf(t, "%[0-9.]-%[0-9.]", addr1, addr2) == 2) {
+    } else if (sscanf(t, SCAN_ACL2, addr1, addr2) == 2) {
 	mask[0] = '\0';
-    } else if (sscanf(t, "%[0-9.]/%[0-9.]", addr1, mask) == 2) {
+    } else if (sscanf(t, SCAN_ACL3, addr1, mask) == 2) {
 	addr2[0] = '\0';
-    } else if (sscanf(t, "%[0-9.]", addr1) == 1) {
+    } else if (sscanf(t, SCAN_ACL4, addr1) == 1) {
 	addr2[0] = '\0';
 	mask[0] = '\0';
     } else if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.150 1998/01/05 21:18:14 wessels Exp $
+ * $Id: squid.h,v 1.151 1998/01/05 21:44:42 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -168,6 +168,10 @@
 #include <assert.h>
 #else
 #define assert(X) ((void)0)
+#endif
+
+#if defined(__QNX__)
+#include <unix.h>
 #endif
 
 /*
