@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_basic.cc,v 1.7 2001/03/03 10:39:36 hno Exp $
+ * $Id: auth_basic.cc,v 1.8 2001/03/21 23:41:13 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -261,7 +261,7 @@ authenticateBasicHandleReply(void *data, char *reply)
     authenticateStateData *r = data;
     auth_user_t *auth_user;
     basic_data *basic_auth;
-    auth_basic_queue_node *node, *tmpnode;
+    auth_basic_queue_node *tmpnode;
     int valid;
     char *t = NULL;
     debug(29, 9) ("authenticateBasicHandleReply: {%s}\n", reply ? reply : "<NULL>");
@@ -284,15 +284,14 @@ authenticateBasicHandleReply(void *data, char *reply)
     if (valid)
 	r->handler(r->data, NULL);
     cbdataUnlock(r->data);
-    node = basic_auth->auth_queue;
-    while (node) {
-	tmpnode = node->next;
-	valid = cbdataValid(node->data);
+    while (basic_auth->auth_queue) {
+	tmpnode = basic_auth->auth_queue->next;
+	valid = cbdataValid(basic_auth->auth_queue->data);
 	if (valid)
-	    node->handler(node->data, NULL);
-	cbdataUnlock(node->data);
-	xfree(node);
-	node = tmpnode;
+	    basic_auth->auth_queue->handler(basic_auth->auth_queue->data, NULL);
+	cbdataUnlock(basic_auth->auth_queue->data);
+	xfree(basic_auth->auth_queue);
+	basic_auth->auth_queue = tmpnode;
     }
     authenticateStateFree(r);
 }
@@ -324,6 +323,7 @@ authBasicParse(authScheme * scheme, int n_configured, char *param_str)
 	memset(scheme->scheme_data, 0, sizeof(auth_basic_config));
 	basicConfig = scheme->scheme_data;
 	basicConfig->authenticateChildren = 5;
+	basicConfig->credentialsTTL = 2 * 60 * 60;	/* two hours */
     }
     basicConfig = scheme->scheme_data;
     if (strcasecmp(param_str, "program") == 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.251 2001/03/10 00:55:36 hno Exp $
+ * $Id: acl.cc,v 1.252 2001/03/21 23:41:10 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1213,7 +1213,7 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
      * so we test for an authenticated connection when we recieve no authentication
      * header.
      */
-    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(auth_user_request)))
+    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(auth_user_request ? auth_user_request : checklist->conn->auth_user_request)))
 	|| (checklist->conn->auth_type == AUTH_BROKEN)) {
 	/* no header or authentication failed/got corrupted - restart */
 	checklist->conn->auth_type = AUTH_UNKNOWN;
