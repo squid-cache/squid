@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.16 1998/10/18 08:26:40 wessels Exp $
+ * $Id: comm_select.cc,v 1.17 1998/10/18 08:33:19 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -523,6 +523,7 @@ comm_select_http_incoming(void)
     statHistCount(&Counter.comm_http_incoming, nevents);
 }
 
+#define DEBUG_FDBITS 1
 /* Select on all sockets; call handlers for those that are ready. */
 int
 comm_select(int msec)
@@ -537,6 +538,9 @@ comm_select(int msec)
     int maxindex;
     int k;
     int j;
+#if DEBUG_FDBITS
+    int i;
+#endif
     fd_mask *fdsp;
     fd_mask tmask;
     static time_t last_timeout = 0;
@@ -623,6 +627,7 @@ comm_select(int msec)
 	fdsp = (fd_mask *) & readfds;
 	maxindex = howmany(maxfd, (sizeof(*fdsp) * NBBY));
 	for (j = 0; j < maxindex; j++) {
+	    debug(5,9)("fdsp[%d] = %x\n", j, fdsp[j]);
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
 	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
@@ -630,6 +635,7 @@ comm_select(int msec)
 		    continue;
 		/* Found a set bit */
 		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
+	        debug(5,9)("FD %d bit set for reading\n", fd);
 #if DEBUG_FDBITS
 		assert(FD_ISSET(fd, &readfds));
 #endif
@@ -648,6 +654,8 @@ comm_select(int msec)
 		    commUpdateReadBits(fd, NULL);
 		    hdl(fd, fd_table[fd].read_data);
 		    Counter.select_fds++;
+		} else {
+		    debug(5, 1)("comm_select: NO READ HANDLER FOR FD %d\n", fd);
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
@@ -667,6 +675,7 @@ comm_select(int msec)
 		    continue;
 		/* Found a set bit */
 		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
+	        debug(5,9)("FD %d bit set for writing\n", fd);
 #if DEBUG_FDBITS
 		assert(FD_ISSET(fd, &writefds));
 #endif
@@ -685,6 +694,8 @@ comm_select(int msec)
 		    commUpdateWriteBits(fd, NULL);
 		    hdl(fd, fd_table[fd].write_data);
 		    Counter.select_fds++;
+		} else {
+		    debug(5, 1)("comm_select: NO WRITE HANDLER FOR FD %d\n", fd);
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
