@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
+<TITLE>שגיאה: הכתובת המבוקשת לא נגישה</TITLE>
+</HEAD><BODY>
+<H2>לא ניתן לגשת אל הכתובת המבוקשת</H2>
+<HR>
+<P>
+כאשר ניסיתי לגשת אל הכתובת: <A HREF="%U">%U</A>
+<P>
+נתקלתי בשגיאה הבאה:
+<BLOCKQUOTE>
+לא יכול למצוא כתובת IP בשביל
+<I>%H</I>
+</BLOCKQUOTE>
+
+<P>
+הודעת שרת השמות:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+זה אומר ש:
+<PRE>
+ השרת לא הצליח למצוא את השרת שצויין.
+ בדוק את הכתובת.
+</PRE>
+<P>מנהל השרת הוא <A HREF="mailto:%w">%w</A>. 

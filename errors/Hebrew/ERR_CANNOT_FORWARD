@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
+<TITLE>שגיאה: הכתובת המבוקשת לא נגישה</TITLE>
+</HEAD><BODY>
+<div dir="rtl" align="right">
+<H1>שגיאה</H1>
+<H2>לא ניתן לגשת אל הכתובת המבוקשת</H2>
+<HR>
+<P>
+כאשר ניסיתי לגשת אל הכתובת: <A HREF="%U">%U</A>
+<P>
+נתקלתי בשגיאה הבאה:
+<UL>
+<LI>
+<STRONG>
+Unable to forward this request at this time.
+</STRONG>
+</UL>
+
+<P>
+This request could not be forwarded to the origin server or to any
+parent caches.  The most likely cause for this error is that:
+<UL>
+<LI>The cache administrator does not allow this cache to make 
+    direct connections to origin servers, and
+<LI>All configured parent caches are currently unreachable.
+</UL>
+<P>מנהל השרת הוא <A HREF="mailto:%w">%w</A>. 

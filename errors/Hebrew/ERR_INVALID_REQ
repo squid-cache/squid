@@ -1,0 +1,33 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
+<TITLE>שגיאה: הכתובת המבוקשת לא נגישה</TITLE>
+</HEAD><BODY>
+<div dir="rtl" align="right">
+<H1>שגיאה</H1>
+<H2>לא ניתן לגשת אל הכתובת המבוקשת</H2>
+<HR>
+<P>
+כאשר ניסיתי לעבד את הבקשה:
+<PRE>
+%R
+</PRE>
+<P>
+נתקלתי בשגיאה הבאה:
+<UL>
+<LI>
+<STRONG>
+בקשה שגויה
+</STRONG>
+</UL>
+
+<P>
+ישנה שגיאה בבקשת ה-HTTP. בעיות אפשריות:
+<UL dir="rtl">
+<LI>סוג בקשה לא ידוע או חסר
+<LI>כתובת חסרה
+<LI>חסר HTTP Identifier (HTTP/1.0)
+<LI>הבקשה ארוכה מדי
+<LI>חסר Content-Length בשביל בקשות POST או PUT
+<LI>תווים לא חוקיים בשם השרת; קווים תחתונים אסורים
+</UL>
+<P>מנהל השרת הוא <A HREF="mailto:%w">%w</A>. 

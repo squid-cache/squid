@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
+<TITLE>ERROR: The requested URN not be retrieved</TITLE>
+</HEAD><BODY>
+<div dir="rtl" align="right">
+<H1>שגיאה</H1>
+<H2>A URL for the requested URN could not be retrieved</H2>
+<HR>
+<P>
+While trying to retrieve the URN:
+<A HREF="%U">%U</A>
+<P>
+נתקלתי בשגיאה הבאה:
+<UL>
+<LI>
+<STRONG>
+לא יכול למצוא URN
+Cannot Resolve URN
+</STRONG>
+</UL>
+
+<P>
+אל תצפה יותר מדי מ-URN על %T :)
+<P>מנהל השרת הוא <A HREF="mailto:%w">%w</A>. 
