@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.104 1996/11/14 18:16:33 wessels Exp $
+ * $Id: http.cc,v 1.105 1996/11/14 18:38:43 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -506,7 +506,7 @@ httpReadReply(int fd, void *data)
 	IOStats.Http.read_hist[bin]++;
     }
     if (len < 0) {
-	debug(11, 2, "httpReadReply: FD %d: read failure: %s.\n",
+	debug(50, 2, "httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */

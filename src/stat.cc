@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.102 1996/11/12 07:06:45 wessels Exp $
+ * $Id: stat.cc,v 1.103 1996/11/14 18:38:49 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -490,7 +490,7 @@ log_get_start(const cacheinfo * obj, StoreEntry * sentry)
     }
     fd = file_open(obj->logfilename, NULL, O_RDONLY);
     if (fd < 0) {
-	debug(18, 0, "Cannot open logfile: %s: %s\n",
+	debug(50, 0, "Cannot open logfile: %s: %s\n",
 	    obj->logfilename, xstrerror());
 	return;
     }
@@ -1283,7 +1283,7 @@ stat_init(cacheinfo ** object, const char *logfilename)
 	strncpy(obj->logfilename, logfilename, SQUID_MAXPATHLEN - 1);
 	obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
 	if (obj->logfile_fd == DISK_ERROR) {
-	    debug(18, 0, "%s: %s\n", obj->logfilename, xstrerror());
+	    debug(50, 0, "%s: %s\n", obj->logfilename, xstrerror());
 	    fatal("Cannot open logfile.");
 	}
 	obj->logfile_access = file_write_lock(obj->logfile_fd);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.82 1996/11/07 18:53:19 wessels Exp $
+ * $Id: tools.cc,v 1.83 1996/11/14 18:38:51 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -413,7 +413,7 @@ getMyHostname(void)
     if (!present) {
 	host[0] = '\0';
 	if (gethostname(host, SQUIDHOSTNAMELEN) == -1) {
-	    debug(21, 1, "getMyHostname: gethostname failed: %s\n",
+	    debug(50, 1, "getMyHostname: gethostname failed: %s\n",
 		xstrerror());
 	    return NULL;
 	} else {
@@ -434,7 +434,7 @@ safeunlink(const char *s, int quiet)
     int err;
     if ((err = unlink(s)) < 0)
 	if (!quiet)
-	    debug(21, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
+	    debug(50, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
     return (err);
 }
 
@@ -517,8 +517,8 @@ writePidFile(void)
 	fprintf(pid_fp, "%d\n", (int) getpid());
 	fclose(pid_fp);
     } else {
-	debug(21, 0, "WARNING: Could not write pid file\n");
-	debug(21, 0, "         %s: %s\n", f, xstrerror());
+	debug(50, 0, "WARNING: Could not write pid file\n");
+	debug(50, 0, "         %s: %s\n", f, xstrerror());
     }
 }
 
@@ -561,7 +561,7 @@ setMaxFD(void)
     struct rlimit rl;
 #if defined(RLIMIT_NOFILE)
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-	debug(21, 0, "setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
+	debug(50, 0, "setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
     } else {
 	rl.rlim_cur = FD_SETSIZE;
 	if (rl.rlim_cur > rl.rlim_max)
@@ -573,7 +573,7 @@ setMaxFD(void)
     }
 #elif defined(RLIMIT_OFILE)
     if (getrlimit(RLIMIT_OFILE, &rl) < 0) {
-	debug(21, 0, "setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
+	debug(50, 0, "setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
     } else {
 	rl.rlim_cur = FD_SETSIZE;
 	if (rl.rlim_cur > rl.rlim_max)
@@ -590,7 +590,7 @@ setMaxFD(void)
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_DATA)
     if (getrlimit(RLIMIT_DATA, &rl) < 0) {
-	debug(21, 0, "getrlimit: RLIMIT_DATA: %s\n", xstrerror());
+	debug(50, 0, "getrlimit: RLIMIT_DATA: %s\n", xstrerror());
     } else {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_DATA, &rl) < 0) {
@@ -627,7 +627,7 @@ squid_signal(int sig, void (*func) _PARAMS((int)), int flags)
     sa.sa_flags = flags;
     sigemptyset(&sa.sa_mask);
     if (sigaction(sig, &sa, NULL) < 0)
-	debug(1, 0, "sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
+	debug(50, 0, "sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
 #else
     (void) signal(sig, func);
 #endif

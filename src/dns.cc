@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.23 1996/11/06 23:14:28 wessels Exp $
+ * $Id: dns.cc,v 1.24 1996/11/14 18:38:41 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -142,13 +142,13 @@ dnsOpenServer(const char *command)
     len = sizeof(S);
     memset(&S, '\0', len);
     if (getsockname(cfd, (struct sockaddr *) &S, &len) < 0) {
-	debug(34, 0, "dnsOpenServer: getsockname: %s\n", xstrerror());
+	debug(50, 0, "dnsOpenServer: getsockname: %s\n", xstrerror());
 	comm_close(cfd);
 	return -1;
     }
     listen(cfd, 1);
     if ((pid = fork()) < 0) {
-	debug(34, 0, "dnsOpenServer: fork: %s\n", xstrerror());
+	debug(50, 0, "dnsOpenServer: fork: %s\n", xstrerror());
 	comm_close(cfd);
 	return -1;
     }
@@ -173,9 +173,10 @@ dnsOpenServer(const char *command)
 	    return -1;
 	}
 	memset(buf, '\0', 128);
+	errno = 0;
 	if (read(sfd, buf, 128) < 0 || strcmp(buf, "$alive\n$end\n")) {
-	    debug(34, 0, "dnsOpenServer: $hello read test failed\n");
-	    debug(34, 0, "--> read: %s\n", xstrerror());
+	    debug(50, 0, "dnsOpenServer: $hello read test failed\n");
+	    debug(50, 0, "--> read: %s\n", xstrerror());
 	    comm_close(sfd);
 	    return -1;
 	}
@@ -185,7 +186,7 @@ dnsOpenServer(const char *command)
     /* child */
     no_suid();			/* give up extra priviliges */
     if ((fd = accept(cfd, NULL, NULL)) < 0) {
-	debug(34, 0, "dnsOpenServer: FD %d accept: %s\n", cfd, xstrerror());
+	debug(50, 0, "dnsOpenServer: FD %d accept: %s\n", cfd, xstrerror());
 	_exit(1);
     }
     dup2(fd, 0);
@@ -195,7 +196,7 @@ dnsOpenServer(const char *command)
     close(fd);
     close(cfd);
     execlp(command, "(dnsserver)", NULL);
-    debug(34, 0, "dnsOpenServer: %s: %s\n", command, xstrerror());
+    debug(50, 0, "dnsOpenServer: %s: %s\n", command, xstrerror());
     _exit(1);
     return 0;
 }
