@@ -150,6 +150,7 @@ typedef enum {
     MGR_STOREDIR,
     MGR_CBDATA,
     MGR_PCONN,
+    MGR_COUNTERS,
     MGR_5MIN,
     MGR_60MIN,
     MGR_MEM,
