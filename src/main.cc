@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.20 1996/04/05 23:21:12 wessels Exp $ */
+/* $Id: main.cc,v 1.21 1996/04/08 17:08:02 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -19,7 +19,7 @@ extern void (*failure_notify) ();	/* for error reporting from xmalloc */
 
 static int asciiPortNumOverride = 0;
 static int udpPortNumOverride = 0;
-
+static int malloc_debug_level = 0;
 
 static void usage()
 {
@@ -40,66 +40,14 @@ Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
     exit(1);
 }
 
-int main(argc, argv)
+static void mainParseOptions(argc, argv)
      int argc;
-     char **argv;
+     char *argv[];
 {
-    int c;
-    int malloc_debug_level = 0;
     extern char *optarg;
-    int errcount = 0;
-    static int neighbors = 0;
-    char *s = NULL;
-    int n;			/* # of GC'd objects */
-    time_t last_maintain = 0;
+    int c;
 
-    errorInitialize();
-
-    cached_starttime = getCurrentTime();
-    failure_notify = fatal_dump;
-
-    setMaxFD();
-
-    for (n = getMaxFD(); n > 2; n--)
-	close(n);
-
-#if HAVE_MALLOPT
-    /* set malloc option */
-    /* use small block algorithm for faster allocation */
-    /* grain of small block */
-    mallopt(M_GRAIN, 16);
-    /* biggest size that is considered a small block */
-    mallopt(M_MXFAST, 4096);
-    /* number of holding small block */
-    mallopt(M_NLBLKS, 100);
-#endif
-
-    /*init comm module */
-    comm_init();
-
-    /* we have to init fdstat here. */
-    fdstat_init(PREOPEN_FD);
-    fdstat_open(0, LOG);
-    fdstat_open(1, LOG);
-    fdstat_open(2, LOG);
-    fd_note(0, "STDIN");
-    fd_note(1, "STDOUT");
-    fd_note(2, "STDERR");
-
-    if ((s = getenv("HARVEST_HOME")) != NULL) {
-	config_file = (char *) xcalloc(1, strlen(s) + 64);
-	sprintf(config_file, "%s/lib/cached.conf", s);
-    } else {
-	config_file = xstrdup("/usr/local/harvest/lib/cached.conf");
-    }
-
-    /* enable syslog by default */
-    syslog_enable = 0;
-    /* preinit for debug module */
-    debug_log = stderr;
-    hash_init(0);
-
-    while ((c = getopt(argc, argv, "vCDRVbsif:a:p:u:m:zh?")) != -1)
+    while ((c = getopt(argc, argv, "vCDRVbsif:a:p:u:m:zh?")) != -1) {
 	switch (c) {
 	case 'v':
 	    printf("Harvest Cache: Version %s\n", SQUID_VERSION);
@@ -146,23 +94,14 @@ int main(argc, argv)
 	    usage();
 	    break;
 	}
-
-    if (catch_signals) {
-	signal(SIGSEGV, death);
-	signal(SIGBUS, death);
     }
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGCHLD, sig_child);
-    signal(SIGHUP, rotate_logs);
-    signal(SIGTERM, shut_down);
-    signal(SIGINT, shut_down);
+}
 
+static void mainInitialize()
+{
     parseConfigFile(config_file);
 
-    if (!neighbors) {
-	neighbors_create();
-	++neighbors;
-    };
+    neighbors_create();
 
     if (asciiPortNumOverride > 0)
 	setAsciiPortNum(asciiPortNumOverride);
@@ -182,7 +121,6 @@ int main(argc, argv)
     neighbors_init();
 
     ftpInitialize();
-
 
 #if defined(MALLOC_DBG)
     malloc_debug(0, malloc_debug_level);
@@ -243,6 +181,80 @@ int main(argc, argv)
     do_mallinfo = 1;
     debug(1, 0, "Ready to serve requests.\n");
 
+}
+
+
+int main(argc, argv)
+     int argc;
+     char **argv;
+{
+    int errcount = 0;
+    char *s = NULL;
+    int n;			/* # of GC'd objects */
+    time_t last_maintain = 0;
+
+    errorInitialize();
+
+    cached_starttime = getCurrentTime();
+    failure_notify = fatal_dump;
+
+    mainParseOptions(argc, argv);
+
+    setMaxFD();
+
+    for (n = getMaxFD(); n > 2; n--)
+	close(n);
+
+#if HAVE_MALLOPT
+    /* set malloc option */
+    /* use small block algorithm for faster allocation */
+    /* grain of small block */
+    mallopt(M_GRAIN, 16);
+    /* biggest size that is considered a small block */
+    mallopt(M_MXFAST, 4096);
+    /* number of holding small block */
+    mallopt(M_NLBLKS, 100);
+#endif
+
+    /*init comm module */
+    comm_init();
+
+    /* we have to init fdstat here. */
+    fdstat_init(PREOPEN_FD);
+    fdstat_open(0, LOG);
+    fdstat_open(1, LOG);
+    fdstat_open(2, LOG);
+    fd_note(0, "STDIN");
+    fd_note(1, "STDOUT");
+    fd_note(2, "STDERR");
+
+    if (config_file == NULL) {
+	if ((s = getenv("HARVEST_HOME")) != NULL) {
+	    config_file = (char *) xcalloc(1, strlen(s) + 64);
+	    sprintf(config_file, "%s/lib/cached.conf", s);
+	} else {
+	    config_file = xstrdup("/usr/local/harvest/lib/cached.conf");
+	}
+    }
+    /* enable syslog by default */
+    syslog_enable = 0;
+
+    /* preinit for debug module */
+    debug_log = stderr;
+    hash_init(0);
+
+    if (catch_signals) {
+	signal(SIGSEGV, death);
+	signal(SIGBUS, death);
+    }
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGCHLD, sig_child);
+    signal(SIGHUP, rotate_logs);
+    signal(SIGTERM, shut_down);
+    signal(SIGINT, shut_down);
+
+    mainInitialize();
+
     /* main loop */
     if (getCleanRate() > 0)
 	next_cleaning = time(0L) + getCleanRate();
@@ -260,7 +272,7 @@ int main(argc, argv)
 	    errcount++;
 	    debug(1, 0, "Select loop Error. Retry. %d\n", errcount);
 	    if (errcount == 10)
-		fatal_dump("Select Loop failed.!");
+		fatal_dump("Select Loop failed!");
 	    break;
 	case COMM_TIMEOUT:
 	    /* this happens after 1 minute of idle time, or
@@ -274,6 +286,9 @@ int main(argc, argv)
 	    }
 	    /* house keeping */
 	    break;
+	case COMM_SHUTDOWN:
+	    normal_shutdown();
+	    exit(0);
 	default:
 	    fatal_dump("MAIN: Internal error -- this should never happen.");
 	    break;

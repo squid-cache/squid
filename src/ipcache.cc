@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.15 1996/04/05 21:51:46 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.16 1996/04/08 17:08:01 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -1342,4 +1342,25 @@ int ipcache_hash_entry_count()
     }
 
     return local_ip_count;
+}
+
+void ipcacheShutdownServers()
+{
+    dnsserver_entry *dns = NULL;
+    int i;
+    static char *shutdown = "$shutdown\n";
+
+    debug(14, 1, "ipcacheShutdownServers:\n");
+
+    for (i = 0; i < getDnsChildren(); i++) {
+	dns = *(dns_child_table + i);
+	debug(14, 1, "ipcacheShutdownServers: sending '$shutdown' to dnsserver #%d\n", i);
+	debug(14, 1, "ipcacheShutdownServers: --> FD %d\n", dns->outpipe);
+	file_write(dns->outpipe,
+	    shutdown,
+	    strlen(shutdown),
+	    0,			/* Lock */
+	    0,			/* Handler */
+	    0);			/* Handler-data */
+    }
 }

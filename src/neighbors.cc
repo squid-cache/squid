@@ -1,4 +1,11 @@
-/* $Id: neighbors.cc,v 1.10 1996/04/06 00:53:06 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.11 1996/04/08 17:08:03 wessels Exp $ */
+
+/* TODO:
+ * - change 'neighbor' to 'sibling'
+ * - change 'edge' to neighbor?
+ * - make ->flags structure
+ * - fix "can't continue" if DNS lookup for neighbor fails.
+ */
 
 /*
  * DEBUG: Section 15          neighbors:
@@ -252,6 +259,42 @@ void neighbors_install(host, type, ascii_port, udp_port, proxy_only, domains)
     friends->n++;
 }
 
+static void neighborFriendsFree()
+{
+    edge *e = NULL;
+    edge *next = NULL;
+
+    debug(15, 1, "neighborFriendsFree()\n");
+
+    for (e = friends->edges_head; e; e = next) {
+	next = e->next;
+	safe_free(e->host);
+	safe_free(e);
+    }
+    friends->edges_head = NULL;
+}
+
+static void neighborsOpenLog(fname)
+     char *fname;
+{
+    int log_fd;
+
+    /* Close and reopen the log.  It may have been renamed "manually"
+     * before HUP'ing us. */
+    if (cache_hierarchy_log) {
+	file_close(fileno(cache_hierarchy_log));
+	fclose(cache_hierarchy_log);
+    }
+    log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT | O_APPEND);
+    if (log_fd < 0) {
+	debug(15, 0, "rotate_logs: %s: %s\n", fname, xstrerror());
+	debug(15, 1, "Hierachical logging is disabled.\n");
+    } else if ((cache_hierarchy_log = fdopen(log_fd, "a")) == NULL) {
+	debug(15, 0, "rotate_logs: %s: %s\n", fname, xstrerror());
+	debug(15, 1, "Hierachical logging is disabled.\n");
+    }
+}
+
 void neighbors_open(fd)
      int fd;
 {
@@ -259,7 +302,6 @@ void neighbors_open(fd)
     struct sockaddr_in our_socket_name;
     struct sockaddr_in *ap;
     int sock_name_length = sizeof(our_socket_name);
-    int log_fd;
     char *fname = NULL;
     char **list = NULL;
     edge *e = NULL;
@@ -272,17 +314,9 @@ void neighbors_open(fd)
     }
     friends->fd = fd;
 
-    /* open log file */
-    if ((fname = getHierarchyLogFile())) {
-	log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT | O_APPEND);
-	if (log_fd < 0) {
-	    debug(15, 1, "%s: %s\n", fname, xstrerror());
-	    debug(15, 1, "Hierachical logging is disabled.\n");
-	} else if (!(cache_hierarchy_log = fdopen(log_fd, "a"))) {
-	    debug(15, 1, "%s: %s\n", fname, xstrerror());
-	    debug(15, 1, "Hierachical logging is disabled.\n");
-	}
-    }
+    if ((fname = getHierarchyLogFile()))
+	neighborsOpenLog(fname);
+
     /* Prepare neighbor connections, one at a time */
     for (e = friends->edges_head; e; e = e->next) {
 	debug(15, 2, "Finding IP addresses for '%s'\n", e->host);
@@ -707,11 +741,10 @@ void neighbors_init()
 
 void neighbors_rotate_log()
 {
+    char *fname = NULL;
     int i;
     static char from[MAXPATHLEN];
     static char to[MAXPATHLEN];
-    char *fname = NULL;
-    int log_fd;
 
     if ((fname = getHierarchyLogFile()) == NULL)
 	return;
@@ -730,16 +763,5 @@ void neighbors_rotate_log()
 	sprintf(to, "%s.%d", fname, 0);
 	rename(fname, to);
     }
-    /* Close and reopen the log.  It may have been renamed "manually"
-     * before HUP'ing us. */
-    fclose(cache_hierarchy_log);
-    log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT | O_APPEND);
-    if (log_fd < 0) {
-	debug(15, 0, "rotate_logs: %s: %s\n", fname, xstrerror());
-	debug(15, 1, "Hierachical logging is disabled.\n");
-    } else if ((cache_hierarchy_log = fdopen(log_fd, "a")) == NULL) {
-	debug(15, 0, "rotate_logs: %s: %s\n",
-	    fname, xstrerror());
-	debug(15, 1, "Hierachical logging is disabled.\n");
-    }
+    neighborsOpenLog(fname);
 }

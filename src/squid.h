@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.8 1996/04/01 18:20:46 wessels Exp $ */
+/* $Id: squid.h,v 1.9 1996/04/08 17:08:03 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -120,3 +120,6 @@ typedef unsigned long u_num32;
 extern time_t cached_starttime;	/* main.c */
 extern time_t next_cleaning;	/* main.c */
 extern int catch_signals;	/* main.c */
+extern int do_reuse;
+extern int theAsciiConnection;
+extern int theUdpConnection;
