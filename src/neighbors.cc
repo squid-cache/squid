@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.212 1998/05/21 00:46:16 wessels Exp $
+ * $Id: neighbors.cc,v 1.213 1998/05/21 03:22:43 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -950,13 +950,13 @@ static void
 peerRefreshDNS(void *datanotused)
 {
     peer *p = NULL;
-    peer *next = Config.peers;
-    while ((p = next) != NULL) {
-	next = p->next;
-	/* some random, bogus FD for ipcache */
-	p->test_fd = Squid_MaxFD + current_time.tv_usec;
-	ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
+    if (0 == stat5minClientRequests()) {
+	/* no recent client traffic, wait a bit */
+        eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 180.0, 1);
+	return;
     }
+    for (p = Config.peers; p; p = p->next)
+	ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
     /* Reconfigure the peers every hour */
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 3600.0, 1);
 }
