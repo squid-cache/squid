@@ -1,7 +1,7 @@
 
 /*
- * $Id: protos.h,v 1.326 1999/05/03 22:41:10 wessels Exp $
- * $Id: protos.h,v 1.326 1999/05/03 22:41:10 wessels Exp $
+ * $Id: protos.h,v 1.327 1999/05/03 22:59:56 wessels Exp $
+ * $Id: protos.h,v 1.327 1999/05/03 22:59:56 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -918,13 +918,13 @@ extern int storeDirNumber(int fileno);
 extern int storeDirProperFileno(int dirn, int fn);
 extern int storeDirValidFileno(int fn);
 extern int storeDirWriteCleanLogs(int reopen);
-extern int storeVerifyCacheDirs(void);
 extern int storeVerifySwapDirs(void);
 extern void storeCreateSwapDirectories(void);
 extern void storeDirCloseSwapLogs(void);
 extern void storeDirCloseTmpSwapLog(int dirn);
 extern void storeDirConfigure(void);
 extern void storeDirDiskFull(int fn);
+extern void storeDirInit(void);
 extern void storeDirMapBitReset(int fn);
 extern void storeDirMapBitSet(int fn);
 extern void storeDirOpenSwapLogs(void);
@@ -939,10 +939,10 @@ extern OBJH storeUfsDirStats;
 extern char *storeUfsDirSwapLogFile(int, const char *);
 extern int storeUfsDirWriteCleanLogs(int reopen);
 extern int storeUfsFilenoBelongsHere(int, int, int, int);
-extern int storeUfsVerifyCacheDirs(void);
 extern void storeUfsCreateSwapDirectories(void);
 extern void storeUfsDirCloseSwapLogs(void);
 extern void storeUfsDirCloseTmpSwapLog(int dirn);
+extern void storeUfsDirInit(void);
 extern void storeUfsDirOpenSwapLogs(void);
 extern void storeUfsDirSwapLog(const StoreEntry *, int op);
 
@@ -959,7 +959,7 @@ extern void storeSwapTLVFree(tlv * n);
  * store_rebuild.c
  */
 extern void storeDoRebuildFromSwapFiles(void *data);
-extern void storeRebuildStart(void);
+extern void storeUfsRebuildStart(void);
 
 /*
  * store_swapin.c

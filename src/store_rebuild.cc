@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.58 1999/05/03 22:41:14 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.59 1999/05/03 23:00:01 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -674,7 +674,7 @@ storeRebuildComplete(void)
 }
 
 void
-storeRebuildStart(void)
+storeUfsRebuildStart(void)
 {
     rebuild_dir *d;
     int clean = 0;
