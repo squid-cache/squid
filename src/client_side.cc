@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.43 1996/10/14 21:27:57 wessels Exp $
+ * $Id: client_side.cc,v 1.44 1996/10/15 04:56:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -409,13 +409,15 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     /* unregister this handler */
     storeUnregister(entry, fd);
     if (entry->store_status == STORE_ABORTED) {
-	debug(33, 3, "icpHandleIMSReply: abort_code=%d\n",
-	    entry->mem_obj->abort_code);
+	debug(33, 3, "icpHandleIMSReply: ABORTED/%s '%s'\n",
+	    log_tags[entry->mem_obj->abort_code], entry->url);
 	icpSendERROR(fd,
 	    entry->mem_obj->abort_code,
 	    entry->mem_obj->e_abort_msg,
 	    icpState,
 	    400);
+	if (icpState->old_entry)
+	    storeUnlockObject(icpState->old_entry);
 	return 0;
     }
     if (mem->reply->code == 0) {
