@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.2 1998/05/11 18:44:28 rousskov Exp $
+ * $Id: HttpRequest.cc,v 1.3 1998/05/11 20:56:06 rousskov Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -52,6 +52,8 @@ requestDestroy(request_t * req)
     safe_free(req->body);
     stringClean(&req->urlpath);
     httpHeaderClean(&req->header);
+    if (req->cache_control)
+	httpHdrCcDestroy(req->cache_control);
     memFree(MEM_REQUEST_T, req);
 }
 
@@ -71,7 +73,11 @@ requestUnlink(request_t * request)
     request->link_count--;
     if (request->link_count > 0)
 	return;
-    requestDestroy(request);
+    if (request->link_count == 0)
+	requestDestroy(request);
+    else
+	debug(73, 1) ("requestUnlink: BUG: negative link_count: %d. Ignored.\n",
+	    request->link_count);
 }
 
 int

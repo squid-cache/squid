@@ -1088,7 +1088,7 @@ struct _request_t {
     String urlpath;
     int link_count;		/* free when zero */
     int flags;
-    HttpHdrCc *cache_control;	/* not used yet */
+    HttpHdrCc *cache_control;
     time_t max_age;
     float http_ver;
     time_t ims;
