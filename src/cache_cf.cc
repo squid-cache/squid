@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.315 1998/12/15 18:19:26 wessels Exp $
+ * $Id: cache_cf.cc,v 1.316 1998/12/15 18:22:40 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -775,7 +775,6 @@ parse_peer(peer ** head)
     while (*head != NULL)
 	head = &(*head)->next;
     *head = p;
-    cbdataLock(p);
     Config.npeers++;
 }
 
@@ -785,7 +784,6 @@ free_peer(peer ** P)
     peer *p;
     while ((p = *P) != NULL) {
 	*P = p->next;
-	cbdataUnlock(p);
 	cbdataFree(p);
     }
     Config.npeers = 0;
