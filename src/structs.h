@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.240 1998/10/14 21:12:02 wessels Exp $
+ * $Id: structs.h,v 1.241 1998/10/15 17:34:33 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1370,8 +1370,8 @@ struct _StatHist {
     double min;
     double max;
     double scale;
-    hbase_f val_in;		/* e.g., log() for log-based histogram */
-    hbase_f val_out;		/* e.g., exp() for log based histogram */
+    hbase_f *val_in;		/* e.g., log() for log-based histogram */
+    hbase_f *val_out;		/* e.g., exp() for log based histogram */
 };
 
 /*

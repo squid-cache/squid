@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.79 1998/10/10 14:57:44 wessels Exp $
+ * $Id: typedefs.h,v 1.80 1998/10/15 17:34:34 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -200,7 +200,7 @@ typedef void STVLDCB(void *, int, int);
 typedef void HLPCB(void *, char *buf);
 typedef void HLPCMDOPTS(int *argc, char **argv);
 
-typedef double (*hbase_f) (double);
+typedef double hbase_f(double);
 typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);
 
 /* append/vprintf's for Packer */

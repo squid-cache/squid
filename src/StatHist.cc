@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.15 1998/10/08 20:10:14 wessels Exp $
+ * $Id: StatHist.cc,v 1.16 1998/10/15 17:34:32 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -48,14 +48,17 @@
 #include "squid.h"
 
 /* Local functions */
-static void statHistInit(StatHist * H, int capacity, hbase_f val_in, hbase_f val_out, double min, double max);
+static void statHistInit(StatHist * H, int capacity, hbase_f *val_in, hbase_f *val_out, double min, double max);
 static int statHistBin(const StatHist * H, double v);
 static double statHistVal(const StatHist * H, int bin);
 static StatHistBinDumper statHistBinDumper;
+static hbase_f Log;
+static hbase_f Exp;
+static hbase_f Null;
 
 /* low level init, higher level functions has less params */
 static void
-statHistInit(StatHist * H, int capacity, hbase_f val_in, hbase_f val_out, double min, double max)
+statHistInit(StatHist * H, int capacity, hbase_f *val_in, hbase_f *val_out, double min, double max)
 {
     assert(H);
     assert(capacity > 0);
@@ -89,14 +92,24 @@ statHistClean(StatHist * H)
 void
 statHistCopy(StatHist * Dest, const StatHist * Orig)
 {
-    assert(Dest && Orig);
+    assert(Dest);
+    assert(Orig);
+    debug(62,3)("statHistCopy: Dest=%p, Orig=%p\n", Dest, Orig);
     assert(Dest->bins);
     /* better be safe than sorry */
     assert(Dest->capacity == Orig->capacity);
-    assert(Dest->min == Orig->min && Dest->max == Orig->max);
+    assert(Dest->min == Orig->min);
+    assert(Dest->max == Orig->max);
     assert(Dest->scale == Orig->scale);
-    assert(Dest->val_in == Orig->val_in && Dest->val_out == Orig->val_out);
+    assert(Dest->val_in == Orig->val_in);
+    assert(Dest->val_out == Orig->val_out);
+    debug(62,3)("statHistCopy: capacity %d, min %f, max %f, scale %f\n",
+	Dest->capacity, Dest->min, Dest->max, Dest->scale);
     /* actual copy */
+    debug(62,3)("statHistCopy: copying %d bytes to %p from %p\n",
+	Dest->capacity * sizeof(*Dest->bins),
+	Dest->bins,
+	Orig->bins);
     xmemcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));
 }
 
@@ -229,7 +242,7 @@ Exp(double x)
 void
 statHistLogInit(StatHist * H, int capacity, double min, double max)
 {
-    statHistInit(H, capacity, &Log, &Exp, min, max);
+    statHistInit(H, capacity, Log, Exp, min, max);
 }
 
 /* linear histogram for enums */
@@ -243,7 +256,7 @@ Null(double x)
 void
 statHistEnumInit(StatHist * H, int last_enum)
 {
-    statHistInit(H, last_enum + 3, &Null, &Null, (double) -1, (double) (last_enum + 1 + 1));
+    statHistInit(H, last_enum + 3, Null, Null, (double) -1, (double) (last_enum + 1 + 1));
 }
 
 void
@@ -257,7 +270,7 @@ statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int co
 void
 statHistIntInit(StatHist * H, int n)
 {
-    statHistInit(H, n, &Null, &Null, 0, n - 1);
+    statHistInit(H, n, Null, Null, 0, n - 1);
 }
 
 void
