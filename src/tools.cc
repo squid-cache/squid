@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.111 1997/07/07 05:29:57 wessels Exp $
+ * $Id: tools.cc,v 1.112 1997/07/14 03:33:41 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -105,10 +105,6 @@
  */
 
 #include "squid.h"
-
-int do_mallinfo = 0;		/* don't do mallinfo() unless this gets set */
-time_t squid_curtime;
-struct timeval current_time;
 
 #define DEAD_MSG "\
 The Squid Cache (version %s) died.\n\

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.172 1997/07/07 05:29:42 wessels Exp $
+ * $Id: comm.cc,v 1.173 1997/07/14 03:33:35 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -115,9 +115,6 @@
  * running shy of free file descriptors.  For example, under SunOS, we'll keep
  * 64 file descriptors free for disk-i/o and connections to remote servers */
 
-int RESERVED_FD = 64;
-int polledinc = 0;
-
 #define min(x,y) ((x)<(y)? (x) : (y))
 #define max(a,b) ((a)>(b)? (a) : (b))
 
@@ -142,10 +139,8 @@ typedef struct {
     int fd;
 } ConnectStateData;
 
-/* GLOBAL */
-fde *fd_table = NULL;	/* also used in disk.c */
-
 /* STATIC */
+static int polledinc = 0;
 static int commBind _PARAMS((int s, struct in_addr, u_short port));
 #if !HAVE_POLL
 static int examine_select _PARAMS((fd_set *, fd_set *));

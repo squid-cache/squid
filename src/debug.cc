@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.45 1997/06/04 06:15:49 wessels Exp $
+ * $Id: debug.cc,v 1.46 1997/07/14 03:33:36 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -105,15 +105,9 @@
 
 #include "squid.h"
 
-FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
-int debugLevels[MAX_DEBUG_SECTIONS];
 static char *accessLogTime _PARAMS((time_t));
 extern int opt_debug_stderr;
-
-#ifdef HAVE_SYSLOG
-int _db_level = 0;
-#endif
 
 #ifdef __STDC__
 void
