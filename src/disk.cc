@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.84 1997/10/23 23:20:19 wessels Exp $
+ * $Id: disk.cc,v 1.85 1997/10/23 23:27:18 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -446,7 +446,7 @@ diskHandleReadComplete(void *data, int len, int errcode)
 	rc = DISK_EOF;
     }
     if (cbdataValid(ctrl_dat->client_data))
-        ctrl_dat->handler(fd, ctrl_dat->buf, len, rc, ctrl_dat->client_data);
+	ctrl_dat->handler(fd, ctrl_dat->buf, len, rc, ctrl_dat->client_data);
     cbdataUnlock(ctrl_dat->client_data);
     safe_free(ctrl_dat);
 }

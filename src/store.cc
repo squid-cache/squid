@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.304 1997/10/23 23:26:45 wessels Exp $
+ * $Id: store.cc,v 1.305 1997/10/23 23:27:20 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -275,7 +275,7 @@ static int storeKeepInMemory(const StoreEntry *);
 static SIH storeClientCopyFileOpened;
 static DRCB storeClientCopyHandleRead;
 static FOCB storeSwapInFileOpened;
-static void storeClientCopyFileRead(store_client *sc);
+static void storeClientCopyFileRead(store_client * sc);
 static void storeInMemAdd(StoreEntry * e);
 static void storeInMemDelete(StoreEntry * e);
 static void storeSetMemStatus(StoreEntry * e, int);
@@ -773,7 +773,7 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
     off_t lowest = mem->inmem_hi;
     store_client *sc;
     store_client *nx = NULL;
-    for (sc = mem->clients; sc; sc=nx) {
+    for (sc = mem->clients; sc; sc = nx) {
 	nx = sc->next;
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
@@ -798,7 +798,7 @@ InvokeHandlers(const StoreEntry * e)
     assert(mem->clients != NULL || mem->nclients == 0);
     debug(20, 3) ("InvokeHandlers: %s\n", e->key);
     /* walk the entire list looking for valid callbacks */
-    for (sc = mem->clients; sc; sc=nx) {
+    for (sc = mem->clients; sc; sc = nx) {
 	nx = sc->next;
 	debug(20, 3) ("InvokeHandlers: checking client #%d\n", i++);
 	if (sc->callback_data == NULL)
@@ -1074,8 +1074,8 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
     if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
 	if (storeDirMapBitTest(e->swap_file_number)) {
 	    /* someone took our file while we weren't looking */
-	    debug(0,0)("storeSwapInStart: someone took our file while we weren't looking\n");
-	    debug(0,0)("storeSwapInStart: for %s\n", e->url);
+	    debug(0, 0) ("storeSwapInStart: someone took our file while we weren't looking\n");
+	    debug(0, 0) ("storeSwapInStart: for %s\n", e->url);
 	    callback(-1, callback_data);
 	    return;
 	}
@@ -1892,7 +1892,7 @@ storeClientListAdd(StoreEntry * e, void *data)
 	return;
     mem->nclients++;
     sc = xcalloc(1, sizeof(store_client));
-    cbdataAdd(sc);	/* sc is callback_data for file_read */
+    cbdataAdd(sc);		/* sc is callback_data for file_read */
     sc->callback_data = data;
     sc->seen_offset = 0;
     sc->copy_offset = 0;
@@ -1982,9 +1982,9 @@ storeClientCopyFileOpened(int fd, void *data)
 }
 
 static void
-storeClientCopyFileRead(store_client *sc)
+storeClientCopyFileRead(store_client * sc)
 {
-    assert (sc->callback != NULL);
+    assert(sc->callback != NULL);
     file_read(sc->swapin_fd,
 	sc->copy_buf,
 	sc->copy_size,
@@ -2342,7 +2342,7 @@ storePendingNClients(const StoreEntry * e)
     int i;
     if (mem == NULL)
 	return 0;
-    for (sc = mem->clients; sc; sc=nx) {
+    for (sc = mem->clients; sc; sc = nx) {
 	nx = sc->next;
 	if (sc->callback_data == NULL)
 	    continue;
