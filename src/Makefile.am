@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.50 2003/01/26 10:46:24 robertc Exp $
+#  $Id: Makefile.am,v 1.51 2003/01/27 08:28:29 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -171,12 +171,15 @@ squid_SOURCES = \
 	HttpHdrCc.cc \
 	HttpHdrRange.cc \
 	HttpHdrContRange.cc \
+	HttpHdrContRange.h \
 	HttpHeader.cc \
 	HttpHeader.h \
+	HttpHeaderRange.h \
 	HttpHeaderTools.cc \
 	HttpBody.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
+	HttpReply.h \
 	HttpRequest.cc \
 	HttpRequest.h \
 	icmp.cc \
@@ -196,6 +199,7 @@ squid_SOURCES = \
 	mem.cc \
 	mem_node.cc \
 	mem_node.h \
+	Mem.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemObject.h \
@@ -373,6 +377,7 @@ ufsdump_SOURCES = debug.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpRequest.cc \
+	HttpRequest.h \
 	icmp.cc \
 	icp_v2.cc \
 	icp_v3.cc \
