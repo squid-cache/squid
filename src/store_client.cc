@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.47 1998/09/29 16:33:53 wessels Exp $
+ * $Id: store_client.cc,v 1.48 1998/10/13 20:38:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -176,19 +176,18 @@ storeClientCopy(StoreEntry * e,
 
 /*
  * This function is used below to decide if we have any more data to
- * send to the client.  If the store_status is STORE_ABORTED, that case
- * should be handled before this function gets called.  If the
- * store_status is STORE_PENDING, then we do have more data to send.
- * If its STORE_OK, then we continue checking.  If the object length is
- * negative, then we don't know the real length and must open the swap
- * file to find out.  If the lenght is >= 0, then we compare it to the
- * requested copy offset.
+ * send to the client.  If the store_status is STORE_PENDING, then we
+ * do have more data to send.  If its STORE_OK or STORE_ABORTED, then
+ * we continue checking.  If the object length is negative, then we
+ * don't know the real length and must open the swap file to find out.
+ * If the length is >= 0, then we compare it to the requested copy
+ * offset.
  */
 static int
 storeClientNoMoreToSend(StoreEntry * e, store_client * sc)
 {
     ssize_t len;
-    if (e->store_status != STORE_OK)
+    if (e->store_status == STORE_PENDING)
 	return 0;
     if ((len = objectLen(e)) < 0)
 	return 0;
@@ -219,19 +218,14 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     sc->flags.store_copying = 1;
     debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->key));
     assert(callback != NULL);
-    if (e->store_status == STORE_ABORTED) {
-#if USE_ASYNC_IO
-	if (sc->flags.disk_io_pending) {
-	    if (sc->swapin_fd >= 0)
-		aioCancel(sc->swapin_fd, NULL);
-	    else
-		aioCancel(-1, sc);
-	}
-#endif
-	sc->flags.disk_io_pending = 0;
-	sc->callback = NULL;
-	callback(sc->callback_data, sc->copy_buf, 0);
-    } else if (storeClientNoMoreToSend(e, sc)) {
+    /*
+     * We used to check for STORE_ABORTED here.  But there were some
+     * problems.  For example, we might have a slow client (or two) and
+     * the server-side is reading far ahead and swapping to disk.  Even
+     * if the server-side aborts, we want to give the client(s)
+     * everything we got before the abort condition occurred.
+     */
+    if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
 #if USE_ASYNC_IO
 	if (sc->flags.disk_io_pending) {
