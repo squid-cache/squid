@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.294 1998/04/27 19:55:10 wessels Exp $
+ * $Id: client_side.cc,v 1.295 1998/05/01 21:09:57 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -872,9 +872,6 @@ clientCachable(clientHttpRequest * http)
      */
     if (!aclCheckFast(Config.accessList.noCache, &ch))
 	return 0;
-    if (Config.cache_stop_relist)
-	if (aclMatchRegex(Config.cache_stop_relist, url))
-	    return 0;
     if (req->protocol == PROTO_HTTP)
 	return httpCachable(method);
     /* FTP is always cachable */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.280 1998/05/01 17:37:13 wessels Exp $
+ * $Id: cache_cf.cc,v 1.281 1998/05/01 21:09:55 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1147,30 +1147,6 @@ free_refreshpattern(refresh_t ** head)
 	regfree(&t->compiled_pattern);
 	safe_free(t);
     }
-}
-
-static void
-dump_regexlist(StoreEntry * entry, const char *name, relist * var)
-{
-    storeAppendPrintf(entry, "%s", name);
-    while (var != NULL) {
-	storeAppendPrintf(entry, " %s", var->pattern);
-	var = var->next;
-    }
-    storeAppendPrintf(entry, "\n");
-}
-
-static void
-parse_regexlist(relist ** var)
-{
-    aclParseRegexList(var);
-}
-
-static void
-free_regexlist(relist ** var)
-{
-    aclDestroyRegexList(*var);
-    *var = NULL;
 }
 
 static void
