@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.374 2001/02/07 18:56:51 hno Exp $
+ * $Id: cache_cf.cc,v 1.375 2001/02/10 16:40:40 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1033,12 +1033,9 @@ parse_cachedir(cacheSwap * swap)
     SwapDir *sd;
     int i;
     int fs;
-    ssize_t maxobjsize;
 
     if ((type_str = strtok(NULL, w_space)) == NULL)
 	self_destruct();
-
-    maxobjsize = (ssize_t) GetInteger();
 
     if ((path_str = strtok(NULL, w_space)) == NULL)
 	self_destruct();
@@ -1070,7 +1067,6 @@ parse_cachedir(cacheSwap * swap)
 	    }
 	    sd = swap->swapDirs + i;
 	    storefs_list[fs].reconfigurefunc(sd, i, path_str);
-	    sd->max_objsize = maxobjsize;
 	    update_maxobjsize();
 	    return;
 	}
@@ -1085,15 +1081,92 @@ parse_cachedir(cacheSwap * swap)
     }
     allocate_new_swapdir(swap);
     sd = swap->swapDirs + swap->n_configured;
-    storefs_list[fs].parsefunc(sd, swap->n_configured, path_str);
-    /* XXX should we dupe the string here, in case it gets trodden on? */
     sd->type = storefs_list[fs].typestr;
-    sd->max_objsize = maxobjsize;
     /* defaults in case fs implementation fails to set these */
+    sd->max_objsize = -1;
     sd->fs.blksize = 1024;
+    /* parse the FS parameters and options */
+    storefs_list[fs].parsefunc(sd, swap->n_configured, path_str);
     swap->n_configured++;
     /* Update the max object size */
     update_maxobjsize();
+}
+
+static void
+parse_cachedir_option_readonly(SwapDir * sd, const char *option, const char *value, int reconfiguring)
+{
+    int read_only = 0;
+    if (value)
+	read_only = atoi(value);
+    else
+	read_only = 1;
+    sd->flags.read_only = read_only;
+}
+
+static void
+parse_cachedir_option_maxsize(SwapDir * sd, const char *option, const char *value, int reconfiguring)
+{
+    ssize_t size;
+
+    if (!value)
+	self_destruct();
+
+    size = atoi(value);
+
+    if (reconfiguring && sd->max_objsize != size)
+	debug(3, 1) ("Cache dir '%s' max object size now %d\n", size);
+
+    sd->max_objsize = size;
+}
+
+static struct cache_dir_option common_cachedir_options[] =
+{
+    {"read-only", parse_cachedir_option_readonly},
+    {"max-size", parse_cachedir_option_maxsize},
+    {NULL, NULL}
+};
+
+void
+parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int reconfiguring)
+{
+    int old_read_only = sd->flags.read_only;
+    char *name, *value;
+    struct cache_dir_option *option, *op;
+
+    while ((name = strtok(NULL, w_space)) != NULL) {
+	value = strchr(name, '=');
+	if (value)
+	    *value++ = '\0';	/* cut on = */
+	option = NULL;
+	if (options) {
+	    for (op = options; !option && op->name; op++) {
+		if (strcmp(op->name, name) == 0) {
+		    option = op;
+		    break;
+		}
+	    }
+	}
+	for (op = common_cachedir_options; !option && op->name; op++) {
+	    if (strcmp(op->name, name) == 0) {
+		option = op;
+		break;
+	    }
+	}
+	if (!option || !option->parse)
+	    self_destruct();
+	option->parse(sd, name, value, reconfiguring);
+    }
+    /*
+     * Handle notifications about reconfigured single-options with no value
+     * where the removal of the option cannot be easily detected in the
+     * parsing...
+     */
+    if (reconfiguring) {
+	if (old_read_only != sd->flags.read_only) {
+	    debug(3, 1) ("Cache dir '%s' now %s\n",
+		sd->path, sd->flags.read_only ? "Read-Only" : "Read-Write");
+	}
+    }
 }
 
 static void

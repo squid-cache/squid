@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.213 2001/02/09 19:35:10 hno Exp $
+# $Id: cf.data.pre,v 1.214 2001/02/10 16:40:40 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -678,16 +678,12 @@ COMMENT_END
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
-DEFAULT_IF_NONE: ufs -1 @DEFAULT_SWAP_DIR@ 100 16 256
+DEFAULT_IF_NONE: ufs @DEFAULT_SWAP_DIR@ 100 16 256
 LOC: Config.cacheSwap
 DOC_START
 	Usage:
 	
-	cache_dir Type Maxobjsize Directory-Name Mbytes Level-1 Level2 [...]
-
-	DISKD Usage:
-
-	cache_dir diskd Maxobjsize Directory-Name MB L1 L2 Q1 Q2
+	cache_dir Type Directory-Name Fs-specific-data [options]
 
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
@@ -698,18 +694,18 @@ DOC_START
 	want to try "aufs" as the type.  Async IO support may be
 	buggy, however, so beware.
 
-	Maxobjsize refers to the max object size this storedir supports.
-	It is used to initially choose the storedir to dump the object.
-	-1 means 'any size'.
-
 	'Directory' is a top-level directory where cache swap
 	files will be stored.  If you want to use an entire disk
 	for caching, then this can be the mount-point directory.
 	The directory must exist and be writable by the Squid
 	process.  Squid will NOT create this directory for you.
 
-	If no 'cache_dir' lines are specified, the following
-	default will be used: @DEFAULT_SWAP_DIR@.
+	The ufs store type:
+
+	"ufs" is the old well-known Squid storage format that has always
+	been there.
+
+	cache_dir ufs Directory-Name Mbytes L1 L2 [options]
 
 	'Mbytes' is the amount of disk space (MB) to use under this
 	directory.  The default is 100 MB.  Change this to suit your
@@ -722,12 +718,43 @@ DOC_START
 	will be created under each first-level directory.  The default
 	is 256.
 
-	For the diskd type, Q1 specifies the number of unacknowledged
-	I/O requests when Squid stops opening new files.  If this
-	many messages are in the queues, Squid won't open new files.
+	The aufs store type:
+
+	"aufs" uses the same storage format as "ufs", utilizing
+	POSIX-threads to avoid blocking the main Squid process on
+	disk-I/O. This was formerly known in Squid as async-io.
+
+	cache_dir aufs Directory-Name Mbytes L1 L2 [options]
+
+	see argument descriptions under ufs above
+
+	The diskd store type:
+
+	"diskd" uses the same storage format as "ufs", utilizing a
+	separate process to avoid blocking the main Squid process on
+	disk-I/O.
+
+	cache_dir diskd Directory-Name Mbytes L1 L2 [options] [Q1=n] [Q2=n]
+
+	see argument descriptions under ufs above
+
+	Q1 specifies the number of unacknowledged I/O requests when Squid
+	stops opening new files. If this many messages are in the queues,
+	Squid won't open new files. Default is 64
+
 	Q2 specifies the number of unacknowledged messages when Squid
 	starts blocking.  If this many messages are in the queues,
-	Squid blocks until it recevies some replies.
+	Squid blocks until it recevies some replies. Default is 72
+
+	Common options:
+
+	read-only, this cache_dir is read only.
+
+	max-size=n, refers to the max object size this storedir supports.
+	It is used to initially choose the storedir to dump the object.
+	Note: To make optimal use of the max-size limits you should order
+	the cache_dir lines with the smallest max-size value first and the
+	ones with no max-size specification last.
 DOC_END
 
 

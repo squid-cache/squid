@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.397 2001/02/07 18:56:52 hno Exp $
+ * $Id: protos.h,v 1.398 2001/02/10 16:40:40 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -93,6 +93,8 @@ extern void parse_eol(char *volatile *var);
 extern void parse_wordlist(wordlist ** list);
 extern void requirePathnameExists(const char *name, const char *path);
 extern void parse_time_t(time_t * var);
+extern void parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int reconfiguring);
+
 
 /*
  * cbdata.c

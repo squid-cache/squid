@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.39 2001/02/07 18:56:54 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.40 2001/02/10 16:40:42 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1707,6 +1707,37 @@ storeDiskdDirStats(SwapDir * SD, StoreEntry * sentry)
     storeAppendPrintf(sentry, "Pending operations: %d\n", diskdinfo->away);
 }
 
+static void 
+storeDiskdDirParseQ1(SwapDir * sd, const char *name, const char *value, int reconfiguring)
+{
+    diskdinfo_t *diskdinfo = sd->fsdata;
+    int old_magic1 = diskdinfo->magic1;
+    diskdinfo->magic1 = atoi(value);
+    if (reconfiguring && old_magic1 != diskdinfo->magic1)
+	debug(3, 1) ("cache_dir '%s' new Q1 value '%d'\n", diskdinfo->magic1);
+}
+
+static void 
+storeDiskdDirParseQ2(SwapDir * sd, const char *name, const char *value, int reconfiguring)
+{
+    diskdinfo_t *diskdinfo = sd->fsdata;
+    int old_magic2 = diskdinfo->magic2;
+    diskdinfo->magic2 = atoi(value);
+    if (reconfiguring && old_magic2 != diskdinfo->magic2)
+	debug(3, 1) ("cache_dir '%s' new Q2 value '%d'\n", diskdinfo->magic2);
+}
+
+struct cache_dir_option options[] =
+{
+#if NOT_YET
+    {"L1", storeDiskdDirParseL1},
+    {"L2", storeDiskdDirParseL2},
+#endif
+    {"Q1", storeDiskdDirParseQ1},
+    {"Q2", storeDiskdDirParseQ2},
+    {NULL, NULL}
+};
+
 /*
  * storeDiskdDirReconfigure
  *
@@ -1715,13 +1746,11 @@ storeDiskdDirStats(SwapDir * SD, StoreEntry * sentry)
 static void
 storeDiskdDirReconfigure(SwapDir * sd, int index, char *path)
 {
-    char *token;
     int i;
     int size;
     int l1;
     int l2;
     int magic1, magic2;
-    unsigned int read_only = 0;
     diskdinfo_t *diskdinfo;
 
     i = GetInteger();
@@ -1744,9 +1773,6 @@ storeDiskdDirReconfigure(SwapDir * sd, int index, char *path)
     magic2 = i;
     if (magic2 <= 0)
 	fatal("storeDiskdDirParse: invalid magic2 value");
-    if ((token = strtok(NULL, w_space)))
-	if (!strcasecmp(token, "read-only"))
-	    read_only = 1;
 
     /* just reconfigure it */
     if (size == sd->max_size)
@@ -1756,14 +1782,10 @@ storeDiskdDirReconfigure(SwapDir * sd, int index, char *path)
 	debug(3, 1) ("Cache dir '%s' size changed to %d KB\n",
 	    path, size);
     sd->max_size = size;
-    if (sd->flags.read_only != read_only)
-	debug(3, 1) ("Cache dir '%s' now %s\n",
-	    path, read_only ? "Read-Only" : "Read-Write");
     diskdinfo = sd->fsdata;
     diskdinfo->magic1 = magic1;
     diskdinfo->magic2 = magic2;
-    sd->flags.read_only = read_only;
-    return;
+    parse_cachedir_options(sd, options, 1);
 }
 
 void
@@ -1852,13 +1874,10 @@ storeDiskdCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
 static void
 storeDiskdDirParse(SwapDir * sd, int index, char *path)
 {
-    char *token;
     int i;
     int size;
     int l1;
     int l2;
-    int magic1, magic2;
-    unsigned int read_only = 0;
     diskdinfo_t *diskdinfo;
 
     i = GetInteger();
@@ -1874,18 +1893,6 @@ storeDiskdDirParse(SwapDir * sd, int index, char *path)
     if (l2 <= 0)
 	fatal("storeDiskdDirParse: invalid level 2 directories value");
     i = GetInteger();
-    magic1 = i;
-    if (magic1 <= 0)
-	fatal("storeDiskdDirParse: invalid magic1 value");
-    i = GetInteger();
-    magic2 = i;
-    if (magic2 <= 0)
-	fatal("storeDiskdDirParse: invalid magic2 value");
-
-
-    if ((token = strtok(NULL, w_space)))
-	if (!strcasecmp(token, "read-only"))
-	    read_only = 1;
 
     sd->fsdata = diskdinfo = xcalloc(1, sizeof(*diskdinfo));
     sd->index = index;
@@ -1896,9 +1903,8 @@ storeDiskdDirParse(SwapDir * sd, int index, char *path)
     diskdinfo->swaplog_fd = -1;
     diskdinfo->map = NULL;	/* Debugging purposes */
     diskdinfo->suggest = 0;
-    diskdinfo->magic1 = magic1;
-    diskdinfo->magic2 = magic2;
-    sd->flags.read_only = read_only;
+    diskdinfo->magic1 = 64;
+    diskdinfo->magic2 = 72;
     sd->init = storeDiskdDirInit;
     sd->newfs = storeDiskdDirNewfs;
     sd->dump = storeDiskdDirDump;
@@ -1923,6 +1929,8 @@ storeDiskdDirParse(SwapDir * sd, int index, char *path)
     sd->log.clean.start = storeDiskdDirWriteCleanStart;
     sd->log.clean.nextentry = storeDiskdDirCleanLogNextEntry;
     sd->log.clean.done = storeDiskdDirWriteCleanDone;
+
+    parse_cachedir_options(sd, options, 0);
 
     /* Initialise replacement policy stuff */
     sd->repl = createRemovalPolicy(Config.replPolicy);
