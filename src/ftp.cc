@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.231 1998/06/30 23:03:17 wessels Exp $
+ * $Id: ftp.cc,v 1.232 1998/06/30 23:10:16 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1058,13 +1058,13 @@ ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
     xstrncpy(sbuf, buf, len + 1);
     end = sbuf + len - 1;
     while (*end != '\r' && *end != '\n' && end > sbuf)
-        end--;
+	end--;
     usable = end - sbuf;
     debug(9, 3) ("ftpParseControlReply: usable = %d\n", usable);
     if (usable == 0) {
-        debug(9, 3) ("ftpParseControlReply: didn't find end of line\n");
-        xfree(sbuf);
-        return NULL;
+	debug(9, 3) ("ftpParseControlReply: didn't find end of line\n");
+	xfree(sbuf);
+	return NULL;
     }
     debug(9, 3) ("ftpParseControlReply: %d bytes to play with\n", len);
     end++;
@@ -1073,7 +1073,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
     for (; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	if (complete)
 	    break;
-	debug(9,3)("ftpParseControlReply: s = {%s}\n", s);
+	debug(9, 3) ("ftpParseControlReply: s = {%s}\n", s);
 	linelen = strcspn(s, crlf) + 1;
 	if (linelen < 2)
 	    break;
@@ -1101,14 +1101,14 @@ ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
 }
 
 static void
-ftpScheduleReadControlReply(FtpStateData *ftpState, int buffered_ok)
+ftpScheduleReadControlReply(FtpStateData * ftpState, int buffered_ok)
 {
-    debug(9,1)("ftpScheduleReadControlReply: FD %d\n", ftpState->ctrl.fd);
+    debug(9, 3) ("ftpScheduleReadControlReply: FD %d\n", ftpState->ctrl.fd);
     if (buffered_ok && ftpState->ctrl.offset > 0) {
 	/* We've already read some reply data */
 	ftpHandleControlReply(ftpState);
     } else {
-        commSetSelect(ftpState->ctrl.fd,
+	commSetSelect(ftpState->ctrl.fd,
 	    COMM_SELECT_READ,
 	    ftpReadControlReply,
 	    ftpState,
