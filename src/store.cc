@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.441 1998/08/17 16:50:39 wessels Exp $
+ * $Id: store.cc,v 1.442 1998/08/17 17:17:45 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -441,8 +441,8 @@ storeCheckCachable(StoreEntry * e)
     } else if (EBIT_TEST(e->flag, KEY_PRIVATE)) {
 	debug(20, 3) ("storeCheckCachable: NO: private key\n");
     } else if (storeExpiredReferenceAge() < 300) {
-	debug(20,2)("storeCheckCachable: NO: LRU Age = %d\n",
-		storeExpiredReferenceAge());
+	debug(20, 2) ("storeCheckCachable: NO: LRU Age = %d\n",
+	    storeExpiredReferenceAge());
     } else {
 	return 1;
     }
@@ -589,16 +589,18 @@ storeMaintainSwapSpace(void *datanotused)
     int max_scan;
     int max_remove;
     static time_t last_warn_time = 0;
-    eventAdd("storeMaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
     /* We can't delete objects while rebuilding swap */
-    if (store_rebuilding)
+    if (store_rebuilding) {
+	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
 	return;
-    if (store_swap_size < store_swap_high) {
-	max_scan = 100;
-	max_remove = 10;
+    } else if (store_swap_size < store_swap_high) {
+	max_scan = 200;
+	max_remove = 8;
+	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 0.1, 1);
     } else {
 	max_scan = 500;
-	max_remove = 50;
+	max_remove = 32;
+	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 0.0, 1);
     }
     debug(20, 3) ("storeMaintainSwapSpace\n");
     for (m = store_list.tail; m; m = prev) {
