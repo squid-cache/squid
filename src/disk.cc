@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.112 1998/03/27 03:23:05 wessels Exp $
+ * $Id: disk.cc,v 1.113 1998/03/28 23:24:45 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -279,7 +279,7 @@ diskHandleWrite(int fd, void *notused)
 	ctrlp);
 #else
     debug(6, 3) ("diskHandleWrite: FD %d writing %d bytes\n",
-	fd, fdd->write_q->len - fdd->write_q->buf_offset);
+	fd, (int) (fdd->write_q->len - fdd->write_q->buf_offset));
     len = write(fd,
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset);
@@ -375,7 +375,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	q->buf_offset += len;
 	if (q->buf_offset > q->len)
 	    debug(50, 1) ("diskHandleWriteComplete: q->buf_offset > q->len (%p,%d, %d, %d FD %d)\n",
-		q, q->buf_offset, q->len, len, fd);
+		q, (int) q->buf_offset, q->len, len, fd);
 	assert(q->buf_offset <= q->len);
 	if (q->buf_offset == q->len) {
 	    /* complete write */

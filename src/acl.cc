@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.153 1998/03/27 04:44:54 wessels Exp $
+ * $Id: acl.cc,v 1.154 1998/03/28 23:24:40 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1630,7 +1630,6 @@ aclChecklistCreate(const acl_access * A,
 	xstrncpy(checklist->browser, user_agent, BROWSERNAMELEN);
     if (ident)
 	xstrncpy(checklist->ident, ident, ICP_IDENT_SZ);
-    debug(28, 6) ("aclChecklistCreate: %x\n", checklist);
     return checklist;
 }
 
@@ -1640,7 +1639,6 @@ aclNBCheck(aclCheck_t * checklist, PF callback, void *callback_data)
     checklist->callback = callback;
     checklist->callback_data = callback_data;
     cbdataLock(callback_data);
-    debug(28, 5) ("aclNBCheck: calling aclCheck with %x\n", checklist);
     aclCheck(checklist);
 }
 
@@ -1926,7 +1924,7 @@ aclReadProxyAuth(acl_proxy_auth * p)
 		xfree(passwords);
 	    } else {
 		debug(28, 5) ("aclReadProxyAuth: %s not changed (old=%d,new=%d)\n",
-		    p->filename, p->change_time, buf.st_mtime);
+		    p->filename, (int) p->change_time, (int) buf.st_mtime);
 	    }
 	} else {
 	    debug(28, 0) ("aclReadProxyAuth: can't access proxy_auth file %s, turning authentication off\n", p->filename);

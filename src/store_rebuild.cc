@@ -167,7 +167,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    tmpe.swap_file_sz = sb.st_size;
 	} else if (tmpe.swap_file_sz != sb.st_size) {
 	    debug(20, 1) ("storeRebuildFromDirectory: SIZE MISMATCH %d!=%d\n",
-		tmpe.swap_file_sz, sb.st_size);
+		tmpe.swap_file_sz, (int) sb.st_size);
 	    storeUnlinkFileno(sfileno);
 	    continue;
 	}
@@ -586,7 +586,7 @@ storeCleanup(void *datanotused)
 		debug(0, 0) ("storeCleanup: PATH %s\n",
 		    storeSwapFullPath(e->swap_file_number, NULL));
 		debug(0, 0) ("storeCleanup: ENTRY SIZE: %d, FILE SIZE: %d\n",
-		    e->swap_file_sz, sb.st_size);
+		    e->swap_file_sz, (int) sb.st_size);
 		storeEntryDump(e, 0);
 		continue;
 	    }
@@ -687,8 +687,9 @@ storeRebuildComplete(void)
     debug(20, 1) ("  %7d Objects cancelled.\n", RebuildState.cancelcount);
     debug(20, 1) ("  %7d Duplicate URLs purged.\n", RebuildState.dupcount);
     debug(20, 1) ("  %7d Swapfile clashes avoided.\n", RebuildState.clashcount);
-    debug(20, 1) ("  Took %d seconds (%6.1lf objects/sec).\n",
-	r > 0 ? r : 0, (double) RebuildState.objcount / (r > 0 ? r : 1));
+    debug(20, 1) ("  Took %d seconds (%6.1f objects/sec).\n",
+	r > 0 ? (int) r : 0,
+	(double) RebuildState.objcount / (r > 0 ? r : 1));
     debug(20, 1) ("Beginning Validation Procedure\n");
     eventAdd("storeCleanup", storeCleanup, NULL, 0);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.238 1998/03/27 19:42:22 wessels Exp $
+ * $Id: comm.cc,v 1.239 1998/03/28 23:24:44 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -200,8 +200,8 @@ comm_local_port(int fd)
 	debug(50, 1) ("comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD %d: %s\n", fd, xstrerror());
 	return 0;
     }
-    debug(5, 6) ("comm_local_port: FD %d: sockaddr %u.\n", fd, addr.sin_addr.s_addr);
     F->local_port = ntohs(addr.sin_port);
+    debug(5, 6) ("comm_local_port: FD %d: port %d\n", fd, (int) F->local_port);
     return F->local_port;
 }
 
@@ -1133,7 +1133,7 @@ comm_select(time_t sec)
 	}
 	return COMM_OK;
     } while (timeout > squid_curtime);
-    debug(5, 8) ("comm_select: time out: %d.\n", squid_curtime);
+    debug(5, 8) ("comm_select: time out: %d\n", (int) squid_curtime);
     return COMM_TIMEOUT;
 }
 #endif
@@ -1377,7 +1377,7 @@ commHandleWrite(int fd, void *data)
     int nleft;
 
     debug(5, 5) ("commHandleWrite: FD %d: off %d, sz %d.\n",
-	fd, state->offset, state->size);
+	fd, (int) state->offset, state->size);
 
     nleft = state->size - state->offset;
     len = write(fd, state->buf + state->offset, nleft);

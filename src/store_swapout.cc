@@ -183,7 +183,7 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 3) ("storeCheckSwapOut: swap_buf_len = %d\n", (int) swap_buf_len);
     assert(swap_buf_len > 0);
     debug(20, 3) ("storeCheckSwapOut: swapping out %d bytes from %d\n",
-	swap_buf_len, mem->swapout.queue_offset);
+	swap_buf_len, (int) mem->swapout.queue_offset);
     mem->swapout.queue_offset += swap_buf_len - hdr_len;
     file_write(mem->swapout.fd,
 	-1,

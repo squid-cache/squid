@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.93 1998/03/24 17:29:45 wessels Exp $
+ * $Id: fqdncache.cc,v 1.94 1998/03/28 23:24:47 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -551,7 +551,8 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
 	FqdncacheStats.pending_hits++;
 	fqdncacheAddPending(f, handler, handlerData);
 	if (squid_curtime - f->expires > 600) {
-	    debug(14, 0) ("fqdncache_nbgethostbyname: '%s' PENDING for %d seconds, aborting\n", name, squid_curtime + Config.negativeDnsTtl - f->expires);
+	    debug(14, 0) ("fqdncache_nbgethostbyname: '%s' PENDING for %d seconds, aborting\n", name,
+	        (int) (squid_curtime + Config.negativeDnsTtl - f->expires));
 	    fqdncacheChangeKey(f);
 	    fqdncache_call_pending(f);
 	}
@@ -641,7 +642,7 @@ fqdncacheUnregister(struct in_addr addr, void *data)
     fqdncache_entry *f = NULL;
     fqdn_pending *p = NULL;
     int n = 0;
-    debug(35, 3) ("fqdncacheUnregister: FD %d, name '%s'\n", name);
+    debug(35, 3) ("fqdncacheUnregister: FD %d, name '%s'\n", fd, name);
     if ((f = fqdncache_get(name)) == NULL)
 	return 0;
     if (f->status == FQDN_PENDING || f->status == FQDN_DISPATCHED) {

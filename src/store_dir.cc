@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.56 1998/02/13 18:16:06 wessels Exp $
+ * $Id: store_dir.cc,v 1.57 1998/03/28 23:24:52 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -656,8 +656,9 @@ storeDirWriteCleanLogs(int reopen)
     stop = squid_curtime;
     r = stop - start;
     debug(20, 1) ("  Finished.  Wrote %d entries.\n", n);
-    debug(20, 1) ("  Took %d seconds (%6.1lf entries/sec).\n",
-	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
+    debug(20, 1) ("  Took %d seconds (%6.1f entries/sec).\n",
+	r > 0 ? (int) r : 0,
+	(double) n / (r > 0 ? r : 1));
     /* touch a timestamp file if we're not still validating */
     if (!store_rebuilding) {
 	for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {

@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.28 1998/03/27 22:44:18 wessels Exp $
+ * $Id: asn.cc,v 1.29 1998/03/28 23:24:41 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -281,7 +281,7 @@ asnAddNet(char *as_string, int as_number)
     xstrncpy(dbg2, inet_ntoa(in_m), 32);
     addr = ntohl(addr);
     mask = ntohl(mask);
-    debug(53, 3) ("asnAddNet: called for %s/%s (%x/%x)\n", dbg1, dbg2, addr, mask);
+    debug(53, 3) ("asnAddNet: called for %s/%s\n", dbg1, dbg2);
     memset(e, '\0', sizeof(rtentry));
     store_m_int(addr, e->e_addr);
     store_m_int(mask, e->e_mask);

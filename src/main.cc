@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.238 1998/03/23 22:37:11 wessels Exp $
+ * $Id: main.cc,v 1.239 1998/03/28 23:24:48 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -315,7 +315,7 @@ shut_down(int sig)
     debug(1, 1) ("Preparing for shutdown after %d requests\n",
 	Counter.client_http.requests);
     debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
-	shutdown_pending > 0 ? Config.shutdownLifetime : 0);
+	shutdown_pending > 0 ? (int) Config.shutdownLifetime : 0);
 #ifdef KILL_PARENT_OPT
     {
 	pid_t ppid = getppid();

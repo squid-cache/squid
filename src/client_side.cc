@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.237 1998/03/28 20:33:45 wessels Exp $
+ * $Id: client_side.cc,v 1.238 1998/03/28 23:24:43 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -240,7 +240,7 @@ clientProcessExpired(void *data)
     storeClientListAdd(http->old_entry, http);
     entry->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: setting lmt = %d\n",
-	entry->lastmod);
+	(int) entry->lastmod);
     entry->refcount++;		/* EXPIRED CASE */
     http->entry = entry;
     http->out.offset = 0;
@@ -276,7 +276,8 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
     /* If the client IMS time is prior to the entry LASTMOD time we
      * need to send the old object */
     if (modifiedSince(old_entry, request)) {
-	debug(33, 5) ("clientGetsOldEntry: YES, modified since %d\n", request->ims);
+	debug(33, 5) ("clientGetsOldEntry: YES, modified since %d\n",
+		(int) request->ims);
 	return 1;
     }
     debug(33, 5) ("clientGetsOldEntry: NO, new one is fine\n");
@@ -925,7 +926,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     assert(size <= SM_PAGE_SIZE);
     assert(http->request != NULL);
     debug(33, 5) ("clientSendMoreData: FD %d '%s', out.offset=%d \n",
-	fd, storeUrl(entry), http->out.offset);
+	fd, storeUrl(entry), (int) http->out.offset);
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
 	debug(0, 0) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
@@ -1032,7 +1033,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     int done;
     http->out.size += size;
     debug(33, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
-	fd, size, errflag, http->out.offset, objectLen(entry));
+	fd, size, errflag, (int) http->out.offset, objectLen(entry));
     if (errflag) {
 #if DONT_DO_THIS
 	/*
@@ -1716,7 +1717,7 @@ clientReadRequest(int fd, void *data)
 	    comm_close(fd);
 	    return;
 	} else if (conn->in.offset == 0) {
-	    debug(50, 2) ("clientReadRequest: FD %d: no data to process\n");
+	    debug(50, 2) ("clientReadRequest: FD %d: no data to process\n", fd);
 	    return;
 	}
 	/* Continue to process previously read data */
@@ -1828,7 +1829,7 @@ clientReadRequest(int fd, void *data)
 		    debug(33, 0) ("Config 'request_size'= %d bytes.\n",
 			Config.maxRequestSize);
 		    debug(33, 0) ("This request = %d bytes.\n",
-			conn->in.offset);
+			(int) conn->in.offset);
 		    err = errorCon(ERR_INVALID_REQ, HTTP_REQUEST_ENTITY_TOO_LARGE);
 		    http->entry = clientCreateStoreEntry(http, request->method, 0);
 		    errorAppendEntry(http->entry, err);
@@ -1839,7 +1840,7 @@ clientReadRequest(int fd, void *data)
 		conn->in.buf = xrealloc(conn->in.buf, conn->in.size);
 		/* XXX account conn->in.buf */
 		debug(33, 2) ("Handling a large request, offset=%d inbufsize=%d\n",
-		    conn->in.offset, conn->in.size);
+		    (int) conn->in.offset, conn->in.size);
 		k = conn->in.size - 1 - conn->in.offset;
 	    }
 	    break;
