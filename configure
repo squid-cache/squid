@@ -520,7 +520,7 @@ fi
 
 
 
-# From configure.in Revision: 1.73 
+# From configure.in Revision: 1.74 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -3447,7 +3447,6 @@ trap 'rm -fr `echo "\
 	./scripts/RunCache \
 	./scripts/RunAccel \
 	./src/Makefile \
-	./src/squid.conf.pre \
 	./contrib/Makefile \
  include/autoconf.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
@@ -3558,7 +3557,6 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	./scripts/RunCache \
 	./scripts/RunAccel \
 	./src/Makefile \
-	./src/squid.conf.pre \
 	./contrib/Makefile \
 "}
 EOF
