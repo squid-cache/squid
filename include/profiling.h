@@ -7,7 +7,7 @@
 #ifdef USE_XPROF_STATS
 
 #if !defined(_SQUID_SOLARIS_)
-typedef long long hrtime_t;
+typedef int64_t  hrtime_t;
 #else
 #include <sys/time.h>
 #endif
@@ -29,6 +29,19 @@ get_tick(void)
 {
     hrtime_t regs;
     asm volatile ("rpcc $0":"=A" (regs));	/* I'm not sure of syntax */
+    return regs;
+}
+#elif defined(_M_IX86) && defined(_MSC_VER) /* x86 platform on Microsoft C Compiler ONLY */
+static __inline hrtime_t 
+get_tick(void)
+{
+    hrtime_t regs;
+    __asm {
+	cpuid
+	rdtsc
+	mov eax,DWORD PTR regs[0]
+	mov edx,DWORD PTR regs[4]
+    }
     return regs;
 }
 #else
@@ -98,7 +111,7 @@ struct _xprof_stats_data {
     hrtime_t best;
     hrtime_t worst;
     hrtime_t count;
-    long long summ;
+    int64_t summ;
 };
 
 struct _xprof_stats_node {
@@ -110,8 +123,8 @@ struct _xprof_stats_node {
 typedef xprof_stats_node TimersArray[1];
 
 /* public Data */
-extern TimersArray *xprof_Timers;
-extern int xprof_nesting;
+SQUIDCEXTERN TimersArray *xprof_Timers;
+SQUIDCEXTERN int xprof_nesting;
 
 /* Exported functions */
 SQUIDCEXTERN void xprof_start(xprof_type type, const char *timer);

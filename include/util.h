@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.68 2003/01/26 23:23:22 robertc Exp $
+ * $Id: util.h,v 1.69 2003/02/02 22:04:13 robertc Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -45,10 +45,14 @@
 #endif
 
 #if !defined(SQUIDHOSTNAMELEN)
+#if HAVE_SYS_PARAM_H
 #include <sys/param.h>
+#endif
+#ifndef _SQUID_MSWIN_
 #ifndef _SQUID_NETDB_H_		/* need protection on NEXTSTEP */
 #define _SQUID_NETDB_H_
 #include <netdb.h>
+#endif
 #endif
 #if !defined(MAXHOSTNAMELEN) || (MAXHOSTNAMELEN < 128)
 #define SQUIDHOSTNAMELEN 128
@@ -68,7 +72,6 @@ SQUIDCEXTERN char *uudecode(const char *);
 SQUIDCEXTERN char *xstrdup(const char *);
 SQUIDCEXTERN char *xstrndup(const char *, size_t);
 SQUIDCEXTERN const char *xstrerror(void);
-extern const char *xbstrerror(int);
 SQUIDCEXTERN int tvSubMsec(struct timeval, struct timeval);
 SQUIDCEXTERN int tvSubUsec(struct timeval, struct timeval);
 SQUIDCEXTERN double tvSubDsec(struct timeval, struct timeval);
@@ -143,7 +146,7 @@ SQUIDCEXTERN double xdiv(double nom, double denom);
 SQUIDCEXTERN const char *xitoa(int num);
 
 #if !HAVE_DRAND48
-double drand48(void);
+SQUIDCEXTERN double drand48(void);
 #endif
 
 typedef struct {
