@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.15 1998/04/21 02:10:26 wessels Exp $
+ * $Id: peer_digest.cc,v 1.16 1998/04/22 16:21:58 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -51,6 +51,7 @@ static STCB peerDigestSwapInMask;
 static int peerDigestFetchedEnough(DigestFetchState *fetch, char *buf, ssize_t size, const char *step_name);
 static void peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg);
 static int peerDigestSetCBlock(peer *p, const char *buf);
+static int peerDigestUseful(const peer *peer);
 #define max_delay(t1,t2) ((t1) >= (t2) ? (t1) : (t2))
 
 
@@ -58,10 +59,9 @@ static int peerDigestSetCBlock(peer *p, const char *buf);
 #define StoreDigestCBlockSize sizeof(StoreDigestCBlock)
 
 /* min interval for requesting digests from the same peer */
-static const time_t PeerDigestRequestMinGap   = 15 * 60; /* seconds */
-
+static const time_t PeerDigestRequestMinGap   = 5 * 60; /* seconds */
 /* min interval for requesting digests at start */
-static const time_t GlobalDigestRequestMinGap =  1 * 60; /* seconds */
+static const time_t GlobalDigestRequestMinGap = 1 * 60; /* seconds */
 
 /* local vars */
 static time_t global_last_req_timestamp = 0;
@@ -495,10 +495,17 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
     const int b_read = (fetch->entry->store_status == STORE_PENDING) ? 
 	mem->inmem_hi : mem->object_sz;
     assert(req);
-    if (!err_msg && !peer->digest.cd)
-	err_msg = "null digest (internal bug?)";
-    if (!err_msg && fetch->mask_offset != peer->digest.cd->mask_size)
-	err_msg = "premature eof";
+    /* final checks */
+    if (!err_msg) {
+	if (!peer->digest.cd)
+	    err_msg = "null digest (internal bug?)";
+	else
+	if (fetch->mask_offset != peer->digest.cd->mask_size)
+	    err_msg = "premature eof";
+	else
+	if (!peerDigestUseful(peer))
+	    err_msg = "useless digest";
+    }
     if (fetch->old_entry) {
 	debug(72,2) ("peerDigestFetchFinish: deleting old entry\n");
 	storeUnregister(fetch->old_entry, fetch);
@@ -526,8 +533,8 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	/* release buggy entry */
 	storeReleaseRequest(fetch->entry);
     } else {
-	/* ugly condition, but how? @?@ @?@ */
-	if (fetch->entry->mem_obj->reply->sline.status == HTTP_NOT_MODIFIED) {
+	/* ugly condition, but how? */
+	if (fetch->entry->store_status == STORE_OK) {
 	   debug(72, 2) ("re-used old digest from %s\n", peer->host);
 	} else {
 	   debug(72, 2) ("received valid digest from %s\n", peer->host);
@@ -593,8 +600,21 @@ peerDigestSetCBlock(peer *peer, const char *buf)
     }
     /* check consistency */
     if (cblock.ver.required > cblock.ver.current || 
-	cblock.mask_size <= 0 || cblock.capacity <= 0) {
+	cblock.mask_size <= 0 || cblock.capacity <= 0 ||
+	cblock.bits_per_entry <= 0 || cblock.hash_func_count <= 0) {
 	debug(72,0) ("%s digest cblock is corrupted.\n", peer->host);
+	return 0;
+    }
+    /* check consistency further */
+    if (cblock.mask_size != cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)) {
+	debug(72,0) ("%s digest cblock is corrupted (mask size mismatch: %d ? %d).\n", 
+	    peer->host, cblock.mask_size, cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry));
+	return 0;
+    }
+    /* there are some things we cannot do yet */
+    if (cblock.hash_func_count != CacheDigestHashFuncCount) {
+	debug(72,0) ("%s digest: unsupported #hash functions: %d ? %d.\n",
+	    peer->host, cblock.hash_func_count, CacheDigestHashFuncCount);
 	return 0;
     }
     /*
@@ -611,35 +631,28 @@ peerDigestSetCBlock(peer *peer, const char *buf)
     if (!peer->digest.cd) {
 	debug(72,2) ("cloning %s digest; size: %d (%+d) bytes\n",
 	    peer->host, cblock.mask_size, (int) (cblock.mask_size - freed_size));
-	peer->digest.cd = cacheDigestSizedCreate(cblock.mask_size, cblock.capacity);
+	peer->digest.cd = cacheDigestCreate(cblock.capacity, cblock.bits_per_entry);
 	if (cblock.mask_size >= freed_size)
 	    kb_incr(&Counter.cd.memory, cblock.mask_size - freed_size);
     }
+    assert(peer->digest.cd);
     /* these assignments leave us in an inconsistent state until we finish reading the digest */
     peer->digest.cd->count = cblock.count;
     peer->digest.cd->del_count = cblock.del_count;
     return 1;
 }
 
-#if OLD_CODE
-
-/* updates current mask. checks for overflows */
 static int
-peerDigestUpdateMask(peer *peer, int offset, const char *buf, int size)
+peerDigestUseful(const peer *peer)
 {
-    if (size) {
-	assert(offset >= 0);
-	assert(peer->digest.cd);
-	if (offset + size > peer->digest.cd->mask_size) {
-	    debug(72,0) ("peerDigestUpdateMask: %s digest is larger than expected: %d > %d\n",
-		peer->host, offset + size, peer->digest.cd->mask_size);
-	    return 0;
-	}
-	xmemcpy(peer->digest.cd->mask + offset, buf, size);
+    /* TODO: we should calculate the prob of a false hit instead of bit util */
+    const int bit_util = cacheDigestBitUtil(peer->digest.cd);
+    if (bit_util > 75) {
+	debug(72,0) ("Warning: %s peer digest has too many bits on (%d%%).\n",
+	    peer->host, bit_util);
+	return 0;
     }
     return 1;
 }
 
-#endif
-		
 #endif
