@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.50 1996/08/26 19:16:05 wessels Exp $
+ * $Id: ftp.cc,v 1.51 1996/08/30 22:39:08 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -722,6 +722,7 @@ int ftpInitialize()
     char *ftpget = Config.Program.ftpget;
     struct sockaddr_in S;
     int len;
+    struct timeval slp;
 
     debug(9, 5, "ftpInitialize: Initializing...\n");
     if (pipe(squid_to_ftpget) < 0) {
@@ -763,8 +764,8 @@ int ftpInitialize()
 	fdstat_open(ftpget_to_squid[0], FD_PIPE);
 	fd_note(squid_to_ftpget[1], "ftpget -S");
 	fd_note(ftpget_to_squid[0], "ftpget -S");
-	fcntl(squid_to_ftpget[1], F_SETFD, 1);	/* set close-on-exec */
-	fcntl(ftpget_to_squid[0], F_SETFD, 1);	/* set close-on-exec */
+	commSetCloseOnExec(squid_to_ftpget[1]);
+	commSetCloseOnExec(ftpget_to_squid[0]);
 	/* if ftpget -S goes away, this handler should get called */
 	comm_set_select_handler(ftpget_to_squid[0],
 	    COMM_SELECT_READ,
@@ -772,6 +773,9 @@ int ftpInitialize()
 	    (void *) NULL);
 	ftpget_server_write = squid_to_ftpget[1];
 	ftpget_server_read = ftpget_to_squid[0];
+	slp.tv_sec = 0;
+	slp.tv_usec = 250000;
+	select(0, NULL, NULL, NULL, &slp);
 	return 0;
     }
     /* child */
