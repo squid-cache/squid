@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.415 1998/10/16 19:19:29 wessels Exp $
+ * $Id: client_side.cc,v 1.416 1998/10/17 04:34:09 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1197,7 +1197,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	if (e->mem_status == IN_MEMORY)
 	    http->log_type = LOG_TCP_MEM_HIT;
 	clientSendMoreData(data, buf, size);
-    } else if (refreshCheck(e, r, 0) && !http->flags.internal) {
+    } else if (refreshCheckHTTP(e, r) && !http->flags.internal) {
 	/*
 	 * We hold a stale copy; it needs to be validated
 	 */
