@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.1 2002/06/23 13:32:24 hno Exp $
+ * $Id: external_acl.cc,v 1.2 2002/06/25 11:54:49 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -94,7 +94,9 @@ struct _external_acl {
 struct _external_acl_format {
     enum {
 	EXT_ACL_LOGIN = 1,
+#if USE_IDENT
 	EXT_ACL_IDENT,
+#endif
 	EXT_ACL_SRC,
 	EXT_ACL_DST,
 	EXT_ACL_PROTO,
@@ -235,8 +237,11 @@ parse_externalAclHelper(external_acl ** list)
 	if (strcmp(token, "%LOGIN") == 0) {
 	    format->type = EXT_ACL_LOGIN;
 	    a->require_auth = 1;
-	} else if (strcmp(token, "%IDENT") == 0)
+	}
+#if USE_IDENT
+       	else if (strcmp(token, "%IDENT") == 0)
 	    format->type = EXT_ACL_IDENT;
+#endif
 	else if (strcmp(token, "%SRC") == 0)
 	    format->type = EXT_ACL_SRC;
 	else if (strcmp(token, "%DST") == 0)
@@ -487,6 +492,7 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 	case EXT_ACL_LOGIN:
 	    str = authenticateUserRequestUsername(request->auth_user_request);
 	    break;
+#if USE_IDENT
 	case EXT_ACL_IDENT:
 	    str = ch->rfc931;
 	    if (!str) {
@@ -494,6 +500,7 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 		goto error;
 	    }
 	    break;
+#endif
 	case EXT_ACL_SRC:
 	    str = inet_ntoa(ch->src_addr);
 	    break;
