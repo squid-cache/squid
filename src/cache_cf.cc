@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.367 2001/01/07 23:36:37 hno Exp $
+ * $Id: cache_cf.cc,v 1.368 2001/01/09 14:11:14 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1069,6 +1069,8 @@ parse_cachedir(cacheSwap * swap)
 	    return;
 	}
     }
+
+    assert(swap->n_configured < 63); /* 7 bits, signed */
 
     fs = find_fstype(type_str);
     if (fs < 0) {

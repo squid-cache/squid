@@ -1,6 +1,6 @@
 
 /*
- * $Id: filemap.cc,v 1.36 2000/10/13 08:45:07 wessels Exp $
+ * $Id: filemap.cc,v 1.37 2001/01/09 14:11:15 hno Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -75,7 +75,7 @@ file_map_grow(fileMap * fm)
     int old_sz = fm->nwords * sizeof(*fm->file_map);
     void *old_map = fm->file_map;
     fm->max_n_files <<= 1;
-    assert(fm->max_n_files <= (1 << 30));
+    assert(fm->max_n_files <= (1 << 24)); /* swap_filen is 25 bits, signed */
     fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
     debug(8, 3) ("file_map_grow: creating space for %d files\n", fm->max_n_files);
     fm->file_map = xcalloc(fm->nwords, sizeof(*fm->file_map));
