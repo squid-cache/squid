@@ -56,6 +56,7 @@ typedef struct _HttpHeader HttpHeader;
 typedef struct _HttpHdrCc HttpHdrCc;
 typedef struct _HttpHdrRangeSpec HttpHdrRangeSpec;
 typedef struct _HttpHdrRange HttpHdrRange;
+typedef struct _HttpHdrContRange HttpHdrContRange;
 typedef struct _HttpHdrExtField HttpHdrExtField;
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
 typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;

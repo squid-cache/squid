@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.4 1998/03/07 23:42:56 rousskov Exp $
+ * $Id: HttpHdrCc.cc,v 1.5 1998/03/08 21:02:07 rousskov Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -151,7 +151,7 @@ httpHdrCcDup(const HttpHdrCc * cc)
 }
 
 void
-httpHdrCcPackValueInto(const HttpHdrCc * cc, Packer * p)
+httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 {
     http_hdr_cc_type flag;
     int pcount = 0;

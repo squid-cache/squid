@@ -174,6 +174,7 @@ typedef enum {
     HDR_CONTENT_ENCODING,
     HDR_CONTENT_LENGTH,
     HDR_CONTENT_MD5,
+    HDR_CONTENT_RANGE,
     HDR_CONTENT_TYPE,
     HDR_DATE,
     HDR_ETAG,
@@ -213,14 +214,11 @@ typedef enum {
 typedef enum {
     ftInvalid = HDR_ENUM_END,	/* to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
-#if OLD_CODE
-    ftPChar,
-#else
     ftStr,
-#endif
     ftDate_1123,
     ftPCc,
     ftPRange,
+    ftPContRange,
     ftPExtField
 } field_type;
 
@@ -483,6 +481,7 @@ typedef enum {
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_RANGE_SPEC,
     MEM_HTTP_HDR_RANGE,
+    MEM_HTTP_HDR_CONTENT_RANGE,
     MEM_HTTPSTATEDATA,
     MEM_ICPUDPDATA,
     MEM_CLIENTHTTPREQUEST,

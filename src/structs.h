@@ -501,6 +501,13 @@ struct _HttpHdrRange {
     Stack specs;
 };
 
+/* http content-range header field */
+struct _HttpHdrContRange {
+    HttpHdrRangeSpec spec;
+    size_t elength; /* entity length, not content length */
+};
+
+
 /* a storage for an entry of one of possible types (for lower level routines) */
 union _field_store {
     int v_int;
@@ -508,6 +515,7 @@ union _field_store {
     String v_str;
     HttpHdrCc *v_pcc;
     HttpHdrRange *v_prange;
+    HttpHdrContRange *v_pcont_range;
     HttpHdrExtField *v_pefield;
 };
 

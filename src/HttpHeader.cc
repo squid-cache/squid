@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.20 1998/03/08 18:58:40 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.21 1998/03/08 21:02:09 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -58,8 +58,7 @@
  */
 
 /*
- * HttpHeader entry 
- * ( the concrete type of entry.field is Headers[id].type )
+ * HttpHeader entry (type of entry.field is Headers[id].type)
  */
 struct _HttpHeaderEntry {
     field_store field;
@@ -100,6 +99,7 @@ static field_attrs_t Headers[] =
     {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
     {"Content-Length", HDR_CONTENT_LENGTH, ftInt},
     {"Content-MD5", HDR_CONTENT_MD5, ftStr},	/* for now */
+    {"Content-Range", HDR_CONTENT_RANGE, ftPContRange},
     {"Content-Type", HDR_CONTENT_TYPE, ftStr},
     {"Date", HDR_DATE, ftDate_1123},
     {"Etag", HDR_ETAG, ftStr},	/* for now */
@@ -137,8 +137,10 @@ static http_hdr_type ListHeaders[] =
     /* HDR_ALLOW, */
     HDR_CACHE_CONTROL, HDR_CONNECTION,
     HDR_CONTENT_ENCODING,
-    /* HDR_CONTENT_LANGUAGE,  HDR_IF_MATCH, HDR_IF_NONE_MATCH,
-     * HDR_PRAGMA, HDR_TRANSFER_ENCODING, */
+    /* HDR_CONTENT_LANGUAGE, */
+    /*  HDR_IF_MATCH, HDR_IF_NONE_MATCH, HDR_PRAGMA, */
+    HDR_RANGE,
+    /* HDR_TRANSFER_ENCODING, */
     HDR_UPGRADE,		/* HDR_VARY, */
     /* HDR_VIA, HDR_WARNING, */
     HDR_WWW_AUTHENTICATE,
@@ -157,7 +159,7 @@ static http_hdr_type ReplyHeaders[] =
 static int RequestHeadersMask = 0;	/* set run-time using RequestHeaders */
 static http_hdr_type RequestHeaders[] =
 {
-    HDR_OTHER
+    HDR_CONTENT_RANGE, HDR_OTHER
 };
 
 /* when first field is added, this is how much entries we allocate */
@@ -739,6 +741,12 @@ httpHeaderGetRange(const HttpHeader * hdr)
     return httpHeaderGet(hdr, HDR_RANGE).v_prange;
 }
 
+HttpHdrContRange *
+httpHeaderGetContRange(const HttpHeader * hdr)
+{
+    return httpHeaderGet(hdr, HDR_CONTENT_RANGE).v_pcont_range;
+}
+
 /* updates header masks */
 static void
 httpHeaderSyncMasks(HttpHeader * hdr, const HttpHeaderEntry * e, int add)
@@ -811,6 +819,10 @@ httpHeaderEntryClean(HttpHeaderEntry * e)
     case ftPRange:
 	if (e->field.v_prange)
 	    httpHdrRangeDestroy(e->field.v_prange);
+	break;
+    case ftPContRange:
+	if (e->field.v_pcont_range)
+	    httpHdrContRangeDestroy(e->field.v_pcont_range);
 	break;
     case ftPExtField:
 	if (e->field.v_pefield)
@@ -906,6 +918,7 @@ httpHeaderEntryParseExtFieldInit(HttpHeaderEntry * e, int id, const HttpHdrExtFi
 static int
 httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHdrExtField * f)
 {
+    const char *err_entry_descr = NULL;
     int type;
     field_store field;
     assert(e && f);
@@ -915,56 +928,52 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHdrExtFiel
     httpHeaderFieldInit(&field);
     switch (type) {
     case ftInt:
-	if (!httpHeaderParseInt(strBuf(f->value), &field.v_int)) {
-	    Headers[id].stat.errCount++;
-	    return 0;
-	}
+	if (!httpHeaderParseInt(strBuf(f->value), &field.v_int))
+	    err_entry_descr = "integer field";
 	break;
-
     case ftStr:
 	field.v_str = stringDup(&f->value);
 	break;
-
     case ftDate_1123:
 	field.v_time = parse_rfc1123(strBuf(f->value));
 	if (field.v_time <= 0)
 	    Headers[id].stat.errCount++;
 	/*
 	 * if parse_rfc1123 fails we fall through anyway so upper levels
-	 * will notice invalid date
+	 * will notice invalid date rather than unparsible header
 	 */
 	break;
-
     case ftPCc:
 	field.v_pcc = httpHdrCcParseCreate(strBuf(f->value));
-	if (!field.v_pcc) {
-	    debug(55, 2) ("failed to parse cc hdr: id: %d, field: '%s: %s'\n",
-		id, strBuf(f->name), strBuf(f->value));
-	    Headers[id].stat.errCount++;
-	    return 0;
-	}
+	if (!field.v_pcc)
+	    err_entry_descr = "cache control hdr";
 	break;
-
     case ftPRange:
 	field.v_prange = httpHdrRangeParseCreate(strBuf(f->value));
-	if (!field.v_prange) {
-	    debug(55, 2) ("failed to parse range hdr: id: %d, field: '%s: %s'\n",
-		id, strBuf(f->name), strBuf(f->value));
-	    Headers[id].stat.errCount++;
-	    return 0;
-	}
+	if (!field.v_prange)
+	    err_entry_descr = "range hdr";
 	break;
-
+    case ftPContRange:
+	field.v_pcont_range = httpHdrContRangeParseCreate(strBuf(f->value));
+	if (!field.v_pcont_range)
+	    err_entry_descr = "content range hdr";
+	break;
     default:
 	debug(55, 2) ("something went wrong with hdr field type analysis: id: %d, type: %d, field: '%s: %s'\n",
 	    id, type, strBuf(f->name), strBuf(f->value));
 	assert(0);
     }
+    /* failure ? */
+    if (err_entry_descr) {
+	debug(55, 2) ("failed to parse %s: id: %d, field: '%s: %s'\n",
+	    err_entry_descr, id, strBuf(f->name), strBuf(f->value));
+	Headers[id].stat.errCount++;
+	return 0;
+    }
     /* success, do actual init */
     httpHeaderEntryInit(e, id, field);
     return 1;
 }
-
 
 static HttpHeaderEntry
 httpHeaderEntryClone(const HttpHeaderEntry * e)
@@ -1019,10 +1028,13 @@ httpHeaderEntryPackByType(const HttpHeaderEntry * e, Packer * p)
 	packerPrintf(p, "%s", mkrfc1123(e->field.v_time));
 	break;
     case ftPCc:
-	httpHdrCcPackValueInto(e->field.v_pcc, p);
+	httpHdrCcPackInto(e->field.v_pcc, p);
 	break;
     case ftPRange:
-	httpHdrRangePackValueInto(e->field.v_prange, p);
+	httpHdrRangePackInto(e->field.v_prange, p);
+	break;
+    case ftPContRange:
+	httpHdrContRangePackInto(e->field.v_pcont_range, p);
 	break;
     case ftPExtField:
 	packerPrintf(p, "%s", e->field.v_pefield->value);
@@ -1082,6 +1094,8 @@ httpHeaderEntryIsValid(const HttpHeaderEntry * e)
 	return e->field.v_pcc != NULL;
     case ftPRange:
 	return e->field.v_prange != NULL;
+    case ftPContRange:
+	return e->field.v_pcont_range != NULL;
     case ftPExtField:
 	return e->field.v_pefield != NULL;
     default:
@@ -1125,6 +1139,8 @@ httpHeaderFieldDup(field_type type, field_store value)
 	return ptrField(httpHdrCcDup(value.v_pcc));
     case ftPRange:
 	return ptrField(httpHdrRangeDup(value.v_prange));
+    case ftPContRange:
+	return ptrField(httpHdrContRangeDup(value.v_pcont_range));
     case ftPExtField:
 	return ptrField(httpHdrExtFieldDup(value.v_pefield));
     default:
@@ -1149,6 +1165,7 @@ httpHeaderFieldBadValue(field_type type)
 	return strField(StringNull);
     case ftPCc:
     case ftPRange:
+    case ftPContRange:
     case ftPExtField:
 	return ptrField(NULL);
     case ftInvalid:
