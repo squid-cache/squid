@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.1 1998/02/27 07:17:22 kostas Exp $
+ * $Id: hash.c,v 1.2 1998/02/27 19:04:15 kostas Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -112,8 +112,8 @@
 #include <sys/time.h>
 #include <strings.h>
 #include "hash.h"
-static int hash_unlink(hash_table *, hash_link *, int);
 
+extern void print_stats();
 /*
  *  hash_url() - Returns a well-distributed hash function for URLs.
  *  The best way is to sum up the last half of the string.
@@ -245,6 +245,11 @@ hash_insert(hash_table * hid, const char *k, void *item)
     assert(k != NULL);
     /* Add to the given hash table 'hid' */
     new = calloc(1, sizeof(hash_link));
+    if (!new) {
+	fprintf(stderr,"calloc failed!\n");
+	print_stats();
+	exit(1);
+    }
     new->item = item;
     new->key = (char *) k;
     i = hid->hash(k, hid->size);
@@ -342,7 +347,7 @@ hash_delete(hash_table * hid, const char *key)
  *  On success, it returns 0 and deletes the link; otherwise, 
  *  returns non-zero on error.
  */
-static int
+int
 hash_unlink(hash_table * hid, hash_link * hl, int FreeLink)
 {
     hash_link *walker, *prev;

@@ -27,6 +27,7 @@ extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
 extern void hash_insert(hash_table *, const char *, void *);
 extern int hash_delete(hash_table *, const char *);
 int hash_delete_link(hash_table *, hash_link *);
+int hash_unlink(hash_table *,hash_link *, int);
 void hash_join(hash_table *, hash_link *);
 int hash_remove_link(hash_table *, hash_link *);
 hash_link *hash_lookup(hash_table *, const void *);

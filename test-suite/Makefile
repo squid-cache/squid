@@ -1,5 +1,5 @@
 CC	= gcc
-CFLAGS	= -g
+CFLAGS	= -O2
 OBJS	= membanger.o hash.o
 LIB	= -lmylib
 

@@ -22,13 +22,14 @@ int minchunk;
 HASHCMP ptrcmp;
 char mbuf[256];
 char abuf[32];
-int *p;
+char *p;
 
 int size;
 void *addr;
 int amt;
 
 int i;
+int a;
 void *my_xmalloc(size_t);
 void *my_xcalloc(int, size_t);
 int my_xfree(void *);
@@ -36,26 +37,30 @@ int my_xfree(void *);
 #define xmalloc my_xmalloc
 #define xcalloc my_xcalloc
 #define xfree my_xfree
+
 int *size2id_array[2];
 int size2id_len=0;
 int size2id_alloc=0;
 
-int size2id(size_t);
-
-void init_stats(), print_stats();
-
 typedef struct {
-	char *orig_ptr;
+	char orig_ptr[32];
 	void *my_ptr;
+#ifdef WITH_LIB
+	MemPool *pool;
+#endif
 	int id;
 	int size;
 } memitem;
 
 struct {
-	int mallocs,frees,callocs;
+	int mallocs,frees,callocs,reallocs;
 } mstat;
 
 memitem *mi;
+void size2id(size_t, memitem *);
+void badformat();
+void init_stats(), print_stats();
+
 
 int 
 ptrcmp(const void *a,const void *b) 
@@ -67,6 +72,7 @@ main(int argc,char **argv)
 {
     char c;
     extern char *optarg; 
+    a=0;
     while ((c = getopt(argc, argv, "f:i:M:m:")) != -1) {
       switch (c) {
 	case 'f':
@@ -99,35 +105,72 @@ main(int argc,char **argv)
     init_stats();
 
     while (fgets(mbuf, 256, fp)!=NULL) {
+#if RUNTIME_STATSA
+	a++;
+	if (a%20000==0) print_stats();
+#endif
+	p=NULL;
 	switch(mbuf[0]) {
 	case 'm': /* malloc */
-           sscanf(&mbuf[2],"%d:%s", &size, abuf);
+	   p=strtok(&mbuf[2],":");
+	   if (!p) badformat();
+	   size=atoi(p);
+	   p=strtok(NULL,"\n");
+	   if (!p) badformat();
 	   mi=malloc(sizeof(memitem)); 
-	   mi->orig_ptr=(char *)strdup(abuf);
+	   strcpy(mi->orig_ptr,p);
 	   mi->size=size;
-	   mi->id=size2id(size);
+	   size2id(size,mi);
 	   mi->my_ptr=(void *)xmalloc(size);
 	   hash_insert(mem_table, mi->orig_ptr, mi);
 	   mstat.mallocs++;
 	   break;
 	case 'c': /* calloc */
-	   sscanf(&mbuf[2],"%d:%d:%s",&amt ,&size, abuf);
+	   p=strtok(&mbuf[2],":");
+	   if (!p) badformat();
+	   amt=atoi(p);
+	   p=strtok(NULL,":");
+	   if (!p) badformat();
+	   size=atoi(p);
+	   p=strtok(NULL,"\n");
+	   if (!p) badformat();
            mi=malloc(sizeof(memitem));
-	   mi->orig_ptr=(char *)strdup(abuf);
-	   mi->id=size2id(size);
+	   strcpy(mi->orig_ptr,p);
+	   size2id(size,mi);
            mi->size=amt*size;
            mi->my_ptr=(void *)xmalloc(amt*size);
 	   hash_insert(mem_table, mi->orig_ptr, mi);
 	   mstat.callocs++;
 	   break;
+	case 'r':
+           p=strtok(&mbuf[2],":");
+	   if (!p) badformat();
+	   strcpy(abuf,p);
+           p=strtok(NULL,":");
+	   if (!p) badformat();
+	   mem_entry=hash_lookup(mem_table, p);
+           if (mem_entry==NULL) {
+                fprintf(stderr,"invalid realloc (%s)!\n",p);
+		break;
+           }
+	   mi=(memitem *)mem_entry;
+	   xfree(mi->my_ptr);
+           strcpy(mi->orig_ptr,abuf);
+	   p=strtok(NULL,"\n");
+	   if (!p) badformat();
+	   mi->my_ptr=(char *)xmalloc(atoi(p)); 
+	   mstat.reallocs++;
+	   break;
 	case 'f':
-	   sscanf(&mbuf[2],"%s", abuf);
-	   mem_entry=hash_lookup(mem_table, abuf);		
+	   p=strtok(&mbuf[2],"\n");
+	   mem_entry=hash_lookup(mem_table, p);		
 	   if (mem_entry==NULL) {
-		fprintf(stderr,"invalid free!\n");
+		fprintf(stderr,"invalid free (%s)!\n",p);
+		break;
 	   }
 	   mi=(memitem *)mem_entry;
 	   xfree(mi->my_ptr);
+	   hash_unlink(mem_table, mem_entry, 1);
 	   mstat.frees++;
 	   break;
 	default:
@@ -167,7 +210,8 @@ void
 print_stats()
 {
 	getrusage(RUSAGE_SELF, &myusage);
-	printf("m/c/f=%d/%d/%d\n",mstat.mallocs,mstat.callocs,mstat.frees);
+	printf("m/c/f/r=%d/%d/%d/%d\n",mstat.mallocs,mstat.callocs,
+					mstat.frees, mstat.reallocs);
 	printf("types                 : %d\n",size2id_len);
 	printf("user time used        : %d.%d\n", (int)myusage.ru_utime.tv_sec,
 						(int)myusage.ru_utime.tv_usec);
@@ -177,15 +221,23 @@ print_stats()
 	printf("page faults           : %d\n", (int)myusage.ru_majflt);
 }
 
-int
-size2id(size_t sz)
+void
+size2id(size_t sz,memitem *mi)
 {
 	int j;
 	for(j=0;j<size2id_len;j++)
 		if (size2id_array[0][j]==sz) {
 			size2id_array[1][j]++;
-			return j;
+			mi->id=j;
+			return;
 		}
+
+	/* we have a different size, so we need a new pool */
+
+	mi->id=size2id_len;
+#ifdef WITH_LIB
+	mi->pool = memPoolCreate(size2id_len, sz);
+#endif
 	size2id_len++;
 	if (size2id_len==1) {
 		size2id_alloc=100;
@@ -197,8 +249,23 @@ size2id(size_t sz)
                 size2id_array[0]=realloc(size2id_array[0],size2id_alloc*sizeof(int));
                 size2id_array[1]=realloc(size2id_array[1],size2id_alloc*sizeof(int));
 	}
+	
 	size2id_array[0][size2id_len-1]=sz;
-	size2id_array[1][size2id_len-1]=0;
-	return size2id_len-1;
+	size2id_array[1][size2id_len-1]++;
 }
 
+void
+badformat()
+{
+    fprintf(stderr,"pummel.bad.format\n");
+    exit(1);
+}
+
+/* unused code, saved for parts */
+const char *
+make_nam(int id, int size)
+{
+    const char *buf = malloc(30); /* argh */
+    sprintf((char *)buf, "pl:%d/%d", id, size);
+    return buf;
+}
