@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.296 1998/08/17 21:35:49 wessels Exp $
+ * $Id: cache_cf.cc,v 1.297 1998/08/17 22:04:55 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -267,6 +267,17 @@ configDoConfigure(void)
 	    Config.redirectChildren = DefaultRedirectChildrenMax;
 	}
     }
+    if (Config.Program.authenticate) {
+	if (Config.authenticateChildren < 1) {
+	    Config.authenticateChildren = 0;
+	    safe_free(Config.Program.authenticate);
+	} else if (Config.authenticateChildren > DefaultAuthenticateChildrenMax) {
+	    debug(3, 0) ("WARNING: authenticate_children was set to a bad value: %d\n",
+		Config.authenticateChildren);
+	    debug(3, 0) ("Setting it to the maximum (%d).\n", DefaultAuthenticateChildrenMax);
+	    Config.authenticateChildren = DefaultAuthenticateChildrenMax;
+	}
+    }
     if (Config.Accel.host) {
 	snprintf(buf, BUFSIZ, "http://%s:%d", Config.Accel.host, Config.Accel.port);
 	Config2.Accel.prefix = xstrdup(buf);
@@ -311,19 +322,21 @@ configDoConfigure(void)
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
     if (Config.Program.redirect)
 	requirePathnameExists("redirect_program", Config.Program.redirect);
+    if (Config.Program.authenticate)
+	requirePathnameExists("authenticate_program", Config.Program.authenticate);
     requirePathnameExists("Icon Directory", Config.icons.directory);
     requirePathnameExists("Error Directory", Config.errorDirectory);
     for (R = Config.Refresh; R; R = R->next) {
-        if (!R->flags.override_expire)
+	if (!R->flags.override_expire)
 	    continue;
-        debug(22,1)("WARNING: use of 'override-expire' in 'refresh_pattern' violates HTTP\n");
-        break;
+	debug(22, 1) ("WARNING: use of 'override-expire' in 'refresh_pattern' violates HTTP\n");
+	break;
     }
     for (R = Config.Refresh; R; R = R->next) {
-        if (!R->flags.override_lastmod)
+	if (!R->flags.override_lastmod)
 	    continue;
-        debug(22,1)("WARNING: use of 'override-lastmod' in 'refresh_pattern' violates HTTP\n");
-        break;
+	debug(22, 1) ("WARNING: use of 'override-lastmod' in 'refresh_pattern' violates HTTP\n");
+	break;
     }
 }
 

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.157 1998/07/31 00:15:31 wessels Exp $
+#  $Id: Makefile.in,v 1.158 1998/08/17 22:04:52 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -26,6 +26,7 @@ DNSSERVER_EXE	= dnsserver$(exec_suffix)
 UNLINKD_EXE	= unlinkd$(exec_suffix)
 PINGER_EXE	= pinger$(exec_suffix)
 CACHEMGR_EXE	= cachemgr$(cgi_suffix)
+NCSA_AUTH_EXE	= ncsa_auth$(exec_suffix)
 
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
@@ -40,6 +41,8 @@ DEFAULT_UNLINKD		= $(libexecdir)/$(UNLINKD_EXE)
 DEFAULT_ICON_DIR	= $(sysconfdir)/icons
 DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
 DEFAULT_MIB_PATH	= $(sysconfdir)/mib.txt
+DEFAULT_AUTH_PROGRAM	= $(bindir)/$(NCSA_AUTH_EXE)
+DEFAULT_PASSWD_FILE	= $(sysconfdir)/passwd
 
 CC		= @CC@
 MAKEDEPEND	= @MAKEDEPEND@
@@ -72,9 +75,10 @@ CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 STD_APP_LIBS    = -L../lib -lmiscutil $(XTRA_LIBS)
+AUTH_LIBS	= -L../lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
 
 PROGS           = $(SQUID_EXE) $(CLIENT_EXE)
-UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE)
+UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE) $(NCSA_AUTH_EXE)
 SUID_UTILS	= $(PINGER_EXE)
 CGIPROGS	= $(CACHEMGR_EXE)
 OBJS	 	= \
@@ -82,6 +86,7 @@ OBJS	 	= \
 		acl.o \
 		asn.o \
 		@ASYNC_OBJS@ \
+		authenticate.o \
 		cache_cf.o \
 		CacheDigest.o \
 		cache_manager.o \
@@ -220,6 +225,9 @@ $(PINGER_EXE): pinger.o
 $(UNLINKD_EXE): unlinkd-daemon.o
 	$(CC) $(LDFLAGS) unlinkd-daemon.o -o $@
 
+$(NCSA_AUTH_EXE): ncsa_auth.o hash.o debug.o globals.o
+	$(CC) $(LDFLAGS) ncsa_auth.o hash.o debug.o globals.o -o $@ $(AUTH_LIBS)
+
 unlinkd-daemon.o: unlinkd.c
 	$(CC) -c $(CFLAGS) -DUNLINK_DAEMON $(srcdir)/unlinkd.c -o $@
 
@@ -250,7 +258,9 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
         s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
-	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g" < $(srcdir)/cf.data.pre >$@
+	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
+	s%@DEFAULT_AUTH_PROGRAM@%$(DEFAULT_AUTH_PROGRAM)%g;\
+	s%@DEFAULT_PASSWD_FILE@%$(DEFAULT_PASSWD_FILE)%g" < $(srcdir)/cf.data.pre >$@
 
 install-mkdirs:
 	-@if test ! -d $(prefix); then \

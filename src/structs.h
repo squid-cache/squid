@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.200 1998/08/17 21:27:33 wessels Exp $
+ * $Id: structs.h,v 1.201 1998/08/17 22:05:02 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -57,10 +57,7 @@ struct _acl_name_list {
 };
 
 struct _acl_proxy_auth {
-    char *filename;
-    time_t last_time;
-    time_t change_time;
-    int check_interval;
+    int timeout;		/* timeout value for cached usercode:password entries */
     hash_table *hash;
 };
 
@@ -68,7 +65,10 @@ struct _acl_proxy_auth_user {
     /* first two items must be same as hash_link */
     char *user;
     acl_proxy_auth_user *next;
+    /* extra fields for proxy_auth */
     char *passwd;
+    int passwd_ok;		/* 1 = passwd checked OK */
+    long expiretime;
 };
 
 struct _acl_deny_info_list {
@@ -170,6 +170,7 @@ struct _aclCheck_t {
     request_t *request;
     char ident[USER_IDENT_SZ];
     char browser[BROWSERNAMELEN];
+    acl_proxy_auth_user *auth_user;
     acl_lookup_state state[ACL_ENUM_MAX];
     PF *callback;
     void *callback_data;
@@ -282,11 +283,14 @@ struct _SquidConfig {
     struct {
 	char *dnsserver;
 	char *redirect;
+	char *authenticate;
+	wordlist *authenticate_options;
 	char *pinger;
 	char *unlinkd;
     } Program;
     int dnsChildren;
     int redirectChildren;
+    int authenticateChildren;
     struct {
 	char *host;
 	u_short port;

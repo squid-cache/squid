@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.268 1998/08/11 20:07:03 wessels Exp $
+ * $Id: main.cc,v 1.269 1998/08/17 22:04:59 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -316,6 +316,7 @@ mainReconfigure(void)
 #endif
     dnsShutdownServers(NULL);
     redirectShutdownServers(NULL);
+    authenticateShutdownServers(NULL);
     storeDirCloseSwapLogs();
     errorFree();
     parseConfigFile(ConfigFile);
@@ -325,6 +326,7 @@ mainReconfigure(void)
     errorInitialize();		/* reload error pages */
     dnsOpenServers();
     redirectOpenServers();
+    authenticateOpenServers();
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.onoff.accel_with_proxy))
 	neighbors_open(theOutIcpConnection);
@@ -400,6 +402,7 @@ mainInitialize(void)
     fqdncache_init();
     dnsOpenServers();
     redirectOpenServers();
+    authenticateOpenServers();
     useragentOpenLog();
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
     httpAnonInitModule();	/* must go before accepting requests */
@@ -567,6 +570,7 @@ main(int argc, char **argv)
 	    serverConnectionsClose();
 	    eventAdd("dnsShutdownServers", dnsShutdownServers, NULL, 0.0, 1);
 	    eventAdd("redirectShutdownServers", redirectShutdownServers, NULL, 0.0, 1);
+	    eventAdd("authenticateShutdownServers", authenticateShutdownServers, NULL, 0.0, 1);
 	    eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1);
 	}
 	eventRun();
