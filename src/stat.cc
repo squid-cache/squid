@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.39 1996/07/12 17:40:47 wessels Exp $
+ * $Id: stat.cc,v 1.40 1996/07/15 23:13:33 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -580,16 +580,16 @@ static void statFiledescriptors(sentry)
 
 int memoryAccounted()
 {
-	return (int)
-	    meta_data.store_entries * sizeof(StoreEntry) +
-	    meta_data.ipcache_count * sizeof(ipcache_entry) +
-	    meta_data.hash_links * sizeof(hash_link) +
-	    sm_stats.total_pages_allocated * sm_stats.page_size +
-	    disk_stats.total_pages_allocated * disk_stats.page_size +
-	    request_pool.total_pages_allocated * request_pool.page_size +
-	    mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size +
-	    meta_data.url_strings +
-	    meta_data.misc;
+    return (int)
+	meta_data.store_entries * sizeof(StoreEntry) +
+	meta_data.ipcache_count * sizeof(ipcache_entry) +
+	meta_data.hash_links * sizeof(hash_link) +
+	sm_stats.total_pages_allocated * sm_stats.page_size +
+	disk_stats.total_pages_allocated * disk_stats.page_size +
+	request_pool.total_pages_allocated * request_pool.page_size +
+	mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size +
+	meta_data.url_strings +
+	meta_data.misc;
 }
 
 int mallinfoTotal()
@@ -1065,6 +1065,8 @@ void stat_init(object, logfilename)
 {
     cacheinfo *obj = NULL;
     int i;
+
+    debug(18, 5, "stat_init: Initializing...\n");
 
     obj = xcalloc(1, sizeof(cacheinfo));
     obj->stat_get = stat_get;

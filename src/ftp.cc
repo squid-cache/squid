@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.40 1996/07/09 03:41:25 wessels Exp $
+ * $Id: ftp.cc,v 1.41 1996/07/15 23:13:31 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -697,6 +697,7 @@ int ftpInitialize()
     struct sockaddr_in S;
     int len;
 
+    debug(9, 5, "ftpInitialize: Initializing...\n");
     if (pipe(squid_to_ftpget) < 0) {
 	debug(9, 0, "ftpInitialize: pipe: %s\n", xstrerror());
 	return -1;
@@ -709,6 +710,7 @@ int ftpInitialize()
 	local_addr,
 	0,
 	"ftpget -S socket");
+    debug(9, 5, "ftpget -S socket on FD %d\n", cfd);
     if (cfd == COMM_ERROR) {
 	debug(9, 0, "ftpInitialize: Failed to create socket\n");
 	return -1;
