@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.58 1996/08/26 19:57:03 wessels Exp $
+ * $Id: comm.cc,v 1.59 1996/08/27 05:51:36 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -657,9 +657,8 @@ static void comm_select_incoming()
 
 
 /* Select on all sockets; call handlers for those that are ready. */
-int comm_select(sec, failtime)
+int comm_select(sec)
      time_t sec;
-     time_t failtime;
 {
     fd_set exceptfds;
     fd_set readfds;
@@ -683,9 +682,6 @@ int comm_select(sec, failtime)
     do {
 	if (sec > 60)
 	    fatal_dump(NULL);
-	if (0 < failtime && failtime < squid_curtime)
-	    break;
-
 	FD_ZERO(&readfds);
 	FD_ZERO(&writefds);
 	FD_ZERO(&exceptfds);
