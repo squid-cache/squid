@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.146 1997/01/31 22:30:31 wessels Exp $
+ * $Id: http.cc,v 1.147 1997/01/31 23:44:10 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -693,7 +693,11 @@ httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max)
     if (n >= max)
 	return;
 #ifdef USE_ANONYMIZER
-    if (!httpAnonSearchHeaderField(http_anon_allowed_header, line)) {
+#ifdef USE_PARANOID_ANONYMIZER
+    if (httpAnonSearchHeaderField(http_anon_allowed_header, line) == NULL) {
+#else
+    if (httpAnonSearchHeaderField(http_anon_denied_header, line) == NULL) {
+#endif
 	debug(11, 5, "httpAppendRequestHeader: removed for anonymity: <%s>\n",
 	    line);
 	return;
