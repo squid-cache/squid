@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.75 1996/08/27 17:55:18 wessels Exp $
+ * $Id: cache_cf.cc,v 1.76 1996/08/28 17:44:28 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -186,9 +186,12 @@ struct SquidConfig Config;
 #define DefaultTcpOutgoingAddr	INADDR_NONE
 #define DefaultUdpIncomingAddr	INADDR_ANY
 #define DefaultUdpOutgoingAddr	INADDR_NONE
-#define DefaultClientNetmask	0xFFFFFFFF;
+#define DefaultClientNetmask	0xFFFFFFFF
 #define DefaultSslProxyPort	0
 #define DefaultSslProxyHost	(char *)NULL
+#define DefaultIpcacheSize	1024
+#define DefaultIpcacheLow	90
+#define DefaultIpcacheHigh	95
 
 int httpd_accel_mode = 0;	/* for fast access */
 char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -1322,6 +1325,13 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "err_html_text"))
 	    parseErrHtmlLine();
 
+	else if (!strcmp(token, "ipcache_size"))
+	    parseIntegerValue(&Config.ipcache.size);
+	else if (!strcmp(token, "ipcache_low"))
+	    parseIntegerValue(&Config.ipcache.low);
+	else if (!strcmp(token, "ipcache_high"))
+	    parseIntegerValue(&Config.ipcache.high);
+
 	else {
 	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
 		config_lineno,
@@ -1520,6 +1530,9 @@ static void configSetFactoryDefaults()
     Config.Addrs.client_netmask.s_addr = DefaultClientNetmask;
     Config.sslProxy.port = DefaultSslProxyPort;
     Config.sslProxy.host = safe_xstrdup(DefaultSslProxyHost);
+    Config.ipcache.size = DefaultIpcacheSize;
+    Config.ipcache.low = DefaultIpcacheLow;
+    Config.ipcache.high = DefaultIpcacheHigh;
 }
 
 static void configDoConfigure()
