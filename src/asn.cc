@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.25 1998/03/07 23:43:00 rousskov Exp $
+ * $Id: asn.cc,v 1.26 1998/03/13 05:37:47 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -156,16 +156,6 @@ asnInit(void)
 void
 asnFreeMemory(void)
 {
-    debug(0, 0) ("asnFreeMemory: Calling asnCleanup()!\n");
-
-    /* XXX - Cleanup is enough.   */
-
-    asnCleanup();
-}
-
-void
-asnCleanup()
-{
     rn_walktree(AS_tree_head, destroyRadixNode, AS_tree_head);
     destroyRadixNode((struct radix_node *) 0, (void *) AS_tree_head);
 }
@@ -213,7 +203,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	memFree(MEM_4K_BUF, buf);
 	return;
     }
-    if (size == 0) {
+    if (size == 0 && e->mem_obj->inmem_hi > 0) {
 	memFree(MEM_4K_BUF, buf);
 	return;
     } else if (size < 0) {
@@ -231,8 +221,9 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	    asState);
 	return;
     }
+    debug(53,1)("asHandleReply: Done: %s\n", storeUrl(e));
     s = buf;
-    while (*s) {
+    while (s - buf < size && *s != '\0') {
 	for (t = s; *t; t++) {
 	    if (isspace(*t))
 		break;
@@ -248,6 +239,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	while (*s && isspace(*s))
 	    s++;
     }
+    memFree(MEM_4K_BUF, buf);
     storeUnregister(e, asState);
     storeUnlockObject(e);
     requestUnlink(asState->request);
@@ -399,10 +391,13 @@ whoisReadReply(int fd, void *data)
     debug(53, 6) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
     if (len <= 0) {
 	storeComplete(entry);
+	debug(53,1)("whoisReadReply: Done: %s\n", storeUrl(entry));
 	comm_close(fd);
+	memFree(MEM_4K_BUF, buf);
 	return;
     }
     storeAppend(entry, buf, len);
+    memFree(MEM_4K_BUF, buf);
     fd_bytes(fd, len, FD_READ);
     commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
 }
