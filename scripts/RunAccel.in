@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id: RunAccel.in,v 1.5 1999/01/29 18:19:45 wessels Exp $
+#  $Id: RunAccel.in,v 1.6 2003/01/09 11:39:53 hno Exp $
 
 # enable HTTP requests on port 80
 port="-a 80"
@@ -8,7 +8,7 @@ port="-a 80"
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 logdir=@localstatedir@
-PATH=@bindir@:/bin:/usr/bin
+PATH=@sbindir@:/bin:/usr/bin
 export PATH
 
 if test $# = 1 ; then
