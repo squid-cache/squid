@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.105 1998/09/09 18:20:49 wessels Exp $
+# $Id: cf.data.pre,v 1.106 1998/09/09 18:21:50 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2572,6 +2572,11 @@ DOC_START
 	Heavy voodoo here.  I can't even beleve you are reading this.
 	Are you crazy?  Don't even think about adjusting these unless
 	you understand the algorithms in comm_select.c first!
+
+incoming_icp_average 6
+incoming_http_average 4
+min_icp_poll_cnt 8
+min_http_poll_cnt 8
 DOC_END
 
 EOF
