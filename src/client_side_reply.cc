@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.20 2002/10/25 07:36:32 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.21 2002/10/26 02:18:12 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1022,16 +1022,12 @@ clientCheckTransferDone(clientReplyContext * context)
     /* mem->reply was wrong because it uses the UPSTREAM header length!!! */
     reply = mem->reply;
     if (context->headers_sz == 0)
-	return 0;		/* haven't found end of headers yet */
-    else if (reply->sline.status == HTTP_OK)
-	sending = SENDING_BODY;
-    else if (reply->sline.status == HTTP_NO_CONTENT)
-	sending = SENDING_HDRSONLY;
-    else if (reply->sline.status == HTTP_NOT_MODIFIED)
-	sending = SENDING_HDRSONLY;
-    else if (reply->sline.status < HTTP_OK)
-	sending = SENDING_HDRSONLY;
-    else if (http->request->method == METHOD_HEAD)
+	/* haven't found end of headers yet */
+	return 0;
+    else if (reply->sline.status == HTTP_NO_CONTENT ||
+	     reply->sline.status == HTTP_NOT_MODIFIED ||
+	     reply->sline.status < HTTP_OK ||
+	     http->request->method == METHOD_HEAD)
 	sending = SENDING_HDRSONLY;
     else
 	sending = SENDING_BODY;
