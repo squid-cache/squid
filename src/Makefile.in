@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.163 1998/11/12 06:27:51 wessels Exp $
+#  $Id: Makefile.in,v 1.164 1998/11/13 06:00:29 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -213,7 +213,7 @@ $(DNSSERVER_EXE): dnsserver.o
 $(CACHEMGR_EXE): cachemgr.o
 	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
 
-$(PINGER_EXE): pinger.o
+$(PINGER_EXE): pinger.o debug.o globals.o
 	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o globals.o $(PINGER_LIBS)
 
 $(UNLINKD_EXE): unlinkd-daemon.o

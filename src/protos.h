@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.286 1998/11/12 23:07:37 wessels Exp $
+ * $Id: protos.h,v 1.287 1998/11/13 06:00:31 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -190,6 +190,7 @@ extern void _db_print(const char *,...);
 #else
 extern void _db_print();
 #endif
+extern void xassert(const char *, const char *, int);
 
 /* packs, then prints an object using debug() */
 extern void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
@@ -1016,7 +1017,6 @@ extern double gb_to_double(const gb_t *);
 extern const char *gb_to_str(const gb_t *);
 extern void gb_flush(gb_t *);	/* internal, do not use this */
 extern int stringHasWhitespace(const char *);
-extern void xassert(const char *, const char *, int);
 
 #if USE_HTCP
 extern void htcpInit(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.171 1998/11/12 23:07:39 wessels Exp $
+ * $Id: tools.cc,v 1.172 1998/11/13 06:00:32 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -835,12 +835,4 @@ int
 stringHasWhitespace(const char *s)
 {
     return (strcspn(s, w_space) != strlen(s));
-}
-
-void
-xassert(const char *msg, const char *file, int line)
-{
-    debug(0, 0) ("assertion failed: %s:%d: \"%s\"\n", file, line, msg);
-    if (!shutting_down)
-        abort();
 }
