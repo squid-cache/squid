@@ -1,5 +1,5 @@
 /*
- * $Id: GNUregex.c,v 1.16 2003/08/03 22:53:47 hno Exp $
+ * $Id: GNUregex.c,v 1.17 2004/11/07 13:55:20 hno Exp $
  */
 
 /* Extended regular expression matching and search library,
@@ -146,26 +146,26 @@ static int re_match_2
 #endif
 
 #ifdef isblank
-#define ISBLANK(c) (isascii (c) && isblank (c))
+#define ISBLANK(c) (isascii ((unsigned char)c) && isblank ((unsigned char)c))
 #else
 #define ISBLANK(c) ((c) == ' ' || (c) == '\t')
 #endif
 #ifdef isgraph
-#define ISGRAPH(c) (isascii (c) && isgraph (c))
+#define ISGRAPH(c) (isascii ((unsigned char)c) && isgraph ((unsigned char)c))
 #else
-#define ISGRAPH(c) (isascii (c) && isprint (c) && !isspace (c))
+#define ISGRAPH(c) (isascii ((unsigned char)c) && isprint ((unsigned char)c) && !isspace ((unsigned char)c))
 #endif
 
-#define ISPRINT(c) (isascii (c) && isprint (c))
-#define ISDIGIT(c) (isascii (c) && isdigit (c))
-#define ISALNUM(c) (isascii (c) && isalnum (c))
-#define ISALPHA(c) (isascii (c) && isalpha (c))
-#define ISCNTRL(c) (isascii (c) && iscntrl (c))
-#define ISLOWER(c) (isascii (c) && islower (c))
-#define ISPUNCT(c) (isascii (c) && ispunct (c))
-#define ISSPACE(c) (isascii (c) && isspace (c))
-#define ISUPPER(c) (isascii (c) && isupper (c))
-#define ISXDIGIT(c) (isascii (c) && isxdigit (c))
+#define ISPRINT(c) (isascii ((unsigned char)c) && isprint ((unsigned char)c))
+#define ISDIGIT(c) (isascii ((unsigned char)c) && isdigit ((unsigned char)c))
+#define ISALNUM(c) (isascii ((unsigned char)c) && isalnum ((unsigned char)c))
+#define ISALPHA(c) (isascii ((unsigned char)c) && isalpha ((unsigned char)c))
+#define ISCNTRL(c) (isascii ((unsigned char)c) && iscntrl ((unsigned char)c))
+#define ISLOWER(c) (isascii ((unsigned char)c) && islower ((unsigned char)c))
+#define ISPUNCT(c) (isascii ((unsigned char)c) && ispunct ((unsigned char)c))
+#define ISSPACE(c) (isascii ((unsigned char)c) && isspace ((unsigned char)c))
+#define ISUPPER(c) (isascii ((unsigned char)c) && isupper ((unsigned char)c))
+#define ISXDIGIT(c) (isascii ((unsigned char)c) && isxdigit ((unsigned char)c))
 
 #ifndef NULL
 #define NULL 0

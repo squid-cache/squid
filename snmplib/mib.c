@@ -127,11 +127,11 @@ lc_cmp(const char *s1, const char *s2)
     char c1, c2;
 
     while (*s1 && *s2) {
-	if (isupper(*s1))
+	if (xisupper(*s1))
 	    c1 = tolower(*s1);
 	else
 	    c1 = *s1;
-	if (isupper(*s2))
+	if (xisupper(*s2))
 	    c2 = tolower(*s2);
 	else
 	    c2 = *s2;
@@ -163,11 +163,11 @@ parse_subtree(struct snmp_mib_tree *subtree, char *input, oid *output, int *out_
 	(*input == '.'))
 	return (0);
 
-    if (isdigit(*input)) {
+    if (xisdigit(*input)) {
 	/*
 	 * Read the number, then try to find it in the subtree.
 	 */
-	while (isdigit(*input)) {
+	while (xisdigit(*input)) {
 	    subid *= 10;
 	    subid += *input++ - '0';
 	}
