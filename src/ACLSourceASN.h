@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLSourceASN.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,26 +33,27 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
-#include "ACLIP.h"
+#ifndef SQUID_ACLSOURCEASN_H
+#define SQUID_ACLSOURCEASN_H
+#include "ACLASN.h"
+#include "ACLStrategy.h"
 
-class ACLSourceIP : public ACLIP
+class ACLSourceASNStrategy : public ACLStrategy<struct in_addr>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
-
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
+    virtual int match (ACLData<MatchType> * &, ACLChecklist *);
+    static ACLSourceASNStrategy *Instance();
+    /* Not implemented to prevent copies of the instance. */
+    /* Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends */
+    ACLSourceASNStrategy(ACLSourceASNStrategy const &);
 
 private:
-    static MemPool *Pool;
-    static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
+    static ACLSourceASNStrategy Instance_;
+    ACLSourceASNStrategy(){}
+
+    ACLSourceASNStrategy&operator=(ACLSourceASNStrategy const &);
 };
 
-#endif /* SQUID_ACLSOURCEIP_H */
+#endif /* SQUID_ACLSOURCEASN_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLProtocolData.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,11 +33,13 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
-#include "ACLIP.h"
+#ifndef SQUID_ACLPROTOCOLDATA_H
+#define SQUID_ACLPROTOCOLDATA_H
+#include "ACL.h"
+#include "ACLData.h"
+#include "List.h"
 
-class ACLSourceIP : public ACLIP
+class ACLProtocolData : public ACLData<protocol_t>
 {
 
 public:
@@ -45,14 +47,19 @@ public:
     void operator delete(void *);
     virtual void deleteSelf() const;
 
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
+    ACLProtocolData();
+    ACLProtocolData(ACLProtocolData const &);
+    ACLProtocolData &operator= (ACLProtocolData const &);
+    virtual ~ACLProtocolData();
+    bool match(protocol_t);
+    wordlist *dump();
+    void parse();
+    virtual ACLData<protocol_t> *clone() const;
+
+    List<protocol_t> *values;
 
 private:
     static MemPool *Pool;
-    static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
 };
 
-#endif /* SQUID_ACLSOURCEIP_H */
+#endif /* SQUID_ACLPROTOCOLDATA_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLData.h,v 1.3 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLData.h,v 1.4 2003/02/25 12:22:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,6 +50,8 @@ public:
     virtual wordlist *dump() =0;
     virtual void parse() =0;
     virtual ACLData *clone() const =0;
-};
+    virtual void prepareForUse() {}}
+
+;
 
 #endif /* SQUID_ACLDATA_H */

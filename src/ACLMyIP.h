@@ -47,8 +47,6 @@ public:
     static ACLMyIP const &RegistryEntry();
 
     virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return ACL_DERIVED;}
-
     virtual int match(ACLChecklist *checklist);
     virtual ACL *clone()const;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.227 2003/02/21 22:50:08 robertc Exp $
+ * $Id: enums.h,v 1.228 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -95,39 +95,6 @@ typedef enum {
     TCP_RESET,
     ERR_MAX
 } err_type;
-
-typedef enum {
-    ACL_NONE,
-    ACL_URL_PORT,
-    ACL_MY_PORT,
-    ACL_PROTO,
-    ACL_METHOD,
-    ACL_SRC_ASN,
-    ACL_DST_ASN,
-#if USE_ARP_ACL
-    ACL_SRC_ARP,
-#endif
-#if SQUID_SNMP
-    ACL_SNMP_COMMUNITY,
-#endif
-#if SRC_RTT_NOT_YET_FINISHED
-    ACL_NETDB_SRC_RTT,
-#endif
-    ACL_MAXCONN,
-    ACL_REP_MIME_TYPE,
-    ACL_MAX_USER_IP,
-    ACL_EXTERNAL,
-    ACL_DERIVED,
-    ACL_ENUM_MAX
-} squid_acl;
-
-typedef enum {
-    ACL_LOOKUP_NONE,
-    ACL_LOOKUP_NEEDED,
-    ACL_LOOKUP_PENDING,
-    ACL_LOOKUP_DONE,
-    ACL_PROXY_AUTH_NEEDED
-} acl_lookup_state;
 
 enum fd_type {
     FD_NONE,
@@ -498,14 +465,16 @@ enum {
 typedef enum {
     STREAM_NONE,		/* No particular status */
     STREAM_COMPLETE,		/* All data has been flushed, no more reads allowed */
-    STREAM_UNPLANNED_COMPLETE,	/* an unpredicted end has occured, no more
-                    				 * reads occured, but no need to tell 
-                    				 * downstream that an error occured
-                    				 */
-    STREAM_FAILED		/* An error has occured in this node or an above one,
-                    				 * and the node is not generating an error body / it's 
-                    				 * midstream
-                    				 */
+    /* an unpredicted end has occured, no more
+     * reads occured, but no need to tell 
+     * downstream that an error occured
+     */
+    STREAM_UNPLANNED_COMPLETE,
+    /* An error has occured in this node or an above one,
+     * and the node is not generating an error body / it's
+     * midstream
+     */
+    STREAM_FAILED
 } clientStream_status_t;
 
 typedef enum {
@@ -582,7 +551,6 @@ typedef enum {
     MEM_HTTP_HDR_CONTENT_RANGE,
     MEM_HTTP_HDR_ENTRY,
     MEM_HTTP_REPLY,
-    MEM_INTLIST,
     MEM_IPCACHE_ENTRY,
     MEM_MD5_DIGEST,
     MEM_NETDBENTRY,

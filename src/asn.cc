@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.90 2003/02/21 22:50:06 robertc Exp $
+ * $Id: asn.cc,v 1.91 2003/02/25 12:24:34 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -39,6 +39,10 @@
 #include "StoreClient.h"
 #include "Store.h"
 #include "ACL.h"
+#include "ACLASN.h"
+#include "ACLSourceASN.h"
+#include "ACLDestinationASN.h"
+#include "ACLDestinationIP.h"
 
 #define WHOIS_PORT 43
 #define	AS_REQBUF_SZ	4096
@@ -60,13 +64,13 @@ struct squid_radix_node_head *AS_tree_head;
 
 /*
  * Structure for as number information. it could be simply 
- * an intlist but it's coded as a structure for future
+ * a list but it's coded as a structure for future
  * enhancements (e.g. expires)
  */
 
 struct _as_info
 {
-    intlist *as_number;
+    List<int> *as_number;
     time_t expires;		/* NOTUSED */
 };
 
@@ -106,7 +110,7 @@ static STCB asHandleReply;
 static int destroyRadixNode(struct squid_radix_node *rn, void *w);
 
 static int printRadixNode(struct squid_radix_node *rn, void *sentry);
-static void asnAclInitialize(acl * acls);
+void asnAclInitialize(acl * acls);
 static void asStateFree(void *data);
 static void destroyRadixNodeInfo(as_info *);
 static OBJH asnStats;
@@ -114,16 +118,15 @@ static OBJH asnStats;
 /* PUBLIC */
 
 int
-
-asnMatchIp(void *data, struct in_addr addr)
+asnMatchIp(List<int> *data, struct in_addr addr)
 {
     unsigned long lh;
 
     struct squid_radix_node *rn;
     as_info *e;
     m_int m_addr;
-    intlist *a = NULL;
-    intlist *b = NULL;
+    List<int> *a = NULL;
+    List<int> *b = NULL;
     lh = ntohl(addr.s_addr);
     debug(53, 3) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
 
@@ -140,8 +143,7 @@ asnMatchIp(void *data, struct in_addr addr)
 
     rn = squid_rn_match(m_addr, AS_tree_head);
 
-    if (rn == NULL)
-    {
+    if (rn == NULL) {
         debug(53, 3) ("asnMatchIp: Address not in as db.\n");
         return 0;
     }
@@ -150,10 +152,9 @@ asnMatchIp(void *data, struct in_addr addr)
     e = ((rtentry_t *) rn)->e_info;
     assert(e);
 
-    for (a = (intlist *) data; a; a = a->next)
+    for (a = data; a; a = a->next)
         for (b = e->as_number; b; b = b->next)
-            if (a->i == b->i)
-            {
+            if (a->element == b->element) {
                 debug(53, 5) ("asnMatchIp: Found a match!\n");
                 return 1;
             }
@@ -162,27 +163,12 @@ asnMatchIp(void *data, struct in_addr addr)
     return 0;
 }
 
-static void
-asnAclInitialize(acl * acls)
-{
-    acl *a;
-    debug(53, 3) ("asnAclInitialize\n");
-
-    for (a = acls; a; a = a->next) {
-        if (a->aclType() != ACL_DST_ASN && a->aclType() != ACL_SRC_ASN)
-            continue;
-
-        a->startCache();
-    }
-}
-
 void
-ACL::startCache()
+ACLASN::prepareForUse()
 {
-    assert (aclType() == ACL_DST_ASN || aclType() == ACL_SRC_ASN);
-
-    for (intlist *i = (intlist *)data; i; i = i->next)
-        asnCacheStart(i->i);
+    for (List<int> *i = data; i; i = i->
+                                     next)
+        asnCacheStart(i->element);
 }
 
 /* initialize the radix tree structure */
@@ -201,8 +187,6 @@ asnInit(void)
         squid_rn_init();
 
     squid_rn_inithead((void **) &AS_tree_head, 8);
-
-    asnAclInitialize(Config.aclList);
 
     cachemgrRegister("asndb", "AS Number Database", asnStats, 0, 1);
 }
@@ -393,8 +377,8 @@ asnAddNet(char *as_string, int as_number)
 
     struct squid_radix_node *rn;
     char dbg1[32], dbg2[32];
-    intlist **Tail = NULL;
-    intlist *q = NULL;
+    List<int> **Tail = NULL;
+    List<int> *q = NULL;
     as_info *asinfo = NULL;
 
     struct in_addr in_a, in_m;
@@ -445,7 +429,7 @@ asnAddNet(char *as_string, int as_number)
     if (rn != NULL) {
         asinfo = ((rtentry_t *) rn)->e_info;
 
-        if (intlistFind(asinfo->as_number, as_number)) {
+        if (asinfo->as_number->find(as_number)) {
             debug(53, 3) ("asnAddNet: Ignoring repeated network '%s/%d' for AS %d\n",
                           dbg1, bitl, as_number);
         } else {
@@ -454,17 +438,14 @@ asnAddNet(char *as_string, int as_number)
             for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next)
 
                 ;
-            q = (intlist *)xcalloc(1, sizeof(intlist));
-
-            q->i = as_number;
+            q = new List<int> (as_number);
 
             *(Tail) = q;
 
             e->e_info = asinfo;
         }
     } else {
-        q = (intlist *)xcalloc(1, sizeof(intlist));
-        q->i = as_number;
+        q = new List<int> (as_number);
         asinfo = (as_info *)xmalloc(sizeof(asinfo));
         asinfo->as_number = q;
         rn = squid_rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
@@ -509,8 +490,8 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
 static void
 destroyRadixNodeInfo(as_info * e_info)
 {
-    intlist *prev = NULL;
-    intlist *data = e_info->as_number;
+    List<int> *prev = NULL;
+    List<int> *data = e_info->as_number;
 
     while (data) {
         prev = data;
@@ -543,7 +524,7 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
 {
     StoreEntry *sentry = (StoreEntry *)_sentry;
     rtentry_t *e = (rtentry_t *) rn;
-    intlist *q;
+    List<int> *q;
     as_info *asinfo;
 
     struct in_addr addr;
@@ -559,9 +540,143 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
     assert(asinfo->as_number);
 
     for (q = asinfo->as_number; q; q = q->next)
-        storeAppendPrintf(sentry, " %d", q->i);
+        storeAppendPrintf(sentry, " %d", q->element);
 
     storeAppendPrintf(sentry, "\n");
 
     return 0;
 }
+
+MemPool *ACLASN::Pool(NULL);
+void *
+ACLASN::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (ACLASN));
+
+    if (!Pool)
+        Pool = memPoolCreate("ACLASN", sizeof (ACLASN));
+
+    return memPoolAlloc(Pool);
+}
+
+void
+ACLASN::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
+
+void
+ACLASN::deleteSelf() const
+{
+    delete this;
+}
+
+ACLASN::~ACLASN()
+{
+    if (data)
+        data->deleteSelf();
+}
+
+bool
+
+ACLASN::match(struct in_addr toMatch)
+{
+    return asnMatchIp(data, toMatch);
+}
+
+wordlist *
+ACLASN::dump()
+{
+    wordlist *W = NULL;
+    char buf[32];
+    List<int> *ldata = data;
+
+    while (ldata != NULL) {
+        snprintf(buf, sizeof(buf), "%d", ldata->element);
+        wordlistAdd(&W, buf);
+        ldata = ldata->next;
+    }
+
+    return W;
+}
+
+void
+ACLASN::parse()
+{
+    List<int> **curlist = &data;
+    List<int> **Tail;
+    List<int> *q = NULL;
+    char *t = NULL;
+
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next))
+
+        ;
+    while ((t = strtokFile())) {
+        q = new List<int> (atoi(t));
+        *(Tail) = q;
+        Tail = &q->next;
+    }
+}
+
+ACLData<struct in_addr> *
+ACLASN::clone() const
+{
+    if (data)
+        fatal ("cloning of ACLASN not implemented");
+
+    return new ACLASN(*this);
+}
+
+ACL::Prototype ACLASN::SourceRegistryProtoype(&ACLASN::SourceRegistryEntry_, "src_as");
+ACLStrategised<struct in_addr> ACLASN::SourceRegistryEntry_(new ACLASN, ACLSourceASNStrategy::Instance(), "src_as");
+ACL::Prototype ACLASN::DestinationRegistryProtoype(&ACLASN::DestinationRegistryEntry_, "dst_as");
+ACLStrategised<struct in_addr> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
+
+int
+ACLSourceASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+{
+    return data->match(checklist->src_addr);
+}
+
+ACLSourceASNStrategy *
+ACLSourceASNStrategy::Instance()
+{
+    return &Instance_;
+}
+
+ACLSourceASNStrategy ACLSourceASNStrategy::Instance_;
+
+
+int
+ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+{
+    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->host, IP_LOOKUP_IF_MISS);
+
+    if (ia) {
+        for (int k = 0; k < (int) ia->count; k++) {
+            if (data->match(ia->in_addrs[k]))
+                return 1;
+        }
+
+        return 0;
+    } else if (!checklist->request->flags.destinationIPLookedUp()) {
+        /* No entry in cache, lookup not attempted */
+        /* XXX FIXME: allow accessing the acl name here */
+        debug(28, 3) ("asnMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+                      "unknown" /*name*/, checklist->request->host);
+        checklist->changeState (DestinationIPLookup::Instance());
+    } else {
+        return data->match(no_addr);
+    }
+
+    return 0;
+}
+
+ACLDestinationASNStrategy *
+ACLDestinationASNStrategy::Instance()
+{
+    return &Instance_;
+}
+
+ACLDestinationASNStrategy ACLDestinationASNStrategy::Instance_;

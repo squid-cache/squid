@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.29 2003/02/21 22:50:08 robertc Exp $
+ * $Id: external_acl.cc,v 1.30 2003/02/25 12:24:35 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -59,8 +59,6 @@
 #endif
 
 typedef struct _external_acl_format external_acl_format;
-
-typedef struct _external_acl_data external_acl_data;
 
 static char *makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data);
 static void external_acl_cache_delete(external_acl * def, external_acl_entry * entry);
@@ -455,13 +453,11 @@ free_external_acl_data(void *data)
 }
 
 void
-aclParseExternal(void *dataptr)
+ACLExternal::parse()
 {
-    external_acl_data **datap = static_cast<external_acl_data **>(dataptr);
-    external_acl_data *data;
     char *token;
 
-    if (*datap)
+    if (data)
         self_destruct();
 
     CBDATA_INIT_TYPE_FREECB(external_acl_data, free_external_acl_data);
@@ -481,22 +477,21 @@ aclParseExternal(void *dataptr)
     while ((token = strtokFile())) {
         wordlistAdd(&data->arguments, token);
     }
-
-    *datap = data;
 }
 
-void
-aclDestroyExternal(void **dataptr)
+ACLExternal::~ACLExternal()
 {
-    cbdataFree(*dataptr);
+    cbdataFree(data);
+    safe_free (class_);
 }
 
-int
-aclMatchExternal(void *data, ACLChecklist * ch)
+static int
+aclMatchExternal(external_acl_data *acl, ACLChecklist * ch);
+static int
+aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
 {
     int result;
     external_acl_entry *entry;
-    external_acl_data *acl = static_cast<external_acl_data *>(data);
     const char *key = "";
     debug(82, 9) ("aclMatchExternal: acl=\"%s\"\n", acl->def->name);
     entry = ch->extacl_entry;
@@ -537,7 +532,6 @@ aclMatchExternal(void *data, ACLChecklist * ch)
 
     if (!entry) {
         debug(82, 2) ("aclMatchExternal: %s(\"%s\") = lookup needed\n", acl->def->name, key);
-        ch->state[ACL_EXTERNAL] = ACL_LOOKUP_NEEDED;
         ch->changeState (ExternalACLLookup::Instance());
         return 0;
     }
@@ -556,10 +550,16 @@ aclMatchExternal(void *data, ACLChecklist * ch)
     return result;
 }
 
-wordlist *
-aclDumpExternal(void *data)
+int
+ACLExternal::match(ACLChecklist *checklist)
 {
-    external_acl_data *acl = static_cast<external_acl_data *>(data);
+    return aclMatchExternal (data, checklist);
+}
+
+wordlist *
+ACLExternal::dump() const
+{
+    external_acl_data const *acl = data;
     wordlist *result = NULL;
     wordlist *arg;
     MemBuf mb;
@@ -913,7 +913,7 @@ externalAclHandleReply(void *data, char *reply)
 }
 
 void
-ACL::ExternalAclLookup(ACLChecklist * ch, ACL * me, EAH * callback, void *callback_data)
+ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callback, void *callback_data)
 {
     MemBuf buf;
     external_acl_data *acl = static_cast<external_acl_data *>(me->data);
@@ -1052,19 +1052,83 @@ ExternalACLLookup::Instance()
 void
 ExternalACLLookup::checkForAsync(ACLChecklist *checklist)const
 {
-    assert (checklist->state[ACL_EXTERNAL] == ACL_LOOKUP_NEEDED);
+    /* TODO: optimise this - we probably have a pointer to this
+     * around somewhere */
     acl *acl = ACL::FindByName(AclMatchedName);
-    assert (acl->aclType() == ACL_EXTERNAL);
+    ACLExternal *me = dynamic_cast<ACLExternal *> (acl);
+    assert (me);
     checklist->asyncInProgress(true);
-    ACL::ExternalAclLookup(checklist, acl, LookupDone, checklist);
+    ACLExternal::ExternalAclLookup(checklist, me, LookupDone, checklist);
 }
 
 void
 ExternalACLLookup::LookupDone(void *data, void *result)
 {
     ACLChecklist *checklist = (ACLChecklist *)data;
-    checklist->state[ACL_EXTERNAL] = ACL_LOOKUP_DONE;
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
     checklist->asyncInProgress(false);
     checklist->check();
+}
+
+/* This registers "external" in the registry. To do dynamic definitions
+ * of external ACL's, rather than a static prototype, have a Prototype instance
+ * prototype in the class that defines each external acl 'class'.
+ * Then, then the external acl instance is created, it self registers under
+ * it's name.
+ * Be sure that clone is fully functional for that acl class though!
+ */
+ACL::Prototype ACLExternal::RegistryProtoype(&ACLExternal::RegistryEntry_, "external");
+
+ACLExternal ACLExternal::RegistryEntry_("external");
+
+ACL *
+ACLExternal::clone() const
+{
+    return new ACLExternal(*this);
+}
+
+ACLExternal::ACLExternal (char const *theClass) : data (NULL), class_ (xstrdup (theClass))
+{}
+
+ACLExternal::ACLExternal (ACLExternal const & old) : data (NULL), class_ (old.class_ ? xstrdup (old.class_) : NULL)
+{
+    /* we don't have copy constructors for the data yet */
+    assert (!old.data);
+}
+
+MemPool *ACLExternal::Pool(NULL);
+void *
+ACLExternal::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (ACLExternal));
+
+    if (!Pool)
+        Pool = memPoolCreate("ACLExternal", sizeof (ACLExternal));
+
+    return memPoolAlloc(Pool);
+}
+
+void
+ACLExternal::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
+
+void
+ACLExternal::deleteSelf() const
+{
+    delete this;
+}
+
+char const *
+ACLExternal::typeString() const
+{
+    return class_;
+}
+
+bool
+ACLExternal::valid () const
+{
+    return data != NULL;
 }

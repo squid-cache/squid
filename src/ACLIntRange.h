@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMatchStrategy.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLIntRange.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,25 +33,29 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLMATCHSTRATEGY_H
-#define SQUID_ACLMATCHSTRATEGY_H
-#include "ACL.h"
+#ifndef SQUID_ACLINTRANGE_H
+#define SQUID_ACLINTRANGE_H
 #include "ACLData.h"
+#include "List.h"
+#include "Range.h"
 
-/* Perhaps this should live in ACL? */
-
-template<class M>
-
-class ACLMatchStrategy
+class ACLIntRange : public ACLData<int>
 {
 
 public:
-    typedef M MatchType;
-    virtual int match (ACLData<M> * &, ACLChecklist *) = 0;
-    virtual bool requiresRequest() const {return false;}
+    virtual void deleteSelf() const;
 
-    virtual ~ACLMatchStrategy(){}}
+    ACLIntRange() : ranges(NULL) {}
 
-;
+    virtual ~ACLIntRange();
+    virtual bool match(int);
+    virtual wordlist *dump();
+    virtual void parse();
+    virtual ACLData<int> *clone() const;
 
-#endif /* SQUID_ACLMATCHSTRATEGY_H */
+private:
+    typedef List<Range<int> > RangeType;
+    RangeType *ranges;
+};
+
+#endif /* SQUID_ACLINTRANGE_H */

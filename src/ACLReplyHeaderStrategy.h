@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLReplyHeaderStrategy.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,26 +33,54 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
-#include "ACLIP.h"
+#ifndef SQUID_ACLREPLYHEADERSTRATEGY_H
+#define SQUID_ACLREPLYHEADERSTRATEGY_H
+#include "ACL.h"
+#include "ACLData.h"
+#include "ACLStrategy.h"
 
-class ACLSourceIP : public ACLIP
+template <http_hdr_type header>
+
+class ACLReplyHeaderStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
+    virtual int match (ACLData<char const *> * &, ACLChecklist *);
+    virtual bool requiresReply() const {return true;}
 
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
+    static ACLReplyHeaderStrategy *Instance();
+    /* Not implemented to prevent copies of the instance. */
+    /* Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends */
+    ACLReplyHeaderStrategy(ACLReplyHeaderStrategy const &);
 
 private:
-    static MemPool *Pool;
-    static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
+    static ACLReplyHeaderStrategy Instance_;
+    ACLReplyHeaderStrategy(){}
+
+    ACLReplyHeaderStrategy&operator=(ACLReplyHeaderStrategy const &);
 };
 
-#endif /* SQUID_ACLSOURCEIP_H */
+template <http_hdr_type header>
+int
+ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
+{
+    char const *theHeader = httpHeaderGetStr(&checklist->request->header, header);
+
+    if (NULL == theHeader)
+        return 0;
+
+    return data->match(theHeader);
+}
+
+template <http_hdr_type header>
+ACLReplyHeaderStrategy<header> *
+ACLReplyHeaderStrategy<header>::Instance()
+{
+    return &Instance_;
+}
+
+template <http_hdr_type header>
+ACLReplyHeaderStrategy<header> ACLReplyHeaderStrategy<header>::Instance_;
+
+#endif /* SQUID_REPLYHEADERSTRATEGY_H */

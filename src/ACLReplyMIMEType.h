@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLReplyMIMEType.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,26 +33,32 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
-#include "ACLIP.h"
+#ifndef SQUID_ACLREPLYMIMETYPE_H
+#define SQUID_ACLREPLYMIMETYPE_H
+#include "ACL.h"
+#include "ACLData.h"
+#include "ACLReplyHeaderStrategy.h"
+#include "ACLStrategised.h"
+#include "ACLChecklist.h"
 
-class ACLSourceIP : public ACLIP
+class ACLReplyMIMEType
 {
 
-public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
-
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
-
 private:
-    static MemPool *Pool;
-    static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
+    static ACL::Prototype RegistryProtoype;
+    static ACLStrategised<char const *> RegistryEntry_;
 };
 
-#endif /* SQUID_ACLSOURCEIP_H */
+/* partial specialisation */
+int
+ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
+{
+    char const *theHeader = httpHeaderGetStr(&checklist->request->header, HDR_CONTENT_TYPE);
+
+    if (NULL == theHeader)
+        theHeader = "";
+
+    return data->match(theHeader);
+}
+
+#endif /* SQUID_ACLREPLYMIMETYPE_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLDestinationDomain.h,v 1.3 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLDestinationDomain.h,v 1.4 2003/02/25 12:22:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -65,8 +65,6 @@ public:
     ACLDestinationDomain &operator= (ACLDestinationDomain const &);
 
     virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return ACL_DERIVED;}
-
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;

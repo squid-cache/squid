@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.368 2003/02/21 22:50:09 robertc Exp $
+ * $Id: main.cc,v 1.369 2003/02/25 12:24:35 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -39,6 +39,8 @@
 #include "ICP.h"
 #include "HttpReply.h"
 #include "Mem.h"
+#include "ACLASN.h"
+#include "ACL.h"
 
 /* for error reporting from xmalloc and friends */
 extern void (*failure_notify) (const char *);
@@ -365,6 +367,7 @@ serverConnectionsOpen(void)
     icmpOpen();
     netdbInit();
     asnInit();
+    ACL::Initialize();
     peerSelectInit();
 #if USE_CARP
 

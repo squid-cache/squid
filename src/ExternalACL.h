@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACL.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: ExternalACL.h,v 1.3 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 
 #ifndef SQUID_EXTERNALACL_H
 #define SQUID_EXTERNALACL_H
+#include "ACL.h"
 #include "ACLChecklist.h"
 
 class ExternalACLLookup : public ACLChecklist::AsyncState
@@ -47,6 +48,46 @@ public:
 private:
     static ExternalACLLookup instance_;
     static void LookupDone(void *data, void *result);
+};
+
+typedef struct _external_acl_data external_acl_data;
+
+class ACLExternal : public ACL
+{
+
+public:
+    void *operator new(size_t);
+    void operator delete(void *);
+    virtual void deleteSelf() const;
+
+    static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *, EAH * callback, void *callback_data);
+
+
+    ACLExternal(char const *);
+    ACLExternal(ACLExternal const &);
+    ~ACLExternal();
+    ACLExternal&operator=(ACLExternal const &);
+
+    virtual ACL *clone()const;
+    virtual char const *typeString() const;
+    virtual void parse();
+    virtual int match(ACLChecklist *checklist);
+    /* This really should be dynamic based on the external class defn */
+    virtual bool requiresRequest() const {return true;}
+
+    /* when requiresRequest is made dynamic, review this too */
+    //    virtual bool requiresReply() const {return true;}
+    /* This may need to be extant, to cause 407's if %LOGIN% is used. */
+    //    virtual bool isProxyAuth() const {return true;}
+    virtual wordlist *dump() const;
+    virtual bool valid () const;
+
+protected:
+    static MemPool *Pool;
+    static Prototype RegistryProtoype;
+    static ACLExternal RegistryEntry_;
+    external_acl_data *data;
+    char const *class_;
 };
 
 #endif /* SQUID_EXTERNALACL_H */

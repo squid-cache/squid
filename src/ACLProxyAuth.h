@@ -76,8 +76,6 @@ public:
     ACLProxyAuth &operator= (ACLProxyAuth const &);
 
     virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return ACL_DERIVED;}
-
     virtual void parse();
     virtual bool isProxyAuth() const {return true;}
 

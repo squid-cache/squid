@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.7 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACL.h,v 1.8 2003/02/25 12:22:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,15 +50,11 @@ SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char 
 SQUIDCEXTERN void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 
 SQUIDCEXTERN void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
-
-SQUIDCEXTERN void aclDestroyRegexList(struct _relist *data);
-SQUIDCEXTERN int aclMatchRegex(relist * data, const char *word);
-wordlist *aclDumpRegexList(relist * data);
-SQUIDCEXTERN void aclParseRegexList(void *curlist);
 SQUIDCEXTERN wordlist *aclDumpGeneric(const acl *);
-SQUIDCEXTERN int aclPurgeMethodInUse(acl_access *);
 SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
 extern void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
+int aclPurgeMethodInUse(acl_access * a);
+extern const char *AclMatchedName;	/* NULL */
 
 class ACL
 {
@@ -66,50 +62,35 @@ class ACL
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
+    virtual void deleteSelf() const = 0;
 
     static ACL *Factory (char const *);
     static void ParseAclLine(acl ** head);
+    static void Initialize();
     static ACL* FindByName(const char *name);
 
-    /* temporary until we subclass external acl's */
-    static void ExternalAclLookup(ACLChecklist * ch, ACL *, EAH * callback, void *callback_data);
-
     ACL();
-    ACL (squid_acl const);
     virtual ~ACL();
-    virtual ACL *clone()const;
-    virtual void parse();
-    virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return type;}
-
+    virtual ACL *clone()const = 0;
+    virtual void parse() = 0;
+    virtual char const *typeString() const = 0;
     virtual bool isProxyAuth() const;
     virtual bool requiresRequest() const;
-    virtual int match(ACLChecklist * checklist);
+    virtual bool requiresReply() const;
+    virtual int match(ACLChecklist * checklist) = 0;
     virtual wordlist *dumpGeneric() const;
-    virtual wordlist *dump() const;
-    virtual bool valid () const;
+    virtual wordlist *dump() const = 0;
+    virtual bool valid () const =0;
     int checklistMatches(ACLChecklist *);
-
-    /* only relevant to METHOD acl's */
-    virtual bool containsPURGE() const;
-
-    /* only relecant to ASN acl's */
-    void startCache();
 
     int cacheMatchAcl(dlink_list * cache, ACLChecklist *);
     virtual int matchForCache(ACLChecklist *checklist);
 
+    virtual void prepareForUse() {}
+
     char name[ACL_NAME_SZ];
     char *cfgline;
     ACL *next;
-
-private:
-    static MemPool *Pool;
-    squid_acl type;
-
-protected:
-    void *data;
 
 public:
 

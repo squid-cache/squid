@@ -298,6 +298,8 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE CXX CXXFLAGS ac_ct_CXX CXXDEPMODE build build_cpu build_vendor build_os host host_cpu host_vendor host_os CGIEXT ENABLE_WIN32SPECIFIC_TRUE ENABLE_WIN32SPECIFIC_FALSE LIBDLMALLOC LIB_MALLOC STORE_OBJS STORE_LIBS STORE_MODULES STORE_PROGRAMS STORE_MODULE_SUBDIRS REPL_POLICIES REPL_OBJS REPL_LIBS ENABLE_PINGER_TRUE ENABLE_PINGER_FALSE USE_DELAY_POOLS_TRUE USE_DELAY_POOLS_FALSE USE_SNMP_TRUE USE_SNMP_FALSE SNMPLIB makesnmplib ENABLE_ARP_ACL_TRUE ENABLE_ARP_ACL_FALSE ENABLE_HTCP_TRUE ENABLE_HTCP_FALSE ENABLE_SSL_TRUE ENABLE_SSL_FALSE NEED_OWN_MD5_TRUE NEED_OWN_MD5_FALSE SSLLIB ERR_DEFAULT_LANGUAGE ERR_LANGUAGES MAKE_LEAKFINDER_TRUE MAKE_LEAKFINDER_FALSE ENABLE_IDENT_TRUE ENABLE_IDENT_FALSE USE_DNSSERVER_TRUE USE_DNSSERVER_FALSE OPT_DEFAULT_HOSTS AUTH_MODULES AUTH_OBJS AUTH_LIBS BASIC_AUTH_HELPERS NTLM_AUTH_HELPERS DIGEST_AUTH_HELPERS EXTERNAL_ACL_HELPERS SAMBASOURCES ENABLE_UNLINKD_TRUE ENABLE_UNLINKD_FALSE ENABLE_XPROF_STATS_TRUE ENABLE_XPROF_STATS_FALSE CPP RANLIB ac_ct_RANLIB LN_S SH FALSE TRUE RM MV MKDIR LN PERL AR AR_R EGREP ALLOCA CRYPTLIB NEED_OWN_SNPRINTF_TRUE NEED_OWN_SNPRINTF_FALSE REGEXLIB LIBREGEX LIBOBJS XTRA_OBJS XTRA_LIBS LTLIBOBJS'
+ac_subst_files=''
 
 # Initialize some variables set by options.
 ac_init_help=
@@ -4516,6 +4518,16 @@ _ACEOF
 
 fi;
 
+
+
+if false; then
+  ENABLE_ARP_ACL_TRUE=
+  ENABLE_ARP_ACL_FALSE='#'
+else
+  ENABLE_ARP_ACL_TRUE='#'
+  ENABLE_ARP_ACL_FALSE=
+fi
+
 # Check whether --enable-arp-acl or --disable-arp-acl was given.
 if test "${enable_arp_acl+set}" = set; then
   enableval="$enable_arp_acl"
@@ -4535,6 +4547,16 @@ if test "${enable_arp_acl+set}" = set; then
 cat >>confdefs.h <<\_ACEOF
 #define USE_ARP_ACL 1
 _ACEOF
+
+
+
+if true; then
+  ENABLE_ARP_ACL_TRUE=
+  ENABLE_ARP_ACL_FALSE='#'
+else
+  ENABLE_ARP_ACL_TRUE='#'
+  ENABLE_ARP_ACL_FALSE=
+fi
 
    fi
 
@@ -15990,6 +16012,231 @@ fi
 
 DEFS=-DHAVE_CONFIG_H
 
+ac_libobjs=
+ac_ltlibobjs=
+for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
+  # 1. Remove the extension, and $U if already installed.
+  ac_i=`echo "$ac_i" |
+         sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
+  # 2. Add them.
+  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
+done
+LIBOBJS=$ac_libobjs
+
+LTLIBOBJS=$ac_ltlibobjs
+
+
+if test -z "${MAINTAINER_MODE_TRUE}" && test -z "${MAINTAINER_MODE_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"MAINTAINER_MODE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"MAINTAINER_MODE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${AMDEP_TRUE}" && test -z "${AMDEP_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"AMDEP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"AMDEP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_WIN32SPECIFIC_TRUE}" && test -z "${ENABLE_WIN32SPECIFIC_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_WIN32SPECIFIC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_WIN32SPECIFIC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_WIN32SPECIFIC_TRUE}" && test -z "${ENABLE_WIN32SPECIFIC_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_WIN32SPECIFIC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_WIN32SPECIFIC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_PINGER_TRUE}" && test -z "${ENABLE_PINGER_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_PINGER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_PINGER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_PINGER_TRUE}" && test -z "${ENABLE_PINGER_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_PINGER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_PINGER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_DELAY_POOLS_TRUE}" && test -z "${USE_DELAY_POOLS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_DELAY_POOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_DELAY_POOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_DELAY_POOLS_TRUE}" && test -z "${USE_DELAY_POOLS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_DELAY_POOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_DELAY_POOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_SNMP_TRUE}" && test -z "${USE_SNMP_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_SNMP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_SNMP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_SNMP_TRUE}" && test -z "${USE_SNMP_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_SNMP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_SNMP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_ARP_ACL_TRUE}" && test -z "${ENABLE_ARP_ACL_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_ARP_ACL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_ARP_ACL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_ARP_ACL_TRUE}" && test -z "${ENABLE_ARP_ACL_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_ARP_ACL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_ARP_ACL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_HTCP_TRUE}" && test -z "${ENABLE_HTCP_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_HTCP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_HTCP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_HTCP_TRUE}" && test -z "${ENABLE_HTCP_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_HTCP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_HTCP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_SSL_TRUE}" && test -z "${ENABLE_SSL_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_SSL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_SSL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_SSL_TRUE}" && test -z "${ENABLE_SSL_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_SSL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_SSL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${NEED_OWN_MD5_TRUE}" && test -z "${NEED_OWN_MD5_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"NEED_OWN_MD5\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"NEED_OWN_MD5\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${NEED_OWN_MD5_TRUE}" && test -z "${NEED_OWN_MD5_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"NEED_OWN_MD5\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"NEED_OWN_MD5\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${MAKE_LEAKFINDER_TRUE}" && test -z "${MAKE_LEAKFINDER_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"MAKE_LEAKFINDER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"MAKE_LEAKFINDER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${MAKE_LEAKFINDER_TRUE}" && test -z "${MAKE_LEAKFINDER_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"MAKE_LEAKFINDER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"MAKE_LEAKFINDER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_IDENT_TRUE}" && test -z "${ENABLE_IDENT_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_IDENT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_IDENT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_IDENT_TRUE}" && test -z "${ENABLE_IDENT_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_IDENT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_IDENT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_DNSSERVER_TRUE}" && test -z "${USE_DNSSERVER_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_DNSSERVER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_DNSSERVER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_DNSSERVER_TRUE}" && test -z "${USE_DNSSERVER_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_DNSSERVER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_DNSSERVER\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_UNLINKD_TRUE}" && test -z "${ENABLE_UNLINKD_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_UNLINKD\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_UNLINKD\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_UNLINKD_TRUE}" && test -z "${ENABLE_UNLINKD_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_UNLINKD\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_UNLINKD\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_XPROF_STATS_TRUE}" && test -z "${ENABLE_XPROF_STATS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_XPROF_STATS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_XPROF_STATS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_XPROF_STATS_TRUE}" && test -z "${ENABLE_XPROF_STATS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_XPROF_STATS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_XPROF_STATS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${NEED_OWN_SNPRINTF_TRUE}" && test -z "${NEED_OWN_SNPRINTF_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"NEED_OWN_SNPRINTF\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"NEED_OWN_SNPRINTF\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${NEED_OWN_SNPRINTF_TRUE}" && test -z "${NEED_OWN_SNPRINTF_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"NEED_OWN_SNPRINTF\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"NEED_OWN_SNPRINTF\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
@@ -16586,6 +16833,8 @@ s,@USE_SNMP_TRUE@,$USE_SNMP_TRUE,;t t
 s,@USE_SNMP_FALSE@,$USE_SNMP_FALSE,;t t
 s,@SNMPLIB@,$SNMPLIB,;t t
 s,@makesnmplib@,$makesnmplib,;t t
+s,@ENABLE_ARP_ACL_TRUE@,$ENABLE_ARP_ACL_TRUE,;t t
+s,@ENABLE_ARP_ACL_FALSE@,$ENABLE_ARP_ACL_FALSE,;t t
 s,@ENABLE_HTCP_TRUE@,$ENABLE_HTCP_TRUE,;t t
 s,@ENABLE_HTCP_FALSE@,$ENABLE_HTCP_FALSE,;t t
 s,@ENABLE_SSL_TRUE@,$ENABLE_SSL_TRUE,;t t

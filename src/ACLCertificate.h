@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLCertificate.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLCertificate.h,v 1.3 2003/02/25 12:22:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -41,7 +41,7 @@
 #include "ssl_support.h"
 #include "ACLStrategised.h"
 
-class ACLCertificateStrategy : public ACLMatchStrategy<SSL *>
+class ACLCertificateStrategy : public ACLStrategy<SSL *>
 {
 
 public:
@@ -61,8 +61,6 @@ private:
 
 class ACLCertificate
 {
-
-public:
 
 private:
     static ACL::Prototype UserRegistryProtoype;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.63 2003/02/23 00:08:04 robertc Exp $
+ * $Id: snmp_core.cc,v 1.64 2003/02/25 12:24:35 robertc Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -1162,3 +1162,52 @@ struct in_addr
     cp[3] = id[3];
     return &laddr;
 }
+
+/* SNMP checklists */
+#include "ACLStrategy.h"
+#include "ACLStrategised.h"
+#include "ACLStringData.h"
+
+class ACLSNMPCommunityStrategy : public ACLStrategy<char const *>
+{
+
+public:
+    virtual int match (ACLData<MatchType> * &, ACLChecklist *);
+    static ACLSNMPCommunityStrategy *Instance();
+    /* Not implemented to prevent copies of the instance. */
+    /* Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends */
+    ACLSNMPCommunityStrategy(ACLSNMPCommunityStrategy const &);
+
+private:
+    static ACLSNMPCommunityStrategy Instance_;
+    ACLSNMPCommunityStrategy(){}
+
+    ACLSNMPCommunityStrategy&operator=(ACLSNMPCommunityStrategy const &);
+};
+
+class ACLSNMPCommunity
+{
+
+private:
+    static ACL::Prototype RegistryProtoype;
+    static ACLStrategised<char const *> RegistryEntry_;
+};
+
+ACL::Prototype ACLSNMPCommunity::RegistryProtoype(&ACLSNMPCommunity::RegistryEntry_, "snmp_community");
+ACLStrategised<char const *> ACLSNMPCommunity::RegistryEntry_(new ACLStringData, ACLSNMPCommunityStrategy::Instance(), "snmp_community");
+
+int
+ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+{
+    return data->match (checklist->snmp_community);
+    ;
+}
+
+ACLSNMPCommunityStrategy *
+ACLSNMPCommunityStrategy::Instance()
+{
+    return &Instance_;
+}
+
+ACLSNMPCommunityStrategy ACLSNMPCommunityStrategy::Instance_;

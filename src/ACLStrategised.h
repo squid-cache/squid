@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategised.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLStrategised.h,v 1.3 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,7 +37,7 @@
 #define SQUID_ACLSTRATEGISED_H
 #include "ACL.h"
 #include "ACLData.h"
-#include "ACLMatchStrategy.h"
+#include "ACLStrategy.h"
 
 template <class M>
 
@@ -51,17 +51,18 @@ public:
     virtual void deleteSelf() const;
 
     ~ACLStrategised();
-    ACLStrategised(ACLData<MatchType> *, ACLMatchStrategy<MatchType> *, char const *);
+    ACLStrategised(ACLData<MatchType> *, ACLStrategy<MatchType> *, char const *);
     ACLStrategised (ACLStrategised const &);
     ACLStrategised &operator= (ACLStrategised const &);
 
     virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return ACL_DERIVED;}
-
     virtual bool requiresRequest() const {return matcher->requiresRequest();}
+
+    virtual void prepareForUse() { data->prepareForUse();}
 
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
+    virtual int match (M const &);
     virtual wordlist *dump() const;
     virtual bool valid () const;
     virtual ACL *clone()const;
@@ -70,7 +71,7 @@ private:
     static MemPool *Pool;
     ACLData<MatchType> *data;
     char const *type_;
-    ACLMatchStrategy<MatchType> *matcher;
+    ACLStrategy<MatchType> *matcher;
 };
 
 /* implementation follows */
@@ -112,7 +113,7 @@ ACLStrategised<MatchType>::~ACLStrategised()
 }
 
 template <class MatchType>
-ACLStrategised<MatchType>::ACLStrategised(ACLData<MatchType> *newData, ACLMatchStrategy<MatchType> *theStrategy, char const *theType) : data (newData), type_(theType), matcher(theStrategy) {}
+ACLStrategised<MatchType>::ACLStrategised(ACLData<MatchType> *newData, ACLStrategy<MatchType> *theStrategy, char const *theType) : data (newData), type_(theType), matcher(theStrategy) {}
 
 template <class MatchType>
 ACLStrategised<MatchType>::ACLStrategised (ACLStrategised const &old) : data (old.data->clone()), type_(old.type_), matcher (old.matcher)
@@ -147,6 +148,13 @@ int
 ACLStrategised<MatchType>::match(ACLChecklist *checklist)
 {
     return matcher->match(data, checklist);
+}
+
+template <class MatchType>
+int
+ACLStrategised<MatchType>::match(MatchType const &toFind)
+{
+    return data->match(toFind);
 }
 
 template <class MatchType>
