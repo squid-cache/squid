@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.28 1996/04/17 17:40:15 wessels Exp $ */
+/* $Id: comm.cc,v 1.29 1996/04/17 21:40:27 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -540,7 +540,7 @@ int comm_select(sec, failtime)
     /* use only 1 second granularity */
     timeout = squid_curtime + sec;
 
-    while (timeout > getCurrentTime()) {
+    while (timeout >= getCurrentTime()) {
 	if (0 < failtime && failtime < squid_curtime)
 	    break;
 
