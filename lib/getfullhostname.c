@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: getfullhostname.c,v 1.1 1996/02/22 06:23:57 wessels Exp $";
+static char rcsid[] = "$Id: getfullhostname.c,v 1.2 1996/02/23 04:08:26 wessels Exp $";
 /*
  *  getfullhostname.c - Retrieves full DNS name of the current host
  *
@@ -101,10 +101,10 @@ static char rcsid[] = "$Id: getfullhostname.c,v 1.1 1996/02/22 06:23:57 wessels 
 char *getfullhostname()
 {
     struct hostent *hp = NULL;
-    static char buf[HARVESTHOSTNAMELEN + 1];
+    static char buf[SQUIDHOSTNAMELEN + 1];
     extern int gethostname();	/* UNIX system call */
 
-    if (gethostname(buf, HARVESTHOSTNAMELEN) < 0)
+    if (gethostname(buf, SQUIDHOSTNAMELEN) < 0)
 	return (NULL);
     if ((hp = gethostbyname(buf)) == NULL)
 	return (buf);
