@@ -194,16 +194,16 @@ strupper(char *s)
 	    } else if (is_kana(*s)) {
 		s++;
 	    } else {
-		if (islower(*s))
-		    *s = toupper(*s);
+		if (islower((int)(unsigned char)*s))
+		    *s = toupper((int)(unsigned char)*s);
 		s++;
 	    }
 	} else
 #endif /* KANJI_WIN95_COMPATIBILITY */
 #endif /* UNUSED_CODE */
 	{
-	    if (islower(*s))
-		*s = toupper(*s);
+	    if (islower((int)(unsigned char)*s))
+		*s = toupper((int)(unsigned char)*s);
 	    s++;
 	}
     }
