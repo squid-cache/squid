@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.157 1997/11/23 06:50:27 wessels Exp $
+ * $Id: client_side.cc,v 1.158 1997/11/24 22:32:36 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -972,13 +972,14 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    httpRequestFree(http);
 	    if ((http = conn->chr) != NULL) {
 		debug(12, 1) ("clientWriteComplete: FD %d Sending next request\n", fd);
-		storeClientCopy(entry,
-		    http->out.offset,
-		    http->out.offset,
-		    SM_PAGE_SIZE,
-		    get_free_4k_page(),
-		    clientSendMoreData,
-		    http);
+		if (!storeClientCopyPending(http->entry, http))
+		    storeClientCopy(http->entry,
+			http->out.offset,
+			http->out.offset,
+			SM_PAGE_SIZE,
+			get_free_4k_page(),
+			clientSendMoreData,
+			http);
 	    } else {
 		debug(12, 5) ("clientWriteComplete: FD %d Setting read handler for next request\n", fd);
 		fd_note(fd, "Reading next request");
@@ -1872,26 +1873,26 @@ clientHttpConnectionsOpen(void)
 {
     ushortlist *u;
     int fd;
-debug(0,0)("clientHttpConnectionsOpen\n");
+    debug(0, 0) ("clientHttpConnectionsOpen\n");
     for (u = Config.Port.http; u; u = u->next) {
-debug(0,0)("clientHttpConnectionsOpen: port=%d\n", (int) u->i);
-        enter_suid();
-        fd = comm_open(SOCK_STREAM,
-            0,
-            Config.Addrs.tcp_incoming,
-            u->i,
-            COMM_NONBLOCKING,
-            "HTTP Socket");
-        leave_suid();
-        if (fd < 0)
-            continue;
-        comm_listen(fd);
-        commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
-        commSetDefer(fd, httpAcceptDefer, NULL);
-        debug(1, 1) ("Accepting HTTP connections on port %d, FD %d.\n",
-            (int) u->i, fd);
-        HttpSockets[NHttpSockets++] = fd;
+	debug(0, 0) ("clientHttpConnectionsOpen: port=%d\n", (int) u->i);
+	enter_suid();
+	fd = comm_open(SOCK_STREAM,
+	    0,
+	    Config.Addrs.tcp_incoming,
+	    u->i,
+	    COMM_NONBLOCKING,
+	    "HTTP Socket");
+	leave_suid();
+	if (fd < 0)
+	    continue;
+	comm_listen(fd);
+	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
+	commSetDefer(fd, httpAcceptDefer, NULL);
+	debug(1, 1) ("Accepting HTTP connections on port %d, FD %d.\n",
+	    (int) u->i, fd);
+	HttpSockets[NHttpSockets++] = fd;
     }
     if (NHttpSockets < 1)
-        fatal("Cannot open HTTP Port");
+	fatal("Cannot open HTTP Port");
 }
