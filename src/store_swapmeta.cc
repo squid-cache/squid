@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.8 1999/10/04 19:09:54 wessels Exp $
+ * $Id: store_swapmeta.cc,v 1.9 2000/01/03 19:33:14 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -64,11 +64,10 @@ storeSwapTLVFree(tlv * n)
 tlv *
 storeSwapMetaBuild(StoreEntry * e)
 {
-    MemObject *mem = e->mem_obj;
     tlv *TLV = NULL;		/* we'll return this */
     tlv **T = &TLV;
     const char *url;
-    assert(mem != NULL);
+    assert(e->mem_obj != NULL);
     assert(e->swap_status == SWAPOUT_WRITING);
     url = storeUrl(e);
     debug(20, 3) ("storeSwapMetaBuild: %s\n", url);
