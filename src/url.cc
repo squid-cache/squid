@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.6 1996/04/04 01:30:53 wessels Exp $ */
+/* $Id: url.cc,v 1.7 1996/04/10 03:54:00 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -14,31 +14,29 @@ static char hex[17] = "0123456789abcdef";
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
 
-char *url_convert_hex(org_url)
+char *url_convert_hex(org_url, allocate)
      char *org_url;
+    int allocate;
 {
-    int i;
-    char temp[MAX_URL], hexstr[MAX_URL];
-    static char *url;
+    static char *code = "00";
+    char *url = NULL;
+    char *s = NULL;
+    char *t = NULL;
 
-    url = (char *) xcalloc(1, MAX_URL);
-    strncpy(url, org_url, MAX_URL);
+    url = allocate ? (char *) xstrdup(org_url) : org_url;
 
-    i = 0;
-    while (i < (int) (strlen(url) - 2)) {
-	if (url[i] == '%') {
-	    /* found %xx, convert it to char */
-	    strncpy(temp, url, i);
-	    strncpy(hexstr, url + i + 1, 2);
-	    hexstr[2] = '\0';
-	    temp[i] = (char) ((int) strtol(hexstr, (char **) NULL, 16));
-	    temp[i + 1] = '\0';
-	    strncat(temp, url + i + 3, MAX_URL);
-	    strcpy(url, temp);
+    for (s=t=url; *(s+2); s++) {
+        if (*s == '%') {
+		*code = *++s;
+		*(code+1) = *++s;
+		*t++ = (char) strtol(code, NULL, 16);
+        } else {
+		*t++ = *s;
 	}
-	i++;
     }
-
+    do {
+	*t++ = *s;
+    } while (*s++);
     return url;
 }
 
