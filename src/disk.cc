@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.130 1998/08/20 22:29:57 wessels Exp $
+ * $Id: disk.cc,v 1.131 1998/08/21 04:48:06 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -164,6 +164,51 @@ file_close(int fd)
     fd_close(fd);
 }
 
+/*
+ * This function has the purpose of combining multiple writes.  This is
+ * to facilitate the ASYNC_IO option since it can only guarantee 1
+ * write to a file per trip around the comm.c select() loop. That's bad
+ * because more than 1 write can be made to the access.log file per
+ * trip, and so this code is purely designed to help batch multiple
+ * sequential writes to the access.log file.  Squid will never issue
+ * multiple writes for any other file type during 1 trip around the
+ * select() loop.       --SLF
+ */
+static void
+diskCombineWrites(struct _fde_disk *fdd)
+{
+    int len = 0;
+    dwrite_q *q = NULL;
+    dwrite_q *wq = NULL;
+    /*
+     * We need to combine multiple write requests on an FD's write
+     * queue But only if we don't need to seek() in between them, ugh!
+     * XXX This currently ignores any seeks (file_offset)
+     */
+    if (fdd->write_q != NULL && fdd->write_q->next != NULL) {
+	len = 0;
+	for (q = fdd->write_q; q != NULL; q = q->next)
+	    len += q->len - q->buf_offset;
+	wq = xcalloc(1, sizeof(dwrite_q));
+	wq->buf = xmalloc(len);
+	wq->len = 0;
+	wq->buf_offset = 0;
+	wq->next = NULL;
+	wq->free_func = xfree;
+	do {
+	    q = fdd->write_q;
+	    len = q->len - q->buf_offset;
+	    xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
+	    wq->len += len;
+	    fdd->write_q = q->next;
+	    if (q->free_func)
+		(q->free_func) (q->buf);
+	    safe_free(q);
+	} while (fdd->write_q != NULL);
+	fdd->write_q_tail = wq;
+	fdd->write_q = wq;
+    }
+}
 
 /* write handler */
 static void
@@ -180,32 +225,6 @@ diskHandleWrite(int fd, void *notused)
     assert(!F->flags.calling_io_handler);
 #endif
     debug(6, 3) ("diskHandleWrite: FD %d\n", fd);
-    /* We need to combine subsequent write requests after the first */
-    /* But only if we don't need to seek() in between them, ugh! */
-    /* XXX This currently ignores any seeks (file_offset) */
-    if (fdd->write_q->next != NULL && fdd->write_q->next->next != NULL) {
-	len = 0;
-	for (q = fdd->write_q->next; q != NULL; q = q->next)
-	    len += q->len - q->buf_offset;
-	wq = xcalloc(1, sizeof(dwrite_q));
-	wq->buf = xmalloc(len);
-	wq->len = 0;
-	wq->buf_offset = 0;
-	wq->next = NULL;
-	wq->free_func = xfree;
-	do {
-	    q = fdd->write_q->next;
-	    len = q->len - q->buf_offset;
-	    xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
-	    wq->len += len;
-	    fdd->write_q->next = q->next;
-	    if (q->free_func)
-		(q->free_func) (q->buf);
-	    safe_free(q);
-	} while (fdd->write_q->next != NULL);
-	fdd->write_q_tail = wq;
-	fdd->write_q->next = wq;
-    }
     assert(fdd->write_q != NULL);
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 #if USE_ASYNC_IO
@@ -327,6 +346,7 @@ diskHandleWriteComplete(int fd, void *data, int len, int errcode)
 	F->flags.write_daemon = 0;
     } else {
 	/* another block is queued */
+	diskCombineWrites(fdd);
 	cbdataLock(fdd->wrt_handle_data);
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
 	F->flags.write_daemon = 1;
