@@ -1,6 +1,6 @@
 
 /*
- * $Id: AccessLogEntry.h,v 1.2 2003/09/04 11:54:23 hno Exp $
+ * $Id: AccessLogEntry.h,v 1.3 2003/10/16 21:40:16 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 #define SQUID_HTTPACCESSLOGENTRY_H
 
 #include "HttpVersion.h"
+#include "HierarchyLogEntry.h"
 
 class AccessLogEntry
 {

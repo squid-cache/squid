@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.61 2003/10/08 21:21:14 robertc Exp $
+ * $Id: cbdata.cc,v 1.62 2003/10/16 21:40:16 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -51,6 +51,9 @@
 #include "Stack.h"
 #endif
 #include "Generic.h"
+
+/* XXX Remove me */
+#include "PeerSelectState.h"
 
 static int cbdataCount = 0;
 #if CBDATA_DEBUG

@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.95 2003/09/01 03:49:37 robertc Exp $
+ * $Id: access_log.cc,v 1.96 2003/10/16 21:40:16 robertc Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1452,6 +1452,22 @@ accessLogClose(void)
     headerslog = NULL;
 
 #endif
+}
+
+HierarchyLogEntry::HierarchyLogEntry() :
+        code(HIER_NONE),
+        cd_lookup(LOOKUP_NONE),
+        n_choices(0),
+        n_ichoices(0)
+{
+    memset(host, '\0', SQUIDHOSTNAMELEN);
+    memset(cd_host, '\0', SQUIDHOSTNAMELEN);
+
+    peer_select_start.tv_sec =0;
+    peer_select_start.tv_usec =0;
+
+    store_complete_stop.tv_sec =0;
+    store_complete_stop.tv_usec =0;
 }
 
 void
