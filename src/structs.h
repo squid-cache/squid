@@ -446,28 +446,36 @@ struct _hash_table {
 
 #include "MemBuf.h"
 #include "Packer.h"
-#include "HttpReply.h"
 
-#if 0				/* tmp moved to HttpReply.h */
-#define Const const
-struct _http_reply {
-    double version;
-    int code;
-    int content_length;
-    int hdr_sz;			/* includes _stored_ status-line, headers, and <CRLF> */
-    /* Note: fields below may not match info stored on disk */
-    Const int cache_control;
-    Const int misc_headers;
-    Const time_t date;
-    Const time_t expires;
-    Const time_t last_modified;
-    Const char content_type[HTTP_REPLY_FIELD_SZ];
-#if 0				/* unused 512 bytes? */
-    Const char user_agent[HTTP_REPLY_FIELD_SZ << 2];
-#endif
+/* server cache control */
+struct _HttpScc {
+    int mask;
+    time_t max_age;
 };
 
-#endif
+/* a storage for an entry of one of possible types (for lower level routines) */
+union _field_store {
+    int v_int;
+    time_t v_time;
+    char *v_pchar;
+    const char *v_pcchar;
+    HttpScc *v_pscc;
+    HttpHeaderExtField *v_pefield;
+};
+
+struct _HttpHeader {
+    /* public, read only */
+    int emask;           /* bits set for present entries */
+
+    /* protected, do not use these, use interface functions instead */
+    int capacity;        /* max #entries before we have to grow */
+    int ucount;          /* #entries used, including holes */
+    HttpHeaderEntry *entries;
+};
+
+
+#include "HttpReply.h"
+
 
 
 struct _HttpStateData {
