@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.17 1997/12/02 03:30:22 wessels Exp $
+ * $Id: cf_gen.cc,v 1.18 1997/12/02 05:06:41 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -43,13 +43,28 @@
  *			 administrator.
  *****************************************************************************/
 
+#include "config.h"
+
+#if HAVE_STDIO_H
 #include <stdio.h>
+#endif
+#if HAVE_STRING_H
 #include <string.h>
+#endif
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_CTYPE_H
 #include <ctype.h>
+#endif
+#if HAVE_ASSERT_H
 #include <assert.h>
+#endif
+
+#if SQUID_SNMP
 #include "snmp.h"
 #include "snmp_config.h"
+#endif
 
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.c"

@@ -103,21 +103,11 @@ typedef void ERCB(int fd, void *, size_t);
 typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
 
-/* 32 bit integer compatability hack */
-#if SIZEOF_INT == 4
-typedef int num32;
-typedef unsigned int u_num32;
-#elif SIZEOF_LONG == 4
-typedef long num32;
-typedef unsigned long u_num32;
-#else
-typedef long num32;		/* assume that long's are 32bit */
-typedef unsigned long u_num32;
-#endif
-#define NUM32LEN sizeof(num32)	/* this should always be 4 */
-
 #if STORE_KEY_SHA
 typedef int cache_key;
+#endif
+#if STORE_KEY_MD5
+typedef unsigned char cache_key;
 #endif
 #if STORE_KEY_URL
 typedef char cache_key;
