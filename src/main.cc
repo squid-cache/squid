@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.16 1996/03/29 21:19:22 wessels Exp $ */
+/* $Id: main.cc,v 1.17 1996/04/01 18:23:52 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -53,7 +53,7 @@ int main(argc, argv)
     int n;			/* # of GC'd objects */
     time_t last_maintain = 0;
 
-    cached_starttime = cached_curtime = time((time_t *) NULL);
+    cached_starttime = getCurrentTime();
     failure_notify = fatal_dump;
 
     for (n = getMaxFD(); n > 2; n--)
