@@ -599,7 +599,7 @@ according to the <em/ipcache_high/ threshold.
 	fooOperationStart(bar, callback_func, callback_data);
 	...
 	fooOperationComplete(...);
-	if (cbdataValid(callback_data) {
+	if (cbdataValid(callback_data)) {
 		callback_func(callback_data, ....);
 	cbdataUnlock(callback_data);
 	cbdataFree(callback_data);
@@ -618,14 +618,12 @@ according to the <em/ipcache_high/ threshold.
 	cbdataFree(callback_data);
 	...
 	fooOperationComplete(...);
-	if (cbdataValid(callback_data) {
+	if (cbdataValid(callback_data)) {
 		callback_func(callback_data, ....);
 	cbdataUnlock(callback_data);
 </verb>
 	In this case, <tt/cbdataValid/ returns 0 and the callback_func
 	is never executed.
-
-As of version 1.2, squid has external custom error page support. 
 
 <!-- %%%% Chapter : CACHE MANAGER %%%% -->
 <sect>Cache Manager
