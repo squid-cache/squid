@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.78 1996/10/24 20:58:51 wessels Exp $
+ * $Id: tools.cc,v 1.79 1996/10/29 02:40:46 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -288,7 +288,7 @@ setSocketShutdownLifetimes(int lft)
     int i;
     for (i = fdstat_biggest_fd(); i >= 0; i--) {
 	f = &fd_table[i];
-	if (!f->read_handler && !f->write_handler && !f->except_handler)
+	if (!f->read_handler && !f->write_handler)
 	    continue;
 	if (fdstatGetType(i) != FD_SOCKET)
 	    continue;
