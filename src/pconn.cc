@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.19 1998/07/22 20:37:39 wessels Exp $
+ * $Id: pconn.cc,v 1.20 1998/07/24 22:48:15 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -181,6 +181,9 @@ pconnPush(int fd, const char *host, u_short port)
 	debug(48, 3) ("pconnPush: Not many unused FDs\n");
 	comm_close(fd);
 	return;
+    } else if (shutting_down) {
+	comm_close(fd);
+	return
     }
     assert(table != NULL);
     strcpy(key, pconnKey(host, port));
