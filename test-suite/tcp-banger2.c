@@ -85,7 +85,6 @@
 
 #define PROXY_PORT 3128
 #define PROXY_ADDR "127.0.0.1"
-#define MAX_FDS 1024
 #define READ_BUF_SZ 4096
 
 static int proxy_port = PROXY_PORT;
@@ -126,7 +125,7 @@ struct _request {
     long sum;
 };
 
-struct _f FD[MAX_FDS];
+struct _f FD[SQUID_MAXFD];
 int nfds = 0;
 int maxfd = 0;
 
@@ -162,6 +161,7 @@ fd_close(int fd)
 void
 fd_open(int fd, CB * cb, void *data, CB * ccb)
 {
+    assert(fd < SQUID_MAXFD);
     FD[fd].cb = cb;
     FD[fd].ccb = ccb;
     FD[fd].data = data;
