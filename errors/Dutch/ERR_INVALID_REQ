@@ -30,5 +30,3 @@ Een gedeelte van het HTTP verzoek is ongeldig. Mogelijke problemen:
 <LI>Er staat een ogeldig teken in de host naam; Het teken '_' is niet toegestaan
 </UL>
 </P>
-</BODY>
-</HTML>

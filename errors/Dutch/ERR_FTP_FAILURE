@@ -20,5 +20,3 @@ en ontving toen het volgende antwoord
 <P>
 Dit kan veroorzaakt worden door een FTP URL met een absoluut pad (hetgeen niet in overeenstemming is met RFC 1738). Als dit de oorzaak is, dan kan het bestand gevonden worden op <A HREF="%B">%B</A>.
 </P>
-</BODY>
-</HTML>

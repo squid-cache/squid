@@ -19,5 +19,3 @@ Doorsturen niet toegestaan.
 <P>
 Deze cache zal uw verzoek niet doorsturen, omdat het een sibling relatie tracht te bewerkstelligen. Wellicht dat de client op %i een fout ingestelde cache is.
 </P>
-</BODY>
-</HTML>
