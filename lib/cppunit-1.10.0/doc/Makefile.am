@@ -63,5 +63,5 @@ pdf: @PACKAGE@.pdf
 
 
 clean-local:
-	$(RM) -r latex
-	$(RM) -r html man @PACKAGE@.ps @PACKAGE@.pdf
+	rm -rf latex
+	rm -rf html man @PACKAGE@.ps @PACKAGE@.pdf
