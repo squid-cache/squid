@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.150 1997/10/25 17:22:42 wessels Exp $
+ * $Id: ftp.cc,v 1.151 1997/10/26 02:33:16 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -957,6 +957,8 @@ ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
     StoreEntry *entry = ftpState->entry;
     ErrorState *err;
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", size);
+    if (errflag == COMM_ERR_CLOSING)
+	return;
     if (errflag) {
 	debug(50, 1) ("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerror());
 	if (entry->mem_obj->inmem_hi == 0) {
