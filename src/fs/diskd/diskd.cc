@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.6 2000/10/03 15:31:40 wessels Exp $
+ * $Id: diskd.cc,v 1.7 2000/11/09 03:32:59 wessels Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -45,7 +45,7 @@
 #include <assert.h>
 
 
-#define STDERR_DEBUG 0
+#define DEBUG(LEVEL) if (LEVEL > DebugLevel)
 
 typedef struct _file_state file_state;
 
@@ -60,6 +60,7 @@ struct _file_state {
 static hash_table *hash = NULL;
 static pid_t mypid;
 static char *shmbuf;
+static int DebugLevel = 0;
 
 static int
 do_open(diomsg * r, int len, const char *buf)
@@ -71,8 +72,10 @@ do_open(diomsg * r, int len, const char *buf)
      */
     fd = open(buf, r->offset, 0600);
     if (fd < 0) {
-	fprintf(stderr, "%d %s: ", (int) mypid, buf);
-	perror("open");
+	DEBUG(1) {
+	    fprintf(stderr, "%d %s: ", (int) mypid, buf);
+	    perror("open");
+	}
 	return -errno;
     }
     fs = xcalloc(1, sizeof(*fs));
@@ -80,13 +83,12 @@ do_open(diomsg * r, int len, const char *buf)
     fs->key = &fs->id;		/* gack */
     fs->fd = fd;
     hash_join(hash, (hash_link *) fs);
-#if STDERR_DEBUG
-    fprintf(stderr, "%d OPEN  id %d, FD %d, fs %p\n",
+    DEBUG(2)
+	fprintf(stderr, "%d OPEN  id %d, FD %d, fs %p\n",
 	(int) mypid,
 	fs->id,
 	fs->fd,
 	fs);
-#endif
     return fd;
 }
 
@@ -98,19 +100,20 @@ do_close(diomsg * r, int len)
     fs = (file_state *) hash_lookup(hash, &r->id);
     if (NULL == fs) {
 	errno = EBADF;
-	fprintf(stderr, "%d CLOSE id %d: ", (int) mypid, r->id);
-	perror("do_close");
-	return -EBADF;
+	DEBUG(1) {
+	    fprintf(stderr, "%d CLOSE id %d: ", (int) mypid, r->id);
+	    perror("do_close");
+	}
+	return -errno;
     }
     fd = fs->fd;
     hash_remove_link(hash, (hash_link *) fs);
-#if STDERR_DEBUG
-    fprintf(stderr, "%d CLOSE id %d, FD %d, fs %p\n",
+    DEBUG(2)
+	fprintf(stderr, "%d CLOSE id %d, FD %d, fs %p\n",
 	(int) mypid,
 	r->id,
 	fs->fd,
 	fs);
-#endif
     xfree(fs);
     return close(fd);
 }
@@ -124,27 +127,31 @@ do_read(diomsg * r, int len, char *buf)
     fs = (file_state *) hash_lookup(hash, &r->id);
     if (NULL == fs) {
 	errno = EBADF;
-	fprintf(stderr, "%d READ  id %d: ", (int) mypid, r->id);
-	perror("do_read");
-	return -EBADF;
+	DEBUG(1) {
+	    fprintf(stderr, "%d READ  id %d: ", (int) mypid, r->id);
+	    perror("do_read");
+	}
+	return -errno;
     }
     if (r->offset > -1 && r->offset != fs->offset) {
-#if STDERR_DEBUG
-	fprintf(stderr, "seeking to %d\n", r->offset);
-#endif
+	DEBUG(2)
+	    fprintf(stderr, "seeking to %d\n", r->offset);
 	if (lseek(fs->fd, r->offset, SEEK_SET) < 0) {
-	    fprintf(stderr, "%d FD %d, offset %d: ", (int) mypid, fs->fd, r->offset);
-	    perror("lseek");
+	    DEBUG(1) {
+		fprintf(stderr, "%d FD %d, offset %d: ", (int) mypid, fs->fd, r->offset);
+		perror("lseek");
+	    }
 	}
     }
     x = read(fs->fd, buf, readlen);
-#if STDERR_DEBUG
-    fprintf(stderr, "%d READ %d,%d,%d ret %d\n", (int) mypid,
+    DEBUG(2)
+	fprintf(stderr, "%d READ %d,%d,%d ret %d\n", (int) mypid,
 	fs->fd, readlen, r->offset, x);
-#endif
     if (x < 0) {
-	fprintf(stderr, "%d FD %d: ", (int) mypid, fs->fd);
-	perror("read");
+	DEBUG(1) {
+	    fprintf(stderr, "%d FD %d: ", (int) mypid, fs->fd);
+	    perror("read");
+	}
 	return -errno;
     }
     fs->offset = r->offset + x;
@@ -160,24 +167,29 @@ do_write(diomsg * r, int len, const char *buf)
     fs = (file_state *) hash_lookup(hash, &r->id);
     if (NULL == fs) {
 	errno = EBADF;
-	fprintf(stderr, "%d WRITE id %d: ", (int) mypid, r->id);
-	perror("do_write");
-	return -EBADF;
+	DEBUG(1) {
+	    fprintf(stderr, "%d WRITE id %d: ", (int) mypid, r->id);
+	    perror("do_write");
+	}
+	return -errno;
     }
     if (r->offset > -1 && r->offset != fs->offset) {
 	if (lseek(fs->fd, r->offset, SEEK_SET) < 0) {
-	    fprintf(stderr, "%d FD %d, offset %d: ", (int) mypid, fs->fd, r->offset);
-	    perror("lseek");
+	    DEBUG(1) {
+		fprintf(stderr, "%d FD %d, offset %d: ", (int) mypid, fs->fd, r->offset);
+		perror("lseek");
+	    }
 	}
     }
-#if STDERR_DEBUG
-    fprintf(stderr, "%d WRITE %d,%d,%d\n", (int) mypid,
+    DEBUG(2)
+	fprintf(stderr, "%d WRITE %d,%d,%d\n", (int) mypid,
 	fs->fd, wrtlen, r->offset);
-#endif
     x = write(fs->fd, buf, wrtlen);
     if (x < 0) {
-	fprintf(stderr, "%d FD %d: ", (int) mypid, fs->fd);
-	perror("write");
+	DEBUG(1) {
+	    fprintf(stderr, "%d FD %d: ", (int) mypid, fs->fd);
+	    perror("write");
+	}
 	return -errno;
     }
     fs->offset = r->offset + x;
@@ -193,13 +205,14 @@ do_unlink(diomsg * r, int len, const char *buf)
     if (unlink(buf) < 0)
 #endif
     {
-	fprintf(stderr, "%d UNLNK id %d %s: ", (int) mypid, r->id, buf);
-	perror("truncate");
+	DEBUG(1) {
+	    fprintf(stderr, "%d UNLNK id %d %s: ", (int) mypid, r->id, buf);
+	    perror("truncate");
+	}
 	return -errno;
     }
-#if STDERR_DEBUG
-    fprintf(stderr, "%d UNLNK %s\n", (int) mypid, buf);
-#endif
+    DEBUG(2)
+	fprintf(stderr, "%d UNLNK %s\n", (int) mypid, buf);
     return 0;
 }
 
@@ -331,9 +344,8 @@ main(int argc, char *argv[])
 	    break;
 	}
     }
-#if STDERR_DEBUG
-    fprintf(stderr, "%d diskd exiting\n", (int) mypid);
-#endif
+    DEBUG(2)
+	fprintf(stderr, "%d diskd exiting\n", (int) mypid);
     if (msgctl(rmsgid, IPC_RMID, 0) < 0)
 	perror("msgctl IPC_RMID");
     if (msgctl(smsgid, IPC_RMID, 0) < 0)
