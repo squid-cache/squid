@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.265 1998/04/08 22:51:13 rousskov Exp $
+ * $Id: client_side.cc,v 1.266 1998/04/09 00:11:31 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -596,9 +596,13 @@ clientUpdateCounters(clientHttpRequest * http)
 	    cacheDigestGuessStatsUpdate(&peer->digest.stats.guess,
 		real_hit, guess_hit);
 	else {
-	    debug(33,2) ("clientUpdateCounters: lost peer %s for %s!\n", 
-		http->request->hier.cd_host, http->request->host);
-	    fatal_dump("lost peer");
+	    /* temporary paranoid debug */
+	    static int max_count = 200;
+	    if (max_count > 0) {
+		debug(33,1) ("clientUpdateCounters: lost peer %s for %s! (%d)\n", 
+		    http->request->hier.cd_host, http->request->host, max_count);
+		max_count--;
+	    }
 	}
     }
 #endif
