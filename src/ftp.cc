@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.156 1997/10/29 22:39:52 wessels Exp $
+ * $Id: ftp.cc,v 1.157 1997/10/30 00:47:48 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -250,6 +250,7 @@ ftpTimeout(int fd, void *data)
 	ftpState->data.fd = -1;
     }
     comm_close(ftpState->ctrl.fd);
+    ftpState->ctrl.fd = -1;
 }
 
 static void
@@ -580,6 +581,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
     }
     line = get_free_4k_page();
     end++;
+    /* XXX there is an ABR bug here.   We need to make sure buf is NULL terminated */
     for (s = buf; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	linelen = strcspn(s, crlf) + 1;
 	if (linelen > 4096)
@@ -637,7 +639,6 @@ ftpReadData(int fd, void *data)
     fd_bytes(fd, len, FD_READ);
     debug(9, 5) ("ftpReadData: FD %d, Read %d bytes\n", fd, len);
     if (len > 0) {
-	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Ftp.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
@@ -646,7 +647,7 @@ ftpReadData(int fd, void *data)
     if (len < 0) {
 	debug(50, 1) ("ftpReadData: read error: %s\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-	    commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, 0);
+	    commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, Config.Timeout.read);
 	} else {
 	    if (entry->mem_obj->inmem_hi == 0) {
 		err = xcalloc(1, sizeof(ErrorState));
@@ -679,7 +680,7 @@ ftpReadData(int fd, void *data)
 	    COMM_SELECT_READ,
 	    ftpReadControlReply,
 	    ftpState,
-	    0);
+	    Config.Timeout.read);
     } else {
 	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	    ftpParseListing(ftpState, len);
@@ -687,7 +688,7 @@ ftpReadData(int fd, void *data)
 	    assert(ftpState->data.offset == 0);
 	    storeAppend(entry, ftpState->data.buf, len);
 	}
-	commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, 0);
+	commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, Config.Timeout.read);
     }
 }
 
@@ -928,7 +929,7 @@ ftpConnectDone(int fd, int status, void *data)
 	ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
 	ftpState->data.size = SQUID_TCP_SO_RCVBUF;
 	ftpState->data.freefunc = xfree;
-	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
+	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, Config.Timeout.read);
     }
 }
 
@@ -951,7 +952,7 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
 	COMM_SELECT_READ,
 	ftpReadControlReply,
 	ftpState,
-	0);
+	Config.Timeout.read);
 }
 
 static void
@@ -1033,8 +1034,6 @@ ftpReadControlReply(int fd, void *data)
 	ftpState->ctrl.size - ftpState->ctrl.offset);
     fd_bytes(fd, len, FD_READ);
     debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, len);
-    if (len > 0)
-	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
     if (len < 0) {
 	debug(50, 1) ("ftpReadControlReply: read error: %s\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
@@ -1042,7 +1041,7 @@ ftpReadControlReply(int fd, void *data)
 		COMM_SELECT_READ,
 		ftpReadControlReply,
 		ftpState,
-		0);
+		Config.Timeout.read);
 	} else {
 	    if (entry->mem_obj->inmem_hi == 0) {
 		err = xcalloc(1, sizeof(ErrorState));
@@ -1090,7 +1089,7 @@ ftpReadControlReply(int fd, void *data)
 	    ftpState->ctrl.freefunc(oldbuf);
 	    ftpState->ctrl.freefunc = xfree;
 	}
-	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
+	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, Config.Timeout.read);
 	return;
     }
     for (W = &ftpState->ctrl.message; *W && (*W)->next; W = &(*W)->next);
@@ -1303,7 +1302,6 @@ ftpSendPasv(FtpStateData * ftpState)
 	return;
     }
     ftpState->data.fd = fd;
-    commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
     snprintf(cbuf, 1024, "PASV\r\n");
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_PASV;
@@ -1441,7 +1439,7 @@ ftpReadList(FtpStateData * ftpState)
 	    COMM_SELECT_READ,
 	    ftpReadData,
 	    ftpState,
-	    0);
+	    Config.Timeout.read);
 	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
 	return;
@@ -1468,9 +1466,13 @@ ftpReadRetr(FtpStateData * ftpState)
 	    COMM_SELECT_READ,
 	    ftpReadData,
 	    ftpState,
-	    0);
+	    Config.Timeout.read);
 	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
+	/* Cancel the timeout on the Control socket and establish one
+	 * on the data socket */
+	commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
+	commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout, ftpState);
     } else {
 	ftpFail(ftpState);
     }
@@ -1547,6 +1549,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	mime_type = mimeGetContentType(filename);
 	mime_enc = mimeGetContentEncoding(filename);
     }
+    BIT_SET(e->flag, DELAY_SENDING);
     storeAppendPrintf(e, "HTTP/1.0 200 Gatewaying\r\n");
     reply->code = 200;
     reply->version = 1.0;
@@ -1568,7 +1571,9 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	storeAppendPrintf(e, "Last-Modified: %s\r\n", mkrfc1123(ftpState->mdtm));
 	reply->last_modified = ftpState->mdtm;
     }
+    BIT_CLR(e->flag, DELAY_SENDING);
     storeAppendPrintf(e, "\r\n");
+    reply->hdr_sz = e->mem_obj->inmem_hi;
     storeTimestampsSet(e);
     storeSetPublicKey(e);
 }
