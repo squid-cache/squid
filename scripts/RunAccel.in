@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id: RunAccel.in,v 1.4 1996/07/09 03:41:15 wessels Exp $
+#  $Id: RunAccel.in,v 1.5 1999/01/29 18:19:45 wessels Exp $
 
 # enable HTTP requests on port 80
 port="-a 80"
@@ -20,7 +20,7 @@ failcount=0
 while : ; do
 	echo "Running: squid $port -s $conf >> $logdir/squid.out 2>&1"
 	start=`date '+%d%H%M%S'`
-	squid $port -s $conf >> $logdir/squid.out 2>&1
+	squid -N $port -s $conf >> $logdir/squid.out 2>&1
 	stop=`date '+%d%H%M%S'`
 	t=`expr $stop - $start`
 	if test 0 -le $t -a $t -lt 5 ; then
