@@ -401,7 +401,7 @@ extern void storeAbort(StoreEntry *, int);
 extern void storeAppend(StoreEntry *, const char *, int);
 extern void storeLockObject(StoreEntry *);
 extern void storeSwapInStart(StoreEntry *, SIH *, void *data);
-extern int storeRelease(StoreEntry *);
+extern void storeRelease(StoreEntry *);
 extern int storeUnlockObject(StoreEntry *);
 extern int storeUnregister(StoreEntry *, void *);
 extern void storeClientCopy(StoreEntry * e,
