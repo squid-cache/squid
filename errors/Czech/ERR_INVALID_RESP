@@ -1,0 +1,27 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR noshade size="1px">
+<P>
+Při provádění požadavku:
+<PRE>
+%R
+</PRE>
+<P>
+se objevila následující chyba:
+<UL>
+<LI>
+<STRONG>
+Invalid Response
+</STRONG>
+</UL>
+
+<P>
+HTTP odpověď obdržená od vzdáleného serveru je nesrozumitelná či poškozená.
+Kontaktujte prosím správce vzdáleného serveru. Další informace Vám poskytne
+správce tohoto proxy serveru <A HREF="mailto:%w">%w</A>

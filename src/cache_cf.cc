@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.463 2005/02/09 13:01:40 serassio Exp $
+ * $Id: cache_cf.cc,v 1.464 2005/03/06 14:46:29 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2017,10 +2017,39 @@ parse_onoff(int *var)
 }
 
 #define free_onoff free_int
-#define dump_eol dump_string
-#define free_eol free_string
-#define dump_debug dump_string
-#define free_debug free_string
+
+static void
+dump_tristate(StoreEntry * entry, const char *name, int var)
+{
+    const char *state;
+
+    if (var > 0)
+        state = "on";
+    else if (var < 0)
+        state = "warn";
+    else
+        state = "off";
+
+    storeAppendPrintf(entry, "%s %s\n", name, state);
+}
+
+static void
+parse_tristate(int *var)
+{
+    char *token = strtok(NULL, w_space);
+
+    if (token == NULL)
+        self_destruct();
+
+    if (!strcasecmp(token, "on") || !strcasecmp(token, "enable"))
+        *var = 1;
+    else if (!strcasecmp(token, "warn"))
+        *var = -1;
+    else
+        *var = 0;
+}
+
+#define free_tristate free_int
 
 static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
@@ -2287,6 +2316,9 @@ parse_eol(char *volatile *var)
     *var = xstrdup((char *) token);
 }
 
+#define dump_eol dump_string
+#define free_eol free_string
+
 void
 parse_debug(char *volatile *var)
 {
@@ -2295,6 +2327,9 @@ parse_debug(char *volatile *var)
     debug_options = xstrdup(Config.debugOptions);
     Debug::parseOptions(Config.debugOptions);
 }
+
+#define dump_debug dump_string
+#define free_debug free_string
 
 static void
 dump_time_t(StoreEntry * entry, const char *name, time_t var)

@@ -1,0 +1,27 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>Puslapis nurodytu adresu negali būti atsiųstas</H2>
+<HR noshade size="1px">
+<P>
+Bandant įvykdyti užklausą:
+<PRE>
+%R
+</PRE>
+<P>
+Gautas klaidos pranešimas:
+<UL>
+<LI>
+<STRONG>
+Klaidingas atsakymas
+</STRONG>
+</UL>
+
+<P>
+Iš serverio gautas nesuprantamas HTTP atsakymas arba jis buvo klaidingai
+suformuotas. Susisiekite su serverio operatoriumi. Jūsų proxy serverio
+administratorius gali suteikti jums daugiau informacijos apie šią problemą.
+</P>

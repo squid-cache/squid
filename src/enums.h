@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.240 2005/02/09 13:01:40 serassio Exp $
+ * $Id: enums.h,v 1.241 2005/03/06 14:46:29 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -95,6 +95,7 @@ typedef enum {
     ERR_TOO_BIG,
     TCP_RESET,
     ERR_ESI,                    /* Failure to perform ESI processing */
+    ERR_INVALID_RESP,
     ERR_MAX
 } err_type;
 
