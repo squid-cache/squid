@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.49 1996/07/26 17:18:21 wessels Exp $
+ * $Id: ftp.cc,v 1.50 1996/08/26 19:16:05 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -565,6 +565,8 @@ void ftpConnInProgress(fd, data)
 	COMM_SELECT_WRITE,
 	(PF) ftpSendRequest,
 	(void *) data);
+    if (opt_no_ipcache)
+	ipcacheInvalidate(data->request->host);
 }
 
 
@@ -670,6 +672,8 @@ int ftpStart(unusedfd, url, request, entry)
 	COMM_SELECT_LIFETIME,
 	(PF) ftpLifetimeExpire,
 	(void *) data);
+    if (opt_no_ipcache)
+	ipcacheInvalidate(data->request->host);
     return COMM_OK;
 }
 

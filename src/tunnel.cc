@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.10 1996/07/26 19:28:51 wessels Exp $
+ * $Id: tunnel.cc,v 1.11 1996/08/26 19:16:08 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -346,6 +346,8 @@ static void sslConnInProgress(fd, sslState)
 	    return;
 	}
     }
+    if (opt_no_ipcache)
+	ipcacheInvalidate(sslState->host);
     /* We are now fully connected */
     if (Config.sslProxy.host)
 	sslProxyConnected(fd, sslState);
@@ -421,6 +423,8 @@ static int sslConnect(fd, hp, sslState)
 		(void *) sslState);
 	    return COMM_OK;
 	}
+	if (opt_no_ipcache)
+	    ipcacheInvalidate(sslState->host);
     }
     if (Config.sslProxy.host)
 	sslProxyConnected(sslState->server.fd, sslState);
