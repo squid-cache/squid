@@ -1,5 +1,5 @@
 /*
- * $Id: md5.h,v 1.7 2001/01/31 22:16:36 hno Exp $
+ * $Id: md5.h,v 1.8 2001/03/11 21:55:20 hno Exp $
  */
 
 #ifndef MD5_H
@@ -29,10 +29,12 @@
  * documentation and/or software.
  */
 
+#include "squid_types.h"
+
 /* MD5 context. */
 typedef struct {
-    u_num32 state[4];		/* state (ABCD) */
-    u_num32 count[2];		/* number of bits, modulo 2^64 (lsb first) */
+    u_int32_t state[4];		/* state (ABCD) */
+    u_int32_t count[2];		/* number of bits, modulo 2^64 (lsb first) */
     unsigned char buffer[64];	/* input buffer */
 } MD5_CTX;
 
