@@ -311,6 +311,18 @@
  */
 #undef mtyp_t
 
+/*
+ * Define this to include code for SSL encryption.
+ */
+#undef USE_SSL
+
+/*
+ * Define this to make use of the OpenSSL libraries for
+ * MD5 calculation rather than Squid's own MD5 implementation
+ * or if building with SSL encryption (USE_SSL)
+ */
+#undef USE_OPENSSL
+
 /* Define if you want to set the COSS membuf size */
 #undef COSS_MEMBUF_SZ
 
@@ -339,6 +351,11 @@
 #undef int64_t
 
 #undef u_int64_t
+
+/*
+ * Enable support for the X-Accelerator-Vary HTTP header
+ */
+#undef X_ACCELERATOR_VARY
 
 /* The number of bytes in a __int64.  */
 #undef SIZEOF___INT64
@@ -645,6 +662,15 @@
 
 /* Define if you have the <netinet/tcp.h> header file.  */
 #undef HAVE_NETINET_TCP_H
+
+/* Define if you have the <openssl/err.h> header file.  */
+#undef HAVE_OPENSSL_ERR_H
+
+/* Define if you have the <openssl/md5.h> header file.  */
+#undef HAVE_OPENSSL_MD5_H
+
+/* Define if you have the <openssl/ssl.h> header file.  */
+#undef HAVE_OPENSSL_SSL_H
 
 /* Define if you have the <poll.h> header file.  */
 #undef HAVE_POLL_H
