@@ -62,3 +62,5 @@
 	- SIGHUP reconfigures the cache
 	- SIGUSR1 rotates logfiles.
 	- New ACLs
+	- added dns_positive_ttl
+	- Added Forwarded: header to proxy HTTP requests
