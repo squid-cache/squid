@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.362 1998/07/21 17:26:26 wessels Exp $
+ * $Id: client_side.cc,v 1.363 1998/07/21 17:44:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -234,7 +234,7 @@ clientProcessExpired(void *data)
     char *url = http->uri;
     StoreEntry *entry = NULL;
     debug(33, 3) ("clientProcessExpired: '%s'\n", http->uri);
-    assert(entry->lastmod >= 0);
+    assert(http->entry->lastmod >= 0);
     /*
      * check if we are allowed to contact other servers
      * @?@: Instead of a 504 (Gateway Timeout) reply, we may want to return 
