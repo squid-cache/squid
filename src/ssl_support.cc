@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.21 2005/03/18 14:43:33 hno Exp $
+ * $Id: ssl_support.cc,v 1.22 2005/03/18 15:17:17 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -500,6 +500,12 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
     SSL_CTX_set_options(sslContext, ssl_parse_options(options));
 
+    if (Config.SSL.unclean_shutdown) {
+        debug(83, 5) ("Enabling quiet SSL shutdowns (RFC violation).\n");
+
+        SSL_CTX_set_quiet_shutdown(sslContext, 1);
+    }
+
     if (cipher) {
         debug(83, 5) ("Using chiper suite %s.\n", cipher);
 
@@ -755,15 +761,6 @@ void
 ssl_shutdown_method(int fd)
 {
     SSL *ssl = fd_table[fd].ssl;
-
-    if (!fd_table[fd].ssl_shutdown) {
-        fd_table[fd].ssl_shutdown = 1;
-
-        if (Config.SSL.unclean_shutdown)
-            SSL_set_shutdown(ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
-        else
-            SSL_set_shutdown(ssl, SSL_RECEIVED_SHUTDOWN);
-    }
 
     SSL_shutdown(ssl);
 }

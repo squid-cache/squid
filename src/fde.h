@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.6 2003/11/09 17:11:11 hno Exp $
+ * $Id: fde.h,v 1.7 2005/03/18 15:17:17 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -120,9 +120,6 @@ unsigned int write_pending:
 #if USE_SSL
 
     SSL *ssl;
-
-int ssl_shutdown:
-    1;
 #endif
 };
 
