@@ -1,17 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=EUC-JP">
+<TITLE>エラー: リクエストされた URL は取得できませんでした</TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>エラー</H1>
+<H2>リクエストされた URL は取得できませんでした</H2>
 <HR>
 <P>
-An FTP authentication failure occurred
-while trying to retrieve the URL:
+以下のURLを取得しようとしているとき、FTPの認証の失敗が発生しました:
 <A HREF="%U">%U</A>
 <P>
-Squid sent the following FTP command:
+Squidは以下のFTPコマンドを送りました:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-and then received this reply
+そして、この様な応答を受け取りました。
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 </P>
