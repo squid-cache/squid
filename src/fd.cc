@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.33 1999/01/19 17:41:02 wessels Exp $
+ * $Id: fd.cc,v 1.34 1999/01/21 21:10:32 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -84,8 +84,6 @@ fd_close(int fd)
     F->flags.open = 0;
     fdUpdateBiggest(fd, 0);
     Number_FD--;
-    if (F->type == FD_FILE)
-	open_disk_fd--;
     commUpdateReadBits(fd, NULL);
     commUpdateWriteBits(fd, NULL);
     memset(F, '\0', sizeof(fde));
@@ -109,8 +107,6 @@ fd_open(int fd, unsigned int type, const char *desc)
     if (desc)
 	xstrncpy(F->desc, desc, FD_DESC_SZ);
     Number_FD++;
-    if (type == FD_FILE)
-	open_disk_fd++;
 }
 
 void
