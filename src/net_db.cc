@@ -330,7 +330,7 @@ netdbDump(StoreEntry * sentry)
     struct _net_db_name *x;
     int k;
     int i;
-    storeAppendPrintf(sentry, "{Network DB Statistics:\n"); */ } */
+    storeAppendPrintf(sentry, "{Network DB Statistics:\n");	/* } */
     storeAppendPrintf(sentry, "{%-16.16s %9s %7s %5s %s}\n",
 	"Network",
 	"recv/sent",
@@ -347,7 +347,7 @@ netdbDump(StoreEntry * sentry)
 	(QS) sortByHops);
     for (k = 0; k < i; k++) {
 	n = *(list + k);
-	storeAppendPrintf(sentry, "{%-16.16s %4d/%4d %7.1f %5.1f", /* } */
+	storeAppendPrintf(sentry, "{%-16.16s %4d/%4d %7.1f %5.1f",	/* } */
 	    n->network,
 	    n->pings_recv,
 	    n->pings_sent,

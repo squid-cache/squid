@@ -1,3 +1,4 @@
+
 #include "squid.h"
 
 typedef struct _client_info {
@@ -64,7 +65,7 @@ clientdbDeniedPercent(struct in_addr addr)
     return 100 * c->result_hist[ICP_OP_DENIED] / c->n_icp;
 }
 
-void 
+void
 clientdbDump(StoreEntry * sentry)
 {
     ClientInfo *c;

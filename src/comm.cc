@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.90 1996/10/13 06:19:43 wessels Exp $
+ * $Id: comm.cc,v 1.91 1996/10/15 04:58:25 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -934,7 +934,7 @@ comm_join_mcast_groups(int fd)
 
     for (s = Config.mcast_group_list; s; s = s->next) {
 	debug(5, 10, "comm_join_mcast_groups: joining group %s on FD %d\n",
-		s->key, fd);
+	    s->key, fd);
 	mr.imr_multiaddr.s_addr = inet_addr(s->key);
 	mr.imr_interface.s_addr = INADDR_ANY;
 	if (setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
