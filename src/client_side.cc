@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.488 2000/05/30 09:35:50 hno Exp $
+ * $Id: client_side.cc,v 1.489 2000/05/31 04:59:23 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2633,10 +2633,10 @@ clientReadRequest(int fd, void *data)
 static void
 requestTimeout(int fd, void *data)
 {
+#if THIS_CONFUSES_PERSISTENT_CONNECTION_AWARE_BROWSERS_AND_USERS
     ConnStateData *conn = data;
     ErrorState *err;
     debug(33, 3) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
-#if THIS_CONFUSES_PERSISTENT_CONNECTION_AWARE_BROWSERS_AND_USERS
     if (fd_table[fd].rwstate) {
 	/*
 	 * Some data has been sent to the client, just close the FD
@@ -2679,6 +2679,7 @@ requestTimeout(int fd, void *data)
      * the open has already been completed on another
      * connection)
      */
+    debug(33, 3) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
     comm_close(fd);
 #endif
 }
