@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.32 2000/07/22 17:56:55 wessels Exp $
+ * $Id: dns_internal.cc,v 1.33 2000/11/02 16:30:10 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -390,6 +390,9 @@ idnsCheckQueue(void *unused)
     idns_query *q;
     event_queued = 0;
     for (n = lru_list.tail; n; n = p) {
+	if (0 == nns)
+	    /* name servers went away; reconfiguring or shutting down */
+	    break;
 	q = n->data;
 	if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * (1 << q->nsends % nns))
 	    break;
