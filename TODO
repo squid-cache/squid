@@ -40,6 +40,7 @@ Our Todo List
 (4)	Refresh based on content types.  This means we'll need an enum of
 	known content types added to StoreEntry.  Unknown types will lose.
 (4)	Write binary headers as metadata?
+(4)	Configurable proxy-auth realm
 
 (5)	X-Proxy-hops header?
 (5)	internalize redirectors?
