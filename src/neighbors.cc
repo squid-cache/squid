@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.119 1997/02/24 20:22:11 wessels Exp $
+ * $Id: neighbors.cc,v 1.120 1997/02/24 23:43:57 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -113,6 +113,8 @@ static peer *whichPeer _PARAMS((const struct sockaddr_in * from));
 static void neighborAlive _PARAMS((peer *, const MemObject *, const icp_common_t *));
 static void neighborCountIgnored _PARAMS((peer * e, icp_opcode op_unused));
 static neighbor_t parseNeighborType _PARAMS((const char *s));
+static void peerRefreshDNS _PARAMS((void *));
+static void peerDNSConfigure _PARAMS((int fd, const ipcache_addrs *ia, void *data));
 
 static icp_common_t echo_hdr;
 static u_short echo_port;
@@ -208,7 +210,7 @@ neighborType(const peer * e, const request_t * request)
 /*
  * peerAllowedToUse
  *
- * this function figures * out if it is appropriate to fetch REQUEST
+ * this function figures out if it is appropriate to fetch REQUEST
  * from PEER.
  */
 static int
@@ -261,6 +263,8 @@ peerWouldBePinged(const peer * e, request_t * request)
     if (e->icp_port == echo_port)
 	if (!neighborUp(e))
 	    return 0;
+    if (e->n_addresses == 0)
+	return 0;
     return 1;
 }
 
@@ -407,61 +411,13 @@ neighborsDestroy(void)
 void
 neighbors_open(int fd)
 {
-    int j;
     struct sockaddr_in name;
-    struct sockaddr_in *ap;
     int len = sizeof(struct sockaddr_in);
-    const ipcache_addrs *ia = NULL;
-    peer *e = NULL;
-    peer *next = NULL;
-    peer **E = NULL;
     struct servent *sep = NULL;
-
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
 	debug(15, 1, "getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
-
-    /* Prepare neighbor connections, one at a time */
-    E = &Peers.peers_head;
-    next = Peers.peers_head;
-    while ((e = next)) {
-	getCurrentTime();
-	next = e->next;
-	debug(15, 1, "Configuring %s %s/%d/%d\n", neighborTypeStr(e),
-	    e->host, e->http_port, e->icp_port);
-	if (e->type == PEER_MULTICAST)
-	    debug(15, 1, "    Multicast TTL = %d\n", e->mcast_ttl);
-	if ((ia = ipcache_gethostbyname(e->host, IP_BLOCKING_LOOKUP)) == NULL) {
-	    debug(0, 0, "WARNING: DNS lookup for '%s' failed!\n", e->host);
-	    debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
-	    neighborRemove(e);
-	    continue;
-	}
-	e->n_addresses = 0;
-	for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
-	    e->addresses[j] = ia->in_addrs[j];
-	    e->n_addresses++;
-	}
-	if (e->n_addresses < 1) {
-	    debug(0, 0, "WARNING: No IP address found for '%s'!\n", e->host);
-	    debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
-	    neighborRemove(e);
-	    continue;
-	}
-	for (j = 0; j < e->n_addresses; j++) {
-	    debug(15, 2, "--> IP address #%d: %s\n",
-		j, inet_ntoa(e->addresses[j]));
-	}
-	e->stats.rtt = 0;
-
-	ap = &e->in_addr;
-	memset(ap, '\0', sizeof(struct sockaddr_in));
-	ap->sin_family = AF_INET;
-	ap->sin_addr = e->addresses[0];
-	ap->sin_port = htons(e->icp_port);
-	E = &e->next;
-    }
-
+    peerRefreshDNS(NULL);
     if (0 == echo_hdr.opcode) {
 	echo_hdr.opcode = ICP_OP_SECHO;
 	echo_hdr.version = ICP_VERSION_CURRENT;
@@ -685,6 +641,12 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	neighborCountIgnored(e, opcode);
 	return;
     }
+    if (BIT_TEST(e->options, NEIGHBOR_MCAST_RESPONDER)) {
+	if (!peerHTTPOkay(e, mem->request)) {
+	    neighborCountIgnored(e, opcode);
+	    return;
+	}
+    }
     debug(15, 3, "neighborsUdpAck: %s for '%s' from %s \n",
 	opcode_d, url, e ? e->host : "source");
     mem->e_pings_n_acks++;
@@ -770,8 +732,6 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 		inet_ntoa(from->sin_addr));
 	} else if (ntype != PEER_PARENT) {
 	    (void) 0;		/* ignore MISS from non-parent */
-	} else if (BIT_TEST(e->options, NEIGHBOR_MCAST_RESPONDER) && !peerHTTPOkay(e, mem->request)) {
-	    (void) 0;		/* ignore multicast miss */
 	} else {
 	    w_rtt = tvSubMsec(mem->start_ping, current_time) / e->weight;
 	    if (mem->w_rtt == 0 || w_rtt < mem->w_rtt) {
@@ -1001,4 +961,62 @@ peerUpdateFudge(void *unused)
     }
     eventAdd("peerUpdateFudge", peerUpdateFudge, NULL, 10);
     debug(15, 3, "peerUpdateFudge: Factor = %d\n", MulticastFudgeFactor);
+}
+
+static void
+peerDNSConfigure(int fd, const ipcache_addrs *ia, void *data)
+{
+    peer *e = data;
+    struct sockaddr_in *ap;
+    int j;
+    if (e->n_addresses == 0) {
+        debug(15, 1, "Configuring %s %s/%d/%d\n", neighborTypeStr(e),
+	    e->host, e->http_port, e->icp_port);
+        if (e->type == PEER_MULTICAST)
+	    debug(15, 1, "    Multicast TTL = %d\n", e->mcast_ttl);
+    }
+    if (ia == NULL) {
+	debug(0, 0, "WARNING: DNS lookup for '%s' failed!\n", e->host);
+#ifdef DONT
+	debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
+	neighborRemove(e);
+#endif
+	return;
+    }
+    e->n_addresses = 0;
+    for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
+	e->addresses[j] = ia->in_addrs[j];
+	e->n_addresses++;
+    }
+    if (e->n_addresses < 1) {
+	debug(0, 0, "WARNING: No IP address found for '%s'!\n", e->host);
+#ifdef DONT
+	debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
+	neighborRemove(e);
+#endif
+	return;
+    }
+    for (j = 0; j < e->n_addresses; j++) {
+	debug(15, 2, "--> IP address #%d: %s\n",
+	    j, inet_ntoa(e->addresses[j]));
+    }
+    e->stats.rtt = 0;
+    ap = &e->in_addr;
+    memset(ap, '\0', sizeof(struct sockaddr_in));
+    ap->sin_family = AF_INET;
+    ap->sin_addr = e->addresses[0];
+    ap->sin_port = htons(e->icp_port);
+}
+
+static void
+peerRefreshDNS(void *junk)
+{
+    peer *e = NULL;
+    peer *next = Peers.peers_head;
+    while ((e = next)) {
+	next = e->next;
+	ipcache_nbgethostbyname(e->host, 0, peerDNSConfigure, (void *) e);
+    }
+    /* Reconfigure the peers every hour */
+    eventAdd("peerRefreshDNS", peerRefreshDNS, NULL, 3600);
 }
