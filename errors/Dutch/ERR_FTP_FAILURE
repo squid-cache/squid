@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
+</HEAD><BODY>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
+<HR>
+<P>
+Er is een FTP protocolfout voorgekomen
+tijdens het ophalen van de URL: 
+<A HREF="%U">%U</A>
+<P>
+Squid stuurde de volgende FTP opdracht:
+<PRE><STRONG>
+	%f
+</STRONG></PRE>
+en ontving toen het volgende antwoord
+<PRE><STRONG>
+	%F
+</STRONG></PRE>
+<P>
+Dit kan veroorzaakt worden door een FTP URL met een absoluut pad (hetgeen niet in overeenstemming is met RFC 1738). Als dit de oorzaak is, dan kan het bestand gevonden worden op <A HREF="%B">%B</A>.
+</P>
+</BODY>
+</HTML>

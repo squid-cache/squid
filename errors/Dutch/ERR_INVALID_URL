@@ -1,0 +1,29 @@
+<HTML><HEAD>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
+</HEAD><BODY>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
+<HR>
+<P>
+Tijdens het opvragen van de URL:
+<A HREF="%U">%U</A>
+<P>
+kwam de volgende fout voor:
+<UL>
+<LI>
+<STRONG>
+Ongeldige URL
+</STRONG>
+</UL>
+
+<P>
+Een gedeelte van de gevraagde URL is ongeldig. Mogelijke problemen:
+<UL>
+<LI>Ontbrekend of onjuist toegangsprotocol (moet zijn: `http://' of vergelijkbaar)
+<LI>Ontbrekende host naam
+<LI>Ongeldige 'double-escape' in het URL pad
+<LI>Er staat een ongeldig teken in de host naam; Het teken '_' is niet toegestaan 
+</UL>
+</P>
+</BODY>
+</HTML>

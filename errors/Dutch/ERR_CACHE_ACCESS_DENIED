@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<TITLE>FOUT: Cache toegang niet toegestaan</TITLE>
+</HEAD>
+<BODY>
+<H1>FOUT</H1>
+<H2>Cache toegang niet toegestaan</H2>
+<HR>
+<P>
+Tijdens het opvragen van de URL:
+<A HREF="%U">%U</A>
+<P>
+kwam de volgende fout voor:
+<UL>
+<LI>
+<STRONG>
+Cache toegang niet toegestaan.
+</STRONG>
+</UL>
+</P>
+
+<P>Sorry, het is u niet toegestaan om:
+<PRE>    %U</PRE>
+van deze cache op te vragen totdat u zich geidentificeerd hebt.
+</P>
+
+<P>
+U dient Netscape 2.0 of recenter, Microsoft Internet Explorer 3.0, of een HTTP/1.1 compatibele browser te gebruiken om dit te laten werken. Neem contact op met de <A HREF="mailto:%w">cache beheerder</a> als u problemen heeft om uzelf te identificeren of <A HREF="http://%h/cgi-bin/chpasswd.cgi\">verander</a> hier uw standaard wachtwoord.
+</P>
+</BODY>
+</HTML>
