@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.2 2002/06/25 11:54:49 hno Exp $
+ * $Id: external_acl.cc,v 1.3 2002/06/25 11:58:15 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -696,8 +696,8 @@ strwordtok(char *buf, char **t)
   done:
     *d++ = '\0';
   error:
-    *t = p;
-    return word;
+    *t = (char *)p;
+    return (char *)word;
 }
 
 /*
