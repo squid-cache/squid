@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.264 1999/01/14 23:55:40 wessels Exp $
+ * $Id: ftp.cc,v 1.265 1999/01/15 00:16:19 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1009,6 +1009,7 @@ ftpStart(FwdState * fwd)
     ftpState->flags.pasv_supported = 1;
     ftpState->flags.rest_supported = 1;
     ftpState->fwd = fwd;
+    comm_add_close_handler(fd, ftpStateFree, ftpState);
     if (ftpState->request->method == METHOD_PUT)
 	ftpState->flags.put = 1;
     if (!ftpCheckAuth(ftpState, &request->header)) {
@@ -1030,7 +1031,7 @@ ftpStart(FwdState * fwd)
 	ftpAuthRequired(reply, request, realm);
 	httpReplySwapOut(reply, entry);
 	fwdComplete(ftpState->fwd);
-	ftpStateFree(-1, ftpState);
+	comm_close(fd);
 	return;
     }
     ftpCheckUrlpath(ftpState);
@@ -1038,8 +1039,8 @@ ftpStart(FwdState * fwd)
     debug(9, 5) ("ftpStart: host=%s, path=%s, user=%s, passwd=%s\n",
 	ftpState->request->host, strBuf(ftpState->request->urlpath),
 	ftpState->user, ftpState->password);
-    comm_add_close_handler(fd, ftpStateFree, ftpState);
     ftpState->state = BEGIN;
+    ftpState->ctrl.last_command = xstrdup("Connect to server");
     ftpState->ctrl.buf = memAllocate(MEM_4K_BUF);
     ftpState->ctrl.freefunc = memFree4K;
     ftpState->ctrl.size = 4096;
@@ -2199,7 +2200,7 @@ ftpFail(FtpStateData * ftpState)
     else
 	err->ftp.request = ftpState->ctrl.last_command;
     if (err->ftp.request) {
-        if (!strncmp(err->ftp.request, "PASS", 4))
+	if (!strncmp(err->ftp.request, "PASS", 4))
 	    err->ftp.request = "PASS <yourpassword>";
     }
     if (ftpState->old_reply)
