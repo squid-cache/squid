@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.88 1996/10/11 23:11:07 wessels Exp $
+ * $Id: comm.cc,v 1.89 1996/10/11 23:11:52 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -334,7 +334,7 @@ comm_nbconnect(int fd, void *data)
 	    COMM_SELECT_WRITE,
 	    comm_nbconnect,
 	    (void *) connectState,
-	0);
+	    0);
 	break;
     case COMM_OK:
 	connectState->handler(fd, COMM_OK, connectState->data);
@@ -1242,7 +1242,7 @@ commHandleRead(int fd, RWStateData * state)
 		COMM_SELECT_READ,
 		(PF) commHandleRead,
 		state,
-	0);
+		0);
 	    return COMM_OK;
 	} else {
 	    /* Len == 0 means connection closed; otherwise would not have been
@@ -1266,7 +1266,7 @@ commHandleRead(int fd, RWStateData * state)
 	    COMM_SELECT_READ,
 	    (PF) commHandleRead,
 	    state,
-	0);
+	    0);
     }
     return COMM_OK;
 }
@@ -1337,7 +1337,7 @@ commHandleWrite(int fd, RWStateData * state)
 		COMM_SELECT_WRITE,
 		(PF) commHandleWrite,
 		state,
-	0);
+		0);
 	} else {
 	    debug(5, 2, "commHandleWrite: FD %d: write failure: %s.\n",
 		fd, xstrerror());
@@ -1352,7 +1352,7 @@ commHandleWrite(int fd, RWStateData * state)
 		COMM_SELECT_WRITE,
 		(PF) commHandleWrite,
 		state,
-	0);
+		0);
 	} else {
 	    RWStateCallbackAndFree(fd, COMM_OK);
 	}

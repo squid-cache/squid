@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.53 1996/10/11 23:11:11 wessels Exp $
+ * $Id: gopher.cc,v 1.54 1996/10/11 23:11:55 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -746,7 +746,7 @@ gopherReadReply(int fd, GopherStateData * data)
 	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    NULL,
-	     NULL,
+	    NULL,
 	    0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
 	    comm_set_fd_lifetime(fd, 3600);	/* limit during deferring */
