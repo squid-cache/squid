@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.344 2003/03/02 23:13:49 hno Exp $
+ * $Id: ftp.cc,v 1.345 2003/03/03 22:14:13 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1408,8 +1408,8 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
     safe_free(ftpState->ctrl.last_reply);
     ftpState->ctrl.last_command = xstrdup(buf);
     comm_write(ftpState->ctrl.fd,
-               xstrdup(buf),
-               strlen(buf),
+               ftpState->ctrl.last_command,
+               strlen(ftpState->ctrl.last_command),
                ftpWriteCommandCallback,
                ftpState);
     ftpScheduleReadControlReply(ftpState, 0);
@@ -1419,7 +1419,7 @@ static void
 ftpWriteCommandCallback(int fd, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
-    xfree(buf);
+
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", (int) size);
 
     if (size > 0) {
