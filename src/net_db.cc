@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.147 2000/10/05 14:02:22 wessels Exp $
+ * $Id: net_db.cc,v 1.148 2000/10/06 05:42:46 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -466,8 +466,8 @@ netdbReloadState(void)
 	memset(&N, '\0', sizeof(netdbEntry));
 	q = strtok(t, w_space);
 	t = s + 1;
-	if (NULL == q);
-	continue;
+	if (NULL == q)
+	    continue;
 	if (!safe_inet_addr(q, &addr))
 	    continue;
 	if (netdbLookupAddr(addr) != NULL)	/* no dups! */
