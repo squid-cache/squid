@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.325 1998/06/02 22:45:03 rousskov Exp $
+ * $Id: client_side.cc,v 1.326 1998/06/02 23:17:46 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1084,12 +1084,12 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	range_err = "too complex range header";
     /* get rid of our range specs on error */
     if (range_err) {
-	debug(33, 1) ("clientBuildRangeHeader: will not do ranges: %s.\n", range_err);
+	debug(33, 2) ("clientBuildRangeHeader: will not do ranges: %s.\n", range_err);
 	httpHdrRangeDestroy(http->request->range);
 	http->request->range = NULL;
     } else {
 	const int spec_count = http->request->range->specs.count;
-	debug(33, 1) ("clientBuildRangeHeader: range spec count: %d clen: %d\n",
+	debug(33, 2) ("clientBuildRangeHeader: range spec count: %d clen: %d\n",
 	    spec_count, rep->content_length);
 	assert(spec_count > 0);
 	/* append appropriate header(s) */ 
@@ -1103,7 +1103,7 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	     * transmitted in the message-body */
 	    httpHeaderDelById(hdr, HDR_CONTENT_LENGTH);
 	    httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, spec.length);
-	    debug(33, 1) ("clientBuildRangeHeader: actual content length: %d\n", spec.length);
+	    debug(33, 2) ("clientBuildRangeHeader: actual content length: %d\n", spec.length);
 	} else {
 	    /* multipart! */
 	    /* generate boundary string */
@@ -1163,7 +1163,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	 * if Date header is not available */
 	httpHeaderPutInt(hdr, HDR_AGE, squid_curtime - http->entry->timestamp);
     } else {
-	debug(33, 1) ("clientBuildReplyHeader: entry's timestamp is invalid: %d ? %d\n",
+	debug(33, 5) ("clientBuildReplyHeader: entry's timestamp is invalid: %d ? %d\n",
 	    http->entry->timestamp, squid_curtime);
     }
     /* Append X-Cache */
@@ -1262,7 +1262,7 @@ clientPackRange(clientHttpRequest *http, HttpHdrRangeIter *i, const char **buf, 
 	Packer p;
 	assert(rep);
 	/* put boundary */
-	debug(33,1) ("clientPackRange: appending boundary: %s\n", strBuf(i->boundary));
+	debug(33, 5) ("clientPackRange: appending boundary: %s\n", strBuf(i->boundary));
 	/* rfc2046 requires to _prepend_ boundary with <crlf>! */
 	memBufPrintf(mb, "\r\n--%s\r\n", strBuf(i->boundary));
 	httpHeaderInit(&hdr, hoReply);
@@ -1277,7 +1277,7 @@ clientPackRange(clientHttpRequest *http, HttpHdrRangeIter *i, const char **buf, 
 	memBufPrintf(mb, "\r\n");
     }
     /* append */
-    debug(33,1) ("clientPackRange: appending %d bytes\n", copy_sz);
+    debug(33, 3) ("clientPackRange: appending %d bytes\n", copy_sz);
     memBufAppend(mb, *buf, copy_sz);
     /* update offsets */
     *size -= copy_sz;
@@ -1310,9 +1310,9 @@ clientPackMoreRanges(clientHttpRequest *http, const char *buf, ssize_t size, Mem
 	if (!i->debt_size)
 	    continue;
 	start = i->spec.offset + i->spec.length - i->debt_size;
-	debug(33,1) ("clientPackMoreRanges: in:  offset: %d size: %d\n",
+	debug(33, 2) ("clientPackMoreRanges: in:  offset: %d size: %d\n",
 	    (int)body_off, size);
-	debug(33,1) ("clientPackMoreRanges: out: start: %d spec[%d]: [%d, %d), len: %d debt: %d\n",
+	debug(33, 2) ("clientPackMoreRanges: out: start: %d spec[%d]: [%d, %d), len: %d debt: %d\n",
 	    (int)start, (int)i->pos, i->spec.offset, (int)(i->spec.offset+i->spec.length), i->spec.length, i->debt_size);
 	assert(body_off <= start); /* we did not miss it */
 	/* skip up to start */
@@ -1334,9 +1334,9 @@ clientPackMoreRanges(clientHttpRequest *http, const char *buf, ssize_t size, Mem
 	    body_off = http->out.offset - i->prefix_size; /* sync */
 	}
     }
-    debug(33,1) ("clientPackMoreRanges: buf exhausted: in:  offset: %d size: %d need_more: %d\n",
+    debug(33, 2) ("clientPackMoreRanges: buf exhausted: in:  offset: %d size: %d need_more: %d\n",
 	(int)body_off, size, need_more);
-    debug(33,1) ("clientPackMoreRanges: spec[%d]: [%d, %d), len: %d debt: %d\n",
+    debug(33, 2) ("clientPackMoreRanges: spec[%d]: [%d, %d), len: %d debt: %d\n",
 	(int)i->pos, i->spec.offset, (int)(i->spec.offset+i->spec.length), i->spec.length, i->debt_size);
     /* skip the data we do not need */
     /* maybe, we have not seen that data yet! */
