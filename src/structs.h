@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.292 1999/05/25 06:53:52 wessels Exp $
+ * $Id: structs.h,v 1.293 1999/05/25 22:18:20 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1321,7 +1321,6 @@ struct _request_flags {
 };
 
 struct _storeIOState {
-    int fd;
     sfileno swap_file_number;
     mode_t mode;
     size_t st_size;		/* do stat(2) after read open */
@@ -1337,6 +1336,7 @@ struct _storeIOState {
     } flags;
     union {
 	struct {
+	    int fd;
 	    struct {
 		unsigned int close_request:1;
 		unsigned int reading:1;
