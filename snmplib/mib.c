@@ -593,8 +593,8 @@ void
 init_mib(const char *file)
 {
     char *prefix;
-	if (Mib!=NULL)
-		return;
+    if (Mib != NULL)
+	return;
 
     Mib = 0;
     if (file)
@@ -750,7 +750,7 @@ main(argc, argv)
     }
 }
 
-#endif	/* testing */
+#endif /* testing */
 
 
 #if 0
@@ -776,7 +776,7 @@ find_rfc1213_mib(root)
 }
 #endif
 
-int 
+int
 read_objid(input, output, out_len)
      char *input;
      oid *output;
@@ -809,7 +809,7 @@ read_objid(input, output, out_len)
 }
 
 #ifdef notdef
-int 
+int
 read_objid(input, output, out_len)
      char *input;
      oid *output;

@@ -106,7 +106,7 @@ typedef void SIGHDLR(int sig);
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4
 /*typedef int num32;
-typedef unsigned int u_num32;*/
+ * typedef unsigned int u_num32; */
 #elif SIZEOF_LONG == 4
 typedef long num32;
 typedef unsigned long u_num32;

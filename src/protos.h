@@ -1,5 +1,6 @@
 
 
+
 extern void accessLogLog(AccessLogEntry *);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.225 1997/12/01 02:17:29 wessels Exp $
+ * $Id: http.cc,v 1.226 1997/12/02 00:17:37 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -580,7 +580,7 @@ httpPconnTransferDone(HttpStateData * httpState)
     if (reply->code != 200)
 	if (reply->content_length < 0)
 	    if (httpState->reply_hdr_state > 1)
-	        return 1;
+		return 1;
     /*
      * If there is no content-length, then we probably can't be persistent
      */

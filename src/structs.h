@@ -35,9 +35,9 @@ struct _acl_deny_info_list {
 };
 
 struct _snmpconf {
-	char *line;
-	int type;
-	struct _snmpconf *next;
+    char *line;
+    int type;
+    struct _snmpconf *next;
 };
 
 struct _acl {
@@ -143,9 +143,9 @@ struct _SquidConfig {
 	int do_queueing;
 	int conf_authtraps;
 	struct _snmpconf *snmpconf;
-	viewEntry       *views;
-	usecEntry       *users;
-	communityEntry  *communities;
+	viewEntry *views;
+	usecEntry *users;
+	communityEntry *communities;
     } Snmp;
     struct {
 	char *log;

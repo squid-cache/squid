@@ -365,7 +365,7 @@ typedef enum {
 } allow_t;
 
 enum {
-SNMP_C_VIEW,
-SNMP_C_USER,
-SNMP_C_COMMUNITY
+    SNMP_C_VIEW,
+    SNMP_C_USER,
+    SNMP_C_COMMUNITY
 };

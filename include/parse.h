@@ -87,7 +87,7 @@ struct tree {
 #define TYPE_NSAPADDRESS    13
 #define TYPE_UINTEGER	    14
 
-struct tree *read_mib (const char *fname);
+struct tree *read_mib(const char *fname);
 
 
 #endif

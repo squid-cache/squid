@@ -4,15 +4,15 @@
 /*
  * call a function at regular intervals (in seconds):
  */
-extern void snmp_alarm (int ival, void (*handler) (void));
+extern void snmp_alarm(int ival, void (*handler) (void));
 
 
 /*
  * service for filedescriptors:
  */
 
-extern void fd_add (int fd, void (*func) (int fd));
-extern void fd_service (void);
+extern void fd_add(int fd, void (*func) (int fd));
+extern void fd_service(void);
 
 
 /* ---------------------------------------------------------------------- */
@@ -28,7 +28,7 @@ extern void fd_service (void);
  * ** character is always '\0'.
  */
 void
-strcpy_safe (char *str, int str_len, char *val);
+     strcpy_safe(char *str, int str_len, char *val);
 
 
 /*
@@ -36,13 +36,13 @@ strcpy_safe (char *str, int str_len, char *val);
  * ** WARNING: this scans all interfaces (slow)
  */
 u_long
-Util_local_ip_address (void);
+Util_local_ip_address(void);
 
 /*
  * ** Function to get the current time in seconds
  */
 long
-Util_time_now (void);
+     Util_time_now(void);
 
 /*
  * ** Function to determine how long the agent has been running
@@ -55,13 +55,13 @@ long
  * ** Read data from file
  */
 int
-Util_file_read (char *file, int offset, char *data, int dataSz);
+    Util_file_read(char *file, int offset, char *data, int dataSz);
 
 /*
  * ** Write data into file
  */
 int
-Util_file_write (char *file, int offset, char *data, int dataSz);
+    Util_file_write(char *file, int offset, char *data, int dataSz);
 
 
 /* ---------------------------------------------------------------------- */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.163 1997/12/01 04:46:50 wessels Exp $
+ * $Id: client_side.cc,v 1.164 1997/12/02 00:17:32 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1781,7 +1781,7 @@ icpCheckTransferDone(clientHttpRequest * http)
 	 * or wait for EOF on the socket.
 	 */
 	if (mem->reply->code == 200)
-		return 0;
+	    return 0;
 	/*
 	 * reply->hdr_sz will be set by httpParseReplyHeaders()
 	 * if we find the end of the headers.  If we find the end,

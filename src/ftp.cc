@@ -1,5 +1,6 @@
+
 /*
- * $Id: ftp.cc,v 1.175 1997/11/30 03:08:38 wessels Exp $
+ * $Id: ftp.cc,v 1.176 1997/12/02 00:17:35 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived

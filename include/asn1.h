@@ -71,15 +71,15 @@ typedef u_char oid;
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4
 typedef int num32;
-typedef unsigned int u_num32; 
+typedef unsigned int u_num32;
 #elif SIZEOF_LONG == 4
 typedef long num32;
 typedef unsigned long u_num32;
 #else
-typedef long num32;             /* assume that long's are 32bit */
+typedef long num32;		/* assume that long's are 32bit */
 typedef unsigned long u_num32;
 #endif
-#define NUM32LEN sizeof(num32)  /* this should always be 4 */
+#define NUM32LEN sizeof(num32)	/* this should always be 4 */
 
 /* 
  * internal 64 bit representation:
@@ -89,105 +89,105 @@ struct counter64 {
     u_num32 low;
 };
 
-extern u_char *asn_parse_int (u_char * data,
-	int *datalength,
-	u_char * type,
-	long *intp,
-	int intsize);
+extern u_char *asn_parse_int(u_char * data,
+    int *datalength,
+    u_char * type,
+    long *intp,
+    int intsize);
 
-extern u_char *asn_build_int (u_char * data,
-	int *datalength,
-	u_char type,
-	long *intp,
-	int intsize);
+extern u_char *asn_build_int(u_char * data,
+    int *datalength,
+    u_char type,
+    long *intp,
+    int intsize);
 
-extern u_char *asn_parse_unsigned_int (u_char * data,
-	int *datalength,
-	u_char * type,
-	u_long * intp,
-	int intsize);
+extern u_char *asn_parse_unsigned_int(u_char * data,
+    int *datalength,
+    u_char * type,
+    u_long * intp,
+    int intsize);
 
-extern u_char *asn_build_unsigned_int (u_char * data,
-	int *datalength,
-	u_char type,
-	u_long * intp,
-	int intsize);
+extern u_char *asn_build_unsigned_int(u_char * data,
+    int *datalength,
+    u_char type,
+    u_long * intp,
+    int intsize);
 
-extern u_char *asn_parse_string (u_char * data,
-	int *datalength,
-	u_char * type,
-	u_char * string,
-	int *len);
+extern u_char *asn_parse_string(u_char * data,
+    int *datalength,
+    u_char * type,
+    u_char * string,
+    int *len);
 
-extern u_char *asn_build_string (u_char * data,
-	int *datalength,
-	u_char type,
-	u_char * str,
-	int len);
+extern u_char *asn_build_string(u_char * data,
+    int *datalength,
+    u_char type,
+    u_char * str,
+    int len);
 
-extern u_char *asn_parse_header (u_char * data,
-	int *datalength,
-	u_char * type);
+extern u_char *asn_parse_header(u_char * data,
+    int *datalength,
+    u_char * type);
 
-extern u_char *asn_build_header (u_char * data,
-	int *datalength,
-	u_char type,
-	int len);
+extern u_char *asn_build_header(u_char * data,
+    int *datalength,
+    u_char type,
+    int len);
 
-extern u_char *asn_build_sequence (u_char * data,
-	int *datalength,
-	u_char type,
-	int len);
+extern u_char *asn_build_sequence(u_char * data,
+    int *datalength,
+    u_char type,
+    int len);
 
-extern u_char *asn_parse_length (u_char * data,
-	u_long * eln);
+extern u_char *asn_parse_length(u_char * data,
+    u_long * eln);
 
-extern u_char *asn_build_length (u_char * data,
-	int *datalength,
-	int len);
+extern u_char *asn_build_length(u_char * data,
+    int *datalength,
+    int len);
 
-extern u_char *asn_parse_objid (
-	u_char * data,
-	int *datalength,
-	u_char * type,
-	oid * objid,
-	int *objidlength);
+extern u_char *asn_parse_objid(
+    u_char * data,
+    int *datalength,
+    u_char * type,
+    oid * objid,
+    int *objidlength);
 
-extern u_char *asn_build_objid (u_char * data,
-	int *datalength,
-	u_char type,
-	oid * objid,
-	int objidlength);
+extern u_char *asn_build_objid(u_char * data,
+    int *datalength,
+    u_char type,
+    oid * objid,
+    int objidlength);
 
-extern u_char *asn_parse_null (u_char * data,
-	int *datalength,
-	u_char * type);
+extern u_char *asn_parse_null(u_char * data,
+    int *datalength,
+    u_char * type);
 
-extern u_char *asn_build_null (u_char * data,
-	int *datalength,
-	u_char type);
-extern u_char *asn_parse_bitstring (u_char * data,
-	int *datalength,
-	u_char * type,
-	u_char * str,
-	int *len);
+extern u_char *asn_build_null(u_char * data,
+    int *datalength,
+    u_char type);
+extern u_char *asn_parse_bitstring(u_char * data,
+    int *datalength,
+    u_char * type,
+    u_char * str,
+    int *len);
 
-extern u_char *asn_build_bitstring (u_char * data,
-	int *datalength,
-	u_char type,
-	u_char * str,
-	int len);
+extern u_char *asn_build_bitstring(u_char * data,
+    int *datalength,
+    u_char type,
+    u_char * str,
+    int len);
 
-extern u_char *asn_parse_unsigned_int64 (u_char * data,
-	int *datalength,
-	u_char * type,
-	struct counter64 * cp,
-	int cp_size);
+extern u_char *asn_parse_unsigned_int64(u_char * data,
+    int *datalength,
+    u_char * type,
+    struct counter64 *cp,
+    int cp_size);
 
-extern u_char *asn_build_unsigned_int64 (u_char * data,
-	int *datalength,
-	u_char type,
-	struct counter64 * cp,
-	int cp_size);
+extern u_char *asn_build_unsigned_int64(u_char * data,
+    int *datalength,
+    u_char type,
+    struct counter64 *cp,
+    int cp_size);
 
 #endif

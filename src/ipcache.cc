@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.147 1997/12/01 22:45:52 wessels Exp $
+ * $Id: ipcache.cc,v 1.148 1997/12/02 00:17:38 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -130,7 +130,7 @@ static struct {
     int release_locked;
 } IpcacheStats;
 
- dlink_list lru_list;
+dlink_list lru_list;
 
 static int ipcache_testname(void);
 #if OLD_CODE

@@ -374,7 +374,7 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
 	    create_toobig(out_auth, *out_length, reqid, pi);
 	    break;
 	}			/* else FALLTHRU */
-#tendif
+#ntendif
     case SNMP_ERR_NOACCESS:
     case SNMP_ERR_WRONGTYPE:
     case SNMP_ERR_WRONGLENGTH:
@@ -772,7 +772,7 @@ check_auth(session, sn_data, length, pp, plen, ueret)
     return 0;
 }
 
-int 
+int
 get_community(sessionid)
      u_char *sessionid;
 {
@@ -797,7 +797,7 @@ get_community(sessionid)
     return 0;
 }
 
-static int 
+static int
 goodValue(inType, inLen, actualType, actualLen)
      u_char inType, actualType;
      int inLen, actualLen;

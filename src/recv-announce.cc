@@ -1,5 +1,6 @@
+
 /*
- * $Id: recv-announce.cc,v 1.14 1997/10/25 17:22:56 wessels Exp $
+ * $Id: recv-announce.cc,v 1.15 1997/12/02 00:17:39 wessels Exp $
  *
  * DEBUG: section 0     Announcement Server
  * AUTHOR: Harvest Derived

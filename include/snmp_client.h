@@ -40,10 +40,10 @@ struct synch_state {
 
 extern struct synch_state snmp_synch_state;
 
-extern struct snmp_pdu *snmp_pdu_create (int cmd);
+extern struct snmp_pdu *snmp_pdu_create(int cmd);
 
-extern struct snmp_pdu *snmp_fix_pdu (struct snmp_pdu * pdu,
-	int cmd);
-extern char *snmp_errstring (int errstat);
+extern struct snmp_pdu *snmp_fix_pdu(struct snmp_pdu *pdu,
+    int cmd);
+extern char *snmp_errstring(int errstat);
 
 #endif

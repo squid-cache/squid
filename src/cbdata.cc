@@ -1,6 +1,7 @@
 
+
 /*
- * $Id: cbdata.cc,v 1.10 1997/11/29 17:00:43 wessels Exp $
+ * $Id: cbdata.cc,v 1.11 1997/12/02 00:17:31 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
