@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.346 2000/06/27 08:41:31 hno Exp $
+ * $Id: structs.h,v 1.347 2000/07/13 06:13:43 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -296,6 +296,9 @@ struct _SquidConfig {
 	char *swap;
 #if USE_USERAGENT_LOG
 	char *useragent;
+#endif
+#if USE_REFERER_LOG
+	char *referer;
 #endif
 	int rotateNumber;
     } Log;
