@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.22 1998/03/06 21:05:48 wessels Exp $
+ * $Id: client_db.cc,v 1.23 1998/03/06 22:19:30 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -31,21 +31,6 @@
 
 #include "squid.h"
 
-typedef struct _client_info {
-    char *key;
-    struct client_info *next;
-    struct in_addr addr;
-    struct {
-	int result_hist[LOG_TYPE_MAX];
-	int n_requests;
-    } Http, Icp;
-    struct {
-	time_t time;
-	int n_req;
-	int n_denied;
-    } cutoff;
-} ClientInfo;
-
 static hash_table *client_table = NULL;
 static ClientInfo *clientdbAdd(struct in_addr addr);
 
@@ -53,11 +38,10 @@ static ClientInfo *
 clientdbAdd(struct in_addr addr)
 {
     ClientInfo *c;
-    c = xcalloc(1, sizeof(ClientInfo));
+    c = memAllocate(MEM_CLIENT_INFO);
     c->key = xstrdup(inet_ntoa(addr));
     c->addr = addr;
     hash_join(client_table, (hash_link *) c);
-    meta_data.client_info++;
     return c;
 }
 
@@ -67,7 +51,6 @@ clientdbInit(void)
     if (client_table)
 	return;
     client_table = hash_create((HASHCMP *) strcmp, 229, hash_string);
-    client_info_sz = sizeof(ClientInfo);
     cachemgrRegister("client_list",
 	"Cache Client List",
 	clientdbDump,
@@ -105,7 +88,7 @@ clientdbCutoffDenied(struct in_addr addr)
     int ND;
     double p;
     ClientInfo *c;
-    if (!Config.Options.client_db)
+    if (!Config.onoff.client_db)
 	return 0;
     key = inet_ntoa(addr);
     c = (ClientInfo *) hash_lookup(client_table, key);
@@ -127,9 +110,9 @@ clientdbCutoffDenied(struct in_addr addr)
     p = 100.0 * ND / NR;
     if (p < 95.0)
 	return 0;
-    debug(1, 0, "WARNING: Probable misconfigured neighbor at %s\n", key);
-    debug(1, 0, "WARNING: %d of the last %d ICP replies are DENIED\n", ND, NR);
-    debug(1, 0, "WARNING: No replies will be sent for the next %d seconds\n",
+    debug(1, 0) ("WARNING: Probable misconfigured neighbor at %s\n", key);
+    debug(1, 0) ("WARNING: %d of the last %d ICP replies are DENIED\n", ND, NR);
+    debug(1, 0) ("WARNING: No replies will be sent for the next %d seconds\n",
 	CUTOFF_SECONDS);
     c->cutoff.time = squid_curtime;
     c->cutoff.n_req = c->Icp.n_requests;

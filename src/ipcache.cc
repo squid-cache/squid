@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.166 1998/03/06 21:05:50 wessels Exp $
+ * $Id: ipcache.cc,v 1.167 1998/03/06 22:19:37 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -105,12 +105,6 @@
  */
 
 #include "squid.h"
-
-struct _ip_pending {
-    IPH *handler;
-    void *handlerData;
-    struct _ip_pending *next;
-};
 
 struct ipcacheQueueData {
     struct ipcacheQueueData *next;
@@ -259,8 +253,7 @@ ipcache_release(ipcache_entry * i)
     }
     safe_free(i->name);
     safe_free(i->error_message);
-    safe_free(i);
-    --meta_data.ipcache_count;
+    memFree(MEM_IPCACHE_ENTRY, i);
     return;
 }
 
@@ -294,8 +287,9 @@ ipcache_purgelru(void *voidnotused)
     dlink_node *prev = NULL;
     ipcache_entry *i;
     int removed = 0;
+    eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
     for (m = lru_list.tail; m; m = prev) {
-	if (meta_data.ipcache_count < ipcache_low)
+	if (memInUse(MEM_IPCACHE_ENTRY) < ipcache_low)
 	    break;
 	prev = m->prev;
 	i = m->data;
@@ -316,8 +310,7 @@ static ipcache_entry *
 ipcache_create(const char *name)
 {
     static ipcache_entry *i;
-    meta_data.ipcache_count++;
-    i = xcalloc(1, sizeof(ipcache_entry));
+    i = memAllocate(MEM_IPCACHE_ENTRY);
     i->name = xstrdup(name);
     i->expires = squid_curtime + Config.negativeDnsTtl;
     hash_join(ip_table, (hash_link *) i);
@@ -365,7 +358,7 @@ ipcacheAddNew(const char *name, const struct hostent *hp, ipcache_status_t statu
 static void
 ipcache_call_pending(ipcache_entry * i)
 {
-    struct _ip_pending *p = NULL;
+    ip_pending *p = NULL;
     int nhandler = 0;
     i->lastref = squid_curtime;
     ipcacheLockEntry(i);
@@ -381,7 +374,7 @@ ipcache_call_pending(ipcache_entry * i)
 	    }
 	    cbdataUnlock(p->handlerData);
 	}
-	safe_free(p);
+	memFree(MEM_IPCACHE_PENDING, p);
     }
     i->pending_head = NULL;	/* nuke list */
     debug(14, 10) ("ipcache_call_pending: Called %d handlers.\n", nhandler);
@@ -551,8 +544,8 @@ ipcache_dnsHandleRead(int fd, void *data)
 static void
 ipcacheAddPending(ipcache_entry * i, IPH * handler, void *handlerData)
 {
-    struct _ip_pending *pending = xcalloc(1, sizeof(struct _ip_pending));
-    struct _ip_pending **I = NULL;
+    ip_pending *pending = memAllocate(MEM_IPCACHE_PENDING);
+    ip_pending **I = NULL;
     i->lastref = squid_curtime;
     pending->handler = handler;
     pending->handlerData = handlerData;
@@ -706,7 +699,7 @@ int
 ipcacheUnregister(const char *name, void *data)
 {
     ipcache_entry *i = NULL;
-    struct _ip_pending *p = NULL;
+    ip_pending *p = NULL;
     int n = 0;
     debug(14, 3) ("ipcacheUnregister: name '%s'\n", name);
     if ((i = ipcache_get(name)) == NULL)
@@ -785,7 +778,7 @@ stat_ipcache_get(StoreEntry * sentry)
     assert(ip_table != NULL);
     storeAppendPrintf(sentry, "IP Cache Statistics:\n");
     storeAppendPrintf(sentry, "IPcache Entries: %d\n",
-	meta_data.ipcache_count);
+	memInUse(MEM_IPCACHE_ENTRY));
     storeAppendPrintf(sentry, "IPcache Requests: %d\n",
 	IpcacheStats.requests);
     storeAppendPrintf(sentry, "IPcache Hits: %d\n",
@@ -822,7 +815,7 @@ dummy_handler(const ipcache_addrs * addrsnotused, void *datanotused)
 static int
 ipcacheHasPending(ipcache_entry * i)
 {
-    struct _ip_pending *p = NULL;
+    ip_pending *p = NULL;
     if (i->status != IP_PENDING)
 	return 0;
     for (p = i->pending_head; p; p = p->next)
@@ -982,9 +975,10 @@ ipcacheFreeMemory(void)
     ipcache_entry **list;
     int k = 0;
     int j;
-    list = xcalloc(meta_data.ipcache_count, sizeof(ipcache_entry *));
+    int n = memInUse(MEM_IPCACHE_ENTRY);
+    list = xcalloc(n, sizeof(ipcache_entry *));
     i = (ipcache_entry *) hash_first(ip_table);
-    while (i && k < meta_data.ipcache_count) {
+    while (i != NULL && k < n) {
 	*(list + k) = i;
 	k++;
 	i = (ipcache_entry *) hash_next(ip_table);
@@ -995,7 +989,7 @@ ipcacheFreeMemory(void)
 	safe_free(i->addrs.bad_mask);
 	safe_free(i->name);
 	safe_free(i->error_message);
-	safe_free(i);
+	memFree(MEM_IPCACHE_ENTRY, i);
     }
     xfree(list);
     hashFreeMemory(ip_table);

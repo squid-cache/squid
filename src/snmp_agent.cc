@@ -683,7 +683,7 @@ snmp_prfSysFn(variable_list * Var, long *ErrP)
 	*(Answer->val.integer) = IOStats.Http.reads_deferred;
 	break;
     case PERF_SYS_MEMUSAGE:
-	*(Answer->val.integer) = (long) statMemoryAccounted() >> 10;
+	*(Answer->val.integer) = (long) memTotalAllocated() >> 10;
 	break;
     case PERF_SYS_CPUUSAGE:
 	squid_getrusage(&rusage);

@@ -1,5 +1,6 @@
+
 /*
- * $Id: filemap.cc,v 1.23 1998/02/10 22:29:51 wessels Exp $
+ * $Id: filemap.cc,v 1.24 1998/03/06 22:19:33 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -133,7 +134,7 @@ file_map_create(int n)
     debug(8, 5) ("--> %d words of %d bytes each\n",
 	fm->nwords, sizeof(unsigned long));
     fm->file_map = xcalloc(fm->nwords, sizeof(unsigned long));
-    meta_data.misc += fm->nwords * sizeof(unsigned long);
+    /* XXX account fm->file_map */
     return fm;
 }
 

@@ -185,6 +185,7 @@ extern const char *fqdnFromAddr(struct in_addr);
 extern int fqdncacheQueueDrain(void);
 extern void fqdncacheFreeMemory(void);
 extern void fqdncache_restart(void);
+extern EVH fqdncache_purgelru;
 
 extern void ftpStart(request_t * req, StoreEntry * entry);
 extern char *ftpUrlWith2f(const request_t *);
@@ -271,8 +272,8 @@ extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double
 /* Http Range Header Field */
 extern HttpHdrRange *httpHdrRangeParseCreate(const char *range_spec);
 /* returns true if ranges are valid; inits HttpHdrRange */
-extern int httpHdrRangeParseInit(HttpHdrRange *range, const char *range_spec);
-extern void httpHdrRangeDestroy(HttpHdrRange *range);
+extern int httpHdrRangeParseInit(HttpHdrRange * range, const char *range_spec);
+extern void httpHdrRangeDestroy(HttpHdrRange * range);
 
 
 
@@ -283,7 +284,7 @@ extern int httpHeaderCalcMask(const int *enums, int count);
 extern int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
 extern const char *getStringPrefix(const char *str);
 extern int httpHeaderParseInt(const char *start, int *val);
-extern int httpHeaderParseSize(const char *start, size_t *sz);
+extern int httpHeaderParseSize(const char *start, size_t * sz);
 
 /* Http Header */
 extern void httpHeaderInitModule();
@@ -523,7 +524,6 @@ extern void identStart(int, ConnStateData *, IDCB * callback);
 
 extern void statInit(void);
 extern void pconnHistCount(int, int);
-extern int statMemoryAccounted(void);
 
 void statHistClean(StatHist * H);
 void statHistCount(StatHist * H, double val);
@@ -564,6 +564,7 @@ extern int memPoolUsedCount(const MemPool * pool);
 extern void memPoolDescribe(const MemPool * pool);
 extern void memPoolReport(const MemPool * pool, StoreEntry * e);
 extern void memReport(StoreEntry * e);
+extern size_t memTotalAllocated(void);
 
 extern int stmemFreeDataUpto(mem_hdr *, int);
 extern void stmemAppend(mem_hdr *, const char *, int);
@@ -771,8 +772,8 @@ extern void releaseServerSockets(void);
 extern void PrintRusage(void);
 extern void dumpMallocStats(void);
 
-extern void pumpInit(int fd, request_t *r, char *uri);
-extern void pumpStart(int fd, StoreEntry *reply_entry, request_t *r, void *callback, void *cbdata);
+extern void pumpInit(int fd, request_t * r, char *uri);
+extern void pumpStart(int fd, StoreEntry * reply_entry, request_t * r, void *callback, void *cbdata);
 
 extern void unlinkdInit(void);
 extern void unlinkdClose(void);
