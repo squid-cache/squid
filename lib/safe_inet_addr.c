@@ -30,7 +30,8 @@ safe_inet_addr(const char *buf, struct in_addr *addr)
     static char addrbuf[32];
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0;
     struct in_addr A;
-    if (sscanf(buf, "%d.%d.%d.%d", &a1, &a2, &a3, &a4) != 4)
+    char x;
+    if (sscanf(buf, "%d.%d.%d.%d%c", &a1, &a2, &a3, &a4, &x) != 4)
 	return 0;
     if (a1 < 0 || a1 > 255)
 	return 0;
