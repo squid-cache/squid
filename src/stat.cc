@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.254 1998/05/24 03:41:13 wessels Exp $
+ * $Id: stat.cc,v 1.255 1998/05/26 17:37:48 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -289,8 +289,6 @@ describeFlags(const StoreEntry * entry)
 	strcat(buf, "ED,");
     if (EBIT_TEST(flags, KEY_PRIVATE))
 	strcat(buf, "KP,");
-    if (EBIT_TEST(flags, HIERARCHICAL))
-	strcat(buf, "HI,");
     if (EBIT_TEST(flags, ENTRY_NEGCACHED))
 	strcat(buf, "NG,");
     if ((t = strrchr(buf, ',')))
