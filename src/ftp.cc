@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.130 1997/07/14 21:11:02 wessels Exp $
+ * $Id: ftp.cc,v 1.131 1997/07/14 23:44:59 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -875,21 +875,26 @@ static void
 ftpConnectDone(int fd, int status, void *data)
 {
     FtpStateData *ftpState = data;
-    debug(9, 3) ("ftpConnectDone\n");
-    if (status == COMM_ERROR) {
+    request_t *request = ftpState->request;
+    debug(9, 3) ("ftpConnectDone, status = %d\n", status);
+    if (status == COMM_ERR_DNS) {
+	debug(9, 4) ("ftpConnectDone: Unknown host: %s\n", request->host);
+	storeAbort(ftpState->entry, ERR_DNS_FAIL, dns_error_message, 0);
+	comm_close(fd);
+    } else if (status != COMM_OK) {
 	storeAbort(ftpState->entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	comm_close(fd);
-	return;
+    } else {
+	ftpState->state = BEGIN;
+	ftpState->ctrl.buf = get_free_4k_page();
+	ftpState->ctrl.freefunc = put_free_4k_page;
+	ftpState->ctrl.size = 4096;
+	ftpState->ctrl.offset = 0;
+	ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
+	ftpState->data.size = SQUID_TCP_SO_RCVBUF;
+	ftpState->data.freefunc = xfree;
+	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
     }
-    ftpState->state = BEGIN;
-    ftpState->ctrl.buf = get_free_4k_page();
-    ftpState->ctrl.freefunc = put_free_4k_page;
-    ftpState->ctrl.size = 4096;
-    ftpState->ctrl.offset = 0;
-    ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
-    ftpState->data.size = SQUID_TCP_SO_RCVBUF;
-    ftpState->data.freefunc = xfree;
-    commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
 }
 
 /* ====================================================================== */
@@ -1440,9 +1445,11 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     char *filename = NULL;
     char *t = NULL;
     StoreEntry *e = ftpState->entry;
-    struct _http_reply *reply = e->mem_obj->reply;
+    http_reply *reply = e->mem_obj->reply;
+    debug(0,0)("ftpAppendSuccessHeader: %s\n", ftpState->entry->url);
     if (EBIT_TEST(ftpState->flags, FTP_HTTP_HEADER_SENT))
 	return;
+    EBIT_SET(ftpState->flags, FTP_HTTP_HEADER_SENT);
     assert(e->mem_obj->e_current_len == 0);
     filename = (t = strrchr(urlpath, '/')) ? t + 1 : urlpath;
     if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
@@ -1474,7 +1481,6 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     }
     storeAppendPrintf(e, "\r\n");
     storeTimestampsSet(e);
-    assert(e->flag & KEY_PRIVATE);
     storeSetPublicKey(e);
 }
 

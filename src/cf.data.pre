@@ -293,7 +293,7 @@ DOC_END
 
 NAME: neighbor_timeout neighbour_timeout
 COMMENT: (seconds)
-DEFAULT: 2
+DEFAULT: 2 seconds
 TYPE: time_t
 LOC: Config.neighborTimeout
 DOC_START
@@ -437,8 +437,8 @@ DOC_END
 
 
 NAME: maximum_object_size
-COMMENT: (KB)
-TYPE: kb_size_t
+COMMENT: (bytes)
+TYPE: size_t
 DEFAULT: 4096 KB
 LOC: Config.Store.maxObjectSize
 DOC_START
@@ -897,7 +897,7 @@ DOC_END
 NAME: quick_abort_min
 COMMENT: (KB)
 TYPE: kb_size_t
-DEFAULT: -1
+DEFAULT: -1 kb
 LOC: Config.quickAbort.min
 DOC_NONE
 
@@ -911,7 +911,7 @@ DOC_NONE
 NAME: quick_abort_max
 COMMENT: (KB)
 TYPE: kb_size_t
-DEFAULT: 0
+DEFAULT: 0 kb
 LOC: Config.quickAbort.max
 DOC_START
 	By default the cache continues to retrieve objects from
@@ -946,7 +946,7 @@ NAME: negative_ttl
 COMMENT: (in minutes)
 TYPE: time_t
 LOC: Config.negativeTtl
-DEFAULT: 300
+DEFAULT: 5 minutes
 DOC_START
 	Time-to-Live (TTL) for failed requests.  Certain types of
 	failures (such as "connection refused" and "404 Not Found") are
@@ -962,13 +962,13 @@ NAME: positive_dns_ttl
 COMMENT: (in minutes)
 TYPE: time_t
 LOC: Config.positiveDnsTtl
-DEFAULT: 21600
+DEFAULT: 6 hours
 DOC_START
 	Time-to-Live (TTL) for positive caching of successful DNS lookups.
 	Default is 6 hours (360 minutes).  If you want to minimize the
 	use of Squid's ipcache, set this to 1, not 0.
 
-positive_dns_ttl 360 minutes
+positive_dns_ttl 6 hours
 DOC_END
 
 
@@ -976,7 +976,7 @@ NAME: negative_dns_ttl
 COMMENT: (in minutes)
 TYPE: time_t
 LOC: Config.negativeDnsTtl
-DEFAULT: 300
+DEFAULT: 5 minutes
 DOC_START
 	Time-to-Live (TTL) for negative caching of failed DNS lookups.
 
@@ -991,7 +991,7 @@ NAME: connect_timeout
 COMMENT: (in seconds)
 TYPE: time_t
 LOC: Config.Timeout.connect
-DEFAULT: 120
+DEFAULT: 2 minutes
 DOC_START
 	Some systems (notably Linux) can not be relied upon to properly
 	time out connect(2) requests.  Therefore the squid process
@@ -1007,7 +1007,7 @@ NAME: read_timeout
 COMMENT: (in minutes)
 TYPE: time_t
 LOC: Config.Timeout.read
-DEFAULT: 900
+DEFAULT: 15 minutes
 DOC_START
 	The read_timeout is applied on server-side connections.  After
 	each successful read(), the timeout will be extended by this
@@ -1023,7 +1023,7 @@ NAME: defer_timeout
 COMMENT: (in minutes)
 TYPE: time_t
 LOC: Config.Timeout.defer
-DEFAULT: 3600
+DEFAULT: 1 hour
 DOC_START
 	If your clients are behind slow (e.g. PPP/SLIP) connections,
 	then data may come in from the server-side faster than it can
@@ -1033,14 +1033,14 @@ DOC_START
 	to wait while in "deferred read mode." The default is one
 	hour.
 
-defer_timeout 60 minutes
+defer_timeout 1 hour
 DOC_END
 
 
 NAME: request_timeout
 TYPE: time_t
 LOC: Config.Timeout.request
-DEFAULT: 30
+DEFAULT: 30 seconds
 DOC_START
 	How long to wait for an HTTP request after connection
 	establishment.  For persistent connections, wait this long
@@ -1054,7 +1054,7 @@ NAME: client_lifetime
 COMMENT: (in minutes)
 TYPE: time_t
 LOC: Config.Timeout.lifetime
-DEFAULT: 86400
+DEFAULT: 1 day
 DOC_START
 	The maximum amount of time that a client (browser) is allowed to
 	remain connected to the cache process.  This protects the Cache
@@ -1079,7 +1079,7 @@ NAME: shutdown_lifetime
 COMMENT: (in seconds)
 TYPE: time_t
 LOC: Config.shutdownLifetime
-DEFAULT: 30
+DEFAULT: 30 seconds
 DOC_START
 	When SIGTERM or SIGHUP is received, the cache is put into
 	"shutdown pending" mode until all active sockets are closed.
@@ -1306,14 +1306,14 @@ DOC_END
 NAME: announce_period
 TYPE: time_t
 LOC: Config.Announce.period
-DEFAULT: 86400
+DEFAULT: 1 day
 DOC_START
 	This is how frequently to send cache announcements.  The default
 	is `0' which disables sending the announcement messages.
 
 	To enable announcing your cache, just uncomment the line below.
 
-announce_period 24 hours
+announce_period 1 day
 DOC_END
 
 
@@ -1783,7 +1783,7 @@ DOC_END
 NAME: netdb_ping_period
 TYPE: time_t
 LOC: Config.Netdb.period
-DEFAULT: 300
+DEFAULT: 5 minutes
 DOC_START
 	The minimum period for measuring a site.  There will be at
 	least this much delay between successive pings to the same

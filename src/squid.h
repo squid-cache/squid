@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.127 1997/07/07 05:29:53 wessels Exp $
+ * $Id: squid.h,v 1.128 1997/07/14 23:45:03 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -270,62 +270,6 @@ typedef unsigned long u_num32;
 #if !HAVE_SNPRINTF
 #include "snprintf.h"
 #endif
-
-extern void serverConnectionsClose _PARAMS((void));
-extern void shut_down _PARAMS((int));
-
-
-extern time_t squid_starttime;	/* main.c */
-extern int do_reuse;		/* main.c */
-extern int HttpSockets[];	/* main.c */
-extern int NHttpSockets;	/* main.c */
-extern int theInIcpConnection;	/* main.c */
-extern int theOutIcpConnection;	/* main.c */
-extern int vizSock;
-extern volatile int shutdown_pending;	/* main.c */
-extern volatile int reconfigure_pending;	/* main.c */
-extern int opt_reload_hit_only;	/* main.c */
-extern int opt_dns_tests;	/* main.c */
-extern int opt_foreground_rebuild;	/* main.c */
-extern int opt_zap_disk_store;	/* main.c */
-extern int opt_syslog_enable;	/* main.c */
-extern int opt_catch_signals;	/* main.c */
-extern int opt_no_ipcache;	/* main.c */
-extern int vhost_mode;		/* main.c */
-extern int Squid_MaxFD;		/* main.c */
-extern int Biggest_FD;		/* main.c */
-extern int select_loops;	/* main.c */
-extern const char *const version_string;	/* main.c */
-extern const char *const appname;	/* main.c */
-extern struct in_addr local_addr;	/* main.c */
-extern struct in_addr theOutICPAddr;	/* main.c */
-extern const char *const localhost;
-extern struct in_addr no_addr;	/* main.c */
-extern struct in_addr any_addr;	/* main.c */
-extern int opt_udp_hit_obj;	/* main.c */
-extern int opt_mem_pools;	/* main.c */
-extern int opt_forwarded_for;	/* main.c */
-extern int opt_accel_uses_host;	/* main.c */
-extern int configured_once;	/* main.c */
-extern char ThisCache[];	/* main.c */
-
-/* Prototypes and definitions which don't really deserve a separate
- * include file */
-
-#define  CONNECT_PORT        443
-
-extern void start_announce _PARAMS((void *unused));
-extern void sslStart _PARAMS((int fd, const char *, request_t *, int *sz));
-extern void waisStart _PARAMS((request_t *, StoreEntry *));
-extern void storeDirClean _PARAMS((void *unused));
-extern void passStart _PARAMS((int, const char *, request_t *, int *));
-extern void identStart _PARAMS((int, ConnStateData *, IDCB * callback));
-extern int httpAnonAllowed _PARAMS((const char *line));
-extern int httpAnonDenied _PARAMS((const char *line));
-
-extern const char *const dash_str;
-extern const char *const null_string;
-extern const char *const w_space;
 
 #define OR(A,B) (A ? A : B)
 

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.204 1997/07/14 21:11:00 wessels Exp $
+ * $Id: cache_cf.cc,v 1.205 1997/07/14 23:44:57 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -258,10 +258,11 @@ parseTimeLine(time_t *tptr, const char *units)
 	self_destruct();
     d = atof(token);
     m = u;			/* default to 'units' if none specified */
-    if ((token = strtok(NULL, w_space)) != NULL) {
-	if ((m = parseTimeUnits(token)) == 0)
+    if ((token = strtok(NULL, w_space)) == NULL)
+	debug(3,0)("WARNING: No units on '%s', assuming %f %s\n",
+		config_input_line, d, units);
+    else if ((m = parseTimeUnits(token)) == 0)
 	    self_destruct();
-    }
     *tptr = m * d / u;
 }
 
@@ -291,7 +292,7 @@ parseTimeUnits(const char *unit)
 }
 
 static void
-parseBytesLine(size_t *bptr, const char *units)
+parseBytesLine(size_t * bptr, const char *units)
 {
     char *token;
     double d;
@@ -303,10 +304,11 @@ parseBytesLine(size_t *bptr, const char *units)
 	self_destruct();
     d = atof(token);
     m = u;			/* default to 'units' if none specified */
-    if ((token = strtok(NULL, w_space)) != NULL) {
-	if ((m = parseBytesUnits(token)) == 0)
-	    self_destruct();
-    }
+    if ((token = strtok(NULL, w_space)) == NULL)
+	debug(3, 0) ("WARNING: No units on '%s', assuming %f %s\n",
+	    config_input_line, d, units);
+    else if ((m = parseBytesUnits(token)) == 0)
+	self_destruct();
     *bptr = m * d / u;
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.30 1997/06/04 06:16:00 wessels Exp $
+ * $Id: ident.cc,v 1.31 1997/07/14 23:45:01 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -79,7 +79,7 @@ identConnectDone(int fd, int status, void *data)
 {
     ConnStateData *connState = data;
     LOCAL_ARRAY(char, reqbuf, BUFSIZ);
-    if (status == COMM_ERROR) {
+    if (status != COMM_OK) {
 	comm_close(fd);
 	identCallback(connState);
 	return;
