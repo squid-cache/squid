@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.72 1996/08/26 22:47:49 wessels Exp $
+ * $Id: cache_cf.cc,v 1.73 1996/08/26 23:26:11 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -586,13 +586,23 @@ static void parseQuickAbort()
 {
     char *token;
     int i;
-
-    GetInteger(i);
-    Config.quickAbort.min = i * 1024;
-    GetInteger(i);
-    Config.quickAbort.pct = i * 128 / 100;	/* 128 is full scale */
-    GetInteger(i);
-    Config.quickAbort.max = i * 1024;
+    token = strtok(NULL, w_space);
+    if (!strcasecmp(token, "on")) {
+	Config.quickAbort.min = 10 << 10;	/* 10k */
+	Config.quickAbort.pct = 64;	/* 50% */
+	Config.quickAbort.max = 100 << 10;	/* 100k */
+    } else if (!strcasecmp(token, "off")) {
+	Config.quickAbort.min = -1;
+	Config.quickAbort.pct = 0;
+	Config.quickAbort.max = 0;
+    } else {
+	GetInteger(i);
+	Config.quickAbort.min = i * 1024;
+	GetInteger(i);
+	Config.quickAbort.pct = i * 128 / 100;	/* 128 is full scale */
+	GetInteger(i);
+	Config.quickAbort.max = i * 1024;
+    }
 }
 
 static void parseNegativeLine()
@@ -678,12 +688,12 @@ static void parseProxyAuthLine()
 
     token = strtok(NULL, w_space);
     if (token == NULL)
-        self_destruct();
+	self_destruct();
     safe_free(Config.proxyAuthFile);
     safe_free(Config.proxyAuthIgnoreDomain);
     Config.proxyAuthFile = xstrdup(token);
     if ((token = strtok(NULL, w_space)))
-        Config.proxyAuthIgnoreDomain = xstrdup(token);
+	Config.proxyAuthIgnoreDomain = xstrdup(token);
 }
 #endif /* USE_PROXY_AUTH */
 
@@ -1217,8 +1227,8 @@ int parseConfigFile(file_name)
 	    parseIntegerValue(&Config.redirectChildren);
 
 #if USE_PROXY_AUTH
-         else if (!strcmp(token, "proxy_authentication"))
-             parseProxyAuthLine();
+	else if (!strcmp(token, "proxy_authentication"))
+	    parseProxyAuthLine();
 #endif /* USE_PROXY_AUTH */
 
 	else if (!strcmp(token, "source_ping"))
