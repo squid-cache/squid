@@ -107,7 +107,7 @@ AUFSFile::deleteSelf() const {delete this;}
 
 AUFSFile::AUFSFile (char const *aPath, AufsIO *anIO):fd(-1), errorOccured (false), IO(anIO) {
     assert (aPath);
-    debug (79,0)("UFSFile::UFSFile: %s\n", aPath);
+    debug (79,3)("UFSFile::UFSFile: %s\n", aPath);
     path_ = xstrdup (aPath);
 }
 

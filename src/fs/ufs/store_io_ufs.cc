@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.15 2003/01/23 00:38:22 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.16 2003/02/19 21:23:52 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -123,7 +123,7 @@ UFSFile::deleteSelf() const {delete this;}
 UFSFile::UFSFile (char const *aPath) : fd (-1)
 {
     assert (aPath);
-    debug (79,0)("UFSFile::UFSFile: %s\n", aPath);
+    debug (79,3)("UFSFile::UFSFile: %s\n", aPath);
     path_ = xstrdup (aPath);
 }
 
@@ -168,7 +168,7 @@ void UFSFile::doClose()
 void
 UFSFile::close ()
 {
-    debug (79,0)("UFSFile::close: %p closing for %p\n", this, ioRequestor.getRaw());
+    debug (79,3)("UFSFile::close: %p closing for %p\n", this, ioRequestor.getRaw());
     doClose();
     assert (ioRequestor.getRaw());
     ioRequestor->closeCompleted();
