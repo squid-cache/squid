@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.12 2001/11/28 03:02:42 robertc Exp $
+#  $Id: Makefile.am,v 1.13 2001/11/30 14:52:12 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -271,8 +271,8 @@ DEFAULT_SWAP_DIR        = $(localstatedir)/cache
 DEFAULT_PINGER		= $(libexecdir)/@OPT_PINGER_EXE@
 DEFAULT_UNLINKD		= $(libexecdir)/$(UNLINKD_EXE)
 DEFAULT_DISKD		= $(libexecdir)/@OPT_DISKD_EXE@
-DEFAULT_ICON_DIR	= $(sharedstatedir)/squid/icons
-DEFAULT_ERROR_DIR	= $(sharedstatedir)/squid/errors/@ERR_DEFAULT_LANGUAGE@
+DEFAULT_ICON_DIR	= $(datadir)/squid/icons
+DEFAULT_ERROR_DIR	= $(datadir)/squid/errors/@ERR_DEFAULT_LANGUAGE@
 DEFAULT_MIB_PATH	= $(sysconfdir)/mib.txt
 
 DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
