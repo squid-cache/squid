@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.342 1997/11/14 16:05:48 wessels Exp $
+ * $Id: store.cc,v 1.343 1997/11/14 17:22:09 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1719,12 +1719,14 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     STCB *callback = sc->callback;
     MemObject *mem = e->mem_obj;
     size_t sz;
+    static int loopdetect = 0;
+    assert(++loopdetect < 3);
     debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->key));
     assert(callback != NULL);
     if (e->store_status == STORE_ABORTED) {
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, 0);
-    } else if (e->store_status == STORE_OK && sc->copy_offset == mem->inmem_hi) {
+    } else if (e->store_status == STORE_OK && sc->copy_offset == e->object_len) {
 	/* There is no more to send! */
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, 0);
@@ -1749,6 +1751,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	assert(sc->type == STORE_DISK_CLIENT);
 	storeClientCopyFileRead(sc);
     }
+    --loopdetect;
 }
 
 static void
