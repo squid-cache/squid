@@ -82,17 +82,17 @@ typedef struct _diskdstate_t diskdstate_t;
 static const int msg_snd_rcv_sz = sizeof(diomsg) - sizeof(mtyp_t);
 
 /* The diskd_state memory pool */
-extern MemPool * diskd_state_pool;
+extern MemPool *diskd_state_pool;
 
 extern void storeDiskdDirMapBitReset(SwapDir *, sfileno);
 extern int storeDiskdDirMapBitAllocate(SwapDir *);
-extern char * storeDiskdDirFullPath(SwapDir *SD, sfileno filn, char *fullpath);
+extern char *storeDiskdDirFullPath(SwapDir * SD, sfileno filn, char *fullpath);
 extern void storeDiskdDirUnlinkFile(SwapDir *, sfileno);
 extern void storeDiskdDirReplAdd(SwapDir *, StoreEntry *);
 extern void storeDiskdDirReplRemove(StoreEntry *);
 extern void storeDiskdShmPut(SwapDir *, int);
 extern void *storeDiskdShmGet(SwapDir *, int *);
-extern void storeDiskdHandle(diomsg *M);
+extern void storeDiskdHandle(diomsg * M);
 
 
 /*

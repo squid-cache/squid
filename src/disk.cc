@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.148 2000/05/03 17:15:41 adrian Exp $
+ * $Id: disk.cc,v 1.149 2000/05/12 00:29:07 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -188,7 +188,7 @@ diskHandleWrite(int fd, void *notused)
 	fd, (int) (fdd->write_q->len - fdd->write_q->buf_offset));
     errno = 0;
     if (fdd->write_q->file_offset != -1)
-        lseek(fd, fdd->write_q->file_offset, SEEK_SET);
+	lseek(fd, fdd->write_q->file_offset, SEEK_SET);
     len = write(fd,
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset);

@@ -16,8 +16,8 @@ struct _cossmembuf {
     int lockcount;
     char buffer[COSS_MEMBUF_SZ];
     struct _cossmembuf_flags {
-        unsigned int full:1;
-        unsigned int writing:1;
+	unsigned int full:1;
+	unsigned int writing:1;
     } flags;
     struct _cossmembuf *next;
 };
@@ -42,8 +42,8 @@ struct _cossstate {
     size_t requestoffset;
     sfileno reqdiskoffset;
     struct {
-        unsigned int reading:1;
-        unsigned int writing:1;
+	unsigned int reading:1;
+	unsigned int writing:1;
     } flags;
 };
 
@@ -53,8 +53,8 @@ typedef struct _cossstate CossState;
 
 /* Whether the coss system has been setup or not */
 extern int coss_initialised;
-extern MemPool * coss_membuf_pool;
-extern MemPool * coss_state_pool;
+extern MemPool *coss_membuf_pool;
+extern MemPool *coss_state_pool;
 
 
 /*
@@ -67,11 +67,11 @@ extern STOBJREAD storeCossRead;
 extern STOBJWRITE storeCossWrite;
 extern STOBJUNLINK storeCossUnlink;
 
-extern off_t storeCossAllocate(SwapDir *SD, const StoreEntry *e, int which);
-extern void storeCossFree(StoreEntry *e);
-extern void storeCossMaintainSwapSpace(SwapDir *SD);
+extern off_t storeCossAllocate(SwapDir * SD, const StoreEntry * e, int which);
+extern void storeCossFree(StoreEntry * e);
+extern void storeCossMaintainSwapSpace(SwapDir * SD);
 extern void storeCossDirStats(SwapDir *, StoreEntry *);
-extern void storeCossDirDump(StoreEntry * entry, const char *name, SwapDir* s);
+extern void storeCossDirDump(StoreEntry * entry, const char *name, SwapDir * s);
 extern void storeCossDirFree(SwapDir *);
 extern SwapDir *storeCossDirPick(void);
 

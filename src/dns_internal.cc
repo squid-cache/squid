@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.24 2000/05/11 22:21:01 wessels Exp $
+ * $Id: dns_internal.cc,v 1.25 2000/05/12 00:29:07 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -205,7 +205,7 @@ idnsSendQuery(idns_query * q)
     assert(nns > 0);
     assert(q->lru.next == NULL);
     assert(q->lru.prev == NULL);
-try_again:
+  try_again:
     ns = q->nsends % nns;
     x = comm_udp_sendto(DnsSocket,
 	&nameservers[ns].S,
@@ -355,7 +355,7 @@ idnsCheckQueue(void *unused)
     event_queued = 0;
     for (n = lru_list.tail; n; n = p) {
 	q = n->data;
-	if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * ( 1 << q->nsends % nns))
+	if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * (1 << q->nsends % nns))
 	    break;
 	debug(78, 3) ("idnsCheckQueue: ID %#04x timeout\n",
 	    q->id);

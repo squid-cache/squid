@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.23 2000/05/03 17:15:44 adrian Exp $
+ * $Id: store_swapin.cc,v 1.24 2000/05/12 00:29:09 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -62,7 +62,7 @@ storeSwapInStart(store_client * sc)
     debug(20, 3) ("storeSwapInStart: Opening fileno %08X\n",
 	e->swap_filen);
     sc->swapin_sio = storeOpen(e, storeSwapInFileNotify, storeSwapInFileClosed,
-      sc);
+	sc);
     cbdataLock(sc->swapin_sio);
 }
 
@@ -85,11 +85,11 @@ storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
 static void
 storeSwapInFileNotify(void *data, int errflag, storeIOState * sio)
 {
-  store_client *sc = data;
-  StoreEntry *e = sc->entry;
- 
-  debug(1, 3) ("storeSwapInFileNotify: changing %d/%d to %d/%d\n", e->swap_filen, e->swap_dirn, sio->swap_filen, sio->swap_dirn);
+    store_client *sc = data;
+    StoreEntry *e = sc->entry;
 
-  e->swap_filen = sio->swap_filen;
-  e->swap_dirn = sio->swap_dirn;
+    debug(1, 3) ("storeSwapInFileNotify: changing %d/%d to %d/%d\n", e->swap_filen, e->swap_dirn, sio->swap_filen, sio->swap_dirn);
+
+    e->swap_filen = sio->swap_filen;
+    e->swap_dirn = sio->swap_dirn;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.34 2000/05/02 20:58:30 hno Exp $
+ * $Id: cf_gen.cc,v 1.35 2000/05/12 00:29:06 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -107,11 +107,12 @@ static void gen_free(Entry *, FILE *);
 static void gen_conf(Entry *, FILE *);
 static void gen_default_if_none(Entry *, FILE *);
 
-static void lineAdd(Line **L, char *str)
+static void
+lineAdd(Line ** L, char *str)
 {
-    while(*L)
-    	L = &(*L)->next;
-    *L=xcalloc(1, sizeof(Line));
+    while (*L)
+	L = &(*L)->next;
+    *L = xcalloc(1, sizeof(Line));
     (*L)->data = xstrdup(str);
 }
 
@@ -431,7 +432,7 @@ gen_default_if_none(Entry * head, FILE * fp)
 	    fprintf(fp, "\t}\n");
 	}
 	if (entry->ifdef)
-	fprintf(fp, "#endif\n");
+	    fprintf(fp, "#endif\n");
     }
     fprintf(fp, "}\n\n");
 }
@@ -535,25 +536,27 @@ gen_free(Entry * head, FILE * fp)
     fprintf(fp, "}\n\n");
 }
 
-static int defined(char *name)
+static int
+defined(char *name)
 {
-	int i=0;
-	if (!name)
-	    return 1;
-	for(i=0;strcmp(defines[i].name, name) != 0; i++) {
-	    assert(defines[i].name);
-	}
-	return defines[i].defined;
+    int i = 0;
+    if (!name)
+	return 1;
+    for (i = 0; strcmp(defines[i].name, name) != 0; i++) {
+	assert(defines[i].name);
+    }
+    return defines[i].defined;
 }
 
-static const char *available_if(char *name)
+static const char *
+available_if(char *name)
 {
-	int i=0;
-	assert(name);
-	for(i=0;strcmp(defines[i].name, name) != 0; i++) {
-	    assert(defines[i].name);
-	}
-	return defines[i].enable;
+    int i = 0;
+    assert(name);
+    for (i = 0; strcmp(defines[i].name, name) != 0; i++) {
+	assert(defines[i].name);
+    }
+    return defines[i].enable;
 }
 
 static void
@@ -581,7 +584,7 @@ gen_conf(Entry * head, FILE * fp)
 	for (line = entry->doc; line != NULL; line = line->next) {
 	    fprintf(fp, "#%s\n", line->data);
 	}
-	if (entry->default_value && strcmp(entry->default_value,"none") != 0) {
+	if (entry->default_value && strcmp(entry->default_value, "none") != 0) {
 	    sprintf(buf, "%s %s", entry->name, entry->default_value);
 	    lineAdd(&def, buf);
 	}
@@ -594,7 +597,7 @@ gen_conf(Entry * head, FILE * fp)
 	if (entry->nocomment)
 	    blank = 0;
 	if (!def && entry->doc && !entry->nocomment &&
-		strcmp(entry->name, "comment") != 0)
+	    strcmp(entry->name, "comment") != 0)
 	    lineAdd(&def, "none");
 	if (def && (entry->doc || entry->nocomment)) {
 	    if (blank)
@@ -607,7 +610,7 @@ gen_conf(Entry * head, FILE * fp)
 		free(line->data);
 		free(line);
 	    }
-	    blank=1;
+	    blank = 1;
 	}
 	if (entry->nocomment && blank)
 	    fprintf(fp, "#\n");

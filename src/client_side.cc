@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.482 2000/05/11 03:15:51 wessels Exp $
+ * $Id: client_side.cc,v 1.483 2000/05/12 00:29:06 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -139,7 +139,7 @@ clientIdentDone(const char *ident, void *data)
 #endif
 
 static aclCheck_t *
-clientAclChecklistCreate(const acl_access *acl, const clientHttpRequest *http)
+clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http)
 {
     aclCheck_t *ch;
     ConnStateData *conn = http->conn;
@@ -1099,10 +1099,10 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	range_err = "canonization failed";
     else if (httpHdrRangeIsComplex(http->request->range))
 	range_err = "too complex range header";
-    else if (!request->flags.cachable) /* from we_do_ranges in http.c */
+    else if (!request->flags.cachable)	/* from we_do_ranges in http.c */
 	range_err = "non-cachable request";
     else if (!is_hit && Config.rangeOffsetLimit < httpHdrRangeFirstOffset(request->range)
-	    && Config.rangeOffsetLimit != -1) /* from we_do_ranges in http.c */
+	&& Config.rangeOffsetLimit != -1)	/* from we_do_ranges in http.c */
 	range_err = "range outside range_offset_limit";
     /* get rid of our range specs on error */
     if (range_err) {

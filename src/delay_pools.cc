@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.15 2000/05/07 16:18:19 adrian Exp $
+ * $Id: delay_pools.cc,v 1.16 2000/05/12 00:29:07 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -222,18 +222,18 @@ delayInitDelayPool(unsigned short pool, u_char class, delaySpecSet * rates)
      */
     switch (class) {
     case 1:
-	delay_data[pool].class1->aggregate = (int)(((double)rates->aggregate.max_bytes *
-	    Config.Delay.initial) / 100);
+	delay_data[pool].class1->aggregate = (int) (((double) rates->aggregate.max_bytes *
+		Config.Delay.initial) / 100);
 	break;
     case 2:
-	delay_data[pool].class2->aggregate = (int)(((double)rates->aggregate.max_bytes *
-	    Config.Delay.initial) / 100);
+	delay_data[pool].class2->aggregate = (int) (((double) rates->aggregate.max_bytes *
+		Config.Delay.initial) / 100);
 	delay_data[pool].class2->individual_map[0] = 255;
 	delay_data[pool].class2->individual_255_used = 0;
 	break;
     case 3:
-	delay_data[pool].class3->aggregate = (int)(((double)rates->aggregate.max_bytes *
-	    Config.Delay.initial) / 100);
+	delay_data[pool].class3->aggregate = (int) (((double) rates->aggregate.max_bytes *
+		Config.Delay.initial) / 100);
 	delay_data[pool].class3->network_map[0] = 255;
 	delay_data[pool].class3->network_255_used = 0;
 	memset(&delay_data[pool].class3->individual_255_used, '\0',
@@ -307,8 +307,8 @@ delayClient(request_t * r)
 	    if (!delay_data[pool].class2->individual_255_used) {
 		delay_data[pool].class2->individual_255_used = 1;
 		delay_data[pool].class2->individual[IND_MAP_SZ - 1] =
-		    (int)(((double)Config.Delay.rates[pool]->individual.max_bytes *
-		    Config.Delay.initial) / 100);
+		    (int) (((double) Config.Delay.rates[pool]->individual.max_bytes *
+			Config.Delay.initial) / 100);
 	    }
 	    return delayId(pool + 1, 255);
 	}
@@ -320,8 +320,8 @@ delayClient(request_t * r)
 		assert(i < (IND_MAP_SZ - 1));
 		delay_data[pool].class2->individual_map[i + 1] = 255;
 		delay_data[pool].class2->individual[i] =
-		    (int)(((double)Config.Delay.rates[pool]->individual.max_bytes *
-		    Config.Delay.initial) / 100);
+		    (int) (((double) Config.Delay.rates[pool]->individual.max_bytes *
+			Config.Delay.initial) / 100);
 		break;
 	    }
 	}
@@ -336,8 +336,8 @@ delayClient(request_t * r)
 	if (!delay_data[pool].class3->network_255_used) {
 	    delay_data[pool].class3->network_255_used = 1;
 	    delay_data[pool].class3->network[255] =
-		(int)(((double)Config.Delay.rates[pool]->network.max_bytes *
-		Config.Delay.initial) / 100);
+		(int) (((double) Config.Delay.rates[pool]->network.max_bytes *
+		    Config.Delay.initial) / 100);
 	}
     } else {
 	for (i = 0; i < NET_MAP_SZ; i++) {
@@ -349,8 +349,8 @@ delayClient(request_t * r)
 		assert(i < (NET_MAP_SZ - 1));
 		delay_data[pool].class3->network_map[i + 1] = 255;
 		delay_data[pool].class3->network[i] =
-		    (int)(((double)Config.Delay.rates[pool]->network.max_bytes *
-		    Config.Delay.initial) / 100);
+		    (int) (((double) Config.Delay.rates[pool]->network.max_bytes *
+			Config.Delay.initial) / 100);
 		break;
 	    }
 	}
@@ -362,8 +362,8 @@ delayClient(request_t * r)
 	    delay_data[pool].class3->individual_255_used[i / 8] |= (1 << (i % 8));
 	    assert(position < C3_IND_SZ);
 	    delay_data[pool].class3->individual[position] =
-		(int)(((double)Config.Delay.rates[pool]->individual.max_bytes *
-		Config.Delay.initial) / 100);
+		(int) (((double) Config.Delay.rates[pool]->individual.max_bytes *
+		    Config.Delay.initial) / 100);
 	}
 	return delayId(pool + 1, position);
     }
@@ -380,8 +380,8 @@ delayClient(request_t * r)
 	    position |= j;
 	    assert(position < C3_IND_SZ);
 	    delay_data[pool].class3->individual[position] =
-		(int)(((double)Config.Delay.rates[pool]->individual.max_bytes *
-		Config.Delay.initial) / 100);
+		(int) (((double) Config.Delay.rates[pool]->individual.max_bytes *
+		    Config.Delay.initial) / 100);
 	    break;
 	}
     }
@@ -611,7 +611,7 @@ delayMostBytesWanted(const MemObject * mem, int max)
     store_client *sc;
     dlink_node *node;
     for (node = mem->clients.head; node; node = node->next) {
-        sc = (store_client *)node->data;
+	sc = (store_client *) node->data;
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
@@ -631,7 +631,7 @@ delayMostBytesAllowed(const MemObject * mem)
     dlink_node *node;
     delay_id d = 0;
     for (node = mem->clients.head; node; node = node->next) {
-        sc = (store_client *)node->data;
+	sc = (store_client *) node->data;
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
@@ -646,7 +646,7 @@ delayMostBytesAllowed(const MemObject * mem)
 }
 
 void
-delaySetStoreClient(store_client *sc, delay_id delay_id)
+delaySetStoreClient(store_client * sc, delay_id delay_id)
 {
     assert(sc != NULL);
     sc->delay_id = delay_id;

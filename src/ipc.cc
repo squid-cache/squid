@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.20 2000/05/02 20:21:04 hno Exp $
+ * $Id: ipc.cc,v 1.21 2000/05/12 00:29:07 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -269,7 +269,7 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
     close(t2);
     close(t3);
     /* Make sure all other filedescriptors are closed */
-    for(x=3;x<SQUID_MAXFD; x++)
+    for (x = 3; x < SQUID_MAXFD; x++)
 	close(x);
 #if HAVE_SETSID
     setsid();

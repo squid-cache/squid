@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.343 2000/05/03 17:15:41 adrian Exp $
+ * $Id: cache_cf.cc,v 1.344 2000/05/12 00:29:06 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -113,7 +113,7 @@ wordlistAdd(wordlist ** list, const char *key)
 }
 
 void
-wordlistJoin(wordlist ** list, wordlist **wl)
+wordlistJoin(wordlist ** list, wordlist ** wl)
 {
     while (*list)
 	list = &(*list)->next;
@@ -122,14 +122,14 @@ wordlistJoin(wordlist ** list, wordlist **wl)
 }
 
 void
-wordlistAddWl(wordlist ** list, wordlist *wl)
+wordlistAddWl(wordlist ** list, wordlist * wl)
 {
     while (*list)
 	list = &(*list)->next;
-    for(;wl;wl=wl->next, list = &(*list)->next) {
+    for (; wl; wl = wl->next, list = &(*list)->next) {
 	*list = memAllocate(MEM_WORDLIST);
 	(*list)->key = xstrdup(wl->key);
-    (*list)->next = NULL;
+	(*list)->next = NULL;
     }
 }
 
@@ -200,8 +200,8 @@ update_maxobjsize(void)
     size_t ms = -1;
 
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        if (Config.cacheSwap.swapDirs[i].max_objsize > ms)
-            ms = Config.cacheSwap.swapDirs[i].max_objsize; 
+	if (Config.cacheSwap.swapDirs[i].max_objsize > ms)
+	    ms = Config.cacheSwap.swapDirs[i].max_objsize;
     }
     store_maxobjsize = ms;
 }
@@ -814,7 +814,7 @@ dump_cachedir(StoreEntry * entry, const char *name, cacheSwap swap)
     int i;
     for (i = 0; i < swap.n_configured; i++) {
 	s = swap.swapDirs + i;
-        s->dump(entry, name, s);
+	s->dump(entry, name, s);
     }
 }
 
@@ -852,7 +852,7 @@ find_fstype(char *type)
 {
     int i;
     for (i = 0; storefs_list[i].typestr != NULL; i++) {
-        if (strcasecmp(type, storefs_list[i].typestr) == 0) {
+	if (strcasecmp(type, storefs_list[i].typestr) == 0) {
 	    return i;
 	}
     }
@@ -872,7 +872,7 @@ parse_cachedir(cacheSwap * swap)
     if ((type_str = strtok(NULL, w_space)) == NULL)
 	self_destruct();
 
-    maxobjsize = (size_t)GetInteger();
+    maxobjsize = (size_t) GetInteger();
 
     if ((path_str = strtok(NULL, w_space)) == NULL)
 	self_destruct();
@@ -896,26 +896,25 @@ parse_cachedir(cacheSwap * swap)
      */
 
     for (i = 0; i < swap->n_configured; i++) {
-        if (0 == strcasecmp(path_str, swap->swapDirs[i].path)) {
+	if (0 == strcasecmp(path_str, swap->swapDirs[i].path)) {
 	    /* This is a little weird, you'll appreciate it later */
 	    fs = find_fstype(type_str);
 	    if (fs < 0) {
-                fatalf("Unknown cache_dir type '%s'\n", type_str);
+		fatalf("Unknown cache_dir type '%s'\n", type_str);
 	    }
 	    sd = swap->swapDirs + i;
 	    storefs_list[fs].reconfigurefunc(sd, i, path_str);
-            sd->max_objsize = maxobjsize;
-            update_maxobjsize();
-            return;
+	    sd->max_objsize = maxobjsize;
+	    update_maxobjsize();
+	    return;
 	}
     }
 
     fs = find_fstype(type_str);
     if (fs < 0) {
-        /* If we get here, we didn't find a matching cache_dir type */
-        fatalf("Unknown cache_dir type '%s'\n", type_str);
+	/* If we get here, we didn't find a matching cache_dir type */
+	fatalf("Unknown cache_dir type '%s'\n", type_str);
     }
-
     allocate_new_swapdir(swap);
     sd = swap->swapDirs + swap->n_configured;
     storefs_list[fs].parsefunc(sd, swap->n_configured, path_str);
@@ -1492,7 +1491,7 @@ parse_refreshpattern(refresh_t ** head)
 }
 
 static int
-check_null_refreshpattern(refresh_t *data)
+check_null_refreshpattern(refresh_t * data)
 {
     return data != NULL;
 }

@@ -8,7 +8,7 @@
  * to select different polices depending on object size or type.
  */
 storeIOState *
-storeCreate(StoreEntry *e, STIOCB *file_callback, STIOCB *close_callback, void *callback_data)
+storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, void *callback_data)
 {
     size_t objsize;
     sdirno dirn;
@@ -17,7 +17,7 @@ storeCreate(StoreEntry *e, STIOCB *file_callback, STIOCB *close_callback, void *
     /* This is just done for logging purposes */
     objsize = objectLen(e);
     if (objsize != -1)
-        objsize += e->mem_obj->swap_hdr_sz;
+	objsize += e->mem_obj->swap_hdr_sz;
 
     /*
      * Pick the swapdir
@@ -25,14 +25,14 @@ storeCreate(StoreEntry *e, STIOCB *file_callback, STIOCB *close_callback, void *
      */
     dirn = storeDirSelectSwapDir(e);
     if (dirn == -1) {
-        debug(20, 2) ("storeCreate: no valid swapdirs for this object\n");
-        return NULL;
+	debug(20, 2) ("storeCreate: no valid swapdirs for this object\n");
+	return NULL;
     }
-    debug (20, 2) ("storeCreate: Selected dir '%d' for obj size '%d'\n", dirn, objsize);
+    debug(20, 2) ("storeCreate: Selected dir '%d' for obj size '%d'\n", dirn, objsize);
     SD = &Config.cacheSwap.swapDirs[dirn];
 
     /* Now that we have a fs to use, call its storeCreate function */
-    return(SD->obj.create(SD, e, file_callback, close_callback, callback_data));
+    return (SD->obj.create(SD, e, file_callback, close_callback, callback_data));
 
     /* Done */
 }
@@ -42,8 +42,8 @@ storeCreate(StoreEntry *e, STIOCB *file_callback, STIOCB *close_callback, void *
  * storeOpen() is purely for reading ..
  */
 storeIOState *
-storeOpen(StoreEntry *e, STFNCB * file_callback, STIOCB * callback,
-  void *callback_data)
+storeOpen(StoreEntry * e, STFNCB * file_callback, STIOCB * callback,
+    void *callback_data)
 {
     SwapDir *SD = &Config.cacheSwap.swapDirs[e->swap_dirn];
     return SD->obj.open(SD, e, file_callback, callback, callback_data);
@@ -74,7 +74,7 @@ storeWrite(storeIOState * sio, char *buf, size_t size, off_t offset, FREE * free
 }
 
 void
-storeUnlink(StoreEntry *e)
+storeUnlink(StoreEntry * e)
 {
     SwapDir *SD = INDEXSD(e->swap_dirn);
     SD->obj.unlink(SD, e);

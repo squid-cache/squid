@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.60 2000/05/07 16:18:19 adrian Exp $
+ * $Id: asn.cc,v 1.61 2000/05/12 00:29:06 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -206,7 +206,7 @@ asnCacheStart(int as)
     asState->seen = 0;
     asState->offset = 0;
     storeClientCopy(asState->sc,
-        e,
+	e,
 	asState->seen,
 	asState->offset,
 	4096,
@@ -262,7 +262,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
     if (e->store_status == STORE_PENDING) {
 	debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
 	storeClientCopy(asState->sc,
-            e,
+	    e,
 	    asState->seen,
 	    asState->offset,
 	    SM_PAGE_SIZE,
@@ -272,7 +272,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
     } else if (asState->seen < e->mem_obj->inmem_hi) {
 	debug(53, 3) ("asHandleReply: asState->seen < e->mem_obj->inmem_hi %s\n", storeUrl(e));
 	storeClientCopy(asState->sc,
-            e,
+	    e,
 	    asState->seen,
 	    asState->offset,
 	    SM_PAGE_SIZE,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.521 2000/05/07 16:18:20 adrian Exp $
+ * $Id: store.cc,v 1.522 2000/05/12 00:29:08 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -232,9 +232,9 @@ storeLockObject(StoreEntry * e)
     SwapDir *SD;
 
     if (e->swap_dirn > -1)
-      SD = INDEXSD(e->swap_dirn);
+	SD = INDEXSD(e->swap_dirn);
     else
-      SD = NULL;
+	SD = NULL;
 
     e->lock_count++;
     debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
@@ -242,7 +242,7 @@ storeLockObject(StoreEntry * e)
     e->lastref = squid_curtime;
     /* Notify the fs that we're referencing this object again */
     if (SD != NULL && SD->refobj != NULL)
-        SD->refobj(SD, e);
+	SD->refobj(SD, e);
 }
 
 void
@@ -277,11 +277,11 @@ storeUnlockObject(StoreEntry * e)
     assert(storePendingNClients(e) == 0);
     /* Notify the fs that we're not referencing this object any more */
     if (e->swap_filen > -1)
-        SD = INDEXSD(e->swap_dirn);
+	SD = INDEXSD(e->swap_dirn);
     else
-        SD = NULL;
+	SD = NULL;
     if (SD != NULL && SD->unrefobj != NULL)
-        SD->unrefobj(SD, e);
+	SD->unrefobj(SD, e);
 #if HEAP_REPLACEMENT
     storeHeapPositionUpdate(e, SD);
 #else
@@ -541,7 +541,7 @@ storeCheckCachable(StoreEntry * e)
 	return 0;		/* avoid release call below */
     } else if ((e->mem_obj->reply->content_length > 0 &&
 		e->mem_obj->reply->content_length > Config.Store.maxObjectSize) ||
-		e->mem_obj->inmem_hi > Config.Store.maxObjectSize) {
+	e->mem_obj->inmem_hi > Config.Store.maxObjectSize) {
 	debug(20, 2) ("storeCheckCachable: NO: too big\n");
 	store_check_cachable_hist.no.too_big++;
     } else if (e->mem_obj->reply->content_length > (int) Config.Store.maxObjectSize) {
@@ -769,8 +769,8 @@ storeMaintainSwapSpace(void *datanotused)
     /* walk each fs */
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	/* call the maintain function .. */
-	SD = INDEXSD(i); 
-        if (SD->maintainfs != NULL)
+	SD = INDEXSD(i);
+	if (SD->maintainfs != NULL)
 	    SD->maintainfs(SD);
     }
 
@@ -1269,7 +1269,7 @@ storeFsDone(void)
     int i = 0;
 
     while (storefs_list[i].typestr != NULL) {
-        storefs_list[i].donefunc();
+	storefs_list[i].donefunc();
 	i++;
     }
 }
@@ -1277,16 +1277,17 @@ storeFsDone(void)
 /*
  * called to add another store fs module
  */
-void storeFsAdd(char *type, STSETUP *setup)
+void
+storeFsAdd(char *type, STSETUP * setup)
 {
     int i;
     /* find the number of currently known storefs types */
     for (i = 0; storefs_list && storefs_list[i].typestr; i++) {
-	assert(strcmp(storefs_list[i].typestr, type)!=0);
+	assert(strcmp(storefs_list[i].typestr, type) != 0);
     }
     /* add the new type */
     storefs_list = xrealloc(storefs_list, (i + 2) * sizeof(storefs_entry_t));
-    memset(&storefs_list[i+1],0,sizeof(storefs_entry_t));
+    memset(&storefs_list[i + 1], 0, sizeof(storefs_entry_t));
     storefs_list[i].typestr = type;
     /* Call the FS to set up capabilities and initialize the FS driver */
     setup(&storefs_list[i]);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.13 2000/05/03 17:15:44 adrian Exp $
+ * $Id: store_log.cc,v 1.14 2000/05/12 00:29:09 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -71,7 +71,7 @@ storeLog(int tag, const StoreEntry * e)
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	storeLogTags[tag],
-        e->swap_dirn,
+	e->swap_dirn,
 	e->swap_filen,
 	reply->sline.status,
 	(int) reply->date,

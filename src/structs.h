@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.330 2000/05/07 16:18:20 adrian Exp $
+ * $Id: structs.h,v 1.331 2000/05/12 00:29:09 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1212,6 +1212,7 @@ struct _pingerReplyData {
     int psize;
     char payload[PINGER_PAYLOAD_SZ];
 };
+
 #endif
 
 struct _icp_common_t {
@@ -1280,7 +1281,7 @@ struct _MemObject {
     int nclients;
     struct {
 	off_t queue_offset;	/* relative to in-mem data */
-        mem_node *memnode;	/* which node we're currently paging out */
+	mem_node *memnode;	/* which node we're currently paging out */
 	storeIOState *sio;
     } swapout;
     HttpReply *reply;
@@ -1326,9 +1327,9 @@ struct _StoreEntry {
     sfileno swap_filen;
     union {
 #ifdef HEAP_REPLACEMENT
-        heap_node *node;
+	heap_node *node;
 #endif
-        dlink_node lru;
+	dlink_node lru;
     } repl;
     u_short lock_count;		/* Assume < 65536! */
     mem_status_t mem_status:3;
@@ -1348,13 +1349,13 @@ struct _SwapDir {
     size_t max_objsize;
     union {
 #ifdef HEAP_REPLACEMENT
-        struct {
-	   heap *heap;
+	struct {
+	    heap *heap;
 	} heap;
 #endif
-        struct {
-	   dlink_list list;
-	   dlink_node *walker;
+	struct {
+	    dlink_list list;
+	    dlink_node *walker;
 	} lru;
     } repl;
     int removals;
@@ -1377,7 +1378,7 @@ struct _SwapDir {
     STCALLBACK *callback;	/* Handle pending callbacks */
     STSYNC *sync;		/* Sync the directory */
     struct {
-        STOBJCREATE *create;
+	STOBJCREATE *create;
 	STOBJOPEN *open;
 	STOBJCLOSE *close;
 	STOBJREAD *read;
@@ -1882,7 +1883,7 @@ struct _diskd_queue {
     int recv_count;		/* number of messages received */
     struct {
 	char *buf;		/* shm buffer */
-	link_list *stack;	
+	link_list *stack;
 	int id;			/* sysvshm id */
     } shm;
 };

@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.1 2000/05/03 17:15:46 adrian Exp $
+ * $Id: async_io.cc,v 1.2 2000/05/12 00:29:18 wessels Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -76,7 +76,7 @@ static OBJH aioStats;
 static MemPool *aio_ctrl_pool;
 static void aioFDWasClosed(int fd);
 
-MemPool * aio_state_pool;
+MemPool *aio_state_pool;
 
 static void
 aioFDWasClosed(int fd)
@@ -219,7 +219,7 @@ aioWrite(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callba
 	if (callback)
 	    (callback) (fd, callback_data, -1, errno);
 	if (free_func)
-            free_func(bufp);
+	    free_func(bufp);
 	return;
     }
     ctrlp = memPoolAlloc(aio_ctrl_pool);
@@ -249,7 +249,7 @@ aioWrite(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callba
      * aio_write copies the buffer so we can free it here
      */
     if (free_func)
-        free_func(bufp);
+	free_func(bufp);
 }				/* aioWrite */
 
 
@@ -352,7 +352,7 @@ aioUnlink(const char *pathname, AIOCB * callback, void *callback_data)
 
 
 void
-aioCheckCallbacks(SwapDir *SD)
+aioCheckCallbacks(SwapDir * SD)
 {
     aio_result_t *resultp;
     aio_ctrl_t *ctrlp;
@@ -407,7 +407,7 @@ aioStats(StoreEntry * sentry)
 
 /* Flush all pending I/O */
 void
-aioSync(SwapDir *SD)
+aioSync(SwapDir * SD)
 {
     if (!initialised)
 	return;			/* nothing to do then */

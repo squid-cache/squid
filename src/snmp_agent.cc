@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.74 2000/05/03 17:15:42 adrian Exp $
+ * $Id: snmp_agent.cc,v 1.75 2000/05/12 00:29:08 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -279,9 +279,9 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 	    ASN_INTEGER);
 	break;
     case PERF_SYS_CURLRUEXP:
-        /* No global LRU info anymore */
+	/* No global LRU info anymore */
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-            0,
+	    0,
 	    SMI_TIMETICKS);
 	break;
     case PERF_SYS_CURUNLREQ:

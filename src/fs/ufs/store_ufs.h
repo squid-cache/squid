@@ -28,13 +28,13 @@ typedef struct _ufsinfo_t ufsinfo_t;
 typedef struct _ufsstate_t ufsstate_t;
 
 /* The ufs_state memory pool */
-extern MemPool * ufs_state_pool;
+extern MemPool *ufs_state_pool;
 
 extern void storeUfsDirMapBitReset(SwapDir *, sfileno);
 extern int storeUfsDirMapBitAllocate(SwapDir *);
-extern char * storeUfsDirFullPath(SwapDir *SD, sfileno filn, char *fullpath);
+extern char *storeUfsDirFullPath(SwapDir * SD, sfileno filn, char *fullpath);
 extern void storeUfsDirUnlinkFile(SwapDir *, sfileno);
-extern void storeUfsDirReplAdd(SwapDir *SD, StoreEntry *);
+extern void storeUfsDirReplAdd(SwapDir * SD, StoreEntry *);
 extern void storeUfsDirReplRemove(StoreEntry *);
 
 /*

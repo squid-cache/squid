@@ -307,4 +307,3 @@ main(int argc, char *argv[])
 	perror("shmctl IPC_RMID");
     return 0;
 }
-
