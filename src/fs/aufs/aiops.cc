@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.9 2001/08/20 06:55:31 hno Exp $
+ * $Id: aiops.cc,v 1.10 2001/10/17 12:41:54 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -148,7 +148,7 @@ static int squidaio_initialised = 0;
 #define AIO_MICRO_BUFS	128
 
 static MemPool *squidaio_large_bufs = NULL;	/* 16K */
-static MemPool *squidaio_medium_bufs = NULL;		/* 8K */
+static MemPool *squidaio_medium_bufs = NULL;	/* 8K */
 static MemPool *squidaio_small_bufs = NULL;	/* 4K */
 static MemPool *squidaio_tiny_bufs = NULL;	/* 2K */
 static MemPool *squidaio_micro_bufs = NULL;	/* 128K */

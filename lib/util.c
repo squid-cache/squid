@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.80 2001/10/17 01:36:05 hno Exp $
+ * $Id: util.c,v 1.81 2001/10/17 12:41:48 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -489,7 +489,7 @@ xfree(void *s)
 void
 xxfree(const void *s_const)
 {
-    void *s = (void *)s_const;
+    void *s = (void *) s_const;
 #if XMALLOC_TRACE
     xmalloc_show_trace(s, -1);
 #endif
@@ -582,7 +582,7 @@ xcalloc(size_t n, size_t sz)
 #endif
 #if MEM_GEN_TRACE
     if (tracefp)
-	fprintf(tracefp, "c:%u:%u:%p\n", (unsigned int)n, (unsigned int)sz, p);
+	fprintf(tracefp, "c:%u:%u:%p\n", (unsigned int) n, (unsigned int) sz, p);
 #endif
     return (p);
 }

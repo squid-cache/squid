@@ -31,7 +31,7 @@ struct _basic_data {
     char *passwd;
     time_t credentials_checkedtime;
     struct {
-        unsigned int credentials_ok:2;  /*0=unchecked,1=ok,2=failed */
+	unsigned int credentials_ok:2;	/*0=unchecked,1=ok,2=failed */
     } flags;
     auth_basic_queue_node *auth_queue;
 };

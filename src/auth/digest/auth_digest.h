@@ -25,7 +25,7 @@ struct _digest_user_h {
     HASH HA1;
     int HA1created;
     struct {
-        unsigned int credentials_ok:2;  /*0=unchecked,1=ok,2=failed */
+	unsigned int credentials_ok:2;	/*0=unchecked,1=ok,2=failed */
     } flags;
     /* what nonces have been allocated to this user */
     dlink_list nonces;
@@ -59,7 +59,7 @@ struct _digest_nonce_data {
 
 /* the nonce structure we'll pass around */
 struct _digest_nonce_h {
-    hash_link hash;	/* must be first */
+    hash_link hash;		/* must be first */
     digest_nonce_data noncedata;
     /* number of uses we've seen of this nonce */
     long nc;
