@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.33 2003/02/21 22:50:40 robertc Exp $
+ * $Id: store_io_diskd.cc,v 1.34 2003/07/22 15:23:11 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -44,12 +44,20 @@
 #include "store_diskd.h"
 #include "SwapDir.h"
 
+size_t DiskdIO::nextInstanceID (0);
+
 static int storeDiskdSend(int, DiskdIO *, int, StoreIOState::Pointer, int, int, off_t);
 static int storeDiskdSend(int, DiskdIO *, int, DiskdFile *, int, int, off_t);
 
 /* === PUBLIC =========================================================== */
-DiskdIO::DiskdIO() : away (0), magic1(64), magic2(72)
+DiskdIO::DiskdIO() : away (0), magic1(64), magic2(72), instanceID(newInstance())
 {}
+
+size_t
+DiskdIO::newInstance()
+{
+    return ++nextInstanceID;
+}
 
 bool
 DiskdIO::shedLoad()
@@ -90,7 +98,7 @@ DiskdIO::openFailed()
 StoreIOState::Pointer
 DiskdIO::createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const
 {
-    return new diskdstate_t (SD, e, callback, callback_data);
+    return new UFSStoreState (SD, e, callback, callback_data);
 }
 
 DiskFile::Pointer
@@ -99,6 +107,54 @@ DiskdIO::newFile (char const *path)
     return new DiskdFile (path, this);
 }
 
+
+void
+DiskdIO::unlinkFile(char const *path)
+{
+    if (shedLoad()) {
+        /* Damn, we need to issue a sync unlink here :( */
+        debug(79, 2) ("storeDiskUnlink: Out of queue space, sync unlink\n");
+#if USE_UNLINKD
+
+        unlinkdUnlink(path);
+#elif USE_TRUNCATE
+
+        truncate(path, 0);
+#else
+
+        unlink(path);
+#endif
+
+        return;
+    }
+
+    /* We can attempt a diskd unlink */
+    int x;
+
+    off_t shm_offset;
+
+    char *buf;
+
+    buf = (char *)shm.get(&shm_offset);
+
+    xstrncpy(buf, path, SHMBUF_BLKSZ);
+
+    x = storeDiskdSend(_MQD_UNLINK,
+                       this,
+                       0,
+                       (StoreIOState::Pointer )NULL,
+                       0,
+                       0,
+                       shm_offset);
+
+    if (x < 0) {
+        debug(79, 1) ("storeDiskdSend UNLINK: %s\n", xstrerror());
+        ::unlink(buf);		/* XXX EWW! */
+        shm.put (shm_offset);
+    }
+
+    diskd_stats.unlink.ops++;
+}
 
 /*
  * SHM manipulation routines
@@ -203,7 +259,8 @@ DiskdFile::operator delete (void *address)
 void
 DiskdFile::deleteSelf() const {delete this;}
 
-DiskdFile::DiskdFile (char const *aPath, DiskdIO *anIO) : errorOccured (false), IO(anIO)
+DiskdFile::DiskdFile (char const *aPath, DiskdIO *anIO) : errorOccured (false), IO(anIO),
+        inProgressIOs (0)
 {
     assert (aPath);
     debug (79,3)("DiskdFile::DiskdFile: %s\n", aPath);
@@ -213,6 +270,7 @@ DiskdFile::DiskdFile (char const *aPath, DiskdIO *anIO) : errorOccured (false), 
 
 DiskdFile::~DiskdFile()
 {
+    assert (inProgressIOs == 0);
     safe_free (path_);
 }
 
@@ -227,6 +285,7 @@ DiskdFile::open (int flags, mode_t aMode, IORequestor::Pointer callback)
     off_t shm_offset;
     char *buf = (char *)IO->shm.get(&shm_offset);
     xstrncpy(buf, path_, SHMBUF_BLKSZ);
+    ioAway();
     int x = storeDiskdSend(_MQD_OPEN,
                            IO,
                            id,
@@ -236,6 +295,7 @@ DiskdFile::open (int flags, mode_t aMode, IORequestor::Pointer callback)
                            shm_offset);
 
     if (x < 0) {
+        ioCompleted();
         errorOccured = true;
         IO->shm.put (shm_offset);
         ioRequestor->ioCompletedNotification();
@@ -256,6 +316,7 @@ DiskdFile::create (int flags, mode_t aMode, IORequestor::Pointer callback)
     off_t shm_offset;
     char *buf = (char *)IO->shm.get(&shm_offset);
     xstrncpy(buf, path_, SHMBUF_BLKSZ);
+    ioAway();
     int x = storeDiskdSend(_MQD_CREATE,
                            IO,
                            id,
@@ -265,6 +326,7 @@ DiskdFile::create (int flags, mode_t aMode, IORequestor::Pointer callback)
                            shm_offset);
 
     if (x < 0) {
+        ioCompleted();
         errorOccured = true;
         IO->shm.put (shm_offset);
         debug(79, 1) ("storeDiskdSend CREATE: %s\n", xstrerror());
@@ -283,6 +345,7 @@ DiskdFile::read(char *buf, off_t offset, size_t size)
     off_t shm_offset;
     char *rbuf = (char *)IO->shm.get(&shm_offset);
     assert(rbuf);
+    ioAway();
     int x = storeDiskdSend(_MQD_READ,
                            IO,
                            id,
@@ -292,6 +355,7 @@ DiskdFile::read(char *buf, off_t offset, size_t size)
                            shm_offset);
 
     if (x < 0) {
+        ioCompleted();
         errorOccured = true;
         IO->shm.put (shm_offset);
         debug(79, 1) ("storeDiskdSend READ: %s\n", xstrerror());
@@ -308,6 +372,7 @@ DiskdFile::close()
 {
     debug (79,3)("DiskdFile::close: %p closing for %p\n", this, ioRequestor.getRaw());
     assert (ioRequestor.getRaw());
+    ioAway();
     int x = storeDiskdSend(_MQD_CLOSE,
                            IO,
                            id,
@@ -317,6 +382,7 @@ DiskdFile::close()
                            -1);
 
     if (x < 0) {
+        ioCompleted();
         errorOccured = true;
         debug(79, 1) ("storeDiskdSend CLOSE: %s\n", xstrerror());
         notifyClient();
@@ -411,6 +477,7 @@ DiskdFile::openDone(diomsg *M)
         diskd_stats.open.success++;
     }
 
+    ioCompleted();
     notifyClient();
 }
 
@@ -427,117 +494,22 @@ DiskdFile::createDone(diomsg *M)
         diskd_stats.create.success++;
     }
 
+    ioCompleted();
     notifyClient();
-}
-
-CBDATA_CLASS_INIT(diskdstate_t);
-
-void *
-diskdstate_t::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(diskdstate_t);
-    diskdstate_t *result = cbdataAlloc(diskdstate_t);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    cbdataReference(result);
-    debug (79,3)("diskdstate with base %p allocating\n", result);
-    return result;
-}
-
-void
-diskdstate_t::operator delete (void *address)
-{
-    debug (79,3)("diskdstate with base %p deleting\n",address);
-    diskdstate_t *t = static_cast<diskdstate_t *>(address);
-    cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (t);
-}
-
-diskdstate_t::diskdstate_t(SwapDir *SD, StoreEntry *e_, STIOCB * callback_, void *callback_data_)
-{
-    swap_filen = e_->swap_filen;
-    swap_dirn = SD->index;
-    mode = O_BINARY;
-    callback = callback_;
-    callback_data = cbdataReference(callback_data_);
-    e = e_;
-}
-
-/*
- * We can't pass memFree() as a free function here, because we need to free
- * the fsdata variable ..
- */
-diskdstate_t::~diskdstate_t()
-{}
-
-void
-diskdstate_t::ioCompletedNotification()
-{
-    if (opening) {
-        opening = false;
-        debug(79, 3) ("storeDiskdOpenDone: dirno %d, fileno %08x status %d\n",
-                      swap_dirn, swap_filen, theFile->error());
-        assert (FILE_MODE(mode) == O_RDONLY);
-
-        if (theFile->error()) {
-            doCallback(DISK_ERROR);
-        }
-
-        return;
-    }
-
-    if (creating) {
-        creating = false;
-        debug(79, 3) ("storeDiskdCreateDone: dirno %d, fileno %08x status %d\n",
-                      swap_dirn, swap_filen, theFile->error());
-
-        if (theFile->error()) {
-            doCallback(DISK_ERROR);
-        }
-
-        return;
-    }
-
-    assert (!closing);
-    debug(79, 3) ("diskd::ioCompleted: dirno %d, fileno %08x status %d\n",                      swap_dirn, swap_filen, theFile->error());
-    /* Ok, notification past open means an error has occured */
-    assert (theFile->error());
-    doCallback(DISK_ERROR);
-}
-
-void
-diskdstate_t::closeCompleted()
-{
-    assert (closing);
-    debug(79, 3) ("storeDiskdCloseDone: dirno %d, fileno %08x status %d\n",
-                  swap_dirn, swap_filen, theFile->error());
-
-    if (theFile->error()) {
-        doCallback(DISK_ERROR);
-    } else {
-        doCallback(DISK_OK);
-    }
-}
-
-void
-diskdstate_t::close()
-{
-    debug(79, 3) ("storeDiskdClose: dirno %d, fileno %08X\n", swap_dirn,
-                  swap_filen);
-    closing = true;
-    ((DiskdFile *)theFile.getRaw())->close();
 }
 
 void
 DiskdFile::write(char const *buf, size_t size, off_t offset, FREE *free_func)
 {
+    debug(79, 3) ("DiskdFile::write: this %p , buf %p, off %ld, len %d\n", this, buf, offset, size);
     off_t shm_offset;
     char *sbuf = (char *)IO->shm.get(&shm_offset);
     xmemcpy(sbuf, buf, size);
 
     if (free_func)
         free_func(const_cast<char *>(buf));
+
+    ioAway();
 
     int x = storeDiskdSend(_MQD_WRITE,
                            IO,
@@ -548,6 +520,7 @@ DiskdFile::write(char const *buf, size_t size, off_t offset, FREE *free_func)
                            shm_offset);
 
     if (x < 0) {
+        ioCompleted();
         errorOccured = true;
         debug(79, 1) ("storeDiskdSend WRITE: %s\n", xstrerror());
         IO->shm.put (shm_offset);
@@ -559,55 +532,26 @@ DiskdFile::write(char const *buf, size_t size, off_t offset, FREE *free_func)
     diskd_stats.write.ops++;
 }
 
-void
-DiskdSwapDir::unlink(StoreEntry & e)
-{
-    int x;
-    off_t shm_offset;
-    char *buf;
-
-    debug(79, 3) ("storeDiskdUnlink: dirno %d, fileno %08X\n", index,
-                  e.swap_filen);
-    replacementRemove(&e);
-    mapBitReset(e.swap_filen);
-
-    if (IO->shedLoad()) {
-        /* Damn, we need to issue a sync unlink here :( */
-        debug(79, 2) ("storeDiskUnlink: Out of queue space, sync unlink\n");
-        UFSSwapDir::unlinkFile(e.swap_filen);
-        return;
-    }
-
-    /* We can attempt a diskd unlink */
-    buf = (char *)((DiskdIO *)IO)->shm.get(&shm_offset);
-
-    xstrncpy(buf, fullPath(e.swap_filen, NULL), SHMBUF_BLKSZ);
-
-    x = storeDiskdSend(_MQD_UNLINK,
-                       (DiskdIO *)IO,
-                       e.swap_filen,
-                       (StoreIOState::Pointer )NULL,
-                       0,
-                       0,
-                       shm_offset);
-
-    if (x < 0) {
-        debug(79, 1) ("storeDiskdSend UNLINK: %s\n", xstrerror());
-        ::unlink(buf);		/* XXX EWW! */
-        ((DiskdIO *)IO)->shm.put (shm_offset);
-    }
-
-    diskd_stats.unlink.ops++;
-}
-
 
 /*  === STATIC =========================================================== */
+
+void
+DiskdFile::ioAway()
+{
+    ++inProgressIOs;
+}
+
+void
+DiskdFile::ioCompleted()
+{
+    --inProgressIOs;
+}
 
 void
 DiskdFile::closeDone(diomsg * M)
 {
     statCounter.syscalls.disk.closes++;
-    debug(79, 3) ("storeDiskdCloseDone: status %d\n", M->status);
+    debug(79, 3) ("DiskdFile::closeDone: status %d\n", M->status);
 
     if (M->status < 0) {
         diskd_stats.close.fail++;
@@ -615,6 +559,8 @@ DiskdFile::closeDone(diomsg * M)
     } else {
         diskd_stats.close.success++;
     }
+
+    ioCompleted();
 
     if (canNotifyClient())
         ioRequestor->closeCompleted();
@@ -630,6 +576,7 @@ DiskdFile::readDone(diomsg * M)
 
     if (M->status < 0) {
         diskd_stats.read.fail++;
+        ioCompleted();
         errorOccured = true;
         ioRequestor->readCompleted(NULL, -1, DISK_ERROR);
         return;
@@ -637,53 +584,8 @@ DiskdFile::readDone(diomsg * M)
 
     diskd_stats.read.success++;
 
+    ioCompleted();
     ioRequestor->readCompleted (IO->shm.buf + M->shm_offset,  M->status, DISK_OK);
-}
-
-void
-diskdstate_t::readCompleted(const char *buf, int len, int errflag)
-{
-    reading = false;
-    debug(79, 3) ("storeDiskdReadDone: dirno %d, fileno %08x len %d\n",
-                  swap_dirn, swap_filen, len);
-
-    if (len > 0)
-        offset_ += len;
-
-    STRCB *callback = read.callback;
-
-    assert(callback);
-
-    read.callback = NULL;
-
-    void *cbdata;
-
-    if (cbdataReferenceValidDone(read.callback_data, &cbdata)) {
-        assert (!closing);
-        /*
-         * Only copy the data if the callback is still valid,
-         * if it isn't valid then the request should have been
-         * aborted.
-         *   -- adrian
-         */
-
-        if (len > 0 && read_buf != buf)
-            memcpy(read_buf, buf, len);
-
-        callback(cbdata, read_buf, len);
-    }
-}
-
-void
-diskdstate_t::writeCompleted(int errflag, size_t len)
-{
-    writing = false;
-    debug(79, 3) ("storeDiskdWriteDone: dirno %d, fileno %08x status %d\n",
-                  swap_dirn, swap_filen, len);
-    offset_ += len;
-
-    if (errflag)
-        doCallback(DISK_ERROR);
 }
 
 void
@@ -695,19 +597,27 @@ DiskdFile::writeDone(diomsg *M)
     if (M->status < 0) {
         errorOccured = true;
         diskd_stats.write.fail++;
+        ioCompleted();
         ioRequestor->writeCompleted (DISK_ERROR,0);
         return;
     }
 
     diskd_stats.write.success++;
+    ioCompleted();
     ioRequestor->writeCompleted (DISK_OK,M->status);
 }
 
-static void
-storeDiskdUnlinkDone(diomsg * M)
+bool
+DiskdFile::ioInProgress()const
 {
-    debug(79, 3) ("storeDiskdUnlinkDone: fileno %08x status %d\n",
-                  M->id, M->status);
+    return inProgressIOs != 0;
+}
+
+void
+DiskdIO::unlinkDone(diomsg * M)
+{
+    debug(79, 3) ("storeDiskdUnlinkDone: file %s status %d\n",shm.buf + M->shm_offset,
+                  M->status);
     statCounter.syscalls.disk.unlinks++;
 
     if (M->status < 0)
@@ -717,7 +627,7 @@ storeDiskdUnlinkDone(diomsg * M)
 }
 
 void
-storeDiskdHandle(diomsg * M)
+DiskdIO::storeDiskdHandle(diomsg * M)
 {
     if (!cbdataReferenceValid (M->callback_data)) {
         debug(79, 3) ("storeDiskdHandle: Invalid callback_data %p\n",
@@ -746,7 +656,7 @@ storeDiskdHandle(diomsg * M)
             break;
 
         case _MQD_UNLINK:
-            storeDiskdUnlinkDone(M);
+            unlinkDone(M);
             break;
 
         default:
@@ -755,23 +665,6 @@ storeDiskdHandle(diomsg * M)
         }
 
     cbdataReferenceDone (M->callback_data);
-}
-
-void
-diskdstate_t::doCallback(int errflag)
-{
-    if (!this || !cbdataReferenceValid(this)) {
-        debug (79, 0) ("storeDiskdIOCallback: invalid siocb %p\n",this);
-        return;
-    }
-
-    void *cbdata;
-    STIOCB *theCallback = callback;
-    debug(79, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
-    callback = NULL;
-
-    if (cbdataReferenceValidDone(callback_data, &cbdata) && theCallback)
-        theCallback(cbdata, errflag, this);
 }
 
 int
@@ -893,4 +786,291 @@ storeDiskdSend(int mtype, DiskdIO *IO, int id, StoreIOState::Pointer sio, int si
     return x;
 }
 
+SwapDirOption *
+DiskdIO::getOptionTree() const
+{
+    SwapDirOptionVector *result = new SwapDirOptionVector;
+    result->options.push_back(new SwapDirOptionAdapter<DiskdIO>(*const_cast<DiskdIO *>(this), &DiskdIO::optionQ1Parse, &DiskdIO::optionQ1Dump));
+    result->options.push_back(new SwapDirOptionAdapter<DiskdIO>(*const_cast<DiskdIO *>(this), &DiskdIO::optionQ2Parse, &DiskdIO::optionQ2Dump));
+    return result;
+}
 
+bool
+DiskdIO::optionQ1Parse(const char *name, const char *value, int reconfiguring)
+{
+    if (strcmp(name, "Q1") != 0)
+        return false;
+
+    int old_magic1 = magic1;
+
+    magic1 = atoi(value);
+
+    if (!reconfiguring)
+        return true;
+
+    if (old_magic1 < magic1) {
+        /*
+        * This is because shm.nbufs is computed at startup, when
+        * we call shmget().  We can't increase the Q1/Q2 parameters
+        * beyond their initial values because then we might have
+        * more "Q2 messages" than shared memory chunks, and this
+        * will cause an assertion in storeDiskdShmGet().
+        */
+        /* TODO: have DiskdIO hold a link to the swapdir, to allow detailed reporting again */
+        debug(3, 1) ("WARNING: cannot increase cache_dir Q1 value while Squid is running.\n");
+        magic1 = old_magic1;
+        return true;
+    }
+
+    if (old_magic1 != magic1)
+        debug(3, 1) ("cache_dir new Q1 value '%d'\n",
+                     magic1);
+
+    return true;
+}
+
+void
+DiskdIO::optionQ1Dump(StoreEntry * e) const
+{
+    storeAppendPrintf(e, " Q1=%d", magic1);
+}
+
+bool
+DiskdIO::optionQ2Parse(const char *name, const char *value, int reconfiguring)
+{
+    if (strcmp(name, "Q2") != 0)
+        return false;
+
+    int old_magic2 = magic2;
+
+    magic2 = atoi(value);
+
+    if (!reconfiguring)
+        return true;
+
+    if (old_magic2 < magic2) {
+        /* See comments in Q1 function above */
+        debug(3, 1) ("WARNING: cannot increase cache_dir Q2 value while Squid is running.\n");
+        magic2 = old_magic2;
+        return true;
+    }
+
+    if (old_magic2 != magic2)
+        debug(3, 1) ("cache_dir new Q2 value '%d'\n",
+                     magic2);
+
+    return true;
+}
+
+void
+DiskdIO::optionQ2Dump(StoreEntry * e) const
+{
+    storeAppendPrintf(e, " Q2=%d", magic2);
+}
+
+void
+DiskdIO::init()
+{
+    int x;
+    int rfd;
+    int ikey;
+    const char *args[5];
+    char skey1[32];
+    char skey2[32];
+    char skey3[32];
+
+    ikey = (getpid() << 10) + (instanceID << 2);
+    ikey &= 0x7fffffff;
+    smsgid = msgget((key_t) ikey, 0700 | IPC_CREAT);
+
+    if (smsgid < 0) {
+        debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
+        fatal("msgget failed");
+    }
+
+    rmsgid = msgget((key_t) (ikey + 1), 0700 | IPC_CREAT);
+
+    if (rmsgid < 0) {
+        debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
+        fatal("msgget failed");
+    }
+
+    shm.init(ikey, magic2);
+    snprintf(skey1, 32, "%d", ikey);
+    snprintf(skey2, 32, "%d", ikey + 1);
+    snprintf(skey3, 32, "%d", ikey + 2);
+    args[0] = "diskd";
+    args[1] = skey1;
+    args[2] = skey2;
+    args[3] = skey3;
+    args[4] = NULL;
+    x = ipcCreate(IPC_STREAM,
+                  Config.Program.diskd,
+                  args,
+                  "diskd",
+                  &rfd,
+                  &wfd);
+
+    if (x < 0)
+        fatalf("execl: %s", Config.Program.diskd);
+
+    if (rfd != wfd)
+        comm_close(rfd);
+
+    fd_note(wfd, "squid -> diskd");
+
+    commSetTimeout(wfd, -1, NULL, NULL);
+
+    commSetNonBlocking(wfd);
+
+    comm_quick_poll_required();
+}
+
+/*
+ * Sync any pending data. We just sit around and read the queue
+ * until the data has finished writing.
+ */
+void
+DiskdIO::sync()
+{
+    static time_t lastmsg = 0;
+
+    while (away > 0) {
+        if (squid_curtime > lastmsg) {
+            debug(47, 1) ("storeDiskdDirSync: %d messages away\n",
+                          away);
+            lastmsg = squid_curtime;
+        }
+
+        callback();
+    }
+}
+
+
+/*
+ * Handle callbacks. If we have more than magic2 requests away, we block
+ * until the queue is below magic2. Otherwise, we simply return when we
+ * don't get a message.
+ */
+int
+DiskdIO::callback()
+{
+    diomsg M;
+    int x;
+    int retval = 0;
+
+    DiskdIO *DIO = this;//dynamic_cast<DiskdIO *>(IO);
+
+    if (DIO->away >= DIO->magic2) {
+        diskd_stats.block_queue_len++;
+        retval = 1;
+        /* We might not have anything to do, but our queue
+         * is full.. */
+    }
+
+    if (diskd_stats.sent_count - diskd_stats.recv_count >
+            diskd_stats.max_away) {
+        diskd_stats.max_away = diskd_stats.sent_count - diskd_stats.recv_count;
+    }
+
+    while (1) {
+#ifdef	ALWAYS_ZERO_BUFFERS
+        memset(&M, '\0', sizeof(M));
+#endif
+
+        x = msgrcv(DIO->rmsgid, &M, msg_snd_rcv_sz, 0, IPC_NOWAIT);
+
+        if (x < 0)
+            break;
+        else if (x != msg_snd_rcv_sz) {
+            debug(47, 1) ("storeDiskdDirCallback: msgget returns %d\n",
+                          x);
+            break;
+        }
+
+        diskd_stats.recv_count++;
+        --DIO->away;
+        DIO->storeDiskdHandle(&M);
+        retval = 1;		/* Return that we've actually done some work */
+
+        if (M.shm_offset > -1)
+            DIO->shm.put ((off_t) M.shm_offset);
+    }
+
+    return retval;
+}
+
+void
+DiskdIO::statfs(StoreEntry & sentry)const
+{
+    storeAppendPrintf(&sentry, "Pending operations: %d\n", away);
+}
+
+DiskdIOModule::DiskdIOModule() : initialised(false) {}
+
+DiskdIOModule &
+DiskdIOModule::GetInstance()
+{
+    if (!Instance)
+        Instance = new DiskdIOModule;
+
+    return *Instance;
+}
+
+void
+DiskdIOModule::init()
+{
+    /* We may be reused - for instance in coss - eventually.
+     * When we do, we either need per-using-module stats (
+     * no singleton pattern), or we need to refcount the 
+     * initialisation level and handle multiple clients.
+     * RBC - 20030718.
+     */
+    assert(!initialised);
+    memset(&diskd_stats, '\0', sizeof(diskd_stats));
+    cachemgrRegister("diskd", "DISKD Stats", storeDiskdStats, 0, 1);
+
+    debug(47, 1) ("diskd started\n");
+    initialised = true;
+}
+
+void
+DiskdIOModule::shutdown()
+{
+    initialised = false;
+}
+
+UFSStrategy *
+DiskdIOModule::createSwapDirIOStrategy()
+{
+    return new DiskdIO;
+}
+
+DiskdIOModule *DiskdIOModule::Instance = NULL;
+
+diskd_stats_t diskd_stats;
+
+void
+storeDiskdStats(StoreEntry * sentry)
+{
+    storeAppendPrintf(sentry, "sent_count: %d\n", diskd_stats.sent_count);
+    storeAppendPrintf(sentry, "recv_count: %d\n", diskd_stats.recv_count);
+    storeAppendPrintf(sentry, "max_away: %d\n", diskd_stats.max_away);
+    storeAppendPrintf(sentry, "max_shmuse: %d\n", diskd_stats.max_shmuse);
+    storeAppendPrintf(sentry, "open_fail_queue_len: %d\n", diskd_stats.open_fail_queue_len);
+    storeAppendPrintf(sentry, "block_queue_len: %d\n", diskd_stats.block_queue_len);
+    diskd_stats.max_away = diskd_stats.max_shmuse = 0;
+    storeAppendPrintf(sentry, "\n             OPS SUCCESS    FAIL\n");
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+                      "open", diskd_stats.open.ops, diskd_stats.open.success, diskd_stats.open.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+                      "create", diskd_stats.create.ops, diskd_stats.create.success, diskd_stats.create.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+                      "close", diskd_stats.close.ops, diskd_stats.close.success, diskd_stats.close.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+                      "unlink", diskd_stats.unlink.ops, diskd_stats.unlink.success, diskd_stats.unlink.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+                      "read", diskd_stats.read.ops, diskd_stats.read.success, diskd_stats.read.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+                      "write", diskd_stats.write.ops, diskd_stats.write.success, diskd_stats.write.fail);
+}

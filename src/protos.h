@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.484 2003/07/15 11:33:22 robertc Exp $
+ * $Id: protos.h,v 1.485 2003/07/22 15:23:02 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -69,6 +69,8 @@ SQUIDCEXTERN void allocate_new_swapdir(cacheSwap *);
 SQUIDCEXTERN void self_destruct(void);
 SQUIDCEXTERN int GetInteger(void);
 SQUIDCEXTERN void add_http_port(char *portspec);
+extern int xatoi(const char *token);
+extern long xatol(const char *token);
 
 
 /* extra functions from cache_cf.c useful for lib modules */
@@ -79,9 +81,6 @@ SQUIDCEXTERN void parse_wordlist(wordlist ** list);
 SQUIDCEXTERN void requirePathnameExists(const char *name, const char *path);
 SQUIDCEXTERN void parse_time_t(time_t * var);
 
-SQUIDCEXTERN void parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int reconfiguring);
-
-SQUIDCEXTERN void dump_cachedir_options(StoreEntry * e, struct cache_dir_option *options, SwapDir const * sd);
 SQUIDCEXTERN void parse_sockaddr_in_list_token(sockaddr_in_list **, char *);
 
 
@@ -732,9 +731,6 @@ SQUIDCEXTERN int memPoolInUseCount(MemPool * pool);
 SQUIDCEXTERN int memPoolsTotalAllocated(void);
 
 /* ----------------------------------------------------------------- */
-
-/* store_modules.c */
-SQUIDCEXTERN void storeFsSetup(void);
 
 /* repl_modules.c */
 SQUIDCEXTERN void storeReplSetup(void);

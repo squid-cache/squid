@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.475 2003/07/17 22:22:53 wessels Exp $
+ * $Id: structs.h,v 1.476 2003/07/22 15:23:02 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2170,17 +2170,6 @@ struct _store_rebuild_data
     int badflags;		/* # bad e->flags */
     int bad_log_op;
     int zero_object_sz;
-};
-
-/*
- * This defines an fs type
- */
-
-struct _storefs_entry
-{
-    const char *typestr;
-    STFSSHUTDOWN *donefunc;
-    STFSNEW *newfunc;
 };
 
 /*

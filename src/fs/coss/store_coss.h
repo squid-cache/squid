@@ -2,6 +2,7 @@
 #define __COSS_H__
 
 #include "SwapDir.h"
+#include "async_io.h"
 
 #ifndef COSS_MEMBUF_SZ
 #define	COSS_MEMBUF_SZ	1048576

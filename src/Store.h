@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.10 2003/03/15 04:17:39 robertc Exp $
+ * $Id: Store.h,v 1.11 2003/07/22 15:23:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,13 +46,10 @@ class StoreClient;
 
 class MemObject;
 
-typedef void STSETUP(storefs_entry_t *);
-
 class StoreEntry : public hash_link
 {
 
 public:
-    static void FsAdd(const char *, STSETUP *);
     static DeferredRead::DeferrableRead DeferReader;
     bool checkDeferRead(int fd) const;
 
@@ -218,11 +215,7 @@ SQUIDCEXTERN void storeHeapPositionUpdate(StoreEntry *, SwapDir *);
 SQUIDCEXTERN void storeSwapFileNumberSet(StoreEntry * e, sfileno filn);
 SQUIDCEXTERN void storeFsInit(void);
 SQUIDCEXTERN void storeFsDone(void);
-typedef void STSETUP(storefs_entry_t *);
 SQUIDCEXTERN void storeReplAdd(const char *, REMOVALPOLICYCREATE *);
-
-/* store_modules.c */
-SQUIDCEXTERN void storeFsSetup(void);
 
 #ifdef _USE_INLINE_
 #include "Store.cci"

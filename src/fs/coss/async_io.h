@@ -1,5 +1,6 @@
 #ifndef __ASYNC_IO_H__
 #define __ASYNC_IO_H__
+#include <aio.h>
 
 #define MAX_ASYNCOP		128
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.571 2003/07/14 10:36:42 robertc Exp $
+ * $Id: store.cc,v 1.572 2003/07/22 15:23:02 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1684,48 +1684,6 @@ void
 storeFsInit(void)
 {
     storeReplSetup();
-    storeFsSetup();
-}
-
-
-/*
- * similar to above, but is called when a graceful shutdown is to occur
- * of each fs module.
- */
-void
-storeFsDone(void)
-{
-    int i = 0;
-
-    while (storefs_list[i].typestr != NULL) {
-        storefs_list[i].donefunc();
-        i++;
-    }
-}
-
-/*
- * called to add another store fs module
- * RBC: doesn't belong here. Move IT.
- */
-void
-StoreEntry::FsAdd(const char *type, STSETUP * setup)
-{
-    int i;
-    /* find the number of currently known storefs types */
-
-    for (i = 0; storefs_list && storefs_list[i].typestr; i++) {
-        assert(strcmp(storefs_list[i].typestr, type) != 0);
-    }
-
-    /* add the new type */
-    storefs_list = static_cast<storefs_entry_t *>(xrealloc(storefs_list, (i + 2) * sizeof(storefs_entry_t)));
-
-    memset(&storefs_list[i + 1], 0, sizeof(storefs_entry_t));
-
-    storefs_list[i].typestr = type;
-
-    /* Call the FS to set up capabilities and initialize the FS driver */
-    setup(&storefs_list[i]);
 }
 
 /*

@@ -1,7 +1,6 @@
+
 /*
- * $Id: Array.cc,v 1.11 2003/07/22 15:23:18 robertc Exp $
- *
- * AUTHOR: Alex Rousskov
+ * $Id: StoreFileSystem.h,v 1.1 2003/07/22 15:23:01 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,25 +28,46 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-/*
- * Array is an array of (void*) items with unlimited capacity
- *
- * Array grows when arrayAppend() is called and no space is left
- * Currently, array does not have an interface for deleting an item because
- *     we do not need such an interface yet.
- */
+#ifndef SQUID_STOREFILESYSTEM_H
+#define SQUID_STOREFILESYSTEM_H
 
-
-#include "config.h"
+#include "squid.h"
 #include "Array.h"
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#include "util.h"
-#include "Array.h"
+class StoreFileSystem
+{
+
+public:
+    static void SetupAllFs();
+    static void FsAdd(StoreFileSystem &);
+    static void FreeAllFs();
+    static Vector<StoreFileSystem*> const &FileSystems();
+    typedef Vector<StoreFileSystem*>::iterator iterator;
+    typedef Vector<StoreFileSystem*>::const_iterator const_iterator;
+    StoreFileSystem() : initialised (false) {}
+
+    virtual ~StoreFileSystem(){}
+
+    virtual char const *type () const = 0;
+    virtual SwapDir *createSwapDir() = 0;
+    virtual void done() = 0;
+    virtual void setup() = 0;
+    // Not implemented
+    StoreFileSystem(StoreFileSystem const &);
+    StoreFileSystem &operator=(StoreFileSystem const&);
+
+protected:
+    bool initialised;
+
+private:
+    static Vector<StoreFileSystem*> &GetFileSystems();
+    static Vector<StoreFileSystem*> *_FileSystems;
+};
+
+typedef StoreFileSystem storefs_entry_t;
+
+
+#endif /* SQUID_STOREFILESYSTEM_H */

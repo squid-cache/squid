@@ -37,6 +37,7 @@ public:
     virtual void close ();
     virtual bool error() const;
     virtual bool canRead() const;
+    virtual bool ioInProgress()const;
 
     /* Temporary */
     int getID() const {return id;}
@@ -58,6 +59,9 @@ private:
     int mode;
     void notifyClient();
     bool canNotifyClient() const;
+    void ioAway();
+    void ioCompleted();
+    size_t inProgressIOs;
 };
 
 class SharedMemory
@@ -78,29 +82,6 @@ public:
     char *inuse_map;
 
     int id;
-};
-
-class diskdstate_t : public UFSStoreState
-{
-
-public:
-    virtual void deleteSelf() const {delete this;}
-
-    void * operator new (size_t);
-    void operator delete (void *);
-    diskdstate_t(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data);
-    ~diskdstate_t();
-
-    void close();
-
-    void ioCompletedNotification();
-    void readCompleted(const char *buf, int len, int errflag);
-    void writeCompleted(int errflag, size_t len);
-    void closeCompleted();
-
-private:
-    CBDATA_CLASS(diskdstate_t);
-    void doCallback(int);
 };
 
 #include "dio.h"
@@ -128,29 +109,29 @@ struct _diskd_stats
 
 typedef struct _diskd_stats diskd_stats_t;
 
-extern void storeDiskdHandle(diomsg * M);
-
-#include "SwapDir.h"
-
-class DiskdSwapDir : public UFSSwapDir
-{
-
-public:
-    virtual void init();
-    virtual void dump(StoreEntry &)const;
-    virtual void unlink(StoreEntry &);
-    virtual void statfs (StoreEntry &) const;
-    virtual int canStore(StoreEntry const &) const;
-    virtual int callback();
-    virtual void sync();
-    virtual void parse (int index, char *path);
-    virtual void reconfigure (int, char *);
-    virtual void unlinkFile(char const *);
-};
-
+class SwapDir;
 #define SHMBUF_BLKSZ SM_PAGE_SIZE
 
 extern diskd_stats_t diskd_stats;
+
+#include "fs/ufs/IOModule.h"
+
+class DiskdIOModule : public IOModule
+{
+
+public:
+    static DiskdIOModule &GetInstance();
+    DiskdIOModule();
+    virtual void init();
+    virtual void shutdown();
+    virtual UFSStrategy *createSwapDirIOStrategy();
+
+private:
+    static DiskdIOModule *Instance;
+    bool initialised;
+};
+
+/* Per SwapDir instance */
 
 class DiskdIO : public UFSStrategy
 {
@@ -163,6 +144,13 @@ public:
     virtual int load();
     virtual StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
     virtual DiskFile::Pointer newFile (char const *path);
+    virtual SwapDirOption *getOptionTree() const;
+    virtual void unlinkFile (char const *);
+    void storeDiskdHandle(diomsg * M);
+    virtual void init();
+    virtual int callback();
+    virtual void sync();
+    virtual void statfs(StoreEntry & sentry)const;
     int away;
     int magic1;
     int magic2;
@@ -170,6 +158,18 @@ public:
     int rmsgid;
     int wfd;
     SharedMemory shm;
+
+private:
+    static size_t newInstance();
+    bool optionQ1Parse(char const *option, const char *value, int reconfiguring);
+    void optionQ1Dump(StoreEntry * e) const;
+    bool optionQ2Parse(char const *option, const char *value, int reconfiguring);
+    void optionQ2Dump(StoreEntry * e) const;
+    void unlinkDone(diomsg * M);
+    static size_t nextInstanceID;
+    size_t instanceID;
 };
+
+extern void storeDiskdStats(StoreEntry * sentry);
 
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.446 2003/07/16 12:54:42 hno Exp $
+ * $Id: cache_cf.cc,v 1.447 2003/07/22 15:23:01 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -39,6 +39,7 @@
 #include "SwapDir.h"
 #include "ConfigParser.h"
 #include "ACL.h"
+#include "StoreFileSystem.h"
 
 #if SQUID_SNMP
 #include "snmp.h"
@@ -64,10 +65,6 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
-static void parse_cachedir_option_readonly(SwapDir * sd, const char *option, const char *value, int reconfiguring);
-static void dump_cachedir_option_readonly(StoreEntry * e, const char *option, SwapDir const * sd);
-static void parse_cachedir_option_maxsize(SwapDir * sd, const char *option, const char *value, int reconfiguring);
-static void dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir const * sd);
 static void parse_logformat(logformat ** logformat_definitions);
 static void parse_access_log(customlog ** customlog_definitions);
 static int check_null_access_log(customlog *customlog_definitions);
@@ -78,13 +75,6 @@ static void free_logformat(logformat ** definitions);
 static void free_access_log(customlog ** definitions);
 
 
-static struct cache_dir_option common_cachedir_options[] =
-    {
-        {"read-only", parse_cachedir_option_readonly, dump_cachedir_option_readonly},
-
-        {"max-size", parse_cachedir_option_maxsize, dump_cachedir_option_maxsize},
-        {NULL, NULL}
-    };
 
 
 static void update_maxobjsize(void);
@@ -221,7 +211,7 @@ wordlistDup(const wordlist * w)
  * These functions is the same as atoi/l/f, except that they check for errors
  */
 
-static long
+long
 xatol(const char *token)
 {
     char *end;
@@ -233,7 +223,7 @@ xatol(const char *token)
     return ret;
 }
 
-static int
+int
 xatoi(const char *token)
 {
     return xatol(token);
@@ -1204,19 +1194,6 @@ free_http_header_replace(header_mangler header[])
 
 #endif
 
-void
-
-dump_cachedir_options(StoreEntry * entry, struct cache_dir_option *options, SwapDir const * sd)
-{
-
-    struct cache_dir_option *option;
-
-    if (!options)
-        return;
-
-    for (option = options; option->name; option++)
-        option->dump(entry, option->name, sd);
-}
 
 static void
 dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swap)
@@ -1227,12 +1204,12 @@ dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swa
 
     for (i = 0; i < swap.n_configured; i++) {
         s = swap.swapDirs[i];
-        storeAppendPrintf(entry, "%s %s %s", name, s->type, s->path);
+        storeAppendPrintf(entry, "%s %s %s", name, s->type(), s->path);
         s->dump(*entry);
-        dump_cachedir_options(entry, common_cachedir_options, s);
         storeAppendPrintf(entry, "\n");
     }
 }
+
 
 static int
 check_null_cachedir(_SquidConfig::_cacheSwap swap)
@@ -1351,16 +1328,13 @@ allocate_new_swapdir(_SquidConfig::_cacheSwap * swap)
     }
 }
 
+/* TODO: just return the object, the # is irrelevant */
 static int
 find_fstype(char *type)
 {
-    int i;
-
-    for (i = 0; storefs_list[i].typestr != NULL; i++) {
-        if (strcasecmp(type, storefs_list[i].typestr) == 0) {
-            return i;
-        }
-    }
+    for (size_t i = 0; i < StoreFileSystem::FileSystems().size(); ++i)
+        if (strcasecmp(type, StoreFileSystem::FileSystems().items[i]->type()) == 0)
+            return (int)i;
 
     return (-1);
 }
@@ -1426,110 +1400,13 @@ parse_cachedir(_SquidConfig::_cacheSwap * swap)
     }
 
     allocate_new_swapdir(swap);
-    swap->swapDirs[swap->n_configured] = SwapDir::Factory(storefs_list[fs]);
+    swap->swapDirs[swap->n_configured] = StoreFileSystem::FileSystems().items[fs]->createSwapDir();
     sd = swap->swapDirs[swap->n_configured];
     /* parse the FS parameters and options */
     sd->parse(swap->n_configured, path_str);
     ++swap->n_configured;
     /* Update the max object size */
     update_maxobjsize();
-}
-
-static void
-parse_cachedir_option_readonly(SwapDir * sd, const char *option, const char *value, int reconfiguring)
-{
-    int read_only = 0;
-
-    if (value)
-        read_only = xatoi(value);
-    else
-        read_only = 1;
-
-    sd->flags.read_only = read_only;
-}
-
-static void
-dump_cachedir_option_readonly(StoreEntry * e, const char *option, SwapDir const * sd)
-{
-    if (sd->flags.read_only)
-        storeAppendPrintf(e, " %s", option);
-}
-
-static void
-parse_cachedir_option_maxsize(SwapDir * sd, const char *option, const char *value, int reconfiguring)
-{
-    ssize_t size;
-
-    if (!value)
-        self_destruct();
-
-    size = xatoi(value);
-
-    if (reconfiguring && sd->max_objsize != size)
-        debug(3, 1) ("Cache dir '%s' max object size now %ld\n", sd->path, (long int) size);
-
-    sd->max_objsize = size;
-}
-
-static void
-dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir const * sd)
-{
-    if (sd->max_objsize != -1)
-        storeAppendPrintf(e, " %s=%ld", option, (long int) sd->max_objsize);
-}
-
-void
-
-parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int reconfiguring)
-{
-    unsigned int old_read_only = sd->flags.read_only;
-    char *name, *value;
-
-    struct cache_dir_option *option, *op;
-
-    while ((name = strtok(NULL, w_space)) != NULL)
-    {
-        value = strchr(name, '=');
-
-        if (value)
-            *value++ = '\0';	/* cut on = */
-
-        option = NULL;
-
-        if (options) {
-            for (op = options; !option && op->name; op++) {
-                if (strcmp(op->name, name) == 0) {
-                    option = op;
-                    break;
-                }
-            }
-        }
-
-        for (op = common_cachedir_options; !option && op->name; op++) {
-            if (strcmp(op->name, name) == 0) {
-                option = op;
-                break;
-            }
-        }
-
-        if (!option || !option->parse)
-            self_destruct();
-
-        option->parse(sd, name, value, reconfiguring);
-    }
-
-    /*
-     * Handle notifications about reconfigured single-options with no value
-     * where the removal of the option cannot be easily detected in the
-     * parsing...
-     */
-    if (reconfiguring)
-    {
-        if (old_read_only != sd->flags.read_only) {
-            debug(3, 1) ("Cache dir '%s' now %s\n",
-                         sd->path, sd->flags.read_only ? "Read-Only" : "Read-Write");
-        }
-    }
 }
 
 static void

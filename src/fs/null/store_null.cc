@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.6 2003/02/21 22:50:44 robertc Exp $
+ * $Id: store_null.cc,v 1.7 2003/07/22 15:23:14 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -39,26 +39,11 @@
 #include <sys/statvfs.h>
 #endif
 #endif
-#include "SwapDir.h"
 #include "Store.h"
+#include "fs/null/store_null.h"
 
-class NullSwapDir : public SwapDir
-{
-
-public:
-    virtual void init();
-    virtual int canStore(StoreEntry const &)const;
-    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
-    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
-    virtual void parse(int, char*);
-    virtual void reconfigure (int, char *);
-};
-
-static int null_initialised = 0;
 static EVH storeNullDirRebuildComplete;
-
-/* The only externally visible interface */
-STSETUP storeFsSetup_null;
+NullSwapDir::NullSwapDir() : SwapDir ("null") {}
 
 void
 NullSwapDir::reconfigure(int index, char *path)
@@ -66,18 +51,6 @@ NullSwapDir::reconfigure(int index, char *path)
     (void) 0;
 }
 
-static void
-storeNullDirDone(void)
-{
-    null_initialised = 0;
-}
-
-static SwapDir *
-storeNullNew(void)
-{
-    SwapDir *result = new NullSwapDir;
-    return result;
-}
 
 void
 NullSwapDir::init()
@@ -122,16 +95,6 @@ NullSwapDir::parse(int anIndex, char *aPath)
 {
     index = anIndex;
     path = xstrdup(aPath);
-    parse_cachedir_options(this, NULL, 0);
+    parseOptions(0);
 }
 
-/* Setup and register the store module */
-
-void
-storeFsSetup_null(storefs_entry_t * storefs)
-{
-    assert(!null_initialised);
-    storefs->donefunc = storeNullDirDone;
-    storefs->newfunc = storeNullNew;
-    null_initialised = 1;
-}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.45 2003/07/15 11:33:23 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.46 2003/07/22 15:23:10 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -35,9 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
-#include <aio.h>
 
-#include "async_io.h"
 #include "store_coss.h"
 #include "fde.h"
 #include "SwapDir.h"
@@ -47,7 +45,6 @@
 
 int n_coss_dirs = 0;
 /* static int last_coss_pick_index = -1; */
-int coss_initialised = 0;
 MemPool *coss_index_pool = NULL;
 
 typedef struct _RebuildState RebuildState;
@@ -86,9 +83,6 @@ static StoreEntry *storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * k
 static void storeCossDirRebuild(CossSwapDir * sd);
 static void storeCossDirCloseTmpSwapLog(CossSwapDir * sd);
 static FILE *storeCossDirOpenTmpSwapLog(CossSwapDir *, int *, int *);
-
-/* The "only" externally visible function */
-STSETUP storeFsSetup_coss;
 
 static char *
 storeCossDirSwapLogFile(SwapDir * sd, const char *ext)
@@ -828,7 +822,7 @@ CossSwapDir::parse(int anIndex, char *aPath)
 
     max_size = size;
 
-    parse_cachedir_options(this, NULL, 0);
+    parseOptions(0);
 
     /* Enforce maxobjsize being set to something */
     if (max_objsize == -1)
@@ -855,7 +849,7 @@ CossSwapDir::reconfigure(int index, char *path)
         max_size = size;
     }
 
-    parse_cachedir_options(this, NULL, 1);
+    parseOptions(1);
     /* Enforce maxobjsize being set to something */
 
     if (max_objsize == -1)
@@ -865,9 +859,8 @@ CossSwapDir::reconfigure(int index, char *path)
 void
 CossSwapDir::dump(StoreEntry &entry)const
 {
-    storeAppendPrintf(&entry, " %d",
-                      max_size >> 20);
-    dump_cachedir_options(&entry, NULL, this);
+    storeAppendPrintf(&entry, " %d", max_size >> 20);
+    dumpOptions(&entry);
 }
 
 #if OLD_UNUSED_CODE
@@ -916,25 +909,7 @@ storeCossDirPick(void)
 }
 
 #endif
-
-/*
- * initial setup/done code
- */
-static void
-storeCossDirDone(void)
-{
-    /*  memPoolDestroy(&coss_index_pool);  XXX Should be here? */
-    coss_initialised = 0;
-}
-
-static SwapDir *
-storeCossNew(void)
-{
-    SwapDir *result = new CossSwapDir;
-    return result;
-}
-
-CossSwapDir::CossSwapDir() : fd (-1), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0)
+CossSwapDir::CossSwapDir() : SwapDir ("coss"), fd (-1), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0)
 {
     membufs.head = NULL;
     membufs.tail = NULL;
@@ -942,13 +917,3 @@ CossSwapDir::CossSwapDir() : fd (-1), swaplog_fd(-1), count(0), current_membuf (
     cossindex.tail = NULL;
 }
 
-void
-storeFsSetup_coss(storefs_entry_t * storefs)
-{
-    assert(!coss_initialised);
-
-    storefs->donefunc = storeCossDirDone;
-    storefs->newfunc = storeCossNew;
-    coss_index_pool = memPoolCreate("COSS index data", sizeof(CossIndexNode));
-    coss_initialised = 1;
-}

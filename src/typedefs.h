@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.167 2003/07/15 11:33:22 robertc Exp $
+ * $Id: typedefs.h,v 1.168 2003/07/22 15:23:02 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -251,8 +251,6 @@ class storeIOState;
 
 typedef struct _link_list link_list;
 
-typedef struct _storefs_entry storefs_entry_t;
-
 typedef struct _storerepl_entry storerepl_entry_t;
 
 typedef struct _diskd_queue diskd_queue;
@@ -331,9 +329,6 @@ typedef int HLPSAVAIL(void *);
 typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);
 typedef void IDNSCB(void *, rfc1035_rr *, int);
-
-typedef void STFSSHUTDOWN(void);
-typedef SwapDir *STFSNEW(void);
 
 typedef double hbase_f(double);
 typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);

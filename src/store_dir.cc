@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.147 2003/07/17 15:40:27 wessels Exp $
+ * $Id: store_dir.cc,v 1.148 2003/07/22 15:23:02 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -362,7 +362,7 @@ storeDirStats(StoreEntry * sentry)
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
         storeAppendPrintf(sentry, "\n");
         SD = INDEXSD(i);
-        storeAppendPrintf(sentry, "Store Directory #%d (%s): %s\n", i, SD->type,
+        storeAppendPrintf(sentry, "Store Directory #%d (%s): %s\n", i, SD->type(),
                           storeSwapDir(i));
         storeAppendPrintf(sentry, "FS Block Size %d Bytes\n",
                           SD->fs.blksize);
@@ -545,6 +545,9 @@ storeDirCallback(void)
             ++ndir;
 
             j += SD->callback();
+
+            if (j > 100)
+                fatal ("too much io\n");
         }
     } while (j > 0);
 

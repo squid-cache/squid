@@ -95,3 +95,4 @@ section 88    Client side reply management - from store to stream
 section 89    NAT / IP Interception
 section 90    Store Client
 section 91    Http Surrogate-Control Header
+section 92    Store File System

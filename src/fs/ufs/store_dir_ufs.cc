@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.59 2003/07/15 11:33:23 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.60 2003/07/22 15:23:14 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -41,12 +41,8 @@
 #include "StoreSwapLogData.h"
 
 #include "SwapDir.h"
-static int ufs_initialised = 0;
-
 int UFSSwapDir::NumberOfUFSDirs = 0;
 int *UFSSwapDir::UFSDirToGlobalDirMapping = NULL;
-
-STSETUP storeFsSetup_ufs;
 
 /*
  * storeUfsDirCheckObj
@@ -56,51 +52,19 @@ STSETUP storeFsSetup_ufs;
  * happily store anything as long as the LRU time isn't too small.
  */
 int
-UfsSwapDir::canStore(StoreEntry const &e)const
+UFSSwapDir::canStore(StoreEntry const &e)const
 {
-    /* Return 999 (99.9%) constant load */
-    return 999;
+    if (IO->shedLoad())
+        return -1;
+
+    return IO->load();
 }
 
-void
-UfsSwapDir::unlinkFile(char const *path)
-{
-#if USE_UNLINKD
-    unlinkdUnlink(path);
-#elif USE_TRUNCATE
-
-    truncate(path, 0);
-#else
-
-    ::unlink(path);
-#endif
-}
 
 /* ========== LOCAL FUNCTIONS ABOVE, GLOBAL FUNCTIONS BELOW ========== */
 
-static struct cache_dir_option options[] =
-    {
-#if NOT_YET_DONE
-        {"L1", storeUfsDirParseL1, storeUfsDirDumpL1},
-        {"L2", storeUfsDirParseL2, storeUfsDirDumpL2},
-#endif
-        {NULL, NULL}
-    };
-
-/*
- * storeUfsDirReconfigure
- *
- * This routine is called when the given swapdir needs reconfiguring 
- */
 void
-UfsSwapDir::reconfigure(int anIndex, char *aPath)
-{
-    UFSSwapDir::reconfigure (anIndex, aPath);
-    parse_cachedir_options(this, options, 1);
-}
-
-void
-UFSSwapDir::reconfigure(int index, char *path)
+UFSSwapDir::parseSizeL1L2()
 {
     int i;
     int size;
@@ -109,17 +73,7 @@ UFSSwapDir::reconfigure(int index, char *path)
     size = i << 10;		/* Mbytes to kbytes */
 
     if (size <= 0)
-        fatal("storeDiskdDirReconfigure: invalid size value");
-
-    l1 = GetInteger();
-
-    if (l1 <= 0)
-        fatal("storeDiskdDirReconfigure: invalid level 1 directories value");
-
-    l2 = GetInteger();
-
-    if (l2 <= 0)
-        fatal("storeDiskdDirReconfigure: invalid level 2 directories value");
+        fatal("UFSSwapDir::parseSizeL1L2: invalid size value");
 
     /* just reconfigure it */
     if (size == max_size)
@@ -130,13 +84,29 @@ UFSSwapDir::reconfigure(int index, char *path)
                      path, size);
 
     max_size = size;
+
+    l1 = GetInteger();
+
+    if (l1 <= 0)
+        fatal("UFSSwapDir::parseSizeL1L2: invalid level 1 directories value");
+
+    l2 = GetInteger();
+
+    if (l2 <= 0)
+        fatal("UFSSwapDir::parseSizeL1L2: invalid level 2 directories value");
 }
 
+/*
+ * storeUfsDirReconfigure
+ *
+ * This routine is called when the given swapdir needs reconfiguring 
+ */
+
 void
-UfsSwapDir::dump(StoreEntry & entry)const
+UFSSwapDir::reconfigure(int index, char *path)
 {
-    UFSSwapDir::dump (entry);
-    dump_cachedir_options(&entry, options, this);
+    parseSizeL1L2();
+    parseOptions(1);
 }
 
 /*
@@ -145,30 +115,9 @@ UfsSwapDir::dump(StoreEntry & entry)const
  * Called when a *new* fs is being setup.
  */
 void
-UfsSwapDir::parse(int anIndex, char *aPath)
-{
-    UFSSwapDir::parse (anIndex, aPath);
-
-    parse_cachedir_options(this, options, 1);
-}
-
-void
 UFSSwapDir::parse (int anIndex, char *aPath)
 {
-    max_size = GetInteger() << 10;		/* Mbytes to kbytes */
-
-    if (max_size <= 0)
-        fatal("storeAufsDirParse: invalid size value");
-
-    l1 = GetInteger();
-
-    if (l1 <= 0)
-        fatal("storeAufsDirParse: invalid level 1 directories value");
-
-    l2 = GetInteger();
-
-    if (l2 <= 0)
-        fatal("storeAufsDirParse: invalid level 2 directories value");
+    parseSizeL1L2();
 
     index = anIndex;
 
@@ -176,6 +125,26 @@ UFSSwapDir::parse (int anIndex, char *aPath)
 
     /* Initialise replacement policy stuff */
     repl = createRemovalPolicy(Config.replPolicy);
+
+    parseOptions(0);
+}
+
+SwapDirOption *
+UFSSwapDir::getOptionTree() const
+{
+    SwapDirOption *parentResult = SwapDir::getOptionTree();
+    SwapDirOption *ioOptions = IO->getOptionTree();
+
+    if (!ioOptions)
+        return parentResult;
+
+    SwapDirOptionVector *result = new SwapDirOptionVector();
+
+    result->options.push_back(parentResult);
+
+    result->options.push_back(ioOptions);
+
+    return result;
 }
 
 /*
@@ -189,6 +158,7 @@ UFSSwapDir::init()
         "\tFailed to verify one of the swap directories, Check cache.log\n"
         "\tfor details.  Run 'squid -z' to create swap directories\n"
         "\tif needed, or if running Squid for the first time.";
+    IO->init();
     initBitmap();
 
     if (verifyCacheDirs())
@@ -214,7 +184,7 @@ UFSSwapDir::newFileSystem()
     createSwapSubDirs();
 }
 
-UFSSwapDir::UFSSwapDir() : IO(NULL), map(NULL), suggest(0), swaplog_fd (-1) {}
+UFSSwapDir::UFSSwapDir(char const *aType) : SwapDir(aType), IO(NULL), map(NULL), suggest(0), swaplog_fd (-1) {}
 
 UFSSwapDir::~UFSSwapDir()
 {
@@ -229,29 +199,6 @@ UFSSwapDir::~UFSSwapDir()
         IO->deleteSelf();
 
     IO = NULL;
-}
-
-static void
-storeUfsDirDone(void)
-{
-    ufs_initialised = 0;
-}
-
-static SwapDir *
-storeUfsNew(void)
-{
-    UfsSwapDir *result = new UfsSwapDir;
-    result->IO = &UfsIO::Instance;
-    return result;
-}
-
-void
-storeFsSetup_ufs(storefs_entry_t * storefs)
-{
-    assert(!ufs_initialised);
-    storefs->donefunc = storeUfsDirDone;
-    storefs->newfunc = storeUfsNew;
-    ufs_initialised = 1;
 }
 
 void
@@ -330,6 +277,8 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
         storeAppendPrintf(&sentry, " READ-ONLY");
 
     storeAppendPrintf(&sentry, "\n");
+
+    IO->statfs(sentry);
 }
 
 void
@@ -569,12 +518,12 @@ UFSSwapDir::verifyCacheDirs()
 void
 UFSSwapDir::createSwapSubDirs()
 {
-    int i, k;
-    int should_exist;
     LOCAL_ARRAY(char, name, MAXPATHLEN);
 
-    for (i = 0; i < l1; i++) {
+    for (int i = 0; i < l1; i++) {
         snprintf(name, MAXPATHLEN, "%s/%02X", path, i);
+
+        int should_exist;
 
         if (createDirectory(name, 0))
             should_exist = 0;
@@ -583,7 +532,7 @@ UFSSwapDir::createSwapSubDirs()
 
         debug(47, 1) ("Making directories in %s\n", name);
 
-        for (k = 0; k < l2; k++) {
+        for (int k = 0; k < l2; k++) {
             snprintf(name, MAXPATHLEN, "%s/%02X/%02X", path, i, k);
             createDirectory(name, should_exist);
         }
@@ -664,7 +613,7 @@ UFSSwapDir::closeLog()
 
     swaplog_fd = -1;
 
-    NumberOfUFSDirs--;
+    --NumberOfUFSDirs;
 
     assert(NumberOfUFSDirs >= 0);
 
@@ -882,16 +831,16 @@ public:
 
 #define CLEAN_BUF_SZ 16384
 
-/*
- * Begin the process to write clean cache state.  For AUFS this means
- * opening some log files and allocating write buffers.  Return 0 if
- * we succeed, and assign the 'func' and 'data' return pointers.
- */
 
 UFSCleanLog::UFSCleanLog(SwapDir *aSwapDir) : cur(NULL),newLog(NULL),cln(NULL),outbuf(NULL),
         outbuf_offset(0), fd(-1),walker(NULL), sd(aSwapDir)
 {}
 
+/*
+ * Begin the process to write clean cache state.  For AUFS this means
+ * opening some log files and allocating write buffers.  Return 0 if
+ * we succeed, and assign the 'func' and 'data' return pointers.
+ */
 int
 UFSSwapDir::writeCleanStart()
 {
@@ -1308,6 +1257,8 @@ UFSSwapDir::validFileno(sfileno filn, int flag) const
     return 1;
 }
 
+
+
 /*
  * UFSSwapDir::unlinkFile
  *
@@ -1318,9 +1269,18 @@ UFSSwapDir::validFileno(sfileno filn, int flag) const
 void
 UFSSwapDir::unlinkFile(sfileno f)
 {
-    debug(79, 3) ("UFSSwapDir::unlinkFile: unlinking fileno %08X\n", f);
+    debug(79, 3) ("UFSSwapDir::unlinkFile: unlinking fileno %08X '%s'\n", f, fullPath(f,NULL));
     /* commonUfsDirMapBitReset(this, f); */
-    unlinkFile(fullPath(f, NULL));
+    IO->unlinkFile(fullPath(f,NULL));
+}
+
+void
+UFSSwapDir::unlink(StoreEntry & e)
+{
+    debug(79, 3) ("storeUfsUnlink: dirno %d, fileno %08X\n", index, e.swap_filen);
+    replacementRemove(&e);
+    mapBitReset(e.swap_filen);
+    UFSSwapDir::unlinkFile(e.swap_filen);
 }
 
 /*
@@ -1362,6 +1322,7 @@ UFSSwapDir::dump(StoreEntry & entry) const
                       max_size >> 10,
                       l1,
                       l2);
+    dumpOptions(&entry);
 }
 
 char *
@@ -1383,4 +1344,16 @@ UFSSwapDir::fullPath(sfileno filn, char *fullpath) const
              filn);
 
     return fullpath;
+}
+
+int
+UFSSwapDir::callback()
+{
+    return IO->callback();
+}
+
+void
+UFSSwapDir::sync()
+{
+    IO->sync();
 }

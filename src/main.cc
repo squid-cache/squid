@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.384 2003/07/15 06:50:42 robertc Exp $
+ * $Id: main.cc,v 1.385 2003/07/22 15:23:02 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -42,6 +42,7 @@
 #include "ACLASN.h"
 #include "ACL.h"
 #include "htcp.h"
+#include "StoreFileSystem.h"
 
 #if USE_WIN32_SERVICE
 
@@ -982,6 +983,9 @@ main(int argc, char **argv)
 
         storeFsInit();		/* required for config parsing */
 
+        /* Shouldn't be needed for config parsing, but have not audited for such */
+        StoreFileSystem::SetupAllFs();
+
         authenticateSchemeInit();	/* required for config parsign */
 
         parse_err = parseConfigFile(ConfigFile);
@@ -1485,7 +1489,7 @@ SquidShutdown(void *unused)
 #endif
 
     storeDirSync();		/* Flush log close */
-    storeFsDone();
+    StoreFileSystem::FreeAllFs();
 #if PURIFY || XMALLOC_TRACE
 
     configFreeMemory();

@@ -1,7 +1,6 @@
+
 /*
- * $Id: Array.cc,v 1.11 2003/07/22 15:23:18 robertc Exp $
- *
- * AUTHOR: Alex Rousskov
+ * $Id: store_null.h,v 1.1 2003/07/22 15:23:14 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,25 +28,26 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-/*
- * Array is an array of (void*) items with unlimited capacity
- *
- * Array grows when arrayAppend() is called and no space is left
- * Currently, array does not have an interface for deleting an item because
- *     we do not need such an interface yet.
- */
+#ifndef SQUID_STORE_NULL_H
+#define SQUID_STORE_NULL_H
 
+#include "squid.h"
+#include "SwapDir.h"
 
-#include "config.h"
-#include "Array.h"
+class NullSwapDir : public SwapDir
+{
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#include "util.h"
-#include "Array.h"
+public:
+    NullSwapDir();
+    virtual void init();
+    virtual int canStore(StoreEntry const &)const;
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
+    virtual void parse(int, char*);
+    virtual void reconfigure (int, char *);
+};
+
+#endif /* SQUID_STORE_NULL_H */

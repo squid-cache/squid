@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.6 2003/07/15 11:33:22 robertc Exp $
+ * $Id: ufscommon.h,v 1.7 2003/07/22 15:23:03 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -52,16 +52,16 @@ public:
     static int DirClean(int swap_index);
     static int FilenoBelongsHere(int fn, int F0, int F1, int F2);
 
-    UFSSwapDir();
+    UFSSwapDir(char const *aType);
     virtual void init();
     virtual void newFileSystem();
     virtual void dump(StoreEntry &) const;
     ~UFSSwapDir();
     virtual bool doubleCheck(StoreEntry &);
-    virtual void unlink(StoreEntry &) = 0;
+    virtual void unlink(StoreEntry &);
     virtual void statfs(StoreEntry &)const;
     virtual void maintainfs();
-    virtual int canStore(StoreEntry const &)const = 0;
+    virtual int canStore(StoreEntry const &)const;
     virtual void reference(StoreEntry &);
     virtual void dereference(StoreEntry &);
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
@@ -73,9 +73,10 @@ public:
     virtual void logEntry(const StoreEntry & e, int op) const;
     virtual void parse(int index, char *path);
     virtual void reconfigure(int, char *);
+    virtual int callback();
+    virtual void sync();
 
     void unlinkFile(sfileno f);
-    virtual void unlinkFile (char const *) = 0;
     // move down when unlink is a virtual method
     //protected:
     UFSStrategy *IO;
@@ -99,6 +100,8 @@ public:
                                int clean);
     int validFileno(sfileno filn, int flag) const;
     int mapBitAllocate();
+    virtual SwapDirOption *getOptionTree() const;
+
     void *fsdata;
 
     bool validL2(int) const;
@@ -114,6 +117,7 @@ protected:
     int l2;
 
 private:
+    void parseSizeL1L2();
     static int NumberOfUFSDirs;
     static int * UFSDirToGlobalDirMapping;
     bool pathIsDirectory(const char *path)const;
@@ -152,6 +156,7 @@ public:
     virtual void create (int, mode_t, IORequestor::Pointer) = 0;
     virtual void read(char *, off_t, size_t) = 0;
     virtual void write(char const *buf, size_t size, off_t offset, FREE *free_func) = 0;
+    virtual void close () = 0;
     virtual bool canRead() const = 0;
     virtual bool canWrite() const {return true;}
 
@@ -159,6 +164,9 @@ public:
     virtual int getFD() const {return -1;}
 
     virtual bool error() const = 0;
+
+    /* Inform callers if there is IO in progress */
+    virtual bool ioInProgress() const = 0;
 };
 
 /* UFS dir specific IO calls */
@@ -182,6 +190,80 @@ public:
                                  STIOCB *, void *);
     /* virtual void strategyStats(StoreEntry *sentry) const = 0; */
     /* virtual void dumpCacheDirParams(StoreEntry * e, const char *option) const = 0; */
+    virtual SwapDirOption *getOptionTree() const { return NULL;}
+
+    virtual void unlinkFile (char const *) = 0;
+    virtual void sync() {}
+
+    virtual int callback() { return 0; }
+
+    /* Init per-instance logic */
+    virtual void init() {}
+
+    /* cachemgr output on the IO instance stats */
+    virtual void statfs(StoreEntry & sentry)const {}}
+
+;
+
+class IOStrategy
+{
+
+public:
+    virtual ~IOStrategy(){}
+
+    /* Can the IO Strategy handle more requests ? */
+    virtual bool shedLoad() = 0;
+    /* What is the current load? 999 = 99.9% */
+    virtual int load() = 0;
+    /* Return a handle for performing IO operations */
+    virtual DiskFile::Pointer newFile (char const *path) = 0;
+    /* flush all IO operations  */
+    virtual void sync() {}
+
+    /* perform any pending callbacks */
+    virtual int callback() { return 0; }
+
+    /* Init per-instance logic */
+    virtual void init() {}
+
+    /* cachemgr output on the IO instance stats */
+    virtual void statfs(StoreEntry & sentry)const {}}
+
+;
+
+/* RBC 20030718 - use this to provide instance expecting classes a pointer to a
+ * singleton
+ */
+
+template <class C>
+
+class InstanceToSingletonAdapter : public C
+{
+
+public:
+    void *operator new (size_t byteCount) { return ::operator new (byteCount);}
+
+    void operator delete (void *address) { ::operator delete (address);}
+
+    InstanceToSingletonAdapter(C const *instance) : theInstance (instance) {}
+
+    C const * operator-> () const {return theInstance; }
+
+    C * operator-> () {return const_cast<C *>(theInstance); }
+
+    C const & operator * () const {return *theInstance; }
+
+    C & operator * () {return *const_cast<C *>(theInstance); }
+
+    operator C const * () const {return theInstance;}
+
+    operator C *() {return const_cast<C *>(theInstance);}
+
+    // This will go when we remove the deleteSelf idiom
+    virtual void deleteSelf() const {delete const_cast<InstanceToSingletonAdapter*>(this);}
+
+private:
+    C const *theInstance;
 };
 
 /* Common ufs-store-dir logic */
@@ -190,10 +272,18 @@ class UFSStoreState : public storeIOState, public IORequestor
 {
 
 public:
-    virtual void deleteSelf() const = 0;
-    UFSStoreState();
+    virtual void deleteSelf() const {delete this;}
+
+    void * operator new (size_t);
+    void operator delete (void *);
+    UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_);
     ~UFSStoreState();
+    virtual void close();
+    virtual void closeCompleted();
     // protected:
+    virtual void ioCompletedNotification();
+    virtual void readCompleted(const char *buf, int len, int errflag);
+    virtual void writeCompleted(int errflag, size_t len);
     DiskFile::Pointer theFile;
     bool opening;
     bool creating;
@@ -204,6 +294,7 @@ public:
     void write(char const *buf, size_t size, off_t offset, FREE * free_func);
 
 protected:
+    virtual void doCallback (int errflag);
 
     class _queued_read
     {
@@ -236,6 +327,14 @@ protected:
         static MemPool *Pool;
     };
 
+    /* These should be in the IO strategy */
+
+    struct
+    {
+        bool write_kicking;
+    }
+
+    flags;
     link_list *pending_reads;
     link_list *pending_writes;
     void queueRead(char *, size_t, off_t, STRCB *, void *);
@@ -243,6 +342,10 @@ protected:
     bool kickReadQueue();
     bool kickWriteQueue();
     char *read_buf;
+
+private:
+    CBDATA_CLASS(UFSStoreState);
+    void openDone();
 };
 
 class RebuildState : public RefCountable
