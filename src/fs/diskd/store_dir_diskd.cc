@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.52 2001/07/10 15:35:45 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.53 2001/07/11 22:29:50 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -305,8 +305,9 @@ storeDiskdDirSwapLogFile(SwapDir * sd, const char *ext)
     char *pathtmp2;
     if (Config.Log.swap) {
 	xstrncpy(pathtmp, sd->path, SQUID_MAXPATHLEN - 64);
-	while (index(pathtmp, '/'))
-	    *index(pathtmp, '/') = '.';
+	pathtmp2 = pathtmp;
+	while ((pathtmp2 = strchr(pathtmp2, '/')) != NULL)
+	    *pathtmp2 = '.';
 	while (strlen(pathtmp) && pathtmp[strlen(pathtmp) - 1] == '.')
 	    pathtmp[strlen(pathtmp) - 1] = '\0';
 	for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
