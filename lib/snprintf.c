@@ -336,7 +336,7 @@ static void
 dopr_outch(c)
      int c;
 {
-    if (iscntrl(c) && c != '\n' && c != '\t') {
+    if (iscntrl(c) && c != '\n' && c != '\t' && c != '\r') {
 	c = '@' + (c & 0x1F);
 	if (end == 0 || output < end) {
 	    *output++ = '^';
