@@ -1,5 +1,5 @@
 /*
- * $Id: recv-announce.cc,v 1.10 1996/09/20 06:29:04 wessels Exp $
+ * $Id: recv-announce.cc,v 1.11 1996/10/09 15:34:35 wessels Exp $
  *
  * DEBUG: section 0     Announement Server
  * AUTHOR: Harvest Derived
@@ -115,6 +115,8 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include "ansiproto.h"
+
 #define RECV_BUF_SIZE 8192
 
 extern void xmemcpy _PARAMS((void *from, void *to, int len));
@@ -140,7 +142,7 @@ extern void xmemcpy _PARAMS((void *from, void *to, int len));
  * usage: recv-announce logfile
  */
 
-void
+static void
 sig_handle(void)
 {
     fflush(stdout);

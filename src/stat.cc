@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.78 1996/09/24 20:17:32 wessels Exp $
+ * $Id: stat.cc,v 1.79 1996/10/09 15:34:37 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -667,7 +667,7 @@ static void
 info_get(cacheinfo * obj, StoreEntry * sentry)
 {
     char *tod = NULL;
-    float f;
+    time_t f;
 #if HAVE_MALLINFO
     int t;
 #endif

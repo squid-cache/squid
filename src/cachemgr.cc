@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.33 1996/10/07 15:06:06 wessels Exp $
+ * $Id: cachemgr.cc,v 1.34 1996/10/09 15:34:21 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -290,14 +290,20 @@ static char *op_cmds_descr[] =
     "Unknown Operation"
 };
 
-int hasTables = FALSE;
+static int hasTables = FALSE;
 
-char *script_name = "/cgi-bin/cachemgr.cgi";
+static char *script_name = "/cgi-bin/cachemgr.cgi";
 char *progname = NULL;
 
+static char x2c _PARAMS((char *));
 static int client_comm_connect _PARAMS((int sock, char *dest_host, u_short dest_port));
+static void print_trailer _PARAMS((void));
+static void noargs_html _PARAMS((char *, int, char *));
+static void unescape_url _PARAMS((char *));
+static void plustospace _PARAMS((char *));
+static void parse_object _PARAMS((char *));
 
-void
+static void
 print_trailer(void)
 {
     time_t now = time(NULL);
@@ -325,7 +331,7 @@ print_option(op_t current_opt, op_t opt_nr)
 }
 
 
-void
+static void
 noargs_html(char *host, int port, char *url)
 {
     op_t op = INFO;
@@ -427,7 +433,7 @@ fmakeword(FILE * f, char stop, int *cl)
 #endif
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-char
+static char
 x2c(char *what)
 {
     char digit;
@@ -439,7 +445,7 @@ x2c(char *what)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-void
+static void
 unescape_url(char *url)
 {
     int x, y;
@@ -454,7 +460,7 @@ unescape_url(char *url)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-void
+static void
 plustospace(char *str)
 {
     int x;
@@ -465,7 +471,7 @@ plustospace(char *str)
 }
 
 
-void
+static void
 parse_object(char *string)
 {
     char *tmp_line = NULL;

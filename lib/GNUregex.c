@@ -161,7 +161,7 @@ init_syntax_once()
  * machines, compilers, `char' and `unsigned char' argument types.
  * (Per Bothner suggested the basic approach.)  */
 #undef SIGN_EXTEND_CHAR
-#if __STDC__
+#ifdef __STDC__
 #define SIGN_EXTEND_CHAR(c) ((signed char) (c))
 #else /* not __STDC__ */
 /* As in Harbison and Steele.  */

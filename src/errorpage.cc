@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.43 1996/09/26 19:19:43 wessels Exp $
+ * $Id: errorpage.cc,v 1.44 1996/10/09 15:34:25 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -72,7 +72,7 @@ typedef struct {
     char *lng;
 } error_data;
 
-error_data ErrorData[] =
+static error_data ErrorData[] =
 {
     {"ERR_READ_TIMEOUT",
 	"Read Timeout",

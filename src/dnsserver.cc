@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.24 1996/09/24 18:47:56 wessels Exp $
+ * $Id: dnsserver.cc,v 1.25 1996/10/09 15:34:24 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -221,7 +221,7 @@ extern int h_errno;
 extern int _dns_ttl_;		/* this is a really *dirty* hack - bne */
 #endif
 
-int do_debug = 0;
+static int do_debug = 0;
 
 /* error messages from gethostbyname() */
 static char *
@@ -254,7 +254,6 @@ main(int argc, char *argv[])
     int alias_count = 0;
     int i;
     int c;
-    extern char *optarg;
 
 #if HAVE_RES_INIT
     res_init();

@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.21 1996/09/26 19:54:45 wessels Exp $
+ * $Id: redirect.cc,v 1.22 1996/10/09 15:34:35 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -345,7 +345,7 @@ redirectFreeMemory(void)
     if (redirect_child_table) {
 	for (k = 0; k < NRedirectors; k++) {
 	    if (redirect_child_table[k]->inbuf)
-	        put_free_4k_page(redirect_child_table[k]->inbuf);
+		put_free_4k_page(redirect_child_table[k]->inbuf);
 	    safe_free(redirect_child_table[k]);
 	}
 	safe_free(redirect_child_table);

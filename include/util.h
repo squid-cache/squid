@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.21 1996/09/20 23:26:52 wessels Exp $
+ * $Id: util.h,v 1.22 1996/10/09 15:34:15 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -190,7 +190,7 @@ extern void init_log3 _PARAMS((char *pn, FILE * a, FILE * b));
 extern void debug_init _PARAMS((void));
 extern void log_errno2 _PARAMS((char *, int, char *));
 
-#if __STDC__
+#ifdef __STDC__
 extern void Log _PARAMS((char *,...));
 extern void errorlog _PARAMS((char *,...));
 #else
