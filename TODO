@@ -1,63 +1,61 @@
 Our Todo List
 
 (1) is high priority, (5) is low priority
+(**) Means we need this for the real 1.2 release
 ==============================================================================
 
-(1) A customizable cache replacement policy.  Ugh, this could be
-    interesting since we just optimized the LRU replacement with a 
-    doubly-linked list.
-(1) Send full HTTP requests in ICP messages
+(1)	A customizable cache replacement policy.  Ugh, this could be
+	interesting since we just optimized the LRU replacement with a 
+	doubly-linked list.
+(1) **	Send full HTTP requests in ICP messages (DW)
 
-(2) copy over -z semantics from 1.1; don't automatically wipeout cache
-(2) copy over 'test_reachability' from 1.1
-(2) we don't properly handle the HTTP/1.1 'Connection' header
-(2) be more persistent in forwarding requests; return fewer error pages
-(2) Fix some problems with peer-selection.
-	- Allow for 'backup' parents
-	- An orderd list of siblings to try.
-	- Hash function load balancing
-(2) Code cleanup:
-	- Make sure the lib/*.c files do not use printf/fprintf.
-	- Replace bzero with memset
-	- Replace bcopy with xmemcpy
-(2) Add "Squid" trailer to all error messages.
+(2) **  copy over -z semantics from 1.1; don't automatically wipeout
+	cache (DW)
+(2) **	copy over 'test_reachability' from 1.1 (DW)
+(2) **	we don't properly handle the HTTP/1.1 'Connection' header (KA)
+(2)	be more persistent in forwarding requests; return fewer error pages
+(2)	Fix some problems with peer-selection.
+		- Allow for 'backup' parents 
+		- An orderd list of siblings to try.  
+		- Hash function load balancing
+(2) **	Code cleanup: (KA)
+		- Make sure the lib/*.c files do not use printf/fprintf.
+		- Replace bzero with memset
+		- Replace bcopy with xmemcpy
+(2) **	Add "Squid" trailer to all error messages. (AR)
 
-(3) request-range
-(3) hit metering
-(3) ETag support (makes metadata bigger--ack!)
-(3) Efficient public peer access control *without ACLs*
-    Bill Wichers <billw@unix0.waveform.net>
-    Dave Zarzycki <zarzycki@ricochet.net>
-    # distant_peer_deny (icmp rtt) (hops)
-    #    If the ICP client is farther than "z" hops away,
-    #    or if more than y% of pings to the client exceed
-    #    x milliseconds, then deny.
-    distant_peer_deny   200  75  10
-(3) Resource limits.
-(3) Make swap.state binary with fixed-size cache keys
-(3) Make checkFailureRatio() work again.
-(3) LDAP support.  See http://miso.wwa.com/~donley/ and
-    Clayton Donley <qa1049@ilms04.cig.mot.com>
+(3) **	request-range (AR)
+(3)	hit metering
+(3)	ETag support (makes metadata bigger--ack!)
+(3)	Efficient public peer access control *without ACLs*
+	Bill Wichers <billw@unix0.waveform.net>
+	Dave Zarzycki <zarzycki@ricochet.net>
+	# distant_peer_deny (icmp rtt) (hops)
+	#    If the ICP client is farther than "z" hops away,
+	#    or if more than y% of pings to the client exceed
+	#    x milliseconds, then deny.
+	distant_peer_deny   200  75  10
+(3)	Resource limits.
+(3) **	Make swap.state binary with fixed-size cache keys (AR)
+(3) **	Make checkFailureRatio() work again.  (DW)
+(3)	LDAP support.  See http://miso.wwa.com/~donley/ and
+	Clayton Donley <qa1049@ilms04.cig.mot.com>
+(3) **  Store cache key and other metadata in swap files (KA)
 
-(4) FTP PUT
-(4) Everywhere that we use 'pattern' or such, use ACL elements instead.
-    stoplist_pattern, refresh_pattern, ...
-(4) Base stoplists on ACLs.
-(4) Refresh based on content types.  This means we'll need an enum of
-    known content types added to StoreEntry.  Unknown types will lose.
+(4) **	FTP PUT (KA)
+(4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
+	stoplist_pattern, refresh_pattern, ...  (DW)
+(4)	Refresh based on content types.  This means we'll need an enum of
+	known content types added to StoreEntry.  Unknown types will lose.
 
-(5) X-Proxy-hops header?
-(5) internalize redirectors?
-(5) should we write clean store logs from the double-linked list so
-    that they are sorted in order of last reference?  Then upon
-    restart we won't have to worry about the list being unsorted
-    and causing problems with the LRU magic value.
-(5) For _popular_ objects, return hits if known to be stale, but then
-    initiate an IMS/refresh in the background.
-(5) #ifdefs to disable IP caching
-(5) REST for failed ftp transfers.
-(5) Customizable access logging.
-(5) Inline DNS queries with native resolver calls.
+(5)	X-Proxy-hops header?
+(5)	internalize redirectors?
+(5)	For _popular_ objects, return hits if known to be stale, but then
+	initiate an IMS/refresh in the background.
+(5)	#ifdefs to disable IP caching
+(5)	REST for failed ftp transfers.
+(5)	Customizable access logging.
+(5)	Inline DNS queries with native resolver calls.
 
 
 DONE:
@@ -82,3 +80,7 @@ DONE:
 	- Stevens V2 Ch.18
 (3) SIGHUP should reread error text files
 (4) support ftp://host/pub;type=d
+(5)	should we write clean store logs from the double-linked list so
+	that they are sorted in order of last reference?  Then upon
+	restart we won't have to worry about the list being unsorted
+	and causing problems with the LRU magic value.
