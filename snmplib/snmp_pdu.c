@@ -359,7 +359,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
     switch (PDU->command) {
 
 /**********************************************************************/
-
+#ifdef TRP_REQ_MSG
     case TRP_REQ_MSG:
 
 	/* SNMPv1 Trap */
@@ -401,9 +401,11 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
 	if (bufp == NULL)
 	    return (NULL);
 	break;
+#endif
 
 /**********************************************************************/
 
+#ifdef SNMP_PDU_GETBULK
     case SNMP_PDU_GETBULK:
 
 	/* SNMPv2 Bulk Request */
@@ -432,6 +434,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
 	    return (NULL);
 	break;
 
+#endif
 /**********************************************************************/
 
     default:
@@ -487,9 +490,11 @@ snmp_pdu_decode(u_char * Packet,	/* data */
 {				/* pdu */
     u_char *bufp;
     u_char PDUType;
-    int four;
     u_char ASNType;
+#ifdef UNUSED_CODE
+    int four;
     oid objid[MAX_NAME_LEN];
+#endif
 
     bufp = asn_parse_header(Packet, Length, &PDUType);
     if (bufp == NULL)
@@ -502,6 +507,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
     PDU->command = PDUType;
     switch (PDUType) {
 
+#ifdef TRP_REQ_MSG
     case TRP_REQ_MSG:
 
 	/* SNMPv1 Trap Message */
@@ -553,9 +559,11 @@ snmp_pdu_decode(u_char * Packet,	/* data */
 	if (bufp == NULL)
 	    ASN_PARSE_ERROR(NULL);
 	break;
+#endif
 
 /**********************************************************************/
 
+#ifdef SNMP_PDU_GETBULK
     case SNMP_PDU_GETBULK:
 
 	/* SNMPv2 Bulk Request */
@@ -580,8 +588,9 @@ snmp_pdu_decode(u_char * Packet,	/* data */
 	    &PDU->max_repetitions, sizeof(PDU->max_repetitions));
 	if (bufp == NULL)
 	    ASN_PARSE_ERROR(NULL);
-
 	break;
+#endif
+
 /**********************************************************************/
 
     default:
@@ -625,45 +634,6 @@ snmp_pdu_decode(u_char * Packet,	/* data */
     }
 
     return (bufp);
-}
-
-
-const char *
-snmp_pdu_type(struct snmp_pdu *PDU)
-{
-    switch (PDU->command) {
-    case SNMP_PDU_GET:
-	return ("GET");
-	break;
-    case SNMP_PDU_GETNEXT:
-	return ("GETNEXT");
-	break;
-    case SNMP_PDU_RESPONSE:
-	return ("RESPONSE");
-	break;
-    case SNMP_PDU_SET:
-	return ("SET");
-	break;
-    case SNMP_PDU_GETBULK:
-	return ("GETBULK");
-	break;
-    case SNMP_PDU_INFORM:
-	return ("INFORM");
-	break;
-    case SNMP_PDU_V2TRAP:
-	return ("V2TRAP");
-	break;
-    case SNMP_PDU_REPORT:
-	return ("REPORT");
-	break;
-
-    case TRP_REQ_MSG:
-	return ("V1TRAP");
-	break;
-    default:
-	return ("Unknown");
-	break;
-    }
 }
 
 /*
