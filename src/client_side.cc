@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.150 1997/11/14 15:49:58 wessels Exp $
+ * $Id: client_side.cc,v 1.151 1997/11/14 17:20:13 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1506,6 +1506,7 @@ clientReadRequest(int fd, void *data)
     debug(12, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
     size = read(fd, conn->in.buf + conn->in.offset, len);
     fd_bytes(fd, size, FD_READ);
+    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, Config.Timeout.read);
 
     if (size == 0) {
 	if (conn->chr == NULL) {
@@ -1518,12 +1519,9 @@ clientReadRequest(int fd, void *data)
 	EBIT_SET(F->flags, FD_SOCKET_EOF);
 	conn->defer.until = squid_curtime + 1;
 	conn->defer.n++;
-	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
 	return;
     } else if (size < 0) {
-	if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR) {
-	    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
-	} else {
+	if (!ignoreErrno(errno)) {
 	    debug(50, 2) ("clientReadRequest: FD %d: %s\n", fd, xstrerror());
 	    comm_close(fd);
 	}
@@ -1594,7 +1592,6 @@ clientReadRequest(int fd, void *data)
 		}
 		break;
 	    }
-	    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
 	    continue;		/* while offset > 0 */
 	} else if (parser_return_code == 0) {
 	    /*
@@ -1624,7 +1621,6 @@ clientReadRequest(int fd, void *data)
 		    conn->in.offset, conn->in.size);
 		k = conn->in.size - 1 - conn->in.offset;
 	    }
-	    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
 	    break;
 	} else {
 	    /* parser returned -1 */
