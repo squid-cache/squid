@@ -287,7 +287,7 @@ main(int argc, char **argv)
 		exit(1);
 	    }
 	    break;
-	case 'S':
+	case 'E':
 #if defined(NETSCAPE_SSL)
 	    sslpath = value;
 	    if (port == LDAP_PORT)
@@ -365,7 +365,7 @@ main(int argc, char **argv)
 	case 'g':
 	    use_extension_dn = 1;
 	    break;
-	case 'E':
+	case 'S':
 	    strip_nt_domain = 1;
 	    break;
 	default:
