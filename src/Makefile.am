@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.77 2003/05/21 00:31:09 hno Exp $
+#  $Id: Makefile.am,v 1.78 2003/05/21 02:58:10 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -37,10 +37,10 @@ DELAY_POOL_ALL_SOURCE = \
 	DelayPools.h \
 	DelaySpec.cc \
 	DelaySpec.h \
-	DelayUser.cc \
-	DelayUser.h \
 	DelayTagged.cc \
 	DelayTagged.h \
+	DelayUser.cc \
+	DelayUser.h \
 	DelayVector.cc \
 	DelayVector.h \
 	NullDelayId.cc \
