@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.53 1997/02/19 00:03:48 wessels Exp $
+ * $Id: url.cc,v 1.54 1997/02/19 17:05:24 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -207,7 +207,7 @@ urlParse(method_t method, char *url)
     int l;
     proto[0] = host[0] = urlpath[0] = login[0] = '\0';
 
-    if ((l = strlen(url)) > (MAX_URL - 1)) {
+    if ((l = strlen(url)) + Config.appendDomainLen > (MAX_URL - 1)) {
 	/* terminate so it doesn't overflow other buffers */
 	*(url + (MAX_URL >> 1)) = '\0';
 	debug(23, 0, "urlParse: URL too large (%d bytes)\n", l);
@@ -240,6 +240,8 @@ urlParse(method_t method, char *url)
     /* remove trailing dots from hostnames */
     while ((l = strlen(host)) && host[--l] == '.')
 	host[l] = '\0';
+    if (Config.appendDomain && !strchr(host, '.'))
+	strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);
     if (port == 0) {
 	debug(23, 0, "urlParse: Invalid port == 0\n");
 	return NULL;
