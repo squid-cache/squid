@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.58 2004/08/30 05:12:31 robertc Exp $
+ * $Id: external_acl.cc,v 1.59 2005/03/18 16:51:22 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -148,6 +148,7 @@ struct _external_acl_format
 #if USE_SSL
         EXT_ACL_USER_CERT,
         EXT_ACL_CA_CERT,
+        EXT_ACL_USER_CERT_RAW,
 #endif
         EXT_ACL_EXT_USER,
         EXT_ACL_END
@@ -341,6 +342,8 @@ parse_externalAclHelper(external_acl ** list)
 
 #if USE_SSL
 
+        else if (strcmp(token, "%USER_CERT") == 0)
+            format->type = EXT_ACL_USER_CERT_RAW;
         else if (strncmp(token, "%USER_CERT_", 11)) {
             format->type = _external_acl_format::EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
@@ -443,6 +446,10 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 DUMP_EXT_ACL_TYPE(PATH);
                 DUMP_EXT_ACL_TYPE(METHOD);
 #if USE_SSL
+
+            case _external_acl_format::EXT_ACL_USER_CERT_RAW:
+                storeAppendPrintf(sentry, " %%USER_CERT");
+                break;
 
             case _external_acl_format::EXT_ACL_USER_CERT:
                 storeAppendPrintf(sentry, " %%USER_CERT_%s", format->header);
@@ -785,6 +792,17 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
             str = sb.buf();
             break;
 #if USE_SSL
+
+        case _external_acl_format::EXT_ACL_USER_CERT_RAW:
+
+            if (ch->conn().getRaw()) {
+                SSL *ssl = fd_table[ch->conn()->fd].ssl;
+
+                if (ssl)
+                    str = sslGetUserCertificatePEM(ssl);
+            }
+
+            break;
 
         case _external_acl_format::EXT_ACL_USER_CERT:
 
