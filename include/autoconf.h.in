@@ -131,6 +131,9 @@
 /* Define if you have the getdtablesize function.  */
 #undef HAVE_GETDTABLESIZE
 
+/* Define if you have the getpagesize function.  */
+#undef HAVE_GETPAGESIZE
+
 /* Define if you have the getrusage function.  */
 #undef HAVE_GETRUSAGE
 
