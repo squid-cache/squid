@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.30 1999/04/16 01:00:49 wessels Exp $
+ * $Id: comm_select.cc,v 1.31 1999/04/23 02:25:03 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -196,7 +196,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 	}
     }
     if (!nfds)
-	return incame;
+	return -1;
 #if !ALARM_UPDATES_TIME
     getCurrentTime();
 #endif
@@ -248,27 +248,6 @@ comm_poll_icp_incoming(void)
     if (nevents > INCOMING_ICP_MAX)
 	nevents = INCOMING_ICP_MAX;
     statHistCount(&Counter.comm_icp_incoming, nevents);
-}
-
-static void
-comm_poll_dns_incoming(void)
-{
-    int nfds = 0;
-    int fds[2];
-    int nevents;
-    dns_io_events = 0;
-    if (DnsSocket < 0)
-	return;
-    fds[nfds++] = DnsSocket;
-    nevents = comm_check_incoming_poll_handlers(nfds, fds);
-    incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
-    if (incoming_dns_interval < Config.comm_incoming.dns_min_poll)
-	incoming_dns_interval = Config.comm_incoming.dns_min_poll;
-    if (incoming_dns_interval > MAX_INCOMING_INTERVAL)
-	incoming_dns_interval = MAX_INCOMING_INTERVAL;
-    if (nevents > INCOMING_DNS_MAX)
-	nevents = INCOMING_DNS_MAX;
-    statHistCount(&Counter.comm_dns_incoming, nevents);
 }
 
 static void
@@ -492,7 +471,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 	}
     }
     if (maxfd++ == 0)
-	return incame;
+	return -1;
 #if !ALARM_UPDATES_TIME
     getCurrentTime();
 #endif
@@ -549,7 +528,11 @@ comm_select_icp_incoming(void)
 }
 
 static void
+#if USE_POLL
+comm_poll_dns_incoming(void)
+#else
 comm_select_dns_incoming(void)
+#endif
 {
     int nfds = 0;
     int fds[2];
@@ -558,10 +541,17 @@ comm_select_dns_incoming(void)
     if (DnsSocket < 0)
 	return;
     fds[nfds++] = DnsSocket;
+#if USE_POLL
+    nevents = comm_check_incoming_poll_handlers(nfds, fds);
+#else
     nevents = comm_check_incoming_select_handlers(nfds, fds);
+#endif
+    if (nevents < 0)
+	return;
     incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
-    if (incoming_dns_interval < 0)
-	incoming_dns_interval = 0;
+    incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
+    if (incoming_dns_interval < Config.comm_incoming.dns_min_poll)
+	incoming_dns_interval = Config.comm_incoming.dns_min_poll;
     if (incoming_dns_interval > MAX_INCOMING_INTERVAL)
 	incoming_dns_interval = MAX_INCOMING_INTERVAL;
     if (nevents > INCOMING_DNS_MAX)
