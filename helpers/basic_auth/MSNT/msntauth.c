@@ -36,15 +36,10 @@
 #include <syslog.h>
 #include <sys/time.h>
 
-#define  MSNTVERSION "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella."
+#include "msntauth.h"
 
-extern int OpenConfigFile();
-extern int QueryServers(char *, char *);
-extern void Checktimer();
-extern void Check_forchange();
-extern int Read_denyusers(void);
-extern int Read_allowusers(void);
-extern int Check_user(char *);
+extern char version[];
+char msntauth_version[] = "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella.";
 
 /* Main program for simple authentication.
  * Reads the denied user file. Sets alarm timer.
@@ -57,10 +52,6 @@ main()
     char username[256];
     char password[256];
     char wstr[256];
-    char ver[100];
-
-    /* Hidden way to imbed the authenticator release version */
-    strcpy(ver, MSNTVERSION);
 
     /* Read configuration file. Abort wildly if error. */
     if (OpenConfigFile() == 1)
