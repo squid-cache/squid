@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.126 1997/07/14 22:32:03 wessels Exp $
+ * $Id: ipcache.cc,v 1.127 1997/07/14 23:48:29 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1092,7 +1092,7 @@ ipcacheChangeKey(ipcache_entry * i)
 	debug(14, 0) ("ipcacheChangeKey: Could not find key '%s'\n", i->name);
 	return;
     }
-    assert(i == table_entry);
+    assert(i == (ipcache_entry *) table_entry);
     if (hash_remove_link(ip_table, table_entry)) {
 	debug_trap("ipcacheChangeKey: hash_remove_link() failed\n");
 	return;
