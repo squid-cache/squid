@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.425 1998/12/09 23:00:58 wessels Exp $
+ * $Id: client_side.cc,v 1.426 1999/01/08 21:12:06 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -64,10 +64,8 @@ static CWCB clientWriteComplete;
 static PF clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
-static int CheckQuickAbort2(const clientHttpRequest *);
 static int clientCheckTransferDone(clientHttpRequest *);
 static int clientGotNotEnough(clientHttpRequest *);
-static void CheckQuickAbort(clientHttpRequest *);
 static void checkFailureRatio(err_type, hier_code);
 static void clientProcessMiss(clientHttpRequest *);
 static void clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep);
@@ -373,37 +371,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     const http_status status = mem->reply->sline.status;
     debug(33, 3) ("clientHandleIMSReply: %s, %d bytes\n", url, (int) size);
     if (size < 0 && entry->store_status != STORE_ABORTED)
-#if OLD_CODE
-	/*
-	 * This storeAbort() call causes wrong behaviour in some situations.
-	 * If there are multiple clients hanging on this entry, the second
-	 * client will not want the entry to be aborted.  This shows up in
-	 * the stack trace below:
-	 *
-	 * #0  0xef5f452c in kill ()
-	 * #1  0xef5ba620 in abort ()
-	 * #2  0x7d680 in __eprintf (string=0x82a70 "%s:%u: failed assertion `%s'\n", expression=0x82a90 "client_side.c", line=1111, filename=0x83468 "size > 0")
-	 * #3  0x2ad7c in clientCacheHit (data=0x31ae318, buf=0x17f1450 "", size=0) at client_side.c:1111
-	 * #4  0x65cd4 in storeClientCopy2 (e=0x4c48c0, sc=0x2eedd70) at store_client.c:264
-	 * #5  0x665b0 in InvokeHandlers (e=0x4c48c0) at store_client.c:510
-	 * #6  0x63c90 in storeAbort (e=0x4c48c0, cbflag=1) at store.c:626
-	 * #7  0x29190 in clientHandleIMSReply (data=0x31e9518, buf=0x2268810 "", size=-1) at client_side.c:343
-	 * #8  0x66450 in storeUnregister (e=0x2910c, data=0x31e9518) at store_client.c:467
-	 * #9  0x29a54 in httpRequestFree (data=0x31e9518) at client_side.c:579
-	 * #10 0x29eb4 in connStateFree (fd=534528, data=0x314d0d0) at client_side.c:667
-	 * #11 0x2f27c in commCallCloseHandlers (fd=42) at comm.c:501
-	 * #12 0x2f410 in comm_close (fd=42) at comm.c:565
-	 * #13 0x2d054 in clientReadRequest (fd=42, data=0x314d0d0) at client_side.c:2038
-	 * #14 0x309c8 in comm_poll (msec=434) at comm_select.c:354
-	 * #15 0x4da64 in main (argc=5, argv=0xeffffd4c) at main.c:587
-	 */
-	storeAbort(entry, 1);
-#endif
-    /*
-     * Lets just try to return here and see what kind of problems that
-     * causes
-     */
-    return;
+	return;
     if (entry->store_status == STORE_ABORTED) {
 	debug(33, 3) ("clientHandleIMSReply: ABORTED '%s'\n", url);
 	/* We have an existing entry, but failed to validate it */
@@ -640,8 +608,7 @@ httpRequestFree(void *data)
     debug(33, 3) ("httpRequestFree: %s\n", storeUrl(entry));
     if (!clientCheckTransferDone(http)) {
 	if (entry)
-	    storeUnregister(entry, http);	/* unregister BEFORE abort */
-	CheckQuickAbort(http);
+	    storeUnregister(entry, http);
 	entry = http->entry;	/* reset, IMS might have changed it */
 	if (entry && entry->ping_status == PING_WAITING)
 	    storeReleaseRequest(entry);
@@ -2469,64 +2436,6 @@ httpAccept(int sock, void *data)
 	commSetDefer(fd, clientReadDefer, connState);
 	(*N)++;
     }
-}
-
-/* return 1 if the request should be aborted */
-static int
-CheckQuickAbort2(const clientHttpRequest * http)
-{
-    int curlen;
-    int minlen;
-    int expectlen;
-
-    if (!http->request->flags.cachable)
-	return 1;
-    if (EBIT_TEST(http->entry->flags, KEY_PRIVATE))
-	return 1;
-    if (http->entry->mem_obj == NULL)
-	return 1;
-    expectlen = http->entry->mem_obj->reply->content_length;
-    curlen = (int) http->entry->mem_obj->inmem_hi;
-    minlen = (int) Config.quickAbort.min << 10;
-    if (minlen < 0)
-	/* disabled */
-	return 0;
-    if (curlen > expectlen)
-	/* bad content length */
-	return 1;
-    if ((expectlen - curlen) < minlen)
-	/* only little more left */
-	return 0;
-    if ((expectlen - curlen) > (Config.quickAbort.max << 10))
-	/* too much left to go */
-	return 1;
-    if (expectlen < 100)
-	/* avoid FPE */
-	return 0;
-    if ((curlen / (expectlen / 100)) > Config.quickAbort.pct)
-	/* past point of no return */
-	return 0;
-    return 1;
-}
-
-
-static void
-CheckQuickAbort(clientHttpRequest * http)
-{
-    StoreEntry *entry = http->entry;
-    /* Note, set entry here because http->entry might get changed (for IMS
-     * requests) during the storeAbort() call */
-    if (entry == NULL)
-	return;
-    if (storePendingNClients(entry) > 0)
-	return;
-    if (entry->store_status != STORE_PENDING)
-	return;
-    if (CheckQuickAbort2(http) == 0)
-	return;
-    debug(33, 3) ("CheckQuickAbort: ABORTING %s\n", storeUrl(entry));
-    Counter.aborted_requests++;
-    storeAbort(entry, 1);
 }
 
 #define SENDING_BODY 0

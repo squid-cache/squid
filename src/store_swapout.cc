@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.39 1998/12/16 06:34:31 wessels Exp $
+ * $Id: store_swapout.cc,v 1.40 1999/01/08 21:12:17 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -135,7 +135,8 @@ storeCheckSwapOut(StoreEntry * e)
     char *swap_buf;
     ssize_t swap_buf_len;
     int hdr_len = 0;
-    assert(mem != NULL);
+    if (mem == NULL)
+	return;
     /* should we swap something out to disk? */
     debug(20, 7) ("storeCheckSwapOut: %s\n", storeUrl(e));
     debug(20, 7) ("storeCheckSwapOut: store_status = %s\n",

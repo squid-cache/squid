@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.293 1998/12/05 00:54:20 wessels Exp $
+ * $Id: comm.cc,v 1.294 1999/01/08 21:12:08 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -545,6 +545,7 @@ comm_close(int fd)
 #if USE_ASYNC_IO
     int doaioclose = 1;
 #endif
+    extern int current_hdl_fd;
     debug(5, 5) ("comm_close: FD %d\n", fd);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
@@ -553,6 +554,10 @@ comm_close(int fd)
 	return;
     if (shutting_down && (!F->open || F->type == FD_FILE))
 	return;
+    if (fd == current_hdl_fd) {
+	F->flags.delayed_comm_close = 1;
+	return;
+    }
     assert(F->open);
     assert(F->type != FD_FILE);
 #ifdef USE_ASYNC_IO

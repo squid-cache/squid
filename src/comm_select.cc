@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.23 1998/12/04 22:20:15 wessels Exp $
+ * $Id: comm_select.cc,v 1.24 1999/01/08 21:12:09 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -49,6 +49,8 @@
 #define FD_MASK_BYTES sizeof(fd_mask)
 #define FD_MASK_BITS (FD_MASK_BYTES*NBBY)
 
+/* GLOBAL */
+int current_hdl_fd = -1;
 
 /* STATIC */
 #if !HAVE_POLL
@@ -343,6 +345,7 @@ comm_poll(int msec)
 	 * more frequently to minimize losses due to the 5 connect 
 	 * limit in SunOS */
 	for (i = 0; i < nfds; i++) {
+	    fde *F;
 	    int revents;
 	    if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
 		continue;
@@ -354,12 +357,17 @@ comm_poll(int msec)
 		callhttp = 1;
 		continue;
 	    }
+	    F = &fd_table[fd];
 	    if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
 		debug(5, 6) ("comm_poll: FD %d ready for reading\n", fd);
-		if ((hdl = fd_table[fd].read_handler)) {
-		    fd_table[fd].read_handler = NULL;
-		    hdl(fd, fd_table[fd].read_data);
+		if ((hdl = F->read_handler)) {
+		    F->read_handler = NULL;
+		    hdl(current_hdl_fd = fd, F->read_data);
 		    Counter.select_fds++;
+		}
+		if (F->flags.delayed_comm_close) {
+		    current_hdl_fd = -1;
+		    comm_close(fd);
 		}
 		if (commCheckICPIncoming)
 		    comm_poll_icp_incoming();
@@ -368,10 +376,14 @@ comm_poll(int msec)
 	    }
 	    if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
 		debug(5, 5) ("comm_poll: FD %d ready for writing\n", fd);
-		if ((hdl = fd_table[fd].write_handler)) {
-		    fd_table[fd].write_handler = NULL;
-		    hdl(fd, fd_table[fd].write_data);
+		if ((hdl = F->write_handler)) {
+		    F->write_handler = NULL;
+		    hdl(current_hdl_fd = fd, F->write_data);
 		    Counter.select_fds++;
+		}
+		if (F->flags.delayed_comm_close) {
+		    current_hdl_fd = -1;
+		    comm_close(fd);
 		}
 		if (commCheckICPIncoming)
 		    comm_poll_icp_incoming();
@@ -380,10 +392,9 @@ comm_poll(int msec)
 	    }
 	    if (revents & POLLNVAL) {
 		close_handler *ch;
-		fde *F = &fd_table[fd];
 		debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
-		debug(5, 0) ("FD %d is a %s\n", fd, fdTypeStr[fd_table[fd].type]);
-		debug(5, 0) ("--> %s\n", fd_table[fd].desc);
+		debug(5, 0) ("FD %d is a %s\n", fd, fdTypeStr[F->type]);
+		debug(5, 0) ("--> %s\n", F->desc);
 		debug(5, 0) ("tmout:%p read:%p write:%p\n",
 		    F->timeout_handler,
 		    F->read_handler,
@@ -551,6 +562,7 @@ comm_select(int msec)
     static time_t last_timeout = 0;
     struct timeval poll_time;
     double timeout = current_dtime + (msec / 1000.0);
+    fde *F;
     do {
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
@@ -652,13 +664,18 @@ comm_select(int msec)
 		    callhttp = 1;
 		    continue;
 		}
+		F = &fd_table[fd];
 		debug(5, 6) ("comm_select: FD %d ready for reading\n", fd);
-		if (fd_table[fd].read_handler) {
-		    hdl = fd_table[fd].read_handler;
-		    fd_table[fd].read_handler = NULL;
+		if (F->read_handler) {
+		    hdl = F->read_handler;
+		    F->read_handler = NULL;
 		    commUpdateReadBits(fd, NULL);
-		    hdl(fd, fd_table[fd].read_data);
+		    hdl(current_hdl_fd = fd, F->read_data);
 		    Counter.select_fds++;
+		}
+		if (F->flags.delayed_comm_close) {
+		    current_hdl_fd = -1;
+		    comm_close(fd);
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
@@ -690,13 +707,18 @@ comm_select(int msec)
 		    callhttp = 1;
 		    continue;
 		}
+		F = &fd_table[fd];
 		debug(5, 5) ("comm_select: FD %d ready for writing\n", fd);
-		if (fd_table[fd].write_handler) {
-		    hdl = fd_table[fd].write_handler;
-		    fd_table[fd].write_handler = NULL;
+		if (F->write_handler) {
+		    hdl = F->write_handler;
+		    F->write_handler = NULL;
 		    commUpdateWriteBits(fd, NULL);
-		    hdl(fd, fd_table[fd].write_data);
+		    hdl(current_hdl_fd = fd, F->write_data);
 		    Counter.select_fds++;
+		}
+		if (F->flags.delayed_comm_close) {
+		    current_hdl_fd = -1;
+		    comm_close(fd);
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
@@ -774,7 +796,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
 	debug(5, 0) ("FD %d is a %s called '%s'\n",
 	    fd,
-	    fdTypeStr[fd_table[fd].type],
+	    fdTypeStr[F->type],
 	    F->desc);
 	debug(5, 0) ("tmout:%p read:%p write:%p\n",
 	    F->timeout_handler,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.49 1998/12/05 00:54:44 wessels Exp $
+ * $Id: store_client.cc,v 1.50 1999/01/08 21:12:16 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -47,6 +47,8 @@ static void storeClientCopy2(StoreEntry * e, store_client * sc);
 static void storeClientFileRead(store_client * sc);
 static EVH storeClientCopyEvent;
 static store_client_t storeClientType(StoreEntry *);
+static int CheckQuickAbort2(StoreEntry * entry);
+static void CheckQuickAbort(StoreEntry * entry);
 
 /* check if there is any client waiting for this object at all */
 /* return 1 if there is at least one client */
@@ -461,6 +463,9 @@ storeUnregister(StoreEntry * e, void *data)
 	callback(sc->callback_data, sc->copy_buf, -1);
     }
     cbdataFree(sc);
+    assert(e->lock_count > 0);
+    if (mem->nclients == 0)
+	CheckQuickAbort(e);
     return 1;
 }
 
@@ -512,4 +517,68 @@ storePendingNClients(const StoreEntry * e)
     int npend = NULL == mem ? 0 : mem->nclients;
     debug(20, 3) ("storePendingNClients: returning %d\n", npend);
     return npend;
+}
+
+/* return 1 if the request should be aborted */
+static int
+CheckQuickAbort2(StoreEntry * entry)
+{
+    int curlen;
+    int minlen;
+    int expectlen;
+    MemObject *mem = entry->mem_obj;
+    assert(mem);
+    debug(20, 3) ("CheckQuickAbort2: entry=%p, mem=%p\n", entry, mem);
+    if (!mem->request->flags.cachable) {
+	debug(20, 3) ("CheckQuickAbort2: YES !mem->request->flags.cachable\n");
+	return 1;
+    }
+    if (EBIT_TEST(entry->flags, KEY_PRIVATE)) {
+	debug(20, 3) ("CheckQuickAbort2: YES KEY_PRIVATE\n");
+	return 1;
+    }
+    expectlen = mem->reply->content_length;
+    curlen = (int) mem->inmem_hi;
+    minlen = (int) Config.quickAbort.min << 10;
+    if (minlen < 0) {
+	debug(20, 3) ("CheckQuickAbort2: NO disabled\n");
+	return 0;
+    }
+    if (curlen > expectlen) {
+	debug(20, 3) ("CheckQuickAbort2: YES bad content length\n");
+	return 1;
+    }
+    if ((expectlen - curlen) < minlen) {
+	debug(20, 3) ("CheckQuickAbort2: NO only little more left\n");
+	return 0;
+    }
+    if ((expectlen - curlen) > (Config.quickAbort.max << 10)) {
+	debug(20, 3) ("CheckQuickAbort2: YES too much left to go\n");
+	return 1;
+    }
+    if (expectlen < 100) {
+	debug(20, 3) ("CheckQuickAbort2: NO avoid FPE\n");
+	return 0;
+    }
+    if ((curlen / (expectlen / 100)) > Config.quickAbort.pct) {
+	debug(20, 3) ("CheckQuickAbort2: NO past point of no return\n");
+	return 0;
+    }
+    debug(20, 3) ("CheckQuickAbort2: YES default, returning 1\n");
+    return 1;
+}
+
+static void
+CheckQuickAbort(StoreEntry * entry)
+{
+    if (entry == NULL)
+	return;
+    if (storePendingNClients(entry) > 0)
+	return;
+    if (entry->store_status != STORE_PENDING)
+	return;
+    if (CheckQuickAbort2(entry) == 0)
+	return;
+    Counter.aborted_requests++;
+    storeAbort(entry, 1);
 }
