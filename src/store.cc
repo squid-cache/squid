@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.315 1997/10/27 04:30:22 wessels Exp $
+ * $Id: store.cc,v 1.316 1997/10/27 05:37:39 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -230,7 +230,6 @@ static int compareLastRef(StoreEntry **, StoreEntry **);
 static int compareBucketOrder(struct _bucketOrder *, struct _bucketOrder *);
 static int storeCheckExpired(const StoreEntry *, int flag);
 static store_client *storeClientListSearch(const MemObject *, void *);
-static int storeCopy(const StoreEntry *, off_t, size_t, char *, size_t *);
 static int storeEntryLocked(const StoreEntry *);
 static int storeEntryValidLength(const StoreEntry *);
 static void storeGetMemSpace(int);
@@ -267,7 +266,6 @@ static void storeRebuiltFromDisk(struct storeRebuildState *data);
 static unsigned int getKeyCounter(void);
 static void storePutUnusedFileno(int fileno);
 static int storeGetUnusedFileno(void);
-
 static void storeCheckSwapOut(StoreEntry * e);
 static void storeSwapoutFileOpened(void *data, int fd);
 static int storeCheckCachable(StoreEntry * e);
@@ -279,6 +277,7 @@ static void storeClientCopyFileRead(store_client * sc);
 static void storeInMemAdd(StoreEntry * e);
 static void storeInMemDelete(StoreEntry * e);
 static void storeSetMemStatus(StoreEntry * e, int);
+static void storeClientCopy2(StoreEntry *, store_client *);
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -789,7 +788,7 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
 
 /* Call handlers waiting for  data to be appended to E. */
 void
-InvokeHandlers(const StoreEntry * e)
+InvokeHandlers(StoreEntry * e)
 {
     int i = 0;
     MemObject *mem = e->mem_obj;
@@ -807,14 +806,7 @@ InvokeHandlers(const StoreEntry * e)
 	    continue;
 	if ((callback = sc->callback) == NULL)
 	    continue;
-	sc->callback = NULL;
-	/* Don't NULL the callback_data, its used to identify the client */
-	size = memCopy(mem->data,
-	    sc->copy_offset,
-	    sc->copy_buf,
-	    sc->copy_size);
-	debug(20, 3) ("InvokeHandlers: calling handler: %p\n", callback);
-	callback(sc->callback_data, sc->copy_buf, size);
+	storeClientCopy2(e, sc);
     }
 }
 
@@ -930,12 +922,12 @@ static void
 storeCheckSwapOut(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
-    int x;
     off_t lowest_offset;
     off_t new_mem_lo;
     size_t swapout_size;
     char *swap_buf;
     size_t swap_buf_len;
+    int x;
     assert(mem != NULL);
     /* should we swap something out to disk? */
     debug(20, 3) ("storeCheckSwapOut: %s\n", e->url);
@@ -992,13 +984,13 @@ storeCheckSwapOut(StoreEntry * e)
     if (swapout_size > SWAP_BUF)
 	swapout_size = SWAP_BUF;
     swap_buf = get_free_8k_page();
-    x = storeCopy(e,
+    swap_buf_len = memCopy(mem->data,
 	mem->swapout.queue_offset,
-	swapout_size,
 	swap_buf,
-	&swap_buf_len);
-    if (x < 0) {
-	debug(20, 1) ("storeCopy returned %d for '%s'\n", x, e->key);
+	swapout_size);
+    if (swap_buf_len < 0) {
+	debug(20, 1) ("memCopy returned %d for '%s'\n", swap_buf_len, e->key);
+	/* XXX This is probably wrong--we should storeRelease()? */
 	e->swap_file_number = -1;
 	file_close(mem->swapout.fd);
 	mem->swapout.fd = -1;
@@ -1842,17 +1834,6 @@ storeEntryLocked(const StoreEntry * e)
     return 0;
 }
 
-static int
-storeCopy(const StoreEntry * e, off_t stateoffset, size_t maxSize, char *buf, size_t * size)
-{
-    MemObject *mem = e->mem_obj;
-    size_t s;
-    assert(stateoffset >= mem->inmem_lo);
-    s = memCopy(mem->data, stateoffset, buf, maxSize);
-    assert(s);
-    return *size = s;
-}
-
 /* check if there is any client waiting for this object at all */
 /* return 1 if there is at least one client */
 int
@@ -1905,8 +1886,7 @@ storeClientListAdd(StoreEntry * e, void *data)
     *T = sc;
 }
 
-/* same to storeCopy but also register client fd and last requested offset
- * for each client */
+/* copy bytes requested by the client */
 void
 storeClientCopy(StoreEntry * e,
     off_t seen_offset,
@@ -1916,8 +1896,6 @@ storeClientCopy(StoreEntry * e,
     STCB * callback,
     void *data)
 {
-    size_t sz;
-    MemObject *mem = e->mem_obj;
     store_client *sc;
     static int recurse_detect = 0;
     assert(e->store_status != STORE_ABORTED);
@@ -1929,7 +1907,7 @@ storeClientCopy(StoreEntry * e,
 	(int) size,
 	callback,
 	data);
-    sc = storeClientListSearch(mem, data);
+    sc = storeClientListSearch(e->mem_obj, data);
     assert(sc != NULL);
     assert(sc->callback == NULL);
     sc->copy_offset = copy_offset;
@@ -1938,24 +1916,33 @@ storeClientCopy(StoreEntry * e,
     sc->copy_buf = buf;
     sc->copy_size = size;
     sc->copy_offset = copy_offset;
-    assert(seen_offset <= mem->inmem_hi || e->store_status != STORE_PENDING);
-    if (e->store_status == STORE_PENDING && seen_offset == mem->inmem_hi) {
+    storeClientCopy2(e, sc);
+    recurse_detect--;
+}
+
+static void
+storeClientCopy2(StoreEntry * e, store_client * sc)
+{
+    STCB *callback = sc->callback;
+    MemObject *mem = e->mem_obj;
+    size_t sz;
+    assert(sc->seen_offset <= mem->inmem_hi || e->store_status != STORE_PENDING);
+    if (e->store_status == STORE_PENDING && sc->seen_offset == mem->inmem_hi) {
 	/* client has already seen this, wait for more */
-	debug(20, 3) ("storeClientCopy: Waiting for more\n");
+	debug(20, 3) ("storeClientCopy2: Waiting for more\n");
 	return;
     }
-    if (copy_offset >= mem->inmem_lo && mem->inmem_lo < mem->inmem_hi) {
+    if (sc->copy_offset >= mem->inmem_lo && mem->inmem_lo < mem->inmem_hi) {
 	/* What the client wants is in memory */
-	debug(20, 3) ("storeClientCopy: Copying from memory\n");
-	sz = memCopy(mem->data, copy_offset, buf, size);
-	recurse_detect++;
+	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
+	sz = memCopy(mem->data, sc->copy_offset, sc->copy_buf, sc->copy_size);
 	sc->callback = NULL;
-	callback(data, buf, sz);
+	callback(sc->callback_data, sc->copy_buf, sz);
     } else if (sc->swapin_fd < 0) {
-	debug(20, 3) ("storeClientCopy: Need to open swap in file\n");
+	debug(20, 3) ("storeClientCopy2: Need to open swap in file\n");
 	assert(sc->type == STORE_DISK_CLIENT);
 	/* gotta open the swapin file */
-	assert(copy_offset == 0);
+	assert(sc->copy_offset == 0);
 	storeSwapInStart(e, storeClientCopyFileOpened, sc);
     } else {
 	debug(20, 3) ("storeClientCopy: reading from disk FD %d\n",
@@ -1963,7 +1950,6 @@ storeClientCopy(StoreEntry * e,
 	assert(sc->type == STORE_DISK_CLIENT);
 	storeClientCopyFileRead(sc);
     }
-    recurse_detect--;
 }
 
 static void
