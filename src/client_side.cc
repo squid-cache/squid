@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.527 2001/02/13 21:45:48 hno Exp $
+ * $Id: client_side.cc,v 1.528 2001/02/20 22:49:23 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1706,18 +1706,19 @@ clientRequestBodyTooLarge(int clen)
  * mysterious breakages.
  */
 static int
-clientAlwaysAllowResponse(http_status sline) {
+clientAlwaysAllowResponse(http_status sline)
+{
     switch (sline) {
-	case HTTP_CONTINUE:
-	case HTTP_SWITCHING_PROTOCOLS:
-	case HTTP_PROCESSING:
-	case HTTP_NO_CONTENT:
-	case HTTP_NOT_MODIFIED:
-	    return 1;
-	    /* unreached */
-	    break;
-	default:
-	    return 0;
+    case HTTP_CONTINUE:
+    case HTTP_SWITCHING_PROTOCOLS:
+    case HTTP_PROCESSING:
+    case HTTP_NO_CONTENT:
+    case HTTP_NOT_MODIFIED:
+	return 1;
+	/* unreached */
+	break;
+    default:
+	return 0;
     }
 }
 
@@ -1790,7 +1791,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	} else if (rep) {
 	    aclCheck_t *ch;
 	    int rv;
- 	    body_size = size - rep->hdr_sz;
+	    body_size = size - rep->hdr_sz;
 	    assert(body_size >= 0);
 	    body_buf = buf + rep->hdr_sz;
 	    http->range_iter.prefix_size = rep->hdr_sz;
@@ -1803,7 +1804,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 		RequestMethodStr[http->request->method], http->uri,
 		rv ? "ALLOWED" : "DENIED",
 		AclMatchedName ? AclMatchedName : "NO ACL's");
-	    if (!rv && rep->sline.status != HTTP_FORBIDDEN 
+	    if (!rv && rep->sline.status != HTTP_FORBIDDEN
 		&& !clientAlwaysAllowResponse(rep->sline.status)) {
 		/* the if above is slightly broken, but there is no way
 		 * to tell if this is a squid generated error page, or one from
@@ -2534,12 +2535,11 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 		    snprintf(http->uri, url_sz, "http://%s:%d%s",
 			inet_ntoa(http->conn->me.sin_addr),
 			vport, url);
-	    } else
-		if (vport_mode)
-		    vport = natLookup.nl_realport;
-		snprintf(http->uri, url_sz, "http://%s:%d%s",
-		    inet_ntoa(natLookup.nl_realip),
-		    vport, url);
+	    } else if (vport_mode)
+		vport = natLookup.nl_realport;
+	    snprintf(http->uri, url_sz, "http://%s:%d%s",
+		inet_ntoa(natLookup.nl_realip),
+		vport, url);
 #else
 #if LINUX_NETFILTER
 	    /* If the call fails the address structure will be unchanged */
@@ -2672,7 +2672,7 @@ clientReadRequest(int fd, void *data)
 	    break;
 	/* Limit the number of concurrent requests to 2 */
 	for (H = &conn->chr, nrequests = 0; *H; H = &(*H)->next, nrequests++);
-	if (nrequests >= 2) {
+	if (nrequests >= (Config.onoff.pipeline_prefetch ? 2 : 1)) {
 	    debug(33, 3) ("clientReadRequest: FD %d max concurrent requests reached\n", fd);
 	    debug(33, 5) ("clientReadRequest: FD %d defering new request until one is done\n", fd);
 	    conn->defer.until = squid_curtime + 100;	/* Reset when a request is complete */
