@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.21 2001/02/07 18:56:51 hno Exp $
+ * $Id: authenticate.cc,v 1.22 2001/03/10 00:55:36 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -174,6 +174,7 @@ authenticateAuthUserNew(const char *scheme)
     temp_auth->auth_type = AUTH_UNKNOWN;
     temp_auth->references = 0;
     temp_auth->auth_module = authenticateAuthSchemeId(scheme) + 1;
+    temp_auth->usernamehash = NULL;
     return temp_auth;
 }
 
@@ -261,7 +262,8 @@ authenticateGetAuthUser(const char *proxy_auth)
 int
 authenticateUserAuthenticated(auth_user_request_t * auth_user_request)
 {
-    assert(authenticateValidateUser(auth_user_request));
+    if (!authenticateValidateUser(auth_user_request))
+	return 0;
     if (auth_user_request->auth_user->auth_module > 0)
 	return authscheme_list[auth_user_request->auth_user->auth_module - 1].authenticated(auth_user_request);
     else

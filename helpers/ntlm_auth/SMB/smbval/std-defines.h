@@ -26,8 +26,12 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define BOOL int
-typedef short int16;
+#include "squid_types.h"
+#define BOOL int16_t
+#define int16 int16_t
+#define uint16 u_int16_t
+#define int32 int32_t
+#define uint32 u_int32_t
 
 #include <netdb.h>
 #include <sys/types.h>

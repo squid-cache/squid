@@ -1,3 +1,4 @@
+
 /* UNIX SMBlib NetBIOS implementation
  * 
  * Version 1.0
@@ -39,7 +40,7 @@ int SMBlib_SMB_Error;
 
 #include <signal.h>
 
-#define DEBUG
+/* #define DEBUG */
 
 SMB_State_Types SMBlib_State;
 

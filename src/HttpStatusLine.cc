@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.23 2001/02/23 20:59:50 hno Exp $
+ * $Id: HttpStatusLine.cc,v 1.24 2001/03/10 00:55:36 hno Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -95,7 +95,7 @@ httpStatusLineParse(HttpStatusLine * sline, const char *start, const char *end)
     }
     if (!(start = strchr(start, ' ')))
 	return 0;
-    sline->status = (http_status)atoi(++start);
+    sline->status = (http_status) atoi(++start);
     /* we ignore 'reason-phrase' */
     return 1;			/* success */
 }
