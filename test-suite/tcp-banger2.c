@@ -275,6 +275,7 @@ main(argc, argv)
     }
     fd_open(0, read_url, NULL);
     signal(SIGINT, sig_intr);
+    signal(SIGPIPE, SIG_IGN);
     while (nfds) {
 	FD_ZERO(&R);
 	to.tv_sec = 0;
