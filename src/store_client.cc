@@ -53,7 +53,7 @@ storeClientListAdd(StoreEntry * e, void *data)
     sc->seen_offset = 0;
     sc->copy_offset = 0;
     sc->swapin_fd = -1;
-    sc->disk_op_in_progress = 0;
+    sc->flags.disk_io_pending = 0;
     sc->entry = e;
     if (e->store_status == STORE_PENDING && mem->swapout.fd == -1)
 	sc->type = STORE_MEM_CLIENT;
@@ -61,6 +61,20 @@ storeClientListAdd(StoreEntry * e, void *data)
 	sc->type = STORE_DISK_CLIENT;
     for (T = &mem->clients; *T; T = &(*T)->next);
     *T = sc;
+}
+
+static void
+storeClientCopyEvent(void *data)
+{
+    store_client *sc = data;
+    int valid = cbdataValid(sc);
+    cbdataUnlock(sc);
+    if (!valid)
+	return;
+    assert(!sc->flags.store_copying);
+    sc->flags.store_copying = 1;
+    storeClientCopy2(sc->entry, sc);
+    sc->flags.store_copying = 0;
 }
 
 /* copy bytes requested by the client */
@@ -74,9 +88,7 @@ storeClientCopy(StoreEntry * e,
     void *data)
 {
     store_client *sc;
-    static int recurse_detect = 0;
     assert(e->store_status != STORE_ABORTED);
-    assert(++recurse_detect < 3);	/* could == 1 for IMS not modified's */
     debug(20, 3) ("storeClientCopy: %s, seen %d, want %d, size %d, cb %p, cbdata %p\n",
 	storeKeyText(e->key),
 	(int) seen_offset,
@@ -93,8 +105,14 @@ storeClientCopy(StoreEntry * e,
     sc->copy_buf = buf;
     sc->copy_size = size;
     sc->copy_offset = copy_offset;
-    storeClientCopy2(e, sc);
-    recurse_detect--;
+    if (sc->flags.store_copying) {
+	cbdataLock(sc);
+	eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0);
+    } else {
+        sc->flags.store_copying = 1;
+        storeClientCopy2(e, sc);
+        sc->flags.store_copying = 0;
+    }
 }
 
 /*
@@ -132,27 +150,27 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     assert(callback != NULL);
     if (e->store_status == STORE_ABORTED) {
 #if USE_ASYNC_IO
-	if (sc->disk_op_in_progress == 1) {
+	if (sc->flags.disk_io_pending == 1) {
 	    if (sc->swapin_fd >= 0)
 		aioCancel(sc->swapin_fd, NULL);
 	    else
 		aioCancel(-1, sc);
 	}
 #endif
-	sc->disk_op_in_progress = 0;
+	sc->flags.disk_io_pending = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, 0);
     } else if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
 #if USE_ASYNC_IO
-	if (sc->disk_op_in_progress == 1) {
+	if (sc->flags.disk_io_pending == 1) {
 	    if (sc->swapin_fd >= 0)
 		aioCancel(sc->swapin_fd, NULL);
 	    else
 		aioCancel(-1, sc);
 	}
 #endif
-	sc->disk_op_in_progress = 0;
+	sc->flags.disk_io_pending = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, 0);
     } else if (e->store_status == STORE_PENDING && sc->seen_offset == mem->inmem_hi) {
@@ -163,14 +181,14 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
 	sz = stmemCopy(mem->data, sc->copy_offset, sc->copy_buf, sc->copy_size);
 #if USE_ASYNC_IO
-	if (sc->disk_op_in_progress == 1) {
+	if (sc->flags.disk_io_pending == 1) {
 	    if (sc->swapin_fd >= 0)
 		aioCancel(sc->swapin_fd, NULL);
 	    else
 		aioCancel(-1, sc);
 	}
 #endif
-	sc->disk_op_in_progress = 0;
+	sc->flags.disk_io_pending = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, sz);
     } else if (sc->swapin_fd < 0) {
@@ -178,8 +196,8 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	assert(sc->type == STORE_DISK_CLIENT);
 	/* gotta open the swapin file */
 	/* assert(sc->copy_offset == 0); */
-	if (sc->disk_op_in_progress == 0) {
-	    sc->disk_op_in_progress = 1;
+	if (sc->flags.disk_io_pending == 0) {
+	    sc->flags.disk_io_pending = 1;
 	    storeSwapInStart(e, storeClientFileOpened, sc);
 	} else {
 	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
@@ -188,7 +206,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	debug(20, 3) ("storeClientCopy: reading from disk FD %d\n",
 	    sc->swapin_fd);
 	assert(sc->type == STORE_DISK_CLIENT);
-	if (sc->disk_op_in_progress == 0) {
+	if (sc->flags.disk_io_pending == 0) {
 	    storeClientFileRead(sc);
 	} else {
 	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
@@ -204,7 +222,7 @@ storeClientFileOpened(int fd, void *data)
     STCB *callback = sc->callback;
     if (fd < 0) {
 	debug(20, 3) ("storeClientFileOpened: failed\n");
-	sc->disk_op_in_progress = 0;
+	sc->flags.disk_io_pending = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, -1);
 	return;
@@ -232,7 +250,7 @@ storeClientFileRead(store_client * sc)
 	    sc->copy_offset + mem->swap_hdr_sz,
 	    storeClientReadBody,
 	    sc);
-    sc->disk_op_in_progress = 1;
+    sc->flags.disk_io_pending = 1;
 }
 
 static void
@@ -241,8 +259,8 @@ storeClientReadBody(int fd, const char *buf, int len, int flagnotused, void *dat
     store_client *sc = data;
     MemObject *mem = sc->entry->mem_obj;
     STCB *callback = sc->callback;
-    assert(sc->disk_op_in_progress != 0);
-    sc->disk_op_in_progress = 0;
+    assert(sc->flags.disk_io_pending != 0);
+    sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientReadBody: FD %d, len %d\n", fd, len);
     if (sc->copy_offset == 0 && len > 0 && mem->reply->sline.status == 0)
@@ -262,8 +280,8 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
     size_t body_sz;
     size_t copy_sz;
     tlv *tlv_list;
-    assert(sc->disk_op_in_progress != 0);
-    sc->disk_op_in_progress = 0;
+    assert(sc->flags.disk_io_pending != 0);
+    sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientReadHeader: FD %d, len %d\n", fd, len);
     if (len < 0) {
@@ -342,7 +360,7 @@ storeUnregister(StoreEntry * e, void *data)
 	return 0;
     *S = sc->next;
     mem->nclients--;
-    sc->disk_op_in_progress = 0;
+    sc->flags.disk_io_pending = 0;
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
 	storeCheckSwapOut(e);
     if (sc->swapin_fd > -1) {

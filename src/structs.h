@@ -1004,7 +1004,10 @@ struct _store_client {
     void *callback_data;
     StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
     int swapin_fd;
-    int disk_op_in_progress;
+    struct {
+    	int disk_io_pending:1;
+	int store_copying:1;
+    } flags;
     store_client *next;
 };
 
