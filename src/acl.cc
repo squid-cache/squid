@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.108 1997/08/26 17:30:34 wessels Exp $
+ * $Id: acl.cc,v 1.109 1997/10/17 00:00:27 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1652,7 +1652,7 @@ aclReadProxyAuth(struct _acl_proxy_auth *p)
 		    p->hash = hash_create(urlcmp, 7921, hash_string);
 		    if (p->hash == NULL) {
 			debug(28, 0) ("aclReadProxyAuth: can't create "
-				"hash table, turning auth off.\n");
+			    "hash table, turning auth off.\n");
 			return 0;
 		    }
 		}

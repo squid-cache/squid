@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.42 1997/10/13 22:09:12 kostas Exp $
+ * $Id: icmp.cc,v 1.43 1997/10/17 00:00:38 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -276,8 +276,8 @@ icmpOpen(void)
     }
     if (pid == 0) {		/* child */
 	int tmp_s;
-	char *x = xcalloc((tmp_s=strlen(Config.debugOptions) + 32), 1);
-	snprintf(x,tmp_s, "SQUID_DEBUG=%s", Config.debugOptions);
+	char *x = xcalloc((tmp_s = strlen(Config.debugOptions) + 32), 1);
+	snprintf(x, tmp_s, "SQUID_DEBUG=%s", Config.debugOptions);
 	putenv(x);
 	comm_close(icmp_sock);
 	dup2(child_sock, 0);

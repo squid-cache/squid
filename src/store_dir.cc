@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.29 1997/10/16 19:22:41 kostas Exp $
+ * $Id: store_dir.cc,v 1.30 1997/10/17 00:00:48 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -46,7 +46,7 @@ storeSwapFullPath(int fn, char *fullpath)
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
-    snprintf(fullpath,SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
+    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
 	Config.cacheSwap.swapDirs[dirn].path,
 	filn % Config.cacheSwap.swapDirs[dirn].l1,
 	filn / Config.cacheSwap.swapDirs[dirn].l1 % Config.cacheSwap.swapDirs[dirn].l2,
@@ -64,7 +64,7 @@ storeSwapSubSubDir(int fn, char *fullpath)
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
-    snprintf(fullpath,SQUID_MAXPATHLEN, "%s/%02X/%02X",
+    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
 	Config.cacheSwap.swapDirs[dirn].path,
 	filn % Config.cacheSwap.swapDirs[dirn].l1,
 	filn / Config.cacheSwap.swapDirs[dirn].l1 % Config.cacheSwap.swapDirs[dirn].l2);
@@ -81,9 +81,9 @@ storeVerifyOrCreateDir(const char *path)
     }
     safeunlink(path, 1);
     if (mkdir(path, 0777) < 0) {
-	if (errno != EEXIST) {    
-	  /* NOTE: couldn't figure size of tmp_error_buf, assumed
-		ERROR_BUF_SZ */
+	if (errno != EEXIST) {
+	    /* NOTE: couldn't figure size of tmp_error_buf, assumed
+	     * ERROR_BUF_SZ */
 	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
 		"Failed to create swap directory %s: %s",
 		path,
@@ -93,9 +93,9 @@ storeVerifyOrCreateDir(const char *path)
     }
     debug(47, 1) ("Created directory %s\n", path);
     if (stat(path, &sb) < 0 || !S_ISDIR(sb.st_mode)) {
-          /* NOTE: couldn't figure size of tmp_error_buf, assumed
-                ERROR_BUF_SZ */
-	snprintf(tmp_error_buf, ERROR_BUF_SZ, 
+	/* NOTE: couldn't figure size of tmp_error_buf, assumed
+	 * ERROR_BUF_SZ */
+	snprintf(tmp_error_buf, ERROR_BUF_SZ,
 	    "Failed to create directory %s: %s", path, xstrerror());
 	fatal(tmp_error_buf);
     }
@@ -124,7 +124,7 @@ storeCreateSwapSubDirs(int j)
     SwapDir *SD = &Config.cacheSwap.swapDirs[j];
     LOCAL_ARRAY(char, name, MAXPATHLEN);
     for (i = 0; i < SD->l1; i++) {
-	snprintf(name,MAXPATHLEN, "%s/%02X", SD->path, i);
+	snprintf(name, MAXPATHLEN, "%s/%02X", SD->path, i);
 	if (storeVerifyOrCreateDir(name) == 0)
 	    continue;
 	debug(47, 1) ("Making directories in %s\n", name);
@@ -224,7 +224,7 @@ storeDirSwapLog(const StoreEntry * e)
     if (BIT_TEST(e->flag, KEY_PRIVATE))
 	debug(0, 0) ("storeDirSwapLog: PRIVATE: %s\n", e->url);
     /* Note this printf format appears in storeWriteCleanLog() too */
-    snprintf(logmsg, MAX_URL << 1 , "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
+    snprintf(logmsg, MAX_URL << 1, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
 	(int) e->swap_file_number,
 	(int) e->timestamp,
 	(int) e->lastref,

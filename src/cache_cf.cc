@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.224 1997/10/13 22:09:03 kostas Exp $
+ * $Id: cache_cf.cc,v 1.225 1997/10/17 00:00:29 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -70,7 +70,7 @@ static void free_all _PARAMS((void));
 static void
 self_destruct(void)
 {
-    snprintf(fatal_str,BUFSIZ, "Bungled %s line %d: %s",
+    snprintf(fatal_str, BUFSIZ, "Bungled %s line %d: %s",
 	cfg_filename, config_lineno, config_input_line);
     fatal(fatal_str);
 }

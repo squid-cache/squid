@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.78 1997/10/16 23:59:53 wessels Exp $
+ * $Id: disk.cc,v 1.79 1997/10/17 00:00:33 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -316,15 +316,15 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     }
     if (q != NULL) {
 	/* q might become NULL from write failure above */
-    	q->cur_offset += len;
-    	assert(q->cur_offset <= q->len);
-    	if (q->cur_offset == q->len) {
-		/* complete write */
-		fdd->write_q = q->next;
-		if (q->free)
-	    	(q->free) (q->buf);
-		safe_free(q);
-    	}
+	q->cur_offset += len;
+	assert(q->cur_offset <= q->len);
+	if (q->cur_offset == q->len) {
+	    /* complete write */
+	    fdd->write_q = q->next;
+	    if (q->free)
+		(q->free) (q->buf);
+	    safe_free(q);
+	}
     }
     if (fdd->write_q == NULL) {
 	/* no more data */
