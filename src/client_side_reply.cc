@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.52 2003/05/25 02:24:05 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.53 2003/05/25 20:29:24 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1823,10 +1823,10 @@ clientReplyContext::buildMaxBodySize(HttpReply * reply)
         ch->matchAclListFast(l->aclList);
 
         if (ch->finished()) {
-            if (l->size != static_cast<size_t>(-1))
+            if (l->size != static_cast<size_t>(-1)) {
+                debug(58, 3) ("clientReplyContext: Setting maxBodySize to %ld\n", (long int) l->size);
                 http->maxReplyBodySize(l->size);
-
-            debug(58, 3) ("httpReplyBodyBuildSize: Setting maxBodySize to %ld\n", (long int) http->maxReplyBodySize());
+            }
 
             break;
         }
