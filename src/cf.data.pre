@@ -178,6 +178,7 @@ DOC_START
 		     round-robin
 		     multicast-responder
 		     closest-only
+		     no-netdb-exchange
 
 		     use 'proxy-only' to specify that objects fetched
 		     from this cache should not be saved locally.
@@ -213,6 +214,9 @@ DOC_START
 		     'closest-only' indicates that, for ICP_OP_MISS
 		     replies, we'll only forward CLOSEST_PARENT_MISSes
 		     and never FIRST_PARENT_MISSes.
+
+		     'no-netdb-exchange' disables requesting ICMP
+		     RTT database (NetDB) from the neighbor.
 
 	NOTE: non-ICP neighbors must be specified as 'parent'.
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.224 1998/07/13 21:37:45 wessels Exp $
+ * $Id: neighbors.cc,v 1.225 1998/07/16 02:40:01 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -936,7 +936,8 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     if (p->type == PEER_MULTICAST)
 	peerCountMcastPeersSchedule(p, 10);
     if (p->type != PEER_MULTICAST)
-	eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
+	if (!EBIT_TEST(p->options, NEIGHBOR_NO_NETDB_EXCHANGE))
+	    eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
 }
 
 static void
