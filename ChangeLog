@@ -64,6 +64,10 @@
 	  bit and did not clear the swap_file_number in the filemap or
 	  in the StoreEntry, so the swap file could get unlinked later
 	  when it was really released.
+	- Fixed FTP so that ';type=X' specifically sets the HTTP reply
+	  content-type and content-encoding (Henrik Nordstrom).
+	- Removed 'icon_content_type' configuration option.  Content
+	  types now taken from mime.conf (Henrik Nordstrom).
 
 Changes to squid-1.2.beta14 (Feb 6, 1998):
 
