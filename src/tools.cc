@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.52 1996/09/11 22:39:23 wessels Exp $
+ * $Id: tools.cc,v 1.53 1996/09/11 22:41:15 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -568,15 +568,15 @@ void squid_signal(sig, func, flags)
 }
 
 char *accessLogTime(t)
-	time_t t;
+     time_t t;
 {
-        struct tm *tm;
-	static char buf[128];
-	static char last_t = 0;
-	if (t != last_t) {
-		tm = localtime(&t);
-		strftime (buf, 127, "%y/%m/%d %T", tm);
-		last_t = t;
-	}
-	return buf;
+    struct tm *tm;
+    static char buf[128];
+    static char last_t = 0;
+    if (t != last_t) {
+	tm = localtime(&t);
+	strftime(buf, 127, "%y/%m/%d %T", tm);
+	last_t = t;
+    }
+    return buf;
 }

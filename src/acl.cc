@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.30 1996/09/11 22:31:04 wessels Exp $
+ * $Id: acl.cc,v 1.31 1996/09/11 22:41:10 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -477,11 +477,11 @@ void aclParseAclLine()
 }
 
 /* maex@space.net (06.09.96)
- *	get (if any) the URL from deny_info for a certain acl
+ *    get (if any) the URL from deny_info for a certain acl
  */
 char *aclGetDenyInfoUrl(head, name)
-    struct _acl_deny_info_list **head;
-    char *name;
+     struct _acl_deny_info_list **head;
+     char *name;
 {
     struct _acl_deny_info_list *A = NULL;
     struct _acl_name_list *L = NULL;
@@ -503,15 +503,15 @@ char *aclGetDenyInfoUrl(head, name)
     return (NULL);
 }
 /* maex@space.net (05.09.96)
- *	get the info for redirecting "access denied" to info pages
- *	TODO (probably ;-)
- *	currently there is no optimization for
- *	- more than one deny_info line with the same url
- *	- a check, whether the given acl really is defined
- *	- a check, whether an acl is added more than once for the same url
+ *    get the info for redirecting "access denied" to info pages
+ *      TODO (probably ;-)
+ *      currently there is no optimization for
+ *      - more than one deny_info line with the same url
+ *      - a check, whether the given acl really is defined
+ *      - a check, whether an acl is added more than once for the same url
  */
 void aclParseDenyInfoLine(head)
-    struct _acl_deny_info_list **head;
+     struct _acl_deny_info_list **head;
 {
     char *t = NULL;
     struct _acl_deny_info_list *A = NULL;
@@ -969,7 +969,7 @@ void aclDestroyAccessList(list)
 }
 
 /* maex@space.net (06.09.1996)
- *	destroy an _acl_deny_info_list
+ *    destroy an _acl_deny_info_list
  */
 void aclDestroyDenyInfoList(list)
      struct _acl_deny_info_list **list;
