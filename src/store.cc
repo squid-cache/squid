@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.110 1996/09/15 05:04:46 wessels Exp $
+ * $Id: store.cc,v 1.111 1996/09/15 08:06:31 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -220,6 +220,7 @@ static int storeClientListSearch __P((MemObject *, int fd));
 static void storeHashMemInsert __P((StoreEntry *));
 static void storeHashMemDelete __P((StoreEntry *));
 static int storeCopy __P((StoreEntry *, int, int, char *, int *));
+static int storeGetMemSpace __P((int size));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -1021,7 +1022,7 @@ storeAppend(StoreEntry * e, char *data, int len)
     }
     if (len) {
 	debug(20, 5, "storeAppend: appending %d bytes for '%s'\n", len, e->key);
-	(void) storeGetMemSpace(len, 0);
+	(void) storeGetMemSpace(len);
 	store_mem_size += len;
 	(void) e->mem_obj->data->mem_append(e->mem_obj->data, data, len);
 	e->mem_obj->e_current_len += len;
@@ -1117,7 +1118,7 @@ storeSwapInHandle(int fd_notused, char *buf, int len, int flag, StoreEntry * e, 
 	storeSetMemStatus(e, NOT_IN_MEMORY);
 	file_close(mem->swapin_fd);
 	swapInError(-1, e);	/* Invokes storeAbort() and completes the I/O */
-	if ((handler = mem->swapin_complete_handler)) {
+	if ((handler = mem->swapin_complete_handler) != NULL) {
 	    data = mem->swapin_complete_data;
 	    mem->swapin_complete_handler = NULL;
 	    mem->swapin_complete_data = NULL;
@@ -1158,7 +1159,7 @@ storeSwapInHandle(int fd_notused, char *buf, int len, int flag, StoreEntry * e, 
 	    debug(20, 0, "  --> Only read %d bytes\n",
 		mem->e_current_len);
 	}
-	if ((handler = mem->swapin_complete_handler)) {
+	if ((handler = mem->swapin_complete_handler) != NULL) {
 	    data = mem->swapin_complete_data;
 	    mem->swapin_complete_handler = NULL;
 	    mem->swapin_complete_data = NULL;
@@ -1658,8 +1659,9 @@ storeCheckSwapable(StoreEntry * e)
     } else if (BIT_TEST(e->flag, ENTRY_NEGCACHED)) {
 	debug(20, 2, "storeCheckSwapable: NO: negative cached\n");
 	return 0;		/* avoid release call below */
-    } else
+    } else {
 	return 1;
+    }
 
     storeReleaseRequest(e);
     BIT_RESET(e->flag, ENTRY_CACHABLE);
@@ -1831,8 +1833,8 @@ storePurgeOld(void)
 
 
 /* Clear Memory storage to accommodate the given object len */
-int
-storeGetMemSpace(int size, int check_vm_number)
+static int
+storeGetMemSpace(int size)
 {
     StoreEntry *e = NULL;
     StoreEntry **list = NULL;

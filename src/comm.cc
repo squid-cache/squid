@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.69 1996/09/15 05:04:17 wessels Exp $
+ * $Id: comm.cc,v 1.70 1996/09/15 08:06:29 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -489,7 +489,7 @@ comm_close(int fd)
     RWStateCallbackAndFree(fd, COMM_ERROR);
     comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
     fdstat_close(fd);		/* update fdstat */
-    while ((ch = conn->close_handler)) {	/* Call close handlers */
+    while ((ch = conn->close_handler) != NULL) {	/* Call close handlers */
 	conn->close_handler = ch->next;
 	ch->handler(fd, ch->data);
 	safe_free(ch);
@@ -1146,19 +1146,19 @@ checkLifetimes()
 	    continue;
 	debug(5, 5, "checkLifetimes: FD %d Expired\n", fd);
 	fde = &fd_table[fd];
-	if ((func = fde->lifetime_handler)) {
+	if ((func = fde->lifetime_handler) != NULL) {
 	    debug(5, 5, "checkLifetimes: FD %d: Calling lifetime handler\n", fd);
 	    func(fd, fde->lifetime_data);
 	    fde->lifetime_handler = NULL;
-	} else if ((func = fde->read_handler)) {
+	} else if ((func = fde->read_handler) != NULL) {
 	    debug(5, 5, "checkLifetimes: FD %d: Calling read handler\n", fd);
 	    func(fd, fde->read_data);
 	    fde->read_handler = NULL;
-	} else if ((func = fde->read_handler)) {
+	} else if ((func = fde->read_handler) != NULL) {
 	    debug(5, 5, "checkLifetimes: FD %d: Calling read handler\n", fd);
 	    func(fd, fde->read_data);
 	    fde->read_handler = NULL;
-	} else if ((func = fde->write_handler)) {
+	} else if ((func = fde->write_handler) != NULL) {
 	    debug(5, 5, "checkLifetimes: FD %d: Calling write handler\n", fd);
 	    func(fd, fde->write_data);
 	    fde->write_handler = NULL;
