@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.141 2002/10/21 14:00:03 adrian Exp $
+ * $Id: typedefs.h,v 1.142 2002/10/25 07:36:32 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -135,7 +135,6 @@ typedef struct _store_client store_client;
 typedef struct _MemObject MemObject;
 typedef struct _StoreEntry StoreEntry;
 typedef struct _SwapDir SwapDir;
-typedef struct _request_flags request_flags;
 typedef struct _helper_flags helper_flags;
 typedef struct _helper_stateful_flags helper_stateful_flags;
 typedef struct _http_state_flags http_state_flags;

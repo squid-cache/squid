@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.436 2002/10/21 14:00:03 adrian Exp $
+ * $Id: structs.h,v 1.437 2002/10/25 07:37:00 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1412,7 +1412,17 @@ struct _SwapDir {
     void *fsdata;
 };
 
-struct _request_flags {
+/* To hard to pull this into another file just yet.
+ * SO, we stop globals.c seeing it 
+ */
+#ifdef __cplusplus
+struct request_flags {
+    request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),internal(0),internalclient(0),body_sent(0)
+      {
+#if HTTP_VIOLATIONS
+	nocache_hack = 1;
+#endif
+      }
     unsigned int range:1;
     unsigned int nocache:1;
     unsigned int ims:1;
@@ -1432,6 +1442,10 @@ struct _request_flags {
     unsigned int internal:1;
     unsigned int internalclient:1;
     unsigned int body_sent:1;
+    bool resetTCP() const;
+    void setResetTCP();
+    void clearResetTCP();
+private:
     unsigned int reset_tcp:1;
 };
 
@@ -1490,7 +1504,7 @@ struct _request_t {
     time_t lastmod;		/* Used on refreshes */
     const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
 };
-
+#endif
 struct _cachemgr_passwd {
     char *passwd;
     wordlist *actions;

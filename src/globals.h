@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.113 2002/10/21 14:00:02 adrian Exp $
+ * $Id: globals.h,v 1.114 2002/10/25 07:36:32 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -145,7 +145,6 @@ extern const char *MultipartMsgBoundaryStr;	/* "Unique-Squid-Separator" */
 #if HTTP_VIOLATIONS
 extern int refresh_nocache_hack;	/* 0 */
 #endif
-extern request_flags null_request_flags;
 extern int store_open_disk_fd;	/* 0 */
 extern const char *SwapDirType[];
 extern authscheme_entry_t *authscheme_list;	/* NULL */

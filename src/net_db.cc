@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.165 2002/10/25 04:06:39 robertc Exp $
+ * $Id: net_db.cc,v 1.166 2002/10/25 07:36:32 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1092,7 +1092,7 @@ netdbExchangeStart(void *data)
     assert(NULL != ex->r);
     httpBuildVersion(&ex->r->http_ver, 1, 0);
     ex->connstate = STATE_HEADER;
-    ex->e = storeCreateEntry(uri, uri, null_request_flags, METHOD_GET);
+    ex->e = storeCreateEntry(uri, uri, request_flags(), METHOD_GET);
     ex->buf_sz = NETDB_REQBUF_SZ;
     assert(NULL != ex->e);
     ex->sc = storeClientListAdd(ex->e, ex);

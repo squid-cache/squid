@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.78 2002/10/14 11:59:33 adrian Exp $
+ * $Id: urn.cc,v 1.79 2002/10/25 07:36:32 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -219,7 +219,7 @@ UrnState::created(_StoreEntry *newEntry)
 {
     urlres_e = newEntry;
     if (urlres_e->isNull()) {
-	urlres_e = storeCreateEntry(urlres, urlres, null_request_flags, METHOD_GET);
+	urlres_e = storeCreateEntry(urlres, urlres, request_flags(), METHOD_GET);
 	sc = storeClientListAdd(urlres_e, this);
 	fwdStart(-1, urlres_e, urlres_r);
     } else {

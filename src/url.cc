@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.138 2002/10/13 20:35:06 robertc Exp $
+ * $Id: url.cc,v 1.139 2002/10/25 07:36:32 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -150,7 +150,6 @@ urlInitialize(void)
 {
     debug(23, 5) ("urlInitialize: Initializing...\n");
     assert(sizeof(ProtocolStr) == (PROTO_MAX + 1) * sizeof(char *));
-    memset(&null_request_flags, '\0', sizeof(null_request_flags));
     /*
      * These test that our matchDomainName() function works the
      * way we expect it to.

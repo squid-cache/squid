@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.179 2002/10/21 14:00:02 adrian Exp $
+ * $Id: errorpage.cc,v 1.180 2002/10/25 07:36:32 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -312,7 +312,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     if (err->page_id == TCP_RESET) {
 	if (err->request) {
 	    debug(4, 2) ("RSTing this reply\n");
-	    err->request->flags.reset_tcp = 1;
+	    err->request->flags.setResetTCP();
 	}
     }
     storeLockObject(entry);
