@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.2 2000/10/06 05:12:35 wessels Exp $
+ * $Id: store_repl_lru.cc,v 1.3 2000/10/06 05:13:04 wessels Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -43,9 +43,9 @@ struct _LruPolicyData {
     dlink_list list;
     int count;
     int nwalkers;
-    enum heap_entry_type
-    { TYPE_UNKNOWN = 0, TYPE_STORE_ENTRY, TYPE_STORE_MEM }
-    type;
+    enum heap_entry_type {
+	TYPE_UNKNOWN = 0, TYPE_STORE_ENTRY, TYPE_STORE_MEM
+    } type;
 };
 
 /* Hack to avoid having to remember the RemovalPolicyNode location.
@@ -69,8 +69,7 @@ repl_guessType(StoreEntry * entry, RemovalPolicyNode * node)
     }
 
 typedef struct _LruNode LruNode;
-struct _LruNode
-{
+struct _LruNode {
     /* Note: the dlink_node MUST be the first member of the LruNode
      * structure. This member is later pointer typecasted to LruNode *.
      */
@@ -129,8 +128,7 @@ lru_referenced(RemovalPolicy * policy, const StoreEntry * entry,
 /** RemovalPolicyWalker **/
 
 typedef struct _LruWalkData LruWalkData;
-struct _LruWalkData
-{
+struct _LruWalkData {
     LruNode *current;
 };
 
@@ -178,8 +176,7 @@ lru_walkInit(RemovalPolicy * policy)
 /** RemovalPurgeWalker **/
 
 typedef struct _LruPurgeData LruPurgeData;
-struct _LruPurgeData
-{
+struct _LruPurgeData {
     LruNode *current;
     LruNode *start;
 };
@@ -262,7 +259,7 @@ lru_free(RemovalPolicy * policy)
 }
 
 RemovalPolicy *
-createRemovalPolicy_lru(wordlist *args)
+createRemovalPolicy_lru(wordlist * args)
 {
     RemovalPolicy *policy;
     LruPolicyData *lru_data;
@@ -292,4 +289,3 @@ createRemovalPolicy_lru(wordlist *args)
     nr_lru_policies += 0;
     return policy;
 }
-
