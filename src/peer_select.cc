@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.95 1998/12/16 06:34:55 wessels Exp $
+ * $Id: peer_select.cc,v 1.96 1999/01/29 17:20:56 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -266,7 +266,9 @@ peerSelectFoo(ps_state * ps)
 	debug(44, 3) ("peerSelectFoo: direct = %s\n",
 	    DirectStr[ps->direct]);
     }
-    if (entry->ping_status == PING_NONE) {
+    if (entry == NULL) {
+	(void) 0;
+    } else if (entry->ping_status == PING_NONE) {
 	peerGetSomeNeighbor(ps);
 	if (entry->ping_status == PING_WAITING)
 	    return;
