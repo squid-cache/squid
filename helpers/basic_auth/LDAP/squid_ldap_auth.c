@@ -32,13 +32,13 @@
  * Changes:
  * 2005-01-07: Henrik Nordstrom <hno@squid-cache.org>
  *             - Added some sanity checks on login names to avoid
- *             users bypassing equality checks by exploring the
- *             overly helpful match capabilities of LDAP
+ *               users bypassing equality checks by exploring the
+ *               overly helpful match capabilities of LDAP
  * 2004-07-17: Henrik Nordstrom <hno@squid-cache.org>
  *             - Corrected non-persistent mode to only issue one
- *             ldap_bind per connection.
+ *               ldap_bind per connection.
  *             - -U option to compare the users password rather
- *             than binding.
+ *               than binding.
  * 2004-03-01: Henrik Nordstrom <hno@squid-cache.org>
  *             - corrected building of search filters to escape
  *               unsafe input
@@ -151,6 +151,10 @@ static int checkLDAP(LDAP * ld, const char *userid, const char *password, const 
 static int readSecret(const char *filename);
 
 /* Yuck.. we need to glue to different versions of the API */
+
+#ifndef LDAP_NO_ATTRS
+#define LDAP_NO_ATTRS "1.1"
+#endif
 
 #if defined(LDAP_API_VERSION) && LDAP_API_VERSION > 1823
 static int
@@ -635,7 +639,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
 	LDAPMessage *res = NULL;
 	LDAPMessage *entry;
 	char *searchattr[] =
-	{NULL};
+	{LDAP_NO_ATTRS, NULL};
 	char *userdn;
 	int rc;
 	LDAP *search_ld = persistent_ld;
