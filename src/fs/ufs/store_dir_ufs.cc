@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.35 2001/07/11 22:29:51 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.36 2001/10/17 13:43:06 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -77,7 +77,7 @@ static void storeUfsDirCreateSwapSubDirs(SwapDir *);
 static char *storeUfsDirSwapLogFile(SwapDir *, const char *);
 static EVH storeUfsDirRebuildFromDirectory;
 static EVH storeUfsDirRebuildFromSwapLog;
-static int storeUfsDirGetNextFile(RebuildState *, int *sfileno, int *size);
+static int storeUfsDirGetNextFile(RebuildState *, sfileno *, int *size);
 static StoreEntry *storeUfsDirAddDiskRestore(SwapDir * SD, const cache_key * key,
     int file_number,
     size_t swap_file_sz,
@@ -126,9 +126,8 @@ STSETUP storeFsSetup_ufs;
  */
 
 static int
-storeUfsDirMapBitTest(SwapDir * SD, int fn)
+storeUfsDirMapBitTest(SwapDir * SD, sfileno filn)
 {
-    sfileno filn = fn;
     ufsinfo_t *ufsinfo;
     ufsinfo = (ufsinfo_t *) SD->fsdata;
     return file_map_bit_test(ufsinfo->map, filn);
@@ -378,7 +377,7 @@ storeUfsDirRebuildFromDirectory(void *data)
     StoreEntry *e = NULL;
     StoreEntry tmpe;
     cache_key key[MD5_DIGEST_CHARS];
-    int sfileno = 0;
+    sfileno filn = 0;
     int count;
     int size;
     struct stat sb;
@@ -390,7 +389,7 @@ storeUfsDirRebuildFromDirectory(void *data)
     debug(20, 3) ("storeUfsDirRebuildFromDirectory: DIR #%d\n", rb->sd->index);
     for (count = 0; count < rb->speed; count++) {
 	assert(fd == -1);
-	fd = storeUfsDirGetNextFile(rb, &sfileno, &size);
+	fd = storeUfsDirGetNextFile(rb, &filn, &size);
 	if (fd == -2) {
 	    debug(20, 1) ("Done scanning %s swaplog (%d entries)\n",
 		rb->sd->path, rb->n_read);
@@ -415,7 +414,7 @@ storeUfsDirRebuildFromDirectory(void *data)
 	if ((++rb->counts.scancount & 0xFFFF) == 0)
 	    debug(20, 3) ("  %s %7d files opened so far.\n",
 		rb->sd->path, rb->counts.scancount);
-	debug(20, 9) ("file_in: fd=%d %08X\n", fd, sfileno);
+	debug(20, 9) ("file_in: fd=%d %08X\n", fd, filn);
 	statCounter.syscalls.disk.reads++;
 	if (read(fd, hdr_buf, SM_PAGE_SIZE) < 0) {
 	    debug(20, 1) ("storeUfsDirRebuildFromDirectory: read(FD %d): %s\n",
@@ -437,7 +436,7 @@ storeUfsDirRebuildFromDirectory(void *data)
 	if (tlv_list == NULL) {
 	    debug(20, 1) ("storeUfsDirRebuildFromDirectory: failed to get meta data\n");
 	    /* XXX shouldn't this be a call to storeUfsUnlink ? */
-	    storeUfsDirUnlinkFile(SD, sfileno);
+	    storeUfsDirUnlinkFile(SD, filn);
 	    continue;
 	}
 	debug(20, 3) ("storeUfsDirRebuildFromDirectory: successful swap meta unpacking\n");
@@ -461,7 +460,7 @@ storeUfsDirRebuildFromDirectory(void *data)
 	tlv_list = NULL;
 	if (storeKeyNull(key)) {
 	    debug(20, 1) ("storeUfsDirRebuildFromDirectory: NULL key\n");
-	    storeUfsDirUnlinkFile(SD, sfileno);
+	    storeUfsDirUnlinkFile(SD, filn);
 	    continue;
 	}
 	tmpe.hash.key = key;
@@ -473,11 +472,11 @@ storeUfsDirRebuildFromDirectory(void *data)
 	} else if (tmpe.swap_file_sz != sb.st_size) {
 	    debug(20, 1) ("storeUfsDirRebuildFromDirectory: SIZE MISMATCH %d!=%d\n",
 		tmpe.swap_file_sz, (int) sb.st_size);
-	    storeUfsDirUnlinkFile(SD, sfileno);
+	    storeUfsDirUnlinkFile(SD, filn);
 	    continue;
 	}
 	if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {
-	    storeUfsDirUnlinkFile(SD, sfileno);
+	    storeUfsDirUnlinkFile(SD, filn);
 	    rb->counts.badflags++;
 	    continue;
 	}
@@ -496,7 +495,7 @@ storeUfsDirRebuildFromDirectory(void *data)
 	rb->counts.objcount++;
 	storeEntryDump(&tmpe, 5);
 	e = storeUfsDirAddDiskRestore(SD, key,
-	    sfileno,
+	    filn,
 	    tmpe.swap_file_sz,
 	    tmpe.expires,
 	    tmpe.timestamp,
@@ -687,7 +686,7 @@ storeUfsDirRebuildFromSwapLog(void *data)
 }
 
 static int
-storeUfsDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
+storeUfsDirGetNextFile(RebuildState * rb, sfileno *filn_p, int *size)
 {
     SwapDir *SD = rb->sd;
     ufsinfo_t *ufsinfo = (ufsinfo_t *) SD->fsdata;
@@ -769,7 +768,7 @@ storeUfsDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
 	rb->curlvl1 = 0;
 	rb->done = 1;
     }
-    *sfileno = rb->fn;
+    *filn_p = rb->fn;
     return fd;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.391 2001/10/10 15:17:39 adrian Exp $
+ * $Id: cache_cf.cc,v 1.392 2001/10/17 13:43:06 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1919,7 +1919,7 @@ free_string(char **var)
 void
 parse_eol(char *volatile *var)
 {
-    unsigned char *token = strtok(NULL, null_string);
+    unsigned char *token = (unsigned char *) strtok(NULL, null_string);
     safe_free(*var);
     if (token == NULL)
 	self_destruct();
@@ -1927,7 +1927,7 @@ parse_eol(char *volatile *var)
 	token++;
     if (!*token)
 	self_destruct();
-    *var = xstrdup(token);
+    *var = xstrdup((char *) token);
 }
 
 static void
@@ -2018,8 +2018,8 @@ dump_body_size_t(StoreEntry * entry, const char *name, dlink_list bodylist)
 }
 
 static void
-free_body_size_t(dlink_list * bodylist)		//acl_access ** head)
- {
+free_body_size_t(dlink_list * bodylist)
+{
     body_size *bs, *tempnode;
     bs = (body_size *) bodylist->head;
     while (bs) {
