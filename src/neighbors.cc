@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.261 1998/11/13 21:02:07 rousskov Exp $
+ * $Id: neighbors.cc,v 1.262 1998/11/23 23:25:06 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -438,6 +438,18 @@ neighborsUdpPing(request_t * request,
 	     * last query
 	     */
 	    p->stats.last_reply = squid_curtime;
+	    /*
+	     * We used to not expect a reply in this case; we assumed
+	     * the peer was DEAD if we hadn't queried it in a long
+	     * time.  However, the number of people whining to
+	     * squid-users that ICP is broken became unbearable.  They
+	     * tried a single request which, to their amazement, was
+	     * forwarded directly to the origin server, even thought
+	     * they KNEW it was in a neighbor cache.  Ok, I give up, you
+	     * win!
+	     */
+	    (*exprep)++;
+	    (*timeout) += 1000;
 	} else if (neighborUp(p)) {
 	    /* its alive, expect a reply from it */
 	    (*exprep)++;
@@ -878,7 +890,7 @@ peerDestroy(peer * p)
 }
 
 void
-peerNoteDigestGone(peer *p)
+peerNoteDigestGone(peer * p)
 {
 #if USE_CACHE_DIGESTS
     if (p->digest) {
