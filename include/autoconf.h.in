@@ -52,15 +52,6 @@
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef pid_t
 
-/* Define to the type of arg1 for select(). */
-#undef SELECT_TYPE_ARG1
-
-/* Define to the type of args 2, 3 and 4 for select(). */
-#undef SELECT_TYPE_ARG234
-
-/* Define to the type of arg5 for select(). */
-#undef SELECT_TYPE_ARG5
-
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
 #undef size_t
 
@@ -396,6 +387,7 @@
 /* Support for poll/select/etc stuff */
 #undef USE_POLL
 #undef USE_SELECT
+#undef USE_KQUEUE
 
 /* The number of bytes in a __int64.  */
 #undef SIZEOF___INT64
