@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.196 1997/11/23 06:50:26 wessels Exp $
+ * $Id: main.cc,v 1.197 1997/11/24 18:27:17 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -134,7 +134,7 @@ static void
 usage(void)
 {
     fprintf(stderr,
-	"Usage: %s [-svzCDFRUVY] [-f config-file] [-[au] port] [-k signal]\n"
+	"Usage: %s [-dhsvzCDFNRVYX] [-f config-file] [-[au] port] [-k signal]\n"
 	"       -a port   Specify HTTP port number (default: %d).\n"
 	"       -d        Write debugging to stderr also.\n"
 	"       -f file   Use given config-file instead of\n"
@@ -149,9 +149,10 @@ usage(void)
 	"       -C        Do not catch fatal signals.\n"
 	"       -D        Disable initial DNS tests.\n"
 	"       -F        Foreground fast store rebuild.\n"
+	"       -N        No daemon mode.\n"
 	"       -R        Do not set REUSEADDR on port.\n"
-	"       -U        Unlink expired objects on reload.\n"
 	"       -V        Virtual host httpd-accelerator.\n"
+	"	-X        Force full debugging.\n"
 	"       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
 	appname, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
     exit(1);
@@ -163,7 +164,7 @@ mainParseOptions(int argc, char *argv[])
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFNRVYXa:bdf:hk:m:su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFNRVYXa:df:hk:m:su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -566,8 +567,8 @@ main(int argc, char **argv)
     /* main loop */
     for (;;) {
 	if (reconfigure_pending) {
-		mainReconfigure();
-		reconfigure_pending = 0;	/* reset */
+	    mainReconfigure();
+	    reconfigure_pending = 0;	/* reset */
 	} else if (rotate_pending) {
 	    icmpClose();
 	    _db_rotate_log();	/* cache.log */
