@@ -1,3 +1,8 @@
+	- Fixed missing CR on Not-Modified replies (Balint Nagy Endre)
+	- Fixed not truncating multi-word content-types.
+	- Fixed ABR bug due to too-small redirector buffers.
+	- Fixed ABR in httpBuildRequestHeader().
+
 Changes to squid-1.1.beta27 (December 4, 1996):
 
 	- Fixed wrong number of args to debug().
