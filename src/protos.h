@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.380 2000/10/04 15:32:13 wessels Exp $
+ * $Id: protos.h,v 1.381 2000/10/10 02:10:42 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1072,6 +1072,7 @@ extern int stringHasCntl(const char *);
 extern void linklistPush(link_list **, void *);
 extern void *linklistShift(link_list **);
 extern int xrename(const char *from, const char *to);
+extern int isPowTen(int);
 
 #if USE_HTCP
 extern void htcpInit(void);

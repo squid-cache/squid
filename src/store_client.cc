@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.96 2000/10/09 18:37:10 wessels Exp $
+ * $Id: store_client.cc,v 1.97 2000/10/10 02:10:43 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -371,6 +371,7 @@ storeClientReadBody(void *data, const char *buf, ssize_t len)
 static void
 storeClientReadHeader(void *data, const char *buf, ssize_t len)
 {
+    static int md5_mismatches = 0;
     store_client *sc = data;
     StoreEntry *e = sc->entry;
     MemObject *mem = e->mem_obj;
@@ -410,9 +411,12 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	    assert(t->length == MD5_DIGEST_CHARS);
 	    if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
 		memcmp(t->value, e->key, MD5_DIGEST_CHARS)) {
-		debug(20, 1) ("WARNING: swapin MD5 mismatch\n");
-		debug(20, 1) ("\t%s\n", storeKeyText(t->value));
-		debug(20, 1) ("\t%s\n", storeKeyText(e->key));
+		debug(20, 2) ("storeClientReadHeader: swapin MD5 mismatch\n");
+		debug(20, 2) ("\t%s\n", storeKeyText(t->value));
+		debug(20, 2) ("\t%s\n", storeKeyText(e->key));
+		if (isPowTen(++md5_mismatches))
+		    debug(20, 1) ("WARNING: %d swapin MD5 mismatches\n",
+			md5_mismatches);
 		swap_object_ok = 0;
 	    }
 	    break;
