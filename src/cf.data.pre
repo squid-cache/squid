@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.189 2000/06/25 22:41:21 wessels Exp $
+# $Id: cf.data.pre,v 1.190 2000/06/26 01:38:37 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -3192,6 +3192,38 @@ DEFAULT: none
 DOC_START
 	Squid only knows about standardized HTTP request methods.
 	You can add up to 20 additional "extension" methods here.
+DOC_END
+
+NAME: high_response_time_warning
+TYPE: int
+COMMENT: (msec)
+LOC: Config.warnings.high_rptm
+DEFAULT: 0
+DOC_START
+	If the one-minute median response time exceeds this value,
+	Squid prints a WARNING with debug level 0 to get the
+	administrators attention.  The value is in milliseconds.
+DOC_END
+
+NAME: high_page_fault_warning
+TYPE: int
+LOC: Config.warnings.high_pf
+DEFAULT: 0
+DOC_START
+	If the one-minute average page fault rate exceeds this
+	value, Squid prints a WARNING with debug level 0 to get
+	the administrators attention.  The value is in page faults
+	per second.
+DOC_END
+
+NAME: high_memory_warning
+TYPE: b_size_t
+LOC: Config.warnings.high_memory
+DEFAULT: 0
+DOC_START
+	If the memory usage (as determined by mallinfo) exceeds
+	value, Squid prints a WARNING with debug level 0 to get
+	the administrators attention.
 DOC_END
 
 EOF
