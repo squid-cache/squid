@@ -1,10 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.16 2002/11/21 12:35:52 robertc Exp $
+# $Id: Makefile.am,v 1.17 2003/01/17 03:53:46 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
-DIST_SUBDIRS	= lib snmplib scripts src icons errors contrib doc helpers test-suite 
+DIST_SUBDIRS	= lib snmplib scripts src icons errors contrib doc helpers test-suite
 SUBDIRS		= lib @makesnmplib@ scripts src icons errors doc helpers test-suite
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
