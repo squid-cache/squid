@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.351 2004/04/30 20:41:09 wessels Exp $
+# $Id: cf.data.pre,v 1.352 2004/08/04 15:54:30 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -365,8 +365,8 @@ DOC_START
 
 	The default behavior is to not bind to any specific address.
 
-	A udp_incoming_address value of 0.0.0.0 indicates that Squid should
-	listen for UDP messages on all available interfaces.
+	A udp_incoming_address value of 0.0.0.0 indicates Squid
+	should listen for UDP messages on all available interfaces.
 
 	If udp_outgoing_address is set to 255.255.255.255 (the default)
 	then it will use the same socket as udp_incoming_address. Only
@@ -3430,8 +3430,8 @@ DOC_START
 		never_direct deny local-servers
 		never_direct allow all
 	
-	or if squid is inside a firewall and there is local intranet
-	servers inside the firewall then use something like:
+	or if squid is inside a firewall and there are local intranet
+	servers inside the firewall use something like:
 
 		acl local-intranet dstdomain .foo.net
 		acl local-external dstdomain external.foo.net
