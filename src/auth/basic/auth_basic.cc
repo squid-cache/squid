@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.31 2004/08/30 05:12:32 robertc Exp $
+ * $Id: auth_basic.cc,v 1.32 2004/09/26 21:35:42 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -300,6 +300,7 @@ AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
     storeAppendPrintf(entry, "%s basic children %d\n", name, authenticateChildren);
     storeAppendPrintf(entry, "%s basic concurrency %d\n", name, authenticateConcurrency);
     storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
+    storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
 
 }
 
@@ -328,6 +329,8 @@ AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
         parse_eol(&basicAuthRealm);
     } else if (strcasecmp(param_str, "credentialsttl") == 0) {
         parse_time_t(&credentialsTTL);
+    } else if (strcasecmp(param_str, "casesensitive") == 0) {
+        parse_onoff(&casesensitive);
     } else {
         debug(28, 0) ("unrecognised basic auth scheme parameter '%s'\n", param_str);
     }
@@ -403,6 +406,9 @@ BasicUser::extractUsername()
 
     if ((cleartext = strchr(username(), ':')) != NULL)
         *(cleartext)++ = '\0';
+
+    if (!basicConfig.casesensitive)
+        Tolower((char *)username());
 }
 
 void

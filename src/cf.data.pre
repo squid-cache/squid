@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.355 2004/09/25 15:46:44 hno Exp $
+# $Id: cf.data.pre,v 1.356 2004/09/26 21:35:41 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1745,6 +1745,13 @@ DOC_START
 	system (such as SecureID).  If you are using such a system,
 	you will be vulnerable to replay attacks unless you also
 	use the max_user_ip ACL in an http_access rule.
+
+    "casesensitive" on|off
+    Specifies if usernames are case sensitive. Most user databases are
+    case insensitive allowing the same username to be spelled using both
+    lower and upper case letters, but some are case sensitive. This
+    makes a big difference for user_max_ip ACL processing and similar.
+    auth_param basic casesensitive off
 
 	=== Parameters for the digest scheme follow ===
 
