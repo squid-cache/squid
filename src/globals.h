@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.56 1998/05/22 02:52:21 rousskov Exp $
+ * $Id: globals.h,v 1.57 1998/05/22 23:14:20 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -69,7 +69,7 @@ extern int theOutSnmpConnection;	/* -1 */
 extern char *snmp_agentinfo;
 #endif
 extern int vhost_mode;		/* 0 */
-extern int vizSock;		/* -1 */
+extern int n_disk_objects;	/* 0 */
 extern iostats IOStats;
 extern struct _acl_deny_info_list *DenyInfoList;	/* NULL */
 extern struct in_addr any_addr;
