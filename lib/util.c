@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.53 1998/03/03 00:30:57 rousskov Exp $
+ * $Id: util.c,v 1.54 1998/03/06 01:33:12 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -141,23 +141,23 @@ extern int sys_nerr;
 
 #if MEM_GEN_TRACE
 
-static FILE *tracefp=NULL;
+static FILE *tracefp = NULL;
 
 void
 log_trace_init(char *fn)
 {
-        tracefp=fopen(fn,"a+");
-        if (!tracefp) {
-            perror("log_trace_init");
-            exit(1);
-        }
+    tracefp = fopen(fn, "a+");
+    if (!tracefp) {
+	perror("log_trace_init");
+	exit(1);
+    }
 }
 
 void
 log_trace_done()
 {
-        fclose(tracefp);
-	tracefp=NULL;
+    fclose(tracefp);
+    tracefp = NULL;
 }
 
 #endif
@@ -493,8 +493,8 @@ xmalloc(size_t sz)
     xmalloc_show_trace(p, 1);
 #endif
 #if MEM_GEN_TRACE
-	if (tracefp)
-	fprintf(tracefp, "m:%d:%p\n",sz,p);
+    if (tracefp)
+	fprintf(tracefp, "m:%d:%p\n", sz, p);
 #endif
     return (p);
 }
@@ -515,8 +515,8 @@ xfree(void *s)
     if (s != NULL)
 	free(s);
 #if MEM_GEN_TRACE
-	if (tracefp && s)
-    fprintf(tracefp,"f:%p\n",s);
+    if (tracefp && s)
+	fprintf(tracefp, "f:%p\n", s);
 #endif
 }
 
@@ -532,8 +532,8 @@ xxfree(void *s)
 #endif
     free(s);
 #if MEM_GEN_TRACE
-	if (tracefp && s)
-    fprintf(tracefp,"f:%p\n",s);
+    if (tracefp && s)
+	fprintf(tracefp, "f:%p\n", s);
 #endif
 }
 
@@ -552,6 +552,10 @@ xrealloc(void *s, size_t sz)
 
     if (sz < 1)
 	sz = 1;
+#if XMALLOC_DEBUG
+    if (s != NULL)
+	check_free(s);
+#endif
     if ((p = realloc(s, sz)) == NULL) {
 	if (failure_notify) {
 	    snprintf(msg, 128, "xrealloc: Unable to reallocate %d bytes!\n",
@@ -572,8 +576,8 @@ xrealloc(void *s, size_t sz)
     xmalloc_show_trace(p, 1);
 #endif
 #if MEM_GEN_TRACE
-	if (tracefp) /* new ptr, old ptr, new size */
-		fprintf(tracefp, "r:%p:%p:%d\n",p,s,sz);
+    if (tracefp)		/* new ptr, old ptr, new size */
+	fprintf(tracefp, "r:%p:%p:%d\n", p, s, sz);
 #endif
     return (p);
 }
@@ -611,8 +615,8 @@ xcalloc(int n, size_t sz)
     xmalloc_show_trace(p, 1);
 #endif
 #if MEM_GEN_TRACE
-	if (tracefp)
-	fprintf(tracefp,"c:%d:%d:%p\n", n, sz,p);
+    if (tracefp)
+	fprintf(tracefp, "c:%d:%d:%p\n", n, sz, p);
 #endif
     return (p);
 }
@@ -635,7 +639,7 @@ xstrdup(const char *s)
 	}
 	exit(1);
     }
-    sz = strlen(s)+1;
+    sz = strlen(s) + 1;
     p = xmalloc(sz);
     memcpy(p, s, sz);		/* copy string, including terminating character */
     return p;
