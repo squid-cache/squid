@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.22 2001/01/04 03:42:38 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.23 2001/01/05 00:28:27 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -370,6 +370,8 @@ storeUfsDirInit(SwapDir * sd)
     }
     if (0 == storeDirGetBlkSize(sd->path, &sd->fs.blksize))
 	sd->fs.kperblk = sd->fs.blksize >> 10;
+    if (sd->fs.kperblk < 1)
+	sd->fs.kperblk = 1;
 }
 
 static void

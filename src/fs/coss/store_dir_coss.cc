@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.13 2001/01/02 01:41:34 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.14 2001/01/05 00:28:26 wessels Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -155,6 +155,8 @@ storeCossDirInit(SwapDir * sd)
     n_coss_dirs++;
     if (0 == storeDirGetBlkSize(sd->path, &sd->fs.blksize))
 	sd->fs.kperblk = sd->fs.blksize >> 10;
+    if (sd->fs.kperblk < 1)
+	sd->fs.kperblk = 1;
 }
 
 void
