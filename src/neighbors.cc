@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.147 1997/06/21 02:38:10 wessels Exp $
+ * $Id: neighbors.cc,v 1.148 1997/06/26 22:41:44 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -730,15 +730,15 @@ neighborAdd(const char *host,
     int mcast_ttl)
 {
     peer *p = NULL;
-    int j;
+    ushortlist *u;
     const char *me = getMyHostname();
     if (!strcmp(host, me)) {
-	for (j = 0; j < Config.Port.n_http; j++) {
-	    if (http_port == Config.Port.http[j]) {
-		debug(15, 0) ("neighborAdd: skipping cache_host %s %s/%d/%d\n",
-		    type, host, http_port, icp_port);
-		return;
-	    }
+	for (u=Config.Port.http; u; u=u->next) {
+	    if (http_port != u->i)
+		continue;
+	    debug(15, 0) ("neighborAdd: skipping cache_host %s %s/%d/%d\n",
+	        type, host, http_port, icp_port);
+	    return;
 	}
     }
     p = xcalloc(1, sizeof(peer));
@@ -910,7 +910,7 @@ peerDestroy(peer * p)
 	safe_free(l);
     }
     if (p->ip_lookup_pending)
-        ipcacheUnregister(p->host, p);
+	ipcacheUnregister(p->host, p);
     safe_free(p->host);
     cbdataFree(p);
 }
@@ -958,7 +958,7 @@ peerRefreshDNS(void *junk)
     peer *next = Peers.peers_head;
     while ((p = next)) {
 	next = p->next;
-        p->ip_lookup_pending = 1;
+	p->ip_lookup_pending = 1;
 	/* some random, bogus FD for ipcache */
 	p->test_fd = Squid_MaxFD + current_time.tv_usec;
 	ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);

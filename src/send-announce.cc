@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.39 1997/06/18 00:20:02 wessels Exp $
+ * $Id: send-announce.cc,v 1.40 1997/06/26 22:41:45 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -62,10 +62,11 @@ send_announce(const ipcache_addrs * ia, void *data)
     sndbuf[0] = '\0';
     sprintf(tbuf, "cache_version SQUID/%s\n", version_string);
     strcat(sndbuf, tbuf);
+    assert(Config.Port.http);
     sprintf(tbuf, "Running on %s %d %d\n",
 	getMyHostname(),
-	Config.Port.http[0],
-	Config.Port.icp);
+	(int) Config.Port.http->i,
+	(int) Config.Port.icp);
     strcat(sndbuf, tbuf);
     if (Config.adminEmail) {
 	sprintf(tbuf, "cache_admin: %s\n", Config.adminEmail);
