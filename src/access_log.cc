@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.48 1999/01/15 06:36:35 wessels Exp $
+ * $Id: access_log.cc,v 1.49 1999/01/29 18:31:17 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -317,13 +317,12 @@ accessLogRotate(void)
 	rename(from, to);
     }
     /* Rotate the current log to .0 */
+    file_close(LogfileFD);	/* always close */
     if (Config.Log.rotateNumber > 0) {
 	snprintf(to, MAXPATHLEN, "%s.%d", fname, 0);
 	rename(fname, to);
     }
-    /* Close and reopen the log.  It may have been renamed "manually"
-     * before HUP'ing us. */
-    file_close(LogfileFD);
+    /* Reopen the log.  It may have been renamed "manually" */
     LogfileFD = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL, NULL);
     if (LogfileFD == DISK_ERROR) {
 	debug(46, 0) ("accessLogRotate: Cannot open logfile: %s\n", fname);
