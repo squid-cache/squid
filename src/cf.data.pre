@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.318 2003/05/29 15:54:07 hno Exp $
+# $Id: cf.data.pre,v 1.319 2003/06/10 20:45:29 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3767,7 +3767,7 @@ DOC_START
 	URI.  Options:
 
 	strip:  The whitespace characters are stripped out of the URL.
-		This is the behavior recommended by RFC2616.
+		This is the behavior recommended by RFC2396.
 	deny:   The request is denied.  The user receives an "Invalid
 		Request" message.
 	allow:  The request is allowed and the URI is not changed.  The
