@@ -16,7 +16,7 @@ extern int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags,
   struct sockaddr *from, socklen_t *fromlen);
 extern int comm_udp_recv(int fd, void *buf, size_t len, int flags);
 extern ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
-extern void comm_accept_setperiod(int fd, int mdelay);
+extern void comm_accept_setcheckperiod(int fd, int mdelay);
 
 extern void comm_write(int s, const char *buf, size_t len, IOWCB *callback, void *callback_data);
 
