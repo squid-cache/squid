@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.40 1997/05/22 22:18:22 wessels Exp $
+ * $Id: stmem.cc,v 1.41 1997/05/23 05:15:57 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -203,7 +203,7 @@ memFreeDataUpto(mem_ptr mem, int target_offset)
 
 
 /* Append incoming data. */
-int
+void
 memAppend(mem_ptr mem, const char *data, int len)
 {
     mem_node p;
@@ -244,7 +244,6 @@ memAppend(mem_ptr mem, const char *data, int len)
 	len -= len_to_copy;
 	data += len_to_copy;
     }
-    return len;
 }
 
 size_t
