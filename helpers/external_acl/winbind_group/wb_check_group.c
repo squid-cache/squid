@@ -292,6 +292,28 @@ process_options(int argc, char *argv[])
     return;
 }
 
+void
+check_winbindd()
+{
+    NSS_STATUS r;
+    int retry=10;
+    struct winbindd_request request;
+    struct winbindd_response response;
+    do {
+	r = winbindd_request(WINBINDD_INTERFACE_VERSION, &request, &response);
+	if (r != NSS_STATUS_SUCCESS)
+	    retry--; 
+    } while (r != NSS_STATUS_SUCCESS && retry);
+    if (r != NSS_STATUS_SUCCESS) {
+	warn("Can't contact winbindd. Dying\n");
+	exit(1);
+    }
+    if (response.data.interface_version != WINBIND_INTERFACE_VERSION) {
+	warn("Winbind protocol mismatch. Align squid and samba. Dying\n");
+	exit(1);
+    }
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -323,6 +345,8 @@ main (int argc, char *argv[])
     if (use_case_insensitive_compare)
         debug("Warning: running in case insensitive mode !!!\n");
  
+    check_winbindd();
+
     /* Main Loop */
     while (fgets (buf, BUFSIZE, stdin))
     {
