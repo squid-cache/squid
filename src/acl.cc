@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.188 1998/11/12 06:41:36 wessels Exp $
+ * $Id: acl.cc,v 1.189 1998/11/26 01:15:49 glenn Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -708,6 +708,11 @@ aclParseAclLine(acl ** head)
 	    assert(proxy_auth_cache);
 	}
 	break;
+#if SQUID_SNMP
+    case ACL_SNMP_COMMUNITY:
+        aclParseWordList(&A->data);
+	break;
+#endif  
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
 	aclParseArpList(&A->data);
