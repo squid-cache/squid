@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.52 1998/07/22 20:36:46 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.53 1998/08/25 19:10:43 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -194,6 +194,9 @@ static http_hdr_type RequestHeadersArr[] =
 static HttpHeaderStat HttpHeaderStats[] =
 {
     {"all"},
+#if USE_HTCP
+    {"HTCP reply"},
+#endif
     {"request"},
     {"reply"}
 };
@@ -240,6 +243,7 @@ httpHeaderInitModule()
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) GeneralHeadersArr, countof(GeneralHeadersArr));
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) EntityHeadersArr, countof(EntityHeadersArr));
     /* init header stats */
+    assert(HttpHeaderStatCount == hoReply+1);
     for (i = 0; i < HttpHeaderStatCount; i++)
 	httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
     HttpHeaderStats[hoRequest].owner_mask = &RequestHeadersMask;
@@ -278,7 +282,8 @@ httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
 void
 httpHeaderInit(HttpHeader * hdr, http_hdr_owner_type owner)
 {
-    assert(hdr && (owner == hoRequest || owner == hoReply));
+    assert(hdr);
+    assert(owner > hoNone && owner <= hoReply);
     debug(55, 7) ("init-ing hdr: %p owner: %d\n", hdr, owner);
     memset(hdr, 0, sizeof(*hdr));
     hdr->owner = owner;
@@ -291,7 +296,8 @@ httpHeaderClean(HttpHeader * hdr)
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
 
-    assert(hdr && (hdr->owner == hoRequest || hdr->owner == hoReply));
+    assert(hdr);
+    assert(hdr->owner > hoNone && hdr->owner <= hoReply);
     debug(55, 7) ("cleaning hdr: %p owner: %d\n", hdr, hdr->owner);
 
     statHistCount(&HttpHeaderStats[hdr->owner].hdrUCountDistr, hdr->entries.count);
@@ -346,7 +352,7 @@ httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMas
 }
 
 /* just handy in parsing: resets and returns false */
-static int
+int
 httpHeaderReset(HttpHeader * hdr)
 {
     http_hdr_owner_type ho = hdr->owner;
