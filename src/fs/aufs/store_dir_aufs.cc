@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.13 2000/11/01 21:48:16 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.14 2000/11/01 22:04:28 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1307,7 +1307,7 @@ storeAufsDirMaintain(SwapDir * SD)
     if (store_dirs_rebuilding) {
 	return;
     } else {
-	f = (double) (store_swap_size - store_swap_low) / (store_swap_high - store_swap_low);
+	f = (double) (SD->cur_size - SD->low_size) / (SD->max_size - SD->low_size);
 	f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
 	max_scan = (int) (f * 400.0 + 100.0);
 	max_remove = (int) (f * 70.0 + 10.0);
