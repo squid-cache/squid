@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.140 1996/12/18 03:50:23 wessels Exp $
+ * $Id: http.cc,v 1.141 1996/12/18 18:15:28 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -309,13 +309,13 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     end = mime_headers_end(headers);
     if (end == NULL) {
 	t = headers;
-        if (!strncasecmp(t, "HTTP/", 5)) {
-	    reply->version = atof(t+5);
-            if ((t = strchr(t, ' ')))
-                reply->code = atoi(++t);
+	if (!strncasecmp(t, "HTTP/", 5)) {
+	    reply->version = atof(t + 5);
+	    if ((t = strchr(t, ' ')))
+		reply->code = atoi(++t);
 	}
-        put_free_4k_page(headers);
-        return;
+	put_free_4k_page(headers);
+	return;
     }
     reply->hdr_sz = end - headers;
     line = get_free_4k_page();
@@ -327,7 +327,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	t = line;
 	debug(11, 3, "httpParseReplyHeaders: %s\n", t);
 	if (!strncasecmp(t, "HTTP/", 5)) {
-	    reply->version = atof(t+5);
+	    reply->version = atof(t + 5);
 	    if ((t = strchr(t, ' ')))
 		reply->code = atoi(++t);
 	} else if (!strncasecmp(t, "Content-type:", 13)) {
@@ -472,6 +472,12 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 		httpMakePrivate(entry);
 	    else if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
 		httpMakePrivate(entry);
+	    /*
+	     * Dealing with cookies is quite a bit more complicated
+	     * than this.  Ideally we should strip the cookie
+	     * header from the reply but still cache the reply body.
+	     * More confusion at draft-ietf-http-state-mgmt-05.txt.
+	     */
 	    else if (EBIT_TEST(reply->misc_headers, HDR_SET_COOKIE))
 		httpMakePrivate(entry);
 	    else if (reply->date > -1)
