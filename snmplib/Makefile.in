@@ -17,10 +17,17 @@ ALIB		= libsnmp.a
 
 TARG		= libsnmp.a
 
-CSRCS		= snmp_client.c snmp.c snmp_auth.c asn1.c mib.c \
-		  parse.c snmp_api.c usec.c snmpdump.c
-OBJS		= snmp_client.o snmp.o snmp_auth.o asn1.o mib.o \
-		  parse.o snmp_api.o usec.o snmpdump.o
+CSRCS		= asn1.c parse.c snmp_dump.c snmp_vars.c \
+		  coexistance.c snmp_api.c snmp_error.c  \
+		  mib.c snmp_api_error.c   \
+		  mibii.c snmp_api_util.c snmp_msg.c \
+		  snmp_client.c snmp_pdu.c 
+
+OBJS		= asn1.o parse.o snmp_dump.o snmp_vars.o \
+                  coexistance.o snmp_api.o snmp_error.o  \
+                  mib.o snmp_api_error.o   \
+                  mibii.o snmp_api_util.o snmp_msg.o \
+                  snmp_client.o snmp_pdu.o
 
 CC		= @CC@
 AR_R		= @AR_R@

@@ -1,0 +1,252 @@
+/*
+ * RFC 1908: Coexistence between SNMPv1 and SNMPv2
+ */
+/**********************************************************************
+ *
+ *           Copyright 1997 by Carnegie Mellon University
+ * 
+ *                       All Rights Reserved
+ * 
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies and that
+ * both that copyright notice and this permission notice appear in
+ * supporting documentation, and that the name of CMU not be
+ * used in advertising or publicity pertaining to distribution of the
+ * software without specific, written prior permission.
+ * 
+ * CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+ * CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+ * SOFTWARE.
+ * 
+ * Author: Ryan Troll <ryan+@andrew.cmu.edu>
+ * 
+ **********************************************************************/
+
+#include "config.h"
+
+#include "config.h"
+
+#include <stdio.h>
+
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+#if HAVE_GNUMALLOC_H
+#include <gnumalloc.h>
+#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#include <malloc.h>
+#endif
+#if HAVE_MEMORY_H
+#include <memory.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#if HAVE_BSTRING_H
+#include <bstring.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#if HAVE_NETDB_H
+#include <netdb.h>
+#endif
+
+#include "snmp.h"
+#include "asn1.h"
+#include "snmp_vars.h"
+#include "snmp_pdu.h"
+#include "snmp_error.h"
+#include "snmp_api_error.h"
+
+#include "util.h"
+
+/*
+ * RFC 1908: Coexistence between SNMPv1 and SNMPv2
+ *
+ * These convert:
+ *
+ *   V1 PDUs from an ** AGENT **   to V2 PDUs for an ** MANAGER **
+ *   V2 PDUs from an ** MANAGER ** to V1 PDUs for an ** AGENT **
+ *
+ * We will never convert V1 information from a manager into V2 PDUs.  V1
+ * requests are always honored by V2 agents, and the responses will be 
+ * valid V1 responses.  (I think. XXXXX)
+ *
+ */
+int snmp_coexist_V2toV1(struct snmp_pdu *PDU)
+{
+  /* Per 3.1.1:
+   */
+  switch (PDU->command) {
+    
+  case SNMP_PDU_GET:
+  case SNMP_PDU_GETNEXT:
+  case SNMP_PDU_SET:
+    return(1);
+    break;
+
+  case SNMP_PDU_GETBULK:
+    PDU->non_repeaters = 0;
+    PDU->max_repetitions = 0;
+    PDU->command = SNMP_PDU_GETNEXT;
+    return(1);
+    break;
+
+  default:
+    snmplib_debug(2, "Unable to translate PDU %d to SNMPv1!\n", PDU->command);
+    snmp_set_api_error(SNMPERR_PDU_TRANSLATION);
+    return(0);
+  }
+}
+
+oid SysUptime[]   = { 1, 3, 6, 1, 2, 1, 1, 3, 0 };
+/* SNMPv2:           .1 .3 .6 .1 .6
+ * snmpModules:                     .3
+ * snmpMib:                            .1
+ * snmpMIBObjects:                        .1
+ * snmpTrap:                                 .4
+ */
+oid TrapOid[]     = { 1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0};
+oid EnterOid[]    = { 1, 3, 6, 1, 6, 3, 1, 1, 4, 3, 0};
+oid snmpTrapsOid[]= { 1, 3, 6, 1, 6, 3, 1, 1, 5};
+
+int snmp_coexist_V1toV2(struct snmp_pdu *PDU)
+{
+  /* Per 3.1.2:
+   */
+  switch (PDU->command) {
+    
+  case SNMP_PDU_RESPONSE:
+
+    if (PDU->errstat == SNMP_ERR_TOOBIG) {
+      snmp_var_free(PDU->variables);
+      PDU->variables = NULL;
+    }
+    return(1);
+    break;
+
+  case TRP_REQ_MSG:
+    {
+      struct variable_list *VarP;
+      oid NewOid[MAX_NAME_LEN];
+      oid NewOidLen = 0;
+
+      /* Fake SysUptime */
+      VarP = snmp_var_new(SysUptime, sizeof(SysUptime) / sizeof(oid));
+      if (VarP == NULL)
+	return(0);
+      VarP->type = ASN_INTEGER;
+      *VarP->val.integer = PDU->time;
+
+      /* Fake SNMPTrapOid */
+      VarP->next_variable = snmp_var_new(TrapOid, sizeof(TrapOid) / sizeof(oid));
+      if (VarP == NULL) {
+	snmp_var_free(VarP);
+	return(0);
+      }
+
+      if (PDU->trap_type == SNMP_TRAP_ENTERPRISESPECIFIC) {
+	xmemcpy(NewOid, PDU->enterprise, PDU->enterprise_length);
+	NewOidLen = PDU->enterprise_length;
+	NewOid[NewOidLen++] = 0;
+	NewOid[NewOidLen++] = PDU->specific_type;
+      } else {
+
+	/* Trap prefix */
+	NewOidLen = sizeof(snmpTrapsOid) / sizeof(oid);
+	xmemcpy(NewOid, snmpTrapsOid, NewOidLen);
+
+	switch (PDU->trap_type) {
+	case SNMP_TRAP_COLDSTART:
+	  NewOid[NewOidLen++] = 1;
+	  break;
+	case SNMP_TRAP_WARMSTART:
+	  NewOid[NewOidLen++] = 2;
+	  break;
+	case SNMP_TRAP_LINKDOWN:
+	  NewOid[NewOidLen++] = 3; /* RFC 1573 */
+	  break;
+	case SNMP_TRAP_LINKUP:
+	  NewOid[NewOidLen++] = 4; /* RFC 1573 */
+	  break;
+	case SNMP_TRAP_AUTHENTICATIONFAILURE:
+	  NewOid[NewOidLen++] = 5;
+	  break;
+	case SNMP_TRAP_EGPNEIGHBORLOSS:
+	  NewOid[NewOidLen++] = 6; /* RFC 1213 */
+	  break;
+	default:
+	  snmplib_debug(2, "Unable to translate v1 trap type %d!\n",
+		  PDU->trap_type);
+	  snmp_set_api_error(SNMPERR_PDU_TRANSLATION);
+	  return(0);
+	}
+      }
+
+      /* ASSERT:  NewOid contains the new OID. */
+      VarP->next_variable->type = ASN_OBJECT_ID;
+      VarP->next_variable->val_len = NewOidLen;
+      VarP->next_variable->val.string = xmalloc(sizeof(oid)*NewOidLen);
+      if (VarP->next_variable->val.string == NULL) {
+	snmp_set_api_error(SNMPERR_OS_ERR);
+	return(0);
+      }
+      xmemcpy((char *)VarP->next_variable->val.string, 
+	     (char *)NewOid, 
+	     sizeof(oid)*NewOidLen);
+      
+      /* Prepend this list */
+      VarP->next_variable->next_variable = PDU->variables;
+      PDU->variables = VarP;
+
+      /* Finally, append the last piece */
+
+      for(VarP = PDU->variables; VarP->next_variable; VarP=VarP->next_variable)
+	; /* Find the last element of the list. */
+
+      VarP->next_variable = snmp_var_new(EnterOid, 
+					 sizeof(EnterOid) / sizeof(oid));
+      if (VarP->next_variable == NULL)
+	return(0);
+      VarP->next_variable->type = ASN_OBJECT_ID;
+      VarP->next_variable->val_len = PDU->enterprise_length;
+      VarP->next_variable->val.string = (u_char *)PDU->enterprise;
+
+      PDU->command = SNMP_PDU_V2TRAP;
+
+    } /* End of trap conversion */
+    return(1);
+    break;
+  default:
+    snmplib_debug(2, "Unable to translate PDU %d to SNMPv2!\n", PDU->command);
+    snmp_set_api_error(SNMPERR_PDU_TRANSLATION);
+    return(0);
+  }
+}
