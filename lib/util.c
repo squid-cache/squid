@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.26 1996/11/14 19:04:23 wessels Exp $
+ * $Id: util.c,v 1.27 1996/11/22 05:05:23 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -475,7 +475,7 @@ xstrncpy(char *dst, const char *src, size_t n)
 {
     if (n != 0) {
 	if (src != NULL)
-	    while (n-- != 0 && *src != '\0')
+	    while (--n != 0 && *src != '\0')
 		*dst++ = *src++;
 	*dst = '\0';
     }
