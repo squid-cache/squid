@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.1 2002/10/12 09:45:56 robertc Exp $
+ * $Id: ufscommon.cc,v 1.2 2002/10/12 09:52:57 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -227,7 +227,11 @@ commonUfsDirCreateDirectory(const char *path, int should_exist)
 	} else {
 	    fatalf("Swap directory %s is not a directory.", path);
 	}
+#ifdef _SQUID_MSWIN_
+    } else if (0 == mkdir(path)) {
+#else
     } else if (0 == mkdir(path, 0755)) {
+#endif
 	debug(47, should_exist ? 1 : 3) ("%s created\n", path);
 	created = 1;
     } else {
@@ -479,9 +483,9 @@ commonUfsDirRebuildFromDirectory(void *data)
 	tmpe.hash.key = key;
 	/* check sizes */
 	if (tmpe.swap_file_sz == 0) {
-	    tmpe.swap_file_sz = sb.st_size;
+	    tmpe.swap_file_sz = (size_t) sb.st_size;
 	} else if (tmpe.swap_file_sz == sb.st_size - swap_hdr_len) {
-	    tmpe.swap_file_sz = sb.st_size;
+	    tmpe.swap_file_sz = (size_t) sb.st_size;
 	} else if (tmpe.swap_file_sz != sb.st_size) {
 	    debug(47, 1) ("commonUfsDirRebuildFromDirectory: SIZE MISMATCH %ld!=%ld\n",
 		(long int) tmpe.swap_file_sz, (long int) sb.st_size);
@@ -1183,7 +1187,11 @@ commonUfsDirClean(int swap_index)
     if (dp == NULL) {
 	if (errno == ENOENT) {
 	    debug(36, 0) ("storeDirClean: WARNING: Creating %s\n", p1);
+#ifdef _SQUID_MSWIN_
+	    if (mkdir(p1) == 0)
+#else
 	    if (mkdir(p1, 0777) == 0)
+#endif
 		return 0;
 	}
 	debug(50, 0) ("storeDirClean: %s: %s\n", p1, xstrerror());
