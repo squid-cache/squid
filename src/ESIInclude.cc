@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.1 2003/07/14 14:15:55 robertc Exp $
+ * $Id: ESIInclude.cc,v 1.2 2003/07/23 10:41:20 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -345,8 +345,6 @@ ESIInclude::ESIInclude(ESIInclude const &old) : parent (NULL), started (false), 
 void
 ESIInclude::prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars)
 {
-    httpHeaderInit (&tempheaders, hoRequest);
-
     tempheaders.update (&vars->header(), NULL);
     tempheaders.removeConnectionHeaderEntries();
 }
@@ -355,10 +353,10 @@ ESIInclude::prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars)
 void
 ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarState *vars)
 {
-    HttpHeader tempheaders;
-
     if (!stream.getRaw())
         return;
+
+    HttpHeader tempheaders(hoRequest);
 
     prepareRequestHeaders(tempheaders, vars);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.42 2003/06/19 19:02:33 hno Exp $
+ * $Id: HttpHeaderTools.cc,v 1.43 2003/07/23 10:41:20 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -400,7 +400,7 @@ httpHeaderTestParser(const char *hstr)
     static int bug_count = 0;
     int hstr_len;
     int parse_success;
-    HttpHeader hdr;
+    HttpHeader hdr(hoReply);
     int pos;
     Packer p;
     MemBuf mb;
@@ -429,8 +429,6 @@ httpHeaderTestParser(const char *hstr)
         hstr_len -= 2;
     else if (strstr(hstr, "\n\n"))
         hstr_len -= 1;
-
-    httpHeaderInit(&hdr, hoReply);
 
     /* Debug::Levels[55] = 8; */
     parse_success = httpHeaderParse(&hdr, hstr, hstr + hstr_len);
