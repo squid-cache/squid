@@ -1280,7 +1280,7 @@ Squid consists of the following major components
 	<P>
 	Also, if the new field is a "list" header, add it to the
 	<em/ListHeadersArr/ array.  A "list" field-header is the
-	one that is defined (or can be defined) using "#" BNF
+	one that is defined (or can be defined) using "&num;" BNF
 	construct described in the HTTP specs. Essentially, a field
 	that may have more than one valid field-value in a single
 	header is a "list" field.
