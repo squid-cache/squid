@@ -1,6 +1,6 @@
 SQUID-MIB  DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.22 1999/01/15 20:48:16 glenn Exp $
+-- $Id: mib.txt,v 1.23 1999/01/26 06:16:32 glenn Exp $
 --
 
 IMPORTS
@@ -133,29 +133,13 @@ squid MODULE-IDENTITY
                         " Cache Memory Maximum Size "
         ::= { cacheStorageConfig 1 }
 
-	cacheMemHighWM OBJECT-TYPE
-                SYNTAX Integer32
-                MAX-ACCESS read-only
-                STATUS current
-                DESCRIPTION
-                        " Cache Memory High Water Mark "
-        ::= { cacheStorageConfig 2 }
-
-        cacheMemLowWM OBJECT-TYPE
-                SYNTAX Integer32
-                MAX-ACCESS read-only
-                STATUS current
-                DESCRIPTION
-                        " Cache Memory Low Water Mark "
-        ::= { cacheStorageConfig 3 }
-
         cacheSwapMaxSize OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
                         " Cache Swap Maximum Size "
-        ::= { cacheStorageConfig 4 }
+        ::= { cacheStorageConfig 2 }
 
         cacheSwapHighWM OBJECT-TYPE
                 SYNTAX Integer32
@@ -163,7 +147,7 @@ squid MODULE-IDENTITY
                 STATUS current
                 DESCRIPTION
                         " Cache Swap High Water Mark "
-        ::= { cacheStorageConfig 5 }
+        ::= { cacheStorageConfig 3 }
 
         cacheSwapLowWM OBJECT-TYPE
                 SYNTAX Integer32
@@ -171,7 +155,7 @@ squid MODULE-IDENTITY
                 STATUS current
                 DESCRIPTION
                         " Cache Swap Low Water Mark "
-        ::= { cacheStorageConfig 6 }
+        ::= { cacheStorageConfig 4 }
 
 -- end of  cacheStorageConfig group
 

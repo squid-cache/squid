@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.139 1999/01/24 05:24:22 wessels Exp $
+# $Id: cf.data.pre,v 1.140 1999/01/26 06:16:31 glenn Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2425,6 +2425,7 @@ NAME: snmp_access
 TYPE: acl_access
 LOC: Config.accessList.snmp
 DEFAULT: none
+DEFAULT_IF_NONE: deny all
 IFDEF: SQUID_SNMP
 DOC_START
 	Allowing or denying access to the SNMP port.
@@ -2437,10 +2438,6 @@ DOC_START
 Example:
 snmp_access allow public localhost
 snmp_access deny all
-
-NOCOMMENT_START
-snmp_access deny all
-NOCOMMENT_END
 DOC_END
 
 NAME: snmp_incoming_address

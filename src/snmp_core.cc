@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.29 1999/01/19 02:24:30 wessels Exp $
+ * $Id: snmp_core.cc,v 1.30 1999/01/26 06:16:34 glenn Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -154,14 +154,6 @@ snmpInit(void)
 					    snmpAddNode(snmpCreateOid(LEN_SQ_CONF + 2, SQ_CONF, 5, 4),
 						LEN_SQ_CONF + 2, snmp_confFn, 1,
 						snmpAddNode(snmpCreateOid(LEN_SQ_CONF + 3, SQ_CONF, 5, 4, 0),
-						    LEN_SQ_CONF + 3, snmp_confFn, 0)),
-					    snmpAddNode(snmpCreateOid(LEN_SQ_CONF + 2, SQ_CONF, 5, 5),
-						LEN_SQ_CONF + 2, snmp_confFn, 1,
-						snmpAddNode(snmpCreateOid(LEN_SQ_CONF + 3, SQ_CONF, 5, 5, 0),
-						    LEN_SQ_CONF + 3, snmp_confFn, 0)),
-					    snmpAddNode(snmpCreateOid(LEN_SQ_CONF + 2, SQ_CONF, 5, 6),
-						LEN_SQ_CONF + 2, snmp_confFn, 1,
-						snmpAddNode(snmpCreateOid(LEN_SQ_CONF + 3, SQ_CONF, 5, 6, 0),
 						    LEN_SQ_CONF + 3, snmp_confFn, 0)))),
 				    snmpAddNode(snmpCreateOid(LEN_SQ_PRF, SQ_PRF),
 					LEN_SQ_PRF, NULL, 2,

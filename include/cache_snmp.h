@@ -1,5 +1,5 @@
 /*
- * $Id: cache_snmp.h,v 1.21 1999/01/21 23:16:37 wessels Exp $
+ * $Id: cache_snmp.h,v 1.22 1999/01/26 06:16:30 glenn Exp $
  */
 
 #ifdef SQUID_SNMP
@@ -78,8 +78,6 @@ enum {
 enum {
     CONF_ST_START,
     CONF_ST_MMAXSZ,
-    CONF_ST_MHIWM,	/* DELETE ME */
-    CONF_ST_MLOWM,	/* DELETE ME */
     CONF_ST_SWMAXSZ,
     CONF_ST_SWHIWM,
     CONF_ST_SWLOWM,
