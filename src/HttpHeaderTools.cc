@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.14 1998/05/27 22:51:42 rousskov Exp $
+ * $Id: HttpHeaderTools.cc,v 1.15 1998/05/28 05:12:42 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -204,7 +204,10 @@ strListAdd(String * str, const char *item, char del)
 {
     assert(str && item);
     if (strLen(*str)) {
-	char buf[3] = { del, ' ', '\0' };
+	char buf[3];
+	buf[0] = del;
+	buf[1] = ' ';
+	buf[2] = '\0';
 	stringAppend(str, buf, 2);
     }
     stringAppend(str, item, strlen(item));
