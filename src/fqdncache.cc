@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.118 1998/09/23 20:13:48 wessels Exp $
+ * $Id: fqdncache.cc,v 1.119 1998/09/23 21:29:07 glenn Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -795,87 +795,59 @@ fqdncache_restart(void)
 }
 
 #ifdef SQUID_SNMP
-
-int
-fqdn_getMax()
-{
-    int i = 0;
-    fqdncache_entry *fq = NULL;
-
-    hash_first(fqdn_table);
-    while ((fq = (fqdncache_entry *) hash_next(fqdn_table)))
-	i++;
-    return i;
-}
+/*
+        The function to return the fqdn statistics via SNMP
+*/
 
 variable_list *
-snmp_fqdncacheFn(variable_list * Var, snint * ErrP)
+snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
-    static fqdncache_entry *fq = NULL;
-    static struct in_addr fqaddr;
-    int cnt = 0;
 
-    debug(49, 5) ("snmp_fqdncacheFn: Processing request with %d.%d!\n", Var->name[11], Var->name[12]);
+    debug(49, 5) ("snmp_netFqdnFn: Processing request:\n", Var->name[LEN_SQ_NET +
+ 1]);
+    snmpDebugOid(5, Var->name, Var->name_length);
 
-    cnt = Var->name[12];
-
-    hash_first(fqdn_table);
-    while (cnt--) {
-	fq = (fqdncache_entry *) hash_next(fqdn_table);
-	if (NULL == fq)
-	    break;
-    }
-    hash_last(fqdn_table);
-    if (fq == NULL || cnt != 0) {
-	*ErrP = SNMP_ERR_NOSUCHNAME;
-	return NULL;
-    }
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
+    Answer->val_len = sizeof(snint);
+    Answer->val.integer = xmalloc(Answer->val_len);
+    Answer->type = SMI_COUNTER32;
 
-    switch (Var->name[11]) {
-    case NET_FQDN_ID:
-	Answer->type = ASN_INTEGER;
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
-	*(Answer->val.integer) = Var->name[12];
-	break;
-    case NET_FQDN_NAME:
-	Answer->type = SMI_STRING;
-	Answer->val_len = strlen(fq->names[0]);
-	Answer->val.string = (u_char *) xstrdup(fq->names[0]);
-	break;
-    case NET_FQDN_IP:
-	Answer->type = SMI_IPADDRESS;
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
-	safe_inet_addr(fq->name, &fqaddr);
-	*(Answer->val.integer) = (snint) fqaddr.s_addr;
-	break;
-    case NET_FQDN_LASTREF:
-	Answer->type = SMI_TIMETICKS;
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
-	*(Answer->val.integer) = squid_curtime - fq->lastref;
-	break;
-    case NET_FQDN_EXPIRES:
-	Answer->type = SMI_TIMETICKS;
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
-	*(Answer->val.integer) = fq->expires - squid_curtime;
-	break;
-    case NET_FQDN_STATE:
-	Answer->type = ASN_INTEGER;
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
-	*(Answer->val.integer) = fq->status;
-	break;
+    switch (Var->name[LEN_SQ_NET+1]) {
+    case FQDN_ENT:
+        *(Answer->val.integer) = memInUse(MEM_FQDNCACHE_ENTRY);
+        Answer->type = SMI_GAUGE32;
+        break;
+    case FQDN_REQ:
+        *(Answer->val.integer) = FqdncacheStats.requests;
+        break;
+    case FQDN_HITS:
+        *(Answer->val.integer) = FqdncacheStats.hits;
+        break;
+    case FQDN_PENDHIT:
+        *(Answer->val.integer) = FqdncacheStats.pending_hits;
+        Answer->type = SMI_GAUGE32;
+        break;
+    case FQDN_NEGHIT:
+        *(Answer->val.integer) = FqdncacheStats.negative_hits;
+        break;
+    case FQDN_MISS:
+        *(Answer->val.integer) = FqdncacheStats.misses;
+        break;
+    case FQDN_GHBN:
+        *(Answer->val.integer) = FqdncacheStats.ghba_calls;
+        break;
+    case FQDN_LENG:
+        *(Answer->val.integer) = queue_length;
+        Answer->type = SMI_GAUGE32;
+        break;
     default:
-	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+        *ErrP = SNMP_ERR_NOSUCHNAME;
+        snmp_var_free(Answer);
+        return (NULL);
     }
     return Answer;
 }
-#endif
+
+#endif /*SQUID_SNMP*/
