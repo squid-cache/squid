@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.67 1998/09/15 06:22:16 wessels Exp $
+ * $Id: redirect.cc,v 1.68 1998/09/15 06:34:57 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -353,6 +353,7 @@ redirectOpenServers(void)
 	}
 	NRedirectorsOpen++;
 	redirector = xcalloc(1, sizeof(redirector_t));
+	cbdataAdd(redirector, MEM_NONE);
 	redirector->flags.alive = 1;
 	redirector->index = k;
 	redirector->fd = redirectsocket;
