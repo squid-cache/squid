@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.6 1996/08/30 22:37:23 wessels Exp $
+ * $Id: dns.cc,v 1.7 1996/09/14 08:45:48 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -110,7 +110,7 @@ struct dnsQueueData {
     void *data;
 };
 
-static int dnsOpenServer _PARAMS((char *command));
+static int dnsOpenServer(char *command);
 
 static dnsserver_t **dns_child_table = NULL;
 static int NDnsServersAlloc = 0;
@@ -118,8 +118,8 @@ static int NDnsServersAlloc = 0;
 char *dns_error_message = NULL;	/* possible error message */
 struct _dnsStats DnsStats;
 
-static int dnsOpenServer(command)
-     char *command;
+static int
+dnsOpenServer(char *command)
 {
     int pid;
     u_short port;
@@ -187,7 +187,8 @@ static int dnsOpenServer(command)
     return 0;
 }
 
-dnsserver_t *dnsGetFirstAvailable()
+dnsserver_t *
+dnsGetFirstAvailable()
 {
     int k;
     dnsserver_t *dns = NULL;
@@ -200,7 +201,8 @@ dnsserver_t *dnsGetFirstAvailable()
 }
 
 
-void dnsOpenServers()
+void
+dnsOpenServers()
 {
     int N = Config.dnsChildren;
     char *prg = Config.Program.dnsserver;
@@ -249,8 +251,8 @@ void dnsOpenServers()
 }
 
 
-void dnsStats(sentry)
-     StoreEntry *sentry;
+void
+dnsStats(StoreEntry * sentry)
 {
     int k;
 
@@ -271,7 +273,8 @@ void dnsStats(sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-void dnsShutdownServers()
+void
+dnsShutdownServers()
 {
     dnsserver_t *dnsData = NULL;
     int k;

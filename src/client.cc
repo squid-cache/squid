@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.8 1996/09/04 22:03:19 wessels Exp $
+ * $Id: client.cc,v 1.9 1996/09/14 08:45:41 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -111,11 +111,11 @@
 #endif
 
 /* Local functions */
-static int client_comm_connect();
-static void usage();
+static int client_comm_connect(int sock, char *dest_host, u_short dest_port);
+static void usage(char *progname);
 
-static void usage(progname)
-     char *progname;
+static void
+usage(char *progname)
 {
     fprintf(stderr, "\
 Usage: %s [-rs] [-i IMS_time] [-h host] [-p port] [-m method] url\n\
@@ -130,9 +130,8 @@ Options:\n\
     exit(1);
 }
 
-int main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char *argv[])
 {
     int conn, c, len, bytesWritten;
     int port, to_stdout, reload;
@@ -235,10 +234,8 @@ int main(argc, argv)
     return 0;
 }
 
-static int client_comm_connect(sock, dest_host, dest_port)
-     int sock;			/* Type of communication to use. */
-     char *dest_host;		/* Server's host name. */
-     u_short dest_port;		/* Server's port. */
+static int
+client_comm_connect(int sock, char *dest_host, u_short dest_port)
 {
     struct hostent *hp;
     static struct sockaddr_in to_addr;

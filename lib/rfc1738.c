@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.3 1996/07/09 03:41:13 wessels Exp $
+ * $Id: rfc1738.c,v 1.4 1996/09/14 08:50:50 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -27,7 +27,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *  
  */
- 
+
 /*
  * Copyright (c) 1994, 1995.  All rights reserved.
  *  
@@ -143,8 +143,8 @@ static char rfc1738_unsafe_chars[] =
  *  rfc1738_escape - Returns a static buffer contains the RFC 1738 
  *  compliant, escaped version of the given url.
  */
-char *rfc1738_escape(url)
-     char *url;
+char *
+rfc1738_escape(char *url)
 {
     static char buf[BIG_BUFSIZ];
     char *p, *q;
@@ -188,8 +188,8 @@ char *rfc1738_escape(url)
  *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in 
  *  given the string.  %% is a %. %ab is the 8-bit hexadecimal number "ab"
  */
-void rfc1738_unescape(s)
-     char *s;
+void
+rfc1738_unescape(char *s)
 {
     char hexnum[3];
     int i, j;			/* i is write, j is read */

@@ -1,5 +1,6 @@
 Changes to squid-1.1.beta2 (:
 
+	- Fixed UDP_HIT_OBJ objects ignoring 'proxy-only' setting.
 	- Added setting cachemgr.cgi fields from query string
 	  (Neil Murray).
 	- Split log type TCP_IFMODSINCE into TCP_IMS_HIT and

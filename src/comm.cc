@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.66 1996/09/12 22:17:58 wessels Exp $
+ * $Id: comm.cc,v 1.67 1996/09/14 08:45:43 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -137,26 +137,25 @@ struct _RWStateData {
 FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
-static void checkTimeouts _PARAMS((void));
-static void checkLifetimes _PARAMS((void));
-static void Reserve_More_FDs _PARAMS((void));
-static void commSetReuseAddr _PARAMS((int));
-static int examine_select _PARAMS((fd_set *, fd_set *, fd_set *));
-static void commSetNoLinger _PARAMS((int));
-static void comm_select_incoming _PARAMS((void));
-static int commBind _PARAMS((int s, struct in_addr, u_short port));
-static void RWStateCallbackAndFree _PARAMS((int fd, int code));
+static void checkTimeouts(void);
+static void checkLifetimes(void);
+static void Reserve_More_FDs(void);
+static void commSetReuseAddr(int);
+static int examine_select(fd_set *, fd_set *, fd_set *);
+static void commSetNoLinger(int);
+static void comm_select_incoming(void);
+static int commBind(int s, struct in_addr, u_short port);
+static void RWStateCallbackAndFree(int fd, int code);
 #ifdef TCP_NODELAY
-static void commSetTcpNoDelay _PARAMS((int));
+static void commSetTcpNoDelay(int);
 #endif
-static void commSetTcpRcvbuf _PARAMS((int, int));
+static void commSetTcpRcvbuf(int, int);
 
 static int *fd_lifetime = NULL;
 static struct timeval zero_tv;
 
-static void RWStateCallbackAndFree(fd, code)
-     int fd;
-     int code;
+static void
+RWStateCallbackAndFree(int fd, int code)
 {
     RWStateData *RWState = fd_table[fd].rwstate;
     rw_complete_handler *callback = NULL;
@@ -180,8 +179,8 @@ static void RWStateCallbackAndFree(fd, code)
 }
 
 /* Return the local port associated with fd. */
-u_short comm_local_port(fd)
-     int fd;
+u_short
+comm_local_port(int fd)
 {
     struct sockaddr_in addr;
     int addr_len = 0;
@@ -204,14 +203,8 @@ u_short comm_local_port(fd)
     return fde->local_port;
 }
 
-#ifdef __STDC__
-static int commBind(int s, struct in_addr in_addr, u_short port)
-#else /* K&R C */
-static int commBind(s, in_addr, port)
-     int s;
-     struct in_addr in_addr;
-     u_short port;
-#endif
+static int
+commBind(int s, struct in_addr in_addr, u_short port)
 {
     struct sockaddr_in S;
 
@@ -230,15 +223,8 @@ static int commBind(s, in_addr, port)
 
 /* Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in comm.h. */
-#ifdef __STDC__
-int comm_open(unsigned int io_type, struct in_addr addr, u_short port, char *note)
-#else /* K&R C */
-int comm_open(io_type, addr, port, note)
-     unsigned int io_type;
-     struct in_addr addr;
-     u_short port;
-     char *note;
-#endif
+int
+comm_open(unsigned int io_type, struct in_addr addr, u_short port, char *note)
 {
     int new_socket;
     FD_ENTRY *conn = NULL;
@@ -302,8 +288,8 @@ int comm_open(io_type, addr, port, note)
     * to 5.  HP-UX currently has a limit of 20.  SunOS is 5 and
     * OSF 3.0 is 8.
     */
-int comm_listen(sock)
-     int sock;
+int
+comm_listen(int sock)
 {
     int x;
     if ((x = listen(sock, FD_SETSIZE >> 2)) < 0) {
@@ -316,10 +302,8 @@ int comm_listen(sock)
 }
 
 /* Connect SOCK to specified DEST_PORT at DEST_HOST. */
-int comm_connect(sock, dest_host, dest_port)
-     int sock;			/* Type of communication to use. */
-     char *dest_host;		/* Server's host name. */
-     u_short dest_port;		/* Server's port. */
+int 
+comm_connect(int sock, char *dest_host, u_short dest_port)
 {
     struct hostent *hp = NULL;
     static struct sockaddr_in to_addr;
@@ -338,9 +322,8 @@ int comm_connect(sock, dest_host, dest_port)
     return comm_connect_addr(sock, &to_addr);
 }
 
-int comm_set_fd_lifetime(fd, lifetime)
-     int fd;
-     int lifetime;
+int
+comm_set_fd_lifetime(int fd, int lifetime)
 {
     debug(5, 3, "comm_set_fd_lifetime: FD %d lft %d\n", fd, lifetime);
     if (fd < 0 || fd > FD_SETSIZE)
@@ -355,25 +338,24 @@ int comm_set_fd_lifetime(fd, lifetime)
     return fd_lifetime[fd] = (int) squid_curtime + lifetime;
 }
 
-int comm_get_fd_lifetime(fd)
-     int fd;
+int
+comm_get_fd_lifetime(int fd)
 {
     if (fd < 0)
 	return 0;
     return fd_lifetime[fd];
 }
 
-int comm_get_fd_timeout(fd)
-     int fd;
+int
+comm_get_fd_timeout(int fd)
 {
     if (fd < 0)
 	return 0;
     return fd_table[fd].timeout_time;
 }
 
-int comm_connect_addr(sock, address)
-     int sock;
-     struct sockaddr_in *address;
+int
+comm_connect_addr(int sock, struct sockaddr_in *address)
 {
     int status = COMM_OK;
     FD_ENTRY *conn = &fd_table[sock];
@@ -434,10 +416,8 @@ int comm_connect_addr(sock, address)
 
 /* Wait for an incoming connection on FD.  FD should be a socket returned
  * from comm_listen. */
-int comm_accept(fd, peer, me)
-     int fd;
-     struct sockaddr_in *peer;
-     struct sockaddr_in *me;
+int
+comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 {
     int sock;
     struct sockaddr_in P;
@@ -490,8 +470,8 @@ int comm_accept(fd, peer, me)
     return sock;
 }
 
-void comm_close(fd)
-     int fd;
+void
+comm_close(int fd)
 {
     FD_ENTRY *conn = NULL;
     struct close_handler *ch = NULL;
@@ -520,8 +500,8 @@ void comm_close(fd)
 
 /* use to clean up fdtable when socket is closed without
  * using comm_close */
-int comm_cleanup_fd_entry(fd)
-     int fd;
+int
+comm_cleanup_fd_entry(int fd)
 {
     FD_ENTRY *conn = &fd_table[fd];
     RWStateCallbackAndFree(fd, COMM_ERROR);
@@ -531,16 +511,8 @@ int comm_cleanup_fd_entry(fd)
 
 
 /* Send a udp datagram to specified PORT at HOST. */
-#ifdef __STDC__
-int comm_udp_send(int fd, char *host, u_short port, char *buf, int len)
-#else /* K&R C */
-int comm_udp_send(fd, host, port, buf, len)
-     int fd;
-     char *host;
-     u_short port;
-     char *buf;
-     int len;
-#endif
+int
+comm_udp_send(int fd, char *host, u_short port, char *buf, int len)
 {
     struct hostent *hp = NULL;
     static struct sockaddr_in to_addr;
@@ -566,12 +538,8 @@ int comm_udp_send(fd, host, port, buf, len)
 }
 
 /* Send a udp datagram to specified TO_ADDR. */
-int comm_udp_sendto(fd, to_addr, addr_len, buf, len)
-     int fd;
-     struct sockaddr_in *to_addr;
-     int addr_len;
-     char *buf;
-     int len;
+int
+comm_udp_sendto(int fd, struct sockaddr_in *to_addr, int addr_len, char *buf, int len)
 {
     int bytes_sent;
 
@@ -586,12 +554,8 @@ int comm_udp_sendto(fd, to_addr, addr_len, buf, len)
     return bytes_sent;
 }
 
-int comm_udp_recv(fd, buf, size, from_addr, from_size)
-     int fd;
-     char *buf;
-     int size;
-     struct sockaddr_in *from_addr;
-     int *from_size;		/* in: size of from_addr; out: size filled in. */
+int
+comm_udp_recv(int fd, char *buf, int size, struct sockaddr_in *from_addr, int *from_size)
 {
     int len = recvfrom(fd, buf, size, 0, (struct sockaddr *) from_addr,
 	from_size);
@@ -603,16 +567,16 @@ int comm_udp_recv(fd, buf, size, from_addr, from_size)
     return len;
 }
 
-void comm_set_stall(fd, delta)
-     int fd;
-     int delta;
+void
+comm_set_stall(int fd, int delta)
 {
     if (fd < 0)
 	return;
     fd_table[fd].stall_until = squid_curtime + delta;
 }
 
-static void comm_select_incoming()
+static void
+comm_select_incoming()
 {
     fd_set read_mask;
     fd_set write_mask;
@@ -667,8 +631,8 @@ static void comm_select_incoming()
 
 
 /* Select on all sockets; call handlers for those that are ready. */
-int comm_select(sec)
-     time_t sec;
+int
+comm_select(time_t sec)
 {
     fd_set exceptfds;
     fd_set readfds;
@@ -832,21 +796,14 @@ int comm_select(sec)
     return COMM_TIMEOUT;
 }
 
-void comm_set_select_handler(fd, type, handler, client_data)
-     int fd;
-     unsigned int type;
-     PF handler;
-     void *client_data;
+void
+comm_set_select_handler(int fd, unsigned int type, PF handler, void *client_data)
 {
     comm_set_select_handler_plus_timeout(fd, type, handler, client_data, 0);
 }
 
-void comm_set_select_handler_plus_timeout(fd, type, handler, client_data, timeout)
-     int fd;
-     unsigned int type;
-     PF handler;
-     void *client_data;
-     time_t timeout;
+void
+comm_set_select_handler_plus_timeout(int fd, unsigned int type, PF handler, void *client_data, time_t timeout)
 {
     if (type & COMM_SELECT_TIMEOUT) {
 	fd_table[fd].timeout_time = (getCurrentTime() + timeout);
@@ -875,11 +832,8 @@ void comm_set_select_handler_plus_timeout(fd, type, handler, client_data, timeou
     }
 }
 
-int comm_get_select_handler(fd, type, handler_ptr, client_data_ptr)
-     int fd;
-     unsigned int type;
-     int (**handler_ptr) ();
-     void **client_data_ptr;
+int
+comm_get_select_handler(int fd, unsigned int type, int (**handler_ptr) (), void **client_data_ptr)
 {
     if (type & COMM_SELECT_TIMEOUT) {
 	*handler_ptr = fd_table[fd].timeout_handler;
@@ -904,10 +858,8 @@ int comm_get_select_handler(fd, type, handler_ptr, client_data_ptr)
     return 0;			/* XXX What is meaningful? */
 }
 
-void comm_add_close_handler(fd, handler, data)
-     int fd;
-     PF handler;
-     void *data;
+void
+comm_add_close_handler(int fd, PF handler, void *data)
 {
     struct close_handler *new = xmalloc(sizeof(*new));
 
@@ -919,10 +871,8 @@ void comm_add_close_handler(fd, handler, data)
     fd_table[fd].close_handler = new;
 }
 
-void comm_remove_close_handler(fd, handler, data)
-     int fd;
-     PF handler;
-     void *data;
+void
+comm_remove_close_handler(int fd, PF handler, void *data)
 {
     struct close_handler *p, *last = NULL;
 
@@ -941,8 +891,8 @@ void comm_remove_close_handler(fd, handler, data)
     safe_free(p);
 }
 
-static void commSetNoLinger(fd)
-     int fd;
+static void
+commSetNoLinger(int fd)
 {
     struct linger L;
     L.l_onoff = 0;		/* off */
@@ -952,8 +902,8 @@ static void commSetNoLinger(fd)
 	debug(5, 0, "commSetNoLinger: FD %d: %s\n", fd, xstrerror());
 }
 
-static void commSetReuseAddr(fd)
-     int fd;
+static void
+commSetReuseAddr(int fd)
 {
     int on = 1;
     debug(5, 10, "commSetReuseAddr: turning on SO_REUSEADDR on FD %d\n", fd);
@@ -962,8 +912,8 @@ static void commSetReuseAddr(fd)
 }
 
 #ifdef TCP_NODELAY
-static void commSetTcpNoDelay(fd)
-     int fd;
+static void
+commSetTcpNoDelay(int fd)
 {
     int on = 1;
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0)
@@ -971,17 +921,16 @@ static void commSetTcpNoDelay(fd)
 }
 #endif
 
-static void commSetTcpRcvbuf(fd, size)
-     int fd;
-     int size;
+static void
+commSetTcpRcvbuf(int fd, int size)
 {
     if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0)
 	debug(5, 1, "commSetTcpRcvbuf: FD %d, SIZE %d: %s\n",
 	    fd, size, xstrerror());
 }
 
-int commSetNonBlocking(fd)
-     int fd;
+int
+commSetNonBlocking(int fd)
 {
 #if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
     if (fcntl(fd, F_SETFL, O_NONBLOCK)) {
@@ -999,8 +948,8 @@ int commSetNonBlocking(fd)
     return 0;
 }
 
-void commSetCloseOnExec(fd)
-     int fd;
+void
+commSetCloseOnExec(int fd)
 {
 #ifdef FD_CLOEXEC
     if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
@@ -1010,8 +959,8 @@ void commSetCloseOnExec(fd)
 #endif
 }
 
-char **getAddressList(name)
-     char *name;
+char **
+getAddressList(char *name)
 {
     struct hostent *hp = NULL;
     if (name == NULL)
@@ -1023,8 +972,8 @@ char **getAddressList(name)
     return NULL;
 }
 
-struct in_addr *getAddress(name)
-     char *name;
+struct in_addr *
+getAddress(char *name)
 {
     static struct in_addr first;
     char **list = NULL;
@@ -1046,7 +995,8 @@ struct in_addr *getAddress(name)
  *  we can find a better solution, we give all asciiPort or
  *  squid initiated clients a maximum lifetime.
  */
-int comm_init()
+int
+comm_init()
 {
     int i;
 
@@ -1079,8 +1029,8 @@ int comm_init()
  * 
  * Call this from where the select loop fails.
  */
-static int examine_select(readfds, writefds, exceptfds)
-     fd_set *readfds, *writefds, *exceptfds;
+static int
+examine_select(fd_set * readfds, fd_set * writefds, fd_set * exceptfds)
 {
     int fd = 0;
     fd_set read_x;
@@ -1149,9 +1099,8 @@ static int examine_select(readfds, writefds, exceptfds)
     return 0;
 }
 
-char *fd_note(fd, s)
-     int fd;
-     char *s;
+char *
+fd_note(int fd, char *s)
 {
     if (s == NULL)
 	return (fd_table[fd].ascii_note);
@@ -1159,7 +1108,8 @@ char *fd_note(fd, s)
     return (NULL);
 }
 
-static void checkTimeouts()
+static void
+checkTimeouts()
 {
     int fd;
     int (*hdl) () = NULL;
@@ -1180,7 +1130,8 @@ static void checkTimeouts()
     }
 }
 
-static void checkLifetimes()
+static void
+checkLifetimes()
 {
     int fd;
     time_t lft;
@@ -1228,7 +1179,8 @@ static void checkLifetimes()
 /*
  * Reserve_More_FDs() called when acceopt(), open(), or socket is failing
  */
-static void Reserve_More_FDs()
+static void
+Reserve_More_FDs()
 {
     if (RESERVED_FD < FD_SETSIZE - 64) {
 	RESERVED_FD = RESERVED_FD + 1;
@@ -1240,9 +1192,8 @@ static void Reserve_More_FDs()
 }
 
 /* Read from FD. */
-static int commHandleRead(fd, state)
-     int fd;
-     RWStateData *state;
+static int
+commHandleRead(int fd, RWStateData * state)
 {
     int len;
 
@@ -1285,14 +1236,14 @@ static int commHandleRead(fd, state)
 
 /* Select for reading on FD, until SIZE bytes are received.  Call
  * HANDLER when complete. */
-void comm_read(fd, buf, size, timeout, immed, handler, handler_data)
-     int fd;
-     char *buf;
-     int size;
-     int timeout;
-     int immed;			/* Call handler immediately when data available */
-     rw_complete_handler *handler;
-     void *handler_data;
+void
+comm_read(int fd,
+    char *buf,
+    int size,
+    int timeout,
+    int immed,
+    rw_complete_handler * handler,
+    void *handler_data)
 {
     RWStateData *state = NULL;
 
@@ -1321,9 +1272,8 @@ void comm_read(fd, buf, size, timeout, immed, handler, handler_data)
 }
 
 /* Write to FD. */
-static void commHandleWrite(fd, state)
-     int fd;
-     RWStateData *state;
+static void
+commHandleWrite(int fd, RWStateData * state)
 {
     int len = 0;
     int nleft;
@@ -1373,14 +1323,8 @@ static void commHandleWrite(fd, state)
 
 /* Select for Writing on FD, until SIZE bytes are sent.  Call
  * * HANDLER when complete. */
-void comm_write(fd, buf, size, timeout, handler, handler_data, free)
-     int fd;
-     char *buf;
-     int size;
-     int timeout;
-     rw_complete_handler *handler;
-     void *handler_data;
-     void (*free) (void *);
+void
+comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handler, void *handler_data, void (*free) (void *))
 {
     RWStateData *state = NULL;
 

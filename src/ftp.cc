@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.54 1996/09/12 16:39:53 wessels Exp $
+ * $Id: ftp.cc,v 1.55 1996/09/14 08:45:59 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -127,26 +127,25 @@ typedef struct _Ftpdata {
 } FtpData;
 
 /* Local functions */
-static int ftpStateFree _PARAMS((int fd, FtpData * ftpState));
-static void ftpProcessReplyHeader _PARAMS((FtpData * data, char *buf, int size));
-static void ftpServerClosed _PARAMS((int fd, void *nodata));
-static void ftp_login_parser _PARAMS((char *login, FtpData * data));
-static char *ftpTransferMode _PARAMS((char *urlpath));
+static int ftpStateFree(int fd, FtpData * ftpState);
+static void ftpProcessReplyHeader(FtpData * data, char *buf, int size);
+static void ftpServerClosed(int fd, void *nodata);
+static void ftp_login_parser(char *login, FtpData * data);
+static char *ftpTransferMode(char *urlpath);
 
 /* Global functions not declared in ftp.h */
-void ftpLifetimeExpire _PARAMS((int fd, FtpData * data));
-int ftpReadReply _PARAMS((int fd, FtpData * data));
-void ftpSendComplete _PARAMS((int fd, char *buf, int size, int errflag, void *ftpData));
-void ftpSendRequest _PARAMS((int fd, FtpData * data));
-void ftpConnInProgress _PARAMS((int fd, FtpData * data));
-void ftpServerClose _PARAMS((void));
+void ftpLifetimeExpire(int fd, FtpData * data);
+int ftpReadReply(int fd, FtpData * data);
+void ftpSendComplete(int fd, char *buf, int size, int errflag, void *ftpData);
+void ftpSendRequest(int fd, FtpData * data);
+void ftpConnInProgress(int fd, FtpData * data);
+void ftpServerClose(void);
 
 /* External functions */
-extern char *base64_decode _PARAMS((char *coded));
+extern char *base64_decode(char *coded);
 
-static int ftpStateFree(fd, ftpState)
-     int fd;
-     FtpData *ftpState;
+static int
+ftpStateFree(int fd, FtpData * ftpState)
 {
     if (ftpState == NULL)
 	return 1;
@@ -160,9 +159,8 @@ static int ftpStateFree(fd, ftpState)
     return 0;
 }
 
-static void ftp_login_parser(login, data)
-     char *login;
-     FtpData *data;
+static void
+ftp_login_parser(char *login, FtpData * data)
 {
     char *user = data->user;
     char *password = data->password;
@@ -184,9 +182,8 @@ static void ftp_login_parser(login, data)
 }
 
 /* This will be called when socket lifetime is expired. */
-void ftpLifetimeExpire(fd, data)
-     int fd;
-     FtpData *data;
+void
+ftpLifetimeExpire(int fd, FtpData * data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
@@ -198,10 +195,8 @@ void ftpLifetimeExpire(fd, data)
 
 /* This is too much duplicated code from httpProcessReplyHeader.  Only
  * difference is FtpData vs HttpData. */
-static void ftpProcessReplyHeader(data, buf, size)
-     FtpData *data;
-     char *buf;			/* chunk just read by ftpReadReply() */
-     int size;
+static void
+ftpProcessReplyHeader(FtpData * data, char *buf, int size)
 {
     char *t = NULL;
     StoreEntry *entry = data->entry;
@@ -279,9 +274,8 @@ static void ftpProcessReplyHeader(data, buf, size)
 
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
-int ftpReadReply(fd, data)
-     int fd;
-     FtpData *data;
+int
+ftpReadReply(int fd, FtpData * data)
 {
     LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
     int len;
@@ -409,12 +403,8 @@ int ftpReadReply(fd, data)
     return 0;
 }
 
-void ftpSendComplete(fd, buf, size, errflag, data)
-     int fd;
-     char *buf;
-     int size;
-     int errflag;
-     void *data;
+void
+ftpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
     FtpData *ftpState = (FtpData *) data;
     StoreEntry *entry = NULL;
@@ -443,8 +433,8 @@ void ftpSendComplete(fd, buf, size, errflag, data)
     }
 }
 
-static char *ftpTransferMode(urlpath)
-     char *urlpath;
+static char *
+ftpTransferMode(char *urlpath)
 {
     static char ftpASCII[] = "A";
     static char ftpBinary[] = "I";
@@ -463,9 +453,8 @@ static char *ftpTransferMode(urlpath)
     return ftpBinary;
 }
 
-void ftpSendRequest(fd, data)
-     int fd;
-     FtpData *data;
+void
+ftpSendRequest(int fd, FtpData * data)
 {
     char *path = NULL;
     char *mode = NULL;
@@ -541,9 +530,8 @@ void ftpSendRequest(fd, data)
 	put_free_8k_page);
 }
 
-void ftpConnInProgress(fd, data)
-     int fd;
-     FtpData *data;
+void
+ftpConnInProgress(int fd, FtpData * data)
 {
     StoreEntry *entry = data->entry;
 
@@ -575,11 +563,8 @@ void ftpConnInProgress(fd, data)
 }
 
 
-int ftpStart(unusedfd, url, request, entry)
-     int unusedfd;
-     char *url;
-     request_t *request;
-     StoreEntry *entry;
+int
+ftpStart(int unusedfd, char *url, request_t * request, StoreEntry * entry)
 {
     LOCAL_ARRAY(char, realm, 8192);
     FtpData *data = NULL;
@@ -682,9 +667,8 @@ int ftpStart(unusedfd, url, request, entry)
     return COMM_OK;
 }
 
-static void ftpServerClosed(fd, nodata)
-     int fd;
-     void *nodata;
+static void
+ftpServerClosed(int fd, void *nodata)
 {
     static time_t last_restart = 0;
     comm_close(fd);
@@ -698,7 +682,8 @@ static void ftpServerClosed(fd, nodata)
     (void) ftpInitialize();
 }
 
-void ftpServerClose()
+void
+ftpServerClose()
 {
     /* NOTE: this function will be called repeatedly while shutdown is
      * pending */
@@ -717,7 +702,8 @@ void ftpServerClose()
 }
 
 
-int ftpInitialize()
+int
+ftpInitialize()
 {
     int pid;
     int cfd;

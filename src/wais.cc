@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.39 1996/09/12 22:18:01 wessels Exp $
+ * $Id: wais.cc,v 1.40 1996/09/14 08:46:38 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -118,18 +118,17 @@ typedef struct {
     char request[MAX_URL + 1];
 } WaisStateData;
 
-static int waisStateFree _PARAMS((int, WaisStateData *));
-static void waisReadReplyTimeout _PARAMS((int, WaisStateData *));
-static void waisLifetimeExpire _PARAMS((int, WaisStateData *));
-static void waisReadReply _PARAMS((int, WaisStateData *));
-static void waisSendComplete _PARAMS((int, char *, int, int, void *));
-static void waisSendRequest _PARAMS((int, WaisStateData *));
-static void waisConnInProgress _PARAMS((int, WaisStateData *));
-static int waisConnect _PARAMS((int, struct hostent *, WaisStateData *));
+static int waisStateFree(int, WaisStateData *);
+static void waisReadReplyTimeout(int, WaisStateData *);
+static void waisLifetimeExpire(int, WaisStateData *);
+static void waisReadReply(int, WaisStateData *);
+static void waisSendComplete(int, char *, int, int, void *);
+static void waisSendRequest(int, WaisStateData *);
+static void waisConnInProgress(int, WaisStateData *);
+static int waisConnect(int, struct hostent *, WaisStateData *);
 
-static int waisStateFree(fd, waisState)
-     int fd;
-     WaisStateData *waisState;
+static int
+waisStateFree(int fd, WaisStateData * waisState)
 {
     if (waisState == NULL)
 	return 1;
@@ -139,9 +138,8 @@ static int waisStateFree(fd, waisState)
 }
 
 /* This will be called when timeout on read. */
-static void waisReadReplyTimeout(fd, waisState)
-     int fd;
-     WaisStateData *waisState;
+static void
+waisReadReplyTimeout(int fd, WaisStateData * waisState)
 {
     StoreEntry *entry = NULL;
 
@@ -153,9 +151,8 @@ static void waisReadReplyTimeout(fd, waisState)
 }
 
 /* This will be called when socket lifetime is expired. */
-static void waisLifetimeExpire(fd, waisState)
-     int fd;
-     WaisStateData *waisState;
+static void
+waisLifetimeExpire(int fd, WaisStateData * waisState)
 {
     StoreEntry *entry = NULL;
 
@@ -170,9 +167,8 @@ static void waisLifetimeExpire(fd, waisState)
 
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
-static void waisReadReply(fd, waisState)
-     int fd;
-     WaisStateData *waisState;
+static void
+waisReadReply(int fd, WaisStateData * waisState)
 {
     LOCAL_ARRAY(char, buf, 4096);
     int len;
@@ -286,12 +282,8 @@ static void waisReadReply(fd, waisState)
 
 /* This will be called when request write is complete. Schedule read of
  * reply. */
-static void waisSendComplete(fd, buf, size, errflag, data)
-     int fd;
-     char *buf;
-     int size;
-     int errflag;
-     void *data;
+static void
+waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
     StoreEntry *entry = NULL;
     WaisStateData *waisState = data;
@@ -316,9 +308,8 @@ static void waisSendComplete(fd, buf, size, errflag, data)
 }
 
 /* This will be called when connect completes. Write request. */
-static void waisSendRequest(fd, waisState)
-     int fd;
-     WaisStateData *waisState;
+static void
+waisSendRequest(int fd, WaisStateData * waisState)
 {
     int len = strlen(waisState->request) + 4;
     char *buf = NULL;
@@ -350,9 +341,8 @@ static void waisSendRequest(fd, waisState)
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }
 
-static void waisConnInProgress(fd, waisState)
-     int fd;
-     WaisStateData *waisState;
+static void
+waisConnInProgress(int fd, WaisStateData * waisState)
 {
     StoreEntry *entry = waisState->entry;
 
@@ -382,12 +372,8 @@ static void waisConnInProgress(fd, waisState)
 	(PF) waisSendRequest, (void *) waisState);
 }
 
-int waisStart(unusedfd, url, method, mime_hdr, entry)
-     int unusedfd;
-     char *url;
-     method_t method;
-     char *mime_hdr;
-     StoreEntry *entry;
+int
+waisStart(int unusedfd, char *url, method_t method, char *mime_hdr, StoreEntry * entry)
 {
     WaisStateData *waisState = NULL;
     int fd;
@@ -424,10 +410,8 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
 }
 
 
-static int waisConnect(fd, hp, waisState)
-     int fd;
-     struct hostent *hp;
-     WaisStateData *waisState;
+static int
+waisConnect(int fd, struct hostent *hp, WaisStateData * waisState)
 {
     int status;
     char *host = waisState->relayhost;

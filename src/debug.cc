@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.22 1996/09/11 22:39:24 wessels Exp $
+ * $Id: debug.cc,v 1.23 1996/09/14 08:45:45 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -115,11 +115,13 @@ static char *debug_log_file = NULL;
 static int debugLevels[MAX_DEBUG_SECTIONS];
 
 #if defined(__STRICT_ANSI__)
-void _db_print(int section, int level, char *format,...)
+void
+_db_print(int section, int level, char *format,...)
 {
     va_list args;
 #else
-void _db_print(va_alist)
+void
+_db_print(va_alist)
      va_dcl
 {
     va_list args;
@@ -174,8 +176,8 @@ void _db_print(va_alist)
     va_end(args);
 }
 
-static void debugArg(arg)
-     char *arg;
+static void
+debugArg(char *arg)
 {
     int s = 0;
     int l = 0;
@@ -198,8 +200,8 @@ static void debugArg(arg)
 	debugLevels[i] = l;
 }
 
-static void debugOpenLog(logfile)
-     char *logfile;
+static void
+debugOpenLog(char *logfile)
 {
     if (logfile == NULL) {
 	debug_log = stderr;
@@ -220,9 +222,8 @@ static void debugOpenLog(logfile)
     }
 }
 
-void _db_init(logfile, options)
-     char *logfile;
-     char *options;
+void
+_db_init(char *logfile, char *options)
 {
     int i;
     char *p = NULL;
@@ -246,7 +247,8 @@ void _db_init(logfile, options)
 
 }
 
-void _db_rotate_log()
+void
+_db_rotate_log()
 {
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);

@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.55 1996/09/04 22:03:26 wessels Exp $
+ * $Id: ipcache.cc,v 1.56 1996/09/14 08:46:10 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -135,30 +135,30 @@ static struct {
     int ghbn_calls;		/* # calls to blocking gethostbyname() */
 } IpcacheStats;
 
-static int ipcache_testname _PARAMS((void));
-static int ipcache_compareLastRef _PARAMS((ipcache_entry **, ipcache_entry **));
-static int ipcache_reverseLastRef _PARAMS((ipcache_entry **, ipcache_entry **));
-static int ipcache_dnsHandleRead _PARAMS((int, dnsserver_t *));
-static ipcache_entry *ipcache_parsebuffer _PARAMS((char *buf, dnsserver_t *));
-static void ipcache_release _PARAMS((ipcache_entry *));
-static ipcache_entry *ipcache_GetFirst _PARAMS((void));
-static ipcache_entry *ipcache_GetNext _PARAMS((void));
-static ipcache_entry *ipcache_create _PARAMS((void));
-static void ipcache_add_to_hash _PARAMS((ipcache_entry *));
-static void ipcache_call_pending _PARAMS((ipcache_entry *));
-static void ipcache_add _PARAMS((char *, ipcache_entry *, struct hostent *, int));
-static int ipcacheHasPending _PARAMS((ipcache_entry *));
-static ipcache_entry *ipcache_get _PARAMS((char *));
-static int dummy_handler _PARAMS((int, struct hostent * hp, void *));
-static int ipcacheExpiredEntry _PARAMS((ipcache_entry *));
-static void ipcacheAddPending _PARAMS((ipcache_entry *, int fd, IPH, void *));
-static void ipcacheEnqueue _PARAMS((ipcache_entry *));
-static void *ipcacheDequeue _PARAMS((void));
-static void ipcache_dnsDispatch _PARAMS((dnsserver_t *, ipcache_entry *));
-static struct hostent *ipcacheCheckNumeric _PARAMS((char *name));
-static void ipcacheStatPrint _PARAMS((ipcache_entry *, StoreEntry *));
-static void ipcacheUnlockEntry _PARAMS((ipcache_entry *));
-static void ipcacheLockEntry _PARAMS((ipcache_entry *));
+static int ipcache_testname(void);
+static int ipcache_compareLastRef(ipcache_entry **, ipcache_entry **);
+static int ipcache_reverseLastRef(ipcache_entry **, ipcache_entry **);
+static int ipcache_dnsHandleRead(int, dnsserver_t *);
+static ipcache_entry *ipcache_parsebuffer(char *buf, dnsserver_t *);
+static void ipcache_release(ipcache_entry *);
+static ipcache_entry *ipcache_GetFirst(void);
+static ipcache_entry *ipcache_GetNext(void);
+static ipcache_entry *ipcache_create(void);
+static void ipcache_add_to_hash(ipcache_entry *);
+static void ipcache_call_pending(ipcache_entry *);
+static void ipcache_add(char *, ipcache_entry *, struct hostent *, int);
+static int ipcacheHasPending(ipcache_entry *);
+static ipcache_entry *ipcache_get(char *);
+static int dummy_handler(int, struct hostent *hp, void *);
+static int ipcacheExpiredEntry(ipcache_entry *);
+static void ipcacheAddPending(ipcache_entry *, int fd, IPH, void *);
+static void ipcacheEnqueue(ipcache_entry *);
+static void *ipcacheDequeue(void);
+static void ipcache_dnsDispatch(dnsserver_t *, ipcache_entry *);
+static struct hostent *ipcacheCheckNumeric(char *name);
+static void ipcacheStatPrint(ipcache_entry *, StoreEntry *);
+static void ipcacheUnlockEntry(ipcache_entry *);
+static void ipcacheLockEntry(ipcache_entry *);
 
 static struct hostent *static_result = NULL;
 static HashID ip_table = 0;
@@ -176,8 +176,8 @@ static char ipcache_status_char[] =
 long ipcache_low = 180;
 long ipcache_high = 200;
 
-static void ipcacheEnqueue(i)
-     ipcache_entry *i;
+static void
+ipcacheEnqueue(ipcache_entry * i)
 {
     struct ipcacheQueueData *new = xcalloc(1, sizeof(struct ipcacheQueueData));
     new->i = i;
@@ -185,7 +185,8 @@ static void ipcacheEnqueue(i)
     ipcacheQueueTailP = &new->next;
 }
 
-static void *ipcacheDequeue()
+static void *
+ipcacheDequeue()
 {
     struct ipcacheQueueData *old = NULL;
     ipcache_entry *i = NULL;
@@ -200,7 +201,8 @@ static void *ipcacheDequeue()
     return i;
 }
 
-static int ipcache_testname()
+static int
+ipcache_testname()
 {
     wordlist *w = NULL;
     debug(14, 1, "Performing DNS Tests...\n");
@@ -215,8 +217,8 @@ static int ipcache_testname()
 }
 
 /* removes the given ipcache entry */
-static void ipcache_release(i)
-     ipcache_entry *i;
+static void
+ipcache_release(ipcache_entry * i)
 {
     hash_link *table_entry = NULL;
     int k;
@@ -260,8 +262,8 @@ static void ipcache_release(i)
 }
 
 /* return match for given name */
-static ipcache_entry *ipcache_get(name)
-     char *name;
+static ipcache_entry *
+ipcache_get(char *name)
 {
     hash_link *e;
     static ipcache_entry *i;
@@ -275,19 +277,21 @@ static ipcache_entry *ipcache_get(name)
 }
 
 /* get the first ip entry in the storage */
-static ipcache_entry *ipcache_GetFirst()
+static ipcache_entry *
+ipcache_GetFirst()
 {
     return (ipcache_entry *) hash_first(ip_table);
 }
 
 /* get the next ip entry in the storage for a given search pointer */
-static ipcache_entry *ipcache_GetNext()
+static ipcache_entry *
+ipcache_GetNext()
 {
     return (ipcache_entry *) hash_next(ip_table);
 }
 
-static int ipcache_compareLastRef(e1, e2)
-     ipcache_entry **e1, **e2;
+static int
+ipcache_compareLastRef(ipcache_entry ** e1, ipcache_entry ** e2)
 {
     if (!e1 || !e2)
 	fatal_dump(NULL);
@@ -298,8 +302,8 @@ static int ipcache_compareLastRef(e1, e2)
     return (0);
 }
 
-static int ipcache_reverseLastRef(e1, e2)
-     ipcache_entry **e1, **e2;
+static int
+ipcache_reverseLastRef(ipcache_entry ** e1, ipcache_entry ** e2)
 {
     if ((*e1)->lastref < (*e2)->lastref)
 	return (1);
@@ -308,8 +312,8 @@ static int ipcache_reverseLastRef(e1, e2)
     return (0);
 }
 
-static int ipcacheExpiredEntry(i)
-     ipcache_entry *i;
+static int
+ipcacheExpiredEntry(ipcache_entry * i)
 {
     if (i->status == IP_PENDING)
 	return 0;
@@ -323,7 +327,8 @@ static int ipcacheExpiredEntry(i)
 }
 
 /* finds the LRU and deletes */
-int ipcache_purgelru()
+int
+ipcache_purgelru()
 {
     ipcache_entry *i = NULL;
     int local_ip_notpending_count = 0;
@@ -377,7 +382,8 @@ int ipcache_purgelru()
 
 
 /* create blank ipcache_entry */
-static ipcache_entry *ipcache_create()
+static ipcache_entry *
+ipcache_create()
 {
     static ipcache_entry *new;
 
@@ -395,8 +401,8 @@ static ipcache_entry *ipcache_create()
 
 }
 
-static void ipcache_add_to_hash(i)
-     ipcache_entry *i;
+static void
+ipcache_add_to_hash(ipcache_entry * i)
 {
     if (hash_join(ip_table, (hash_link *) i)) {
 	debug(14, 1, "ipcache_add_to_hash: Cannot add %s (%p) to hash table %d.\n",
@@ -406,11 +412,8 @@ static void ipcache_add_to_hash(i)
 }
 
 
-static void ipcache_add(name, i, hp, cached)
-     char *name;
-     ipcache_entry *i;
-     struct hostent *hp;
-     int cached;
+static void
+ipcache_add(char *name, ipcache_entry * i, struct hostent *hp, int cached)
 {
     int addr_count;
     int alias_count;
@@ -464,8 +467,8 @@ static void ipcache_add(name, i, hp, cached)
 }
 
 /* walks down the pending list, calling handlers */
-static void ipcache_call_pending(i)
-     ipcache_entry *i;
+static void
+ipcache_call_pending(ipcache_entry * i)
 {
     struct _ip_pending *p = NULL;
     int nhandler = 0;
@@ -491,9 +494,8 @@ static void ipcache_call_pending(i)
     ipcacheUnlockEntry(i);
 }
 
-static ipcache_entry *ipcache_parsebuffer(inbuf, dnsData)
-     char *inbuf;
-     dnsserver_t *dnsData;
+static ipcache_entry *
+ipcache_parsebuffer(char *inbuf, dnsserver_t * dnsData)
 {
     char *buf = xstrdup(inbuf);
     char *token;
@@ -575,9 +577,8 @@ static ipcache_entry *ipcache_parsebuffer(inbuf, dnsData)
     return &i;
 }
 
-static int ipcache_dnsHandleRead(fd, dnsData)
-     int fd;
-     dnsserver_t *dnsData;
+static int
+ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 {
     int len;
     int svc_time;
@@ -645,11 +646,8 @@ static int ipcache_dnsHandleRead(fd, dnsData)
     return 0;
 }
 
-static void ipcacheAddPending(i, fd, handler, handlerData)
-     ipcache_entry *i;
-     int fd;
-     IPH handler;
-     void *handlerData;
+static void
+ipcacheAddPending(ipcache_entry * i, int fd, IPH handler, void *handlerData)
 {
     struct _ip_pending *pending = xcalloc(1, sizeof(struct _ip_pending));
     struct _ip_pending **I = NULL;
@@ -661,11 +659,8 @@ static void ipcacheAddPending(i, fd, handler, handlerData)
     *I = pending;
 }
 
-void ipcache_nbgethostbyname(name, fd, handler, handlerData)
-     char *name;
-     int fd;
-     IPH handler;
-     void *handlerData;
+void
+ipcache_nbgethostbyname(char *name, int fd, IPH handler, void *handlerData)
 {
     ipcache_entry *i = NULL;
     dnsserver_t *dnsData = NULL;
@@ -728,9 +723,8 @@ void ipcache_nbgethostbyname(name, fd, handler, handlerData)
 	ipcacheEnqueue(i);
 }
 
-static void ipcache_dnsDispatch(dns, i)
-     dnsserver_t *dns;
-     ipcache_entry *i;
+static void
+ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
 {
     char *buf = NULL;
     if (!ipcacheHasPending(i)) {
@@ -765,7 +759,8 @@ static void ipcache_dnsDispatch(dns, i)
 
 
 /* initialize the ipcache */
-void ipcache_init()
+void
+ipcache_init()
 {
     debug(14, 3, "Initializing IP Cache...\n");
 
@@ -796,9 +791,8 @@ void ipcache_init()
 
 /* clean up the pending entries in dnsserver */
 /* return 1 if we found the host, 0 otherwise */
-int ipcache_unregister(name, fd)
-     char *name;
-     int fd;
+int
+ipcache_unregister(char *name, int fd)
 {
     ipcache_entry *i = NULL;
     struct _ip_pending *p = NULL;
@@ -820,9 +814,8 @@ int ipcache_unregister(name, fd)
     return n;
 }
 
-struct hostent *ipcache_gethostbyname(name, flags)
-     char *name;
-     int flags;
+struct hostent *
+ipcache_gethostbyname(char *name, int flags)
 {
     ipcache_entry *i = NULL;
     struct hostent *hp = NULL;
@@ -878,9 +871,8 @@ struct hostent *ipcache_gethostbyname(name, flags)
     return NULL;
 }
 
-static void ipcacheStatPrint(i, sentry)
-     ipcache_entry *i;
-     StoreEntry *sentry;
+static void
+ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 {
     int k;
     storeAppendPrintf(sentry, " {%-32.32s  %c %6d %6d %d",
@@ -904,8 +896,8 @@ static void ipcacheStatPrint(i, sentry)
 }
 
 /* process objects list */
-void stat_ipcache_get(sentry)
-     StoreEntry *sentry;
+void
+stat_ipcache_get(StoreEntry * sentry)
 {
     int k;
     int N;
@@ -954,16 +946,14 @@ void stat_ipcache_get(sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-static int dummy_handler(u1, u2, u3)
-     int u1;
-     struct hostent *u2;
-     void *u3;
+static int
+dummy_handler(int u1, struct hostent *u2, void *u3)
 {
     return 0;
 }
 
-static int ipcacheHasPending(i)
-     ipcache_entry *i;
+static int
+ipcacheHasPending(ipcache_entry * i)
 {
     struct _ip_pending *p = NULL;
     if (i->status != IP_PENDING)
@@ -974,8 +964,8 @@ static int ipcacheHasPending(i)
     return 0;
 }
 
-void ipcacheReleaseInvalid(name)
-     char *name;
+void
+ipcacheReleaseInvalid(char *name)
 {
     ipcache_entry *i;
     if ((i = ipcache_get(name)) == NULL)
@@ -985,8 +975,8 @@ void ipcacheReleaseInvalid(name)
     ipcache_release(i);
 }
 
-void ipcacheInvalidate(name)
-     char *name;
+void
+ipcacheInvalidate(char *name)
 {
     ipcache_entry *i;
     if ((i = ipcache_get(name)) == NULL)
@@ -997,8 +987,8 @@ void ipcacheInvalidate(name)
      * FMR */
 }
 
-static struct hostent *ipcacheCheckNumeric(name)
-     char *name;
+static struct hostent *
+ipcacheCheckNumeric(char *name)
 {
     unsigned int ip;
     /* check if it's already a IP address in text form. */
@@ -1009,7 +999,8 @@ static struct hostent *ipcacheCheckNumeric(name)
     return static_result;
 }
 
-int ipcacheQueueDrain()
+int
+ipcacheQueueDrain()
 {
     ipcache_entry *i;
     dnsserver_t *dnsData;
@@ -1020,14 +1011,14 @@ int ipcacheQueueDrain()
     return 1;
 }
 
-static void ipcacheLockEntry(i)
-     ipcache_entry *i;
+static void
+ipcacheLockEntry(ipcache_entry * i)
 {
     i->locks++;
 }
 
-static void ipcacheUnlockEntry(i)
-     ipcache_entry *i;
+static void
+ipcacheUnlockEntry(ipcache_entry * i)
 {
     i->locks--;
     if (ipcacheExpiredEntry(i))

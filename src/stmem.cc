@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.19 1996/08/27 05:17:50 wessels Exp $
+ * $Id: stmem.cc,v 1.20 1996/09/14 08:46:28 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -116,12 +116,12 @@ stmem_stats mem_obj_pool;
 #define USE_MEMALIGN 0
 #endif
 
-static void *get_free_thing _PARAMS((stmem_stats * thing));
-static void put_free_thing _PARAMS((stmem_stats * thing, void *p));
+static void *get_free_thing(stmem_stats * thing);
+static void put_free_thing(stmem_stats * thing, void *p);
 
 
-void memFree(mem)
-     mem_ptr mem;
+void
+memFree(mem_ptr mem)
 {
     mem_node lastp, p = mem->head;
 
@@ -144,8 +144,8 @@ void memFree(mem)
     safe_free(mem);
 }
 
-void memFreeData(mem)
-     mem_ptr mem;
+void
+memFreeData(mem_ptr mem)
 {
     mem_node lastp, p = mem->head;
 
@@ -165,9 +165,8 @@ void memFreeData(mem)
     mem->origin_offset = 0;
 }
 
-int memFreeDataUpto(mem, target_offset)
-     mem_ptr mem;
-     int target_offset;
+int
+memFreeDataUpto(mem_ptr mem, int target_offset)
 {
     int current_offset = mem->origin_offset;
     mem_node lastp, p = mem->head;
@@ -204,10 +203,8 @@ int memFreeDataUpto(mem, target_offset)
 
 
 /* Append incoming data. */
-int memAppend(mem, data, len)
-     mem_ptr mem;
-     char *data;
-     int len;
+int
+memAppend(mem_ptr mem, char *data, int len)
 {
     mem_node p;
     int avail_len;
@@ -251,10 +248,8 @@ int memAppend(mem, data, len)
 }
 
 #ifdef UNUSED_CODE
-int memGrep(mem, string, nbytes)
-     mem_ptr mem;
-     char *string;
-     int nbytes;
+int
+memGrep(mem_ptr mem, char *string, int nbytes)
 {
     mem_node p = mem->head;
     char *str_i, *mem_i;
@@ -303,11 +298,8 @@ int memGrep(mem, string, nbytes)
 }
 #endif
 
-int memCopy(mem, offset, buf, size)
-     mem_ptr mem;
-     int offset;
-     char *buf;
-     int size;
+int
+memCopy(mem_ptr mem, int offset, char *buf, int size)
 {
     mem_node p = mem->head;
     int t_off = mem->origin_offset;
@@ -364,7 +356,8 @@ int memCopy(mem, offset, buf, size)
 
 
 /* Do whatever is necessary to begin storage of new object */
-mem_ptr memInit()
+mem_ptr
+memInit()
 {
     mem_ptr new = xcalloc(1, sizeof(Mem_Hdr));
     new->tail = new->head = NULL;
@@ -379,8 +372,8 @@ mem_ptr memInit()
     return new;
 }
 
-static void *get_free_thing(thing)
-     stmem_stats *thing;
+static void *
+get_free_thing(stmem_stats * thing)
 {
     void *p = NULL;
     if (!empty_stack(&thing->free_page_stack)) {
@@ -396,29 +389,32 @@ static void *get_free_thing(thing)
     return p;
 }
 
-void *get_free_request_t()
+void *
+get_free_request_t()
 {
     return get_free_thing(&request_pool);
 }
 
-void *get_free_mem_obj()
+void *
+get_free_mem_obj()
 {
     return get_free_thing(&mem_obj_pool);
 }
 
-char *get_free_4k_page()
+char *
+get_free_4k_page()
 {
     return (char *) get_free_thing(&sm_stats);
 }
 
-char *get_free_8k_page()
+char *
+get_free_8k_page()
 {
     return (char *) get_free_thing(&disk_stats);
 }
 
-static void put_free_thing(thing, p)
-     stmem_stats *thing;
-     void *p;
+static void
+put_free_thing(stmem_stats * thing, void *p)
 {
     if (p == NULL)
 	fatal_dump("Somebody is putting a NULL pointer!");
@@ -434,31 +430,32 @@ static void put_free_thing(thing, p)
     }
 }
 
-void put_free_request_t(req)
-     void *req;
+void
+put_free_request_t(void *req)
 {
     put_free_thing(&request_pool, req);
 }
 
-void put_free_mem_obj(mem)
-     void *mem;
+void
+put_free_mem_obj(void *mem)
 {
     put_free_thing(&mem_obj_pool, mem);
 }
 
-void put_free_4k_page(page)
-     void *page;
+void
+put_free_4k_page(void *page)
 {
     put_free_thing(&sm_stats, page);
 }
 
-void put_free_8k_page(page)
-     void *page;
+void
+put_free_8k_page(void *page)
 {
     put_free_thing(&disk_stats, page);
 }
 
-void stmemInit()
+void
+stmemInit()
 {
     sm_stats.page_size = SM_PAGE_SIZE;
     sm_stats.total_pages_allocated = 0;

@@ -11,7 +11,8 @@ static int base64_initialized = 0;
 int base64_value[256];
 char base64_code[] = "ABCDEFGHIJKLMNOPQRSTUVWZYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static void base64_init()
+static void
+base64_init()
 {
     int i;
 
@@ -25,8 +26,8 @@ static void base64_init()
     base64_initialized = 1;
 }
 
-char *base64_decode(p)
-     char *p;
+char *
+base64_decode(char *p)
 {
     static char result[8192];
     int c;

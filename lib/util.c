@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.11 1996/07/22 16:40:58 wessels Exp $
+ * $Id: util.c,v 1.12 1996/09/14 08:50:52 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -145,7 +145,8 @@ extern char *sys_errlist[];
 static int malloc_sizes[DBG_MAXINDEX + 1];
 static int dbg_stat_init = 0;
 
-static void stat_init()
+static void
+stat_init()
 {
     int i;
     for (i = 0; i <= DBG_MAXINDEX; i++)
@@ -153,17 +154,16 @@ static void stat_init()
     dbg_stat_init = 1;
 }
 
-static int malloc_stat(sz)
-     int sz;
+static int
+malloc_stat(int sz)
 {
     if (!dbg_stat_init)
 	stat_init();
     return malloc_sizes[DBG_INDEX(sz)] += 1;
 }
 
-void malloc_statistics(func, data)
-     void (*func) _PARAMS((int, int, void *));
-     void *data;
+void
+malloc_statistics(void (*func) _PARAMS((int, int, void *)), void *data)
 {
     int i;
     for (i = 0; i <= DBG_MAXSIZE; i += DBG_GRAIN)
@@ -184,7 +184,8 @@ static int I = 0;
 static void *P;
 static void *Q;
 
-static void check_init()
+static void
+check_init()
 {
     for (B = 0; B < DBG_ARRY_BKTS; B++) {
 	for (I = 0; I < DBG_ARRY_SZ; I++) {
@@ -195,8 +196,8 @@ static void check_init()
     dbg_initd = 1;
 }
 
-static void check_free(s)
-     void *s;
+static void
+check_free(void *s)
 {
     B = (((int) s) >> 4) & 0xFF;
     for (I = 0; I < DBG_ARRY_SZ; I++) {
@@ -212,9 +213,8 @@ static void check_free(s)
     }
 }
 
-static void check_malloc(p, sz)
-     void *p;
-     size_t sz;
+static void
+check_malloc(void *p, size_t sz)
 {
     if (!dbg_initd)
 	check_init();
@@ -242,8 +242,8 @@ static void check_malloc(p, sz)
 #endif
 
 #if XMALLOC_COUNT && !HAVE_MALLOCBLKSIZE
-int mallocblksize(p)
-     void *p;
+int
+mallocblksize(void *p)
 {
     B = (((int) p) >> 4) & 0xFF;
     for (I = 0; I < DBG_ARRY_SZ; I++) {
@@ -255,9 +255,8 @@ int mallocblksize(p)
 #endif
 
 #ifdef XMALLOC_COUNT
-static void xmalloc_count(p, sign)
-     void *p;
-     int sign;
+static void
+xmalloc_count(void *p, int sign)
 {
     size_t sz;
     static size_t total = 0;
@@ -270,14 +269,15 @@ static void xmalloc_count(p, sign)
 	memoryAccounted(),
 	mallinfoTotal());
 }
+
 #endif /* XMALLOC_COUNT */
 
 /*
  *  xmalloc() - same as malloc(3).  Used for portability.
  *  Never returns NULL; fatal on error.
  */
-void *xmalloc(sz)
-     size_t sz;
+void *
+xmalloc(size_t sz)
 {
     static void *p;
 
@@ -308,8 +308,8 @@ void *xmalloc(sz)
 /*
  *  xfree() - same as free(3).  Will not call free(3) if s == NULL.
  */
-void xfree(s)
-     void *s;
+void
+xfree(void *s)
 {
 #if XMALLOC_COUNT
     xmalloc_count(s, -1);
@@ -322,8 +322,8 @@ void xfree(s)
 }
 
 /* xxfree() - like xfree(), but we already know s != NULL */
-void xxfree(s)
-     void *s;
+void
+xxfree(void *s)
 {
 #if XMALLOC_COUNT
     xmalloc_count(s, -1);
@@ -338,9 +338,8 @@ void xxfree(s)
  *  xrealloc() - same as realloc(3). Used for portability.
  *  Never returns NULL; fatal on error.
  */
-void *xrealloc(s, sz)
-     void *s;
-     size_t sz;
+void *
+xrealloc(void *s, size_t sz)
 {
     static void *p;
 
@@ -376,9 +375,8 @@ void *xrealloc(s, sz)
  *  xcalloc() - same as calloc(3).  Used for portability.
  *  Never returns NULL; fatal on error.
  */
-void *xcalloc(n, sz)
-     int n;
-     size_t sz;
+void *
+xcalloc(int n, size_t sz)
 {
     static void *p;
 
@@ -412,8 +410,8 @@ void *xcalloc(n, sz)
  *  xstrdup() - same as strdup(3).  Used for portability.
  *  Never returns NULL; fatal on error.
  */
-char *xstrdup(s)
-     char *s;
+char *
+xstrdup(char *s)
 {
     static char *p = NULL;
     size_t sz;
@@ -436,7 +434,8 @@ char *xstrdup(s)
 /*
  * xstrerror() - return sys_errlist[errno];
  */
-char *xstrerror()
+char *
+xstrerror()
 {
     static char xstrerror_buf[BUFSIZ];
 
@@ -449,17 +448,15 @@ char *xstrerror()
 
 #if !HAVE_STRDUP
 /* define for systems that don't have strdup */
-char *strdup(s)
-     char *s;
+char *
+strdup(char *s)
 {
     return (xstrdup(s));
 }
 #endif
 
-void xmemcpy(from, to, len)
-     void *from;
-     void *to;
-     int len;
+void
+xmemcpy(void *from, void *to, int len)
 {
 #if HAVE_MEMMOVE
     (void) memmove(from, to, len);
@@ -470,12 +467,12 @@ void xmemcpy(from, to, len)
 #endif
 }
 
-void Tolower(q)
-     char *q;
+void
+Tolower(char *q)
 {
     char *s = q;
     while (*s) {
-        *s = tolower((unsigned char) *s);
-        s++;
+	*s = tolower((unsigned char) *s);
+	s++;
     }
 }

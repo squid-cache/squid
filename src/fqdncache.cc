@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.16 1996/09/12 03:24:03 wessels Exp $
+ * $Id: fqdncache.cc,v 1.17 1996/09/14 08:45:58 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -137,26 +137,26 @@ static struct {
     int ghba_calls;		/* # calls to blocking gethostbyaddr() */
 } FqdncacheStats;
 
-static int fqdncache_compareLastRef _PARAMS((fqdncache_entry **, fqdncache_entry **));
-static int fqdncache_dnsHandleRead _PARAMS((int, dnsserver_t *));
-static fqdncache_entry *fqdncache_parsebuffer _PARAMS((char *buf, dnsserver_t *));
-static int fqdncache_purgelru _PARAMS((void));
-static void fqdncache_release _PARAMS((fqdncache_entry *));
-static fqdncache_entry *fqdncache_GetFirst _PARAMS((void));
-static fqdncache_entry *fqdncache_GetNext _PARAMS((void));
-static fqdncache_entry *fqdncache_create _PARAMS((void));
-static void fqdncache_add_to_hash _PARAMS((fqdncache_entry *));
-static void fqdncache_call_pending _PARAMS((fqdncache_entry *));
-static void fqdncache_call_pending_badname _PARAMS((int fd, FQDNH handler, void *));
-static void fqdncache_add _PARAMS((char *, fqdncache_entry *, struct hostent *, int));
-static int fqdncacheHasPending _PARAMS((fqdncache_entry *));
-static fqdncache_entry *fqdncache_get _PARAMS((char *));
-static void dummy_handler _PARAMS((int, char *, void *));
-static int fqdncacheExpiredEntry _PARAMS((fqdncache_entry *));
-static void fqdncacheAddPending _PARAMS((fqdncache_entry *, int fd, FQDNH, void *));
-static void fqdncacheEnqueue _PARAMS((fqdncache_entry *));
-static void *fqdncacheDequeue _PARAMS((void));
-static void fqdncache_dnsDispatch _PARAMS((dnsserver_t *, fqdncache_entry *));
+static int fqdncache_compareLastRef(fqdncache_entry **, fqdncache_entry **);
+static int fqdncache_dnsHandleRead(int, dnsserver_t *);
+static fqdncache_entry *fqdncache_parsebuffer(char *buf, dnsserver_t *);
+static int fqdncache_purgelru(void);
+static void fqdncache_release(fqdncache_entry *);
+static fqdncache_entry *fqdncache_GetFirst(void);
+static fqdncache_entry *fqdncache_GetNext(void);
+static fqdncache_entry *fqdncache_create(void);
+static void fqdncache_add_to_hash(fqdncache_entry *);
+static void fqdncache_call_pending(fqdncache_entry *);
+static void fqdncache_call_pending_badname(int fd, FQDNH handler, void *);
+static void fqdncache_add(char *, fqdncache_entry *, struct hostent *, int);
+static int fqdncacheHasPending(fqdncache_entry *);
+static fqdncache_entry *fqdncache_get(char *);
+static void dummy_handler(int, char *, void *);
+static int fqdncacheExpiredEntry(fqdncache_entry *);
+static void fqdncacheAddPending(fqdncache_entry *, int fd, FQDNH, void *);
+static void fqdncacheEnqueue(fqdncache_entry *);
+static void *fqdncacheDequeue(void);
+static void fqdncache_dnsDispatch(dnsserver_t *, fqdncache_entry *);
 
 static struct hostent *static_result = NULL;
 static HashID fqdn_table = 0;
@@ -174,8 +174,8 @@ static char fqdncache_status_char[] =
 long fqdncache_low = 180;
 long fqdncache_high = 200;
 
-static void fqdncacheEnqueue(f)
-     fqdncache_entry *f;
+static void
+fqdncacheEnqueue(fqdncache_entry * f)
 {
     struct fqdncacheQueueData *new = xcalloc(1, sizeof(struct fqdncacheQueueData));
     new->f = f;
@@ -183,7 +183,8 @@ static void fqdncacheEnqueue(f)
     fqdncacheQueueTailP = &new->next;
 }
 
-static void *fqdncacheDequeue()
+static void *
+fqdncacheDequeue()
 {
     struct fqdncacheQueueData *old = NULL;
     fqdncache_entry *f = NULL;
@@ -199,8 +200,8 @@ static void *fqdncacheDequeue()
 }
 
 /* removes the given fqdncache entry */
-static void fqdncache_release(f)
-     fqdncache_entry *f;
+static void
+fqdncache_release(fqdncache_entry * f)
 {
     fqdncache_entry *result = NULL;
     hash_link *table_entry = NULL;
@@ -241,8 +242,8 @@ static void fqdncache_release(f)
 }
 
 /* return match for given name */
-static fqdncache_entry *fqdncache_get(name)
-     char *name;
+static fqdncache_entry *
+fqdncache_get(char *name)
 {
     hash_link *e;
     static fqdncache_entry *f;
@@ -255,18 +256,20 @@ static fqdncache_entry *fqdncache_get(name)
     return f;
 }
 
-static fqdncache_entry *fqdncache_GetFirst()
+static fqdncache_entry *
+fqdncache_GetFirst()
 {
     return (fqdncache_entry *) hash_first(fqdn_table);
 }
 
-static fqdncache_entry *fqdncache_GetNext()
+static fqdncache_entry *
+fqdncache_GetNext()
 {
     return (fqdncache_entry *) hash_next(fqdn_table);
 }
 
-static int fqdncache_compareLastRef(e1, e2)
-     fqdncache_entry **e1, **e2;
+static int
+fqdncache_compareLastRef(fqdncache_entry ** e1, fqdncache_entry ** e2)
 {
     if (!e1 || !e2)
 	fatal_dump(NULL);
@@ -277,8 +280,8 @@ static int fqdncache_compareLastRef(e1, e2)
     return (0);
 }
 
-static int fqdncacheExpiredEntry(f)
-     fqdncache_entry *f;
+static int
+fqdncacheExpiredEntry(fqdncache_entry * f)
 {
     if (f->status == FQDN_PENDING)
 	return 0;
@@ -290,7 +293,8 @@ static int fqdncacheExpiredEntry(f)
 }
 
 /* finds the LRU and deletes */
-static int fqdncache_purgelru()
+static int
+fqdncache_purgelru()
 {
     fqdncache_entry *f = NULL;
     int local_fqdn_count = 0;
@@ -353,7 +357,8 @@ static int fqdncache_purgelru()
 
 
 /* create blank fqdncache_entry */
-static fqdncache_entry *fqdncache_create()
+static fqdncache_entry *
+fqdncache_create()
 {
     static fqdncache_entry *new;
 
@@ -367,8 +372,8 @@ static fqdncache_entry *fqdncache_create()
 
 }
 
-static void fqdncache_add_to_hash(f)
-     fqdncache_entry *f;
+static void
+fqdncache_add_to_hash(fqdncache_entry * f)
 {
     if (hash_join(fqdn_table, (hash_link *) f)) {
 	debug(35, 1, "fqdncache_add_to_hash: Cannot add %s (%p) to hash table %d.\n",
@@ -378,11 +383,8 @@ static void fqdncache_add_to_hash(f)
 }
 
 
-static void fqdncache_add(name, f, hp, cached)
-     char *name;
-     fqdncache_entry *f;
-     struct hostent *hp;
-     int cached;
+static void
+fqdncache_add(char *name, fqdncache_entry * f, struct hostent *hp, int cached)
 {
     int k;
 
@@ -411,8 +413,8 @@ static void fqdncache_add(name, f, hp, cached)
 }
 
 /* walks down the pending list, calling handlers */
-static void fqdncache_call_pending(f)
-     fqdncache_entry *f;
+static void
+fqdncache_call_pending(fqdncache_entry * f)
 {
     struct _fqdn_pending *p = NULL;
     int nhandler = 0;
@@ -436,18 +438,15 @@ static void fqdncache_call_pending(f)
     debug(35, 10, "fqdncache_call_pending: Called %d handlers.\n", nhandler);
 }
 
-static void fqdncache_call_pending_badname(fd, handler, data)
-     int fd;
-     FQDNH handler;
-     void *data;
+static void
+fqdncache_call_pending_badname(int fd, FQDNH handler, void *data)
 {
     debug(35, 0, "fqdncache_call_pending_badname: Bad Name: Calling handler with NULL result.\n");
     handler(fd, NULL, data);
 }
 
-static fqdncache_entry *fqdncache_parsebuffer(inbuf, dnsData)
-     char *inbuf;
-     dnsserver_t *dnsData;
+static fqdncache_entry *
+fqdncache_parsebuffer(char *inbuf, dnsserver_t * dnsData)
 {
     char *buf = xstrdup(inbuf);
     char *token;
@@ -513,9 +512,8 @@ static fqdncache_entry *fqdncache_parsebuffer(inbuf, dnsData)
     return &f;
 }
 
-static int fqdncache_dnsHandleRead(fd, dnsData)
-     int fd;
-     dnsserver_t *dnsData;
+static int
+fqdncache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 {
     int len;
     int svc_time;
@@ -576,11 +574,8 @@ static int fqdncache_dnsHandleRead(fd, dnsData)
     return 0;
 }
 
-static void fqdncacheAddPending(f, fd, handler, handlerData)
-     fqdncache_entry *f;
-     int fd;
-     FQDNH handler;
-     void *handlerData;
+static void
+fqdncacheAddPending(fqdncache_entry * f, int fd, FQDNH handler, void *handlerData)
 {
     struct _fqdn_pending *pending = xcalloc(1, sizeof(struct _fqdn_pending));
     struct _fqdn_pending **I = NULL;
@@ -593,11 +588,8 @@ static void fqdncacheAddPending(f, fd, handler, handlerData)
     *I = pending;
 }
 
-int fqdncache_nbgethostbyaddr(addr, fd, handler, handlerData)
-     struct in_addr addr;
-     int fd;
-     FQDNH handler;
-     void *handlerData;
+int
+fqdncache_nbgethostbyaddr(struct in_addr addr, int fd, FQDNH handler, void *handlerData)
 {
     fqdncache_entry *f = NULL;
     dnsserver_t *dnsData = NULL;
@@ -657,9 +649,8 @@ int fqdncache_nbgethostbyaddr(addr, fd, handler, handlerData)
     return 0;
 }
 
-static void fqdncache_dnsDispatch(dns, f)
-     dnsserver_t *dns;
-     fqdncache_entry *f;
+static void
+fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 {
     char *buf = NULL;
     if (!fqdncacheHasPending(f)) {
@@ -694,7 +685,8 @@ static void fqdncache_dnsDispatch(dns, f)
 
 
 /* initialize the fqdncache */
-void fqdncache_init()
+void
+fqdncache_init()
 {
     debug(35, 3, "Initializing FQDN Cache...\n");
 
@@ -716,9 +708,8 @@ void fqdncache_init()
 
 /* clean up the pending entries in dnsserver */
 /* return 1 if we found the host, 0 otherwise */
-int fqdncacheUnregister(addr, fd)
-     struct in_addr addr;
-     int fd;
+int
+fqdncacheUnregister(struct in_addr addr, int fd)
 {
     char *name = inet_ntoa(addr);
     fqdncache_entry *f = NULL;
@@ -741,9 +732,8 @@ int fqdncacheUnregister(addr, fd)
     return n;
 }
 
-char *fqdncache_gethostbyaddr(addr, flags)
-     struct in_addr addr;
-     int flags;
+char *
+fqdncache_gethostbyaddr(struct in_addr addr, int flags)
 {
     char *name = inet_ntoa(addr);
     fqdncache_entry *f = NULL;
@@ -794,8 +784,8 @@ char *fqdncache_gethostbyaddr(addr, flags)
 
 
 /* process objects list */
-void fqdnStats(sentry)
-     StoreEntry *sentry;
+void
+fqdnStats(StoreEntry * sentry)
 {
     fqdncache_entry *f = NULL;
     int k;
@@ -841,16 +831,14 @@ void fqdnStats(sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-static void dummy_handler(u1, u2, u3)
-     int u1;
-     char *u2;
-     void *u3;
+static void
+dummy_handler(int u1, char *u2, void *u3)
 {
     return;
 }
 
-static int fqdncacheHasPending(f)
-     fqdncache_entry *f;
+static int
+fqdncacheHasPending(fqdncache_entry * f)
 {
     struct _fqdn_pending *p = NULL;
     if (f->status != FQDN_PENDING)
@@ -861,8 +849,8 @@ static int fqdncacheHasPending(f)
     return 0;
 }
 
-void fqdncacheReleaseInvalid(name)
-     char *name;
+void
+fqdncacheReleaseInvalid(char *name)
 {
     fqdncache_entry *f;
     if ((f = fqdncache_get(name)) == NULL)
@@ -872,8 +860,8 @@ void fqdncacheReleaseInvalid(name)
     fqdncache_release(f);
 }
 
-char *fqdnFromAddr(addr)
-     struct in_addr addr;
+char *
+fqdnFromAddr(struct in_addr addr)
 {
     char *n;
     static char buf[32];
@@ -883,7 +871,8 @@ char *fqdnFromAddr(addr)
     return buf;
 }
 
-int fqdncacheQueueDrain()
+int
+fqdncacheQueueDrain()
 {
     fqdncache_entry *i;
     dnsserver_t *dnsData;

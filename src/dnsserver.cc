@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.21 1996/09/12 03:24:02 wessels Exp $
+ * $Id: dnsserver.cc,v 1.22 1996/09/14 08:45:50 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -223,8 +223,8 @@ extern int _dns_ttl_;		/* this is a really *dirty* hack - bne */
 int do_debug = 0;
 
 /* error messages from gethostbyname() */
-static char *my_h_msgs(x)
-     int x;
+static char *
+my_h_msgs(int x)
 {
     if (x == HOST_NOT_FOUND)
 	return "Host not found (authoritative)";
@@ -238,9 +238,8 @@ static char *my_h_msgs(x)
 	return "Unknown DNS problem";
 }
 
-int main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char *argv[])
 {
     char request[256];
     char msg[256];

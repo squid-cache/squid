@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.32 1996/09/03 19:24:08 wessels Exp $
+ * $Id: url.cc,v 1.33 1996/09/14 08:46:36 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -58,9 +58,8 @@ static char hex[17] = "0123456789abcdef";
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
 
-char *url_convert_hex(org_url, allocate)
-     char *org_url;
-     int allocate;
+char *
+url_convert_hex(char *org_url, int allocate)
 {
     static char code[] = "00";
     char *url = NULL;
@@ -90,7 +89,8 @@ char *url_convert_hex(org_url, allocate)
 
 /* INIT Acceptable table. 
  * Borrow from libwww2 with Mosaic2.4 Distribution   */
-void urlInitialize()
+void
+urlInitialize()
 {
     unsigned int i;
     char *good =
@@ -105,8 +105,8 @@ void urlInitialize()
 
 /* Encode prohibited char in string */
 /* return the pointer to new (allocated) string */
-char *url_escape(url)
-     char *url;
+char *
+url_escape(char *url)
 {
     char *p, *q;
     char *tmpline = xcalloc(1, MAX_URL);
@@ -125,8 +125,8 @@ char *url_escape(url)
     return tmpline;
 }
 
-method_t urlParseMethod(s)
-     char *s;
+method_t
+urlParseMethod(char *s)
 {
     if (strcasecmp(s, "GET") == 0) {
 	return METHOD_GET;
@@ -143,8 +143,8 @@ method_t urlParseMethod(s)
 }
 
 
-protocol_t urlParseProtocol(s)
-     char *s;
+protocol_t
+urlParseProtocol(char *s)
 {
     if (strncasecmp(s, "http", 4) == 0)
 	return PROTO_HTTP;
@@ -166,8 +166,8 @@ protocol_t urlParseProtocol(s)
 }
 
 
-int urlDefaultPort(p)
-     protocol_t p;
+int
+urlDefaultPort(protocol_t p)
 {
     switch (p) {
     case PROTO_HTTP:
@@ -185,9 +185,8 @@ int urlDefaultPort(p)
     }
 }
 
-request_t *urlParse(method, url)
-     method_t method;
-     char *url;
+request_t *
+urlParse(method_t method, char *url)
 {
     LOCAL_ARRAY(char, proto, MAX_URL + 1);
     LOCAL_ARRAY(char, login, MAX_URL + 1);
@@ -247,9 +246,8 @@ request_t *urlParse(method, url)
     return request;
 }
 
-char *urlCanonical(request, buf)
-     request_t *request;
-     char *buf;
+char *
+urlCanonical(request_t * request, char *buf)
 {
     LOCAL_ARRAY(char, urlbuf, MAX_URL + 1);
     LOCAL_ARRAY(char, portbuf, 32);
@@ -275,15 +273,15 @@ char *urlCanonical(request, buf)
     return buf;
 }
 
-request_t *requestLink(request)
-     request_t *request;
+request_t *
+requestLink(request_t * request)
 {
     request->link_count++;
     return request;
 }
 
-void requestUnlink(request)
-     request_t *request;
+void
+requestUnlink(request_t * request)
 {
     if (request == NULL)
 	return;
@@ -294,9 +292,8 @@ void requestUnlink(request)
     put_free_request_t(request);
 }
 
-int matchDomainName(domain, host)
-     char *domain;
-     char *host;
+int
+matchDomainName(char *domain, char *host)
 {
     int offset;
     if ((offset = strlen(host) - strlen(domain)) < 0)
@@ -312,8 +309,8 @@ int matchDomainName(domain, host)
     return 0;
 }
 
-int urlCheckRequest(r)
-     request_t *r;
+int
+urlCheckRequest(request_t * r)
 {
     int rc = 0;
     if (r->method == METHOD_CONNECT)
