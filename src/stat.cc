@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.166 1997/11/03 22:43:20 wessels Exp $
+ * $Id: stat.cc,v 1.167 1997/11/03 23:18:17 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -336,7 +336,9 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	if ((++N & 0xFF) == 0) {
 	    debug(18, 3) ("stat_objects_get:  Processed %d objects...\n", N);
 	}
-	storeAppendPrintf(sentry, "%s %s\n",
+	BIT_SET(sentry->flag, DELAY_SENDING);
+	storeAppendPrintf(sentry, "KEY %s\n", storeKeyText(entry->key));
+	storeAppendPrintf(sentry, "\t%s %s\n",
 	    RequestMethodStr[entry->method], storeUrl(entry));
 	storeAppendPrintf(sentry, "\t%s\n", describeStatuses(entry));
 	storeAppendPrintf(sentry, "\t%s\n", describeFlags(entry));
@@ -369,6 +371,8 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	    storeAppendPrintf(sentry, "\t\tswapin_fd: %d\n",
 		(int) sc->swapin_fd);
 	}
+	BIT_CLR(sentry->flag, DELAY_SENDING);
+	storeAppendPrintf(sentry, "\n");
     }
 }
 
