@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.447 1999/04/26 21:09:52 wessels Exp $
+ * $Id: client_side.cc,v 1.448 1999/04/27 06:33:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -189,7 +189,10 @@ clientAccessCheckDone(int answer, void *data)
     int page_id = -1;
     http_status status;
     ErrorState *err = NULL;
-    debug(33, 5) ("clientAccessCheckDone: '%s' answer=%d\n", http->uri, answer);
+    debug(33, 2) ("The request %s %s is %s, because it matched '%s'\n",
+	RequestMethodStr[http->request->method], http->uri,
+        answer ? "ALLOWED" : "DENIED",
+        AclMatchedName ? AclMatchedName : "NO ACL's");
     http->acl_checklist = NULL;
     if (answer == ACCESS_ALLOWED) {
 	safe_free(http->uri);
@@ -343,7 +346,7 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
     /* If the reply is a failure then send the old object as a last
      * resort */
     if (status >= 500 && status < 600) {
-	debug(33, 2) ("clientGetsOldEntry: YES, failure reply=%d\n", status);
+	debug(33, 3) ("clientGetsOldEntry: YES, failure reply=%d\n", status);
 	return 1;
     }
     /* If the reply is anything but "Not Modified" then
@@ -1049,14 +1052,14 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	range_err = "too complex range header";
     /* get rid of our range specs on error */
     if (range_err) {
-	debug(33, 2) ("clientBuildRangeHeader: will not do ranges: %s.\n", range_err);
+	debug(33, 3) ("clientBuildRangeHeader: will not do ranges: %s.\n", range_err);
 	httpHdrRangeDestroy(http->request->range);
 	http->request->range = NULL;
     } else {
 	const int spec_count = http->request->range->specs.count;
 	int actual_clen = -1;
 
-	debug(33, 2) ("clientBuildRangeHeader: range spec count: %d virgin clen: %d\n",
+	debug(33, 3) ("clientBuildRangeHeader: range spec count: %d virgin clen: %d\n",
 	    spec_count, rep->content_length);
 	assert(spec_count > 0);
 	/* ETags should not be returned with Partial Content replies? */
@@ -1089,7 +1092,7 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	assert(actual_clen >= 0);
 	httpHeaderDelById(hdr, HDR_CONTENT_LENGTH);
 	httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, actual_clen);
-	debug(33, 2) ("clientBuildRangeHeader: actual content length: %d\n", actual_clen);
+	debug(33, 3) ("clientBuildRangeHeader: actual content length: %d\n", actual_clen);
     }
 }
 
@@ -1467,9 +1470,9 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
 	off_t start;		/* offset of still missing data */
 	assert(i->spec);
 	start = i->spec->offset + i->spec->length - i->debt_size;
-	debug(33, 2) ("clientPackMoreRanges: in:  offset: %d size: %d\n",
+	debug(33, 3) ("clientPackMoreRanges: in:  offset: %d size: %d\n",
 	    (int) body_off, size);
-	debug(33, 2) ("clientPackMoreRanges: out: start: %d spec[%d]: [%d, %d), len: %d debt: %d\n",
+	debug(33, 3) ("clientPackMoreRanges: out: start: %d spec[%d]: [%d, %d), len: %d debt: %d\n",
 	    (int) start, (int) i->pos, i->spec->offset, (int) (i->spec->offset + i->spec->length), i->spec->length, i->debt_size);
 	assert(body_off <= start);	/* we did not miss it */
 	/* skip up to start */
@@ -1492,10 +1495,10 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
 	}
     }
     assert(!i->debt_size == !i->spec);	/* paranoid sync condition */
-    debug(33, 2) ("clientPackMoreRanges: buf exhausted: in:  offset: %d size: %d need_more: %d\n",
+    debug(33, 3) ("clientPackMoreRanges: buf exhausted: in:  offset: %d size: %d need_more: %d\n",
 	(int) body_off, size, i->debt_size);
     if (i->debt_size) {
-	debug(33, 2) ("clientPackMoreRanges: need more: spec[%d]: [%d, %d), len: %d\n",
+	debug(33, 3) ("clientPackMoreRanges: need more: spec[%d]: [%d, %d), len: %d\n",
 	    (int) i->pos, i->spec->offset, (int) (i->spec->offset + i->spec->length), i->spec->length);
 	/* skip the data we do not need if possible */
 	if (i->debt_size == i->spec->length)	/* at the start of the cur. spec */
@@ -2278,7 +2281,7 @@ clientReadRequest(int fd, void *data)
 	/* Limit the number of concurrent requests to 2 */
 	for (H = &conn->chr, nrequests = 0; *H; H = &(*H)->next, nrequests++);
 	if (nrequests >= 2) {
-	    debug(33, 2) ("clientReadRequest: FD %d max concurrent requests reached\n", fd);
+	    debug(33, 3) ("clientReadRequest: FD %d max concurrent requests reached\n", fd);
 	    debug(33, 5) ("clientReadRequest: FD %d defering new request until one is done\n", fd);
 	    conn->defer.until = squid_curtime + 100;	/* Reset when a request is complete */
 	    break;
@@ -2433,7 +2436,7 @@ clientReadRequest(int fd, void *data)
 		conn->in.size += REQUEST_BUF_SIZE;
 		conn->in.buf = xrealloc(conn->in.buf, conn->in.size);
 		/* XXX account conn->in.buf */
-		debug(33, 2) ("Handling a large request, offset=%d inbufsize=%d\n",
+		debug(33, 3) ("Handling a large request, offset=%d inbufsize=%d\n",
 		    (int) conn->in.offset, conn->in.size);
 		k = conn->in.size - 1 - conn->in.offset;
 	    }
@@ -2448,7 +2451,7 @@ requestTimeout(int fd, void *data)
 {
     ConnStateData *conn = data;
     ErrorState *err;
-    debug(33, 2) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
+    debug(33, 3) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
     if (fd_table[fd].rwstate) {
 	/*
 	 * Some data has been sent to the client, just close the FD
