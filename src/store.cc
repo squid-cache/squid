@@ -1,7 +1,7 @@
 
 /*
- * $Id: store.cc,v 1.494 1999/05/03 22:59:58 wessels Exp $
- * $Id: store.cc,v 1.494 1999/05/03 22:59:58 wessels Exp $
+ * $Id: store.cc,v 1.495 1999/05/04 18:47:28 wessels Exp $
+ * $Id: store.cc,v 1.495 1999/05/04 18:47:28 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -907,7 +907,7 @@ storeInitHashValues(void)
     /* ideally the full scan period should be configurable, for the
      * moment it remains at approximately 24 hours.  */
     store_hash_buckets = storeKeyHashBuckets(i);
-    debug(20, 1) ("Using %d Store buckets%s\n", store_hash_buckets);
+    debug(20, 1) ("Using %d Store buckets\n", store_hash_buckets);
     debug(20, 1) ("Max Mem  size: %d KB\n", Config.memMaxSize >> 10);
     debug(20, 1) ("Max Swap size: %d KB\n", Config.Swap.maxSize);
 }
