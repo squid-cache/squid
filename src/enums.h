@@ -480,7 +480,7 @@ enum {
     REQ_REFRESH,
     REQ_USED_PROXY_AUTH,
     REQ_REDIRECTED,
-    REQ_NOCACHE_HACK 	/* for changing no-cache requests into IMS */
+    REQ_NOCACHE_HACK		/* for changing no-cache requests into IMS */
 };
 
 enum {

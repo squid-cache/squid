@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.290 1998/07/20 20:20:52 wessels Exp $
+ * $Id: cache_cf.cc,v 1.291 1998/07/21 17:26:21 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -465,7 +465,7 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
     acl_list *l;
     while (head != NULL) {
 	storeAppendPrintf(entry, "%s %s",
-		name,
+	    name,
 	    head->allow ? "Allow" : "Deny");
 	for (l = head->acl_list; l != NULL; l = l->next) {
 	    storeAppendPrintf(entry, " %s%s",
@@ -671,7 +671,7 @@ free_cachedir(cacheSwap * swap)
 const char *
 peer_type_str(const peer_t type)
 {
-    switch(type) {
+    switch (type) {
     case PEER_PARENT:
 	return "parent";
 	break;
@@ -786,9 +786,9 @@ parse_peer(peer ** head)
 #if USE_CARP
 	} else if (!strncasecmp(token, "carp-load-factor=", 17)) {
 	    if (p->type != PEER_PARENT)
-		debug(3,0)("parse_peer: Ignoring carp-load-factor for non-parent %s/%d\n", p->host, p->http_port);
-	    else 
-	        p->carp.load_factor = atof(token + 17);
+		debug(3, 0) ("parse_peer: Ignoring carp-load-factor for non-parent %s/%d\n", p->host, p->http_port);
+	    else
+		p->carp.load_factor = atof(token + 17);
 #endif
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
@@ -801,12 +801,12 @@ parse_peer(peer ** head)
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
 #if USE_CARP
     if (p->carp.load_factor) {
-        /*
-         * calculate this peers hash for use in CARP
-         */
-        p->carp.hash = 0;
-        for (token = p->host; *token != 0;token++)
-            p->carp.hash += (p->carp.hash << 19) + *token;
+	/*
+	 * calculate this peers hash for use in CARP
+	 */
+	p->carp.hash = 0;
+	for (token = p->host; *token != 0; token++)
+	    p->carp.hash += (p->carp.hash << 19) + *token;
     }
 #endif
     cbdataAdd(p, MEM_NONE);
@@ -913,11 +913,11 @@ parse_peer_access(void)
     peer *p;
     if (!(host = strtok(NULL, w_space)))
 	self_destruct();
-	if ((p = peerFindByName(host)) == NULL) {
-	    debug(15, 0) ("%s, line %d: No cache_peer '%s'\n",
-		cfg_filename, config_lineno, host);
-	    return;
-	}
+    if ((p = peerFindByName(host)) == NULL) {
+	debug(15, 0) ("%s, line %d: No cache_peer '%s'\n",
+	    cfg_filename, config_lineno, host);
+	return;
+    }
     aclParseAccessLine(&p->access);
 }
 

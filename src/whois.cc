@@ -1,5 +1,5 @@
 /*
- * $Id: whois.cc,v 1.3 1998/07/20 17:20:24 wessels Exp $
+ * $Id: whois.cc,v 1.4 1998/07/21 17:26:48 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -56,7 +56,7 @@ whoisStart(FwdState * fwdState, int fd)
     cbdataAdd(p, MEM_NONE);
     storeLockObject(p->entry);
     comm_add_close_handler(fd, whoisClose, p);
-    l = strLen(p->request->urlpath)+3;
+    l = strLen(p->request->urlpath) + 3;
     buf = xmalloc(l);
     snprintf(buf, l, "%s\r\n", strBuf(p->request->urlpath) + 1);
     comm_write(fd, buf, strlen(buf), NULL, p, xfree);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.13 1998/07/20 17:19:02 wessels Exp $
+ * $Id: HttpHdrCc.cc,v 1.14 1998/07/21 17:26:13 wessels Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -205,7 +205,7 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 void
 httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
-    extern const HttpHeaderStat *dump_stat; /* argh! */
+    extern const HttpHeaderStat *dump_stat;	/* argh! */
     const int id = (int) val;
     const int valid_id = id >= 0 && id < CC_ENUM_END;
     const char *name = valid_id ? strBuf(CcFieldsInfo[id].name) : "INVALID";

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.15 1998/07/20 20:20:53 wessels Exp $
+ * $Id: cache_manager.cc,v 1.16 1998/07/21 17:26:23 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -45,8 +45,8 @@ typedef struct _action_table {
     char *desc;
     OBJH *handler;
     struct {
-        int pw_req:1;
-        int atomic:1;
+	int pw_req:1;
+	int atomic:1;
     } flags;
     struct _action_table *next;
 } action_table;
@@ -238,7 +238,7 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
     a = cachemgrFindAction(mgr->action);
     assert(a != NULL);
     if (a->flags.atomic)
-        storeBuffer(entry);
+	storeBuffer(entry);
     {
 	HttpReply *rep = entry->mem_obj->reply;
 	/* prove there are no previous reply headers around */
@@ -255,8 +255,8 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
     }
     a->handler(entry);
     if (a->flags.atomic) {
-        storeBufferFlush(entry);
-        storeComplete(entry);
+	storeBufferFlush(entry);
+	storeComplete(entry);
     }
     cachemgrStateFree(mgr);
 }

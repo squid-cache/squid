@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.227 1998/07/20 20:21:04 wessels Exp $
+ * $Id: neighbors.cc,v 1.228 1998/07/21 17:26:36 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -148,7 +148,7 @@ neighborTypeStr(const peer * p)
 
 
 peer *
-whichPeer(const struct sockaddr_in *from)
+whichPeer(const struct sockaddr_in * from)
 {
     int j;
     u_short port = ntohs(from->sin_port);

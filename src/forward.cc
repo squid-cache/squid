@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.18 1998/07/20 17:19:39 wessels Exp $
+ * $Id: forward.cc,v 1.19 1998/07/21 17:26:28 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -319,24 +319,24 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr peer_addr)
     /*      
      * Check if this host is allowed to fetch MISSES from us (miss_access)
      */
-    memset(&ch, '\0', sizeof(aclCheck_t));  
+    memset(&ch, '\0', sizeof(aclCheck_t));
     ch.src_addr = peer_addr;
     ch.request = r;
     answer = aclCheckFast(Config.accessList.miss, &ch);
     if (answer == 0) {
-        err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
-        err->request = requestLink(r);
-        err->src_addr = peer_addr;
-        errorAppendEntry(e, err);
-        return;
+	err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
+	err->request = requestLink(r);
+	err->src_addr = peer_addr;
+	errorAppendEntry(e, err);
+	return;
     }
     debug(17, 3) ("fwdStart: '%s'\n", storeUrl(e));
     e->mem_obj->request = requestLink(r);
     e->mem_obj->fd = fd;
     switch (r->protocol) {
-    /*
-     * Note, don't create fwdState for these requests
-     */
+	/*
+	 * Note, don't create fwdState for these requests
+	 */
     case PROTO_INTERNAL:
 	internalStart(r, e);
 	return;

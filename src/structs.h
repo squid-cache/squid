@@ -1,7 +1,4 @@
 
-
-
-
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
     struct in_addr addr2;
@@ -1386,8 +1383,8 @@ struct _FwdState {
     FwdServer *servers;
     int server_fd;
     struct {
-        int err_code;
-        http_status http_code;
+	int err_code;
+	http_status http_code;
 	int xerrno;
     } fail;
     time_t start;
