@@ -1,4 +1,4 @@
-$Id: CREDITS,v 1.7 2002/07/05 09:20:56 hno Exp $
+$Id: CREDITS,v 1.8 2002/07/07 18:18:11 hno Exp $
 
 ==============================================================================
 
@@ -311,4 +311,29 @@ helpers/external_acl/wbinfo_group/wbinfo_group.pl
  <jmurdock@itraktech.com>. It is distributed in the hope that it will
  be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+==============================================================================
+
+helpers/external_acl/winbind_group/
+
+ This is a helper for the external ACL interface for Squid Cache
+ Copyright (C) 2002 Guido Serassio <squidnt@serassio.it>
+ Based on previous work of Rodrigo Albani de Campos
+ 
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+ includes code contributed by others
+
+   winbind client common code
+
+   Copyright (C) Tim Potter 2000
+   Copyright (C) Andrew Tridgell 2000
+   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public
+   License as published by the Free Software Foundation; either
+   version 2 of the License, or (at your option) any later version.
 
