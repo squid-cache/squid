@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.82 1998/04/04 05:02:49 wessels Exp $
+ * $Id: net_db.cc,v 1.83 1998/04/07 23:50:54 rousskov Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -662,18 +662,11 @@ int
 netdbHostPeerRtt(const char *host, peer * peer)
 {
 #if USE_ICMP
-    netdbEntry *n = netdbLookupHost(host);
-    net_db_peer *p;
-    int i;
-    if (NULL == n)
-	return 0;
-    p = n->peers;
-    for (i = 0; i < n->n_peers; i++, p++) {
-	if (strcmp(p->peername, peer->host))
-	    continue;
-	if (p->expires < squid_curtime)
-	    break;
-	return p->rtt;
+    const netdbEntry *n = netdbLookupHost(host);
+    if (n) {
+	const net_db_peer *p = netdbPeerByName(n, peer->host);
+	if (p && p->expires >= squid_curtime)
+	    return (int) (p->rtt + 0.5);
     }
 #endif
     return 0;
