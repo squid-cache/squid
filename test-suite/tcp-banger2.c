@@ -101,6 +101,7 @@ static struct timeval now;
 static long total_bytes_written = 0;
 static long total_bytes_read = 0;
 static int opt_checksum = 0;
+static int accepted_status = 200;
 FILE *trace_file = NULL;
 
 typedef void (CB) (int, void *);
@@ -121,6 +122,8 @@ struct _request {
     int validsize;
     int bodysize;
     int content_length;
+    int status;
+    int validstatus;
     long validsum;
     long sum;
 };
@@ -133,9 +136,9 @@ int maxfd = 0;
 static void
 free_request(struct _request *r)
 {
-	if (r->url)
-	    free(r->url);
-	free(r);
+    if (r->url)
+	free(r->url);
+    free(r);
 }
 
 char *
@@ -216,6 +219,8 @@ read_reply(int fd, void *data)
 		if (!header)
 		    break;
 		/* Decode header */
+		if (strncasecmp(header, "HTTP/1", 6) == 0)
+		    r->status = atoi(header + 9);
 		if (strncasecmp(header, "Content-Length:", 15) == 0)
 		    r->content_length = atoi(header + 15);
 		if (strncasecmp(header, "X-Request-URI:", 14) == 0) {
@@ -269,9 +274,11 @@ reply_done(int fd, void *data)
 	    fprintf(stderr, "WARNING: %s invalid checksum wanted 0x%lx got 0x%lx\n",
 		r->url, r->validsum, r->sum);
     }
+    if (r->status != r->validstatus && r->validstatus)
+	fprintf(stderr, "WARNING: %s status %d\n", r->url, r->status);
     if (trace_file) {
-	fprintf(trace_file, "%s %s %s %d 0x%lx\n",
-	    r->method, r->url, r->requestbodyfile, r->bodysize, r->sum);
+	fprintf(trace_file, "%s %s %s %d 0x%lx %d\n",
+	    r->method, r->url, r->requestbodyfile, r->bodysize, r->sum, r->status);
     }
     free_request(r);
 }
@@ -282,7 +289,7 @@ request(char *urlin)
     int s = -1, f = -1;
     char buf[4096];
     char msg[8192];
-    char *method, *url, *file, *size, *checksum;
+    char *method, *url, *file, *size, *checksum, *status;
     char urlbuf[8192];
     int len, len2;
     time_t w;
@@ -310,6 +317,7 @@ request(char *urlin)
     file = strtok(NULL, " ");
     size = strtok(NULL, " ");
     checksum = strtok(NULL, " ");
+    status = strtok(NULL, " ");
     if (!url) {
 	url = method;
 	method = "GET";
@@ -334,6 +342,10 @@ request(char *urlin)
     if (checksum && strcmp(checksum, "-") != 0)
 	r->validsum = strtoul(checksum, NULL, 0);
     r->content_length = -1;	/* Unknown */
+    if (status && strcmp(status, "-") != 0)
+	r->validstatus = strtoul(status, NULL, 0);
+    else
+	r->validstatus = accepted_status;
     msg[0] = '\0';
     sprintf(buf, "%s %s HTTP/1.0\r\n", method, url);
     strcat(msg, buf);
@@ -441,6 +453,7 @@ usage(void)
     fprintf(stderr, " -c              Check checksum agains trace\n");
     fprintf(stderr, " -i              Send random If-Modified-Since times\n");
     fprintf(stderr, " -l <seconds>    Connection lifetime timeout (default 60)\n");
+    fprintf(stderr, " -s <status>     HTTP status expected (default 200, 0 == ignore)\n");
 }
 
 int
