@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.289 2000/12/05 06:24:00 wessels Exp $
+ * $Id: neighbors.cc,v 1.290 2000/12/05 08:55:47 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -351,9 +351,28 @@ neighbors_open(int fd)
     struct sockaddr_in name;
     socklen_t len = sizeof(struct sockaddr_in);
     struct servent *sep = NULL;
+    const char *me = getMyHostname();
+    peer *this;
+    peer *next;
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
 	debug(15, 1) ("getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
+    for (this = Config.peers; this; this = next) {
+	sockaddr_in_list *s;
+	next = this->next;
+	if (0 != strcmp(this->host, me))
+	    continue;
+	for (s = Config.Sockaddr.http; s; s = s->next) {
+	    if (this->http_port != ntohs(s->s.sin_port))
+		continue;
+	    debug(15, 1) ("WARNING: Peer looks like this host\n");
+	    debug(15, 1) ("         Ignoring %s %s/%d/%d\n",
+		neighborTypeStr(this), this->host, this->http_port,
+		this->icp.port);
+	    neighborRemove(this);
+	}
+    }
+
     peerRefreshDNS((void *) 1);
     if (0 == echo_hdr.opcode) {
 	echo_hdr.opcode = ICP_SECHO;
