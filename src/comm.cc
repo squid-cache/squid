@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.370 2003/03/08 09:35:15 robertc Exp $
+ * $Id: comm.cc,v 1.371 2003/03/08 16:18:45 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1275,12 +1275,13 @@ ConnectStateData::callCallback(comm_err_t status, int xerrno)
     CallBack<CNCB> aCallback = callback;
     callback = CallBack<CNCB>();
     commSetTimeout(fd, -1, NULL, NULL);
-    commConnectFree(fd, this);
 
     if (cbdataReferenceValid(aCallback.data))
         aCallback.handler(fd, status, xerrno, aCallback.data);
 
     cbdataReferenceDone(aCallback.data);
+
+    commConnectFree(fd, this);
 }
 
 static void
