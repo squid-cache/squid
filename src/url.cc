@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.8 1996/04/10 03:54:45 wessels Exp $ */
+/* $Id: url.cc,v 1.9 1996/04/10 05:06:38 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -24,6 +24,9 @@ char *url_convert_hex(org_url, allocate)
     char *t = NULL;
 
     url = allocate ? (char *) xstrdup(org_url) : org_url;
+
+    if (strlen(url) < 3 || !strchr(url, '%'))
+	return url;
 
     for (s = t = url; *(s + 2); s++) {
 	if (*s == '%') {
