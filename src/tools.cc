@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.181 1999/05/26 17:08:05 wessels Exp $
+ * $Id: tools.cc,v 1.182 1999/05/27 03:21:42 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -837,4 +837,29 @@ int
 stringHasWhitespace(const char *s)
 {
     return (strcspn(s, w_space) != strlen(s));
+}
+
+void
+linklistPush(link_list ** L, void *p)
+{
+    link_list *l = xmalloc(sizeof(*l));
+    l->next = NULL;
+    l->ptr = p;
+    while (*L)
+	L = &(*L)->next;
+    *L = l;
+}
+
+void *
+linklistShift(link_list ** L)
+{
+    void *p;
+    link_list *l;
+    if (NULL == *L)
+	return NULL;
+    l = *L;
+    p = l->ptr;
+    *L = (*L)->next;
+    xfree(l);
+    return p;
 }

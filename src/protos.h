@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.336 1999/05/26 20:41:21 wessels Exp $
+ * $Id: protos.h,v 1.337 1999/05/27 03:21:37 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1090,6 +1090,8 @@ extern double gb_to_double(const gb_t *);
 extern const char *gb_to_str(const gb_t *);
 extern void gb_flush(gb_t *);	/* internal, do not use this */
 extern int stringHasWhitespace(const char *);
+extern void linklistPush(link_list **, void *);
+extern void *linklistShift(link_list **);
 
 #if USE_HTCP
 extern void htcpInit(void);
