@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.230 1998/06/30 19:32:38 wessels Exp $
+ * $Id: ftp.cc,v 1.231 1998/06/30 23:03:17 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -152,7 +152,7 @@ static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 static void ftpPutStart(FtpStateData *);
 static CWCB ftpPutTransferDone;
 static void ftpUnhack(FtpStateData * ftpState);
-static void ftpScheduleReadControlReply(FtpStateData *);
+static void ftpScheduleReadControlReply(FtpStateData *, int);
 static void ftpHandleControlReply(FtpStateData *);
 
 /* State machine functions
@@ -770,7 +770,7 @@ ftpReadComplete(FtpStateData * ftpState)
 	storeComplete(ftpState->entry);
     }
     /* expect the "transfer complete" message on the control socket */
-    ftpScheduleReadControlReply(ftpState);
+    ftpScheduleReadControlReply(ftpState, 1);
 }
 
 static void
@@ -987,7 +987,7 @@ ftpStart(request_t * request, StoreEntry * entry, int fd)
     ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
     ftpState->data.size = SQUID_TCP_SO_RCVBUF;
     ftpState->data.freefunc = xfree;
-    ftpScheduleReadControlReply(ftpState);
+    ftpScheduleReadControlReply(ftpState, 0);
     commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
 }
 
@@ -1005,7 +1005,7 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
 	ftpWriteCommandCallback,
 	ftpState,
 	xfree);
-    ftpScheduleReadControlReply(ftpState);
+    ftpScheduleReadControlReply(ftpState, 0);
 }
 
 static void
@@ -1101,10 +1101,10 @@ ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
 }
 
 static void
-ftpScheduleReadControlReply(FtpStateData *ftpState)
+ftpScheduleReadControlReply(FtpStateData *ftpState, int buffered_ok)
 {
     debug(9,1)("ftpScheduleReadControlReply: FD %d\n", ftpState->ctrl.fd);
-    if (ftpState->ctrl.offset > 0) {
+    if (buffered_ok && ftpState->ctrl.offset > 0) {
 	/* We've already read some reply data */
 	ftpHandleControlReply(ftpState);
     } else {
@@ -1137,7 +1137,7 @@ ftpReadControlReply(int fd, void *data)
     if (len < 0) {
 	debug(50, 1) ("ftpReadControlReply: read error: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
-	    ftpScheduleReadControlReply(ftpState);
+	    ftpScheduleReadControlReply(ftpState, 0);
 	} else {
 	    if (entry->mem_obj->inmem_hi == 0) {
 		err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
@@ -1180,13 +1180,8 @@ ftpHandleControlReply(FtpStateData * ftpState)
     wordlistDestroy(&ftpState->ctrl.message);
     ftpState->ctrl.message = ftpParseControlReply(ftpState->ctrl.buf,
 	ftpState->ctrl.offset, &ftpState->ctrl.replycode, &bytes_used);
-    if (ftpState->ctrl.offset == bytes_used) {
-	/* used it all up */
-	assert(ftpState->ctrl.message);
-	ftpState->ctrl.offset = 0;
-    } else if (bytes_used == 0) {
+    if (ftpState->ctrl.message == NULL) {
 	/* didn't get complete reply yet */
-	assert(ftpState->ctrl.message == NULL);
 	if (ftpState->ctrl.offset == ftpState->ctrl.size) {
 	    oldbuf = ftpState->ctrl.buf;
 	    ftpState->ctrl.buf = xcalloc(ftpState->ctrl.size << 1, 1);
@@ -1195,8 +1190,11 @@ ftpHandleControlReply(FtpStateData * ftpState)
 	    ftpState->ctrl.freefunc(oldbuf);
 	    ftpState->ctrl.freefunc = xfree;
 	}
-	ftpScheduleReadControlReply(ftpState);
+	ftpScheduleReadControlReply(ftpState, 0);
 	return;
+    } else if (ftpState->ctrl.offset == bytes_used) {
+	/* used it all up */
+	ftpState->ctrl.offset = 0;
     } else {
 	/* Got some data past the complete reply */
 	assert(bytes_used < ftpState->ctrl.offset);
