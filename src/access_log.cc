@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.2 1997/06/26 22:35:35 wessels Exp $
+ * $Id: access_log.cc,v 1.3 1997/07/19 06:12:49 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -174,6 +174,8 @@ accessLogLog(AccessLogEntry * al)
 	al->private.method_str = IcpOpcodeStr[al->icp.opcode];
     else
 	al->private.method_str = RequestMethodStr[al->http.method];
+    if (al->hier.host[0] == '\0')
+	xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
     if (Config.commonLogFormat)
 	l = accessLogCommon(al);
     else
