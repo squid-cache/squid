@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.277 1998/04/16 21:51:54 wessels Exp $
+ * $Id: cache_cf.cc,v 1.278 1998/04/21 16:39:00 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1289,6 +1289,12 @@ parse_wordlist(wordlist ** list)
     char *token;
     while ((token = strtok(NULL, w_space)))
 	wordlistAdd(list, token);
+}
+
+static int
+check_null_wordlist(wordlist *w)
+{
+    return w == NULL;
 }
 
 #if SQUID_SNMP
