@@ -64,31 +64,31 @@ static int checkLDAP(LDAP * ld, char *userid, char *password);
 /* Yuck.. we need to glue to different versions of the API */
 
 #if defined(LDAP_API_VERSION) && LDAP_API_VERSION > 1823
-int squid_ldap_errno(LDAP *ld)
+static int squid_ldap_errno(LDAP *ld)
 {
     int err = 0;
     ldap_get_option(ld, LDAP_OPT_ERROR_NUMBER, &err);
     return err;
 }
-void squid_ldap_set_aliasderef(LDAP *ld, int deref)
+static void squid_ldap_set_aliasderef(LDAP *ld, int deref)
 {
     ldap_set_option(ld, LDAP_OPT_DEREF, &deref);
 }
-void squid_ldap_set_referrals(LDAP *ld, int referrals)
+static void squid_ldap_set_referrals(LDAP *ld, int referrals)
 {
     int *value = referrals ? LDAP_OPT_ON : LDAP_OPT_OFF;
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
 #else
-int squid_ldap_errno(LDAP *ld)
+static int squid_ldap_errno(LDAP *ld)
 {
     return ld->ld_errno;
 }
-void squid_ldap_set_aliasderef(LDAP *ld, int deref)
+static void squid_ldap_set_aliasderef(LDAP *ld, int deref)
 {
     ld->ld_deref = deref;
 }
-void squid_ldap_set_referrals(LDAP *ld, int referrals)
+static void squid_ldap_set_referrals(LDAP *ld, int referrals)
 {
     if (referrals)
 	ld->ld_options |= ~LDAP_OPT_REFERRALS;
