@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.295 2003/01/23 00:37:17 robertc Exp $
+# $Id: cf.data.pre,v 1.296 2003/02/01 13:35:17 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2490,8 +2490,8 @@ DEFAULT: none
 DEFAULT_IF_NONE: 0 allow all
 LOC: Config.ReplyBodySize
 DOC_START
-        This option specifies the maximum size of a reply body.  It
-	can be used to prevent users from downloading very large files,
+        This option specifies the maximum size of a reply body in bytes.
+	It can be used to prevent users from downloading very large files,
 	such as MP3's and movies. When the reply headers are recieved,
 	the reply_body_max_size lines are processed, and the first line with
 	a result of "allow" is used as the maximum body size for this reply.
