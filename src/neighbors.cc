@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.49 1996/09/13 23:16:40 wessels Exp $
+ * $Id: neighbors.cc,v 1.50 1996/09/13 23:20:49 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -612,6 +612,8 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	} else if (entry->object_len != 0) {
 	    debug(15, 1, "Too late UDP_HIT_OBJ '%s'?\n", entry->url);
 	} else {
+            if (e->options & NEIGHBOR_PROXY_ONLY)
+                storeReleaseRequest(entry);
 	    protoCancelTimeout(0, entry);
 	    entry->ping_status = PING_DONE;
 	    httpState = xcalloc(1, sizeof(HttpStateData));
