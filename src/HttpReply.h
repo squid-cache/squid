@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.4 2003/07/14 14:15:56 robertc Exp $
+ * $Id: HttpReply.h,v 1.5 2003/07/15 06:50:39 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -86,6 +86,7 @@ class HttpReply
 public:
     void *operator new (size_t);
     void operator delete (void *);
+    HttpReply();
     /* unsupported, writable, may disappear/change in the future */
     int hdr_sz;			/* sums _stored_ status-line, headers, and <CRLF> */
 

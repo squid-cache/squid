@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.472 2003/07/14 14:16:02 robertc Exp $
+ * $Id: structs.h,v 1.473 2003/07/15 06:50:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -996,6 +996,7 @@ struct _HierarchyLogEntry
 
 struct _AccessLogEntry
 {
+    /* NB: memset is used on AccessLogEntries as at 20030715 RBC */
     const char *url;
 
     struct

@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.14 2003/07/12 12:42:19 robertc Exp $
+ * $Id: Array.h,v 1.15 2003/07/15 06:50:38 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -34,20 +34,14 @@
 #ifndef SQUID_ARRAY_H
 #define SQUID_ARRAY_H
 
-/* see Array.c for more documentation */
-#ifndef __cplusplus
-typedef struct {
-    int capacity;
-    int count;
-    void **items;
-} Array;
-#endif
+/* iterator support */
 
-#ifdef __cplusplus
+template <class C>
 
-/* iterator support */ 
-template <class C> class VectorIteratorBase {
-  public:
+class VectorIteratorBase
+{
+
+public:
     VectorIteratorBase();
     VectorIteratorBase(C &);
     VectorIteratorBase(size_t, C &);
@@ -57,31 +51,37 @@ template <class C> class VectorIteratorBase {
     VectorIteratorBase & operator ++();
     VectorIteratorBase operator ++(int);
     typename C::value_type & operator *() const
-      {
-          return theVector->items[pos];
-      }
-      typename C::value_type * operator -> () const
-      {
-          return &theVector->items[pos];
-      }
+    {
+        return theVector->items[pos];
+    }
+
+    typename C::value_type * operator -> () const
+    {
+        return &theVector->items[pos];
+    }
+
     ssize_t operator - (VectorIteratorBase const &rhs) const;
     bool incrementable() const;
-  private:
+
+private:
     size_t pos;
     C * theVector;
 };
-  
+
 template<class E>
-class Vector {
+
+class Vector
+{
+
 public:
     typedef E value_type;
     typedef E* pointer;
     typedef VectorIteratorBase<Vector<E> > iterator;
     typedef VectorIteratorBase<Vector<E> const> const_iterator;
-  
+
     void *operator new (size_t);
     void operator delete (void *);
-    
+
     Vector();
     ~Vector();
     Vector(Vector const &);
@@ -98,25 +98,12 @@ public:
     const_iterator begin () const;
     iterator end();
     const_iterator end () const;
-    
+
     /* Do not change these, until the entry C struct is removed */
     size_t capacity;
     size_t count;
     E *items;
 };
-
-typedef Vector<void *> Array;
-
-#endif
-
-SQUIDCEXTERN Array *arrayCreate(void);
-SQUIDCEXTERN void arrayInit(Array * s);
-SQUIDCEXTERN void arrayClean(Array * s);
-SQUIDCEXTERN void arrayDestroy(Array * s);
-SQUIDCEXTERN void arrayAppend(Array * s, void *obj);
-SQUIDCEXTERN void arrayPreAppend(Array * s, int app_count);
-
-#ifdef __cplusplus
 
 template<class E>
 void *
@@ -134,11 +121,10 @@ Vector<E>::operator delete (void *address)
 
 template<class E>
 Vector<E>::Vector() : capacity (0), count(0), items (NULL)
-{
-}
+{}
 
 template<class E>
-Vector<E>::~Vector() 
+Vector<E>::~Vector()
 {
     clean();
 }
@@ -161,20 +147,29 @@ Vector<E>::reserve(size_t min_capacity)
 {
     const int min_delta = 16;
     int delta;
+
     if (capacity >= min_capacity)
-	return;
+        return;
+
     delta = min_capacity;
+
     /* make delta a multiple of min_delta */
     delta += min_delta - 1;
+
     delta /= min_delta;
+
     delta *= min_delta;
+
     /* actual grow */
     if (delta < 0)
-	delta = min_capacity - capacity;
+        delta = min_capacity - capacity;
+
     E*newitems = new E[capacity + delta];
+
     for (size_t counter = 0; counter < size(); ++counter) {
-	newitems[counter] = items[counter];
+        newitems[counter] = items[counter];
     }
+
     capacity += delta;
     delete[]items;
     items = newitems;
@@ -185,7 +180,8 @@ void
 Vector<E>::push_back(E obj)
 {
     if (size() >= capacity)
-	reserve (size() + 1);
+        reserve (size() + 1);
+
     items[count++] = obj;
 }
 
@@ -213,7 +209,7 @@ void
 Vector<E>::preAppend(int app_count)
 {
     if (size() + app_count > capacity)
-	reserve(size() + app_count);
+        reserve(size() + app_count);
 }
 
 template<class E>
@@ -222,8 +218,10 @@ Vector<E>::operator = (Vector const &old)
 {
     clean();
     reserve (old.size());
+
     for (size_t counter = 0; counter < old.size(); ++counter)
-	push_back (old.items[counter]);
+        push_back (old.items[counter]);
+
     return *this;
 }
 
@@ -272,13 +270,11 @@ Vector<E>::end() const
 
 template<class C>
 VectorIteratorBase<C>::VectorIteratorBase() : pos(0), theVector(NULL)
-{
-}
+{}
 
 template<class C>
 VectorIteratorBase<C>::VectorIteratorBase(C &container) : pos(container.begin()), theVector(&container)
-{
-}
+{}
 
 template<class C>
 VectorIteratorBase<C>::VectorIteratorBase(size_t aPos, C &container) : pos(aPos), theVector(&container) {}
@@ -298,7 +294,7 @@ bool VectorIteratorBase<C>:: operator == (VectorIteratorBase const &rhs)
 }
 
 template<class C>
-bool 
+bool
 VectorIteratorBase<C>::incrementable() const
 {
     assert (theVector);
@@ -309,9 +305,12 @@ template<class C>
 VectorIteratorBase<C> & VectorIteratorBase<C>:: operator ++()
 {
     assert (theVector);
+
     if (!incrementable())
-	fatal ("domain error");
+        fatal ("domain error");
+
     ++pos;
+
     return *this;
 }
 
@@ -325,7 +324,8 @@ VectorIteratorBase<C> VectorIteratorBase<C>:: operator ++(int)
 
 template<class C>
 VectorIteratorBase<C>&
-VectorIteratorBase<C>::operator =(VectorIteratorBase const &old) {
+VectorIteratorBase<C>::operator =(VectorIteratorBase const &old)
+{
     pos = old.pos;
     theVector = old.theVector;
     return *this;
@@ -338,6 +338,5 @@ VectorIteratorBase<C>::operator - (VectorIteratorBase const &rhs) const
     assert(theVector == rhs.theVector);
     return pos - rhs.pos;
 }
-#endif
 
 #endif /* SQUID_ARRAY_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.419 2003/07/14 14:16:00 robertc Exp $
+ * $Id: http.cc,v 1.420 2003/07/15 06:50:42 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1125,7 +1125,7 @@ httpBuildRequestHeader(request_t * request,
     const HttpHeaderEntry *e;
     String strFwd;
     HttpHeaderPos pos = HttpHeaderInitPos;
-    httpHeaderInit(hdr_out, hoRequest);
+    assert (hdr_out->owner == hoRequest);
     /* append our IMS header */
 
     if (request->lastmod > -1 && request->method == METHOD_GET)
@@ -1486,7 +1486,7 @@ httpBuildRequestPrefix(request_t * request,
                  httpver.major,httpver.minor);
     /* build and pack headers */
     {
-        HttpHeader hdr;
+        HttpHeader hdr(hoRequest);
         Packer p;
         httpBuildRequestHeader(request, orig_request, entry, &hdr, flags);
         packerToMemInit(&p, mb);

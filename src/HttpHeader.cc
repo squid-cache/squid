@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.92 2003/07/14 14:15:56 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.93 2003/07/15 06:50:39 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -346,15 +346,22 @@ httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
  * HttpHeader Implementation
  */
 
-void
-httpHeaderInit(HttpHeader * hdr, http_hdr_owner_type owner)
+HttpHeader::HttpHeader() : owner (hoNone), len (0)
 {
-    assert(hdr);
-    assert(owner > hoNone && owner <= hoReply);
-    debug(55, 7) ("init-ing hdr: %p owner: %d\n", hdr, owner);
-    memset(hdr, 0, sizeof(*hdr));
-    hdr->owner = owner;
-    arrayInit(&hdr->entries);
+    httpHeaderMaskInit(&mask, 0);
+}
+
+HttpHeader::HttpHeader(http_hdr_owner_type const &anOwner) : owner (anOwner), len (0)
+{
+    assert(this);
+    assert(anOwner > hoNone && anOwner <= hoReply);
+    debug(55, 7) ("init-ing hdr: %p owner: %d\n", this, owner);
+    httpHeaderMaskInit(&mask, 0);
+}
+
+HttpHeader::~HttpHeader()
+{
+    httpHeaderClean (this);
 }
 
 void
@@ -384,7 +391,7 @@ httpHeaderClean(HttpHeader * hdr)
         }
     }
 
-    arrayClean(&hdr->entries);
+    hdr->entries.clean();
 }
 
 /* append entries (also see httpHeaderUpdate) */
@@ -439,7 +446,7 @@ httpHeaderReset(HttpHeader * hdr)
     assert(hdr);
     ho = hdr->owner;
     httpHeaderClean(hdr);
-    httpHeaderInit(hdr, ho);
+    *hdr = HttpHeader(ho);
     return 0;
 }
 
@@ -667,7 +674,7 @@ httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e)
     else
         CBIT_SET(hdr->mask, e->id);
 
-    arrayAppend(&hdr->entries, e);
+    hdr->entries.push_back(e);
 
     /* increment header length, allow for ": " and crlf */
     hdr->len += e->name.size() + 2 + e->value.size() + 2;

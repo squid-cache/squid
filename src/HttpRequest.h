@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.3 2003/07/14 14:15:56 robertc Exp $
+ * $Id: HttpRequest.h,v 1.4 2003/07/15 06:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,10 +52,16 @@ extern int httpRequestHdrAllowedByName(http_hdr_type id);
 
 class HttpHdrRange;
 
-class request_t
+class HttpRequest
 {
 
 public:
+    void *operator new(size_t);
+    void operator delete(void *);
+    virtual void deleteSelf() const;
+    HttpRequest();
+    virtual ~HttpRequest() {}
+
     bool multipartRangeRequest() const;
 
     method_t method;
@@ -96,5 +102,6 @@ public:
     String extacl_log;		/* String to be used for access.log purposes */
 };
 
+typedef HttpRequest request_t;
 
 #endif /* SQUID_HTTPREQUEST_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.482 2003/07/14 14:16:01 robertc Exp $
+ * $Id: protos.h,v 1.483 2003/07/15 06:50:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -401,7 +401,6 @@ SQUIDCEXTERN void httpHeaderPutStrf();
 SQUIDCEXTERN void httpHeaderInitModule(void);
 SQUIDCEXTERN void httpHeaderCleanModule(void);
 /* init/clean */
-SQUIDCEXTERN void httpHeaderInit(HttpHeader * hdr, http_hdr_owner_type owner);
 SQUIDCEXTERN void httpHeaderClean(HttpHeader * hdr);
 /* append/update */
 SQUIDCEXTERN void httpHeaderAppend(HttpHeader * dest, const HttpHeader * src);
@@ -578,10 +577,6 @@ SQUIDCEXTERN void dump_peer_options(StoreEntry *, peer *);
 SQUIDCEXTERN int peerHTTPOkay(const peer *, request_t *);
 
 SQUIDCEXTERN peer *whichPeer(const struct sockaddr_in *from);
-#if USE_HTCP
-
-SQUIDCEXTERN void neighborsHtcpReply(const cache_key *, htcpReplyData *, const struct sockaddr_in *);
-#endif
 
 SQUIDCEXTERN void netdbInit(void);
 
@@ -948,12 +943,6 @@ SQUIDCEXTERN int getMyPort(void);
 SQUIDCEXTERN char *strwordtok(char *buf, char **t);
 SQUIDCEXTERN void strwordquote(MemBuf * mb, const char *str);
 
-#if USE_HTCP
-SQUIDCEXTERN void htcpInit(void);
-SQUIDCEXTERN void htcpQuery(StoreEntry * e, request_t * req, peer * p);
-SQUIDCEXTERN void htcpSocketShutdown(void);
-SQUIDCEXTERN void htcpSocketClose(void);
-#endif
 
 
 /*

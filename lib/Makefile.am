@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.11 2003/06/19 13:12:00 robertc Exp $
+#  $Id: Makefile.am,v 1.12 2003/07/15 06:50:38 robertc Exp $
 #
 
 SUBDIRS = libTrie
@@ -39,7 +39,6 @@ EXTRA_libmiscutil_a_SOURCES = \
 	snprintf.c
 libmiscutil_a_SOURCES = \
 	MemPool.c \
-	Array.cc \
 	base64.c \
 	getfullhostname.c \
 	hash.c \

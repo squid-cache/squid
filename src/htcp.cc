@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.53 2003/07/14 14:16:00 robertc Exp $
+ * $Id: htcp.cc,v 1.54 2003/07/15 06:50:42 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -729,7 +729,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
 {
     htcpStuff stuff;
     char *pkt;
-    HttpHeader hdr;
+    HttpHeader hdr(hoHtcpReply);
     MemBuf mb;
     Packer p;
     ssize_t pktlen;
@@ -750,7 +750,6 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
     {
         memBufDefInit(&mb);
         packerToMemInit(&p, &mb);
-        httpHeaderInit(&hdr, hoHtcpReply);
         stuff.S.method = spec->method;
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
@@ -884,6 +883,9 @@ htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
         htcpHandleTstResponse(hdr, buf, sz, from);
 }
 
+HtcpReplyData::HtcpReplyData() : hdr(hoHtcpReply)
+{}
+
 static void
 
 htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
@@ -899,8 +901,6 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
         return;
     }
 
-    memset(&htcpReply, '\0', sizeof(htcpReply));
-    httpHeaderInit(&htcpReply.hdr, hoHtcpReply);
     htcpReply.msg_id = hdr->msg_id;
     debug(31, 3) ("htcpHandleTstResponse: msg_id = %d\n", (int) htcpReply.msg_id);
     htcpReply.hit = hdr->response ? 0 : 1;
@@ -1201,7 +1201,7 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     ssize_t pktlen;
     char vbuf[32];
     htcpStuff stuff;
-    HttpHeader hdr;
+    HttpHeader hdr(hoRequest);
     Packer pa;
     MemBuf mb;
     http_state_flags flags;
