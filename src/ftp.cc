@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.189 1998/02/02 21:16:25 wessels Exp $
+ * $Id: ftp.cc,v 1.190 1998/02/03 04:21:14 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -548,7 +548,7 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
     size_t width = Config.Ftp.list_width;
     ftpListParts *parts;
     int flags = ftpState->flags;
-    if (strlen(line) > 1024) {
+    if ((int)strlen(line) > 1024) {
 	snprintf(html, 8192, "%s\n", line);
 	return html;
     }
@@ -1487,7 +1487,7 @@ ftpReadPasv(FtpStateData * ftpState)
 	ftpSendPort(ftpState);
 	return;
     }
-    if (strlen(buf) > 1024) {
+    if ((int)strlen(buf) > 1024) {
 	debug(9, 1) ("ftpReadPasv: Avoiding potential buffer overflow\n");
 	ftpSendPort(ftpState);
 	return;
@@ -1909,7 +1909,7 @@ ftpUrlWith2f(const request_t * request)
     if (request->port != urlDefaultPort(request->protocol))
 	snprintf(portbuf, 32, ":%d", request->port);
     loginbuf[0] = '\0';
-    if (strlen(request->login) > 0) {
+    if ((int)strlen(request->login) > 0) {
 	strcpy(loginbuf, request->login);
 	if ((t = strchr(loginbuf, ':')))
 	    *t = '\0';

@@ -137,7 +137,6 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     const cache_key *key;
     request_t *icp_request = NULL;
     int allow = 0;
-    int pkt_len;
     aclCheck_t checklist;
     icp_common_t *reply;
     int src_rtt = 0;
@@ -183,7 +182,6 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	entry = storeGet(key);
 	debug(12, 5) ("icpHandleIcpV2: OPCODE %s\n", icp_opcode_str[header.opcode]);
 	if (icpCheckUdpHit(entry, icp_request)) {
-	    pkt_len = sizeof(icp_common_t) + strlen(url) + 1 + 2 + entry->object_len;
 	    reply = icpCreateMessage(ICP_HIT, flags, url, header.reqnum, src_rtt);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_HIT, icp_request->protocol);
 	    break;

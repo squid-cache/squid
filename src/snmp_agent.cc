@@ -40,7 +40,6 @@ void snmp_input();
 void snmp_trap();
 int create_identical();
 int parse_var_op_list();
-void setVariable();
 
 struct pbuf *definitelyGetBuf();
 int get_community();
@@ -66,15 +65,15 @@ u_long _agentSize;
 
 
 /* fwd: */
-static int check_auth();
-static int bulk_var_op_list();
-static int goodValue();
+static int check_auth(struct snmp_session *, u_char *, int, u_char *, int, usecEntry **);
+static int bulk_var_op_list(u_char *, int, u_char *, int, int, int, long *);
+static int goodValue(u_char, int, u_char, int);
+static void setVariable(u_char *, u_char, int, u_char *, int);
 /* from usec.c: */
 extern void increment_stat();
 extern void create_report();
 extern void md5Digest();
 extern int parse_parameters();
-
 
 int
 init_agent_auth(void)
@@ -124,13 +123,12 @@ init_agent_auth(void)
 }
 
 int
-snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
-     u_char *sn_data;
-     int length;
-     u_char *out_sn_data;
-     int *out_length;
-     u_long sourceip;		/* possibly for authentication */
-     long *ireqid;
+snmp_agent_parse(u_char *sn_data,
+     int length,
+     u_char *out_sn_data,
+     int *out_length,
+     u_long sourceip,		/* possibly for authentication */
+     long *ireqid)
 {
     u_char msgtype, type;
     long zero = 0;
@@ -171,7 +169,7 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
 	}
 	if (ret < 0) {
 	    increment_stat(-ret);
-	    if ((sn_data = asn_parse_header(sn_data, &length, &msgtype))
+	    if ((sn_data = asn_parse_header(sn_data, &length, &msgtype)) != NULL
 		&& asn_parse_int(sn_data, &length, &type, &reqid, sizeof(reqid))) {
 		if (msgtype == REPORT_MSG)
 		    return 0;
@@ -309,7 +307,7 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
 
     if (errstat == SNMP_ERR_NOSUCHNAME) {
 	/* see if we have forwarding turned on */
-	if (Config.Snmp.localPort > 0) {
+	if (Config.Snmp.localPort != 0) {
 	    *ireqid = reqid;
 	    return 2;
 	}
@@ -421,14 +419,13 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
  * If any error occurs, an error code is returned.
  */
 int
-parse_var_op_list(sn_data, length, out_sn_data, out_length, index, msgtype, action)
-     u_char *sn_data;
-     int length;
-     u_char *out_sn_data;
-     int out_length;
-     long *index;
-     int msgtype;
-     int action;
+parse_var_op_list(u_char *sn_data,
+     int length,
+     u_char *out_sn_data,
+     int out_length,
+     long *index,
+     int msgtype,
+     int action)
 {
     u_char type;
     oid var_name[MAX_NAME_LEN];
@@ -609,11 +606,11 @@ parse_var_op_list(sn_data, length, out_sn_data, out_length, index, msgtype, acti
  * Returns 1 upon success and 0 upon failure.
  */
 int
-create_identical(snmp_in, snmp_out, snmp_length, errstat, errindex)
-     u_char *snmp_in;
-     u_char *snmp_out;
-     int snmp_length;
-     long errstat, errindex;
+create_identical(u_char *snmp_in,
+     u_char *snmp_out,
+     int snmp_length,
+     long errstat,
+     long errindex)
 {
     u_char *sn_data;
     u_char type;
@@ -657,13 +654,12 @@ create_identical(snmp_in, snmp_out, snmp_length, errstat, errindex)
 }
 
 static int
-check_auth(session, sn_data, length, pp, plen, ueret)
-     struct snmp_session *session;
-     u_char *sn_data;
-     int length;
-     u_char *pp;
-     int plen;
-     usecEntry **ueret;
+check_auth(struct snmp_session *session,
+     u_char *sn_data,
+     int length,
+     u_char *pp,
+     int plen,
+     usecEntry **ueret)
 {
     usecEntry *ue;
     Parameters params;
@@ -709,7 +705,7 @@ check_auth(session, sn_data, length, pp, plen, ueret)
 
 
     /* verify that the requested qoS is supported by the userName */
-    if ((params.qoS & USEC_QOS_AUTHPRIV) > ue->qoS)
+    if ((u_char) (params.qoS & USEC_QOS_AUTHPRIV) > ue->qoS)
 	return -USEC_STAT_UNSUPPORTED_QOS;
 
     xmemcpy(session->authKey, ue->authKey, 16);
@@ -747,14 +743,13 @@ check_auth(session, sn_data, length, pp, plen, ueret)
 }
 
 int
-get_community(sessionid)
-     u_char *sessionid;
+get_community(char *sessionid)
 {
     communityEntry *cp;
     debug(49, 5) ("get_community: %s\n", sessionid);
     for (cp = Config.Snmp.communities; cp; cp = cp->next) {
 	debug(49, 5) ("get_community: %s\n", cp->name);
-	if (!strcmp(cp->name, (char *) sessionid))
+	if (!strcmp(cp->name, sessionid))
 	    break;
     }
 
@@ -772,9 +767,7 @@ get_community(sessionid)
 }
 
 static int
-goodValue(inType, inLen, actualType, actualLen)
-     u_char inType, actualType;
-     int inLen, actualLen;
+goodValue(u_char inType, int inLen, u_char actualType, int actualLen)
 {
     if (inLen > actualLen)
 	return FALSE;
@@ -782,13 +775,12 @@ goodValue(inType, inLen, actualType, actualLen)
 }
 
 
-void
-setVariable(var_val, var_val_type, var_val_len, statP, statLen)
-     u_char *var_val;
-     u_char var_val_type;
-     int var_val_len;
-     u_char *statP;
-     int statLen;
+static void
+setVariable(u_char *var_val,
+     u_char var_val_type,
+     int var_val_len,
+     u_char *statP,
+     int statLen)
 {
     int buffersize = 1000;
 
@@ -817,14 +809,13 @@ struct repeater {
 
 
 static int
-bulk_var_op_list(sn_data, length, out_sn_data, out_length, non_repeaters, max_repetitions, index)
-     u_char *sn_data;
-     int length;
-     u_char *out_sn_data;
-     int out_length;
-     int non_repeaters;
-     int max_repetitions;
-     long *index;
+bulk_var_op_list(u_char *sn_data,
+     int length,
+     u_char *out_sn_data,
+     int out_length,
+     int non_repeaters,
+     int max_repetitions,
+     long *index)
 {
     u_char type;
     oid var_name[MAX_NAME_LEN];

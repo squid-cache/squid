@@ -247,6 +247,7 @@ extern int create_view(char **);
 extern int create_user(char **);
 extern int create_community(char **);
 extern void tokenize(char *, char **, int);
+extern int snmpCompare(oid * name1, int len1, oid * name2, int len2);
 #endif /* SQUID_SNMP */
 
 extern void AppendUdp(icpUdpData *);
@@ -516,8 +517,8 @@ extern void storeConvertFile(const cache_key * key,
     time_t timestamp,
     time_t lastref,
     time_t lastmod,
-    u_num32 refcount,
-    u_num32 flags,
+    u_short refcount,
+    u_short flags,
     int clean);
 extern int storeGetNextFile(int *sfileno, int *size);
 extern StoreEntry * storeAddDiskRestore(const cache_key * key,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.234 1998/01/12 04:30:39 wessels Exp $
+ * $Id: http.cc,v 1.235 1998/02/03 04:21:15 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -826,13 +826,13 @@ httpBuildRequestHeader(request_t * request,
 		EBIT_SET(cc_flags, CCC_MAXAGE);
 	} else if (strncasecmp(xbuf, "Via:", 4) == 0) {
 	    for (s = xbuf + 4; *s && isspace(*s); s++);
-	    if (strlen(viabuf) + strlen(s) < 4000)
+	    if ((int)strlen(viabuf) + (int)strlen(s) < 4000)
 		strcat(viabuf, s);
 	    strcat(viabuf, ", ");
 	    continue;
 	} else if (strncasecmp(xbuf, "X-Forwarded-For:", 16) == 0) {
 	    for (s = xbuf + 16; *s && isspace(*s); s++);
-	    if (strlen(fwdbuf) + strlen(s) < 4000)
+	    if ((int)strlen(fwdbuf) + (int)strlen(s) < 4000)
 		strcat(fwdbuf, s);
 	    strcat(fwdbuf, ", ");
 	    continue;

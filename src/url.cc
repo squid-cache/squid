@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.74 1998/01/12 04:30:16 wessels Exp $
+ * $Id: url.cc,v 1.75 1998/02/03 04:21:26 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -347,7 +347,7 @@ urlCanonicalClean(const request_t * request)
 	    if (request->port != urlDefaultPort(request->protocol))
 		snprintf(portbuf, 32, ":%d", request->port);
 	    loginbuf[0] = '\0';
-	    if (strlen(request->login) > 0) {
+	    if ((int) strlen(request->login) > 0) {
 		strcpy(loginbuf, request->login);
 		if ((t = strchr(loginbuf, ':')))
 		    *t = '\0';

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.60 1998/01/12 04:30:06 wessels Exp $
+ * $Id: net_db.cc,v 1.61 1998/02/03 04:21:18 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -125,7 +125,7 @@ static void
 netdbRelease(netdbEntry * n)
 {
     net_db_name *x;
-    net_db_name *next;
+    net_db_name *next = NULL;
     for (x = n->hosts; x; x = next) {
 	next = x->next;
 	netdbHashUnlink(x->name);
@@ -347,7 +347,7 @@ netdbSaveState(void *foo)
 	return;
     }
     next = (netdbEntry *) hash_first(addr_table);
-    while ((n = next)) {
+    while ((n = next) != NULL) {
 	next = (netdbEntry *) hash_next(addr_table);
 	if (n->pings_recv == 0)
 	    continue;
@@ -519,7 +519,7 @@ netdbFreeMemory(void)
     }
     for (j = 0; j < i; j++) {
 	n = *(L1 + j);
-	while ((x = n->hosts)) {
+	while ((x = n->hosts) != NULL) {
 	    n->hosts = x->next;
 	    safe_free(x);
 	}
@@ -701,7 +701,7 @@ var_netdb_entry(struct variable *vp, oid * name, int *length, int exact, int *va
     n = (netdbEntry *) hash_first(addr_table);
     while (n != NULL) {
 	newname[vp->namelen] = cnt++;
-	result = compare(name, *length, newname, (int) vp->namelen + 1);
+	result = snmpCompare(name, *length, newname, (int) vp->namelen + 1);
 	if ((exact && (result == 0)) || (!exact && (result < 0))) {
 	    debug(49, 5) ("snmp var_netdb_entry: yup, a match.\n");
 	    break;

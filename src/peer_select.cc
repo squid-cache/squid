@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.36 1998/01/31 05:32:03 wessels Exp $
+ * $Id: peer_select.cc,v 1.37 1998/02/03 04:21:19 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -328,12 +328,12 @@ peerSelectFoo(ps_state * psstate)
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
 	hierarchyNote(&request->hier, code, &psstate->icp, request->host);
 	peerSelectCallback(psstate, NULL);
-    } else if ((p = psstate->closest_parent_miss)) {
+    } else if ((p = psstate->closest_parent_miss) != NULL) {
 	code = CLOSEST_PARENT_MISS;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
-    } else if ((p = psstate->first_parent_miss)) {
+    } else if ((p = psstate->first_parent_miss) != NULL) {
 	code = FIRST_PARENT_MISS;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
