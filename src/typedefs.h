@@ -25,6 +25,7 @@ typedef struct _acl_time_data acl_time_data;
 typedef struct _acl_name_list acl_name_list;
 typedef struct _acl_deny_info_list acl_deny_info_list;
 typedef struct _acl_proxy_auth acl_proxy_auth;
+typedef struct _acl_arp_data acl_arp_data;
 typedef struct _acl acl;
 typedef struct _snmpconf snmpconf;
 typedef struct _snmp_request_t snmp_request_t;
