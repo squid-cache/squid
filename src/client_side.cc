@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.540 2001/07/17 09:50:38 hno Exp $
+ * $Id: client_side.cc,v 1.541 2001/07/28 09:21:31 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -114,7 +114,7 @@ static int clientHierarchical(clientHttpRequest * http);
 static int clientCheckContentLength(request_t * r);
 static DEFER httpAcceptDefer;
 static log_type clientProcessRequest2(clientHttpRequest * http);
-static int clientReplyBodyTooLarge(int clen);
+static int clientReplyBodyTooLarge(HttpReply *, int clen);
 static int clientRequestBodyTooLarge(int clen);
 static void clientProcessBody(ConnStateData * conn);
 
@@ -1760,13 +1760,13 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
 }
 
 static int
-clientReplyBodyTooLarge(int clen)
+clientReplyBodyTooLarge(HttpReply *rep, int clen)
 {
-    if (0 == Config.maxReplyBodySize)
+    if (0 == rep->maxBodySize)
 	return 0;		/* disabled */
     if (clen < 0)
 	return 0;		/* unknown */
-    if (clen > Config.maxReplyBodySize)
+    if (clen > rep->maxBodySize)
 	return 1;		/* too large */
     return 0;
 }
@@ -1865,20 +1865,22 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    }
 	}
 	rep = clientBuildReply(http, buf, size);
-	if (rep && clientReplyBodyTooLarge(rep->content_length)) {
-	    ErrorState *err = errorCon(ERR_TOO_BIG, HTTP_FORBIDDEN);
-	    err->request = requestLink(http->request);
-	    storeUnregister(http->sc, http->entry, http);
-	    http->sc = NULL;
-	    storeUnlockObject(http->entry);
-	    http->entry = clientCreateStoreEntry(http, http->request->method,
-		null_request_flags);
-	    errorAppendEntry(http->entry, err);
-	    httpReplyDestroy(rep);
-	    return;
-	} else if (rep) {
+	if (rep) {
 	    aclCheck_t *ch;
 	    int rv;
+	    httpReplyBodyBuildSize(http->request, rep, &Config.ReplyBodySize);
+	    if (clientReplyBodyTooLarge(rep, rep->content_length)) {
+	    	ErrorState *err = errorCon(ERR_TOO_BIG, HTTP_FORBIDDEN);
+	    	err->request = requestLink(http->request);
+	    	storeUnregister(http->sc, http->entry, http);
+	    	http->sc = NULL;
+	    	storeUnlockObject(http->entry);
+	    	http->entry = clientCreateStoreEntry(http, http->request->method,
+		    null_request_flags);
+	    	errorAppendEntry(http->entry, err);
+	    	httpReplyDestroy(rep);
+	    return;
+	    }
 	    body_size = size - rep->hdr_sz;
 	    assert(body_size >= 0);
 	    body_buf = buf + rep->hdr_sz;
@@ -2095,7 +2097,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	} else {
 	    comm_close(fd);
 	}
-    } else if (clientReplyBodyTooLarge((int) http->out.offset)) {
+    } else if (clientReplyBodyTooLarge(entry->mem_obj->reply, (int) http->out.offset)) {
 	comm_close(fd);
     } else {
 	/* More data will be coming from primary server; register with 
