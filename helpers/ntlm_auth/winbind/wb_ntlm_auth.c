@@ -26,6 +26,7 @@
 
 #include "wbntlm.h"
 #include "util.h"
+#include "squid_endian.h"
 /* stdio.h is included in wbntlm.h */
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -316,7 +317,7 @@ try_again:
 	return;
     }
     /* Understand what we got */
-    switch WSWAP(fast_header->type) {
+    switch le32toh(fast_header->type) {
     case NTLM_NEGOTIATE:
 	authfail("-", "-", "Received neg-request while expecting auth packet");
 	return;

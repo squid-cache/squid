@@ -7400,6 +7400,8 @@ done
 
 
 
+
+
 for ac_header in \
 	arpa/inet.h \
 	arpa/nameser.h \
@@ -7444,6 +7446,8 @@ for ac_header in \
 	string.h \
 	strings.h \
 	sys/bitypes.h \
+	sys/bswap.h \
+	sys/endian.h \
 	sys/file.h \
 	sys/ioctl.h \
 	sys/param.h \
@@ -15570,11 +15574,17 @@ fi
 
 
 
+
+
+
+
 for ac_func in \
 	backtrace_symbols_fd \
 	bcopy \
 	bswap_16 \
 	bswap_32 \
+	bswap16 \
+	bswap32 \
 	crypt \
 	fchmod \
 	getdtablesize \
@@ -15583,6 +15593,8 @@ for ac_func in \
 	getrlimit \
 	getrusage \
 	getspnam \
+	htobe16 \
+	htole16 \
 	lrand48 \
 	mallinfo \
 	mallocblksize \

@@ -14,6 +14,7 @@
 
 #include "config.h"
 #include "ntlmauth.h"
+#include "squid_endian.h"
 
 #include "ntlm.h"
 #include "util.h"
@@ -78,9 +79,9 @@ ntlmMakeChallenge(struct ntlm_challenge *chal)
 
     memset(chal, 0, sizeof(*chal));
     memcpy(chal->hdr.signature, "NTLMSSP", 8);
-    chal->flags = WSWAP(0x00018206);
-    chal->hdr.type = WSWAP(NTLM_CHALLENGE);
-    chal->unknown[6] = SSWAP(0x003a);
+    chal->flags = htole32(0x00018206);
+    chal->hdr.type = htole32(NTLM_CHALLENGE);
+    chal->unknown[6] = htole16(0x003a);
 
     d = (char *) chal + 48;
     i = 0;
@@ -89,8 +90,8 @@ ntlmMakeChallenge(struct ntlm_challenge *chal)
 	while (authenticate_ntlm_domain[i++]);
 
 
-    chal->target.offset = WSWAP(48);
-    chal->target.maxlen = SSWAP(i);
+    chal->target.offset = htole32(48);
+    chal->target.maxlen = htole16(i);
     chal->target.len = chal->target.maxlen;
 
 #ifdef NTLM_STATIC_CHALLENGE
@@ -125,10 +126,10 @@ ntlmCheckHeader(ntlmhdr * hdr, int type)
     if (type == NTLM_ANY)
 	return 0;
 
-    if (WSWAP(hdr->type) != type) {
+    if (le32toh(hdr->type) != type) {
 /* don't report this error - it's ok as we do a if() around this function */
 //      fprintf(stderr, "ntlmCheckHeader: type is %d, wanted %d\n",
-	//          WSWAP(hdr->type), type);
+	//          le32toh(hdr->type), type);
 	return (-1);
     }
     return (0);
@@ -145,8 +146,8 @@ ntlmGetString(ntlmhdr * hdr, strhdr * str, int flags)
     char *d, *sc;
     int l, o;
 
-    l = SSWAP(str->len);
-    o = WSWAP(str->offset);
+    l = le16toh(str->len);
+    o = le32toh(str->offset);
 
     /* Sanity checks. XXX values arbitrarialy chosen */
     if (l <= 0 || l >= 32 || o >= 256) {
@@ -159,7 +160,7 @@ ntlmGetString(ntlmhdr * hdr, strhdr * str, int flags)
 	d = buf;
 
 	for (l >>= 1; l; s++, l--) {
-	    c = SSWAP(*s);
+	    c = le16toh(*s);
 	    if (c > 254 || c == '\0' || !isprint(c)) {
 		fprintf(stderr, "ntlmGetString: bad uni: %04x\n", c);
 		return (NULL);
@@ -258,7 +259,7 @@ main()
 	    ntlmMakeChallenge(&chal);
 	    len =
 		sizeof(chal) - sizeof(chal.pad) +
-		SSWAP(chal.target.maxlen);
+		le16toh(chal.target.maxlen);
 	    data = (char *) base64_encode_bin((char *) &chal, len);
 	    printf("TT %s\n", data);
 	} else if (strncasecmp(buf, "KK ", 3) == 0) {
@@ -287,7 +288,7 @@ main()
 		ntlmMakeChallenge(&chal);
 		len =
 		    sizeof(chal) - sizeof(chal.pad) +
-		    SSWAP(chal.target.maxlen);
+		    le16toh(chal.target.maxlen);
 		data = (char *) base64_encode_bin((char *) &chal, len);
 		printf("CH %s\n", data);
 	    } else if (!ntlmCheckHeader
