@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.182 1997/10/30 04:49:37 wessels Exp $
+ * $Id: main.cc,v 1.183 1997/10/30 18:27:20 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -129,7 +129,7 @@ static void usage(void);
 static void mainParseOptions(int, char **);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
-static void daemonize(char **);
+static void watch_child(char **);
 
 static void
 usage(void)
@@ -623,7 +623,7 @@ main(int argc, char **argv)
 	/* NOTREACHED */
     }
     if (!opt_no_daemon)
-	daemonize(argv);
+	watch_child(argv);
     setMaxFD();
 
     if (opt_catch_signals)
@@ -724,11 +724,9 @@ sendSignal(void)
 }
 
 static void
-daemonize(char *argv[])
+watch_child(char *argv[])
 {
     char *prog;
-    char *t;
-    size_t l;
     int failcount = 0;
     time_t start;
     time_t stop;
@@ -743,12 +741,9 @@ daemonize(char *argv[])
 	if (fork() == 0) {
 	    /* child */
 	    prog = xstrdup(argv[0]);
-	    if ((t = strrchr(prog, '/')) == NULL)
-		t = prog;
-	    argv[0] = xmalloc(l = strlen(prog) + 3);
-	    snprintf(argv[0], l, "(%s)", prog);
-	    execv(prog, argv);
-	    fatal("execl failed");
+	    argv[0] = xstrdup("(squid)");
+	    execvp(prog, argv);
+	    fatal("execvp failed");
 	}
 	/* parent */
 	time(&start);
@@ -769,4 +764,5 @@ daemonize(char *argv[])
 		exit(0);
 	sleep(3);
     }
+    /* NOTREACHED */
 }
