@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.31 
+# From configure.in Revision: 1.33 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -2168,6 +2168,7 @@ for ac_func in \
 	mallinfo \
 	mallopt \
 	memmove \
+	mktime \
 	regcomp \
 	regexec \
 	regfree \
@@ -2178,7 +2179,6 @@ for ac_func in \
 	setrlimit \
 	setsid \
 	sigaction \
-	socketpair \
 	srand48 \
 	strdup \
 	sysconf \

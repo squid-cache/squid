@@ -91,6 +91,9 @@
 /* Define if you have the memmove function.  */
 #undef HAVE_MEMMOVE
 
+/* Define if you have the mktime function.  */
+#undef HAVE_MKTIME
+
 /* Define if you have the regcomp function.  */
 #undef HAVE_REGCOMP
 
@@ -120,9 +123,6 @@
 
 /* Define if you have the sigaction function.  */
 #undef HAVE_SIGACTION
-
-/* Define if you have the socketpair function.  */
-#undef HAVE_SOCKETPAIR
 
 /* Define if you have the srand48 function.  */
 #undef HAVE_SRAND48
