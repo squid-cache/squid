@@ -13,8 +13,9 @@ $(DOC).dvi: $(DOC).sgml
 #	latex $(DOC).tex
 #	latex $(DOC).tex
 #
-#$(DOC).tex: $(DOC).sgml
-#	sgml2latex $(DOC)
+
+$(DOC).txt: $(DOC).sgml
+	sgml2txt $(DOC)
 
 $(DOC).html: $(DOC).sgml
 	sgml2html $(DOC)

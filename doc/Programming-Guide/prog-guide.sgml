@@ -1,8 +1,8 @@
 <!doctype linuxdoc system>
 <article>
 <title>Squid Programmers Guide</title>
-<author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.45 2001/07/04 00:12:05 hno Exp $</date>
+<author>Squid Developers
+<date>$Id: prog-guide.sgml,v 1.46 2001/09/07 01:30:33 wessels Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
