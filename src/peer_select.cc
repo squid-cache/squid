@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.41 1998/03/16 21:45:03 wessels Exp $
+ * $Id: peer_select.cc,v 1.42 1998/03/16 23:21:33 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -297,7 +297,6 @@ peerSelectFoo(ps_state * psstate)
 	return;
     }
     psstate->single_parent = getSingleParent(request);
-    debug(0, 0) ("psstate->single_parent = %p\n", psstate->single_parent);
     if (psstate->single_parent != NULL) {
 	debug(44, 3) ("peerSelect: found single parent, skipping ICP query\n");
     } else if (peerSelectIcpPing(request, direct, entry)) {
