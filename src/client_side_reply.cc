@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.37 2003/02/08 15:23:53 hno Exp $
+ * $Id: client_side_reply.cc,v 1.38 2003/02/08 17:37:36 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1964,7 +1964,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 	     * And as this is a malformed HTTP reply we cannot keep
 	     * the connection persistent
 	     */
-	    request->flags.proxy_keepalive = 0;
+	    http->request->flags.proxy_keepalive = 0;
 	    
 	    StoreIOBuffer tempBuffer;
 	    assert(body_buf && body_size);
