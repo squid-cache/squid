@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.396 2004/10/18 12:20:09 hno Exp $
+ * $Id: comm.cc,v 1.397 2004/11/06 22:11:39 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -844,7 +844,7 @@ comm_write_try(int fd, void *data)
     assert(Fc->write.handler != NULL);
 
     /* Attempt a write */
-    statCounter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.writes++;
     errno = 0;
     retval = FD_WRITE_METHOD(fd, Fc->write.buf + Fc->write.curofs, Fc->write.size - Fc->write.curofs);
     debug(5, 3) ("comm_write_try: fd %d: tried to write %d bytes, retval %d, errno %d\n",
@@ -1297,8 +1297,6 @@ commResetFD(ConnectStateData * cs)
     statCounter.syscalls.sock.sockets++;
 
     int fd2 = socket(AF_INET, SOCK_STREAM, 0);
-
-    statCounter.syscalls.sock.sockets++;
 
     if (fd2 < 0) {
         debug(5, 0) ("commResetFD: socket: %s\n", xstrerror());
