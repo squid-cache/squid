@@ -1379,6 +1379,7 @@ struct _FwdState {
         http_status http_code;
 	int xerrno;
     } fail;
+    time_t start;
 };
 
 struct _FwdServer {
