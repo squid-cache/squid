@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.235 1997/05/16 00:19:30 wessels Exp $
+ * $Id: store.cc,v 1.236 1997/05/16 07:44:57 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -502,10 +502,11 @@ storeLog(int tag, const StoreEntry * e)
     if (mem == NULL)
 	return;
     reply = mem->reply;
-    sprintf(logmsg, "%9d.%03d %-7s %4d %9d %9d %9d %s %d/%d %s %s\n",
+    sprintf(logmsg, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	storeLogTags[tag],
+	e->swap_file_number,
 	reply->code,
 	(int) reply->date,
 	(int) reply->last_modified,
@@ -1089,6 +1090,10 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 {
     swapin_ctrl_t *ctrlp;
     if (e->mem_status != NOT_IN_MEMORY) {
+	callback(callback_data, 0);
+	return;
+    }
+    if (e->store_status == STORE_PENDING) {
 	callback(callback_data, 0);
 	return;
     }
@@ -1797,7 +1802,7 @@ storePurgeOld(void *unused)
     for (e = storeGetFirst(); e; e = storeGetNext()) {
 	if ((++n & 0xFF) == 0) {
 	    getCurrentTime();
-	    if (shutdown_pending || reread_pending)
+	    if (shutdown_pending || reconfigure_pending)
 		break;
 	}
 	if ((n & 0xFFF) == 0)
