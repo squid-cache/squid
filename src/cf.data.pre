@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.321 2003/06/19 17:25:53 hno Exp $
+# $Id: cf.data.pre,v 1.322 2003/06/19 17:34:10 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -993,8 +993,6 @@ DOC_START
 	Usage:
 	
 	cache_dir Type Directory-Name Fs-specific-data [options]
-
-	cache_dir diskd Maxobjsize Directory-Name MB L1 L2 Q1 Q2
 
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
