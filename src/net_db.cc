@@ -319,10 +319,10 @@ netdbFreeMemory(void)
     }
     for (j = 0; j < i; j++) {
 	n = *(L1 + j);
-        while ((x = n->hosts)) {
+	while ((x = n->hosts)) {
 	    n->hosts = x->next;
 	    safe_free(x);
-        }
+	}
 	xfree(n);
     }
     xfree(L1);

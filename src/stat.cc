@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.82 1996/10/10 18:48:51 wessels Exp $
+ * $Id: stat.cc,v 1.83 1996/10/10 22:21:00 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -648,7 +648,7 @@ memoryAccounted(void)
 	meta_data.netdb_addrs * sizeof(netdbEntry) +
 	meta_data.netdb_hosts * sizeof(struct _net_db_name) +
 #endif
-	meta_data.misc;
+                 meta_data.misc;
 }
 
 #ifdef UNUSED_CODE
@@ -851,7 +851,7 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
 	"NetDB Host Entries",
 	meta_data.netdb_hosts,
 	(int) sizeof(struct _net_db_name),
-	(int) (meta_data.netdb_hosts * sizeof(struct _net_db_name) >> 10));
+	             (int) (meta_data.netdb_hosts * sizeof(struct _net_db_name) >> 10));
 #endif
 
     storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
