@@ -1017,7 +1017,7 @@ extern peer * carpSelectParent(request_t *);
 #endif
 
 /* packs, then prints an object using debug() */
-extern void debugObj(int section, int level, void *obj, void (*packMeth)(void *obj, Packer *p));
+extern void debugObj(int section, int level, void *obj, ObjPackMethod pm);
 
 /*
  * prototypes for system functions missing from system includes
