@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.131 1998/08/21 04:48:06 wessels Exp $
+ * $Id: disk.cc,v 1.132 1998/08/21 09:15:22 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -215,8 +215,6 @@ static void
 diskHandleWrite(int fd, void *notused)
 {
     int len = 0;
-    dwrite_q *q = NULL;
-    dwrite_q *wq = NULL;
     fde *F = &fd_table[fd];
     struct _fde_disk *fdd = &F->disk;
     if (!fdd->write_q)
