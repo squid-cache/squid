@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.29 1999/01/12 16:42:18 wessels Exp $
+ * $Id: fd.cc,v 1.30 1999/01/12 23:37:41 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -97,7 +97,7 @@ fd_open(int fd, unsigned int type, const char *desc)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
-    if (!F->flags.open) {
+    if (F->flags.open) {
 	debug(51, 1) ("WARNING: Closing open FD %4d\n", fd);
 	fd_close(fd);
     }
@@ -150,8 +150,10 @@ fdDumpOpen(void)
 	    continue;
 	if (i == fileno(debug_log))
 	    continue;
-	debug(51, 1) ("Open FD %s %4d %s\n",
-	    F->type == FD_READ ? "reading" : "writing",
+	debug(51, 1) ("Open FD %-10s %4d %s\n",
+	    F->bytes_read && F->bytes_written ? "READ/WRITE" :
+	    F->bytes_read ? "READING" :
+	    F->bytes_written ? "WRITING" : null_string,
 	    i, F->desc);
     }
 }

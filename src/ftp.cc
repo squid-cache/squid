@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.262 1999/01/12 15:47:51 wessels Exp $
+ * $Id: ftp.cc,v 1.263 1999/01/12 23:37:43 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -836,10 +836,6 @@ ftpDataRead(int fd, void *data)
     delay_id delay_id = delayMostBytesAllowed(mem);
 #endif
     assert(fd == ftpState->data.fd);
-    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        comm_close(fd);
-        return;
-    }
     errno = 0;
     read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
