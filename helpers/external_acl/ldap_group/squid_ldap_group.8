@@ -1,0 +1,130 @@
+.TH squid_ldap_group 8 "7 September 2002" "Squid LDAP Match"
+.
+.SH NAME
+squid_ldap_group - Squid LDAP external acl group helper
+.
+.SH SYNOPSIS
+squid_ldap_auth -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]...]
+.
+.SH DESCRIPTION
+This helper allows Squid to connect to a LDAP directory to
+authorize users via LDAP groups.
+.P
+The program operates by searching with a search filter based
+on the users login name and requested group, and if a match
+is found it is determined that the user belongs to the group.
+.
+.TP
+.BI "-b " "basedn " (REQUIRED)
+Specifies the base DN under which the groups are located.
+.
+.TB
+.B "-g"
+Specifies that the first query argument sent to the helper by Squid is
+a additional RDN that will be added to the basedn for this query.
+.TP
+.BI "-f " filter
+LDAP search filter used to search the LDAP directory for any
+matching group memberships.
+.BR
+In the filter %v will be replaces by the user login name
+and %a by the requested group name.
+.
+.TP
+.BI "-s " base|one|sub
+search scope. Defaults to 'sub'.
+.IP
+.B base
+object only,
+.B one
+level below the base object or
+.BR sub tree
+below the base object
+.
+.TP
+.BI "-D " "binddn " "-w " password
+The DN and password to bind as while performing searches. Required
+if the directory does not allow anonymous searches.
+.IP
+As the password needs to be printed in plain text in your Squid configuration
+and will be sent on the command line to the helper it is strongly recommended
+to use a account with minimal associated privileges.  This to limit the damage
+in case someone could get hold of a copy of your Squid configuration file or
+extracts the password used from a process listing.
+.
+.TP
+.BI -P
+Use a persistent LDAP connection. Normally the LDAP connection
+is only open while validating a username to preserve resources
+at the LDAP server. This option causes the LDAP connection to
+be kept open, allowing it to be reused for further user
+validations. Recommended for larger installations.
+.
+.TP
+.BI -R
+do not follow referrals
+.
+.TP
+.BI "-a " never|always|search|find
+when to dereference aliases. Defaults to 'never'
+.IP
+.BI never
+dereference aliases (default),
+.BI always
+dereference aliases, only while
+.BR search ing
+or only to
+.B find
+the base object
+.
+.TP
+.BI -h " ldapserver"
+Specify the LDAP server to connect to
+.TP
+.BI -p " ldapport"
+Specify an alternate TCP port where the ldap server is listening if
+other than the default LDAP port 389.
+.
+.SH NOTES
+.
+When constructing search filters it is strongly recommended to test the filter
+using ldapsearch before you attempt to use squid_ldap_group. This to verify
+that the filter matches what you expect.
+.
+.SH AUTHOR
+This manual page was written by 
+.I Henrik Nordstrom <hno@marasystems.com>
+.P
+squid_ldap_group is written by 
+.I Flavio Pescuma <flavio@marasystems.com>
+and
+.IR "Henrik Nordstrom <hno@squid-cache.org>" ,
+based on prior work in squid_ldap_auth by
+.I Glen Newton <glen.newton@nrc.ca>
+.
+.SH KNOWN LIMITATIONS
+The program assumes that the loginname is in the group member attribute.
+If the loginname cannot be found in a attribute of the groups then
+squid_ldap_group won't be able to find the group memberships. The program
+really should search for the user DN like squid_ldap_auth and then use this
+when matching groups.
+.
+.SH QUESTIONS
+Any questions on usage can be sent to 
+.IR "Squid Users <squid-users@squid-cache.org>" ,
+or to your favorite LDAP list/friend if the question is more related to
+LDAP than Squid.
+.
+.SH REPORTING BUGS
+Report bugs or bug-fixes to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+or ideas for new improvements to 
+.I Squid Developers <squid-dev@squid-cache.org>
+.
+.SH "SEE ALSO"
+.BR squid_ldap_auth ( 8 ),
+.BR ldapsearch ( 1 ),
+.br
+Your favorite LDAP documentation
+.br
+.BR RFC2254 " - The String Representation of LDAP Search Filters,"
