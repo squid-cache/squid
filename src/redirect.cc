@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.102 2003/09/21 00:30:47 robertc Exp $
+ * $Id: redirect.cc,v 1.103 2003/11/06 12:27:02 hno Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -171,7 +171,7 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
              r->orig_url,
              inet_ntoa(r->client_addr),
              fqdn,
-             r->client_ident,
+             r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
              r->method_s);
 
     helperSubmit(redirectors, buf, redirectHandleReply, r);
