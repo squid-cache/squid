@@ -25,30 +25,30 @@
 #define ASYNC_WRITE 0
 #define ASYNC_READ 1
 
-struct _aio_result_t {
+struct _squidaio_result_t {
     int aio_return;
     int aio_errno;
     void *_data;		/* Internal housekeeping */
     void *data;			/* Available to the caller */
 };
 
-typedef struct _aio_result_t aio_result_t;
+typedef struct _squidaio_result_t squidaio_result_t;
 
 typedef void AIOCB(int fd, void *, int aio_return, int aio_errno);
 
-int aio_cancel(aio_result_t *);
-int aio_open(const char *, int, mode_t, aio_result_t *);
-int aio_read(int, char *, int, off_t, int, aio_result_t *);
-int aio_write(int, char *, int, off_t, int, aio_result_t *);
-int aio_close(int, aio_result_t *);
-int aio_stat(const char *, struct stat *, aio_result_t *);
-int aio_unlink(const char *, aio_result_t *);
-int aio_truncate(const char *, off_t length, aio_result_t *);
-int aio_opendir(const char *, aio_result_t *);
-aio_result_t *aio_poll_done(void);
-int aio_operations_pending(void);
-int aio_sync(void);
-int aio_get_queue_len(void);
+int squidaio_cancel(squidaio_result_t *);
+int squidaio_open(const char *, int, mode_t, squidaio_result_t *);
+int squidaio_read(int, char *, int, off_t, int, squidaio_result_t *);
+int squidaio_write(int, char *, int, off_t, int, squidaio_result_t *);
+int squidaio_close(int, squidaio_result_t *);
+int squidaio_stat(const char *, struct stat *, squidaio_result_t *);
+int squidaio_unlink(const char *, squidaio_result_t *);
+int squidaio_truncate(const char *, off_t length, squidaio_result_t *);
+int squidaio_opendir(const char *, squidaio_result_t *);
+squidaio_result_t *squidaio_poll_done(void);
+int squidaio_operations_pending(void);
+int squidaio_sync(void);
+int squidaio_get_queue_len(void);
 
 void aioInit(void);
 void aioDone(void);
@@ -64,7 +64,7 @@ int aioCheckCallbacks(SwapDir *);
 void aioSync(SwapDir *);
 int aioQueueSize(void);
 
-struct _aioinfo_t {
+struct _squidaioinfo_t {
     int swaplog_fd;
     int l1;
     int l2;
@@ -72,7 +72,7 @@ struct _aioinfo_t {
     int suggest;
 };
 
-struct _aiostate_t {
+struct _squidaiostate_t {
     int fd;
     struct {
 	unsigned int close_request:1;
@@ -103,13 +103,13 @@ struct _queued_read {
     void *callback_data;
 };
 
-typedef struct _aioinfo_t aioinfo_t;
-typedef struct _aiostate_t aiostate_t;
+typedef struct _squidaioinfo_t squidaioinfo_t;
+typedef struct _squidaiostate_t squidaiostate_t;
 
-/* The aio_state memory pools */
-extern MemPool *aio_state_pool;
-extern MemPool *aio_qread_pool;
-extern MemPool *aio_qwrite_pool;
+/* The squidaio_state memory pools */
+extern MemPool *squidaio_state_pool;
+extern MemPool *aufs_qread_pool;
+extern MemPool *aufs_qwrite_pool;
 
 extern void storeAufsDirMapBitReset(SwapDir *, sfileno);
 extern int storeAufsDirMapBitAllocate(SwapDir *);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.36 2001/07/11 22:29:50 hno Exp $
+ * $Id: store_dir_aufs.cc,v 1.37 2001/08/20 06:55:31 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -66,9 +66,9 @@ struct _RebuildState {
 
 static int n_asyncufs_dirs = 0;
 static int *asyncufs_dir_index = NULL;
-MemPool *aio_state_pool = NULL;
-MemPool *aio_qread_pool = NULL;
-MemPool *aio_qwrite_pool = NULL;
+MemPool *squidaio_state_pool = NULL;
+MemPool *aufs_qread_pool = NULL;
+MemPool *aufs_qwrite_pool = NULL;
 static int asyncufs_initialised = 0;
 
 static char *storeAufsDirSwapSubDir(SwapDir *, int subdirn);
@@ -132,8 +132,8 @@ static int
 storeAufsDirMapBitTest(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
-    aioinfo_t *aioinfo;
-    aioinfo = (aioinfo_t *) SD->fsdata;
+    squidaioinfo_t *aioinfo;
+    aioinfo = (squidaioinfo_t *) SD->fsdata;
     return file_map_bit_test(aioinfo->map, filn);
 }
 
@@ -141,8 +141,8 @@ static void
 storeAufsDirMapBitSet(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
-    aioinfo_t *aioinfo;
-    aioinfo = (aioinfo_t *) SD->fsdata;
+    squidaioinfo_t *aioinfo;
+    aioinfo = (squidaioinfo_t *) SD->fsdata;
     file_map_bit_set(aioinfo->map, filn);
 }
 
@@ -150,8 +150,8 @@ void
 storeAufsDirMapBitReset(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
-    aioinfo_t *aioinfo;
-    aioinfo = (aioinfo_t *) SD->fsdata;
+    squidaioinfo_t *aioinfo;
+    aioinfo = (squidaioinfo_t *) SD->fsdata;
     /*
      * We have to test the bit before calling file_map_bit_reset.
      * file_map_bit_reset doesn't do bounds checking.  It assumes
@@ -166,7 +166,7 @@ storeAufsDirMapBitReset(SwapDir * SD, int fn)
 int
 storeAufsDirMapBitAllocate(SwapDir * SD)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) SD->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) SD->fsdata;
     int fn;
     fn = file_map_allocate(aioinfo->map, aioinfo->suggest);
     file_map_bit_set(aioinfo->map, fn);
@@ -183,7 +183,7 @@ storeAufsDirMapBitAllocate(SwapDir * SD)
 static void
 storeAufsDirInitBitmap(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) sd->fsdata;
 
     if (aioinfo->map == NULL) {
 	/* First time */
@@ -198,7 +198,7 @@ storeAufsDirInitBitmap(SwapDir * sd)
 static char *
 storeAufsDirSwapSubDir(SwapDir * sd, int subdirn)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) sd->fsdata;
 
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
     assert(0 <= subdirn && subdirn < aioinfo->l1);
@@ -251,7 +251,7 @@ storeAufsDirVerifyDirectory(const char *path)
 static int
 storeAufsDirVerifyCacheDirs(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) sd->fsdata;
     int j;
     const char *path = sd->path;
 
@@ -268,7 +268,7 @@ storeAufsDirVerifyCacheDirs(SwapDir * sd)
 static void
 storeAufsDirCreateSwapSubDirs(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) sd->fsdata;
     int i, k;
     int should_exist;
     LOCAL_ARRAY(char, name, MAXPATHLEN);
@@ -319,7 +319,7 @@ storeAufsDirSwapLogFile(SwapDir * sd, const char *ext)
 static void
 storeAufsDirOpenSwapLog(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) sd->fsdata;
     char *path;
     int fd;
     path = storeAufsDirSwapLogFile(sd, NULL);
@@ -339,7 +339,7 @@ storeAufsDirOpenSwapLog(SwapDir * sd)
 static void
 storeAufsDirCloseSwapLog(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) sd->fsdata;
     if (aioinfo->swaplog_fd < 0)	/* not open */
 	return;
     file_close(aioinfo->swaplog_fd);
@@ -693,7 +693,7 @@ static int
 storeAufsDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
 {
     SwapDir *SD = rb->sd;
-    aioinfo_t *aioinfo = (aioinfo_t *) SD->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) SD->fsdata;
     int fd = -1;
     int used = 0;
     int dirs_opened = 0;
@@ -860,7 +860,7 @@ storeAufsDirRebuild(SwapDir * sd)
 static void
 storeAufsDirCloseTmpSwapLog(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) sd->fsdata;
     char *swaplog_path = xstrdup(storeAufsDirSwapLogFile(sd, NULL));
     char *new_path = xstrdup(storeAufsDirSwapLogFile(sd, ".new"));
     int fd;
@@ -888,7 +888,7 @@ storeAufsDirCloseTmpSwapLog(SwapDir * sd)
 static FILE *
 storeAufsDirOpenTmpSwapLog(SwapDir * sd, int *clean_flag, int *zero_flag)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) sd->fsdata;
     char *swaplog_path = xstrdup(storeAufsDirSwapLogFile(sd, NULL));
     char *clean_path = xstrdup(storeAufsDirSwapLogFile(sd, ".last-clean"));
     char *new_path = xstrdup(storeAufsDirSwapLogFile(sd, ".new"));
@@ -1105,7 +1105,7 @@ storeSwapLogDataFree(void *s)
 static void
 storeAufsDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) sd->fsdata;
     storeSwapLogData *s = memAllocate(MEM_SWAP_LOG_DATA);
     s->op = (char) op;
     s->swap_filen = e->swap_filen;
@@ -1160,11 +1160,11 @@ storeAufsDirClean(int swap_index)
     int N0, N1, N2;
     int D0, D1, D2;
     SwapDir *SD;
-    aioinfo_t *aioinfo;
+    squidaioinfo_t *aioinfo;
     N0 = n_asyncufs_dirs;
     D0 = asyncufs_dir_index[swap_index % N0];
     SD = &Config.cacheSwap.swapDirs[D0];
-    aioinfo = (aioinfo_t *) SD->fsdata;
+    aioinfo = (squidaioinfo_t *) SD->fsdata;
     N1 = aioinfo->l1;
     D1 = (swap_index / N0) % N1;
     N2 = aioinfo->l2;
@@ -1232,7 +1232,7 @@ storeAufsDirCleanEvent(void *unused)
     assert(n_asyncufs_dirs);
     if (NULL == asyncufs_dir_index) {
 	SwapDir *sd;
-	aioinfo_t *aioinfo;
+	squidaioinfo_t *aioinfo;
 	/*
 	 * Initialize the little array that translates AUFS cache_dir
 	 * number into the Config.cacheSwap.swapDirs array index.
@@ -1243,7 +1243,7 @@ storeAufsDirCleanEvent(void *unused)
 	    if (!storeAufsDirIs(sd))
 		continue;
 	    asyncufs_dir_index[n++] = i;
-	    aioinfo = (aioinfo_t *) sd->fsdata;
+	    aioinfo = (squidaioinfo_t *) sd->fsdata;
 	    j += (aioinfo->l1 * aioinfo->l2);
 	}
 	assert(n == n_asyncufs_dirs);
@@ -1280,9 +1280,9 @@ storeAufsFilenoBelongsHere(int fn, int F0, int F1, int F2)
     int D1, D2;
     int L1, L2;
     int filn = fn;
-    aioinfo_t *aioinfo;
+    squidaioinfo_t *aioinfo;
     assert(F0 < Config.cacheSwap.n_configured);
-    aioinfo = (aioinfo_t *) Config.cacheSwap.swapDirs[F0].fsdata;
+    aioinfo = (squidaioinfo_t *) Config.cacheSwap.swapDirs[F0].fsdata;
     L1 = aioinfo->l1;
     L2 = aioinfo->l2;
     D1 = ((filn / L2) / L2) % L1;
@@ -1297,7 +1297,7 @@ storeAufsFilenoBelongsHere(int fn, int F0, int F1, int F2)
 int
 storeAufsDirValidFileno(SwapDir * SD, sfileno filn, int flag)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) SD->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) SD->fsdata;
     if (filn < 0)
 	return 0;
     /*
@@ -1457,7 +1457,7 @@ storeAufsDirReplRemove(StoreEntry * e)
 void
 storeAufsDirStats(SwapDir * SD, StoreEntry * sentry)
 {
-    aioinfo_t *aioinfo = SD->fsdata;
+    squidaioinfo_t *aioinfo = SD->fsdata;
     int totl_kb = 0;
     int free_kb = 0;
     int totl_in = 0;
@@ -1543,7 +1543,7 @@ storeAufsDirReconfigure(SwapDir * sd, int index, char *path)
 void
 storeAufsDirDump(StoreEntry * entry, SwapDir * s)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) s->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) s->fsdata;
     storeAppendPrintf(entry, " %d %d %d",
 	s->max_size >> 10,
 	aioinfo->l1,
@@ -1557,7 +1557,7 @@ storeAufsDirDump(StoreEntry * entry, SwapDir * s)
 static void
 storeAufsDirFree(SwapDir * s)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *) s->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) s->fsdata;
     if (aioinfo->swaplog_fd > -1) {
 	file_close(aioinfo->swaplog_fd);
 	aioinfo->swaplog_fd = -1;
@@ -1571,7 +1571,7 @@ char *
 storeAufsDirFullPath(SwapDir * SD, sfileno filn, char *fullpath)
 {
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
-    aioinfo_t *aioinfo = (aioinfo_t *) SD->fsdata;
+    squidaioinfo_t *aioinfo = (squidaioinfo_t *) SD->fsdata;
     int L1 = aioinfo->l1;
     int L2 = aioinfo->l2;
     if (!fullpath)
@@ -1626,7 +1626,7 @@ storeAufsDirParse(SwapDir * sd, int index, char *path)
     int size;
     int l1;
     int l2;
-    aioinfo_t *aioinfo;
+    squidaioinfo_t *aioinfo;
 
     i = GetInteger();
     size = i << 10;		/* Mbytes to kbytes */
@@ -1641,9 +1641,9 @@ storeAufsDirParse(SwapDir * sd, int index, char *path)
     if (l2 <= 0)
 	fatal("storeAufsDirParse: invalid level 2 directories value");
 
-    aioinfo = xmalloc(sizeof(aioinfo_t));
+    aioinfo = xmalloc(sizeof(squidaioinfo_t));
     if (aioinfo == NULL)
-	fatal("storeAufsDirParse: couldn't xmalloc() aioinfo_t!\n");
+	fatal("storeAufsDirParse: couldn't xmalloc() squidaioinfo_t!\n");
 
     sd->index = index;
     sd->path = xstrdup(path);
@@ -1692,9 +1692,9 @@ static void
 storeAufsDirDone(void)
 {
     aioDone();
-    memPoolDestroy(aio_state_pool);
-    memPoolDestroy(aio_qread_pool);
-    memPoolDestroy(aio_qwrite_pool);
+    memPoolDestroy(squidaio_state_pool);
+    memPoolDestroy(aufs_qread_pool);
+    memPoolDestroy(aufs_qwrite_pool);
     asyncufs_initialised = 0;
 }
 
@@ -1705,10 +1705,10 @@ storeFsSetup_aufs(storefs_entry_t * storefs)
     storefs->parsefunc = storeAufsDirParse;
     storefs->reconfigurefunc = storeAufsDirReconfigure;
     storefs->donefunc = storeAufsDirDone;
-    aio_state_pool = memPoolCreate("AUFS IO State data", sizeof(aiostate_t));
-    aio_qread_pool = memPoolCreate("AUFS Queued read data",
+    squidaio_state_pool = memPoolCreate("AUFS IO State data", sizeof(squidaiostate_t));
+    aufs_qread_pool = memPoolCreate("AUFS Queued read data",
 	sizeof(queued_read));
-    aio_qwrite_pool = memPoolCreate("AUFS Queued write data",
+    aufs_qwrite_pool = memPoolCreate("AUFS Queued write data",
 	sizeof(queued_write));
 
     asyncufs_initialised = 1;
