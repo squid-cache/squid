@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.36 1996/04/11 23:51:57 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.37 1996/04/12 00:11:02 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -956,6 +956,7 @@ static void parseBindAddressLine()
     wordlistAdd(&Config.bind_addr_list, token);
 }
 
+#ifdef OLD_CODE
 static void parseBlockListLine()
 {
     char *token;
@@ -964,6 +965,7 @@ static void parseBlockListLine()
 	return;
     blockAddToList(token);
 }
+#endif
 
 static void parseLocalDomainLine()
 {
@@ -1280,9 +1282,11 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "ttl_pattern"))
 	    parseTTLPattern();
 
+#ifdef OLD_CODE
 	/* Parse a blocklist line */
 	else if (!strcmp(token, "blocklist"))
 	    parseBlockListLine();
+#endif
 
 	/* Parse a negative_ttl line */
 	else if (!strcmp(token, "negative_ttl"))
