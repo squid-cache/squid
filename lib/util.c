@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.55 1998/03/07 23:42:56 rousskov Exp $
+ * $Id: util.c,v 1.56 1998/03/08 04:42:25 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -570,6 +570,7 @@ xrealloc(void *s, size_t sz)
 	exit(1);
     }
 #if XMALLOC_DEBUG
+    fprintf(stderr, "realloc: ``mallocing'' %p\n", s);
     check_malloc(p, sz);
 #endif
 #if XMALLOC_STATISTICS
@@ -748,7 +749,7 @@ xpercent(double part, double whole)
 int
 xpercentInt(double part, double whole)
 {
-    return (int)rint(xpercent(part, whole));
+    return (int) rint(xpercent(part, whole));
 }
 
 
