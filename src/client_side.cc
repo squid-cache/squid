@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.410 1998/10/11 23:19:47 wessels Exp $
+ * $Id: client_side.cc,v 1.411 1998/10/13 23:39:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -366,11 +366,11 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	 */
 	storeAbort(entry, 1);
 #endif
-	/*
-	 * Lets just try to return here and see what kind of problems that
-	 * causes
-	 */
-	return;
+    /*
+     * Lets just try to return here and see what kind of problems that
+     * causes
+     */
+    return;
     if (entry->store_status == STORE_ABORTED) {
 	debug(33, 3) ("clientHandleIMSReply: ABORTED '%s'\n", url);
 	/* We have an existing entry, but failed to validate it */
@@ -1644,35 +1644,35 @@ clientProcessRequest2(clientHttpRequest * http)
 #endif
     if (NULL == e) {
 	/* this object isn't in the cache */
-	debug(33,3)("clientProcessRequest2: storeGet() MISS\n");
+	debug(33, 3) ("clientProcessRequest2: storeGet() MISS\n");
 	return LOG_TCP_MISS;
     }
     if (Config.onoff.offline) {
-	debug(33,3)("clientProcessRequest2: offline HIT\n");
+	debug(33, 3) ("clientProcessRequest2: offline HIT\n");
 	http->entry = e;
 	return LOG_TCP_HIT;
     }
     if (!storeEntryValidToSend(e)) {
-	debug(33,3)("clientProcessRequest2: !storeEntryValidToSend MISS\n");
+	debug(33, 3) ("clientProcessRequest2: !storeEntryValidToSend MISS\n");
 	http->entry = NULL;
 	return LOG_TCP_MISS;
     }
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
 	/* Special entries are always hits, no matter what the client says */
-	debug(33,3)("clientProcessRequest2: ENTRY_SPECIAL HIT\n");
+	debug(33, 3) ("clientProcessRequest2: ENTRY_SPECIAL HIT\n");
 	http->entry = e;
 	return LOG_TCP_HIT;
     }
 #if HTTP_VIOLATIONS
     if (r->flags.nocache_hack) {
-        /* if nocache_hack is set, nocache should always be clear, right? */
-        assert(!r->flags.nocache);
+	/* if nocache_hack is set, nocache should always be clear, right? */
+	assert(!r->flags.nocache);
 	ipcacheReleaseInvalid(r->host);
 	/* continue! */
     }
 #endif
     if (r->flags.nocache) {
-	debug(33,3)("clientProcessRequest2: no-cache REFRESH MISS\n");
+	debug(33, 3) ("clientProcessRequest2: no-cache REFRESH MISS\n");
 	http->entry = NULL;
 	ipcacheReleaseInvalid(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
@@ -1684,11 +1684,11 @@ clientProcessRequest2(clientHttpRequest * http)
 	 * Range request that is also a HIT. Thus, let's prevent HITs
 	 * on complex Range requests
 	 */
-	debug(33,3)("clientProcessRequest2: complex range MISS\n");
+	debug(33, 3) ("clientProcessRequest2: complex range MISS\n");
 	http->entry = NULL;
 	return LOG_TCP_MISS;
     }
-    debug(33,3)("clientProcessRequest2: default HIT\n");
+    debug(33, 3) ("clientProcessRequest2: default HIT\n");
     http->entry = e;
     return LOG_TCP_HIT;
 }
@@ -1991,19 +1991,24 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    if (natfd < 0) {
 		debug(50, 1) ("parseHttpRequest: NAT open failed: %s\n",
 		    xstrerror());
-		return NULL;
+		return parseHttpRequestAbort(conn, "error:nat-open-failed");
 	    }
 	    if (ioctl(natfd, SIOCGNATL, &natLookup) < 0) {
-		debug(50, 1) ("parseHttpRequest: NAT lookup failed: %s\n",
-		    xstrerror());
-		close(natfd);
-		natfd = -1;
-		return NULL;
-	    }
-	    snprintf(http->uri, url_sz, "http://%s:%d%s",
-		inet_ntoa(natLookup.nl_realip),
-		(int) Config.Accel.port,
-		url);
+		if (errno != ESRCH) {
+		    debug(50, 1) ("parseHttpRequest: NAT lookup failed: ioctl(SIOCGNATL)\n");
+		    close(natfd);
+		    natfd = -1;
+		    return parseHttpRequestAbort(conn, "error:nat-lookup-failed");
+		} else
+		    snprintf(http->uri, url_sz, "http://%s:%d%s",
+			inet_ntoa(http->conn->me.sin_addr),
+			(int) Config.Accel.port,
+			url);
+	    } else
+		snprintf(http->uri, url_sz, "http://%s:%d%s",
+		    inet_ntoa(natLookup.nl_realip),
+		    (int) Config.Accel.port,
+		    url);
 #else
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
 		inet_ntoa(http->conn->me.sin_addr),
