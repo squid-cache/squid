@@ -10,7 +10,7 @@ FTP protokoll hiba történt az alábbi URL letöltésekor:
 <P>
 A Squid az alábbi FTP parancsot küldte:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-és ezt a választ kapta
+és ezt a választ kapta:
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 <P>
