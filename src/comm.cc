@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.111 1996/11/28 07:31:47 wessels Exp $
+ * $Id: comm.cc,v 1.112 1996/11/29 03:28:50 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1208,8 +1208,7 @@ commHandleRead(int fd, RWStateData * state)
 	} else {
 	    /* Len == 0 means connection closed; otherwise would not have been
 	     * called by comm_select(). */
-	    debug(50, len == 0 ? 2 : 1,
-		"commHandleRead: FD %d: read failure: %s\n",
+	    debug(50, 2, "commHandleRead: FD %d: read failure: %s\n",
 		fd,
 		len == 0 ? "connection closed" : xstrerror());
 	    RWStateCallbackAndFree(fd, COMM_ERROR);
