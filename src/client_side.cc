@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.333 1998/06/09 05:54:12 wessels Exp $
+ * $Id: client_side.cc,v 1.334 1998/06/09 21:18:45 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -336,8 +336,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     debug(33, 3) ("clientHandleIMSReply: %s, %d bytes\n", url, (int) size);
     memFree(MEM_4K_BUF, buf);
     buf = NULL;
-    /* unregister this handler */
-    if (size < 0 || entry->store_status == STORE_ABORTED) {
+    if (size < 0 && entry->store_status != STORE_ABORTED)
+	storeAbort(entry, 1);
+    if (entry->store_status == STORE_ABORTED) {
 	debug(33, 3) ("clientHandleIMSReply: ABORTED '%s'\n", url);
 	/* We have an existing entry, but failed to validate it */
 	/* Its okay to send the old one anyway */
@@ -617,7 +618,6 @@ httpRequestFree(void *data)
 	entry = http->entry;	/* reset, IMS might have changed it */
 	if (entry && entry->ping_status == PING_WAITING)
 	    storeReleaseRequest(entry);
-	fwdUnregister(entry, request);
     }
     assert(http->log_type < LOG_TYPE_MAX);
     if (entry)

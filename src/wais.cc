@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.110 1998/06/04 18:57:20 wessels Exp $
+ * $Id: wais.cc,v 1.111 1998/06/09 21:18:57 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -121,7 +121,9 @@ static PF waisTimeout;
 static PF waisReadReply;
 static CWCB waisSendComplete;
 static PF waisSendRequest;
+#if OLD_CODE
 static STABH waisAbort;
+#endif
 
 static void
 waisStateFree(int fdnotused, void *data)
@@ -129,7 +131,9 @@ waisStateFree(int fdnotused, void *data)
     WaisStateData *waisState = data;
     if (waisState == NULL)
 	return;
+#if OLD_CODE
     storeUnregisterAbort(waisState->entry);
+#endif
     storeUnlockObject(waisState->entry);
     cbdataFree(waisState);
 }
@@ -328,12 +332,15 @@ waisStart(request_t * request, StoreEntry * entry, int fd)
     waisState->entry = entry;
     xstrncpy(waisState->request, url, MAX_URL);
     comm_add_close_handler(waisState->fd, waisStateFree, waisState);
+#if OLD_CODE
     storeRegisterAbort(entry, waisAbort, waisState);
+#endif
     storeLockObject(entry);
     commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
     commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
 }
 
+#if OLD_CODE
 static void
 waisAbort(void *data)
 {
@@ -341,3 +348,4 @@ waisAbort(void *data)
     debug(24, 1) ("waisAbort: %s\n", storeUrl(waisState->entry));
     comm_close(waisState->fd);
 }
+#endif

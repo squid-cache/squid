@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.284 1998/06/09 05:22:05 wessels Exp $
+ * $Id: http.cc,v 1.285 1998/06/09 21:18:50 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -127,7 +127,6 @@ static void httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, si
 static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
-static STABH httpAbort;
 static int httpSocketOpen(StoreEntry *, request_t *);
 static void httpRestart(HttpStateData *);
 static int httpTryRestart(HttpStateData *);
@@ -139,7 +138,9 @@ httpStateFree(int fdnotused, void *data)
     HttpStateData *httpState = data;
     if (httpState == NULL)
 	return;
+#if OLD_CODE
     storeUnregisterAbort(httpState->entry);
+#endif
     storeUnlockObject(httpState->entry);
     if (httpState->reply_hdr) {
 	memFree(MEM_8K_BUF, httpState->reply_hdr);
@@ -852,7 +853,6 @@ httpStart(FwdState * fwdState, int fd)
      * register the handler to free HTTP state data when the FD closes
      */
     comm_add_close_handler(fd, httpStateFree, httpState);
-    storeRegisterAbort(httpState->entry, httpAbort, httpState);
     Counter.server.all.requests++;
     Counter.server.http.requests++;
     httpConnectDone(fd, COMM_OK, httpState);
@@ -933,14 +933,6 @@ httpConnectDone(int fd, int status, void *data)
 	commSetSelect(fd, COMM_SELECT_WRITE, httpSendRequest, httpState, 0);
 	commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
     }
-}
-
-static void
-httpAbort(void *data)
-{
-    HttpStateData *httpState = data;
-    debug(11, 2) ("httpAbort: %s\n", storeUrl(httpState->entry));
-    comm_close(httpState->fd);
 }
 
 static void
