@@ -46,3 +46,12 @@
 	- Added support for shttp and CONNECT urls.
 	- Added support for large POST objects.
 	- Started arranging for HUP to re-read config file.
+	- Created struct _http_reply to hold reply fields.
+	  Elmininates need for storeMatchMime() in ttl.c.
+	- fixed use of storeSetPublicKey() in ftp/gopher/wais.  Now
+	  call at end of *SendRequest().
+	- Fixed converting gopher to HTML bug, removed html_request
+	  field of gopherData;
+	- Open server sockets _after_ storeRebuild() so many incoming
+	  connections don't stack up on the listen queue.
+	- Created "store.log" which logs RELEASE/SWAPIN/SWAPOUT events.
