@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.249 1998/04/02 04:45:04 rousskov Exp $
+ * $Id: client_side.cc,v 1.250 1998/04/02 05:35:21 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -892,12 +892,6 @@ clientBuildReplyHeader(clientHttpRequest * http,
     debug(33, 3) ("clientBuildReplyHeader: OUTPUT:\n%s\n", hdr_out);
     memFree(MEM_4K_BUF, xbuf);
     memFree(MEM_4K_BUF, ybuf);
-    /* temporary kludge to test headers, remove it @?@ @?@ */
-    {
-	extern void httpHeaderTestParser(const char *hstr);
-	httpHeaderTestParser(hdr_out);
-    }
-    /* end of kludge */
     return len;
 }
 
@@ -1605,13 +1599,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     *(*headers_p + header_sz) = '\0';
 
     debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", *headers_p);
-    /* temporary kludge to test headers, remove it @?@ @?@ */
-    {
-	extern void httpHeaderTestParser(const char *hstr);
-	httpHeaderTestParser(*headers_p);
-    }
-    /* end of kludge */
-
     /* Assign http->uri */
     if ((t = strchr(url, '\n')))	/* remove NL */
 	*t = '\0';
