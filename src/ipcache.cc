@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.19 1996/04/10 20:45:28 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.20 1996/04/10 20:53:46 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -1139,7 +1139,7 @@ void ipcache_init()
 
     last_dns_dispatched = getDnsChildren() - 1;
     if (!dns_error_message)
-        dns_error_message = xcalloc(1, 256);
+	dns_error_message = xcalloc(1, 256);
 
     /* test naming lookup */
     if (!do_dns_test) {

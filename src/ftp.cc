@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.32 1996/04/10 20:45:26 wessels Exp $ */
+/* $Id: ftp.cc,v 1.33 1996/04/10 20:53:45 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -125,7 +125,7 @@ int ftpCachable(url)
     wordlist *p = NULL;
 
     /* scan stop list */
-    for (p = getFtpStoplist(); p; p=p->next) {
+    for (p = getFtpStoplist(); p; p = p->next) {
 	if (strstr(url, p->key))
 	    return 0;
     }

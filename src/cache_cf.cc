@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.30 1996/04/10 20:45:24 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.31 1996/04/10 20:53:44 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -415,12 +415,12 @@ void addToIPACL(list, ip_str, access)
 #endif /* ndef IPACL_INTS */
 
 static void wordlistDestroy(list)
-    wordlist **list;
+     wordlist **list;
 {
     wordlist *w = NULL;
     wordlist *n = NULL;
 
-    for (w = *list; w; w=n) {
+    for (w = *list; w; w = n) {
 	n = w->next;
 	safe_free(w->key);
 	safe_free(w);
@@ -1778,31 +1778,31 @@ int getAnnounceRate()
 {
     return Config.Announce.rate;
 }
-wordlist * getHttpStoplist()
+wordlist *getHttpStoplist()
 {
     return Config.http_stoplist;
 }
-wordlist * getFtpStoplist()
+wordlist *getFtpStoplist()
 {
     return Config.ftp_stoplist;
 }
-wordlist * getGopherStoplist()
+wordlist *getGopherStoplist()
 {
     return Config.gopher_stoplist;
 }
-wordlist * getLocalDomainList()
+wordlist *getLocalDomainList()
 {
     return Config.local_domain_list;
 }
-wordlist * getCacheDirs()
+wordlist *getCacheDirs()
 {
     return Config.cache_dirs;
 }
-wordlist * getInsideFirewallList()
+wordlist *getInsideFirewallList()
 {
     return Config.inside_firewall_list;
 }
-wordlist * getBindAddrList()
+wordlist *getBindAddrList()
 {
     return Config.bind_addr_list;
 }
