@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.26 2002/04/10 21:16:17 hno Exp $
+ * $Id: rfc1035.c,v 1.27 2002/09/15 06:40:54 robertc Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -211,7 +211,7 @@ rfc1035QuestionPack(char *buf,
     size_t sz,
     const char *name,
     unsigned short type,
-    unsigned short class)
+    unsigned short _class)
 {
     off_t off = 0;
     unsigned short s;
@@ -219,7 +219,7 @@ rfc1035QuestionPack(char *buf,
     s = htons(type);
     memcpy(buf + off, &s, sizeof(s));
     off += sizeof(s);
-    s = htons(class);
+    s = htons(_class);
     memcpy(buf + off, &s, sizeof(s));
     off += sizeof(s);
     assert(off <= sz);
@@ -386,7 +386,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t * off, rfc1035_rr * RR)
     RR->type = ntohs(s);
     memcpy(&s, buf + (*off), sizeof(s));
     (*off) += sizeof(s);
-    RR->class = ntohs(s);
+    RR->_class = ntohs(s);
     memcpy(&i, buf + (*off), sizeof(i));
     (*off) += sizeof(i);
     RR->ttl = ntohl(i);

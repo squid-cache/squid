@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.429 2002/09/15 05:41:57 robertc Exp $
+ * $Id: structs.h,v 1.430 2002/09/15 06:40:58 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -249,31 +249,31 @@ struct _acl {
 
 struct _acl_list {
     int op;
-    acl *acl;
+    acl *_acl;
     acl_list *next;
 };
 
 struct _acl_access {
     int allow;
-    acl_list *acl_list;
+    acl_list *aclList;
     char *cfgline;
     acl_access *next;
 };
 
 struct _acl_address {
     acl_address *next;
-    acl_list *acl_list;
+    acl_list *aclList;
     struct in_addr addr;
 };
 
 struct _acl_tos {
     acl_tos *next;
-    acl_list *acl_list;
+    acl_list *aclList;
     int tos;
 };
 
 struct _aclCheck_t {
-    const acl_access *access_list;
+    const acl_access *accessList;
     struct in_addr src_addr;
     struct in_addr dst_addr;
     struct in_addr my_addr;
@@ -378,7 +378,7 @@ struct _SquidConfig {
     struct {
 	char *relayHost;
 	u_short relayPort;
-	peer *peer;
+	peer *_peer;
     } Wais;
     struct {
 	size_t min;
@@ -792,7 +792,7 @@ struct _fde {
     time_t timeout;
     void *timeout_data;
     void *lifetime_data;
-    close_handler *close_handler;	/* linked list */
+    close_handler *closeHandler;	/* linked list */
     DEFER *defer_check;		/* check if we should defer read */
     void *defer_data;
     CommWriteStateData *rwstate;	/* State data for comm_write */
@@ -974,7 +974,7 @@ struct _HttpStateData {
     char *reply_hdr;
     size_t reply_hdr_size;
     int reply_hdr_state;
-    peer *peer;			/* peer request made to */
+    peer *_peer;		/* peer request made to */
     int eof;			/* reached end-of-object? */
     request_t *orig_request;
     int fd;
@@ -1044,7 +1044,7 @@ struct _AccessLogEntry {
     } headers;
     struct {
 	const char *method_str;
-    } private;
+    } _private;
     HierarchyLogEntry hier;
 };
 
@@ -1074,7 +1074,7 @@ struct _clientHttpRequest {
     size_t req_sz;		/* raw request size on input, not current request size */
     StoreEntry *entry;
     StoreEntry *old_entry;
-    log_type log_type;
+    log_type logType;
     struct timeval start;
     http_version_t http_ver;
     AccessLogEntry al;
@@ -1677,7 +1677,7 @@ struct _request_t {
     ConnStateData *body_connection;	/* used by clientReadBody() */
     int content_length;
     HierarchyLogEntry hier;
-    err_type err_type;
+    err_type errType;
     char *peer_login;		/* Configured peer login:password */
     time_t lastmod;		/* Used on refreshes */
     const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
@@ -1719,7 +1719,7 @@ struct _CommWriteStateData {
 struct _ErrorState {
     err_type type;
     int page_id;
-    http_status http_status;
+    http_status httpStatus;
     auth_user_request_t *auth_user_request;
     request_t *request;
     char *url;
@@ -1942,7 +1942,7 @@ struct _CacheDigest {
 };
 
 struct _FwdServer {
-    peer *peer;			/* NULL --> origin server */
+    peer *_peer;		/* NULL --> origin server */
     hier_code code;
     FwdServer *next;
 };

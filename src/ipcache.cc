@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.237 2002/04/13 23:07:50 hno Exp $
+ * $Id: ipcache.cc,v 1.238 2002/09/15 06:40:57 robertc Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -325,7 +325,7 @@ ipcacheParse(rfc1035_rr * answers, int nr)
     for (j = 0, k = 0; k < nr; k++) {
 	if (answers[k].type != RFC1035_TYPE_A)
 	    continue;
-	if (answers[k].class != RFC1035_CLASS_IN)
+	if (answers[k]._class != RFC1035_CLASS_IN)
 	    continue;
 	na++;
     }
@@ -341,7 +341,7 @@ ipcacheParse(rfc1035_rr * answers, int nr)
     for (j = 0, k = 0; k < nr; k++) {
 	if (answers[k].type != RFC1035_TYPE_A)
 	    continue;
-	if (answers[k].class != RFC1035_CLASS_IN)
+	if (answers[k]._class != RFC1035_CLASS_IN)
 	    continue;
 	if (j == 0)
 	    i.expires = squid_curtime + answers[k].ttl;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.1 2002/09/15 05:41:56 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.2 2002/09/15 06:40:57 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -128,7 +128,7 @@ clientSetReplyToError(void *data,
     if (status == HTTP_NOT_IMPLEMENTED && context->http->request)
 	/* prevent confusion over whether we default to persistent or not */
 	context->http->request->flags.proxy_keepalive = 0;
-    context->http->al.http.code = errstate->http_status;
+    context->http->al.http.code = errstate->httpStatus;
 
     context->http->entry =
 	clientCreateStoreEntry(context, method, null_request_flags);
@@ -342,7 +342,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	debug(88, 3) ("clientHandleIMSReply: ABORTED '%s'\n", url);
 	/* We have an existing entry, but failed to validate it */
 	/* Its okay to send the old one anyway */
-	http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
+	http->logType = LOG_TCP_REFRESH_FAIL_HIT;
 	clientRemoveStoreReference(context, &context->sc, &entry);
 	/* Get the old request back */
 	clientReplyContextRestoreState(context, http);
@@ -358,7 +358,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 		("clientHandleIMSReply: Reply is too large '%s', using old entry\n",
 		url);
 	    /* use old entry, this repeats the code abovez */
-	    http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
+	    http->logType = LOG_TCP_REFRESH_FAIL_HIT;
 	    clientRemoveStoreReference(context, &context->sc, &entry);
 	    entry = http->entry = http->old_entry;
 	    /* Get the old request back */
@@ -379,7 +379,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	 * headers have been loaded from disk. */
 	clientStreamNode *next = context->http->client_stream.head->next->data;
 	oldentry = http->old_entry;
-	http->log_type = LOG_TCP_REFRESH_HIT;
+	http->logType = LOG_TCP_REFRESH_HIT;
 	if (oldentry->mem_obj->request == NULL) {
 	    oldentry->mem_obj->request = requestLink(mem->request);
 	    unlink_request = 1;
@@ -404,12 +404,12 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	clientSendMoreData(context, next->readbuf, context->reqsize);
     } else {
 	/* the client can handle this reply, whatever it is */
-	http->log_type = LOG_TCP_REFRESH_MISS;
+	http->logType = LOG_TCP_REFRESH_MISS;
 	if (HTTP_NOT_MODIFIED == mem->reply->sline.status) {
 	    httpReplyUpdateOnNotModified(http->old_entry->mem_obj->reply,
 		mem->reply);
 	    storeTimestampsSet(http->old_entry);
-	    http->log_type = LOG_TCP_REFRESH_HIT;
+	    http->logType = LOG_TCP_REFRESH_HIT;
 	}
 	clientRemoveStoreReference(context, &context->old_sc, &http->old_entry);
 	/* here the data to send is the data we just recieved */
@@ -446,7 +446,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     } else if (size < 0) {
 	/* swap in failure */
 	debug(88, 3) ("clientCacheHit: swapin failure for %s\n", http->uri);
-	http->log_type = LOG_TCP_SWAPFAIL_MISS;
+	http->logType = LOG_TCP_SWAPFAIL_MISS;
 	clientRemoveStoreReference(context, &context->sc, &http->entry);
 	clientProcessMiss(context);
 	return;
@@ -483,7 +483,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     /*
      * Got the headers, now grok them
      */
-    assert(http->log_type == LOG_TCP_HIT);
+    assert(http->logType == LOG_TCP_HIT);
     switch (varyEvaluateMatch(e, r)) {
     case VARY_NONE:
 	/* No variance detected. Continue as normal */
@@ -517,7 +517,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	return;
     }
     if (storeCheckNegativeHit(e)) {
-	http->log_type = LOG_TCP_NEGATIVE_HIT;
+	http->logType = LOG_TCP_NEGATIVE_HIT;
 	clientSendMoreData(context, buf, size);
     } else if (r->method == METHOD_HEAD) {
 	/*
@@ -526,7 +526,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	 * request, nor can we return 304.
 	 */
 	if (e->mem_status == IN_MEMORY)
-	    http->log_type = LOG_TCP_MEM_HIT;
+	    http->logType = LOG_TCP_MEM_HIT;
 	clientSendMoreData(context, buf, size);
     } else if (refreshCheckHTTP(e, r) && !http->flags.internal) {
 	debug(88, 5) ("clientCacheHit: in refreshCheck() block\n");
@@ -546,28 +546,28 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	     * Previous reply didn't have a Last-Modified header,
 	     * we cannot revalidate it.
 	     */
-	    http->log_type = LOG_TCP_MISS;
+	    http->logType = LOG_TCP_MISS;
 	    clientProcessMiss(context);
 	} else if (r->flags.nocache) {
 	    /*
 	     * This did not match a refresh pattern that overrides no-cache
 	     * we should honour the client no-cache header.
 	     */
-	    http->log_type = LOG_TCP_CLIENT_REFRESH_MISS;
+	    http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
 	    clientProcessMiss(context);
 	} else if (r->protocol == PROTO_HTTP) {
 	    /*
 	     * Object needs to be revalidated
 	     * XXX This could apply to FTP as well, if Last-Modified is known.
 	     */
-	    http->log_type = LOG_TCP_REFRESH_MISS;
+	    http->logType = LOG_TCP_REFRESH_MISS;
 	    clientProcessExpired(context);
 	} else {
 	    /*
 	     * We don't know how to re-validate other protocols. Handle
 	     * them as if the object has expired.
 	     */
-	    http->log_type = LOG_TCP_MISS;
+	    http->logType = LOG_TCP_MISS;
 	    clientProcessMiss(context);
 	}
     } else if (r->flags.ims) {
@@ -577,16 +577,16 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	if (mem->reply->sline.status != HTTP_OK) {
 	    debug(88, 4) ("clientCacheHit: Reply code %d != 200\n",
 		mem->reply->sline.status);
-	    http->log_type = LOG_TCP_MISS;
+	    http->logType = LOG_TCP_MISS;
 	    clientProcessMiss(context);
 	} else if (modifiedSince(e, http->request)) {
-	    http->log_type = LOG_TCP_IMS_HIT;
+	    http->logType = LOG_TCP_IMS_HIT;
 	    clientSendMoreData(context, buf, size);
 	} else {
 	    clientStreamNode *next;
 	    time_t timestamp = e->timestamp;
 	    MemBuf mb = httpPacked304Reply(e->mem_obj->reply);
-	    http->log_type = LOG_TCP_IMS_HIT;
+	    http->logType = LOG_TCP_IMS_HIT;
 	    clientRemoveStoreReference(context, &context->sc, &http->entry);
 	    http->entry = e =
 		clientCreateStoreEntry(context, http->request->method,
@@ -616,9 +616,9 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	 * plain ol' cache hit
 	 */
 	if (e->mem_status == IN_MEMORY)
-	    http->log_type = LOG_TCP_MEM_HIT;
+	    http->logType = LOG_TCP_MEM_HIT;
 	else if (Config.onoff.offline)
-	    http->log_type = LOG_TCP_OFFLINE_HIT;
+	    http->logType = LOG_TCP_OFFLINE_HIT;
 	clientSendMoreData(context, buf, size);
     }
 }
@@ -643,7 +643,7 @@ clientProcessMiss(clientReplyContext * context)
 	if (EBIT_TEST(http->entry->flags, ENTRY_SPECIAL)) {
 	    debug(88, 0) ("clientProcessMiss: miss on a special object (%s).\n",
 		url);
-	    debug(88, 0) ("\tlog_type = %s\n", log_tags[http->log_type]);
+	    debug(88, 0) ("\tlog_type = %s\n", log_tags[http->logType]);
 	    storeEntryDump(http->entry, 1);
 	}
 	clientRemoveStoreReference(context, &context->sc, &http->entry);
@@ -684,7 +684,7 @@ clientProcessMiss(clientReplyContext * context)
 	if (http->redirect.status) {
 	    HttpReply *rep = httpReplyCreate();
 #if LOG_TCP_REDIRECTS
-	    http->log_type = LOG_TCP_REDIRECT;
+	    http->logType = LOG_TCP_REDIRECT;
 #endif
 	    storeReleaseRequest(http->entry);
 	    httpRedirectReply(rep, http->redirect.status,
@@ -743,7 +743,7 @@ clientPurgeRequest(clientReplyContext * context)
 	Config2.onoff.enable_purge);
     next = http->client_stream.head->next->data;
     if (!Config2.onoff.enable_purge) {
-	http->log_type = LOG_TCP_DENIED;
+	http->logType = LOG_TCP_DENIED;
 	err =
 	    clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
 	    &http->conn->peer.sin_addr, http->request);
@@ -775,7 +775,7 @@ clientPurgeRequest(clientReplyContext * context)
 	    storeCreateMemObject(http->entry, http->uri, http->log_uri);
 	    http->entry->mem_obj->method = http->request->method;
 	    context->sc = storeClientListAdd(http->entry, context);
-	    http->log_type = LOG_TCP_HIT;
+	    http->logType = LOG_TCP_HIT;
 	    context->reqofs = 0;
 	    storeClientCopy(context->sc, http->entry,
 		http->out.offset,
@@ -783,7 +783,7 @@ clientPurgeRequest(clientReplyContext * context)
 	    return;
 	}
     }
-    http->log_type = LOG_TCP_MISS;
+    http->logType = LOG_TCP_MISS;
     /* Release the cached URI */
     entry = storeGetPublicByRequestMethod(http->request, METHOD_GET);
     if (entry) {
@@ -1059,7 +1059,7 @@ static void
 clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 {
     HttpHeader *hdr = &rep->header;
-    int is_hit = isTcpHit(http->log_type);
+    int is_hit = isTcpHit(http->logType);
     request_t *request = http->request;
 #if DONT_FILTER_THESE
     /* but you might want to if you run Squid as an HTTP accelerator */
@@ -1288,9 +1288,9 @@ clientGetMoreData(clientStreamNode * this, clientHttpRequest * http)
 	    return;
 	}
 	/* continue forwarding, not finished yet. */
-	http->log_type = LOG_TCP_MISS;
+	http->logType = LOG_TCP_MISS;
     } else
-	http->log_type = clientIdentifyStoreObject(http);
+	http->logType = clientIdentifyStoreObject(http);
     /* We still have to do store logic processing - vary, cache hit etc */
     if (context->http->entry != NULL) {
 	/* someone found the object in the cache for us */
@@ -1312,14 +1312,14 @@ clientGetMoreData(clientStreamNode * this, clientHttpRequest * http)
 #if DELAY_POOLS
 	delaySetStoreClient(context->http->sc, delayClient(context->http));
 #endif
-	assert(context->http->log_type == LOG_TCP_HIT);
+	assert(context->http->logType == LOG_TCP_HIT);
 	context->reqofs = 0;
 	assert(http->out.offset == http->out.size && http->out.offset == 0);
 	storeClientCopy(context->sc, http->entry,
 	    context->reqofs,
 	    next->readlen, next->readbuf, clientCacheHit, context);
     } else {
-	/* MISS CASE, http->log_type is already set! */
+	/* MISS CASE, http->logType is already set! */
 	clientProcessMiss(context);
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.4 2002/09/15 06:23:28 adrian Exp $
+ * $Id: comm_poll.cc,v 1.5 2002/09/15 06:40:57 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -475,15 +475,15 @@ comm_select(int msec)
 		    F->timeout_handler,
 		    F->read_handler,
 		    F->write_handler);
-		for (ch = F->close_handler; ch; ch = ch->next)
+		for (ch = F->closeHandler; ch; ch = ch->next)
 		    debug(5, 0) (" close handler: %p\n", ch->handler);
-		if (F->close_handler) {
+		if (F->closeHandler) {
 		    commCallCloseHandlers(fd);
 		} else if (F->timeout_handler) {
 		    debug(5, 0) ("comm_poll: Calling Timeout Handler\n");
 		    F->timeout_handler(fd, F->timeout_data);
 		}
-		F->close_handler = NULL;
+		F->closeHandler = NULL;
 		F->timeout_handler = NULL;
 		F->read_handler = NULL;
 		F->write_handler = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.74 2002/06/16 11:24:00 hno Exp $
+ * $Id: access_log.cc,v 1.75 2002/09/15 06:40:56 robertc Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -250,7 +250,7 @@ accessLogSquid(AccessLogEntry * al)
 	log_tags[al->cache.code],
 	al->http.code,
 	(long int) al->cache.size,
-	al->private.method_str,
+	al->_private.method_str,
 	al->url,
 	user && *user ? user : dash_str,
 	al->hier.ping.timedout ? "TIMEOUT_" : "",
@@ -276,7 +276,7 @@ accessLogCommon(AccessLogEntry * al)
 	user2 ? user2 : dash_str,
 	user1 ? user1 : dash_str,
 	mkhttpdlogtime(&squid_curtime),
-	al->private.method_str,
+	al->_private.method_str,
 	al->url,
 	al->http.version.major, al->http.version.minor,
 	al->http.code,
@@ -297,9 +297,9 @@ accessLogLog(AccessLogEntry * al)
     if (!al->http.content_type || *al->http.content_type == '\0')
 	al->http.content_type = dash_str;
     if (al->icp.opcode)
-	al->private.method_str = icp_opcode_str[al->icp.opcode];
+	al->_private.method_str = icp_opcode_str[al->icp.opcode];
     else
-	al->private.method_str = RequestMethodStr[al->http.method];
+	al->_private.method_str = RequestMethodStr[al->http.method];
     if (al->hier.host[0] == '\0')
 	xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.284 2002/09/07 15:12:55 hno Exp $
+ * $Id: acl.cc,v 1.285 2002/09/15 06:40:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -949,8 +949,8 @@ aclParseAccessLine(acl_access ** head)
 	cbdataFree(A);
 	return;
     }
-    aclParseAclList(&A->acl_list);
-    if (A->acl_list == NULL) {
+    aclParseAclList(&A->aclList);
+    if (A->aclList == NULL) {
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
@@ -991,7 +991,7 @@ aclParseAclList(acl_list ** head)
 	    memFree(L, MEM_ACL_LIST);
 	    continue;
 	}
-	L->acl = a;
+	L->_acl = a;
 	*Tail = L;
 	Tail = &L->next;
     }
@@ -1683,10 +1683,10 @@ int
 aclMatchAclList(const acl_list * list, aclCheck_t * checklist)
 {
     while (list) {
-	AclMatchedName = list->acl->name;
+	AclMatchedName = list->_acl->name;
 	debug(28, 3) ("aclMatchAclList: checking %s%s\n",
-	    list->op ? null_string : "!", list->acl->name);
-	if (aclMatchAcl(list->acl, checklist) != list->op) {
+	    list->op ? null_string : "!", list->_acl->name);
+	if (aclMatchAcl(list->_acl, checklist) != list->op) {
 	    debug(28, 3) ("aclMatchAclList: returning 0\n");
 	    return 0;
 	}
@@ -1712,7 +1712,7 @@ aclCheckFast(const acl_access * A, aclCheck_t * checklist)
     debug(28, 5) ("aclCheckFast: list: %p\n", A);
     while (A) {
 	allow = A->allow;
-	if (aclMatchAclList(A->acl_list, checklist)) {
+	if (aclMatchAclList(A->aclList, checklist)) {
 	    aclCheckCleanup(checklist);
 	    return allow == ACCESS_ALLOWED;
 	}
@@ -1733,19 +1733,19 @@ aclCheck(aclCheck_t * checklist)
     /* NOTE: This holds a cbdata reference to the current access_list
      * entry, not the whole list.
      */
-    while ((A = checklist->access_list) != NULL) {
+    while ((A = checklist->accessList) != NULL) {
 	/*
 	 * If the _acl_access is no longer valid (i.e. its been
 	 * freed because of a reconfigure), then bail on this
 	 * access check.  For now, return ACCESS_DENIED.
 	 */
 	if (!cbdataReferenceValid(A)) {
-	    cbdataReferenceDone(checklist->access_list);
+	    cbdataReferenceDone(checklist->accessList);
 	    break;
 	}
 	debug(28, 3) ("aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
-	match = aclMatchAclList(A->acl_list, checklist);
+	match = aclMatchAclList(A->aclList, checklist);
 	if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NEEDED) {
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
 	    ipcache_nbgethostbyname(checklist->request->host,
@@ -1815,14 +1815,14 @@ aclCheck(aclCheck_t * checklist)
 	 */
 	if (match) {
 	    debug(28, 3) ("aclCheck: match found, returning %d\n", allow);
-	    cbdataReferenceDone(checklist->access_list);	/* A */
+	    cbdataReferenceDone(checklist->accessList);		/* A */
 	    aclCheckCallback(checklist, allow);
 	    return;
 	}
 	/*
 	 * Reference the next _acl_access entry
 	 */
-	checklist->access_list = cbdataReference(A->next);
+	checklist->accessList = cbdataReference(A->next);
 	cbdataReferenceDone(A);
     }
     debug(28, 3) ("aclCheck: NO match found, returning %d\n", allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
@@ -1954,7 +1954,7 @@ aclChecklistCreate(const acl_access * A, request_t * request, const char *ident)
     int i;
     aclCheck_t *checklist;
     checklist = cbdataAlloc(aclCheck_t);
-    checklist->access_list = cbdataReference(A);
+    checklist->accessList = cbdataReference(A);
     if (request != NULL) {
 	checklist->request = requestLink(request);
 	checklist->src_addr = request->client_addr;
@@ -2127,7 +2127,7 @@ aclDestroyAccessList(acl_access ** list)
     for (l = *list; l; l = next) {
 	debug(28, 3) ("aclDestroyAccessList: '%s'\n", l->cfgline);
 	next = l->next;
-	aclDestroyAclList(&l->acl_list);
+	aclDestroyAclList(&l->aclList);
 	safe_free(l->cfgline);
 	cbdataFree(l);
     }
@@ -2530,10 +2530,10 @@ aclPurgeMethodInUse(acl_access * a)
 {
     acl_list *b;
     for (; a; a = a->next) {
-	for (b = a->acl_list; b; b = b->next) {
-	    if (ACL_METHOD != b->acl->type)
+	for (b = a->aclList; b; b = b->next) {
+	    if (ACL_METHOD != b->_acl->type)
 		continue;
-	    if (aclMatchInteger(b->acl->data, METHOD_PURGE))
+	    if (aclMatchInteger(b->_acl->data, METHOD_PURGE))
 		return 1;
 	}
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.591 2002/09/15 05:41:56 robertc Exp $
+ * $Id: client_side.cc,v 1.592 2002/09/15 06:40:57 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -228,13 +228,13 @@ clientUpdateCounters(clientHttpRequest * http)
     ping_data *i;
     HierarchyLogEntry *H;
     statCounter.client_http.requests++;
-    if (isTcpHit(http->log_type))
+    if (isTcpHit(http->logType))
 	statCounter.client_http.hits++;
-    if (http->log_type == LOG_TCP_HIT)
+    if (http->logType == LOG_TCP_HIT)
 	statCounter.client_http.disk_hits++;
-    else if (http->log_type == LOG_TCP_MEM_HIT)
+    else if (http->logType == LOG_TCP_MEM_HIT)
 	statCounter.client_http.mem_hits++;
-    if (http->request->err_type != ERR_NONE)
+    if (http->request->errType != ERR_NONE)
 	statCounter.client_http.errors++;
     statHistCount(&statCounter.client_http.all_svc_time, svc_time);
     /*
@@ -243,7 +243,7 @@ clientUpdateCounters(clientHttpRequest * http)
      * LOG_TCP_REFRESH_FAIL_HIT because its not really a cache hit
      * (we *tried* to validate it, but failed).
      */
-    switch (http->log_type) {
+    switch (http->logType) {
     case LOG_TCP_REFRESH_HIT:
 	statHistCount(&statCounter.client_http.nh_svc_time, svc_time);
 	break;
@@ -303,10 +303,10 @@ httpRequestFree(void *data)
 	/* the ICP check here was erroneous - storeReleaseRequest was always called if entry was valid 
 	 */
     }
-    assert(http->log_type < LOG_TYPE_MAX);
+    assert(http->logType < LOG_TYPE_MAX);
     if (http->entry)
 	mem = http->entry->mem_obj;
-    if (http->out.size || http->log_type) {
+    if (http->out.size || http->logType) {
 	http->al.icp.opcode = ICP_INVALID;
 	http->al.url = http->log_uri;
 	debug(33, 9) ("httpRequestFree: al.url='%s'\n", http->al.url);
@@ -316,7 +316,7 @@ httpRequestFree(void *data)
 	}
 	http->al.cache.caddr = conn ? conn->log_addr : no_addr;
 	http->al.cache.size = http->out.size;
-	http->al.cache.code = http->log_type;
+	http->al.cache.code = http->logType;
 	http->al.cache.msec = tvSubMsec(http->start, current_time);
 	if (request) {
 	    Packer p;
@@ -343,11 +343,11 @@ httpRequestFree(void *data)
 	accessLogLog(&http->al);
 	clientUpdateCounters(http);
 	if (conn)
-	    clientdbUpdate(conn->peer.sin_addr, http->log_type, PROTO_HTTP,
+	    clientdbUpdate(conn->peer.sin_addr, http->logType, PROTO_HTTP,
 		http->out.size);
     }
     if (request)
-	checkFailureRatio(request->err_type, http->al.hier.code);
+	checkFailureRatio(request->errType, http->al.hier.code);
     safe_free(http->uri);
     safe_free(http->log_uri);
     safe_free(http->al.headers.request);
@@ -656,7 +656,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	fd, (long int) size, errflag, (long int) http->out.size, entry ? objectLen(entry) : 0);
     if (size > 0 && fd > -1) {
 	kb_incr(&statCounter.client_http.kbytes_out, size);
-	if (isTcpHit(http->log_type))
+	if (isTcpHit(http->logType))
 	    kb_incr(&statCounter.client_http.hit_kbytes_out, size);
     }
     if (errflag) {

@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.h,v 1.6 2001/10/08 16:18:31 hno Exp $
+ * $Id: rfc1035.h,v 1.7 2002/09/15 06:40:53 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -51,7 +51,7 @@ typedef struct _rfc1035_rr rfc1035_rr;
 struct _rfc1035_rr {
     char name[RFC1035_MAXHOSTNAMESZ];
     unsigned short type;
-    unsigned short class;
+    unsigned short _class;
     unsigned int ttl;
     unsigned short rdlength;
     char *rdata;
