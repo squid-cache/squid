@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.222 1998/06/08 17:29:17 wessels Exp $
+ * $Id: neighbors.cc,v 1.223 1998/06/26 04:23:34 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -671,7 +671,8 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 	p->stats.counts[header->opcode]++;
     if (mem) {
 	rtt = tvSubMsec(mem->start_ping, current_time);
-	p->stats.rtt = intAverage(p->stats.rtt, rtt, n, RTT_AV_FACTOR);
+	if (rtt)
+	    p->stats.rtt = intAverage(p->stats.rtt, rtt, n, RTT_AV_FACTOR);
 	p->icp_version = (int) header->version;
     }
 }

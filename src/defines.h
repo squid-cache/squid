@@ -146,7 +146,7 @@
 #define MAX_LOGIN_SZ  128
 
 #define PEER_MAX_ADDRESSES 10
-#define RTT_AV_FACTOR      1000
+#define RTT_AV_FACTOR      50
 
 /* flags for peer->mcast.flags */
 #define PEER_COUNT_EVENT_PENDING 1
