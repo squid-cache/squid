@@ -1,0 +1,39 @@
+draft-cooper-webi-wpad-00.txt
+	WPAD protocol documenting how MSIE and several other browsers
+	automatically find their proxy settings from DHCP and/or DNS
+
+draft-ietf-wrec-web-pro-00.txt
+	WCCP 1.0
+
+draft-wilson-wrec-wccp-v2-01.txt
+	WCCP 2.0
+
+draft-vinod-carp-v1-03.txt
+	Microsoft CARP peering algorithm
+
+rfc1738.txt
+	Uniform Resource Locators (URL)
+
+rfc1945.txt
+	Hypertext Transfer Protocol -- HTTP/1.0
+	
+rfc2817.txt
+	Upgrading to TLS Within HTTP/1.1
+	Not currently in use, but scheduled to replace https://
+
+rfc2818.txt
+	HTTP Over TLS
+	Documents the https:// scheme
+
+rfc2964.txt
+	Use of HTTP State Management
+	Cookies
+
+rfc2965.txt
+	HTTP State Management Mechanism
+	Cookies
+
+rfc3310.txt
+	Updated Digest specification
+	Most likely not in use for HTTP. Title says HTTP but all examples
+	is SIP.
