@@ -36,12 +36,13 @@ Our Todo List
 	#    x milliseconds, then deny.
 	distant_peer_deny   200  75  10
 (3)	Resource limits.
-(3) **	Make swap.state binary with fixed-size cache keys (AR)
 (3)	LDAP support.  See http://miso.wwa.com/~donley/ and
 	Clayton Donley <qa1049@ilms04.cig.mot.com>
 (3) **  Store cache key and other metadata in swap files (KA)
 (3) **  Make sure every squid.conf option has documentation (??)
 (3) **  Finish implementing the *_dump() functions in cache_cf.c (DW)
+(3)	'no_cache' access list for specifing objects which should not
+	be cached.
 
 (4) **	FTP PUT (KA)
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
@@ -88,3 +89,4 @@ DONE:
 (3) **	Make checkFailureRatio() work again.  (DW)
 (2) **  copy over -z semantics from 1.1; don't automatically wipeout
 	cache (DW)
+(3) **	Make swap.state binary with fixed-size cache keys (AR)
