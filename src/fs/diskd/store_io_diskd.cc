@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.10 2000/05/29 01:37:11 wessels Exp $
+ * $Id: store_io_diskd.cc,v 1.11 2000/06/26 03:19:47 wessels Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -468,7 +468,7 @@ storeDiskdSend(int mtype, SwapDir * sd, int id, storeIOState * sio, int size, in
      * then we can have a lot of messages in the queue (probably
      * up to 2*magic1) and we can run out of shared memory buffers.
      */
-    if (diskdinfo->away > diskdinfo->magic2)
+    while (diskdinfo->away > diskdinfo->magic2)
 	storeDiskdDirCallback(sd);
     return x;
 }
