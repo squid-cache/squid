@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.468 1998/10/09 17:53:01 wessels Exp $
+ * $Id: store.cc,v 1.469 1998/10/16 19:18:16 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -864,7 +864,7 @@ storeEntryValidLength(const StoreEntry * e)
 	return 1;
     debug(20, 3) ("storeEntryValidLength: %d bytes too %s; '%s'\n",
 	diff < 0 ? -diff : diff,
-	diff < 0 ? "small" : "big",
+	diff < 0 ? "big" : "small",
 	storeKeyText(e->key));
     return 0;
 }
