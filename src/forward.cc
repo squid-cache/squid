@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.119 2004/09/25 15:52:59 hno Exp $
+ * $Id: forward.cc,v 1.120 2004/10/10 02:49:05 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -165,7 +165,7 @@ fwdCheckRetry(FwdState * fwdState)
     if (fwdState->origin_tries > 2)
         return 0;
 
-    if (squid_curtime - fwdState->start > Config.Timeout.connect)
+    if (squid_curtime - fwdState->start > Config.Timeout.forward)
         return 0;
 
     if (fwdState->flags.dont_retry)
@@ -556,7 +556,8 @@ fwdConnectStart(void *data)
     const char *host;
     unsigned short port;
     const char *domain = NULL;
-    time_t ctimeout;
+    int ctimeout;
+    int ftimeout = Config.Timeout.forward - (squid_curtime - fwdState->start);
 
     struct in_addr outgoing;
     unsigned short tos;
@@ -577,6 +578,12 @@ fwdConnectStart(void *data)
         port = fwdState->request->port;
         ctimeout = Config.Timeout.connect;
     }
+
+    if (ftimeout < 0)
+        ftimeout = 5;
+
+    if (ftimeout < ctimeout)
+        ctimeout = ftimeout;
 
     if ((fd = pconnPop(host, port, domain)) >= 0) {
         if (fwdCheckRetriable(fwdState)) {

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.358 2004/10/08 17:42:09 hno Exp $
+# $Id: cf.data.pre,v 1.359 2004/10/10 02:49:04 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2231,17 +2231,25 @@ COMMENT_START
  -----------------------------------------------------------------------------
 COMMENT_END
 
+NAME: forward_timeout
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.Timeout.forward
+DEFAULT: 4 minutes
+DOC_START
+    This parameter specifies how long Squid should at most attempt in
+    finding a forwarding path for the request before giving up.
+DOC_END
+
 NAME: connect_timeout
 COMMENT: time-units
 TYPE: time_t
 LOC: Config.Timeout.connect
-DEFAULT: 2 minutes
+DEFAULT: 1 minute
 DOC_START
-	Some systems (notably Linux) can not be relied upon to properly
-	time out connect(2) requests.  Therefore the Squid process
-	enforces its own timeout on server connections.  This parameter
-	specifies how long to wait for the connect to complete.  The
-	default is two minutes (120 seconds).
+    This parameter specifies how long to wait for the TCP connect to
+    the requested server or peer to complete before Squid should
+    attempt to find another path where to forward the request.
 DOC_END
 
 NAME: peer_connect_timeout
