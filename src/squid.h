@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.221 2002/08/09 10:57:43 robertc Exp $
+ * $Id: squid.h,v 1.222 2002/09/01 15:16:35 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -202,7 +202,7 @@
 #if HAVE_LIMITS_H
 #include <limits.h>
 #endif
-#if defined(_SQUID_CYGWIN_)
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
 #include <io.h>
 #endif
 

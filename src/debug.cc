@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.84 2001/12/17 18:01:54 wessels Exp $
+ * $Id: debug.cc,v 1.85 2002/09/01 15:16:35 hno Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -177,7 +177,7 @@ debugOpenLog(const char *logfile)
 	fflush(stderr);
 	debug_log = stderr;
     }
-#if defined(_SQUID_CYGWIN_)
+#if defined(_SQUID_CYGWIN_)||defined(_SQUID_MSWIN_)
     setmode(fileno(debug_log), O_TEXT);
 #endif
 }
@@ -237,6 +237,14 @@ _db_rotate_log(void)
 	snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, i);
 	rename(from, to);
     }
+/*
+ * You can't rename open files on Microsoft "operating systems"
+ * so we close before renaming.
+ */
+#ifdef _SQUID_MSWIN_
+    if (debug_log != stderr)
+	fclose(debug_log);
+#endif
     /* Rotate the current log to .0 */
     if (Config.Log.rotateNumber > 0) {
 	snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, 0);

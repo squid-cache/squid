@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.159 2002/08/08 20:12:45 hno Exp $
+ * $Id: disk.cc,v 1.160 2002/09/01 15:16:35 hno Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -92,7 +92,7 @@ file_close(int fd)
 	read_callback(-1, F->read_data);
     }
     if (F->flags.write_daemon) {
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_OS2_) || defined (_SQUID_CYGWIN_)
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_OS2_) || defined(_SQUID_CYGWIN_)
 	/*
 	 * on some operating systems, you can not delete or rename
 	 * open files, so we won't allow delayed close.
