@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.136 1998/03/25 09:21:42 kostas Exp $
+#  $Id: Makefile.in,v 1.137 1998/03/28 04:41:15 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -87,6 +87,7 @@ OBJS	 	= \
 		globals.o \
 		gopher.o \
 		hash.o \
+		@HTCP_OBJS@ \
 		http.o \
 		http-anon.o \
 		HttpStatusLine.o \
@@ -151,6 +152,8 @@ SNMP_OBJS	= \
                 snmp_oidlist.o \
                 snmp_agent.o  \
 		snmp_config.o
+
+HTCP_OBJS	= htcp.o
 
 ASYNC_OBJS	= \
 		aiops.o \
