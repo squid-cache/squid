@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.2 2002/09/15 06:40:57 robertc Exp $
+ * $Id: client_side_request.cc,v 1.3 2002/09/15 15:06:01 robertc Exp $
  *
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -458,13 +458,11 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     }
 #if USE_USERAGENT_LOG
     if ((str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT)))
-	logUserAgent(fqdnFromAddr(http->conn ? http->conn->log_addr.
-		sin_addr : &noaddr), str);
+	logUserAgent(fqdnFromAddr(http->conn ? http->conn->log_addr : no_addr), str);
 #endif
 #if USE_REFERER_LOG
     if ((str = httpHeaderGetStr(req_hdr, HDR_REFERER)))
-	logReferer(fqdnFromAddr(http->conn ? http->conn->log_addr.
-		sin_addr : &noaddr), str, http->log_uri);
+	logReferer(fqdnFromAddr(http->conn ? http->conn->log_addr : no_addr), str, http->log_uri);
 #endif
 #if FORW_VIA_DB
     if (httpHeaderHas(req_hdr, HDR_X_FORWARDED_FOR)) {
