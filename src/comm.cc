@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.354 2002/10/25 05:54:44 adrian Exp $
+ * $Id: comm.cc,v 1.355 2002/10/27 14:01:29 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -85,6 +85,7 @@ CBDATA_TYPE(ConnectStateData);
 
 struct _fdc_t {
 	int active;
+	int fd;
 	dlink_list CommCallbackList;
 	struct {
 		char *buf;
@@ -100,6 +101,8 @@ struct _fdc_t {
 		void *handler_data;
 	} write;
 	struct {
+		/* how often (in msec) to re-check if we're out of fds on an accept() */
+		int check_delay;	
 		struct sockaddr_in me;
 		struct sockaddr_in pn;
 		IOACB *handler;
@@ -405,8 +408,12 @@ comm_read_try(int fd, void *data)
 
 	/* Attempt a read */
         statCounter.syscalls.sock.reads++;
+	errno = 0;
 	retval = FD_READ_METHOD(fd, Fc->read.buf, Fc->read.size);
+	debug(5, 3) ("comm_read_try: fd %d, size %d, retval %d, errno %d\n",
+	    fd, Fc->read.size, retval, errno);
 	if (retval < 0 && !ignoreErrno(errno)) {
+		debug(5, 3) ("comm_read_try: scheduling COMM_ERROR\n");
 		comm_read_callback(fd, -1, COMM_ERROR, errno);
 		return;
 	};
@@ -505,7 +512,7 @@ comm_fill_immediate(int fd, StoreIOBuffer sb, IOFCB *callback, void *data)
 static void
 comm_empty_os_read_buffers(int fd)
 {
-#ifdef _SQUID_LINUX_
+#if _SQUID_LINUX_
     /* prevent those nasty RST packets */
     char buf[SQUID_TCP_SO_RCVBUF];
     if (fd_table[fd].flags.nonblocking == 1)
@@ -593,6 +600,7 @@ fdc_open(int fd, unsigned int type, char *desc)
 	assert(fdc_table[fd].active == 0);
 
 	fdc_table[fd].active = 1;
+	fdc_table[fd].fd = fd;
 	fd_open(fd, type, desc);
 }
 
@@ -642,8 +650,12 @@ comm_write_try(int fd, void *data)
 
 	/* Attempt a write */
         statCounter.syscalls.sock.reads++;
+	errno = 0;
 	retval = FD_WRITE_METHOD(fd, Fc->write.buf + Fc->write.curofs, Fc->write.size - Fc->write.curofs);
+	debug(5, 3) ("comm_write_try: fd %d: tried to write %d bytes, retval %d, errno %d\n",
+	    fd, Fc->write.size - Fc->write.curofs, retval, errno);
 	if (retval < 0 && !ignoreErrno(errno)) {
+		debug(5, 3) ("comm_write_try: can't ignore error: scheduling COMM_ERROR callback\n");
 		comm_add_write_callback(fd, 0, COMM_ERROR, errno);
 		return;
 	};
@@ -1317,7 +1329,6 @@ _comm_close(int fd, char *file, int line)
 	memPoolFree(comm_callback_pool, cio);
     }
 
-
     commCallCloseHandlers(fd);
     if (F->uses)		/* assume persistent connect count */
 	pconnHistCount(1, F->uses);
@@ -1783,6 +1794,23 @@ comm_accept_try(int fd, void *data)
 	}
 }
 
+
+/*
+ * Set the check delay on accept()ing when we're out of FDs
+ *
+ * The premise behind this is that we can hit a situation where
+ * we've hit our reserved filedescriptor limit and we don't want
+ * to accept any more connections until some others have closed.
+ *
+ * This code will set the period which we register an event to check
+ * to see whether we _have_ enough open FDs to re-register for IO.
+ */
+void
+comm_accept_setcheckperiod(int fd, int mdelay)
+{
+	assert(fdc_table[fd].active == 1);
+	fdc_table[fd].accept.check_delay = mdelay;
+}
 
 /*
  * Notes:
