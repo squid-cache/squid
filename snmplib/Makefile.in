@@ -14,9 +14,9 @@ ALIB		= libsnmp.a
 
 TARG		= @SNMPLIB@
 
-CSRCS		= snmp_client.c snmp.c snmp_auth.c asn1.c mib.c
+CSRCS		= snmp_client.c snmp.c snmp_auth.c asn1.c mib.c \
 		  parse.c snmp_api.c usec.c snmpdump.c
-OBJS		= snmp_client.o snmp.o snmp_auth.o asn1.o mib.o
+OBJS		= snmp_client.o snmp.o snmp_auth.o asn1.o mib.o \
 		  parse.o snmp_api.o usec.o snmpdump.o
 
 CC		= @CC@
@@ -26,7 +26,7 @@ AC_CFLAGS	= @CFLAGS@
 DEFS		= -DSQUID_SNMP=1
 INCLUDE		= -I../include -I$(srcdir)/../include
 MIBDEFS		= -DMIBFILEPATH=\"$(prefix)/lib\"
-CFLAGS		= $(AC_FLAGS) $(DEFS) $(INCLUDE)
+CFLAGS		= $(AC_CFLAGS) $(DEFS) $(INCLUDE)
 
 
 all:	$(TARG)
