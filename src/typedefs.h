@@ -46,6 +46,11 @@ typedef struct _hash_table hash_table;
 typedef struct _http_reply http_reply;
 #else
 typedef struct _HttpReply http_reply;
+typedef struct _HttpHeader HttpHeader;
+typedef struct _HttpScc HttpScc;
+typedef struct _HttpHeaderExtField HttpHeaderExtField;
+typedef struct _HttpHeaderEntry HttpHeaderEntry;
+typedef union _field_store field_store;
 #endif
 typedef struct _HttpStateData HttpStateData;
 typedef struct _icpUdpData icpUdpData;

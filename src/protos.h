@@ -206,9 +206,6 @@ extern int httpCachable(method_t);
 extern void httpStart(request_t *, StoreEntry *, peer *);
 extern void httpParseReplyHeaders(const char *, http_reply *);
 extern void httpProcessReplyHeader(HttpStateData *, const char *, int);
-#if 0
-extern void httpReplyHeaderStats(StoreEntry *);
-#endif
 extern size_t httpBuildRequestHeader(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
@@ -219,16 +216,35 @@ extern size_t httpBuildRequestHeader(request_t * request,
     int flags);
 extern int httpAnonAllowed(const char *line);
 extern int httpAnonDenied(const char *line);
-#if 0
-extern char *httpReplyHeader(double ver,
-    http_status status,
-    char *ctype,
-    int clen,
-    time_t lmt,
-    time_t expires);
-#endif
 extern void httpInit(void);
 
+/* Http Header */
+extern void httpHeaderInitModule();
+/* create/init/clean/destroy */
+extern HttpHeader *httpHeaderCreate();
+extern void httpHeaderInit(HttpHeader *hdr);
+extern void httpHeaderClean(HttpHeader *hdr);
+extern void httpHeaderDestroy(HttpHeader *hdr);
+/* clone */
+HttpHeader *httpHeaderClone(HttpHeader *hdr);
+/* parse/pack */
+extern int httpHeaderParse(HttpHeader *hdr, const char *header_start, const char *header_end);
+extern void httpHeaderPackInto(const HttpHeader *hdr, Packer *p);
+/* field manipulation */
+extern int httpHeaderHas(const HttpHeader *hdr, http_hdr_type type);
+extern void httpHeaderDel(HttpHeader *hdr, http_hdr_type id);
+extern void httpHeaderSetInt(HttpHeader *hdr, http_hdr_type type, int number);
+extern void httpHeaderSetTime(HttpHeader *hdr, http_hdr_type type, time_t time);
+extern void httpHeaderSetStr(HttpHeader *hdr, http_hdr_type type, const char *str);
+extern void httpHeaderSetAuth(HttpHeader *hdr, const char *authScheme, const char *realm);
+extern void httpHeaderAddExt(HttpHeader *hdr, const char *name, const char* value);
+extern const char *httpHeaderGetStr(const HttpHeader *hdr, http_hdr_type id);
+extern time_t httpHeaderGetTime(const HttpHeader *hdr, http_hdr_type id);
+extern HttpScc *httpHeaderGetScc(const HttpHeader *hdr);
+extern field_store httpHeaderGet(const HttpHeader *hdr, http_hdr_type id);
+int httpHeaderDelFields(HttpHeader *hdr, const char *name);
+/* store report about current header usage and other stats */
+extern void httpHeaderStoreReport(StoreEntry *e);
 
 extern void icmpOpen(void);
 extern void icmpClose(void);

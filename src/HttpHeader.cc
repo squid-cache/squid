@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.8 1998/02/25 16:35:08 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.9 1998/02/26 06:30:01 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -30,7 +30,6 @@
 
 #include "squid.h"
 #include "MemPool.h"
-#include "HttpHeader.h"
 
 /*
    On naming conventions:

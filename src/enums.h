@@ -162,6 +162,49 @@ typedef enum {
     MGR_MAX
 } objcache_op;
 
+/* recognized or "known" header fields; @?@ add more! */
+typedef enum {
+    HDR_ACCEPT,
+    HDR_AGE,
+    HDR_CACHE_CONTROL,
+    HDR_CONNECTION,
+    HDR_CONTENT_ENCODING,
+    HDR_CONTENT_LENGTH,
+    HDR_CONTENT_MD5,
+    HDR_CONTENT_TYPE,
+    HDR_DATE,
+    HDR_ETAG,
+    HDR_EXPIRES,
+    HDR_HOST,
+    HDR_IMS,
+    HDR_LAST_MODIFIED,
+    HDR_LOCATION,
+    HDR_MAX_FORWARDS,
+    HDR_PROXY_AUTHENTICATE,
+    HDR_PUBLIC,
+    HDR_RETRY_AFTER,
+    HDR_SET_COOKIE,
+    HDR_UPGRADE,
+    HDR_WARNING,
+    HDR_WWW_AUTHENTICATE,
+    HDR_PROXY_KEEPALIVE,
+    HDR_OTHER,
+    HDR_ENUM_END
+} http_hdr_type;
+
+/* server cache-control */
+typedef enum {
+    SCC_PUBLIC,
+    SCC_PRIVATE,
+    SCC_NO_CACHE,
+    SCC_NO_STORE,
+    SCC_NO_TRANSFORM,
+    SCC_MUST_REVALIDATE,
+    SCC_PROXY_REVALIDATE,
+    SCC_MAX_AGE,
+    SCC_ENUM_END
+} http_scc_type;
+
 typedef enum {
     HIER_NONE,
     DIRECT,
