@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.636 2003/05/19 22:35:28 robertc Exp $
+ * $Id: client_side.cc,v 1.637 2003/05/24 12:09:03 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1067,6 +1067,9 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         http->request->range->deleteSelf();
         http->request->range = NULL;
     } else {
+        /* XXX: TODO: Review, this unconditional set may be wrong. - TODO: review. */
+        httpStatusLineSet(&rep->sline, rep->sline.version,
+                          HTTP_PARTIAL_CONTENT, NULL);
         const int spec_count = http->request->range->specs.count;
         int actual_clen = -1;
 
