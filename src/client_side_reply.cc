@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.9 2002/09/26 13:33:08 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.10 2002/09/29 09:52:36 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1166,7 +1166,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 #if USE_CACHE_DIGESTS
     /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
     httpHeaderPutStrf(hdr, HDR_X_CACHE_LOOKUP, "%s from %s:%d",
-	context->lookup_type ? context->lookup_type : "NONE",
+	http->lookup_type ? http->lookup_type : "NONE",
 	getMyHostname(), getMyPort());
 #endif
     if (httpReplyBodySize(request->method, rep) < 0) {
@@ -1241,7 +1241,7 @@ clientIdentifyStoreObject(clientHttpRequest * http)
 	ipcacheInvalidate(r->host);
 #endif
 #if USE_CACHE_DIGESTS
-    context->lookup_type = e ? "HIT" : "MISS";
+    http->lookup_type = e ? "HIT" : "MISS";
 #endif
     if (NULL == e) {
 	/* this object isn't in the cache */
