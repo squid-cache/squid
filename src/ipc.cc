@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.30 2002/10/14 08:16:58 robertc Exp $
+ * $Id: ipc.cc,v 1.31 2002/10/21 05:49:59 adrian Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -206,7 +206,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 	}
 	memset(hello_buf, '\0', HELLO_BUF_SZ);
 	if (type == IPC_UDP_SOCKET)
-	    x = recv(prfd, hello_buf, HELLO_BUF_SZ - 1, 0);
+	    x = comm_recv(prfd, hello_buf, HELLO_BUF_SZ - 1, 0);
 	else
 	    x = read(prfd, hello_buf, HELLO_BUF_SZ - 1);
 	if (x < 0) {
