@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.79 1996/12/18 18:35:31 wessels Exp $
+ * $Id: client_side.cc,v 1.80 1996/12/19 23:13:30 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -610,5 +610,7 @@ clientConstructTraceEcho(icpStateData * icpState)
 	buf + len,
 	8192 - len,
 	icpState->fd);
+    icpState->log_type = TCP_MISS;
+    icpState->http_code = 200;
     return buf;
 }
