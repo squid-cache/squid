@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.566 2003/05/18 00:04:07 robertc Exp $
+ * $Id: store.cc,v 1.567 2003/06/23 10:07:36 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -463,11 +463,13 @@ storeUnlockObject(StoreEntry * e)
         storeSetMemStatus(e, IN_MEMORY);
         e->mem_obj->unlinkRequest();
     } else {
-        storePurgeMem(e);
         storeEntryDereferenced(e);
 
         if (EBIT_TEST(e->flags, KEY_PRIVATE))
             debug(20, 1) ("WARNING: %s:%d: found KEY_PRIVATE\n", __FILE__, __LINE__);
+
+        /* storePurgeMem may free e */
+        storePurgeMem(e);
     }
 
     return 0;
