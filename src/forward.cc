@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.42 1999/01/11 16:50:31 wessels Exp $
+ * $Id: forward.cc,v 1.43 1999/01/11 23:29:42 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -395,6 +395,13 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr)
 	    errorAppendEntry(e, err);
 	    return;
 	}
+    }
+    if (shutting_down) {
+	/* more yuck */
+	err = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE);
+	err->request = requestLink(r);
+	errorAppendEntry(e, err);
+	return;
     }
     debug(17, 3) ("fwdStart: '%s'\n", storeUrl(e));
     e->mem_obj->request = requestLink(r);
