@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.58 1998/04/01 00:12:33 wessels Exp $
+ * $Id: mime.cc,v 1.59 1998/04/02 04:45:06 rousskov Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -123,14 +123,26 @@ static mimeEntry **MimeTableTail = NULL;
 
 static void mimeLoadIconFile(const char *icon);
 
+/* returns a pointer to a field-value of the first matching field-name */
 char *
 mime_get_header(const char *mime, const char *name)
+{
+    return mime_get_header_field(mime, name, NULL);
+}
+
+/*
+ * returns a pointer to a field-value of the first matching field-name where
+ * field-value matches prefix if any
+ */
+char *
+mime_get_header_field(const char *mime, const char *name, const char *prefix)
 {
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
     const char *p = NULL;
     char *q = NULL;
     char got = 0;
-    int namelen = strlen(name);
+    const int namelen = name ? strlen(name) : 0;
+    const int preflen = prefix ? strlen(prefix) : 0;
     int l;
 
     if (!mime || !name)
@@ -158,6 +170,11 @@ mime_get_header(const char *mime, const char *name)
 	    q++, got = 1;
 	while (isspace(*q))
 	    q++, got = 1;
+	if (got && prefix) {
+	    /* we could process list entries here if we had strcasestr(). */
+	    /* make sure we did not match a part of another field-value */
+	    got = !strncasecmp(q, prefix, preflen) && !isalpha(q[preflen]);
+	}
 	if (got) {
 	    debug(25, 5) ("mime_get_header: returning '%s'\n", q);
 	    return q;

@@ -450,6 +450,7 @@ extern FREE *memBufFreeFunc(MemBuf * mb);
 extern void memBufReport(MemBuf * mb);
 
 extern char *mime_get_header(const char *mime, const char *header);
+char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
 #if OLD_CODE
 extern char *mime_headers_end(const char *mime);
 #endif
