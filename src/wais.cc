@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.19 1996/04/05 17:47:50 wessels Exp $ */
+/* $Id: wais.cc,v 1.20 1996/04/08 18:28:59 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -18,13 +18,11 @@ typedef struct _waisdata {
     char request[MAX_URL];
 } WAISData;
 
-extern char *dns_error_message;
-
 static void waisCloseAndFree(fd, data)
      int fd;
      WAISData *data;
 {
-    if (fd > 0)
+    if (fd >= 0)
 	comm_close(fd);
     xfree(data);
 }
