@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.21 1996/04/11 22:52:29 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.22 1996/04/12 04:34:17 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -11,7 +11,6 @@
 char ipcache_status_char _PARAMS((ipcache_entry *));
 int ipcache_hash_entry_count();
 
-#define IP_POS_TTL	86400	/* one day  */
 #define MAX_IP		 1024	/* Maximum cached IP */
 #define IP_LOW_WATER       70
 #define IP_HIGH_WATER      90
@@ -448,7 +447,7 @@ void ipcache_add(name, e, data, cached)
 	e->entry.h_name = xstrdup(data->h_name);
 	e->lastref = e->timestamp = cached_curtime;
 	e->status = CACHED;
-	e->ttl = IP_POS_TTL;
+	e->ttl = DnsPositiveTtl;
     } else {
 	e->lastref = e->timestamp = cached_curtime;
 	e->status = NEGATIVE_CACHED;
@@ -511,7 +510,7 @@ void ipcache_update_content(name, e, data, cached)
 	e->entry.h_name = xstrdup(data->h_name);
 	e->lastref = e->timestamp = cached_curtime;
 	e->status = CACHED;
-	e->ttl = IP_POS_TTL;
+	e->ttl = DnsPositiveTtl;
     } else {
 	e->lastref = e->timestamp = cached_curtime;
 	e->status = NEGATIVE_CACHED;
@@ -770,7 +769,7 @@ int ipcache_parsebuffer(buf, offset, data)
 			debug(14, 4, "ipcache_parsebuffer: DNS record already resolved.\n");
 		    } else {
 			e->lastref = e->timestamp = cached_curtime;
-			e->ttl = IP_POS_TTL;
+			e->ttl = DnsPositiveTtl;
 			e->status = CACHED;
 
 			line_cur = line_head->next;
