@@ -469,9 +469,9 @@ icpCount(void *buf, int which, size_t len, int delay)
 	    Counter.icp.replies_sent++;
 	    kb_incr(&Counter.icp.r_kbytes_sent, len);
 	    /* this is the sent-reply service time */
-            statHistCount(&Counter.icp.reply_svc_time, delay);
+	    statHistCount(&Counter.icp.reply_svc_time, delay);
 	}
-        if (ICP_HIT == icp->opcode)
+	if (ICP_HIT == icp->opcode)
 	    Counter.icp.hits_sent++;
     } else if (RECV == which) {
 	Counter.icp.pkts_recv++;
@@ -484,7 +484,7 @@ icpCount(void *buf, int which, size_t len, int delay)
 	    kb_incr(&Counter.icp.r_kbytes_recv, len);
 	    /* Counter.icp.query_svc_time set in clientUpdateCounters */
 	}
-        if (ICP_HIT == icp->opcode)
+	if (ICP_HIT == icp->opcode)
 	    Counter.icp.hits_recv++;
     }
 }

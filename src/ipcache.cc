@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.181 1998/04/24 06:40:05 wessels Exp $
+ * $Id: ipcache.cc,v 1.182 1998/04/24 07:09:37 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -904,17 +904,17 @@ ipcacheCycleAddr(const char *name)
 #endif
 
 void
-ipcacheCycleAddr(const char *name, ipcache_addrs *ia)
+ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
 {
     ipcache_entry *i;
     unsigned char k;
     assert(name || ia);
     if (NULL == ia) {
-        if ((i = ipcache_get(name)) == NULL)
+	if ((i = ipcache_get(name)) == NULL)
 	    return;
-        if (i->status != IP_CACHED)
+	if (i->status != IP_CACHED)
 	    return;
-        ia = &i->addrs;
+	ia = &i->addrs;
     }
     for (k = 0; k < ia->count; k++) {
 	if (++ia->cur == ia->count)
@@ -923,15 +923,15 @@ ipcacheCycleAddr(const char *name, ipcache_addrs *ia)
 	    break;;
     }
     if (k == ia->count) {
-        /* All bad, reset to All good */
-        debug(14, 3)("ipcacheCycleAddr: Changing ALL %s addrs from BAD to OK\n",
+	/* All bad, reset to All good */
+	debug(14, 3) ("ipcacheCycleAddr: Changing ALL %s addrs from BAD to OK\n",
 	    name);
-        for (k = 0; k < ia->count; k++)
+	for (k = 0; k < ia->count; k++)
 	    ia->bad_mask[k] = 0;
-        ia->badcount = 0;
-        ia->cur = 0;
+	ia->badcount = 0;
+	ia->cur = 0;
     }
-    debug(14,3) ("ipcacheCycleAddr: %s now at %s\n", name,
+    debug(14, 3) ("ipcacheCycleAddr: %s now at %s\n", name,
 	inet_ntoa(ia->in_addrs[ia->cur]));
 }
 

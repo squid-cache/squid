@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: HttpBody.cc,v 1.8 1998/04/09 23:51:40 rousskov Exp $
+ * $Id: HttpBody.cc,v 1.9 1998/04/24 07:09:27 wessels Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -73,7 +73,7 @@ httpBodySet(HttpBody * body, const char *buf, int size, FREE * freefunc)
 	freefunc = &xfree;
     } else {
 	/* @?@ @?@ Fix this cast: we should probably have two httpBodySet()s */
-	body->buf = (char*)buf;
+	body->buf = (char *) buf;
     }
     body->freefunc = freefunc;
     body->size = size;

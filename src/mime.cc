@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.62 1998/04/10 00:51:04 wessels Exp $
+ * $Id: mime.cc,v 1.63 1998/04/24 07:09:38 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -487,7 +487,7 @@ mimeLoadIconFile(const char *icon)
     const char *type = mimeGetContentType(icon);
     if (type == NULL)
 	fatal("Unknown icon format while reading mime.conf\n");
-    xstrncpy(url, urlInternal("icons",icon), MAX_URL);
+    xstrncpy(url, urlInternal("icons", icon), MAX_URL);
     key = storeKeyPublic(url, METHOD_GET);
     if (storeGet(key))
 	return;

@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.10 1998/04/24 06:08:24 wessels Exp $
+ * $Id: store_digest.cc,v 1.11 1998/04/24 07:09:47 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -50,12 +50,12 @@ typedef struct {
 } StoreDigestState;
 
 typedef struct {
-    int del_count;         /* #store entries deleted from store_digest */
-    int del_lost_count;    /* #store entries not found in store_digest on delete */
-    int add_count;         /* #store entries accepted to store_digest */
-    int add_coll_count;    /* #accepted entries that collided with existing ones */
-    int rej_count;         /* #store entries not accepted to store_digest */
-    int rej_coll_count;    /* #not accepted entries that collided with existing ones */
+    int del_count;		/* #store entries deleted from store_digest */
+    int del_lost_count;		/* #store entries not found in store_digest on delete */
+    int add_count;		/* #store entries accepted to store_digest */
+    int add_coll_count;		/* #accepted entries that collided with existing ones */
+    int rej_count;		/* #store entries not accepted to store_digest */
+    int rej_coll_count;		/* #not accepted entries that collided with existing ones */
 } StoreDigestStats;
 
 /*
@@ -121,17 +121,17 @@ storeDigestAdd(const StoreEntry * entry)
 {
     int good_entry = 0;
     assert(entry && store_digest);
-    debug(71,6) ("storeDigestAdd: checking entry, key: %s\n",
+    debug(71, 6) ("storeDigestAdd: checking entry, key: %s\n",
 	storeKeyText(entry->key));
     /* only public entries are digested */
     if (!EBIT_TEST(entry->flag, KEY_PRIVATE)) {
 	const time_t expires = refreshWhen(entry);
-	debug(71,6) ("storeDigestAdd: entry expires in %d secs\n",
-		(int)(expires - squid_curtime));
+	debug(71, 6) ("storeDigestAdd: entry expires in %d secs\n",
+	    (int) (expires - squid_curtime));
 	/* if expires too soon, ignore */
 	/* Note: We should use the time of the next rebuild, not cur_time @?@ */
 	if (expires <= squid_curtime + StoreDigestRebuildPeriod) {
-	    debug(71,6) ("storeDigestAdd: entry expires too early, ignoring\n");
+	    debug(71, 6) ("storeDigestAdd: entry expires too early, ignoring\n");
 	} else {
 	    good_entry = 1;
 	}
@@ -141,7 +141,7 @@ storeDigestAdd(const StoreEntry * entry)
 	if (cacheDigestTest(store_digest, entry->key))
 	    sd_stats.add_coll_count++;
 	cacheDigestAdd(store_digest, entry->key);
-	debug(71,6) ("storeDigestAdd: added entry, key: %s\n",
+	debug(71, 6) ("storeDigestAdd: added entry, key: %s\n",
 	    storeKeyText(entry->key));
     } else {
 	sd_stats.rej_count++;
@@ -154,17 +154,17 @@ void
 storeDigestDel(const StoreEntry * entry)
 {
     assert(entry && store_digest);
-    debug(71,6) ("storeDigestDel: checking entry, key: %s\n",
+    debug(71, 6) ("storeDigestDel: checking entry, key: %s\n",
 	storeKeyText(entry->key));
     if (!EBIT_TEST(entry->flag, KEY_PRIVATE)) {
 	if (!cacheDigestTest(store_digest, entry->key)) {
 	    sd_stats.del_lost_count++;
-	    debug(71,6) ("storeDigestDel: lost entry, key: %s url: %s\n",
+	    debug(71, 6) ("storeDigestDel: lost entry, key: %s url: %s\n",
 		storeKeyText(entry->key), storeUrl(entry));
 	} else {
 	    sd_stats.del_count++;
 	    cacheDigestDel(store_digest, entry->key);
-	    debug(71,6) ("storeDigestDel: deled entry, key: %s\n",
+	    debug(71, 6) ("storeDigestDel: deled entry, key: %s\n",
 		storeKeyText(entry->key));
 	}
     }
@@ -198,7 +198,7 @@ storeDigestRebuildResume()
     sd_state.rebuild_offset = 0;
     /* resize or clear */
     if (!storeDigestResize())
-	cacheDigestClear(store_digest); /* not clean()! */
+	cacheDigestClear(store_digest);		/* not clean()! */
     memset(&sd_stats, 0, sizeof(sd_stats));
     eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0);
 }
@@ -351,7 +351,7 @@ storeDigestCBlockSwapOut(StoreEntry * e)
     sd_state.cblock.mask_size = htonl(store_digest->mask_size);
     sd_state.cblock.bits_per_entry = (unsigned char) StoreDigestBitsPerEntry;
     sd_state.cblock.hash_func_count = (unsigned char) CacheDigestHashFuncCount;
-    storeAppend(e, (char*) &sd_state.cblock, sizeof(sd_state.cblock));
+    storeAppend(e, (char *) &sd_state.cblock, sizeof(sd_state.cblock));
 }
 
 /* calculates digest capacity */
@@ -373,7 +373,7 @@ storeDigestCalcCap()
 	cap = lo_cap;
     /* do not enforce hi_cap limit, average-based estimation may be wrong
      *if (cap > hi_cap)
-     *	cap = hi_cap; 
+     *  cap = hi_cap; 
      */
     return cap;
 }
@@ -390,7 +390,7 @@ storeDigestResize()
 	store_digest->capacity, cap, diff,
 	xpercentInt(diff, store_digest->capacity));
     /* avoid minor adjustments */
-    if (diff <= store_digest->capacity/10) {
+    if (diff <= store_digest->capacity / 10) {
 	debug(71, 2) ("storeDigestResize: small change, will not resize.\n");
 	return 0;
     } else {
@@ -406,12 +406,12 @@ storeDigestReport(StoreEntry * e)
     if (store_digest) {
 	cacheDigestReport(store_digest, "store", e);
 	storeAppendPrintf(e, "\t added: %d rejected: %d ( %.2f %%) del-ed: %d\n",
-	    sd_stats.add_count, 
+	    sd_stats.add_count,
 	    sd_stats.rej_count,
-		xpercent(sd_stats.rej_count, sd_stats.rej_count + sd_stats.add_count),
+	    xpercent(sd_stats.rej_count, sd_stats.rej_count + sd_stats.add_count),
 	    sd_stats.del_count);
 	storeAppendPrintf(e, "\t collisions: on add: %.2f %% on rej: %.2f %%\n",
-	    xpercent(sd_stats.add_coll_count, sd_stats.add_count), 
+	    xpercent(sd_stats.add_coll_count, sd_stats.add_count),
 	    xpercent(sd_stats.rej_coll_count, sd_stats.rej_count));
     } else {
 	storeAppendPrintf(e, "store digest: disabled.\n");

@@ -142,7 +142,7 @@ typedef enum {
 typedef enum {
     LOOKUP_NONE,
     LOOKUP_HIT,
-    LOOKUP_MISS  
+    LOOKUP_MISS
 } lookup_t;
 
 typedef enum {
@@ -217,7 +217,7 @@ typedef enum {
     HDR_WARNING,
     HDR_WWW_AUTHENTICATE,
     HDR_X_CACHE,
-    HDR_X_CACHE_LOOKUP, /* tmp hack, remove later */
+    HDR_X_CACHE_LOOKUP,		/* tmp hack, remove later */
     HDR_PROXY_CONNECTION,
     HDR_OTHER,
     HDR_ENUM_END
@@ -398,10 +398,10 @@ typedef enum {
 } http_status;
 
 enum {
-    PD_INITED,    /* initialized */
-    PD_USABLE,    /* ready to use */
-    PD_REQUESTED, /* we are in the process of receiving a [fresh] digest */
-    PD_DISABLED   /* do not use/validate the digest */
+    PD_INITED,			/* initialized */
+    PD_USABLE,			/* ready to use */
+    PD_REQUESTED,		/* we are in the process of receiving a [fresh] digest */
+    PD_DISABLED			/* do not use/validate the digest */
 } peer_cd_t;
 
 /* These are for StoreEntry->flag, which is defined as a SHORT */

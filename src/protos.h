@@ -183,7 +183,7 @@ extern int file_map_bit_set(fileMap *, int);
 extern int file_map_bit_test(fileMap *, int);
 extern void file_map_bit_reset(fileMap *, int);
 extern void filemapFreeMemory(fileMap *);
-extern void filemapCopy(fileMap *old, fileMap *new);
+extern void filemapCopy(fileMap * old, fileMap * new);
 
 
 extern void fqdncache_nbgethostbyaddr(struct in_addr, FQDNH *, void *);
@@ -773,7 +773,7 @@ extern void storeSwapOutStart(StoreEntry * e);
 extern void storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data);
 extern void storeCheckSwapOut(StoreEntry * e);
 extern void storeSwapOutFileClose(StoreEntry * e);
-int storeSwapOutWriteQueued(MemObject *mem);
+int storeSwapOutWriteQueued(MemObject * mem);
 
 /*
  * store_client.c

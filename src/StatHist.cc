@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.6 1998/04/12 06:00:44 rousskov Exp $
+ * $Id: StatHist.cc,v 1.7 1998/04/24 07:09:28 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -228,6 +228,6 @@ void
 statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     if (count)
-        storeAppendPrintf(sentry, "%2d\t %5d\t %5d\n",
-            idx, (int) val, count);
+	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\n",
+	    idx, (int) val, count);
 }
