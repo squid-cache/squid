@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.323 2002/07/18 23:43:14 hno Exp $
+ * $Id: ftp.cc,v 1.324 2002/07/21 17:12:22 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -360,7 +360,7 @@ ftpListingStart(FtpStateData * ftpState)
     storeAppendPrintf(e, "FTP Directory: %s\n",
 	html_quote(strBuf(ftpState->title_url)));
     storeAppendPrintf(e, "</TITLE>\n");
-    storeAppendPrintf(e, "<STYLE type= \"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
+    storeAppendPrintf(e, "<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
     if (ftpState->flags.use_base)
 	storeAppendPrintf(e, "<BASE HREF=\"%s\">\n",
 	    html_quote(strBuf(ftpState->base_href)));
