@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.11 1997/11/20 06:25:25 wessels Exp $
+ * $Id: access_log.cc,v 1.12 1997/11/30 02:26:41 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -163,7 +163,7 @@ accessLogSquid(AccessLogEntry * al)
 static int
 accessLogCommon(AccessLogEntry * al)
 {
-    const char *client = dash_str;
+    const char *client = NULL;
     if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
     if (client == NULL)
@@ -181,19 +181,31 @@ accessLogCommon(AccessLogEntry * al)
 	hier_strings[al->hier.code]);
 }
 
+#define SKIP_BASIC_SZ 6
 void
 accessLogLog(AccessLogEntry * al)
 {
     int x;
     int l;
+    char *t;
+    char *xbuf = NULL;
     if (LogfileStatus != LOG_ENABLE)
 	return;
     if (al->url == NULL)
 	al->url = dash_str;
     if (!al->http.content_type || *al->http.content_type == '\0')
 	al->http.content_type = dash_str;
-    if (!al->cache.ident || *al->cache.ident == '\0')
-	al->cache.ident = dash_str;
+    if (!al->cache.ident || *al->cache.ident == '\0') {
+	t = mime_get_header(al->headers.request, "Proxy-authorization:");
+	if (t == NULL) {
+	    al->cache.ident = dash_str;
+	} else if (strlen(t) < SKIP_BASIC_SZ) {
+	    al->cache.ident = dash_str;
+	} else {
+	    al->cache.ident = xbuf = uudecode(t + SKIP_BASIC_SZ);
+	    strtok((char *) al->cache.ident, ":");	/*  remove password  */
+	}
+    }
     if (al->icp.opcode)
 	al->private.method_str = icp_opcode_str[al->icp.opcode];
     else
@@ -223,6 +235,7 @@ accessLogLog(AccessLogEntry * al)
 	xfree);
     if (x != DISK_OK)
 	debug(46, 1) ("log_append: File write failed.\n");
+    safe_free(xbuf);
 }
 
 void
