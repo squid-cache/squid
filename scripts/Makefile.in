@@ -26,4 +26,4 @@ install:
 clean:
 
 realclean:
-	-rm -f RunCache RunAccel
+	-rm -f RunCache RunAccel Makefile
