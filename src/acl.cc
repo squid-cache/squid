@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.256 2001/08/03 15:13:03 adrian Exp $
+ * $Id: acl.cc,v 1.257 2001/08/03 16:54:51 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1960,7 +1960,7 @@ aclChecklistCreate(const acl_access * A, request_t * request, const char *ident)
 }
 
 void
-aclNBCheck(aclCheck_t * checklist, PF callback, void *callback_data)
+aclNBCheck(aclCheck_t * checklist, PF * callback, void *callback_data)
 {
     checklist->callback = callback;
     checklist->callback_data = callback_data;
