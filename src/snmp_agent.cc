@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.54 1998/07/31 00:15:52 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.55 1998/08/27 22:01:47 rousskov Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -426,7 +426,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = ASN_INTEGER;
-	*(Answer->val.integer) = (snint) p->icp_port;
+	*(Answer->val.integer) = (snint) p->icp.port;
 	break;
     case MESH_PTBL_TYPE:
 	Answer->val_len = sizeof(snint);
