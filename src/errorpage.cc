@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.98 1997/10/30 17:49:17 wessels Exp $
+ * $Id: errorpage.cc,v 1.99 1997/11/04 19:54:46 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -311,6 +311,9 @@ errorConvert(char token, ErrorState * err)
 	    p = err->dnsserver_msg;
 	else
 	    p = "[unknown]";
+	break;
+    case '%':
+	p = "%";
 	break;
     default:
 	p = "%UNKNOWN%";
