@@ -1,7 +1,7 @@
 
 /*
- * $Id: store.cc,v 1.492 1999/05/03 21:55:07 wessels Exp $
- * $Id: store.cc,v 1.492 1999/05/03 21:55:07 wessels Exp $
+ * $Id: store.cc,v 1.493 1999/05/03 22:43:34 wessels Exp $
+ * $Id: store.cc,v 1.493 1999/05/03 22:43:34 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -98,7 +98,6 @@ static int store_pages_max = 0;
 static int store_swap_high = 0;
 static int store_swap_low = 0;
 static int store_swap_mid = 0;
-static int store_maintain_rate;
 static Stack LateReleaseStack;
 
 static MemObject *
@@ -908,12 +907,7 @@ storeInitHashValues(void)
     /* ideally the full scan period should be configurable, for the
      * moment it remains at approximately 24 hours.  */
     store_hash_buckets = storeKeyHashBuckets(i);
-    store_maintain_rate = 86400 / store_hash_buckets;
-    assert(store_maintain_rate > 0);
-    debug(20, 1) ("Using %d Store buckets, replacement runs every %d second%s\n",
-	store_hash_buckets,
-	store_maintain_rate,
-	store_maintain_rate == 1 ? null_string : "s");
+    debug(20, 1) ("Using %d Store buckets%s\n", store_hash_buckets);
     debug(20, 1) ("Max Mem  size: %d KB\n", Config.memMaxSize >> 10);
     debug(20, 1) ("Max Swap size: %d KB\n", Config.Swap.maxSize);
 }
