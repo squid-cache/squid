@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.147 2003/02/21 22:50:13 robertc Exp $
+ * $Id: wais.cc,v 1.148 2003/03/04 01:40:31 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -39,6 +39,7 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "comm.h"
 
 class WaisStateData
 {
@@ -214,8 +215,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
         comm_close(fd);
     } else {
         /* Schedule read reply. */
-        comm_read(fd, waisState->buf, BUFSIZ, waisReadReply, waisState);
-        commSetDefer(fd, StoreEntry::CheckDeferRead, entry);
+        entry->delayAwareRead(fd, waisState->buf, BUFSIZ, waisReadReply, waisState);
     }
 }
 

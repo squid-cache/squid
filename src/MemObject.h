@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.3 2003/02/21 22:50:06 robertc Exp $
+ * $Id: MemObject.h,v 1.4 2003/03/04 01:40:25 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 
 #include "StoreIOBuffer.h"
 #include "stmem.h"
+#include "CommRead.h"
 
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 
@@ -75,6 +76,7 @@ public:
     void trimUnSwappable();
     bool isContiguous() const;
     int mostBytesWanted(int max) const;
+    void setNoDelay(bool const newValue);
 #if DELAY_POOLS
 
     DelayId mostBytesAllowed() const;
@@ -129,12 +131,16 @@ public:
 
     const char *vary_headers;
 
+    void delayRead(DeferredRead const &);
+    void kickReads();
+
 private:
     static MemPool *pool;
 
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
     HttpReply const *_reply;
+    DeferredReadManager deferredReads;
 };
 
 #endif /* SQUID_MEMOBJECT_H */

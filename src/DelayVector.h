@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.h,v 1.3 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayVector.h,v 1.4 2003/03/04 01:40:25 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -69,6 +69,7 @@ class Id:public DelayIdComposite
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
+        virtual void delayRead(DeferredRead const &);
 
     private:
         DelayVector::Pointer theVector;

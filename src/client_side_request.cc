@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.18 2003/02/21 22:50:07 robertc Exp $
+ * $Id: client_side_request.cc,v 1.19 2003/03/04 01:40:27 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -48,6 +48,7 @@
 #include "HttpRequest.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
+#include "client_side.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -289,8 +290,9 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     /* make it visible in the 'current acctive requests list' */
     dlinkAdd(http, &http->active, &ClientActiveRequests);
     /* Set flags */
-    http->flags.accel = 1;	/* internal requests only makes sense in an
-    		        				 * accelerator today. TODO: accept flags ? */
+    /* internal requests only makes sense in an
+     * accelerator today. TODO: accept flags ? */
+    http->flags.accel = 1;
     /* allow size for url rewriting */
     url_sz = strlen(url) + Config.appendDomainLen + 5;
     http->uri = (char *)xcalloc(url_sz, 1);
@@ -318,10 +320,11 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
      */
     request->flags.accelerated = http->flags.accel;
 
-    request->flags.internalclient = 1;	/* this is an internally created
-    		 
-    		        					 * request, not subject to acceleration
-    		        					 * target overrides */
+    request->flags.internalclient = 1;
+
+    /* this is an internally created
+     * request, not subject to acceleration
+     * target overrides */
     /*
      * FIXME? Do we want to detect and handle internal requests of internal
      * objects ?
@@ -461,9 +464,11 @@ clientCachable(clientHttpRequest * http)
         return 0;
 
     if (method == METHOD_POST)
-        return 0;		/* XXX POST may be cached sometimes.. ignored
-    		 
-    		        				 * for now */
+        return 0;
+
+    /* XXX POST may be cached sometimes.. ignored
+            		 
+            		        				 * for now */
     if (req->protocol == PROTO_GOPHER)
         return gopherCachable(req);
 

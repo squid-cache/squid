@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.55 2003/02/26 06:11:38 robertc Exp $
+ * $Id: authenticate.cc,v 1.56 2003/03/04 01:40:25 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -40,6 +40,7 @@
 #include "squid.h"
 #include "authenticate.h"
 #include "ACL.h"
+#include "client_side.h"
 
 CBDATA_TYPE(auth_user_ip_t);
 
@@ -1363,6 +1364,7 @@ void *
 AuthUserRequestState::operator new (size_t)
 {
     fatal ("unusable\n");
+    return (void *)1;
 }
 
 void

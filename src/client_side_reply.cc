@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.42 2003/02/25 12:24:35 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.43 2003/03/04 01:40:26 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -48,6 +48,7 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "client_side.h"
 
 static STCB clientHandleIMSReply;
 static STCB clientSendMoreData;

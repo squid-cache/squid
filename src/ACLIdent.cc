@@ -40,6 +40,7 @@
 #include "ACLChecklist.h"
 #include "ACLRegexData.h"
 #include "ACLUserData.h"
+#include "client_side.h"
 
 MemPool *ACLIdent::Pool(NULL);
 void *

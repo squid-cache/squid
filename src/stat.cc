@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.370 2003/02/21 22:50:11 robertc Exp $
+ * $Id: stat.cc,v 1.371 2003/03/04 01:40:29 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -40,6 +40,7 @@
 #include "fde.h"
 #include "mem_node.h"
 #include "client_side_request.h"
+#include "client_side.h"
 
 /* these are included because they expose stats calls */
 /* TODO: provide a self registration mechanism for those classes
@@ -344,7 +345,7 @@ statObjects(void *data)
         storeUnlockObject(state->sentry);
         cbdataFree(state);
         return;
-    } else if (StoreEntry::CheckDeferRead(-1, state->sentry)) {
+    } else if (state->sentry->checkDeferRead(-1)) {
         eventAdd("statObjects", statObjects, state, 0.1, 1);
         return;
     }
@@ -1586,8 +1587,6 @@ statClientRequests(StoreEntry * s)
                               ntohs(conn->me.sin_port));
             storeAppendPrintf(s, "\tnrequests: %d\n",
                               conn->nrequests);
-            storeAppendPrintf(s, "\tdefer: n %d, until %ld\n",
-                              conn->defer.n, (long int) conn->defer.until);
         }
 
         storeAppendPrintf(s, "uri %s\n", http->uri);

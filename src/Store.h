@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.7 2003/02/21 22:50:06 robertc Exp $
+ * $Id: Store.h,v 1.8 2003/03/04 01:40:25 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,8 @@
 #define SQUID_STORE_H
 
 #include "StoreIOBuffer.h"
+#include "Range.h"
+#include "CommRead.h"
 
 class StoreClient;
 
@@ -46,19 +48,23 @@ class StoreEntry : public hash_link
 {
 
 public:
-    static int CheckDeferRead(int fd, void *data);
     static void FsAdd(const char *, STSETUP *);
+    static DeferredRead::DeferrableRead DeferReader;
+    bool checkDeferRead(int fd) const;
 
     virtual const char *getMD5Text() const;
     virtual HttpReply const *getReply() const;
     virtual void write (StoreIOBuffer);
     virtual _SQUID_INLINE_ bool isEmpty() const;
-    virtual int checkDeferRead(int fd) const;
+    virtual size_t bytesWanted(Range<size_t> const) const;
     virtual void complete();
     virtual store_client_t storeClientType() const;
     virtual char const *getSerialisedMetaData();
     virtual bool swapoutPossible();
     virtual void trimMemory();
+
+    void delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data);
+    void setNoDelay (bool const);
 
     MemObject *mem_obj;
     RemovalPolicyNode repl;
@@ -127,7 +133,7 @@ public:
 
     bool isEmpty () const {return true;}
 
-    int checkDeferRead(int fd) const {return 1;}
+    virtual size_t bytesWanted(Range<size_t> const aRange) const { assert (aRange.size());return aRange.end - 1;}
 
     void operator delete(void *address);
     void complete(){}

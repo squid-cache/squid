@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.124 2003/02/21 22:50:11 robertc Exp $
+ * $Id: store_client.cc,v 1.125 2003/03/04 01:40:30 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -248,6 +248,11 @@ store_client::copy(StoreEntry * anEntry,
     copyInto.data = copyRequest.data;
     copyInto.length = copyRequest.length;
     copyInto.offset = copyRequest.offset;
+
+    /* we might be blocking comm reads due to readahead limits
+     * now we have a new offset, trigger those reads...
+     */
+    entry->mem_obj->kickReads();
 
     storeClientCopy2(entry, this);
 }
@@ -649,6 +654,8 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
     if (mem->nclients == 0)
         CheckQuickAbort(e);
+    else
+        mem->kickReads();
 
     return 1;
 }

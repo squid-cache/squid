@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.5 2003/02/21 22:50:06 robertc Exp $
+ * $Id: MemObject.cc,v 1.6 2003/03/04 01:40:25 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -397,8 +397,8 @@ MemObject::isContiguous() const
 {
     bool result = data_hdr.hasContigousContentRange (inmem_lo, endOffset());
     /* XXX : make this higher level */
-    debug (19, result ? 2 : 1) ("MemObject::isContiguous: Returning %s\n",
-                                result ? "true" : "false");
+    debug (19, result ? 4 :3) ("MemObject::isContiguous: Returning %s\n",
+                               result ? "true" : "false");
     return result;
 }
 
@@ -406,24 +406,6 @@ int
 MemObject::mostBytesWanted(int max) const
 {
 #if DELAY_POOLS
-#if 0
-    int i = -1;
-
-    for (dlink_node *node = clients.head; node; node = node->next) {
-        store_client *sc = (store_client *) node->data;
-
-        if (!sc->callbackPending())
-            /* not waiting for more data */
-            continue;
-
-        if (sc->getType() != STORE_MEM_CLIENT)
-            continue;
-
-        i = sc->delayId.bytesWanted(i, XMIN(sc->copyInto.length, (size_t)max));
-    }
-
-    return XMAX(i, 0);
-#endif
     /* identify delay id with largest allowance */
     DelayId largestAllowance = mostBytesAllowed ();
     return largestAllowance.bytesWanted(0, max);
@@ -431,6 +413,31 @@ MemObject::mostBytesWanted(int max) const
 
     return max;
 #endif
+}
+
+void
+MemObject::setNoDelay(bool const newValue)
+{
+#if DELAY_POOLS
+
+    for (dlink_node *node = clients.head; node; node = node->next) {
+        store_client *sc = (store_client *) node->data;
+        sc->delayId.setNoDelay(newValue);
+    }
+
+#endif
+}
+
+void
+MemObject::delayRead(DeferredRead const &aRead)
+{
+    deferredReads.delayRead(aRead);
+}
+
+void
+MemObject::kickReads()
+{
+    deferredReads.kickReads(-1);
 }
 
 #if DELAY_POOLS

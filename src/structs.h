@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.455 2003/02/25 15:07:54 hno Exp $
+ * $Id: structs.h,v 1.456 2003/03/04 01:40:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1021,65 +1021,6 @@ struct _AccessLogEntry
     HierarchyLogEntry hier;
 };
 
-struct _ConnStateData
-{
-    int fd;
-
-    struct
-    {
-        char *buf;
-        size_t notYetUsed;
-        size_t allocatedSize;
-    }
-
-    in;
-
-    struct
-    {
-        size_t size_left;	/* How much body left to process */
-        request_t *request;	/* Parameters passed to clientReadBody */
-        char *buf;
-        size_t bufsize;
-        CBCB *callback;
-        void *cbdata;
-    }
-
-    body;
-    auth_type_t auth_type;	/* Is this connection based authentication? if so what type it is. */
-    /* note this is ONLY connection based because NTLM is against HTTP spec */
-    /* the user details for connection based authentication */
-    auth_user_request_t *auth_user_request;
-    void *currentobject;	/* used by the owner of the connection. Opaque otherwise */
-
-    struct sockaddr_in peer;
-
-    struct sockaddr_in me;
-
-    struct in_addr log_addr;
-    char rfc931[USER_IDENT_SZ];
-    int nrequests;
-
-    struct
-    {
-        int n;
-        time_t until;
-    }
-
-    defer;
-
-    struct
-    {
-
-int readMoreRequests:
-        1;
-    }
-
-    flags;
-    bool reading;
-    http_port_list *port;
-    int transparent;
-};
-
 struct _ipcache_addrs
 {
 
@@ -1642,6 +1583,8 @@ struct _link_list
 };
 
 class HttpHdrRange;
+
+class ConnStateData;
 
 class request_t
 {

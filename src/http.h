@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.5 2003/02/21 22:50:09 robertc Exp $
+ * $Id: http.h,v 1.6 2003/03/04 01:40:28 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -71,7 +71,6 @@ private:
     };
     ConnectionStatus statusIfComplete() const;
     ConnectionStatus persistentConnStatus() const;
-    size_t amountToRead();
 };
 
 #endif /* SQUID_HTTP_H */

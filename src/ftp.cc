@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.345 2003/03/03 22:14:13 hno Exp $
+ * $Id: ftp.cc,v 1.346 2003/03/04 01:40:27 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2557,8 +2557,7 @@ ftpReadList(FtpStateData * ftpState)
         ftpAppendSuccessHeader(ftpState);
         /* XXX what about Config.Timeout.read? */
         assert(ftpState->data.offset == 0);
-        comm_read(ftpState->data.fd, ftpState->data.buf, ftpState->data.size, ftpDataRead, ftpState);
-        commSetDefer(ftpState->data.fd, StoreEntry::CheckDeferRead, ftpState->entry);
+        ftpState->entry->delayAwareRead(ftpState->data.fd, ftpState->data.buf, ftpState->data.size, ftpDataRead, ftpState);
         ftpState->state = READING_DATA;
         /*
          * Cancel the timeout on the Control socket and establish one
@@ -2606,14 +2605,9 @@ ftpReadRetr(FtpStateData * ftpState)
         ftpAppendSuccessHeader(ftpState);
         /* XXX what about Config.Timeout.read? */
         size_t read_sz = ftpState->data.size - ftpState->data.offset;
-#if DELAY_POOLS
 
-        read_sz = ftpState->entry->mem_obj->mostBytesAllowed().bytesWanted(1, read_sz);
-#endif
+        ftpState->entry->delayAwareRead(ftpState->data.fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, ftpState);
 
-        comm_read(ftpState->data.fd, ftpState->data.buf + ftpState->data.offset,
-                  read_sz, ftpDataRead, ftpState);
-        commSetDefer(ftpState->data.fd, StoreEntry::CheckDeferRead, ftpState->entry);
         ftpState->state = READING_DATA;
         /*
          * Cancel the timeout on the Control socket and establish one

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.30 2003/02/26 06:11:41 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.31 2003/03/04 01:40:55 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -42,6 +42,7 @@
 #include "auth_ntlm.h"
 #include "authenticate.h"
 #include "Store.h"
+#include "client_side.h"
 
 extern AUTHSSETUP authSchemeSetup_ntlm;
 

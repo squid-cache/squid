@@ -40,6 +40,7 @@
 #include "ACLChecklist.h"
 #include "ACLUserData.h"
 #include "ACLRegexData.h"
+#include "client_side.h"
 
 MemPool *ACLProxyAuth::Pool(NULL);
 void *
