@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.341 2003/08/31 21:20:08 robertc Exp $
+# $Id: cf.data.pre,v 1.342 2003/09/07 17:55:53 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -80,17 +80,25 @@ DOC_START
 
 	You may specify multiple socket addresses on multiple lines.
 
-	options are:
-		accel		Accelerator mode
-		transparent	Support for transparent proxies
-		vhost		Accelerator using Host directive
-		vport		Accelerator with IP virtual host support
-		vport=NN	As above, but uses specified port number
-				rather than the http_port number.
-		defaultsite=xx	Main web site name for accelerators.
-				also implies accel
-		protocol=	Protocol to reconstruct accelerated
-				requests with. Defaults to http.
+	Options:
+
+	   transparent	Support for transparent proxies
+
+	   accel	Accelerator mode. Also set implicit by the other
+			accelerator directives
+
+	   vhost	Accelerator mode using Host header for virtual
+			domain support
+
+	   vport	Accelerator with IP based virtual host support
+
+	   vport=NN	As above, but uses specified port number rather
+			than the http_port number
+
+	   defaultsite= Main web site name for accelerators
+
+	   protocol=	Protocol to reconstruct accelerated requests with.
+			Defaults to http
 
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface then we recommend you to specify the
@@ -123,10 +131,10 @@ DOC_START
 	Options:
 
 	   defaultsite=	The name of the https site presented on
-	   		this port.
+	   		this port
 
 	   protocol=	Protocol to reconstruct accelerated requests
-	   		with. Defaults to https.
+	   		with. Defaults to https
 
 	   cert=	Path to SSL certificate (PEM format)
 		
@@ -151,14 +159,14 @@ DOC_START
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
-			documentation for a complete list of options.
+			documentation for a complete list of options
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate
 
 	   cafile=	File containing additional CA certificates to
 			use when verifying client certificates. If unset
-			clientca will be used.
+			clientca will be used
 
 	   capath=	Directory containing additional CA certificates
 			to use when verifying client certificates
@@ -173,7 +181,18 @@ DOC_START
 				requires a certificate
 			    NO_DEFAULT_CA	
 				Don't use the default CA list built in
-				to OpenSSL.
+				to OpenSSL
+
+	   accel	Accelerator mode. Also set implicit by the other
+			accelerator directives
+
+	   vhost	Accelerator mode using Host header for virtual
+			domain support
+
+	   vport	Accelerator with IP based virtual host support
+
+	   vport=NN	As above, but uses specified port number rather
+			than the https_port number
 
 DOC_END
 
