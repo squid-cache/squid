@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.133 1997/07/16 22:57:02 wessels Exp $
+ * $Id: ftp.cc,v 1.134 1997/07/19 01:33:55 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -461,10 +461,9 @@ ftpHtmlifyListEntry(char *line, int flags)
     ftpListParts *parts;
     /* check .. as special case */
     if (!strcmp(line, "..")) {
-	sprintf(icon, "<IMG BORDER=0 SRC=\"%s%s%s\" ALT=\"%-6s\">",
-	    Config.Ftp.icon_prefix,
-	    "gopher-menu",
-	    Config.Ftp.icon_suffix,
+	sprintf(icon, "<IMG BORDER=0 SRC=\"%s%s\" ALT=\"%-6s\">",
+	    "http://internal.squid/icons/",
+	    "menu",
 	    "[DIR]");
 	sprintf(link, "<A HREF=\"%s\">%s</A>", "../", "Parent Directory");
 	sprintf(html, "%s %s\n", icon, link);
@@ -495,10 +494,9 @@ ftpHtmlifyListEntry(char *line, int flags)
     ename = xstrdup(rfc1738_escape(parts->name));
     switch (parts->type) {
     case 'd':
-	sprintf(icon, "<IMG SRC=\"%sgopher-%s%s\" ALT=\"%-6s\">",
-	    Config.Ftp.icon_prefix,
+	sprintf(icon, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
+	    "http://internal.squid/icons/",
 	    "menu",
-	    Config.Ftp.icon_suffix,
 	    "[DIR]");
 	sprintf(link, "<A HREF=\"%s/\">%s</A>%s",
 	    ename,
@@ -510,10 +508,9 @@ ftpHtmlifyListEntry(char *line, int flags)
 	    parts->date);
 	break;
     case 'l':
-	sprintf(icon, "<IMG SRC=\"%sgopher-%s%s\" ALT=\"%-6s\">",
-	    Config.Ftp.icon_prefix,
+	sprintf(icon, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
+	    "http://internal.squid/icons/",
 	    mimeGetIcon(parts->link),
-	    Config.Ftp.icon_suffix,
 	    "[LINK]");
 	sprintf(link, "<A HREF=\"%s\">%s</A>%s",
 	    ename,
@@ -526,10 +523,9 @@ ftpHtmlifyListEntry(char *line, int flags)
 	break;
     case '-':
     default:
-	sprintf(icon, "<IMG SRC=\"%sgopher-%s%s\" ALT=\"%-6s\">",
-	    Config.Ftp.icon_prefix,
+	sprintf(icon, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
+	    "http://internal.squid/icons/",
 	    mimeGetIcon(parts->name),
-	    Config.Ftp.icon_suffix,
 	    "[FILE]");
 	sprintf(link, "<A HREF=\"%s\">%s</A>%s",
 	    ename,

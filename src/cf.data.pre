@@ -714,6 +714,14 @@ DOC_START
 ftp_user squid@
 DOC_END
 
+NAME: ftp_list_width
+TYPE: int
+DEFAULT: 32
+LOC: Config.Ftp.list_width
+DOC_START
+ftp_list_width 32
+DOC_END
+
 
 NAME: cache_dns_program
 TYPE: pathname_stat
@@ -1834,5 +1842,20 @@ DOC_START
 fake_user_agent none
 DOC_END
 
+NAME: icon_directory
+TYPE: pathname_stat
+LOC: Config.icons.directory
+DEFAULT: @DEFAULT_ICON_DIR@
+DOC_START
+	XXX
+DOC_END
+
+NAME: icon_content_type
+TYPE: string
+LOC: Config.icons.content_type
+DEFAULT: image/gif
+DOC_START
+	XXX
+DOC_END
 
 EOF

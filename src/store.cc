@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.276 1997/07/16 22:58:25 wessels Exp $
+ * $Id: store.cc,v 1.277 1997/07/19 01:33:58 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2064,6 +2064,8 @@ storeEntryLocked(const StoreEntry * e)
     if (e->mem_status == SWAPPING_IN)
 	return 1;
     if (e->store_status == STORE_PENDING)
+	return 1;
+    if (BIT_TEST(e->flag, ENTRY_SPECIAL))
 	return 1;
     return 0;
 }

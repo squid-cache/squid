@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.32 1997/07/16 22:57:42 wessels Exp $
+ * $Id: mime.cc,v 1.33 1997/07/19 01:33:57 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -119,6 +119,8 @@ typedef struct _mime_entry {
 
 static mimeEntry *MimeTable = NULL;
 static mimeEntry **MimeTableTail = NULL;
+
+static void mimeLoadIconFile _PARAMS((const char *icon));
 
 char *
 mime_get_header(const char *mime, const char *name)
@@ -368,9 +370,63 @@ mimeInit(char *filename)
 	    m->transfer_mode = 'A';
 	else
 	    m->transfer_mode = 'I';
+	mimeLoadIconFile(m->icon);
 	debug(25, 5) ("mimeInit: added '%s'\n", buf);
 	*MimeTableTail = m;
 	MimeTableTail = &m->next;
     }
     fclose(fp);
+}
+
+static void
+mimeLoadIconFile(const char *icon)
+{
+	int fd;
+	int n;
+	int l;
+	struct stat sb;
+	StoreEntry *e;
+	LOCAL_ARRAY(char, path, MAXPATHLEN);
+	LOCAL_ARRAY(char, url, MAX_URL);
+	char *buf;
+	snprintf(url, MAX_URL, "http://internal.squid/icons/%s", icon);
+	if (storeGet(url))
+		return;
+	snprintf(path, MAXPATHLEN, "%s/%s", Config.icons.directory, icon);
+	fd = file_open(path, O_RDONLY, NULL, NULL);
+	if (fd < 0) {
+		debug(25,0)("mimeLoadIconFile: %s: %s\n", path, xstrerror());
+		return;
+	}
+	if (fstat(fd, &sb) < 0) {
+		debug(50,0)("mimeLoadIconFile: FD %d: fstat: %s\n", fd, xstrerror());
+		return;
+	}
+	e = storeCreateEntry(url,
+		url,
+		REQ_CACHABLE,
+		METHOD_GET);
+	assert(e != NULL);
+	e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
+	buf = get_free_4k_page();
+	l = 0;
+	l += snprintf(buf+l, SM_PAGE_SIZE-l, "HTTP/1.0 200 OK\r\n");
+	l += snprintf(buf+l, SM_PAGE_SIZE-l, "Date: %s\r\n", mkrfc1123(squid_curtime));
+	l += snprintf(buf+l, SM_PAGE_SIZE-l, "Server: Squid/%s\r\n", version_string);
+	l += snprintf(buf+l, SM_PAGE_SIZE-l, "Content-Type: %s\r\n", Config.icons.content_type);
+	l += snprintf(buf+l, SM_PAGE_SIZE-l, "Content-Length: %d\r\n", (int) sb.st_size);
+	l += snprintf(buf+l, SM_PAGE_SIZE-l, "Last-Modified: %s\r\n", mkrfc1123(sb.st_mtime));
+	l += snprintf(buf+l, SM_PAGE_SIZE-l, "Expires: %s\r\n", mkrfc1123(squid_curtime + 86400));
+	l += snprintf(buf+l, SM_PAGE_SIZE-l, "\r\n");
+	httpParseReplyHeaders(buf, e->mem_obj->reply);
+	storeAppend(e, buf, l);
+	while ((n = read(fd, buf, SM_PAGE_SIZE)) > 0)
+		storeAppend(e, buf, n);
+	file_close(fd);
+	storeSetPublicKey(e);
+	storeComplete(e);
+	storeTimestampsSet(e);
+	BIT_SET(e->flag, ENTRY_SPECIAL);
+	debug(25,1)("Loaded icon %s\n", url);
+	put_free_4k_page(buf);
 }

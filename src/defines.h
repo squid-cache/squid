@@ -210,6 +210,7 @@
 #define DELAY_SENDING 		(1<<3)
 #define ENTRY_REVALIDATE 	(1<<2)
 #define DELETE_BEHIND   	(1<<1)
+#define ENTRY_SPECIAL		(1<<0)
 
 #define MAX_FILES_PER_DIR (1<<20)
 
