@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.99 2004/12/20 18:01:06 robertc Exp $
+#  $Id: Makefile.am,v 1.100 2004/12/20 18:14:31 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -171,6 +171,7 @@ EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
+INCLUDES	+= @SQUID_CPPUNIT_INC@
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
