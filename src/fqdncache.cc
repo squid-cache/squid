@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.127 1999/04/18 05:27:13 wessels Exp $
+ * $Id: fqdncache.cc,v 1.128 1999/04/18 05:28:52 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -299,7 +299,7 @@ fqdncacheParse(rfc1035_rr * answers, int nr)
 	f.error_message = xstrdup("No DNS records");
 	return &f;
     }
-    debug(35, 1) ("fqdncacheParse: %d answers\n", nr);
+    debug(35, 3) ("fqdncacheParse: %d answers\n", nr);
     assert(answers);
     for (j = 0, k = 0; k < nr; k++) {
 	if (answers[k].type != RFC1035_TYPE_PTR)
