@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.52 2001/01/12 00:37:15 wessels Exp $
+ * $Id: client_db.cc,v 1.53 2001/02/23 20:59:50 hno Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -290,7 +290,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	break;
     case MESH_CTBL_HTHITS:
 	aggr = 0;
-	for (l = 0; l < LOG_TYPE_MAX; l++) {
+	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {
 	    if (isTcpHit(l))
 		aggr += c->Http.result_hist[l];
 	}

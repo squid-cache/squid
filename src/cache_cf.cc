@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.376 2001/02/21 00:02:34 hno Exp $
+ * $Id: cache_cf.cc,v 1.377 2001/02/23 20:59:50 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1210,7 +1210,6 @@ static void
 dump_peer(StoreEntry * entry, const char *name, peer * p)
 {
     domain_ping *d;
-    acl_access *a;
     domain_type *t;
     LOCAL_ARRAY(char, xname, 128);
     while (p != NULL) {
@@ -1227,7 +1226,7 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
 		d->do_ping ? null_string : "!",
 		d->domain);
 	}
-	if ((a = p->access)) {
+	if (p->access) {
 	    snprintf(xname, 128, "cache_peer_access %s", p->host);
 	    dump_acl_access(entry, xname, p->access);
 	}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.232 2001/01/12 00:37:18 wessels Exp $
+ * $Id: ipcache.cc,v 1.233 2001/02/23 20:59:51 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -364,13 +364,12 @@ ipcacheHandleReply(void *data, char *reply)
 ipcacheHandleReply(void *data, rfc1035_rr * answers, int na)
 #endif
 {
-    int n;
     generic_cbdata *c = data;
     ipcache_entry *i = c->data;
     ipcache_entry *x = NULL;
     cbdataFree(c);
     c = NULL;
-    n = ++IpcacheStats.replies;
+    IpcacheStats.replies++;
     statHistCount(&statCounter.dns.svc_time,
 	tvSubMsec(i->request_time, current_time));
 #if USE_DNSSERVERS
