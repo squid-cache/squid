@@ -1,6 +1,6 @@
 DOC	= prog-guide
 
-all: $(DOC).html $(DOC).ps
+all: $(DOC).html $(DOC).ps $(DOC).txt
 
 $(DOC).ps: $(DOC).dvi
 	dvips -o $(DOC).ps $(DOC).dvi
