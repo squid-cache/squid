@@ -89,7 +89,7 @@ typedef int HASHCMP _PARAMS((const char *, const char *));
 typedef unsigned int HASHHASH _PARAMS((const char *, unsigned int));
 typedef void IDCB _PARAMS((void *));
 typedef void IPH _PARAMS((const ipcache_addrs *, void *));
-typedef void IRCB _PARAMS((peer *, peer_t, icp_opcode, void *data));
+typedef void IRCB _PARAMS((peer *, peer_t, icp_common_t *, void *data));
 typedef void PSC _PARAMS((peer *, void *));
 typedef void RH _PARAMS((void *data, char *result));
 

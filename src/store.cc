@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.280 1997/08/10 05:05:33 wessels Exp $
+ * $Id: store.cc,v 1.281 1997/08/25 02:17:49 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1334,6 +1334,8 @@ storeDoRebuildFromDisk(void *data)
 	    RB->invalid++;
 	    continue;
 	}
+	if (strncmp(url, "http://internal.squid", 21) == 0)
+	    continue;
 	storeSwapFullPath(sfileno, swapfile);
 	if (x != 9) {
 	    RB->invalid++;
@@ -2770,12 +2772,6 @@ storeMemObjectDump(MemObject * mem)
     debug(20, 1) ("MemObject->e_swap_buf: %p %s\n",
 	mem->e_swap_buf,
 	checkNullString(mem->e_swap_buf));
-    debug(20, 1) ("MemObject->w_rtt: %d\n",
-	mem->w_rtt);
-    debug(20, 1) ("MemObject->e_pings_closest_parent: %p\n",
-	mem->e_pings_closest_parent);
-    debug(20, 1) ("MemObject->p_rtt: %d\n",
-	mem->p_rtt);
     debug(20, 1) ("MemObject->start_ping: %d.%06d\n",
 	mem->start_ping.tv_sec,
 	mem->start_ping.tv_usec);
