@@ -533,6 +533,7 @@ u_char *asn_build_header_with_truth(u_char *data, int *datalength,
   return(asn_build_length(data, datalength, length, truth));
 }
 
+#if 0
 /*
  * asn_build_sequence - builds an ASN header for a sequence with the ID and
  * length specified.
@@ -566,6 +567,7 @@ u_char *asn_build_sequence(u_char *data, int *datalength,
   *data++ = (u_char)(length & 0xFF);
   return(data);
 }
+#endif
 
 /*
  * asn_parse_length - interprets the length of the current object.
@@ -829,6 +831,7 @@ u_char *asn_build_objid(u_char *data, int *datalength,
   return(data + asnlength);
 }
 
+#if 0
 /*
  * asn_parse_null - Interprets an ASN null type.
  *  On entry, datalength is input as the number of valid bytes following
@@ -863,6 +866,7 @@ u_char *asn_parse_null(u_char *data, int *datalength, u_char *type)
   *datalength -= (bufp - data);
   return(bufp + asn_length);
 }
+#endif
 
 /*
  * asn_build_null - Builds an ASN null object.
@@ -884,6 +888,8 @@ u_char *asn_build_null(u_char *data, int *datalength, u_char type)
    */
   return(asn_build_header_with_truth(data, datalength, type, 0, 1));
 }
+
+#if 0
 
 /*
  * asn_parse_bitstring - pulls a bitstring out of an ASN bitstring type.
@@ -983,6 +989,7 @@ u_char *asn_build_bitstring(u_char *data, int *datalength,
   return(data + strlength);
 }
 
+#endif
 
 /*
  * To do: Write an asn_parse_exception function to go with the new 

@@ -74,6 +74,7 @@ int snmp_build(struct snmp_session *, struct snmp_pdu *,
  * the pointer passed to snmp_open()).  On any error, NULL is returned
  * and snmp_errno is set to the appropriate error code.
  */
+#if 0
 struct snmp_session *snmp_open(struct snmp_session *);
 
 /*
@@ -101,7 +102,6 @@ int snmp_close(struct snmp_session *);
  * The pdu is freed by snmp_send() unless a failure occured.
  */
 int snmp_send(struct snmp_session *, struct snmp_pdu *);
-
 
 /*
  * void snmp_read(fdset)
@@ -178,7 +178,7 @@ void snmp_timeout(void);
 
 
 void snmp_api_stats(void *);
-
+#endif
 #ifdef __cplusplus
 }
 #endif

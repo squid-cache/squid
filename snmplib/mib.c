@@ -81,9 +81,11 @@ SOFTWARE.
 
 #include "util.h"
 #include "snprintf.h"
-
+#if 0
 static void sprint_by_type();
+#endif
 
+#if 0
 static char *
 uptimeString(timeticks, buf)
     int timeticks;
@@ -373,6 +375,7 @@ int quiet;
     }
     sprintf(buf, "%d.%d.%d.%d",ip[0], ip[1], ip[2], ip[3]);
 }
+#endif
 
 #if 0
 static void
@@ -396,6 +399,7 @@ void *foo;
 }
 #endif 
 
+#if 0
 static void
 sprint_null(buf, var, foo, quiet)
     char *buf;
@@ -470,6 +474,7 @@ sprint_by_type(buf, var, enums, quiet)
 	    break;
     }
 }
+#endif
 
 static struct snmp_mib_tree *get_symbol();
 
@@ -477,6 +482,7 @@ oid RFC1066_MIB[] = { 1, 3, 6, 1, 2, 1 };
 unsigned char RFC1066_MIB_text[] = ".iso.org.dod.internet.mgmt.mib";
 struct snmp_mib_tree *Mib;
 
+#if 0
 static void
 set_functions(subtree)
     struct snmp_mib_tree *subtree;
@@ -521,6 +527,7 @@ set_functions(subtree)
 	set_functions(subtree->child_list);
     }
 }
+#endif
 
 void init_mib(char *file)
 {
@@ -531,7 +538,9 @@ void init_mib(char *file)
 
     if (file != NULL)
 	Mib = read_mib(file);
+#if 0
     set_functions(Mib);
+#endif
 }
 
 
@@ -725,7 +734,7 @@ void sprint_objid(buf, objid, objidlen)
     get_symbol(objid, objidlen, subtree, buf + 1);
 }
 
-
+#if 0
 void print_variable(objid, objidlen, pvariable)
     oid     *objid;
     int	    objidlen;
@@ -811,6 +820,7 @@ void print_value(objid, objidlen, pvariable)
     }
     printf("%s\n", tempbuf);
 }
+#endif
 
 static struct snmp_mib_tree *
 get_symbol(objid, objidlen, subtree, buf)
@@ -854,13 +864,11 @@ found:
 
 
 
-
-
+#if 0
 void print_variable_list(variable_list *V)
 {
   print_variable(V->name, V->name_length, V);
 }
-
 
 void print_variable_list_value(variable_list *pvariable)
 {
@@ -878,6 +886,7 @@ void print_variable_list_value(variable_list *pvariable)
   }
   printf("%s", buf);
 }
+#endif
 
 void print_type(variable_list *var)
 {
