@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.202 2000/06/08 18:05:35 hno Exp $
+ * $Id: squid.h,v 1.203 2000/08/07 23:01:18 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -389,7 +389,9 @@ struct rusage {
 #define XMAX(a,b) ((a)>(b)? (a) : (b))
 
 /*
- * Squid source files should not call these functions directly
+ * Squid source files should not call these functions directly.
+ * Use xmalloc, xfree, xcalloc, snprintf, and xstrdup instead.
+ * Also use xmemcpy, xisspace, ...
  */
 #ifndef malloc
 #define malloc +
