@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.22 1998/08/14 17:23:41 wessels Exp $
+ * $Id: pconn.cc,v 1.23 1998/08/14 18:02:49 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -198,7 +198,7 @@ pconnPush(int fd, const char *host, u_short port)
 	p->nfds_alloc <<= 1;
 	old = p->fds;
 	p->fds = xmalloc(p->nfds_alloc * sizeof(int));
-	xmemcpy(p->fds, old, p->nfds);
+	xmemcpy(p->fds, old, p->nfds * sizeof(int));
 	xfree(old);
     }
     p->fds[p->nfds++] = fd;
