@@ -1,5 +1,5 @@
 /*
- * $Id: squid.h,v 1.22 1996/07/08 22:42:53 wessels Exp $
+ * $Id: squid.h,v 1.23 1996/07/09 03:41:39 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -253,6 +253,7 @@ extern char version_string[];	/* main.c */
 extern char appname[];		/* main.c */
 extern struct in_addr local_addr;	/* main.c */
 extern char localhost[];
+extern struct in_addr any_addr;	/* comm.c */
 
 
 /* Prototypes and definitions which don't really deserve a seaprate

@@ -1,10 +1,34 @@
-/* $Id: errorpage.cc,v 1.21 1996/05/01 22:36:28 wessels Exp $ */
-
-/* DEBUG: Section 4             errorpage: Error printing routines */
+/*
+ * $Id: errorpage.cc,v 1.22 1996/07/09 03:41:23 wessels Exp $
+ *
+ * DEBUG: section 4     Error Generation
+ * AUTHOR: Duane Wessels
+ *
+ * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
 
 #include "squid.h"
-
-
 
 #define SQUID_ERROR_MSG_P1 "\
 <TITLE>ERROR: The requested URL could not be retrieved</TITLE>\n\
@@ -95,16 +119,14 @@ error_data ErrorData[] =
 char *tmp_error_buf;
 
 /* LOCAL */
-static char *tbuf;
-
-int log_errors = 1;
+static char *tbuf = NULL;
 
 void errorInitialize()
 {
-    tmp_error_buf = (char *) xmalloc(MAX_URL * 4);
-    tbuf = (char *) xmalloc(MAX_URL * 3);
+    tmp_error_buf = xmalloc(MAX_URL * 4);
+    tbuf = xmalloc(MAX_URL * 3);
+    meta_data.misc += MAX_URL * 7;
 }
-
 
 void squid_error_entry(entry, type, msg)
      StoreEntry *entry;
@@ -166,8 +188,7 @@ char *squid_error_url(url, method, type, address, code, msg)
 	appname,
 	version_string,
 	getMyHostname());
-    if (!log_errors)
-	return tmp_error_buf;
+    strcat(tmp_error_buf, tbuf);
     return tmp_error_buf;
 }
 
@@ -191,12 +212,9 @@ char *squid_error_request(request, type, address, code)
      char *address;
      int code;
 {
-    int index;
-
     *tmp_error_buf = '\0';
     if (type < ERR_MIN || type > ERR_MAX)
-	fatal_dump("squid_error_url: type out of range.");
-    index = (int) (type - ERR_MIN);
+	fatal_dump("squid_error_request: type out of range.");
 
     sprintf(tmp_error_buf, "HTTP/1.0 %d Cache Detected Error\r\nContent-type: text/html\r\n\r\n", code);
     sprintf(tbuf, SQUID_REQUEST_ERROR_MSG,
@@ -205,8 +223,6 @@ char *squid_error_request(request, type, address, code)
 	version_string,
 	getMyHostname());
     strcat(tmp_error_buf, tbuf);
-    if (!log_errors)
-	return tmp_error_buf;
     return tmp_error_buf;
 }
 

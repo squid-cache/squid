@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.25 1996/05/03 22:56:20 wessels Exp $
+#  $Id: Makefile.in,v 1.26 1996/07/09 03:41:17 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -35,19 +35,19 @@ RANLIB		= @RANLIB@
 LN_S		= @LN_S@
 PERL            = @PERL@
 CRYPT_LIB	= @CRYPT_LIB@
-STD_CFLAGS	= @STD_CFLAGS@
-STD_LDFLAGS	= @STD_LDFLAGS@
-XTRA_CFLAGS	= @XTRA_CFLAGS@
+AC_CFLAGS	= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
 XTRA_OBJS 	= @XTRA_OBJS@
+MV		= @MV@
+RM		= @RM@
 SHELL		= /bin/sh
 
 
 INCLUDE		= -I. -I../include -I$(srcdir)/../include
-CFLAGS 		= $(STD_CFLAGS) $(XTRA_CFLAGS) $(INCLUDE) $(DEFINES)
-LDFLAGS         = $(STD_LDFLAGS)
-LIBS		= -L../lib -lregex -lutil $(XTRA_LIBS)
-CLIENT_LIBS	= -L../lib -lutil $(XTRA_LIBS)
+CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
+LIBS		= -L../lib -lregex -lmiscutil $(XTRA_LIBS)
+CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 
 PROGS           = squid client
 UTILS           = dnsserver ftpget
@@ -103,47 +103,71 @@ squid.conf: squid.conf.pre
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g" <$? >$@
 
 install-mkdirs:
-	@if test ! -d $(prefix); then \
+	-@if test ! -d $(prefix); then \
 		echo "mkdir $(prefix)"; \
 		mkdir $(prefix); \
 	fi
-	@if test ! -d $(exec_prefix); then \
+	-@if test ! -d $(exec_prefix); then \
 		echo "mkdir $(exec_prefix)"; \
 		mkdir $(exec_prefix); \
 	fi
-	@if test ! -d $(bindir); then \
+	-@if test ! -d $(bindir); then \
 		echo "mkdir $(bindir)"; \
 		mkdir $(bindir); \
 	fi
-	@if test ! -d $(libexecdir); then \
+	-@if test ! -d $(libexecdir); then \
 		echo "mkdir $(libexecdir)"; \
 		mkdir $(libexecdir); \
 	fi
-	@if test ! -d $(sysconfdir); then \
+	-@if test ! -d $(sysconfdir); then \
 		echo "mkdir $(sysconfdir)"; \
 		mkdir $(sysconfdir); \
 	fi
-	@if test ! -d $(localstatedir); then \
+	-@if test ! -d $(localstatedir); then \
 		echo "mkdir $(localstatedir)"; \
 		mkdir $(localstatedir); \
 	fi
-	@if test ! -d $(localstatedir)/logs; then \
+	-@if test ! -d $(localstatedir)/logs; then \
 		echo "mkdir $(localstatedir)/logs"; \
 		mkdir $(localstatedir)/logs; \
 	fi
 
 install: all install-mkdirs
 	@for f in $(PROGS); do \
+		if test -f $(bindir)/$$f; then \
+			echo $(MV) $(bindir)/$$f $(bindir)/-$$f; \
+			$(MV) $(bindir)/$$f $(bindir)/-$$f; \
+		fi; \
 		echo $(INSTALL_BIN) $$f $(bindir); \
 		$(INSTALL_BIN) $$f $(bindir); \
+		if test -f $(bindir)/-$$f; then \
+			echo $(RM) -f $(bindir)/-$$f; \
+			$(RM) $(bindir)/-$$f; \
+		fi; \
 	done
 	@for f in $(UTILS); do \
+		if test -f $(libexecdir)/$$f; then \
+			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+			$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+		fi; \
 		echo $(INSTALL_BIN) $$f $(libexecdir); \
 		$(INSTALL_BIN) $$f $(libexecdir); \
+		if test -f $(libexecdir)/-$$f; then \
+			echo $(RM) -f $(libexecdir)/-$$f; \
+			$(RM) $(libexecdir)/-$$f; \
+		fi; \
 	done
 	@for f in $(CGIPROGS); do \
+		if test -f $(libexecdir)/$$f; then \
+			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+			$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+		fi; \
 		echo $(INSTALL_BIN) $$f $(libexecdir); \
 		$(INSTALL_BIN) $$f $(libexecdir); \
+		if test -f $(libexecdir)/-$$f; then \
+			echo $(RM) -f $(libexecdir)/-$$f; \
+			$(RM) $(libexecdir)/-$$f; \
+		fi; \
 	done
 	$(INSTALL_FILE) squid.conf $(sysconfdir)/squid.conf.default
 	@if test -f $(sysconfdir)/squid.conf ; then \
@@ -158,3 +182,6 @@ clean:
 
 realclean:	clean
 	-rm -f Makefile squid.conf squid.conf.pre
+
+tags:
+	ctags *.[ch] ../include/*.h ../lib/*.[ch]

@@ -1,8 +1,106 @@
-
-/* $Id: tools.cc,v 1.42 1996/05/01 22:36:41 wessels Exp $ */
+/*
+ * $Id: tools.cc,v 1.43 1996/07/09 03:41:45 wessels Exp $
+ *
+ * DEBUG: section 21    Misc Functions
+ * AUTHOR: Harvest Derived
+ *
+ * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
 
 /*
- * DEBUG: Section 21          tools
+ * Copyright (c) 1994, 1995.  All rights reserved.
+ *  
+ *   The Harvest software was developed by the Internet Research Task
+ *   Force Research Group on Resource Discovery (IRTF-RD):
+ *  
+ *         Mic Bowman of Transarc Corporation.
+ *         Peter Danzig of the University of Southern California.
+ *         Darren R. Hardy of the University of Colorado at Boulder.
+ *         Udi Manber of the University of Arizona.
+ *         Michael F. Schwartz of the University of Colorado at Boulder.
+ *         Duane Wessels of the University of Colorado at Boulder.
+ *  
+ *   This copyright notice applies to software in the Harvest
+ *   ``src/'' directory only.  Users should consult the individual
+ *   copyright notices in the ``components/'' subdirectories for
+ *   copyright information about other software bundled with the
+ *   Harvest source code distribution.
+ *  
+ * TERMS OF USE
+ *   
+ *   The Harvest software may be used and re-distributed without
+ *   charge, provided that the software origin and research team are
+ *   cited in any use of the system.  Most commonly this is
+ *   accomplished by including a link to the Harvest Home Page
+ *   (http://harvest.cs.colorado.edu/) from the query page of any
+ *   Broker you deploy, as well as in the query result pages.  These
+ *   links are generated automatically by the standard Broker
+ *   software distribution.
+ *   
+ *   The Harvest software is provided ``as is'', without express or
+ *   implied warranty, and with no support nor obligation to assist
+ *   in its use, correction, modification or enhancement.  We assume
+ *   no liability with respect to the infringement of copyrights,
+ *   trade secrets, or any patents, and are not responsible for
+ *   consequential damages.  Proper use of the Harvest software is
+ *   entirely the responsibility of the user.
+ *  
+ * DERIVATIVE WORKS
+ *  
+ *   Users may make derivative works from the Harvest software, subject 
+ *   to the following constraints:
+ *  
+ *     - You must include the above copyright notice and these 
+ *       accompanying paragraphs in all forms of derivative works, 
+ *       and any documentation and other materials related to such 
+ *       distribution and use acknowledge that the software was 
+ *       developed at the above institutions.
+ *  
+ *     - You must notify IRTF-RD regarding your distribution of 
+ *       the derivative work.
+ *  
+ *     - You must clearly notify users that your are distributing 
+ *       a modified version and not the original Harvest software.
+ *  
+ *     - Any derivative product is also subject to these copyright 
+ *       and use restrictions.
+ *  
+ *   Note that the Harvest software is NOT in the public domain.  We
+ *   retain copyright, as specified above.
+ *  
+ * HISTORY OF FREE SOFTWARE STATUS
+ *  
+ *   Originally we required sites to license the software in cases
+ *   where they were going to build commercial products/services
+ *   around Harvest.  In June 1995 we changed this policy.  We now
+ *   allow people to use the core Harvest software (the code found in
+ *   the Harvest ``src/'' directory) for free.  We made this change
+ *   in the interest of encouraging the widest possible deployment of
+ *   the technology.  The Harvest software is really a reference
+ *   implementation of a set of protocols and formats, some of which
+ *   we intend to standardize.  We encourage commercial
+ *   re-implementations of code complying to this set of standards.  
  */
 
 #include "squid.h"
@@ -10,8 +108,6 @@
 int do_mallinfo = 0;		/* don't do mallinfo() unless this gets set */
 time_t squid_curtime;
 struct timeval current_time;
-
-extern void serverConnectionsClose _PARAMS((void));
 
 #define DEAD_MSG "\
 The Squid Cache (version %s) died.\n\
@@ -63,52 +159,65 @@ static void dumpMallocStats(f)
 {
 #if HAVE_MALLINFO
     struct mallinfo mp;
-
+    int t;
     if (!do_mallinfo)
 	return;
-
     mp = mallinfo();
-
-    fprintf(f, "Malloc Instrumentation via mallinfo(): \n");
-    fprintf(f, "   total space in arena  %d\n", mp.arena);
-    fprintf(f, "   number of ordinary blocks  %d\n", mp.ordblks);
-    fprintf(f, "   number of small blocks  %d\n", mp.smblks);
-    fprintf(f, "   number of holding blocks  %d\n", mp.hblks);
-    fprintf(f, "   space in holding block headers  %d\n", mp.hblkhd);
-    fprintf(f, "   space in small blocks in use  %d\n", mp.usmblks);
-    fprintf(f, "   space in free blocks  %d\n", mp.fsmblks);
-    fprintf(f, "   space in ordinary blocks in use  %d\n", mp.uordblks);
-    fprintf(f, "   space in free ordinary blocks  %d\n", mp.fordblks);
-    fprintf(f, "   cost of enabling keep option  %d\n", mp.keepcost);
+    fprintf(f, "Memory usage for %s via mallinfo():\n", appname);
+    fprintf(f, "\ttotal space in arena:  %6d KB\n",
+	mp.arena >> 10);
+    fprintf(f, "\tOrdinary blocks:       %6d KB %6d blks\n",
+	mp.uordblks >> 10, mp.ordblks);
+    fprintf(f, "\tSmall blocks:          %6d KB %6d blks\n",
+	mp.usmblks >> 10, mp.smblks);
+    fprintf(f, "\tHolding blocks:        %6d KB %6d blks\n",
+	mp.hblkhd >> 10, mp.hblks);
+    fprintf(f, "\tFree Small blocks:     %6d KB\n",
+	mp.fsmblks >> 10);
+    fprintf(f, "\tFree Ordinary blocks:  %6d KB\n",
+	mp.fordblks >> 10);
+    t = mp.uordblks + mp.usmblks + mp.hblkhd;
+    fprintf(f, "\tTotal in use:          %6d KB %d%%\n",
+	t >> 10, percent(t, mp.arena));
+    t = mp.fsmblks + mp.fordblks;
+    fprintf(f, "\tTotal free:            %6d KB %d%%\n",
+	t >> 10, percent(t, mp.arena));
+#ifdef WE_DONT_USE_KEEP
+    fprintf(f, "\tKeep option:           %6d KB\n",
+	mp.keepcost >> 10);
+#endif
 #if HAVE_EXT_MALLINFO
-    fprintf(f, "   max size of small blocks  %d\n", mp.mxfast);
-    fprintf(f, "   number of small blocks in a holding block  %d\n",
+    fprintf(f, "\tmax size of small blocks:\t%d\n",
+	mp.mxfast);
+    fprintf(f, "\tnumber of small blocks in a holding block:\t%d\n",
 	mp.nlblks);
-    fprintf(f, "   small block rounding factor  %d\n", mp.grain);
-    fprintf(f, "   space (including overhead) allocated in ord. blks  %d\n",
+    fprintf(f, "\tsmall block rounding factor:\t%d\n",
+	mp.grain);
+    fprintf(f, "\tspace (including overhead) allocated in ord. blks:\t%d\n",
 	mp.uordbytes);
-    fprintf(f, "   number of ordinary blocks allocated  %d\n",
+    fprintf(f, "\tnumber of ordinary blocks allocated:\t%d\n",
 	mp.allocated);
-    fprintf(f, "   bytes used in maintaining the free tree  %d\n",
+    fprintf(f, "\tbytes used in maintaining the free tree:\t%d\n",
 	mp.treeoverhead);
 #endif /* HAVE_EXT_MALLINFO */
-
 #if PRINT_MMAP
     mallocmap();
 #endif /* PRINT_MMAP */
 #endif /* HAVE_MALLINFO */
 }
+
 static int PrintRusage(f, lf)
      void (*f) ();
      FILE *lf;
 {
-#if HAVE_RUSAGE && defined(RUSAGE_SELF)
+#if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
     struct rusage rusage;
     getrusage(RUSAGE_SELF, &rusage);
-    fprintf(lf, "CPU Usage: user %d sys %d\nMemory Usage: rss %d KB\n",
-	rusage.ru_utime.tv_sec, rusage.ru_stime.tv_sec,
-	rusage.ru_maxrss * getpagesize() / 1000);
-    fprintf(lf, "Page faults with physical i/o: %d\n",
+    fprintf(lf, "CPU Usage: user %d sys %d\n",
+	(int) rusage.ru_utime.tv_sec, (int) rusage.ru_stime.tv_sec);
+    fprintf(lf, "Memory Usage: rss %ld KB\n",
+	rusage.ru_maxrss * getpagesize() >> 10);
+    fprintf(lf, "Page faults with physical i/o: %ld\n",
 	rusage.ru_majflt);
 #endif
     dumpMallocStats(lf);
@@ -126,9 +235,11 @@ void death(sig)
 	fprintf(debug_log, "FATAL: Received bus error...dying.\n");
     else
 	fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
+#if !HAVE_SIGACTION
     signal(SIGSEGV, SIG_DFL);
     signal(SIGBUS, SIG_DFL);
     signal(sig, SIG_DFL);
+#endif
     storeWriteCleanLog();
     PrintRusage(NULL, debug_log);
     print_warranty();
@@ -136,54 +247,55 @@ void death(sig)
 }
 
 
-void rotate_logs(sig)
+void sigusr2_handle(sig)
      int sig;
 {
-    debug(21, 1, "rotate_logs: SIGUSR1 received.\n");
-
-    storeWriteCleanLog();
-    storeRotateLog();
-    neighbors_rotate_log();
-    stat_rotate_log();
-    _db_rotate_log();
-#if RESET_SIGNAL_HANDLER
-    signal(sig, rotate_logs);
+    static int state = 0;
+    debug(21, 1, "sigusr2_handle: SIGUSR2 received.\n");
+    if (state == 0) {
+	_db_init(getCacheLogFile(), "ALL,10");
+	state = 1;
+    } else {
+	_db_init(getCacheLogFile(), getDebugOptions());
+	state = 0;
+    }
+#if !HAVE_SIGACTION
+    signal(sig, sigusr2_handle);	/* reinstall */
 #endif
+}
+
+void setSocketShutdownLifetimes()
+{
+    FD_ENTRY *f = NULL;
+    int lft = getShutdownLifetime();
+    int cur;
+    int i;
+    for (i = fdstat_biggest_fd(); i >= 0; i--) {
+	f = &fd_table[i];
+	if (!f->read_handler && !f->write_handler && !f->except_handler)
+	    continue;
+	if (fdstatGetType(i) != FD_SOCKET)
+	    continue;
+	cur = comm_get_fd_lifetime(i);
+	if (cur > 0 && (cur - squid_curtime) <= lft)
+	    continue;
+	comm_set_fd_lifetime(i, lft);
+    }
 }
 
 void normal_shutdown()
 {
     debug(21, 1, "Shutting down...\n");
     if (getPidFilename()) {
-	get_suid();
+	enter_suid();
 	safeunlink(getPidFilename(), 0);
-	check_suid();
+	leave_suid();
     }
     storeWriteCleanLog();
     PrintRusage(NULL, debug_log);
     debug(21, 0, "Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     exit(0);
-}
-void shut_down(sig)
-     int sig;
-{
-    int i;
-    int lft = getShutdownLifetime();
-    FD_ENTRY *f;
-    debug(21, 1, "Preparing for shutdown after %d connections\n",
-	ntcpconn + nudpconn);
-    serverConnectionsClose();
-    ipcacheShutdownServers();
-    ftpServerClose();
-    for (i = fdstat_biggest_fd(); i >= 0; i--) {
-	f = &fd_table[i];
-	if (f->read_handler || f->write_handler || f->except_handler)
-	    if (fdstatGetType(i) == Socket)
-		comm_set_fd_lifetime(i, lft);
-    }
-    shutdown_pending = 1;
-    /* reinstall signal handler? */
 }
 
 void fatal_common(message)
@@ -219,66 +331,30 @@ void fatal_dump(message)
     abort();
 }
 
-
-int getHeapSize()
-{
-#if HAVE_MALLINFO
-    struct mallinfo mp;
-
-    mp = mallinfo();
-
-    return (mp.arena);
-#else
-    return (0);
-#endif
-}
-
 void sig_child(sig)
      int sig;
 {
+#ifdef _SQUID_NEXT_
+    union wait status;
+#else
     int status;
+#endif
     int pid;
 
-    if ((pid = waitpid(-1, &status, WNOHANG)) > 0)
+    do {
+#ifdef _SQUID_NEXT_
+	pid = wait3(&status, WNOHANG, NULL);
+#else
+	pid = waitpid(-1, &status, WNOHANG);
+#endif
 	debug(21, 3, "sig_child: Ate pid %d\n", pid);
-
-#if RESET_SIGNAL_HANDLER
+#if HAVE_SIGACTION
+    } while (pid > 0);
+#else
+    } while (pid > 0 || (pid < 0 && errno == EINTR));
     signal(sig, sig_child);
 #endif
 }
-
-#ifdef OLD_CODE
-/*
- *  getMaxFD - returns the file descriptor table size
- */
-int getMaxFD()
-{
-    static int i = -1;
-
-    if (i == -1) {
-#if HAVE_SYSCONF && defined(_SC_OPEN_MAX)
-	i = sysconf(_SC_OPEN_MAX);	/* prefered method */
-#elif HAVE_GETDTABLESIZE
-	i = getdtablesize();	/* the BSD way */
-#elif defined(OPEN_MAX)
-	i = OPEN_MAX;
-#elif defined(NOFILE)
-	i = NOFILE;
-#elif defined(_NFILE)
-	i = _NFILE;
-#else
-	i = 64;			/* 64 is a safe default */
-#endif
-	debug(21, 10, "getMaxFD set MaxFD at %d\n", i);
-    }
-    return (i);
-}
-#else
-int getMaxFD()
-{
-    return FD_SETSIZE;
-}
-#endif
 
 char *getMyHostname()
 {
@@ -298,7 +374,7 @@ char *getMyHostname()
 		xstrerror());
 	    return NULL;
 	} else {
-	    if ((h = ipcache_gethostbyname(host)) != NULL) {
+	    if ((h = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) != NULL) {
 		/* DNS lookup successful */
 		/* use the official name from DNS lookup */
 		strcpy(host, h->h_name);
@@ -320,31 +396,16 @@ int safeunlink(s, quiet)
     return (err);
 }
 
-/* 
- * Daemonize a process according to guidlines in "Advanced Programming
- * For The UNIX Environment", W.R. Stevens ( Addison Wesley, 1992) - Ch. 13
+/* leave a privilegied section. (Give up any privilegies)
+ * Routines that need privilegies can rap themselves in enter_suid()
+ * and leave_suid()
+ * To give upp all posibilites to gain privilegies use no_suid()
  */
-int daemonize()
-{
-    int n_openf, i;
-    pid_t pid;
-    if ((pid = fork()) < 0)
-	return -1;
-    else if (pid != 0)
-	exit(0);
-    /* Child continues */
-    setsid();			/* Become session leader */
-    n_openf = getMaxFD();	/* Close any inherited files */
-    for (i = 0; i < n_openf; i++)
-	close(i);
-    umask(0);			/* Clear file mode creation mask */
-    return 0;
-}
-
-void check_suid()
+void leave_suid()
 {
     struct passwd *pwd = NULL;
     struct group *grp = NULL;
+    debug(21, 3, "leave_suid: PID %d called\n", getpid());
     if (geteuid() != 0)
 	return;
     /* Started as a root, check suid option */
@@ -357,6 +418,8 @@ void check_suid()
     } else {
 	setgid(pwd->pw_gid);
     }
+    debug(21, 3, "leave_suid: PID %d giving up root, becoming '%s'\n",
+	getpid(), pwd->pw_name);
 #if HAVE_SETRESUID
     setresuid(pwd->pw_uid, pwd->pw_uid, 0);
 #elif HAVE_SETEUID
@@ -366,8 +429,10 @@ void check_suid()
 #endif
 }
 
-void get_suid()
+/* Enter a privilegied section */
+void enter_suid()
 {
+    debug(21, 3, "enter_suid: PID %d taking root priveleges\n", getpid());
 #if HAVE_SETRESUID
     setresuid(-1, 0, -1);
 #else
@@ -375,11 +440,15 @@ void get_suid()
 #endif
 }
 
+/* Give up the posibility to gain privilegies.
+ * this should be used before starting a sub process
+ */
 void no_suid()
 {
     uid_t uid;
-    check_suid();
+    leave_suid();
     uid = geteuid();
+    debug(21, 3, "leave_suid: PID %d giving up root priveleges forever\n", getpid());
 #if HAVE_SETRESUID
     setresuid(uid, uid, uid);
 #else
@@ -395,13 +464,16 @@ void writePidFile()
 
     if ((f = getPidFilename()) == NULL)
 	return;
-    if ((pid_fp = fopen(f, "w")) == NULL) {
+    enter_suid();
+    pid_fp = fopen(f, "w");
+    leave_suid();
+    if (pid_fp != NULL) {
+	fprintf(pid_fp, "%d\n", (int) getpid());
+	fclose(pid_fp);
+    } else {
 	debug(21, 0, "WARNING: Could not write pid file\n");
 	debug(21, 0, "         %s: %s\n", f, xstrerror());
-	return;
     }
-    fprintf(pid_fp, "%d\n", (int) getpid());
-    fclose(pid_fp);
 }
 
 
@@ -416,6 +488,8 @@ void setMaxFD()
 	debug(21, 0, "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
     } else {
 	rl.rlim_cur = FD_SETSIZE;
+	if (rl.rlim_cur > rl.rlim_max)
+	    rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
 	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
@@ -426,6 +500,8 @@ void setMaxFD()
 	debug(21, 0, "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
     } else {
 	rl.rlim_cur = FD_SETSIZE;
+	if (rl.rlim_cur > rl.rlim_max)
+	    rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
 	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_OFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
@@ -434,36 +510,29 @@ void setMaxFD()
 #endif
 #else /* HAVE_SETRLIMIT */
     debug(21, 1, "setMaxFD: Cannot increase: setrlimit() not supported on this system");
-#endif
+#endif /* HAVE_SETRLIMIT */
+
+#if HAVE_SETRLIMIT && defined(RLIMIT_DATA)
+    if (getrlimit(RLIMIT_DATA, &rl) < 0) {
+	debug(21, 0, "getrlimit: RLIMIT_DATA: %s", xstrerror());
+    } else {
+	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
+	if (setrlimit(RLIMIT_DATA, &rl) < 0) {
+	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_DATA: %s", xstrerror());
+	    fatal_dump(tmp_error_buf);
+	}
+    }
+#endif /* RLIMIT_DATA */
 }
 
 time_t getCurrentTime()
 {
+#if defined(_SQUID_MOTOROLA_)
+    gettimeofday(&current_time);
+#else
     gettimeofday(&current_time, NULL);
-    return squid_curtime = current_time.tv_sec;
-}
-
-
-void reconfigure(sig)
-     int sig;
-{
-    int i;
-    int lft = getShutdownLifetime();
-    FD_ENTRY *f;
-    debug(21, 1, "reconfigure: SIGHUP received.\n");
-    serverConnectionsClose();
-    ipcacheShutdownServers();
-    ftpServerClose();
-    reread_pending = 1;
-    for (i = fdstat_biggest_fd(); i >= 0; i--) {
-	f = &fd_table[i];
-	if (f->read_handler || f->write_handler || f->except_handler)
-	    if (fdstatGetType(i) == Socket)
-		comm_set_fd_lifetime(i, lft);
-    }
-#if RESET_SIGNAL_HANDLER
-    signal(sig, reconfigure);
 #endif
+    return squid_curtime = current_time.tv_sec;
 }
 
 int tvSubMsec(t1, t2)
@@ -472,4 +541,28 @@ int tvSubMsec(t1, t2)
 {
     return (t2.tv_sec - t1.tv_sec) * 1000 +
 	(t2.tv_usec - t1.tv_usec) / 1000;
+}
+
+int percent(a, b)
+     int a;
+     int b;
+{
+    return b ? ((int) (100.0 * a / b + 0.5)) : 0;
+}
+
+void squid_signal(sig, func, flags)
+     int sig;
+     void (*func) ();
+     int flags;
+{
+#if HAVE_SIGACTION
+    struct sigaction sa;
+    sa.sa_handler = func;
+    sa.sa_flags = flags;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(sig, &sa, NULL) < 0)
+	debug(1, 0, "sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
+#else
+    (void) signal(sig, func);
+#endif
 }

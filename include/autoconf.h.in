@@ -31,11 +31,26 @@
 /* Define if struct mallinfo has mxfast member */
 #undef HAVE_EXT_MALLINFO
 
-/* Define if signal handlers must be reset after invocation */
-#undef RESET_SIGNAL_HANDLER
-
 /* Maximum number of open filedescriptors */
 #undef SQUID_FD_SETSIZE
+
+/* UDP send buffer size */
+#undef SQUID_UDP_SO_SNDBUF
+
+/* UDP receive buffer size */
+#undef SQUID_UDP_SO_RCVBUF
+
+/* TCP send buffer size */
+#undef SQUID_TCP_SO_SNDBUF
+
+/* TCP receive buffer size */
+#undef SQUID_TCP_SO_RCVBUF
+
+/* Host type from configure */
+#undef CONFIG_HOST_TYPE
+
+/* If we need to declare sys_errlist[] as external */
+#undef NEED_SYS_ERRLIST
 
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
@@ -43,14 +58,26 @@
 /* The number of bytes in a long.  */
 #undef SIZEOF_LONG
 
+/* Define if you have the bcopy function.  */
+#undef HAVE_BCOPY
+
 /* Define if you have the getdtablesize function.  */
 #undef HAVE_GETDTABLESIZE
+
+/* Define if you have the getrusage function.  */
+#undef HAVE_GETRUSAGE
+
+/* Define if you have the lrand48 function.  */
+#undef HAVE_LRAND48
 
 /* Define if you have the mallinfo function.  */
 #undef HAVE_MALLINFO
 
 /* Define if you have the mallopt function.  */
 #undef HAVE_MALLOPT
+
+/* Define if you have the memmove function.  */
+#undef HAVE_MEMMOVE
 
 /* Define if you have the regcomp function.  */
 #undef HAVE_REGCOMP
@@ -61,8 +88,14 @@
 /* Define if you have the regfree function.  */
 #undef HAVE_REGFREE
 
+/* Define if you have the res_init function.  */
+#undef HAVE_RES_INIT
+
 /* Define if you have the seteuid function.  */
 #undef HAVE_SETEUID
+
+/* Define if you have the setpgrp function.  */
+#undef HAVE_SETPGRP
 
 /* Define if you have the setresuid function.  */
 #undef HAVE_SETRESUID
@@ -70,17 +103,29 @@
 /* Define if you have the setrlimit function.  */
 #undef HAVE_SETRLIMIT
 
+/* Define if you have the setsid function.  */
+#undef HAVE_SETSID
+
+/* Define if you have the sigaction function.  */
+#undef HAVE_SIGACTION
+
+/* Define if you have the socketpair function.  */
+#undef HAVE_SOCKETPAIR
+
+/* Define if you have the srand48 function.  */
+#undef HAVE_SRAND48
+
 /* Define if you have the strdup function.  */
 #undef HAVE_STRDUP
-
-/* Define if you have the strerror function.  */
-#undef HAVE_STRERROR
 
 /* Define if you have the sysconf function.  */
 #undef HAVE_SYSCONF
 
 /* Define if you have the syslog function.  */
 #undef HAVE_SYSLOG
+
+/* Define if you have the tempnam function.  */
+#undef HAVE_TEMPNAM
 
 /* Define if you have the timegm function.  */
 #undef HAVE_TIMEGM
@@ -91,6 +136,9 @@
 /* Define if you have the <arpa/inet.h> header file.  */
 #undef HAVE_ARPA_INET_H
 
+/* Define if you have the <arpa/nameser.h> header file.  */
+#undef HAVE_ARPA_NAMESER_H
+
 /* Define if you have the <bstring.h> header file.  */
 #undef HAVE_BSTRING_H
 
@@ -100,11 +148,26 @@
 /* Define if you have the <crypt.h> header file.  */
 #undef HAVE_CRYPT_H
 
+/* Define if you have the <ctype.h> header file.  */
+#undef HAVE_CTYPE_H
+
 /* Define if you have the <dirent.h> header file.  */
 #undef HAVE_DIRENT_H
 
+/* Define if you have the <errno.h> header file.  */
+#undef HAVE_ERRNO_H
+
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
+
+/* Define if you have the <grp.h> header file.  */
+#undef HAVE_GRP_H
+
+/* Define if you have the <libc.h> header file.  */
+#undef HAVE_LIBC_H
+
+/* Define if you have the <malloc.h> header file.  */
+#undef HAVE_MALLOC_H
 
 /* Define if you have the <memory.h> header file.  */
 #undef HAVE_MEMORY_H
@@ -112,11 +175,35 @@
 /* Define if you have the <ndir.h> header file.  */
 #undef HAVE_NDIR_H
 
+/* Define if you have the <netdb.h> header file.  */
+#undef HAVE_NETDB_H
+
 /* Define if you have the <netinet/in.h> header file.  */
 #undef HAVE_NETINET_IN_H
 
+/* Define if you have the <netinet/tcp.h> header file.  */
+#undef HAVE_NETINET_TCP_H
+
+/* Define if you have the <pwd.h> header file.  */
+#undef HAVE_PWD_H
+
 /* Define if you have the <regex.h> header file.  */
 #undef HAVE_REGEX_H
+
+/* Define if you have the <resolv.h> header file.  */
+#undef HAVE_RESOLV_H
+
+/* Define if you have the <signal.h> header file.  */
+#undef HAVE_SIGNAL_H
+
+/* Define if you have the <stdarg.h> header file.  */
+#undef HAVE_STDARG_H
+
+/* Define if you have the <stddef.h> header file.  */
+#undef HAVE_STDDEF_H
+
+/* Define if you have the <stdio.h> header file.  */
+#undef HAVE_STDIO_H
 
 /* Define if you have the <stdlib.h> header file.  */
 #undef HAVE_STDLIB_H
@@ -136,8 +223,20 @@
 /* Define if you have the <sys/ndir.h> header file.  */
 #undef HAVE_SYS_NDIR_H
 
+/* Define if you have the <sys/param.h> header file.  */
+#undef HAVE_SYS_PARAM_H
+
+/* Define if you have the <sys/resource.h> header file.  */
+#undef HAVE_SYS_RESOURCE_H
+
 /* Define if you have the <sys/select.h> header file.  */
 #undef HAVE_SYS_SELECT_H
+
+/* Define if you have the <sys/socket.h> header file.  */
+#undef HAVE_SYS_SOCKET_H
+
+/* Define if you have the <sys/stat.h> header file.  */
+#undef HAVE_SYS_STAT_H
 
 /* Define if you have the <sys/syscall.h> header file.  */
 #undef HAVE_SYS_SYSCALL_H
@@ -148,11 +247,23 @@
 /* Define if you have the <sys/types.h> header file.  */
 #undef HAVE_SYS_TYPES_H
 
+/* Define if you have the <sys/un.h> header file.  */
+#undef HAVE_SYS_UN_H
+
+/* Define if you have the <sys/wait.h> header file.  */
+#undef HAVE_SYS_WAIT_H
+
 /* Define if you have the <syslog.h> header file.  */
 #undef HAVE_SYSLOG_H
 
+/* Define if you have the <time.h> header file.  */
+#undef HAVE_TIME_H
+
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
+
+/* Define if you have the <varargs.h> header file.  */
+#undef HAVE_VARARGS_H
 
 /* Define if you have the bsd library (-lbsd).  */
 #undef HAVE_LIBBSD

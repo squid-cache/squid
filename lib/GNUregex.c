@@ -1,4 +1,3 @@
-#include "autoconf.h"	/* get the #defines from GNU autoconf */
 /* Extended regular expression matching and search library,
    version 0.12.
    (Implements POSIX draft P10003.2/D11.2, except for
@@ -27,12 +26,7 @@
 
 #define _GNU_SOURCE
 
-/* We need this for `regex.h', and perhaps for the Emacs include files.  */
-#include <sys/types.h>
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #if !HAVE_ALLOCA
 #define REGEX_MALLOC 1
@@ -2497,10 +2491,10 @@ typedef struct
   DEBUG_PRINT_COMPILED_PATTERN (bufp, pat, pend);			\
 									\
   /* Restore register info.  */						\
-  high_reg = (unsigned) POP_FAILURE_ITEM ();				\
+  high_reg = (unsigned long) POP_FAILURE_ITEM ();			\
   DEBUG_PRINT2 ("  Popping high active reg: %d\n", high_reg);		\
 									\
-  low_reg = (unsigned) POP_FAILURE_ITEM ();				\
+  low_reg = (unsigned long) POP_FAILURE_ITEM ();			\
   DEBUG_PRINT2 ("  Popping  low active reg: %d\n", low_reg);		\
 									\
   for (this_reg = high_reg; this_reg >= low_reg; this_reg--)		\
@@ -3213,8 +3207,8 @@ re_match_2 (bufp, string1, size1, string2, size2, pos, regs, stop)
   unsigned num_regs = bufp->re_nsub + 1;
   
   /* The currently active registers.  */
-  unsigned lowest_active_reg = NO_LOWEST_ACTIVE_REG;
-  unsigned highest_active_reg = NO_HIGHEST_ACTIVE_REG;
+  unsigned long lowest_active_reg = NO_LOWEST_ACTIVE_REG;
+  unsigned long highest_active_reg = NO_HIGHEST_ACTIVE_REG;
 
   /* Information on the contents of registers. These are pointers into
      the input strings; they record just what was matched (on this
@@ -3223,14 +3217,14 @@ re_match_2 (bufp, string1, size1, string2, size2, pos, regs, stop)
      matching and the regnum-th regend points to right after where we
      stopped matching the regnum-th subexpression.  (The zeroth register
      keeps track of what the whole pattern matches.)  */
-  const char **regstart, **regend;
+  const char **regstart = NULL, **regend = NULL;
 
   /* If a group that's operated upon by a repetition operator fails to
      match anything, then the register for its start will need to be
      restored because it will have been set to wherever in the string we
      are when we last see its open-group operator.  Similarly for a
      register's end.  */
-  const char **old_regstart, **old_regend;
+  const char **old_regstart = NULL, **old_regend = NULL;
 
   /* The is_active field of reg_info helps us keep track of which (possibly
      nested) subexpressions we are currently in. The matched_something
@@ -3238,14 +3232,14 @@ re_match_2 (bufp, string1, size1, string2, size2, pos, regs, stop)
      matched any of the pattern so far this time through the reg_num-th
      subexpression.  These two fields get reset each time through any
      loop their register is in.  */
-  register_info_type *reg_info; 
+  register_info_type *reg_info = NULL; 
 
   /* The following record the register info as found in the above
      variables when we find a match better than any we've seen before. 
      This happens as we backtrack through the failure points, which in
      turn happens only if we have not yet matched the entire string. */
   unsigned best_regs_set = false;
-  const char **best_regstart, **best_regend;
+  const char **best_regstart = NULL, **best_regend = NULL;
   
   /* Logically, this is `best_regend[0]'.  But we don't want to have to
      allocate space for that if we're not allocating space for anything
@@ -3258,8 +3252,8 @@ re_match_2 (bufp, string1, size1, string2, size2, pos, regs, stop)
   const char *match_end = NULL;
 
   /* Used when we pop values we don't care about.  */
-  const char **reg_dummy;
-  register_info_type *reg_info_dummy;
+  const char **reg_dummy = NULL;
+  register_info_type *reg_info_dummy = NULL;
 
 #ifdef DEBUG
   /* Counts the total number of registers pushed.  */
@@ -3767,13 +3761,13 @@ re_match_2 (bufp, string1, size1, string2, size2, pos, regs, stop)
                           regstart[r] = old_regstart[r];
 
                           /* xx why this test?  */
-                          if ((int) old_regend[r] >= (int) regstart[r])
+                          if ((long) old_regend[r] >= (long) regstart[r])
                             regend[r] = old_regend[r];
                         }     
                     }
 		  p1++;
                   EXTRACT_NUMBER_AND_INCR (mcnt, p1);
-                  PUSH_FAILURE_POINT (p1 + mcnt, d, -2);
+                  PUSH_FAILURE_POINT ( p1 + mcnt, d, -2);
 
                   goto fail;
                 }
@@ -4074,7 +4068,7 @@ re_match_2 (bufp, string1, size1, string2, size2, pos, regs, stop)
                actual values.  Otherwise, we will restore only one
                register from the stack, since lowest will == highest in
                `pop_failure_point'.  */
-            unsigned dummy_low_reg, dummy_high_reg;
+            unsigned long dummy_low_reg, dummy_high_reg;
             unsigned char *pdummy;
             const char *sdummy;
 

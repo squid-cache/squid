@@ -1,4 +1,4 @@
-To build and install the Harvest Cache, type:
+To build and install the Squid Cache, type:
 
 	% ./configure --prefix=/usr/local/squid
         % make all

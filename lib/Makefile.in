@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.8 1996/05/01 22:36:21 wessels Exp $
+#  $Id: Makefile.in,v 1.9 1996/07/09 03:41:10 wessels Exp $
 #
 prefix		= @prefix@
 srcdir		= @srcdir@
@@ -15,10 +15,9 @@ INSTALL		= @INSTALL@
 INSTALL_BIN 	= @INSTALL_PROGRAM@
 INSTALL_FILE 	= @INSTALL_DATA@
 RANLIB		= @RANLIB@
-STD_CFLAGS	= @STD_CFLAGS@
-STD_LDFLAGS	= @STD_LDFLAGS@
+AC_CFLAGS	= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
-XTRA_CFLAGS     = @XTRA_CFLAGS@
 
 INCLUDE		= -I../include -I$(srcdir)/../include
 UTILOBJS	= rfc850.o \
@@ -27,16 +26,16 @@ UTILOBJS	= rfc850.o \
 		  host_cache.o \
 		  getfullhostname.o \
 		  debug.o \
-		  log.o
+		  log.o \
+		  tempnam.o
 REGEXOBJS	= GNUregex.o
-LIBS		= libutil.a libregex.a
+LIBS		= libmiscutil.a libregex.a
 
-CFLAGS		= $(STD_CFLAGS) $(XTRA_CFLAGS) $(INCLUDE)
-LDFLAGS		= $(STD_LDFLAGS)
+CFLAGS		= $(AC_CFLAGS) $(INCLUDE)
 
 all: $(LIBS)
 
-libutil.a: $(UTILOBJS)
+libmiscutil.a: $(UTILOBJS)
 	ar r $@ $(UTILOBJS)
 	$(RANLIB) $@
 

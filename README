@@ -1,10 +1,33 @@
 
-This is the Squid Internet Object Cache developed by the National
-Laboratory for Applied Networking Research (NLANR) and Internet
-volunteers.  This software is freely available for anyone to use.
-The Squid home page is http://www.nlanr.net/Squid/.
+SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+--------------------------------------------------------
 
-This software is based on the Harvest Object Cache developed by
-the University of Colorado and the University of Southern California.
-The Harvest home page is http://harvest.cs.colorado.edu/.
+  Squid is the result of efforts by numerous individuals from the
+  Internet community.  Development is led by Duane Wessels of the
+  National Laboratory for Applied Network Research and funded by
+  the National Science Foundation.
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+Squid is derived from the ``cached'' software from the ARPA-funded
+Harvest research project.  The Harvest home page is
+http://harvest.cs.colorado.edu/.
+
+Please use our mailing lists for questions, feedback and bug fixes
+
+        squid-users@nlanr.net	# general questions, pubilc forum
+        squid-bugs@nlanr.net	# bugs and fixes
+        squid@nlanr.net		# other feedback
 

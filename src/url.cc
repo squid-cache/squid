@@ -1,7 +1,31 @@
-/* $Id: url.cc,v 1.21 1996/05/03 22:56:33 wessels Exp $ */
-
-/* 
- * DEBUG: Section 23          url
+/*
+ * $Id: url.cc,v 1.22 1996/07/09 03:41:46 wessels Exp $
+ *
+ * DEBUG: section 23    URL Parsing
+ * AUTHOR: Duane Wessels
+ *
+ * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
  */
 
 #include "squid.h"
@@ -11,6 +35,7 @@ char *RequestMethodStr[] =
     "NONE",
     "GET",
     "POST",
+    "PUT",
     "HEAD",
     "CONNECT"
 };
@@ -43,7 +68,7 @@ char *url_convert_hex(org_url, allocate)
 
     url = allocate ? (char *) xstrdup(org_url) : org_url;
 
-    if (strlen(url) < 3 || !strchr(url, '%'))
+    if ((int) strlen(url) < 3 || !strchr(url, '%'))
 	return url;
 
     for (s = t = url; *(s + 2); s++) {
@@ -105,6 +130,8 @@ method_t urlParseMethod(s)
 	return METHOD_GET;
     } else if (strcasecmp(s, "POST") == 0) {
 	return METHOD_POST;
+    } else if (strcasecmp(s, "PUT") == 0) {
+	return METHOD_PUT;
     } else if (strcasecmp(s, "HEAD") == 0) {
 	return METHOD_HEAD;
     } else if (strcasecmp(s, "CONNECT") == 0) {
@@ -186,9 +213,10 @@ request_t *urlParse(method, url)
 	    *t = 0;
 	    strcpy(host, t + 1);
 	}
-	if ((t = strrchr(host, ':')) && *(t + 1) != '\0') {
-	    *t = '\0';
-	    port = atoi(t + 1);
+	if ((t = strrchr(host, ':'))) {
+	    *t++ = '\0';
+	    if (*t != '\0')
+		port = atoi(t);
 	}
     }
     for (t = host; *t; t++)
@@ -197,7 +225,7 @@ request_t *urlParse(method, url)
 	debug(23, 0, "urlParse: Invalid port == 0\n");
 	return NULL;
     }
-    request = (request_t *) xcalloc(1, sizeof(request_t));
+    request = get_free_request_t();
     request->method = method;
     request->protocol = protocol;
     strncpy(request->host, host, SQUIDHOSTNAMELEN);
@@ -233,4 +261,39 @@ char *urlCanonical(request, buf)
 	break;
     }
     return buf;
+}
+
+request_t *requestLink(request)
+     request_t *request;
+{
+    request->link_count++;
+    return request;
+}
+
+void requestUnlink(request)
+     request_t *request;
+{
+    if (request == NULL)
+	return;
+    request->link_count--;
+    if (request->link_count == 0)
+	put_free_request_t(request);
+}
+
+int matchDomainName(domain, host)
+     char *domain;
+     char *host;
+{
+    int offset;
+    if ((offset = strlen(host) - strlen(domain)) < 0)
+	return 0;		/* host too short */
+    if (strcasecmp(domain, host + offset) != 0)
+	return 0;		/* no match at all */
+    if (*domain == '.')
+	return 1;
+    if (*(host + offset - 1) == '.')
+	return 1;
+    if (offset == 0)
+	return 1;
+    return 0;
 }

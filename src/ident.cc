@@ -1,4 +1,4 @@
-/* $Id: ident.cc,v 1.1 1996/05/03 23:22:22 wessels Exp $ */
+/* $Id: ident.cc,v 1.2 1996/07/09 03:41:31 wessels Exp $ */
 
 /*
  * DEBUG: Section 30           ident/RFC931
@@ -8,7 +8,7 @@
 
 #define IDENT_PORT 113
 
-static void identRequestComplete _PARAMS((int, char *, int, int, icpStateData *));
+static void identRequestComplete _PARAMS((int, char *, int, int, void *));
 static void identReadReply _PARAMS((int, icpStateData *));
 static void identClose _PARAMS((int, icpStateData *));
 
@@ -35,14 +35,12 @@ void identStart(sock, icpState)
     debug(30, 1, "identStart: peer is %s:%d\n", host, port);
 
     if (sock < 0) {
-	if ((sock = comm_open(COMM_NONBLOCKING, 0, 0, "ident")) == COMM_ERROR) {
-	    debug(30, 4, "identStart: Failed because we're out of sockets.\n");
+	sock = comm_open(COMM_NONBLOCKING, getTcpOutgoingAddr(), 0, "ident");
+	if (sock == COMM_ERROR)
 	    return;
-	}
     }
     icpState->ident_fd = sock;
-    comm_set_select_handler(sock,
-	COMM_SELECT_CLOSE,
+    comm_add_close_handler(sock,
 	(PF) identClose,
 	(void *) icpState);
     if ((status = comm_connect(sock, host, IDENT_PORT)) < 0) {
@@ -61,9 +59,7 @@ void identStart(sock, icpState)
     sprintf(reqbuf, "%d, %d\r\n",
 	ntohs(icpState->peer.sin_port),
 	ntohs(icpState->me.sin_port));
-    /* XXX icpWrite() returns a data structure which we need to free if there is
-     * a timeout */
-    (void) icpWrite(sock,
+    (void) comm_write(sock,
 	reqbuf,
 	strlen(reqbuf),
 	5,			/* timeout */
@@ -75,12 +71,12 @@ void identStart(sock, icpState)
 	(void *) icpState);
 }
 
-static void identRequestComplete(fd, buf, size, errflag, state)
+static void identRequestComplete(fd, buf, size, errflag, data)
      int fd;
      char *buf;
      int size;
      int errflag;
-     icpStateData *state;
+     void *data;
 {
     debug(30, 1, "identRequestComplete: FD %d: wrote %d bytes\n", fd, size);
 }

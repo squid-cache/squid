@@ -1,51 +1,195 @@
-/* $Id: cachemgr.cc,v 1.9 1996/05/03 22:56:22 wessels Exp $ */
+/*
+ * $Id: cachemgr.cc,v 1.10 1996/07/09 03:41:19 wessels Exp $
+ *
+ * DEBUG: Section 0     CGI Cache Manager
+ * AUTHOR: Harvest Derived
+ *
+ * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
+
+/*
+ * Copyright (c) 1994, 1995.  All rights reserved.
+ *  
+ *   The Harvest software was developed by the Internet Research Task
+ *   Force Research Group on Resource Discovery (IRTF-RD):
+ *  
+ *         Mic Bowman of Transarc Corporation.
+ *         Peter Danzig of the University of Southern California.
+ *         Darren R. Hardy of the University of Colorado at Boulder.
+ *         Udi Manber of the University of Arizona.
+ *         Michael F. Schwartz of the University of Colorado at Boulder.
+ *         Duane Wessels of the University of Colorado at Boulder.
+ *  
+ *   This copyright notice applies to software in the Harvest
+ *   ``src/'' directory only.  Users should consult the individual
+ *   copyright notices in the ``components/'' subdirectories for
+ *   copyright information about other software bundled with the
+ *   Harvest source code distribution.
+ *  
+ * TERMS OF USE
+ *   
+ *   The Harvest software may be used and re-distributed without
+ *   charge, provided that the software origin and research team are
+ *   cited in any use of the system.  Most commonly this is
+ *   accomplished by including a link to the Harvest Home Page
+ *   (http://harvest.cs.colorado.edu/) from the query page of any
+ *   Broker you deploy, as well as in the query result pages.  These
+ *   links are generated automatically by the standard Broker
+ *   software distribution.
+ *   
+ *   The Harvest software is provided ``as is'', without express or
+ *   implied warranty, and with no support nor obligation to assist
+ *   in its use, correction, modification or enhancement.  We assume
+ *   no liability with respect to the infringement of copyrights,
+ *   trade secrets, or any patents, and are not responsible for
+ *   consequential damages.  Proper use of the Harvest software is
+ *   entirely the responsibility of the user.
+ *  
+ * DERIVATIVE WORKS
+ *  
+ *   Users may make derivative works from the Harvest software, subject 
+ *   to the following constraints:
+ *  
+ *     - You must include the above copyright notice and these 
+ *       accompanying paragraphs in all forms of derivative works, 
+ *       and any documentation and other materials related to such 
+ *       distribution and use acknowledge that the software was 
+ *       developed at the above institutions.
+ *  
+ *     - You must notify IRTF-RD regarding your distribution of 
+ *       the derivative work.
+ *  
+ *     - You must clearly notify users that your are distributing 
+ *       a modified version and not the original Harvest software.
+ *  
+ *     - Any derivative product is also subject to these copyright 
+ *       and use restrictions.
+ *  
+ *   Note that the Harvest software is NOT in the public domain.  We
+ *   retain copyright, as specified above.
+ *  
+ * HISTORY OF FREE SOFTWARE STATUS
+ *  
+ *   Originally we required sites to license the software in cases
+ *   where they were going to build commercial products/services
+ *   around Harvest.  In June 1995 we changed this policy.  We now
+ *   allow people to use the core Harvest software (the code found in
+ *   the Harvest ``src/'' directory) for free.  We made this change
+ *   in the interest of encouraging the widest possible deployment of
+ *   the technology.  The Harvest software is really a reference
+ *   implementation of a set of protocols and formats, some of which
+ *   we intend to standardize.  We encourage commercial
+ *   re-implementations of code complying to this set of standards.  
+ */
 
 #include "config.h"
-#include "autoconf.h"
-#include "version.h"
 
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_STDIO_H
 #include <stdio.h>
+#endif
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#if HAVE_CTYPE_H
 #include <ctype.h>
+#endif
+#if HAVE_ERRNO_H
 #include <errno.h>
+#endif
+#if HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#if HAVE_GRP_H
 #include <grp.h>
-#ifndef _SQUID_FREEBSD_		/* "Obsolete" Markus Stumpf <maex@Space.NET> */
+#endif
+#if HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
 #include <malloc.h>
 #endif
+#if HAVE_MEMORY_H
 #include <memory.h>
+#endif
+#if HAVE_NETDB_H && !defined(_SQUID_NETDB_H_)	/* protect NEXTSTEP */
+#define _SQUID_NETDB_H_
 #include <netdb.h>
+#endif
+#if HAVE_PWD_H
 #include <pwd.h>
+#endif
+#if HAVE_SIGNAL_H
 #include <signal.h>
+#endif
+#if HAVE_TIME_H
 #include <time.h>
+#endif
+#if HAVE_SYS_PARAM_H
 #include <sys/param.h>
+#endif
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+#if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>	/* needs sys/time.h above it */
+#endif
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
+#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#if HAVE_SYS_UN_H
 #include <sys/un.h>
+#endif
+#if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-
-#ifdef HAVE_STRING_H
+#endif
+#if HAVE_LIBC_H
+#include <libc.h>
+#endif
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
-
 #if HAVE_BSTRING_H
 #include <bstring.h>
 #endif
-
-#ifdef HAVE_CRYPT_H
+#if HAVE_CRYPT_H
 #include <crypt.h>
 #endif
-
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -74,6 +218,7 @@ typedef enum {
     STATS_O,
     STATS_VM,
     STATS_U,
+    STATS_IO,
     SHUTDOWN,
     REFRESH,
 #ifdef REMOVE_OBJECT
@@ -93,6 +238,7 @@ static char *op_cmds[] =
     "stats/objects",
     "stats/vm_objects",
     "stats/utilization",
+    "stats/io",
     "shutdown",
     "<refresh>",
 #ifdef REMOVE_OBJECT
@@ -158,6 +304,7 @@ void noargs_html()
     printf("<OPTION VALUE=\"log\">Cache Log\n");
 #endif
     printf("<OPTION VALUE=\"stats/utilization\">Utilization\n");
+    printf("<OPTION VALUE=\"stats/io\">I/O\n");
     printf("<OPTION VALUE=\"stats/objects\">Objects\n");
     printf("<OPTION VALUE=\"stats/vm_objects\">VM_Objects\n");
     printf("<OPTION VALUE=\"server_list\">Cache Server List\n");
@@ -179,7 +326,7 @@ void noargs_html()
 char *makeword(char *line, char stop)
 {
     int x = 0, y;
-    char *word = (char *) malloc(sizeof(char) * (strlen(line) + 1));
+    char *word = xmalloc(sizeof(char) * (strlen(line) + 1));
 
     for (x = 0; ((line[x]) && (line[x] != stop)); x++)
 	word[x] = line[x];
@@ -196,20 +343,17 @@ char *makeword(char *line, char stop)
 /* A utility function from the NCSA httpd cgi-src utils.c */
 char *fmakeword(FILE * f, char stop, int *cl)
 {
-    int wsize;
-    char *word;
-    int ll;
+    int wsize = 102400;
+    char *word = NULL;
+    int ll = 0;
 
-    wsize = 102400;
-    ll = 0;
-    word = (char *) malloc(sizeof(char) * (wsize + 1));
-
+    word = xmalloc(sizeof(char) * (wsize + 1));
     for (;;) {
 	word[ll] = (char) fgetc(f);
 	if (ll == wsize) {
 	    word[ll + 1] = '\0';
 	    wsize += 102400;
-	    word = (char *) realloc(word, sizeof(char) * (wsize + 1));
+	    word = realloc(word, sizeof(char) * (wsize + 1));
 	}
 	--(*cl);
 	if ((word[ll] == stop) || (feof(f)) || (!(*cl))) {
@@ -226,7 +370,7 @@ char *fmakeword(FILE * f, char stop, int *cl)
 /* A utility function from the NCSA httpd cgi-src utils.c */
 char x2c(char *what)
 {
-    register char digit;
+    char digit;
 
     digit = (what[0] >= 'A' ? ((what[0] & 0xdf) - 'A') + 10 : (what[0] - '0'));
     digit *= 16;
@@ -237,7 +381,7 @@ char x2c(char *what)
 /* A utility function from the NCSA httpd cgi-src utils.c */
 void unescape_url(char *url)
 {
-    register int x, y;
+    int x, y;
 
     for (x = 0, y = 0; url[y]; ++x, ++y) {
 	if ((url[x] = url[y]) == '%') {
@@ -251,7 +395,7 @@ void unescape_url(char *url)
 /* A utility function from the NCSA httpd cgi-src utils.c */
 void plustospace(char *str)
 {
-    register int x;
+    int x;
 
     for (x = 0; str[x]; x++)
 	if (str[x] == '+')
@@ -379,6 +523,7 @@ int main(int argc, char *argv[])
     printf("Content-type: text/html\r\n\r\n");
     if ((agent = getenv("HTTP_USER_AGENT")) != NULL) {
 	if (!strncasecmp(agent, "Mozilla", 7) ||
+	    !strncasecmp(agent, "OmniWeb/2", 9) ||
 	    !strncasecmp(agent, "Netscape", 8)) {
 	    hasTables = TRUE;
 	}
@@ -454,6 +599,9 @@ int main(int argc, char *argv[])
     } else if (!strcmp(operation, "stats/utilization") ||
 	!strcmp(operation, "Utilization")) {
 	op = STATS_U;
+    } else if (!strcmp(operation, "stats/io") ||
+	!strcmp(operation, "I/O")) {
+	op = STATS_IO;
     } else if (!strcmp(operation, "shutdown")) {
 	op = SHUTDOWN;
     } else if (!strcmp(operation, "refresh")) {
@@ -477,6 +625,7 @@ int main(int argc, char *argv[])
     case STATS_O:
     case STATS_VM:
     case STATS_U:
+    case STATS_IO:
 	sprintf(msg, "GET cache_object://%s/%s HTTP/1.0\r\n\r\n",
 	    hostname, op_cmds[op]);
 	break;
@@ -515,6 +664,7 @@ int main(int argc, char *argv[])
     printf("<OPTION VALUE=\"log\">Cache Log\n");
 #endif
     printf("<OPTION VALUE=\"stats/utilization\">Utilization\n");
+    printf("<OPTION VALUE=\"stats/io\">I/O\n");
     printf("<OPTION VALUE=\"stats/objects\">Objects\n");
     printf("<OPTION VALUE=\"stats/vm_objects\">VM_Objects\n");
     printf("<OPTION VALUE=\"server_list\">Cache Server List\n");
@@ -559,6 +709,7 @@ int main(int argc, char *argv[])
     case STATS_G:
     case STATS_O:
     case STATS_VM:
+    case STATS_IO:
     case SHUTDOWN:
     case REFRESH:
 	break;
@@ -621,6 +772,7 @@ int main(int argc, char *argv[])
 		case SERVER:
 		case LOG:
 		case STATS_G:
+		case STATS_IO:
 		case SHUTDOWN:
 		    p_state = 1;
 		    printf("%s", reserve);
@@ -684,7 +836,7 @@ int main(int argc, char *argv[])
 static int client_comm_connect(sock, dest_host, dest_port)
      int sock;			/* Type of communication to use. */
      char *dest_host;		/* Server's host name. */
-     int dest_port;		/* Server's port. */
+     u_short dest_port;		/* Server's port. */
 {
     struct hostent *hp;
     static struct sockaddr_in to_addr;
@@ -695,7 +847,7 @@ static int client_comm_connect(sock, dest_host, dest_port)
     if ((hp = gethostbyname(dest_host)) == 0) {
 	return (-1);
     }
-    memcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
+    xmemcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
     to_addr.sin_port = htons(dest_port);
     return connect(sock, (struct sockaddr *) &to_addr, sizeof(struct sockaddr_in));
 }
