@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.39 2000/05/03 17:15:42 adrian Exp $
+ * $Id: fd.cc,v 1.40 2000/12/01 17:41:26 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -93,8 +93,9 @@ fd_close(int fd)
 void
 fd_open(int fd, unsigned int type, const char *desc)
 {
-    fde *F = &fd_table[fd];
+    fde *F;
     assert(fd >= 0);
+    F = &fd_table[fd];
     if (F->flags.open) {
 	debug(51, 1) ("WARNING: Closing open FD %4d\n", fd);
 	fd_close(fd);
