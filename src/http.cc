@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.114 1996/11/25 02:35:21 wessels Exp $
+ * $Id: http.cc,v 1.115 1996/11/25 06:49:36 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -703,6 +703,9 @@ httpSendRequest(int fd, void *data)
     strcat(viabuf, ybuf);
     strcat(buf, viabuf);
     len += strlen(viabuf);
+    put_free_4k_page(viabuf);
+    put_free_4k_page(ybuf);
+    viabuf = ybuf = NULL;
 
     if (!saw_host) {
 	ybuf = get_free_4k_page();
