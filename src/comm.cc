@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.249 1998/04/09 08:25:50 wessels Exp $
+ * $Id: comm.cc,v 1.250 1998/04/09 20:52:51 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -152,7 +152,9 @@ static int fdIsHttpOrIcp(int fd);
 static IPH commConnectDnsHandle;
 static void commConnectCallback(ConnectStateData * cs, int status);
 static int commDeferRead(int fd);
+#if UNUSED_CODE
 static void commSetConnectTimeout(int fd, time_t timeout);
+#endif
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
 static time_t commBackoffTimeout(int);
@@ -345,7 +347,9 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
     ipcacheCycleAddr(cs->host, NULL);
     cs->addrcount = ia->count;
     cs->connstart = squid_curtime;
+#if UNUSED_CODE
     commSetConnectTimeout(cs->fd, commBackoffTimeout((int) ia->count));
+#endif
     commConnectHandle(cs->fd, cs);
 }
 
@@ -397,7 +401,9 @@ commResetFD(ConnectStateData * cs)
 	return 0;
     }
     close(fd2);
+#if UNUSED_CODE
     commSetConnectTimeout(cs->fd, commBackoffTimeout((int) cs->addrcount));
+#endif
     commSetNonBlocking(cs->fd);
     return 1;
 }
@@ -411,7 +417,9 @@ commRetryConnect(ConnectStateData * cs)
 	    return 0;
 	if (squid_curtime - cs->connstart > Config.Timeout.connect)
 	    return 0;
+#if UNUSED_CODE
 	commSetConnectTimeout(cs->fd, commBackoffTimeout(100));
+#endif
     } else {
 	if (cs->tries > cs->addrcount)
 	    return 0;
@@ -1463,9 +1471,11 @@ ignoreErrno(int ierrno)
     /* NOTREACHED */
 }
 
+#if UNUSED_CODE
 static void
 commSetConnectTimeout(int fd, time_t timeout)
 {
     fde *F = &fd_table[fd];
     F->connect_timeout = timeout;
 }
+#endif
