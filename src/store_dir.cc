@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.24 1997/07/07 05:29:57 wessels Exp $
+ * $Id: store_dir.cc,v 1.25 1997/07/16 20:58:25 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -246,7 +246,7 @@ storeDirSwapLogFile(int dirn, const char *ext)
 	strncat(path, digit, 3);
     } else {
 	xstrncpy(path, storeSwapDir(dirn), SQUID_MAXPATHLEN - 64);
-	strcat(path, "/log");
+	strcat(path, "/swap.state");
     }
     if (ext)
 	strncat(path, ext, 16);
