@@ -2,7 +2,7 @@
 <TITLE>VIGA: P&auml;ring URLile ei saa vastust</TITLE>
 </HEAD><BODY>
 <H1>VIGA</H1>
-<H2>P&auml;ring URLile ei saa vastust</H2>
+<H2>P&auml;ringule ei saabunud vastust</H2>
 <HR>
 <P>
 Sooritades p&auml;ringut URLile:
@@ -12,7 +12,7 @@ tekkis j&auml;rgnev viga:
 <UL>
 <LI>
 <STRONG>
-Lugemise timeout
+Lugeja kannatus katkes
 </STRONG>
 </UL>
 
@@ -21,6 +21,6 @@ S&uuml;steem vastas:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Andmete lugemisel v&otilde;rgust tekkis timeout. V&otilde;rk v&otilde;i
+Lugejal katkes v&otilde;rgust andmete lugemisel kannatus. V&otilde;rk v&otilde;i
 server v&otilde;ib olla maas v&otilde;i umbes. Proovige uuesti.
 </P>
