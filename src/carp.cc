@@ -1,5 +1,5 @@
 /*
- * $Id: carp.cc,v 1.5 1998/08/13 21:14:39 wessels Exp $
+ * $Id: carp.cc,v 1.6 1998/08/17 21:55:20 wessels Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
@@ -42,36 +42,42 @@ carpInit(void)
     /* calculate load factors */
     int K = 0;
     float a = 0.0;
-    float X;
     float Xn;
-    float n;
+    float P_last;
+    float X_last;
     int k;
     peer *p;
     for (p = Config.peers; p; p = p->next) {
 	a += p->carp.load_factor;
 	K++;
     }
-    if (a == 0.0)
-	/* CARP load factors not configured */
+    if (a == 0.0) {
+	for (p = Config.peers; p; p = p->next)
+	    p->carp.load_multiplier = 1;
 	return;
+    }
     /*
      * sum of carp-load-factor's for all cache_peer's in squid.conf
      * must equal 1.0
      */
     assert(a == 1.0);
     k = 1;
-    n = 0;
-    Xn = 0;
-    for (p = Config.peers; p; p = p->next) {
-	X = pow(K * p->carp.load_factor, 1 / K);
-	if (Xn == 0)
-	    Xn = X;
-	else
-	    Xn *= X;
-	p->carp.load_multiplier = ((K - k + 1) * (p->carp.load_factor - n)) / Xn
-	    ;
+    P_last = 0;
+    p = Config.peers;
+    p->carp.load_multiplier = pow(K * p->carp.load_factor, 1 / K);
+    Xn = p->carp.load_multiplier;
+    P_last = p->carp.load_factor;
+    X_last = p->carp.load_multiplier;
+    if (!p->next)
+	return;
+    for (p = p->next; p; p = p->next) {
+	p->carp.load_multiplier = ((K - k + 1) * (p->carp.load_factor - P_last)) / Xn;
+	p->carp.load_multiplier += pow(X_last, K - k + 1);
+	p->carp.load_multiplier = pow(p->carp.load_multiplier, 1 / (K - k + 1));
+	Xn *= p->carp.load_multiplier;
+	X_last = p->carp.load_multiplier;
 	k++;
-	n = p->carp.load_factor;
+	P_last = p->carp.load_factor;
     }
 }
 
@@ -91,9 +97,7 @@ carpSelectParent(request_t * request)
 	url_hash += (url_hash << 19) + *c;
     /* select peer */
     for (tp = Config.peers; tp; tp = tp->next) {
-	if (p->carp.load_factor == 0.0)
-	    continue;
-	assert(p->type == PEER_PARENT);
+	assert(tp->type == PEER_PARENT);
 	combined_hash = (url_hash ^ tp->carp.hash);
 	combined_hash += combined_hash * 0x62531965;
 	combined_hash = combined_hash << 21;
