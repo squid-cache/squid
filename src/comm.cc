@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.77 1996/09/20 20:27:33 wessels Exp $
+ * $Id: comm.cc,v 1.78 1996/09/24 19:50:07 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -670,7 +670,10 @@ comm_select(time_t sec)
 	    ftpServerClose();
 	    dnsShutdownServers();
 	    redirectShutdownServers();
-	    setSocketShutdownLifetimes();
+	    if (shutdown_pending > 0)
+	    	setSocketShutdownLifetimes(Config.lifetimeShutdown);
+	    else
+		setSocketShutdownLifetimes(0);
 	}
 	nfds = 0;
 	maxfd = fdstat_biggest_fd() + 1;

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.85 1996/09/20 23:26:57 wessels Exp $
+ * $Id: main.cc,v 1.86 1996/09/24 19:50:08 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -167,7 +167,7 @@ Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port] [-k signal]\n\
                  %s\n\
        -h        Print help message.\n\
        -i        Disable IP caching.\n\
-       -k reconfigure|rotate|shutdown|kill|debug|check\n\
+       -k reconfigure|rotate|shutdown|interrupt|kill|debug|check\n\
 		 Send signal to running copy and exit.\n\
        -s        Enable logging to syslog.\n\
        -u port   Specify ICP port number (default: %d), disable with 0.\n\
@@ -240,6 +240,8 @@ mainParseOptions(int argc, char *argv[])
 		opt_send_signal = SIGUSR2;
 	    else if (!strncmp(optarg, "shutdown", strlen(optarg)))
 		opt_send_signal = SIGTERM;
+            else if (!strncmp(optarg, "interrupt", strlen(optarg)))
+                opt_send_signal = SIGINT;
 	    else if (!strncmp(optarg, "kill", strlen(optarg)))
 		opt_send_signal = SIGKILL;
 	    else if (!strncmp(optarg, "check", strlen(optarg)))
@@ -303,11 +305,11 @@ reconfigure(int sig)
 void
 shut_down(int sig)
 {
+    shutdown_pending = sig == SIGINT ? -1 : 1;
     debug(21, 1, "Preparing for shutdown after %d connections\n",
 	ntcpconn + nudpconn);
     debug(21, 1, "Waiting %d seconds for active connections to finish\n",
-	Config.lifetimeShutdown);
-    shutdown_pending = 1;
+	shutdown_pending > 0 ? Config.lifetimeShutdown : 0);
 #if SA_RESETHAND == 0
     signal(SIGTERM, SIG_DFL);
     signal(SIGINT, SIG_DFL);

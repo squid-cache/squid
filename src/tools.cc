@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.63 1996/09/20 23:27:01 wessels Exp $
+ * $Id: tools.cc,v 1.64 1996/09/24 19:50:10 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -263,10 +263,9 @@ sigusr2_handle(int sig)
 }
 
 void
-setSocketShutdownLifetimes(void)
+setSocketShutdownLifetimes(int lft)
 {
     FD_ENTRY *f = NULL;
-    int lft = Config.lifetimeShutdown;
     int cur;
     int i;
     for (i = fdstat_biggest_fd(); i >= 0; i--) {
