@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.398 2002/01/13 01:08:43 robertc Exp $
+ * $Id: cache_cf.cc,v 1.399 2002/01/15 16:26:41 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -239,6 +239,7 @@ parseConfigFile(const char *file_name)
     int err_count = 0;
     configFreeMemory();
     default_all();
+    enter_suid();
     if ((fp = fopen(file_name, "r")) == NULL)
 	fatalf("Unable to open configuration file: %s: %s",
 	    file_name, xstrerror());
@@ -269,6 +270,7 @@ parseConfigFile(const char *file_name)
 	safe_free(tmp_line);
     }
     fclose(fp);
+    leave_suid();
     defaults_if_none();
     configDoConfigure();
     cachemgrRegister("config",
