@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.20 1998/05/21 03:59:35 wessels Exp $
+ * $Id: refresh.cc,v 1.21 1998/07/14 19:56:39 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -71,12 +71,14 @@ refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
     time_t age;
     double factor;
     time_t check_time = squid_curtime + delta;
-    debug(22, 3) ("refreshCheck: '%s'\n", storeUrl(entry));
+    assert(entry->mem_obj);
+    assert(entry->mem_obj->url);
+    debug(22, 3) ("refreshCheck: '%s'\n", entry->mem_obj->url);
     if (EBIT_TEST(entry->flag, ENTRY_REVALIDATE)) {
 	debug(22, 3) ("refreshCheck: YES: Required Authorization\n");
 	return 1;
     }
-    if ((R = refreshLimits(storeUrl(entry)))) {
+    if ((R = refreshLimits(entry->mem_obj->url))) {
 	min = R->min;
 	pct = R->pct;
 	max = R->max;
@@ -86,6 +88,8 @@ refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
 	pattern, (int) min, (int) (100.0 * pct), (int) max);
     age = check_time - entry->timestamp;
     debug(22, 3) ("refreshCheck: age = %d\n", (int) age);
+    debug(22, 3) ("\tcheck_time:\t%s\n", mkrfc1123(check_time));
+    debug(22, 3) ("\tentry->timestamp:\t%s\n", mkrfc1123(entry->timestamp));
     if (request->max_age > -1) {
 	if (age > request->max_age) {
 	    debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");
@@ -137,17 +141,17 @@ refreshWhen(const StoreEntry * entry)
     time_t max = REFRESH_DEFAULT_MAX;
     double pct = REFRESH_DEFAULT_PCT;
     const char *pattern = ".";
-
-    assert(entry);
+    assert(entry->mem_obj);
+    assert(entry->mem_obj->url);
     debug(22, 3) ("refreshWhen: key '%s'\n", storeKeyText(entry->key));
-    debug(22, 3) ("refreshWhen: url '%s'\n", storeUrl(entry));
+    debug(22, 3) ("refreshWhen: url '%s'\n", entry->mem_obj->url);
     if (EBIT_TEST(entry->flag, ENTRY_REVALIDATE)) {
 	debug(22, 3) ("refreshWhen: NOW: Required Authorization\n");
 	return refresh_time;
     }
     debug(22, 3) ("refreshWhen: entry: exp: %d, tstamp: %d, lmt: %d\n",
 	entry->expires, entry->timestamp, entry->lastmod);
-    if ((R = refreshLimits(storeUrl(entry)))) {
+    if ((R = refreshLimits(entry->mem_obj->url))) {
 	min = R->min;
 	max = R->max;
 	pct = R->pct;
