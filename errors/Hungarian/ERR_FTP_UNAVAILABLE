@@ -1,17 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
-</HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD>
+<BODY>
+<H1>HIBA</H1>
+<H2>A kért URL nem tölthető le</H2>
 <HR>
 <P>
-The FTP server was too busy while trying to retrieve the URL:
+Az FTP kiszolgáló túlterheltsége miatt az alábbi URL nem tölthető le:
 <A HREF="%U">%U</A>
 <P>
-Squid sent the following FTP command:
+A Squid az alábbi FTP parancsot küldte:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-and then received this reply
+és ezt a választ kapta:
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 </P>
-
