@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.96 1997/11/20 06:25:24 wessels Exp $
+#  $Id: Makefile.in,v 1.97 1997/11/21 00:29:34 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -35,6 +35,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
+DEFAULT_SNMP_CONF	= $(sysconfdir)/snmp.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/dnsserver
 DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
@@ -46,6 +47,7 @@ DEFAULT_PINGER		= $(libexecdir)/pinger
 DEFAULT_UNLINKD		= $(libexecdir)/unlinkd
 DEFAULT_ICON_DIR	= $(sysconfdir)/icons
 DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
+DEFAULT_MIB_PATH	= $(sysconfdir)/squidmib.txt
 
 CC		= @CC@
 MAKEDEPEND	= @MAKEDEPEND@
@@ -137,7 +139,14 @@ OBJS	 	= \
 		url.o \
 		useragent.o \
 		wais.o \
+		$(SNMP_OBJS) \
 		$(XTRA_OBJS)
+
+SNMP_OBJS	= \
+		snmp.o \
+                snmp_vars.o \
+                snmp_agent.o \
+                snmp_config.o 
 
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
@@ -147,7 +156,7 @@ all:    squid.conf $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
 $(OBJS): ../include/version.h
 
 squid:	$(OBJS)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_LIBS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_LIBS) $(SQUID_SNMP_LIBS)
 
 globals.o: globals.c Makefile
 	$(CC) -c $< $(CFLAGS) $(DEFAULTS)
@@ -192,7 +201,9 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_STORE_LOG@%$(DEFAULT_STORE_LOG)%g;\
 	s%@DEFAULT_PID_FILE@%$(DEFAULT_PID_FILE)%g;\
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
+	s%@DEFAULT_SNMP_CONF@%$(DEFAULT_SNMP_CONF)%g;\
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
+        s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g" < cf.data.pre >$@
 
 install-mkdirs:
@@ -264,6 +275,7 @@ install: all install-mkdirs
 			$(RM) -f $(libexecdir)/-$$f; \
 		fi; \
 	done
+	$(INSTALL_FILE) mib.txt $(sysconfdir)/mib.txt
 	$(INSTALL_FILE) squid.conf $(sysconfdir)/squid.conf.default
 	@if test -f $(sysconfdir)/squid.conf ; then \
 		echo "$@ will not overwrite existing $(sysconfdir)/squid.conf" ; \
@@ -271,6 +283,14 @@ install: all install-mkdirs
 		echo "$(INSTALL_FILE) squid.conf $(sysconfdir)"; \
 		$(INSTALL_FILE) squid.conf $(sysconfdir); \
 	fi
+	$(INSTALL_FILE) snmp.conf $(sysconfdir)/snmp.conf.default
+	@if test -f $(sysconfdir)/snmp.conf ; then \
+                echo "$@ will not overwrite existing $(sysconfdir)/snmp.conf" ; \
+        else \
+                echo "$(INSTALL_FILE) snmp.conf $(sysconfdir)"; \
+                $(INSTALL_FILE) snmp.conf $(sysconfdir); \
+        fi
+
 	$(INSTALL_FILE) mime.conf $(sysconfdir)/mime.conf.default
 	@if test -f $(sysconfdir)/mime.conf ; then \
 		echo "$@ will not overwrite existing $(sysconfdir)/mime.conf" ; \

@@ -130,6 +130,13 @@ struct _SquidConfig {
 #endif
     } Port;
     struct {
+	char *configFile;
+	char *agentInfo;
+	char *mibPath;
+	u_short localPort;
+	int do_queueing;
+	} Snmp;
+    struct {
 	char *log;
 	char *access;
 	char *store;
@@ -169,10 +176,11 @@ struct _SquidConfig {
 	struct in_addr tcp_incoming;
 	struct in_addr tcp_outgoing;
 	struct in_addr udp_incoming;
+	struct in_addr udp_outgoing;
 #ifdef SQUID_SNMP
 	struct in_addr snmp_incoming;
+	struct in_addr snmp_outgoing;
 #endif				/* SQUID_SNMP */
-	struct in_addr udp_outgoing;
 	struct in_addr client_netmask;
     } Addrs;
     size_t tcpRcvBufsz;

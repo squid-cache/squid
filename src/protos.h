@@ -239,8 +239,15 @@ extern PF icpHandleUdp;
 extern PF httpAccept;
 extern DEFER httpAcceptDefer;
 #ifdef SQUID_SNMP
-extern PF snmpAccept;
+/*extern PF snmpHandleUdp;*/
+/*extern void initSquidSnmp();*/
 #endif /* SQUID_SNMP */
+
+extern void icpSendERROR(int fd,
+    log_type errorCode,
+    const char *text,
+    clientHttpRequest *,
+    int httpCode);
 extern void AppendUdp(icpUdpData *);
 extern PF icpUdpReply;
 extern void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
