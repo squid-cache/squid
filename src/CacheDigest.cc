@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.13 1998/04/14 16:38:21 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.14 1998/04/18 06:54:08 rousskov Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -155,7 +155,9 @@ cacheDigestAdd(CacheDigest * cd, const cache_key * key)
 	    CBIT_SET(cd->mask, hashed_keys[3]);
 	    on_xition_cnt++;
 	}
+#if SQUID_PEER_DIGEST
 	statHistCount(&Counter.cd.on_xition_count, on_xition_cnt);
+#endif
     }
 #endif
     cd->count++;
@@ -182,13 +184,13 @@ cacheDigestStats(const CacheDigest * cd, CacheDigestStats * stats)
     assert(stats);
     memset(stats, 0, sizeof(*stats));
     while (pos-- > 0) {
-	const int is_on = CBIT_TEST(cd->mask, pos);
+	const int is_on = 0 != CBIT_TEST(cd->mask, pos);
 	if (is_on)
 	    on_count++;
 	if (is_on != cur_seq_type || !pos) {
 	    seq_len_sum += cur_seq_len;
 	    seq_count++;
-	    cur_seq_type = !cur_seq_type;
+	    cur_seq_type = is_on;
 	    cur_seq_len = 0;
 	}
 	cur_seq_len++;
