@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.87 1998/02/26 18:00:43 wessels Exp $
+ * $Id: fqdncache.cc,v 1.88 1998/02/26 22:16:28 kostas Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -973,9 +973,6 @@ snmp_fqdncacheFn(variable_list * Var, long *ErrP)
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	snmp_var_free(Answer);
-#if 0
-	xfree(Answer->val.integer);
-#endif
 	return (NULL);
     }
     return Answer;

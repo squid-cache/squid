@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.70 1998/02/26 18:00:47 wessels Exp $
+ * $Id: net_db.cc,v 1.71 1998/02/26 22:16:29 kostas Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -787,7 +787,6 @@ snmp_netdbFn(variable_list * Var, long *ErrP)
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	snmp_var_free(Answer);
-	xfree(Answer->val.integer);
 	return (NULL);
     }
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.162 1998/02/26 18:00:44 wessels Exp $
+ * $Id: ipcache.cc,v 1.163 1998/02/26 22:16:28 kostas Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1112,7 +1112,6 @@ snmp_ipcacheFn(variable_list * Var, long *ErrP)
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	snmp_var_free(Answer);
-	xfree(Answer->val.integer);
 	return (NULL);
     }
     return Answer;
