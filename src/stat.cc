@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.248 1998/05/15 15:16:33 wessels Exp $
+ * $Id: stat.cc,v 1.249 1998/05/15 17:16:21 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -107,6 +107,8 @@
 
 #include "squid.h"
 
+#define DEBUG_OPENFD 1
+
 /* LOCALS */
 static const char *describeStatuses(const StoreEntry *);
 static const char *describeFlags(const StoreEntry *);
@@ -125,6 +127,9 @@ static void statStoreEntry(StoreEntry * s, StoreEntry * e);
 static OBJH stat_io_get;
 static OBJH stat_objects_get;
 static OBJH stat_vmobjects_get;
+#if DEBUG_OPENFD
+static OBJH statOpenfdObj;
+#endif
 static OBJH info_get;
 static OBJH statFiledescriptors;
 static OBJH statCountersDump;
@@ -379,6 +384,24 @@ stat_vmobjects_get(StoreEntry * e)
 {
     statObjects(e, 1);
 }
+
+#if DEBUG_OPENFD
+static void
+statOpenfdObj(StoreEntry * sentry)
+{
+    StoreEntry *entry = NULL;
+    StoreEntry *next = NULL;
+    next = (StoreEntry *) hash_first(store_table);
+    while ((entry = next) != NULL) {
+	next = (StoreEntry *) hash_next(store_table);
+	if (entry->mem_obj == NULL)
+	    continue;
+	if (entry->mem_obj->swapout.fd < 0)
+	    continue;
+	statStoreEntry(sentry, entry);
+    }
+}
+#endif
 
 #ifdef XMALLOC_STATISTICS
 static void
@@ -763,6 +786,11 @@ statInit(void)
     cachemgrRegister("vm_objects",
 	"In-Memory and In-Transit Objects",
 	stat_vmobjects_get, 0);
+#if DEBUG_OPENFD
+    cachemgrRegister("openfd_objects",
+	"Objects with Swapout files open",
+	statOpenfdObj, 0);
+#endif
     cachemgrRegister("io",
 	"Server-side network read() size histograms",
 	stat_io_get, 0);
