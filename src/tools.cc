@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.195 2000/09/16 21:47:46 hno Exp $
+ * $Id: tools.cc,v 1.196 2000/10/10 02:10:43 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -907,4 +907,18 @@ stringHasCntl(const char *s)
 	    return 1;
     }
     return 0;
+}
+
+/*
+ * isPowTen returns true if its argument is an integer power of
+ * 10.  Its used for logging of certain error messages that can
+ * occur often, but that we don't want to fill cache.log with.
+ */
+int
+isPowTen(int count)
+{
+    double x = log(count) / log(10.0);
+    if (0.0 != x - (double) (int) x)
+	return 0;
+    return 1;
 }
