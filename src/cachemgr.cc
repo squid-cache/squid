@@ -1,4 +1,4 @@
-/* $Id: cachemgr.cc,v 1.4 1996/03/27 01:45:56 wessels Exp $ */
+/* $Id: cachemgr.cc,v 1.5 1996/04/01 23:22:03 wessels Exp $ */
 
 #include "squid.h"
 
@@ -206,6 +206,9 @@ void parse_object(char *string)
 
     /* Parse out the url */
     url = strtok(tmp_line, w_space);
+
+    if (!url)
+	return;
 
 #if !ALL_OBJECTS
     if (!strncmp(url, "cache_object", 12))
