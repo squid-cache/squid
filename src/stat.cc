@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.273 1998/07/30 23:31:09 wessels Exp $
+ * $Id: stat.cc,v 1.274 1998/08/11 19:00:42 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -826,7 +826,7 @@ statAvgTick(void *notused)
 	StatCounters *t = &CountHourHist[1];
 	StatCounters *c = &CountHist[N_COUNT_HIST];
 	xmemmove(p, t, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
-	memcpy(t, c, sizeof(StatCounters));
+	statCountersCopy(t, c);
 	NCountHourHist++;
     }
 }
