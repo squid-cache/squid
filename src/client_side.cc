@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.258 1998/04/07 04:50:46 wessels Exp $
+ * $Id: client_side.cc,v 1.259 1998/04/07 22:37:44 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1828,6 +1828,11 @@ clientReadRequest(int fd, void *data)
 		safe_free(headers);
 		break;
 	    }
+	    if (0 == http->internal)
+		if (0 == strncmp(request->urlpath, "/squid-internal/", 16))
+		    if (0 == strcasecmp(request->host, getMyHostname())
+		        if (request->port == Config.Port.http->i)
+	                    http->internal = 1;
 	    safe_free(http->log_uri);
 	    http->log_uri = xstrdup(urlCanonicalClean(request));
 	    request->client_addr = conn->peer.sin_addr;
