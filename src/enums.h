@@ -86,11 +86,6 @@ typedef enum {
     ACL_LOOKUP_DONE
 } acl_lookup_state;
 
-typedef enum {
-    IP_ALLOW,
-    IP_DENY
-} ip_access_type;
-
 enum {
     FD_NONE,
     FD_LOG,
