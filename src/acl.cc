@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.237 2001/01/08 19:36:26 hno Exp $
+ * $Id: acl.cc,v 1.238 2001/01/09 23:39:03 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2207,7 +2207,13 @@ aclDumpUserList(acl_user_data * data)
      * a wordlist this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    splay_walk(data->names, aclDumpUserListWalkee, &wl);
+    if (data->names)
+	splay_walk(data->names, aclDumpUserListWalkee, &wl);
+    else
+	/*
+	 * special case for REQUIRED
+	 */
+	wordlistAdd(&wl, "REQUIRED");
     return wl;
 }
 
@@ -2804,4 +2810,4 @@ aclDumpArpList(void *data)
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */
-#endif				/* USE_ARP_ACL */
+#endif /* USE_ARP_ACL */
