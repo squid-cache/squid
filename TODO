@@ -1,5 +1,6 @@
 + copy over new -z semantics; don't automatically wipeout cache
 
++ request-range
 + we don't properly handle the HTTP/1.1 'Connection' header
 + ETag support (makes metadata bigger--ack!)
 + make USE_PROXY_AUTH standard
