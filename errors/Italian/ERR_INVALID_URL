@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+URL non valida
+</STRONG>
+</UL>
+
+<P>
+Alcuni aspetti dell'URL richiesta sono errati. Possibili problemi:
+<UL>
+<LI>Protocollo d'accesso mancante o errato (dev'essere `http://' o simile)
+<LI>Nome dell'host mancante
+<LI>Errata doppia conversione di caratteri nell'<i>URL-Path</i>
+<LI>Caratteri illegali nel nome dell'host; gli "underscores" ('<TT>_</TT>')
+non sono permessi
+</UL>
+</P>

@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Inoltramento vietato.
+</STRONG>
+</UL>
+
+<P>
+Questa cache non inoltra la vostra richiesta in quanto si vuole 
+stabilire una relazione di "fratellanza". Probabilmente il cliente %i
+&egrave; una cache mal configurata.
+</P>

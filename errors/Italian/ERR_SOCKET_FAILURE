@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Socket Failure
+</STRONG>
+</UL>
+
+<P>
+Il sistema ha risposto:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Squid &egrave; impossibilitato a creare un socket TCP, probabilmente
+a causa di un carico eccessivo. Riprovate la richiesta.
+</P>

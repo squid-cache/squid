@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<BLOCKQUOTE>
+Impossibile determinare l'indirizzo IP dal nome dell'host per
+<I>%H</I>
+</BLOCKQUOTE>
+</UL>
+
+<P>
+Il dnsserver ha risposto:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+Ci&ograve; significa che:
+<PRE>
+La cache non ha potuto risolvere il nome dell'host presente nella URL.
+Controllate che l'indirizzo sia corretto.
+</PRE>
+</P>
+

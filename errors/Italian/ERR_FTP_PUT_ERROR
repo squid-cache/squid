@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>ERRORE: Trasferimento FTP fallito</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>Trasferimento FTP fallito</H2>
+<HR>
+<P>
+Mentre si cercava di trasferire la seguente URL:
+<A HREF="%U">%U</A>
+<P>
+Squid ha spedito il seguente comando FTP:
+<PRE><STRONG>
+	%f
+</STRONG></PRE>
+e ha ricevuto in risposta
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+Ci&ograve; significa che:
+<PRE>
+Controllate il percorso, i permessi, lo spazio sul disco e riprovate.
+</PRE>
+</P>
+

@@ -1,0 +1,34 @@
+<HTML><HEAD>
+<TITLE>ERRORE: Negato l'accesso alla cache</TITLE>
+</HEAD>
+<BODY>
+<H1>ERRORE</H1>
+<H2>Negato l'accesso alla cache</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Negato l'accesso alla cache
+</STRONG>
+</UL>
+</P>
+
+<P>Ci dispiace, ma non siete autorizzati a recuperare
+<PRE>    %U</PRE>
+da questa cache fino a quando non vi sarete autenticati.
+</P>
+
+<P> 
+Dovete utilizzare Netscape versione 2.0 o maggiore, o Microsoft
+Internet Explorer 3.0, o un browser compatibile HTTP/1.1 perch&eacute;
+ci&ograve; sia possibile.  Contattate 
+<A HREF="mailto:%w">l'amministratore della cache</a> se avete
+difficolt&agrave; ad autenticarvi o 
+<A HREF="http://%h/cgi-bin/chpasswd.cgi\">cambiate</a> la vostra
+password.
+</P>

@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si elaborava la richiesta:
+<PRE>
+%R
+</PRE>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Richiesta non valida
+</STRONG>
+</UL>
+
+<P>
+Alcuni aspetti della richiesta HTTP non sono validi. Possibili problemi:
+<UL>
+<LI>Metodo mancante o sconosciuto (GET, POST)
+<LI>URL mancante
+<LI>Identificativo HTTP mancante (HTTP/1.0)
+<LI>La richiesta pu&ograve; essere troppo grande
+<LI>Mancanza di <i>Content-Length</i> per richieste POST o PUT
+<LI>Caratteri illegali nel nome dell'host; gli "underscores" ('<TT>_</TT>')
+non sono permessi
+</UL>
+</P>
