@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.58 1996/07/11 17:42:36 wessels Exp $
+ * $Id: cache_cf.cc,v 1.59 1996/07/11 22:44:11 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -157,6 +157,7 @@ static struct {
     int sourcePing;
     int quickAbort;
     int commonLogFormat;
+    int identLookup;
     int neighborTimeout;
     int stallDelay;
     int singleParentBypass;
@@ -249,6 +250,7 @@ static struct {
 #define DefaultAccelWithProxy	0	/* default off */
 #define DefaultSourcePing	0	/* default off */
 #define DefaultCommonLogFormat	0	/* default off */
+#define DefaultIdentLookup	0	/* default off */
 #define DefaultQuickAbort	0	/* default off */
 #define DefaultNeighborTimeout  2	/* 2 seconds */
 #define DefaultStallDelay	1	/* 1 seconds */
@@ -271,6 +273,7 @@ ip_acl *firewall_ip_list = NULL;
 int zap_disk_store = 0;		/* off, try to rebuild from disk */
 int httpd_accel_mode = 0;	/* for fast access */
 int emulate_httpd_log = DefaultCommonLogFormat;		/* for fast access */
+int identLookup = DefaultIdentLookup;			/* for fast access */
 time_t neighbor_timeout = DefaultNeighborTimeout;	/* for fast access */
 int single_parent_bypass = 0;
 int DnsPositiveTtl = DefaultPositiveDnsTtl;
@@ -288,6 +291,7 @@ static void configSetFactoryDefaults _PARAMS((void));
 static void configFreeMemory _PARAMS((void));
 static void configDoConfigure _PARAMS((void));
 static char *safe_xstrdup _PARAMS((char *p));
+static void parseOnOff _PARAMS((int *));
 static char fatal_str[BUFSIZ];
 
 void self_destruct()
@@ -546,41 +550,6 @@ static void parseHostAclLine()
 }
 
 
-static void parseSourcePingLine()
-{
-    char *srcping;
-
-    srcping = strtok(NULL, w_space);
-    if (srcping == NULL)
-	self_destruct();
-
-    /* set source_ping, default is off. */
-    if (!strcasecmp(srcping, "on"))
-	Config.sourcePing = 1;
-    else if (!strcasecmp(srcping, "off"))
-	Config.sourcePing = 0;
-    else
-	Config.sourcePing = 0;
-}
-
-
-static void parseQuickAbortLine()
-{
-    char *abort;
-
-    abort = strtok(NULL, w_space);
-    if (abort == NULL)
-	self_destruct();
-
-    if (!strcasecmp(abort, "on") || !strcasecmp(abort, "quick"))
-	Config.quickAbort = 1;
-    else if (!strcmp(abort, "off") || !strcasecmp(abort, "normal"))
-	Config.quickAbort = 0;
-    else
-	Config.quickAbort = 0;
-
-}
-
 static void parseMemLine()
 {
     char *token;
@@ -834,23 +803,6 @@ static void parseHttpdAccelLine()
     httpd_accel_mode = 1;
 }
 
-static void parseHttpdAccelWithProxyLine()
-{
-    char *proxy;
-
-    proxy = strtok(NULL, w_space);
-    if (proxy == NULL)
-	self_destruct();
-
-    /* set httpd_accel_with_proxy, default is off. */
-    if (!strcasecmp(proxy, "on"))
-	Config.Accel.withProxy = 1;
-    else if (!strcasecmp(proxy, "off"))
-	Config.Accel.withProxy = 0;
-    else
-	Config.Accel.withProxy = 0;
-}
-
 static void parseEffectiveUserLine()
 {
     char *token;
@@ -956,16 +908,17 @@ static void parseRedirectProgramLine()
     Config.Program.redirect = xstrdup(token);
 }
 
-static void parseEmulateLine()
+static void parseOnOff(var)
+	int *var;
 {
     char *token;
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
     if (!strcasecmp(token, "on") || !strcasecmp(token, "enable"))
-	Config.commonLogFormat = 1;
+	*var = 1;
     else
-	Config.commonLogFormat = 0;
+	*var = 0;
 }
 
 static void parseWAISRelayLine()
@@ -1137,16 +1090,6 @@ static void parseNeighborTimeout()
     Config.neighborTimeout = i;
 }
 
-static void parseSingleParentBypassLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    if (!strcasecmp(token, "on"))
-	Config.singleParentBypass = 1;
-}
-
 static void parseDebugOptionsLine()
 {
     char *token;
@@ -1295,9 +1238,8 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "logfile_rotate"))
 	    parseLogfileRotateLine();
 
-	/* Parse a httpd_accel_with_proxy line */
 	else if (!strcmp(token, "httpd_accel_with_proxy"))
-	    parseHttpdAccelWithProxyLine();
+	    parseOnOff(&Config.Accel.withProxy);
 
 	/* Parse a httpd_accel line */
 	else if (!strcmp(token, "httpd_accel"))
@@ -1437,17 +1379,17 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "redirect_children"))
 	    parseRedirectChildrenLine();
 
-	/* Parse source_ping line */
 	else if (!strcmp(token, "source_ping"))
-	    parseSourcePingLine();
+	    parseOnOff(&Config.sourcePing);
 
-	/* Parse quick_abort line */
 	else if (!strcmp(token, "quick_abort"))
-	    parseQuickAbortLine();
+	    parseOnOff(&Config.quickAbort);
 
-	/* Parse emulate_httpd_log line */
 	else if (!strcmp(token, "emulate_httpd_log"))
-	    parseEmulateLine();
+	    parseOnOff(&Config.commonLogFormat);
+
+	else if (!strcmp(token, "lookup_ident"))
+	    parseOnOff(&Config.identLookup);
 
 	else if (!strcmp(token, "append_domain"))
 	    parseAppendDomainLine();
@@ -1498,7 +1440,7 @@ int parseConfigFile(file_name)
 	    parseDnsTestnameLine();
 
 	else if (!strcmp(token, "single_parent_bypass"))
-	    parseSingleParentBypassLine();
+	    parseOnOff(&Config.singleParentBypass);
 
 	else if (!strcmp(token, "debug_options"))
 	    parseDebugOptionsLine();
