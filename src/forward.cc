@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.52 1999/01/19 19:23:27 wessels Exp $
+ * $Id: forward.cc,v 1.53 1999/01/29 21:28:12 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -384,7 +384,8 @@ fwdReforward(FwdState * fwdState)
 /* PUBLIC FUNCTIONS */
 
 void
-fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr)
+fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr,
+    struct in_addr my_addr)
 {
     FwdState *fwdState;
     aclCheck_t ch;
@@ -401,6 +402,7 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr)
 	 */
 	memset(&ch, '\0', sizeof(aclCheck_t));
 	ch.src_addr = client_addr;
+	ch.my_addr = my_addr;
 	ch.request = r;
 	answer = aclCheckFast(Config.accessList.miss, &ch);
 	if (answer == 0) {

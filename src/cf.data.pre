@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.141 1999/01/29 21:05:21 wessels Exp $
+# $Id: cf.data.pre,v 1.142 1999/01/29 21:28:08 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1413,6 +1413,7 @@ DOC_START
 	acl aclname src      ip-address/netmask ... (clients IP address)
 	acl aclname src      addr1-addr2/netmask ... (range of addresses)
 	acl aclname dst      ip-address/netmask ... (URL host's IP address)
+	acl aclname myip     ip-address/netmask ... (local socket IP address)
 
 	acl aclname srcdomain   foo.com ...     # reverse lookup, client IP
 	acl aclname dstdomain   foo.com ...     # Destination server from URL

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.196 1999/01/24 04:03:48 wessels Exp $
+ * $Id: acl.cc,v 1.197 1999/01/29 21:28:06 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -153,6 +153,8 @@ aclStrToType(const char *s)
 	return ACL_SRC_IP;
     if (!strcmp(s, "dst"))
 	return ACL_DST_IP;
+    if (!strcmp(s, "myip"))
+	return ACL_MY_IP;
     if (!strcmp(s, "domain"))
 	return ACL_DST_DOMAIN;
     if (!strcmp(s, "dstdomain"))
@@ -209,6 +211,8 @@ aclTypeToStr(squid_acl type)
 	return "src";
     if (type == ACL_DST_IP)
 	return "dst";
+    if (type == ACL_MY_IP)
+	return "myip";
     if (type == ACL_DST_DOMAIN)
 	return "dstdomain";
     if (type == ACL_SRC_DOMAIN)
@@ -672,6 +676,7 @@ aclParseAclLine(acl ** head)
     switch (A->type) {
     case ACL_SRC_IP:
     case ACL_DST_IP:
+    case ACL_MY_IP:
 	aclParseIpList(&A->data);
 	break;
     case ACL_SRC_DOMAIN:
@@ -1228,6 +1233,9 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     case ACL_SRC_IP:
 	return aclMatchIp(&ae->data, checklist->src_addr);
 	/* NOTREACHED */
+    case ACL_MY_IP:
+	return aclMatchIp(&ae->data, checklist->my_addr);
+	/* NOTREACHED */
     case ACL_DST_IP:
 	ia = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
 	if (ia) {
@@ -1659,6 +1667,7 @@ aclCheck_t *
 aclChecklistCreate(const acl_access * A,
     request_t * request,
     struct in_addr src_addr,
+    struct in_addr my_addr,
     const char *user_agent,
     const char *ident)
 {
@@ -1674,6 +1683,7 @@ aclChecklistCreate(const acl_access * A,
     if (request != NULL)
 	checklist->request = requestLink(request);
     checklist->src_addr = src_addr;
+    checklist->my_addr = my_addr;
     for (i = 0; i < ACL_ENUM_MAX; i++)
 	checklist->state[i] = ACL_LOOKUP_NONE;
     if (user_agent)
@@ -1753,6 +1763,7 @@ aclDestroyAcls(acl ** head)
 	switch (a->type) {
 	case ACL_SRC_IP:
 	case ACL_DST_IP:
+	case ACL_MY_IP:
 	    splay_destroy(a->data, aclFreeIpData);
 	    break;
 	case ACL_SRC_ARP:
@@ -2082,6 +2093,7 @@ aclDumpGeneric(const acl * a)
     switch (a->type) {
     case ACL_SRC_IP:
     case ACL_DST_IP:
+    case ACL_MY_IP:
 	return aclDumpIpList(a->data);
 	break;
     case ACL_SRC_DOMAIN:

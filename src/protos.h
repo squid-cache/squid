@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.312 1999/01/24 04:03:53 wessels Exp $
+ * $Id: protos.h,v 1.313 1999/01/29 21:28:19 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -45,6 +45,7 @@ extern void fvdbCountForw(const char *key);
 extern aclCheck_t *aclChecklistCreate(const struct _acl_access *,
     request_t *,
     struct in_addr src,
+    struct in_addr me,
     const char *user_agent,
     const char *ident);
 extern void aclNBCheck(aclCheck_t *, PF *, void *);
@@ -651,7 +652,7 @@ extern void peerDigestNotePeerGone(PeerDigest * pd);
 extern void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
 /* forward.c */
-extern void fwdStart(int, StoreEntry *, request_t *, struct in_addr);
+extern void fwdStart(int, StoreEntry *, request_t *, struct in_addr, struct in_addr);
 extern DEFER fwdCheckDeferRead;
 extern void fwdFail(FwdState *, ErrorState *);
 extern void fwdUnregister(int fd, FwdState *);

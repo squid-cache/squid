@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.57 1999/01/11 23:29:42 wessels Exp $
+ * $Id: icp_v2.cc,v 1.58 1999/01/29 21:28:13 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -218,6 +218,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    break;
 	}
 	checklist.src_addr = from.sin_addr;
+	checklist.my_addr = no_addr;
 	checklist.request = icp_request;
 	allow = aclCheckFast(Config.accessList.icp, &checklist);
 	if (!allow) {
