@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.51 2001/06/28 05:18:25 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.52 2001/07/10 15:35:45 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -402,9 +402,12 @@ storeDiskdDirInit(SwapDir * sd)
 	debug(50, 0) ("storeDiskdInit: shmat: %s\n", xstrerror());
 	fatal("shmat failed");
     }
+    diskdinfo->shm.inuse_map = xcalloc((SHMBUFS + 7) / 8, 1);
     diskd_stats.shmbuf_count += SHMBUFS;
-    for (i = 0; i < SHMBUFS; i++)
+    for (i = 0; i < SHMBUFS; i++) {
+	CBIT_SET(diskdinfo->shm.inuse_map, i);
 	storeDiskdShmPut(sd, i * SHMBUF_BLKSZ);
+    }
     snprintf(skey1, 32, "%d", ikey);
     snprintf(skey2, 32, "%d", ikey + 1);
     snprintf(skey3, 32, "%d", ikey + 2);
@@ -514,7 +517,6 @@ storeDiskdDirCallback(SwapDir * SD)
     if (diskd_stats.sent_count - diskd_stats.recv_count >
 	diskd_stats.max_away) {
 	diskd_stats.max_away = diskd_stats.sent_count - diskd_stats.recv_count;
-	diskd_stats.max_shmuse = diskd_stats.shmbuf_count;
     }
     while (1) {
 	memset(&M, '\0', sizeof(M));
@@ -1638,26 +1640,37 @@ storeDiskdDirReplRemove(StoreEntry * e)
 void *
 storeDiskdShmGet(SwapDir * sd, off_t * shm_offset)
 {
-    char *buf;
+    char *buf = NULL;
     diskdinfo_t *diskdinfo = sd->fsdata;
-    buf = linklistShift(&diskdinfo->shm.stack);
+    int i;
+    for (i = 0; i < SHMBUFS; i++) {
+	if (CBIT_TEST(diskdinfo->shm.inuse_map, i))
+	    continue;
+	CBIT_SET(diskdinfo->shm.inuse_map, i);
+	*shm_offset = i * SHMBUF_BLKSZ;
+	buf = diskdinfo->shm.buf + (*shm_offset);
+	break;
+    }
     assert(buf);
     assert(buf >= diskdinfo->shm.buf);
     assert(buf < diskdinfo->shm.buf + (SHMBUFS * SHMBUF_BLKSZ));
-    *shm_offset = buf - diskdinfo->shm.buf;
     diskd_stats.shmbuf_count++;
+    if (diskd_stats.max_shmuse < diskd_stats.shmbuf_count)
+	diskd_stats.max_shmuse = diskd_stats.shmbuf_count;
     return buf;
 }
 
 void
 storeDiskdShmPut(SwapDir * sd, off_t offset)
 {
-    char *buf;
+    int i;
     diskdinfo_t *diskdinfo = sd->fsdata;
     assert(offset >= 0);
     assert(offset < SHMBUFS * SHMBUF_BLKSZ);
-    buf = diskdinfo->shm.buf + offset;
-    linklistPush(&diskdinfo->shm.stack, buf);
+    i = offset / SHMBUF_BLKSZ;
+    assert(i < SHMBUFS);
+    assert(CBIT_TEST(diskdinfo->shm.inuse_map, i));
+    CBIT_CLR(diskdinfo->shm.inuse_map, i);
     diskd_stats.shmbuf_count--;
 }
 
