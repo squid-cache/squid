@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.54 1997/02/28 21:33:36 wessels Exp $
+ * $Id: errorpage.cc,v 1.55 1997/05/26 04:04:58 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -85,6 +85,9 @@ static error_data ErrorData[] =
 	"All Clients went away before tranmission completed and the object is too big to cache."},
     {"ERR_READ_ERROR",
 	"Read Error",
+	"The remote site or network may be down.  Please try again."},
+    {"ERR_WRITE_ERROR",
+	"Write Error",
 	"The remote site or network may be down.  Please try again."},
     {"ERR_CLIENT_ABORT",
 	"Client Aborted",

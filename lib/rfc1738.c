@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.8 1996/11/06 23:14:15 wessels Exp $
+ * $Id: rfc1738.c,v 1.9 1997/05/26 04:04:53 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -114,7 +114,6 @@
 
 #include "ansiproto.h"
 #include "util.h"
-#define BIG_BUFSIZ (BUFSIZ * 4)
 
 /*  
  *  RFC 1738 defines that these characters should be escaped, as well
@@ -147,12 +146,19 @@ static char rfc1738_unsafe_chars[] =
 char *
 rfc1738_escape(const char *url)
 {
-    static char buf[BIG_BUFSIZ];
+    static char *buf;
+    static size_t bufsize = 0;
     const char *p;
     char *q;
     int i, do_escape;
 
-    for (p = url, q = &buf[0]; *p != '\0'; p++, q++) {
+    if (buf == NULL || strlen(url) * 3 > bufsize) {
+	safe_free(buf);
+	bufsize = strlen(url) * 3 + 1;
+	buf = xcalloc (bufsize, 1);
+    }
+
+    for (p = url, q = buf; *p != '\0'; p++, q++) {
 	do_escape = 0;
 
 	/* RFC 1738 defines these chars as unsafe */
