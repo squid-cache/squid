@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.516 2000/03/09 04:50:13 wessels Exp $
+ * $Id: store.cc,v 1.517 2000/05/02 18:49:26 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -552,7 +552,9 @@ storeCheckCachable(StoreEntry * e)
 	debug(20, 3) ("storeCheckCachable: NO: negative cached\n");
 	store_check_cachable_hist.no.negative_cached++;
 	return 0;		/* avoid release call below */
-    } else if (e->mem_obj->inmem_hi > Config.Store.maxObjectSize) {
+    } else if ((e->mem_obj->reply->content_length > 0 &&
+		e->mem_obj->reply->content_length > Config.Store.maxObjectSize) ||
+		e->mem_obj->inmem_hi > Config.Store.maxObjectSize) {
 	debug(20, 2) ("storeCheckCachable: NO: too big\n");
 	store_check_cachable_hist.no.too_big++;
     } else if (e->mem_obj->reply->content_length > (int) Config.Store.maxObjectSize) {

@@ -17,6 +17,8 @@ Changes to Squid-2.4.DEVEL3 ():
 	- ICP timeout selection now prefers to use parents only when
 	  calculating the dynamic timeout to compensate for common RTT
 	  differences between parents and siblings.
+	- No longer starts to swap out objects which are known to be above
+	  the maximum allowed size.
 
 Changes to Squid-2.4.DEVEL2 ():
 
