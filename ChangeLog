@@ -1,10 +1,15 @@
-	- Squid-1.0 changes up to 1.0.4.
+Changes to squid-1.1.alpha7:
+
 	- Added 'tcp_recv_bufsize' option to config.
 	- Changed NEIGHBOR to SIBLING where appropriate.
 	- Split UDP_HIT_OBJ into {PARENT,SIBLING}_UDP_HIT_OBJ
 	- Misc casts and cleanup from running Insight.
 	- Replaced all get*() functions with direct references to
 	  Config structure.
+	- Removed 'http_stop', 'ftp_stop', and 'gopher_stop' from config.
+	- Added 'ssl_proxy' config for forwarding all SSL requests to
+	  another proxy.
+	- Includes all squid-1.0 changes up to squid-1.0.5.
 
 Changes to squid-1.1.alpha6:
 
