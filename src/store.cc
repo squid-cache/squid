@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.450 1998/08/21 08:57:07 wessels Exp $
+ * $Id: store.cc,v 1.451 1998/09/02 05:56:45 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -179,10 +179,7 @@ storeHashInsert(StoreEntry * e, const cache_key * key)
 	e, storeKeyText(key));
     e->key = storeKeyDup(key);
     hash_join(store_table, (hash_link *) e);
-    if (EBIT_TEST(e->flag, KEY_PRIVATE))
-	dlinkAddTail(e, &e->lru, &store_list);
-    else
-	dlinkAdd(e, &e->lru, &store_list);
+    dlinkAdd(e, &e->lru, &store_list);
 }
 
 static void
@@ -262,8 +259,13 @@ storeUnlockObject(StoreEntry * e)
 	storeSetMemStatus(e, IN_MEMORY);
 	requestUnlink(e->mem_obj->request);
 	e->mem_obj->request = NULL;
-    } else
+    } else {
 	storePurgeMem(e);
+	if (EBIT_TEST(e->flag, KEY_PRIVATE)) {
+	    dlinkDelete(&e->lru, &store_list);
+	    dlinkAddTail(e, &e->lru, &store_list);
+	}
+    }
     return 0;
 }
 
