@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.29 1998/09/21 20:53:37 wessels Exp $
+ * $Id: forward.cc,v 1.30 1998/09/23 20:13:48 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -366,31 +366,6 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr peer_addr)
     storeLockObject(e);
     storeRegisterAbort(e, fwdAbort, fwdState);
     peerSelect(r, e, fwdStartComplete, fwdStartFail, fwdState);
-}
-
-/* This is called before reading data from the server side to
- * decide if the server side should abort the fetch.
- * XXX This probably breaks quick_abort!
- * When to abort?
- * - NOT if there are clients reading
- * - YES if we don't know the content length
- * - YES if we do know the content length and we don't have the
- * whole object
- */
-int
-fwdAbortFetch(StoreEntry * entry)
-{
-    MemObject *mem;
-    const HttpReply *reply;
-    if (storeClientWaiting(entry))
-	return 0;
-    mem = entry->mem_obj;
-    reply = mem->reply;
-    if (reply->content_length < 0)
-	return 1;
-    if (mem->inmem_hi < reply->content_length + reply->hdr_sz)
-	return 1;
-    return 0;
 }
 
 int

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.38 1998/07/22 20:37:08 wessels Exp $
+ * $Id: client_db.cc,v 1.39 1998/09/23 20:13:47 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -209,6 +209,7 @@ meshCtblGetRowFn(oid * New, oid * Oid)
     if (!Oid[0] && !Oid[1] && !Oid[2] && !Oid[3]) {
 	hash_first(client_table);
 	c = (ClientInfo *) hash_next(client_table);
+	hash_last(client_table);
     } else {
 	char key[15];
 	snprintf(key, sizeof(key), "%d.%d.%d.%d", Oid[0], Oid[1], Oid[2], Oid[3]);
