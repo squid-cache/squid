@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.94 1998/12/11 23:45:11 wessels Exp $
+ * $Id: peer_select.cc,v 1.95 1998/12/16 06:34:55 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -263,7 +263,7 @@ peerSelectFoo(ps_state * ps)
 	} else {
 	    ps->direct = DIRECT_MAYBE;
 	}
-	debug(44, 3) ("ps: direct = %s\n",
+	debug(44, 3) ("peerSelectFoo: direct = %s\n",
 	    DirectStr[ps->direct]);
     }
     if (entry->ping_status == PING_NONE) {
