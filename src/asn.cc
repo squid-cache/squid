@@ -357,6 +357,7 @@ whoisStart(request_t * request, StoreEntry * entry)
     p->request = request;
     p->entry = entry;
     cbdataAdd(p);
+    storeLockObject(p->entry);
 
     fd = comm_open(SOCK_STREAM, 0, any_addr, 0, COMM_NONBLOCKING, "whois");
     if (fd == COMM_ERROR) {
@@ -407,9 +408,7 @@ static void
 whoisClose(int fd, void *data)
 {
     whoisState *p = data;
-    StoreEntry *entry = p->entry;
     debug(53, 6) ("whoisClose: FD %d\n", fd);
-    storeComplete(entry);
-    /* XXX free up whoisState */
+    storeUnlockObject(p->entry);
     cbdataFree(p);
 }
