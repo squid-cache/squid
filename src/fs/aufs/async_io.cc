@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.13 2002/04/13 23:07:55 hno Exp $
+ * $Id: async_io.cc,v 1.14 2002/07/28 11:31:06 robertc Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -316,6 +316,7 @@ void
 aioStats(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "ASYNC IO Counters:\n");
+    storeAppendPrintf(sentry, "Operation\t# Requests\n");
     storeAppendPrintf(sentry, "open\t%d\n", squidaio_counts.open);
     storeAppendPrintf(sentry, "close\t%d\n", squidaio_counts.close);
     storeAppendPrintf(sentry, "cancel\t%d\n", squidaio_counts.cancel);
