@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.70 2003/04/22 15:06:09 hno Exp $
+#  $Id: Makefile.am,v 1.71 2003/05/01 17:46:48 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -21,8 +21,7 @@ else
 SNMPSOURCE = 
 endif
 
-if USE_DELAY_POOLS
-DELAY_POOL_SOURCE = \
+DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
 	CompositePoolNode.h \
 	delay_pools.cc \
@@ -44,6 +43,8 @@ DELAY_POOL_SOURCE = \
 	DelayVector.h \
 	NullDelayId.cc \
 	NullDelayId.h
+if USE_DELAY_POOLS
+DELAY_POOL_SOURCE = $(DELAY_POOL_ALL_SOURCE)
 else
 DELAY_POOL_SOURCE = 
 endif
@@ -105,15 +106,16 @@ else
 PINGER = 
 endif
 
-if ENABLE_SSL
-SSLSOURCE = \
+SSL_ALL_SOURCE = \
 	ACLCertificateData.cc \
 	ACLCertificateData.h  \
 	ACLCertificate.cc \
 	ACLCertificate.h  \
 	ssl_support.cc
+if ENABLE_SSL
+SSL_SOURCE = $(SSL_ALL_SOURCE)
 else
-SSLSOURCE = 
+SSL_SOURCE = 
 endif
 
 if ENABLE_WIN32SPECIFIC
@@ -122,14 +124,16 @@ else
 WIN32SOURCE = 
 endif
 
+IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc
 if ENABLE_IDENT
-IDENTSOURCE = ACLIdent.cc ACLIdent.h ident.cc
+IDENT_SOURCE = $(IDENT_ALL_SOURCE)
 else
-IDENTSOURCE =
+IDENT_SOURCE =
 endif
 
+ARP_ACL_ALL_SOURCE = ACLARP.cc ACLARP.h
 if ENABLE_ARP_ACL
-ARP_ACL_SOURCE = ACLARP.cc ACLARP.h
+ARP_ACL_SOURCE = $(ARP_ACL_ALL_SOURCE)
 else
 ARP_ACL_SOURCE =
 endif
@@ -171,20 +175,20 @@ squidclient_SOURCES = client.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
 
 EXTRA_squid_SOURCES = \
-	$(ARP_ACL_SOURCE) \
-	$(DELAY_POOL_SOURCE) \
+	$(ARP_ACL_ALL_SOURCE) \
+	$(DELAY_POOL_ALL_SOURCE) \
 	dns.cc \
 	dnsserver.cc \
 	dns_internal.cc \
 	htcp.cc \
+	$(IDENT_ALL_SOURCE)
 	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
 	leakfinder.cc \
 	snmp_core.cc \
 	snmp_agent.cc \
 	unlinkd.cc \
-	ssl_support.cc \
-	ssl_support.h \
+	$(SSL_ALL_SOURCE) \
 	win32.cc
 
 squid_ACLSOURCES = \
@@ -337,7 +341,7 @@ squid_SOURCES = \
 	ICP.h \
 	icp_v2.cc \
 	icp_v3.cc \
-	$(IDENTSOURCE) \
+	$(IDENT_SOURCE) \
 	int.cc \
 	internal.cc \
 	ipc.cc \
@@ -371,7 +375,7 @@ squid_SOURCES = \
 	$(SNMPSOURCE) \
 	squid.h \
 	tunnel.cc \
-	$(SSLSOURCE) \
+	$(SSL_SOURCE) \
 	stat.cc \
 	StatHist.cc \
 	String.cc \
@@ -540,7 +544,7 @@ ufsdump_SOURCES = debug.cc \
 	icmp.cc \
 	icp_v2.cc \
 	icp_v3.cc \
-	$(IDENTSOURCE) \
+	$(IDENT_SOURCE) \
 	internal.cc \
 	ipc.cc \
 	ipcache.cc \
@@ -571,7 +575,7 @@ ufsdump_SOURCES = debug.cc \
 	send-announce.cc \
 	$(SNMPSOURCE) \
 	squid.h \
-	$(SSLSOURCE) \
+	$(SSL_SOURCE) \
 	tunnel.cc \
 	stat.cc \
 	StatHist.cc \
