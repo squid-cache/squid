@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.17 1996/10/09 22:49:36 wessels Exp $
+ * $Id: ident.cc,v 1.18 1996/10/10 23:21:28 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -114,7 +114,7 @@ identReadReply(int fd, icpStateData * icpState)
 	    *t = '\0';
 	if ((t = strchr(buf, '\n')))
 	    *t = '\0';
-	debug(30, 1, "identReadReply: FD %d: Read '%s'\n", fd, buf);
+	debug(30, 5, "identReadReply: FD %d: Read '%s'\n", fd, buf);
 	if (strstr(buf, "USERID")) {
 	    if ((t = strrchr(buf, ':'))) {
 		while (isspace(*++t));
