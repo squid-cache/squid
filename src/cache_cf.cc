@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.412 2002/09/07 14:55:24 hno Exp $
+ * $Id: cache_cf.cc,v 1.413 2002/09/07 15:02:24 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2155,7 +2155,8 @@ void
 parse_wordlist(wordlist ** list)
 {
     char *token;
-    while ((token = strtok(NULL, w_space)))
+    char *t = strtok(NULL, "");
+    while ((token = strwordtok(NULL, &t)))
 	wordlistAdd(list, token);
 }
 
