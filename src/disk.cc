@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.122 1998/07/31 00:15:41 wessels Exp $
+ * $Id: disk.cc,v 1.123 1998/08/12 16:15:23 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -451,7 +451,7 @@ diskHandleReadComplete(void *data, int len, int errcode)
 
     if (len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
 	cbdataUnlock(ctrl_dat->client_data);
-	safe_free(ctrl_dat);
+	memFree(MEM_DREAD_CTRL, ctrl_dat);
 	return;
     }
     fd_bytes(fd, len, FD_READ);
@@ -469,7 +469,7 @@ diskHandleReadComplete(void *data, int len, int errcode)
     if (cbdataValid(ctrl_dat->client_data))
 	ctrl_dat->handler(fd, ctrl_dat->buf, len, rc, ctrl_dat->client_data);
     cbdataUnlock(ctrl_dat->client_data);
-    safe_free(ctrl_dat);
+    memFree(MEM_DREAD_CTRL, ctrl_dat);
 }
 
 
@@ -482,7 +482,7 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
 {
     dread_ctrl *ctrl_dat;
     assert(fd >= 0);
-    ctrl_dat = xcalloc(1, sizeof(dread_ctrl));
+    ctrl_dat = memAllocate(MEM_DREAD_CTRL);
     ctrl_dat->fd = fd;
     ctrl_dat->offset = offset;
     ctrl_dat->req_len = req_len;
