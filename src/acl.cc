@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.189 1998/11/26 01:15:49 glenn Exp $
+ * $Id: acl.cc,v 1.190 1998/12/04 22:20:10 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -981,7 +981,7 @@ aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *b
     *user = buf;
     if ((*password = strchr(*user, ':')) != NULL)
 	*(*password)++ = '\0';
-    if (password == NULL) {
+    if (*password == NULL) {
 	debug(28, 1) ("aclDecodeProxyAuth: no password in proxy authorization header\n");
 	return 0;
     }
@@ -1066,9 +1066,7 @@ aclLookupProxyAuthStart(aclCheck_t * checklist)
     char *user, *password;
     int ok;
     acl_proxy_auth_user *auth_user;
-
     assert(!checklist->auth_user);
-
     if (!checklist->request->flags.accelerated) {
 	/* Proxy auth on proxy requests */
 	proxy_auth = httpHeaderGetStr(&checklist->request->header,
@@ -1080,8 +1078,11 @@ aclLookupProxyAuthStart(aclCheck_t * checklist)
     }
     ok = aclDecodeProxyAuth(proxy_auth, &user, &password, login_buf,
 	sizeof(login_buf));
-    assert(ok);			/* We should never get here unless the above succeeds in aclMatchProxyAuth */
-
+    /*
+     * if aclDecodeProxyAuth() fails, the same call should have failed
+     * in aclMatchProxyAuth, and we should never get this far.
+     */
+    assert(ok);
     debug(28, 4) ("aclLookupProxyAuthStart: going to ask authenticator on %s\n", user);
     /* we must still check this user's password */
     auth_user = memAllocate(MEM_ACL_PROXY_AUTH_USER);
@@ -1090,7 +1091,6 @@ aclLookupProxyAuthStart(aclCheck_t * checklist)
     auth_user->passwd_ok = -1;
     auth_user->expiretime = -1;
     checklist->auth_user = auth_user;
-
     authenticateStart(checklist->auth_user, aclLookupProxyAuthDone,
 	checklist);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.22 1998/11/12 06:28:01 wessels Exp $
+ * $Id: comm_select.cc,v 1.23 1998/12/04 22:20:15 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -46,6 +46,9 @@
 #ifndef        NBBY
 #define        NBBY    8
 #endif
+#define FD_MASK_BYTES sizeof(fd_mask)
+#define FD_MASK_BITS (FD_MASK_BYTES*NBBY)
+
 
 /* STATIC */
 #if !HAVE_POLL
@@ -561,20 +564,21 @@ comm_select(int msec)
 	    comm_select_http_incoming();
 	callicp = callhttp = 0;
 	maxfd = Biggest_FD + 1;
-	/* copy whole integers. XXX breaks if fd_mask is a long */
-	xmemcpy(&readfds, &global_readfds, ((maxfd + 31) / 32) * 4);
-	xmemcpy(&writefds, &global_writefds, ((maxfd + 31) / 32) * 4);
+	xmemcpy(&readfds, &global_readfds,
+	    howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
+	xmemcpy(&writefds, &global_writefds,
+	    howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
 	/* remove stalled FDs */
-	maxindex = howmany(maxfd, (sizeof(*fdsp) * NBBY));
+	maxindex = howmany(maxfd, FD_MASK_BITS);
 	fdsp = (fd_mask *) & readfds;
 	for (j = 0; j < maxindex; j++) {
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
-	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
+	    for (k = 0; k < FD_MASK_BITS; k++) {
 		if (!EBIT_TEST(tmask, k))
 		    continue;
 		/* Found a set bit */
-		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
+		fd = (j * FD_MASK_BITS) + k;
 		if (commDeferRead(fd))
 		    FD_CLR(fd, &readfds);
 	    }
@@ -627,15 +631,15 @@ comm_select(int msec)
 	    continue;
 	/* Scan return fd masks for ready descriptors */
 	fdsp = (fd_mask *) & readfds;
-	maxindex = howmany(maxfd, (sizeof(*fdsp) * NBBY));
+	maxindex = howmany(maxfd, FD_MASK_BITS);
 	for (j = 0; j < maxindex; j++) {
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
-	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
+	    for (k = 0; k < FD_MASK_BITS; k++) {
 		if (!EBIT_TEST(tmask, k))
 		    continue;
 		/* Found a set bit */
-		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
+		fd = (j * FD_MASK_BITS) + k;
 #if DEBUG_FDBITS
 		debug(5, 9) ("FD %d bit set for reading\n", fd);
 		assert(FD_ISSET(fd, &readfds));
@@ -669,11 +673,11 @@ comm_select(int msec)
 	for (j = 0; j < maxindex; j++) {
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
-	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
+	    for (k = 0; k < FD_MASK_BITS; k++) {
 		if (!EBIT_TEST(tmask, k))
 		    continue;
 		/* Found a set bit */
-		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
+		fd = (j * FD_MASK_BITS) + k;
 #if DEBUG_FDBITS
 		debug(5, 9) ("FD %d bit set for writing\n", fd);
 		assert(FD_ISSET(fd, &writefds));
