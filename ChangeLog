@@ -1,5 +1,9 @@
-Changes to squid-1.2.beta13 ():
+Changes to squid-1.2.beta13 (Feb 4, 1998):
 
+	- NOTE: this version still has the bug where we don't rewind
+	  a swapout file and rewrite the swap meta data.  Objects
+	  larger than 8KB will be lost when rebuilding from the swap
+	  files.
 	- Combined various interprocess communication setup functions
 	  into ipcCreate().
 	- Removed some leftover ICP_HIT_OBJ things.
@@ -75,6 +79,7 @@ Changes to squid-1.2.beta13 ():
 	  be MD5's now.
 	- Fixed up store swap meta data.
 	- Changed swap.state logs to a binary format.
+	- The swap.state logs are written transaction-style.
 
 Changes to squid-1.2.beta12 (Jan 30, 1998):
 
