@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: ftp.cc,v 1.3 1996/02/23 06:56:31 wessels Exp $";
+static char rcsid[] = "$Id: ftp.cc,v 1.4 1996/02/23 07:00:58 wessels Exp $";
 /* 
  *  File:         ftp.c
  *  Description:  state machine for ftp retrieval protocol.  Based on John's
@@ -653,7 +653,7 @@ static int ftp_open_pipe(p1, p2, p3, p4, p5, type, cpid, opts)
     execvp(p1, argv);
     perror(p1);
     _exit(1);
-    /* NOTREACHED */
+    return (0); /* NOTREACHED */
 }
 
 /*
