@@ -114,6 +114,7 @@ helperStats(StoreEntry * sentry, helper * hlp)
 {
     helper_server *srv;
     dlink_node *link;
+    double tt;
     storeAppendPrintf(sentry, "number running: %d of %d\n",
 	hlp->n_running, hlp->n_to_start);
     storeAppendPrintf(sentry, "requests sent: %d\n",
@@ -134,6 +135,7 @@ helperStats(StoreEntry * sentry, helper * hlp)
 	"Offset");
     for (link = hlp->servers.head; link; link = link->next) {
 	srv = link->data;
+	tt = 0.001 * tvSubMsec(srv->dispatch_time, current_time);
 	storeAppendPrintf(sentry, "%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\n",
 	    srv->index + 1,
 	    srv->rfd,
@@ -142,7 +144,7 @@ helperStats(StoreEntry * sentry, helper * hlp)
 	    srv->flags.busy ? 'B' : ' ',
 	    srv->flags.closing ? 'C' : ' ',
 	    srv->flags.shutdown ? 'S' : ' ',
-	    0.001 * tvSubMsec(srv->dispatch_time, current_time),
+	    tt < 0.0 ? 0.0 : tt,
 	    (int) srv->offset);
     }
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
