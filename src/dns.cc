@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.47 1998/01/02 18:15:32 wessels Exp $
+ * $Id: dns.cc,v 1.48 1998/01/02 22:03:41 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -349,9 +349,15 @@ dnsShutdownServers(void)
 
     debug(34, 3) ("dnsShutdownServers:\n");
 
+#if OLD_CODE
+    /*
+     * We used to do this when we waited for all active connections
+     * to close before reconfiguring.
+     */
     k = ipcacheQueueDrain();
     if (fqdncacheQueueDrain() || k)
 	return;
+#endif
     for (k = 0; k < NDnsServersAlloc; k++) {
 	dns = *(dns_child_table + k);
 	if (!EBIT_TEST(dns->flags, HELPER_ALIVE)) {

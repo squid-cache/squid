@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.75 1997/12/30 02:47:41 wessels Exp $
+ * $Id: fqdncache.cc,v 1.76 1998/01/02 22:03:41 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -487,16 +487,21 @@ fqdncache_dnsHandleRead(int fd, void *data)
 	    fqdncache_call_pending(f);
 	}
 	fqdncacheUnlockEntry(f);	/* unlock from FQDN_DISPATCHED */
+    } else {
+        debug(14, 5) ("fqdncache_dnsHandleRead: Incomplete reply\n");
+        commSetSelect(fd,
+            COMM_SELECT_READ,
+            fqdncache_dnsHandleRead,
+            dnsData,
+            0);
     }
     if (dnsData->offset == 0) {
 	dnsData->data = NULL;
 	EBIT_CLR(dnsData->flags, HELPER_BUSY);
+        if (EBIT_TEST(dnsData->flags, HELPER_SHUTDOWN))
+            dnsShutdownServer(dnsData);
+        cbdataUnlock(dnsData);
     }
-    /* reschedule */
-    commSetSelect(dnsData->inpipe,
-	COMM_SELECT_READ,
-	fqdncache_dnsHandleRead,
-	dnsData, 0);
     fqdncacheNudgeQueue();
 }
 
@@ -605,6 +610,7 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
 	xfree);
+    cbdataLock(dns);
     commSetSelect(dns->outpipe,
 	COMM_SELECT_READ,
 	fqdncache_dnsHandleRead,
@@ -787,6 +793,7 @@ fqdnFromAddr(struct in_addr addr)
     return buf;
 }
 
+#if OLD_CODE
 int
 fqdncacheQueueDrain(void)
 {
@@ -798,6 +805,7 @@ fqdncacheQueueDrain(void)
 	fqdncache_dnsDispatch(dnsData, i);
     return 1;
 }
+#endif
 
 static void
 fqdncacheLockEntry(fqdncache_entry * f)
