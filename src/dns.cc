@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.46 1997/11/23 06:52:37 wessels Exp $
+ * $Id: dns.cc,v 1.47 1998/01/02 18:15:32 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -196,7 +196,13 @@ dnsOpenServer(const char *command)
     dup2(fd, 1);
     dup2(fileno(debug_log), 2);
     fclose(debug_log);
-    close(fd);
+    /*
+     * Solaris pthreads seems to close FD 0 upon fork(), so don't close
+     * this FD if its 0, 1, or 2.
+     * -- Michael O'Reilly <michael@metal.iinet.net.au>
+     */
+    if (fd > 2)
+        close(fd);
     close(cfd);
     if (Config.onoff.res_defnames)
 	execlp(command, "(dnsserver)", "-D", NULL);
