@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.34 2003/07/22 15:23:11 robertc Exp $
+ * $Id: store_io_diskd.cc,v 1.35 2003/07/29 11:34:57 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -67,7 +67,7 @@ DiskdIO::shedLoad()
      */
 
     if (away > magic1) {
-        debug(79, 3) ("storeDiskdIO::sheLoad: Shedding, too many requests away\n");
+        debug(79, 3) ("storeDiskdIO::shedLoad: Shedding, too many requests away\n");
 
         return true;
     }

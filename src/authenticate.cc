@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.60 2003/07/14 14:15:59 robertc Exp $
+ * $Id: authenticate.cc,v 1.61 2003/07/29 11:34:56 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -409,7 +409,7 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
 
     ip1 = xstrdup(inet_ntoa(ipaddr));
 
-    debug(29, 2) ("authenticateAuthUserRequestSetIp: user '%s' has been seen at a new IP address (%s)\n ", auth_user->username(), ip1);
+    debug(29, 2) ("authenticateAuthUserRequestSetIp: user '%s' has been seen at a new IP address (%s)\n", auth_user->username(), ip1);
 
     safe_free(ip1);
 }

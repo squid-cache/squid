@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.423 2003/07/23 11:39:44 robertc Exp $
+ * $Id: http.cc,v 1.424 2003/07/29 11:34:56 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -840,7 +840,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
     */
 
     if (flag == COMM_ERR_CLOSING) {
-        debug (11,1)("http socket closing\n");
+        debug (11,3)("http socket closing\n");
         return;
     }
 
