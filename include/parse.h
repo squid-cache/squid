@@ -86,15 +86,5 @@ struct snmp_mib_tree *read_mib();
 }
 #endif
 
-#ifndef _SNMP_H
-#ifndef SQUID_H
-#ifdef __STDC__
-void (*snmplib_debug) (int,char *,...); 
-#else
-void (*snmplib_debug) (va_alist));
-#endif
-#endif
-
-#endif
 
 #endif /* _HAVE_PARSE_H_ */

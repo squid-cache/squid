@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.67 1998/02/22 11:59:33 kostas Exp $
+ * $Id: net_db.cc,v 1.68 1998/02/23 21:05:18 kostas Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -699,97 +699,99 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
 }
 
 #ifdef SQUID_SNMP
-int netdb_getMax()
+int 
+netdb_getMax()
 {
-  int i=0;
+    int i = 0;
 #if USE_ICMP
-  static netdbEntry *n=NULL;
+    static netdbEntry *n = NULL;
 
-  n = (netdbEntry *) hash_first(addr_table);
-  if (n!=NULL) {
-	i=1;
-	while ((n=(netdbEntry *)hash_next(addr_table))) i++;
-  }
+    n = (netdbEntry *) hash_first(addr_table);
+    if (n != NULL) {
+	i = 1;
+	while ((n = (netdbEntry *) hash_next(addr_table)))
+	    i++;
+    }
 #endif
-  return i;
+    return i;
 }
 
-variable_list *snmp_netdbFn(variable_list *Var, long *ErrP)
+variable_list *
+snmp_netdbFn(variable_list * Var, long *ErrP)
 {
-  variable_list *Answer;
-  int cnt;
-  static netdbEntry *n = NULL;
+    variable_list *Answer;
+    int cnt;
+    static netdbEntry *n = NULL;
 #if USE_ICMP
-  struct in_addr addr;
+    struct in_addr addr;
 #endif
-  debug(49,5)("snmp_netdbFn: Processing request with %d.%d!\n",Var->name[10],Var->name[11]);
+    debug(49, 5) ("snmp_netdbFn: Processing request with %d.%d!\n", Var->name[10],
+	Var->name[11]);
 
-  Answer = snmp_var_new(Var->name, Var->name_length);
-  *ErrP = SNMP_ERR_NOERROR;
+    Answer = snmp_var_new(Var->name, Var->name_length);
+    *ErrP = SNMP_ERR_NOERROR;
 
-  cnt=Var->name[11];
+    cnt = Var->name[11];
 #if USE_ICMP
-  n = (netdbEntry *) hash_first(addr_table);
-  if (n==NULL) debug(49,6)("NO FUCKING ENTRIES HERE :((( - cnt=%d\n",cnt);
-  while (n != NULL)  
-	if (--cnt!=0){ 
-		 debug(49,6)("hmmmmm... getting another one while cnt=%d\n",
-				cnt);
-		 n = (netdbEntry *) hash_next(addr_table); 
-	}
-	else break;
+    n = (netdbEntry *) hash_first(addr_table);
+
+    while (n != NULL)
+	if (--cnt != 0)
+	    n = (netdbEntry *) hash_next(addr_table);
+	else
+	    break;
 #endif
-  if (n==NULL) {
-	debug(49,6)("snmp_netdbFn: No more entries.\n");
-       *ErrP = SNMP_ERR_NOSUCHNAME;
-        snmp_var_free(Answer);
-        return(NULL);
-  }
+    if (n == NULL) {
+	debug(49, 8) ("snmp_netdbFn: Requested past end of netdb table.\n");
+	*ErrP = SNMP_ERR_NOSUCHNAME;
+	snmp_var_free(Answer);
+	return (NULL);
+    }
 #if USE_ICMP
-  Answer->val.integer = xmalloc(Answer->val_len);
-  Answer->val_len = sizeof(long);
-  switch(Var->name[10]) {
+    Answer->val.integer = xmalloc(Answer->val_len);
+    Answer->val_len = sizeof(long);
+    switch (Var->name[10]) {
     case NETDB_ID:
 	Answer->type = SMI_INTEGER;
-        *(Answer->val.integer)= (long) cnt - 1;
+	*(Answer->val.integer) = (long) cnt - 1;
 	break;
     case NETDB_NET:
 	Answer->type = SMI_IPADDRESS;
 	safe_inet_addr(n->network, &addr);
-        *(Answer->val.integer)= addr.s_addr;
+	*(Answer->val.integer) = addr.s_addr;
 	break;
     case NETDB_PING_S:
 	Answer->type = SMI_COUNTER32;
-        *(Answer->val.integer) = (long) n->pings_sent;
+	*(Answer->val.integer) = (long) n->pings_sent;
 	break;
     case NETDB_PING_R:
 	Answer->type = SMI_COUNTER32;
-        *(Answer->val.integer) = (long) n->pings_recv;
+	*(Answer->val.integer) = (long) n->pings_recv;
 	break;
     case NETDB_HOPS:
 	Answer->type = SMI_COUNTER32;
-        *(Answer->val.integer) = (long) n->hops;
+	*(Answer->val.integer) = (long) n->hops;
 	break;
     case NETDB_RTT:
 	Answer->type = SMI_TIMETICKS;
-        *(Answer->val.integer) = (long) n->rtt;
+	*(Answer->val.integer) = (long) n->rtt;
 	break;
     case NETDB_PINGTIME:
 	Answer->type = SMI_TIMETICKS;
-        *(Answer->val.integer) = (long) n->next_ping_time;
+	*(Answer->val.integer) = (long) n->next_ping_time;
 	break;
     case NETDB_LASTUSE:
 	Answer->type = SMI_TIMETICKS;
-        *(Answer->val.integer) = (long) n->last_use_time;
+	*(Answer->val.integer) = (long) n->last_use_time;
 	break;
     default:
-        *ErrP = SNMP_ERR_NOSUCHNAME;
-        snmp_var_free(Answer);
+	*ErrP = SNMP_ERR_NOSUCHNAME;
+	snmp_var_free(Answer);
 	xfree(Answer->val.integer);
-        return(NULL);
-  }
+	return (NULL);
+    }
 #endif
-  return Answer;
+    return Answer;
 }
 #endif
 
