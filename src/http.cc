@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.342 1999/01/19 02:24:27 wessels Exp $
+ * $Id: http.cc,v 1.343 1999/01/19 23:17:58 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -220,6 +220,12 @@ httpCachableReply(HttpStateData * httpState)
     case HTTP_MULTIPLE_CHOICES:
     case HTTP_MOVED_PERMANENTLY:
     case HTTP_GONE:
+	/*
+	 * Don't cache objects that need to be refreshed on next request,
+	 * unless we know how to refresh it.
+	 */
+	if (!refreshIsCachable(httpState->entry))
+	    return 0;
 	/* don't cache objects from peers w/o LMT, Date, or Expires */
 	/* check that is it enough to check headers @?@ */
 	if (rep->date > -1)
