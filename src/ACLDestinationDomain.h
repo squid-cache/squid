@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLDestinationDomain.h,v 1.2 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLDestinationDomain.h,v 1.3 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,17 +39,22 @@
 #include "ACLData.h"
 #include "ACLChecklist.h"
 
-class DestinationDomainLookup : public ACLChecklist::AsyncState {
-  public:
+class DestinationDomainLookup : public ACLChecklist::AsyncState
+{
+
+public:
     static DestinationDomainLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
-  private:
+
+private:
     static DestinationDomainLookup instance_;
     static void LookupDone(const char *, void *);
 };
 
-class ACLDestinationDomain : public ACL {
-  public:
+class ACLDestinationDomain : public ACL
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -58,16 +63,19 @@ class ACLDestinationDomain : public ACL {
     ACLDestinationDomain(ACLData<char const *> *, char const *);
     ACLDestinationDomain (ACLDestinationDomain const &);
     ACLDestinationDomain &operator= (ACLDestinationDomain const &);
-    
+
     virtual char const *typeString() const;
     virtual squid_acl aclType() const { return ACL_DERIVED;}
+
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;
     virtual bool valid () const;
     virtual bool requiresRequest() const {return true;}
+
     virtual ACL *clone()const;
-  private:
+
+private:
     static MemPool *Pool;
     static Prototype LiteralRegistryProtoype;
     static Prototype LegacyRegistryProtoype;

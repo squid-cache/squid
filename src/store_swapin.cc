@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.34 2003/01/23 00:37:27 robertc Exp $
+ * $Id: store_swapin.cc,v 1.35 2003/02/21 22:50:12 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -45,24 +45,29 @@ storeSwapInStart(store_client * sc)
 {
     StoreEntry *e = sc->entry;
     assert(e->mem_status == NOT_IN_MEMORY);
+
     if (!EBIT_TEST(e->flags, ENTRY_VALIDATED)) {
-	/* We're still reloading and haven't validated this entry yet */
-	return;
+        /* We're still reloading and haven't validated this entry yet */
+        return;
     }
+
     debug(20, 3) ("storeSwapInStart: called for %d %08X %s \n",
-	e->swap_dirn, e->swap_filen, e->getMD5Text());
+                  e->swap_dirn, e->swap_filen, e->getMD5Text());
+
     if (e->swap_status != SWAPOUT_WRITING && e->swap_status != SWAPOUT_DONE) {
-	debug(20, 1) ("storeSwapInStart: bad swap_status (%s)\n",
-	    swapStatusStr[e->swap_status]);
-	return;
+        debug(20, 1) ("storeSwapInStart: bad swap_status (%s)\n",
+                      swapStatusStr[e->swap_status]);
+        return;
     }
+
     if (e->swap_filen < 0) {
-	debug(20, 1) ("storeSwapInStart: swap_filen < 0\n");
-	return;
+        debug(20, 1) ("storeSwapInStart: swap_filen < 0\n");
+        return;
     }
+
     assert(e->mem_obj != NULL);
     debug(20, 3) ("storeSwapInStart: Opening fileno %08X\n",
-	e->swap_filen);
+                  e->swap_filen);
     sc->swapin_sio = storeOpen(e, storeSwapInFileNotify, storeSwapInFileClosed, sc);
 }
 
@@ -71,13 +76,15 @@ storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
 {
     store_client *sc = (store_client *)data;
     debug(20, 3) ("storeSwapInFileClosed: sio=%p, errflag=%d\n",
-	sio, errflag);
+                  sio, errflag);
     sc->swapin_sio = NULL;
     /* why this assert */
+
     if (sc->callbackPending()) {
-	assert (errflag <= 0);
+        assert (errflag <= 0);
         sc->callback(0, errflag ? true : false);
     }
+
     statCounter.swap.ins++;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.27 2003/01/23 00:37:22 robertc Exp $
+ * $Id: internal.cc,v 1.28 2003/02/21 22:50:09 robertc Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -49,34 +49,37 @@ internalStart(request_t * request, StoreEntry * entry)
     const char *upath = request->urlpath.buf();
     http_version_t version;
     debug(76, 3) ("internalStart: %s requesting '%s'\n",
-	inet_ntoa(request->client_addr), upath);
+                  inet_ntoa(request->client_addr), upath);
+
     if (0 == strcmp(upath, "/squid-internal-dynamic/netdb")) {
-	netdbBinaryExchange(entry);
+        netdbBinaryExchange(entry);
     } else if (0 == strcmp(upath, "/squid-internal-periodic/store_digest")) {
 #if USE_CACHE_DIGESTS
-	const char *msgbuf = "This cache is currently building its digest.\n";
+        const char *msgbuf = "This cache is currently building its digest.\n";
 #else
-	const char *msgbuf = "This cache does not suport Cache Digests.\n";
+
+        const char *msgbuf = "This cache does not suport Cache Digests.\n";
 #endif
-	httpBuildVersion(&version, 1, 0);
-	HttpReply *reply = httpReplyCreate ();
-	httpReplySetHeaders(reply,
-	    version,
-	    HTTP_NOT_FOUND,
-	    "Not Found",
-	    "text/plain",
-	    strlen(msgbuf),
-	    squid_curtime,
-	    -2);
-	httpReplySwapOut(reply, entry);
-	storeAppend(entry, msgbuf, strlen(msgbuf));
-	entry->complete();
+
+        httpBuildVersion(&version, 1, 0);
+        HttpReply *reply = httpReplyCreate ();
+        httpReplySetHeaders(reply,
+                            version,
+                            HTTP_NOT_FOUND,
+                            "Not Found",
+                            "text/plain",
+                            strlen(msgbuf),
+                            squid_curtime,
+                            -2);
+        httpReplySwapOut(reply, entry);
+        storeAppend(entry, msgbuf, strlen(msgbuf));
+        entry->complete();
     } else {
-	debugObj(76, 1, "internalStart: unknown request:\n",
-	    request, (ObjPackMethod) & httpRequestPack);
-	err = errorCon(ERR_INVALID_REQ, HTTP_NOT_FOUND);
-	err->request = requestLink(request);
-	errorAppendEntry(entry, err);
+        debugObj(76, 1, "internalStart: unknown request:\n",
+                 request, (ObjPackMethod) & httpRequestPack);
+        err = errorCon(ERR_INVALID_REQ, HTTP_NOT_FOUND);
+        err->request = requestLink(request);
+        errorAppendEntry(entry, err);
     }
 }
 
@@ -108,18 +111,25 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
      * append the domain in order to mirror the requests with appended
      * domains
      */
+
     if (Config.appendDomain && !strchr(lc_host, '.'))
-	strncat(lc_host, Config.appendDomain, SQUIDHOSTNAMELEN -
-	    strlen(lc_host) - 1);
+        strncat(lc_host, Config.appendDomain, SQUIDHOSTNAMELEN -
+                strlen(lc_host) - 1);
+
     /* build uri in mb */
     memBufReset(&mb);
+
     memBufPrintf(&mb, "http://%s", lc_host);
+
     /* append port if not default */
     if (port && port != urlDefaultPort(PROTO_HTTP))
-	memBufPrintf(&mb, ":%d", port);
+        memBufPrintf(&mb, ":%d", port);
+
     if (dir)
-	memBufPrintf(&mb, "%s", dir);
+        memBufPrintf(&mb, "%s", dir);
+
     memBufPrintf(&mb, "%s", name);
+
     /* return a pointer to a local static buffer */
     return mb.buf;
 }
@@ -131,7 +141,7 @@ char *
 internalLocalUri(const char *dir, const char *name)
 {
     return internalRemoteUri(getMyHostname(),
-	getMyPort(), dir, name);
+                             getMyPort(), dir, name);
 }
 
 const char *
@@ -147,10 +157,13 @@ int
 internalHostnameIs(const char *arg)
 {
     wordlist *w;
+
     if (0 == strcmp(arg, internalHostname()))
-	return 1;
+        return 1;
+
     for (w = Config.hostnameAliases; w; w = w->next)
-	if (0 == strcmp(arg, w->key))
-	    return 1;
+        if (0 == strcmp(arg, w->key))
+            return 1;
+
     return 0;
 }

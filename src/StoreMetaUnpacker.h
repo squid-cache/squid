@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaUnpacker.h,v 1.1 2003/01/23 00:37:15 robertc Exp $
+ * $Id: StoreMetaUnpacker.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,14 +35,18 @@
 #define SQUID_TYPELENGTHVALUEUNPACKER_H
 
 class StoreMeta;
-class StoreMetaUnpacker {
+
+class StoreMetaUnpacker
+{
+
 public:
     StoreMetaUnpacker (const char *buf, ssize_t bufferLength, int *hdrlen);
     StoreMeta *createStoreMeta();
     bool isBufferSane();
+
 private:
     static off_t const MinimumBufferLength;
-    
+
     void getBufferLength();
     void getType();
     void getLength();

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.h,v 1.1 2003/01/23 00:37:12 robertc Exp $
+ * $Id: HttpHdrContRange.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,7 +37,10 @@
 #include "HttpHeaderRange.h"
 
 /* http content-range header field */
-class HttpHdrContRange {
+
+class HttpHdrContRange
+{
+
 public:
     HttpHdrRangeSpec spec;
     ssize_t elength;		/* entity length, not content length */

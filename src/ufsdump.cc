@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.1 2003/01/23 00:37:27 robertc Exp $
+ * $Id: ufsdump.cc,v 1.2 2003/02/21 22:50:12 robertc Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -55,17 +55,21 @@ struct DumpStoreMeta : public unary_function<StoreMeta, void>
     void operator()(StoreMeta const &x)
     {
         switch (x.getType()) {
-            case STORE_META_KEY:
-	        std::cout << "MD5: " << storeKeyText((const cache_key *)x.value) << std::endl;
-                break;
-            case STORE_META_STD:
-                break;
-            case STORE_META_URL:
-                assert (((char *)x.value)[x.length - 1] == 0);
-                std::cout << "URL: " << (char *)x.value << std::endl;
-            default:
-                break;
-            }
+
+        case STORE_META_KEY:
+            std::cout << "MD5: " << storeKeyText((const cache_key *)x.value) << std::endl;
+            break;
+
+        case STORE_META_STD:
+            break;
+
+        case STORE_META_URL:
+            assert (((char *)x.value)[x.length - 1] == 0);
+            std::cout << "URL: " << (char *)x.value << std::endl;
+
+        default:
+            break;
+        }
     }
 };
 
@@ -109,8 +113,9 @@ main(int argc, char *argv[])
 
         memset(&anEntry, '\0', sizeof(StoreEntry));
 
-	DumpStoreMeta dumper;
-	for_each(*metadata, dumper);
+        DumpStoreMeta dumper;
+
+        for_each(*metadata, dumper);
 
 
         return 0;

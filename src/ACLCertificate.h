@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLCertificate.h,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLCertificate.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,22 +43,28 @@
 
 class ACLCertificateStrategy : public ACLMatchStrategy<SSL *>
 {
-  public:
+
+public:
     virtual int match (ACLData<MatchType> * &, ACLChecklist *);
     static ACLCertificateStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g+++ warnings about
      * private constructors with no friends */
     ACLCertificateStrategy(ACLCertificateStrategy const &);
-  private:
+
+private:
     static ACLCertificateStrategy Instance_;
     ACLCertificateStrategy(){}
+
     ACLCertificateStrategy&operator=(ACLCertificateStrategy const &);
 };
 
-class ACLCertificate {
-  public:
-  private:
+class ACLCertificate
+{
+
+public:
+
+private:
     static ACL::Prototype UserRegistryProtoype;
     static ACLStrategised<SSL*> UserRegistryEntry_;
     static ACL::Prototype CARegistryProtoype;

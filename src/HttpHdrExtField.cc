@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrExtField.cc,v 1.10 2003/01/23 00:37:12 robertc Exp $
+ * $Id: HttpHdrExtField.cc,v 1.11 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 69    HTTP Header: Extension Field
  * AUTHOR: Alex Rousskov
@@ -43,7 +43,7 @@ static HttpHdrExtField *httpHdrExtFieldDoCreate(const char *name, int name_len, 
 
 static HttpHdrExtField *
 httpHdrExtFieldDoCreate(const char *name, int name_len,
-    const char *value, int value_len)
+                        const char *value, int value_len)
 {
     HttpHdrExtField *f = xcalloc(1, sizeof(HttpHdrExtField));
     stringLimitInit(&f->name, name, name_len);
@@ -55,8 +55,8 @@ HttpHdrExtField *
 httpHdrExtFieldCreate(const char *name, const char *value)
 {
     return httpHdrExtFieldDoCreate(
-	name, strlen(name),
-	value, strlen(value));
+               name, strlen(name),
+               value, strlen(value));
 }
 
 /* parses ext field; returns fresh ext field on success and NULL on failure */
@@ -69,16 +69,17 @@ httpHdrExtFieldParseCreate(const char *field_start, const char *field_end)
     /* note: value_end == field_end */
 
     if (!name_end || name_end <= field_start || name_end > field_end)
-	return NULL;
+        return NULL;
 
     value_start = name_end + 1;	/* skip ':' */
+
     /* skip white space */
     while (value_start < field_end && xisspace(*value_start))
-	value_start++;
+        value_start++;
 
     return httpHdrExtFieldDoCreate(
-	field_start, name_end - field_start,
-	value_start, field_end - value_start);
+               field_start, name_end - field_start,
+               value_start, field_end - value_start);
 }
 
 void
@@ -95,6 +96,6 @@ httpHdrExtFieldDup(HttpHdrExtField * f)
 {
     assert(f);
     return httpHdrExtFieldDoCreate(
-	f->name.buf(), f->name.size(),
-	f->value.buf(), f->value.size());
+               f->name.buf(), f->name.size(),
+               f->value.buf(), f->value.size());
 }

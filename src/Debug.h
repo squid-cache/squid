@@ -1,6 +1,6 @@
 
 /*
- * $Id: Debug.h,v 1.2 2003/01/23 00:37:12 robertc Exp $
+ * $Id: Debug.h,v 1.3 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -36,11 +36,12 @@
 #ifndef SQUID_DEBUG
 #define SQUID_DEBUG
 
-class Debug 
+class Debug
 {
+
 public:
-  static int Levels[MAX_DEBUG_SECTIONS];
-  static int level;
+    static int Levels[MAX_DEBUG_SECTIONS];
+    static int level;
 };
 
 #endif /* SQUID_DEBUG */

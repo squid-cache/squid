@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_heap_replacement.cc,v 1.11 2003/01/23 00:38:28 robertc Exp $
+ * $Id: store_heap_replacement.cc,v 1.12 2003/02/21 22:50:50 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Heap-based replacement
  * AUTHOR: John Dilley
@@ -73,18 +73,23 @@ HeapKeyGen_StoreEntry_LFUDA(void *entry, double heap_age)
     StoreEntry *e = (StoreEntry *)entry;
     heap_key key;
     double tie;
+
     if (e->lastref <= 0)
-	tie = 0.0;
+        tie = 0.0;
     else if (squid_curtime <= e->lastref)
-	tie = 0.0;
+        tie = 0.0;
     else
-	tie = 1.0 - exp((double) (e->lastref - squid_curtime) / 86400.0);
+        tie = 1.0 - exp((double) (e->lastref - squid_curtime) / 86400.0);
+
     key = heap_age + (double) e->refcount - tie;
+
     debug(81, 3) ("HeapKeyGen_StoreEntry_LFUDA: %s refcnt=%d lastref=%ld heap_age=%f tie=%f -> %f\n",
-	e->getMD5Text(), (int)e->refcount, e->lastref, heap_age, tie, key);
+                  e->getMD5Text(), (int)e->refcount, e->lastref, heap_age, tie, key);
+
     if (e->mem_obj && e->mem_obj->url)
-	debug(81, 3) ("HeapKeyGen_StoreEntry_LFUDA: url=%s\n",
-	    e->mem_obj->url);
+        debug(81, 3) ("HeapKeyGen_StoreEntry_LFUDA: url=%s\n",
+                      e->mem_obj->url);
+
     return (double) key;
 }
 
@@ -117,14 +122,16 @@ HeapKeyGen_StoreEntry_GDSF(void *entry, double heap_age)
     double tie = (e->lastref > 1) ? (1.0 / e->lastref) : 1.0;
     key = heap_age + ((double) e->refcount / size) - tie;
     debug(81, 3) ("HeapKeyGen_StoreEntry_GDSF: %s size=%f refcnt=%d lastref=%ld heap_age=%f tie=%f -> %f\n",
-	e->getMD5Text(), size, (int)e->refcount, e->lastref, heap_age, tie, key);
+                  e->getMD5Text(), size, (int)e->refcount, e->lastref, heap_age, tie, key);
+
     if (e->mem_obj && e->mem_obj->url)
-	debug(81, 3) ("HeapKeyGen_StoreEntry_GDSF: url=%s\n",
-	    e->mem_obj->url);
+        debug(81, 3) ("HeapKeyGen_StoreEntry_GDSF: url=%s\n",
+                      e->mem_obj->url);
+
     return key;
 }
 
-/* 
+/*
  * Key generation function to implement the LRU policy.  Normally
  * one would not do this with a heap -- use the linked list instead.
  * For testing and performance characterization it was useful.
@@ -136,9 +143,11 @@ HeapKeyGen_StoreEntry_LRU(void *entry, double heap_age)
 {
     StoreEntry *e = (StoreEntry *)entry;
     debug(81, 3) ("HeapKeyGen_StoreEntry_LRU: %s heap_age=%f lastref=%f\n",
-	e->getMD5Text(), heap_age, (double) e->lastref);
+                  e->getMD5Text(), heap_age, (double) e->lastref);
+
     if (e->mem_obj && e->mem_obj->url)
-	debug(81, 3) ("HeapKeyGen_StoreEntry_LRU: url=%s\n",
-	    e->mem_obj->url);
+        debug(81, 3) ("HeapKeyGen_StoreEntry_LRU: url=%s\n",
+                      e->mem_obj->url);
+
     return (heap_key) e->lastref;
 }

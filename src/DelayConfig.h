@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayConfig.h,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelayConfig.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,8 +36,10 @@
 #ifndef SQUID_DELAYCONFIG_H
 #define SQUID_DELAYCONFIG_H
 
-class DelayConfig {
-  public:
+class DelayConfig
+{
+
+public:
     void freePoolCount();
     void dumpPoolCount(StoreEntry * entry, const char *name) const;
     void parsePoolCount();

@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.33 2003/02/05 10:36:50 robertc Exp $
+ * $Id: delay_pools.cc,v 1.34 2003/02/21 22:50:07 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -76,8 +76,10 @@
 
 long DelayPools::MemoryUsed = 0;
 
-class Aggregate : public CompositePoolNode {
-  public:
+class Aggregate : public CompositePoolNode
+{
+
+public:
     typedef RefCount<Aggregate> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
@@ -85,101 +87,137 @@ class Aggregate : public CompositePoolNode {
     Aggregate();
     ~Aggregate();
     virtual DelaySpec *rate() {return &spec;}
+
     virtual DelaySpec const *rate() const {return &spec;}
+
     virtual void stats(StoreEntry * sentry);
     virtual void dump(StoreEntry *entry) const;
     virtual void update(int incr);
     virtual void parse();
+
     virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *);
-  private:
-    class AggregateId:public DelayIdComposite {
-      public:
-	void *operator new(size_t);
-	void operator delete (void *);
-	virtual void deleteSelf() const;
-	AggregateId (Aggregate::Pointer);
-	virtual int bytesWanted (int min, int max) const;
-	virtual void bytesIn(int qty);
-      private:
-	Aggregate::Pointer theAggregate;
+
+private:
+
+class AggregateId:public DelayIdComposite
+    {
+
+    public:
+        void *operator new(size_t);
+        void operator delete (void *);
+        virtual void deleteSelf() const;
+        AggregateId (Aggregate::Pointer);
+        virtual int bytesWanted (int min, int max) const;
+        virtual void bytesIn(int qty);
+
+    private:
+        Aggregate::Pointer theAggregate;
     };
+
     DelayBucket theBucket;
     DelaySpec spec;
 };
 
 template <class Key, class Value>
-class VectorMap {
-  public:
+
+class VectorMap
+{
+
+public:
     VectorMap();
     unsigned int size() const;
     unsigned char findKeyIndex (Key const key) const;
     bool indexUsed (unsigned char const index) const;
     unsigned int insert (Key const key);
-    
+
 #define IND_MAP_SZ 256
+
     Key key_map[IND_MAP_SZ];
     Value values[IND_MAP_SZ];
-  private:
+
+private:
     unsigned int nextMapPosition;
 };
 
-class VectorPool : public CompositePoolNode {
-  public:
+class VectorPool : public CompositePoolNode
+{
+
+public:
     typedef RefCount<VectorPool> Pointer;
     virtual void dump(StoreEntry *entry) const;
     virtual void parse();
     virtual void update(int incr);
     virtual void stats(StoreEntry * sentry);
+
     virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *);
     VectorMap<unsigned char, DelayBucket> buckets;
     VectorPool();
     ~VectorPool();
-  protected:
+
+protected:
     bool keyAllocated (unsigned char const key) const;
     virtual DelaySpec *rate() {return &spec;}
+
     virtual DelaySpec const *rate() const {return &spec;}
+
     virtual char const *label() const = 0;
+
     virtual unsigned int const makeKey (struct in_addr &src_addr) const = 0;
 
     DelaySpec spec;
-    class Id:public DelayIdComposite {
-      public:
-	void *operator new(size_t);
-	void operator delete (void *);
-	virtual void deleteSelf() const;
-	Id (VectorPool::Pointer, int);
-	virtual int bytesWanted (int min, int max) const;
-	virtual void bytesIn(int qty);
-      private:
-	VectorPool::Pointer theVector;
-	int theIndex;
+
+class Id:public DelayIdComposite
+    {
+
+    public:
+        void *operator new(size_t);
+        void operator delete (void *);
+        virtual void deleteSelf() const;
+        Id (VectorPool::Pointer, int);
+        virtual int bytesWanted (int min, int max) const;
+        virtual void bytesIn(int qty);
+
+    private:
+        VectorPool::Pointer theVector;
+        int theIndex;
     };
 };
 
-class IndividualPool : public VectorPool {
-  public:
+class IndividualPool : public VectorPool
+{
+
+public:
     void *operator new(size_t);
     void operator delete (void *);
     virtual void deleteSelf() const;
-  protected:
+
+protected:
     virtual char const *label() const {return "Individual";}
+
     virtual unsigned int const makeKey (struct in_addr &src_addr) const;
 
 };
 
-class ClassCNetPool : public VectorPool {
-  public:
+class ClassCNetPool : public VectorPool
+{
+
+public:
     void *operator new(size_t);
     void operator delete (void *);
     virtual void deleteSelf() const;
-  protected:
+
+protected:
     virtual char const *label() const {return "Network";}
+
     virtual unsigned int const makeKey (struct in_addr &src_addr) const;
 };
 
 /* don't use remote storage for these */
-class ClassCBucket {
-  public:
+
+class ClassCBucket
+{
+
+public:
     bool individualUsed (unsigned int index)const;
     unsigned char findHostMapPosition (unsigned char const host) const;
     bool individualAllocated (unsigned char host) const;
@@ -187,43 +225,55 @@ class ClassCBucket {
     void initHostIndex (DelaySpec &rate, unsigned char index, unsigned char host);
     void update (DelaySpec const &, int incr);
     void stats(StoreEntry *)const;
-    
+
     DelayBucket net;
     VectorMap<unsigned char, DelayBucket> individuals;
 };
 
-class ClassCHostPool : public CompositePoolNode {
-  public:
+class ClassCHostPool : public CompositePoolNode
+{
+
+public:
     typedef RefCount<ClassCHostPool> Pointer;
     virtual void dump(StoreEntry *entry) const;
     virtual void parse();
     virtual void update(int incr);
     virtual void stats(StoreEntry * sentry);
+
     virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *);
     ClassCHostPool();
     ~ClassCHostPool();
-  protected:
+
+protected:
     bool keyAllocated (unsigned char const key) const;
     virtual DelaySpec *rate() {return &spec;}
+
     virtual DelaySpec const *rate() const {return &spec;}
+
     virtual char const *label() const {return "Individual";}
+
     virtual unsigned int const makeKey (struct in_addr &src_addr) const;
+
     unsigned char const makeHostKey (struct in_addr &src_addr) const;
 
     DelaySpec spec;
     VectorMap<unsigned char, ClassCBucket> buckets;
-    class Id:public DelayIdComposite {
-      public:
-	void *operator new(size_t);
-	void operator delete (void *);
-	virtual void deleteSelf() const;
-	Id (ClassCHostPool::Pointer, unsigned char, unsigned char);
-	virtual int bytesWanted (int min, int max) const;
-	virtual void bytesIn(int qty);
-      private:
-	ClassCHostPool::Pointer theClassCHost;
-	unsigned char theNet;
-	unsigned char theHost;
+
+class Id:public DelayIdComposite
+    {
+
+    public:
+        void *operator new(size_t);
+        void operator delete (void *);
+        virtual void deleteSelf() const;
+        Id (ClassCHostPool::Pointer, unsigned char, unsigned char);
+        virtual int bytesWanted (int min, int max) const;
+        virtual void bytesIn(int qty);
+
+    private:
+        ClassCHostPool::Pointer theClassCHost;
+        unsigned char theNet;
+        unsigned char theHost;
     };
 };
 
@@ -252,54 +302,63 @@ CommonPool *
 CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeCopy)
 {
     CommonPool *result = new CommonPool;
+
     switch (_class) {
-      case 0:
-      break;
-      case 1:
-	compositeCopy = new Aggregate;
-	result->typeLabel = "1";
-	break;
-      case 2:
-	result->typeLabel = "2";
-	  {
-	    DelayVector::Pointer temp = new DelayVector;
-	    compositeCopy = temp.getRaw();
-	    temp->push_back (new Aggregate);
-	    temp->push_back(new IndividualPool);
-	  }
-	break;
-      case 3:
-	result->typeLabel = "3";
-	  {
-	    DelayVector::Pointer temp = new DelayVector;
-	    compositeCopy = temp.getRaw();
-	    temp->push_back (new Aggregate);
-	    temp->push_back (new ClassCNetPool);
-	    temp->push_back (new ClassCHostPool);
-	  }
-	break;
-      case 4:
-	result->typeLabel = "4";
-	  {
-	    DelayVector::Pointer temp = new DelayVector;
-	    compositeCopy = temp.getRaw();
-	    temp->push_back (new Aggregate);
-	    temp->push_back (new ClassCNetPool);
-	    temp->push_back (new ClassCHostPool);
-	    temp->push_back (new DelayUser);
-	  }
-	break;
-      default:
+
+    case 0:
+        break;
+
+    case 1:
+        compositeCopy = new Aggregate;
+        result->typeLabel = "1";
+        break;
+
+    case 2:
+        result->typeLabel = "2";
+        {
+            DelayVector::Pointer temp = new DelayVector;
+            compositeCopy = temp.getRaw();
+            temp->push_back (new Aggregate);
+            temp->push_back(new IndividualPool);
+        }
+
+        break;
+
+    case 3:
+        result->typeLabel = "3";
+        {
+            DelayVector::Pointer temp = new DelayVector;
+            compositeCopy = temp.getRaw();
+            temp->push_back (new Aggregate);
+            temp->push_back (new ClassCNetPool);
+            temp->push_back (new ClassCHostPool);
+        }
+
+        break;
+
+    case 4:
+        result->typeLabel = "4";
+        {
+            DelayVector::Pointer temp = new DelayVector;
+            compositeCopy = temp.getRaw();
+            temp->push_back (new Aggregate);
+            temp->push_back (new ClassCNetPool);
+            temp->push_back (new ClassCHostPool);
+            temp->push_back (new DelayUser);
+        }
+
+        break;
+
+    default:
         fatal ("unknown delay pool class");
-	return NULL;
+        return NULL;
     };
 
     return result;
 }
 
-CommonPool::CommonPool() 
-{
-}
+CommonPool::CommonPool()
+{}
 
 void
 ClassCBucket::update (DelaySpec const &rate, int incr)
@@ -308,16 +367,16 @@ ClassCBucket::update (DelaySpec const &rate, int incr)
     assert (rate.restore_bps != -1);
 
     for (unsigned char j = 0; j < individuals.size(); ++j)
-	individuals.values[j].update (rate, incr);
+        individuals.values[j].update (rate, incr);
 }
 
 void
 ClassCBucket::stats(StoreEntry *sentry)const
 {
     for (unsigned int j = 0; j < individuals.size(); ++j) {
-	assert (individualUsed (j));
-	storeAppendPrintf(sentry, " %d:",individuals.key_map[j]);
-	individuals.values[j].stats (sentry);
+        assert (individualUsed (j));
+        storeAppendPrintf(sentry, " %d:",individuals.key_map[j]);
+        individuals.values[j].stats (sentry);
     }
 }
 
@@ -343,11 +402,14 @@ unsigned char
 ClassCBucket::hostPosition (DelaySpec &rate, unsigned char const host)
 {
     if (individualAllocated (host))
-	return findHostMapPosition(host);
+        return findHostMapPosition(host);
 
     assert (!individualUsed (findHostMapPosition(host)));
+
     unsigned char result = findHostMapPosition(host);
+
     initHostIndex (rate, result, host);
+
     return result;
 }
 
@@ -355,7 +417,7 @@ void
 ClassCBucket::initHostIndex (DelaySpec &rate, unsigned char index, unsigned char host)
 {
     assert (!individualUsed(index));
-    
+
     unsigned char const newIndex = individuals.insert (host);
 
     /* give the bucket a default value */
@@ -417,10 +479,14 @@ void
 Aggregate::stats(StoreEntry * sentry)
 {
     rate()->stats (sentry, "Aggregate");
+
     if (rate()->restore_bps == -1)
-	return;
+        return;
+
     storeAppendPrintf(sentry, "\t\tCurrent: ");
+
     theBucket.stats(sentry);
+
     storeAppendPrintf(sentry, "\n\n");
 }
 
@@ -443,12 +509,13 @@ Aggregate::parse()
 }
 
 DelayIdComposite::Pointer
+
 Aggregate::id(struct in_addr &src_addr, AuthUserRequest *)
 {
     if (rate()->restore_bps != -1)
-	return new AggregateId (this);
+        return new AggregateId (this);
     else
-	return new NullDelayId;
+        return new NullDelayId;
 }
 
 void *
@@ -472,8 +539,7 @@ Aggregate::AggregateId::deleteSelf() const
 }
 
 Aggregate::AggregateId::AggregateId(Aggregate::Pointer anAggregate) : theAggregate(anAggregate)
-{
-}
+{}
 
 int
 Aggregate::AggregateId::bytesWanted (int min, int max) const
@@ -504,9 +570,12 @@ void
 DelayPools::InitDelayData()
 {
     if (!pools())
-	return;
+        return;
+
     DelayPools::delay_data = new DelayPool[pools()];
+
     DelayPools::MemoryUsed += pools() * sizeof(DelayPool);
+
     eventAdd("DelayPools::Update", DelayPools::Update, NULL, 1.0, 1);
 }
 
@@ -540,16 +609,22 @@ void
 DelayPools::Update(void *unused)
 {
     if (!pools())
-	return;
+        return;
+
     eventAdd("DelayPools::Update", Update, NULL, 1.0, 1);
+
     int incr = squid_curtime - LastUpdate;
+
     if (incr < 1)
-	return;
+        return;
+
     LastUpdate = squid_curtime;
+
     Vector<Updateable *>::iterator pos = toUpdate.begin();
+
     while (pos != toUpdate.end()) {
-	(*pos)->update(incr);
-	++pos;
+        (*pos)->update(incr);
+        ++pos;
     }
 }
 
@@ -564,19 +639,23 @@ void
 DelayPools::deregisterForUpdates (Updateable *anObject)
 {
     Vector<Updateable *>::iterator pos = toUpdate.begin();
+
     while (pos != toUpdate.end() && *pos != anObject) {
-	++pos;
+        ++pos;
     }
+
     if (pos != toUpdate.end()) {
-	/* move all objects down one */
-	Vector<Updateable *>::iterator temp = pos;
-	++pos;
-	while (pos != toUpdate.end()) {
-	    *temp = *pos;
-	    ++temp;
-	    ++pos;
-	}
-	toUpdate.pop_back();
+        /* move all objects down one */
+        Vector<Updateable *>::iterator temp = pos;
+        ++pos;
+
+        while (pos != toUpdate.end()) {
+            *temp = *pos;
+            ++temp;
+            ++pos;
+        }
+
+        toUpdate.pop_back();
     }
 }
 
@@ -588,13 +667,15 @@ DelayPools::Stats(StoreEntry * sentry)
     unsigned short i;
 
     storeAppendPrintf(sentry, "Delay pools configured: %d\n\n", DelayPools::pools());
+
     for (i = 0; i < DelayPools::pools(); ++i) {
-	if (DelayPools::delay_data[i].theComposite().getRaw()) {
-	    storeAppendPrintf(sentry, "Pool: %d\n\tClass: %s\n\n", i + 1, DelayPools::delay_data[i].pool->theClassTypeLabel());
-	    DelayPools::delay_data[i].theComposite()->stats (sentry);
-	} else
-	    storeAppendPrintf(sentry, "\tMisconfigured pool.\n\n");
+        if (DelayPools::delay_data[i].theComposite().getRaw()) {
+            storeAppendPrintf(sentry, "Pool: %d\n\tClass: %s\n\n", i + 1, DelayPools::delay_data[i].pool->theClassTypeLabel());
+            DelayPools::delay_data[i].theComposite()->stats (sentry);
+        } else
+            storeAppendPrintf(sentry, "\tMisconfigured pool.\n\n");
     }
+
     storeAppendPrintf(sentry, "Memory Used: %d bytes\n", (int) DelayPools::MemoryUsed);
 }
 
@@ -602,12 +683,13 @@ void
 DelayPools::FreePools()
 {
     if (!DelayPools::pools())
-	return;
+        return;
+
     FreeDelayData();
 }
 
 unsigned short
-DelayPools::pools() 
+DelayPools::pools()
 {
     return pools_;
 }
@@ -616,26 +698,27 @@ void
 DelayPools::pools (u_short newPools)
 {
     if (pools()) {
-	debug(3, 0) ("parse_delay_pool_count: multiple delay_pools lines, aborting all previous delay_pools config\n");
-	FreePools();
+        debug(3, 0) ("parse_delay_pool_count: multiple delay_pools lines, aborting all previous delay_pools config\n");
+        FreePools();
     }
+
     pools_ = newPools;
+
     if (pools())
-	InitDelayData();
+        InitDelayData();
 }
 
 template <class Key, class Value>
 VectorMap<Key,Value>::VectorMap() : nextMapPosition(0)
-{
-}
+{}
 
 template <class Key, class Value>
-unsigned int 
+unsigned int
 VectorMap<Key,Value>::size() const
 {
     return nextMapPosition;
 }
- 
+
 template <class Key, class Value>
 unsigned int
 VectorMap<Key,Value>::insert (Key const key)
@@ -684,17 +767,22 @@ void
 VectorPool::stats(StoreEntry * sentry)
 {
     rate()->stats (sentry, label());
+
     if (rate()->restore_bps == -1) {
-	storeAppendPrintf(sentry, "\n\n");
-	return;
+        storeAppendPrintf(sentry, "\n\n");
+        return;
     }
+
     storeAppendPrintf(sentry, "\t\tCurrent:");
+
     for (unsigned int i = 0; i < buckets.size(); i++) {
-	storeAppendPrintf(sentry, " %d:", buckets.key_map[i]);
-	buckets.values[i].stats(sentry);
+        storeAppendPrintf(sentry, " %d:", buckets.key_map[i]);
+        buckets.values[i].stats(sentry);
     }
+
     if (!buckets.size())
-	storeAppendPrintf(sentry, " Not used yet.");
+        storeAppendPrintf(sentry, " Not used yet.");
+
     storeAppendPrintf(sentry, "\n\n");
 }
 
@@ -708,9 +796,10 @@ void
 VectorPool::update(int incr)
 {
     if (rate()->restore_bps == -1)
-	return;
+        return;
+
     for (unsigned int i = 0; i< buckets.size(); ++i)
-	buckets.values[i].update (*rate(), incr);
+        buckets.values[i].update (*rate(), incr);
 }
 
 void
@@ -739,27 +828,32 @@ unsigned char
 VectorMap<Key,Value>::findKeyIndex (Key const key) const
 {
     for (unsigned int index = 0; index < size(); ++index) {
-	assert (indexUsed (index));
-	if (key_map[index] == key)
-	    return index;
+        assert (indexUsed (index));
+
+        if (key_map[index] == key)
+            return index;
     }
+
     /* not in map */
     return size();
 }
 
 DelayIdComposite::Pointer
+
 VectorPool::id(struct in_addr &src_addr, AuthUserRequest *)
 {
     if (rate()->restore_bps == -1)
-	return new NullDelayId;
+        return new NullDelayId;
 
     unsigned int key = makeKey (src_addr);
 
     if (keyAllocated (key))
-	return new Id (this, buckets.findKeyIndex(key));
-    
+        return new Id (this, buckets.findKeyIndex(key));
+
     unsigned char const resultIndex = buckets.insert(key);
+
     buckets.values[resultIndex].init (*rate());
+
     return new Id(this, resultIndex);
 }
 
@@ -784,8 +878,7 @@ VectorPool::Id::deleteSelf() const
 }
 
 VectorPool::Id::Id (VectorPool::Pointer aPool, int anIndex) : theVector (aPool), theIndex (anIndex)
-{
-}
+{}
 
 int
 VectorPool::Id::bytesWanted (int min, int max) const
@@ -800,6 +893,7 @@ VectorPool::Id::bytesIn(int qty)
 }
 
 unsigned int const
+
 IndividualPool::makeKey (struct in_addr &src_addr) const
 {
     unsigned int host;
@@ -828,6 +922,7 @@ ClassCNetPool::deleteSelf() const
 }
 
 unsigned int const
+
 ClassCNetPool::makeKey (struct in_addr &src_addr) const
 {
     unsigned int net;
@@ -850,19 +945,20 @@ void
 ClassCHostPool::stats(StoreEntry * sentry)
 {
     rate()->stats (sentry, label());
+
     if (rate()->restore_bps == -1) {
-	storeAppendPrintf(sentry, "\n\n");
-	return;
+        storeAppendPrintf(sentry, "\n\n");
+        return;
     }
 
     for (unsigned int index = 0; index < buckets.size(); ++index) {
-	storeAppendPrintf(sentry, "\t\tCurrent [Network %d]:", buckets.key_map[index]);
-	buckets.values[index].stats (sentry);
-	storeAppendPrintf(sentry, "\n");
+        storeAppendPrintf(sentry, "\t\tCurrent [Network %d]:", buckets.key_map[index]);
+        buckets.values[index].stats (sentry);
+        storeAppendPrintf(sentry, "\n");
     }
 
     if (!buckets.size())
-	storeAppendPrintf(sentry, "\t\tCurrent [All networks]: Not used yet.\n");
+        storeAppendPrintf(sentry, "\t\tCurrent [All networks]: Not used yet.\n");
 
     storeAppendPrintf(sentry, "\n\n");
 }
@@ -877,9 +973,10 @@ void
 ClassCHostPool::update(int incr)
 {
     if (rate()->restore_bps == -1)
-	return;
+        return;
+
     for (unsigned int i = 0; i< buckets.size(); ++i)
-	buckets.values[i].update (*rate(), incr);
+        buckets.values[i].update (*rate(), incr);
 }
 
 void
@@ -895,6 +992,7 @@ ClassCHostPool::keyAllocated (unsigned char const key) const
 }
 
 unsigned char const
+
 ClassCHostPool::makeHostKey (struct in_addr &src_addr) const
 {
     unsigned int host;
@@ -903,30 +1001,36 @@ ClassCHostPool::makeHostKey (struct in_addr &src_addr) const
 }
 
 unsigned int const
+
 ClassCHostPool::makeKey (struct in_addr &src_addr) const
 {
     unsigned int net;
     net = (ntohl(src_addr.s_addr) >> 8) & 0xff;
     return net;
 }
+
 DelayIdComposite::Pointer
+
 ClassCHostPool::id(struct in_addr &src_addr, AuthUserRequest *)
 {
     if (rate()->restore_bps == -1)
-	return new NullDelayId;
+        return new NullDelayId;
 
     unsigned int key = makeKey (src_addr);
+
     unsigned char host = makeHostKey (src_addr);
 
     unsigned char hostIndex;
+
     unsigned char netIndex;
+
     if (keyAllocated (key))
-	netIndex = buckets.findKeyIndex(key);
+        netIndex = buckets.findKeyIndex(key);
     else
-	netIndex = buckets.insert (key);
+        netIndex = buckets.insert (key);
 
     hostIndex = buckets.values[netIndex].hostPosition (*rate(), host);
-    
+
     return new Id (this, netIndex, hostIndex);
 }
 
@@ -951,8 +1055,7 @@ ClassCHostPool::Id::deleteSelf() const
 }
 
 ClassCHostPool::Id::Id (ClassCHostPool::Pointer aPool, unsigned char aNet, unsigned char aHost) : theClassCHost (aPool), theNet (aNet), theHost (aHost)
-{
-}
+{}
 
 int
 ClassCHostPool::Id::bytesWanted (int min, int max) const

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Mem.h,v 1.1 2003/01/23 00:37:14 robertc Exp $
+ * $Id: Mem.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -36,13 +36,15 @@
 #ifndef SQUID_MEM
 #define SQUID_MEM
 
-class Mem {
+class Mem
+{
+
 public:
-  static void Init();
-  static void Stats(StoreEntry *);
-  static void CleanIdlePools(void *unused);
-  static void Report(StoreEntry *);
-  static void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, StoreEntry * e);
+    static void Init();
+    static void Stats(StoreEntry *);
+    static void CleanIdlePools(void *unused);
+    static void Report(StoreEntry *);
+    static void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, StoreEntry * e);
 };
 
 #endif /* SQUID_MEM */

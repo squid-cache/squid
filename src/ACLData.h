@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLData.h,v 1.2 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLData.h,v 1.3 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,11 +37,15 @@
 #define SQUID_ACLDATA_H
 
 template <class M>
-class ACLData {
-  public:
+
+class ACLData
+{
+
+public:
     virtual void deleteSelf() const =0;
 
     virtual ~ACLData() {}
+
     virtual bool match(M) =0;
     virtual wordlist *dump() =0;
     virtual void parse() =0;

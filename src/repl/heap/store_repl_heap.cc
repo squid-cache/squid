@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.12 2003/01/23 00:38:28 robertc Exp $
+ * $Id: store_repl_heap.cc,v 1.13 2003/02/21 22:50:50 robertc Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -51,7 +51,8 @@ REMOVALPOLICYCREATE createRemovalPolicy_heap;
 
 static int nr_heap_policies = 0;
 
-struct HeapPolicyData {
+struct HeapPolicyData
+{
     void setPolicyNode (StoreEntry *, void *) const;
     RemovalPolicy *policy;
     heap *theHeap;
@@ -59,7 +60,7 @@ struct HeapPolicyData {
     int count;
     int nwalkers;
     enum heap_entry_type {
-	TYPE_UNKNOWN = 0, TYPE_STORE_ENTRY, TYPE_STORE_MEM
+        TYPE_UNKNOWN = 0, TYPE_STORE_ENTRY, TYPE_STORE_MEM
     } type;
 };
 
@@ -70,10 +71,13 @@ static enum HeapPolicyData::heap_entry_type
 heap_guessType(StoreEntry * entry, RemovalPolicyNode * node)
 {
     if (node == &entry->repl)
-	return HeapPolicyData::TYPE_STORE_ENTRY;
+        return HeapPolicyData::TYPE_STORE_ENTRY;
+
     if (entry->mem_obj && node == &entry->mem_obj->repl)
-	return HeapPolicyData::TYPE_STORE_MEM;
+        return HeapPolicyData::TYPE_STORE_MEM;
+
     fatal("Heap Replacement: Unknown StoreEntry node type");
+
     return HeapPolicyData::TYPE_UNKNOWN;
 }
 
@@ -81,9 +85,17 @@ void
 HeapPolicyData::setPolicyNode (StoreEntry *entry, void *value) const
 {
     switch (type) {
-      case TYPE_STORE_ENTRY: entry->repl.data = value; break ;
-      case TYPE_STORE_MEM: entry->mem_obj->repl.data = value ; break ;
-      default: break;
+
+    case TYPE_STORE_ENTRY:
+        entry->repl.data = value;
+        break ;
+
+    case TYPE_STORE_MEM:
+        entry->mem_obj->repl.data = value ;
+        break ;
+
+    default:
+        break;
     }
 }
 
@@ -92,44 +104,57 @@ heap_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 {
     HeapPolicyData *heap = (HeapPolicyData *)policy->_data;
     assert(!node->data);
+
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL))
-	return;			/* We won't manage these.. they messes things up */
+        return;			/* We won't manage these.. they messes things up */
+
     node->data = heap_insert(heap->theHeap, entry);
+
     heap->count += 1;
+
     if (!heap->type)
-	heap->type = heap_guessType(entry, node);
+        heap->type = heap_guessType(entry, node);
+
     /* Add a little more variance to the aging factor */
     heap->theHeap->age += heap->theHeap->age / 100000000;
 }
 
 static void
 heap_remove(RemovalPolicy * policy, StoreEntry * entry,
-    RemovalPolicyNode * node)
+            RemovalPolicyNode * node)
 {
     HeapPolicyData *heap = (HeapPolicyData *)policy->_data;
     heap_node *hnode = (heap_node *)node->data;
+
     if (!hnode)
-	return;
+        return;
+
     heap_delete(heap->theHeap, hnode);
+
     node->data = NULL;
+
     heap->count -= 1;
 }
 
 static void
 heap_referenced(RemovalPolicy * policy, const StoreEntry * entry,
-    RemovalPolicyNode * node)
+                RemovalPolicyNode * node)
 {
     HeapPolicyData *heap = (HeapPolicyData *)policy->_data;
     heap_node *hnode = (heap_node *)node->data;
+
     if (!hnode)
-	return;
+        return;
+
     heap_update(heap->theHeap, hnode, (StoreEntry *) entry);
 }
 
 /** RemovalPolicyWalker **/
 
 typedef struct _HeapWalkData HeapWalkData;
-struct _HeapWalkData {
+
+struct _HeapWalkData
+{
     size_t current;
 };
 
@@ -140,9 +165,12 @@ heap_walkNext(RemovalPolicyWalker * walker)
     RemovalPolicy *policy = walker->_policy;
     HeapPolicyData *heap = (HeapPolicyData *)policy->_data;
     StoreEntry *entry;
+
     if (heap_walk->current >= heap_nodes(heap->theHeap))
-	return NULL;		/* done */
+        return NULL;		/* done */
+
     entry = (StoreEntry *) heap_peep(heap->theHeap, heap_walk->current++);
+
     return entry;
 }
 
@@ -178,7 +206,9 @@ heap_walkInit(RemovalPolicy * policy)
 /** RemovalPurgeWalker **/
 
 typedef struct _HeapPurgeData HeapPurgeData;
-struct _HeapPurgeData {
+
+struct _HeapPurgeData
+{
     link_list *locked_entries;
     heap_key min_age;
 };
@@ -191,15 +221,21 @@ heap_purgeNext(RemovalPurgeWalker * walker)
     HeapPolicyData *heap = (HeapPolicyData *)policy->_data;
     StoreEntry *entry;
     heap_key age;
-  try_again:
+
+try_again:
+
     if (!heap_nodes(heap->theHeap) > 0)
-	return NULL;		/* done */
+        return NULL;		/* done */
+
     age = heap_peepminkey(heap->theHeap);
+
     entry = (StoreEntry *)heap_extractmin(heap->theHeap);
+
     if (storeEntryLocked(entry)) {
-	linklistPush(&heap_walker->locked_entries, entry);
-	goto try_again;
+        linklistPush(&heap_walker->locked_entries, entry);
+        goto try_again;
     }
+
     heap_walker->min_age = age;
     heap->setPolicyNode(entry, NULL);
     return entry;
@@ -215,18 +251,21 @@ heap_purgeDone(RemovalPurgeWalker * walker)
     assert(strcmp(policy->_type, "heap") == 0);
     assert(heap->nwalkers > 0);
     heap->nwalkers -= 1;
+
     if (heap_walker->min_age > 0) {
-	heap->theHeap->age = heap_walker->min_age;
-	debug(81, 3) ("heap_purgeDone: Heap age set to %f\n",
-	    (double) heap->theHeap->age);
+        heap->theHeap->age = heap_walker->min_age;
+        debug(81, 3) ("heap_purgeDone: Heap age set to %f\n",
+                      (double) heap->theHeap->age);
     }
+
     /*
      * Reinsert the locked entries
      */
     while ((entry = (StoreEntry *)linklistShift(&heap_walker->locked_entries))) {
-	heap_node *node = heap_insert(heap->theHeap, entry);
-	heap->setPolicyNode(entry, node);
+        heap_node *node = heap_insert(heap->theHeap, entry);
+        heap->setPolicyNode(entry, node);
     }
+
     safe_free(walker->_data);
     cbdataFree(walker);
 }
@@ -275,39 +314,55 @@ createRemovalPolicy_heap(wordlist * args)
     heap_data = (HeapPolicyData *)xcalloc(1, sizeof(*heap_data));
     /* Initialize the policy data */
     heap_data->policy = policy;
+
     if (args) {
-	keytype = args->key;
-	args = args->next;
+        keytype = args->key;
+        args = args->next;
     } else {
-	debug(81, 1) ("createRemovalPolicy_heap: No key type specified. Using LRU\n");
-	keytype = "LRU";
+        debug(81, 1) ("createRemovalPolicy_heap: No key type specified. Using LRU\n");
+        keytype = "LRU";
     }
+
     if (!strcmp(keytype, "GDSF"))
-	heap_data->keyfunc = HeapKeyGen_StoreEntry_GDSF;
+        heap_data->keyfunc = HeapKeyGen_StoreEntry_GDSF;
     else if (!strcmp(keytype, "LFUDA"))
-	heap_data->keyfunc = HeapKeyGen_StoreEntry_LFUDA;
+        heap_data->keyfunc = HeapKeyGen_StoreEntry_LFUDA;
     else if (!strcmp(keytype, "LRU"))
-	heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
+        heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     else {
-	debug(81, 0) ("createRemovalPolicy_heap: Unknown key type \"%s\". Using LRU\n",
-	    keytype);
-	heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
+        debug(81, 0) ("createRemovalPolicy_heap: Unknown key type \"%s\". Using LRU\n",
+                      keytype);
+        heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     }
+
     /* No additional arguments expected */
     assert(!args);
+
     heap_data->theHeap = new_heap(1000, heap_data->keyfunc);
+
     heap_data->theHeap->age = 1.0;
+
     /* Populate the policy structure */
     policy->_type = "heap";
+
     policy->_data = heap_data;
+
     policy->Free = heap_free;
+
     policy->Add = heap_add;
+
     policy->Remove = heap_remove;
+
     policy->Referenced = NULL;
+
     policy->Dereferenced = heap_referenced;
+
     policy->WalkInit = heap_walkInit;
+
     policy->PurgeInit = heap_purgeInit;
+
     /* Increase policy usage count */
     nr_heap_policies += 0;
+
     return policy;
 }

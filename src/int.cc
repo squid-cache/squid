@@ -1,6 +1,6 @@
 
 /*
- * $Id: int.cc,v 1.1 2003/01/17 05:37:24 robertc Exp $
+ * $Id: int.cc,v 1.2 2003/02/21 22:50:09 robertc Exp $
  *
  * DEBUG: section 21    Integer functions
  * AUTHOR: Harvest Derived
@@ -38,7 +38,9 @@ int
 isPowTen(int count)
 {
     double x = log(count) / log(10.0);
+
     if (0.0 != x - (double) (int) x)
-	return 0;
+        return 0;
+
     return 1;
 }

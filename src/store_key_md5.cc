@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.28 2003/01/23 00:37:26 robertc Exp $
+ * $Id: store_key_md5.cc,v 1.29 2003/02/21 22:50:12 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -42,8 +42,10 @@ storeKeyText(const unsigned char *key)
 {
     static char buf[MD5_DIGEST_CHARS * 2+1];
     int i;
+
     for (i = 0; i < MD5_DIGEST_CHARS; i++)
-	snprintf(&buf[i*2],sizeof(buf) - i*2, "%02X", *(key + i));
+        snprintf(&buf[i*2],sizeof(buf) - i*2, "%02X", *(key + i));
+
     return buf;
 }
 
@@ -54,12 +56,14 @@ storeKeyScan(const char *buf)
     int i;
     int j = 0;
     char t[3];
+
     for (i = 0; i < MD5_DIGEST_CHARS; i++) {
-	t[0] = *(buf + (j++));
-	t[1] = *(buf + (j++));
-	t[2] = '\0';
-	*(digest + i) = (unsigned char) strtol(t, NULL, 16);
+        t[0] = *(buf + (j++));
+        t[1] = *(buf + (j++));
+        t[2] = '\0';
+        *(digest + i) = (unsigned char) strtol(t, NULL, 16);
     }
+
     return digest;
 }
 
@@ -69,12 +73,15 @@ storeKeyHashCmp(const void *a, const void *b)
     const unsigned char *A = (const unsigned char *)a;
     const unsigned char *B = (const unsigned char *)b;
     int i;
+
     for (i = 0; i < MD5_DIGEST_CHARS; i++) {
-	if (A[i] < B[i])
-	    return -1;
-	if (A[i] > B[i])
-	    return 1;
+        if (A[i] < B[i])
+            return -1;
+
+        if (A[i] > B[i])
+            return 1;
     }
+
     return 0;
 }
 
@@ -84,9 +91,9 @@ storeKeyHashHash(const void *key, unsigned int n)
     /* note, n must be a power of 2! */
     const unsigned char *digest = (const unsigned char *)key;
     unsigned int i = digest[0]
-    | digest[1] << 8
-    | digest[2] << 16
-    | digest[3] << 24;
+                     | digest[1] << 8
+                     | digest[2] << 16
+                     | digest[3] << 24;
     return (i & (--n));
 }
 
@@ -97,7 +104,7 @@ storeKeyPrivate(const char *url, method_t method, int id)
     MD5_CTX M;
     assert(id > 0);
     debug(20, 3) ("storeKeyPrivate: %s %s\n",
-	RequestMethodStr[method], url);
+                  RequestMethodStr[method], url);
     MD5Init(&M);
     MD5Update(&M, (unsigned char *) &id, sizeof(id));
     MD5Update(&M, (unsigned char *) &method, sizeof(method));
@@ -135,9 +142,12 @@ storeKeyPublicByRequestMethod(request_t * request, const method_t method)
     MD5Init(&M);
     MD5Update(&M, &m, sizeof(m));
     MD5Update(&M, (unsigned char *) url, strlen(url));
+
     if (request->vary_headers)
-	MD5Update(&M, (unsigned char *) request->vary_headers, strlen(request->vary_headers));
+        MD5Update(&M, (unsigned char *) request->vary_headers, strlen(request->vary_headers));
+
     MD5Final(digest, &M);
+
     return digest;
 }
 
@@ -166,8 +176,10 @@ int
 storeKeyHashBuckets(int nbuckets)
 {
     int n = 0x2000;
+
     while (n < nbuckets)
-	n <<= 1;
+        n <<= 1;
+
     return n;
 }
 
@@ -175,9 +187,9 @@ int
 storeKeyNull(const cache_key * key)
 {
     if (memcmp(key, null_key, MD5_DIGEST_CHARS) == 0)
-	return 1;
+        return 1;
     else
-	return 0;
+        return 0;
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLSourceDomain.cc,v 1.2 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLSourceDomain.cc,v 1.3 2003/02/21 22:50:04 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -77,16 +77,18 @@ ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checkl
 {
     const char *fqdn = NULL;
     fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
+
     if (fqdn) {
-	return data->match(fqdn);
+        return data->match(fqdn);
     } else if (!checklist->sourceDomainChecked()) {
-	/* FIXME: reinstate a means to get to "name" 
-	debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		      name, inet_ntoa(checklist->src_addr));
-		      */
-	checklist->changeState(SourceDomainLookup::Instance());
-	return 0;
+        /* FIXME: reinstate a means to get to "name"
+        debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+        	      name, inet_ntoa(checklist->src_addr));
+        	      */
+        checklist->changeState(SourceDomainLookup::Instance());
+        return 0;
     }
+
     return data->match("none");
 }
 

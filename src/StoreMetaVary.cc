@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaVary.cc,v 1.1 2003/01/23 00:37:15 robertc Exp $
+ * $Id: StoreMetaVary.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -45,8 +45,10 @@ StoreMetaVary::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (StoreMetaVary));
+
     if (!pool)
-	pool = memPoolCreate("StoreMetaVary", sizeof (StoreMetaVary));
+        pool = memPoolCreate("StoreMetaVary", sizeof (StoreMetaVary));
+
     return memPoolAlloc(pool);
 }
 
@@ -62,17 +64,20 @@ StoreMetaVary::deleteSelf()
     delete this;
 }
 
-bool 
+bool
 StoreMetaVary::checkConsistency(StoreEntry *e) const
 {
     assert (getType() == STORE_META_VARY_HEADERS);
+
     if (!e->mem_obj->vary_headers) {
-	/* XXX separate this mutator from the query */
-	/* Assume the object is OK.. remember the vary request headers */
-	e->mem_obj->vary_headers = xstrdup((char *)value);
-	return true;
+        /* XXX separate this mutator from the query */
+        /* Assume the object is OK.. remember the vary request headers */
+        e->mem_obj->vary_headers = xstrdup((char *)value);
+        return true;
     }
+
     if (strcmp(e->mem_obj->vary_headers, (char *)value) != 0)
-	return false;
+        return false;
+
     return true;
 }

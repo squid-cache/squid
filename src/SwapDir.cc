@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.cc,v 1.2 2003/01/23 00:37:15 robertc Exp $
+ * $Id: SwapDir.cc,v 1.3 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section ??    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -45,7 +45,8 @@ SwapDir::Factory (_storefs_entry const &fs)
     return result;
 }
 
-SwapDir::~SwapDir() {
+SwapDir::~SwapDir()
+{
     xfree(path);
 }
 
@@ -90,17 +91,23 @@ bool
 SwapDir::canLog(StoreEntry const &e)const
 {
     if (e.swap_filen < 0)
-	return false;
+        return false;
+
     if (e.swap_status != SWAPOUT_DONE)
-	return false;
+        return false;
+
     if (e.swap_file_sz <= 0)
-	return false;
+        return false;
+
     if (EBIT_TEST(e.flags, RELEASE_REQUEST))
-	return false;
+        return false;
+
     if (EBIT_TEST(e.flags, KEY_PRIVATE))
-	return false;
+        return false;
+
     if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
-	return false;
+        return false;
+
     return true;
 }
 

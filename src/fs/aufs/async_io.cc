@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.22 2003/01/23 00:38:09 robertc Exp $
+ * $Id: async_io.cc,v 1.23 2003/02/21 22:50:29 robertc Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -48,7 +48,9 @@
 #define _AIO_OPENDIR	5
 #define _AIO_STAT	6
 
-typedef struct squidaio_ctrl_t {
+typedef struct squidaio_ctrl_t
+{
+
     struct squidaio_ctrl_t *next;
     int fd;
     int operation;
@@ -59,9 +61,12 @@ typedef struct squidaio_ctrl_t {
     char *bufp;
     FREE *free_func;
     dlink_node node;
-} squidaio_ctrl_t;
+}
 
-static struct {
+squidaio_ctrl_t;
+
+static struct
+{
     int open_start;
     int open_finish;
     int close_start;
@@ -76,12 +81,18 @@ static struct {
     int unlink_start;
     int unlink_finish;
     int check_callback;
-} squidaio_counts;
+}
 
-typedef struct squidaio_unlinkq_t {
+squidaio_counts;
+
+typedef struct squidaio_unlinkq_t
+{
     char *path;
+
     struct squidaio_unlinkq_t *next;
-} squidaio_unlinkq_t;
+}
+
+squidaio_unlinkq_t;
 
 static dlink_list used_list;
 static int initialised = 0;
@@ -93,7 +104,7 @@ static void
 aioFDWasClosed(int fd)
 {
     if (fd_table[fd].flags.closing)
-	fd_close(fd);
+        fd_close(fd);
 }
 
 
@@ -101,10 +112,13 @@ void
 aioInit(void)
 {
     if (initialised)
-	return;
+        return;
+
     squidaio_ctrl_pool = memPoolCreate("aio_ctrl", sizeof(squidaio_ctrl_t));
+
     cachemgrRegister("squidaio_counts", "Async IO Function Counters",
-	aioStats, 0, 1);
+                     aioStats, 0, 1);
+
     initialised = 1;
 }
 
@@ -160,30 +174,36 @@ aioCancel(int fd)
 
     assert(initialised);
     squidaio_counts.cancel++;
+
     for (m = used_list.head; m; m = next) {
-	next = m->next;
-	ctrlp = (squidaio_ctrl_t *)m->data;
-	if (ctrlp->fd != fd)
-	    continue;
+        next = m->next;
+        ctrlp = (squidaio_ctrl_t *)m->data;
 
-	squidaio_cancel(&ctrlp->result);
+        if (ctrlp->fd != fd)
+            continue;
 
-	if (ctrlp->done_handler) {
-	    AIOCB *callback = ctrlp->done_handler;
-	    void *cbdata;
-	    ctrlp->done_handler = NULL;
-	    debug(32, 1) ("this be aioCancel. Danger ahead!\n");
-	    if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata))
-		callback(fd, cbdata, NULL, -2, -2);
-	    /* free data if requested to aioWrite() */
-	    if (ctrlp->free_func)
-		ctrlp->free_func(ctrlp->bufp);
-	    /* free temporary read buffer */
-	    if (ctrlp->operation == _AIO_READ)
-		squidaio_xfree(ctrlp->bufp, ctrlp->len);
-	}
-	dlinkDelete(m, &used_list);
-	memPoolFree(squidaio_ctrl_pool, ctrlp);
+        squidaio_cancel(&ctrlp->result);
+
+        if (ctrlp->done_handler) {
+            AIOCB *callback = ctrlp->done_handler;
+            void *cbdata;
+            ctrlp->done_handler = NULL;
+            debug(32, 1) ("this be aioCancel. Danger ahead!\n");
+
+            if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata))
+                callback(fd, cbdata, NULL, -2, -2);
+
+            /* free data if requested to aioWrite() */
+            if (ctrlp->free_func)
+                ctrlp->free_func(ctrlp->bufp);
+
+            /* free temporary read buffer */
+            if (ctrlp->operation == _AIO_READ)
+                squidaio_xfree(ctrlp->bufp, ctrlp->len);
+        }
+
+        dlinkDelete(m, &used_list);
+        memPoolFree(squidaio_ctrl_pool, ctrlp);
     }
 }
 
@@ -203,12 +223,14 @@ aioWrite(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callba
     ctrlp->operation = _AIO_WRITE;
     ctrlp->bufp = bufp;
     ctrlp->free_func = free_func;
+
     if (offset >= 0)
-	seekmode = SEEK_SET;
+        seekmode = SEEK_SET;
     else {
-	seekmode = SEEK_END;
-	offset = 0;
+        seekmode = SEEK_END;
+        offset = 0;
     }
+
     ctrlp->result.data = ctrlp;
     squidaio_write(fd, bufp, len, offset, seekmode, &ctrlp->result);
     dlinkAdd(ctrlp, &ctrlp->node, &used_list);
@@ -230,12 +252,14 @@ aioRead(int fd, int offset, int len, AIOCB * callback, void *callback_data)
     ctrlp->operation = _AIO_READ;
     ctrlp->len = len;
     ctrlp->bufp = (char *)squidaio_xmalloc(len);
+
     if (offset >= 0)
-	seekmode = SEEK_SET;
+        seekmode = SEEK_SET;
     else {
-	seekmode = SEEK_CUR;
-	offset = 0;
+        seekmode = SEEK_CUR;
+        offset = 0;
     }
+
     ctrlp->result.data = ctrlp;
     squidaio_read(fd, ctrlp->bufp, len, offset, seekmode, &ctrlp->result);
     dlinkAdd(ctrlp, &ctrlp->node, &used_list);
@@ -243,6 +267,7 @@ aioRead(int fd, int offset, int len, AIOCB * callback, void *callback_data)
 }				/* aioRead */
 
 void
+
 aioStat(char *path, struct stat *sb, AIOCB * callback, void *callback_data)
 {
     squidaio_ctrl_t *ctrlp;
@@ -302,64 +327,86 @@ AUFSSwapDir::callback()
 
     assert(initialised);
     squidaio_counts.check_callback++;
+
     for (;;) {
-	if ((resultp = squidaio_poll_done()) == NULL)
-	    break;
-	ctrlp = (squidaio_ctrl_t *) resultp->data;
-	switch (resultp->result_type) {
-	case _AIO_OP_NONE:
-	case _AIO_OP_TRUNCATE:
-	case _AIO_OP_OPENDIR:
-	    break;
-	case _AIO_OP_OPEN:
-	    ++squidaio_counts.open_finish;
-	    break;
-	case _AIO_OP_READ:
-	    ++squidaio_counts.read_finish;
-	    break;
-	case _AIO_OP_WRITE:
-	    ++squidaio_counts.write_finish;
-	    break;
-	case _AIO_OP_CLOSE:
-	    ++squidaio_counts.close_finish;
-	    break;
-	case _AIO_OP_UNLINK:
-	    ++squidaio_counts.unlink_finish;
-	    break;
-	case _AIO_OP_STAT:
-	    ++squidaio_counts.stat_finish;
-	    break;
-	}
-	if (ctrlp == NULL)
-	    continue;		/* XXX Should not happen */
-	dlinkDelete(&ctrlp->node, &used_list);
-	if (ctrlp->done_handler) {
-	    AIOCB *callback = ctrlp->done_handler;
-	    void *cbdata;
-	    ctrlp->done_handler = NULL;
-	    if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata)) {
-		retval = 1;	/* Return that we've actually done some work */
-		callback(ctrlp->fd, cbdata, ctrlp->bufp,
-		    ctrlp->result.aio_return, ctrlp->result.aio_errno);
-	    } else {
-		if (ctrlp->operation == _AIO_OPEN) {
-		    /* The open operation was aborted.. */
-		    int fd = ctrlp->result.aio_return;
-		    if (fd >= 0)
-			aioClose(fd);
-		}
-	    }
-	}
-	/* free data if requested to aioWrite() */
-	if (ctrlp->free_func)
-	    ctrlp->free_func(ctrlp->bufp);
-	/* free temporary read buffer */
-	if (ctrlp->operation == _AIO_READ)
-	    squidaio_xfree(ctrlp->bufp, ctrlp->len);
-	if (ctrlp->operation == _AIO_CLOSE)
-	    aioFDWasClosed(ctrlp->fd);
-	memPoolFree(squidaio_ctrl_pool, ctrlp);
+        if ((resultp = squidaio_poll_done()) == NULL)
+            break;
+
+        ctrlp = (squidaio_ctrl_t *) resultp->data;
+
+        switch (resultp->result_type) {
+
+        case _AIO_OP_NONE:
+
+        case _AIO_OP_TRUNCATE:
+
+        case _AIO_OP_OPENDIR:
+            break;
+
+        case _AIO_OP_OPEN:
+            ++squidaio_counts.open_finish;
+            break;
+
+        case _AIO_OP_READ:
+            ++squidaio_counts.read_finish;
+            break;
+
+        case _AIO_OP_WRITE:
+            ++squidaio_counts.write_finish;
+            break;
+
+        case _AIO_OP_CLOSE:
+            ++squidaio_counts.close_finish;
+            break;
+
+        case _AIO_OP_UNLINK:
+            ++squidaio_counts.unlink_finish;
+            break;
+
+        case _AIO_OP_STAT:
+            ++squidaio_counts.stat_finish;
+            break;
+        }
+
+        if (ctrlp == NULL)
+            continue;		/* XXX Should not happen */
+
+        dlinkDelete(&ctrlp->node, &used_list);
+
+        if (ctrlp->done_handler) {
+            AIOCB *callback = ctrlp->done_handler;
+            void *cbdata;
+            ctrlp->done_handler = NULL;
+
+            if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata)) {
+                retval = 1;	/* Return that we've actually done some work */
+                callback(ctrlp->fd, cbdata, ctrlp->bufp,
+                         ctrlp->result.aio_return, ctrlp->result.aio_errno);
+            } else {
+                if (ctrlp->operation == _AIO_OPEN) {
+                    /* The open operation was aborted.. */
+                    int fd = ctrlp->result.aio_return;
+
+                    if (fd >= 0)
+                        aioClose(fd);
+                }
+            }
+        }
+
+        /* free data if requested to aioWrite() */
+        if (ctrlp->free_func)
+            ctrlp->free_func(ctrlp->bufp);
+
+        /* free temporary read buffer */
+        if (ctrlp->operation == _AIO_READ)
+            squidaio_xfree(ctrlp->bufp, ctrlp->len);
+
+        if (ctrlp->operation == _AIO_CLOSE)
+            aioFDWasClosed(ctrlp->fd);
+
+        memPoolFree(squidaio_ctrl_pool, ctrlp);
     }
+
     return retval;
 }
 
@@ -384,12 +431,15 @@ void
 AUFSSwapDir::sync()
 {
     if (!initialised)
-	return;			/* nothing to do then */
+        return;			/* nothing to do then */
+
     /* Flush all pending operations */
     debug(32, 1) ("aioSync: flushing pending I/O operations\n");
+
     do {
-	callback();
+        callback();
     } while (squidaio_sync());
+
     debug(32, 1) ("aioSync: done\n");
 }
 

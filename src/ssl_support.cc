@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.11 2003/02/08 14:55:07 hno Exp $
+ * $Id: ssl_support.cc,v 1.12 2003/02/21 22:50:11 robertc Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -48,7 +48,8 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
     static RSA *rsa = NULL;
 
     if (rsa == NULL)
-	rsa = RSA_generate_key(512, RSA_F4, NULL, NULL);
+        rsa = RSA_generate_key(512, RSA_F4, NULL, NULL);
+
     return rsa;
 }
 
@@ -63,185 +64,203 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     X509 *peer_cert = ctx->cert;
 
     X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
-	sizeof(buffer));
+                      sizeof(buffer));
 
     if (ok) {
-	debug(83, 5) ("SSL Certificate signature OK: %s\n", buffer);
-	if (server) {
-	    int i;
-	    int found = 0;
-	    char cn[1024];
-	    X509_NAME *name = X509_get_subject_name(peer_cert);
-	    debug(83, 3) ("Verifying server domain %s to certificate dn %s\n",
-		server, buffer);
-	    for (i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
-		ASN1_STRING *data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
-		if (data->length > (int)sizeof(cn) - 1)
-		    continue;
-		memcpy(cn, data->data, data->length);
-		cn[data->length] = '\0';
-		debug(83, 4) ("Verifying server domain %s to certificate cn %s\n",
-		    server, cn);
-		if (matchDomainName(server, cn[0] == '*' ? cn + 1 : cn) == 0) {
-		    found = 1;
-		    break;
-		}
-	    }
-	    if (!found) {
-		debug(83, 2) ("ERROR: Certificate %s does not match domainname %s\n", buffer, server);
-		ok = 0;
-	    }
-	}
+        debug(83, 5) ("SSL Certificate signature OK: %s\n", buffer);
+
+        if (server) {
+            int i;
+            int found = 0;
+            char cn[1024];
+            X509_NAME *name = X509_get_subject_name(peer_cert);
+            debug(83, 3) ("Verifying server domain %s to certificate dn %s\n",
+                          server, buffer);
+
+            for (i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
+                ASN1_STRING *data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
+
+                if (data->length > (int)sizeof(cn) - 1)
+                    continue;
+
+                memcpy(cn, data->data, data->length);
+
+                cn[data->length] = '\0';
+
+                debug(83, 4) ("Verifying server domain %s to certificate cn %s\n",
+                              server, cn);
+
+                if (matchDomainName(server, cn[0] == '*' ? cn + 1 : cn) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+
+            if (!found) {
+                debug(83, 2) ("ERROR: Certificate %s does not match domainname %s\n", buffer, server);
+                ok = 0;
+            }
+        }
     } else {
-	switch (ctx->error) {
-	case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:
-	    debug(83, 5) ("SSL Certficate error: CA not known: %s\n", buffer);
-	    break;
-	case X509_V_ERR_CERT_NOT_YET_VALID:
-	    debug(83, 5) ("SSL Certficate not yet valid: %s\n", buffer);
-	    break;
-	case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:
-	    debug(83, 5) ("SSL Certificate has illegal \'not before\' field: %s\n", buffer);
-	    break;
-	case X509_V_ERR_CERT_HAS_EXPIRED:
-	    debug(83, 5) ("SSL Certificate expired: %s\n", buffer);
-	    break;
-	case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:
-	    debug(83, 5) ("SSL Certificate has invalid \'not after\' field: %s\n", buffer);
-	    break;
-	default:
-	    debug(83, 1) ("SSL unknown certificate error %d in %s\n",
-		ctx->error, buffer);
-	    break;
-	}
+        switch (ctx->error) {
+
+        case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:
+            debug(83, 5) ("SSL Certficate error: CA not known: %s\n", buffer);
+            break;
+
+        case X509_V_ERR_CERT_NOT_YET_VALID:
+            debug(83, 5) ("SSL Certficate not yet valid: %s\n", buffer);
+            break;
+
+        case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:
+            debug(83, 5) ("SSL Certificate has illegal \'not before\' field: %s\n", buffer);
+            break;
+
+        case X509_V_ERR_CERT_HAS_EXPIRED:
+            debug(83, 5) ("SSL Certificate expired: %s\n", buffer);
+            break;
+
+        case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:
+            debug(83, 5) ("SSL Certificate has invalid \'not after\' field: %s\n", buffer);
+            break;
+
+        default:
+            debug(83, 1) ("SSL unknown certificate error %d in %s\n",
+                          ctx->error, buffer);
+            break;
+        }
     }
-    if (!dont_verify_domain && server) {
-    }
+
+if (!dont_verify_domain && server) {}
+
     return ok;
 }
 
-static struct ssl_option {
+static struct ssl_option
+{
     const char *name;
     long value;
-} ssl_options[] = {
+}
+
+ssl_options[] = {
 
 #ifdef SSL_OP_MICROSOFT_SESS_ID_BUG
-    {
-	"MICROSOFT_SESS_ID_BUG", SSL_OP_MICROSOFT_SESS_ID_BUG
-    },
+                    {
+                        "MICROSOFT_SESS_ID_BUG", SSL_OP_MICROSOFT_SESS_ID_BUG
+                    },
 #endif
 #ifdef SSL_OP_NETSCAPE_CHALLENGE_BUG
-    {
-	"NETSCAPE_CHALLENGE_BUG", SSL_OP_NETSCAPE_CHALLENGE_BUG
-    },
+                    {
+                        "NETSCAPE_CHALLENGE_BUG", SSL_OP_NETSCAPE_CHALLENGE_BUG
+                    },
 #endif
 #ifdef SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
-    {
-	"NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
-    },
+                    {
+                        "NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
+                    },
 #endif
 #ifdef SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
-    {
-	"SSLREF2_REUSE_CERT_TYPE_BUG", SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
-    },
+                    {
+                        "SSLREF2_REUSE_CERT_TYPE_BUG", SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
+                    },
 #endif
 #ifdef SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
-    {
-	"MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
-    },
+                    {
+                        "MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
+                    },
 #endif
 #ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
-    {
-	"MSIE_SSLV2_RSA_PADDING", SSL_OP_MSIE_SSLV2_RSA_PADDING
-    },
+                    {
+                        "MSIE_SSLV2_RSA_PADDING", SSL_OP_MSIE_SSLV2_RSA_PADDING
+                    },
 #endif
 #ifdef SSL_OP_SSLEAY_080_CLIENT_DH_BUG
-    {
-	"SSLEAY_080_CLIENT_DH_BUG", SSL_OP_SSLEAY_080_CLIENT_DH_BUG
-    },
+                    {
+                        "SSLEAY_080_CLIENT_DH_BUG", SSL_OP_SSLEAY_080_CLIENT_DH_BUG
+                    },
 #endif
 #ifdef SSL_OP_TLS_D5_BUG
-    {
-	"TLS_D5_BUG", SSL_OP_TLS_D5_BUG
-    },
+                    {
+                        "TLS_D5_BUG", SSL_OP_TLS_D5_BUG
+                    },
 #endif
 #ifdef SSL_OP_TLS_BLOCK_PADDING_BUG
-    {
-	"TLS_BLOCK_PADDING_BUG", SSL_OP_TLS_BLOCK_PADDING_BUG
-    },
+                    {
+                        "TLS_BLOCK_PADDING_BUG", SSL_OP_TLS_BLOCK_PADDING_BUG
+                    },
 #endif
 #ifdef SSL_OP_TLS_ROLLBACK_BUG
-    {
-	"TLS_ROLLBACK_BUG", SSL_OP_TLS_ROLLBACK_BUG
-    },
+                    {
+                        "TLS_ROLLBACK_BUG", SSL_OP_TLS_ROLLBACK_BUG
+                    },
 #endif
 #ifdef SSL_OP_ALL
-    {
-	"ALL", SSL_OP_ALL
-    },
+                    {
+                        "ALL", SSL_OP_ALL
+                    },
 #endif
 #ifdef SSL_OP_SINGLE_DH_USE
-    {
-	"SINGLE_DH_USE", SSL_OP_SINGLE_DH_USE
-    },
+                    {
+                        "SINGLE_DH_USE", SSL_OP_SINGLE_DH_USE
+                    },
 #endif
 #ifdef SSL_OP_EPHEMERAL_RSA
-    {
-	"EPHEMERAL_RSA", SSL_OP_EPHEMERAL_RSA
-    },
+                    {
+                        "EPHEMERAL_RSA", SSL_OP_EPHEMERAL_RSA
+                    },
 #endif
 #ifdef SSL_OP_PKCS1_CHECK_1
-    {
-	"PKCS1_CHECK_1", SSL_OP_PKCS1_CHECK_1
-    },
+                    {
+                        "PKCS1_CHECK_1", SSL_OP_PKCS1_CHECK_1
+                    },
 #endif
 #ifdef SSL_OP_PKCS1_CHECK_2
-    {
-	"PKCS1_CHECK_2", SSL_OP_PKCS1_CHECK_2
-    },
+                    {
+                        "PKCS1_CHECK_2", SSL_OP_PKCS1_CHECK_2
+                    },
 #endif
 #ifdef SSL_OP_NETSCAPE_CA_DN_BUG
-    {
-	"NETSCAPE_CA_DN_BUG", SSL_OP_NETSCAPE_CA_DN_BUG
-    },
+                    {
+                        "NETSCAPE_CA_DN_BUG", SSL_OP_NETSCAPE_CA_DN_BUG
+                    },
 #endif
 #ifdef SSL_OP_NON_EXPORT_FIRST
-    {
-	"NON_EXPORT_FIRST", SSL_OP_NON_EXPORT_FIRST
-    },
+                    {
+                        "NON_EXPORT_FIRST", SSL_OP_NON_EXPORT_FIRST
+                    },
 #endif
 #ifdef SSL_OP_CIPHER_SERVER_PREFERENCE
-    {
-	"CIPHER_SERVER_PREFERENCE", SSL_OP_CIPHER_SERVER_PREFERENCE
-    },
+                    {
+                        "CIPHER_SERVER_PREFERENCE", SSL_OP_CIPHER_SERVER_PREFERENCE
+                    },
 #endif
 #ifdef SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
-    {
-	"NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
-    },
+                    {
+                        "NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
+                    },
 #endif
 #ifdef SSL_OP_NO_SSLv2
-    {
-	"NO_SSLv2", SSL_OP_NO_SSLv2
-    },
+                    {
+                        "NO_SSLv2", SSL_OP_NO_SSLv2
+                    },
 #endif
 #ifdef SSL_OP_NO_SSLv3
-    {
-	"NO_SSLv3", SSL_OP_NO_SSLv3
-    },
+                    {
+                        "NO_SSLv3", SSL_OP_NO_SSLv3
+                    },
 #endif
 #ifdef SSL_OP_NO_TLSv1
-    {
-	"NO_TLSv1", SSL_OP_NO_TLSv1
-    },
+                    {
+                        "NO_TLSv1", SSL_OP_NO_TLSv1
+                    },
 #endif
-    {
-	"", 0
-    },
-    {
-	NULL, 0
-    }
-};
+                    {
+                        "", 0
+                    },
+                    {
+                        NULL, 0
+                    }
+                };
 
 static long
 ssl_parse_options(const char *options)
@@ -251,58 +270,73 @@ ssl_parse_options(const char *options)
     char *option;
 
     if (!options)
-	goto no_options;
+        goto no_options;
 
     tmp = xstrdup(options);
+
     option = strtok(tmp, ":,");
+
     while (option) {
-	struct ssl_option *opt = NULL, *opttmp;
-	long value = 0;
-	enum {
-	    MODE_ADD, MODE_REMOVE
-	} mode;
-	switch (*option) {
-	case '!':
-	case '-':
-	    mode = MODE_REMOVE;
-	    option++;
-	    break;
-	case '+':
-	    mode = MODE_ADD;
-	    option++;
-	    break;
-	default:
-	    mode = MODE_ADD;
-	    break;
-	}
-	for (opttmp = ssl_options; opttmp->name; opttmp++) {
-	    if (strcmp(opttmp->name, option) == 0) {
-		opt = opttmp;
-		break;
-	    }
-	}
-	if (opt)
-	    value = opt->value;
-	else if (strncmp(option, "0x", 2) == 0) {
-	    /* Special case.. hex specification */
-	    value = strtol(option + 2, NULL, 16);
-	} else {
-	    fatalf("Unknown SSL option '%s'", option);
-	    value = 0;		/* Keep GCC happy */
-	}
-	switch (mode) {
-	case MODE_ADD:
-	    op |= value;
-	    break;
-	case MODE_REMOVE:
-	    op &= ~value;
-	    break;
-	}
-	option = strtok(NULL, ":,");
+
+        struct ssl_option *opt = NULL, *opttmp;
+        long value = 0;
+        enum {
+            MODE_ADD, MODE_REMOVE
+        } mode;
+
+        switch (*option) {
+
+        case '!':
+
+        case '-':
+            mode = MODE_REMOVE;
+            option++;
+            break;
+
+        case '+':
+            mode = MODE_ADD;
+            option++;
+            break;
+
+        default:
+            mode = MODE_ADD;
+            break;
+        }
+
+        for (opttmp = ssl_options; opttmp->name; opttmp++) {
+            if (strcmp(opttmp->name, option) == 0) {
+                opt = opttmp;
+                break;
+            }
+        }
+
+        if (opt)
+            value = opt->value;
+        else if (strncmp(option, "0x", 2) == 0) {
+            /* Special case.. hex specification */
+            value = strtol(option + 2, NULL, 16);
+        } else {
+            fatalf("Unknown SSL option '%s'", option);
+            value = 0;		/* Keep GCC happy */
+        }
+
+        switch (mode) {
+
+        case MODE_ADD:
+            op |= value;
+            break;
+
+        case MODE_REMOVE:
+            op &= ~value;
+            break;
+        }
+
+        option = strtok(NULL, ":,");
     }
 
     safe_free(tmp);
-  no_options:
+
+no_options:
     return op;
 }
 
@@ -319,23 +353,27 @@ ssl_parse_flags(const char *flags)
     char *flag;
 
     if (!flags)
-	return 0;
+        return 0;
 
     tmp = xstrdup(flags);
+
     flag = strtok(tmp, ":,");
+
     while (flag) {
-	if (strcmp(flag, "NO_DEFAULT_CA") == 0)
-	    fl |= SSL_FLAG_NO_DEFAULT_CA;
-	else if (strcmp(flag, "DELAYED_AUTH") == 0)
-	    fl |= SSL_FLAG_DELAYED_AUTH;
-	else if (strcmp(flag, "DONT_VERIFY_PEER") == 0)
-	    fl |= SSL_FLAG_DONT_VERIFY_PEER;
-	else if (strcmp(flag, "DONT_VERIFY_DOMAIN") == 0)
-	    fl |= SSL_FLAG_DONT_VERIFY_DOMAIN;
-	else
-	    fatalf("Unknown ssl flag '%s'", flag);
-	flag = strtok(NULL, ":,");
+        if (strcmp(flag, "NO_DEFAULT_CA") == 0)
+            fl |= SSL_FLAG_NO_DEFAULT_CA;
+        else if (strcmp(flag, "DELAYED_AUTH") == 0)
+            fl |= SSL_FLAG_DELAYED_AUTH;
+        else if (strcmp(flag, "DONT_VERIFY_PEER") == 0)
+            fl |= SSL_FLAG_DONT_VERIFY_PEER;
+        else if (strcmp(flag, "DONT_VERIFY_DOMAIN") == 0)
+            fl |= SSL_FLAG_DONT_VERIFY_DOMAIN;
+        else
+            fatalf("Unknown ssl flag '%s'", flag);
+
+        flag = strtok(NULL, ":,");
     }
+
     safe_free(tmp);
     return fl;
 }
@@ -345,28 +383,36 @@ static void
 ssl_initialize(void)
 {
     static int ssl_initialized = 0;
+
     if (!ssl_initialized) {
-	ssl_initialized = 1;
-	SSL_load_error_strings();
-	SSLeay_add_ssl_algorithms();
+        ssl_initialized = 1;
+        SSL_load_error_strings();
+        SSLeay_add_ssl_algorithms();
 #ifdef HAVE_OPENSSL_ENGINE_H
-	if (Config.SSL.ssl_engine) {
-	    ENGINE *e;
-	    if (!(e = ENGINE_by_id(Config.SSL.ssl_engine))) {
-		fatalf("Unable to find SSL engine '%s'\n", Config.SSL.ssl_engine);
-	    }
-	    if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
-		int ssl_error = ERR_get_error();
-		fatalf("Failed to initialise SSL engine: %s\n",
-		    ERR_error_string(ssl_error, NULL));
-	    }
-	}
+
+        if (Config.SSL.ssl_engine) {
+            ENGINE *e;
+
+            if (!(e = ENGINE_by_id(Config.SSL.ssl_engine))) {
+                fatalf("Unable to find SSL engine '%s'\n", Config.SSL.ssl_engine);
+            }
+
+            if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
+                int ssl_error = ERR_get_error();
+                fatalf("Failed to initialise SSL engine: %s\n",
+                       ERR_error_string(ssl_error, NULL));
+            }
+        }
+
 #else
-	if (Config.SSL.ssl_engine) {
-	    fatalf("Your OpenSSL has no SSL engine support\n");
-	}
+        if (Config.SSL.ssl_engine) {
+            fatalf("Your OpenSSL has no SSL engine support\n");
+        }
+
 #endif
+
     }
+
     ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
 
@@ -383,107 +429,132 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     ssl_initialize();
 
     if (!keyfile)
-	keyfile = certfile;
+        keyfile = certfile;
+
     if (!certfile)
-	certfile = keyfile;
+        certfile = keyfile;
+
     if (!CAfile)
-	CAfile = clientCA;
+        CAfile = clientCA;
 
     debug(83, 1) ("Initialising SSL.\n");
+
     switch (version) {
+
     case 2:
-	debug(83, 5) ("Using SSLv2.\n");
-	method = SSLv2_server_method();
-	break;
+        debug(83, 5) ("Using SSLv2.\n");
+        method = SSLv2_server_method();
+        break;
+
     case 3:
-	debug(83, 5) ("Using SSLv3.\n");
-	method = SSLv3_server_method();
-	break;
+        debug(83, 5) ("Using SSLv3.\n");
+        method = SSLv3_server_method();
+        break;
+
     case 4:
-	debug(83, 5) ("Using TLSv1.\n");
-	method = TLSv1_server_method();
-	break;
+        debug(83, 5) ("Using TLSv1.\n");
+        method = TLSv1_server_method();
+        break;
+
     case 1:
+
     default:
-	debug(83, 5) ("Using SSLv2/SSLv3.\n");
-	method = SSLv23_server_method();
-	break;
+        debug(83, 5) ("Using SSLv2/SSLv3.\n");
+        method = SSLv23_server_method();
+        break;
     }
 
     sslContext = SSL_CTX_new(method);
+
     if (sslContext == NULL) {
-	ssl_error = ERR_get_error();
-	fatalf("Failed to allocate SSL context: %s\n",
-	    ERR_error_string(ssl_error, NULL));
+        ssl_error = ERR_get_error();
+        fatalf("Failed to allocate SSL context: %s\n",
+               ERR_error_string(ssl_error, NULL));
     }
+
     SSL_CTX_set_options(sslContext, ssl_parse_options(options));
 
     if (cipher) {
-	debug(83, 5) ("Using chiper suite %s.\n", cipher);
-	if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
-	    ssl_error = ERR_get_error();
-	    fatalf("Failed to set SSL cipher suite '%s': %s\n",
-		cipher, ERR_error_string(ssl_error, NULL));
-	}
+        debug(83, 5) ("Using chiper suite %s.\n", cipher);
+
+        if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
+            ssl_error = ERR_get_error();
+            fatalf("Failed to set SSL cipher suite '%s': %s\n",
+                   cipher, ERR_error_string(ssl_error, NULL));
+        }
     }
+
     debug(83, 1) ("Using certificate in %s\n", certfile);
+
     if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
-	ssl_error = ERR_get_error();
-	debug(83, 0) ("Failed to acquire SSL certificate '%s': %s\n",
-	    certfile, ERR_error_string(ssl_error, NULL));
-	goto error;
+        ssl_error = ERR_get_error();
+        debug(83, 0) ("Failed to acquire SSL certificate '%s': %s\n",
+                      certfile, ERR_error_string(ssl_error, NULL));
+        goto error;
     }
+
     debug(83, 1) ("Using private key in %s\n", keyfile);
+
     if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
-	ssl_error = ERR_get_error();
-	debug(83, 0) ("Failed to acquire SSL private key '%s': %s\n",
-	    keyfile, ERR_error_string(ssl_error, NULL));
-	goto error;
+        ssl_error = ERR_get_error();
+        debug(83, 0) ("Failed to acquire SSL private key '%s': %s\n",
+                      keyfile, ERR_error_string(ssl_error, NULL));
+        goto error;
     }
+
     debug(83, 5) ("Comparing private and public SSL keys.\n");
+
     if (!SSL_CTX_check_private_key(sslContext)) {
-	ssl_error = ERR_get_error();
-	debug(83, 0) ("SSL private key '%s' does not match public key '%s': %s\n",
-	    certfile, keyfile, ERR_error_string(ssl_error, NULL));
-	goto error;
+        ssl_error = ERR_get_error();
+        debug(83, 0) ("SSL private key '%s' does not match public key '%s': %s\n",
+                      certfile, keyfile, ERR_error_string(ssl_error, NULL));
+        goto error;
     }
+
     debug(83, 9) ("Setting RSA key generation callback.\n");
     SSL_CTX_set_tmp_rsa_callback(sslContext, ssl_temp_rsa_cb);
 
     debug(83, 9) ("Setting CA certificate locations.\n");
+
     if ((!SSL_CTX_load_verify_locations(sslContext, CAfile, CApath))) {
-	ssl_error = ERR_get_error();
-	debug(83, 1) ("Error error setting CA certificate locations: %s\n",
-	    ERR_error_string(ssl_error, NULL));
-	debug(83, 1) ("continuing anyway...\n");
+        ssl_error = ERR_get_error();
+        debug(83, 1) ("Error error setting CA certificate locations: %s\n",
+                      ERR_error_string(ssl_error, NULL));
+        debug(83, 1) ("continuing anyway...\n");
     }
+
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
-	!SSL_CTX_set_default_verify_paths(sslContext)) {
-	ssl_error = ERR_get_error();
-	debug(83, 1) ("Error error setting default CA certificate location: %s\n",
-	    ERR_error_string(ssl_error, NULL));
-	debug(83, 1) ("continuing anyway...\n");
+            !SSL_CTX_set_default_verify_paths(sslContext)) {
+        ssl_error = ERR_get_error();
+        debug(83, 1) ("Error error setting default CA certificate location: %s\n",
+                      ERR_error_string(ssl_error, NULL));
+        debug(83, 1) ("continuing anyway...\n");
     }
+
     if (clientCA) {
-	debug(83, 9) ("Set client certifying authority list.\n");
-	SSL_CTX_set_client_CA_list(sslContext, SSL_load_client_CA_file(clientCA));
-	if (fl & SSL_FLAG_DELAYED_AUTH) {
-	    debug(83, 9) ("Not requesting client certificates until acl processing requires one\n");
-	    SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
-	} else {
-	    debug(83, 9) ("Requiring client certificates.\n");
-	    SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
-	}
+        debug(83, 9) ("Set client certifying authority list.\n");
+        SSL_CTX_set_client_CA_list(sslContext, SSL_load_client_CA_file(clientCA));
+
+        if (fl & SSL_FLAG_DELAYED_AUTH) {
+            debug(83, 9) ("Not requesting client certificates until acl processing requires one\n");
+            SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
+        } else {
+            debug(83, 9) ("Requiring client certificates.\n");
+            SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
+        }
     } else {
-	debug(83, 9) ("Not requiring any client certificates\n");
-	SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
+        debug(83, 9) ("Not requiring any client certificates\n");
+        SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
     }
 
     if (fl & SSL_FLAG_DONT_VERIFY_DOMAIN)
-	SSL_CTX_set_ex_data(sslContext, ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
+        SSL_CTX_set_ex_data(sslContext, ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
+
     return sslContext;
-  error:
+
+error:
     SSL_CTX_free(sslContext);
+
     return NULL;
 }
 
@@ -498,92 +569,112 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     ssl_initialize();
 
     if (!keyfile)
-	keyfile = certfile;
+        keyfile = certfile;
+
     if (!certfile)
-	certfile = keyfile;
+        certfile = keyfile;
 
     debug(83, 1) ("Initialising SSL.\n");
+
     switch (version) {
+
     case 2:
-	debug(83, 5) ("Using SSLv2.\n");
-	method = SSLv2_client_method();
-	break;
+        debug(83, 5) ("Using SSLv2.\n");
+        method = SSLv2_client_method();
+        break;
+
     case 3:
-	debug(83, 5) ("Using SSLv3.\n");
-	method = SSLv3_client_method();
-	break;
+        debug(83, 5) ("Using SSLv3.\n");
+        method = SSLv3_client_method();
+        break;
+
     case 4:
-	debug(83, 5) ("Using TLSv1.\n");
-	method = TLSv1_client_method();
-	break;
+        debug(83, 5) ("Using TLSv1.\n");
+        method = TLSv1_client_method();
+        break;
+
     case 1:
+
     default:
-	debug(83, 5) ("Using SSLv2/SSLv3.\n");
-	method = SSLv23_client_method();
-	break;
+        debug(83, 5) ("Using SSLv2/SSLv3.\n");
+        method = SSLv23_client_method();
+        break;
     }
 
     sslContext = SSL_CTX_new(method);
+
     if (sslContext == NULL) {
-	ssl_error = ERR_get_error();
-	fatalf("Failed to allocate SSL context: %s\n",
-	    ERR_error_string(ssl_error, NULL));
+        ssl_error = ERR_get_error();
+        fatalf("Failed to allocate SSL context: %s\n",
+               ERR_error_string(ssl_error, NULL));
     }
+
     SSL_CTX_set_options(sslContext, ssl_parse_options(options));
 
     if (cipher) {
-	debug(83, 5) ("Using chiper suite %s.\n", cipher);
-	if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
-	    ssl_error = ERR_get_error();
-	    fatalf("Failed to set SSL cipher suite '%s': %s\n",
-		cipher, ERR_error_string(ssl_error, NULL));
-	}
+        debug(83, 5) ("Using chiper suite %s.\n", cipher);
+
+        if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
+            ssl_error = ERR_get_error();
+            fatalf("Failed to set SSL cipher suite '%s': %s\n",
+                   cipher, ERR_error_string(ssl_error, NULL));
+        }
     }
+
     if (certfile) {
-	debug(83, 1) ("Using certificate in %s\n", certfile);
-	if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
-	    ssl_error = ERR_get_error();
-	    fatalf("Failed to acquire SSL certificate '%s': %s\n",
-		certfile, ERR_error_string(ssl_error, NULL));
-	}
-	debug(83, 1) ("Using private key in %s\n", keyfile);
-	if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
-	    ssl_error = ERR_get_error();
-	    fatalf("Failed to acquire SSL private key '%s': %s\n",
-		keyfile, ERR_error_string(ssl_error, NULL));
-	}
-	debug(83, 5) ("Comparing private and public SSL keys.\n");
-	if (!SSL_CTX_check_private_key(sslContext)) {
-	    ssl_error = ERR_get_error();
-	    fatalf("SSL private key '%s' does not match public key '%s': %s\n",
-		certfile, keyfile, ERR_error_string(ssl_error, NULL));
-	}
+        debug(83, 1) ("Using certificate in %s\n", certfile);
+
+        if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
+            ssl_error = ERR_get_error();
+            fatalf("Failed to acquire SSL certificate '%s': %s\n",
+                   certfile, ERR_error_string(ssl_error, NULL));
+        }
+
+        debug(83, 1) ("Using private key in %s\n", keyfile);
+
+        if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
+            ssl_error = ERR_get_error();
+            fatalf("Failed to acquire SSL private key '%s': %s\n",
+                   keyfile, ERR_error_string(ssl_error, NULL));
+        }
+
+        debug(83, 5) ("Comparing private and public SSL keys.\n");
+
+        if (!SSL_CTX_check_private_key(sslContext)) {
+            ssl_error = ERR_get_error();
+            fatalf("SSL private key '%s' does not match public key '%s': %s\n",
+                   certfile, keyfile, ERR_error_string(ssl_error, NULL));
+        }
     }
+
     debug(83, 9) ("Setting RSA key generation callback.\n");
     SSL_CTX_set_tmp_rsa_callback(sslContext, ssl_temp_rsa_cb);
 
     if (fl & SSL_FLAG_DONT_VERIFY_PEER) {
-	debug(83, 1) ("NOTICE: Peer certificates are not verified for validity!\n");
-	SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
+        debug(83, 1) ("NOTICE: Peer certificates are not verified for validity!\n");
+        SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
     } else {
-	debug(83, 9) ("Setting certificate verification callback.\n");
-	SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
+        debug(83, 9) ("Setting certificate verification callback.\n");
+        SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
     }
 
     debug(83, 9) ("Setting CA certificate locations.\n");
+
     if ((!SSL_CTX_load_verify_locations(sslContext, CAfile, CApath))) {
-	ssl_error = ERR_get_error();
-	debug(83, 1) ("Error error setting CA certificate locations: %s\n",
-	    ERR_error_string(ssl_error, NULL));
-	debug(83, 1) ("continuing anyway...\n");
+        ssl_error = ERR_get_error();
+        debug(83, 1) ("Error error setting CA certificate locations: %s\n",
+                      ERR_error_string(ssl_error, NULL));
+        debug(83, 1) ("continuing anyway...\n");
     }
+
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
-	!SSL_CTX_set_default_verify_paths(sslContext)) {
-	ssl_error = ERR_get_error();
-	debug(83, 1) ("Error error setting default CA certificate location: %s\n",
-	    ERR_error_string(ssl_error, NULL));
-	debug(83, 1) ("continuing anyway...\n");
+            !SSL_CTX_set_default_verify_paths(sslContext)) {
+        ssl_error = ERR_get_error();
+        debug(83, 1) ("Error error setting default CA certificate location: %s\n",
+                      ERR_error_string(ssl_error, NULL));
+        debug(83, 1) ("continuing anyway...\n");
     }
+
     return sslContext;
 }
 
@@ -595,10 +686,10 @@ ssl_read_method(int fd, char *buf, int len)
     i = SSL_read(fd_table[fd].ssl, buf, len);
 
     if (i > 0 && SSL_pending(fd_table[fd].ssl) > 0) {
-	debug(83, 2) ("SSL fd %d is pending\n", fd);
-	fd_table[fd].flags.read_pending = 1;
+        debug(83, 2) ("SSL fd %d is pending\n", fd);
+        fd_table[fd].flags.read_pending = 1;
     } else
-	fd_table[fd].flags.read_pending = 0;
+        fd_table[fd].flags.read_pending = 0;
 
     return i;
 }
@@ -613,13 +704,16 @@ void
 ssl_shutdown_method(int fd)
 {
     SSL *ssl = fd_table[fd].ssl;
+
     if (!fd_table[fd].ssl_shutdown) {
-	fd_table[fd].ssl_shutdown = 1;
-	if (Config.SSL.unclean_shutdown)
-	    SSL_set_shutdown(ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
-	else
-	    SSL_set_shutdown(ssl, SSL_RECEIVED_SHUTDOWN);
+        fd_table[fd].ssl_shutdown = 1;
+
+        if (Config.SSL.unclean_shutdown)
+            SSL_set_shutdown(ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+        else
+            SSL_set_shutdown(ssl, SSL_RECEIVED_SHUTDOWN);
     }
+
     SSL_shutdown(ssl);
 }
 
@@ -632,16 +726,20 @@ ssl_get_attribute(X509_NAME * name, const char *attribute_name)
     buffer[0] = '\0';
 
     if (strcmp(attribute_name, "DN") == 0) {
-	X509_NAME_oneline(name, buffer, sizeof(buffer));
-	goto done;
+        X509_NAME_oneline(name, buffer, sizeof(buffer));
+        goto done;
     }
+
     nid = OBJ_txt2nid((char *) attribute_name);
+
     if (nid == 0) {
-	debug(83, 1) ("WARNING: Unknown SSL attribute name '%s'\n", attribute_name);
-	return NULL;
+        debug(83, 1) ("WARNING: Unknown SSL attribute name '%s'\n", attribute_name);
+        return NULL;
     }
+
     X509_NAME_get_text_by_NID(name, nid, buffer, sizeof(buffer));
-  done:
+
+done:
     return *buffer ? buffer : NULL;
 }
 
@@ -652,11 +750,12 @@ sslGetUserAttribute(SSL * ssl, const char *attribute_name)
     X509_NAME *name;
 
     if (!ssl)
-	return NULL;
+        return NULL;
 
     cert = SSL_get_peer_certificate(ssl);
+
     if (!cert)
-	return NULL;
+        return NULL;
 
     name = X509_get_issuer_name(cert);
 
@@ -670,11 +769,12 @@ sslGetCAAttribute(SSL * ssl, const char *attribute_name)
     X509_NAME *name;
 
     if (!ssl)
-	return NULL;
+        return NULL;
 
     cert = SSL_get_peer_certificate(ssl);
+
     if (!cert)
-	return NULL;
+        return NULL;
 
     name = X509_get_subject_name(cert);
 
@@ -691,18 +791,21 @@ sslGetUserEmail(SSL * ssl)
     static char email[128];
 
     if (!ssl)
-	return NULL;
+        return NULL;
+
     cert = SSL_get_peer_certificate(ssl);
+
     if (!cert)
-	return NULL;
+        return NULL;
 
     name = X509_get_subject_name(cert);
 
     if (X509_NAME_get_text_by_NID(name, NID_pkcs9_emailAddress, email, sizeof(email)) > 0)
-	return email;
+        return email;
     else
-	return NULL;
+        return NULL;
 }
+
 #endif
 
 const char *

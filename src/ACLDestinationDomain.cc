@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.2 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.3 2003/02/21 22:50:04 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -47,8 +47,10 @@ ACLDestinationDomain::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (ACLDestinationDomain));
+
     if (!Pool)
-	Pool = memPoolCreate("ACLDestinationDomain", sizeof (ACLDestinationDomain));
+        Pool = memPoolCreate("ACLDestinationDomain", sizeof (ACLDestinationDomain));
+
     return memPoolAlloc(Pool);
 }
 
@@ -70,9 +72,10 @@ ACLDestinationDomain::~ACLDestinationDomain()
 }
 
 ACLDestinationDomain::ACLDestinationDomain(ACLData<char const *> *newData, char const *theType) : data (newData), type_(theType) {}
+
 ACLDestinationDomain::ACLDestinationDomain (ACLDestinationDomain const &old) : data (old.data->clone()), type_(old.type_)
-{
-}
+{}
+
 ACLDestinationDomain &
 ACLDestinationDomain::operator= (ACLDestinationDomain const &rhs)
 {
@@ -97,18 +100,24 @@ int
 ACLDestinationDomain::match(ACLChecklist *checklist)
 {
     const ipcache_addrs *ia = NULL;
+
     if ((ia = ipcacheCheckNumeric(checklist->request->host)) == NULL)
-	return data->match(checklist->request->host);
+        return data->match(checklist->request->host);
+
     const char *fqdn = NULL;
+
     fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
+
     if (fqdn)
-	return data->match(fqdn);
+        return data->match(fqdn);
+
     if (!checklist->destinationDomainChecked()) {
-	debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		      name, inet_ntoa(ia->in_addrs[0]));
-	checklist->changeState(DestinationDomainLookup::Instance());
-	return 0;
+        debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+                      name, inet_ntoa(ia->in_addrs[0]));
+        checklist->changeState(DestinationDomainLookup::Instance());
+        return 0;
     }
+
     return data->match("none");
 }
 
@@ -138,15 +147,16 @@ DestinationDomainLookup::checkForAsync(ACLChecklist *checklist)const
 
     ipcache_addrs *ia;
     ia = ipcacheCheckNumeric(checklist->request->host);
+
     if (ia == NULL) {
-	/* Make fatal? XXX this is checked during match() */
-	checklist->markDestinationDomainChecked();
-	checklist->changeState (ACLChecklist::NullState::Instance());
+        /* Make fatal? XXX this is checked during match() */
+        checklist->markDestinationDomainChecked();
+        checklist->changeState (ACLChecklist::NullState::Instance());
     } else {
-	checklist->asyncInProgress(true);
-	checklist->dst_addr = ia->in_addrs[0];
-	fqdncache_nbgethostbyaddr(checklist->dst_addr,
-				  LookupDone, checklist);
+        checklist->asyncInProgress(true);
+        checklist->dst_addr = ia->in_addrs[0];
+        fqdncache_nbgethostbyaddr(checklist->dst_addr,
+                                  LookupDone, checklist);
     }
 }
 

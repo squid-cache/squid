@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.34 2003/02/12 06:10:58 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.35 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -46,14 +46,22 @@ requestCreate(method_t method, protocol_t protocol, const char *aUrlpath)
     request_t *req = static_cast<request_t *>(memAllocate(MEM_REQUEST_T));
     req->method = method;
     req->protocol = protocol;
+
     if (aUrlpath)
-	req->urlpath = aUrlpath;
+        req->urlpath = aUrlpath;
+
     req->max_forwards = -1;
+
     req->lastmod = -1;
+
     req->client_addr = no_addr;
+
     req->my_addr = no_addr;
+
     httpHeaderInit(&req->header, hoRequest);
+
     httpRequestHdrCacheInit(req);
+
     return req;
 }
 
@@ -61,18 +69,27 @@ void
 requestDestroy(request_t * req)
 {
     assert(req);
+
     if (req->body_connection)
-	clientAbortBody(req);
+        clientAbortBody(req);
+
     if (req->auth_user_request)
-	authenticateAuthUserRequestUnlock(req->auth_user_request);
+        authenticateAuthUserRequestUnlock(req->auth_user_request);
+
     safe_free(req->canonical);
+
     safe_free(req->vary_headers);
+
     req->urlpath.clean();
+
     httpHeaderClean(&req->header);
+
     if (req->cache_control)
-	httpHdrCcDestroy(req->cache_control);
+        httpHdrCcDestroy(req->cache_control);
+
     if (req->range)
-	req->range->deleteSelf();
+        req->range->deleteSelf();
+
     memFree(req, MEM_REQUEST_T);
 }
 
@@ -88,10 +105,13 @@ void
 requestUnlink(request_t * request)
 {
     if (!request)
-	return;
+        return;
+
     assert(request->link_count > 0);
+
     if (--request->link_count > 0)
-	return;
+        return;
+
     requestDestroy(request);
 }
 
@@ -99,11 +119,15 @@ int
 httpRequestParseHeader(request_t * req, const char *parse_start)
 {
     const char *blk_start, *blk_end;
+
     if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end))
-	return 0;
+        return 0;
+
     int result = httpHeaderParse(&req->header, blk_start, blk_end);
+
     if (result)
-	httpRequestHdrCacheInit(req);
+        httpRequestHdrCacheInit(req);
+
     return result;
 }
 
@@ -125,7 +149,7 @@ httpRequestPack(const request_t * req, Packer * p)
     assert(req && p);
     /* pack request-line */
     packerPrintf(p, "%s %s HTTP/1.0\r\n",
-	RequestMethodStr[req->method], req->urlpath.buf());
+                 RequestMethodStr[req->method], req->urlpath.buf());
     /* headers */
     httpHeaderPackInto(&req->header, p);
     /* trailer */
@@ -149,9 +173,9 @@ httpRequestPrefixLen(const request_t * req)
 {
     assert(req);
     return strlen(RequestMethodStr[req->method]) + 1 +
-	req->urlpath.size() + 1 +
-	4 + 1 + 3 + 2 +
-	req->header.len + 2;
+           req->urlpath.size() + 1 +
+           4 + 1 + 3 + 2 +
+           req->header.len + 2;
 }
 
 /*
@@ -163,8 +187,10 @@ httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
 {
     assert(e);
     /* check connection header */
+
     if (strConn && strListIsMember(strConn, e->name.buf(), ','))
-	return 0;
+        return 0;
+
     return 1;
 }
 
@@ -173,25 +199,33 @@ static void
 httpRequestHdrCacheInit(request_t * req)
 {
     const HttpHeader *hdr = &req->header;
-/*  const char *str; */
+    /*  const char *str; */
     req->content_length = httpHeaderGetInt(hdr, HDR_CONTENT_LENGTH);
     /* TODO: canonicalise these into an HttpEntity */
 #if 0
+
     req->date = httpHeaderGetTime(hdr, HDR_DATE);
     req->last_modified = httpHeaderGetTime(hdr, HDR_LAST_MODIFIED);
     str = httpHeaderGetStr(hdr, HDR_CONTENT_TYPE);
+
     if (str)
-       stringLimitInit(&req->content_type, str, strcspn(str, ";\t "));
+        stringLimitInit(&req->content_type, str, strcspn(str, ";\t "));
     else
-       req->content_type = StringNull;
+        req->content_type = StringNull;
+
 #endif
+
     req->cache_control = httpHeaderGetCc(hdr);
+
     req->range = httpHeaderGetRange(hdr);
+
 #if 0
+
     req->keep_alive = httpMsgIsPersistent(req->http_ver, &req->header);
 
     /* be sure to set expires after date and cache-control */
     req->expires = httpReplyHdrExpirationTime(req);
+
 #endif
 }
 

@@ -3,14 +3,21 @@
 #include "MemObject.h"
 #include "SwapDir.h"
 
-static struct {
-    struct {
-	int calls;
-	int select_fail;
-	int create_fail;
-	int success;
-    } create;
-} store_io_stats;
+static struct
+{
+
+    struct
+    {
+        int calls;
+        int select_fail;
+        int create_fail;
+        int success;
+    }
+
+    create;
+}
+
+store_io_stats;
 
 OBJH storeIOStats;
 
@@ -31,28 +38,33 @@ storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, voi
     store_io_stats.create.calls++;
     /* This is just done for logging purposes */
     objsize = objectLen(e);
+
     if (objsize != -1)
-	objsize += e->mem_obj->swap_hdr_sz;
+        objsize += e->mem_obj->swap_hdr_sz;
 
     /*
      * Pick the swapdir
      * We assume that the header has been packed by now ..
      */
     dirn = storeDirSelectSwapDir(e);
+
     if (dirn == -1) {
-	debug(20, 2) ("storeCreate: no valid swapdirs for this object\n");
-	store_io_stats.create.select_fail++;
-	return NULL;
+        debug(20, 2) ("storeCreate: no valid swapdirs for this object\n");
+        store_io_stats.create.select_fail++;
+        return NULL;
     }
+
     debug(20, 2) ("storeCreate: Selected dir '%d' for obj size '%ld'\n", dirn, (long int) objsize);
     SD = INDEXSD(dirn);
 
     /* Now that we have a fs to use, call its storeCreate function */
     StoreIOState::Pointer sio = SD->createStoreIO(*e, file_callback, close_callback, callback_data);
+
     if (sio == NULL)
-	store_io_stats.create.create_fail++;
+        store_io_stats.create.create_fail++;
     else
-	store_io_stats.create.success++;
+        store_io_stats.create.success++;
+
     return sio;
 }
 
@@ -61,7 +73,7 @@ storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, voi
  */
 StoreIOState::Pointer
 storeOpen(StoreEntry * e, STFNCB * file_callback, STIOCB * callback,
-    void *callback_data)
+          void *callback_data)
 {
     return INDEXSD(e->swap_dirn)->openStoreIO(*e, file_callback, callback, callback_data);
 }
@@ -70,8 +82,10 @@ void
 storeClose(StoreIOState::Pointer sio)
 {
     if (sio->flags.closing)
-	return;
+        return;
+
     sio->flags.closing = 1;
+
     sio->close();
 }
 

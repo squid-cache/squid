@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.3 2003/02/13 10:28:01 robertc Exp $
+ * $Id: DelayId.cc,v 1.4 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -65,18 +65,16 @@
 */
 
 DelayId::DelayId () : pool_ (0), compositeId(NULL)
-{
-}
+{}
 
-DelayId::DelayId (unsigned short aPool) : 
-pool_ (aPool), compositeId (NULL)
+DelayId::DelayId (unsigned short aPool) :
+        pool_ (aPool), compositeId (NULL)
 {
     debug (77,3)("DelayId::DelayId: Pool %du\n", aPool);
 }
 
 DelayId::~DelayId ()
-{
-}
+{}
 
 void
 DelayId::compositePosition(DelayIdComposite::Pointer newPosition)
@@ -99,7 +97,7 @@ DelayId::operator == (DelayId const &rhs) const
     return pool_ == rhs.pool_ && compositeId == rhs.compositeId;
 }
 
-DelayId::operator bool() const 
+DelayId::operator bool() const
 {
     return pool_ || compositeId.getRaw();
 }
@@ -113,24 +111,28 @@ DelayId::DelayClient(clientHttpRequest * http)
     r = http->request;
 
     if (r->client_addr.s_addr == INADDR_BROADCAST) {
-	debug(77, 2) ("delayClient: WARNING: Called with 'allones' address, ignoring\n");
-	return DelayId();
+        debug(77, 2) ("delayClient: WARNING: Called with 'allones' address, ignoring\n");
+        return DelayId();
     }
 
     ACLChecklist ch;
     ch.src_addr = r->client_addr;
     ch.my_addr = r->my_addr;
     ch.my_port = r->my_port;
+
     if (http->conn)
-	ch.conn(cbdataReference(http->conn));
+        ch.conn(cbdataReference(http->conn));
+
     ch.request = requestLink(r);
+
     for (pool = 0; pool < DelayPools::pools(); pool++)
-	if (DelayPools::delay_data[pool].theComposite().getRaw() &&
-	    aclCheckFast(DelayPools::delay_data[pool].access, &ch)) {
-	    DelayId result (pool + 1);
-	    result.compositePosition(DelayPools::delay_data[pool].theComposite()->id(ch.src_addr, r->auth_user_request));
-	    return result;
-	}
+        if (DelayPools::delay_data[pool].theComposite().getRaw() &&
+                aclCheckFast(DelayPools::delay_data[pool].access, &ch)) {
+            DelayId result (pool + 1);
+            result.compositePosition(DelayPools::delay_data[pool].theComposite()->id(ch.src_addr, r->auth_user_request));
+            return result;
+        }
+
     return DelayId();
 }
 
@@ -142,13 +144,16 @@ int
 DelayId::bytesWanted(int min, int max) const
 {
     /* unlimited */
+
     if (! (*this))
-	return XMAX(min, max);
-    
+        return XMAX(min, max);
+
     /* limited */
     int nbytes = XMAX(min, max);
+
     if (compositeId.getRaw())
-	nbytes = compositeId->bytesWanted(min, nbytes);
+        nbytes = compositeId->bytesWanted(min, nbytes);
+
     return nbytes;
 }
 
@@ -161,14 +166,15 @@ void
 DelayId::bytesIn(int qty)
 {
     if (! (*this))
-	return;
+        return;
 
     unsigned short tempPool = pool() - 1;
 
     assert (tempPool != 0xFFFF);
 
     if (compositeId.getRaw())
-	compositeId->bytesIn(qty);
+        compositeId->bytesIn(qty);
 }
+
 #endif
 

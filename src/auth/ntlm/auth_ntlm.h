@@ -18,19 +18,25 @@ typedef enum {
 } auth_state_t;                 /* connection level auth state */
 
 /* Generic */
-typedef struct {
+
+typedef struct
+{
     void *data;
     auth_user_request_t *auth_user_request;
     RH *handler;
-} authenticateStateData;
+}
 
-struct _ntlm_user {
+authenticateStateData;
+
+struct _ntlm_user
+{
     /* what username did this connection get? */
     char *username;
     dlink_list proxy_auth_list;
 };
 
-struct _ntlm_request {
+struct _ntlm_request
+{
     /* what negotiate string did the client use? */
     char *ntlmnegotiate;
     /* what challenge did we give the client? */
@@ -47,7 +53,8 @@ struct _ntlm_request {
     ConnStateData *conn;
 };
 
-struct _ntlm_helper_state_t {
+struct _ntlm_helper_state_t
+{
     char *challenge;		/* the challenge to use with this helper */
     int starve;			/* 0= normal operation. 1=don't hand out any more challenges */
     int challengeuses;		/* the number of times this challenge has been issued */
@@ -55,22 +62,28 @@ struct _ntlm_helper_state_t {
 };
 
 /* configuration runtime data */
-struct _auth_ntlm_config {
+
+struct _auth_ntlm_config
+{
     int authenticateChildren;
     wordlist *authenticate;
     int challengeuses;
     time_t challengelifetime;
 };
 
-struct ProxyAuthCachePointer : public hash_link {
+struct ProxyAuthCachePointer : public hash_link
+{
     dlink_node link;
     /* other hash entries that point to the same auth_user */
     auth_user_t *auth_user;
 };
 
 typedef struct _ntlm_user ntlm_user_t;
+
 typedef struct _ntlm_request ntlm_request_t;
+
 typedef struct _ntlm_helper_state_t ntlm_helper_state_t;
+
 typedef struct _auth_ntlm_config auth_ntlm_config;
 
 #endif

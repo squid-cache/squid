@@ -39,17 +39,22 @@
 #include "ACLChecklist.h"
 #include "ACLData.h"
 
-class IdentLookup : public ACLChecklist::AsyncState {
-  public:
+class IdentLookup : public ACLChecklist::AsyncState
+{
+
+public:
     static IdentLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
-  private:
+
+private:
     static IdentLookup instance_;
     static void LookupDone(const char *ident, void *data);
 };
 
-class ACLIdent : public ACL {
-  public:
+class ACLIdent : public ACL
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -58,16 +63,19 @@ class ACLIdent : public ACL {
     ACLIdent (ACLIdent const &old);
     ACLIdent & operator= (ACLIdent const &rhs);
     ~ACLIdent();
-    
+
     virtual char const *typeString() const;
     virtual squid_acl aclType() const { return ACL_DERIVED;}
+
     virtual void parse();
     virtual bool isProxyAuth() const {return true;}
+
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;
     virtual bool valid () const;
     virtual ACL *clone()const;
-  private:
+
+private:
     static MemPool *Pool;
     static Prototype UserRegistryProtoype;
     static ACLIdent UserRegistryEntry_;

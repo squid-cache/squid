@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.35 2003/01/23 00:37:24 robertc Exp $
+ * $Id: pconn.cc,v 1.36 2003/02/21 22:50:10 robertc Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -37,13 +37,15 @@
 #include "Store.h"
 #include "comm.h"
 
-struct _pconn {
+struct _pconn
+{
     hash_link hash;		/* must be first */
     int *fds;
     int nfds_alloc;
     int nfds;
     char buf[4096];
 };
+
 typedef struct _pconn pconn;
 
 #define PCONN_FDS_SZ	8	/* pconn set size, increase for better memcache hit rate */
@@ -55,8 +57,11 @@ static IOCB pconnRead;
 static PF pconnTimeout;
 static const char *pconnKey(const char *host, u_short port);
 static hash_table *table = NULL;
+
 static struct _pconn *pconnNew(const char *key);
+
 static void pconnDelete(struct _pconn *p);
+
 static void pconnRemoveFD(struct _pconn *p, int fd);
 static OBJH pconnHistDump;
 static MemPool *pconn_fds_pool = NULL;
@@ -73,7 +78,7 @@ pconnKey(const char *host, u_short port)
 }
 
 static struct _pconn *
-pconnNew(const char *key)
+            pconnNew(const char *key)
 {
     pconn *p;
     CBDATA_INIT_TYPE(pconn);
@@ -87,37 +92,47 @@ pconnNew(const char *key)
 }
 
 static void
+
 pconnDelete(struct _pconn *p)
 {
     debug(48, 3) ("pconnDelete: deleting %s\n", hashKeyStr(&p->hash));
     hash_remove_link(table, (hash_link *) p);
+
     if (p->nfds_alloc == PCONN_FDS_SZ)
-	memPoolFree(pconn_fds_pool, p->fds);
+        memPoolFree(pconn_fds_pool, p->fds);
     else
-	xfree(p->fds);
+        xfree(p->fds);
+
     xfree(p->hash.key);
+
     cbdataFree(p);
 }
 
 static int
+
 pconnFindFDIndex (struct _pconn *p, int fd)
 {
     int result;
-    for (result = 0; result < p->nfds; ++result) {
-	if (p->fds[result] == fd)
-	    return result;
+
+    for (result = 0; result < p->nfds; ++result)
+    {
+        if (p->fds[result] == fd)
+            return result;
     }
+
     return p->nfds;
 }
 
 static void
+
 pconnRemoveFDByIndex (struct _pconn *p, int index)
 {
     for (; index < p->nfds - 1; index++)
-	p->fds[index] = p->fds[index + 1];
+        p->fds[index] = p->fds[index + 1];
 }
 
 static void
+
 pconnPreventHandingOutFD(struct _pconn *p, int fd)
 {
     int i = pconnFindFDIndex (p, fd);
@@ -127,16 +142,19 @@ pconnPreventHandingOutFD(struct _pconn *p, int fd)
 }
 
 static void
+
 pconnRemoveFD(struct _pconn *p, int fd)
 {
     pconnPreventHandingOutFD(p, fd);
+
     if (--p->nfds == 0)
-	pconnDelete(p);
+        pconnDelete(p);
 }
 
 static void
 pconnTimeout(int fd, void *data)
 {
+
     struct _pconn *p = (_pconn *)data;
     assert(table != NULL);
     debug(48, 3) ("pconnTimeout: FD %d %s\n", fd, hashKeyStr(&p->hash));
@@ -147,15 +165,17 @@ pconnTimeout(int fd, void *data)
 static void
 pconnRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
+
     struct _pconn *p = (_pconn *)data;
     assert(table != NULL);
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+
     if (flag == COMM_ERR_CLOSING) {
-	return;
+        return;
     }
 
     debug(48, 3) ("pconnRead: %d bytes from FD %d, %s\n", (int) len, fd,
-	hashKeyStr(&p->hash));
+                  hashKeyStr(&p->hash));
     pconnRemoveFD(p, fd);
     comm_close(fd);
 }
@@ -165,27 +185,32 @@ pconnHistDump(StoreEntry * e)
 {
     int i;
     storeAppendPrintf(e,
-	"Client-side persistent connection counts:\n"
-	"\n"
-	"\treq/\n"
-	"\tconn      count\n"
-	"\t----  ---------\n");
+                      "Client-side persistent connection counts:\n"
+                      "\n"
+                      "\treq/\n"
+                      "\tconn      count\n"
+                      "\t----  ---------\n");
+
     for (i = 0; i < PCONN_HIST_SZ; i++) {
-	if (client_pconn_hist[i] == 0)
-	    continue;
-	storeAppendPrintf(e, "\t%4d  %9d\n", i, client_pconn_hist[i]);
+        if (client_pconn_hist[i] == 0)
+            continue;
+
+        storeAppendPrintf(e, "\t%4d  %9d\n", i, client_pconn_hist[i]);
     }
+
     storeAppendPrintf(e,
-	"\n"
-	"Server-side persistent connection counts:\n"
-	"\n"
-	"\treq/\n"
-	"\tconn      count\n"
-	"\t----  ---------\n");
+                      "\n"
+                      "Server-side persistent connection counts:\n"
+                      "\n"
+                      "\treq/\n"
+                      "\tconn      count\n"
+                      "\t----  ---------\n");
+
     for (i = 0; i < PCONN_HIST_SZ; i++) {
-	if (server_pconn_hist[i] == 0)
-	    continue;
-	storeAppendPrintf(e, "\t%4d  %9d\n", i, server_pconn_hist[i]);
+        if (server_pconn_hist[i] == 0)
+            continue;
+
+        storeAppendPrintf(e, "\t%4d  %9d\n", i, server_pconn_hist[i]);
     }
 }
 
@@ -198,49 +223,59 @@ pconnInit(void)
     int i;
     assert(table == NULL);
     table = hash_create((HASHCMP *) strcmp, 229, hash_string);
+
     for (i = 0; i < PCONN_HIST_SZ; i++) {
-	client_pconn_hist[i] = 0;
-	server_pconn_hist[i] = 0;
+        client_pconn_hist[i] = 0;
+        server_pconn_hist[i] = 0;
     }
+
     pconn_fds_pool = memPoolCreate("pconn_fds", PCONN_FDS_SZ * sizeof(int));
 
     cachemgrRegister("pconn",
-	"Persistent Connection Utilization Histograms",
-	pconnHistDump, 0, 1);
+                     "Persistent Connection Utilization Histograms",
+                     pconnHistDump, 0, 1);
     debug(48, 3) ("persistent connection module initialized\n");
 }
 
 void
 pconnPush(int fd, const char *host, u_short port)
 {
+
     struct _pconn *p;
     int *old;
     LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     LOCAL_ARRAY(char, desc, FD_DESC_SZ);
+
     if (fdNFree() < (RESERVED_FD << 1)) {
-	debug(48, 3) ("pconnPush: Not many unused FDs\n");
-	comm_close(fd);
-	return;
+        debug(48, 3) ("pconnPush: Not many unused FDs\n");
+        comm_close(fd);
+        return;
     } else if (shutting_down) {
-	comm_close(fd);
-	return;
+        comm_close(fd);
+        return;
     }
+
     assert(table != NULL);
     strcpy(key, pconnKey(host, port));
+
     p = (struct _pconn *) hash_lookup(table, key);
+
     if (p == NULL)
-	p = pconnNew(key);
+        p = pconnNew(key);
+
     if (p->nfds == p->nfds_alloc) {
-	debug(48, 3) ("pconnPush: growing FD array\n");
-	p->nfds_alloc <<= 1;
-	old = p->fds;
-	p->fds = (int *)xmalloc(p->nfds_alloc * sizeof(int));
-	xmemcpy(p->fds, old, p->nfds * sizeof(int));
-	if (p->nfds == PCONN_FDS_SZ)
-	    memPoolFree(pconn_fds_pool, old);
-	else
-	    xfree(old);
+        debug(48, 3) ("pconnPush: growing FD array\n");
+        p->nfds_alloc <<= 1;
+        old = p->fds;
+        p->fds = (int *)xmalloc(p->nfds_alloc * sizeof(int));
+        xmemcpy(p->fds, old, p->nfds * sizeof(int));
+
+        if (p->nfds == PCONN_FDS_SZ)
+            memPoolFree(pconn_fds_pool, old);
+        else
+            xfree(old);
     }
+
     p->fds[p->nfds++] = fd;
     comm_read(fd, p->buf, BUFSIZ, pconnRead, p);
     commSetTimeout(fd, Config.Timeout.pconn, pconnTimeout, p);
@@ -262,6 +297,7 @@ pconnPush(int fd, const char *host, u_short port)
 int
 pconnPop(const char *host, u_short port)
 {
+
     struct _pconn *p;
     hash_link *hptr;
     int fd = -1;
@@ -269,20 +305,25 @@ pconnPop(const char *host, u_short port)
     assert(table != NULL);
     strcpy(key, pconnKey(host, port));
     hptr = (hash_link *)hash_lookup(table, key);
+
     if (hptr != NULL) {
-	p = (struct _pconn *) hptr;
-	assert(p->nfds > 0);
-	for (int i = 0; i < p->nfds; i++) {
-	    fd = p->fds[0];
-	    /* If there are pending read callbacks - we're about to close it, so don't issue it! */
-	    if (!comm_has_pending_read_callback(fd)) {
-		pconnRemoveFD(p, fd);
-		comm_read_cancel(fd, pconnRead, p);
-		commSetTimeout(fd, -1, NULL, NULL);
-		return fd;
-	    }
-	}
+
+        p = (struct _pconn *) hptr;
+        assert(p->nfds > 0);
+
+        for (int i = 0; i < p->nfds; i++) {
+            fd = p->fds[0];
+            /* If there are pending read callbacks - we're about to close it, so don't issue it! */
+
+            if (!comm_has_pending_read_callback(fd)) {
+                pconnRemoveFD(p, fd);
+                comm_read_cancel(fd, pconnRead, p);
+                commSetTimeout(fd, -1, NULL, NULL);
+                return fd;
+            }
+        }
     }
+
     /* Nothing (valid!) found */
     return fd;
 }
@@ -291,12 +332,13 @@ void
 pconnHistCount(int what, int i)
 {
     if (i >= PCONN_HIST_SZ)
-	i = PCONN_HIST_SZ - 1;
+        i = PCONN_HIST_SZ - 1;
+
     /* what == 0 for client, 1 for server */
     if (what == 0)
-	client_pconn_hist[i]++;
+        client_pconn_hist[i]++;
     else if (what == 1)
-	server_pconn_hist[i]++;
+        server_pconn_hist[i]++;
     else
-	assert(0);
+        assert(0);
 }

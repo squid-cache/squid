@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACL.h,v 1.1 2003/02/13 08:07:47 robertc Exp $
+ * $Id: ExternalACL.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,12 +36,17 @@
 #ifndef SQUID_EXTERNALACL_H
 #define SQUID_EXTERNALACL_H
 #include "ACLChecklist.h"
-class ExternalACLLookup : public ACLChecklist::AsyncState {
-  public:
+
+class ExternalACLLookup : public ACLChecklist::AsyncState
+{
+
+public:
     static ExternalACLLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
-  private:
+
+private:
     static ExternalACLLookup instance_;
     static void LookupDone(void *data, void *result);
 };
+
 #endif /* SQUID_EXTERNALACL_H */

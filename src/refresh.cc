@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.59 2003/01/23 00:37:25 robertc Exp $
+ * $Id: refresh.cc,v 1.60 2003/02/21 22:50:10 robertc Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -54,12 +54,21 @@ typedef enum {
     rcCount
 } refreshCountsEnum;
 
-typedef struct {
-    unsigned int expires:1;
-    unsigned int min:1;
-    unsigned int lmfactor:1;
+typedef struct
+{
+
+unsigned int expires:
+    1;
+
+unsigned int min:
+    1;
+
+unsigned int lmfactor:
+    1;
     unsigned int max;
-} stale_flags;
+}
+
+stale_flags;
 
 /*
  * This enumerated list assigns specific values, ala HTTP/FTP status
@@ -85,11 +94,14 @@ enum {
     STALE_DEFAULT = 299
 };
 
-static struct RefreshCounts {
+static struct RefreshCounts
+{
     const char *proto;
     int total;
     int status[STALE_DEFAULT + 1];
-} refreshCounts[rcCount];
+}
+
+refreshCounts[rcCount];
 
 /*
  * Defaults:
@@ -112,10 +124,12 @@ static const refresh_t *
 refreshLimits(const char *url)
 {
     const refresh_t *R;
+
     for (R = Config.Refresh; R; R = R->next) {
-	if (!regexec(&(R->compiled_pattern), url, 0, 0, 0))
-	    return R;
+        if (!regexec(&(R->compiled_pattern), url, 0, 0, 0))
+            return R;
     }
+
     return NULL;
 }
 
@@ -123,10 +137,12 @@ static const refresh_t *
 refreshUncompiledPattern(const char *pat)
 {
     const refresh_t *R;
+
     for (R = Config.Refresh; R; R = R->next) {
-	if (0 == strcmp(R->pattern, pat))
-	    return R;
+        if (0 == strcmp(R->pattern, pat))
+            return R;
     }
+
     return NULL;
 }
 
@@ -150,57 +166,65 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
     /*
      * Check for an explicit expiration time.
      */
+
     if (entry->expires > -1) {
-	sf->expires = 1;
-	if (entry->expires > check_time) {
-	    debug(22, 3) ("FRESH: expires %d >= check_time %d \n",
-		(int) entry->expires, (int) check_time);
-	    return -1;
-	} else {
-	    debug(22, 3) ("STALE: expires %d < check_time %d \n",
-		(int) entry->expires, (int) check_time);
-	    return (check_time - entry->expires);
-	}
+        sf->expires = 1;
+
+        if (entry->expires > check_time) {
+            debug(22, 3) ("FRESH: expires %d >= check_time %d \n",
+                          (int) entry->expires, (int) check_time);
+            return -1;
+        } else {
+            debug(22, 3) ("STALE: expires %d < check_time %d \n",
+                          (int) entry->expires, (int) check_time);
+            return (check_time - entry->expires);
+        }
     }
+
     assert(age >= 0);
     /*
      * Use local heuristics to determine staleness.  Start with the
      * max age from the refresh_pattern rule.
      */
+
     if (age > R->max) {
-	debug(22, 3) ("STALE: age %d > max %d \n", (int) age, (int) R->max);
-	sf->max = 1;
-	return (age - R->max);
+        debug(22, 3) ("STALE: age %d > max %d \n", (int) age, (int) R->max);
+        sf->max = 1;
+        return (age - R->max);
     }
+
     /*
      * Try the last-modified factor algorithm.
      */
     if (entry->lastmod > -1 && entry->timestamp > entry->lastmod) {
-	/*
-	 * stale_age is the Age of the response when it became/becomes
-	 * stale according to the last-modified factor algorithm.
-	 */
-	time_t stale_age = static_cast<time_t>((entry->timestamp - entry->lastmod) * R->pct);
-	sf->lmfactor = 1;
-	if (age >= stale_age) {
-	    debug(22, 3) ("STALE: age %d > stale_age %d\n",
-		(int) age, (int) stale_age);
-	    return (age - stale_age);
-	} else {
-	    debug(22, 3) ("FRESH: age %d <= stale_age %d\n",
-		(int) age, (int) stale_age);
-	    return -1;
-	}
+        /*
+         * stale_age is the Age of the response when it became/becomes
+         * stale according to the last-modified factor algorithm.
+         */
+        time_t stale_age = static_cast<time_t>((entry->timestamp - entry->lastmod) * R->pct);
+        sf->lmfactor = 1;
+
+        if (age >= stale_age) {
+            debug(22, 3) ("STALE: age %d > stale_age %d\n",
+                          (int) age, (int) stale_age);
+            return (age - stale_age);
+        } else {
+            debug(22, 3) ("FRESH: age %d <= stale_age %d\n",
+                          (int) age, (int) stale_age);
+            return -1;
+        }
     }
+
     /*
      * If we are here, staleness is determined by the refresh_pattern
      * configured minimum age.
      */
     if (age <= R->min) {
-	debug(22, 3) ("FRESH: age %d <= min %d\n", (int) age, (int) R->min);
-	sf->min = 1;
-	return -1;
+        debug(22, 3) ("FRESH: age %d <= min %d\n", (int) age, (int) R->min);
+        sf->min = 1;
+        return -1;
     }
+
     debug(22, 3) ("STALE: age %d > min %d\n", (int) age, (int) R->min);
     return (age - R->min);
 }
@@ -219,116 +243,143 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
     time_t check_time = squid_curtime + delta;
     int staleness;
     stale_flags sf;
+
     if (entry->mem_obj)
-	uri = entry->mem_obj->url;
+        uri = entry->mem_obj->url;
     else if (request)
-	uri = urlCanonical(request);
+        uri = urlCanonical(request);
 
     debug(22, 3) ("refreshCheck: '%s'\n", uri ? uri : "<none>");
 
     if (check_time > entry->timestamp)
-	age = check_time - entry->timestamp;
+        age = check_time - entry->timestamp;
+
     R = uri ? refreshLimits(uri) : refreshUncompiledPattern(".");
+
     if (NULL == R)
-	R = &DefaultRefresh;
+        R = &DefaultRefresh;
+
     memset(&sf, '\0', sizeof(sf));
+
     staleness = refreshStaleness(entry, check_time, age, R, &sf);
+
     debug(22, 3) ("Staleness = %d\n", staleness);
 
     debug(22, 3) ("refreshCheck: Matched '%s %d %d%% %d'\n",
-	R->pattern, (int) R->min, (int) (100.0 * R->pct), (int) R->max);
+                  R->pattern, (int) R->min, (int) (100.0 * R->pct), (int) R->max);
+
     debug(22, 3) ("refreshCheck: age = %d\n", (int) age);
+
     debug(22, 3) ("\tcheck_time:\t%s\n", mkrfc1123(check_time));
+
     debug(22, 3) ("\tentry->timestamp:\t%s\n", mkrfc1123(entry->timestamp));
 
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1) {
-	debug(22, 3) ("refreshCheck: YES: Must revalidate stale response\n");
-	return STALE_MUST_REVALIDATE;
+        debug(22, 3) ("refreshCheck: YES: Must revalidate stale response\n");
+        return STALE_MUST_REVALIDATE;
     }
+
     /* request-specific checks */
     if (request) {
-	HttpHdrCc *cc = request->cache_control;
+        HttpHdrCc *cc = request->cache_control;
 #if HTTP_VIOLATIONS
-	if (!request->flags.nocache_hack) {
-	    (void) 0;
-	} else if (R->flags.ignore_reload) {
-	    /* The clients no-cache header is ignored */
-	    debug(22, 3) ("refreshCheck: MAYBE: ignore-reload\n");
-	} else if (R->flags.reload_into_ims || Config.onoff.reload_into_ims) {
-	    /* The clients no-cache header is changed into a IMS query */
-	    debug(22, 3) ("refreshCheck: YES: reload-into-ims\n");
-	    return STALE_RELOAD_INTO_IMS;
-	} else {
-	    /* The clients no-cache header is not overridden on this request */
-	    debug(22, 3) ("refreshCheck: YES: client reload\n");
-	    request->flags.nocache = 1;
-	    return STALE_FORCED_RELOAD;
-	}
+
+        if (!request->flags.nocache_hack) {
+            (void) 0;
+        } else if (R->flags.ignore_reload) {
+            /* The clients no-cache header is ignored */
+            debug(22, 3) ("refreshCheck: MAYBE: ignore-reload\n");
+        } else if (R->flags.reload_into_ims || Config.onoff.reload_into_ims) {
+            /* The clients no-cache header is changed into a IMS query */
+            debug(22, 3) ("refreshCheck: YES: reload-into-ims\n");
+            return STALE_RELOAD_INTO_IMS;
+        } else {
+            /* The clients no-cache header is not overridden on this request */
+            debug(22, 3) ("refreshCheck: YES: client reload\n");
+            request->flags.nocache = 1;
+            return STALE_FORCED_RELOAD;
+        }
+
 #endif
-	if (NULL != cc) {
-	    if (cc->max_age > -1) {
+        if (NULL != cc) {
+            if (cc->max_age > -1) {
 #if HTTP_VIOLATIONS
-		if (R->flags.ignore_reload && cc->max_age == 0) {
-		} else
+                if (R->flags.ignore_reload && cc->max_age == 0) {} else
 #endif
-		  {
+                {
 #if 0
-		    if (cc->max_age == 0) {
-			debug (22,3) ("refreshCheck: YES: client-max-age = 0\n");
-			return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
-		    }
+
+                    if (cc->max_age == 0) {
+                        debug (22,3) ("refreshCheck: YES: client-max-age = 0\n");
+                        return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
+                    }
+
 #endif
-		if (age > cc->max_age) {
-		    debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");
-		    return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
-		}
-		  }
-	    }
-	    if (EBIT_TEST(cc->mask, CC_MAX_STALE) && staleness > -1) {
-		if (cc->max_stale < 0) {
-		    /* max-stale directive without a value */
-		    debug(22, 3) ("refreshCheck: NO: max-stale wildcard\n");
-		    return FRESH_REQUEST_MAX_STALE_ALL;
-		} else if (staleness < cc->max_stale) {
-		    debug(22, 3) ("refreshCheck: NO: staleness < max-stale\n");
-		    return FRESH_REQUEST_MAX_STALE_VALUE;
-		}
-	    }
-	}
+                    if (age > cc->max_age) {
+                        debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");
+                        return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
+                    }
+                }
+            }
+
+            if (EBIT_TEST(cc->mask, CC_MAX_STALE) && staleness > -1) {
+                if (cc->max_stale < 0) {
+                    /* max-stale directive without a value */
+                    debug(22, 3) ("refreshCheck: NO: max-stale wildcard\n");
+                    return FRESH_REQUEST_MAX_STALE_ALL;
+                } else if (staleness < cc->max_stale) {
+                    debug(22, 3) ("refreshCheck: NO: staleness < max-stale\n");
+                    return FRESH_REQUEST_MAX_STALE_VALUE;
+                }
+            }
+        }
     }
+
     if (-1 == staleness) {
-	if (sf.expires)
-	    return FRESH_EXPIRES;
-	assert(!sf.max);
-	if (sf.lmfactor)
-	    return FRESH_LMFACTOR_RULE;
-	assert(sf.min);
-	return FRESH_MIN_RULE;
+        if (sf.expires)
+            return FRESH_EXPIRES;
+
+        assert(!sf.max);
+
+        if (sf.lmfactor)
+            return FRESH_LMFACTOR_RULE;
+
+        assert(sf.min);
+
+        return FRESH_MIN_RULE;
     }
+
     /*
      * At this point the response is stale, unless one of
      * the override options kicks in.
      */
     if (sf.expires) {
 #if HTTP_VIOLATIONS
-	if (R->flags.override_expire && age < R->min) {
-	    debug(22, 3) ("refreshCheck: NO: age < min && override-expire\n");
-	    return FRESH_OVERRIDE_EXPIRES;
-	}
+
+        if (R->flags.override_expire && age < R->min) {
+            debug(22, 3) ("refreshCheck: NO: age < min && override-expire\n");
+            return FRESH_OVERRIDE_EXPIRES;
+        }
+
 #endif
-	return STALE_EXPIRES;
+        return STALE_EXPIRES;
     }
+
     if (sf.max)
-	return STALE_MAX_RULE;
+        return STALE_MAX_RULE;
+
     if (sf.lmfactor) {
 #if HTTP_VIOLATIONS
-	if (R->flags.override_lastmod && age < R->min) {
-	    debug(22, 3) ("refreshCheck: NO: age < min && override-lastmod\n");
-	    return FRESH_OVERRIDE_LASTMOD;
-	}
+
+        if (R->flags.override_lastmod && age < R->min) {
+            debug(22, 3) ("refreshCheck: NO: age < min && override-lastmod\n");
+            return FRESH_OVERRIDE_LASTMOD;
+        }
+
 #endif
-	return STALE_LMFACTOR_RULE;
+        return STALE_LMFACTOR_RULE;
     }
+
     return STALE_DEFAULT;
 }
 
@@ -344,21 +395,27 @@ refreshIsCachable(const StoreEntry * entry)
     int reason = refreshCheck(entry, NULL, 60);
     refreshCounts[rcStore].total++;
     refreshCounts[rcStore].status[reason]++;
+
     if (reason < 200)
-	/* Does not need refresh. This is certainly cachable */
-	return 1;
+        /* Does not need refresh. This is certainly cachable */
+        return 1;
+
     if (entry->lastmod < 0)
-	/* Last modified is needed to do a refresh */
-	return 0;
+        /* Last modified is needed to do a refresh */
+        return 0;
+
     if (entry->mem_obj == NULL)
-	/* no mem_obj? */
-	return 1;
+        /* no mem_obj? */
+        return 1;
+
     if (entry->getReply() == NULL)
-	/* no reply? */
-	return 1;
+        /* no reply? */
+        return 1;
+
     if (entry->getReply()->content_length == 0)
-	/* No use refreshing (caching?) 0 byte objects */
-	return 0;
+        /* No use refreshing (caching?) 0 byte objects */
+        return 0;
+
     /* This seems to be refreshable. Cache it */
     return 1;
 }
@@ -393,6 +450,7 @@ refreshCheckHTCP(const StoreEntry * entry, request_t * request)
     refreshCounts[rcHTCP].status[reason]++;
     return (reason < 200) ? 0 : 1;
 }
+
 #endif
 
 #if USE_CACHE_DIGESTS
@@ -400,12 +458,13 @@ int
 refreshCheckDigest(const StoreEntry * entry, time_t delta)
 {
     int reason = refreshCheck(entry,
-	entry->mem_obj ? entry->mem_obj->request : NULL,
-	delta);
+                              entry->mem_obj ? entry->mem_obj->request : NULL,
+                              delta);
     refreshCounts[rcCDigest].total++;
     refreshCounts[rcCDigest].status[reason]++;
     return (reason < 200) ? 0 : 1;
 }
+
 #endif
 
 time_t
@@ -413,13 +472,15 @@ getMaxAge(const char *url)
 {
     const refresh_t *R;
     debug(22, 3) ("getMaxAge: '%s'\n", url);
+
     if ((R = refreshLimits(url)))
-	return R->max;
+        return R->max;
     else
-	return REFRESH_DEFAULT_MAX;
+        return REFRESH_DEFAULT_MAX;
 }
 
 static void
+
 refreshCountsStats(StoreEntry * sentry, struct RefreshCounts *rc)
 {
     int sum = 0;
@@ -435,41 +496,41 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts *rc)
 }
 
     refreshCountsStatsEntry(FRESH_REQUEST_MAX_STALE_ALL,
-	"Fresh: request max-stale wildcard");
+                            "Fresh: request max-stale wildcard");
     refreshCountsStatsEntry(FRESH_REQUEST_MAX_STALE_VALUE,
-	"Fresh: request max-stale value");
+                            "Fresh: request max-stale value");
     refreshCountsStatsEntry(FRESH_EXPIRES,
-	"Fresh: expires time not reached");
+                            "Fresh: expires time not reached");
     refreshCountsStatsEntry(FRESH_LMFACTOR_RULE,
-	"Fresh: refresh_pattern last-mod factor percentage");
+                            "Fresh: refresh_pattern last-mod factor percentage");
     refreshCountsStatsEntry(FRESH_MIN_RULE,
-	"Fresh: refresh_pattern min value");
+                            "Fresh: refresh_pattern min value");
     refreshCountsStatsEntry(FRESH_OVERRIDE_EXPIRES,
-	"Fresh: refresh_pattern override expires");
+                            "Fresh: refresh_pattern override expires");
     refreshCountsStatsEntry(FRESH_OVERRIDE_LASTMOD,
-	"Fresh: refresh_pattern override lastmod");
+                            "Fresh: refresh_pattern override lastmod");
     refreshCountsStatsEntry(STALE_MUST_REVALIDATE,
-	"Stale: response has must-revalidate");
+                            "Stale: response has must-revalidate");
     refreshCountsStatsEntry(STALE_RELOAD_INTO_IMS,
-	"Stale: changed reload into IMS");
+                            "Stale: changed reload into IMS");
     refreshCountsStatsEntry(STALE_FORCED_RELOAD,
-	"Stale: request has no-cache directive");
+                            "Stale: request has no-cache directive");
     refreshCountsStatsEntry(STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE,
-	"Stale: age exceeds request max-age value");
+                            "Stale: age exceeds request max-age value");
     refreshCountsStatsEntry(STALE_EXPIRES,
-	"Stale: expires time reached");
+                            "Stale: expires time reached");
     refreshCountsStatsEntry(STALE_MAX_RULE,
-	"Stale: refresh_pattern max age rule");
+                            "Stale: refresh_pattern max age rule");
     refreshCountsStatsEntry(STALE_LMFACTOR_RULE,
-	"Stale: refresh_pattern last-mod factor percentage");
+                            "Stale: refresh_pattern last-mod factor percentage");
     refreshCountsStatsEntry(STALE_DEFAULT,
-	"Stale: by default");
+                            "Stale: by default");
 
     tot = sum;			/* paranoid: "total" line shows 100% if we forgot nothing */
     storeAppendPrintf(sentry, "%6d\t%6.2f\tTOTAL\n",
-	rc->total, xpercent(rc->total, tot));
+                      rc->total, xpercent(rc->total, tot));
     \
-	storeAppendPrintf(sentry, "\n");
+    storeAppendPrintf(sentry, "\n");
 }
 
 static void
@@ -479,22 +540,26 @@ refreshStats(StoreEntry * sentry)
     int total = 0;
 
     /* get total usage count */
+
     for (i = 0; i < rcCount; ++i)
-	total += refreshCounts[i].total;
+        total += refreshCounts[i].total;
 
     /* protocol usage histogram */
     storeAppendPrintf(sentry, "\nRefreshCheck calls per protocol\n\n");
+
     storeAppendPrintf(sentry, "Protocol\t#Calls\t%%Calls\n");
+
     for (i = 0; i < rcCount; ++i)
-	storeAppendPrintf(sentry, "%10s\t%6d\t%6.2f\n",
-	    refreshCounts[i].proto,
-	    refreshCounts[i].total,
-	    xpercent(refreshCounts[i].total, total));
+        storeAppendPrintf(sentry, "%10s\t%6d\t%6.2f\n",
+                          refreshCounts[i].proto,
+                          refreshCounts[i].total,
+                          xpercent(refreshCounts[i].total, total));
 
     /* per protocol histograms */
     storeAppendPrintf(sentry, "\n\nRefreshCheck histograms for various protocols\n");
+
     for (i = 0; i < rcCount; ++i)
-	refreshCountsStats(sentry, &refreshCounts[i]);
+        refreshCountsStats(sentry, &refreshCounts[i]);
 }
 
 void
@@ -504,17 +569,21 @@ refreshInit(void)
     refreshCounts[rcHTTP].proto = "HTTP";
     refreshCounts[rcICP].proto = "ICP";
 #if USE_HTCP
+
     refreshCounts[rcHTCP].proto = "HTCP";
 #endif
+
     refreshCounts[rcStore].proto = "On Store";
 #if USE_CACHE_DIGESTS
+
     refreshCounts[rcCDigest].proto = "Cache Digests";
 #endif
+
     cachemgrRegister("refresh",
-	"Refresh Algorithm Statistics",
-	refreshStats,
-	0,
-	1);
+                     "Refresh Algorithm Statistics",
+                     refreshStats,
+                     0,
+                     1);
     memset(&DefaultRefresh, '\0', sizeof(DefaultRefresh));
     DefaultRefresh.pattern = "<none>";
     DefaultRefresh.min = REFRESH_DEFAULT_MIN;

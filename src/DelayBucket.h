@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayBucket.h,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelayBucket.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,15 +38,21 @@
 
 class DelaySpec;
 /* don't use remote storage for these */
-class DelayBucket {
+
+class DelayBucket
+{
+
 public:
     int const& level() const {return level_;}
+
     int & level() {return level_;}
+
     void stats(StoreEntry *)const;
     void update (DelaySpec const &, int incr);
     int bytesWanted (int min, int max) const;
     void bytesIn(int qty);
     void init (DelaySpec const &);
+
 private:
     int level_;
 };

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.184 2003/02/09 20:12:19 hno Exp $
+ * $Id: errorpage.cc,v 1.185 2003/02/21 22:50:08 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -50,10 +50,13 @@
 
 /* local types */
 
-typedef struct {
+typedef struct
+{
     int id;
     char *page_name;
-} ErrorDynamicPageInfo;
+}
+
+ErrorDynamicPageInfo;
 
 /* local constant and vars */
 
@@ -61,25 +64,29 @@ typedef struct {
  * note: hard coded error messages are not appended with %S automagically
  * to give you more control on the format
  */
-static const struct {
+
+static const struct
+{
     int type;			/* and page_id */
     const char *text;
-} error_hard_text[] = {
+}
 
-    {
-	ERR_SQUID_SIGNATURE,
-	    "\n<BR clear=\"all\">\n"
-	    "<HR noshade size=\"1px\">\n"
-	    "<ADDRESS>\n"
-	    "Generated %T by %h (%s)\n"
-	    "</ADDRESS>\n"
-	    "</BODY></HTML>\n"
-    },
-    {
-	TCP_RESET,
-	    "reset"
-    }
-};
+error_hard_text[] = {
+
+                        {
+                            ERR_SQUID_SIGNATURE,
+                            "\n<BR clear=\"all\">\n"
+                            "<HR noshade size=\"1px\">\n"
+                            "<ADDRESS>\n"
+                            "Generated %T by %h (%s)\n"
+                            "</ADDRESS>\n"
+                            "</BODY></HTML>\n"
+                        },
+                        {
+                            TCP_RESET,
+                            "reset"
+                        }
+                    };
 
 static Vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 
@@ -106,7 +113,8 @@ err_type &operator++ (err_type &anErr)
     return anErr;
 }
 
-int operator - (err_type const &anErr, err_type const &anErr2) {
+int operator - (err_type const &anErr, err_type const &anErr2)
+{
     return (int)anErr - (int)anErr2;
 }
 
@@ -126,23 +134,26 @@ errorInitialize(void)
     const char *text;
     error_page_count = ERR_MAX + ErrorDynamicPages.size();
     error_text = static_cast<char **>(xcalloc(error_page_count, sizeof(char *)));
+
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
-	safe_free(error_text[i]);
-	/* hard-coded ? */
-	if ((text = errorFindHardText(i)))
-	    error_text[i] = xstrdup(text);
-	else if (i < ERR_MAX) {
-	    /* precompiled ? */
-	    error_text[i] = errorLoadText(err_type_str[i]);
-	} else {
-	    /* dynamic */
-	    ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i - ERR_MAX];
-	    assert(info && info->id == i && info->page_name);
-	    if (strchr(info->page_name, ':') == NULL) {
-		/* Not on redirected errors... */
-		error_text[i] = errorLoadText(info->page_name);
-	    }
-	}
+        safe_free(error_text[i]);
+        /* hard-coded ? */
+
+        if ((text = errorFindHardText(i)))
+            error_text[i] = xstrdup(text);
+        else if (i < ERR_MAX) {
+            /* precompiled ? */
+            error_text[i] = errorLoadText(err_type_str[i]);
+        } else {
+            /* dynamic */
+            ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i - ERR_MAX];
+            assert(info && info->id == i && info->page_name);
+
+            if (strchr(info->page_name, ':') == NULL) {
+                /* Not on redirected errors... */
+                error_text[i] = errorLoadText(info->page_name);
+            }
+        }
     }
 }
 
@@ -150,13 +161,17 @@ void
 errorClean(void)
 {
     if (error_text) {
-	int i;
-	for (i = ERR_NONE + 1; i < error_page_count; i++)
-	    safe_free(error_text[i]);
-	safe_free(error_text);
+        int i;
+
+        for (i = ERR_NONE + 1; i < error_page_count; i++)
+            safe_free(error_text[i]);
+
+        safe_free(error_text);
     }
+
     while (ErrorDynamicPages.size())
-	errorDynamicPageInfoDestroy(ErrorDynamicPages.pop_back());
+        errorDynamicPageInfoDestroy(ErrorDynamicPages.pop_back());
+
     error_page_count = 0;
 }
 
@@ -164,9 +179,11 @@ static const char *
 errorFindHardText(err_type type)
 {
     int i;
+
     for (i = 0; i < error_hard_text_count; i++)
-	if (error_hard_text[i].type == type)
-	    return error_hard_text[i].text;
+        if (error_hard_text[i].type == type)
+            return error_hard_text[i].text;
+
     return NULL;
 }
 
@@ -177,11 +194,14 @@ errorLoadText(const char *page_name)
     /* test configured location */
     char *text = errorTryLoadText(page_name, Config.errorDirectory);
     /* test default location if failed */
+
     if (!text && strcmp(Config.errorDirectory, DEFAULT_SQUID_ERROR_DIR))
-	text = errorTryLoadText(page_name, DEFAULT_SQUID_ERROR_DIR);
+        text = errorTryLoadText(page_name, DEFAULT_SQUID_ERROR_DIR);
+
     /* giving up if failed */
     if (!text)
-	fatal("failed to find or read error text file.");
+        fatal("failed to find or read error text file.");
+
     return text;
 }
 
@@ -199,29 +219,35 @@ errorTryLoadText(const char *page_name, const char *dir)
     fd = file_open(path, O_RDONLY | O_TEXT);
 
     if (fd < 0) {
-	debug(4, 0) ("errorTryLoadText: '%s': %s\n", path, xstrerror());
-	return NULL;
+        debug(4, 0) ("errorTryLoadText: '%s': %s\n", path, xstrerror());
+        return NULL;
     }
+
     memBufDefInit(&textbuf);
+
     while((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
-	memBufAppend(&textbuf, buf, len);
+        memBufAppend(&textbuf, buf, len);
     }
+
     if (len < 0) {
-	debug(4, 0) ("errorTryLoadText: failed to fully read: '%s': %s\n",
-	    path, xstrerror());
-	memBufClean(&textbuf);
-	text = NULL;
+        debug(4, 0) ("errorTryLoadText: failed to fully read: '%s': %s\n",
+                     path, xstrerror());
+        memBufClean(&textbuf);
+        text = NULL;
     }
+
     file_close(fd);
 
     if (strstr(textbuf.buf, "%s") == NULL)
-	memBufAppend(&textbuf, "%S", 2);	/* add signature */
+        memBufAppend(&textbuf, "%S", 2);	/* add signature */
 
     /* Shrink memory size down to exact size. MemBuf has a tencendy
      * to be rather large..
      */
     text = xstrdup(textbuf.buf);
+
     memBufClean(&textbuf);
+
     return text;
 }
 
@@ -246,13 +272,15 @@ static int
 errorPageId(const char *page_name)
 {
     for (int i = 0; i < ERR_MAX; i++) {
-	if (strcmp(err_type_str[i], page_name) == 0)
-	    return i;
+        if (strcmp(err_type_str[i], page_name) == 0)
+            return i;
     }
+
     for (size_t i = 0; i < ErrorDynamicPages.size(); i++) {
-	if (strcmp(ErrorDynamicPages.items[i]->page_name, page_name) == 0)
-	    return i + ERR_MAX;
+        if (strcmp(ErrorDynamicPages.items[i]->page_name, page_name) == 0)
+            return i + ERR_MAX;
     }
+
     return ERR_NONE;
 }
 
@@ -261,11 +289,13 @@ errorReservePageId(const char *page_name)
 {
     ErrorDynamicPageInfo *info;
     int id = errorPageId(page_name);
+
     if (id == ERR_NONE) {
-	info = errorDynamicPageInfoCreate(ERR_MAX + ErrorDynamicPages.size(), page_name);
-	ErrorDynamicPages.push_back(info);
-	id = info->id;
+        info = errorDynamicPageInfoCreate(ERR_MAX + ErrorDynamicPages.size(), page_name);
+        ErrorDynamicPages.push_back(info);
+        id = info->id;
     }
+
     return (err_type)id;
 }
 
@@ -273,9 +303,11 @@ static const char *
 errorPageName(int pageId)
 {
     if (pageId >= ERR_NONE && pageId < ERR_MAX)		/* common case */
-	return err_type_str[pageId];
+        return err_type_str[pageId];
+
     if (pageId >= ERR_MAX && pageId - ERR_MAX < (ssize_t)ErrorDynamicPages.size())
-	return ErrorDynamicPages.items[pageId - ERR_MAX]->page_name;
+        return ErrorDynamicPages.items[pageId - ERR_MAX]->page_name;
+
     return "ERR_UNKNOWN";	/* should not happen */
 }
 
@@ -316,23 +348,26 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     MemObject *mem = entry->mem_obj;
     assert(mem != NULL);
     assert (entry->isEmpty());
+
     if (entry->store_status != STORE_PENDING) {
-	/*
-	 * If the entry is not STORE_PENDING, then no clients
-	 * care about it, and we don't need to generate an
-	 * error message
-	 */
-	assert(EBIT_TEST(entry->flags, ENTRY_ABORTED));
-	assert(mem->nclients == 0);
-	errorStateFree(err);
-	return;
+        /*
+         * If the entry is not STORE_PENDING, then no clients
+         * care about it, and we don't need to generate an
+         * error message
+         */
+        assert(EBIT_TEST(entry->flags, ENTRY_ABORTED));
+        assert(mem->nclients == 0);
+        errorStateFree(err);
+        return;
     }
+
     if (err->page_id == TCP_RESET) {
-	if (err->request) {
-	    debug(4, 2) ("RSTing this reply\n");
-	    err->request->flags.setResetTCP();
-	}
+        if (err->request) {
+            debug(4, 2) ("RSTing this reply\n");
+            err->request->flags.setResetTCP();
+        }
     }
+
     storeLockObject(entry);
     storeBuffer(entry);
     rep = errorBuildReply(err);
@@ -381,12 +416,17 @@ errorSend(int fd, ErrorState * err)
      * ugh, this is how we make sure error codes get back to
      * the client side for logging and error tracking.
      */
+
     if (err->request)
-	err->request->errType = err->type;
+        err->request->errType = err->type;
+
     /* moved in front of errorBuildBuf @?@ */
     err->flags.flag_cbdata = 1;
+
     rep = errorBuildReply(err);
+
     comm_old_write_mbuf(fd, httpReplyPack(rep), errorSendComplete, err);
+
     httpReplyDestroy(rep);
 }
 
@@ -404,15 +444,17 @@ errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, voi
 {
     ErrorState *err = static_cast<ErrorState *>(data);
     debug(4, 3) ("errorSendComplete: FD %d, size=%ld\n", fd, (long int) size);
+
     if (errflag != COMM_ERR_CLOSING) {
-	if (err->callback) {
-	    debug(4, 3) ("errorSendComplete: callback\n");
-	    err->callback(fd, err->callback_data, size);
-	} else {
-	    comm_close(fd);
-	    debug(4, 3) ("errorSendComplete: comm_close\n");
-	}
+        if (err->callback) {
+            debug(4, 3) ("errorSendComplete: callback\n");
+            err->callback(fd, err->callback_data, size);
+        } else {
+            comm_close(fd);
+            debug(4, 3) ("errorSendComplete: comm_close\n");
+        }
     }
+
     errorStateFree(err);
 }
 
@@ -428,9 +470,12 @@ errorStateFree(ErrorState * err)
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
     safe_free(err->ftp.reply);
+
     if (err->auth_user_request)
-	authenticateAuthUserRequestUnlock(err->auth_user_request);
+        authenticateAuthUserRequestUnlock(err->auth_user_request);
+
     err->auth_user_request = NULL;
+
     cbdataFree(err);
 }
 
@@ -449,50 +494,61 @@ errorDump(ErrorState * err, MemBuf * mb)
     memBufPrintf(&str, "CacheHost: %s\r\n", getMyHostname());
     /* - Err Msgs */
     memBufPrintf(&str, "ErrPage: %s\r\n", errorPageName(err->type));
+
     if (err->xerrno) {
-	memBufPrintf(&str, "Err: (%d) %s\r\n", err->xerrno, strerror(err->xerrno));
+        memBufPrintf(&str, "Err: (%d) %s\r\n", err->xerrno, strerror(err->xerrno));
     } else {
-	memBufPrintf(&str, "Err: [none]\r\n");
+        memBufPrintf(&str, "Err: [none]\r\n");
     }
+
     if (authenticateAuthUserRequestMessage(err->auth_user_request)) {
-	memBufPrintf(&str, "extAuth ErrMsg: %s\r\n", authenticateAuthUserRequestMessage(err->auth_user_request));
+        memBufPrintf(&str, "extAuth ErrMsg: %s\r\n", authenticateAuthUserRequestMessage(err->auth_user_request));
     }
+
     if (err->dnsserver_msg) {
-	memBufPrintf(&str, "DNS Server ErrMsg: %s\r\n", err->dnsserver_msg);
+        memBufPrintf(&str, "DNS Server ErrMsg: %s\r\n", err->dnsserver_msg);
     }
+
     /* - TimeStamp */
     memBufPrintf(&str, "TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
+
     /* - IP stuff */
     memBufPrintf(&str, "ClientIP: %s\r\n", inet_ntoa(err->src_addr));
+
     if (err->host) {
-	memBufPrintf(&str, "ServerIP: %s\r\n", err->host);
+        memBufPrintf(&str, "ServerIP: %s\r\n", err->host);
     }
+
     memBufPrintf(&str, "\r\n");
     /* - HTTP stuff */
     memBufPrintf(&str, "HTTP Request:\r\n");
+
     if (NULL != r) {
-	Packer p;
-	memBufPrintf(&str, "%s %s HTTP/%d.%d\n",
-	    RequestMethodStr[r->method],
-	    r->urlpath.size() ? r->urlpath.buf() : "/",
-	    r->http_ver.major, r->http_ver.minor);
-	packerToMemInit(&p, &str);
-	httpHeaderPackInto(&r->header, &p);
-	packerClean(&p);
+        Packer p;
+        memBufPrintf(&str, "%s %s HTTP/%d.%d\n",
+                     RequestMethodStr[r->method],
+                     r->urlpath.size() ? r->urlpath.buf() : "/",
+                     r->http_ver.major, r->http_ver.minor);
+        packerToMemInit(&p, &str);
+        httpHeaderPackInto(&r->header, &p);
+        packerClean(&p);
     } else if (err->request_hdrs) {
-	p = err->request_hdrs;
+        p = err->request_hdrs;
     } else {
-	p = "[none]";
+        p = "[none]";
     }
+
     memBufPrintf(&str, "\r\n");
     /* - FTP stuff */
+
     if (err->ftp.request) {
-	memBufPrintf(&str, "FTP Request: %s\r\n", err->ftp.request);
-	memBufPrintf(&str, "FTP Reply: %s\r\n", err->ftp.reply);
-	memBufPrintf(&str, "FTP Msg: ");
-	wordlistCat(err->ftp.server_msg, &str);
-	memBufPrintf(&str, "\r\n");
+        memBufPrintf(&str, "FTP Request: %s\r\n", err->ftp.request);
+        memBufPrintf(&str, "FTP Reply: %s\r\n", err->ftp.reply);
+        memBufPrintf(&str, "FTP Msg: ");
+        wordlistCat(err->ftp.server_msg, &str);
+        memBufPrintf(&str, "\r\n");
     }
+
     memBufPrintf(&str, "\r\n");
     memBufPrintf(mb, "&body=%s", rfc1738_escape_part(str.buf));
     memBufClean(&str);
@@ -540,154 +596,211 @@ errorConvert(char token, ErrorState * err)
     int do_quote = 1;
 
     memBufReset(&mb);
+
     switch (token) {
+
     case 'B':
-	p = r ? ftpUrlWith2f(r) : "[no URL]";
-	break;
+        p = r ? ftpUrlWith2f(r) : "[no URL]";
+        break;
+
     case 'c':
-	p = errorPageName(err->type);
-	break;
+        p = errorPageName(err->type);
+        break;
+
     case 'e':
-	memBufPrintf(&mb, "%d", err->xerrno);
-	break;
+        memBufPrintf(&mb, "%d", err->xerrno);
+        break;
+
     case 'E':
-	if (err->xerrno)
-	    memBufPrintf(&mb, "(%d) %s", err->xerrno, strerror(err->xerrno));
-	else
-	    memBufPrintf(&mb, "[No Error]");
-	break;
+
+        if (err->xerrno)
+            memBufPrintf(&mb, "(%d) %s", err->xerrno, strerror(err->xerrno));
+        else
+            memBufPrintf(&mb, "[No Error]");
+
+        break;
+
     case 'f':
-	/* FTP REQUEST LINE */
-	if (err->ftp.request)
-	    p = err->ftp.request;
-	else
-	    p = "nothing";
-	break;
+        /* FTP REQUEST LINE */
+        if (err->ftp.request)
+            p = err->ftp.request;
+        else
+            p = "nothing";
+
+        break;
+
     case 'F':
-	/* FTP REPLY LINE */
-	if (err->ftp.request)
-	    p = err->ftp.reply;
-	else
-	    p = "nothing";
-	break;
+        /* FTP REPLY LINE */
+        if (err->ftp.request)
+            p = err->ftp.reply;
+        else
+            p = "nothing";
+
+        break;
+
     case 'g':
-	/* FTP SERVER MESSAGE */
-	wordlistCat(err->ftp.server_msg, &mb);
-	break;
+        /* FTP SERVER MESSAGE */
+        wordlistCat(err->ftp.server_msg, &mb);
+
+        break;
+
     case 'h':
-	memBufPrintf(&mb, "%s", getMyHostname());
-	break;
+        memBufPrintf(&mb, "%s", getMyHostname());
+
+        break;
+
     case 'H':
-	p = r ? r->host : "[unknown host]";
-	break;
+        p = r ? r->host : "[unknown host]";
+
+        break;
+
     case 'i':
-	memBufPrintf(&mb, "%s", inet_ntoa(err->src_addr));
-	break;
+        memBufPrintf(&mb, "%s", inet_ntoa(err->src_addr));
+
+        break;
+
     case 'I':
-	if (err->host) {
-	    memBufPrintf(&mb, "%s", err->host);
-	} else
-	    p = "[unknown]";
-	break;
+        if (err->host) {
+            memBufPrintf(&mb, "%s", err->host);
+        } else
+            p = "[unknown]";
+
+        break;
+
     case 'L':
-	if (Config.errHtmlText) {
-	    memBufPrintf(&mb, "%s", Config.errHtmlText);
-	    do_quote = 0;
-	} else
-	    p = "[not available]";
-	break;
+        if (Config.errHtmlText) {
+            memBufPrintf(&mb, "%s", Config.errHtmlText);
+            do_quote = 0;
+        } else
+            p = "[not available]";
+
+        break;
+
     case 'm':
-	p = authenticateAuthUserRequestMessage(err->auth_user_request) ? authenticateAuthUserRequestMessage(err->auth_user_request) : "[not available]";
-	break;
+        p = authenticateAuthUserRequestMessage(err->auth_user_request) ? authenticateAuthUserRequestMessage(err->auth_user_request) : "[not available]";
+
+        break;
+
     case 'M':
-	p = r ? RequestMethodStr[r->method] : "[unkown method]";
-	break;
+        p = r ? RequestMethodStr[r->method] : "[unkown method]";
+
+        break;
+
     case 'p':
-	if (r) {
-	    memBufPrintf(&mb, "%d", (int) r->port);
-	} else {
-	    p = "[unknown port]";
-	}
-	break;
+        if (r) {
+            memBufPrintf(&mb, "%d", (int) r->port);
+        } else {
+            p = "[unknown port]";
+        }
+
+        break;
+
     case 'P':
-	p = r ? ProtocolStr[r->protocol] : "[unkown protocol]";
-	break;
+        p = r ? ProtocolStr[r->protocol] : "[unkown protocol]";
+        break;
+
     case 'R':
-	if (NULL != r) {
-	    Packer p;
-	    memBufPrintf(&mb, "%s %s HTTP/%d.%d\n",
-		RequestMethodStr[r->method],
-		r->urlpath.size() ? r->urlpath.buf() : "/",
-		r->http_ver.major, r->http_ver.minor);
-	    packerToMemInit(&p, &mb);
-	    httpHeaderPackInto(&r->header, &p);
-	    packerClean(&p);
-	} else if (err->request_hdrs) {
-	    p = err->request_hdrs;
-	} else {
-	    p = "[no request]";
-	}
-	break;
+
+        if (NULL != r) {
+            Packer p;
+            memBufPrintf(&mb, "%s %s HTTP/%d.%d\n",
+                         RequestMethodStr[r->method],
+                         r->urlpath.size() ? r->urlpath.buf() : "/",
+                         r->http_ver.major, r->http_ver.minor);
+            packerToMemInit(&p, &mb);
+            httpHeaderPackInto(&r->header, &p);
+            packerClean(&p);
+        } else if (err->request_hdrs) {
+            p = err->request_hdrs;
+        } else {
+            p = "[no request]";
+        }
+
+        break;
+
     case 's':
-	p = full_appname_string;
-	break;
+        p = full_appname_string;
+        break;
+
     case 'S':
-	/* signature may contain %-escapes, recursion */
-	if (err->page_id != ERR_SQUID_SIGNATURE) {
-	    const int saved_id = err->page_id;
-	    MemBuf sign_mb;
-	    err->page_id = ERR_SQUID_SIGNATURE;
-	    sign_mb = errorBuildContent(err);
-	    memBufPrintf(&mb, "%s", sign_mb.buf);
-	    memBufClean(&sign_mb);
-	    err->page_id = saved_id;
-	    do_quote = 0;
-	} else {
-	    /* wow, somebody put %S into ERR_SIGNATURE, stop recursion */
-	    p = "[%S]";
-	}
-	break;
+        /* signature may contain %-escapes, recursion */
+
+        if (err->page_id != ERR_SQUID_SIGNATURE) {
+            const int saved_id = err->page_id;
+            MemBuf sign_mb;
+            err->page_id = ERR_SQUID_SIGNATURE;
+            sign_mb = errorBuildContent(err);
+            memBufPrintf(&mb, "%s", sign_mb.buf);
+            memBufClean(&sign_mb);
+            err->page_id = saved_id;
+            do_quote = 0;
+        } else {
+            /* wow, somebody put %S into ERR_SIGNATURE, stop recursion */
+            p = "[%S]";
+        }
+
+        break;
+
     case 't':
-	memBufPrintf(&mb, "%s", mkhttpdlogtime(&squid_curtime));
-	break;
+        memBufPrintf(&mb, "%s", mkhttpdlogtime(&squid_curtime));
+        break;
+
     case 'T':
-	memBufPrintf(&mb, "%s", mkrfc1123(squid_curtime));
-	break;
+        memBufPrintf(&mb, "%s", mkrfc1123(squid_curtime));
+        break;
+
     case 'U':
-	p = r ? urlCanonicalClean(r) : err->url ? err->url : "[no URL]";
-	break;
+        p = r ? urlCanonicalClean(r) : err->url ? err->url : "[no URL]";
+        break;
+
     case 'u':
-	p = r ? urlCanonical(r) : err->url ? err->url : "[no URL]";
-	break;
+        p = r ? urlCanonical(r) : err->url ? err->url : "[no URL]";
+        break;
+
     case 'w':
-	if (Config.adminEmail)
-	    memBufPrintf(&mb, "%s", Config.adminEmail);
-	else
-	    p = "[unknown]";
-	break;
+
+        if (Config.adminEmail)
+            memBufPrintf(&mb, "%s", Config.adminEmail);
+        else
+            p = "[unknown]";
+
+        break;
+
     case 'W':
-	if (Config.adminEmail && Config.onoff.emailErrData)
-	    errorDump(err, &mb);
-	break;
+        if (Config.adminEmail && Config.onoff.emailErrData)
+            errorDump(err, &mb);
+
+        break;
+
     case 'z':
-	if (err->dnsserver_msg)
-	    p = err->dnsserver_msg;
-	else
-	    p = "[unknown]";
-	break;
+        if (err->dnsserver_msg)
+            p = err->dnsserver_msg;
+        else
+            p = "[unknown]";
+
+        break;
+
     case '%':
-	p = "%";
-	break;
+        p = "%";
+
+        break;
+
     default:
-	memBufPrintf(&mb, "%%%c", token);
-	break;
+        memBufPrintf(&mb, "%%%c", token);
+
+        break;
     }
+
     if (!p)
-	p = mb.buf;		/* do not use mb after this assignment! */
+        p = mb.buf;		/* do not use mb after this assignment! */
+
     assert(p);
+
     debug(4, 3) ("errorConvert: %%%c --> '%s'\n", token, p);
+
     if (do_quote)
-	p = html_quote(p);
+        p = html_quote(p);
+
     return p;
 }
 
@@ -700,28 +813,30 @@ errorBuildReply(ErrorState * err)
     http_version_t version;
     /* no LMT for error pages; error pages expire immediately */
     httpBuildVersion(&version, 1, 0);
+
     if (strchr(name, ':')) {
-	/* Redirection */
-	char *quoted_url = rfc1738_escape_part(errorConvert('u', err));
-	httpReplySetHeaders(rep, version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, squid_curtime);
-	httpHeaderPutStrf(&rep->header, HDR_LOCATION, name, quoted_url);
-	httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s\n", err->httpStatus, "Access Denied");
+        /* Redirection */
+        char *quoted_url = rfc1738_escape_part(errorConvert('u', err));
+        httpReplySetHeaders(rep, version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, squid_curtime);
+        httpHeaderPutStrf(&rep->header, HDR_LOCATION, name, quoted_url);
+        httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s\n", err->httpStatus, "Access Denied");
     } else {
-	MemBuf content = errorBuildContent(err);
-	httpReplySetHeaders(rep, version, err->httpStatus, NULL, "text/html", content.size, 0, squid_curtime);
-	/*
-	 * include some information for downstream caches. Implicit
-	 * replaceable content. This isn't quite sufficient. xerrno is not
-	 * necessarily meaningful to another system, so we really should
-	 * expand it. Additionally, we should identify ourselves. Someone
-	 * might want to know. Someone _will_ want to know OTOH, the first
-	 * X-CACHE-MISS entry should tell us who.
-	 */
-	httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%s %d",
-	    name, err->xerrno);
-	httpBodySet(&rep->body, &content);
-	/* do not memBufClean() the content, it was absorbed by httpBody */
+        MemBuf content = errorBuildContent(err);
+        httpReplySetHeaders(rep, version, err->httpStatus, NULL, "text/html", content.size, 0, squid_curtime);
+        /*
+         * include some information for downstream caches. Implicit
+         * replaceable content. This isn't quite sufficient. xerrno is not
+         * necessarily meaningful to another system, so we really should
+         * expand it. Additionally, we should identify ourselves. Someone
+         * might want to know. Someone _will_ want to know OTOH, the first
+         * X-CACHE-MISS entry should tell us who.
+         */
+        httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%s %d",
+                          name, err->xerrno);
+        httpBodySet(&rep->body, &content);
+        /* do not memBufClean() the content, it was absorbed by httpBody */
     }
+
     return rep;
 }
 
@@ -737,14 +852,18 @@ errorBuildContent(ErrorState * err)
     memBufDefInit(&content);
     m = error_text[err->page_id];
     assert(m);
+
     while ((p = strchr(m, '%'))) {
-	memBufAppend(&content, m, p - m);	/* copy */
-	t = errorConvert(*++p, err);	/* convert */
-	memBufPrintf(&content, "%s", t);	/* copy */
-	m = p + 1;		/* advance */
+        memBufAppend(&content, m, p - m);	/* copy */
+        t = errorConvert(*++p, err);	/* convert */
+        memBufPrintf(&content, "%s", t);	/* copy */
+        m = p + 1;		/* advance */
     }
+
     if (*m)
-	memBufPrintf(&content, "%s", m);	/* copy tail */
+        memBufPrintf(&content, "%s", m);	/* copy tail */
+
     assert((size_t)content.size == strlen(content.buf));
+
     return content;
 }

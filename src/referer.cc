@@ -1,6 +1,6 @@
 
 /*
- * $Id: referer.cc,v 1.6 2003/01/23 00:37:25 robertc Exp $
+ * $Id: referer.cc,v 1.7 2003/02/21 22:50:10 robertc Exp $
  *
  * DEBUG: section 40    User-Agent and Referer logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
@@ -45,10 +45,12 @@ refererOpenLog(void)
 {
 #if USE_REFERER_LOG
     assert(NULL == refererlog);
+
     if (!Config.Log.referer || (0 == strcmp(Config.Log.referer, "none"))) {
-	debug(40, 1) ("Referer logging is disabled.\n");
-	return;
+        debug(40, 1) ("Referer logging is disabled.\n");
+        return;
     }
+
     refererlog = logfileOpen(Config.Log.referer, 0, 1);
 #endif
 }
@@ -57,9 +59,12 @@ void
 refererRotateLog(void)
 {
 #if USE_REFERER_LOG
+
     if (NULL == refererlog)
-	return;
+        return;
+
     logfileRotate(refererlog);
+
 #endif
 }
 
@@ -67,14 +72,17 @@ void
 logReferer(const char *client, const char *referer, const char *uri)
 {
 #if USE_REFERER_LOG
+
     if (NULL == refererlog)
-	return;
+        return;
+
     logfilePrintf(refererlog, "%9d.%03d %s %s %s\n",
-	(int) current_time.tv_sec,
-	(int) current_time.tv_usec / 1000,
-	client,
-	referer,
-	uri ? uri : "-");
+                  (int) current_time.tv_sec,
+                  (int) current_time.tv_usec / 1000,
+                  client,
+                  referer,
+                  uri ? uri : "-");
+
 #endif
 }
 
@@ -82,9 +90,13 @@ void
 refererCloseLog(void)
 {
 #if USE_REFERER_LOG
+
     if (NULL == refererlog)
-	return;
+        return;
+
     logfileClose(refererlog);
+
     refererlog = NULL;
+
 #endif
 }

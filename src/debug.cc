@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.88 2003/02/03 21:33:15 robertc Exp $
+ * $Id: debug.cc,v 1.89 2003/02/21 22:50:07 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -55,13 +55,15 @@ _db_print(const char *format,...)
 {
 #else
 _db_print(va_alist)
-     va_dcl
+va_dcl
 {
     const char *format = NULL;
 #endif
+
     LOCAL_ARRAY(char, f, BUFSIZ);
     va_list args1;
 #if STDC_HEADERS
+
     va_list args2;
     va_list args3;
 #else
@@ -69,164 +71,213 @@ _db_print(va_alist)
 #define args3 args1
 #endif
     /* give a chance to context-based debugging to print current context */
+
     if (!Ctx_Lock)
-	ctx_print();
+        ctx_print();
+
 #if STDC_HEADERS
+
     va_start(args1, format);
+
     va_start(args2, format);
+
     va_start(args3, format);
+
 #else
+
     format = va_arg(args1, const char *);
+
 #endif
+
     snprintf(f, BUFSIZ, "%s| %s",
-	debugLogTime(squid_curtime),
-	format);
+             debugLogTime(squid_curtime),
+             format);
+
     _db_print_file(f, args1);
+
     _db_print_stderr(f, args2);
+
 #if HAVE_SYSLOG
+
     _db_print_syslog(format, args3);
+
 #endif
+
     va_end(args1);
+
 #if STDC_HEADERS
+
     va_end(args2);
+
     va_end(args3);
+
 #endif
 }
 
 static void
-_db_print_file(const char *format, va_list args)
-{
+_db_print_file(const char *format, va_list args) {
     if (debug_log == NULL)
-	return;
+        return;
+
     /* give a chance to context-based debugging to print current context */
     if (!Ctx_Lock)
-	ctx_print();
+        ctx_print();
+
     vfprintf(debug_log, format, args);
+
     if (!Config.onoff.buffered_logs)
-	fflush(debug_log);
+        fflush(debug_log);
 }
 
 static void
-_db_print_stderr(const char *format, va_list args)
-{
+_db_print_stderr(const char *format, va_list args) {
     if (opt_debug_stderr < Debug::level)
-	return;
+        return;
+
     if (debug_log == stderr)
-	return;
+        return;
+
     vfprintf(stderr, format, args);
 }
 
 #if HAVE_SYSLOG
 static void
-_db_print_syslog(const char *format, va_list args)
-{
+_db_print_syslog(const char *format, va_list args) {
     LOCAL_ARRAY(char, tmpbuf, BUFSIZ);
     /* level 0,1 go to syslog */
+
     if (Debug::level > 1)
-	return;
+        return;
+
     if (0 == opt_syslog_enable)
-	return;
+        return;
+
     tmpbuf[0] = '\0';
+
     vsnprintf(tmpbuf, BUFSIZ, format, args);
+
     tmpbuf[BUFSIZ - 1] = '\0';
+
     syslog(Debug::level == 0 ? LOG_WARNING : LOG_NOTICE, "%s", tmpbuf);
 }
+
 #endif /* HAVE_SYSLOG */
 
 static void
-debugArg(const char *arg)
-{
+debugArg(const char *arg) {
     int s = 0;
     int l = 0;
     int i;
+
     if (!strncasecmp(arg, "ALL", 3)) {
-	s = -1;
-	arg += 4;
+        s = -1;
+        arg += 4;
     } else {
-	s = atoi(arg);
-	while (*arg && *arg++ != ',');
+        s = atoi(arg);
+
+        while (*arg && *arg++ != ',')
+
+            ;
     }
+
     l = atoi(arg);
     assert(s >= -1);
     assert(s < MAX_DEBUG_SECTIONS);
+
     if (l < 0)
-	l = 0;
+        l = 0;
+
     if (l > 10)
-	l = 10;
+        l = 10;
+
     if (s >= 0) {
-	Debug::Levels[s] = l;
-	return;
+        Debug::Levels[s] = l;
+        return;
     }
+
     for (i = 0; i < MAX_DEBUG_SECTIONS; i++)
-	Debug::Levels[i] = l;
+        Debug::Levels[i] = l;
 }
 
 static void
-debugOpenLog(const char *logfile)
-{
+debugOpenLog(const char *logfile) {
     if (logfile == NULL) {
-	debug_log = stderr;
-	return;
+        debug_log = stderr;
+        return;
     }
+
     if (debug_log_file)
-	xfree(debug_log_file);
+        xfree(debug_log_file);
+
     debug_log_file = xstrdup(logfile);	/* keep a static copy */
+
     if (debug_log && debug_log != stderr)
-	fclose(debug_log);
+        fclose(debug_log);
+
     debug_log = fopen(logfile, "a+");
+
     if (!debug_log) {
-	fprintf(stderr, "WARNING: Cannot write log file: %s\n", logfile);
-	perror(logfile);
-	fprintf(stderr, "         messages will be sent to 'stderr'.\n");
-	fflush(stderr);
-	debug_log = stderr;
+        fprintf(stderr, "WARNING: Cannot write log file: %s\n", logfile);
+        perror(logfile);
+        fprintf(stderr, "         messages will be sent to 'stderr'.\n");
+        fflush(stderr);
+        debug_log = stderr;
     }
+
 #if defined(_SQUID_CYGWIN_)||defined(_SQUID_MSWIN_)
     setmode(fileno(debug_log), O_TEXT);
+
 #endif
 }
 
 void
-_db_init(const char *logfile, const char *options)
-{
+_db_init(const char *logfile, const char *options) {
     int i;
     char *p = NULL;
     char *s = NULL;
 
     for (i = 0; i < MAX_DEBUG_SECTIONS; i++)
-	Debug::Levels[i] = -1;
+        Debug::Levels[i] = -1;
 
     if (options) {
-	p = xstrdup(options);
-	for (s = strtok(p, w_space); s; s = strtok(NULL, w_space))
-	    debugArg(s);
-	xfree(p);
+        p = xstrdup(options);
+
+        for (s = strtok(p, w_space); s; s = strtok(NULL, w_space))
+            debugArg(s);
+
+        xfree(p);
     }
+
     debugOpenLog(logfile);
 
 #if HAVE_SYSLOG && defined(LOG_LOCAL4)
+
     if (opt_syslog_enable)
-	openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+        openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+
 #endif /* HAVE_SYSLOG */
 
 }
 
 void
-_db_rotate_log(void)
-{
+_db_rotate_log(void) {
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);
     LOCAL_ARRAY(char, to, MAXPATHLEN);
 #ifdef S_ISREG
+
     struct stat sb;
 #endif
 
     if (debug_log_file == NULL)
-	return;
+        return;
+
 #ifdef S_ISREG
+
     if (stat(debug_log_file, &sb) == 0)
-	if (S_ISREG(sb.st_mode) == 0)
-	    return;
+        if (S_ISREG(sb.st_mode) == 0)
+            return;
+
 #endif
 
     /*
@@ -236,56 +287,69 @@ _db_rotate_log(void)
      */
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
-	i--;
-	snprintf(from, MAXPATHLEN, "%s.%d", debug_log_file, i - 1);
-	snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, i);
+        i--;
+        snprintf(from, MAXPATHLEN, "%s.%d", debug_log_file, i - 1);
+        snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, i);
 #ifdef _SQUID_MSWIN_
-	remove(to);
+
+        remove
+            (to);
+
 #endif
-	rename(from, to);
+
+        rename(from, to);
     }
-/*
- * You can't rename open files on Microsoft "operating systems"
- * so we close before renaming.
- */
+
+    /*
+     * You can't rename open files on Microsoft "operating systems"
+     * so we close before renaming.
+     */
 #ifdef _SQUID_MSWIN_
     if (debug_log != stderr)
-	fclose(debug_log);
+        fclose(debug_log);
+
 #endif
     /* Rotate the current log to .0 */
     if (Config.Log.rotateNumber > 0) {
-	snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, 0);
+        snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, 0);
 #ifdef _SQUID_MSWIN_
-	remove(to);
+
+        remove
+            (to);
+
 #endif
-	rename(debug_log_file, to);
+
+        rename(debug_log_file, to);
     }
+
     /* Close and reopen the log.  It may have been renamed "manually"
      * before HUP'ing us. */
     if (debug_log != stderr)
-	debugOpenLog(Config.Log.log);
+        debugOpenLog(Config.Log.log);
 }
 
 static const char *
-debugLogTime(time_t t)
-{
+debugLogTime(time_t t) {
+
     struct tm *tm;
     static char buf[128];
     static time_t last_t = 0;
+
     if (t != last_t) {
-	tm = localtime(&t);
-	strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
-	last_t = t;
+        tm = localtime(&t);
+        strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
+        last_t = t;
     }
+
     return buf;
 }
 
 void
-xassert(const char *msg, const char *file, int line)
-{
+xassert(const char *msg, const char *file, int line) {
     debug(0, 0) ("assertion failed: %s:%d: \"%s\"\n", file, line, msg);
+
     if (!shutting_down)
-	abort();
+        abort();
 }
 
 /*
@@ -383,27 +447,27 @@ static const char *ctx_get_descr(Ctx ctx);
 
 
 Ctx
-ctx_enter(const char *descr)
-{
+ctx_enter(const char *descr) {
     Ctx_Current_Level++;
 
     if (Ctx_Current_Level <= CTX_MAX_LEVEL)
-	Ctx_Descrs[Ctx_Current_Level] = descr;
+        Ctx_Descrs[Ctx_Current_Level] = descr;
 
     if (Ctx_Current_Level == Ctx_Warn_Level) {
-	debug(0, 0) ("# ctx: suspiciously deep (%d) nesting:\n", Ctx_Warn_Level);
-	Ctx_Warn_Level *= 2;
+        debug(0, 0) ("# ctx: suspiciously deep (%d) nesting:\n", Ctx_Warn_Level);
+        Ctx_Warn_Level *= 2;
     }
+
     return Ctx_Current_Level;
 }
 
 void
-ctx_exit(Ctx ctx)
-{
+ctx_exit(Ctx ctx) {
     assert(ctx >= 0);
     Ctx_Current_Level = (ctx >= 0) ? ctx - 1 : -1;
+
     if (Ctx_Valid_Level > Ctx_Current_Level)
-	Ctx_Valid_Level = Ctx_Current_Level;
+        Ctx_Valid_Level = Ctx_Current_Level;
 }
 
 /*
@@ -411,36 +475,39 @@ ctx_exit(Ctx ctx)
  * info for deducing the current execution stack
  */
 static void
-ctx_print(void)
-{
+ctx_print(void) {
     /* lock so _db_print will not call us recursively */
     Ctx_Lock++;
     /* ok, user saw [0,Ctx_Reported_Level] descriptions */
     /* first inform about entries popped since user saw them */
+
     if (Ctx_Valid_Level < Ctx_Reported_Level) {
-	if (Ctx_Reported_Level != Ctx_Valid_Level + 1)
-	    _db_print("ctx: exit levels from %2d down to %2d\n",
-		Ctx_Reported_Level, Ctx_Valid_Level + 1);
-	else
-	    _db_print("ctx: exit level %2d\n", Ctx_Reported_Level);
-	Ctx_Reported_Level = Ctx_Valid_Level;
+        if (Ctx_Reported_Level != Ctx_Valid_Level + 1)
+            _db_print("ctx: exit levels from %2d down to %2d\n",
+                      Ctx_Reported_Level, Ctx_Valid_Level + 1);
+        else
+            _db_print("ctx: exit level %2d\n", Ctx_Reported_Level);
+
+        Ctx_Reported_Level = Ctx_Valid_Level;
     }
+
     /* report new contexts that were pushed since last report */
     while (Ctx_Reported_Level < Ctx_Current_Level) {
-	Ctx_Reported_Level++;
-	Ctx_Valid_Level++;
-	_db_print("ctx: enter level %2d: '%s'\n", Ctx_Reported_Level,
-	    ctx_get_descr(Ctx_Reported_Level));
+        Ctx_Reported_Level++;
+        Ctx_Valid_Level++;
+        _db_print("ctx: enter level %2d: '%s'\n", Ctx_Reported_Level,
+                  ctx_get_descr(Ctx_Reported_Level));
     }
+
     /* unlock */
     Ctx_Lock--;
 }
 
 /* checks for nulls and overflows */
 static const char *
-ctx_get_descr(Ctx ctx)
-{
+ctx_get_descr(Ctx ctx) {
     if (ctx < 0 || ctx > CTX_MAX_LEVEL)
-	return "<lost>";
+        return "<lost>";
+
     return Ctx_Descrs[ctx] ? Ctx_Descrs[ctx] : "<null>";
 }

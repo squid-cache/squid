@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.cc,v 1.2 2003/02/06 09:57:36 robertc Exp $
+ * $Id: DelayVector.cc,v 1.3 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -64,16 +64,16 @@ DelayVector::deleteSelf() const
 }
 
 DelayVector::~DelayVector()
-{
-}
+{}
 
 void
 DelayVector::stats(StoreEntry * sentry)
 {
     iterator pos = pools.begin();
+
     while (pos != pools.end()) {
-	(*pos)->stats(sentry);
-	++pos;
+        (*pos)->stats(sentry);
+        ++pos;
     }
 }
 
@@ -81,9 +81,10 @@ void
 DelayVector::dump(StoreEntry *entry) const
 {
     const_iterator pos = pools.begin();
+
     while (pos != pools.end()) {
-	(*pos)->dump(entry);
-	++pos;
+        (*pos)->dump(entry);
+        ++pos;
     }
 }
 
@@ -91,9 +92,10 @@ void
 DelayVector::update(int incr)
 {
     iterator pos = pools.begin();
+
     while (pos != pools.end()) {
-	(*pos)->update(incr);
-	++pos;
+        (*pos)->update(incr);
+        ++pos;
     }
 }
 
@@ -101,13 +103,15 @@ void
 DelayVector::parse()
 {
     iterator pos = pools.begin();
+
     while (pos != pools.end()) {
-	(*pos)->parse();
-	++pos;
+        (*pos)->parse();
+        ++pos;
     }
 }
 
 DelayIdComposite::Pointer
+
 DelayVector::id(struct in_addr &src_addr, AuthUserRequest *authUser)
 {
     return new Id(this, src_addr, authUser);
@@ -143,9 +147,11 @@ DelayVector::Id::Id(DelayVector::Pointer aDelayVector,struct in_addr &src_addr, 
 {
     debug(77,3)("DelayVector::Id::Id\n");
     DelayVector::iterator pos = theVector->pools.begin();
-    while (pos != theVector->pools.end()) {
-	ids.push_back ((*pos)->id (src_addr, authUser));
-	++pos;
+
+    while (pos != theVector->pools.end())
+    {
+        ids.push_back ((*pos)->id (src_addr, authUser));
+        ++pos;
     }
 }
 
@@ -159,10 +165,12 @@ DelayVector::Id::bytesWanted (int min, int max) const
 {
     int nbytes = max;
     const_iterator pos = ids.begin();
+
     while (pos != ids.end()) {
-	nbytes = XMIN (nbytes, (*pos)->bytesWanted(min, nbytes));
-	++pos;
+        nbytes = XMIN (nbytes, (*pos)->bytesWanted(min, nbytes));
+        ++pos;
     }
+
     nbytes = XMAX(min, nbytes);
     return nbytes;
 }
@@ -171,9 +179,11 @@ void
 DelayVector::Id::bytesIn(int qty)
 {
     iterator pos = ids.begin();
+
     while (pos != ids.end()) {
-	(*pos)->bytesIn(qty);
-	++pos;
+        (*pos)->bytesIn(qty);
+        ++pos;
     }
 }
+
 #endif

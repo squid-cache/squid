@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.110 2003/01/23 00:37:23 robertc Exp $
+ * $Id: mime.cc,v 1.111 2003/02/21 22:50:10 robertc Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -43,31 +43,40 @@
 
 #define GET_HDR_SZ 1024
 
-class MimeIcon : public StoreClient {
-public: 
+class MimeIcon : public StoreClient
+{
+
+public:
     MimeIcon ();
     void setName (char const *);
     char const * getName () const;
     void _free();
     void load();
     void created (StoreEntry *newEntry);
+
 private:
     char *icon;
     char *url;
 };
 
-class mimeEntry {
+class mimeEntry
+{
+
 public:
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-  
+
     char *pattern;
     regex_t compiled_pattern;
     char *icon;
     char *content_type;
     char *content_encoding;
     char transfer_mode;
-    unsigned int view_option:1, download_option:1;
+
+unsigned int view_option:
+
+1, download_option:
+    1;
     mimeEntry *next;
     MimeIcon theIcon;
 };
@@ -110,41 +119,56 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
     int l;
 
     if (NULL == mime)
-	return NULL;
+        return NULL;
+
     assert(NULL != name);
 
     debug(25, 5) ("mime_get_header: looking for '%s'\n", name);
 
     for (p = mime; *p; p += strcspn(p, "\n\r")) {
-	if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
-	    return NULL;
-	while (xisspace(*p))
-	    p++;
-	if (strncasecmp(p, name, namelen))
-	    continue;
-	if (!xisspace(p[namelen]) && p[namelen] != ':')
-	    continue;
-	l = strcspn(p, "\n\r") + 1;
-	if (l > GET_HDR_SZ)
-	    l = GET_HDR_SZ;
-	xstrncpy(header, p, l);
-	debug(25, 5) ("mime_get_header: checking '%s'\n", header);
-	q = header;
-	q += namelen;
-	if (*q == ':')
-	    q++, got = 1;
-	while (xisspace(*q))
-	    q++, got = 1;
-	if (got && prefix) {
-	    /* we could process list entries here if we had strcasestr(). */
-	    /* make sure we did not match a part of another field-value */
-	    got = !strncasecmp(q, prefix, preflen) && !xisalpha(q[preflen]);
-	}
-	if (got) {
-	    debug(25, 5) ("mime_get_header: returning '%s'\n", q);
-	    return q;
-	}
+        if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
+            return NULL;
+
+        while (xisspace(*p))
+            p++;
+
+        if (strncasecmp(p, name, namelen))
+            continue;
+
+        if (!xisspace(p[namelen]) && p[namelen] != ':')
+            continue;
+
+        l = strcspn(p, "\n\r") + 1;
+
+        if (l > GET_HDR_SZ)
+            l = GET_HDR_SZ;
+
+        xstrncpy(header, p, l);
+
+        debug(25, 5) ("mime_get_header: checking '%s'\n", header);
+
+        q = header;
+
+        q += namelen;
+
+        if (*q == ':')
+            q++, got = 1;
+
+        while (xisspace(*q))
+            q++, got = 1;
+
+        if (got && prefix) {
+            /* we could process list entries here if we had strcasestr(). */
+            /* make sure we did not match a part of another field-value */
+            got = !strncasecmp(q, prefix, preflen) && !xisalpha(q[preflen]);
+        }
+
+        if (got) {
+            debug(25, 5) ("mime_get_header: returning '%s'\n", q);
+            return q;
+        }
     }
+
     return NULL;
 }
 
@@ -153,35 +177,47 @@ headersEnd(const char *mime, size_t l)
 {
     size_t e = 0;
     int state = 0;
+
     while (e < l && state < 3) {
-	switch (state) {
-	case 0:
-	    if ('\n' == mime[e])
-		state = 1;
-	    break;
-	case 1:
-	    if ('\r' == mime[e])
-		state = 2;
-	    else if ('\n' == mime[e])
-		state = 3;
-	    else
-		state = 0;
-	    break;
-	case 2:
-	    if ('\r' == mime[e])	/* ignore repeated CR */
-		(void) 0;
-	    else if ('\n' == mime[e])
-		state = 3;
-	    else
-		state = 0;
-	    break;
-	default:
-	    break;
-	}
-	e++;
+        switch (state) {
+
+        case 0:
+
+            if ('\n' == mime[e])
+                state = 1;
+
+            break;
+
+        case 1:
+            if ('\r' == mime[e])
+                state = 2;
+            else if ('\n' == mime[e])
+                state = 3;
+            else
+                state = 0;
+
+            break;
+
+        case 2:
+            if ('\r' == mime[e])	/* ignore repeated CR */
+                (void) 0;
+            else if ('\n' == mime[e])
+                state = 3;
+            else
+                state = 0;
+
+            break;
+
+        default:
+            break;
+        }
+
+        e++;
     }
+
     if (3 == state)
-	return e;
+        return e;
+
     return 0;
 }
 
@@ -190,20 +226,28 @@ mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field)
 {
     char *auth_hdr;
     char *t;
+
     if (auth_field)
-	*auth_field = NULL;
+        *auth_field = NULL;
+
     if (hdr == NULL)
-	return NULL;
+        return NULL;
+
     if ((auth_hdr = mime_get_header(hdr, "Authorization")) == NULL)
-	return NULL;
+        return NULL;
+
     if (auth_field)
-	*auth_field = auth_hdr;
+        *auth_field = auth_hdr;
+
     if ((t = strtok(auth_hdr, " \t")) == NULL)
-	return NULL;
+        return NULL;
+
     if (strcasecmp(t, auth_scheme) != 0)
-	return NULL;
+        return NULL;
+
     if ((t = strtok(NULL, " \t")) == NULL)
-	return NULL;
+        return NULL;
+
     return base64_decode(t);
 }
 
@@ -213,35 +257,40 @@ mimeGetEntry(const char *fn, int skip_encodings)
     mimeEntry *m;
     char *t;
     char *name = xstrdup(fn);
-  try_again:
+
+try_again:
+
     for (m = MimeTable; m; m = m->next) {
-	if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)
-	    break;
+        if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)
+            break;
     }
+
     if (!skip_encodings)
-	(void) 0;
+        (void) 0;
     else if (m == NULL)
-	(void) 0;
+        (void) 0;
     else if (strcmp(m->content_type, dash_str))
-	(void) 0;
+        (void) 0;
     else if (!strcmp(m->content_encoding, dash_str))
-	(void) 0;
+        (void) 0;
     else {
-	/* Assume we matched /\.\w$/ and cut off the last extension */
-	if ((t = strrchr(name, '.'))) {
-	    *t = '\0';
-	    goto try_again;
-	}
-	/* What? A encoding without a extension? */
-	m = NULL;
+        /* Assume we matched /\.\w$/ and cut off the last extension */
+
+        if ((t = strrchr(name, '.'))) {
+            *t = '\0';
+            goto try_again;
+        }
+
+        /* What? A encoding without a extension? */
+        m = NULL;
     }
+
     xfree(name);
     return m;
 }
 
 MimeIcon::MimeIcon () : icon (NULL), url (NULL)
-{
-}
+{}
 
 void
 MimeIcon::setName (char const *aString)
@@ -270,10 +319,13 @@ char const *
 mimeGetIcon(const char *fn)
 {
     mimeEntry *m = mimeGetEntry(fn, 1);
+
     if (m == NULL)
-	return NULL;
+        return NULL;
+
     if (!strcmp(m->theIcon.getName(), dash_str))
-	return NULL;
+        return NULL;
+
     return m->theIcon.getName();
 }
 
@@ -281,8 +333,10 @@ const char *
 mimeGetIconURL(const char *fn)
 {
     char const *icon = mimeGetIcon(fn);
+
     if (icon == NULL)
-	return null_string;
+        return null_string;
+
     return internalLocalUri("/squid-internal-static/icons/", icon);
 }
 
@@ -290,10 +344,13 @@ char *
 mimeGetContentType(const char *fn)
 {
     mimeEntry *m = mimeGetEntry(fn, 1);
+
     if (m == NULL)
-	return NULL;
+        return NULL;
+
     if (!strcmp(m->content_type, dash_str))
-	return NULL;
+        return NULL;
+
     return m->content_type;
 }
 
@@ -301,10 +358,13 @@ char *
 mimeGetContentEncoding(const char *fn)
 {
     mimeEntry *m = mimeGetEntry(fn, 0);
+
     if (m == NULL)
-	return NULL;
+        return NULL;
+
     if (!strcmp(m->content_encoding, dash_str))
-	return NULL;
+        return NULL;
+
     return m->content_encoding;
 }
 
@@ -352,84 +412,112 @@ mimeInit(char *filename)
     regex_t re;
     mimeEntry *m;
     int re_flags = REG_EXTENDED | REG_NOSUB | REG_ICASE;
+
     if (filename == NULL)
-	return;
+        return;
+
     if ((fp = fopen(filename, "r")) == NULL) {
-	debug(25, 1) ("mimeInit: %s: %s\n", filename, xstrerror());
-	return;
+        debug(25, 1) ("mimeInit: %s: %s\n", filename, xstrerror());
+        return;
     }
+
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     setmode(fileno(fp), O_TEXT);
+
 #endif
+
     mimeFreeMemory();
+
     while (fgets(buf, BUFSIZ, fp)) {
-	if ((t = strchr(buf, '#')))
-	    *t = '\0';
-	if ((t = strchr(buf, '\r')))
-	    *t = '\0';
-	if ((t = strchr(buf, '\n')))
-	    *t = '\0';
-	if (buf[0] == '\0')
-	    continue;
-	xstrncpy(chopbuf, buf, BUFSIZ);
-	if ((pattern = strtok(chopbuf, w_space)) == NULL) {
-	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
-	    continue;
-	}
-	if ((type = strtok(NULL, w_space)) == NULL) {
-	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
-	    continue;
-	}
-	if ((icon = strtok(NULL, w_space)) == NULL) {
-	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
-	    continue;
-	}
-	if ((encoding = strtok(NULL, w_space)) == NULL) {
-	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
-	    continue;
-	}
-	if ((mode = strtok(NULL, w_space)) == NULL) {
-	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
-	    continue;
-	}
-	download_option = 0;
-	view_option = 0;
-	while ((option = strtok(NULL, w_space)) != NULL) {
-	    if (!strcmp(option, "+download"))
-		download_option = 1;
-	    else if (!strcmp(option, "+view"))
-		view_option = 1;
-	    else
-		debug(25, 1) ("mimeInit: unknown option: '%s' (%s)\n", buf, option);
-	}
-	if (regcomp(&re, pattern, re_flags) != 0) {
-	    debug(25, 1) ("mimeInit: regcomp error: '%s'\n", buf);
-	    continue;
-	}
-	m = new mimeEntry;
-	m->pattern = xstrdup(pattern);
-	m->content_type = xstrdup(type);
-	m->theIcon.setName(icon);
-	m->content_encoding = xstrdup(encoding);
-	m->compiled_pattern = re;
-	if (!strcasecmp(mode, "ascii"))
-	    m->transfer_mode = 'A';
-	else if (!strcasecmp(mode, "text"))
-	    m->transfer_mode = 'A';
-	else
-	    m->transfer_mode = 'I';
-	m->view_option = view_option;
-	m->download_option = download_option;
-	*MimeTableTail = m;
-	MimeTableTail = &m->next;
-	debug(25, 5) ("mimeInit: added '%s'\n", buf);
+        if ((t = strchr(buf, '#')))
+            *t = '\0';
+
+        if ((t = strchr(buf, '\r')))
+            *t = '\0';
+
+        if ((t = strchr(buf, '\n')))
+            *t = '\0';
+
+        if (buf[0] == '\0')
+            continue;
+
+        xstrncpy(chopbuf, buf, BUFSIZ);
+
+        if ((pattern = strtok(chopbuf, w_space)) == NULL) {
+            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            continue;
+        }
+
+        if ((type = strtok(NULL, w_space)) == NULL) {
+            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            continue;
+        }
+
+        if ((icon = strtok(NULL, w_space)) == NULL) {
+            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            continue;
+        }
+
+        if ((encoding = strtok(NULL, w_space)) == NULL) {
+            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            continue;
+        }
+
+        if ((mode = strtok(NULL, w_space)) == NULL) {
+            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            continue;
+        }
+
+        download_option = 0;
+        view_option = 0;
+
+        while ((option = strtok(NULL, w_space)) != NULL) {
+            if (!strcmp(option, "+download"))
+                download_option = 1;
+            else if (!strcmp(option, "+view"))
+                view_option = 1;
+            else
+                debug(25, 1) ("mimeInit: unknown option: '%s' (%s)\n", buf, option);
+        }
+
+        if (regcomp(&re, pattern, re_flags) != 0) {
+            debug(25, 1) ("mimeInit: regcomp error: '%s'\n", buf);
+            continue;
+        }
+
+        m = new mimeEntry;
+        m->pattern = xstrdup(pattern);
+        m->content_type = xstrdup(type);
+        m->theIcon.setName(icon);
+        m->content_encoding = xstrdup(encoding);
+        m->compiled_pattern = re;
+
+        if (!strcasecmp(mode, "ascii"))
+            m->transfer_mode = 'A';
+        else if (!strcasecmp(mode, "text"))
+            m->transfer_mode = 'A';
+        else
+            m->transfer_mode = 'I';
+
+        m->view_option = view_option;
+
+        m->download_option = download_option;
+
+        *MimeTableTail = m;
+
+        MimeTableTail = &m->next;
+
+        debug(25, 5) ("mimeInit: added '%s'\n", buf);
     }
+
     fclose(fp);
     /*
      * Create Icon StoreEntry's
      */
+
     for (m = MimeTable; m != NULL; m = m->next)
-	m->theIcon.load();
+        m->theIcon.load();
+
     debug(25, 1) ("Loaded Icons.\n");
 }
 
@@ -437,15 +525,17 @@ void
 mimeFreeMemory(void)
 {
     mimeEntry *m;
+
     while ((m = MimeTable)) {
-	MimeTable = m->next;
-	safe_free(m->pattern);
-	safe_free(m->content_type);
-	safe_free(m->icon);
-	safe_free(m->content_encoding);
-	regfree(&m->compiled_pattern);
-	delete m;
+        MimeTable = m->next;
+        safe_free(m->pattern);
+        safe_free(m->content_type);
+        safe_free(m->icon);
+        safe_free(m->content_encoding);
+        regfree(&m->compiled_pattern);
+        delete m;
     }
+
     MimeTableTail = &MimeTable;
 }
 
@@ -453,8 +543,10 @@ void
 MimeIcon::load()
 {
     const char *type = mimeGetContentType(icon);
+
     if (type == NULL)
-	fatal("Unknown icon format while reading mime.conf\n");
+        fatal("Unknown icon format while reading mime.conf\n");
+
     StoreEntry::getPublic(this, url, METHOD_GET);
 }
 
@@ -462,58 +554,88 @@ void
 MimeIcon::created (StoreEntry *newEntry)
 {
     /* is already in the store, do nothing */
+
     if (!newEntry->isNull())
-	return;
+        return;
+
     int fd;
+
     int n;
+
     request_flags flags;
+
     struct stat sb;
+
     LOCAL_ARRAY(char, path, MAXPATHLEN);
+
     char *buf;
+
     http_version_t version;
-	
-				
+
+
     snprintf(path, MAXPATHLEN, "%s/%s", Config.icons.directory, icon);
+
     fd = file_open(path, O_RDONLY | O_BINARY);
+
     if (fd < 0) {
-	debug(25, 0) ("mimeLoadIconFile: %s: %s\n", path, xstrerror());
-	return;
+        debug(25, 0) ("mimeLoadIconFile: %s: %s\n", path, xstrerror());
+        return;
     }
+
     if (fstat(fd, &sb) < 0) {
-	debug(25, 0) ("mimeLoadIconFile: FD %d: fstat: %s\n", fd, xstrerror());
-	file_close(fd);
-	return;
+        debug(25, 0) ("mimeLoadIconFile: FD %d: fstat: %s\n", fd, xstrerror());
+        file_close(fd);
+        return;
     }
+
     flags.cachable = 1;
     StoreEntry *e = storeCreateEntry(url,
-	url,
-	flags,
-	METHOD_GET);
+                                     url,
+                                     flags,
+                                     METHOD_GET);
     assert(e != NULL);
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     storeSetPublicKey(e);
     storeBuffer(e);
     request_t *r = urlParse(METHOD_GET, url);
+
     if (NULL == r)
-	fatal("mimeLoadIcon: cannot parse internal URL");
+        fatal("mimeLoadIcon: cannot parse internal URL");
+
     e->mem_obj->request = requestLink(r);
+
     HttpReply *reply = httpReplyCreate();
+
     httpBuildVersion(&version, 1, 0);
+
     httpReplySetHeaders(reply, version, HTTP_OK, NULL,
-	mimeGetContentType(icon), (int) sb.st_size, sb.st_mtime, -1);
+                        mimeGetContentType(icon), (int) sb.st_size, sb.st_mtime, -1);
+
     reply->cache_control = httpHdrCcCreate();
+
     httpHdrCcSetMaxAge(reply->cache_control, 86400);
+
     httpHeaderPutCc(&reply->header, reply->cache_control);
+
     httpReplySwapOut(reply, e);
+
     /* read the file into the buffer and append it to store */
     buf = (char *)memAllocate(MEM_4K_BUF);
+
     while ((n = FD_READ_METHOD(fd, buf, 4096)) > 0)
-	storeAppend(e, buf, n);
+        storeAppend(e, buf, n);
+
     file_close(fd);
+
     storeBufferFlush(e);
+
     e->complete();
+
     storeTimestampsSet(e);
+
     debug(25, 3) ("Loaded icon %s\n", url);
+
     storeUnlockObject(e);
+
     memFree(buf, MEM_4K_BUF);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.56 2003/01/23 00:37:21 robertc Exp $
+ * $Id: helper.cc,v 1.57 2003/02/21 22:50:09 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -75,61 +75,79 @@ helperOpenServers(helper * hlp)
     int rfd;
     int wfd;
     wordlist *w;
+
     if (hlp->cmdline == NULL)
-	return;
+        return;
+
     progname = hlp->cmdline->key;
+
     if ((s = strrchr(progname, '/')))
-	shortname = xstrdup(s + 1);
+        shortname = xstrdup(s + 1);
     else
-	shortname = xstrdup(progname);
+        shortname = xstrdup(progname);
+
     debug(84, 1) ("helperOpenServers: Starting %d '%s' processes\n",
-	hlp->n_to_start, shortname);
+                  hlp->n_to_start, shortname);
+
     procname = (char *)xmalloc(strlen(shortname) + 3);
+
     snprintf(procname, strlen(shortname) + 3, "(%s)", shortname);
+
     args[nargs++] = procname;
+
     for (w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
-	args[nargs++] = w->key;
+        args[nargs++] = w->key;
+
     args[nargs++] = NULL;
+
     assert(nargs <= HELPER_MAX_ARGS);
+
     for (k = 0; k < hlp->n_to_start; k++) {
-	getCurrentTime();
-	rfd = wfd = -1;
-	x = ipcCreate(hlp->ipc_type,
-	    progname,
-	    args,
-	    shortname,
-	    &rfd,
-	    &wfd);
-	if (x < 0) {
-	    debug(84, 1) ("WARNING: Cannot run '%s' process.\n", progname);
-	    continue;
-	}
-	hlp->n_running++;
-	srv = cbdataAlloc(helper_server);
-	srv->pid = x;
-	srv->flags.alive = 1;
-	srv->index = k;
-	srv->rfd = rfd;
-	srv->wfd = wfd;
-	srv->buf = (char *)memAllocate(MEM_8K_BUF);
-	srv->buf_sz = 8192;
-	srv->offset = 0;
-	srv->parent = cbdataReference(hlp);
-	dlinkAddTail(srv, &srv->link, &hlp->servers);
-	if (rfd == wfd) {
-	    snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", shortname, k + 1);
-	    fd_note(rfd, fd_note_buf);
-	} else {
-	    snprintf(fd_note_buf, FD_DESC_SZ, "reading %s #%d", shortname, k + 1);
-	    fd_note(rfd, fd_note_buf);
-	    snprintf(fd_note_buf, FD_DESC_SZ, "writing %s #%d", shortname, k + 1);
-	    fd_note(wfd, fd_note_buf);
-	}
-	commSetNonBlocking(rfd);
-	if (wfd != rfd)
-	    commSetNonBlocking(wfd);
-	comm_add_close_handler(rfd, helperServerFree, srv);
+        getCurrentTime();
+        rfd = wfd = -1;
+        x = ipcCreate(hlp->ipc_type,
+                      progname,
+                      args,
+                      shortname,
+                      &rfd,
+                      &wfd);
+
+        if (x < 0) {
+            debug(84, 1) ("WARNING: Cannot run '%s' process.\n", progname);
+            continue;
+        }
+
+        hlp->n_running++;
+        srv = cbdataAlloc(helper_server);
+        srv->pid = x;
+        srv->flags.alive = 1;
+        srv->index = k;
+        srv->rfd = rfd;
+        srv->wfd = wfd;
+        srv->buf = (char *)memAllocate(MEM_8K_BUF);
+        srv->buf_sz = 8192;
+        srv->offset = 0;
+        srv->parent = cbdataReference(hlp);
+        dlinkAddTail(srv, &srv->link, &hlp->servers);
+
+        if (rfd == wfd) {
+            snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", shortname, k + 1);
+            fd_note(rfd, fd_note_buf);
+        } else {
+            snprintf(fd_note_buf, FD_DESC_SZ, "reading %s #%d", shortname, k + 1);
+            fd_note(rfd, fd_note_buf);
+            snprintf(fd_note_buf, FD_DESC_SZ, "writing %s #%d", shortname, k + 1);
+            fd_note(wfd, fd_note_buf);
+        }
+
+        commSetNonBlocking(rfd);
+
+        if (wfd != rfd)
+            commSetNonBlocking(wfd);
+
+        comm_add_close_handler(rfd, helperServerFree, srv);
     }
+
     safe_free(shortname);
     safe_free(procname);
     helperKickQueue(hlp);
@@ -151,69 +169,89 @@ helperStatefulOpenServers(statefulhelper * hlp)
     int rfd;
     int wfd;
     wordlist *w;
+
     if (hlp->cmdline == NULL)
-	return;
+        return;
+
     progname = hlp->cmdline->key;
+
     if ((s = strrchr(progname, '/')))
-	shortname = xstrdup(s + 1);
+        shortname = xstrdup(s + 1);
     else
-	shortname = xstrdup(progname);
+        shortname = xstrdup(progname);
+
     debug(84, 1) ("helperStatefulOpenServers: Starting %d '%s' processes\n",
-	hlp->n_to_start, shortname);
+                  hlp->n_to_start, shortname);
+
     procname = (char *)xmalloc(strlen(shortname) + 3);
+
     snprintf(procname, strlen(shortname) + 3, "(%s)", shortname);
+
     args[nargs++] = procname;
+
     for (w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
-	args[nargs++] = w->key;
+        args[nargs++] = w->key;
+
     args[nargs++] = NULL;
+
     assert(nargs <= HELPER_MAX_ARGS);
+
     for (k = 0; k < hlp->n_to_start; k++) {
-	getCurrentTime();
-	rfd = wfd = -1;
-	x = ipcCreate(hlp->ipc_type,
-	    progname,
-	    args,
-	    shortname,
-	    &rfd,
-	    &wfd);
-	if (x < 0) {
-	    debug(84, 1) ("WARNING: Cannot run '%s' process.\n", progname);
-	    continue;
-	}
-	hlp->n_running++;
-	srv = cbdataAlloc(helper_stateful_server);
-	srv->pid = x;
-	srv->flags.alive = 1;
-	srv->flags.reserved = S_HELPER_FREE;
-	srv->deferred_requests = 0;
-	srv->stats.deferbyfunc = 0;
-	srv->stats.deferbycb = 0;
-	srv->stats.submits = 0;
-	srv->stats.releases = 0;
-	srv->index = k;
-	srv->rfd = rfd;
-	srv->wfd = wfd;
-	srv->buf = (char *)memAllocate(MEM_8K_BUF);
-	srv->buf_sz = 8192;
-	srv->offset = 0;
-	srv->parent = cbdataReference(hlp);
-	if (hlp->datapool != NULL)
-	    srv->data = memPoolAlloc(hlp->datapool);
-	dlinkAddTail(srv, &srv->link, &hlp->servers);
-	if (rfd == wfd) {
-	    snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", shortname, k + 1);
-	    fd_note(rfd, fd_note_buf);
-	} else {
-	    snprintf(fd_note_buf, FD_DESC_SZ, "reading %s #%d", shortname, k + 1);
-	    fd_note(rfd, fd_note_buf);
-	    snprintf(fd_note_buf, FD_DESC_SZ, "writing %s #%d", shortname, k + 1);
-	    fd_note(wfd, fd_note_buf);
-	}
-	commSetNonBlocking(rfd);
-	if (wfd != rfd)
-	    commSetNonBlocking(wfd);
-	comm_add_close_handler(rfd, helperStatefulServerFree, srv);
+        getCurrentTime();
+        rfd = wfd = -1;
+        x = ipcCreate(hlp->ipc_type,
+                      progname,
+                      args,
+                      shortname,
+                      &rfd,
+                      &wfd);
+
+        if (x < 0) {
+            debug(84, 1) ("WARNING: Cannot run '%s' process.\n", progname);
+            continue;
+        }
+
+        hlp->n_running++;
+        srv = cbdataAlloc(helper_stateful_server);
+        srv->pid = x;
+        srv->flags.alive = 1;
+        srv->flags.reserved = S_HELPER_FREE;
+        srv->deferred_requests = 0;
+        srv->stats.deferbyfunc = 0;
+        srv->stats.deferbycb = 0;
+        srv->stats.submits = 0;
+        srv->stats.releases = 0;
+        srv->index = k;
+        srv->rfd = rfd;
+        srv->wfd = wfd;
+        srv->buf = (char *)memAllocate(MEM_8K_BUF);
+        srv->buf_sz = 8192;
+        srv->offset = 0;
+        srv->parent = cbdataReference(hlp);
+
+        if (hlp->datapool != NULL)
+            srv->data = memPoolAlloc(hlp->datapool);
+
+        dlinkAddTail(srv, &srv->link, &hlp->servers);
+
+        if (rfd == wfd) {
+            snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", shortname, k + 1);
+            fd_note(rfd, fd_note_buf);
+        } else {
+            snprintf(fd_note_buf, FD_DESC_SZ, "reading %s #%d", shortname, k + 1);
+            fd_note(rfd, fd_note_buf);
+            snprintf(fd_note_buf, FD_DESC_SZ, "writing %s #%d", shortname, k + 1);
+            fd_note(wfd, fd_note_buf);
+        }
+
+        commSetNonBlocking(rfd);
+
+        if (wfd != rfd)
+            commSetNonBlocking(wfd);
+
+        comm_add_close_handler(rfd, helperStatefulServerFree, srv);
     }
+
     safe_free(shortname);
     safe_free(procname);
     helperStatefulKickQueue(hlp);
@@ -225,18 +263,22 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
     helper_request *r = (helper_request *)memAllocate(MEM_HELPER_REQUEST);
     helper_server *srv;
+
     if (hlp == NULL) {
-	debug(84, 3) ("helperSubmit: hlp == NULL\n");
-	callback(data, NULL);
-	return;
+        debug(84, 3) ("helperSubmit: hlp == NULL\n");
+        callback(data, NULL);
+        return;
     }
+
     r->callback = callback;
     r->data = cbdataReference(data);
     r->buf = xstrdup(buf);
+
     if ((srv = GetFirstAvailable(hlp)))
-	helperDispatch(srv, r);
+        helperDispatch(srv, r);
     else
-	Enqueue(hlp, r);
+        Enqueue(hlp, r);
+
     debug(84, 9) ("helperSubmit: %s\n", buf);
 }
 
@@ -248,48 +290,55 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
 {
     helper_stateful_request *r = (helper_stateful_request *)memAllocate(MEM_HELPER_STATEFUL_REQUEST);
     helper_stateful_server *srv;
+
     if (hlp == NULL) {
-	debug(84, 3) ("helperStatefulSubmit: hlp == NULL\n");
-	callback(data, 0, NULL);
-	return;
+        debug(84, 3) ("helperStatefulSubmit: hlp == NULL\n");
+        callback(data, 0, NULL);
+        return;
     }
+
     r->callback = callback;
     r->data = cbdataReference(data);
+
     if (buf != NULL) {
-	r->buf = xstrdup(buf);
-	r->placeholder = 0;
+        r->buf = xstrdup(buf);
+        r->placeholder = 0;
     } else {
-	r->buf = NULL;
-	r->placeholder = 1;
+        r->buf = NULL;
+        r->placeholder = 1;
     }
+
     if ((buf != NULL) && lastserver) {
-	debug(84, 5) ("StatefulSubmit with lastserver %p\n", lastserver);
-	/* the queue doesn't count for this assert because queued requests
-	 * have already gone through here and been tested.
-	 * It's legal to have deferred_requests == 0 and queue entries 
-	 * and status of S_HELPEER_DEFERRED.
-	 * BUT:  It's not legal to submit a new request w/lastserver in
-	 * that state.
-	 */
-	assert(!(lastserver->deferred_requests == 0 &&
-		lastserver->flags.reserved == S_HELPER_DEFERRED));
-	if (lastserver->flags.reserved != S_HELPER_RESERVED) {
-	    lastserver->stats.submits++;
-	    lastserver->deferred_requests--;
-	}
-	if (!(lastserver->request)) {
-	    debug(84, 5) ("StatefulSubmit dispatching\n");
-	    helperStatefulDispatch(lastserver, r);
-	} else {
-	    debug(84, 5) ("StatefulSubmit queuing\n");
-	    StatefulServerEnqueue(lastserver, r);
-	}
+        debug(84, 5) ("StatefulSubmit with lastserver %p\n", lastserver);
+        /* the queue doesn't count for this assert because queued requests
+         * have already gone through here and been tested.
+         * It's legal to have deferred_requests == 0 and queue entries 
+         * and status of S_HELPEER_DEFERRED.
+         * BUT:  It's not legal to submit a new request w/lastserver in
+         * that state.
+         */
+        assert(!(lastserver->deferred_requests == 0 &&
+                 lastserver->flags.reserved == S_HELPER_DEFERRED));
+
+        if (lastserver->flags.reserved != S_HELPER_RESERVED) {
+            lastserver->stats.submits++;
+            lastserver->deferred_requests--;
+        }
+
+        if (!(lastserver->request)) {
+            debug(84, 5) ("StatefulSubmit dispatching\n");
+            helperStatefulDispatch(lastserver, r);
+        } else {
+            debug(84, 5) ("StatefulSubmit queuing\n");
+            StatefulServerEnqueue(lastserver, r);
+        }
     } else {
-	if ((srv = StatefulGetFirstAvailable(hlp))) {
-	    helperStatefulDispatch(srv, r);
-	} else
-	    StatefulEnqueue(hlp, r);
+        if ((srv = StatefulGetFirstAvailable(hlp))) {
+            helperStatefulDispatch(srv, r);
+        } else
+            StatefulEnqueue(hlp, r);
     }
+
     debug(84, 9) ("helperStatefulSubmit: placeholder: '%d', buf '%s'.\n", r->placeholder, buf);
 }
 
@@ -299,39 +348,56 @@ helperStatefulDefer(statefulhelper * hlp)
 {
     dlink_node *n;
     helper_stateful_server *srv = NULL, *rv = NULL;
-    if (hlp == NULL) {
-	debug(84, 3) ("helperStatefulDefer: hlp == NULL\n");
-	return NULL;
+
+    if (hlp == NULL)
+    {
+        debug(84, 3) ("helperStatefulDefer: hlp == NULL\n");
+        return NULL;
     }
+
     debug(84, 5) ("helperStatefulDefer: Running servers %d.\n", hlp->n_running);
-    if (hlp->n_running == 0) {
-	debug(84, 1) ("helperStatefulDefer: No running servers!. \n");
-	return NULL;
+
+    if (hlp->n_running == 0)
+    {
+        debug(84, 1) ("helperStatefulDefer: No running servers!. \n");
+        return NULL;
     }
+
     rv = srv = StatefulGetFirstAvailable(hlp);
-    if (rv == NULL) {
-	/*
-	 * all currently busy; loop through servers and find server
-	 * with the shortest queue
-	 */
-	for (n = hlp->servers.head; n != NULL; n = n->next) {
-	    srv = (helper_stateful_server *)n->data;
-	    if (srv->flags.reserved == S_HELPER_RESERVED)
-		continue;
-	    if (!srv->flags.alive)
-		continue;
-	    if ((hlp->IsAvailable != NULL) && (srv->data != NULL) &&
-		!(hlp->IsAvailable(srv->data)))
-		continue;
-	    if ((rv != NULL) && (rv->deferred_requests < srv->deferred_requests))
-		continue;
-	    rv = srv;
-	}
+
+    if (rv == NULL)
+    {
+        /*
+         * all currently busy; loop through servers and find server
+         * with the shortest queue
+         */
+
+        for (n = hlp->servers.head; n != NULL; n = n->next) {
+            srv = (helper_stateful_server *)n->data;
+
+            if (srv->flags.reserved == S_HELPER_RESERVED)
+                continue;
+
+            if (!srv->flags.alive)
+                continue;
+
+            if ((hlp->IsAvailable != NULL) && (srv->data != NULL) &&
+                    !(hlp->IsAvailable(srv->data)))
+                continue;
+
+            if ((rv != NULL) && (rv->deferred_requests < srv->deferred_requests))
+                continue;
+
+            rv = srv;
+        }
     }
-    if (rv == NULL) {
-	debug(84, 1) ("helperStatefulDefer: None available.\n");
-	return NULL;
+
+    if (rv == NULL)
+    {
+        debug(84, 1) ("helperStatefulDefer: None available.\n");
+        return NULL;
     }
+
     /* consistency check:
      * when the deferred count is 0,
      *   submits + releases == deferbyfunc + deferbycb
@@ -340,42 +406,53 @@ helperStatefulDefer(statefulhelper * hlp)
      * we have said we wanted to be able to submit or cancel
      */
     if (rv->deferred_requests == 0)
-	assert(rv->stats.submits + rv->stats.releases ==
-	    rv->stats.deferbyfunc + rv->stats.deferbycb);
+        assert(rv->stats.submits + rv->stats.releases ==
+               rv->stats.deferbyfunc + rv->stats.deferbycb);
 
     rv->flags.reserved = S_HELPER_DEFERRED;
+
     rv->deferred_requests++;
+
     rv->stats.deferbyfunc++;
+
     return rv;
 }
 
 void
 helperStatefulReset(helper_stateful_server * srv)
-/* puts this helper back in the queue. the calling app is required to 
+/* puts this helper back in the queue. the calling app is required to
  * manage the state in the helper.
  */
 {
     statefulhelper *hlp = srv->parent;
     helper_stateful_request *r;
     r = srv->request;
-    if (r != NULL) {
-	/* reset attempt DURING an outstaning request */
-	debug(84, 1) ("helperStatefulReset: RESET During request %s \n",
-	    hlp->id_name);
-	srv->flags.busy = 0;
-	srv->offset = 0;
-	helperStatefulRequestFree(r);
-	srv->request = NULL;
+
+    if (r != NULL)
+    {
+        /* reset attempt DURING an outstaning request */
+        debug(84, 1) ("helperStatefulReset: RESET During request %s \n",
+                      hlp->id_name);
+        srv->flags.busy = 0;
+        srv->offset = 0;
+        helperStatefulRequestFree(r);
+        srv->request = NULL;
     }
+
     srv->flags.busy = 0;
-    if (srv->queue.head) {
-	srv->flags.reserved = S_HELPER_DEFERRED;
-	helperStatefulServerKickQueue(srv);
-    } else {
-	srv->flags.reserved = S_HELPER_FREE;
-	if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
-	    srv->parent->OnEmptyQueue(srv->data);
-	helperStatefulKickQueue(hlp);
+
+    if (srv->queue.head)
+    {
+        srv->flags.reserved = S_HELPER_DEFERRED;
+        helperStatefulServerKickQueue(srv);
+    } else
+    {
+        srv->flags.reserved = S_HELPER_FREE;
+
+        if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
+            srv->parent->OnEmptyQueue(srv->data);
+
+        helperStatefulKickQueue(hlp);
     }
 }
 
@@ -384,14 +461,19 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
 /*decrease the number of 'waiting' clients that set the helper to be DEFERRED */
 {
     srv->stats.releases++;
-    if (srv->flags.reserved == S_HELPER_DEFERRED) {
-	assert(srv->deferred_requests);
-	srv->deferred_requests--;
+
+    if (srv->flags.reserved == S_HELPER_DEFERRED)
+    {
+        assert(srv->deferred_requests);
+        srv->deferred_requests--;
     }
-    if (!(srv->deferred_requests) && (srv->flags.reserved == S_HELPER_DEFERRED) && !(srv->queue.head)) {
-	srv->flags.reserved = S_HELPER_FREE;
-	if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
-	    srv->parent->OnEmptyQueue(srv->data);
+
+    if (!(srv->deferred_requests) && (srv->flags.reserved == S_HELPER_DEFERRED) && !(srv->queue.head))
+    {
+        srv->flags.reserved = S_HELPER_FREE;
+
+        if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
+            srv->parent->OnEmptyQueue(srv->data);
     }
 }
 
@@ -409,44 +491,46 @@ helperStats(StoreEntry * sentry, helper * hlp)
     dlink_node *link;
     double tt;
     storeAppendPrintf(sentry, "program: %s\n",
-	hlp->cmdline->key);
+                      hlp->cmdline->key);
     storeAppendPrintf(sentry, "number running: %d of %d\n",
-	hlp->n_running, hlp->n_to_start);
+                      hlp->n_running, hlp->n_to_start);
     storeAppendPrintf(sentry, "requests sent: %d\n",
-	hlp->stats.requests);
+                      hlp->stats.requests);
     storeAppendPrintf(sentry, "replies received: %d\n",
-	hlp->stats.replies);
+                      hlp->stats.replies);
     storeAppendPrintf(sentry, "queue length: %d\n",
-	hlp->stats.queue_size);
+                      hlp->stats.queue_size);
     storeAppendPrintf(sentry, "avg service time: %.2f msec\n",
-	(double) hlp->stats.avg_svc_time / 1000.0);
+                      (double) hlp->stats.avg_svc_time / 1000.0);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%s\t%7s\t%7s\t%7s\n",
-	"#",
-	"FD",
-	"PID",
-	"# Requests",
-	"Flags",
-	"Time",
-	"Offset",
-	"Request");
+                      "#",
+                      "FD",
+                      "PID",
+                      "# Requests",
+                      "Flags",
+                      "Time",
+                      "Offset",
+                      "Request");
+
     for (link = hlp->servers.head; link; link = link->next) {
-	srv = (helper_server*)link->data;
-	tt = 0.001 * tvSubMsec(srv->dispatch_time,
-	    srv->flags.busy ? current_time : srv->answer_time);
-	storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
-	    srv->index + 1,
-	    srv->rfd,
-	    srv->pid,
-	    srv->stats.uses,
-	    srv->flags.alive ? 'A' : ' ',
-	    srv->flags.busy ? 'B' : ' ',
-	    srv->flags.closing ? 'C' : ' ',
-	    srv->flags.shutdown ? 'S' : ' ',
-	    tt < 0.0 ? 0.0 : tt,
-	    (int) srv->offset,
-	    srv->request ? log_quote(srv->request->buf) : "(none)");
+        srv = (helper_server*)link->data;
+        tt = 0.001 * tvSubMsec(srv->dispatch_time,
+                               srv->flags.busy ? current_time : srv->answer_time);
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
+                          srv->index + 1,
+                          srv->rfd,
+                          srv->pid,
+                          srv->stats.uses,
+                          srv->flags.alive ? 'A' : ' ',
+                          srv->flags.busy ? 'B' : ' ',
+                          srv->flags.closing ? 'C' : ' ',
+                          srv->flags.shutdown ? 'S' : ' ',
+                          tt < 0.0 ? 0.0 : tt,
+                          (int) srv->offset,
+                          srv->request ? log_quote(srv->request->buf) : "(none)");
     }
+
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
     storeAppendPrintf(sentry, "   A = ALIVE\n");
     storeAppendPrintf(sentry, "   B = BUSY\n");
@@ -461,45 +545,47 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
     dlink_node *link;
     double tt;
     storeAppendPrintf(sentry, "number running: %d of %d\n",
-	hlp->n_running, hlp->n_to_start);
+                      hlp->n_running, hlp->n_to_start);
     storeAppendPrintf(sentry, "requests sent: %d\n",
-	hlp->stats.requests);
+                      hlp->stats.requests);
     storeAppendPrintf(sentry, "replies received: %d\n",
-	hlp->stats.replies);
+                      hlp->stats.replies);
     storeAppendPrintf(sentry, "queue length: %d\n",
-	hlp->stats.queue_size);
+                      hlp->stats.queue_size);
     storeAppendPrintf(sentry, "avg service time: %d msec\n",
-	hlp->stats.avg_svc_time);
+                      hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%20s\t%s\t%7s\t%7s\t%7s\n",
-	"#",
-	"FD",
-	"PID",
-	"# Requests",
-	"# Deferred Requests",
-	"Flags",
-	"Time",
-	"Offset",
-	"Request");
+                      "#",
+                      "FD",
+                      "PID",
+                      "# Requests",
+                      "# Deferred Requests",
+                      "Flags",
+                      "Time",
+                      "Offset",
+                      "Request");
+
     for (link = hlp->servers.head; link; link = link->next) {
-	srv = (helper_stateful_server *)link->data;
-	tt = 0.001 * tvSubMsec(srv->dispatch_time, current_time);
-	storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%c%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
-	    srv->index + 1,
-	    srv->rfd,
-	    srv->pid,
-	    srv->stats.uses,
-	    (int) srv->deferred_requests,
-	    srv->flags.alive ? 'A' : ' ',
-	    srv->flags.busy ? 'B' : ' ',
-	    srv->flags.closing ? 'C' : ' ',
-	    srv->flags.reserved != S_HELPER_FREE ? 'R' : ' ',
-	    srv->flags.shutdown ? 'S' : ' ',
-	    srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
-	    tt < 0.0 ? 0.0 : tt,
-	    (int) srv->offset,
-	    srv->request ? log_quote(srv->request->buf) : "(none)");
+        srv = (helper_stateful_server *)link->data;
+        tt = 0.001 * tvSubMsec(srv->dispatch_time, current_time);
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%c%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
+                          srv->index + 1,
+                          srv->rfd,
+                          srv->pid,
+                          srv->stats.uses,
+                          (int) srv->deferred_requests,
+                          srv->flags.alive ? 'A' : ' ',
+                          srv->flags.busy ? 'B' : ' ',
+                          srv->flags.closing ? 'C' : ' ',
+                          srv->flags.reserved != S_HELPER_FREE ? 'R' : ' ',
+                          srv->flags.shutdown ? 'S' : ' ',
+                          srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
+                                  tt < 0.0 ? 0.0 : tt,
+                                  (int) srv->offset,
+                                  srv->request ? log_quote(srv->request->buf) : "(none)");
     }
+
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
     storeAppendPrintf(sentry, "   A = ALIVE\n");
     storeAppendPrintf(sentry, "   B = BUSY\n");
@@ -513,31 +599,37 @@ void
 helperShutdown(helper * hlp)
 {
     dlink_node *link = hlp->servers.head;
+
     while (link) {
-	helper_server *srv;
-	srv = (helper_server *)link->data;
-	link = link->next;
-	if (!srv->flags.alive) {
-	    debug(84, 3) ("helperShutdown: %s #%d is NOT ALIVE.\n",
-		hlp->id_name, srv->index + 1);
-	    continue;
-	}
-	srv->flags.shutdown = 1;	/* request it to shut itself down */
-	if (srv->flags.busy) {
-	    debug(84, 3) ("helperShutdown: %s #%d is BUSY.\n",
-		hlp->id_name, srv->index + 1);
-	    continue;
-	}
-	if (srv->flags.closing) {
-	    debug(84, 3) ("helperShutdown: %s #%d is CLOSING.\n",
-		hlp->id_name, srv->index + 1);
-	    continue;
-	}
-	srv->flags.closing = 1;
-	/* the rest of the details is dealt with in the helperServerFree
-	 * close handler
-	 */
-	comm_close(srv->rfd);
+        helper_server *srv;
+        srv = (helper_server *)link->data;
+        link = link->next;
+
+        if (!srv->flags.alive) {
+            debug(84, 3) ("helperShutdown: %s #%d is NOT ALIVE.\n",
+                          hlp->id_name, srv->index + 1);
+            continue;
+        }
+
+        srv->flags.shutdown = 1;	/* request it to shut itself down */
+
+        if (srv->flags.busy) {
+            debug(84, 3) ("helperShutdown: %s #%d is BUSY.\n",
+                          hlp->id_name, srv->index + 1);
+            continue;
+        }
+
+        if (srv->flags.closing) {
+            debug(84, 3) ("helperShutdown: %s #%d is CLOSING.\n",
+                          hlp->id_name, srv->index + 1);
+            continue;
+        }
+
+        srv->flags.closing = 1;
+        /* the rest of the details is dealt with in the helperServerFree
+         * close handler
+         */
+        comm_close(srv->rfd);
     }
 }
 
@@ -546,40 +638,48 @@ helperStatefulShutdown(statefulhelper * hlp)
 {
     dlink_node *link = hlp->servers.head;
     helper_stateful_server *srv;
+
     while (link) {
-	srv = (helper_stateful_server *)link->data;
-	link = link->next;
-	if (!srv->flags.alive) {
-	    debug(84, 3) ("helperStatefulShutdown: %s #%d is NOT ALIVE.\n",
-		hlp->id_name, srv->index + 1);
-	    continue;
-	}
-	srv->flags.shutdown = 1;	/* request it to shut itself down */
-	if (srv->flags.busy) {
-	    debug(84, 3) ("helperStatefulShutdown: %s #%d is BUSY.\n",
-		hlp->id_name, srv->index + 1);
-	    continue;
-	}
-	if (srv->flags.closing) {
-	    debug(84, 3) ("helperStatefulShutdown: %s #%d is CLOSING.\n",
-		hlp->id_name, srv->index + 1);
-	    continue;
-	}
-	if (srv->flags.reserved != S_HELPER_FREE) {
-	    debug(84, 3) ("helperStatefulShutdown: %s #%d is RESERVED.\n",
-		hlp->id_name, srv->index + 1);
-	    continue;
-	}
-	if (srv->deferred_requests) {
-	    debug(84, 3) ("helperStatefulShutdown: %s #%d has DEFERRED requests.\n",
-		hlp->id_name, srv->index + 1);
-	    continue;
-	}
-	srv->flags.closing = 1;
-	/* the rest of the details is dealt with in the helperStatefulServerFree
-	 * close handler
-	 */
-	comm_close(srv->rfd);
+        srv = (helper_stateful_server *)link->data;
+        link = link->next;
+
+        if (!srv->flags.alive) {
+            debug(84, 3) ("helperStatefulShutdown: %s #%d is NOT ALIVE.\n",
+                          hlp->id_name, srv->index + 1);
+            continue;
+        }
+
+        srv->flags.shutdown = 1;	/* request it to shut itself down */
+
+        if (srv->flags.busy) {
+            debug(84, 3) ("helperStatefulShutdown: %s #%d is BUSY.\n",
+                          hlp->id_name, srv->index + 1);
+            continue;
+        }
+
+        if (srv->flags.closing) {
+            debug(84, 3) ("helperStatefulShutdown: %s #%d is CLOSING.\n",
+                          hlp->id_name, srv->index + 1);
+            continue;
+        }
+
+        if (srv->flags.reserved != S_HELPER_FREE) {
+            debug(84, 3) ("helperStatefulShutdown: %s #%d is RESERVED.\n",
+                          hlp->id_name, srv->index + 1);
+            continue;
+        }
+
+        if (srv->deferred_requests) {
+            debug(84, 3) ("helperStatefulShutdown: %s #%d has DEFERRED requests.\n",
+                          hlp->id_name, srv->index + 1);
+            continue;
+        }
+
+        srv->flags.closing = 1;
+        /* the rest of the details is dealt with in the helperStatefulServerFree
+         * close handler
+         */
+        comm_close(srv->rfd);
     }
 }
 
@@ -607,11 +707,13 @@ void
 helperFree(helper * hlp)
 {
     if (!hlp)
-	return;
+        return;
+
     /* note, don't free hlp->name, it probably points to static memory */
     if (hlp->queue.head)
-	debug(84, 0) ("WARNING: freeing %s helper with %d requests queued\n",
-	    hlp->id_name, hlp->stats.queue_size);
+        debug(84, 0) ("WARNING: freeing %s helper with %d requests queued\n",
+                      hlp->id_name, hlp->stats.queue_size);
+
     cbdataFree(hlp);
 }
 
@@ -619,11 +721,13 @@ void
 helperStatefulFree(statefulhelper * hlp)
 {
     if (!hlp)
-	return;
+        return;
+
     /* note, don't free hlp->name, it probably points to static memory */
     if (hlp->queue.head)
-	debug(84, 0) ("WARNING: freeing %s helper with %d requests queued\n",
-	    hlp->id_name, hlp->stats.queue_size);
+        debug(84, 0) ("WARNING: freeing %s helper with %d requests queued\n",
+                      hlp->id_name, hlp->stats.queue_size);
+
     cbdataFree(hlp);
 }
 
@@ -639,28 +743,40 @@ helperServerFree(int fd, void *data)
     helper *hlp = srv->parent;
     helper_request *r;
     assert(srv->rfd == fd);
+
     if (srv->buf) {
-	memFree(srv->buf, MEM_8K_BUF);
-	srv->buf = NULL;
+        memFree(srv->buf, MEM_8K_BUF);
+        srv->buf = NULL;
     }
+
     if ((r = srv->request)) {
-	void *cbdata;
-	if (cbdataReferenceValidDone(r->data, &cbdata))
-	    r->callback(cbdata, srv->buf);
-	helperRequestFree(r);
-	srv->request = NULL;
+        void *cbdata;
+
+        if (cbdataReferenceValidDone(r->data, &cbdata))
+            r->callback(cbdata, srv->buf);
+
+        helperRequestFree(r);
+
+        srv->request = NULL;
     }
+
     if (srv->wfd != srv->rfd && srv->wfd != -1)
-	comm_close(srv->wfd);
+        comm_close(srv->wfd);
+
     dlinkDelete(&srv->link, &hlp->servers);
+
     hlp->n_running--;
+
     assert(hlp->n_running >= 0);
+
     if (!srv->flags.shutdown) {
-	debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
-	    hlp->id_name, srv->index + 1, fd);
-	if (hlp->n_running < hlp->n_to_start / 2)
-	    fatalf("Too few %s processes are running", hlp->id_name);
+        debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
+                      hlp->id_name, srv->index + 1, fd);
+
+        if (hlp->n_running < hlp->n_to_start / 2)
+            fatalf("Too few %s processes are running", hlp->id_name);
     }
+
     cbdataReferenceDone(srv->parent);
     cbdataFree(srv);
 }
@@ -672,32 +788,46 @@ helperStatefulServerFree(int fd, void *data)
     statefulhelper *hlp = srv->parent;
     helper_stateful_request *r;
     assert(srv->rfd == fd);
+
     if (srv->buf) {
-	memFree(srv->buf, MEM_8K_BUF);
-	srv->buf = NULL;
+        memFree(srv->buf, MEM_8K_BUF);
+        srv->buf = NULL;
     }
+
     if ((r = srv->request)) {
-	void *cbdata;
-	if (cbdataReferenceValidDone(r->data, &cbdata))
-	    r->callback(cbdata, srv, srv->buf);
-	helperStatefulRequestFree(r);
-	srv->request = NULL;
+        void *cbdata;
+
+        if (cbdataReferenceValidDone(r->data, &cbdata))
+            r->callback(cbdata, srv, srv->buf);
+
+        helperStatefulRequestFree(r);
+
+        srv->request = NULL;
     }
+
     /* TODO: walk the local queue of requests and carry them all out */
     if (srv->wfd != srv->rfd && srv->wfd != -1)
-	comm_close(srv->wfd);
+        comm_close(srv->wfd);
+
     dlinkDelete(&srv->link, &hlp->servers);
+
     hlp->n_running--;
+
     assert(hlp->n_running >= 0);
+
     if (!srv->flags.shutdown) {
-	debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
-	    hlp->id_name, srv->index + 1, fd);
-	if (hlp->n_running < hlp->n_to_start / 2)
-	    fatalf("Too few %s processes are running", hlp->id_name);
+        debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
+                      hlp->id_name, srv->index + 1, fd);
+
+        if (hlp->n_running < hlp->n_to_start / 2)
+            fatalf("Too few %s processes are running", hlp->id_name);
     }
+
     if (srv->data != NULL)
-	memPoolFree(hlp->datapool, srv->data);
+        memPoolFree(hlp->datapool, srv->data);
+
     cbdataReferenceDone(srv->parent);
+
     cbdataFree(srv);
 }
 
@@ -713,53 +843,68 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     assert(cbdataReferenceValid(data));
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+
     if (flag == COMM_ERR_CLOSING) {
         return;
     }
 
     debug(84, 5) ("helperHandleRead: %d bytes from %s #%d.\n",
-	(int)len, hlp->id_name, srv->index + 1);
+                  (int)len, hlp->id_name, srv->index + 1);
+
     if (flag != COMM_OK || len <= 0) {
-	if (len < 0)
-	    debug(84, 1) ("helperHandleRead: FD %d read: %s\n", fd, xstrerror());
-	comm_close(fd);
-	return;
+        if (len < 0)
+            debug(84, 1) ("helperHandleRead: FD %d read: %s\n", fd, xstrerror());
+
+        comm_close(fd);
+
+        return;
     }
+
     srv->offset += len;
     srv->buf[srv->offset] = '\0';
     debug(84, 9) ("helperHandleRead: '%s'\n", srv->buf);
     r = srv->request;
+
     if (r == NULL) {
-	/* someone spoke without being spoken to */
-	debug(84, 1) ("helperHandleRead: unexpected read from %s #%d, %d bytes\n",
-	    hlp->id_name, srv->index + 1, (int)len);
-	srv->offset = 0;
+        /* someone spoke without being spoken to */
+        debug(84, 1) ("helperHandleRead: unexpected read from %s #%d, %d bytes\n",
+                      hlp->id_name, srv->index + 1, (int)len);
+        srv->offset = 0;
     } else if ((t = strchr(srv->buf, '\n'))) {
-	/* end of reply found */
-	HLPCB *callback;
-	void *cbdata;
-	debug(84, 3) ("helperHandleRead: end of reply found\n");
-	*t = '\0';
-	callback = r->callback;
-	r->callback = NULL;
-	if (cbdataReferenceValidDone(r->data, &cbdata))
-	    callback(cbdata, srv->buf);
-	srv->flags.busy = 0;
-	srv->offset = 0;
-	helperRequestFree(r);
-	srv->request = NULL;
-	hlp->stats.replies++;
-	srv->answer_time = current_time;
-	hlp->stats.avg_svc_time =
-	    intAverage(hlp->stats.avg_svc_time,
-	    tvSubUsec(srv->dispatch_time, current_time),
-	    hlp->stats.replies, REDIRECT_AV_FACTOR);
-	if (srv->flags.shutdown) {
-	    int wfd = srv->wfd;
-	    srv->wfd = -1;
-	    comm_close(wfd);
-	} else
-	    helperKickQueue(hlp);
+        /* end of reply found */
+        HLPCB *callback;
+        void *cbdata;
+        debug(84, 3) ("helperHandleRead: end of reply found\n");
+        *t = '\0';
+        callback = r->callback;
+        r->callback = NULL;
+
+        if (cbdataReferenceValidDone(r->data, &cbdata))
+            callback(cbdata, srv->buf);
+
+        srv->flags.busy = 0;
+
+        srv->offset = 0;
+
+        helperRequestFree(r);
+
+        srv->request = NULL;
+
+        hlp->stats.replies++;
+
+        srv->answer_time = current_time;
+
+        hlp->stats.avg_svc_time =
+            intAverage(hlp->stats.avg_svc_time,
+                       tvSubUsec(srv->dispatch_time, current_time),
+                       hlp->stats.replies, REDIRECT_AV_FACTOR);
+
+        if (srv->flags.shutdown) {
+            int wfd = srv->wfd;
+            srv->wfd = -1;
+            comm_close(wfd);
+        } else
+            helperKickQueue(hlp);
     } else {
         comm_read(fd, srv->buf + srv->offset, srv->buf_sz - srv->offset, helperHandleRead, data);
     }
@@ -776,95 +921,115 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
     assert(cbdataReferenceValid(data));
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+
     if (flag == COMM_ERR_CLOSING) {
         return;
     }
 
     debug(84, 5) ("helperStatefulHandleRead: %d bytes from %s #%d.\n",
-	(int)len, hlp->id_name, srv->index + 1);
+                  (int)len, hlp->id_name, srv->index + 1);
+
     if (flag != COMM_OK || len <= 0) {
-	if (len < 0)
-	    debug(84, 1) ("helperStatefulHandleRead: FD %d read: %s\n", fd, xstrerror());
-	comm_close(fd);
-	return;
+        if (len < 0)
+            debug(84, 1) ("helperStatefulHandleRead: FD %d read: %s\n", fd, xstrerror());
+
+        comm_close(fd);
+
+        return;
     }
+
     srv->offset += len;
     srv->buf[srv->offset] = '\0';
     r = srv->request;
-    if (r == NULL) {
-	/* someone spoke without being spoken to */
-	debug(84, 1) ("helperStatefulHandleRead: unexpected read from %s #%d, %d bytes\n",
-	    hlp->id_name, srv->index + 1, (int)len);
-	srv->offset = 0;
-    } else if ((t = strchr(srv->buf, '\n'))) {
-	/* end of reply found */
-	debug(84, 3) ("helperStatefulHandleRead: end of reply found\n");
-	*t = '\0';
-	if (cbdataReferenceValid(r->data)) {
-	    switch ((r->callback(r->data, srv, srv->buf))) {	/*if non-zero reserve helper */
-	    case S_HELPER_UNKNOWN:
-		fatal("helperStatefulHandleRead: either a non-state aware callback was give to the stateful helper routines, or an uninitialised callback response was recieved.\n");
-		break;
-	    case S_HELPER_RELEASE:	/* helper finished with */
-		if (!srv->deferred_requests && !srv->queue.head) {
-		    srv->flags.reserved = S_HELPER_FREE;
-		    if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
-			srv->parent->OnEmptyQueue(srv->data);
-		    debug(84, 5) ("StatefulHandleRead: releasing %s #%d\n", hlp->id_name, srv->index + 1);
-		} else {
-		    srv->flags.reserved = S_HELPER_DEFERRED;
-		    debug(84, 5) ("StatefulHandleRead: outstanding deferred requests on %s #%d. reserving for deferred requests.\n", hlp->id_name, srv->index + 1);
-		}
-		break;
-	    case S_HELPER_RESERVE:	/* 'pin' this helper for the caller */
-		if (!srv->queue.head) {
-		    assert(srv->deferred_requests == 0);
-		    srv->flags.reserved = S_HELPER_RESERVED;
-		    debug(84, 5) ("StatefulHandleRead: reserving %s #%d\n", hlp->id_name, srv->index + 1);
-		} else {
-		    fatal("StatefulHandleRead: Callback routine attempted to reserve a stateful helper with deferred requests. This can lead to deadlock.\n");
-		}
-		break;
-	    case S_HELPER_DEFER:
-		/* the helper is still needed, but can
-		 * be used for other requests in the meantime.
-		 */
-		srv->flags.reserved = S_HELPER_DEFERRED;
-		srv->deferred_requests++;
-		srv->stats.deferbycb++;
-		debug(84, 5) ("StatefulHandleRead: reserving %s #%d for deferred requests.\n", hlp->id_name, srv->index + 1);
-		break;
-	    default:
-		fatal("helperStatefulHandleRead: unknown stateful helper callback result.\n");
-	    }
 
-	} else {
-	    debug(84, 1) ("StatefulHandleRead: no callback data registered\n");
-	}
-	srv->flags.busy = 0;
-	srv->offset = 0;
-	helperStatefulRequestFree(r);
-	srv->request = NULL;
-	hlp->stats.replies++;
-	hlp->stats.avg_svc_time =
-	    intAverage(hlp->stats.avg_svc_time,
-	    tvSubMsec(srv->dispatch_time, current_time),
-	    hlp->stats.replies, REDIRECT_AV_FACTOR);
-	if (srv->flags.shutdown
-	    && srv->flags.reserved == S_HELPER_FREE
-	    && !srv->deferred_requests) {
-	    int wfd = srv->wfd;
-	    srv->wfd = -1;
-	    comm_close(wfd);
-	} else {
-	    if (srv->queue.head)
-		helperStatefulServerKickQueue(srv);
-	    else
-		helperStatefulKickQueue(hlp);
-	}
+    if (r == NULL) {
+        /* someone spoke without being spoken to */
+        debug(84, 1) ("helperStatefulHandleRead: unexpected read from %s #%d, %d bytes\n",
+                      hlp->id_name, srv->index + 1, (int)len);
+        srv->offset = 0;
+    } else if ((t = strchr(srv->buf, '\n'))) {
+        /* end of reply found */
+        debug(84, 3) ("helperStatefulHandleRead: end of reply found\n");
+        *t = '\0';
+
+        if (cbdataReferenceValid(r->data)) {
+            switch ((r->callback(r->data, srv, srv->buf))) {	/*if non-zero reserve helper */
+
+            case S_HELPER_UNKNOWN:
+                    fatal("helperStatefulHandleRead: either a non-state aware callback was give to the stateful helper routines, or an uninitialised callback response was recieved.\n");
+                break;
+
+            case S_HELPER_RELEASE:	/* helper finished with */
+
+                if (!srv->deferred_requests && !srv->queue.head) {
+                    srv->flags.reserved = S_HELPER_FREE;
+
+                    if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
+                        srv->parent->OnEmptyQueue(srv->data);
+
+                    debug(84, 5) ("StatefulHandleRead: releasing %s #%d\n", hlp->id_name, srv->index + 1);
+                } else {
+                    srv->flags.reserved = S_HELPER_DEFERRED;
+                    debug(84, 5) ("StatefulHandleRead: outstanding deferred requests on %s #%d. reserving for deferred requests.\n", hlp->id_name, srv->index + 1);
+                }
+
+                break;
+
+            case S_HELPER_RESERVE:	/* 'pin' this helper for the caller */
+
+                if (!srv->queue.head) {
+                    assert(srv->deferred_requests == 0);
+                    srv->flags.reserved = S_HELPER_RESERVED;
+                    debug(84, 5) ("StatefulHandleRead: reserving %s #%d\n", hlp->id_name, srv->index + 1);
+                } else {
+                    fatal("StatefulHandleRead: Callback routine attempted to reserve a stateful helper with deferred requests. This can lead to deadlock.\n");
+                }
+
+                break;
+
+            case S_HELPER_DEFER:
+                /* the helper is still needed, but can
+                 * be used for other requests in the meantime.
+                 */
+                srv->flags.reserved = S_HELPER_DEFERRED;
+                srv->deferred_requests++;
+                srv->stats.deferbycb++;
+                debug(84, 5) ("StatefulHandleRead: reserving %s #%d for deferred requests.\n", hlp->id_name, srv->index + 1);
+                break;
+
+            default:
+                fatal("helperStatefulHandleRead: unknown stateful helper callback result.\n");
+            }
+
+        } else {
+            debug(84, 1) ("StatefulHandleRead: no callback data registered\n");
+        }
+
+        srv->flags.busy = 0;
+        srv->offset = 0;
+        helperStatefulRequestFree(r);
+        srv->request = NULL;
+        hlp->stats.replies++;
+        hlp->stats.avg_svc_time =
+            intAverage(hlp->stats.avg_svc_time,
+                       tvSubMsec(srv->dispatch_time, current_time),
+                       hlp->stats.replies, REDIRECT_AV_FACTOR);
+
+        if (srv->flags.shutdown
+                && srv->flags.reserved == S_HELPER_FREE
+                && !srv->deferred_requests) {
+            int wfd = srv->wfd;
+            srv->wfd = -1;
+            comm_close(wfd);
+        } else {
+            if (srv->queue.head)
+                helperStatefulServerKickQueue(srv);
+            else
+                helperStatefulKickQueue(hlp);
+        }
     } else {
         comm_read(srv->rfd, srv->buf + srv->offset, srv->buf_sz - srv->offset,
-            helperStatefulHandleRead, srv);
+                  helperStatefulHandleRead, srv);
     }
 }
 
@@ -874,17 +1039,25 @@ Enqueue(helper * hlp, helper_request * r)
     dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
     hlp->stats.queue_size++;
+
     if (hlp->stats.queue_size < hlp->n_running)
-	return;
+        return;
+
     if (squid_curtime - hlp->last_queue_warn < 600)
-	return;
+        return;
+
     if (shutting_down || reconfiguring)
-	return;
+        return;
+
     hlp->last_queue_warn = squid_curtime;
+
     debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
+
     debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
+
     if (hlp->stats.queue_size > hlp->n_running * 2)
-	fatalf("Too many queued %s requests", hlp->id_name);
+        fatalf("Too many queued %s requests", hlp->id_name);
+
     debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);
 }
 
@@ -894,17 +1067,25 @@ StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
     dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
     hlp->stats.queue_size++;
+
     if (hlp->stats.queue_size < hlp->n_running)
-	return;
+        return;
+
     if (hlp->stats.queue_size > hlp->n_running * 2)
-	fatalf("Too many queued %s requests", hlp->id_name);
+        fatalf("Too many queued %s requests", hlp->id_name);
+
     if (squid_curtime - hlp->last_queue_warn < 600)
-	return;
+        return;
+
     if (shutting_down || reconfiguring)
-	return;
+        return;
+
     hlp->last_queue_warn = squid_curtime;
+
     debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
+
     debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
+
     debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);
 }
 
@@ -913,23 +1094,23 @@ StatefulServerEnqueue(helper_stateful_server * srv, helper_stateful_request * r)
 {
     dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &srv->queue);
-/* TODO: warning if the queue on this server is more than X
- * We don't check the queue size at the moment, because
- * requests hitting here are deferrable 
- */
-/*    hlp->stats.queue_size++;
- * if (hlp->stats.queue_size < hlp->n_running)
- * return;
- * if (squid_curtime - hlp->last_queue_warn < 600)
- * return;
- * if (shutting_down || reconfiguring)
- * return;
- * hlp->last_queue_warn = squid_curtime;
- * debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
- * debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
- * if (hlp->stats.queue_size > hlp->n_running * 2)
- * fatalf("Too many queued %s requests", hlp->id_name);
- * debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);  */
+    /* TODO: warning if the queue on this server is more than X
+     * We don't check the queue size at the moment, because
+     * requests hitting here are deferrable 
+     */
+    /*    hlp->stats.queue_size++;
+     * if (hlp->stats.queue_size < hlp->n_running)
+     * return;
+     * if (squid_curtime - hlp->last_queue_warn < 600)
+     * return;
+     * if (shutting_down || reconfiguring)
+     * return;
+     * hlp->last_queue_warn = squid_curtime;
+     * debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
+     * debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
+     * if (hlp->stats.queue_size > hlp->n_running * 2)
+     * fatalf("Too many queued %s requests", hlp->id_name);
+     * debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);  */
 }
 
 
@@ -938,12 +1119,14 @@ Dequeue(helper * hlp)
 {
     dlink_node *link;
     helper_request *r = NULL;
+
     if ((link = hlp->queue.head)) {
-	r = (helper_request *)link->data;
-	dlinkDelete(link, &hlp->queue);
-	memFree(link, MEM_DLINK_NODE);
-	hlp->stats.queue_size--;
+        r = (helper_request *)link->data;
+        dlinkDelete(link, &hlp->queue);
+        memFree(link, MEM_DLINK_NODE);
+        hlp->stats.queue_size--;
     }
+
     return r;
 }
 
@@ -952,11 +1135,13 @@ StatefulServerDequeue(helper_stateful_server * srv)
 {
     dlink_node *link;
     helper_stateful_request *r = NULL;
+
     if ((link = srv->queue.head)) {
-	r = (helper_stateful_request *)link->data;
-	dlinkDelete(link, &srv->queue);
-	memFree(link, MEM_DLINK_NODE);
+        r = (helper_stateful_request *)link->data;
+        dlinkDelete(link, &srv->queue);
+        memFree(link, MEM_DLINK_NODE);
     }
+
     return r;
 }
 
@@ -965,12 +1150,14 @@ StatefulDequeue(statefulhelper * hlp)
 {
     dlink_node *link;
     helper_stateful_request *r = NULL;
+
     if ((link = hlp->queue.head)) {
-	r = (helper_stateful_request *)link->data;
-	dlinkDelete(link, &hlp->queue);
-	memFree(link, MEM_DLINK_NODE);
-	hlp->stats.queue_size--;
+        r = (helper_stateful_request *)link->data;
+        dlinkDelete(link, &hlp->queue);
+        memFree(link, MEM_DLINK_NODE);
+        hlp->stats.queue_size--;
     }
+
     return r;
 }
 
@@ -979,16 +1166,22 @@ GetFirstAvailable(helper * hlp)
 {
     dlink_node *n;
     helper_server *srv = NULL;
+
     if (hlp->n_running == 0)
-	return NULL;
+        return NULL;
+
     for (n = hlp->servers.head; n != NULL; n = n->next) {
-	srv = (helper_server *)n->data;
-	if (srv->flags.busy)
-	    continue;
-	if (!srv->flags.alive)
-	    continue;
-	return srv;
+        srv = (helper_server *)n->data;
+
+        if (srv->flags.busy)
+            continue;
+
+        if (!srv->flags.alive)
+            continue;
+
+        return srv;
     }
+
     return NULL;
 }
 
@@ -998,20 +1191,28 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
     dlink_node *n;
     helper_stateful_server *srv = NULL;
     debug(84, 5) ("StatefulGetFirstAvailable: Running servers %d.\n", hlp->n_running);
+
     if (hlp->n_running == 0)
-	return NULL;
+        return NULL;
+
     for (n = hlp->servers.head; n != NULL; n = n->next) {
-	srv = (helper_stateful_server *)n->data;
-	if (srv->flags.busy)
-	    continue;
-	if (srv->flags.reserved == S_HELPER_RESERVED)
-	    continue;
-	if (!srv->flags.alive)
-	    continue;
-	if ((hlp->IsAvailable != NULL) && (srv->data != NULL) && !(hlp->IsAvailable(srv->data)))
-	    continue;
-	return srv;
+        srv = (helper_stateful_server *)n->data;
+
+        if (srv->flags.busy)
+            continue;
+
+        if (srv->flags.reserved == S_HELPER_RESERVED)
+            continue;
+
+        if (!srv->flags.alive)
+            continue;
+
+        if ((hlp->IsAvailable != NULL) && (srv->data != NULL) && !(hlp->IsAvailable(srv->data)))
+            continue;
+
+        return srv;
     }
+
     debug(84, 5) ("StatefulGetFirstAvailable: None available.\n");
     return NULL;
 }
@@ -1020,39 +1221,41 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
 static void
 helperDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
-	/* nothing! */
+    /* nothing! */
 }
 
 static void
 helperDispatch(helper_server * srv, helper_request * r)
 {
     helper *hlp = srv->parent;
+
     if (!cbdataReferenceValid(r->data)) {
-	debug(84, 1) ("helperDispatch: invalid callback data\n");
-	helperRequestFree(r);
-	return;
+        debug(84, 1) ("helperDispatch: invalid callback data\n");
+        helperRequestFree(r);
+        return;
     }
+
     assert(!srv->flags.busy);
     srv->flags.busy = 1;
     srv->request = r;
     srv->dispatch_time = current_time;
     comm_write(srv->wfd,
-	r->buf,
-	strlen(r->buf),
-	helperDispatchWriteDone,	/* Handler */
-	hlp);				/* Handler-data */
+               r->buf,
+               strlen(r->buf),
+               helperDispatchWriteDone,	/* Handler */
+               hlp);				/* Handler-data */
     comm_read(srv->rfd, srv->buf + srv->offset, srv->buf_sz - srv->offset, helperHandleRead, srv);
     debug(84, 5) ("helperDispatch: Request sent to %s #%d, %d bytes\n",
-	hlp->id_name, srv->index + 1, (int) strlen(r->buf));
+                  hlp->id_name, srv->index + 1, (int) strlen(r->buf));
     srv->stats.uses++;
     hlp->stats.requests++;
 }
 
 static void
 helperStatefulDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag,
-  int xerrno, void *data)
+                                int xerrno, void *data)
 {
-	/* nothing! */
+    /* nothing! */
 }
 
 
@@ -1060,49 +1263,55 @@ static void
 helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r)
 {
     statefulhelper *hlp = srv->parent;
+
     if (!cbdataReferenceValid(r->data)) {
-	debug(84, 1) ("helperStatefulDispatch: invalid callback data\n");
-	helperStatefulRequestFree(r);
-	return;
+        debug(84, 1) ("helperStatefulDispatch: invalid callback data\n");
+        helperStatefulRequestFree(r);
+        return;
     }
+
     debug(84, 9) ("helperStatefulDispatch busying helper %s #%d\n", hlp->id_name, srv->index + 1);
+
     if (r->placeholder == 1) {
-	/* a callback is needed before this request can _use_ a helper. */
-	/* we don't care about releasing/deferring this helper. The request NEVER
-	 * gets to the helper. So we throw away the return code */
-	r->callback(r->data, srv, NULL);
-	/* throw away the placeholder */
-	helperStatefulRequestFree(r);
-	/* and push the queue. Note that the callback may have submitted a new 
-	 * request to the helper which is why we test for the request*/
-	if (srv->request == NULL) {
-	    if (srv->flags.shutdown
-		&& srv->flags.reserved == S_HELPER_FREE
-		&& !srv->deferred_requests) {
-		int wfd = srv->wfd;
-		srv->wfd = -1;
-		comm_close(wfd);
-	    } else {
-		if (srv->queue.head)
-		    helperStatefulServerKickQueue(srv);
-		else
-		    helperStatefulKickQueue(hlp);
-	    }
-	}
-	return;
+        /* a callback is needed before this request can _use_ a helper. */
+        /* we don't care about releasing/deferring this helper. The request NEVER
+         * gets to the helper. So we throw away the return code */
+        r->callback(r->data, srv, NULL);
+        /* throw away the placeholder */
+        helperStatefulRequestFree(r);
+        /* and push the queue. Note that the callback may have submitted a new
+         * request to the helper which is why we test for the request*/
+
+        if (srv->request == NULL) {
+            if (srv->flags.shutdown
+                    && srv->flags.reserved == S_HELPER_FREE
+                    && !srv->deferred_requests) {
+                int wfd = srv->wfd;
+                srv->wfd = -1;
+                comm_close(wfd);
+            } else {
+                if (srv->queue.head)
+                    helperStatefulServerKickQueue(srv);
+                else
+                    helperStatefulKickQueue(hlp);
+            }
+        }
+
+        return;
     }
+
     srv->flags.busy = 1;
     srv->request = r;
     srv->dispatch_time = current_time;
     comm_write(srv->wfd,
-	r->buf,
-	strlen(r->buf),
-	helperStatefulDispatchWriteDone,	/* Handler */
-	hlp);				/* Handler-data */
+               r->buf,
+               strlen(r->buf),
+               helperStatefulDispatchWriteDone,	/* Handler */
+               hlp);				/* Handler-data */
     comm_read(srv->rfd, srv->buf + srv->offset, srv->buf_sz - srv->offset,
-      helperStatefulHandleRead, srv);
+              helperStatefulHandleRead, srv);
     debug(84, 5) ("helperStatefulDispatch: Request sent to %s #%d, %d bytes\n",
-	hlp->id_name, srv->index + 1, (int) strlen(r->buf));
+                  hlp->id_name, srv->index + 1, (int) strlen(r->buf));
     srv->stats.uses++;
     hlp->stats.requests++;
 }
@@ -1113,8 +1322,9 @@ helperKickQueue(helper * hlp)
 {
     helper_request *r;
     helper_server *srv;
+
     while ((srv = GetFirstAvailable(hlp)) && (r = Dequeue(hlp)))
-	helperDispatch(srv, r);
+        helperDispatch(srv, r);
 }
 
 static void
@@ -1122,16 +1332,18 @@ helperStatefulKickQueue(statefulhelper * hlp)
 {
     helper_stateful_request *r;
     helper_stateful_server *srv;
+
     while ((srv = StatefulGetFirstAvailable(hlp)) && (r = StatefulDequeue(hlp)))
-	helperStatefulDispatch(srv, r);
+        helperStatefulDispatch(srv, r);
 }
 
 static void
 helperStatefulServerKickQueue(helper_stateful_server * srv)
 {
     helper_stateful_request *r;
+
     if ((r = StatefulServerDequeue(srv)))
-	helperStatefulDispatch(srv, r);
+        helperStatefulDispatch(srv, r);
 }
 
 static void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.365 2003/02/14 13:59:49 robertc Exp $
+ * $Id: comm.cc,v 1.366 2003/02/21 22:50:07 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -52,21 +52,27 @@
  */
 #define	MAX_ACCEPT_PER_LOOP		10
 
-typedef struct {
+typedef struct
+{
     char *host;
     u_short port;
+
     struct sockaddr_in S;
     CNCB *callback;
     void *data;
+
     struct in_addr in_addr;
     int locks;
     int fd;
     int tries;
     int addrcount;
     int connstart;
-} ConnectStateData;
+}
+
+ConnectStateData;
 
 /* STATIC */
+
 static comm_err_t commBind(int s, struct in_addr, u_short port);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
@@ -86,81 +92,108 @@ CBDATA_TYPE(ConnectStateData);
 
 static PF comm_accept_try;
 
-class AcceptFD {
-  public:
+class AcceptFD
+{
+
+public:
     int check_delay;
     IOACB *handler;
     void *handler_data;
 };
 
-struct _fdc_t {
-	int active;
-	int fd;
-	dlink_list CommCallbackList;
-	struct {
-		char *buf;
-		int size;
-		IOCB *handler;
-		void *handler_data;
-	} read;
-	struct {
-		const char *buf;
-		int size;
-		int curofs;
-		IOCB *handler;
-		void *handler_data;
-	} write;
-	struct {
-		/* how often (in msec) to re-check if we're out of fds on an accept() */
-		struct sockaddr_in & me() {return connDetails.me;}
-		struct sockaddr_in & pn() {return connDetails.peer;}
-		AcceptFD accept;
-		ConnectionDetail connDetails;
-	} accept;
-	struct CommFiller {
-		StoreIOBuffer requestedData;
-		size_t amountDone;
-		IOFCB *handler;
-		void *handler_data;
-	} fill;
+struct _fdc_t
+{
+    int active;
+    int fd;
+    dlink_list CommCallbackList;
+
+    struct
+    {
+        char *buf;
+        int size;
+        IOCB *handler;
+        void *handler_data;
+    }
+
+    read;
+
+    struct
+    {
+        const char *buf;
+        int size;
+        int curofs;
+        IOCB *handler;
+        void *handler_data;
+    }
+
+    write;
+
+    struct
+    {
+        /* how often (in msec) to re-check if we're out of fds on an accept() */
+
+        struct sockaddr_in & me() {return connDetails.me;}
+
+        struct sockaddr_in & pn() {return connDetails.peer;}
+
+        AcceptFD accept;
+        ConnectionDetail connDetails;
+    }
+
+    accept;
+
+    struct CommFiller
+    {
+        StoreIOBuffer requestedData;
+        size_t amountDone;
+        IOFCB *handler;
+        void *handler_data;
+    }
+
+    fill;
 
 };
+
 typedef struct _fdc_t fdc_t;
 
 typedef enum {
-	COMM_CB_READ = 1,
-	COMM_CB_WRITE,
-	COMM_CB_ACCEPT,
-	COMM_CB_FILL
+    COMM_CB_READ = 1,
+    COMM_CB_WRITE,
+    COMM_CB_ACCEPT,
+    COMM_CB_FILL
 } comm_callback_t;
 
-struct _CommCallbackData {
-	comm_callback_t type;
-	dlink_node fd_node;
-	dlink_node h_node;
-	int fd;
-	int newfd;	/* for accept() */
-	char *buf;
-	int retval;
-	union {
-	    IOCB *r_callback;
-	    IOACB *a_callback;
-	    IOFCB *f_callback;
-	    IOWCB *w_callback;
-	} c;
-	void *callback_data;
-	comm_err_t errcode;
-	int xerrno;
-	int seqnum;
-	ConnectionDetail details;
-	StoreIOBuffer sb;
+struct _CommCallbackData
+{
+    comm_callback_t type;
+    dlink_node fd_node;
+    dlink_node h_node;
+    int fd;
+    int newfd;	/* for accept() */
+    char *buf;
+    int retval;
+    union {
+        IOCB *r_callback;
+        IOACB *a_callback;
+        IOFCB *f_callback;
+        IOWCB *w_callback;
+    } c;
+    void *callback_data;
+    comm_err_t errcode;
+    int xerrno;
+    int seqnum;
+    ConnectionDetail details;
+    StoreIOBuffer sb;
 };
+
 typedef struct _CommCallbackData CommCallbackData;
 
-struct _fd_debug_t {
-  char *close_file;
-  int close_line;
+struct _fd_debug_t
+{
+    char *close_file;
+    int close_line;
 };
+
 typedef struct _fd_debug_t fd_debug_t;
 
 static MemPool *comm_write_pool = NULL;
@@ -180,7 +213,7 @@ static int CommCallbackSeqnum = 1;
 int
 comm_existsiocallback(void)
 {
-	return CommCallbackList.head == NULL;
+    return CommCallbackList.head == NULL;
 }
 
 /*
@@ -192,31 +225,31 @@ comm_existsiocallback(void)
  */
 static void
 comm_addreadcallback(int fd, IOCB *callback, char *buf, size_t retval, comm_err_t errcode,
-  int xerrno, void *callback_data)
+                     int xerrno, void *callback_data)
 {
-	CommCallbackData *cio;
+    CommCallbackData *cio;
 
-	assert(fdc_table[fd].active == 1);
+    assert(fdc_table[fd].active == 1);
 
-	/* Allocate a new struct */
-	cio = (CommCallbackData *)memPoolAlloc(comm_callback_pool);
+    /* Allocate a new struct */
+    cio = (CommCallbackData *)memPoolAlloc(comm_callback_pool);
 
-	/* Throw our data into it */
-	cio->fd = fd;
-	cio->retval = retval;
-	cio->xerrno = xerrno;
-	cio->errcode = errcode;
-	cio->c.r_callback = callback;
-	cio->callback_data = callback_data;
-	cio->seqnum = CommCallbackSeqnum;
-        cio->buf = buf;
-	cio->type = COMM_CB_READ;
+    /* Throw our data into it */
+    cio->fd = fd;
+    cio->retval = retval;
+    cio->xerrno = xerrno;
+    cio->errcode = errcode;
+    cio->c.r_callback = callback;
+    cio->callback_data = callback_data;
+    cio->seqnum = CommCallbackSeqnum;
+    cio->buf = buf;
+    cio->type = COMM_CB_READ;
 
-	/* Add it to the end of the list */
-	dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
+    /* Add it to the end of the list */
+    dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
 
-	/* and add it to the end of the fd list */
-	dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
+    /* and add it to the end of the fd list */
+    dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
 
 }
 
@@ -225,94 +258,94 @@ comm_addreadcallback(int fd, IOCB *callback, char *buf, size_t retval, comm_err_
 static void
 comm_addacceptcallback(int fd, int newfd, IOACB *callback, ConnectionDetail details, comm_err_t errcode, int xerrno, void *callback_data)
 {
-	CommCallbackData *cio;
+    CommCallbackData *cio;
 
-	assert(fdc_table[fd].active == 1);
+    assert(fdc_table[fd].active == 1);
 
-	/* Allocate a new struct */
-	cio = (CommCallbackData *)memPoolAlloc(comm_callback_pool);
+    /* Allocate a new struct */
+    cio = (CommCallbackData *)memPoolAlloc(comm_callback_pool);
 
-	/* Throw our data into it */
-	cio->fd = fd;
-	cio->xerrno = xerrno;
-	cio->errcode = errcode;
-	cio->c.a_callback = callback;
-	cio->callback_data = callback_data;
-	cio->seqnum = CommCallbackSeqnum;
-	cio->type = COMM_CB_ACCEPT;
-	cio->newfd = newfd;
-	cio->details = details;
+    /* Throw our data into it */
+    cio->fd = fd;
+    cio->xerrno = xerrno;
+    cio->errcode = errcode;
+    cio->c.a_callback = callback;
+    cio->callback_data = callback_data;
+    cio->seqnum = CommCallbackSeqnum;
+    cio->type = COMM_CB_ACCEPT;
+    cio->newfd = newfd;
+    cio->details = details;
 
-	/* Add it to the end of the list */
-	dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
+    /* Add it to the end of the list */
+    dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
 
-	/* and add it to the end of the fd list */
-	dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
+    /* and add it to the end of the fd list */
+    dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
 
 }
 
 static void
 comm_add_fill_callback(int fd, size_t retval, comm_err_t errcode, int xerrno)
 {
-	CommCallbackData *cio;
+    CommCallbackData *cio;
 
-	assert(fdc_table[fd].active == 1);
+    assert(fdc_table[fd].active == 1);
 
-	/* Allocate a new struct */
-	cio = (CommCallbackData *)memPoolAlloc(comm_callback_pool);
+    /* Allocate a new struct */
+    cio = (CommCallbackData *)memPoolAlloc(comm_callback_pool);
 
-	/* Throw our data into it */
-	cio->fd = fd;
-	cio->xerrno = xerrno;
-	cio->errcode = errcode;
-	cio->c.f_callback = fdc_table[fd].fill.handler;
-	cio->callback_data = fdc_table[fd].fill.handler_data;
-	cio->seqnum = CommCallbackSeqnum;
-	cio->type = COMM_CB_FILL;
-	/* retval not used */
-	cio->retval = -1;
-	cio->sb = fdc_table[fd].fill.requestedData;
-	cio->sb.length = retval;
-	/* Clear out fd state */
-	fdc_table[fd].fill.handler = NULL;
-	fdc_table[fd].fill.handler_data = NULL;
+    /* Throw our data into it */
+    cio->fd = fd;
+    cio->xerrno = xerrno;
+    cio->errcode = errcode;
+    cio->c.f_callback = fdc_table[fd].fill.handler;
+    cio->callback_data = fdc_table[fd].fill.handler_data;
+    cio->seqnum = CommCallbackSeqnum;
+    cio->type = COMM_CB_FILL;
+    /* retval not used */
+    cio->retval = -1;
+    cio->sb = fdc_table[fd].fill.requestedData;
+    cio->sb.length = retval;
+    /* Clear out fd state */
+    fdc_table[fd].fill.handler = NULL;
+    fdc_table[fd].fill.handler_data = NULL;
 
-	/* Add it to the end of the list */
-	dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
+    /* Add it to the end of the list */
+    dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
 
-	/* and add it to the end of the fd list */
-	dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
+    /* and add it to the end of the fd list */
+    dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
 }
 
 static void
 comm_add_write_callback(int fd, size_t retval, comm_err_t errcode, int xerrno)
 {
-	CommCallbackData *cio;
+    CommCallbackData *cio;
 
-	assert(fdc_table[fd].active == 1);
+    assert(fdc_table[fd].active == 1);
 
-	/* Allocate a new struct */
-	cio = (CommCallbackData *)memPoolAlloc(comm_callback_pool);
+    /* Allocate a new struct */
+    cio = (CommCallbackData *)memPoolAlloc(comm_callback_pool);
 
-	/* Throw our data into it */
-	cio->fd = fd;
-	cio->xerrno = xerrno;
-	cio->errcode = errcode;
-	cio->c.w_callback = fdc_table[fd].write.handler;
-	cio->callback_data = fdc_table[fd].write.handler_data;
-	cio->seqnum = CommCallbackSeqnum;
-	cio->type = COMM_CB_WRITE;
-	cio->retval = retval;
+    /* Throw our data into it */
+    cio->fd = fd;
+    cio->xerrno = xerrno;
+    cio->errcode = errcode;
+    cio->c.w_callback = fdc_table[fd].write.handler;
+    cio->callback_data = fdc_table[fd].write.handler_data;
+    cio->seqnum = CommCallbackSeqnum;
+    cio->type = COMM_CB_WRITE;
+    cio->retval = retval;
 
-	/* Clear out fd state */
-	fdc_table[fd].write.handler = NULL;
-	fdc_table[fd].write.handler_data = NULL;
+    /* Clear out fd state */
+    fdc_table[fd].write.handler = NULL;
+    fdc_table[fd].write.handler_data = NULL;
 
-	/* Add it to the end of the list */
-	dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
+    /* Add it to the end of the list */
+    dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
 
-	/* and add it to the end of the fd list */
-	dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
+    /* and add it to the end of the fd list */
+    dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
 }
 
 
@@ -320,27 +353,32 @@ comm_add_write_callback(int fd, size_t retval, comm_err_t errcode, int xerrno)
 static void
 comm_call_io_callback(CommCallbackData *cio)
 {
-		switch(cio->type) {
-		    case COMM_CB_READ:
-		        cio->c.r_callback(cio->fd, cio->buf, cio->retval, cio->errcode, cio->xerrno,
-		          cio->callback_data);
-			break;
-		    case COMM_CB_WRITE:
-			cio->c.w_callback(cio->fd, cio->buf, cio->retval, cio->errcode, cio->xerrno,
-			  cio->callback_data);
-		        break;
-		    case COMM_CB_ACCEPT:
-                        cio->c.a_callback(cio->fd, cio->newfd, &cio->details, cio->errcode,
-			  cio->xerrno, cio->callback_data);
-			break;
-		    case COMM_CB_FILL:
-			cio->c.f_callback(cio->fd, cio->sb, cio->errcode,
-			  cio->xerrno, cio->callback_data);
-                        break;
-		    default:
-			fatal("unknown comm io callback type!");
-			break;
-		};
+    switch(cio->type) {
+
+    case COMM_CB_READ:
+        cio->c.r_callback(cio->fd, cio->buf, cio->retval, cio->errcode, cio->xerrno,
+                          cio->callback_data);
+        break;
+
+    case COMM_CB_WRITE:
+        cio->c.w_callback(cio->fd, cio->buf, cio->retval, cio->errcode, cio->xerrno,
+                          cio->callback_data);
+        break;
+
+    case COMM_CB_ACCEPT:
+        cio->c.a_callback(cio->fd, cio->newfd, &cio->details, cio->errcode,
+                          cio->xerrno, cio->callback_data);
+        break;
+
+    case COMM_CB_FILL:
+        cio->c.f_callback(cio->fd, cio->sb, cio->errcode,
+                          cio->xerrno, cio->callback_data);
+        break;
+
+    default:
+        fatal("unknown comm io callback type!");
+        break;
+    };
 }
 
 
@@ -359,26 +397,31 @@ comm_call_io_callback(CommCallbackData *cio)
 void
 comm_calliocallback(void)
 {
-	CommCallbackData *cio;
-	dlink_node *node;
-	int oldseqnum = CommCallbackSeqnum;
+    CommCallbackData *cio;
+    dlink_node *node;
+    int oldseqnum = CommCallbackSeqnum;
 
-	/* Call our callbacks until we hit NULL or the seqnum changes */
-	while (CommCallbackList.head != NULL) {
-		node = (dlink_node *)CommCallbackList.head;
-		cio = (CommCallbackData *)node->data;
+    /* Call our callbacks until we hit NULL or the seqnum changes */
 
-		/* If seqnum isn't the same, its time to die */
-		if (cio->seqnum != oldseqnum)
-			break;		/* we've hit newly-added events */
+    while (CommCallbackList.head != NULL) {
+        node = (dlink_node *)CommCallbackList.head;
+        cio = (CommCallbackData *)node->data;
 
-		assert(fdc_table[cio->fd].active == 1);
+        /* If seqnum isn't the same, its time to die */
 
-		dlinkDelete(&cio->h_node, &CommCallbackList);
-		dlinkDelete(&cio->fd_node, &(fdc_table[cio->fd].CommCallbackList));
-		comm_call_io_callback(cio);
-		memPoolFree(comm_callback_pool, cio);
-	}
+        if (cio->seqnum != oldseqnum)
+            break;		/* we've hit newly-added events */
+
+        assert(fdc_table[cio->fd].active == 1);
+
+        dlinkDelete(&cio->h_node, &CommCallbackList);
+
+        dlinkDelete(&cio->fd_node, &(fdc_table[cio->fd].CommCallbackList));
+
+        comm_call_io_callback(cio);
+
+        memPoolFree(comm_callback_pool, cio);
+    }
 }
 
 
@@ -388,14 +431,14 @@ comm_calliocallback(void)
 static void
 comm_read_callback(int fd, int retval, comm_err_t errcode, int xerrno)
 {
-	fdc_t *Fc = &fdc_table[fd];
+    fdc_t *Fc = &fdc_table[fd];
 
-	assert(Fc->read.handler != NULL);
+    assert(Fc->read.handler != NULL);
 
-	comm_addreadcallback(fd, Fc->read.handler, Fc->read.buf, retval, errcode, xerrno,
-	    Fc->read.handler_data);
-	Fc->read.handler = NULL;
-	Fc->read.handler_data = NULL;
+    comm_addreadcallback(fd, Fc->read.handler, Fc->read.buf, retval, errcode, xerrno,
+                         Fc->read.handler_data);
+    Fc->read.handler = NULL;
+    Fc->read.handler_data = NULL;
 }
 
 /*
@@ -407,34 +450,35 @@ comm_read_callback(int fd, int retval, comm_err_t errcode, int xerrno)
 static void
 comm_read_try(int fd, void *data)
 {
-	fdc_t *Fc = &fdc_table[fd];
-	int retval;
+    fdc_t *Fc = &fdc_table[fd];
+    int retval;
 
-	/* make sure we actually have a callback */
-	assert(Fc->read.handler != NULL);
+    /* make sure we actually have a callback */
+    assert(Fc->read.handler != NULL);
 
-	/* Attempt a read */
-        statCounter.syscalls.sock.reads++;
-	errno = 0;
-	retval = FD_READ_METHOD(fd, Fc->read.buf, Fc->read.size);
-	debug(5, 3) ("comm_read_try: fd %d, size %d, retval %d, errno %d\n",
-	    fd, Fc->read.size, retval, errno);
-	if (retval < 0 && !ignoreErrno(errno)) {
-		debug(5, 3) ("comm_read_try: scheduling COMM_ERROR\n");
-		comm_read_callback(fd, -1, COMM_ERROR, errno);
-		return;
-	};
+    /* Attempt a read */
+    statCounter.syscalls.sock.reads++;
+    errno = 0;
+    retval = FD_READ_METHOD(fd, Fc->read.buf, Fc->read.size);
+    debug(5, 3) ("comm_read_try: fd %d, size %d, retval %d, errno %d\n",
+                 fd, Fc->read.size, retval, errno);
 
-	/* See if we read anything */
-	/* Note - read 0 == socket EOF, which is a valid read */
-	if (retval >= 0) {
-                fd_bytes(fd, retval, FD_READ);
-		comm_read_callback(fd, retval, COMM_OK, 0);
-		return;
-	}
+    if (retval < 0 && !ignoreErrno(errno)) {
+        debug(5, 3) ("comm_read_try: scheduling COMM_ERROR\n");
+        comm_read_callback(fd, -1, COMM_ERROR, errno);
+        return;
+    };
 
-	/* Nope, register for some more IO */
-        commSetSelect(fd, COMM_SELECT_READ, comm_read_try, NULL, 0);
+    /* See if we read anything */
+    /* Note - read 0 == socket EOF, which is a valid read */
+    if (retval >= 0) {
+        fd_bytes(fd, retval, FD_READ);
+        comm_read_callback(fd, retval, COMM_OK, 0);
+        return;
+    }
+
+    /* Nope, register for some more IO */
+    commSetSelect(fd, COMM_SELECT_READ, comm_read_try, NULL, 0);
 }
 
 /*
@@ -444,24 +488,25 @@ comm_read_try(int fd, void *data)
 void
 comm_read(int fd, char *buf, int size, IOCB *handler, void *handler_data)
 {
-	/* Make sure we're not reading anything and we're not closing */
-	assert(fdc_table[fd].active == 1);
-	assert(fdc_table[fd].read.handler == NULL);
-        assert(!fd_table[fd].flags.closing);
+    /* Make sure we're not reading anything and we're not closing */
+    assert(fdc_table[fd].active == 1);
+    assert(fdc_table[fd].read.handler == NULL);
+    assert(!fd_table[fd].flags.closing);
 
-	debug(5,4)("comm_read, queueing read for FD %d\n",fd);
+    debug(5,4)("comm_read, queueing read for FD %d\n",fd);
 
-	/* Queue a read */
-	fdc_table[fd].read.buf = buf;
-	fdc_table[fd].read.size = size;
-	fdc_table[fd].read.handler = handler;
-	fdc_table[fd].read.handler_data = handler_data;
+    /* Queue a read */
+    fdc_table[fd].read.buf = buf;
+    fdc_table[fd].read.size = size;
+    fdc_table[fd].read.handler = handler;
+    fdc_table[fd].read.handler_data = handler_data;
 
 #if OPTIMISTIC_IO
-        comm_read_try(fd, NULL);
+
+    comm_read_try(fd, NULL);
 #else
-	/* Register intrest in a FD read */
-        commSetSelect(fd, COMM_SELECT_READ, comm_read_try, NULL, 0);
+    /* Register intrest in a FD read */
+    commSetSelect(fd, COMM_SELECT_READ, comm_read_try, NULL, 0);
 #endif
 }
 
@@ -475,18 +520,23 @@ comm_fill_read(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 
     if (flag != COMM_OK) {
         /* Error! */
-	/* XXX This was -1 below, but -1 can't be used for size_t parameters.
-	 * The callback should set -1 to the client if needed based on the flags
-	 */
-	comm_add_fill_callback(fd, 0, flag, xerrno);
-	return;
+        /* XXX This was -1 below, but -1 can't be used for size_t parameters.
+         * The callback should set -1 to the client if needed based on the flags
+         */
+        comm_add_fill_callback(fd, 0, flag, xerrno);
+        return;
     }
+
     /* flag is COMM_OK */
     /* We handle EOFs as read lengths of 0! Its eww, but its consistent */
     fill = &fdc_table[fd].fill;
+
     fill->amountDone += len;
+
     sb = &fdc_table[fd].fill.requestedData;
+
     assert(fill->amountDone <= sb->length);
+
     comm_add_fill_callback(fd, fill->amountDone, COMM_OK, 0);
 }
 
@@ -524,8 +574,11 @@ comm_empty_os_read_buffers(int fd)
 #ifdef _SQUID_LINUX_
     /* prevent those nasty RST packets */
     char buf[SQUID_TCP_SO_RCVBUF];
+
     if (fd_table[fd].flags.nonblocking == 1)
-    	while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0);
+        while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0)
+
+            ;
 #endif
 }
 
@@ -552,11 +605,14 @@ comm_has_pending_read_callback(int fd)
      * - adrian
      */
     node = fdc_table[fd].CommCallbackList.head;
+
     while (node != NULL) {
-	cd = (CommCallbackData *)node->data;
-	if (cd->type == COMM_CB_READ)
-	    return 1;
-	node = node->next;
+        cd = (CommCallbackData *)node->data;
+
+        if (cd->type == COMM_CB_READ)
+            return 1;
+
+        node = node->next;
     }
 
     /* Not found */
@@ -572,10 +628,10 @@ comm_has_pending_read_callback(int fd)
 bool
 comm_has_pending_read(int fd)
 {
-	assert(fd_table[fd].flags.open == 1);
-	assert(fdc_table[fd].active == 1);
+    assert(fd_table[fd].flags.open == 1);
+    assert(fdc_table[fd].active == 1);
 
-	return (fdc_table[fd].read.handler != NULL);
+    return (fdc_table[fd].read.handler != NULL);
 }
 
 /*
@@ -600,7 +656,7 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
     fdc_table[fd].read.handler_data = NULL;
 
     /* And the IO event */
-   commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 
@@ -611,12 +667,12 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
 void
 fdc_open(int fd, unsigned int type, char *desc)
 {
-	assert(fdc_table[fd].active == 0);
+    assert(fdc_table[fd].active == 0);
 
-	fdc_table[fd].active = 1;
-	fdc_table[fd].fd = fd;
-	comm_accept_setcheckperiod(fd, 250);
-	fd_open(fd, type, desc);
+    fdc_table[fd].active = 1;
+    fdc_table[fd].fd = fd;
+    comm_accept_setcheckperiod(fd, 250);
+    fd_open(fd, type, desc);
 }
 
 
@@ -626,22 +682,23 @@ fdc_open(int fd, unsigned int type, char *desc)
 
 int
 comm_udp_recvfrom(int fd, void *buf, size_t len, int flags,
-  struct sockaddr *from, socklen_t *fromlen)
+
+                  struct sockaddr *from, socklen_t *fromlen)
 {
-	statCounter.syscalls.sock.recvfroms++;     
-	return recvfrom(fd, buf, len, flags, from, fromlen);
+    statCounter.syscalls.sock.recvfroms++;
+    return recvfrom(fd, buf, len, flags, from, fromlen);
 }
 
 int
 comm_udp_recv(int fd, void *buf, size_t len, int flags)
 {
-	return comm_udp_recvfrom(fd, buf, len, flags, NULL, 0);
+    return comm_udp_recvfrom(fd, buf, len, flags, NULL, 0);
 }
 
 ssize_t
 comm_udp_send(int s, const void *buf, size_t len, int flags)
 {
-	return send(s, buf, len, flags);
+    return send(s, buf, len, flags);
 }
 
 
@@ -657,38 +714,39 @@ comm_udp_send(int s, const void *buf, size_t len, int flags)
 static void
 comm_write_try(int fd, void *data)
 {
-	fdc_t *Fc = &fdc_table[fd];
-	int retval;
+    fdc_t *Fc = &fdc_table[fd];
+    int retval;
 
-	/* make sure we actually have a callback */
-	assert(Fc->write.handler != NULL);
+    /* make sure we actually have a callback */
+    assert(Fc->write.handler != NULL);
 
-	/* Attempt a write */
-        statCounter.syscalls.sock.reads++;
-	errno = 0;
-	retval = FD_WRITE_METHOD(fd, Fc->write.buf + Fc->write.curofs, Fc->write.size - Fc->write.curofs);
-	debug(5, 3) ("comm_write_try: fd %d: tried to write %d bytes, retval %d, errno %d\n",
-	    fd, Fc->write.size - Fc->write.curofs, retval, errno);
+    /* Attempt a write */
+    statCounter.syscalls.sock.reads++;
+    errno = 0;
+    retval = FD_WRITE_METHOD(fd, Fc->write.buf + Fc->write.curofs, Fc->write.size - Fc->write.curofs);
+    debug(5, 3) ("comm_write_try: fd %d: tried to write %d bytes, retval %d, errno %d\n",
+                 fd, Fc->write.size - Fc->write.curofs, retval, errno);
 
-	if (retval < 0 && !ignoreErrno(errno)) {
-		debug(5, 3) ("comm_write_try: can't ignore error: scheduling COMM_ERROR callback\n");
-		comm_add_write_callback(fd, 0, COMM_ERROR, errno);
-		return;
-	}
+    if (retval < 0 && !ignoreErrno(errno)) {
+        debug(5, 3) ("comm_write_try: can't ignore error: scheduling COMM_ERROR callback\n");
+        comm_add_write_callback(fd, 0, COMM_ERROR, errno);
+        return;
+    }
 
-	if (retval >= 0) {
-		fd_bytes(fd, retval, FD_WRITE);
-		Fc->write.curofs += retval;
-		assert(Fc->write.curofs <= Fc->write.size);
-		/* All? */
-		if (Fc->write.curofs == Fc->write.size) {
-			comm_add_write_callback(fd, Fc->write.size, COMM_OK, 0);
-			return;
-		}
-	}
+    if (retval >= 0) {
+        fd_bytes(fd, retval, FD_WRITE);
+        Fc->write.curofs += retval;
+        assert(Fc->write.curofs <= Fc->write.size);
+        /* All? */
 
-	/* if we get here, we need to write more! */
-        commSetSelect(fd, COMM_SELECT_WRITE, comm_write_try, NULL, 0);
+        if (Fc->write.curofs == Fc->write.size) {
+            comm_add_write_callback(fd, Fc->write.size, COMM_OK, 0);
+            return;
+        }
+    }
+
+    /* if we get here, we need to write more! */
+    commSetSelect(fd, COMM_SELECT_WRITE, comm_write_try, NULL, 0);
 }
 
 /*
@@ -698,23 +756,24 @@ comm_write_try(int fd, void *data)
 void
 comm_write(int fd, const char *buf, size_t size, IOWCB *handler, void *handler_data)
 {
-	/* Make sure we're not writing anything and we're not closing */
-	assert(fdc_table[fd].active == 1);
-	assert(fdc_table[fd].write.handler == NULL);
-        assert(!fd_table[fd].flags.closing);
+    /* Make sure we're not writing anything and we're not closing */
+    assert(fdc_table[fd].active == 1);
+    assert(fdc_table[fd].write.handler == NULL);
+    assert(!fd_table[fd].flags.closing);
 
-	/* Queue a read */
-	fdc_table[fd].write.buf = buf;
-	fdc_table[fd].write.size = size;
-	fdc_table[fd].write.handler = handler;
-	fdc_table[fd].write.handler_data = handler_data;
-	fdc_table[fd].write.curofs = 0;
+    /* Queue a read */
+    fdc_table[fd].write.buf = buf;
+    fdc_table[fd].write.size = size;
+    fdc_table[fd].write.handler = handler;
+    fdc_table[fd].write.handler_data = handler_data;
+    fdc_table[fd].write.curofs = 0;
 
 #if OPTIMISTIC_IO
-        comm_write_try(fd, NULL);
+
+    comm_write_try(fd, NULL);
 #else
-	/* Register intrest in a FD read */
-        commSetSelect(fd, COMM_SELECT_WRITE, comm_write_try, NULL, 0);
+    /* Register intrest in a FD read */
+    commSetSelect(fd, COMM_SELECT_WRITE, comm_write_try, NULL, 0);
 #endif
 }
 
@@ -735,9 +794,9 @@ comm_write(int fd, const char *buf, size_t size, IOWCB *handler, void *handler_d
 void
 comm_accept_setcheckperiod(int fd, int mdelay)
 {
-	assert(fdc_table[fd].active == 1);
-	assert(mdelay != 0);
-	fdc_table[fd].accept.accept.check_delay = mdelay;
+    assert(fdc_table[fd].active == 1);
+    assert(mdelay != 0);
+    fdc_table[fd].accept.accept.check_delay = mdelay;
 }
 
 /*
@@ -746,19 +805,21 @@ comm_accept_setcheckperiod(int fd, int mdelay)
 static void
 comm_accept_check_event(void *data)
 {
-	static time_t last_warn = 0;
-	int fd = ((fdc_t *)(data))->fd;
+    static time_t last_warn = 0;
+    int fd = ((fdc_t *)(data))->fd;
 
-	if (fdNFree() < RESERVED_FD) {
-		commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
-		return;
-	}
-	if (last_warn + 15 < squid_curtime) {
-		debug(33, 0) ("WARNING! Your cache is running out of filedescriptors\n");
-		last_warn = squid_curtime;
-	}
-	eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
-	    1000.0 / (double)(fdc_table[fd].accept.accept.check_delay), 1);
+    if (fdNFree() < RESERVED_FD) {
+        commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
+        return;
+    }
+
+    if (last_warn + 15 < squid_curtime) {
+        debug(33, 0) ("WARNING! Your cache is running out of filedescriptors\n");
+        last_warn = squid_curtime;
+    }
+
+    eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
+             1000.0 / (double)(fdc_table[fd].accept.accept.check_delay), 1);
 }
 
 
@@ -772,19 +833,24 @@ CommWriteStateCallbackAndFree(int fd, comm_err_t code)
     CWCB *callback = NULL;
     void *cbdata;
     fd_table[fd].rwstate = NULL;
+
     if (CommWriteState == NULL)
-	return;
+        return;
+
     if (CommWriteState->free_func) {
-	FREE *free_func = CommWriteState->free_func;
-	void *free_buf = CommWriteState->buf;
-	CommWriteState->free_func = NULL;
-	CommWriteState->buf = NULL;
-	free_func(free_buf);
+        FREE *free_func = CommWriteState->free_func;
+        void *free_buf = CommWriteState->buf;
+        CommWriteState->free_func = NULL;
+        CommWriteState->buf = NULL;
+        free_func(free_buf);
     }
+
     callback = CommWriteState->handler;
     CommWriteState->handler = NULL;
+
     if (callback && cbdataReferenceValidDone(CommWriteState->handler_data, &cbdata))
-	callback(fd, CommWriteState->buf, CommWriteState->offset, code, cbdata);
+        callback(fd, CommWriteState->buf, CommWriteState->offset, code, cbdata);
+
     memPoolFree(comm_write_pool, CommWriteState);
 }
 
@@ -792,30 +858,38 @@ CommWriteStateCallbackAndFree(int fd, comm_err_t code)
 u_short
 comm_local_port(int fd)
 {
+
     struct sockaddr_in addr;
     socklen_t addr_len = 0;
     fde *F = &fd_table[fd];
 
     /* If the fd is closed already, just return */
+
     if (!F->flags.open) {
-	debug(5, 0) ("comm_local_port: FD %d has been closed.\n", fd);
-	return 0;
+        debug(5, 0) ("comm_local_port: FD %d has been closed.\n", fd);
+        return 0;
     }
+
     if (F->local_port)
-	return F->local_port;
+        return F->local_port;
+
     addr_len = sizeof(addr);
+
     if (getsockname(fd, (struct sockaddr *) &addr, &addr_len)) {
-	debug(50, 1) ("comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD %d: %s\n", fd, xstrerror());
-	return 0;
+        debug(50, 1) ("comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD %d: %s\n", fd, xstrerror());
+        return 0;
     }
+
     F->local_port = ntohs(addr.sin_port);
     debug(5, 6) ("comm_local_port: FD %d: port %d\n", fd, (int) F->local_port);
     return F->local_port;
 }
 
 static comm_err_t
+
 commBind(int s, struct in_addr in_addr, u_short port)
 {
+
     struct sockaddr_in S;
 
     memset(&S, '\0', sizeof(S));
@@ -823,13 +897,16 @@ commBind(int s, struct in_addr in_addr, u_short port)
     S.sin_port = htons(port);
     S.sin_addr = in_addr;
     statCounter.syscalls.sock.binds++;
+
     if (bind(s, (struct sockaddr *) &S, sizeof(S)) == 0)
-	return COMM_OK;
+        return COMM_OK;
+
     debug(50, 0) ("commBind: Cannot bind socket FD %d to %s:%d: %s\n",
-	s,
-	S.sin_addr.s_addr == INADDR_ANY ? "*" : inet_ntoa(S.sin_addr),
-	(int) port,
-	xstrerror());
+                  s,
+                  S.sin_addr.s_addr == INADDR_ANY ? "*" : inet_ntoa(S.sin_addr),
+                  (int) port,
+                  xstrerror());
+
     return COMM_ERROR;
 }
 
@@ -837,11 +914,12 @@ commBind(int s, struct in_addr in_addr, u_short port)
  * is OR of flags specified in comm.h. Defaults TOS */
 int
 comm_open(int sock_type,
-    int proto,
-    struct in_addr addr,
-    u_short port,
-    int flags,
-    const char *note)
+          int proto,
+
+          struct in_addr addr,
+          u_short port,
+          int flags,
+          const char *note)
 {
     return comm_openex(sock_type, proto, addr, port, flags, 0, note);
 }
@@ -851,12 +929,13 @@ comm_open(int sock_type,
  * is OR of flags specified in defines.h:COMM_* */
 int
 comm_openex(int sock_type,
-    int proto,
-    struct in_addr addr,
-    u_short port,
-    int flags,
-    unsigned char TOS,
-    const char *note)
+            int proto,
+
+            struct in_addr addr,
+            u_short port,
+            int flags,
+            unsigned char TOS,
+            const char *note)
 {
     int new_socket;
     int tos = 0;
@@ -865,73 +944,110 @@ comm_openex(int sock_type,
     PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     statCounter.syscalls.sock.sockets++;
-    if ((new_socket = socket(AF_INET, sock_type, proto)) < 0) {
-	/* Increase the number of reserved fd's if calls to socket()
-	 * are failing because the open file table is full.  This
-	 * limits the number of simultaneous clients */
-	switch (errno) {
-	case ENFILE:
-	case EMFILE:
-	    debug(50, 1) ("comm_open: socket failure: %s\n", xstrerror());
-	    fdAdjustReserved();
-	    break;
-	default:
-	    debug(50, 0) ("comm_open: socket failure: %s\n", xstrerror());
-	}
-	PROF_stop(comm_open);
-	return -1;
+
+    if ((new_socket = socket(AF_INET, sock_type, proto)) < 0)
+    {
+        /* Increase the number of reserved fd's if calls to socket()
+         * are failing because the open file table is full.  This
+         * limits the number of simultaneous clients */
+
+        switch (errno) {
+
+        case ENFILE:
+
+        case EMFILE:
+            debug(50, 1) ("comm_open: socket failure: %s\n", xstrerror());
+            fdAdjustReserved();
+            break;
+
+        default:
+            debug(50, 0) ("comm_open: socket failure: %s\n", xstrerror());
+        }
+
+        PROF_stop(comm_open);
+        return -1;
     }
+
     /* set TOS if needed */
-    if (TOS) {
+    if (TOS)
+    {
 #ifdef IP_TOS
-	tos = TOS;
-	if (setsockopt(new_socket, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int)) < 0)
-	        debug(50, 1) ("comm_open: setsockopt(IP_TOS) on FD %d: %s\n",
-		new_socket, xstrerror());
+        tos = TOS;
+
+        if (setsockopt(new_socket, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int)) < 0)
+            debug(50, 1) ("comm_open: setsockopt(IP_TOS) on FD %d: %s\n",
+                          new_socket, xstrerror());
+
 #else
-	debug(50, 0) ("comm_open: setsockopt(IP_TOS) not supported on this platform\n");
+
+        debug(50, 0) ("comm_open: setsockopt(IP_TOS) not supported on this platform\n");
+
 #endif
+
     }
+
     /* update fdstat */
     debug(5, 5) ("comm_open: FD %d is a new socket\n", new_socket);
+
     fd_open(new_socket, FD_SOCKET, note);
+
     fdd_table[new_socket].close_file = NULL;
+
     fdd_table[new_socket].close_line = 0;
+
     assert(fdc_table[new_socket].active == 0);
+
     fdc_table[new_socket].active = 1;
+
     F = &fd_table[new_socket];
+
     F->local_addr = addr;
+
     F->tos = tos;
+
     if (!(flags & COMM_NOCLOEXEC))
-	commSetCloseOnExec(new_socket);
+        commSetCloseOnExec(new_socket);
+
     if ((flags & COMM_REUSEADDR))
-	commSetReuseAddr(new_socket);
-    if (port > (u_short) 0) {
-	commSetNoLinger(new_socket);
-	if (opt_reuseaddr)
-	    commSetReuseAddr(new_socket);
+        commSetReuseAddr(new_socket);
+
+    if (port > (u_short) 0)
+    {
+        commSetNoLinger(new_socket);
+
+        if (opt_reuseaddr)
+            commSetReuseAddr(new_socket);
     }
-    if (addr.s_addr != no_addr.s_addr) {
-	if (commBind(new_socket, addr, port) != COMM_OK) {
-	    comm_close(new_socket);
-	    return -1;
-	    PROF_stop(comm_open);
-	}
+
+    if (addr.s_addr != no_addr.s_addr)
+    {
+        if (commBind(new_socket, addr, port) != COMM_OK) {
+            comm_close(new_socket);
+            return -1;
+            PROF_stop(comm_open);
+        }
     }
+
     F->local_port = port;
 
     if (flags & COMM_NONBLOCKING)
-	if (commSetNonBlocking(new_socket) == COMM_ERROR) {
-	    return -1;
-	    PROF_stop(comm_open);
-	}
+        if (commSetNonBlocking(new_socket) == COMM_ERROR)
+        {
+            return -1;
+            PROF_stop(comm_open);
+        }
+
 #ifdef TCP_NODELAY
     if (sock_type == SOCK_STREAM)
-	commSetTcpNoDelay(new_socket);
+        commSetTcpNoDelay(new_socket);
+
 #endif
+
     if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
-	commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
+        commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
+
     PROF_stop(comm_open);
+
     return new_socket;
 }
 
@@ -957,16 +1073,20 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
     ConnectStateData *cs = (ConnectStateData *)data;
     assert(cs->locks == 1);
     cs->locks--;
+
     if (ia == NULL) {
-	debug(5, 3) ("commConnectDnsHandle: Unknown host: %s\n", cs->host);
-	if (!dns_error_message) {
-	    dns_error_message = "Unknown DNS error";
-	    debug(5, 1) ("commConnectDnsHandle: Bad dns_error_message\n");
-	}
-	assert(dns_error_message != NULL);
-	commConnectCallback(cs, COMM_ERR_DNS);
-	return;
+        debug(5, 3) ("commConnectDnsHandle: Unknown host: %s\n", cs->host);
+
+        if (!dns_error_message) {
+            dns_error_message = "Unknown DNS error";
+            debug(5, 1) ("commConnectDnsHandle: Bad dns_error_message\n");
+        }
+
+        assert(dns_error_message != NULL);
+        commConnectCallback(cs, COMM_ERR_DNS);
+        return;
     }
+
     assert(ia->cur < ia->count);
     cs->in_addr = ia->in_addrs[ia->cur];
     ipcacheCycleAddr(cs->host, NULL);
@@ -987,8 +1107,10 @@ commConnectCallback(ConnectStateData * cs, comm_err_t status)
     cs->data = NULL;
     commSetTimeout(fd, -1, NULL, NULL);
     commConnectFree(fd, cs);
+
     if (cbdataReferenceValid(cbdata))
-	callback(fd, status, cbdata);
+        callback(fd, status, cbdata);
+
     cbdataReferenceDone(cbdata);
 }
 
@@ -1008,24 +1130,36 @@ commResetFD(ConnectStateData * cs)
 {
     int fd2;
     fde *F;
+
     if (!cbdataReferenceValid(cs->data))
-	return 0;
+        return 0;
+
     statCounter.syscalls.sock.sockets++;
+
     fd2 = socket(AF_INET, SOCK_STREAM, 0);
+
     statCounter.syscalls.sock.sockets++;
+
     if (fd2 < 0) {
-	debug(5, 0) ("commResetFD: socket: %s\n", xstrerror());
-	if (ENFILE == errno || EMFILE == errno)
-	    fdAdjustReserved();
-	return 0;
+        debug(5, 0) ("commResetFD: socket: %s\n", xstrerror());
+
+        if (ENFILE == errno || EMFILE == errno)
+            fdAdjustReserved();
+
+        return 0;
     }
+
     if (dup2(fd2, cs->fd) < 0) {
-	debug(5, 0) ("commResetFD: dup2: %s\n", xstrerror());
-	if (ENFILE == errno || EMFILE == errno)
-	    fdAdjustReserved();
-	close(fd2);
-	return 0;
+        debug(5, 0) ("commResetFD: dup2: %s\n", xstrerror());
+
+        if (ENFILE == errno || EMFILE == errno)
+            fdAdjustReserved();
+
+        close(fd2);
+
+        return 0;
     }
+
     close(fd2);
     F = &fd_table[cs->fd];
     fd_table[cs->fd].flags.called_connect = 0;
@@ -1033,27 +1167,37 @@ commResetFD(ConnectStateData * cs)
      * yuck, this has assumptions about comm_open() arguments for
      * the original socket
      */
+
     if (commBind(cs->fd, F->local_addr, F->local_port) != COMM_OK) {
-	debug(5, 0) ("commResetFD: bind: %s\n", xstrerror());
-	return 0;
+        debug(5, 0) ("commResetFD: bind: %s\n", xstrerror());
+        return 0;
     }
+
 #ifdef IP_TOS
     if (F->tos) {
-	int tos = F->tos;
-	if (setsockopt(cs->fd, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int)) < 0)
-	        debug(50, 1) ("commResetFD: setsockopt(IP_TOS) on FD %d: %s\n", cs->fd, xstrerror());
+        int tos = F->tos;
+
+        if (setsockopt(cs->fd, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int)) < 0)
+            debug(50, 1) ("commResetFD: setsockopt(IP_TOS) on FD %d: %s\n", cs->fd, xstrerror());
     }
+
 #endif
     if (F->flags.close_on_exec)
-	commSetCloseOnExec(cs->fd);
+        commSetCloseOnExec(cs->fd);
+
     if (F->flags.nonblocking)
-	commSetNonBlocking(cs->fd);
+        commSetNonBlocking(cs->fd);
+
 #ifdef TCP_NODELAY
+
     if (F->flags.nodelay)
-	commSetTcpNoDelay(cs->fd);
+        commSetTcpNoDelay(cs->fd);
+
 #endif
+
     if (Config.tcpRcvBufsz > 0)
-	commSetTcpRcvbuf(cs->fd, Config.tcpRcvBufsz);
+        commSetTcpRcvbuf(cs->fd, Config.tcpRcvBufsz);
+
     return 1;
 }
 
@@ -1061,15 +1205,18 @@ static int
 commRetryConnect(ConnectStateData * cs)
 {
     assert(cs->addrcount > 0);
+
     if (cs->addrcount == 1) {
-	if (cs->tries >= Config.retry.maxtries)
-	    return 0;
-	if (squid_curtime - cs->connstart > Config.Timeout.connect)
-	    return 0;
+        if (cs->tries >= Config.retry.maxtries)
+            return 0;
+
+        if (squid_curtime - cs->connstart > Config.Timeout.connect)
+            return 0;
     } else {
-	if (cs->tries > cs->addrcount)
-	    return 0;
+        if (cs->tries > cs->addrcount)
+            return 0;
     }
+
     return commResetFD(cs);
 }
 
@@ -1078,34 +1225,43 @@ static void
 commConnectHandle(int fd, void *data)
 {
     ConnectStateData *cs = (ConnectStateData *)data;
+
     if (cs->S.sin_addr.s_addr == 0) {
-	cs->S.sin_family = AF_INET;
-	cs->S.sin_addr = cs->in_addr;
-	cs->S.sin_port = htons(cs->port);
-	if (Config.onoff.log_fqdn)
-	    fqdncache_gethostbyaddr(cs->S.sin_addr, FQDN_LOOKUP_IF_MISS);
+        cs->S.sin_family = AF_INET;
+        cs->S.sin_addr = cs->in_addr;
+        cs->S.sin_port = htons(cs->port);
+
+        if (Config.onoff.log_fqdn)
+            fqdncache_gethostbyaddr(cs->S.sin_addr, FQDN_LOOKUP_IF_MISS);
     }
+
     switch (comm_connect_addr(fd, &cs->S)) {
+
     case COMM_INPROGRESS:
-	debug(5, 5) ("commConnectHandle: FD %d: COMM_INPROGRESS\n", fd);
-	commSetSelect(fd, COMM_SELECT_WRITE, commConnectHandle, cs, 0);
-	break;
+        debug(5, 5) ("commConnectHandle: FD %d: COMM_INPROGRESS\n", fd);
+        commSetSelect(fd, COMM_SELECT_WRITE, commConnectHandle, cs, 0);
+        break;
+
     case COMM_OK:
-	ipcacheMarkGoodAddr(cs->host, cs->S.sin_addr);
-	commConnectCallback(cs, COMM_OK);
-	break;
+        ipcacheMarkGoodAddr(cs->host, cs->S.sin_addr);
+        commConnectCallback(cs, COMM_OK);
+        break;
+
     default:
-	cs->tries++;
-	ipcacheMarkBadAddr(cs->host, cs->S.sin_addr);
-	if (Config.onoff.test_reachability)
-	    netdbDeleteAddrNetwork(cs->S.sin_addr);
-	if (commRetryConnect(cs)) {
-	    cs->locks++;
-	    ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
-	} else {
-	    commConnectCallback(cs, COMM_ERR_CONNECT);
-	}
-	break;
+        cs->tries++;
+        ipcacheMarkBadAddr(cs->host, cs->S.sin_addr);
+
+        if (Config.onoff.test_reachability)
+            netdbDeleteAddrNetwork(cs->S.sin_addr);
+
+        if (commRetryConnect(cs)) {
+            cs->locks++;
+            ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
+        } else {
+            commConnectCallback(cs, COMM_ERR_CONNECT);
+        }
+
+        break;
     }
 }
 
@@ -1118,23 +1274,28 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
     assert(F->flags.open);
+
     if (timeout < 0) {
-	cbdataReferenceDone(F->timeout_data);
-	F->timeout_handler = NULL;
-	F->timeout = 0;
+        cbdataReferenceDone(F->timeout_data);
+        F->timeout_handler = NULL;
+        F->timeout = 0;
     } else {
-	assert(handler || F->timeout_handler);
-	if (handler) {
-	    cbdataReferenceDone(F->timeout_data);
-	    F->timeout_handler = handler;
-	    F->timeout_data = cbdataReference(data);
-	}
-	F->timeout = squid_curtime + (time_t) timeout;
+        assert(handler || F->timeout_handler);
+
+        if (handler) {
+            cbdataReferenceDone(F->timeout_data);
+            F->timeout_handler = handler;
+            F->timeout_data = cbdataReference(data);
+        }
+
+        F->timeout = squid_curtime + (time_t) timeout;
     }
+
     return F->timeout;
 }
 
 int
+
 comm_connect_addr(int sock, const struct sockaddr_in *address)
 {
     comm_err_t status = COMM_OK;
@@ -1146,54 +1307,76 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     PROF_start(comm_connect_addr);
     /* Establish connection. */
     errno = 0;
-    if (!F->flags.called_connect) {
-	F->flags.called_connect = 1;
-	statCounter.syscalls.sock.connects++;
-	x = connect(sock, (struct sockaddr *) address, sizeof(*address));
-	if (x < 0)
-	    debug(5, 9) ("connect FD %d: %s\n", sock, xstrerror());
-    } else {
+
+    if (!F->flags.called_connect)
+    {
+        F->flags.called_connect = 1;
+        statCounter.syscalls.sock.connects++;
+
+        x = connect(sock, (struct sockaddr *) address, sizeof(*address));
+
+        if (x < 0)
+            debug(5, 9) ("connect FD %d: %s\n", sock, xstrerror());
+    } else
+    {
 #if defined(_SQUID_NEWSOS6_)
-	/* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
-	connect(sock, (struct sockaddr *) address, sizeof(*address));
-	if (errno == EINVAL) {
-	    errlen = sizeof(err);
-	    x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
-	    if (x >= 0)
-		errno = x;
-	}
+        /* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
+
+        connect(sock, (struct sockaddr *) address, sizeof(*address));
+
+        if (errno == EINVAL) {
+            errlen = sizeof(err);
+            x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
+
+            if (x >= 0)
+                errno = x;
+        }
+
 #else
-	errlen = sizeof(err);
-	x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
-	if (x == 0)
-	    errno = err;
+        errlen = sizeof(err);
+
+        x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
+
+        if (x == 0)
+            errno = err;
+
 #if defined(_SQUID_SOLARIS_)
-	/*
-	 * Solaris 2.4's socket emulation doesn't allow you
-	 * to determine the error from a failed non-blocking
-	 * connect and just returns EPIPE.  Create a fake
-	 * error message for connect.   -- fenner@parc.xerox.com
-	 */
-	if (x < 0 && errno == EPIPE)
-	    errno = ENOTCONN;
+        /*
+        * Solaris 2.4's socket emulation doesn't allow you
+        * to determine the error from a failed non-blocking
+        * connect and just returns EPIPE.  Create a fake
+        * error message for connect.   -- fenner@parc.xerox.com
+        */
+        if (x < 0 && errno == EPIPE)
+            errno = ENOTCONN;
+
 #endif
 #endif
+
     }
+
     PROF_stop(comm_connect_addr);
+
     if (errno == 0 || errno == EISCONN)
-	status = COMM_OK;
+        status = COMM_OK;
     else if (ignoreErrno(errno))
-	status = COMM_INPROGRESS;
+        status = COMM_INPROGRESS;
     else
-	return COMM_ERROR;
+        return COMM_ERROR;
+
     xstrncpy(F->ipaddr, inet_ntoa(address->sin_addr), 16);
+
     F->remote_port = ntohs(address->sin_port);
-    if (status == COMM_OK) {
-	debug(5, 10) ("comm_connect_addr: FD %d connected to %s:%d\n",
-	    sock, F->ipaddr, F->remote_port);
-    } else if (status == COMM_INPROGRESS) {
-	debug(5, 10) ("comm_connect_addr: FD %d connection pending\n", sock);
+
+    if (status == COMM_OK)
+    {
+        debug(5, 10) ("comm_connect_addr: FD %d connected to %s:%d\n",
+                      sock, F->ipaddr, F->remote_port);
+    } else if (status == COMM_INPROGRESS)
+    {
+        debug(5, 10) ("comm_connect_addr: FD %d connection pending\n", sock);
     }
+
     return status;
 }
 
@@ -1206,21 +1389,28 @@ comm_old_accept(int fd, ConnectionDetail &details)
     statCounter.syscalls.sock.accepts++;
     int sock;
     socklen_t Slen = sizeof(details.peer);
+
     if ((sock = accept(fd, (struct sockaddr *) &details.peer, &Slen)) < 0) {
-	PROF_stop(comm_accept);
-	if (ignoreErrno(errno)) {
-	    debug(50, 5) ("comm_old_accept: FD %d: %s\n", fd, xstrerror());
-	    return COMM_NOMESSAGE;
-	} else if (ENFILE == errno || EMFILE == errno) {
-	    debug(50, 3) ("comm_old_accept: FD %d: %s\n", fd, xstrerror());
-	    return COMM_ERROR;
-	} else {
-	    debug(50, 1) ("comm_old_accept: FD %d: %s\n", fd, xstrerror());
-	    return COMM_ERROR;
-	}
+        PROF_stop(comm_accept);
+
+        if (ignoreErrno(errno))
+        {
+            debug(50, 5) ("comm_old_accept: FD %d: %s\n", fd, xstrerror());
+            return COMM_NOMESSAGE;
+        } else if (ENFILE == errno || EMFILE == errno)
+        {
+            debug(50, 3) ("comm_old_accept: FD %d: %s\n", fd, xstrerror());
+            return COMM_ERROR;
+        } else
+        {
+            debug(50, 1) ("comm_old_accept: FD %d: %s\n", fd, xstrerror());
+            return COMM_ERROR;
+        }
     }
+
     Slen = sizeof(details.me);
     memset(&details.me, '\0', Slen);
+
     getsockname(sock, (struct sockaddr *) &details.me, &Slen);
     commSetCloseOnExec(sock);
     /* fdstat update */
@@ -1242,15 +1432,18 @@ commCallCloseHandlers(int fd)
 {
     fde *F = &fd_table[fd];
     debug(5, 5) ("commCallCloseHandlers: FD %d\n", fd);
+
     while (F->closeHandler != NULL) {
-	close_handler ch = *F->closeHandler;
-	memPoolFree(conn_close_pool, F->closeHandler);	/* AAA */
-	F->closeHandler = ch.next;
-	ch.next = NULL;
-	debug(5, 5) ("commCallCloseHandlers: ch->handler=%p data=%p\n", ch.handler, ch.data);
-	if (cbdataReferenceValid(ch.data))
-	    ch.handler(fd, ch.data);
-	cbdataReferenceDone(ch.data);
+        close_handler ch = *F->closeHandler;
+        memPoolFree(conn_close_pool, F->closeHandler);	/* AAA */
+        F->closeHandler = ch.next;
+        ch.next = NULL;
+        debug(5, 5) ("commCallCloseHandlers: ch->handler=%p data=%p\n", ch.handler, ch.data);
+
+        if (cbdataReferenceValid(ch.data))
+            ch.handler(fd, ch.data);
+
+        cbdataReferenceDone(ch.data);
     }
 }
 
@@ -1261,8 +1454,10 @@ commLingerClose(int fd, void *unused)
     LOCAL_ARRAY(char, buf, 1024);
     int n;
     n = FD_READ_METHOD(fd, buf, 1024);
+
     if (n < 0)
-	debug(5, 3) ("commLingerClose: FD %d read: %s\n", fd, xstrerror());
+        debug(5, 3) ("commLingerClose: FD %d read: %s\n", fd, xstrerror());
+
     comm_close(fd);
 }
 
@@ -1280,17 +1475,22 @@ void
 comm_lingering_close(int fd)
 {
 #if USE_SSL
+
     if (fd_table[fd].ssl)
-	ssl_shutdown_method(fd);
+        ssl_shutdown_method(fd);
+
 #endif
+
     if (shutdown(fd, 1) < 0) {
-	comm_close(fd);
-	return;
+        comm_close(fd);
+        return;
     }
+
     fd_note(fd, "lingering close");
     commSetTimeout(fd, 10, commLingerTimeout, NULL);
     commSetSelect(fd, COMM_SELECT_READ, commLingerClose, NULL, 0);
 }
+
 #endif
 
 /*
@@ -1300,11 +1500,14 @@ comm_lingering_close(int fd)
 void
 comm_reset_close(int fd)
 {
+
     struct linger L;
     L.l_onoff = 1;
     L.l_linger = 0;
+
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
-	debug(50, 0) ("commResetTCPClose: FD %d: %s\n", fd, xstrerror());
+        debug(50, 0) ("commResetTCPClose: FD %d: %s\n", fd, xstrerror());
+
     comm_close(fd);
 }
 
@@ -1331,20 +1534,31 @@ _comm_close(int fd, char *file, int line)
     fdd_table[fd].close_line = line;
 
     if (F->flags.closing)
-	return;
+        return;
+
     if (shutting_down && (!F->flags.open || F->type == FD_FILE))
-	return;
+        return;
+
     assert(F->flags.open);
+
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
-    assert(fdc_table[fd].active == 1); 
+    assert(fdc_table[fd].active == 1);
+
     assert(F->type != FD_FILE);
+
     PROF_start(comm_close);
+
     F->flags.closing = 1;
+
 #if USE_SSL
+
     if (F->ssl)
-	ssl_shutdown_method(fd);
+        ssl_shutdown_method(fd);
+
 #endif
+
     commSetTimeout(fd, -1, NULL, NULL);
+
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
 
     /* Delete any accept check */
@@ -1355,74 +1569,95 @@ _comm_close(int fd, char *file, int line)
     /* Do callbacks for read/accept/fill routines, if any */
     if (fdc_table[fd].read.handler) {
         fdc_table[fd].read.handler(fd, fdc_table[fd].read.buf, 0,
-          COMM_ERR_CLOSING, 0, fdc_table[fd].read.handler_data);
-	fdc_table[fd].read.handler = NULL;
+                                   COMM_ERR_CLOSING, 0, fdc_table[fd].read.handler_data);
+        fdc_table[fd].read.handler = NULL;
     }
+
     if (fdc_table[fd].accept.accept.handler) {
         fdc_table[fd].accept.accept.handler(fd, -1, NULL, COMM_ERR_CLOSING,
-          0, fdc_table[fd].accept.accept.handler_data);
-	fdc_table[fd].accept.accept.handler = NULL;
+                                            0, fdc_table[fd].accept.accept.handler_data);
+        fdc_table[fd].accept.accept.handler = NULL;
     }
+
     if (fdc_table[fd].fill.handler) {
         fdc_table[fd].fill.handler(fd, fdc_table[fd].fill.requestedData, COMM_ERR_CLOSING, 0,
-          fdc_table[fd].fill.handler_data);
-	fdc_table[fd].fill.handler = NULL;
+                                   fdc_table[fd].fill.handler_data);
+        fdc_table[fd].fill.handler = NULL;
     }
+
     /* Complete (w/ COMM_ERR_CLOSING!) any pending io callbacks */
     while (fdc_table[fd].CommCallbackList.head != NULL) {
-	node = fdc_table[fd].CommCallbackList.head;
-	cio = (CommCallbackData *)node->data;
-	assert(fd == cio->fd); /* just paranoid */
-	dlinkDelete(&cio->h_node, &CommCallbackList);
-	dlinkDelete(&cio->fd_node, &(fdc_table[cio->fd].CommCallbackList));
-	/* We're closing! */
-	cio->errcode = COMM_ERR_CLOSING;
-	comm_call_io_callback(cio);
-	memPoolFree(comm_callback_pool, cio);
+        node = fdc_table[fd].CommCallbackList.head;
+        cio = (CommCallbackData *)node->data;
+        assert(fd == cio->fd); /* just paranoid */
+        dlinkDelete(&cio->h_node, &CommCallbackList);
+        dlinkDelete(&cio->fd_node, &(fdc_table[cio->fd].CommCallbackList));
+        /* We're closing! */
+        cio->errcode = COMM_ERR_CLOSING;
+        comm_call_io_callback(cio);
+        memPoolFree(comm_callback_pool, cio);
     }
 
     commCallCloseHandlers(fd);
+
     if (F->uses)		/* assume persistent connect count */
-	pconnHistCount(1, F->uses);
+        pconnHistCount(1, F->uses);
+
     comm_empty_os_read_buffers(fd);
+
 #if USE_SSL
+
     if (F->ssl) {
-	SSL_free(F->ssl);
-	F->ssl = NULL;
+        SSL_free(F->ssl);
+        F->ssl = NULL;
     }
+
 #endif
     fd_close(fd);		/* update fdstat */
+
     close(fd);
+
     fdc_table[fd].active = 0;
+
     bzero(&fdc_table[fd], sizeof(fdc_t));
+
     statCounter.syscalls.sock.closes++;
+
     PROF_stop(comm_close);
 }
 
 /* Send a udp datagram to specified TO_ADDR. */
 int
 comm_udp_sendto(int fd,
-    const struct sockaddr_in *to_addr,
-    int addr_len,
-    const void *buf,
-    int len)
+
+                const struct sockaddr_in *to_addr,
+                int addr_len,
+                const void *buf,
+                int len)
 {
     int x;
     PROF_start(comm_udp_sendto);
     statCounter.syscalls.sock.sendtos++;
+
     x = sendto(fd, buf, len, 0, (struct sockaddr *) to_addr, addr_len);
     PROF_stop(comm_udp_sendto);
-    if (x < 0) {
+
+    if (x < 0)
+    {
 #ifdef _SQUID_LINUX_
-	if (ECONNREFUSED != errno)
+
+        if (ECONNREFUSED != errno)
 #endif
-	    debug(50, 1) ("comm_udp_sendto: FD %d, %s, port %d: %s\n",
-		fd,
-		inet_ntoa(to_addr->sin_addr),
-		(int) htons(to_addr->sin_port),
-		xstrerror());
-	return COMM_ERROR;
+
+            debug(50, 1) ("comm_udp_sendto: FD %d, %s, port %d: %s\n",
+                          fd,
+                          inet_ntoa(to_addr->sin_addr),
+                          (int) htons(to_addr->sin_port),
+                          xstrerror());
+
+        return COMM_ERROR;
     }
+
     return x;
 }
 
@@ -1440,12 +1675,17 @@ comm_add_close_handler(int fd, PF * handler, void *data)
     close_handler *newHandler = (close_handler *)memPoolAlloc(conn_close_pool);		/* AAA */
     close_handler *c;
     debug(5, 5) ("comm_add_close_handler: FD %d, handler=%p, data=%p\n",
-	fd, handler, data);
+                 fd, handler, data);
+
     for (c = fd_table[fd].closeHandler; c; c = c->next)
-	assert(c->handler != handler || c->data != data);
+        assert(c->handler != handler || c->data != data);
+
     newHandler->handler = handler;
+
     newHandler->data = cbdataReference(data);
+
     newHandler->next = fd_table[fd].closeHandler;
+
     fd_table[fd].closeHandler = newHandler;
 }
 
@@ -1456,28 +1696,36 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     close_handler *last = NULL;
     /* Find handler in list */
     debug(5, 5) ("comm_remove_close_handler: FD %d, handler=%p, data=%p\n",
-	fd, handler, data);
+                 fd, handler, data);
+
     for (p = fd_table[fd].closeHandler; p != NULL; last = p, p = p->next)
-	if (p->handler == handler && p->data == data)
-	    break;		/* This is our handler */
+        if (p->handler == handler && p->data == data)
+            break;		/* This is our handler */
+
     assert(p != NULL);
+
     /* Remove list entry */
     if (last)
-	last->next = p->next;
+        last->next = p->next;
     else
-	fd_table[fd].closeHandler = p->next;
+        fd_table[fd].closeHandler = p->next;
+
     cbdataReferenceDone(p->data);
+
     memPoolFree(conn_close_pool, p);
 }
 
 static void
 commSetNoLinger(int fd)
 {
+
     struct linger L;
     L.l_onoff = 0;		/* off */
     L.l_linger = 0;
+
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
-	debug(50, 0) ("commSetNoLinger: FD %d: %s\n", fd, xstrerror());
+        debug(50, 0) ("commSetNoLinger: FD %d: %s\n", fd, xstrerror());
+
     fd_table[fd].flags.nolinger = 1;
 }
 
@@ -1485,16 +1733,17 @@ static void
 commSetReuseAddr(int fd)
 {
     int on = 1;
+
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0)
-	debug(50, 1) ("commSetReuseAddr: FD %d: %s\n", fd, xstrerror());
+        debug(50, 1) ("commSetReuseAddr: FD %d: %s\n", fd, xstrerror());
 }
 
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
     if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0)
-	debug(50, 1) ("commSetTcpRcvbuf: FD %d, SIZE %d: %s\n",
-	    fd, size, xstrerror());
+        debug(50, 1) ("commSetTcpRcvbuf: FD %d, SIZE %d: %s\n",
+                      fd, size, xstrerror());
 }
 
 int
@@ -1503,26 +1752,34 @@ commSetNonBlocking(int fd)
     int flags;
     int dummy = 0;
 #ifdef _SQUID_CYGWIN_
+
     int nonblocking = TRUE;
+
     if (fd_table[fd].type != FD_PIPE) {
-	if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
-	    debug(50, 0) ("commSetNonBlocking: FD %d: %s %D\n", fd, xstrerror(), fd_table[fd].type);
-	    return COMM_ERROR;
-	}
+        if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
+            debug(50, 0) ("commSetNonBlocking: FD %d: %s %D\n", fd, xstrerror(), fd_table[fd].type);
+            return COMM_ERROR;
+        }
     } else {
 #endif
-	if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
-	    debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
-	    return COMM_ERROR;
-	}
-	if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
-	    debug(50, 0) ("commSetNonBlocking: FD %d: %s\n", fd, xstrerror());
-	    return COMM_ERROR;
-	}
+
+        if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
+            debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
+            return COMM_ERROR;
+        }
+
+        if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
+            debug(50, 0) ("commSetNonBlocking: FD %d: %s\n", fd, xstrerror());
+            return COMM_ERROR;
+        }
+
 #ifdef _SQUID_CYGWIN_
+
     }
+
 #endif
     fd_table[fd].flags.nonblocking = 1;
+
     return 0;
 }
 
@@ -1531,14 +1788,17 @@ commUnsetNonBlocking(int fd)
 {
     int flags;
     int dummy = 0;
+
     if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
-	debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
-	return COMM_ERROR;
+        debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
+        return COMM_ERROR;
     }
+
     if (fcntl(fd, F_SETFL, flags & (~SQUID_NONBLOCK)) < 0) {
-	debug(50, 0) ("commUnsetNonBlocking: FD %d: %s\n", fd, xstrerror());
-	return COMM_ERROR;
+        debug(50, 0) ("commUnsetNonBlocking: FD %d: %s\n", fd, xstrerror());
+        return COMM_ERROR;
     }
+
     fd_table[fd].flags.nonblocking = 0;
     return 0;
 }
@@ -1549,13 +1809,17 @@ commSetCloseOnExec(int fd)
 #ifdef FD_CLOEXEC
     int flags;
     int dummy = 0;
+
     if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
-	debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
-	return;
+        debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
+        return;
     }
+
     if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0)
-	debug(50, 0) ("FD %d: set close-on-exec failed: %s\n", fd, xstrerror());
+        debug(50, 0) ("FD %d: set close-on-exec failed: %s\n", fd, xstrerror());
+
     fd_table[fd].flags.close_on_exec = 1;
+
 #endif
 }
 
@@ -1564,10 +1828,13 @@ static void
 commSetTcpNoDelay(int fd)
 {
     int on = 1;
+
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0)
-	debug(50, 1) ("commSetTcpNoDelay: FD %d: %s\n", fd, xstrerror());
+        debug(50, 1) ("commSetTcpNoDelay: FD %d: %s\n", fd, xstrerror());
+
     fd_table[fd].flags.nodelay = 1;
 }
+
 #endif
 
 
@@ -1599,7 +1866,7 @@ commHandleWrite(int fd, void *data)
 
     PROF_start(commHandleWrite);
     debug(5, 5) ("commHandleWrite: FD %d: off %ld, sz %ld.\n",
-	fd, (long int) state->offset, (long int) state->size);
+                 fd, (long int) state->offset, (long int) state->size);
 
     nleft = state->size - state->offset;
     len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
@@ -1608,44 +1875,49 @@ commHandleWrite(int fd, void *data)
     statCounter.syscalls.sock.writes++;
 
     if (len == 0) {
-	/* Note we even call write if nleft == 0 */
-	/* We're done */
-	if (nleft != 0)
-	    debug(5, 1) ("commHandleWrite: FD %d: write failure: connection closed with %d bytes remaining.\n", fd, nleft);
-	CommWriteStateCallbackAndFree(fd, nleft ? COMM_ERROR : COMM_OK);
+        /* Note we even call write if nleft == 0 */
+        /* We're done */
+
+        if (nleft != 0)
+            debug(5, 1) ("commHandleWrite: FD %d: write failure: connection closed with %d bytes remaining.\n", fd, nleft);
+
+        CommWriteStateCallbackAndFree(fd, nleft ? COMM_ERROR : COMM_OK);
     } else if (len < 0) {
-	/* An error */
-	if (fd_table[fd].flags.socket_eof) {
-	    debug(50, 2) ("commHandleWrite: FD %d: write failure: %s.\n",
-		fd, xstrerror());
-	    CommWriteStateCallbackAndFree(fd, COMM_ERROR);
-	} else if (ignoreErrno(errno)) {
-	    debug(50, 10) ("commHandleWrite: FD %d: write failure: %s.\n",
-		fd, xstrerror());
-	    commSetSelect(fd,
-		COMM_SELECT_WRITE,
-		commHandleWrite,
-		state,
-		0);
-	} else {
-	    debug(50, 2) ("commHandleWrite: FD %d: write failure: %s.\n",
-		fd, xstrerror());
-	    CommWriteStateCallbackAndFree(fd, COMM_ERROR);
-	}
+        /* An error */
+
+        if (fd_table[fd].flags.socket_eof) {
+            debug(50, 2) ("commHandleWrite: FD %d: write failure: %s.\n",
+                          fd, xstrerror());
+            CommWriteStateCallbackAndFree(fd, COMM_ERROR);
+        } else if (ignoreErrno(errno)) {
+            debug(50, 10) ("commHandleWrite: FD %d: write failure: %s.\n",
+                           fd, xstrerror());
+            commSetSelect(fd,
+                          COMM_SELECT_WRITE,
+                          commHandleWrite,
+                          state,
+                          0);
+        } else {
+            debug(50, 2) ("commHandleWrite: FD %d: write failure: %s.\n",
+                          fd, xstrerror());
+            CommWriteStateCallbackAndFree(fd, COMM_ERROR);
+        }
     } else {
-	/* A successful write, continue */
-	state->offset += len;
-	if (state->offset < (off_t)state->size) {
-	    /* Not done, reinstall the write handler and write some more */
-	    commSetSelect(fd,
-		COMM_SELECT_WRITE,
-		commHandleWrite,
-		state,
-		0);
-	} else {
-	    CommWriteStateCallbackAndFree(fd, COMM_OK);
-	}
+        /* A successful write, continue */
+        state->offset += len;
+
+        if (state->offset < (off_t)state->size) {
+            /* Not done, reinstall the write handler and write some more */
+            commSetSelect(fd,
+                          COMM_SELECT_WRITE,
+                          commHandleWrite,
+                          state,
+                          0);
+        } else {
+            CommWriteStateCallbackAndFree(fd, COMM_OK);
+        }
     }
+
     PROF_stop(commHandleWrite);
 }
 
@@ -1665,12 +1937,14 @@ comm_old_write(int fd, const char *buf, int size, CWCB * handler, void *handler_
     assert(!fd_table[fd].flags.closing);
 
     debug(5, 5) ("comm_write: FD %d: sz %d: hndl %p: data %p.\n",
-	fd, size, handler, handler_data);
+                 fd, size, handler, handler_data);
+
     if (NULL != state) {
-	debug(5, 1) ("comm_write: fd_table[%d].rwstate != NULL\n", fd);
-	memPoolFree(comm_write_pool, state);
-	fd_table[fd].rwstate = NULL;
+        debug(5, 1) ("comm_write: fd_table[%d].rwstate != NULL\n", fd);
+        memPoolFree(comm_write_pool, state);
+        fd_table[fd].rwstate = NULL;
     }
+
     fd_table[fd].rwstate = state = (CommWriteStateData *)memPoolAlloc(comm_write_pool);
     state->buf = (char *) buf;
     state->size = size;
@@ -1697,20 +1971,29 @@ int
 ignoreErrno(int ierrno)
 {
     switch (ierrno) {
+
     case EINPROGRESS:
+
     case EWOULDBLOCK:
 #if EAGAIN != EWOULDBLOCK
+
     case EAGAIN:
 #endif
+
     case EALREADY:
+
     case EINTR:
 #ifdef ERESTART
+
     case ERESTART:
 #endif
-	return 1;
+
+        return 1;
+
     default:
-	return 0;
+        return 0;
     }
+
     /* NOTREACHED */
 }
 
@@ -1719,26 +2002,32 @@ commCloseAllSockets(void)
 {
     int fd;
     fde *F = NULL;
+
     for (fd = 0; fd <= Biggest_FD; fd++) {
-	F = &fd_table[fd];
-	if (!F->flags.open)
-	    continue;
-	if (F->type != FD_SOCKET)
-	    continue;
-	if (F->flags.ipc)	/* don't close inter-process sockets */
-	    continue;
-	if (F->timeout_handler) {
-	    PF *callback = F->timeout_handler;
-	    void *cbdata = NULL;
-	    F->timeout_handler = NULL;
-	    debug(5, 5) ("commCloseAllSockets: FD %d: Calling timeout handler\n",
-		fd);
-	    if (cbdataReferenceValidDone(F->timeout_data, &cbdata))
-		callback(fd, cbdata);
-	} else {
-	    debug(5, 5) ("commCloseAllSockets: FD %d: calling comm_close()\n", fd);
-	    comm_close(fd);
-	}
+        F = &fd_table[fd];
+
+        if (!F->flags.open)
+            continue;
+
+        if (F->type != FD_SOCKET)
+            continue;
+
+        if (F->flags.ipc)	/* don't close inter-process sockets */
+            continue;
+
+        if (F->timeout_handler) {
+            PF *callback = F->timeout_handler;
+            void *cbdata = NULL;
+            F->timeout_handler = NULL;
+            debug(5, 5) ("commCloseAllSockets: FD %d: Calling timeout handler\n",
+                         fd);
+
+            if (cbdataReferenceValidDone(F->timeout_data, &cbdata))
+                callback(fd, cbdata);
+        } else {
+            debug(5, 5) ("commCloseAllSockets: FD %d: calling comm_close()\n", fd);
+            comm_close(fd);
+        }
     }
 }
 
@@ -1748,24 +2037,30 @@ checkTimeouts(void)
     int fd;
     fde *F = NULL;
     PF *callback;
+
     for (fd = 0; fd <= Biggest_FD; fd++) {
-	F = &fd_table[fd];
-	if (!F->flags.open)
-	    continue;
-	if (F->timeout == 0)
-	    continue;
-	if (F->timeout > squid_curtime)
-	    continue;
-	debug(5, 5) ("checkTimeouts: FD %d Expired\n", fd);
-	if (F->timeout_handler) {
-	    debug(5, 5) ("checkTimeouts: FD %d: Call timeout handler\n", fd);
-	    callback = F->timeout_handler;
-	    F->timeout_handler = NULL;
-	    callback(fd, F->timeout_data);
-	} else {
-	    debug(5, 5) ("checkTimeouts: FD %d: Forcing comm_close()\n", fd);
-	    comm_close(fd);
-	}
+        F = &fd_table[fd];
+
+        if (!F->flags.open)
+            continue;
+
+        if (F->timeout == 0)
+            continue;
+
+        if (F->timeout > squid_curtime)
+            continue;
+
+        debug(5, 5) ("checkTimeouts: FD %d Expired\n", fd);
+
+        if (F->timeout_handler) {
+            debug(5, 5) ("checkTimeouts: FD %d: Call timeout handler\n", fd);
+            callback = F->timeout_handler;
+            F->timeout_handler = NULL;
+            callback(fd, F->timeout_data);
+        } else {
+            debug(5, 5) ("checkTimeouts: FD %d: Forcing comm_close()\n", fd);
+            comm_close(fd);
+        }
     }
 }
 
@@ -1774,8 +2069,10 @@ int
 commDeferRead(int fd)
 {
     fde *F = &fd_table[fd];
+
     if (F->defer_check == NULL)
-	return 0;
+        return 0;
+
     return F->defer_check(fd, F->defer_data);
 }
 
@@ -1791,12 +2088,14 @@ int
 comm_listen(int sock)
 {
     int x;
+
     if ((x = listen(sock, Squid_MaxFD >> 2)) < 0) {
-	debug(50, 0) ("comm_listen: listen(%d, %d): %s\n",
-	    Squid_MaxFD >> 2,
-	    sock, xstrerror());
-	return x;
+        debug(50, 0) ("comm_listen: listen(%d, %d): %s\n",
+                      Squid_MaxFD >> 2,
+                      sock, xstrerror());
+        return x;
     }
+
     return sock;
 }
 
@@ -1808,48 +2107,57 @@ comm_listen(int sock)
 static void
 comm_accept_try(int fd, void *data)
 {
-	int newfd;
-	fdc_t *Fc;
-	int count;
-	IOACB *hdl;
+    int newfd;
+    fdc_t *Fc;
+    int count;
+    IOACB *hdl;
 
-	assert(fdc_table[fd].active == 1);
+    assert(fdc_table[fd].active == 1);
 
-	Fc = &(fdc_table[fd]);
+    Fc = &(fdc_table[fd]);
 
-	for (count = 0; count < MAX_ACCEPT_PER_LOOP; count++) {
-		/* If we're out of fds, register an event and return now */
-		if (fdNFree() < RESERVED_FD) {
-			debug(5, 3) ("comm_accept_try: we're out of fds - deferring io!\n");
-			eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
-			    1000.0 / (double)(fdc_table[fd].accept.accept.check_delay), 1);
-			return;
-		}
-		/* Accept a new connection */
-		newfd = comm_old_accept(fd, Fc->accept.connDetails);
-		/* Check for errors */
-		if (newfd < 0) {
-			if (newfd == COMM_NOMESSAGE) {
-				/* register interest again */
-				commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
-				return;
-			}
-			/* A non-recoverable error - register an error callback */
-			comm_addacceptcallback(fd, -1, Fc->accept.accept.handler, Fc->accept.connDetails, COMM_ERROR, errno, Fc->accept.accept.handler_data);
-			Fc->accept.accept.handler = NULL;
-			Fc->accept.accept.handler_data = NULL;
-			return;
-		}
+    for (count = 0; count < MAX_ACCEPT_PER_LOOP; count++) {
+        /* If we're out of fds, register an event and return now */
 
-		/* Try the callback! */
-		hdl = Fc->accept.accept.handler;
-		Fc->accept.accept.handler = NULL;
-		hdl(fd, newfd, &Fc->accept.connDetails, COMM_OK, 0, Fc->accept.accept.handler_data);
+        if (fdNFree() < RESERVED_FD) {
+            debug(5, 3) ("comm_accept_try: we're out of fds - deferring io!\n");
+            eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
+                     1000.0 / (double)(fdc_table[fd].accept.accept.check_delay), 1);
+            return;
+        }
 
-		/* If we weren't re-registed, don't bother trying again! */
-		if (Fc->accept.accept.handler == NULL)
-			return;
-	}
+        /* Accept a new connection */
+        newfd = comm_old_accept(fd, Fc->accept.connDetails);
+
+        /* Check for errors */
+        if (newfd < 0) {
+            if (newfd == COMM_NOMESSAGE) {
+                /* register interest again */
+                commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
+                return;
+            }
+
+            /* A non-recoverable error - register an error callback */
+            comm_addacceptcallback(fd, -1, Fc->accept.accept.handler, Fc->accept.connDetails, COMM_ERROR, errno, Fc->accept.accept.handler_data);
+
+            Fc->accept.accept.handler = NULL;
+
+            Fc->accept.accept.handler_data = NULL;
+
+            return;
+        }
+
+        /* Try the callback! */
+        hdl = Fc->accept.accept.handler;
+
+        Fc->accept.accept.handler = NULL;
+
+        hdl(fd, newfd, &Fc->accept.connDetails, COMM_OK, 0, Fc->accept.accept.handler_data);
+
+        /* If we weren't re-registed, don't bother trying again! */
+        if (Fc->accept.accept.handler == NULL)
+            return;
+    }
 }
 
 
@@ -1861,24 +2169,26 @@ comm_accept_try(int fd, void *data)
 void
 comm_accept(int fd, IOACB *handler, void *handler_data)
 {
-	fdc_t *Fc;
+    fdc_t *Fc;
 
-	assert(fd_table[fd].flags.open == 1);
-	assert(fdc_table[fd].active == 1);
+    assert(fd_table[fd].flags.open == 1);
+    assert(fdc_table[fd].active == 1);
 
-	/* make sure we're not pending! */
-	assert(fdc_table[fd].accept.accept.handler == NULL);
+    /* make sure we're not pending! */
+    assert(fdc_table[fd].accept.accept.handler == NULL);
 
-	/* Record our details */
-	Fc = &fdc_table[fd];
-	Fc->accept.accept.handler = handler;
-	Fc->accept.accept.handler_data = handler_data;
+    /* Record our details */
+    Fc = &fdc_table[fd];
+    Fc->accept.accept.handler = handler;
+    Fc->accept.accept.handler_data = handler_data;
 
-	/* Kick off the accept */
+    /* Kick off the accept */
 #if OPTIMISTIC_IO
-	comm_accept_try(fd, NULL);
+
+    comm_accept_try(fd, NULL);
 #else
-	commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
+
+    commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
 #endif
 }
 
@@ -1917,10 +2227,10 @@ CommIO::NULLFDHandler(int fd, void *data)
 }
 
 void
-CommIO::ResetNotifications() 
+CommIO::ResetNotifications()
 {
     if (DoneSignalled) {
-	FlushPipe();
-	DoneSignalled = false;
+        FlushPipe();
+        DoneSignalled = false;
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLBrowser.h,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLBrowser.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,8 +40,10 @@
 #include "ACLRequestHeaderStrategy.h"
 #include "ACLStrategised.h"
 
-class ACLBrowser {
-  private:
+class ACLBrowser
+{
+
+private:
     static ACL::Prototype RegistryProtoype;
     static ACLStrategised<char const *> RegistryEntry_;
 };

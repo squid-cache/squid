@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.179 2003/02/05 10:36:51 robertc Exp $
+ * $Id: gopher.cc,v 1.180 2003/02/21 22:50:08 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -72,15 +72,16 @@
 #define TEMP_BUF_SIZE       4096
 #define MAX_CSO_RESULT      1024
 
-typedef struct gopher_ds {
+typedef struct gopher_ds
+{
     StoreEntry *entry;
     enum {
-	NORMAL,
-	HTML_DIR,
-	HTML_INDEX_RESULT,
-	HTML_CSO_RESULT,
-	HTML_INDEX_PAGE,
-	HTML_CSO_PAGE
+        NORMAL,
+        HTML_DIR,
+        HTML_INDEX_RESULT,
+        HTML_CSO_RESULT,
+        HTML_INDEX_PAGE,
+        HTML_CSO_PAGE
     } conversion;
     int HTML_header_added;
     char type_id;
@@ -93,14 +94,16 @@ typedef struct gopher_ds {
     request_t *req;
     FwdState *fwdState;
     char replybuf[BUFSIZ];
-} GopherStateData;
+}
+
+GopherStateData;
 
 static PF gopherStateFree;
 static void gopher_mime_content(MemBuf * mb, const char *name, const char *def);
 static void gopherMimeCreate(GopherStateData *);
 static void gopher_request_parse(const request_t * req,
-    char *type_id,
-    char *request);
+                                 char *type_id,
+                                 char *request);
 static void gopherEndHTML(GopherStateData *);
 static void gopherToHTML(GopherStateData *, char *inbuf, int len);
 static PF gopherTimeout;
@@ -115,14 +118,18 @@ static void
 gopherStateFree(int fdnotused, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *)data;
+
     if (gopherState == NULL)
-	return;
+        return;
+
     if (gopherState->entry) {
-	storeUnlockObject(gopherState->entry);
+        storeUnlockObject(gopherState->entry);
     }
+
     if (gopherState->req) {
-	requestUnlink(gopherState->req);
+        requestUnlink(gopherState->req);
     }
+
     memFree(gopherState->buf, MEM_4K_BUF);
     gopherState->buf = NULL;
     cbdataFree(gopherState);
@@ -135,10 +142,12 @@ gopher_mime_content(MemBuf * mb, const char *name, const char *def_ctype)
 {
     char *ctype = mimeGetContentType(name);
     char *cenc = mimeGetContentEncoding(name);
+
     if (cenc)
-	memBufPrintf(mb, "Content-Encoding: %s\r\n", cenc);
+        memBufPrintf(mb, "Content-Encoding: %s\r\n", cenc);
+
     memBufPrintf(mb, "Content-Type: %s\r\n",
-	ctype ? ctype : def_ctype);
+                 ctype ? ctype : def_ctype);
 }
 
 
@@ -152,44 +161,61 @@ gopherMimeCreate(GopherStateData * gopherState)
     memBufDefInit(&mb);
 
     memBufPrintf(&mb,
-	"HTTP/1.0 200 OK Gatewaying\r\n"
-	"Server: Squid/%s\r\n"
-	"Date: %s\r\n",
-	version_string, mkrfc1123(squid_curtime));
+                 "HTTP/1.0 200 OK Gatewaying\r\n"
+                 "Server: Squid/%s\r\n"
+                 "Date: %s\r\n",
+                 version_string, mkrfc1123(squid_curtime));
 
     switch (gopherState->type_id) {
 
     case GOPHER_DIRECTORY:
+
     case GOPHER_INDEX:
+
     case GOPHER_HTML:
+
     case GOPHER_WWW:
+
     case GOPHER_CSO:
-	memBufPrintf(&mb, "Content-Type: text/html\r\n");
-	break;
+        memBufPrintf(&mb, "Content-Type: text/html\r\n");
+        break;
+
     case GOPHER_GIF:
+
     case GOPHER_IMAGE:
+
     case GOPHER_PLUS_IMAGE:
-	memBufPrintf(&mb, "Content-Type: image/gif\r\n");
-	break;
+        memBufPrintf(&mb, "Content-Type: image/gif\r\n");
+        break;
+
     case GOPHER_SOUND:
+
     case GOPHER_PLUS_SOUND:
-	memBufPrintf(&mb, "Content-Type: audio/basic\r\n");
-	break;
+        memBufPrintf(&mb, "Content-Type: audio/basic\r\n");
+        break;
+
     case GOPHER_PLUS_MOVIE:
-	memBufPrintf(&mb, "Content-Type: video/mpeg\r\n");
-	break;
+        memBufPrintf(&mb, "Content-Type: video/mpeg\r\n");
+        break;
+
     case GOPHER_MACBINHEX:
+
     case GOPHER_DOSBIN:
+
     case GOPHER_UUENCODED:
+
     case GOPHER_BIN:
-	/* Rightnow We have no idea what it is. */
-	gopher_mime_content(&mb, gopherState->request, def_gopher_bin);
-	break;
+        /* Rightnow We have no idea what it is. */
+        gopher_mime_content(&mb, gopherState->request, def_gopher_bin);
+        break;
+
     case GOPHER_FILE:
+
     default:
-	gopher_mime_content(&mb, gopherState->request, def_gopher_text);
-	break;
+        gopher_mime_content(&mb, gopherState->request, def_gopher_text);
+        break;
     }
+
     memBufPrintf(&mb, "\r\n");
     EBIT_CLR(gopherState->entry->flags, ENTRY_FWD_HDR_WAIT);
     storeAppend(gopherState->entry, mb.buf, mb.size);
@@ -203,21 +229,22 @@ gopher_request_parse(const request_t * req, char *type_id, char *request)
     const char *path = req->urlpath.buf();
 
     if (request)
-	request[0] = '\0';
+        request[0] = '\0';
 
     if (path && (*path == '/'))
-	path++;
+        path++;
 
     if (!path || !*path) {
-	*type_id = GOPHER_DIRECTORY;
-	return;
+        *type_id = GOPHER_DIRECTORY;
+        return;
     }
+
     *type_id = path[0];
 
     if (request) {
-	xstrncpy(request, path + 1, MAX_URL);
-	/* convert %xx to char */
-	url_convert_hex(request, 0);
+        xstrncpy(request, path + 1, MAX_URL);
+        /* convert %xx to char */
+        url_convert_hex(request, 0);
     }
 }
 
@@ -228,18 +255,25 @@ gopherCachable(const request_t * req)
     char type_id;
     /* parse to see type */
     gopher_request_parse(req,
-	&type_id,
-	NULL);
+                         &type_id,
+                         NULL);
+
     switch (type_id) {
+
     case GOPHER_INDEX:
+
     case GOPHER_CSO:
+
     case GOPHER_TELNET:
+
     case GOPHER_3270:
-	cachable = 0;
-	break;
+        cachable = 0;
+        break;
+
     default:
-	cachable = 1;
+        cachable = 1;
     }
+
     return cachable;
 }
 
@@ -262,9 +296,9 @@ gopherHTMLFooter(StoreEntry * e)
     storeAppendPrintf(e, "<HR noshade size=\"1px\">\n");
     storeAppendPrintf(e, "<ADDRESS>\n");
     storeAppendPrintf(e, "Generated %s by %s (%s)\n",
-	mkrfc1123(squid_curtime),
-	getMyHostname(),
-	full_appname_string);
+                      mkrfc1123(squid_curtime),
+                      getMyHostname(),
+                      full_appname_string);
     storeAppendPrintf(e, "</ADDRESS></BODY></HTML>\n");
 }
 
@@ -272,12 +306,14 @@ static void
 gopherEndHTML(GopherStateData * gopherState)
 {
     StoreEntry *e = gopherState->entry;
+
     if (!gopherState->data_in) {
-	gopherHTMLHeader(e, "Server Return Nothing", NULL);
-	storeAppendPrintf(e, "<P>The Gopher query resulted in a blank response</P>");
+        gopherHTMLHeader(e, "Server Return Nothing", NULL);
+        storeAppendPrintf(e, "<P>The Gopher query resulted in a blank response</P>");
     } else {
-	storeAppendPrintf(e, "</PRE>\n");
+        storeAppendPrintf(e, "</PRE>\n");
     }
+
     gopherHTMLFooter(e);
 }
 
@@ -308,297 +344,351 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     entry = gopherState->entry;
 
     if (gopherState->conversion == gopher_ds::HTML_INDEX_PAGE) {
-	char *html_url = html_quote(storeUrl(entry));
-	gopherHTMLHeader(entry, "Gopher Index %s", html_url);
-	storeAppendPrintf(entry,
-	    "<p>This is a searchable Gopher index. Use the search\n"
-	    "function of your browser to enter search terms.\n"
-	    "<ISINDEX>\n");
-	gopherHTMLFooter(entry);
-	/* now let start sending stuff to client */
-	storeBufferFlush(entry);
-	gopherState->data_in = 1;
+        char *html_url = html_quote(storeUrl(entry));
+        gopherHTMLHeader(entry, "Gopher Index %s", html_url);
+        storeAppendPrintf(entry,
+                          "<p>This is a searchable Gopher index. Use the search\n"
+                          "function of your browser to enter search terms.\n"
+                          "<ISINDEX>\n");
+        gopherHTMLFooter(entry);
+        /* now let start sending stuff to client */
+        storeBufferFlush(entry);
+        gopherState->data_in = 1;
 
-	return;
+        return;
     }
+
     if (gopherState->conversion == gopher_ds::HTML_CSO_PAGE) {
-	char *html_url = html_quote(storeUrl(entry));
-	gopherHTMLHeader(entry, "CSO Search of %s", html_url);
-	storeAppendPrintf(entry,
-	    "<P>A CSO database usually contains a phonebook or\n"
-	    "directory.  Use the search function of your browser to enter\n"
-	    "search terms.</P><ISINDEX>\n");
-	gopherHTMLFooter(entry);
-	/* now let start sending stuff to client */
-	storeBufferFlush(entry);
-	gopherState->data_in = 1;
+        char *html_url = html_quote(storeUrl(entry));
+        gopherHTMLHeader(entry, "CSO Search of %s", html_url);
+        storeAppendPrintf(entry,
+                          "<P>A CSO database usually contains a phonebook or\n"
+                          "directory.  Use the search function of your browser to enter\n"
+                          "search terms.</P><ISINDEX>\n");
+        gopherHTMLFooter(entry);
+        /* now let start sending stuff to client */
+        storeBufferFlush(entry);
+        gopherState->data_in = 1;
 
-	return;
+        return;
     }
+
     inbuf[len] = '\0';
 
     if (!gopherState->HTML_header_added) {
-	if (gopherState->conversion == gopher_ds::HTML_CSO_RESULT)
-	    gopherHTMLHeader(entry, "CSO Search Result", NULL);
-	else
-	    gopherHTMLHeader(entry, "Gopher Menu", NULL);
-	outbuf.append ("<PRE>");
-	gopherState->HTML_header_added = 1;
+        if (gopherState->conversion == gopher_ds::HTML_CSO_RESULT)
+            gopherHTMLHeader(entry, "CSO Search Result", NULL);
+        else
+            gopherHTMLHeader(entry, "Gopher Menu", NULL);
+
+        outbuf.append ("<PRE>");
+
+        gopherState->HTML_header_added = 1;
     }
+
     while ((pos != NULL) && (pos < inbuf + len)) {
 
-	if (gopherState->len != 0) {
-	    /* there is something left from last tx. */
-	    xstrncpy(line, gopherState->buf, gopherState->len + 1);
-	    lpos = (char *) memccpy(line + gopherState->len, inbuf, '\n', len);
-	    if (lpos)
-		*lpos = '\0';
-	    else {
-		/* there is no complete line in inbuf */
-		/* copy it to temp buffer */
-		if (gopherState->len + len > TEMP_BUF_SIZE) {
-		    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
-			storeUrl(entry));
-		    len = TEMP_BUF_SIZE - gopherState->len;
-		}
-		xmemcpy(gopherState->buf + gopherState->len, inbuf, len);
-		gopherState->len += len;
-		return;
-	    }
+        if (gopherState->len != 0) {
+            /* there is something left from last tx. */
+            xstrncpy(line, gopherState->buf, gopherState->len + 1);
+            lpos = (char *) memccpy(line + gopherState->len, inbuf, '\n', len);
 
-	    /* skip one line */
-	    pos = (char *) memchr(pos, '\n', len);
-	    if (pos)
-		pos++;
+            if (lpos)
+                *lpos = '\0';
+            else {
+                /* there is no complete line in inbuf */
+                /* copy it to temp buffer */
 
-	    /* we're done with the remain from last tx. */
-	    gopherState->len = 0;
-	    *(gopherState->buf) = '\0';
-	} else {
+                if (gopherState->len + len > TEMP_BUF_SIZE) {
+                    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
+                                  storeUrl(entry));
+                    len = TEMP_BUF_SIZE - gopherState->len;
+                }
 
-	    lpos = (char *) memccpy(line, pos, '\n', len - (pos - inbuf));
-	    if (lpos)
-		*lpos = '\0';
-	    else {
-		/* there is no complete line in inbuf */
-		/* copy it to temp buffer */
-		if ((len - (pos - inbuf)) > TEMP_BUF_SIZE) {
-		    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
-			storeUrl(entry));
-		    len = TEMP_BUF_SIZE;
-		}
-		if (len > (pos - inbuf)) {
-		    xmemcpy(gopherState->buf, pos, len - (pos - inbuf));
-		    gopherState->len = len - (pos - inbuf);
-		}
-		break;
-	    }
+                xmemcpy(gopherState->buf + gopherState->len, inbuf, len);
+                gopherState->len += len;
+                return;
+            }
 
-	    /* skip one line */
-	    pos = (char *) memchr(pos, '\n', len);
-	    if (pos)
-		pos++;
+            /* skip one line */
+            pos = (char *) memchr(pos, '\n', len);
 
-	}
+            if (pos)
+                pos++;
 
-	/* at this point. We should have one line in buffer to process */
+            /* we're done with the remain from last tx. */
+            gopherState->len = 0;
 
-	if (*line == '.') {
-	    /* skip it */
-	    memset(line, '\0', TEMP_BUF_SIZE);
-	    continue;
-	}
-	switch (gopherState->conversion) {
+            *(gopherState->buf) = '\0';
+        } else {
 
-	case gopher_ds::HTML_INDEX_RESULT:
-	case gopher_ds::HTML_DIR:{
-		tline = line;
-		gtype = *tline++;
-		name = tline;
-		selector = strchr(tline, TAB);
-		if (selector) {
-		    *selector++ = '\0';
-		    host = strchr(selector, TAB);
-		    if (host) {
-			*host++ = '\0';
-			port = strchr(host, TAB);
-			if (port) {
-			    char *junk;
-			    port[0] = ':';
-			    junk = strchr(host, TAB);
-			    if (junk)
-				*junk++ = 0;	/* Chop port */
-			    else {
-				junk = strchr(host, '\r');
-				if (junk)
-				    *junk++ = 0;	/* Chop port */
-				else {
-				    junk = strchr(host, '\n');
-				    if (junk)
-					*junk++ = 0;	/* Chop port */
-				}
-			    }
-			    if ((port[1] == '0') && (!port[2]))
-				port[0] = 0;	/* 0 means none */
-			}
-			/* escape a selector here */
-			escaped_selector = xstrdup(rfc1738_escape_part(selector));
+            lpos = (char *) memccpy(line, pos, '\n', len - (pos - inbuf));
 
-			switch (gtype) {
-			case GOPHER_DIRECTORY:
-			    icon_url = mimeGetIconURL("internal-menu");
-			    break;
-			case GOPHER_HTML:
-			case GOPHER_FILE:
-			    icon_url = mimeGetIconURL("internal-text");
-			    break;
-			case GOPHER_INDEX:
-			case GOPHER_CSO:
-			    icon_url = mimeGetIconURL("internal-index");
-			    break;
-			case GOPHER_IMAGE:
-			case GOPHER_GIF:
-			case GOPHER_PLUS_IMAGE:
-			    icon_url = mimeGetIconURL("internal-image");
-			    break;
-			case GOPHER_SOUND:
-			case GOPHER_PLUS_SOUND:
-			    icon_url = mimeGetIconURL("internal-sound");
-			    break;
-			case GOPHER_PLUS_MOVIE:
-			    icon_url = mimeGetIconURL("internal-movie");
-			    break;
-			case GOPHER_TELNET:
-			case GOPHER_3270:
-			    icon_url = mimeGetIconURL("internal-telnet");
-			    break;
-			case GOPHER_BIN:
-			case GOPHER_MACBINHEX:
-			case GOPHER_DOSBIN:
-			case GOPHER_UUENCODED:
-			    icon_url = mimeGetIconURL("internal-binary");
-			    break;
-			case GOPHER_INFO:
-			    icon_url = NULL;
-			    break;
-			default:
-			    icon_url = mimeGetIconURL("internal-unknown");
-			    break;
-			}
+            if (lpos)
+                *lpos = '\0';
+            else {
+                /* there is no complete line in inbuf */
+                /* copy it to temp buffer */
 
-			memset(tmpbuf, '\0', TEMP_BUF_SIZE);
-			if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
-			    if (strlen(escaped_selector) != 0)
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
-				    icon_url, escaped_selector, rfc1738_escape_part(host),
-				    *port ? ":" : "", port, html_quote(name));
-			    else
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
-				    icon_url, rfc1738_escape_part(host), *port ? ":" : "",
-				    port, html_quote(name));
+                if ((len - (pos - inbuf)) > TEMP_BUF_SIZE) {
+                    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
+                                  storeUrl(entry));
+                    len = TEMP_BUF_SIZE;
+                }
 
-			} else if (gtype == GOPHER_INFO) {
-			    snprintf(tmpbuf, TEMP_BUF_SIZE, "\t%s\n", html_quote(name));
-			} else {
-			    if (strncmp(selector, "GET /", 5) == 0) {
-				/* WWW link */
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
-				    icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
-			    } else {
-				/* Standard link */
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
-				    icon_url, host, gtype, escaped_selector, html_quote(name));
-			    }
-			}
-			safe_free(escaped_selector);
-			outbuf.append(tmpbuf);
-			gopherState->data_in = 1;
-		    } else {
-			memset(line, '\0', TEMP_BUF_SIZE);
-			continue;
-		    }
-		} else {
-		    memset(line, '\0', TEMP_BUF_SIZE);
-		    continue;
-		}
-		break;
-	    }			/* HTML_DIR, HTML_INDEX_RESULT */
+                if (len > (pos - inbuf)) {
+                    xmemcpy(gopherState->buf, pos, len - (pos - inbuf));
+                    gopherState->len = len - (pos - inbuf);
+                }
 
+                break;
+            }
 
-	case gopher_ds::HTML_CSO_RESULT:{
-		if (line[0] == '-') {
-		    int code, recno;
-		    char *s_code, *s_recno, *result;
+            /* skip one line */
+            pos = (char *) memchr(pos, '\n', len);
 
-		    s_code = strtok(line + 1, ":\n");
-		    s_recno = strtok(NULL, ":\n");
-		    result = strtok(NULL, "\n");
+            if (pos)
+                pos++;
 
-		    if (!result)
-			break;
+        }
 
-		    code = atoi(s_code);
-		    recno = atoi(s_recno);
+        /* at this point. We should have one line in buffer to process */
 
-		    if (code != 200)
-			break;
+        if (*line == '.') {
+            /* skip it */
+            memset(line, '\0', TEMP_BUF_SIZE);
+            continue;
+        }
 
-		    if (gopherState->cso_recno != recno) {
-			snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, html_quote(result));
-			gopherState->cso_recno = recno;
-		    } else {
-			snprintf(tmpbuf, TEMP_BUF_SIZE, "%s\n", html_quote(result));
-		    }
-		    outbuf.append(tmpbuf);
-		    gopherState->data_in = 1;
-		    break;
-		} else {
-		    int code;
-		    char *s_code, *result;
+        switch (gopherState->conversion) {
 
-		    s_code = strtok(line, ":");
-		    result = strtok(NULL, "\n");
+        case gopher_ds::HTML_INDEX_RESULT:
 
-		    if (!result)
-			break;
+        case gopher_ds::HTML_DIR: {
+                tline = line;
+                gtype = *tline++;
+                name = tline;
+                selector = strchr(tline, TAB);
 
-		    code = atoi(s_code);
-		    switch (code) {
+                if (selector) {
+                    *selector++ = '\0';
+                    host = strchr(selector, TAB);
 
-		    case 200:{
-			    /* OK */
-			    /* Do nothing here */
-			    break;
-			}
+                    if (host) {
+                        *host++ = '\0';
+                        port = strchr(host, TAB);
 
-		    case 102:	/* Number of matches */
-		    case 501:	/* No Match */
-		    case 502:	/* Too Many Matches */
-			{
-			    /* Print the message the server returns */
-			    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
-			    outbuf.append(tmpbuf);
-			    gopherState->data_in = 1;
-			    break;
-			}
+                        if (port) {
+                            char *junk;
+                            port[0] = ':';
+                            junk = strchr(host, TAB);
+
+                            if (junk)
+                                *junk++ = 0;	/* Chop port */
+                            else {
+                                junk = strchr(host, '\r');
+
+                                if (junk)
+                                    *junk++ = 0;	/* Chop port */
+                                else {
+                                    junk = strchr(host, '\n');
+
+                                    if (junk)
+                                        *junk++ = 0;	/* Chop port */
+                                }
+                            }
+
+                            if ((port[1] == '0') && (!port[2]))
+                                port[0] = 0;	/* 0 means none */
+                        }
+
+                        /* escape a selector here */
+                        escaped_selector = xstrdup(rfc1738_escape_part(selector));
+
+                        switch (gtype) {
+
+                        case GOPHER_DIRECTORY:
+                            icon_url = mimeGetIconURL("internal-menu");
+                            break;
+
+                        case GOPHER_HTML:
+
+                        case GOPHER_FILE:
+                            icon_url = mimeGetIconURL("internal-text");
+                            break;
+
+                        case GOPHER_INDEX:
+
+                        case GOPHER_CSO:
+                            icon_url = mimeGetIconURL("internal-index");
+                            break;
+
+                        case GOPHER_IMAGE:
+
+                        case GOPHER_GIF:
+
+                        case GOPHER_PLUS_IMAGE:
+                            icon_url = mimeGetIconURL("internal-image");
+                            break;
+
+                        case GOPHER_SOUND:
+
+                        case GOPHER_PLUS_SOUND:
+                            icon_url = mimeGetIconURL("internal-sound");
+                            break;
+
+                        case GOPHER_PLUS_MOVIE:
+                            icon_url = mimeGetIconURL("internal-movie");
+                            break;
+
+                        case GOPHER_TELNET:
+
+                        case GOPHER_3270:
+                            icon_url = mimeGetIconURL("internal-telnet");
+                            break;
+
+                        case GOPHER_BIN:
+
+                        case GOPHER_MACBINHEX:
+
+                        case GOPHER_DOSBIN:
+
+                        case GOPHER_UUENCODED:
+                            icon_url = mimeGetIconURL("internal-binary");
+                            break;
+
+                        case GOPHER_INFO:
+                            icon_url = NULL;
+                            break;
+
+                        default:
+                            icon_url = mimeGetIconURL("internal-unknown");
+                            break;
+                        }
+
+                        memset(tmpbuf, '\0', TEMP_BUF_SIZE);
+
+                        if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
+                            if (strlen(escaped_selector) != 0)
+                                snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
+                                         icon_url, escaped_selector, rfc1738_escape_part(host),
+                                         *port ? ":" : "", port, html_quote(name));
+                            else
+                                snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
+                                         icon_url, rfc1738_escape_part(host), *port ? ":" : "",
+                                         port, html_quote(name));
+
+                        } else if (gtype == GOPHER_INFO) {
+                            snprintf(tmpbuf, TEMP_BUF_SIZE, "\t%s\n", html_quote(name));
+                        } else {
+                            if (strncmp(selector, "GET /", 5) == 0) {
+                                /* WWW link */
+                                snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
+                                         icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
+                            } else {
+                                /* Standard link */
+                                snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
+                                         icon_url, host, gtype, escaped_selector, html_quote(name));
+                            }
+                        }
+
+                        safe_free(escaped_selector);
+                        outbuf.append(tmpbuf);
+                        gopherState->data_in = 1;
+                    } else {
+                        memset(line, '\0', TEMP_BUF_SIZE);
+                        continue;
+                    }
+                } else {
+                    memset(line, '\0', TEMP_BUF_SIZE);
+                    continue;
+                }
+
+                break;
+            }			/* HTML_DIR, HTML_INDEX_RESULT */
 
 
-		    }
-		}
+        case gopher_ds::HTML_CSO_RESULT: {
+                if (line[0] == '-') {
+                    int code, recno;
+                    char *s_code, *s_recno, *result;
 
-	    }			/* HTML_CSO_RESULT */
-	default:
-	    break;		/* do nothing */
+                    s_code = strtok(line + 1, ":\n");
+                    s_recno = strtok(NULL, ":\n");
+                    result = strtok(NULL, "\n");
 
-	}			/* switch */
+                    if (!result)
+                        break;
+
+                    code = atoi(s_code);
+
+                    recno = atoi(s_recno);
+
+                    if (code != 200)
+                        break;
+
+                    if (gopherState->cso_recno != recno) {
+                        snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, html_quote(result));
+                        gopherState->cso_recno = recno;
+                    } else {
+                        snprintf(tmpbuf, TEMP_BUF_SIZE, "%s\n", html_quote(result));
+                    }
+
+                    outbuf.append(tmpbuf);
+                    gopherState->data_in = 1;
+                    break;
+                } else {
+                    int code;
+                    char *s_code, *result;
+
+                    s_code = strtok(line, ":");
+                    result = strtok(NULL, "\n");
+
+                    if (!result)
+                        break;
+
+                    code = atoi(s_code);
+
+                    switch (code) {
+
+                    case 200: {
+                            /* OK */
+                            /* Do nothing here */
+                            break;
+                        }
+
+                    case 102:	/* Number of matches */
+
+                    case 501:	/* No Match */
+
+                    case 502:	/* Too Many Matches */
+                        {
+                            /* Print the message the server returns */
+                            snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
+                            outbuf.append(tmpbuf);
+                            gopherState->data_in = 1;
+                            break;
+                        }
+
+
+                    }
+                }
+
+            }			/* HTML_CSO_RESULT */
+
+        default:
+            break;		/* do nothing */
+
+        }			/* switch */
 
     }				/* while loop */
 
     if (outbuf.size() > 0) {
-	storeAppend(entry, outbuf.buf(), outbuf.size());
-	/* now let start sending stuff to client */
-	storeBufferFlush(entry);
+        storeAppend(entry, outbuf.buf(), outbuf.size());
+        /* now let start sending stuff to client */
+        storeBufferFlush(entry);
     }
+
     outbuf.clean();
     return;
 }
@@ -609,12 +699,14 @@ gopherTimeout(int fd, void *data)
     GopherStateData *gopherState = (GopherStateData *)data;
     StoreEntry *entry = gopherState->entry;
     debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
+
     if (entry->store_status == STORE_PENDING) {
-	if (entry->isEmpty()) {
-	    fwdFail(gopherState->fwdState,
-		errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
-	}
+        if (entry->isEmpty()) {
+            fwdFail(gopherState->fwdState,
+                    errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+        }
     }
+
     comm_close(fd);
 }
 
@@ -630,85 +722,106 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
     size_t read_sz = BUFSIZ;
     int do_next_read = 0;
 #if DELAY_POOLS
+
     DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+
     if (flag == COMM_ERR_CLOSING) {
         return;
     }
 
     assert(buf == gopherState->replybuf);
+
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-	comm_close(fd);
-	return;
+        comm_close(fd);
+        return;
     }
 
     errno = 0;
 #if DELAY_POOLS
+
     read_sz = delayId.bytesWanted(1, read_sz);
 #endif
 
     /* leave one space for \0 in gopherToHTML */
+
     if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
-	delayId.bytesIn(len);
+        delayId.bytesIn(len);
 #endif
-	kb_incr(&statCounter.server.all.kbytes_in, len);
-	kb_incr(&statCounter.server.other.kbytes_in, len);
+
+        kb_incr(&statCounter.server.all.kbytes_in, len);
+        kb_incr(&statCounter.server.other.kbytes_in, len);
     }
+
     debug(10, 5) ("gopherReadReply: FD %d read len=%d\n", fd, (int)len);
+
     if (flag == COMM_OK && len > 0) {
-	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
-	IOStats.Gopher.reads++;
-	for (clen = len - 1, bin = 0; clen; bin++)
-	    clen >>= 1;
-	IOStats.Gopher.read_hist[bin]++;
+        commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
+        IOStats.Gopher.reads++;
+
+        for (clen = len - 1, bin = 0; clen; bin++)
+            clen >>= 1;
+
+        IOStats.Gopher.read_hist[bin]++;
     }
+
     if (flag != COMM_OK || len < 0) {
-	debug(50, 1) ("gopherReadReply: error reading: %s\n", xstrerror());
-	if (ignoreErrno(errno)) {
+        debug(50, 1) ("gopherReadReply: error reading: %s\n", xstrerror());
+
+        if (ignoreErrno(errno)) {
             do_next_read = 1;
-	} else if (entry->isEmpty()) {
-	    ErrorState *err;
-	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
-	    err->xerrno = errno;
-	    err->url = xstrdup(storeUrl(entry));
-	    errorAppendEntry(entry, err);
-	    comm_close(fd);
+        } else if (entry->isEmpty()) {
+            ErrorState *err;
+            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+            err->xerrno = errno;
+            err->url = xstrdup(storeUrl(entry));
+            errorAppendEntry(entry, err);
+            comm_close(fd);
             do_next_read = 0;
-	} else {
-	    comm_close(fd);
+        } else {
+            comm_close(fd);
             do_next_read = 0;
-	}
+        }
     } else if (len == 0 && entry->isEmpty()) {
-	ErrorState *err;
-	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
-	err->xerrno = errno;
-	err->url = xstrdup(gopherState->request);
-	errorAppendEntry(entry, err);
-	comm_close(fd);
+        ErrorState *err;
+        err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
+        err->xerrno = errno;
+        err->url = xstrdup(gopherState->request);
+        errorAppendEntry(entry, err);
+        comm_close(fd);
         do_next_read = 0;
     } else if (len == 0) {
-	/* Connection closed; retrieval done. */
-	/* flush the rest of data in temp buf if there is one. */
-	if (gopherState->conversion != gopher_ds::NORMAL)
-	    gopherEndHTML(gopherState);
-	storeTimestampsSet(entry);
-	storeBufferFlush(entry);
-	fwdComplete(gopherState->fwdState);
-	comm_close(fd);
+        /* Connection closed; retrieval done. */
+        /* flush the rest of data in temp buf if there is one. */
+
+        if (gopherState->conversion != gopher_ds::NORMAL)
+            gopherEndHTML(gopherState);
+
+        storeTimestampsSet(entry);
+
+        storeBufferFlush(entry);
+
+        fwdComplete(gopherState->fwdState);
+
+        comm_close(fd);
+
         do_next_read = 0;
     } else {
-	if (gopherState->conversion != gopher_ds::NORMAL) {
-	    gopherToHTML(gopherState, buf, len);
-	} else {
-	    storeAppend(entry, buf, len);
-	}
+        if (gopherState->conversion != gopher_ds::NORMAL) {
+            gopherToHTML(gopherState, buf, len);
+        } else {
+            storeAppend(entry, buf, len);
+        }
+
         do_next_read = 1;
     }
+
     if (do_next_read)
         comm_read(fd, buf, read_sz, gopherReadReply, gopherState);
+
     return;
 }
 
@@ -720,59 +833,72 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;
     debug(10, 5) ("gopherSendComplete: FD %d size: %d errflag: %d\n",
-	fd, (int) size, errflag);
+                  fd, (int) size, errflag);
+
     if (size > 0) {
-	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&statCounter.server.all.kbytes_out, size);
-	kb_incr(&statCounter.server.other.kbytes_out, size);
+        fd_bytes(fd, size, FD_WRITE);
+        kb_incr(&statCounter.server.all.kbytes_out, size);
+        kb_incr(&statCounter.server.other.kbytes_out, size);
     }
+
     if (errflag) {
-	ErrorState *err;
-	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
-	err->xerrno = errno;
-	err->host = xstrdup(gopherState->req->host);
-	err->port = gopherState->req->port;
-	err->url = xstrdup(storeUrl(entry));
-	errorAppendEntry(entry, err);
-	comm_close(fd);
-	if (buf)
-	    memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
-	return;
+        ErrorState *err;
+        err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
+        err->xerrno = errno;
+        err->host = xstrdup(gopherState->req->host);
+        err->port = gopherState->req->port;
+        err->url = xstrdup(storeUrl(entry));
+        errorAppendEntry(entry, err);
+        comm_close(fd);
+
+        if (buf)
+            memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
+
+        return;
     }
-    /* 
+
+    /*
      * OK. We successfully reach remote site.  Start MIME typing
      * stuff.  Do it anyway even though request is not HTML type.
      */
     gopherMimeCreate(gopherState);
+
     switch (gopherState->type_id) {
+
     case GOPHER_DIRECTORY:
-	/* we got to convert it first */
-	storeBuffer(entry);
-	gopherState->conversion = gopher_ds::HTML_DIR;
-	gopherState->HTML_header_added = 0;
-	break;
+        /* we got to convert it first */
+        storeBuffer(entry);
+        gopherState->conversion = gopher_ds::HTML_DIR;
+        gopherState->HTML_header_added = 0;
+        break;
+
     case GOPHER_INDEX:
-	/* we got to convert it first */
-	storeBuffer(entry);
-	gopherState->conversion = gopher_ds::HTML_INDEX_RESULT;
-	gopherState->HTML_header_added = 0;
-	break;
+        /* we got to convert it first */
+        storeBuffer(entry);
+        gopherState->conversion = gopher_ds::HTML_INDEX_RESULT;
+        gopherState->HTML_header_added = 0;
+        break;
+
     case GOPHER_CSO:
-	/* we got to convert it first */
-	storeBuffer(entry);
-	gopherState->conversion = gopher_ds::HTML_CSO_RESULT;
-	gopherState->cso_recno = 0;
-	gopherState->HTML_header_added = 0;
-	break;
+        /* we got to convert it first */
+        storeBuffer(entry);
+        gopherState->conversion = gopher_ds::HTML_CSO_RESULT;
+        gopherState->cso_recno = 0;
+        gopherState->HTML_header_added = 0;
+        break;
+
     default:
-	gopherState->conversion = gopher_ds::NORMAL;
+        gopherState->conversion = gopher_ds::NORMAL;
     }
+
     /* Schedule read reply. */
     /* XXX this read isn't being bound by delay pools! */
     comm_read(fd, gopherState->replybuf, BUFSIZ, gopherReadReply, gopherState);
+
     commSetDefer(fd, StoreEntry::CheckDeferRead, entry);
+
     if (buf)
-	memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
+        memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
 }
 
 /* This will be called when connect completes. Write request. */
@@ -781,29 +907,36 @@ gopherSendRequest(int fd, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *)data;
     char *buf = (char *)memAllocate(MEM_4K_BUF);
+
     if (gopherState->type_id == GOPHER_CSO) {
-	const char *t = strchr(gopherState->request, '?');
-	if (t != NULL)
-	    t++;		/* skip the ? */
-	else
-	    t = "";
-	snprintf(buf, 4096, "query %s\r\nquit\r\n", t);
+        const char *t = strchr(gopherState->request, '?');
+
+        if (t != NULL)
+            t++;		/* skip the ? */
+        else
+            t = "";
+
+        snprintf(buf, 4096, "query %s\r\nquit\r\n", t);
     } else if (gopherState->type_id == GOPHER_INDEX) {
-	char *t = strchr(gopherState->request, '?');
-	if (t != NULL)
-	    *t = '\t';
-	snprintf(buf, 4096, "%s\r\n", gopherState->request);
+        char *t = strchr(gopherState->request, '?');
+
+        if (t != NULL)
+            *t = '\t';
+
+        snprintf(buf, 4096, "%s\r\n", gopherState->request);
     } else {
-	snprintf(buf, 4096, "%s\r\n", gopherState->request);
+        snprintf(buf, 4096, "%s\r\n", gopherState->request);
     }
+
     debug(10, 5) ("gopherSendRequest: FD %d\n", fd);
     comm_write(fd,
-	buf,
-	strlen(buf),
-	gopherSendComplete,
-	gopherState);
+               buf,
+               strlen(buf),
+               gopherSendComplete,
+               gopherState);
+
     if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
-	storeSetPublicKey(gopherState->entry);	/* Make it public */
+        storeSetPublicKey(gopherState->entry);	/* Make it public */
 }
 
 CBDATA_TYPE(GopherStateData);
@@ -825,37 +958,43 @@ gopherStart(FwdState * fwdState)
     statCounter.server.other.requests++;
     /* Parse url. */
     gopher_request_parse(fwdState->request,
-	&gopherState->type_id, gopherState->request);
+                         &gopherState->type_id, gopherState->request);
 #if OLD_PARSE_ERROR_CODE
+
     if (...) {
-	ErrorState *err;
-	err = errorCon(ERR_INVALID_URL, HTTP_BAD_REQUEST);
-	err->url = xstrdup(storeUrl(entry));
-	errorAppendEntry(entry, err);
-	gopherStateFree(-1, gopherState);
-	return;
+        ErrorState *err;
+        err = errorCon(ERR_INVALID_URL, HTTP_BAD_REQUEST);
+        err->url = xstrdup(storeUrl(entry));
+        errorAppendEntry(entry, err);
+        gopherStateFree(-1, gopherState);
+        return;
     }
+
 #endif
     comm_add_close_handler(fd, gopherStateFree, gopherState);
+
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
-	&& (strchr(gopherState->request, '?') == NULL)) {
-	/* Index URL without query word */
-	/* We have to generate search page back to client. No need for connection */
-	gopherMimeCreate(gopherState);
-	if (gopherState->type_id == GOPHER_INDEX) {
-	    gopherState->conversion = gopher_ds::HTML_INDEX_PAGE;
-	} else {
-	    if (gopherState->type_id == GOPHER_CSO) {
-		gopherState->conversion = gopher_ds::HTML_CSO_PAGE;
-	    } else {
-		gopherState->conversion = gopher_ds::HTML_INDEX_PAGE;
-	    }
-	}
-	gopherToHTML(gopherState, (char *) NULL, 0);
-	fwdComplete(fwdState);
-	comm_close(fd);
-	return;
+            && (strchr(gopherState->request, '?') == NULL)) {
+        /* Index URL without query word */
+        /* We have to generate search page back to client. No need for connection */
+        gopherMimeCreate(gopherState);
+
+        if (gopherState->type_id == GOPHER_INDEX) {
+            gopherState->conversion = gopher_ds::HTML_INDEX_PAGE;
+        } else {
+            if (gopherState->type_id == GOPHER_CSO) {
+                gopherState->conversion = gopher_ds::HTML_CSO_PAGE;
+            } else {
+                gopherState->conversion = gopher_ds::HTML_INDEX_PAGE;
+            }
+        }
+
+        gopherToHTML(gopherState, (char *) NULL, 0);
+        fwdComplete(fwdState);
+        comm_close(fd);
+        return;
     }
+
     gopherState->fd = fd;
     gopherState->fwdState = fwdState;
     gopherSendRequest(fd, gopherState);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.95 2003/02/12 06:11:04 robertc Exp $
+ * $Id: redirect.cc,v 1.96 2003/02/21 22:50:10 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -40,14 +40,18 @@
 #include "ACLChecklist.h"
 #include "HttpRequest.h"
 
-typedef struct {
+typedef struct
+{
     void *data;
     char *orig_url;
+
     struct in_addr client_addr;
     const char *client_ident;
     const char *method_s;
     RH *handler;
-} redirectStateData;
+}
+
+redirectStateData;
 
 static HLPCB redirectHandleReply;
 static void redirectStateFree(redirectStateData * r);
@@ -63,14 +67,18 @@ redirectHandleReply(void *data, char *reply)
     char *t;
     void *cbdata;
     debug(61, 5) ("redirectHandleRead: {%s}\n", reply ? reply : "<NULL>");
+
     if (reply) {
-	if ((t = strchr(reply, ' ')))
-	    *t = '\0';
-	if (*reply == '\0')
-	    reply = NULL;
+        if ((t = strchr(reply, ' ')))
+            *t = '\0';
+
+        if (*reply == '\0')
+            reply = NULL;
     }
+
     if (cbdataReferenceValidDone(r->data, &cbdata))
-	r->handler(cbdata, reply);
+        r->handler(cbdata, reply);
+
     redirectStateFree(r);
 }
 
@@ -86,9 +94,10 @@ redirectStats(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "Redirector Statistics:\n");
     helperStats(sentry, redirectors);
+
     if (Config.onoff.redirector_bypass)
-	storeAppendPrintf(sentry, "\nNumber of requests bypassed "
-	    "because all redirectors were busy: %d\n", n_bypassed);
+        storeAppendPrintf(sentry, "\nNumber of requests bypassed "
+                          "because all redirectors were busy: %d\n", n_bypassed);
 }
 
 /**** PUBLIC FUNCTIONS ****/
@@ -103,49 +112,59 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
     assert(http);
     assert(handler);
     debug(61, 5) ("redirectStart: '%s'\n", http->uri);
+
     if (Config.Program.redirect == NULL) {
-	handler(data, NULL);
-	return;
+        handler(data, NULL);
+        return;
     }
+
     if (Config.accessList.redirector) {
-	ACLChecklist ch;
-	ch.src_addr = http->conn->peer.sin_addr;
-	ch.my_addr = http->conn->me.sin_addr;
-	ch.my_port = ntohs(http->conn->me.sin_port);
-	ch.request = requestLink(http->request);
-	if (!aclCheckFast(Config.accessList.redirector, &ch)) {
-	    /* denied -- bypass redirector */
-	    handler(data, NULL);
-	    return;
-	}
+        ACLChecklist ch;
+        ch.src_addr = http->conn->peer.sin_addr;
+        ch.my_addr = http->conn->me.sin_addr;
+        ch.my_port = ntohs(http->conn->me.sin_port);
+        ch.request = requestLink(http->request);
+
+        if (!aclCheckFast(Config.accessList.redirector, &ch)) {
+            /* denied -- bypass redirector */
+            handler(data, NULL);
+            return;
+        }
     }
+
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
-	/* Skip redirector if there is one request queued */
-	n_bypassed++;
-	handler(data, NULL);
-	return;
+        /* Skip redirector if there is one request queued */
+        n_bypassed++;
+        handler(data, NULL);
+        return;
     }
+
     r = cbdataAlloc(redirectStateData);
     r->orig_url = xstrdup(http->uri);
     r->client_addr = conn->log_addr;
+
     if (http->request->auth_user_request)
-	r->client_ident = authenticateUserRequestUsername(http->request->auth_user_request);
+        r->client_ident = authenticateUserRequestUsername(http->request->auth_user_request);
     else if (conn->rfc931[0]) {
-	r->client_ident = conn->rfc931;
+        r->client_ident = conn->rfc931;
     } else {
-	r->client_ident = dash_str;
+        r->client_ident = dash_str;
     }
+
     r->method_s = RequestMethodStr[http->request->method];
     r->handler = handler;
     r->data = cbdataReference(data);
+
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
-	fqdn = dash_str;
+        fqdn = dash_str;
+
     snprintf(buf, 8192, "%s %s/%s %s %s\n",
-	r->orig_url,
-	inet_ntoa(r->client_addr),
-	fqdn,
-	r->client_ident,
-	r->method_s);
+             r->orig_url,
+             inet_ntoa(r->client_addr),
+             fqdn,
+             r->client_ident,
+             r->method_s);
+
     helperSubmit(redirectors, buf, redirectHandleReply, r);
 }
 
@@ -153,20 +172,27 @@ void
 redirectInit(void)
 {
     static int init = 0;
+
     if (!Config.Program.redirect)
-	return;
+        return;
+
     if (redirectors == NULL)
-	redirectors = helperCreate("redirector");
+        redirectors = helperCreate("redirector");
+
     redirectors->cmdline = Config.Program.redirect;
+
     redirectors->n_to_start = Config.redirectChildren;
+
     redirectors->ipc_type = IPC_STREAM;
+
     helperOpenServers(redirectors);
+
     if (!init) {
-	cachemgrRegister("redirector",
-	    "URL Redirector Stats",
-	    redirectStats, 0, 1);
-	init = 1;
-	CBDATA_INIT_TYPE(redirectStateData);
+        cachemgrRegister("redirector",
+                         "URL Redirector Stats",
+                         redirectStats, 0, 1);
+        init = 1;
+        CBDATA_INIT_TYPE(redirectStateData);
     }
 }
 
@@ -174,10 +200,14 @@ void
 redirectShutdown(void)
 {
     if (!redirectors)
-	return;
+        return;
+
     helperShutdown(redirectors);
+
     if (!shutting_down)
-	return;
+        return;
+
     helperFree(redirectors);
+
     redirectors = NULL;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.5 2003/02/21 19:53:01 hno Exp $
+ * $Id: IPInterception.cc,v 1.6 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -80,8 +80,10 @@
 
 #if IPF_TRANSPARENT
 int
+
 clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
 {
+
     struct natlookup natLookup;
     static int natfd = -1;
     static int siocgnatl_cmd = SIOCGNATL & 0xff;
@@ -92,19 +94,24 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
     natLookup.nl_inip = me.sin_addr;
     natLookup.nl_outip = peer.sin_addr;
     natLookup.nl_flags = IPN_TCP;
-    if (natfd < 0) {
-	int save_errno;
-	enter_suid();
-	natfd = open(IPL_NAT, O_RDONLY, 0);
-	save_errno = errno;
-	leave_suid();
-	errno = save_errno;
+
+    if (natfd < 0)
+    {
+        int save_errno;
+        enter_suid();
+        natfd = open(IPL_NAT, O_RDONLY, 0);
+        save_errno = errno;
+        leave_suid();
+        errno = save_errno;
     }
-    if (natfd < 0) {
-	debug(50, 1) ("parseHttpRequest: NAT open failed: %s\n",
-	    xstrerror());
-	return -1;
+
+    if (natfd < 0)
+    {
+        debug(50, 1) ("parseHttpRequest: NAT open failed: %s\n",
+                      xstrerror());
+        return -1;
     }
+
     /*
      * IP-Filter changed the type for SIOCGNATL between
      * 3.3 and 3.4.  It also changed the cmd value for
@@ -112,59 +119,83 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
      * put something in configure and use ifdefs here, but
      * this seems simpler.
      */
-    if (63 == siocgnatl_cmd) {
-	struct natlookup *nlp = &natLookup;
-	x = ioctl(natfd, SIOCGNATL, &nlp);
-    } else {
-	x = ioctl(natfd, SIOCGNATL, &natLookup);
+    if (63 == siocgnatl_cmd)
+    {
+
+        struct natlookup *nlp = &natLookup;
+        x = ioctl(natfd, SIOCGNATL, &nlp);
+    } else
+    {
+        x = ioctl(natfd, SIOCGNATL, &natLookup);
     }
-    if (x < 0) {
-	if (errno != ESRCH) {
-	    debug(50, 1) ("parseHttpRequest: NAT lookup failed: ioctl(SIOCGNATL)\n");
-	    close(natfd);
-	    natfd = -1;
-	}
-	return -1;
-    } else {
-	if (me.sin_addr.s_addr != natLookup.nl_realip.s_addr)
-	    dst->sin_family = AF_INET;
-	    dst->sin_port = natLookup.nl_realport;
-	    dst->sin_addr = natLookup.nl_realip;
-	    return 0;
-	} else {
-	    return -1;
-	}
+
+    if (x < 0)
+    {
+        if (errno != ESRCH) {
+            debug(50, 1) ("parseHttpRequest: NAT lookup failed: ioctl(SIOCGNATL)\n");
+            close(natfd);
+            natfd = -1;
+        }
+
+        return -1;
+    } else
+    {
+        if (me.sin_addr.s_addr != natLookup.nl_realip.s_addr)
+            dst->sin_family = AF_INET;
+
+        dst->sin_port = natLookup.nl_realport;
+
+        dst->sin_addr = natLookup.nl_realip;
+
+        return 0;
+    }
+    else
+    {
+        return -1;
     }
 }
+}
+
 #elif LINUX_NETFILTER
 int
+
 clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
 {
     size_t sock_sz = sizeof(*dst);
     memcpy(dst, &me, sizeof(*dst));
+
     if (getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, dst, &sock_sz) != 0)
-	return -1;
+        return -1;
 
     debug(33, 5) ("clientNatLookup: addr = %s", inet_ntoa(dst->sin_addr));
+
     if (me.sin_addr.s_addr != dst->sin_addr.s_addr)
-	return 0;
+        return 0;
     else
-	return -1;
+        return -1;
 }
+
 #elif PF_TRANSPARENT
 int
+
 clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
 {
+
     struct pfioc_natlook nl;
     static int pffd = -1;
+
     if (pffd < 0)
-	pffd = open("/dev/pf", O_RDWR);
-    if (pffd < 0) {
-	debug(50, 1) ("parseHttpRequest: PF open failed: %s\n",
-	    xstrerror());
-	return -1;
+        pffd = open("/dev/pf", O_RDWR);
+
+    if (pffd < 0)
+    {
+        debug(50, 1) ("parseHttpRequest: PF open failed: %s\n",
+                      xstrerror());
+        return -1;
     }
+
     memset(dst, 0, sizeof(*dst));
+
     memset(&nl, 0, sizeof(struct pfioc_natlook));
     nl.saddr.v4.s_addr = peer.sin_addr.s_addr;
     nl.sport = peer.sin_port;
@@ -173,30 +204,38 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
     nl.af = AF_INET;
     nl.proto = IPPROTO_TCP;
     nl.direction = PF_OUT;
-    if (ioctl(pffd, DIOCNATLOOK, &nl)) {
-	if (errno != ENOENT) {
-	    debug(50, 1) ("parseHttpRequest: PF lookup failed: ioctl(DIOCNATLOOK)\n");
-	    close(pffd);
-	    pffd = -1;
-	}
-	return -1;
-    } else {
-	int natted = me.sin_addr.s_addr != nt.rdaddr.v4.s_addr;
-	dst->sin_family = AF_INET;
-	dst->sin_port = nl.rdport;
-	dst->sin_addr = nl.rdaddr.v4;
-	if (natted)
-	    return 0;
-	else
-	    return -1;
+
+    if (ioctl(pffd, DIOCNATLOOK, &nl))
+    {
+        if (errno != ENOENT) {
+            debug(50, 1) ("parseHttpRequest: PF lookup failed: ioctl(DIOCNATLOOK)\n");
+            close(pffd);
+            pffd = -1;
+        }
+
+        return -1;
+    } else
+    {
+        int natted = me.sin_addr.s_addr != nt.rdaddr.v4.s_addr;
+        dst->sin_family = AF_INET;
+        dst->sin_port = nl.rdport;
+        dst->sin_addr = nl.rdaddr.v4;
+
+        if (natted)
+            return 0;
+        else
+            return -1;
     }
 }
+
 #else
 int
+
 clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
 {
     debug(33, 1) ("WARNING: transparent proxying not supported\n");
     return -1;
 }
+
 #endif
 

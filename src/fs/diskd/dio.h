@@ -19,7 +19,8 @@ enum {
     _MQD_UNLINK
 };
 
-struct _diomsg {
+struct _diomsg
+{
     mtyp_t mtype;
     int id;
     int seq_no;

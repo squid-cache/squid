@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.11 2003/01/23 00:37:12 robertc Exp $
+ * $Id: HttpMsg.cc,v 1.12 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -47,26 +47,33 @@ httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const ch
     size_t l = strlen(*parse_start);
     size_t end = headersEnd(*parse_start, l);
     int nnl;
+
     if (end) {
-	*blk_start = *parse_start;
-	*blk_end = *parse_start + end - 1;
-	/*
-	 * leave blk_end pointing to the first character after the
-	 * first newline which terminates the headers
-	 */
-	assert(**blk_end == '\n');
-	while (*(*blk_end - 1) == '\r')
-	    (*blk_end)--;
-	assert(*(*blk_end - 1) == '\n');
-	*parse_start += end;
-	return 1;
+        *blk_start = *parse_start;
+        *blk_end = *parse_start + end - 1;
+        /*
+         * leave blk_end pointing to the first character after the
+         * first newline which terminates the headers
+         */
+        assert(**blk_end == '\n');
+
+        while (*(*blk_end - 1) == '\r')
+            (*blk_end)--;
+
+        assert(*(*blk_end - 1) == '\n');
+
+        *parse_start += end;
+
+        return 1;
     }
+
     /*
      * If we didn't find the end of headers, and parse_start does
      * NOT point to a CR or NL character, then return failure
      */
     if (**parse_start != '\r' && **parse_start != '\n')
-	return 0;		/* failure */
+        return 0;		/* failure */
+
     /*
      * If we didn't find the end of headers, and parse_start does point
      * to an empty line, then we have empty headers.  Skip all CR and
@@ -74,43 +81,49 @@ httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const ch
      * the first character after the first NL.
      */
     *blk_start = *parse_start;
+
     *blk_end = *blk_start;
+
     for (nnl = 0; nnl == 0; (*parse_start)++) {
-	if (**parse_start == '\r')
-	    (void) 0;
-	else if (**parse_start == '\n')
-	    nnl++;
-	else
-	    break;
+        if (**parse_start == '\r')
+            (void) 0;
+        else if (**parse_start == '\n')
+            nnl++;
+        else
+            break;
     }
+
     return 1;
 }
 
-/* returns true if connection should be "persistent" 
+/* returns true if connection should be "persistent"
  * after processing this message */
 int
 httpMsgIsPersistent(http_version_t http_ver, const HttpHeader * hdr)
 {
     if ((http_ver.major >= 1) && (http_ver.minor >= 1)) {
-	/*
-	 * for modern versions of HTTP: persistent unless there is
-	 * a "Connection: close" header.
-	 */
-	return !httpHeaderHasConnDir(hdr, "close");
+        /*
+         * for modern versions of HTTP: persistent unless there is
+         * a "Connection: close" header.
+         */
+        return !httpHeaderHasConnDir(hdr, "close");
     } else {
-	/*
-	 * Persistent connections in Netscape 3.x are allegedly broken,
-	 * return false if it is a browser connection.  If there is a
-	 * VIA header, then we assume this is NOT a browser connection.
-	 */
-	const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
-	if (agent && !httpHeaderHas(hdr, HDR_VIA)) {
-	    if (!strncasecmp(agent, "Mozilla/3.", 10))
-		return 0;
-	    if (!strncasecmp(agent, "Netscape/3.", 11))
-		return 0;
-	}
-	/* for old versions of HTTP: persistent if has "keep-alive" */
-	return httpHeaderHasConnDir(hdr, "keep-alive");
+        /*
+         * Persistent connections in Netscape 3.x are allegedly broken,
+         * return false if it is a browser connection.  If there is a
+         * VIA header, then we assume this is NOT a browser connection.
+         */
+        const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
+
+        if (agent && !httpHeaderHas(hdr, HDR_VIA)) {
+            if (!strncasecmp(agent, "Mozilla/3.", 10))
+                return 0;
+
+            if (!strncasecmp(agent, "Netscape/3.", 11))
+                return 0;
+        }
+
+        /* for old versions of HTTP: persistent if has "keep-alive" */
+        return httpHeaderHasConnDir(hdr, "keep-alive");
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.6 2003/01/23 00:37:14 robertc Exp $
+ * $Id: Store.h,v 1.7 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,14 +37,18 @@
 #include "StoreIOBuffer.h"
 
 class StoreClient;
+
 class MemObject;
 
 typedef void STSETUP(storefs_entry_t *);
-class StoreEntry : public hash_link {
+
+class StoreEntry : public hash_link
+{
+
 public:
     static int CheckDeferRead(int fd, void *data);
     static void FsAdd(const char *, STSETUP *);
-  
+
     virtual const char *getMD5Text() const;
     virtual HttpReply const *getReply() const;
     virtual void write (StoreIOBuffer);
@@ -67,24 +71,40 @@ public:
     u_short refcount;
     u_short flags;
     /* END OF ON-DISK STORE_META_STD */
-    sfileno swap_filen:25;
-    sdirno swap_dirn:7;
+
+sfileno swap_filen:
+    25;
+
+sdirno swap_dirn:
+    7;
     u_short lock_count;		/* Assume < 65536! */
-    mem_status_t mem_status:3;
-    ping_status_t ping_status:3;
-    store_status_t store_status:3;
-    swap_status_t swap_status:3;
+
+mem_status_t mem_status:
+    3;
+
+ping_status_t ping_status:
+    3;
+
+store_status_t store_status:
+    3;
+
+swap_status_t swap_status:
+    3;
+
 public:
     static size_t inUseCount();
     static void getPublicByRequestMethod(StoreClient * aClient, request_t * request, const method_t method);
     static void getPublicByRequest(StoreClient * aClient, request_t * request);
     static void getPublic(StoreClient * aClient, const char *uri, const method_t method);
 
-    virtual bool isNull() {
-	return false;
+    virtual bool isNull()
+    {
+        return false;
     }
+
     void *operator new(size_t byteCount);
     void operator delete(void *address);
+
 private:
     static MemPool *pool;
 
@@ -93,25 +113,34 @@ private:
 
 class NullStoreEntry:public StoreEntry
 {
+
 public:
     static NullStoreEntry *getInstance();
-    bool isNull() {
-	return true;
+    bool isNull()
+    {
+        return true;
     }
+
     const char *getMD5Text() const;
     _SQUID_INLINE_ HttpReply const *getReply() const;
     void write (StoreIOBuffer){}
+
     bool isEmpty () const {return true;}
+
     int checkDeferRead(int fd) const {return 1;}
+
     void operator delete(void *address);
     void complete(){}
-         private:
+
+private:
     store_client_t storeClientType() const{return STORE_MEM_CLIENT;}
+
     char const *getSerialisedMetaData();
     bool swapoutPossible() {return false;}
+
     void trimMemory() {}
 
-    
+
     static NullStoreEntry _instance;
 };
 

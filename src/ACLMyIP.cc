@@ -43,8 +43,10 @@ ACLMyIP::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (ACLMyIP));
+
     if (!Pool)
-	Pool = memPoolCreate("ACLMyIP", sizeof (ACLMyIP));
+        Pool = memPoolCreate("ACLMyIP", sizeof (ACLMyIP));
+
     return memPoolAlloc(Pool);
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.146 2003/02/05 10:36:56 robertc Exp $
+ * $Id: wais.cc,v 1.147 2003/02/21 22:50:13 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -40,7 +40,9 @@
 #include "DelayPools.h"
 #endif
 
-class WaisStateData {
+class WaisStateData
+{
+
 public:
     int fd;
     StoreEntry *entry;
@@ -63,10 +65,14 @@ static void
 waisStateFree(int fdnotused, void *data)
 {
     WaisStateData *waisState = (WaisStateData *)data;
+
     if (waisState == NULL)
-	return;
+        return;
+
     storeUnlockObject(waisState->entry);
+
     requestUnlink(waisState->request);
+
     cbdataFree(waisState);
 }
 
@@ -77,12 +83,14 @@ waisTimeout(int fd, void *data)
     WaisStateData *waisState = (WaisStateData *)data;
     StoreEntry *entry = waisState->entry;
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
+
     if (entry->store_status == STORE_PENDING) {
-	if (!waisState->dataWritten) {
-	    fwdFail(waisState->fwd,
-		errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
-	}
+        if (!waisState->dataWritten) {
+            fwdFail(waisState->fwd,
+                    errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+        }
     }
+
     comm_close(fd);
 }
 
@@ -97,70 +105,83 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
     int bin;
     size_t read_sz;
 #if DELAY_POOLS
+
     DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+
     if (flag == COMM_ERR_CLOSING) {
         return;
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-	comm_close(fd);
-	return;
+        comm_close(fd);
+        return;
     }
+
     errno = 0;
     read_sz = BUFSIZ;
+
     if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
-	delayId.bytesIn(len);
+        delayId.bytesIn(len);
 #endif
-	kb_incr(&statCounter.server.all.kbytes_in, len);
-	kb_incr(&statCounter.server.other.kbytes_in, len);
+
+        kb_incr(&statCounter.server.all.kbytes_in, len);
+        kb_incr(&statCounter.server.other.kbytes_in, len);
     }
+
 #if DELAY_POOLS
     read_sz = delayId.bytesWanted(1, read_sz);
+
 #endif
+
     debug(24, 5) ("waisReadReply: FD %d read len:%d\n", fd, (int)len);
+
     if (flag == COMM_OK && len > 0) {
-	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
-	IOStats.Wais.reads++;
-	for (clen = len - 1, bin = 0; clen; bin++)
-	    clen >>= 1;
-	IOStats.Wais.read_hist[bin]++;
+        commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
+        IOStats.Wais.reads++;
+
+        for (clen = len - 1, bin = 0; clen; bin++)
+            clen >>= 1;
+
+        IOStats.Wais.read_hist[bin]++;
     }
+
     if (flag != COMM_OK || len < 0) {
-	debug(50, 1) ("waisReadReply: FD %d: read failure: %s.\n",
-	    fd, xstrerror());
-	if (ignoreErrno(xerrno)) {
-	    /* reinstall handlers */
-	    /* XXX This may loop forever */
+        debug(50, 1) ("waisReadReply: FD %d: read failure: %s.\n",
+                      fd, xstrerror());
+
+        if (ignoreErrno(xerrno)) {
+            /* reinstall handlers */
+            /* XXX This may loop forever */
             comm_read(fd, waisState->buf, read_sz, waisReadReply, waisState);
-	} else {
-	    ErrorState *err;
-	    EBIT_CLR(entry->flags, ENTRY_CACHABLE);
-	    storeReleaseRequest(entry);
-	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
-	    err->xerrno = errno;
-	    err->request = requestLink(waisState->request);
-	    errorAppendEntry(entry, err);
-	    comm_close(fd);
-	}
+        } else {
+            ErrorState *err;
+            EBIT_CLR(entry->flags, ENTRY_CACHABLE);
+            storeReleaseRequest(entry);
+            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+            err->xerrno = errno;
+            err->request = requestLink(waisState->request);
+            errorAppendEntry(entry, err);
+            comm_close(fd);
+        }
     } else if (flag == COMM_OK && len == 0 && !waisState->dataWritten) {
-	ErrorState *err;
-	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
-	err->xerrno = errno;
-	err->request = requestLink(waisState->request);
-	errorAppendEntry(entry, err);
-	comm_close(fd);
+        ErrorState *err;
+        err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
+        err->xerrno = errno;
+        err->request = requestLink(waisState->request);
+        errorAppendEntry(entry, err);
+        comm_close(fd);
     } else if (flag == COMM_OK && len == 0) {
-	/* Connection closed; retrieval done. */
-	entry->expires = squid_curtime;
-	fwdComplete(waisState->fwd);
-	comm_close(fd);
+        /* Connection closed; retrieval done. */
+        entry->expires = squid_curtime;
+        fwdComplete(waisState->fwd);
+        comm_close(fd);
     } else {
-	waisState->dataWritten = 1;
-	storeAppend(entry, buf, len);
+        waisState->dataWritten = 1;
+        storeAppend(entry, buf, len);
         comm_read(fd, waisState->buf, read_sz, waisReadReply, waisState);
     }
 }
@@ -173,25 +194,28 @@ waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
     WaisStateData *waisState = (WaisStateData *)data;
     StoreEntry *entry = waisState->entry;
     debug(24, 5) ("waisSendComplete: FD %d size: %d errflag: %d\n",
-	fd, (int) size, errflag);
+                  fd, (int) size, errflag);
+
     if (size > 0) {
-	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&statCounter.server.all.kbytes_out, size);
-	kb_incr(&statCounter.server.other.kbytes_out, size);
+        fd_bytes(fd, size, FD_WRITE);
+        kb_incr(&statCounter.server.all.kbytes_out, size);
+        kb_incr(&statCounter.server.other.kbytes_out, size);
     }
+
     if (errflag == COMM_ERR_CLOSING)
-	return;
+        return;
+
     if (errflag) {
-	ErrorState *err;
-	err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE);
-	err->xerrno = errno;
-	err->request = requestLink(waisState->request);
-	errorAppendEntry(entry, err);
-	comm_close(fd);
+        ErrorState *err;
+        err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE);
+        err->xerrno = errno;
+        err->request = requestLink(waisState->request);
+        errorAppendEntry(entry, err);
+        comm_close(fd);
     } else {
-	/* Schedule read reply. */
+        /* Schedule read reply. */
         comm_read(fd, waisState->buf, BUFSIZ, waisReadReply, waisState);
-	commSetDefer(fd, StoreEntry::CheckDeferRead, entry);
+        commSetDefer(fd, StoreEntry::CheckDeferRead, entry);
     }
 }
 
@@ -205,17 +229,21 @@ waisSendRequest(int fd, void *data)
     debug(24, 5) ("waisSendRequest: FD %d\n", fd);
     memBufDefInit(&mb);
     memBufPrintf(&mb, "%s %s HTTP/1.0\r\n", Method, waisState->url);
+
     if (waisState->request_hdr) {
-	Packer p;
-	packerToMemInit(&p, &mb);
-	httpHeaderPackInto(waisState->request_hdr, &p);
-	packerClean(&p);
+        Packer p;
+        packerToMemInit(&p, &mb);
+        httpHeaderPackInto(waisState->request_hdr, &p);
+        packerClean(&p);
     }
+
     memBufPrintf(&mb, "\r\n");
     debug(24, 6) ("waisSendRequest: buf: %s\n", mb.buf);
     comm_old_write_mbuf(fd, mb, waisSendComplete, waisState);
+
     if (EBIT_TEST(waisState->entry->flags, ENTRY_CACHABLE))
-	storeSetPublicKey(waisState->entry);	/* Make it public */
+        storeSetPublicKey(waisState->entry);	/* Make it public */
+
     EBIT_CLR(waisState->entry->flags, ENTRY_FWD_HDR_WAIT);
 }
 

@@ -9,7 +9,10 @@
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
 /* Generic */
-class AuthenticateStateData {
+
+class AuthenticateStateData
+{
+
 public:
     void *data;
     auth_user_request_t *auth_user_request;
@@ -17,7 +20,10 @@ public:
 };
 
 /* queue of auth requests waiting for verification to occur */
-class BasicAuthQueueNode {
+
+class BasicAuthQueueNode
+{
+
 public:
     BasicAuthQueueNode *next;
     AuthUserRequest *auth_user_request;
@@ -25,19 +31,30 @@ public:
     void *data;
 };
 
-class basic_data {
+class basic_data
+{
+
 public:
     char *username;
     char *passwd;
     time_t credentials_checkedtime;
-    struct {
-	unsigned int credentials_ok:2;	/*0=unchecked,1=ok,2=failed */
-    } flags;
+
+    struct
+    {
+
+unsigned int credentials_ok:
+        2;	/*0=unchecked,1=ok,2=failed */
+    }
+
+    flags;
     BasicAuthQueueNode *auth_queue;
 };
 
 /* configuration runtime data */
-class auth_basic_config {
+
+class auth_basic_config
+{
+
 public:
     int authenticateChildren;
     char *basicAuthRealm;

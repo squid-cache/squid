@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLSourceDomain.h,v 1.2 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLSourceDomain.h,v 1.3 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,30 +42,38 @@
 
 class ACLSourceDomainStrategy : public ACLMatchStrategy<char const *>
 {
-  public:
+
+public:
     virtual int match (ACLData<MatchType> * &, ACLChecklist *);
     static ACLSourceDomainStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g+++ warnings about
      * private constructors with no friends */
     ACLSourceDomainStrategy(ACLSourceDomainStrategy const &);
-  private:
+
+private:
     static ACLSourceDomainStrategy Instance_;
     ACLSourceDomainStrategy(){}
+
     ACLSourceDomainStrategy&operator=(ACLSourceDomainStrategy const &);
 };
 
-class SourceDomainLookup : public ACLChecklist::AsyncState {
-  public:
+class SourceDomainLookup : public ACLChecklist::AsyncState
+{
+
+public:
     static SourceDomainLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
-  private:
+
+private:
     static SourceDomainLookup instance_;
     static void LookupDone(const char *, void *);
 };
 
-class ACLSourceDomain {
-  private:
+class ACLSourceDomain
+{
+
+private:
     static ACL::Prototype LiteralRegistryProtoype;
     static ACLStrategised<char const *> LiteralRegistryEntry_;
     static ACL::Prototype RegexRegistryProtoype;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.152 2003/02/21 19:53:02 hno Exp $
+ * $Id: typedefs.h,v 1.153 2003/02/21 22:50:12 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,132 +42,252 @@ typedef unsigned int swap_status_t;
 typedef signed int sfileno;
 typedef signed int sdirno;
 
-typedef struct {
+typedef struct
+{
     size_t bytes;
     size_t kb;
-} kb_t;
+}
+
+kb_t;
 
 typedef struct _acl_time_data acl_time_data;
+
 typedef struct _acl_name_list acl_name_list;
+
 typedef struct _acl_deny_info_list acl_deny_info_list;
+
 typedef struct AuthUser auth_user_t;
+
 class AuthUserRequest;
 typedef AuthUserRequest auth_user_request_t;
+
 typedef struct AuthUserHashPointer auth_user_hash_pointer;
+
 typedef struct AuthUserIP auth_user_ip_t;
+
 typedef struct _acl_proxy_auth_match_cache acl_proxy_auth_match_cache;
+
 typedef struct _authscheme_entry authscheme_entry_t;
+
 typedef struct _authScheme authScheme;
+
 typedef struct _acl_user_ip_data acl_user_ip_data;
+
 typedef struct _acl_arp_data acl_arp_data;
+
 typedef struct _acl_snmp_comm acl_snmp_comm;
+
 typedef class ACLList acl_list;
+
 typedef struct _acl_address acl_address;
+
 typedef struct _acl_tos acl_tos;
+
 class ACLChecklist;
+
 typedef struct _wordlist wordlist;
+
 typedef struct _intlist intlist;
+
 typedef struct _intrange intrange;
+
 typedef struct _ushortlist ushortlist;
+
 typedef struct _relist relist;
+
 typedef struct _sockaddr_in_list sockaddr_in_list;
+
 typedef struct _http_port_list http_port_list;
+
 typedef struct _https_port_list https_port_list;
+
 typedef struct _SquidConfig SquidConfig;
+
 typedef struct _SquidConfig2 SquidConfig2;
+
 typedef struct _close_handler close_handler;
+
 typedef struct _dread_ctrl dread_ctrl;
+
 typedef struct _dnsserver_t dnsserver_t;
+
 typedef struct _dwrite_q dwrite_q;
+
 typedef struct _ETag ETag;
+
 class fde;
+
 typedef struct _fileMap fileMap;
+
 typedef struct _HttpReply http_reply;
+
 typedef struct _HttpStatusLine HttpStatusLine;
+
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
+
 typedef struct _HttpHeaderFieldInfo HttpHeaderFieldInfo;
+
 typedef struct _HttpHeader HttpHeader;
+
 typedef struct _HttpHdrCc HttpHdrCc;
+
 typedef struct _HttpHdrSc HttpHdrSc;
+
 typedef struct _HttpHdrScTarget HttpHdrScTarget;
+
 typedef struct _TimeOrTag TimeOrTag;
+
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
+
 typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;
+
 typedef struct _HttpHeaderStat HttpHeaderStat;
+
 typedef struct _HttpBody HttpBody;
+
 typedef struct _HttpReply HttpReply;
+
 typedef struct _ConnStateData ConnStateData;
+
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
+
 typedef struct _ipcache_addrs ipcache_addrs;
+
 typedef struct _domain_ping domain_ping;
+
 typedef struct _domain_type domain_type;
+
 typedef struct _DynPool DynPool;
+
 typedef struct _Packer Packer;
+
 typedef struct _StoreDigestCBlock StoreDigestCBlock;
+
 typedef struct _DigestFetchState DigestFetchState;
+
 typedef struct _PeerDigest PeerDigest;
+
 typedef struct _peer peer;
+
 typedef struct _net_db_name net_db_name;
+
 typedef struct _net_db_peer net_db_peer;
+
 typedef struct _netdbEntry netdbEntry;
+
 typedef struct _ping_data ping_data;
+
 typedef struct _ps_state ps_state;
+
 typedef struct _HierarchyLogEntry HierarchyLogEntry;
+
 typedef struct _pingerEchoData pingerEchoData;
+
 typedef struct _pingerReplyData pingerReplyData;
+
 typedef struct _icp_common_t icp_common_t;
+
 typedef struct _Meta_data Meta_data;
+
 typedef struct _iostats iostats;
+
 class MemBuf;
+
 class store_client;
+
 class StoreEntry;
+
 class SwapDir;
+
 typedef struct _helper_flags helper_flags;
+
 typedef struct _helper_stateful_flags helper_stateful_flags;
+
 typedef struct _http_state_flags http_state_flags;
+
 typedef struct _header_mangler header_mangler;
+
 typedef struct _body_size body_size;
+
 class request_t;
+
 typedef struct _AccessLogEntry AccessLogEntry;
+
 typedef struct _cachemgr_passwd cachemgr_passwd;
+
 typedef struct _refresh_t refresh_t;
+
 typedef struct _CommWriteStateData CommWriteStateData;
+
 typedef struct _ErrorState ErrorState;
+
 typedef struct _dlink_node dlink_node;
+
 typedef struct _dlink_list dlink_list;
+
 typedef struct _StatCounters StatCounters;
+
 typedef struct _storeSwapLogData storeSwapLogData;
+
 typedef struct _authConfig authConfig;
+
 typedef struct _cacheSwap cacheSwap;
+
 typedef struct _StatHist StatHist;
+
 typedef struct _ClientInfo ClientInfo;
+
 typedef struct _cd_guess_stats cd_guess_stats;
+
 typedef struct _CacheDigest CacheDigest;
+
 typedef struct _Version Version;
+
 typedef struct _FwdState FwdState;
+
 typedef struct _FwdServer FwdServer;
+
 typedef struct _helper helper;
+
 typedef struct _helper_stateful statefulhelper;
+
 typedef struct _helper_server helper_server;
+
 typedef struct _helper_stateful_server helper_stateful_server;
+
 typedef struct _helper_request helper_request;
+
 typedef struct _helper_stateful_request helper_stateful_request;
+
 typedef struct _generic_cbdata generic_cbdata;
+
 class storeIOState;
+
 typedef struct _link_list link_list;
+
 typedef struct _storefs_entry storefs_entry_t;
+
 typedef struct _storerepl_entry storerepl_entry_t;
+
 typedef struct _diskd_queue diskd_queue;
+
 typedef struct _Logfile Logfile;
+
 typedef struct _RemovalPolicy RemovalPolicy;
+
 typedef struct _RemovalPolicyWalker RemovalPolicyWalker;
+
 typedef struct _RemovalPurgeWalker RemovalPurgeWalker;
+
 typedef struct _RemovalPolicyNode RemovalPolicyNode;
+
 typedef struct _RemovalPolicySettings RemovalPolicySettings;
+
 typedef struct _http_version_t http_version_t;
 
 #if SQUID_SNMP
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
+
 typedef struct _snmp_request_t snmp_request_t;
 #endif
 
@@ -183,7 +303,7 @@ typedef void PF(int, void *);
 
 /* disk.c / diskd.c callback typedefs */
 typedef void DRCB(int, const char *buf, int size, int errflag, void *data);
-							/* Disk read CB */
+/* Disk read CB */
 typedef void DWCB(int, int, size_t, void *);	/* disk write CB */
 typedef void DOCB(int, int errflag, void *data);	/* disk open CB */
 typedef void DCCB(int, int errflag, void *data);	/* disk close CB */
@@ -253,6 +373,7 @@ typedef char HttpHeaderMask[8];
 typedef void (*ObjPackMethod) (void *obj, Packer * p);
 
 #if USE_HTCP
+
 typedef struct _htcpReplyData htcpReplyData;
 #endif
 
@@ -261,6 +382,7 @@ typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 typedef int STDIRSELECT(const StoreEntry *);
 
 typedef struct _external_acl external_acl;
+
 typedef struct _external_acl_entry external_acl_entry;
 
 #endif /* SQUID_TYPEDEFS_H */

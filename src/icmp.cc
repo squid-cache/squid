@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.82 2003/01/23 00:37:22 robertc Exp $
+ * $Id: icmp.cc,v 1.83 2003/02/21 22:50:09 robertc Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -48,20 +48,29 @@
 static PF icmpRecv;
 static void icmpSend(pingerEchoData * pkt, int len);
 #if ALLOW_SOURCE_PING
+
 static void icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf);
 #endif
 
 static void
+
 icmpSendEcho(struct in_addr to, int opcode, const char *payload, int len)
 {
     static pingerEchoData pecho;
+
     if (payload && len == 0)
-	len = strlen(payload);
+        len = strlen(payload);
+
     assert(len <= PINGER_PAYLOAD_SZ);
+
     pecho.to = to;
+
     pecho.opcode = (unsigned char) opcode;
+
     pecho.psize = len;
+
     xmemcpy(pecho.payload, payload, len);
+
     icmpSend(&pecho, sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ + len);
 }
 
@@ -71,39 +80,53 @@ icmpRecv(int unused1, void *unused2)
     int n;
     static int fail_count = 0;
     pingerReplyData preply;
+
     static struct sockaddr_in F;
     commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
     memset(&preply, '\0', sizeof(pingerReplyData));
     n = comm_udp_recv(icmp_sock,
-	(char *) &preply,
-	sizeof(pingerReplyData),
-	0);
+                      (char *) &preply,
+                      sizeof(pingerReplyData),
+                      0);
+
     if (n < 0) {
-	debug(37, 1) ("icmpRecv: recv: %s\n", xstrerror());
-	if (++fail_count == 10 || errno == ECONNREFUSED)
-	    icmpClose();
-	return;
+        debug(37, 1) ("icmpRecv: recv: %s\n", xstrerror());
+
+        if (++fail_count == 10 || errno == ECONNREFUSED)
+            icmpClose();
+
+        return;
     }
+
     fail_count = 0;
+
     if (n == 0)			/* test probe from pinger */
-	return;
+        return;
+
     F.sin_family = AF_INET;
+
     F.sin_addr = preply.from;
+
     F.sin_port = 0;
+
     switch (preply.opcode) {
+
     case S_ICMP_ECHO:
-	break;
+        break;
 #if ALLOW_SOURCE_PING
+
     case S_ICMP_ICP:
-	icmpHandleSourcePing(&F, preply.payload);
-	break;
+        icmpHandleSourcePing(&F, preply.payload);
+        break;
 #endif
+
     case S_ICMP_DOM:
-	netdbHandlePingReply(&F, preply.hops, preply.rtt);
-	break;
+        netdbHandlePingReply(&F, preply.hops, preply.rtt);
+        break;
+
     default:
-	debug(37, 1) ("icmpRecv: Bad opcode: %d\n", (int) preply.opcode);
-	break;
+        debug(37, 1) ("icmpRecv: Bad opcode: %d\n", (int) preply.opcode);
+        break;
     }
 }
 
@@ -111,24 +134,30 @@ static void
 icmpSend(pingerEchoData * pkt, int len)
 {
     int x;
+
     if (icmp_sock < 0)
-	return;
+        return;
+
     debug(37, 2) ("icmpSend: to %s, opcode %d, len %d\n",
-	inet_ntoa(pkt->to), (int) pkt->opcode, pkt->psize);
+                  inet_ntoa(pkt->to), (int) pkt->opcode, pkt->psize);
+
     x = comm_udp_send(icmp_sock, (char *) pkt, len, 0);
+
     if (x < 0) {
-	debug(37, 1) ("icmpSend: send: %s\n", xstrerror());
-	if (errno == ECONNREFUSED || errno == EPIPE) {
-	    icmpClose();
-	    return;
-	}
+        debug(37, 1) ("icmpSend: send: %s\n", xstrerror());
+
+        if (errno == ECONNREFUSED || errno == EPIPE) {
+            icmpClose();
+            return;
+        }
     } else if (x != len) {
-	debug(37, 1) ("icmpSend: Wrote %d of %d bytes\n", x, len);
+        debug(37, 1) ("icmpSend: Wrote %d of %d bytes\n", x, len);
     }
 }
 
 #if ALLOW_SOURCE_PING
 static void
+
 icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
 {
     const cache_key *key;
@@ -138,7 +167,7 @@ icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
     url = buf + sizeof(icp_common_t);
     key = icpGetCacheKey(url, (int) header.reqnum);
     debug(37, 3) ("icmpHandleSourcePing: from %s, key '%s'\n",
-	inet_ntoa(from->sin_addr), storeKeyText(key));
+                  inet_ntoa(from->sin_addr), storeKeyText(key));
     /* call neighborsUdpAck even if ping_status != PING_WAITING */
     neighborsUdpAck(key, &header, from);
 }
@@ -149,6 +178,7 @@ icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
 
 #if ALLOW_SOURCE_PING
 void
+
 icmpSourcePing(struct in_addr to, const icp_common_t * header, const char *url)
 {
 #if USE_ICMP
@@ -156,20 +186,31 @@ icmpSourcePing(struct in_addr to, const icp_common_t * header, const char *url)
     int len;
     int ulen;
     debug(37, 3) ("icmpSourcePing: '%s'\n", url);
+
     if ((ulen = strlen(url)) > MAX_URL)
-	return;
+        return;
+
     payload = memAllocate(MEM_8K_BUF);
+
     len = sizeof(icp_common_t);
+
     xmemcpy(payload, header, len);
+
     strcpy(payload + len, url);
+
     len += ulen + 1;
+
     icmpSendEcho(to, S_ICMP_ICP, payload, len);
+
     memFree(payload, MEM_8K_BUF);
+
 #endif
 }
+
 #endif
 
 void
+
 icmpDomainPing(struct in_addr to, const char *domain)
 {
 #if USE_ICMP
@@ -189,19 +230,27 @@ icmpOpen(void)
     args[0] = "(pinger)";
     args[1] = NULL;
     x = ipcCreate(IPC_DGRAM,
-	Config.Program.pinger,
-	args,
-	"Pinger Socket",
-	&rfd,
-	&wfd);
+                  Config.Program.pinger,
+                  args,
+                  "Pinger Socket",
+                  &rfd,
+                  &wfd);
+
     if (x < 0)
-	return;
+        return;
+
     assert(rfd == wfd);
+
     icmp_sock = rfd;
+
     fd_note(icmp_sock, "pinger");
+
     commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
+
     commSetTimeout(icmp_sock, -1, NULL, NULL);
+
     debug(37, 1) ("Pinger socket opened on FD %d\n", icmp_sock);
+
 #endif
 }
 
@@ -209,10 +258,15 @@ void
 icmpClose(void)
 {
 #if USE_ICMP
+
     if (icmp_sock < 0)
-	return;
+        return;
+
     debug(37, 1) ("Closing Pinger socket on FD %d\n", icmp_sock);
+
     comm_close(icmp_sock);
+
     icmp_sock = -1;
+
 #endif
 }

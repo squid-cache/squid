@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.84 2003/01/23 00:37:12 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.85 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -68,73 +68,75 @@
  * After reorganization, field id can be used as an index to the table.
  */
 static const HttpHeaderFieldAttrs HeadersAttrs[] =
-{
-    {"Accept", HDR_ACCEPT, ftStr},
-    {"Accept-Charset", HDR_ACCEPT_CHARSET, ftStr},
-    {"Accept-Encoding", HDR_ACCEPT_ENCODING, ftStr},
-    {"Accept-Language", HDR_ACCEPT_LANGUAGE, ftStr},
-    {"Accept-Ranges", HDR_ACCEPT_RANGES, ftStr},
-    {"Age", HDR_AGE, ftInt},
-    {"Allow", HDR_ALLOW, ftStr},
-    {"Authorization", HDR_AUTHORIZATION, ftStr},	/* for now */
-    {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
-    {"Connection", HDR_CONNECTION, ftStr},
-    {"Content-Base", HDR_CONTENT_BASE, ftStr},
-    {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
-    {"Content-Language", HDR_CONTENT_LANGUAGE, ftStr},
-    {"Content-Length", HDR_CONTENT_LENGTH, ftInt},
-    {"Content-Location", HDR_CONTENT_LOCATION, ftStr},
-    {"Content-MD5", HDR_CONTENT_MD5, ftStr},	/* for now */
-    {"Content-Range", HDR_CONTENT_RANGE, ftPContRange},
-    {"Content-Type", HDR_CONTENT_TYPE, ftStr},
-    {"Cookie", HDR_COOKIE, ftStr},
-    {"Date", HDR_DATE, ftDate_1123},
-    {"ETag", HDR_ETAG, ftETag},
-    {"Expires", HDR_EXPIRES, ftDate_1123},
-    {"From", HDR_FROM, ftStr},
-    {"Host", HDR_HOST, ftStr},
-    {"If-Match", HDR_IF_MATCH, ftStr},	/* for now */
-    {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
-    {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
-    {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
-    {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
-    {"Link", HDR_LINK, ftStr},
-    {"Location", HDR_LOCATION, ftStr},
-    {"Max-Forwards", HDR_MAX_FORWARDS, ftInt},
-    {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
-    {"Pragma", HDR_PRAGMA, ftStr},
-    {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
-    {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO, ftStr},
-    {"Proxy-Authorization", HDR_PROXY_AUTHORIZATION, ftStr},
-    {"Proxy-Connection", HDR_PROXY_CONNECTION, ftStr},
-    {"Public", HDR_PUBLIC, ftStr},
-    {"Range", HDR_RANGE, ftPRange},
-    {"Referer", HDR_REFERER, ftStr},
-    {"Request-Range", HDR_REQUEST_RANGE, ftPRange},	/* usually matches HDR_RANGE */
-    {"Retry-After", HDR_RETRY_AFTER, ftStr},	/* for now (ftDate_1123 or ftInt!) */
-    {"Server", HDR_SERVER, ftStr},
-    {"Set-Cookie", HDR_SET_COOKIE, ftStr},
-    {"Title", HDR_TITLE, ftStr},
-    {"Transfer-Encoding", HDR_TRANSFER_ENCODING, ftStr},
-    {"Upgrade", HDR_UPGRADE, ftStr},	/* for now */
-    {"User-Agent", HDR_USER_AGENT, ftStr},
-    {"Vary", HDR_VARY, ftStr},	/* for now */
-    {"Via", HDR_VIA, ftStr},	/* for now */
-    {"Warning", HDR_WARNING, ftStr},	/* for now */
-    {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
-    {"Authentication-Info", HDR_AUTHENTICATION_INFO, ftStr},
-    {"X-Cache", HDR_X_CACHE, ftStr},
-    {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP, ftStr},
-    {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
-    {"X-Request-URI", HDR_X_REQUEST_URI, ftStr},
-    {"X-Squid-Error", HDR_X_SQUID_ERROR, ftStr},
-    {"Negotiate", HDR_NEGOTIATE, ftStr},
+    {
+        {"Accept", HDR_ACCEPT, ftStr},
+
+        {"Accept-Charset", HDR_ACCEPT_CHARSET, ftStr},
+        {"Accept-Encoding", HDR_ACCEPT_ENCODING, ftStr},
+        {"Accept-Language", HDR_ACCEPT_LANGUAGE, ftStr},
+        {"Accept-Ranges", HDR_ACCEPT_RANGES, ftStr},
+        {"Age", HDR_AGE, ftInt},
+        {"Allow", HDR_ALLOW, ftStr},
+        {"Authorization", HDR_AUTHORIZATION, ftStr},	/* for now */
+        {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
+        {"Connection", HDR_CONNECTION, ftStr},
+        {"Content-Base", HDR_CONTENT_BASE, ftStr},
+        {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
+        {"Content-Language", HDR_CONTENT_LANGUAGE, ftStr},
+        {"Content-Length", HDR_CONTENT_LENGTH, ftInt},
+        {"Content-Location", HDR_CONTENT_LOCATION, ftStr},
+        {"Content-MD5", HDR_CONTENT_MD5, ftStr},	/* for now */
+        {"Content-Range", HDR_CONTENT_RANGE, ftPContRange},
+        {"Content-Type", HDR_CONTENT_TYPE, ftStr},
+        {"Cookie", HDR_COOKIE, ftStr},
+        {"Date", HDR_DATE, ftDate_1123},
+        {"ETag", HDR_ETAG, ftETag},
+        {"Expires", HDR_EXPIRES, ftDate_1123},
+        {"From", HDR_FROM, ftStr},
+        {"Host", HDR_HOST, ftStr},
+        {"If-Match", HDR_IF_MATCH, ftStr},	/* for now */
+        {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
+        {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
+        {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
+        {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
+        {"Link", HDR_LINK, ftStr},
+        {"Location", HDR_LOCATION, ftStr},
+        {"Max-Forwards", HDR_MAX_FORWARDS, ftInt},
+        {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
+        {"Pragma", HDR_PRAGMA, ftStr},
+        {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
+        {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO, ftStr},
+        {"Proxy-Authorization", HDR_PROXY_AUTHORIZATION, ftStr},
+        {"Proxy-Connection", HDR_PROXY_CONNECTION, ftStr},
+        {"Public", HDR_PUBLIC, ftStr},
+        {"Range", HDR_RANGE, ftPRange},
+        {"Referer", HDR_REFERER, ftStr},
+        {"Request-Range", HDR_REQUEST_RANGE, ftPRange},	/* usually matches HDR_RANGE */
+        {"Retry-After", HDR_RETRY_AFTER, ftStr},	/* for now (ftDate_1123 or ftInt!) */
+        {"Server", HDR_SERVER, ftStr},
+        {"Set-Cookie", HDR_SET_COOKIE, ftStr},
+        {"Title", HDR_TITLE, ftStr},
+        {"Transfer-Encoding", HDR_TRANSFER_ENCODING, ftStr},
+        {"Upgrade", HDR_UPGRADE, ftStr},	/* for now */
+        {"User-Agent", HDR_USER_AGENT, ftStr},
+        {"Vary", HDR_VARY, ftStr},	/* for now */
+        {"Via", HDR_VIA, ftStr},	/* for now */
+        {"Warning", HDR_WARNING, ftStr},	/* for now */
+        {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
+        {"Authentication-Info", HDR_AUTHENTICATION_INFO, ftStr},
+        {"X-Cache", HDR_X_CACHE, ftStr},
+        {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP, ftStr},
+        {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
+        {"X-Request-URI", HDR_X_REQUEST_URI, ftStr},
+        {"X-Squid-Error", HDR_X_SQUID_ERROR, ftStr},
+        {"Negotiate", HDR_NEGOTIATE, ftStr},
 #if X_ACCELERATOR_VARY
-    {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
+        {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
 #endif
-    {"Front-End-Https", HDR_FRONT_END_HTTPS, ftStr},
-    {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
-};
+        {"Front-End-Https", HDR_FRONT_END_HTTPS, ftStr},
+        {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
+    };
+
 static HttpHeaderFieldInfo *Headers = NULL;
 
 http_hdr_type &operator++ (http_hdr_type &aHeader)
@@ -150,88 +152,88 @@ http_hdr_type &operator++ (http_hdr_type &aHeader)
  */
 static HttpHeaderMask ListHeadersMask;	/* set run-time using  ListHeadersArr */
 static http_hdr_type ListHeadersArr[] =
-{
-    HDR_ACCEPT,
-    HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
-    HDR_ACCEPT_RANGES, HDR_ALLOW,
-    HDR_CACHE_CONTROL,
-    HDR_CONTENT_ENCODING,
-    HDR_CONTENT_LANGUAGE,
-    HDR_CONNECTION,
-    HDR_IF_MATCH, HDR_IF_NONE_MATCH,
-    HDR_LINK, HDR_PRAGMA,
-    HDR_PROXY_CONNECTION,
-    HDR_TRANSFER_ENCODING,
-    HDR_UPGRADE,
-    HDR_VARY,
-    HDR_VIA,
-    /* HDR_WARNING, */
-    HDR_WWW_AUTHENTICATE,
-    HDR_AUTHENTICATION_INFO,
-    HDR_PROXY_AUTHENTICATION_INFO,
-    /* HDR_EXPECT, HDR_TE, HDR_TRAILER */
+    {
+        HDR_ACCEPT,
+        HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
+        HDR_ACCEPT_RANGES, HDR_ALLOW,
+        HDR_CACHE_CONTROL,
+        HDR_CONTENT_ENCODING,
+        HDR_CONTENT_LANGUAGE,
+        HDR_CONNECTION,
+        HDR_IF_MATCH, HDR_IF_NONE_MATCH,
+        HDR_LINK, HDR_PRAGMA,
+        HDR_PROXY_CONNECTION,
+        HDR_TRANSFER_ENCODING,
+        HDR_UPGRADE,
+        HDR_VARY,
+        HDR_VIA,
+        /* HDR_WARNING, */
+        HDR_WWW_AUTHENTICATE,
+        HDR_AUTHENTICATION_INFO,
+        HDR_PROXY_AUTHENTICATION_INFO,
+        /* HDR_EXPECT, HDR_TE, HDR_TRAILER */
 #if X_ACCELERATOR_VARY
-    HDR_X_ACCELERATOR_VARY,
+        HDR_X_ACCELERATOR_VARY,
 #endif
-    HDR_X_FORWARDED_FOR
-};
+        HDR_X_FORWARDED_FOR
+    };
 
 /* general-headers */
 static http_hdr_type GeneralHeadersArr[] =
-{
-    HDR_CACHE_CONTROL, HDR_CONNECTION, HDR_DATE, HDR_PRAGMA,
-    HDR_TRANSFER_ENCODING,
-    HDR_UPGRADE,
-    /* HDR_TRAILER, */
-    HDR_VIA
-};
+    {
+        HDR_CACHE_CONTROL, HDR_CONNECTION, HDR_DATE, HDR_PRAGMA,
+        HDR_TRANSFER_ENCODING,
+        HDR_UPGRADE,
+        /* HDR_TRAILER, */
+        HDR_VIA
+    };
 
 /* entity-headers */
 static http_hdr_type EntityHeadersArr[] =
-{
-    HDR_ALLOW, HDR_CONTENT_BASE, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE,
-    HDR_CONTENT_LENGTH, HDR_CONTENT_LOCATION, HDR_CONTENT_MD5,
-    HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_ETAG, HDR_EXPIRES, HDR_LAST_MODIFIED, HDR_LINK,
-    HDR_OTHER
-};
+    {
+        HDR_ALLOW, HDR_CONTENT_BASE, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE,
+        HDR_CONTENT_LENGTH, HDR_CONTENT_LOCATION, HDR_CONTENT_MD5,
+        HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_ETAG, HDR_EXPIRES, HDR_LAST_MODIFIED, HDR_LINK,
+        HDR_OTHER
+    };
 
 static HttpHeaderMask ReplyHeadersMask;		/* set run-time using ReplyHeaders */
 static http_hdr_type ReplyHeadersArr[] =
-{
-    HDR_ACCEPT, HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
-    HDR_ACCEPT_RANGES, HDR_AGE,
-    HDR_LOCATION, HDR_MAX_FORWARDS,
-    HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
-    HDR_VARY,
-    HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
-    HDR_X_CACHE_LOOKUP,
-    HDR_X_REQUEST_URI,
+    {
+        HDR_ACCEPT, HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
+        HDR_ACCEPT_RANGES, HDR_AGE,
+        HDR_LOCATION, HDR_MAX_FORWARDS,
+        HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
+        HDR_VARY,
+        HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
+        HDR_X_CACHE_LOOKUP,
+        HDR_X_REQUEST_URI,
 #if X_ACCELERATOR_VARY
-    HDR_X_ACCELERATOR_VARY,
+        HDR_X_ACCELERATOR_VARY,
 #endif
-    HDR_X_SQUID_ERROR
-};
+        HDR_X_SQUID_ERROR
+    };
 
 static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders */
 static http_hdr_type RequestHeadersArr[] =
-{
-    HDR_AUTHORIZATION, HDR_FROM, HDR_HOST,
-    HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
-    HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
-    HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
-    HDR_USER_AGENT, HDR_X_FORWARDED_FOR
-};
+    {
+        HDR_AUTHORIZATION, HDR_FROM, HDR_HOST,
+        HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
+        HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
+        HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
+        HDR_USER_AGENT, HDR_X_FORWARDED_FOR
+    };
 
 /* header accounting */
 static HttpHeaderStat HttpHeaderStats[] =
-{
-    {"all"},
+    {
+        {"all"},
 #if USE_HTCP
-    {"HTCP reply"},
+        {"HTCP reply"},
 #endif
-    {"request"},
-    {"reply"}
-};
+        {"request"},
+        {"reply"}
+    };
 static int HttpHeaderStatCount = countof(HttpHeaderStats);
 
 static int HeaderEntryParsedCount = 0;
@@ -262,33 +264,52 @@ httpHeaderInitModule(void)
     assert(8 * sizeof(HttpHeaderMask) >= HDR_ENUM_END);
     /* all headers must be described */
     assert(countof(HeadersAttrs) == HDR_ENUM_END);
+
     if (!Headers)
-	Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+        Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+
     /* create masks */
     httpHeaderMaskInit(&ListHeadersMask, 0);
+
     httpHeaderCalcMask(&ListHeadersMask, (const int *) ListHeadersArr, countof(ListHeadersArr));
+
     httpHeaderMaskInit(&ReplyHeadersMask, 0);
+
     httpHeaderCalcMask(&ReplyHeadersMask, (const int *) ReplyHeadersArr, countof(ReplyHeadersArr));
+
     httpHeaderCalcMask(&ReplyHeadersMask, (const int *) GeneralHeadersArr, countof(GeneralHeadersArr));
+
     httpHeaderCalcMask(&ReplyHeadersMask, (const int *) EntityHeadersArr, countof(EntityHeadersArr));
+
     httpHeaderMaskInit(&RequestHeadersMask, 0);
+
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) RequestHeadersArr, countof(RequestHeadersArr));
+
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) GeneralHeadersArr, countof(GeneralHeadersArr));
+
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) EntityHeadersArr, countof(EntityHeadersArr));
+
     /* init header stats */
     assert(HttpHeaderStatCount == hoReply + 1);
+
     for (i = 0; i < HttpHeaderStatCount; i++)
-	httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
+        httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
+
     HttpHeaderStats[hoRequest].owner_mask = &RequestHeadersMask;
+
     HttpHeaderStats[hoReply].owner_mask = &ReplyHeadersMask;
+
 #if USE_HTCP
+
     HttpHeaderStats[hoHtcpReply].owner_mask = &ReplyHeadersMask;
+
 #endif
     /* init dependent modules */
     httpHdrCcInitModule();
+
     /* register with cache manager */
     cachemgrRegister("http_headers",
-	"HTTP Header Statistics", httpHeaderStoreReport, 0, 1);
+                     "HTTP Header Statistics", httpHeaderStoreReport, 0, 1);
 }
 
 void
@@ -339,17 +360,20 @@ httpHeaderClean(HttpHeader * hdr)
     statHistCount(&HttpHeaderStats[hdr->owner].hdrUCountDistr, hdr->entries.count);
     HttpHeaderStats[hdr->owner].destroyedCount++;
     HttpHeaderStats[hdr->owner].busyDestroyedCount += hdr->entries.count > 0;
+
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	/* tmp hack to try to avoid coredumps */
-	if (e->id < 0 || e->id >= HDR_ENUM_END) {
-	    debug(55, 0) ("httpHeaderClean BUG: entry[%d] is invalid (%d). Ignored.\n",
-		(int) pos, e->id);
-	} else {
-	    statHistCount(&HttpHeaderStats[hdr->owner].fieldTypeDistr, e->id);
-	    /* yes, this destroy() leaves us in an incosistent state */
-	    httpHeaderEntryDestroy(e);
-	}
+        /* tmp hack to try to avoid coredumps */
+
+        if (e->id < 0 || e->id >= HDR_ENUM_END) {
+            debug(55, 0) ("httpHeaderClean BUG: entry[%d] is invalid (%d). Ignored.\n",
+                          (int) pos, e->id);
+        } else {
+            statHistCount(&HttpHeaderStats[hdr->owner].fieldTypeDistr, e->id);
+            /* yes, this destroy() leaves us in an incosistent state */
+            httpHeaderEntryDestroy(e);
+        }
     }
+
     arrayClean(&hdr->entries);
 }
 
@@ -364,7 +388,7 @@ httpHeaderAppend(HttpHeader * dest, const HttpHeader * src)
     debug(55, 7) ("appending hdr: %p += %p\n", dest, src);
 
     while ((e = httpHeaderGetEntry(src, &pos))) {
-	httpHeaderAddEntry(dest, httpHeaderEntryClone(e));
+        httpHeaderAddEntry(dest, httpHeaderEntryClone(e));
     }
 }
 
@@ -379,11 +403,14 @@ httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMas
     debug(55, 7) ("updating hdr: %p <- %p\n", old, fresh);
 
     while ((e = httpHeaderGetEntry(fresh, &pos))) {
-	/* deny bad guys (ok to check for HDR_OTHER) here */
-	if (denied_mask && CBIT_TEST(*denied_mask, e->id))
-	    continue;
-	httpHeaderDelByName(old, e->name.buf());
-	httpHeaderAddEntry(old, httpHeaderEntryClone(e));
+        /* deny bad guys (ok to check for HDR_OTHER) here */
+
+        if (denied_mask && CBIT_TEST(*denied_mask, e->id))
+            continue;
+
+        httpHeaderDelByName(old, e->name.buf());
+
+        httpHeaderAddEntry(old, httpHeaderEntryClone(e));
     }
 }
 
@@ -410,33 +437,43 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
     debug(55, 7) ("parsing hdr: (%p)\n%s\n", hdr, getStringPrefix(header_start, header_end));
     HttpHeaderStats[hdr->owner].parsedCount++;
     /* commonn format headers are "<name>:[ws]<value>" lines delimited by <CRLF> */
+
     while (field_start < header_end) {
-	const char *field_end;
-	const char *field_ptr = field_start;
-	do {
-	    field_end = field_ptr = field_ptr + strcspn(field_ptr, "\r\n");
-	    /* skip CRLF */
-	    if (*field_ptr == '\r')
-		field_ptr++;
-	    if (*field_ptr == '\n')
-		field_ptr++;
-	}
-	while (*field_ptr == ' ' || *field_ptr == '\t');
-	if (!*field_end || field_end > header_end)
-	    return httpHeaderReset(hdr);	/* missing <CRLF> */
-	e = httpHeaderEntryParseCreate(field_start, field_end);
-	if (e != NULL)
-	    httpHeaderAddEntry(hdr, e);
-	else
-	    debug(55, 2) ("warning: ignoring unparseable http header field near '%s'\n",
-		getStringPrefix(field_start, field_end));
-	field_start = field_end;
-	/* skip CRLF */
-	if (*field_start == '\r')
-	    field_start++;
-	if (*field_start == '\n')
-	    field_start++;
+        const char *field_end;
+        const char *field_ptr = field_start;
+
+        do {
+            field_end = field_ptr = field_ptr + strcspn(field_ptr, "\r\n");
+            /* skip CRLF */
+
+            if (*field_ptr == '\r')
+                field_ptr++;
+
+            if (*field_ptr == '\n')
+                field_ptr++;
+        } while (*field_ptr == ' ' || *field_ptr == '\t');
+
+        if (!*field_end || field_end > header_end)
+            return httpHeaderReset(hdr);	/* missing <CRLF> */
+
+        e = httpHeaderEntryParseCreate(field_start, field_end);
+
+        if (e != NULL)
+            httpHeaderAddEntry(hdr, e);
+        else
+            debug(55, 2) ("warning: ignoring unparseable http header field near '%s'\n",
+                          getStringPrefix(field_start, field_end));
+
+        field_start = field_end;
+
+        /* skip CRLF */
+        if (*field_start == '\r')
+            field_start++;
+
+        if (*field_start == '\n')
+            field_start++;
     }
+
     return 1;			/* even if no fields where found, it is a valid header */
 }
 
@@ -449,8 +486,9 @@ httpHeaderPackInto(const HttpHeader * hdr, Packer * p)
     assert(hdr && p);
     debug(55, 7) ("packing hdr: (%p)\n", hdr);
     /* pack all entries one by one */
+
     while ((e = httpHeaderGetEntry(hdr, &pos)))
-	httpHeaderEntryPackInto(e, p);
+        httpHeaderEntryPackInto(e, p);
 }
 
 /* returns next valid entry */
@@ -459,10 +497,12 @@ httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
 {
     assert(hdr && pos);
     assert(*pos >= HttpHeaderInitPos && *pos < (ssize_t)hdr->entries.count);
+
     for ((*pos)++; *pos < (ssize_t)hdr->entries.count; (*pos)++) {
-	if (hdr->entries.items[*pos])
-	    return (HttpHeaderEntry*)hdr->entries.items[*pos];
+        if (hdr->entries.items[*pos])
+            return (HttpHeaderEntry*)hdr->entries.items[*pos];
     }
+
     return NULL;
 }
 
@@ -481,15 +521,19 @@ httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id)
     assert(!CBIT_TEST(ListHeadersMask, id));
 
     /* check mask first */
+
     if (!CBIT_TEST(hdr->mask, id))
-	return NULL;
+        return NULL;
+
     /* looks like we must have it, do linear search */
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	if (e->id == id)
-	    return e;
+        if (e->id == id)
+            return e;
     }
+
     /* hm.. we thought it was there, but it was not found */
     assert(0);
+
     return NULL;		/* not reached */
 }
 
@@ -507,13 +551,16 @@ httpHeaderFindLastEntry(const HttpHeader * hdr, http_hdr_type id)
     assert(!CBIT_TEST(ListHeadersMask, id));
 
     /* check mask first */
+
     if (!CBIT_TEST(hdr->mask, id))
-	return NULL;
+        return NULL;
+
     /* looks like we must have it, do linear search */
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	if (e->id == id)
-	    result = e;
+        if (e->id == id)
+            result = e;
     }
+
     assert(result);		/* must be there! */
     return result;
 }
@@ -529,13 +576,15 @@ httpHeaderDelByName(HttpHeader * hdr, const char *name)
     HttpHeaderEntry *e;
     httpHeaderMaskInit(&hdr->mask, 0);	/* temporal inconsistency */
     debug(55, 7) ("deleting '%s' fields in hdr %p\n", name, hdr);
+
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	if (!strCaseCmp(e->name, name)) {
-	    httpHeaderDelAt(hdr, pos);
-	    count++;
-	} else
-	    CBIT_SET(hdr->mask, e->id);
+        if (!strCaseCmp(e->name, name)) {
+            httpHeaderDelAt(hdr, pos);
+            count++;
+        } else
+            CBIT_SET(hdr->mask, e->id);
     }
+
     return count;
 }
 
@@ -550,14 +599,17 @@ httpHeaderDelById(HttpHeader * hdr, http_hdr_type id)
     assert(hdr);
     assert_eid(id);
     assert_eid(id != HDR_OTHER);	/* does not make sense */
+
     if (!CBIT_TEST(hdr->mask, id))
-	return 0;
+        return 0;
+
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	if (e->id == id) {
-	    httpHeaderDelAt(hdr, pos);
-	    count++;
-	}
+        if (e->id == id) {
+            httpHeaderDelAt(hdr, pos);
+            count++;
+        }
     }
+
     CBIT_CLR(hdr->mask, id);
     assert(count);
     return count;
@@ -581,7 +633,7 @@ httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos)
 }
 
 
-/* appends an entry; 
+/* appends an entry;
  * does not call httpHeaderEntryClone() so one should not reuse "*e"
  */
 void
@@ -591,12 +643,15 @@ httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e)
     assert_eid(e->id);
 
     debug(55, 7) ("%p adding entry: %d at %d\n",
-	hdr, e->id, hdr->entries.count);
+                  hdr, e->id, hdr->entries.count);
+
     if (CBIT_TEST(hdr->mask, e->id))
-	Headers[e->id].stat.repCount++;
+        Headers[e->id].stat.repCount++;
     else
-	CBIT_SET(hdr->mask, e->id);
+        CBIT_SET(hdr->mask, e->id);
+
     arrayAppend(&hdr->entries, e);
+
     /* increment header length, allow for ": " and crlf */
     hdr->len += e->name.size() + 2 + e->value.size() + 2;
 }
@@ -611,21 +666,27 @@ httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
     debug(55, 6) ("%p: joining for id %d\n", hdr, id);
     /* only fields from ListHeaders array can be "listed" */
     assert(CBIT_TEST(ListHeadersMask, id));
+
     if (!CBIT_TEST(hdr->mask, id))
-	return s;
+        return s;
+
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	if (e->id == id)
-	    strListAdd(&s, e->value.buf(), ',');
+        if (e->id == id)
+            strListAdd(&s, e->value.buf(), ',');
     }
+
     /*
      * note: we might get an empty (len==0) string if there was an "empty"
      * header; we must not get a NULL string though.
      */
     assert(s.buf());
+
     /* temporary warning: remove it! @?@ @?@ @?@ */
     if (!s.size())
-	debug(55, 3) ("empty list header: %s (%d)\n", Headers[id].name.buf(), id);
+        debug(55, 3) ("empty list header: %s (%d)\n", Headers[id].name.buf(), id);
+
     debug(55, 6) ("%p: joined for id %d: %s\n", hdr, id, s.buf());
+
     return s;
 }
 
@@ -636,9 +697,11 @@ httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id)
     HttpHeaderEntry *e;
 
     if (CBIT_TEST(ListHeadersMask, id))
-	return httpHeaderGetList(hdr, id);
+        return httpHeaderGetList(hdr, id);
+
     if ((e = httpHeaderFindEntry(hdr, id)))
-	return e->value;
+        return e->value;
+
     return String::Null;
 }
 
@@ -658,15 +721,17 @@ httpHeaderGetByName(const HttpHeader * hdr, const char *name)
 
     /* First try the quick path */
     id = httpHeaderIdByNameDef(name, strlen(name));
+
     if (id != -1)
-	return httpHeaderGetStrOrList(hdr, id);
+        return httpHeaderGetStrOrList(hdr, id);
 
     /* Sorry, an unknown header name. Do linear search */
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	if (e->id == HDR_OTHER && strCaseCmp(e->name, name) == 0) {
-	    strListAdd(&result, e->value.buf(), ',');
-	}
+        if (e->id == HDR_OTHER && strCaseCmp(e->name, name) == 0) {
+            strListAdd(&result, e->value.buf(), ',');
+        }
     }
+
     return result;
 }
 
@@ -689,11 +754,12 @@ httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const ch
     header = httpHeaderGetByName(hdr, name);
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
-	if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {
-	    result.append(item + mlen + 1, ilen - mlen - 1);
-	    break;
-	}
+        if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {
+            result.append(item + mlen + 1, ilen - mlen - 1);
+            break;
+        }
     }
+
     return result;
 }
 
@@ -716,11 +782,12 @@ httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *me
     header = httpHeaderGetStrOrList(hdr, id);
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
-	if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {
-	    result.append(item + mlen + 1, ilen - mlen - 1);
-	    break;
-	}
+        if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {
+            result.append(item + mlen + 1, ilen - mlen - 1);
+            break;
+        }
     }
+
     header.clean();
     return result;
 }
@@ -858,8 +925,10 @@ httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id)
     assert_eid(id);
     assert(Headers[id].type == ftInt);	/* must be of an appropriate type */
     HttpHeaderEntry *e;
+
     if ((e = httpHeaderFindEntry(hdr, id)))
-	return httpHeaderEntryGetInt (e);
+        return httpHeaderEntryGetInt (e);
+
     return -1;
 }
 
@@ -870,10 +939,12 @@ httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id)
     time_t value = -1;
     assert_eid(id);
     assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
+
     if ((e = httpHeaderFindEntry(hdr, id))) {
-	value = parse_rfc1123(e->value.buf());
-	httpHeaderNoteParsedEntry(e->id, e->value, value < 0);
+        value = parse_rfc1123(e->value.buf());
+        httpHeaderNoteParsedEntry(e->id, e->value, value < 0);
     }
+
     return value;
 }
 
@@ -884,10 +955,12 @@ httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id)
     HttpHeaderEntry *e;
     assert_eid(id);
     assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
+
     if ((e = httpHeaderFindEntry(hdr, id))) {
-	httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
-	return e->value.buf();
+        httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
+        return e->value.buf();
     }
+
     return NULL;
 }
 
@@ -898,10 +971,12 @@ httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id)
     HttpHeaderEntry *e;
     assert_eid(id);
     assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
+
     if ((e = httpHeaderFindLastEntry(hdr, id))) {
-	httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
-	return e->value.buf();
+        httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
+        return e->value.buf();
     }
+
     return NULL;
 }
 
@@ -910,15 +985,23 @@ httpHeaderGetCc(const HttpHeader * hdr)
 {
     HttpHdrCc *cc;
     String s;
+
     if (!CBIT_TEST(hdr->mask, HDR_CACHE_CONTROL))
-	return NULL;
+        return NULL;
+
     s = httpHeaderGetList(hdr, HDR_CACHE_CONTROL);
+
     cc = httpHdrCcParseCreate(&s);
+
     HttpHeaderStats[hdr->owner].ccParsedCount++;
+
     if (cc)
-	httpHdrCcUpdateStats(cc, &HttpHeaderStats[hdr->owner].ccTypeDistr);
+        httpHdrCcUpdateStats(cc, &HttpHeaderStats[hdr->owner].ccTypeDistr);
+
     httpHeaderNoteParsedEntry(HDR_CACHE_CONTROL, s, !cc);
+
     s.clean();
+
     return cc;
 }
 
@@ -931,11 +1014,13 @@ httpHeaderGetRange(const HttpHeader * hdr)
      * who knows, some clients might send Request-Range only;
      * this "if" should work correctly in both cases;
      * hopefully no clients send mismatched headers! */
+
     if ((e = httpHeaderFindEntry(hdr, HDR_RANGE)) ||
-	(e = httpHeaderFindEntry(hdr, HDR_REQUEST_RANGE))) {
-	r = HttpHdrRange::ParseCreate(&e->value);
-	httpHeaderNoteParsedEntry(e->id, e->value, !r);
+            (e = httpHeaderFindEntry(hdr, HDR_REQUEST_RANGE))) {
+        r = HttpHdrRange::ParseCreate(&e->value);
+        httpHeaderNoteParsedEntry(e->id, e->value, !r);
     }
+
     return r;
 }
 
@@ -944,10 +1029,12 @@ httpHeaderGetContRange(const HttpHeader * hdr)
 {
     HttpHdrContRange *cr = NULL;
     HttpHeaderEntry *e;
+
     if ((e = httpHeaderFindEntry(hdr, HDR_CONTENT_RANGE))) {
-	cr = httpHdrContRangeParseCreate(e->value.buf());
-	httpHeaderNoteParsedEntry(e->id, e->value, !cr);
+        cr = httpHdrContRangeParseCreate(e->value.buf());
+        httpHeaderNoteParsedEntry(e->id, e->value, !cr);
     }
+
     return cr;
 }
 
@@ -958,18 +1045,26 @@ httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *auth_sch
     int l;
     assert(hdr && auth_scheme);
     field = httpHeaderGetStr(hdr, id);
+
     if (!field)			/* no authorization field */
-	return NULL;
+        return NULL;
+
     l = strlen(auth_scheme);
+
     if (!l || strncasecmp(field, auth_scheme, l))	/* wrong scheme */
-	return NULL;
+        return NULL;
+
     field += l;
+
     if (!xisspace(*field))	/* wrong scheme */
-	return NULL;
+        return NULL;
+
     /* skip white space */
     field += xcountws(field);
+
     if (!*field)		/* no authorization cookie */
-	return NULL;
+        return NULL;
+
     return base64_decode(field);
 }
 
@@ -977,11 +1072,13 @@ ETag
 httpHeaderGetETag(const HttpHeader * hdr, http_hdr_type id)
 {
     ETag etag =
-    {NULL, -1};
+        {NULL, -1};
     HttpHeaderEntry *e;
     assert(Headers[id].type == ftETag);		/* must be of an appropriate type */
+
     if ((e = httpHeaderFindEntry(hdr, id)))
-	etagParseInit(&etag, e->value.buf());
+        etagParseInit(&etag, e->value.buf());
+
     return etag;
 }
 
@@ -992,19 +1089,22 @@ httpHeaderGetTimeOrTag(const HttpHeader * hdr, http_hdr_type id)
     HttpHeaderEntry *e;
     assert(Headers[id].type == ftDate_1123_or_ETag);	/* must be of an appropriate type */
     memset(&tot, 0, sizeof(tot));
+
     if ((e = httpHeaderFindEntry(hdr, id))) {
-	const char *str = e->value.buf();
-	/* try as an ETag */
-	if (etagParseInit(&tot.tag, str)) {
-	    tot.valid = tot.tag.str != NULL;
-	    tot.time = -1;
-	} else {
-	    /* or maybe it is time? */
-	    tot.time = parse_rfc1123(str);
-	    tot.valid = tot.time >= 0;
-	    tot.tag.str = NULL;
-	}
+        const char *str = e->value.buf();
+        /* try as an ETag */
+
+        if (etagParseInit(&tot.tag, str)) {
+            tot.valid = tot.tag.str != NULL;
+            tot.time = -1;
+        } else {
+            /* or maybe it is time? */
+            tot.time = parse_rfc1123(str);
+            tot.valid = tot.time >= 0;
+            tot.tag.str = NULL;
+        }
     }
+
     assert(tot.time < 0 || !tot.tag.str);	/* paranoid */
     return tot;
 }
@@ -1020,13 +1120,18 @@ httpHeaderEntryCreate(http_hdr_type id, const char *name, const char *value)
     assert_eid(id);
     e = (HttpHeaderEntry *)memAllocate(MEM_HTTP_HDR_ENTRY);
     e->id = id;
+
     if (id != HDR_OTHER)
-	e->name = Headers[id].name;
+        e->name = Headers[id].name;
     else
-	e->name = name;
+        e->name = name;
+
     e->value = value;
+
     Headers[id].stat.aliveCount++;
+
     debug(55, 9) ("created entry %p: '%s: %s'\n", e, e->name.buf(), e->value.buf());
+
     return e;
 }
 
@@ -1037,12 +1142,18 @@ httpHeaderEntryDestroy(HttpHeaderEntry * e)
     assert_eid(e->id);
     debug(55, 9) ("destroying entry %p: '%s: %s'\n", e, e->name.buf(), e->value.buf());
     /* clean name if needed */
+
     if (e->id == HDR_OTHER)
-	e->name.clean();
+        e->name.clean();
+
     e->value.clean();
+
     assert(Headers[e->id].stat.aliveCount);
+
     Headers[e->id].stat.aliveCount--;
+
     e->id = HDR_BAD_HDR;
+
     memFree(e, MEM_HTTP_HDR_ENTRY);
 }
 
@@ -1061,44 +1172,63 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     HeaderEntryParsedCount++;
 
     /* do we have a valid field name within this field? */
+
     if (!name_len || name_end > field_end)
-	return NULL;
+        return NULL;
+
     if (name_len > 65536) {
-	/* String has a 64K limit */
-	debug(55, 1) ("WARNING: ignoring header name of %d bytes\n", name_len);
-	return NULL;
+        /* String has a 64K limit */
+        debug(55, 1) ("WARNING: ignoring header name of %d bytes\n", name_len);
+        return NULL;
     }
+
     /* now we know we can parse it */
     e = (HttpHeaderEntry *)memAllocate(MEM_HTTP_HDR_ENTRY);
+
     debug(55, 9) ("creating entry %p: near '%s'\n", e, getStringPrefix(field_start, field_end));
+
     /* is it a "known" field? */
     id = httpHeaderIdByName(field_start, name_len, Headers, HDR_ENUM_END);
+
     if (id < 0)
-	id = HDR_OTHER;
+        id = HDR_OTHER;
+
     assert_eid(id);
+
     e->id = id;
+
     /* set field name */
     if (id == HDR_OTHER)
-	e->name.limitInit(field_start, name_len);
+        e->name.limitInit(field_start, name_len);
     else
-	e->name = Headers[id].name;
+        e->name = Headers[id].name;
+
     /* trim field value */
     while (value_start < field_end && xisspace(*value_start))
-	value_start++;
+        value_start++;
+
     if (field_end - value_start > 65536) {
-	/* String has a 64K limit */
-	debug(55, 1) ("WARNING: ignoring '%s' header of %d bytes\n",
-	    e->name.buf(), (int) (field_end - value_start));
-	if (e->id == HDR_OTHER)
-	    e->name.clean();
-	memFree(e, MEM_HTTP_HDR_ENTRY);
-	return NULL;
+        /* String has a 64K limit */
+        debug(55, 1) ("WARNING: ignoring '%s' header of %d bytes\n",
+                      e->name.buf(), (int) (field_end - value_start));
+
+        if (e->id == HDR_OTHER)
+            e->name.clean();
+
+        memFree(e, MEM_HTTP_HDR_ENTRY);
+
+        return NULL;
     }
+
     /* set field value */
     e->value.limitInit(value_start, field_end - value_start);
+
     Headers[id].stat.seenCount++;
+
     Headers[id].stat.aliveCount++;
+
     debug(55, 9) ("created entry %p: '%s: %s'\n", e, e->name.buf(), e->value.buf());
+
     return e;
 }
 
@@ -1122,10 +1252,11 @@ static void
 httpHeaderNoteParsedEntry(http_hdr_type id, String context, int error)
 {
     Headers[id].stat.parsCount++;
+
     if (error) {
-	Headers[id].stat.errCount++;
-	debug(55, 2) ("cannot parse hdr field: '%s: %s'\n",
-	    Headers[id].name.buf(), context.buf());
+        Headers[id].stat.errCount++;
+        debug(55, 2) ("cannot parse hdr field: '%s: %s'\n",
+                      Headers[id].name.buf(), context.buf());
     }
 }
 
@@ -1145,20 +1276,22 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size,
     const char *name = valid_id ? Headers[id].name.buf() : "INVALID";
     int visible = count > 0;
     /* for entries with zero count, list only those that belong to current type of message */
+
     if (!visible && valid_id && dump_stat->owner_mask)
-	visible = CBIT_TEST(*dump_stat->owner_mask, id);
+        visible = CBIT_TEST(*dump_stat->owner_mask, id);
+
     if (visible)
-	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
-	    id, name, count, xdiv(count, dump_stat->busyDestroyedCount));
+        storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
+                          id, name, count, xdiv(count, dump_stat->busyDestroyedCount));
 }
 
 static void
 httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     if (count)
-	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
-	    idx, (int) val, count,
-	    xpercent(count, dump_stat->destroyedCount));
+        storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
+                          idx, (int) val, count,
+                          xpercent(count, dump_stat->destroyedCount));
 }
 
 
@@ -1171,15 +1304,15 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "\nHeader Stats: %s\n", hs->label);
     storeAppendPrintf(e, "\nField type distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
-	"id", "name", "count", "#/header");
+                      "id", "name", "count", "#/header");
     statHistDump(&hs->fieldTypeDistr, e, httpHeaderFieldStatDumper);
     storeAppendPrintf(e, "\nCache-control directives distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
-	"id", "name", "count", "#/cc_field");
+                      "id", "name", "count", "#/cc_field");
     statHistDump(&hs->ccTypeDistr, e, httpHdrCcStatDumper);
     storeAppendPrintf(e, "\nNumber of fields per header distribution\n");
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
-	"id", "#flds", "count", "%total");
+                      "id", "#flds", "count", "%total");
     statHistDump(&hs->hdrUCountDistr, e, httpHeaderFldsPerHdrDumper);
     dump_stat = NULL;
 }
@@ -1192,33 +1325,37 @@ httpHeaderStoreReport(StoreEntry * e)
     assert(e);
 
     HttpHeaderStats[0].parsedCount =
-	HttpHeaderStats[hoRequest].parsedCount + HttpHeaderStats[hoReply].parsedCount;
+        HttpHeaderStats[hoRequest].parsedCount + HttpHeaderStats[hoReply].parsedCount;
     HttpHeaderStats[0].ccParsedCount =
-	HttpHeaderStats[hoRequest].ccParsedCount + HttpHeaderStats[hoReply].ccParsedCount;
+        HttpHeaderStats[hoRequest].ccParsedCount + HttpHeaderStats[hoReply].ccParsedCount;
     HttpHeaderStats[0].destroyedCount =
-	HttpHeaderStats[hoRequest].destroyedCount + HttpHeaderStats[hoReply].destroyedCount;
+        HttpHeaderStats[hoRequest].destroyedCount + HttpHeaderStats[hoReply].destroyedCount;
     HttpHeaderStats[0].busyDestroyedCount =
-	HttpHeaderStats[hoRequest].busyDestroyedCount + HttpHeaderStats[hoReply].busyDestroyedCount;
+        HttpHeaderStats[hoRequest].busyDestroyedCount + HttpHeaderStats[hoReply].busyDestroyedCount;
 
     for (i = 1; i < HttpHeaderStatCount; i++) {
-	httpHeaderStatDump(HttpHeaderStats + i, e);
-	storeAppendPrintf(e, "%s\n", "<br>");
+        httpHeaderStatDump(HttpHeaderStats + i, e);
+        storeAppendPrintf(e, "%s\n", "<br>");
     }
+
     /* field stats for all messages */
     storeAppendPrintf(e, "\nHttp Fields Stats (replies and requests)\n");
+
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\t %6s\n",
-	"id", "name", "#alive", "%err", "%repeat");
+                      "id", "name", "#alive", "%err", "%repeat");
+
     for (ht = (http_hdr_type)0; ht < HDR_ENUM_END; ++ht) {
-	HttpHeaderFieldInfo *f = Headers + ht;
-	storeAppendPrintf(e, "%2d\t %-20s\t %5d\t %6.3f\t %6.3f\n",
-	    f->id, f->name.buf(), f->stat.aliveCount,
-	    xpercent(f->stat.errCount, f->stat.parsCount),
-	    xpercent(f->stat.repCount, f->stat.seenCount));
+        HttpHeaderFieldInfo *f = Headers + ht;
+        storeAppendPrintf(e, "%2d\t %-20s\t %5d\t %6.3f\t %6.3f\n",
+                          f->id, f->name.buf(), f->stat.aliveCount,
+                          xpercent(f->stat.errCount, f->stat.parsCount),
+                          xpercent(f->stat.repCount, f->stat.seenCount));
     }
+
     storeAppendPrintf(e, "Headers Parsed: %d + %d = %d\n",
-	HttpHeaderStats[hoRequest].parsedCount,
-	HttpHeaderStats[hoReply].parsedCount,
-	HttpHeaderStats[0].parsedCount);
+                      HttpHeaderStats[hoRequest].parsedCount,
+                      HttpHeaderStats[hoReply].parsedCount,
+                      HttpHeaderStats[0].parsedCount);
     storeAppendPrintf(e, "Hdr Fields Parsed: %d\n", HeaderEntryParsedCount);
 }
 
@@ -1226,13 +1363,16 @@ http_hdr_type
 httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * info, int end)
 {
     int i;
+
     for (i = 0; i < end; ++i) {
-	if (name_len >= 0 && name_len != info[i].name.size())
-	    continue;
-	if (!strncasecmp(name, info[i].name.buf(),
-		name_len < 0 ? info[i].name.size() + 1 : name_len))
-	    return info[i].id;
+        if (name_len >= 0 && name_len != info[i].name.size())
+            continue;
+
+        if (!strncasecmp(name, info[i].name.buf(),
+                         name_len < 0 ? info[i].name.size() + 1 : name_len))
+            return info[i].id;
     }
+
     return HDR_BAD_HDR;
 }
 
@@ -1240,7 +1380,8 @@ http_hdr_type
 httpHeaderIdByNameDef(const char *name, int name_len)
 {
     if (!Headers)
-	Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+        Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+
     return httpHeaderIdByName(name, name_len, Headers, HDR_ENUM_END);
 }
 
@@ -1248,7 +1389,9 @@ const char *
 httpHeaderNameById(int id)
 {
     if (!Headers)
-	Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+        Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+
     assert(id >= 0 && id < HDR_ENUM_END);
+
     return HeadersAttrs[id].name;
 }

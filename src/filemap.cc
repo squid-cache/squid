@@ -1,6 +1,6 @@
 
 /*
- * $Id: filemap.cc,v 1.41 2003/01/23 00:37:20 robertc Exp $
+ * $Id: filemap.cc,v 1.42 2003/02/21 22:50:08 robertc Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -63,7 +63,7 @@ file_map_create(void)
     fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
     debug(8, 3) ("file_map_create: creating space for %d files\n", fm->max_n_files);
     debug(8, 5) ("--> %d words of %d bytes each\n",
-	fm->nwords, (int) sizeof(*fm->file_map));
+                 fm->nwords, (int) sizeof(*fm->file_map));
     fm->file_map = (unsigned long *)xcalloc(fm->nwords, sizeof(*fm->file_map));
     /* XXX account fm->file_map */
     return fm;
@@ -89,10 +89,14 @@ int
 file_map_bit_set(fileMap * fm, int file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
+
     while (file_number >= fm->max_n_files)
-	file_map_grow(fm);
+        file_map_grow(fm);
+
     fm->file_map[file_number >> LONG_BIT_SHIFT] |= bitmask;
+
     fm->n_files_in_map++;
+
     return file_number;
 }
 
@@ -114,8 +118,10 @@ int
 file_map_bit_test(fileMap * fm, int file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
+
     if (file_number >= fm->max_n_files)
-	return 0;
+        return 0;
+
     /* be sure the return value is an int, not a u_long */
     return (fm->file_map[file_number >> LONG_BIT_SHIFT] & bitmask ? 1 : 0);
 }
@@ -126,22 +132,30 @@ file_map_allocate(fileMap * fm, int suggestion)
     int word;
     int bit;
     int count;
+
     if (suggestion >= fm->max_n_files)
-	suggestion = 0;
+        suggestion = 0;
+
     if (!file_map_bit_test(fm, suggestion))
-	return suggestion;
+        return suggestion;
+
     word = suggestion >> LONG_BIT_SHIFT;
+
     for (count = 0; count < fm->nwords; count++) {
-	if (fm->file_map[word] != ALL_ONES)
-	    break;
-	word = (word + 1) % fm->nwords;
+        if (fm->file_map[word] != ALL_ONES)
+            break;
+
+        word = (word + 1) % fm->nwords;
     }
+
     for (bit = 0; bit < BITS_IN_A_LONG; bit++) {
-	suggestion = ((unsigned long) word << LONG_BIT_SHIFT) | bit;
-	if (!file_map_bit_test(fm, suggestion)) {
-	    return suggestion;
-	}
+        suggestion = ((unsigned long) word << LONG_BIT_SHIFT) | bit;
+
+        if (!file_map_bit_test(fm, suggestion)) {
+            return suggestion;
+        }
     }
+
     debug(8, 3) ("growing from file_map_allocate\n");
     file_map_grow(fm);
     return file_map_allocate(fm, fm->max_n_files >> 1);
@@ -164,9 +178,10 @@ main(argc, argv)
     fm = file_map_create(TEST_SIZE);
 
     for (i = 0; i < TEST_SIZE; ++i) {
-	file_map_bit_set(i);
-	assert(file_map_bit_test(i));
-	file_map_bit_reset(i);
+        file_map_bit_set(i);
+        assert(file_map_bit_test(i));
+        file_map_bit_reset(i);
     }
 }
+
 #endif

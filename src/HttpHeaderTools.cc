@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.37 2003/02/12 06:10:58 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.38 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -55,20 +55,21 @@ httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
     table = (HttpHeaderFieldInfo *)xcalloc(count, sizeof(HttpHeaderFieldInfo));
 
     for (i = 0; i < count; ++i) {
-	const http_hdr_type id = attrs[i].id;
-	HttpHeaderFieldInfo *info = table + id;
-	/* sanity checks */
-	assert(id >= 0 && id < count);
-	assert(attrs[i].name);
-	assert(info->id == 0 && info->type == 0);	/* was not set before */
-	/* copy and init fields */
-	info->id = id;
-	info->type = attrs[i].type;
-	info->name = attrs[i].name;
-	assert(info->name.size());
-	/* init stats */
-	memset(&info->stat, 0, sizeof(info->stat));
+        const http_hdr_type id = attrs[i].id;
+        HttpHeaderFieldInfo *info = table + id;
+        /* sanity checks */
+        assert(id >= 0 && id < count);
+        assert(attrs[i].name);
+        assert(info->id == 0 && info->type == 0);	/* was not set before */
+        /* copy and init fields */
+        info->id = id;
+        info->type = attrs[i].type;
+        info->name = attrs[i].name;
+        assert(info->name.size());
+        /* init stats */
+        memset(&info->stat, 0, sizeof(info->stat));
     }
+
     return table;
 }
 
@@ -76,8 +77,10 @@ void
 httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * table, int count)
 {
     int i;
+
     for (i = 0; i < count; ++i)
-	table[i].name.clean();
+        table[i].name.clean();
+
     xfree(table);
 }
 
@@ -96,8 +99,8 @@ httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, size_t count)
     assert(count < sizeof(*mask) * 8);	/* check for overflow */
 
     for (i = 0; i < count; ++i) {
-	assert(!CBIT_TEST(*mask, enums[i]));	/* check for duplicates */
-	CBIT_SET(*mask, enums[i]);
+        assert(!CBIT_TEST(*mask, enums[i]));	/* check for duplicates */
+        CBIT_SET(*mask, enums[i]);
     }
 }
 
@@ -107,13 +110,14 @@ void
 httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...)
 #else
 httpHeaderPutStrf(va_alist)
-     va_dcl
+va_dcl
 #endif
 {
 #if STDC_HEADERS
     va_list args;
     va_start(args, fmt);
 #else
+
     va_list args;
     HttpHeader *hdr = NULL;
     http_hdr_type id = HDR_ENUM_END;
@@ -123,6 +127,7 @@ httpHeaderPutStrf(va_alist)
     id = va_arg(args, http_hdr_type);
     fmt = va_arg(args, char *);
 #endif
+
     httpHeaderPutStrvf(hdr, id, fmt, args);
     va_end(args);
 }
@@ -163,16 +168,20 @@ httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
     http_hdr_type ht;
     int res;
     /* what type of header do we have? */
+
     if (httpHeaderHas(hdr, HDR_PROXY_CONNECTION))
-	ht = HDR_PROXY_CONNECTION;
+        ht = HDR_PROXY_CONNECTION;
     else if (httpHeaderHas(hdr, HDR_CONNECTION))
-	ht = HDR_CONNECTION;
+        ht = HDR_CONNECTION;
     else
-	return 0;
+        return 0;
 
     list = httpHeaderGetList(hdr, ht);
+
     res = strListIsMember(&list, directive, ',');
+
     list.clean();
+
     return res;
 }
 
@@ -186,10 +195,12 @@ strListIsMember(const String * list, const char *m, char del)
     int mlen;
     assert(list && m);
     mlen = strlen(m);
+
     while (strListGetItem(list, del, &item, &ilen, &pos)) {
-	if (mlen == ilen && !strncasecmp(item, m, ilen))
-	    return 1;
+        if (mlen == ilen && !strncasecmp(item, m, ilen))
+            return 1;
     }
+
     return 0;
 }
 
@@ -209,13 +220,16 @@ strListIsSubstr(const String * list, const char *s, char del)
      */
 
 #ifdef BROKEN_CODE
+
     const char *pos = NULL;
     const char *item;
     assert(list && s);
+
     while (strListGetItem(list, del, &item, NULL, &pos)) {
-	if (strstr(item, s))
-	    return 1;
+        if (strstr(item, s))
+            return 1;
     }
+
     return 0;
 #endif
 }
@@ -225,13 +239,15 @@ void
 strListAdd(String * str, const char *item, char del)
 {
     assert(str && item);
+
     if (str->size()) {
-	char buf[3];
-	buf[0] = del;
-	buf[1] = ' ';
-	buf[2] = '\0';
-	str->append(buf, 2);
+        char buf[3];
+        buf[0] = del;
+        buf[1] = ' ';
+        buf[2] = '\0';
+        str->append(buf, 2);
     }
+
     str->append(item, strlen(item));
 }
 
@@ -248,30 +264,39 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
 {
     size_t len;
     assert(str && item && pos);
+
     if (*pos) {
-	if (!**pos)		/* end of string */
-	    return 0;
-	else
-	    (*pos)++;
+        if (!**pos)		/* end of string */
+            return 0;
+        else
+            (*pos)++;
     } else {
-	*pos = str->buf();
-	if (!*pos)
-	    return 0;
+        *pos = str->buf();
+
+        if (!*pos)
+            return 0;
     }
 
     /* skip leading ws (ltrim) */
     *pos += xcountws(*pos);
+
     *item = *pos;		/* remember item's start */
+
     /* find next delimiter */
     *pos = strchr(*item, del);
+
     if (!*pos)			/* last item */
-	*pos = *item + strlen(*item);
+        *pos = *item + strlen(*item);
+
     len = *pos - *item;		/* *pos points to del or '\0' */
+
     /* rtrim */
     while (len > 0 && xisspace((*item)[len - 1]))
-	len--;
+        len--;
+
     if (ilen)
-	*ilen = len;
+        *ilen = len;
+
     return len > 0;
 }
 
@@ -295,10 +320,12 @@ httpHeaderParseInt(const char *start, int *value)
 {
     assert(value);
     *value = atoi(start);
+
     if (!*value && !xisdigit(*start)) {
-	debug(66, 2) ("failed to parse an int header field near '%s'\n", start);
-	return 0;
+        debug(66, 2) ("failed to parse an int header field near '%s'\n", start);
+        return 0;
     }
+
     return 1;
 }
 
@@ -330,44 +357,59 @@ httpHeaderTestParser(const char *hstr)
     MemBuf mb;
     assert(hstr);
     /* skip start line if any */
+
     if (!strncasecmp(hstr, "HTTP/", 5)) {
-	const char *p = strchr(hstr, '\n');
-	if (p)
-	    hstr = p + 1;
+        const char *p = strchr(hstr, '\n');
+
+        if (p)
+            hstr = p + 1;
     }
+
     /* skip invalid first line if any */
     if (xisspace(*hstr)) {
-	const char *p = strchr(hstr, '\n');
-	if (p)
-	    hstr = p + 1;
+        const char *p = strchr(hstr, '\n');
+
+        if (p)
+            hstr = p + 1;
     }
+
     hstr_len = strlen(hstr);
     /* skip terminator if any */
+
     if (strstr(hstr, "\n\r\n"))
-	hstr_len -= 2;
+        hstr_len -= 2;
     else if (strstr(hstr, "\n\n"))
-	hstr_len -= 1;
+        hstr_len -= 1;
+
     httpHeaderInit(&hdr, hoReply);
+
     /* Debug::Levels[55] = 8; */
     parse_success = httpHeaderParse(&hdr, hstr, hstr + hstr_len);
+
     /* Debug::Levels[55] = 2; */
     if (!parse_success) {
-	debug(66, 2) ("TEST (%d): failed to parsed a header: {\n%s}\n", bug_count, hstr);
-	return;
+        debug(66, 2) ("TEST (%d): failed to parsed a header: {\n%s}\n", bug_count, hstr);
+        return;
     }
+
     /* we think that we parsed it, veryfy */
     memBufDefInit(&mb);
+
     packerToMemInit(&p, &mb);
+
     httpHeaderPackInto(&hdr, &p);
+
     if ((pos = abs(httpHeaderStrCmp(hstr, mb.buf, hstr_len)))) {
-	bug_count++;
-	debug(66, 2) ("TEST (%d): hdr parsing bug (pos: %d near '%s'): expected: {\n%s} got: {\n%s}\n",
-	    bug_count, pos, hstr + pos, hstr, mb.buf);
+        bug_count++;
+        debug(66, 2) ("TEST (%d): hdr parsing bug (pos: %d near '%s'): expected: {\n%s} got: {\n%s}\n",
+                      bug_count, pos, hstr + pos, hstr, mb.buf);
     }
+
     httpHeaderClean(&hdr);
     packerClean(&p);
     memBufClean(&mb);
 }
+
 #endif
 
 
@@ -380,25 +422,34 @@ httpHeaderStrCmp(const char *h1, const char *h2, int len)
     int len2 = 0;
     assert(h1 && h2);
     /* fast check first */
+
     if (!strncasecmp(h1, h2, len))
-	return 0;
+        return 0;
+
     while (1) {
-	const char c1 = xtoupper(h1[len1 += xcountws(h1 + len1)]);
-	const char c2 = xtoupper(h2[len2 += xcountws(h2 + len2)]);
-	if (c1 < c2)
-	    return -len1;
-	if (c1 > c2)
-	    return +len1;
-	if (!c1 && !c2)
-	    return 0;
-	if (c1)
-	    len1++;
-	if (c2)
-	    len2++;
+        const char c1 = xtoupper(h1[len1 += xcountws(h1 + len1)]);
+        const char c2 = xtoupper(h2[len2 += xcountws(h2 + len2)]);
+
+        if (c1 < c2)
+            return -len1;
+
+        if (c1 > c2)
+            return +len1;
+
+        if (!c1 && !c2)
+            return 0;
+
+        if (c1)
+            len1++;
+
+        if (c2)
+            len2++;
     }
+
     /* NOTREACHED */
     return 0;
 }
+
 #endif
 
 /*
@@ -416,19 +467,20 @@ httpHdrMangle(HttpHeaderEntry * e, request_t * request)
     assert(e);
     hm = &Config.header_access[e->id];
     checklist = aclChecklistCreate(hm->access_list, request, NULL);
+
     if (1 == aclCheckFast(hm->access_list, checklist)) {
-	/* aclCheckFast returns 1 for allow. */
-	retval = 1;
+        /* aclCheckFast returns 1 for allow. */
+        retval = 1;
     } else if (NULL == hm->replacement) {
-	/* It was denied, and we don't have any replacement */
-	retval = 0;
+        /* It was denied, and we don't have any replacement */
+        retval = 0;
     } else {
-	/* It was denied, but we have a replacement. Replace the
-	 * header on the fly, and return that the new header
-	 * is allowed.
-	 */
-	e->value = hm->replacement;
-	retval = 1;
+        /* It was denied, but we have a replacement. Replace the
+         * header on the fly, and return that the new header
+         * is allowed.
+         */
+        e->value = hm->replacement;
+        retval = 1;
     }
 
     delete checklist;
@@ -441,7 +493,8 @@ httpHdrMangleList(HttpHeader * l, request_t * request)
 {
     HttpHeaderEntry *e;
     HttpHeaderPos p = HttpHeaderInitPos;
+
     while ((e = httpHeaderGetEntry(l, &p)))
-	if (0 == httpHdrMangle(e, request))
-	    httpHeaderDelAt(l, p);
+        if (0 == httpHdrMangle(e, request))
+            httpHeaderDelAt(l, p);
 }

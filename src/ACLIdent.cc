@@ -47,8 +47,10 @@ ACLIdent::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (ACLIdent));
+
     if (!Pool)
-	Pool = memPoolCreate("ACLIdent", sizeof (ACLIdent));
+        Pool = memPoolCreate("ACLIdent", sizeof (ACLIdent));
+
     return memPoolAlloc(Pool);
 }
 
@@ -70,9 +72,10 @@ ACLIdent::~ACLIdent()
 }
 
 ACLIdent::ACLIdent(ACLData<char const *> *newData, char const *newType) : data (newData), type_ (newType) {}
+
 ACLIdent::ACLIdent (ACLIdent const &old) : data (old.data->clone()), type_ (old.type_)
-{
-}
+{}
+
 ACLIdent &
 ACLIdent::operator= (ACLIdent const &rhs)
 {
@@ -99,10 +102,10 @@ int
 ACLIdent::match(ACLChecklist *checklist)
 {
     if (checklist->rfc931[0]) {
-	return data->match(checklist->rfc931);
+        return data->match(checklist->rfc931);
     } else {
-	checklist->changeState(IdentLookup::Instance());
-	return 0;
+        checklist->changeState(IdentLookup::Instance());
+        return 0;
     }
 }
 
@@ -142,13 +145,14 @@ IdentLookup::checkForAsync(ACLChecklist *checklist)const
 {
     checklist->asyncInProgress(true);
     debug(28, 3) ("IdentLookup::checkForAsync: Doing ident lookup\n");
+
     if (checklist->conn() && cbdataReferenceValid(checklist->conn())) {
-	identStart(&checklist->conn()->me, &checklist->conn()->peer,
-		       LookupDone, checklist);
+        identStart(&checklist->conn()->me, &checklist->conn()->peer,
+                   LookupDone, checklist);
     } else {
-	debug(28, 1) ("IdentLookup::checkForAsync: Can't start ident lookup. No client connection\n");
-	checklist->currentAnswer(ACCESS_DENIED);
-	checklist->markFinished();
+        debug(28, 1) ("IdentLookup::checkForAsync: Can't start ident lookup. No client connection\n");
+        checklist->currentAnswer(ACCESS_DENIED);
+        checklist->markFinished();
     }
 }
 
@@ -159,17 +163,21 @@ IdentLookup::LookupDone(const char *ident, void *data)
     assert (checklist->asyncState() == IdentLookup::Instance());
 
     if (ident) {
-	xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
+        xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
     } else {
-	xstrncpy(checklist->rfc931, dash_str, USER_IDENT_SZ);
+        xstrncpy(checklist->rfc931, dash_str, USER_IDENT_SZ);
     }
+
     /*
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
     if (cbdataReferenceValid(checklist->conn()) && !checklist->conn()->rfc931[0])
-	xstrncpy(checklist->conn()->rfc931, checklist->rfc931, USER_IDENT_SZ);
+        xstrncpy(checklist->conn()->rfc931, checklist->rfc931, USER_IDENT_SZ);
+
     checklist->asyncInProgress(false);
+
     checklist->changeState (ACLChecklist::NullState::Instance());
+
     checklist->check();
 }

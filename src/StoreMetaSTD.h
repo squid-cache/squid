@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaSTD.h,v 1.1 2003/01/23 00:37:15 robertc Exp $
+ * $Id: StoreMetaSTD.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,16 +36,19 @@
 
 #include "StoreMeta.h"
 
-class StoreMetaSTD : public StoreMeta {
+class StoreMetaSTD : public StoreMeta
+{
+
 public:
     void *operator new (size_t);
     void operator delete (void *);
     void deleteSelf();
-    
+
     char getType() const {return STORE_META_STD;}
+
     bool validLength(int) const;
-//    bool checkConsistency(StoreEntry *) const;
-    
+    //    bool checkConsistency(StoreEntry *) const;
+
 private:
     static MemPool *pool;
 };

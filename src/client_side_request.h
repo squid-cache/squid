@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.6 2003/02/05 10:36:50 robertc Exp $
+ * $Id: client_side_request.h,v 1.7 2003/02/21 22:50:07 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -41,9 +41,12 @@
 extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, void *, HttpHeader const *, char *, size_t);
 
 class MemObject;
+
 typedef class ClientHttpRequest clientHttpRequest;
 
-class ClientHttpRequest {
+class ClientHttpRequest
+{
+
 public:
     void *operator new (size_t);
     void operator delete (void *);
@@ -54,7 +57,7 @@ public:
     /* Not implemented - present to prevent synthetic operations */
     ClientHttpRequest(ClientHttpRequest const &);
     ClientHttpRequest& operator=(ClientHttpRequest const &);
-    
+
     String rangeBoundaryStr() const;
     void freeResources();
     void updateCounters();
@@ -67,32 +70,54 @@ public:
     request_t *request;		/* Parsed URL ... */
     char *uri;
     char *log_uri;
-    struct {
-	off_t offset;
-	size_t size;
-	size_t headers_sz;
-    } out;
+
+    struct
+    {
+        off_t offset;
+        size_t size;
+        size_t headers_sz;
+    }
+
+    out;
     HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
     size_t req_sz;		/* raw request size on input, not current request size */
     StoreEntry *entry;
     StoreEntry *old_entry;
     log_type logType;
+
     struct timeval start;
     http_version_t http_ver;
     AccessLogEntry al;
-    struct {
-	unsigned int accel:1;
-	unsigned int internal:1;
-	unsigned int done_copying:1;
-	unsigned int purging:1;
-    } flags;
-    struct {
-	http_status status;
-	char *location;
-    } redirect;
+
+    struct
+    {
+
+unsigned int accel:
+        1;
+
+unsigned int internal:
+        1;
+
+unsigned int done_copying:
+        1;
+
+unsigned int purging:
+        1;
+    }
+
+    flags;
+
+    struct
+    {
+        http_status status;
+        char *location;
+    }
+
+    redirect;
     dlink_node active;
     dlink_list client_stream;
     int mRangeCLen();
+
 private:
     CBDATA_CLASS(ClientHttpRequest);
 };

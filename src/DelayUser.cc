@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.cc,v 1.3 2003/02/08 01:45:47 robertc Exp $
+ * $Id: DelayUser.cc,v 1.4 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -88,8 +88,7 @@ DelayUserCmp(DelayUserBucket::Pointer const &left, DelayUserBucket::Pointer cons
 
 void
 DelayUserFree(DelayUserBucket::Pointer &)
-{
-}
+{}
 
 void
 DelayUserStatsWalkee(DelayUserBucket::Pointer const &current, void *state)
@@ -101,13 +100,17 @@ void
 DelayUser::stats(StoreEntry * sentry)
 {
     spec.stats (sentry, "Per User");
+
     if (spec.restore_bps == -1)
-	return;
+        return;
+
     storeAppendPrintf(sentry, "\t\tCurrent: ");
+
     if (!buckets.head) {
-	storeAppendPrintf (sentry, "Not used yet.\n\n");
-	return;
+        storeAppendPrintf (sentry, "Not used yet.\n\n");
+        return;
     }
+
     buckets.head->walk(DelayUserStatsWalkee, sentry);
     storeAppendPrintf(sentry, "\n\n");
 }
@@ -118,12 +121,14 @@ DelayUser::dump(StoreEntry *entry) const
     spec.dump(entry);
 }
 
-struct DelayUserUpdater 
+struct DelayUserUpdater
 {
     DelayUserUpdater (DelaySpec &_spec, int _incr):spec(_spec),incr(_incr){};
+
     DelaySpec spec;
     int incr;
 };
+
 void
 DelayUserUpdateWalkee(DelayUserBucket::Pointer const &current, void *state)
 {
@@ -131,6 +136,7 @@ DelayUserUpdateWalkee(DelayUserBucket::Pointer const &current, void *state)
     /* This doesn't change the value of the DelayUserBucket, so is safe */
     const_cast<DelayUserBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
 }
+
 void
 DelayUser::update(int incr)
 {
@@ -145,10 +151,12 @@ DelayUser::parse()
 }
 
 DelayIdComposite::Pointer
+
 DelayUser::id(struct in_addr &src_addr, AuthUserRequest *authRequest)
 {
     if (!authRequest)
-	return new NullDelayId;
+        return new NullDelayId;
+
     return new Id(this, authRequest->auth_user);
 }
 
@@ -209,10 +217,12 @@ DelayUser::Id::Id(DelayUser::Pointer aDelayUser,AuthUser *aUser) : theUser(aDela
 {
     theBucket = new DelayUserBucket(aUser);
     DelayUserBucket::Pointer const *existing = theUser->buckets.find(theBucket, DelayUserCmp);
+
     if (existing) {
-	theBucket = *existing;
-	return;
+        theBucket = *existing;
+        return;
     }
+
     theBucket->theBucket.init(theUser->spec);
     theUser->buckets.head = theUser->buckets.head->insert (theBucket, DelayUserCmp);
 }
@@ -233,4 +243,5 @@ DelayUser::Id::bytesIn(int qty)
 {
     theBucket->theBucket.bytesIn(qty);
 }
+
 #endif

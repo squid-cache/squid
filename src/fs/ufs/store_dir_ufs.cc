@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.55 2003/01/23 20:59:11 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.56 2003/02/21 22:50:45 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -67,8 +67,10 @@ UfsSwapDir::unlinkFile(char const *path)
 #if USE_UNLINKD
     unlinkdUnlink(path);
 #elif USE_TRUNCATE
+
     truncate(path, 0);
 #else
+
     ::unlink(path);
 #endif
 }
@@ -76,13 +78,13 @@ UfsSwapDir::unlinkFile(char const *path)
 /* ========== LOCAL FUNCTIONS ABOVE, GLOBAL FUNCTIONS BELOW ========== */
 
 static struct cache_dir_option options[] =
-{
+    {
 #if NOT_YET_DONE
-    {"L1", storeUfsDirParseL1, storeUfsDirDumpL1},
-    {"L2", storeUfsDirParseL2, storeUfsDirDumpL2},
+        {"L1", storeUfsDirParseL1, storeUfsDirDumpL1},
+        {"L2", storeUfsDirParseL2, storeUfsDirDumpL2},
 #endif
-    {NULL, NULL}
-};
+        {NULL, NULL}
+    };
 
 /*
  * storeUfsDirReconfigure
@@ -104,22 +106,28 @@ UFSSwapDir::reconfigure(int index, char *path)
 
     i = GetInteger();
     size = i << 10;		/* Mbytes to kbytes */
+
     if (size <= 0)
-	fatal("storeDiskdDirReconfigure: invalid size value");
+        fatal("storeDiskdDirReconfigure: invalid size value");
+
     l1 = GetInteger();
+
     if (l1 <= 0)
-	fatal("storeDiskdDirReconfigure: invalid level 1 directories value");
+        fatal("storeDiskdDirReconfigure: invalid level 1 directories value");
+
     l2 = GetInteger();
+
     if (l2 <= 0)
-	fatal("storeDiskdDirReconfigure: invalid level 2 directories value");
+        fatal("storeDiskdDirReconfigure: invalid level 2 directories value");
 
     /* just reconfigure it */
     if (size == max_size)
-	debug(3, 1) ("Cache dir '%s' size remains unchanged at %d KB\n",
-	    path, size);
+        debug(3, 1) ("Cache dir '%s' size remains unchanged at %d KB\n",
+                     path, size);
     else
-	debug(3, 1) ("Cache dir '%s' size changed to %d KB\n",
-	    path, size);
+        debug(3, 1) ("Cache dir '%s' size changed to %d KB\n",
+                     path, size);
+
     max_size = size;
 }
 
@@ -147,16 +155,22 @@ void
 UFSSwapDir::parse (int anIndex, char *aPath)
 {
     max_size = GetInteger() << 10;		/* Mbytes to kbytes */
+
     if (max_size <= 0)
-	fatal("storeAufsDirParse: invalid size value");
+        fatal("storeAufsDirParse: invalid size value");
+
     l1 = GetInteger();
+
     if (l1 <= 0)
-	fatal("storeAufsDirParse: invalid level 1 directories value");
+        fatal("storeAufsDirParse: invalid level 1 directories value");
+
     l2 = GetInteger();
+
     if (l2 <= 0)
-	fatal("storeAufsDirParse: invalid level 2 directories value");
+        fatal("storeAufsDirParse: invalid level 2 directories value");
 
     index = anIndex;
+
     path = xstrdup(aPath);
 
     /* Initialise replacement policy stuff */
@@ -171,18 +185,23 @@ UFSSwapDir::init()
 {
     static int started_clean_event = 0;
     static const char *errmsg =
-    "\tFailed to verify one of the swap directories, Check cache.log\n"
-    "\tfor details.  Run 'squid -z' to create swap directories\n"
-    "\tif needed, or if running Squid for the first time.";
+        "\tFailed to verify one of the swap directories, Check cache.log\n"
+        "\tfor details.  Run 'squid -z' to create swap directories\n"
+        "\tif needed, or if running Squid for the first time.";
     initBitmap();
+
     if (verifyCacheDirs())
-	fatal(errmsg);
+        fatal(errmsg);
+
     openLog();
+
     rebuild();
+
     if (!started_clean_event) {
-	eventAdd("UFS storeDirClean", CleanEvent, NULL, 15.0, 1);
-	started_clean_event = 1;
+        eventAdd("UFS storeDirClean", CleanEvent, NULL, 15.0, 1);
+        started_clean_event = 1;
     }
+
     (void) storeDirGetBlkSize(path, &fs.blksize);
 }
 
@@ -199,12 +218,15 @@ UFSSwapDir::UFSSwapDir() : IO(NULL), map(NULL), suggest(0), swaplog_fd (-1) {}
 UFSSwapDir::~UFSSwapDir()
 {
     if (swaplog_fd > -1) {
-	file_close(swaplog_fd);
-	swaplog_fd = -1;
+        file_close(swaplog_fd);
+        swaplog_fd = -1;
     }
+
     filemapFreeMemory(map);
+
     if (IO)
-	IO->deleteSelf();
+        IO->deleteSelf();
+
     IO = NULL;
 }
 
@@ -236,7 +258,7 @@ UFSSwapDir::dumpEntry(StoreEntry &e) const
 {
     debug(47, 0) ("UFSSwapDir::dumpEntry: FILENO %08X\n", e.swap_filen);
     debug(47, 0) ("UFSSwapDir::dumpEntry: PATH %s\n",
-	fullPath(e.swap_filen, NULL));
+                  fullPath(e.swap_filen, NULL));
     storeEntryDump(&e, 0);
 }
 
@@ -248,19 +270,23 @@ UFSSwapDir::dumpEntry(StoreEntry &e) const
 bool
 UFSSwapDir::doubleCheck(StoreEntry & e)
 {
+
     struct stat sb;
+
     if (stat(fullPath(e.swap_filen, NULL), &sb) < 0) {
-	debug(47, 0) ("UFSSwapDir::doubleCheck: MISSING SWAP FILE\n");
-	dumpEntry(e);
-	return true;
+        debug(47, 0) ("UFSSwapDir::doubleCheck: MISSING SWAP FILE\n");
+        dumpEntry(e);
+        return true;
     }
+
     if ((off_t)e.swap_file_sz != sb.st_size) {
-	debug(47, 0) ("UFSSwapDir::doubleCheck: SIZE MISMATCH\n");
-	debug(47, 0) ("UFSSwapDir::doubleCheck: ENTRY SIZE: %ld, FILE SIZE: %ld\n",
-	    (long int) e.swap_file_sz, (long int) sb.st_size);
-	dumpEntry(e);
-	return true;
+        debug(47, 0) ("UFSSwapDir::doubleCheck: SIZE MISMATCH\n");
+        debug(47, 0) ("UFSSwapDir::doubleCheck: ENTRY SIZE: %ld, FILE SIZE: %ld\n",
+                      (long int) e.swap_file_sz, (long int) sb.st_size);
+        dumpEntry(e);
+        return true;
     }
+
     return false;
 }
 
@@ -277,26 +303,31 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
     storeAppendPrintf(&sentry, "Maximum Size: %d KB\n", max_size);
     storeAppendPrintf(&sentry, "Current Size: %d KB\n", cur_size);
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
-	100.0 * cur_size / max_size);
+                      100.0 * cur_size / max_size);
     storeAppendPrintf(&sentry, "Filemap bits in use: %d of %d (%d%%)\n",
-	map->n_files_in_map, map->max_n_files,
-	percent(map->n_files_in_map, map->max_n_files));
+                      map->n_files_in_map, map->max_n_files,
+                      percent(map->n_files_in_map, map->max_n_files));
     x = storeDirGetUFSStats(path, &totl_kb, &free_kb, &totl_in, &free_in);
+
     if (0 == x) {
-	storeAppendPrintf(&sentry, "Filesystem Space in use: %d/%d KB (%d%%)\n",
-	    totl_kb - free_kb,
-	    totl_kb,
-	    percent(totl_kb - free_kb, totl_kb));
-	storeAppendPrintf(&sentry, "Filesystem Inodes in use: %d/%d (%d%%)\n",
-	    totl_in - free_in,
-	    totl_in,
-	    percent(totl_in - free_in, totl_in));
+        storeAppendPrintf(&sentry, "Filesystem Space in use: %d/%d KB (%d%%)\n",
+                          totl_kb - free_kb,
+                          totl_kb,
+                          percent(totl_kb - free_kb, totl_kb));
+        storeAppendPrintf(&sentry, "Filesystem Inodes in use: %d/%d (%d%%)\n",
+                          totl_in - free_in,
+                          totl_in,
+                          percent(totl_in - free_in, totl_in));
     }
+
     storeAppendPrintf(&sentry, "Flags:");
+
     if (flags.selected)
-	storeAppendPrintf(&sentry, " SELECTED");
+        storeAppendPrintf(&sentry, " SELECTED");
+
     if (flags.read_only)
-	storeAppendPrintf(&sentry, " READ-ONLY");
+        storeAppendPrintf(&sentry, " READ-ONLY");
+
     storeAppendPrintf(&sentry, "\n");
 }
 
@@ -310,34 +341,43 @@ UFSSwapDir::maintainfs()
     double f;
     RemovalPurgeWalker *walker;
     /* We can't delete objects while rebuilding swap */
+
     if (store_dirs_rebuilding) {
-	return;
+        return;
     } else {
-	f = (double) (cur_size - low_size) / (max_size - low_size);
-	f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
-	max_scan = (int) (f * 400.0 + 100.0);
-	max_remove = (int) (f * 70.0 + 10.0);
-	/*
-	 * This is kinda cheap, but so we need this priority hack?
-	 */
+        f = (double) (cur_size - low_size) / (max_size - low_size);
+        f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
+        max_scan = (int) (f * 400.0 + 100.0);
+        max_remove = (int) (f * 70.0 + 10.0);
+        /*
+         * This is kinda cheap, but so we need this priority hack?
+         */
     }
+
     debug(47, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n",
-	f, max_scan, max_remove);
+                  f, max_scan, max_remove);
     walker = repl->PurgeInit(repl, max_scan);
+
     while (1) {
-	if (cur_size < low_size)
-	    break;
-	if (removed >= max_remove)
-	    break;
-	e = walker->Next(walker);
-	if (!e)
-	    break;		/* no more objects */
-	removed++;
-	storeRelease(e);
+        if (cur_size < low_size)
+            break;
+
+        if (removed >= max_remove)
+            break;
+
+        e = walker->Next(walker);
+
+        if (!e)
+            break;		/* no more objects */
+
+        removed++;
+
+        storeRelease(e);
     }
+
     walker->Done(walker);
     debug(47, (removed ? 2 : 3)) ("UFSSwapDir::maintainfs: %s removed %d/%d f=%.03f max_scan=%d\n",
-	path, removed, max_remove, f, max_scan);
+                                  path, removed, max_remove, f, max_scan);
 }
 
 /*
@@ -350,10 +390,11 @@ void
 UFSSwapDir::reference(StoreEntry &e)
 {
     debug(47, 3) ("UFSSwapDir::reference: referencing %p %d/%d\n", &e, e.swap_dirn,
-	e.swap_filen);
+                  e.swap_filen);
+
     if (repl->Referenced)
-	repl->Referenced(repl, &e, &e.repl);
-} 
+        repl->Referenced(repl, &e, &e.repl);
+}
 
 /*
  * UFSSwapDir::dereference
@@ -364,9 +405,10 @@ void
 UFSSwapDir::dereference(StoreEntry & e)
 {
     debug(47, 3) ("UFSSwapDir::dereference: referencing %p %d/%d\n", &e, e.swap_dirn,
-	e.swap_filen);
+                  e.swap_filen);
+
     if (repl->Dereferenced)
-	repl->Dereferenced(repl, &e, &e.repl);
+        repl->Dereferenced(repl, &e, &e.repl);
 }
 
 StoreIOState::Pointer
@@ -403,8 +445,9 @@ UFSSwapDir::mapBitReset(sfileno filn)
      * the map is dynamic in size.  Also clearing an already clear
      * bit puts the map counter of-of-whack.
      */
+
     if (file_map_bit_test(map, filn))
-	file_map_bit_reset(map, filn);
+        file_map_bit_reset(map, filn);
 }
 
 int
@@ -427,12 +470,13 @@ void
 UFSSwapDir::initBitmap()
 {
     if (map == NULL) {
-	/* First time */
-	map = file_map_create();
+        /* First time */
+        map = file_map_create();
     } else if (map->max_n_files) {
-	/* it grew, need to expand */
-	/* XXX We don't need it anymore .. */
+        /* it grew, need to expand */
+        /* XXX We don't need it anymore .. */
     }
+
     /* else it shrunk, and we leave the old one in place */
 }
 
@@ -449,40 +493,50 @@ int
 UFSSwapDir::createDirectory(const char *path, int should_exist)
 {
     int created = 0;
+
     struct stat st;
     getCurrentTime();
+
     if (0 == stat(path, &st)) {
-	if (S_ISDIR(st.st_mode)) {
-	    debug(47, should_exist ? 3 : 1) ("%s exists\n", path);
-	} else {
-	    fatalf("Swap directory %s is not a directory.", path);
-	}
+        if (S_ISDIR(st.st_mode)) {
+            debug(47, should_exist ? 3 : 1) ("%s exists\n", path);
+        } else {
+            fatalf("Swap directory %s is not a directory.", path);
+        }
+
 #ifdef _SQUID_MSWIN_
+
     } else if (0 == mkdir(path)) {
 #else
+
     } else if (0 == mkdir(path, 0755)) {
 #endif
-	debug(47, should_exist ? 1 : 3) ("%s created\n", path);
-	created = 1;
+        debug(47, should_exist ? 1 : 3) ("%s created\n", path);
+        created = 1;
     } else {
-	fatalf("Failed to make swap directory %s: %s",
-	    path, xstrerror());
+        fatalf("Failed to make swap directory %s: %s",
+               path, xstrerror());
     }
+
     return created;
 }
 
 bool
 UFSSwapDir::pathIsDirectory(const char *path)const
 {
+
     struct stat sb;
+
     if (stat(path, &sb) < 0) {
-	debug(47, 0) ("%s: %s\n", path, xstrerror());
-	return false;
+        debug(47, 0) ("%s: %s\n", path, xstrerror());
+        return false;
     }
+
     if (S_ISDIR(sb.st_mode) == 0) {
-	debug(47, 0) ("%s is not a directory\n", path);
-	return false;
+        debug(47, 0) ("%s is not a directory\n", path);
+        return false;
     }
+
     return true;
 }
 
@@ -495,12 +549,15 @@ bool
 UFSSwapDir::verifyCacheDirs()
 {
     if (!pathIsDirectory(path))
-	return true;
+        return true;
+
     for (int j = 0; j < l1; j++) {
-	char const *aPath = swapSubDir(j);
-	if (!pathIsDirectory(aPath))
-	    return true;
+        char const *aPath = swapSubDir(j);
+
+        if (!pathIsDirectory(aPath))
+            return true;
     }
+
     return false;
 }
 
@@ -510,17 +567,21 @@ UFSSwapDir::createSwapSubDirs()
     int i, k;
     int should_exist;
     LOCAL_ARRAY(char, name, MAXPATHLEN);
+
     for (i = 0; i < l1; i++) {
-	snprintf(name, MAXPATHLEN, "%s/%02X", path, i);
-	if (createDirectory(name, 0))
-	    should_exist = 0;
-	else
-	    should_exist = 1;
-	debug(47, 1) ("Making directories in %s\n", name);
-	for (k = 0; k < l2; k++) {
-	    snprintf(name, MAXPATHLEN, "%s/%02X/%02X", path, i, k);
-	    createDirectory(name, should_exist);
-	}
+        snprintf(name, MAXPATHLEN, "%s/%02X", path, i);
+
+        if (createDirectory(name, 0))
+            should_exist = 0;
+        else
+            should_exist = 1;
+
+        debug(47, 1) ("Making directories in %s\n", name);
+
+        for (k = 0; k < l2; k++) {
+            snprintf(name, MAXPATHLEN, "%s/%02X/%02X", path, i, k);
+            createDirectory(name, should_exist);
+        }
     }
 }
 
@@ -531,26 +592,35 @@ UFSSwapDir::logFile(char const *ext) const
     LOCAL_ARRAY(char, pathtmp, SQUID_MAXPATHLEN);
     LOCAL_ARRAY(char, digit, 32);
     char *pathtmp2;
+
     if (Config.Log.swap) {
-	xstrncpy(pathtmp, path, SQUID_MAXPATHLEN - 64);
-	pathtmp2 = pathtmp;
-	while ((pathtmp2 = strchr(pathtmp2, '/')) != NULL)
-	    *pathtmp2 = '.';
-	while (strlen(pathtmp) && pathtmp[strlen(pathtmp) - 1] == '.')
-	    pathtmp[strlen(pathtmp) - 1] = '\0';
-	for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
-	snprintf(lpath, SQUID_MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
-	if (strncmp(lpath, Config.Log.swap, SQUID_MAXPATHLEN - 64) == 0) {
-	    strcat(lpath, ".");
-	    snprintf(digit, 32, "%02d", index);
-	    strncat(lpath, digit, 3);
-	}
+        xstrncpy(pathtmp, path, SQUID_MAXPATHLEN - 64);
+        pathtmp2 = pathtmp;
+
+        while ((pathtmp2 = strchr(pathtmp2, '/')) != NULL)
+            *pathtmp2 = '.';
+
+        while (strlen(pathtmp) && pathtmp[strlen(pathtmp) - 1] == '.')
+            pathtmp[strlen(pathtmp) - 1] = '\0';
+
+        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++)
+
+            ;
+        snprintf(lpath, SQUID_MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
+
+        if (strncmp(lpath, Config.Log.swap, SQUID_MAXPATHLEN - 64) == 0) {
+            strcat(lpath, ".");
+            snprintf(digit, 32, "%02d", index);
+            strncat(lpath, digit, 3);
+        }
     } else {
-	xstrncpy(lpath, path, SQUID_MAXPATHLEN - 64);
-	strcat(lpath, "/swap.state");
+        xstrncpy(lpath, path, SQUID_MAXPATHLEN - 64);
+        strcat(lpath, "/swap.state");
     }
+
     if (ext)
-	strncat(lpath, ext, 16);
+        strncat(lpath, ext, 16);
+
     return lpath;
 }
 
@@ -560,14 +630,19 @@ UFSSwapDir::openLog()
     char *logPath;
     logPath = logFile();
     swaplog_fd = file_open(logPath, O_WRONLY | O_CREAT | O_BINARY);
+
     if (swaplog_fd < 0) {
-	debug(50, 1) ("%s: %s\n", logPath, xstrerror());
-	fatal("commonUfsDirOpenSwapLog: Failed to open swap log.");
+        debug(50, 1) ("%s: %s\n", logPath, xstrerror());
+        fatal("commonUfsDirOpenSwapLog: Failed to open swap log.");
     }
+
     debug(50, 3) ("Cache Dir #%d log opened on FD %d\n", index, swaplog_fd);
+
     if (0 == NumberOfUFSDirs)
-	assert(NULL == UFSDirToGlobalDirMapping);
+        assert(NULL == UFSDirToGlobalDirMapping);
+
     ++NumberOfUFSDirs;
+
     assert(NumberOfUFSDirs <= Config.cacheSwap.n_configured);
 }
 
@@ -575,15 +650,21 @@ void
 UFSSwapDir::closeLog()
 {
     if (swaplog_fd < 0)	/* not open */
-	return;
+        return;
+
     file_close(swaplog_fd);
+
     debug(47, 3) ("Cache Dir #%d log closed on FD %d\n",
-	index, swaplog_fd);
+                  index, swaplog_fd);
+
     swaplog_fd = -1;
+
     NumberOfUFSDirs--;
+
     assert(NumberOfUFSDirs >= 0);
+
     if (0 == NumberOfUFSDirs)
-	safe_free(UFSDirToGlobalDirMapping);
+        safe_free(UFSDirToGlobalDirMapping);
 }
 
 bool
@@ -602,19 +683,19 @@ UFSSwapDir::validL2(int anInt) const
  * use to rebuild store from disk. */
 StoreEntry *
 UFSSwapDir::addDiskRestore(const cache_key * key,
-    sfileno file_number,
-    size_t swap_file_sz,
-    time_t expires,
-    time_t timestamp,
-    time_t lastref,
-    time_t lastmod,
-    u_int32_t refcount,
-    u_int16_t flags,
-    int clean)
+                           sfileno file_number,
+                           size_t swap_file_sz,
+                           time_t expires,
+                           time_t timestamp,
+                           time_t lastref,
+                           time_t lastmod,
+                           u_int32_t refcount,
+                           u_int16_t flags,
+                           int clean)
 {
     StoreEntry *e = NULL;
     debug(47, 5) ("commonUfsAddDiskRestore: %s, fileno=%08X\n", storeKeyText(key), file_number);
-    /* if you call this you'd better be sure file_number is not 
+    /* if you call this you'd better be sure file_number is not
      * already in use! */
     e = new_StoreEntry(STORE_ENTRY_WITHOUT_MEMOBJ, NULL, NULL);
     e->store_status = STORE_OK;
@@ -658,20 +739,26 @@ UFSSwapDir::rebuild()
      * and suck in the meta data.
      */
     fp = openTmpSwapLog(&clean, &zeroLengthLog);
+
     if (fp == NULL || zeroLengthLog) {
-	if (fp != NULL)
-	    fclose(fp);
-	func = RebuildState::RebuildFromDirectory;
+        if (fp != NULL)
+            fclose(fp);
+
+        func = RebuildState::RebuildFromDirectory;
     } else {
-	func = RebuildState::RebuildFromSwapLog;
-	rb->log = fp;
-	rb->flags.clean = (unsigned int) clean;
+        func = RebuildState::RebuildFromSwapLog;
+        rb->log = fp;
+        rb->flags.clean = (unsigned int) clean;
     }
+
     if (!clean)
-	rb->flags.need_to_validate = 1;
+        rb->flags.need_to_validate = 1;
+
     debug(47, 1) ("Rebuilding storage in %s (%s)\n",
-	path, clean ? "CLEAN" : "DIRTY");
+                  path, clean ? "CLEAN" : "DIRTY");
+
     store_dirs_rebuilding++;
+
     eventAdd("storeRebuild", func, rb, 0.0, 1);
 }
 
@@ -683,19 +770,24 @@ UFSSwapDir::closeTmpSwapLog()
     int fd;
     file_close(swaplog_fd);
 #if defined (_SQUID_OS2_) || defined (_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
+
     if (::unlink(swaplog_path) < 0) {
-	debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
-	fatal("commonUfsDirCloseTmpSwapLog: unlink failed");
+        debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
+        fatal("commonUfsDirCloseTmpSwapLog: unlink failed");
     }
+
 #endif
     if (xrename(new_path, swaplog_path) < 0) {
-	fatal("commonUfsDirCloseTmpSwapLog: rename failed");
+        fatal("commonUfsDirCloseTmpSwapLog: rename failed");
     }
+
     fd = file_open(swaplog_path, O_WRONLY | O_CREAT | O_BINARY);
+
     if (fd < 0) {
-	debug(50, 1) ("%s: %s\n", swaplog_path, xstrerror());
-	fatal("commonUfsDirCloseTmpSwapLog: Failed to open swap log.");
+        debug(50, 1) ("%s: %s\n", swaplog_path, xstrerror());
+        fatal("commonUfsDirCloseTmpSwapLog: Failed to open swap log.");
     }
+
     safe_free(swaplog_path);
     safe_free(new_path);
     swaplog_fd = fd;
@@ -708,50 +800,68 @@ UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
     char *swaplog_path = xstrdup(logFile(NULL));
     char *clean_path = xstrdup(logFile(".last-clean"));
     char *new_path = xstrdup(logFile(".new"));
+
     struct stat log_sb;
+
     struct stat clean_sb;
     FILE *fp;
     int fd;
+
     if (stat(swaplog_path, &log_sb) < 0) {
-	debug(47, 1) ("Cache Dir #%d: No log file\n", index);
-	safe_free(swaplog_path);
-	safe_free(clean_path);
-	safe_free(new_path);
-	return NULL;
+        debug(47, 1) ("Cache Dir #%d: No log file\n", index);
+        safe_free(swaplog_path);
+        safe_free(clean_path);
+        safe_free(new_path);
+        return NULL;
     }
+
     *zero_flag = log_sb.st_size == 0 ? 1 : 0;
     /* close the existing write-only FD */
+
     if (swaplog_fd >= 0)
-	file_close(swaplog_fd);
+        file_close(swaplog_fd);
+
     /* open a write-only FD for the new log */
     fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
+
     if (fd < 0) {
-	debug(50, 1) ("%s: %s\n", new_path, xstrerror());
-	fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");
+        debug(50, 1) ("%s: %s\n", new_path, xstrerror());
+        fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");
     }
+
     swaplog_fd = fd;
     /* open a read-only stream of the old log */
     fp = fopen(swaplog_path, "rb");
+
     if (fp == NULL) {
-	debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
-	fatal("Failed to open swap log for reading");
+        debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
+        fatal("Failed to open swap log for reading");
     }
+
     memset(&clean_sb, '\0', sizeof(struct stat));
+
     if (stat(clean_path, &clean_sb) < 0)
-	*clean_flag = 0;
+        *clean_flag = 0;
     else if (clean_sb.st_mtime < log_sb.st_mtime)
-	*clean_flag = 0;
+        *clean_flag = 0;
     else
-	*clean_flag = 1;
+        *clean_flag = 1;
+
     safeunlink(clean_path, 1);
+
     safe_free(swaplog_path);
+
     safe_free(clean_path);
+
     safe_free(new_path);
+
     return fp;
 }
 
-class UFSCleanLog : public SwapDir::CleanLog {
-  public:
+class UFSCleanLog : public SwapDir::CleanLog
+{
+
+public:
     UFSCleanLog(SwapDir *);
     virtual const StoreEntry *nextEntry();
     virtual void write(StoreEntry const &);
@@ -774,25 +884,28 @@ class UFSCleanLog : public SwapDir::CleanLog {
  */
 
 UFSCleanLog::UFSCleanLog(SwapDir *aSwapDir) : cur(NULL),newLog(NULL),cln(NULL),outbuf(NULL),
-  outbuf_offset(0), fd(-1),walker(NULL), sd(aSwapDir)
-{
-}
+        outbuf_offset(0), fd(-1),walker(NULL), sd(aSwapDir)
+{}
 
 int
 UFSSwapDir::writeCleanStart()
 {
     UFSCleanLog *state = new UFSCleanLog(this);
 #if HAVE_FCHMOD
+
     struct stat sb;
 #endif
+
     cleanLog = NULL;
     state->newLog = xstrdup(logFile(".clean"));
     state->fd = file_open(state->newLog, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
+
     if (state->fd < 0) {
-	xfree(state->newLog);
-	delete state;
-	return -1;
+        xfree(state->newLog);
+        delete state;
+        return -1;
     }
+
     state->cur = xstrdup(logFile(NULL));
     state->cln = xstrdup(logFile(".last-clean"));
     state->outbuf = (char *)xcalloc(CLEAN_BUF_SZ, 1);
@@ -800,12 +913,16 @@ UFSSwapDir::writeCleanStart()
     state->walker = repl->WalkInit(repl);
     ::unlink(state->cln);
     debug(47, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
-	state->newLog, state->fd);
+                  state->newLog, state->fd);
 #if HAVE_FCHMOD
+
     if (stat(state->cur, &sb) == 0)
-	fchmod(state->fd, sb.st_mode);
+        fchmod(state->fd, sb.st_mode);
+
 #endif
+
     cleanLog = state;
+
     return 0;
 }
 
@@ -816,8 +933,10 @@ const StoreEntry *
 UFSCleanLog::nextEntry()
 {
     const StoreEntry *entry = NULL;
+
     if (walker)
-	entry = walker->Next(walker);
+        entry = walker->Next(walker);
+
     return entry;
 }
 
@@ -844,19 +963,21 @@ UFSCleanLog::write(StoreEntry const &e)
     xmemcpy(state->outbuf + state->outbuf_offset, &s, ss);
     state->outbuf_offset += ss;
     /* buffered write */
+
     if (state->outbuf_offset + ss > CLEAN_BUF_SZ) {
-	if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
-	    debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
-		state->newLog, xstrerror());
-	    debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
-	    file_close(state->fd);
-	    state->fd = -1;
-	    unlink(state->newLog);
-	    delete state;
-	    sd->cleanLog = NULL;
-	    return;
-	}
-	state->outbuf_offset = 0;
+        if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
+            debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
+                          state->newLog, xstrerror());
+            debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
+            file_close(state->fd);
+            state->fd = -1;
+            unlink(state->newLog);
+            delete state;
+            sd->cleanLog = NULL;
+            return;
+        }
+
+        state->outbuf_offset = 0;
     }
 }
 
@@ -865,20 +986,25 @@ UFSSwapDir::writeCleanDone()
 {
     UFSCleanLog *state = (UFSCleanLog *)cleanLog;
     int fd;
+
     if (NULL == state)
-	return;
+        return;
+
     if (state->fd < 0)
-	return;
+        return;
+
     state->walker->Done(state->walker);
+
     if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
-	debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
-	    state->newLog, xstrerror());
-	debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile "
-	    "not replaced.\n");
-	file_close(state->fd);
-	state->fd = -1;
-	::unlink(state->newLog);
+        debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
+                      state->newLog, xstrerror());
+        debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile "
+                      "not replaced.\n");
+        file_close(state->fd);
+        state->fd = -1;
+        ::unlink(state->newLog);
     }
+
     safe_free(state->outbuf);
     /*
      * You can't rename open files on Microsoft "operating systems"
@@ -888,31 +1014,43 @@ UFSSwapDir::writeCleanDone()
     /* save the fd value for a later test */
     fd = state->fd;
     /* rename */
+
     if (state->fd >= 0) {
 #if defined(_SQUID_OS2_) || defined (_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
-	file_close(state->fd);
-	state->fd = -1;
-	if (::unlink(state->cur) < 0)
-	    debug(50, 0) ("storeDirWriteCleanLogs: unlinkd failed: %s, %s\n",
-		xstrerror(), state->cur);
+        file_close(state->fd);
+        state->fd = -1;
+
+        if (::unlink(state->cur) < 0)
+            debug(50, 0) ("storeDirWriteCleanLogs: unlinkd failed: %s, %s\n",
+                          xstrerror(), state->cur);
+
 #endif
-	xrename(state->newLog, state->cur);
+
+        xrename(state->newLog, state->cur);
     }
+
     /* touch a timestamp file if we're not still validating */
     if (store_dirs_rebuilding)
-	(void) 0;
+        (void) 0;
     else if (fd < 0)
-	(void) 0;
+        (void) 0;
     else
-	file_close(file_open(state->cln, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY));
+        file_close(file_open(state->cln, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY));
+
     /* close */
     safe_free(state->cur);
+
     safe_free(state->newLog);
+
     safe_free(state->cln);
+
     if (state->fd >= 0)
-	file_close(state->fd);
+        file_close(state->fd);
+
     state->fd = -1;
+
     delete state;
+
     cleanLog = NULL;
 }
 
@@ -937,12 +1075,12 @@ UFSSwapDir::logEntry(const StoreEntry & e, int op) const
     s->flags = e.flags;
     xmemcpy(s->key, e.key, MD5_DIGEST_CHARS);
     file_write(swaplog_fd,
-	-1,
-	s,
-	sizeof(storeSwapLogData),
-	NULL,
-	NULL,
-	(FREE *) storeSwapLogDataFree);
+               -1,
+               s,
+               sizeof(storeSwapLogData),
+               NULL,
+               NULL,
+               (FREE *) storeSwapLogDataFree);
 }
 
 static QS rev_int_sort;
@@ -958,12 +1096,15 @@ int
 UFSSwapDir::DirClean(int swap_index)
 {
     DIR *dp = NULL;
+
     struct dirent *de = NULL;
     LOCAL_ARRAY(char, p1, MAXPATHLEN + 1);
     LOCAL_ARRAY(char, p2, MAXPATHLEN + 1);
 #if USE_TRUNCATE
+
     struct stat sb;
 #endif
+
     int files[20];
     int swapfileno;
     int fn;			/* same as swapfileno, but with dirn bits set */
@@ -981,54 +1122,75 @@ UFSSwapDir::DirClean(int swap_index)
     N2 = SD->l2;
     D2 = ((swap_index / N0) / N1) % N2;
     snprintf(p1, SQUID_MAXPATHLEN, "%s/%02X/%02X",
-	SD->path, D1, D2);
+             SD->path, D1, D2);
     debug(36, 3) ("storeDirClean: Cleaning directory %s\n", p1);
     dp = opendir(p1);
+
     if (dp == NULL) {
-	if (errno == ENOENT) {
-	    debug(36, 0) ("storeDirClean: WARNING: Creating %s\n", p1);
+        if (errno == ENOENT) {
+            debug(36, 0) ("storeDirClean: WARNING: Creating %s\n", p1);
 #ifdef _SQUID_MSWIN_
-	    if (mkdir(p1) == 0)
+
+            if (mkdir(p1) == 0)
 #else
-	    if (mkdir(p1, 0777) == 0)
+
+            if (mkdir(p1, 0777) == 0)
 #endif
-		return 0;
-	}
-	debug(50, 0) ("storeDirClean: %s: %s\n", p1, xstrerror());
-	safeunlink(p1, 1);
-	return 0;
+
+                return 0;
+        }
+
+        debug(50, 0) ("storeDirClean: %s: %s\n", p1, xstrerror());
+        safeunlink(p1, 1);
+        return 0;
     }
+
     while ((de = readdir(dp)) != NULL && k < 20) {
-	if (sscanf(de->d_name, "%X", &swapfileno) != 1)
-	    continue;
-	fn = swapfileno;	/* XXX should remove this cruft ! */
-	if (SD->validFileno(fn, 1))
-	    if (SD->mapBitTest(fn))
-		if (UFSSwapDir::FilenoBelongsHere(fn, D0, D1, D2))
-		    continue;
+        if (sscanf(de->d_name, "%X", &swapfileno) != 1)
+            continue;
+
+        fn = swapfileno;	/* XXX should remove this cruft ! */
+
+        if (SD->validFileno(fn, 1))
+            if (SD->mapBitTest(fn))
+                if (UFSSwapDir::FilenoBelongsHere(fn, D0, D1, D2))
+                    continue;
+
 #if USE_TRUNCATE
-	if (!stat(de->d_name, &sb))
-	    if (sb.st_size == 0)
-		continue;
+
+        if (!stat(de->d_name, &sb))
+            if (sb.st_size == 0)
+                continue;
+
 #endif
-	files[k++] = swapfileno;
+
+        files[k++] = swapfileno;
     }
+
     closedir(dp);
+
     if (k == 0)
-	return 0;
+        return 0;
+
     qsort(files, k, sizeof(int), rev_int_sort);
+
     if (k > 10)
-	k = 10;
+        k = 10;
+
     for (n = 0; n < k; n++) {
-	debug(36, 3) ("storeDirClean: Cleaning file %08X\n", files[n]);
-	snprintf(p2, MAXPATHLEN + 1, "%s/%08X", p1, files[n]);
+        debug(36, 3) ("storeDirClean: Cleaning file %08X\n", files[n]);
+        snprintf(p2, MAXPATHLEN + 1, "%s/%08X", p1, files[n]);
 #if USE_TRUNCATE
-	truncate(p2, 0);
+
+        truncate(p2, 0);
 #else
-	safeunlink(p2, 0);
+
+        safeunlink(p2, 0);
 #endif
-	statCounter.swap.files_cleaned++;
+
+        statCounter.swap.files_cleaned++;
     }
+
     debug(36, 3) ("Cleaned %d unused files from %s\n", k, p1);
     return k;
 }
@@ -1045,36 +1207,46 @@ UFSSwapDir::CleanEvent(void *unused)
      * we should never be called.
      */
     assert(NumberOfUFSDirs);
+
     if (NULL == UFSDirToGlobalDirMapping) {
-	SwapDir *sd;
-	/*
-	 * Initialize the little array that translates UFS cache_dir
-	 * number into the Config.cacheSwap.swapDirs array index.
-	 */
-	UFSDirToGlobalDirMapping = (int *)xcalloc(NumberOfUFSDirs, sizeof(*UFSDirToGlobalDirMapping));
-	for (i = 0, n = 0; i < Config.cacheSwap.n_configured; i++) {
-	    sd = INDEXSD(i);
-	    if (!UFSSwapDir::IsUFSDir(sd))
-		continue;
-	    UFSSwapDir *usd = dynamic_cast<UFSSwapDir *>(sd);
-	    assert (usd);
-	    UFSDirToGlobalDirMapping[n++] = i;
-	    j += (usd->l1 * usd->l2);
-	}
-	assert(n == NumberOfUFSDirs);
-	/*
-	 * Start the commonUfsDirClean() swap_index with a random
-	 * value.  j equals the total number of UFS level 2
-	 * swap directories
-	 */
-	swap_index = (int) (squid_random() % j);
+        SwapDir *sd;
+        /*
+         * Initialize the little array that translates UFS cache_dir
+         * number into the Config.cacheSwap.swapDirs array index.
+         */
+        UFSDirToGlobalDirMapping = (int *)xcalloc(NumberOfUFSDirs, sizeof(*UFSDirToGlobalDirMapping));
+
+        for (i = 0, n = 0; i < Config.cacheSwap.n_configured; i++) {
+            sd = INDEXSD(i);
+
+            if (!UFSSwapDir::IsUFSDir(sd))
+                continue;
+
+            UFSSwapDir *usd = dynamic_cast<UFSSwapDir *>(sd);
+
+            assert (usd);
+
+            UFSDirToGlobalDirMapping[n++] = i;
+
+            j += (usd->l1 * usd->l2);
+        }
+
+        assert(n == NumberOfUFSDirs);
+        /*
+         * Start the commonUfsDirClean() swap_index with a random
+         * value.  j equals the total number of UFS level 2
+         * swap directories
+         */
+        swap_index = (int) (squid_random() % j);
     }
+
     if (0 == store_dirs_rebuilding) {
-	n = DirClean(swap_index);
-	swap_index++;
+        n = DirClean(swap_index);
+        swap_index++;
     }
+
     eventAdd("storeDirClean", CleanEvent, NULL,
-	15.0 * exp(-0.25 * n), 1);
+             15.0 * exp(-0.25 * n), 1);
 }
 
 int
@@ -1100,16 +1272,24 @@ UFSSwapDir::FilenoBelongsHere(int fn, int F0, int F1, int F2)
     assert(F0 < Config.cacheSwap.n_configured);
     assert (UFSSwapDir::IsUFSDir (INDEXSD(F0)));
     UFSSwapDir *sd = dynamic_cast<UFSSwapDir *>(INDEXSD(F0));
+
     if (!sd)
-	return 0;
+        return 0;
+
     L1 = sd->l1;
+
     L2 = sd->l2;
+
     D1 = ((filn / L2) / L2) % L1;
+
     if (F1 != D1)
-	return 0;
+        return 0;
+
     D2 = (filn / L2) % L2;
+
     if (F2 != D2)
-	return 0;
+        return 0;
+
     return 1;
 }
 
@@ -1117,14 +1297,16 @@ int
 UFSSwapDir::validFileno(sfileno filn, int flag) const
 {
     if (filn < 0)
-	return 0;
+        return 0;
+
     /*
      * If flag is set it means out-of-range file number should
      * be considered invalid.
      */
     if (flag)
-	if (filn > map->max_n_files)
-	    return 0;
+        if (filn > map->max_n_files)
+            return 0;
+
     return 1;
 }
 
@@ -1152,7 +1334,7 @@ void
 UFSSwapDir::replacementAdd(StoreEntry * e)
 {
     debug(47, 4) ("UFSSwapDir::replacementAdd: added node %p to dir %d\n", e,
-	index);
+                  index);
     repl->Add(repl, e, &e->repl);
 }
 
@@ -1161,12 +1343,17 @@ void
 UFSSwapDir::replacementRemove(StoreEntry * e)
 {
     SwapDir *SD;
+
     if (e->swap_dirn < 0)
-	return;
+        return;
+
     SD = INDEXSD(e->swap_dirn);
+
     assert (dynamic_cast<UFSSwapDir *>(SD) == this);
+
     debug(47, 4) ("UFSSwapDir::replacementRemove: remove node %p from dir %d\n", e,
-	index);
+                  index);
+
     repl->Remove(repl, e, &e->repl);
 }
 
@@ -1174,9 +1361,9 @@ void
 UFSSwapDir::dump(StoreEntry & entry) const
 {
     storeAppendPrintf(&entry, " %d %d %d",
-	max_size >> 10,
-	l1,
-	l2);
+                      max_size >> 10,
+                      l1,
+                      l2);
 }
 
 char *
@@ -1185,13 +1372,17 @@ UFSSwapDir::fullPath(sfileno filn, char *fullpath) const
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
     int L1 = l1;
     int L2 = l2;
+
     if (!fullpath)
-	fullpath = fullfilename;
+        fullpath = fullfilename;
+
     fullpath[0] = '\0';
+
     snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
-	path,
-	((filn / L2) / L2) % L1,
-	(filn / L2) % L2,
-	filn);
+             path,
+             ((filn / L2) / L2) % L1,
+             (filn / L2) % L2,
+             filn);
+
     return fullpath;
 }

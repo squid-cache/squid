@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelaySpec.cc,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelaySpec.cc,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -45,16 +45,16 @@
 #include "Store.h"
 
 DelaySpec::DelaySpec() : restore_bps(-1), max_bytes (-1)
-{
-}
+{}
 
 void
 DelaySpec::stats (StoreEntry * sentry, char const *label) const
 {
     if (restore_bps == -1) {
-	storeAppendPrintf(sentry, "\t%s:\n\t\tDisabled.\n\n", label);
-	return;
+        storeAppendPrintf(sentry, "\t%s:\n\t\tDisabled.\n\n", label);
+        return;
     }
+
     storeAppendPrintf(sentry, "\t%s:\n", label);
     storeAppendPrintf(sentry, "\t\tMax: %d\n", max_bytes);
     storeAppendPrintf(sentry, "\t\tRestore: %d\n", restore_bps);
@@ -72,13 +72,19 @@ DelaySpec::parse()
     int i;
     char *token;
     token = strtok(NULL, "/");
+
     if (token == NULL)
-	self_destruct();
+        self_destruct();
+
     if (sscanf(token, "%d", &i) != 1)
-	self_destruct();
+        self_destruct();
+
     restore_bps = i;
+
     i = GetInteger();
+
     max_bytes = i;
 }
+
 #endif
 

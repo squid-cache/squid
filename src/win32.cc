@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.6 2003/01/23 00:37:29 robertc Exp $
+ * $Id: win32.cc,v 1.7 2003/02/21 22:50:13 robertc Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -43,46 +43,61 @@ GetOSVersion()
     memset(&osvi, '\0', sizeof(OSVERSIONINFO));
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx((OSVERSIONINFO *) & osvi);
+
     switch (osvi.dwPlatformId) {
+
     case VER_PLATFORM_WIN32_NT:
-	if (osvi.dwMajorVersion <= 4) {
-	    WIN32_OS_string = xstrdup("Windows NT");
-	    return _WIN_OS_WINNT;
-	}
-	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 0)) {
-	    WIN32_OS_string = xstrdup("Windows 2000");
-	    return _WIN_OS_WIN2K;
-	}
-	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 1)) {
-	    WIN32_OS_string = xstrdup("Windows XP");
-	    return _WIN_OS_WINXP;
-	}
-	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 2)) {
-	    WIN32_OS_string = xstrdup("Windows .NET");
-	    return _WIN_OS_WINNET;
-	}
-	break;
+
+        if (osvi.dwMajorVersion <= 4) {
+            WIN32_OS_string = xstrdup("Windows NT");
+            return _WIN_OS_WINNT;
+        }
+
+        if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 0)) {
+            WIN32_OS_string = xstrdup("Windows 2000");
+            return _WIN_OS_WIN2K;
+        }
+
+        if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 1)) {
+            WIN32_OS_string = xstrdup("Windows XP");
+            return _WIN_OS_WINXP;
+        }
+
+        if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 2)) {
+            WIN32_OS_string = xstrdup("Windows .NET");
+            return _WIN_OS_WINNET;
+        }
+
+        break;
+
     case VER_PLATFORM_WIN32_WINDOWS:
-	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 0)) {
-	    WIN32_OS_string = xstrdup("Windows 95");
-	    return _WIN_OS_WIN95;
-	}
-	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 10)) {
-	    WIN32_OS_string = xstrdup("Windows 98");
-	    return _WIN_OS_WIN98;
-	}
-	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 90)) {
-	    WIN32_OS_string = xstrdup("Windows Me");
-	    return _WIN_OS_WINME;
-	}
-	break;
+
+        if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 0)) {
+            WIN32_OS_string = xstrdup("Windows 95");
+            return _WIN_OS_WIN95;
+        }
+
+        if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 10)) {
+            WIN32_OS_string = xstrdup("Windows 98");
+            return _WIN_OS_WIN98;
+        }
+
+        if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 90)) {
+            WIN32_OS_string = xstrdup("Windows Me");
+            return _WIN_OS_WINME;
+        }
+
+        break;
+
     case VER_PLATFORM_WIN32s:
-	WIN32_OS_string = xstrdup("Windows 3.1 with WIN32S");
-	return _WIN_OS_WIN32S;
-	break;
+        WIN32_OS_string = xstrdup("Windows 3.1 with WIN32S");
+        return _WIN_OS_WIN32S;
+        break;
+
     default:
-	break;
+        break;
     }
+
     WIN32_OS_string = xstrdup("Unknown Windows system");
     return _WIN_OS_UNKNOWN;
 }
@@ -101,10 +116,14 @@ int
 WIN32_Subsystem_Init()
 {
     WIN32_OS_version = GetOSVersion();
+
     if ((WIN32_OS_version == _WIN_OS_UNKNOWN) || (WIN32_OS_version == _WIN_OS_WIN32S))
-	return 1;
+        return 1;
+
     if (atexit(WIN32_Exit) != 0)
-	return 1;
+        return 1;
+
     return 0;
 }
+
 #endif

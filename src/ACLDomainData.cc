@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.2 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLDomainData.cc,v 1.3 2003/02/21 22:50:04 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -45,8 +45,10 @@ ACLDomainData::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (ACLDomainData));
+
     if (!Pool)
-	Pool = memPoolCreate("ACLDomainData", sizeof (ACLDomainData));
+        Pool = memPoolCreate("ACLDomainData", sizeof (ACLDomainData));
+
     return memPoolAlloc(Pool);
 }
 
@@ -72,8 +74,8 @@ xRefFree(T &thing)
 ACLDomainData::~ACLDomainData()
 {
     if (domains)
-	domains->destroy(xRefFree);
-} 
+        domains->destroy(xRefFree);
+}
 
 template<class T>
 inline int
@@ -102,17 +104,20 @@ aclDomainCompare(T const &a, T const &b)
     char * const d2 = (char *const )a;
     int ret;
     ret = aclHostDomainCompare(d1, d2);
+
     if (ret != 0) {
-	char *const d3 = d2;
-	char *const d4 = d1;
-	ret = aclHostDomainCompare(d3, d4);
+        char *const d3 = d2;
+        char *const d4 = d1;
+        ret = aclHostDomainCompare(d3, d4);
     }
+
     /* FIXME this warning may display d1 and d2 when it should display d3 and d4 */
     if (ret == 0) {
-	debug(28, 0) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
-	debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", (char *) a);
-	debug(28, 0) ("WARNING: You should probably remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
+        debug(28, 0) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
+        debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", (char *) a);
+        debug(28, 0) ("WARNING: You should probably remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
     }
+
     return ret;
 }
 
@@ -131,11 +136,15 @@ bool
 ACLDomainData::match(char const *host)
 {
     if (host == NULL)
-	return 0;
+        return 0;
+
     debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
+
     domains = domains->splay((char *)host, aclHostDomainCompare);
+
     debug(28, 3) ("aclMatchDomainList: '%s' %s\n",
-	host, splayLastResult ? "NOT found" : "found");
+                  host, splayLastResult ? "NOT found" : "found");
+
     return !splayLastResult;
 }
 
@@ -162,9 +171,10 @@ void
 ACLDomainData::parse()
 {
     char *t = NULL;
+
     while ((t = strtokFile())) {
-	Tolower(t);
-	domains = domains->insert(xstrdup(t), aclDomainCompare);
+        Tolower(t);
+        domains = domains->insert(xstrdup(t), aclDomainCompare);
     }
 }
 

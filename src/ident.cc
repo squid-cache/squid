@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.65 2003/02/12 06:11:04 robertc Exp $
+ * $Id: ident.cc,v 1.66 2003/02/21 22:50:09 robertc Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -38,20 +38,29 @@
 #define IDENT_PORT 113
 #define IDENT_KEY_SZ 50
 
-typedef struct _IdentClient {
+typedef struct _IdentClient
+{
     IDCB *callback;
     void *callback_data;
-    struct _IdentClient *next;
-} IdentClient;
 
-typedef struct _IdentStateData {
+    struct _IdentClient *next;
+}
+
+IdentClient;
+
+typedef struct _IdentStateData
+{
     hash_link hash;		/* must be first */
     int fd;			/* IDENT fd */
+
     struct sockaddr_in me;
+
     struct sockaddr_in my_peer;
     IdentClient *clients;
     char buf[4096];
-} IdentStateData;
+}
+
+IdentStateData;
 
 static IOCB identReadReply;
 static PF identClose;
@@ -66,14 +75,18 @@ static void
 identCallback(IdentStateData * state, char *result)
 {
     IdentClient *client;
+
     if (result && *result == '\0')
-	result = NULL;
+        result = NULL;
+
     while ((client = state->clients)) {
-	void *cbdata;
-	state->clients = client->next;
-	if (cbdataReferenceValidDone(client->callback_data, &cbdata))
-	    client->callback(result, cbdata);
-	xfree(client);
+        void *cbdata;
+        state->clients = client->next;
+
+        if (cbdataReferenceValidDone(client->callback_data, &cbdata))
+            client->callback(result, cbdata);
+
+        xfree(client);
     }
 }
 
@@ -92,7 +105,7 @@ identTimeout(int fd, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     debug(30, 3) ("identTimeout: FD %d, %s\n", fd,
-	inet_ntoa(state->my_peer.sin_addr));
+                  inet_ntoa(state->my_peer.sin_addr));
     comm_close(fd);
 }
 
@@ -102,27 +115,31 @@ identConnectDone(int fd, comm_err_t status, void *data)
     IdentStateData *state = (IdentStateData *)data;
     IdentClient *c;
     MemBuf mb;
+
     if (status != COMM_OK) {
-	/* Failed to connect */
-	comm_close(fd);
-	return;
+        /* Failed to connect */
+        comm_close(fd);
+        return;
     }
+
     /*
      * see if any of our clients still care
      */
     for (c = state->clients; c; c = c->next) {
-	if (cbdataReferenceValid(c->callback_data))
-	    break;
+        if (cbdataReferenceValid(c->callback_data))
+            break;
     }
+
     if (c == NULL) {
-	/* no clients care */
-	comm_close(fd);
-	return;
+        /* no clients care */
+        comm_close(fd);
+        return;
     }
+
     memBufDefInit(&mb);
     memBufPrintf(&mb, "%d, %d\r\n",
-	ntohs(state->my_peer.sin_port),
-	ntohs(state->me.sin_port));
+                 ntohs(state->my_peer.sin_port),
+                 ntohs(state->me.sin_port));
     comm_old_write_mbuf(fd, mb, NULL, state);
     comm_read(fd, state->buf, BUFSIZ, identReadReply, state);
     commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
@@ -136,28 +153,36 @@ identReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
     char *t = NULL;
 
     assert (buf == state->buf);
-    
+
     if (flag != COMM_OK || len <= 0) {
-	comm_close(fd);
-	return;
+        comm_close(fd);
+        return;
     }
+
     /*
      * XXX This isn't really very tolerant. It should read until EOL
      * or EOF and then decode the answer... If the reply is fragmented
      * then this will fail
      */
     buf[len] = '\0';
+
     if ((t = strchr(buf, '\r')))
-	*t = '\0';
+        *t = '\0';
+
     if ((t = strchr(buf, '\n')))
-	*t = '\0';
+        *t = '\0';
+
     debug(30, 5) ("identReadReply: FD %d: Read '%s'\n", fd, buf);
+
     if (strstr(buf, "USERID")) {
-	if ((ident = strrchr(buf, ':'))) {
-	    while (xisspace(*++ident));
-	    identCallback(state, ident);
-	}
+        if ((ident = strrchr(buf, ':'))) {
+            while (xisspace(*++ident))
+
+                ;
+            identCallback(state, ident);
+        }
     }
+
     comm_close(fd);
 }
 
@@ -169,7 +194,10 @@ identClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
     IdentClient **C;
     c->callback = callback;
     c->callback_data = cbdataReference(callback_data);
-    for (C = &state->clients; *C; C = &(*C)->next);
+
+    for (C = &state->clients; *C; C = &(*C)->next)
+
+        ;
     *C = c;
 }
 
@@ -181,6 +209,7 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
+
 identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback, void *data)
 {
     IdentStateData *state;
@@ -189,27 +218,33 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
     char key2[IDENT_KEY_SZ];
     char key[IDENT_KEY_SZ];
     snprintf(key1, IDENT_KEY_SZ, "%s:%d",
-	inet_ntoa(me->sin_addr),
-	ntohs(me->sin_port));
+             inet_ntoa(me->sin_addr),
+             ntohs(me->sin_port));
     snprintf(key2, IDENT_KEY_SZ, "%s:%d",
-	inet_ntoa(my_peer->sin_addr),
-	ntohs(my_peer->sin_port));
+             inet_ntoa(my_peer->sin_addr),
+             ntohs(my_peer->sin_port));
     snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
-    if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL) {
-	identClientAdd(state, callback, data);
-	return;
+
+    if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL)
+    {
+        identClientAdd(state, callback, data);
+        return;
     }
+
     fd = comm_open(SOCK_STREAM,
-	0,
-	me->sin_addr,
-	0,
-	COMM_NONBLOCKING,
-	"ident");
-    if (fd == COMM_ERROR) {
-	/* Failed to get a local socket */
-	callback(NULL, data);
-	return;
+                   0,
+                   me->sin_addr,
+                   0,
+                   COMM_NONBLOCKING,
+                   "ident");
+
+    if (fd == COMM_ERROR)
+    {
+        /* Failed to get a local socket */
+        callback(NULL, data);
+        return;
     }
+
     CBDATA_INIT_TYPE(IdentStateData);
     state = cbdataAlloc(IdentStateData);
     state->hash.key = xstrdup(key);
@@ -219,20 +254,20 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
     identClientAdd(state, callback, data);
     hash_join(ident_hash, &state->hash);
     comm_add_close_handler(fd,
-	identClose,
-	state);
+                           identClose,
+                           state);
     commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
     commConnectStart(fd,
-	inet_ntoa(state->my_peer.sin_addr),
-	IDENT_PORT,
-	identConnectDone,
-	state);
+                     inet_ntoa(state->my_peer.sin_addr),
+                     IDENT_PORT,
+                     identConnectDone,
+                     state);
 }
 
 void
 identInit(void)
 {
     ident_hash = hash_create((HASHCMP *) strcmp,
-	hashPrime(Squid_MaxFD / 8),
-	hash4);
+                             hashPrime(Squid_MaxFD / 8),
+                             hash4);
 }

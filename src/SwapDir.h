@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.2 2003/01/23 00:37:15 robertc Exp $
+ * $Id: SwapDir.h,v 1.3 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -41,12 +41,17 @@
 typedef void STFSSTARTUP(void);
 typedef void STFSSHUTDOWN(void);
 typedef SwapDir *STFSNEW(void);
-struct SwapDir {
+
+struct SwapDir
+{
+
 public:
     static SwapDir *Factory (_storefs_entry const &fs);
-    SwapDir() : max_objsize (-1){
-	fs.blksize = 1024;
+    SwapDir() : max_objsize (-1)
+    {
+        fs.blksize = 1024;
     }
+
     virtual ~SwapDir();
     virtual void reconfigure(int, char *) = 0;
     const char *type;
@@ -59,10 +64,18 @@ public:
     RemovalPolicy *repl;
     int removals;
     int scanned;
-    struct {
-	unsigned int selected:1;
-	unsigned int read_only:1;
-    } flags;
+
+    struct
+    {
+
+unsigned int selected:
+        1;
+
+unsigned int read_only:
+        1;
+    }
+
+    flags;
     virtual void init() = 0;	/* Initialise the fs */
     virtual void newFileSystem();	/* Create a new fs */
     virtual void dump(StoreEntry &)const;	/* Dump fs config snippet */
@@ -83,18 +96,28 @@ public:
     virtual void openLog();
     virtual void closeLog();
     virtual void logEntry(const StoreEntry & e, int op) const;
-    class CleanLog {
-      public:
-	virtual ~CleanLog(){}
-	virtual const StoreEntry *nextEntry() = 0;
-	virtual void write(StoreEntry const &) = 0;
+
+    class CleanLog
+    {
+
+    public:
+        virtual ~CleanLog(){}
+
+        virtual const StoreEntry *nextEntry() = 0;
+        virtual void write(StoreEntry const &) = 0;
     };
+
     CleanLog *cleanLog;
     virtual int writeCleanStart();
     virtual void writeCleanDone();
     virtual void parse(int index, char *path) = 0;
-    struct {
-	int blksize;
-    } fs;
+
+    struct
+    {
+        int blksize;
+    }
+
+    fs;
 };
+
 #endif /* SQUID_SWAPDIR_H */

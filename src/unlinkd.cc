@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.51 2003/02/14 15:37:43 wessels Exp $
+ * $Id: unlinkd.cc,v 1.52 2003/02/21 22:50:12 robertc Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -51,19 +51,27 @@ main(int argc, char *argv[])
     setbuf(stdout, NULL);
     close(2);
     open("/dev/null", O_RDWR);
+
     while (fgets(buf, UNLINK_BUF_LEN, stdin)) {
-	if ((t = strchr(buf, '\n')))
-	    *t = '\0';
+        if ((t = strchr(buf, '\n')))
+            *t = '\0';
+
 #if USE_TRUNCATE
-	x = truncate(buf, 0);
+
+        x = truncate(buf, 0);
+
 #else
-	x = unlink(buf);
+
+        x = unlink(buf);
+
 #endif
-	if (x < 0)
-	    printf("ERR\n");
-	else
-	    printf("OK\n");
+
+        if (x < 0)
+            printf("ERR\n");
+        else
+            printf("OK\n");
     }
+
     exit(0);
 }
 
@@ -85,67 +93,77 @@ unlinkdUnlink(const char *path)
     int l;
     int x;
     static int queuelen = 0;
+
     if (unlinkd_wfd < 0) {
-	debug_trap("unlinkdUnlink: unlinkd_wfd < 0");
-	safeunlink(path, 0);
-	return;
+        debug_trap("unlinkdUnlink: unlinkd_wfd < 0");
+        safeunlink(path, 0);
+        return;
     }
+
     /*
-     * If the queue length is greater than our limit, then
-     * we pause for up to 100ms, hoping that unlinkd
-     * has some feedback for us.  Maybe it just needs a slice
-     * of the CPU's time.
-     */
+    * If the queue length is greater than our limit, then
+    * we pause for up to 100ms, hoping that unlinkd
+    * has some feedback for us.  Maybe it just needs a slice
+    * of the CPU's time.
+    */
     if (queuelen >= UNLINKD_QUEUE_LIMIT) {
-	struct timeval to;
-	fd_set R;
-	FD_ZERO(&R);
-	FD_SET(unlinkd_rfd, &R);
-	to.tv_sec = 0;
-	to.tv_usec = 100000;
-	select(unlinkd_rfd + 1, &R, NULL, NULL, &to);
+
+        struct timeval to;
+        fd_set R;
+        FD_ZERO(&R);
+        FD_SET(unlinkd_rfd, &R);
+        to.tv_sec = 0;
+        to.tv_usec = 100000;
+        select(unlinkd_rfd + 1, &R, NULL, NULL, &to);
     }
+
     /*
-     * If there is at least one outstanding unlink request, then
-     * try to read a response.  If there's nothing to read we'll
-     * get an EWOULDBLOCK or whatever.  If we get a response, then
-     * decrement the queue size by the number of newlines read.
-     */
+    * If there is at least one outstanding unlink request, then
+    * try to read a response.  If there's nothing to read we'll
+    * get an EWOULDBLOCK or whatever.  If we get a response, then
+    * decrement the queue size by the number of newlines read.
+    */
     if (queuelen > 0) {
-	int x;
-	int i;
-	char rbuf[512];
-	x = read(unlinkd_rfd, rbuf, 511);
-	if (x > 0) {
-	    rbuf[x] = '\0';
-	    for (i = 0; i < x; i++)
-		if ('\n' == rbuf[i])
-		    queuelen--;
-	    assert(queuelen >= 0);
-	}
+        int x;
+        int i;
+        char rbuf[512];
+        x = read(unlinkd_rfd, rbuf, 511);
+
+        if (x > 0) {
+            rbuf[x] = '\0';
+
+            for (i = 0; i < x; i++)
+                if ('\n' == rbuf[i])
+                    queuelen--;
+
+            assert(queuelen >= 0);
+        }
     }
+
     l = strlen(path);
     assert(l < MAXPATHLEN);
     xstrncpy(buf, path, MAXPATHLEN);
     buf[l++] = '\n';
     x = write(unlinkd_wfd, buf, l);
+
     if (x < 0) {
-	debug(2, 1) ("unlinkdUnlink: write FD %d failed: %s\n",
-	    unlinkd_wfd, xstrerror());
-	safeunlink(path, 0);
-	return;
+        debug(2, 1) ("unlinkdUnlink: write FD %d failed: %s\n",
+                     unlinkd_wfd, xstrerror());
+        safeunlink(path, 0);
+        return;
     } else if (x != l) {
-	debug(2, 1) ("unlinkdUnlink: FD %d only wrote %d of %d bytes\n",
-	    unlinkd_wfd, x, l);
-	safeunlink(path, 0);
-	return;
+        debug(2, 1) ("unlinkdUnlink: FD %d only wrote %d of %d bytes\n",
+                     unlinkd_wfd, x, l);
+        safeunlink(path, 0);
+        return;
     }
+
     statCounter.unlink.requests++;
     /*
-     * Increment this syscalls counter here, even though the syscall
-     * is executed by the helper process.  We try to be consistent
-     * in counting unlink operations.
-     */
+    * Increment this syscalls counter here, even though the syscall
+    * is executed by the helper process.  We try to be consistent
+    * in counting unlink operations.
+    */
     statCounter.syscalls.disk.unlinks++;
     queuelen++;
 }
@@ -154,12 +172,17 @@ void
 unlinkdClose(void)
 {
     if (unlinkd_wfd < 0)
-	return;
+        return;
+
     debug(2, 1) ("Closing unlinkd pipe on FD %d\n", unlinkd_wfd);
+
     file_close(unlinkd_wfd);
+
     if (unlinkd_wfd != unlinkd_rfd)
-	file_close(unlinkd_rfd);
+        file_close(unlinkd_rfd);
+
     unlinkd_wfd = -1;
+
     unlinkd_rfd = -1;
 }
 
@@ -168,6 +191,7 @@ unlinkdInit(void)
 {
     int x;
     const char *args[2];
+
     struct timeval slp;
     args[0] = "(unlinkd)";
     args[1] = NULL;
@@ -175,16 +199,17 @@ unlinkdInit(void)
     /* pipes and poll() don't get along on DUNIX -DW */
     x = ipcCreate(IPC_STREAM,
 #else
-    /* We currently need to use FIFO.. see below */
-    x = ipcCreate(IPC_FIFO,
+/* We currently need to use FIFO.. see below */
+x = ipcCreate(IPC_FIFO,
 #endif
-	Config.Program.unlinkd,
-	args,
-	"unlinkd",
-	&unlinkd_rfd,
-	&unlinkd_wfd);
+                  Config.Program.unlinkd,
+                  args,
+                  "unlinkd",
+                  &unlinkd_rfd,
+                  &unlinkd_wfd);
+
     if (x < 0)
-	fatal("Failed to create unlinkd subprocess");
+        fatal("Failed to create unlinkd subprocess");
     slp.tv_sec = 0;
     slp.tv_usec = 250000;
     select(0, NULL, NULL, NULL, &slp);
@@ -193,15 +218,15 @@ unlinkdInit(void)
     commSetTimeout(unlinkd_rfd, -1, NULL, NULL);
     commSetTimeout(unlinkd_wfd, -1, NULL, NULL);
     /*
-     * unlinkd_rfd should already be non-blocking because of
-     * ipcCreate.  We change unlinkd_wfd to blocking mode because
-     * we never want to lose an unlink request, and we don't have
-     * code to retry if we get EWOULDBLOCK.  Unfortunately, we can
-     * do this only for the IPC_FIFO case.
-     */
+    * unlinkd_rfd should already be non-blocking because of
+    * ipcCreate.  We change unlinkd_wfd to blocking mode because
+    * we never want to lose an unlink request, and we don't have
+    * code to retry if we get EWOULDBLOCK.  Unfortunately, we can
+    * do this only for the IPC_FIFO case.
+    */
     assert(fd_table[unlinkd_rfd].flags.nonblocking);
     if (FD_PIPE == fd_table[unlinkd_wfd].type)
-	commUnsetNonBlocking(unlinkd_wfd);
+        commUnsetNonBlocking(unlinkd_wfd);
     debug(2, 1) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
 }
 

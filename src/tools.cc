@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.232 2003/02/21 19:53:02 hno Exp $
+ * $Id: tools.cc,v 1.233 2003/02/21 22:50:12 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -70,14 +70,17 @@ releaseServerSockets(void)
 {
     int i;
     /* Release the main ports as early as possible */
+
     for (i = 0; i < NHttpSockets; i++) {
-	if (HttpSockets[i] >= 0)
-	    close(HttpSockets[i]);
+        if (HttpSockets[i] >= 0)
+            close(HttpSockets[i]);
     }
+
     if (theInIcpConnection >= 0)
-	close(theInIcpConnection);
+        close(theInIcpConnection);
+
     if (theOutIcpConnection >= 0 && theOutIcpConnection != theInIcpConnection)
-	close(theOutIcpConnection);
+        close(theOutIcpConnection);
 }
 
 static char *
@@ -94,25 +97,40 @@ mail_warranty(void)
     FILE *fp = NULL;
     static char command[256];
 #if HAVE_MKSTEMP
+
     char filename[] = "/tmp/squid-XXXXXX";
     int tfd = mkstemp(filename);
+
     if (tfd < 0)
-	return;
+        return;
+
     if ((fp = fdopen(tfd, "w")) == NULL)
-	return;
+        return;
+
 #else
+
     char *filename;
+
     if ((filename = tempnam(NULL, appname)) == NULL)
-	return;
+        return;
+
     if ((fp = fopen(filename, "w")) == NULL)
-	return;
+        return;
+
 #endif
+
     fprintf(fp, "From: %s\n", appname);
+
     fprintf(fp, "To: %s\n", Config.adminEmail);
+
     fprintf(fp, "Subject: %s\n", dead_msg());
+
     fclose(fp);
+
     snprintf(command, 256, "mail %s < %s", Config.adminEmail, filename);
+
     system(command);		/* XXX should avoid system(3) */
+
     unlink(filename);
 }
 
@@ -120,77 +138,105 @@ void
 dumpMallocStats(void)
 {
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
+
     struct mstats ms = mstats();
     fprintf(debug_log, "\ttotal space in arena:  %6d KB\n",
-	(int) (ms.bytes_total >> 10));
+            (int) (ms.bytes_total >> 10));
     fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
-	(int) (ms.bytes_free >> 10),
-	percent(ms.bytes_free, ms.bytes_total));
+            (int) (ms.bytes_free >> 10),
+            percent(ms.bytes_free, ms.bytes_total));
 #elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
+
     struct mallinfo mp;
     int t;
+
     if (!do_mallinfo)
-	return;
+        return;
+
     mp = mallinfo();
+
     fprintf(debug_log, "Memory usage for %s via mallinfo():\n", appname);
+
     fprintf(debug_log, "\ttotal space in arena:  %6d KB\n",
-	mp.arena >> 10);
+            mp.arena >> 10);
+
     fprintf(debug_log, "\tOrdinary blocks:       %6d KB %6d blks\n",
-	mp.uordblks >> 10, mp.ordblks);
+            mp.uordblks >> 10, mp.ordblks);
+
     fprintf(debug_log, "\tSmall blocks:          %6d KB %6d blks\n",
-	mp.usmblks >> 10, mp.smblks);
+            mp.usmblks >> 10, mp.smblks);
+
     fprintf(debug_log, "\tHolding blocks:        %6d KB %6d blks\n",
-	mp.hblkhd >> 10, mp.hblks);
+            mp.hblkhd >> 10, mp.hblks);
+
     fprintf(debug_log, "\tFree Small blocks:     %6d KB\n",
-	mp.fsmblks >> 10);
+            mp.fsmblks >> 10);
+
     fprintf(debug_log, "\tFree Ordinary blocks:  %6d KB\n",
-	mp.fordblks >> 10);
+            mp.fordblks >> 10);
+
     t = mp.uordblks + mp.usmblks + mp.hblkhd;
+
     fprintf(debug_log, "\tTotal in use:          %6d KB %d%%\n",
-	t >> 10, percent(t, mp.arena));
+            t >> 10, percent(t, mp.arena));
+
     t = mp.fsmblks + mp.fordblks;
+
     fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
-	t >> 10, percent(t, mp.arena));
+            t >> 10, percent(t, mp.arena));
+
 #if HAVE_STRUCT_MALLINFO_MXFAST
+
     fprintf(debug_log, "\tmax size of small blocks:\t%d\n",
-	mp.mxfast);
+            mp.mxfast);
+
     fprintf(debug_log, "\tnumber of small blocks in a holding block:\t%d\n",
-	mp.nlblks);
+            mp.nlblks);
+
     fprintf(debug_log, "\tsmall block rounding factor:\t%d\n",
-	mp.grain);
+            mp.grain);
+
     fprintf(debug_log, "\tspace (including overhead) allocated in ord. blks:\t%d\n",
-	mp.uordbytes);
+            mp.uordbytes);
+
     fprintf(debug_log, "\tnumber of ordinary blocks allocated:\t%d\n",
-	mp.allocated);
+            mp.allocated);
+
     fprintf(debug_log, "\tbytes used in maintaining the free tree:\t%d\n",
-	mp.treeoverhead);
+            mp.treeoverhead);
+
 #endif /* HAVE_STRUCT_MALLINFO_MXFAST */
 #endif /* HAVE_MALLINFO */
 }
 
 void
+
 squid_getrusage(struct rusage *r)
 {
+
     memset(r, '\0', sizeof(struct rusage));
 #if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
 #ifdef _SQUID_SOLARIS_
     /* Solaris 2.5 has getrusage() permission bug -- Arjan de Vet */
     enter_suid();
 #endif
+
     getrusage(RUSAGE_SELF, r);
 #ifdef _SQUID_SOLARIS_
+
     leave_suid();
 #endif
 #endif
 }
 
 double
+
 rusage_cputime(struct rusage *r)
 {
     return (double) r->ru_stime.tv_sec +
-	(double) r->ru_utime.tv_sec +
-	(double) r->ru_stime.tv_usec / 1000000.0 +
-	(double) r->ru_utime.tv_usec / 1000000.0;
+           (double) r->ru_utime.tv_sec +
+           (double) r->ru_stime.tv_usec / 1000000.0 +
+           (double) r->ru_utime.tv_usec / 1000000.0;
 }
 
 /* Hack for some HP-UX preprocessors */
@@ -199,31 +245,40 @@ rusage_cputime(struct rusage *r)
 #endif
 
 int
+
 rusage_maxrss(struct rusage *r)
 {
 #if defined(_SQUID_SGI_) && _ABIAPI
     return r->ru_pad[0];
 #elif defined(_SQUID_SGI_)
+
     return r->ru_maxrss;
 #elif defined(_SQUID_OSF_)
+
     return r->ru_maxrss;
 #elif defined(BSD4_4)
+
     return r->ru_maxrss;
 #elif defined(HAVE_GETPAGESIZE) && HAVE_GETPAGESIZE != 0
+
     return (r->ru_maxrss * getpagesize()) >> 10;
 #elif defined(PAGESIZE)
+
     return (r->ru_maxrss * PAGESIZE) >> 10;
 #else
+
     return r->ru_maxrss;
 #endif
 }
 
 int
+
 rusage_pagefaults(struct rusage *r)
 {
 #if defined(_SQUID_SGI_) && _ABIAPI
     return r->ru_pad[5];
 #else
+
     return r->ru_majflt;
 #endif
 }
@@ -232,16 +287,17 @@ rusage_pagefaults(struct rusage *r)
 void
 PrintRusage(void)
 {
+
     struct rusage rusage;
     squid_getrusage(&rusage);
     fprintf(debug_log, "CPU Usage: %.3f seconds = %.3f user + %.3f sys\n",
-	rusage_cputime(&rusage),
-	rusage.ru_utime.tv_sec + ((double) rusage.ru_utime.tv_usec / 1000000.0),
-	rusage.ru_stime.tv_sec + ((double) rusage.ru_stime.tv_usec / 1000000.0));
+            rusage_cputime(&rusage),
+            rusage.ru_utime.tv_sec + ((double) rusage.ru_utime.tv_usec / 1000000.0),
+            rusage.ru_stime.tv_sec + ((double) rusage.ru_stime.tv_usec / 1000000.0));
     fprintf(debug_log, "Maximum Resident Size: %d KB\n",
-	rusage_maxrss(&rusage));
+            rusage_maxrss(&rusage));
     fprintf(debug_log, "Page faults with physical i/o: %d\n",
-	rusage_pagefaults(&rusage));
+            rusage_pagefaults(&rusage));
 }
 
 
@@ -249,56 +305,69 @@ void
 death(int sig)
 {
     if (sig == SIGSEGV)
-	fprintf(debug_log, "FATAL: Received Segment Violation...dying.\n");
+        fprintf(debug_log, "FATAL: Received Segment Violation...dying.\n");
     else if (sig == SIGBUS)
-	fprintf(debug_log, "FATAL: Received Bus Error...dying.\n");
+        fprintf(debug_log, "FATAL: Received Bus Error...dying.\n");
     else
-	fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
+        fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
 
 #ifdef PRINT_STACK_TRACE
 #ifdef _SQUID_HPUX_
     {
-	extern void U_STACK_TRACE(void);	/* link with -lcl */
-	fflush(debug_log);
-	dup2(fileno(debug_log), 2);
-	U_STACK_TRACE();
+        extern void U_STACK_TRACE(void);	/* link with -lcl */
+        fflush(debug_log);
+        dup2(fileno(debug_log), 2);
+        U_STACK_TRACE();
     }
+
 #endif /* _SQUID_HPUX_ */
 #ifdef _SQUID_SOLARIS_
     {				/* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
-	extern void opcom_stack_trace(void);	/* link with -lopcom_stack */
-	fflush(debug_log);
-	dup2(fileno(debug_log), fileno(stdout));
-	opcom_stack_trace();
-	fflush(stdout);
+        extern void opcom_stack_trace(void);	/* link with -lopcom_stack */
+        fflush(debug_log);
+        dup2(fileno(debug_log), fileno(stdout));
+        opcom_stack_trace();
+        fflush(stdout);
     }
+
 #endif /* _SQUID_SOLARIS_ */
 #if HAVE_BACKTRACE_SYMBOLS_FD
     {
-	static void *(callarray[8192]);
-	int n;
-	n = backtrace(callarray, 8192);
-	backtrace_symbols_fd(callarray, n, fileno(debug_log));
+        static void *(callarray[8192]);
+        int n;
+        n = backtrace(callarray, 8192);
+        backtrace_symbols_fd(callarray, n, fileno(debug_log));
     }
+
 #endif
 #endif /* PRINT_STACK_TRACE */
 
 #if SA_RESETHAND == 0
     signal(SIGSEGV, SIG_DFL);
+
     signal(SIGBUS, SIG_DFL);
+
     signal(sig, SIG_DFL);
+
 #endif
+
     releaseServerSockets();
+
     storeDirWriteCleanLogs(0);
+
     PrintRusage();
+
     dumpMallocStats();
+
     if (squid_curtime - SQUID_RELEASE_TIME < 864000) {
-	/* skip if more than 10 days old */
-	if (Config.adminEmail)
-	    mail_warranty();
-	else
-	    puts(dead_msg());
+        /* skip if more than 10 days old */
+
+        if (Config.adminEmail)
+            mail_warranty();
+        else
+            puts(dead_msg());
     }
+
     abort();
 }
 
@@ -308,23 +377,30 @@ sigusr2_handle(int sig)
 {
     static int state = 0;
     /* no debug() here; bad things happen if the signal is delivered during _db_print() */
+
     if (state == 0) {
 #ifndef MEM_GEN_TRACE
-	_db_init(Config.Log.log, "ALL,10");
+        _db_init(Config.Log.log, "ALL,10");
 #else
-	log_trace_done();
+
+        log_trace_done();
 #endif
-	state = 1;
+
+        state = 1;
     } else {
 #ifndef MEM_GEN_TRACE
-	_db_init(Config.Log.log, Config.debugOptions);
+        _db_init(Config.Log.log, Config.debugOptions);
 #else
-	log_trace_init("/tmp/squid.alloc");
+
+        log_trace_init("/tmp/squid.alloc");
 #endif
-	state = 0;
+
+        state = 0;
     }
+
 #if !HAVE_SIGACTION
     signal(sig, sigusr2_handle);	/* reinstall */
+
 #endif
 }
 
@@ -334,13 +410,19 @@ fatal_common(const char *message)
 #if HAVE_SYSLOG
     syslog(LOG_ALERT, "%s", message);
 #endif
+
     fprintf(debug_log, "FATAL: %s\n", message);
+
     if (opt_debug_stderr > 0 && debug_log != stderr)
-	fprintf(stderr, "FATAL: %s\n", message);
+        fprintf(stderr, "FATAL: %s\n", message);
+
     fprintf(debug_log, "Squid Cache (Version %s): Terminated abnormally.\n",
-	version_string);
+            version_string);
+
     fflush(debug_log);
+
     PrintRusage();
+
     dumpMallocStats();
 }
 
@@ -352,13 +434,16 @@ fatal(const char *message)
     /* check for store_dirs_rebuilding because fatal() is often
      * used in early initialization phases, long before we ever
      * get to the store log. */
+
     if (0 == store_dirs_rebuilding)
-	storeDirWriteCleanLogs(0);
+        storeDirWriteCleanLogs(0);
+
     fatal_common(message);
+
     if (shutting_down)
-	exit(0);
+        exit(0);
     else
-	abort();
+        abort();
 }
 
 /* printf-style interface for fatal */
@@ -371,13 +456,14 @@ fatalf(const char *fmt,...)
 #else
 void
 fatalf(va_alist)
-     va_dcl
+va_dcl
 {
     va_list args;
     const char *fmt = NULL;
     va_start(args);
     fmt = va_arg(args, char *);
 #endif
+
     fatalvf(fmt, args);
     va_end(args);
 }
@@ -385,8 +471,7 @@ fatalf(va_alist)
 
 /* used by fatalf */
 static void
-fatalvf(const char *fmt, va_list args)
-{
+fatalvf(const char *fmt, va_list args) {
     static char fatal_str[BUFSIZ];
     vsnprintf(fatal_str, sizeof(fatal_str), fmt, args);
     fatal(fatal_str);
@@ -394,47 +479,59 @@ fatalvf(const char *fmt, va_list args)
 
 /* fatal with dumping core */
 void
-fatal_dump(const char *message)
-{
+fatal_dump(const char *message) {
     failure_notify = NULL;
     releaseServerSockets();
+
     if (message)
-	fatal_common(message);
+        fatal_common(message);
+
     if (opt_catch_signals)
-	storeDirWriteCleanLogs(0);
+        storeDirWriteCleanLogs(0);
+
     abort();
 }
 
 void
-debug_trap(const char *message)
-{
+debug_trap(const char *message) {
     if (!opt_catch_signals)
-	fatal_dump(message);
+        fatal_dump(message);
+
     _db_print("WARNING: %s\n", message);
 }
 
 void
-sig_child(int sig)
-{
+sig_child(int sig) {
 #ifdef _SQUID_NEXT_
     union wait status;
 #else
+
     int status;
 #endif
+
     pid_t pid;
 
     do {
 #ifdef _SQUID_NEXT_
-	pid = wait3(&status, WNOHANG, NULL);
+        pid = wait3(&status, WNOHANG, NULL);
 #else
-	pid = waitpid(-1, &status, WNOHANG);
+
+        pid = waitpid(-1, &status, WNOHANG);
 #endif
-	/* no debug() here; bad things happen if the signal is delivered during _db_print() */
+        /* no debug() here; bad things happen if the signal is delivered during _db_print() */
 #if HAVE_SIGACTION
+
     } while (pid > 0);
+
 #else
-    } while (pid > 0 || (pid < 0 && errno == EINTR));
+
+    }
+
+    while (pid > 0 || (pid < 0 && errno == EINTR))
+
+        ;
     signal(sig, sig_child);
+
 #endif
 }
 
@@ -443,59 +540,75 @@ getMyHostname(void)
 {
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
+
     const struct hostent *h = NULL;
+
     struct in_addr sa;
+
     if (Config.visibleHostname != NULL)
-	return Config.visibleHostname;
+        return Config.visibleHostname;
+
     if (present)
-	return host;
+        return host;
+
     host[0] = '\0';
+
     memcpy(&sa, &any_addr, sizeof(sa));
+
     if (Config.Sockaddr.http && sa.s_addr == any_addr.s_addr)
-	memcpy(&sa, &Config.Sockaddr.http->s.sin_addr, sizeof(sa));
+        memcpy(&sa, &Config.Sockaddr.http->s.sin_addr, sizeof(sa));
+
 #if USE_SSL
+
     if (Config.Sockaddr.https && sa.s_addr == any_addr.s_addr)
-	memcpy(&sa, &Config.Sockaddr.https->http.s.sin_addr, sizeof(sa));
+        memcpy(&sa, &Config.Sockaddr.https->http.s.sin_addr, sizeof(sa));
+
 #endif
     /*
      * If the first http_port address has a specific address, try a
      * reverse DNS lookup on it.
      */
     if (sa.s_addr != any_addr.s_addr) {
-	h = gethostbyaddr((char *) &sa,
-	    sizeof(sa), AF_INET);
-	if (h != NULL) {
-	    /* DNS lookup successful */
-	    /* use the official name from DNS lookup */
-	    xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
-	    debug(50, 4) ("getMyHostname: resolved %s to '%s'\n",
-		inet_ntoa(sa),
-		host);
-	    present = 1;
-	    if (strchr(host, '.'))
-		return host;
+        h = gethostbyaddr((char *) &sa,
+                          sizeof(sa), AF_INET);
 
-	}
-	debug(50, 1) ("WARNING: failed to resolve %s to a fully qualified hostname\n",
-	    inet_ntoa(sa));
+        if (h != NULL) {
+            /* DNS lookup successful */
+            /* use the official name from DNS lookup */
+            xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
+            debug(50, 4) ("getMyHostname: resolved %s to '%s'\n",
+                          inet_ntoa(sa),
+                          host);
+            present = 1;
+
+            if (strchr(host, '.'))
+                return host;
+
+        }
+
+        debug(50, 1) ("WARNING: failed to resolve %s to a fully qualified hostname\n",
+                      inet_ntoa(sa));
     }
+
     /*
      * Get the host name and store it in host to return
      */
     if (gethostname(host, SQUIDHOSTNAMELEN) < 0) {
-	debug(50, 1) ("WARNING: gethostname failed: %s\n", xstrerror());
+        debug(50, 1) ("WARNING: gethostname failed: %s\n", xstrerror());
     } else if ((h = gethostbyname(host)) == NULL) {
-	debug(50, 1) ("WARNING: gethostbyname failed for %s\n", host);
+        debug(50, 1) ("WARNING: gethostbyname failed for %s\n", host);
     } else {
-	debug(50, 6) ("getMyHostname: '%s' resolved into '%s'\n",
-	    host, h->h_name);
-	/* DNS lookup successful */
-	/* use the official name from DNS lookup */
-	xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
-	present = 1;
-	if (strchr(host, '.'))
-	    return host;
+        debug(50, 6) ("getMyHostname: '%s' resolved into '%s'\n",
+                      host, h->h_name);
+        /* DNS lookup successful */
+        /* use the official name from DNS lookup */
+        xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
+        present = 1;
+
+        if (strchr(host, '.'))
+            return host;
     }
+
     fatal("Could not determine fully qualified hostname.  Please set 'visible_hostname'\n");
     return NULL;		/* keep compiler happy */
 }
@@ -510,8 +623,9 @@ void
 safeunlink(const char *s, int quiet)
 {
     statCounter.syscalls.disk.unlinks++;
+
     if (unlink(s) < 0 && !quiet)
-	debug(50, 1) ("safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
+        debug(50, 1) ("safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
 }
 
 /* leave a privilegied section. (Give up any privilegies)
@@ -523,27 +637,41 @@ void
 leave_suid(void)
 {
     debug(21, 3) ("leave_suid: PID %d called\n", (int) getpid());
+
     if (geteuid() != 0)
-	return;
+        return;
+
     /* Started as a root, check suid option */
     if (Config.effectiveUser == NULL)
-	return;
+        return;
+
 #if HAVE_SETGROUPS
+
     setgroups(1, &Config2.effectiveGroupID);
+
 #endif
+
     if (setgid(Config2.effectiveGroupID) < 0)
-	debug(50, 0) ("ALERT: setgid: %s\n", xstrerror());
+        debug(50, 0) ("ALERT: setgid: %s\n", xstrerror());
+
     debug(21, 3) ("leave_suid: PID %d giving up root, becoming '%s'\n",
-	(int) getpid(), Config.effectiveUser);
+                  (int) getpid(), Config.effectiveUser);
+
 #if HAVE_SETRESUID
+
     if (setresuid(Config2.effectiveUserID, Config2.effectiveUserID, 0) < 0)
-	debug(50, 0) ("ALERT: setresuid: %s\n", xstrerror());
+        debug(50, 0) ("ALERT: setresuid: %s\n", xstrerror());
+
 #elif HAVE_SETEUID
+
     if (seteuid(Config2.effectiveUserID) < 0)
-	debug(50, 0) ("ALERT: seteuid: %s\n", xstrerror());
+        debug(50, 0) ("ALERT: seteuid: %s\n", xstrerror());
+
 #else
+
     if (setuid(Config2.effectiveUserID) < 0)
-	debug(50, 0) ("ALERT: setuid: %s\n", xstrerror());
+        debug(50, 0) ("ALERT: setuid: %s\n", xstrerror());
+
 #endif
 }
 
@@ -553,8 +681,10 @@ enter_suid(void)
 {
     debug(21, 3) ("enter_suid: PID %d taking root priveleges\n", (int) getpid());
 #if HAVE_SETRESUID
+
     setresuid((uid_t)-1, 0, (uid_t)-1);
 #else
+
     setuid(0);
 #endif
 }
@@ -570,12 +700,17 @@ no_suid(void)
     uid = geteuid();
     debug(21, 3) ("leave_suid: PID %d giving up root priveleges forever\n", (int) getpid());
 #if HAVE_SETRESUID
+
     if (setresuid(uid, uid, uid) < 0)
-	debug(50, 1) ("no_suid: setresuid: %s\n", xstrerror());
+        debug(50, 1) ("no_suid: setresuid: %s\n", xstrerror());
+
 #else
+
     setuid(0);
+
     if (setuid(uid) < 0)
-	debug(50, 1) ("no_suid: setuid: %s\n", xstrerror());
+        debug(50, 1) ("no_suid: setuid: %s\n", xstrerror());
+
 #endif
 }
 
@@ -586,20 +721,29 @@ writePidFile(void)
     const char *f = NULL;
     mode_t old_umask;
     char buf[32];
+
     if ((f = Config.pidFilename) == NULL)
-	return;
+        return;
+
     if (!strcmp(Config.pidFilename, "none"))
-	return;
+        return;
+
     enter_suid();
+
     old_umask = umask(022);
+
     fd = file_open(f, O_WRONLY | O_CREAT | O_TRUNC | O_TEXT);
+
     umask(old_umask);
+
     leave_suid();
+
     if (fd < 0) {
-	debug(50, 0) ("%s: %s\n", f, xstrerror());
-	debug_trap("Could not write pid file");
-	return;
+        debug(50, 0) ("%s: %s\n", f, xstrerror());
+        debug_trap("Could not write pid file");
+        return;
     }
+
     snprintf(buf, 32, "%d\n", (int) getpid());
     FD_WRITE_METHOD(fd, buf, strlen(buf));
     file_close(fd);
@@ -615,22 +759,27 @@ readPidFile(void)
     int i;
 
     if (f == NULL || !strcmp(Config.pidFilename, "none")) {
-	fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
-	exit(1);
+        fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
+        exit(1);
     }
+
     pid_fp = fopen(f, "r");
+
     if (pid_fp != NULL) {
-	pid = 0;
-	if (fscanf(pid_fp, "%d", &i) == 1)
-	    pid = (pid_t) i;
-	fclose(pid_fp);
+        pid = 0;
+
+        if (fscanf(pid_fp, "%d", &i) == 1)
+            pid = (pid_t) i;
+
+        fclose(pid_fp);
     } else {
-	if (errno != ENOENT) {
-	    fprintf(stderr, "%s: ERROR: Could not read pid file\n", appname);
-	    fprintf(stderr, "\t%s: %s\n", f, xstrerror());
-	    exit(1);
-	}
+        if (errno != ENOENT) {
+            fprintf(stderr, "%s: ERROR: Could not read pid file\n", appname);
+            fprintf(stderr, "\t%s: %s\n", f, xstrerror());
+            exit(1);
+        }
     }
+
     return pid;
 }
 
@@ -641,61 +790,75 @@ setMaxFD(void)
 #if HAVE_SETRLIMIT
     /* try to use as many file descriptors as possible */
     /* System V uses RLIMIT_NOFILE and BSD uses RLIMIT_OFILE */
+
     struct rlimit rl;
 #if defined(RLIMIT_NOFILE)
+
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-	debug(50, 0) ("setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
+        debug(50, 0) ("setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
     } else {
-	rl.rlim_cur = Squid_MaxFD;
-	if (rl.rlim_cur > rl.rlim_max)
-	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
-	if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
-	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
-		"setrlimit: RLIMIT_NOFILE: %s", xstrerror());
-	    fatal_dump(tmp_error_buf);
-	}
+        rl.rlim_cur = Squid_MaxFD;
+
+        if (rl.rlim_cur > rl.rlim_max)
+            Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
+
+        if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
+            snprintf(tmp_error_buf, ERROR_BUF_SZ,
+                     "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
+            fatal_dump(tmp_error_buf);
+        }
     }
+
 #elif defined(RLIMIT_OFILE)
     if (getrlimit(RLIMIT_OFILE, &rl) < 0) {
-	debug(50, 0) ("setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
+        debug(50, 0) ("setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
     } else {
-	rl.rlim_cur = Squid_MaxFD;
-	if (rl.rlim_cur > rl.rlim_max)
-	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
-	if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
-	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
-		"setrlimit: RLIMIT_OFILE: %s", xstrerror());
-	    fatal_dump(tmp_error_buf);
-	}
+        rl.rlim_cur = Squid_MaxFD;
+
+        if (rl.rlim_cur > rl.rlim_max)
+            Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
+
+        if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
+            snprintf(tmp_error_buf, ERROR_BUF_SZ,
+                     "setrlimit: RLIMIT_OFILE: %s", xstrerror());
+            fatal_dump(tmp_error_buf);
+        }
     }
+
 #endif
 #else /* HAVE_SETRLIMIT */
     debug(21, 1) ("setMaxFD: Cannot increase: setrlimit() not supported on this system\n");
+
 #endif /* HAVE_SETRLIMIT */
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_DATA)
+
     if (getrlimit(RLIMIT_DATA, &rl) < 0) {
-	debug(50, 0) ("getrlimit: RLIMIT_DATA: %s\n", xstrerror());
+        debug(50, 0) ("getrlimit: RLIMIT_DATA: %s\n", xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
-	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
-	if (setrlimit(RLIMIT_DATA, &rl) < 0) {
-	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
-		"setrlimit: RLIMIT_DATA: %s", xstrerror());
-	    fatal_dump(tmp_error_buf);
-	}
+        rl.rlim_cur = rl.rlim_max;	/* set it to the max */
+
+        if (setrlimit(RLIMIT_DATA, &rl) < 0) {
+            snprintf(tmp_error_buf, ERROR_BUF_SZ,
+                     "setrlimit: RLIMIT_DATA: %s", xstrerror());
+            fatal_dump(tmp_error_buf);
+        }
     }
+
 #endif /* RLIMIT_DATA */
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM)
     if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
-	debug(50, 0) ("getrlimit: RLIMIT_VMEM: %s\n", xstrerror());
+        debug(50, 0) ("getrlimit: RLIMIT_VMEM: %s\n", xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
-	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
-	if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
-	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
-		"setrlimit: RLIMIT_VMEM: %s", xstrerror());
-	    fatal_dump(tmp_error_buf);
-	}
+        rl.rlim_cur = rl.rlim_max;	/* set it to the max */
+
+        if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
+            snprintf(tmp_error_buf, ERROR_BUF_SZ,
+                     "setrlimit: RLIMIT_VMEM: %s", xstrerror());
+            fatal_dump(tmp_error_buf);
+        }
     }
+
 #endif /* RLIMIT_VMEM */
 }
 
@@ -705,10 +868,12 @@ getCurrentTime(void)
 #if GETTIMEOFDAY_NO_TZP
     gettimeofday(&current_time);
 #else
+
     gettimeofday(&current_time, NULL);
 #endif
+
     current_dtime = (double) current_time.tv_sec +
-	(double) current_time.tv_usec / 1000000.0;
+                    (double) current_time.tv_usec / 1000000.0;
     return squid_curtime = current_time.tv_sec;
 }
 
@@ -728,20 +893,27 @@ void
 squid_signal(int sig, SIGHDLR * func, int flags)
 {
 #if HAVE_SIGACTION
+
     struct sigaction sa;
     sa.sa_handler = func;
     sa.sa_flags = flags;
     sigemptyset(&sa.sa_mask);
+
     if (sigaction(sig, &sa, NULL) < 0)
-	debug(50, 0) ("sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
+        debug(50, 0) ("sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
+
 #else
+
     signal(sig, func);
+
 #endif
 }
 
 struct in_addr
-inaddrFromHostent(const struct hostent *hp)
+
+            inaddrFromHostent(const struct hostent *hp)
 {
+
     struct in_addr s;
     xmemcpy(&s.s_addr, hp->h_addr, sizeof(s.s_addr));
     return s;
@@ -751,7 +923,8 @@ double
 doubleAverage(double cur, double newD, int N, int max)
 {
     if (N > max)
-	N = max;
+        N = max;
+
     return (cur * (N - 1.0) + newD) / N;
 }
 
@@ -759,7 +932,8 @@ int
 intAverage(int cur, int newI, int n, int max)
 {
     if (n > max)
-	n = max;
+        n = max;
+
     return (cur * (n - 1) + newI) / n;
 }
 
@@ -767,7 +941,7 @@ void
 logsFlush(void)
 {
     if (debug_log)
-	fflush(debug_log);
+        fflush(debug_log);
 }
 
 const char *
@@ -780,7 +954,8 @@ dlink_node *
 dlinkNodeNew()
 {
     if (dlink_node_pool == NULL)
-	dlink_node_pool = memPoolCreate("Dlink list nodes", sizeof(dlink_node));
+        dlink_node_pool = memPoolCreate("Dlink list nodes", sizeof(dlink_node));
+
     /* where should we call memPoolDestroy(dlink_node_pool); */
     return (dlink_node *)memPoolAlloc(dlink_node_pool);
 }
@@ -790,7 +965,8 @@ void
 dlinkNodeDelete(dlink_node * m)
 {
     if (m == NULL)
-	return;
+        return;
+
     memPoolFree(dlink_node_pool, m);
 }
 
@@ -800,11 +976,14 @@ dlinkAdd(void *data, dlink_node * m, dlink_list * list)
     m->data = data;
     m->prev = NULL;
     m->next = list->head;
+
     if (list->head)
-	list->head->prev = m;
+        list->head->prev = m;
+
     list->head = m;
+
     if (list->tail == NULL)
-	list->tail = m;
+        list->tail = m;
 }
 
 void
@@ -813,12 +992,14 @@ dlinkAddAfter(void *data, dlink_node * m, dlink_node * n, dlink_list * list)
     m->data = data;
     m->prev = n;
     m->next = n->next;
+
     if (n->next)
-	n->next->prev = m;
+        n->next->prev = m;
     else {
-	assert(list->tail == n);
-	list->tail = m;
+        assert(list->tail == n);
+        list->tail = m;
     }
+
     n->next = m;
 }
 
@@ -828,24 +1009,31 @@ dlinkAddTail(void *data, dlink_node * m, dlink_list * list)
     m->data = data;
     m->next = NULL;
     m->prev = list->tail;
+
     if (list->tail)
-	list->tail->next = m;
+        list->tail->next = m;
+
     list->tail = m;
+
     if (list->head == NULL)
-	list->head = m;
+        list->head = m;
 }
 
 void
 dlinkDelete(dlink_node * m, dlink_list * list)
 {
     if (m->next)
-	m->next->prev = m->prev;
+        m->next->prev = m->prev;
+
     if (m->prev)
-	m->prev->next = m->next;
+        m->prev->next = m->next;
+
     if (m == list->head)
-	list->head = m->next;
+        list->head = m->next;
+
     if (m == list->tail)
-	list->tail = m->prev;
+        list->tail = m->prev;
+
     m->next = m->prev = NULL;
 }
 
@@ -883,8 +1071,10 @@ linklistPush(link_list ** L, void *p)
     link_list *l = (link_list *)memAllocate(MEM_LINK_LIST);
     l->next = NULL;
     l->ptr = p;
+
     while (*L)
-	L = &(*L)->next;
+        L = &(*L)->next;
+
     *L = l;
 }
 
@@ -893,12 +1083,18 @@ linklistShift(link_list ** L)
 {
     void *p;
     link_list *l;
+
     if (NULL == *L)
-	return NULL;
+        return NULL;
+
     l = *L;
+
     p = l->ptr;
+
     *L = (*L)->next;
+
     memFree(l, MEM_LINK_LIST);
+
     return p;
 }
 
@@ -912,12 +1108,18 @@ xrename(const char *from, const char *to)
 {
     debug(21, 2) ("xrename: renaming %s to %s\n", from, to);
 #ifdef _SQUID_MSWIN_
-    remove(to);
+
+    remove
+        (to);
+
 #endif
+
     if (0 == rename(from, to))
-	return 0;
+        return 0;
+
     debug(21, errno == ENOENT ? 2 : 1) ("xrename: Cannot rename %s to %s: %s\n",
-	from, to, xstrerror());
+                                        from, to, xstrerror());
+
     return -1;
 }
 
@@ -925,12 +1127,15 @@ int
 stringHasCntl(const char *s)
 {
     unsigned char c;
+
     while ((c = (unsigned char) *s++) != '\0') {
-	if (c <= 0x1f)
-	    return 1;
-	if (c >= 0x7f && c <= 0x9f)
-	    return 1;
+        if (c <= 0x1f)
+            return 1;
+
+        if (c >= 0x7f && c <= 0x9f)
+            return 1;
     }
+
     return 0;
 }
 
@@ -944,58 +1149,83 @@ parseEtcHosts(void)
     char *lt = buf;
 
     if (NULL == Config.etcHostsPath)
-	return;
+        return;
+
     if (0 == strcmp(Config.etcHostsPath, "none"))
-	return;
+        return;
+
     fp = fopen(Config.etcHostsPath, "r");
+
     if (fp == NULL) {
-	debug(1, 1) ("parseEtcHosts: %s: %s\n",
-	    Config.etcHostsPath, xstrerror());
-	return;
+        debug(1, 1) ("parseEtcHosts: %s: %s\n",
+                     Config.etcHostsPath, xstrerror());
+        return;
     }
+
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     setmode(fileno(fp), O_TEXT);
+
 #endif
+
     while (fgets(buf, 1024, fp)) {	/* for each line */
-	wordlist *hosts = NULL;
-	char *addr;
-	if (buf[0] == '#')	/* MS-windows likes to add comments */
-	    continue;
-	lt = buf;
-	addr = buf;
-	debug(1, 5) ("etc_hosts: line is '%s'\n", buf);
-	nt = strpbrk(lt, w_space);
-	if (nt == NULL)		/* empty line */
-	    continue;
-	*nt = '\0';		/* null-terminate the address */
-	debug(1, 5) ("etc_hosts: address is '%s'\n", addr);
-	lt = nt + 1;
-	while ((nt = strpbrk(lt, w_space))) {
-	    char *host = NULL;
-	    if (nt == lt) {	/* multiple spaces */
-		debug(1, 5) ("etc_hosts: multiple spaces, skipping\n");
-		lt = nt + 1;
-		continue;
-	    }
-	    *nt = '\0';
-	    debug(1, 5) ("etc_hosts: got hostname '%s'\n", lt);
-	    if (Config.appendDomain && !strchr(lt, '.')) {
-		/* I know it's ugly, but it's only at reconfig */
-		strncpy(buf2, lt, 512);
-		strncat(buf2, Config.appendDomain, 512 - strlen(lt));
-		host = buf2;
-	    } else {
-		host = lt;
-	    }
-	    if (ipcacheAddEntryFromHosts(host, addr) != 0)
-		goto skip;	/* invalid address, continuing is useless */
-	    wordlistAdd(&hosts, host);
-	    lt = nt + 1;
-	}
-	fqdncacheAddEntryFromHosts(addr, hosts);
-      skip:
-	wordlistDestroy(&hosts);
+        wordlist *hosts = NULL;
+        char *addr;
+
+        if (buf[0] == '#')	/* MS-windows likes to add comments */
+            continue;
+
+        lt = buf;
+
+        addr = buf;
+
+        debug(1, 5) ("etc_hosts: line is '%s'\n", buf);
+
+        nt = strpbrk(lt, w_space);
+
+        if (nt == NULL)		/* empty line */
+            continue;
+
+        *nt = '\0';		/* null-terminate the address */
+
+        debug(1, 5) ("etc_hosts: address is '%s'\n", addr);
+
+        lt = nt + 1;
+
+        while ((nt = strpbrk(lt, w_space))) {
+            char *host = NULL;
+
+            if (nt == lt) {	/* multiple spaces */
+                debug(1, 5) ("etc_hosts: multiple spaces, skipping\n");
+                lt = nt + 1;
+                continue;
+            }
+
+            *nt = '\0';
+            debug(1, 5) ("etc_hosts: got hostname '%s'\n", lt);
+
+            if (Config.appendDomain && !strchr(lt, '.')) {
+                /* I know it's ugly, but it's only at reconfig */
+                strncpy(buf2, lt, 512);
+                strncat(buf2, Config.appendDomain, 512 - strlen(lt));
+                host = buf2;
+            } else {
+                host = lt;
+            }
+
+            if (ipcacheAddEntryFromHosts(host, addr) != 0)
+                goto skip;	/* invalid address, continuing is useless */
+
+            wordlistAdd(&hosts, host);
+
+            lt = nt + 1;
+        }
+
+        fqdncacheAddEntryFromHosts(addr, hosts);
+
+skip:
+        wordlistDestroy(&hosts);
     }
+
     fclose (fp);
 }
 
@@ -1003,12 +1233,17 @@ int
 getMyPort(void)
 {
     if (Config.Sockaddr.http)
-	return ntohs(Config.Sockaddr.http->s.sin_port);
+        return ntohs(Config.Sockaddr.http->s.sin_port);
+
 #if USE_SSL
+
     if (Config.Sockaddr.https)
-	return ntohs(Config.Sockaddr.https->http.s.sin_port);
+        return ntohs(Config.Sockaddr.https->http.s.sin_port);
+
 #endif
+
     fatal("No port defined");
+
     return 0;			/* NOT REACHED */
 }
 
@@ -1024,39 +1259,55 @@ strwordtok(char *buf, char **t)
     unsigned char *d;
     unsigned char ch;
     int quoted = 0;
+
     if (!p)
-	p = (unsigned char *) *t;
+        p = (unsigned char *) *t;
+
     if (!p)
-	goto error;
+        goto error;
+
     while (*p && isspace(*p))
-	p++;
+        p++;
+
     if (!*p)
-	goto error;
+        goto error;
+
     word = d = p;
+
     while ((ch = *p)) {
-	switch (ch) {
-	case '\\':
-	    p++;
-	    *d++ = ch = *p;
-	    if (ch)
-		p++;
-	    break;
-	case '"':
-	    quoted = !quoted;
-	    p++;
-	    break;
-	default:
-	    if (!quoted && isspace(*p)) {
-		p++;
-		goto done;
-	    }
-	    *d++ = *p++;
-	    break;
-	}
+        switch (ch) {
+
+        case '\\':
+            p++;
+            *d++ = ch = *p;
+
+            if (ch)
+                p++;
+
+            break;
+
+        case '"':
+            quoted = !quoted;
+
+            p++;
+
+            break;
+
+        default:
+            if (!quoted && isspace(*p)) {
+                p++;
+                goto done;
+            }
+
+            *d++ = *p++;
+            break;
+        }
     }
-  done:
+
+done:
     *d++ = '\0';
-  error:
+
+error:
     *t = (char *) p;
     return (char *) word;
 }
@@ -1068,20 +1319,24 @@ void
 strwordquote(MemBuf * mb, const char *str)
 {
     int quoted = 0;
+
     if (strchr(str, ' ')) {
-	quoted = 1;
-	memBufAppend(mb, "\"", 1);
+        quoted = 1;
+        memBufAppend(mb, "\"", 1);
     }
+
     while (*str) {
-	int l = strcspn(str, "\"\\");
-	memBufAppend(mb, str, l);
-	str += l;
-	while (*str == '"' || *str == '\\') {
-	    memBufAppend(mb, "\\", 1);
-	    memBufAppend(mb, str, 1);
-	    str++;
-	}
+        int l = strcspn(str, "\"\\");
+        memBufAppend(mb, str, l);
+        str += l;
+
+        while (*str == '"' || *str == '\\') {
+            memBufAppend(mb, "\\", 1);
+            memBufAppend(mb, str, 1);
+            str++;
+        }
     }
+
     if (quoted)
-	memBufAppend(mb, "\"", 1);
+        memBufAppend(mb, "\"", 1);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.54 2003/01/23 00:38:09 robertc Exp $
+ * $Id: store_dir_aufs.cc,v 1.55 2003/02/21 22:50:29 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -61,18 +61,24 @@ AUFSSwapDir::canStore(StoreEntry const &e) const
     int ql;
 
 #if OLD_UNUSED_CODE
+
     if (storeAufsDirExpiredReferenceAge(this) < 300) {
-	debug(47, 3) ("storeAufsDirCheckObj: NO: LRU Age = %d\n",
-	    storeAufsDirExpiredReferenceAge(this));
-	/* store_check_cachable_hist.no.lru_age_too_low++; */
-	return -1;
+        debug(47, 3) ("storeAufsDirCheckObj: NO: LRU Age = %d\n",
+                      storeAufsDirExpiredReferenceAge(this));
+        /* store_check_cachable_hist.no.lru_age_too_low++; */
+        return -1;
     }
+
 #endif
     ql = aioQueueSize();
+
     if (ql == 0)
-	loadav = 0;
+        loadav = 0;
+
     loadav = ql * 1000 / MAGIC1;
+
     debug(47, 9) ("storeAufsDirCheckObj: load=%d\n", loadav);
+
     return loadav;
 }
 
@@ -82,6 +88,7 @@ AUFSSwapDir::unlinkFile(char const *path)
 #if USE_TRUNCATE_NOT_UNLINK
     aioTruncate(path, NULL, NULL);
 #else
+
     aioUnlink(path, NULL, NULL);
 #endif
 }
@@ -89,13 +96,13 @@ AUFSSwapDir::unlinkFile(char const *path)
 /* ========== LOCAL FUNCTIONS ABOVE, GLOBAL FUNCTIONS BELOW ========== */
 
 static struct cache_dir_option options[] =
-{
+    {
 #if NOT_YET_DONE
-    {"L1", storeAufsDirParseL1, storeAufsDirDumpL1},
-    {"L2", storeAufsDirParseL2, storeAufsDirDumpL2},
+        {"L1", storeAufsDirParseL1, storeAufsDirDumpL1},
+        {"L2", storeAufsDirParseL2, storeAufsDirDumpL2},
 #endif
-    {NULL, NULL}
-};
+        {NULL, NULL}
+    };
 
 /*
  * storeAufsDirReconfigure

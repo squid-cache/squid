@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaMD5.cc,v 1.1 2003/01/23 00:37:14 robertc Exp $
+ * $Id: StoreMetaMD5.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -45,8 +45,10 @@ StoreMetaMD5::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (StoreMetaMD5));
+
     if (!pool)
-	pool = memPoolCreate("StoreMetaMD5", sizeof (StoreMetaMD5));
+        pool = memPoolCreate("StoreMetaMD5", sizeof (StoreMetaMD5));
+
     return memPoolAlloc(pool);
 }
 
@@ -62,7 +64,7 @@ StoreMetaMD5::deleteSelf()
     delete this;
 }
 
-bool 
+bool
 StoreMetaMD5::validLength(int len) const
 {
     return len == MD5_DIGEST_CHARS;
@@ -70,20 +72,24 @@ StoreMetaMD5::validLength(int len) const
 
 int StoreMetaMD5::md5_mismatches = 0;
 
-bool 
+bool
 StoreMetaMD5::checkConsistency(StoreEntry *e) const
 {
     assert (getType() == STORE_META_KEY_MD5);
     assert(length == MD5_DIGEST_CHARS);
+
     if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
-	memcmp(value, e->key, MD5_DIGEST_CHARS)) {
-	debug(20, 2) ("storeClientReadHeader: swapin MD5 mismatch\n");
-//	debug(20, 2) ("\t%s\n", storeKeyText((const cache_key *)value));
-	debug(20, 2) ("\t%s\n", e->getMD5Text());
-	if (isPowTen(++md5_mismatches))
-	    debug(20, 1) ("WARNING: %d swapin MD5 mismatches\n",
-			  md5_mismatches);
-	return false;
+            memcmp(value, e->key, MD5_DIGEST_CHARS)) {
+        debug(20, 2) ("storeClientReadHeader: swapin MD5 mismatch\n");
+        //	debug(20, 2) ("\t%s\n", storeKeyText((const cache_key *)value));
+        debug(20, 2) ("\t%s\n", e->getMD5Text());
+
+        if (isPowTen(++md5_mismatches))
+            debug(20, 1) ("WARNING: %d swapin MD5 mismatches\n",
+                          md5_mismatches);
+
+        return false;
     }
+
     return true;
 }

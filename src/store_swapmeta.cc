@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.20 2003/01/23 00:37:27 robertc Exp $
+ * $Id: store_swapmeta.cc,v 1.21 2003/02/21 22:50:12 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -43,10 +43,11 @@ void
 storeSwapTLVFree(tlv * n)
 {
     tlv *t;
+
     while ((t = n) != NULL) {
-	n = t->next;
-	xfree(t->value);
-	t->deleteSelf();
+        n = t->next;
+        xfree(t->value);
+        t->deleteSelf();
     }
 }
 
@@ -65,32 +66,42 @@ storeSwapMetaBuild(StoreEntry * e)
     url = storeUrl(e);
     debug(20, 3) ("storeSwapMetaBuild: %s\n", url);
     tlv *t = StoreMeta::Factory (STORE_META_KEY,MD5_DIGEST_CHARS, e->key);
+
     if (!t) {
-	storeSwapTLVFree(TLV);
-	return NULL;
+        storeSwapTLVFree(TLV);
+        return NULL;
     }
+
     T = StoreMeta::Add(T, t);
     t = StoreMeta::Factory(STORE_META_STD,STORE_HDR_METASIZE,&e->timestamp);
+
     if (!t) {
-	storeSwapTLVFree(TLV);
-	return NULL;
+        storeSwapTLVFree(TLV);
+        return NULL;
     }
+
     T = StoreMeta::Add(T, t);
     t = StoreMeta::Factory(STORE_META_URL, strlen(url) + 1, url);
+
     if (!t) {
-	storeSwapTLVFree(TLV);
-	return NULL;
+        storeSwapTLVFree(TLV);
+        return NULL;
     }
+
     T = StoreMeta::Add(T, t);
     vary = e->mem_obj->vary_headers;
+
     if (vary) {
-	t =StoreMeta::Factory(STORE_META_VARY_HEADERS, strlen(vary) + 1, vary);
-	if (!t) {
-	    storeSwapTLVFree(TLV);
-	    return NULL;
-	}
-	StoreMeta::Add (T, t);
+        t =StoreMeta::Factory(STORE_META_VARY_HEADERS, strlen(vary) + 1, vary);
+
+        if (!t) {
+            storeSwapTLVFree(TLV);
+            return NULL;
+        }
+
+        StoreMeta::Add (T, t);
     }
+
     return TLV;
 }
 
@@ -104,20 +115,28 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     assert(length != NULL);
     buflen++;			/* STORE_META_OK */
     buflen += sizeof(int);	/* size of header to follow */
+
     for (t = tlv_list; t; t = t->next)
-	buflen += sizeof(char) + sizeof(int) + t->length;
+        buflen += sizeof(char) + sizeof(int) + t->length;
+
     buflen++;			/* STORE_META_END */
+
     buf = (char *)xmalloc(buflen);
+
     buf[j++] = (char) STORE_META_OK;
+
     xmemcpy(&buf[j], &buflen, sizeof(int));
+
     j += sizeof(int);
+
     for (t = tlv_list; t; t = t->next) {
-	buf[j++] = t->getType();
-	xmemcpy(&buf[j], &t->length, sizeof(int));
-	j += sizeof(int);
-	xmemcpy(&buf[j], t->value, t->length);
-	j += t->length;
+        buf[j++] = t->getType();
+        xmemcpy(&buf[j], &t->length, sizeof(int));
+        j += sizeof(int);
+        xmemcpy(&buf[j], t->value, t->length);
+        j += t->length;
     }
+
     buf[j++] = (char) STORE_META_END;
     assert((int) j == buflen);
     *length = buflen;

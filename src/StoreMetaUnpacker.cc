@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaUnpacker.cc,v 1.1 2003/01/23 00:37:15 robertc Exp $
+ * $Id: StoreMetaUnpacker.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Unpacker
  * AUTHOR: Robert Collins
@@ -43,16 +43,20 @@ bool
 StoreMetaUnpacker::isBufferSane()
 {
     if (buf[0] != (char) STORE_META_OK)
-	return false;
+        return false;
+
     /*
      * sanity check on 'buflen' value.  It should be at least big
      * enough to hold one type and one length.
      */
     getBufferLength();
+
     if (*hdr_len <= MinimumBufferLength)
-	return false;
+        return false;
+
     if (*hdr_len > buflen)
-	return false;
+        return false;
+
     return true;
 }
 
@@ -85,17 +89,23 @@ StoreMetaUnpacker::doOneEntry()
 {
     getType();
     getLength();
+
     if (position + length > *hdr_len) {
         debug(20, 0) ("storeSwapMetaUnpack: overflow!\n");
         debug(20, 0) ("\ttype=%d, length=%d, *hdr_len=%d, offset=%d\n",
-            type, length, *hdr_len, (int) position);
+                      type, length, *hdr_len, (int) position);
         return false;
     }
+
     StoreMeta *newNode = StoreMeta::Factory(type, length, &buf[position]);
+
     if (!newNode)
-	return false;
+        return false;
+
     tail = StoreMeta::Add (tail, newNode);
+
     position += length;
+
     return true;
 }
 
@@ -111,13 +121,18 @@ StoreMetaUnpacker::createStoreMeta ()
     tlv *TLV = NULL;
     tail = &TLV;
     assert(hdr_len != NULL);
+
     if (!isBufferSane())
-	return NULL;
+        return NULL;
+
     getBufferLength();
+
     assert (position == 1 + sizeof(int));
+
     while (moreToProcess()) {
-	if (!doOneEntry())
-	    break;
+        if (!doOneEntry())
+            break;
     }
+
     return TLV;
 }

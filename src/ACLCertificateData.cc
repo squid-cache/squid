@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificateData.cc,v 1.2 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLCertificateData.cc,v 1.3 2003/02/21 22:50:04 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -45,8 +45,10 @@ ACLCertificateData::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (ACLCertificateData));
+
     if (!Pool)
-	Pool = memPoolCreate("ACLCertificateData", sizeof (ACLCertificateData));
+        Pool = memPoolCreate("ACLCertificateData", sizeof (ACLCertificateData));
+
     return memPoolAlloc(Pool);
 }
 
@@ -64,14 +66,14 @@ ACLCertificateData::deleteSelf() const
 
 
 ACLCertificateData::ACLCertificateData(SSLGETATTRIBUTE *sslStrategy) : attribute (NULL), values (NULL), sslAttributeCall (sslStrategy)
-{
-}
+{}
 
 ACLCertificateData::ACLCertificateData(ACLCertificateData const &old) : attribute (NULL), values (NULL), sslAttributeCall (old.sslAttributeCall)
 {
     assert (!old.values);
+
     if (old.attribute)
-	attribute = xstrdup (old.attribute);
+        attribute = xstrdup (old.attribute);
 }
 
 template<class T>
@@ -84,9 +86,10 @@ xRefFree(T &thing)
 ACLCertificateData::~ACLCertificateData()
 {
     safe_free (attribute);
+
     if (values)
-	values->destroy(xRefFree);
-} 
+        values->destroy(xRefFree);
+}
 
 template<class T>
 inline int
@@ -106,15 +109,20 @@ bool
 ACLCertificateData::match(SSL *ssl)
 {
     if (!ssl)
-	return 0;
-    
+        return 0;
+
     char const *value = sslAttributeCall(ssl, attribute);
+
     if (value == NULL)
-	return 0;
+        return 0;
+
     debug(28, 3) ("aclMatchCertificateList: checking '%s'\n", value);
+
     values = values->splay((char *)value, splaystrcmp);
+
     debug(28, 3) ("aclMatchCertificateList: '%s' %s\n",
-	value, splayLastResult ? "NOT found" : "found");
+                  value, splayLastResult ? "NOT found" : "found");
+
     return !splayLastResult;
 }
 
@@ -142,17 +150,21 @@ void
 ACLCertificateData::parse()
 {
     char *newAttribute = strtokFile();
+
     if (!newAttribute)
-	self_destruct();
+        self_destruct();
+
     /* an acl must use consistent attributes in all config lines */
     if (attribute) {
-	if (strcasecmp(newAttribute, attribute) != 0)
-	    self_destruct();
+        if (strcasecmp(newAttribute, attribute) != 0)
+            self_destruct();
     } else
-	attribute = xstrdup(newAttribute);
+        attribute = xstrdup(newAttribute);
+
     char *t;
+
     while ((t = strtokFile())) {
-	values = values->insert(xstrdup(t), splaystrcmp);
+        values = values->insert(xstrdup(t), splaystrcmp);
     }
 }
 
