@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.4 2003/07/15 06:50:41 robertc Exp $
+ * $Id: HttpRequest.h,v 1.5 2003/07/15 11:33:21 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -100,6 +100,9 @@ public:
     String extacl_user;		/* User name returned by extacl lookup */
     String extacl_passwd;	/* Password returned by extacl lookup */
     String extacl_log;		/* String to be used for access.log purposes */
+
+private:
+    static MemPool *Pool;
 };
 
 typedef HttpRequest request_t;

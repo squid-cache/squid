@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.58 2003/04/24 06:35:10 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.59 2003/07/15 11:33:23 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "fde.h"
 #include "store_ufs.h"
 #include "ufscommon.h"
+#include "StoreSwapLogData.h"
 
 #include "SwapDir.h"
 static int ufs_initialised = 0;
@@ -950,9 +951,8 @@ UFSCleanLog::nextEntry()
 void
 UFSCleanLog::write(StoreEntry const &e)
 {
-    storeSwapLogData s;
-    static size_t ss = sizeof(storeSwapLogData);
-    memset(&s, '\0', ss);
+    StoreSwapLogData s;
+    static size_t ss = sizeof(StoreSwapLogData);
     s.op = (char) SWAP_LOG_ADD;
     s.swap_filen = e.swap_filen;
     s.timestamp = e.timestamp;
@@ -1059,15 +1059,9 @@ UFSSwapDir::writeCleanDone()
 }
 
 void
-storeSwapLogDataFree(void *s)
-{
-    memFree(s, MEM_SWAP_LOG_DATA);
-}
-
-void
 UFSSwapDir::logEntry(const StoreEntry & e, int op) const
 {
-    storeSwapLogData *s = (storeSwapLogData *)memAllocate(MEM_SWAP_LOG_DATA);
+    StoreSwapLogData *s = new StoreSwapLogData;
     s->op = (char) op;
     s->swap_filen = e.swap_filen;
     s->timestamp = e.timestamp;
@@ -1081,10 +1075,10 @@ UFSSwapDir::logEntry(const StoreEntry & e, int op) const
     file_write(swaplog_fd,
                -1,
                s,
-               sizeof(storeSwapLogData),
+               sizeof(StoreSwapLogData),
                NULL,
                NULL,
-               (FREE *) storeSwapLogDataFree);
+               FreeObject<StoreSwapLogData>);
 }
 
 static QS rev_int_sort;

@@ -1,8 +1,8 @@
 /*
- * $Id: ufscommon.cc,v 1.9 2003/02/21 22:50:12 robertc Exp $
+ * $Id: ufscommon.cc,v 1.10 2003/07/15 11:33:22 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
- * AUTHOR: Duane Wessels
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,6 +30,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "ufscommon.h"
@@ -39,6 +40,7 @@
 #include "Generic.h"
 #include "StoreMetaUnpacker.h"
 #include "RefCount.h"
+#include "StoreSwapLogData.h"
 
 CBDATA_CLASS_INIT(RebuildState);
 
@@ -293,8 +295,8 @@ RebuildState::rebuildFromSwapLog()
     /* load a number of objects per invocation */
 
     for (int count = 0; count < speed; count++) {
-        storeSwapLogData s;
-        size_t ss = sizeof(storeSwapLogData);
+        StoreSwapLogData s;
+        size_t ss = sizeof(StoreSwapLogData);
 
         if (fread(&s, ss, 1, log) != 1) {
             debug(47, 1) ("Done reading %s swaplog (%d entries)\n",

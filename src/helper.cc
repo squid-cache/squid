@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.58 2003/05/29 15:54:08 hno Exp $
+ * $Id: helper.cc,v 1.59 2003/07/15 11:33:22 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "helper.h"
 #include "Store.h"
 #include "comm.h"
 
@@ -265,7 +266,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 void
 helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
-    helper_request *r = (helper_request *)memAllocate(MEM_HELPER_REQUEST);
+    helper_request *r = new helper_request;
     helper_server *srv;
 
     if (hlp == NULL) {
@@ -292,7 +293,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 void
 helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver)
 {
-    helper_stateful_request *r = (helper_stateful_request *)memAllocate(MEM_HELPER_STATEFUL_REQUEST);
+    helper_stateful_request *r = new helper_stateful_request;
     helper_stateful_server *srv;
 
     if (hlp == NULL) {
@@ -1451,7 +1452,33 @@ helperRequestFree(helper_request * r)
 {
     cbdataReferenceDone(r->data);
     xfree(r->buf);
-    memFree(r, MEM_HELPER_REQUEST);
+    r->deleteSelf();
+}
+
+MemPool (*helper_request::Pool)(NULL);
+
+void *
+helper_request::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (helper_request));
+
+    if (!Pool)
+        Pool = memPoolCreate("helper_request", sizeof (helper_request));
+
+    return memPoolAlloc(Pool);
+}
+
+void
+helper_request::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
+
+void
+helper_request::deleteSelf() const
+{
+    delete this;
 }
 
 static void
@@ -1459,5 +1486,31 @@ helperStatefulRequestFree(helper_stateful_request * r)
 {
     cbdataReferenceDone(r->data);
     xfree(r->buf);
-    memFree(r, MEM_HELPER_STATEFUL_REQUEST);
+    r->deleteSelf();
+}
+
+MemPool (*helper_stateful_request::Pool)(NULL);
+
+void *
+helper_stateful_request::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (helper_stateful_request));
+
+    if (!Pool)
+        Pool = memPoolCreate("helper_stateful_request", sizeof (helper_stateful_request));
+
+    return memPoolAlloc(Pool);
+}
+
+void
+helper_stateful_request::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
+
+void
+helper_stateful_request::deleteSelf() const
+{
+    delete this;
 }

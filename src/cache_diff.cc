@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_diff.cc,v 1.19 2003/04/24 06:35:08 hno Exp $
+ * $Id: cache_diff.cc,v 1.20 2003/07/15 11:33:22 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -58,7 +58,7 @@ typedef struct _CacheEntry
     const cache_key *key;
 
     struct _CacheEntry *next;
-    /* storeSwapLogData s; */
+    /* StoreSwapLogData s; */
     unsigned char key_arr[MD5_DIGEST_CHARS];
 }
 
@@ -83,7 +83,7 @@ static int cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file);
 
 
 static CacheEntry *
-cacheEntryCreate(const storeSwapLogData * s)
+cacheEntryCreate(const StoreSwapLogData * s)
 {
     CacheEntry *e = xcalloc(1, sizeof(CacheEntry));
     assert(s);
@@ -181,7 +181,7 @@ static int
 cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file)
 {
     int count = 0;
-    storeSwapLogData s;
+    StoreSwapLogData s;
     fprintf(stderr, "%s scanning\n", fname);
 
     while (fread(&s, sizeof(s), 1, file) == 1) {

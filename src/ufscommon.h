@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.5 2003/02/21 22:50:12 robertc Exp $
+ * $Id: ufscommon.h,v 1.6 2003/07/15 11:33:22 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -40,7 +40,6 @@
 #define STORE_META_BUFSZ 4096
 
 /* Common UFS routines */
-FREE storeSwapLogDataFree;
 #include "SwapDir.h"
 
 class UFSStrategy;
