@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.343 2003/02/23 00:08:04 robertc Exp $
+ * $Id: ftp.cc,v 1.344 2003/03/02 23:13:49 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -215,7 +215,7 @@ static IOWCB ftpDataWriteCallback;
 static PF ftpStateFree;
 static PF ftpTimeout;
 static IOCB ftpReadControlReply;
-static CWCB ftpWriteCommandCallback;
+static IOWCB ftpWriteCommandCallback;
 static void ftpLoginParser(const char *, FtpStateData *, int escaped);
 static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
 static int ftpRestartable(FtpStateData * ftpState);
@@ -226,8 +226,8 @@ static void ftpUnhack(FtpStateData * ftpState);
 static void ftpScheduleReadControlReply(FtpStateData *, int);
 static void ftpHandleControlReply(FtpStateData *);
 static char *ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState);
-static void ftpFailed(FtpStateData *, err_type);
-static void ftpFailedErrorMessage(FtpStateData *, err_type);
+static void ftpFailed(FtpStateData *, err_type, int xerrno);
+static void ftpFailedErrorMessage(FtpStateData *, err_type, int xerrno);
 
 /*
  * State machine functions
@@ -438,7 +438,7 @@ ftpTimeout(int fd, void *data)
         debug(9, 1) ("ftpTimeout: timeout in SENT_PASV state\n");
     }
 
-    ftpFailed(ftpState, ERR_READ_TIMEOUT);
+    ftpFailed(ftpState, ERR_READ_TIMEOUT, 0);
     /* ftpFailed closes ctrl.fd and frees ftpState */
 }
 
@@ -1158,9 +1158,9 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
     }
 
     if (flag != COMM_OK || len < 0) {
-        debug(50, ignoreErrno(errno) ? 3 : 1) ("ftpDataRead: read error: %s\n", xstrerror());
+        debug(50, ignoreErrno(xerrno) ? 3 : 1) ("ftpDataRead: read error: %s\n", xstrerr(xerrno));
 
-        if (ignoreErrno(errno)) {
+        if (ignoreErrno(xerrno)) {
             /* XXX what about Config.Timeout.read? */
             read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
@@ -1170,7 +1170,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
 
             comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);
         } else {
-            ftpFailed(ftpState, ERR_READ_ERROR);
+            ftpFailed(ftpState, ERR_READ_ERROR, 0);
             /* ftpFailed closes ctrl.fd and frees ftpState */
             return;
         }
@@ -1407,19 +1407,19 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
     safe_free(ftpState->ctrl.last_command);
     safe_free(ftpState->ctrl.last_reply);
     ftpState->ctrl.last_command = xstrdup(buf);
-    comm_old_write(ftpState->ctrl.fd,
-                   xstrdup(buf),
-                   strlen(buf),
-                   ftpWriteCommandCallback,
-                   ftpState,
-                   xfree);
+    comm_write(ftpState->ctrl.fd,
+               xstrdup(buf),
+               strlen(buf),
+               ftpWriteCommandCallback,
+               ftpState);
     ftpScheduleReadControlReply(ftpState, 0);
 }
 
 static void
-ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
+ftpWriteCommandCallback(int fd, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
+    xfree(buf);
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", (int) size);
 
     if (size > 0) {
@@ -1432,8 +1432,8 @@ ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, comm_err_t errfla
         return;
 
     if (errflag) {
-        debug(9, 1) ("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerror());
-        ftpFailed(ftpState, ERR_WRITE_ERROR);
+        debug(9, 1) ("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerr(xerrno));
+        ftpFailed(ftpState, ERR_WRITE_ERROR, xerrno);
         /* ftpFailed closes ctrl.fd and frees ftpState */
         return;
     }
@@ -1581,12 +1581,12 @@ ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, 
     debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, (int)len);
 
     if (flag != COMM_OK || len < 0) {
-        debug(50, ignoreErrno(errno) ? 3 : 1) ("ftpReadControlReply: read error: %s\n", xstrerror());
+        debug(50, ignoreErrno(xerrno) ? 3 : 1) ("ftpReadControlReply: read error: %s\n", xstrerr(xerrno));
 
-        if (ignoreErrno(errno)) {
+        if (ignoreErrno(xerrno)) {
             ftpScheduleReadControlReply(ftpState, 0);
         } else {
-            ftpFailed(ftpState, ERR_READ_ERROR);
+            ftpFailed(ftpState, ERR_READ_ERROR, xerrno);
             /* ftpFailed closes ctrl.fd and frees ftpState */
             return;
         }
@@ -1596,7 +1596,7 @@ ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, 
 
     if (len == 0) {
         if (entry->store_status == STORE_PENDING) {
-            ftpFailed(ftpState, ERR_FTP_FAILURE);
+            ftpFailed(ftpState, ERR_FTP_FAILURE, 0);
             /* ftpFailed closes ctrl.fd and frees ftpState */
             return;
         }
@@ -2204,7 +2204,7 @@ ftpReadPasv(FtpStateData * ftpState)
 }
 
 static void
-ftpPasvCallback(int fd, comm_err_t status, void *data)
+ftpPasvCallback(int fd, comm_err_t status, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debug(9, 3) ("ftpPasvCallback\n");
@@ -2213,7 +2213,7 @@ ftpPasvCallback(int fd, comm_err_t status, void *data)
         debug(9, 2) ("ftpPasvCallback: failed to connect. Retrying without PASV.\n");
         ftpState->fwd->flags.dont_retry = 0;	/* this is a retryable error */
         ftpState->fwd->flags.ftp_pasv_failed = 1;
-        ftpFailed(ftpState, ERR_NONE);
+        ftpFailed(ftpState, ERR_NONE, 0);
         /* ftpFailed closes ctrl.fd and frees ftpState */
         return;
     }
@@ -2359,8 +2359,7 @@ ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
     }
 
     if (flag != COMM_OK) {
-        errno = xerrno;
-        debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s", newfd, xstrerror());
+        debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s", newfd, xstrerr(xerrno));
         /* XXX Need to set error message */
         ftpFail(ftpState);
         return;
@@ -2665,7 +2664,7 @@ ftpReadTransferDone(FtpStateData * ftpState)
     } else {			/* != 226 */
         debug(9, 1) ("ftpReadTransferDone: Got code %d after reading data\n",
                      code);
-        ftpFailed(ftpState, ERR_FTP_FAILURE);
+        ftpFailed(ftpState, ERR_FTP_FAILURE, 0);
         /* ftpFailed closes ctrl.fd and frees ftpState */
         return;
     }
@@ -2685,7 +2684,7 @@ ftpRequestBody(char *buf, ssize_t size, void *data)
     } else if (size < 0) {
         /* Error */
         debug(9, 1) ("ftpRequestBody: request aborted");
-        ftpFailed(ftpState, ERR_READ_ERROR);
+        ftpFailed(ftpState, ERR_READ_ERROR, 0);
     } else if (size == 0) {
         /* End of transfer */
         ftpDataComplete(ftpState);
@@ -2702,8 +2701,8 @@ ftpDataWriteCallback(int fd, char *buf, size_t size, comm_err_t err, int xerrno,
         /* Shedule the rest of the request */
         clientReadBody(ftpState->request, ftpState->data.buf, ftpState->data.size, ftpRequestBody, ftpState);
     } else {
-        debug(9, 1) ("ftpDataWriteCallback: write error: %s\n", xstrerror());
-        ftpFailed(ftpState, ERR_WRITE_ERROR);
+        debug(9, 1) ("ftpDataWriteCallback: write error: %s\n", xstrerr(xerrno));
+        ftpFailed(ftpState, ERR_WRITE_ERROR, xerrno);
     }
 }
 
@@ -2725,7 +2724,7 @@ ftpWriteTransferDone(FtpStateData * ftpState)
     if (code != 226) {
         debug(9, 1) ("ftpReadTransferDone: Got code %d after sending data\n",
                      code);
-        ftpFailed(ftpState, ERR_FTP_PUT_ERROR);
+        ftpFailed(ftpState, ERR_FTP_PUT_ERROR, 0);
         return;
     }
 
@@ -2872,17 +2871,17 @@ ftpFail(FtpStateData * ftpState)
         }
     }
 
-    ftpFailed(ftpState, ERR_NONE);
+    ftpFailed(ftpState, ERR_NONE, 0);
     /* ftpFailed closes ctrl.fd and frees ftpState */
 }
 
 static void
-ftpFailed(FtpStateData * ftpState, err_type error)
+ftpFailed(FtpStateData * ftpState, err_type error, int xerrno)
 {
     StoreEntry *entry = ftpState->entry;
 
     if (entry->isEmpty())
-        ftpFailedErrorMessage(ftpState, error);
+        ftpFailedErrorMessage(ftpState, error, xerrno);
 
     if (ftpState->data.fd > -1) {
         comm_close(ftpState->data.fd);
@@ -2893,7 +2892,7 @@ ftpFailed(FtpStateData * ftpState, err_type error)
 }
 
 static void
-ftpFailedErrorMessage(FtpStateData * ftpState, err_type error)
+ftpFailedErrorMessage(FtpStateData * ftpState, err_type error, int xerrno)
 {
     ErrorState *err;
     const char *command, *reply;
@@ -2943,7 +2942,7 @@ ftpFailedErrorMessage(FtpStateData * ftpState, err_type error)
     if (err == NULL)
         err = errorCon(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY);
 
-    err->xerrno = errno;
+    err->xerrno = xerrno;
 
     err->request = requestLink(ftpState->request);
 

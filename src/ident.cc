@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.67 2003/02/23 00:08:04 robertc Exp $
+ * $Id: ident.cc,v 1.68 2003/03/02 23:13:49 hno Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -110,7 +110,7 @@ identTimeout(int fd, void *data)
 }
 
 static void
-identConnectDone(int fd, comm_err_t status, void *data)
+identConnectDone(int fd, comm_err_t status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     IdentClient *c;

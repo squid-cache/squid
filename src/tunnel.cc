@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.139 2003/03/02 23:10:22 hno Exp $
+ * $Id: tunnel.cc,v 1.140 2003/03/02 23:13:49 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -403,7 +403,7 @@ sslErrorComplete(int fdnotused, void *data, size_t sizenotused)
 
 
 static void
-sslConnectDone(int fdnotused, comm_err_t status, void *data)
+sslConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
     request_t *request = sslState->request;
@@ -431,7 +431,7 @@ sslConnectDone(int fdnotused, comm_err_t status, void *data)
     } else if (status != COMM_OK) {
         err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
         *sslState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
-        err->xerrno = errno;
+        err->xerrno = xerrno;
         err->host = xstrdup(sslState->host);
         err->port = sslState->port;
         err->request = requestLink(request);

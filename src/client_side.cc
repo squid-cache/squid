@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.626 2003/02/23 00:08:03 robertc Exp $
+ * $Id: client_side.cc,v 1.627 2003/03/02 23:13:48 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -206,7 +206,7 @@ static int connGetAvailableBufferLength(ConnStateData const *conn);
 static void connMakeSpaceAvailable(ConnStateData * conn);
 static void connAddContextToQueue(ConnStateData * conn, ClientSocketContext * context);
 static int connGetConcurrentRequestCount(ConnStateData * conn);
-static int connReadWasError(ConnStateData * conn, comm_err_t, int size);
+static int connReadWasError(ConnStateData * conn, comm_err_t, int size, int xerrno);
 static int connFinishedWithConn(ConnStateData * conn, int size);
 static void connNoteUseOfBuffer(ConnStateData * conn, size_t byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData * conn);
@@ -1932,7 +1932,7 @@ connGetConcurrentRequestCount(ConnStateData * conn)
 }
 
 int
-connReadWasError(ConnStateData * conn, comm_err_t flag, int size)
+connReadWasError(ConnStateData * conn, comm_err_t flag, int size, int xerrno)
 {
     if (flag != COMM_OK) {
         debug(50, 2) ("connReadWasError: FD %d: got flag %d\n", conn->fd, flag);
@@ -1940,12 +1940,12 @@ connReadWasError(ConnStateData * conn, comm_err_t flag, int size)
     }
 
     if (size < 0) {
-        if (!ignoreErrno(errno)) {
-            debug(50, 2) ("connReadWasError: FD %d: %s\n", conn->fd, xstrerror());
+        if (!ignoreErrno(xerrno)) {
+            debug(50, 2) ("connReadWasError: FD %d: %s\n", conn->fd, xstrerr(xerrno));
             return 1;
         } else if (conn->in.notYetUsed == 0) {
             debug(50, 2) ("connReadWasError: FD %d: no data to process (%s)\n",
-                          conn->fd, xstrerror());
+                          conn->fd, xstrerr(xerrno));
         }
     }
 
@@ -2220,7 +2220,7 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
      * whole, not individual read() calls.  Plus, it breaks our
      * lame half-close detection
      */
-    if (connReadWasError(conn, flag, size)) {
+    if (connReadWasError(conn, flag, size, xerrno)) {
         comm_close(fd);
         return;
     }
@@ -2614,9 +2614,8 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
     /* XXX we're not considering httpAcceptDefer yet! */
 
     if (flag != COMM_OK) {
-        errno = xerrno;
         debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
-                      sock, xstrerror());
+                      sock, xstrerr(xerrno));
         return;
     }
 
@@ -2727,7 +2726,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     if (flag != COMM_OK) {
         errno = xerrno;
         debug(50, 1) ("httpsAccept: FD %d: accept failure: %s\n",
-                      sock, xstrerror());
+                      sock, xstrerr(xerrno));
         return;
     }
 
