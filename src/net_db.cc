@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.134 1998/12/05 00:54:34 wessels Exp $
+ * $Id: net_db.cc,v 1.135 1999/01/11 16:50:35 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -587,8 +587,8 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
     debug(38, 3) ("netdbExchangeHandleReply: used %d entries, (x %d bytes) == %d bytes total\n",
 	nused, rec_sz, nused * rec_sz);
     debug(38, 3) ("netdbExchangeHandleReply: seen %d, used %d\n", ex->seen, ex->used);
-    if (ex->e->store_status == STORE_ABORTED) {
-	debug(38, 3) ("netdbExchangeHandleReply: STORE_ABORTED\n");
+    if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
+	debug(38, 3) ("netdbExchangeHandleReply: ENTRY_ABORTED\n");
 	netdbExchangeDone(ex);
     } else if (ex->e->store_status == STORE_PENDING) {
 	debug(38, 3) ("netdbExchangeHandleReply: STORE_PENDING\n");

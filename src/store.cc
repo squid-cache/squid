@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.475 1998/12/05 00:54:43 wessels Exp $
+ * $Id: store.cc,v 1.476 1999/01/11 16:50:41 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -56,8 +56,7 @@ const char *pingStatusStr[] =
 const char *storeStatusStr[] =
 {
     "STORE_OK",
-    "STORE_PENDING",
-    "STORE_ABORTED"
+    "STORE_PENDING"
 };
 
 const char *swapStatusStr[] =
@@ -250,10 +249,8 @@ storeUnlockObject(StoreEntry * e)
 	storeKeyText(e->key), e->lock_count);
     if (e->lock_count)
 	return (int) e->lock_count;
-    if (e->store_status == STORE_PENDING) {
-	assert(!EBIT_TEST(e->flags, ENTRY_DISPATCHED));
+    if (e->store_status == STORE_PENDING)
 	EBIT_SET(e->flags, RELEASE_REQUEST);
-    }
     assert(storePendingNClients(e) == 0);
     if (EBIT_TEST(e->flags, RELEASE_REQUEST))
 	storeRelease(e);
@@ -596,7 +593,7 @@ storeAbort(StoreEntry * e, int cbflag)
     storeLockObject(e);		/* lock while aborting */
     storeNegativeCache(e);
     storeReleaseRequest(e);
-    e->store_status = STORE_ABORTED;
+    EBIT_SET(e->flags, ENTRY_ABORTED);
     storeSetMemStatus(e, NOT_IN_MEMORY);
     /* No DISK swap for negative cached object */
     e->swap_status = SWAPOUT_NONE;
@@ -1051,7 +1048,7 @@ storeEntryValidToSend(StoreEntry * e)
     if (EBIT_TEST(e->flags, ENTRY_NEGCACHED))
 	if (e->expires <= squid_curtime)
 	    return 0;
-    if (e->store_status == STORE_ABORTED)
+    if (EBIT_TEST(e->flags, ENTRY_ABORTED))
 	return 0;
     return 1;
 }

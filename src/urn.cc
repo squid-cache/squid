@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.49 1998/12/05 00:54:48 wessels Exp $
+ * $Id: urn.cc,v 1.50 1999/01/11 16:50:43 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -191,7 +191,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     int urlcnt = 0;
 
     debug(52, 3) ("urnHandleReply: Called with size=%d.\n", size);
-    if (urlres_e->store_status == STORE_ABORTED) {
+    if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED)) {
 	memFree(buf, MEM_4K_BUF);
 	return;
     }
