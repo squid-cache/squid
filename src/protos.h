@@ -846,6 +846,7 @@ extern int matchDomainName(const char *d, const char *h);
 extern int urlCheckRequest(const request_t *);
 extern int urlDefaultPort(protocol_t p);
 extern char *urlCanonicalClean(const request_t *);
+extern char *urlHostname(const char *url);
 
 extern void useragentOpenLog(void);
 extern void useragentRotateLog(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.89 1998/05/05 03:50:02 wessels Exp $
+ * $Id: url.cc,v 1.90 1998/05/08 06:34:59 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -442,4 +442,35 @@ urlCheckRequest(const request_t * r)
 	break;
     }
     return rc;
+}
+
+/*
+ * Quick-n-dirty host extraction from a URL.  Steps:
+ *	Look for a colon
+ *	Skip any '/' after the colon
+ *	Copy the next SQUID_MAXHOSTNAMELEN bytes to host[]
+ *	Look for an ending '/' or ':' and terminate
+ *	Look for login info preceeded by '@'
+ */
+char *
+urlHostname(const char *url)
+{
+    LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN);
+    char *t;
+    host[0] = '\0';
+    if (NULL == (t = strchr(url, ':')))
+	return NULL;
+    t++;
+    while (*t != '\0' && *t == '/')
+	t++;
+    xstrncpy(host, t, SQUIDHOSTNAMELEN);
+    if ((t = strchr(host, '/')))
+	*t = '\0';
+    if ((t = strchr(host, ':')))
+	*t = '\0';
+    if ((t = strrchr(host, '@'))) {
+	t++;
+        xmemmove(host, t, strlen(t)+1);
+    }
+    return host;
 }

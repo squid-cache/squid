@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.28 1998/05/01 22:13:32 wessels Exp $
+ * $Id: urn.cc,v 1.29 1998/05/08 06:35:00 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -32,10 +32,6 @@
 
 #include "squid.h"
 
-static STCB urnHandleReply;
-static wordlist *urnParseReply(const char *inbuf);
-static const char *const crlf = "\r\n";
-
 enum {
     URN_FORCE_MENU
 };
@@ -48,52 +44,52 @@ typedef struct {
     int flags;
 } UrnState;
 
-wordlist *
-urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
+typedef struct {
+    char *url;
+    char *host;
+    int rtt;
+    struct {
+	int cached;
+    } flags;
+} url_entry;
+
+static STCB urnHandleReply;
+static url_entry *urnParseReply(const char *inbuf, method_t);
+static const char *const crlf = "\r\n";
+static QS url_entry_sort;
+
+url_entry *
+urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
 {
     int min_rtt = 0;
-    request_t *r;
-    int rtt;
-    wordlist *w;
-    wordlist *min_w = NULL;
+    url_entry *u = NULL;
+    url_entry *min_u = NULL;
+    int i;
     int urlcnt = 0;
     debug(52, 3) ("urnFindMinRtt\n");
     assert(urls != NULL);
-    for (w = urls; w; w = w->next)
+    for (i = 0; NULL != (urls+i)->url; i++)
 	urlcnt++;
-    if (urlcnt == 1) {
-	debug(52, 3) ("Only one URL - return it!\n");
-	return(urls);
+    if (1 == urlcnt) {
+	debug(52, 3) ("urnFindMinRtt: Only one URL - return it!\n");
+	return urls;
     }
-    for (w = urls; w; w = w->next) {
-	r = urlParse(m, w->key);
-	if (r == NULL)
+    for (i = 0; i<urlcnt; i++) {
+	u = urls+i;
+	debug(52, 3) ("urnFindMinRtt: %s rtt=%d\n", u->host, u->rtt);
+	if (u->rtt == 0)
 	    continue;
-	debug(52, 3) ("Parsed %s\n", w->key);
-	rtt = netdbHostRtt(r->host);
-	if (rtt == 0) {
-	    debug(52, 3) ("Pinging %s\n", r->host);
-	    netdbPingSite(r->host);
-	    stringClean(&r->urlpath);
-	    memFree(MEM_REQUEST_T, r);
+	if (u->rtt > min_rtt && min_rtt != 0)
 	    continue;
-	}
-	debug(52, 3) ("%s rtt=%d\n", r->host, rtt);
-	if (rtt == 0)
-	    continue;
-	if (rtt > min_rtt && min_rtt != 0)
-	    continue;
-	min_rtt = rtt;
-	min_w = w;
-	stringClean(&r->urlpath);
-	memFree(MEM_REQUEST_T, r);
+	min_rtt = u->rtt;
+	min_u = u;
     }
     if (rtt_ret)
 	*rtt_ret = min_rtt;
     debug(52, 1) ("urnFindMinRtt: Returning '%s' RTT %d\n",
-	min_w ? min_w->key : "NONE",
+	min_u ? min_u->url : "NONE",
 	min_rtt);
-    return min_w;
+    return min_u;
 }
 
 void
@@ -164,6 +160,21 @@ urnStart(request_t * r, StoreEntry * e)
 	urnState);
 }
 
+static int
+url_entry_sort(const void *A, const void *B)
+{
+    const url_entry *u1 = A;
+    const url_entry *u2 = B;
+    if (u2->rtt == u1->rtt)
+	return 0;
+    else if (0 == u1->rtt)
+	return 1;
+    else if (0 == u2->rtt)
+	return 1;
+    else
+        return u1->rtt - u2->rtt;
+}
+
 static void
 urnHandleReply(void *data, char *buf, ssize_t size)
 {
@@ -173,13 +184,12 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     char *s = NULL;
     size_t k;
     HttpReply *rep;
-    wordlist *w;
-    wordlist *urls;
-    wordlist *min_w;
+    url_entry *urls;
+    url_entry *min_u;
     MemBuf mb;
     ErrorState *err;
-    double tmprtt;
-    StoreEntry *tmpentry;
+    int i;
+    int urlcnt = 0;
 
     debug(52, 3) ("urnHandleReply: Called with size=%d.\n", size);
     if (urlres_e->store_status == STORE_ABORTED) {
@@ -225,7 +235,9 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     }
     while (isspace(*s))
 	s++;
-    urls = urnParseReply(s);
+    urls = urnParseReply(s, urnState->request->method);
+    for (i = 0; NULL != (urls+i)->url; i++)
+	urlcnt++;
     if (urls == NULL) {		/* unkown URN error */
 	debug(52, 3) ("urnTranslateDone: unknown URN %s\n", storeUrl(e));
 	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
@@ -234,22 +246,27 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	errorAppendEntry(e, err);
 	return;
     }
-    min_w = urnFindMinRtt(urls, urnState->request->method, NULL);
+    min_u = urnFindMinRtt(urls, urnState->request->method, NULL);
+    qsort(urls, urlcnt, sizeof(*urls), url_entry_sort);
     storeBuffer(e);
     memBufDefInit(&mb);
     memBufPrintf(&mb,
 	"<TITLE>Select URL for %s</TITLE>\n"
 	"<H2>Select URL for %s</H2>\n"
 	"<TABLE BORDER=0 WIDTH=\"100%%\">\n", storeUrl(e), storeUrl(e));
-    for (w = urls; w; w = w->next) {
-	request_t *tmpr = urlParse(urnState->request->method, w->key);
-	const cache_key *tmpk = storeKeyPublic(w->key, urnState->request->method);
-	tmpentry = storeGet(tmpk);
-	if (tmpr && tmpr->host && (tmprtt = netdbHostRtt(tmpr->host)))
-	    memBufPrintf(&mb, "<TR><TD><A HREF=\"%s\">%s</A></TD><TD align=right>%4.0f </it>ms</it></TD><TD>%s</TD></TR>\n",
-		w->key, w->key, tmprtt, tmpentry ? "    [cached]" : " ");
+    for (i = 0; i < urlcnt; i++) {
+	memBufPrintf(&mb,
+		"<TR><TD><A HREF=\"%s\">%s</A></TD>",
+		(urls+i)->url, (urls+i)->url);
+	if ((urls+i)->rtt > 0)
+	    memBufPrintf(&mb,
+		"<TD align=right>%4d </it>ms</it></TD>",
+		(urls+i)->rtt);
 	else
-	    memBufPrintf(&mb, "<TR><TD><A HREF=\"%s\">%s</A></TD></TR>", w->key, w->key);
+	    memBufPrintf(&mb, "<TD align=right>Unknown</TD>");
+	memBufPrintf(&mb,
+		"<TD>%s</TD></TR>\n",
+		(urls+i)->flags.cached ? "    [cached]" : " ");
     }
     memBufPrintf(&mb,
 	"</TABLE>"
@@ -264,14 +281,18 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	"text/html", mb.size, 0, squid_curtime);
     if (EBIT_TEST(urnState->flags, URN_FORCE_MENU)) {
 	debug(51, 3) ("urnHandleReply: forcing menu\n");
-    } else if (min_w) {
-	httpHeaderPutStr(&rep->header, HDR_LOCATION, min_w->key);
+    } else if (min_u) {
+	httpHeaderPutStr(&rep->header, HDR_LOCATION, min_u->url);
     }
     httpBodySet(&rep->body, mb.buf, mb.size + 1, memBufFreeFunc(&mb));
     httpReplySwapOut(rep, e);
     storeComplete(e);
     memFree(MEM_4K_BUF, buf);
-    wordlistDestroy(&urls);
+    for (i = 0; i < urlcnt; i++) {
+	safe_free((urls+i)->url);
+	safe_free((urls+i)->host);
+    }
+    safe_free(urls);
     /* mb was frozen with memBufFreeFunc call, so we must not clean it */
     storeUnregister(urlres_e, urnState);
     storeUnlockObject(urlres_e);
@@ -281,23 +302,45 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     cbdataFree(urnState);
 }
 
-static wordlist *
-urnParseReply(const char *inbuf)
+static url_entry *
+urnParseReply(const char *inbuf, method_t m)
 {
     char *buf = xstrdup(inbuf);
     char *token;
-    wordlist *u;
-    wordlist *head = NULL;
-    wordlist **last = &head;
+    char *url;
+    char *host;
+    const cache_key *key;
+    int rtt;
+    url_entry *list;
+    url_entry *old;
+    int n = 32;
+    int i = 0;
     debug(52, 3) ("urnParseReply\n");
+    list = xcalloc(n + 1, sizeof(*list));
     for (token = strtok(buf, crlf); token; token = strtok(NULL, crlf)) {
 	debug(52, 3) ("urnParseReply: got '%s'\n", token);
-	u = xmalloc(sizeof(wordlist));
-	u->key = xstrdup(token);
-	u->next = NULL;
-	*last = u;
-	last = &u->next;
+	if (i == n) {
+	    old = list;
+	    n <<= 2;
+	    list = xcalloc(n + 1, sizeof(*list));
+	    xmemcpy(list, old, i * sizeof(*list));
+	    safe_free(old);
+	}
+	url = xstrdup(token);
+	host = urlHostname(url);
+	if (NULL == host)
+	    continue;
+	rtt = netdbHostRtt(host);
+	if (0 == rtt) {
+	    debug(52, 3) ("urnParseReply: Pinging %s\n", host);
+	    netdbPingSite(host);
+	}
+	key = storeKeyPublic(url, m);
+	(list + i)->url = url;
+	(list + i)->host = xstrdup(host);
+	(list + i)->rtt = rtt;
+	(list + i)->flags.cached = storeGet(key) ? 1 : 0;
+	i++;
     }
-    safe_free(buf);
-    return head;
+    return list;
 }
