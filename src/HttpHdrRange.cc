@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.32 2003/03/06 06:21:36 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.33 2003/05/24 12:43:30 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -574,6 +574,8 @@ HttpHdrRange::lowestOffset(ssize_t size) const
 /*
  * Return true if the first range offset is larger than the configured
  * limit.
+ * Note that exceeding the limit (returning true) results in only 
+ * grabbing the needed range elements from the origin.
  */
 bool
 HttpHdrRange::offsetLimitExceeded() const
@@ -584,6 +586,10 @@ HttpHdrRange::offsetLimitExceeded() const
 
     if (-1 == (ssize_t)Config.rangeOffsetLimit)
         /* disabled */
+        return false;
+
+    if (firstOffset() == -1)
+        /* tail request */
         return false;
 
     if ((ssize_t)Config.rangeOffsetLimit >= firstOffset())
