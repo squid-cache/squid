@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.226 2000/12/08 23:58:08 wessels Exp $
+ * $Id: acl.cc,v 1.227 2001/01/01 22:03:55 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1319,6 +1319,25 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     int k;
     if (!ae)
 	return 0;
+    switch (ae->type) {
+    case ACL_DST_IP:
+    case ACL_DST_DOMAIN:
+    case ACL_DST_DOM_REGEX:
+    case ACL_URLPATH_REGEX:
+    case ACL_URL_PORT:
+    case ACL_PROTO:
+    case ACL_METHOD:
+    case ACL_DST_ASN:
+	/* These ACL types require checklist->request */
+	if (NULL == r) {
+	    debug(28, 1) ("WARNING: '%s' ACL is used but there is no"
+		" HTTP request -- access denied.\n", ae->name);
+	    return 0;
+	}
+	break;
+    default:
+	break;
+    }
     debug(28, 3) ("aclMatchAcl: checking '%s'\n", ae->cfgline);
     switch (ae->type) {
     case ACL_SRC_IP:
