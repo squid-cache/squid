@@ -157,12 +157,9 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     header.pad = ntohl(header.pad);
 
     method = header.reqnum >> 24;
-    /* check if method is valid */
-    if (method >= METHOD_ENUM_END) {
-	debug(12, 0) ("icpHandleIcpV2: UNKNOWN METHOD: %d from %s\n",
-	    method, inet_ntoa(from.sin_addr));
-	return;
-    }
+    /* Squid-1.1 doesn't use the "method bits" for METHOD_GET */
+    if (METHOD_NONE == method || METHOD_ENUM_END <= method)
+	method = METHOD_GET;
     switch (header.opcode) {
     case ICP_QUERY:
 	/* We have a valid packet */
