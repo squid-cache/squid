@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.174 2000/10/17 08:06:03 adrian Exp $
+ * $Id: enums.h,v 1.175 2000/11/09 03:09:47 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -231,7 +231,6 @@ typedef enum {
     HDR_ENUM_END
 } http_hdr_type;
 
-/* server cache-control */
 typedef enum {
     CC_PUBLIC,
     CC_PRIVATE,
@@ -242,6 +241,7 @@ typedef enum {
     CC_PROXY_REVALIDATE,
     CC_MAX_AGE,
     CC_S_MAXAGE,
+    CC_MAX_STALE,
     CC_ONLY_IF_CACHED,
     CC_OTHER,
     CC_ENUM_END

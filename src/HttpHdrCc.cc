@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.20 2000/03/06 16:23:27 wessels Exp $
+ * $Id: HttpHdrCc.cc,v 1.21 2000/11/09 03:09:47 wessels Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -48,6 +48,7 @@ static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] =
     {"only-if-cached", CC_ONLY_IF_CACHED},
     {"max-age", CC_MAX_AGE},
     {"s-maxage", CC_S_MAXAGE},
+    {"max-stale", CC_MAX_STALE},
     {"Other,", CC_OTHER}	/* ',' will protect from matches */
 };
 HttpHeaderFieldInfo *CcFieldsInfo = NULL;
@@ -77,7 +78,7 @@ HttpHdrCc *
 httpHdrCcCreate(void)
 {
     HttpHdrCc *cc = memAllocate(MEM_HTTP_HDR_CC);
-    cc->max_age = cc->s_maxage = -1;
+    cc->max_age = cc->s_maxage = cc->max_stale = -1;
     return cc;
 }
 
@@ -140,6 +141,12 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
 		EBIT_CLR(cc->mask, type);
 	    }
 	    break;
+	case CC_MAX_STALE:
+	    if (!p || !httpHeaderParseInt(p, &cc->max_stale)) {
+		debug(65, 2) ("cc: max-stale directive is valid without value\n");
+		cc->max_stale = -1;
+	    }
+	    break;
 	default:
 	    /* note that we ignore most of '=' specs */
 	    break;
@@ -164,6 +171,7 @@ httpHdrCcDup(const HttpHdrCc * cc)
     dup->mask = cc->mask;
     dup->max_age = cc->max_age;
     dup->s_maxage = cc->s_maxage;
+    dup->max_stale = cc->max_stale;
     return dup;
 }
 
@@ -186,6 +194,9 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 	    if (flag == CC_S_MAXAGE)
 		packerPrintf(p, "=%d", (int) cc->s_maxage);
 
+	    if (flag == CC_MAX_STALE)
+		packerPrintf(p, "=%d", (int) cc->max_stale);
+
 	    pcount++;
 	}
     }
@@ -199,6 +210,8 @@ httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc)
 	cc->max_age = new_cc->max_age;
     if (cc->s_maxage < 0)
 	cc->s_maxage = new_cc->s_maxage;
+    if (cc->max_stale < 0)
+	cc->max_stale = new_cc->max_stale;
     cc->mask |= new_cc->mask;
 }
 
