@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.310 1998/11/12 06:27:57 wessels Exp $
+ * $Id: cache_cf.cc,v 1.311 1998/11/13 21:02:02 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -153,6 +153,7 @@ parseConfigFile(const char *file_name)
     FILE *fp = NULL;
     char *token = NULL;
     char *tmp_line;
+    int err_count = 0;
     free_all();
     default_all();
     if ((fp = fopen(file_name, "r")) == NULL)
@@ -177,6 +178,7 @@ parseConfigFile(const char *file_name)
 	    debug(3, 0) ("parseConfigFile: line %d unrecognized: '%s'\n",
 		config_lineno,
 		config_input_line);
+	    err_count++;
 	}
 	safe_free(tmp_line);
     }
@@ -187,7 +189,7 @@ parseConfigFile(const char *file_name)
 	"Current Squid Configuration",
 	dump_config,
 	1, 1);
-    return 0;
+    return err_count;
 }
 
 static void
@@ -672,7 +674,7 @@ parse_peer(peer ** head)
     int i;
     ushortlist *u;
     const char *me = null_string;	/* XXX */
-    p = xcalloc(1, sizeof(peer));
+    p = memAllocate(MEM_PEER);
     p->http_port = CACHE_HTTP_PORT;
     p->icp.port = CACHE_ICP_PORT;
     p->weight = 1;
@@ -749,15 +751,19 @@ parse_peer(peer ** head)
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
 #if USE_CARP
     if (p->carp.load_factor) {
-	/*
-	 * calculate this peers hash for use in CARP
-	 */
+	/* calculate this peers hash for use in CARP */
 	p->carp.hash = 0;
 	for (token = p->host; *token != 0; token++)
 	    p->carp.hash += (p->carp.hash << 19) + *token;
     }
 #endif
-    cbdataAdd(p, MEM_NONE);
+    cbdataAdd(p, MEM_PEER); /* must preceed peerDigestCreate */
+#if USE_CACHE_DIGESTS
+    if (!p->options.no_digest) {
+	p->digest = peerDigestCreate(p);
+	cbdataLock(p->digest); /* so we know when/if digest disappears */
+    }	
+#endif
     while (*head != NULL)
 	head = &(*head)->next;
     *head = p;

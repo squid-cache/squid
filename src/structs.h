@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.248 1998/11/12 06:33:33 wessels Exp $
+ * $Id: structs.h,v 1.249 1998/11/13 21:02:11 rousskov Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -907,13 +907,19 @@ struct _StoreDigestCBlock {
 };
 
 struct _DigestFetchState {
-    peer *peer;
+    PeerDigest *pd;
     StoreEntry *entry;
     StoreEntry *old_entry;
+    request_t *request;
     int offset;
     int mask_offset;
     time_t start_time;
-    request_t *request;
+    time_t resp_time;
+    time_t expires;
+    struct {
+	int msg;
+	int bytes;
+    } sent, recv;
 };
 
 /* statistics for cache digests and other hit "predictors" */
@@ -927,24 +933,33 @@ struct _cd_guess_stats {
 };
 
 struct _PeerDigest {
-    CacheDigest *cd;
+    peer *peer;                 /* pointer back to peer structure, argh */
+    CacheDigest *cd;            /* actual digest structure */
+    String host;                /* copy of peer->host */
+    const char *req_result;	/* text status of the last request */
     struct {
-	unsigned int inited:1;	/* initialized */
-	unsigned int usable:1;	/* ready to use */
+	unsigned int needed:1;  /* there were requests for this digest */
+	unsigned int usable:1;	/* can be used for lookups */
 	unsigned int requested:1;	/* in process of receiving [fresh] digest */
-	unsigned int disabled:1;	/* do not use/validate the digest */
-	unsigned int init_pending:1;
     } flags;
-    time_t last_fetch_resp_time;
-    time_t last_req_timestamp;
-    time_t last_dis_delay;	/* last disability delay */
+    struct {
+	/* all times are absolute unless augmented with _delay */
+	time_t initialized;	/* creation */
+	time_t needed;		/* first lookup/use by a peer */
+	time_t next_check;	/* next scheduled check/refresh event */
+	time_t retry_delay;	/* delay before re-checking _invalid_ digest */
+	time_t requested;	/* requested a fresh copy of a digest */
+	time_t req_delay;       /* last request response time */
+	time_t received;	/* received the current copy of a digest */
+	time_t disabled;	/* disabled for good */
+    } times;
     struct {
 	cd_guess_stats guess;
 	int used_count;
-	int msgs_sent;
-	int msgs_recv;
-	kb_t kbytes_sent;
-	kb_t kbytes_recv;
+	struct {
+	    int msgs;
+	    kb_t kbytes;
+	} sent, recv;
     } stats;
 };
 
@@ -1011,7 +1026,7 @@ struct _peer {
 	} flags;
     } mcast;
 #if USE_CACHE_DIGESTS
-    PeerDigest digest;
+    PeerDigest *digest;
 #endif
     int tcp_up;			/* 0 if a connect() fails */
     time_t last_fail_time;

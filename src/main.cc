@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.277 1998/11/12 23:07:36 wessels Exp $
+ * $Id: main.cc,v 1.278 1998/11/13 21:02:04 rousskov Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -40,8 +40,10 @@ extern void (*failure_notify) (const char *);
 
 static int opt_send_signal = -1;
 static int opt_no_daemon = 0;
+static int opt_parse_cfg_only = 0;
 static int httpPortNumOverride = 1;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
+static int configured_once = 0;
 #if MALLOC_DBG
 static int malloc_debug_level = 0;
 #endif
@@ -79,8 +81,9 @@ usage(void)
 	"       -f file   Use given config-file instead of\n"
 	"                 %s\n"
 	"       -h        Print help message.\n"
-	"       -k reconfigure|rotate|shutdown|interrupt|kill|debug|check\n"
-	"                 Send signal to running copy and exit.\n"
+	"       -k reconfigure|rotate|shutdown|interrupt|kill|debug|check|parse\n"
+	"                 Parse configuration file, then send signal to \n"
+	"                 running copy (except -k parse) and exit.\n"
 	"       -s        Enable logging to syslog.\n"
 	"       -u port   Specify ICP port number (default: %d), disable with 0.\n"
 	"       -v        Print version.\n"
@@ -171,6 +174,8 @@ mainParseOptions(int argc, char *argv[])
 		opt_send_signal = SIGKILL;
 	    else if (!strncmp(optarg, "check", strlen(optarg)))
 		opt_send_signal = 0;	/* SIGNULL */
+	    else if (!strncmp(optarg, "parse", strlen(optarg)))
+		opt_parse_cfg_only = 1;	/* parse cfg file only */
 	    else
 		usage();
 	    break;
@@ -374,14 +379,6 @@ mainInitialize(void)
     squid_signal(SIGPIPE, SIG_IGN, SA_RESTART);
     squid_signal(SIGCHLD, sig_child, SA_NODEFER | SA_RESTART);
 
-    if (!configured_once) {
-	cbdataInit();
-	memInit();		/* memInit must go before config parsing */
-    }
-    if (ConfigFile == NULL)
-	ConfigFile = xstrdup(DefaultConfigFile);
-    parseConfigFile(ConfigFile);
-
     setEffectiveUser();
     assert(Config.Port.http);
     if (httpPortNumOverride != 1)
@@ -523,17 +520,28 @@ main(int argc, char **argv)
 
     mainParseOptions(argc, argv);
 
+    /* parse configuration file
+     * note: in "normal" case this used to be called from mainInitialize() */
+    {
+	int parse_err;
+	if (!ConfigFile)
+	    ConfigFile = xstrdup(DefaultConfigFile);
+	if (!configured_once) /* is it ever false? */ {
+	    cbdataInit();
+	    memInit(); /* memInit is required for config parsing */
+	}
+	parse_err = parseConfigFile(ConfigFile);
+	
+	if (opt_parse_cfg_only)
+	    return parse_err;
+    }
+
     /* send signal to running copy and exit */
     if (opt_send_signal != -1) {
 	sendSignal();
 	/* NOTREACHED */
     }
     if (opt_create_swap_dirs) {
-	if (ConfigFile == NULL)
-	    ConfigFile = xstrdup(DefaultConfigFile);
-	cbdataInit();
-	memInit();		/* memInit is required for config parsing */
-	parseConfigFile(ConfigFile);
 	setEffectiveUser();
 	debug(0, 0) ("Creating Swap Directories\n");
 	storeCreateSwapDirectories();
@@ -547,7 +555,7 @@ main(int argc, char **argv)
 	for (n = Squid_MaxFD; n > 2; n--)
 	    close(n);
 
-    /*init comm module */
+    /* init comm module */
     comm_init();
     comm_select_init();
 
@@ -617,11 +625,6 @@ sendSignal(void)
 {
     pid_t pid;
     debug_log = stderr;
-    if (ConfigFile == NULL)
-	ConfigFile = xstrdup(DefaultConfigFile);
-    cbdataInit();
-    memInit();
-    parseConfigFile(ConfigFile);
     pid = readPidFile();
     if (pid > 1) {
 	if (kill(pid, opt_send_signal) &&

@@ -78,6 +78,12 @@ Changes to Squid-2.1 ():
 	  authentication information.  (Henrik Nordstrom)
 	- Changed refreshCheck() so that objects with negative age
 	  are always stale.
+	- Rewrote peer digest module to fix memory leaks on reconfigure
+	  and clean the code. Increased "current" digest version to 5
+ 	  ("required" version is still 3). Revised "Peer Select" cache 
+ 	  manager stats.
+	- Added "-k parse" command line option: parses the config file
+	  but does not send a signal unlike other -k options.
 
 Changes to Squid-2.0 (October 2, 1998):
 

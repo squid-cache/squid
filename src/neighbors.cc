@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.260 1998/11/13 20:50:52 wessels Exp $
+ * $Id: neighbors.cc,v 1.261 1998/11/13 21:02:07 rousskov Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -510,31 +510,28 @@ peerDigestLookup(peer * p, request_t * request, StoreEntry * entry)
     assert(request);
     debug(15, 5) ("peerDigestLookup: peer %s\n", p->host);
     /* does the peeer have a valid digest? */
-    if (p->digest.flags.disabled) {
-	debug(15, 5) ("peerDigestLookup: Disabled!\n");
+    if (!p->digest) {
+	debug(15, 5) ("peerDigestLookup: gone!\n");
 	return LOOKUP_NONE;
     } else if (!peerHTTPOkay(p, request)) {
-	debug(15, 5) ("peerDigestLookup: !peerHTTPOkay()\n");
+	debug(15, 5) ("peerDigestLookup: !peerHTTPOkay\n");
 	return LOOKUP_NONE;
-    } else if (p->digest.flags.usable) {
-	debug(15, 5) ("peerDigestLookup: Usable!\n");
+    } else if (p->digest->flags.usable) {
+	debug(15, 5) ("peerDigestLookup: usable\n");
 	/* fall through; put here to have common case on top */ ;
-    } else if (!p->digest.flags.inited) {
-	debug(15, 5) ("peerDigestLookup: !initialized\n");
-	if (!p->digest.flags.init_pending) {
-	    p->digest.flags.init_pending = 1;
-	    cbdataLock(p);
-	    eventAdd("peerDigestInit", peerDigestInit, p, 0.0, 1);
-	}
+    } else if (!p->digest->flags.needed) {
+	debug(15, 5) ("peerDigestLookup: note need\n");
+	peerDigestNeeded(p->digest);
 	return LOOKUP_NONE;
     } else {
-	debug(15, 5) ("peerDigestLookup: Whatever!\n");
+	debug(15, 5) ("peerDigestLookup: !ready && %srequested\n",
+	    p->digest->flags.requested ? "" : "!");
 	return LOOKUP_NONE;
     }
     debug(15, 5) ("peerDigestLookup: OK to lookup peer %s\n", p->host);
-    assert(p->digest.cd);
+    assert(p->digest->cd);
     /* does digest predict a hit? */
-    if (!cacheDigestTest(p->digest.cd, key))
+    if (!cacheDigestTest(p->digest->cd, key))
 	return LOOKUP_MISS;
     debug(15, 5) ("peerDigestLookup: peer %s says HIT!\n", p->host);
     return LOOKUP_HIT;
@@ -869,7 +866,26 @@ peerDestroy(peer * p)
 	safe_free(l);
     }
     safe_free(p->host);
+#if USE_CACHE_DIGESTS
+    if (p->digest) {
+	if (cbdataValid(p->digest))
+	    peerDigestNotePeerGone(p->digest);
+	cbdataUnlock(p->digest);
+	p->digest = NULL;
+    }
+#endif
     cbdataFree(p);
+}
+
+void
+peerNoteDigestGone(peer *p)
+{
+#if USE_CACHE_DIGESTS
+    if (p->digest) {
+	cbdataUnlock(p->digest);
+	p->digest = NULL;
+    }
+#endif
 }
 
 static void
