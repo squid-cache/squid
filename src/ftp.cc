@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.210 1998/03/22 07:38:59 rousskov Exp $
+ * $Id: ftp.cc,v 1.211 1998/03/27 19:41:58 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1510,6 +1510,7 @@ ftpSendPasv(FtpStateData * ftpState)
 	0,
 	COMM_NONBLOCKING,
 	storeUrl(ftpState->entry));
+    debug(9,3)("ftpSendPasv: Unconnected data socket created on FD %d\n", fd);
     if (fd < 0) {
 	ftpFail(ftpState);
 	return;
@@ -1623,6 +1624,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 	port,
 	COMM_NONBLOCKING | (fallback ? COMM_REUSEADDR : 0),
 	storeUrl(ftpState->entry));
+    debug(9,3)("ftpOpenListenSocket: Unconnected data socket created on FD %d\n", fd);
     if (fd < 0) {
 	debug(9, 0) ("ftpOpenListenSocket: comm_open failed\n");
 	return -1;
@@ -1693,7 +1695,9 @@ ftpAcceptDataConnection(int fd, void *data)
 	ftpFail(ftpState);
 	return;
     }
-    comm_close(ftpState->data.fd);	/* Listen socket replaced by data socket */
+    /* Replace the Listen socket with the accepted data socket */
+    comm_close(ftpState->data.fd);
+    debug(9,3)("ftpAcceptDataConnection: Connected data socket on FD %d\n", fd);
     ftpState->data.fd = fd;
     ftpState->data.port = ntohs(peer.sin_port);
     ftpState->data.host = xstrdup(inet_ntoa(peer.sin_addr));
