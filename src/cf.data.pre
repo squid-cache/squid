@@ -40,7 +40,7 @@ DOC_START
 	understand the difference between an ICP _query_ and an ICP
 	_reply_.  This option is to be set only if you want to RECEIVE
 	multicast queries.  Do NOT set this option to SEND multicast
-	ICP (use cache_host for that).  ICP replies are always sent via
+	ICP (use cache_peer for that).  ICP replies are always sent via
 	unicast, so this option does not affect whether or not you will
 	receive replies from multicast group members.
 
@@ -122,9 +122,9 @@ DOC_START
 	#                                        proxy  icp
 	#          hostname             type     port   port  options
 	#          -------------------- -------- ----- -----  -----------
-	cache_host bigserver.usc.edu    parent    3128  3130  [proxy-only]
-	cache_host littleguy1.usc.edu   sibling   3128  3130  [proxy-only]
-	cache_host littleguy1.usc.edu   sibling   3128  3130  [proxy-only]
+	cache_peer bigserver.usc.edu    parent    3128  3130  [proxy-only]
+	cache_peer littleguy1.usc.edu   sibling   3128  3130  [proxy-only]
+	cache_peer littleguy1.usc.edu   sibling   3128  3130  [proxy-only]
 
 	      type:  either 'parent', 'sibling', or 'multicast'.
 
@@ -183,7 +183,7 @@ DOC_START
 
 	NOTE: non-ICP neighbors must be specified as 'parent'.
 
-cache_host hostname type 3128 3130
+cache_peer hostname type 3128 3130
 DOC_END
 
 
@@ -229,13 +229,13 @@ DOC_START
 
 	Modifying the neighbor type for specific domains is now
 	possible.  You can treat some domains differently than the the
-	default neighbor type specified on the 'cache_host' line.
+	default neighbor type specified on the 'cache_peer' line.
 	Normally it should only be necessary to list domains which
 	should be treated differently because the default neighbor type
 	applies for hostnames which do not match domains listed here.
 
 EXAMPLE:
-	cache_host  parent cache.foo.org 3128 3130
+	cache_peer  parent cache.foo.org 3128 3130
 	neighbor_type_domain cache.foo.org sibling .com .net
 	neighbor_type_domain cache.foo.org sibling .au .de
 DOC_END
@@ -499,7 +499,7 @@ DOC_START
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
 
-cache_dir /usr/local/squid/cache 1000 256 16
+cache_dir /usr/local/squid/cache 1000 16 256
 DOC_END
 
 
@@ -787,7 +787,7 @@ DOC_END
 
 
 NAME: pinger_program
-TYPE: pathname_stat
+TYPE: string
 DEFAULT: @DEFAULT_PINGER@
 LOC: Config.Program.pinger
 DOC_START
@@ -1274,13 +1274,13 @@ DOC_END
 
 NAME: cache_effective_user
 TYPE: string
-DEFAULT: none
+DEFAULT: nobody
 LOC: Config.effectiveUser
 DOC_NONE
 
 NAME: cache_effective_group
 TYPE: string
-DEFAULT: none
+DEFAULT: nogroup
 LOC: Config.effectiveGroup
 DOC_START
 	If the cache is run as root, it will change its effective/real

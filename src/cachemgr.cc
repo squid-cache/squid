@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: cachemgr.cc,v 1.56 1997/07/16 20:31:58 wessels Exp $
+ * $Id: cachemgr.cc,v 1.57 1997/08/25 05:29:55 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -249,17 +249,17 @@ static const char *const op_cmds[] =
     "client_list",
     "log",
     "parameter",
-    "stats/ipcache",
-    "stats/fqdncache",
-    "stats/dns",
-    "stats/redirector",
-    "stats/objects",
-    "stats/vm_objects",
-    "stats/utilization",
-    "stats/io",
-    "stats/reply_headers",
-    "stats/filedescriptors",
-    "stats/netdb",
+    "ipcache",
+    "fqdncache",
+    "dns",
+    "redirector",
+    "objects",
+    "vm_objects",
+    "utilization",
+    "io",
+    "reply_headers",
+    "filedescriptors",
+    "netdb",
     "shutdown",
     "refresh",
 #ifdef REMOVE_OBJECT

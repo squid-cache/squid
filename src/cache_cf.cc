@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.220 1997/08/25 03:52:16 wessels Exp $
+ * $Id: cache_cf.cc,v 1.221 1997/08/25 05:29:55 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -172,6 +172,8 @@ parseConfigFile(const char *file_name)
     }
 
     /* Sanity checks */
+    if (Config.cacheSwap.swapDirs == NULL)
+	fatal("No cache_dir's specified in config file");
     if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10)) {
 	printf("WARNING: cache_swap (%d kbytes) is less than cache_mem (%d bytes).\n", Config.Swap.maxSize, Config.Mem.maxSize);
 	printf("         This will cause serious problems with your cache!!!\n");
@@ -1127,3 +1129,4 @@ configFreeMemory(void)
 {
     free_all();
 }
+
