@@ -10,7 +10,7 @@ storeOpen(sfileno f, mode_t mode, STIOCB * callback, void *callback_data)
 }
 
 void
-storeClose(storeIOState *sio)
+storeClose(storeIOState * sio)
 {
     assert(!sio->flags.closing);
     sio->flags.closing = 1;
@@ -18,13 +18,13 @@ storeClose(storeIOState *sio)
 }
 
 void
-storeRead(storeIOState *sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data)
+storeRead(storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data)
 {
     storeUfsRead(sio, buf, size, offset, callback, callback_data);
 }
 
 void
-storeWrite(storeIOState *sio, char *buf, size_t size, off_t offset)
+storeWrite(storeIOState * sio, char *buf, size_t size, off_t offset)
 {
     storeUfsWrite(sio, buf, size, offset);
 }
@@ -36,7 +36,7 @@ storeUnlink(sfileno f)
 }
 
 off_t
-storeOffset(storeIOState *sio)
+storeOffset(storeIOState * sio)
 {
-	return sio->offset;
+    return sio->offset;
 }

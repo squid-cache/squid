@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.449 1999/05/03 21:54:57 wessels Exp $
+ * $Id: client_side.cc,v 1.450 1999/05/04 19:22:23 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -191,8 +191,8 @@ clientAccessCheckDone(int answer, void *data)
     ErrorState *err = NULL;
     debug(33, 2) ("The request %s %s is %s, because it matched '%s'\n",
 	RequestMethodStr[http->request->method], http->uri,
-        answer ? "ALLOWED" : "DENIED",
-        AclMatchedName ? AclMatchedName : "NO ACL's");
+	answer ? "ALLOWED" : "DENIED",
+	AclMatchedName ? AclMatchedName : "NO ACL's");
     http->acl_checklist = NULL;
     if (answer == ACCESS_ALLOWED) {
 	safe_free(http->uri);

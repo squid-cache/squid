@@ -1,7 +1,7 @@
 
 /*
- * $Id: store_client.cc,v 1.65 1999/05/03 21:55:09 wessels Exp $
- * $Id: store_client.cc,v 1.65 1999/05/03 21:55:09 wessels Exp $
+ * $Id: store_client.cc,v 1.66 1999/05/04 19:22:28 wessels Exp $
+ * $Id: store_client.cc,v 1.66 1999/05/04 19:22:28 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -275,7 +275,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	} else if (!sc->flags.disk_io_pending) {
 	    sc->flags.disk_io_pending = 1;
 	    sc->swapin_sio = storeSwapInStart(e);
-    	    storeClientFileRead(sc);
+	    storeClientFileRead(sc);
 	} else {
 	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
 	}
