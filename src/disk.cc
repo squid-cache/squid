@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.85 1997/10/23 23:27:18 wessels Exp $
+ * $Id: disk.cc,v 1.86 1997/10/24 02:55:11 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -414,8 +414,8 @@ diskHandleRead(int fd, void *data)
 	ctrlp);
 #else
     if (F->disk.offset != ctrl_dat->offset) {
-	debug(6, 1) ("diskHandleRead: seeking to offset %d\n",
-	    (int) ctrl_dat->offset);
+	debug(6, 1) ("diskHandleRead: FD %d seeking to offset %d\n",
+	    fd, (int) ctrl_dat->offset);
 	lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
     }
     len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
