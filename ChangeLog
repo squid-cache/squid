@@ -14,6 +14,7 @@ Changes to squid-1.1.alpha18:
 	- Fixed FMR bug in neighborsUdpAck() for UDP_HIT_OBJ replies.
 	- Fixed up InvokeHandlers() to clear handler before calling.
 	- Added -k signal option to signal a running Squid (Markus Gyger).
+	- Removed dynamic_array code.
 
 Changes to squid-1.1.alpha17:
 
