@@ -1,4 +1,9 @@
 	- Added Italian error pages by Alessio Bragadini.
+	- Fixed asnAclInitialize calling to prevent coredump.
+	- Fixed FTP directory parsing again.
+	- Made FTP directory listing "Generated" tagline like
+	  the one for error pages.
+	
 
 Changes to squid-1.2.beta20 (April 24, 1998):
 
