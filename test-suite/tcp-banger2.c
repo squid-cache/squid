@@ -113,7 +113,7 @@ struct _f {
 };
 struct _request {
     int fd;
-    char url[8192];
+    char *url;
     char method[16];
     char requestbodyfile[256];
     char buf[READ_BUF_SZ * 2 + 1];
@@ -129,6 +129,14 @@ struct _f FD[SQUID_MAXFD];
 int nfds = 0;
 int maxfd = 0;
 
+
+static void
+free_request(struct _request *r)
+{
+	if (r->url)
+	    free(r->url);
+	free(r);
+}
 
 char *
 mkrfc850(t)
@@ -265,7 +273,7 @@ reply_done(int fd, void *data)
 	fprintf(trace_file, "%s %s %s %d 0x%lx\n",
 	    r->method, r->url, r->requestbodyfile, r->bodysize, r->sum);
     }
-    free(r);
+    free_request(r);
 }
 
 struct _request *
@@ -314,7 +322,8 @@ request(char *urlin)
 	checksum = "-";
     r = calloc(1, sizeof *r);
     assert(r != NULL);
-    strcpy(r->url, url);
+    r->url = strdup(url);
+    assert(r->url);
     strcpy(r->method, method);
     strcpy(r->requestbodyfile, file);
     r->fd = s;
@@ -373,7 +382,7 @@ request(char *urlin)
     if ((len2 = write(s, msg, len)) != len) {
 	close(s);
 	perror("write request");
-	free(r);
+	free_request(r);
 	return NULL;
     } else
 	total_bytes_written += len2;
@@ -383,7 +392,7 @@ request(char *urlin)
 	    if (len2 < 0) {
 		perror("write body");
 		close(s);
-		free(r);
+		free_request(r);
 	    }
 	}
 	if (len < 0) {
