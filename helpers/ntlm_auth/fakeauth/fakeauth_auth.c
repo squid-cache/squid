@@ -176,7 +176,7 @@ ntlmGetString(ntlmhdr * hdr, strhdr * str, int flags)
 	d = buf;
 
 	for (; l; l--) {
-	    if (*sc == '\0' || !isprint(*sc)) {
+	    if (*sc == '\0' || !isprint((int)(unsigned char)*sc)) {
 		fprintf(stderr, "ntlmGetString: bad ascii: %04x\n", *sc);
 		return (NULL);
 	    }
