@@ -1,5 +1,5 @@
 #
-#  $Id: Makefile.in,v 1.47 2000/11/21 21:15:10 wessels Exp $
+#  $Id: Makefile.in,v 1.48 2001/01/07 23:36:36 hno Exp $
 #
 prefix		= @prefix@
 top_srcdir	= @top_srcdir@
@@ -43,7 +43,8 @@ UTILOBJS	= rfc1123.o \
 		  $(LIBOBJS)
 REGEXOBJS	= GNUregex.o
 DLMALLOCOBJS	= dlmalloc.o
-LIBS		= libmiscutil.a @LIBREGEX@ @LIBDLMALLOC@
+NTLMAUTHOBJS = ntlmauth.o
+LIBS		= libmiscutil.a @LIBREGEX@ @LIBDLMALLOC@ libntlmauth.a
 
 CFLAGS		= $(AC_CFLAGS) $(INCLUDE)
 
@@ -64,6 +65,11 @@ libregex.a: $(REGEXOBJS)
 libdlmalloc.a: $(DLMALLOCOBJS)
 	$(RM) -f $@
 	$(AR_R) $@ $(DLMALLOCOBJS)
+	$(RANLIB) $@
+
+libntlmauth.a: $(NTLMAUTHOBJS)
+	$(RM) -f $@
+	$(AR_R) $@ $(NTLMAUTHOBJS)
 	$(RANLIB) $@
 
 clean:

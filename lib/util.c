@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.75 2001/01/07 09:55:22 hno Exp $
+ * $Id: util.c,v 1.76 2001/01/07 23:36:36 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -749,7 +749,7 @@ xitoa(int num)
 }
 
 /* A default failure notifier when the main program hasn't installed any */
-void 
+void
 default_failure_notify(const char *msg)
 {
     write(2, msg, strlen(msg));

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.115 2001/01/07 19:55:20 hno Exp $
+ * $Id: typedefs.h,v 1.116 2001/01/07 23:36:41 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -61,8 +61,14 @@ typedef struct _acl_ip_data acl_ip_data;
 typedef struct _acl_time_data acl_time_data;
 typedef struct _acl_name_list acl_name_list;
 typedef struct _acl_deny_info_list acl_deny_info_list;
+typedef struct _acl_proxy_auth acl_proxy_auth;
+typedef struct _auth_user_t auth_user_t;
+typedef struct _auth_user_request_t auth_user_request_t;
+typedef struct _auth_user_hash_pointer auth_user_hash_pointer;
+typedef struct _acl_proxy_auth_match_cache acl_proxy_auth_match_cache;
+typedef struct _authscheme_entry authscheme_entry_t;
+typedef struct _authScheme authScheme;
 typedef struct _acl_user_data acl_user_data;
-typedef struct _acl_proxy_auth_user acl_proxy_auth_user;
 typedef struct _acl_arp_data acl_arp_data;
 typedef struct _acl acl;
 typedef struct _acl_snmp_comm acl_snmp_comm;
@@ -105,6 +111,7 @@ typedef struct _HttpStateData HttpStateData;
 typedef struct _icpUdpData icpUdpData;
 typedef struct _clientHttpRequest clientHttpRequest;
 typedef struct _ConnStateData ConnStateData;
+typedef struct _ConnCloseHelperData ConnCloseHelperData;
 typedef struct _ipcache_addrs ipcache_addrs;
 typedef struct _domain_ping domain_ping;
 typedef struct _domain_type domain_type;
@@ -134,6 +141,7 @@ typedef struct _StoreEntry StoreEntry;
 typedef struct _SwapDir SwapDir;
 typedef struct _request_flags request_flags;
 typedef struct _helper_flags helper_flags;
+typedef struct _helper_stateful_flags helper_stateful_flags;
 typedef struct _http_state_flags http_state_flags;
 typedef struct _header_mangler header_mangler;
 typedef struct _request_t request_t;
@@ -147,6 +155,7 @@ typedef struct _dlink_list dlink_list;
 typedef struct _StatCounters StatCounters;
 typedef struct _tlv tlv;
 typedef struct _storeSwapLogData storeSwapLogData;
+typedef struct _authConfig authConfig;
 typedef struct _cacheSwap cacheSwap;
 typedef struct _StatHist StatHist;
 typedef struct _String String;
@@ -160,8 +169,11 @@ typedef struct _Version Version;
 typedef struct _FwdState FwdState;
 typedef struct _FwdServer FwdServer;
 typedef struct _helper helper;
+typedef struct _helper_stateful statefulhelper;
 typedef struct _helper_server helper_server;
+typedef struct _helper_stateful_server helper_stateful_server;
 typedef struct _helper_request helper_request;
+typedef struct _helper_stateful_request helper_stateful_request;
 typedef struct _generic_cbdata generic_cbdata;
 typedef struct _storeIOState storeIOState;
 typedef struct _queued_read queued_read;
@@ -217,6 +229,7 @@ typedef void PSC(FwdServer *, void *);
 typedef void RH(void *data, char *);
 typedef void UH(void *data, wordlist *);
 typedef int DEFER(int fd, void *data);
+typedef void CBCB(char *buf, size_t size, void *data);
 
 typedef void STIOCB(void *their_data, int errflag, storeIOState *);
 typedef void STFNCB(void *their_data, int errflag, storeIOState *);
@@ -231,6 +244,9 @@ typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
 typedef void STVLDCB(void *, int, int);
 typedef void HLPCB(void *, char *buf);
+typedef stateful_helper_callback_t HLPSCB(void *, void *lastserver, char *buf);
+typedef int HLPSAVAIL(void *);
+typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);
 typedef void IDNSCB(void *, rfc1035_rr *, int);
 
@@ -273,6 +289,28 @@ typedef void STFSSHUTDOWN(void);
 
 typedef double hbase_f(double);
 typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);
+
+/* authenticate.c authenticate scheme routines typedefs */
+typedef int AUTHSACTIVE();
+typedef int AUTHSAUTHED(auth_user_request_t *);
+typedef void AUTHSAUTHUSER(auth_user_request_t *, request_t *, ConnStateData *, http_hdr_type);
+typedef void AUTHSDECODE(auth_user_request_t *, const char *);
+typedef int AUTHSDIRECTION(auth_user_request_t *);
+typedef void AUTHSDUMP(StoreEntry *, const char *, authScheme *);
+typedef void AUTHSFIXERR(auth_user_request_t *, HttpReply *, http_hdr_type, request_t *);
+typedef void AUTHSADDHEADER(auth_user_request_t *, HttpReply *, int);
+typedef void AUTHSADDTRAILER(auth_user_request_t *, HttpReply *, int);
+typedef void AUTHSFREE(auth_user_t *);
+typedef void AUTHSFREECONFIG(authScheme *);
+typedef char *AUTHSUSERNAME(auth_user_t *);
+typedef void AUTHSONCLOSEC(ConnStateData *);
+typedef void AUTHSPARSE(authScheme *, int, char *);
+typedef void AUTHSINIT(authScheme *);
+typedef void AUTHSREQFREE(auth_user_request_t *);
+typedef void AUTHSSETUP(authscheme_entry_t *);
+typedef void AUTHSSHUTDOWN(void);
+typedef void AUTHSSTART(auth_user_request_t *, RH *, void *);
+typedef void AUTHSSTATS(StoreEntry *);
 
 /* append/vprintf's for Packer */
 typedef void (*append_f) (void *, const char *buf, int size);

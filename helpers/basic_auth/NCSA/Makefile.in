@@ -1,0 +1,100 @@
+#
+#  Makefile for the Squid Object Cache server
+#
+#  $Id: Makefile.in,v 1.1 2001/01/07 23:36:45 hno Exp $
+#
+#  Uncomment and customize the following to suit your needs:
+#
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+exec_suffix	= @exec_suffix@
+cgi_suffix	= @cgi_suffix@
+top_srcdir	= @top_srcdir@
+bindir		= @bindir@
+libexecdir      = @libexecdir@
+sysconfdir	= @sysconfdir@
+localstatedir   = @localstatedir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+# Gotta love the DOS legacy
+#
+NCSA_AUTH_EXE	= ncsa_auth$(exec_suffix)
+
+DEFAULT_PASSWD_FILE     = $(sysconfdir)/passwd
+
+CC		= @CC@
+MAKEDEPEND	= @MAKEDEPEND@
+INSTALL		= @INSTALL@
+INSTALL_BIN 	= @INSTALL_PROGRAM@
+INSTALL_FILE 	= @INSTALL_DATA@
+INSTALL_SUID	= @INSTALL_PROGRAM@ -o root -m 4755
+RANLIB		= @RANLIB@
+LN_S		= @LN_S@
+PERL            = @PERL@
+CRYPTLIB	= @CRYPTLIB@
+REGEXLIB	= @REGEXLIB@
+PTHREADLIB	= @PTHREADLIB@
+SNMPLIB		= @SNMPLIB@
+MALLOCLIB	= @LIB_MALLOC@
+AC_CFLAGS	= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
+XTRA_LIBS	= @XTRA_LIBS@
+XTRA_OBJS 	= @XTRA_OBJS@
+MV		= @MV@
+RM		= @RM@
+SHELL		= /bin/sh
+
+
+INCLUDE		= -I. -I../../../../../include -I$(top_srcdir)/include
+CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
+AUTH_LIBS	= -L../../../../../lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
+
+PROGS           = $(NCSA_AUTH_EXE)
+OBJS	 	= ncsa_auth.o
+
+all:    $(NCSA_AUTH_EXE)
+
+$(OBJS): $(top_srcdir)/include/version.h
+
+$(NCSA_AUTH_EXE): ncsa_auth.o
+	$(CC) $(LDFLAGS) ncsa_auth.o -o $@ $(AUTH_LIBS)
+
+install-mkdirs:
+	-@if test ! -d $(prefix); then \
+		echo "mkdir $(prefix)"; \
+		mkdir $(prefix); \
+	fi
+	-@if test ! -d $(bindir); then \
+		echo "mkdir $(bindir)"; \
+		mkdir $(bindir); \
+	fi
+
+# Michael Lupp <mike@nemesis.saar.de> wants to know about additions
+# to the install target.
+install: all install-mkdirs
+	@for f in $(PROGS); do \
+		if test -f $(bindir)/$$f; then \
+			echo $(MV) $(bindir)/$$f $(bindir)/-$$f; \
+			$(MV) $(bindir)/$$f $(bindir)/-$$f; \
+		fi; \
+		echo $(INSTALL_BIN) $$f $(bindir); \
+		$(INSTALL_BIN) $$f $(bindir); \
+		if test -f $(bindir)/-$$f; then \
+			echo $(RM) -f $(bindir)/-$$f; \
+			$(RM) -f $(bindir)/-$$f; \
+		fi; \
+	done
+
+clean: 
+	-rm -rf *.o *pure_* core $(PROGS)
+
+distclean:	clean
+	-rm -f Makefile
+
+tags:
+	ctags *.[ch] ../include/*.h ../lib/*.[ch]
+
+depend:
+	$(MAKEDEPEND) -I../include -I. -fMakefile *.c

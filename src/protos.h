@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.392 2001/01/05 09:51:39 adrian Exp $
+ * $Id: protos.h,v 1.393 2001/01/07 23:36:39 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -46,6 +46,7 @@ extern void headersLog(int cs, int pq, method_t m, void *data);
 #endif
 char *log_quote(const char *header);
 
+/* acl.c */
 extern aclCheck_t *aclChecklistCreate(const struct _acl_access *,
     request_t *,
     const char *ident);
@@ -67,6 +68,7 @@ extern void aclParseRegexList(void *curlist);
 extern const char *aclTypeToStr(squid_acl);
 extern wordlist *aclDumpGeneric(const acl *);
 extern int aclPurgeMethodInUse(acl_access *);
+extern void aclCacheMatchFlush(dlink_list * cache);
 
 /*
  * cache_cf.c
@@ -85,6 +87,12 @@ extern void allocate_new_swapdir(cacheSwap *);
 extern void self_destruct(void);
 extern int GetInteger(void);
 
+/* extra functions from cache_cf.c useful for lib modules */
+extern void parse_int(int *var);
+extern void parse_eol(char *volatile *var);
+extern void parse_wordlist(wordlist ** list);
+extern void requirePathnameExists(const char *name, const char *path);
+extern void parse_time_t(time_t * var);
 
 /*
  * cbdata.c
@@ -123,6 +131,8 @@ extern void clientHttpConnectionsOpen(void);
 extern void clientHttpConnectionsClose(void);
 extern StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, request_flags);
 extern int isTcpHit(log_type);
+extern void clientReadBody(request_t * req, char *buf, size_t size, CBCB * callback, void *data);
+extern int clientAbortBody(request_t * req);
 
 extern int commSetNonBlocking(int fd);
 extern int commUnsetNonBlocking(int fd);
@@ -707,9 +717,47 @@ extern void redirectStart(clientHttpRequest *, RH *, void *);
 extern void redirectInit(void);
 extern void redirectShutdown(void);
 
-extern void authenticateStart(acl_proxy_auth_user *, RH *, void *);
-extern void authenticateInit(void);
+/* auth_modules.c */
+extern void authSchemeSetup(void);
+
+/* authenticate.c */
+extern void authenticateAuthUserMerge(auth_user_t *, auth_user_t *);
+extern auth_user_t *authenticateAuthUserNew(const char *);
+extern int authenticateAuthSchemeId(const char *typestr);
+extern void authenticateStart(auth_user_request_t *, RH *, void *);
+extern void authenticateSchemeInit(void);
+extern void authenticateInit(authConfig *);
 extern void authenticateShutdown(void);
+extern void authenticateFixHeader(HttpReply *, auth_user_request_t *, request_t *, int);
+extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, request_t *, int);
+extern auth_user_request_t *authenticateGetAuthUser(const char *proxy_auth);
+extern void authenticateAuthenticateUser(auth_user_request_t *, request_t *, ConnStateData *, http_hdr_type);
+extern void authenticateAuthUserUnlock(auth_user_t * auth_user);
+extern void authenticateAuthUserLock(auth_user_t * auth_user);
+extern void authenticateAuthUserRequestUnlock(auth_user_request_t *);
+extern void authenticateAuthUserRequestLock(auth_user_request_t *);
+extern char *authenticateAuthUserRequestMessage(auth_user_request_t *);
+extern int authenticateAuthUserInuse(auth_user_t * auth_user);
+extern void authenticateAuthUserRequestSetIp(auth_user_request_t *, struct in_addr);
+extern int authenticateDirection(auth_user_request_t *);
+extern FREE authenticateFreeProxyAuthUser;
+extern void authenticateFreeProxyAuthUserACLResults(void *data);
+extern void authenticateProxyUserCacheCleanup(void *);
+extern void authenticateInitUserCache();
+#if 0
+extern void authenticateProxyAuthCacheAddLink(const char *key, auth_user_t *);
+#endif
+extern int authenticateActiveSchemeCount();
+extern int authenticateSchemeCount();
+extern void authenticateUserNameCacheAdd(auth_user_t * auth_user);
+extern int authenticateCheckAuthUserIP(struct in_addr request_src_addr, auth_user_request_t * auth_user);
+extern int authenticateUserAuthenticated(auth_user_request_t *);
+extern void authenticateUserCacheRestart();
+extern char *authenticateUserUsername(auth_user_t *);
+extern char *authenticateUserRequestUsername(auth_user_request_t *);
+extern int authenticateValidateUser(auth_user_request_t *);
+extern void authenticateOnCloseConnection(ConnStateData * conn);
+extern void authSchemeAdd(char *type, AUTHSSETUP * setup);
 
 extern void refreshAddToList(const char *, int, time_t, int, time_t);
 extern int refreshIsCachable(const StoreEntry *);
@@ -1028,11 +1076,6 @@ extern void releaseServerSockets(void);
 extern void PrintRusage(void);
 extern void dumpMallocStats(void);
 
-extern void pumpInit(int fd, request_t * r, char *uri);
-extern void pumpStart(int, FwdState *, CWCB * callback, void *);
-extern int pumpMethod(method_t method);
-extern int pumpRestart(request_t *);
-
 #if USE_UNLINKD
 extern void unlinkdInit(void);
 extern void unlinkdClose(void);
@@ -1084,6 +1127,9 @@ extern void asnFreeMemory(void);
 extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
 extern void dlinkAddTail(void *data, dlink_node *, dlink_list *);
 extern void dlinkDelete(dlink_node * m, dlink_list * list);
+extern void dlinkNodeDelete(dlink_node * m);
+extern dlink_node *dlinkNodeNew();
+
 extern void kb_incr(kb_t *, size_t);
 extern double gb_to_double(const gb_t *);
 extern const char *gb_to_str(const gb_t *);
@@ -1187,11 +1233,23 @@ extern void delayUnregisterDelayIdPtr(delay_id * loc);
 
 /* helper.c */
 extern void helperOpenServers(helper * hlp);
+extern void helperStatefulOpenServers(statefulhelper * hlp);
 extern void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
+extern void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver);
 extern void helperStats(StoreEntry * sentry, helper * hlp);
+extern void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp);
 extern void helperShutdown(helper * hlp);
+extern void helperStatefulShutdown(statefulhelper * hlp);
 extern helper *helperCreate(const char *);
+extern statefulhelper *helperStatefulCreate(const char *);
 extern void helperFree(helper *);
+extern void helperStatefulFree(statefulhelper *);
+extern void helperStatefulReset(helper_stateful_server * srv);
+extern void helperStatefulReleaseServer(helper_stateful_server * srv);
+extern void *helperStatefulServerGetData(helper_stateful_server * srv);
+extern helper_stateful_server *helperStatefulDefer(statefulhelper *);
+
+
 
 #if USE_LEAKFINDER
 extern void leakInit(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.78 2001/01/05 09:51:37 adrian Exp $
+ * $Id: forward.cc,v 1.79 2001/01/07 23:36:38 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -138,9 +138,8 @@ fwdCheckRetry(FwdState * fwdState)
 	return 0;
     if (fwdState->flags.dont_retry)
 	return 0;
-    if (fwdState->request->content_length >= 0)
-	if (0 == pumpRestart(fwdState->request))
-	    return 0;
+    if (fwdState->request->flags.body_sent)
+	return 0;
     return 1;
 }
 
@@ -392,6 +391,7 @@ fwdDispatch(FwdState * fwdState)
 	fwdState->request->peer_login = p->login;
 	httpStart(fwdState);
     } else {
+	fwdState->request->peer_login = NULL;
 	switch (request->protocol) {
 	case PROTO_HTTP:
 	    httpStart(fwdState);
@@ -459,9 +459,8 @@ fwdReforward(FwdState * fwdState)
     }
     if (fwdState->n_tries > 9)
 	return 0;
-    if (fwdState->request->content_length >= 0)
-	if (0 == pumpRestart(fwdState->request))
-	    return 0;
+    if (fwdState->request->flags.body_sent)
+	return 0;
     assert(fs);
     fwdState->servers = fs->next;
     fwdServerFree(fs);

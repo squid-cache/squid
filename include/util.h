@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.56 2000/11/04 23:04:09 hno Exp $
+ * $Id: util.h,v 1.57 2001/01/07 23:36:35 hno Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -111,6 +111,7 @@ extern int safe_inet_addr(const char *, SIA *);
 extern time_t parse_iso3307_time(const char *buf);
 extern char *base64_decode(const char *coded);
 extern const char *base64_encode(const char *decoded);
+extern const char *base64_encode_bin(const char *data, int len);
 
 extern double xpercent(double part, double whole);
 extern int xpercentInt(double part, double whole);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.33 2001/01/06 11:14:42 hno Exp $
+ * $Id: cbdata.cc,v 1.34 2001/01/07 23:36:37 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -137,6 +137,8 @@ cbdataInit(void)
     CREATE_CBDATA(generic_cbdata);
     CREATE_CBDATA(helper);
     CREATE_CBDATA(helper_server);
+    CREATE_CBDATA(statefulhelper);
+    CREATE_CBDATA(helper_stateful_server);
     CREATE_CBDATA(HttpStateData);
     CREATE_CBDATA(peer);
     CREATE_CBDATA(ps_state);

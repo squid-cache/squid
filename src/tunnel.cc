@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.109 2001/01/05 09:51:40 adrian Exp $
+ * $Id: tunnel.cc,v 1.110 2001/01/07 23:36:40 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -587,6 +587,7 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
 	sslState->request->peer_login = fs->peer->login;
 	sslState->request->flags.proxying = 1;
     } else {
+	sslState->request->peer_login = NULL;
 	sslState->request->flags.proxying = 0;
     }
 #if DELAY_POOLS

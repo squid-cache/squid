@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.341 2001/01/05 09:51:40 adrian Exp $
+ * $Id: stat.cc,v 1.342 2001/01/07 23:36:40 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1415,8 +1415,6 @@ statClientRequests(StoreEntry * s)
 		ntohs(conn->me.sin_port));
 	    storeAppendPrintf(s, "\tnrequests: %d\n",
 		conn->nrequests);
-	    storeAppendPrintf(s, "\tpersistent: %d\n",
-		conn->persistent);
 	    storeAppendPrintf(s, "\tdefer: n %d, until %d\n",
 		conn->defer.n, conn->defer.until);
 	}

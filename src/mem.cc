@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.52 2001/01/07 20:11:18 hno Exp $
+ * $Id: mem.cc,v 1.53 2001/01/07 23:36:39 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -204,10 +204,14 @@ memInit(void)
     memDataInit(MEM_ACL_LIST, "acl_list", sizeof(acl_list), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
     memDataInit(MEM_ACL_TIME_DATA, "acl_time_data", sizeof(acl_time_data), 0);
+    memDataInit(MEM_AUTH_USER_T, "auth_user_t",
+	sizeof(auth_user_t), 0);
+    memDataInit(MEM_AUTH_USER_HASH, "auth_user_hash_pointer",
+	sizeof(auth_user_hash_pointer), 0);
+    memDataInit(MEM_ACL_PROXY_AUTH_MATCH, "acl_proxy_auth_match_cache",
+	sizeof(acl_proxy_auth_match_cache), 0);
     memDataInit(MEM_ACL_USER_DATA, "acl_user_data",
 	sizeof(acl_user_data), 0);
-    memDataInit(MEM_ACL_PROXY_AUTH_USER, "acl_proxy_auth_user",
-	sizeof(acl_proxy_auth_user), 0);
     memDataInit(MEM_CACHEMGR_PASSWD, "cachemgr_passwd",
 	sizeof(cachemgr_passwd), 0);
 #if USE_CACHE_DIGESTS
@@ -286,10 +290,15 @@ memInit(void)
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", MD5_DIGEST_CHARS, 0);
     memDataInit(MEM_HELPER, "helper", sizeof(helper), 0);
+    memDataInit(MEM_HELPER_STATEFUL, "stateful_helper", sizeof(statefulhelper), 0);
     memDataInit(MEM_HELPER_REQUEST, "helper_request",
 	sizeof(helper_request), 0);
+    memDataInit(MEM_HELPER_STATEFUL_REQUEST, "helper_stateful_request",
+	sizeof(helper_stateful_request), 0);
     memDataInit(MEM_HELPER_SERVER, "helper_server",
 	sizeof(helper_server), 0);
+    memDataInit(MEM_HELPER_STATEFUL_SERVER, "helper_stateful_server",
+	sizeof(helper_stateful_server), 0);
     memDataInit(MEM_STORE_IO, "storeIOState", sizeof(storeIOState), 0);
     memDataInit(MEM_TLV, "storeSwapTLV", sizeof(tlv), 0);
     memDataInit(MEM_GEN_CBDATA, "generic_cbdata", sizeof(generic_cbdata), 0);

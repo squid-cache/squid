@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.160 2001/01/05 09:51:37 adrian Exp $
+ * $Id: errorpage.cc,v 1.161 2001/01/07 23:36:38 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -51,8 +51,6 @@ typedef struct {
 } ErrorDynamicPageInfo;
 
 /* local constant and vars */
-
-static const char *const proxy_auth_challenge_fmt = "Basic realm=\"%s\"";
 
 /*
  * note: hard coded error messages are not appended with %S automagically
@@ -280,25 +278,13 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     storeBuffer(entry);
     rep = errorBuildReply(err);
     /* Add authentication header */
-    switch (err->http_status) {
-    case HTTP_PROXY_AUTHENTICATION_REQUIRED:
-	/* Proxy authorisation needed */
-	httpHeaderPutStrf(&rep->header, HDR_PROXY_AUTHENTICATE,
-	    proxy_auth_challenge_fmt, Config.proxyAuthRealm);
-	break;
-    case HTTP_UNAUTHORIZED:
-	/* WWW Authorisation needed */
-	httpHeaderPutStrf(&rep->header, HDR_WWW_AUTHENTICATE,
-	    proxy_auth_challenge_fmt, Config.proxyAuthRealm);
-	break;
-    default:
-	/* Keep GCC happy */
-	break;
-    }
+    /* TODO: alter errorstate to be accel on|off aware. The 0 on the next line
+     * depends on authenticate behaviour: all schemes to date send no extra data
+     * on 407/401 responses, and do not check the accel state on 401/407 responses 
+     */
+    authenticateFixHeader(rep, err->auth_user_request, err->request, 0);
     httpReplySwapOut(rep, entry);
-    httpReplyDestroy(rep);
-    mem->reply->sline.status = err->http_status;
-    mem->reply->content_length = -1;
+    httpReplyAbsorb(mem->reply, rep);
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     storeBufferFlush(entry);
     storeComplete(entry);
@@ -361,10 +347,13 @@ errorSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data
     ErrorState *err = data;
     debug(4, 3) ("errorSendComplete: FD %d, size=%d\n", fd, size);
     if (errflag != COMM_ERR_CLOSING) {
-	if (err->callback)
+	if (err->callback) {
+	    debug(4, 3) ("errorSendComplete: callback\n");
 	    err->callback(fd, err->callback_data, size);
-	else
+	} else {
 	    comm_close(fd);
+	    debug(4, 3) ("errorSendComplete: comm_close\n");
+	}
     }
     errorStateFree(err);
 }
@@ -377,11 +366,12 @@ errorStateFree(ErrorState * err)
     safe_free(err->url);
     safe_free(err->host);
     safe_free(err->dnsserver_msg);
-    safe_free(err->proxy_auth_msg);
     safe_free(err->request_hdrs);
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
     safe_free(err->ftp.reply);
+    if (err->auth_user_request)
+	authenticateAuthUserRequestUnlock(err->auth_user_request);
     cbdataFree(err);
 }
 
@@ -483,7 +473,7 @@ errorConvert(char token, ErrorState * err)
 	    p = "[not available]";
 	break;
     case 'm':
-	p = err->proxy_auth_msg ? err->proxy_auth_msg : "[not available]";
+	p = authenticateAuthUserRequestMessage(err->auth_user_request) ? authenticateAuthUserRequestMessage(err->auth_user_request) : "[not available]";
 	break;
     case 'M':
 	p = r ? RequestMethodStr[r->method] : "[unkown method]";
