@@ -41,6 +41,7 @@ Changes to Squid-2.4.DEVEL3 ():
 	- Negatively cached DNS entries are now purged on "reload".
 	- PURGE now also purges the DNS cache
 	- HEAD on FTP objects no longer retreives the whole object
+	- More cleanups of the dstdomain ACL type
 
 Changes to Squid-2.4.DEVEL2 ():
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.121 2000/03/06 16:23:36 wessels Exp $
+ * $Id: url.cc,v 1.122 2000/05/02 20:22:55 hno Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -127,7 +127,7 @@ urlInitialize(void)
      * way we expect it to.
      */
     assert(0 == matchDomainName("foo.com", "foo.com"));
-    assert(0 == matchDomainName(".foo.com", "foo.com"));
+    assert(0 < matchDomainName(".foo.com", "foo.com"));
     assert(0 == matchDomainName("foo.com", ".foo.com"));
     assert(0 == matchDomainName(".foo.com", ".foo.com"));
     assert(0 == matchDomainName("x.foo.com", ".foo.com"));
@@ -140,6 +140,8 @@ urlInitialize(void)
     assert(0 < matchDomainName("zzz.com", "foo.com"));
     assert(0 > matchDomainName("aaa.com", "foo.com"));
     assert(0 == matchDomainName("FOO.com", "foo.COM"));
+    assert(0 < matchDomainName("bfoo.com", "afoo.com"));
+    assert(0 > matchDomainName("afoo.com", "bfoo.com"));
     /* more cases? */
 }
 
@@ -397,14 +399,11 @@ urlCanonicalClean(const request_t * request)
  *    HOST          DOMAIN        MATCH?
  * ------------- -------------    ------
  *    foo.com       foo.com         YES
- *   .foo.com       foo.com         YES
+ *   .foo.com       foo.com          NO
  *  x.foo.com       foo.com          NO
  *    foo.com      .foo.com         YES
  *   .foo.com      .foo.com         YES
  *  x.foo.com      .foo.com         YES
- *
- *  We strip leading dots on hosts (but not domains!) so that
- *  ".foo.com" is is always the same as "foo.com".
  *
  *  Return values:
  *     0 means the host matches the domain
@@ -417,8 +416,6 @@ matchDomainName(const char *h, const char *d)
 {
     int dl;
     int hl;
-    while ('.' == *h)
-	h++;
     hl = strlen(h);
     dl = strlen(d);
     /*
