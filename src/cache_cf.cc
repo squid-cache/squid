@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.148 1996/12/01 00:51:54 wessels Exp $
+ * $Id: cache_cf.cc,v 1.149 1996/12/02 04:15:08 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1111,6 +1111,9 @@ parseConfigFile(const char *file_name)
 
 	else if (!strcmp(token, "httpd_accel_with_proxy"))
 	    parseOnOff(&Config.Accel.withProxy);
+
+	else if (!strcmp(token, "httpd_accel_uses_host_header"))
+	    parseOnOff(&opt_accel_users_host);
 
 	else if (!strcmp(token, "httpd_accel"))
 	    parseHttpdAccelLine();
