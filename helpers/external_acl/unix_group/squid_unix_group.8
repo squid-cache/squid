@@ -1,0 +1,60 @@
+.TH squid_unix_group 8 "12 August 2002" "Squid UNIX Group helper"
+.
+.SH NAME
+squid_unix_group - Squid UNIX Group external_acl helper
+.
+.SH SYNOPSIS
+squid_unix_group [-g groupname] [-g groupname...] [-p]
+.
+.SH DESCRIPTION
+This helper allows Squid to base access controls on users
+memberships in UNIX groups.
+.
+.TP
+.BI "-g " "groupname "
+Specifies a group name to match.
+.
+.TP
+.BI "-p"
+Also match the users primary group from /etc/passwd
+.
+.SH EXAMPLES
+.
+This squid.conf example defines two Squid acls. usergroup1 matches users in group1, and usergroup2
+matches users in group2 or group3
+.IP
+external_acl_type unix_group %LOGIN /usr/local/squid/libexec/squid_unix_group -p
+.IP
+acl usergroup1 external unix_group group1
+.IP
+acl usergroup2 external unix_group group2 group3
+.
+.SH NOTES
+.
+By default up to 11 groups can be matched in one acl (including commandline specified
+groups). This limit is defined by MAX_GROUPS in the source code.
+.
+.SH AUTHOR
+This manual page was written by 
+.I Henrik Nordstrom <hno@squid-cache.org>
+.P
+squid_unix_group is written by 
+.I Rodrigo Campos <rodrigo@geekbunker.org>
+.
+.SH KNOWN ISSUES
+Does not understand gid aliased groups sometimes used to work around groups size
+limitations. If you are using gid aliased groups then you must specify each alias
+by name.
+.
+.SH QUESTIONS
+Any questions on usage can be sent to 
+.IR "Squid Users <squid-users@squid-cache.org>"
+.
+.SH REPORTING BUGS
+Report bugs or bug-fixes to
+.I Rodrigo Campos <rodrigo@geekbunker.org>
+or 
+.I Squid Developers <squid-dev@squid-cache.org>
+.
+.SH "SEE ALSO"
+.BR group ( 5 ), passwd ( 5 )

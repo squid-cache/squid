@@ -1,4 +1,4 @@
-$Id: README,v 1.1 2002/06/23 14:31:09 hno Exp $
+$Id: README,v 1.2 2002/08/12 13:56:35 hno Exp $
 
 This is the README file for check_group, an external
 helper fo the External ACL Scheme for Squid.
@@ -7,13 +7,12 @@ More information about the External ACL scheme may
 be found at http://devel.squid-cache.org/external_acl/
 
 This program reads one new line terminated argument in the
-standard input (the username) and tries to match it against
+standard input (the username and groups) and tries to match it against
 several command-line specified groups.
 
 The syntax for the program is as follows:
 
-
-check_group -g group1 [-g group2 -g group3 ...] [-p]
+check_group [-g group1 -g group2 -g group3 ...] [-p]
 
 You may specify up to 11 different groups, this limit may be
 increased by changing the MAX_GROUP define in the source code
@@ -21,7 +20,12 @@ and recompiling the program.
 
 To compile this program, use:
 
-gcc -o check_group check_group-1.0.c
+gcc -o check_group check_group.c
+
+
+You may specify the group names in the acl, as follows:
+
+acl ckgroup external ckgroup_helper %LOGIN group1 group2 group3
 
 
 You may get the latest release and more information about this
