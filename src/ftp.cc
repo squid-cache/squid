@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.187 1998/01/12 04:30:38 wessels Exp $
+ * $Id: ftp.cc,v 1.188 1998/02/02 19:50:10 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -45,7 +45,8 @@ enum {
     FTP_NO_DOTDOT,
     FTP_HTML_HEADER_SENT,
     FTP_BINARY,
-    FTP_TRY_SLASH_HACK
+    FTP_TRY_SLASH_HACK,
+    FTP_LISTFORMAT_UNKNOWN
 };
 
 static const char *const crlf = "\r\n";
@@ -129,7 +130,7 @@ typedef void (FTPSM) (FtpStateData *);
 /* Local functions */
 static CNCB ftpConnectDone;
 static CNCB ftpPasvCallback;
-static PF ftpReadData;
+static PF ftpDataRead;
 static PF ftpStateFree;
 static PF ftpTimeout;
 static PF ftpReadControlReply;
@@ -137,8 +138,6 @@ static CWCB ftpWriteCommandCallback;
 static char *ftpGetBasicAuth(const char *);
 static void ftpLoginParser(const char *, FtpStateData *);
 static wordlist *ftpParseControlReply(char *buf, size_t len, int *code);
-static void ftpRestOrList(FtpStateData * ftpState);
-static void ftpDataTransferDone(FtpStateData * ftpState);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
 static char *ftpAuthRequired(const request_t *, const char *);
 static STABH ftpAbort;
@@ -147,6 +146,7 @@ static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 /* State machine functions
  * send == state transition
  * read == wait for response, and select next state transition
+ * other == Transition logic
  */
 static FTPSM ftpReadWelcome;
 static FTPSM ftpSendUser;
@@ -163,7 +163,9 @@ static FTPSM ftpSendPort;
 static FTPSM ftpReadPort;
 static FTPSM ftpSendPasv;
 static FTPSM ftpReadPasv;
-static FTPSM ftpTraverseDirectory;	/* Selects CWD or RETR */
+static FTPSM ftpTraverseDirectory;
+static FTPSM ftpListDir;
+static FTPSM ftpGetFile;
 static FTPSM ftpSendCwd;
 static FTPSM ftpReadCwd;
 static FTPSM ftpSendList;
@@ -177,6 +179,33 @@ static FTPSM ftpReadTransferDone;
 static FTPSM ftpSendQuit;
 static FTPSM ftpReadQuit;
 static FTPSM ftpFail;
+static FTPSM ftpDataTransferDone;
+static FTPSM ftpRestOrList;
+
+/************************************************
+** State Machine Description (excluding hacks) **
+*************************************************
+From			To
+---------------------------------------
+Welcome			User
+User			Pass
+Pass			Type
+Type			TraverseDirectory / GetFile
+TraverseDirectory	Cwd / GetFile / ListDir
+Cwd			TraverseDirectory
+GetFile			Mdtm
+Mdtm			Size
+Size			Pasv
+ListDir			Pasv
+Pasv			RestOrList
+RestOrList		Rest / Retr / Nlst / List
+Rest			Retr
+Retr / Nlst / List	(ftpDataRead on datachannel)
+(ftpDataRead)		ReadTransferDone
+ReadTransferDone	DataTransferDone
+DataTransferDone	Quit
+Quit			-
+************************************************/
 
 FTPSM *FTP_SM_FUNCS[] =
 {
@@ -315,6 +344,11 @@ ftpListingFinish(FtpStateData * ftpState)
     StoreEntry *e = ftpState->entry;
     storeBuffer(e);
     storeAppendPrintf(e, "</PRE>\n");
+    if (EBIT_TEST(ftpState->flags, FTP_LISTFORMAT_UNKNOWN) && !EBIT_TEST(ftpState->flags, FTP_TRIED_NLST)) {
+	storeAppendPrintf(e, "<A HREF=\"./;type=d\">[As plain directory]</A>\n");
+    } else if (ftpState->typecode=='D') {
+	storeAppendPrintf(e, "<A HREF=\"./\">[As extended directory]</A>\n");
+    }
     storeAppendPrintf(e, "<HR>\n");
     storeAppendPrintf(e, "<ADDRESS>\n");
     storeAppendPrintf(e, "Generated %s, by %s/%s@%s\n",
@@ -380,6 +414,12 @@ ftpListParseParts(const char *buf, int flags)
     for (i = 0; i < MAX_TOKENS; i++)
 	tokens[i] = (char *) NULL;
     xbuf = xstrdup(buf);
+    if (EBIT_TEST(flags, FTP_TRIED_NLST)) {
+	/* Machine readable format, one name per line */
+	p->name=xbuf;
+	p->type='\0'; 
+	return p;
+    }
     for (t = strtok(xbuf, w_space); t && n_tokens < MAX_TOKENS; t = strtok(NULL, w_space))
 	tokens[n_tokens++] = xstrdup(t);
     xfree(xbuf);
@@ -499,7 +539,7 @@ dots_fill(size_t len)
 }
 
 static char *
-ftpHtmlifyListEntry(char *line, int flags)
+ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 {
     LOCAL_ARRAY(char, link, 2048 + 40);
     LOCAL_ARRAY(char, link2, 2048 + 40);
@@ -507,12 +547,17 @@ ftpHtmlifyListEntry(char *line, int flags)
     LOCAL_ARRAY(char, html, 8192);
     size_t width = Config.Ftp.list_width;
     ftpListParts *parts;
+    int flags = ftpState->flags;
     if (strlen(line) > 1024) {
 	snprintf(html, 8192, "%s\n", line);
 	return html;
     }
     if ((parts = ftpListParseParts(line, flags)) == NULL) {
+        char *p;
 	snprintf(html, 8192, "%s\n", line);
+	for(p=line;*p && isspace(*p);p++);
+	if (*p && !isspace(*p))
+	    EBIT_SET(ftpState->flags, FTP_LISTFORMAT_UNKNOWN);
 	return html;
     }
     /* check .. as special case */
@@ -597,6 +642,21 @@ ftpHtmlifyListEntry(char *line, int flags)
 	    parts->date,
 	    link2);
 	break;
+    case '\0':
+	snprintf(icon, 2048, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
+	    "http://internal.squid/icons/",
+	    mimeGetIcon(parts->name),
+	    "[UNKNOWN]");
+	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>",
+	    rfc1738_escape(parts->name),
+	    parts->name);
+	snprintf(link2, 2048, "(<A HREF=\"%s/;type=d\">chdir</A>)",
+	    rfc1738_escape(parts->name));
+	snprintf(html, 8192, "%s %s %s\n",
+	    icon,
+	    link,
+	    link2);
+	break;
     case '-':
     default:
 	snprintf(icon, 2048, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
@@ -651,7 +711,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
 	debug(9, 7) ("%s\n", line);
 	if (!strncmp(line, "total", 5))
 	    continue;
-	t = ftpHtmlifyListEntry(line, ftpState->flags);
+	t = ftpHtmlifyListEntry(line, ftpState);
 	assert(t != NULL);
 	storeAppend(e, t, strlen(t));
     }
@@ -687,7 +747,7 @@ ftpReadComplete(FtpStateData * ftpState)
 }
 
 static void
-ftpReadData(int fd, void *data)
+ftpDataRead(int fd, void *data)
 {
     FtpStateData *ftpState = data;
     int len;
@@ -708,7 +768,7 @@ ftpReadData(int fd, void *data)
 	ftpState->data.buf + ftpState->data.offset,
 	ftpState->data.size - ftpState->data.offset);
     fd_bytes(fd, len, FD_READ);
-    debug(9, 5) ("ftpReadData: FD %d, Read %d bytes\n", fd, len);
+    debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, len);
     if (len > 0) {
 	IOStats.Ftp.reads++;
 	for (j = len - 1, bin = 0; j; bin++)
@@ -716,11 +776,11 @@ ftpReadData(int fd, void *data)
 	IOStats.Ftp.read_hist[bin]++;
     }
     if (len < 0) {
-	debug(50, 1) ("ftpReadData: read error: %s\n", xstrerror());
+	debug(50, 1) ("ftpDataRead: read error: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
-		ftpReadData,
+		ftpDataRead,
 		data,
 		Config.Timeout.read);
 	} else {
@@ -744,7 +804,7 @@ ftpReadData(int fd, void *data)
 	else
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
-		ftpReadData,
+		ftpDataRead,
 		data,
 		Config.Timeout.read);
     }
@@ -806,6 +866,12 @@ ftpCheckUrlpath(FtpStateData * ftpState)
     request_t *request = ftpState->request;
     int l;
     char *t;
+    if ((t = strrchr(request->urlpath, ';')) != NULL) {
+	if (strncasecmp(t + 1, "type=", 5) == 0) {
+	    ftpState->typecode = (char) toupper((int) *(t + 6));
+	    *t = '\0';
+	}
+    }
     l = strlen(request->urlpath);
     EBIT_SET(ftpState->flags, FTP_USE_BASE);
     /* check for null path */
@@ -821,12 +887,6 @@ ftpCheckUrlpath(FtpStateData * ftpState)
 	EBIT_CLR(ftpState->flags, FTP_USE_BASE);
 	if (l == 1)
 	    EBIT_SET(ftpState->flags, FTP_ROOT_DIR);
-    }
-    if ((t = strrchr(request->urlpath, ';')) != NULL) {
-	if (strncasecmp(t + 1, "type=", 5) == 0) {
-	    ftpState->typecode = (char) toupper((int) *(t + 6));
-	    *t = '\0';
-	}
     }
 }
 
@@ -1194,9 +1254,13 @@ ftpSendType(FtpStateData * ftpState)
     case 'I':
 	break;
     default:
-	t = strrchr(ftpState->request->urlpath, '/');
-	filename = t ? t + 1 : ftpState->request->urlpath;
-	mode = mimeGetTransferMode(filename);
+	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
+	    mode = 'A';
+	} else {
+	    t = strrchr(ftpState->request->urlpath, '/');
+	    filename = t ? t + 1 : ftpState->request->urlpath;
+	    mode = mimeGetTransferMode(filename);
+	}
 	break;
     }
     if (mode == 'I')
@@ -1229,7 +1293,7 @@ ftpReadType(FtpStateData * ftpState)
 	if (ftpState->pathcomps)
 	    ftpTraverseDirectory(ftpState);
 	else
-	    ftpSendPasv(ftpState);
+	    ftpListDir(ftpState);
     } else {
 	ftpFail(ftpState);
     }
@@ -1245,13 +1309,7 @@ ftpTraverseDirectory(FtpStateData * ftpState)
     /* Done? */
     if (ftpState->pathcomps == NULL) {
 	debug(9, 3) ("the final component was a directory\n");
-	if (!EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
-	    debug(9, 3) ("and path did not end in /\n");
-	    strcat(ftpState->title_url, "/");
-	    EBIT_SET(ftpState->flags, FTP_ISDIR);
-	    EBIT_SET(ftpState->flags, FTP_USE_BASE);
-	}
-	ftpSendPasv(ftpState);
+	ftpListDir(ftpState);
 	return;
     }
     /* Go to next path component */
@@ -1264,7 +1322,7 @@ ftpTraverseDirectory(FtpStateData * ftpState)
 	ftpSendCwd(ftpState);
     } else {
 	debug(9, 3) ("final component is probably a file\n");
-	ftpSendMdtm(ftpState);
+	ftpGetFile(ftpState);
 	return;
     }
 }
@@ -1304,6 +1362,26 @@ ftpReadCwd(FtpStateData * ftpState)
 }
 
 static void
+ftpGetFile(FtpStateData * ftpState)
+{
+    assert(*ftpState->filepath != '\0');
+    EBIT_CLR(ftpState->flags, FTP_ISDIR);
+    ftpSendMdtm(ftpState);
+}
+
+static void
+ftpListDir(FtpStateData * ftpState)
+{
+    if (!EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
+	debug(9, 3) ("Directory path did not end in /\n");
+	strcat(ftpState->title_url, "/");
+	EBIT_SET(ftpState->flags, FTP_ISDIR);
+	EBIT_SET(ftpState->flags, FTP_USE_BASE);
+    }
+    ftpSendPasv(ftpState);
+}
+
+static void
 ftpSendMdtm(FtpStateData * ftpState)
 {
     assert(*ftpState->filepath != '\0');
@@ -1330,7 +1408,7 @@ ftpSendSize(FtpStateData * ftpState)
 {
     /* Only send SIZE for binary transfers. The returned size
      * is useless on ASCII transfers */
-    if (!EBIT_TEST(ftpState->flags, FTP_BINARY)) {
+    if (EBIT_TEST(ftpState->flags, FTP_BINARY)) {
 	assert(ftpState->filepath != NULL);
 	assert(*ftpState->filepath != '\0');
 	snprintf(cbuf, 1024, "SIZE %s\r\n", ftpState->filepath);
@@ -1478,8 +1556,10 @@ ftpRestOrList(FtpStateData * ftpState)
 {
     debug(9, 3) ("This is ftpRestOrList\n");
     if (ftpState->typecode == 'D') {
+	/* XXX This should NOT be here */
 	ftpSendNlst(ftpState);	/* sec 3.2.2 of RFC 1738 */
 	EBIT_SET(ftpState->flags, FTP_ISDIR);
+	EBIT_SET(ftpState->flags, FTP_USE_BASE);
     } else if (EBIT_TEST(ftpState->flags, FTP_ISDIR))
 	ftpSendList(ftpState);
     else if (ftpState->restart_offset > 0)
@@ -1515,9 +1595,28 @@ ftpReadRest(FtpStateData * ftpState)
 static void
 ftpSendList(FtpStateData * ftpState)
 {
-    snprintf(cbuf, 1024, "LIST\r\n");
+    if (ftpState->filepath) {
+	EBIT_SET(ftpState->flags, FTP_USE_BASE);
+	snprintf(cbuf, 1024, "LIST %s\r\n", ftpState->filepath);
+    } else {
+	snprintf(cbuf, 1024, "LIST\r\n");
+    }
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_LIST;
+}
+
+static void
+ftpSendNlst(FtpStateData * ftpState)
+{
+    EBIT_SET(ftpState->flags, FTP_TRIED_NLST);
+    if (ftpState->filepath) {
+	EBIT_SET(ftpState->flags, FTP_USE_BASE);
+	snprintf(cbuf, 1024, "NLST %s\r\n", ftpState->filepath);
+    } else {
+	snprintf(cbuf, 1024, "NLST\r\n");
+    }
+    ftpWriteCommand(cbuf, ftpState);
+    ftpState->state = SENT_NLST;
 }
 
 static void
@@ -1529,7 +1628,7 @@ ftpReadList(FtpStateData * ftpState)
 	ftpAppendSuccessHeader(ftpState);
 	commSetSelect(ftpState->data.fd,
 	    COMM_SELECT_READ,
-	    ftpReadData,
+	    ftpDataRead,
 	    ftpState,
 	    Config.Timeout.read);
 	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
@@ -1545,18 +1644,6 @@ ftpReadList(FtpStateData * ftpState)
 	ftpFail(ftpState);
 	return;
     }
-}
-
-static void
-ftpSendNlst(FtpStateData * ftpState)
-{
-    EBIT_SET(ftpState->flags, FTP_TRIED_NLST);
-    if (ftpState->filepath)
-	snprintf(cbuf, 1024, "NLST %s\r\n", ftpState->filepath);
-    else
-	snprintf(cbuf, 1024, "NLST\r\n");
-    ftpWriteCommand(cbuf, ftpState);
-    ftpState->state = SENT_NLST;
 }
 
 static void
@@ -1578,7 +1665,7 @@ ftpReadRetr(FtpStateData * ftpState)
 	ftpAppendSuccessHeader(ftpState);
 	commSetSelect(ftpState->data.fd,
 	    COMM_SELECT_READ,
-	    ftpReadData,
+	    ftpDataRead,
 	    ftpState,
 	    Config.Timeout.read);
 	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
@@ -1650,7 +1737,7 @@ ftpTrySlashHack(FtpStateData * ftpState)
     rfc1738_unescape(path);
     ftpState->filepath = path;
     /* And off we go */
-    ftpSendMdtm(ftpState);
+    ftpGetFile(ftpState);
 }
 
 static void
@@ -1671,8 +1758,7 @@ ftpFail(FtpStateData * ftpState)
 {
     ErrorState *err;
     debug(9, 3) ("ftpFail\n");
-    /* Try the / hack to support "Netscape" FTP URL's
-     * only if we failed on CWD or RETR, !IS_DIR */
+    /* Try the / hack to support "Netscape" FTP URL's for retreiving files */
     if (!EBIT_TEST(ftpState->flags, FTP_ISDIR) &&
 	!EBIT_TEST(ftpState->flags, FTP_TRY_SLASH_HACK)) {
 	switch (ftpState->state) {

@@ -279,7 +279,7 @@ handle_read(char *buf, int len)
 	}
 	if (len) {
 	    assert(bytes_used > 0);
-	    memmove(buf, buf + bytes_used, len);
+	    xmemmove(buf, buf + bytes_used, len);
 	    return handle_read(buf, len);
 	}
     }

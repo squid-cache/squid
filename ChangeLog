@@ -8,6 +8,22 @@
 	- Fixed no reference to @LIB_MALLOC@ in src/Makefile.in
 	  (Masashi Fujita).
 	- Fixed building outside of source tree (Masashi Fujita).
+	- FTP: Format NLST listings, and inform the user that the NLST
+	  (plain) format is available when we find a LIST listing that we
+	  don't understand (Henrik Nordstrom)
+	- FTP: Use SIZE on Binary transfers, and not ASCII. The
+	  condition was inversed, making squid use SIZE on ASCII
+	  transfers (Henrik Nordstrom).
+	- Enable virtual and Host: based acceleration in order to be
+	  able to use Squid as a transparent proxy without breaking
+	  either virtual servers or clients not sending Host: header
+	  the order of the virtual and Host: based acceleration needs
+	  to be swapped, giving Host: a higher precendence than virtual
+	  host (Henrik Nordstrom).
+	- Use memmove/bcopy as detected by configure Some systems does
+	  not have memmove, but have the older bcopy implementation
+	  (Henrik Nordstrom).
+
 
 Changes to squid-1.2.beta12 (Jan 30, 1998):
 
