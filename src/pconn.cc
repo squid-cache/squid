@@ -1,5 +1,5 @@
 /*
- * $Id: pconn.cc,v 1.3 1997/08/24 00:37:04 wessels Exp $
+ * $Id: pconn.cc,v 1.4 1997/10/23 20:42:53 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -140,6 +140,7 @@ pconnPush(int fd, const char *host, u_short port)
 	    key, p->nfds);
 	close(fd);
 	xfree(key);
+	commSetTimeout(fd, -1, NULL, NULL);
 	return;
     }
     p->fds[p->nfds++] = fd;
