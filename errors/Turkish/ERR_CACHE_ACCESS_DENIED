@@ -9,7 +9,7 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu 
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <UL>
 <LI>
 <STRONG>
@@ -17,15 +17,13 @@ Cache Sunucusunu Kullanamazsýnýz.
 </STRONG>
 </UL>
 </P>
-
 <P>Özür dilerim, istediðiniz:
 <PRE>    %U</PRE>
-adresine bu cache sunucusunu kullanarak ulaþamazsýnýz.
+adresine bu Cache Sunucusunu kullanarak ulaþamazsýnýz.
 </P>
-
 <P>
-Netscape 2.0 ve yenisi, Microsoft Internet Exporer 3.0 ve yenisi, veya herhangi HTTP/1.1 uyumlu
-tarayýcý kullandýðýnýza emin olun. Lütfen <A HREF="mailto:%w">cache yöneticisi</a> ile 
+Netscape 2.0 veya üstü, Microsoft Internet Exporer 3.0 veya üstü, veya herhangi HTTP/1.1 uyumlu
+tarayýcý kullandýðýnýza emin olun. Lütfen <A HREF="mailto:%w">Cache Yöneticisi</a> ile 
 baðlantýya geçin, veya þifrenizi deðiþtirmek için 
 <A HREF=\"http://%h/cgi-bin/chpasswd.cgi\">buraya</a> týklayýn. 
 </P>

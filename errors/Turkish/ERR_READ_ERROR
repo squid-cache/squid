@@ -8,20 +8,17 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
-
 <STRONG>
-Okuma Hatasý
+Okuma Hatasý.
 </STRONG>
 </UL>
-
 <P>
 Sistem aþaðýdaki mesajý verdi:
 <PRE><I>    %E</I></PRE>
-
 <P>
-Aðýdan bilgileri okuma sýrasýnda hata oluþtu. Lütfen isteðinizi tekrar giriniz.
+Aðdan bilgileri okuma sýrasýnda hata oluþtu. Lütfen isteðinizi tekrar giriniz.
 </P>

@@ -10,17 +10,14 @@
 <P>
 adresine FTP ile dosya yüklemesi sýrasýnda
 <P>
-Squid aþaðýdaki FTP komutlarý gönderdi:
+Squid, aþaðýdaki FTP komutlarýný gönderdi:
 <PRE><STRONG>
         %f
 </STRONG></PRE>
-ve bu mesajý aldý
+ve bu cevabý aldý:
 <PRE><STRONG>
         %F
 </STRONG></PRE>
 <P>
-<PRE>
-Lütfen dizin ismini, boþ alaný ve yetkilerinizi kontrol edin ve tekrar deneyin.
-</PRE>
+Lütfen dizin ismini, yetkilerinizi ve boþ disk alanýný kontrol ederek tekrar deneyiniz.
 </P>
-

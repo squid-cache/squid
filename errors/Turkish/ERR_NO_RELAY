@@ -8,15 +8,14 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
 <STRONG>
-Wais Sunucu tanýmlý deðil.
+WAIS Sunucu tanýmlý deðil.
 </STRONG>
 </UL>
-
 <P>
-Bu cache sunucuda WAIS sunucu tanýmlý deðil. Lütfen cache yöneticisi ile baðlantýya geçiniz.
+Bu Cache Sunucuda WAIS sunucu tanýmlý deðil. Lütfen Cache Yöneticisi ile baðlantýya geçiniz.
 </P>

@@ -8,7 +8,7 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
@@ -16,12 +16,11 @@ adresine ulaþýrken aþaðýdaki hata oluþtu
 Þu anda sizi yönlendiremem.
 </STRONG>
 </UL>
-
 <P>
-Bu istek þu anda baþka bir cache sunucuya veya hedef WWW sunucuya yönlendirilemez.
-Bunun nedenleri þunlar olabilir:
+Bu istek þu anda baþka bir Cache Sunucuya veya hedef WWW Sunucuya yönlendirilemez.
+Bunun sebebi aþaðýdakilerden herhangi biri olabilir:
 <UL>
-<LI>Cache yöneticisi isteklerin hedef WWW sunucuya gitmesine izin vermiyor, ve
-<LI>Tüm ana cache sunucularýna þu anda ulaþýlamýyor.
+<LI>Cache yöneticisi isteklerin hedef WWW sunucuya gitmesine izin vermiyor.
+<LI>Hiç bir ana Cache Sunucuya þu anda ulaþýlamýyor.
 </UL>
 </P>

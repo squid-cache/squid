@@ -8,12 +8,12 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
 <STRONG>
-Eriþim Yasak.
+Eriþim yasak.
 </STRONG>
 <P>
 Eriþim kontrol mekanizmasý istediðiniz bilgilere ulaþmanýzý yasaklýyor. 
@@ -21,4 +21,3 @@ Eriþim kontrol mekanizmasý istediðiniz bilgilere ulaþmanýzý yasaklýyor.
 Saðlayýcý Kurumla baðlantýya geçiniz.
 </UL>
 </P>
-

@@ -8,7 +8,7 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
@@ -16,9 +16,7 @@ adresine ulaþýrken aþaðýdaki hata oluþtu
 Yönlendirme yasak.
 </STRONG>
 </UL>
-
 <P>
-Yapýlan ayarlardan ve tanýmlanan kullanýcý hakklarýndan dolayý Cache sunucusu
-isteðinizi yönlendiremez. %i isimli makina yanlýþ ayarlar ile calýþan bir cache 
-sunucu olabilir.
+Bu Cache Sunucu, yapýlan ayarlardan ve tanýmlanan kullanýcý hakklarýndan dolayý 
+isteðinizi yönlendirememektedir. %i isimli Cache Sunucu ayarlarýnda bir yanlýþlýk olabilir. 
 </P>

@@ -8,7 +8,7 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
@@ -16,7 +16,6 @@ adresine ulaþýrken aþaðýdaki hata oluþtu
 FTP þu anda kapalý.
 </STRONG>
 </UL>
-
 <P>
-Bu cache sunucu FTP desteklemiyor..
+Bu cache sunucu FTP desteklemiyor.
 </P>

@@ -8,16 +8,14 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
-
 <STRONG>
 URN çözülemedi.
 </STRONG>
 </UL>
-
 <P>
 %T de URN den fazla birsey beklemeyin. :)
 </P>

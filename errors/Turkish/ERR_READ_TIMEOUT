@@ -8,20 +8,18 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
 <STRONG>
-Okuma zamaný doldu (Read Timeout)
+Okuma zamaný doldu (Read Timeout).
 </STRONG>
 </UL>
-
 <P>
 Sistem aþaðýdaki mesajý verdi:
 <PRE><I>    %E</I></PRE>
-
 <P>
-Ýstemiþ olduðunuz bilgileri aðýdan okuma sýrasýnda okuma zamaný doldu. Hedef sunucu 
-kapalý veya çok meþkul olabilir. Lütfen isteðinizi tekrar girinizi
+Ýstemiþ olduðunuz bilgileri aðdan okuma sýrasýnda okuma zamaný doldu. Hedef sunucu 
+kapalý veya çok meþgul olabilir. Lütfen isteðinizi tekrar giriniz.
 </P>
