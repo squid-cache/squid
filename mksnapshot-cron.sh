@@ -57,6 +57,9 @@ set +e
 ../commit/bootstrap squid
 make_snapshot ../commit/squid/mksnapshot.sh HEAD v3 HEAD 6
 
+cp ../commit/squid/CONTRIBUTORS /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.txt
+cp ../commit/squid/SPONSORS /server/httpd/htdocs/squid-cache.org/SPONSORS.txt
+
 #../commit/bootstrap squid-3.0
 #make_snapshot ../commit/squid/mksnapshot.sh SQUID_3_0 v3 3.0 3
 make_snapshot ../commit/squid/mksnapshot.sh HEAD v3 3.0 3
