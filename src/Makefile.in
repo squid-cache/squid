@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.3 1996/02/23 05:52:43 wessels Exp $
+#  $Id: Makefile.in,v 1.4 1996/02/23 06:23:20 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -29,10 +29,11 @@ LEXLIB		= @LEXLIB@
 LN_S		= @LN_S@
 PERL		= @CMD_PERL@
 CRYPT_LIB	= @CRYPT_LIB@
+STD_CFLAGS	= @STD_CFLAGS@
+STD_LDFLAGS	= @STD_LDFLAGS@
 XTRA_CFLAGS	= @XTRA_CFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
 XTRA_OBJS 	= @XTRA_OBJS@
-DEBUG_TOP 	= @DEBUG_TOP@
 
 
 ## AIX users might need to use these values
@@ -47,12 +48,11 @@ DEBUG_TOP 	= @DEBUG_TOP@
 #
 #XTRA_CFLAGS	= -D_ALL_SOURCE
 
-DEBUG		= $(DEBUG_TOP) #-O #-g #-DDEBUG
 INCLUDE		= -I. -I../include	# MUST use -I. first
-CFLAGS 		= $(CCOPTS) $(DEBUG) $(INCLUDE) $(DEFINES) $(XTRA_CFLAGS) 
-LDFLAGS         = $(DEBUG_TOP) $(LDOPTS) -L../lib
-LIBS		= -lregex -lutil $(XTRA_LIBS) $(CRYPT_LIB)
-CLIENT_LIBS	= -lutil $(XTRA_LIBS)
+CFLAGS 		= $(STD_CFLAGS) $(INCLUDE) $(DEFINES) $(XTRA_CFLAGS) 
+LDFLAGS         = $(STD_LDFLAGS)
+LIBS		= -L../lib -lregex -lutil $(XTRA_LIBS) $(CRYPT_LIB)
+CLIENT_LIBS	= -L../lib -lutil $(XTRA_LIBS)
 
 PROGS		= cached 
 UTILS		= client dnsserver ftpget
