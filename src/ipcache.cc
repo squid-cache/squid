@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.53 1996/08/30 22:37:58 wessels Exp $
+ * $Id: ipcache.cc,v 1.54 1996/09/03 18:54:45 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -631,6 +631,7 @@ static int ipcache_dnsHandleRead(fd, dnsData)
 	    i->entry = x->entry;
 	    i->error_message = x->error_message;
 	    i->status = x->status;
+	    i->expires = x->expires;
 	    ipcache_call_pending(i);
 	}
     }
