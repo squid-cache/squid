@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.63 1998/09/04 23:04:51 wessels Exp $
+ * $Id: icmp.cc,v 1.64 1998/09/11 17:07:43 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -126,11 +126,7 @@ icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
     const char *url;
     xmemcpy(&header, buf, sizeof(icp_common_t));
     url = buf + sizeof(icp_common_t);
-    if (neighbors_do_private_keys && header.reqnum) {
-	key = storeKeyPrivate(url, METHOD_GET, header.reqnum);
-    } else {
-	key = storeKeyPublic(url, METHOD_GET);
-    }
+    key = icpGetCacheKey(url, (int) header.reqnum);
     debug(37, 3) ("icmpHandleSourcePing: from %s, key '%s'\n",
 	inet_ntoa(from->sin_addr), storeKeyText(key));
     /* call neighborsUdpAck even if ping_status != PING_WAITING */

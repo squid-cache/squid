@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.24 1998/08/18 16:00:24 wessels Exp $
+ * $Id: icp_v3.cc,v 1.25 1998/09/11 17:07:44 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -47,7 +47,6 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     request_t *icp_request = NULL;
     int allow = 0;
     aclCheck_t checklist;
-    method_t method;
     xmemcpy(&header, buf, sizeof(icp_common_t));
     /*
      * Only these fields need to be converted
@@ -57,10 +56,6 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     header.flags = ntohl(header.flags);
     header.pad = ntohl(header.pad);
 
-    method = header.reqnum >> 24;
-    /* Squid-1.1 doesn't use the "method bits" for METHOD_GET */
-    if (METHOD_NONE == method || METHOD_ENUM_END <= method)
-	method = METHOD_GET;
     switch (header.opcode) {
     case ICP_QUERY:
 	/* We have a valid packet */
@@ -71,7 +66,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
 	    break;
 	}
-	if ((icp_request = urlParse(method, url)) == NULL) {
+	if ((icp_request = urlParse(METHOD_GET, url)) == NULL) {
 	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
 	    break;
@@ -95,7 +90,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    break;
 	}
 	/* The peer is allowed to use this cache */
-	key = storeKeyPublic(url, method);
+	key = storeKeyPublic(url, METHOD_GET);
 	entry = storeGet(key);
 	debug(12, 5) ("icpHandleIcpV3: OPCODE %s\n",
 	    icp_opcode_str[header.opcode]);
@@ -134,10 +129,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    icp_opcode_str[header.opcode],
 	    inet_ntoa(from.sin_addr),
 	    url);
-	if (neighbors_do_private_keys && header.reqnum)
-	    key = storeKeyPrivate(url, method, header.reqnum);
-	else
-	    key = storeKeyPublic(url, method);
+	key = icpGetCacheKey(url, (int) header.reqnum);
 	/* call neighborsUdpAck even if ping_status != PING_WAITING */
 	neighborsUdpAck(key, &header, &from);
 	break;

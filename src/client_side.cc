@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.391 1998/09/04 23:04:39 wessels Exp $
+ * $Id: client_side.cc,v 1.392 1998/09/11 17:07:41 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1503,7 +1503,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     int done;
     http->out.size += size;
     debug(33, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
-	fd, size, errflag, (int) http->out.offset, objectLen(entry));
+	fd, size, errflag, (int) http->out.offset, entry ? objectLen(entry) : 0);
     if (size > 0) {
 	kb_incr(&Counter.client_http.kbytes_out, size);
 	if (isTcpHit(http->log_type))

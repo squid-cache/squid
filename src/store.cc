@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.456 1998/09/10 19:50:56 wessels Exp $
+ * $Id: store.cc,v 1.457 1998/09/11 17:07:48 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -86,7 +86,7 @@ static MemObject *new_MemObject(const char *, const char *);
 static void destroy_MemObject(StoreEntry *);
 static FREE destroy_StoreEntry;
 static void storePurgeMem(StoreEntry *);
-static unsigned int getKeyCounter(method_t);
+static int getKeyCounter(void);
 static int storeKeepInMemory(const StoreEntry *);
 static OBJH storeCheckCachableStats;
 
@@ -279,13 +279,13 @@ storeGet(const cache_key * key)
     return (StoreEntry *) hash_lookup(store_table, key);
 }
 
-static unsigned int
-getKeyCounter(method_t method)
+static int
+getKeyCounter(void)
 {
-    static unsigned int key_counter = 0;
-    if (++key_counter == (1 << 24))
+    static int key_counter = 0;
+    if (++key_counter < 0)
 	key_counter = 1;
-    return (method << 24) | key_counter;
+    return key_counter;
 }
 
 void
@@ -301,10 +301,10 @@ storeSetPrivateKey(StoreEntry * e)
 	storeHashDelete(e);
     }
     if (mem != NULL) {
-	mem->reqnum = getKeyCounter(mem->method);
-	newkey = storeKeyPrivate(mem->url, mem->method, mem->reqnum);
+	mem->id = getKeyCounter();
+	newkey = storeKeyPrivate(mem->url, mem->method, mem->id);
     } else {
-	newkey = storeKeyPrivate("JUNK", METHOD_NONE, getKeyCounter(METHOD_NONE));
+	newkey = storeKeyPrivate("JUNK", METHOD_NONE, getKeyCounter());
     }
     assert(hash_lookup(store_table, newkey) == NULL);
     EBIT_SET(e->flag, KEY_PRIVATE);
