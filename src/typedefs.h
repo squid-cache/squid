@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.67 1998/08/14 09:22:41 wessels Exp $
+ * $Id: typedefs.h,v 1.68 1998/08/17 16:44:13 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -227,7 +227,5 @@ typedef char HttpHeaderMask[8];
 typedef void (*ObjPackMethod) (void *obj, Packer * p);
 
 #if DELAY_POOLS
-typedef int delay_id;
-#else
 typedef int delay_id;
 #endif

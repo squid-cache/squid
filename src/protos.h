@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.247 1998/08/14 23:53:09 wessels Exp $
+ * $Id: protos.h,v 1.248 1998/08/17 16:44:09 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1066,7 +1066,7 @@ extern int delayMostBytesWanted(const MemObject * mem, int max);
 extern int delayMostBytesAllowed(const MemObject * mem);
 extern void delayBytesIn(delay_id, int qty);
 extern void delaySetStoreClient(StoreEntry * e, void *data, delay_id delay_id);
-extern int delayBytesWanted(delay_id d, int max);
+extern int delayBytesWanted(delay_id d, int min, int max);
 #endif
 
 /*

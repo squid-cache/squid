@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.379 1998/08/17 16:38:07 wessels Exp $
+ * $Id: client_side.cc,v 1.380 1998/08/17 16:44:02 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -337,9 +337,6 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	storeUnlockObject(entry);
 	entry = http->entry = http->old_entry;
 	entry->refcount++;
-#if DELAY_POOLS
-	http->request->delay_id = 0;
-#endif
     } else if (STORE_PENDING == entry->store_status && 0 == status) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
 	if (size >= 4096) {
@@ -351,9 +348,6 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
 	    entry->refcount++;
-#if DELAY_POOLS
-	    http->request->delay_id = 0;
-#endif
 	    /* continue */
 	} else {
 	    storeClientCopy(entry,
@@ -389,9 +383,6 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    requestUnlink(entry->mem_obj->request);
 	    entry->mem_obj->request = NULL;
 	}
-#if DELAY_POOLS
-	http->request->delay_id = 0;
-#endif
     } else {
 	/* the client can handle this reply, whatever it is */
 	http->log_type = LOG_TCP_REFRESH_MISS;
@@ -1140,9 +1131,6 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     assert(http->log_type == LOG_TCP_HIT);
     if (checkNegativeHit(e)) {
 	http->log_type = LOG_TCP_NEGATIVE_HIT;
-#if DELAY_POOLS
-	http->request->delay_id = 0;
-#endif
 	clientSendMoreData(data, buf, size);
     } else if (refreshCheck(e, r, 0) && !http->flags.internal) {
 	/*
@@ -1194,9 +1182,6 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	 */
 	if (e->mem_status == IN_MEMORY)
 	    http->log_type = LOG_TCP_MEM_HIT;
-#if DELAY_POOLS
-	http->request->delay_id = 0;
-#endif
 	clientSendMoreData(data, buf, size);
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.116 1998/08/14 09:22:43 wessels Exp $
+ * $Id: wais.cc,v 1.117 1998/08/17 16:44:14 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -101,8 +101,7 @@ waisReadReply(int fd, void *data)
     errno = 0;
     read_sz = 4096;
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delay_id, read_sz);
-    assert(read_sz > 0);
+    read_sz = delayBytesWanted(delay_id, 1, read_sz);
 #endif
     len = read(fd, buf, read_sz);
     if (len > 0) {

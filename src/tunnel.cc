@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.86 1998/08/14 09:22:40 wessels Exp $
+ * $Id: tunnel.cc,v 1.87 1998/08/17 16:44:11 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -113,7 +113,7 @@ static int
 sslDeferServerRead(int fdnotused, void *data)
 {
     request_t *r = data;
-    return delayBytesWanted(r->delay_id, 1) == 0;
+    return delayBytesWanted(r->delay_id, 0, 1) == 0;
 }
 #endif
 
@@ -149,8 +149,13 @@ sslSetSelect(SslStateData * sslState)
 		0);
 	}
 #if DELAY_POOLS
-	read_sz = delayBytesWanted(sslState->request->delay_id, read_sz);
-	assert(read_sz > 0);
+	/* If this was allowed to return 0, there would be a possibility
+         * of the socket becoming "hung" with data accumulating but no
+         * write handler (server.len==0) and no read handler (!(0<0)) and
+         * no data flowing in the other direction.  Hence the argument of
+         * 1 as min.
+         */
+	read_sz = delayBytesWanted(sslState->request->delay_id, 1, read_sz);
 #endif
 	if (sslState->server.len < read_sz) {
 	    /* Have room to read more */
@@ -179,8 +184,7 @@ sslReadServer(int fd, void *data)
 	fd, read_sz, sslState->server.len);
     errno = 0;
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(sslState->request->delay_id, read_sz);
-    assert(read_sz > 0);
+    read_sz = delayBytesWanted(sslState->request->delay_id, 1, read_sz);
 #endif
     len = read(fd, sslState->server.buf + sslState->server.len, read_sz);
     debug(26, 3) ("sslReadServer: FD %d, read   %d bytes\n", fd, len);
