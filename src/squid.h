@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.75 1996/11/22 05:07:15 wessels Exp $
+ * $Id: squid.h,v 1.76 1996/11/24 04:16:40 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -32,6 +32,19 @@
 #define SQUID_H
 
 #include "config.h"
+
+/*
+ * On some systems, FD_SETSIZE is set to something lower than the
+ * actual number of files which can be opened.  IRIX is one case,
+ * NetBSD is another.  So here we increase FD_SETSIZE to our
+ * configure-discovered maximum *before* including any system .h
+ * files.  If something changes FD_SETSIZE to a lower value, were
+ * hosed...
+ */
+
+#if SQUID_MAXFD > 256
+#define FD_SETSIZE SQUID_MAXFD
+#endif
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -222,7 +235,12 @@ typedef unsigned long u_num32;
 #endif
 
 #include "ansiproto.h"
+
+#if HAVE_REGEX_H
+#include <regex.h>
+#else /* HAVE_REGEX_H */
 #include "GNUregex.h"
+#endif /* HAVE_REGEX_H */
 
 typedef void (*SIH) (int, void *);	/* swap in */
 typedef int (*QS) (const void *, const void *);
