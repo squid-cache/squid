@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.79 2000/05/02 20:58:30 hno Exp $
+ * $Id: defines.h,v 1.80 2000/05/03 17:15:41 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -147,7 +147,6 @@
 #define LOG_DISABLE 0
 
 #define SM_PAGE_SIZE 4096
-#define DISK_PAGE_SIZE  8192
 
 #define EBIT_SET(flag, bit) 	((void)((flag) |= ((1L<<(bit)))))
 #define EBIT_CLR(flag, bit) 	((void)((flag) &= ~((1L<<(bit)))))
@@ -268,17 +267,5 @@
 
 #ifndef _PATH_DEVNULL
 #define _PATH_DEVNULL "/dev/null"
-#endif
-
-#if USE_ASYNC_IO
-#ifndef NUMTHREADS
-#define NUMTHREADS 16
-#endif
-#endif
-
-#if USE_ASYNC_IO
-#undef USE_UNLINKD
-#else
-#define USE_UNLINKD 1
 #endif
 

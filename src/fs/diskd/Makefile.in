@@ -1,0 +1,93 @@
+#
+#  Makefile for the DISKD storage driver for the Squid Object Cache server
+#
+#  $Id: Makefile.in,v 1.1 2000/05/03 17:15:47 adrian Exp $
+#
+
+FS		= diskd
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+exec_suffix	= @exec_suffix@
+cgi_suffix	= @cgi_suffix@
+top_srcdir	= @top_srcdir@
+bindir		= @bindir@
+libexecdir      = @libexecdir@
+sysconfdir	= @sysconfdir@
+localstatedir   = @localstatedir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+CC		= @CC@
+MAKEDEPEND	= @MAKEDEPEND@
+AR_R		= @AR_R@
+RANLIB		= @RANLIB@
+AC_CFLAGS	= @CFLAGS@
+SHELL		= /bin/sh
+LDFLAGS		= @LDFLAGS@
+INSTALL         = @INSTALL@
+INSTALL_BIN     = @INSTALL_PROGRAM@
+MV		= @MV@
+RM		= @RM@
+
+INCLUDE		= -I../../../include -I$(top_srcdir)/include -I$(top_srcdir)/src/
+CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
+
+OUT		= ../$(FS).a
+DISKD_EXE      = diskd$(exec_suffix)
+
+
+OBJS	 	= \
+		store_dir_diskd.o \
+		store_io_diskd.o
+
+UTILS		= \
+		$(DISKD_EXE)
+
+all: $(OUT) $(UTILS)
+
+$(OUT): $(OBJS)
+	@rm -f ../stamp
+	$(AR_R) $(OUT) $(OBJS)
+	$(RANLIB) $(OUT)
+
+$(OBJS): $(top_srcdir)/include/version.h ../../../include/autoconf.h
+
+.c.o:
+	@rm -f ../stamp
+	$(CC) -DSQUID_PREFIX=\"$(prefix)\" $(CFLAGS) -c $<
+
+clean: 
+	-rm -rf *.o *pure_* core ../$(FS).a diskd
+
+distclean:	clean
+	-rm -f Makefile
+	-rm -f Makefile.bak
+	-rm -f tags
+
+tags:
+	ctags *.[ch] $(top_srcdir)/src/*.[ch] $(top_srcdir)/include/*.h $(top_srcdir)/lib/*.[ch]
+
+depend:
+	$(MAKEDEPEND) $(INCLUDE) -fMakefile *.c
+
+diskd.o: $(srcdir)/diskd.c
+	$(CC) $(CFLAGS) $(srcdir)/diskd.c -c -o diskd.o
+
+$(DISKD_EXE): diskd.o
+	$(CC) $(LDFLAGS) -L../../../lib/ $(CFLAGS) diskd.o -o $(DISKD_EXE) -lmiscutil -lm
+
+install: $(UTILS)
+	@for f in $(UTILS); do \
+		if test -f $(libexecdir)/$$f; then \
+			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+			$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+		fi; \
+		echo $(INSTALL_BIN) $$f $(libexecdir); \
+		$(INSTALL_BIN) $$f $(libexecdir); \
+		if test -f $(libexecdir)/-$$f; then \
+			echo $(RM) -f $(libexecdir)/-$$f; \
+			$(RM) -f $(libexecdir)/-$$f; \
+		fi; \
+	done
+

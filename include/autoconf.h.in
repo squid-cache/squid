@@ -67,11 +67,8 @@
 
 #undef FORW_VIA_DB
 
-/* Define to use async disk I/O operations */
-#undef USE_ASYNC_IO
-
 /* Defines how many threads to use for async I/O */
-#undef NUMTHREADS
+#undef ASYNC_IO_THREADS
 
 /*
  * If you want to use Squid's ICMP features (highly recommended!) then
@@ -281,14 +278,12 @@
 #undef HEAP_REPLACEMENT
 
 /*
- * Use DISKD
- */
-#undef USE_DISKD
-
-/*
  * message type for message queues
  */
 #undef mtyp_t
+
+/* Define if you want to set the COSS membuf size */
+#undef COSS_MEMBUF_SZ
 
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
@@ -412,6 +407,9 @@
 
 /* Define if you have the srandom function.  */
 #undef HAVE_SRANDOM
+
+/* Define if you have the statfs function.  */
+#undef HAVE_STATFS
 
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
@@ -569,11 +567,11 @@
 /* Define if you have the <sys/ioctl.h> header file.  */
 #undef HAVE_SYS_IOCTL_H
 
-/* Define if you have the <sys/msg.h> header file.  */
-#undef HAVE_SYS_MSG_H
-
 /* Define if you have the <sys/mount.h> header file.  */
 #undef HAVE_SYS_MOUNT_H
+
+/* Define if you have the <sys/msg.h> header file.  */
+#undef HAVE_SYS_MSG_H
 
 /* Define if you have the <sys/ndir.h> header file.  */
 #undef HAVE_SYS_NDIR_H

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.41 2000/03/06 16:23:30 wessels Exp $
+ * $Id: comm_select.cc,v 1.42 2000/05/03 17:15:41 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -34,13 +34,7 @@
 
 #include "squid.h"
 
-#if USE_ASYNC_IO
-#define MAX_POLL_TIME 10
-#elif USE_DISKD
-#define MAX_POLL_TIME 10
-#else
-#define MAX_POLL_TIME 1000
-#endif
+static int MAX_POLL_TIME = 1000; /* see also comm_quick_poll_required() */
 
 #ifndef        howmany
 #define howmany(x, y)   (((x)+((y)-1))/(y))
@@ -332,12 +326,8 @@ comm_poll(int msec)
 	getCurrentTime();
 	start = current_dtime;
 #endif
-#if USE_ASYNC_IO
-	aioCheckCallbacks();
-#endif
-#if USE_DISKD
-	storeDiskdReadQueue();
-#endif
+    /* Handle any fs callbacks that need doing */
+    storeDirCallback();
 #if DELAY_POOLS
 	FD_ZERO(&slowfds);
 #endif
@@ -645,6 +635,7 @@ comm_select(int msec)
     fd_set slowfds;
 #endif
     PF *hdl = NULL;
+    SwapDir *SD;
     int fd;
     int maxfd;
     int num;
@@ -662,19 +653,16 @@ comm_select(int msec)
     struct timeval poll_time;
     double timeout = current_dtime + (msec / 1000.0);
     fde *F;
+    int i;
     do {
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
 #endif
-#if USE_ASYNC_IO
-	aioCheckCallbacks();
-#endif
-#if USE_DISKD
-	storeDiskdReadQueue();
-#endif
 #if DELAY_POOLS
 	FD_ZERO(&slowfds);
 #endif
+        /* Handle any fs callbacks that need doing */
+        storeDirCallback();
 	if (commCheckICPIncoming)
 	    comm_select_icp_incoming();
 	if (commCheckDNSIncoming)
@@ -1089,4 +1077,11 @@ commUpdateWriteBits(int fd, PF * handler)
 	FD_CLR(fd, &global_writefds);
 	nwritefds--;
     }
+}
+
+/* Called by async-io or diskd to speed up the polling */
+void
+comm_quick_poll_required(void)
+{
+    MAX_POLL_TIME = 10;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.309 2000/05/02 20:13:58 hno Exp $
+ * $Id: main.cc,v 1.310 2000/05/03 17:15:42 adrian Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -101,6 +101,7 @@ usage(void)
 	"       -F        Don't serve any requests until store is rebuilt.\n"
 	"       -N        No daemon mode.\n"
 	"       -R        Do not set REUSEADDR on port.\n"
+	"       -S        Double-check swap during rebuild.\n"
 	"       -V        Virtual host httpd-accelerator.\n"
 	"       -X        Force full debugging.\n"
 	"       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
@@ -493,9 +494,6 @@ mainInitialize(void)
 #endif
 
     if (!configured_once) {
-#if USE_ASYNC_IO
-	aioInit();
-#endif
 	unlinkdInit();
 	urlInitialize();
 	cachemgrInit();
@@ -618,6 +616,7 @@ main(int argc, char **argv)
 #endif
 	memInit();		/* memInit is required for config parsing */
 	eventInit();		/* eventInit() is required for config parsing */
+	storeFsInit();		/* required for config parsing */
 	parse_err = parseConfigFile(ConfigFile);
 
 	if (opt_parse_cfg_only)
@@ -907,21 +906,16 @@ SquidShutdown(void *unused)
     releaseServerSockets();
     commCloseAllSockets();
     unlinkdClose();
-#if USE_ASYNC_IO
-    aioSync();			/* flush pending object writes / unlinks */
-#endif
+    storeDirSync();		/* Flush pending object writes/unlinks */
     storeDirWriteCleanLogs(0);
     PrintRusage();
     dumpMallocStats();
-#if USE_ASYNC_IO
-    aioSync();			/* flush log writes */
-#endif
+    storeDirSync();		/* Flush log writes */
     storeLogClose();
     accessLogClose();
-#if USE_ASYNC_IO
-    aioSync();			/* flush log close */
-#endif
+    storeDirSync();		/* Flush log close */
 #if PURIFY || XMALLOC_TRACE
+    storeFsDone();
     configFreeMemory();
     storeFreeMemory();
     /*stmemFreeMemory(); */
