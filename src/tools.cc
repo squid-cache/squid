@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.47 1996/08/19 22:44:57 wessels Exp $
+ * $Id: tools.cc,v 1.48 1996/08/19 23:09:26 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -137,10 +137,10 @@ void mail_warranty()
     if ((fp = fopen(filename, "w")) == NULL)
 	return;
     fprintf(fp, "From: %s\n", appname);
-    fprintf(fp, "To: %s\n", getAdminEmail());
+    fprintf(fp, "To: %s\n", Config.adminEmail);
     fprintf(fp, "Subject: %s\n", dead_msg());
     fclose(fp);
-    sprintf(command, "mail %s < %s", getAdminEmail(), filename);
+    sprintf(command, "mail %s < %s", Config.adminEmail, filename);
     system(command);		/* XXX should avoid system(3) */
     unlink(filename);
 }
@@ -235,7 +235,7 @@ void death(sig)
     PrintRusage(NULL, debug_log);
     if (squid_curtime - SQUID_RELEASE_TIME < 864000) {
 	/* skip if more than 10 days old */
-	if (getAdminEmail())
+	if (Config.adminEmail)
 	    mail_warranty();
 	else
 	    puts(dead_msg());
