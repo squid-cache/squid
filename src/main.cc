@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.64 1996/08/27 05:51:38 wessels Exp $
+ * $Id: main.cc,v 1.65 1996/08/27 16:05:08 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -140,7 +140,7 @@ static int malloc_debug_level = 0;
 static void rotate_logs _PARAMS((int));
 static void reconfigure _PARAMS((int));
 static void mainInitialize _PARAMS((void));
-static void mainRenitialize _PARAMS((void));
+static void mainReinitialize _PARAMS((void));
 static void mainMaintenance _PARAMS((void));
 static void usage _PARAMS((void));
 static void mainParseOptions _PARAMS((int, char **));
