@@ -1,6 +1,13 @@
+draft-brezak-kerberos-http-00.txt
+	HTTP Authentication: Kerberos Authentication
+	Microsoft Negotiate "HTTP" authentication scheme
+	Microsoft connection pinning HTTP extension to support
+	connection oriented authentication over proxies
+
 draft-cooper-webi-wpad-00.txt
-	WPAD protocol documenting how MSIE and several other browsers
-	automatically find their proxy settings from DHCP and/or DNS
+	Web Proxy Auto-Discovery Protocol -- WPAD
+	documents how MSIE and several other browsers automatically
+	find their proxy settings from DHCP and/or DNS
 
 draft-ietf-wrec-web-pro-00.txt
 	WCCP 1.0
