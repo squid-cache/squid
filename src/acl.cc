@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.202 1999/04/26 21:04:39 wessels Exp $
+ * $Id: acl.cc,v 1.203 1999/05/04 17:40:09 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1889,21 +1889,33 @@ aclDomainCompare(const void *data, splayNode * n)
 {
     const char *d1 = data;
     const char *d2 = n->data;
-    int l1 = strlen(d1);
-    int l2 = strlen(d2);
+    int l1;
+    int l2;
+    while ('.' == *d1)
+	d1++;
+    while ('.' == *d2)
+	d2++;
+    l1 = strlen(d1);
+    l2 = strlen(d2);
     while (d1[l1] == d2[l2]) {
 	if ((l1 == 0) && (l2 == 0))
 	    return 0;		/* d1 == d2 */
-	if (l1-- == 0) {
-	    debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d1, d2);
-	    debug(28, 0) ("WARNING: This may break Splay tree searching\n");
-	    debug(28, 0) ("WARNING: You should remove '%s' from the ACL named '%s'\n", d2, AclMatchedName);
+	l1--;
+	l2--;
+	if (0 == l1) {
+	    if ('.' == d2[l2 - 1]) {
+		debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d1, d2);
+		debug(28, 0) ("WARNING: This may break Splay tree searching\n");
+		debug(28, 0) ("WARNING: You should remove '%s' from the ACL named '%s'\n", d2, AclMatchedName);
+	    }
 	    return -1;		/* d1 < d2 */
 	}
-	if (l2-- == 0) {
-	    debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d2, d1);
-	    debug(28, 0) ("WARNING: This may break Splay tree searching\n");
-	    debug(28, 0) ("WARNING: You should remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
+	if (0 == l2) {
+	    if ('.' == d1[l1 - 1]) {
+		debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d2, d1);
+		debug(28, 0) ("WARNING: This may break Splay tree searching\n");
+		debug(28, 0) ("WARNING: You should remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
+	    }
 	    return 1;		/* d1 > d2 */
 	}
     }
