@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.2 1999/04/14 06:35:34 wessels Exp $
+ * $Id: dns_internal.cc,v 1.3 1999/04/15 06:03:48 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -53,6 +53,7 @@ static int nns = 0;
 static int nns_alloc = 0;
 static int domain_socket = -1;
 static dlink_list lru_list;
+static int event_queued = 0;
 
 static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
@@ -63,6 +64,7 @@ static int idnsFromKnownNameserver(struct sockaddr_in *from);
 static idns_query *idnsFindQuery(unsigned short id);
 static void idnsGrokReply(const char *buf, size_t sz);
 static PF idnsRead;
+static EVH idnsCheckQueue;
 
 static void
 idnsAddNameserver(const char *buf)
@@ -126,15 +128,25 @@ idnsStats(StoreEntry * sentry)
 {
     dlink_node *n;
     idns_query *q;
+    int i;
     storeAppendPrintf(sentry, "Internal DNS Statistics:\n");
     storeAppendPrintf(sentry, "\nThe Queue:\n");
-	storeAppendPrintf(sentry, " ID  SIZE SENDS   DELAY\n");
-	storeAppendPrintf(sentry, "---- ---- ----- --------\n");
+    storeAppendPrintf(sentry, "  ID   SIZE SENDS   DELAY\n");
+    storeAppendPrintf(sentry, "------ ---- ----- --------\n");
     for (n = lru_list.head; n; n = n->next) {
 	q = n->data;
-	storeAppendPrintf(sentry, "%#04hx %4d %5d %8.3f\n",
-		q->id, q->sz, q->nsends,
-		tvSubDsec(q->start, current_time));
+	storeAppendPrintf(sentry, "%#06hx %4d %5d %8.3f\n",
+	    q->id, q->sz, q->nsends,
+	    tvSubDsec(q->start_t, current_time));
+    }
+    storeAppendPrintf(sentry, "\nNameservers:\n");
+    storeAppendPrintf(sentry, "IP ADDRESS      # QUERIES # REPLIES\n");
+    storeAppendPrintf(sentry, "--------------- --------- ---------\n");
+    for (i = 0; i < nns; i++) {
+	storeAppendPrintf(sentry, "%-15s %9d %9d\n",
+	    inet_ntoa(nameservers[i].S.sin_addr),
+	    nameservers[i].nqueries,
+	    nameservers[i].nreplies);
     }
 }
 
@@ -153,7 +165,13 @@ idnsSendQuery(idns_query * q)
 	q->buf,
 	q->sz);
     q->nsends++;
+    q->sent_t = current_time;
+    nameservers[ns].nqueries++;
     dlinkAdd(q, &q->lru, &lru_list);
+    if (!event_queued) {
+	eventAdd("idnsCheckQueue", idnsCheckQueue, NULL, 1.0, 1);
+	event_queued = 1;
+    }
 }
 
 static int
@@ -165,9 +183,9 @@ idnsFromKnownNameserver(struct sockaddr_in *from)
 	    continue;
 	if (nameservers[i].S.sin_port != from->sin_port)
 	    continue;
-	return 1;
+	return i;
     }
-    return 0;
+    return -1;
 }
 
 static idns_query *
@@ -226,6 +244,7 @@ idnsRead(int fd, void *data)
     socklen_t from_len;
     int max = 10;
     static char rbuf[512];
+    int ns;
     commSetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
     while (max--) {
 	from_len = sizeof(from);
@@ -252,12 +271,31 @@ idnsRead(int fd, void *data)
 	    fd,
 	    len,
 	    inet_ntoa(from.sin_addr));
-	if (!idnsFromKnownNameserver(&from)) {
+	ns = idnsFromKnownNameserver(&from);
+	if (ns < 0) {
 	    debug(78, 1) ("idnsRead: Reply from unknown nameserver [%s]\n",
 		inet_ntoa(from.sin_addr));
 	    continue;
 	}
+	nameservers[ns].nreplies++;
 	idnsGrokReply(rbuf, len);
+    }
+}
+
+static void
+idnsCheckQueue(void *unused)
+{
+    dlink_node *n;
+    idns_query *q;
+    event_queued = 0;
+    for (n = lru_list.tail; n; n = n->prev) {
+	q = n->data;
+	if (tvSubDsec(q->sent_t, current_time) < 5.0)
+	    break;
+	debug(78, 1) ("idnsCheckQueue: ID %#04x timeout\n",
+	    q->id);
+	dlinkDelete(&q->lru, &lru_list);
+	idnsSendQuery(q);
     }
 }
 
@@ -309,6 +347,6 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     q->callback = callback;
     q->callback_data = data;
     cbdataLock(q->callback_data);
-    q->start = current_time;
+    q->start_t = current_time;
     idnsSendQuery(q);
 }
