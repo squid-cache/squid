@@ -1,5 +1,5 @@
 /*
- * $Id: Array.cc,v 1.7 2001/02/07 18:56:50 hno Exp $
+ * $Id: Array.cc,v 1.8 2003/01/18 04:50:39 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -57,7 +57,7 @@ static void arrayGrow(Array * a, int min_capacity);
 Array *
 arrayCreate(void)
 {
-    Array *a = xmalloc(sizeof(Array));
+    Array *a = new Array;
     arrayInit(a);
     return a;
 }
@@ -83,7 +83,7 @@ arrayDestroy(Array * a)
 {
     assert(a);
     arrayClean(a);
-    xfree(a);
+    delete a;
 }
 
 void
@@ -119,9 +119,9 @@ arrayGrow(Array * a, int min_capacity)
     /* actual grow */
     assert(delta > 0);
     a->capacity += delta;
-    a->items = a->items ?
+    a->items = (void **) (a->items ?
 	xrealloc(a->items, a->capacity * sizeof(void *)) :
-         xmalloc(a->capacity * sizeof(void *));
+         xmalloc(a->capacity * sizeof(void *)));
     /* reset, just in case */
     memset(a->items + a->count, 0, (a->capacity - a->count) * sizeof(void *));
 }
