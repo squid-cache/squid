@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.199 1997/10/27 23:30:22 wessels Exp $
+ * $Id: comm.cc,v 1.200 1997/10/28 06:46:51 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -990,7 +990,7 @@ comm_select(time_t sec)
 	    if (shutdown_pending > 0 || reconfigure_pending > 0)
 		setSocketShutdownLifetimes(Config.shutdownLifetime);
 	    else
-		setSocketShutdownLifetimes(0);
+		setSocketShutdownLifetimes(1);
 	}
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
