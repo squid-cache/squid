@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.177 1998/04/09 02:25:22 wessels Exp $
+ * $Id: ipcache.cc,v 1.178 1998/04/09 08:24:15 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -753,11 +753,12 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 	(int) (i->expires - squid_curtime),
 	(int) i->addrs.count,
 	(int) i->addrs.badcount);
-    for (k = 0; k < (int) i->addrs.count; k++)
+    for (k = 0; k < (int) i->addrs.count; k++) {
 	storeAppendPrintf(sentry, " %15s-%3s", inet_ntoa(i->addrs.in_addrs[k]),
 	    i->addrs.bad_mask[k] ? "BAD" : "OK ");
 	if (i->addrs.count > 1 && k == i->addrs.cur)
-	    storeAppendPrintf(sentry, ",CUR"),
+	    storeAppendPrintf(sentry, ",CUR");
+    }
     storeAppendPrintf(sentry, "\n");
 }
 
@@ -879,11 +880,11 @@ ipcacheUnlockEntry(ipcache_entry * i)
 	ipcache_release(i);
 }
 
+#if OLD_CODE
 void
 ipcacheCycleAddr(const char *name)
 {
     ipcache_entry *i;
-    ipcache_addrs *ia;
     unsigned char fullcircle;
     if ((i = ipcache_get(name)) == NULL)
 	return;
@@ -901,13 +902,43 @@ ipcacheCycleAddr(const char *name)
 	}
     }
 }
+#endif
 
-/* "MarkBad" function must leave the "cur" pointer at the next
- * available good address, or the next bad address, in the list.
- * This simulates the functionality of RemoveBadAddr() which it
- * replaces.  Marking, instead of removing, allows bad addresses
- * to be retried as a last resort before returning an error to
- * the user.
+void
+ipcacheCycleAddr(const char *name, ipcache_addrs *ia)
+{
+    ipcache_entry *i;
+    unsigned char k;
+    assert(name || ia);
+    if (NULL == ia) {
+        if ((i = ipcache_get(name)) == NULL)
+	    return;
+        if (i->status != IP_CACHED)
+	    return;
+        ia = &i->addrs;
+    }
+    for (k = 0; k < ia->count; k++) {
+	if (++ia->cur == ia->count)
+	    ia->cur = 0;
+	if (!ia->bad_mask[ia->cur])
+	    break;;
+    }
+    if (k == ia->count) {
+        /* All bad, reset to All good */
+        debug(14, 3)("ipcacheCycleAddr: Changing ALL %s addrs from BAD to OK\n",
+	    name);
+        for (k = 0; k < ia->count; k++)
+	    ia->bad_mask[k] = 0;
+        ia->badcount = 0;
+        ia->cur = 0;
+    }
+    debug(14,1)("ipcacheCycleAddr: %s now at %s\n", name,
+	inet_ntoa(ia->in_addrs[ia->cur]));
+}
+
+/*
+ * Marks the given address as BAD and calls ipcacheCycleAddr to
+ * advance the current pointer to the next OK address.
  */
 void
 ipcacheMarkBadAddr(const char *name, struct in_addr addr)
@@ -922,24 +953,14 @@ ipcacheMarkBadAddr(const char *name, struct in_addr addr)
 	if (ia->in_addrs[k].s_addr == addr.s_addr)
 	    break;
     }
-    if (k == (int) ia->count)
+    if (k == (int) ia->count)	/* not found */
 	return;
     if (!ia->bad_mask[k]) {
 	ia->bad_mask[k] = TRUE;
 	ia->badcount++;
-	debug(14, 2) ("ipcacheMarkBadAddr: %s [%s]\n",
-	    name, inet_ntoa(ia->in_addrs[k]));
-	if (ia->badcount != ia->count) {
-	    /* at least one good address left */
-	    i->expires = squid_curtime + Config.positiveDnsTtl;
-	    while (ia->bad_mask[ia->cur])
-		if (++ia->cur == ia->count)
-		    ia->cur = 0;
-	    return;
-	}
+	debug(14, 2) ("ipcacheMarkBadAddr: %s [%s]\n", name, inet_ntoa(addr));
     }
-    if (++ia->cur == ia->count)
-	ia->cur = 0;
+    ipcacheCycleAddr(name, ia);
 }
 
 void
@@ -955,16 +976,13 @@ ipcacheMarkGoodAddr(const char *name, struct in_addr addr)
 	if (ia->in_addrs[k].s_addr == addr.s_addr)
 	    break;
     }
-    if (k == (int) ia->count)
+    if (k == (int) ia->count)	/* not found */
 	return;
-    i->expires = squid_curtime + Config.positiveDnsTtl;
-    if (ia->bad_mask[k]) {
-	ia->bad_mask[k] = FALSE;
-	ia->badcount--;
-	i->expires = squid_curtime + Config.positiveDnsTtl;
-	debug(14, 2) ("ipcacheMarkGoodAddr: %s [%s]\n",
-	    name, inet_ntoa(ia->in_addrs[k]));
-    }
+    if (!ia->bad_mask[k])	/* already OK */
+	return;
+    ia->bad_mask[k] = FALSE;
+    ia->badcount--;
+    debug(14, 2) ("ipcacheMarkGoodAddr: %s [%s]\n", name, inet_ntoa(addr));
 }
 
 static void
