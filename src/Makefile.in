@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.257 2002/10/19 02:05:33 robertc Exp $
+#  $Id: Makefile.in,v 1.258 2002/10/20 00:10:49 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -490,23 +490,23 @@ recv_announce_OBJECTS = $(am_recv_announce_OBJECTS)
 recv_announce_LDADD = $(LDADD)
 recv_announce_DEPENDENCIES =
 recv_announce_LDFLAGS =
-@USE_DELAY_POOLS_FALSE@am__objects_1 =
-@USE_DELAY_POOLS_TRUE@am__objects_1 = delay_pools.$(OBJEXT)
-@USE_DNSSERVER_FALSE@am__objects_2 = dns_internal.$(OBJEXT)
-@USE_DNSSERVER_TRUE@am__objects_2 = dns.$(OBJEXT)
-@ENABLE_HTCP_TRUE@am__objects_3 = htcp.$(OBJEXT)
-@MAKE_LEAKFINDER_TRUE@am__objects_4 = leakfinder.$(OBJEXT)
-@MAKE_LEAKFINDER_FALSE@am__objects_4 =
-@ENABLE_XPROF_STATS_TRUE@am__objects_5 = ProfStats.$(OBJEXT)
-@ENABLE_XPROF_STATS_FALSE@am__objects_5 =
-@USE_SNMP_TRUE@am__objects_6 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
-@USE_SNMP_FALSE@am__objects_6 =
-@ENABLE_SSL_FALSE@am__objects_7 =
-@ENABLE_SSL_TRUE@am__objects_7 = ssl_support.$(OBJEXT)
-@ENABLE_UNLINKD_TRUE@am__objects_8 = unlinkd.$(OBJEXT)
-@ENABLE_UNLINKD_FALSE@am__objects_8 =
-@ENABLE_WIN32SPECIFIC_FALSE@am__objects_9 =
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_9 = win32.$(OBJEXT)
+@USE_DELAY_POOLS_FALSE@am__objects_4 =
+@USE_DELAY_POOLS_TRUE@am__objects_4 = delay_pools.$(OBJEXT)
+@USE_DNSSERVER_FALSE@am__objects_5 = dns_internal.$(OBJEXT)
+@USE_DNSSERVER_TRUE@am__objects_5 = dns.$(OBJEXT)
+@ENABLE_HTCP_TRUE@am__objects_6 = htcp.$(OBJEXT)
+@MAKE_LEAKFINDER_TRUE@am__objects_7 = leakfinder.$(OBJEXT)
+@MAKE_LEAKFINDER_FALSE@am__objects_7 =
+@ENABLE_XPROF_STATS_TRUE@am__objects_3 = ProfStats.$(OBJEXT)
+@ENABLE_XPROF_STATS_FALSE@am__objects_3 =
+@USE_SNMP_TRUE@am__objects_8 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
+@USE_SNMP_FALSE@am__objects_8 =
+@ENABLE_SSL_FALSE@am__objects_9 =
+@ENABLE_SSL_TRUE@am__objects_9 = ssl_support.$(OBJEXT)
+@ENABLE_UNLINKD_TRUE@am__objects_10 = unlinkd.$(OBJEXT)
+@ENABLE_UNLINKD_FALSE@am__objects_10 =
+@ENABLE_WIN32SPECIFIC_FALSE@am__objects_11 =
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_11 = win32.$(OBJEXT)
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
@@ -514,11 +514,11 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	clientStream.$(OBJEXT) comm.$(OBJEXT) comm_select.$(OBJEXT) \
 	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) debug.$(OBJEXT) \
-	$(am__objects_1) disk.$(OBJEXT) $(am__objects_2) \
+	$(am__objects_4) disk.$(OBJEXT) $(am__objects_5) \
 	errorpage.$(OBJEXT) ETag.$(OBJEXT) event.$(OBJEXT) \
 	external_acl.$(OBJEXT) fd.$(OBJEXT) filemap.$(OBJEXT) \
 	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
-	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_3) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_6) \
 	http.$(OBJEXT) HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
 	HttpHdrRange.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
@@ -526,22 +526,22 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
 	icp_v3.$(OBJEXT) ident.$(OBJEXT) internal.$(OBJEXT) \
 	ipc.$(OBJEXT) ipcache.$(OBJEXT) IPInterception.$(OBJEXT) \
-	$(am__objects_4) logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
+	$(am__objects_7) logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
 	MemBuf.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
-	$(am__objects_5) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	$(am__objects_3) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
 	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
-	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_6) \
-	ssl.$(OBJEXT) $(am__objects_7) stat.$(OBJEXT) \
+	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_8) \
+	ssl.$(OBJEXT) $(am__objects_9) stat.$(OBJEXT) \
 	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
 	store.$(OBJEXT) store_io.$(OBJEXT) store_client.$(OBJEXT) \
 	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	tools.$(OBJEXT) ufscommon.$(OBJEXT) $(am__objects_8) \
+	tools.$(OBJEXT) ufscommon.$(OBJEXT) $(am__objects_10) \
 	url.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_9)
+	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_11)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	store_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
