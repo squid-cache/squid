@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.9 1996/07/12 17:38:11 wessels Exp $
+ * $Id: util.c,v 1.10 1996/07/16 01:49:52 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -27,7 +27,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *  
  */
- 
+
 /*
  * Copyright (c) 1994, 1995.  All rights reserved.
  *  
@@ -213,9 +213,9 @@ static void check_malloc(p, sz)
      void *p;
      size_t sz;
 {
-    B = (((int) p) >> 4) & 0xFF;
     if (!dbg_initd)
 	check_init();
+    B = (((int) p) >> 4) & 0xFF;
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if ((P = malloc_ptrs[B][I]) == NULL)
 	    continue;
@@ -238,21 +238,34 @@ static void check_malloc(p, sz)
 }
 #endif
 
+#if XMALLOC_COUNT && !HAVE_MALLOCBLKSIZE
+int mallocblksize(p)
+     void *p;
+{
+    B = (((int) p) >> 4) & 0xFF;
+    for (I = 0; I < DBG_ARRY_SZ; I++) {
+	if (malloc_ptrs[B][I] == p)
+	    return malloc_size[B][I];
+    }
+    return 0;
+}
+#endif
+
 #ifdef XMALLOC_COUNT
 static void xmalloc_count(p, sign)
-	void *p;
-	int sign;
+     void *p;
+     int sign;
 {
-	size_t sz;
-	static size_t total = 0;
-	int memoryAccounted();
-	int mallinfoTotal();
-	sz = mallocblksize(p) * sign;
-	total += sz;
-	fprintf(stderr, "xmalloc_count=%9d  accounted=%9d  mallinfo=%9d\n",
-		(int) total,
-		memoryAccounted(),
-		mallinfoTotal());
+    size_t sz;
+    static size_t total = 0;
+    int memoryAccounted();
+    int mallinfoTotal();
+    sz = mallocblksize(p) * sign;
+    total += sz;
+    fprintf(stderr, "xmalloc_count=%9d  accounted=%9d  mallinfo=%9d\n",
+	(int) total,
+	memoryAccounted(),
+	mallinfoTotal());
 }
 #endif /* XMALLOC_COUNT */
 
@@ -295,11 +308,11 @@ void *xmalloc(sz)
 void xfree(s)
      void *s;
 {
-#if XMALLOC_DEBUG
-    check_free(s);
-#endif
 #if XMALLOC_COUNT
     xmalloc_count(s, -1);
+#endif
+#if XMALLOC_DEBUG
+    check_free(s);
 #endif
     if (s != NULL)
 	free(s);
@@ -309,11 +322,11 @@ void xfree(s)
 void xxfree(s)
      void *s;
 {
-#if XMALLOC_DEBUG
-    check_free(s);
-#endif
 #if XMALLOC_COUNT
     xmalloc_count(s, -1);
+#endif
+#if XMALLOC_DEBUG
+    check_free(s);
 #endif
     free(s);
 }
