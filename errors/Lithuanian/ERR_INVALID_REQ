@@ -24,7 +24,7 @@ Neteisinga uþklausa
 Dalis HTTP uþklausos yra klaidinga. Galimos problemos:
 <UL>
 <LI>Trûksta arba neþinomas uþklausos metodas
-<LI>Trûksta adresas
+<LI>Trûksta adreso
 <LI>Trûksta HTTP identifikatoriaus (HTTP/1.0)
 <LI>Uþklausa per didelë
 <LI>Trûksta Content-Length parametro POST arba PUT uþklausoje
