@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.27 1996/04/04 21:34:26 wessels Exp $ */
+/* $Id: store.cc,v 1.28 1996/04/05 01:00:33 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -360,7 +360,7 @@ int storeUnlockObject(e)
 {
     int e_lock_count;
 
-    debug(20, 0, "storeUnlockObject: key '%s' count=%d\n", e->key, e->lock_count);
+    debug(20, 3, "storeUnlockObject: key '%s' count=%d\n", e->key, e->lock_count);
 
     if ((int) e->lock_count > 0)
 	e->lock_count--;
@@ -2218,6 +2218,7 @@ int storeEntryValidToSend(e)
     return 0;
 }
 
+#ifdef HENRIK_VERSION
 int storeEntryValidLength(e)
      StoreEntry *e;
 {
@@ -2234,6 +2235,7 @@ int storeEntryValidLength(e)
     length = atoi(header);
     if (!length) {
 	debug(20, 1, "storeEntryValidLength: can't parse content-length: %s\n", e->key);
+	debug(20, 1, "--> header = '%s'\n", header);
 	return 0;
     }
     headerlength = storeGrep(e, "\r\n\r\n", 300);
@@ -2248,6 +2250,42 @@ int storeEntryValidLength(e)
     }
     return 1;
 }
+#else
+int storeEntryValidLength(e)
+     StoreEntry *e;
+{
+    MemObject *mem = e->mem_obj;
+    int diff;
+
+    if (mem == NULL)
+	fatal_dump("storeEntryValidLength: NULL mem_obj");
+
+    debug(20, 3, "storeEntryValidLength: Checking '%s'\n", e->key);
+    debug(20, 3, "storeEntryValidLength:     object_len = %d\n", e->object_len);
+    debug(20, 3, "storeEntryValidLength:         hdr_sz = %d\n", mem->hdr_sz);
+    debug(20, 3, "storeEntryValidLength: content_length = %d\n", mem->content_length);
+
+    if (mem->content_length == 0) {
+	debug(20, 1, "storeEntryValidLength: Zero content length; assume valid; '%s'\n",
+	    e->key);
+	return 1;
+    }
+    if (mem->hdr_sz == 0) {
+	debug(20, 1, "storeEntryValidLength: Zero header size; assume valid; '%s'\n",
+	    e->key);
+	return 1;
+    }
+    diff = mem->hdr_sz + mem->content_length - e->object_len;
+    if (diff != 0) {
+	debug(20, 1, "storeEntryValidLength: %d bytes too %s; '%s'\n",
+	    diff < 0 ? -diff : diff,
+	    diff < 0 ? "small" : "big",
+	    e->key);
+	return 0;
+    }
+    return 1;
+}
+#endif
 
 static int storeVerifySwapDirs(clean)
      int clean;
