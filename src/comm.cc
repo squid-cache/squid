@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.132 1997/02/06 18:44:24 wessels Exp $
+ * $Id: comm.cc,v 1.133 1997/02/07 04:53:14 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1153,16 +1153,22 @@ comm_join_mcast_groups(int fd)
 #ifdef IP_MULTICAST_TTL
     struct ip_mreq mr;
     wordlist *s = NULL;
-
+    const ipcache_addrs *ia = NULL;
+    int i;
+    int x;
     for (s = Config.mcast_group_list; s; s = s->next) {
 	debug(5, 10, "comm_join_mcast_groups: joining group %s on FD %d\n",
 	    s->key, fd);
-	mr.imr_multiaddr.s_addr = inet_addr(s->key);
-	mr.imr_interface.s_addr = INADDR_ANY;
-	if (setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-		(char *) &mr, sizeof(struct ip_mreq)) < 0)
-	            debug(5, 1, "comm_join_mcast_groups: FD %d, addr: %s\n",
-		fd, s->key);
+	ia = ipcache_gethostbyname(s->key, IP_BLOCKING_LOOKUP);
+	for (i = 0; i < ia->count; i++) {
+	    mr.imr_multiaddr.s_addr = (ia->in_addrs + i)->s_addr;
+	    mr.imr_interface.s_addr = INADDR_ANY;
+	    x = setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+		(char *) &mr, sizeof(struct ip_mreq));
+	    if (x < 0)
+		debug(5, 1, "comm_join_mcast_groups: FD %d, addr: %s [%s]\n",
+		    fd, s->key, inet_ntoa(*(ia->in_addrs + i)));
+	}
     }
 #endif
     return 0;
