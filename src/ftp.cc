@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.18 1996/04/04 01:30:43 wessels Exp $ */
+/* $Id: ftp.cc,v 1.19 1996/04/04 04:33:11 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -84,7 +84,7 @@ int ftp_url_parser(url, data)
     if (t < 3) {
 	strcpy(host, user);	/* no login/passwd information */
 	strcpy(user, "anonymous");
-	strcpy(password, "harvest@");
+	strcpy(password, getFtpUser());
     }
     /* we need to convert user and password for URL encodings */
     tmp = url_convert_hex(user);
