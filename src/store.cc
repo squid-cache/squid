@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.199 1997/01/20 19:24:33 wessels Exp $
+ * $Id: store.cc,v 1.200 1997/01/22 04:41:12 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2799,19 +2799,14 @@ storeCheckExpired(const StoreEntry * e)
 time_t
 storeExpiredReferenceAge(void)
 {
-    int half;
     double x;
     double z;
     time_t age;
     if (Config.referenceAge > -1)
 	return Config.referenceAge;
-    half = (store_swap_high >> 1) + (store_swap_low >> 1);
-    x = (double) (half - store_swap_size) / (store_swap_high - half);
-    if (x < -1.0)
-	x = -1.0;
-    else if (x > 1.0)
-	x = 1.0;
-    z = pow(724.0, (x + 1.0));	/* minutes [1:525600] */
+    x = 2.0 * (store_swap_high - store_swap_size) / (store_swap_high - store_swap_low);
+    x = x < 0.0 ? 0.0 : x > 2.0 ? 2.0 : x;
+    z = pow(724.0, x);		/* minutes [1:525600] */
     age = (time_t) (z * 60.0);
     if (age < 60)
 	age = 60;
