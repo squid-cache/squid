@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.428 2002/09/10 09:54:53 hno Exp $
+ * $Id: structs.h,v 1.429 2002/09/15 05:41:57 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1048,13 +1048,22 @@ struct _AccessLogEntry {
     HierarchyLogEntry hier;
 };
 
+struct _clientStreamNode {
+    dlink_node node;
+    dlink_list *head;		/* sucks I know, but hey, the interface is limited */
+    CSR *readfunc;
+    CSCB *callback;
+    CSD *detach;		/* tell this node the next one downstream wants no more data */
+    CSS *status;
+    void *data;			/* Context for the node */
+    char *readbuf;		/* where *this* node wants its data returned; */
+    size_t readlen;		/* how much data *this* node can handle */
+    off_t readoff;		/* where *this* node wants it's data read from in the stream */
+};
+
 struct _clientHttpRequest {
     ConnStateData *conn;
     request_t *request;		/* Parsed URL ... */
-    store_client *sc;		/* The store_client we're using */
-    store_client *old_sc;	/* ... for entry to be validated */
-    int old_reqofs;		/* ... for the buffer */
-    int old_reqsize;		/* ... again, for the buffer */
     char *uri;
     char *log_uri;
     struct {
@@ -1066,14 +1075,8 @@ struct _clientHttpRequest {
     StoreEntry *entry;
     StoreEntry *old_entry;
     log_type log_type;
-#if USE_CACHE_DIGESTS
-    const char *lookup_type;	/* temporary hack: storeGet() result: HIT/MISS/NONE */
-#endif
     struct timeval start;
     http_version_t http_ver;
-    int redirect_state;
-    aclCheck_t *acl_checklist;	/* need ptr back so we can unreg if needed */
-    clientHttpRequest *next;
     AccessLogEntry al;
     struct {
 	unsigned int accel:1;
@@ -1086,11 +1089,7 @@ struct _clientHttpRequest {
 	char *location;
     } redirect;
     dlink_node active;
-    char norm_reqbuf[HTTP_REQBUF_SZ];	/* For 'normal requests' */
-    char ims_reqbuf[HTTP_REQBUF_SZ];	/* For 'ims' requests */
-    char *reqbuf;
-    int reqofs;
-    int reqsize;
+    dlink_list client_stream;
 };
 
 struct _ConnStateData {
@@ -1113,7 +1112,7 @@ struct _ConnStateData {
     /* note this is ONLY connection based because NTLM is against HTTP spec */
     /* the user details for connection based authentication */
     auth_user_request_t *auth_user_request;
-    clientHttpRequest *chr;
+    void *currentobject;	/* used by the owner of the connection. Opaque otherwise */
     struct sockaddr_in peer;
     struct sockaddr_in me;
     struct in_addr log_addr;
@@ -1623,6 +1622,7 @@ struct _request_flags {
 #endif
     unsigned int accelerated:1;
     unsigned int internal:1;
+    unsigned int internalclient:1;
     unsigned int body_sent:1;
     unsigned int reset_tcp:1;
 };

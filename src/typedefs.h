@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.134 2002/06/23 13:32:25 hno Exp $
+ * $Id: typedefs.h,v 1.135 2002/09/15 05:41:57 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -97,6 +97,8 @@ typedef struct _HttpHdrCc HttpHdrCc;
 typedef struct _HttpHdrRangeSpec HttpHdrRangeSpec;
 typedef struct _HttpHdrRange HttpHdrRange;
 typedef struct _HttpHdrRangeIter HttpHdrRangeIter;
+typedef struct _HttpHdrSc HttpHdrSc;
+typedef struct _HttpHdrScTarget HttpHdrScTarget;
 typedef struct _HttpHdrContRange HttpHdrContRange;
 typedef struct _TimeOrTag TimeOrTag;
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
@@ -106,6 +108,7 @@ typedef struct _HttpBody HttpBody;
 typedef struct _HttpReply HttpReply;
 typedef struct _HttpStateData HttpStateData;
 typedef struct _icpUdpData icpUdpData;
+typedef struct _clientStreamNode clientStreamNode;
 typedef struct _clientHttpRequest clientHttpRequest;
 typedef struct _ConnStateData ConnStateData;
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
@@ -196,6 +199,15 @@ typedef struct _delayConfig delayConfig;
 typedef struct _delaySpecSet delaySpecSet;
 typedef struct _delaySpec delaySpec;
 #endif
+
+/* client_side.c callbacks and callforwards */
+/* client stream read callback */
+typedef void CSCB(clientStreamNode *, clientHttpRequest *, HttpReply *, const char *, ssize_t);
+/* client stream read */
+typedef void CSR(clientStreamNode *, clientHttpRequest *);
+/* client stream detach */
+typedef void CSD(clientStreamNode *, clientHttpRequest *);
+typedef clientStream_status_t CSS(clientStreamNode *, clientHttpRequest *);
 
 typedef void CWCB(int fd, char *, size_t size, int flag, void *data);
 typedef void CNCB(int fd, int status, void *);

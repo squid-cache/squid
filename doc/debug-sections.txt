@@ -88,3 +88,6 @@ section 81    Cache Store
 section 82    External ACL
 section 83    SSL accelerator support
 section 84    Helper process maintenance
+section 85    Client side request management - after parsing, before caching
+section 87    client side stream management
+section 88    Client side reply management - from store to stream

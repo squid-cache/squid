@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.111 2002/04/21 21:52:47 hno Exp $
+ * $Id: store_client.cc,v 1.112 2002/09/15 05:41:57 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -492,9 +492,14 @@ storeClientCopyPending(store_client * sc, StoreEntry * e, void *data)
 #if STORE_CLIENT_LIST_DEBUG
     assert(sc == storeClientListSearch(e->mem_obj, data));
 #endif
+#ifndef SILLY_CODE
+    assert(sc);
+#endif
     assert(sc->entry == e);
+#if SILLY_CODE
     if (sc == NULL)
 	return 0;
+#endif
     if (sc->callback == NULL)
 	return 0;
     return 1;

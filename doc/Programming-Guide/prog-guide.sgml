@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.51 2002/08/09 10:57:41 robertc Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.52 2002/09/15 05:41:27 robertc Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -91,19 +91,41 @@ or improve it.
 	<P>
 Squid consists of the following major components
 
-<sect1>Client Side
+<sect1>Client Side Socket
 
 	<P>
 	Here new client connections are accepted, parsed, and
-	processed.  This is where we determine if the request is
-	a cache HIT, REFRESH, MISS, etc.  With HTTP/1.1 we may have
-	multiple requests from a single TCP connection.  Per-connection
-	state information is held in a data structure called
-	<em/ConnStateData/.  Per-request state information is stored
-	in the <em/clientHttpRequest/ structure.
+	reply data sent. Per-connection state information is held
+	in a data structure called <em/ConnStateData/.  Per-request 
+	state information is stored in the <em/clientSocketContext/
+	structure. With HTTP/1.1 we may have multiple requests from
+	a single TCP connection.
+
+<sect1>Client Side Request
+	<P>
+	This is where requests are processed. We determine if the
+	request is to be redirected, if it passes access lists,
+	and setup the initial client stream for internal requests.
+	Temporary state for this processing is held in a 
+	<em/clientRequestContext/ struct.
+	
+<sect1>Client Side Reply	
+	<P>
+	This is where we determine if the request is cache HIT, 
+	REFRESH, MISS, etc. This involves querying the store 
+	(possibly multiple times) to work through Vary lists and
+	the list. Per-request state information is stored
+	in the <em/clientReplyContext/ structure.
+
+<sect1>Client Streams
+	<P>
+	These routines implement a unidirectional, non-blocking,
+	pull pipeline. They allow code to be inserted into the 
+	reply logic on an as-needed basis. For instance, 
+	transfer-encoding logic is only needed when sending a
+	HTTP/1.1 reply.
 
 <sect1>Server Side
-
 	<P>
 	These routines are responsible for forwarding cache misses
 	to other servers, depending on the protocol.  Cache misses
@@ -479,20 +501,25 @@ Squid consists of the following major components
 	<P>
 	<enum>
 	<item>
-	A client connection is accepted by the <em/client-side/.
-	The HTTP request is parsed.
+	A client connection is accepted by the <em/client-side socket
+	support/ and parsed, or is directly created via
+	<em/clientBeginRequest/.
 
 	<item>
-	The access controls are checked.  The client-side builds
+	The access controls are checked.  The client-side-request builds
 	an ACL state data structure and registers a callback function
 	for notification when access control checking is completed.
 
 	<item>
-	After the access controls have been verified, the client-side
-	looks for the requested object in the cache.  If is a cache
-	hit, then the client-side registers its interest in the
-	<em/StoreEntry/.  Otherwise, Squid needs to forward the
-	request, perhaps with an If-Modified-Since header.
+	After the access controls have been verified, the request
+	may be redirected. 
+	
+	<item>The client-side-request is forwarded up the client stream
+	to <em/GetMoreData/ which looks for the requested object in the 
+	cache, and or Vary: versions of the same. If is a cache hit, 
+	then the client-side registers its interest in the 
+	<em/StoreEntry/. Otherwise, Squid needs to forward the request,
+	perhaps with an If-Modified-Since header.
 
 	<item>
 	The request-forwarding process begins with <tt/protoDispatch/.
@@ -679,7 +706,137 @@ Squid consists of the following major components
 	descriptors which have been idle for too long.  They are
 	further discussed in a following chapter.
 
-<!-- %%%% Chapter : CLIENT REQUEST PROCESSING %%%% -->
+<!-- %%%% Chapter : CLIENT STREAMS %%%% -->
+<sect>Client Streams
+<sect1>Introduction
+	<P>A clientStream is a uni-directional loosely coupled pipe. Each node
+consists of four methods - read, callback, detach, and status, along with the
+stream housekeeping variables (a dlink node and pointer to the head of
+the list), context data for the node, and read request parameters -
+readbuf, readlen and readoff (in the body).
+<P>clientStream is the basic unit for scheduling, and the clientStreamRead
+and clientStreamCallback calls allow for deferred scheduled activity if desired.
+<P>Theory on stream operation:
+<enum>
+<item>Something creates a pipeline. At a minimum it needs a head with a
+status method and a read method, and a tail with a callback method and a
+valid initial read request.
+<item>Other nodes may be added into the pipeline.
+<item>The tail-1th node's read method is called.
+<item>for each node going up the pipeline, the node either:
+<enum>
+<item>satisfies the read request, or
+<item>inserts a new node above it and calls clientStreamRead, or
+<item>calls clientStreamRead
+</enum>
+<P>There is no requirement for the Read parameters from different
+nodes to have any correspondence, as long as the callbacks provided are
+correct.
+<item>The first node that satisfies the read request MUST generate an
+httpReply to be passed down the pipeline. Body data MAY be provided.
+<item>On the first callback a node MAY insert further downstream nodes in
+the pipeline, but MAY NOT do so thereafter.
+<item>the callbacks progress down the pipeline until a node makes further
+reads instead of satisfying the callback (go to 4) or the end of the
+pipe line is reached, where a new read sequence may be scheduled.
+</enum>
+<sect1>Implementation notes
+<P>ClientStreams have been implemented for the client side reply logic,
+starting with either a client socket (tail of the list is
+clientSocketRecipient) or a custom handler for in-squid requests, and
+with the pipeline HEAD being clientGetMoreData, which uses
+clientSendMoreData to send data down the pipeline.
+<P>client POST bodies do not use a pipeline currently, they use the
+previous code to send the data. This is a TODO when time permits.
+
+<sect1>Whats in a node
+<P>Each node must have: 
+<itemize>
+<item>read method - to allow loose coupling in the pipeline. (The reader may
+therefore change if the pipeline is altered, even mid-flow).
+<item>callback method - likewise.
+<item>status method - likewise.
+<item>detach method - used to ensure all resources are cleaned up properly.
+<item>dlink head pointer - to allow list inserts and deletes from within a
+node.
+<item>context data - to allow the called back nodes to maintain their
+private information.
+<item>read request parameters - For two reasons:
+<enum>
+<item>To allow a node to determine the requested data offset, length and
+target buffer dynamically. Again, this is to promote loose coupling.
+<item>Because of the callback nature of squid, every node would have to
+keep these parameters in their context anyway, so this reduces
+programmer overhead.
+</enum>
+</itemize>
+
+<sect1>Method details
+<P>The first parameter is always the 'this' reference for the client
+stream - a clientStreamNode *.
+<sect2>Read
+<P>Parameters:
+<itemize>
+<item>clientHttpRequest * - superset of request data, being winnowed down
+over time. MUST NOT be NULL.
+<item>offset, length, buffer - what, how much and where.
+</itemize>
+<P>Side effects:
+<P>Triggers a read of data that satisfies the httpClientRequest 
+metainformation and (if appropriate) the offset,length and buffer
+parameters.
+<sect2>Callback
+<P>Parameters:
+<itemize>
+<item>clientHttpRequest * - superset of request data, being winnowed down
+over time. MUST NOT be NULL.
+<item>httpReply * - not NULL on the first call back only. Ownership is
+passed down the pipeline. Each node may alter the reply if appropriate.
+<item>buffer, length - where and how much.
+</itemize>
+<P>Side effects:
+<P>Return data to the next node in the stream. The data may be returned immediately,
+or may be delayed for a later scheduling cycle.
+<sect2>Detach
+<P>Parameters:
+<itemize>
+<item>clienthttpRequest * - MUST NOT be NULL.
+</itemize>
+<P>Side effects:
+<itemize>
+<item>Removes this node from a clientStream. The stream infrastructure handles
+the removal. This node MUST have cleaned up all context data, UNLESS scheduled
+callbacks will take care of that.
+<item>Informs the prev node in the list of this nodes detachment.
+</itemize>
+<sect2>Status
+<P>Parameters:
+<itemize>
+<item>clienthttpRequest * - MUST NOT be NULL.
+</itemize>
+<P>Side effects:
+<P>Allows nodes to query the upstream nodes for :
+<itemize>
+<item>stream ABORTS - request cancelled for some reason. upstream will not
+accept further reads().
+<item>stream COMPLETION - upstream has completed and will not accept further
+reads().
+<item>stream UNPLANNED COMPLETION - upstream has completed, but not at a
+pre-planned location (used for keepalive checking), and will not accept
+further reads().
+<item>stream NONE - no special status, further reads permitted.
+</itemize>
+
+<sect2>Abort
+<P>Parameters:
+<itemize>
+<item>clienthttpRequest * - MUST NOT be NULL.
+</itemize>
+<P>Side effects:
+<P>Detachs the tail of the stream. CURRENTLY DOES NOT clean up the tail node data - 
+this must be done separately. Thus Abort may ONLY be called by the tail node.
+
+<!-- %%%% Chapter : CLIENT REQUEST PROCESSING  %%%% -->
 <sect>Processing Client Requests
 
 	<P>
