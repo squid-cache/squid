@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.117 2004/04/04 13:37:20 hno Exp $
+ * $Id: forward.cc,v 1.118 2004/04/04 13:46:49 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -49,6 +49,7 @@ static void fwdConnectStart(void *);	/* should be same as EVH */
 static void fwdStateFree(FwdState * fwdState);
 static PF fwdConnectTimeout;
 static PF fwdServerClosed;
+static PF fwdPeerClosed;
 static CNCB fwdConnectDone;
 static int fwdCheckRetry(FwdState * fwdState);
 static int fwdReforward(FwdState *);
@@ -141,9 +142,6 @@ fwdStateFree(FwdState * fwdState)
         fwdState->server_fd = -1;
         debug(17, 3) ("fwdStateFree: closing FD %d\n", sfd);
         comm_close(sfd);
-
-        if (p)
-            p->stats.conn_open--;
     }
 
     cbdataFree(fwdState);
@@ -420,9 +418,6 @@ fwdConnectDone(int server_fd, comm_err_t status, int xerrno, void *data)
 
         fwdFail(fwdState, err);
 
-        if (fs->_peer)
-            fs->_peer->stats.conn_open--;
-
         comm_close(server_fd);
     } else if (status != COMM_OK) {
         assert(fs);
@@ -440,10 +435,8 @@ fwdConnectDone(int server_fd, comm_err_t status, int xerrno, void *data)
         err->request = requestLink(request);
         fwdFail(fwdState, err);
 
-        if (fs->_peer) {
+        if (fs->_peer)
             peerConnectFailed(fs->_peer);
-            fs->_peer->stats.conn_open--;
-        }
 
         comm_close(server_fd);
     } else {
@@ -471,7 +464,6 @@ fwdConnectTimeout(int fd, void *data)
     FwdState *fwdState = (FwdState *)data;
     StoreEntry *entry = fwdState->entry;
     ErrorState *err;
-    peer *p = fwdStateServerPeer(fwdState);
     debug(17, 2) ("fwdConnectTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     assert(fd == fwdState->server_fd);
 
@@ -488,9 +480,6 @@ fwdConnectTimeout(int fd, void *data)
             if (fwdState->servers->_peer)
                 peerConnectFailed(fwdState->servers->_peer);
     }
-
-    if (p)
-        p->stats.conn_open--;
 
     comm_close(fd);
 }
@@ -655,8 +644,10 @@ fwdConnectStart(void *data)
      * even if the connection may fail.
      */
 
-    if (fs->_peer)
+    if (fs->_peer) {
         fs->_peer->stats.conn_open++;
+        comm_add_close_handler(fd, fwdPeerClosed, fs->_peer);
+    }
 
     comm_add_close_handler(fd, fwdServerClosed, fwdState);
 
@@ -796,11 +787,6 @@ fwdDispatch(FwdState * fwdState)
              * transient (network) error; its a bug.
              */
             fwdState->flags.dont_retry = 1;
-            /*
-             * this assertion exists because if we are connected to
-             * a peer, then we need to decrement p->stats.conn_open.
-             */
-            assert(NULL == p);
             comm_close(fwdState->server_fd);
             break;
         }
@@ -971,6 +957,16 @@ fwdAbort(void *data)
     FwdState *fwdState = (FwdState *)data;
     debug(17, 2) ("fwdAbort: %s\n", storeUrl(fwdState->entry));
     fwdStateFree(fwdState);
+}
+
+/*
+ * Accounts for closed persistent connections
+ */
+static void
+fwdPeerClosed(int fd, void *data)
+{
+    peer *p = (peer *)data;
+    p->stats.conn_open--;
 }
 
 /*
