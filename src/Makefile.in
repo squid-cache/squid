@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.44 1996/09/20 23:39:53 wessels Exp $
+#  $Id: Makefile.in,v 1.45 1996/09/24 18:50:04 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -32,6 +32,7 @@ DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
 DEFAULT_ACCESS_LOG      = $(localstatedir)/logs/access.log
 DEFAULT_STORE_LOG       = $(localstatedir)/logs/store.log
 DEFAULT_SWAP_DIR        = $(localstatedir)/cache
+DEFAULT_PINGER		= $(libexecdir)/pinger
 
 CC		= @CC@
 INSTALL		= @INSTALL@
@@ -75,7 +76,8 @@ DEFAULTS        = \
 	-DDEFAULT_CACHE_LOG=\"$(DEFAULT_CACHE_LOG)\" \
 	-DDEFAULT_ACCESS_LOG=\"$(DEFAULT_ACCESS_LOG)\" \
 	-DDEFAULT_STORE_LOG=\"$(DEFAULT_STORE_LOG)\" \
-	-DDEFAULT_SWAP_DIR=\"$(DEFAULT_SWAP_DIR)\"
+	-DDEFAULT_SWAP_DIR=\"$(DEFAULT_SWAP_DIR)\" \
+	-DDEFAULT_PINGER=\"$(DEFAULT_PINGER)\"
 
 all:    squid.conf $(PROGS) $(UTILS) $(CGIPROGS)
 
