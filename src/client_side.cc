@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.292 1998/04/24 18:32:11 rousskov Exp $
+ * $Id: client_side.cc,v 1.293 1998/04/24 23:47:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1796,22 +1796,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     debug(33, 3) ("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
     end = req_hdr + header_sz;
     debug(33, 3) ("parseHttpRequest: end = {%s}\n", end);
-
-    if (end <= req_hdr) {
-	/* Invalid request */
-	debug(33, 3) ("parseHttpRequest: No request headers?\n");
-	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http, MEM_NONE);
-	http->conn = conn;
-	http->start = current_time;
-	http->req_sz = conn->in.offset;
-	http->uri = xstrdup("error:no-request-headers");
-	http->log_uri = xstrdup("error:no-request-headers");
-	*headers_sz_p = conn->in.offset;
-	*headers_p = inbuf;
-	*status = -1;
-	return http;
-    }
     req_sz = end - inbuf;
     debug(33, 3) ("parseHttpRequest: req_sz = %d\n", (int) req_sz);
     assert(req_sz <= conn->in.offset);
