@@ -1,25 +1,9 @@
+Changes to squid-1.2.beta19 (Apr 8, 1998):
+
 	- Added support for only-if-cached cache-control directive.
-	- Added STRICT_HTTP_PARSER pp directive to control parsing of invalid
-	  but commonly used HTTP formats (e.g. buggy SpyGame queries).
-	  STRICT_HTTP_PARSER is "off" by default.
-	- SNMP changes:
-	  1. renovated mib and added descriptions and comments
-	  2. added hit and byte counters to client_db , for cacheClientTable
-	  3. cacheClientTable, netdbTable, cachePeerTable, cacheConnTable
-	     now indexed by ip address. hash_lookup was enhanced
-	     to allow for subsequent hash_next's similar to hash_first, 
-	     to speed up getnext's in tables which refer to hash-table 
-	     structures.
-	  4. added generic (well, sorf of) table indexing functionality
-	  5. added makefile dependencies for snmplib and cache_snmp.h
-	  6. WaisHost, WaisPort, Timeouts removed
-	  7. FdTable split into FdTable and ConnTable. FdTable simplified
-	  8. PeerTable and PeerStat merged and put into new cacheMesh group 
-	  9. cacheClientTable added for client statistics and accounting 
-	     (cacheMesh 2)
-	 10. cacheSec and cacheAccounting groups removed 
-	 11. fixed acl bug when communities not defined
-	 12. snmp_acl now survives bad configuration
+	- Added RELAXED_HTTP_PARSER #define to allow requests which are
+	  missing the HTTP identifier on the request line (e.g. buggy
+	  SpyGame queries).  RELAXED_HTTP_PARSER is undefined by default.
 	- Fixed disk.c FD leak for delayed closes in
 	  diskHandleWriteComplete().
 	- Fixed cache announcement feature.
@@ -29,6 +13,108 @@
 	- Fixed cbdata memory counting leak.  cbdataUnlock() always
 	  called free(), never memFree().
 	- Fixed storeDirWriteCleanLogs() malloc bug on Alphas.
+	- Fixed `++loopdetect < 10' assertion due to
+	  clientHandleIMSReply bug for invalid/partial HTTP
+	  replies.
+	- Added preliminary code for HTCP.
+	- Renamed 'aux' dir to 'cfgaux' for legacy DOS machines.
+	- Added "snmp_community" as an ACL type.
+	- Cleaned up proxy-auth acl implementation and removed
+	  memory leaks.
+	- Added generic 'hashFreeItems()' function for efficiently
+	  freeing hash table pointers.
+	- Added whoisTimeout() for ASN code.
+XXX	- Remove BINARY TREE junk
+	- Fixed forgetting to reset Config.Swap.maxSize in
+	  configDoConfigure.
+	- Fixed httpReplyUpdateOnNotModified() arguments-in-wrong-order
+	  bug which caused not modified replies to not get updated.
+	- Fixed client_side.c bugs which could cause data to be written
+	  to the client in the wrong order for persistent connections.
+	  clientPurgeRequest() and clientHandleIMSComplete() must not
+	  call comm_write().  Instead they must create and write to
+	  StoreEntry's.
+	- Fixed ICP query service time counting bug(s).
+	- replaced 'char *mime_headers_end()' with 'size_t headersEnd()'
+	  to fix buffer overruns.  This also requires adding 'buf_sz'
+	  args to some functions like clientBuildReplyHeader().
+	  But we can eliminate the need to NULL-terminate the
+	  buffer beforehand.
+	- Changed commConnectCallback() to reset the FD timeout to
+	  zero before notifying about the connection.  This requires
+	  commSetTimeout() calls in numerous places to reinstall
+	  timeouts.
+	- Changed comm_poll_incoming() to be called less frequently
+	  (every 15 I/O's instead of every 7 FD's) (Michael O'Reilly).
+	- Removed HAVE_SYSLOG case for debug() macro.  Almost all
+	  systems do have syslog(), but more importatnly the
+	  _db_level value is needed for debugging to stderr.
+	- Rewrote squid/dnsserver interface to use smaller, single-line
+	  messages.
+	- Rewrote 'dns' cachemgr output to use a table format.
+	- Rewrote a lot of dnsserver.c.
+	- Added eventAddIsh() for semi-random event scheduling.
+	- Fixed an ftpTimeout bug for sessions which use PORT
+	  commands.
+	- Fixed ftp.c to recognized invalid PASV replies (e.g.
+	  port == 0).
+	- Removed hash_insert().  All hasing uses hash_join() now.
+	- Renamed hash_unlink() to hash_remove_link().
+	- Added hashPrime() to find closes prime hash table size
+	  to a given value.
+	- Fixed Keep-Alive ratio counting bug which prevented
+	  persistent connections from being used between cache
+	  peers.
+	- Changed icmp.c to NOT queue messages sent from squid to
+	  the pinger program.
+	- Changed icp_v2.c to NOT queue ICP messages by default.
+	  But they will be queued and resent once if the first
+	  send fails.  Counters.icp.queued_replies counts the
+	  number of messaages queued.
+	- Cleaned up ICP logging.
+	- Added identTimeout().
+	- Fixed ipcache reply counting bug.  Overcounted dnsserver
+	  replies for partial replies.
+	- Added urlInternal() for building internal Squid URLs.
+	- Changed peerAllowedToUse() to check both 'cache_peer_domain'
+	  AND 'cache_peer_acl' configurations.  This should be changed
+	  in the fugure to use ONLY cache_peer_acl.
+	- Changed DEAD/REVIVED neighbor detection to avoid reporting
+	  so many false deaths.  (Joe Ramey).
+	- Added some preliminary code to support "cache digests."
+	- Fixed pumpClose() coredumps (?).
+	- Updated cachemgr 'info' output to show median service
+	  times for various categories.
+	- Fixed ABW bug in storeDirWriteCleanLogs().  sizeof(off_t)
+	  != sizeof(int) for Alphas.
+	- Fixed potential alignment problem in storeDirWriteCleanLogs().
+	- Fixed store_rebuild.c to NOT replace current, but
+	  not-swapped-out StoreEntry's with on-disk entries.
+	- Changed storeCleanup() to call storeRelease on invalid
+	  entries which don't have a swapfile (i.e. no unlink()
+	  penalty).
+	- Fixed storeSwapInStart() to fail for unvalidated
+	  entries.
+	- SNMP changes:
+	  .  renovated mib and added descriptions and comments
+	  .  added hit and byte counters to client_db , for
+	     cacheClientTable
+	  .  cacheClientTable, netdbTable, cachePeerTable,
+	     cacheConnTable now indexed by ip address. hash_lookup was
+	     enhanced to allow for subsequent hash_next's similar to
+	     hash_first, to speed up getnext's in tables which refer to
+	     hash-table structures.
+	  .  added generic (well, sorf of) table indexing functionality
+	  .  added makefile dependencies for snmplib and cache_snmp.h
+	  .  WaisHost, WaisPort, Timeouts removed
+	  .  FdTable split into FdTable and ConnTable. FdTable simplified
+	  .  PeerTable and PeerStat merged and put into new cacheMesh
+	     group
+	  .  cacheClientTable added for client statistics and accounting 
+	     (cacheMesh 2)
+	  .  cacheSec and cacheAccounting groups removed 
+	  .  fixed acl bug when communities not defined
+	  .  snmp_acl now survives bad configuration
 
 Changes to squid-1.2.beta18 (Mar 23, 1998):
 
