@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.259 1998/03/30 04:11:13 wessels Exp $
+ * $Id: http.cc,v 1.260 1998/03/31 05:35:23 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -326,9 +326,12 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	}
 	t = httpState->reply_hdr + hdr_len;
 	/* headers can be incomplete only if object still arriving */
-	if (!httpState->eof)
-	    if ((t = mime_headers_end(httpState->reply_hdr)) == NULL)
+	if (!httpState->eof) {
+	    size_t k = headersEnd(httpState->reply_hdr, 8192);
+	    if (0 == k)
 		return;		/* headers not complete */
+	    t = httpState->reply_hdr + k;
+	}
 	*t = '\0';
 	httpState->reply_hdr_state++;
     }
@@ -338,7 +341,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
 	    httpState->reply_hdr);
 	/* Parse headers into reply structure */
-	/* Old code never parsed headers if mime_headers_end failed, was it intentional ? @?@ @?@ */
+	/* Old code never parsed headers if headersEnd failed, was it intentional ? @?@ @?@ */
 	/* what happens if we fail to parse here? @?@ @?@ */
 	httpReplyParse(reply, httpState->reply_hdr);	/* httpState->eof); */
 	storeTimestampsSet(entry);
@@ -598,9 +601,10 @@ httpBuildRequestHeader(request_t * request,
     int cc_flags = 0;
     int n;
     const char *url = NULL;
-    char *hdr_in = orig_request->headers;
+    char *hdr_in;
 
-    assert(hdr_in != NULL);
+    assert(orig_request->headers != NULL);
+    hdr_in = orig_request->headers;
     debug(11, 3) ("httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
     xstrncpy(fwdbuf, "X-Forwarded-For: ", 4096);
     xstrncpy(viabuf, "Via: ", 4096);
@@ -614,12 +618,15 @@ httpBuildRequestHeader(request_t * request,
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
 	EBIT_SET(hdr_flags, HDR_IMS);
     }
-    end = mime_headers_end(hdr_in);
+    assert(orig_request->headers_sz > 0);
+    end = orig_request->headers + orig_request->headers_sz;
     for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
 	hdr_len = t - hdr_in;
 	l = strcspn(t, crlf) + 1;
 	if (l > 4096)
 	    l = 4096;
+	if (0 == l)
+	   break;
 	xstrncpy(xbuf, t, l);
 	debug(11, 5) ("httpBuildRequestHeader: %s\n", xbuf);
 	if (strncasecmp(xbuf, "Proxy-Connection:", 17) == 0)

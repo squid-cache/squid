@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.55 1998/03/16 21:59:59 wessels Exp $
+ * $Id: mime.cc,v 1.56 1998/03/31 05:35:24 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -166,6 +166,7 @@ mime_get_header(const char *mime, const char *name)
     return NULL;
 }
 
+#if OLD_CODE
 /* need to take the lowest, non-zero pointer to the end of the headers.
  * The headers end at the first empty line */
 char *
@@ -173,18 +174,51 @@ mime_headers_end(const char *mime)
 {
     const char *p1, *p2;
     const char *end = NULL;
-
     p1 = strstr(mime, "\n\r\n");
     p2 = strstr(mime, "\n\n");
-
     if (p1 && p2)
 	end = p1 < p2 ? p1 : p2;
     else
 	end = p1 ? p1 : p2;
     if (end)
 	end += (end == p1 ? 3 : 2);
-
     return (char *) end;
+}
+#endif
+
+size_t
+headersEnd(const char *mime, size_t l)
+{
+    size_t e = 0;
+    int state = 0;
+    while (e < l && state < 3) {
+        switch (state) {
+        case 0:
+            if ('\n' == mime[e]) 
+                state = 1;
+            break;
+        case 1:
+            if ('\r' == mime[e])
+                state = 2;
+            else if ('\n' == mime[e])
+                state = 3;
+            else
+                state = 0;
+            break;
+        case 2:
+            if ('\n' == mime[e])
+                state = 3;
+            else
+                state = 0;
+            break;
+        default:
+                break;
+        }
+        e++;
+    }
+    if (3 == state)
+        return e;
+    return 0;
 }
 
 /*
