@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.20 2002/07/06 12:24:25 hno Exp $
+# $Id: Makefile.in,v 1.21 2002/07/06 20:19:11 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -478,6 +478,10 @@ dist-hook:
 	    rm -f $(distdir)/$$subdir/autoconf.h; \
 	  fi; \
 	done
+
+install-pinger:
+	chown root $(libexecdir)/pinger$(EXEEXT)
+	chmod 4700 $(libexecdir)/pinger$(EXEEXT)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
