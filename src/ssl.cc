@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.47 1997/04/30 18:31:01 wessels Exp $
+ * $Id: ssl.cc,v 1.48 1997/04/30 20:06:36 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -58,7 +58,7 @@ static void sslWriteServer _PARAMS((int fd, void *));
 static void sslWriteClient _PARAMS((int fd, void *));
 static void sslConnected _PARAMS((int fd, void *));
 static void sslProxyConnected _PARAMS((int fd, void *));
-static void sslConnect _PARAMS((int fd, const ipcache_addrs *, void *));
+static IPH sslConnect;
 static void sslErrorComplete _PARAMS((int, char *, int, int, void *));
 static void sslClose _PARAMS((SslStateData * sslState));
 static void sslClientClosed _PARAMS((int fd, void *));
@@ -119,7 +119,7 @@ sslStateFree(int fd, void *data)
     xfree(sslState->url);
     requestUnlink(sslState->request);
     if (sslState->ip_lookup_pending)
-	ipcache_unregister(sslState->host, sslState->server.fd);
+	ipcacheUnregister(sslState->host, sslState);
     safe_free(sslState);
 }
 
@@ -205,6 +205,7 @@ sslWriteServer(int fd, void *data)
     len = write(sslState->server.fd,
 	sslState->client.buf + sslState->client.offset,
 	sslState->client.len - sslState->client.offset);
+    fd_bytes(fd, len, FD_WRITE);
     debug(26, 5, "sslWriteServer FD %d, wrote %d bytes\n", fd, len);
     if (len < 0) {
 	if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
@@ -247,6 +248,7 @@ sslWriteClient(int fd, void *data)
     len = write(sslState->client.fd,
 	sslState->server.buf + sslState->server.offset,
 	sslState->server.len - sslState->server.offset);
+    fd_bytes(fd, len, FD_WRITE);
     debug(26, 5, "sslWriteClient FD %d, wrote %d bytes\n", fd, len);
     if (len < 0) {
 	if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.33 1997/04/29 22:13:04 wessels Exp $
+ * $Id: net_db.cc,v 1.34 1997/04/30 20:06:33 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -48,6 +48,7 @@ static void netdbPurgeLRU _PARAMS((void));
 static net_db_peer *netdbPeerByName _PARAMS((const netdbEntry * n, const char *));
 static net_db_peer *netdbPeerAdd _PARAMS((netdbEntry * n, peer * e));
 static char *netdbPeerName _PARAMS((const char *name));
+static IPH netdbSendPing;
 
 /* We have to keep a local list of peer names.  The Peers structure
  * gets freed during a reconfigure.  We want this database to

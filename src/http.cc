@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.157 1997/04/30 18:30:53 wessels Exp $
+ * $Id: http.cc,v 1.158 1997/04/30 20:06:28 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -223,7 +223,7 @@ static void httpSendComplete _PARAMS((int fd, char *, int, int, void *));
 static void proxyhttpStartComplete _PARAMS((void *, int));
 static void httpStartComplete _PARAMS((void *, int));
 static void httpSendRequest _PARAMS((int fd, void *));
-static void httpConnect _PARAMS((int fd, const ipcache_addrs *, void *));
+static IPH httpConnect;
 static void httpConnectDone _PARAMS((int fd, int status, void *data));
 static void httpAppendRequestHeader _PARAMS((char *hdr, const char *line, size_t * sz, size_t max));
 
@@ -240,7 +240,7 @@ httpStateFree(int fd, void *data)
 	httpState->reply_hdr = NULL;
     }
     if (httpState->ip_lookup_pending)
-	ipcache_unregister(httpState->request->host, httpState->fd);
+	ipcacheUnregister(httpState->request->host, httpState);
     requestUnlink(httpState->request);
     requestUnlink(httpState->orig_request);
     xfree(httpState);

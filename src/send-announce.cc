@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.32 1997/04/30 18:31:00 wessels Exp $
+ * $Id: send-announce.cc,v 1.33 1997/04/30 20:06:35 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -31,8 +31,7 @@
 
 #include "squid.h"
 
-static void
-send_announce _PARAMS((int fd, const ipcache_addrs * ia, void *data));
+static IPH send_announce;
 
 void
 start_announce(void *unused)

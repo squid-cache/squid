@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.67 1997/04/30 18:31:05 wessels Exp $
+ * $Id: wais.cc,v 1.68 1997/04/30 20:06:37 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -125,7 +125,7 @@ static PF waisTimeout;
 static PF waisReadReply;
 static void waisSendComplete _PARAMS((int, char *, int, int, void *));
 static PF waisSendRequest;
-static void waisConnect _PARAMS((int, const ipcache_addrs *, void *));
+static IPH waisConnect;
 static CNCB waisConnectDone;
 
 static void
@@ -136,7 +136,7 @@ waisStateFree(int fd, void *data)
 	return;
     storeUnlockObject(waisState->entry);
     if (waisState->ip_lookup_pending)
-	ipcache_unregister(waisState->relayhost, waisState->fd);
+	ipcacheUnregister(waisState->relayhost, waisState);
     xfree(waisState);
 }
 
