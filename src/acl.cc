@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.271 2002/01/13 01:08:43 robertc Exp $
+ * $Id: acl.cc,v 1.272 2002/04/11 16:45:28 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -114,7 +114,9 @@ strtokFile(void)
   strtok_again:
     if (!aclFromFile) {
 	t = (strtok(NULL, w_space));
-	if (t && (*t == '\"' || *t == '\'')) {
+	if (!t || *t == '#') {
+	    return NULL;
+	} else if (*t == '\"' || *t == '\'') {
 	    /* quote found, start reading from file */
 	    fn = ++t;
 	    while (*t && *t != '\"' && *t != '\'')
