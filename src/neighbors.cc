@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.9 1996/04/04 01:30:49 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.10 1996/04/06 00:53:06 wessels Exp $ */
 
 /*
  * DEBUG: Section 15          neighbors:
@@ -493,7 +493,9 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	header->opcode, header->version, header->shostid,
 	header->length, header->reqnum);
     debug(15, 6, "     from: fam=%d, port=%d, addr=0x%x\n",
-	from->sin_family, from->sin_port, from->sin_addr.s_addr);
+	ntohs(from->sin_family),
+	ntohs(from->sin_port),
+	ntohl(from->sin_addr.s_addr));
 
     /* look up for neighbor/parent entry */
     e = whichEdge(header, from);

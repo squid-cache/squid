@@ -1,4 +1,4 @@
-/* $Id: errorpage.cc,v 1.14 1996/04/05 23:21:11 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.15 1996/04/06 00:53:05 wessels Exp $ */
 
 /* DEBUG: Section 4             cached_error: Error printing routines */
 
@@ -105,9 +105,10 @@ static char *tbuf;
 
 int log_errors = 1;
 
-void errorInitialize() {
-	tmp_error_buf = (char *) xmalloc(MAX_URL * 4);
-	tbuf = (char *) xmalloc(MAX_URL * 3);
+void errorInitialize()
+{
+    tmp_error_buf = (char *) xmalloc(MAX_URL * 4);
+    tbuf = (char *) xmalloc(MAX_URL * 3);
 }
 
 
