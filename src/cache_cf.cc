@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.324 1999/01/29 23:39:12 wessels Exp $
+ * $Id: cache_cf.cc,v 1.325 1999/04/07 21:39:04 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -230,7 +230,7 @@ configDoConfigure(void)
     if (Config.Program.redirect) {
 	if (Config.redirectChildren < 1) {
 	    Config.redirectChildren = 0;
-	    safe_free(Config.Program.redirect);
+	    wordlistDestroy(&Config.Program.redirect);
 	} else if (Config.redirectChildren > DefaultRedirectChildrenMax) {
 	    debug(3, 0) ("WARNING: redirect_children was set to a bad value: %d\n",
 		Config.redirectChildren);
@@ -300,7 +300,7 @@ configDoConfigure(void)
     requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
     if (Config.Program.redirect)
-	requirePathnameExists("redirect_program", Config.Program.redirect);
+	requirePathnameExists("redirect_program", Config.Program.redirect->key);
     if (Config.Program.authenticate)
 	requirePathnameExists("authenticate_program", Config.Program.authenticate->key);
     requirePathnameExists("Icon Directory", Config.icons.directory);
@@ -1547,7 +1547,7 @@ check_null_wordlist(wordlist * w)
 }
 
 static int
-check_null_acl_access(acl_access *a)
+check_null_acl_access(acl_access * a)
 {
     return a == NULL;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.276 1999/01/29 23:39:24 wessels Exp $
+ * $Id: structs.h,v 1.277 1999/04/07 21:39:06 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -282,7 +282,7 @@ struct _SquidConfig {
     char *effectiveGroup;
     struct {
 	char *dnsserver;
-	char *redirect;
+	wordlist *redirect;
 	wordlist *authenticate;
 	char *pinger;
 	char *unlinkd;
