@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.196 1998/08/14 09:22:41 wessels Exp $
+ * $Id: structs.h,v 1.197 1998/08/14 16:42:04 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -307,8 +307,10 @@ struct _SquidConfig {
 	struct in_addr tcp_outgoing;
 	struct in_addr udp_incoming;
 	struct in_addr udp_outgoing;
+#if SQUID_SNMP
 	struct in_addr snmp_incoming;
 	struct in_addr snmp_outgoing;
+#endif
 	struct in_addr client_netmask;
     } Addrs;
     size_t tcpRcvBufsz;
