@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.340 1997/11/14 05:13:28 wessels Exp $
+ * $Id: store.cc,v 1.341 1997/11/14 05:16:23 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -861,7 +861,7 @@ storeCheckSwapOut(StoreEntry * e)
 
     new_mem_lo = lowest_offset;
     if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
-	assert(EBIT_TEST(e->flag, ENTRY_PRIVATE));
+	assert(EBIT_TEST(e->flag, KEY_PRIVATE));
 	memFreeDataUpto(mem->data, new_mem_lo);
 	mem->inmem_lo = new_mem_lo;
 	return;
