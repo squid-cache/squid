@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.55 2003/05/21 07:24:40 hno Exp $
+# $Id: Makefile.in,v 1.56 2003/05/21 08:17:00 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -403,9 +403,11 @@ uninstall-am: uninstall-iconDATA uninstall-info-am
 $(ICON2): $(ICON1)
 
 $(ICON1):
-	@$(SHELL) "$(srcdir)/icons.shar"
+	@if [ ! -f "$(srcdir)/$(ICON1)" ]; then \
+	    $(SHELL) "$(srcdir)/icons.shar" ; \
+	fi
 
-icons.shar:
+update-icons.shar:
 	shar --no-timestamp $(ICON1) $(ICON2) > $@ 2>/dev/null || \
 	shar $(ICON1) $(ICON2) > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
