@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.354 1998/07/16 03:46:47 wessels Exp $
+ * $Id: client_side.cc,v 1.355 1998/07/16 22:22:47 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -165,7 +165,8 @@ clientAccessCheckDone(int answer, void *data)
     debug(33, 5) ("clientAccessCheckDone: '%s' answer=%d\n", http->uri, answer);
     http->acl_checklist = NULL;
     if (answer == ACCESS_ALLOWED) {
-	urlCanonical(http->request, http->uri);
+	safe_free(http->uri);
+	http->uri = xstrdup(urlCanonical(http->request));
 	assert(http->redirect_state == REDIRECT_NONE);
 	http->redirect_state = REDIRECT_PENDING;
 	redirectStart(http, clientRedirectDone, http);
@@ -198,7 +199,6 @@ static void
 clientRedirectDone(void *data, char *result)
 {
     clientHttpRequest *http = data;
-    size_t l;
     request_t *new_request = NULL;
     request_t *old_request = http->request;
     debug(33, 5) ("clientRedirectDone: '%s' result=%s\n", http->uri,
@@ -209,12 +209,7 @@ clientRedirectDone(void *data, char *result)
 	new_request = urlParse(old_request->method, result);
     if (new_request) {
 	safe_free(http->uri);
-	/* need to malloc because the URL returned by the redirector might
-	 * not be big enough to append the local domain
-	 * -- David Lamkin drl@net-tel.co.uk */
-	l = strlen(result) + Config.appendDomainLen + 64;
-	http->uri = xcalloc(l, 1);
-	xstrncpy(http->uri, result, l);
+	http->uri = xstrdup(urlCanonical(new_request));
 	new_request->http_ver = old_request->http_ver;
 	httpHeaderAppend(&new_request->header, &old_request->header);
 	new_request->client_addr = old_request->client_addr;
@@ -226,7 +221,6 @@ clientRedirectDone(void *data, char *result)
 	}
 	requestUnlink(old_request);
 	http->request = requestLink(new_request);
-	urlCanonical(http->request, http->uri);
     }
     clientInterpretRequestHeaders(http);
     fd_note(http->conn->fd, http->uri);

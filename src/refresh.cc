@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.22 1998/07/14 21:25:51 wessels Exp $
+ * $Id: refresh.cc,v 1.23 1998/07/16 22:22:52 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -78,6 +78,7 @@ int
 refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
 {
     const refresh_t *R;
+    const char *uri;
     time_t min = REFRESH_DEFAULT_MIN;
     double pct = REFRESH_DEFAULT_PCT;
     time_t max = REFRESH_DEFAULT_MAX;
@@ -85,14 +86,16 @@ refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
     time_t age;
     double factor;
     time_t check_time = squid_curtime + delta;
-    assert(entry->mem_obj);
-    assert(entry->mem_obj->url);
-    debug(22, 3) ("refreshCheck: '%s'\n", entry->mem_obj->url);
+    if (entry->mem_obj)
+	uri = entry->mem_obj->url;
+    else
+	uri = urlCanonical(request);
+    debug(22, 3) ("refreshCheck: '%s'\n", uri);
     if (EBIT_TEST(entry->flag, ENTRY_REVALIDATE)) {
 	debug(22, 3) ("refreshCheck: YES: Required Authorization\n");
 	return 1;
     }
-    if ((R = refreshLimits(entry->mem_obj->url))) {
+    if ((R = refreshLimits(uri))) {
 	min = R->min;
 	pct = R->pct;
 	max = R->max;

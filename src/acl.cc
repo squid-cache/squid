@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.169 1998/07/14 22:28:08 wessels Exp $
+ * $Id: acl.cc,v 1.170 1998/07/16 22:22:46 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1319,7 +1319,7 @@ aclMatchAcl(acl * acl, aclCheck_t * checklist)
 	return k;
 	/* NOTREACHED */
     case ACL_URL_REGEX:
-	esc_buf = xstrdup(urlCanonical(r, NULL));
+	esc_buf = xstrdup(urlCanonical(r));
 	rfc1738_unescape(esc_buf);
 	k = aclMatchRegex(acl->data, esc_buf);
 	safe_free(esc_buf);
