@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.263 2002/11/22 14:25:38 robertc Exp $
+#  $Id: Makefile.in,v 1.264 2002/12/15 09:04:57 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -335,7 +335,7 @@ nodist_squid_SOURCES = \
 	auth_modules.cc \
 	store_modules.cc \
 	cf_parser.h \
-	globals.c \
+	globals.cc \
 	string_arrays.c
 
 
@@ -367,13 +367,13 @@ dnsserver_SOURCES = dnsserver.cc
 recv_announce_SOURCES = recv-announce.cc
 
 nodist_pinger_SOURCES = \
-	globals.c
+	globals.cc
 
 
 BUILT_SOURCES = \
 	cf_gen_defines.h \
 	cf_parser.h \
-	globals.c \
+	globals.cc \
 	string_arrays.c \
 	repl_modules.cc \
 	auth_modules.cc \
@@ -430,7 +430,7 @@ DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 #		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 #	fi
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
-	globals.c string_arrays.c repl_modules.cc auth_modules.cc store_modules.cc
+	globals.cc string_arrays.c repl_modules.cc auth_modules.cc store_modules.cc
 
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
@@ -1191,7 +1191,7 @@ $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
 snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
-globals.c: globals.h mk-globals-c.pl
+globals.cc: globals.h mk-globals-c.pl
 	$(PERL) $(srcdir)/mk-globals-c.pl < $(srcdir)/globals.h > $@
 
 string_arrays.c: enums.h mk-string-arrays.pl
