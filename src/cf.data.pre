@@ -4,8 +4,8 @@ COMMENT_START
 	--------------------
 
 	This is the default Squid configuration file. You may wish
-	to look at http://cache.is.co.za/Squid/ for documentation,
-	or the Squid home page (http://Squid.nlanr.net/) for the FAQ.
+	to look at http://cache.is.co.za/squid/ for documentation,
+	or the Squid home page (http://squid.nlanr.net/) for the FAQ.
 
 COMMENT_END
 
