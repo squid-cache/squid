@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.182 1998/03/20 18:03:18 wessels Exp $
+ * $Id: neighbors.cc,v 1.183 1998/03/28 05:09:13 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -781,8 +781,6 @@ peerDestroy(peer * p)
 	safe_free(l->domain);
 	safe_free(l);
     }
-    if (p->ip_lookup_pending)
-	ipcacheUnregister(p->host, p);
     safe_free(p->host);
     cbdataFree(p);
 }
@@ -793,7 +791,6 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     peer *p = data;
     struct sockaddr_in *ap;
     int j;
-    p->ip_lookup_pending = 0;
     if (p->n_addresses == 0) {
 	debug(15, 1) ("Configuring %s %s/%d/%d\n", neighborTypeStr(p),
 	    p->host, p->http_port, p->icp_port);
@@ -830,7 +827,6 @@ peerRefreshDNS(void *datanotused)
     peer *next = Config.peers;
     while ((p = next) != NULL) {
 	next = p->next;
-	p->ip_lookup_pending = 1;
 	/* some random, bogus FD for ipcache */
 	p->test_fd = Squid_MaxFD + current_time.tv_usec;
 	ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
@@ -851,7 +847,6 @@ peerCheckConnect(void *data)
 	0, COMM_NONBLOCKING, p->host);
     if (fd < 0)
 	return;
-    p->ip_lookup_pending = 1;
     p->test_fd = fd;
     ipcache_nbgethostbyname(p->host, peerCheckConnect2, p);
 }
@@ -860,7 +855,6 @@ static void
 peerCheckConnect2(const ipcache_addrs * ianotused, void *data)
 {
     peer *p = data;
-    p->ip_lookup_pending = 0;
     commConnectStart(p->test_fd,
 	p->host,
 	p->http_port,

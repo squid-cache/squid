@@ -799,7 +799,6 @@ struct _peer {
     int n_addresses;
     int rr_count;
     struct _peer *next;
-    int ip_lookup_pending;
     int ck_conn_event_pend;
     int test_fd;
 };
