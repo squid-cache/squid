@@ -18,6 +18,10 @@ Changes to squid-1.1.7 (February @@@, 1997):
 	- Fixed extra unlocking on partial reads from dnsservers.
 	- Fixes for 'Splay' trees in acl.c (Ed Knowles)
 	- Support for balanced binary trees in acl.c (Arjan de Vet).
+	- Made HTTP anonymizing a standard feature and settable in
+	  squid.conf (disabled by default).
+	- Ignore ICP_MISS replies from multicast parents which would
+	  violate the domain restrictions.
 
 Changes to squid-1.novm.6 (February 7, 1997):
 
