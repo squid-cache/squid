@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.8 1998/03/06 23:22:24 wessels Exp $
+ * $Id: cache_manager.cc,v 1.9 1998/03/16 23:50:04 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -177,6 +177,7 @@ cachemgrStateFree(cachemgrStateData * mgr)
     safe_free(mgr->action);
     safe_free(mgr->user_name);
     safe_free(mgr->passwd);
+    storeUnlockObject(mgr->entry);
     xfree(mgr);
 }
 
@@ -195,31 +196,61 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
 	return;
     }
     mgr->entry = entry;
+    storeLockObject(entry);
     entry->expires = squid_curtime;
     debug(16, 5) ("CACHEMGR: %s requesting '%s'\n",
 	fd_table[fd].ipaddr, mgr->action);
     /* get additional info from request headers */
     cachemgrParseHeaders(mgr, request);
-    if (mgr->user_name && strlen(mgr->user_name))
-	debug(16, 1) ("CACHEMGR: %s@%s requesting '%s'\n",
-	    mgr->user_name, fd_table[fd].ipaddr, mgr->action);
-    else
-	debug(16, 1) ("CACHEMGR: %s requesting '%s'\n",
-	    fd_table[fd].ipaddr, mgr->action);
     /* Check password */
     if (cachemgrCheckPassword(mgr) != 0) {
+	/* build error message */
+	ErrorState *err;
+	HttpReply *rep;
+	err = errorCon(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED);
+	/* warn if user specified incorrect password */
+	if (mgr->passwd)
+	    debug(16, 1) ("CACHEMGR: %s@%s: incorrect password for '%s'\n",
+		mgr->user_name ? mgr->user_name : "<unknown>",
+		fd_table[fd].ipaddr, mgr->action);
+	else
+	    debug(16, 1) ("CACHEMGR: %s@%s: password needed for '%s'\n",
+		mgr->user_name ? mgr->user_name : "<unknown>",
+		fd_table[fd].ipaddr, mgr->action);
+	err->request = requestLink(request);
+	rep = errorBuildReply(err);
+	errorStateFree(err);
+	/*
+	 * add Authenticate header, use 'action' as a realm because
+	 * password depends on action
+	 */
+	httpHeaderSetAuth(&rep->hdr, "Basic", mgr->action);
+	/* move info to the mem_obj->reply */
+	httpReplyAbsorb(entry->mem_obj->reply, rep);
+	/* store the reply */
+	httpReplySwapOut(entry->mem_obj->reply, entry);
 	entry->expires = squid_curtime;
 	storeComplete(entry);
+	cachemgrStateFree(mgr);
 	return;
     }
+    debug(16, 1) ("CACHEMGR: %s@%s requesting '%s'\n",
+	mgr->user_name ? mgr->user_name : "<unknown>",
+	fd_table[fd].ipaddr, mgr->action);
     /* retrieve object requested */
     a = cachemgrFindAction(mgr->action);
     assert(a != NULL);
     storeBuffer(entry);
     {
 	HttpReply *rep = httpReplyCreate();
-	httpReplySetHeaders(rep, (double) 1.0, HTTP_OK, NULL,
-	    "text/plain", -1 /* C-Len */ , squid_curtime /* LMT */ , squid_curtime);
+	httpReplySetHeaders(rep,
+	    (double) 1.0,
+	    HTTP_OK,
+	    NULL,
+	    "text/plain",
+	    -1,			/* C-Len */
+	    squid_curtime,	/* LMT */
+	    squid_curtime);
 	httpReplySwapOut(rep, entry);
 	httpReplyDestroy(rep);
     }
