@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.332 2003/07/10 15:55:22 hno Exp $
+# $Id: cf.data.pre,v 1.333 2003/07/16 12:54:42 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1150,21 +1150,19 @@ NAME: access_log cache_access_log
 TYPE: access_log
 LOC: Config.Log.accesslogs
 DEFAULT: none
+DEFAULT_IF_NONE: @DEFAULT_ACCESS_LOG@
 DOC_START
 	These files log client request activities. Has a line every HTTP or
 	ICP request. The format is:
 	access_log <filepath> [<logformat name> [acl acl ...]]
+	access_log none [acl acl ...]]
 
 	Will log to the specified file using the specified format (which
 	must be defined in a logformat directive) those entries which match
 	ALL the acl's specified (which must be defined in acl clauses).
 	If no acl is specified, all requests will be logged to this file.
 	
-	To disable logging of a request use the filepath "none", in which
-	case a logformat name should not be specified.
-NOCOMMENT_START
-access_log @DEFAULT_ACCESS_LOG@ squid
-NOCOMMENT_END
+	To disable logging of a request specify "none".
 DOC_END
 
 
