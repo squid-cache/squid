@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.328 1998/10/17 05:37:48 wessels Exp $
+ * $Id: http.cc,v 1.329 1998/10/17 05:38:45 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -334,7 +334,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	ctx_exit(ctx);
 	if (reply->date > -1 && !httpState->peer) {
 	    int skew = abs(reply->date - squid_curtime);
-	    if (skew > 60)
+	    if (skew > 7200)
 		debug(11, 1) ("%s's clock is skewed by %d seconds!\n",
 			httpState->request->host, skew);
 	}
