@@ -1,3 +1,18 @@
+Changes to squid-1.1.6 (February @@@, 1997):
+
+	- Fixed urlParse to leave trailing slashes on FTP URLs.  Although
+	  stripping the slashes offers a slight hit rate increase, it
+	  breaks some proxies which return HTTP redirects.
+	- Initialize struct tm in parse_rfc1123() (Henrik Hempelmann).
+	- Fixed parseHttpRequest() to use memcpy instead of strncpy;
+	  caused POST's with NULL bytes to fail (Joe Ramey).
+	- Fixed another HTTP reply code 0 bug (Neil Murray).
+	- Changed code structure in ipcache_nbgethostbyname() to
+	  maybe get around some trashed-stack problems.
+	- Added WARNING if blocking gethostbyname() gets called.
+	- Fixed calling commSetSelect() with FD < 0 bug in ssl.c and
+	  pass.c.
+
 Changes to squid-1.novm.6 (February 7, 1997):
 
 	- Merged squid-1.1.6 changes.
