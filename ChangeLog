@@ -56,3 +56,4 @@
 	  connections don't stack up on the listen queue.
 	- Created "store.log" which logs RELEASE/SWAPIN/SWAPOUT events.
 	- Added announce to cached; no longer external program.
+	- Added ftpProcessReplyHeader() (a twin of the one in http.c).
