@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.242 2001/12/01 18:03:10 hno Exp $
+# $Id: cf.data.pre,v 1.243 2001/12/05 07:58:17 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -157,9 +157,6 @@ DOC_START
 	The port number where Squid sends and receives HTCP queries to
 	and from neighbor caches.  Default is 4827.  To disable use
 	"0".
-
-	To enable this option, you must use --enable-htcp with the
-	configure script.
 DOC_END
 
 
@@ -740,11 +737,9 @@ DOC_START
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
 
-	Type specifies the kind of storage system to use.  Most
-	everyone will want to use "ufs" as the type.  If you are using
-	Async I/O (--enable async-io) on Linux or Solaris, then you may
-	want to try "aufs" as the type.  Async IO support may be
-	buggy, however, so beware.
+	Type specifies the kind of storage system to use. Only "ufs"
+	is built by default. To eanble any of the other storage systems
+	see the --enable-storeio configure option.
 
 	'Directory' is a top-level directory where cache swap
 	files will be stored.  If you want to use an entire disk
@@ -1161,8 +1156,6 @@ LOC: Config.Program.pinger
 IFDEF: USE_ICMP
 DOC_START
 	Specify the location of the executable for the pinger process.
-	This is only useful if you configured Squid (during compilation)
-	with the '--enable-icmp' option.
 DOC_END
 
 
@@ -1792,17 +1785,11 @@ IFDEF: USE_IDENT
 LOC: Config.Timeout.ident
 DEFAULT: 10 seconds
 DOC_START
-	Maximum time to wait for IDENT requests.  If this is too high,
-	and you enabled 'ident_lookup', then you might be susceptible
-	to denial-of-service by having many ident requests going at
-	once.
-
-	Only src type ACL checks are fully supported.  A src_domain
-	ACL might work at times, but it will not always provide
-	the correct result.
-
-	This option may be disabled by using --disable-ident with
-	the configure script.
+	Maximum time to wait for IDENT lookups to complete.
+	
+	If this is too high, and you enabled IDENT lookups from untrusted
+	users, then you might be susceptible to denial-of-service by having
+	many ident requests going at once.
 DOC_END
 
 
@@ -2123,8 +2110,9 @@ DOC_START
 	ident_lookup_access allow ident_aware_hosts
 	ident_lookup_access deny all
 
-	This option may be disabled by using --disable-ident with
-	the configure script.
+	Only src type ACL checks are fully supported.  A src_domain
+	ACL might work at times, but it will not always provide
+	the correct result.
 DOC_END
 
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoin_dscp
@@ -2819,9 +2807,6 @@ DOC_START
 	causes.
 	
 	see also refresh_pattern for a more selective approach.
-
-	This option may be disabled by using --disable-http-violations
-	with the configure script.
 DOC_END
 
 NAME: always_direct
@@ -3032,9 +3017,6 @@ DOC_START
 	Squid can now serve statistics and status information via SNMP.
 	By default it listens to port 3401 on the machine. If you don't
 	wish to use SNMP, set this to "0".
-
-	NOTE: SNMP support requires use the --enable-snmp configure
-	command line option.
 DOC_END
 
 NAME: snmp_access
@@ -3166,9 +3148,6 @@ DOC_START
 	This represents the number of delay pools to be used.  For example,
 	if you have one class 2 delay pool and one class 3 delays pool, you
 	have a total of 2 delay pools.
-
-	To enable this option, you must use --enable-delay-pools with the
-	configure script.
 DOC_END
 
 NAME: delay_class
