@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.26 2001/08/12 10:20:41 adrian Exp $
+ * $Id: store_dir_coss.cc,v 1.27 2001/08/12 10:25:00 adrian Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -88,6 +88,7 @@ static STFREE storeCossDirShutdown;
 static STFSPARSE storeCossDirParse;
 static STFSRECONFIGURE storeCossDirReconfigure;
 static STDUMP storeCossDirDump;
+static STCALLBACK storeCossDirCallback;
 
 /* The "only" externally visible function */
 STSETUP storeFsSetup_coss;
@@ -688,6 +689,18 @@ storeCossDirCheckObj(SwapDir * SD, const StoreEntry * e)
     return 900;
 }
 
+
+/*
+ * storeCossDirCallback - do the IO completions
+ */
+static int
+storeCossDirCallback(SwapDir *SD)
+{
+    CossInfo *cs = (CossInfo *) SD->fsdata;
+
+    return a_file_callback(&cs->aq);
+}
+
 /* ========== LOCAL FUNCTIONS ABOVE, GLOBAL FUNCTIONS BELOW ========== */
 
 static void
@@ -749,7 +762,7 @@ storeCossDirParse(SwapDir * sd, int index, char *path)
     sd->checkobj = storeCossDirCheckObj;
     sd->refobj = NULL;		/* LRU is done in storeCossRead */
     sd->unrefobj = NULL;
-    sd->callback = NULL;
+    sd->callback = storeCossDirCallback;
     sd->sync = storeCossSync;
 
     sd->obj.create = storeCossCreate;
