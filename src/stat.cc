@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.259 1998/07/07 02:54:14 wessels Exp $
+ * $Id: stat.cc,v 1.260 1998/07/14 23:20:33 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -642,12 +642,12 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     ct = f->cputime - l->cputime;
 
     storeAppendPrintf(sentry, "sample_start_time = %d.%d (%s)\n",
-	(int) f->timestamp.tv_sec,
-	(int) f->timestamp.tv_usec,
-	mkrfc1123(f->timestamp.tv_sec));
-    storeAppendPrintf(sentry, "sample_end_time = %d.%d (%s)\n",
 	(int) l->timestamp.tv_sec,
 	(int) l->timestamp.tv_usec,
+	mkrfc1123(f->timestamp.tv_sec));
+    storeAppendPrintf(sentry, "sample_end_time = %d.%d (%s)\n",
+	(int) f->timestamp.tv_sec,
+	(int) f->timestamp.tv_usec,
 	mkrfc1123(l->timestamp.tv_sec));
 
     storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
