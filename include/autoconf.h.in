@@ -193,6 +193,9 @@
 /* Define if you have the <arpa/nameser.h> header file.  */
 #undef HAVE_ARPA_NAMESER_H
 
+/* Define if you have the <assert.h> header file.  */
+#undef HAVE_ASSERT_H
+
 /* Define if you have the <bstring.h> header file.  */
 #undef HAVE_BSTRING_H
 
