@@ -1,3 +1,8 @@
+	- Fixed content-length bugs for 204 replies, 304 replies,
+	  and HEAD requests (Henrik Nordstrom).
+	- Fixed errorAppendEntry() bug in gopherReadReply().
+	- Basic support for FTP URL typecodes (;type=X).
+
 Changes to squid-1.2.beta8 (Dec 2, 1997):
 
 	- Fixed accessLogLog() to log ident from Proxy-Authorization
