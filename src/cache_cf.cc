@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.457 2004/12/08 00:06:03 hno Exp $
+ * $Id: cache_cf.cc,v 1.458 2004/12/10 00:56:46 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -680,8 +680,8 @@ configDoConfigure(void)
 
         https_port_list *s;
 
-        for (s = Config.Sockaddr.https; s != NULL; s = s->next) {
-            debug(3, 1) ("Initializing https_port %s:%d SSL context\n", inet_ntoa(s->s.sin_addr), ntohs(s->s.sin_port));
+        for (s = Config.Sockaddr.https; s != NULL; s = (https_port_list *) s->http.next) {
+            debug(3, 1) ("Initializing https_port %s:%d SSL context\n", inet_ntoa(s->http.s.sin_addr), ntohs(s->http.s.sin_port));
             s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->dhfile);
         }
     }
