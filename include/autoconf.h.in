@@ -296,6 +296,11 @@
  */
 #undef USE_UNLINKD
 
+/* 
+ * Enable support for Transparent Proxy on Linux 2.4 systems
+ */
+#undef LINUX_NETFILTER
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
@@ -505,6 +510,9 @@
 
 /* Define if you have the <limits.h> header file.  */
 #undef HAVE_LIMITS_H
+
+/* Define if you have the <linux/netfilter_ipv4.h> header file.  */
+#undef HAVE_LINUX_NETFILTER_IPV4_H
 
 /* Define if you have the <malloc.h> header file.  */
 #undef HAVE_MALLOC_H
