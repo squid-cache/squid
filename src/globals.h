@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.45 1998/03/31 04:09:50 wessels Exp $
+ * $Id: globals.h,v 1.46 1998/03/31 05:34:47 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -80,7 +80,7 @@ extern struct in_addr theOutSNMPAddr;
 extern struct timeval current_time;
 extern struct timeval squid_start;
 extern time_t squid_curtime;	/* 0 */
-extern volatile int shutdown_pending;	/* 0 */
+extern int shutting_down;	/* 0 */
 extern int reconfiguring; 	/* 0 */
 extern int store_rebuilding;	/* 1 */
 extern int store_swap_size;	/* 0 */
