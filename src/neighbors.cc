@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.310 2003/01/28 01:29:34 robertc Exp $
+ * $Id: neighbors.cc,v 1.311 2003/02/12 06:11:04 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -154,7 +154,7 @@ peerAllowedToUse(const peer * p, request_t * request)
     checklist.src_addr = request->client_addr;
     checklist.my_addr = request->my_addr;
     checklist.my_port = request->my_port;
-    checklist.request = request;
+    checklist.request = requestLink(request);
 #if 0 && USE_IDENT
     /*
      * this is currently broken because 'request->user_ident' has been

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.93 2003/02/06 00:02:51 robertc Exp $
+ * $Id: forward.cc,v 1.94 2003/02/12 06:11:03 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@
 #include "fde.h"
 #include "MemObject.h"
 #include "ACLChecklist.h"
+#include "ACL.h"
 
 static PSC fwdStartComplete;
 static void fwdDispatch(FwdState *);
@@ -370,7 +371,7 @@ aclMapAddr(acl_address * head, ACLChecklist * ch)
     acl_address *l;
     struct in_addr addr;
     for (l = head; l; l = l->next) {
-	if (aclMatchAclList(l->aclList, ch))
+	if (ch->matchAclList(l->aclList))
 	    return l->addr;
     }
     addr.s_addr = INADDR_ANY;
@@ -382,7 +383,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 {
     acl_tos *l;
     for (l = head; l; l = l->next) {
-	if (aclMatchAclList(l->aclList, ch))
+	if (ch->matchAclList(l->aclList))
 	    return l->tos;
     }
     return 0;
@@ -396,7 +397,7 @@ getOutgoingAddr(request_t * request)
 	ch.src_addr = request->client_addr;
 	ch.my_addr = request->my_addr;
 	ch.my_port = request->my_port;
-	ch.request = request;
+	ch.request = requestLink(request);
     }
     return aclMapAddr(Config.accessList.outgoing_address, &ch);
 }
@@ -409,7 +410,7 @@ getOutgoingTOS(request_t * request)
 	ch.src_addr = request->client_addr;
 	ch.my_addr = request->my_addr;
 	ch.my_port = request->my_port;
-	ch.request = request;
+	ch.request = requestLink(request);
     }
     return aclMapTOS(Config.accessList.outgoing_tos, &ch);
 }
@@ -661,7 +662,6 @@ void
 fwdStart(int fd, StoreEntry * e, request_t * r)
 {
     FwdState *fwdState;
-    ACLChecklist ch;
     int answer;
     ErrorState *err;
     /*
@@ -673,10 +673,11 @@ fwdStart(int fd, StoreEntry * e, request_t * r)
 	/*      
 	 * Check if this host is allowed to fetch MISSES from us (miss_access)
 	 */
+	ACLChecklist ch;
 	ch.src_addr = r->client_addr;
 	ch.my_addr = r->my_addr;
 	ch.my_port = r->my_port;
-	ch.request = r;
+	ch.request = requestLink(r);
 	answer = aclCheckFast(Config.accessList.miss, &ch);
 	if (answer == 0) {
 	    err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);

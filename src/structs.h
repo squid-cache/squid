@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.447 2003/02/08 01:45:50 robertc Exp $
+ * $Id: structs.h,v 1.448 2003/02/12 06:11:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -54,13 +54,6 @@ struct _acl_user_ip_data {
     } flags;
 };
 
-struct _acl_ip_data {
-    struct in_addr addr1;	/* if addr2 non-zero then its a range */
-    struct in_addr addr2;
-    struct in_addr mask;
-    acl_ip_data *next;		/* used for parsing, not for storing */
-};
-
 struct _acl_time_data {
     int weekbits;
     int start;
@@ -95,6 +88,7 @@ struct _acl_arp_data {
 #endif
 
 
+class acl_access;
 struct _header_mangler {
     acl_access *access_list;
     char *replacement;
@@ -128,27 +122,8 @@ struct _snmp_request_t {
 
 #endif
 
-struct _acl {
-    char name[ACL_NAME_SZ];
-    squid_acl type;
-    void *data;
-    char *cfgline;
-    acl *next;
-};
+typedef class ACL acl;
 
-struct _acl_list {
-    int op;
-    acl *_acl;
-    acl_list *next;
-};
-
-class acl_access {
-  public:
-    allow_t allow;
-    acl_list *aclList;
-    char *cfgline;
-    acl_access *next;
-};
 
 struct _acl_address {
     acl_address *next;
@@ -1180,7 +1155,7 @@ struct _RemovalPurgeWalker {
  */
 #ifdef __cplusplus
 struct request_flags {
-    request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),internal(0),internalclient(0),body_sent(0)
+    request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),internal(0),internalclient(0),body_sent(0),destinationIPLookedUp_(0)
       {
 #if HTTP_VIOLATIONS
 	nocache_hack = 1;
@@ -1208,8 +1183,11 @@ struct request_flags {
     bool resetTCP() const;
     void setResetTCP();
     void clearResetTCP();
+    void destinationIPLookupCompleted();
+    bool destinationIPLookedUp() const;
 private:
     unsigned int reset_tcp:1;
+    unsigned int destinationIPLookedUp_:1;
 };
 
 struct _link_list {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.88 2003/01/23 00:37:16 robertc Exp $
+ * $Id: asn.cc,v 1.89 2003/02/12 06:11:00 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -38,6 +38,7 @@
 #include "HttpRequest.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "ACL.h"
 
 #define WHOIS_PORT 43
 #define	AS_REQBUF_SZ	4096
@@ -143,14 +144,20 @@ static void
 asnAclInitialize(acl * acls)
 {
     acl *a;
-    intlist *i;
     debug(53, 3) ("asnAclInitialize\n");
     for (a = acls; a; a = a->next) {
-	if (a->type != ACL_DST_ASN && a->type != ACL_SRC_ASN)
+	if (a->aclType() != ACL_DST_ASN && a->aclType() != ACL_SRC_ASN)
 	    continue;
-	for (i = (intlist *)a->data; i; i = i->next)
-	    asnCacheStart(i->i);
+	a->startCache();
     }
+}
+
+void
+ACL::startCache()
+{
+    assert (aclType() == ACL_DST_ASN || aclType() == ACL_SRC_ASN);
+    for (intlist *i = (intlist *)data; i; i = i->next)
+	asnCacheStart(i->i);
 }
 
 /* initialize the radix tree structure */

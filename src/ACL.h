@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.2 2003/02/08 01:45:47 robertc Exp $
+ * $Id: ACL.h,v 1.3 2003/02/12 06:10:58 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 #ifndef SQUID_ACL_H
 #define SQUID_ACL_H
 #include "splay.h"
+#include "Array.h"
 
 /* As ACL's get refactored, these probably need better homes */
 
@@ -52,20 +53,114 @@ class acl_cert_data {
 };
 #endif
 
-class acl_user_data {
+/* acl.c */
+SQUIDCEXTERN int aclMatchAclList(const acl_list * list, ACLChecklist * checklist);
+SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
+SQUIDCEXTERN void aclDestroyAcls(acl **);
+SQUIDCEXTERN void aclDestroyAclList(acl_list **);
+SQUIDCEXTERN void aclParseAccessLine(acl_access **);
+SQUIDCEXTERN void aclParseAclList(acl_list **);
+SQUIDCEXTERN int aclIsProxyAuth(const char *name);
+SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
+SQUIDCEXTERN void aclParseDenyInfoLine(struct _acl_deny_info_list **);
+SQUIDCEXTERN void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
+SQUIDCEXTERN void aclDestroyRegexList(struct _relist *data);
+SQUIDCEXTERN int aclMatchRegex(relist * data, const char *word);
+SQUIDCEXTERN void aclParseRegexList(void *curlist);
+SQUIDCEXTERN wordlist *aclDumpGeneric(const acl *);
+SQUIDCEXTERN int aclPurgeMethodInUse(acl_access *);
+SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
+SQUIDCEXTERN int aclAuthenticated(ACLChecklist * checklist);
+void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
+
+class ACL {
   public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
-    SplayNode<char *> *names;
-    struct {
-	unsigned int case_insensitive:1;
-	unsigned int required:1;
-    } flags;
+
+    static ACL *Factory (char const *);
+    static void ParseAclLine(acl ** head);
+
+    ACL();
+    ACL (squid_acl const);
+    virtual ~ACL();
+    virtual ACL *clone()const;
+    virtual void parse();
+    virtual char const *typeString() const;
+    virtual squid_acl aclType() const { return type;}
+    virtual bool isProxyAuth() const;
+    virtual bool requiresRequest() const;
+    virtual int match(ACLChecklist * checklist);
+    virtual wordlist *dumpGeneric() const;
+    virtual wordlist *dump() const;
+    virtual bool valid () const;
+    virtual void startExternal(ACLChecklist *);
+    int checklistMatches(ACLChecklist *);
+    
+    /* only relevant to METHOD acl's */
+    virtual bool containsPURGE() const;
+
+    /* only relecant to ASN acl's */
+    void startCache();
+    
+
+    char name[ACL_NAME_SZ];
+    char *cfgline;
+    ACL *next;
+  private:
+    static MemPool *Pool;
+    squid_acl type;
+  protected:
+    void *data;
+    class Prototype {
+      public:
+	Prototype ();
+	Prototype (ACL const *, char const *);
+	~Prototype();
+	static bool Registered(char const *);
+	static ACL *Factory (char const *);
+      private:
+	ACL const*prototype;
+	char const *typeString;
+      private:
+	static Vector<Prototype const *> * Registry;
+	static void *Initialized;
+	typedef Vector<Prototype const*>::iterator iterator;
+	typedef Vector<Prototype const*>::const_iterator const_iterator;
+	void registerMe();
+    };
+};
+
+class acl_access {
+  public:
+    void *operator new(size_t);
+    void operator delete(void *);
+    virtual void deleteSelf() const;
+    bool containsPURGE() const;
+    allow_t allow;
+    acl_list *aclList;
+    char *cfgline;
+    acl_access *next;
+  private:
+    CBDATA_CLASS(acl_access);
+};
+
+class ACLList {
+  public:
+    void *operator new(size_t);
+    void operator delete(void *);
+    virtual void deleteSelf() const;
+
+    ACLList();
+    void negated(bool isNegated);
+    bool matches (ACLChecklist *)const;
+    int op;
+    acl *_acl;
+    ACLList *next;
   private:
     static MemPool *Pool;
 };
 
-void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
-
+typedef ACLList acl_list;
 #endif /* SQUID_ACL_H */

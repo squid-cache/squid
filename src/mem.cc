@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.71 2003/02/08 01:45:47 robertc Exp $
+ * $Id: mem.cc,v 1.72 2003/02/12 06:11:04 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -345,11 +345,8 @@ Mem::Init(void)
     memDataInit(MEM_16K_BUF, "16K Buffer", 16384, 10);
     memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10);
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10);
-    memDataInit(MEM_ACL, "acl", sizeof(acl), 0);
     memDataInit(MEM_ACL_DENY_INFO_LIST, "acl_deny_info_list",
 	sizeof(acl_deny_info_list), 0);
-    memDataInit(MEM_ACL_IP_DATA, "acl_ip_data", sizeof(acl_ip_data), 0);
-    memDataInit(MEM_ACL_LIST, "acl_list", sizeof(acl_list), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
     memDataInit(MEM_ACL_TIME_DATA, "acl_time_data", sizeof(acl_time_data), 0);
     memDataInit(MEM_ACL_PROXY_AUTH_MATCH, "acl_proxy_auth_match_cache",

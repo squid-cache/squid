@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.463 2003/02/05 10:36:54 robertc Exp $
+ * $Id: protos.h,v 1.464 2003/02/12 06:11:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,33 +50,6 @@ SQUIDCEXTERN void headersLog(int cs, int pq, method_t m, void *data);
 #endif
 SQUIDCEXTERN char *log_quote(const char *header);
 SQUIDCEXTERN int logTypeIsATcpHit(log_type);
-
-/* acl.c */
-SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
-    request_t *,
-    const char *ident);
-SQUIDCEXTERN void aclNBCheck(ACLChecklist *, PF *, void *);
-SQUIDCEXTERN int aclCheckFast(const acl_access *A, ACLChecklist *);
-SQUIDCEXTERN void aclChecklistFree(ACLChecklist *);
-SQUIDCEXTERN int aclMatchAclList(const acl_list * list, ACLChecklist * checklist);
-SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
-SQUIDCEXTERN void aclDestroyAcls(acl **);
-SQUIDCEXTERN void aclDestroyAclList(acl_list **);
-SQUIDCEXTERN void aclParseAccessLine(acl_access **);
-SQUIDCEXTERN void aclParseAclList(acl_list **);
-SQUIDCEXTERN void aclParseAclLine(acl **);
-SQUIDCEXTERN int aclIsProxyAuth(const char *name);
-SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
-SQUIDCEXTERN void aclParseDenyInfoLine(struct _acl_deny_info_list **);
-SQUIDCEXTERN void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
-SQUIDCEXTERN void aclDestroyRegexList(struct _relist *data);
-SQUIDCEXTERN int aclMatchRegex(relist * data, const char *word);
-SQUIDCEXTERN void aclParseRegexList(void *curlist);
-SQUIDCEXTERN const char *aclTypeToStr(squid_acl);
-SQUIDCEXTERN wordlist *aclDumpGeneric(const acl *);
-SQUIDCEXTERN int aclPurgeMethodInUse(acl_access *);
-SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
-SQUIDCEXTERN int aclAuthenticated(ACLChecklist * checklist);
 
 /*
  * cache_cf.c

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.428 2003/02/08 14:40:55 hno Exp $
+ * $Id: cache_cf.cc,v 1.429 2003/02/12 06:11:00 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #include "Store.h"
 #include "SwapDir.h"
 #include "Config.h"
+#include "ACL.h"
 
 #if SQUID_SNMP
 #include "snmp.h"
@@ -501,7 +502,7 @@ configDoConfigure(void)
     if (0 == Config.onoff.client_db) {
 	acl *a;
 	for (a = Config.aclList; a; a = a->next) {
-	    if (ACL_MAXCONN != a->type)
+	    if (ACL_MAXCONN != a->aclType())
 		continue;
 	    debug(22, 0) ("WARNING: 'maxconn' ACL (%s) won't work with client_db disabled\n", a->name);
 	}
@@ -610,13 +611,13 @@ dump_acl(StoreEntry * entry, const char *name, acl * ae)
     wordlist *v;
     while (ae != NULL) {
 	debug(3, 3) ("dump_acl: %s %s\n", name, ae->name);
-	v = w = aclDumpGeneric(ae);
+	v = w = ae->dumpGeneric();
 	while (v != NULL) {
 	    debug(3, 3) ("dump_acl: %s %s %s\n", name, ae->name, v->key);
 	    storeAppendPrintf(entry, "%s %s %s %s\n",
 		name,
 		ae->name,
-		aclTypeToStr(ae->type),
+		ae->typeString(),
 		v->key);
 	    v = v->next;
 	}
@@ -628,7 +629,7 @@ dump_acl(StoreEntry * entry, const char *name, acl * ae)
 static void
 parse_acl(acl ** ae)
 {
-    aclParseAclLine(ae);
+    ACL::ParseAclLine(ae);
 }
 
 static void
@@ -648,7 +649,6 @@ dump_acl_list(StoreEntry * entry, acl_list * head)
     }
 }
 
-#include "ACL.h"
 void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelayId.cc,v 1.2 2003/02/12 06:10:58 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -46,6 +46,7 @@
 #include "ACLChecklist.h"
 #include "DelayPools.h"
 #include "DelayPool.h"
+#include "HttpRequest.h"
 /*
 #include "DelaySpec.h"
 #include "StoreClient.h"
@@ -119,8 +120,9 @@ DelayId::DelayClient(clientHttpRequest * http)
     ch.src_addr = r->client_addr;
     ch.my_addr = r->my_addr;
     ch.my_port = r->my_port;
-    ch.conn = http->conn;
-    ch.request = r;
+    if (http->conn)
+	ch.conn(cbdataReference(http->conn));
+    ch.request = requestLink(r);
     for (pool = 0; pool < DelayPools::pools(); pool++)
 	if (DelayPools::delay_data[pool].theComposite().getRaw() &&
 	    aclCheckFast(DelayPools::delay_data[pool].access, &ch)) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.406 2003/02/05 10:36:53 robertc Exp $
+ * $Id: http.cc,v 1.407 2003/02/12 06:11:03 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1260,7 +1260,7 @@ httpSendRequestEntityDone(int fd, void *data)
     ACLChecklist ch;
     debug(11, 5) ("httpSendRequestEntityDone: FD %d\n",
 	fd);
-    ch.request = httpState->request;
+    ch.request = requestLink(httpState->request);
     if (!Config.accessList.brokenPosts) {
 	debug(11, 5) ("httpSendRequestEntityDone: No brokenPosts list\n");
 	httpSendComplete(fd, NULL, 0, COMM_OK, data);

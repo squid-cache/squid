@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.36 2003/01/28 01:29:32 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.37 2003/02/12 06:10:58 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "HttpHeader.h"
 #include "HttpHdrContRange.h"
+#include "ACLChecklist.h"
 
 #if UNUSED_CODE
 static int httpHeaderStrCmp(const char *h1, const char *h2, int len);
@@ -430,7 +431,7 @@ httpHdrMangle(HttpHeaderEntry * e, request_t * request)
 	retval = 1;
     }
 
-    aclChecklistFree(checklist);
+    delete checklist;
     return retval;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.51 2003/02/06 09:57:36 robertc Exp $
+ * $Id: authenticate.cc,v 1.52 2003/02/12 06:11:00 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -39,6 +39,7 @@
 
 #include "squid.h"
 #include "authenticate.h"
+#include "ACL.h"
 
 CBDATA_TYPE(auth_user_ip_t);
 
