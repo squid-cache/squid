@@ -108,7 +108,7 @@ the base object
 .
 .TP
 .BI -H " ldapuri"
-Specity the LDAP server to connect to by a LDAP URI
+Specity the LDAP server to connect to by a LDAP URI (requires OpenLDAP libraries)
 .
 .TP
 .BI -h " ldapserver"
@@ -117,6 +117,22 @@ Specify the LDAP server to connect to
 .BI -p " ldapport"
 Specify an alternate TCP port where the ldap server is listening if
 other than the default LDAP port 389.
+.
+.TP
+.BI -Z
+Use TLS encryption
+.
+.TP
+.BI -E certpath
+Enable LDAP over SSL (requires Netscape LDAP API libraries)
+.
+.TP
+.BI -c connect_timeout
+Specify timeout used when connecting to LDAP servers (requires
+Netscape LDAP API libraries)
+.TP
+.BI -t search_timeout
+Specify time limit on LDAP search operations
 .
 .TP
 .BI -S
