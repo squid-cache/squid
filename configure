@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.10 
+# From configure.in Revision: 1.11 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -1967,6 +1967,7 @@ fi
 
 
 if test -z "$STD_CFLAGS"; then
+    STD_CFLAGS="-g"
     XXXCC=`echo $CC | awk '{print $1}'`
     if test "`basename $XXXCC`" = "gcc"; then
 	STD_CFLAGS="$STD_CFLAGS -Wall"
@@ -1975,7 +1976,7 @@ fi
 
 
 if test -z "$STD_LDFLAGS"; then
-    STD_LDFLAGS='-g'
+    STD_LDFLAGS="-g"
 fi
 
 
