@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.51 2003/04/24 06:35:08 hno Exp $
+ * $Id: cf_gen.cc,v 1.52 2004/12/10 00:44:29 hno Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -752,7 +752,7 @@ gen_conf(Entry * head, FILE * fp)
 
         if (!defined(entry->ifdef)) {
             fprintf(fp, "# Note: This option is only available if Squid is rebuilt with the\n");
-            fprintf(fp, "#       %s option\n#\n", available_if(entry->ifdef));
+            fprintf(fp, "#       %s\n#\n", available_if(entry->ifdef));
         }
 
         for (line = entry->doc; line != NULL; line = line->next) {
