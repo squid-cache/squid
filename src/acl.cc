@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.238 2001/01/09 23:39:03 wessels Exp $
+ * $Id: acl.cc,v 1.239 2001/01/09 23:55:52 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2201,19 +2201,16 @@ wordlist *
 aclDumpUserList(acl_user_data * data)
 {
     wordlist *wl = NULL;
-    if ((data->flags.case_insensitive) != 0)
+    if (data->flags.case_insensitive)
 	wordlistAdd(&wl, "-i");
     /* damn this is VERY inefficient for long ACL lists... filling
      * a wordlist this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    if (data->names)
-	splay_walk(data->names, aclDumpUserListWalkee, &wl);
-    else
-	/*
-	 * special case for REQUIRED
-	 */
+    if (data->flags.required)
 	wordlistAdd(&wl, "REQUIRED");
+    else if (data->names)
+	splay_walk(data->names, aclDumpUserListWalkee, &wl);
     return wl;
 }
 
