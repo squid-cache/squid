@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.110 2001/01/01 23:09:59 wessels Exp $
+ * $Id: peer_select.cc,v 1.111 2001/01/05 09:51:39 adrian Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -134,12 +134,12 @@ peerSelect(request_t * request,
     PSC * callback,
     void *callback_data)
 {
-    ps_state *psstate = memAllocate(MEM_PS_STATE);
+    ps_state *psstate;
     if (entry)
 	debug(44, 3) ("peerSelect: %s\n", storeUrl(entry));
     else
 	debug(44, 3) ("peerSelect: %s\n", RequestMethodStr[request->method]);
-    cbdataAdd(psstate, memFree, MEM_PS_STATE);
+    psstate = CBDATA_ALLOC(ps_state, NULL);
     psstate->request = requestLink(request);
     psstate->entry = entry;
     psstate->callback = callback;

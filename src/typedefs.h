@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.112 2001/01/04 21:09:02 wessels Exp $
+ * $Id: typedefs.h,v 1.113 2001/01/05 09:51:41 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -195,7 +195,7 @@ typedef void CWCB(int fd, char *, size_t size, int flag, void *data);
 typedef void CNCB(int fd, int status, void *);
 
 typedef void FREE(void *);
-typedef void CBDUNL(void *, int);
+typedef void CBDUNL(void *);
 typedef void FOCB(void *, int fd, int errcode);
 typedef void EVH(void *);
 typedef void PF(int, void *);

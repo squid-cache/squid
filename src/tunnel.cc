@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.108 2000/10/04 02:18:49 wessels Exp $
+ * $Id: tunnel.cc,v 1.109 2001/01/05 09:51:40 adrian Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -429,6 +429,7 @@ sslConnectDone(int fdnotused, int status, void *data)
     }
 }
 
+CBDATA_TYPE(SslStateData);
 void
 sslStart(int fd, const char *url, request_t * request, size_t * size_ptr, int *status_ptr)
 {
@@ -482,8 +483,8 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr, int *s
 	errorSend(fd, err);
 	return;
     }
-    sslState = xcalloc(1, sizeof(SslStateData));
-    cbdataAdd(sslState, cbdataXfree, 0);
+    CBDATA_INIT_TYPE(SslStateData);
+    sslState = CBDATA_ALLOC(SslStateData, NULL);
 #if DELAY_POOLS
     sslState->delay_id = delayClient(request);
     delayRegisterDelayIdPtr(&sslState->delay_id);

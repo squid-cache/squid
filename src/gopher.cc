@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.157 2000/12/05 09:15:59 wessels Exp $
+ * $Id: gopher.cc,v 1.158 2001/01/05 09:51:38 adrian Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -812,11 +812,13 @@ gopherStart(FwdState * fwdState)
     commSetTimeout(fd, Config.Timeout.read, gopherTimeout, gopherState);
 }
 
+CBDATA_TYPE(GopherStateData);
 static GopherStateData *
 CreateGopherStateData(void)
 {
-    GopherStateData *gd = xcalloc(1, sizeof(GopherStateData));
-    cbdataAdd(gd, cbdataXfree, 0);
+    GopherStateData *gd;
+    CBDATA_INIT_TYPE(GopherStateData);
+    gd = CBDATA_ALLOC(GopherStateData, NULL);
     gd->buf = memAllocate(MEM_4K_BUF);
     return (gd);
 }

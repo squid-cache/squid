@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.230 2001/01/04 04:01:17 wessels Exp $
+ * $Id: acl.cc,v 1.231 2001/01/05 09:51:36 adrian Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -898,7 +898,7 @@ aclParseAccessLine(acl_access ** head)
 	debug(28, 0) ("aclParseAccessLine: missing 'allow' or 'deny'.\n");
 	return;
     }
-    A = memAllocate(MEM_ACL_ACCESS);
+    A = CBDATA_ALLOC(acl_access, NULL);
 
     if (!strcmp(t, "allow"))
 	A->allow = 1;
@@ -908,7 +908,7 @@ aclParseAccessLine(acl_access ** head)
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
-	memFree(A, MEM_ACL_ACCESS);
+	cbdataFree(A);
 	return;
     }
 
@@ -940,7 +940,7 @@ aclParseAccessLine(acl_access ** head)
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
-	memFree(A, MEM_ACL_ACCESS);
+	cbdataFree(A);
 	return;
     }
     A->cfgline = xstrdup(config_input_line);
@@ -948,7 +948,6 @@ aclParseAccessLine(acl_access ** head)
     for (B = *head, T = head; B; T = &B->next, B = B->next);
     *T = A;
     /* We lock _acl_access structures in aclCheck() */
-    cbdataAdd(A, memFree, MEM_ACL_ACCESS);
 }
 
 /**************/
@@ -1813,8 +1812,8 @@ aclChecklistCreate(const acl_access * A,
     const char *ident)
 {
     int i;
-    aclCheck_t *checklist = memAllocate(MEM_ACLCHECK_T);
-    cbdataAdd(checklist, memFree, MEM_ACLCHECK_T);
+    aclCheck_t *checklist;
+    checklist = CBDATA_ALLOC(aclCheck_t, NULL);
     checklist->access_list = A;
     /*
      * aclCheck() makes sure checklist->access_list is a valid

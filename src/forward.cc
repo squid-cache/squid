@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.77 2000/12/17 13:31:29 hno Exp $
+ * $Id: forward.cc,v 1.78 2001/01/05 09:51:37 adrian Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -545,8 +545,7 @@ fwdStart(int fd, StoreEntry * e, request_t * r)
     default:
 	break;
     }
-    fwdState = memAllocate(MEM_FWD_STATE);
-    cbdataAdd(fwdState, memFree, MEM_FWD_STATE);
+    fwdState = CBDATA_ALLOC(FwdState, NULL);
     fwdState->entry = e;
     fwdState->client_fd = fd;
     fwdState->server_fd = -1;

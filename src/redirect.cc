@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.84 2000/03/06 16:23:34 wessels Exp $
+ * $Id: redirect.cc,v 1.85 2001/01/05 09:51:40 adrian Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -49,6 +49,7 @@ static void redirectStateFree(redirectStateData * r);
 static helper *redirectors = NULL;
 static OBJH redirectStats;
 static int n_bypassed = 0;
+CBDATA_TYPE(redirectStateData);
 
 static void
 redirectHandleReply(void *data, char *reply)
@@ -122,8 +123,7 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
 	handler(data, NULL);
 	return;
     }
-    r = xcalloc(1, sizeof(redirectStateData));
-    cbdataAdd(r, cbdataXfree, 0);
+    r = CBDATA_ALLOC(redirectStateData, NULL);
     r->orig_url = xstrdup(http->uri);
     r->client_addr = conn->log_addr;
     if (http->request->user_ident[0])
@@ -165,6 +165,7 @@ redirectInit(void)
 	    "URL Redirector Stats",
 	    redirectStats, 0, 1);
 	init = 1;
+	CBDATA_INIT_TYPE(redirectStateData);
     }
 }
 

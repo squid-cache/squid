@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.391 2001/01/04 21:09:01 wessels Exp $
+ * $Id: protos.h,v 1.392 2001/01/05 09:51:39 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -86,19 +86,25 @@ extern void self_destruct(void);
 extern int GetInteger(void);
 
 
+/*
+ * cbdata.c
+ */
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
-extern void cbdataAddDbg(const void *p, CBDUNL *, int, const char *, int);
+extern void *cbdataInternalAllocDbg(cbdata_type type, CBDUNL *, int, const char *);
 extern void cbdataLockDbg(const void *p, const char *, int);
 extern void cbdataUnlockDbg(const void *p, const char *, int);
 #else
-extern void cbdataAdd(const void *p, CBDUNL *, int);
+extern void *cbdataInternalAlloc(cbdata_type type, CBDUNL *);
 extern void cbdataLock(const void *p);
 extern void cbdataUnlock(const void *p);
 #endif
+/* Note: Allocations is done using the CBDATA_ALLOC macro */
+
 extern void cbdataFree(void *p);
 extern int cbdataValid(const void *p);
-extern CBDUNL cbdataXfree;
+extern void cbdataInitType(cbdata_type type, char *label, int size);
+extern cbdata_type cbdataAddType(cbdata_type type, char *label, int size);
 
 extern void clientdbInit(void);
 extern void clientdbUpdate(struct in_addr, log_type, protocol_t, size_t);
@@ -772,7 +778,7 @@ extern void memCleanModule(void);
 extern void memConfigure(void);
 extern void *memAllocate(mem_type);
 extern void *memAllocBuf(size_t net_size, size_t * gross_size);
-extern CBDUNL memFree;
+extern void memFree(void *, int type);
 extern void memFreeBuf(size_t size, void *);
 extern void memFree2K(void *);
 extern void memFree4K(void *);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.15 2001/01/05 03:58:22 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.16 2001/01/05 09:51:47 adrian Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -42,7 +42,6 @@
 int n_coss_dirs = 0;
 /* static int last_coss_pick_index = -1; */
 int coss_initialised = 0;
-MemPool *coss_membuf_pool = NULL;
 MemPool *coss_state_pool = NULL;
 MemPool *coss_index_pool = NULL;
 
@@ -327,15 +326,17 @@ storeCossAddDiskRestore(SwapDir * SD, const cache_key * key,
     return e;
 }
 
+CBDATA_TYPE(RebuildState);
 static void
 storeCossDirRebuild(SwapDir * sd)
 {
-    RebuildState *rb = xcalloc(1, sizeof(*rb));
+    RebuildState *rb;
     int clean = 0;
     int zero = 0;
     FILE *fp;
     EVH *func = NULL;
-    cbdataAdd(rb, cbdataXfree, 0);
+    CBDATA_INIT_TYPE(RebuildState);
+    rb = CBDATA_ALLOC(RebuildState, NULL);
     rb->sd = sd;
     rb->speed = opt_foreground_rebuild ? 1 << 30 : 50;
     func = storeCossRebuildFromSwapLog;
@@ -858,7 +859,6 @@ storeCossDirPick(void)
 static void
 storeCossDirDone(void)
 {
-    memPoolDestroy(coss_membuf_pool);
     memPoolDestroy(coss_state_pool);
     coss_initialised = 0;
 }
@@ -871,7 +871,6 @@ storeFsSetup_coss(storefs_entry_t * storefs)
     storefs->parsefunc = storeCossDirParse;
     storefs->reconfigurefunc = storeCossDirReconfigure;
     storefs->donefunc = storeCossDirDone;
-    coss_membuf_pool = memPoolCreate("COSS Membuf data", sizeof(CossMemBuf));
     coss_state_pool = memPoolCreate("COSS IO State data", sizeof(CossState));
     coss_index_pool = memPoolCreate("COSS index data", sizeof(CossIndexNode));
     coss_initialised = 1;

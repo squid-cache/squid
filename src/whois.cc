@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.12 2000/06/27 22:06:06 hno Exp $
+ * $Id: whois.cc,v 1.13 2001/01/05 09:51:41 adrian Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -49,17 +49,20 @@ static PF whoisReadReply;
 
 /* PUBLIC */
 
+CBDATA_TYPE(WhoisState);
+
 void
 whoisStart(FwdState * fwd)
 {
-    WhoisState *p = xcalloc(1, sizeof(*p));
+    WhoisState *p;
     int fd = fwd->server_fd;
     char *buf;
     size_t l;
+    CBDATA_INIT_TYPE(WhoisState);
+    p = CBDATA_ALLOC(WhoisState, NULL);
     p->request = fwd->request;
     p->entry = fwd->entry;
     p->fwd = fwd;
-    cbdataAdd(p, cbdataXfree, 0);
     storeLockObject(p->entry);
     comm_add_close_handler(fd, whoisClose, p);
     l = strLen(p->request->urlpath) + 3;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.59 2001/01/04 03:42:35 wessels Exp $
+ * $Id: send-announce.cc,v 1.60 2001/01/05 09:51:40 adrian Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -40,13 +40,11 @@ static IPH send_announce;
 void
 start_announce(void *datanotused)
 {
-    void *junk;
     if (0 == Config.onoff.announce)
 	return;
     if (theOutIcpConnection < 0)
 	return;
-    cbdataAdd(junk = xmalloc(1), cbdataXfree, 0);
-    ipcache_nbgethostbyname(Config.Announce.host, send_announce, junk);
+    ipcache_nbgethostbyname(Config.Announce.host, send_announce, NULL);
     eventAdd("send_announce", start_announce, NULL, (double) Config.Announce.period, 1);
 }
 
@@ -63,7 +61,6 @@ send_announce(const ipcache_addrs * ia, void *junk)
     int n;
     int fd;
     int x;
-    cbdataFree(junk);
     if (ia == NULL) {
 	debug(27, 1) ("send_announce: Unknown host '%s'\n", host);
 	return;

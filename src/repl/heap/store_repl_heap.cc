@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.2 2000/11/03 16:39:42 wessels Exp $
+ * $Id: store_repl_heap.cc,v 1.3 2001/01/05 09:52:03 adrian Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -151,14 +151,13 @@ heap_walkInit(RemovalPolicy * policy)
     RemovalPolicyWalker *walker;
     HeapWalkData *heap_walk;
     heap->nwalkers += 1;
-    walker = xcalloc(1, sizeof(*walker));
+    walker = CBDATA_ALLOC(RemovalPolicyWalker, NULL);
     heap_walk = xcalloc(1, sizeof(*heap_walk));
     heap_walk->current = 0;
     walker->_policy = policy;
     walker->_data = heap_walk;
     walker->Next = heap_walkNext;
     walker->Done = heap_walkDone;
-    cbdataAdd(walker, cbdataXfree, 0);
     return walker;
 }
 
@@ -225,7 +224,7 @@ heap_purgeInit(RemovalPolicy * policy, int max_scan)
     RemovalPurgeWalker *walker;
     HeapPurgeData *heap_walk;
     heap->nwalkers += 1;
-    walker = xcalloc(1, sizeof(*walker));
+    walker = CBDATA_ALLOC(RemovalPurgeWalker, NULL);
     heap_walk = xcalloc(1, sizeof(*heap_walk));
     heap_walk->min_age = 0.0;
     heap_walk->locked_entries = NULL;
@@ -234,7 +233,6 @@ heap_purgeInit(RemovalPolicy * policy, int max_scan)
     walker->max_scan = max_scan;
     walker->Next = heap_purgeNext;
     walker->Done = heap_purgeDone;
-    cbdataAdd(walker, cbdataXfree, 0);
 #if HEAP_REPLACEMENT_DEBUG
     if (!verify_heap_property(heap->heap)) {
 	debug(81, 1) ("Heap property violated!\n");
@@ -264,10 +262,8 @@ createRemovalPolicy_heap(wordlist * args)
     HeapPolicyData *heap_data;
     char *keytype;
     /* Allocate the needed structures */
-    policy = xcalloc(1, sizeof(*policy));
+    policy = CBDATA_ALLOC(RemovalPolicy, NULL);
     heap_data = xcalloc(1, sizeof(*heap_data));
-    /* cbdata register the policy */
-    cbdataAdd(policy, cbdataXfree, 0);
     /* Initialize the policy data */
     heap_data->policy = policy;
     if (args) {

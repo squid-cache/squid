@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.25 2001/01/05 03:58:21 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.26 2001/01/05 09:51:46 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -820,14 +820,18 @@ storeAufsDirAddDiskRestore(SwapDir * SD, const cache_key * key,
     return e;
 }
 
+CBDATA_TYPE(RebuildState);
+
 static void
 storeAufsDirRebuild(SwapDir * sd)
 {
-    RebuildState *rb = xcalloc(1, sizeof(*rb));
+    RebuildState *rb;
     int clean = 0;
     int zero = 0;
     FILE *fp;
     EVH *func = NULL;
+    CBDATA_INIT_TYPE(RebuildState);
+    rb = CBDATA_ALLOC(RebuildState, NULL);
     rb->sd = sd;
     rb->speed = opt_foreground_rebuild ? 1 << 30 : 50;
     /*
@@ -851,7 +855,6 @@ storeAufsDirRebuild(SwapDir * sd)
     debug(20, 1) ("Rebuilding storage in %s (%s)\n",
 	sd->path, clean ? "CLEAN" : "DIRTY");
     store_dirs_rebuilding++;
-    cbdataAdd(rb, cbdataXfree, 0);
     eventAdd("storeRebuild", func, rb, 0.0, 1);
 }
 

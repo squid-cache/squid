@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.4 2001/01/04 03:42:38 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.5 2001/01/05 09:52:00 adrian Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -40,7 +40,7 @@
 static DRCB storeUfsReadDone;
 static DWCB storeUfsWriteDone;
 static void storeUfsIOCallback(storeIOState * sio, int errflag);
-static void storeUfsIOFreeEntry(void *, int);
+static CBDUNL storeUfsIOFreeEntry;
 
 /* === PUBLIC =========================================================== */
 
@@ -60,8 +60,7 @@ storeUfsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	return NULL;
     }
     debug(79, 3) ("storeUfsOpen: opened FD %d\n", fd);
-    sio = memAllocate(MEM_STORE_IO);
-    cbdataAdd(sio, storeUfsIOFreeEntry, MEM_STORE_IO);
+    sio = CBDATA_ALLOC(storeIOState, storeUfsIOFreeEntry);
     sio->fsstate = memPoolAlloc(ufs_state_pool);
 
     sio->swap_filen = f;
@@ -108,8 +107,7 @@ storeUfsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * ca
 	return NULL;
     }
     debug(79, 3) ("storeUfsCreate: opened FD %d\n", fd);
-    sio = memAllocate(MEM_STORE_IO);
-    cbdataAdd(sio, storeUfsIOFreeEntry, MEM_STORE_IO);
+    sio = CBDATA_ALLOC(storeIOState, storeUfsIOFreeEntry);
     sio->fsstate = memPoolAlloc(ufs_state_pool);
 
     sio->swap_filen = filn;
@@ -257,12 +255,10 @@ storeUfsIOCallback(storeIOState * sio, int errflag)
 
 
 /*
- * We can't pass memFree() as a free function here, because we need to free
- * the fsstate variable ..
+ * Clean up any references from the SIO before it get's released.
  */
 static void
-storeUfsIOFreeEntry(void *sio, int foo)
+storeUfsIOFreeEntry(void *sio)
 {
     memPoolFree(ufs_state_pool, ((storeIOState *) sio)->fsstate);
-    memFree(sio, MEM_STORE_IO);
 }

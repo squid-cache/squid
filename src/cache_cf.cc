@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.365 2001/01/05 03:58:18 wessels Exp $
+ * $Id: cache_cf.cc,v 1.366 2001/01/05 09:51:36 adrian Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -393,8 +393,7 @@ configDoConfigure(void)
     if (Config.Wais.relayHost) {
 	if (Config.Wais.peer)
 	    cbdataFree(Config.Wais.peer);
-	Config.Wais.peer = memAllocate(MEM_PEER);
-	cbdataAdd(Config.Wais.peer, peerDestroy, MEM_PEER);
+	Config.Wais.peer = CBDATA_ALLOC(peer, peerDestroy);
 	Config.Wais.peer->host = xstrdup(Config.Wais.relayHost);
 	Config.Wais.peer->http_port = Config.Wais.relayPort;
     }
@@ -1101,7 +1100,7 @@ parse_peer(peer ** head)
     char *token = NULL;
     peer *p;
     int i;
-    p = memAllocate(MEM_PEER);
+    p = CBDATA_ALLOC(peer, peerDestroy);
     p->http_port = CACHE_HTTP_PORT;
     p->icp.port = CACHE_ICP_PORT;
     p->weight = 1;
@@ -1189,8 +1188,6 @@ parse_peer(peer ** head)
 	p->carp.hash = ROTATE_LEFT(p->carp.hash, 21);
     }
 #endif
-    /* This must preceed peerDigestCreate */
-    cbdataAdd(p, peerDestroy, MEM_PEER);
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest) {
 	p->digest = peerDigestCreate(p);
