@@ -239,8 +239,8 @@ extern PF icpHandleUdp;
 extern PF httpAccept;
 extern DEFER httpAcceptDefer;
 #ifdef SQUID_SNMP
-/*extern PF snmpHandleUdp;*/
-/*extern void initSquidSnmp();*/
+/*extern PF snmpHandleUdp; */
+/*extern void initSquidSnmp(); */
 #endif /* SQUID_SNMP */
 
 extern void icpSendERROR(int fd,

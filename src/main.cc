@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.193 1997/11/21 00:29:36 wessels Exp $
+ * $Id: main.cc,v 1.194 1997/11/21 01:59:16 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -404,7 +404,7 @@ serverConnectionsOpen(void)
 	}
     }
 #ifdef SQUID_SNMP
-        initSquidSnmp();
+    initSquidSnmp();
 #endif
 
     clientdbInit();
@@ -572,7 +572,7 @@ mainInitialize(void)
     configured_once = 1;
 
 #ifdef SQUID_SNMP
-	init_snmp();
+    init_snmp();
 #endif
 }
 

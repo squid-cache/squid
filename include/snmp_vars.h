@@ -31,35 +31,35 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #undef _ANSI_ARGS_
 #if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-# define _ANSI_ARGS_(x) x
+#define _ANSI_ARGS_(x) x
 #else
-# define _ANSI_ARGS_(x) ()
+#define _ANSI_ARGS_(x) ()
 #endif
 
 
-u_char	*var_system();
-u_char	*var_ifEntry();
-u_char	*var_atEntry();
-u_char	*var_ip();
-u_char	*var_ipAddrEntry();
-u_char	*var_ipRouteEntry();
-u_char	*var_icmp();
-u_char	*var_tcp();
-u_char	*var_udp();
+u_char *var_system();
+u_char *var_ifEntry();
+u_char *var_atEntry();
+u_char *var_ip();
+u_char *var_ipAddrEntry();
+u_char *var_ipRouteEntry();
+u_char *var_icmp();
+u_char *var_tcp();
+u_char *var_udp();
 #ifdef linux
-u_char	*var_snmp();
-u_char	*var_id();
+u_char *var_snmp();
+u_char *var_id();
 #endif
-u_char	*var_process();
-u_char	*var_event();
-u_char  *var_capture();
-u_char	*var_demo();
-u_char	*var_snmpStats();
-u_char	*var_usecStats();
-u_char	*var_usecAgent();
-u_char	*var_orEntry();
-u_char	*var_rwstats();
-u_char	*getStatPtr();
+u_char *var_process();
+u_char *var_event();
+u_char *var_capture();
+u_char *var_demo();
+u_char *var_snmpStats();
+u_char *var_usecStats();
+u_char *var_usecAgent();
+u_char *var_orEntry();
+u_char *var_rwstats();
+u_char *getStatPtr();
 
 extern long long_return;
 extern u_char return_buf[];
@@ -257,32 +257,33 @@ extern u_char return_buf[];
 
 #ifdef linux
 struct inpcb {
-        struct  inpcb *inp_next;        /* pointers to other pcb's */
-        struct  in_addr inp_faddr;      /* foreign host table entry */
-        u_short inp_fport;              /* foreign port */
-        struct  in_addr inp_laddr;      /* local host table entry */
-        u_short inp_lport;              /* local port */
-	int     inp_state;
-	int     uid;			/* owner of the connection */
+    struct inpcb *inp_next;	/* pointers to other pcb's */
+    struct in_addr inp_faddr;	/* foreign host table entry */
+    u_short inp_fport;		/* foreign port */
+    struct in_addr inp_laddr;	/* local host table entry */
+    u_short inp_lport;		/* local port */
+    int inp_state;
+    int uid;			/* owner of the connection */
 };
+
 #endif
 
-extern void TCP_Scan_Init ();
-extern int TCP_Scan_Next ();
+extern void TCP_Scan_Init();
+extern int TCP_Scan_Next();
 
 
 struct variable {
-    u_char	    magic;	    /* passed to function as a hint */
-    char	    type;	    /* type of variable */
+    u_char magic;		/* passed to function as a hint */
+    char type;			/* type of variable */
 /* See important comment in snmp_vars.c relating to acl */
-    u_short	    acl;	    /* access control list for variable */
-    u_char	    *(*findVar)();  /* function that finds variable */
-    u_char	    namelen;	    /* length of above */
-    oid		    name[32];	    /* object identifier of variable */
+    u_short acl;		/* access control list for variable */
+    u_char *(*findVar) ();	/* function that finds variable */
+    u_char namelen;		/* length of above */
+    oid name[32];		/* object identifier of variable */
 };
 
-extern int compare ();
-extern void Interface_Scan_Init ();
-extern int Interface_Scan_Next ();
+extern int compare();
+extern void Interface_Scan_Init();
+extern int Interface_Scan_Next();
 
 #endif

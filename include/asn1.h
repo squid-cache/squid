@@ -32,18 +32,18 @@ SOFTWARE.
 
 #undef _ANSI_ARGS_
 #if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-# define _ANSI_ARGS_(x) x
+#define _ANSI_ARGS_(x) x
 #else
-# define _ANSI_ARGS_(x) ()
+#define _ANSI_ARGS_(x) ()
 #endif
 
 #include <sys/types.h>
 
 #ifndef EIGHTBIT_SUBIDS
-typedef u_long	oid;
+typedef u_long oid;
 #define MAX_SUBID   0xFFFFFFFF
 #else
-typedef u_char	oid;
+typedef u_char oid;
 #define MAX_SUBID   0xFF
 #endif
 
@@ -92,108 +92,108 @@ typedef long int32;
 struct counter64 {
     u_int32 high;
     u_int32 low;
-  };
+};
 
 
-extern u_char	*asn_parse_int _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char *type,
-			long *intp,
-			int intsize));
+extern u_char *asn_parse_int _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char * type,
+	long *intp,
+	int intsize));
 
-extern u_char	*asn_build_int _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char type,
-			long *intp,
-			int intsize));
+extern u_char *asn_build_int _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char type,
+	long *intp,
+	int intsize));
 
-extern u_char	*asn_parse_unsigned_int _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char *type,
-			u_long *intp,
-			int intsize));
+extern u_char *asn_parse_unsigned_int _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char * type,
+	u_long * intp,
+	int intsize));
 
-extern u_char	*asn_build_unsigned_int _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char type,
-			u_long *intp,
-			int intsize));
+extern u_char *asn_build_unsigned_int _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char type,
+	u_long * intp,
+	int intsize));
 
-extern u_char	*asn_parse_string _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char *type,
-			u_char *string,
-			int *len));
+extern u_char *asn_parse_string _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char * type,
+	u_char * string,
+	int *len));
 
-extern u_char	*asn_build_string _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char type,
-			u_char *str,
-			int len));
+extern u_char *asn_build_string _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char type,
+	u_char * str,
+	int len));
 
-extern u_char	*asn_parse_header _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char *type));
+extern u_char *asn_parse_header _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char * type));
 
-extern u_char	*asn_build_header _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char type,
-			int len));
+extern u_char *asn_build_header _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char type,
+	int len));
 
-extern u_char	*asn_build_sequence _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char type,
-			int len));
+extern u_char *asn_build_sequence _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char type,
+	int len));
 
-extern u_char	*asn_parse_length _ANSI_ARGS_((u_char *data,
-			u_long *eln));
+extern u_char *asn_parse_length _ANSI_ARGS_((u_char * data,
+	u_long * eln));
 
-extern u_char	*asn_build_length _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			int len));
+extern u_char *asn_build_length _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	int len));
 
-extern u_char	*asn_parse_objid _ANSI_ARGS_((
-			u_char *data,
-			int *datalength,
-			u_char *type,
-			oid *objid, 
-			int *objidlength));
+extern u_char *asn_parse_objid _ANSI_ARGS_((
+	u_char * data,
+	int *datalength,
+	u_char * type,
+	oid * objid,
+	int *objidlength));
 
-extern u_char	*asn_build_objid _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char type,
-			oid *objid, 
-			int objidlength));
+extern u_char *asn_build_objid _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char type,
+	oid * objid,
+	int objidlength));
 
-extern u_char	*asn_parse_null _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char *type));
+extern u_char *asn_parse_null _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char * type));
 
-extern u_char	*asn_build_null _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char type));
-extern u_char	*asn_parse_bitstring _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char *type,
-			u_char *str,
-			int *len));
+extern u_char *asn_build_null _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char type));
+extern u_char *asn_parse_bitstring _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char * type,
+	u_char * str,
+	int *len));
 
-extern u_char	*asn_build_bitstring _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char type,
-			u_char *str,
-			int len));
+extern u_char *asn_build_bitstring _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char type,
+	u_char * str,
+	int len));
 
-extern u_char	*asn_parse_unsigned_int64 _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char *type,
-			struct counter64 *cp,
-			int cp_size));
+extern u_char *asn_parse_unsigned_int64 _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char * type,
+	struct counter64 * cp,
+	int cp_size));
 
-extern u_char	*asn_build_unsigned_int64 _ANSI_ARGS_((u_char *data,
-			int *datalength,
-			u_char type,
-			struct counter64 *cp,
-			int cp_size));
+extern u_char *asn_build_unsigned_int64 _ANSI_ARGS_((u_char * data,
+	int *datalength,
+	u_char type,
+	struct counter64 * cp,
+	int cp_size));
 
 #endif

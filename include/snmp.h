@@ -113,35 +113,35 @@ SOFTWARE.
 
 
 typedef struct _conf_if_list {
-  char *name;
-  int type;
-  int speed;
-  struct _conf_if_list *next;
+    char *name;
+    int type;
+    int speed;
+    struct _conf_if_list *next;
 } conf_if_list;
 
 extern conf_if_list *if_list;
 
 #ifndef SQUID_SNMP
-/*extern void init_snmp();*/
+/*extern void init_snmp(); */
 
-extern int read_objid (char *input,
-				   oid *output,
-				   int	*out_len);
+extern int read_objid(char *input,
+    oid * output,
+    int *out_len);
 
-extern void sprint_objid (char *buf,oid *id,int idlen);
-extern void print_objid (oid *id,
-				     int idlen);
-void snmp_add_null_var (struct snmp_pdu *,
-					   oid *,
-					   int);
-extern void xdump (u_char *cp,
-			       int length,
-			       char *prefix);
+extern void sprint_objid(char *buf, oid * id, int idlen);
+extern void print_objid(oid * id,
+    int idlen);
+void snmp_add_null_var(struct snmp_pdu *,
+    oid *,
+    int);
+extern void xdump(u_char * cp,
+    int length,
+    char *prefix);
 
-extern void snmp_synch_setup (struct snmp_session *session);
+extern void snmp_synch_setup(struct snmp_session *session);
 
-extern int snmp_synch_response (struct snmp_session *ss,
-					    struct snmp_pdu *pdu,
-					    struct snmp_pdu **response);
+extern int snmp_synch_response(struct snmp_session *ss,
+    struct snmp_pdu *pdu,
+    struct snmp_pdu **response);
 #endif
 #endif

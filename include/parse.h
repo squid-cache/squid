@@ -30,9 +30,9 @@ SOFTWARE.
 
 #undef _ANSI_ARGS_
 #if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-# define _ANSI_ARGS_(x) x
+#define _ANSI_ARGS_(x) x
 #else
-# define _ANSI_ARGS_(x) ()
+#define _ANSI_ARGS_(x) ()
 #endif
 
 
@@ -47,7 +47,7 @@ SOFTWARE.
  */
 struct enum_list {
     struct enum_list *next;
-    int	value;
+    int value;
     char *label;
 };
 
@@ -56,13 +56,13 @@ struct enum_list {
  */
 struct node {
     struct node *next;
-    char label[MAXLABEL]; /* This node's (unique) textual name */
-    u_long  subid;  /* This node's integer subidentifier */
-    char parent[MAXLABEL];/* The parent's textual name */
-    int type;	    /* The type of object this represents */
+    char label[MAXLABEL];	/* This node's (unique) textual name */
+    u_long subid;		/* This node's integer subidentifier */
+    char parent[MAXLABEL];	/* The parent's textual name */
+    int type;			/* The type of object this represents */
     struct enum_list *enums;	/* (optional) list of enumerated integers
-(otherwise NULL) */
-    char *description;	/* description (a quoted string) */
+				 * (otherwise NULL) */
+    char *description;		/* description (a quoted string) */
 };
 
 /*
@@ -72,13 +72,13 @@ struct tree {
     struct tree *child_list;	/* list of children of this node */
     struct tree *next_peer;	/* Next node in list of peers */
     struct tree *parent;
-    char label[MAXLABEL];		/* This node's textual name */
+    char label[MAXLABEL];	/* This node's textual name */
     u_long subid;		/* This node's integer subidentifier */
     int type;			/* This node's object type */
     struct enum_list *enums;	/* (optional) list of enumerated integers
-(otherwise NULL) */
-    void (*printer)();     /* Value printing function */
-    char *description;	/* description (a quoted string) */
+				 * (otherwise NULL) */
+    void (*printer) ();		/* Value printing function */
+    char *description;		/* description (a quoted string) */
 };
 
 /* non-aggregate types for tree end nodes */

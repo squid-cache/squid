@@ -49,7 +49,7 @@ struct subid {
 
 /* use large token buffer in case of very long tokens: */
 #define MAXTC	1024
-struct tc {	/* textual conventions */
+struct tc {			/* textual conventions */
     int type;
     char descriptor[MAXTOKEN];
     struct enum_list *enums;
@@ -61,7 +61,7 @@ int Line = 1;
 
 #define SYNTAX_MASK	0x80
 /* types of tokens
- Tokens wiht the SYNTAX_MASK bit set are syntax tokens */
+ * Tokens wiht the SYNTAX_MASK bit set are syntax tokens */
 #define	CONTINUE    -1
 #define ENDOFFILE   0
 #define LABEL	    1
@@ -78,7 +78,7 @@ int Line = 1;
 #define OPAQUE	    (12 | SYNTAX_MASK)
 #define NUL	    (13 | SYNTAX_MASK)
 #define SEQUENCE    14
-#define OF	    15	/* SEQUENCE OF */
+#define OF	    15		/* SEQUENCE OF */
 #define OBJTYPE	    16
 #define ACCESS	    17
 #define READONLY    18
@@ -126,85 +126,86 @@ int Line = 1;
 #define SEMI        60
 
 struct tok {
-	char *name;			/* token name */
-	int len;			/* length not counting nul */
-	int token;			/* value */
-	int hash;			/* hash of name */
-	struct tok *next;		/* pointer to next in hash table */
+    char *name;			/* token name */
+    int len;			/* length not counting nul */
+    int token;			/* value */
+    int hash;			/* hash of name */
+    struct tok *next;		/* pointer to next in hash table */
 };
 
 
-struct tok tokens[] = {
-	{ "obsolete", sizeof ("obsolete")-1, OBSOLETE },
-	{ "Opaque", sizeof ("Opaque")-1, OPAQUE },
-/*	{ "recommended", sizeof("recommended")-1, RECOMMENDED },  */
-	{ "optional", sizeof ("optional")-1, OPTIONAL },
-	{ "LAST-UPDATED", sizeof ("LAST-UPDATED")-1, LASTUPDATED },
-	{ "ORGANIZATION", sizeof ("ORGANIZATION")-1, ORGANIZATION },
-	{ "CONTACT-INFO", sizeof ("CONTACT-INFO")-1, CONTACTINFO },
-	{ "MODULE-IDENTITY", sizeof ("MODULE-IDENTITY")-1, MODULEIDENTITY },
-	{ "MODULE-COMPLIANCE", sizeof ("MODULE-COMPLIANCE")-1, COMPLIANCE },
-        { "DEFINITIONS", sizeof("DEFINITIONS")-1, DEFINITIONS},
-        { "END", sizeof("END")-1, END},
-        { ";", sizeof(";")-1, SEMI},
-	{ "AUGMENTS", sizeof ("AUGMENTS")-1, AUGMENTS },
-	{ "not-accessible", sizeof ("not-accessible")-1, NOACCESS },
-	{ "write-only", sizeof ("write-only")-1, WRITEONLY },
-	{ "NsapAddress", sizeof("NsapAddress")-1, NSAPADDRESS},
-	{ "UNITS", sizeof("Units")-1, UNITS},
-	{ "REFERENCE", sizeof("REFERENCE")-1, REFERENCE},
-	{ "NUM-ENTRIES", sizeof("NUM-ENTRIES")-1, NUM_ENTRIES},
-	{ "BITSTRING", sizeof("BitString")-1, BITSTRING},
-	{ "BIT", sizeof("BIT")-1, CONTINUE},
-	{ "Counter64", sizeof("Counter64")-1, COUNTER64},
-	{ "TimeTicks", sizeof ("TimeTicks")-1, TIMETICKS },
-	{ "NOTIFICATION-TYPE", sizeof ("NOTIFICATION-TYPE")-1, NOTIFTYPE },
-	{ "OBJECT-GROUP", sizeof ("OBJECT-GROUP")-1, OBJGROUP },
-	{ "OBJECTIDENTIFIER", sizeof ("OBJECTIDENTIFIER")-1, OBJID },
+struct tok tokens[] =
+{
+    {"obsolete", sizeof("obsolete") - 1, OBSOLETE},
+    {"Opaque", sizeof("Opaque") - 1, OPAQUE},
+/*      { "recommended", sizeof("recommended")-1, RECOMMENDED },  */
+    {"optional", sizeof("optional") - 1, OPTIONAL},
+    {"LAST-UPDATED", sizeof("LAST-UPDATED") - 1, LASTUPDATED},
+    {"ORGANIZATION", sizeof("ORGANIZATION") - 1, ORGANIZATION},
+    {"CONTACT-INFO", sizeof("CONTACT-INFO") - 1, CONTACTINFO},
+    {"MODULE-IDENTITY", sizeof("MODULE-IDENTITY") - 1, MODULEIDENTITY},
+    {"MODULE-COMPLIANCE", sizeof("MODULE-COMPLIANCE") - 1, COMPLIANCE},
+    {"DEFINITIONS", sizeof("DEFINITIONS") - 1, DEFINITIONS},
+    {"END", sizeof("END") - 1, END},
+    {";", sizeof(";") - 1, SEMI},
+    {"AUGMENTS", sizeof("AUGMENTS") - 1, AUGMENTS},
+    {"not-accessible", sizeof("not-accessible") - 1, NOACCESS},
+    {"write-only", sizeof("write-only") - 1, WRITEONLY},
+    {"NsapAddress", sizeof("NsapAddress") - 1, NSAPADDRESS},
+    {"UNITS", sizeof("Units") - 1, UNITS},
+    {"REFERENCE", sizeof("REFERENCE") - 1, REFERENCE},
+    {"NUM-ENTRIES", sizeof("NUM-ENTRIES") - 1, NUM_ENTRIES},
+    {"BITSTRING", sizeof("BitString") - 1, BITSTRING},
+    {"BIT", sizeof("BIT") - 1, CONTINUE},
+    {"Counter64", sizeof("Counter64") - 1, COUNTER64},
+    {"TimeTicks", sizeof("TimeTicks") - 1, TIMETICKS},
+    {"NOTIFICATION-TYPE", sizeof("NOTIFICATION-TYPE") - 1, NOTIFTYPE},
+    {"OBJECT-GROUP", sizeof("OBJECT-GROUP") - 1, OBJGROUP},
+    {"OBJECTIDENTIFIER", sizeof("OBJECTIDENTIFIER") - 1, OBJID},
 	/*
 	 * This CONTINUE appends the next word onto OBJECT,
 	 * hopefully matching OBJECTIDENTIFIER above.
 	 */
-	{ "OBJECT", sizeof ("OBJECT")-1, CONTINUE },
-	{ "NetworkAddress", sizeof ("NetworkAddress")-1, NETADDR },
-	{ "Gauge", sizeof ("Gauge")-1, GAUGE },
-	{ "read-write", sizeof ("read-write")-1, READWRITE },
-	{ "read-create", sizeof ("read-create")-1, READCREATE },
-	{ "OCTETSTRING", sizeof ("OCTETSTRING")-1, OCTETSTR },
-	{ "OCTET", sizeof ("OCTET")-1, -1 },
-	{ "OF", sizeof ("OF")-1, OF },
-	{ "SEQUENCE", sizeof ("SEQUENCE")-1, SEQUENCE },
-	{ "NULL", sizeof ("NULL")-1, NUL },
-	{ "IpAddress", sizeof ("IpAddress")-1, IPADDR },
-	{ "UInteger32", sizeof ("UInteger32")-1, UINTEGER32 },
-	{ "INTEGER", sizeof ("INTEGER")-1, INTEGER },
-	{ "Counter", sizeof ("Counter")-1, COUNTER },
-	{ "read-only", sizeof ("read-only")-1, READONLY },
-        { "DESCRIPTION", sizeof ("DESCRIPTION")-1, DESCRIPTION },
-        { "INDEX", sizeof ("INDEX")-1, INDEX },
-        { "DEFVAL", sizeof ("DEFVAL")-1, DEFVAL },
-        { "deprecated", sizeof ("deprecated")-1, DEPRECATED },
-        { "SIZE", sizeof ("SIZE")-1, SIZE },
-	{ "MAX-ACCESS", sizeof ("MAX-ACCESS")-1, ACCESS },
-	{ "ACCESS", sizeof ("ACCESS")-1, ACCESS },
-	{ "mandatory", sizeof ("mandatory")-1, MANDATORY },
-	{ "current", sizeof ("current")-1, CURRENT },
-	{ "STATUS", sizeof ("STATUS")-1, STATUS },
-	{ "SYNTAX", sizeof ("SYNTAX")-1, SYNTAX },
-	{ "OBJECT-TYPE", sizeof ("OBJECT-TYPE")-1, OBJTYPE },
-	{ "{", sizeof ("{")-1, LEFTBRACKET },
-	{ "}", sizeof ("}")-1, RIGHTBRACKET },
-	{ "::=", sizeof ("::=")-1, EQUALS },
-	{ "(", sizeof ("(")-1, LEFTPAREN },
-	{ ")", sizeof (")")-1, RIGHTPAREN },
-	{ ",", sizeof (",")-1, COMMA },
-	{ NULL }
+    {"OBJECT", sizeof("OBJECT") - 1, CONTINUE},
+    {"NetworkAddress", sizeof("NetworkAddress") - 1, NETADDR},
+    {"Gauge", sizeof("Gauge") - 1, GAUGE},
+    {"read-write", sizeof("read-write") - 1, READWRITE},
+    {"read-create", sizeof("read-create") - 1, READCREATE},
+    {"OCTETSTRING", sizeof("OCTETSTRING") - 1, OCTETSTR},
+    {"OCTET", sizeof("OCTET") - 1, -1},
+    {"OF", sizeof("OF") - 1, OF},
+    {"SEQUENCE", sizeof("SEQUENCE") - 1, SEQUENCE},
+    {"NULL", sizeof("NULL") - 1, NUL},
+    {"IpAddress", sizeof("IpAddress") - 1, IPADDR},
+    {"UInteger32", sizeof("UInteger32") - 1, UINTEGER32},
+    {"INTEGER", sizeof("INTEGER") - 1, INTEGER},
+    {"Counter", sizeof("Counter") - 1, COUNTER},
+    {"read-only", sizeof("read-only") - 1, READONLY},
+    {"DESCRIPTION", sizeof("DESCRIPTION") - 1, DESCRIPTION},
+    {"INDEX", sizeof("INDEX") - 1, INDEX},
+    {"DEFVAL", sizeof("DEFVAL") - 1, DEFVAL},
+    {"deprecated", sizeof("deprecated") - 1, DEPRECATED},
+    {"SIZE", sizeof("SIZE") - 1, SIZE},
+    {"MAX-ACCESS", sizeof("MAX-ACCESS") - 1, ACCESS},
+    {"ACCESS", sizeof("ACCESS") - 1, ACCESS},
+    {"mandatory", sizeof("mandatory") - 1, MANDATORY},
+    {"current", sizeof("current") - 1, CURRENT},
+    {"STATUS", sizeof("STATUS") - 1, STATUS},
+    {"SYNTAX", sizeof("SYNTAX") - 1, SYNTAX},
+    {"OBJECT-TYPE", sizeof("OBJECT-TYPE") - 1, OBJTYPE},
+    {"{", sizeof("{") - 1, LEFTBRACKET},
+    {"}", sizeof("}") - 1, RIGHTBRACKET},
+    {"::=", sizeof("::=") - 1, EQUALS},
+    {"(", sizeof("(") - 1, LEFTPAREN},
+    {")", sizeof(")") - 1, RIGHTPAREN},
+    {",", sizeof(",") - 1, COMMA},
+    {NULL}
 };
 
 #define	HASHSIZE	32
 #define	BUCKET(x)	(x & 0x01F)
 
-struct tok	*buckets[HASHSIZE];
+struct tok *buckets[HASHSIZE];
 
 static void do_subtree();
 static int get_token();
@@ -214,21 +215,21 @@ static int tossObjectIdentifier();
 static void
 hash_init()
 {
-	struct tok	*tp;
-	char	*cp;
-	int	h;
-	int	b;
+    struct tok *tp;
+    char *cp;
+    int h;
+    int b;
 
-	bzero((char *)buckets, sizeof(buckets));
-	for (tp = tokens; tp->name; tp++) {
-		for (h = 0, cp = tp->name; *cp; cp++)
-			h += *cp;
-		tp->hash = h;
-		b = BUCKET(h);
-		if (buckets[b])
-		    tp->next = buckets[b]; /* BUG ??? */
-		buckets[b] = tp;
-	}
+    bzero((char *) buckets, sizeof(buckets));
+    for (tp = tokens; tp->name; tp++) {
+	for (h = 0, cp = tp->name; *cp; cp++)
+	    h += *cp;
+	tp->hash = h;
+	b = BUCKET(h);
+	if (buckets[b])
+	    tp->next = buckets[b];	/* BUG ??? */
+	buckets[b] = tp;
+    }
 }
 
 #define NHASHSIZE    128
@@ -239,42 +240,42 @@ void
 init_node_hash(nodes)
      struct node *nodes;
 {
-     struct node *np, *nextp;
-     char *cp;
-     int hash;
+    struct node *np, *nextp;
+    char *cp;
+    int hash;
 
-     bzero((char *)nbuckets,sizeof(nbuckets));
-     for(np = nodes; np;){
-         nextp = np->next;
-         hash = 0;
-	 for(cp = np->parent; *cp; cp++)
-	     hash += *cp;
-	 np->next = nbuckets[NBUCKET(hash)];
-	 nbuckets[NBUCKET(hash)] = np;
-	 np = nextp;
-     }
+    bzero((char *) nbuckets, sizeof(nbuckets));
+    for (np = nodes; np;) {
+	nextp = np->next;
+	hash = 0;
+	for (cp = np->parent; *cp; cp++)
+	    hash += *cp;
+	np->next = nbuckets[NBUCKET(hash)];
+	nbuckets[NBUCKET(hash)] = np;
+	np = nextp;
+    }
 }
 
 static char *
 Malloc(num)
-    unsigned num;
+     unsigned num;
 {
 #ifndef linux
-    char* calloc();
+    char *calloc();
 #endif
-    
+
     /* this is to fix (what seems to be) a problem with the IBM RT C
-       library malloc */
+     * library malloc */
     if (num < 16)
 	num = 16;
-    return (char *)calloc(1, num);
+    return (char *) calloc(1, num);
 }
 
 static void
 print_error(string, token, type)
-    char *string;
-    char *token;
-    int type;
+     char *string;
+     char *token;
+     int type;
 {
     if (type == ENDOFFILE)
 	fprintf(stderr, "%s(EOF): On or around line %d\n", string, Line);
@@ -286,22 +287,22 @@ print_error(string, token, type)
 
 #ifdef TEST
 print_subtree(tree, count)
-    struct tree *tree;
-    int count;
+     struct tree *tree;
+     int count;
 {
     struct tree *tp;
     int i;
 
-    for(i = 0; i < count; i++)
+    for (i = 0; i < count; i++)
 	printf("  ");
     printf("Children of %s:\n", tree->label);
     count++;
-    for(tp = tree->child_list; tp; tp = tp->next_peer){
-	for(i = 0; i < count; i++)
+    for (tp = tree->child_list; tp; tp = tp->next_peer) {
+	for (i = 0; i < count; i++)
 	    printf("  ");
 	printf("%s\n", tp->label);
     }
-    for(tp = tree->child_list; tp; tp = tp->next_peer){
+    for (tp = tree->child_list; tp; tp = tp->next_peer) {
 	print_subtree(tp, count);
     }
 }
@@ -314,71 +315,71 @@ build_translation_table()
 {
     int count;
 
-    for(count = 0; count < 256; count++){
-	switch(count){
-	    case OBJID:
-		translation_table[count] = TYPE_OBJID;
-		break;
-	    case OCTETSTR:
-		translation_table[count] = TYPE_OCTETSTR;
-		break;
-	    case INTEGER:
-		translation_table[count] = TYPE_INTEGER;
-		break;
-	    case NETADDR:
-		translation_table[count] = TYPE_IPADDR;
-		break;
-	    case IPADDR:
-		translation_table[count] = TYPE_IPADDR;
-		break;
-	    case COUNTER:
-		translation_table[count] = TYPE_COUNTER;
-		break;
-	    case GAUGE:
-		translation_table[count] = TYPE_GAUGE;
-		break;
-	    case TIMETICKS:
-		translation_table[count] = TYPE_TIMETICKS;
-		break;
-	    case OPAQUE:
-		translation_table[count] = TYPE_OPAQUE;
-		break;
-	    case NUL:
-		translation_table[count] = TYPE_NULL;
-		break;
-	    case COUNTER64:
-		translation_table[count] = TYPE_COUNTER64;
-		break;
-	    case BITSTRING:
-		translation_table[count] = TYPE_BITSTRING;
-		break;
-	    case NSAPADDRESS:
-		translation_table[count] = TYPE_NSAPADDRESS;
-		break;
-	    case UINTEGER32:
-		translation_table[count] = TYPE_UINTEGER;
-		break;
-	    default:
-		translation_table[count] = TYPE_OTHER;
-		break;
+    for (count = 0; count < 256; count++) {
+	switch (count) {
+	case OBJID:
+	    translation_table[count] = TYPE_OBJID;
+	    break;
+	case OCTETSTR:
+	    translation_table[count] = TYPE_OCTETSTR;
+	    break;
+	case INTEGER:
+	    translation_table[count] = TYPE_INTEGER;
+	    break;
+	case NETADDR:
+	    translation_table[count] = TYPE_IPADDR;
+	    break;
+	case IPADDR:
+	    translation_table[count] = TYPE_IPADDR;
+	    break;
+	case COUNTER:
+	    translation_table[count] = TYPE_COUNTER;
+	    break;
+	case GAUGE:
+	    translation_table[count] = TYPE_GAUGE;
+	    break;
+	case TIMETICKS:
+	    translation_table[count] = TYPE_TIMETICKS;
+	    break;
+	case OPAQUE:
+	    translation_table[count] = TYPE_OPAQUE;
+	    break;
+	case NUL:
+	    translation_table[count] = TYPE_NULL;
+	    break;
+	case COUNTER64:
+	    translation_table[count] = TYPE_COUNTER64;
+	    break;
+	case BITSTRING:
+	    translation_table[count] = TYPE_BITSTRING;
+	    break;
+	case NSAPADDRESS:
+	    translation_table[count] = TYPE_NSAPADDRESS;
+	    break;
+	case UINTEGER32:
+	    translation_table[count] = TYPE_UINTEGER;
+	    break;
+	default:
+	    translation_table[count] = TYPE_OTHER;
+	    break;
 	}
     }
 }
 
 static struct tree *
 build_tree(nodes)
-    struct node *nodes;
+     struct node *nodes;
 {
     struct node *np;
     struct tree *tp, *lasttp;
     int bucket, nodes_left = 0;
-    
+
     build_translation_table();
     /* grow tree from this root node */
     init_node_hash(nodes);
 
     /* build root node */
-    tp = (struct tree *)Malloc(sizeof(struct tree));
+    tp = (struct tree *) Malloc(sizeof(struct tree));
     tp->parent = NULL;
     tp->next_peer = NULL;
     tp->child_list = NULL;
@@ -392,7 +393,7 @@ build_tree(nodes)
     lasttp = tp;
 
     /* build root node */
-    tp = (struct tree *)Malloc(sizeof(struct tree));
+    tp = (struct tree *) Malloc(sizeof(struct tree));
     tp->parent = NULL;
     tp->next_peer = lasttp;
     tp->child_list = NULL;
@@ -406,7 +407,7 @@ build_tree(nodes)
     lasttp = tp;
 
     /* build root node */
-    tp = (struct tree *)Malloc(sizeof(struct tree));
+    tp = (struct tree *) Malloc(sizeof(struct tree));
     tp->parent = NULL;
     tp->next_peer = lasttp;
     tp->child_list = NULL;
@@ -423,20 +424,20 @@ build_tree(nodes)
     print_subtree(tp, 0);
 #endif /* TEST */
     /* If any nodes are left, the tree is probably inconsistent */
-    for(bucket = 0; bucket < NHASHSIZE; bucket++){
-        if (nbuckets[bucket]){
+    for (bucket = 0; bucket < NHASHSIZE; bucket++) {
+	if (nbuckets[bucket]) {
 	    nodes_left = 1;
 	    break;
 	}
     }
-    if (nodes_left){
+    if (nodes_left) {
 	fprintf(stderr, "The mib description doesn't seem to be consistent.\n");
 	fprintf(stderr, "Some nodes couldn't be linked under the \"iso\" tree.\n");
 	fprintf(stderr, "these nodes are left:\n");
-	for(bucket = 0; bucket < NHASHSIZE; bucket++){
-	    for(np = nbuckets[bucket]; np; np = np->next)
-	        fprintf(stderr, "%s ::= { %s %ld } (%d)\n", np->label,
-			np->parent, np->subid, np->type);
+	for (bucket = 0; bucket < NHASHSIZE; bucket++) {
+	    for (np = nbuckets[bucket]; np; np = np->next)
+		fprintf(stderr, "%s ::= { %s %ld } (%d)\n", np->label,
+		    np->parent, np->subid, np->type);
 	}
     }
     return tp;
@@ -448,8 +449,8 @@ build_tree(nodes)
  */
 static void
 do_subtree(root, nodes)
-    struct tree *root;
-    struct node **nodes;
+     struct tree *root;
+     struct node **nodes;
 {
     struct tree *tp;
     struct tree *peer = NULL;
@@ -457,19 +458,19 @@ do_subtree(root, nodes)
     struct node *oldnp = NULL, *child_list = NULL, *childp = NULL;
     char *cp;
     int hash;
-    
+
     tp = root;
     hash = 0;
-    for(cp = tp->label; *cp; cp++)
-        hash += *cp;
+    for (cp = tp->label; *cp; cp++)
+	hash += *cp;
     headp = &nbuckets[NBUCKET(hash)];
     /*
      * Search each of the nodes for one whose parent is root, and
      * move each into a separate list.
      */
-    for(np = *headp; np; np = np->next){
-	if ((*tp->label != *np->parent) || strcmp(tp->label, np->parent)){
-	    if ((*tp->label == *np->label) && !strcmp(tp->label, np->label)){
+    for (np = *headp; np; np = np->next) {
+	if ((*tp->label != *np->parent) || strcmp(tp->label, np->parent)) {
+	    if ((*tp->label == *np->label) && !strcmp(tp->label, np->label)) {
 		/* if there is another node with the same label, assume that
 		 * any children after this point in the list belong to the other node.
 		 * This adds some scoping to the table and allows vendors to
@@ -479,17 +480,17 @@ do_subtree(root, nodes)
 	    }
 	    oldnp = np;
 	} else {
-	    if (child_list == NULL){
-		child_list = childp = np;   /* first entry in child list */
+	    if (child_list == NULL) {
+		child_list = childp = np;	/* first entry in child list */
 	    } else {
 		childp->next = np;
 		childp = np;
 	    }
 	    /* take this node out of the node list */
-	    if (oldnp == NULL){
-		*headp = np->next;  /* fix root of node list */
+	    if (oldnp == NULL) {
+		*headp = np->next;	/* fix root of node list */
 	    } else {
-		oldnp->next = np->next;	/* link around this node */
+		oldnp->next = np->next;		/* link around this node */
 	    }
 	}
     }
@@ -498,8 +499,8 @@ do_subtree(root, nodes)
     /*
      * Take each element in the child list and place it into the tree.
      */
-    for(np = child_list; np; np = np->next){
-	tp = (struct tree *)Malloc(sizeof(struct tree));
+    for (np = child_list; np; np = np->next) {
+	tp = (struct tree *) Malloc(sizeof(struct tree));
 	tp->parent = root;
 	tp->next_peer = NULL;
 	tp->child_list = NULL;
@@ -508,21 +509,21 @@ do_subtree(root, nodes)
 	tp->type = translation_table[np->type];
 	tp->enums = np->enums;
 	np->enums = NULL;	/* so we don't free them later */
-	tp->description = np->description; /* steals memory from np */
-	np->description = NULL; /* so we don't free it later */
-	if (root->child_list == NULL){
+	tp->description = np->description;	/* steals memory from np */
+	np->description = NULL;	/* so we don't free it later */
+	if (root->child_list == NULL) {
 	    root->child_list = tp;
 	} else {
 	    peer->next_peer = tp;
 	}
 	peer = tp;
-/*	if (tp->type == TYPE_OTHER) */
-	    do_subtree(tp, nodes);	/* recurse on this child if it isn't
-					   an end node */
+/*      if (tp->type == TYPE_OTHER) */
+	do_subtree(tp, nodes);	/* recurse on this child if it isn't
+				 * an end node */
     }
     /* free all nodes that were copied into tree */
     oldnp = NULL;
-    for(np = child_list; np; np = np->next){
+    for (np = child_list; np; np = np->next) {
 	if (oldnp)
 	    free(oldnp);
 	oldnp = np;
@@ -539,41 +540,41 @@ do_subtree(root, nodes)
  * Returns NULL on error.
  */
 static int
-getoid(fp, oid,  length)
-    FILE *fp;
-    struct subid *oid;	/* an array of subids */
-    int length;	    /* the length of the array */
+getoid(fp, oid, length)
+     FILE *fp;
+     struct subid *oid;		/* an array of subids */
+     int length;		/* the length of the array */
 {
     int count;
     int type;
     char token[MAXTOKEN];
     char *cp;
 
-    if ((type = get_token(fp, token)) != LEFTBRACKET){
+    if ((type = get_token(fp, token)) != LEFTBRACKET) {
 	print_error("Expected \"{\"", token, type);
 	return 0;
     }
     type = get_token(fp, token);
-    for(count = 0; count < length; count++, oid++){
+    for (count = 0; count < length; count++, oid++) {
 	oid->label = 0;
 	oid->subid = -1;
-	if (type == RIGHTBRACKET){
+	if (type == RIGHTBRACKET) {
 	    return count;
-	} else if (type != LABEL && type != NUMBER){
+	} else if (type != LABEL && type != NUMBER) {
 	    print_error("Not valid for object identifier", token, type);
 	    return 0;
 	}
-	if (type == LABEL){
+	if (type == LABEL) {
 	    /* this entry has a label */
-	    cp = (char *)Malloc((unsigned)strlen(token) + 1);
+	    cp = (char *) Malloc((unsigned) strlen(token) + 1);
 	    strcpy(cp, token);
 	    oid->label = cp;
 	    type = get_token(fp, token);
-	    if (type == LEFTPAREN){
+	    if (type == LEFTPAREN) {
 		type = get_token(fp, token);
-		if (type == NUMBER){
+		if (type == NUMBER) {
 		    oid->subid = atoi(token);
-		    if ((type = get_token(fp, token)) != RIGHTPAREN){
+		    if ((type = get_token(fp, token)) != RIGHTPAREN) {
 			print_error("Unexpected a closing parenthesis", token, type);
 			return 0;
 		    }
@@ -597,17 +598,17 @@ getoid(fp, oid,  length)
 
 static void
 free_node(np)
-    struct node *np;
+     struct node *np;
 {
     struct enum_list *ep, *tep;
 
     ep = np->enums;
-    while(ep){
+    while (ep) {
 	tep = ep;
 	ep = ep->next;
-	free((char *)tep);
+	free((char *) tep);
     }
-    free((char *)np);
+    free((char *) np);
 }
 
 /*
@@ -618,8 +619,8 @@ free_node(np)
  */
 static struct node *
 parse_objectid(fp, name)
-    FILE *fp;
-    char *name;
+     FILE *fp;
+     char *name;
 {
     int type;
     char token[MAXTOKEN];
@@ -630,21 +631,21 @@ parse_objectid(fp, name)
     struct node *np, *root, *oldnp = NULL;
 
     type = get_token(fp, token);
-    if (type != EQUALS){
+    if (type != EQUALS) {
 	print_error("Bad format", token, type);
 	return 0;
     }
-    if ((length = getoid(fp, oid, 32)) != 0){
-	np = root = (struct node *)Malloc(sizeof(struct node));
-	bzero((char *)np, sizeof(struct node));
+    if ((length = getoid(fp, oid, 32)) != 0) {
+	np = root = (struct node *) Malloc(sizeof(struct node));
+	bzero((char *) np, sizeof(struct node));
 	/*
 	 * For each parent-child subid pair in the subid array,
 	 * create a node and link it into the node list.
 	 */
-	for(count = 0, op = oid, nop=oid+1; count < (length - 2); count++,
-	    op++, nop++){
+	for (count = 0, op = oid, nop = oid + 1; count < (length - 2); count++,
+	    op++, nop++) {
 	    /* every node must have parent's name and child's name or number */
-	    if (op->label && (nop->label || (nop->subid != -1))){
+	    if (op->label && (nop->label || (nop->subid != -1))) {
 		strcpy(np->parent, op->label);
 		if (nop->label)
 		    strcpy(np->label, nop->label);
@@ -653,28 +654,28 @@ parse_objectid(fp, name)
 		np->type = 0;
 		np->enums = 0;
 		/* set up next entry */
-		np->next = (struct node *)Malloc(sizeof(*np->next));
-		bzero((char *)np->next, sizeof(struct node));
+		np->next = (struct node *) Malloc(sizeof(*np->next));
+		bzero((char *) np->next, sizeof(struct node));
 		oldnp = np;
 		np = np->next;
 	    }
 	}
-	np->next = (struct node *)NULL;
+	np->next = (struct node *) NULL;
 	/*
 	 * The above loop took care of all but the last pair.  This pair is taken
 	 * care of here.  The name for this node is taken from the label for this
 	 * entry.
 	 * np still points to an unused entry.
 	 */
-	if (count == (length - 2)){
-	    if (op->label){
+	if (count == (length - 2)) {
+	    if (op->label) {
 		strcpy(np->parent, op->label);
 		strcpy(np->label, name);
 		if (nop->subid != -1)
 		    np->subid = nop->subid;
 		else
 		    print_error("Warning: This entry is pretty silly",
-				np->label, type);
+			np->label, type);
 	    } else {
 		free_node(np);
 		if (oldnp)
@@ -683,36 +684,36 @@ parse_objectid(fp, name)
 		    return NULL;
 	    }
 	} else {
-	    print_error("Missing end of oid", (char *)NULL, type);
-	    free_node(np);   /* the last node allocated wasn't used */
+	    print_error("Missing end of oid", (char *) NULL, type);
+	    free_node(np);	/* the last node allocated wasn't used */
 	    if (oldnp)
 		oldnp->next = NULL;
 	    return NULL;
 	}
 	/* free the oid array */
-	for(count = 0, op = oid; count < length; count++, op++){
+	for (count = 0, op = oid; count < length; count++, op++) {
 	    if (op->label)
 		free(op->label);
 	    op->label = 0;
 	}
 	return root;
     } else {
-	print_error("Bad object identifier", (char *)NULL, type);
+	print_error("Bad object identifier", (char *) NULL, type);
 	return 0;
     }
 }
 
 static int
 get_tc(descriptor, ep)
-    char *descriptor;
-    struct enum_list **ep;
+     char *descriptor;
+     struct enum_list **ep;
 {
     int i;
 
-    for(i = 0; i < MAXTC; i++){
+    for (i = 0; i < MAXTC; i++) {
 	if (tclist[i].type == 0)
 	    break;
-	if (!strcmp(descriptor, tclist[i].descriptor)){
+	if (!strcmp(descriptor, tclist[i].descriptor)) {
 	    *ep = tclist[i].enums;
 	    return tclist[i].type;
 	}
@@ -726,21 +727,21 @@ get_tc(descriptor, ep)
  */
 static int
 parse_asntype(fp, name, ntype, ntoken)
-    FILE *fp;
-    char *name;
-    int *ntype;
-    char *ntoken;
+     FILE *fp;
+     char *name;
+     int *ntype;
+     char *ntoken;
 {
     int type, i;
     char token[MAXTOKEN];
     struct enum_list *ep = 0;
     struct tc *tcp;
     int level;
-    
+
     type = get_token(fp, token);
-    if (type == SEQUENCE){
-	while((type = get_token(fp, token)) != ENDOFFILE){
-	    if (type == RIGHTBRACKET){
+    if (type == SEQUENCE) {
+	while ((type = get_token(fp, token)) != ENDOFFILE) {
+	    if (type == RIGHTBRACKET) {
 		*ntype = get_token(fp, ntoken);
 		return 1;
 	    }
@@ -748,48 +749,48 @@ parse_asntype(fp, name, ntype, ntoken)
 	print_error("Expected \"}\"", token, type);
 	return 0;
     } else {
-	if (!strcmp(token, "TEXTUAL-CONVENTION")){
+	if (!strcmp(token, "TEXTUAL-CONVENTION")) {
 	    while (type != SYNTAX)
 		type = get_token(fp, token);
 	    type = get_token(fp, token);
 	}
 	/* textual convention */
-	for(i = 0; i < MAXTC; i++){
+	for (i = 0; i < MAXTC; i++) {
 	    if (tclist[i].type == 0)
 		break;
 	}
-	if (i == MAXTC){
+	if (i == MAXTC) {
 	    print_error("No more textual conventions possible.", token, type);
 	    return 0;
 	}
 	tcp = &tclist[i];
 	strcpy(tcp->descriptor, name);
-	if (!(type & SYNTAX_MASK)){
+	if (!(type & SYNTAX_MASK)) {
 	    print_error("Textual convention doesn't map to real type.", token,
-			type);
+		type);
 	    return 0;
 	}
 	tcp->type = type;
 	*ntype = get_token(fp, ntoken);
-	if (*ntype == LEFTPAREN){
+	if (*ntype == LEFTPAREN) {
 	    level = 1;
 	    /* don't record any constraints for now */
-	    while(level > 0){
+	    while (level > 0) {
 		*ntype = get_token(fp, ntoken);
 		if (*ntype == LEFTPAREN)
 		    level++;
 		if (*ntype == RIGHTPAREN)
-		    level--;		
+		    level--;
 	    }
 	    *ntype = get_token(fp, ntoken);
 	} else if (*ntype == LEFTBRACKET) {
 	    /* if there is an enumeration list, parse it */
-	    while((type = get_token(fp, token)) != ENDOFFILE){
+	    while ((type = get_token(fp, token)) != ENDOFFILE) {
 		if (type == RIGHTBRACKET)
 		    break;
-		if (type == LABEL){
+		if (type == LABEL) {
 		    /* this is an enumerated label */
-		    if (tcp->enums == 0){
+		    if (tcp->enums == 0) {
 			ep = tcp->enums = (struct enum_list *)
 			    Malloc(sizeof(struct enum_list));
 		    } else {
@@ -800,30 +801,30 @@ parse_asntype(fp, name, ntype, ntoken)
 		    ep->next = 0;
 		    /* a reasonable approximation for the length */
 		    ep->label =
-			(char *)Malloc((unsigned)strlen(token) + 1);
+			(char *) Malloc((unsigned) strlen(token) + 1);
 		    strcpy(ep->label, token);
 		    type = get_token(fp, token);
-		    if (type != LEFTPAREN){
+		    if (type != LEFTPAREN) {
 			print_error("Expected \"(\"", token, type);
 			/* free_node(np); */
 			return 0;
 		    }
 		    type = get_token(fp, token);
-		    if (type != NUMBER){
+		    if (type != NUMBER) {
 			print_error("Expected integer", token, type);
 			/* free_node(np); */
 			return 0;
 		    }
 		    ep->value = atoi(token);
 		    type = get_token(fp, token);
-		    if (type != RIGHTPAREN){
+		    if (type != RIGHTPAREN) {
 			print_error("Expected \")\"", token, type);
 			/* free_node(np); */
 			return 0;
 		    }
 		}
 	    }
-	    if (type == ENDOFFILE){
+	    if (type == ENDOFFILE) {
 		print_error("Expected \"}\"", token, type);
 		/* free_node(np); */
 		return 0;
@@ -841,8 +842,8 @@ parse_asntype(fp, name, ntype, ntoken)
  */
 static struct node *
 parse_objecttype(fp, name)
-    FILE *fp;
-    char *name;
+     FILE *fp;
+     char *name;
 {
     int type;
     char token[MAXTOKEN];
@@ -855,19 +856,19 @@ parse_objecttype(fp, name)
     struct enum_list *ep = 0;
 
     type = get_token(fp, token);
-    if (type != SYNTAX){
+    if (type != SYNTAX) {
 	print_error("Bad format for OBJECT TYPE", token, type);
 	return 0;
     }
-    np = (struct node *)Malloc(sizeof(struct node));
+    np = (struct node *) Malloc(sizeof(struct node));
     np->next = 0;
     np->enums = 0;
-    np->description = NULL;        /* default to an empty description */
+    np->description = NULL;	/* default to an empty description */
     type = get_token(fp, token);
-    if (type == LABEL){
+    if (type == LABEL) {
 	tctype = get_tc(token, &(np->enums));
 #if 0
-	if (tctype == LABEL){
+	if (tctype == LABEL) {
 	    print_error("No known translation for type", token, type);
 	    return 0;
 	}
@@ -876,173 +877,172 @@ parse_objecttype(fp, name)
     }
     np->type = type;
     nexttype = get_token(fp, nexttoken);
-    switch(type){
-	case SEQUENCE:
-	    strcpy(syntax, token);
-	    if (nexttype == OF){
-		strcat(syntax, " ");
-		strcat(syntax, nexttoken);
-		nexttype = get_token(fp, nexttoken);
-		strcat(syntax, " ");
-		strcat(syntax, nexttoken);
-		nexttype = get_token(fp, nexttoken);
-	    }
-	    break;
-	case INTEGER:
-	case UINTEGER32:
-	    strcpy(syntax, token);
-	    if (nexttype == LEFTBRACKET) {
-		/* if there is an enumeration list, parse it */
-		while((type = get_token(fp, token)) != ENDOFFILE){
-		    if (type == RIGHTBRACKET)
-			break;
-		    if (type == LABEL){
-			/* this is an enumerated label */
-			if (np->enums == 0){
-			    ep = np->enums = (struct enum_list *)
-					Malloc(sizeof(struct enum_list));
-			} else {
-			    ep->next = (struct enum_list *)
-					Malloc(sizeof(struct enum_list));
-			    ep = ep->next;
-			}
-			ep->next = 0;
-			/* a reasonable approximation for the length */
-			ep->label =
-			    (char *)Malloc((unsigned)strlen(token) + 1);
-			strcpy(ep->label, token);
-			type = get_token(fp, token);
-			if (type != LEFTPAREN){
-			    print_error("Expected \"(\"", token, type);
-			    free_node(np);
-			    return 0;
-			}
-			type = get_token(fp, token);
-			if (type != NUMBER){
-			    print_error("Expected integer", token, type);
-			    free_node(np);
-			    return 0;
-			}
-			ep->value = atoi(token);
-			type = get_token(fp, token);
-			if (type != RIGHTPAREN){
-			    print_error("Expected \")\"", token, type);
-			    free_node(np);
-			    return 0;
-			}
+    switch (type) {
+    case SEQUENCE:
+	strcpy(syntax, token);
+	if (nexttype == OF) {
+	    strcat(syntax, " ");
+	    strcat(syntax, nexttoken);
+	    nexttype = get_token(fp, nexttoken);
+	    strcat(syntax, " ");
+	    strcat(syntax, nexttoken);
+	    nexttype = get_token(fp, nexttoken);
+	}
+	break;
+    case INTEGER:
+    case UINTEGER32:
+	strcpy(syntax, token);
+	if (nexttype == LEFTBRACKET) {
+	    /* if there is an enumeration list, parse it */
+	    while ((type = get_token(fp, token)) != ENDOFFILE) {
+		if (type == RIGHTBRACKET)
+		    break;
+		if (type == LABEL) {
+		    /* this is an enumerated label */
+		    if (np->enums == 0) {
+			ep = np->enums = (struct enum_list *)
+			    Malloc(sizeof(struct enum_list));
+		    } else {
+			ep->next = (struct enum_list *)
+			    Malloc(sizeof(struct enum_list));
+			ep = ep->next;
+		    }
+		    ep->next = 0;
+		    /* a reasonable approximation for the length */
+		    ep->label =
+			(char *) Malloc((unsigned) strlen(token) + 1);
+		    strcpy(ep->label, token);
+		    type = get_token(fp, token);
+		    if (type != LEFTPAREN) {
+			print_error("Expected \"(\"", token, type);
+			free_node(np);
+			return 0;
+		    }
+		    type = get_token(fp, token);
+		    if (type != NUMBER) {
+			print_error("Expected integer", token, type);
+			free_node(np);
+			return 0;
+		    }
+		    ep->value = atoi(token);
+		    type = get_token(fp, token);
+		    if (type != RIGHTPAREN) {
+			print_error("Expected \")\"", token, type);
+			free_node(np);
+			return 0;
 		    }
 		}
-		if (type == ENDOFFILE){
-		    print_error("Expected \"}\"", token, type);
-		    free_node(np);
-		    return 0;
-		}
-		nexttype = get_token(fp, nexttoken);
-	    } else if (nexttype == LEFTPAREN){
-		/* ignore the "constrained integer" for now */
-		nexttype = get_token(fp, nexttoken);
-		nexttype = get_token(fp, nexttoken);
-		nexttype = get_token(fp, nexttoken);
 	    }
-	    break;
-	case BITSTRING:
-	    strcpy(syntax, token);
-	    if (nexttype == LEFTBRACKET) {
-		/* if there is an enumeration list, parse it */
-		while((type = get_token(fp, token)) != ENDOFFILE){
-		    if (type == RIGHTBRACKET)
-			break;
-		    if (type == LABEL){
-			/* this is an enumerated label */
-			if (np->enums == 0){
-			    ep = np->enums = (struct enum_list *)
-					Malloc(sizeof(struct enum_list));
-			} else {
-			    ep->next = (struct enum_list *)
-					Malloc(sizeof(struct enum_list));
-			    ep = ep->next;
-			}
-			ep->next = 0;
-			/* a reasonable approximation for the length */
-			ep->label =
-			    (char *)Malloc((unsigned)strlen(token) + 1);
-			strcpy(ep->label, token);
-			type = get_token(fp, token);
-			if (type != LEFTPAREN){
-			    print_error("Expected \"(\"", token, type);
-			    free_node(np);
-			    return 0;
-			}
-			type = get_token(fp, token);
-			if (type != NUMBER){
-			    print_error("Expected integer", token, type);
-			    free_node(np);
-			    return 0;
-			}
-			ep->value = atoi(token);
-			type = get_token(fp, token);
-			if (type != RIGHTPAREN){
-			    print_error("Expected \")\"", token, type);
-			    free_node(np);
-			    return 0;
-			}
+	    if (type == ENDOFFILE) {
+		print_error("Expected \"}\"", token, type);
+		free_node(np);
+		return 0;
+	    }
+	    nexttype = get_token(fp, nexttoken);
+	} else if (nexttype == LEFTPAREN) {
+	    /* ignore the "constrained integer" for now */
+	    nexttype = get_token(fp, nexttoken);
+	    nexttype = get_token(fp, nexttoken);
+	    nexttype = get_token(fp, nexttoken);
+	}
+	break;
+    case BITSTRING:
+	strcpy(syntax, token);
+	if (nexttype == LEFTBRACKET) {
+	    /* if there is an enumeration list, parse it */
+	    while ((type = get_token(fp, token)) != ENDOFFILE) {
+		if (type == RIGHTBRACKET)
+		    break;
+		if (type == LABEL) {
+		    /* this is an enumerated label */
+		    if (np->enums == 0) {
+			ep = np->enums = (struct enum_list *)
+			    Malloc(sizeof(struct enum_list));
+		    } else {
+			ep->next = (struct enum_list *)
+			    Malloc(sizeof(struct enum_list));
+			ep = ep->next;
+		    }
+		    ep->next = 0;
+		    /* a reasonable approximation for the length */
+		    ep->label =
+			(char *) Malloc((unsigned) strlen(token) + 1);
+		    strcpy(ep->label, token);
+		    type = get_token(fp, token);
+		    if (type != LEFTPAREN) {
+			print_error("Expected \"(\"", token, type);
+			free_node(np);
+			return 0;
+		    }
+		    type = get_token(fp, token);
+		    if (type != NUMBER) {
+			print_error("Expected integer", token, type);
+			free_node(np);
+			return 0;
+		    }
+		    ep->value = atoi(token);
+		    type = get_token(fp, token);
+		    if (type != RIGHTPAREN) {
+			print_error("Expected \")\"", token, type);
+			free_node(np);
+			return 0;
 		    }
 		}
-		if (type == ENDOFFILE){
-		    print_error("Expected \"}\"", token, type);
-		    free_node(np);
-		    return 0;
-		}
-		nexttype = get_token(fp, nexttoken);
-	    } else if (nexttype == LEFTPAREN){
-		/* ignore the "constrained integer" for now */
-		nexttype = get_token(fp, nexttoken);
-		nexttype = get_token(fp, nexttoken);
-		nexttype = get_token(fp, nexttoken);
 	    }
-	    break;
-	case OCTETSTR:
-	    strcpy(syntax, token);
-            /* ignore the "constrained octet string" for now */
-            if (nexttype == LEFTPAREN) {
-                nexttype = get_token(fp, nexttoken);
-                if (nexttype == SIZE) {
-                    nexttype = get_token(fp, nexttoken);
-                    if (nexttype == LEFTPAREN) {
-                        nexttype = get_token(fp, nexttoken); /* 0..255 */
-                        nexttype = get_token(fp, nexttoken); /* ) */
-                        nexttype = get_token(fp, nexttoken); /* ) */
-                        if (nexttype == RIGHTPAREN)
-                        {
-                            nexttype = get_token(fp, nexttoken);
-                            break;
-                        }
-                    }
-                }
-                print_error("Bad syntax", token, type);
-                free_node(np);
-                return 0;
-            }
-	    break;
-	case OBJID:
-	case NETADDR:
-	case IPADDR:
-	case COUNTER:
-	case GAUGE:
-	case TIMETICKS:
-	case OPAQUE:
-	case NUL:
-	case LABEL:
-	case NSAPADDRESS:
-	case COUNTER64:
-	    strcpy(syntax, token);
-	    break;
-	default:
+	    if (type == ENDOFFILE) {
+		print_error("Expected \"}\"", token, type);
+		free_node(np);
+		return 0;
+	    }
+	    nexttype = get_token(fp, nexttoken);
+	} else if (nexttype == LEFTPAREN) {
+	    /* ignore the "constrained integer" for now */
+	    nexttype = get_token(fp, nexttoken);
+	    nexttype = get_token(fp, nexttoken);
+	    nexttype = get_token(fp, nexttoken);
+	}
+	break;
+    case OCTETSTR:
+	strcpy(syntax, token);
+	/* ignore the "constrained octet string" for now */
+	if (nexttype == LEFTPAREN) {
+	    nexttype = get_token(fp, nexttoken);
+	    if (nexttype == SIZE) {
+		nexttype = get_token(fp, nexttoken);
+		if (nexttype == LEFTPAREN) {
+		    nexttype = get_token(fp, nexttoken);	/* 0..255 */
+		    nexttype = get_token(fp, nexttoken);	/* ) */
+		    nexttype = get_token(fp, nexttoken);	/* ) */
+		    if (nexttype == RIGHTPAREN) {
+			nexttype = get_token(fp, nexttoken);
+			break;
+		    }
+		}
+	    }
 	    print_error("Bad syntax", token, type);
 	    free_node(np);
 	    return 0;
+	}
+	break;
+    case OBJID:
+    case NETADDR:
+    case IPADDR:
+    case COUNTER:
+    case GAUGE:
+    case TIMETICKS:
+    case OPAQUE:
+    case NUL:
+    case LABEL:
+    case NSAPADDRESS:
+    case COUNTER64:
+	strcpy(syntax, token);
+	break;
+    default:
+	print_error("Bad syntax", token, type);
+	free_node(np);
+	return 0;
     }
-    if (nexttype == UNITS){
+    if (nexttype == UNITS) {
 	type = get_token(fp, token);
 	if (type != QUOTESTRING) {
 	    print_error("Bad DESCRIPTION", token, type);
@@ -1051,26 +1051,26 @@ parse_objecttype(fp, name)
 	}
 	nexttype = get_token(fp, nexttoken);
     }
-    if (nexttype != ACCESS){
+    if (nexttype != ACCESS) {
 	print_error("Should be ACCESS", nexttoken, nexttype);
 	free_node(np);
 	return 0;
     }
     type = get_token(fp, token);
     if (type != READONLY && type != READWRITE && type != WRITEONLY
-	&& type != NOACCESS && type != READCREATE){
+	&& type != NOACCESS && type != READCREATE) {
 	print_error("Bad access type", nexttoken, nexttype);
 	free_node(np);
 	return 0;
     }
     type = get_token(fp, token);
-    if (type != STATUS){
+    if (type != STATUS) {
 	print_error("Should be STATUS", token, nexttype);
 	free_node(np);
 	return 0;
     }
     type = get_token(fp, token);
-    if (type != MANDATORY && type != CURRENT && type != OPTIONAL && type != OBSOLETE && type != DEPRECATED){
+    if (type != MANDATORY && type != CURRENT && type != OPTIONAL && type != OBSOLETE && type != DEPRECATED) {
 	print_error("Bad status", token, type);
 	free_node(np);
 	return 0;
@@ -1080,55 +1080,55 @@ parse_objecttype(fp, name)
      */
     type = get_token(fp, token);
     while (type != EQUALS) {
-      switch (type) {
-        case DESCRIPTION:
-          type = get_token(fp, token);
-          if (type != QUOTESTRING) {
-              print_error("Bad DESCRIPTION", token, type);
-              free_node(np);
-              return 0;
-          }
+	switch (type) {
+	case DESCRIPTION:
+	    type = get_token(fp, token);
+	    if (type != QUOTESTRING) {
+		print_error("Bad DESCRIPTION", token, type);
+		free_node(np);
+		return 0;
+	    }
 #ifdef TEST
-printf("Description== \"%.50s\"\n", quoted_string_buffer);
+	    printf("Description== \"%.50s\"\n", quoted_string_buffer);
 #endif
-	  np->description = quoted_string_buffer;
-	  quoted_string_buffer = (char *)calloc(1, MAXQUOTESTR);
-          break;
+	    np->description = quoted_string_buffer;
+	    quoted_string_buffer = (char *) calloc(1, MAXQUOTESTR);
+	    break;
 
 	case REFERENCE:
-	  type = get_token(fp, token);
-	  if (type != QUOTESTRING) {
-	      print_error("Bad DESCRIPTION", token, type);
-	      free_node(np);
-	      return 0;
-	  }
-	  break;
-        case INDEX:
-        case DEFVAL:
+	    type = get_token(fp, token);
+	    if (type != QUOTESTRING) {
+		print_error("Bad DESCRIPTION", token, type);
+		free_node(np);
+		return 0;
+	    }
+	    break;
+	case INDEX:
+	case DEFVAL:
 	case AUGMENTS:
 	case NUM_ENTRIES:
-          if (tossObjectIdentifier(fp) != OBJID) {
-              print_error("Bad Object Identifier", token, type);
-              free_node(np);
-              return 0;
-          }
-          break;
+	    if (tossObjectIdentifier(fp) != OBJID) {
+		print_error("Bad Object Identifier", token, type);
+		free_node(np);
+		return 0;
+	    }
+	    break;
 
-        default:
-          print_error("Bad format of optional clauses", token,type);
-          free_node(np);
-          return 0;
+	default:
+	    print_error("Bad format of optional clauses", token, type);
+	    free_node(np);
+	    return 0;
 
-      }
-      type = get_token(fp, token);
+	}
+	type = get_token(fp, token);
     }
-    if (type != EQUALS){
+    if (type != EQUALS) {
 	print_error("Bad format", token, type);
 	free_node(np);
 	return 0;
     }
     length = getoid(fp, oid, 32);
-    if (length > 1 && length <= 32){
+    if (length > 1 && length <= 32) {
 	/* just take the last pair in the oid list */
 	if (oid[length - 2].label)
 	    strncpy(np->parent, oid[length - 2].label, MAXLABEL);
@@ -1138,12 +1138,12 @@ printf("Description== \"%.50s\"\n", quoted_string_buffer);
 	else
 	    print_error("Warning: This entry is pretty silly", np->label, type);
     } else {
-	print_error("No end to oid", (char *)NULL, type);
+	print_error("No end to oid", (char *) NULL, type);
 	free_node(np);
 	np = 0;
     }
     /* free oid array */
-    for(count = 0; count < length; count++){
+    for (count = 0; count < length; count++) {
 	if (oid[count].label)
 	    free(oid[count].label);
 	oid[count].label = 0;
@@ -1158,8 +1158,8 @@ printf("Description== \"%.50s\"\n", quoted_string_buffer);
  */
 static struct node *
 parse_objectgroup(fp, name)
-    FILE *fp;
-    char *name;
+     FILE *fp;
+     char *name;
 {
     int type;
     char token[MAXTOKEN];
@@ -1167,36 +1167,36 @@ parse_objectgroup(fp, name)
     struct subid oid[32];
     struct node *np;
 
-    np = (struct node *)Malloc(sizeof(struct node));
+    np = (struct node *) Malloc(sizeof(struct node));
     np->type = 0;
     np->next = 0;
     np->enums = 0;
-    np->description = NULL;        /* default to an empty description */
+    np->description = NULL;	/* default to an empty description */
     type = get_token(fp, token);
     while (type != EQUALS) {
-      switch (type) {
-        case DESCRIPTION:
-          type = get_token(fp, token);
-          if (type != QUOTESTRING) {
-              print_error("Bad DESCRIPTION", token, type);
-              free_node(np);
-              return 0;
-          }
+	switch (type) {
+	case DESCRIPTION:
+	    type = get_token(fp, token);
+	    if (type != QUOTESTRING) {
+		print_error("Bad DESCRIPTION", token, type);
+		free_node(np);
+		return 0;
+	    }
 #ifdef TEST
-printf("Description== \"%.50s\"\n", quoted_string_buffer);
+	    printf("Description== \"%.50s\"\n", quoted_string_buffer);
 #endif
-	  np->description = quoted_string_buffer;
-	  quoted_string_buffer = (char *)calloc(1, MAXQUOTESTR);
-          break;
+	    np->description = quoted_string_buffer;
+	    quoted_string_buffer = (char *) calloc(1, MAXQUOTESTR);
+	    break;
 
-        default:
-	  /* NOTHING */
-	  break;
-      }
-      type = get_token(fp, token);
+	default:
+	    /* NOTHING */
+	    break;
+	}
+	type = get_token(fp, token);
     }
     length = getoid(fp, oid, 32);
-    if (length > 1 && length <= 32){
+    if (length > 1 && length <= 32) {
 	/* just take the last pair in the oid list */
 	if (oid[length - 2].label)
 	    strncpy(np->parent, oid[length - 2].label, MAXLABEL);
@@ -1206,12 +1206,12 @@ printf("Description== \"%.50s\"\n", quoted_string_buffer);
 	else
 	    print_error("Warning: This entry is pretty silly", np->label, type);
     } else {
-	print_error("No end to oid", (char *)NULL, type);
+	print_error("No end to oid", (char *) NULL, type);
 	free_node(np);
 	np = 0;
     }
     /* free oid array */
-    for(count = 0; count < length; count++){
+    for (count = 0; count < length; count++) {
 	if (oid[count].label)
 	    free(oid[count].label);
 	oid[count].label = 0;
@@ -1225,8 +1225,8 @@ printf("Description== \"%.50s\"\n", quoted_string_buffer);
  */
 static struct node *
 parse_notificationDefinition(fp, name)
-    FILE *fp;
-    char *name;
+     FILE *fp;
+     char *name;
 {
     int type;
     char token[MAXTOKEN];
@@ -1234,36 +1234,36 @@ parse_notificationDefinition(fp, name)
     struct subid oid[32];
     struct node *np;
 
-    np = (struct node *)Malloc(sizeof(struct node));
+    np = (struct node *) Malloc(sizeof(struct node));
     np->type = 0;
     np->next = 0;
     np->enums = 0;
-    np->description = NULL;        /* default to an empty description */
+    np->description = NULL;	/* default to an empty description */
     type = get_token(fp, token);
     while (type != EQUALS) {
-      switch (type) {
-        case DESCRIPTION:
-          type = get_token(fp, token);
-          if (type != QUOTESTRING) {
-              print_error("Bad DESCRIPTION", token, type);
-              free_node(np);
-              return 0;
-          }
+	switch (type) {
+	case DESCRIPTION:
+	    type = get_token(fp, token);
+	    if (type != QUOTESTRING) {
+		print_error("Bad DESCRIPTION", token, type);
+		free_node(np);
+		return 0;
+	    }
 #ifdef TEST
-printf("Description== \"%.50s\"\n", quoted_string_buffer);
+	    printf("Description== \"%.50s\"\n", quoted_string_buffer);
 #endif
-	  np->description = quoted_string_buffer;
-	  quoted_string_buffer = (char *)calloc(1, MAXQUOTESTR);
-          break;
+	    np->description = quoted_string_buffer;
+	    quoted_string_buffer = (char *) calloc(1, MAXQUOTESTR);
+	    break;
 
-        default:
-	  /* NOTHING */
-	  break;
-      }
-      type = get_token(fp, token);
+	default:
+	    /* NOTHING */
+	    break;
+	}
+	type = get_token(fp, token);
     }
     length = getoid(fp, oid, 32);
-    if (length > 1 && length <= 32){
+    if (length > 1 && length <= 32) {
 	/* just take the last pair in the oid list */
 	if (oid[length - 2].label)
 	    strncpy(np->parent, oid[length - 2].label, MAXLABEL);
@@ -1273,12 +1273,12 @@ printf("Description== \"%.50s\"\n", quoted_string_buffer);
 	else
 	    print_error("Warning: This entry is pretty silly", np->label, type);
     } else {
-	print_error("No end to oid", (char *)NULL, type);
+	print_error("No end to oid", (char *) NULL, type);
 	free_node(np);
 	np = 0;
     }
     /* free oid array */
-    for(count = 0; count < length; count++){
+    for (count = 0; count < length; count++) {
 	if (oid[count].label)
 	    free(oid[count].label);
 	oid[count].label = 0;
@@ -1292,8 +1292,8 @@ printf("Description== \"%.50s\"\n", quoted_string_buffer);
  */
 static struct node *
 parse_compliance(fp, name)
-    FILE *fp;
-    char *name;
+     FILE *fp;
+     char *name;
 {
     int type;
     char token[MAXTOKEN];
@@ -1301,17 +1301,17 @@ parse_compliance(fp, name)
     struct subid oid[32];
     struct node *np;
 
-    np = (struct node *)Malloc(sizeof(struct node));
+    np = (struct node *) Malloc(sizeof(struct node));
     np->type = 0;
     np->next = 0;
     np->enums = 0;
-    np->description = NULL;        /* default to an empty description */
+    np->description = NULL;	/* default to an empty description */
     type = get_token(fp, token);
     while (type != EQUALS) {
 	type = get_token(fp, token);
     }
     length = getoid(fp, oid, 32);
-    if (length > 1 && length <= 32){
+    if (length > 1 && length <= 32) {
 	/* just take the last pair in the oid list */
 	if (oid[length - 2].label)
 	    strncpy(np->parent, oid[length - 2].label, MAXLABEL);
@@ -1321,12 +1321,12 @@ parse_compliance(fp, name)
 	else
 	    print_error("Warning: This entry is pretty silly", np->label, type);
     } else {
-	print_error("No end to oid", (char *)NULL, type);
+	print_error("No end to oid", (char *) NULL, type);
 	free_node(np);
 	np = 0;
     }
     /* free oid array */
-    for(count = 0; count < length; count++){
+    for (count = 0; count < length; count++) {
 	if (oid[count].label)
 	    free(oid[count].label);
 	oid[count].label = 0;
@@ -1342,8 +1342,8 @@ parse_compliance(fp, name)
  */
 static struct node *
 parse_moduleIdentity(fp, name)
-    FILE *fp;
-    char *name;
+     FILE *fp;
+     char *name;
 {
     int type;
     char token[MAXTOKEN];
@@ -1351,17 +1351,17 @@ parse_moduleIdentity(fp, name)
     struct subid oid[32];
     struct node *np;
 
-    np = (struct node *)Malloc(sizeof(struct node));
+    np = (struct node *) Malloc(sizeof(struct node));
     np->type = 0;
     np->next = 0;
     np->enums = 0;
-    np->description = NULL;        /* default to an empty description */
+    np->description = NULL;	/* default to an empty description */
     type = get_token(fp, token);
     while (type != EQUALS) {
 	type = get_token(fp, token);
     }
     length = getoid(fp, oid, 32);
-    if (length > 1 && length <= 32){
+    if (length > 1 && length <= 32) {
 	/* just take the last pair in the oid list */
 	if (oid[length - 2].label)
 	    strncpy(np->parent, oid[length - 2].label, MAXLABEL);
@@ -1371,12 +1371,12 @@ parse_moduleIdentity(fp, name)
 	else
 	    print_error("Warning: This entry is pretty silly", np->label, type);
     } else {
-	print_error("No end to oid", (char *)NULL, type);
+	print_error("No end to oid", (char *) NULL, type);
 	free_node(np);
 	np = 0;
     }
     /* free oid array */
-    for(count = 0; count < length; count++){
+    for (count = 0; count < length; count++) {
 	if (oid[count].label)
 	    free(oid[count].label);
 	oid[count].label = 0;
@@ -1384,21 +1384,22 @@ parse_moduleIdentity(fp, name)
     return np;
 }
 
-int parse_mib_header(fp, name)
-    FILE *fp;
-    char *name;
+int 
+parse_mib_header(fp, name)
+     FILE *fp;
+     char *name;
 {
     int type = DEFINITIONS;
     char token[MAXTOKEN];
-    
+
     /* This probably isn't good enough.  If there is no
-       imports clause we can't go around waiting (forever) for a semicolon.
-       We need to check for semi following an EXPORTS clause or an IMPORTS
-       clause of both.  Look for BEGIN; in my initial MIBs to see those
-       that I needed to hack to get to parse because they didn't have
-       an IMPORTS or and EXPORTS clause.
-       */
-    while(type != SEMI && type != ENDOFFILE){
+     * imports clause we can't go around waiting (forever) for a semicolon.
+     * We need to check for semi following an EXPORTS clause or an IMPORTS
+     * clause of both.  Look for BEGIN; in my initial MIBs to see those
+     * that I needed to hack to get to parse because they didn't have
+     * an IMPORTS or and EXPORTS clause.
+     */
+    while (type != SEMI && type != ENDOFFILE) {
 	type = get_token(fp, token);
     }
     return (type == SEMI);
@@ -1412,32 +1413,32 @@ int parse_mib_header(fp, name)
  */
 static struct node *
 parse(fp)
-    FILE *fp;
+     FILE *fp;
 {
     char token[MAXTOKEN];
     char name[MAXTOKEN];
-    int	type = 1;
+    int type = 1;
 #define BETWEEN_MIBS  	      1
 #define IN_MIB                2
     int state = BETWEEN_MIBS;
     struct node *np = 0, *root = NULL;
 
     hash_init();
-    quoted_string_buffer = (char *)calloc(1, MAXQUOTESTR);  /* free this later */
+    quoted_string_buffer = (char *) calloc(1, MAXQUOTESTR);	/* free this later */
     bzero(tclist, 64 * sizeof(struct tc));
 
-    while(type != ENDOFFILE){
+    while (type != ENDOFFILE) {
 	type = get_token(fp, token);
-skipget:
-	if (type == END){
-	    if (state != IN_MIB){
-		print_error("Error, end before start of MIB.", (char *)NULL, type);
+      skipget:
+	if (type == END) {
+	    if (state != IN_MIB) {
+		print_error("Error, end before start of MIB.", (char *) NULL, type);
 		return NULL;
 	    }
 	    state = BETWEEN_MIBS;
 	    continue;
-	} else if (type != LABEL){
-	    if (type == ENDOFFILE){
+	} else if (type != LABEL) {
+	    if (type == ENDOFFILE) {
 		return root;
 	    }
 	    print_error(token, "is a reserved word", type);
@@ -1445,163 +1446,163 @@ skipget:
 	}
 	strncpy(name, token, MAXTOKEN);
 	type = get_token(fp, token);
-	if (type == DEFINITIONS){
-	    if (state != BETWEEN_MIBS){
-		print_error("Error, nested MIBS.", (char *)NULL, type);
+	if (type == DEFINITIONS) {
+	    if (state != BETWEEN_MIBS) {
+		print_error("Error, nested MIBS.", (char *) NULL, type);
 		return NULL;
 	    }
 	    state = IN_MIB;
-	    if (!parse_mib_header(fp, name)){
-		print_error("Bad parse of module header", (char *)NULL, type);
+	    if (!parse_mib_header(fp, name)) {
+		print_error("Bad parse of module header", (char *) NULL, type);
 		return NULL;
 	    }
-       } else if (type == OBJTYPE){
-	    if (root == NULL){
+	} else if (type == OBJTYPE) {
+	    if (root == NULL) {
 		/* first link in chain */
 		np = root = parse_objecttype(fp, name);
-		if (np == NULL){
-		    print_error("Bad parse of object type", (char *)NULL,
-				type);
+		if (np == NULL) {
+		    print_error("Bad parse of object type", (char *) NULL,
+			type);
 		    return NULL;
 		}
 	    } else {
 		np->next = parse_objecttype(fp, name);
-		if (np->next == NULL){
-		    print_error("Bad parse of objecttype", (char *)NULL,
-				type);
+		if (np->next == NULL) {
+		    print_error("Bad parse of objecttype", (char *) NULL,
+			type);
 		    return NULL;
 		}
 	    }
 	    /* now find end of chain */
-	    while(np->next)
+	    while (np->next)
 		np = np->next;
-	} else if (type == OBJGROUP){
-	    if (root == NULL){
+	} else if (type == OBJGROUP) {
+	    if (root == NULL) {
 		/* first link in chain */
 		np = root = parse_objectgroup(fp, name);
-		if (np == NULL){
-		    print_error("Bad parse of object group", (char *)NULL,
-				type);
+		if (np == NULL) {
+		    print_error("Bad parse of object group", (char *) NULL,
+			type);
 		    return NULL;
 		}
 	    } else {
 		np->next = parse_objectgroup(fp, name);
-		if (np->next == NULL){
-		    print_error("Bad parse of objectgroup", (char *)NULL,
-				type);
+		if (np->next == NULL) {
+		    print_error("Bad parse of objectgroup", (char *) NULL,
+			type);
 		    return NULL;
 		}
 	    }
 	    /* now find end of chain */
-	    while(np->next)
+	    while (np->next)
 		np = np->next;
-	} else if (type == NOTIFTYPE){
-	    if (root == NULL){
+	} else if (type == NOTIFTYPE) {
+	    if (root == NULL) {
 		/* first link in chain */
 		np = root = parse_notificationDefinition(fp, name);
-		if (np == NULL){
+		if (np == NULL) {
 		    print_error("Bad parse of notification definition",
-				(char *)NULL, type);
+			(char *) NULL, type);
 		    return NULL;
 		}
 	    } else {
 		np->next = parse_notificationDefinition(fp, name);
-		if (np->next == NULL){
+		if (np->next == NULL) {
 		    print_error("Bad parse of notification definition",
-				(char *)NULL, type);
+			(char *) NULL, type);
 		    return NULL;
 		}
 	    }
 	    /* now find end of chain */
-	    while(np->next)
+	    while (np->next)
 		np = np->next;
-	} else if (type == COMPLIANCE){
-	    if (root == NULL){
+	} else if (type == COMPLIANCE) {
+	    if (root == NULL) {
 		/* first link in chain */
 		np = root = parse_compliance(fp, name);
-		if (np == NULL){
-		    print_error("Bad parse of module compliance", (char *)NULL,
-				type);
+		if (np == NULL) {
+		    print_error("Bad parse of module compliance", (char *) NULL,
+			type);
 		    return NULL;
 		}
 	    } else {
 		np->next = parse_compliance(fp, name);
-		if (np->next == NULL){
-		    print_error("Bad parse of module compliance", (char *)NULL,
-				type);
+		if (np->next == NULL) {
+		    print_error("Bad parse of module compliance", (char *) NULL,
+			type);
 		    return NULL;
 		}
 	    }
 	    /* now find end of chain */
-	    while(np->next)
+	    while (np->next)
 		np = np->next;
-	} else if (type == MODULEIDENTITY){
-	    if (root == NULL){
+	} else if (type == MODULEIDENTITY) {
+	    if (root == NULL) {
 		/* first link in chain */
 		np = root = parse_moduleIdentity(fp, name);
-		if (np == NULL){
-		    print_error("Bad parse of module identity", (char *)NULL,
-				type);
+		if (np == NULL) {
+		    print_error("Bad parse of module identity", (char *) NULL,
+			type);
 		    return NULL;
 		}
 	    } else {
 		np->next = parse_moduleIdentity(fp, name);
-		if (np->next == NULL){
-		    print_error("Bad parse of module identity", (char *)NULL,
-				type);
+		if (np->next == NULL) {
+		    print_error("Bad parse of module identity", (char *) NULL,
+			type);
 		    return NULL;
 		}
 	    }
 	    /* now find end of chain */
-	    while(np->next)
+	    while (np->next)
 		np = np->next;
-	} else if (type == OBJID){
-	    if (root == NULL){
+	} else if (type == OBJID) {
+	    if (root == NULL) {
 		/* first link in chain */
 		np = root = parse_objectid(fp, name);
-		if (np == NULL){
-		    print_error("Bad parse of object id", (char *)NULL, type);
+		if (np == NULL) {
+		    print_error("Bad parse of object id", (char *) NULL, type);
 		    return NULL;
 		}
 	    } else {
 		np->next = parse_objectid(fp, name);
-		if (np->next == NULL){
-		    print_error("Bad parse of object type", (char *)NULL,
-				type);
+		if (np->next == NULL) {
+		    print_error("Bad parse of object type", (char *) NULL,
+			type);
 		    return NULL;
 		}
 	    }
 	    /* now find end of chain */
-	    while(np->next)
+	    while (np->next)
 		np = np->next;
-	} else if (type == EQUALS){
-	    if (!parse_asntype(fp, name, &type, token)){
+	} else if (type == EQUALS) {
+	    if (!parse_asntype(fp, name, &type, token)) {
 		print_error("Bad parse of ASN type definition.", NULL, EQUALS);
 		return NULL;
 	    }
 	    goto skipget;
-	} else if (type == ENDOFFILE){
+	} else if (type == ENDOFFILE) {
 	    break;
 	} else {
-	    print_error("Bad operator", (char *)NULL, type);
+	    print_error("Bad operator", (char *) NULL, type);
 	    return NULL;
 	}
     }
 #ifdef TEST
-{
-    struct enum_list *ep;
-    
-    for(np = root; np; np = np->next){
-	printf("%s ::= { %s %d } (%d)\n", np->label, np->parent, np->subid,
+    {
+	struct enum_list *ep;
+
+	for (np = root; np; np = np->next) {
+	    printf("%s ::= { %s %d } (%d)\n", np->label, np->parent, np->subid,
 		np->type);
-	if (np->enums){
-	    printf("Enums: \n");
-	    for(ep = np->enums; ep; ep = ep->next){
-		printf("%s(%d)\n", ep->label, ep->value);
+	    if (np->enums) {
+		printf("Enums: \n");
+		for (ep = np->enums; ep; ep = ep->next) {
+		    printf("%s(%d)\n", ep->label, ep->value);
+		}
 	    }
 	}
     }
-}
 #endif /* TEST */
     return root;
 }
@@ -1612,8 +1613,8 @@ skipget:
  */
 static int
 get_token(fp, token)
-    FILE *fp;
-    char *token;
+     FILE *fp;
+     char *token;
 {
     static char last = ' ';
     int ch;
@@ -1624,7 +1625,7 @@ get_token(fp, token)
     *cp = 0;
     ch = last;
     /* skip all white space */
-    while(isspace(ch) && ch != -1){
+    while (isspace(ch) && ch != -1) {
 	ch = getc(fp);
 	if (ch == '\n')
 	    Line++;
@@ -1634,7 +1635,6 @@ get_token(fp, token)
     } else if (ch == '"') {
 	return parseQuoteString(fp, token);
     }
-
     /*
      * Accumulate characters until end of token is found.  Then attempt to
      * match this token as a reserved word.  If a match is found, return the
@@ -1644,8 +1644,8 @@ get_token(fp, token)
 	if (ch == '\n')
 	    Line++;
 	if (isspace(ch) || ch == '(' || ch == ')' || ch == '{' || ch == '}' ||
-	    ch == ',' || ch == ';'){
-	    if (!isspace(ch) && *token == 0){
+	    ch == ',' || ch == ';') {
+	    if (!isspace(ch) && *token == 0) {
 		hash += ch;
 		*cp++ = ch;
 		last = ' ';
@@ -1656,19 +1656,18 @@ get_token(fp, token)
 
 	    for (tp = buckets[BUCKET(hash)]; tp; tp = tp->next) {
 		if ((tp->hash == hash) && (strcmp(tp->name, token) == 0))
-			break;
+		    break;
 	    }
-	    if (tp){
+	    if (tp) {
 		if (tp->token == CONTINUE)
 		    continue;
 		return (tp->token);
 	    }
-
-	    if (token[0] == '-' && token[1] == '-'){
+	    if (token[0] == '-' && token[1] == '-') {
 		/* strip comment */
-		if (ch != '\n'){
+		if (ch != '\n') {
 		    while ((ch = getc(fp)) != -1)
-			if (ch == '\n'){
+			if (ch == '\n') {
 			    Line++;
 			    break;
 			}
@@ -1676,9 +1675,9 @@ get_token(fp, token)
 		if (ch == -1)
 		    return ENDOFFILE;
 		last = ch;
-		return get_token(fp, token);		
+		return get_token(fp, token);
 	    }
-	    for(cp = token; *cp; cp++)
+	    for (cp = token; *cp; cp++)
 		if (!isdigit(*cp))
 		    return LABEL;
 	    return NUMBER;
@@ -1688,14 +1687,14 @@ get_token(fp, token)
 	    if (ch == '\n')
 		Line++;
 	}
-    
+
     } while ((ch = getc(fp)) != -1);
     return ENDOFFILE;
 }
 
 struct tree *
 read_mib(filename)
-    char *filename;
+     char *filename;
 {
     FILE *fp;
     struct node *nodes;
@@ -1705,7 +1704,7 @@ read_mib(filename)
     if (fp == NULL)
 	return NULL;
     nodes = parse(fp);
-    if (!nodes){
+    if (!nodes) {
 	fprintf(stderr, "Mib table is bad.  Exiting\n");
 	exit(1);
     }
@@ -1717,15 +1716,15 @@ read_mib(filename)
 
 #ifdef TEST
 main(argc, argv)
-    int argc;
-    char *argv[];
+     int argc;
+     char *argv[];
 {
     FILE *fp;
     struct node *nodes;
     struct tree *tp;
 
     fp = fopen("mib.txt", "r");
-    if (fp == NULL){
+    if (fp == NULL) {
 	fprintf(stderr, "open failed\n");
 	return 1;
     }
@@ -1739,22 +1738,21 @@ main(argc, argv)
 
 static int
 parseQuoteString(fp, token)
-    FILE *fp;
-    char *token;
+     FILE *fp;
+     char *token;
 {
     int ch;
 
     ch = ' ';
-    *token = '\0';                      /* make the token empty */
+    *token = '\0';		/* make the token empty */
 
-    while(ch != -1) {
-        ch = getc(fp);
+    while (ch != -1) {
+	ch = getc(fp);
 	if (ch == '\n')
 	    Line++;
 	else if (ch == '"') {
-            return QUOTESTRING;
-        }
-
+	    return QUOTESTRING;
+	}
     }
 
     return 0;
@@ -1766,30 +1764,30 @@ parseQuoteString(fp, token)
  */
 static int
 tossObjectIdentifier(fp)
-    FILE *fp;
+     FILE *fp;
 {
     int ch;
 
-        ch = getc(fp);
+    ch = getc(fp);
 /*    ch = last; = ' '? */
     /* skip all white space */
-    while(isspace(ch) && ch != -1){
-        ch = getc(fp);
-        if (ch == '\n')
-            Line++;
+    while (isspace(ch) && ch != -1) {
+	ch = getc(fp);
+	if (ch == '\n')
+	    Line++;
     }
     if (ch != '{')
-        return 0;
+	return 0;
 
-    while(ch != -1) {
-        ch = getc(fp);
+    while (ch != -1) {
+	ch = getc(fp);
 
-        if (ch == '\n')
-            Line++;
-        else if (ch == '}')
-            return OBJID;
+	if (ch == '\n')
+	    Line++;
+	else if (ch == '}')
+	    return OBJID;
     }
 
-/*    last = ch;*/
+/*    last = ch; */
     return 0;
 }
