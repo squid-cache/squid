@@ -13,7 +13,7 @@
  **************************************************************/
 
 /* Original RCS tag:
-  Id: snprintf.c,v 1.1 1995/08/19 20:36:09 papowell Exp */
+ * Id: snprintf.c,v 1.1 1995/08/19 20:36:09 papowell Exp */
 
 static void dopr();
 static char *end;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.22 1997/07/19 04:01:24 wessels Exp $
+ * $Id: peer_select.cc,v 1.23 1997/07/19 07:20:04 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -58,10 +58,11 @@ static struct {
     int timeouts;
 } PeerStats;
 
-static char *DirectStr[] = {
-	"DIRECT_NO",
-	"DIRECT_MAYBE",
-	"DIRECT_YES"
+static char *DirectStr[] =
+{
+    "DIRECT_NO",
+    "DIRECT_MAYBE",
+    "DIRECT_YES"
 };
 
 static void peerSelectFoo _PARAMS((ps_state *));
@@ -88,7 +89,7 @@ peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
     int n;
     if (entry == NULL)
 	return 0;
-    debug(44,3)("peerSelectIcpPing: %s\n", entry->url);
+    debug(44, 3) ("peerSelectIcpPing: %s\n", entry->url);
     if (entry->ping_status != PING_NONE)
 	return 0;
     if (direct == DIRECT_YES)
@@ -102,7 +103,7 @@ peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
 	if (direct != DIRECT_NO)
 	    return 0;
     n = neighborsCount(request);
-    debug(44,3)("peerSelectIcpPing: counted %d neighbors\n", n);
+    debug(44, 3) ("peerSelectIcpPing: counted %d neighbors\n", n);
     return n;
 }
 
@@ -139,9 +140,9 @@ peerSelect(request_t * request,
 {
     ps_state *psstate = xcalloc(1, sizeof(ps_state));
     if (entry)
-        debug(44,3)("peerSelect: %s\n", entry->url);
+	debug(44, 3) ("peerSelect: %s\n", entry->url);
     else
-        debug(44,3)("peerSelect: %s\n", RequestMethodStr[request->method]);
+	debug(44, 3) ("peerSelect: %s\n", RequestMethodStr[request->method]);
     cbdataAdd(psstate);
     psstate->request = requestLink(request);
     psstate->entry = entry;
@@ -179,7 +180,7 @@ peerSelectCallback(ps_state * psstate, peer * p)
     StoreEntry *entry = psstate->entry;
     void *data = psstate->callback_data;
     if (entry) {
-        debug(44, 3) ("peerSelectCallback: %s\n", entry->url);
+	debug(44, 3) ("peerSelectCallback: %s\n", entry->url);
 	if (entry->ping_status == PING_WAITING)
 	    eventDelete(peerPingTimeout, psstate);
 	entry->ping_status = PING_DONE;
@@ -300,7 +301,7 @@ peerPingTimeout(void *data)
     ps_state *psstate = data;
     StoreEntry *entry = psstate->entry;
     if (entry)
-        debug(44, 3) ("peerPingTimeout: '%s'\n", entry->url);
+	debug(44, 3) ("peerPingTimeout: '%s'\n", entry->url);
     entry->ping_status = PING_TIMEOUT;
     PeerStats.timeouts++;
     psstate->icp.timeout = 1;
@@ -320,7 +321,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_opcode op, void *data)
     ps_state *psstate = data;
     int w_rtt;
     request_t *request = psstate->request;
-    debug(44,3)("peerHandleIcpReply: %s %s\n",
+    debug(44, 3) ("peerHandleIcpReply: %s %s\n",
 	IcpOpcodeStr[op],
 	psstate->entry->url);
     psstate->icp.n_recv++;

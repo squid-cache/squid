@@ -97,7 +97,7 @@
 #undef  HASH_SIZE 65357		/* prime number < 65536 */
 #endif
 
-#define  DEFAULT_HASH_SIZE 7951		/* prime number < 8192 */
+#define  DEFAULT_HASH_SIZE 7951	/* prime number < 8192 */
 
 #define HTTP_REPLY_FIELD_SZ 128
 
