@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.50 1996/08/28 20:11:58 wessels Exp $
+ * $Id: ipcache.cc,v 1.51 1996/08/28 20:12:55 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -337,7 +337,6 @@ int ipcache_purgelru()
 	    removed++;
 	    continue;
 	}
-
 	if (LRU_list_count == meta_data.ipcache_count)
 	    break;
 	if (i->status == IP_PENDING)

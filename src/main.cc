@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.67 1996/08/28 20:12:26 wessels Exp $
+ * $Id: main.cc,v 1.68 1996/08/28 20:12:56 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -503,8 +503,8 @@ static time_t mainMaintenance()
     time_t next;
     int n;
     if (squid_curtime >= next_maintain) {
-        storeMaintainSwapSpace();
-        next_maintain = squid_curtime + 1;
+	storeMaintainSwapSpace();
+	next_maintain = squid_curtime + 1;
     }
     if (store_rebuilding != STORE_NOT_REBUILDING)
 	goto maintenance_done;
