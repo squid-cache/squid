@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.24 1998/03/17 07:08:26 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.25 1998/03/17 17:35:12 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -343,7 +343,7 @@ httpHeaderClean(HttpHeader * hdr)
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
 	/* fix this (for cc too) for req headers @?@ */
 	statHistCount(&HttpHeaderStats[0].fieldTypeDistr, e->id);
-	if (e->id == HDR_CACHE_CONTROL)
+	if (e->id == HDR_CACHE_CONTROL && e->cache.v_pcc)
 	    httpHdrCcUpdateStats(e->cache.v_pcc, &HttpHeaderStats[0].ccTypeDistr);
 	httpHeaderEntryClean(e); /* yes, this leaves us in inconsistent state */
     }
