@@ -1,3 +1,14 @@
+Changes to squid-1.1.beta5 (October 7, 1996):
+
+	- Fixed coredump in storeFreeMemory().
+	- Fixed displaying repeated IP addresses in IP cache contents.
+	- Added parent/sibling modifiers to cache_host_domain lines.
+	- Added 'miss_access' to restrict fetching HTTP MISS requests.
+	  Use this to force your peer caches to use you as a sibling and
+	  not as a parent.
+	- Added browser ACL patch (Carson Gaspar).
+	- Added reading ACLs from file patch (Arjan de Vet).
+
 Changes to squid-1.1.beta4 (September 26, 1996):
 
 	- Fixed coredump in icpStateFree() when calling
