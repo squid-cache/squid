@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.95 2002/07/18 23:43:12 hno Exp $
+ * $Id: cachemgr.cc,v 1.96 2002/07/18 23:55:43 hno Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -454,10 +454,10 @@ read_reply(int s, cachemgr_request * req)
 	    break;
 	case isBodyStart:
 	    printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
-	    printf("<HTML><HEAD><TITLE>CacheMgr@%s: %s</TITLE>\n");
-	    printf("<STYLE type= \"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
-	    printf("</HEAD><BODY>\n",
+	    printf("<HTML><HEAD><TITLE>CacheMgr@%s: %s</TITLE>\n",
 		req->hostname, action);
+	    printf("<STYLE type= \"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
+	    printf("</HEAD><BODY>\n");
 	    if (parse_menu) {
 		printf("<H2><a href=\"%s\">Cache Manager</a> menu for %s:</H2>",
 		    menu_url(req, "authenticate"), req->hostname);
