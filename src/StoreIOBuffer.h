@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOBuffer.h,v 1.3 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StoreIOBuffer.h,v 1.4 2003/08/10 03:59:19 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -29,10 +29,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins  <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_STOREIORESULT_H
-#define SQUID_STOREIORESULT_H
+#ifndef SQUID_STOREIOBUFFER_H
+#define SQUID_STOREIOBUFFER_H
+
+/* TODO: move this and the range() method into a .cci */
+#include "Range.h"
 
 class StoreIOBuffer
 {
@@ -44,6 +48,11 @@ public:
             length (aLength), offset (anOffset), data (someData)
     {
         flags.error = 0;
+    }
+
+    Range<size_t> range() const
+    {
+        return Range<size_t>(offset, offset + length);
     }
 
     struct
@@ -59,4 +68,4 @@ int error:
     char *data;
 };
 
-#endif /* SQUID_STOREIORESULT_H */
+#endif /* SQUID_STOREIOBUFFER_H */

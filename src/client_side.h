@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.6 2003/08/04 22:14:41 robertc Exp $
+ * $Id: client_side.h,v 1.7 2003/08/10 03:59:19 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,6 +42,10 @@ class ConnStateData;
 class ClientHttpRequest;
 
 class clientStreamNode;
+
+template <class T>
+
+class Range;
 
 class ClientSocketContext : public RefCountable
 {
@@ -96,7 +100,7 @@ int parsed_ok:
     clientStream_status_t socketState();
     void sendBody(HttpReply * rep, StoreIOBuffer bodyData);
     void sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData);
-    size_t lengthToSend(size_t maximum);
+    size_t lengthToSend(Range<size_t> const &available);
     void noteSentBodyBytes(size_t);
     void buildRangeHeader(HttpReply * rep);
     int fd() const;
@@ -106,14 +110,12 @@ int parsed_ok:
     void removeFromConnectionList(RefCount<ConnStateData> conn);
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer recievedData);
     bool multipartRangeRequest() const;
-    void packRange(const char **buf,
-                   size_t size,
-                   MemBuf * mb);
     void registerWithConn();
 
 private:
     CBDATA_CLASS(ClientSocketContext);
     void prepareReply(HttpReply * rep);
+    void packRange(StoreIOBuffer const &, MemBuf * mb);
     void deRegisterWithConn();
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
