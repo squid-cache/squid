@@ -1,21 +1,21 @@
 
 /*
- * $Id: http.cc,v 1.376 2001/01/09 14:41:33 hno Exp $
+ * $Id: http.cc,v 1.377 2001/01/12 00:37:18 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+ * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
- *  Squid is the result of efforts by numerous individuals from the
- *  Internet community.  Development is led by Duane Wessels of the
- *  National Laboratory for Applied Network Research and funded by the
- *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  the Regents of the University of California.  Please see the
- *  COPYRIGHT file for full details.  Squid incorporates software
- *  developed and/or copyrighted by other sources.  Please see the
- *  CREDITS file for full details.
+ *  Squid is the result of efforts by numerous individuals from
+ *  the Internet community; see the CONTRIBUTORS file for full
+ *  details.   Many organizations have provided support for Squid's
+ *  development; see the SPONSORS file for full details.  Squid is
+ *  Copyrighted (C) 2001 by the Regents of the University of
+ *  California; see the COPYRIGHT file for full details.  Squid
+ *  incorporates software developed and/or copyrighted by other
+ *  sources; see the CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -790,15 +790,15 @@ httpBuildRequestHeader(request_t * request,
     }
     /* append Proxy-Authorization if configured for peer, and proxying */
     if (request->flags.proxying && orig_request->peer_login &&
-	    !httpHeaderHas(hdr_out, HDR_PROXY_AUTHORIZATION) &&
-	    strcmp(orig_request->peer_login, "PASS") != 0) {
+	!httpHeaderHas(hdr_out, HDR_PROXY_AUTHORIZATION) &&
+	strcmp(orig_request->peer_login, "PASS") != 0) {
 	if (*orig_request->peer_login == '*') {
 	    /* Special mode, to pass the username to the upstream cache */
 	    char loginbuf[256];
 	    char *username = "-";
 	    if (orig_request->auth_user_request)
 		username = authenticateUserRequestUsername(orig_request->auth_user_request);
-	    snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login+1);
+	    snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 	    httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
 		base64_encode(loginbuf));
 	} else {

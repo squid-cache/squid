@@ -1,21 +1,21 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.29 2001/01/11 22:20:45 adrian Exp $
+ * $Id: HttpHeaderTools.cc,v 1.30 2001/01/12 00:37:14 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
  *
- * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+ * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
- *  Squid is the result of efforts by numerous individuals from the
- *  Internet community.  Development is led by Duane Wessels of the
- *  National Laboratory for Applied Network Research and funded by the
- *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  the Regents of the University of California.  Please see the
- *  COPYRIGHT file for full details.  Squid incorporates software
- *  developed and/or copyrighted by other sources.  Please see the
- *  CREDITS file for full details.
+ *  Squid is the result of efforts by numerous individuals from
+ *  the Internet community; see the CONTRIBUTORS file for full
+ *  details.   Many organizations have provided support for Squid's
+ *  development; see the SPONSORS file for full details.  Squid is
+ *  Copyrighted (C) 2001 by the Regents of the University of
+ *  California; see the COPYRIGHT file for full details.  Squid
+ *  incorporates software developed and/or copyrighted by other
+ *  sources; see the CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -409,13 +409,13 @@ httpHdrMangle(HttpHeaderEntry * e, request_t * request)
     checklist = aclChecklistCreate(hm->access_list, request, NULL);
     /* aclCheckFast returns 1 for allow. */
     if (1 == aclCheckFast(hm->access_list, checklist))
-        retval = 1;
+	retval = 1;
     /* It was denied; Do we replace it with something else? */
     else if (NULL == hm->replacement)
-        retval = 0;
+	retval = 0;
     /* yes, we do */
     else
-        stringReset(&e->value, hm->replacement);
+	stringReset(&e->value, hm->replacement);
     retval = 1;
 
     aclChecklistFree(checklist);

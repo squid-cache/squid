@@ -1,3 +1,4 @@
+	- Added 'max-conn' option to 'cache_peer'
 
 Changes to squid-2.5
 	- Major rewrite of proxy authentication to support other schemes
