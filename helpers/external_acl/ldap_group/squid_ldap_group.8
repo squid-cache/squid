@@ -1,17 +1,17 @@
-.TH squid_ldap_group 8 "7 September 2002" "Squid LDAP Match"
+.TH squid_ldap_group 8 "1 Mars 2003" "Squid LDAP Match"
 .
 .SH NAME
 squid_ldap_group - Squid LDAP external acl group helper
 .
 .SH SYNOPSIS
-squid_ldap_group -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]...]
+squid_ldap_group -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]...|URI]
 .
 .SH DESCRIPTION
 This helper allows Squid to connect to a LDAP directory to
 authorize users via LDAP groups.
 .P
 The program operates by searching with a search filter based
-on the users login name and requested group, and if a match
+on the users user name and requested group, and if a match
 is found it is determined that the user belongs to the group.
 .
 .TP
@@ -25,7 +25,7 @@ Specifies the base DN under which the users are located (if different)
 .TP
 .B "-g"
 Specifies that the first query argument sent to the helper by Squid is
-a extension to the basedn and will be temporarily added infront of the
+a extension to the basedn and will be temporarily added in front of the
 global basedn for this query.
 .
 .TP
@@ -33,7 +33,7 @@ global basedn for this query.
 LDAP search filter used to search the LDAP directory for any
 matching group memberships.
 .BR
-In the filter %u will be replaced by the user login name (or DN if
+In the filter %u will be replaced by the user name (or DN if
 the -F or -u options are used) and %g by the requested group name.
 .
 .TP
@@ -41,13 +41,13 @@ the -F or -u options are used) and %g by the requested group name.
 LDAP search filter used to search the LDAP directory for any
 matching users.
 .BR
-In the filter %s will be replaced by the user login name. If % is to be
+In the filter %s will be replaced by the user name. If % is to be
 included literally in the filter then use %%.
 .
 .TP
 .BI "-u " attr
-LDAP attribute used to construct the user DN from the login name and
-base dn.
+LDAP attribute used to construct the user DN from the user name and
+base dn without needing to search for the user.
 .
 .TP
 .BI "-s " base|one|sub
@@ -74,8 +74,8 @@ extracts the password used from a process listing.
 .TP
 .BI -P
 Use a persistent LDAP connection. Normally the LDAP connection
-is only open while validating a username to preserve resources
-at the LDAP server. This option causes the LDAP connection to
+is only open while verifying a users group membership to preserve
+resources at the LDAP server. This option causes the LDAP connection to
 be kept open, allowing it to be reused for further user
 validations. Recommended for larger installations.
 .
@@ -97,6 +97,10 @@ or only to
 the base object
 .
 .TP
+.BI -H " ldapuri"
+Specity the LDAP server to connect to by a LDAP URI
+.
+.TP
 .BI -h " ldapserver"
 Specify the LDAP server to connect to
 .TP
@@ -106,7 +110,7 @@ other than the default LDAP port 389.
 .
 .TP
 .BI -S
-Strip NT domain name component from usernames (/ or \\ separated)
+Strip NT domain name component from user names (/ or \\ separated)
 .
 .SH SQUID CONFIGURATION
 .
@@ -117,15 +121,15 @@ squid.conf.
 .nf
 external_acl_type ldap_group %LOGIN /path/to/squid_ldap_group ...
 .br
-acl group1 ldap_group Group1
+acl group1 external ldap_group Group1
 .br
-acl group2 ldap_gorup Group2
+acl group2 external ldap_group Group2
 .fi
 .ft
 .
 .SH NOTES
 .
-When constructing search filters it is strongly recommended to test the filter
+When constructing search filters it is recommended to first test the filter
 using ldapsearch before you attempt to use squid_ldap_group. This to verify
 that the filter matches what you expect.
 .
@@ -141,7 +145,7 @@ based on prior work in squid_ldap_auth by
 .I Glen Newton <glen.newton@nrc.ca>
 .
 .SH KNOWN LIMITATIONS
-Max 16 occurances of %s in the -u argument is supported.
+Max 16 occurrences of %s in the -u argument is supported.
 .
 .SH QUESTIONS
 Any questions on usage can be sent to 

@@ -13,8 +13,7 @@
  *  Henrik Nordstrom <hno@marasystems.com>
  *  MARA Systems AB, Sweden <http://www.marasystems.com>
  *
- * With contributions from others mentioned in the change histor section
- * below.
+ * With contributions from others mentioned in the ChangeLog file
  *
  * In part based on squid_ldap_auth by Glen Newton and Henrik Nordstrom.
  *
@@ -32,90 +31,6 @@
  * and/or modify it under the terms of the GNU General Public License 
  * as published by the Free Software Foundation; either version 2, 
  * or (at your option) any later version.
- *
- * History:
- *
- * Version 2.9
- * 2003-01-03 Henrik Nordstrom <hno@marasystems.com>
- *		Fixed missing string termination on ldap_escape_vale,
- *		and corrected build problem with LDAPv2 libraries
- * Version 2.8
- * 2002-11-27 Henrik Nordstrom <hno@marasystems.com>
- * 		Replacement for ldap_build_filter. Also changed
- * 		the % codes to %u (user) and %g (group) which
- * 		is a bit more intuitive.
- * 2002-11-21 Gerard Eviston
- * 		Fix ldap_search_s error management. This fixes
- * 		a core dump if there is a LDAP search filter
- * 		syntax error (possibly caused by malformed input).
- * Version 2.7
- * 2002-10-22: Henrik Nordstrom <hno@marasystems.com>
- * 		strwordtok bugfix
- * Version 2.6
- * 2002-09-21: Gerard Eviston
- * 		-S option to strip NT domain names from
- * 		login names
- * Version 2.5
- * 2002-09-09: Henrik Nordstrom <hno@marasystems.com>
- * 		Added support for user DN lookups
- * 		(-u -B -F options)
- * Version 2.4
- * 2002-09-06: Henrik Nordstrom <hno@marasystems.com>
- * 		Many bugfixes in connection management
- * 		-g option added, and added support
- * 		for multiple groups. Prior versions
- * 		only supported one group and an optional
- * 		group base RDN
- * Version 2.3
- * 2002-09-04: Henrik Nordstrom <hno@marasystems.com>
- *              Minor cleanups
- * Version 2.2
- * 2002-09-04: Henrik Nordstrom <hno@marasystems.com>
- *              Merged changes from squid_ldap_auth.c
- *              - TLS support (Michael Cunningham)
- *              - -p option to specify port
- *              Documented the % codes to use in -f
- * Version 2.1
- * 2002-08-21: Henrik Nordstrom <hno@marasystems.com>
- *              Support groups or usernames having spaces
- * Version 2.0
- * 2002-01-22: Henrik Nordstrom <hno@marasystems.com>
- *              Added optional third query argument for search RDN
- * 2002-01-22: Henrik Nordstrom <hno@marasystems.com>
- *              Removed unused options, and fully changed name
- *              to squid_ldap_group.
- * Version 1.0
- * 2001-07-17: Flavio Pescuma <flavio@marasystems.com>
- *              Using the main function from squid_ldap_auth
- *              wrote squid_ldap_group. This program replaces 
- *              the %a and %v (ldapfilter.conf) from the filter 
- *              template supplied with -f with the two arguments 
- *              sent by squid. Returns OK if the ldap_search 
- *              using the composed filter succeeds.
- *
- * Changes from squid_ldap_auth.c:
- *
- * 2001-12-12: Michael Cunningham <m.cunningham@xpedite.com>
- *             - Added TLS support and partial ldap version 3 support. 
- * 2001-09-05: Henrik Nordstrom <hno@squid-cache.org>
- *             - Added ability to specify another default LDAP port to
- *               connect to. Persistent connections moved to -P
- * 2001-05-02: Henrik Nordstrom <hno@squid-cache.org>
- *             - Support newer OpenLDAP 2.x libraries using the
- *               revised Internet Draft API which unfortunately
- *               is not backwards compatible with RFC1823..
- * 2001-04-15: Henrik Nordstrom <hno@squid-cache.org>
- *             - Added command line option for basedn
- *             - Added the ability to search for the user DN
- * 2001-04-16: Henrik Nordstrom <hno@squid-cache.org>
- *             - Added -D binddn -w bindpasswd.
- * 2001-04-17: Henrik Nordstrom <hno@squid-cache.org>
- *             - Added -R to disable referrals
- *             - Added -a to control alias dereferencing
- * 2001-04-17: Henrik Nordstrom <hno@squid-cache.org>
- *             - Added -u, DN username attribute name
- * 2001-04-18: Henrik Nordstrom <hno@squid-cache.org>
- *             - Allow full filter specifications in -f
  */
 
 #include <stdio.h>
@@ -203,6 +118,12 @@ squid_ldap_memfree(char *p)
 }
 #endif
 
+#ifdef LDAP_API_FEATURE_X_OPENLDAP
+  #if LDAP_VENDOR_VERSION > 194
+    #define HAS_URI_SUPPORT 1
+  #endif
+#endif
+
 static char *
 strwordtok(char *buf, char **t)
 {
@@ -287,6 +208,12 @@ main(int argc, char **argv)
 	argv++;
 	argc--;
 	switch (option) {
+	case 'H':
+#if !HAS_URI_SUPPORT
+	    fprintf(stderr, "ERROR: Your LDAP library does not have URI support\n");
+	    exit(1);
+#endif
+	    /* Fall thru to -h */
 	case 'h':
 	    if (ldapServer) {
 		int len = strlen(ldapServer) + 1 + strlen(value) + 1;
@@ -298,7 +225,6 @@ main(int argc, char **argv)
 		ldapServer = strdup(value);
 	    }
 	    break;
-
 	case 'b':
 	    basedn = value;
 	    break;
@@ -421,13 +347,18 @@ main(int argc, char **argv)
 	fprintf(stderr, "\t-s base|one|sub\t\tsearch scope\n");
 	fprintf(stderr, "\t-D binddn\t\tDN to bind as to perform searches\n");
 	fprintf(stderr, "\t-w bindpasswd\t\tpassword for binddn\n");
+#if HAS_URI_SUPPORT
+	fprintf(stderr, "\t-H URI\t\t\tLDAPURI (defaults to ldap://localhost)\n");
+#endif
 	fprintf(stderr, "\t-h server\t\tLDAP server (defaults to localhost)\n");
 	fprintf(stderr, "\t-p port\t\t\tLDAP server port (defaults to %d)\n", LDAP_PORT);
 	fprintf(stderr, "\t-P\t\t\tpersistent LDAP connection\n");
 	fprintf(stderr, "\t-R\t\t\tdo not follow referrals\n");
 	fprintf(stderr, "\t-a never|always|search|find\n\t\t\t\twhen to dereference aliases\n");
-	fprintf(stderr, "\t-v 1|2\t\t\tLDAP version\n");
+#ifdef LDAP_VERSION3
+	fprintf(stderr, "\t-v 2|3\t\t\tLDAP version\n");
 	fprintf(stderr, "\t-Z\t\t\tTLS encrypt the LDAP connection, requires\n\t\t\t\tLDAP version 3\n");
+#endif
 	fprintf(stderr, "\t-g\t\t\tfirst query parameter is base DN extension\n\t\t\t\tfor this query\n");
 	fprintf(stderr, "\t-S\t\t\tStrip NT domain from usernames\n");
 	fprintf(stderr, "\n");
@@ -452,11 +383,20 @@ main(int argc, char **argv)
 
 	  recover:
 	    if (ld == NULL) {
+#if HAS_URI_SUPPORT
+	    	if (strstr(ldapServer, "://") != NULL) {
+		    rc = ldap_initialize( &ld, ldapServer );
+		    if( rc != LDAP_SUCCESS ) {
+			fprintf(stderr, "\nUnable to connect to LDAPURI:%s\n", ldapServer);
+			break;
+		    }
+	    	} else
+#endif
 		if ((ld = ldap_init(ldapServer, port)) == NULL) {
-		    fprintf(stderr, "\nUnable to connect to LDAP server:%s port:%d\n",
-			ldapServer, port);
+		    fprintf(stderr, "\nUnable to connect to LDAP server:%s port:%d\n",ldapServer, port);
 		    break;
 		}
+
 #ifdef LDAP_VERSION3
 		if (version == -1) {
 		    version = LDAP_VERSION2;
@@ -619,7 +559,7 @@ searchLDAPGroup(LDAP * ld, char *group, char *member, char *extension_dn)
     }
 
     if (debug)
-	fprintf(stderr, "filter %s\n", filter);
+	fprintf(stderr, "group filter '%s', searchbase '%s'\n", filter, searchbase);
 
     rc = ldap_search_s(ld, searchbase, searchscope, filter, NULL, 1, &res);
     if (rc != LDAP_SUCCESS) {
@@ -656,10 +596,12 @@ searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
 	char *userdn;
 	if (extension_dn && *extension_dn)
 	    snprintf(searchbase, sizeof(searchbase), "%s,%s", extension_dn, userbasedn ? userbasedn : basedn);
+	else
+	    snprintf(searchbase, sizeof(searchbase), "%s", userbasedn ? userbasedn : basedn);
 	ldap_escape_value(escaped_login, sizeof(escaped_login), login);
 	snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
 	if (debug)
-	    fprintf(stderr, "user filter %s\n", filter);
+	    fprintf(stderr, "user filter '%s', searchbase '%s'\n", filter, searchbase);
 	rc = ldap_search_s(ld, searchbase, searchscope, filter, NULL, 1, &res);
 	if (rc != LDAP_SUCCESS) {
 	    if (noreferrals && rc == LDAP_PARTIAL_RESULTS) {
@@ -674,7 +616,7 @@ searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
 	}
 	entry = ldap_first_entry(ld, res);
 	if (!entry) {
-	    fprintf(stderr, PROGRAM_NAME " WARNING, User '%s' not found\n", filter);
+	    fprintf(stderr, PROGRAM_NAME " WARNING, User '%s' not found in '%s'\n", login, searchbase);
 	    ldap_msgfree(res);
 	    return 1;
 	}

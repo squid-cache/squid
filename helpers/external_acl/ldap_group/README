@@ -1,0 +1,10 @@
+This program is a LDAP group helper for Squid.
+
+See the included manpage for documentation.
+
+  nroff -man squid_ldap_group.8 | less
+
+See INSTALL for installation instructions
+
+The latest version of this program can always be found from
+MARA Systems at http://marasystems.com/download/LDAP_Group/
