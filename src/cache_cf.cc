@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.10 1996/03/29 21:14:32 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.11 1996/04/04 04:33:09 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -63,6 +63,7 @@ static struct {
     char *debugOptions;
     char *pidFilename;
     char *visibleHostname;
+    char *ftpUser;
 } Config;
 
 #define DefaultMemMaxSize 	(16 << 20)	/* 16 MB */
@@ -121,6 +122,7 @@ static struct {
 #define DefaultSingleParentBypass 0	/* default off */
 #define DefaultPidFilename      (char *)NULL	/* default NONE */
 #define DefaultVisibleHostname  (char *)NULL	/* default NONE */
+#define DefaultFtpUser		"cached@"	/* Default without domain */
 
 extern char *config_file;
 
@@ -968,6 +970,17 @@ static void parseVisibleHostnameLine(line_in)
     Config.visibleHostname = xstrdup(token);
 }
 
+static void parseFtpUserLine(line_in)
+     char *line_in;
+{
+    char *token;
+    token = strtok(NULL, w_space);
+    safe_free(Config.ftpUser);
+    if (token == (char *) NULL)
+	self_destruct(line_in);
+    Config.ftpUser = xstrdup(token);
+}
+
 int parseConfigFile(file_name)
      char *file_name;
 {
@@ -1226,6 +1239,9 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "visible_hostname"))
 	    parseVisibleHostnameLine(line_in);
 
+	else if (!strcmp(token, "ftp_user"))
+	    parseFtpUserLine(line_in);
+
 	/* If unknown, treat as a comment line */
 	else {
 	    /* EMPTY */ ;
@@ -1461,6 +1477,10 @@ char *getVisibleHostname()
 {
     return Config.visibleHostname;
 }
+char *getFtpUser()
+{
+    return Config.ftpUser;
+}
 
 int setAsciiPortNum(p)
      int p;
@@ -1542,6 +1562,7 @@ static void configSetFactoryDefaults()
     Config.Accel.withProxy = DefaultAccelWithProxy;
     Config.pidFilename = safe_xstrdup(DefaultPidFilename);
     Config.visibleHostname = safe_xstrdup(DefaultVisibleHostname);
+    Config.ftpUser = safe_xstrdup(DefaultFtpUser);
 }
 
 static void configDoConfigure()
