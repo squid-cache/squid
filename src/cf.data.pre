@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.192 2000/07/13 06:13:42 wessels Exp $
+# $Id: cf.data.pre,v 1.193 2000/07/15 23:56:22 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -837,13 +837,10 @@ NAME: referer_log
 TYPE: string
 LOC: Config.Log.referer
 DEFAULT: none
+IFDEF: USE_REFERER_LOG
 DOC_START
-	If configured with the "--enable-referer_log" configure
-	option, Squid will write the Referer field from HTTP
-	requests to the filename specified here.  By default
-	referer_log is disabled.
-
-referer_log none
+	Squid will write the Referer field from HTTP requests to the
+	filename specified here.  By default referer_log is disabled.
 DOC_END
 
 
