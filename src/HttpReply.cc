@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.16 1998/04/27 19:16:06 wessels Exp $
+ * $Id: HttpReply.cc,v 1.17 1998/04/27 20:03:56 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -273,7 +273,14 @@ httpReplyHdrCacheInit(HttpReply * rep)
     str = httpHeaderGetStr(hdr, HDR_PROXY_CONNECTION);
     if (NULL == str)
 	str = httpHeaderGetStr(hdr, HDR_CONNECTION);	/* @?@ FIX ME */
-    rep->proxy_keep_alive = str && 0 == strcasecmp(str, "Keep-Alive");
+    if (str) {
+	rep->keep_alive = (strcasecmp(str, "Keep-Alive") == 0);
+    } else {
+	if (rep->sline.version >= 1.1)
+	    rep->keep_alive = 1;	/* 1.1+ defaults to keep-alive */
+	else
+	    rep->keep_alive = 0;	/* pre 1.1 default to non-keep-alive */
+    }
     /* final adjustments */
     /* The max-age directive takes priority over Expires, check it first */
     if (rep->cache_control && rep->cache_control->max_age >= 0)
