@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.207 1997/10/30 02:41:02 wessels Exp $
+ * $Id: http.cc,v 1.208 1997/10/30 03:31:22 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -632,12 +632,10 @@ httpReadReply(int fd, void *data)
 	    httpRestart(httpState);
 	} else {
 	    httpState->eof = 1;
-
 	    err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	    err->xerrno = errno;
 	    err->request = requestLink(httpState->request);
 	    errorAppendEntry(entry, err);
-
 	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
@@ -685,7 +683,6 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	err->xerrno = errno;
 	err->request = requestLink(httpState->request);
 	errorAppendEntry(entry, err);
-
 	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
@@ -930,13 +927,11 @@ httpSocketOpen(StoreEntry * entry, request_t * request)
 	entry->url);
     if (fd < 0) {
 	debug(11, 4) ("httpSocketOpen: Failed because we're out of sockets.\n");
-
 	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->xerrno = errno;
 	if (request)
 	    err->request = requestLink(request);
 	errorAppendEntry(entry, err);
-
 	storeAbort(entry, 0);
     }
     return fd;
@@ -1050,23 +1045,19 @@ httpConnectDone(int fd, int status, void *data)
     ErrorState *err;
     if (status == COMM_ERR_DNS) {
 	debug(11, 4) ("httpConnectDone: Unknown host: %s\n", request->host);
-
 	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = requestLink(request);
 	errorAppendEntry(entry, err);
-
 	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-
 	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->host = xstrdup(request->host);
 	err->port = request->port;
 	err->request = requestLink(request);
 	errorAppendEntry(entry, err);
-
 	storeAbort(entry, 0);
 	if (httpState->neighbor)
 	    peerCheckConnectStart(httpState->neighbor);

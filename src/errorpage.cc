@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.95 1997/10/30 02:40:58 wessels Exp $
+ * $Id: errorpage.cc,v 1.96 1997/10/30 03:31:20 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -30,10 +30,10 @@
  */
 
 /*
- * Abstract:	These routines are used to generate error messages to be
- *		sent to clients.  The error type is used to select between
- *		the various message formats. (formats are stored in the
- *		Config.errorDirectory)
+ * Abstract:  These routines are used to generate error messages to be
+ *              sent to clients.  The error type is used to select between
+ *              the various message formats. (formats are stored in the
+ *              Config.errorDirectory)
  */
 
 #include "squid.h"
@@ -123,9 +123,10 @@ errorCon(err_type type, http_status status)
  * Arguments: err - This object is destroyed after use in this function.
  *
  * Abstract:  This function generates a error page from the info contained
- *            by 'err' and then attaches it to the specified 'entry'
- *
- * Note:      The above abstract is should be check for correctness!!!!
+ *            by 'err' and then stores the text in the specified store
+ *            entry.  This function should only be called by ``server
+ *            side routines'' which need to communicate errors to the
+ *            client side.  The client side should call errorSend().
  */
 void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
@@ -134,6 +135,9 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     MemObject *mem = entry->mem_obj;
     int len;
     assert(entry->store_status == STORE_PENDING);
+#if WE_SHOULD_PROBABLY_REQUIRE_THIS
+    assert(mem->inmem_hi == 0);
+#endif
     buf = errorBuildBuf(err, &len);
     storeAppend(entry, buf, len);
     if (mem)
@@ -149,11 +153,11 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
  *
  * Abstract:  This function generates a error page from the info contained
  *            by 'err' and then sends it to the client.
- *
- * Note:      The callback function errorSendComplete() cleans up 'err'
- *
- * Note:      I don't think we need to add 'err' to the callback table
- *            since the only path ends up a errorSendComplete().
+ *            The callback function errorSendComplete() is called after
+ *            the page has been written to the client socket (fd).
+ *            errorSendComplete() deallocates 'err'.  We need to add
+ *            'err' to the cbdata because comm_write() requires it
+ *            for all callback data pointers.
  */
 void
 errorSend(int fd, ErrorState * err)
@@ -170,7 +174,8 @@ errorSend(int fd, ErrorState * err)
 /*
  * Function:  errorSendComplete
  *
- * Abstract:  This function 
+ * Abstract:  Called by commHandleWrite() after data has been written
+ *            to the client socket.
  *
  * Note:      If there is a callback, the callback is responsible for
  *            closeing the FD, otherwise we do it ourseves.

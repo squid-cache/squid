@@ -1,5 +1,6 @@
+
 /*
- * $Id: pconn.cc,v 1.8 1997/10/30 02:41:06 wessels Exp $
+ * $Id: pconn.cc,v 1.9 1997/10/30 03:31:24 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -130,7 +131,7 @@ void
 pconnPush(int fd, const char *host, u_short port)
 {
     struct _pconn *p;
-    LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10); /* MO why static array? */
+    LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     assert(table != NULL);
     strcpy(key, pconnKey(host, port));
     p = (struct _pconn *) hash_lookup(table, key);
@@ -155,7 +156,7 @@ pconnPop(const char *host, u_short port)
     struct _pconn *p;
     hash_link *hptr;
     int fd = -1;
-    LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10); /* MO why static array? */
+    LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     assert(table != NULL);
     strcpy(key, pconnKey(host, port));
     hptr = hash_lookup(table, key);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.93 1997/10/30 02:41:09 wessels Exp $
+ * $Id: wais.cc,v 1.94 1997/10/30 03:31:26 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -150,8 +150,6 @@ waisTimeout(int fd, void *data)
     comm_close(fd);
 }
 
-
-
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
 static void
@@ -166,11 +164,9 @@ waisReadReply(int fd, void *data)
     int bin;
     if (protoAbortFetch(entry)) {
 	ErrorState *err;
-
 	err = errorCon(ERR_CLIENT_ABORT, HTTP_INTERNAL_SERVER_ERROR);
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
-
 	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
@@ -203,7 +199,6 @@ waisReadReply(int fd, void *data)
 	    err->xerrno = errno;
 	    err->request = urlParse(METHOD_CONNECT, waisState->request);
 	    errorAppendEntry(entry, err);
-
 	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
@@ -213,7 +208,6 @@ waisReadReply(int fd, void *data)
 	err->xerrno = errno;
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
-
 	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (len == 0) {
@@ -269,28 +263,19 @@ waisSendRequest(int fd, void *data)
     int len = strlen(waisState->request) + 4;
     char *buf = NULL;
     const char *Method = RequestMethodStr[waisState->method];
-
     debug(24, 5) ("waisSendRequest: FD %d\n", fd);
-
     if (Method)
 	len += strlen(Method);
     if (waisState->request_hdr)
 	len += strlen(waisState->request_hdr);
-
     buf = xcalloc(1, len + 1);
-
     if (waisState->request_hdr)
 	snprintf(buf, len + 1, "%s %s %s\r\n", Method, waisState->request,
 	    waisState->request_hdr);
     else
 	snprintf(buf, len + 1, "%s %s\r\n", Method, waisState->request);
     debug(24, 6) ("waisSendRequest: buf: %s\n", buf);
-    comm_write(fd,
-	buf,
-	len,
-	waisSendComplete,
-	(void *) waisState,
-	xfree);
+    comm_write(fd, buf, len, waisSendComplete, waisState, xfree);
     if (BIT_TEST(waisState->entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }
