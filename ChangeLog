@@ -74,8 +74,8 @@ Changes to Squid-2.2 ():
 	  list.
 	- Rewrote the anonymizer.
 	- Removed the http_anonymizer option.
-	- Added the http_header option to allow individual referencing of
-	  headers for addition or removal. See 'http_header' in squid.conf
+	- Added the anonymize_headers option to allow individual referencing of
+	  headers for addition or removal. See 'anonymize_headers' in squid.conf
 	  for additional configuration.
 	- Fixed config file parser's handing of optional directives.
 	  Some people might get new warnings about unknown config
