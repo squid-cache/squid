@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.192 1997/10/21 19:38:52 wessels Exp $
+ * $Id: http.cc,v 1.193 1997/10/22 05:50:30 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -248,7 +248,7 @@ httpTimeout(int fd, void *data)
     StoreEntry *entry = httpState->entry;
     ErrorState *err;
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, entry->url);
-    if (entry->object_len == 0) {
+    if (entry->mem_obj->inmem_hi == 0) {
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_READ_TIMEOUT;
 	err->http_status = HTTP_GATEWAY_TIMEOUT;
@@ -653,7 +653,7 @@ httpReadReply(int fd, void *data)
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
 	} else {
-	    if (entry->object_len == 0) {
+	    if (clen == 0) {
 		err = xcalloc(1, sizeof(ErrorState));
 		err->type = ERR_READ_ERROR;
 		err->errno = errno;

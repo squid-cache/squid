@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.142 1997/10/21 19:38:50 wessels Exp $
+ * $Id: ftp.cc,v 1.143 1997/10/22 05:50:28 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -233,7 +233,7 @@ ftpTimeout(int fd, void *data)
     StoreEntry *entry = ftpState->entry;
     ErrorState *err;
     debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, entry->url);
-    if (entry->object_len == 0) {
+    if (entry->mem_obj->inmem_hi == 0) {
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_READ_TIMEOUT;
 	err->http_status = HTTP_GATEWAY_TIMEOUT;
@@ -659,7 +659,7 @@ ftpReadData(int fd, void *data)
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, 0);
 	} else {
-	    if (entry->object_len == 0) {
+	    if (entry->mem_obj->inmem_hi == 0) {
 		err = xcalloc(1, sizeof(ErrorState));
 		err->type = ERR_READ_ERROR;
 		err->errno = errno;
@@ -972,7 +972,7 @@ ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", size);
     if (errflag) {
 	debug(50, 1) ("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerror());
-	if (entry->object_len == 0) {
+	if (entry->mem_obj->inmem_hi == 0) {
 	    err = xcalloc(1, sizeof(ErrorState));
 	    err->type = ERR_WRITE_ERROR;
 	    err->http_status = HTTP_SERVICE_UNAVAILABLE;
@@ -1050,7 +1050,7 @@ ftpReadControlReply(int fd, void *data)
 		ftpState,
 		0);
 	} else {
-	    if (entry->object_len == 0) {
+	    if (entry->mem_obj->inmem_hi == 0) {
 		err = xcalloc(1, sizeof(ErrorState));
 		err->type = ERR_READ_ERROR;
 		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
