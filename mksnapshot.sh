@@ -40,3 +40,6 @@ make dist-all
 cd $startdir
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.bz2 .
+
+echo ${PACKAGE}-${VERSION}-${date}.tar.gz >${tag}.out
+echo ${PACKAGE}-${VERSION}-${date}.tar.bz2 >>${tag}.out
