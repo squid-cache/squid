@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.17 1998/12/05 00:54:10 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.18 1999/01/19 21:40:39 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -409,20 +409,48 @@ httpHdrRangeWillBeComplex(const HttpHdrRange * range)
     return 0;
 }
 
-/* hack: returns offset of first range spec */
+/* Returns lowest known offset in range spec(s), or range_spec_unknown */
+/* this is used for size limiting */
 size_t
 httpHdrRangeFirstOffset(const HttpHdrRange * range)
 {
+    size_t offset = range_spec_unknown;
     HttpHdrRangePos pos = HttpHdrRangeInitPos;
     const HttpHdrRangeSpec *spec;
     assert(range);
     while ((spec = httpHdrRangeGetSpec(range, &pos))) {
-	if (!known_spec(spec->offset))	/* ignore unknowns */
-	    continue;
-	return spec->offset;
+	if (spec->offset < offset || !known_spec(offset))
+	    offset = spec->offset;
     }
-    return 0;
+    return offset;
 }
+
+/* Returns lowest offset in range spec(s), 0 if unknown */
+/* This is used for finding out where we need to start if all
+ * ranges are combined into one, for example FTP REST.
+ * Use 0 for size if unknown
+ */
+size_t
+httpHdrRangeLowestOffset(const HttpHdrRange * range, size_t size)
+{
+    size_t offset = range_spec_unknown;
+    size_t current;
+    HttpHdrRangePos pos = HttpHdrRangeInitPos;
+    const HttpHdrRangeSpec *spec;
+    assert(range);
+    while ((spec = httpHdrRangeGetSpec(range, &pos))) {
+	current = spec->offset;
+	if (!known_spec(current)) {
+	    if (spec->length > size || !known_spec(spec->length))
+		return 0; /* Unknown. Assume start of file */
+	    current = size - spec->length;
+	}
+	if (current < offset || !known_spec(offset))
+	    offset = current;
+    }
+    return known_spec(offset) ? offset : 0;
+}
+
 
 /* generates a "unique" boundary string for multipart responses
  * the caller is responsible for cleaning the string */

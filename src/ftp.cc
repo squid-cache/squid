@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.267 1999/01/19 02:24:25 wessels Exp $
+ * $Id: ftp.cc,v 1.268 1999/01/19 21:40:40 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -50,9 +50,7 @@ typedef enum {
     SENT_CWD,
     SENT_LIST,
     SENT_NLST,
-#if RESTART_UNSUPPORTED
     SENT_REST,
-#endif
     SENT_RETR,
     SENT_STOR,
     SENT_QUIT,
@@ -97,9 +95,8 @@ typedef struct _Ftpdata {
     int size;
     wordlist *pathcomps;
     char *filepath;
-#if RESTART_UNSUPPORTED
     int restart_offset;
-#endif
+    int restarted_offset;
     int rest_att;
     char *proxy_host;
     size_t list_width;
@@ -155,6 +152,7 @@ static PF ftpReadControlReply;
 static CWCB ftpWriteCommandCallback;
 static void ftpLoginParser(const char *, FtpStateData *, int escaped);
 static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
+static int ftpRestartable(FtpStateData * ftpState);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
 static void ftpAuthRequired(HttpReply * reply, request_t * request, const char *realm);
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
@@ -193,10 +191,8 @@ static FTPSM ftpReadCwd;
 static FTPSM ftpSendList;
 static FTPSM ftpSendNlst;
 static FTPSM ftpReadList;
-#if RESTART_UNSUPPORTED
 static FTPSM ftpSendRest;
 static FTPSM ftpReadRest;
-#endif
 static FTPSM ftpSendRetr;
 static FTPSM ftpReadRetr;
 static FTPSM ftpReadTransferDone;
@@ -248,9 +244,7 @@ FTPSM *FTP_SM_FUNCS[] =
     ftpReadCwd,
     ftpReadList,		/* SENT_LIST */
     ftpReadList,		/* SENT_NLST */
-#if RESTART_UNSUPPORTED
     ftpReadRest,
-#endif
     ftpReadRetr,
     ftpReadStor,
     ftpReadQuit,
@@ -1395,6 +1389,8 @@ ftpSendType(FtpStateData * ftpState)
     }
     if (mode == 'I')
 	ftpState->flags.binary = 1;
+    else
+	ftpState->flags.binary = 0;
     snprintf(cbuf, 1024, "TYPE %c\r\n", mode);
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_TYPE;
@@ -1860,10 +1856,8 @@ ftpRestOrList(FtpStateData * ftpState)
 	ftpState->flags.use_base = 1;
     } else if (ftpState->flags.isdir)
 	ftpSendList(ftpState);
-#if RESTART_UNSUPPORTED
-    else if (ftpState->restart_offset > 0)
+    else if (ftpRestartable(ftpState))
 	ftpSendRest(ftpState);
-#endif
     else
 	ftpSendRetr(ftpState);
 }
@@ -1903,13 +1897,30 @@ ftpReadStor(FtpStateData * ftpState)
     }
 }
 
-#if RESTART_UNSUPPORTED
 static void
 ftpSendRest(FtpStateData * ftpState)
 {
     snprintf(cbuf, 1024, "REST %d\r\n", ftpState->restart_offset);
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_REST;
+}
+
+static int
+ftpRestartable(FtpStateData * ftpState)
+{
+    if (ftpState->restart_offset > 0)
+	return 1;
+    if (!ftpState->request->range)
+	return 0;
+    if (!ftpState->flags.binary)
+	return 0;
+    if (ftpState->size <= 0)
+	return 0;
+
+    ftpState->restart_offset = httpHdrRangeLowestOffset(ftpState->request->range, (size_t) ftpState->size);
+    if (ftpState->restart_offset <= 0)
+	return 0;
+    return 1;
 }
 
 static void
@@ -1919,6 +1930,7 @@ ftpReadRest(FtpStateData * ftpState)
     debug(9, 3) ("This is ftpReadRest\n");
     assert(ftpState->restart_offset > 0);
     if (code == 350) {
+	ftpState->restarted_offset = ftpState->restart_offset;
 	ftpSendRetr(ftpState);
     } else if (code > 0) {
 	debug(9, 3) ("ftpReadRest: REST not supported\n");
@@ -1927,7 +1939,6 @@ ftpReadRest(FtpStateData * ftpState)
 	ftpFail(ftpState);
     }
 }
-#endif
 
 static void
 ftpSendList(FtpStateData * ftpState)
@@ -2302,8 +2313,21 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     storeBuffer(e);
     httpReplyReset(reply);
     /* set standard stuff */
-    httpReplySetHeaders(reply, 1.0, HTTP_OK, "Gatewaying",
-	mime_type, ftpState->size, ftpState->mdtm, -2);
+    if (ftpState->restarted_offset) {
+	/* Partial reply */
+	HttpHdrRangeSpec range_spec =
+	{
+	    ftpState->restarted_offset,
+	    ftpState->size - ftpState->restarted_offset
+	};
+	httpReplySetHeaders(reply, 1.0, HTTP_PARTIAL_CONTENT, "Gatewaying",
+	    mime_type, ftpState->size - ftpState->restarted_offset, ftpState->mdtm, -2);
+	httpHeaderAddContRange(&reply->header, range_spec, ftpState->size);
+    } else {
+	/* Full reply */
+	httpReplySetHeaders(reply, 1.0, HTTP_OK, "Gatewaying",
+	    mime_type, ftpState->size, ftpState->mdtm, -2);
+    }
     /* additional info */
     if (mime_enc)
 	httpHeaderPutStr(&reply->header, HDR_CONTENT_ENCODING, mime_enc);
@@ -2320,7 +2344,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	if (pe)
 	    storeRelease(pe);
 	storeRelease(e);
-    } else if (EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
+    } else if (EBIT_TEST(e->flags, ENTRY_CACHABLE) && !ftpState->restarted_offset) {
 	storeSetPublicKey(e);
     } else {
 	storeRelease(e);
