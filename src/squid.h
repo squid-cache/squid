@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.140 1997/12/02 05:06:43 wessels Exp $
+ * $Id: squid.h,v 1.141 1997/12/02 17:59:37 kostas Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -273,7 +273,10 @@
 
 #ifdef SQUID_SNMP
 #include "snmp.h"
+#include "snmp_impl.h"
+#include "snmp_vars.h"
 #include "snmp_config.h"
+#include "cache_snmp.h"
 #endif
 
 /* Needed for poll() on Linux at least */

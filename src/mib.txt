@@ -295,10 +295,11 @@ squid 		OBJECT IDENTIFIER ::= { nsfnet 17 }
                 STATUS current
                 DESCRIPTION
                         " An entry in the NetDb" 
-                INDEX   { netDbEntryNetwork }
+                INDEX   { netDbEntryId }
                 ::= { NetDbTable 1 } 
 
 	NetDbEntry ::= SEQUENCE {
+		NetDbEntryId		Integer,
 		NetDbEntryNetwork	IpAddress,
 		NetDbEntryPingsSent	Counter32,
 		NetDbEntryPingsRecv	Counter32, 
@@ -307,48 +308,54 @@ squid 		OBJECT IDENTIFIER ::= { nsfnet 17 }
 		NetDbEntryPingTime	TimeTicks,
 		NetDbEntryLastUse	TimeTicks,
 	}
+
+	NetDbEntryId OBJECT-TYPE
+                SYNTAX Integer
+                ACCESS read-only
+                STATUS current
+        ::= { netDbEntry 1 }
 	
 	NetDbEntryNetwork OBJECT-TYPE
                 SYNTAX IpAddress
                 ACCESS read-only
                 STATUS current
-	::= { netDbEntry 1 }
+	::= { netDbEntry 2 }
 
 	NetDbEntryPingsSent OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS current
-        ::= { netDbEntry 2 }    
+        ::= { netDbEntry 3 }    
 
 	NetDbEntryPingsRecv OBJECT-TYPE 
                 SYNTAX Counter32        
                 ACCESS read-only        
                 STATUS current  
-        ::= { netDbEntry 3 }            
+        ::= { netDbEntry 4 }            
 
 	NetDbEntryHops OBJECT-TYPE
                 SYNTAX Integer                
                 ACCESS read-only                
                 STATUS current          
-        ::= { netDbEntry 4 }                    
+        ::= { netDbEntry 5 }                    
 
         NetDbEntryRtt OBJECT-TYPE      
                 SYNTAX TimeTicks
                 ACCESS read-only
                 STATUS current
-        ::= { netDbEntry 5 }
+        ::= { netDbEntry 6 }
 
 	NetDbEntryPingTime OBJECT-TYPE
                 SYNTAX TimeTicks
                 ACCESS read-only
                 STATUS current
-        ::= { netDbEntry 6 }
+        ::= { netDbEntry 7 }
 
 	NetDbEntryLastUse OBJECT-TYPE
                 SYNTAX TimeTicks
                 ACCESS read-only
                 STATUS current
-        ::= { netDbEntry 7 }
+        ::= { netDbEntry 8 }
 
 	
 	-- IP cache info

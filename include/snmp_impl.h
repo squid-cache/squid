@@ -54,11 +54,11 @@ SOFTWARE.
 #define READ	    1
 #define WRITE	    0
 
-#define RESERVE1    0
-#define RESERVE2    1
-#define COMMIT      2
-#define ACTION      3
-#define FREE        4
+#define SNM_RESERVE1    0
+#define SNM_RESERVE2    1
+#define SNM_COMMIT      2
+#define SNM_ACTION      3
+#define SNM_FREE        4
 
 #define RONLY	0xAAAA		/* read access for everyone */
 #define RWRITE	0xAABA		/* add write access for community private */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.52 1997/12/01 22:45:53 wessels Exp $
+ * $Id: net_db.cc,v 1.53 1997/12/02 17:59:35 kostas Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -33,7 +33,7 @@
 
 
 #if USE_ICMP
-hash_table *addr_table = NULL;
+static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
 static struct in_addr networkFromInaddr(struct in_addr a);
@@ -113,13 +113,13 @@ netdbLookupHost(const char *key)
     return hptr ? (netdbEntry *) hptr->item : NULL;
 }
 
-netdbEntry *
+static netdbEntry *
 netdbGetFirst(hash_table * table)
 {
     return (netdbEntry *) hash_first(table);
 }
 
-netdbEntry *
+static netdbEntry *
 netdbGetNext(hash_table * table)
 {
     return (netdbEntry *) hash_next(table);
@@ -663,3 +663,77 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
 	sortPeerByRtt);
 #endif
 }
+
+#ifdef SQUID_SNMP
+u_char *
+var_netdb_entry(struct variable * vp, oid * name, int *length, int exact, int *var_len, SNMPWM ** write_method)
+{
+    oid newname[MAX_NAME_LEN];
+    static char snbuf[256];
+    static netdbEntry *n = NULL;
+    static long long_return;
+	int cnt=1;
+
+    debug(49, 3) ("snmp: var_netdb_entry called with magic=%d\n", vp->magic);
+    debug(49, 3) ("snmp: var_netdb_entry with (%d,%d)\n", *length, *var_len);
+    sprint_objid(snbuf, name, *length);
+    debug(49, 3) ("snmp: var_netdb_entry oid: %s\n", snbuf);
+
+    memcpy((char *) newname, (char *) vp->name, (int) vp->namelen * sizeof(oid));
+    newname[vp->namelen] = (oid) 1;
+
+    debug(49, 5) ("snmp var_netdb_entry: hey, here we are.\n");
+#ifdef USE_ICMP
+    n=netdbGetFirst(addr_table);
+
+    while (n != NULL) {
+        newname[vp->namelen] = cnt++;
+        result = compare(name, *length, newname, (int) vp->namelen + 1);
+        if ((exact && (result == 0)) || (!exact && (result < 0))) {
+            debug(49, 5) ("snmp var_netdb_entry: yup, a match.\n");
+            break;
+        }
+        n=netdbGetNext(addr_table);
+    }
+#endif
+    if (n == NULL)
+        return NULL;
+
+    debug(49, 5) ("hey, matched.\n");
+    memcpy((char *) name, (char *) newname, ((int) vp->namelen + 1) * sizeof(oid));
+    *length = vp->namelen + 1;
+    *write_method = 0;
+    *var_len = sizeof(long);    /* default length */
+    sprint_objid(snbuf, newname, *length);
+    debug(49, 5) ("snmp var_netdb_entry with peertable request for %s (%d)\n", snbuf, newname[10]);
+
+    switch (vp->magic) {
+    case NETDB_ID:
+	long_return= (long) cnt-1;
+	return (u_char *) & long_return;
+    case NETDB_NET:
+        long_return = (long) n->network;
+        return (u_char *) & long_return;
+    case NETDB_PING_S:
+        long_return = (long) n->pings_sent;
+        return (u_char *) & long_return;
+    case NETDB_PING_R:
+        long_return = (long) n->pings_recv;
+        return (u_char *) & long_return;
+    case NETDB_HOPS:
+        long_return = (long) n->hops;
+        return (u_char *) & long_return;
+    case NETDB_RTT:
+        long_return = (long) n->rtt;
+        return (u_char *) & long_return;
+    case NETDB_PINGTIME:
+        long_return = (long) n->next_ping_time;
+        return (u_char *) & long_return;
+    case NETDB_LASTUSE:
+        long_return = (long) n->last_use_time;
+        return (u_char *) & long_return;
+    default:
+        return NULL;
+    }
+}
+#endif

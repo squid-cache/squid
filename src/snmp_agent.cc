@@ -307,7 +307,7 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
 	    errstat, errindex, &errindex);
     else
 	errstat = parse_var_op_list(sn_data, length, out_sn_data, *out_length,
-	    &errindex, msgtype, RESERVE1);
+	    &errindex, msgtype, SNM_RESERVE1);
 
     if (errstat == SNMP_ERR_NOSUCHNAME) {
 	/* see if we have forwarding turned on */
@@ -319,7 +319,7 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
     if (msgtype == SET_REQ_MSG) {
 	if (errstat == SNMP_ERR_NOERROR)
 	    errstat = parse_var_op_list(sn_data, length, out_sn_data, *out_length,
-		&errindex, msgtype, RESERVE2);
+		&errindex, msgtype, SNM_RESERVE2);
 	if (errstat == SNMP_ERR_NOERROR) {
 	    /*
 	     * SETS require 3-4 passes through the var_op_list.  The first two
@@ -331,9 +331,9 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
 	     * pass is made so that any reserved resources can be freed.
 	     */
 	    parse_var_op_list(sn_data, length, out_sn_data, *out_length,
-		&dummyindex, msgtype, COMMIT);
+		&dummyindex, msgtype, SNM_COMMIT);
 	    parse_var_op_list(sn_data, length, out_sn_data, *out_length,
-		&dummyindex, msgtype, ACTION);
+		&dummyindex, msgtype, SNM_ACTION);
 	    if (create_identical(startData, out_auth, startLength, 0L, 0L)) {
 		*out_length = packet_end - out_auth;
 		return 1;
@@ -342,7 +342,7 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
 	    return 0;
 	} else {
 	    parse_var_op_list(sn_data, length, out_sn_data, *out_length,
-		&dummyindex, msgtype, FREE);
+		&dummyindex, msgtype, SNM_FREE);
 	}
     }
     switch ((short) errstat) {
@@ -514,7 +514,7 @@ parse_var_op_list(sn_data, length, out_sn_data, out_length, index, msgtype, acti
 			}
 		    }
 		    /* actually do the set if necessary */
-		    if (action == COMMIT)
+		    if (action == SNM_COMMIT)
 			setVariable(var_val, var_val_type, var_val_len,
 			    statP, statLen);
 		} else {
