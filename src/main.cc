@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.42 1996/04/17 17:45:13 wessels Exp $ */
+/* $Id: main.cc,v 1.43 1996/04/17 19:26:40 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -52,7 +52,7 @@ static void mainParseOptions(argc, argv)
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "vCDRVbsif:a:p:u:m:zh?")) != -1) {
+    while ((c = getopt(argc, argv, "vCDRVUbsif:a:p:u:m:zh?")) != -1) {
 	switch (c) {
 	case 'v':
 	    printf("Squid Cache: Version %s\n", version_string);
