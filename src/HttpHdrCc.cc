@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.1 1998/03/05 00:01:07 rousskov Exp $
+ * $Id: HttpHdrCc.cc,v 1.2 1998/03/05 00:45:36 rousskov Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -97,11 +97,11 @@ httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
 	type = httpHeaderIdByName(item, ilen,
 	    CcAttrs, CC_ENUM_END, -1);
 	if (type < 0) {
-	    debug(55, 0) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, str);
+	    debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, str);
 	    continue;
 	}
 	if (EBIT_TEST(cc->mask, type)) {
-	    debug(55, 0) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
+	    debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
 	    CcAttrs[type].stat.repCount++;
 	    continue;
 	}
@@ -113,7 +113,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
 	    if (p)
 		cc->max_age = (time_t) atoi(p);
 	    if (cc->max_age < 0) {
-		debug(55, 0) ("cc: invalid max-age specs near '%s'\n", item);
+		debug(65, 2) ("cc: invalid max-age specs near '%s'\n", item);
 		cc->max_age = -1;
 		EBIT_CLR(cc->mask, type);
 	    }
