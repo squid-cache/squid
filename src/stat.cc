@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.274 1998/08/11 19:00:42 wessels Exp $
+ * $Id: stat.cc,v 1.275 1998/08/11 20:07:05 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1046,6 +1046,16 @@ statCountersDump(StoreEntry * sentry)
 	f->cputime);
     storeAppendPrintf(sentry, "wall_time = %f\n",
 	tvSubDsec(f->timestamp, current_time));
+}
+
+void
+statFreeMemory(void)
+{
+    int i;
+    for (i = 0; i < N_COUNT_HIST; i++)
+	statCountersClean(&CountHist[i]);
+    for (i = 0; i < N_COUNT_HOUR_HIST; i++)
+	statCountersClean(&CountHourHist[i]);
 }
 
 static void
