@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.8 2003/02/22 14:59:33 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.9 2003/02/25 12:16:55 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -197,12 +197,7 @@ ACLChecklist::checkAccessList()
     /* what is our result on a match? */
     currentAnswer(accessList->allow);
     /* does the current AND clause match */
-    bool match = matchAclList(accessList->aclList);
-
-    if (match)
-        markFinished();
-    else
-        checkForAsync();
+    matchAclList(accessList->aclList);
 }
 
 void
@@ -239,7 +234,7 @@ ACLChecklist::checkCallback(allow_t answer)
     delete this;
 }
 
-bool
+void
 ACLChecklist::matchAclList(const acl_list * head, bool const fast)
 {
     PROF_start(aclMatchAclList);
@@ -253,16 +248,17 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
 
         if (!nodeMatched || state_ != NullState::Instance()) {
             debug(28, 3) ("aclmatchAclList: %p returning false (AND list entry failed to match)\n", this);
+            checkForAsync();
             PROF_stop(aclMatchAclList);
-            return false;
+            return;
         }
 
         node = node->next;
     }
 
     debug(28, 3) ("aclmatchAclList: %p returning true (AND list satisfied)\n", this);
+    markFinished();
     PROF_stop(aclMatchAclList);
-    return true;
 }
 
 CBDATA_CLASS_INIT(ACLChecklist);
@@ -318,7 +314,6 @@ ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
 
     memset (&my_addr, '\0', sizeof (struct in_addr));
     rfc931[0] = '\0';
-    memset (&state, '\0', sizeof (state));
 }
 
 ACLChecklist::~ACLChecklist()

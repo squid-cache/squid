@@ -1,0 +1,535 @@
+/*
+ * $Id: ACLARP.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ *
+ * DEBUG: section 28    Access Control
+ * AUTHOR: Duane Wessels
+ *
+ * SQUID Web Proxy Cache          http://www.squid-cache.org/
+ * ----------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from
+ *  the Internet community; see the CONTRIBUTORS file for full
+ *  details.   Many organizations have provided support for Squid's
+ *  development; see the SPONSORS file for full details.  Squid is
+ *  Copyrighted (C) 2001 by the Regents of the University of
+ *  California; see the COPYRIGHT file for full details.  Squid
+ *  incorporates software developed and/or copyrighted by other
+ *  sources; see the CREDITS file for full details.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+ *
+ *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
+ */
+
+#include "squid.h"
+#include "ACLARP.h"
+
+#if !USE_ARP_ACL
+#error USE_ARP_ACL Not defined
+#endif
+static void aclParseArpList(SplayNode<acl_arp_data *> **curlist);
+static int decode_eth(const char *asc, char *eth);
+static int aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c);
+static SplayNode<acl_arp_data *>::SPLAYCMP aclArpCompare;
+static SplayNode<acl_arp_data *>::SPLAYWALKEE aclDumpArpListWalkee;
+
+ACL::Prototype ACLARP::RegistryProtoype(&ACLARP::RegistryEntry_, "arp");
+
+ACLARP ACLARP::RegistryEntry_("arp");
+
+ACL *
+ACLARP::clone() const
+{
+    return new ACLARP(*this);
+}
+
+ACLARP::ACLARP (char const *theClass) : data (NULL), class_ (theClass)
+{}
+
+ACLARP::ACLARP (ACLARP const & old) : data (NULL), class_ (old.class_)
+{
+    /* we don't have copy constructors for the data yet */
+    assert (!old.data);
+}
+
+MemPool *ACLARP::Pool(NULL);
+void *
+ACLARP::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (ACLARP));
+
+    if (!Pool)
+        Pool = memPoolCreate("ACLARP", sizeof (ACLARP));
+
+    return memPoolAlloc(Pool);
+}
+
+void
+ACLARP::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
+
+void
+ACLARP::deleteSelf() const
+{
+    delete this;
+}
+
+ACLARP::~ACLARP()
+{
+    if (data)
+        data->destroy(SplayNode<acl_arp_data*>::DefaultFree);
+}
+
+char const *
+ACLARP::typeString() const
+{
+    return class_;
+}
+
+bool
+ACLARP::valid () const
+{
+    return data != NULL;
+}
+
+/* ==== BEGIN ARP ACL SUPPORT ============================================= */
+
+/*
+ * From:    dale@server.ctam.bitmcnit.bryansk.su (Dale)
+ * To:      wessels@nlanr.net
+ * Subject: Another Squid patch... :)
+ * Date:    Thu, 04 Dec 1997 19:55:01 +0300
+ * ============================================================================
+ * 
+ * Working on setting up a proper firewall for a network containing some
+ * Win'95 computers at our Univ, I've discovered that some smart students
+ * avoid the restrictions easily just changing their IP addresses in Win'95
+ * Contol Panel... It has been getting boring, so I took Squid-1.1.18
+ * sources and added a new acl type for hard-wired access control:
+ * 
+ * acl <name> arp <Ethernet address> ...
+ * 
+ * For example,
+ * 
+ * acl students arp 00:00:21:55:ed:22 00:00:21:ff:55:38
+ *
+ * NOTE: Linux code by David Luyer <luyer@ucs.uwa.edu.au>.
+ *       Original (BSD-specific) code no longer works.
+ *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
+ */
+
+#ifdef _SQUID_SOLARIS_
+#include <sys/sockio.h>
+#else
+#include <sys/sysctl.h>
+#endif
+#ifdef _SQUID_LINUX_
+#include <net/if_arp.h>
+#include <sys/ioctl.h>
+#else
+#include <net/if_dl.h>
+#endif
+#include <net/route.h>
+#include <net/if.h>
+#if HAVE_NETINET_IF_ETHER_H
+#include <netinet/if_ether.h>
+#endif
+
+/*
+ * Decode an ascii representation (asc) of an ethernet adress, and place
+ * it in eth[6].
+ */
+static int
+decode_eth(const char *asc, char *eth)
+{
+    int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0;
+
+    if (sscanf(asc, "%x:%x:%x:%x:%x:%x", &a1, &a2, &a3, &a4, &a5, &a6) != 6) {
+        debug(28, 0) ("decode_eth: Invalid ethernet address '%s'\n", asc);
+        return 0;		/* This is not valid address */
+    }
+
+    eth[0] = (u_char) a1;
+    eth[1] = (u_char) a2;
+    eth[2] = (u_char) a3;
+    eth[3] = (u_char) a4;
+    eth[4] = (u_char) a5;
+    eth[5] = (u_char) a6;
+    return 1;
+}
+
+acl_arp_data *
+aclParseArpData(const char *t)
+{
+    LOCAL_ARRAY(char, eth, 256);
+    acl_arp_data *q = new acl_arp_data;
+    debug(28, 5) ("aclParseArpData: %s\n", t);
+
+    if (sscanf(t, "%[0-9a-fA-F:]", eth) != 1) {
+        debug(28, 0) ("aclParseArpData: Bad ethernet address: '%s'\n", t);
+        safe_free(q);
+        return NULL;
+    }
+
+    if (!decode_eth(eth, q->eth)) {
+        debug(28, 0) ("%s line %d: %s\n",
+                      cfg_filename, config_lineno, config_input_line);
+        debug(28, 0) ("aclParseArpData: Ignoring invalid ARP acl entry: can't parse '%s'\n", eth);
+        safe_free(q);
+        return NULL;
+    }
+
+    return q;
+}
+
+
+/*******************/
+/* aclParseArpList */
+/*******************/
+void
+ACLARP::parse()
+{
+    aclParseArpList (&data);
+}
+
+void
+aclParseArpList(SplayNode<acl_arp_data *> **curlist)
+{
+    char *t = NULL;
+    SplayNode<acl_arp_data *> **Top = curlist;
+    acl_arp_data *q = NULL;
+
+    while ((t = strtokFile())) {
+        if ((q = aclParseArpData(t)) == NULL)
+            continue;
+
+        *Top = (*Top)->insert(q, aclArpCompare);
+    }
+}
+
+int
+ACLARP::match(ACLChecklist *checklist)
+{
+    return aclMatchArp(&data, checklist->src_addr);
+}
+
+/***************/
+/* aclMatchArp */
+/***************/
+int
+aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c)
+{
+#if defined(_SQUID_LINUX_)
+
+    struct arpreq arpReq;
+
+    struct sockaddr_in ipAddr;
+
+    unsigned char ifbuffer[sizeof(struct ifreq) * 64];
+
+    struct ifconf ifc;
+
+    struct ifreq *ifr;
+    int offset;
+    SplayNode<acl_arp_data*> **Top = dataptr;
+    /*
+     * The linux kernel 2.2 maintains per interface ARP caches and
+     * thus requires an interface name when doing ARP queries.
+     * 
+     * The older 2.0 kernels appear to use a unified ARP cache,
+     * and require an empty interface name
+     * 
+     * To support both, we attempt the lookup with a blank interface
+     * name first. If that does not succeed, the try each interface
+     * in turn
+     */
+    /*
+     * Set up structures for ARP lookup with blank interface name
+     */
+    ipAddr.sin_family = AF_INET;
+    ipAddr.sin_port = 0;
+    ipAddr.sin_addr = c;
+    memset(&arpReq, '\0', sizeof(arpReq));
+
+    xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+    /* Query ARP table */
+
+    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
+        /* Skip non-ethernet interfaces */
+
+        if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
+            return 0;
+        }
+
+        debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
+                      arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
+                      arpReq.arp_ha.sa_data[2] & 0xff, arpReq.arp_ha.sa_data[3] & 0xff,
+                      arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
+        /* Do lookup */
+        acl_arp_data X;
+        memcpy (X.eth, arpReq.arp_ha.sa_data, 6);
+        *Top = (*Top)->splay(&X, aclArpCompare);
+        debug(28, 3) ("aclMatchArp: '%s' %s\n",
+                      inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+        return (0 == splayLastResult);
+    }
+
+    /* lookup list of interface names */
+    ifc.ifc_len = sizeof(ifbuffer);
+
+    ifc.ifc_buf = (char *)ifbuffer;
+
+    if (ioctl(HttpSockets[0], SIOCGIFCONF, &ifc) < 0) {
+        debug(28, 1) ("Attempt to retrieve interface list failed: %s\n",
+                      xstrerror());
+        return 0;
+    }
+
+    if (ifc.ifc_len > (int)sizeof(ifbuffer)) {
+        debug(28, 1) ("Interface list too long - %d\n", ifc.ifc_len);
+        return 0;
+    }
+
+    /* Attempt ARP lookup on each interface */
+    offset = 0;
+
+    while (offset < ifc.ifc_len) {
+
+        ifr = (struct ifreq *) (ifbuffer + offset);
+        offset += sizeof(*ifr);
+        /* Skip loopback and aliased interfaces */
+
+        if (0 == strncmp(ifr->ifr_name, "lo", 2))
+            continue;
+
+        if (NULL != strchr(ifr->ifr_name, ':'))
+            continue;
+
+        debug(28, 4) ("Looking up ARP address for %s on %s\n", inet_ntoa(c),
+                      ifr->ifr_name);
+
+        /* Set up structures for ARP lookup */
+        ipAddr.sin_family = AF_INET;
+
+        ipAddr.sin_port = 0;
+
+        ipAddr.sin_addr = c;
+
+        memset(&arpReq, '\0', sizeof(arpReq));
+
+        xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+
+        strncpy(arpReq.arp_dev, ifr->ifr_name, sizeof(arpReq.arp_dev) - 1);
+
+        arpReq.arp_dev[sizeof(arpReq.arp_dev) - 1] = '\0';
+
+        /* Query ARP table */
+        if (-1 == ioctl(HttpSockets[0], SIOCGARP, &arpReq)) {
+            /*
+             * Query failed.  Do not log failed lookups or "device
+             * not supported"
+             */
+
+            if (ENXIO == errno)
+                (void) 0;
+            else if (ENODEV == errno)
+                (void) 0;
+            else
+                debug(28, 1) ("ARP query failed: %s: %s\n",
+                              ifr->ifr_name, xstrerror());
+
+            continue;
+        }
+
+        /* Skip non-ethernet interfaces */
+        if (arpReq.arp_ha.sa_family != ARPHRD_ETHER)
+            continue;
+
+        debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x on %s\n",
+                      arpReq.arp_ha.sa_data[0] & 0xff,
+                      arpReq.arp_ha.sa_data[1] & 0xff,
+                      arpReq.arp_ha.sa_data[2] & 0xff,
+                      arpReq.arp_ha.sa_data[3] & 0xff,
+                      arpReq.arp_ha.sa_data[4] & 0xff,
+                      arpReq.arp_ha.sa_data[5] & 0xff, ifr->ifr_name);
+
+        /* Do lookup */
+        acl_arp_data X;
+
+        memcpy (X.eth, arpReq.arp_ha.sa_data, 6);
+
+        *Top = (*Top)->splay(&X, aclArpCompare);
+
+        /* Return if match, otherwise continue to other interfaces */
+        if (0 == splayLastResult) {
+            debug(28, 3) ("aclMatchArp: %s found on %s\n",
+                          inet_ntoa(c), ifr->ifr_name);
+            return 1;
+        }
+
+        /*
+         * Should we stop looking here? Can the same IP address
+         * exist on multiple interfaces?
+         */
+    }
+
+#elif defined(_SQUID_SOLARIS_)
+
+    struct arpreq arpReq;
+
+    struct sockaddr_in ipAddr;
+
+    unsigned char ifbuffer[sizeof(struct ifreq) * 64];
+
+    struct ifconf ifc;
+
+    struct ifreq *ifr;
+
+    int offset;
+
+    SplayNode<acl_arp_data *> **Top = dataptr;
+
+    /*
+    * Set up structures for ARP lookup with blank interface name
+    */
+    ipAddr.sin_family = AF_INET;
+
+    ipAddr.sin_port = 0;
+
+    ipAddr.sin_addr = c;
+
+    memset(&arpReq, '\0', sizeof(arpReq));
+
+    xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+
+    /* Query ARP table */
+    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
+        /*
+        *  Solaris (at least 2.6/x86) does not use arp_ha.sa_family -
+        * it returns 00:00:00:00:00:00 for non-ethernet media
+        */
+
+        if (arpReq.arp_ha.sa_data[0] == 0 &&
+                arpReq.arp_ha.sa_data[1] == 0 &&
+                arpReq.arp_ha.sa_data[2] == 0 &&
+                arpReq.arp_ha.sa_data[3] == 0 &&
+                arpReq.arp_ha.sa_data[4] == 0 && arpReq.arp_ha.sa_data[5] == 0)
+            return 0;
+
+        debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
+                      arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
+                      arpReq.arp_ha.sa_data[2] & 0xff, arpReq.arp_ha.sa_data[3] & 0xff,
+                      arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
+
+        /* Do lookup */
+        *Top = (*Top)->splay(&arpReq.arp_ha.sa_data, aclArpCompare);
+
+        debug(28, 3) ("aclMatchArp: '%s' %s\n",
+                      inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+
+        return (0 == splayLastResult);
+    }
+
+#else
+    WRITE ME;
+
+#endif
+    /*
+     * Address was not found on any interface
+     */
+    debug(28, 3) ("aclMatchArp: %s NOT found\n", inet_ntoa(c));
+
+    return 0;
+}
+
+static int
+aclArpCompare(acl_arp_data * const &a, acl_arp_data * const &b)
+{
+    return memcmp(a->eth, b->eth, 6);
+}
+
+#if UNUSED_CODE
+/**********************************************************************
+* This is from the pre-splay-tree code for BSD
+* I suspect the Linux approach will work on most O/S and be much
+* better - <luyer@ucs.uwa.edu.au>
+***********************************************************************
+static int
+checkARP(u_long ip, char *eth)
+{
+    int mib[6] =
+    {CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO};
+    size_t needed;
+    char *buf, *next, *lim;
+    struct rt_msghdr *rtm;
+    struct sockaddr_inarp *sin;
+    struct sockaddr_dl *sdl;
+    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
+	debug(28, 0) ("Can't estimate ARP table size!\n");
+	return 0;
+    }
+    if ((buf = xmalloc(needed)) == NULL) {
+	debug(28, 0) ("Can't allocate temporary ARP table!\n");
+	return 0;
+    }
+    if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
+	debug(28, 0) ("Can't retrieve ARP table!\n");
+	xfree(buf);
+	return 0;
+    }
+    lim = buf + needed;
+    for (next = buf; next < lim; next += rtm->rtm_msglen) {
+	rtm = (struct rt_msghdr *) next;
+	sin = (struct sockaddr_inarp *) (rtm + 1);
+	sdl = (struct sockaddr_dl *) (sin + 1);
+	if (sin->sin_addr.s_addr == ip) {
+	    if (sdl->sdl_alen)
+		if (!memcmp(LLADDR(sdl), eth, 6)) {
+		    xfree(buf);
+		    return 1;
+		}
+	    break;
+	}
+    }
+    xfree(buf);
+    return 0;
+}
+**********************************************************************/
+#endif
+
+static void
+aclDumpArpListWalkee(acl_arp_data * const &node, void *state)
+{
+    acl_arp_data *arp = node;
+    static char buf[24];
+    snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+             arp->eth[0], arp->eth[1], arp->eth[2], arp->eth[3],
+             arp->eth[4], arp->eth[5]);
+    wordlistAdd((wordlist **)state, buf);
+}
+
+wordlist *
+ACLARP::dump() const
+{
+    wordlist *w = NULL;
+    data->walk(aclDumpArpListWalkee, &w);
+    return w;
+}
+
+/* ==== END ARP ACL SUPPORT =============================================== */

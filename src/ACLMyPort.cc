@@ -1,8 +1,7 @@
+
 /*
- * $Id: ACLASN.cc,v 1.2 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLMyPort.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
  *
- * DEBUG: section 28    Access Control
- * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,10 +29,28 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
-#include "ACLASN.h"
+#include "ACLMyPort.h"
+#include "ACLIntRange.h"
 #include "ACLChecklist.h"
 
+ACL::Prototype ACLMyPort::RegistryProtoype(&ACLMyPort::RegistryEntry_, "myport");
+ACLStrategised<int> ACLMyPort::RegistryEntry_(new ACLIntRange, ACLMyPortStrategy::Instance(), "myport");
+
+int
+ACLMyPortStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+{
+    return data->match (checklist->my_port);
+}
+
+ACLMyPortStrategy *
+ACLMyPortStrategy::Instance()
+{
+    return &Instance_;
+}
+
+ACLMyPortStrategy ACLMyPortStrategy::Instance_;
