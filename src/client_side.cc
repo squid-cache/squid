@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.412 1998/10/14 21:11:58 wessels Exp $
+ * $Id: client_side.cc,v 1.413 1998/10/15 23:40:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -224,8 +224,20 @@ clientRedirectDone(void *data, char *result)
 	result ? result : "NULL");
     assert(http->redirect_state == REDIRECT_PENDING);
     http->redirect_state = REDIRECT_DONE;
-    if (result && strcmp(result, http->uri))
-	new_request = urlParse(old_request->method, result);
+    if (result) {
+	http_status status = atoi(result);
+	if (status == 301 || status == 302) {
+	    char *t = result;
+	    if ((t = strchr(result, ':')) != NULL) {
+		http->redirect.status = status;
+		http->redirect.location = xstrdup(t+1);
+	    } else {
+		debug(33,1)("clientRedirectDone: bad input: %s\n", result);
+	    }
+	}
+	if (strcmp(result, http->uri))
+	    new_request = urlParse(old_request->method, result);
+    }
     if (new_request) {
 	safe_free(http->uri);
 	http->uri = xstrdup(urlCanonical(new_request));
@@ -656,6 +668,7 @@ httpRequestFree(void *data)
     safe_free(http->log_uri);
     safe_free(http->al.headers.request);
     safe_free(http->al.headers.reply);
+    safe_free(http->redirect.location);
     stringClean(&http->range_iter.boundary);
     if (entry) {
 	http->entry = NULL;
@@ -1800,6 +1813,15 @@ clientProcessMiss(clientHttpRequest * http)
     assert(http->out.offset == 0);
     http->entry = clientCreateStoreEntry(http, r->method, r->flags);
     http->entry->refcount++;
+    if (http->redirect.status) {
+	HttpReply *rep = httpReplyCreate();
+	storeReleaseRequest(http->entry);
+	httpRedirectReply(rep, http->redirect.status, http->redirect.location);
+	httpReplySwapOut(rep, http->entry);
+	httpReplyDestroy(rep);
+	storeComplete(http->entry);
+	return;
+    }
     if (http->flags.internal)
 	r->protocol = PROTO_INTERNAL;
     fwdStart(http->conn->fd, http->entry, r, http->conn->peer.sin_addr);
