@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.178 1998/04/09 08:24:15 wessels Exp $
+ * $Id: ipcache.cc,v 1.179 1998/04/09 20:33:10 rousskov Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -932,7 +932,7 @@ ipcacheCycleAddr(const char *name, ipcache_addrs *ia)
         ia->badcount = 0;
         ia->cur = 0;
     }
-    debug(14,1)("ipcacheCycleAddr: %s now at %s\n", name,
+    debug(14,3) ("ipcacheCycleAddr: %s now at %s\n", name,
 	inet_ntoa(ia->in_addrs[ia->cur]));
 }
 
