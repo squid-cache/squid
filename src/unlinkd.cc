@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.50 2003/02/13 21:22:28 wessels Exp $
+ * $Id: unlinkd.cc,v 1.51 2003/02/14 15:37:43 wessels Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -146,7 +146,7 @@ unlinkdUnlink(const char *path)
      * is executed by the helper process.  We try to be consistent
      * in counting unlink operations.
      */
-    syscalls.disk.unlinks++;
+    statCounter.syscalls.disk.unlinks++;
     queuelen++;
 }
 
