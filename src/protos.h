@@ -59,6 +59,7 @@ extern int parseConfigFile(const char *file_name);
 extern void intlistDestroy(intlist **);
 extern void wordlistDestroy(wordlist **);
 extern void configFreeMemory(void);
+extern char *wordlistCat(const wordlist *);
 
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
