@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.63 1998/12/05 00:54:35 wessels Exp $
+ * $Id: peer_digest.cc,v 1.64 1998/12/14 23:45:15 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -188,7 +188,6 @@ peerDigestNewDelay(const StoreEntry * e)
 static void
 peerDigestSetCheck(PeerDigest * pd, time_t delay)
 {
-    cbdataLock(pd);
     eventAdd("peerDigestCheck", peerDigestCheck, pd, (double) delay, 1);
     pd->times.next_check = squid_curtime + delay;
     debug(72, 3) ("peerDigestSetCheck: will check peer %s in %d secs\n",
@@ -219,15 +218,9 @@ peerDigestCheck(void *data)
     PeerDigest *pd = data;
     time_t req_time;
 
-    assert(pd);
-
-    if (!cbdataValid(pd)) {
-	cbdataUnlock(pd);
-	return;
-    }
-    cbdataUnlock(pd);		/* non-blocking event is over */
-
+    assert(cbdataValid(pd));
     assert(!pd->flags.requested);
+
     pd->times.next_check = 0;	/* unknown */
 
     if (!cbdataValid(pd->peer)) {
@@ -664,6 +657,7 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
 	else
 	    debug(72, 2) ("received valid digest from %s\n", host);
     }
+    cbdataUnlock(pd);
 }
 
 /* free fetch state structures
@@ -687,8 +681,6 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     Counter.cd.msgs_recv += fetch->recv.msg;
 
     /* unlock everything */
-    if (fetch->pd)
-	cbdataUnlock(fetch->pd);
     storeUnregister(fetch->entry, fetch);
     storeUnlockObject(fetch->entry);
     requestUnlink(fetch->request);
