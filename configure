@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.2 
+# From configure.in Revision: 1.3 
 
 
 if test -n "$prefix"; then
@@ -539,7 +539,7 @@ CRYPT_LIB=''
 SOCKET_PH_TYPE='default'
 
 echo '-----------------------'
-echo "Installing Harvest in $myprefix"
+echo "Installing Squid in $myprefix"
 echo '-----------------------'
 
 
@@ -628,8 +628,7 @@ fi
 
 
 XXXCC=`echo $CC | awk '{print $1}'`
-if test "`basename $XXXCC`" != "gcc"
-then
+if test "`basename $XXXCC`" != "gcc"; then
         echo '**************************************************************';
         echo '**************************************************************';
         echo '**';
@@ -656,7 +655,7 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 660 "configure"
+#line 659 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
@@ -670,7 +669,7 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 674 "configure"
+#line 673 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
@@ -989,7 +988,7 @@ if eval "test \"`echo '$''{'ac_cv_header_dirent_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 993 "configure"
+#line 992 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
 #include <$ac_hdr>
@@ -1029,7 +1028,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldir  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1033 "configure"
+#line 1032 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1064,7 +1063,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lx  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1068 "configure"
+#line 1067 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1101,7 +1100,7 @@ else
   ac_cv_c_cross=yes
 else
 cat > conftest.$ac_ext <<EOF
-#line 1105 "configure"
+#line 1104 "configure"
 #include "confdefs.h"
 main(){return(0);}
 EOF
@@ -1123,7 +1122,7 @@ if eval "test \"`echo '$''{'ac_cv_header_stdc'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1127 "configure"
+#line 1126 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 #include <stdarg.h>
@@ -1145,7 +1144,7 @@ rm -f conftest*
 if test $ac_cv_header_stdc = yes; then
   # SunOS 4.x string.h does not declare mem*, contrary to ANSI.
 cat > conftest.$ac_ext <<EOF
-#line 1149 "configure"
+#line 1148 "configure"
 #include "confdefs.h"
 #include <string.h>
 EOF
@@ -1163,7 +1162,7 @@ fi
 if test $ac_cv_header_stdc = yes; then
   # ISC 2.0.2 stdlib.h does not declare free, contrary to ANSI.
 cat > conftest.$ac_ext <<EOF
-#line 1167 "configure"
+#line 1166 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
@@ -1184,7 +1183,7 @@ if test "$cross_compiling" = yes; then
   :
 else
 cat > conftest.$ac_ext <<EOF
-#line 1188 "configure"
+#line 1187 "configure"
 #include "confdefs.h"
 #include <ctype.h>
 #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
@@ -1224,7 +1223,7 @@ if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1228 "configure"
+#line 1227 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
@@ -1253,7 +1252,7 @@ fi
 done
 
 cat > conftest.$ac_ext <<EOF
-#line 1257 "configure"
+#line 1256 "configure"
 #include "confdefs.h"
 #include <malloc.h>
 EOF
@@ -1276,7 +1275,7 @@ else
     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
 else
 cat > conftest.$ac_ext <<EOF
-#line 1280 "configure"
+#line 1279 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 main()
@@ -1310,7 +1309,7 @@ else
     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
 else
 cat > conftest.$ac_ext <<EOF
-#line 1314 "configure"
+#line 1313 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 main()
@@ -1354,7 +1353,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1358 "configure"
+#line 1357 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -1407,7 +1406,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lsocket  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1411 "configure"
+#line 1410 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1442,7 +1441,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lmalloc  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1446 "configure"
+#line 1445 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1477,7 +1476,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lnsl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1481 "configure"
+#line 1480 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1511,7 +1510,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1515 "configure"
+#line 1514 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1545,7 +1544,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lbsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1549 "configure"
+#line 1548 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1580,7 +1579,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-l44bsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1584 "configure"
+#line 1583 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1614,7 +1613,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1618 "configure"
+#line 1617 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1649,7 +1648,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcrypt  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1653 "configure"
+#line 1652 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1698,12 +1697,21 @@ if test -x "/bin/uname"; then
         XXMyOs=`/bin/uname`;
 fi
 
-if test -z "$DEBUG_TOP"; then
+if test -z "$CFLAGS"; then
     if test "HP-UX" = "$XXMyOs"; then
-    	DEBUG_TOP='#-g #-O'
+    	CFLAGS='#-g #-O'
     else
-    	DEBUG_TOP='-g #-O'
+    	CFLAGS='-g'
     fi
+    XXXCC=`echo $CC | awk '{print $1}'`
+    if test "`basename $XXXCC`" = "gcc"; then
+	CFLAGS="$CFLAGS -Wall"
+    fi
+fi
+
+
+if test -z "$LDFLAGS"; then
+    LDFLAGS='-g #-O'
 fi
 
 
@@ -1870,7 +1878,6 @@ s%@PERL@%$PERL%g
 s%@XTRA_OBJS@%$XTRA_OBJS%g
 s%@CRYPT_LIB@%$CRYPT_LIB%g
 s%@XTRA_LIBS@%$XTRA_LIBS%g
-s%@DEBUG_TOP@%$DEBUG_TOP%g
 
 CEOF
 EOF
