@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.320 1997/10/28 06:47:41 wessels Exp $
+ * $Id: store.cc,v 1.321 1997/10/28 06:54:14 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -983,14 +983,12 @@ storeCheckSwapOut(StoreEntry * e)
     if (swap_buf_len < 0) {
 	debug(20, 1) ("memCopy returned %d for '%s'\n", swap_buf_len, e->key);
 	/* XXX This is probably wrong--we should storeRelease()? */
-	e->swap_file_number = -1;
-	file_close(mem->swapout.fd);
-	mem->swapout.fd = -1;
 	storeDirMapBitReset(e->swap_file_number);
 	safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
 	e->swap_file_number = -1;
 	e->swap_status = SWAPOUT_NONE;
 	put_free_8k_page(swap_buf);
+	storeSwapOutFileClose(e);
 	return;
     }
     debug(20, 3) ("storeCheckSwapOut: swap_buf_len = %d\n", (int) swap_buf_len);
@@ -2154,8 +2152,7 @@ storeWriteCleanLogs(int reopen)
     if (store_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeWriteCleanLogs: Operation aborted.\n");
-	for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++)
-	    file_close(fd[dirn]);
+        storeDirCloseSwapLogs();
 	return 0;
     }
     debug(20, 1) ("storeWriteCleanLogs: Starting...\n");
@@ -2567,7 +2564,9 @@ storeSetMemStatus(StoreEntry * e, int new_status)
 static void
 storeSwapOutFileClose(StoreEntry * e)
 {
-    file_close(e->mem_obj->swapout.fd);
-    e->mem_obj->swapout.fd = -1;
+    MemObject *mem = e->mem_obj;
+    if (mem->swapout.fd > -1)
+        file_close(mem->swapout.fd);
+    mem->swapout.fd = -1;
     storeUnlockObject(e);
 }
