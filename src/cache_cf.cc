@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.267 1998/03/28 18:37:05 wessels Exp $
+ * $Id: cache_cf.cc,v 1.268 1998/03/31 04:09:48 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -613,7 +613,7 @@ free_cachedir(cacheSwap * swap)
     SwapDir *s;
     int i;
     /* DON'T FREE THESE FOR RECONFIGURE */
-    if (reconfigure_pending)
+    if (reconfiguring)
 	return;
     for (i = 0; i < swap->n_configured; i++) {
 	s = swap->swapDirs + i;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.239 1998/03/28 23:24:48 wessels Exp $
+ * $Id: main.cc,v 1.240 1998/03/31 04:09:51 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -111,20 +111,22 @@ extern void (*failure_notify) (const char *);
 
 static int opt_send_signal = -1;
 static int opt_no_daemon = 0;
-static volatile int rotate_pending = 0;		/* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 #if MALLOC_DBG
 static int malloc_debug_level = 0;
 #endif
+static volatile int do_reconfigure = 0;
+static volatile int do_rotate = 0;
 
+static void mainRotate(void);
+static void mainReconfigure(void);
 static SIGHDLR rotate_logs;
 static SIGHDLR reconfigure;
 #if ALARM_UPDATES_TIME
 static SIGHDLR time_tick;
 #endif
 static void mainInitialize(void);
-static void mainReconfigure(void);
 static void usage(void);
 static void mainParseOptions(int, char **);
 static void sendSignal(void);
@@ -278,8 +280,7 @@ mainParseOptions(int argc, char *argv[])
 static void
 rotate_logs(int sig)
 {
-    debug(1, 1) ("rotate_logs: SIGUSR1 received.\n");
-    rotate_pending = 1;
+    do_rotate = 1;
 #if !HAVE_SIGACTION
     signal(sig, rotate_logs);
 #endif
@@ -302,7 +303,7 @@ time_tick(int sig)
 static void
 reconfigure(int sig)
 {
-    reconfigure_pending = 1;
+    do_reconfigure = 1;
 #if !HAVE_SIGACTION
     signal(sig, reconfigure);
 #endif
@@ -312,17 +313,10 @@ void
 shut_down(int sig)
 {
     shutdown_pending = sig == SIGINT ? -1 : 1;
-    debug(1, 1) ("Preparing for shutdown after %d requests\n",
-	Counter.client_http.requests);
-    debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
-	shutdown_pending > 0 ? (int) Config.shutdownLifetime : 0);
 #ifdef KILL_PARENT_OPT
-    {
-	pid_t ppid = getppid();
-	if (ppid > 1) {
-	    debug(1, 1) ("Killing RunCache, pid %d\n", ppid);
-	    kill(ppid, sig);
-	}
+    if (getppid() > 1) {
+	debug(1, 1) ("Killing RunCache, pid %d\n", getppid());
+	kill(getppid(), sig);
     }
 #endif
 #if SA_RESETHAND == 0
@@ -368,6 +362,7 @@ static void
 mainReconfigure(void)
 {
     debug(1, 0) ("Restarting Squid Cache (version %s)...\n", version_string);
+    reconfiguring = 1;
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
     serverConnectionsClose();
     icpConnectionClose();
@@ -392,6 +387,19 @@ mainReconfigure(void)
 	neighbors_open(theOutIcpConnection);
     storeDirOpenSwapLogs();
     debug(1, 0) ("Ready to serve requests.\n");
+    reconfiguring = 0;
+}
+
+static void
+mainRotate(void)
+{
+    icmpClose();
+    _db_rotate_log();		/* cache.log */
+    storeDirWriteCleanLogs(1);
+    storeLogRotate();		/* store.log */
+    accessLogRotate();		/* access.log */
+    useragentRotateLog();	/* useragent.log */
+    icmpOpen();
 }
 
 static void
@@ -589,18 +597,17 @@ main(int argc, char **argv)
 
     /* main loop */
     for (;;) {
-	if (reconfigure_pending) {
+	if (do_reconfigure) {
 	    mainReconfigure();
-	    reconfigure_pending = 0;	/* reset */
-	} else if (rotate_pending) {
-	    icmpClose();
-	    _db_rotate_log();	/* cache.log */
-	    storeDirWriteCleanLogs(1);
-	    storeLogRotate();	/* store.log */
-	    accessLogRotate();	/* access.log */
-	    useragentRotateLog();	/* useragent.log */
-	    icmpOpen();
-	    rotate_pending = 0;
+	    do_reconfigure = 0;
+	} else if (do_rotate) {
+	    mainRotate();
+	    do_rotate = 0;
+	} else if (shutdown_pending) {
+	    debug(1, 1) ("Preparing for shutdown after %d requests\n",
+		Counter.client_http.requests);
+	    debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
+		shutdown_pending > 0 ? (int) Config.shutdownLifetime : 0);
 	}
 	eventRun();
 	if ((loop_delay = eventNextTime()) < 0)
@@ -692,8 +699,7 @@ watch_child(char *argv[])
 	    execvp(prog, argv);
 	    fatal("execvp failed");
 	}
-	/* parent */
-	time(&start);
+	/* parent */ time(&start);
 	do {
 	    squid_signal(SIGINT, SIG_IGN, SA_RESTART);
 #ifdef _SQUID_NEXT_
