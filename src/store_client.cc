@@ -272,7 +272,7 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
          * we have (part of )what they want
 	 */
 	copy_sz = XMIN(sc->copy_size, body_sz);
-	debug(20,1)("storeClientReadHeader: copying %d bytes of body\n",
+	debug(20,3)("storeClientReadHeader: copying %d bytes of body\n",
 		copy_sz);
 	xmemcpy(sc->copy_buf, buf+swap_hdr_sz, copy_sz);
 	memFree(MEM_DISK_BUF, (void *) buf);
