@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.274 1998/05/22 23:44:12 wessels Exp $
+ * $Id: http.cc,v 1.275 1998/05/26 23:04:13 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -623,7 +623,7 @@ httpBuildRequestHeader(request_t * request,
     httpHeaderInit(hdr_out);
 
     /* append our IMS header */
-    if (entry && entry->lastmod && request->method == METHOD_GET)
+    if (entry && entry->lastmod > -1 && request->method == METHOD_GET)
 	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, entry->lastmod);
 
     strConnection = httpHeaderGetList(hdr_in, HDR_CONNECTION);
