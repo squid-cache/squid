@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.83 1998/11/20 23:20:51 wessels Exp $
+ * $Id: mime.cc,v 1.84 1998/12/05 00:54:32 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -432,5 +432,5 @@ mimeLoadIconFile(const char *icon)
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     debug(25, 3) ("Loaded icon %s\n", url);
     storeUnlockObject(e);
-    memFree(MEM_4K_BUF, buf);
+    memFree(buf, MEM_4K_BUF);
 }

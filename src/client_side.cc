@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.423 1998/12/04 22:20:13 wessels Exp $
+ * $Id: client_side.cc,v 1.424 1998/12/05 00:54:18 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1188,12 +1188,12 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     request_t *r = http->request;
     debug(33, 3) ("clientCacheHit: %s, %d bytes\n", http->uri, (int) size);
     if (http->entry == NULL) {
-	memFree(MEM_CLIENT_SOCK_BUF, buf);
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	debug(33, 3) ("clientCacheHit: request aborted\n");
 	return;
     } else if (size < 0) {
 	/* swap in failure */
-	memFree(MEM_CLIENT_SOCK_BUF, buf);
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	debug(33, 3) ("clientCacheHit: swapin failure for %s\n", http->uri);
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
 	if ((e = http->entry)) {
@@ -1213,10 +1213,10 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	 * punt to clientProcessMiss.
 	 */
 	if (e->mem_status == IN_MEMORY || e->store_status == STORE_OK) {
-	    memFree(MEM_CLIENT_SOCK_BUF, buf);
+	    memFree(buf, MEM_CLIENT_SOCK_BUF);
 	    clientProcessMiss(http);
 	} else if (size == CLIENT_SOCK_SZ && http->out.offset == 0) {
-	    memFree(MEM_CLIENT_SOCK_BUF, buf);
+	    memFree(buf, MEM_CLIENT_SOCK_BUF);
 	    clientProcessMiss(http);
 	} else {
 	    debug(33, 3) ("clientCacheHit: waiting for HTTP reply headers\n");
@@ -1288,7 +1288,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    http->log_type = LOG_TCP_MISS;
 	    clientProcessMiss(http);
 	}
-	memFree(MEM_CLIENT_SOCK_BUF, buf);
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
     } else if (r->flags.ims) {
 	/*
 	 * Handle If-Modified-Since requests from the client
@@ -1296,7 +1296,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	if (mem->reply->sline.status != HTTP_OK) {
 	    debug(33, 4) ("clientCacheHit: Reply code %d != 200\n",
 		mem->reply->sline.status);
-	    memFree(MEM_CLIENT_SOCK_BUF, buf);
+	    memFree(buf, MEM_CLIENT_SOCK_BUF);
 	    clientProcessMiss(http);
 	} else if (modifiedSince(e, http->request)) {
 	    http->log_type = LOG_TCP_IMS_HIT;
@@ -1304,7 +1304,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	} else {
 	    MemBuf mb = httpPacked304Reply(e->mem_obj->reply);
 	    http->log_type = LOG_TCP_IMS_HIT;
-	    memFree(MEM_CLIENT_SOCK_BUF, buf);
+	    memFree(buf, MEM_CLIENT_SOCK_BUF);
 	    storeUnregister(e, http);
 	    storeUnlockObject(e);
 	    e = clientCreateStoreEntry(http, http->request->method, null_request_flags);
@@ -1472,22 +1472,22 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
 	debug(33, 1) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
-	memFree(MEM_CLIENT_SOCK_BUF, buf);
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     } else if (entry && entry->store_status == STORE_ABORTED) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
-	memFree(MEM_CLIENT_SOCK_BUF, buf);
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     } else if (size < 0) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
-	memFree(MEM_CLIENT_SOCK_BUF, buf);
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     } else if (size == 0) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
-	memFree(MEM_CLIENT_SOCK_BUF, buf);
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     }
     if (http->out.offset == 0) {
@@ -1569,7 +1569,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     /* write */
     comm_write_mbuf(fd, mb, clientWriteComplete, http);
     /* if we don't do it, who will? */
-    memFree(MEM_CLIENT_SOCK_BUF, buf);
+    memFree(buf, MEM_CLIENT_SOCK_BUF);
 }
 
 static void
@@ -1890,7 +1890,7 @@ static clientHttpRequest *
 parseHttpRequestAbort(ConnStateData * conn, const char *uri)
 {
     clientHttpRequest *http = xcalloc(1, sizeof(clientHttpRequest));
-    cbdataAdd(http, MEM_NONE);
+    cbdataAdd(http, cbdataXfree, 0);
     http->conn = conn;
     http->start = current_time;
     http->req_sz = conn->in.offset;
@@ -2021,7 +2021,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 
     /* Ok, all headers are received */
     http = xcalloc(1, sizeof(clientHttpRequest));
-    cbdataAdd(http, MEM_NONE);
+    cbdataAdd(http, cbdataXfree, 0);
     http->http_ver = http_ver;
     http->conn = conn;
     http->start = current_time;
@@ -2454,7 +2454,7 @@ httpAccept(int sock, void *data)
 	connState->ident.fd = -1;
 	connState->in.size = REQUEST_BUF_SIZE;
 	connState->in.buf = xcalloc(connState->in.size, 1);
-	cbdataAdd(connState, MEM_NONE);
+	cbdataAdd(connState, cbdataXfree, 0);
 	/* XXX account connState->in.buf */
 	comm_add_close_handler(fd, connStateFree, connState);
 	if (Config.onoff.log_fqdn)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.312 1998/11/25 09:00:18 wessels Exp $
+ * $Id: cache_cf.cc,v 1.313 1998/12/05 00:54:16 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -87,7 +87,7 @@ wordlistDestroy(wordlist ** list)
     while ((w = *list) != NULL) {
 	*list = w->next;
 	safe_free(w->key);
-	memFree(MEM_WORDLIST, w);
+	memFree(w, MEM_WORDLIST);
     }
     *list = NULL;
 }
@@ -119,7 +119,7 @@ intlistDestroy(intlist ** list)
     intlist *n = NULL;
     for (w = *list; w; w = n) {
 	n = w->next;
-	memFree(MEM_INTLIST, w);
+	memFree(w, MEM_INTLIST);
     }
     *list = NULL;
 }
@@ -308,6 +308,14 @@ configDoConfigure(void)
 	}
     }
 #endif
+    if (Config.Wais.relayHost) {
+	if (Config.Wais.peer)
+	    cbdataFree(Config.Wais.peer);
+	Config.Wais.peer = memAllocate(MEM_PEER);
+	cbdataAdd(Config.Wais.peer, peerDestroy, MEM_PEER);
+	Config.Wais.peer->host = Config.Wais.relayHost;
+	Config.Wais.peer->http_port = Config.Wais.relayPort;
+    }
 }
 
 /* Parse a time specification from the config file.  Store the
@@ -757,7 +765,7 @@ parse_peer(peer ** head)
 	    p->carp.hash += (p->carp.hash << 19) + *token;
     }
 #endif
-    cbdataAdd(p, MEM_PEER);	/* must preceed peerDigestCreate */
+    cbdataAdd(p, peerDestroy, MEM_PEER);	/* must preceed peerDigestCreate */
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest) {
 	p->digest = peerDigestCreate(p);
@@ -776,7 +784,7 @@ free_peer(peer ** P)
     peer *p;
     while ((p = *P) != NULL) {
 	*P = p->next;
-	peerDestroy(p);
+	cbdataUnlock(p);
     }
     Config.npeers = 0;
 }

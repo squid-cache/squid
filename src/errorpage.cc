@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.143 1998/11/12 06:28:05 wessels Exp $
+ * $Id: errorpage.cc,v 1.144 1998/12/05 00:54:23 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -312,7 +312,7 @@ errorSend(int fd, ErrorState * err)
 	err->request->err_type = err->type;
     /* moved in front of errorBuildBuf @?@ */
     err->flags.flag_cbdata = 1;
-    cbdataAdd(err, MEM_NONE);
+    cbdataAdd(err, cbdataXfree, 0);
     rep = errorBuildReply(err);
     comm_write_mbuf(fd, httpReplyPack(rep), errorSendComplete, err);
     httpReplyDestroy(rep);

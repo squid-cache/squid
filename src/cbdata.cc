@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.26 1998/12/02 05:14:17 wessels Exp $
+ * $Id: cbdata.cc,v 1.27 1998/12/05 00:54:17 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -75,7 +75,8 @@ typedef struct _cbdata {
     struct _cbdata *next;
     int valid;
     int locks;
-    mem_type mem_type;
+    CBDUNL *unlock_func;
+    int id;
 #if CBDATA_DEBUG
     const char *file;
     int line;
@@ -85,6 +86,7 @@ typedef struct _cbdata {
 static HASHCMP cbdata_cmp;
 static HASHHASH cbdata_hash;
 static void cbdataReallyFree(cbdata * c);
+static OBJH cbdataDump;
 
 static int
 cbdata_cmp(const void *p1, const void *p2)
@@ -111,9 +113,9 @@ cbdataInit(void)
 
 void
 #if CBDATA_DEBUG
-cbdataAddDbg(const void *p, mem_type mtype, const char *file, int line)
+cbdataAddDbg(const void *p, CBDUNL * unlock_func, int id, const char *file, int line)
 #else
-cbdataAdd(const void *p, mem_type mtype)
+cbdataAdd(const void *p, CBDUNL * unlock_func, int id)
 #endif
 {
     cbdata *c;
@@ -124,7 +126,8 @@ cbdataAdd(const void *p, mem_type mtype)
     c = xcalloc(1, sizeof(cbdata));
     c->key = p;
     c->valid = 1;
-    c->mem_type = mtype;
+    c->unlock_func = unlock_func;
+    c->id = id;
 #if CBDATA_DEBUG
     c->file = file;
     c->line = line;
@@ -136,18 +139,15 @@ cbdataAdd(const void *p, mem_type mtype)
 static void
 cbdataReallyFree(cbdata * c)
 {
-    mem_type mtype = c->mem_type;
+    CBDUNL *unlock_func = c->unlock_func;
     void *p = (void *) c->key;
+    int id = c->id;
     hash_remove_link(htable, (hash_link *) c);
     cbdataCount--;
     xfree(c);
-    if (mtype == MEM_DONTFREE)
-	return;
     debug(45, 3) ("cbdataReallyFree: Freeing %p\n", p);
-    if (mtype == MEM_NONE)
-	xfree(p);
-    else
-	memFree(mtype, p);
+    if (unlock_func)
+	unlock_func(p, id);
 }
 
 void
@@ -208,8 +208,14 @@ cbdataValid(const void *p)
     return c->valid;
 }
 
-
 void
+cbdataXfree(void *p, int unused)
+{
+    xfree(p);
+}
+
+
+static void
 cbdataDump(StoreEntry * sentry)
 {
     hash_link *hptr;

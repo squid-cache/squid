@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.300 1998/11/18 00:16:40 glenn Exp $
+ * $Id: stat.cc,v 1.301 1998/12/05 00:54:41 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -328,7 +328,7 @@ statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
     state->sentry = sentry;
     state->filter = filter;
     storeLockObject(sentry);
-    cbdataAdd(state, MEM_NONE);
+    cbdataAdd(state, cbdataXfree, 0);
     eventAdd("statObjects", statObjects, state, 0.0, 1);
 }
 

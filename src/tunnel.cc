@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.90 1998/09/14 22:40:11 wessels Exp $
+ * $Id: tunnel.cc,v 1.91 1998/12/05 00:54:40 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -61,7 +61,6 @@ static PF sslTimeout;
 static PF sslWriteClient;
 static PF sslWriteServer;
 static PSC sslPeerSelectComplete;
-static PSC sslPeerSelectFail;
 static void sslStateFree(SslStateData * sslState);
 static void sslConnected(int fd, void *);
 static void sslProxyConnected(int fd, void *);
@@ -424,7 +423,7 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
 	return;
     }
     sslState = xcalloc(1, sizeof(SslStateData));
-    cbdataAdd(sslState, MEM_NONE);
+    cbdataAdd(sslState, cbdataXfree, 0);
     sslState->url = xstrdup(url);
     sslState->request = requestLink(request);
     sslState->size_ptr = size_ptr;
@@ -449,7 +448,6 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
     peerSelect(request,
 	NULL,
 	sslPeerSelectComplete,
-	sslPeerSelectFail,
 	sslState);
     /*
      * Disable the client read handler until peer selection is complete
@@ -493,18 +491,28 @@ sslProxyConnected(int fd, void *data)
 }
 
 static void
-sslPeerSelectComplete(peer * p, void *data)
+sslPeerSelectComplete(FwdServer * fs, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;
     peer *g = NULL;
-    sslState->proxying = p ? 1 : 0;
-    sslState->host = p ? p->host : request->host;
-    if (p == NULL) {
+
+    if (fs == NULL) {
+	ErrorState *err;
+	err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
+	err->request = requestLink(sslState->request);
+	err->callback = sslErrorComplete;
+	err->callback_data = sslState;
+	errorSend(sslState->client.fd, err);
+	return;
+    }
+    sslState->proxying = fs->peer ? 1 : 0;
+    sslState->host = fs->peer ? fs->peer->host : request->host;
+    if (fs->peer == NULL) {
 	sslState->port = request->port;
-    } else if (p->http_port != 0) {
-	sslState->port = p->http_port;
-    } else if ((g = peerFindByName(p->host))) {
+    } else if (fs->peer->http_port != 0) {
+	sslState->port = fs->peer->http_port;
+    } else if ((g = peerFindByName(fs->peer->host))) {
 	sslState->port = g->http_port;
     } else {
 	sslState->port = CACHE_HTTP_PORT;
@@ -514,17 +522,4 @@ sslPeerSelectComplete(peer * p, void *data)
 	sslState->port,
 	sslConnectDone,
 	sslState);
-}
-
-static void
-sslPeerSelectFail(peer * peernotused, void *data)
-{
-    SslStateData *sslState = data;
-    ErrorState *err;
-    err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
-    err->request = requestLink(sslState->request);
-    err->callback = sslErrorComplete;
-    err->callback_data = sslState;
-    errorSend(sslState->client.fd, err);
-
 }

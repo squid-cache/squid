@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.48 1998/09/29 16:32:50 wessels Exp $
+ * $Id: urn.cc,v 1.49 1998/12/05 00:54:48 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -109,7 +109,7 @@ urnStart(request_t * r, StoreEntry * e)
     urnState = xcalloc(1, sizeof(UrnState));
     urnState->entry = e;
     urnState->request = requestLink(r);
-    cbdataAdd(urnState, MEM_NONE);
+    cbdataAdd(urnState, cbdataXfree, 0);
     storeLockObject(urnState->entry);
     if (strncasecmp(strBuf(r->urlpath), "menu.", 5) == 0) {
 	char *new_path = xstrdup(strBuf(r->urlpath) + 5);
@@ -192,14 +192,14 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 
     debug(52, 3) ("urnHandleReply: Called with size=%d.\n", size);
     if (urlres_e->store_status == STORE_ABORTED) {
-	memFree(MEM_4K_BUF, buf);
+	memFree(buf, MEM_4K_BUF);
 	return;
     }
     if (size == 0) {
-	memFree(MEM_4K_BUF, buf);
+	memFree(buf, MEM_4K_BUF);
 	return;
     } else if (size < 0) {
-	memFree(MEM_4K_BUF, buf);
+	memFree(buf, MEM_4K_BUF);
 	return;
     }
     if (urlres_e->store_status == STORE_PENDING && size < SM_PAGE_SIZE) {
@@ -286,7 +286,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     httpBodySet(&rep->body, &mb);
     httpReplySwapOut(rep, e);
     storeComplete(e);
-    memFree(MEM_4K_BUF, buf);
+    memFree(buf, MEM_4K_BUF);
     for (i = 0; i < urlcnt; i++) {
 	safe_free(urls[i].url);
 	safe_free(urls[i].host);

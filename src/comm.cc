@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.292 1998/11/20 23:58:50 wessels Exp $
+ * $Id: comm.cc,v 1.293 1998/12/05 00:54:20 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -231,7 +231,7 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
 {
     ConnectStateData *cs = xcalloc(1, sizeof(ConnectStateData));
     debug(5, 3) ("commConnectStart: FD %d, %s:%d\n", fd, host, (int) port);
-    cbdataAdd(cs, MEM_NONE);
+    cbdataAdd(cs, cbdataXfree, 0);
     cs->fd = fd;
     cs->host = xstrdup(host);
     cs->port = port;

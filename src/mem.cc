@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.37 1998/12/04 22:20:19 wessels Exp $
+ * $Id: mem.cc,v 1.38 1998/12/05 00:54:31 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -127,9 +127,9 @@ memAllocate(mem_type type)
     return memPoolAlloc(MemPools[type]);
 }
 
-/* find appropriate pool and use it */
+/* give memory back to the pool */
 void
-memFree(mem_type type, void *p)
+memFree(void *p, int type)
 {
     memPoolFree(MemPools[type], p);
 }
@@ -327,23 +327,23 @@ memInUse(mem_type type)
 void
 memFree2K(void *p)
 {
-    memFree(MEM_2K_BUF, p);
+    memFree(p, MEM_2K_BUF);
 }
 
 void
 memFree4K(void *p)
 {
-    memFree(MEM_4K_BUF, p);
+    memFree(p, MEM_4K_BUF);
 }
 
 void
 memFree8K(void *p)
 {
-    memFree(MEM_8K_BUF, p);
+    memFree(p, MEM_8K_BUF);
 }
 
 void
 memFreeDISK(void *p)
 {
-    memFree(MEM_DISK_BUF, p);
+    memFree(p, MEM_DISK_BUF);
 }

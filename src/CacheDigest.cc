@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.28 1998/11/25 09:00:17 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.29 1998/12/05 00:54:08 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -88,7 +88,7 @@ cacheDigestDestroy(CacheDigest * cd)
 {
     assert(cd);
     cacheDigestClean(cd);
-    memFree(MEM_CACHE_DIGEST, cd);
+    memFree(cd, MEM_CACHE_DIGEST);
 }
 
 CacheDigest *
@@ -256,7 +256,6 @@ cacheDigestGuessStatsReport(const cd_guess_stats * stats, StoreEntry * sentry, c
     storeAppendPrintf(sentry, "Digest guesses stats for %s:\n", label);
     storeAppendPrintf(sentry, "guess\t hit\t\t miss\t\t total\t\t\n");
     storeAppendPrintf(sentry, " \t #\t %%\t #\t %%\t #\t %%\t\n");
-
     storeAppendPrintf(sentry, "true\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
 	stats->true_hits, xpercent(stats->true_hits, tot_count),
 	stats->true_misses, xpercent(stats->true_misses, tot_count),

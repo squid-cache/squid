@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.293 1998/12/02 05:03:29 wessels Exp $
+ * $Id: protos.h,v 1.294 1998/12/05 00:54:36 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -96,15 +96,15 @@ extern void wordlistCat(const wordlist *, MemBuf * mb);
 
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
-extern void cbdataAddDbg(const void *p, mem_type, const char *, int);
+extern void cbdataAddDbg(const void *p, CBDUNL *, int, const char *, int);
 #else
-extern void cbdataAdd(const void *p, mem_type);
+extern void cbdataAdd(const void *p, CBDUNL *, int);
 #endif
 extern void cbdataFree(void *p);
 extern void cbdataLock(const void *p);
 extern void cbdataUnlock(const void *p);
 extern int cbdataValid(const void *p);
-extern void cbdataDump(StoreEntry *);
+extern CBDUNL cbdataXfree;
 
 extern void clientdbInit(void);
 extern void clientdbUpdate(struct in_addr, log_type, protocol_t, size_t);
@@ -247,17 +247,17 @@ extern void fqdncacheFreeMemory(void);
 extern void fqdncache_restart(void);
 extern EVH fqdncache_purgelru;
 
-extern void ftpStart(request_t * req, StoreEntry * entry, int);
+extern void ftpStart(FwdState *);
 extern char *ftpUrlWith2f(const request_t *);
 
-extern void gopherStart(StoreEntry *, int fd);
+extern void gopherStart(FwdState *);
 extern int gopherCachable(const char *);
 
 
-extern void whoisStart(FwdState *, int fd);
+extern void whoisStart(FwdState *);
 
 extern int httpCachable(method_t);
-extern void httpStart(FwdState *, int fd);
+extern void httpStart(FwdState *);
 extern void httpParseReplyHeaders(const char *, http_reply *);
 extern void httpProcessReplyHeader(HttpStateData *, const char *, int);
 extern size_t httpBuildRequestPrefix(request_t * request,
@@ -591,6 +591,7 @@ extern void neighborsUdpAck(const cache_key *, icp_common_t *, const struct sock
 extern void neighborAdd(const char *, const char *, int, int, int, int, int);
 extern void neighbors_open(int);
 extern peer *peerFindByName(const char *);
+extern peer *peerFindByNameAndPort(const char *, unsigned short);
 extern peer *getDefaultParent(request_t * request);
 extern peer *getRoundRobinParent(request_t * request);
 extern peer *getAnyParent(request_t * request);
@@ -599,7 +600,7 @@ extern peer *neighborsDigestSelect(request_t * request, StoreEntry * entry);
 extern void peerNoteDigestLookup(request_t * request, peer * p, lookup_t lookup);
 extern void peerNoteDigestGone(peer * p);
 extern int neighborUp(const peer * e);
-extern void peerDestroy(peer * e);
+extern CBDUNL peerDestroy;
 extern char *neighborTypeStr(const peer * e);
 extern peer_t neighborType(const peer *, const request_t *);
 extern void peerCheckConnectStart(peer *);
@@ -633,8 +634,7 @@ extern void cachemgrStart(int fd, request_t * request, StoreEntry * entry);
 extern void cachemgrRegister(const char *, const char *, OBJH *, int, int);
 extern void cachemgrInit(void);
 
-extern void peerSelect(request_t *, StoreEntry *, PSC *, PSC *, void *data);
-extern peer *peerGetSomeParent(request_t *, hier_code *);
+extern void peerSelect(request_t *, StoreEntry *, PSC *, void *data);
 extern void peerSelectInit(void);
 
 /* peer_digest.c */
@@ -649,6 +649,8 @@ extern DEFER fwdCheckDeferRead;
 extern void fwdFail(FwdState *, int, http_status, int);
 extern STABH fwdAbort;
 extern void fwdUnregister(int fd, FwdState *);
+extern void fwdComplete(FwdState * fwdState);
+
 
 extern void urnStart(request_t *, StoreEntry *);
 
@@ -673,8 +675,7 @@ extern void shut_down(int);
 
 extern void start_announce(void *unused);
 extern void sslStart(int fd, const char *, request_t *, size_t * sz);
-extern void waisStart(request_t *, StoreEntry *, int fd);
-extern void passStart(int, const char *, request_t *, size_t *);
+extern void waisStart(FwdState *);
 extern void identStart(int, ConnStateData *, IDCB * callback, void *);
 
 extern void statInit(void);
@@ -719,7 +720,7 @@ extern void memCleanModule();
 extern void memConfigure();
 extern void *memAllocate(mem_type);
 extern void *memAllocBuf(size_t net_size, size_t * gross_size);
-extern void memFree(mem_type, void *);
+extern CBDUNL memFree;
 extern void memFreeBuf(size_t size, void *);
 extern void memFree2K(void *);
 extern void memFree4K(void *);
@@ -759,9 +760,6 @@ extern StoreEntry *storeGetPublic(const char *uri, const method_t method);
 extern StoreEntry *storeCreateEntry(const char *, const char *, request_flags, method_t);
 extern void storeSetPublicKey(StoreEntry *);
 extern void storeComplete(StoreEntry *);
-#ifdef PPNR_WIP
-extern void storePPNR(StoreEntry *);
-#endif /* PPNR_WIP */
 extern void storeInit(void);
 extern int storeClientWaiting(const StoreEntry *);
 extern void storeAbort(StoreEntry *, int);
@@ -816,6 +814,7 @@ extern int objectLen(const StoreEntry * e);
 extern int contentLen(const StoreEntry * e);
 extern HttpReply *storeEntryReply(StoreEntry *);
 extern int storeTooManyDiskFilesOpen(void);
+extern void storeEntryReset(StoreEntry *);
 
 /*
  * store_log.c

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.139 1998/11/25 08:58:10 wessels Exp $
+ * $Id: enums.h,v 1.140 1998/12/05 00:54:22 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -280,7 +280,6 @@ typedef enum {
     DEFAULT_PARENT,
     SINGLE_PARENT,
     FIRSTUP_PARENT,
-    NO_PARENT_DIRECT,
     FIRST_PARENT_MISS,
     CLOSEST_PARENT_MISS,
     CLOSEST_PARENT,
@@ -445,11 +444,7 @@ enum {
     ENTRY_CACHABLE,
     ENTRY_DISPATCHED,
     KEY_PRIVATE,
-#ifndef PPNR_WIP
-    ENTRY_UNUSED_08,
-#else
     ENTRY_FWD_HDR_WAIT,
-#endif				/* PPNR_WIP */
     ENTRY_NEGCACHED,
     ENTRY_VALIDATED,
     ENTRY_BAD_LENGTH

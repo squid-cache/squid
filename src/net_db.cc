@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.133 1998/11/13 20:50:53 wessels Exp $
+ * $Id: net_db.cc,v 1.134 1998/12/05 00:54:34 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -126,7 +126,7 @@ netdbHostDelete(const net_db_name * x)
     }
     hash_remove_link(host_table, (hash_link *) x);
     xfree(x->name);
-    memFree(MEM_NET_DB_NAME, (void *) x);
+    memFree((void *) x, MEM_NET_DB_NAME);
 }
 
 static netdbEntry *
@@ -152,7 +152,7 @@ netdbRelease(netdbEntry * n)
     n->n_peers_alloc = 0;
     if (n->link_count == 0) {
 	netdbHashDelete(n->network);
-	memFree(MEM_NETDBENTRY, n);
+	memFree(n, MEM_NETDBENTRY);
     }
 }
 
@@ -460,7 +460,7 @@ netdbReloadState(void)
 	}
 	count++;
     }
-    memFree(MEM_4K_BUF, buf);
+    memFree(buf, MEM_4K_BUF);
     fclose(fp);
     getCurrentTime();
     debug(38, 1) ("NETDB state reloaded; %d entries, %d msec\n",
@@ -484,7 +484,7 @@ netdbFreeNetdbEntry(void *data)
 {
     netdbEntry *n = data;
     safe_free(n->peers);
-    memFree(MEM_NETDBENTRY, n);
+    memFree(n, MEM_NETDBENTRY);
 }
 
 static void
@@ -492,7 +492,7 @@ netdbFreeNameEntry(void *data)
 {
     net_db_name *x = data;
     xfree(x->name);
-    memFree(MEM_NET_DB_NAME, x);
+    memFree(x, MEM_NET_DB_NAME);
 }
 
 static void
@@ -609,7 +609,7 @@ netdbExchangeDone(void *data)
 {
     netdbExchangeState *ex = data;
     debug(38, 3) ("netdbExchangeDone: %s\n", storeUrl(ex->e));
-    memFree(MEM_4K_BUF, ex->buf);
+    memFree(ex->buf, MEM_4K_BUF);
     requestUnlink(ex->r);
     storeUnregister(ex->e, ex);
     storeUnlockObject(ex->e);
@@ -650,7 +650,7 @@ netdbPingSite(const char *hostname)
 	if (n->next_ping_time > squid_curtime)
 	    return;
     h = xstrdup(hostname);
-    cbdataAdd(h, MEM_NONE);
+    cbdataAdd(h, cbdataXfree, 0);
     cbdataLock(h);
     ipcache_nbgethostbyname(hostname, netdbSendPing, h);
 #endif
@@ -932,7 +932,7 @@ netdbBinaryExchange(StoreEntry * s)
     }
     assert(0 == i);
     storeBufferFlush(s);
-    memFree(MEM_4K_BUF, buf);
+    memFree(buf, MEM_4K_BUF);
 #else
     httpReplyReset(reply);
     httpReplySetHeaders(reply, 1.0, HTTP_BAD_REQUEST, "Bad Request",
@@ -949,7 +949,7 @@ netdbExchangeStart(void *data)
     peer *p = data;
     char *uri;
     netdbExchangeState *ex = xcalloc(1, sizeof(*ex));
-    cbdataAdd(ex, MEM_NONE);
+    cbdataAdd(ex, cbdataXfree, 0);
     cbdataLock(p);
     ex->p = p;
     uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.474 1998/12/04 22:20:24 wessels Exp $
+ * $Id: store.cc,v 1.475 1998/12/05 00:54:43 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -157,7 +157,7 @@ destroy_MemObject(StoreEntry * e)
     ctx_exit(ctx);		/* must exit before we free mem->url */
     safe_free(mem->url);
     safe_free(mem->log_url);
-    memFree(MEM_MEMOBJECT, mem);
+    memFree(mem, MEM_MEMOBJECT);
 }
 
 static void
@@ -170,7 +170,7 @@ destroy_StoreEntry(void *data)
 	destroy_MemObject(e);
     storeHashDelete(e);
     assert(e->key == NULL);
-    memFree(MEM_STOREENTRY, e);
+    memFree(e, MEM_STOREENTRY);
 }
 
 /* ----- INTERFACE BETWEEN STORAGE MANAGER AND HASH TABLE FUNCTIONS --------- */
@@ -384,9 +384,6 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
     e->timestamp = 0;		/* set in storeTimestampsSet() */
     e->ping_status = PING_NONE;
     EBIT_SET(e->flags, ENTRY_VALIDATED);
-#ifdef PPNR_WIP
-    EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
-#endif /* PPNR_WIP */
     return e;
 }
 
@@ -581,16 +578,6 @@ storeComplete(StoreEntry * e)
     InvokeHandlers(e);
     storeCheckSwapOut(e);
 }
-
-#ifdef PPNR_WIP
-void
-storePPNR(StoreEntry * e)
-{
-    assert(EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT));
-    EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
-}
-
-#endif /* PPNR_WIP */
 
 /*
  * Someone wants to abort this transfer.  Set the reason in the
@@ -1240,4 +1227,16 @@ storeEntryReply(StoreEntry * e)
     if (NULL == e->mem_obj)
 	return NULL;
     return e->mem_obj->reply;
+}
+
+void
+storeEntryReset(StoreEntry * e)
+{
+    MemObject *mem = e->mem_obj;
+    debug(20, 3) ("storeEntryReset: %s\n", storeUrl(e));
+    assert(mem->swapout.fd == -1);
+    stmemFree(&mem->data_hdr);
+    mem->inmem_hi = mem->inmem_lo = 0;
+    httpReplyDestroy(mem->reply);
+    mem->reply = httpReplyCreate();
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.58 1998/11/12 06:27:50 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.59 1998/12/05 00:54:11 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -897,7 +897,7 @@ httpHeaderEntryDestroy(HttpHeaderEntry * e)
     assert(Headers[e->id].stat.aliveCount);
     Headers[e->id].stat.aliveCount--;
     e->id = -1;
-    memFree(MEM_HTTP_HDR_ENTRY, e);
+    memFree(e, MEM_HTTP_HDR_ENTRY);
 }
 
 /* parses and inits header entry, returns new entry on success */

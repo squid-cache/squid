@@ -59,7 +59,7 @@ helperOpenServers(helper * hlp)
 	}
 	hlp->n_running++;
 	srv = memAllocate(MEM_HELPER_SERVER);
-	cbdataAdd(srv, MEM_HELPER_SERVER);
+	cbdataAdd(srv, memFree, MEM_HELPER_SERVER);
 	srv->flags.alive = 1;
 	srv->index = k;
 	srv->rfd = rfd;
@@ -185,7 +185,7 @@ helper *
 helperCreate(const char *name)
 {
     helper *hlp = memAllocate(MEM_HELPER);
-    cbdataAdd(hlp, MEM_HELPER);
+    cbdataAdd(hlp, memFree, MEM_HELPER);
     hlp->id_name = name;
     return hlp;
 }
@@ -212,7 +212,7 @@ helperServerFree(int fd, void *data)
     helper_request *r;
     assert(srv->rfd == fd);
     if (srv->buf) {
-	memFree(MEM_8K_BUF, srv->buf);
+	memFree(srv->buf, MEM_8K_BUF);
 	srv->buf = NULL;
     }
     if ((r = srv->request)) {
@@ -318,7 +318,7 @@ Dequeue(helper * hlp)
     if ((link = hlp->queue.head)) {
 	r = link->data;
 	dlinkDelete(link, &hlp->queue);
-	memFree(MEM_DLINK_NODE, link);
+	memFree(link, MEM_DLINK_NODE);
 	hlp->stats.queue_size--;
     }
     return r;
@@ -385,5 +385,5 @@ helperRequestFree(helper_request * r)
 {
     cbdataUnlock(r->data);
     xfree(r->buf);
-    memFree(MEM_HELPER_REQUEST, r);
+    memFree(r, MEM_HELPER_REQUEST);
 }

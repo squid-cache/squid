@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.123 1998/11/21 16:54:30 wessels Exp $
+ * $Id: wais.cc,v 1.124 1998/12/05 00:54:48 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -42,6 +42,7 @@ typedef struct {
     const HttpHeader *request_hdr;
     char url[MAX_URL];
     request_t *request;
+    FwdState *fwd;
 } WaisStateData;
 
 static PF waisStateFree;
@@ -141,7 +142,7 @@ waisReadReply(int fd, void *data)
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	entry->expires = squid_curtime;
-	storeComplete(entry);
+	fwdComplete(waisState->fwd);
 	comm_close(fd);
     } else {
 	storeAppend(entry, buf, len);
@@ -209,22 +210,26 @@ waisSendRequest(int fd, void *data)
 }
 
 void
-waisStart(request_t * request, StoreEntry * entry, int fd)
+waisStart(FwdState * fwd)
 {
     WaisStateData *waisState = NULL;
+    request_t *request = fwd->request;
+    StoreEntry *entry = fwd->entry;
+    int fd = fwd->server_fd;
     const char *url = storeUrl(entry);
     method_t method = request->method;
     debug(24, 3) ("waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
     Counter.server.all.requests++;
     Counter.server.other.requests++;
     waisState = xcalloc(1, sizeof(WaisStateData));
-    cbdataAdd(waisState, MEM_NONE);
+    cbdataAdd(waisState, cbdataXfree, 0);
     waisState->method = method;
     waisState->request_hdr = &request->header;
     waisState->fd = fd;
     waisState->entry = entry;
     xstrncpy(waisState->url, url, MAX_URL);
     waisState->request = requestLink(request);
+    waisState->fwd = fwd;
     comm_add_close_handler(waisState->fd, waisStateFree, waisState);
     storeLockObject(entry);
     commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
