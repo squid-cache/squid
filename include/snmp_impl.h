@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_impl.h,v 1.12 2001/10/08 16:18:31 hno Exp $
+ * $Id: snmp_impl.h,v 1.13 2002/02/13 02:01:11 hno Exp $
  */
 
 #ifndef SQUID_SNMP_IMPL_H
@@ -77,13 +77,6 @@ SOFTWARE.
 #define RONLY	0xAAAA		/* read access for everyone */
 #define RWRITE	0xAABA		/* add write access for community private */
 #define NOACCESS 0x0000		/* no access for anybody */
-
-#ifndef INTEGER
-#define INTEGER	    ASN_INTEGER
-#define STRING	    ASN_OCTET_STR
-#define OBJID	    ASN_OBJECT_ID
-#define NULLOBJ	    ASN_NULL
-#endif
 
 struct trapVar {
     oid *varName;
