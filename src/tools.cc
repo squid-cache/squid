@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.217 2002/04/11 17:05:31 hno Exp $
+ * $Id: tools.cc,v 1.218 2002/04/11 21:34:03 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -998,10 +998,10 @@ getMyPort(void)
 {
 #if USE_SSL
     if (Config.Sockaddr.http)
-	return Config.Sockaddr.http->s.sin_port;
+	return ntohs(Config.Sockaddr.http->s.sin_port);
     else
-	return Config.Sockaddr.https->s.sin_port;
+	return ntohs(Config.Sockaddr.https->s.sin_port);
 #else
-    return Config.Sockaddr.http->s.sin_port;
+    return ntohs(Config.Sockaddr.http->s.sin_port);
 #endif
 }
