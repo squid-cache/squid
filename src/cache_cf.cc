@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.173 1997/02/20 22:22:55 wessels Exp $
+ * $Id: cache_cf.cc,v 1.174 1997/02/24 20:22:08 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1032,7 +1032,7 @@ parseHttpAnonymizer(int *iptr)
     char *token;
     token = strtok(NULL, w_space);
     if (token == NULL)
-        self_destruct();
+	self_destruct();
     if (!strcasecmp(token, "off"))
 	*iptr = ANONYMIZER_NONE;
     else if (!strcasecmp(token, "paranoid"))
