@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.278 1998/06/02 04:18:23 wessels Exp $
+ * $Id: http.cc,v 1.279 1998/06/02 21:38:09 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -604,7 +604,7 @@ httpBuildRequestHeader(request_t * request,
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
     String strConnection = StringNull;
     const HttpHeader *hdr_in = &orig_request->header;
-    HttpHdrRange *range = NULL;
+    int filter_range;
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
 
@@ -618,13 +618,11 @@ httpBuildRequestHeader(request_t * request,
     if (entry && entry->lastmod > -1 && request->method == METHOD_GET)
 	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, entry->lastmod);
 
-#if FUTURE_CODE
     /* decide if we want to filter out Range specs
      * no reason to filter out if the reply will not be cachable
      * or if we cannot parse the specs */
-    if (EBIT_TEST(orig_request->flags, REQ_CACHABLE))
-	range = httpHeaderGetRange(hdr_in);
-#endif
+    filter_range =
+	orig_request->range && EBIT_TEST(orig_request->flags, REQ_CACHABLE);
 
     strConnection = httpHeaderGetList(hdr_in, HDR_CONNECTION);
     while ((e = httpHeaderGetEntry(hdr_in, &pos))) {
@@ -657,12 +655,10 @@ httpBuildRequestHeader(request_t * request,
 		    httpHeaderPutInt(hdr_out, HDR_MAX_FORWARDS, hops - 1);
 	    }
 	    break;
-#if FUTURE_CODE
 	case HDR_RANGE:
-	    if (!range)
+	    if (!filter_range)
 		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
 	    break;
-#endif
 	case HDR_PROXY_CONNECTION:
 	case HDR_CONNECTION:
 	case HDR_VIA:
@@ -729,8 +725,6 @@ httpBuildRequestHeader(request_t * request,
 	}
     }
     stringClean(&strConnection);
-    if (range)
-	httpHdrRangeDestroy(range);
 }
 
 /* build request prefix and append it to a given MemBuf; 

@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.17 1998/06/02 04:18:13 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.18 1998/06/02 21:38:06 rousskov Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -142,6 +142,17 @@ httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list 
     memBufClean(&mb);
 }
 
+
+/* wrapper arrounf PutContRange */
+void
+httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, size_t ent_len)
+{
+    HttpHdrContRange *cr = httpHdrContRangeCreate();
+    assert(hdr && ent_len >= 0);
+    httpHdrContRangeSet(cr, spec, ent_len);
+    httpHeaderPutContRange(hdr, cr);
+    httpHdrContRangeDestroy(cr);
+}
 
 /*
  * return true if a given directive is found in at least one of the "connection" header-fields

@@ -522,6 +522,14 @@ struct _HttpHdrContRange {
     size_t elength;		/* entity length, not content length */
 };
 
+/* data for iterating thru range specs */
+struct _HttpHdrRangeIter  {
+    HttpHdrRangeSpec spec;
+    HttpHdrRangePos pos;
+    size_t debt_size;	/* bytes left to send from the current spec */
+    size_t prefix_size; /* the size of the incoming HTTP msg prefix */
+    String boundary;    /* boundary for multipart responses */
+};
 
 /* per field statistics */
 struct _HttpHeaderFieldStat {
@@ -670,7 +678,8 @@ struct _clientHttpRequest {
 	off_t offset;
 	size_t size;
     } out;
-    size_t req_sz;		/* raw request size on input, not current request size */
+    HttpHdrRangeIter range_iter;/* data for iterating thru range specs */
+    size_t req_sz;              /* raw request size on input, not current request size */
     StoreEntry *entry;
     StoreEntry *old_entry;
     log_type log_type;
@@ -1099,18 +1108,14 @@ struct _request_t {
     int link_count;		/* free when zero */
     int flags;
     HttpHdrCc *cache_control;
+    HttpHdrRange *range;
     time_t max_age;
     float http_ver;
     time_t ims;
     int imslen;
     int max_forwards;
     struct in_addr client_addr;
-#if OLD_CODE
-    char *headers;
-    size_t headers_sz;
-#else
     HttpHeader header;
-#endif
     char *body;
     size_t body_sz;
     HierarchyLogEntry hier;

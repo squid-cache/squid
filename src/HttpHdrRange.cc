@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.8 1998/05/22 23:43:51 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.9 1998/06/02 21:38:04 rousskov Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -147,6 +147,8 @@ httpHdrRangeSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
 static int
 httpHdrRangeSpecCanonize(HttpHdrRangeSpec * spec, size_t clen)
 {
+    debug(64, 5) ("httpHdrRangeSpecCanonize: have: [%d, %d) len: %d\n",
+	spec->offset, spec->offset+spec->length, spec->length);
     if (!known_spec(spec->offset))	/* suffix */
 	spec->offset = size_diff(clen, spec->length);
     else if (!known_spec(spec->length))		/* trailer */
@@ -156,6 +158,8 @@ httpHdrRangeSpecCanonize(HttpHdrRangeSpec * spec, size_t clen)
     assert(known_spec(spec->offset));
     spec->length = size_min(size_diff(clen, spec->offset), spec->length);
     /* check range validity */
+    debug(64, 5) ("httpHdrRangeSpecCanonize: done: [%d, %d) len: %d\n",
+	spec->offset, spec->offset+spec->length, spec->length);
     return spec->length > 0;
 }
 
@@ -209,7 +213,7 @@ httpHdrRangeParseInit(HttpHdrRange * range, const String * str)
 	    stackPush(&range->specs, spec);
 	count++;
     }
-    debug(68, 8) ("parsed range range count: %d\n", range->specs.count);
+    debug(64, 8) ("parsed range range count: %d\n", range->specs.count);
     return range->specs.count;
 }
 
@@ -260,17 +264,24 @@ httpHdrRangePackInto(const HttpHdrRange * range, Packer * p)
 int
 httpHdrRangeCanonize(HttpHdrRange * range, size_t clen)
 {
+    int bad_count = 0;
     int i;
     assert(range);
-    for (i = 0; i < range->specs.count; i++)
+    assert(clen >= 0);
+    for (i = 0; i < range->specs.count; i++) {
 	if (!httpHdrRangeSpecCanonize(range->specs.items[i], clen))
-	    return 0;
-    return range->specs.count;
+	    bad_count++;
+    }
+    if (bad_count)
+	debug(64, 2) ("httpHdrRangeCanonize: found %d invalid specs out of %d\n", bad_count, range->specs.count);
+    else
+	debug(64, 3) ("httpHdrRangeCanonize: got %d valid specs\n", range->specs.count);
+    return !bad_count;
 }
 
 /* searches for next range, returns true if found */
 int
-httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangeSpec * spec, int *pos)
+httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangeSpec * spec, HttpHdrRangePos *pos)
 {
     assert(range && spec);
     assert(pos && *pos >= -1 && *pos < range->specs.count);
@@ -281,4 +292,36 @@ httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangeSpec * spec, int *po
     }
     spec->offset = spec->length = 0;
     return 0;
+}
+
+/* hack: returns true if range specs are too "complex" for Squid to handle */
+int
+httpHdrRangeIsComplex(const HttpHdrRange * range)
+{
+    HttpHdrRangePos pos = HttpHdrRangeInitPos;
+    HttpHdrRangeSpec spec;
+    size_t offset = 0;
+    assert(range);
+    /* check that all rangers are in "strong" order */
+    while (httpHdrRangeGetSpec(range, &spec, &pos)) {
+	if (spec.offset < offset)
+	    return 1;
+	offset = spec.offset + spec.length;
+    }
+    return 0;
+}
+
+/* generates a "unique" boundary string for multipart responses
+ * the caller is responsible for cleaning the string */
+String
+httpHdrRangeBoundaryStr(clientHttpRequest * http)
+{
+    const char *key;
+    String b = StringNull;
+    assert(http);
+    stringAppend(&b, full_appname_string, strlen(full_appname_string));
+    stringAppend(&b, ":", 1);
+    key = storeKeyText(http->entry->key);
+    stringAppend(&b, key, strlen(key));
+    return b;
 }
