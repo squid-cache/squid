@@ -34,6 +34,11 @@ Our Todo List
 (3)	What to do about ACL's and URL escaping?
 (3)	Arjan's external proxy auth patch is at
 	http://www.iae.nl/users/devet/squid/proxy_auth/
+(3)	Review RFC 2068 and RFC 2109 for header handing, especially
+	Cache-Control.
+(3)	In some situations, a private-key reply needs to eject a
+	public-key cached object.  For example when an object is
+	first cachable, but later becomes uncachable.
 
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
 	stoplist_pattern, refresh_pattern, ...  (DW)
