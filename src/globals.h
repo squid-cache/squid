@@ -36,6 +36,7 @@ extern const char *swapStatusStr[];
 extern dnsStatData DnsStats;
 extern fde *fd_table;		/* NULL */
 extern int Biggest_FD;		/* -1 */
+extern int Number_FD;		/* 0 */
 extern int HttpSockets[MAXHTTPPORTS];
 extern int NDnsServersAlloc;	/* 0 */
 extern int NHttpSockets;	/* 0 */
@@ -86,6 +87,10 @@ extern volatile unsigned long nudpconn;		/* 0 */
 extern volatile unsigned long ntcpconn;		/* 0 */
 extern int unlinkd_count;	/* 0 */
 extern int fileno_stack_count;	/* 0 */
+extern int store_rebuilding;	/* 1 */
+extern int store_swap_size;	/* 0 */
+extern int client_info_sz;	/* 0 */
+extern unsigned long store_mem_size;	/* 0 */
 
 #ifdef HAVE_SYSLOG
 extern int _db_level;

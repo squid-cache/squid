@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.57 1997/07/16 04:48:31 wessels Exp $
+ * $Id: tunnel.cc,v 1.58 1997/07/16 20:32:17 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -42,8 +42,7 @@ typedef struct {
 	int offset;
 	char *buf;
     } client, server;
-    time_t timeout;
-    int *size_ptr;		/* pointer to size in an ConnStateData for logging */
+    size_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
     int proxying;
 } SslStateData;
 
@@ -102,12 +101,6 @@ sslStateFree(int fd, void *data)
 	return;
     if (fd != sslState->server.fd)
 	fatal_dump("sslStateFree: FD mismatch!\n");
-    if (sslState->client.fd > -1) {
-	commSetSelect(sslState->client.fd,
-	    COMM_SELECT_READ,
-	    NULL,
-	    NULL, 0);
-    }
     safe_free(sslState->server.buf);
     safe_free(sslState->client.buf);
     xfree(sslState->url);
@@ -135,6 +128,10 @@ sslReadServer(int fd, void *data)
 		COMM_SELECT_READ,
 		sslReadServer,
 		sslState, 0);
+	    commSetTimeout(sslState->server.fd,
+		Config.Timeout.read,
+		NULL,
+		NULL);
 	} else {
 	    sslClose(sslState);
 	}
@@ -219,6 +216,10 @@ sslWriteServer(int fd, void *data)
 	    COMM_SELECT_READ,
 	    sslReadClient,
 	    sslState, 0);
+	commSetTimeout(sslState->server.fd,
+	    Config.Timeout.read,
+	    NULL,
+	    NULL);
     } else {
 	/* still have more to write */
 	commSetSelect(sslState->server.fd,
@@ -264,6 +265,10 @@ sslWriteClient(int fd, void *data)
 	    COMM_SELECT_READ,
 	    sslReadServer,
 	    sslState, 0);
+	commSetTimeout(sslState->server.fd,
+	    Config.Timeout.read,
+	    NULL,
+	    NULL);
     } else {
 	/* still have more to write */
 	commSetSelect(sslState->client.fd,
@@ -390,7 +395,6 @@ sslStart(int fd, const char *url, request_t * request, int *size_ptr)
     cbdataAdd(sslState);
     sslState->url = xstrdup(url);
     sslState->request = requestLink(request);
-    sslState->timeout = Config.Timeout.read;
     sslState->size_ptr = size_ptr;
     sslState->client.fd = fd;
     sslState->server.fd = sock;
@@ -431,6 +435,10 @@ sslProxyConnected(int fd, void *data)
 	COMM_SELECT_READ,
 	sslReadServer,
 	sslState, 0);
+    commSetTimeout(sslState->server.fd,
+	Config.Timeout.read,
+	NULL,
+	NULL);
 }
 
 static void

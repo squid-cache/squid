@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.29 1997/02/21 16:28:36 wessels Exp $
+ * $Id: util.c,v 1.30 1997/07/16 20:31:55 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -120,7 +120,9 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#if HAVE_GNUMALLLOC_H
+#include <gnumalloc.h>
+#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
 #include <malloc.h>
 #endif
 #if HAVE_ERRNO_H
@@ -457,6 +459,13 @@ tvSubMsec(struct timeval t1, struct timeval t2)
 {
     return (t2.tv_sec - t1.tv_sec) * 1000 +
 	(t2.tv_usec - t1.tv_usec) / 1000;
+}
+
+int
+tvSubUsec(struct timeval t1, struct timeval t2)
+{
+    return (t2.tv_sec - t1.tv_sec) * 1000000 +
+	(t2.tv_usec - t1.tv_usec);
 }
 
 /*

@@ -207,6 +207,7 @@ struct _SquidConfig {
 	int anonymizer;
 	int client_db;
 	int query_icmp;
+	int icp_hit_stale;
     } Options;
     struct _acl *aclList;
     struct {
@@ -230,6 +231,7 @@ struct _SquidConfig {
 	int n_allocated;
 	int n_configured;
     } cacheSwap;
+    char *fake_ua;
 };
 
 struct _SquidConfig2 {
@@ -435,6 +437,7 @@ struct _clientHttpRequest {
     ConnStateData *conn;
     request_t *request;		/* Parsed URL ... */
     char *url;
+    char *log_url;
     struct {
 	char *buf;
 	int offset;
@@ -550,6 +553,7 @@ struct _peer {
     int rr_count;
     struct _peer *next;
     int ip_lookup_pending;
+    int ck_conn_event_pend;
     int test_fd;
 };
 
@@ -741,6 +745,7 @@ struct _MemObject {
 	STABH *callback;
 	void *data;
     } abort;
+    char *log_url;
 };
 
 /* A cut down structure for store manager */

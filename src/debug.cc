@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.48 1997/07/14 23:44:58 wessels Exp $
+ * $Id: debug.cc,v 1.49 1997/07/16 20:32:02 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -233,7 +233,9 @@ _db_rotate_log(void)
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);
     LOCAL_ARRAY(char, to, MAXPATHLEN);
+#ifdef S_ISREG
     struct stat sb;
+#endif
 
     if (debug_log_file == NULL)
 	return;

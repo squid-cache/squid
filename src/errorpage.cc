@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.58 1997/07/14 03:33:37 wessels Exp $
+ * $Id: errorpage.cc,v 1.59 1997/07/16 20:32:04 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -80,9 +80,9 @@ static error_data ErrorData[] =
     {"ERR_LIFETIME_EXP",
 	"Transaction Timeout",
 	"The network or remote site may be down or too slow.  Try again later."},
-    {"ERR_NO_CLIENTS_BIG_OBJ",
+    {"ERR_NO_CLIENTS",
 	"No Client",
-	"All Clients went away before tranmission completed and the object is too big to cache."},
+	"All Clients went away before tranmission completed and the object would not be cached."},
     {"ERR_READ_ERROR",
 	"Read Error",
 	"The remote site or network may be down.  Please try again."},
@@ -151,6 +151,7 @@ errorInitialize(void)
     auth_msg = xmalloc(MAX_URL * 3);
     meta_data.misc += MAX_URL * 3;
 }
+
 
 char *
 squid_error_url(const char *url, int method, int type, const char *address, int code, const char *msg)
@@ -233,9 +234,9 @@ access_denied_msg(int code, int method, const char *url, const char *client)
 	"<BODY><H1>Error</H1>\n"
 	"<H2>Access Denied</H2>\n"
 	"<P>\n"
-	"Sorry, you are not currently allowed to request\n"
+	"Sorry, you are not currently allowed to request:\n"
 	"<PRE>    %s</PRE>\n"
-	"From this cache.  Please check with the\n"
+	"from this cache.  Please check with the\n"
 	"<A HREF=\"mailto:%s\">cache administrator</A>\n"
 	"if you believe this is incorrect.\n"
 	"<P>\n"
@@ -271,7 +272,7 @@ access_denied_redirect(int code, int method, const char *url, const char *client
 	"<BODY><H1>Error</H1>\n"
 	"<H2>Access Denied</H2>\n"
 	"<P>\n"
-	"Sorry, you are not currently allowed to request\n"
+	"Sorry, you are not currently allowed to request:\n"
 	"<PRE>    %s</PRE>\n"
 	"from this cache.\n"
 	"<P>\n"
@@ -305,7 +306,7 @@ authorization_needed_msg(const request_t * request, const char *realm)
 {
     sprintf(auth_msg, "<HTML><HEAD><TITLE>Authorization needed</TITLE>\n\
 </HEAD><BODY><H1>Authorization needed</H1>\n\
-<P>Sorry, you have to authorize yourself to request\n\
+<P>Sorry, you have to authorize yourself to request:\n\
 <PRE>    ftp://%s@%s%s</PRE>\n\
 <P>from this cache.  Please check with the\n\
 <A HREF=\"mailto:%s\">cache administrator</A>\n\
@@ -349,7 +350,7 @@ Content-type: text/html\r\n\
 <TITLE>Cache Access Denied</TITLE>\n\
 <H2>Cache Access Denied</H2>\n\
 <P>\n\
-Sorry, you are not currently allowed to request\n\
+Sorry, you are not currently allowed to request:\n\
 <PRE>    %s</PRE>\n\
 from this cache until you have authenticated yourself.\n\
 \n<p>\

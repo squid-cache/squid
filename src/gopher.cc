@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.90 1997/07/15 23:23:23 wessels Exp $
+ * $Id: gopher.cc,v 1.91 1997/07/16 20:32:06 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -289,7 +289,7 @@ gopher_url_parser(const char *url, char *host, int *port, char *type_id, char *r
 	request[0] = '\0';
     } else {
 	/* convert %xx to char */
-	(void) url_convert_hex(request, 0);
+	url_convert_hex(request, 0);
     }
 
     host[0] = '\0';

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.117 1997/07/15 23:23:19 wessels Exp $
+ * $Id: client_side.cc,v 1.118 1997/07/16 20:32:00 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -165,6 +165,7 @@ clientRedirectDone(void *data, char *result)
 {
     clientHttpRequest *http = data;
     int fd = http->conn->fd;
+    size_t l;
     request_t *new_request = NULL;
     request_t *old_request = http->request;
     debug(33, 5) ("clientRedirectDone: '%s' result=%s\n", http->url,
@@ -176,7 +177,12 @@ clientRedirectDone(void *data, char *result)
 	new_request = urlParse(old_request->method, result);
     if (new_request) {
 	safe_free(http->url);
-	http->url = xstrdup(result);
+	/* need to malloc because the URL returned by the redirector might
+	 * not be big enough to append the local domain
+	 * -- David Lamkin drl@net-tel.co.uk */
+	l = strlen(result) + Config.appendDomainLen + 5;
+	http->url = xcalloc(l, 1);
+	xstrncpy(http->url, result, l);
 	new_request->http_ver = old_request->http_ver;
 	new_request->headers = old_request->headers;
 	new_request->headers_sz = old_request->headers_sz;
@@ -275,9 +281,9 @@ proxyAuthenticate(const char *headers)
 
 		debug(33, 5) ("proxyAuthenticate: adding new passwords to hash table\n");
 		while (user != NULL) {
-		    if (strlen(user) > 1 && strlen(passwd) > 1) {
+		    if (strlen(user) > 1 && passwd && strlen(passwd) > 1) {
 			debug(33, 6) ("proxyAuthenticate: adding %s, %s to hash table\n", user, passwd);
-			hash_insert(validated, xstrdup(user), xstrdup(passwd));
+			hash_insert(validated, xstrdup(user), (void *) xstrdup(passwd));
 		    }
 		    user = strtok(NULL, ":");
 		    passwd = strtok(NULL, "\n");
@@ -291,9 +297,8 @@ proxyAuthenticate(const char *headers)
 	    Config.proxyAuth.File = NULL;
 	    return (dash_str);
 	}
+	last_time = squid_curtime;
     }
-    last_time = squid_curtime;
-
     hashr = hash_lookup(validated, sent_user);
     if (hashr == NULL) {
 	/* User doesn't exist; deny them */
@@ -337,6 +342,7 @@ icpProcessExpired(int fd, void *data)
     BIT_SET(http->request->flags, REQ_REFRESH);
     http->old_entry = http->entry;
     entry = storeCreateEntry(url,
+	http->log_url,
 	http->request->flags,
 	http->request->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
