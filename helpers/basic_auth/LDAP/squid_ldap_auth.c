@@ -8,7 +8,7 @@
  * CISTI
  * National Research Council
  * 
- * Usage: squid_ldap_auth <ldap_server_name>
+ * Usage: squid_ldap_auth [-b basedn] [-s searchscope] [-f searchfilter] <ldap_server_name>
  * 
  * Dependencies: You need to get the OpenLDAP libraries
  * from http://www.openldap.org
@@ -21,12 +21,15 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <lber.h>
 #include <ldap_cdefs.h>
 #include <ldap.h>
 
 /* Change this to your search base */
-#define SEARCHBASE "ou=people,o=nrc.ca"
+static char *basedn = "ou=people,o=nrc.ca";
+static char *searchfilter = NULL;
+static int searchscope = LDAP_SCOPE_SUBTREE;
 
 int checkLDAP(LDAP * ld, char *userid, char *password);
 
@@ -37,12 +40,48 @@ main(int argc, char **argv)
     char *user, *passwd, *p;
     char *ldapServer;
     LDAP *ld;
-    LDAPMessage *result, *e;
 
     setbuf(stdout, NULL);
 
+    while (argc > 2 && argv[1][0] == '-') {
+	char *value;
+	char option = argv[1][1];
+	if (strlen(argv[1]) > 2) {
+	    value = argv[1]+2;
+	} else {
+	    value = argv[2];
+	    argv++;
+	    argc--;
+	}
+	argv++;
+	argc--;
+	switch(option) {
+	case 'b':
+		basedn = value;
+		break;
+	case 'f':
+		searchfilter = value;
+		break;
+	case 's':
+		if (strcmp(value, "base") == 0)
+		    searchscope = LDAP_SCOPE_BASE;
+		else if (strcmp(value, "one") == 0)
+		    searchscope = LDAP_SCOPE_ONELEVEL;
+		else if (strcmp(value, "sub") == 0)
+		    searchscope = LDAP_SCOPE_SUBTREE;
+		else {
+		    fprintf(stderr, "squid_ldap_auth: ERROR: Unknown search scope '%s'\n", value);
+		    exit(1);
+		}
+		break;
+	default:
+		fprintf(stderr, "squid_ldap_auth: ERROR: Unknown command line option '%c'\n", option);
+		exit(1);
+	}
+    }
+	
     if (argc != 2) {
-	fprintf(stderr, "Usage: squid_ldap_auth ldap_server_name\n");
+	fprintf(stderr, "Usage: squid_ldap_auth [-b basedn] [-s searchscope] [-f searchfilter] ldap_server_name\n");
 	exit(1);
     }
     ldapServer = (char *) argv[1];
@@ -77,21 +116,44 @@ main(int argc, char **argv)
 	}
 	ldap_unbind(ld);
     }
+    return 0;
 }
-
-
 
 int
 checkLDAP(LDAP * ld, char *userid, char *password)
 {
-    char str[256];
+    char dn[256];
+    int result = 1;
 
-    /*sprintf(str,"uid=[%s][%s], %s",userid, password, SEARCHBASE); */
-    sprintf(str, "uid=%s, %s", userid, SEARCHBASE);
+    if (searchfilter) {
+	char filter[256];
+	LDAPMessage *res = NULL;
+	LDAPMessage *entry;
+	char *searchattr[] = {NULL};
+	char *userdn;
 
-    if (ldap_simple_bind_s(ld, str, password) != LDAP_SUCCESS) {
-	/*fprintf(stderr, "\nUnable to bind\n"); */
-	return 33;
+	snprintf(filter, sizeof(filter), "%s%s", searchfilter, userid);
+	if (ldap_search_s(ld, basedn, searchscope, filter, searchattr, 1, &res) != LDAP_SUCCESS)
+	    return 1;
+	entry = ldap_first_entry(ld, res);
+	if (!entry) {
+	    ldap_msgfree(res);
+	    return 1;
+	}
+	userdn = ldap_get_dn(ld, entry);
+	if (!userdn) {
+	    ldap_msgfree(res);
+	    return 1;
+	}
+	snprintf(dn, sizeof(dn), "%s", userdn);
+	free(userdn);
+	ldap_msgfree(res);
+    } else {
+	snprintf(dn, sizeof(dn), "uid=%s, %s", userid, basedn);
     }
-    return 0;
+
+    if (ldap_simple_bind_s(ld, dn, password) == LDAP_SUCCESS)
+	result = 0;
+
+    return result;
 }
