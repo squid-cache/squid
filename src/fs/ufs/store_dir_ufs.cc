@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.33 2001/03/14 22:28:41 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.34 2001/05/08 15:24:37 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1475,8 +1475,8 @@ storeUfsDirStats(SwapDir * SD, StoreEntry * sentry)
 static struct cache_dir_option options[] =
 {
 #if NOT_YET_DONE
-    {"L1", storeAufsDirParseL1},
-    {"L2", storeAufsDirParseL2},
+    {"L1", storeUfsDirParseL1, storeUfsDirDumpL1},
+    {"L2", storeUfsDirParseL2, storeUfsDirDumpL2},
 #endif
     {NULL, NULL}
 };
@@ -1520,16 +1520,14 @@ storeUfsDirReconfigure(SwapDir * sd, int index, char *path)
 }
 
 void
-storeUfsDirDump(StoreEntry * entry, const char *name, SwapDir * s)
+storeUfsDirDump(StoreEntry * entry, SwapDir * s)
 {
     ufsinfo_t *ufsinfo = (ufsinfo_t *) s->fsdata;
-    storeAppendPrintf(entry, "%s %s %s %d %d %d\n",
-	name,
-	"ufs",
-	s->path,
+    storeAppendPrintf(entry, " %d %d %d",
 	s->max_size >> 10,
 	ufsinfo->l1,
 	ufsinfo->l2);
+    dump_cachedir_options(entry, options, s);
 }
 
 /*

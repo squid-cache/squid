@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.48 2001/04/03 20:22:11 adrian Exp $
+ * $Id: store_dir_diskd.cc,v 1.49 2001/05/08 15:24:36 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1714,6 +1714,13 @@ storeDiskdDirParseQ1(SwapDir * sd, const char *name, const char *value, int reco
 }
 
 static void
+storeDiskdDirDumpQ1(StoreEntry * e, const char *option, SwapDir *sd)
+{
+    diskdinfo_t *diskdinfo = sd->fsdata;
+    storeAppendPrintf(e, " Q1=%d", diskdinfo->magic1);
+}
+
+static void
 storeDiskdDirParseQ2(SwapDir * sd, const char *name, const char *value, int reconfiguring)
 {
     diskdinfo_t *diskdinfo = sd->fsdata;
@@ -1723,14 +1730,21 @@ storeDiskdDirParseQ2(SwapDir * sd, const char *name, const char *value, int reco
 	debug(3, 1) ("cache_dir '%s' new Q2 value '%d'\n", diskdinfo->magic2);
 }
 
+static void
+storeDiskdDirDumpQ2(StoreEntry * e, const char *option, SwapDir *sd)
+{
+    diskdinfo_t *diskdinfo = sd->fsdata;
+    storeAppendPrintf(e, " Q2=%d", diskdinfo->magic2);
+}
+
 struct cache_dir_option options[] =
 {
 #if NOT_YET
-    {"L1", storeDiskdDirParseL1},
-    {"L2", storeDiskdDirParseL2},
+    {"L1", storeDiskdDirParseL1, storeDiskdDirDumpL1},
+    {"L2", storeDiskdDirParseL2, storeDiskdDirDumpL2},
 #endif
-    {"Q1", storeDiskdDirParseQ1},
-    {"Q2", storeDiskdDirParseQ2},
+    {"Q1", storeDiskdDirParseQ1, storeDiskdDirDumpQ1},
+    {"Q2", storeDiskdDirParseQ2, storeDiskdDirDumpQ2},
     {NULL, NULL}
 };
 
@@ -1772,16 +1786,14 @@ storeDiskdDirReconfigure(SwapDir * sd, int index, char *path)
 }
 
 void
-storeDiskdDirDump(StoreEntry * entry, const char *name, SwapDir * s)
+storeDiskdDirDump(StoreEntry * entry, SwapDir * s)
 {
     diskdinfo_t *diskdinfo = s->fsdata;
-    storeAppendPrintf(entry, "%s %s %s %d %d %d\n",
-	name,
-	"diskd",
-	s->path,
+    storeAppendPrintf(entry, " %d %d %d",
 	s->max_size >> 10,
 	diskdinfo->l1,
 	diskdinfo->l2);
+    dump_cachedir_options(entry, options, s);
 }
 
 /*
