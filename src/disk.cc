@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.114 1998/05/20 22:39:44 wessels Exp $
+ * $Id: disk.cc,v 1.115 1998/05/22 21:11:47 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -241,6 +241,7 @@ diskHandleWrite(int fd, void *notused)
     debug(6, 3) ("diskHandleWrite: FD %d\n", fd);
     /* We need to combine subsequent write requests after the first */
     /* But only if we don't need to seek() in betwen them, ugh! */
+    /* XXX This currently ignores any seeks (file_offset) */
     if (fdd->write_q->next != NULL && fdd->write_q->next->next != NULL) {
 	len = 0;
 	for (q = fdd->write_q->next; q != NULL; q = q->next)
@@ -273,6 +274,7 @@ diskHandleWrite(int fd, void *notused)
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 #if USE_ASYNC_IO
     aioWrite(fd,
+	-1, /* seek offset, -1 == append */
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset,
 	diskHandleWriteComplete,
@@ -480,6 +482,7 @@ diskHandleRead(int fd, void *data)
     ctrlp->data = ctrl_dat;
 #if USE_ASYNC_IO
     aioRead(fd,
+	ctrl_dat->offset,
 	ctrl_dat->buf,
 	ctrl_dat->req_len,
 	diskHandleReadComplete,
