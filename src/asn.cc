@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.23 1998/03/06 23:22:23 wessels Exp $
+ * $Id: asn.cc,v 1.24 1998/03/07 00:02:14 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -248,10 +248,6 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	while (*s && isspace(*s))
 	    s++;
     }
-    /* XXX why assert that ? */
-#if 0
-    assert(e->mem_obj->reply);
-#endif
     storeUnregister(e, asState);
     storeUnlockObject(e);
     requestUnlink(asState->request);
