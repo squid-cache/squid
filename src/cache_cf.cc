@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.124 1996/11/02 00:17:43 wessels Exp $
+ * $Id: cache_cf.cc,v 1.125 1996/11/04 17:04:16 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1000,6 +1000,8 @@ parseConfigFile(char *file_name)
 #if DELAY_HACK
     aclDestroyAccessList(&DelayAccessList);
 #endif
+    aclDestroyRegexList(Config.cache_stop_relist);
+    Config.cache_stop_relist = NULL;
 
     if ((fp = fopen(file_name, "r")) == NULL) {
 	sprintf(fatal_str, "Unable to open configuration file: %s: %s",
@@ -1105,6 +1107,10 @@ parseConfigFile(char *file_name)
 
 	else if (!strcmp(token, "cache_stoplist"))
 	    parseWordlist(&Config.cache_stoplist);
+	else if (!strcmp(token, "cache_stoplist_pattern"))
+	    Config.cache_stop_relist = aclParseRegexList(0);
+	else if (!strcmp(token, "cache_stoplist_pattern/i"))
+	    Config.cache_stop_relist = aclParseRegexList(1);
 
 #if DELAY_HACK
 	else if (!strcmp(token, "delay_access"))

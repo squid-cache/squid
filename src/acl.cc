@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.56 1996/11/02 00:17:40 wessels Exp $
+ * $Id: acl.cc,v 1.57 1996/11/04 17:04:14 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -51,19 +51,16 @@ static struct _acl **AclListTail = &AclList;
 
 static void aclDestroyAclList _PARAMS((struct _acl_list * list));
 static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
-static void aclDestroyRegexList _PARAMS((struct _relist * data));
 static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
 static int aclMatchDomainList _PARAMS((wordlist *, char *));
 static int aclMatchAclList _PARAMS((struct _acl_list *, aclCheck_t *));
 static int aclMatchInteger _PARAMS((intlist * data, int i));
 static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
-static int aclMatchRegex _PARAMS((relist * data, char *word));
 static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
 static intlist *aclParseIntlist _PARAMS((void));
 static struct _acl_ip_data *aclParseIpList _PARAMS((void));
 static intlist *aclParseMethodList _PARAMS((void));
 static intlist *aclParseProtoList _PARAMS((void));
-static struct _relist *aclParseRegexList _PARAMS((void));
 static struct _acl_time_data *aclParseTimeSpec _PARAMS((void));
 static wordlist *aclParseWordList _PARAMS((void));
 static wordlist *aclParseDomainList _PARAMS((void));
@@ -401,16 +398,19 @@ aclParseTimeSpec(void)
     return data;
 }
 
-static struct _relist *
-aclParseRegexList(void)
+struct _relist *
+aclParseRegexList(int icase)
 {
     relist *head = NULL;
     relist **Tail = &head;
     relist *q = NULL;
     char *t = NULL;
     regex_t comp;
+    int flags = REG_EXTENDED;
+    if (icase)
+	flags |= REG_ICASE;
     while ((t = strtokFile())) {
-	if (regcomp(&comp, t, REG_EXTENDED) != REG_NOERROR) {
+	if (regcomp(&comp, t, flags) != REG_NOERROR) {
 	    debug(28, 0, "%s line %d: %s\n",
 		cfg_filename, config_lineno, config_input_line);
 	    debug(28, 0, "aclParseRegexList: Invalid regular expression: '%s'\n", t);
@@ -505,7 +505,7 @@ aclParseAclLine(void)
 	break;
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
-	A->data = (void *) aclParseRegexList();
+	A->data = (void *) aclParseRegexList(0);
 	break;
     case ACL_URL_PORT:
 	A->data = (void *) aclParseIntlist();
@@ -520,7 +520,7 @@ aclParseAclLine(void)
 	A->data = (void *) aclParseMethodList();
 	break;
     case ACL_BROWSER:
-	A->data = (void *) aclParseRegexList();
+	A->data = (void *) aclParseRegexList(0);
 	break;
     case ACL_NONE:
     default:
@@ -747,7 +747,7 @@ aclMatchDomainList(wordlist * data, char *host)
     return 0;
 }
 
-static int
+int
 aclMatchRegex(relist * data, char *word)
 {
     relist *first, *prev;
@@ -953,7 +953,7 @@ aclDestroyTimeList(struct _acl_time_data *data)
     }
 }
 
-static void
+void
 aclDestroyRegexList(struct _relist *data)
 {
     struct _relist *next = NULL;
