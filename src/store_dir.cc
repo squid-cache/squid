@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.66 1998/05/08 23:29:30 wessels Exp $
+ * $Id: store_dir.cc,v 1.67 1998/05/11 20:06:19 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -743,6 +743,13 @@ storeDirWriteCleanLogs(int reopen)
     }
     safe_free(outbuf);
     safe_free(outbufoffset);
+#ifdef _SQUID_MSWIN_
+    /*
+     * You can't rename open files on Microsoft "operating systems"
+     * so we close before renaming.
+     */
+    storeDirCloseSwapLogs();
+#endif
     /* rename */
     for (dirn = 0; dirn < N; dirn++) {
 	if (fd[dirn] < 0)
@@ -752,7 +759,9 @@ storeDirWriteCleanLogs(int reopen)
 		xstrerror(), new[dirn], cur[dirn]);
 	}
     }
+#ifndef _SQUID_MSWIN_
     storeDirCloseSwapLogs();
+#endif
     if (reopen)
 	storeDirOpenSwapLogs();
     stop = squid_curtime;
