@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.211 2002/07/21 11:54:02 hno Exp $
+ * $Id: enums.h,v 1.212 2002/09/15 05:41:57 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -512,6 +512,23 @@ enum {
     ENTRY_DONT_LOG
 #endif
 };
+
+/*
+ * These are for client Streams. Each node in the stream can be queried for
+ * its status
+ */
+typedef enum {
+    STREAM_NONE,		/* No particular status */
+    STREAM_COMPLETE,		/* All data has been flushed, no more reads allowed */
+    STREAM_UNPLANNED_COMPLETE,	/* an unpredicted end has occured, no more
+				 * reads occured, but no need to tell 
+				 * downstream that an error occured
+				 */
+    STREAM_FAILED		/* An error has occured in this node or an above one,
+				 * and the node is not generating an error body / it's 
+				 * midstream
+				 */
+} clientStream_status_t;
 
 typedef enum {
     ACCESS_DENIED,

@@ -15,7 +15,7 @@
 
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.12 2002/09/02 00:24:21 hno Exp $
+#  $Id: Makefile.in,v 1.13 2002/09/15 05:41:59 robertc Exp $
 #
 
 SHELL = @SHELL@

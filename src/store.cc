@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.545 2002/08/15 18:11:48 hno Exp $
+ * $Id: store.cc,v 1.546 2002/09/15 05:41:57 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1037,6 +1037,18 @@ storeKeepInMemory(const StoreEntry * e)
     if (mem->data_hdr.head == NULL)
 	return 0;
     return mem->inmem_lo == 0;
+}
+
+int
+storeCheckNegativeHit(StoreEntry * e)
+{
+    if (!EBIT_TEST(e->flags, ENTRY_NEGCACHED))
+	return 0;
+    if (e->expires <= squid_curtime)
+	return 0;
+    if (e->store_status != STORE_OK)
+	return 0;
+    return 1;
 }
 
 void

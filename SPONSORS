@@ -33,3 +33,10 @@ SGI - http://www.sgi.com/
 
 	SGI has provided hardware donations for Squid developers.
 
+Zope Corporation - http://www.zope.com/
+
+	Zope Corporation funded the development of the ESI protocol
+	(http://www.esi.org) in Squid to provide greater cachability
+	of dynamic and personalized pages by caching common page
+	components. Zope engaged one of the core Squid developers
+	for the project.

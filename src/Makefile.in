@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.240 2002/09/02 00:24:13 hno Exp $
+#  $Id: Makefile.in,v 1.241 2002/09/15 05:41:56 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -214,6 +214,9 @@ squid_SOURCES = \
 	cbdata.c \
 	client_db.c \
 	client_side.c \
+	client_side_reply.c \
+	client_side_request.c \
+	clientStream.c \
 	comm.c \
 	comm_select.c \
 	comm_poll.c \
@@ -462,29 +465,30 @@ pinger_LDFLAGS =
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
-	client_db.$(OBJEXT) client_side.$(OBJEXT) comm.$(OBJEXT) \
-	comm_select.$(OBJEXT) comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) \
-	debug.$(OBJEXT) $(am__objects_3) disk.$(OBJEXT) \
-	$(am__objects_4) errorpage.$(OBJEXT) ETag.$(OBJEXT) \
-	event.$(OBJEXT) external_acl.$(OBJEXT) fd.$(OBJEXT) \
-	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_5) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
-	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
-	HttpHdrContRange.$(OBJEXT) HttpHeader.$(OBJEXT) \
-	HttpHeaderTools.$(OBJEXT) HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) \
-	HttpReply.$(OBJEXT) HttpRequest.$(OBJEXT) icmp.$(OBJEXT) \
-	icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) ident.$(OBJEXT) \
-	internal.$(OBJEXT) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
-	$(am__objects_6) logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
-	MemBuf.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
-	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
-	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
-	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
-	send-announce.$(OBJEXT) $(am__objects_7) ssl.$(OBJEXT) \
-	$(am__objects_8) stat.$(OBJEXT) StatHist.$(OBJEXT) \
-	String.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
-	store_io.$(OBJEXT) store_client.$(OBJEXT) \
+	client_db.$(OBJEXT) client_side.$(OBJEXT) \
+	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
+	clientStream.$(OBJEXT) comm.$(OBJEXT) comm_select.$(OBJEXT) \
+	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) debug.$(OBJEXT) \
+	$(am__objects_3) disk.$(OBJEXT) $(am__objects_4) \
+	errorpage.$(OBJEXT) ETag.$(OBJEXT) event.$(OBJEXT) \
+	external_acl.$(OBJEXT) fd.$(OBJEXT) filemap.$(OBJEXT) \
+	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_5) \
+	http.$(OBJEXT) HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
+	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
+	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
+	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
+	icp_v3.$(OBJEXT) ident.$(OBJEXT) internal.$(OBJEXT) \
+	ipc.$(OBJEXT) ipcache.$(OBJEXT) $(am__objects_6) \
+	logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) MemBuf.$(OBJEXT) \
+	mime.$(OBJEXT) multicast.$(OBJEXT) neighbors.$(OBJEXT) \
+	net_db.$(OBJEXT) Packer.$(OBJEXT) pconn.$(OBJEXT) \
+	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
+	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
+	$(am__objects_7) ssl.$(OBJEXT) $(am__objects_8) stat.$(OBJEXT) \
+	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
+	store.$(OBJEXT) store_io.$(OBJEXT) store_client.$(OBJEXT) \
 	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
@@ -526,8 +530,10 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/cache_cf.Po $(DEPDIR)/cache_manager.Po \
 @AMDEP_TRUE@	$(DEPDIR)/cachemgr.Po $(DEPDIR)/carp.Po \
 @AMDEP_TRUE@	$(DEPDIR)/cbdata.Po $(DEPDIR)/cf_gen.Po \
-@AMDEP_TRUE@	$(DEPDIR)/client.Po $(DEPDIR)/client_db.Po \
-@AMDEP_TRUE@	$(DEPDIR)/client_side.Po $(DEPDIR)/comm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/client.Po $(DEPDIR)/clientStream.Po \
+@AMDEP_TRUE@	$(DEPDIR)/client_db.Po $(DEPDIR)/client_side.Po \
+@AMDEP_TRUE@	$(DEPDIR)/client_side_reply.Po \
+@AMDEP_TRUE@	$(DEPDIR)/client_side_request.Po $(DEPDIR)/comm.Po \
 @AMDEP_TRUE@	$(DEPDIR)/comm_kqueue.Po $(DEPDIR)/comm_poll.Po \
 @AMDEP_TRUE@	$(DEPDIR)/comm_select.Po $(DEPDIR)/debug.Po \
 @AMDEP_TRUE@	$(DEPDIR)/delay_pools.Po $(DEPDIR)/disk.Po \
@@ -728,8 +734,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cbdata.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cf_gen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/clientStream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_db.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_side.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_side_reply.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_side_request.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/comm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/comm_kqueue.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/comm_poll.Po@am__quote@

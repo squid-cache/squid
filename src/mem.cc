@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.66 2002/07/20 23:51:03 hno Exp $
+ * $Id: mem.cc,v 1.67 2002/09/15 05:41:57 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -263,6 +263,7 @@ void *
 memReallocBuf(void *oldbuf, size_t net_size, size_t * gross_size)
 {
     /* XXX This can be optimized on very large buffers to use realloc() */
+    /* TODO: if the existing gross size is >= new gross size, do nothing */
     int new_gross_size;
     void *newbuf = memAllocBuf(net_size, &new_gross_size);
     if (oldbuf) {
