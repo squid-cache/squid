@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.556 2001/10/26 23:11:56 hno Exp $
+ * $Id: client_side.cc,v 1.557 2001/11/13 06:38:27 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2187,7 +2187,10 @@ clientProcessRequest2(clientHttpRequest * http)
 {
     request_t *r = http->request;
     StoreEntry *e;
-    e = http->entry = storeGetPublicByRequest(r);
+    if (r->flags.cachable)
+	e = http->entry = storeGetPublicByRequest(r);
+    else
+	e = http->entry = NULL;
     /* Release negatively cached IP-cache entries on reload */
     if (r->flags.nocache)
 	ipcacheInvalidate(r->host);

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.238 2001/10/22 14:40:23 hno Exp $
+# $Id: cf.data.pre,v 1.239 2001/11/13 06:38:27 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -508,9 +508,9 @@ TYPE: acl_access
 DEFAULT: none
 LOC: Config.accessList.noCache
 DOC_START
-	A list of ACL elements which, if matched, cause the reply to
-	immediately removed from the cache.  In other words, use this
-	to force certain objects to never be cached.
+	A list of ACL elements which, if matched, cause the request to
+	not be satisfied from the cache and the reply to not be cached.
+	In other words, use this to force certain objects to never be cached.
 
 	You must use the word 'DENY' to indicate the ACL names which should
 	NOT be cached.
