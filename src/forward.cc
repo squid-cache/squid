@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.111 2003/08/16 20:33:47 hno Exp $
+ * $Id: forward.cc,v 1.112 2003/08/18 12:24:45 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -314,6 +314,13 @@ fwdNegotiateSSL(int fd, void *data)
         }
     }
 
+    if (fs->_peer && !SSL_session_reused(ssl)) {
+        if (fs->_peer->sslSession)
+            SSL_SESSION_free(fs->_peer->sslSession);
+
+        fs->_peer->sslSession = SSL_get1_session(ssl);
+    }
+
     fwdDispatch(fwdState);
 }
 
@@ -362,6 +369,10 @@ fwdInitiateSSL(FwdState * fwdState)
 
         else
             SSL_set_ex_data(ssl, ssl_ex_index_server, peer->host);
+
+        if (peer->sslSession)
+            SSL_set_session(ssl, peer->sslSession);
+
     } else {
         SSL_set_ex_data(ssl, ssl_ex_index_server, fwdState->request->host);
     }

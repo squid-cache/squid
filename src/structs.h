@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.479 2003/08/13 00:17:26 robertc Exp $
+ * $Id: structs.h,v 1.480 2003/08/18 12:24:45 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1383,6 +1383,7 @@ unsigned int counting:
     char *sslflags;
     char *ssldomain;
     SSL_CTX *sslContext;
+    SSL_SESSION *sslSession;
 #endif
 
     int front_end_https;
