@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.82 2003/02/21 22:50:13 robertc Exp $
+ * $Id: urn.cc,v 1.83 2003/03/06 06:21:38 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -174,10 +174,10 @@ UrnState::getHost (String &urlpath)
     char * result;
     char const *t;
 
-    if ((t = strChr(urlpath, ':')) != NULL) {
-        strSet(urlpath, t, '\0');
+    if ((t = urlpath.pos(':')) != NULL) {
+        urlpath.set(t, '\0');
         result = xstrdup(urlpath.buf());
-        strSet(urlpath, t, ':');
+        urlpath.set(t, ':');
     } else {
         result = xstrdup(urlpath.buf());
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.38 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.39 2003/03/06 06:21:37 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -209,7 +209,7 @@ int
 strListIsSubstr(const String * list, const char *s, char del)
 {
     assert(list && del);
-    return strStr(*list, s) != 0;
+    return list->pos(s) != 0;
 
     /*
      * Note: the original code with a loop is broken because it uses strstr()

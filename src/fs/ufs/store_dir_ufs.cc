@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.56 2003/02/21 22:50:45 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.57 2003/03/06 06:21:41 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -334,28 +334,32 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
 void
 UFSSwapDir::maintainfs()
 {
-    StoreEntry *e = NULL;
-    int removed = 0;
-    int max_scan;
-    int max_remove;
-    double f;
-    RemovalPurgeWalker *walker;
     /* We can't delete objects while rebuilding swap */
 
-    if (store_dirs_rebuilding) {
+    if (store_dirs_rebuilding)
         return;
-    } else {
-        f = (double) (cur_size - low_size) / (max_size - low_size);
-        f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
-        max_scan = (int) (f * 400.0 + 100.0);
-        max_remove = (int) (f * 70.0 + 10.0);
-        /*
-         * This is kinda cheap, but so we need this priority hack?
-         */
-    }
+
+    StoreEntry *e = NULL;
+
+    int removed = 0;
+
+    RemovalPurgeWalker *walker;
+
+    double f = (double) (cur_size - low_size) / (max_size - low_size);
+
+    f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
+
+    int max_scan = (int) (f * 400.0 + 100.0);
+
+    int max_remove = (int) (f * 70.0 + 10.0);
+
+    /*
+     * This is kinda cheap, but so we need this priority hack?
+     */
 
     debug(47, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n",
                   f, max_scan, max_remove);
+
     walker = repl->PurgeInit(repl, max_scan);
 
     while (1) {

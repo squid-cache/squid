@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cci,v 1.1 2003/01/23 00:37:15 robertc Exp $
+ * $Id: String.cci,v 1.2 2003/03/06 06:21:37 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -34,8 +34,7 @@
  */
 
 String::String() : size_(0), len_(0), buf_ (NULL)
-{
-}
+{}
 
 int
 String::size() const
@@ -49,8 +48,67 @@ String::buf() const
     return buf_;
 }
 
-int
-String::nCaseCmp (char const *aString, int aLen) const
+const char *
+String::pos(char const *aString) const
 {
-    return strncasecmp(buf(), aString, aLen);
+    return strstr(buf(), aString);
 }
+
+const char *
+String::pos(char const ch) const
+{
+    return strchr(buf(), ch);
+}
+
+const char *
+String::rpos(char const ch) const
+{
+    return strrchr(buf(), (ch));
+}
+
+int
+String::cmp (char const *aString) const
+{
+    return strcmp(buf(), aString);
+}
+
+int
+String::cmp (char const *aString, size_t count) const
+{
+    return strncmp(buf(), aString, count);
+}
+
+int
+String::caseCmp (char const *aString) const
+{
+    return strcasecmp(buf(), aString);
+}
+
+int
+String::caseCmp (char const *aString, size_t count) const
+{
+    return strncasecmp(buf(), aString, count);
+}
+
+void
+
+String::set
+    (char const *loc, char const ch)
+{
+    buf_[loc-buf_] = ch;
+}
+
+void
+String::cut (size_t newLength)
+{
+    len_ = newLength;
+    buf_[newLength] = '\0';
+}
+
+void
+String::cutPointer (char const *loc)
+{
+    len_ = loc-buf_;
+    buf_[len_] = '\0';
+}
+

@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.181 2003/03/04 01:40:28 robertc Exp $
+ * $Id: gopher.cc,v 1.182 2003/03/06 06:21:38 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -328,7 +328,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     char *tline = NULL;
     LOCAL_ARRAY(char, line, TEMP_BUF_SIZE);
     LOCAL_ARRAY(char, tmpbuf, TEMP_BUF_SIZE);
-    String outbuf = StringNull;
     char *name = NULL;
     char *selector = NULL;
     char *host = NULL;
@@ -374,6 +373,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     }
 
     inbuf[len] = '\0';
+    String outbuf;
 
     if (!gopherState->HTML_header_added) {
         if (gopherState->conversion == gopher_ds::HTML_CSO_RESULT)

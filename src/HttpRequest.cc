@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.35 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.36 2003/03/06 06:21:37 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -211,7 +211,7 @@ httpRequestHdrCacheInit(request_t * req)
     if (str)
         stringLimitInit(&req->content_type, str, strcspn(str, ";\t "));
     else
-        req->content_type = StringNull;
+        req->content_type = String();
 
 #endif
 

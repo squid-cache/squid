@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
+ * $Id: SquidString.h,v 1.3 2003/03/06 06:21:37 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -40,7 +40,6 @@ class String
 {
 
 public:
-    static const String Null;
     _SQUID_INLINE_ String();
     String (char const *);
     String (String const &);
@@ -51,6 +50,7 @@ public:
 
     _SQUID_INLINE_ int size() const;
     _SQUID_INLINE_ char const * buf() const;
+    void buf(char *);
     void init (char const *);
     void initBuf(size_t sz);
     void limitInit(const char *str, int len);
@@ -60,28 +60,29 @@ public:
     void append(char const *buf);
     void append (String const &);
     void absorb(String &old);
-    _SQUID_INLINE_ int nCaseCmp (char const *aString, int aLen) const;
+    _SQUID_INLINE_ const char * pos(char const *) const;
+    _SQUID_INLINE_ const char * pos(char const ch) const;
+    _SQUID_INLINE_ const char * rpos(char const ch) const;
+    _SQUID_INLINE_ int cmp (char const *) const;
+    _SQUID_INLINE_ int cmp (char const *, size_t count) const;
+    _SQUID_INLINE_ int caseCmp (char const *) const;
+    _SQUID_INLINE_ int caseCmp (char const *, size_t count) const;
+
+    _SQUID_INLINE_ void set
+        (char const *loc, char const ch);
+
+    _SQUID_INLINE_ void cut (size_t newLength);
+
+    _SQUID_INLINE_ void cutPointer (char const *loc);
 
 private:
     /* never reference these directly! */
     unsigned short int size_;	/* buffer size; 64K limit */
 
-public:
     unsigned short int len_;	/* current length  */
+
     char *buf_;
 };
-
-#define StringNull String::Null;
-/* String */
-#define strChr(s,ch)  ((const char*)strchr((s).buf(), (ch)))
-#define strRChr(s,ch) ((const char*)strrchr((s).buf(), (ch)))
-#define strStr(s,str) ((const char*)strstr((s).buf(), (str)))
-#define strCmp(s,str)     strcmp((s).buf(), (str))
-#define strNCmp(s,str,n)     strncmp((s).buf(), (str), (n))
-#define strCaseCmp(s,str) strcasecmp((s).buf(), (str))
-#define strSet(s,ptr,ch) (s).buf_[ptr-(s).buf_] = (ch)
-#define strCut(s,pos) (((s).len_ = pos) , ((s).buf_[pos] = '\0'))
-#define strCutPtr(s,ptr) (((s).len_ = (ptr)-(s).buf_) , ((s).buf_[(s).len_] = '\0'))
 
 #ifdef _USE_INLINE_
 #include "String.cci"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.91 2003/02/25 12:24:34 robertc Exp $
+ * $Id: asn.cc,v 1.92 2003/03/06 06:21:37 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -496,10 +496,10 @@ destroyRadixNodeInfo(as_info * e_info)
     while (data) {
         prev = data;
         data = data->next;
-        xfree(prev);
+        prev->deleteSelf();
     }
 
-    xfree(data);
+    data->deleteSelf();
 }
 
 static int

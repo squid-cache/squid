@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.346 2003/03/04 01:40:27 robertc Exp $
+ * $Id: ftp.cc,v 1.347 2003/03/06 06:21:37 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1243,10 +1243,10 @@ ftpCheckUrlpath(FtpStateData * ftpState)
     int l;
     const char *t;
 
-    if ((t = strRChr(request->urlpath, ';')) != NULL) {
+    if ((t = request->urlpath.rpos(';')) != NULL) {
         if (strncasecmp(t + 1, "type=", 5) == 0) {
             ftpState->typecode = (char) toupper((int) *(t + 6));
-            strCutPtr(request->urlpath, t);
+            request->urlpath.cutPointer(t);
         }
     }
 
@@ -1257,7 +1257,7 @@ ftpCheckUrlpath(FtpStateData * ftpState)
     if (!l) {
         ftpState->flags.isdir = 1;
         ftpState->flags.root_dir = 1;
-    } else if (!strCmp(request->urlpath, "/%2f/")) {
+    } else if (!request->urlpath.cmp("/%2f/")) {
         /* UNIX root directory */
         ftpState->flags.need_base_href = 0;
         ftpState->flags.isdir = 1;
@@ -1771,7 +1771,7 @@ ftpSendType(FtpStateData * ftpState)
         if (ftpState->flags.isdir) {
             mode = 'A';
         } else {
-            t = strRChr(ftpState->request->urlpath, '/');
+            t = ftpState->request->urlpath.rpos('/');
             filename = t ? t + 1 : ftpState->request->urlpath.buf();
             mode = mimeGetTransferMode(filename);
         }
@@ -2830,7 +2830,7 @@ ftpFail(FtpStateData * ftpState)
     if (!ftpState->flags.isdir &&	/* Not a directory */
             !ftpState->flags.try_slash_hack &&	/* Not in slash hack */
             ftpState->mdtm <= 0 && ftpState->size < 0 &&	/* Not known as a file */
-            ftpState->request->urlpath.nCaseCmp("/%2f", 4) != 0) {	/* No slash encoded */
+            ftpState->request->urlpath.caseCmp("/%2f", 4) != 0) {	/* No slash encoded */
 
         switch (ftpState->state) {
 
@@ -3033,7 +3033,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 
     EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
 
-    filename = (t = strRChr(urlpath, '/')) ? t + 1 : urlpath.buf();
+    filename = (t = urlpath.rpos('/')) ? t + 1 : urlpath.buf();
 
     if (ftpState->flags.isdir) {
         mime_type = "text/html";
