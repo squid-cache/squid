@@ -74,6 +74,7 @@ extern int modifiedSince(StoreEntry *, request_t *);
 extern char *clientConstructTraceEcho(clientHttpRequest *);
 extern void clientPurgeRequest(clientHttpRequest *);
 extern int checkNegativeHit(StoreEntry *);
+extern void clientHttpConnectionsOpen(void);
 
 extern int commSetNonBlocking(int fd);
 extern void commSetCloseOnExec(int fd);
@@ -133,6 +134,7 @@ extern int disk_init(void);
 extern int diskWriteIsComplete(int);
 
 extern void dnsShutdownServers(void);
+extern void dnsShutdownServer(dnsserver_t * dns);
 extern void dnsOpenServers(void);
 extern dnsserver_t *dnsGetFirstAvailable(void);
 extern void dnsStats(StoreEntry *);
@@ -238,10 +240,12 @@ extern void icpUdpSend(int fd,
 extern PF icpHandleUdp;
 extern PF httpAccept;
 extern DEFER httpAcceptDefer;
+
 #ifdef SQUID_SNMP
 extern PF snmpHandleUdp;
 extern void snmpInit(void);
 extern void snmpConnectionOpen(void);
+extern void snmpConnectionClose(void);
 #endif /* SQUID_SNMP */
 
 extern void icpSendERROR(int fd,
@@ -257,6 +261,7 @@ extern int icpCheckUdpHit(StoreEntry *, request_t * request);
 extern int icpCheckUdpHitObj(StoreEntry * e, request_t * r, icp_common_t * h, int len);
 extern void *icpCreateHitObjMessage(icp_opcode, int, const char *, int, int, StoreEntry *);
 #endif
+extern void icpConnectionsOpen(void);
 
 extern void ipcache_nbgethostbyname(const char *name,
     IPH * handler,
