@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.122 1996/12/01 00:18:47 wessels Exp $
+ * $Id: http.cc,v 1.123 1996/12/02 05:55:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -734,6 +734,10 @@ httpBuildRequestHeader(request_t * request,
     put_free_4k_page(fwdbuf);
     if (in_len)
 	*in_len = hdr_len;
+    if ((l = strlen(hdr_out)) != len) {
+	debug_trap("httpBuildRequestHeader: size mismatch");
+	len = l;
+    }
     debug(11, 3, "httpBuildRequestHeader: OUTPUT:\n%s\n", hdr_out);
     return len;
 }
