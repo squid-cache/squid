@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.452 1999/05/10 19:33:22 wessels Exp $
+ * $Id: client_side.cc,v 1.453 1999/05/10 19:43:36 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2392,7 +2392,7 @@ clientReadRequest(int fd, void *data)
 		break;
 	    }
 	    if (0 == clientCheckContentLength(request)) {
-		err = errorCon(ERR_TOO_BIG, HTTP_LENGTH_REQUIRED);
+		err = errorCon(ERR_INVALID_REQ, HTTP_LENGTH_REQUIRED);
 		err->src_addr = conn->peer.sin_addr;
 		err->request = requestLink(request);
 		http->al.http.code = err->http_status;
@@ -2457,7 +2457,7 @@ clientReadRequest(int fd, void *data)
 			Config.maxRequestHeaderSize);
 		    debug(33, 0) ("This request = %d bytes.\n",
 			(int) conn->in.offset);
-		    err = errorCon(ERR_INVALID_REQ, HTTP_REQUEST_ENTITY_TOO_LARGE);
+		    err = errorCon(ERR_TOO_BIG, HTTP_REQUEST_ENTITY_TOO_LARGE);
 		    http = parseHttpRequestAbort(conn, "error:request-too-large");
 		    /* add to the client request queue */
 		    for (H = &conn->chr; *H; H = &(*H)->next);
