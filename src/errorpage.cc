@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.32 1996/08/26 22:47:51 wessels Exp $
+ * $Id: errorpage.cc,v 1.33 1996/08/26 23:27:12 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -366,4 +366,3 @@ char *proxy_denied_msg(code, method, url, client)
 	getMyHostname());
     return tmp_error_buf;
 }
-
