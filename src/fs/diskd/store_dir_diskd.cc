@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.72 2002/10/13 20:35:26 robertc Exp $
+ * $Id: store_dir_diskd.cc,v 1.73 2002/10/28 08:53:37 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -203,7 +203,9 @@ storeDiskdDirCallback(SwapDir * SD)
 	diskd_stats.max_away = diskd_stats.sent_count - diskd_stats.recv_count;
     }
     while (1) {
+#ifdef	ALWAYS_ZERO_BUFFERS
 	memset(&M, '\0', sizeof(M));
+#endif
 	x = msgrcv(diskdinfo->rmsgid, &M, msg_snd_rcv_sz, 0, IPC_NOWAIT);
 	if (x < 0)
 	    break;
