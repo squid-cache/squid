@@ -1,7 +1,8 @@
 
 /*
- * $Id: ETag.cc,v 1.6 2000/03/06 16:23:27 wessels Exp $
+ * $Id: ETag.cc,v 1.7 2000/06/06 19:34:30 hno Exp $
  *
+ * DEBUG: none          ETag parsing support
  * AUTHOR: Alex Rousskov
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

@@ -1,5 +1,6 @@
+
 /*
- * $Id: store_digest.cc,v 1.40 2000/05/12 00:29:09 wessels Exp $
+ * $Id: store_digest.cc,v 1.41 2000/06/06 19:34:31 hno Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov

@@ -1,5 +1,6 @@
+
 /*
- * $Id: carp.cc,v 1.8 2000/05/16 07:06:03 wessels Exp $
+ * $Id: carp.cc,v 1.9 2000/06/06 19:34:31 hno Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
