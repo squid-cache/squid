@@ -1,7 +1,7 @@
 
 /*
- * $Id: protos.h,v 1.325 1999/05/03 21:55:03 wessels Exp $
- * $Id: protos.h,v 1.325 1999/05/03 21:55:03 wessels Exp $
+ * $Id: protos.h,v 1.326 1999/05/03 22:41:10 wessels Exp $
+ * $Id: protos.h,v 1.326 1999/05/03 22:41:10 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -850,20 +850,20 @@ extern int storeTooManyDiskFilesOpen(void);
 extern void storeEntryReset(StoreEntry *);
 
 /* store_io.c */
-extern storeIOState *storeOpen(sfileno f, mode_t mode, STIOCB *callback, void *callback_data);
-extern void storeClose(storeIOState *sio);
-extern void storeRead(storeIOState *sio, char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data);
-extern void storeWrite(storeIOState *sio, char *buf, size_t size, off_t offset);
+extern storeIOState *storeOpen(sfileno f, mode_t mode, STIOCB * callback, void *callback_data);
+extern void storeClose(storeIOState * sio);
+extern void storeRead(storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
+extern void storeWrite(storeIOState * sio, char *buf, size_t size, off_t offset);
 extern void storeUnlink(int fileno);
 extern off_t storeOffset(storeIOState *);
 
 /* store_io_ufs.c */
-extern storeIOState *storeUfsOpen(sfileno f, mode_t mode, STIOCB *callback, void *callback_data);
-extern void storeUfsClose(storeIOState *sio);
-extern void storeUfsRead(storeIOState *sio, char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data);
-extern void storeUfsWrite(storeIOState *sio, char *buf, size_t size, off_t offset);
+extern storeIOState *storeUfsOpen(sfileno f, mode_t mode, STIOCB * callback, void *callback_data);
+extern void storeUfsClose(storeIOState * sio);
+extern void storeUfsRead(storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
+extern void storeUfsWrite(storeIOState * sio, char *buf, size_t size, off_t offset);
 extern void storeUfsUnlink(int fileno);
-extern char *storeUfsFullPath(sfileno fn, char *fullpath); 	/* XXX want this to be static */
+extern char *storeUfsFullPath(sfileno fn, char *fullpath);	/* XXX want this to be static */
 
 /*
  * store_log.c
@@ -905,33 +905,46 @@ extern void storeDigestReport(StoreEntry *);
 /*
  * store_dir.c
  */
+extern OBJH storeDirStats;
+extern char *storeDirSwapLogFile(int, const char *);
+extern char *storeSwapDir(int);
 extern char *storeSwapFullPath(int, char *);
 extern char *storeSwapSubSubDir(int, char *);
-extern int storeVerifySwapDirs(void);
 extern const char *storeSwapPath(int);
-extern int storeDirMapBitTest(int fn);
-extern void storeDirMapBitSet(int fn);
-extern void storeDirMapBitReset(int fn);
 extern int storeDirMapAllocate(void);
-extern char *storeSwapDir(int);
-extern FILE *storeDirOpenTmpSwapLog(int dirn, int *clean, int *zero);
-extern void storeDirCloseTmpSwapLog(int dirn);
-extern void storeDirOpenSwapLogs(void);
-extern void storeDirCloseSwapLogs(void);
-extern char *storeDirSwapLogFile(int, const char *);
-extern void storeDirSwapLog(const StoreEntry *, int op);
-extern int storeDirNumber(int fileno);
-extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
-extern int storeDirProperFileno(int dirn, int fn);
-extern void storeCreateSwapDirectories(void);
-extern int storeVerifyCacheDirs(void);
-extern int storeDirWriteCleanLogs(int reopen);
-extern int storeDirValidFileno(int fn);
-extern int storeFilenoBelongsHere(int, int, int, int);
-extern OBJH storeDirStats;
+extern int storeDirMapBitTest(int fn);
 extern int storeDirMapBitsInUse(void);
+extern int storeDirNumber(int fileno);
+extern int storeDirProperFileno(int dirn, int fn);
+extern int storeDirValidFileno(int fn);
+extern int storeDirWriteCleanLogs(int reopen);
+extern int storeVerifyCacheDirs(void);
+extern int storeVerifySwapDirs(void);
+extern void storeCreateSwapDirectories(void);
+extern void storeDirCloseSwapLogs(void);
+extern void storeDirCloseTmpSwapLog(int dirn);
 extern void storeDirConfigure(void);
 extern void storeDirDiskFull(int fn);
+extern void storeDirMapBitReset(int fn);
+extern void storeDirMapBitSet(int fn);
+extern void storeDirOpenSwapLogs(void);
+extern void storeDirSwapLog(const StoreEntry *, int op);
+extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
+
+/*
+ * store_dir_ufs.c
+ */
+extern FILE *storeUfsDirOpenTmpSwapLog(int dirn, int *clean, int *zero);
+extern OBJH storeUfsDirStats;
+extern char *storeUfsDirSwapLogFile(int, const char *);
+extern int storeUfsDirWriteCleanLogs(int reopen);
+extern int storeUfsFilenoBelongsHere(int, int, int, int);
+extern int storeUfsVerifyCacheDirs(void);
+extern void storeUfsCreateSwapDirectories(void);
+extern void storeUfsDirCloseSwapLogs(void);
+extern void storeUfsDirCloseTmpSwapLog(int dirn);
+extern void storeUfsDirOpenSwapLogs(void);
+extern void storeUfsDirSwapLog(const StoreEntry *, int op);
 
 
 /*
