@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.18 1996/04/05 17:22:22 wessels Exp $ */
+/* $Id: wais.cc,v 1.19 1996/04/05 17:47:50 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -100,12 +100,12 @@ void waisReadReply(fd, data)
 		comm_set_select_handler(fd,
 		    COMM_SELECT_READ,
 		    (PF) waisReadReply,
-		    (caddr_t) data);
+		    (void *) data);
 		/* don't install read handler while we're above the gap */
 		comm_set_select_handler_plus_timeout(fd,
 		    COMM_SELECT_TIMEOUT,
 		    (PF) NULL,
-		    (caddr_t) NULL,
+		    (void *) NULL,
 		    (time_t) 0);
 		/* dont try reading again for a while */
 		comm_set_stall(fd, getStallDelay());
@@ -127,9 +127,9 @@ void waisReadReply(fd, data)
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
-		(PF) waisReadReply, (caddr_t) data);
+		(PF) waisReadReply, (void *) data);
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-		(PF) waisReadReplyTimeout, (caddr_t) data, getReadTimeout());
+		(PF) waisReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    BIT_SET(entry->flag, RELEASE_REQUEST);
@@ -154,22 +154,22 @@ void waisReadReply(fd, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) waisReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) waisReadReplyTimeout,
-	    (caddr_t) data,
+	    (void *) data,
 	    getReadTimeout());
     } else {
 	storeAppend(entry, buf, len);
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) waisReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) waisReadReplyTimeout,
-	    (caddr_t) data,
+	    (void *) data,
 	    getReadTimeout());
     }
 }
@@ -195,11 +195,11 @@ void waisSendComplete(fd, buf, size, errflag, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) waisReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) waisReadReplyTimeout,
-	    (caddr_t) data,
+	    (void *) data,
 	    getReadTimeout());
     }
     safe_free(buf);		/* Allocated by waisSendRequest. */
@@ -230,7 +230,7 @@ void waisSendRequest(fd, data)
     else
 	sprintf(buf, "%s %s%c%c", data->type, data->request, CR, LF);
     debug(24, 6, "waisSendRequest - buf:%s\n", buf);
-    icpWrite(fd, buf, len, 30, waisSendComplete, (caddr_t) data);
+    icpWrite(fd, buf, len, 30, waisSendComplete, (void *) data);
 }
 
 int waisStart(unusedfd, url, type, mime_hdr, entry)
@@ -290,9 +290,9 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     }
     /* Install connection complete handler. */
     comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-	(PF) waisLifetimeExpire, (caddr_t) data);
+	(PF) waisLifetimeExpire, (void *) data);
     comm_set_select_handler(sock, COMM_SELECT_WRITE,
-	(PF) waisSendRequest, (caddr_t) data);
+	(PF) waisSendRequest, (void *) data);
     if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
 	storeSetPublicKey(entry);	/* Make it public */
     return COMM_OK;

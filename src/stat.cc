@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.16 1996/04/04 18:41:27 wessels Exp $ */
+/* $Id: stat.cc,v 1.17 1996/04/05 17:47:47 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -271,7 +271,7 @@ void log_get_start(obj, sentry)
     strcpy(tmp, open_bracket);
     storeAppend(sentry, tmp, 2);
     file_walk(obj->logfile_fd, (FILE_WALK_HD) logReadEndHandler,
-	(caddr_t) data, (FILE_WALK_LHD) logReadHandler, (caddr_t) data);
+	(void *) data, (FILE_WALK_LHD) logReadHandler, (void *) data);
     return;
 }
 
@@ -319,8 +319,8 @@ void cached_get_start(obj, sentry)
     data->sentry = sentry;
     data->fd = file_open((char *) config_file, NULL, O_RDONLY);
     storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
-    file_walk(data->fd, (FILE_WALK_HD) cachedReadEndHandler, (caddr_t) data,
-	(FILE_WALK_LHD) cachedReadHandler, (caddr_t) data);
+    file_walk(data->fd, (FILE_WALK_HD) cachedReadEndHandler, (void *) data,
+	(FILE_WALK_LHD) cachedReadHandler, (void *) data);
 }
 
 

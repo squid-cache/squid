@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.30 1996/04/05 17:22:20 wessels Exp $ */
+/* $Id: http.cc,v 1.31 1996/04/05 17:47:43 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -281,12 +281,12 @@ static void httpReadReply(fd, data)
 		comm_set_select_handler(fd,
 		    COMM_SELECT_READ,
 		    (PF) httpReadReply,
-		    (caddr_t) data);
+		    (void *) data);
 		/* don't install read timeout until we are below the GAP */
 		comm_set_select_handler_plus_timeout(fd,
 		    COMM_SELECT_TIMEOUT,
 		    (PF) NULL,
-		    (caddr_t) NULL,
+		    (void *) NULL,
 		    (time_t) 0);
 		/* dont try reading again for a while */
 		comm_set_stall(fd, getStallDelay());
@@ -310,9 +310,9 @@ static void httpReadReply(fd, data)
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
-		(PF) httpReadReply, (caddr_t) data);
+		(PF) httpReadReply, (void *) data);
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-		(PF) httpReadReplyTimeout, (caddr_t) data, getReadTimeout());
+		(PF) httpReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    BIT_SET(entry->flag, RELEASE_REQUEST);
@@ -336,11 +336,11 @@ static void httpReadReply(fd, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) httpReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
-	    (caddr_t) data,
+	    (void *) data,
 	    getReadTimeout());
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
@@ -354,11 +354,11 @@ static void httpReadReply(fd, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) httpReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
-	    (caddr_t) data,
+	    (void *) data,
 	    getReadTimeout());
     }
 }
@@ -394,11 +394,11 @@ static void httpSendComplete(fd, buf, size, errflag, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) httpReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
-	    (caddr_t) data,
+	    (void *) data,
 	    getReadTimeout());
 	comm_set_fd_lifetime(fd, -1);	/* disable lifetime DPW */
     }
@@ -476,7 +476,7 @@ static void httpSendRequest(fd, data)
 	len,
 	30,
 	httpSendComplete,
-	(caddr_t) data);
+	(void *) data);
 }
 
 static void httpConnInProgress(fd, data)
@@ -496,7 +496,7 @@ static void httpConnInProgress(fd, data)
 	    comm_set_select_handler(fd,
 		COMM_SELECT_WRITE,
 		(PF) httpConnInProgress,
-		(caddr_t) data);
+		(void *) data);
 	    return;
 	case EISCONN:
 	    break;		/* cool, we're connected */
@@ -508,7 +508,7 @@ static void httpConnInProgress(fd, data)
     }
     /* Call the real write handler, now that we're fully connected */
     comm_set_select_handler(fd, COMM_SELECT_WRITE,
-	(PF) httpSendRequest, (caddr_t) data);
+	(PF) httpSendRequest, (void *) data);
 }
 
 int proxyhttpStart(e, url, entry)
@@ -564,18 +564,18 @@ int proxyhttpStart(e, url, entry)
 	} else {
 	    debug(11, 5, "proxyhttpStart: FD %d: EINPROGRESS.\n", sock);
 	    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-		(PF) httpLifetimeExpire, (caddr_t) data);
+		(PF) httpLifetimeExpire, (void *) data);
 	    comm_set_select_handler(sock, COMM_SELECT_WRITE,
-		(PF) httpConnInProgress, (caddr_t) data);
+		(PF) httpConnInProgress, (void *) data);
 	    return COMM_OK;
 	}
     }
     /* Install connection complete handler. */
     fd_note(sock, entry->url);
     comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-	(PF) httpLifetimeExpire, (caddr_t) data);
+	(PF) httpLifetimeExpire, (void *) data);
     comm_set_select_handler(sock, COMM_SELECT_WRITE,
-	(PF) httpSendRequest, (caddr_t) data);
+	(PF) httpSendRequest, (void *) data);
     return COMM_OK;
 
 }
@@ -631,17 +631,17 @@ int httpStart(unusedfd, url, type, req_hdr, entry)
 	} else {
 	    debug(11, 5, "httpStart: FD %d: EINPROGRESS.\n", sock);
 	    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-		(PF) httpLifetimeExpire, (caddr_t) data);
+		(PF) httpLifetimeExpire, (void *) data);
 	    comm_set_select_handler(sock, COMM_SELECT_WRITE,
-		(PF) httpConnInProgress, (caddr_t) data);
+		(PF) httpConnInProgress, (void *) data);
 	    return COMM_OK;
 	}
     }
     /* Install connection complete handler. */
     fd_note(sock, entry->url);
     comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-	(PF) httpLifetimeExpire, (caddr_t) data);
+	(PF) httpLifetimeExpire, (void *) data);
     comm_set_select_handler(sock, COMM_SELECT_WRITE,
-	(PF) httpSendRequest, (caddr_t) data);
+	(PF) httpSendRequest, (void *) data);
     return COMM_OK;
 }
