@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.481 2000/05/11 03:05:23 wessels Exp $
+ * $Id: client_side.cc,v 1.482 2000/05/11 03:15:51 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -72,6 +72,7 @@ static const char *const crlf = "\r\n";
 /* Local functions */
 
 static CWCB clientWriteComplete;
+static CWCB clientWriteBodyComplete;
 static PF clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
@@ -1702,6 +1703,13 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	}
 	/* reset range iterator */
 	http->range_iter.pos = HttpHdrRangeInitPos;
+    } else if (!http->request->range) {
+	/* Avoid copying to MemBuf for non-range requests */
+	/* Note, if we're here, then 'rep' is known to be NULL */
+	http->out.offset += body_size;
+	comm_write(fd, buf, size, clientWriteBodyComplete, http, NULL);
+	/* NULL because clientWriteBodyComplete frees it */
+	return;
     }
     if (http->request->method == METHOD_HEAD) {
 	if (rep) {
@@ -1753,6 +1761,23 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     /* write */
     comm_write_mbuf(fd, mb, clientWriteComplete, http);
     /* if we don't do it, who will? */
+    memFree(buf, MEM_CLIENT_SOCK_BUF);
+}
+
+/*
+ * clientWriteBodyComplete is called for MEM_CLIENT_SOCK_BUF's
+ * written directly to the client socket, versus copying to a MemBuf
+ * and going through comm_write_mbuf.  Most non-range responses after
+ * the headers probably go through here.
+ */
+static void
+clientWriteBodyComplete(int fd, char *buf, size_t size, int errflag, void *data)
+{
+    /*
+     * NOTE: clientWriteComplete doesn't currently use its "buf"
+     * (second) argument, so we pass in NULL.
+     */
+    clientWriteComplete(fd, NULL, size, errflag, data);
     memFree(buf, MEM_CLIENT_SOCK_BUF);
 }
 
