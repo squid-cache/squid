@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.10 1998/03/20 18:06:41 rousskov Exp $
+ * $Id: cache_manager.cc,v 1.11 1998/05/04 21:43:09 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -242,7 +242,9 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
     assert(a != NULL);
     storeBuffer(entry);
     {
-	HttpReply *rep = httpReplyCreate();
+	HttpReply *rep = entry->mem_obj->reply;
+	/* prove there are no previous reply headers around */
+	assert(0 == rep->sline.status);
 	httpReplySetHeaders(rep,
 	    (double) 1.0,
 	    HTTP_OK,
@@ -252,7 +254,6 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
 	    squid_curtime,	/* LMT */
 	    squid_curtime);
 	httpReplySwapOut(rep, entry);
-	httpReplyDestroy(rep);
     }
     a->handler(entry);
     storeBufferFlush(entry);
