@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.174 2005/01/03 16:08:26 robertc Exp $
+ * $Id: net_db.cc,v 1.175 2005/01/05 21:59:34 serassio Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -43,6 +43,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "SwapDir.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemObject.h"
@@ -452,7 +453,7 @@ netdbPath(char *path)
      * separately from the cache dirs, and also be settable in 
      * squid.conf RBC 20041225
      */
-    snprintf(path, SQUID_MAXPATHLEN, "%s/netdb_state", Config.cacheSwap.swapDirs[0]->path);
+    snprintf(path, SQUID_MAXPATHLEN, "%s/netdb_state", dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[0].getRaw())->path);
 }
 
 static void
