@@ -8,6 +8,9 @@ Changes to squid-1.1.alpha12:
 	- Added -i option which forces IP cache entry to be invalidated
 	  just after an object retrieval begins.
 	- Includes all squid-1.0 changes up to squid-1.0.10.
+	- Added patch from srb@cuci.nl (Stephen R. van den Berg) for
+		- ttl_force_pattern
+		- quick_abort min pct max
 
 Changes to squid-1.1.alpha11:
 
@@ -44,6 +47,22 @@ Changes to squid-1.1.alpha8:
 	  written to stdout.
 	- Cleaned up pointers in protoUnregister().
 	- Includes all squid-1.0 changes up to squid-1.0.6.
+
+Changes to squid-1.1.alpha7.BuGless:
+
+	- cache_swap 0 is allowed (proxy only server, no swapping), mainly
+	  intended for fast maintenance startups where the system already
+	  has to be running, but the disk(s) have not been fsck'd yet.
+	- quick_abort actually works now
+	- quick_abort functionality made conditional
+	- ttl_pattern storage wasn't being cleaned upon a reread of
+	  the config file (the patterns were added only, got duplicates)
+	- ttl_force_pattern a new config option to override the settings
+	  of certain pages despite (or because) of enforced low expiry times
+	- Reduced the struct sentry size.  Moved some attributes to mem_obj,
+	  eliminated some.  On typical 32-bit machines the size was 52 bytes,
+	  now it's 32.
+	- Reduced /cache/log file size (still compatible with old format)
 
 Changes to squid-1.1.alpha7:
 
