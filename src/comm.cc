@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.255 1998/05/15 15:16:19 wessels Exp $
+ * $Id: comm.cc,v 1.256 1998/05/15 18:57:42 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -664,6 +664,10 @@ void
 comm_close(int fd)
 {
     fde *F = NULL;
+#if USE_ASYNC_IO
+    int flags;
+    int dummy = 0;
+#endif
     debug(5, 5) ("comm_close: FD %d\n", fd);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
@@ -687,7 +691,13 @@ comm_close(int fd)
      */
     close(fd);
 #elif USE_ASYNC_IO
-    aioClose(fd);
+    /* slf@connect.com.au */
+    if ((flags = fcntl(fd, F_GETFL, dummy)) < 0)
+	aioClose(fd);
+    else if (flags & SQUID_NONBLOCK)
+	close(fd);
+    else
+	aioClose(fd);
 #else
     close(fd);
 #endif
