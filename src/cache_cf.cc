@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.65 1996/07/26 17:18:21 wessels Exp $
+ * $Id: cache_cf.cc,v 1.66 1996/07/26 19:28:49 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -181,6 +181,8 @@ struct SquidConfig Config;
 #define DefaultUdpIncomingAddr	INADDR_ANY
 #define DefaultUdpOutgoingAddr	INADDR_NONE
 #define DefaultClientNetmask	0xFFFFFFFF;
+#define DefaultSslProxyPort	0
+#define DefaultSslProxyHost	(char *)NULL
 
 int httpd_accel_mode = 0;	/* for fast access */
 char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -409,7 +411,6 @@ static void parseCacheHostLine()
     int weight = 1;
     int i;
 
-    /* Parse a cache_host line */
     if (!(hostname = strtok(NULL, w_space)))
 	self_destruct();
     if (!(type = strtok(NULL, w_space)))
@@ -963,6 +964,22 @@ static void parseAnnounceToLine()
     Config.Announce.file = xstrdup(token);
 }
 
+static void parseSslProxyLine()
+{
+    char *token;
+    char *t;
+    token = strtok(NULL, w_space);
+    if (token == NULL)
+	self_destruct();
+    safe_free(Config.sslProxy.host);
+    Config.sslProxy.port = 0;
+    if ((t = strchr(token, ':'))) {
+	*t++ = '\0';
+	Config.sslProxy.port = atoi(t);
+    }
+    Config.sslProxy.host = xstrdup(token);
+}
+
 static void parseIntegerValue(iptr)
      int *iptr;
 {
@@ -1009,87 +1026,67 @@ int parseConfigFile(file_name)
 	if ((token = strtok(tmp_line, w_space)) == NULL)
 	    continue;
 
-	/* Parse a cache_host line */
 	if (!strcmp(token, "cache_host"))
 	    parseCacheHostLine();
 
-	/* Parse a cache_host_domain line */
 	else if (!strcmp(token, "cache_host_domain"))
 	    parseHostDomainLine();
 	else if (!strcmp(token, "cache_host_acl"))
 	    parseHostAclLine();
 
-	/* Parse a neighbor_timeout line */
 	else if (!strcmp(token, "neighbor_timeout"))
 	    parseIntegerValue(&Config.neighborTimeout);
 	else if (!strcmp(token, "neighbour_timeout"))	/* alternate spelling */
 	    parseIntegerValue(&Config.neighborTimeout);
 
-	/* Parse a cache_dir line */
 	else if (!strcmp(token, "cache_dir"))
 	    parseDirLine();
 
-	/* Parse a cache_log line */
 	else if (!strcmp(token, "cache_log"))
 	    parseLogLine();
 
-	/* Parse a cache_access_log line */
 	else if (!strcmp(token, "cache_access_log"))
 	    parseAccessLogLine();
 
-	/* Parse a cache_hierarchy_log line */
 	else if (!strcmp(token, "cache_hierarchy_log"))
 	    parseHierachyLogLine();
 
-	/* Parse a cache_store_log line */
 	else if (!strcmp(token, "cache_store_log"))
 	    parseStoreLogLine();
 
-	/* Parse a logfile_rotate line */
 	else if (!strcmp(token, "logfile_rotate"))
 	    parseIntegerValue(&Config.Log.rotateNumber);
 
 	else if (!strcmp(token, "httpd_accel_with_proxy"))
 	    parseOnOff(&Config.Accel.withProxy);
 
-	/* Parse a httpd_accel line */
 	else if (!strcmp(token, "httpd_accel"))
 	    parseHttpdAccelLine();
 
-	/* Parse a cache_effective_user line */
 	else if (!strcmp(token, "cache_effective_user"))
 	    parseEffectiveUserLine();
 
-	/* Parse a cache_mem_high line */
 	else if (!strcmp(token, "cache_swap_high"))
 	    parseIntegerValue(&Config.Swap.highWaterMark);
 
-	/* Parse a cache_mem_low line */
 	else if (!strcmp(token, "cache_swap_low"))
 	    parseIntegerValue(&Config.Swap.highWaterMark);
 
-	/* Parse a cache_mem_high line */
 	else if (!strcmp(token, "cache_mem_high"))
 	    parseIntegerValue(&Config.Mem.highWaterMark);
 
-	/* Parse a cache_mem_low line */
 	else if (!strcmp(token, "cache_mem_low"))
 	    parseIntegerValue(&Config.Mem.lowWaterMark);
 
-	/* Parse a cache_hot_vm_factor line */
 	else if (!strcmp(token, "cache_hot_vm_factor"))
 	    parseHotVmFactorLine();
 
-	/* Parse a cache_mem line */
-	/* XXX: this must be AFTER cache_mem_low, etc. */
 	else if (!strcmp(token, "cache_mem"))
 	    parseMemLine();
 
-	/* Parse a cache_swap line */
 	else if (!strcmp(token, "cache_swap"))
 	    parseSwapLine();
 
-	/* Parse a cache_mgr line */
 	else if (!strcmp(token, "cache_mgr"))
 	    parseMgrLine();
 
@@ -1102,79 +1099,63 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "icp_access"))
 	    aclParseAccessLine(&ICPAccessList);
 
-	/* Parse a hierarchy_stoplist line */
 	else if (!strcmp(token, "hierarchy_stoplist"))
 	    parseHierarchyStoplistLine();
 
-	/* Parse a gopher protocol line */
 	else if (!strcmp(token, "gopher"))
 	    parseGopherLine();
 
-	/* Parse a http protocol line */
 	else if (!strcmp(token, "http"))
 	    parseHttpLine();
 
-	/* Parse a ftp protocol line */
 	else if (!strcmp(token, "ftp"))
 	    parseFtpLine();
 
 	else if (!strcmp(token, "ttl_pattern"))
 	    parseTTLPattern();
 
-	/* Parse a negative_ttl line */
 	else if (!strcmp(token, "negative_ttl"))
 	    parseNegativeLine();
 
-	/* Parse a negative_dns_ttl line */
 	else if (!strcmp(token, "negative_dns_ttl"))
 	    parseNegativeDnsLine();
 
-	/* Parse a positive_dns_ttl line */
 	else if (!strcmp(token, "positive_dns_ttl"))
 	    parsePositiveDnsLine();
 
-	/* Parse a read_timeout line */
 	else if (!strcmp(token, "read_timeout"))
 	    parseReadTimeoutLine();
 
-	/* Parse a clean_rate line */
 	else if (!strcmp(token, "clean_rate"))
 	    parseCleanRateLine();
 
-	/* Parse a client_lifetime line */
 	else if (!strcmp(token, "client_lifetime"))
 	    parseLifetimeLine();
 
-	/* Parse a client_lifetime line */
 	else if (!strcmp(token, "shutdown_lifetime"))
 	    parseIntegerValue(&Config.lifetimeShutdown);
 
-	/* Parse a request_size line */
 	else if (!strcmp(token, "request_size"))
 	    parseRequestSizeLine();
 
-	/* Parse a connect_timeout line */
 	else if (!strcmp(token, "connect_timeout"))
 	    parseIntegerValue(&Config.connectTimeout);
 
-	/* Parse a cache_ftp_program line */
 	else if (!strcmp(token, "cache_ftp_program"))
 	    parseFtpProgramLine();
 
-	/* Parse a cache_ftp_options line */
 	else if (!strcmp(token, "cache_ftp_options"))
 	    parseFtpOptionsLine();
 
-	/* Parse a cache_dns_program line */
 	else if (!strcmp(token, "cache_dns_program"))
 	    parseDnsProgramLine();
 
-	/* Parse a cache_dns_program line */
 	else if (!strcmp(token, "dns_children"))
 	    parseIntegerValue(&Config.dnsChildren);
 
 	else if (!strcmp(token, "redirect_program"))
 	    parseRedirectProgramLine();
+
 	else if (!strcmp(token, "redirect_children"))
 	    parseIntegerValue(&Config.redirectChildren);
 
@@ -1202,7 +1183,6 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "firewall_ip"))
 	    parseIPLine(&Config.firewall_ip_list);
 
-	/* Parse a local_domain line */
 	else if (!strcmp(token, "local_domain"))
 	    parseLocalDomainLine();
 
@@ -1233,11 +1213,9 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "outbound_address"))
 	    parseAddressLine(&Config.Addrs.tcp_outgoing);
 
-	/* Parse a http_port line */
 	else if (!strcmp(token, "http_port") || !strcmp(token, "ascii_port"))
 	    parseHttpPortLine();
 
-	/* Parse a icp_port line */
 	else if (!strcmp(token, "icp_port") || !strcmp(token, "udp_port"))
 	    parseIcpPortLine();
 
@@ -1268,7 +1246,9 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "announce_to"))
 	    parseAnnounceToLine();
 
-	/* If unknown, treat as a comment line */
+	else if (!strcmp(token, "ssl_proxy"))
+	    parseSslProxyLine();
+
 	else {
 	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
 		config_lineno,
@@ -1380,6 +1360,7 @@ static void configFreeMemory()
     wordlistDestroy(&Config.local_domain_list);
     wordlistDestroy(&Config.inside_firewall_list);
     wordlistDestroy(&Config.dns_testname_list);
+    safe_free(Config.sslProxy.host);
 }
 
 
@@ -1456,6 +1437,8 @@ static void configSetFactoryDefaults()
     Config.Addrs.udp_outgoing.s_addr = DefaultUdpOutgoingAddr;
     Config.Addrs.udp_incoming.s_addr = DefaultUdpIncomingAddr;
     Config.Addrs.client_netmask.s_addr = DefaultClientNetmask;
+    Config.sslProxy.port = DefaultSslProxyPort;
+    Config.sslProxy.host = safe_xstrdup(DefaultSslProxyHost);
 }
 
 static void configDoConfigure()
