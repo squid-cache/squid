@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.35 1996/04/16 05:05:25 wessels Exp $ */
+/* $Id: main.cc,v 1.36 1996/04/16 05:48:58 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -12,7 +12,6 @@ int do_reuse = 1;
 int opt_unlink_on_reload = 0;
 int catch_signals = 1;
 int do_dns_test = 1;
-char *config_file = NULL;
 int vhost_mode = 0;
 int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
@@ -288,9 +287,6 @@ int main(argc, argv)
     fd_note(0, "STDIN");
     fd_note(1, "STDOUT");
     fd_note(2, "STDERR");
-
-    if (config_file == NULL)
-	config_file = xstrdup(DEFAULT_CONFIG_FILE);
 
     /* enable syslog by default */
     syslog_enable = 0;
