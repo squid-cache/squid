@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.17 2000/07/14 17:45:54 wessels Exp $
+ * $Id: rfc1035.c,v 1.18 2000/09/14 15:41:03 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -180,6 +180,9 @@ rfc1035NamePack(char *buf, size_t sz, const char *name)
     off_t off = 0;
     char *copy = strdup(name);
     char *t;
+    /*
+     * NOTE: use of strtok here makes names like foo....com valid.
+     */
     for (t = strtok(copy, "."); t; t = strtok(NULL, "."))
 	off += rfc1035LabelPack(buf + off, sz - off, t);
     free(copy);
