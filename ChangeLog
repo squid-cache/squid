@@ -1,17 +1,33 @@
 Future/Current Changes to squid-1.2.beta16 (Feb 23, 1998):
 
-	- Added "basic" authentication scheme for Cache Manager interface.
-	  Tested with Netscape 3.01. When a password protected function is
-	  accessed, Squid sends an HTTP_UNAUTHORIZED reply, and the browser
-	  prompts the user for "user name" and "password" for the specified
-	  action. The user name is currently used for logging purposes only.
-	  The password is verified against must be an appropriate
-	  "cachemgr_passwd" entry from squid.conf. Note that Netscape will
-	  cache your authentication info and will reuse it for future
-	  accesses. Caching is done on per-realm (per-action) basis, but
-	  Netscape may try to use information from other realms when new realm
-	  is accessed.  The old interface (appending @password to the url)
-	  is still supported but discouraged.
+	- Cache Manager got new Web interface (cachemgr.cgi). New .cgi script
+	  forwards basic authentication from browser to squid. Authentication
+	  info is encoded within all dynamically generated pages so you do not
+	  have to type your password often. Authentication records expire
+	  after 3 hours (default) since last use. Cachemgr.cgi now recognizes
+	  "action protection" types described below.
+
+	- Added better recognition of available protection for actions in
+	  Cache Manager. Actions are classified as "public" (no password
+	  needed), "protected" (must specify a valid password), "disabled"
+	  (those with a "disable" password in squid.conf), and "hidden"
+	  (actions that require a password, but do not have corresponding
+	  cachemgr_passwd entry). If you manage to request a hidden, disabled,
+	  or unknown action, squid replies with "Invalid URL" message. If a
+	  password is needed, and you failed to provide one, squid replies
+	  with "Access Denied" message and asks you to authenticate yourself.
+
+	- Added "basic" authentication scheme for the Cache Manager.  When a
+	  password protected function is accessed, Squid sends an
+	  HTTP_UNAUTHORIZED reply allowing the client to authorize itself by
+	  specifying "name" and "password" for the specified action. The user
+	  name is currently used for logging purposes only.  The password must
+	  be an appropriate "cachemgr_passwd" entry from squid.conf. The old
+	  interface (appending @password to the url) is still supported but
+	  discouraged.  Note: it is not possible to pass authentication
+	  information between squid and browser *via a web server*. The server
+	  will strip all authentication headers coming from the browser. A
+	  similar problem exists for Proxy-Authentication scheme.
 
 	- Added ERR_CACHE_MGR_ACCESS_DENIED page to notify of authentication
 	  failures when accessing Cache Manager.
