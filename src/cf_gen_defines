@@ -16,6 +16,7 @@ BEGIN {
 	define["USE_IDENT"]="--enable-ident-lookups"
 	define["USE_USERAGENT_LOG"]="--enable-useragent-log"
 	define["USE_WCCP"]="--enable-wccp"
+	define["USE_UNLINKD"]="--enable-unlinkd"
 }
 /^IFDEF:/ {
 	print "{\"" $2 "\", \"" (define[$2] != "" ? define[$2] : ("-D" $2)) "\", "

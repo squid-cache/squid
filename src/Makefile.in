@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.187 2000/05/31 01:34:10 hno Exp $
+#  $Id: Makefile.in,v 1.188 2000/05/31 08:57:08 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -24,10 +24,12 @@ SUBDIRS		= fs
 #
 SQUID_EXE	= squid$(exec_suffix)
 CLIENT_EXE	= client$(exec_suffix)
-DNSSERVER_EXE	= dnsserver$(exec_suffix)
+OPT_DNSSERVER_EXE = dnsserver$(exec_suffix)
+DNSSERVER_EXE	= @OPT_DNSSERVER_EXE@
 OPT_UNLINKD_EXE	= unlinkd$(exec_suffix)
 UNLINKD_EXE	= @OPT_UNLINKD_EXE@
-PINGER_EXE	= pinger$(exec_suffix)
+OPT_PINGER_EXE	= pinger$(exec_suffix)
+PINGER_EXE	= @OPT_PINGER_EXE@
 CACHEMGR_EXE	= cachemgr$(cgi_suffix)
 
 DEFAULT_PREFIX		= $(prefix)
@@ -75,12 +77,11 @@ SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @SQUID_PTHREAD_LIB@ \
 		  $(SNMPLIB) $(MALLOCLIB) -lmiscutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
-DISKD_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 STD_APP_LIBS    = -L../lib -lmiscutil $(XTRA_LIBS)
 
 PROGS           = $(SQUID_EXE) $(CLIENT_EXE)
-UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE) $(DISKD_EXE)
+UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE)
 SUID_UTILS	= $(PINGER_EXE)
 CGIPROGS	= $(CACHEMGR_EXE)
 OBJS	 	= \
@@ -100,8 +101,7 @@ OBJS	 	= \
 		debug.o \
 		@DELAY_OBJS@ \
 		disk.o \
-		dns.o \
-		dns_internal.o \
+		@DNS_OBJS@ \
 		errorpage.o \
 		ETag.o \
 		event.o \
@@ -326,7 +326,8 @@ install: all install-mkdirs
 			$(RM) -f $(bindir)/-$$f; \
 		fi; \
 	done
-	@for f in $(UTILS); do \
+	@if test -n "$(UTILS)"; then \
+	    for f in $(UTILS); do \
 		if test -f $(libexecdir)/$$f; then \
 			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
 			$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
@@ -337,7 +338,8 @@ install: all install-mkdirs
 			echo $(RM) -f $(libexecdir)/-$$f; \
 			$(RM) -f $(libexecdir)/-$$f; \
 		fi; \
-	done
+	    done; \
+	fi
 	@for f in $(CGIPROGS); do \
 		if test -f $(libexecdir)/$$f; then \
 			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
