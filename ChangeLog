@@ -1,3 +1,14 @@
+Changes to squid-1.2.beta1 ():
+
+	- Reworked storage manager to not keep objects in memory during
+	  transit.  In other words, no separate NOVM distribution.
+	- Lots of cleanup and debugging for beta release.
+	- Use snprintf() everywhere instead of sprintf().
+	- The 'in_memory' hash table has been replaced with a
+	  doubly-linked list.  New objects are added to the head of
+	  the list.  When memory space is needed, old objects are
+	  purged from the tail of the list.
+
 Changes to squid-1.2.alpha7 ():
 
 	- fixes fixes fixes.

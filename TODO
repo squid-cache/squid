@@ -1,6 +1,4 @@
-+ fix all the assert(!ERR_FOO) placeholders
-+ Finish hacking at storeCopy() to achieve in-memory sliding window
-  for objects being retrieved.
++ copy over new -z semantics; don't automatically wipeout cache
 
 + we don't properly handle the HTTP/1.1 'Connection' header
 + ETag support (makes metadata bigger--ack!)
@@ -32,3 +30,6 @@
 DONE:
 + s/sprintf/snprintf/g
 + Write the text for all the error message files
++ fix all the assert(!ERR_FOO) placeholders
++ Finish hacking at storeCopy() to achieve in-memory sliding window
+  for objects being retrieved.
