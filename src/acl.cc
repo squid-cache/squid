@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.215 2000/05/02 20:22:54 hno Exp $
+ * $Id: acl.cc,v 1.216 2000/05/02 21:35:24 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1145,13 +1145,21 @@ aclMatchProxyAuth(void * data, const char *proxy_auth, acl_proxy_auth_user * aut
 		return 0; /* NOTREACHED */
 	    }
 	} else {
-	    /* user has switched to another IP addr */
-	    debug(28, 1) ("aclMatchProxyAuth: user '%s' has changed IP address\n", user);
-	    /* remove this user from the hash, making him unknown */
-	    hash_remove_link(proxy_auth_cache, (hash_link *) auth_user);
-	    aclFreeProxyAuthUser(auth_user);
-	    /* require the user to reauthenticate */
-	    return -2;
+	    if (Config.onoff.authenticateIpTTLStrict) {
+		/* Access from some other IP address than the one owning
+		 * this user ID. Deny access
+		 */
+		debug(28, 1) ("aclMatchProxyAuth: user '%s' tries to use multple IP addresses!\n", user);
+		return 0;
+	    } else {
+		/* user has switched to another IP addr */
+		debug(28, 1) ("aclMatchProxyAuth: user '%s' has changed IP address\n", user);
+		/* remove this user from the hash, making him unknown */
+		hash_remove_link(proxy_auth_cache, (hash_link *) auth_user);
+		aclFreeProxyAuthUser(auth_user);
+		/* require the user to reauthenticate */
+		return -2;
+	    }
 	}
     } else {
 	/* password mismatch/timeout */
