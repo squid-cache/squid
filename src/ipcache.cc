@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.175 1998/04/01 05:38:57 wessels Exp $
+ * $Id: ipcache.cc,v 1.176 1998/04/03 06:27:05 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -127,7 +127,7 @@ static dlink_list lru_list;
 
 static int ipcache_testname(void);
 static PF ipcache_dnsHandleRead;
-static ipcache_entry *ipcache_parsebuffer(const char *buf, dnsserver_t *);
+static ipcache_entry *ipcacheParse(const char *buf, dnsserver_t *);
 static void ipcache_release(ipcache_entry *);
 static ipcache_entry *ipcache_create(const char *name);
 static void ipcache_call_pending(ipcache_entry *);
@@ -384,79 +384,67 @@ ipcache_call_pending(ipcache_entry * i)
 
 
 static ipcache_entry *
-ipcache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
+ipcacheParse(const char *inbuf, dnsserver_t * dnsData)
 {
-    char *buf = xstrdup(inbuf);
+    LOCAL_ARRAY(char, buf, DNS_INBUF_SZ);
     char *token;
     static ipcache_entry i;
+    int j;
     int k;
-    int ipcount;
-    int aliascount;
-    debug(14, 5) ("ipcache_parsebuffer: parsing:\n%s", inbuf);
-    memset(&i, '\0', sizeof(ipcache_entry));
-    i.expires = squid_curtime + Config.positiveDnsTtl;
-    for (token = strtok(buf, w_space); token; token = strtok(NULL, w_space)) {
-	if (!strcmp(token, "$end")) {
-	    break;
-	} else if (!strcmp(token, "$alive")) {
-	    dnsData->answer = squid_curtime;
-	} else if (!strcmp(token, "$fail")) {
-	    if ((token = strtok(NULL, "\n")) == NULL)
-		fatal_dump("Invalid $fail");
-	    i.expires = squid_curtime + Config.negativeDnsTtl;
-	    i.status = IP_NEGATIVE_CACHED;
-	} else if (!strcmp(token, "$message")) {
-	    if ((token = strtok(NULL, "\n")) == NULL)
-		fatal_dump("Invalid $message");
-	    i.error_message = xstrdup(token);
-	} else if (!strcmp(token, "$name")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $name");
-	    i.status = IP_CACHED;
-	} else if (!strcmp(token, "$h_name")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $h_name");
-	    /* ignore $h_name */
-	} else if (!strcmp(token, "$h_len")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $h_len");
-	    /* ignore $h_length */
-	} else if (!strcmp(token, "$ipcount")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $ipcount");
-	    ipcount = atoi(token);
-	    i.addrs.count = (unsigned char) ipcount;
-	    if (ipcount == 0) {
-		i.addrs.in_addrs = NULL;
-		i.addrs.bad_mask = NULL;
-	    } else {
-		i.addrs.in_addrs = xcalloc(ipcount, sizeof(struct in_addr));
-		i.addrs.bad_mask = xcalloc(ipcount, sizeof(unsigned char));
-	    }
-	    for (k = 0; k < ipcount; k++) {
-		if ((token = strtok(NULL, w_space)) == NULL)
-		    fatal_dump("Invalid IP address");
-		if (!safe_inet_addr(token, &i.addrs.in_addrs[k]))
-		    fatal_dump("Invalid IP address");
-	    }
-	} else if (!strcmp(token, "$aliascount")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $aliascount");
-	    aliascount = atoi(token);
-	    for (k = 0; k < aliascount; k++) {
-		if ((token = strtok(NULL, w_space)) == NULL)
-		    fatal_dump("Invalid alias");
-	    }
-	} else if (!strcmp(token, "$ttl")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $ttl");
-	    i.expires = squid_curtime + atoi(token);
-	} else {
-	    debug(14, 0) ("--> %s <--\n", inbuf);
-	    debug_trap("Invalid dnsserver output");
-	}
+    int ipcount = 0;
+    int ttl;
+    char A[32][16];
+    xstrncpy(buf, inbuf, DNS_INBUF_SZ);
+    debug(14, 5) ("ipcacheParse: parsing:\n%s", buf);
+    memset(&i, '\0', sizeof(i));
+    i.expires = squid_curtime;
+    i.status = IP_NEGATIVE_CACHED;
+    token = strtok(buf, w_space);
+    if (NULL == token) {
+	debug(14, 1) ("ipcacheParse: Got <NULL>, expecting '$addr'\n");
+	return &i;
     }
-    xfree(buf);
+    if (0 == strcmp(token, "$fail")) {
+	i.expires = squid_curtime + Config.negativeDnsTtl;
+	token = strtok(NULL, "\n");
+	assert(NULL != token);
+	i.error_message = xstrdup(token);
+	return &i;
+    }
+    if (0 != strcmp(token, "$addr")) {
+	debug(14, 1) ("ipcacheParse: Got '%s', expecting '$addr'\n", token);
+	return &i;
+    }
+    token = strtok(NULL, w_space);
+    if (NULL == token) {
+	debug(14, 1) ("ipcacheParse: Got <NULL>, expecting TTL\n");
+	return &i;
+    }
+    i.status = IP_CACHED;
+    ttl = atoi(token);
+    if (ttl > 0)
+	i.expires = squid_curtime + ttl;
+    else
+	i.expires = squid_curtime + Config.positiveDnsTtl;
+    while (NULL != (token = strtok(NULL, w_space))) {
+	xstrncpy(A[ipcount], token, 16);
+	if (++ipcount == 32)
+	    break;
+    }
+    if (0 == ipcount) {
+	i.addrs.in_addrs = NULL;
+	i.addrs.bad_mask = NULL;
+    } else {
+	i.addrs.in_addrs = xcalloc(ipcount, sizeof(struct in_addr));
+	i.addrs.bad_mask = xcalloc(ipcount, sizeof(unsigned char));
+    }
+    for (j = 0, k = 0; k < ipcount; k++) {
+	if (safe_inet_addr(A[k], &i.addrs.in_addrs[j]))
+	    j++;
+	else
+	    debug(14, 1) ("ipcacheParse: Invalid IP address '%s'\n", A[k]);
+    }
+    i.addrs.count = (unsigned char) j;
     return &i;
 }
 
@@ -502,24 +490,24 @@ ipcache_dnsHandleRead(int fd, void *data)
 	return;
     }
     n = ++IpcacheStats.replies;
-    DnsStats.replies++;
     dnsData->offset += len;
     dnsData->ip_inbuf[dnsData->offset] = '\0';
     i = dnsData->data;
     assert(i != NULL);
     assert(i->status == IP_DISPATCHED);
-    if (strstr(dnsData->ip_inbuf, "$end\n")) {
+    if (strchr(dnsData->ip_inbuf, '\n')) {
 	/* end of record found */
+	DnsStats.replies++;
 	statHistCount(&Counter.dns.svc_time,
 	    tvSubMsec(i->request_time, current_time));
-	if ((x = ipcache_parsebuffer(dnsData->ip_inbuf, dnsData)) == NULL) {
-	    debug(14, 0) ("ipcache_dnsHandleRead: ipcache_parsebuffer failed?!\n");
+	if ((x = ipcacheParse(dnsData->ip_inbuf, dnsData)) == NULL) {
+	    debug(14, 0) ("ipcache_dnsHandleRead: ipcacheParse failed?!\n");
 	} else {
 	    dnsData->offset = 0;
 	    dnsData->ip_inbuf[0] = '\0';
+	    i->status = x->status;
 	    i->addrs = x->addrs;
 	    i->error_message = x->error_message;
-	    i->status = x->status;
 	    i->expires = x->expires;
 	    ipcache_call_pending(i);
 	}
