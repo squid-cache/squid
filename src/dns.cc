@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.4 1996/08/12 23:22:34 wessels Exp $
+ * $Id: dns.cc,v 1.5 1996/08/14 21:54:20 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -207,8 +207,8 @@ void dnsOpenServers()
 	safe_free(dns_child_table);
     }
     dns_child_table = xcalloc(N, sizeof(dnsserver_t *));
-    NDnsServersAlloc = N;
     debug(34, 1, "dnsOpenServers: Starting %d 'dns_server' processes\n", N);
+    NDnsServersAlloc = 0;
     for (k = 0; k < N; k++) {
 	dns_child_table[k] = xcalloc(1, sizeof(dnsserver_t));
 	if ((dnssocket = dnsOpenServer(prg)) < 0) {
@@ -233,6 +233,7 @@ void dnsOpenServers()
 	    fd_note(dns_child_table[k]->inpipe, fd_note_buf);
 	    commSetNonBlocking(dns_child_table[k]->inpipe);
 	    debug(34, 3, "dnsOpenServers: 'dns_server' %d started\n", k);
+	    NDnsServersAlloc++;
 	}
     }
 }
