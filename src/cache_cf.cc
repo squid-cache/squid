@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.383 2001/06/01 06:51:16 hno Exp $
+ * $Id: cache_cf.cc,v 1.384 2001/06/01 09:06:57 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -56,6 +56,10 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
+static void parse_cachedir_option_readonly(SwapDir * sd, const char *option, const char *value, int reconfiguring);
+static void dump_cachedir_option_readonly(StoreEntry * e, const char *option, SwapDir * sd);
+static void parse_cachedir_option_maxsize(SwapDir * sd, const char *option, const char *value, int reconfiguring);
+static void dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir * sd);
 static struct cache_dir_option common_cachedir_options[] =
 {
     {"read-only", parse_cachedir_option_readonly, dump_cachedir_option_readonly},
