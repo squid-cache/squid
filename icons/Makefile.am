@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.9 2003/05/21 07:38:49 hno Exp $
+# $Id: Makefile.am,v 1.10 2003/05/21 08:05:16 hno Exp $
 #
 
 ICON1	=	anthony-binhex.gif
@@ -39,7 +39,9 @@ DISTCLEANFILES =
 $(ICON2): $(ICON1)
 
 $(ICON1):
-	@$(SHELL) "$(srcdir)/icons.shar"
+	@if [ ! -f "$(srcdir)/$(ICON1)" ]; then \
+	    $(SHELL) "$(srcdir)/icons.shar" ; \
+	fi
 ##	@$(SHELL) -c "cd $(srcdir); $(SHELL) icons.shar"
 
 update-icons.shar:
