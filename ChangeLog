@@ -62,6 +62,10 @@ Changes to Squid ():
 	  aufs or diskd stores
 	- Added --enable-stacktraces configure option to set PRINT_STACK_TRACE,
 	  and extended support for this to Linux/GNU libc.
+	- Disabled the "request timeout" error message sent if the user agent
+	  did not provide a request in a timely manner after opening the
+	  connection. Now the connection is silently closed. The error message
+	  was confusing user agents utilizing persistent connections.
 
 Changes to Squid-2.4.DEVEL3 ():
 
