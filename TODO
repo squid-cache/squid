@@ -41,6 +41,7 @@ Our Todo List
 (3)	LDAP support.  See http://miso.wwa.com/~donley/ and
 	Clayton Donley <qa1049@ilms04.cig.mot.com>
 (3) **  Store cache key and other metadata in swap files (KA)
+(3) **  Make sure every squid.conf option has documentation (??)
 
 (4) **	FTP PUT (KA)
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
