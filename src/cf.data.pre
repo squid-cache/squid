@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.265 2002/06/23 14:50:06 hno Exp $
+# $Id: cf.data.pre,v 1.266 2002/06/23 21:52:32 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1492,7 +1492,7 @@ DOC_START
 	  negative_ttl=n
 	  		TTL for cached negative lookups (default same
 	  		as ttl)
-	  concurrenty=n	Concurrency level / number of processes spawn
+	  concurrency=n	Concurrency level / number of processes spawn
 			to service external acl lookups of this type.
 	  cache=n	result cache size, 0 is unbounded (default)
 	
