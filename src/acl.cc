@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.133 1998/02/04 07:22:13 wessels Exp $
+ * $Id: acl.cc,v 1.134 1998/02/06 00:48:59 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -50,7 +50,7 @@ static int aclMatchTime(struct _acl_time_data *data, time_t when);
 static int aclMatchIdent(wordlist * data, const char *ident);
 static int aclMatchIp(void *dataptr, struct in_addr c);
 static int aclMatchDomainList(void *dataptr, const char *);
-static squid_acl aclType(const char *s);
+static squid_acl aclStrToType(const char *s);
 static int decode_addr(const char *, struct in_addr *, struct in_addr *);
 static void aclCheck(aclCheck_t * checklist);
 static void aclCheckCallback(aclCheck_t * checklist, allow_t answer);
@@ -59,11 +59,21 @@ static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
 static int aclReadProxyAuth(struct _acl_proxy_auth *p);
+static wordlist * aclDumpIpList(acl_ip_data * ip);
+static wordlist * aclDumpDomainList(void *data);
+static wordlist * aclDumpTimeSpec(void *data);
+static wordlist * aclDumpRegexList(void *data);
+static wordlist * aclDumpIntlist(void *data);
+static wordlist * aclDumpWordList(wordlist *data);
+static wordlist * aclDumpProtoList(void *data);
+static wordlist * aclDumpMethodList(void *data);
+static wordlist * aclDumpProxyAuth(void *data);
 
 #if USE_ARP_ACL
 static int checkARP(u_long ip, char *eth);
 static int decode_eth(const char *asc, char *eth);
 static int aclMatchArp(void *dataptr, struct in_addr c);
+static const char * aclDumpArpList(void *data);
 #endif
 
 #if defined(USE_SPLAY_TREE)
@@ -86,7 +96,7 @@ static int bintreeArpNetworkCompare(void *, void *);
 #endif
 
 #else /* LINKED LIST */
-static void aclDestroyIpList(struct _acl_ip_data *data);
+static void aclDestroyIpList(acl_ip_data *data);
 
 #endif /* USE_SPLAY_TREE */
 
@@ -151,7 +161,7 @@ strtokFile(void)
 }
 
 static squid_acl
-aclType(const char *s)
+aclStrToType(const char *s)
 {
     if (!strcmp(s, "src"))
 	return ACL_SRC_IP;
@@ -192,6 +202,46 @@ aclType(const char *s)
 	return ACL_SRC_ARP;
 #endif
     return ACL_NONE;
+}
+
+const char *
+aclTypeToStr(squid_acl type)
+{
+    if (type == ACL_SRC_IP)
+	return "src";
+    if (type == ACL_DST_IP)
+	return "dst";
+    if (type == ACL_DST_DOMAIN)
+	return "dstdomain";
+    if (type == ACL_SRC_DOMAIN)
+	return "srcdomain";
+    if (type == ACL_TIME)
+	return "time";
+    if (type == ACL_URLPATH_REGEX)
+	return "urlpath_regex";
+    if (type == ACL_URL_REGEX)
+	return "url_regex";
+    if (type == ACL_URL_PORT)
+	return "port";
+    if (type == ACL_USER)
+	return "user";
+    if (type == ACL_PROTO)
+	return "proto";
+    if (type == ACL_METHOD)
+	return "method";
+    if (type == ACL_BROWSER)
+	return "browser";
+    if (type == ACL_PROXY_AUTH)
+	return "proxy_auth";
+    if (type == ACL_SRC_ASN)
+	return "src_as";
+    if (type == ACL_DST_ASN)
+	return "dst_as";
+#if USE_ARP_ACL
+    if (type == ACL_SRC_ARP)
+	return "arp";
+#endif
+    return "ERROR";
 }
 
 struct _acl *
@@ -310,13 +360,13 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 #define SCAN_ACL3       "%[0123456789.]/%[0123456789.]"
 #define SCAN_ACL4       "%[0123456789.]"
 
-static struct _acl_ip_data *
+static acl_ip_data *
 aclParseIpData(const char *t)
 {
     LOCAL_ARRAY(char, addr1, 256);
     LOCAL_ARRAY(char, addr2, 256);
     LOCAL_ARRAY(char, mask, 256);
-    struct _acl_ip_data *q = xcalloc(1, sizeof(struct _acl_ip_data));
+    acl_ip_data *q = xcalloc(1, sizeof(acl_ip_data));
     debug(28, 5) ("aclParseIpData: %s\n", t);
     if (!strcasecmp(t, "all")) {
 	q->addr1.s_addr = 0;
@@ -383,7 +433,7 @@ aclParseIpList(void *curlist)
 {
     char *t = NULL;
     splayNode **Top = curlist;
-    struct _acl_ip_data *q = NULL;
+    acl_ip_data *q = NULL;
     while ((t = strtokFile())) {
 	if ((q = aclParseIpData(t)) == NULL)
 	    continue;
@@ -397,7 +447,7 @@ aclParseIpList(void **curtree)
 {
     tree **Tree;
     char *t = NULL;
-    struct _acl_ip_data *q;
+    acl_ip_data *q;
     Tree = xmalloc(sizeof(tree *));
     *curtree = Tree;
     tree_init(Tree);
@@ -413,8 +463,8 @@ static void
 aclParseIpList(void *curlist)
 {
     char *t = NULL;
-    struct _acl_ip_data **Tail;
-    struct _acl_ip_data *q = NULL;
+    acl_ip_data **Tail;
+    acl_ip_data *q = NULL;
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	if ((q = aclParseIpData(t)) == NULL)
@@ -665,7 +715,7 @@ aclParseAclLine(acl ** head)
 	debug(28, 0) ("aclParseAclLine: missing ACL type.\n");
 	return;
     }
-    if ((acltype = aclType(t)) == ACL_NONE) {
+    if ((acltype = aclStrToType(t)) == ACL_NONE) {
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAclLine: Invalid ACL type '%s'\n", t);
@@ -924,11 +974,11 @@ aclMatchIp(void *dataptr, struct in_addr c)
 static int
 aclMatchIp(void *dataptr, struct in_addr c)
 {
-    struct _acl_ip_data **D = dataptr;
-    struct _acl_ip_data *data = *D;
+    acl_ip_data **D = dataptr;
+    acl_ip_data *data = *D;
     struct in_addr h;
     unsigned long lh, la1, la2;
-    struct _acl_ip_data *first, *prev;
+    acl_ip_data *first, *prev;
 
     first = data;		/* remember first element, this will never be moved */
     prev = NULL;		/* previous element in the list */
@@ -1542,9 +1592,9 @@ aclDestroyTree(tree ** data)
 
 #elif !defined(USE_SPLAY_TREE)
 static void
-aclDestroyIpList(struct _acl_ip_data *data)
+aclDestroyIpList(acl_ip_data *data)
 {
-    struct _acl_ip_data *next = NULL;
+    acl_ip_data *next = NULL;
     for (; data; data = next) {
 	next = data->next;
 	safe_free(data);
@@ -1877,10 +1927,10 @@ aclHostDomainCompare(const char *h, const char *d)
 
 #if defined(USE_BIN_TREE)
 static int
-networkCompare(struct _acl_ip_data *net, struct _acl_ip_data *data)
+networkCompare(acl_ip_data *net, acl_ip_data *data)
 {
     struct in_addr addr;
-    struct _acl_ip_data acl_ip;
+    acl_ip_data acl_ip;
     int rc = 0;
     xmemcpy(&acl_ip, net, sizeof(acl_ip));
     addr = acl_ip.addr1;
@@ -1911,7 +1961,7 @@ static int
 aclIpNetworkCompare(const void *a, splayNode * n)
 {
     struct in_addr A = *(struct in_addr *) a;
-    struct _acl_ip_data *q = n->data;
+    acl_ip_data *q = n->data;
     struct in_addr B = q->addr1;
     struct in_addr C = q->addr2;
     int rc = 0;
@@ -1936,7 +1986,7 @@ aclIpNetworkCompare(const void *a, splayNode * n)
 
 #elif defined(USE_BIN_TREE)
 static int
-aclIpNetworkCompare(struct in_addr addr, struct _acl_ip_data *data)
+aclIpNetworkCompare(struct in_addr addr, acl_ip_data *data)
 {
     int rc = 0;
     addr.s_addr &= data->mask.s_addr;	/* apply netmask */
@@ -1980,21 +2030,169 @@ bintreeHostDomainCompare(void *t1, void *t2)
 static int
 bintreeNetworkCompare(void *t1, void *t2)
 {
-    return networkCompare((struct _acl_ip_data *) t1,
-	(struct _acl_ip_data *) t2);
+    return networkCompare((acl_ip_data *) t1,
+	(acl_ip_data *) t2);
 }
 
 static int
 bintreeIpNetworkCompare(void *t1, void *t2)
 {
     struct in_addr addr;
-    struct _acl_ip_data *data;
+    acl_ip_data *data;
     xmemcpy(&addr, t1, sizeof(addr));
-    data = (struct _acl_ip_data *) t2;
+    data = (acl_ip_data *) t2;
     return aclIpNetworkCompare(addr, data);
 }
 
 #endif /* USE_BIN_TREE */
+
+static wordlist *
+aclDumpIpList(acl_ip_data * ip)
+{
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    wordlist *w;
+    char buf[128];
+    off_t o;
+    while (ip != NULL) {
+	o = 0;
+	o += snprintf(buf + o, 128 - o, "%s", inet_ntoa(ip->addr1));
+	if (ip->addr2.s_addr != any_addr.s_addr)
+	    o += snprintf(buf + o, 128 - o, "-%s", inet_ntoa(ip->addr2));
+	if (ip->mask.s_addr != no_addr.s_addr)
+	    o += snprintf(buf + o, 128 - o, "/%s", inet_ntoa(ip->mask));
+	w = xcalloc(1, sizeof(wordlist));
+	w->key = xstrdup(buf);
+	*T = w;
+	T = &w->next;
+	ip = ip->next;
+    }
+    return W;
+}
+
+static wordlist *
+aclDumpDomainList(void *data)
+{
+#if USE_BIN_TREE
+    wordlist *w = xcalloc(1, sizeof(wordlist));
+    w->key = xstrdup("UNIMPLEMENTED");
+    return w;
+#elif USE_SPLAY_TREE
+    wordlist *w = xcalloc(1, sizeof(wordlist));
+    w->key = xstrdup("UNIMPLEMENTED");
+    return w;
+#else
+    return aclDumpWordList(data);
+#endif
+}
+static wordlist *
+aclDumpTimeSpec(void *data)
+{
+    wordlist *w = xcalloc(1, sizeof(wordlist));
+    w->key = xstrdup("UNIMPLEMENTED");
+    return w;
+}
+static wordlist *
+aclDumpRegexList(void *data)
+{
+    wordlist *w = xcalloc(1, sizeof(wordlist));
+    w->key = xstrdup("UNIMPLEMENTED");
+    return w;
+}
+static wordlist *
+aclDumpIntlist(void *data)
+{
+    wordlist *w = xcalloc(1, sizeof(wordlist));
+    w->key = xstrdup("UNIMPLEMENTED");
+    return w;
+}
+static wordlist *
+aclDumpWordList(wordlist *data)
+{
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    wordlist *w;
+    while (data != NULL) {
+	w = xcalloc(1, sizeof(wordlist));
+	w->key = xstrdup(data->key);
+	*T = w;
+	T = &w->next;
+	data = data->next;
+    }
+    return W;
+}
+static wordlist *
+aclDumpProtoList(void *data)
+{
+    wordlist *w = xcalloc(1, sizeof(wordlist));
+    w->key = xstrdup("UNIMPLEMENTED");
+    return w;
+}
+static wordlist *
+aclDumpMethodList(void *data)
+{
+    wordlist *w = xcalloc(1, sizeof(wordlist));
+    w->key = xstrdup("UNIMPLEMENTED");
+    return w;
+}
+static wordlist *
+aclDumpProxyAuth(void *data)
+{
+    wordlist *w = xcalloc(1, sizeof(wordlist));
+    w->key = xstrdup("UNIMPLEMENTED");
+    return w;
+}
+
+
+
+wordlist *
+aclDumpGeneric(const acl * a)
+{
+    switch (a->type) {
+    case ACL_SRC_IP:
+    case ACL_DST_IP:
+	return aclDumpIpList(a->data);
+	break;
+    case ACL_SRC_DOMAIN:
+    case ACL_DST_DOMAIN:
+	return aclDumpDomainList(a->data);
+	break;
+    case ACL_TIME:
+	return aclDumpTimeSpec(a->data);
+	break;
+    case ACL_URL_REGEX:
+    case ACL_URLPATH_REGEX:
+    case ACL_BROWSER:
+	return aclDumpRegexList(a->data);
+	break;
+    case ACL_URL_PORT:
+    case ACL_SRC_ASN:
+    case ACL_DST_ASN:
+	return aclDumpIntlist(a->data);
+	break;
+    case ACL_USER:
+	return aclDumpWordList(a->data);
+	break;
+    case ACL_PROTO:
+	return aclDumpProtoList(a->data);
+	break;
+    case ACL_METHOD:
+	return aclDumpMethodList(a->data);
+	break;
+    case ACL_PROXY_AUTH:
+	return aclDumpProxyAuth(a->data);
+	break;
+#if USE_ARP_ACL
+    case ACL_SRC_ARP:
+	return aclDumpArpList(a->data);
+	break;
+#endif
+    case ACL_NONE:
+    default:
+	break;
+    }
+    return NULL;
+}
 
 
 
@@ -2232,6 +2430,12 @@ checkARP(u_long ip, char *eth)
     }
     xfree(buf);
     return 0;
+}
+
+static const char *
+aclDumpArpList(void *data)
+{
+    return "UNIMPLEMENTED";
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */

@@ -26,6 +26,8 @@ extern void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
 extern void aclDestroyRegexList(struct _relist *data);
 extern int aclMatchRegex(relist * data, const char *word);
 extern void aclParseRegexList(void *curlist);
+extern const char *aclTypeToStr(squid_acl);
+extern wordlist *aclDumpGeneric(const acl *);
 
 #if USE_ASYNC_IO
 extern int aio_cancel(aio_result_t *);

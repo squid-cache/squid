@@ -1984,54 +1984,6 @@ DOC_START
 	The location of squid's mib.
 DOC_END
 
-NAME: snmp_port
-TYPE: ushort
-LOC: Config.Port.snmp
-DEFAULT: 3401
-IFDEF: SQUID_SNMP
-DOC_START
-       Port for snmp. <=0 to disable.
-DOC_END
-
-NAME: snmp_config_file
-TYPE: string
-LOC: Config.Snmp.configFile
-DEFAULT: @DEFAULT_SNMP_CONF@
-IFDEF: SQUID_SNMP
-DOC_START
-       External snmp configuration file, CMU-snmpd style.
-DOC_END
-
-NAME: snmp_do_queueing
-TYPE: onoff
-LOC: Config.Snmp.do_queueing
-DEFAULT: on
-IFDEF: SQUID_SNMP
-DOC_START
-       If disabled, snmp packets will not be queued but delivered
-       immediately. This could be performant when you want to monitor a
-       cache in trouble, but this could also bring squid to block.
-DOC_END
-
-NAME: forward_snmpd_port
-TYPE: ushort
-LOC: Config.Snmp.localPort
-DEFAULT: 0
-IFDEF: SQUID_SNMP
-DOC_START
-       This configures whether we should be forwarding SNMP requests to
-       another snmpd. The reason for putting this piece of
-       functionality into squid was to enable access to the system's
-       installed snmpd with minimal changes.  This option is turned off
-       by default, check with your /etc/services for your system's snmp
-       port (usually 161).  We do not use getservbyname() to allow you
-       to set squid into port 161 and your system's snmpd to another
-       port by changing /etc/services.  WARNING: Because of squid
-       acting as a proxy snmpd for system  you have to do security
-       checks on THIS snmpd for all objects.  Check your
-       snmp_config_file
-DOC_END
-
 NAME: trap_sink
 TYPE: string
 LOC: Config.Snmp.trap_sink

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.244 1998/02/05 20:32:35 wessels Exp $
+ * $Id: cache_cf.cc,v 1.245 1998/02/06 00:49:01 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -356,7 +356,21 @@ parseBytesUnits(const char *unit)
 static void
 dump_acl(StoreEntry * entry, const char *name, acl * acl)
 {
-    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
+    wordlist *w;
+    wordlist *v;
+    while (acl != NULL) {
+        v = w = aclDumpGeneric(acl);
+	while (v != NULL) {
+            storeAppendPrintf(entry, "%s %s %s %s\n",
+		    name,
+		    acl->name,
+		    aclTypeToStr(acl->type),
+		    v->key);
+	    v = v->next;
+	}
+	wordlistDestroy(&w);
+	acl = acl->next;
+    }
 }
 
 #if SQUID_SNMP
@@ -418,19 +432,29 @@ free_acl(acl ** acl)
 }
 
 static void
-dump_acl_access(StoreEntry * entry, const char *name, struct _acl_access *head)
+dump_acl_access(StoreEntry * entry, const char *name, acl_access *head)
 {
-    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
+    acl_list *l;
+    while (head != NULL) {
+	for (l=head->acl_list; l != NULL; l = l->next) {
+	storeAppendPrintf(entry, "%s %s %s%s\n",
+		name,
+		head->allow ? "Allow" : "Deny",
+		l->op ? "" : "!",
+		l->acl->name);
+        }
+	head = head->next;
+    }
 }
 
 static void
-parse_acl_access(struct _acl_access **head)
+parse_acl_access(acl_access **head)
 {
     aclParseAccessLine(head);
 }
 
 static void
-free_acl_access(struct _acl_access **head)
+free_acl_access(acl_access **head)
 {
     aclDestroyAccessList(head);
 }
@@ -464,7 +488,7 @@ free_address(struct in_addr *addr)
 }
 
 static void
-dump_cachedir(StoreEntry * entry, const char *name, struct _cacheSwap swap)
+dump_cachedir(StoreEntry * entry, const char *name, cacheSwap swap)
 {
     SwapDir *s;
     int i;
@@ -480,7 +504,7 @@ dump_cachedir(StoreEntry * entry, const char *name, struct _cacheSwap swap)
 }
 
 static int
-check_null_cachedir(struct _cacheSwap swap)
+check_null_cachedir(cacheSwap swap)
 {
     return swap.swapDirs == NULL;
 }
@@ -492,7 +516,7 @@ check_null_string(char *s)
 }
 
 static void
-parse_cachedir(struct _cacheSwap *swap)
+parse_cachedir(cacheSwap *swap)
 {
     char *token;
     char *path;
@@ -561,7 +585,7 @@ parse_cachedir(struct _cacheSwap *swap)
 }
 
 static void
-free_cachedir(struct _cacheSwap *swap)
+free_cachedir(cacheSwap *swap)
 {
     SwapDir *s;
     int i;
@@ -699,13 +723,13 @@ free_cachemgrpasswd(cachemgr_passwd ** head)
 
 
 static void
-dump_denyinfo(StoreEntry * entry, const char *name, struct _acl_deny_info_list *var)
+dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list *var)
 {
     storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
-parse_denyinfo(struct _acl_deny_info_list **var)
+parse_denyinfo(acl_deny_info_list **var)
 {
     aclParseDenyInfoLine(var);
 }
@@ -713,10 +737,10 @@ parse_denyinfo(struct _acl_deny_info_list **var)
 void
 free_denyinfo(acl_deny_info_list ** list)
 {
-    struct _acl_deny_info_list *a = NULL;
-    struct _acl_deny_info_list *a_next = NULL;
-    struct _acl_name_list *l = NULL;
-    struct _acl_name_list *l_next = NULL;
+    acl_deny_info_list *a = NULL;
+    acl_deny_info_list *a_next = NULL;
+    acl_name_list *l = NULL;
+    acl_name_list *l_next = NULL;
     for (a = *list; a; a = a_next) {
 	for (l = a->acl_list; l; l = l_next) {
 	    l_next = l->next;
@@ -746,7 +770,7 @@ parse_peeracl(void)
 		cfg_filename, config_lineno, host);
 	    return;
 	}
-	L = xcalloc(1, sizeof(struct _acl_list));
+	L = xcalloc(1, sizeof(acl_list));
 	L->op = 1;
 	if (*aclname == '!') {
 	    L->op = 0;
@@ -783,7 +807,7 @@ parse_hostdomain(void)
 		cfg_filename, config_lineno, host);
 	    continue;
 	}
-	l = xcalloc(1, sizeof(struct _domain_ping));
+	l = xcalloc(1, sizeof(domain_ping));
 	l->do_ping = 1;
 	if (*domain == '!') {	/* check for !.edu */
 	    l->do_ping = 0;
@@ -814,7 +838,7 @@ parse_hostdomaintype(void)
 		cfg_filename, config_lineno, host);
 	    return;
 	}
-	l = xcalloc(1, sizeof(struct _domain_type));
+	l = xcalloc(1, sizeof(domain_type));
 	l->type = parseNeighborType(type);
 	l->domain = xstrdup(domain);
 	for (L = &(p->typelist); *L; L = &((*L)->next));

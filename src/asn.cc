@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.18 1998/02/05 20:32:24 wessels Exp $
+ * $Id: asn.cc,v 1.19 1998/02/06 00:49:00 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -133,7 +133,7 @@ asnAclInitialize(acl * acls)
 {
     acl *a;
     intlist *i;
-    debug(53, 1) ("asnAclInitialize: STARTING\n");
+    debug(53, 3) ("asnAclInitialize\n");
     for (a = acls; a; a = a->next) {
 	if (a->type != ACL_DST_ASN && a->type != ACL_SRC_ASN)
 	    continue;
