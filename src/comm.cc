@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.151 1997/05/15 01:06:53 wessels Exp $
+ * $Id: comm.cc,v 1.152 1997/05/15 23:32:27 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -611,7 +611,7 @@ comm_poll_incoming(void)
 {
     int fd;
     int fds[4];
-    struct pollfd pfds[3+MAXHTTPPORTS];
+    struct pollfd pfds[3 + MAXHTTPPORTS];
     unsigned long N = 0;
     unsigned long i, nfds;
     int j;
@@ -621,11 +621,11 @@ comm_poll_incoming(void)
     if (theInIcpConnection != theOutIcpConnection)
 	if (theOutIcpConnection >= 0)
 	    fds[N++] = theOutIcpConnection;
-    for (j=0; j<NHttpSockets; j++) {
+    for (j = 0; j < NHttpSockets; j++) {
 	if (HttpSockets[j] < 0)
-		continue;
+	    continue;
 	if (fd_table[HttpSockets[j]].stall_until > squid_curtime)
-		continue;
+	    continue;
 	fds[N++] = HttpSockets[j];
     }
     for (i = nfds = 0; i < N; i++) {
@@ -677,17 +677,17 @@ comm_select_incoming(void)
     fd_set write_mask;
     int maxfd = 0;
     int fd = 0;
-    int fds[3+MAXHTTPPORTS];
+    int fds[3 + MAXHTTPPORTS];
     int N = 0;
     int i = 0;
     PF *hdl = NULL;
     FD_ZERO(&read_mask);
     FD_ZERO(&write_mask);
-    for (i=0; i<NHttpSockets; i++) {
+    for (i = 0; i < NHttpSockets; i++) {
 	if (HttpSockets[i] < 0)
-		continue;
+	    continue;
 	if (fd_table[HttpSockets[i]].stall_until > squid_curtime)
-		continue;
+	    continue;
 	fds[N++] = HttpSockets[i];
     }
     if (theInIcpConnection >= 0)
@@ -801,27 +801,26 @@ comm_poll(time_t sec)
 		pfds[nfds].events = events;
 		pfds[nfds].revents = 0;
 		nfds++;
-		if (pfds[i].events == 0)
-		    pfds[i].fd = -1;
-	    }
-	    /* If we're out of free fd's, don't poll the http incoming fd */
-	    if (shutdown_pending || reread_pending)
-		debug(5, 2, "comm_poll: Still waiting on %d FDs\n", nfds);
-	    if (pending_time == 0)
-		pending_time = squid_curtime;
-	    if ((squid_curtime - pending_time) > (Config.shutdownLifetime + 5)) {
-		pending_time = 0;
-		for (i = 1; i < maxfd; i++) {
-		    if ((fd = pfds[i].fd) < 0)
-			continue;
-		    if (fd_table[fd].type == FD_FILE)
-			file_must_close(fd);
-		    else
-			comm_close(fd);
-		    pfds[fd].fd = -1;
-		}
 	    }
 	}
+	if (shutdown_pending || reread_pending)
+	    debug(5, 2, "comm_poll: Still waiting on %d FDs\n", nfds);
+#ifdef WTFISTHIS
+	if (pending_time == 0)
+	    pending_time = squid_curtime;
+	if ((squid_curtime - pending_time) > (Config.shutdownLifetime + 5)) {
+	    pending_time = 0;
+	    for (i = 1; i < maxfd; i++) {
+		if ((fd = pfds[i].fd) < 0)
+		    continue;
+		if (fd_table[fd].type == FD_FILE)
+		    file_must_close(fd);
+		else
+		    comm_close(fd);
+		pfds[fd].fd = -1;
+	    }
+	}
+#endif
 	pending_time = 0;
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
@@ -839,7 +838,7 @@ comm_poll(time_t sec)
 	    if (errno == EINTR)
 		continue;
 	    debug(5, 0, "comm_poll: poll failure: %s\n", xstrerror());
-	    if (errno == EINVAL) 
+	    if (errno == EINVAL)
 		fatal_dump("Poll returned EINVAL");
 	    return COMM_ERROR;
 	    /* NOTREACHED */
@@ -866,15 +865,17 @@ comm_poll(time_t sec)
 		continue;
 	    if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
 		debug(5, 6, "comm_poll: FD %d ready for reading\n", fd);
-		hdl = fd_table[fd].read_handler;
-		fd_table[fd].read_handler = 0;
-		hdl(fd, fd_table[fd].read_data);
+		if ((hdl = fd_table[fd].read_handler)) {
+		    fd_table[fd].read_handler = 0;
+		    hdl(fd, fd_table[fd].read_data);
+		}
 	    }
 	    if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
 		debug(5, 5, "comm_poll: FD %d ready for writing\n", fd);
-		hdl = fd_table[fd].write_handler;
-		fd_table[fd].write_handler = 0;
-		hdl(fd, fd_table[fd].write_data);
+		if ((hdl = fd_table[fd].write_handler)) {
+		    fd_table[fd].write_handler = 0;
+		    hdl(fd, fd_table[fd].write_data);
+		}
 	    }
 	    if (revents & POLLNVAL) {
 		struct close_handler *ch;
