@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.211 2001/09/04 01:02:50 robertc Exp $
+#  $Id: Makefile.in,v 1.212 2001/09/04 03:09:09 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -73,8 +73,6 @@ AUTH_MODULES = @AUTH_MODULES@
 AUTH_OBJS = @AUTH_OBJS@
 AWK = @AWK@
 BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
-CACHE_HTTP_PORT = @CACHE_HTTP_PORT@
-CACHE_ICP_PORT = @CACHE_ICP_PORT@
 CC = @CC@
 CPP = @CPP@
 CRYPTLIB = @CRYPTLIB@
@@ -229,7 +227,7 @@ DEFAULT_ICON_DIR = $(sysconfdir)/icons
 DEFAULT_ERROR_DIR = $(sysconfdir)/errors
 DEFAULT_MIB_PATH = $(sysconfdir)/mib.txt
 
-DEFS = -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
+DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
 	globals.c string_arrays.c repl_modules.c auth_modules.c store_modules.c
