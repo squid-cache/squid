@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.174 2000/05/02 20:28:30 hno Exp $
+# $Id: cf.data.pre,v 1.175 2000/05/02 20:39:27 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -921,6 +921,27 @@ DOC_START
 dns_children 5
 DOC_END
 
+NAME: dns_retransmit_interval
+TYPE: time_t
+DEFAULT: 5 seconds
+LOC: Config.Timeout.idns_retransmit
+IFDEF: !USE_DNSSERVERS
+DOC_START
+	Initial retransmit interval for DNS queries. The interval is
+	doubled each time all configured DNS servers have been tried.
+
+DOC_END
+
+NAME: dns_timeout
+TYPE: time_t
+DEFAULT: 5 minutes
+LOC: Config.Timeout.idns_query
+IFDEF: !USE_DNSSERVERS
+DOC_START
+	DNS Query timeout. If no response is received to a DNS query
+	within this time then all DNS servers for the queried domain
+	is assumed to be unavailable.
+DOC_END
 
 NAME: dns_defnames
 COMMENT: on|off

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.18 2000/03/06 16:23:31 wessels Exp $
+ * $Id: dns_internal.cc,v 1.19 2000/05/02 20:39:28 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -43,8 +43,6 @@
 #ifndef DOMAIN_PORT
 #define DOMAIN_PORT 53
 #endif
-
-#define IDNS_MAX_TRIES 20
 
 typedef struct _idns_query idns_query;
 typedef struct _ns ns;
@@ -141,15 +139,13 @@ idnsParseResolvConf(void)
     }
     while (fgets(buf, 512, fp)) {
 	t = strtok(buf, w_space);
-	if (NULL == t)
-	    continue;
-	if (strcasecmp(t, "nameserver"))
-	    continue;
-	t = strtok(NULL, w_space);
-	if (t == NULL)
-	    continue;;
-	debug(78, 1) ("Adding nameserver %s from %s\n", t, _PATH_RESOLV_CONF);
-	idnsAddNameserver(t);
+	if (strcasecmp(t, "nameserver") == 0) {
+	    t = strtok(NULL, w_space);
+	    if (t == NULL)
+		continue;;
+	    debug(78, 1) ("Adding nameserver %s from %s\n", t, _PATH_RESOLV_CONF);
+	    idnsAddNameserver(t);
+	}
     }
     fclose(fp);
 }
@@ -207,21 +203,24 @@ idnsSendQuery(idns_query * q)
     assert(nns > 0);
     assert(q->lru.next == NULL);
     assert(q->lru.prev == NULL);
+try_again:
     ns = q->nsends % nns;
     x = comm_udp_sendto(DnsSocket,
 	&nameservers[ns].S,
 	sizeof(nameservers[ns].S),
 	q->buf,
 	q->sz);
+    q->nsends++;
+    q->sent_t = current_time;
     if (x < 0) {
 	debug(50, 1) ("idnsSendQuery: FD %d: sendto: %s\n",
 	    DnsSocket, xstrerror());
+	if (q->nsends % nns != 0)
+	    goto try_again;
     } else {
 	fd_bytes(DnsSocket, x, FD_WRITE);
 	commSetSelect(DnsSocket, COMM_SELECT_READ, idnsRead, NULL, 0);
     }
-    q->nsends++;
-    q->sent_t = current_time;
     nameservers[ns].nqueries++;
     dlinkAdd(q, &q->lru, &lru_list);
     idnsTickleQueue();
@@ -353,13 +352,13 @@ idnsCheckQueue(void *unused)
     event_queued = 0;
     for (n = lru_list.tail; n; n = p) {
 	q = n->data;
-	if (tvSubDsec(q->sent_t, current_time) < 5.0)
+	if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * ( 1 << q->nsends % nns))
 	    break;
 	debug(78, 3) ("idnsCheckQueue: ID %#04x timeout\n",
 	    q->id);
 	p = n->prev;
 	dlinkDelete(&q->lru, &lru_list);
-	if (q->nsends < IDNS_MAX_TRIES) {
+	if (tvSubDsec(q->start_t, current_time) < Config.Timeout.idns_query) {
 	    idnsSendQuery(q);
 	} else {
 	    int v = cbdataValid(q->callback_data);
