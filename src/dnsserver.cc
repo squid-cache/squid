@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.31 1997/01/02 07:20:28 wessels Exp $
+ * $Id: dnsserver.cc,v 1.32 1997/02/06 18:02:10 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -273,7 +273,7 @@ main(int argc, char *argv[])
 #endif
 #endif
 
-    while ((c = getopt(argc, argv, "vhd")) != -1) {
+    while ((c = getopt(argc, argv, "vhdD")) != -1) {
 	switch (c) {
 	case 'v':
 	    printf("dnsserver version %s\n", SQUID_VERSION);
@@ -285,6 +285,11 @@ main(int argc, char *argv[])
 	    do_debug++;
 	    if (!logfile)
 		fprintf(stderr, "Could not open dnsserver's log file\n");
+	    break;
+	case 'D':
+#ifdef RES_DEFNAMES
+	    _res.options |= RES_DEFNAMES;
+#endif
 	    break;
 	case 'h':
 	default:
