@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.78 1999/10/04 22:49:30 wessels Exp $
+ * $Id: store_client.cc,v 1.79 1999/12/01 04:24:27 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -97,6 +97,14 @@ storeClientType(StoreEntry * e)
      * If this is the first client, let it be the mem client
      */
     else if (mem->nclients == 1)
+	return STORE_MEM_CLIENT;
+    /*
+     * If there is no disk file to open yet, we must make this a
+     * mem client.  If we can't open the swapin file before writing
+     * to the client, there is no guarantee that we will be able
+     * to open it later.
+     */
+    else if (e->swap_status == SWAPOUT_NONE)
 	return STORE_MEM_CLIENT;
     /*
      * otherwise, make subsequent clients read from disk so they
