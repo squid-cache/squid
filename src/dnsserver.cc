@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.26 1996/10/18 20:36:22 wessels Exp $
+ * $Id: dnsserver.cc,v 1.27 1996/11/04 18:12:27 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -244,7 +244,7 @@ main(int argc, char *argv[])
 {
     char request[256];
     char msg[256];
-    struct hostent *result = NULL;
+    const struct hostent *result = NULL;
     FILE *logfile = NULL;
     long start;
     long stop;

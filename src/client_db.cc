@@ -32,7 +32,7 @@ clientdbAdd(struct in_addr addr)
 void
 clientdbInit(void)
 {
-    client_table = hash_create((int (*)_PARAMS((char *, char *))) strcmp,
+    client_table = hash_create((int (*)_PARAMS((const char *, const char *))) strcmp,
 	229,
 	hash_string);
     client_info_sz = sizeof(ClientInfo);

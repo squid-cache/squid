@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.22 1996/11/02 00:17:54 wessels Exp $
+ * $Id: ssl.cc,v 1.23 1996/11/04 18:13:03 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -48,7 +48,7 @@ typedef struct {
     ConnectStateData connectState;
 } SslStateData;
 
-static char conn_established[] = "HTTP/1.0 200 Connection established\r\n\r\n";
+static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
 
 static void sslLifetimeExpire _PARAMS((int fd, void *));
 static void sslReadTimeout _PARAMS((int fd, void *));
@@ -58,7 +58,7 @@ static void sslWriteServer _PARAMS((int fd, void *));
 static void sslWriteClient _PARAMS((int fd, void *));
 static void sslConnected _PARAMS((int fd, void *));
 static void sslProxyConnected _PARAMS((int fd, void *));
-static void sslConnect _PARAMS((int fd, ipcache_addrs *, void *));
+static void sslConnect _PARAMS((int fd, const ipcache_addrs *, void *));
 static void sslErrorComplete _PARAMS((int, char *, int, int, void *));
 static void sslClose _PARAMS((SslStateData * sslState));
 static void sslClientClosed _PARAMS((int fd, void *));
@@ -311,7 +311,7 @@ sslErrorComplete(int fd, char *buf, int size, int errflag, void *sslState)
 
 
 static void
-sslConnect(int fd, ipcache_addrs * ia, void *data)
+sslConnect(int fd, const ipcache_addrs *ia, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;
@@ -389,7 +389,7 @@ sslConnectDone(int fd, int status, void *data)
 }
 
 int
-sslStart(int fd, char *url, request_t * request, char *mime_hdr, int *size_ptr)
+sslStart(int fd, const char *url, request_t *request, char *mime_hdr, int *size_ptr)
 {
     /* Create state structure. */
     SslStateData *sslState = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.3 1996/11/04 17:02:49 wessels Exp $
+ * $Id: refresh.cc,v 1.4 1996/11/04 18:13:00 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -78,7 +78,7 @@ refreshFreeMemory(void)
 }
 
 void
-refreshAddToList(char *pattern, int opts, time_t min, int pct, time_t max)
+refreshAddToList(const char *pattern, int opts, time_t min, int pct, time_t max)
 {
     refresh_t *t;
     regex_t comp;
@@ -111,13 +111,13 @@ refreshAddToList(char *pattern, int opts, time_t min, int pct, time_t max)
  *     return 1 if its time to revalidate this entry, 0 otherwise
  */
 int
-refreshCheck(StoreEntry * entry, request_t * request_unused)
+refreshCheck(const StoreEntry *entry, const request_t *request_unused)
 {
     refresh_t *R;
     time_t min = REFRESH_DEFAULT_MIN;
     int pct = REFRESH_DEFAULT_PCT;
     time_t max = REFRESH_DEFAULT_MAX;
-    char *pattern = ".";
+    const char *pattern = ".";
     time_t age;
     int factor;
     debug(22, 3, "refreshCheck: '%s'\n", entry->url);

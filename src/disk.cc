@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.36 1996/11/01 21:25:02 wessels Exp $
+ * $Id: disk.cc,v 1.37 1996/11/04 18:12:24 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -149,7 +149,7 @@ disk_init(void)
 
 /* Open a disk file. Return a file descriptor */
 int
-file_open(char *path, int (*handler) _PARAMS((void)), int mode)
+file_open(const char *path, int (*handler) _PARAMS((void)), int mode)
 {
     FD_ENTRY *conn;
     int fd;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.97 1996/11/01 21:25:06 wessels Exp $
+ * $Id: stat.cc,v 1.98 1996/11/04 18:13:05 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -124,39 +124,39 @@ Meta_data meta_data;
 volatile unsigned long ntcpconn = 0;
 volatile unsigned long nudpconn = 0;
 struct _iostats IOStats;
-char *open_bracket = "{\n";
-char *close_bracket = "}\n";
+const char *const open_bracket = "{\n";
+const char *const close_bracket = "}\n";
 
 extern char *diskFileName _PARAMS((int));
 
 /* LOCALS */
-static char *describeStatuses _PARAMS((StoreEntry *));
-static char *describeFlags _PARAMS((StoreEntry *));
-static char *describeTimestamps _PARAMS((StoreEntry *));
+static const char *describeStatuses _PARAMS((const StoreEntry *));
+static const char *describeFlags _PARAMS((const StoreEntry *));
+static const char *describeTimestamps _PARAMS((const StoreEntry *));
 static void dummyhandler _PARAMS((cacheinfo *, StoreEntry *));
-static void info_get _PARAMS((cacheinfo *, StoreEntry *));
+static void info_get _PARAMS((const cacheinfo *, StoreEntry *));
 static void logReadEndHandler _PARAMS((int, int, log_read_data_t *));
 static void log_clear _PARAMS((cacheinfo *, StoreEntry *));
 static void log_disable _PARAMS((cacheinfo *, StoreEntry *));
 static void log_enable _PARAMS((cacheinfo *, StoreEntry *));
-static void log_get_start _PARAMS((cacheinfo *, StoreEntry *));
-static void log_status_get _PARAMS((cacheinfo *, StoreEntry *));
-static void parameter_get _PARAMS((cacheinfo *, StoreEntry *));
+static void log_get_start _PARAMS((const cacheinfo *, StoreEntry *));
+static void log_status_get _PARAMS((const cacheinfo *, StoreEntry *));
+static void parameter_get _PARAMS((const cacheinfo *, StoreEntry *));
 static void proto_count _PARAMS((cacheinfo *, protocol_t, log_type));
 static void proto_newobject _PARAMS((cacheinfo *, protocol_t, int, int));
 static void proto_purgeobject _PARAMS((cacheinfo *, protocol_t, int));
 static void proto_touchobject _PARAMS((cacheinfo *, protocol_t, int));
-static void server_list _PARAMS((cacheinfo *, StoreEntry *));
+static void server_list _PARAMS((const cacheinfo *, StoreEntry *));
 static void squidReadEndHandler _PARAMS((int, int, squid_read_data_t *));
-static void squid_get_start _PARAMS((cacheinfo *, StoreEntry *));
+static void squid_get_start _PARAMS((const cacheinfo *, StoreEntry *));
 static void statFiledescriptors _PARAMS((StoreEntry *));
-static void stat_get _PARAMS((cacheinfo *, char *req, StoreEntry *));
+static void stat_get _PARAMS((const cacheinfo *, const char *req, StoreEntry *));
 static void stat_io_get _PARAMS((StoreEntry *));
-static void stat_objects_get _PARAMS((cacheinfo *, StoreEntry *, int vm_or_not));
-static void stat_utilization_get _PARAMS((cacheinfo *, StoreEntry *, char *desc));
-static int cache_size_get _PARAMS((cacheinfo *));
-static int logReadHandler _PARAMS((int, char *, int, log_read_data_t *));
-static int squidReadHandler _PARAMS((int, char *, int, squid_read_data_t *));
+static void stat_objects_get _PARAMS((const cacheinfo *, StoreEntry *, int vm_or_not));
+static void stat_utilization_get _PARAMS((cacheinfo *, StoreEntry *, const char *desc));
+static int cache_size_get _PARAMS((const cacheinfo *));
+static int logReadHandler _PARAMS((int, const char *, int, log_read_data_t *));
+static int squidReadHandler _PARAMS((int, const char *, int, squid_read_data_t *));
 static int memoryAccounted _PARAMS((void));
 
 #ifdef UNUSED_CODE
@@ -169,7 +169,7 @@ static void info_get_mallstat _PARAMS((int, int, StoreEntry *));
 
 /* process utilization information */
 static void
-stat_utilization_get(cacheinfo * obj, StoreEntry * sentry, char *desc)
+stat_utilization_get(cacheinfo *obj, StoreEntry *sentry, const char *desc)
 {
     protocol_t proto_id;
     proto_stat *p = &obj->proto_stat_data[PROTO_MAX];
@@ -297,7 +297,7 @@ stat_io_get(StoreEntry * sentry)
  * may not reflect the retrieving object....
  * something need to be done here to get more accurate cache size */
 static int
-cache_size_get(cacheinfo * obj)
+cache_size_get(const cacheinfo *obj)
 {
     int size = 0;
     protocol_t proto_id;
@@ -307,8 +307,8 @@ cache_size_get(cacheinfo * obj)
     return size;
 }
 
-static char *
-describeStatuses(StoreEntry * entry)
+static const char *
+describeStatuses(const StoreEntry *entry)
 {
     LOCAL_ARRAY(char, buf, 256);
     sprintf(buf, "%-13s %-13s %-12s %-12s",
@@ -319,8 +319,8 @@ describeStatuses(StoreEntry * entry)
     return buf;
 }
 
-static char *
-describeFlags(StoreEntry * entry)
+static const char *
+describeFlags(const StoreEntry *entry)
 {
     LOCAL_ARRAY(char, buf, 256);
     int flags = (int) entry->flag;
@@ -363,8 +363,8 @@ describeFlags(StoreEntry * entry)
     return buf;
 }
 
-static char *
-describeTimestamps(StoreEntry * entry)
+static const char *
+describeTimestamps(const StoreEntry *entry)
 {
     LOCAL_ARRAY(char, buf, 256);
     sprintf(buf, "LV:%-9d LU:%-9d LM:%-9d EX:%-9d",
@@ -377,7 +377,7 @@ describeTimestamps(StoreEntry * entry)
 
 /* process objects list */
 static void
-stat_objects_get(cacheinfo * obj, StoreEntry * sentry, int vm_or_not)
+stat_objects_get(const cacheinfo *obj, StoreEntry *sentry, int vm_or_not)
 {
     StoreEntry *entry = NULL;
     MemObject *mem;
@@ -409,7 +409,7 @@ stat_objects_get(cacheinfo * obj, StoreEntry * sentry, int vm_or_not)
 
 /* process a requested object into a manager format */
 static void
-stat_get(cacheinfo * obj, char *req, StoreEntry * sentry)
+stat_get(const cacheinfo *obj, const char *req, StoreEntry *sentry)
 {
 
     if (strcmp(req, "objects") == 0) {
@@ -441,7 +441,7 @@ stat_get(cacheinfo * obj, char *req, StoreEntry * sentry)
 
 /* generate logfile status information */
 static void
-log_status_get(cacheinfo * obj, StoreEntry * sentry)
+log_status_get(const cacheinfo *obj, StoreEntry *sentry)
 {
     if (obj->logfile_status == LOG_ENABLE) {
 	storeAppendPrintf(sentry, "{\"Logfile is Enabled. Filename: %s\"}\n",
@@ -456,7 +456,7 @@ log_status_get(cacheinfo * obj, StoreEntry * sentry)
 /* log convert handler */
 /* call for each line in file, use fileWalk routine */
 static int
-logReadHandler(int fd_unused, char *buf, int size_unused, log_read_data_t * data)
+logReadHandler(int fd_unused, const char *buf, int size_unused, log_read_data_t *data)
 {
     storeAppendPrintf(data->sentry, "{%s}\n", buf);
     return 0;
@@ -477,7 +477,7 @@ logReadEndHandler(int fd, int errflag_unused, log_read_data_t * data)
 
 /* start converting logfile to processed format */
 static void
-log_get_start(cacheinfo * obj, StoreEntry * sentry)
+log_get_start(const cacheinfo *obj, StoreEntry *sentry)
 {
     log_read_data_t *data = NULL;
     int fd;
@@ -509,7 +509,7 @@ log_get_start(cacheinfo * obj, StoreEntry * sentry)
 /* squid convert handler */
 /* call for each line in file, use fileWalk routine */
 static int
-squidReadHandler(int fd_unused, char *buf, int size_unused, squid_read_data_t * data)
+squidReadHandler(int fd_unused, const char *buf, int size_unused, squid_read_data_t *data)
 {
     storeAppendPrintf(data->sentry, "{\"%s\"}\n", buf);
     return 0;
@@ -529,13 +529,13 @@ squidReadEndHandler(int fd_unused, int errflag_unused, squid_read_data_t * data)
 
 /* start convert squid.conf file to processed format */
 static void
-squid_get_start(cacheinfo * obj, StoreEntry * sentry)
+squid_get_start(const cacheinfo *obj, StoreEntry *sentry)
 {
     squid_read_data_t *data;
 
     data = xcalloc(1, sizeof(squid_read_data_t));
     data->sentry = sentry;
-    data->fd = file_open((char *) ConfigFile, NULL, O_RDONLY);
+    data->fd = file_open(ConfigFile, NULL, O_RDONLY);
     storeAppendPrintf(sentry, open_bracket);
     file_walk(data->fd, (FILE_WALK_HD) squidReadEndHandler, (void *) data,
 	(FILE_WALK_LHD) squidReadHandler, (void *) data);
@@ -549,7 +549,7 @@ dummyhandler(cacheinfo * obj, StoreEntry * sentry)
 }
 
 static void
-server_list(cacheinfo * obj, StoreEntry * sentry)
+server_list(const cacheinfo *obj, StoreEntry *sentry)
 {
     edge *e = NULL;
     dom_list *d = NULL;
@@ -616,8 +616,8 @@ info_get_mallstat(int size, number, StoreEntry * sentry)
 }
 #endif
 
-static char *
-host_port_fmt(char *host, u_short port)
+static const char *
+host_port_fmt(const char *host, u_short port)
 {
     LOCAL_ARRAY(char, buf, 32);
     sprintf(buf, "%s.%d", host, (int) port);
@@ -721,9 +721,9 @@ mallinfoTotal(void)
 #endif
 
 static void
-info_get(cacheinfo * obj, StoreEntry * sentry)
+info_get(const cacheinfo *obj, StoreEntry *sentry)
 {
-    char *tod = NULL;
+    const char *tod = NULL;
     float f;
 #if HAVE_MALLINFO
     int t;
@@ -935,7 +935,7 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
 }
 
 static void
-parameter_get(cacheinfo * obj, StoreEntry * sentry)
+parameter_get(const cacheinfo *obj, StoreEntry *sentry)
 {
     storeAppendPrintf(sentry, open_bracket);
     storeAppendPrintf(sentry,
@@ -997,7 +997,7 @@ static char c2x[] =
 /* log_quote -- URL-style encoding on MIME headers. */
 
 char *
-log_quote(char *header)
+log_quote(const char *header)
 {
     int c, i;
     char *buf, *buf_cursor;
@@ -1048,21 +1048,21 @@ log_quote(char *header)
 
 
 static void
-log_append(cacheinfo * obj,
-    char *url,
+log_append(const cacheinfo *obj,
+    const char *url,
     struct in_addr caddr,
     int size,
-    char *action,
-    char *method,
+    const char *action,
+    const char *method,
     int http_code,
     int msec,
-    char *ident,
+    const char *ident,
 #if !LOG_FULL_HEADERS
-    struct _hierarchyLogData *hierData
+    const struct _hierarchyLogData *hierData
 #else
-    struct _hierarchyLogData *hierData,
-    char *request_hdr,
-    char *reply_hdr
+    const struct _hierarchyLogData *hierData,
+    const char *request_hdr,
+    const char *reply_hdr
 #endif				/* LOG_FULL_HEADERS */
 )
 {
@@ -1072,9 +1072,9 @@ log_append(cacheinfo * obj,
     LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
 #endif /* LOG_FULL_HEADERS */
     int x;
-    char *client = NULL;
+    const char *client = NULL;
     hier_code hier_code = HIER_NONE;
-    char *hier_host = dash_str;
+    const char *hier_host = dash_str;
     int hier_timeout = 0;
 
     if (Config.Log.log_fqdn)
@@ -1258,7 +1258,7 @@ proto_count(cacheinfo * obj, protocol_t proto_id, log_type type)
 
 
 void
-stat_init(cacheinfo ** object, char *logfilename)
+stat_init(cacheinfo **object, const char *logfilename)
 {
     cacheinfo *obj = NULL;
     int i;

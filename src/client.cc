@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.12 1996/10/25 02:15:17 wessels Exp $
+ * $Id: client.cc,v 1.13 1996/11/04 18:12:14 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -112,21 +112,21 @@
 
 /* Local functions */
 static int client_comm_connect _PARAMS((int sock, char *dest_host, u_short dest_port));
-static void usage _PARAMS((char *progname));
+static void usage _PARAMS((const char *progname));
 
 static void
-usage(char *progname)
+usage(const char *progname)
 {
-    fprintf(stderr, "\
-Usage: %s [-rs] [-i IMS_time] [-h host] [-p port] [-m method] url\n\
-Options:\n\
-    -r         Force cache to reload URL.\n\
-    -s         Silent.  Do not print data to stdout.\n\
-    -i IMS     If-Modified-Since time (in Epoch seconds).\n\
-    -h host    Retrieve URL from cache on hostname.  Default is localhost.\n\
-    -p port    Port number of cache.  Default is %d.\n\
-    -m method  Request method, default is GET.\n\
-", progname, CACHE_HTTP_PORT);
+    fprintf(stderr,
+    "Usage: %s [-rs] [-i IMS_time] [-h host] [-p port] [-m method] url\n"
+    "Options:\n"
+    "    -r         Force cache to reload URL.\n"
+    "    -s         Silent.  Do not print data to stdout.\n"
+    "    -i IMS     If-Modified-Since time (in Epoch seconds).\n"
+    "    -h host    Retrieve URL from cache on hostname.  Default is localhost.\n"
+    "    -p port    Port number of cache.  Default is %d.\n"
+    "    -m method  Request method, default is GET.\n",
+    progname, CACHE_HTTP_PORT);
     exit(1);
 }
 
@@ -136,7 +136,7 @@ main(int argc, char *argv[])
     int conn, c, len, bytesWritten;
     int port, to_stdout, reload;
     char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ], hostname[BUFSIZ];
-    char *method = "GET";
+    const char *method = "GET";
     extern char *optarg;
     time_t ims = 0;
 
@@ -237,7 +237,7 @@ main(int argc, char *argv[])
 static int
 client_comm_connect(int sock, char *dest_host, u_short dest_port)
 {
-    struct hostent *hp;
+    const struct hostent *hp;
     static struct sockaddr_in to_addr;
 
     /* Set up the destination socket address for message to send to. */

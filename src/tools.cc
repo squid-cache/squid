@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.79 1996/10/29 02:40:46 wessels Exp $
+ * $Id: tools.cc,v 1.80 1996/11/04 18:13:11 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -120,7 +120,7 @@ and report the trace back to squid-bugs@nlanr.net.\n\
 \n\
 Thanks!\n"
 
-static void fatal_common _PARAMS((char *));
+static void fatal_common _PARAMS((const char *));
 static void mail_warranty _PARAMS((void));
 
 #ifdef _SQUID_SOLARIS_
@@ -332,7 +332,7 @@ normal_shutdown(void)
 }
 
 static void
-fatal_common(char *message)
+fatal_common(const char *message)
 {
 #if HAVE_SYSLOG
     if (opt_syslog_enable)
@@ -347,7 +347,7 @@ fatal_common(char *message)
 
 /* fatal */
 void
-fatal(char *message)
+fatal(const char *message)
 {
     fatal_common(message);
     exit(1);
@@ -355,7 +355,7 @@ fatal(char *message)
 
 /* fatal with dumping core */
 void
-fatal_dump(char *message)
+fatal_dump(const char *message)
 {
     if (message)
 	fatal_common(message);
@@ -366,7 +366,7 @@ fatal_dump(char *message)
 
 /* fatal with dumping core */
 void
-_debug_trap(char *message)
+_debug_trap(const char *message)
 {
     if (!opt_catch_signals)
 	fatal_dump(message);
@@ -398,12 +398,12 @@ sig_child(int sig)
 #endif
 }
 
-char *
+const char *
 getMyHostname(void)
 {
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
-    struct hostent *h = NULL;
+    const struct hostent *h = NULL;
     char *t = NULL;
 
     if ((t = Config.visibleHostname))
@@ -429,7 +429,7 @@ getMyHostname(void)
 }
 
 int
-safeunlink(char *s, int quiet)
+safeunlink(const char *s, int quiet)
 {
     int err;
     if ((err = unlink(s)) < 0)
@@ -634,7 +634,7 @@ squid_signal(int sig, void (*func) _PARAMS((int)), int flags)
 }
 
 struct in_addr
-inaddrFromHostent(struct hostent *hp)
+inaddrFromHostent(const struct hostent *hp)
 {
     struct in_addr s;
     xmemcpy(&s.s_addr, hp->h_addr, sizeof(s.s_addr));

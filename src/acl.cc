@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.57 1996/11/04 17:04:14 wessels Exp $
+ * $Id: acl.cc,v 1.58 1996/11/04 18:12:06 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -31,7 +31,7 @@
 #include "squid.h"
 
 /* Global */
-char *AclMatchedName = NULL;
+const char *AclMatchedName = NULL;
 
 /* for reading ACL's from files */
 int aclFromFile = 0;
@@ -52,8 +52,8 @@ static struct _acl **AclListTail = &AclList;
 static void aclDestroyAclList _PARAMS((struct _acl_list * list));
 static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
 static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
-static int aclMatchDomainList _PARAMS((wordlist *, char *));
-static int aclMatchAclList _PARAMS((struct _acl_list *, aclCheck_t *));
+static int aclMatchDomainList _PARAMS((wordlist *, const char *));
+static int aclMatchAclList _PARAMS((const struct _acl_list *, aclCheck_t *));
 static int aclMatchInteger _PARAMS((intlist * data, int i));
 static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
 static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
@@ -64,8 +64,8 @@ static intlist *aclParseProtoList _PARAMS((void));
 static struct _acl_time_data *aclParseTimeSpec _PARAMS((void));
 static wordlist *aclParseWordList _PARAMS((void));
 static wordlist *aclParseDomainList _PARAMS((void));
-static squid_acl aclType _PARAMS((char *s));
-static int decode_addr _PARAMS((char *, struct in_addr *, struct in_addr *));
+static squid_acl aclType _PARAMS((const char *s));
+static int decode_addr _PARAMS((const char *, struct in_addr *, struct in_addr *));
 
 char *
 strtokFile(void)
@@ -107,7 +107,7 @@ strtokFile(void)
 }
 
 static squid_acl
-aclType(char *s)
+aclType(const char *s)
 {
     if (!strcmp(s, "src"))
 	return ACL_SRC_IP;
@@ -141,7 +141,7 @@ aclType(char *s)
 }
 
 struct _acl *
-aclFindByName(char *name)
+aclFindByName(const char *name)
 {
     struct _acl *a;
     for (a = AclList; a; a = a->next)
@@ -203,7 +203,7 @@ aclParseMethodList(void)
  * adress and netmask information in addr and mask.
  */
 static int
-decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
+decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 {
     u_num32 a = 0;
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0;
@@ -540,7 +540,7 @@ aclParseAclLine(void)
  *    get (if any) the URL from deny_info for a certain acl
  */
 char *
-aclGetDenyInfoUrl(struct _acl_deny_info_list **head, char *name)
+aclGetDenyInfoUrl(struct _acl_deny_info_list **head, const char *name)
 {
     struct _acl_deny_info_list *A = NULL;
     struct _acl_name_list *L = NULL;
@@ -721,7 +721,7 @@ aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
 }
 
 static int
-aclMatchDomainList(wordlist * data, char *host)
+aclMatchDomainList(wordlist *data, const char *host)
 {
     wordlist *first, *prev;
 
@@ -748,7 +748,7 @@ aclMatchDomainList(wordlist * data, char *host)
 }
 
 int
-aclMatchRegex(relist * data, char *word)
+aclMatchRegex(relist * data, const char *word)
 {
     relist *first, *prev;
     if (word == NULL)
@@ -820,9 +820,9 @@ aclMatchTime(struct _acl_time_data *data, time_t when)
 int
 aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 {
-    request_t *r = checklist->request;
-    ipcache_addrs *ia = NULL;
-    char *fqdn = NULL;
+    const request_t *r = checklist->request;
+    const ipcache_addrs *ia = NULL;
+    const char *fqdn = NULL;
     int k;
     if (!acl)
 	return 0;
@@ -900,7 +900,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 }
 
 static int
-aclMatchAclList(struct _acl_list *list, aclCheck_t * checklist)
+aclMatchAclList(const struct _acl_list *list, aclCheck_t *checklist)
 {
     while (list) {
 	AclMatchedName = list->acl->name;
@@ -917,7 +917,7 @@ aclMatchAclList(struct _acl_list *list, aclCheck_t * checklist)
 }
 
 int
-aclCheck(struct _acl_access *A, aclCheck_t * checklist)
+aclCheck(const struct _acl_access *A, aclCheck_t *checklist)
 {
     int allow = 0;
 

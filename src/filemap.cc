@@ -1,5 +1,5 @@
 /*
- * $Id: filemap.cc,v 1.13 1996/09/26 19:19:46 wessels Exp $
+ * $Id: filemap.cc,v 1.14 1996/11/04 18:12:32 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -124,7 +124,7 @@
 #endif
 
 extern int storeGetSwapSpace _PARAMS((int));
-extern void fatal_dump _PARAMS((char *));
+extern void fatal_dump _PARAMS((const char *));
 
 static fileMap *fm = NULL;
 

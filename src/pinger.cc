@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.12 1996/10/25 17:34:04 wessels Exp $
+ * $Id: pinger.cc,v 1.13 1996/11/04 18:12:56 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -35,8 +35,8 @@
 /* Junk so we can link with debug.o */
 int opt_syslog_enable = 0;
 volatile int unbuffered_logs = 1;
-char w_space[] = " \t\n\r";
-char appname[] = "pinger";
+const char *const w_space = " \t\n\r";
+const char *const appname = "pinger";
 struct timeval current_time;
 time_t squid_curtime;
 struct SquidConfig Config;
@@ -85,7 +85,7 @@ int icmp_sock = -1;
 int icmp_ident = -1;
 int icmp_pkts_sent = 0;
 
-static char *icmpPktStr[] =
+static const char *icmpPktStr[] =
 {
     "Echo Reply",
     "ICMP 1",
@@ -330,7 +330,7 @@ main(int argc, char *argv[])
     fd_set R;
     int x;
     struct timeval tv;
-    char *debug_args = "ALL,1";
+    const char *debug_args = "ALL,1";
     char *t;
     time_t last_check_time = 0;
 

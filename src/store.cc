@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.146 1996/11/02 00:17:58 wessels Exp $
+ * $Id: store.cc,v 1.147 1996/11/04 18:13:09 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -155,14 +155,14 @@ static char *storeLogTags[] =
     "RELEASE"
 };
 
-char *memStatusStr[] =
+const char *memStatusStr[] =
 {
     "NOT_IN_MEMORY",
     "SWAPPING_IN",
     "IN_MEMORY"
 };
 
-char *pingStatusStr[] =
+const char *pingStatusStr[] =
 {
     "PING_WAITING",
     "PING_TIMEOUT",
@@ -170,14 +170,14 @@ char *pingStatusStr[] =
     "PING_NONE"
 };
 
-char *storeStatusStr[] =
+const char *storeStatusStr[] =
 {
     "STORE_OK",
     "STORE_PENDING",
     "STORE_ABORTED"
 };
 
-char *swapStatusStr[] =
+const char *swapStatusStr[] =
 {
     "NO_SWAP",
     "SWAPPING_OUT",
@@ -200,28 +200,28 @@ struct storeRebuild_data {
 int store_rebuilding = STORE_REBUILDING_SLOW;
 
 /* Static Functions */
-static char *storeDescribeStatus _PARAMS((StoreEntry *));
+static const char *storeDescribeStatus _PARAMS((const StoreEntry *));
 static char *storeSwapFullPath _PARAMS((int, char *));
-static HashID storeCreateHashTable _PARAMS((int (*)_PARAMS((char *, char *))));
+static HashID storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
 static int compareSize _PARAMS((StoreEntry **, StoreEntry **));
-static int storeAddSwapDisk _PARAMS((char *));
-static int storeCheckExpired _PARAMS((StoreEntry *));
-static int storeCheckPurgeMem _PARAMS((StoreEntry *));
-static int storeClientListSearch _PARAMS((MemObject *, int));
-static int storeCopy _PARAMS((StoreEntry *, int, int, char *, int *));
-static int storeEntryLocked _PARAMS((StoreEntry *));
-static int storeEntryValidLength _PARAMS((StoreEntry *));
+static int storeAddSwapDisk _PARAMS((const char *));
+static int storeCheckExpired _PARAMS((const StoreEntry *));
+static int storeCheckPurgeMem _PARAMS((const StoreEntry *));
+static int storeClientListSearch _PARAMS((const MemObject *, int));
+static int storeCopy _PARAMS((const StoreEntry *, int, int, char *, int *));
+static int storeEntryLocked _PARAMS((const StoreEntry *));
+static int storeEntryValidLength _PARAMS((const StoreEntry *));
 static void storeGetMemSpace _PARAMS((int));
 static int storeHashDelete _PARAMS((StoreEntry *));
-static int storeShouldPurgeMem _PARAMS((StoreEntry *));
-static int storeSwapInHandle _PARAMS((int, char *, int, int, StoreEntry *, int));
+static int storeShouldPurgeMem _PARAMS((const StoreEntry *));
+static int storeSwapInHandle _PARAMS((int, const char *, int, int, StoreEntry *, int));
 static int storeSwapInStart _PARAMS((StoreEntry *, SIH, void *));
 static int swapInError _PARAMS((int, StoreEntry *));
 static mem_ptr new_MemObjectData _PARAMS((void));
 static MemObject *new_MemObject _PARAMS((void));
 static StoreEntry *new_StoreEntry _PARAMS((int));
-static StoreEntry *storeAddDiskRestore _PARAMS((char *, int, int, time_t, time_t, time_t));
+static StoreEntry *storeAddDiskRestore _PARAMS((const char *, int, int, time_t, time_t, time_t));
 static StoreEntry *storeGetInMemFirst _PARAMS((void));
 static StoreEntry *storeGetInMemNext _PARAMS((void));
 static unsigned int storeGetBucketNum _PARAMS((void));
@@ -233,7 +233,7 @@ static void storePurgeMem _PARAMS((StoreEntry *));
 static void storeSanityCheck _PARAMS((void));
 static void storeSetMemStatus _PARAMS((StoreEntry *, mem_status_t));
 static void storeStartRebuildFromDisk _PARAMS((void));
-static void storeSwapLog _PARAMS((StoreEntry *));
+static void storeSwapLog _PARAMS((const StoreEntry *));
 static void storeSwapOutHandle _PARAMS((int, int, StoreEntry *));
 static void storeHashMemInsert _PARAMS((StoreEntry *));
 static void storeHashMemDelete _PARAMS((StoreEntry *));
@@ -378,7 +378,7 @@ destroy_MemObjectData(MemObject * mem)
  */
 
 static HashID
-storeCreateHashTable(int (*cmp_func) (char *, char *))
+storeCreateHashTable(int (*cmp_func) (const char *, const char *))
 {
     store_table = hash_create(cmp_func, store_buckets, hash4);
     in_mem_table = hash_create(cmp_func, STORE_IN_MEM_BUCKETS, hash4);
@@ -465,7 +465,7 @@ time_describe(time_t t)
 }
 
 static void
-storeLog(int tag, StoreEntry * e)
+storeLog(int tag, const StoreEntry *e)
 {
     LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
     time_t t = -1;
@@ -612,7 +612,7 @@ storeUnlockObject(StoreEntry * e)
 /* Lookup an object in the cache. 
  * return just a reference to object, don't start swapping in yet. */
 StoreEntry *
-storeGet(char *url)
+storeGet(const char *url)
 {
     debug(20, 3, "storeGet: looking up %s\n", url);
     return (StoreEntry *) hash_lookup(store_table, url);
@@ -627,8 +627,8 @@ getKeyCounter(void)
     return key_counter;
 }
 
-char *
-storeGeneratePrivateKey(char *url, method_t method, int num)
+const char *
+storeGeneratePrivateKey(const char *url, method_t method, int num)
 {
     if (num == 0)
 	num = getKeyCounter();
@@ -641,8 +641,8 @@ storeGeneratePrivateKey(char *url, method_t method, int num)
     return key_temp_buffer;
 }
 
-char *
-storeGeneratePublicKey(char *url, method_t method)
+const char *
+storeGeneratePublicKey(const char *url, method_t method)
 {
     debug(20, 3, "storeGeneratePublicKey: type=%d %s\n", method, url);
     switch (method) {
@@ -682,7 +682,7 @@ storeSetPrivateKey(StoreEntry * e)
 {
     StoreEntry *e2 = NULL;
     hash_link *table_entry = NULL;
-    char *newkey = NULL;
+    const char *newkey = NULL;
 
     if (e->key && BIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already private */
@@ -712,7 +712,7 @@ storeSetPublicKey(StoreEntry * e)
 {
     StoreEntry *e2 = NULL;
     hash_link *table_entry = NULL;
-    char *newkey = NULL;
+    const char *newkey = NULL;
     int loop_detect = 0;
 
     if (e->key && !BIT_TEST(e->flag, KEY_PRIVATE))
@@ -746,8 +746,8 @@ storeSetPublicKey(StoreEntry * e)
 }
 
 StoreEntry *
-storeCreateEntry(char *url,
-    char *req_hdr,
+storeCreateEntry(const char *url,
+    const char *req_hdr,
     int req_hdr_sz,
     int flags,
     method_t method)
@@ -811,7 +811,7 @@ storeCreateEntry(char *url,
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
 static StoreEntry *
-storeAddDiskRestore(char *url, int file_number, int size, time_t expires, time_t timestamp, time_t lastmod)
+storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, time_t timestamp, time_t lastmod)
 {
     StoreEntry *e = NULL;
 
@@ -921,9 +921,9 @@ storeUnregister(StoreEntry * e, int fd)
 }
 
 int
-storeGetLowestReaderOffset(StoreEntry * entry)
+storeGetLowestReaderOffset(const StoreEntry *entry)
 {
-    MemObject *mem = entry->mem_obj;
+    const MemObject *mem = entry->mem_obj;
     int lowest = mem->e_current_len;
     int i;
     for (i = 0; i < mem->client_list_size; i++) {
@@ -1004,7 +1004,7 @@ storeStartDeleteBehind(StoreEntry * e)
 
 /* Append incoming data from a primary server to an entry. */
 void
-storeAppend(StoreEntry * e, char *data, int len)
+storeAppend(StoreEntry *e, const char *data, int len)
 {
     MemObject *mem;
     /* sanity check */
@@ -1035,7 +1035,7 @@ storeAppend(StoreEntry * e, char *data, int len)
 
 #ifdef __STDC__
 void
-storeAppendPrintf(StoreEntry * e, char *fmt,...)
+storeAppendPrintf(StoreEntry *e, const char *fmt,...)
 {
     va_list args;
     LOCAL_ARRAY(char, buf, 4096);
@@ -1047,7 +1047,7 @@ storeAppendPrintf(va_alist)
 {
     va_list args;
     StoreEntry *e = NULL;
-    char *fmt = NULL;
+    const char *fmt = NULL;
     LOCAL_ARRAY(char, buf, 4096);
     va_start(args);
     e = va_arg(args, StoreEntry *);
@@ -1061,7 +1061,7 @@ storeAppendPrintf(va_alist)
 
 /* add directory to swap disk */
 static int
-storeAddSwapDisk(char *path)
+storeAddSwapDisk(const char *path)
 {
     char **tmp = NULL;
     int i;
@@ -1084,7 +1084,7 @@ storeAddSwapDisk(char *path)
 }
 
 /* return the nth swap directory */
-char *
+const char *
 swappath(int n)
 {
     return *(CacheDirs + (n % ncache_dirs));
@@ -1109,7 +1109,7 @@ storeSwapFullPath(int fn, char *fullpath)
 
 /* swapping in handle */
 static int
-storeSwapInHandle(int fd_notused, char *buf, int len, int flag, StoreEntry * e, int offset_notused)
+storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry *e, int offset_notused)
 {
     MemObject *mem = e->mem_obj;
     SIH handler = NULL;
@@ -1228,7 +1228,7 @@ storeSwapInStart(StoreEntry * e, SIH swapin_complete_handler, void *swapin_compl
 }
 
 static void
-storeSwapLog(StoreEntry * e)
+storeSwapLog(const StoreEntry *e)
 {
     LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
     /* Note this printf format appears in storeWriteCleanLog() too */
@@ -1689,7 +1689,7 @@ storeComplete(StoreEntry * e)
  * abort message, freeing the data for this object 
  */
 void
-storeAbort(StoreEntry * e, char *msg)
+storeAbort(StoreEntry * e, const char *msg)
 {
     LOCAL_ARRAY(char, mime_hdr, 300);
     char *abort_msg;
@@ -2086,7 +2086,7 @@ storeRelease(StoreEntry * e)
     StoreEntry *result = NULL;
     StoreEntry *hentry = NULL;
     hash_link *hptr = NULL;
-    char *hkey;
+    const char *hkey;
 
     debug(20, 3, "storeRelease: Releasing: '%s'\n", e->key);
 
@@ -2151,7 +2151,7 @@ storeRelease(StoreEntry * e)
 
 /* return if the current key is the original one. */
 int
-storeOriginalKey(StoreEntry * e)
+storeOriginalKey(const StoreEntry *e)
 {
     if (!e)
 	return 1;
@@ -2160,7 +2160,7 @@ storeOriginalKey(StoreEntry * e)
 
 /* return 1 if a store entry is locked */
 static int
-storeEntryLocked(StoreEntry * e)
+storeEntryLocked(const StoreEntry *e)
 {
     if (e->lock_count)
 	return 1;
@@ -2175,7 +2175,7 @@ storeEntryLocked(StoreEntry * e)
 
 /*  use this for internal call only */
 static int
-storeCopy(StoreEntry * e, int stateoffset, int maxSize, char *buf, int *size)
+storeCopy(const StoreEntry *e, int stateoffset, int maxSize, char *buf, int *size)
 {
     int available_to_write = 0;
 
@@ -2204,7 +2204,7 @@ storeCopy(StoreEntry * e, int stateoffset, int maxSize, char *buf, int *size)
 /* check if there is any client waiting for this object at all */
 /* return 1 if there is at least one client */
 int
-storeClientWaiting(StoreEntry * e)
+storeClientWaiting(const StoreEntry *e)
 {
     int i;
     MemObject *mem = e->mem_obj;
@@ -2225,7 +2225,7 @@ storeClientWaiting(StoreEntry * e)
 
 /* return index to matched clientstatus in client_list, -1 on NOT_FOUND */
 static int
-storeClientListSearch(MemObject * mem, int fd)
+storeClientListSearch(const MemObject *mem, int fd)
 {
     int i;
     if (mem->client_list) {
@@ -2314,7 +2314,7 @@ storeClientCopy(StoreEntry * e,
 }
 
 static int
-storeEntryValidLength(StoreEntry * e)
+storeEntryValidLength(const StoreEntry *e)
 {
     int diff;
     int hdr_sz;
@@ -2356,7 +2356,7 @@ static int
 storeVerifySwapDirs(int clean)
 {
     int inx;
-    char *path = NULL;
+    const char *path = NULL;
     struct stat sb;
     int directory_created = 0;
     char *cmdbuf = NULL;
@@ -2552,7 +2552,7 @@ storeSanityCheck(void)
 }
 
 int
-urlcmp(char *url1, char *url2)
+urlcmp(const char *url1, const char *url2)
 {
     if (!url1 || !url2)
 	fatal_dump("urlcmp: Got a NULL url pointer.");
@@ -2713,7 +2713,7 @@ swapInError(int fd_unused, StoreEntry * entry)
 }
 
 int
-storePendingNClients(StoreEntry * e)
+storePendingNClients(const StoreEntry *e)
 {
     int npend = 0;
     int i;
@@ -2767,7 +2767,7 @@ storeRotateLog(void)
 }
 
 static int
-storeShouldPurgeMem(StoreEntry * e)
+storeShouldPurgeMem(const StoreEntry *e)
 {
     if (storeCheckPurgeMem(e) == 0)
 	return 0;
@@ -2783,7 +2783,7 @@ storeShouldPurgeMem(StoreEntry * e)
  * storeUnlockObject() and storeSwapOutHandle().
  */
 static int
-storeCheckPurgeMem(StoreEntry * e)
+storeCheckPurgeMem(const StoreEntry *e)
 {
     if (storeEntryLocked(e))
 	return 0;
@@ -2795,7 +2795,7 @@ storeCheckPurgeMem(StoreEntry * e)
 }
 
 static int
-storeCheckExpired(StoreEntry * e)
+storeCheckExpired(const StoreEntry *e)
 {
     if (storeEntryLocked(e))
 	return 0;
@@ -2806,8 +2806,8 @@ storeCheckExpired(StoreEntry * e)
     return 0;
 }
 
-static char *
-storeDescribeStatus(StoreEntry * e)
+static const char *
+storeDescribeStatus(const StoreEntry *e)
 {
     static char buf[MAX_URL << 1];
     sprintf(buf, "mem:%13s ping:%12s store:%13s swap:%12s locks:%d %s\n",
