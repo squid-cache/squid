@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.1.1.1 
+# From configure.in Revision: 1.2 
 
 
 if test -n "$prefix"; then
@@ -1811,6 +1811,7 @@ ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
 trap 'rm -fr `echo "\
+	./makefile \
 	./lib/Makefile \
 	./src/Makefile \
 	./include/paths.h \
@@ -1876,6 +1877,7 @@ EOF
 cat >> $CONFIG_STATUS <<EOF
 
 CONFIG_FILES=\${CONFIG_FILES-"\
+	./makefile \
 	./lib/Makefile \
 	./src/Makefile \
 	./include/paths.h \
