@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.105 2002/06/23 14:50:07 hno Exp $
+ * $Id: defines.h,v 1.106 2002/07/15 09:14:29 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -228,7 +228,9 @@
 #define N_COUNT_HOUR_HIST (86400 * 3) / (60 * COUNT_INTERVAL)
 
 /* were to look for errors if config path fails */
+#ifndef DEFAULT_SQUID_ERROR_DIR
 #define DEFAULT_SQUID_ERROR_DIR "/usr/local/squid/etc/errors"
+#endif
 
 /* iteration for HttpHdrRange */
 #define HttpHdrRangeInitPos (-1)
