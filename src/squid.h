@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.149 1998/01/02 19:27:01 wessels Exp $
+ * $Id: squid.h,v 1.150 1998/01/05 21:18:14 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -328,5 +328,8 @@ struct rusage {
 #if !HAVE_SNPRINTF
 #include "snprintf.h"
 #endif
+
+#define XMIN(x,y) ((x)<(y)? (x) : (y))
+#define XMAX(a,b) ((a)>(b)? (a) : (b))
 
 #endif /* SQUID_H */
