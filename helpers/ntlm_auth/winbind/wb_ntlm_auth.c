@@ -17,9 +17,7 @@
  */
 /*
  * TODO:
- * -add handling of the -d flag
  * -move all squid-helper-protocol-related operations to helper functions
- * -remove the hard-coded target NT domain name
  *
  * - MAYBE move squid-helper-protocol-related opetations to an external
  *   library?
@@ -363,7 +361,7 @@ usage(char *program)
 {
     fprintf(stderr,"Usage: %s [-d] [-h] [domain]\n"
 	    	" -d      enable debugging\n"
-		" -hi     this message\n"
+		" -h      this message\n"
 		" domain  target domain, if different from the winbind configuration\n",
 		program);
 }
@@ -374,6 +372,7 @@ process_options(int argc, char *argv[])
     int opt;
     char *target_domain = NULL;
 
+    opterr = 0;
     while (-1 != (opt = getopt(argc, argv, "dh"))) {
 	switch (opt) {
 	case 'd':
@@ -382,6 +381,9 @@ process_options(int argc, char *argv[])
 	case 'h':
 	    usage(argv[0]);
 	    exit(0);
+	case '?':
+	    opt = optopt;
+	    /* fall thru to default */
 	default:
 	    warn("Unknown option: -%c\n\n", opt);
 	    usage(argv[0]);

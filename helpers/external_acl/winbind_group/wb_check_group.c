@@ -1,5 +1,5 @@
 /*
- * $Id: wb_check_group.c,v 1.2 2002/07/07 21:36:58 hno Exp $
+ * $Id: wb_check_group.c,v 1.3 2002/07/20 11:26:20 hno Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Guido Serassio <squidnt@serassio.it>
@@ -186,18 +186,35 @@ Valid_Group(char *UserName, char *UserGroup)
     return match;
 }
 
+static void
+usage(char *program)
+{
+    fprintf(stderr,"Usage: %s [-d] [-h]\n"
+	    	" -d      enable debugging\n"
+		" -h      this message\n",
+		program);
+}
+
 void
 process_options(int argc, char *argv[])
 {
     int opt;
 
-    while (-1 != (opt = getopt(argc, argv, "d"))) {
+    opterr = 0;
+    while (-1 != (opt = getopt(argc, argv, "dh"))) {
 	switch (opt) {
 	case 'd':
 	    debug_enabled = 1;
 	    break;
+	case 'h':
+	    usage(argv[0]);
+	    exit(0);
+	case '?':
+	    opt = optopt;
+	    /* fall thru to default */
 	default:
-	    warn("Unknown option: -%c. Exiting\n", opt);
+	    warn("Unknown option: -%c\n\n", opt);
+	    usage(argv[0]);
 	    exit(1);
 	    break;		/* not reached */
 	}
@@ -212,6 +229,7 @@ main (int argc, char *argv[])
     char buf[BUFSIZE];
     char *username;
     char *group;
+    int err = 0;
 
     if (argc > 0) {	/* should always be true */
 	myname=strrchr(argv[0],'/');
@@ -234,22 +252,37 @@ main (int argc, char *argv[])
     /* Main Loop */
     while (fgets (buf, BUFSIZE, stdin))
     {
-	
+	if (NULL == strchr(buf, '\n')) {
+	    err = 1;
+	    continue;
+	}
+	if (err) {
+	    warn("Oversized message\n");
+	    goto error;
+	}
+
 	if ((p = strchr(buf, '\n')) != NULL)
 	    *p = '\0';		/* strip \n */
 	if ((p = strchr(buf, '\r')) != NULL)
 	    *p = '\0';		/* strip \r */
 
 	debug("Got '%s' from Squid (length: %d).\n",buf,sizeof(buf));
-	
+
+	if (buf[0] == '\0') {
+	    warn("Invalid Request\n");
+	    goto error;
+	}
+
 	username = strwordtok(buf, &t);
 	group = strwordtok(NULL, &t);
 
 	if (Valid_Group(username, group)) {
 	    printf ("OK\n");
 	} else {
+error:
 	    printf ("ERR\n");
 	}
+	err = 0;
     }
     return 0;
 }
