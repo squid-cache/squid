@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.152 1997/11/15 00:14:46 wessels Exp $
+ * $Id: client_side.cc,v 1.153 1997/11/18 00:47:59 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1387,10 +1387,21 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*status = -1;
 	return NULL;
     }
+#ifdef SSCANF_GIVING_ME_TROUBLE
     memset(http_ver_s, '\0', 32);
     xstrncpy(http_ver_s, token, 32);
     sscanf(http_ver_s, "HTTP/%f", &http_ver);
     debug(12, 5) ("parseHttpRequest: HTTP version is '%3.1f'\n", http_ver);
+#else
+    if (strncmp(token, "HTTP/", 5)) {
+	debug(12, 1) ("parseHttpRequest: Missing HTTP identifier ('%s')\n",
+	    token);
+	xfree(inbuf);
+	*status = -1;
+	return NULL;
+    }
+    http_ver = (float) atof(token + 5);
+#endif
 
     /* Check if headers are received */
     if ((end = mime_headers_end(t)) == NULL) {
