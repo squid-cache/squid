@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.31 2003/02/25 13:47:43 hno Exp $
+ * $Id: external_acl.cc,v 1.32 2003/02/27 08:23:55 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -918,16 +918,29 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
     MemBuf buf;
     external_acl_data *acl = static_cast<external_acl_data *>(me->data);
     external_acl *def = acl->def;
-    const char *key = makeExternalAclKey(ch, acl);
-    external_acl_entry *entry = static_cast<external_acl_entry *>(hash_lookup(def->cache, key));
     externalAclState *state;
-    debug(82, 2) ("externalAclLookup: lookup in '%s' for '%s'\n", def->name, key);
+
+    if (acl->def->require_auth) {
+        int ti;
+        /* Make sure the user is authenticated */
+
+        if ((ti = ch->authenticated()) != 1) {
+            debug(82, 1) ("externalAclLookup: %s user authentication failure (%d)\n", acl->def->name, ti);
+            callback(callback_data, NULL);
+            return;
+        }
+    }
+
+    const char *key = makeExternalAclKey(ch, acl);
 
     if (!key) {
         debug(82, 1) ("externalAclLookup: lookup in '%s', prerequisit failure\n", def->name);
         callback(callback_data, NULL);
         return;
     }
+
+    debug(82, 2) ("externalAclLookup: lookup in '%s' for '%s'\n", def->name, key);
+    external_acl_entry *entry = static_cast<external_acl_entry *>(hash_lookup(def->cache, key));
 
     state = cbdataAlloc(externalAclState);
     state->def = cbdataReference(def);
