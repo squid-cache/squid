@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.97 1996/11/05 20:43:51 wessels Exp $
+ * $Id: comm.cc,v 1.98 1996/11/06 22:14:32 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -154,6 +154,17 @@ static void commSetTcpRcvbuf _PARAMS((int, int));
 
 static int *fd_lifetime = NULL;
 static struct timeval zero_tv;
+
+void
+commCancelRWHandler(int fd)
+{
+    RWStateData *RWState = fd_table[fd].rwstate;
+    if (RWState) {
+        RWState->handler = NULL;
+        RWState->handler_data = NULL;
+    }
+}
+
 
 static void
 RWStateCallbackAndFree(int fd, int code)
