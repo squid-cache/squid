@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.308 2003/05/21 00:35:16 hno Exp $
+#  $Id: Makefile.in,v 1.309 2003/05/21 07:15:08 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -235,10 +235,10 @@ DELAY_POOL_ALL_SOURCE = \
 	DelayPools.h \
 	DelaySpec.cc \
 	DelaySpec.h \
-	DelayUser.cc \
-	DelayUser.h \
 	DelayTagged.cc \
 	DelayTagged.h \
+	DelayUser.cc \
+	DelayUser.h \
 	DelayVector.cc \
 	DelayVector.h \
 	NullDelayId.cc \
@@ -979,13 +979,13 @@ am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
 	defines.h CommonPool.h CompositePoolNode.h delay_pools.cc \
 	DelayId.cc DelayId.h DelayIdComposite.h DelayBucket.cc \
 	DelayBucket.h DelayConfig.cc DelayConfig.h DelayPool.cc \
-	DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h DelayUser.cc \
-	DelayUser.h DelayTagged.cc DelayTagged.h DelayVector.cc \
-	DelayVector.h NullDelayId.cc NullDelayId.h disk.cc \
-	dns_internal.cc dns.cc enums.h errorpage.cc ElementList.h \
-	ESI.cc ESI.h ESIAttempt.h ESIContext.cc ESIContext.h \
-	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
-	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
+	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
+	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
+	disk.cc dns_internal.cc dns.cc enums.h errorpage.cc \
+	ElementList.h ESI.cc ESI.h ESIAttempt.h ESIContext.cc \
+	ESIContext.h ESICustomParser.cc ESICustomParser.h ESIElement.h \
+	ESIExcept.h ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
 	ESILiteral.h ESIParser.cc ESIParser.h ESISegment.cc \
 	ESISegment.h ESISequence.cc ESISequence.h ETag.cc event.cc \
 	external_acl.cc ExternalACL.h ExternalACLEntry.cc \
@@ -1035,7 +1035,7 @@ am__objects_3 = $(am__objects_2) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
 	ACLUrlPath.$(OBJEXT) ACLUrlPort.$(OBJEXT) ACLUserData.$(OBJEXT)
 am__objects_4 = delay_pools.$(OBJEXT) DelayId.$(OBJEXT) \
 	DelayBucket.$(OBJEXT) DelayConfig.$(OBJEXT) DelayPool.$(OBJEXT) \
-	DelaySpec.$(OBJEXT) DelayUser.$(OBJEXT) DelayTagged.$(OBJEXT) \
+	DelaySpec.$(OBJEXT) DelayTagged.$(OBJEXT) DelayUser.$(OBJEXT) \
 	DelayVector.$(OBJEXT) NullDelayId.$(OBJEXT)
 @USE_DELAY_POOLS_TRUE@am__objects_5 = $(am__objects_4)
 @USE_DELAY_POOLS_FALSE@am__objects_5 =
@@ -1150,13 +1150,13 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	defines.h CommonPool.h CompositePoolNode.h delay_pools.cc \
 	DelayId.cc DelayId.h DelayIdComposite.h DelayBucket.cc \
 	DelayBucket.h DelayConfig.cc DelayConfig.h DelayPool.cc \
-	DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h DelayUser.cc \
-	DelayUser.h DelayTagged.cc DelayTagged.h DelayVector.cc \
-	DelayVector.h NullDelayId.cc NullDelayId.h disk.cc \
-	dns_internal.cc dns.cc enums.h errorpage.cc ElementList.h \
-	ESI.cc ESI.h ESIAttempt.h ESIContext.cc ESIContext.h \
-	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
-	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
+	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
+	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
+	disk.cc dns_internal.cc dns.cc enums.h errorpage.cc \
+	ElementList.h ESI.cc ESI.h ESIAttempt.h ESIContext.cc \
+	ESIContext.h ESICustomParser.cc ESICustomParser.h ESIElement.h \
+	ESIExcept.h ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
 	ESILiteral.h ESIParser.cc ESIParser.h ESISegment.cc \
 	ESISegment.h ESISequence.cc ESISequence.h ETag.cc event.cc \
 	external_acl.cc fd.cc fde.cc fde.h filemap.cc forward.cc \
