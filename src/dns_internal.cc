@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.34 2000/11/03 17:03:54 wessels Exp $
+ * $Id: dns_internal.cc,v 1.35 2001/01/04 03:42:34 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -148,6 +148,9 @@ idnsParseResolvConf(void)
 	debug(78, 1) ("%s: %s\n", _PATH_RESOLV_CONF, xstrerror());
 	return;
     }
+#if defined(_SQUID_CYGWIN_)
+    setmode(fileno(fp), O_TEXT);
+#endif
     while (fgets(buf, 512, fp)) {
 	t = strtok(buf, w_space);
 	if (NULL == t)

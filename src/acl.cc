@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.228 2001/01/02 00:09:55 wessels Exp $
+ * $Id: acl.cc,v 1.229 2001/01/04 03:42:34 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -120,6 +120,9 @@ strtokFile(void)
 		debug(28, 0) ("strtokFile: %s not found\n", fn);
 		return (NULL);
 	    }
+#if defined(_SQUID_CYGWIN_)
+	    setmode(fileno(aclFile), O_TEXT);
+#endif
 	    aclFromFile = 1;
 	} else {
 	    return t;

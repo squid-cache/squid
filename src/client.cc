@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.89 2000/08/15 02:37:14 wessels Exp $
+ * $Id: client.cc,v 1.90 2001/01/04 03:42:34 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -203,6 +203,9 @@ main(int argc, char *argv[])
 		xstrerror());
 	    exit(-1);
 	}
+#if defined(_SQUID_CYGWIN_)
+	setmode(put_fd, O_BINARY);
+#endif
 	fstat(put_fd, &sb);
     }
     snprintf(msg, BUFSIZ, "%s %s HTTP/1.0\r\n", method, url);

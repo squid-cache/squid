@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.158 2000/12/08 23:58:08 wessels Exp $
+ * $Id: errorpage.cc,v 1.159 2001/01/04 03:42:34 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -171,7 +171,7 @@ errorTryLoadText(const char *page_name, const char *dir)
     char *text;
 
     snprintf(path, sizeof(path), "%s/%s", dir, page_name);
-    fd = file_open(path, O_RDONLY);
+    fd = file_open(path, O_RDONLY | O_TEXT);
     if (fd < 0 || fstat(fd, &sb) < 0) {
 	debug(4, 0) ("errorTryLoadText: '%s': %s\n", path, xstrerror());
 	if (fd >= 0)
