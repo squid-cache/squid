@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.41 2001/02/19 23:10:07 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.42 2001/03/01 21:23:18 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1750,7 +1750,6 @@ storeDiskdDirReconfigure(SwapDir * sd, int index, char *path)
     int size;
     int l1;
     int l2;
-    int magic1, magic2;
     diskdinfo_t *diskdinfo;
 
     i = GetInteger();
@@ -1765,14 +1764,6 @@ storeDiskdDirReconfigure(SwapDir * sd, int index, char *path)
     l2 = i;
     if (l2 <= 0)
 	fatal("storeDiskdDirReconfigure: invalid level 2 directories value");
-    i = GetInteger();
-    magic1 = i;
-    if (magic1 <= 0)
-	fatal("storeDiskdDirParse: invalid magic1 value");
-    i = GetInteger();
-    magic2 = i;
-    if (magic2 <= 0)
-	fatal("storeDiskdDirParse: invalid magic2 value");
 
     /* just reconfigure it */
     if (size == sd->max_size)
@@ -1783,8 +1774,6 @@ storeDiskdDirReconfigure(SwapDir * sd, int index, char *path)
 	    path, size);
     sd->max_size = size;
     diskdinfo = sd->fsdata;
-    diskdinfo->magic1 = magic1;
-    diskdinfo->magic2 = magic2;
     parse_cachedir_options(sd, options, 1);
 }
 
@@ -1892,7 +1881,6 @@ storeDiskdDirParse(SwapDir * sd, int index, char *path)
     l2 = i;
     if (l2 <= 0)
 	fatal("storeDiskdDirParse: invalid level 2 directories value");
-    i = GetInteger();
 
     sd->fsdata = diskdinfo = xcalloc(1, sizeof(*diskdinfo));
     sd->index = index;
