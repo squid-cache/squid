@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.159 1996/11/08 04:19:11 wessels Exp $
+ * $Id: store.cc,v 1.160 1996/11/12 22:37:17 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -238,6 +238,8 @@ static void storeSwapOutHandle _PARAMS((int, int, StoreEntry *));
 static void storeHashMemInsert _PARAMS((StoreEntry *));
 static void storeHashMemDelete _PARAMS((StoreEntry *));
 static void storeSetPrivateKey _PARAMS((StoreEntry *));
+static void storeDoRebuildFromDisk _PARAMS((void *data));
+static void storeRebuiltFromDisk _PARAMS((struct storeRebuild_data * data));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -946,8 +948,9 @@ storeStartDeleteBehind(StoreEntry * e)
 {
     if (BIT_TEST(e->flag, DELETE_BEHIND))
 	return;
-    debug(20, 1, "storeStartDeleteBehind: '%s' at %d bytes\n", e->url,
-	e->mem_obj->e_current_len);
+    debug(20, e->mem_obj->e_current_len ? 1 : 3,
+	"storeStartDeleteBehind: '%s' at %d bytes\n",
+	e->url, e->mem_obj->e_current_len);
     storeSetPrivateKey(e);
     BIT_SET(e->flag, DELETE_BEHIND);
     storeReleaseRequest(e);
@@ -1340,9 +1343,10 @@ storeSwapOutStart(StoreEntry * e)
 /* recreate meta data from disk image in swap directory */
 
 /* Add one swap file at a time from disk storage */
-static int
-storeDoRebuildFromDisk(struct storeRebuild_data *data)
+static void
+storeDoRebuildFromDisk(void *data)
 {
+    struct storeRebuild_data *rebuildData = data;
     LOCAL_ARRAY(char, swapfile, MAXPATHLEN);
     LOCAL_ARRAY(char, url, MAX_URL + 1);
     StoreEntry *e = NULL;
@@ -1360,16 +1364,19 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
     int x;
 
     /* load a number of objects per invocation */
-    for (count = 0; count < data->speed; count++) {
-	if (!fgets(data->line_in, 4095, data->log))
-	    return !diskWriteIsComplete(swaplog_fd);	/* We are done */
+    for (count = 0; count < rebuildData->speed; count++) {
+	if (fgets(rebuildData->line_in, 4095, rebuildData->log) == NULL) {
+	    /* We are done */
+	    diskWriteIsComplete(swaplog_fd);
+	    storeRebuiltFromDisk(rebuildData);
+	    return;
+	}
+	if ((++rebuildData->linecount & 0xFFF) == 0)
+	    debug(20, 1, "  %7d Lines read so far.\n", rebuildData->linecount);
 
-	if ((++data->linecount & 0xFFF) == 0)
-	    debug(20, 1, "  %7d Lines read so far.\n", data->linecount);
-
-	debug(20, 9, "line_in: %s", data->line_in);
-	if ((data->line_in[0] == '\0') || (data->line_in[0] == '\n') ||
-	    (data->line_in[0] == '#'))
+	debug(20, 9, "line_in: %s", rebuildData->line_in);
+	if ((rebuildData->line_in[0] == '\0') || (rebuildData->line_in[0] == '\n') ||
+	    (rebuildData->line_in[0] == '#'))
 	    continue;		/* skip bad lines */
 
 	url[0] = '\0';
@@ -1379,7 +1386,7 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 	scan2 = 0;
 	scan3 = 0;
 	scan4 = 0;
-	x = sscanf(data->line_in, "%x %x %x %x %d %s",
+	x = sscanf(rebuildData->line_in, "%x %x %x %x %d %s",
 	    &sfileno,		/* swap_file_number */
 	    &scan1,		/* timestamp */
 	    &scan2,		/* expires */
@@ -1416,14 +1423,14 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 	    delta = (int) (timestamp - sb.st_mtime);
 	    if (delta > REBUILD_TIMESTAMP_DELTA_MAX || delta < 0) {
 		/* this log entry doesn't correspond to this file */
-		data->clashcount++;
+		rebuildData->clashcount++;
 		continue;
 	    }
 #endif
 	    /* Wrong size? */
 	    if (sb.st_size != size) {
 		/* this log entry doesn't correspond to this file */
-		data->clashcount++;
+		rebuildData->clashcount++;
 		continue;
 	    }
 #ifdef DONT_DO_THIS
@@ -1438,28 +1445,28 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 		debug(20, 3, "storeRebuildFromDisk: Replaced: %s\n", url);
 		if (opt_unlink_on_reload)
 		    safeunlink(swapfile, 1);
-		data->dupcount++;
+		rebuildData->dupcount++;
 		continue;
 	    }
 	    debug(20, 6, "storeRebuildFromDisk: Duplicate: '%s'\n", url);
 	    storeRelease(e);
-	    data->objcount--;
-	    data->dupcount++;
+	    rebuildData->objcount--;
+	    rebuildData->dupcount++;
 	}
 	/* Is the swap file number already taken? */
 	if (file_map_bit_test(sfileno)) {
 	    /* Yes it is, we can't use this swapfile */
 	    debug(20, 2, "storeRebuildFromDisk: Line %d Active clash: file #%d\n",
-		data->linecount,
+		rebuildData->linecount,
 		sfileno);
 	    debug(20, 3, "storeRebuildFromDisk: --> '%s'\n", url);
 	    /* don't unlink the file!  just skip this log entry */
-	    data->clashcount++;
+	    rebuildData->clashcount++;
 	    continue;
 	}
 	/* update store_swap_size */
 	store_swap_size += (int) ((size + 1023) >> 10);
-	data->objcount++;
+	rebuildData->objcount++;
 	e = storeAddDiskRestore(url,
 	    sfileno,
 	    (int) size,
@@ -1472,7 +1479,7 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 	    (int) size,
 	    TRUE);
     }
-    return 1;
+    eventAdd("storeRebuild", storeDoRebuildFromDisk, rebuildData, 0);
 }
 
 /* meta data recreated from disk image in swap directory */
@@ -1571,13 +1578,10 @@ storeStartRebuildFromDisk(void)
 
     /* Start reading the log file */
     if (opt_foreground_rebuild) {
-	while (storeDoRebuildFromDisk(data));
-	storeRebuiltFromDisk(data);
+	data->speed = 1 << 31;
+	storeDoRebuildFromDisk(data);
     } else {
-	runInBackground("storeRebuild",
-	    (int (*)(void *)) storeDoRebuildFromDisk,
-	    data,
-	    (void (*)(void *)) storeRebuiltFromDisk);
+	eventAdd("storeRebuild", storeDoRebuildFromDisk, data, 0);
     }
 }
 
@@ -1736,12 +1740,14 @@ storeGetNext(void)
 }
 
 /* free up all ttl-expired objects */
-int
-storePurgeOld(void)
+void
+storePurgeOld(void *unused)
 {
     StoreEntry *e = NULL;
     int n = 0;
     int count = 0;
+    /* reschedule */
+    eventAdd("storePurgeOld", storePurgeOld, NULL, Config.cleanRate);
     for (e = storeGetFirst(); e; e = storeGetNext()) {
 	if ((++n & 0xFF) == 0) {
 	    getCurrentTime();
@@ -1753,7 +1759,7 @@ storePurgeOld(void)
 	if (storeCheckExpired(e))
 	    count += storeRelease(e);
     }
-    return count;
+    debug(20, 0, "storePurgeOld: Removed %d objects\n", count);
 }
 
 
@@ -2512,8 +2518,8 @@ urlcmp(const char *url1, const char *url2)
  *
  * This should get called 1/s from main().
  */
-int
-storeMaintainSwapSpace(void)
+void
+storeMaintainSwapSpace(void *unused)
 {
     static time_t last_time = 0;
     static unsigned int bucket = 0;
@@ -2523,9 +2529,10 @@ storeMaintainSwapSpace(void)
     int scan_buckets;
     int scan_obj = 0;
 
+    eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
     /* We can't delete objects while rebuilding swap */
     if (store_rebuilding == STORE_REBUILDING_FAST)
-	return -1;
+	return;
 
     /* Purges expired objects, check one bucket on each calling */
     if (squid_curtime - last_time >= store_maintain_rate) {
@@ -2550,12 +2557,9 @@ storeMaintainSwapSpace(void)
 	}
     }
     debug(20, rm_obj ? 1 : 2, "Scanned %d objects, Removed %d expired objects\n", scan_obj, rm_obj);
-
     /* Scan row of hash table each second and free storage if we're
      * over the high-water mark */
     storeGetSwapSpace(0);
-
-    return rm_obj;
 }
 
 
@@ -2806,9 +2810,9 @@ storeFreeMemory(void)
 int
 expiresMoreThan(time_t expires, time_t when)
 {
-    if (expires < 0)
-	return 0;
-    return (expires > squid_curtime + when);
+    if (expires < 0)		/* No Expires given */
+	return 1;
+    return (expires > (squid_curtime + when));
 }
 
 int
@@ -2823,4 +2827,3 @@ storeEntryValidToSend(StoreEntry * e)
 	return 0;
     return 1;
 }
-

@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.84 1996/11/06 23:14:44 wessels Exp $
+ * $Id: ipcache.cc,v 1.85 1996/11/12 22:37:09 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -326,7 +326,7 @@ ipcacheExpiredEntry(ipcache_entry * i)
 
 /* finds the LRU and deletes */
 int
-ipcache_purgelru(void)
+ipcache_purgelru(void *unused)
 {
     ipcache_entry *i = NULL;
     int local_ip_notpending_count = 0;
@@ -335,6 +335,7 @@ ipcache_purgelru(void)
     ipcache_entry **LRU_list = NULL;
     int LRU_list_count = 0;
 
+    eventAdd("ipcache_purgelru", (EVH) ipcache_purgelru, NULL, 10);
     LRU_list = xcalloc(meta_data.ipcache_count, sizeof(ipcache_entry *));
 
     for (i = ipcache_GetFirst(); i; i = ipcache_GetNext()) {
@@ -387,7 +388,7 @@ ipcache_create(const char *name)
 {
     static ipcache_entry *new;
     if (meta_data.ipcache_count > ipcache_high) {
-	if (ipcache_purgelru() < 0)
+	if (ipcache_purgelru(NULL) < 0)
 	    debug(14, 0, "HELP!! IP Cache is overflowing!\n");
     }
     meta_data.ipcache_count++;

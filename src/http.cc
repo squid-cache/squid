@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.101 1996/11/08 16:13:51 wessels Exp $
+ * $Id: http.cc,v 1.102 1996/11/12 22:37:05 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -243,7 +243,7 @@ httpCacheNegatively(StoreEntry * entry)
 
 /* Build a reply structure from HTTP reply headers */
 void
-httpParseHeaders(const char *buf, struct _http_reply *reply)
+httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 {
     char *headers = NULL;
     char *t = NULL;
@@ -369,7 +369,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	debug(11, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
 	    httpState->reply_hdr);
 	/* Parse headers into reply structure */
-	httpParseHeaders(httpState->reply_hdr, reply);
+	httpParseReplyHeaders(httpState->reply_hdr, reply);
 	timestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	if (reply->code)
@@ -607,6 +607,7 @@ httpSendRequest(int fd, void *data)
     StoreEntry *entry = httpState->entry;
     int saw_host = 0;
     int did_ims = 0;
+    int saw_max_age = 0;
 
     debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     buflen = strlen(Method) + strlen(req->urlpath);
@@ -654,6 +655,8 @@ httpSendRequest(int fd, void *data)
 		continue;
 	    if (strncasecmp(t, "Host:", 5) == 0)
 		saw_host = 1;
+	    if (strncasecmp(t, "Cache-control: Max-age", 5) == 0)
+		saw_max_age = 1;
 	    if (did_ims && !strncasecmp(t, "If-Modified-Since:", 18))
 		continue;
 	    if (len + (int) strlen(t) > buflen - 10)
@@ -680,10 +683,18 @@ httpSendRequest(int fd, void *data)
 
     /* Add Host: header */
     /* Don't add Host: if proxying, mainly because req->host is
-       the name of the proxy, not the origin :-( */
+     * the name of the proxy, not the origin :-( */
     if (!saw_host && !BIT_TEST(req->flags, REQ_PROXYING)) {
 	ybuf = get_free_4k_page();
 	sprintf(ybuf, "Host: %s\r\n", req->host);
+	strcat(buf, ybuf);
+	len += strlen(ybuf);
+	put_free_4k_page(ybuf);
+    }
+    if (!saw_max_age) {
+	ybuf = get_free_4k_page();
+	sprintf(ybuf, "Cache-control: Max-age=%d\r\n",
+	    (int) getMaxAge(entry->url));
 	strcat(buf, ybuf);
 	len += strlen(ybuf);
 	put_free_4k_page(ybuf);

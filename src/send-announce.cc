@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.23 1996/11/06 23:14:54 wessels Exp $
+ * $Id: send-announce.cc,v 1.24 1996/11/12 22:37:16 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -32,22 +32,20 @@
 #include "squid.h"
 
 void
-send_announce(void)
+send_announce(void *unused)
 {
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
     icpUdpData *qdata = NULL;
     const ipcache_addrs *ia = NULL;
-    char *host = NULL;
+    char *host = Config.Announce.host;
     char *file = NULL;
-    u_short port;
+    u_short port = Config.Announce.port;
     int fd;
     int l;
     int n;
 
-    host = Config.Announce.host;
-    port = Config.Announce.port;
-
+    eventAdd("send_announce", send_announce, NULL, Config.Announce.rate);
     if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) == NULL) {
 	debug(27, 1, "send_announce: Unknown host '%s'\n", host);
 	return;

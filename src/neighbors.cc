@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.84 1996/11/11 21:57:26 wessels Exp $
+ * $Id: neighbors.cc,v 1.85 1996/11/12 22:37:11 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -387,7 +387,6 @@ neighbors_open(int fd)
 	echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
     }
 }
-
 
 int
 neighborsUdpPing(protodispatch_data * proto)
