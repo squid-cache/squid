@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.h,v 1.5 2003/03/06 11:51:55 robertc Exp $
+ * $Id: DelayVector.h,v 1.6 2003/05/15 07:06:24 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,6 +46,7 @@ public:
     void *operator new(size_t);
     void operator delete (void *);
     virtual void deleteSelf() const;
+    DelayVector();
     virtual ~DelayVector();
     virtual void stats(StoreEntry * sentry);
     virtual void dump(StoreEntry *entry) const;
