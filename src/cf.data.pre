@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.307 2003/03/10 04:56:36 robertc Exp $
+# $Id: cf.data.pre,v 1.308 2003/03/13 07:39:54 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,8 +31,8 @@
 #
 
 COMMENT_START
-	WELCOME TO SQUID 2
-	------------------
+	WELCOME TO SQUID @VERSION@
+	----------------------------
 
 	This is the default Squid configuration file. You may wish
 	to look at the Squid home page (http://www.squid-cache.org/)

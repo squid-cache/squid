@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.66 2003/03/11 22:11:38 robertc Exp $
+#  $Id: Makefile.am,v 1.67 2003/03/13 07:39:53 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -725,7 +725,8 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;\
-	s%@DEFAULT_HOSTS@%$(DEFAULT_HOSTS)%g;"\
+	s%@DEFAULT_HOSTS@%$(DEFAULT_HOSTS)%g;\
+	s%@[V]ERSION@%$(VERSION)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
 store_modules.cc: store_modules.sh Makefile
