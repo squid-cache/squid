@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.193 1998/01/06 18:12:22 wessels Exp $
+ * $Id: client_side.cc,v 1.194 1998/01/07 22:46:11 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1474,7 +1474,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	     * types should be used to prevent httpd-accelerators 
 	     * handling requests for non-local servers */
 	    strtok(t, " :/;@");
-	    url_sz = strlen(url) + 32 + Config.appendDomainLen;
+	    url_sz = strlen(url) + 32 + Config.appendDomainLen +
+		strlen(t);
 	    http->uri = xcalloc(url_sz, 1);
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
 		t, (int) Config.Accel.port, url);
