@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.98 2002/07/15 21:18:32 hno Exp $
+ * $Id: client.cc,v 1.99 2002/07/15 21:24:48 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -252,24 +252,32 @@ main(int argc, char *argv[])
     if (proxy_user) {
 	char *user = proxy_user;
 	char *password = proxy_password;
+#if HAVE_GETPASS
 	if (!password)
 	    password = getpass("Proxy password: ");
-	if (password) {
-	    snprintf(buf, BUFSIZ, "%s:%s", user, password);
-	    snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %s\n", base64_encode(buf));
-	    strcat(msg, buf);
+#endif
+	if (!password) {
+	    fprintf(stderr, "ERROR: Proxy password missing\n");
+	    exit(1);
 	}
+	snprintf(buf, BUFSIZ, "%s:%s", user, password);
+	snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %s\n", base64_encode(buf));
+	strcat(msg, buf);
     }
     if (www_user) {
 	char *user = www_user;
 	char *password = www_password;
+#if HAVE_GETPASS
 	if (!password)
 	    password = getpass("WWW password: ");
-	if (password) {
-	    snprintf(buf, BUFSIZ, "%s:%s", user, password);
-	    snprintf(buf, BUFSIZ, "Authorization: Basic %s\n", base64_encode(buf));
-	    strcat(msg, buf);
+#endif
+	if (!password) {
+	    fprintf(stderr, "ERROR: WWW password missing\n");
+	    exit(1);
 	}
+	snprintf(buf, BUFSIZ, "%s:%s", user, password);
+	snprintf(buf, BUFSIZ, "Authorization: Basic %s\n", base64_encode(buf));
+	strcat(msg, buf);
     }
     if (keep_alive) {
 	if (port != 80)
