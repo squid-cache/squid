@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.17 2001/12/24 15:33:42 adrian Exp $
+#  $Id: Makefile.am,v 1.18 2001/12/26 23:03:11 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -230,7 +230,9 @@ unlinkd-daemon.o: unlinkd.c
 
 pinger_SOURCES = \
 	pinger.c \
-	debug.c \
+	debug.c
+
+nodist_pinger_SOURCES = \
 	globals.c
 
 BUILT_SOURCES = \
