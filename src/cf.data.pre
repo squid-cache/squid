@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.363 2004/12/08 00:24:42 hno Exp $
+# $Id: cf.data.pre,v 1.364 2004/12/10 00:49:54 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3006,7 +3006,7 @@ DOC_END
 
 NAME: esi_parser
 IFDEF: ESI
-COMMENT: expat|custom
+COMMENT: libxml2|expat|custom
 TYPE: string
 LOC: ESIParser::Type
 DEFAULT: custom
@@ -4147,7 +4147,7 @@ DOC_START
 DOC_END
 
 NAME: mcast_miss_ttl
-IFDEF: MULTICAST_MISS_TTL
+IFDEF: MULTICAST_MISS_STREAM
 TYPE: ushort
 LOC: Config.mcast_miss.ttl
 DEFAULT: 16
