@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.42 1997/06/17 19:00:02 wessels Exp $
+ * $Id: net_db.cc,v 1.43 1997/06/24 20:24:20 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -452,10 +452,7 @@ netdbPingSite(const char *hostname)
     if ((n = netdbLookupHost(hostname)) != NULL)
 	if (n->next_ping_time > squid_curtime)
 	    return;
-    ipcache_nbgethostbyname(hostname,
-	netdbSendPing,
-	(void *) xstrdup(hostname),
-	NULL);
+    ipcache_nbgethostbyname(hostname, netdbSendPing, (void *) xstrdup(hostname));
 #endif
 }
 
