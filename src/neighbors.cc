@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.264 1998/12/05 00:54:33 wessels Exp $
+ * $Id: neighbors.cc,v 1.265 1998/12/15 23:51:19 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -894,12 +894,9 @@ peerDestroy(void *data, int unused)
     }
     safe_free(p->host);
 #if USE_CACHE_DIGESTS
-    if (p->digest) {
-	if (cbdataValid(p->digest))
-	    peerDigestNotePeerGone(p->digest);
+    if (p->digest)
 	cbdataUnlock(p->digest);
-	p->digest = NULL;
-    }
+    p->digest = NULL;
 #endif
     xfree(p);
 }
@@ -909,8 +906,9 @@ peerNoteDigestGone(peer * p)
 {
 #if USE_CACHE_DIGESTS
     if (p->digest) {
-	cbdataUnlock(p->digest);
+	PeerDigest *pd = p->digest;
 	p->digest = NULL;
+	cbdataUnlock(pd);
     }
 #endif
 }
