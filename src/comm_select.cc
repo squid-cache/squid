@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.24 1999/01/08 21:12:09 wessels Exp $
+ * $Id: comm_select.cc,v 1.25 1999/01/11 19:40:29 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -363,12 +363,11 @@ comm_poll(int msec)
 		if ((hdl = F->read_handler)) {
 		    F->read_handler = NULL;
 		    hdl(current_hdl_fd = fd, F->read_data);
+		    current_hdl_fd = -1;
 		    Counter.select_fds++;
 		}
-		if (F->flags.delayed_comm_close) {
-		    current_hdl_fd = -1;
+		if (F->flags.delayed_comm_close)
 		    comm_close(fd);
-		}
 		if (commCheckICPIncoming)
 		    comm_poll_icp_incoming();
 		if (commCheckHTTPIncoming)
@@ -379,12 +378,11 @@ comm_poll(int msec)
 		if ((hdl = F->write_handler)) {
 		    F->write_handler = NULL;
 		    hdl(current_hdl_fd = fd, F->write_data);
+		    current_hdl_fd = -1;
 		    Counter.select_fds++;
 		}
-		if (F->flags.delayed_comm_close) {
-		    current_hdl_fd = -1;
+		if (F->flags.delayed_comm_close)
 		    comm_close(fd);
-		}
 		if (commCheckICPIncoming)
 		    comm_poll_icp_incoming();
 		if (commCheckHTTPIncoming)
@@ -671,12 +669,11 @@ comm_select(int msec)
 		    F->read_handler = NULL;
 		    commUpdateReadBits(fd, NULL);
 		    hdl(current_hdl_fd = fd, F->read_data);
+		    current_hdl_fd = -1;
 		    Counter.select_fds++;
 		}
-		if (F->flags.delayed_comm_close) {
-		    current_hdl_fd = -1;
+		if (F->flags.delayed_comm_close)
 		    comm_close(fd);
-		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
 		if (commCheckHTTPIncoming)
@@ -714,12 +711,11 @@ comm_select(int msec)
 		    F->write_handler = NULL;
 		    commUpdateWriteBits(fd, NULL);
 		    hdl(current_hdl_fd = fd, F->write_data);
+		    current_hdl_fd = -1;
 		    Counter.select_fds++;
 		}
-		if (F->flags.delayed_comm_close) {
-		    current_hdl_fd = -1;
+		if (F->flags.delayed_comm_close)
 		    comm_close(fd);
-		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
 		if (commCheckHTTPIncoming)
