@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.27 2002/08/08 20:12:46 hno Exp $
+ * $Id: store_io_diskd.cc,v 1.28 2002/10/12 09:45:57 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -87,7 +87,7 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     diskdstate->id = diskd_stats.sio_id++;
 
     buf = storeDiskdShmGet(SD, &shm_offset);
-    xstrncpy(buf, storeDiskdDirFullPath(SD, f, NULL), SHMBUF_BLKSZ);
+    xstrncpy(buf, commonUfsDirFullPath(SD, f, NULL), SHMBUF_BLKSZ);
     x = storeDiskdSend(_MQD_OPEN,
 	SD,
 	diskdstate->id,
@@ -125,7 +125,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	return NULL;
     }
     /* Allocate a number */
-    f = storeDiskdDirMapBitAllocate(SD);
+    f = commonUfsDirMapBitAllocate(SD);
     debug(79, 3) ("storeDiskdCreate: fileno %08X\n", f);
 
     CBDATA_INIT_TYPE_FREECB(storeIOState, storeDiskdIOFreeEntry);
@@ -145,7 +145,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     diskdstate->id = diskd_stats.sio_id++;
 
     buf = storeDiskdShmGet(SD, &shm_offset);
-    xstrncpy(buf, storeDiskdDirFullPath(SD, f, NULL), SHMBUF_BLKSZ);
+    xstrncpy(buf, commonUfsDirFullPath(SD, f, NULL), SHMBUF_BLKSZ);
     x = storeDiskdSend(_MQD_OPEN,
 	SD,
 	diskdstate->id,
@@ -160,7 +160,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	cbdataFree(sio);
 	return NULL;
     }
-    storeDiskdDirReplAdd(SD, e);
+    commonUfsDirReplAdd(SD, e);
     diskd_stats.create.ops++;
     return sio;
 }
@@ -270,17 +270,17 @@ storeDiskdUnlink(SwapDir * SD, StoreEntry * e)
 
     debug(79, 3) ("storeDiskdUnlink: dirno %d, fileno %08X\n", SD->index,
 	e->swap_filen);
-    storeDiskdDirReplRemove(e);
-    storeDiskdDirMapBitReset(SD, e->swap_filen);
+    commonUfsDirReplRemove(e);
+    commonUfsDirMapBitReset(SD, e->swap_filen);
     if (diskdinfo->away >= diskdinfo->magic1) {
 	/* Damn, we need to issue a sync unlink here :( */
 	debug(79, 2) ("storeDiskUnlink: Out of queue space, sync unlink\n");
-	storeDiskdDirUnlinkFile(SD, e->swap_filen);
+	commonUfsDirUnlinkFile(SD, e->swap_filen);
 	return;
     }
     /* We can attempt a diskd unlink */
     buf = storeDiskdShmGet(SD, &shm_offset);
-    xstrncpy(buf, storeDiskdDirFullPath(SD, e->swap_filen, NULL), SHMBUF_BLKSZ);
+    xstrncpy(buf, commonUfsDirFullPath(SD, e->swap_filen, NULL), SHMBUF_BLKSZ);
     x = storeDiskdSend(_MQD_UNLINK,
 	SD,
 	e->swap_filen,

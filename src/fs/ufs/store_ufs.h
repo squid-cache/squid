@@ -7,14 +7,6 @@
 #ifndef __STORE_UFS_H__
 #define __STORE_UFS_H__
 
-struct _ufsinfo_t {
-    int swaplog_fd;
-    int l1;
-    int l2;
-    fileMap *map;
-    int suggest;
-};
-
 struct _ufsstate_t {
     int fd;
     struct {
@@ -24,18 +16,10 @@ struct _ufsstate_t {
     } flags;
 };
 
-typedef struct _ufsinfo_t ufsinfo_t;
 typedef struct _ufsstate_t ufsstate_t;
 
 /* The ufs_state memory pool */
 extern MemPool *ufs_state_pool;
-
-extern void storeUfsDirMapBitReset(SwapDir *, sfileno);
-extern int storeUfsDirMapBitAllocate(SwapDir *);
-extern char *storeUfsDirFullPath(SwapDir * SD, sfileno filn, char *fullpath);
-extern void storeUfsDirUnlinkFile(SwapDir *, sfileno);
-extern void storeUfsDirReplAdd(SwapDir * SD, StoreEntry *);
-extern void storeUfsDirReplRemove(StoreEntry *);
 
 /*
  * Store IO stuff

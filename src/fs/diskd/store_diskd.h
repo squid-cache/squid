@@ -7,6 +7,8 @@
 #ifndef __STORE_DISKD_H__
 #define __STORE_DISKD_H__
 
+#include "ufscommon.h"
+
 /*
  * magic2 is the point at which we start blocking on msgsnd/msgrcv.
  * If a queue has magic2 (or more) messages away, then we read the
@@ -16,11 +18,8 @@
  */
 
 struct _diskdinfo_t {
-    int swaplog_fd;
-    int l1;
-    int l2;
-    fileMap *map;
-    int suggest;
+    /* MUST BE FIRST */
+    squidufsinfo_t commondata;
     int smsgid;
     int rmsgid;
     int wfd;
@@ -90,12 +89,6 @@ static const int msg_snd_rcv_sz = sizeof(diomsg) - sizeof(mtyp_t);
 /* The diskd_state memory pool */
 extern MemPool *diskd_state_pool;
 
-extern void storeDiskdDirMapBitReset(SwapDir *, sfileno);
-extern int storeDiskdDirMapBitAllocate(SwapDir *);
-extern char *storeDiskdDirFullPath(SwapDir * SD, sfileno filn, char *fullpath);
-extern void storeDiskdDirUnlinkFile(SwapDir *, sfileno);
-extern void storeDiskdDirReplAdd(SwapDir *, StoreEntry *);
-extern void storeDiskdDirReplRemove(StoreEntry *);
 extern void storeDiskdShmPut(SwapDir *, off_t);
 extern void *storeDiskdShmGet(SwapDir *, off_t *);
 extern void storeDiskdHandle(diomsg * M);
