@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.184 1999/01/18 22:23:39 wessels Exp $
+ * $Id: squid.h,v 1.185 1999/01/19 17:41:04 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -309,8 +309,6 @@ struct rusage {
 #define leakTouch(p) p
 #define leakFree(p) p
 #endif
-
-#define fdTouch(f) fdTouchFL(f,__FILE__,__LINE__)
 
 #if defined(_SQUID_NEXT_) && !defined(S_ISDIR)
 #define S_ISDIR(mode) (((mode) & (_S_IFMT)) == (_S_IFDIR))

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.32 1999/01/19 02:24:24 wessels Exp $
+ * $Id: fd.cc,v 1.33 1999/01/19 17:41:02 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -191,16 +191,4 @@ fdAdjustReserved(void)
     debug(51, 0) ("Reserved FD adjusted from %d to %d due to failures\n",
 	RESERVED_FD, new);
     RESERVED_FD = new;
-}
-
-void
-fdTouchFL(int fd, const char *file, int line)
-{
-    fde *F;
-    if (fd < 0)
-	return;
-    F = &fd_table[fd];
-    assert(F->flags.open);
-    F->last.file = file;
-    F->last.line = line;
 }

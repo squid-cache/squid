@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.263 1999/01/19 05:24:49 wessels Exp $
+ * $Id: structs.h,v 1.264 1999/01/19 17:41:09 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -531,10 +531,6 @@ struct _fde {
     DEFER *defer_check;		/* check if we should defer read */
     void *defer_data;
     CommWriteStateData *rwstate;	/* State data for comm_write */
-    struct {
-	const char *file;
-	int line;
-    } last;
 };
 
 struct _fileMap {
