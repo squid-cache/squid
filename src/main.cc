@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.49 1996/07/11 17:42:44 wessels Exp $
+ * $Id: main.cc,v 1.50 1996/07/14 05:35:54 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -468,6 +468,22 @@ int main(argc, argv)
     time_t last_announce = 0;
     time_t loop_delay;
 
+    /* call mallopt() before anything else */
+#if HAVE_MALLOPT
+#ifdef M_GRAIN
+    /* Round up all sizes to a multiple of this */
+    mallopt(M_GRAIN, 16);
+#endif
+#ifdef M_MXFAST
+    /* biggest size that is considered a small block */
+    mallopt(M_MXFAST, 256);
+#endif
+#ifdef M_NBLKS
+    /* allocate this many small blocks at once */
+    mallopt(M_NLBLKS, 32);
+#endif
+#endif /* HAVE_MALLOPT */
+
     memset(&local_addr, '\0', sizeof(struct in_addr));
     local_addr.s_addr = inet_addr(localhost);
 
@@ -483,21 +499,6 @@ int main(argc, argv)
     if (catch_signals)
 	for (n = FD_SETSIZE; n > 2; n--)
 	    close(n);
-
-#if HAVE_MALLOPT
-#ifdef M_GRAIN
-    /* Round up all sizes to a multiple of this */
-    mallopt(M_GRAIN, 16);
-#endif
-#ifdef M_MXFAST
-    /* biggest size that is considered a small block */
-    mallopt(M_MXFAST, 256);
-#endif
-#ifdef M_NBLKS
-    /* allocate this many small blocks at once */
-    mallopt(M_NLBLKS, 32);
-#endif
-#endif /* HAVE_MALLOPT */
 
     /*init comm module */
     comm_init();
