@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.156 1998/02/05 20:53:38 wessels Exp $
+ * $Id: squid.h,v 1.157 1998/02/06 06:44:34 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -352,5 +352,6 @@ struct rusage {
 #define free +
 #define calloc +
 #define sprintf +
+#define strdup +
 
 #endif /* SQUID_H */

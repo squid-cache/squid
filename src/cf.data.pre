@@ -1982,17 +1982,6 @@ DOC_START
 	command line option.
 DOC_END
 
-NAME: snmp_config_file
-TYPE: string
-LOC: Config.Snmp.configFile
-DEFAULT: @DEFAULT_SNMP_CONF@
-IFDEF: SQUID_SNMP
-DOC_START
-	SNMP is configured by a file in the same format as the
-	CMU-snmpd config file. This tag should contain a path to this
-	file.
-DOC_END
-
 NAME: snmp_do_queueing
 TYPE: onoff
 LOC: Config.Snmp.do_queueing
