@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.104 1996/12/21 07:54:52 wessels Exp $
+ * $Id: neighbors.cc,v 1.105 1997/01/15 17:41:28 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -281,7 +281,7 @@ getDefaultParent(request_t * request)
 	    continue;
 	if (neighborType(e, request) != EDGE_PARENT)
 	    continue;
-	if (!BIT_SET(e->options, NEIGHBOR_DEFAULT_PARENT))
+	if (!BIT_TEST(e->options, NEIGHBOR_DEFAULT_PARENT))
 	    continue;
 	if (!edgeWouldBePinged(e, request))
 	    continue;
