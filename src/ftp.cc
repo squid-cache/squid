@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.106 1997/05/15 01:18:44 wessels Exp $
+ * $Id: ftp.cc,v 1.107 1997/05/15 23:37:58 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -141,7 +141,6 @@ static PF ftpStateFree;
 static PF ftpTimeout;
 static char *ftpGetBasicAuth _PARAMS((const char *));
 static void ftpProcessReplyHeader _PARAMS((FtpStateData *, const char *, int));
-static void ftpStartComplete _PARAMS((void *, int));
 static void ftpLoginParser _PARAMS((const char *, FtpStateData *));
 
 /* External functions */
@@ -429,7 +428,7 @@ ftpSendRequest(int fd, void *data)
     buf = get_free_8k_page();
 
     path = ftpState->request->urlpath;
-    mode = "-";		/* let ftpget figure it out */
+    mode = "-";			/* let ftpget figure it out */
 
     /* Start building the buffer ... */
     strcat(buf, Config.Program.ftpget);
@@ -538,36 +537,21 @@ ftpCheckAuth(FtpStateData * ftpState, char *req_hdr)
     return 0;			/* different username */
 }
 
-
-int
+void
 ftpStart(request_t * request, StoreEntry * entry)
 {
-    ftp_ctrl_t *ctrlp;
-    debug(9, 3, "FtpStart: '%s'\n", entry->url);
-    if (ftpget_server_write < 0) {
-	squid_error_entry(entry, ERR_FTP_DISABLED, NULL);
-	return COMM_ERROR;
-    }
-    ctrlp = xmalloc(sizeof(ftp_ctrl_t));
-    ctrlp->request = request;
-    ctrlp->entry = entry;
-    storeLockObject(entry, ftpStartComplete, ctrlp);
-    return COMM_OK;
-}
-
-static void
-ftpStartComplete(void *data, int status)
-{
     LOCAL_ARRAY(char, realm, 8192);
-    ftp_ctrl_t *ctrlp = data;
-    request_t *request = ctrlp->request;
-    StoreEntry *entry = ctrlp->entry;
     char *url = entry->url;
     FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
     char *req_hdr;
     char *response;
+    debug(9, 3, "FtpStart: '%s'\n", entry->url);
+    if (ftpget_server_write < 0) {
+	squid_error_entry(entry, ERR_FTP_DISABLED, NULL);
+	return;
+    }
+    storeLockObject(entry);
     ftpState->entry = entry;
-    xfree(ctrlp);
     req_hdr = entry->mem_obj->mime_hdr;
     ftpState->request = requestLink(request);
     if (!ftpCheckAuth(ftpState, req_hdr)) {

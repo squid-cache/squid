@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.160 1997/05/08 07:22:02 wessels Exp $
+ * $Id: http.cc,v 1.161 1997/05/15 23:38:01 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -834,7 +834,7 @@ httpSendRequest(int fd, void *data)
     httpState->orig_request = NULL;
 }
 
-int
+void
 proxyhttpStart(request_t * orig_request,
     StoreEntry * entry,
     peer * e)
@@ -858,9 +858,9 @@ proxyhttpStart(request_t * orig_request,
     if (fd == COMM_ERROR) {
 	debug(11, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
-	return COMM_ERROR;
+	return;
     }
-    storeLockObject(entry, NULL, NULL);
+    storeLockObject(entry);
     httpState = xcalloc(1, sizeof(HttpStateData));
     httpState->entry = entry;
     httpState->req_hdr = entry->mem_obj->mime_hdr;
@@ -885,7 +885,6 @@ proxyhttpStart(request_t * orig_request,
 	httpState->fd,
 	httpConnect,
 	httpState);
-    return COMM_OK;
 }
 
 static void
@@ -931,7 +930,7 @@ httpConnectDone(int fd, int status, void *data)
     }
 }
 
-int
+void
 httpStart(request_t * request,
     char *req_hdr,
     int req_hdr_sz,
@@ -952,9 +951,9 @@ httpStart(request_t * request,
     if (fd == COMM_ERROR) {
 	debug(11, 4, "httpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
-	return COMM_ERROR;
+	return;
     }
-    storeLockObject(entry, NULL, NULL);
+    storeLockObject(entry);
     httpState = xcalloc(1, sizeof(HttpStateData));
     httpState->entry = entry;
     httpState->req_hdr = req_hdr;
@@ -970,7 +969,6 @@ httpStart(request_t * request,
 	httpState->fd,
 	httpConnect,
 	httpState);
-    return COMM_OK;
 }
 
 void
