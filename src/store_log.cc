@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.6 1998/07/22 20:54:02 wessels Exp $
+ * $Id: store_log.cc,v 1.7 1999/05/26 17:08:04 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -118,7 +118,7 @@ storeLogRotate(void)
 	snprintf(to, MAXPATHLEN, "%s.%d", fname, 0);
 	rename(fname, to);
     }
-    storelog_fd = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL, NULL);
+    storelog_fd = file_open(fname, O_WRONLY | O_CREAT);
     if (storelog_fd < 0) {
 	debug(50, 0) ("storeLogRotate: %s: %s\n", fname, xstrerror());
 	debug(20, 1) ("Store logging disabled\n");
@@ -138,11 +138,7 @@ storeLogOpen(void)
     if (strcmp(Config.Log.store, "none") == 0)
 	storelog_fd = -1;
     else
-	storelog_fd = file_open(Config.Log.store,
-	    O_WRONLY | O_CREAT,
-	    NULL,
-	    NULL,
-	    NULL);
+	storelog_fd = file_open(Config.Log.store, O_WRONLY | O_CREAT);
     if (storelog_fd < 0)
 	debug(20, 1) ("Store logging disabled\n");
 }

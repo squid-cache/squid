@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.50 1999/04/23 02:57:16 wessels Exp $
+ * $Id: access_log.cc,v 1.51 1999/05/26 17:07:56 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -216,7 +216,7 @@ accessLogOpen(const char *fname)
 {
     assert(fname);
     xstrncpy(LogfileName, fname, SQUID_MAXPATHLEN);
-    LogfileFD = file_open(LogfileName, O_WRONLY | O_CREAT, NULL, NULL, NULL);
+    LogfileFD = file_open(LogfileName, O_WRONLY | O_CREAT);
     if (LogfileFD == DISK_ERROR) {
 	debug(50, 0) ("%s: %s\n", LogfileName, xstrerror());
 	fatalf("Cannot open %s: %s", LogfileName, xstrerror());
@@ -323,7 +323,7 @@ accessLogRotate(void)
 	rename(fname, to);
     }
     /* Reopen the log.  It may have been renamed "manually" */
-    LogfileFD = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL, NULL);
+    LogfileFD = file_open(fname, O_WRONLY | O_CREAT);
     if (LogfileFD == DISK_ERROR) {
 	debug(46, 0) ("accessLogRotate: Cannot open logfile: %s\n", fname);
 	LogfileStatus = LOG_DISABLE;
