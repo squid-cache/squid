@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.105 1997/10/26 02:35:31 wessels Exp $
+ * $Id: gopher.cc,v 1.106 1997/10/27 18:11:34 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -429,7 +429,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	    }
 
 	    /* skip one line */
-	    pos = (char *) memchr(pos, '\n', 256);
+	    pos = (char *) memchr(pos, '\n', len);
 	    if (pos)
 		pos++;
 
@@ -457,7 +457,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	    }
 
 	    /* skip one line */
-	    pos = (char *) memchr(pos, '\n', 256);
+	    pos = (char *) memchr(pos, '\n', len);
 	    if (pos)
 		pos++;
 
