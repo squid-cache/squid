@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.196 1998/02/22 07:45:19 rousskov Exp $
+ * $Id: ftp.cc,v 1.197 1998/02/24 21:17:03 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -144,7 +144,7 @@ static void ftpAppendSuccessHeader(FtpStateData * ftpState);
 #if 0
 static char *ftpAuthRequired(const request_t *, const char *);
 #else
-static void ftpAuthRequired(HttpReply *reply, request_t *request, const char *realm);
+static void ftpAuthRequired(HttpReply * reply, request_t * request, const char *realm);
 #endif
 static STABH ftpAbort;
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
@@ -773,7 +773,10 @@ ftpDataRead(int fd, void *data)
     len = read(fd,
 	ftpState->data.buf + ftpState->data.offset,
 	ftpState->data.size - ftpState->data.offset);
-    fd_bytes(fd, len, FD_READ);
+    if (len > 0) {
+	fd_bytes(fd, len, FD_READ);
+	kb_incr(&Counter.server.kbytes_in, len);
+    }
     debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, len);
     if (len > 0) {
 	IOStats.Ftp.reads++;
@@ -816,7 +819,7 @@ ftpDataRead(int fd, void *data)
     }
 }
 
-#if 0 /* moved to mime.c because cachemgr needs it too */
+#if 0				/* moved to mime.c because cachemgr needs it too */
 static char *
 ftpGetBasicAuth(const char *req_hdr)
 {
@@ -1060,6 +1063,10 @@ ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, int errflag, void
     StoreEntry *entry = ftpState->entry;
     ErrorState *err;
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", size);
+    if (size > 0) {
+	fd_bytes(fd, size, FD_WRITE);
+	kb_incr(&Counter.server.kbytes_out, size);
+    }
     if (errflag == COMM_ERR_CLOSING)
 	return;
     if (errflag) {
@@ -1128,7 +1135,10 @@ ftpReadControlReply(int fd, void *data)
     len = read(fd,
 	ftpState->ctrl.buf + ftpState->ctrl.offset,
 	ftpState->ctrl.size - ftpState->ctrl.offset);
-    fd_bytes(fd, len, FD_READ);
+    if (len > 0) {
+	fd_bytes(fd, len, FD_READ);
+	kb_incr(&Counter.server.kbytes_in, len);
+    }
     debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, len);
     if (len < 0) {
 	debug(50, 1) ("ftpReadControlReply: read error: %s\n", xstrerror());
@@ -1965,7 +1975,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	}
     }
     storeBuffer(e);
-#if 0 /* old code */
+#if 0				/* old code */
     storeAppendPrintf(e, "HTTP/1.0 200 Gatewaying\r\n");
     reply->code = 200;
     reply->version = 1.0;
@@ -2016,7 +2026,7 @@ ftpAbort(void *data)
     comm_close(ftpState->ctrl.fd);
 }
 
-#if 0 /* use new interfaces instead */
+#if 0				/* use new interfaces instead */
 static char *
 ftpAuthRequired(const request_t * request, const char *realm)
 {
@@ -2068,7 +2078,7 @@ ftpAuthRequired(const request_t * request, const char *realm)
 #endif
 
 static void
-ftpAuthRequired(HttpReply *old_reply, request_t *request, const char *realm)
+ftpAuthRequired(HttpReply * old_reply, request_t * request, const char *realm)
 {
     ErrorState *err = errorCon(ERR_ACCESS_DENIED, HTTP_UNAUTHORIZED);
     HttpReply *rep;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.213 1998/02/23 23:47:21 rousskov Exp $
+ * $Id: client_side.cc,v 1.214 1998/02/24 21:17:02 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -33,7 +33,7 @@
 
 static const char *const crlf = "\r\n";
 static const char *const proxy_auth_challenge =
-    "Basic realm=\"Squid proxy-caching web server\"";
+"Basic realm=\"Squid proxy-caching web server\"";
 
 #define REQUEST_BUF_SIZE 4096
 #define FAILURE_MODE_TIME 300
@@ -114,7 +114,7 @@ clientAccessCheck(void *data)
     aclNBCheck(http->acl_checklist, clientAccessCheckDone, http);
 }
 
-#if 0 /* reimplemented using new interfaces */
+#if 0				/* reimplemented using new interfaces */
 static char *
 clientConstructProxyAuthReply(clientHttpRequest * http)
 {
@@ -166,7 +166,7 @@ clientConstructProxyAuthReply(clientHttpRequest * http)
 #endif
 
 static HttpReply *
-clientConstructProxyAuthReply(clientHttpRequest *http)
+clientConstructProxyAuthReply(clientHttpRequest * http)
 {
     ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_PROXY_AUTHENTICATION_REQUIRED);
     HttpReply *rep;
@@ -532,7 +532,7 @@ clientPurgeRequest(clientHttpRequest * http)
 	storeRelease(entry);
 	http->http_code = HTTP_OK;
     }
-#if 0 /* new interface */
+#if 0				/* new interface */
     msg = httpReplyHeader(1.0, http->http_code, NULL, 0, 0, -1);
     if ((int) strlen(msg) < 8190)
 	strcat(msg, "\r\n");
@@ -558,6 +558,8 @@ checkNegativeHit(StoreEntry * e)
 void
 clientUpdateCounters(clientHttpRequest * http)
 {
+    int svc_time = tvSubMsec(http->start, current_time);
+    icp_ping_data *i;
     Counter.client_http.requests++;
     kb_incr(&Counter.client_http.kbytes_in, http->req_sz);
     kb_incr(&Counter.client_http.kbytes_out, http->out.size);
@@ -567,8 +569,32 @@ clientUpdateCounters(clientHttpRequest * http)
     }
     if (http->request->err_type != ERR_NONE)
 	Counter.client_http.errors++;
-    statLogHistCount(&Counter.client_http.svc_time,
-	tvSubMsec(http->start, current_time));
+    statLogHistCount(&Counter.client_http.all_svc_time, svc_time);
+    /*
+     * The idea here is not to be complete, but to get service times
+     * for only well-defined types.  For example, we don't include
+     * LOG_TCP_REFRESH_FAIL_HIT because its not really a cache hit
+     * (we *tried* to validate it, but failed).
+     */
+    switch (http->log_type) {
+    case LOG_TCP_IMS_HIT:
+	statLogHistCount(&Counter.client_http.nm_svc_time, svc_time);
+	break;
+    case LOG_TCP_HIT:
+    case LOG_TCP_MEM_HIT:
+	statLogHistCount(&Counter.client_http.hit_svc_time, svc_time);
+	break;
+    case LOG_TCP_MISS:
+    case LOG_TCP_CLIENT_REFRESH_MISS:
+	statLogHistCount(&Counter.client_http.miss_svc_time, svc_time);
+	break;
+    default:
+	/* make compiler warnings go away */
+	break;
+    }
+    i = &http->request->hier.icp;
+    if (0 != i->stop.tv_sec)
+	statLogHistCount(&Counter.icp.query_svc_time, tvSubUsec(i->start, i->stop));
 }
 
 static void
@@ -1210,7 +1236,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	return;
     }
     debug(33, 4) ("clientGetHeadersForIMS: Not modified '%s'\n", storeUrl(entry));
-#if 0 /* use new interfaces */
+#if 0				/* use new interfaces */
     reply = clientConstruct304reply(mem->reply);
     comm_write(http->conn->fd,
 	xstrdup(reply),
@@ -1272,7 +1298,7 @@ clientProcessRequest2(clientHttpRequest * http)
 	    storeRelease(e);
 	ipcacheReleaseInvalid(r->host);
 	http->entry = NULL;
-	return LOG_TCP_CLIENT_REFRESH;
+	return LOG_TCP_CLIENT_REFRESH_MISS;
     } else if (checkNegativeHit(e)) {
 	return LOG_TCP_NEGATIVE_HIT;
     } else if (refreshCheck(e, r, 0)) {
@@ -1318,7 +1344,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->entry = clientCreateStoreEntry(http, r->method, 0);
 	    storeReleaseRequest(http->entry);
 	    storeBuffer(http->entry);
-#if 0 /* use new interface */
+#if 0				/* use new interface */
 	    hdr = httpReplyHeader(1.0,
 		HTTP_OK,
 		"text/plain",
@@ -2051,9 +2077,9 @@ clientCheckTransferDone(clientHttpRequest * http)
 	return 1;
 }
 
-#if 0 /* moved to HttpReply */
+#if 0				/* moved to HttpReply */
 static char *
-clientConstruct304reply(http_reply *source)
+clientConstruct304reply(http_reply * source)
 {
     LOCAL_ARRAY(char, line, 256);
     LOCAL_ARRAY(char, reply, 8192);

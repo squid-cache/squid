@@ -7,7 +7,7 @@ typedef enum {
     LOG_TCP_REFRESH_HIT,
     LOG_TCP_REFRESH_FAIL_HIT,
     LOG_TCP_REFRESH_MISS,
-    LOG_TCP_CLIENT_REFRESH,
+    LOG_TCP_CLIENT_REFRESH_MISS,
     LOG_TCP_IMS_HIT,
     LOG_TCP_IMS_MISS,
     LOG_TCP_SWAPFAIL_MISS,
@@ -301,7 +301,7 @@ typedef enum {
     HTTP_SERVICE_UNAVAILABLE = 503,
     HTTP_GATEWAY_TIMEOUT = 504,
     HTTP_HTTP_VERSION_NOT_SUPPORTED = 505,
-    HTTP_INVALID_HEADER = 600 /* Squid header parsing error */
+    HTTP_INVALID_HEADER = 600	/* Squid header parsing error */
 } http_status;
 
 /* These are for StoreEntry->flag, which is defined as a SHORT */
@@ -415,7 +415,7 @@ typedef enum {
     MEM_FQDNCACHE_ENTRY,
     MEM_HASH_LINK,
     MEM_HASH_TABLE,
-#if 0 /* renamed to detect all old uses */
+#if 0				/* renamed to detect all old uses */
     MEM_HTTP_REPLY,
 #else
     MEM_HTTPREPLY,
