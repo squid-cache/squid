@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.13 1996/08/26 19:57:04 wessels Exp $
+ * $Id: dnsserver.cc,v 1.14 1996/08/27 20:10:51 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -215,6 +215,10 @@
 #include "util.h"
 
 extern int h_errno;
+
+#if LIBRESOLV_DNS_TTL_HACK
+extern int _dns_ttl_;	/* this is a really *dirty* hack - bne */
+#endif
 
 int do_debug = 0;
 
@@ -434,6 +438,13 @@ int main(argc, argv)
 	    for (i = 0; i < alias_count; i++) {
 		printf("%s\n", result->h_aliases[i]);
 	    }
+
+#if LIBRESOLV_DNS_TTL_HACK
+	    /* DNS TTL handling - bne@CareNet.hu
+	     * for first try it's a dirty hack, by hacking getanswer
+	     * to place th e ttl in a global variable */
+	    printf("$ttl %d\n", _dns_ttl_);
+#endif
 
 	    printf("$end\n");
 	    fflush(stdout);
