@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.145 1998/03/04 22:07:54 wessels Exp $
+ * $Id: acl.cc,v 1.146 1998/03/06 21:05:47 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -399,10 +399,10 @@ aclParseIpData(const char *t)
 	Q = &q;
 	for (x = hp->h_addr_list; x != NULL && *x != NULL; x++) {
 	    if ((r = *Q) == NULL)
-		*Q = r = xcalloc(1, sizeof(struct _acl_ip_data));
+		r = *Q = xcalloc(1, sizeof(struct _acl_ip_data));
 	    xmemcpy(&r->addr1.s_addr, *x, sizeof(r->addr1.s_addr));
 	    r->addr2.s_addr = 0;
-	    r->mask.s_addr = 0;
+	    r->mask.s_addr = no_addr.s_addr;	/* 255.255.255.255 */
 	    Q = &r->next;
 	    debug(28, 3) ("%s --> %s\n", addr1, inet_ntoa(r->addr1));
 	}

@@ -36,17 +36,15 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	if (!allow) {
 	    debug(12, 2) ("icpHandleIcpV3: Access Denied for %s by %s.\n",
 		inet_ntoa(from.sin_addr), AclMatchedName);
-	    if (clientdbDeniedPercent(from.sin_addr) < 95) {
-		reply = icpCreateMessage(ICP_DENIED, 0, url, header.reqnum, 0);
-		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, icp_request->protocol);
-	    } else {
+	    if (clientdbCutoffDenied(from.sin_addr)) {
 		/*
 		 * count this DENIED query in the clientdb, even though
 		 * we're not sending an ICP reply...
 		 */
-		clientdbUpdate(from.sin_addr,
-		    LOG_UDP_DENIED,
-		    Config.Port.icp);
+		clientdbUpdate(from.sin_addr, LOG_UDP_DENIED, Config.Port.icp);
+	    } else {
+		reply = icpCreateMessage(ICP_DENIED, 0, url, header.reqnum, 0);
+		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, icp_request->protocol);
 	    }
 	    break;
 	}

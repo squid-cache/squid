@@ -70,7 +70,7 @@ extern void cbdataDump(StoreEntry *);
 
 extern void clientdbInit(void);
 extern void clientdbUpdate(struct in_addr, log_type, protocol_t);
-extern int clientdbDeniedPercent(struct in_addr);
+extern int clientdbCutoffDenied(struct in_addr);
 extern void clientdbDump(StoreEntry *);
 
 extern void clientAccessCheck(void *);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.165 1998/03/05 00:42:57 wessels Exp $
+ * $Id: ipcache.cc,v 1.166 1998/03/06 21:05:50 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -316,8 +316,6 @@ static ipcache_entry *
 ipcache_create(const char *name)
 {
     static ipcache_entry *i;
-    if (meta_data.ipcache_count > ipcache_high)
-	ipcache_purgelru(NULL);
     meta_data.ipcache_count++;
     i = xcalloc(1, sizeof(ipcache_entry));
     i->name = xstrdup(name);
