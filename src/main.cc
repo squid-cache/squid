@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.212 1998/02/04 23:35:33 wessels Exp $
+ * $Id: main.cc,v 1.213 1998/02/04 23:50:26 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -703,7 +703,7 @@ watch_child(char *argv[])
     /* NOTREACHED */
 }
 
-void
+static void
 normal_shutdown(void)
 {
     debug(1, 1) ("Shutting down...\n");
