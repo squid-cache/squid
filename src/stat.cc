@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.20 1996/04/11 04:47:25 wessels Exp $ */
+/* $Id: stat.cc,v 1.21 1996/04/11 04:48:09 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -963,20 +963,20 @@ protocol_t proto_url_to_id(url)
 }
 
 int proto_default_port(p)
-	protocol_t p;
+     protocol_t p;
 {
-	switch(p) {
-	case PROTO_HTTP:
-		return 80;
-	case PROTO_FTP:
-		return 21;
-	case PROTO_GOPHER:
-		return 70;
-	case PROTO_CACHEOBJ:
-		return CACHE_HTTP_PORT;
-	default:
-		return 0;
-	}
+    switch (p) {
+    case PROTO_HTTP:
+	return 80;
+    case PROTO_FTP:
+	return 21;
+    case PROTO_GOPHER:
+	return 70;
+    case PROTO_CACHEOBJ:
+	return CACHE_HTTP_PORT;
+    default:
+	return 0;
+    }
 }
 
 
