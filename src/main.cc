@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.104 1996/10/24 23:29:39 wessels Exp $
+ * $Id: main.cc,v 1.105 1996/10/25 16:43:25 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -283,8 +283,6 @@ mainParseOptions(int argc, char *argv[])
 	    break;
 	}
     }
-    argc -= optind;
-    argv += optind;
 }
 
 static void
