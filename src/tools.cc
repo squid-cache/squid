@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.188 1999/12/30 17:37:01 wessels Exp $
+ * $Id: tools.cc,v 1.189 2000/03/06 16:23:36 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -12,10 +12,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -482,6 +482,7 @@ leave_suid(void)
 {
     struct passwd *pwd = NULL;
     struct group *grp = NULL;
+    gid_t gid;
     debug(21, 3) ("leave_suid: PID %d called\n", getpid());
     if (geteuid() != 0)
 	return;
@@ -491,12 +492,15 @@ leave_suid(void)
     if ((pwd = getpwnam(Config.effectiveUser)) == NULL)
 	return;
     if (Config.effectiveGroup && (grp = getgrnam(Config.effectiveGroup))) {
-	if (setgid(grp->gr_gid) < 0)
-	    debug(50, 1) ("leave_suid: setgid: %s\n", xstrerror());
+	gid = grp->gr_gid;
     } else {
-	if (setgid(pwd->pw_gid) < 0)
-	    debug(50, 1) ("leave_suid: setgid: %s\n", xstrerror());
+	gid = pwd->pw_gid;
     }
+#if HAVE_SETGROUPS
+    setgroups(1, &gid);
+#endif
+    if (setgid(gid) < 0)
+	debug(50, 1) ("leave_suid: setgid: %s\n", xstrerror());
     debug(21, 3) ("leave_suid: PID %d giving up root, becoming '%s'\n",
 	getpid(), pwd->pw_name);
 #if HAVE_SETRESUID

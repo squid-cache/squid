@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.68 2000/01/11 04:58:03 wessels Exp $
+ * $Id: forward.cc,v 1.69 2000/03/06 16:23:31 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -12,10 +12,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ fwdCheckRetry(FwdState * fwdState)
 	return 0;
     if (fwdState->n_tries > 10)
 	return 0;
-    if (squid_curtime - fwdState->start > 120)
+    if (squid_curtime - fwdState->start > Config.Timeout.connect)
 	return 0;
     if (fwdState->flags.dont_retry)
 	return 0;
@@ -206,6 +206,12 @@ fwdConnectTimeout(int fd, void *data)
 	err->request = requestLink(fwdState->request);
 	err->xerrno = ETIMEDOUT;
 	fwdFail(fwdState, err);
+	/*
+	 * This marks the peer DOWN ... 
+	 */
+	if (fwdState->servers)
+	    if (fwdState->servers->peer)
+		peerCheckConnectStart(fwdState->servers->peer);
     }
     comm_close(fd);
 }

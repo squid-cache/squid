@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.17 1999/10/04 19:10:52 wessels Exp $
+ * $Id: dns_internal.cc,v 1.18 2000/03/06 16:23:31 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -12,10 +12,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@ static int event_queued = 0;
 static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
 static void idnsFreeNameservers(void);
+static void idnsParseNameservers(void);
 static void idnsParseResolvConf(void);
 static void idnsSendQuery(idns_query * q);
 static int idnsFromKnownNameserver(struct sockaddr_in *from);
@@ -83,6 +84,7 @@ static idns_query *idnsFindQuery(unsigned short id);
 static void idnsGrokReply(const char *buf, size_t sz);
 static PF idnsRead;
 static EVH idnsCheckQueue;
+static void idnsTickleQueue(void);
 
 static void
 idnsAddNameserver(const char *buf)
@@ -104,7 +106,7 @@ idnsAddNameserver(const char *buf)
     nameservers[nns].S.sin_family = AF_INET;
     nameservers[nns].S.sin_port = htons(DOMAIN_PORT);
     nameservers[nns].S.sin_addr.s_addr = inet_addr(buf);
-    debug(78, 1) ("idnsAddNameserver: Added nameserver #%d: %s\n",
+    debug(78, 3) ("idnsAddNameserver: Added nameserver #%d: %s\n",
 	nns, inet_ntoa(nameservers[nns].S.sin_addr));
     nns++;
 }
@@ -114,6 +116,16 @@ idnsFreeNameservers(void)
 {
     safe_free(nameservers);
     nns = nns_alloc = 0;
+}
+
+static void
+idnsParseNameservers(void)
+{
+    wordlist *w;
+    for (w = Config.dns_nameservers; w; w = w->next) {
+	debug(78, 1) ("Adding nameserver %s from squid.conf\n", w->key);
+	idnsAddNameserver(w->key);
+    }
 }
 
 static void
@@ -127,7 +139,6 @@ idnsParseResolvConf(void)
 	debug(78, 1) ("%s: %s\n", _PATH_RESOLV_CONF, xstrerror());
 	return;
     }
-    idnsFreeNameservers();
     while (fgets(buf, 512, fp)) {
 	t = strtok(buf, w_space);
 	if (NULL == t)
@@ -137,7 +148,7 @@ idnsParseResolvConf(void)
 	t = strtok(NULL, w_space);
 	if (t == NULL)
 	    continue;;
-	debug(78, 1) ("idnsParseResolvConf: nameserver %s\n", t);
+	debug(78, 1) ("Adding nameserver %s from %s\n", t, _PATH_RESOLV_CONF);
 	idnsAddNameserver(t);
     }
     fclose(fp);
@@ -173,6 +184,17 @@ idnsStats(StoreEntry * sentry)
 }
 
 static void
+idnsTickleQueue(void)
+{
+    if (event_queued)
+	return;
+    if (NULL == lru_list.tail)
+	return;
+    eventAdd("idnsCheckQueue", idnsCheckQueue, NULL, 1.0, 1);
+    event_queued = 1;
+}
+
+static void
 idnsSendQuery(idns_query * q)
 {
     int x;
@@ -202,10 +224,7 @@ idnsSendQuery(idns_query * q)
     q->sent_t = current_time;
     nameservers[ns].nqueries++;
     dlinkAdd(q, &q->lru, &lru_list);
-    if (!event_queued) {
-	eventAdd("idnsCheckQueue", idnsCheckQueue, NULL, 1.0, 1);
-	event_queued = 1;
-    }
+    idnsTickleQueue();
 }
 
 static int
@@ -353,6 +372,7 @@ idnsCheckQueue(void *unused)
 	    memFree(q, MEM_IDNS_QUERY);
 	}
     }
+    idnsTickleQueue();
 }
 
 /* ====================================================================== */
@@ -372,7 +392,9 @@ idnsInit(void)
 	    fatal("Could not create a DNS socket");
 	debug(78, 1) ("DNS Socket created on FD %d\n", DnsSocket);
     }
-    if (nns == 0)
+    assert(0 == nns);
+    idnsParseNameservers();
+    if (0 == nns)
 	idnsParseResolvConf();
     if (!init) {
 	memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
@@ -390,6 +412,7 @@ idnsShutdown(void)
 	return;
     comm_close(DnsSocket);
     DnsSocket = -1;
+    idnsFreeNameservers();
 }
 
 void

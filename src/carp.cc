@@ -1,5 +1,5 @@
 /*
- * $Id: carp.cc,v 1.6 1998/08/17 21:55:20 wessels Exp $
+ * $Id: carp.cc,v 1.7 2000/03/06 16:23:29 wessels Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
@@ -11,10 +11,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -97,6 +97,10 @@ carpSelectParent(request_t * request)
 	url_hash += (url_hash << 19) + *c;
     /* select peer */
     for (tp = Config.peers; tp; tp = tp->next) {
+	if (0.0 == tp->carp.load_factor)
+	    continue;
+	if (tp->tcp_up != PEER_TCP_MAGIC_COUNT)
+	    continue;
 	assert(tp->type == PEER_PARENT);
 	combined_hash = (url_hash ^ tp->carp.hash);
 	combined_hash += combined_hash * 0x62531965;

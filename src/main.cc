@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.307 1999/12/30 17:36:41 wessels Exp $
+ * $Id: main.cc,v 1.308 2000/03/06 16:23:32 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -12,10 +12,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -71,6 +71,7 @@ extern void log_trace_init(char *);
 #endif
 static EVH SquidShutdown;
 static void mainSetCwd(void);
+static int checkRunningPid(void);
 
 static const char *squid_start_script = "squid_start";
 
@@ -431,6 +432,10 @@ mainSetCwd(void)
 static void
 mainInitialize(void)
 {
+    /* chroot if configured to run inside chroot */
+    if (Config.chroot_dir && chroot(Config.chroot_dir)) {
+	fatal("failed to chroot");
+    }
     if (opt_catch_signals) {
 	squid_signal(SIGSEGV, death, SA_NODEFER | SA_RESETHAND);
 	squid_signal(SIGBUS, death, SA_NODEFER | SA_RESETHAND);
@@ -511,6 +516,8 @@ mainInitialize(void)
 	else
 	    debug(1, 1) ("ICP port disabled in httpd_accelerator mode\n");
     }
+    if (Config.chroot_dir)
+	no_suid();
     if (!configured_once)
 	writePidFile();		/* write PID file */
 
@@ -610,6 +617,9 @@ main(int argc, char **argv)
 	if (opt_parse_cfg_only)
 	    return parse_err;
     }
+    if (-1 == opt_send_signal)
+	if (checkRunningPid())
+	    exit(1);
 
 #if TEST_ACCESS
     comm_init();
@@ -621,10 +631,18 @@ main(int argc, char **argv)
 
     /* send signal to running copy and exit */
     if (opt_send_signal != -1) {
+	/* chroot if configured to run inside chroot */
+	if (Config.chroot_dir && chroot(Config.chroot_dir)) {
+	    fatal("failed to chroot");
+	}
 	sendSignal();
 	/* NOTREACHED */
     }
     if (opt_create_swap_dirs) {
+	/* chroot if configured to run inside chroot */
+	if (Config.chroot_dir && chroot(Config.chroot_dir)) {
+	    fatal("failed to chroot");
+	}
 	setEffectiveUser();
 	debug(0, 0) ("Creating Swap Directories\n");
 	storeCreateSwapDirectories();
@@ -766,6 +784,20 @@ mainStartScript(const char *prog)
     }
 }
 
+static int
+checkRunningPid(void)
+{
+    pid_t pid;
+    debug_log = stderr;
+    pid = readPidFile();
+    if (pid < 2)
+	return 0;
+    if (kill(pid, 0) < 0)
+	return 0;
+    debug(0, 0) ("Squid is already running!  Process ID %d\n", pid);
+    return 1;
+}
+
 static void
 watch_child(char *argv[])
 {
@@ -789,6 +821,7 @@ watch_child(char *argv[])
 	exit(0);
     if (setsid() < 0)
 	syslog(LOG_ALERT, "setsid failed: %s", xstrerror());
+    closelog();
 #ifdef TIOCNOTTY
     if ((i = open("/dev/tty", O_RDWR)) >= 0) {
 	ioctl(i, TIOCNOTTY, NULL);
@@ -801,12 +834,14 @@ watch_child(char *argv[])
 	mainStartScript(argv[0]);
 	if ((pid = fork()) == 0) {
 	    /* child */
+	    openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 	    prog = xstrdup(argv[0]);
 	    argv[0] = xstrdup("(squid)");
 	    execvp(prog, argv);
 	    syslog(LOG_ALERT, "execvp failed: %s", xstrerror());
 	}
 	/* parent */
+	openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 	syslog(LOG_NOTICE, "Squid Parent: child process %d started", pid);
 	time(&start);
 	squid_signal(SIGINT, SIG_IGN, SA_RESTART);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.336 2000/01/14 08:37:04 wessels Exp $
+ * $Id: cache_cf.cc,v 1.337 2000/03/06 16:23:29 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -12,10 +12,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -55,8 +55,8 @@ static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
-
-static int http_header_first = 0;
+static int http_header_first;
+static int http_header_allowed = 0;
 
 static void configDoConfigure(void);
 static void parse_refreshpattern(refresh_t **);
@@ -188,6 +188,7 @@ parseConfigFile(const char *file_name)
 	cfg_filename = token + 1;
     memset(config_input_line, '\0', BUFSIZ);
     config_lineno = 0;
+    http_header_first = 0;
     while (fgets(config_input_line, BUFSIZ, fp)) {
 	config_lineno++;
 	if ((token = strchr(config_input_line, '\n')))
@@ -236,6 +237,7 @@ configDoConfigure(void)
 	Config.Announce.period = 86400 * 365;	/* one year */
 	Config.onoff.announce = 0;
     }
+#if USE_DNSSERVER
     if (Config.dnsChildren < 1)
 	fatal("No dnsservers allocated");
     if (Config.dnsChildren > DefaultDnsChildrenMax) {
@@ -245,6 +247,7 @@ configDoConfigure(void)
 	    DefaultDnsChildrenMax);
 	Config.dnsChildren = DefaultDnsChildrenMax;
     }
+#endif
     if (Config.Program.redirect) {
 	if (Config.redirectChildren < 1) {
 	    Config.redirectChildren = 0;
@@ -319,7 +322,9 @@ configDoConfigure(void)
     }
 #endif
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
+#if USE_DNSSERVER
     requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
+#endif
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
     if (Config.Program.redirect)
 	requirePathnameExists("redirect_program", Config.Program.redirect->key);
@@ -711,7 +716,13 @@ parse_delay_pool_access(delayConfig * cfg)
 static void
 dump_http_header(StoreEntry * entry, const char *name, HttpHeaderMask header)
 {
-    storeAppendPrintf(entry, "%s\n", name);
+    int i;
+    for (i = 0; i < HDR_OTHER; i++) {
+	if (http_header_allowed && !CBIT_TEST(header, i))
+	    storeAppendPrintf(entry, "%s allow %s\n", name, httpHeaderNameById(i));
+	else if (!http_header_allowed && CBIT_TEST(header, i))
+	    storeAppendPrintf(entry, "%s deny %s\n", name, httpHeaderNameById(i));
+    }
 }
 
 static void
@@ -719,7 +730,6 @@ parse_http_header(HttpHeaderMask * header)
 {
     int allowed, id;
     char *t = NULL;
-
     if ((t = strtok(NULL, w_space)) == NULL) {
 	debug(3, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
@@ -736,16 +746,20 @@ parse_http_header(HttpHeaderMask * header)
 	debug(3, 0) ("parse_http_header: expecting 'allow' or 'deny', got '%s'.\n", t);
 	return;
     }
-
     if (!http_header_first) {
 	http_header_first = 1;
-	if (allowed)
+	if (allowed) {
+	    http_header_allowed = 1;
 	    httpHeaderMaskInit(header, 0xFF);
+	} else {
+	    http_header_allowed = 0;
+	    httpHeaderMaskInit(header, 0);
+	}
     }
     while ((t = strtok(NULL, w_space))) {
 	if ((id = httpHeaderIdByNameDef(t, strlen(t))) == -1)
-	    id = HDR_OTHER;
-	if (allowed)
+	    debug(3, 0) ("parse_http_header: Ignoring unknown header '%s'\n", t);
+	else if (allowed)
 	    CBIT_CLR(*header, id);
 	else
 	    CBIT_SET(*header, id);
@@ -1276,7 +1290,6 @@ parse_onoff(int *var)
 }
 
 #define free_onoff free_int
-#define free_httpanonymizer free_int
 #define dump_eol dump_string
 #define free_eol free_string
 
@@ -1629,30 +1642,32 @@ parse_sockaddr_in_list(sockaddr_in_list ** head)
 {
     char *token;
     char *t;
-    char *host = NULL;
+    char *host;
     const struct hostent *hp;
-    int i;
+    unsigned short port;
     sockaddr_in_list *s;
     while ((token = strtok(NULL, w_space))) {
+	host = NULL;
+	port = 0;
 	if ((t = strchr(token, ':'))) {
 	    /* host:port */
 	    host = token;
 	    *t = '\0';
-	    i = atoi(t + 1);
-	    if (i <= 0)
+	    port = (unsigned short) atoi(t + 1);
+	    if (0 == port)
 		self_destruct();
-	} else if ((i = atoi(token)) > 0) {
+	} else if ((port = atoi(token)) > 0) {
 	    /* port */
 	} else {
 	    self_destruct();
 	}
 	s = xcalloc(1, sizeof(*s));
-	s->s.sin_port = htons(i);
+	s->s.sin_port = htons(port);
 	if (NULL == host)
 	    s->s.sin_addr = any_addr;
 	else if (1 == safe_inet_addr(host, &s->s.sin_addr))
 	    (void) 0;
-	else if ((hp = gethostbyname(token)))	/* dont use ipcache */
+	else if ((hp = gethostbyname(host)))	/* dont use ipcache */
 	    s->s.sin_addr = inaddrFromHostent(hp);
 	else
 	    self_destruct();
