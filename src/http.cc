@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.413 2003/03/10 04:56:38 robertc Exp $
+ * $Id: http.cc,v 1.414 2003/05/24 11:32:34 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1154,7 +1154,7 @@ httpBuildRequestHeader(request_t * request,
     {
         /* Append Surrogate-Capabilities */
         String strSurrogate (httpHeaderGetList(hdr_in, HDR_SURROGATE_CAPABILITY));
-        snprintf(bbuf, BBUF_SZ, "%s=Surrogate/1.0 ESI/1.0",
+        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"",
                  Config.Accel.surrogate_id);
         strListAdd(&strSurrogate, bbuf, ',');
         httpHeaderPutStr(hdr_out, HDR_SURROGATE_CAPABILITY, strSurrogate.buf());
