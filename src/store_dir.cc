@@ -76,6 +76,12 @@ storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
     tmp->l2 = l2;
     tmp->read_only = read_only;
     tmp->map = file_map_create(MAX_FILES_PER_DIR);
+    debug(20,0,"storeAddSwapDisk: #%d: %s\n", ncache_dirs, path);
+    debug(20,0,"storeAddSwapDisk: l1=%d\n", tmp->l1);
+    debug(20,0,"storeAddSwapDisk: l2=%d\n", tmp->l2);
+    debug(20,0,"storeAddSwapDisk: sz=%d\n", tmp->max_size);
+    debug(20,0,"storeAddSwapDisk: ro=%d\n", tmp->read_only);
+    debug(20,0,"storeAddSwapDisk: mp=%d\n", tmp->map);
     return ++ncache_dirs;
 }
 
@@ -83,8 +89,10 @@ static int
 storeVerifyOrCreateDir(const char *path)
 {
     struct stat sb;
-    if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode))
+    if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode)) {
+	debug(20,3,"%s exists\n", path);
 	return 0;
+    }
     safeunlink(path, 1);
     if (mkdir(path, 0777) < 0) {
 	if (errno != EEXIST) {
@@ -111,9 +119,9 @@ storeVerifySwapDirs(void)
     int directory_created = 0;
     for (i = 0; i < ncache_dirs; i++) {
 	path = SwapDirs[i].path;
-	debug(20, 9, "storeVerifySwapDirs: Creating swap space in %s\n", path);
-	if (storeVerifyOrCreateDir(path))
-	    storeCreateSwapSubDirs(i);
+	debug(20, 3, "storeVerifySwapDirs: Creating swap space in %s\n", path);
+	storeVerifyOrCreateDir(path);
+	storeCreateSwapSubDirs(i);
     }
     return directory_created;
 }
@@ -126,8 +134,9 @@ storeCreateSwapSubDirs(int j)
     LOCAL_ARRAY(char, name, MAXPATHLEN);
     for (i = 0; i < SD->l1; i++) {
 	sprintf(name, "%s/%02X", SD->path, i);
+	if (storeVerifyOrCreateDir(name) == 0)
+	    continue;
 	debug(20, 1, "Making directories in %s\n", name);
-	storeVerifyOrCreateDir(name);
 	for (k = 0; k < SD->l2; k++) {
 	    sprintf(name, "%s/%02X/%02X", SD->path, i, k);
 	    storeVerifyOrCreateDir(name);
