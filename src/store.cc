@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.156 1996/11/07 20:52:52 wessels Exp $
+ * $Id: store.cc,v 1.157 1996/11/07 20:55:14 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2818,7 +2818,7 @@ storeEntryValidToSend(StoreEntry * e)
     if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	return 0;
     if (BIT_TEST(e->flag, ENTRY_NEGCACHED))
-	if (entry->expires <= squid_curtime)
+	if (e->expires <= squid_curtime)
 	    return 0;
     if (e->store_status == STORE_ABORTED)
 	return 0;
