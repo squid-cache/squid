@@ -54,6 +54,7 @@ extern void intlistDestroy _PARAMS((intlist **));
 extern void wordlistDestroy _PARAMS((wordlist **));
 extern void configFreeMemory _PARAMS((void));
 extern char *cachemgr_getpassword _PARAMS((cachemgr_passwd **, char *));
+extern void dump_all _PARAMS((void));
 
 extern void cbdataInit _PARAMS((void));
 extern void cbdataAdd _PARAMS((void *p));

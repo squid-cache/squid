@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.203 1997/07/14 19:56:14 wessels Exp $
+ * $Id: cache_cf.cc,v 1.204 1997/07/14 21:11:00 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -40,6 +40,11 @@ static const char *const T_MONTH_STR = "month";
 static const char *const T_YEAR_STR = "year";
 static const char *const T_DECADE_STR = "decade";
 
+static const char *const B_BYTES_STR = "bytes";
+static const char *const B_KBYTES_STR = "KB";
+static const char *const B_MBYTES_STR = "MB";
+static const char *const B_GBYTES_STR = "GB";
+
 static const char *const list_sep = ", \t\n\r";
 
 static char fatal_str[BUFSIZ];
@@ -56,10 +61,11 @@ static void parse_wordlist _PARAMS((wordlist **));
 static void default_all _PARAMS((void));
 static int parse_line _PARAMS((char *));
 static cache_peer *configFindPeer _PARAMS((const char *name));
+static void parseBytesLine _PARAMS((size_t *bptr, const char *units));
+static size_t parseBytesUnits _PARAMS((const char *unit));
 
 /* These come from cf_gen.c */
 static void default_all _PARAMS((void));
-static void dump_all _PARAMS((void));
 static void free_all _PARAMS((void));
 
 static void
@@ -164,11 +170,6 @@ parseConfigFile(const char *file_name)
 		config_input_line);
 	}
     }
-
-    /* Scale values */
-    Config.maxRequestSize <<= 10;	/* 1k */
-    Config.Store.maxObjectSize <<= 10;	/* 1k */
-    Config.Mem.maxSize <<= 10;	/* 1m */
 
     /* Sanity checks */
     if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10)) {
@@ -286,6 +287,41 @@ parseTimeUnits(const char *unit)
     if (!strncasecmp(unit, T_DECADE_STR, strlen(T_DECADE_STR)))
 	return 86400 * 365.2522 * 10;
     debug(3, 1) ("parseTimeUnits: unknown time unit '%s'\n", unit);
+    return 0;
+}
+
+static void
+parseBytesLine(size_t *bptr, const char *units)
+{
+    char *token;
+    double d;
+    size_t m;
+    size_t u;
+    if ((u = parseBytesUnits(units)) == 0)
+	self_destruct();
+    if ((token = strtok(NULL, w_space)) == NULL)
+	self_destruct();
+    d = atof(token);
+    m = u;			/* default to 'units' if none specified */
+    if ((token = strtok(NULL, w_space)) != NULL) {
+	if ((m = parseBytesUnits(token)) == 0)
+	    self_destruct();
+    }
+    *bptr = m * d / u;
+}
+
+static size_t
+parseBytesUnits(const char *unit)
+{
+    if (!strncasecmp(unit, B_BYTES_STR, strlen(B_BYTES_STR)))
+	return 1;
+    if (!strncasecmp(unit, B_KBYTES_STR, strlen(B_KBYTES_STR)))
+	return 1<<10;
+    if (!strncasecmp(unit, B_MBYTES_STR, strlen(B_MBYTES_STR)))
+	return 1<<20;
+    if (!strncasecmp(unit, B_GBYTES_STR, strlen(B_GBYTES_STR)))
+	return 1<<30;
+    debug(3, 1) ("parseBytesUnits: unknown bytes unit '%s'\n", unit);
     return 0;
 }
 
@@ -417,6 +453,7 @@ parse_cachedir(struct _cacheSwap *swap)
     tmp->map = file_map_create(MAX_FILES_PER_DIR);
     tmp->swaplog_fd = -1;
     swap->n_configured++;
+    Config.Swap.maxSize += size;
 }
 
 static void
@@ -941,7 +978,40 @@ free_time_t(time_t *var)
 {
 	*var = 0;
 }
-	
+
+static void
+dump_size_t(size_t var)
+{
+    printf("%d bytes", (int) var);
+}
+
+static void
+dump_kb_size_t(size_t var)
+{
+    printf("%d KB", (int) var);
+}
+
+static void
+parse_size_t(size_t *var)
+{
+    parseBytesLine(var, B_BYTES_STR);
+}
+
+static void
+parse_kb_size_t(size_t *var)
+{
+    parseBytesLine(var, B_KBYTES_STR);
+}
+
+static void
+free_size_t(size_t *var)
+{
+	*var = 0;
+}
+
+#define free_kb_size_t free_size_t
+#define free_mb_size_t free_size_t
+#define free_gb_size_t free_size_t
 
 static void
 dump_ushort(u_short var)

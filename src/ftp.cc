@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.129 1997/06/26 22:41:41 wessels Exp $
+ * $Id: ftp.cc,v 1.130 1997/07/14 21:11:02 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1000,6 +1000,7 @@ ftpReadControlReply(int fd, void *data)
     }
     if (len == 0) {
 	debug(9, 1) ("Read 0 bytes from FTP control socket?\n");
+	assert(len);
 	BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(entry);
 	storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
