@@ -1,5 +1,5 @@
 /*
- * $Id: ESIContext.h,v 1.2 2003/03/15 04:17:38 robertc Exp $
+ * $Id: ESIContext.h,v 1.3 2003/07/14 14:15:56 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,7 +37,7 @@
 #include "ESIElement.h"
 #include "clientStream.h"
 
-class esiVarState;
+class ESIVarState;
 
 class ClientHttpRequest;
 
@@ -66,11 +66,12 @@ public:
 
     /* when esi processing completes */
     void provideData(ESISegment::Pointer, ESIElement *source);
-    void fail (ESIElement *source);
+    void fail (ESIElement *source, char const*anError = NULL);
     void startRead();
     void finishRead();
     bool reading() const;
     void setError();
+    void setErrorMessage(char const *);
 
     void addStackElement (ESIElement::Pointer element);
     void addLiteral (const char *s, int len);
@@ -158,7 +159,7 @@ int detached:
     }
 
     parserState; /* todo factor this off somewhere else; */
-    esiVarState *varState;
+    ESIVarState *varState;
     ESIElement::Pointer tree;
 
     esiKick_t kick ();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 Robert Collins <rbtcollins@hotmail.com>
+ * Copyright (c) 2002,2003 Robert Collins <rbtcollins@hotmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@
 * i.e. M-ary internal node sizes etc
 */
 
+class TrieCharTransform;
+
 class TrieNode
 {
 
@@ -56,7 +58,7 @@ public:
     * If found, return the private data.
     * If not found, return NULL.
     */
-    _SQUID_INLINE_ void *find (char const *, size_t, bool prefix = false) const;
+    _SQUID_INLINE_ void *find (char const *, size_t, TrieCharTransform *, bool const prefix) const;
 
     /* Add a string.
     * returns false if the string is already
@@ -64,7 +66,7 @@ public:
     */
 
     bool add
-        (char const *, size_t, void *);
+        (char const *, size_t, void *, TrieCharTransform *);
 
 private:
     /* 256-way Trie */

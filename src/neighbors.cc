@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.319 2003/03/02 23:13:49 hno Exp $
+ * $Id: neighbors.cc,v 1.320 2003/07/14 14:16:00 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -39,6 +39,7 @@
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "ACLChecklist.h"
+#include "htcp.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.481 2003/07/06 21:50:56 hno Exp $
+ * $Id: protos.h,v 1.482 2003/07/14 14:16:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -405,7 +405,6 @@ SQUIDCEXTERN void httpHeaderInit(HttpHeader * hdr, http_hdr_owner_type owner);
 SQUIDCEXTERN void httpHeaderClean(HttpHeader * hdr);
 /* append/update */
 SQUIDCEXTERN void httpHeaderAppend(HttpHeader * dest, const HttpHeader * src);
-SQUIDCEXTERN void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
 /* parse/pack */
 SQUIDCEXTERN int httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end);
 SQUIDCEXTERN void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
@@ -416,7 +415,11 @@ SQUIDCEXTERN void httpHeaderPutTime(HttpHeader * hdr, http_hdr_type type, time_t
 SQUIDCEXTERN void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str);
 SQUIDCEXTERN void httpHeaderPutAuth(HttpHeader * hdr, const char *auth_scheme, const char *realm);
 SQUIDCEXTERN void httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc);
+
+class HttpHdrContRange;
 SQUIDCEXTERN void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr);
+
+class HttpHdrRange;
 SQUIDCEXTERN void httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range);
 SQUIDCEXTERN void httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value);
 SQUIDCEXTERN int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
@@ -634,22 +637,6 @@ SQUIDCEXTERN void urnStart(request_t *, StoreEntry *);
 
 SQUIDCEXTERN void redirectInit(void);
 SQUIDCEXTERN void redirectShutdown(void);
-
-SQUIDCEXTERN void refreshAddToList(const char *, int, time_t, int, time_t);
-SQUIDCEXTERN int refreshIsCachable(const StoreEntry *);
-SQUIDCEXTERN int refreshCheckHTTP(const StoreEntry *, request_t *);
-SQUIDCEXTERN int refreshCheckICP(const StoreEntry *, request_t *);
-SQUIDCEXTERN int refreshCheckHTCP(const StoreEntry *, request_t *);
-SQUIDCEXTERN int refreshCheckDigest(const StoreEntry *, time_t delta);
-SQUIDCEXTERN time_t getMaxAge(const char *url);
-SQUIDCEXTERN void refreshInit(void);
-
-SQUIDCEXTERN void serverConnectionsClose(void);
-SQUIDCEXTERN void shut_down(int);
-
-
-SQUIDCEXTERN void start_announce(void *unused);
-SQUIDCEXTERN void waisStart(FwdState *);
 
 extern void refreshAddToList(const char *, int, time_t, int, time_t);
 extern int refreshIsCachable(const StoreEntry *);

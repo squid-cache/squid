@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.10 2003/07/12 12:39:56 robertc Exp $
+ * $Id: authenticate.h,v 1.11 2003/07/14 14:15:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -109,6 +109,8 @@ private:
 };
 
 /* Per scheme request data ABC */
+
+class ConnStateData;
 
 class AuthUserRequestState
 {

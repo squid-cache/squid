@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.164 2003/07/12 12:39:56 robertc Exp $
+ * $Id: typedefs.h,v 1.165 2003/07/14 14:16:02 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -119,7 +119,7 @@ typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 
 class HttpHeaderFieldInfo;
 
-typedef struct _HttpHeader HttpHeader;
+class HttpHeader;
 
 typedef struct _HttpHdrCc HttpHdrCc;
 

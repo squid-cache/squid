@@ -1,7 +1,8 @@
-
 /*
- * $Id: ACLReplyMIMEType.h,v 1.3 2003/07/14 14:15:55 robertc Exp $
+ * $Id: ESIVar.h,v 1.1 2003/07/14 14:15:55 robertc Exp $
  *
+ * DEBUG: section 86    ESI processing
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,38 +30,29 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLREPLYMIMETYPE_H
-#define SQUID_ACLREPLYMIMETYPE_H
-#include "ACL.h"
-#include "ACLData.h"
-#include "ACLReplyHeaderStrategy.h"
-#include "ACLStrategised.h"
-#include "ACLChecklist.h"
-/* FIXME: TODO: this is broken - should be HttpReply checks!! */
-#include "HttpRequest.h"
+#ifndef SQUID_ESIVAR_H
+#define SQUID_ESIVAR_H
 
-class ACLReplyMIMEType
+#include "squid.h"
+#include "ESIElement.h"
+#include "ESISequence.h"
+
+/* esiVar */
+
+class ESIVar:public esiSequence
 {
 
-private:
-    static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<char const *> RegistryEntry_;
+public:
+    //    void *operator new (size_t byteCount);
+    //    void operator delete (void *address);
+    void deleteSelf() const;
+    ESIVar(esiTreeParentPtr aParent) : esiSequence (aParent)
+    {
+        flags.dovars = 1;
+    }
 };
 
-/* partial specialisation */
-int
-ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
-{
-    char const *theHeader = httpHeaderGetStr(&checklist->request->header, HDR_CONTENT_TYPE);
-
-    if (NULL == theHeader)
-        theHeader = "";
-
-    return data->match(theHeader);
-}
-
-#endif /* SQUID_ACLREPLYMIMETYPE_H */
+#endif /* SQUID_ESIVAR_H */

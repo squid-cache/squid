@@ -1,5 +1,5 @@
 /*
- * $Id: ESILiteral.h,v 1.2 2003/07/14 14:15:56 robertc Exp $
+ * $Id: ESIAssign.h,v 1.1 2003/07/14 14:15:55 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -33,46 +33,61 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ESILITERAL_H
-#define SQUID_ESILITERAL_H
+#ifndef SQUID_ESIASSIGN_H
+#define SQUID_ESIASSIGN_H
 
 #include "squid.h"
 #include "ESIElement.h"
+#include "SquidString.h"
+#include "ESIVarState.h"
+
+/* ESIVariableExpression */
+/* This is a variable that is itself and expression */
+
+class ESIVariableExpression : public ESIVarState::Variable
+{
+
+public:
+    ~ESIVariableExpression();
+    ESIVariableExpression (String const &value);
+    virtual void eval (ESIVarState &state, char const *, char const *) const;
+
+private:
+    String expression;
+};
+
+/* ESIAssign */
 
 class ESIContext;
-/* esiLiteral */
 
-struct esiLiteral : public ESIElement
+class ESIAssign : public ESIElement
 {
+
+public:
     void *operator new (size_t byteCount);
     void operator delete (void *address);
     void deleteSelf() const;
-
-    esiLiteral(ESISegment::Pointer);
-    esiLiteral(ESIContext *, const char *s, int len);
-    ~esiLiteral();
-
-    void render(ESISegment::Pointer);
+    ESIAssign (esiTreeParentPtr, int, const char **, ESIContext *);
+    ESIAssign (ESIAssign const &);
+    ESIAssign &operator=(ESIAssign const &);
+    ~ESIAssign();
     esiProcessResult_t process (int dovars);
+    void render(ESISegment::Pointer);
+    bool addElement(ESIElement::Pointer);
+    void provideData (ESISegment::Pointer data, ESIElement * source);
     Pointer makeCacheable() const;
     Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
-    /* optimise copies away later */
-    ESISegment::Pointer buffer;
-
-    struct
-    {
-
-int donevars:
-        1;
-    }
-
-    flags;
-    ESIVarState *varState;
     void finish();
 
 private:
-    static MemPool *pool;
-    esiLiteral(esiLiteral const &);
+    static MemPool *Pool;
+    void evaluateVariable();
+    esiTreeParentPtr parent;
+    ESIVarState *varState;
+    String name;
+    ESIVariableExpression * value;
+    ESIElement::Pointer variable;
+    String unevaluatedVariable;
 };
 
-#endif /* SQUID_ESILITERAL_H */
+#endif /* SQUID_ESIASSIGN_H */

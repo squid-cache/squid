@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.100 2003/07/11 01:40:36 robertc Exp $
+ * $Id: redirect.cc,v 1.101 2003/07/14 14:16:02 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -121,9 +121,13 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
 
     if (Config.accessList.redirector) {
         ACLChecklist ch;
-        ch.src_addr = http->getConn()->peer.sin_addr;
-        ch.my_addr = http->getConn()->me.sin_addr;
-        ch.my_port = ntohs(http->getConn()->me.sin_port);
+
+        if (conn.getRaw() != NULL) {
+            ch.src_addr = conn->peer.sin_addr;
+            ch.my_addr = conn->me.sin_addr;
+            ch.my_port = ntohs(conn->me.sin_port);
+        }
+
         ch.request = requestLink(http->request);
 
         if (!aclCheckFast(Config.accessList.redirector, &ch)) {
@@ -142,11 +146,11 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
 
     r = cbdataAlloc(redirectStateData);
     r->orig_url = xstrdup(http->uri);
-    r->client_addr = conn->log_addr;
+    r->client_addr = conn.getRaw() != NULL ? conn->log_addr : no_addr;
 
     if (http->request->auth_user_request)
         r->client_ident = authenticateUserRequestUsername(http->request->auth_user_request);
-    else if (conn->rfc931[0]) {
+    else if (conn.getRaw() != NULL && conn->rfc931[0]) {
         r->client_ident = conn->rfc931;
     } else {
         r->client_ident = dash_str;

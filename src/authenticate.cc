@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.59 2003/07/11 01:40:35 robertc Exp $
+ * $Id: authenticate.cc,v 1.60 2003/07/14 14:15:59 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -41,6 +41,7 @@
 #include "authenticate.h"
 #include "ACL.h"
 #include "client_side.h"
+#include "HttpReply.h"
 #include "HttpRequest.h"
 
 CBDATA_TYPE(auth_user_ip_t);

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.81 2003/07/07 22:44:28 robertc Exp $
+#  $Id: Makefile.am,v 1.82 2003/07/14 14:15:56 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -55,6 +55,8 @@ ESI_ALL_SOURCE = \
 	ElementList.h \
 	ESI.cc \
 	ESI.h \
+	ESIAssign.cc \
+	ESIAssign.h \
 	ESIAttempt.h \
 	ESIContext.cc \
 	ESIContext.h \
@@ -65,13 +67,19 @@ ESI_ALL_SOURCE = \
 	ESIExpatParser.cc \
 	ESIExpatParser.h \
 	ESIExpression.cc \
+	ESIExpression.h \
+	ESIInclude.cc \
+	ESIInclude.h \
 	ESILiteral.h \
 	ESIParser.cc \
 	ESIParser.h \
 	ESISegment.cc \
 	ESISegment.h \
 	ESISequence.cc \
-	ESISequence.h
+	ESISequence.h \
+	ESIVar.h \
+	ESIVarState.cc \
+	ESIVarState.h
 if USE_ESI
   ESI_SOURCE = $(ESI_ALL_SOURCE)
 else
@@ -85,7 +93,7 @@ XPROF_STATS_SOURCE =
 endif
 
 if ENABLE_HTCP
-HTCPSOURCE = htcp.cc
+HTCPSOURCE = htcp.cc htcp.h
 endif
 
 if MAKE_LEAKFINDER

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 Robert Collins <rbtcollins@hotmail.com>
+ * Copyright (c) 2002,2003 Robert Collins <rbtcollins@hotmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 #ifdef __cplusplus
 #include "TrieNode.h"
+#include "TrieCharTransform.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -26,26 +27,31 @@
 
 /* recursive. TODO? make iterative */
 void *
-TrieNode::find (char const *aString, size_t theLength, bool prefix) const
+TrieNode::find (char const *aString, size_t theLength, TrieCharTransform *transform, bool const prefix) const
 {
     if (theLength) {
-	int index = -1;
-	if (internal[*aString])
-	    index = *aString;
-	else if (internal[tolower(*aString)])
-	    index = tolower(*aString);
-	if (index > -1) {
-	    void *result;
-	    result = internal[index]->find(aString + 1, theLength - 1, prefix);
-	    if (result)
-		return result;
-	}
-	if (prefix)
-	    return _privateData;
-	return NULL;
+        int index = -1;
+        unsigned char pos = transform ? (*transform) (*aString) : *aString;
+
+        if (internal[pos])
+            index = pos;
+
+        if (index > -1) {
+            void *result;
+            result = internal[index]->find(aString + 1, theLength - 1, transform, prefix);
+
+            if (result)
+                return result;
+        }
+
+        if (prefix)
+            return _privateData;
+
+        return NULL;
     } else {
-	/* terminal node */
-	return _privateData;
+        /* terminal node */
+        return _privateData;
     }
 }
+
 #endif

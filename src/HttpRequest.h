@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.2 2003/07/11 01:40:35 robertc Exp $
+ * $Id: HttpRequest.h,v 1.3 2003/07/14 14:15:56 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,7 +35,22 @@
 #define SQUID_HTTPREQUEST_H
 
 #include "typedefs.h"
+#include "HttpHeader.h"
 #include "client_side.h"
+
+/*  Http Request */
+extern request_t *requestCreate(method_t, protocol_t, const char *urlpath);
+extern void requestDestroy(request_t *);
+extern request_t *requestLink(request_t *);
+extern void requestUnlink(request_t *);
+extern int httpRequestParseHeader(request_t * req, const char *parse_start);
+extern void httpRequestSwapOut(const request_t * req, StoreEntry * e);
+extern void httpRequestPack(const request_t * req, Packer * p);
+extern int httpRequestPrefixLen(const request_t * req);
+extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
+extern int httpRequestHdrAllowedByName(http_hdr_type id);
+
+class HttpHdrRange;
 
 class request_t
 {
@@ -80,18 +95,6 @@ public:
     String extacl_passwd;	/* Password returned by extacl lookup */
     String extacl_log;		/* String to be used for access.log purposes */
 };
-
-/*  Http Request */
-extern request_t *requestCreate(method_t, protocol_t, const char *urlpath);
-extern void requestDestroy(request_t *);
-extern request_t *requestLink(request_t *);
-extern void requestUnlink(request_t *);
-extern int httpRequestParseHeader(request_t * req, const char *parse_start);
-extern void httpRequestSwapOut(const request_t * req, StoreEntry * e);
-extern void httpRequestPack(const request_t * req, Packer * p);
-extern int httpRequestPrefixLen(const request_t * req);
-extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
-extern int httpRequestHdrAllowedByName(http_hdr_type id);
 
 
 #endif /* SQUID_HTTPREQUEST_H */

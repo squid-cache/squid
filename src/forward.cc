@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.106 2003/07/11 01:40:36 robertc Exp $
+ * $Id: forward.cc,v 1.107 2003/07/14 14:16:00 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -41,6 +41,7 @@
 #include "MemObject.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
+#include "HttpReply.h"
 
 static PSC fwdStartComplete;
 static void fwdDispatch(FwdState *);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 Robert Collins <rbtcollins@hotmail.com>
+ * Copyright (c) 2002,2003 Robert Collins <rbtcollins@hotmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 /* C bindings */
 #ifndef   __cplusplus
 
+/* TODO: provide parameterisation for C bindings */
 void *TrieCreate ();
 void TrieDestroy (void *);
 void *TrieFind (void *, char const *, size_t);
@@ -43,6 +44,8 @@ int TrieAdd (void *, char const *, size_t, void *);
 
 /* C++ bindings */
 #else
+
+class TrieCharTransform;
 
 class TrieNode;
 
@@ -54,7 +57,7 @@ class Trie
 {
 
 public:
-    Trie();
+    Trie(TrieCharTransform *aTransform = 0);
     ~Trie();
     Trie (Trie const &);
     Trie &operator= (Trie const &);
@@ -79,6 +82,9 @@ public:
 
 private:
     TrieNode *head;
+
+    /* transfor each 8 bits in the element */
+    TrieCharTransform *transform;
 };
 
 #endif /* __cplusplus */

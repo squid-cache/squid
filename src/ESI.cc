@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.3 2003/03/15 04:17:38 robertc Exp $
+ * $Id: ESI.cc,v 1.4 2003/07/14 14:15:55 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -45,6 +45,10 @@
 #include "ESIAttempt.h"
 #include "ESIExcept.h"
 #include "client_side.h"
+#include "ESIVarState.h"
+#include "ESIAssign.h"
+#include "ESIExpression.h"
+#include "HttpRequest.h"
 
 /* quick reference on behaviour here.
  * The ESI specification 1.0 requires the ESI processor to be able to 
@@ -56,8 +60,6 @@
  */
 
 class ESIStreamContext;
-
-typedef class ESIStreamContext esiStreamContext;
 
 /* TODO: split this out into separate files ? */
 /* Parsing: quick and dirty. ESI files are not valid XML, so a generic
@@ -86,107 +88,6 @@ bool operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
     return lhs == rhs.getRaw();
 }
 
-
-/* esi variable replacement logic */
-
-typedef enum {
-    ESI_BROWSER_MSIE,
-    ESI_BROWSER_MOZILLA,
-    ESI_BROWSER_OTHER
-} esiBrowser_t;
-
-static char const * esiBrowsers[]=
-    {"MSIE",
-     "MOZILLA",
-     "OTHER"
-    };
-
-/* Recursive uses are not supported by design */
-
-struct _query_elem{char *var, *val;};
-
-struct esiVarState
-{
-    ESISegment::Pointer extractList();
-    char *extractChar();
-    void feedData (const char *buf, size_t len);
-    void buildVary (HttpReply *rep);
-
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
-    void deleteSelf() const;
-    void freeResources();
-    esiVarState (HttpHeader const *hdr, char const *uri);
-
-private:
-    char *getProductVersion (char const *s);
-    ESISegment::Pointer input;
-    ESISegment::Pointer output;
-    HttpHeader hdr;
-
-    struct _query_elem *query;
-    size_t query_sz;
-    size_t query_elements;
-    char *query_string;
-
-    struct
-    {
-
-int language:
-        1;
-
-int cookie:
-        1;
-
-int host:
-        1;
-
-int referer:
-        1;
-
-int useragent:
-        1;
-    }
-
-    flags;
-    esiBrowser_t browser;
-    char *browserversion;
-    enum esiVar_t {
-        ESI_VAR_LANGUAGE,
-        ESI_VAR_COOKIE,
-        ESI_VAR_HOST,
-        ESI_VAR_REFERER,
-        ESI_VAR_USERAGENT,
-        ESI_QUERY_STRING,
-        ESI_VAR_OTHER
-    };
-    void doIt ();
-    void eval (esiVar_t type, char const *, char const *);
-    enum esiUserOs_t{
-        ESI_OS_WIN,
-        ESI_OS_MAC,
-        ESI_OS_UNIX,
-        ESI_OS_OTHER
-    } UserOs;
-    static char const * esiUserOs[];
-    static esiVar_t GetVar(char *s, int len);
-    bool validChar (char c);
-};
-
-CBDATA_TYPE (esiVarState);
-FREE esiVarStateFree;
-
-char const *esiVarState::esiUserOs[]=
-    {
-        "WIN",
-        "MAC",
-        "UNIX",
-        "OTHER"
-    };
-
-
-extern int esiExpressionEval (char const *);
-
 typedef ESIContext::esiKick_t esiKick_t;
 
 
@@ -202,7 +103,7 @@ struct esiComment : public ESIElement
     ~esiComment();
     esiComment();
     Pointer makeCacheable() const;
-    Pointer makeUsable(esiTreeParentPtr, esiVarState &) const;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
 
     void render(ESISegment::Pointer);
     void finish();
@@ -213,89 +114,13 @@ private:
 
 MemPool * esiComment::pool = NULL;
 
-class esiInclude;
-typedef RefCount<esiInclude> esiIncludePtr;
-
-class ESIStreamContext : public RefCountable
-{
-
-public:
-    typedef RefCount<ESIStreamContext> Pointer;
-    void *operator new(size_t);
-    void operator delete(void *);
-    void deleteSelf() const;
-    ESIStreamContext();
-    ~ESIStreamContext();
-    void freeResources();
-    int finished;
-    esiIncludePtr include;
-    ESISegment::Pointer localbuffer;
-    ESISegment::Pointer buffer;
-
-private:
-    CBDATA_CLASS(ESIStreamContext);
-};
-
-CBDATA_CLASS_INIT (ESIStreamContext);
 
 #include "ESILiteral.h"
 MemPool *esiLiteral::pool = NULL;
 
 #include "ESISequence.h"
 
-/* esiInclude */
-
-class esiInclude : public ESIElement
-{
-
-public:
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
-    void deleteSelf() const;
-
-    esiInclude(esiTreeParentPtr, int attributes, const char **attr, ESIContext *);
-    ~esiInclude();
-    void render(ESISegment::Pointer);
-    esiProcessResult_t process (int dovars);
-    Pointer makeCacheable() const;
-    Pointer makeUsable(esiTreeParentPtr, esiVarState &) const;
-    void subRequestDone (ESIStreamContext::Pointer, bool);
-
-    struct
-    {
-
-int onerrorcontinue:
-        1; /* on error return zero data */
-
-int failed:
-        1; /* Failed to process completely */
-
-int finished:
-        1; /* Finished getting subrequest data */
-    }
-
-    flags;
-    ESIStreamContext::Pointer src;
-    ESIStreamContext::Pointer alt;
-    ESISegment::Pointer srccontent;
-    ESISegment::Pointer altcontent;
-    esiVarState *varState;
-    char *srcurl, *alturl;
-    void fail(ESIStreamContext::Pointer);
-    void finish();
-
-private:
-    static MemPool *Pool;
-    static void Start (ESIStreamContext::Pointer, char const *, esiVarState *);
-    esiTreeParentPtr parent;
-    void start();
-    bool started;
-    bool sent;
-    esiInclude(esiInclude const &);
-    bool dataNeeded() const;
-};
-
-MemPool *esiInclude::Pool = NULL;
+#include "ESIInclude.h"
 
 /* esiRemove */
 
@@ -311,7 +136,7 @@ public:
     void render(ESISegment::Pointer);
     bool addElement (ESIElement::Pointer);
     Pointer makeCacheable() const;
-    Pointer makeUsable(esiTreeParentPtr, esiVarState &) const;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
     void finish();
 };
 
@@ -333,11 +158,11 @@ struct esiTry : public ESIElement
 
     void render(ESISegment::Pointer);
     bool addElement (ESIElement::Pointer);
-    void fail(ESIElement *);
+    void fail(ESIElement *, char const * = NULL);
     esiProcessResult_t process (int dovars);
     void provideData (ESISegment::Pointer data, ESIElement * source);
     Pointer makeCacheable() const;
-    Pointer makeUsable(esiTreeParentPtr, esiVarState &) const;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
 
     ESIElement::Pointer attempt;
     ESIElement::Pointer except;
@@ -372,18 +197,7 @@ private:
 
 MemPool *esiTry::Pool = NULL;
 
-/* esiVar */
-
-struct esiVar:public esiSequence
-{
-    //    void *operator new (size_t byteCount);
-    //    void operator delete (void *address);
-    void deleteSelf() const;
-    esiVar(esiTreeParentPtr aParent) : esiSequence (aParent)
-    {
-        flags.dovars = 1;
-    }
-};
+#include "ESIVar.h"
 
 /* esiChoose */
 
@@ -398,14 +212,14 @@ struct esiChoose : public ESIElement
 
     void render(ESISegment::Pointer);
     bool addElement (ESIElement::Pointer);
-    void fail(ESIElement *);
+    void fail(ESIElement *, char const * = NULL);
     esiProcessResult_t process (int dovars);
 
     void provideData (ESISegment::Pointer data, ESIElement *source);
     void makeCachableElements(esiChoose const &old);
-    void makeUsableElements(esiChoose const &old, esiVarState &);
+    void makeUsableElements(esiChoose const &old, ESIVarState &);
     Pointer makeCacheable() const;
-    Pointer makeUsable(esiTreeParentPtr, esiVarState &) const;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
     void NULLUnChosen();
 
     ElementList elements;
@@ -430,10 +244,10 @@ struct esiWhen : public esiSequence
     void *operator new (size_t byteCount);
     void operator delete (void *address);
     void deleteSelf() const;
-    esiWhen(esiTreeParentPtr aParent, int attributes, const char **attr, esiVarState *);
+    esiWhen(esiTreeParentPtr aParent, int attributes, const char **attr, ESIVarState *);
     ~esiWhen();
     Pointer makeCacheable() const;
-    Pointer makeUsable(esiTreeParentPtr, esiVarState &) const;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
 
     bool testsTrue() const { return testValue;}
 
@@ -444,7 +258,7 @@ private:
     esiWhen (esiWhen const &);
     bool testValue;
     char const *unevaluatedExpression;
-    esiVarState *varState;
+    ESIVarState *varState;
     void evaluate();
 };
 
@@ -487,16 +301,7 @@ ESIStreamContext::ESIStreamContext() : finished(false), include (NULL), localbuf
 /* Local functions */
 /* ESIContext */
 static ESIContext *ESIContextNew(HttpReply *, clientStreamNode *, clientHttpRequest *);
-/* esiStreamContext */
-static esiStreamContext *esiStreamContextNew (esiIncludePtr);
 
-/* other */
-static CSCB esiBufferRecipient;
-static CSD esiBufferDetach;
-
-/* ESI TO CONSIDER:
- * 1. retry failed upstream requests
- */
 
 void *
 ESIContext::operator new(size_t byteCount)
@@ -564,9 +369,10 @@ ESIContext::provideData (ESISegment::Pointer theData, ESIElement * source)
 }
 
 void
-ESIContext::fail (ESIElement * source)
+ESIContext::fail (ESIElement * source, char const *anError)
 {
     setError();
+    setErrorMessage (anError);
     fail ();
     send ();
 }
@@ -613,7 +419,7 @@ ESIContext::kick ()
             break;
 
         case ESI_PROCESS_FAILED:
-            debug (86,0)("esiKick: esiProcess %p FAILED\n", this);
+            debug (86,2)("esiKick: esiProcess %p FAILED\n", this);
             /* this can not happen - processing can't fail until we have data,
              * and when we come here we have sent data to the client
              */
@@ -1128,7 +934,7 @@ ESIContextNew (HttpReply *rep, clientStreamNode *thisNode, clientHttpRequest *ht
         rv->thisNode = thisNode;
         rv->http = http;
         rv->flags.clientwantsdata = 1;
-        rv->varState = new esiVarState (&http->request->header, http->uri);
+        rv->varState = new ESIVarState (&http->request->header, http->uri);
         debug (86,5)("ESIContextNew: Client wants data (always created during reply cycle\n");
     }
 
@@ -1163,6 +969,9 @@ ESIElement::IdentifyElement (const char *el)
 
     if (!strncmp (el + offset, "attempt", 7))
         return ESI_ELEMENT_ATTEMPT;
+
+    if (!strncmp (el + offset, "assign", 6))
+        return ESI_ELEMENT_ASSIGN;
 
     if (!strncmp (el + offset, "remove", 6))
         return ESI_ELEMENT_REMOVE;
@@ -1270,7 +1079,7 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
 
     case ESIElement::ESI_ELEMENT_INCLUDE:
         /* Put on the stack to allow skipping of 'invalid' markup */
-        element = new esiInclude (parserState.top().getRaw(), specifiedattcount, attr, this);
+        element = new ESIInclude (parserState.top().getRaw(), specifiedattcount, attr, this);
         break;
 
     case ESIElement::ESI_ELEMENT_REMOVE:
@@ -1295,7 +1104,7 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
 
     case ESIElement::ESI_ELEMENT_VARS:
         /* Put on the stack to allow skipping of 'invalid' markup */
-        element = new esiVar (parserState.top().getRaw());
+        element = new ESIVar (parserState.top().getRaw());
         break;
 
     case ESIElement::ESI_ELEMENT_CHOOSE:
@@ -1311,6 +1120,11 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
     case ESIElement::ESI_ELEMENT_OTHERWISE:
         /* Put on the stack to allow skipping of 'invalid' markup */
         element = new esiOtherwise (parserState.top().getRaw());
+        break;
+
+    case ESIElement::ESI_ELEMENT_ASSIGN:
+        /* Put on the stack to allow skipping of 'invalid' markup */
+        element = new ESIAssign (parserState.top().getRaw(), specifiedattcount, attr, this);
         break;
     }
 
@@ -1364,6 +1178,8 @@ ESIContext::end(const char *el)
     case ESIElement::ESI_ELEMENT_WHEN:
 
     case ESIElement::ESI_ELEMENT_OTHERWISE:
+
+    case ESIElement::ESI_ELEMENT_ASSIGN:
         /* pop of the stack */
         parserState.stack[--parserState.stackdepth] = NULL;
         break;
@@ -1403,8 +1219,7 @@ ESIContext::parserComment (const char *s)
                      tempParser->errorString());
             debug (86,0)("%s",tempstr);
 
-            if (!errormessage)
-                errormessage = xstrdup (tempstr);
+            setErrorMessage(tempstr);
         }
 
         debug (86,5)("ESIContext::parserComment: ESI <!-- block parsed\n");
@@ -1466,8 +1281,7 @@ ESIContext::parseOneBuffer()
                   parserState.theParser->errorString());
         debug (86,0)("%s", tempstr);
 
-        if (!errormessage)
-            errormessage = xstrdup (tempstr);
+        setErrorMessage(tempstr);
 
         assert (flags.error);
 
@@ -1584,8 +1398,7 @@ ESIContext::process ()
             debug (86,0)("esiProcess: tree Processed FAILED\n");
             setError();
 
-            if (!errormessage)
-                errormessage = xstrdup("esiProcess: ESI template Processing failed.");
+            setErrorMessage("esiProcess: ESI template Processing failed.");
 
             PROF_stop(esiProcessing);
 
@@ -1650,7 +1463,7 @@ ESIContext::freeResources ()
     ESISegmentFreeList (buffered);
     ESISegmentFreeList (outbound);
     ESISegmentFreeList (outboundtail);
-    cbdataFree (varState);
+    varState->deleteSelf();
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
@@ -1673,7 +1486,7 @@ ESIContext::fail ()
     flags.error = 1;
     /* create an error object */
     ErrorState * err = clientBuildError(errorpage, errorstatus, NULL,
-                                        http->conn ? &http->conn->peer.sin_addr : &no_addr, http->request);
+                                        http->getConn().getRaw() != NULL ? &http->getConn()->peer.sin_addr : &no_addr, http->request);
     err->err_msg = errormessage;
     errormessage = NULL;
     rep = errorBuildReply (err);
@@ -1697,217 +1510,6 @@ ESIContext::fail ()
      * themselves when the reply is freed - and we don't know what to 
      * clean anyway.
      */
-}
-
-/* Detach from a buffering stream
- */
-void
-esiBufferDetach (clientStreamNode *node, clientHttpRequest *http)
-{
-    /* Detach ourselves */
-    clientStreamDetach (node, http);
-}
-
-/*
- * Write a chunk of data to a client 'socket'. 
- * If the reply is present, send the reply headers down the wire too,
- * and clean them up when finished.
- * Pre-condition: 
- *   The request is an internal ESI subrequest.
- *   data context is not NULL
- *   There are no more entries in the stream chain.
- */
-void
-esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *rep, StoreIOBuffer recievedData)
-{
-    /* Test preconditions */
-    assert (node != NULL);
-    /* ESI TODO: handle thisNode rather than asserting
-     * - it should only ever happen if we cause an 
-     * abort and the callback chain loops back to 
-     * here, so we can simply return. However, that 
-     * itself shouldn't happen, so it stays as an 
-     * assert for now. */
-    assert (cbdataReferenceValid (node));
-    assert (node->node.next == NULL);
-    assert (http->conn == NULL);
-
-    esiStreamContext::Pointer esiStream = dynamic_cast<esiStreamContext *>(node->data.getRaw());
-    assert (esiStream.getRaw() != NULL);
-    /* If segments become more flexible, ignore thisNode */
-    assert (recievedData.length <= sizeof(esiStream->localbuffer->buf));
-    assert (!esiStream->finished);
-
-    debug (86,5) ("esiBufferRecipient rep %p body %p len %d\n", rep, recievedData.data, recievedData.length);
-    assert (node->readBuffer.offset == recievedData.offset || recievedData.length == 0);
-
-    /* trivial case */
-
-    if (http->out.offset != 0) {
-        assert(rep == NULL);
-    } else {
-        if (rep) {
-            if (rep->sline.status != HTTP_OK) {
-                httpReplyDestroy(rep);
-                rep = NULL;
-                esiStream->include->fail (esiStream);
-                esiStream->finished = 1;
-                httpRequestFree (http);
-                return;
-            }
-
-#if HEADERS_LOG
-            /* should be done in the store rather than every recipient?  */
-            headersLog(0, 0, http->request->method, rep);
-
-#endif
-
-            httpReplyDestroy(rep);
-
-            rep = NULL;
-        }
-    }
-
-    if (recievedData.data && recievedData.length) {
-        http->out.offset += recievedData.length;
-
-        if (recievedData.data >= esiStream->localbuffer->buf &&
-                recievedData.data < &esiStream->localbuffer->buf[sizeof(esiStream->localbuffer->buf)]) {
-            /* original static buffer */
-
-            if (recievedData.data != esiStream->localbuffer->buf) {
-                /* But not the start of it */
-                xmemmove (esiStream->localbuffer->buf, recievedData.data, recievedData.length);
-            }
-
-            esiStream->localbuffer->len = recievedData.length;
-        } else {
-            assert (esiStream->buffer.getRaw() != NULL);
-            esiStream->buffer->len = recievedData.length;
-        }
-    }
-
-    /* EOF / Read error /  aborted entry */
-    if (rep == NULL && recievedData.data == NULL && recievedData.length == 0) {
-        /* TODO: get stream status to test the entry for aborts */
-        debug (86,5)("Finished reading upstream data in subrequest\n");
-        esiStream->include->subRequestDone (esiStream, true);
-        esiStream->finished = 1;
-        httpRequestFree (http);
-        return;
-    }
-
-
-    /* after the write to the user occurs, (ie here, or in a callback)
-     * we call */
-    if (clientHttpRequestStatus(-1, http)) {
-        /* TODO: Does thisNode if block leak htto ? */
-        /* XXX when reviewing ESI this is the first place to look */
-        node->data = NULL;
-        esiStream->finished = 1;
-        esiStream->include->fail (esiStream);
-        return;
-    };
-
-    switch (clientStreamStatus (node, http)) {
-
-    case STREAM_UNPLANNED_COMPLETE: /* fallthru ok */
-
-    case STREAM_COMPLETE: /* ok */
-        debug (86,3)("ESI subrequest finished OK\n");
-        esiStream->include->subRequestDone (esiStream, true);
-        esiStream->finished = 1;
-        httpRequestFree (http);
-        return;
-
-    case STREAM_FAILED:
-        debug (86,1)("ESI subrequest failed transfer\n");
-        esiStream->include->fail (esiStream);
-        esiStream->finished = 1;
-        httpRequestFree (http);
-        return;
-
-    case STREAM_NONE: {
-            StoreIOBuffer tempBuffer;
-
-            if (!esiStream->buffer.getRaw()) {
-                esiStream->buffer = esiStream->localbuffer;
-            }
-
-            esiStream->buffer = esiStream->buffer->tail();
-
-            if (esiStream->buffer->len) {
-                esiStream->buffer->next = new ESISegment;
-                esiStream->buffer = esiStream->buffer->next;
-            }
-
-            tempBuffer.offset = http->out.offset;
-            tempBuffer.length = sizeof (esiStream->buffer->buf);
-            tempBuffer.data = esiStream->buffer->buf;
-            /* now just read into 'buffer' */
-            clientStreamRead (node,
-                              http, tempBuffer);
-            debug (86,5)("esiBufferRecipient: Requested more data for ESI subrequest\n");
-        }
-
-        break;
-
-    default:
-        fatal ("Hit unreachable code in esiBufferRecipient\n");
-    }
-
-}
-
-/* esiStream functions */
-ESIStreamContext::~ESIStreamContext()
-{
-    assert (this);
-    freeResources();
-}
-
-void
-ESIStreamContext::freeResources()
-{
-    debug (86,5)("Freeing stream context resources.\n");
-    buffer = NULL;
-    localbuffer = NULL;
-    include = NULL;
-}
-
-void *
-ESIStreamContext::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (ESIStreamContext));
-    CBDATA_INIT_TYPE(ESIStreamContext);
-    ESIStreamContext *result = cbdataAlloc(ESIStreamContext);
-    /* Mark result as being owned - we want the refcounter to do the
-     * delete call
-     */
-    cbdataReference(result);
-    return result;
-}
-
-void
-ESIStreamContext::operator delete (void *address)
-{
-    ESIStreamContext *t = static_cast<ESIStreamContext *>(address);
-    cbdataFree(t);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (address);
-}
-
-void
-ESIStreamContext::deleteSelf() const
-{
-    delete this;
-}
-
-esiStreamContext *
-esiStreamContextNew (esiIncludePtr include)
-{
-    esiStreamContext *rv = new ESIStreamContext;
-    rv->include = include;
-    return rv;
 }
 
 /* Implementation of ESIElements */
@@ -1963,7 +1565,7 @@ esiComment::makeCacheable() const
 }
 
 ESIElement::Pointer
-esiComment::makeUsable(esiTreeParentPtr, esiVarState &) const
+esiComment::makeUsable(esiTreeParentPtr, ESIVarState &) const
 {
     fatal ("esiComment::Usable: unreachable code!\n");
     return NULL;
@@ -2085,330 +1687,12 @@ esiLiteral::makeCacheable() const
 }
 
 ESIElement::Pointer
-esiLiteral::makeUsable(esiTreeParentPtr , esiVarState &newVarState) const
+esiLiteral::makeUsable(esiTreeParentPtr , ESIVarState &newVarState) const
 {
     debug (86,5)("esiLiteral::makeUsable: Creating usable literal\n");
     esiLiteral * result = new esiLiteral (*this);
     result->varState = cbdataReference (&newVarState);
     return result;
-}
-
-/* esiInclude */
-esiInclude::~esiInclude()
-{
-    debug (86,5)("esiInclude::Free %p\n", this);
-    ESISegmentFreeList (srccontent);
-    ESISegmentFreeList (altcontent);
-    cbdataReferenceDone (varState);
-    safe_free (srcurl);
-    safe_free (alturl);
-}
-
-void
-esiInclude::finish()
-{
-    parent = NULL;
-}
-
-void *
-esiInclude::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (esiInclude));
-
-    if (!Pool)
-        Pool = memPoolCreate ("esiInclude", sizeof (esiInclude));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-esiInclude::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
-void
-esiInclude::deleteSelf() const
-{
-    delete this;
-}
-
-ESIElement::Pointer
-esiInclude::makeCacheable() const
-{
-    return new esiInclude (*this);
-}
-
-ESIElement::Pointer
-esiInclude::makeUsable(esiTreeParentPtr newParent, esiVarState &newVarState) const
-{
-    esiInclude *resultI = new esiInclude (*this);
-    ESIElement::Pointer result = resultI;
-    resultI->parent = newParent;
-    resultI->varState = cbdataReference (&newVarState);
-
-    if (resultI->srcurl)
-        resultI->src = esiStreamContextNew (resultI);
-
-    if (resultI->alturl)
-        resultI->alt = esiStreamContextNew (resultI);
-
-    return result;
-}
-
-esiInclude::esiInclude(esiInclude const &old) : parent (NULL), started (false), sent (false)
-{
-    varState = NULL;
-    flags.onerrorcontinue = old.flags.onerrorcontinue;
-
-    if (old.srcurl)
-        srcurl = xstrdup (old.srcurl);
-
-    if (old.alturl)
-        alturl = xstrdup (old.alturl);
-}
-
-void
-esiInclude::Start (ESIStreamContext::Pointer stream, char const *url, esiVarState *vars)
-{
-    HttpHeader tempheaders;
-
-    if (!stream.getRaw())
-        return;
-
-    httpHeaderInit (&tempheaders, hoRequest);
-
-    /* Ensure variable state is clean */
-    vars->feedData(url, strlen (url));
-
-    /* tempUrl is eaten by the request */
-    char const *tempUrl = vars->extractChar ();
-
-    debug (86,5)("esiIncludeStart: Starting subrequest with url '%s'\n", tempUrl);
-
-    if (clientBeginRequest(METHOD_GET, tempUrl, esiBufferRecipient, esiBufferDetach, stream.getRaw(), &tempheaders, stream->localbuffer->buf, HTTP_REQBUF_SZ)) {
-        debug (86,0) ("starting new ESI subrequest failed\n");
-    }
-
-    httpHeaderClean (&tempheaders);
-}
-
-esiInclude::esiInclude (esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) : parent (aParent), started (false), sent (false)
-{
-    int i;
-    assert (aContext);
-
-    for (i = 0; i < attrcount && attr[i]; i += 2) {
-        if (!strcmp(attr[i],"src")) {
-            /* Start a request for thisNode url */
-            debug (86,5)("esiIncludeNew: Requesting source '%s'\n",attr[i+1]);
-            /* TODO: don't assert on thisNode, ignore the duplicate */
-            assert (src.getRaw() == NULL);
-            src = esiStreamContextNew (this);
-            assert (src.getRaw() != NULL);
-            srcurl = xstrdup ( attr[i+1]);
-        } else if (!strcmp(attr[i],"alt")) {
-            /* Start a secondary request for thisNode url */
-            /* TODO: make a config parameter to wait on requesting alt's
-             * for the src to fail
-             */
-            debug (86,5)("esiIncludeNew: Requesting alternate '%s'\n",attr[i+1]);
-            assert (alt.getRaw() == NULL); /* TODO: FIXME */
-            alt = esiStreamContextNew (this);
-            assert (alt.getRaw() != NULL);
-            alturl = xstrdup (attr[i+1]);
-        } else if (!strcmp(attr[i],"onerror")) {
-            if (!strcmp(attr[i+1], "continue")) {
-                flags.onerrorcontinue = 1;
-            } else {
-                /* ignore mistyped attributes */
-                debug (86, 1)("invalid value for onerror='%s'\n", attr[i+1]);
-            }
-        } else {
-            /* ignore mistyped attributes. TODO:? error on these for user feedback - config parameter needed
-             */
-        }
-    }
-
-    varState = cbdataReference(aContext->varState);
-}
-
-void
-esiInclude::start()
-{
-    /* prevent freeing ourselves */
-    esiIncludePtr foo(this);
-
-    if (started)
-        return;
-
-    started = true;
-
-    if (src.getRaw()) {
-        Start (src, srcurl, varState);
-        Start (alt, alturl, varState);
-    } else {
-        alt = NULL;
-
-        debug (86,1)("esiIncludeNew: esi:include with no src attributes\n");
-
-        flags.failed = 1;
-    }
-}
-
-void
-esiInclude::render(ESISegment::Pointer output)
-{
-    if (sent)
-        return;
-
-    ESISegment::Pointer myout;
-
-    debug (86, 5)("esiIncludeRender: Rendering include %p\n", this);
-
-    assert (flags.finished || (flags.failed && flags.onerrorcontinue));
-
-    if (flags.failed && flags.onerrorcontinue) {
-        return;
-    }
-
-    /* Render the content */
-    if (srccontent.getRaw()) {
-        myout = srccontent;
-        srccontent = NULL;
-    } else if (altcontent.getRaw()) {
-        myout = altcontent;
-        altcontent = NULL;
-    } else
-        fatal ("esiIncludeRender called with no content, and no failure!\n");
-
-    assert (output->next == NULL);
-
-    output->next = myout;
-
-    sent = true;
-}
-
-esiProcessResult_t
-esiInclude::process (int dovars)
-{
-    start();
-    debug (86, 5)("esiIncludeRender: Processing include %p\n", this);
-
-    if (flags.failed) {
-        if (flags.onerrorcontinue)
-            return ESI_PROCESS_COMPLETE;
-        else
-            return ESI_PROCESS_FAILED;
-    }
-
-    if (!flags.finished) {
-        if (flags.onerrorcontinue)
-            return ESI_PROCESS_PENDING_WONTFAIL;
-        else
-            return ESI_PROCESS_PENDING_MAYFAIL;
-    }
-
-    return ESI_PROCESS_COMPLETE;
-}
-
-void
-esiInclude::fail (ESIStreamContext::Pointer stream)
-{
-    subRequestDone (stream, false);
-}
-
-bool
-esiInclude::dataNeeded() const
-{
-    return !(flags.finished || flags.failed);
-}
-
-void
-esiInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
-{
-    assert (this);
-
-    if (!dataNeeded())
-        return;
-
-    if (stream == src) {
-        debug (86,3)("esiInclude::subRequestDone: %s\n", srcurl);
-
-        if (success) {
-            /* copy the lead segment */
-            debug (86,3)("esiIncludeSubRequestDone: Src OK - include PASSED.\n");
-            assert (!srccontent.getRaw());
-            ESISegment::ListTransfer (stream->localbuffer, srccontent);
-            /* we're done! */
-            flags.finished = 1;
-        } else {
-            /* Fail if there is no alt being retrieved */
-            debug (86,3)("esiIncludeSubRequestDone: Src FAILED\n");
-
-            if (!(alt.getRaw() || altcontent.getRaw())) {
-                debug (86,3)("esiIncludeSubRequestDone: Include FAILED - No ALT\n");
-                flags.failed = 1;
-            } else if (altcontent.getRaw()) {
-                debug (86,3)("esiIncludeSubRequestDone: Include PASSED - ALT already Complete\n");
-                /* ALT was already retrieved, we are done */
-                flags.finished = 1;
-            }
-        }
-
-        src = NULL;
-    } else if (stream == alt) {
-        debug (86,3)("esiInclude::subRequestDone: %s\n", alturl);
-
-        if (success) {
-            debug (86,3)("esiIncludeSubRequestDone: ALT OK.\n");
-            /* copy the lead segment */
-            assert (!altcontent.getRaw());
-            ESISegment::ListTransfer (stream->localbuffer, altcontent);
-            /* we're done! */
-
-            if (!(src.getRaw() || srccontent.getRaw())) {
-                /* src already failed, kick ESI processor */
-                debug (86,3)("esiIncludeSubRequestDone: Include PASSED - SRC already failed.\n");
-                flags.finished = 1;
-            }
-        } else {
-            if (!(src.getRaw() || srccontent.getRaw())) {
-                debug (86,3)("esiIncludeSubRequestDone: ALT FAILED, Include FAILED - SRC already failed\n");
-                /* src already failed */
-                flags.failed = 1;
-            }
-        }
-
-        alt = NULL;
-    } else {
-        fatal ("esiIncludeSubRequestDone: non-owned stream found!\n");
-    }
-
-    if (flags.finished || flags.failed) {
-        /* Kick ESI Processor */
-        debug (86,5)("esiInclude %p SubRequest %p completed, kicking processor , status %s\n", this, stream.getRaw(), flags.finished ? "OK" : "FAILED");
-        assert (parent.getRaw());
-
-        if (!flags.failed) {
-            sent = true;
-            parent->provideData (srccontent.getRaw() ? srccontent:altcontent,this);
-
-            if (srccontent.getRaw())
-                srccontent = NULL;
-            else
-                altcontent = NULL;
-        } else if (flags.onerrorcontinue) {
-            /* render nothing but inform of completion */
-
-            if (!sent) {
-                sent = true;
-                parent->provideData (new ESISegment, this);
-            } else
-                assert (0);
-        } else
-            parent->fail(this);
-    }
 }
 
 /* esiRemove */
@@ -2481,7 +1765,7 @@ esiRemove::makeCacheable() const
 }
 
 ESIElement::Pointer
-esiRemove::makeUsable(esiTreeParentPtr, esiVarState &) const
+esiRemove::makeUsable(esiTreeParentPtr, ESIVarState &) const
 {
     fatal ("esiRemove::Usable: unreachable code!\n");
     return NULL;
@@ -2671,7 +1955,7 @@ esiTry::notifyParent()
             parent->provideData (exceptbuffer, this);
             exceptbuffer = NULL;
         } else if (flags.exceptfailed || except.getRaw() == NULL) {
-            parent->fail (this);
+            parent->fail (this, "esi:try - except claused failed, or no except clause found");
         }
     }
 
@@ -2679,11 +1963,11 @@ esiTry::notifyParent()
 }
 
 void
-esiTry::fail(ESIElement *source)
+esiTry::fail(ESIElement *source, char const *anError)
 {
     assert (source);
     assert (source == attempt || source == except);
-    debug (86,5) ("esiTry::fail: this=%p, source=%p\n", this, source);
+    debug (86,5) ("esiTry::fail: this=%p, source=%p, message=%s\n", this, source, anError);
 
     if (source == except) {
         flags.exceptfailed = 1;
@@ -2737,7 +2021,7 @@ esiTry::makeCacheable() const
 }
 
 ESIElement::Pointer
-esiTry::makeUsable(esiTreeParentPtr newParent, esiVarState &newVarState) const
+esiTry::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) const
 {
     debug (86,5)("esiTry::makeUsable: making usable Try from %p\n",this);
     esiTry *resultT = new esiTry (*this);
@@ -2817,7 +2101,7 @@ esiExcept::deleteSelf() const
     delete this;
 }
 
-/* esiVar */
+/* ESIVar */
 #if 0
 void *
 esiVar::operator new(size_t byteCount)
@@ -2838,671 +2122,9 @@ esiVar::operator delete (void *address)
 #endif
 
 void
-esiVar::deleteSelf() const
+ESIVar::deleteSelf() const
 {
     delete this;
-}
-
-/* esiVarState */
-void
-esiVarStateFree (void *data)
-{
-    esiVarState *thisNode = (esiVarState*)data;
-    thisNode->freeResources();
-}
-
-void
-esiVarState::freeResources()
-{
-    input = NULL;
-    ESISegmentFreeList (output);
-    httpHeaderClean (&hdr);
-
-    if (query) {
-        unsigned int i;
-
-        for (i = 0; i < query_elements; ++i) {
-            safe_free(query[i].var);
-            safe_free(query[i].val);
-        }
-
-        memFreeBuf (query_sz, query);
-    }
-
-    safe_free (query_string);
-    safe_free (browserversion);
-}
-
-void *
-esiVarState::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (esiVarState));
-    void *rv;
-    CBDATA_INIT_TYPE_FREECB(esiVarState, esiVarStateFree);
-    rv = (void *)cbdataAlloc (esiVarState);
-    return rv;
-}
-
-void
-esiVarState::operator delete (void *address)
-{
-    cbdataFree (address);
-}
-
-void
-esiVarState::deleteSelf() const
-{
-    delete this;
-}
-
-char *
-esiVarState::getProductVersion (char const *s)
-{
-    char const *t;
-    int len;
-    t = index (s,'/');
-
-    if (!t || !*(++t))
-        return xstrdup ("");
-
-    len = strcspn (t, " \r\n()<>@,;:\\\"/[]?={}");
-
-    return xstrndup (t, len);
-}
-
-esiVarState::esiVarState (HttpHeader const *aHeader, char const *uri)
-        : output (NULL)
-{
-    /* Fill out variable values */
-    /* Count off the query elements */
-    char const *query_start = strchr (uri, '?');
-
-    if (query_start && query_start[1] != '\0' ) {
-        unsigned int n;
-        query_string = xstrdup (query_start + 1);
-        query_elements = 1;
-        char const *query_pos = query_start + 1;
-
-        while ((query_pos = strchr (query_pos, '&'))) {
-            ++query_elements;
-            ++query_pos;
-        }
-
-        query = (_query_elem *)memReallocBuf(query, query_elements * sizeof (struct _query_elem),
-                                             &query_sz);
-        query_pos = query_start + 1;
-        n = 0;
-
-        while (query_pos) {
-            char *next = strchr (query_pos, '&');
-            char *div = strchr (query_pos, '=');
-
-            if (next)
-                ++next;
-
-            assert (n < query_elements);
-
-            if (!div)
-                div = next;
-
-            if (!(div - query_pos + 1))
-                /* zero length between & and = or & and & */
-                continue;
-
-            query[n].var = xstrndup (query_pos, div - query_pos + 1) ;
-
-            if (div == next) {
-                query[n].val = xstrdup ("");
-            } else {
-                query[n].val = xstrndup (div + 1, next - div - 1);
-            }
-
-            query_pos = next;
-            ++n;
-        }
-    } else {
-        query_string = xstrdup ("");
-    }
-
-    if (query) {
-        unsigned int n = 0;
-        debug (86,6)("esiVarStateNew: Parsed Query string: '%s'\n",uri);
-
-        while (n < query_elements) {
-            debug (86,6)("esiVarStateNew: Parsed Query element %d '%s'='%s'\n",n + 1, query[n].var, query[n].val);
-            ++n;
-        }
-    }
-
-    /* Now setup the UserAgent values */
-    /* An example:
-     *    User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; .NET CLR 1.0.3705) */
-    /* Grr thisNode is painful - RFC 2616 specifies that 'by convention' the tokens are in order of importance
-     * in identifying the product. According to the RFC the above should be interpreted as:
-     * Product - Mozilla version 4.0
-     * in comments - compatible; .... 3705 
-     *
-     * Useing the RFC a more appropriate header would be
-     *    User-Agent: MSIE/6.0 Mozilla/4.0 Windows-NT/5.1 .NET-CLR/1.0.3705
-     *    or something similar.
-     *
-     * Because we can't parse under those rules and get real-world useful answers, we follow the following 
-     * algorithm:
-     * if the string Windows appears in the header, the OS is WIN.
-     * If the string Mac appears in the header, the OS is MAC.
-     * If the string nix, or BSD appears in the header, the OS is UNIX.
-     * If the string MSIE appears in the header, the BROWSER is MSIE, and the version is the string from 
-     * MSIE<sp> to the first ;, or end of string.
-     * If the String MSIE does not appear in the header, and MOZILLA does, we use the version from the 
-     * /version field.
-     * if MOZILLA doesn't appear, the browser is set to OTHER.
-     * In future, thisNode may be better implemented as a regexp.
-     */
-    /* TODO: only grab the needed headers */
-    httpHeaderInit (&hdr, hoReply);
-
-    httpHeaderAppend (&hdr, aHeader);
-
-    if (httpHeaderHas(&hdr, HDR_USER_AGENT)) {
-        char const *s = httpHeaderGetStr (&hdr, HDR_USER_AGENT);
-        char const *t, *t1;
-
-        if (strstr (s, "Windows"))
-            UserOs = ESI_OS_WIN;
-        else if (strstr (s, "Mac"))
-            UserOs = ESI_OS_MAC;
-        else if (strstr (s, "nix") || strstr (s, "BSD"))
-            UserOs = ESI_OS_UNIX;
-        else
-            UserOs = ESI_OS_OTHER;
-
-        /* Now the browser and version */
-        if ((t = strstr (s, "MSIE"))) {
-            browser = ESI_BROWSER_MSIE;
-            t = index (t, ' ');
-
-            if (!t)
-                browserversion = xstrdup ("");
-            else {
-                t1 = index (t, ';');
-
-                if (!t1)
-                    browserversion = xstrdup (t + 1);
-                else
-                    browserversion = xstrndup (t + 1, t1-t);
-            }
-        } else if (strstr (s, "Mozilla")) {
-            browser = ESI_BROWSER_MOZILLA;
-            browserversion = getProductVersion(s);
-        } else {
-            browser = ESI_BROWSER_OTHER;
-            browserversion = getProductVersion(s);
-        }
-    } else {
-        UserOs = ESI_OS_OTHER;
-        browser = ESI_BROWSER_OTHER;
-        browserversion = xstrdup ("");
-    }
-}
-
-void
-esiVarState::feedData (const char *buf, size_t len)
-{
-    /* TODO: if needed - tune to skip segment iteration */
-    debug (86,6)("esiVarState::feedData: accepting %d bytes\n", len);
-    ESISegment::ListAppend (input, buf, len);
-}
-
-ESISegment::Pointer
-esiVarState::extractList()
-{
-    doIt();
-    ESISegment::Pointer rv = output;
-    output = NULL;
-    debug (86,6)("esiVarStateExtractList: Extracted list\n");
-    return rv;
-}
-
-char *
-esiVarState::extractChar ()
-{
-    if (!input.getRaw())
-        fatal ("Attempt to extract variable state with no data fed in \n");
-
-    doIt();
-
-    char *rv = output->listToChar();
-
-    ESISegmentFreeList (output);
-
-    debug (86,6)("esiVarStateExtractList: Extracted char\n");
-
-    return rv;
-}
-
-int
-httpHeaderHasListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator);
-
-int
-httpHeaderHasListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator)
-{
-    int result = 0;
-    const char *pos = NULL;
-    const char *item;
-    int ilen;
-    int mlen = strlen(member);
-
-    assert(hdr);
-    assert(id >= 0);
-
-    String header (httpHeaderGetStrOrList(hdr, id));
-
-    while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
-        if (strncmp(item, member, mlen) == 0
-                && (item[mlen] == '=' || item[mlen] == separator || item[mlen] == ';' || item[mlen] == '\0')) {
-            result = 1;
-            break;
-        }
-    }
-
-    return result;
-}
-
-void
-esiVarState::eval (esiVar_t type, char const *subref, char const *found_default )
-{
-    const char *s = NULL;
-
-    if (!found_default)
-        found_default = "";
-
-    switch (type) {
-
-    case ESI_VAR_HOST:
-        flags.host = 1;
-
-        if (!subref && httpHeaderHas(&hdr,HDR_HOST)) {
-            s = httpHeaderGetStr (&hdr, HDR_HOST);
-        } else
-            s = found_default;
-
-        ESISegment::ListAppend (output, s, strlen (s));
-
-        break;
-
-    case ESI_VAR_COOKIE:
-        flags.cookie = 1;
-
-        if (httpHeaderHas(&hdr, HDR_COOKIE)) {
-            if (!subref)
-                s = httpHeaderGetStr (&hdr, HDR_COOKIE);
-            else {
-                String S = httpHeaderGetListMember (&hdr, HDR_COOKIE, subref, ';');
-
-                if (S.size())
-                    ESISegment::ListAppend (output, S.buf(), S.size());
-                else if (found_default)
-                    ESISegment::ListAppend (output, found_default, strlen (found_default));
-            }
-        } else
-            s = found_default;
-
-        if (s)
-            ESISegment::ListAppend (output, s, strlen (s));
-
-        break;
-
-    case ESI_VAR_REFERER:
-        flags.referer = 1;
-
-        if (!subref && httpHeaderHas(&hdr, HDR_REFERER))
-            s = httpHeaderGetStr (&hdr, HDR_REFERER);
-        else
-            s = found_default;
-
-        ESISegment::ListAppend (output, s, strlen (s));
-
-        break;
-
-    case ESI_QUERY_STRING:
-        if (!subref)
-            s = query_string;
-        else {
-            unsigned int i = 0;
-
-            while (i < query_elements && !s) {
-                if (!strcmp (subref, query[i].var))
-                    s = query[i].val;
-
-                ++i;
-            }
-
-            if (!s)
-                s = found_default;
-        }
-
-        ESISegment::ListAppend (output, s, strlen (s));
-        break;
-
-    case ESI_VAR_USERAGENT:
-        flags.useragent = 1;
-
-        if (httpHeaderHas(&hdr, HDR_USER_AGENT)) {
-            if (!subref)
-                s = httpHeaderGetStr (&hdr, HDR_USER_AGENT);
-            else {
-                if (!strcmp (subref, "os")) {
-                    s = esiUserOs[UserOs];
-                } else if (!strcmp (subref, "browser")) {
-                    s = esiBrowsers[browser];
-                } else if (!strcmp (subref, "version")) {
-                    s = browserversion;
-                } else
-                    s = "";
-            }
-        } else
-            s = found_default;
-
-        ESISegment::ListAppend (output, s, strlen (s));
-
-        break;
-
-    case ESI_VAR_LANGUAGE:
-        flags.language = 1;
-
-        if (httpHeaderHas(&hdr, HDR_ACCEPT_LANGUAGE)) {
-            if (!subref) {
-                String S (httpHeaderGetList (&hdr, HDR_ACCEPT_LANGUAGE));
-                ESISegment::ListAppend (output, S.buf(), S.size());
-            } else {
-                if (httpHeaderHasListMember (&hdr, HDR_ACCEPT_LANGUAGE, subref, ',')) {
-                    s = "true";
-                } else {
-                    s = "false";
-                }
-
-                ESISegment::ListAppend (output, s, strlen (s));
-            }
-        } else {
-            s = found_default;
-            ESISegment::ListAppend (output, s, strlen (s));
-        }
-
-        break;
-
-    case ESI_VAR_OTHER:
-        /* No-op. We swallow it */
-
-        if (found_default) {
-            ESISegment::ListAppend (output, found_default, strlen (found_default));
-        }
-
-        break;
-    }
-}
-
-bool
-esiVarState::validChar (char c)
-{
-    if (('A' <= c && c <= 'Z') ||
-            ('a' <= c && c <= 'z') ||
-            '_' == c || '-' == c)
-        return true;
-
-    return false;
-}
-
-esiVarState::esiVar_t
-esiVarState::GetVar(char *s, int len)
-{
-    assert (s);
-
-    if (len == 9) {
-        if (!strncmp (s, "HTTP_HOST", 9))
-            return ESI_VAR_HOST;
-        else
-            return ESI_VAR_OTHER;
-    }
-
-    if (len == 11) {
-        if (!strncmp (s, "HTTP_COOKIE", 11))
-            return ESI_VAR_COOKIE;
-        else
-            return ESI_VAR_OTHER;
-    }
-
-    if (len == 12) {
-        if (!strncmp (s, "HTTP_REFERER", 12))
-            return ESI_VAR_REFERER;
-        else if (!strncmp (s, "QUERY_STRING", 12))
-            return ESI_QUERY_STRING;
-        else
-            return ESI_VAR_OTHER;
-    }
-
-    if (len == 15) {
-        if (!strncmp (s, "HTTP_USER_AGENT", 15))
-            return ESI_VAR_USERAGENT;
-        else
-            return ESI_VAR_OTHER;
-    }
-
-    if (len == 20) {
-        if (!strncmp (s, "HTTP_ACCEPT_LANGUAGE", 20))
-            return ESI_VAR_LANGUAGE;
-        else
-            return ESI_VAR_OTHER;
-    }
-
-    return ESI_VAR_OTHER;
-}
-
-/* because we are only used to process:
- * - include URL's
- * - non-esi elements
- * - choose clauses
- * buffering is ok - we won't delay the start of async activity, or
- * of output data preparation
- */
-void
-esiVarState::doIt ()
-{
-    assert (output == NULL);
-    int state = 0;
-    char *string = input->listToChar();
-    size_t len = strlen (string);
-    size_t pos = 0;
-    size_t var_pos = 0;
-    size_t done_pos = 0;
-    char * found_subref = NULL;
-    char *found_default = NULL;
-    esiVar_t vartype = ESI_VAR_OTHER;
-    ESISegmentFreeList (input);
-
-    while (pos < len) {
-        switch (state) {
-
-        case 0: /* skipping pre-variables */
-
-            if (string[pos] != '$') {
-                ++pos;
-            } else {
-                if (pos - done_pos)
-                    /* extract known good text */
-                    ESISegment::ListAppend (output, string + done_pos, pos - done_pos);
-
-                done_pos = pos;
-
-                state = 1;
-
-                ++pos;
-            }
-
-            break;
-
-        case 1:/* looking for ( */
-
-            if (string[pos] != '(') {
-                state = 0;
-            } else {
-                state = 2; /* extract a variable name */
-                var_pos = ++pos;
-            }
-
-            break;
-
-        case 2: /* looking for variable name */
-
-            if (!validChar(string[pos])) {
-                /* not a variable name char */
-
-                if (pos - var_pos)
-                    vartype = GetVar (string + var_pos, pos - var_pos);
-
-                state = 3;
-            } else {
-                ++pos;
-            }
-
-            break;
-
-        case 3: /* looking for variable subref, end bracket or default indicator */
-
-            if (string[pos] == ')') {
-                /* end of string */
-                eval(vartype, found_subref, found_default);
-                done_pos = ++pos;
-                safe_free(found_subref);
-                safe_free(found_default);
-                state = 0;
-            } else if (!found_subref && !found_default && string[pos] == '{') {
-                debug (86,6)("esiVarStateDoIt: Subref of some sort\n");
-                /* subreference of some sort */
-                /* look for the entry name */
-                var_pos = ++pos;
-                state = 4;
-            } else if (!found_default && string[pos] == '|') {
-                debug (86,6)("esiVarStateDoIt: Default present\n");
-                /* extract default value */
-                state = 5;
-                var_pos = ++pos;
-            } else {
-                /* unexpected char, not a variable after all */
-                debug (86,6)("esiVarStateDoIt: unexpected char after varname\n");
-                state = 0;
-                pos = done_pos + 2;
-            }
-
-            break;
-
-        case 4: /* looking for variable subref */
-
-            if (string[pos] == '}') {
-                /* end of subref */
-                found_subref = xstrndup (&string[var_pos], pos - var_pos + 1);
-                debug (86,6)("esiVarStateDoIt: found end of variable subref '%s'\n", found_subref);
-                state = 3;
-                ++pos;
-            } else if (!validChar (string[pos])) {
-                debug (86,6)("esiVarStateDoIt: found invalid char in variable subref\n");
-                /* not a valid subref */
-                safe_free(found_subref);
-                state = 0;
-                pos = done_pos + 2;
-            } else {
-                ++pos;
-            }
-
-            break;
-
-        case 5: /* looking for a default value */
-
-            if (string[pos] == '\'') {
-                /* begins with a quote */
-                debug (86,6)("esiVarStateDoIt: found quoted default\n");
-                state = 6;
-                var_pos = ++pos;
-            } else {
-                /* doesn't */
-                debug (86,6)("esiVarStateDoIt: found unquoted default\n");
-                state = 7;
-                ++pos;
-            }
-
-            break;
-
-        case 6: /* looking for a quote terminate default value */
-
-            if (string[pos] == '\'') {
-                /* end of default */
-                found_default = xstrndup (&string[var_pos], pos - var_pos + 1);
-                debug (86,6)("esiVarStateDoIt: found end of quoted default '%s'\n", found_default);
-                state = 3;
-            }
-
-            ++pos;
-            break;
-
-        case 7: /* looking for } terminate default value */
-
-            if (string[pos] == ')') {
-                /* end of default - end of variable*/
-                found_default = xstrndup (&string[var_pos], pos - var_pos + 1);
-                debug (86,6)("esiVarStateDoIt: found end of variable (w/ unquoted default) '%s'\n",found_default);
-                eval(vartype,found_subref, found_default);
-                done_pos = ++pos;
-                safe_free(found_default);
-                safe_free(found_subref);
-                state = 0;
-            }
-
-            ++pos;
-            break;
-
-        default:
-            fatal("esiVarStateDoIt: unexpected state\n");
-        }
-    }
-
-    /* pos-done_pos chars are ready to copy */
-    if (pos-done_pos)
-        ESISegment::ListAppend (output, string+done_pos, pos - done_pos);
-
-    safe_free (found_default);
-
-    safe_free (found_subref);
-}
-
-/* XXX FIXME: this should be comma delimited, no? */
-void
-esiVarState::buildVary (HttpReply *rep)
-{
-    char tempstr[1024];
-    tempstr[0]='\0';
-
-    if (flags.language)
-        strcat (tempstr, "Accept-Language ");
-
-    if (flags.cookie)
-        strcat (tempstr, "Cookie ");
-
-    if (flags.host)
-        strcat (tempstr, "Host ");
-
-    if (flags.referer)
-        strcat (tempstr, "Referer ");
-
-    if (flags.useragent)
-        strcat (tempstr, "User-Agent ");
-
-    if (!tempstr[0])
-        return;
-
-    String strVary (httpHeaderGetList (&rep->header, HDR_VARY));
-
-    if (!strVary.size() || strVary.buf()[0] != '*') {
-        httpHeaderPutStr (&rep->header, HDR_VARY, tempstr);
-    }
 }
 
 /* esiChoose */
@@ -3698,7 +2320,7 @@ esiChoose::checkValidSource (ESIElement::Pointer source) const
 }
 
 void
-esiChoose::fail(ESIElement * source)
+esiChoose::fail(ESIElement * source, char const *anError)
 {
     checkValidSource (source);
     elements.setNULL (0, elements.size());
@@ -3708,7 +2330,7 @@ esiChoose::fail(ESIElement * source)
 
     otherwise = NULL;
 
-    parent->fail(this);
+    parent->fail(this, anError);
 
     parent = NULL;
 }
@@ -3743,7 +2365,7 @@ esiChoose::makeCachableElements(esiChoose const &old)
 }
 
 void
-esiChoose::makeUsableElements(esiChoose const &old, esiVarState &newVarState)
+esiChoose::makeUsableElements(esiChoose const &old, ESIVarState &newVarState)
 {
     for (size_t counter = 0; counter < old.elements.size(); ++counter) {
         ESIElement::Pointer newElement = old.elements[counter]->makeUsable (this, newVarState);
@@ -3767,7 +2389,7 @@ esiChoose::makeCacheable() const
 }
 
 ESIElement::Pointer
-esiChoose::makeUsable(esiTreeParentPtr newParent, esiVarState &newVarState) const
+esiChoose::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) const
 {
     esiChoose *resultC = new esiChoose (*this);
     ESIElement::Pointer result = resultC;
@@ -3858,7 +2480,7 @@ esiWhen::deleteSelf() const
     delete this;
 }
 
-esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,esiVarState *aVar) : esiSequence (aParent)
+esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,ESIVarState *aVar) : esiSequence (aParent)
 {
     varState = NULL;
     char const *expression = NULL;
@@ -3866,7 +2488,7 @@ esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,esi
     for (int loopCounter = 0; loopCounter < attrcount && attr[loopCounter]; loopCounter += 2) {
         if (!strcmp(attr[loopCounter],"test")) {
             /* evaluate test */
-            debug (86,5)("esiIncludeNew: Evaluating '%s'\n",attr[loopCounter+1]);
+            debug (86,5)("esiWhen::esiWhen: Evaluating '%s'\n",attr[loopCounter+1]);
             /* TODO: warn the user instead of asserting */
             assert (expression == NULL);
             expression = attr[loopCounter+1];
@@ -3909,7 +2531,7 @@ esiWhen::evaluate()
 
     char const *expression = varState->extractChar ();
 
-    setTestResult(esiExpressionEval (expression));
+    setTestResult(ESIExpression::Evaluate (expression));
 
     safe_free (expression);
 }
@@ -3931,7 +2553,7 @@ esiWhen::makeCacheable() const
 }
 
 ESIElement::Pointer
-esiWhen::makeUsable(esiTreeParentPtr newParent, esiVarState &newVarState) const
+esiWhen::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) const
 {
     esiWhen *resultW = new esiWhen (*this);
     ESIElement::Pointer result = resultW;

@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.26 2003/07/11 01:40:39 robertc Exp $
+ * $Id: auth_basic.cc,v 1.27 2003/07/14 14:16:21 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -41,6 +41,7 @@
 #include "auth_basic.h"
 #include "authenticate.h"
 #include "Store.h"
+#include "HttpReply.h"
 
 static void
 authenticateStateFree(AuthenticateStateData * r)

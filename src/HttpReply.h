@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.3 2003/05/11 13:53:03 hno Exp $
+ * $Id: HttpReply.h,v 1.4 2003/07/14 14:15:56 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #define SQUID_HTTPREPLY_H
 
 #include "typedefs.h"
+#include "HttpHeader.h"
 
 /* Http Reply */
 extern void httpReplyInitModule(void);
@@ -74,5 +75,42 @@ extern int httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type);
 extern void httpRedirectReply(HttpReply *, http_status, const char *);
 extern int httpReplyBodySize(method_t, HttpReply const *);
 extern int httpReplyValidatorsMatch (HttpReply const *, HttpReply const *);
+
+/* Sync changes here with HttpReply.cc */
+
+class HttpHdrContRange;
+
+class HttpReply
+{
+
+public:
+    void *operator new (size_t);
+    void operator delete (void *);
+    /* unsupported, writable, may disappear/change in the future */
+    int hdr_sz;			/* sums _stored_ status-line, headers, and <CRLF> */
+
+    /* public, readable; never update these or their .hdr equivalents directly */
+    int content_length;
+    time_t date;
+    time_t last_modified;
+    time_t expires;
+    String content_type;
+    HttpHdrCc *cache_control;
+    HttpHdrSc *surrogate_control;
+    HttpHdrContRange *content_range;
+    short int keep_alive;
+
+    /* public, readable */
+    HttpMsgParseState pstate;	/* the current parsing state */
+
+    /* public, writable, but use httpReply* interfaces when possible */
+    HttpStatusLine sline;
+    HttpHeader header;
+    HttpBody body;		/* for small constant memory-resident text bodies only */
+
+private:
+    static MemPool *Pool;
+};
+
 
 #endif /* SQUID_HTTPREPLY_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.61 2003/07/11 01:40:37 robertc Exp $
+ * $Id: refresh.cc,v 1.62 2003/07/14 14:16:02 robertc Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -41,6 +41,7 @@
 #include "Store.h"
 #include "MemObject.h"
 #include "HttpRequest.h"
+#include "HttpReply.h"
 
 typedef enum {
     rcHTTP,
@@ -393,7 +394,11 @@ refreshIsCachable(const StoreEntry * entry)
      * 60 seconds delta, to avoid objects which expire almost
      * immediately, and which can't be refreshed.
      */
-    int reason = refreshCheck(entry, NULL, 60);
+    /* For ESI, we use a delta of 0, as ESI objects typically can be
+     * refreshed, but the expiry may be low to enforce regular
+     * checks
+     */
+    int reason = refreshCheck(entry, NULL, ESI ? 0 : 60);
     refreshCounts[rcStore].total++;
     refreshCounts[rcStore].status[reason]++;
 

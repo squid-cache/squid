@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.26 2003/07/14 08:22:01 robertc Exp $
+ * $Id: auth_digest.cc,v 1.27 2003/07/14 14:16:21 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -44,6 +44,7 @@
 #include "authenticate.h"
 #include "Store.h"
 #include "HttpRequest.h"
+#include "HttpReply.h"
 
 extern AUTHSSETUP authSchemeSetup_digest;
 

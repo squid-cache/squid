@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.471 2003/07/11 01:40:37 robertc Exp $
+ * $Id: structs.h,v 1.472 2003/07/14 14:16:02 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -925,15 +925,6 @@ private:
     static MemPool *Pool;
 };
 
-struct _HttpHeader
-{
-    /* protected, do not use these, use interface functions instead */
-    Array entries;		/* parsed fields in raw format */
-    HttpHeaderMask mask;	/* bit set <=> entry present */
-    http_hdr_owner_type owner;	/* request or reply */
-    int len;			/* length when packed, not counting terminating '\0' */
-};
-
 /* http surogate control header field */
 
 struct _HttpHdrScTarget
@@ -949,42 +940,6 @@ struct _HttpHdrScTarget
 struct _HttpHdrSc
 {
     dlink_list targets;
-};
-
-/* Sync changes here with HttpReply.c */
-
-class HttpHdrContRange;
-
-class HttpReply
-{
-
-public:
-    void *operator new (size_t);
-    void operator delete (void *);
-    /* unsupported, writable, may disappear/change in the future */
-    int hdr_sz;			/* sums _stored_ status-line, headers, and <CRLF> */
-
-    /* public, readable; never update these or their .hdr equivalents directly */
-    int content_length;
-    time_t date;
-    time_t last_modified;
-    time_t expires;
-    String content_type;
-    HttpHdrCc *cache_control;
-    HttpHdrSc *surrogate_control;
-    HttpHdrContRange *content_range;
-    short int keep_alive;
-
-    /* public, readable */
-    HttpMsgParseState pstate;	/* the current parsing state */
-
-    /* public, writable, but use httpReply* interfaces when possible */
-    HttpStatusLine sline;
-    HttpHeader header;
-    HttpBody body;		/* for small constant memory-resident text bodies only */
-
-private:
-    static MemPool *Pool;
 };
 
 struct _http_state_flags
@@ -1576,11 +1531,6 @@ struct _RemovalPurgeWalker
     void (*Done) (RemovalPurgeWalker * walker);
 };
 
-/* To hard to pull this into another file just yet.
- * SO, we stop globals.c seeing it 
- */
-#ifdef __cplusplus
-
 struct request_flags
 {
     request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),transparent(0),internal(0),internalclient(0),body_sent(0),destinationIPLookedUp_(0)
@@ -1667,13 +1617,6 @@ struct _link_list
 
     struct _link_list *next;
 };
-
-class HttpHdrRange;
-
-class ConnStateData;
-
-class request_t;
-#endif
 
 struct _cachemgr_passwd
 {
@@ -2065,28 +2008,6 @@ unsigned int ftp_pasv_failed:
 
     flags;
 };
-
-#if USE_HTCP
-
-struct _htcpReplyData
-{
-    int hit;
-    HttpHeader hdr;
-    u_int32_t msg_id;
-    double version;
-
-    struct
-    {
-        /* cache-to-origin */
-        double rtt;
-        int samp;
-        int hops;
-    }
-
-    cto;
-};
-
-#endif
 
 
 struct _helper_request

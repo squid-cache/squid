@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.13 2003/07/14 10:36:44 robertc Exp $
+#  $Id: Makefile.am,v 1.14 2003/07/14 14:16:12 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -23,10 +23,12 @@ TESTS = debug \
 	MemPoolTest\
 	mem_node_test\
 	mem_hdr_test\
-	http_range_test
+	http_range_test \
+	ESIExpressions
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS= debug \
+		ESIExpressions \
 		http_range_test \
 		MemPoolTest\
 		mem_node_test\
@@ -38,33 +40,36 @@ check_PROGRAMS= debug \
 		syntheticoperators
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
-debug_SOURCES = debug.cc test_tools.cc
-debug_LDADD = $(top_builddir)/src/globals.o \
-		$(LDADD)
+DEBUG_SOURCE = test_tools.cc
+DEBUG_OBJECTS = $(top_builddir)/src/globals.o
+debug_SOURCES = debug.cc $(DEBUG_SOURCE)
+debug_LDADD = $(DEBUG_OBJECTS) $(LDADD)
+ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)
+ESIExpressions_LDADD = $(top_builddir)/src/ESIExpression.o \
+		$(DEBUG_OBJECTS) $(LDADD)
 mem_node_test_SOURCES = mem_node_test.cc
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
-mem_hdr_test_SOURCES = mem_hdr_test.cc test_tools.cc
+mem_hdr_test_SOURCES = mem_hdr_test.cc $(DEBUG_SOURCE)
 mem_hdr_test_LDADD = $(top_builddir)/src/stmem.o \
-		     $(top_builddir)/src/globals.o \
+		     $(DEBUG_OBJECTS) \
 		     $(top_builddir)/src/mem_node.o $(LDADD)
 MemPoolTest_SOURCES = MemPoolTest.cc
 refcount_SOURCES = refcount.cc
 
-http_range_test_SOURCES = http_range_test.cc test_tools.cc
+http_range_test_SOURCES = http_range_test.cc $(DEBUG_SOURCE)
 http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
 		$(top_builddir)/src/HttpHeaderTools.o \
 		$(top_builddir)/src/MemBuf.o \
 		$(top_builddir)/src/Packer.o \
 		$(top_builddir)/src/String.o \
 		$(top_builddir)/src/mem.o \
-		$(top_builddir)/src/globals.o \
-		$(LDADD)
+		$(DEBUG_OBJECTS) $(LDADD)
 
 splay_SOURCES = splay.cc
 
-StackTest_SOURCES = StackTest.cc test_tools.cc
+StackTest_SOURCES = StackTest.cc $(DEBUG_SOURCE)
 
-syntheticoperators_SOURCES = syntheticoperators.cc test_tools.cc
+syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
 
 rfc1738_SOURCES = rfc1738.cc
 
