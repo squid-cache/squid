@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.17 2002/10/15 09:25:34 robertc Exp $
+ * $Id: auth_digest.cc,v 1.18 2003/01/09 11:44:08 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -881,7 +881,7 @@ authDigestInit(authScheme * scheme)
 	digestauthenticators->ipc_type = IPC_STREAM;
 	helperOpenServers(digestauthenticators);
 	if (!init) {
-	    cachemgrRegister("digestauthenticator", "User Authenticator Stats",
+	    cachemgrRegister("digestauthenticator", "Digest User Authenticator Stats",
 		authenticateDigestStats, 0, 1);
 	    init++;
 	}
