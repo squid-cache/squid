@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.75 2004/12/08 00:24:42 hno Exp $
+ * $Id: client_side_reply.cc,v 1.76 2004/12/10 00:51:33 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -902,6 +902,16 @@ void
 clientReplyContext::purgeFoundObject(StoreEntry *entry)
 {
     assert (entry && !entry->isNull());
+
+    if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
+        http->logType = LOG_TCP_DENIED;
+        ErrorState *err =
+            clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
+                             &http->getConn()->peer.sin_addr, http->request);
+        startError(err);
+        return;
+    }
+
     StoreIOBuffer tempBuffer;
     /* Swap in the metadata */
     http->storeEntry(entry);
