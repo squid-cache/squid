@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.399 2004/12/20 16:30:35 robertc Exp $
+ * $Id: comm.cc,v 1.400 2005/02/13 15:49:50 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1392,9 +1392,6 @@ ConnectStateData::defaults()
     S.sin_family = AF_INET;
     S.sin_addr = in_addr;
     S.sin_port = htons(port);
-
-    if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(S.sin_addr, FQDN_LOOKUP_IF_MISS);
 }
 
 void
