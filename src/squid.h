@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.82 1996/12/03 20:26:58 wessels Exp $
+ * $Id: squid.h,v 1.83 1996/12/04 17:51:19 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -59,6 +59,7 @@
  */
 
 #if FD_SETSIZE < SQUID_MAXFD
+#undef SQUID_MAXFD
 #define SQUID_MAXFD FD_SETSIZE
 #endif
 
@@ -342,6 +343,7 @@ extern int opt_udp_hit_obj;	/* main.c */
 extern int opt_mem_pools;	/* main.c */
 extern int opt_forwarded_for;	/* main.c */
 extern int opt_accel_uses_host;	/* main.c */
+extern char ThisCache[];	/* main.c */
 
 /* Prototypes and definitions which don't really deserve a seaprate
  * include file */
