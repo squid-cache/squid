@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.238 2003/06/24 20:53:39 wessels Exp $
+ * $Id: tools.cc,v 1.239 2003/08/03 10:05:12 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1118,7 +1118,7 @@ int
 xrename(const char *from, const char *to)
 {
     debug(21, 2) ("xrename: renaming %s to %s\n", from, to);
-#ifdef _SQUID_MSWIN_
+#if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
 
     remove
         (to);
