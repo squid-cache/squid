@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.61 2004/04/04 14:31:05 hno Exp $
+ * $Id: dns_internal.cc,v 1.62 2004/04/04 14:36:58 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -706,7 +706,7 @@ idnsCheckQueue(void *unused)
 
         q = (idns_query *)n->data;
 
-        if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * (1 << q->nsends % nns))
+        if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * (1 << (q->nsends - 1) % nns))
             break;
 
         debug(78, 3) ("idnsCheckQueue: ID %#04x timeout\n",
