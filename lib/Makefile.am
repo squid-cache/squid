@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.5 2002/10/02 11:06:30 robertc Exp $
+#  $Id: Makefile.am,v 1.6 2003/01/18 14:06:32 robertc Exp $
 #
 
 if ENABLE_XPROF_STATS
@@ -34,7 +34,7 @@ EXTRA_libmiscutil_a_SOURCES = \
 	snprintf.c
 libmiscutil_a_SOURCES = \
 	MemPool.c \
-	Array.c \
+	Array.cc \
 	base64.c \
 	getfullhostname.c \
 	hash.c \

@@ -1,5 +1,5 @@
 /*
- * $Id: Array.cc,v 1.8 2003/01/18 04:50:39 robertc Exp $
+ * $Id: Array.cc,v 1.9 2003/01/18 14:06:32 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -52,76 +52,15 @@
 #include "util.h"
 #include "Array.h"
 
-static void arrayGrow(Array * a, int min_capacity);
-
-Array *
-arrayCreate(void)
-{
-    Array *a = new Array;
-    arrayInit(a);
-    return a;
-}
+Array *arrayCreate(void) {return new Array;}
+void arrayClean(Array * s) {s->clean();}
+void arrayDestroy(Array * s) { delete s;}
+void arrayAppend(Array * s, void *obj) {s->push_back(obj);}
+void arrayPreAppend(Array * s, int app_count) {s->preAppend(app_count);}
 
 void
 arrayInit(Array * a)
 {
     assert(a);
     memset(a, 0, sizeof(Array));
-}
-
-void
-arrayClean(Array * a)
-{
-    assert(a);
-    /* could also warn if some objects are left */
-    xfree(a->items);
-    a->items = NULL;
-}
-
-void
-arrayDestroy(Array * a)
-{
-    assert(a);
-    arrayClean(a);
-    delete a;
-}
-
-void
-arrayAppend(Array * a, void *obj)
-{
-    assert(a);
-    if (a->count >= a->capacity)
-	arrayGrow(a, a->count + 1);
-    a->items[a->count++] = obj;
-}
-
-/* if you are going to append a known and large number of items, call this first */
-void
-arrayPreAppend(Array * a, int app_count)
-{
-    assert(a);
-    if (a->count + app_count > a->capacity)
-	arrayGrow(a, a->count + app_count);
-}
-
-/* grows internal buffer to satisfy required minimal capacity */
-static void
-arrayGrow(Array * a, int min_capacity)
-{
-    const int min_delta = 16;
-    int delta;
-    assert(a->capacity < min_capacity);
-    delta = min_capacity;
-    /* make delta a multiple of min_delta */
-    delta += min_delta - 1;
-    delta /= min_delta;
-    delta *= min_delta;
-    /* actual grow */
-    assert(delta > 0);
-    a->capacity += delta;
-    a->items = (void **) (a->items ?
-	xrealloc(a->items, a->capacity * sizeof(void *)) :
-         xmalloc(a->capacity * sizeof(void *)));
-    /* reset, just in case */
-    memset(a->items + a->count, 0, (a->capacity - a->count) * sizeof(void *));
 }
