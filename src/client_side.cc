@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.147 1997/11/12 23:47:37 wessels Exp $
+ * $Id: client_side.cc,v 1.148 1997/11/13 00:17:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -51,7 +51,9 @@ static char *icpConstruct304reply(struct _http_reply *);
 static int CheckQuickAbort2(const clientHttpRequest *);
 static int icpCheckTransferDone(clientHttpRequest *);
 static void CheckQuickAbort(clientHttpRequest *);
+#if CHECK_FAILURE_IS_BROKE
 static void checkFailureRatio(log_type, hier_code);
+#endif
 static void clientProcessMISS(int, clientHttpRequest *);
 static void clientAppendReplyHeader(char *, const char *, size_t *, size_t);
 size_t clientBuildReplyHeader(clientHttpRequest *, char *, size_t *, char *, size_t);
@@ -534,7 +536,9 @@ httpRequestFree(void *data)
 	redirectUnregister(http->url, http);
     if (http->acl_checklist)
 	aclChecklistFree(http->acl_checklist);
+#if CHECK_FAILURE_IS_BROKE
     checkFailureRatio(http->log_type, http->al.hier.code);
+#endif
     safe_free(http->url);
     safe_free(http->log_url);
     safe_free(http->al.headers.reply);
@@ -1835,6 +1839,7 @@ icpConstruct304reply(struct _http_reply *source)
  * Duane W., Sept 16, 1996
  */
 
+#if CHECK_FAILURE_IS_BROKE
 static void
 checkFailureRatio(log_type rcode, hier_code hcode)
 {
@@ -1866,3 +1871,4 @@ checkFailureRatio(log_type rcode, hier_code hcode)
     hit_only_mode_until = squid_curtime + FAILURE_MODE_TIME;
     fail_ratio = 0.8;		/* reset to something less than 1.0 */
 }
+#endif
