@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.143 1996/11/24 02:37:33 wessels Exp $
+ * $Id: cache_cf.cc,v 1.144 1996/11/25 18:47:15 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -256,6 +256,7 @@ static void parseMinutesLine _PARAMS((int *));
 static void ip_acl_destroy _PARAMS((ip_acl **));
 static void parseCachemgrPasswd _PARAMS((void));
 static void parsePathname _PARAMS((char **));
+static void parseProxyLine _PARAMS((edge **));
 
 static void
 self_destruct(void)
@@ -954,20 +955,25 @@ parseVizHackLine(void)
 }
 
 static void
-parseSslProxyLine(void)
+parseProxyLine(edge **E)
 {
     char *token;
     char *t;
+    edge *e;
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
-    safe_free(Config.sslProxy.host);
-    Config.sslProxy.port = 0;
+    if (*E) {
+	edgeDestroy(*E);
+	*E = NULL;
+    }
+    e = xcalloc (1, sizeof(edge));
     if ((t = strchr(token, ':'))) {
 	*t++ = '\0';
-	Config.sslProxy.port = atoi(t);
+	e->http_port = atoi(t);
     }
-    Config.sslProxy.host = xstrdup(token);
+    e->host = xstrdup(token);
+    *E = e;
 }
 
 static void
@@ -1310,7 +1316,9 @@ parseConfigFile(const char *file_name)
 	    parseAnnounceToLine();
 
 	else if (!strcmp(token, "ssl_proxy"))
-	    parseSslProxyLine();
+	    parseProxyLine(&Config.sslProxy);
+	else if (!strcmp(token, "passthrough_proxy"))
+	    parseProxyLine(&Config.passProxy);
 
 	else if (!strcmp(token, "err_html_text"))
 	    parseErrHtmlLine();
@@ -1446,7 +1454,8 @@ configFreeMemory(void)
     safe_free(Config.Announce.host);
     safe_free(Config.Announce.file);
     safe_free(Config.errHtmlText);
-    safe_free(Config.sslProxy.host);
+    edgeDestroy(Config.sslProxy);
+    edgeDestroy(Config.passProxy);
     wordlistDestroy(&Config.cache_dirs);
     wordlistDestroy(&Config.hierarchy_stoplist);
     wordlistDestroy(&Config.local_domain_list);
@@ -1544,8 +1553,6 @@ configSetFactoryDefaults(void)
     Config.Addrs.udp_outgoing.s_addr = DefaultUdpOutgoingAddr;
     Config.Addrs.udp_incoming.s_addr = DefaultUdpIncomingAddr;
     Config.Addrs.client_netmask.s_addr = DefaultClientNetmask;
-    Config.sslProxy.port = DefaultSslProxyPort;
-    Config.sslProxy.host = safe_xstrdup(DefaultSslProxyHost);
     Config.ipcache.size = DefaultIpcacheSize;
     Config.ipcache.low = DefaultIpcacheLow;
     Config.ipcache.high = DefaultIpcacheHigh;
