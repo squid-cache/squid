@@ -1,5 +1,5 @@
 /*
- * $Id: comm.cc,v 1.185 1997/08/10 06:34:27 wessels Exp $
+ * $Id: comm.cc,v 1.186 1997/08/25 22:35:52 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -117,15 +117,6 @@
 #define min(x,y) ((x)<(y)? (x) : (y))
 #define max(a,b) ((a)>(b)? (a) : (b))
 
-struct _cwstate {
-    char *buf;
-    long size;
-    long offset;
-    CWCB *handler;
-    void *handler_data;
-    void (*free) (void *);
-};
-
 typedef struct {
     char *host;
     u_short port;
@@ -165,16 +156,6 @@ static IPH commConnectDnsHandle;
 static void commConnectCallback _PARAMS((ConnectStateData * cs, int status));
 
 static struct timeval zero_tv;
-
-void
-commCancelWriteHandler(int fd)
-{
-    CommWriteStateData *CommWriteState = fd_table[fd].rwstate;
-    if (CommWriteState) {
-	CommWriteState->handler = NULL;
-	CommWriteState->handler_data = NULL;
-    }
-}
 
 static void
 CommWriteStateCallbackAndFree(int fd, int code)
@@ -579,8 +560,11 @@ comm_close(int fd)
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
+    if (BIT_TEST(F->flags, FD_CLOSING))
+	return;
     assert(F->open);
     assert(F->type != FD_FILE);
+    BIT_SET(F->flags, FD_CLOSING);
     CommWriteStateCallbackAndFree(fd, COMM_ERROR);
     commCallCloseHandlers(fd);
     if (F->uses)		/* assume persistent connect count */
@@ -591,7 +575,6 @@ comm_close(int fd)
 #else
     close(fd);
 #endif
-    memset(F, '\0', sizeof(fde));
 }
 
 

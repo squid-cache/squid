@@ -65,6 +65,7 @@
 #define FD_CLOSE_REQUEST	0x02
 #define FD_WRITE_DAEMON		0x04
 #define FD_WRITE_PENDING	0x08
+#define FD_CLOSING		0x10
 
 #define FD_DESC_SZ		64
 

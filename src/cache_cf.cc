@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.222 1997/08/25 15:55:22 wessels Exp $
+ * $Id: cache_cf.cc,v 1.223 1997/08/25 22:35:50 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1129,4 +1129,3 @@ configFreeMemory(void)
 {
     free_all();
 }
-

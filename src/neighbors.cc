@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.158 1997/08/25 02:19:32 wessels Exp $
+ * $Id: neighbors.cc,v 1.159 1997/08/25 22:35:58 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -124,6 +124,7 @@ static void peerCountMcastPeersDone _PARAMS((void *data));
 static void peerCountMcastPeersStart _PARAMS((void *data));
 static void peerCountMcastPeersSchedule _PARAMS((peer * p, time_t when));
 static IRCB peerCountHandleIcpReply;
+static void neighborIgnoreNonPeer _PARAMS((const struct sockaddr_in *, icp_opcode));
 
 static icp_common_t echo_hdr;
 static u_short echo_port;
@@ -134,6 +135,8 @@ static peer *first_ping = NULL;
 char *
 neighborTypeStr(const peer * p)
 {
+    if (p->type == PEER_NONE)
+	return "Non-Peer";
     if (p->type == PEER_SIBLING)
 	return "Sibling";
     if (p->type == PEER_MULTICAST)
@@ -577,6 +580,45 @@ neighborCountIgnored(peer * p, icp_opcode op_unused)
     NLateReplies++;
 }
 
+static peer *non_peers = NULL;
+
+static void
+neighborIgnoreNonPeer(const struct sockaddr_in *from, icp_opcode opcode)
+{
+    peer *np;
+    double x;
+    for (np = non_peers; np; np = np->next) {
+	if (np->in_addr.sin_addr.s_addr != from->sin_addr.s_addr)
+	    continue;
+	if (np->in_addr.sin_port != from->sin_port)
+	    continue;
+	break;
+    }
+    if (np == NULL) {
+	np = xcalloc(1, sizeof(peer));
+	np->in_addr.sin_addr = from->sin_addr;
+	np->in_addr.sin_port = from->sin_port;
+	np->icp_port = ntohl(from->sin_port);
+	np->type = PEER_NONE;
+	np->host = xstrdup(inet_ntoa(from->sin_addr));
+	np->next = non_peers;
+	non_peers = np;
+    }
+    np->stats.ignored_replies++;
+    np->stats.counts[opcode]++;
+    x = log(np->stats.ignored_replies) / log(10.0);
+    if (0.0 != x - (double) (int) x)
+	return;
+    debug(15, 1) ("WARNING: Ignored %d replies from non-peer %s\n",
+	np->stats.ignored_replies, np->host);
+}
+
+void
+neighborDumpNonPeers(StoreEntry * sentry)
+{
+    dump_peers(sentry, non_peers);
+}
+
 /* ignoreMulticastReply
  * 
  * We want to ignore replies from multicast peers if the
@@ -656,8 +698,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_MISS) {
 	if (p == NULL) {
-	    debug(15, 1) ("Ignoring MISS from non-peer %s\n",
-		inet_ntoa(from->sin_addr));
+	    neighborIgnoreNonPeer(from, opcode);
 	} else if (ntype != PEER_PARENT) {
 	    (void) 0;		/* ignore MISS from non-parent */
 	} else {
@@ -665,16 +706,14 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_HIT || opcode == ICP_OP_HIT_OBJ) {
 	if (p == NULL) {
-	    debug(15, 1) ("Ignoring HIT from non-peer %s\n",
-		inet_ntoa(from->sin_addr));
+	    neighborIgnoreNonPeer(from, opcode);
 	} else {
 	    header->opcode = ICP_OP_HIT;
 	    mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
 	}
     } else if (opcode == ICP_OP_DECHO) {
 	if (p == NULL) {
-	    debug(15, 1) ("Ignoring DECHO from non-peer %s\n",
-		inet_ntoa(from->sin_addr));
+	    neighborIgnoreNonPeer(from, opcode);
 	} else if (ntype == PEER_SIBLING) {
 	    debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
 	    debug_trap("neighborsUdpAck: non-ICP neighbors must be a PARENT\n");
@@ -692,8 +731,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_DENIED) {
 	if (p == NULL) {
-	    debug(15, 1) ("Ignoring DENIED from non-peer %s\n",
-		inet_ntoa(from->sin_addr));
+	    neighborIgnoreNonPeer(from, opcode);
 	} else if (p->stats.pings_acked > 100) {
 	    if (100 * p->stats.counts[ICP_OP_DENIED] / p->stats.pings_acked > 95) {
 		debug(15, 0) ("95%% of replies from '%s' are UDP_DENIED\n", p->host);

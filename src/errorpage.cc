@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.68 1997/08/25 02:38:52 wessels Exp $
+ * $Id: errorpage.cc,v 1.69 1997/08/25 22:35:54 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -151,7 +151,7 @@ errorConvert(char token, ErrorState * err)
     }
     if (p == NULL)
 	p = "<NULL>";
-    debug(4, 1) ("errorConvert: %%%c --> '%s'\n", token, p);
+    debug(4, 3) ("errorConvert: %%%c --> '%s'\n", token, p);
     return p;
 }
 

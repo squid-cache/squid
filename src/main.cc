@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.172 1997/08/10 04:42:41 wessels Exp $
+ * $Id: main.cc,v 1.173 1997/08/25 22:35:57 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -613,7 +613,7 @@ main(int argc, char **argv)
 	if (rotate_pending) {
 	    icmpClose();
 	    _db_rotate_log();	/* cache.log */
-	    storeWriteCleanLogs();
+	    storeWriteCleanLogs(1);
 	    storeRotateLog();	/* store.log */
 	    accessLogRotate();	/* access.log */
 	    useragentRotateLog();	/* useragent.log */
