@@ -64,6 +64,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 #ifdef HAVE_CVT
 
@@ -888,11 +889,23 @@ strx_printv(int *ccp, char *buf, size_t len, const char *format,
     int cc;
 
     /*
+     * If someone calls snprintf(buf, 0, ...), then len == -1 here.
+     * Previously this code would assume an "unlimited" buffer size,
+     * thereby emulating sprintf().  Now we silently return and hope
+     * the caller doesn't expect us to terminate the buffer!
+     */
+    if (len < 0)
+	return;
+    /*
      * First initialize the descriptor
      * Notice that if no length is given, we initialize buf_end to the
      * highest possible address.
      */
+#if OLD_CODE
     od.buf_end = len ? &buf[len] : (char *) ~0;
+#else
+    od.buf_end = &buf[len];
+#endif
     od.nextb = buf;
 
     /*
@@ -912,6 +925,7 @@ snprintf(char *buf, size_t len, const char *format,...)
 {
     int cc;
     va_list ap;
+    assert(len >= 0);
     va_start(ap, format);
     strx_printv(&cc, buf, (len - 1), format, ap);
     va_end(ap);
@@ -925,6 +939,7 @@ vsnprintf(char *buf, size_t len, const char *format,
     va_list ap)
 {
     int cc;
+    assert(len >= 0);
     strx_printv(&cc, buf, (len - 1), format, ap);
     return (cc);
 }
