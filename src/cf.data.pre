@@ -1158,6 +1158,17 @@ DOC_START
 	acl aclname user     username ...	# string match on ident output.
 						# use REQUIRED to accept any
 						# non-null ident.
+	acl aclname proxy_auth passwd_file [ refresh ]
+	  # 'passwd_file' is an Apache-style file of passwords for
+	  # authenticated proxy access. Looks like user:password, with
+	  # the password being standard crypt() format.  'refresh' is
+	  # the time in seconds to check for a changes in the file
+	  # (default = 300 secs).  When using a proxy_auth ACL in an
+	  # ACL list, make sure it is the *last* in the list and the
+	  # only proxy_auth ACL in the list.  NOTE: when a
+	  # Proxy-Authentication header is sent but it is not needed
+	  # during ACL checking the username is NOT logged in
+	  # access.log.
 
 acl manager proto cache_object
 acl localhost src 127.0.0.1/255.255.255.255
@@ -1485,37 +1496,6 @@ DOC_START
 
 tcp_recv_bufsize 0 bytes
 DOC_END
-
-NAME: proxy_auth_passwd
-TYPE: string
-LOC: Config.proxyAuth.File
-DEFAULT: none
-DOC_NONE
-
-NAME: proxy_auth_ignore
-TYPE: regexlist
-LOC: Config.proxyAuth.IgnoreDomains
-DEFAULT: none
-DOC_START
-	'passwd_file' is an apache-style file of passwords for
-	authenticated proxy access Looks like user:password, with the
-	password being standard crypt() format.  Proxy authentication
-	is disabled by default.
-
-	'proxy_auth_ignore' is a regular-expression list of domain names
-	(source or destination??)
-	for which authorization will *not* be required.
-
-	NOTE, proxy_auth support is not compiled into Squid by default.
-	To use this feature you must enable the USE_PROXY_AUTH option
-	near the top of src/Makefile.
-
-	Insert -i to get case-insensitive regular expressions.
-
-proxy_auth_passwd /dev/null
-proxy_auth_ignore
-DOC_END
-
 
 NAME: err_html_text
 TYPE: eol

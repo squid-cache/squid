@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.105 1997/07/26 04:48:22 wessels Exp $
+ * $Id: acl.cc,v 1.106 1997/08/25 23:45:22 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -52,12 +52,11 @@ static int aclMatchDomainList _PARAMS((void *dataptr, const char *));
 static squid_acl aclType _PARAMS((const char *s));
 static int decode_addr _PARAMS((const char *, struct in_addr *, struct in_addr *));
 static void aclCheck _PARAMS((aclCheck_t * checklist));
-
 static void aclCheckCallback _PARAMS((aclCheck_t * checklist, int answer));
 static IPH aclLookupDstIPDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
-
+static int aclReadProxyAuth _PARAMS((struct _acl_proxy_auth * p));
 
 #if defined(USE_SPLAY_TREE)
 static int aclIpNetworkCompare _PARAMS((const void *, splayNode *));
@@ -162,6 +161,8 @@ aclType(const char *s)
 	return ACL_METHOD;
     if (!strcmp(s, "browser"))
 	return ACL_BROWSER;
+    if (!strcmp(s, "proxy_auth"))
+	return ACL_PROXY_AUTH;
     return ACL_NONE;
 }
 
@@ -569,6 +570,42 @@ aclParseDomainList(void *curlist)
 
 #endif /* USE_SPLAY_TREE */
 
+/* check for change password file each 300 seconds */
+#define CHECK_PROXY_FILE_TIME 300
+static void
+aclParseProxyAuth(void *data)
+{
+    struct _acl_proxy_auth *p;
+    struct _acl_proxy_auth **q = data;
+    char *t;
+    t = strtok(NULL, w_space);
+    if (t) {
+	p = xcalloc(1, sizeof(struct _acl_proxy_auth));
+	p->filename = xstrdup(t);
+	p->last_time = 0;
+	p->change_time = 0;
+	t = strtok(NULL, w_space);
+	if (t == NULL) {
+	    p->check_interval = CHECK_PROXY_FILE_TIME;
+	} else {
+	    p->check_interval = atoi(t);
+	}
+	if (p->check_interval < 1)
+	    p->check_interval = 1;
+	p->hash = 0;		/* force creation of a new hash table */
+	if (aclReadProxyAuth(p)) {
+	    *q = p;
+	    return;
+	} else {
+	    debug(28, 0) ("cannot read proxy_auth %s, ignoring\n", p->filename);
+	}
+    } else {
+	debug(28, 0) ("no filename in acl proxy_auth, ignoring\n");
+    }
+    *q = NULL;
+    return;
+}
+
 void
 aclParseAclLine(acl ** head)
 {
@@ -646,6 +683,9 @@ aclParseAclLine(acl ** head)
 	break;
     case ACL_BROWSER:
 	aclParseRegexList(&A->data);
+	break;
+    case ACL_PROXY_AUTH:
+	aclParseProxyAuth(&A->data);
 	break;
     case ACL_NONE:
     default:
@@ -997,6 +1037,63 @@ aclMatchIdent(wordlist * data, const char *ident)
     return 0;
 }
 
+#define SKIP_BASIC_SZ 6
+static int
+aclMatchProxyAuth(struct _acl_proxy_auth *p, aclCheck_t * checklist)
+{
+    LOCAL_ARRAY(char, sent_user, ICP_IDENT_SZ);
+    char *s;
+    char *cleartext;
+    char *sent_auth;
+    char *passwd = NULL;
+    hash_link *hashr = NULL;
+    s = mime_get_header(checklist->request->headers, "Proxy-authorization:");
+    if (s == NULL)
+	return 0;
+    if (strlen(s) < SKIP_BASIC_SZ)
+	return 0;
+    s += SKIP_BASIC_SZ;
+    sent_auth = xstrdup(s);	/* username and password */
+    /* Trim trailing \n before decoding */
+    strtok(sent_auth, "\n");
+    cleartext = uudecode(sent_auth);
+    xfree(sent_auth);
+    debug(28, 3) ("aclMatchProxyAuth: cleartext = '%s'\n", cleartext);
+    xstrncpy(sent_user, cleartext, ICP_IDENT_SZ);
+    xfree(cleartext);
+    strtok(sent_user, ":");	/* Remove :password */
+    debug(28, 5) ("aclMatchProxyAuth: checking user %s\n", sent_user);
+    /* reread password file if necessary */
+    aclReadProxyAuth(p);
+    hashr = hash_lookup(p->hash, sent_user);
+    if (hashr == NULL) {
+	/* User doesn't exist; deny them */
+	debug(28, 4) ("aclMatchProxyAuth: user %s does not exist\n", sent_user);
+	return 0;
+    }
+    passwd = strtok(sent_user, null_string);
+    passwd++;
+    /* See if we've already validated them */
+    passwd[0] |= 0x80;
+    if (strcmp(hashr->item, passwd) == 0) {
+	debug(28, 5) ("aclMatchProxyAuth: user %s previously validated\n",
+	    sent_user);
+	return 1;
+    }
+    passwd[0] &= (~0x80);
+    if (strcmp(hashr->item, (char *) crypt(passwd, hashr->item))) {
+	/* Passwords differ, deny access */
+	debug(28, 4) ("aclMatchProxyAuth: authentication failed: user %s: "
+	    "passwords differ\n", sent_user);
+	return 0;
+    }
+    passwd[0] |= 0x80;
+    debug(28, 5) ("proxyAuthenticate: user %s validated OK\n", sent_user);
+    hash_delete(p->hash, sent_user);
+    hash_insert(p->hash, xstrdup(sent_user), (void *) xstrdup(passwd));
+    return 1;
+}
+
 static int
 aclMatchInteger(intlist * data, int i)
 {
@@ -1112,8 +1209,6 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	return aclMatchInteger(acl->data, r->port);
 	/* NOTREACHED */
     case ACL_USER:
-	/* debug(28, 0)("aclMatchAcl: ACL_USER unimplemented\n"); */
-	/* return 0; */
 	return aclMatchIdent(acl->data, checklist->ident);
 	/* NOTREACHED */
     case ACL_PROTO:
@@ -1124,6 +1219,17 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	/* NOTREACHED */
     case ACL_BROWSER:
 	return aclMatchRegex(acl->data, checklist->browser);
+	/* NOTREACHED */
+    case ACL_PROXY_AUTH:
+	if (!aclMatchProxyAuth(acl->data, checklist)) {
+	    /* no such user OR we need a proxy authentication header */
+	    checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_NEEDED;
+	    return 0;
+	} else {
+	    /* register that we used the proxy authentication header */
+	    checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_DONE;
+	    return 1;
+	}
 	/* NOTREACHED */
     case ACL_NONE:
     default:
@@ -1351,6 +1457,21 @@ aclDestroyRegexList(struct _relist *data)
     }
 }
 
+static void
+aclDestroyProxyAuth(struct _acl_proxy_auth *p)
+{
+    int i;
+    hash_link *hashr = NULL;
+    /* destroy hash list contents */
+    for (i = 0, hashr = hash_first(p->hash); hashr; hashr = hash_next(p->hash))
+	hash_delete(p->hash, hashr->key);
+    /* destroy and free the hash table itself */
+    hashFreeMemory(p->hash);
+    p->hash = NULL;
+    safe_free(p->filename);
+    safe_free(p);
+}
+
 void
 aclDestroyAcls(acl ** head)
 {
@@ -1395,6 +1516,9 @@ aclDestroyAcls(acl ** head)
 	case ACL_PROTO:
 	case ACL_METHOD:
 	    intlistDestroy((intlist **) & a->data);
+	    break;
+	case ACL_PROXY_AUTH:
+	    aclDestroyProxyAuth(a->data);
 	    break;
 	case ACL_NONE:
 	default:
@@ -1498,6 +1622,68 @@ aclDomainCompare(const char *d1, const char *d2)
 }
 
 #endif /* USE_BIN_TREE || SPLAY_TREE */
+
+/* Original ProxyAuth code by Jon Thackray <jrmt@uk.gdscorp.com> */
+/* Generalized to ACL's by Arjan.deVet <Arjan.deVet@adv.IAEhv.nl> */
+static int
+aclReadProxyAuth(struct _acl_proxy_auth *p)
+{
+    struct stat buf;
+    static char *passwords = NULL;
+    char *user = NULL;
+    char *passwd = NULL;
+    int i;
+    hash_link *hashr = NULL;
+    FILE *f = NULL;
+    if ((squid_curtime - p->last_time) >= p->check_interval) {
+	if (stat(p->filename, &buf) == 0) {
+	    if (buf.st_mtime != p->change_time) {
+		debug(28, 1) ("aclReadProxyAuth: reloading changed proxy authentication file %s\n", p->filename);
+		p->change_time = buf.st_mtime;
+		if (p->hash != 0) {
+		    debug(28, 5) ("aclReadProxyAuth: invalidating old entries\n");
+		    for (i = 0, hashr = hash_first(p->hash); hashr; hashr = hash_next(p->hash)) {
+			debug(28, 6) ("aclReadProxyAuth: deleting %s\n", hashr->key);
+			hash_delete(p->hash, hashr->key);
+		    }
+		} else {
+		    /* First time around, 7921 should be big enough */
+		    if ((p->hash = hash_create(urlcmp, 7921, hash_string)) < 0) {
+			debug(28, 0) ("aclReadProxyAuth: can't create hash table, turning auth off\n");
+			return 0;
+		    }
+		}
+		passwords = xmalloc((size_t) buf.st_size + 2);
+		f = fopen(p->filename, "r");
+		fread(passwords, (size_t) buf.st_size, 1, f);
+		*(passwords + buf.st_size) = '\0';
+		strcat(passwords, "\n");
+		fclose(f);
+		user = strtok(passwords, ":");
+		passwd = strtok(NULL, "\n");
+		debug(28, 5) ("aclReadProxyAuth: adding new passwords to hash table\n");
+		while (user != NULL) {
+		    if (strlen(user) > 1 && passwd && strlen(passwd) > 1) {
+			debug(28, 6) ("aclReadProxyAuth: adding %s, %s to hash table\n", user, passwd);
+			hash_insert(p->hash, xstrdup(user), (void *) xstrdup(passwd));
+		    }
+		    user = strtok(NULL, ":");
+		    passwd = strtok(NULL, "\n");
+		}
+		xfree(passwords);
+	    } else {
+		debug(28, 5) ("aclReadProxyAuth: %s not changed (old=%d,new=%d)\n",
+		    p->filename, p->change_time, buf.st_mtime);
+	    }
+	} else {
+	    debug(28, 0) ("aclReadProxyAuth: can't access proxy_auth file %s, turning authentication off\n", p->filename);
+	    return 0;
+	}
+	p->last_time = squid_curtime;
+    }
+    return 1;
+}
+
 
 /* compare a host and a domain */
 

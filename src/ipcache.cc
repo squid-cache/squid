@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.128 1997/07/16 20:32:11 wessels Exp $
+ * $Id: ipcache.cc,v 1.129 1997/08/25 23:45:28 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1087,6 +1087,7 @@ ipcacheFreeMemory(void)
     }
     xfree(list);
     hashFreeMemory(ip_table);
+    ip_table = NULL;
 }
 
 static void

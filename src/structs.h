@@ -20,6 +20,14 @@ struct _acl_name_list {
     struct _acl_name_list *next;
 };
 
+struct _acl_proxy_auth {
+    char *filename;
+    time_t last_time;
+    time_t change_time;
+    int check_interval;
+    hash_table *hash;
+};
+
 struct _acl_deny_info_list {
     char url[MAX_URL];
     struct _acl_name_list *acl_list;
@@ -128,10 +136,6 @@ struct _SquidConfig {
 	char *useragent;
 	int rotateNumber;
     } Log;
-    struct {
-	char *File;
-	relist *IgnoreDomains;
-    } proxyAuth;
     char *adminEmail;
     char *effectiveUser;
     char *effectiveGroup;
