@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.74 2001/10/24 08:19:07 hno Exp $
+ * $Id: HttpHeader.cc,v 1.75 2002/04/07 00:41:54 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -621,16 +621,16 @@ httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
 String
 httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id)
 {
-    const char *str;
-    String s;
+    HttpHeaderEntry *e;
 
     if (CBIT_TEST(ListHeadersMask, id))
-	s = httpHeaderGetList(hdr, id);
-    else {
-	str = httpHeaderGetStr(hdr, id);
-	stringInit(&s, str);
+	return httpHeaderGetList(hdr, id);
+    if ((e = httpHeaderFindEntry(hdr, id))) {
+	String s;
+	stringInit(&s, strBuf(e->value));
+	return s;
     }
-    return s;
+    return StringNull;
 }
 
 /*
