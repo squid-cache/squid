@@ -1,7 +1,7 @@
 
 /*
- * $Id: protos.h,v 1.324 1999/04/26 21:06:16 wessels Exp $
- * $Id: protos.h,v 1.324 1999/04/26 21:06:16 wessels Exp $
+ * $Id: protos.h,v 1.325 1999/05/03 21:55:03 wessels Exp $
+ * $Id: protos.h,v 1.325 1999/05/03 21:55:03 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -207,7 +207,7 @@ extern int file_open(const char *path, int mode, FOCB *, void *callback_data, vo
 extern void file_close(int fd);
 extern void file_write(int, off_t, void *, int len, DWCB *, void *, FREE *);
 extern void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
-extern int file_read(int, char *, int, off_t, DRCB *, void *);
+extern void file_read(int, char *, int, off_t, DRCB *, void *);
 extern void disk_init(void);
 extern int diskWriteIsComplete(int);
 
@@ -231,9 +231,6 @@ extern void eventFreeMemory(void);
 extern int eventFind(EVH *, void *);
 
 extern void fd_close(int fd);
-#if USE_ASYNC_IO
-extern void fd_was_closed(int fd);
-#endif
 extern void fd_open(int fd, unsigned int type, const char *);
 extern void fd_note(int fd, const char *);
 extern void fd_bytes(int fd, int len, unsigned int type);
@@ -803,7 +800,6 @@ extern int storeClientWaiting(const StoreEntry *);
 extern void storeAbort(StoreEntry *);
 extern void storeAppend(StoreEntry *, const char *, int);
 extern void storeLockObject(StoreEntry *);
-extern void storeSwapInStart(StoreEntry *, SIH *, void *data);
 extern void storeRelease(StoreEntry *);
 extern int storeUnlockObject(StoreEntry *);
 extern int storeUnregister(StoreEntry *, void *);
@@ -846,13 +842,28 @@ extern void storeAppendPrintf();
 #endif
 extern void storeAppendVPrintf(StoreEntry *, const char *, va_list ap);
 extern int storeCheckCachable(StoreEntry * e);
-extern void storeUnlinkFileno(int fileno);
 extern void storeSetPrivateKey(StoreEntry *);
 extern int objectLen(const StoreEntry * e);
 extern int contentLen(const StoreEntry * e);
 extern HttpReply *storeEntryReply(StoreEntry *);
 extern int storeTooManyDiskFilesOpen(void);
 extern void storeEntryReset(StoreEntry *);
+
+/* store_io.c */
+extern storeIOState *storeOpen(sfileno f, mode_t mode, STIOCB *callback, void *callback_data);
+extern void storeClose(storeIOState *sio);
+extern void storeRead(storeIOState *sio, char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data);
+extern void storeWrite(storeIOState *sio, char *buf, size_t size, off_t offset);
+extern void storeUnlink(int fileno);
+extern off_t storeOffset(storeIOState *);
+
+/* store_io_ufs.c */
+extern storeIOState *storeUfsOpen(sfileno f, mode_t mode, STIOCB *callback, void *callback_data);
+extern void storeUfsClose(storeIOState *sio);
+extern void storeUfsRead(storeIOState *sio, char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data);
+extern void storeUfsWrite(storeIOState *sio, char *buf, size_t size, off_t offset);
+extern void storeUfsUnlink(int fileno);
+extern char *storeUfsFullPath(sfileno fn, char *fullpath); 	/* XXX want this to be static */
 
 /*
  * store_log.c
@@ -935,22 +946,18 @@ extern void storeSwapTLVFree(tlv * n);
  * store_rebuild.c
  */
 extern void storeDoRebuildFromSwapFiles(void *data);
-extern void storeValidate(StoreEntry *, STVLDCB *, void *, void *);
 extern void storeRebuildStart(void);
 
 /*
  * store_swapin.c
  */
-extern void storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data);
-extern void storeSwapInValidateComplete(void *data, int retcode, int errcode);
-extern void storeSwapInFileOpened(void *data, int fd, int errcode);
+extern storeIOState *storeSwapInStart(StoreEntry *);
 
 /*
  * store_swapout.c
  */
-extern void storeCheckSwapOut(StoreEntry * e);
+extern void storeSwapOut(StoreEntry * e);
 extern void storeSwapOutFileClose(StoreEntry * e);
-extern int storeSwapOutWriteQueued(MemObject * mem);
 extern int storeSwapOutAble(const StoreEntry * e);
 
 /*

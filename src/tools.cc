@@ -1,7 +1,7 @@
 
 /*
- * $Id: tools.cc,v 1.176 1999/04/23 02:57:40 wessels Exp $
- * $Id: tools.cc,v 1.176 1999/04/23 02:57:40 wessels Exp $
+ * $Id: tools.cc,v 1.177 1999/05/03 21:55:15 wessels Exp $
+ * $Id: tools.cc,v 1.177 1999/05/03 21:55:15 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -49,9 +49,6 @@ Thanks!\n"
 static void fatal_common(const char *);
 static void fatalvf(const char *fmt, va_list args);
 static void mail_warranty(void);
-#if USE_ASYNC_IO
-static AIOCB safeunlinkComplete;
-#endif
 #if MEM_GEN_TRACE
 extern void log_trace_done();
 extern void log_trace_init(char *);
@@ -458,30 +455,10 @@ uniqueHostname(void)
 void
 safeunlink(const char *s, int quiet)
 {
-#if USE_ASYNC_IO
-    aioUnlink(s,
-	quiet ? NULL : safeunlinkComplete,
-	quiet ? NULL : xstrdup(s));
-#else
     Counter.syscalls.disk.unlinks++;
     if (unlink(s) < 0 && !quiet)
 	debug(50, 1) ("safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
-#endif
 }
-
-#if USE_ASYNC_IO
-static void
-safeunlinkComplete(int fd, void *data, int retcode, int errcode)
-{
-    char *s = data;
-    if (retcode < 0) {
-	errno = errcode;
-	debug(50, 1) ("safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
-	errno = 0;
-    }
-    xfree(s);
-}
-#endif
 
 /* leave a privilegied section. (Give up any privilegies)
  * Routines that need privilegies can rap themselves in enter_suid()

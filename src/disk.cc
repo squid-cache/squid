@@ -1,7 +1,6 @@
 
-
 /*
- * $Id: disk.cc,v 1.143 1999/05/03 20:39:31 wessels Exp $
+ * $Id: disk.cc,v 1.144 1999/05/03 21:55:00 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -44,18 +43,13 @@ typedef struct open_ctrl_t {
     char *path;
 } open_ctrl_t;
 
-static AIOCB diskHandleWriteComplete;
-static AIOCB diskHandleReadComplete;
 static PF diskHandleRead;
 static PF diskHandleWrite;
-static AIOCB fileOpenComplete;
 
 void
 disk_init(void)
 {
-#if USE_ASYNC_IO
-    aioClose(dup(0));
-#endif
+	(void) 0;
 }
 
 /* Open a disk file. Return a file descriptor */
@@ -63,86 +57,39 @@ int
 file_open(const char *path, int mode, FOCB * callback, void *callback_data, void *tag)
 {
     int fd;
-    open_ctrl_t *ctrlp;
-
-    ctrlp = xmalloc(sizeof(open_ctrl_t));
-    ctrlp->path = xstrdup(path);
-    ctrlp->callback = callback;
-    ctrlp->callback_data = callback_data;
-
     if (mode & O_WRONLY)
 	mode |= O_APPEND;
     mode |= SQUID_NONBLOCK;
-
     /* Open file */
-    Opening_FD++;
-#if USE_ASYNC_IO
-    if (callback != NULL) {
-	aioOpen(path, mode, 0644, fileOpenComplete, ctrlp, tag);
-	return DISK_OK;
-    }
-#endif
     errno = 0;
     fd = open(path, mode, 0644);
-    fileOpenComplete(-1, ctrlp, fd, errno);
-    if (fd < 0)
-	return DISK_ERROR;
+    Counter.syscalls.disk.opens++;
+    if (fd < 0) {
+	debug(50, 3) ("file_open: error opening file %s: %s\n", path,
+	    xstrerror());
+	fd = DISK_ERROR;
+    } else {
+	debug(6, 5) ("file_open: FD %d\n", fd);
+	commSetCloseOnExec(fd);
+	fd_open(fd, FD_FILE, path);
+    }
+    if (callback)
+	callback(callback_data, fd, errno);
     return fd;
 }
 
-
-static void
-fileOpenComplete(int unused, void *data, int fd, int errcode)
-{
-    open_ctrl_t *ctrlp = (open_ctrl_t *) data;
-    debug(6, 5) ("fileOpenComplete: FD %d, data %p, errcode %d\n",
-	fd, data, errcode);
-    Counter.syscalls.disk.opens++;
-    Opening_FD--;
-    if (fd == -2 && errcode == -2) {	/* Cancelled - clean up */
-	if (ctrlp->callback)
-	    (ctrlp->callback) (ctrlp->callback_data, fd, errcode);
-	xfree(ctrlp->path);
-	xfree(ctrlp);
-	return;
-    }
-    if (fd < 0) {
-	errno = errcode;
-	debug(50, 3) ("fileOpenComplete: error opening file %s: %s\n", ctrlp->path,
-	    xstrerror());
-	if (ctrlp->callback)
-	    (ctrlp->callback) (ctrlp->callback_data, DISK_ERROR, errcode);
-	xfree(ctrlp->path);
-	xfree(ctrlp);
-	return;
-    }
-    debug(6, 5) ("fileOpenComplete: FD %d\n", fd);
-    commSetCloseOnExec(fd);
-    fd_open(fd, FD_FILE, ctrlp->path);
-    if (ctrlp->callback)
-	(ctrlp->callback) (ctrlp->callback_data, fd, errcode);
-    xfree(ctrlp->path);
-    xfree(ctrlp);
-}
 
 /* close a disk file. */
 void
 file_close(int fd)
 {
     fde *F = &fd_table[fd];
-    PF *callback;
-#if USE_ASYNC_IO
-    if (fd < 0) {
-	debug(6, 0) ("file_close: FD less than zero: %d\n", fd);
-	return;
-    }
-#else
+    PF *read_callback;
     assert(fd >= 0);
-#endif
     assert(F->flags.open);
-    if ((callback = F->read_handler)) {
+    if ((read_callback = F->read_handler)) {
 	F->read_handler = NULL;
-	callback(-1, F->read_data);
+	read_callback(-1, F->read_data);
     }
     if (F->flags.write_daemon) {
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_OS2_)
@@ -164,19 +111,13 @@ file_close(int fd)
      */
     assert(F->write_handler == NULL);
     F->flags.closing = 1;
-#if USE_ASYNC_IO
-    aioClose(fd);
-#else
 #if CALL_FSYNC_BEFORE_CLOSE
     fsync(fd);
 #endif
     close(fd);
-#endif
     debug(6, F->flags.close_request ? 2 : 5)
 	("file_close: FD %d, really closing\n", fd);
-#if !USE_ASYNC_IO
     fd_close(fd);
-#endif
     Counter.syscalls.disk.closes++;
 }
 
@@ -230,80 +171,27 @@ diskCombineWrites(struct _fde_disk *fdd)
 static void
 diskHandleWrite(int fd, void *notused)
 {
-#if !USE_ASYNC_IO
     int len = 0;
-#endif
-    fde *F = &fd_table[fd];
-    struct _fde_disk *fdd = &F->disk;
-    if (!fdd->write_q)
-	return;
-    debug(6, 3) ("diskHandleWrite: FD %d\n", fd);
-    assert(fdd->write_q != NULL);
-    assert(fdd->write_q->len > fdd->write_q->buf_offset);
-#if USE_ASYNC_IO
-    aioWrite(fd,
-	-1,			/* seek offset, -1 == append */
-	fdd->write_q->buf + fdd->write_q->buf_offset,
-	fdd->write_q->len - fdd->write_q->buf_offset,
-	diskHandleWriteComplete,
-	fdd->write_q);
-#else
-    debug(6, 3) ("diskHandleWrite: FD %d writing %d bytes\n",
-	fd, (int) (fdd->write_q->len - fdd->write_q->buf_offset));
-    errno = 0;
-    len = write(fd,
-	fdd->write_q->buf + fdd->write_q->buf_offset,
-	fdd->write_q->len - fdd->write_q->buf_offset);
-    diskHandleWriteComplete(fd, fdd->write_q, len, errno);
-#endif
-}
-
-static void
-diskHandleWriteComplete(int fd, void *data, int len, int errcode)
-{
     fde *F = &fd_table[fd];
     struct _fde_disk *fdd = &F->disk;
     dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
     int do_callback;
     int do_close;
-    errno = errcode;
-    debug(6, 3) ("diskHandleWriteComplete: FD %d len = %d\n", fd, len);
+    if (NULL == q)
+	return;
+    debug(6, 3) ("diskHandleWrite: FD %d\n", fd);
+    F->flags.write_daemon = 0;
+    assert(fdd->write_q != NULL);
+    assert(fdd->write_q->len > fdd->write_q->buf_offset);
+    debug(6, 3) ("diskHandleWrite: FD %d writing %d bytes\n",
+	fd, (int) (fdd->write_q->len - fdd->write_q->buf_offset));
+    errno = 0;
+    len = write(fd,
+	fdd->write_q->buf + fdd->write_q->buf_offset,
+	fdd->write_q->len - fdd->write_q->buf_offset);
+    debug(6, 3) ("diskHandleWrite: FD %d len = %d\n", fd, len);
     Counter.syscalls.disk.writes++;
-#if USE_ASYNC_IO
-/*
- * From:    "Michael O'Reilly" <michael@metal.iinet.net.au>
- * Date:    24 Feb 1998 15:12:06 +0800
- *
- * A small patch to improve the AIO sanity. the patch below makes sure
- * the write request really does match the data passed back from the
- * async IO call.  note that I haven't actually rebooted with this
- * patch yet, so 'provisional' is an understatement.
- */
-    if (q && q != data) {
-	dwrite_q *p = data;
-	debug(50, 0) ("KARMA: q != data (%p, %p)\n", q, p);
-	debug(50, 0) ("KARMA: (%d, %d, %d FD %d)\n",
-	    q->buf_offset, q->len, len, fd);
-	debug(50, 0) ("KARMA: desc %s, type %d, open %d, flags 0x%x\n",
-	    F->desc, F->type, F->flags.open, F->flags);
-	debug(50, 0) ("KARMA: (%d, %d)\n", p->buf_offset, p->len);
-	len = -1;
-	errcode = EFAULT;
-    }
-#endif
-    if (q == NULL)		/* Someone aborted then write completed */
-	return;
-
-    if (len == -2 && errcode == -2) {	/* Write cancelled - cleanup */
-	do {
-	    fdd->write_q = q->next;
-	    if (q->free_func)
-		(q->free_func) (q->buf);
-	    safe_free(q);
-	} while ((q = fdd->write_q));
-	return;
-    }
     fd_bytes(fd, len, FD_WRITE);
     if (len < 0) {
 	if (!ignoreErrno(errno)) {
@@ -357,7 +245,6 @@ diskHandleWriteComplete(int fd, void *data, int len, int errcode)
     if (fdd->write_q == NULL) {
 	/* no more data */
 	fdd->write_q_tail = NULL;
-	F->flags.write_daemon = 0;
     } else {
 	/* another block is queued */
 	diskCombineWrites(fdd);
@@ -425,12 +312,7 @@ file_write(int fd,
     }
     if (!F->flags.write_daemon) {
 	cbdataLock(F->disk.wrt_handle_data);
-#if USE_ASYNC_IO
 	diskHandleWrite(fd, NULL);
-#else
-	    commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
-#endif
-	F->flags.write_daemon = 1;
     }
 }
 
@@ -449,10 +331,9 @@ static void
 diskHandleRead(int fd, void *data)
 {
     dread_ctrl *ctrl_dat = data;
-#if !USE_ASYNC_IO
     fde *F = &fd_table[fd];
     int len;
-#endif
+    int rc = DISK_OK;
     /*
      * FD < 0 indicates premature close; we just have to free
      * the state data.
@@ -461,14 +342,6 @@ diskHandleRead(int fd, void *data)
 	memFree(ctrl_dat, MEM_DREAD_CTRL);
 	return;
     }
-#if USE_ASYNC_IO
-    aioRead(fd,
-	ctrl_dat->offset,
-	ctrl_dat->buf,
-	ctrl_dat->req_len,
-	diskHandleReadComplete,
-	ctrl_dat);
-#else
     if (F->disk.offset != ctrl_dat->offset) {
 	debug(6, 3) ("diskHandleRead: FD %d seeking to offset %d\n",
 	    fd, (int) ctrl_dat->offset);
@@ -480,22 +353,7 @@ diskHandleRead(int fd, void *data)
     len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
     if (len > 0)
 	F->disk.offset += len;
-    diskHandleReadComplete(fd, ctrl_dat, len, errno);
-#endif
-}
-
-static void
-diskHandleReadComplete(int fd, void *data, int len, int errcode)
-{
-    dread_ctrl *ctrl_dat = data;
-    int rc = DISK_OK;
     Counter.syscalls.disk.reads++;
-    errno = errcode;
-    if (len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
-	cbdataUnlock(ctrl_dat->client_data);
-	memFree(ctrl_dat, MEM_DREAD_CTRL);
-	return;
-    }
     fd_bytes(fd, len, FD_READ);
     if (len < 0) {
 	if (ignoreErrno(errno)) {
@@ -519,7 +377,7 @@ diskHandleReadComplete(int fd, void *data, int len, int errcode)
 /* buffer must be allocated from the caller. 
  * It must have at least req_len space in there. 
  * call handler when a reading is complete. */
-int
+void
 file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
@@ -533,16 +391,7 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = client_data;
     cbdataLock(client_data);
-#if USE_ASYNC_IO
     diskHandleRead(fd, ctrl_dat);
-#else
-    commSetSelect(fd,
-	COMM_SELECT_READ,
-	diskHandleRead,
-	ctrl_dat,
-	0);
-#endif
-    return DISK_OK;
 }
 
 int

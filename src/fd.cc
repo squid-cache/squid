@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.36 1999/04/15 06:15:54 wessels Exp $
+ * $Id: fd.cc,v 1.37 1999/05/03 21:55:02 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -89,16 +89,6 @@ fd_close(int fd)
     memset(F, '\0', sizeof(fde));
     F->timeout = 0;
 }
-
-#if USE_ASYNC_IO
-void
-fd_was_closed(int fd)
-{
-    fde *F = &fd_table[fd];
-    if (F->flags.closing)
-	fd_close(fd);
-}
-#endif
 
 void
 fd_open(int fd, unsigned int type, const char *desc)

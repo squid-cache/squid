@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.56 1999/01/24 02:26:25 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.57 1999/05/03 21:55:11 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -101,7 +101,6 @@ static StoreEntry *storeAddDiskRestore(const cache_key * key,
     u_num32 refcount,
     u_short flags,
     int clean);
-static AIOCB storeValidateComplete;
 
 static int
 storeRebuildFromDirectory(rebuild_dir * d)
@@ -165,7 +164,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	tlv_list = storeSwapMetaUnpack(hdr_buf, &swap_hdr_len);
 	if (tlv_list == NULL) {
 	    debug(20, 1) ("storeRebuildFromDirectory: failed to get meta data\n");
-	    storeUnlinkFileno(sfileno);
+	    storeUnlink(sfileno);
 	    continue;
 	}
 	debug(20, 3) ("storeRebuildFromDirectory: successful swap meta unpacking\n");
@@ -189,7 +188,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	tlv_list = NULL;
 	if (storeKeyNull(key)) {
 	    debug(20, 1) ("storeRebuildFromDirectory: NULL key\n");
-	    storeUnlinkFileno(sfileno);
+	    storeUnlink(sfileno);
 	    continue;
 	}
 	tmpe.key = key;
@@ -201,11 +200,11 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	} else if (tmpe.swap_file_sz != sb.st_size) {
 	    debug(20, 1) ("storeRebuildFromDirectory: SIZE MISMATCH %d!=%d\n",
 		tmpe.swap_file_sz, (int) sb.st_size);
-	    storeUnlinkFileno(sfileno);
+	    storeUnlink(sfileno);
 	    continue;
 	}
 	if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {
-	    storeUnlinkFileno(sfileno);
+	    storeUnlink(sfileno);
 	    RebuildState.badflags++;
 	    continue;
 	}
@@ -645,72 +644,6 @@ storeCleanup(void *datanotused)
 	    debug(20, 1) ("  %7d Entries Validated so far.\n", validnum);
     }
     eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
-}
-
-void
-storeValidate(StoreEntry * e, STVLDCB * callback, void *callback_data, void *tag)
-{
-    valid_ctrl_t *ctrlp;
-    char *path;
-    struct stat *sb;
-#if !USE_ASYNC_IO
-    int x;
-#endif
-    assert(!EBIT_TEST(e->flags, ENTRY_VALIDATED));
-    if (e->swap_file_number < 0) {
-	EBIT_CLR(e->flags, ENTRY_VALIDATED);
-	callback(callback_data, 0, 0);
-	return;
-    }
-    path = storeSwapFullPath(e->swap_file_number, NULL);
-    sb = xmalloc(sizeof(struct stat));
-    ctrlp = xmalloc(sizeof(valid_ctrl_t));
-    ctrlp->sb = sb;
-    ctrlp->e = e;
-    ctrlp->callback = callback;
-    ctrlp->callback_data = callback_data;
-#if USE_ASYNC_IO
-    aioStat(path, sb, storeValidateComplete, ctrlp, tag);
-#else
-    /*
-     * When evaluating the actual arguments in a function call, the order
-     * in which the arguments and the function expression are evaluated is
-     * not specified;
-     */
-    x = stat(path, sb);
-    storeValidateComplete(-1, ctrlp, x, errno);
-#endif
-    return;
-}
-
-static void
-storeValidateComplete(int fd, void *data, int retcode, int errcode)
-{
-    valid_ctrl_t *ctrlp = data;
-    struct stat *sb = ctrlp->sb;
-    StoreEntry *e = ctrlp->e;
-    char *path;
-
-    if (retcode == -2 && errcode == -2) {
-	xfree(sb);
-	xfree(ctrlp);
-	ctrlp->callback(ctrlp->callback_data, retcode, errcode);
-	return;
-    }
-    if (retcode < 0 && errcode == EWOULDBLOCK) {
-	path = storeSwapFullPath(e->swap_file_number, NULL);
-	retcode = stat(path, sb);
-    }
-    if (retcode < 0 || sb->st_size == 0 || sb->st_size != e->swap_file_sz) {
-	EBIT_CLR(e->flags, ENTRY_VALIDATED);
-    } else {
-	EBIT_SET(e->flags, ENTRY_VALIDATED);
-	storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, 1);
-    }
-    errno = errcode;
-    ctrlp->callback(ctrlp->callback_data, retcode, errcode);
-    xfree(sb);
-    xfree(ctrlp);
 }
 
 /* meta data recreated from disk image in swap directory */

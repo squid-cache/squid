@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.286 1999/05/03 20:39:36 wessels Exp $
+ * $Id: structs.h,v 1.287 1999/05/03 21:55:14 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1191,7 +1191,7 @@ struct _store_client {
     STCB *callback;
     void *callback_data;
     StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
-    int swapin_fd;
+    storeIOState *swapin_sio;
     struct {
 	unsigned int disk_io_pending:1;
 	unsigned int store_copying:1;
@@ -1215,9 +1215,8 @@ struct _MemObject {
     int nclients;
     struct {
 	off_t queue_offset;	/* relative to in-mem data */
-	off_t done_offset;	/* relative to swap file with meta headers! */
-	int fd;
-	void *ctrl;
+	storeIOState *sio;
+	FREE *free_write_buf;
     } swapout;
     HttpReply *reply;
     request_t *request;
@@ -1248,7 +1247,7 @@ struct _StoreEntry {
     size_t swap_file_sz;
     u_short refcount;
     u_short flags;
-    int swap_file_number;
+    sfileno swap_file_number;
     dlink_node lru;
     u_short lock_count;		/* Assume < 65536! */
     mem_status_t mem_status:3;
@@ -1291,6 +1290,32 @@ struct _request_flags {
 #endif
     unsigned int accelerated:1;
     unsigned int internal:1;
+};
+
+struct _storeIOState {
+    int fd;
+    sfileno swap_file_number;
+    mode_t mode;
+    size_t st_size;		/* do stat(2) after read open */
+    off_t offset;		/* current offset pointer */
+    STIOCB *callback;
+    void *callback_data;
+    struct {
+	STRCB *callback;
+	void *callback_data;
+    } read;
+    struct {
+	unsigned int closing:1;	/* debugging aid */
+    } flags;
+    union {
+	struct {
+	    struct {
+		unsigned int close_request:1;
+		unsigned int reading:1;
+		unsigned int writing:1;
+	    } flags;
+	} ufs;
+    } type;
 };
 
 struct _request_t {
@@ -1528,7 +1553,7 @@ struct _tlv {
 
 struct _storeSwapLogData {
     char op;
-    int swap_file_number;
+    sfileno swap_file_number;
     time_t timestamp;
     time_t lastref;
     time_t expires;

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.170 1999/04/26 20:44:06 glenn Exp $
+#  $Id: Makefile.in,v 1.171 1999/05/03 21:54:55 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -152,6 +152,8 @@ OBJS	 	= \
 		String.o \
 		stmem.o \
 		store.o \
+		store_io.o \
+		store_io_ufs.o \
 		store_clean.o \
 		store_client.o \
 		store_digest.o \
