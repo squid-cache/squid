@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.302 2001/01/05 20:40:52 hno Exp $
+ * $Id: ftp.cc,v 1.303 2001/01/06 11:46:43 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1044,8 +1044,6 @@ ftpStart(FwdState * fwd)
     const char *url = storeUrl(entry);
     FtpStateData *ftpState;
     HttpReply *reply;
-    StoreEntry *pe = NULL;
-    const cache_key *key = NULL;
 
     CBDATA_INIT_TYPE(FtpStateData);
     ftpState = CBDATA_ALLOC(FtpStateData, NULL);
