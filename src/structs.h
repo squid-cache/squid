@@ -775,9 +775,6 @@ struct _peer {
 	int logged_state;	/* so we can print dead/revived msgs */
     } stats;
     u_short icp_port;
-#if USE_HTCP
-    u_short htcp_port;
-#endif
     u_short http_port;
     int icp_version;
     struct _domain_ping *pinglist;

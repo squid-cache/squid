@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.184 1998/03/28 05:28:54 wessels Exp $
+ * $Id: neighbors.cc,v 1.185 1998/03/28 06:26:44 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -442,7 +442,7 @@ neighborsUdpPing(request_t * request,
 	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", storeKeyText(entry->key));
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
-	if (p->htcp_port > 0) {
+	if (EBIT_TEST(p->options, NEIGHBOR_HTCP)) {
 	    debug(15, 0)("neighborsUdpPing: sending HTCP query\n");
 	    htcpQuery(entry, request, p);
 	} else if (p->icp_port == echo_port) {
@@ -1005,6 +1005,8 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 	storeAppendPrintf(sentry, " multicast-responder");
     if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
 	storeAppendPrintf(sentry, " closest-only");
+    if (EBIT_TEST(p->options, NEIGHBOR_HTCP))
+	storeAppendPrintf(sentry, " htcp");
     if (p->mcast.ttl > 0)
 	storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
     storeAppendPrintf(sentry, "\n");

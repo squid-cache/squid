@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.265 1998/03/28 05:26:08 wessels Exp $
+ * $Id: cache_cf.cc,v 1.266 1998/03/28 06:26:42 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -653,7 +653,6 @@ parse_peer(peer ** head)
     int i;
     ushortlist *u;
     const char *me = null_string;	/* XXX */
-    char *t;
     p = xcalloc(1, sizeof(peer));
     p->http_port = CACHE_HTTP_PORT;
     p->icp_port = CACHE_ICP_PORT;
@@ -667,16 +666,8 @@ parse_peer(peer ** head)
     p->type = parseNeighborType(token);
     GetInteger(i);
     p->http_port = (u_short) i;
-    if ((token = strtok(NULL, w_space)) == NULL)
-	self_destruct();
-    if (NULL == (t = strchr(token, '/')))
-	p->icp_port = atoi(token);
-    else if (0 == strcmp(t, "/icp"))
-	p->icp_port = atoi(token);
-    else if (0 == strcmp(t, "/htcp"))
-	p->htcp_port = atoi(token);
-    else
-	self_destruct();
+    GetInteger(i);
+    p->icp_port = (u_short) i;
     if (strcmp(p->host, me) == 0) {
 	for (u = Config.Port.http; u; u = u->next) {
 	    if (p->http_port != u->i)
@@ -707,6 +698,8 @@ parse_peer(peer ** head)
 	    EBIT_SET(p->options, NEIGHBOR_DEFAULT_PARENT);
 	} else if (!strncasecmp(token, "round-robin", 11)) {
 	    EBIT_SET(p->options, NEIGHBOR_ROUNDROBIN);
+	} else if (!strncasecmp(token, "htcp", 4)) {
+	    EBIT_SET(p->options, NEIGHBOR_HTCP);
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
 	    self_destruct();
