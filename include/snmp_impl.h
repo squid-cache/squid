@@ -74,11 +74,12 @@ SOFTWARE.
 #define RWRITE	0xAABA	/* add write access for community private */
 #define NOACCESS 0x0000	/* no access for anybody */
 
+#ifndef INTEGER
 #define INTEGER	    ASN_INTEGER
 #define STRING	    ASN_OCTET_STR
 #define OBJID	    ASN_OBJECT_ID
 #define NULLOBJ	    ASN_NULL
-
+#endif
 
 struct trapVar {
     oid	    *varName;
