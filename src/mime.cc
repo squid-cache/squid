@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.14 1996/07/18 20:27:05 wessels Exp $
+ * $Id: mime.cc,v 1.15 1996/09/04 22:03:27 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -240,11 +240,11 @@ int mk_mime_hdr(result, ttl, size, lmt, type)
     expiretime = ttl ? t + ttl : 0;
     date[0] = expires[0] = last_modified[0] = '\0';
     content_length[0] = result[0] = '\0';
-    sprintf(date, "Date: %s\r\n", mkrfc850(&t));
+    sprintf(date, "Date: %s\r\n", mkrfc850(t));
     if (ttl >= 0)
-	sprintf(expires, "Expires: %s\r\n", mkrfc850(&expiretime));
+	sprintf(expires, "Expires: %s\r\n", mkrfc850(expiretime));
     if (lmt)
-	sprintf(last_modified, "Last-Modified: %s\r\n", mkrfc850(&lmt));
+	sprintf(last_modified, "Last-Modified: %s\r\n", mkrfc850(lmt));
     if (size > 0)
 	sprintf(content_length, "Content-Length: %d\r\n", size);
     sprintf(result, "Server: %s/%s\r\n%s%s%sContent-Type: %s\r\n%s",

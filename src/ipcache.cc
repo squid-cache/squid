@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.54 1996/09/03 18:54:45 wessels Exp $
+ * $Id: ipcache.cc,v 1.55 1996/09/04 22:03:26 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -146,7 +146,6 @@ static ipcache_entry *ipcache_GetNext _PARAMS((void));
 static ipcache_entry *ipcache_create _PARAMS((void));
 static void ipcache_add_to_hash _PARAMS((ipcache_entry *));
 static void ipcache_call_pending _PARAMS((ipcache_entry *));
-static void ipcache_call_pending_badname _PARAMS((int fd, IPH handler, void *));
 static void ipcache_add _PARAMS((char *, ipcache_entry *, struct hostent *, int));
 static int ipcacheHasPending _PARAMS((ipcache_entry *));
 static ipcache_entry *ipcache_get _PARAMS((char *));
@@ -158,6 +157,8 @@ static void *ipcacheDequeue _PARAMS((void));
 static void ipcache_dnsDispatch _PARAMS((dnsserver_t *, ipcache_entry *));
 static struct hostent *ipcacheCheckNumeric _PARAMS((char *name));
 static void ipcacheStatPrint _PARAMS((ipcache_entry *, StoreEntry *));
+static void ipcacheUnlockEntry _PARAMS((ipcache_entry *));
+static void ipcacheLockEntry _PARAMS((ipcache_entry *));
 
 static struct hostent *static_result = NULL;
 static HashID ip_table = 0;
@@ -314,6 +315,8 @@ static int ipcacheExpiredEntry(i)
 	return 0;
     if (i->status == IP_DISPATCHED)
 	return 0;
+    if (i->locks != 0)
+	return 0;
     if (i->expires > squid_curtime)
 	return 0;
     return 1;
@@ -469,6 +472,7 @@ static void ipcache_call_pending(i)
 
     i->lastref = squid_curtime;
 
+    ipcacheLockEntry(i);
     while (i->pending_head != NULL) {
 	p = i->pending_head;
 	i->pending_head = p->next;
@@ -484,15 +488,7 @@ static void ipcache_call_pending(i)
     }
     i->pending_head = NULL;	/* nuke list */
     debug(14, 10, "ipcache_call_pending: Called %d handlers.\n", nhandler);
-}
-
-static void ipcache_call_pending_badname(fd, handler, data)
-     int fd;
-     IPH handler;
-     void *data;
-{
-    debug(14, 0, "ipcache_call_pending_badname: Bad Name: Calling handler with NULL result.\n");
-    handler(fd, NULL, data);
+    ipcacheUnlockEntry(i);
 }
 
 static ipcache_entry *ipcache_parsebuffer(inbuf, dnsData)
@@ -683,7 +679,7 @@ void ipcache_nbgethostbyname(name, fd, handler, handlerData)
 
     if (name == NULL || name[0] == '\0') {
 	debug(14, 4, "ipcache_nbgethostbyname: Invalid name!\n");
-	ipcache_call_pending_badname(fd, handler, handlerData);
+	handler(fd, NULL, handlerData);
 	return;
     }
     if ((hp = ipcacheCheckNumeric(name))) {
@@ -744,11 +740,11 @@ static void ipcache_dnsDispatch(dns, i)
 	ipcache_release(i);
 	return;
     }
-    i->status = IP_DISPATCHED;
     buf = xcalloc(1, 256);
     sprintf(buf, "%1.254s\n", i->name);
     dns->flags |= DNS_FLAG_BUSY;
     dns->data = i;
+    i->status = IP_DISPATCHED;
     comm_write(dns->outpipe,
 	buf,
 	strlen(buf),
@@ -1022,4 +1018,18 @@ int ipcacheQueueDrain()
     while ((dnsData = dnsGetFirstAvailable()) && (i = ipcacheDequeue()))
 	ipcache_dnsDispatch(dnsData, i);
     return 1;
+}
+
+static void ipcacheLockEntry(i)
+     ipcache_entry *i;
+{
+    i->locks++;
+}
+
+static void ipcacheUnlockEntry(i)
+     ipcache_entry *i;
+{
+    i->locks--;
+    if (ipcacheExpiredEntry(i))
+	ipcache_release(i);
 }

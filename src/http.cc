@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.70 1996/09/03 19:24:03 wessels Exp $
+ * $Id: http.cc,v 1.71 1996/09/04 22:03:23 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -496,9 +496,9 @@ static void httpReadReply(fd, httpState)
 	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
     } else {
-	storeAppend(entry, buf, len);
 	if (httpState->reply_hdr_state < 2 && len > 0)
 	    httpProcessReplyHeader(httpState, buf, len);
+	storeAppend(entry, buf, len);
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) httpReadReply,
@@ -557,13 +557,13 @@ static void httpSendRequest(fd, httpState)
     char *t = NULL;
     char *post_buf = NULL;
     static char *crlf = "\r\n";
-    static char *VIA_PROXY_TEXT = "via Squid Cache version";
     int len = 0;
     int buflen;
     int cfd = -1;
     request_t *req = httpState->request;
     char *Method = RequestMethodStr[req->method];
     int buftype = 0;
+    StoreEntry *entry = httpState->entry;
 
     debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     buflen = strlen(Method) + strlen(req->urlpath);
@@ -593,12 +593,7 @@ static void httpSendRequest(fd, httpState)
     if (httpState->req_hdr) {	/* we have to parse the request header */
 	xbuf = xstrdup(httpState->req_hdr);
 	for (t = strtok(xbuf, crlf); t; t = strtok(NULL, crlf)) {
-	    if (strncasecmp(t, "User-Agent:", 11) == 0) {
-		ybuf = (char *) get_free_4k_page();
-		memset(ybuf, '\0', SM_PAGE_SIZE);
-		sprintf(ybuf, "%s %s %s", t, VIA_PROXY_TEXT, version_string);
-		t = ybuf;
-	    } else if (strncasecmp(t, "Connection:", 11) == 0)
+	    if (strncasecmp(t, "Connection:", 11) == 0)
 		continue;
 	    if (len + (int) strlen(t) > buflen - 10)
 		continue;
@@ -607,15 +602,11 @@ static void httpSendRequest(fd, httpState)
 	    len += strlen(t) + 2;
 	}
 	xfree(xbuf);
-	if (ybuf) {
-	    put_free_4k_page(ybuf);
-	    ybuf = NULL;
-	}
     }
     /* Add Forwarded: header */
     ybuf = get_free_4k_page();
-    if (httpState->entry->mem_obj)
-	cfd = httpState->entry->mem_obj->fd_of_first_client;
+    if (entry->mem_obj)
+	cfd = entry->mem_obj->fd_of_first_client;
     if (cfd < 0) {
 	sprintf(ybuf, "%s\r\n", ForwardedBy);
     } else {
@@ -626,6 +617,16 @@ static void httpSendRequest(fd, httpState)
     put_free_4k_page(ybuf);
     ybuf = NULL;
 
+    /* Add IMS header */
+    if (entry->lastmod && req->method == METHOD_GET) {
+	debug(11, 3, "httpSendRequest: Adding IMS: %s\r\n",
+	    mkrfc850(entry->lastmod));
+	ybuf = get_free_4k_page();
+	sprintf(ybuf, "If-Modified-Since: %s\r\n", mkrfc850(entry->lastmod));
+	strcat(buf, ybuf);
+	len += strlen(ybuf);
+	put_free_4k_page(ybuf);
+    }
     strcat(buf, crlf);
     len += 2;
     if (post_buf) {
@@ -715,10 +716,6 @@ int proxyhttpStart(e, url, entry)
     strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
     request->port = e->http_port;
     strncpy(request->urlpath, url, MAX_URL);
-
-    /* check if IP is already in cache. It must be. 
-     * It should be done before this route is called. 
-     * Otherwise, we cannot check return code for connect. */
     ipcache_nbgethostbyname(request->host,
 	sock,
 	(IPH) httpConnect,

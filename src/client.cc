@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.7 1996/07/09 03:41:20 wessels Exp $
+ * $Id: client.cc,v 1.8 1996/09/04 22:03:19 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -209,7 +209,7 @@ int main(argc, argv)
     sprintf(buf, "Accept: */*\r\n");
     strcat(msg, buf);
     if (ims) {
-	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&ims));
+	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(ims));
 	strcat(msg, buf);
     }
     sprintf(buf, "\r\n");
