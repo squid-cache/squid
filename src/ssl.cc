@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.79 1998/05/22 23:44:24 wessels Exp $
+ * $Id: ssl.cc,v 1.80 1998/06/04 18:57:19 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -88,7 +88,7 @@ sslClientClosed(int fd, void *data)
     debug(26, 3) ("sslClientClosed: FD %d\n", fd);
     /* we have been called from comm_close for the client side, so
      * just need to clean up the server side */
-    protoUnregister(NULL, sslState->request);
+    fwdUnregister(NULL, sslState->request);
     comm_close(sslState->server.fd);
 }
 

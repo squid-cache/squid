@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.152 1998/06/03 22:32:59 rousskov Exp $
+#  $Id: Makefile.in,v 1.153 1998/06/04 18:57:06 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -96,6 +96,7 @@ OBJS	 	= \
 		event.o \
 		fd.o \
 		filemap.o \
+		forward.o \
 		fqdncache.o \
 		ftp.o \
 		globals.o \
@@ -134,7 +135,6 @@ OBJS	 	= \
 		pconn.o \
 		peer_digest.o \
 		peer_select.o \
-		proto.o \
 		pump.o \
 		redirect.o \
 		refresh.o \
@@ -163,6 +163,7 @@ OBJS	 	= \
 		urn.o \
 		useragent.o \
 		wais.o \
+		whois.o \
 		$(XTRA_OBJS)
 
 SNMP_OBJS	= \

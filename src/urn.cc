@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.34 1998/05/27 22:52:03 rousskov Exp $
+ * $Id: urn.cc,v 1.35 1998/06/04 18:57:19 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -143,7 +143,7 @@ urnStart(request_t * r, StoreEntry * e)
     if ((urlres_e = storeGet(k)) == NULL) {
 	urlres_e = storeCreateEntry(urlres, urlres, 0, METHOD_GET);
 	storeClientListAdd(urlres_e, urnState);
-	protoDispatch(-1, urlres_e, urlres_r);
+	fwdStart(-1, urlres_e, urlres_r);
     } else {
 	storeLockObject(urlres_e);
 	storeClientListAdd(urlres_e, urnState);

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.127 1998/06/02 04:18:21 wessels Exp $
+ * $Id: gopher.cc,v 1.128 1998/06/04 18:57:12 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -175,7 +175,6 @@ static PF gopherReadReply;
 static CWCB gopherSendComplete;
 static PF gopherSendRequest;
 static GopherStateData *CreateGopherStateData(void);
-static CNCB gopherConnectDone;
 static STABH gopherAbort;
 
 static char def_gopher_bin[] = "www/unknown";
@@ -670,7 +669,7 @@ gopherReadReply(int fd, void *data)
     int len;
     int clen;
     int bin;
-    if (protoAbortFetch(entry)) {
+    if (fwdAbortFetch(entry)) {
 	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
@@ -797,7 +796,7 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
     }
     /* Schedule read reply. */
     commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, gopherState, 0);
-    commSetDefer(fd, protoCheckDeferRead, entry);
+    commSetDefer(fd, fwdCheckDeferRead, entry);
     if (buf)
 	memFree(MEM_4K_BUF, buf);	/* Allocated by gopherSendRequest. */
 }
@@ -832,11 +831,9 @@ gopherSendRequest(int fd, void *data)
 }
 
 void
-gopherStart(StoreEntry * entry)
+gopherStart(StoreEntry * entry, int fd)
 {
     GopherStateData *gopherState = CreateGopherStateData();
-    ErrorState *err;
-    int fd;
     storeLockObject(entry);
     gopherState->entry = entry;
     debug(10, 3) ("gopherStart: %s\n", storeUrl(entry));
@@ -847,22 +844,6 @@ gopherStart(StoreEntry * entry)
 	    &gopherState->type_id, gopherState->request)) {
 	ErrorState *err;
 	err = errorCon(ERR_INVALID_URL, HTTP_BAD_REQUEST);
-	err->url = xstrdup(storeUrl(entry));
-	errorAppendEntry(entry, err);
-	gopherStateFree(-1, gopherState);
-	return;
-    }
-    /* Create socket. */
-    fd = comm_open(SOCK_STREAM,
-	0,
-	Config.Addrs.tcp_outgoing,
-	0,
-	COMM_NONBLOCKING,
-	storeUrl(entry));
-    if (fd == COMM_ERROR) {
-	debug(10, 4) ("gopherStart: Failed because we're out of sockets.\n");
-	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
-	err->xerrno = errno;
 	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
 	gopherStateFree(-1, gopherState);
@@ -889,44 +870,10 @@ gopherStart(StoreEntry * entry)
 	comm_close(fd);
 	return;
     }
-    commSetTimeout(fd, Config.Timeout.connect, gopherTimeout, gopherState);
-    commConnectStart(fd,
-	gopherState->host,
-	gopherState->port,
-	gopherConnectDone,
-	gopherState);
     gopherState->fd = fd;
+    commSetSelect(fd, COMM_SELECT_WRITE, gopherSendRequest, gopherState, 0);
+    commSetTimeout(fd, Config.Timeout.read, gopherTimeout, gopherState);
 }
-
-static void
-gopherConnectDone(int fd, int status, void *data)
-{
-    GopherStateData *gopherState = data;
-    StoreEntry *entry = gopherState->entry;
-
-    ErrorState *err;
-    if (status == COMM_ERR_DNS) {
-	debug(10, 4) ("gopherConnectDone: Unknown host: %s\n", gopherState->host);
-	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
-	err->dnsserver_msg = xstrdup(dns_error_message);
-	err->url = xstrdup(storeUrl(entry));
-	errorAppendEntry(entry, err);
-	comm_close(fd);
-    } else if (status != COMM_OK) {
-	ErrorState *err;
-	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
-	err->xerrno = errno;
-	err->host = xstrdup(gopherState->host);
-	err->port = gopherState->port;
-	err->url = xstrdup(storeUrl(entry));
-	errorAppendEntry(entry, err);
-	comm_close(fd);
-    } else {
-	commSetSelect(fd, COMM_SELECT_WRITE, gopherSendRequest, gopherState, 0);
-	commSetTimeout(fd, Config.Timeout.read, gopherTimeout, gopherState);
-    }
-}
-
 
 static GopherStateData *
 CreateGopherStateData(void)

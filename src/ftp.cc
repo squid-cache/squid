@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.227 1998/05/26 16:20:20 wessels Exp $
+ * $Id: ftp.cc,v 1.228 1998/06/04 18:57:11 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -135,7 +135,6 @@ typedef struct {
 typedef void (FTPSM) (FtpStateData *);
 
 /* Local functions */
-static CNCB ftpConnectDone;
 static CNCB ftpPasvCallback;
 static PF ftpDataRead;
 static PF ftpStateFree;
@@ -788,7 +787,7 @@ ftpDataRead(int fd, void *data)
     StoreEntry *entry = ftpState->entry;
     MemObject *mem = entry->mem_obj;
     assert(fd == ftpState->data.fd);
-    if (protoAbortFetch(entry)) {
+    if (fwdAbortFetch(entry)) {
 	storeAbort(entry, 0);
 	ftpDataTransferDone(ftpState);
 	return;
@@ -936,13 +935,11 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
 }
 
 void
-ftpStart(request_t * request, StoreEntry * entry)
+ftpStart(request_t * request, StoreEntry * entry, int fd)
 {
     LOCAL_ARRAY(char, realm, 8192);
     const char *url = storeUrl(entry);
     FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
-    int fd;
-    ErrorState *err;
     HttpReply *reply;
     cbdataAdd(ftpState, MEM_NONE);
     debug(9, 3) ("FtpStart: '%s'\n", url);
@@ -951,7 +948,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     storeLockObject(entry);
     ftpState->entry = entry;
     ftpState->request = requestLink(request);
-    ftpState->ctrl.fd = -1;
+    ftpState->ctrl.fd = fd;
     ftpState->data.fd = -1;
     ftpState->size = -1;
     ftpState->flags.pasv_supported = 1;
@@ -981,65 +978,18 @@ ftpStart(request_t * request, StoreEntry * entry)
     debug(9, 5) ("FtpStart: host=%s, path=%s, user=%s, passwd=%s\n",
 	ftpState->request->host, strBuf(ftpState->request->urlpath),
 	ftpState->user, ftpState->password);
-    fd = comm_open(SOCK_STREAM,
-	0,
-	Config.Addrs.tcp_outgoing,
-	0,
-	COMM_NONBLOCKING,
-	url);
-    if (fd == COMM_ERROR) {
-	debug(9, 4) ("ftpStart: Failed to open a socket.\n");
-	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
-	err->xerrno = errno;
-	err->request = requestLink(ftpState->request);
-	errorAppendEntry(entry, err);
-	return;
-    }
-    ftpState->ctrl.fd = fd;
     comm_add_close_handler(fd, ftpStateFree, ftpState);
     storeRegisterAbort(entry, ftpAbort, ftpState);
-    commSetTimeout(fd, Config.Timeout.connect, ftpTimeout, ftpState);
-    commConnectStart(ftpState->ctrl.fd,
-	request->host,
-	request->port,
-	ftpConnectDone,
-	ftpState);
-}
-
-static void
-ftpConnectDone(int fd, int status, void *data)
-{
-    FtpStateData *ftpState = data;
-    request_t *request = ftpState->request;
-    ErrorState *err;
-    debug(9, 3) ("ftpConnectDone, status = %d\n", status);
-    if (status == COMM_ERR_DNS) {
-	debug(9, 4) ("ftpConnectDone: Unknown host: %s\n", request->host);
-	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
-	err->dnsserver_msg = xstrdup(dns_error_message);
-	err->request = requestLink(request);
-	errorAppendEntry(ftpState->entry, err);
-	comm_close(ftpState->ctrl.fd);
-    } else if (status != COMM_OK) {
-	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
-	err->xerrno = errno;
-	err->host = xstrdup(request->host);
-	err->port = request->port;
-	err->request = requestLink(request);
-	errorAppendEntry(ftpState->entry, err);
-	comm_close(ftpState->ctrl.fd);
-    } else {
-	ftpState->state = BEGIN;
-	ftpState->ctrl.buf = memAllocate(MEM_4K_BUF);
-	ftpState->ctrl.freefunc = memFree4K;
-	ftpState->ctrl.size = 4096;
-	ftpState->ctrl.offset = 0;
-	ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
-	ftpState->data.size = SQUID_TCP_SO_RCVBUF;
-	ftpState->data.freefunc = xfree;
-	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
-	commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
-    }
+    ftpState->state = BEGIN;
+    ftpState->ctrl.buf = memAllocate(MEM_4K_BUF);
+    ftpState->ctrl.freefunc = memFree4K;
+    ftpState->ctrl.size = 4096;
+    ftpState->ctrl.offset = 0;
+    ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
+    ftpState->data.size = SQUID_TCP_SO_RCVBUF;
+    ftpState->data.freefunc = xfree;
+    commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
+    commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
 }
 
 /* ====================================================================== */
@@ -1876,7 +1826,7 @@ ftpReadList(FtpStateData * ftpState)
 	    ftpDataRead,
 	    ftpState,
 	    Config.Timeout.read);
-	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
+	commSetDefer(ftpState->data.fd, fwdCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
 	/*
 	 * Cancel the timeout on the Control socket and establish one
@@ -1930,7 +1880,7 @@ ftpReadRetr(FtpStateData * ftpState)
 	    ftpDataRead,
 	    ftpState,
 	    Config.Timeout.read);
-	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
+	commSetDefer(ftpState->data.fd, fwdCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
 	/*
 	 * Cancel the timeout on the Control socket and establish one

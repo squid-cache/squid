@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.109 1998/06/02 04:18:29 wessels Exp $
+ * $Id: wais.cc,v 1.110 1998/06/04 18:57:20 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -121,7 +121,6 @@ static PF waisTimeout;
 static PF waisReadReply;
 static CWCB waisSendComplete;
 static PF waisSendRequest;
-static CNCB waisConnectDone;
 static STABH waisAbort;
 
 static void
@@ -161,7 +160,7 @@ waisReadReply(int fd, void *data)
     int clen;
     int off;
     int bin;
-    if (protoAbortFetch(entry)) {
+    if (fwdAbortFetch(entry)) {
 	ErrorState *err;
 	err = errorCon(ERR_CLIENT_ABORT, HTTP_INTERNAL_SERVER_ERROR);
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
@@ -256,7 +255,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	    COMM_SELECT_READ,
 	    waisReadReply,
 	    waisState, 0);
-	commSetDefer(fd, protoCheckDeferRead, entry);
+	commSetDefer(fd, fwdCheckDeferRead, entry);
     }
 }
 
@@ -303,10 +302,9 @@ waisSendRequest(int fd, void *data)
 }
 
 void
-waisStart(request_t * request, StoreEntry * entry)
+waisStart(request_t * request, StoreEntry * entry, int fd)
 {
     WaisStateData *waisState = NULL;
-    int fd;
     const char *url = storeUrl(entry);
     method_t method = request->method;
     debug(24, 3) ("waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
@@ -316,20 +314,6 @@ waisStart(request_t * request, StoreEntry * entry)
 	ErrorState *err;
 	debug(24, 0) ("waisStart: Failed because no relay host defined!\n");
 	err = errorCon(ERR_NO_RELAY, HTTP_INTERNAL_SERVER_ERROR);
-	err->request = urlParse(METHOD_CONNECT, waisState->request);
-	errorAppendEntry(entry, err);
-	return;
-    }
-    fd = comm_open(SOCK_STREAM,
-	0,
-	Config.Addrs.tcp_outgoing,
-	0,
-	COMM_NONBLOCKING,
-	url);
-    if (fd == COMM_ERROR) {
-	ErrorState *err;
-	debug(24, 4) ("waisStart: Failed because we're out of sockets.\n");
-	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
 	return;
@@ -345,40 +329,9 @@ waisStart(request_t * request, StoreEntry * entry)
     xstrncpy(waisState->request, url, MAX_URL);
     comm_add_close_handler(waisState->fd, waisStateFree, waisState);
     storeRegisterAbort(entry, waisAbort, waisState);
-    commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
     storeLockObject(entry);
-    commConnectStart(waisState->fd,
-	waisState->relayhost,
-	waisState->relayport,
-	waisConnectDone,
-	waisState);
-}
-
-static void
-waisConnectDone(int fd, int status, void *data)
-{
-    WaisStateData *waisState = data;
-    char *request = waisState->request;
-    ErrorState *err;
-
-    if (status == COMM_ERR_DNS) {
-	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
-	err->dnsserver_msg = xstrdup(dns_error_message);
-	err->request = urlParse(METHOD_CONNECT, request);
-	errorAppendEntry(waisState->entry, err);
-	comm_close(fd);
-    } else if (status != COMM_OK) {
-	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
-	err->xerrno = errno;
-	err->host = xstrdup(waisState->relayhost);
-	err->port = waisState->relayport;
-	err->request = urlParse(METHOD_CONNECT, request);
-	errorAppendEntry(waisState->entry, err);
-	comm_close(fd);
-    } else {
-	commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
-	commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
-    }
+    commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
+    commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
 }
 
 static void
