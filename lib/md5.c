@@ -37,8 +37,6 @@
  * and by the SNMP routines.
  */
 
-#if STORE_KEY_MD5 || SQUID_SNMP
-
 #include "md5.h"
 
 /*
@@ -343,5 +341,3 @@ MD5_memset(char *output, int value, unsigned int len)
     for (i = 0; i < len; i++)
 	output[i] = (char) value;
 }
-
-#endif /* STORE_KEY_MD5 || SQUID_SNMP */
