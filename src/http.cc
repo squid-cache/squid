@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.291 1998/07/16 22:22:49 wessels Exp $
+ * $Id: http.cc,v 1.292 1998/07/18 07:28:03 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -216,9 +216,15 @@ httpCachableReply(HttpStateData * httpState)
 	return 0;
     if (EBIT_TEST(cc_mask, CC_NO_STORE))
 	return 0;
-    if (EBIT_TEST(httpState->request->flags, REQ_AUTH))
-	if (!EBIT_TEST(cc_mask, CC_PROXY_REVALIDATE))
+    if (EBIT_TEST(httpState->request->flags, REQ_AUTH)) {
+	/*
+	 * Responses to requests with authorization may be cached
+	 * only if a Cache-Control: pubic reply header is present.
+	 * RFC 2068, sec 14.9.4
+	 */
+	if (!EBIT_TEST(cc_mask, CC_PUBLIC))
 	    return 0;
+    }
     /*
      * We don't properly deal with Vary features yet, so we can't
      * cache these
