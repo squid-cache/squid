@@ -1,5 +1,6 @@
-Changes to squid-1.1.alpha4:
+Changes to squid-1.1.alpha5:
 
+	- Got Asynchronous I/O stuff to compile and run on IRIX 5.3
 	- Cleaned up diskHandleWrite()
 	- Added free() handler to struct dwrite_q so diskHandleWrite()
 	  can free memory after its been written.
