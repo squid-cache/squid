@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.14 1996/03/28 02:34:05 wessels Exp $ */
+/* $Id: tools.cc,v 1.15 1996/03/28 05:23:31 wessels Exp $ */
 
 #include "squid.h"
 
@@ -376,8 +376,8 @@ void setMaxFD()
 	}
     }
 #endif
-    debug(0,1,"setMaxFD: Using %d file descriptors\n", rl.rlim_max);
+    debug(0, 1, "setMaxFD: Using %d file descriptors\n", rl.rlim_max);
 #else /* HAVE_SETRLIMIT */
-    debug(0,1,"setMaxFD: Cannot increase: setrlimit() not supported on this system");
+    debug(0, 1, "setMaxFD: Cannot increase: setrlimit() not supported on this system");
 #endif
 }
