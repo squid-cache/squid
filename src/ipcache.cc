@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.134 1997/10/21 18:40:32 wessels Exp $
+ * $Id: ipcache.cc,v 1.135 1997/10/25 17:22:48 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -130,32 +130,32 @@ static struct {
     int release_locked;
 } IpcacheStats;
 
-static int ipcache_testname _PARAMS((void));
-static int ipcache_compareLastRef _PARAMS((ipcache_entry **, ipcache_entry **));
-static int ipcache_reverseLastRef _PARAMS((ipcache_entry **, ipcache_entry **));
+static int ipcache_testname(void);
+static int ipcache_compareLastRef(ipcache_entry **, ipcache_entry **);
+static int ipcache_reverseLastRef(ipcache_entry **, ipcache_entry **);
 static PF ipcache_dnsHandleRead;
-static ipcache_entry *ipcache_parsebuffer _PARAMS((const char *buf, dnsserver_t *));
-static void ipcache_release _PARAMS((ipcache_entry *));
-static ipcache_entry *ipcache_GetFirst _PARAMS((void));
-static ipcache_entry *ipcache_GetNext _PARAMS((void));
-static ipcache_entry *ipcache_create _PARAMS((const char *name));
-static void ipcache_add_to_hash _PARAMS((ipcache_entry *));
-static void ipcache_call_pending _PARAMS((ipcache_entry *));
-static ipcache_entry *ipcacheAddNew _PARAMS((const char *, const struct hostent *, ipcache_status_t));
-static void ipcacheAddHostent _PARAMS((ipcache_entry *, const struct hostent *));
-static int ipcacheHasPending _PARAMS((ipcache_entry *));
-static ipcache_entry *ipcache_get _PARAMS((const char *));
+static ipcache_entry *ipcache_parsebuffer(const char *buf, dnsserver_t *);
+static void ipcache_release(ipcache_entry *);
+static ipcache_entry *ipcache_GetFirst(void);
+static ipcache_entry *ipcache_GetNext(void);
+static ipcache_entry *ipcache_create(const char *name);
+static void ipcache_add_to_hash(ipcache_entry *);
+static void ipcache_call_pending(ipcache_entry *);
+static ipcache_entry *ipcacheAddNew(const char *, const struct hostent *, ipcache_status_t);
+static void ipcacheAddHostent(ipcache_entry *, const struct hostent *);
+static int ipcacheHasPending(ipcache_entry *);
+static ipcache_entry *ipcache_get(const char *);
 static IPH dummy_handler;
-static int ipcacheExpiredEntry _PARAMS((ipcache_entry *));
-static void ipcacheAddPending _PARAMS((ipcache_entry *, IPH *, void *));
-static void ipcacheEnqueue _PARAMS((ipcache_entry *));
-static void *ipcacheDequeue _PARAMS((void));
-static void ipcache_dnsDispatch _PARAMS((dnsserver_t *, ipcache_entry *));
-static void ipcacheStatPrint _PARAMS((ipcache_entry *, StoreEntry *));
-static void ipcacheUnlockEntry _PARAMS((ipcache_entry *));
-static void ipcacheLockEntry _PARAMS((ipcache_entry *));
-static void ipcacheNudgeQueue _PARAMS((void));
-static void ipcacheChangeKey _PARAMS((ipcache_entry * i));
+static int ipcacheExpiredEntry(ipcache_entry *);
+static void ipcacheAddPending(ipcache_entry *, IPH *, void *);
+static void ipcacheEnqueue(ipcache_entry *);
+static void *ipcacheDequeue(void);
+static void ipcache_dnsDispatch(dnsserver_t *, ipcache_entry *);
+static void ipcacheStatPrint(ipcache_entry *, StoreEntry *);
+static void ipcacheUnlockEntry(ipcache_entry *);
+static void ipcacheLockEntry(ipcache_entry *);
+static void ipcacheNudgeQueue(void);
+static void ipcacheChangeKey(ipcache_entry * i);
 
 static ipcache_addrs static_addrs;
 static hash_table *ip_table = NULL;

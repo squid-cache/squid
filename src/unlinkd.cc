@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.9 1997/07/16 20:32:21 wessels Exp $
+ * $Id: unlinkd.cc,v 1.10 1997/10/25 17:23:04 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -79,7 +79,7 @@ main(int argc, char *argv[])
 
 static int unlinkd_fd = -1;
 
-static int unlinkdCreate _PARAMS((void));
+static int unlinkdCreate(void);
 
 #define HELLO_BUFSIZ 128
 static int

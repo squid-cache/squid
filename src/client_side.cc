@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.132 1997/10/25 16:45:59 wessels Exp $
+ * $Id: client_side.cc,v 1.133 1997/10/25 17:22:36 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -33,8 +33,8 @@
 
 static RH clientRedirectDone;
 static STCB icpHandleIMSReply;
-static int clientGetsOldEntry _PARAMS((StoreEntry * new, StoreEntry * old, request_t * request));
-static int checkAccelOnly _PARAMS((clientHttpRequest *));
+static int clientGetsOldEntry(StoreEntry * new, StoreEntry * old, request_t * request);
+static int checkAccelOnly(clientHttpRequest *);
 
 static int
 checkAccelOnly(clientHttpRequest * http)

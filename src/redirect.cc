@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.47 1997/10/17 00:00:44 wessels Exp $
+ * $Id: redirect.cc,v 1.48 1997/10/25 17:22:57 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -70,13 +70,13 @@ struct redirectQueueData {
     redirectStateData *redirectState;
 };
 
-static redirector_t *GetFirstAvailable _PARAMS((void));
-static int redirectCreateRedirector _PARAMS((const char *command));
+static redirector_t *GetFirstAvailable(void);
+static int redirectCreateRedirector(const char *command);
 static PF redirectHandleRead;
-static redirectStateData *Dequeue _PARAMS((void));
-static void Enqueue _PARAMS((redirectStateData *));
-static void redirectDispatch _PARAMS((redirector_t *, redirectStateData *));
-static void redirectStateFree _PARAMS((redirectStateData * r));
+static redirectStateData *Dequeue(void);
+static void Enqueue(redirectStateData *);
+static void redirectDispatch(redirector_t *, redirectStateData *);
+static void redirectStateFree(redirectStateData * r);
 
 static redirector_t **redirect_child_table = NULL;
 static int NRedirectors = 0;

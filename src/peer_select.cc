@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.28 1997/10/22 19:23:45 wessels Exp $
+ * $Id: peer_select.cc,v 1.29 1997/10/25 17:22:54 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -65,13 +65,13 @@ static char *DirectStr[] =
     "DIRECT_YES"
 };
 
-static void peerSelectFoo _PARAMS((ps_state *));
-static void peerPingTimeout _PARAMS((void *data));
-static void peerSelectCallbackFail _PARAMS((ps_state * psstate));
+static void peerSelectFoo(ps_state *);
+static void peerPingTimeout(void *data);
+static void peerSelectCallbackFail(ps_state * psstate);
 static IRCB peerHandleIcpReply;
-static void peerSelectStateFree _PARAMS((ps_state * psstate));
-static void peerIcpParentMiss _PARAMS((peer *, icp_common_t *, ps_state *));
-static int peerCheckNetdbDirect _PARAMS((ps_state * psstate));
+static void peerSelectStateFree(ps_state * psstate);
+static void peerIcpParentMiss(peer *, icp_common_t *, ps_state *);
+static int peerCheckNetdbDirect(ps_state * psstate);
 
 static void
 peerSelectStateFree(ps_state * psstate)

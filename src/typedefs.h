@@ -73,30 +73,31 @@ typedef struct _refresh_t refresh_t;
 typedef struct _CommWriteStateData CommWriteStateData;
 typedef struct _ErrorState ErrorState;
 
-typedef void AIOCB _PARAMS((void *, int aio_return, int aio_errno));
-typedef void CWCB _PARAMS((int fd, char *, int size, int errflag, void *data));
-typedef void CNCB _PARAMS((int fd, int status, void *));
-typedef void FREE _PARAMS((void *));
-typedef void FOCB _PARAMS((void *, int fd));
-typedef void EVH _PARAMS((void *));
-typedef void PF _PARAMS((int, void *));
-typedef void DRCB _PARAMS((int fd, const char *buf, int size, int errflag, void *data));
-typedef void DWCB _PARAMS((int, int, size_t, void *));
-typedef void FILE_WALK_HD _PARAMS((int fd, int errflag, void *data));
-typedef void FILE_WALK_LHD _PARAMS((int fd, const char *buf, int size, void *line_data));
-typedef void FQDNH _PARAMS((const char *, void *));
-typedef int HASHCMP _PARAMS((const char *, const char *));
-typedef unsigned int HASHHASH _PARAMS((const char *, unsigned int));
-typedef void IDCB _PARAMS((void *));
-typedef void IPH _PARAMS((const ipcache_addrs *, void *));
-typedef void IRCB _PARAMS((peer *, peer_t, icp_common_t *, void *data));
-typedef void PSC _PARAMS((peer *, void *));
-typedef void RH _PARAMS((void *data, char *result));
+typedef void AIOCB(void *, int aio_return, int aio_errno);
+typedef void CWCB(int fd, char *, int size, int errflag, void *data);
+typedef void CNCB(int fd, int status, void *);
+typedef void FREE(void *);
+typedef void FOCB(void *, int fd);
+typedef void EVH(void *);
+typedef void PF(int, void *);
+typedef void DRCB(int fd, const char *buf, int size, int errflag, void *data);
+typedef void DWCB(int, int, size_t, void *);
+typedef void FILE_WALK_HD(int fd, int errflag, void *data);
+typedef void FILE_WALK_LHD(int fd, const char *buf, int size, void *line_data);
+typedef void FQDNH(const char *, void *);
+typedef int HASHCMP(const char *, const char *);
+typedef unsigned int HASHHASH(const char *, unsigned int);
+typedef void IDCB(void *);
+typedef void IPH(const ipcache_addrs *, void *);
+typedef void IRCB(peer *, peer_t, icp_common_t *, void *data);
+typedef void PSC(peer *, void *);
+typedef void RH(void *data, char *result);
 typedef int DEFER(int fd, void *data);
 
-typedef void SIH _PARAMS((int fd, void *));	/* swap in */
-typedef int QS _PARAMS((const void *, const void *));	/* qsort */
-typedef void STCB _PARAMS((void *, char *, ssize_t));	/* store callback */
-typedef void STABH _PARAMS((void *));
-typedef void ERCB _PARAMS((int fd, void *, int size));
-typedef void OBJH _PARAMS((StoreEntry *));
+typedef void SIH(int fd, void *);	/* swap in */
+typedef int QS(const void *, const void *);	/* qsort */
+typedef void STCB(void *, char *, ssize_t);	/* store callback */
+typedef void STABH(void *);
+typedef void ERCB(int fd, void *, int size);
+typedef void OBJH(StoreEntry *);
+typedef void SIGHDLR(int sig);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.312 1997/10/25 16:45:00 wessels Exp $
+ * $Id: store.cc,v 1.313 1997/10/25 17:23:01 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -189,7 +189,7 @@ typedef struct storeCleanList {
     struct storeCleanList *next;
 } storeCleanList;
 
-typedef void (VCB) _PARAMS((void *));
+typedef void (VCB)(void *);
 
 typedef struct valid_ctrl_t {
     struct stat *sb;
@@ -225,21 +225,21 @@ struct _mem_entry {
 };
 
 /* Static Functions */
-static void storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
-static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
-static int compareBucketOrder _PARAMS((struct _bucketOrder *, struct _bucketOrder *));
-static int storeCheckExpired _PARAMS((const StoreEntry *, int flag));
-static store_client *storeClientListSearch _PARAMS((const MemObject *, void *));
-static int storeCopy _PARAMS((const StoreEntry *, off_t, size_t, char *, size_t *));
-static int storeEntryLocked _PARAMS((const StoreEntry *));
-static int storeEntryValidLength _PARAMS((const StoreEntry *));
-static void storeGetMemSpace _PARAMS((int));
-static int storeHashDelete _PARAMS((StoreEntry *));
+static void storeCreateHashTable(HASHCMP *);
+static int compareLastRef(StoreEntry **, StoreEntry **);
+static int compareBucketOrder(struct _bucketOrder *, struct _bucketOrder *);
+static int storeCheckExpired(const StoreEntry *, int flag);
+static store_client *storeClientListSearch(const MemObject *, void *);
+static int storeCopy(const StoreEntry *, off_t, size_t, char *, size_t *);
+static int storeEntryLocked(const StoreEntry *);
+static int storeEntryValidLength(const StoreEntry *);
+static void storeGetMemSpace(int);
+static int storeHashDelete(StoreEntry *);
 static VCB storeSwapInValidateComplete;
-static mem_hdr *new_MemObjectData _PARAMS((void));
-static MemObject *new_MemObject _PARAMS((const char *));
-static StoreEntry *new_StoreEntry _PARAMS((int, const char *));
-static StoreEntry *storeAddDiskRestore _PARAMS((const char *,
+static mem_hdr *new_MemObjectData(void);
+static MemObject *new_MemObject(const char *);
+static StoreEntry *new_StoreEntry(int, const char *);
+static StoreEntry *storeAddDiskRestore(const char *,
 	int,
 	int,
 	time_t,
@@ -248,25 +248,25 @@ static StoreEntry *storeAddDiskRestore _PARAMS((const char *,
 	time_t,
 	u_num32,
 	u_num32,
-	int));
-static unsigned int storeGetBucketNum _PARAMS((void));
-static void destroy_MemObject _PARAMS((MemObject *));
-static void destroy_MemObjectData _PARAMS((MemObject *));
-static void destroy_StoreEntry _PARAMS((StoreEntry *));
-static void storePurgeMem _PARAMS((StoreEntry *));
-static void storeStartRebuildFromDisk _PARAMS((void));
-static void storeSwapOutStart _PARAMS((StoreEntry * e));
+	int);
+static unsigned int storeGetBucketNum(void);
+static void destroy_MemObject(MemObject *);
+static void destroy_MemObjectData(MemObject *);
+static void destroy_StoreEntry(StoreEntry *);
+static void storePurgeMem(StoreEntry *);
+static void storeStartRebuildFromDisk(void);
+static void storeSwapOutStart(StoreEntry * e);
 static DWCB storeSwapOutHandle;
-static void storeSetPrivateKey _PARAMS((StoreEntry *));
+static void storeSetPrivateKey(StoreEntry *);
 static EVH storeDoRebuildFromDisk;
 static EVH storeCleanup;
 static VCB storeCleanupComplete;
-static void storeValidate _PARAMS((StoreEntry *, VCB *, void *));
+static void storeValidate(StoreEntry *, VCB *, void *);
 static AIOCB storeValidateComplete;
-static void storeRebuiltFromDisk _PARAMS((struct storeRebuildState * data));
-static unsigned int getKeyCounter _PARAMS((void));
-static void storePutUnusedFileno _PARAMS((int fileno));
-static int storeGetUnusedFileno _PARAMS((void));
+static void storeRebuiltFromDisk(struct storeRebuildState * data);
+static unsigned int getKeyCounter(void);
+static void storePutUnusedFileno(int fileno);
+static int storeGetUnusedFileno(void);
 
 static void storeCheckSwapOut(StoreEntry * e);
 static void storeSwapoutFileOpened(void *data, int fd);

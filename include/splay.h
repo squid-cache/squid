@@ -5,10 +5,10 @@ typedef struct _splay_node {
     struct _splay_node *right;
 } splayNode;
 
-typedef int (*SPCMP) _PARAMS((const void *, splayNode *));
+typedef int (*SPCMP)(const void *, splayNode *);
 
 extern int splayLastResult;
 
-splayNode *splay_insert _PARAMS((void *, splayNode *, SPCMP));
-splayNode *splay_splay _PARAMS((const void *, splayNode *, SPCMP));
-void splay_destroy _PARAMS((splayNode *, void (*)_PARAMS((void *))));
+splayNode *splay_insert(void *, splayNode *, SPCMP);
+splayNode *splay_splay(const void *, splayNode *, SPCMP);
+void splay_destroy(splayNode *, void (*)(void *));

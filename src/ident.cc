@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.34 1997/10/17 00:00:40 wessels Exp $
+ * $Id: ident.cc,v 1.35 1997/10/25 17:22:47 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -37,7 +37,7 @@ static CWCB identRequestComplete;
 static PF identReadReply;
 static PF identClose;
 static CNCB identConnectDone;
-static void identCallback _PARAMS((ConnStateData * connState));
+static void identCallback(ConnStateData * connState);
 
 static void
 identClose(int fd, void *data)

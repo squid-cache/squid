@@ -1,3 +1,8 @@
+	- Fixed aiops.c and async_iu.c so that they actually compile
+	  with USE_ASYNC_IO (Arjan de Vet).
+	- Fixed errState->errno causing problems with some macros
+	  (Michael O'Reilly).
+	
 Changes to squid-1.2.beta1 ():
 
 	- Reworked storage manager to not keep objects in memory during

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.200 1997/10/25 06:26:40 wessels Exp $
+ * $Id: http.cc,v 1.201 1997/10/25 17:22:44 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -203,15 +203,15 @@ static PF httpReadReply;
 static PF httpSendRequest;
 static PF httpStateFree;
 static PF httpTimeout;
-static void httpAppendRequestHeader _PARAMS((char *hdr, const char *line, size_t * sz, size_t max, int));
-static void httpCacheNegatively _PARAMS((StoreEntry *));
-static void httpMakePrivate _PARAMS((StoreEntry *));
-static void httpMakePublic _PARAMS((StoreEntry *));
-static char *httpStatusString _PARAMS((int status));
+static void httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, int);
+static void httpCacheNegatively(StoreEntry *);
+static void httpMakePrivate(StoreEntry *);
+static void httpMakePublic(StoreEntry *);
+static char *httpStatusString(int status);
 static STABH httpAbort;
-static HttpStateData *httpBuildState _PARAMS((int, StoreEntry *, request_t *, peer *));
-static int httpSocketOpen _PARAMS((StoreEntry *, request_t *));
-static void httpRestart _PARAMS((HttpStateData *));
+static HttpStateData *httpBuildState(int, StoreEntry *, request_t *, peer *);
+static int httpSocketOpen(StoreEntry *, request_t *);
+static void httpRestart(HttpStateData *);
 
 static void
 httpStateFree(int fd, void *data)

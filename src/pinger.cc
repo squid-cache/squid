@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.26 1997/08/25 05:29:57 wessels Exp $
+ * $Id: pinger.cc,v 1.27 1997/10/25 17:22:54 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -97,14 +97,11 @@ static const char *icmpPktStr[] =
     "Out of Range Type"
 };
 
-static int in_cksum _PARAMS((unsigned short *ptr, int size));
-static void pingerRecv _PARAMS((void));
-static void pingerLog _PARAMS((struct icmphdr * icmp,
-	struct in_addr addr,
-	int rtt,
-	int hops));
-static int ipHops _PARAMS((int ttl));
-static void pingerSendtoSquid _PARAMS((pingerReplyData * preply));
+static int in_cksum(unsigned short *ptr, int size);
+static void pingerRecv(void);
+static void pingerLog(struct icmphdr *, struct in_addr, int, int);
+static int ipHops(int ttl);
+static void pingerSendtoSquid(pingerReplyData * preply);
 
 void
 pingerOpen(void)

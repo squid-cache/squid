@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.109 1997/10/17 00:00:27 wessels Exp $
+ * $Id: acl.cc,v 1.110 1997/10/25 17:22:33 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,55 +41,55 @@
 static int aclFromFile = 0;
 static FILE *aclFile;
 
-static void aclDestroyAclList _PARAMS((struct _acl_list * list));
-static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
-static int aclMatchAclList _PARAMS((const struct _acl_list *, aclCheck_t *));
-static int aclMatchInteger _PARAMS((intlist * data, int i));
-static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
-static int aclMatchIdent _PARAMS((wordlist * data, const char *ident));
-static int aclMatchIp _PARAMS((void *dataptr, struct in_addr c));
-static int aclMatchDomainList _PARAMS((void *dataptr, const char *));
-static squid_acl aclType _PARAMS((const char *s));
-static int decode_addr _PARAMS((const char *, struct in_addr *, struct in_addr *));
-static void aclCheck _PARAMS((aclCheck_t * checklist));
-static void aclCheckCallback _PARAMS((aclCheck_t * checklist, int answer));
+static void aclDestroyAclList(struct _acl_list * list);
+static void aclDestroyTimeList(struct _acl_time_data * data);
+static int aclMatchAclList(const struct _acl_list *, aclCheck_t *);
+static int aclMatchInteger(intlist * data, int i);
+static int aclMatchTime(struct _acl_time_data * data, time_t when);
+static int aclMatchIdent(wordlist * data, const char *ident);
+static int aclMatchIp(void *dataptr, struct in_addr c);
+static int aclMatchDomainList(void *dataptr, const char *);
+static squid_acl aclType(const char *s);
+static int decode_addr(const char *, struct in_addr *, struct in_addr *);
+static void aclCheck(aclCheck_t * checklist);
+static void aclCheckCallback(aclCheck_t * checklist, int answer);
 static IPH aclLookupDstIPDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
-static int aclReadProxyAuth _PARAMS((struct _acl_proxy_auth * p));
+static int aclReadProxyAuth(struct _acl_proxy_auth * p);
 
 #if defined(USE_SPLAY_TREE)
-static int aclIpNetworkCompare _PARAMS((const void *, splayNode *));
-static int aclHostDomainCompare _PARAMS((const void *, splayNode *));
-static int aclDomainCompare _PARAMS((const void *, splayNode *));
+static int aclIpNetworkCompare(const void *, splayNode *);
+static int aclHostDomainCompare(const void *, splayNode *);
+static int aclDomainCompare(const void *, splayNode *);
 
 #elif defined(USE_BIN_TREE)
-static int bintreeDomainCompare _PARAMS((void *, void *));
-static int bintreeHostDomainCompare _PARAMS((void *, void *));
-static int bintreeNetworkCompare _PARAMS((void *, void *));
-static int bintreeIpNetworkCompare _PARAMS((void *, void *));
-static int aclDomainCompare _PARAMS((const char *d1, const char *d2));
-static void aclDestroyTree _PARAMS((tree **));
+static int bintreeDomainCompare(void *, void *);
+static int bintreeHostDomainCompare(void *, void *);
+static int bintreeNetworkCompare(void *, void *);
+static int bintreeIpNetworkCompare(void *, void *);
+static int aclDomainCompare(const char *d1, const char *d2);
+static void aclDestroyTree(tree **);
 
 #else /* LINKED LIST */
-static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
+static void aclDestroyIpList(struct _acl_ip_data * data);
 
 #endif /* USE_SPLAY_TREE */
 
 #if defined(USE_BIN_TREE)
-static void aclParseDomainList _PARAMS((void **curtree));
-static void aclParseIpList _PARAMS((void **curtree));
+static void aclParseDomainList(void **curtree);
+static void aclParseIpList(void **curtree);
 #else
-static void aclParseDomainList _PARAMS((void *curlist));
-static void aclParseIpList _PARAMS((void *curlist));
+static void aclParseDomainList(void *curlist);
+static void aclParseIpList(void *curlist);
 #endif
 
-static void aclParseIntlist _PARAMS((void *curlist));
-static void aclParseWordList _PARAMS((void *curlist));
-static void aclParseProtoList _PARAMS((void *curlist));
-static void aclParseMethodList _PARAMS((void *curlist));
-static void aclParseTimeSpec _PARAMS((void *curlist));
-static char *strtokFile _PARAMS((void));
+static void aclParseIntlist(void *curlist);
+static void aclParseWordList(void *curlist);
+static void aclParseProtoList(void *curlist);
+static void aclParseMethodList(void *curlist);
+static void aclParseTimeSpec(void *curlist);
+static char *strtokFile(void);
 
 static char *
 strtokFile(void)

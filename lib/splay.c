@@ -11,7 +11,6 @@
 #include <unistd.h>
 #endif
 
-#include "ansiproto.h"
 #include "splay.h"
 #include "util.h"
 
@@ -98,7 +97,7 @@ splay_splay(const void *data, splayNode * top, SPCMP compare)
 }
 
 void
-splay_destroy(splayNode * top, void (*free_func) _PARAMS((void *)))
+splay_destroy(splayNode * top, void (*free_func) (void *))
 {
     if (top->left)
 	splay_destroy(top->left, free_func);

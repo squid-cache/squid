@@ -1,5 +1,5 @@
 /*
- * $Id: pconn.cc,v 1.5 1997/10/25 16:58:25 wessels Exp $
+ * $Id: pconn.cc,v 1.6 1997/10/25 17:22:53 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -41,11 +41,11 @@ struct _pconn {
 
 static PF pconnRead;
 static PF pconnTimeout;
-static const char *pconnKey _PARAMS((const char *host, u_short port));
+static const char *pconnKey(const char *host, u_short port);
 static hash_table *table = NULL;
-static struct _pconn *pconnNew _PARAMS((const char *key));
-static void pconnDelete _PARAMS((struct _pconn * p));
-static void pconnRemoveFD _PARAMS((struct _pconn * p, int fd));
+static struct _pconn *pconnNew(const char *key);
+static void pconnDelete(struct _pconn * p);
+static void pconnRemoveFD(struct _pconn * p, int fd);
 
 
 static const char *

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.161 1997/10/23 05:13:44 wessels Exp $
+ * $Id: stat.cc,v 1.162 1997/10/25 17:22:59 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -124,17 +124,17 @@ typedef struct _squid_read_data_t {
 } squid_read_data_t;
 
 /* LOCALS */
-static const char *describeStatuses _PARAMS((const StoreEntry *));
-static const char *describeFlags _PARAMS((const StoreEntry *));
-static const char *describeTimestamps _PARAMS((const StoreEntry *));
-static void proto_count _PARAMS((cacheinfo *, protocol_t, log_type));
-static void proto_newobject _PARAMS((cacheinfo *, protocol_t, int, int));
-static void proto_purgeobject _PARAMS((cacheinfo *, protocol_t, int));
-static void proto_touchobject _PARAMS((cacheinfo *, protocol_t, int));
-static int memoryAccounted _PARAMS((void));
+static const char *describeStatuses(const StoreEntry *);
+static const char *describeFlags(const StoreEntry *);
+static const char *describeTimestamps(const StoreEntry *);
+static void proto_count(cacheinfo *, protocol_t, log_type);
+static void proto_newobject(cacheinfo *, protocol_t, int, int);
+static void proto_purgeobject(cacheinfo *, protocol_t, int);
+static void proto_touchobject(cacheinfo *, protocol_t, int);
+static int memoryAccounted(void);
 
 #ifdef XMALLOC_STATISTICS
-static void info_get_mallstat _PARAMS((int, int, StoreEntry *));
+static void info_get_mallstat(int, int, StoreEntry *);
 #endif
 
 #define PCONN_HIST_SZ 256

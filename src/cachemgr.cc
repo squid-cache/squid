@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.62 1997/10/17 00:00:30 wessels Exp $
+ * $Id: cachemgr.cc,v 1.63 1997/10/25 17:22:34 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -197,7 +197,6 @@
 #include <sys/select.h>
 #endif
 
-#include "ansiproto.h"
 #include "util.h"
 #include "snprintf.h"
 
@@ -306,14 +305,14 @@ static const char *progname = NULL;
 static time_t now;
 static struct in_addr no_addr;
 
-static char x2c _PARAMS((char *));
-static int client_comm_connect _PARAMS((int sock, char *dest_host, u_short dest_port));
-static void print_trailer _PARAMS((void));
-static void noargs_html _PARAMS((char *, int, char *, char *));
-static void unescape_url _PARAMS((char *));
-static void plustospace _PARAMS((char *));
-static void parse_object _PARAMS((char *));
-static char *describeTimeSince _PARAMS((time_t then));
+static char x2c(char *);
+static int client_comm_connect(int sock, char *dest_host, u_short dest_port);
+static void print_trailer(void);
+static void noargs_html(char *, int, char *, char *);
+static void unescape_url(char *);
+static void plustospace(char *);
+static void parse_object(char *);
+static char *describeTimeSince(time_t then);
 
 static void
 print_trailer(void)

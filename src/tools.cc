@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.125 1997/10/25 16:49:06 wessels Exp $
+ * $Id: tools.cc,v 1.126 1997/10/25 17:23:02 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -116,18 +116,18 @@ and report the trace back to squid-bugs@nlanr.net.\n\
 \n\
 Thanks!\n"
 
-static void fatal_common _PARAMS((const char *));
-static void mail_warranty _PARAMS((void));
-static void shutdownTimeoutHandler _PARAMS((int fd, void *data));
+static void fatal_common(const char *);
+static void mail_warranty(void);
+static void shutdownTimeoutHandler(int fd, void *data);
 
 #if USE_ASYNC_IO
-static void safeunlinkComplete _PARAMS((void *data, int retcode, int errcode));
+static void safeunlinkComplete(void *data, int retcode, int errcode);
 #endif
 
 #ifdef _SQUID_SOLARIS_
-int getrusage _PARAMS((int, struct rusage *));
-int getpagesize _PARAMS((void));
-int gethostname _PARAMS((char *, int));
+int getrusage(int, struct rusage *);
+int getpagesize(void);
+int gethostname(char *, int);
 #endif
 
 static void
@@ -725,7 +725,7 @@ percent(int a, int b)
 }
 
 void
-squid_signal(int sig, void (*func) _PARAMS((int)), int flags)
+squid_signal(int sig, SIGHDLR *func, int flags)
 {
 #if HAVE_SIGACTION
     struct sigaction sa;

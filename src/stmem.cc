@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.51 1997/10/23 05:13:45 wessels Exp $
+ * $Id: stmem.cc,v 1.52 1997/10/25 17:23:00 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -112,9 +112,9 @@
 #define USE_MEMALIGN 0
 #endif
 
-static void *get_free_thing _PARAMS((stmem_stats *));
-static void put_free_thing _PARAMS((stmem_stats *, void *));
-static void stmemFreeThingMemory _PARAMS((stmem_stats *));
+static void *get_free_thing(stmem_stats *);
+static void put_free_thing(stmem_stats *, void *);
+static void stmemFreeThingMemory(stmem_stats *);
 
 void
 memFree(mem_hdr * mem)

@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.32 1997/10/16 19:22:36 kostas Exp $
+ * $Id: util.h,v 1.33 1997/10/25 17:22:27 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -127,35 +127,34 @@
 #endif
 #endif
 
-extern const char *getfullhostname _PARAMS((void));
-extern const char *mkhttpdlogtime _PARAMS((const time_t *));
-extern const char *mkrfc1123 _PARAMS((time_t));
-extern char *uudecode _PARAMS((const char *));
-extern char *xstrdup _PARAMS((const char *));
-extern const char *xstrerror _PARAMS((void));
-extern const char *xbstrerror _PARAMS((int));
-extern int tvSubMsec _PARAMS((struct timeval, struct timeval));
-extern int tvSubUsec _PARAMS((struct timeval, struct timeval));
-extern char *xstrncpy _PARAMS((char *, const char *, size_t));
-extern time_t parse_rfc1123 _PARAMS((const char *str));
-extern void *xcalloc _PARAMS((int, size_t));
-extern void *xmalloc _PARAMS((size_t));
-extern void *xrealloc _PARAMS((void *, size_t));
-extern void Tolower _PARAMS((char *));
-extern void xfree _PARAMS((void *));
-extern void xmemcpy _PARAMS((void *, void *, int));
-extern void xxfree _PARAMS((void *));
+extern const char *getfullhostname(void);
+extern const char *mkhttpdlogtime(const time_t *);
+extern const char *mkrfc1123(time_t);
+extern char *uudecode(const char *);
+extern char *xstrdup(const char *);
+extern const char *xstrerror(void);
+extern const char *xbstrerror(int);
+extern int tvSubMsec(struct timeval, struct timeval);
+extern int tvSubUsec(struct timeval, struct timeval);
+extern char *xstrncpy(char *, const char *, size_t);
+extern time_t parse_rfc1123(const char *str);
+extern void *xcalloc(int, size_t);
+extern void *xmalloc(size_t);
+extern void *xrealloc(void *, size_t);
+extern void Tolower(char *);
+extern void xfree(void *);
+extern void xxfree(void *);
 
 /* rfc1738.c */
-extern char *rfc1738_escape _PARAMS((const char *));
+extern char *rfc1738_escape(const char *);
 
 #if XMALLOC_STATISTICS
-void malloc_statistics _PARAMS((void (*)_PARAMS((int, int, void *)), void *));
+void malloc_statistics(void (*)(int, int, void *), void *);
 #endif
 
 typedef struct in_addr SIA;
-extern int safe_inet_addr _PARAMS((const char *, SIA *));
-extern time_t parse_iso3307_time _PARAMS((const char *buf));
-extern char *base64_decode _PARAMS((const char *coded));
+extern int safe_inet_addr(const char *, SIA *);
+extern time_t parse_iso3307_time(const char *buf);
+extern char *base64_decode(const char *coded);
 
 #endif /* ndef _UTIL_H_ */

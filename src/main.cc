@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.177 1997/10/23 16:38:13 wessels Exp $
+ * $Id: main.cc,v 1.178 1997/10/25 17:22:49 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -107,7 +107,7 @@
 #include "squid.h"
 
 /* for error reporting from xmalloc and friends */
-extern void (*failure_notify) _PARAMS((const char *));
+extern void (*failure_notify)(const char *);
 
 static int opt_send_signal = -1;
 static volatile int rotate_pending = 0;		/* set by SIGUSR1 handler */
@@ -117,15 +117,15 @@ static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int malloc_debug_level = 0;
 #endif
 
-static void rotate_logs _PARAMS((int));
-static void reconfigure _PARAMS((int));
-static void time_tick _PARAMS((int));
-static void mainInitialize _PARAMS((void));
-static void mainReconfigure _PARAMS((void));
-static void usage _PARAMS((void));
-static void mainParseOptions _PARAMS((int, char **));
-static void sendSignal _PARAMS((void));
-static void serverConnectionsOpen _PARAMS((void));
+static void rotate_logs(int);
+static void reconfigure(int);
+static void time_tick(int);
+static void mainInitialize(void);
+static void mainReconfigure(void);
+static void usage(void);
+static void mainParseOptions(int, char **);
+static void sendSignal(void);
+static void serverConnectionsOpen(void);
 
 static void
 usage(void)
