@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.173 2002/04/18 16:18:04 hno Exp $
+ * $Id: errorpage.cc,v 1.174 2002/07/18 23:43:14 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -63,8 +63,8 @@ static const struct {
 
     {
 	ERR_SQUID_SIGNATURE,
-	    "\n<br clear=\"all\">\n"
-	    "<hr noshade size=1>\n"
+	    "\n<BR clear=\"all\">\n"
+	    "<HR noshade size=\"1px\">\n"
 	    "Generated %T by %h (%s)\n"
 	    "</BODY></HTML>\n"
     },

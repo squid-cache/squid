@@ -1,9 +1,11 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
 <H2>El URL solicitado no se ha podido conseguir</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 Mientras se intentaba procesar la petición:
 <PRE>

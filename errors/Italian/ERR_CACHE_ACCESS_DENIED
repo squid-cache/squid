@@ -1,10 +1,12 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>ERRORE: Negato l'accesso alla cache</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 <H1>ERRORE</H1>
 <H2>Negato l'accesso alla cache</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 Mentre si cercava di recuperare la URL:
 <A HREF="%U">%U</A>

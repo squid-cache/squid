@@ -1,7 +1,9 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
    <TITLE>Operacja FTP PUT udała się: plik został utworzony</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 
@@ -11,6 +13,4 @@ Operacja zakończona pomyślnie</H1>
 <H2>
 plik został utworzony</H2>
 
-<HR>
-</BODY>
-</HTML>
+<HR noshade size="1px">

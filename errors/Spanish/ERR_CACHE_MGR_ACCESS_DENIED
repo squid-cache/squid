@@ -1,10 +1,12 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>ERROR: Acceso Denegado al Cache Manager</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 <H1>ERROR</H1>
 <H2>Acceso Denegado al Cache Manager</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 Mientras se intentaba traer el URL:
 <A HREF="%U">%U</A>

@@ -1,10 +1,12 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>VIRHE: P&auml;&auml;sy v&auml;lityspalvelimen hallintaan ev&auml;tty</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 <H1>VIRHE</H1>
 <H2>P&auml;&auml;sy v&auml;lityspalvelimen hallintaan ev&auml;tty</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 Yritett&auml;ess&auml; hakea URL-osoitetta
 <A HREF="%U">%U</A>

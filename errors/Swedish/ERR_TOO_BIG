@@ -1,9 +1,11 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>FEL: Den beg&auml;rda URL:en kunde inte h&auml;mtas</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>FEL</H1>
 <H2>Den beg&auml;rda URL:en kunde inte h&auml;mtas</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 N&auml;r f&ouml;ljande URL f&ouml;rs&ouml;ktes h&auml;mtas:
 <A HREF="%U">%U</A>

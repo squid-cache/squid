@@ -1,20 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>FEHLER: Die angeforderete URN konnte nicht geholt werden</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>FEHLER</H1>
 <H2>Ein URL f&uuml;r den angeforderten URN konnte nicht geholt werden</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 W&auml;hrend des Versuches, den URN
-<A HREF="%U">%U</A>
-zu laden,
-<P>
-trat der folgende Fehler auf:
+<A HREF="%U">%U</A><BR>
+zu laden, trat der folgende Fehler auf:
 <UL>
 <LI>
-<STRONG> Kann URN nicht aufl&ouml;sen </STRONG>
+<STRONG>Die URN konnte nicht aufgel&ouml;st werden</STRONG>
 </UL>
 
 <P>
-Hey, erwarte nicht zu viel von URNs am %T  :)
+Erwarten Sie nicht zu viel von URNs auf %T
 </P>
+
+<P>
+Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.

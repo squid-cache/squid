@@ -1,10 +1,12 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
 <TITLE>שגיאה: הכתובת המבוקשת לא נגישה</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <div dir="rtl" align="right">
 <H2>לא ניתן לגשת אל הכתובת המבוקשת</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 כאשר ניסיתי לגשת אל הכתובת: <A HREF="%U">%U</A>
 <P>
