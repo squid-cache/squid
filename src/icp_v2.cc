@@ -96,7 +96,7 @@ icpUdpSend(int fd,
 	inet_ntoa(to->sin_addr),
 	ntohs(to->sin_port));
     x = comm_udp_sendto(fd, to, sizeof(*to), msg, len);
-    if (0 == x) {
+    if (x >= 0) {
 	/* successfully written */
 	icpLogIcp(to->sin_addr, logcode, len, (char *) (msg + 1), delay);
 	safe_free(msg);
