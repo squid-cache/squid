@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.518 2000/05/02 20:07:37 hno Exp $
+ * $Id: store.cc,v 1.519 2000/05/02 21:07:36 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -976,6 +976,7 @@ storeRelease(StoreEntry * e)
 	} else {
 	    destroy_StoreEntry(e);
 	}
+    }
     storeLog(STORE_LOG_RELEASE, e);
     if (e->swap_file_number > -1) {
 	storeUnlink(e->swap_file_number);
