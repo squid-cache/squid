@@ -1,6 +1,5 @@
 /* 
-   Unix SMB/Netbios implementation.
-   Version 2.0
+   Unix SMB/CIFS implementation.
 
    Winbind daemon for ntdom nss module
 
@@ -27,7 +26,7 @@
 
 /* Include header files from data in config.h file */
 
-#include "config.h"
+#include <config.h>
 
 #include <stdio.h>
 
@@ -37,6 +36,10 @@
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 #ifdef HAVE_SYS_SOCKET_H
@@ -63,7 +66,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <pwd.h>
-#include "samba_nss.h"
+#include "nsswitch/sys_nss.h"
 
 /* Declarations for functions in winbind_nss.c
    needed in winbind_nss_solaris.c (solaris wrapper to nss) */
@@ -130,11 +133,15 @@ typedef int BOOL;
 #endif
 
 /* zero a structure */
+#ifndef ZERO_STRUCT
 #define ZERO_STRUCT(x) memset((char *)&(x), 0, sizeof(x))
+#endif
 
 /* zero a structure given a pointer to the structure */
+#ifndef ZERO_STRUCTP
 #define ZERO_STRUCTP(x) { if ((x) != NULL) memset((char *)(x), 0, sizeof(*(x))); }
-    
+#endif
+
 /* Some systems (SCO) treat UNIX domain sockets as FIFOs */
 
 #ifndef S_IFSOCK

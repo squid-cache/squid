@@ -25,8 +25,8 @@
 #include <sys/time.h>           /* for gettimeofday */
 #include <errno.h>              /* BUG: is this portable? */
 
-#include "winbind_nss_config.h"
-#include "winbindd_nss.h"
+#include "nsswitch/winbind_nss_config.h"
+#include "nsswitch/winbindd_nss.h"
 
 char debug_enabled=0;
 char *myname;

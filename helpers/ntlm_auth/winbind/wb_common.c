@@ -23,8 +23,8 @@
    Boston, MA  02111-1307, USA.   
 */
 
-#include "winbind_nss_config.h"
-#include "winbindd_nss.h"
+#include "nsswitch/winbind_nss_config.h"
+#include "nsswitch/winbindd_nss.h"
 #include "config.h"
 
 
