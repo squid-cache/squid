@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.8 2003/02/22 14:59:34 hno Exp $
+ * $Id: client_side_request.h,v 1.9 2003/03/15 04:17:39 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,7 +38,7 @@
 #include "clientStream.h"
 
 /* client_side_request.c - client side request related routines (pure logic) */
-extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, void *, HttpHeader const *, char *, size_t);
+extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
 
 class MemObject;
 
@@ -66,6 +66,9 @@ public:
     bool multipartRangeRequest() const;
     void processRequest();
     void httpStart();
+    bool onlyIfCached()const;
+    bool gotEnough() const;
+
     ConnStateData *conn;
     request_t *request;		/* Parsed URL ... */
     char *uri;
@@ -82,7 +85,6 @@ public:
     HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
     size_t req_sz;		/* raw request size on input, not current request size */
     StoreEntry *entry;
-    StoreEntry *old_entry;
     log_type logType;
 
     struct timeval start;
@@ -128,7 +130,6 @@ private:
 /* client http based routines */
 SQUIDCEXTERN char *clientConstructTraceEcho(clientHttpRequest *);
 SQUIDCEXTERN ACLChecklist *clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http);
-SQUIDCEXTERN void *clientReplyNewContext(clientHttpRequest *);
 SQUIDCEXTERN int clientHttpRequestStatus(int fd, clientHttpRequest const *http);
 SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 

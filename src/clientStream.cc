@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.6 2003/03/10 04:56:37 robertc Exp $
+ * $Id: clientStream.cc,v 1.7 2003/03/15 04:17:39 robertc Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -96,9 +96,9 @@ CBDATA_TYPE(clientStreamNode);
  *
  * (i.e. 
  * mycontext = thisObject->data;
- * cbdataReferenceDone (mycontext);
+ * thisObject->data = NULL;
  * clientStreamFreeLinst (thisObject->head);
- * cbdataFree (mycontext);
+ * mycontext = NULL;
  * return;
  */
 
@@ -107,7 +107,7 @@ static FREE clientStreamFree;
 
 clientStreamNode *
 clientStreamNew(CSR * readfunc, CSCB * callback, CSD * detach, CSS * status,
-                void *data)
+                ClientStreamData data)
 {
     clientStreamNode *temp;
     CBDATA_INIT_TYPE_FREECB(clientStreamNode, clientStreamFree);
@@ -129,7 +129,7 @@ clientStreamNew(CSR * readfunc, CSCB * callback, CSD * detach, CSS * status,
  */
 void
 clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
-                 void *readdata, CSCB * callback, CSD * cdetach, void *callbackdata,
+                 ClientStreamData readdata, CSCB * callback, CSD * cdetach, ClientStreamData callbackdata,
                  StoreIOBuffer tailBuffer)
 {
     clientStreamNode *temp = clientStreamNew(func, NULL, rdetach, readstatus,
@@ -149,18 +149,17 @@ clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
  */
 void
 clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
-                       CSD * detach, CSS * status, void *data)
+                       CSD * detach, CSS * status, ClientStreamData data)
 {
-    clientStreamNode *temp;
 
     /* test preconditions */
     assert(list != NULL);
     assert(list->head);
-    temp = clientStreamNew(func, callback, detach, status, data);
+    clientStreamNode *temp = clientStreamNew(func, callback, detach, status, data);
     temp->head = list;
     debug(87, 3)
     ("clientStreamInsertHead: Inserted node %p with data %p after head\n",
-     temp, data);
+     temp, data.getRaw());
 
     if (list->head->next)
         temp->readBuffer = ((clientStreamNode *)list->head->next->data)->readBuffer;
@@ -183,7 +182,7 @@ clientStreamCallback(clientStreamNode * thisObject, clientHttpRequest * http,
 
     debug(87,
           3) ("clientStreamCallback: Calling %p with cbdata %p from node %p\n",
-              next->callback, next->data, thisObject);
+              next->callback, next->data.getRaw(), thisObject);
     next->callback(next, http, rep, replyBuffer);
 }
 
@@ -200,7 +199,7 @@ clientStreamRead(clientStreamNode * thisObject, clientHttpRequest * http,
     prev = thisObject->prev();
 
     debug(87, 3) ("clientStreamRead: Calling %p with cbdata %p from node %p\n",
-                  prev->readfunc, prev->data, thisObject);
+                  prev->readfunc, prev->data.getRaw(), thisObject);
     thisObject->readBuffer = readBuffer;
     prev->readfunc(prev, http);
 }
@@ -211,15 +210,23 @@ clientStreamRead(clientStreamNode * thisObject, clientHttpRequest * http,
 void
 clientStreamDetach(clientStreamNode * thisObject, clientHttpRequest * http)
 {
-    clientStreamNode *prev = thisObject->prev();
     clientStreamNode *temp = thisObject;
 
     assert(thisObject->node.next == NULL);
     debug(87, 3) ("clientStreamDetach: Detaching node %p\n", thisObject);
     /* And clean up thisObject node */
     /* ESI TODO: push refcount class through to head */
+    clientStreamNode *prev = NULL;
+
+    if (thisObject->prev())
+        prev = cbdataReference(thisObject->prev());
+
+    thisObject->removeFromStream();
+
     cbdataReferenceDone(temp);
+
     cbdataFree(thisObject);
+
     /* and tell the prev that the detach has occured */
     /*
      * We do it in thisObject order so that the detaching node is always
@@ -228,8 +235,12 @@ clientStreamDetach(clientStreamNode * thisObject, clientHttpRequest * http)
 
     if (prev) {
         debug(87, 3) ("clientStreamDetach: Calling %p with cbdata %p\n",
-                      prev->detach, prev->data);
-        prev->detach(prev, http);
+                      prev->detach, prev->data.getRaw());
+
+        if (cbdataReferenceValid(prev))
+            prev->detach(prev, http);
+
+        cbdataReferenceDone(prev);
     }
 }
 
@@ -266,20 +277,23 @@ clientStreamStatus(clientStreamNode * thisObject, clientHttpRequest * http)
 
 /* Local function bodies */
 void
+clientStreamNode::removeFromStream()
+{
+    if (head)
+        dlinkDelete(&node, head);
+
+    head = NULL;
+}
+
+void
 clientStreamFree(void *foo)
 {
     clientStreamNode *thisObject = (clientStreamNode *)foo;
 
     debug(87, 3) ("Freeing clientStreamNode %p\n", thisObject);
 
-    if (thisObject->data) {
-        cbdataFree(thisObject->data);
-    }
-
-    if (thisObject->node.next || thisObject->node.prev) {
-        dlinkDelete(&thisObject->node, thisObject->head);
-    }
-
+    thisObject->removeFromStream();
+    thisObject->data = NULL;
 }
 
 clientStreamNode *

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.2 2003/03/11 08:24:42 robertc Exp $
+ * $Id: ESI.cc,v 1.3 2003/03/15 04:17:38 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -55,7 +55,9 @@
  *
  */
 
-typedef struct _esiStreamContext esiStreamContext;
+class ESIStreamContext;
+
+typedef class ESIStreamContext esiStreamContext;
 
 /* TODO: split this out into separate files ? */
 /* Parsing: quick and dirty. ESI files are not valid XML, so a generic
@@ -211,6 +213,31 @@ private:
 
 MemPool * esiComment::pool = NULL;
 
+class esiInclude;
+typedef RefCount<esiInclude> esiIncludePtr;
+
+class ESIStreamContext : public RefCountable
+{
+
+public:
+    typedef RefCount<ESIStreamContext> Pointer;
+    void *operator new(size_t);
+    void operator delete(void *);
+    void deleteSelf() const;
+    ESIStreamContext();
+    ~ESIStreamContext();
+    void freeResources();
+    int finished;
+    esiIncludePtr include;
+    ESISegment::Pointer localbuffer;
+    ESISegment::Pointer buffer;
+
+private:
+    CBDATA_CLASS(ESIStreamContext);
+};
+
+CBDATA_CLASS_INIT (ESIStreamContext);
+
 #include "ESILiteral.h"
 MemPool *esiLiteral::pool = NULL;
 
@@ -218,8 +245,10 @@ MemPool *esiLiteral::pool = NULL;
 
 /* esiInclude */
 
-struct esiInclude : public ESIElement
+class esiInclude : public ESIElement
 {
+
+public:
     void *operator new (size_t byteCount);
     void operator delete (void *address);
     void deleteSelf() const;
@@ -230,7 +259,7 @@ struct esiInclude : public ESIElement
     esiProcessResult_t process (int dovars);
     Pointer makeCacheable() const;
     Pointer makeUsable(esiTreeParentPtr, esiVarState &) const;
-    void subRequestDone (esiStreamContext *, bool);
+    void subRequestDone (ESIStreamContext::Pointer, bool);
 
     struct
     {
@@ -246,18 +275,18 @@ int finished:
     }
 
     flags;
-    esiStreamContext *src;
-    esiStreamContext *alt;
+    ESIStreamContext::Pointer src;
+    ESIStreamContext::Pointer alt;
     ESISegment::Pointer srccontent;
     ESISegment::Pointer altcontent;
     esiVarState *varState;
     char *srcurl, *alturl;
-    void fail(esiStreamContext *);
+    void fail(ESIStreamContext::Pointer);
     void finish();
 
 private:
     static MemPool *Pool;
-    static void Start (esiStreamContext *, char const *, esiVarState *);
+    static void Start (ESIStreamContext::Pointer, char const *, esiVarState *);
     esiTreeParentPtr parent;
     void start();
     bool started;
@@ -451,30 +480,14 @@ bool ESIContext::reading() const
     return reading_;
 }
 
-typedef RefCount<esiInclude> esiIncludePtr;
 
-struct _esiStreamContext
-{
-
-public:
-    void *operator new(size_t);
-    _esiStreamContext();
-    int finished;
-    esiIncludePtr include;
-    ESISegment::Pointer localbuffer;
-    ESISegment::Pointer buffer;
-};
-
-CBDATA_TYPE (esiStreamContext);
-
-_esiStreamContext::_esiStreamContext() : finished(false), include (NULL), localbuffer (new ESISegment), buffer (NULL)
+ESIStreamContext::ESIStreamContext() : finished(false), include (NULL), localbuffer (new ESISegment), buffer (NULL)
 {}
 
 /* Local functions */
 /* ESIContext */
 static ESIContext *ESIContextNew(HttpReply *, clientStreamNode *, clientHttpRequest *);
 /* esiStreamContext */
-static FREE esiStreamContextFree;
 static esiStreamContext *esiStreamContextNew (esiIncludePtr);
 
 /* other */
@@ -645,22 +658,20 @@ void
 esiStreamRead (clientStreamNode *thisNode, clientHttpRequest *http)
 {
     clientStreamNode *next;
-    ESIContext *context;
     /* Test preconditions */
     assert (thisNode != NULL);
     assert (cbdataReferenceValid (thisNode));
     /* we are not in the chain until ESI is detected on a data callback */
-    assert (thisNode->data != NULL);
     assert (thisNode->node.prev != NULL);
     assert (thisNode->node.next != NULL);
 
-    context = (ESIContext *)cbdataReference (thisNode->data);
+    ESIContext::Pointer context = dynamic_cast<ESIContext *>(thisNode->data.getRaw());
+    assert (context.getRaw() != NULL);
 
     if (context->flags.passthrough) {
         /* passthru mode - read into supplied buffers */
         next = thisNode->next();
         clientStreamRead (thisNode, http, next->readBuffer);
-        cbdataReferenceDone (context);
         return;
     }
 
@@ -679,7 +690,6 @@ esiStreamRead (clientStreamNode *thisNode, clientHttpRequest *http)
     case ESIContext::ESI_KICK_SENT:
 
     case ESIContext::ESI_KICK_INPROGRESS:
-        cbdataReferenceDone (context);
         return;
 
     case ESIContext::ESI_KICK_PENDING:
@@ -696,7 +706,6 @@ esiStreamRead (clientStreamNode *thisNode, clientHttpRequest *http)
          * flow
          */
         debug (86,5) ("esiStreamRead: Waiting for async resume of esi processing\n");
-        cbdataReferenceDone (context);
         return;
     }
 
@@ -704,7 +713,6 @@ esiStreamRead (clientStreamNode *thisNode, clientHttpRequest *http)
         debug (86,5)("all processing complete, but outbound data still buffered\n");
         assert (!context->flags.clientwantsdata);
         /* client MUST be processing the last reply */
-        cbdataReferenceDone (context);
         return;
     }
 
@@ -715,14 +723,11 @@ esiStreamRead (clientStreamNode *thisNode, clientHttpRequest *http)
         /* We've finished processing, and there is no more data buffered */
         debug (86,5)("Telling recipient EOF on READ\n");
         clientStreamCallback (thisNode, http, NULL, tempBuffer);
-        cbdataReferenceDone (context);
         return;
     }
 
-    if (context->reading()) {
-        cbdataReferenceDone (context);
+    if (context->reading())
         return;
-    }
 
     /* no data that is ready to send, and still reading? well, lets get some */
     /* secure a buffer */
@@ -741,8 +746,6 @@ esiStreamRead (clientStreamNode *thisNode, clientHttpRequest *http)
         context->startRead();
         clientStreamRead (thisNode, http, tempBuffer);
     }
-
-    cbdataReferenceDone (context);
 }
 
 clientStream_status_t
@@ -752,27 +755,22 @@ esiStreamStatus (clientStreamNode *thisNode, clientHttpRequest *http)
     assert (thisNode != NULL);
     assert (cbdataReferenceValid (thisNode));
     /* we are not in the chain until ESI is detected on a data callback */
-    assert (thisNode->data != NULL);
     assert (thisNode->node.prev != NULL);
     assert (thisNode->node.next != NULL);
 
-    ESIContext *context = (ESIContext *)cbdataReference (thisNode->data);
+    ESIContext::Pointer context = dynamic_cast<ESIContext *>(thisNode->data.getRaw());
+    assert (context.getRaw() != NULL);
 
-    if (context->flags.passthrough) {
-        cbdataReferenceDone (context);
+    if (context->flags.passthrough)
         return clientStreamStatus (thisNode, http);
-    }
 
     if (context->flags.oktosend && context->flags.finished &&
             !(context->outbound.getRaw() && context->outbound_offset < context->outbound->len)) {
-        cbdataReferenceDone (context);
         debug (86,5) ("Telling recipient EOF on STATUS\n");
         return STREAM_UNPLANNED_COMPLETE; /* we don't know lengths in advance */
     }
 
     /* ?? RC: we can't be aborted / fail ? */
-    cbdataReferenceDone (context);
-
     return STREAM_NONE;
 }
 
@@ -930,11 +928,11 @@ void
 esiStreamDetach (clientStreamNode *thisNode, clientHttpRequest *http)
 {
     /* if we have pending callbacks, tell them we're done. */
-    ESIContext *context;
     /* test preconditions */
     assert (thisNode != NULL);
     assert (cbdataReferenceValid (thisNode));
-    context = ( ESIContext *)cbdataReference(thisNode->data);
+    ESIContext::Pointer context = dynamic_cast<ESIContext *>(thisNode->data.getRaw());
+    assert (context.getRaw() != NULL);
     /* detach from the stream */
     clientStreamDetach (thisNode,http);
     /* if we have pending callbacks (from subincludes), tell them we're done. */
@@ -945,7 +943,6 @@ esiStreamDetach (clientStreamNode *thisNode, clientHttpRequest *http)
     context->parserState.stack[0] = NULL;
     /* allow refcount logic to trigger */
     context->cbdataLocker = NULL;
-    cbdataReferenceDone (context);
 }
 
 /* Process incoming data for ESI tags */
@@ -964,7 +961,6 @@ esiStreamDetach (clientStreamNode *thisNode, clientHttpRequest *http)
 void
 esiProcessStream (clientStreamNode *thisNode, clientHttpRequest *http, HttpReply *rep, StoreIOBuffer recievedData)
 {
-    ESIContext *context;
     /* test preconditions */
     assert (thisNode != NULL);
     /* ESI TODO: handle thisNode rather than asserting - it should only ever
@@ -976,14 +972,16 @@ esiProcessStream (clientStreamNode *thisNode, clientHttpRequest *http, HttpReply
      * if data is NULL thisNode is the first entrance. If rep is also NULL,
      * something is wrong.
      * */
-    assert (thisNode->data != NULL || rep);
+    assert (thisNode->data.getRaw() != NULL || rep);
     assert (thisNode->node.next != NULL);
 
-    if (!thisNode->data)
+    if (!thisNode->data.getRaw())
         /* setup ESI context from reply headers */
         thisNode->data = ESIContextNew(rep, thisNode, http);
 
-    context = (ESIContext *)cbdataReference(thisNode->data);
+    ESIContext::Pointer context = dynamic_cast<ESIContext *>(thisNode->data.getRaw());
+
+    assert (context.getRaw() != NULL);
 
     context->finishRead();
 
@@ -992,12 +990,11 @@ esiProcessStream (clientStreamNode *thisNode, clientHttpRequest *http, HttpReply
      * has been detected to prevent ESI processing the error body
      */
     if (context->flags.passthrough) {
-        cbdataReferenceDone(context);
         clientStreamCallback (thisNode, http, rep, recievedData);
         return;
     }
 
-    debug (86, 3)("esiProcessStream: Processing thisNode %p context %p offset %d length %u\n",thisNode, context, (int) recievedData.offset, (unsigned int)recievedData.length);
+    debug (86, 3)("esiProcessStream: Processing thisNode %p context %p offset %d length %u\n",thisNode, context.getRaw(), (int) recievedData.offset, (unsigned int)recievedData.length);
 
     /* once we finish the template, we *cannot* return here */
     assert (!context->flags.finishedtemplate);
@@ -1061,7 +1058,7 @@ esiProcessStream (clientStreamNode *thisNode, clientHttpRequest *http, HttpReply
     if (rep == NULL && recievedData.data == NULL && recievedData.length == 0 && !context->flags.finishedtemplate) {
         /* TODO: get stream status to test the entry for aborts */
         /* else flush the esi processor */
-        debug (86,5)("esiProcess: %p Finished reading upstream data\n", context);
+        debug (86,5)("esiProcess: %p Finished reading upstream data\n", context.getRaw());
         /* This is correct */
         context->flags.finishedtemplate = 1;
     }
@@ -1072,13 +1069,11 @@ esiProcessStream (clientStreamNode *thisNode, clientHttpRequest *http, HttpReply
         /* thisNode can not happen - processing can't fail until we have data,
          * and when we come here we have sent data to the client
          */
-        cbdataReferenceDone (context);
         return;
 
     case ESIContext::ESI_KICK_SENT:
 
     case ESIContext::ESI_KICK_INPROGRESS:
-        cbdataReferenceDone (context);
         return;
 
     case ESIContext::ESI_KICK_PENDING:
@@ -1097,12 +1092,10 @@ esiProcessStream (clientStreamNode *thisNode, clientHttpRequest *http, HttpReply
         tempBuffer.data = &context->incoming->buf[context->incoming->len];
         context->startRead();
         clientStreamRead (thisNode, http, tempBuffer);
-        cbdataReferenceDone (context);
         return;
     }
 
     debug (86,3)("esiProcessStream: no data to send, no data to read, awaiting a callback\n");
-    cbdataReferenceDone(context);
 }
 
 ESIContext::~ESIContext()
@@ -1727,7 +1720,6 @@ esiBufferDetach (clientStreamNode *node, clientHttpRequest *http)
 void
 esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *rep, StoreIOBuffer recievedData)
 {
-    esiStreamContext *esiStream;
     /* Test preconditions */
     assert (node != NULL);
     /* ESI TODO: handle thisNode rather than asserting
@@ -1737,11 +1729,11 @@ esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *
      * itself shouldn't happen, so it stays as an 
      * assert for now. */
     assert (cbdataReferenceValid (node));
-    assert (node->data != NULL);
     assert (node->node.next == NULL);
     assert (http->conn == NULL);
 
-    esiStream = (esiStreamContext *)cbdataReference (node->data);
+    esiStreamContext::Pointer esiStream = dynamic_cast<esiStreamContext *>(node->data.getRaw());
+    assert (esiStream.getRaw() != NULL);
     /* If segments become more flexible, ignore thisNode */
     assert (recievedData.length <= sizeof(esiStream->localbuffer->buf));
     assert (!esiStream->finished);
@@ -1760,7 +1752,6 @@ esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *
                 rep = NULL;
                 esiStream->include->fail (esiStream);
                 esiStream->finished = 1;
-                cbdataReferenceDone (esiStream);
                 httpRequestFree (http);
                 return;
             }
@@ -1802,7 +1793,6 @@ esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *
         debug (86,5)("Finished reading upstream data in subrequest\n");
         esiStream->include->subRequestDone (esiStream, true);
         esiStream->finished = 1;
-        cbdataReferenceDone (esiStream);
         httpRequestFree (http);
         return;
     }
@@ -1812,11 +1802,10 @@ esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *
      * we call */
     if (clientHttpRequestStatus(-1, http)) {
         /* TODO: Does thisNode if block leak htto ? */
-        esiStreamContext *temp = esiStream;
-        esiStream->include->fail (esiStream);
+        /* XXX when reviewing ESI this is the first place to look */
+        node->data = NULL;
         esiStream->finished = 1;
-        cbdataReferenceDone (esiStream);
-        cbdataFree (temp); /* free the request */
+        esiStream->include->fail (esiStream);
         return;
     };
 
@@ -1828,7 +1817,6 @@ esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *
         debug (86,3)("ESI subrequest finished OK\n");
         esiStream->include->subRequestDone (esiStream, true);
         esiStream->finished = 1;
-        cbdataReferenceDone (esiStream);
         httpRequestFree (http);
         return;
 
@@ -1836,7 +1824,6 @@ esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *
         debug (86,1)("ESI subrequest failed transfer\n");
         esiStream->include->fail (esiStream);
         esiStream->finished = 1;
-        cbdataReferenceDone (esiStream);
         httpRequestFree (http);
         return;
 
@@ -1869,32 +1856,56 @@ esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *
         fatal ("Hit unreachable code in esiBufferRecipient\n");
     }
 
-    cbdataReferenceDone (esiStream);
 }
 
 /* esiStream functions */
-void
-esiStreamContextFree (void *data)
+ESIStreamContext::~ESIStreamContext()
 {
-    esiStreamContext *esiStream = (esiStreamContext *)data;
-    assert (esiStream);
-    esiStream->buffer = NULL;
-    esiStream->localbuffer = NULL;
-    esiStream->include = NULL;
-    debug (86,5)("Freeing stream context\n");
+    assert (this);
+    freeResources();
+}
+
+void
+ESIStreamContext::freeResources()
+{
+    debug (86,5)("Freeing stream context resources.\n");
+    buffer = NULL;
+    localbuffer = NULL;
+    include = NULL;
 }
 
 void *
-_esiStreamContext::operator new (size_t count)
+ESIStreamContext::operator new(size_t byteCount)
 {
-    CBDATA_INIT_TYPE_FREECB(esiStreamContext, esiStreamContextFree);
-    return cbdataAlloc(esiStreamContext);
+    assert (byteCount == sizeof (ESIStreamContext));
+    CBDATA_INIT_TYPE(ESIStreamContext);
+    ESIStreamContext *result = cbdataAlloc(ESIStreamContext);
+    /* Mark result as being owned - we want the refcounter to do the
+     * delete call
+     */
+    cbdataReference(result);
+    return result;
+}
+
+void
+ESIStreamContext::operator delete (void *address)
+{
+    ESIStreamContext *t = static_cast<ESIStreamContext *>(address);
+    cbdataFree(t);
+    /* And allow the memory to be freed */
+    cbdataReferenceDone (address);
+}
+
+void
+ESIStreamContext::deleteSelf() const
+{
+    delete this;
 }
 
 esiStreamContext *
 esiStreamContextNew (esiIncludePtr include)
 {
-    esiStreamContext *rv = new _esiStreamContext;
+    esiStreamContext *rv = new ESIStreamContext;
     rv->include = include;
     return rv;
 }
@@ -2158,11 +2169,11 @@ esiInclude::esiInclude(esiInclude const &old) : parent (NULL), started (false), 
 }
 
 void
-esiInclude::Start (esiStreamContext *stream, char const *url, esiVarState *vars)
+esiInclude::Start (ESIStreamContext::Pointer stream, char const *url, esiVarState *vars)
 {
     HttpHeader tempheaders;
 
-    if (!stream)
+    if (!stream.getRaw())
         return;
 
     httpHeaderInit (&tempheaders, hoRequest);
@@ -2175,7 +2186,7 @@ esiInclude::Start (esiStreamContext *stream, char const *url, esiVarState *vars)
 
     debug (86,5)("esiIncludeStart: Starting subrequest with url '%s'\n", tempUrl);
 
-    if (clientBeginRequest(METHOD_GET, tempUrl, esiBufferRecipient, esiBufferDetach, stream, &tempheaders, stream->localbuffer->buf, HTTP_REQBUF_SZ)) {
+    if (clientBeginRequest(METHOD_GET, tempUrl, esiBufferRecipient, esiBufferDetach, stream.getRaw(), &tempheaders, stream->localbuffer->buf, HTTP_REQBUF_SZ)) {
         debug (86,0) ("starting new ESI subrequest failed\n");
     }
 
@@ -2192,9 +2203,9 @@ esiInclude::esiInclude (esiTreeParentPtr aParent, int attrcount, char const **at
             /* Start a request for thisNode url */
             debug (86,5)("esiIncludeNew: Requesting source '%s'\n",attr[i+1]);
             /* TODO: don't assert on thisNode, ignore the duplicate */
-            assert (src == NULL);
+            assert (src.getRaw() == NULL);
             src = esiStreamContextNew (this);
-            assert (src != NULL);
+            assert (src.getRaw() != NULL);
             srcurl = xstrdup ( attr[i+1]);
         } else if (!strcmp(attr[i],"alt")) {
             /* Start a secondary request for thisNode url */
@@ -2202,9 +2213,9 @@ esiInclude::esiInclude (esiTreeParentPtr aParent, int attrcount, char const **at
              * for the src to fail
              */
             debug (86,5)("esiIncludeNew: Requesting alternate '%s'\n",attr[i+1]);
-            assert (alt == NULL); /* TODO: FIXME */
+            assert (alt.getRaw() == NULL); /* TODO: FIXME */
             alt = esiStreamContextNew (this);
-            assert (alt != NULL);
+            assert (alt.getRaw() != NULL);
             alturl = xstrdup (attr[i+1]);
         } else if (!strcmp(attr[i],"onerror")) {
             if (!strcmp(attr[i+1], "continue")) {
@@ -2233,12 +2244,11 @@ esiInclude::start()
 
     started = true;
 
-    if (src) {
+    if (src.getRaw()) {
         Start (src, srcurl, varState);
         Start (alt, alturl, varState);
     } else {
-        if (alt)
-            cbdataFree (alt);
+        alt = NULL;
 
         debug (86,1)("esiIncludeNew: esi:include with no src attributes\n");
 
@@ -2303,7 +2313,7 @@ esiInclude::process (int dovars)
 }
 
 void
-esiInclude::fail (esiStreamContext *stream)
+esiInclude::fail (ESIStreamContext::Pointer stream)
 {
     subRequestDone (stream, false);
 }
@@ -2315,7 +2325,7 @@ esiInclude::dataNeeded() const
 }
 
 void
-esiInclude::subRequestDone (esiStreamContext *stream, bool success)
+esiInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
 {
     assert (this);
 
@@ -2336,7 +2346,7 @@ esiInclude::subRequestDone (esiStreamContext *stream, bool success)
             /* Fail if there is no alt being retrieved */
             debug (86,3)("esiIncludeSubRequestDone: Src FAILED\n");
 
-            if (!(alt || altcontent.getRaw())) {
+            if (!(alt.getRaw() || altcontent.getRaw())) {
                 debug (86,3)("esiIncludeSubRequestDone: Include FAILED - No ALT\n");
                 flags.failed = 1;
             } else if (altcontent.getRaw()) {
@@ -2357,13 +2367,13 @@ esiInclude::subRequestDone (esiStreamContext *stream, bool success)
             ESISegment::ListTransfer (stream->localbuffer, altcontent);
             /* we're done! */
 
-            if (!(src || srccontent.getRaw())) {
+            if (!(src.getRaw() || srccontent.getRaw())) {
                 /* src already failed, kick ESI processor */
                 debug (86,3)("esiIncludeSubRequestDone: Include PASSED - SRC already failed.\n");
                 flags.finished = 1;
             }
         } else {
-            if (!(src || srccontent.getRaw())) {
+            if (!(src.getRaw() || srccontent.getRaw())) {
                 debug (86,3)("esiIncludeSubRequestDone: ALT FAILED, Include FAILED - SRC already failed\n");
                 /* src already failed */
                 flags.failed = 1;
@@ -2377,7 +2387,7 @@ esiInclude::subRequestDone (esiStreamContext *stream, bool success)
 
     if (flags.finished || flags.failed) {
         /* Kick ESI Processor */
-        debug (86,5)("esiInclude %p SubRequest %p completed, kicking processor , status %s\n", this, stream, flags.finished ? "OK" : "FAILED");
+        debug (86,5)("esiInclude %p SubRequest %p completed, kicking processor , status %s\n", this, stream.getRaw(), flags.finished ? "OK" : "FAILED");
         assert (parent.getRaw());
 
         if (!flags.failed) {

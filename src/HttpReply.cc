@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.58 2003/03/10 04:56:36 robertc Exp $
+ * $Id: HttpReply.cc,v 1.59 2003/03/15 04:17:38 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -645,4 +645,16 @@ void
 HttpReply::operator delete (void *address)
 {
     memPoolFree (Pool, address);
+}
+
+bool
+HttpReply::isBodyTooLarge(ssize_t clen) const
+{
+    if (0 == maxBodySize)
+        return 0;		/* disabled */
+
+    if (clen < 0)
+        return 0;		/* unknown */
+
+    return (unsigned int)clen > maxBodySize;
 }

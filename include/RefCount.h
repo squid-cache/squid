@@ -1,6 +1,6 @@
 
 /*
- * $Id: RefCount.h,v 1.4 2003/03/10 04:56:20 robertc Exp $
+ * $Id: RefCount.h,v 1.5 2003/03/15 04:17:38 robertc Exp $
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins
@@ -82,6 +82,11 @@ public:
     bool operator == (const RefCount& p) const
     {
         return p.p_ == p_;
+    }
+
+    bool operator != (const RefCount &p) const
+    {
+        return p.p_ != p_;
     }
 
 private:

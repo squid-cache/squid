@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.564 2003/03/10 04:56:38 robertc Exp $
+ * $Id: store.cc,v 1.565 2003/03/15 04:17:41 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1856,6 +1856,47 @@ StoreEntry::trimMemory()
         mem_obj->trimSwappable ();
     }
 }
+
+bool
+StoreEntry::modifiedSince(request_t * request) const
+{
+    int object_length;
+    time_t mod_time = lastmod;
+
+    if (mod_time < 0)
+        mod_time = timestamp;
+
+    debug(88, 3) ("modifiedSince: '%s'\n", storeUrl(this));
+
+    debug(88, 3) ("modifiedSince: mod_time = %ld\n", (long int) mod_time);
+
+    if (mod_time < 0)
+        return true;
+
+    /* Find size of the object */
+    object_length = getReply()->content_length;
+
+    if (object_length < 0)
+        object_length = contentLen(this);
+
+    if (mod_time > request->ims) {
+        debug(88, 3) ("--> YES: entry newer than client\n");
+        return true;
+    } else if (mod_time < request->ims) {
+        debug(88, 3) ("-->  NO: entry older than client\n");
+        return false;
+    } else if (request->imslen < 0) {
+        debug(88, 3) ("-->  NO: same LMT, no client length\n");
+        return false;
+    } else if (request->imslen == object_length) {
+        debug(88, 3) ("-->  NO: same LMT, same length\n");
+        return false;
+    } else {
+        debug(88, 3) ("--> YES: same LMT, different length\n");
+        return true;
+    }
+}
+
 
 /* NullStoreEntry */
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ESIContext.h,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id: ESIContext.h,v 1.2 2003/03/15 04:17:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +35,9 @@
 #define SQUID_ESICONTEXT_H
 
 #include "ESIElement.h"
+#include "clientStream.h"
 
 class esiVarState;
-
-class clientStreamNode;
 
 class ClientHttpRequest;
 
@@ -50,6 +49,7 @@ class ESIContext : public esiTreeParent, public ESIParserClient
 {
 
 public:
+    typedef RefCount<ESIContext> Pointer;
     void *operator new (size_t byteCount);
     void operator delete (void *address);
     void deleteSelf() const;
