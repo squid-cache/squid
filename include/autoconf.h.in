@@ -25,6 +25,9 @@
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
 
+/* Define struct tm has tm_gmtoff member */
+#undef HAVE_TM_GMTOFF
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
