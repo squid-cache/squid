@@ -45,6 +45,16 @@
 	- Changed hash_remove_link() to return void.
 	- Changed ipcache_gethostbyname() to return NULL if
 	  i->addrs.count == 0.
+	- Added millisecond-timing to select/poll loops and event
+	  queue.
+	- Changed 'peerPingTimeout' value to be twice the average
+	  of all the peer ICP RTT's.
+	- Added 'half_closed_clients' option to force closing of
+	  client connections which might only be half-closed.
+	- Fixed matchDomainName coredump bug.
+	- Don't cache HTTP replies with Vary: headers until we
+	  get content negotiation working.
+	- Fixed SSL proxying to forward full HTTP request headers.
 
 Changes to squid-1.2.beta20 (April 24, 1998):
 
