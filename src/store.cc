@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.58 1996/04/17 17:16:43 wessels Exp $ */
-#ident "$Id: store.cc,v 1.58 1996/04/17 17:16:43 wessels Exp $"
+/* $Id: store.cc,v 1.59 1996/04/17 20:59:32 wessels Exp $ */
+#ident "$Id: store.cc,v 1.59 1996/04/17 20:59:32 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -1848,9 +1848,9 @@ int storeGetMemSpace(size, check_vm_number)
 	    /* print only once when the condition occur until it clears. */
 	    debug(20, 1, "storeGetMemSpace: Allocating beyond the MAX Store with total size of %d\n",
 		store_mem_size + size);
-	    debug(20, 1, "       Start Deleting Behind for every pending objects\n:");
-	    debug(20, 1, "       You should really adjust your cache_mem, high/low water mark,\n");
-	    debug(20, 1, "       max object size to suit your need.\n");
+	    debug(20, 1, " Start Deleting Behind for every pending objects\n");
+	    debug(20, 1, " You should really adjust your cache_mem, high/low water mark,\n");
+	    debug(20, 1, " max object size to suit your need.\n");
 	    over_max = 1;
 	}
 	/* delete all of them, we desperate for a space. */
