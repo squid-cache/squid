@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.27 1996/04/10 05:10:28 wessels Exp $ */
+/* $Id: tools.cc,v 1.28 1996/04/10 20:45:34 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -139,7 +139,7 @@ void death(sig)
 void rotate_logs(sig)
      int sig;
 {
-    debug(21, 1, "rotate_logs: SIGHUP received.\n");
+    debug(21, 1, "rotate_logs: SIGUSR1 received.\n");
 
     storeWriteCleanLog();
     neighbors_rotate_log();
@@ -398,13 +398,15 @@ time_t getCurrentTime()
 }
 
 
-void usr1_handle(sig)
+void reconfigure(sig)
      int sig;
 {
-    debug(21, 1, "usr1_handle: SIGUSR1 received.\n");
+    debug(21, 1, "reconfigure: SIGHUP received.\n");
 
+    serverConnectionsClose();
+    ipcacheShutdownServers();
     reread_pending = 1;
 #if defined(_SQUID_SYSV_SIGNALS_)
-    signal(sig, rotate_logs);
+    signal(sig, reconfigure);
 #endif
 }

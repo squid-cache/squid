@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.13 1996/04/10 17:57:44 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.14 1996/04/10 20:45:31 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -219,14 +219,15 @@ void neighborsDestroy()
     edge *e = NULL;
     edge *next = NULL;
 
-    debug(15, 1, "neighborEdgesFree()\n");
+    debug(15, 3, "neighborsDestroy: called\n");
 
     for (e = friends->edges_head; e; e = next) {
 	next = e->next;
 	safe_free(e->host);
 	safe_free(e);
     }
-    friends->edges_head = NULL;
+    safe_free(friends);
+    friends = NULL;
 }
 
 static void neighborsOpenLog(fname)
@@ -378,8 +379,8 @@ int neighborsUdpPing(proto)
 
 	/* e->header.reqnum++; */
 	e->header.reqnum = atoi(entry->key);
-	debug(15, 1, "neighborsUdpPing: key = '%s'\n", entry->key);
-	debug(15, 1, "neighborsUdpPing: reqnum = %d\n", e->header.reqnum);
+	debug(15, 3, "neighborsUdpPing: key = '%s'\n", entry->key);
+	debug(15, 3, "neighborsUdpPing: reqnum = %d\n", e->header.reqnum);
 
 	if (e->udp_port == echo_port) {
 	    debug(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
@@ -702,8 +703,9 @@ void neighbors_init()
 	friends->edges_tail = e;
 	friends->n++;
 
-	xfree(t);
+	safe_free(t);
     }
+    Neighbor_cf = NULL;
 }
 
 void neighbors_rotate_log()

@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.28 1996/04/10 17:58:26 wessels Exp $ */
+/* $Id: main.cc,v 1.29 1996/04/10 20:45:30 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -160,12 +160,19 @@ void serverConnectionsClose()
     }
 }
 
-static void mainUninitialize()
+static void mainReinitialize()
 {
+    debug(1, 0, "Retarting Harvest Cache (version %s)...\n", SQUID_VERSION);
+    /* Already called serverConnectionsClose and ipcacheShutdownServers() */
     neighborsDestroy();
-    serverConnectionsClose();
-    /* ipcache_uninit() */
-    /* neighbors_uninit(); */
+
+    parseConfigFile(config_file);
+    neighbors_init();
+    ipcacheOpenServers();
+    serverConnectionsOpen();
+    if (theUdpConnection >= 0 && (!httpd_accel_mode || getAccelWithProxy()))
+	neighbors_open(theUdpConnection);
+    debug(1, 0, "Ready to serve requests.\n");
 }
 
 static void mainInitialize()
@@ -274,9 +281,10 @@ int main(argc, argv)
     }
     signal(SIGPIPE, SIG_IGN);
     signal(SIGCHLD, sig_child);
-    signal(SIGHUP, rotate_logs);
+    signal(SIGUSR1, rotate_logs);
     signal(SIGTERM, shut_down);
     signal(SIGINT, shut_down);
+    signal(SIGHUP, reconfigure);
 
     mainInitialize();
 
@@ -321,12 +329,12 @@ int main(argc, argv)
 		normal_shutdown();
 		exit(0);
 	    } else if (reread_pending) {
-		mainUninitialize();
-		mainInitialize();
+		mainReinitialize();
 		reread_pending = 0;	/* reset */
 	    } else {
 		fatal_dump("MAIN: SHUTDOWN from comm_select, but nothing pending.");
 	    }
+	    break;
 	default:
 	    fatal_dump("MAIN: Internal error -- this should never happen.");
 	    break;
