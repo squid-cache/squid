@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.91 1998/03/06 22:19:35 wessels Exp $
+ * $Id: fqdncache.cc,v 1.92 1998/03/21 22:06:00 kostas Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -903,7 +903,7 @@ fqdn_getMax()
 }
 
 variable_list *
-snmp_fqdncacheFn(variable_list * Var, long *ErrP)
+snmp_fqdncacheFn(variable_list * Var, snint *ErrP)
 {
     variable_list *Answer;
     static fqdncache_entry *fq = NULL;
@@ -927,7 +927,7 @@ snmp_fqdncacheFn(variable_list * Var, long *ErrP)
     switch (Var->name[11]) {
     case NET_FQDN_ID:
 	Answer->type = ASN_INTEGER;
-	Answer->val_len = sizeof(long);
+	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	*(Answer->val.integer) = Var->name[12];
 	break;
@@ -938,26 +938,26 @@ snmp_fqdncacheFn(variable_list * Var, long *ErrP)
 	break;
     case NET_FQDN_IP:
 	Answer->type = SMI_IPADDRESS;
-	Answer->val_len = sizeof(long);
+	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	safe_inet_addr(fq->name, &fqaddr);
-	*(Answer->val.integer) = (long) fqaddr.s_addr;
+	*(Answer->val.integer) = (snint) fqaddr.s_addr;
 	break;
     case NET_FQDN_LASTREF:
 	Answer->type = SMI_TIMETICKS;
-	Answer->val_len = sizeof(long);
+	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	*(Answer->val.integer) = squid_curtime - fq->lastref;
 	break;
     case NET_FQDN_EXPIRES:
 	Answer->type = SMI_TIMETICKS;
-	Answer->val_len = sizeof(long);
+	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	*(Answer->val.integer) = fq->expires - squid_curtime;
 	break;
     case NET_FQDN_STATE:
 	Answer->type = ASN_INTEGER;
-	Answer->val_len = sizeof(long);
+	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	*(Answer->val.integer) = fq->status;
 	break;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.74 1998/03/06 22:19:39 wessels Exp $
+ * $Id: net_db.cc,v 1.75 1998/03/21 22:06:02 kostas Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -715,7 +715,7 @@ netdb_getMax()
 }
 
 variable_list *
-snmp_netdbFn(variable_list * Var, long *ErrP)
+snmp_netdbFn(variable_list * Var, snint *ErrP)
 {
     variable_list *Answer;
     int cnt;
@@ -746,12 +746,12 @@ snmp_netdbFn(variable_list * Var, long *ErrP)
 	return (NULL);
     }
 #if USE_ICMP
-    Answer->val_len = sizeof(long);
+    Answer->val_len = sizeof(snint);
     Answer->val.integer = xmalloc(Answer->val_len);
     switch (Var->name[10]) {
     case NETDB_ID:
 	Answer->type = SMI_INTEGER;
-	*(Answer->val.integer) = (long) Var->name[11];
+	*(Answer->val.integer) = (snint) Var->name[11];
 	break;
     case NETDB_NET:
 	Answer->type = SMI_IPADDRESS;
@@ -760,27 +760,27 @@ snmp_netdbFn(variable_list * Var, long *ErrP)
 	break;
     case NETDB_PING_S:
 	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (long) n->pings_sent;
+	*(Answer->val.integer) = (snint) n->pings_sent;
 	break;
     case NETDB_PING_R:
 	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (long) n->pings_recv;
+	*(Answer->val.integer) = (snint) n->pings_recv;
 	break;
     case NETDB_HOPS:
 	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (long) n->hops;
+	*(Answer->val.integer) = (snint) n->hops;
 	break;
     case NETDB_RTT:
 	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (long) n->rtt;
+	*(Answer->val.integer) = (snint) n->rtt;
 	break;
     case NETDB_PINGTIME:
 	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (long) n->next_ping_time - squid_curtime;
+	*(Answer->val.integer) = (snint) n->next_ping_time - squid_curtime;
 	break;
     case NETDB_LASTUSE:
 	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (long) squid_curtime - n->last_use_time;
+	*(Answer->val.integer) = (snint) squid_curtime - n->last_use_time;
 	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;

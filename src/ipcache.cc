@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.169 1998/03/19 19:14:49 wessels Exp $
+ * $Id: ipcache.cc,v 1.170 1998/03/21 22:06:01 kostas Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1070,7 +1070,7 @@ ipcache_getMax()
 }
 
 variable_list *
-snmp_ipcacheFn(variable_list * Var, long *ErrP)
+snmp_ipcacheFn(variable_list * Var, snint *ErrP)
 {
     variable_list *Answer;
     ipcache_entry *IPc = NULL;
@@ -1088,7 +1088,7 @@ snmp_ipcacheFn(variable_list * Var, long *ErrP)
     }
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-    Answer->val_len = sizeof(long);
+    Answer->val_len = sizeof(snint);
     Answer->val.integer = xmalloc(Answer->val_len);
     switch (Var->name[11]) {
     case NET_IPC_ID:

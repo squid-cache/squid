@@ -2,6 +2,12 @@
 #ifndef CACHE_SNMP_H
 #define CACHE_SNMP_H
 
+#ifdef _SQUID_OSF_
+#define snint int
+#else
+#define snint long
+#endif
+
 #include "snmp.h"
 #include "snmp_impl.h"
 #include "asn1.h"
@@ -265,22 +271,22 @@ enum {
  
 struct MIBListEntry {
   oid            Name[9]; /* Change as appropriate */
-  long           NameLen;
+  snint           NameLen;
   oid_GetFn     *GetFn;
   oid_GetNextFn *GetNextFn;
 };
 
-variable_list *snmp_basicFn(variable_list *, long *);
-variable_list *snmp_confPtblFn(variable_list *, long *);
-variable_list *snmp_confFn(variable_list *, long *);
-variable_list *snmp_sysFn(variable_list *, long *);
-variable_list *snmp_prfSysFn(variable_list *, long *);
-variable_list *snmp_prfProtoFn(variable_list *, long *);
-variable_list *snmp_prfPeerFn(variable_list *, long *);
-variable_list *snmp_netdbFn(variable_list *, long *);
-variable_list *snmp_dnsFn(variable_list *, long *);
-variable_list *snmp_ipcacheFn(variable_list *, long *);
-variable_list *snmp_fqdncacheFn(variable_list *, long *);
+variable_list *snmp_basicFn(variable_list *, snint *);
+variable_list *snmp_confPtblFn(variable_list *, snint *);
+variable_list *snmp_confFn(variable_list *, snint *);
+variable_list *snmp_sysFn(variable_list *, snint *);
+variable_list *snmp_prfSysFn(variable_list *, snint *);
+variable_list *snmp_prfProtoFn(variable_list *, snint *);
+variable_list *snmp_prfPeerFn(variable_list *, snint *);
+variable_list *snmp_netdbFn(variable_list *, snint *);
+variable_list *snmp_dnsFn(variable_list *, snint *);
+variable_list *snmp_ipcacheFn(variable_list *, snint *);
+variable_list *snmp_fqdncacheFn(variable_list *, snint *);
 
 #endif
 #endif
