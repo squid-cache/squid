@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.109 1998/09/14 20:29:12 wessels Exp $
+# $Id: cf.data.pre,v 1.110 1998/09/14 22:29:11 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1344,6 +1344,7 @@ DOC_START
 	acl aclname url_regex  ^http:// ...	# regex matching on whole URL
 	acl aclname urlpath_regex  \.gif$ ...	# regex matching on URL path
 	acl aclname port     80 70 21 ...
+	acl aclname port     0-1024 ...		# ranges allowed
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
 	acl aclname browser  regexp
