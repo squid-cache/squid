@@ -3,6 +3,11 @@
 	- Multiple HTTP sockets (Lincoln Dale).
 	- Moved 'fds_are_n_free' check to httpAccept().
 	- s/USE_POLL/HAVE_POLL/; make poll() default if available.
+	- Changed storeRegister to use offsets and make immediate
+	  callbacks if appropriate.
+	- Removed icpDetectClientClose().  Some of that functionality
+	  goes into clientReadRequest() and the rest into
+	  httpRequestFree().
 
 Changes to squid-1.2.alpha3 ():
 
