@@ -1,7 +1,7 @@
 -- File: SQUID.MIB
 -- kostas@nlanr.net
 -- Created    : 11/ 2/97 kostas@nlanr.net
--- Last Update: 12/1/97 kostas@nlanr.net
+-- Last Update:  2/11/98 kostas@nlanr.net
 
 SQUID-MIB DEFINITIONS ::= BEGIN
 		IMPORTS
@@ -16,15 +16,7 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 -- definitions included for standalone agent/managers
 --
 
---mgmt           	OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) 2 }
---mib            	OBJECT IDENTIFIER ::= { mgmt 1 }
---directory      	OBJECT IDENTIFIER ::= { internet 1 }
---experimental   	OBJECT IDENTIFIER ::= { internet 3 }
---private        	OBJECT IDENTIFIER ::= { internet 4 }
---enterprises    	OBJECT IDENTIFIER ::= { private 1 }
---nsfnet		OBJECT IDENTIFIER ::= { experimental 25 } 
 squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) nsfnet(25) 17 }
--- squid 		OBJECT IDENTIFIER ::= { nsfnet 17 }
 
 
 --
@@ -825,6 +817,42 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 4 }
+
+        cacheHttpHits OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 5 }
+
+        cacheHttpErrors OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 6 }
+
+        cacheICPkbSent OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 7 }
+
+        cacheICPkbRecv OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 8 }
+
+        cacheHttpInKb OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 9 }
+
+        cacheHttpOutKb OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 10 }
 
 
 	
