@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.25 1996/04/16 05:05:18 wessels Exp $ */
+/* $Id: comm.cc,v 1.26 1996/04/16 20:29:26 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -21,20 +21,14 @@ FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
 static int *fd_lifetime = NULL;
-static int (*app_handler) ();
-static void checkTimeouts();
-static void checkLifetimes();
+static void checkTimeouts  _PARAMS((void));
+static void checkLifetimes _PARAMS((void));
 static void Reserve_More_FDs _PARAMS((void));
 static int commSetReuseAddr _PARAMS((int));
 static int examine_select _PARAMS((fd_set *, fd_set *, fd_set *));
 static int commSetNoLinger _PARAMS((int));
-
-void comm_handler()
-{
-    /* Call application installed handler. */
-    debug(5, 5, "comm_handler:\n");
-    app_handler();
-}
+static struct timeval zero_tv;
+static void comm_select_incoming _PARAMS((void));
 
 /* Return the local port associated with fd. */
 int comm_port(fd)
@@ -466,6 +460,58 @@ void comm_set_stall(fd, delta)
     fd_table[fd].stall_until = squid_curtime + delta;
 }
 
+static void comm_select_incoming()
+{
+    fd_set read_mask;
+    fd_set write_mask;
+    int maxfd = 0;
+    int fd = 0;
+    int fds[3];
+    int N = 0;
+    int i = 0;
+    int (*tmp) () = NULL;
+
+    FD_ZERO(&read_mask);
+    FD_ZERO(&write_mask);
+
+    if (theAsciiConnection >= 0 && fdstat_are_n_free_fd(RESERVED_FD))
+	fds[N++] = theAsciiConnection;
+    if (theUdpConnection >= 0)
+	fds[N++] = theUdpConnection;
+    fds[N++] = 0;
+
+    for (i = 0; i < N; i++) {
+	fd = fds[i];
+	if (fd_table[fd].read_handler) {
+	    FD_SET(fd, &read_mask);
+	    if (fd > maxfd)
+		maxfd = fd;
+	}
+	if (fd_table[fd].write_handler) {
+	    FD_SET(fd, &write_mask);
+	    if (fd > maxfd)
+		maxfd = fd;
+	}
+    }
+
+    if (maxfd++ == 0)
+	return;
+    if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) > 0) {
+	for (i=0; i<N; i++) {
+	    fd = fds[i];
+	    if (FD_ISSET(fd, &read_mask)) {
+		tmp = fd_table[fd].read_handler;
+		fd_table[fd].read_handler = 0;
+		tmp(fd, fd_table[fd].read_data);
+	    }
+	    if (FD_ISSET(fd, &write_mask)) {
+		tmp = fd_table[fd].write_handler;
+		fd_table[fd].write_handler = 0;
+		tmp(fd, fd_table[fd].write_data);
+	    }
+	}
+    }
+}
 
 
 /* Select on all sockets; call handlers for those that are ready. */
@@ -474,9 +520,7 @@ int comm_select(sec, failtime)
      time_t failtime;
 {
     fd_set exceptfds;
-    fd_set read_mask;
     fd_set readfds;
-    fd_set write_mask;
     fd_set writefds;
     int (*tmp) () = NULL;
     int fd;
@@ -484,18 +528,14 @@ int comm_select(sec, failtime)
     int maxfd;
     int nfds;
     int num;
-    int sel_fd_width;
     static time_t last_timeout = 0;
     struct timeval poll_time;
-    struct timeval zero_tv;
     time_t timeout;
 
     /* assume all process are very fast (less than 1 second). Call
      * time() only once */
     getCurrentTime();
     /* use only 1 second granularity */
-    zero_tv.tv_sec = 0;
-    zero_tv.tv_usec = 0;
     timeout = squid_curtime + sec;
 
     while (timeout > getCurrentTime()) {
@@ -575,43 +615,8 @@ int comm_select(sec, failtime)
 	     * Admit more connections quickly until we hit the hard limit.
 	     * Don't forget to keep the UDP acks coming and going.
 	     */
+	    comm_select_incoming();
 
-	    FD_ZERO(&read_mask);
-	    FD_ZERO(&write_mask);
-
-	    if (theAsciiConnection >= 0) {
-		if ((fdstat_are_n_free_fd(RESERVED_FD))
-		    && (fd_table[theAsciiConnection].read_handler))
-		    FD_SET(theAsciiConnection, &read_mask);
-		else
-		    FD_CLR(theAsciiConnection, &read_mask);
-	    }
-	    if (theUdpConnection >= 0) {
-		if (fd_table[theUdpConnection].read_handler)
-		    FD_SET(theUdpConnection, &read_mask);
-		if (fd_table[theUdpConnection].write_handler)
-		    FD_SET(theUdpConnection, &write_mask);
-	    }
-	    sel_fd_width = max(theAsciiConnection, theUdpConnection) + 1;
-	    if (select(sel_fd_width, &read_mask, &write_mask, NULL, &zero_tv) > 0) {
-		if (FD_ISSET(theAsciiConnection, &read_mask)) {
-		    tmp = fd_table[theAsciiConnection].read_handler;
-		    fd_table[theAsciiConnection].read_handler = 0;
-		    tmp(theAsciiConnection, fd_table[theAsciiConnection].read_data);
-		}
-		if ((theUdpConnection >= 0)) {
-		    if (FD_ISSET(theUdpConnection, &read_mask)) {
-			tmp = fd_table[theUdpConnection].read_handler;
-			fd_table[theUdpConnection].read_handler = 0;
-			tmp(theUdpConnection, fd_table[theUdpConnection].read_data);
-		    }
-		    if (FD_ISSET(theUdpConnection, &write_mask)) {
-			tmp = fd_table[theUdpConnection].write_handler;
-			fd_table[theUdpConnection].write_handler = 0;
-			tmp(theUdpConnection, fd_table[theUdpConnection].write_data);
-		    }
-		}
-	    }
 	    if ((fd == theUdpConnection) || (fd == theAsciiConnection))
 		continue;
 
@@ -871,9 +876,10 @@ int comm_init()
     RESERVED_FD = min(100, getMaxFD() / 4);
     /* hardwired lifetimes */
     fd_lifetime = (int *) xmalloc(sizeof(int) * max_fd);
-    for (i = 0; i < max_fd; i++) {
+    for (i = 0; i < max_fd; i++)
 	comm_set_fd_lifetime(i, -1);	/* denotes invalid */
-    }
+    zero_tv.tv_sec = 0;
+    zero_tv.tv_usec = 0;
     return 0;
 }
 
