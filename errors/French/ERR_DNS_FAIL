@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>ERREUR: L'URL demand&eacute;e n'a pu etre charg&eacute;e</TITLE>
+</HEAD><BODY>
+<H2>L'URL demand&eacute;e n'a pu etre charg&eacute;e</H2>
+<HR>
+<P>
+En essayant de charger l'URL:
+<A HREF="%U">%U</A>
+<P>
+L'erreur suivante fut rencontr&eacute;e:
+<BLOCKQUOTE>
+Impossible d'associer une adresse IP &agrave; la machine
+<I>%H</I>
+</BLOCKQUOTE>
+</UL>
+
+<P>
+Le serveur de noms retourna:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+En d'autres termes:
+<PRE>
+ Le cache n'a pas &eacute;t&eacute; en mesure de r&eacute;soudre le nom de
+machine pr&eacute;sent&eacute; dans l'URL.
+ V&eacute;rifiez si l'adresse est correcte.
+</PRE>
+</P>
+

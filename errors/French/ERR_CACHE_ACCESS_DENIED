@@ -1,0 +1,33 @@
+<HTML><HEAD>
+<TITLE>ERREUR: Acc&egrave;s interdit au cache</TITLE>
+</HEAD>
+<BODY>
+<H1>ERREUR</H1>
+<H2>Acc&egrave;s interdit au cache</H2>
+<HR>
+<P>
+En essayant de charger l'URL:
+<A HREF="%U">%U</A>
+<P>
+L'erreur suivante fut rencontr&eacute;e:
+<UL>
+<LI>
+<STRONG>
+Acc&egrave;s interdit au cache.
+</STRONG>
+</UL>
+</P>
+
+<P>D&eacute;sol&eacute;, vous n'etes actuellement pas autoris&eacute;
+&agrave; demander
+<PRE>    %U</PRE>
+&agrave; ce cache tant que vous ne vous etes pas identifi&eacute;.
+</P>
+
+<P>
+Vous avez besoin de Netscape version 2.0 ou sup&eacute;rieure, ou Microsoft
+Internet Explorer 3.0, ou un navigateur conforme &agrave; HTTP/1.1 pour que
+ceci fonctionne.  Veuillez contacter l'<A HREF="mailto:%w">administrateur du cache</a>
+si vous avez des difficult&eacute;s &agrave; vous authentifier, ou
+<A HREF="http://%h/cgi-bin/chpasswd.cgi\">changez</a> votre mot de passe.
+</P>

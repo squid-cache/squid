@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>ERREUR: L'URL demand&eacute;e n'a pu etre charg&eacute;e</TITLE>
+</HEAD><BODY>
+<H1>ERREUR</H1>
+<H2>L'URL demand&eacute;e n'a pu etre charg&eacute;e</H2>
+<HR>
+<P>
+En essayant de charger l'URL:
+<A HREF="%U">%U</A>
+<P>
+L'erreur suivante fut rencontr&eacute;e:
+<UL>
+<LI>
+<STRONG>
+Erreur de lecture
+</STRONG>
+</UL>
+
+<P>
+Le syst&egrave;me retourna:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Une erreur est survenue en essayant d'acc&eacute;der au r&eacute;seau.
+Veuillez r&eacute;it&eacute;rer votre requete.
+</P>
