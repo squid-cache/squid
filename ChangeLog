@@ -8,6 +8,8 @@
 	  failures (e.g. miss_access rules).
 	- Changed signal handlers with ASYNC_IO and Linux so that
 	  -k command line options work (Miquel van Smoorenburg).
+	- Rewrote shutdown code to use events instead of setting 
+	  FD timeouts.
 	- Fixed cachemgr 'objects' (statObjects()) by adding a check
 	  for READ_AHEAD_GAP.
 	- Modified storeExpireNow() to move expired entries to the
