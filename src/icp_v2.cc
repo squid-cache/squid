@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.48 1998/08/18 16:00:22 wessels Exp $
+ * $Id: icp_v2.cc,v 1.49 1998/08/18 19:14:02 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -338,7 +338,7 @@ icpHandleUdp(int sock, void *data)
 {
     int *N = data;
     struct sockaddr_in from;
-    int from_len;
+    socklen_t from_len;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
     int len;
     int icp_version;
@@ -403,7 +403,7 @@ icpConnectionsOpen(void)
     struct in_addr addr;
     struct sockaddr_in xaddr;
     int x;
-    int len;
+    socklen_t len;
     wordlist *s;
     if (Config2.Accel.on && !Config.onoff.accel_with_proxy)
 	return;

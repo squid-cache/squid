@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.8 1998/08/14 16:42:03 wessels Exp $
+ * $Id: snmp_core.cc,v 1.9 1998/08/18 19:14:08 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Kostas Anagnostakis
@@ -122,7 +122,7 @@ void
 snmpHandleUdp(int sock, void *not_used)
 {
     struct sockaddr_in from;
-    int from_len;
+    socklen_t from_len;
     LOCAL_ARRAY(char, buf, SNMP_REQUEST_SIZE);
     LOCAL_ARRAY(char, deb_line, 4096);
     int len;
@@ -310,7 +310,7 @@ snmpConnectionOpen(void)
     u_short port;
     struct in_addr addr;
     struct sockaddr_in xaddr;
-    int len;
+    socklen_t len;
     int x;
 
     if ((port = Config.Port.snmp) > (u_short) 0) {

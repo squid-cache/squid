@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.232 1998/08/05 07:56:08 wessels Exp $
+ * $Id: neighbors.cc,v 1.233 1998/08/18 19:14:05 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -304,7 +304,7 @@ void
 neighbors_open(int fd)
 {
     struct sockaddr_in name;
-    int len = sizeof(struct sockaddr_in);
+    socklen_t len = sizeof(struct sockaddr_in);
     struct servent *sep = NULL;
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
