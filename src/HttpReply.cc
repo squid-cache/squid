@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.19 1998/05/22 05:02:38 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.20 1998/05/22 05:19:09 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -421,7 +421,7 @@ httpMsgIsPersistent(float http_ver, const HttpHeader *hdr)
     } else {
 	/* pconns in Netscape 3.x are allegedly broken, return false */
 	const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
-	if (agent && !strncasecmp(agent, "Mozilla/3.", 10))
+	if (agent && (!strncasecmp(agent, "Mozilla/3.", 10) || !strncasecmp(agent, "Netscape/3.", 11)))
 	    return 0;
 	/* for old versions of HTTP: persistent if has "keep-alive" */
 	return httpHeaderHasConnDir(hdr, "keep-alive");
