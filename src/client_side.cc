@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.504 2000/10/04 15:54:45 wessels Exp $
+ * $Id: client_side.cc,v 1.505 2000/10/04 17:09:24 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2000,6 +2000,11 @@ clientProcessRequest2(clientHttpRequest * http)
 	debug(33, 3) ("clientProcessRequest2: offline HIT\n");
 	http->entry = e;
 	return LOG_TCP_HIT;
+    }
+    if (http->redirect.status) {
+	/* force this to be a miss */
+	http->entry = NULL;
+	return LOG_TCP_MISS;
     }
     if (!storeEntryValidToSend(e)) {
 	debug(33, 3) ("clientProcessRequest2: !storeEntryValidToSend MISS\n");
