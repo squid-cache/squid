@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.cc,v 1.6 2003/05/15 07:06:24 robertc Exp $
+ * $Id: DelayVector.cc,v 1.7 2003/05/19 09:11:30 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -66,12 +66,12 @@ DelayVector::deleteSelf() const
 
 DelayVector::DelayVector()
 {
-    DelayPools::RegisterForUpdates (this);
+    DelayPools::registerForUpdates (this);
 }
 
 DelayVector::~DelayVector()
 {
-    DelayPools::DeregisterForUpdates (this);
+    DelayPools::deregisterForUpdates (this);
 }
 
 void
