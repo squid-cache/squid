@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.151 1996/11/06 08:17:33 wessels Exp $
+ * $Id: store.cc,v 1.152 1996/11/06 22:18:12 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -303,15 +303,9 @@ new_StoreEntry(int mem_obj_flag)
 static void
 destroy_MemObject(MemObject * mem)
 {
-    int i;
     debug(20, 3, "destroy_MemObject: destroying %p\n", mem);
     destroy_MemObjectData(mem);
-    safe_free(mem->pending);
-    if (mem->client_list) {
-	for (i = 0; i < mem->client_list_size; i++)
-	    safe_free(mem->client_list[i]);
-	safe_free(mem->client_list);
-    }
+    safe_free(mem->clients);
     safe_free(mem->mime_hdr);
     safe_free(mem->reply);
     safe_free(mem->e_abort_msg);
@@ -795,15 +789,10 @@ storeCreateEntry(const char *url,
     e->timestamp = 0;		/* set in timestampsSet() */
     e->ping_status = PING_NONE;
 
-    /* allocate pending list */
-    mem->pending_list_size = MIN_PENDING;
-    mem->pending = (struct pentry **)
-	xcalloc(mem->pending_list_size, sizeof(struct pentry *));
-
     /* allocate client list */
-    mem->client_list_size = MIN_CLIENT;
-    mem->client_list =
-	xcalloc(mem->client_list_size, sizeof(ClientStatusEntry *));
+    mem->nclients = MIN_CLIENT;
+    mem->clients =
+	xcalloc(mem->nclients, sizeof(struct _store_client));
     /* storeLog(STORE_LOG_CREATE, e); */
     return e;
 }
@@ -851,73 +840,36 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
 int
 storeRegister(StoreEntry * e, int fd, PIF handler, void *data)
 {
-    PendingEntry *pe = NULL;
-    int old_size;
     int i;
-    int j;
     MemObject *mem = e->mem_obj;
     debug(20, 3, "storeRegister: FD %d '%s'\n", fd, e->key);
-    pe = xcalloc(1, sizeof(PendingEntry));
-    pe->fd = fd;
-    pe->handler = handler;
-    pe->data = data;
-    /* find an empty slot */
-    for (i = 0; i < (int) mem->pending_list_size; i++) {
-	if (mem->pending[i] == NULL)
-	    break;
-    }
-    if (i == mem->pending_list_size) {
-	/* grow the array */
-	struct pentry **tmp = NULL;
-	old_size = mem->pending_list_size;
-	/* set list_size to an appropriate amount */
-	mem->pending_list_size += MIN_PENDING;
-	/* allocate, and copy old pending list over to the new one */
-	tmp = xcalloc(mem->pending_list_size, sizeof(struct pentry *));
-	for (j = 0; j < old_size; j++)
-	    tmp[j] = mem->pending[j];
-	/* free the old list and set the new one */
-	safe_free(mem->pending);
-	mem->pending = tmp;
-	debug(20, 9, "storeRegister: grew pending list to %d for slot %d.\n",
-	    mem->pending_list_size, i);
-    }
-    mem->pending[i] = pe;
+    if ((i = storeClientListSearch(mem, fd)) < 0)
+	i = storeClientListAdd(e, fd, 0);
+    if (mem->clients[i].callback)
+	fatal_dump("storeRegister: handler already exists");
+    mem->clients[i].callback = handler;
+    mem->clients[i].callback_data = data;
     return 0;
 }
 
-/* remove handler assoicate to that fd from store pending list */
-/* Also remove entry from client_list if exist. */
-/* return number of successfully free pending entries */
 int
 storeUnregister(StoreEntry * e, int fd)
 {
     int i;
-    int freed = 0;
     MemObject *mem = e->mem_obj;
     if (mem == NULL)
 	return 0;
     debug(20, 3, "storeUnregister: called for FD %d '%s'\n", fd, e->key);
-    /* look for entry in client_list */
-    if ((i = storeClientListSearch(mem, fd)) > -1) {
-	safe_free(mem->client_list[i]);
-	mem->client_list[i] = NULL;
-    }
-    /* walk the entire list looking for matched fd */
-    for (i = 0; i < (int) mem->pending_list_size; i++) {
-	if (mem->pending[i] == NULL)
-	    continue;
-	if (mem->pending[i]->fd != fd)
-	    continue;
-	/* found the match fd */
-	safe_free(mem->pending[i]);
-	mem->pending[i] = NULL;
-	freed++;
-    }
+    if ((i = storeClientListSearch(mem, fd)) < 0)
+	return 0;
+    mem->clients[i].fd = -1;
+    mem->clients[i].last_offset = 0;
+    mem->clients[i].callback = NULL;
+    mem->clients[i].callback_data = NULL;
     if (mem->fd_of_first_client == fd)
 	mem->fd_of_first_client = -1;
-    debug(20, 9, "storeUnregister: returning %d\n", freed);
-    return freed;
+    debug(20, 9, "storeUnregister: returning 1\n");
+    return 1;
 }
 
 int
@@ -926,11 +878,11 @@ storeGetLowestReaderOffset(const StoreEntry * entry)
     const MemObject *mem = entry->mem_obj;
     int lowest = mem->e_current_len;
     int i;
-    for (i = 0; i < mem->client_list_size; i++) {
-	if (mem->client_list[i] == NULL)
+    for (i = 0; i < mem->nclients; i++) {
+	if (mem->clients[i].fd == -1)
 	    continue;
-	if (mem->client_list[i]->last_offset < lowest)
-	    lowest = mem->client_list[i]->last_offset;
+	if (mem->clients[i].last_offset < lowest)
+	    lowest = mem->clients[i].last_offset;
     }
     return lowest;
 }
@@ -957,24 +909,21 @@ void
 InvokeHandlers(StoreEntry * e)
 {
     int i;
-    int fd;
     MemObject *mem = e->mem_obj;
-    struct pentry *p = NULL;
     PIF handler = NULL;
     void *data = NULL;
+    struct _store_client *sc;
     /* walk the entire list looking for valid handlers */
-    for (i = 0; i < (int) mem->pending_list_size; i++) {
-	p = mem->pending[i];
-	if (p == NULL)
+    for (i = 0; i < mem->nclients; i++) {
+	sc = &mem->clients[i];
+	if (sc->fd == -1)
 	    continue;
-	if ((handler = p->handler) == NULL)
+	if ((handler = sc->callback) == NULL)
 	    continue;
-	data = p->data;
-	fd = p->fd;
-	memset(p, '\0', sizeof(struct pentry));
-	safe_free(p);
-	mem->pending[i] = NULL;
-	handler(fd, e, data);
+	data = sc->callback_data;
+	sc->callback = NULL;
+	sc->callback_data = NULL;
+	handler(sc->fd, e, data);
     }
 }
 
@@ -1742,12 +1691,7 @@ storeAbort(StoreEntry * e, const char *msg)
     /* We assign an object length here--The only other place we assign the
      * object length is in storeComplete() */
     e->object_len = mem->e_current_len;
-
-#ifdef DONT
-    /* Call handlers so they can report error. */
     InvokeHandlers(e);
-#endif
-
     storeUnlockObject(e);
     return;
 }
@@ -2210,31 +2154,24 @@ storeClientWaiting(const StoreEntry * e)
 {
     int i;
     MemObject *mem = e->mem_obj;
-    if (mem->client_list) {
-	for (i = 0; i < mem->client_list_size; i++) {
-	    if (mem->client_list[i])
-		return 1;
-	}
-    }
-    if (mem->pending) {
-	for (i = 0; i < (int) mem->pending_list_size; i++) {
-	    if (mem->pending[i])
+    if (mem->clients) {
+	for (i = 0; i < mem->nclients; i++) {
+	    if (mem->clients[i].fd != -1)
 		return 1;
 	}
     }
     return 0;
 }
 
-/* return index to matched clientstatus in client_list, -1 on NOT_FOUND */
 static int
 storeClientListSearch(const MemObject * mem, int fd)
 {
     int i;
-    if (mem->client_list) {
-	for (i = 0; i < mem->client_list_size; i++) {
-	    if (mem->client_list[i] == NULL)
+    if (mem->clients) {
+	for (i = 0; i < mem->nclients; i++) {
+	    if (mem->clients[i].fd == -1)
 		continue;
-	    if (mem->client_list[i]->fd != fd)
+	    if (mem->clients[i].fd != fd)
 		continue;
 	    return i;
 	}
@@ -2243,38 +2180,41 @@ storeClientListSearch(const MemObject * mem, int fd)
 }
 
 /* add client with fd to client list */
-void
+int
 storeClientListAdd(StoreEntry * e, int fd, int last_offset)
 {
     int i;
     MemObject *mem = e->mem_obj;
-    ClientStatusEntry **oldlist = NULL;
+    struct _store_client *oldlist = NULL;
     int oldsize;
     /* look for empty slot */
-    if (mem->client_list == NULL) {
-	mem->client_list_size = MIN_CLIENT;
-	mem->client_list =
-	    xcalloc(mem->client_list_size, sizeof(ClientStatusEntry *));
+    if (mem->clients == NULL) {
+	mem->nclients = MIN_CLIENT;
+	mem->clients =
+	    xcalloc(mem->nclients, sizeof(struct _store_client));
     }
-    for (i = 0; i < mem->client_list_size; i++) {
-	if (mem->client_list[i] == NULL)
+    for (i = 0; i < mem->nclients; i++) {
+	if (mem->clients[i].fd == -1)
 	    break;
     }
-    if (i == mem->client_list_size) {
-	debug(20, 3, "storeClientListAdd: FD %d Growing client_list for '%s'\n",
+    if (i == mem->nclients) {
+	debug(20, 3, "storeClientListAdd: FD %d Growing clients for '%s'\n",
 	    fd, e->url);
-	oldlist = mem->client_list;
-	oldsize = mem->client_list_size;
-	mem->client_list_size <<= 1;
-	mem->client_list =
-	    xcalloc(mem->client_list_size, sizeof(ClientStatusEntry *));
+	oldlist = mem->clients;
+	oldsize = mem->nclients;
+	mem->nclients <<= 1;
+	mem->clients =
+	    xcalloc(mem->nclients, sizeof(struct _store_client));
 	for (i = 0; i < oldsize; i++)
-	    mem->client_list[i] = oldlist[i];
+	    mem->clients[i] = oldlist[i];
+	for (; i < mem->nclients; i++)
+	    mem->clients[i].fd = -1;
 	safe_free(oldlist);
+	i = oldsize;
     }
-    mem->client_list[i] = xcalloc(1, sizeof(ClientStatusEntry));
-    mem->client_list[i]->fd = fd;
-    mem->client_list[i]->last_offset = last_offset;
+    mem->clients[i].fd = fd;
+    mem->clients[i].last_offset = last_offset;
+    return i;
 }
 
 /* same to storeCopy but also register client fd and last requested offset
@@ -2305,7 +2245,7 @@ storeClientCopy(StoreEntry * e,
     }
     sz = (available_to_write >= maxSize) ? maxSize : available_to_write;
     /* update the lowest requested offset */
-    mem->client_list[ci]->last_offset = stateoffset + sz;
+    mem->clients[ci].last_offset = stateoffset + sz;
     if (sz > 0)
 	(void) mem->data->mem_copy(mem->data, stateoffset, buf, sz);
     /* see if we can get rid of some data if we are in "delete behind" mode . */
@@ -2718,12 +2658,14 @@ int
 storePendingNClients(const StoreEntry * e)
 {
     int npend = 0;
+    MemObject *mem = e->mem_obj;
     int i;
-
-    if (!e->mem_obj)
+    if (mem == NULL)
 	return 0;
-    for (npend = i = 0; i < (int) e->mem_obj->pending_list_size; i++) {
-	if (e->mem_obj->pending[i])
+    for (i = 0; i < (int) mem->nclients; i++) {
+	if (mem->clients[i].fd == -1)
+	    continue;
+	if (mem->clients[i].callback)
 	    npend++;
     }
     return npend;

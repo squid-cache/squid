@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.58 1996/11/05 17:08:02 wessels Exp $
+ * $Id: client_side.cc,v 1.59 1996/11/06 22:18:11 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -32,7 +32,7 @@
 #include "squid.h"
 
 static void clientRedirectDone _PARAMS((void *data, char *result));
-static int icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
+static void icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
 static void clientLookupDstIPDone _PARAMS((int fd, const ipcache_addrs *, void *data));
 static void clientLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
 
@@ -52,7 +52,6 @@ clientLookupDstIPDone(int fd, const ipcache_addrs * ia, void *data)
 	    inet_ntoa(icpState->aclChecklist->dst_addr));
     }
     clientAccessCheck(icpState, icpState->aclHandler);
-    return;
 }
 
 static void
@@ -367,9 +366,10 @@ proxyAuthenticate(const char *headers)
 }
 #endif /* USE_PROXY_AUTH */
 
-int
-icpProcessExpired(int fd, icpStateData * icpState)
+void
+icpProcessExpired(int fd, void *data)
 {
+    icpStateData *icpState = data;
     char *url = icpState->url;
     char *request_hdr = icpState->request_hdr;
     StoreEntry *entry = NULL;
@@ -394,12 +394,12 @@ icpProcessExpired(int fd, icpStateData * icpState)
     icpState->entry = entry;
     icpState->offset = 0;
     /* Register with storage manager to receive updates when data comes in. */
-    storeRegister(entry, fd, (PIF) icpHandleIMSReply, (void *) icpState);
-    return (protoDispatch(fd, url, icpState->entry, icpState->request));
+    storeRegister(entry, fd, icpHandleIMSReply, (void *) icpState);
+    protoDispatch(fd, url, icpState->entry, icpState->request);
 }
 
 
-static int
+static void
 icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 {
     icpStateData *icpState = data;
@@ -425,9 +425,9 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    entry->url);
 	storeRegister(entry,
 	    fd,
-	    (PIF) icpHandleIMSReply,
+	    icpHandleIMSReply,
 	    (void *) icpState);
-	return 0;
+	return;
     } else if (mem->reply->code == 304 && !BIT_TEST(icpState->request->flags, REQ_IMS)) {
 	/* We initiated the IMS request, the client is not expecting
 	 * 304, so put the good one back.  First, make sure the old entry
@@ -436,9 +436,9 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	if (oldentry->mem_obj->e_current_len == 0) {
 	    storeRegister(entry,
 		fd,
-		(PIF) icpHandleIMSReply,
+		icpHandleIMSReply,
 		(void *) icpState);
-	    return 0;
+	    return;
 	}
 	icpState->log_type = LOG_TCP_REFRESH_HIT;
 	hbuf = get_free_8k_page();
@@ -476,5 +476,4 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     }
     icpState->old_entry = NULL;	/* done with old_entry */
     icpSendMoreData(fd, icpState);	/* give data to the client */
-    return 1;
 }
