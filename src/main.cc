@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.261 1998/07/24 16:14:13 wessels Exp $
+ * $Id: main.cc,v 1.262 1998/07/25 00:16:27 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -63,12 +63,11 @@ static void sendSignal(void);
 static void serverConnectionsOpen(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
-static void normal_shutdown(void);
 #if MEM_GEN_TRACE
 extern void log_trace_done();
 extern void log_trace_init(char *);
 #endif
-static EVH force_shutdown;
+static EVH SquidShutdown;
 
 static void
 usage(void)
@@ -288,10 +287,7 @@ serverConnectionsOpen(void)
 void
 serverConnectionsClose(void)
 {
-    /*
-     * NOTE, this function will be called repeatedly while shutdown
-     * is pending
-     */
+    assert(shutting_down);
     clientHttpConnectionsClose();
     icpConnectionShutdown();
 #if USE_HTCP
@@ -318,8 +314,8 @@ mainReconfigure(void)
 #ifdef SQUID_SNMP
     snmpConnectionClose();
 #endif
-    dnsShutdownServers();
-    redirectShutdownServers();
+    dnsShutdownServers(NULL);
+    redirectShutdownServers(NULL);
     storeDirCloseSwapLogs();
     errorFree();
     parseConfigFile(ConfigFile);
@@ -565,8 +561,10 @@ main(int argc, char **argv)
 		wait);
 	    do_shutdown = 0;
 	    shutting_down = 1;
-	    eventAdd("force_shutdown", force_shutdown,
-		NULL, (double) (wait+1), 1);
+	    serverConnectionsClose();
+	    eventAdd("dnsShutdownServers", dnsShutdownServers, NULL, 0.0, 1);
+	    eventAdd("redirectShutdownServers", redirectShutdownServers, NULL, 0.0, 1);
+	    eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1);
 	}
 	eventRun();
 	if ((loop_delay = eventNextTime()) < 0)
@@ -585,22 +583,10 @@ main(int argc, char **argv)
 	    if (errcount == 10)
 		fatal_dump("Select Loop failed!");
 	    break;
-	case COMM_SHUTDOWN:
-	    /* delayed close so we can transmit while shutdown pending */
-	    icpConnectionClose();
-#if USE_HTCP
-	    htcpSocketClose();
-#endif
-#ifdef SQUID_SNMP
-	    snmpConnectionClose();
-#endif
-	    if (shutting_down) {
-		normal_shutdown();
-	    } else {
-		fatal_dump("MAIN: Unexpected SHUTDOWN from comm_select.");
-	    }
-	    break;
 	case COMM_TIMEOUT:
+	    break;
+	case COMM_SHUTDOWN:
+	    SquidShutdown(NULL);
 	    break;
 	default:
 	    fatal_dump("MAIN: Internal error -- this should never happen.");
@@ -688,7 +674,7 @@ watch_child(char *argv[])
 }
 
 static void
-normal_shutdown(void)
+SquidShutdown(void *unused)
 {
     debug(1, 1) ("Shutting down...\n");
     if (Config.pidFilename && strcmp(Config.pidFilename, "none")) {
@@ -696,7 +682,15 @@ normal_shutdown(void)
 	safeunlink(Config.pidFilename, 0);
 	leave_suid();
     }
+    icpConnectionClose();
+#if USE_HTCP
+    htcpSocketClose();
+#endif
+#ifdef SQUID_SNMP
+    snmpConnectionClose();
+#endif
     releaseServerSockets();
+    commCloseAllSockets();
     unlinkdClose();
     storeDirWriteCleanLogs(0);
     PrintRusage();
@@ -731,16 +725,8 @@ normal_shutdown(void)
 #if MEM_GEN_TRACE
     log_trace_done();
 #endif
-
     debug(1, 0) ("Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     fclose(debug_log);
     exit(0);
-}
-
-static void
-force_shutdown(void *unused)
-{
-    fdDumpOpen();
-    fatal_dump("Shutdown procedure failed");
 }

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm_select.cc,v 1.2 1998/07/22 20:37:11 wessels Exp $
+ * $Id: comm_select.cc,v 1.3 1998/07/25 00:16:25 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -269,18 +269,6 @@ comm_poll(int msec)
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
 #endif
-	if (shutting_down) {
-	    serverConnectionsClose();
-	    dnsShutdownServers();
-	    redirectShutdownServers();
-	    /* shutting_down will be set to
-	     * +1 for SIGTERM
-	     * -1 for SIGINT */
-	    if (shutting_down > 0)
-		setSocketShutdownLifetimes(Config.shutdownLifetime);
-	    else
-		setSocketShutdownLifetimes(1);
-	}
 #if USE_ASYNC_IO
 	aioCheckCallbacks();
 #endif
@@ -306,10 +294,10 @@ comm_poll(int msec)
 		nfds++;
 	    }
 	}
-	if (shutting_down)
-	    debug(5, 2) ("comm_poll: Still waiting on %d FDs\n", nfds);
-	if (nfds == 0)
+	if (nfds == 0) {
+	    assert(shutting_down);
 	    return COMM_SHUTDOWN;
+	}
 	if (msec > MAX_POLL_TIME)
 	    msec = MAX_POLL_TIME;
 	for (;;) {
@@ -537,18 +525,6 @@ comm_select(int msec)
 #endif
 	FD_ZERO(&readfds);
 	FD_ZERO(&writefds);
-	if (shutting_down) {
-	    serverConnectionsClose();
-	    dnsShutdownServers();
-	    redirectShutdownServers();
-	    /* shutting_down will be set to
-	     * +1 for SIGTERM
-	     * -1 for SIGINT */
-	    if (shutting_down > 0)
-		setSocketShutdownLifetimes(Config.shutdownLifetime);
-	    else
-		setSocketShutdownLifetimes(1);
-	}
 	if (commCheckICPIncoming)
 	    comm_select_icp_incoming();
 	if (commCheckHTTPIncoming)
@@ -567,10 +543,10 @@ comm_select(int msec)
 		FD_SET(i, &writefds);
 	    }
 	}
-	if (shutting_down)
-	    debug(5, 2) ("comm_select: Still waiting on %d FDs\n", nfds);
-	if (nfds == 0)
+	if (nfds == 0) {
+	    assert(shutting_down);
 	    return COMM_SHUTDOWN;
+	}
 	if (msec > MAX_POLL_TIME)
 	    msec = MAX_POLL_TIME;
 	for (;;) {
