@@ -68,6 +68,9 @@
 	  content-type and content-encoding (Henrik Nordstrom).
 	- Removed 'icon_content_type' configuration option.  Content
 	  types now taken from mime.conf (Henrik Nordstrom).
+	- Added additional memory malloc tracing and memory leak
+	  detection.  Use --enable-xmalloc-debug-trace configure
+	  option and -m command line option  (Henrik Nordstrom).
 
 Changes to squid-1.2.beta14 (Feb 6, 1998):
 
