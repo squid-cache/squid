@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.269 1997/07/14 23:45:06 wessels Exp $
+ * $Id: store.cc,v 1.270 1997/07/15 03:29:05 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -543,7 +543,8 @@ storeReleaseRequest(StoreEntry * e)
 	return;
     if (!storeEntryLocked(e))
 	fatal_dump("storeReleaseRequest: unlocked entry");
-    debug(20, 3) ("storeReleaseRequest: '%s'\n", e->key);
+    debug(20, 3) ("storeReleaseRequest: '%s'\n",
+	e->key ? e->key : e->url);
     BIT_SET(e->flag, RELEASE_REQUEST);
     storeSetPrivateKey(e);
 }
@@ -726,6 +727,10 @@ storeCreateEntry(const char *url, int flags, method_t method)
     e->url = xstrdup(url);
     meta_data.url_strings += strlen(url);
     e->method = method;
+    if (neighbors_do_private_keys || !BIT_TEST(flags, REQ_HIERARCHICAL))
+	storeSetPrivateKey(e);
+    else
+	storeSetPublicKey(e);
     if (BIT_TEST(flags, REQ_CACHABLE)) {
 	BIT_SET(e->flag, ENTRY_CACHABLE);
 	BIT_RESET(e->flag, RELEASE_REQUEST);
@@ -737,12 +742,6 @@ storeCreateEntry(const char *url, int flags, method_t method)
 	BIT_SET(e->flag, HIERARCHICAL);
     else
 	BIT_RESET(e->flag, HIERARCHICAL);
-    if (neighbors_do_private_keys || !BIT_TEST(flags, REQ_HIERARCHICAL))
-	storeSetPrivateKey(e);
-    else
-	storeSetPublicKey(e);
-    BIT_SET(e->flag, ENTRY_HTML);
-
     e->store_status = STORE_PENDING;
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = NO_SWAP;
@@ -782,7 +781,6 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     storeSetPublicKey(e);
     BIT_SET(e->flag, ENTRY_CACHABLE);
     BIT_RESET(e->flag, RELEASE_REQUEST);
-    BIT_SET(e->flag, ENTRY_HTML);
     e->store_status = STORE_OK;
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAP_OK;
@@ -869,8 +867,10 @@ InvokeHandlers(StoreEntry * e)
     struct _store_client *sc;
     ssize_t size;
     assert(mem->clients != NULL || mem->nclients == 0);
+    debug(20,3)("InvokeHandlers: %s\n", e->key);
     /* walk the entire list looking for valid callbacks */
     for (i = 0; i < mem->nclients; i++) {
+        debug(20,3)("InvokeHandlers: checking client #%d\n", i);
 	sc = &mem->clients[i];
 	if (sc->callback_data == NULL)
 	    continue;
@@ -882,6 +882,7 @@ InvokeHandlers(StoreEntry * e)
 	    sc->copy_offset,
 	    sc->copy_buf,
 	    sc->copy_size);
+        debug(20,3)("InvokeHandlers: calling handler: %p\n", callback);
 	callback(sc->callback_data, sc->copy_buf, size);
     }
 }
@@ -2133,6 +2134,13 @@ storeClientCopy(StoreEntry * e,
     assert(seen_offset <= mem->e_current_len);
     assert(copy_offset >= mem->e_lowest_offset);
     assert(recurse_detect < 3);	/* could == 1 for IMS not modified's */
+    debug(20,3)("storeClientCopy: %s, seen %d want %d, size %d, cb %p, cbdata %p\n",
+	e->key,
+	(int) seen_offset,
+	(int) copy_offset,
+	(int) size,
+	callback,
+	data);
     if ((ci = storeClientListSearch(mem, data)) < 0)
 	fatal_dump("storeClientCopy: Unregistered client");
     sc = &mem->clients[ci];
@@ -2225,7 +2233,7 @@ storeInitHashValues(void)
     int i;
     /* Calculate size of hash table (maximum currently 64k buckets).  */
     i = Config.Swap.maxSize / Config.Store.avgObjectSize;
-    debug(20, 1) ("Swap maxSize %d kB, estimated %d objects\n",
+    debug(20, 1) ("Swap maxSize %d KB, estimated %d objects\n",
 	Config.Swap.maxSize, i);
     i /= Config.Store.objectsPerBucket;
     debug(20, 1) ("Target number of buckets: %d\n", i);

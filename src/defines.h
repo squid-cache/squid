@@ -200,7 +200,7 @@
 #define HIERARCHICAL 		(1<<13)		/* can we query neighbors? */
 #define KEY_PRIVATE 		(1<<12)		/* is the key currently private? */
 #define ENTRY_DISPATCHED 	(1<<11)
-#define ENTRY_HTML 		(1<<10)
+#define ENTRY_UNUSED10 		(1<<10)
 #define KEY_CHANGE 		(1<<9)
 #define KEY_URL    		(1<<8)
 #define ENTRY_CACHABLE   	(1<<7)
