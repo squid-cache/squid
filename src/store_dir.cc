@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.31 1997/10/17 23:31:51 wessels Exp $
+ * $Id: store_dir.cc,v 1.32 1997/10/23 20:47:53 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -195,8 +195,7 @@ storeDirMapAllocate(void)
 char *
 storeSwapDir(int dirn)
 {
-    if (dirn < 0 || dirn >= Config.cacheSwap.n_configured)
-	fatal_dump("storeSwapDir: bad index");
+    assert(0 <= dirn && dirn < Config.cacheSwap.n_configured);
     return Config.cacheSwap.swapDirs[dirn].path;
 }
 
@@ -217,8 +216,7 @@ storeDirSwapLog(const StoreEntry * e)
 {
     LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
     int dirn;
-    if (e->swap_file_number < 0)
-	fatal_dump("storeDirSwapLog: swap_file_number < 0");
+    assert(e->swap_file_number >= 0);
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < Config.cacheSwap.n_configured);
     assert(!BIT_TEST(e->flag, KEY_PRIVATE));
