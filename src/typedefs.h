@@ -64,6 +64,7 @@ typedef struct _HttpHdrContRange HttpHdrContRange;
 typedef struct _TimeOrTag TimeOrTag;
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
 typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;
+typedef struct _HttpHeaderStat HttpHeaderStat;
 typedef struct _HttpBody HttpBody;
 typedef struct _HttpReply HttpReply;
 typedef struct _HttpStateData HttpStateData;

@@ -550,6 +550,13 @@ struct _HttpHdrRangeIter  {
     String boundary;    /* boundary for multipart responses */
 };
 
+/* constant attributes of http header fields */
+struct _HttpHeaderFieldAttrs {
+    const char *name;
+    http_hdr_type id;
+    field_type type;
+};
+
 /* per field statistics */
 struct _HttpHeaderFieldStat {
     int aliveCount;		/* created but not destroyed (count) */
@@ -557,13 +564,6 @@ struct _HttpHeaderFieldStat {
     int parsCount;		/* #parsing attempts */
     int errCount;		/* #pasring errors */
     int repCount;		/* #repetitons */
-};
-
-/* constant attributes of http header fields */
-struct _HttpHeaderFieldAttrs {
-    const char *name;
-    http_hdr_type id;
-    field_type type;
 };
 
 /* compiled version of HttpHeaderFieldAttrs plus stats */
@@ -1279,6 +1279,22 @@ struct _StatCounters {
     struct timeval timestamp;
     StatHist comm_incoming;
 };
+
+/* per header statistics */
+struct _HttpHeaderStat {
+    const char *label;
+    HttpHeaderMask *owner_mask;
+
+    StatHist hdrUCountDistr;
+    StatHist fieldTypeDistr;
+    StatHist ccTypeDistr;
+
+    int parsedCount;
+    int ccParsedCount;
+    int destroyedCount;
+    int busyDestroyedCount;
+};
+
 
 struct _tlv {
     char type;
