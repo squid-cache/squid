@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.181 1999/12/30 17:36:19 wessels Exp $
+#  $Id: Makefile.in,v 1.182 2000/03/14 23:03:03 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -131,6 +131,7 @@ OBJS	 	= \
 		ipc.o \
 		ipcache.o \
 		@LEAKFINDER_OBJS@ \
+		logfile.o \
 		main.o \
 		mem.o \
 		MemPool.o \
