@@ -16,6 +16,7 @@ export CVSROOT
 rm -rf $tmpdir
 trap "rm -rf $tmpdir" 0
 
+rm -f ${tag}.out
 cvs -Q export -d $tmpdir -r $tag $package
 if [ ! -f $tmpdir/configure ]; then
 	echo "ERROR! Tag $tag not found in $package"
@@ -35,11 +36,16 @@ w
 EOS
 
 ./configure --silent
-make dist-all
+make -s dist-all
 
 cd $startdir
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.bz2 .
 
-echo ${PACKAGE}-${VERSION}-${date}.tar.gz >${tag}.out
+echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
 echo ${PACKAGE}-${VERSION}-${date}.tar.bz2 >>${tag}.out
+
+if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
+  cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $package >${PACKAGE}-${VERSION}-${date}.diff
+  echo ${PACKAGE}-${VERSION}-${date}.diff >>${tag}.out
+fi
