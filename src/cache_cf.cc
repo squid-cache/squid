@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.292 1998/07/22 20:37:01 wessels Exp $
+ * $Id: cache_cf.cc,v 1.293 1998/07/30 22:39:40 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -769,7 +769,7 @@ parse_peer(peer ** head)
 	    EBIT_SET(p->options, NEIGHBOR_MCAST_RESPONDER);
 	} else if (!strncasecmp(token, "weight=", 7)) {
 	    p->weight = atoi(token + 7);
-	} else if (!strncasecmp(token, "closest-only", 12)) {
+	} else if (!strcasecmp(token, "closest-only")) {
 	    EBIT_SET(p->options, NEIGHBOR_CLOSEST_ONLY);
 	} else if (!strncasecmp(token, "ttl=", 4)) {
 	    p->mcast.ttl = atoi(token + 4);
@@ -777,15 +777,15 @@ parse_peer(peer ** head)
 		p->mcast.ttl = 0;
 	    if (p->mcast.ttl > 128)
 		p->mcast.ttl = 128;
-	} else if (!strncasecmp(token, "default", 7)) {
+	} else if (!strcasecmp(token, "default")) {
 	    EBIT_SET(p->options, NEIGHBOR_DEFAULT_PARENT);
-	} else if (!strncasecmp(token, "round-robin", 11)) {
+	} else if (!strcasecmp(token, "round-robin")) {
 	    EBIT_SET(p->options, NEIGHBOR_ROUNDROBIN);
 #if USE_HTCP
-	} else if (!strncasecmp(token, "htcp", 4)) {
+	} else if (!strcasecmp(token, "htcp")) {
 	    EBIT_SET(p->options, NEIGHBOR_HTCP);
 #endif
-	} else if (!strncasecmp(token, "no-netdb-exchange", 17)) {
+	} else if (!strcasecmp(token, "no-netdb-exchange")) {
 	    EBIT_SET(p->options, NEIGHBOR_NO_NETDB_EXCHANGE);
 #if USE_CARP
 	} else if (!strncasecmp(token, "carp-load-factor=", 17)) {
