@@ -4182,7 +4182,6 @@ trap 'rm -fr `echo "\
 	./scripts/RunCache \
 	./scripts/RunAccel \
 	./src/Makefile \
-	./src/options.h \
 	./contrib/Makefile \
 	./snmplib/Makefile \
 	./icons/Makefile \
@@ -4306,7 +4305,6 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	./scripts/RunCache \
 	./scripts/RunAccel \
 	./src/Makefile \
-	./src/options.h \
 	./contrib/Makefile \
 	./snmplib/Makefile \
 	./icons/Makefile \
