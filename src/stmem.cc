@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.76 2003/02/21 22:50:11 robertc Exp $
+ * $Id: stmem.cc,v 1.77 2003/06/24 12:30:59 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -142,7 +142,7 @@ mem_hdr::appendNode (mem_node *aNode)
         if (!pointer) {
             /* prepend to list */
             aNode->next = head;
-            head = aNode->next;
+            head = aNode;
         } else {
             /* Append it to existing chain */
             aNode->next = pointer->next;
@@ -300,14 +300,14 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
 }
 
 bool
-mem_hdr::hasContigousContentRange(size_t start, size_t end) const
+mem_hdr::hasContigousContentRange(Range<size_t> const & range) const
 {
-    size_t currentStart = start;
+    size_t currentStart = range.start;
 
     while (mem_node *curr = getBlockContainingLocation(currentStart)) {
         currentStart = curr->end();
 
-        if (currentStart >= end)
+        if (currentStart >= range.end)
             return true;
     }
 
@@ -349,7 +349,7 @@ mem_hdr::nodeToRecieve(off_t offset)
     /* case 2: location fits within an extant node */
     mem_node *candidate = getHighestBlockBeforeLocation(offset);
 
-    /* case 2: no nodes before it */
+    /* case 3: no nodes before it */
     if (!candidate) {
         candidate = new mem_node(offset);
         appendNode (candidate);
@@ -396,4 +396,12 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
     }
 
     return true;
+}
+
+mem_hdr::mem_hdr() : head (NULL), tail(NULL), inmem_hi(0)
+{}
+
+mem_hdr::~mem_hdr()
+{
+    freeContent();
 }

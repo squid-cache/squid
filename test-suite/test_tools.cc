@@ -1,8 +1,7 @@
 
 /*
- * $Id: mem_node_test.cc,v 1.3 2003/06/24 12:31:00 robertc Exp $
+ * $Id: test_tools.cc,v 1.1 2003/06/24 12:31:02 robertc Exp $
  *
- * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,13 +30,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003 Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
-#include "mem_node.h"
 #include <iostream>
 
-/* TODO: put this in a libTest */
 void
 xassert(const char *msg, const char *file, int line)
 {
@@ -46,35 +44,77 @@ xassert(const char *msg, const char *file, int line)
 }
 time_t squid_curtime = 0;
 
-int
-main (int argc, char *argv)
+int Debug::Levels[MAX_DEBUG_SECTIONS];
+int Debug::level;
+
+static void
+_db_print_stderr(const char *format, va_list args);
+
+void
+#if STDC_HEADERS
+_db_print(const char *format,...)
 {
-    mem_node *aNode = new mem_node(0);
-    assert (aNode);
-    /* This will fail if MemPools are disabled. A knock on effect is that
-     * the store will never trim memory
-     */
-    assert (mem_node::InUseCount() == 1);
-    assert (SM_PAGE_SIZE > 50);
-    aNode->nodeBuffer.length = 45;
-    assert (aNode->start() == 0);
-    assert (aNode->end() == 45);
-    aNode->nodeBuffer.offset = 50;
-    assert (aNode->start() == 50);
-    assert (aNode->end() == 95);
-    assert (!aNode->contains(49));
-    assert (aNode->contains(50));
-    assert (aNode->contains(75));
-    assert (!aNode->contains(95));
-    assert (aNode->contains(94));
-    assert (!aNode->canAccept(50));
-    assert (aNode->canAccept(95));
-    assert (!aNode->canAccept(94));
-    aNode->nodeBuffer.length = SM_PAGE_SIZE - 1;
-    assert (aNode->canAccept (50 + SM_PAGE_SIZE - 1));
-    assert (!aNode->canAccept (50 + SM_PAGE_SIZE));
-    assert (mem_node (0) < mem_node (2));
-    assert (!(mem_node (0) < mem_node (0)));
-    assert (!(mem_node (2) < mem_node (0)));
-    return 0;
+#else
+_db_print(va_alist)
+va_dcl
+{
+    const char *format = NULL;
+#endif
+
+    LOCAL_ARRAY(char, f, BUFSIZ);
+    va_list args1;
+#if STDC_HEADERS
+
+    va_list args2;
+    va_list args3;
+#else
+#define args2 args1
+#define args3 args1
+#endif
+
+#if STDC_HEADERS
+
+    va_start(args1, format);
+
+    va_start(args2, format);
+
+    va_start(args3, format);
+
+#else
+
+    format = va_arg(args1, const char *);
+
+#endif
+
+    snprintf(f, BUFSIZ, "%s| %s",
+             "stub time", //debugLogTime(squid_curtime),
+             format);
+
+    _db_print_stderr(f, args2);
+
+    va_end(args1);
+
+#if STDC_HEADERS
+
+    va_end(args2);
+
+    va_end(args3);
+
+#endif
+}
+
+static void
+_db_print_stderr(const char *format, va_list args) {
+    /* FIXME? */
+   // if (opt_debug_stderr < Debug::level)
+   if (1 < Debug::level)
+        return;
+
+    vfprintf(stderr, format, args);
+}
+
+void
+fatal(const char *message) {
+    debug (0,0) ("Fatal: %s",message);
+    exit (1);
 }
