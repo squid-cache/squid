@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.378 2000/10/04 00:24:17 wessels Exp $
+ * $Id: protos.h,v 1.379 2000/10/04 02:18:49 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -708,7 +708,7 @@ extern void shut_down(int);
 
 
 extern void start_announce(void *unused);
-extern void sslStart(int fd, const char *, request_t *, size_t * sz);
+extern void sslStart(int fd, const char *, request_t *, size_t *, int *);
 extern void waisStart(FwdState *);
 
 /* ident.c */
