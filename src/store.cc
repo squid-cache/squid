@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.87 1996/08/23 21:25:59 wessels Exp $
+ * $Id: store.cc,v 1.88 1996/08/26 23:26:59 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1009,12 +1009,10 @@ void storeStartDeleteBehind(e)
      StoreEntry *e;
 {
     debug(20, 2, "storeStartDeleteBehind: Object: %s\n", e->key);
-    if (e->flag & DELETE_BEHIND) {
-	debug(20, 2, "storeStartDeleteBehind:\tis already in delete behind mode.\n");
+    if (e->flag & DELETE_BEHIND)
 	return;
-    }
-    debug(20, 2, "storeStartDeleteBehind:\tis now in delete behind mode.\n");
-    /* change its key, so it couldn't be found by other client */
+    debug(20, 2, "storeStartDeleteBehind:is now in delete behind mode.\n");
+    /* change its key, so it can't be found by another client */
     storeSetPrivateKey(e);
     BIT_SET(e->flag, DELETE_BEHIND);
     storeReleaseRequest(e);
@@ -1890,6 +1888,7 @@ int storeGetMemSpace(size, check_vm_number)
     int list_count = 0;
     int n_expired = 0;
     int n_released = 0;
+    int n_locked = 0;
     int i;
     static time_t last_warning = 0;
     static time_t last_check = 0;
@@ -1906,8 +1905,10 @@ int storeGetMemSpace(size, check_vm_number)
     for (e = storeGetInMemFirst(); e; e = storeGetInMemNext()) {
 	if (list_count == meta_data.store_in_mem_objects)
 	    break;
-	if (storeEntryLocked(e))
+	if (storeEntryLocked(e)) {
+	    n_locked++;
 	    continue;
+	}
 	if (squid_curtime > e->expires) {
 	    debug(20, 2, "storeGetMemSpace: Expired: %s\n", e->url);
 	    n_expired++;
@@ -1945,15 +1946,23 @@ int storeGetMemSpace(size, check_vm_number)
     debug(20, 2, "storeGetMemSpace: After freeing size: %7d bytes\n", store_mem_size);
     debug(20, 2, "storeGetMemSpace: Released:           %7d items\n", n_released);
     if (meta_data.hot_vm > store_hotobj_high) {
-	if (squid_curtime - last_warning > 10) {
+	if (squid_curtime - last_warning > 600) {
 	    debug(20, 0, "WARNING: Over hot_vm object count (%d > %d)\n",
 		meta_data.hot_vm, store_hotobj_high);
+	    debug(20, 0, "       : %d objects locked in memory\n", n_locked);
+	    debug(20, 0, "       : released %d of %d candidates\n",
+		n_released,
+		list_count);
 	    last_warning = squid_curtime;
 	}
     } else if ((store_mem_size + size) > store_mem_high) {
-	if (squid_curtime - last_warning > 10) {
+	if (squid_curtime - last_warning > 600) {
 	    debug(20, 0, "WARNING: Over store_mem high-water mark (%d > %d)\n",
 		store_mem_size + size, store_mem_high);
+	    debug(20, 0, "       : %d objects locked in memory\n", n_locked);
+	    debug(20, 0, "       : released %d of %d candidates\n",
+		n_released,
+		list_count);
 	    last_warning = squid_curtime;
 	}
     }
