@@ -1,3 +1,8 @@
+
+Squid QUICKSTART
+
+$Id: QUICKSTART,v 1.4 2001/11/19 09:02:57 adrian Exp $
+
 This document is intended only for people who want to get Squid running
 quickly It is not a substitute for the real documentation.  Squid has
 many features, but only a few of them are useful at the beginning.  Use
@@ -31,7 +36,7 @@ cache_dir /usr/local/squid/cache 100 16 256
     Add here (first number, here 100) the amount of hard disk space 
     (in megabytes) to devote to caching.
 
-acl, http_access, icp_access
+acl, http_access, icp_access, miss_access
 
     Access control lists.  This is important because it prevents people
     from stealing your network resources.  To fill in the
@@ -50,6 +55,8 @@ acl, http_access, icp_access
         icp_access  allow  allowed_hosts
         icp_access deny all
 
+	miss_access allow allowed_hosts
+	miss_access deny all
 
 cache_mgr
 
