@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.6 1999/04/18 05:44:55 wessels Exp $
+ * $Id: dns_internal.cc,v 1.7 1999/04/18 22:39:54 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -304,7 +304,7 @@ idnsCheckQueue(void *unused)
 	} else {
 	    int v = cbdataValid(q->callback_data);
 	    debug(78, 1) ("idnsCheckQueue: ID %x: giving up after %d tries\n",
-		q->nsends);
+		(int) q->id, q->nsends);
 	    cbdataUnlock(q->callback_data);
 	    if (v)
 		q->callback(q->callback_data, NULL, 0);
