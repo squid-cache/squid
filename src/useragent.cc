@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.2 1996/11/14 18:38:51 wessels Exp $
+ * $Id: useragent.cc,v 1.3 1997/01/15 18:41:50 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -69,10 +69,14 @@ useragentRotateLog(void)
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);
     LOCAL_ARRAY(char, to, MAXPATHLEN);
+    struct stat sb;
     if ((fname = Config.Log.useragent) == NULL)
 	return;
     if (strcmp(fname, "none") == 0)
 	return;
+    if (stat(fname, &sb) == 0)
+	if (S_ISREG(sb.st_mode) == 0)
+	    return;
     debug(40, 1, "useragentRotateLog: Rotating.\n");
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
