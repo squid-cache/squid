@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node_test.cc,v 1.3 2003/06/24 12:31:00 robertc Exp $
+ * $Id: mem_node_test.cc,v 1.4 2003/06/26 12:52:00 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -44,6 +44,7 @@ xassert(const char *msg, const char *file, int line)
     std::cout << "Assertion failed: (" << msg << ") at " << file << ":" << line << std::endl;
     exit (1);
 }
+
 time_t squid_curtime = 0;
 
 int
@@ -59,9 +60,11 @@ main (int argc, char *argv)
     aNode->nodeBuffer.length = 45;
     assert (aNode->start() == 0);
     assert (aNode->end() == 45);
+    assert (aNode->dataRange().size() == 45);
     aNode->nodeBuffer.offset = 50;
     assert (aNode->start() == 50);
     assert (aNode->end() == 95);
+    assert (aNode->dataRange().size() == 45);
     assert (!aNode->contains(49));
     assert (aNode->contains(50));
     assert (aNode->contains(75));
@@ -76,5 +79,7 @@ main (int argc, char *argv)
     assert (mem_node (0) < mem_node (2));
     assert (!(mem_node (0) < mem_node (0)));
     assert (!(mem_node (2) < mem_node (0)));
+    aNode->deleteSelf();
+    assert (mem_node::InUseCount() == 0);
     return 0;
 }

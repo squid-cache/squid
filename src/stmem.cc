@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.78 2003/06/24 12:42:25 robertc Exp $
+ * $Id: stmem.cc,v 1.79 2003/06/26 12:51:57 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -31,6 +31,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
@@ -41,8 +42,10 @@
 int
 mem_hdr::lowestOffset () const
 {
-    if (head)
-        return head->nodeBuffer.offset;
+    const SplayNode<mem_node *> *theStart = nodes.start();
+
+    if (theStart)
+        return theStart->data->nodeBuffer.offset;
 
     return 0;
 }
@@ -51,9 +54,10 @@ off_t
 mem_hdr::endOffset () const
 {
     off_t result = 0;
+    const SplayNode<mem_node *> *theEnd = nodes.end();
 
-    if (tail)
-        result = tail->nodeBuffer.offset + tail->nodeBuffer.length;
+    if (theEnd)
+        result = theEnd->data->dataRange().end;
 
     assert (result == inmem_hi);
 
@@ -63,22 +67,15 @@ mem_hdr::endOffset () const
 void
 mem_hdr::freeContent()
 {
-    while (head)
-        unlinkHead();
-
-    head = tail = NULL;
-
+    nodes.destroy(SplayNode<mem_node *>::DefaultFree);
     inmem_hi = 0;
 }
 
 void
-mem_hdr::unlinkHead()
+mem_hdr::unlink(mem_node *aNode)
 {
-    assert (head);
-    mem_node *aNode = head;
-    head = aNode->next;
-    aNode->next = NULL;
-    delete aNode;
+    nodes.remove (aNode, NodeCompare);
+    aNode->deleteSelf();
 }
 
 int
@@ -86,9 +83,13 @@ mem_hdr::freeDataUpto(int target_offset)
 {
     /* keep the last one to avoid change to other part of code */
 
-    while (head && head != tail &&
-            ((lowestOffset() + head->nodeBuffer.length) <= (size_t)target_offset))
-        unlinkHead ();
+    SplayNode<mem_node*> const * theStart = nodes.start();
+
+    while (theStart && theStart != nodes.end() &&
+            theStart->data->end() <= (size_t) target_offset ) {
+        unlink(theStart->data);
+        theStart = nodes.start();
+    }
 
     assert (lowestOffset () <= target_offset);
 
@@ -131,41 +132,21 @@ mem_hdr::writeAvailable(mem_node *aNode, size_t location, size_t amount, char co
 void
 mem_hdr::appendNode (mem_node *aNode)
 {
-    assert (aNode->next == NULL);
-
-    if (!head) {
-        /* The chain is empty */
-        head = tail = aNode;
-    } else {
-        mem_node *pointer = getHighestBlockBeforeLocation(aNode->nodeBuffer.offset);
-
-        if (!pointer) {
-            /* prepend to list */
-            aNode->next = head;
-            head = aNode;
-        } else {
-            /* Append it to existing chain */
-            aNode->next = pointer->next;
-            pointer->next = aNode;
-
-            if (tail == pointer)
-                tail = aNode;
-        }
-    }
+    nodes.insert (aNode, NodeCompare);
 }
 
 void
 mem_hdr::makeAppendSpace()
 {
-    if (!head) {
-        appendNode (new mem_node(0));
+    if (!nodes.size()) {
+        appendNode (new mem_node (0));
         return;
     }
 
-    if (!tail->space())
+    if (!nodes.end()->data->space())
         appendNode (new mem_node (endOffset()));
 
-    assert (tail->space());
+    assert (nodes.end()->data->space());
 }
 
 void
@@ -175,38 +156,12 @@ mem_hdr::internalAppend(const char *data, int len)
 
     while (len > 0) {
         makeAppendSpace();
-
-        int copied = appendToNode (tail, data, len);
+        int copied = appendToNode (nodes.end()->data, data, len);
         assert (copied);
 
         len -= copied;
         data += copied;
     }
-}
-
-mem_node *
-mem_hdr::getHighestBlockBeforeLocation (size_t location) const
-{
-    mem_node *result = head;
-    mem_node *prevResult = NULL;
-
-    while (result && result->end() <= location) {
-        if (!result->next)
-            return result;
-
-        prevResult = result;
-
-        result = result->next;
-
-        if (result->contains(location))
-            return result;
-    }
-
-    /* the if here is so we catch 0 offset requests */
-    if (result && result->contains(location))
-        return result;
-    else
-        return prevResult;
 }
 
 /* returns a mem_node that contains location..
@@ -215,12 +170,14 @@ mem_hdr::getHighestBlockBeforeLocation (size_t location) const
 mem_node *
 mem_hdr::getBlockContainingLocation (size_t location) const
 {
-    mem_node *result = getHighestBlockBeforeLocation(location);
+    mem_node target (location);
+    target.nodeBuffer.length = 1;
+    mem_node *const *result = nodes.find (&target, NodeCompare);
 
-    if (!result || !result->contains(location))
-        return NULL;
+    if (result)
+        return *result;
 
-    return result;
+    return NULL;
 }
 
 size_t
@@ -255,8 +212,11 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
 
     debug(19, 6) ("memCopy: offset %ld: size %u\n", (long int) offset, size);
 
-    if (head == NULL)
+    if (nodes.size() == 0) {
+        /* we shouldn't ever ask for absent offsets */
+        assert (0);
         return 0;
+    }
 
     /* RC: the next assert is nearly useless */
     assert(size > 0);
@@ -293,7 +253,7 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
 
         bytes_to_go -= bytes_to_copy;
 
-        p = p->next;
+        p = getBlockContainingLocation(location);
     }
 
     return size - bytes_to_go;
@@ -317,23 +277,10 @@ mem_hdr::hasContigousContentRange(Range<size_t> const & range) const
 bool
 mem_hdr::unionNotEmpty(StoreIOBuffer const &candidate)
 {
-    mem_node *low = getHighestBlockBeforeLocation(candidate.offset);
     assert (candidate.offset >= 0);
-
-    if (low && low->end() > (size_t) candidate.offset)
-        return true;
-
-    mem_node *high = getHighestBlockBeforeLocation(candidate.offset + candidate.length);
-
-    /* trivial case - we are writing completely beyond the end of the current object */
-    if (low == high)
-        return false;
-
-    if (high && high->start() < candidate.offset + candidate.length &&
-            !high->end() > candidate.offset)
-        return true;
-
-    return false;
+    mem_node target(candidate.offset);
+    target.nodeBuffer.length = candidate.length;
+    return nodes.find (&target, NodeCompare);
 }
 
 mem_node *
@@ -341,22 +288,24 @@ mem_hdr::nodeToRecieve(off_t offset)
 {
     /* case 1: Nothing in memory */
 
-    if (!head) {
+    if (!nodes.size()) {
         appendNode (new mem_node(offset));
-        return head;
+        return nodes.start()->data;
     }
 
+    mem_node *candidate = NULL;
     /* case 2: location fits within an extant node */
-    mem_node *candidate = getHighestBlockBeforeLocation(offset);
 
-    /* case 3: no nodes before it */
-    if (!candidate) {
-        candidate = new mem_node(offset);
-        appendNode (candidate);
-        assert (candidate->canAccept(offset));
+    if (offset > 0) {
+        mem_node search (offset - 1);
+        search.nodeBuffer.length = 1;
+        mem_node *const *leadup =  nodes.find (&search, NodeCompare);
+
+        if (leadup)
+            candidate = *leadup;
     }
 
-    if (candidate->canAccept(offset))
+    if (candidate && candidate->canAccept(offset))
         return candidate;
 
     /* candidate can't accept, so we need a new node */
@@ -401,10 +350,50 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
     return true;
 }
 
-mem_hdr::mem_hdr() : head (NULL), tail(NULL), inmem_hi(0)
+mem_hdr::mem_hdr() : inmem_hi(0)
 {}
 
 mem_hdr::~mem_hdr()
 {
     freeContent();
+}
+
+/* splay of mem nodes:
+ * conditions:
+ * a = b if a.intersection(b).size > 0;
+ * a < b if a < b
+ */
+int
+mem_hdr::NodeCompare(mem_node * const &left, mem_node * const &right)
+{
+    // possibly Range can help us at some point.
+
+    if (left->dataRange().intersection(right->dataRange()).size() > 0)
+        return 0;
+
+    return *left < *right ? -1 : 1;
+}
+
+void
+mem_hdr::dump() const
+{
+    debug(20, 1) ("mem_hdr: %p nodes.start() %p\n", this, nodes.start());
+    debug(20, 1) ("mem_hdr: %p nodes.end() %p\n", this, nodes.end());
+}
+
+size_t
+mem_hdr::size() const
+{
+    return nodes.size();
+}
+
+mem_node const *
+mem_hdr::start() const
+{
+    const SplayNode<mem_node *> * result = nodes.start();
+
+    if (result)
+        return result->data;
+
+    return NULL;
 }

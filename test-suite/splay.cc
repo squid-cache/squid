@@ -1,5 +1,5 @@
 /*
- * $Id: splay.cc,v 1.4 2003/06/24 12:31:00 robertc Exp $
+ * $Id: splay.cc,v 1.5 2003/06/26 12:52:00 robertc Exp $
  *
  * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
  * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl
@@ -17,12 +17,22 @@
 #include <unistd.h>
 #endif
 
+#define assert(X) {if (!(X)) exit (1);}
 #include "splay.h"
+#undef assert
 #include "util.h"
 
-typedef struct {
+
+class intnode
+{
+
+public:
+    intnode() : i(0){}
+
+    intnode (int anInt) : i (anInt) {}
+
     int i;
-} intnode;
+};
 
 int
 compareintvoid(void * const &a, void * const &n)
@@ -40,7 +50,8 @@ compareint(intnode * const &a, intnode * const &b)
 
 class SplayCheck
 {
-  public:
+
+public:
     static void BeginWalk();
     static int LastValue;
     static bool ExpectedFail;
@@ -70,13 +81,15 @@ void
 SplayCheck::CheckNode(intnode const &A)
 {
     if (LastValue > A.i) {
-	/* failure */
-	if (!ExpectedFail)
-	    exit (1);
+        /* failure */
+
+        if (!ExpectedFail)
+            exit (1);
     } else
-	/* success */
-	if (ExpectedFail)
-	    exit (1);
+        /* success */
+        if (ExpectedFail)
+            exit (1);
+
     LastValue = A.i;
 }
 
@@ -113,69 +126,77 @@ compareintref(intnode const &a, intnode const &b)
 
 void
 destintref (intnode &)
-{
-}
+{}
 
 int
 main(int argc, char *argv[])
 {
-      {
-    int i;
-    intnode *I;
-    /* test void * splay containers */
-    splayNode *top = NULL;
-    srandom(time(NULL));
-    for (i = 0; i < 100; i++) {
-	I = (intnode *)xcalloc(sizeof(intnode), 1);
-	I->i = random();
-	top = splay_insert(I, top, compareintvoid);
+    {
+        int i;
+        intnode *I;
+        /* test void * splay containers */
+        splayNode *top = NULL;
+        srandom(time(NULL));
+
+        for (i = 0; i < 100; i++) {
+            I = (intnode *)xcalloc(sizeof(intnode), 1);
+            I->i = random();
+            top = splay_insert(I, top, compareintvoid);
+        }
+
+        SplayCheck::BeginWalk();
+        splay_walk(top, SplayCheck::WalkVoid, NULL);
+
+        SplayCheck::BeginWalk();
+        top->walk(SplayCheck::WalkVoid, NULL);
+        top->destroy(destintvoid);
+        /* check we don't segfault on NULL splay calls */
+        top = NULL;
+        top->splay(NULL, compareintvoid);
     }
-    SplayCheck::BeginWalk();
-    splay_walk(top, SplayCheck::WalkVoid, NULL);
-    
-    SplayCheck::BeginWalk();
-    top->walk(SplayCheck::WalkVoid, NULL);
-    top->destroy(destintvoid);
-    /* check we don't segfault on NULL splay calls */
-    top = NULL;
-    top->splay(NULL, compareintvoid);
-      }
+
     /* test typesafe splay containers */
-      {
-    /* intnode* */
-    SplayNode<intnode *> *safeTop = NULL;
-    for ( int i = 0; i < 100; i++) {
-	intnode *I;
-	I = new intnode;
-	I->i = random();
-	safeTop = safeTop->insert(I, compareint);
+    {
+        /* intnode* */
+        SplayNode<intnode *> *safeTop = NULL;
+
+        for ( int i = 0; i < 100; i++)
+        {
+            intnode *I;
+            I = new intnode;
+            I->i = random();
+            safeTop = safeTop->insert(I, compareint);
+        }
+
+        SplayCheck::BeginWalk();
+        safeTop->walk(SplayCheck::WalkNode, NULL);
+
+        safeTop->destroy(destint);
+        /* check we don't segfault on NULL splay calls */
+        safeTop = NULL;
+        safeTop->splay(NULL, compareint);
     }
-    SplayCheck::BeginWalk();
-    safeTop->walk(SplayCheck::WalkNode, NULL);
-    
-    safeTop->destroy(destint);
-    /* check we don't segfault on NULL splay calls */
-    safeTop = NULL;
-    safeTop->splay(NULL, compareint);
-      }
-      {
-    /* intnode */
-    SplayNode<intnode> *safeTop = NULL;
-    for (int i = 0; i < 100; i++) {
-	intnode I;
-	I.i = random();
-	safeTop = safeTop->insert(I, compareintref);
+    {
+        /* intnode */
+        SplayNode<intnode> *safeTop = NULL;
+
+        for (int i = 0; i < 100; i++)
+        {
+            intnode I;
+            I.i = random();
+            safeTop = safeTop->insert(I, compareintref);
+        }
+
+        SplayCheck::BeginWalk();
+        safeTop->walk(SplayCheck::WalkNodeRef, NULL);
+
+        safeTop->destroy(destintref);
+        /* check we don't segfault on NULL splay calls */
+        safeTop = NULL;
+        safeTop->splay(intnode(), compareintref);
+        SplayCheck::BeginWalk();
+        safeTop->walk(SplayCheck::WalkNodeRef, NULL);
     }
-    SplayCheck::BeginWalk();
-    safeTop->walk(SplayCheck::WalkNodeRef, NULL);
-    
-    safeTop->destroy(destintref);
-    /* check we don't segfault on NULL splay calls */
-    safeTop = NULL;
-    safeTop->splay(intnode(), compareintref);
-    SplayCheck::BeginWalk();
-    safeTop->walk(SplayCheck::WalkNodeRef, NULL);
-}
     /* check the check routine */
     SplayCheck::BeginWalk();
     intnode I;
@@ -185,33 +206,73 @@ main(int argc, char *argv[])
     I.i = 0;
     SplayCheck::ExpectedFail = true;
     SplayCheck::WalkNodeRef(I, NULL);
-    
-{
-    /* check for begin() */
-    SplayNode<intnode> *safeTop = NULL;
-    if (safeTop->start() != NULL)
-	exit (1);
-    for (int i = 0; i < 100; i++) {
-	intnode I;
-	I.i = random();
-	if (i > 50)
-	    safeTop = safeTop->insert(I, compareintref);
-    }
+
     {
-      intnode I;
-      I.i = 50;
-      safeTop = safeTop->insert (I, compareintref);
+        /* check for begin() */
+        SplayNode<intnode> *safeTop = NULL;
+
+        if (safeTop->start() != NULL)
+            exit (1);
+
+        if (safeTop->end() != NULL)
+            exit (1);
+
+        for (int i = 0; i < 100; i++) {
+            intnode I;
+            I.i = random();
+
+            if (I.i > 50 && I.i < 10000000)
+                safeTop = safeTop->insert(I, compareintref);
+        }
+
+        {
+            intnode I;
+            I.i = 50;
+            safeTop = safeTop->insert (I, compareintref);
+            I.i = 10000000;
+            safeTop = safeTop->insert (I, compareintref);
+        }
+
+        if (!safeTop->start())
+            exit (1);
+
+        if (safeTop->start()->data.i != 50)
+            exit (1);
+
+        if (!safeTop->end())
+            exit (1);
+
+        if (safeTop->end()->data.i != 10000000)
+            exit (1);
+
+        safeTop->destroy(destintref);
     }
-    if (!safeTop->start())
-      exit (1);
-    if (safeTop->start()->data.i != 50)
-      exit (1);
-    safeTop->destroy(destintref);
-}
+
     {
-      Splay<intnode *> aSplay;
-      if (aSplay.start() != NULL)
-	  exit (1);
+        Splay<intnode *> aSplay;
+
+        if (aSplay.start() != NULL)
+            exit (1);
+
+        if (aSplay.size() != 0)
+            exit (1);
+
+        aSplay.insert (new intnode(5), compareint);
+
+        if (aSplay.start() == NULL)
+            exit (1);
+
+        if (aSplay.size() != 1)
+            exit (1);
+
+        aSplay.destroy(destint);
+
+        if (aSplay.start() != NULL)
+            exit (1);
+
+        if (aSplay.size() != 0)
+            exit (1);
     }
+
     return 0;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.569 2003/06/24 12:42:27 robertc Exp $
+ * $Id: store.cc,v 1.570 2003/06/26 12:51:58 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1415,7 +1415,7 @@ storeKeepInMemory(const StoreEntry * e)
     if (mem == NULL)
         return 0;
 
-    if (mem->data_hdr.head == NULL)
+    if (mem->data_hdr.size() == 0)
         return 0;
 
     return mem->inmem_lo == 0;

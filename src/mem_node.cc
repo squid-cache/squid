@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.cc,v 1.3 2003/06/24 12:30:59 robertc Exp $
+ * $Id: mem_node.cc,v 1.4 2003/06/26 12:51:57 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -57,7 +57,13 @@ mem_node::operator delete (void *address)
     memPoolFree(pool, address);
 }
 
-mem_node::mem_node(off_t offset):nodeBuffer(0,offset,data), next (NULL)
+void
+mem_node::deleteSelf() const
+{
+    delete this;
+}
+
+mem_node::mem_node(off_t offset):nodeBuffer(0,offset,data)
 {}
 
 mem_node::~mem_node()
@@ -89,6 +95,12 @@ size_t
 mem_node::end() const
 {
     return nodeBuffer.offset + nodeBuffer.length;
+}
+
+Range<size_t>
+mem_node::dataRange() const
+{
+    return Range<size_t> (start(), end());
 }
 
 size_t

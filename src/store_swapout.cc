@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.94 2003/03/04 01:40:30 robertc Exp $
+ * $Id: store_swapout.cc,v 1.95 2003/06/26 12:51:58 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -121,10 +121,12 @@ doPages(StoreEntry *anEntry)
 
         if (mem->swapout.memnode == NULL) {
             /* We need to swap out the first page */
-            mem->swapout.memnode = mem->data_hdr.head;
+            mem->swapout.memnode = const_cast<mem_node *>(mem->data_hdr.start());
         } else {
             /* We need to swap out the next page */
-            mem->swapout.memnode = mem->swapout.memnode->next;
+            /* 20030636 RBC - we don't have ->next anymore.
+             * But we do have the next location */
+            mem->swapout.memnode = mem->data_hdr.getBlockContainingLocation (mem->swapout.memnode->end());
         }
 
         /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.3 2003/06/24 12:30:59 robertc Exp $
+ * $Id: mem_node.h,v 1.4 2003/06/26 12:51:57 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #define SQUID_MEM_NODE_H
 
 #include "StoreIOBuffer.h"
+#include "Range.h"
 
 class mem_node
 {
@@ -45,17 +46,18 @@ public:
 
     void operator delete (void *);
     void *operator new (size_t);
+    void deleteSelf() const;
     mem_node(off_t);
     ~mem_node();
     size_t space() const;
     size_t start() const;
     size_t end() const;
+    Range<size_t> dataRange() const;
     bool contains (size_t const &location) const;
     bool canAccept (size_t const &location) const;
     bool operator < (mem_node const & rhs) const;
     /* public */
     StoreIOBuffer nodeBuffer;
-    mem_node *next;
     /* Private */
     char data[SM_PAGE_SIZE];
 
