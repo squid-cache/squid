@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.243 2002/09/16 12:50:43 robertc Exp $
+#  $Id: Makefile.in,v 1.244 2002/09/24 10:49:11 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -154,6 +154,8 @@ makesnmplib = @makesnmplib@
 @ENABLE_WIN32SPECIFIC_TRUE@WIN32SOURCE = win32.c
 @ENABLE_WIN32SPECIFIC_FALSE@WIN32SOURCE = 
 
+AM_CFLAGS = -Werror -Wall
+
 SUBDIRS = fs repl auth
 
 INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include
@@ -259,6 +261,8 @@ squid_SOURCES = \
 	internal.c \
 	ipc.c \
 	ipcache.c \
+	IPInterception.c \
+	IPInterception.h \
 	$(LEAKFINDERSOURCE) \
 	logfile.c \
 	main.c \
@@ -482,15 +486,16 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
 	icp_v3.$(OBJEXT) ident.$(OBJEXT) internal.$(OBJEXT) \
-	ipc.$(OBJEXT) ipcache.$(OBJEXT) $(am__objects_6) \
-	logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) MemBuf.$(OBJEXT) \
-	mime.$(OBJEXT) multicast.$(OBJEXT) neighbors.$(OBJEXT) \
-	net_db.$(OBJEXT) Packer.$(OBJEXT) pconn.$(OBJEXT) \
-	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
-	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
-	$(am__objects_7) ssl.$(OBJEXT) $(am__objects_8) stat.$(OBJEXT) \
-	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
-	store.$(OBJEXT) store_io.$(OBJEXT) store_client.$(OBJEXT) \
+	ipc.$(OBJEXT) ipcache.$(OBJEXT) IPInterception.$(OBJEXT) \
+	$(am__objects_6) logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
+	MemBuf.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
+	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
+	send-announce.$(OBJEXT) $(am__objects_7) ssl.$(OBJEXT) \
+	$(am__objects_8) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	String.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
+	store_io.$(OBJEXT) store_client.$(OBJEXT) \
 	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
@@ -523,7 +528,8 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/HttpHdrRange.Po $(DEPDIR)/HttpHeader.Po \
 @AMDEP_TRUE@	$(DEPDIR)/HttpHeaderTools.Po $(DEPDIR)/HttpMsg.Po \
 @AMDEP_TRUE@	$(DEPDIR)/HttpReply.Po $(DEPDIR)/HttpRequest.Po \
-@AMDEP_TRUE@	$(DEPDIR)/HttpStatusLine.Po $(DEPDIR)/MemBuf.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpStatusLine.Po \
+@AMDEP_TRUE@	$(DEPDIR)/IPInterception.Po $(DEPDIR)/MemBuf.Po \
 @AMDEP_TRUE@	$(DEPDIR)/Packer.Po $(DEPDIR)/StatHist.Po \
 @AMDEP_TRUE@	$(DEPDIR)/String.Po $(DEPDIR)/access_log.Po \
 @AMDEP_TRUE@	$(DEPDIR)/acl.Po $(DEPDIR)/asn.Po \
@@ -719,6 +725,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpReply.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpRequest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpStatusLine.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/IPInterception.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/MemBuf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Packer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StatHist.Po@am__quote@
