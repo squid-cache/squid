@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.35 1996/11/15 00:36:17 wessels Exp $
+ * $Id: fqdncache.cc,v 1.36 1996/11/15 07:51:07 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -171,6 +171,7 @@ static char fqdncache_status_char[] =
 
 static long fqdncache_low = 180;
 static long fqdncache_high = 200;
+static const char *const w_space = " \t\n\r";
 
 static void
 fqdncacheEnqueue(fqdncache_entry * f)

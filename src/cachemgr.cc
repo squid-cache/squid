@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.44 1996/11/15 00:36:15 wessels Exp $
+ * $Id: cachemgr.cc,v 1.45 1996/11/15 07:51:06 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -299,7 +299,7 @@ static const char *const op_cmds_descr[] =
 static int hasTables = FALSE;
 
 static const char *script_name = "/cgi-bin/cachemgr.cgi";
-static const char *const w_space = " \t\n";
+static const char *const w_space = " \t\n\r";
 static const char *progname = NULL;
 static time_t now;
 

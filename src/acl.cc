@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.63 1996/11/15 00:36:12 wessels Exp $
+ * $Id: acl.cc,v 1.64 1996/11/15 07:51:04 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -48,6 +48,7 @@ struct _acl_access *DelayAccessList = NULL;
 
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
+static const char *const w_space = " \t\n\r";	/* Jasper sez so */
 
 static void aclDestroyAclList _PARAMS((struct _acl_list * list));
 static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
