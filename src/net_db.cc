@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.57 1998/01/02 21:55:05 wessels Exp $
+ * $Id: net_db.cc,v 1.58 1998/01/06 22:44:03 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -158,11 +158,12 @@ netdbPurgeLRU(void)
     int list_count = 0;
     int removed = 0;
     list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
-    for (n = hash_first(addr_table); n; n = hash_next(addr_table)) {
+    n = (netdbEntry *) hash_first(addr_table);
+    while (n != NULL) {
+	assert(list_count < meta_data.netdb_addrs);
 	*(list + list_count) = n;
 	list_count++;
-	if (list_count > meta_data.netdb_addrs)
-	    fatal_dump("netdbPurgeLRU: list_count overflow");
+        n = (netdbEntry *) hash_next(addr_table);
     }
     qsort((char *) list,
 	list_count,
@@ -563,8 +564,11 @@ netdbDump(StoreEntry * sentry)
 	"Hostnames");
     list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
     i = 0;
-    for (n = hash_first(addr_table); n; n = hash_next(addr_table))
+    n = (netdbEntry *) hash_first(addr_table);
+    while (n != NULL) {
 	*(list + i++) = n;
+        n = (netdbEntry *) hash_next(addr_table);
+    }
     if (i != meta_data.netdb_addrs)
 	debug(37, 0) ("WARNING: netdb_addrs count off, found %d, expected %d\n",
 	    i, meta_data.netdb_addrs);
@@ -674,8 +678,7 @@ var_netdb_entry(struct variable *vp, oid * name, int *length, int exact, int *va
 
     debug(49, 5) ("snmp var_netdb_entry: hey, here we are.\n");
 #ifdef USE_ICMP
-    n = hash_first(addr_table);
-
+    n = (netdbEntry *) hash_first(addr_table);
     while (n != NULL) {
 	newname[vp->namelen] = cnt++;
 	result = compare(name, *length, newname, (int) vp->namelen + 1);
