@@ -69,6 +69,7 @@ storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
 	xfree(SwapDirs);
 	SwapDirs = tmp;
     }
+    debug(20,1,"Creating Swap Dir #%d in %s\n", ncache_dirs+1, path);
     tmp = SwapDirs + ncache_dirs;
     tmp->path = xstrdup(path);
     tmp->max_size = size;
@@ -78,6 +79,21 @@ storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
     tmp->map = file_map_create(MAX_FILES_PER_DIR);
     tmp->swaplog_fd = -1;
     return ++ncache_dirs;
+}
+
+void
+storeReconfigureSwapDisk(const char *path, int size, int l1, int l2, int read_only)
+{
+    int i;
+    for (i = 0; i < ncache_dirs; i++) {
+	if (!strcmp(path, SwapDirs[i].path))
+	    break;
+    }
+    if (i == ncache_dirs)
+	return;
+    SwapDirs[i].max_size = size;
+    SwapDirs[i].read_only = read_only;
+    /* ignore the rest */
 }
 
 static int
