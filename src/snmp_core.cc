@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.52 2002/02/13 00:50:34 hno Exp $
+ * $Id: snmp_core.cc,v 1.53 2002/02/13 00:57:18 hno Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -525,7 +525,7 @@ snmpDecodePacket(snmp_request_t * rq)
 	snmp_free_pdu(PDU);
     }
     if (Community)
-	free(Community);
+	xfree(Community);
 }
 
 /*
