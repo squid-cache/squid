@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.21 2001/05/08 15:24:36 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.22 2001/05/08 15:34:45 hno Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -797,7 +797,7 @@ storeCossDirDump(StoreEntry * entry, SwapDir * s)
 {
     storeAppendPrintf(entry, " %d",
 	s->max_size >> 20);
-    dump_cachedir_options(entry, NULL, sd);
+    dump_cachedir_options(entry, NULL, s);
 }
 
 #if OLD_UNUSED_CODE
