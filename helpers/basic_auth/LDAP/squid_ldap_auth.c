@@ -15,6 +15,9 @@
  * 
  * Dependencies: You need to get the OpenLDAP libraries
  * from http://www.openldap.org
+ *
+ * If you want to make a TLS enabled connection you will also need the
+ * OpenSSL libraries linked into openldap. See http://www.openssl.org/
  * 
  * License: squid_ldap_auth is free software; you can redistribute it 
  * and/or modify it under the terms of the GNU General Public License 
@@ -22,6 +25,8 @@
  * or (at your option) any later version.
  *
  * Changes:
+ * 2001-12-12: Michael Cunningham <m.cunningham@xpedite.com>
+               - Added TLS support and partial ldap version 3 support. 
  * 2001-10-04: Henrik Nordstrom <hno@squid-cache.org>
  *             - Be consistent with the other helpers in how
  *               spaces are managed. If there is space characters
@@ -63,6 +68,10 @@ static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int noreferrals = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
+
+/* Added for TLS support and version 3 */
+static int use_tls = 0;
+static int version = -1;
 
 static int checkLDAP(LDAP * ld, char *userid, char *password);
 
@@ -127,6 +136,7 @@ main(int argc, char **argv)
 	switch (option) {
 	case 'P':
 	case 'R':
+	case 'z':
 	    break;
 	default:
 	    if (strlen(argv[1]) > 2 || argc <= 2) {
@@ -202,6 +212,28 @@ main(int argc, char **argv)
 	case 'R':
 	    noreferrals = !noreferrals;
 	    break;
+	case 'v':
+	    switch( atoi(value) ) {
+	    case 2:
+		version = LDAP_VERSION2;
+		break;
+	    case 3:
+		version = LDAP_VERSION3;
+		break;
+	    default:
+		fprintf( stderr, "Protocol version should be 2 or 3\n");
+		exit(1);
+	    }
+	    break;
+	case 'Z':
+	    if ( version == LDAP_VERSION2 ) {
+		fprintf( stderr, "TLS (-Z) is incompatible with version %d\n",
+			version);
+		exit(1);
+	    }
+	    version = LDAP_VERSION3;
+	    use_tls = 1;
+	    break;
 	default:
 	    fprintf(stderr, "squid_ldap_auth: ERROR: Unknown command line option '%c'\n", option);
 	    exit(1);
@@ -238,6 +270,8 @@ main(int argc, char **argv)
 	fprintf(stderr, "\t-P\t\t\tpersistent LDAP connection\n");
 	fprintf(stderr, "\t-R\t\t\tdo not follow referrals\n");
 	fprintf(stderr, "\t-a never|always|search|find\n\t\t\t\twhen to dereference aliases\n");
+	fprintf(stderr, "\t-v 1|2\t\t\tLDAP version\n");
+	fprintf(stderr, "\t-Z\t\t\TLS encrypt the LDAP connection, requires LDAP version 3\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "\tIf no search filter is specified, then the dn <userattr>=user,basedn\n\twill be used (same as specifying a search filter of '<userattr>=',\n\tbut quicker as as there is no need to search for the user DN)\n\n");
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd options\n\n");
@@ -259,6 +293,24 @@ main(int argc, char **argv)
 		    ldapServer, port);
 		exit(1);
 	    }
+
+        if (version == -1 ) {
+                version = LDAP_VERSION2;
+        }
+
+        if( ldap_set_option( ld, LDAP_OPT_PROTOCOL_VERSION, &version )
+                != LDAP_OPT_SUCCESS )
+        {
+                fprintf( stderr, "Could not set LDAP_OPT_PROTOCOL_VERSION %d\n",
+                        version );
+                exit(1);
+        }
+
+        if ( use_tls && ( version == LDAP_VERSION3 ) && ( ldap_start_tls_s( ld, NULL, NULL ) == LDAP_SUCCESS )) {
+                fprintf( stderr, "Could not Activate TLS connection\n");
+                exit(1);
+        }
+
 	    squid_ldap_set_referrals(ld, !noreferrals);
 	    squid_ldap_set_aliasderef(ld, aliasderef);
 	}
