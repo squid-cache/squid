@@ -43,6 +43,7 @@ struct _acl_arp_data {
     acl_arp_data *next;
 #endif
 };
+
 #endif
 
 struct _String {
@@ -95,6 +96,7 @@ typedef struct _usecEntry {
     int authWriteView;
     struct _usecEntry *next;
 } usecEntry;
+
 #endif
 
 struct _acl {
@@ -306,6 +308,7 @@ struct _SquidConfig {
 	int announce;
 	int accel_with_proxy;
 	int mem_pools;
+	int test_reachability;
     } onoff;
     struct _acl *aclList;
     struct {
