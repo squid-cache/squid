@@ -1,5 +1,5 @@
 /*
- * $Id: MemPool.c,v 1.4 1998/02/25 17:39:46 rousskov Exp $
+ * $Id: MemPool.c,v 1.5 1998/02/26 17:47:59 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -52,26 +52,26 @@ Synopsis:
 	 * pre-allocated objects and 10% for dynamic stack.  Any of the first two
 	 * parameters can be 0. If name is NULL "anonymous" will be used instead
 	 */
-	MemPool *mp1 = memPoolCreate(objCnt, objCnt/10, objSz, "urls");
+MemPool * mp1 = memPoolCreate(objCnt, objCnt / 10, objSz, "urls");
 
 	/*
 	 * getting a new object from a pool; object buffer is initialized with 0s
 	 */
-	void *buf = memPoolGetObj(mp1);
+void *buf = memPoolGetObj(mp1);
 
 	/*
 	 * returning an object back
 	 */
-	memPoolPutObj(mp1, buf);
+memPoolPutObj(mp1, buf);
 
 	/*
 	 * accounting: generate report as an ASCII string
 	 * warning: static buffer is used, strdup your copy!
 	 */
-	char *report = xstrdup(memPoolReport());
+char *report = xstrdup(memPoolReport());
 
 	/* destroy your pools when done playing! */
-	memPoolDestroy(mp1);
+memPoolDestroy(mp1);
 
 #endif /* synopsis */
 
@@ -91,18 +91,18 @@ memPoolCreate(size_t preallocCnt, size_t dynStackCnt, size_t objSz, const char *
     mp->buf = xcalloc(preallocCnt, objSz);
     mp->obj_size = objSz;
     mp->name = xstrdup(poolName ? poolName : "anonymous");
-    mp->_buf_end = mp->buf + objSz*preallocCnt; /* internal, never dereference this! */
+    mp->_buf_end = mp->buf + objSz * preallocCnt;	/* internal, never dereference this! */
     mp->static_stack = stackCreate(preallocCnt);
     mp->dynamic_stack = stackCreate(dynStackCnt);
     /* other members are initialized with 0 because of calloc() */
     /* push all pre-allocated memory on stack because it is currently free */
-    while(preallocCnt-- > 0)
-	stackPush(mp->static_stack, mp->buf + objSz*preallocCnt);
+    while (preallocCnt-- > 0)
+	stackPush(mp->static_stack, mp->buf + objSz * preallocCnt);
     return mp;
 }
 
 void
-memPoolDestroy(MemPool *mp)
+memPoolDestroy(MemPool * mp)
 {
     assert(mp);
     /* could also warn if some objects are left */
@@ -120,13 +120,12 @@ memPoolDestroy(MemPool *mp)
  * never fails
  */
 void *
-memPoolGetObj(MemPool *mp)
+memPoolGetObj(MemPool * mp)
 {
     assert(mp);
     if (mp->static_stack->count)
 	return stackPop(mp->static_stack);
-    else
-    if (mp->dynamic_stack->count)
+    else if (mp->dynamic_stack->count)
 	return stackPop(mp->dynamic_stack);
     /* have to alloc, monitor high whater mark */
     if (++mp->alloc_count - mp->free_count > mp->alloc_high_water)
@@ -139,30 +138,30 @@ memPoolGetObj(MemPool *mp)
  * corresponding stack is full
  */
 void
-memPoolPutObj(MemPool *mp, void *obj)
+memPoolPutObj(MemPool * mp, void *obj)
 {
     assert(mp);
     /* static object? */
-    if (mp->buf <= (char*)obj && mp->_buf_end > (char*)obj) {
-	assert(!mp->static_stack->is_full); /* never full if we got here! */
+    if (mp->buf <= (char *) obj && mp->_buf_end > (char *) obj) {
+	assert(!mp->static_stack->is_full);	/* never full if we got here! */
 	stackPush(mp->static_stack, obj);
     } else
-    /* dynamic object, but stack may be full */
+	/* dynamic object, but stack may be full */
     if (!mp->dynamic_stack->is_full) {
 	assert(mp->alloc_count);
 	stackPush(mp->dynamic_stack, obj);
     } else {
-        /* free-ing is the last option */
+	/* free-ing is the last option */
 	mp->free_count++;
 	assert(mp->free_count <= mp->alloc_count);
-	xfree(obj); /* do this after assert */
+	xfree(obj);		/* do this after assert */
     }
 }
 
 const char *
-memPoolReport(MemPool *mp)
+memPoolReport(MemPool * mp)
 {
-    static char buf[1024]; /* we do not use LOCALL_ARRAY in squid/lib, do we? */
+    static char buf[1024];	/* we do not use LOCALL_ARRAY in squid/lib, do we? */
     assert(mp);
 
     snprintf(buf, sizeof(buf),
@@ -171,7 +170,7 @@ memPoolReport(MemPool *mp)
 	mp->name,
 	mp->obj_size,
 	mp->static_stack->capacity,
-	(double)(mp->obj_size*mp->static_stack->capacity)/1024.,
+	(double) (mp->obj_size * mp->static_stack->capacity) / 1024.,
 	mp->dynamic_stack->capacity,
 	mp->static_stack->capacity + mp->static_stack->pop_count - mp->static_stack->push_count,
 	mp->alloc_count - mp->free_count,
