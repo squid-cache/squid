@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.188 2000/06/08 18:05:35 hno Exp $
+# $Id: cf.data.pre,v 1.189 2000/06/25 22:41:21 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -3183,6 +3183,15 @@ DOC_START
 	default, Squid uses persistent connections (when allowed)
 	with its clients and servers.  You can use these options to
 	disable persistent connections with clients and/or servers.
+DOC_END
+
+NAME: extension_methods
+TYPE: wordlist
+LOC: Config.ext_methods
+DEFAULT: none
+DOC_START
+	Squid only knows about standardized HTTP request methods.
+	You can add up to 20 additional "extension" methods here.
 DOC_END
 
 EOF
