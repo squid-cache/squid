@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.4 2003/02/05 10:37:14 robertc Exp $
+#  $Id: Makefile.am,v 1.5 2003/04/22 01:37:44 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -11,13 +11,13 @@ AM_CXXFLAGS = -Werror -Wall
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
 
-EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2
+EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
 
 ## Sort by dependencies - test lowest layers first
-TESTS = refcount splay mem_node_test http_range_test
+TESTS = rfc1738 refcount splay mem_node_test http_range_test
 
 ## Sort by dependencies - test lowest layers first
-check_PROGRAMS= refcount splay mem_node_test http_range_test
+check_PROGRAMS= rfc1738 refcount splay mem_node_test http_range_test
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
 mem_node_test_SOURCES = mem_node_test.cc
@@ -37,6 +37,8 @@ http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
 		$(DEBUG_OBJECTS) $(LDADD)
 
 splay_SOURCES = splay.cc
+
+rfc1738_SOURCES = rfc1738.cc
 
 ## membanger won't link today. Bitrot..
 ##CC	= gcc
