@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.265 1998/07/22 21:07:37 wessels Exp $
+ * $Id: stat.cc,v 1.266 1998/07/22 21:24:42 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -499,6 +499,8 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tCPU Time:\t%.3f seconds\n", cputime);
     storeAppendPrintf(sentry, "\tCPU Usage:\t%.2f%%\n",
 	dpercent(cputime, runtime));
+    storeAppendPrintf(sentry, "\tCPU Usage, 5 minute avg:\t%.2f%%\n",
+	stat5minCPUUsage());
     storeAppendPrintf(sentry, "\tMaximum Resident Size: %d KB\n",
 	rusage_maxrss(&rusage));
     storeAppendPrintf(sentry, "\tPage faults with physical i/o: %d\n",
@@ -548,8 +550,8 @@ info_get(StoreEntry * sentry)
 #endif /* HAVE_EXT_MALLINFO */
 #endif /* HAVE_MALLINFO */
     storeAppendPrintf(sentry, "Memory accounted for:\n");
-    storeAppendPrintf(sentry, "\tTotal accounted:       %6d KB %d%%\n",
-	memTotalAllocated());
+    storeAppendPrintf(sentry, "\tTotal accounted:       %6d KB\n",
+	memTotalAllocated()>>10);
 
     storeAppendPrintf(sentry, "File descriptor usage for %s:\n", appname);
     storeAppendPrintf(sentry, "\tMaximum number of file descriptors:   %4d\n",
@@ -732,6 +734,7 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     storeAppendPrintf(sentry, "wall_time = %f seconds\n", dt);
     storeAppendPrintf(sentry, "cpu_usage = %f%%\n", dpercent(ct, dt));
 }
+
 
 void
 statInit(void)
@@ -1175,6 +1178,12 @@ stat5minClientRequests(void)
     return Counter.client_http.requests - CountHist[5].client_http.requests;
 }
 
+double
+stat5minCPUUsage(void)
+{
+    return dpercent(CountHist[0].cputime - CountHist[5].cputime,
+	tvSubDsec(CountHist[5].timestamp, CountHist[0].timestamp));
+}
 
 #if STAT_GRAPHS
 /*
