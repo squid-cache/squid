@@ -583,7 +583,7 @@ fi
 
 
 
-# From configure.in Revision: 1.154 
+# From configure.in Revision: 1.155 
 ac_aux_dir=
 for ac_dir in cfgaux $srcdir/cfgaux; do
   if test -f $ac_dir/install-sh; then
@@ -877,7 +877,7 @@ if test -z "$PRESET_CFLAGS"; then
 		-Wl,-woff,85,-woff,84,-woff,134 \
 		-nostdinc -I/usr/include -D_BSD_SIGNALS"
 	    ;;
-	alpha-dec-osf*)
+	alpha-dec-osf4.*)
 	    # Mogul says DEC compilers take both -g and -O2
 	    CFLAGS="$CFLAGS -O2"
 	    ;;
