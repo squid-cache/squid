@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.86 2003/07/09 14:14:58 hno Exp $
+ * $Id: access_log.cc,v 1.87 2003/07/11 22:32:59 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -793,7 +793,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         }
 
         if (out && *out) {
-            if (quote) {
+            if (quote || fmt->quote != LOG_QUOTE_NONE) {
                 char *newout = NULL;
                 int newfree = 0;
 
