@@ -1130,9 +1130,12 @@ struct _refresh_t {
     char *pattern;
     regex_t compiled_pattern;
     time_t min;
-    int pct;
+    double pct;
     time_t max;
     refresh_t *next;
+    struct {
+	int icase:1;
+    } flags;
 };
 
 struct _CommWriteStateData {

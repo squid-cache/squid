@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.19 1998/04/24 07:09:44 wessels Exp $
+ * $Id: refresh.cc,v 1.20 1998/05/21 03:59:35 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -42,7 +42,7 @@
  *      MAX     3 days
  */
 #define REFRESH_DEFAULT_MIN	(time_t)0
-#define REFRESH_DEFAULT_PCT	(time_t)20
+#define REFRESH_DEFAULT_PCT	0.20
 #define REFRESH_DEFAULT_MAX	(time_t)259200
 
 static const refresh_t *
@@ -65,11 +65,11 @@ refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
 {
     const refresh_t *R;
     time_t min = REFRESH_DEFAULT_MIN;
-    int pct = REFRESH_DEFAULT_PCT;
+    double pct = REFRESH_DEFAULT_PCT;
     time_t max = REFRESH_DEFAULT_MAX;
     const char *pattern = ".";
     time_t age;
-    int factor;
+    double factor;
     time_t check_time = squid_curtime + delta;
     debug(22, 3) ("refreshCheck: '%s'\n", storeUrl(entry));
     if (EBIT_TEST(entry->flag, ENTRY_REVALIDATE)) {
@@ -83,7 +83,7 @@ refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
 	pattern = R->pattern;
     }
     debug(22, 3) ("refreshCheck: Matched '%s %d %d%% %d'\n",
-	pattern, (int) min, pct, (int) max);
+	pattern, (int) min, (int) (100.0 * pct), (int) max);
     age = check_time - entry->timestamp;
     debug(22, 3) ("refreshCheck: age = %d\n", (int) age);
     if (request->max_age > -1) {
@@ -118,8 +118,8 @@ refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
 	    (int) entry->timestamp, (int) entry->lastmod);
 	return 1;
     }
-    factor = 100 * age / (entry->timestamp - entry->lastmod);
-    debug(22, 3) ("refreshCheck: factor = %d\n", factor);
+    factor = (double) age / (double) (entry->timestamp - entry->lastmod);
+    debug(22, 3) ("refreshCheck: factor = %f\n", factor);
     if (factor < pct) {
 	debug(22, 3) ("refreshCheck: NO: factor < pct\n");
 	return 0;
@@ -135,7 +135,7 @@ refreshWhen(const StoreEntry * entry)
     time_t refresh_time = squid_curtime;
     time_t min = REFRESH_DEFAULT_MIN;
     time_t max = REFRESH_DEFAULT_MAX;
-    int pct = REFRESH_DEFAULT_PCT;
+    double pct = REFRESH_DEFAULT_PCT;
     const char *pattern = ".";
 
     assert(entry);
@@ -154,7 +154,7 @@ refreshWhen(const StoreEntry * entry)
 	pattern = R->pattern;
     }
     debug(22, 3) ("refreshWhen: Matched '%s %d %d%% %d'\n",
-	pattern, (int) min, pct, (int) max);
+	pattern, (int) min, (int) (100.0 * pct), (int) max);
     /* convert to absolute numbers */
     min += entry->timestamp;
     max += entry->timestamp;
@@ -165,7 +165,7 @@ refreshWhen(const StoreEntry * entry)
 	debug(22, 3) ("refreshWhen: lastvalid <= lastmod\n");
 	refresh_time = squid_curtime;
     } else {
-	refresh_time = pct * (entry->timestamp - entry->lastmod) / 100 + entry->timestamp;
+	refresh_time = (entry->timestamp - entry->lastmod) * pct + entry->timestamp;
 	debug(22, 3) ("refreshWhen: using refresh pct\n");
     }
     /* take min/max into account, max takes priority over min */
