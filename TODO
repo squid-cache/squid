@@ -1,7 +1,7 @@
-+ s/sprintf/snprintf/g
++ fix all the assert(!ERR_FOO) placeholders
++ Finish hacking at storeCopy() to achieve in-memory sliding window
+  for objects being retrieved.
 
-
-+ Write the text for all the error message files
 + we don't properly handle the HTTP/1.1 'Connection' header
 + ETag support (makes metadata bigger--ack!)
 + make USE_PROXY_AUTH standard
@@ -12,7 +12,13 @@
 + Send full HTTP requests in ICP messages
 + Everywhere that we use 'pattern' or such, use ACL elements instead.
 	- stoplist_pattern, refresh_pattern, ...
-+ Finish hacking at storeCopy() to achieve in-memory sliding window
-  for objects being retrieved.
 + support ftp://host/pub;type=d
 + X-Proxy-hops header
++ SNMP interface
++ URLs --> MD5?
++ redo cachemgr utilization
++ internalize redirectors?
+
+DONE:
++ s/sprintf/snprintf/g
++ Write the text for all the error message files
