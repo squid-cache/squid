@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.286 1999/01/19 02:24:28 wessels Exp $
+ * $Id: main.cc,v 1.287 1999/01/21 21:13:02 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -747,11 +747,20 @@ SquidShutdown(void *unused)
     releaseServerSockets();
     commCloseAllSockets();
     unlinkdClose();
+#if USE_ASYNC_IO
+    aioSync();			/* flush pending object writes / unlinks */
+#endif
     storeDirWriteCleanLogs(0);
     PrintRusage();
     dumpMallocStats();
+#if USE_ASYNC_IO
+    aioSync();			/* flush log writes */
+#endif
     storeLogClose();
     accessLogClose();
+#if USE_ASYNC_IO
+    aioSync();			/* flush log close */
+#endif
 #if PURIFY || XMALLOC_TRACE
     configFreeMemory();
     storeFreeMemory();
@@ -767,7 +776,6 @@ SquidShutdown(void *unused)
     mimeFreeMemory();
     errorClean();
 #endif
-    memClean();
 #if !XMALLOC_TRACE
     if (opt_no_daemon) {
 	file_close(0);
@@ -777,6 +785,7 @@ SquidShutdown(void *unused)
 #endif
     fdDumpOpen();
     fdFreeMemory();
+    memClean();
 #if XMALLOC_TRACE
     xmalloc_find_leaks();
     debug(1, 0) ("Memory used after shutdown: %d\n", xmalloc_total);
