@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.50 1999/01/19 06:38:09 wessels Exp $
+ * $Id: forward.cc,v 1.51 1999/01/19 18:11:16 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -85,10 +85,11 @@ fwdStateFree(FwdState * fwdState)
 	} else {
 	    EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
 	    storeComplete(e);
-    	    storeReleaseRequest(e);
+	    storeReleaseRequest(e);
 	}
     }
-    assert(!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT));
+    if (storePendingNClients(e) > 0)
+	assert(!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT));
     fwdServersFree(&fwdState->servers);
     requestUnlink(fwdState->request);
     fwdState->request = NULL;
@@ -178,7 +179,7 @@ fwdConnectDone(int server_fd, int status, void *data)
 	    peerCheckConnectStart(fs->peer);
 	comm_close(server_fd);
     } else {
-        debug(17, 3) ("fwdConnectDone: FD %d: '%s'\n", server_fd, storeUrl(fwdState->entry));
+	debug(17, 3) ("fwdConnectDone: FD %d: '%s'\n", server_fd, storeUrl(fwdState->entry));
 	fd_note(server_fd, storeUrl(fwdState->entry));
 	fd_table[server_fd].uses++;
 	fwdDispatch(fwdState);
@@ -206,7 +207,7 @@ fwdConnectTimeout(int fd, void *data)
 static void
 fwdConnectStart(void *data)
 {
-    FwdState * fwdState = data;
+    FwdState *fwdState = data;
     const char *url = storeUrl(fwdState->entry);
     int fd;
     ErrorState *err;
@@ -261,7 +262,7 @@ static void
 fwdStartComplete(FwdServer * servers, void *data)
 {
     FwdState *fwdState = data;
-    debug(17,3)("fwdStartComplete: %s\n", storeUrl(fwdState->entry));
+    debug(17, 3) ("fwdStartComplete: %s\n", storeUrl(fwdState->entry));
     if (servers != NULL) {
 	fwdState->servers = servers;
 	fwdConnectStart(fwdState);
@@ -274,7 +275,7 @@ static void
 fwdStartFail(FwdState * fwdState)
 {
     ErrorState *err;
-    debug(17,3)("fwdStartFail: %s\n", storeUrl(fwdState->entry));
+    debug(17, 3) ("fwdStartFail: %s\n", storeUrl(fwdState->entry));
     err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
     err->request = requestLink(fwdState->request);
     err->xerrno = errno;
