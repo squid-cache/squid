@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.292 1998/11/25 09:00:24 wessels Exp $
+ * $Id: protos.h,v 1.293 1998/12/02 05:03:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -215,6 +215,7 @@ extern time_t eventNextTime(void);
 extern void eventDelete(EVH * func, void *arg);
 extern void eventInit(void);
 extern void eventFreeMemory(void);
+extern int eventFind(EVH *, void *);
 
 extern void fd_close(int fd);
 extern void fd_open(int fd, unsigned int type, const char *);
