@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.673 2004/10/18 12:16:22 hno Exp $
+ * $Id: client_side.cc,v 1.674 2004/11/16 23:11:46 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1937,6 +1937,12 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
 
     debug(33, 3) ("parseHttpRequest: end = {%s}\n", end);
 
+    if (strstr(req_hdr, "\r\r\n")) {
+        debug(33, 1) ("WARNING: suspicious HTTP request contains double CR\n");
+        xfree(inbuf);
+        return parseHttpRequestAbort(conn, "error:double-CR");
+    }
+
     prefix_sz = end - inbuf;
 
     debug(33, 3) ("parseHttpRequest: prefix_sz = %d, req_line_sz = %d\n",
@@ -2207,12 +2213,19 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
 
     /* compile headers */
     /* we should skip request line! */
-    if (!httpRequestParseHeader(request, prefix + req_line_sz))
-        if (http->http_ver.major >= 1)
-            debug(33, 1) ("Failed to parse request headers: %s\n%s\n",
-                          http->uri, prefix);
-
-    /* continue anyway? */
+    if (!httpRequestParseHeader(request, prefix + req_line_sz)) {
+        clientStreamNode *node = context->getClientReplyContext();
+        debug(33, 5) ("Failed to parse request headers:\n%s\n", prefix);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        repContext->setReplyToError(
+            ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri,
+            &conn->peer.sin_addr, NULL, NULL, NULL);
+        assert(context->http->out.offset == 0);
+        context->pullData();
+        conn->flags.readMoreRequests = 0;
+        return;
+    }
 
     request->flags.accelerated = http->flags.accel;
 
