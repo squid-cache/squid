@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.39 1996/07/26 21:09:37 wessels Exp $
+ * $Id: neighbors.cc,v 1.40 1996/07/27 07:07:43 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -114,8 +114,6 @@ static struct neighbor_cf *Neighbor_cf = NULL;
 static icp_common_t echo_hdr;
 static u_short echo_port;
 
-FILE *cache_hierarchy_log = NULL;
-
 char *hier_strings[] =
 {
     "NONE",
@@ -160,69 +158,17 @@ static edge *whichEdge(header, from)
     return (NULL);
 }
 
-
-void hierarchy_log_append(entry, code, timeout, cache_host)
-     StoreEntry *entry;
+void hierarchyNote(request, code, timeout, cache_host)
+     request_t *request;
      hier_code code;
      int timeout;
      char *cache_host;
 {
-    char *url = entry->url;
-    MemObject *mem = entry->mem_obj;
-    static time_t last_time = 0;
-    LOCAL_ARRAY(char, time_str, 128);
-    char *s = NULL;
-
-    if (!cache_hierarchy_log)
-	return;
-
-    if (code > HIER_MAX)
-	code = HIER_MAX;
-    if (mem)
-	mem->request->hierarchy_code = code;
-    if (mem && cache_host)
-	mem->request->hierarchy_host = xstrdup(cache_host);
-
-    if (Config.commonLogFormat) {
-	if (squid_curtime != last_time) {
-	    s = mkhttpdlogtime(&squid_curtime);
-	    strcpy(time_str, s);
-	    last_time = squid_curtime;
-	}
-	if (cache_host) {
-	    fprintf(cache_hierarchy_log, "[%s] %s %s%s %s\n",
-		time_str,
-		url,
-		timeout ? "TIMEOUT_" : "",
-		hier_strings[code],
-		cache_host);
-	} else {
-	    fprintf(cache_hierarchy_log, "[%s] %s %s%s\n",
-		time_str,
-		url,
-		timeout ? "TIMEOUT_" : "",
-		hier_strings[code]);
-	}
-    } else {
-	if (cache_host) {
-	    fprintf(cache_hierarchy_log, "%d.%03d %s %s%s %s\n",
-		(int) current_time.tv_sec,
-		(int) current_time.tv_usec / 1000,
-		url,
-		timeout ? "TIMEOUT_" : "",
-		hier_strings[code],
-		cache_host);
-	} else {
-	    fprintf(cache_hierarchy_log, "%d.%03d %s %s%s\n",
-		(int) current_time.tv_sec,
-		(int) current_time.tv_usec / 1000,
-		url,
-		timeout ? "TIMEOUT_" : "",
-		hier_strings[code]);
-	}
+    if (request) {
+	request->hierarchy.code = code;
+	request->hierarchy.timeout = timeout;
+	request->hierarchy.host = xstrdup(cache_host);
     }
-    if (unbuffered_logs)
-	fflush(cache_hierarchy_log);
 }
 
 static int edgeWouldBePinged(e, request)
@@ -354,30 +300,6 @@ void neighborsDestroy()
     }
     safe_free(friends);
     friends = NULL;
-}
-
-static void neighborsOpenLog(fname)
-     char *fname;
-{
-    int log_fd = -1;
-    /* Close and reopen the log.  It may have been renamed "manually"
-     * before HUP'ing us. */
-    if (cache_hierarchy_log) {
-	file_close(fileno(cache_hierarchy_log));
-	fclose(cache_hierarchy_log);
-	cache_hierarchy_log = NULL;
-    }
-    if (strcmp(fname, "none") != 0) {
-	log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
-	if (log_fd < 0) {
-	    debug(15, 0, "neighborsOpenLog: %s: %s\n", fname, xstrerror());
-	} else if ((cache_hierarchy_log = fdopen(log_fd, "a")) == NULL) {
-	    file_close(log_fd);
-	    debug(15, 0, "neighborsOpenLog: %s: %s\n", fname, xstrerror());
-	}
-    }
-    if (log_fd < 0 || cache_hierarchy_log == NULL)
-	debug(15, 1, "Hierachical logging is disabled.\n");
 }
 
 void neighbors_open(fd)
@@ -667,7 +589,7 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	    /* if we reach here, source-ping reply is the first 'parent',
 	     * so fetch directly from the source */
 	    debug(15, 6, "Source is the first to respond.\n");
-	    hierarchy_log_append(entry,
+	    hierarchyNote(entry->mem_obj->request,
 		HIER_SOURCE_FASTEST,
 		0,
 		fqdnFromAddr(from->sin_addr));
@@ -690,7 +612,7 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	    httpProcessReplyHeader(httpState, data, data_sz);
 	    storeAppend(entry, data, data_sz);
 	    storeComplete(entry);
-	    hierarchy_log_append(entry,
+	    hierarchyNote(entry->mem_obj->request,
 		e->type == EDGE_PARENT ? HIER_PARENT_UDP_HIT_OBJ : HIER_SIBLING_UDP_HIT_OBJ,
 		0,
 		e->host);
@@ -703,7 +625,7 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	if (e == NULL) {
 	    debug(15, 1, "neighborsUdpAck: Ignoring HIT from non-neighbor\n");
 	} else {
-	    hierarchy_log_append(entry,
+	    hierarchyNote(entry->mem_obj->request,
 		e->type == EDGE_SIBLING ? HIER_SIBLING_HIT : HIER_PARENT_HIT,
 		0,
 		e->host);
@@ -869,15 +791,11 @@ void neighbors_init()
     struct neighbor_cf *next = NULL;
     char *me = getMyHostname();
     edge *e = NULL;
-    char *fname = NULL;
 
     debug(15, 1, "neighbors_init: Initializing Neighbors...\n");
 
     if (friends == NULL)
 	friends = xcalloc(1, sizeof(neighbors));
-
-    if ((fname = Config.Log.hierarchy))
-	neighborsOpenLog(fname);
 
     for (t = Neighbor_cf; t; t = next) {
 	next = t->next;
@@ -919,33 +837,6 @@ void neighbors_init()
     }
     Neighbor_cf = NULL;
     any_addr.s_addr = inet_addr("0.0.0.0");
-}
-
-void neighbors_rotate_log()
-{
-    char *fname = NULL;
-    int i;
-    LOCAL_ARRAY(char, from, MAXPATHLEN);
-    LOCAL_ARRAY(char, to, MAXPATHLEN);
-
-    if ((fname = Config.Log.hierarchy) == NULL)
-	return;
-
-    debug(15, 1, "neighbors_rotate_log: Rotating.\n");
-
-    /* Rotate numbers 0 through N up one */
-    for (i = Config.Log.rotateNumber; i > 1;) {
-	i--;
-	sprintf(from, "%s.%d", fname, i - 1);
-	sprintf(to, "%s.%d", fname, i);
-	rename(from, to);
-    }
-    /* Rotate the current log to .0 */
-    if (Config.Log.rotateNumber > 0) {
-	sprintf(to, "%s.%d", fname, 0);
-	rename(fname, to);
-    }
-    neighborsOpenLog(fname);
 }
 
 edge *neighborFindByName(name)
