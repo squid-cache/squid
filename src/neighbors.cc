@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.64 1996/10/14 00:28:34 wessels Exp $
+ * $Id: neighbors.cc,v 1.65 1996/10/15 04:57:54 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -505,11 +505,9 @@ neighborsUdpPing(protodispatch_data * proto)
 	    debug(15, 6, "neighborsUdpPing: Source Ping: to %s for '%s'\n",
 		host, url);
 	    echo_hdr.reqnum = reqnum;
-#if USE_ICMP
 	    if (icmp_sock != -1) {
 		icmpSourcePing(ia->in_addrs[ia->cur], &echo_hdr, url);
 	    } else {
-#endif
 		to_addr.sin_family = AF_INET;
 		to_addr.sin_addr = ia->in_addrs[ia->cur];
 		to_addr.sin_port = htons(echo_port);
@@ -521,9 +519,7 @@ neighborsUdpPing(protodispatch_data * proto)
 		    ICP_OP_SECHO,
 		    LOG_TAG_NONE,
 		    PROTO_NONE);
-#if USE_ICMP
 	    }
-#endif
 	} else {
 	    debug(15, 6, "neighborsUdpPing: Source Ping: unknown host: %s\n",
 		host);
