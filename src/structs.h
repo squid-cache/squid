@@ -1380,6 +1380,7 @@ struct _FwdState {
 	int xerrno;
     } fail;
     time_t start;
+    int n_tries;
 };
 
 struct _FwdServer {
