@@ -1,5 +1,5 @@
 /*
- * $Id: filemap.cc,v 1.12 1996/09/26 19:19:17 wessels Exp $
+ * $Id: filemap.cc,v 1.13 1996/09/26 19:19:46 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -218,8 +218,8 @@ file_map_allocate(int suggestion)
 void
 filemapFreeMemory(void)
 {
-        safe_free(fm->file_map);
-	safe_free(fm);
+    safe_free(fm->file_map);
+    safe_free(fm);
 }
 
 #ifdef TEST
