@@ -5588,32 +5588,22 @@ for repl in $REPL_POLICIES none; do
 	fi
 done
 
-AUTH_SCHEME_MAKEFILES=""
-for auth in $AUTH_MODULES none; do
-        if test $auth != none; then
-            AUTH_SCHEME_MAKEFILES="$AUTH_SCHEME_MAKEFILES ./src/auth/$auth/Makefile"
+AUTH_MAKEFILES=""
+for auth in $srcdir/src/auth/* none; do
+	if test -f $auth/Makefile.in; then
+	    scheme=`basename $auth`
+            AUTH_MAKEFILES="$AUTH_MAKEFILES ./src/auth/$scheme/Makefile"
+	    if test -f $auth/helpers/Makefile.in; then
+		AUTH_MAKEFILES="$AUTH_MAKEFILES ./src/auth/$scheme/helpers/Makefile"
+		for helper in $auth/helpers/*; do
+		    if test -f $helper/Makefile.in; then
+			AUTH_MAKEFILES="$AUTH_MAKEFILES ./src/auth/$scheme/helpers/`basename $helper`/Makefile"
+		    fi
+		done
+	    fi
+
         fi
 done
-
-BASIC_AUTH_MAKEFILES=""
-for helper in $srcdir/src/auth/basic/helpers/*; do
-	if test -f $helper/Makefile.in; then
-	    BASIC_AUTH_MAKEFILES="$BASIC_AUTH_MAKEFILES ./src/auth/basic/helpers/`basename $helper`/Makefile"
-	fi
-done
-
-NTLM_AUTH_MAKEFILES=""
-for helper in $srcdir/src/auth/ntlm/helpers/*; do
-        if test -f $helper/Makefile.in; then
-            NTLM_AUTH_MAKEFILES="$NTLM_AUTH_MAKEFILES ./src/auth/ntlm/helpers/`basename $helper`/Makefile"
-           for submodule in $helper/*; do
-               if test -f $submodule/Makefile.in; then
-                     NTLM_AUTH_MAKEFILES="$NTLM_AUTH_MAKEFILES ./src/auth/ntlm/helpers/`basename $helper`/`basename $submodule`/Makefile"
-               fi
-           done
-        fi
-done
-
 
 trap '' 1 2 15
 cat > confcache <<\EOF
@@ -5729,11 +5719,7 @@ trap 'rm -fr `echo "\
 	./src/repl/Makefile \
 	$REPL_MAKEFILES \
 	./src/auth/Makefile \
-	$AUTH_SCHEME_MAKEFILES \
-	./src/auth/basic/helpers/Makefile \
-	$BASIC_AUTH_MAKEFILES \
-	./src/auth/ntlm/helpers/Makefile \
-	$NTLM_AUTH_MAKEFILES \
+	$AUTH_MAKEFILES \
 	./contrib/Makefile \
 	$SNMP_MAKEFILE \
 	./icons/Makefile \
@@ -5886,11 +5872,7 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	./src/repl/Makefile \
 	$REPL_MAKEFILES \
 	./src/auth/Makefile \
-	$AUTH_SCHEME_MAKEFILES \
-	./src/auth/basic/helpers/Makefile \
-	$BASIC_AUTH_MAKEFILES \
-	./src/auth/ntlm/helpers/Makefile \
-	$NTLM_AUTH_MAKEFILES \
+	$AUTH_MAKEFILES \
 	./contrib/Makefile \
 	$SNMP_MAKEFILE \
 	./icons/Makefile \
