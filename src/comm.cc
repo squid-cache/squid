@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.235 1998/03/24 17:29:44 wessels Exp $
+ * $Id: comm.cc,v 1.236 1998/03/25 05:21:47 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -642,7 +642,13 @@ comm_close(int fd)
     if (F->uses)		/* assume persistent connect count */
 	pconnHistCount(1, F->uses);
     fd_close(fd);		/* update fdstat */
-#if USE_ASYNC_IO
+#if defined(_SQUID_LINUX_)
+    /*
+     * michael@metal.iinet.net.au sez close() on
+     * network sockets never blocks.
+     */
+    close(fd);
+#elsif USE_ASYNC_IO
     aioClose(fd);
 #else
     close(fd);
