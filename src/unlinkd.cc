@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.38 2000/05/31 00:28:20 hno Exp $
+ * $Id: unlinkd.cc,v 1.39 2000/05/31 04:27:51 wessels Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -145,7 +145,8 @@ unlinkdUnlink(const char *path)
 void
 unlinkdClose(void)
 {
-    assert(unlinkd_wfd > -1);
+    if (unlinkd_wfd < 0)
+	return;
     debug(12, 1) ("Closing unlinkd pipe on FD %d\n", unlinkd_wfd);
     file_close(unlinkd_wfd);
     if (unlinkd_wfd != unlinkd_rfd)
