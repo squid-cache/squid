@@ -220,7 +220,7 @@ cache_peer hostname type 3128 3130
 DOC_END
 
 
-NAME: cache_host_domain
+NAME: cache_peer_domain cache_host_domain
 TYPE: hostdomain
 DEFAULT: none
 LOC: none
@@ -228,12 +228,12 @@ DOC_START
 	Use to limit the domains for which a neighbor cache will be
 	queried.  Usage:
 
-	cache_host_domain cache-host domain [domain ...]
-	cache_host_domain cache-host !domain
+	cache_peer_domain cache-host domain [domain ...]
+	cache_peer_domain cache-host !domain
 
 	For example, specifying
 
-		cache_host_domain parent.foo.net	.edu
+		cache_peer_domain parent.foo.net	.edu
 
 	has the effect such that UDP query packets are sent to
 	'bigserver' only when the requested object exists on a
@@ -248,7 +248,7 @@ DOC_START
 		* Cache hosts with no domain restrictions are queried
 		  for all requests.
 		* There are no defaults.
-		* There is also a 'cache_host_acl' tag in the ACL
+		* There is also a 'cache_peer_acl' tag in the ACL
 		  section.
 DOC_END
 
@@ -1201,8 +1201,8 @@ DOC_START
 	  # example for routing all requests for AS#1241 and only 
 	  # those to mycache.mydomain.net:
 	  # acl asexample dst_as 1241
-	  # cache_host_acl mycache.mydomain.net asexample
-	  # cache_host_acl mycache_mydomain.net !all
+	  # cache_peer_acl mycache.mydomain.net asexample
+	  # cache_peer_acl mycache_mydomain.net !all
 
 	acl aclname proxy_auth passwd_file [ refresh ]
 	  # 'passwd_file' is an Apache-style file of passwords for
@@ -1294,15 +1294,15 @@ miss_access allow  all
 DOC_END
 
 
-NAME: cache_host_acl
+NAME: cache_peer_acl cache_host_acl
 TYPE: peeracl
 DEFAULT: none
 LOC: none
 DOC_START
-	Just like 'cache_host_domain' but provides more flexibility by
+	Just like 'cache_peer_domain' but provides more flexibility by
 	using ACL's.
 
-		cache_host_acl cache-host	[!]aclname ...
+		cache_peer_acl cache-host	[!]aclname ...
 
 	NOTE:	* Any number of ACL's may be given for a cache-host,
 		  either on the same or separate lines.
