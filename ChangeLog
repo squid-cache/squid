@@ -1,12 +1,15 @@
 	- Added "mem_pools_limit" configuration option. Semantics of
 	  "mem_pools" option has also changed a bit to reflect new memory
 	  management policy.
-	- Reorganized memory pools. Squid now allocates memory in big chunks
-	  and distributes that memory among "frequently allocated" objects.
-	  There is a configurable limit on the total amount of memory to be
-	  allocated for static pools. All requests that exceed that amount are
-	  satisfied using malloc library. Support for variable size objects
-	  (mostly strings) will be enabled soon.
+	- Reorganized memory pools. Squid now supports a global pool limit
+	  instead of individual pool limits. Per-pool limits can be
+	  implemented on top of the current scheme if needed, but it is
+	  probably hard to guess their values.  Squid distributes pool memory
+	  among "frequently allocated" objects.  There is a configurable limit
+	  on the total amount of "idle" memory to be kept in reserve. All
+	  requests that exceed that amount are satisfied using malloc library.
+	  Support for variable size objects (mostly strings) will be enabled
+	  soon.
 	- memAllocate() has now only one parameter. Objects are always reset
 	  with 0s. (We actually never used that parameter before; it was
 	  always set to "clear").
