@@ -33,9 +33,30 @@ Changes to squid-2.5 ():
 	- Added 'max-conn' option to 'cache_peer'
 	- Added SSL gatewaying support, allowing Squid to act as a SSL server
 	  in accelerator setups.
-	- Multiple SNMP memory leaks fixed
 	- Countless other small things and fixes
 	
+Changes to Squid-2.4.STABLE4 ()
+
+	- htcp_port 0 now properly disabled htcp
+        - Fixed problem with certain non-anonymous ftp:// style URL's
+	- SNMP bugfixes including several memory leaks
+
+Changes to Squid-2.4.STABLE3 (Nov 28, 2001):
+
+	- Fixed bug #255: core dump on SSL/CONNECT if access denied by
+	  miss_access
+	- Fixed bug #246: corrupt on-disk meta information preventing
+	  rebuilds of lost swap.state files
+	- Fixed bug #243: squid_ldap_auth now supports spaces in passwords
+	- Fixed a coredump when creating FTP directories
+	- Fixed a compile time problem with statHistDump prototype mistmatch,
+	  reported by some compilers
+	- Fixed a potential coredump situation on snmpwalk in certain
+	  configurations
+	- Fixed bug #229: filedescriptor leakage in the "aufs" cache_dir
+	  store implementation
+	- Serbian error message translations
+
 Changes to Squid-2.4.STABLE2 (Aug 24, 2001):
 
 	- Expanded configure's GCC opimization disabling check to
