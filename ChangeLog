@@ -605,6 +605,7 @@ Changes to squid-1.1.alpha6:
 
 	- Changed storage manager to use a two level directory
 	  structure.  This makes squid-1.1 incompatible with squid-1.0!
+	  (Mark Treacy).
 	- Added last modification time to the StoreEntry structure, and
 	  the swap log.
 	- Changed how memory passed to comm_write() gets freed.  Now
