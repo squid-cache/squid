@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.47 1999/01/19 23:18:01 wessels Exp $
+ * $Id: refresh.cc,v 1.48 1999/05/03 20:37:49 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -328,7 +328,6 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts *rc)
     storeAppendPrintf(sentry, "Category\tCount\t%%Total\n");
 
 #define refreshCountsStatsEntry(name) { \
-    if (rc->name || !strcmp(#name, "total")) \
 	storeAppendPrintf(sentry, "%s\t%6d\t%6.2f\n", \
 	    #name, rc->name, xpercent(rc->name, tot)); \
     sum += rc->name; \
@@ -350,6 +349,7 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts *rc)
     tot = sum;			/* paranoid: "total" line shows 100% if we forgot nothing */
     refreshCountsStatsEntry(total);
     /* maybe counters */
+    storeAppendPrintf(sentry, "\n");
     refreshCountsStatsEntry(request_reload_ignore_maybe);
     refreshCountsStatsEntry(response_lmt_future_maybe);
 }
