@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.140 1997/10/20 19:06:02 wessels Exp $
+ * $Id: ftp.cc,v 1.141 1997/10/21 18:24:02 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1064,17 +1064,18 @@ ftpReadControlReply(int fd, void *data)
 	return;
     }
     if (len == 0) {
-	debug(9, 1) ("Read 0 bytes from FTP control socket?\n");
-	assert(len);
-	if (entry->object_len == 0) {
-	    err = xcalloc(1, sizeof(ErrorState));
-	    err->type = ERR_READ_ERROR;
-	    err->http_status = HTTP_INTERNAL_SERVER_ERROR;
-	    err->errno = errno;
-	    err->request = requestLink(ftpState->request);
-	    errorAppendEntry(entry, err);
+	debug(9, 1) ("ftpReadControlReply: FD %d Read 0 bytes\n", fd);
+	if (entry->store_status == STORE_PENDING) {
+	    storeReleaseRequest(entry);
+	    if (entry->mem_obj->inmem_hi == 0) {
+		err = xcalloc(1, sizeof(ErrorState));
+		err->type = ERR_READ_ERROR;
+		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+		err->errno = errno;
+		err->request = requestLink(ftpState->request);
+		errorAppendEntry(entry, err);
+	    }
 	}
-	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
     }
