@@ -1,0 +1,119 @@
+#!/sbin/sh
+
+# Squid Internet Object Cache startup
+# AUTHOR: Markus Gyger
+# This is squid's startup file /sbin/init.d/squid or /etc/init.d/squid
+
+
+PATH=/opt/squid/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+
+config()
+{
+    # SGI IRIX 6.2
+    if [ -f /sbin/chkconfig ]
+    then if /sbin/chkconfig squid
+	 then if [ -f /var/config/squid.options ]
+	      then . /var/config/squid.options
+	      fi
+	      SQUID=1
+	 else SQUID=0
+	 fi
+
+    # Digital UNIX
+    elif [ -f /usr/sbin/rcmgr ]
+    then SQUID=`/usr/sbin/rcmgr get SQUID 0`
+	 SQUID_OPTIONS=`/usr/sbin/rcmgr get SQUID_OPTIONS "-s"`
+	 SQUID_RESPAWN=`/usr/sbin/rcmgr get SQUID_RESPAWN 1`
+
+    # HP-UX 10 / Linux
+    elif [ -f /etc/rc.config ]
+    then . /etc/rc.config
+
+    # SUN Solaris 2
+    else SQUID=1
+	 SQUID_OPTIONS="-s"
+	 SQUID_RESPAWN=1
+    fi
+
+    [ 1 = "${SQUID-}" ]
+}
+
+
+respawn()
+{
+    trap "" 1
+    fails=0
+    while [ $fails -le 5 ]
+    do  start=`date +%d%H%M%S`
+	if "$@"
+	then logger -t "$1" -p local4.notice \
+		 "respawn[$$]: Exiting due to shutdown"
+	     return 0
+	fi
+	stop=`date +%d%H%M%S`
+	time=`expr $stop - $start`
+	[ "$time" -gt 10 ] && fails=0
+	fails=`expr $fails + 1`
+    done
+
+    logger -t "$1" -p local4.alert \
+	"respawn[$$]: Exiting due to repeated, frequent failures"
+    return 1
+}
+
+
+case $* in
+start_msg)
+    echo "Start Squid Internet Object Cache"
+    ;;
+
+stop_msg)
+    echo "Stopping Squid Internet Object Cache"
+    ;;
+
+start)
+    config || exit 2  # Squid not enabled
+
+    if whence=`type squid 2>&1`
+    then trap "" 1
+	 if [ 0 = "${SQUID_RESPAWN-}" ]
+	 then         squid ${SQUID_OPTIONS-} &
+	 else respawn squid ${SQUID_OPTIONS-} &
+	 fi
+
+    else echo "ERROR: $whence" >&2
+	 exit 1
+    fi
+    ;;
+
+stop)
+    config || exit 2  # Squid not enabled
+
+    squid ${SQUID_OPTIONS-} -k shutdown || exit 1
+    ;;
+
+reconf*|rotate|int*|debug|check|kill)
+    config
+
+    squid ${SQUID_OPTIONS-} -k "$1"
+    ;;
+
+*)
+    echo "usage: $0 {start|stop|reconfigure|rotate|interrupt|debug|check|kill}" >&2
+    echo "    start        start squid" >&2
+    echo "    stop         clean shutdown" >&2
+    echo "    reconfigure  reread configuration files" >&2
+    echo "    rotate       rotate log files" >&2
+    echo "    interrupt    quick clean shutdown " >&2
+    echo "    debug        toggle debug logging" >&2
+    echo "    check        check for running squid" >&2
+    echo "    kill         terminate squid by brute force" >&2
+
+    exit 1
+    ;;
+esac
+
+[ $? -eq 0 ]  # only 0 and 1 exit values allowed
+exit
