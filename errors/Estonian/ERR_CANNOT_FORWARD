@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>VIGA: P&auml;ring URLile ei saa vastust</TITLE>
+</HEAD><BODY>
+<H1>VIGA</H1>
+<H2>P&auml;ring URLile ei saa vastust</H2>
+<HR>
+<P>
+Sooritades p&auml;ringut URLile:
+<A HREF="%U">%U</A>
+<P>
+tekkis j&auml;rgnev viga:
+<UL>
+<LI>
+<STRONG>
+P&auml;ringu edastamine eba&otilde;nnestus.
+</STRONG>
+</UL>
+
+<P>
+P&auml;ringut ei &otilde;nnestunud edastada ei originaali serverile ega
+&uuml;helegi vanem cache serverile. Ilmselt on p&otilde;hjus:
+<UL>
+<LI>Cache administraator ei v&otilde;imalda teha otseseid p&auml;ringuid
+originaali serverile ja
+<LI>K&otilde;ik kirjeldatud vanem vanem cached on hetkel k&auml;ttesaamatud.
+</UL>
+</P>

@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>VIGA: P&auml;ring URLile ei saa vastust</TITLE>
+</HEAD><BODY>
+<H1>VIGA</H1>
+<H2>P&auml;ring URLile ei saa vastust</H2>
+<HR>
+<P>
+Sooritades p&auml;ringut URLile:
+<A HREF="%U">%U</A>
+<P>
+tekkis j&auml;rgnev viga:
+<UL>
+<LI>
+<STRONG>
+Wais edastaja puudub
+</STRONG>
+</UL>
+
+<P>
+Selles Caches on WAISi edastav host kirjeldamata!  Karju natuke administraatori
+peale.
+</P>
