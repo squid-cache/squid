@@ -60,3 +60,12 @@ rfc3310.txt
 rfc2507.txt
 	Internet Content Adaptation Protocol (ICAP/1.0)
 	Common protocol for plugging into the datastream of a HTTP proxy
+
+rfc2756.txt
+	Hyper Text Caching Protocol (HTCP/0.0)
+	an alternative to ICP which will become more interesting the
+	day Squid fully implements Vary + ETag
+
+rfc2186.txt
+rfc2187.txt
+	Internet Cache Protocol (ICP), version 2
