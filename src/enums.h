@@ -397,7 +397,7 @@ enum {
     PD_INITED,    /* initialized */
     PD_USABLE,    /* ready to use */
     PD_REQUESTED, /* we are in the process of receiving a [fresh] digest */
-    PD_DISABLED,  /* do not use/validate the digest */
+    PD_DISABLED   /* do not use/validate the digest */
 } peer_cd_t;
 
 /* These are for StoreEntry->flag, which is defined as a SHORT */
