@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.18 1996/04/10 03:52:56 wessels Exp $ */
+/* $Id: stat.cc,v 1.19 1996/04/10 20:45:32 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -394,6 +394,7 @@ void info_get(obj, sentry)
 {
     char *tod = NULL;
     static char line[MAX_LINELEN];
+    wordlist *p = NULL;
 
 #if defined(HAVE_GETRUSAGE) && defined(RUSAGE_SELF)
     struct rusage rusage;
@@ -589,9 +590,7 @@ void info_get(obj, sentry)
 
     sprintf(line, "{Stop List:}\n");
     storeAppend(sentry, line, strlen(line));
-    if (http_stoplist) {
-	stoplist *p;
-	p = http_stoplist;
+    if ((p = getHttpStoplist())) {
 	sprintf(line, "{\tHTTP:}\n");
 	storeAppend(sentry, line, strlen(line));
 	while (p) {
@@ -600,9 +599,7 @@ void info_get(obj, sentry)
 	    p = p->next;
 	}
     }
-    if (gopher_stoplist) {
-	stoplist *p;
-	p = gopher_stoplist;
+    if ((p = getGopherStoplist())) {
 	sprintf(line, "{\tGOPHER:}\n");
 	storeAppend(sentry, line, strlen(line));
 	while (p) {
@@ -611,9 +608,7 @@ void info_get(obj, sentry)
 	    p = p->next;
 	}
     }
-    if (ftp_stoplist) {
-	stoplist *p;
-	p = ftp_stoplist;
+    if ((p = getFtpStoplist())) {
 	sprintf(line, "{\tFTP:}\n");
 	storeAppend(sentry, line, strlen(line));
 	while (p) {

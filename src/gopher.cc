@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.22 1996/04/10 03:53:59 wessels Exp $ */
+/* $Id: gopher.cc,v 1.23 1996/04/10 20:45:27 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -221,12 +221,12 @@ int gopher_url_parser(url, host, port, type_id, request)
 int gopherCachable(url)
      char *url;
 {
-    stoplist *p = NULL;
+    wordlist *p = NULL;
     GopherData *data = NULL;
     int cachable = 1;
 
     /* scan stop list */
-    for (p = gopher_stoplist; p; p = p->next)
+    for (p = getGopherStoplist(); p; p = p->next)
 	if (strstr(url, p->key))
 	    return 0;
 

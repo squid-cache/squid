@@ -1,9 +1,8 @@
-/* $Id: cache_cf.cc,v 1.29 1996/04/10 03:54:42 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.30 1996/04/10 20:45:24 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
 #include "squid.h"
-
 
 static struct {
     struct {
@@ -72,6 +71,13 @@ static struct {
 	char *file;
 	int rate;
     } Announce;
+    wordlist *cache_dirs;
+    wordlist *http_stoplist;
+    wordlist *gopher_stoplist;
+    wordlist *ftp_stoplist;
+    wordlist *bind_addr_list;
+    wordlist *local_domain_list;
+    wordlist *inside_firewall_list;
 } Config;
 
 #define DefaultMemMaxSize 	(16 << 20)	/* 16 MB */
@@ -140,13 +146,6 @@ static struct {
 
 extern char *config_file;
 
-stoplist *http_stoplist = NULL;
-stoplist *gopher_stoplist = NULL;
-stoplist *ftp_stoplist = NULL;
-stoplist *bind_addr_list = NULL;
-stoplist *local_domain_list = NULL;
-stoplist *inside_firewall_list = NULL;
-
  /* default CONNECT ports */
 intlist snews =
 {
@@ -176,8 +175,9 @@ int getDnsChildren();
 
 char w_space[] = " \t\n";
 
-static void configSetFactoryDefaults();
-static void configDoConfigure();
+static void configSetFactoryDefaults _PARAMS((void));
+static void configFreeMemory _PARAMS((void));
+static void configDoConfigure _PARAMS((void));
 static char fatal_str[BUFSIZ];
 
 void self_destruct(in_string)
@@ -414,22 +414,37 @@ void addToIPACL(list, ip_str, access)
 
 #endif /* ndef IPACL_INTS */
 
-void addToStopList(list, key)
-     stoplist **list;
+static void wordlistDestroy(list)
+    wordlist **list;
+{
+    wordlist *w = NULL;
+    wordlist *n = NULL;
+
+    for (w = *list; w; w=n) {
+	n = w->next;
+	safe_free(w->key);
+	safe_free(w);
+    }
+    *list = NULL;
+}
+
+void wordlistAdd(list, key)
+     wordlist **list;
      char *key;
 {
-    stoplist *p, *q;
+    wordlist *p = NULL;
+    wordlist *q = NULL;
 
     if (!(*list)) {
 	/* empty list */
-	*list = (stoplist *) xcalloc(1, sizeof(stoplist));
+	*list = (wordlist *) xcalloc(1, sizeof(wordlist));
 	(*list)->key = xstrdup(key);
 	(*list)->next = NULL;
     } else {
 	p = *list;
 	while (p->next)
 	    p = p->next;
-	q = (stoplist *) xcalloc(1, sizeof(stoplist));
+	q = (wordlist *) xcalloc(1, sizeof(wordlist));
 	q->key = xstrdup(key);
 	q->next = NULL;
 	p->next = q;
@@ -782,8 +797,7 @@ static void parseDirLine(line_in)
     token = strtok(NULL, w_space);
     if (token == (char *) NULL)
 	self_destruct(line_in);
-    storeAddSwapDisk(xstrdup(token));
-
+    wordlistAdd(&Config.cache_dirs, token);
 }
 
 static void parseHttpdAccelLine(line_in)
@@ -1022,7 +1036,7 @@ static void parseHttpStopLine(line_in)
     token = strtok(NULL, w_space);
     if (token == (char *) NULL)
 	return;
-    addToStopList(&http_stoplist, token);
+    wordlistAdd(&Config.http_stoplist, token);
 }
 
 static void parseGopherStopLine(line_in)
@@ -1032,7 +1046,7 @@ static void parseGopherStopLine(line_in)
     token = strtok(NULL, w_space);
     if (token == (char *) NULL)
 	return;
-    addToStopList(&gopher_stoplist, token);
+    wordlistAdd(&Config.gopher_stoplist, token);
 }
 static void parseFtpStopLine(line_in)
      char *line_in;
@@ -1041,7 +1055,7 @@ static void parseFtpStopLine(line_in)
     token = strtok(NULL, w_space);
     if (token == (char *) NULL)
 	return;
-    addToStopList(&ftp_stoplist, token);
+    wordlistAdd(&Config.ftp_stoplist, token);
 }
 
 static void parseAppendDomainLine(line_in)
@@ -1065,7 +1079,7 @@ static void parseBindAddressLine(line_in)
     if (token == (char *) NULL)
 	self_destruct(line_in);
     debug(3, 1, "parseBindAddressLine: adding %s\n", token);
-    addToStopList(&bind_addr_list, token);
+    wordlistAdd(&Config.bind_addr_list, token);
 }
 
 static void parseBlockListLine(line_in)
@@ -1083,7 +1097,7 @@ static void parseLocalDomainLine(line_in)
 {
     char *token;
     while ((token = strtok(NULL, w_space))) {
-	addToStopList(&local_domain_list, token);
+	wordlistAdd(&Config.local_domain_list, token);
     }
 }
 
@@ -1092,7 +1106,7 @@ static void parseInsideFirewallLine(line_in)
 {
     char *token;
     while ((token = strtok(NULL, w_space))) {
-	addToStopList(&inside_firewall_list, token);
+	wordlistAdd(&Config.inside_firewall_list, token);
     }
 }
 
@@ -1234,8 +1248,7 @@ int parseConfigFile(file_name)
     static char tmp_line[BUFSIZ];
     static char line_in[BUFSIZ];
 
-    /* Initialize a few global strings, in case they aren't user defined */
-
+    configFreeMemory();
     configSetFactoryDefaults();
 
     if ((fp = fopen(file_name, "r")) == NULL) {
@@ -1511,7 +1524,7 @@ int parseConfigFile(file_name)
     }
 
     /* Add INADDR_ANY to end of bind_addr_list as last chance */
-    addToStopList(&bind_addr_list, "0.0.0.0");
+    wordlistAdd(&Config.bind_addr_list, "0.0.0.0");
 
     /* Sanity checks */
     if (getClientLifetime() < getReadTimeout()) {
@@ -1765,6 +1778,34 @@ int getAnnounceRate()
 {
     return Config.Announce.rate;
 }
+wordlist * getHttpStoplist()
+{
+    return Config.http_stoplist;
+}
+wordlist * getFtpStoplist()
+{
+    return Config.ftp_stoplist;
+}
+wordlist * getGopherStoplist()
+{
+    return Config.gopher_stoplist;
+}
+wordlist * getLocalDomainList()
+{
+    return Config.local_domain_list;
+}
+wordlist * getCacheDirs()
+{
+    return Config.cache_dirs;
+}
+wordlist * getInsideFirewallList()
+{
+    return Config.inside_firewall_list;
+}
+wordlist * getBindAddrList()
+{
+    return Config.bind_addr_list;
+}
 
 int setAsciiPortNum(p)
      int p;
@@ -1788,6 +1829,36 @@ int safe_strlen(p)
      char *p;
 {
     return p ? strlen(p) : -1;
+}
+
+static void configFreeMemory()
+{
+    safe_free(Config.Wais.relayHost);
+    safe_free(Config.Log.log);
+    safe_free(Config.Log.access);
+    safe_free(Config.Log.hierarchy);
+    safe_free(Config.adminEmail);
+    safe_free(Config.effectiveUser);
+    safe_free(Config.effectiveGroup);
+    safe_free(Config.Program.ftpget);
+    safe_free(Config.Program.ftpget_opts);
+    safe_free(Config.Program.dnsserver);
+    safe_free(Config.Accel.host);
+    safe_free(Config.Accel.prefix);
+    safe_free(Config.appendDomain);
+    safe_free(Config.debugOptions);
+    safe_free(Config.pidFilename);
+    safe_free(Config.visibleHostname);
+    safe_free(Config.ftpUser);
+    safe_free(Config.Announce.host);
+    safe_free(Config.Announce.file);
+    wordlistDestroy(&Config.cache_dirs);
+    wordlistDestroy(&Config.http_stoplist);
+    wordlistDestroy(&Config.gopher_stoplist);
+    wordlistDestroy(&Config.ftp_stoplist);
+    wordlistDestroy(&Config.bind_addr_list);
+    wordlistDestroy(&Config.local_domain_list);
+    wordlistDestroy(&Config.inside_firewall_list);
 }
 
 

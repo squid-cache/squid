@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.39 1996/04/10 05:07:27 wessels Exp $ */
-#ident "$Id: store.cc,v 1.39 1996/04/10 05:07:27 wessels Exp $"
+/* $Id: store.cc,v 1.40 1996/04/10 20:45:33 wessels Exp $ */
+#ident "$Id: store.cc,v 1.40 1996/04/10 20:45:33 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -933,7 +933,9 @@ int storeAddSwapDisk(path)
 {
     if (cache_dirs == NULL)
 	cache_dirs = create_dynamic_array(5, 5);
-    insert_dynamic_array(cache_dirs, path);
+    /* XXX note xstrdup here prob means we
+	can't use destroy_dynamic_array() */
+    insert_dynamic_array(cache_dirs, xstrdup(path));
     return ++ncache_dirs;
 }
 
@@ -1048,8 +1050,7 @@ int storeSwapInStart(e)
     e->mem_obj = new_MemObject();
 
     path = storeSwapFullPath(e->swap_file_number, NULL);
-    fd = e->mem_obj->swap_fd = file_open(path, NULL, O_RDONLY);
-    if (fd < 0) {
+    if ((fd = file_open(path, NULL, O_RDONLY)) < 0) {
 	debug(20, 0, "storeSwapInStart: Unable to open swapfile: %s\n",
 	    path);
 	debug(20, 0, "storeSwapInStart: --> for <URL:%s>\n",
@@ -1058,6 +1059,7 @@ int storeSwapInStart(e)
 	/* Invoke a store abort that should free the memory object */
 	return -1;
     }
+    e->mem_obj->swap_fd = (short) fd;
     debug(20, 5, "storeSwapInStart: initialized swap file '%s' for <URL:%s>\n",
 	path, e->url);
 
@@ -1183,7 +1185,7 @@ static int storeSwapOutStart(e)
 	e->swap_file_number = -1;
 	return -1;
     }
-    e->mem_obj->swap_fd = fd;
+    e->mem_obj->swap_fd = (short) fd;
     debug(20, 5, "storeSwapOutStart: Begin SwapOut <URL:%s> to FD %d FILE %s.\n",
 	e->url, fd, swapfilename);
 
@@ -2421,9 +2423,12 @@ static void storeCreateSwapSubDirs()
 int storeInit()
 {
     int dir_created;
+    wordlist *w = NULL;
 
     storelog_fd = file_open("store.log", NULL, O_WRONLY | O_APPEND | O_CREAT);
 
+    for (w = getCacheDirs(); w; w=w->next)
+	storeAddSwapDisk(w->key);
     storeSanityCheck();
     file_map_create(MAX_SWAP_FILE);
     dir_created = storeVerifySwapDirs(zap_disk_store);

@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.19 1996/04/09 18:18:48 wessels Exp $ */
+/* $Id: comm.cc,v 1.20 1996/04/10 20:45:26 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -105,7 +105,7 @@ int comm_open(io_type, port, handler, note)
     int new_socket;
     FD_ENTRY *conn = NULL;
     int sock_type = io_type & COMM_DGRAM ? SOCK_DGRAM : SOCK_STREAM;
-    stoplist *p = NULL;
+    wordlist *p = NULL;
 
     /* Create socket for accepting new connections. */
     if ((new_socket = socket(AF_INET, sock_type, 0)) < 0) {
@@ -145,10 +145,10 @@ int comm_open(io_type, port, handler, note)
 	}
     }
     if (port) {
-	for (p = bind_addr_list; p; p = p->next) {
+	for (p = getBindAddrList(); p; p = p->next) {
 	    if (do_bind(new_socket, p->key, port) == COMM_OK)
 		break;
-	    if (p->next == (stoplist *) NULL)
+	    if (p->next == (wordlist *) NULL)
 		return COMM_ERROR;
 	}
     }

@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.35 1996/04/10 00:18:49 wessels Exp $ */
+/* $Id: http.cc,v 1.36 1996/04/10 20:45:27 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -86,14 +86,14 @@ int httpCachable(url, method, req_hdr)
      int method;
      char *req_hdr;
 {
-    stoplist *p = NULL;
+    wordlist *p = NULL;
 
     /* GET and HEAD are cachable. Others are not. */
     if (method != METHOD_GET && method != METHOD_HEAD)
 	return 0;
 
     /* scan stop list */
-    for (p = http_stoplist; p; p = p->next) {
+    for (p = getHttpStoplist(); p; p = p->next) {
 	if (strstr(url, p->key))
 	    return 0;
     }
