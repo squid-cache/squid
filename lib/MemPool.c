@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.c,v 1.18 2003/06/19 19:53:15 hno Exp $
+ * $Id: MemPool.c,v 1.19 2003/09/07 17:04:14 hno Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa
@@ -160,7 +160,7 @@ memPoolIterate(void)
 void
 memPoolIterateDone(MemPoolIterator ** iter)
 {
-    assert(iter);
+    assert(iter != NULL);
     Iterator.pool = NULL;
     *iter = NULL;
 }
@@ -169,7 +169,7 @@ MemPool *
 memPoolIterateNext(MemPoolIterator * iter)
 {
     MemPool *pool;
-    assert(iter);
+    assert(iter != NULL);
 
     pool = iter->pool;
     if (!pool)
@@ -410,7 +410,7 @@ memPoolCreate(const char *label, size_t obj_size)
 	memPoolInit();
 
     pool = xcalloc(1, sizeof(MemPool));
-    assert(label && obj_size);
+    assert(label != NULL && obj_size);
     pool->label = label;
     pool->obj_size = obj_size;
     pool->obj_size =
@@ -441,8 +441,8 @@ memPoolDestroy(MemPool ** pool)
     MemChunk *chunk, *fchunk;
     MemPool *find_pool, *free_pool, *prev_pool;
 
-    assert(pool);
-    assert(*pool);
+    assert(pool != NULL);
+    assert(*pool != NULL);
     free_pool = *pool;
     memPoolFlushMetersFull(free_pool);
     memPoolCleanOne(free_pool, 0);
@@ -451,12 +451,12 @@ memPoolDestroy(MemPool ** pool)
     for (chunk = free_pool->Chunks; (fchunk = chunk) != NULL; chunk = chunk->next)
 	memPoolChunkDestroy(free_pool, fchunk);
 
-    assert(memPools && "Called memPoolDestroy, but no pool exists!");
+    assert(memPools != NULL && "Called memPoolDestroy, but no pool exists!");
 
     /* Pool clean, remove it from List and free */
     for (find_pool = memPools, prev_pool = NULL; (find_pool && free_pool != find_pool); find_pool = find_pool->next)
 	prev_pool = find_pool;
-    assert(find_pool && "pool to destroy not found");
+    assert(find_pool != NULL && "pool to destroy not found");
 
     if (prev_pool)
 	prev_pool->next = free_pool->next;
@@ -535,7 +535,7 @@ void *
 memPoolAlloc(MemPool * pool)
 {
     void *p;
-    assert(pool);
+    assert(pool != NULL);
 #if !DISABLE_POOLS
     p = memPoolGet(pool);
     assert(pool->idle);
@@ -553,7 +553,7 @@ memPoolAlloc(MemPool * pool)
 void
 memPoolFree(MemPool * pool, void *obj)
 {
-    assert(pool && obj);
+    assert(pool != NULL && obj != NULL);
 #if !DISABLE_POOLS
 
     memPoolPush(pool, obj);
