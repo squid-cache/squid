@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.384 2001/06/01 09:06:57 hno Exp $
+ * $Id: cache_cf.cc,v 1.385 2001/06/14 19:15:04 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -685,10 +685,12 @@ parse_delay_pool_count(delayConfig * cfg)
 	free_delay_pool_count(cfg);
     }
     parse_ushort(&cfg->pools);
-    delayInitDelayData(cfg->pools);
-    cfg->class = xcalloc(cfg->pools, sizeof(u_char));
-    cfg->rates = xcalloc(cfg->pools, sizeof(delaySpecSet *));
-    cfg->access = xcalloc(cfg->pools, sizeof(acl_access *));
+    if (cfg->pools) {
+	delayInitDelayData(cfg->pools);
+	cfg->class = xcalloc(cfg->pools, sizeof(u_char));
+	cfg->rates = xcalloc(cfg->pools, sizeof(delaySpecSet *));
+	cfg->access = xcalloc(cfg->pools, sizeof(acl_access *));
+    }
 }
 
 static void
