@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.17 1996/04/04 18:50:11 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.18 1996/04/04 18:51:02 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -181,8 +181,6 @@ ip_access_type ip_access_check(address, list)
     {0};
     ip_acl *p = NULL;
     struct in_addr naddr;	/* network byte-order IP addr */
-    static char buf[100];
-
 
     if (!list)
 	return IP_ALLOW;
