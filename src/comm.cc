@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.338 2002/10/15 00:49:10 adrian Exp $
+ * $Id: comm.cc,v 1.339 2002/10/15 00:59:49 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1138,7 +1138,22 @@ _comm_close(int fd, char *file, int line)
     commSetTimeout(fd, -1, NULL, NULL);
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
 
-    /* Delete any pending io callbacks */
+    /* Schedule immediate callbacks for the read/accept/fill routines, if any */
+    if (fdc_table[fd].read.handler) {
+        comm_addreadcallback(fd, fdc_table[fd].read.handler, fdc_table[fd].read.buf,
+	  0, COMM_ERR_CLOSING, 0, fdc_table[fd].read.handler_data);
+	fdc_table[fd].read.handler = NULL;
+    }
+    if (fdc_table[fd].accept.handler) {
+	comm_addacceptcallback(fd, -1, fdc_table[fd].accept.handler, NULL, NULL,
+	  COMM_ERR_CLOSING, 0, fdc_table[fd].accept.handler_data);
+	fdc_table[fd].accept.handler = NULL;
+    }
+    if (fdc_table[fd].fill.handler) {
+        comm_add_fill_callback(fd, 0, COMM_ERR_CLOSING, 0);
+	fdc_table[fd].fill.handler = NULL;
+    }
+    /* Complete (w/ COMM_ERR_CLOSING!) any pending io callbacks */
     while (fdc_table[fd].CommCallbackList.head != NULL) {
 	node = fdc_table[fd].CommCallbackList.head;
 	cio = (CommCallbackData *)node->data;
@@ -1150,6 +1165,7 @@ _comm_close(int fd, char *file, int line)
 	comm_call_io_callback(cio);
 	memPoolFree(comm_callback_pool, cio);
     }
+
 
     commCallCloseHandlers(fd);
     if (F->uses)		/* assume persistent connect count */
