@@ -1,16 +1,19 @@
 /*
- * $Id: wb_check_group.c,v 1.4 2002/09/07 10:09:50 hno Exp $
+ * $Id: wb_check_group.c,v 1.5 2002/09/08 09:25:59 hno Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Guido Serassio <squidnt@serassio.it>
  * Based on previous work of Rodrigo Albani de Campos
  * 
- * It reads STDIN looking for a username that matches a NT/2000 global
- * Domain group. Requires Samba 2.2.4 or later with Winbindd.
- * Returns `OK' if the user belongs to the group or `ERR' otherwise, as 
- * described on http://devel.squid-cache.org/external_acl/config.html
- * To compile this program, use:
+ * It reads from the standard input the domain username and a list of
+ * groups and tries to match it against the groups membership of the
+ * specified username.
  *
+ * Returns `OK' if the user belongs to a group or `ERR' otherwise, as
+ * described on http://devel.squid-cache.org/ external_acl/config.html
+ *
+ * Requires Samba 2.2.4 or later with Winbindd.
+ * 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
