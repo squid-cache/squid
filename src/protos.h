@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.422 2002/01/06 00:44:13 hno Exp $
+ * $Id: protos.h,v 1.423 2002/01/13 01:08:44 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -94,6 +94,7 @@ extern int GetInteger(void);
 
 /* extra functions from cache_cf.c useful for lib modules */
 extern void parse_int(int *var);
+extern void parse_onoff(int *var);
 extern void parse_eol(char *volatile *var);
 extern void parse_wordlist(wordlist ** list);
 extern void requirePathnameExists(const char *name, const char *path);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.397 2002/01/06 00:44:13 hno Exp $
+ * $Id: cache_cf.cc,v 1.398 2002/01/13 01:08:43 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1737,7 +1737,7 @@ dump_onoff(StoreEntry * entry, const char *name, int var)
     storeAppendPrintf(entry, "%s %s\n", name, var ? "on" : "off");
 }
 
-static void
+void
 parse_onoff(int *var)
 {
     char *token = strtok(NULL, w_space);

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.246 2001/12/25 05:46:35 adrian Exp $
+# $Id: cf.data.pre,v 1.247 2002/01/13 01:08:43 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1314,6 +1314,11 @@ DOC_START
 
 	"nonce_max_count" number
 	Specifies the maximum number of times a given nonce can be used.
+
+	"nonce_strictness" on|off
+	Determines if squid requires increment-by-1 behaviour for nonce counts 
+	(on - the default), or strictly incrementing (off - for use when useragents
+	generate nonce counts that occasionally miss 1 (ie, 1,2,4,6)).
 
 	=== NTLM scheme options follow ===
 

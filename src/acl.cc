@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.270 2001/12/21 09:47:34 hno Exp $
+ * $Id: acl.cc,v 1.271 2002/01/13 01:08:43 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1206,7 +1206,6 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
     squid_acl acltype)
 {
     /* checklist is used to register user name when identified, nothing else */
-
     /* General program flow in proxy_auth acls
      * 1. Consistency checks: are we getting sensible data
      * 2. Call the authenticate* functions to establish a authenticated user
@@ -1669,7 +1668,6 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	    fatal("Invalid response from match routine\n");
 	    break;
 	}
-
 	/* NOTREACHED */
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
