@@ -1,38 +1,48 @@
--- File: SQUID.MIB
--- Maintained by: glenn@ircache.net
+SQUID-MIB  DEFINITIONS ::= BEGIN
 --
--- NOTE: This version (1.14) of the mib is supported as of squid1.2beta19. 
+-- $Id: mib.txt,v 1.16 1998/09/23 21:21:08 glenn Exp $
 --
+IMPORTS
+	enterprises, Unsigned32, TimeTicks, Gauge32, Counter32,
+	MODULE-IDENTITY, OBJECT-TYPE
+        	FROM SNMPv2-SMI
 
-SQUID-MIB DEFINITIONS ::= BEGIN
- 		IMPORTS
-             	TimeTicks,
-             	Counter                FROM RFC1155-SMI
-            	DisplayString          FROM RFC1158-MIB
-            	mib-2                  FROM RFC1213-MIB
-           	OBJECT-TYPE            FROM RFC-1212
-          	TRAP-TYPE              FROM RFC-1215;
+	DisplayString
+        	FROM SNMPv2-TC;
+
+nlanr OBJECT IDENTIFIER ::= { enterprises 3495 }
+
+squid MODULE-IDENTITY
+    LAST-UPDATED "9809220000Z"
+    ORGANIZATION "National Laboratory for Applied Network Research"
+    CONTACT-INFO
+            "        Glenn Chisholm
+
+             Postal: National Centre for Atmospheric Research (NCAR)
+		     Room 36, SCD
+		     PO Box 3000
+                     Boulder, Colorado 80307  
+                     US
+
+                Tel: +1 303 497 1289
+                Fax: +1 303 497 1818
+
+             E-mail: glenn@ircache.net"
+    DESCRIPTION
+		"Squid MIB defined for the management of the squid
+		proxy server. See http://squid.nlanr.net/."
+	    
+    REVISION      "9809220000Z"
+    DESCRIPTION
+		"Move to SMIv2. Prepare to split into proxy/squid."
+    ::= { nlanr 1 }
 
 -- Do NOT remove the following line
 
--- v 1.14 1998/04/03 kostas@nlanr.net
-
--- 
--- definition of squid mib subtree
--- NOTE: This should be left this way for compatibility with various tools
-
-	squid OBJECT IDENTIFIER ::= { 
-		iso 
-		org(3) 
-		dod(6) 		
-		internet(1) 
-		experimental(3) 
-		nsfnet(25) 
-		17 
-	}
+-- v 1.16 1998/09/22 glenn@ircache.net
 
 --
--- Major MIB groups
+-- OID Assignments
 --
 
 	cacheSystem	OBJECT IDENTIFIER ::= { squid 1 }
@@ -45,161 +55,31 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 --
 -- cacheSystem group
 --
--- Should contain information not otherwise accessible through
--- standard MIB's. Where this is not true, we will align as soon
--- as possible!
--- One reason to keep this information here is for dedicated 
--- hardware as offered by today's commercial caching solutions
--- 
 
         cacheSysVMsize OBJECT-TYPE
 	        SYNTAX Integer32
-		ACCESS read-only
-		STATUS mandatory
+		MAX-ACCESS read-only
+		STATUS current
 		DESCRIPTION
 			" Virtual Memory size in KB"
 	::= { cacheSystem 1 }
 
 	cacheSysStorage OBJECT-TYPE
 		SYNTAX Integer32
-		ACCESS read-only
-                STATUS mandatory
+		MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
                         " Diskspace in KB"
         ::= { cacheSystem 2 }
 
-        -- fd table
-
-        cacheFdTable OBJECT-TYPE
-                SYNTAX SEQUENCE OF CacheFdEntry
-                ACCESS read-only
-                STATUS mandatory
+	cacheUptime  OBJECT-TYPE
+                SYNTAX Timeticks
+                MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
-                        " This table contains an enumeration of
-                          registered filedescriptors , complete with info "
-        ::= { cacheSystem 4 }
+                        " Number of timeticks since cache started "
+	::= { cacheSystem 3 }
 
-        cacheFdEntry OBJECT-TYPE
-                SYNTAX CacheFdEntry
-                MAX-ACCESS not-accessible
-                STATUS mandatory
-                DESCRIPTION 
-                        " An entry in cacheFdTable " 
-                INDEX   { cacheFdNumber }
-        ::= { cacheFdTable 1 }
-
-        CacheFdEntry ::= SEQUENCE {
-                cacheFdNumber    Integer32,
-                cacheFdNread     Counter32,
-                cacheFdNwrite    Counter32,
-                cacheFdName      DisplayString
-        }
-
-        cacheFdNumber OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION 
-                        " Filedescriptor number (in the mib context, 
-			  not really the system-level fdnum) " 
-        ::= { cacheFdEntry 1 }
-
-        cacheFdNread OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION 
-                        " Number of bytes read from this filedescriptor " 
-        ::= { cacheFdEntry 2 }
-
-        cacheFdNwrite OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION 
-                        " Number of bytes written to this filedescriptor " 
-        ::= { cacheFdEntry 3 }
-
-        cacheFdName OBJECT-TYPE
-                SYNTAX DisplayString
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION 
-                        " Name of filedescriptor, revealing type and purpose " 
-        ::= { cacheFdEntry 4 }
-
---
---  cacheActiveConnTable : Table of active network connections
---
-
-	cacheActiveConnTable OBJECT-TYPE
-                SYNTAX SEQUENCE OF CacheActiveConnEntry
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION
-                        " This table contains an enumeration of
-                          registered filedescriptors , complete with info "
-        ::= { cacheSystem 3 }
-
-        cacheActiveConnEntry OBJECT-TYPE
-                SYNTAX CacheActiveConnEntry
-                MAX-ACCESS not-accessible
-                STATUS mandatory
-                DESCRIPTION 
-                        " An entry in cacheActiveConnEntry " 
-                INDEX   { cacheActiveConnAddr, cacheActiveConnPort }
-        ::= { cacheActiveConnTable 1 }
-
-        CacheActiveConnEntry ::= SEQUENCE {
-                cacheActiveConnNread    Counter32,
-                cacheActiveConnNwrite   Counter32,
-                cacheActiveConnAddr   	IpAddress,
-                cacheActiveConnName     DisplayString,
-                cacheActiveConnType     Integer32
-        }
-
-	cacheActiveConnNread OBJECT-TYPE
-                SYNTAX Counter32 
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION 
-                        " Number of bytes read from connection "
-        ::= { cacheActiveConnEntry 1 }
-
-	cacheActiveConnNwrite OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION 
-                        " Number of bytes written to connection "
-        ::= { cacheActiveConnEntry 2 }
-
-	cacheActiveConnAddress OBJECT-TYPE
-                SYNTAX IpAddress
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION 
-                        " Peer-end IP address " 
-        ::= { cacheActiveConnEntry 3 }
-
-	cacheActiveConnName OBJECT-TYPE
-                SYNTAX DisplayString
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION 
-                        " Name assigned to connection by the cache, revealing 
-			  type / purpose "
-        ::= { cacheActiveConnEntry 4 }
-
-        cacheActiveConnPort OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION 
-                        " Peer-end TCP/UDP port number " 
-        ::= { cacheActiveConnEntry 5 }
-
-	
 --
 -- config group
 --
@@ -208,108 +88,508 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 
 	cacheAdmin OBJECT-TYPE
 		SYNTAX DisplayString
-		ACCESS read-only
-                STATUS mandatory
+		MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
-                        " Cache Administrator Contact Name and E-Mail address "
+                        " Cache Administrator E-Mail address "
 	::= { cacheConfig 1 }
 
         cacheSoftware OBJECT-TYPE
                 SYNTAX DisplayString
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
                         " Cache Software Name "
         ::= { cacheConfig 2 }
 
         cacheVersionId OBJECT-TYPE
                 SYNTAX OCTET STRING
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
                         " Cache Software Version "
         ::= { cacheConfig 3 }
 
-	cacheUptime  OBJECT-TYPE
-                SYNTAX Timeticks
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION
-                        " Number of timeticks since cache started "
-	::= { cacheConfig 4 }
+	cacheLoggingFacility OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS current
+		DESCRIPTION
+			" Logging Facility. An informational string
+			  indicating logging info like debug level, 
+			  local/syslog/remote logging etc " 
+	::= { cacheConfig 4 } 
 
 -- cacheStorageConfig group
 
-	cacheStorageConfig OBJECT IDENTIFIER ::= { cacheConfig 6  }
+	cacheStorageConfig OBJECT IDENTIFIER ::= { cacheConfig 5 }
 
 	cacheMemMaxSize OBJECT-TYPE
                 SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
                         " Cache Memory Maximum Size "
         ::= { cacheStorageConfig 1 }
 
 	cacheMemHighWM OBJECT-TYPE
                 SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
                         " Cache Memory High Water Mark "
         ::= { cacheStorageConfig 2 }
 
         cacheMemLowWM OBJECT-TYPE
                 SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
                         " Cache Memory Low Water Mark "
         ::= { cacheStorageConfig 3 }
 
         cacheSwapMaxSize OBJECT-TYPE
                 SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
                         " Cache Swap Maximum Size "
         ::= { cacheStorageConfig 4 }
 
         cacheSwapHighWM OBJECT-TYPE
                 SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
                         " Cache Swap High Water Mark "
         ::= { cacheStorageConfig 5 }
 
         cacheSwapLowWM OBJECT-TYPE
                 SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
                 DESCRIPTION
                         " Cache Swap Low Water Mark "
         ::= { cacheStorageConfig 6 }
 
 -- end of  cacheStorageConfig group
 
-	cacheLoggingFacility OBJECT-TYPE
-		SYNTAX DisplayString
-		ACCESS read-write
-		STATUS mandatory
+--
+-- performance group { squid 3 }
+--
+
+	cacheSysPerf    OBJECT IDENTIFIER ::= { cachePerf 1 } 
+        cacheProtoStats OBJECT IDENTIFIER ::= { cachePerf 2 }
+
+	--
+	-- cacheSysPerf 
+	--
+
+        cacheSysPageFaults OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+                DESCRIPTION
+                        " Number of system page faults "
+        ::= { cacheSysPerf 1 }
+
+        cacheSysNumReads OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS not-accessible
+                STATUS current 
+                DESCRIPTION
+                        " Number of Reads " 
+       	::= { cacheSysPerf 2 }
+
+        cacheSysDefReads OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS not-accessible
+                STATUS current
 		DESCRIPTION
-			" Logging Facility. An informational string
-			  indicating logging info like debug level, 
-			  local/syslog/remote logging etc " 
-	::= { cacheConfig 5 } 
+			" see cachemgr "
+       	::= { cacheSysPerf 3 }
+
+	cacheMemUsage OBJECT-TYPE
+		SYNTAX Integer32
+		MAX-ACCESS read-only
+		STATUS 	current
+		DESCRIPTION
+			" Amount of system memory allocated by the cache"
+	::= { cacheSysPerf 4 } 
+
+	cacheCpuUsage OBJECT-TYPE
+		SYNTAX Integer32
+		MAX-ACCESS read-only
+                STATUS  current
+                DESCRIPTION
+                        " Amount of cpu seconds consumed"
+	::= { cacheSysPerf 5 }
+
+	cacheMaxResSize OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS  current
+                DESCRIPTION
+                        " Maximum Resident Size"
+        ::= { cacheSysPerf 6 }
+
+	cacheNumObjCount OBJECT-TYPE
+                SYNTAX Counter32                 
+		MAX-ACCESS read-only
+                STATUS  current
+                DESCRIPTION
+                        " Number of objects "
+        ::= { cacheSysPerf 7 }
+
+        cacheCurrentLRUExpiration OBJECT-TYPE
+                SYNTAX TimeTicks
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheSysPerf 8 }
+
+        cacheCurrentUnlinkRequests OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheSysPerf 9 }
+
+        cacheCurrentUnusedFileDescrCount OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheSysPerf 10 }
+
+	cacheCurrentReservedFileDescrCount  OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheSysPerf 11 }
+
+	--
+	-- cacheProtoStats
+	--
+
+		-- cacheProtoAggregateStats
+		--
+
+	cacheProtoAggregateStats OBJECT IDENTIFIER ::= { cacheProtoStats 1 }
+
+
+	cacheClientHttpRequests  OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 1 }
+
+        cacheHttpHits OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 2 }
+
+        cacheHttpErrors OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 3 }
+
+        cacheHttpInKb OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 4 }
+
+        cacheHttpOutKb OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 5 }
+
+	cacheIcpPktsSent OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 6 }
+
+	cacheIcpPktsRecv OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 7 }
+
+        cacheIcpKbSent OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 8 }
+
+        cacheIcpKbRecv OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 9 }
+
+        cacheServerRequests OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 10 }
+
+        cacheServerErrors OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 11 }
+
+	cacheServerInKb OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 12 }
+
+        cacheServerOutKb OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 13 }
+
+	cacheCurrentSwapSize OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheProtoAggregateStats 14 }
+
+
+	--
+	-- cacheProtoMedianSvcStats group
+	-- 
+	-- This is a table, indexed by the interval we want statistics for
+	-- Example: cacheDnsSvcTime.10 gives 10-min medians for Dns Service Time.
+
+	cacheMedianSvcTable OBJECT-TYPE
+                SYNTAX SEQUENCE OF CacheMedianSvcEntry
+                MAX-ACCESS read-only
+                STATUS current
+	::= { cacheProtoStats 2 }
+
+        cacheMedianSvcEntry OBJECT-TYPE
+                SYNTAX CacheMedianSvcEntry
+                MAX-ACCESS not-accessible
+                STATUS current
+                DESCRIPTION 
+                        " An entry in cacheMedianSvcTable " 
+                INDEX   { cacheMedianTime }
+        ::= { cacheMedianSvcTable 1 }
+
+        CacheMedianSvcEntry ::= SEQUENCE {
+		cacheMedianTime		Integer32,
+		cacheHttpAllSvcTime 	Integer32,
+		cacheHttpMissSvcTime 	Integer32,	
+		cacheHttpNmSvcTime 	Integer32,
+		cacheHttpHitSvcTime 	Integer32,
+		cacheIcpQuerySvcTime 	Integer32,
+		cacheIcpReplySvcTime 	Integer32,
+		cacheDnsSvcTime		Integer32
+	}
+
+	cacheMedianTime OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheMedianSvcEntry 1 }
+
+	cacheHttpAllSvcTime OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheMedianSvcEntry 2 } 
+
+	cacheHttpMissSvcTime OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheMedianSvcEntry 3 } 
+
+	cacheHttpNmSvcTime OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheMedianSvcEntry 4 } 
+
+	cacheHttpHitSvcTime OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheMedianSvcEntry 5 } 
+
+	cacheIcpQuerySvcTime OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheMedianSvcEntry 6 } 
+
+	cacheIcpReplySvcTime OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheMedianSvcEntry 7 } 
+
+	cacheDnsSvcTime OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheMedianSvcEntry 8 } 
 
 --
--- cacheMesh group :  peers , clients and children
+-- cacheNetwork group
+--
+-- This material is probably best suited elsewhere, however for now it
+-- will reside here until the both the Proxy and Squid MIBs are implimented.
+--
+
+	cacheIpCache	OBJECT IDENTIFIER ::= { cacheNetwork 1 }
+	cacheFqdnCache	OBJECT IDENTIFIER ::= { cacheNetwork 2 } 
+	cacheDns	OBJECT IDENTIFIER ::= { cacheNetwork 3 }
+
+--
+-- cacheIpCache
+--
+
+	cacheEntries OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheIpCache 1 } 
+
+	cacheRequests OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheIpCache 2 } 
+
+	cacheHits OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheIpCache 3 } 
+
+	cachePendingHits OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheIpCache 4 } 
+
+	cacheNegativeHits OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheIpCache 5 } 
+
+	cacheMisses OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheIpCache 6 } 
+
+	cacheBlockingGetHostByName OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheIpCache 7 } 
+
+	cacheAttemptReleaseLockedEntries OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheIpCache 8 } 
+
+	cacheQueueLength OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheIpCache 9 } 
+--
+-- cacheFqdnCache
+--
+
+	cacheEntries OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheFqdnCache 1 } 
+
+	cacheRequests OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheFqdnCache 2 } 
+
+	cacheHits OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheFqdnCache 3 } 
+
+	cachePendingHits OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheFqdnCache 4 } 
+
+	cacheNegativeHits OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheFqdnCache 5 } 
+
+	cacheMisses OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheFqdnCache 6 } 
+
+	cacheBlockingGetHostByAddr OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheFqdnCache 7 } 
+
+	cacheQueueLength OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheFqdnCache 8 } 
+
+--
+--	cacheDNS 
+--
+
+	cacheDnsRequests OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheDns 1 } 
+
+	cacheDnsReplies OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheDns 2 } 
+
+	cacheDnsNumberServers OBJECT-TYPE
+                SYNTAX Counter32
+                MAX-ACCESS read-only
+                STATUS current
+        ::= { cacheDns 3 } 
+	
+--
+-- cacheMesh group
 --
 
 	cachePeerTable OBJECT-TYPE
 		SYNTAX SEQUENCE OF CachePeerEntry
-		ACCESS read-only
-		STATUS mandatory
+		MAX-ACCESS read-only
+		STATUS current
 		DESCRIPTION
 			" This table contains an enumeration of
 			  the peer caches, complete with info "
@@ -318,7 +598,7 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 	cachePeerEntry OBJECT-TYPE
 		SYNTAX CachePeerEntry
 		MAX-ACCESS not-accessible
-		STATUS mandatory
+		STATUS current
 		DESCRIPTION 
 			" An entry in cachePeerTable " 
 		INDEX 	{ cachePeerAddr }
@@ -342,8 +622,8 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 
 	cachePeerName OBJECT-TYPE
 		SYNTAX DisplayString
-		ACCESS read-only
-		STATUS mandatory
+		MAX-ACCESS read-only
+		STATUS current
 		DESCRIPTION 
 			  " The FQDN name or internal alias for the
 		      	    peer cache"
@@ -351,24 +631,24 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 
 	cachePeerAddr OBJECT-TYPE
                 SYNTAX IpAddress
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" The IP Address of the peer cache "
         ::= { cachePeerEntry 2 }
 
 	cachePeerPortHttp OBJECT-TYPE
                 SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" The port the peer listens for HTTP requests "
         ::= { cachePeerEntry 3 }
 
 	cachePeerPortIcp OBJECT-TYPE
                 SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" The port the peer listens for ICP requests 
 			  should be 0 if not configured to send ICP requests "
@@ -382,7 +662,7 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 				multicast(3)
                                 }
                 MAX-ACCESS not-accessible
-                STATUS mandatory
+                STATUS current
                 DESCRIPTION 
                         " Peer Type "
 	::= { cachePeerEntry 5 } 
@@ -392,64 +672,64 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 				down(0), 
 				up(1)
 				}
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" The operational state of this peer "
         ::= { cachePeerEntry 6 }
 
         cachePeerPingsSent OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" Number of pings sent to peer "
         ::= { cachePeerEntry 7 }
 
         cachePeerPingsAcked OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" Number of pings received from peer "
         ::= {  cachePeerEntry 8 }
 
         cachePeerFetches OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" Number of times this peer was selected  "
         ::= { cachePeerEntry 9 }
 
         cachePeerRtt OBJECT-TYPE
                 SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" Last known round-trip time to the peer (in ms) "
         ::= { cachePeerEntry 10 }
 
         cachePeerIgnored OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" How many times this peer was ignored "
         ::= { cachePeerEntry 11 }
 
         cachePeerKeepAlSent OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" Number of keepalives sent "
         ::= { cachePeerEntry 12 }
 
         cachePeerKeepAlRecv OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
 		DESCRIPTION 
 			" Number of keepalives received "
         ::= { cachePeerEntry 13 }
@@ -477,7 +757,7 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 	::= { cacheClientTable 1 }
 
 	CacheClientEntry ::= SEQUENCE {
-               	cacheClientAddr 	NetworkAddress,
+               	cacheClientAddr 	IpAddress
                	cacheClientHttpRequests	Counter32,
                	cacheClientHttpKb 	Counter32,
                	cacheClientHttpHits 	Counter32,
@@ -489,73 +769,73 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 	}
 
 	cacheClientAddr OBJECT-TYPE
-                SYNTAX NetworkAddress
-                ACCESS read-only
-                STATUS mandatory
+                SYNTAX IpAddress
+                MAX-ACCESS read-only
+                STATUS current
            	DESCRIPTION
                     "The client's IP address "
         ::= { cacheClientEntry 1 }
 
 	cacheClientHttpRequests OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
            	DESCRIPTION
                     " Number of HTTP requests received from client "
         ::= { cacheClientEntry 2 }
 
 	cacheClientHttpKb OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
            	DESCRIPTION
                     " Amount of total HTTP traffic to this client  "
         ::= { cacheClientEntry 3 }
 
         cacheClientHttpHits OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
            	DESCRIPTION
                     " Number of hits in response to this client's HTTP requests "
         ::= { cacheClientEntry 4 }
 
         cacheClientHTTPHitKb OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
            	DESCRIPTION
                     " Amount of HTTP hit traffic in KB "
         ::= { cacheClientEntry 5 }
 
 	cacheClientIcpRequests OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
            	DESCRIPTION
                     " Number of ICP requests received from client "
         ::= { cacheClientEntry 6 }
 
 	cacheClientIcpKb OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
            	DESCRIPTION
                     " Amount of total ICP traffic to this client (child) "
         ::= { cacheClientEntry 7 }
 
         cacheClientIcpHits OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
            	DESCRIPTION
                     " Number of hits in response to this client's ICP requests "
         ::= { cacheClientEntry 8 }
 
         cacheClientIcpHitKb OBJECT-TYPE
                 SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
+                MAX-ACCESS read-only
+                STATUS current
            	DESCRIPTION
                     " Amount of ICP hit traffic in KB "
         ::= { cacheClientEntry 9 }
@@ -564,509 +844,6 @@ SQUID-MIB DEFINITIONS ::= BEGIN
   
  
     -- end of cacheMesh group
-
---
--- cacheNetwork group
---
--- contains dns (ip/fqdn cache etc) info, network statistics and probe results
---
--- 
-
-	cacheDns OBJECT IDENTIFIER ::= { cacheNetwork 2 }
-
-	-- NetDB info
-
-	NetDbTable OBJECT-TYPE
-                SYNTAX SEQUENCE OF NetDbEntry
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION
-                        " This table contains squid's netdb"
-        ::= { cacheNetwork 1 } 
-
-	netDbEntry OBJECT-TYPE
-                SYNTAX NetDbEntry
-                MAX-ACCESS not-accessible
-                STATUS mandatory
-                DESCRIPTION
-                        " An entry in the NetDb" 
-                INDEX   { netDbEntryNetwork }
-        ::= { NetDbTable 1 } 
-
-	NetDbEntry ::= SEQUENCE {
-		NetDbEntryNetwork	IpAddress,
-		NetDbEntryPingsSent	Counter32,
-		NetDbEntryPingsRecv	Counter32, 
-		NetDbEntryHops		Integer32,
-		NetDbEntryRtt		TimeTicks,
-		NetDbEntryPingTime	TimeTicks,
-		NetDbEntryLastUse	TimeTicks,
-	}
-
-	NetDbEntryNetwork OBJECT-TYPE
-                SYNTAX IpAddress
-                ACCESS read-only
-                STATUS mandatory
-	::= { netDbEntry 1 }
-
-	NetDbEntryPingsSent OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { netDbEntry 2 }    
-
-	NetDbEntryPingsRecv OBJECT-TYPE 
-                SYNTAX Counter32        
-                ACCESS read-only        
-                STATUS mandatory  
-        ::= { netDbEntry 3 }            
-
-	NetDbEntryHops OBJECT-TYPE
-                SYNTAX Integer32                
-                ACCESS read-only                
-                STATUS mandatory          
-        ::= { netDbEntry 4 }                    
-
-        NetDbEntryRtt OBJECT-TYPE      
-                SYNTAX TimeTicks
-                ACCESS read-only
-                STATUS mandatory
-        ::= { netDbEntry 5 }
-
-	NetDbEntryPingTime OBJECT-TYPE
-                SYNTAX TimeTicks
-                ACCESS read-only
-                STATUS mandatory
-        ::= { netDbEntry 6 }
-
-	NetDbEntryLastUse OBJECT-TYPE
-                SYNTAX TimeTicks
-                ACCESS read-only
-                STATUS mandatory
-        ::= { netDbEntry 7 }
-
-	
-	-- IP cache info
-
-	ipCacheTable OBJECT-TYPE
-                SYNTAX SEQUENCE OF iPcacheEntry
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION
-                        " This table contains information about
-                          cached name -> address dns resolution "
-        ::= { cacheDns 1 }
-
-        iPcacheEntry OBJECT-TYPE
-                SYNTAX IPcacheEntry
-                MAX-ACCESS not-accessible
-                STATUS mandatory
-                DESCRIPTION 
-                        " An entry in ipCacheTable " 
-                INDEX   { IPcacheEntryId }
-        ::= { ipCacheTable 1 }
-
-        IPcacheEntry ::= SEQUENCE {
-	  IPcacheEntryId	   Integer32,
-          IPcacheEntryName         DisplayString,
-          IPcacheEntryIP           IpAddress,
-          IPcacheEntryState        Integer32, 
-        }
-
-	IPcacheEntryState OBJECT-TYPE
-                SYNTAX INTEGER { 
-                                pending(1), expired(2), ok(3) }
-                MAX-ACCESS not-accessible
-                STATUS mandatory
-                DESCRIPTION 
-                        " State of IP cache entry " 
-	::= { iPcacheEntry 3 } 
-
-	IPcacheEntryId OBJECT-TYPE
-		SYNTAX Integer32
-		ACCESS read-only
-		STATUS mandatory
-	::= { iPcacheEntry 1 } 
-
-	IPcacheEntryName OBJECT-TYPE
-                SYNTAX DisplayString
-                ACCESS read-only
-                STATUS mandatory
-	::= { iPcacheEntry 2 }
-
-	IPcacheEntryIP OBJECT-TYPE
-                SYNTAX IpAddress
-                ACCESS read-only
-                STATUS mandatory
-        ::= { iPcacheEntry 3 }
-
-	IPcacheEntryState OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { iPcacheEntry 4 }
-
-
--- fqdn cache info
-
-        fqdnCacheTable OBJECT-TYPE
-                SYNTAX SEQUENCE OF fqdnCacheEntry
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION
-                        " This table contains an enumeration of
-                          the peer caches, complete with info "
-        ::= { cacheDns 2 }
-
-        fqdnCacheEntry OBJECT-TYPE
-                SYNTAX FQDNcacheEntry
-                MAX-ACCESS not-accessible
-                STATUS mandatory
-                DESCRIPTION 
-                        " An entry in cachePeerTable " 
-                INDEX   { FQDNcacheEntryId }
-        ::= { fqdnCacheTable 1 }
-
-        FQDNcacheEntry ::= SEQUENCE {
-	  FQDNcacheEntryId	     Integer32,
-          FQDNcacheEntryName         DisplayString,
-          FQDNcacheEntryIP           IpAddress,
-	  FQDNcacheEntryLastRef	     TimeTicks,
-	  FQDNcacheEntryExpires	     TimeTicks,
-          FQDNcacheEntryState        Integer32
-        }
-
-	FQDNcacheEntryId OBJECT-TYPE
-		SYNTAX Integer32
-		ACCESS read-only
-		STATUS mandatory
-	::= { fqdnCacheEntry 1 }
-
-	FQDNcacheEntryName OBJECT-TYPE
-                SYNTAX DisplayString
-                ACCESS read-only
-                STATUS mandatory
-	::= { fqdnCacheEntry 2 }
-
-	FQDNcacheEntryIP OBJECT-TYPE
-                SYNTAX IpAddress
-                ACCESS read-only
-                STATUS mandatory
-        ::= { fqdnCacheEntry 3 }
-
-	FQDNcacheEntryLastRef OBJECT-TYPE
-                SYNTAX TimeTicks
-                ACCESS read-only
-                STATUS mandatory
-        ::= { fqdnCacheEntry 4}
-
-	FQDNcacheEntryExpires OBJECT-TYPE
-                SYNTAX TimeTicks
-                ACCESS read-only
-                STATUS mandatory
-        ::= { fqdnCacheEntry 5}
-
-	FQDNcacheEntryState OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { fqdnCacheEntry 6}
-
-
-	FQDNcacheEntryState OBJECT-TYPE
-                SYNTAX INTEGER { 
-                                pending(1), expired(2), ok(3) }
-                MAX-ACCESS not-accessible
-                STATUS mandatory
-                DESCRIPTION 
-                        "  state of FQDN cache entry "
-        ::= { fqdnCacheEntry 7  }
-
--- end of fqdnCacheTable
-
-        cacheNetStat OBJECT IDENTIFIER ::= { cacheNetwork 3 }
-
-	cacheTCPconnections OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION
-                        " Number of TCP connections since start-up "
-	::= { cacheNetStat 1 }
-
-	cacheUDPconnections OBJECT-TYPE
-		SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION
-                        " Number of UDP connections since start-up "
-        ::= { cacheNetStat 2 }
-
---
--- performance group { squid 3 }
---
-
-	cacheSysPerf    OBJECT IDENTIFIER ::= { cachePerf 1 } 
-        cacheProtoStats OBJECT IDENTIFIER ::= { cachePerf 2 }
-
-	--
-	-- cacheSysPerf 
-	--
-
-        cacheSysPageFaults OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-                DESCRIPTION
-                        " Number of system page faults "
-        ::= { cacheSysPerf 1 }
-
-        cacheSysNumReads OBJECT-TYPE
-                SYNTAX Counter32
-                MAX-ACCESS not-accessible
-                STATUS mandatory 
-                DESCRIPTION
-                        " Number of Reads " 
-       	::= { cacheSysPerf 2 }
-
-        cacheSysDefReads OBJECT-TYPE
-                SYNTAX Counter32
-                MAX-ACCESS not-accessible
-                STATUS mandatory
-		DESCRIPTION
-			" see cachemgr "
-       	::= { cacheSysPerf 3 }
-
-	cacheMemUsage OBJECT-TYPE
-		SYNTAX Integer3232
-		MAX-ACCESS read-only
-		STATUS 	current
-		DESCRIPTION
-			" Amount of system memory allocated by the cache"
-	::= { cacheSysPerf 4 } 
-
-	cacheCpuUsage OBJECT-TYPE
-		SYNTAX Integer3232
-		MAX-ACCESS read-only
-                STATUS  current
-                DESCRIPTION
-                        " Amount of cpu seconds consumed"
-	::= { cacheSysPerf 5 }
-
-	cacheMaxResSize OBJECT-TYPE
-                SYNTAX Integer3232
-                MAX-ACCESS read-only
-                STATUS  current
-                DESCRIPTION
-                        " Maximum Resident Size"
-        ::= { cacheSysPerf 6 }
-
-	cacheNumObjCount OBJECT-TYPE
-                SYNTAX Counter32                 
-		MAX-ACCESS read-only
-                STATUS  current
-                DESCRIPTION
-                        " Number of objects "
-        ::= { cacheSysPerf 7 }
-
-        cacheCurrentLRUExpiration OBJECT-TYPE
-                SYNTAX TimeTicks
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheSysPerf 8 }
-
-        cacheCurrentUnlinkRequests OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheSysPerf 9 }
-
-        cacheCurrentUnusedFileDescrCount OBJECT-TYPE
-                SYNTAX Gauge32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheSysPerf 10 }
-
-	cacheCurrentReservedFileDescrCount  OBJECT-TYPE
-                SYNTAX Gauge32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheSysPerf 11 }
-
-	--
-	-- cacheProtoStats
-	--
-
-		-- cacheProtoAggregateStats
-		--
-
-	cacheProtoAggregateStats OBJECT IDENTIFIER ::= { cacheProtoStats 1 }
-
-
-	cacheClientHttpRequests  OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 1 }
-
-        cacheHttpHits OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 2 }
-
-        cacheHttpErrors OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 3 }
-
-        cacheHttpInKb OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 4 }
-
-        cacheHttpOutKb OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 5 }
-
-	cacheIcpPktsSent OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 6 }
-
-	cacheIcpPktsRecv OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 7 }
-
-        cacheIcpKbSent OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 8 }
-
-        cacheIcpKbRecv OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 9 }
-
-        cacheServerRequests OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 10 }
-
-        cacheServerErrors OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 11 }
-
-	cacheServerInKb OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 12 }
-
-        cacheServerOutKb OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 13 }
-
-	cacheCurrentSwapSize OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheProtoAggregateStats 14 }
-
-
-	--
-	-- cacheProtoMedianSvcStats group
-	-- 
-	-- This is a table, indexed by the interval we want statistics for
-	-- Example: cacheDnsSvcTime.10 gives 10-min medians for Dns Service Time.
-
-	cacheMedianSvcTable OBJECT-TYPE
-                SYNTAX SEQUENCE OF CacheMedianSvcEntry
-                ACCESS read-only
-                STATUS mandatory
-	::= { cacheProtoStats 2 }
-
-        cacheMedianSvcEntry OBJECT-TYPE
-                SYNTAX CacheMedianSvcEntry
-                MAX-ACCESS not-accessible
-                STATUS mandatory
-                DESCRIPTION 
-                        " An entry in cacheMedianSvcTable " 
-                INDEX   { cacheMedianTime }
-        ::= { cacheMedianSvcTable 1 }
-
-        CacheMedianSvcEntry ::= SEQUENCE {
-		cacheMedianTime		Integer32,
-		cacheHttpAllSvcTime 	Integer32,
-		cacheHttpMissSvcTime 	Integer32,	
-		cacheHttpNmSvcTime 	Integer32,
-		cacheHttpHitSvcTime 	Integer32,
-		cacheIcpQuerySvcTime 	Integer32,
-		cacheIcpReplySvcTime 	Integer32,
-		cacheDnsSvcTime		Integer32
-	}
-
-	cacheMedianTime OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheMedianSvcEntry 1 }
-
-	cacheHttpAllSvcTime OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheMedianSvcEntry 2 } 
-
-	cacheHttpMissSvcTime OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheMedianSvcEntry 3 } 
-
-	cacheHttpNmSvcTime OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheMedianSvcEntry 4 } 
-
-	cacheHttpHitSvcTime OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheMedianSvcEntry 5 } 
-
-	cacheIcpQuerySvcTime OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheMedianSvcEntry 6 } 
-
-	cacheIcpReplySvcTime OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheMedianSvcEntry 7 } 
-
-	cacheDnsSvcTime OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-                STATUS mandatory
-        ::= { cacheMedianSvcEntry 8 } 
 
 -- end of SQUID-MIB
 --
