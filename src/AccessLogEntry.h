@@ -1,6 +1,6 @@
 
 /*
- * $Id: AccessLogEntry.h,v 1.1 2003/09/01 03:49:37 robertc Exp $
+ * $Id: AccessLogEntry.h,v 1.2 2003/09/04 11:54:23 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -97,12 +97,11 @@ public:
         int msec;
         const char *rfc931;
         const char *authuser;
+        const char *extuser;
 #if USE_SSL
 
         const char *ssluser;
 #endif
-
-        const char *extuser;
 
     }
 
