@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.242 2001/01/28 16:23:36 hno Exp $
+ * $Id: acl.cc,v 1.243 2001/01/31 21:48:24 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -764,6 +764,7 @@ aclParseAclLine(acl ** head)
     case ACL_BROWSER:
     case ACL_SRC_DOM_REGEX:
     case ACL_DST_DOM_REGEX:
+    case ACL_REQ_MIME_TYPE:
 	aclParseRegexList(&A->data);
 	break;
     case ACL_SRC_ASN:
