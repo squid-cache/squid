@@ -22,6 +22,15 @@
 	  renaming.
 	- Fixed storeDirClean to clean directories in a more sensible
 	  order, instead of the new "MONOTONIC" order for swap files.
+	- Merged fdstat.c functions into fd.c.
+	- Cleaned up some debugging sections.  Some unrelated source
+	  files were using the same section.
+	- Removed curly brackets from all cachemgr output.
+	- Removed unused filemap->last_file_number_allocated member.
+	- Removed unused fde->lifetime_data member.
+	- Fixed incorrectly applying htonl() on icp_common_t->shostid.
+	- Call setsid() before exec() in ipc.c so that child processes
+	  don't receive SIGINT (etc) when running squid on a tty.
 
 Changes to squid-1.2.beta14 (Feb 6, 1998):
 
