@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.58 1998/03/30 23:00:47 wessels Exp $
+ * $Id: store_dir.cc,v 1.59 1998/03/31 20:36:04 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -531,7 +531,8 @@ storeDirWriteCleanLogs(int reopen)
     dlink_node *m;
     char **outbuf;
     off_t *outbufoffset;
-    storeSwapLogData *s;
+    storeSwapLogData s;
+    size_t ss = sizeof(storeSwapLogData);
     if (store_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeDirWriteCleanLogs: Operation aborted.\n");
@@ -597,21 +598,21 @@ storeDirWriteCleanLogs(int reopen)
 	assert(dirn < Config.cacheSwap.n_configured);
 	if (fd[dirn] < 0)
 	    continue;
-	s = (storeSwapLogData *) (outbuf[dirn] + outbufoffset[dirn]);
-	outbufoffset[dirn] += sizeof(storeSwapLogData);
-	memset(s, '\0', sizeof(storeSwapLogData));
-	s->op = (char) SWAP_LOG_ADD;
-	s->swap_file_number = e->swap_file_number;
-	s->timestamp = e->timestamp;
-	s->lastref = e->lastref;
-	s->expires = e->expires;
-	s->lastmod = e->lastmod;
-	s->swap_file_sz = e->swap_file_sz;
-	s->refcount = e->refcount;
-	s->flags = e->flag;
-	xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
+	memset(&s, '\0', ss);
+	s.op = (char) SWAP_LOG_ADD;
+	s.swap_file_number = e->swap_file_number;
+	s.timestamp = e->timestamp;
+	s.lastref = e->lastref;
+	s.expires = e->expires;
+	s.lastmod = e->lastmod;
+	s.swap_file_sz = e->swap_file_sz;
+	s.refcount = e->refcount;
+	s.flags = e->flag;
+	xmemcpy(&s.key, e->key, MD5_DIGEST_CHARS);
+	xmemcpy(outbuf[dirn] + outbufoffset[dirn], &s, ss);
+	outbufoffset[dirn] += ss;
 	/* buffered write */
-	if (outbufoffset[dirn] + sizeof(storeSwapLogData) > CLEAN_BUF_SZ) {
+	if (outbufoffset[dirn] + ss > CLEAN_BUF_SZ) {
 	    if (write(fd[dirn], outbuf[dirn], outbufoffset[dirn]) < 0) {
 		debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
 		    new[dirn], xstrerror());
