@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.67 1998/07/22 20:37:12 wessels Exp $
+ * $Id: debug.cc,v 1.68 1998/08/05 06:16:32 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -80,12 +80,12 @@ _db_print(va_alist)
 	debugLogTime(squid_curtime),
 	format);
 #if HAVE_SYSLOG
-    /* level 0 go to syslog */
-    if (_db_level == 0 && opt_syslog_enable) {
+    /* level 0,1 go to syslog */
+    if (_db_level <= 1 && opt_syslog_enable) {
 	tmpbuf[0] = '\0';
 	vsnprintf(tmpbuf, BUFSIZ, format, args);
 	tmpbuf[1023] = '\0';
-	syslog(LOG_ERR, "%s", tmpbuf);
+	syslog(_db_level == 0 ? LOG_WARNING : LOG_ERR, "%s", tmpbuf);
     }
 #endif /* HAVE_SYSLOG */
     /* write to log file */
