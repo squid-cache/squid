@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.340 2002/10/16 15:03:12 adrian Exp $
+ * $Id: comm.cc,v 1.341 2002/10/21 05:38:32 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -547,6 +547,20 @@ fdc_open(int fd, unsigned int type, char *desc)
 	fdc_table[fd].active = 1;
 	fd_open(fd, type, desc);
 }
+
+
+/*
+ * synchronous wrapper around udp socket functions
+ */
+
+int
+comm_recvfrom(int fd, void *buf, size_t len, int flags,
+  struct sockaddr *from, socklen_t *fromlen)
+{
+	statCounter.syscalls.sock.recvfroms++;     
+	return recvfrom(fd, buf, len, flags, from, fromlen);
+}
+
 
 
 /* Older stuff */
