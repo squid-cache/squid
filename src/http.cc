@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.100 1996/11/07 20:52:50 wessels Exp $
+ * $Id: http.cc,v 1.101 1996/11/08 16:13:51 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -679,7 +679,9 @@ httpSendRequest(int fd, void *data)
     ybuf = NULL;
 
     /* Add Host: header */
-    if (!saw_host) {
+    /* Don't add Host: if proxying, mainly because req->host is
+       the name of the proxy, not the origin :-( */
+    if (!saw_host && !BIT_TEST(req->flags, REQ_PROXYING)) {
 	ybuf = get_free_4k_page();
 	sprintf(ybuf, "Host: %s\r\n", req->host);
 	strcat(buf, ybuf);
@@ -745,6 +747,7 @@ proxyhttpStart(edge * e, const char *url, StoreEntry * entry)
     strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
     request->port = e->http_port;
     strncpy(request->urlpath, url, MAX_URL);
+    BIT_SET(request->flags, REQ_PROXYING);
     ipcache_nbgethostbyname(request->host,
 	sock,
 	httpConnect,
