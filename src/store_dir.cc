@@ -141,23 +141,21 @@ storeCreateSwapSubDirs(int j)
 int
 storeMostFreeSwapDir(void)
 {
-    int most_free = 0;
-    int this_free;
+    double least_used = 1.0;
+    double this_used;
     int dirn = 0;
     int i;
+    SwapDir *SD;
     for (i = 0; i < ncache_dirs; i++) {
-	this_free = SwapDirs[i].max_size - SwapDirs[i].cur_size;
-debug(20,0,"storeMostFreeSwapDir: most free = #%d with %d\n", dirn, most_free);
-debug(20,0,"storeMostFreeSwapDir: #%d has %d free\n", i, this_free);
-	if (this_free <= most_free)
+	SD = &SwapDirs[i];
+	this_used = (double) SD->cur_size / SD->max_size;
+	if (this_used > least_used)
 	    continue;
-	if (SwapDirs[i].read_only)
+	if (SD->read_only)
 	    continue;
-	most_free = this_free;
+	least_used = this_used;
 	dirn = i;
     }
-debug(20,0,"storeMostFreeSwapDir: most free = #%d with %d\n", dirn, most_free);
-debug(20,0,"storeMostFreeSwapDir: returning %d\n", dirn);
     return dirn;
 }
 
@@ -209,6 +207,12 @@ int
 storeDirNumber(int swap_file_number)
 {
     return swap_file_number >> SWAP_DIR_SHIFT;
+}
+
+int
+storeDirProperFileno(int dirn, int fn)
+{
+    return (dirn << SWAP_DIR_SHIFT) | (fn & SWAP_FILE_MASK);
 }
 
 void
@@ -352,10 +356,31 @@ storeDirCloseTmpSwapLog(int dirn)
 }
 
 void
-storeDirUpdateSwapSize(int fn, size_t size)
+storeDirUpdateSwapSize(int fn, size_t size, int sign)
 {
     int dirn = (fn >> SWAP_DIR_SHIFT) % ncache_dirs;
-    int k = ((size + 1023) >> 10);
+    int k = ((size + 1023) >> 10) * sign;
     SwapDirs[dirn].cur_size += k;
     store_swap_size += k;
+}
+
+void
+storeDirStats(StoreEntry *sentry)
+{
+    int i;
+    SwapDir *SD;
+    storeAppendPrintf(sentry, "Store Directory Statistics:\n");
+    storeAppendPrintf(sentry, "Store Entries: %d\n", meta_data.store_entries);
+    storeAppendPrintf(sentry, "Store Swap Size: %d KB\n", store_swap_size);
+    for (i = 0; i<ncache_dirs; i++) {
+	SD = &SwapDirs[i];
+	storeAppendPrintf(sentry, "\n");
+	storeAppendPrintf(sentry, "Store Directory #%d: %s\n", i, SD->path);
+	storeAppendPrintf(sentry, "First level subdirectories: %d\n", SD->l1);
+	storeAppendPrintf(sentry, "Second level subdirectories: %d\n", SD->l2);
+	storeAppendPrintf(sentry, "Maximum Size: %d KB\n", SD->max_size);
+	storeAppendPrintf(sentry, "Current Size: %d KB\n", SD->cur_size);
+	storeAppendPrintf(sentry, "Percent Used: %0.2f%%\n",
+		100.0 * SD->cur_size /  SD->max_size);
+    }
 }

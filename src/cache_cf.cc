@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.178 1997/04/25 20:15:31 wessels Exp $
+ * $Id: cache_cf.cc,v 1.179 1997/04/25 21:43:56 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -110,7 +110,7 @@ struct SquidConfig Config;
 #define DefaultMemMaxSize 	(8 << 20)	/* 8 MB */
 #define DefaultMemHighWaterMark 90	/* 90% */
 #define DefaultMemLowWaterMark  75	/* 75% */
-#define DefaultSwapMaxSize	(100 << 10)	/* 100 MB (100*1024 kbytes) */
+#define DefaultSwapMaxSize	0 
 #define DefaultSwapHighWaterMark 95	/* 95% */
 #define DefaultSwapLowWaterMark  90	/* 90% */
 #define DefaultNetdbHigh	1000	/* counts, not percents */
