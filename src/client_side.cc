@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.75 1996/12/17 07:16:53 wessels Exp $
+ * $Id: client_side.cc,v 1.76 1996/12/17 21:16:54 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -141,6 +141,9 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
 	} else {
 	    icpState->aclChecklist->browser[0] = '\0';
 	}
+	xstrncpy(icpState->aclChecklist->ident,
+	    icpState->ident.ident,
+	    ICP_IDENT_SZ);
     }
 #if USE_PROXY_AUTH
     if (clientProxyAuthCheck(icpState) == 0) {
