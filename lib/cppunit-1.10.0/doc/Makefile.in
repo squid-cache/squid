@@ -377,8 +377,8 @@ pdf: @PACKAGE@.pdf
 	ln -s ./latex/refman.pdf @PACKAGE@.pdf
 
 clean-local:
-	$(RM) -r latex
-	$(RM) -r html man @PACKAGE@.ps @PACKAGE@.pdf
+	rm -rf latex
+	rm -rf html man @PACKAGE@.ps @PACKAGE@.pdf
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
