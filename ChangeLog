@@ -69,3 +69,4 @@
 	  storeAddFromDisk().
 	- Fixed memory leaks.
 	- Check specifically for tm_gmtoff and set HAVE_TM_GMTOFF
+	- Fixed memory problem for colon but no port ("http://foo.com:/")
