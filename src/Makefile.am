@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.18 2001/12/26 23:03:11 hno Exp $
+#  $Id: Makefile.am,v 1.19 2001/12/27 00:23:31 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -96,6 +96,7 @@ EXTRA_squid_SOURCES = \
 	snmp_agent.c \
 	unlinkd.c \
 	ssl_support.c \
+	ssl_support.h \
 	win32.c
 
 squid_SOURCES = \
