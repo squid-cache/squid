@@ -47,7 +47,7 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	return NULL;
 #endif
 #if !ASYNC_OPEN
-    fd = file_open(path, O_RDONLY);
+    fd = file_open(path, O_RDONLY | O_BINARY);
     if (fd < 0) {
 	debug(78, 3) ("storeAufsOpen: got failude (%d)\n", errno);
 	return NULL;
@@ -67,7 +67,7 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     cbdataLock(callback_data);
     Opening_FD++;
 #if ASYNC_OPEN
-    aioOpen(path, O_RDONLY, 0644, storeAufsOpenDone, sio);
+    aioOpen(path, O_RDONLY | O_BINARY, 0644, storeAufsOpenDone, sio);
 #else
     storeAufsOpenDone(fd, sio, fd, 0);
 #endif
@@ -102,7 +102,7 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
 	return NULL;
 #endif
 #if !ASYNC_CREATE
-    fd = file_open(path, O_WRONLY | O_CREAT | O_TRUNC);
+    fd = file_open(path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
     if (fd < 0) {
 	debug(78, 3) ("storeAufsCreate: got failude (%d)\n", errno);
 	return NULL;
@@ -115,14 +115,14 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
     ((aiostate_t *) (sio->fsstate))->flags.opening = 1;
     sio->swap_filen = filn;
     sio->swap_dirn = dirn;
-    sio->mode = O_WRONLY;
+    sio->mode = O_WRONLY | O_BINARY;
     sio->callback = callback;
     sio->callback_data = callback_data;
     sio->e = (StoreEntry *) e;
     cbdataLock(callback_data);
     Opening_FD++;
 #if ASYNC_CREATE
-    aioOpen(path, O_WRONLY | O_CREAT | O_TRUNC, 0644, storeAufsOpenDone, sio);
+    aioOpen(path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0644, storeAufsOpenDone, sio);
 #else
     storeAufsOpenDone(fd, sio, fd, 0);
 #endif
