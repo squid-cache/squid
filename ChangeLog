@@ -2,6 +2,12 @@
 	  and HEAD requests (Henrik Nordstrom).
 	- Fixed errorAppendEntry() bug in gopherReadReply().
 	- Basic support for FTP URL typecodes (;type=X).
+	- Support for access controls based on ehternet MAC addresses
+	  (Dale).
+	- Initial URN support; see
+	  http://squid.nlanr.net/Squid/urn-support.html
+	- Fixed client-side persistent connections for objects with
+	  bad content lengths (Henrik Nordstrom).
 
 Changes to squid-1.2.beta8 (Dec 2, 1997):
 
