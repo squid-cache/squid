@@ -5,7 +5,7 @@ struct _acl_ip_data {
     struct in_addr addr2;
     struct in_addr mask;
 #ifndef USE_SPLAY_TREE
-    struct _acl_ip_data *next;
+    acl_ip_data *next;
 #endif
 };
 
@@ -13,12 +13,12 @@ struct _acl_time_data {
     int weekbits;
     int start;
     int stop;
-    struct _acl_time_data *next;
+    acl_time_data *next;
 };
 
 struct _acl_name_list {
     char name[ACL_NAME_SZ];
-    struct _acl_name_list *next;
+    acl_name_list *next;
 };
 
 struct _acl_proxy_auth {
@@ -31,15 +31,15 @@ struct _acl_proxy_auth {
 
 struct _acl_deny_info_list {
     char url[MAX_URL];
-    struct _acl_name_list *acl_list;
-    struct _acl_deny_info_list *next;
+    acl_name_list *acl_list;
+    acl_deny_info_list *next;
 };
 
 #if USE_ARP_ACL
 struct _acl_arp_data {
     unsigned char eth[6];
 #ifndef USE_SPLAY_TREE
-    struct _acl_arp_data *next;
+    acl_arp_data *next;
 #endif
 };
 
@@ -49,7 +49,7 @@ struct _acl_arp_data {
 struct _snmpconf {
     char *line;
     int type;
-    struct _snmpconf *next;
+    snmpconf *next;
 };
 
 typedef struct _viewEntry {
@@ -370,7 +370,7 @@ struct _dwrite_q {
     int len;
     off_t buf_offset;
     struct _dwrite_q *next;
-    FREE *free;
+    FREE *free_func;
 };
 
 struct _fde {
@@ -669,7 +669,9 @@ struct _peer {
 
 struct _net_db_name {
     char *name;
-    struct _net_db_name *next;
+    net_db_name *htbl_next;
+    net_db_name *next;
+    netdbEntry *net_db_entry;
 };
 
 struct _net_db_peer {
@@ -681,7 +683,7 @@ struct _net_db_peer {
 
 struct _netdbEntry {
     char *key;
-    struct _netdbEntry *next;
+    netdbEntry *next;
     char network[16];
     int pings_sent;
     int pings_recv;
@@ -746,8 +748,6 @@ struct _Meta_data {
     int hot_vm;
     int ipcache_count;
     int fqdncache_count;
-    int netdb_addrs;
-    int netdb_hosts;
     int netdb_peers;
     int misc;
     int client_info;
@@ -899,7 +899,7 @@ struct _CommWriteStateData {
     off_t offset;
     CWCB *handler;
     void *handler_data;
-    FREE *free;
+    FREE *free_func;
 };
 
 struct _ErrorState {
