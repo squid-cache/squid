@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.220 1998/02/17 19:12:06 wessels Exp $
+ * $Id: main.cc,v 1.221 1998/02/17 23:04:04 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -436,9 +436,6 @@ mainInitialize(void)
 	memInit();		/* memInit must go before at least redirect */
 	disk_init();		/* disk_init must go before ipcache_init() */
     }
-#if USE_ASYNC_IO
-    aioClose(dup(0));		/* cough */
-#endif
     ipcache_init();
     fqdncache_init();
     dnsOpenServers();
