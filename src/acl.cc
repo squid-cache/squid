@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.259 2001/09/03 10:33:02 robertc Exp $
+ * $Id: acl.cc,v 1.260 2001/10/10 15:17:38 adrian Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -51,7 +51,6 @@ static void aclParseMethodList(void *curlist);
 static void aclParseTimeSpec(void *curlist);
 static void aclParseIntRange(void *curlist);
 static char *strtokFile(void);
-static void aclDestroyAclList(acl_list * list);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyIntRange(intrange *);
 static void aclLookupProxyAuthStart(aclCheck_t * checklist);
@@ -966,9 +965,6 @@ aclParseAccessLine(acl_access ** head)
     acl_access *A = NULL;
     acl_access *B = NULL;
     acl_access **T = NULL;
-    acl_list *L = NULL;
-    acl_list **Tail = NULL;
-    acl *a = NULL;
 
     /* first expect either 'allow' or 'deny' */
     if ((t = strtok(NULL, w_space)) == NULL) {
@@ -990,10 +986,31 @@ aclParseAccessLine(acl_access ** head)
 	cbdataFree(A);
 	return;
     }
+    aclParseAclList(&A->acl_list);
+    if (A->acl_list == NULL) {
+	debug(28, 0) ("%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
+	cbdataFree(A);
+	return;
+    }
+    A->cfgline = xstrdup(config_input_line);
+    /* Append to the end of this list */
+    for (B = *head, T = head; B; T = &B->next, B = B->next);
+    *T = A;
+    /* We lock _acl_access structures in aclCheck() */
+}
+
+void
+aclParseAclList(acl_list ** head)
+{
+    acl_list *L = NULL;
+    acl_list **Tail = head;	/* sane name in the use below */
+    acl *a = NULL;
+    char *t;
 
     /* next expect a list of ACL names, possibly preceeded
      * by '!' for negation */
-    Tail = &A->acl_list;
     while ((t = strtok(NULL, w_space))) {
 	L = memAllocate(MEM_ACL_LIST);
 	L->op = 1;		/* defaults to non-negated */
@@ -1015,18 +1032,6 @@ aclParseAccessLine(acl_access ** head)
 	*Tail = L;
 	Tail = &L->next;
     }
-    if (A->acl_list == NULL) {
-	debug(28, 0) ("%s line %d: %s\n",
-	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
-	cbdataFree(A);
-	return;
-    }
-    A->cfgline = xstrdup(config_input_line);
-    /* Append to the end of this list */
-    for (B = *head, T = head; B; T = &B->next, B = B->next);
-    *T = A;
-    /* We lock _acl_access structures in aclCheck() */
 }
 
 /**************/
@@ -2101,13 +2106,13 @@ aclDestroyAcls(acl ** head)
     *head = NULL;
 }
 
-static void
-aclDestroyAclList(acl_list * list)
+void
+aclDestroyAclList(acl_list ** head)
 {
-    acl_list *next = NULL;
-    for (; list; list = next) {
-	next = list->next;
-	memFree(list, MEM_ACL_LIST);
+    acl_list *l;
+    for (l = *head; l; l = *head) {
+	*head = l->next;
+	memFree(l, MEM_ACL_LIST);
     }
 }
 
@@ -2119,8 +2124,7 @@ aclDestroyAccessList(acl_access ** list)
     for (l = *list; l; l = next) {
 	debug(28, 3) ("aclDestroyAccessList: '%s'\n", l->cfgline);
 	next = l->next;
-	aclDestroyAclList(l->acl_list);
-	l->acl_list = NULL;
+	aclDestroyAclList(&l->acl_list);
 	safe_free(l->cfgline);
 	cbdataFree(l);
     }
@@ -2200,13 +2204,13 @@ aclHostDomainCompare(const void *a, const void *b)
 
 /* compare two network specs
  * 
- * NOTE: this is very similar to aclIpNetworkCompare and it's not yet
- * clear whether this OK. The problem could be with when a network
- * is a subset of the other networks:
- * 
- * 128.1.2.0/255.255.255.128 == 128.1.2.0/255.255.255.0 ?
- * 
- * Currently only the first address of the first network is used.
+ * * NOTE: this is very similar to aclIpNetworkCompare and it's not yet
+ * * clear whether this OK. The problem could be with when a network
+ * * is a subset of the other networks:
+ * * 
+ * * 128.1.2.0/255.255.255.128 == 128.1.2.0/255.255.255.0 ?
+ * * 
+ * * Currently only the first address of the first network is used.
  */
 
 /* compare an address and a network spec */

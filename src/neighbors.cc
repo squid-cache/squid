@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.297 2001/06/26 21:02:05 wessels Exp $
+ * $Id: neighbors.cc,v 1.298 2001/10/10 15:17:41 adrian Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -759,9 +759,9 @@ neighborIgnoreNonPeer(const struct sockaddr_in *from, icp_opcode opcode)
 
 /* ignoreMulticastReply
  * 
- * We want to ignore replies from multicast peers if the
- * cache_host_domain rules would normally prevent the peer
- * from being used
+ * * We want to ignore replies from multicast peers if the
+ * * cache_host_domain rules would normally prevent the peer
+ * * from being used
  */
 static int
 ignoreMulticastReply(peer * p, MemObject * mem)
@@ -1072,7 +1072,7 @@ peerProbeConnect(peer * p)
 	return;			/* probe already running */
     if (squid_curtime - p->stats.last_connect_probe < Config.Timeout.connect)
 	return;			/* don't probe to often */
-    fd = comm_open(SOCK_STREAM, 0, Config.Addrs.tcp_outgoing,
+    fd = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL),
 	0, COMM_NONBLOCKING, p->host);
     if (fd < 0)
 	return;

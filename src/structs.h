@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.402 2001/10/08 16:18:33 hno Exp $
+ * $Id: structs.h,v 1.403 2001/10/10 15:17:42 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -260,6 +260,18 @@ struct _acl_access {
     acl_access *next;
 };
 
+struct _acl_address {
+    acl_address *next;
+    acl_list *acl_list;
+    struct in_addr addr;
+};
+
+struct _acl_tos {
+    acl_tos *next;
+    acl_list *acl_list;
+    int tos;
+};
+
 struct _aclCheck_t {
     const acl_access *access_list;
     struct in_addr src_addr;
@@ -490,7 +502,6 @@ struct _SquidConfig {
 	u_short port;
     } Announce;
     struct {
-	struct in_addr tcp_outgoing;
 	struct in_addr udp_incoming;
 	struct in_addr udp_outgoing;
 #if SQUID_SNMP
@@ -589,6 +600,8 @@ struct _SquidConfig {
 #endif
 	acl_access *redirector;
 	acl_access *reply;
+	acl_address *outgoing_address;
+	acl_tos *outgoing_tos;
     } accessList;
     acl_deny_info_list *denyInfoList;
     struct _authConfig {
@@ -733,6 +746,8 @@ struct _fde {
     unsigned int type;
     u_short local_port;
     u_short remote_port;
+    struct in_addr local_addr;
+    unsigned char tos;
     char ipaddr[16];		/* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
     struct {
@@ -745,6 +760,8 @@ struct _fde {
 	unsigned int nonblocking:1;
 	unsigned int ipc:1;
 	unsigned int called_connect:1;
+	unsigned int nodelay:1;
+	unsigned int close_on_exec:1;
     } flags;
     int bytes_read;
     int bytes_written;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.81 2001/03/03 10:39:31 hno Exp $
+ * $Id: forward.cc,v 1.82 2001/10/10 15:17:41 adrian Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -266,6 +266,58 @@ fwdConnectTimeout(int fd, void *data)
     comm_close(fd);
 }
 
+static struct in_addr
+aclMapAddr(acl_address * head, aclCheck_t * ch)
+{
+    acl_address *l;
+    struct in_addr addr;
+    for (l = head; l; l = l->next) {
+	if (aclMatchAclList(l->acl_list, ch))
+	    return l->addr;
+    }
+    addr.s_addr = INADDR_ANY;
+    return addr;
+}
+
+static int
+aclMapTOS(acl_tos * head, aclCheck_t * ch)
+{
+    acl_tos *l;
+    for (l = head; l; l = l->next) {
+	if (aclMatchAclList(l->acl_list, ch))
+	    return l->tos;
+    }
+    return 0;
+}
+
+struct in_addr
+getOutgoingAddr(request_t * request)
+{
+    aclCheck_t ch;
+    memset(&ch, '\0', sizeof(aclCheck_t));
+    if (request) {
+	ch.src_addr = request->client_addr;
+	ch.my_addr = request->my_addr;
+	ch.my_port = request->my_port;
+	ch.request = request;
+    }
+    return aclMapAddr(Config.accessList.outgoing_address, &ch);
+}
+
+unsigned long
+getOutgoingTOS(request_t * request)
+{
+    aclCheck_t ch;
+    memset(&ch, '\0', sizeof(aclCheck_t));
+    if (request) {
+	ch.src_addr = request->client_addr;
+	ch.my_addr = request->my_addr;
+	ch.my_port = request->my_port;
+	ch.request = request;
+    }
+    return aclMapTOS(Config.accessList.outgoing_tos, &ch);
+}
+
 static void
 fwdConnectStart(void *data)
 {
@@ -277,6 +329,8 @@ fwdConnectStart(void *data)
     const char *host;
     unsigned short port;
     time_t ctimeout;
+    struct in_addr outgoing;
+    unsigned short tos;
     assert(fs);
     assert(fwdState->server_fd == -1);
     debug(17, 3) ("fwdConnectStart: %s\n", url);
@@ -306,11 +360,17 @@ fwdConnectStart(void *data)
 #if URL_CHECKSUM_DEBUG
     assert(fwdState->entry->mem_obj->chksum == url_checksum(url));
 #endif
-    fd = comm_open(SOCK_STREAM,
+    outgoing = getOutgoingAddr(fwdState->request);
+    tos = getOutgoingTOS(fwdState->request);
+
+    debug(17, 3) ("fwdConnectStart: got addr %s, tos %d\n",
+	inet_ntoa(outgoing), tos);
+    fd = comm_openex(SOCK_STREAM,
 	0,
-	Config.Addrs.tcp_outgoing,
+	outgoing,
 	0,
 	COMM_NONBLOCKING,
+	tos,
 	url);
     if (fd < 0) {
 	debug(50, 4) ("fwdConnectStart: %s\n", xstrerror());

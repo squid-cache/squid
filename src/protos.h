@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.413 2001/10/08 16:18:32 hno Exp $
+ * $Id: protos.h,v 1.414 2001/10/10 15:17:41 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -59,7 +59,9 @@ extern void aclChecklistFree(aclCheck_t *);
 extern int aclMatchAclList(const acl_list * list, aclCheck_t * checklist);
 extern void aclDestroyAccessList(struct _acl_access **list);
 extern void aclDestroyAcls(acl **);
+extern void aclDestroyAclList(acl_list **);
 extern void aclParseAccessLine(struct _acl_access **);
+extern void aclParseAclList(acl_list **);
 extern void aclParseAclLine(acl **);
 extern int aclIsProxyAuth(const char *name);
 extern err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
@@ -153,6 +155,7 @@ extern int comm_connect_addr(int sock, const struct sockaddr_in *);
 extern void comm_init(void);
 extern int comm_listen(int sock);
 extern int comm_open(int, int, struct in_addr, u_short port, int, const char *note);
+extern int comm_openex(int, int, struct in_addr, u_short, int, unsigned char TOS, const char *);
 extern u_short comm_local_port(int fd);
 
 extern void commSetSelect(int, unsigned int, PF *, void *, time_t);
@@ -720,6 +723,8 @@ extern void fwdUninit(void);
 extern void fwdLogRotate(void);
 extern void fwdStatus(FwdState *, http_status);
 #endif
+struct in_addr getOutgoingAddr(request_t * request);
+unsigned long getOutgoingTOS(request_t * request);
 
 extern void urnStart(request_t *, StoreEntry *);
 

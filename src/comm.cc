@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.320 2001/08/26 22:22:43 hno Exp $
+ * $Id: comm.cc,v 1.321 2001/10/10 15:17:40 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -148,7 +148,7 @@ commBind(int s, struct in_addr in_addr, u_short port)
 }
 
 /* Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
- * is OR of flags specified in comm.h. */
+ * is OR of flags specified in comm.h. Defaults TOS */
 int
 comm_open(int sock_type,
     int proto,
@@ -157,7 +157,23 @@ comm_open(int sock_type,
     int flags,
     const char *note)
 {
+    return comm_openex(sock_type, proto, addr, port, flags, 0, note);
+}
+
+
+/* Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
+ * is OR of flags specified in defines.h:COMM_* */
+int
+comm_openex(int sock_type,
+    int proto,
+    struct in_addr addr,
+    u_short port,
+    int flags,
+    unsigned char TOS,
+    const char *note)
+{
     int new_socket;
+    int tos;
     fde *F = NULL;
 
     /* Create socket for accepting new connections. */
@@ -177,10 +193,23 @@ comm_open(int sock_type,
 	}
 	return -1;
     }
+    /* set TOS if needed */
+    if (TOS) {
+#ifdef IP_TOS
+	tos = TOS;
+	if (setsockopt(new_socket, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int)) < 0)
+	        debug(50, 1) ("comm_open: setsockopt(IP_TOS) on FD %d: %s\n",
+		new_socket, xstrerror());
+#else
+	debug(50, 0) ("comm_open: setsockopt(IP_TOS) not supported on this platform\n");
+#endif
+    }
     /* update fdstat */
     debug(5, 5) ("comm_open: FD %d is a new socket\n", new_socket);
     fd_open(new_socket, FD_SOCKET, note);
     F = &fd_table[new_socket];
+    F->local_addr = addr;
+    F->tos = tos;
     if (!(flags & COMM_NOCLOEXEC))
 	commSetCloseOnExec(new_socket);
     if ((flags & COMM_REUSEADDR))
@@ -303,6 +332,7 @@ static int
 commResetFD(ConnectStateData * cs)
 {
     int fd2;
+    fde *F;
     if (!cbdataValid(cs->data))
 	return 0;
     statCounter.syscalls.sock.sockets++;
@@ -318,23 +348,34 @@ commResetFD(ConnectStateData * cs)
 	debug(5, 0) ("commResetFD: dup2: %s\n", xstrerror());
 	if (ENFILE == errno || EMFILE == errno)
 	    fdAdjustReserved();
+	close(fd2);
 	return 0;
     }
     close(fd2);
+    F = &fd_table[cs->fd];
     fd_table[cs->fd].flags.called_connect = 0;
     /*
      * yuck, this has assumptions about comm_open() arguments for
      * the original socket
      */
-    commSetCloseOnExec(cs->fd);
-    if (Config.Addrs.tcp_outgoing.s_addr != no_addr.s_addr) {
-	if (commBind(cs->fd, Config.Addrs.tcp_outgoing, 0) != COMM_OK) {
-	    return 0;
-	}
+    if (commBind(cs->fd, F->local_addr, F->local_port) != COMM_OK) {
+	debug(5, 0) ("commResetFD: bind: %s\n", xstrerror());
+	return 0;
     }
-    commSetNonBlocking(cs->fd);
+#ifdef IP_TOS
+    if (F->tos) {
+	int tos = F->tos;
+	if (setsockopt(cs->fd, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int)) < 0)
+	        debug(50, 1) ("commResetFD: setsockopt(IP_TOS) on FD %d: %s\n", cs->fd, xstrerror());
+    }
+#endif
+    if (F->flags.close_on_exec)
+	commSetCloseOnExec(cs->fd);
+    if (F->flags.nonblocking)
+	commSetNonBlocking(cs->fd);
 #ifdef TCP_NODELAY
-    commSetTcpNoDelay(cs->fd);
+    if (F->flags.nodelay)
+	commSetTcpNoDelay(cs->fd);
 #endif
     if (Config.tcpRcvBufsz > 0)
 	commSetTcpRcvbuf(cs->fd, Config.tcpRcvBufsz);
@@ -786,6 +827,7 @@ commSetCloseOnExec(int fd)
     }
     if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0)
 	debug(50, 0) ("FD %d: set close-on-exec failed: %s\n", fd, xstrerror());
+    fd_table[fd].flags.close_on_exec = 1;
 #endif
 }
 
@@ -796,6 +838,7 @@ commSetTcpNoDelay(int fd)
     int on = 1;
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0)
 	debug(50, 1) ("commSetTcpNoDelay: FD %d: %s\n", fd, xstrerror());
+    fd_table[fd].flags.nodelay = 1;
 }
 #endif
 

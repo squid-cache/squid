@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.311 2001/09/18 13:55:00 hno Exp $
+ * $Id: ftp.cc,v 1.312 2001/10/10 15:17:41 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1680,7 +1680,8 @@ ftpSendPasv(FtpStateData * ftpState)
     if (getsockname(ftpState->ctrl.fd, (struct sockaddr *) &addr, &addr_len)) {
 	debug(9, 0) ("ftpSendPasv: getsockname(%d,..): %s\n",
 	    ftpState->ctrl.fd, xstrerror());
-	addr.sin_addr = Config.Addrs.tcp_outgoing;
+	ftpFail(ftpState);
+	return;
     }
     /* Open data channel with the same local address as control channel */
     fd = comm_open(SOCK_STREAM,
