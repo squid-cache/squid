@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.358 1998/07/20 19:24:58 wessels Exp $
+ * $Id: client_side.cc,v 1.359 1998/07/20 20:37:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -430,37 +430,6 @@ modifiedSince(StoreEntry * entry, request_t * request)
     }
 }
 
-#if UNUSED_CODE
-char *
-clientConstructTraceEcho(clientHttpRequest * http)
-{
-    LOCAL_ARRAY(char, line, 256);
-    LOCAL_ARRAY(char, buf, 8192);
-    size_t len;
-    memset(buf, '\0', 8192);
-    snprintf(buf, 8192, "HTTP/1.0 200 OK\r\n");
-    snprintf(line, 256, "Date: %s\r\n", mkrfc1123(squid_curtime));
-    strcat(buf, line);
-    snprintf(line, 256, "Server: Squid/%s\r\n", SQUID_VERSION);
-    strcat(buf, line);
-    snprintf(line, 256, "Content-Type: message/http\r\n");
-    strcat(buf, line);
-    strcat(buf, "\r\n");
-    len = strlen(buf);
-    httpBuildRequestHeader(http->request,
-	http->request,
-	NULL,			/* entry */
-	NULL,			/* in_len */
-	buf + len,
-	8192 - len,
-	http->conn->fd,
-	0);			/* flags */
-    http->log_type = LOG_TCP_MISS;
-    http->http_code = HTTP_OK;
-    return buf;
-}
-#endif /* UNUSED_CODE */
-
 void
 clientPurgeRequest(clientHttpRequest * http)
 {
@@ -510,15 +479,6 @@ checkNegativeHit(StoreEntry * e)
 	return 0;
     return 1;
 }
-
-#if UNUSED_CODE
-static void
-updateCDJunkStats()
-{
-    /* rewrite */
-}
-
-#endif
 
 void
 clientUpdateCounters(clientHttpRequest * http)
