@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_impl.h,v 1.13 2002/02/13 02:01:11 hno Exp $
+ * $Id: snmp_impl.h,v 1.14 2002/02/19 00:27:43 hno Exp $
  */
 
 #ifndef SQUID_SNMP_IMPL_H
@@ -43,15 +43,6 @@ SOFTWARE.
 #endif
 #endif
 #endif
-
-/*
- * Error codes:
- */
-/*
- * These must not clash with SNMP error codes (all positive).
- */
-#define PARSE_ERROR	-1
-#define BUILD_ERROR	-2
 
 #define SID_MAX_LEN	64
 
