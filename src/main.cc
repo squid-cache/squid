@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.340 2001/08/16 00:16:16 hno Exp $
+ * $Id: main.cc,v 1.341 2001/09/03 23:01:45 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -424,7 +424,9 @@ mainSetCwd(void)
 {
     char *p;
     if (Config.coredump_dir) {
-	if (chdir(Config.coredump_dir) == 0) {
+	if (0 == strcmp("none", Config.coredump_dir)) {
+	    (void) 0;
+	} else if (chdir(Config.coredump_dir) == 0) {
 	    debug(0, 1) ("Set Current Directory to %s\n", Config.coredump_dir);
 	    return;
 	} else {
