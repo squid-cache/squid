@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.36 1996/04/09 23:28:36 wessels Exp $ */
-#ident "$Id: store.cc,v 1.36 1996/04/09 23:28:36 wessels Exp $"
+/* $Id: store.cc,v 1.37 1996/04/10 03:53:22 wessels Exp $ */
+#ident "$Id: store.cc,v 1.37 1996/04/10 03:53:22 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -431,9 +431,11 @@ void storeReleaseRequest(e, file, line)
      char *file;
      int line;
 {
+    if (e->flag & RELEASE_REQUEST)
+	return;
     debug(20, 1, "storeReleaseRequest: FROM %s:%d FOR '%s'\n",
 	file, line, e->key ? e->key : e->url);
-    BIT_SET(e->flag, RELEASE_REQUEST);
+    e->flag |=  RELEASE_REQUEST;
 }
 
 /* unlock object, return -1 if object get released after unlock
@@ -2029,8 +2031,7 @@ int storeRelease(e)
     if (storeEntryLocked(e)) {
 	storeExpireNow(e);
 	debug(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit\n");
-	if (!BIT_TEST(e->flag, RELEASE_REQUEST))
-	    storeReleaseRequest(e, __FILE__, __LINE__);
+	storeReleaseRequest(e, __FILE__, __LINE__);
 	return -1;
     }
     if (e->key != NULL) {
