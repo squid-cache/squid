@@ -3,17 +3,29 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.228 2001/08/24 14:29:33 hno Exp $
+dnl  $Id: configure.in,v 1.229 2001/08/31 11:19:06 robertc Exp $
 dnl
 dnl
 dnl
 AC_INIT(src/main.c)
-AC_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.228 $)dnl
-AC_PREFIX_DEFAULT(/usr/local/squid)
 AC_CONFIG_AUX_DIR(cfgaux)
+AM_INIT_AUTOMAKE(Squid, 2.5-DEVEL)
+AM_CONFIG_HEADER(include/autoconf.h)
+AC_REVISION($Revision: 1.229 $)dnl
+AC_PREFIX_DEFAULT(/usr/local/squid)
 
+dnl Set default LDFLAGS
+if test -z "$LDFLAGS"; then
+        LDFLAGS="-g"
+fi
+
+PRESET_CFLAGS="$CFLAGS"
+
+dnl Check for GNU cc
+AC_PROG_CC
+AM_PROG_CC_C_O
 AC_CANONICAL_HOST
+
 
 CRYPTLIB=''
 REGEXLIB=''	# -lregex
@@ -26,24 +38,26 @@ if test "$libexecdir" = '${exec_prefix}/libexec' &&
 	localstatedir='${prefix}'
 fi
 
-dnl use .exe suffix for executables on cygwin32 platform
+dnl find out the exe extension for this platform. If it's not empty, use it for CGI's as well.
+AC_EXEEXT
+AC_OBJEXT
+
+if test -z "$EXEEXT"; then
+	CGIEXT=".cgi"
+else
+	CGIEXT="$EXEEXT"
+fi
+
 dnl this should be expanded to a list of platform sensible support requirements.
 dnl (adding an option like --enable-cygwin-support doesn't make sense :]) - R Collins 2001
 case "$host_os" in
-cygwin|cygwin32|os2)
-	exec_suffix=".exe"
-	cgi_suffix=".exe"
-	WIN32_OBJS="win32.o"
+cygwin|cygwin32)
+        AM_CONDITIONAL(ENABLE_WIN32SPECIFIC, true)
 	;;
 *)
-	exec_suffix=""
-	cgi_suffix=".cgi"
-	WIN32_OBJS=""
+	AM_CONDITIONAL(ENABLE_WIN32SPECIFIC, false)
 	;;
 esac
-AC_SUBST(exec_suffix)
-AC_SUBST(cgi_suffix)
-AC_SUBST(WIN32_OBJS)
 
 if test -z "$CACHE_HTTP_PORT"; then
 	CACHE_HTTP_PORT="3128"
@@ -58,15 +72,6 @@ AC_SUBST(CACHE_ICP_PORT)
 
 AC_DEFINE_UNQUOTED(CONFIG_HOST_TYPE, "$host")
 
-dnl Set default LDFLAGS
-if test -z "$LDFLAGS"; then
-	LDFLAGS="-g"
-fi
-
-PRESET_CFLAGS="$CFLAGS"
-
-dnl Check for GNU cc
-AC_PROG_CC
 
 dnl Gerben Wierda <Gerben_Wierda@RnA.nl>
 case "$host" in
@@ -321,7 +326,7 @@ AC_ARG_ENABLE(storeio,
 	for module in $srcdir/src/fs/*; do
 	    if test -f $module/Makefile.in; then
 		STORE_MODULES="$STORE_MODULES `basename $module`"
-	    fi
+	     fi
 	done
   	;;
   no)
@@ -335,11 +340,21 @@ AC_ARG_ENABLE(storeio,
   fi
 ])
 echo "Store modules built: $STORE_MODULES"
-AC_SUBST(STORE_MODULES)
-STORE_OBJS="fs/`echo $STORE_MODULES|sed -e 's% %.a fs/%g'`.a"
+STORE_OBJS="fs/lib`echo $STORE_MODULES|sed -e 's% %.a fs/lib%g'`.a"
 AC_SUBST(STORE_OBJS)
 STORE_LIBS="`echo $STORE_OBJS|sed -e 's%fs/%%g'`"
 AC_SUBST(STORE_LIBS)
+dnl remove all but diskd - its the only module that needs to recurse
+dnl into the sub directory
+STORE_MODULE_SUBDIRS=
+for fs in $STORE_MODULES none; do
+    if test $fs == diskd; then
+        STORE_MODULE_SUBDIRS="$STORE_MODULE_SUBDIRS $fs"
+    fi
+done
+AC_SUBST(STORE_MODULES)
+AC_SUBST(STORE_MODULE_SUBDIRS)
+
 
 dnl --enable-heap-replacement compability option
 AC_ARG_ENABLE(heap-replacement,
@@ -381,7 +396,7 @@ AC_ARG_ENABLE(removal-policies,
 ])
 echo "Removal policies built: $REPL_POLICIES"
 AC_SUBST(REPL_POLICIES)
-REPL_OBJS="repl/`echo $REPL_POLICIES|sed -e 's% %.a repl/%g'`.a"
+REPL_OBJS="repl/lib`echo $REPL_POLICIES|sed -e 's% %.a repl/lib%g'`.a"
 AC_SUBST(REPL_OBJS)
 REPL_LIBS="`echo $REPL_OBJS|sed -e 's%repl/%%g'`"
 AC_SUBST(REPL_LIBS)
@@ -392,20 +407,20 @@ AC_ARG_ENABLE(icmp,
 [ if test "$enableval" = "yes" ; then
     echo "ICMP enabled"
     AC_DEFINE(USE_ICMP)
-    OPT_PINGER_EXE='$(OPT_PINGER_EXE)'
+    OPT_PINGER_EXE='pinger'
   fi
 ])
 AC_SUBST(OPT_PINGER_EXE)
 
+AM_CONDITIONAL(USE_DELAY_POOLS, false)
 AC_ARG_ENABLE(delay-pools,
 [  --enable-delay-pools    Enable delay pools to limit bandwidth usage],
 [ if test "$enableval" = "yes" ; then
     echo "Delay pools enabled"
-    DELAY_OBJS='$(DELAY_OBJS)'
     AC_DEFINE(DELAY_POOLS)
+    AM_CONDITIONAL(USE_DELAY_POOLS, true)
   fi
 ])
-AC_SUBST(DELAY_OBJS)
 
 AC_ARG_ENABLE(mem-gen-trace,
 [  --enable-mem-gen-trace  Do trace of memory stuff],
@@ -450,19 +465,19 @@ AC_ARG_ENABLE(kill-parent-hack,
   fi
 ])
 
+AM_CONDITIONAL(USE_SNMP, false)
 AC_ARG_ENABLE(snmp,
 [  --enable-snmp           Enable SNMP monitoring],
 [ if test "$enableval" = "yes" ; then
     echo "SNMP monitoring enabled"
     AC_DEFINE(SQUID_SNMP)
     SNMPLIB='-L../snmplib -lsnmp'
-    SNMP_OBJS='$(SNMP_OBJS)'
+    AM_CONDITIONAL(USE_SNMP, true)
     SNMP_MAKEFILE=./snmplib/Makefile
     makesnmplib=snmplib
   fi
 ])
 AC_SUBST(SNMPLIB)
-AC_SUBST(SNMP_OBJS)
 AC_SUBST(makesnmplib)
 
 AC_ARG_ENABLE(time-hack,
@@ -508,22 +523,25 @@ AC_ARG_ENABLE(arp-acl,
    fi
 ])
 
+AM_CONDITIONAL(ENABLE_HTCP, false)
 AC_ARG_ENABLE(htcp,
 [  --enable-htcp           Enable HTCP protocol],
 [ if test "$enableval" = "yes" ; then
     echo "HTCP enabled"
-    HTCP_OBJS='$(HTCP_OBJS)'
     AC_DEFINE(USE_HTCP)
+    AM_CONDITIONAL(ENABLE_HTCP, true)
   fi
 ])
-AC_SUBST(HTCP_OBJS)
+
+AM_CONDITIONAL(ENABLE_SSL, false)
+SSLINC=""
 
 AC_ARG_ENABLE(ssl,
 [  --enable-ssl            Enable ssl gatewaying support using OpenSSL],
 [ if test "$enableval" != "no"; then
     echo "SSL gatewaying enabled"
     AC_DEFINE(USE_SSL)
-    SSL_OBJS='$(SSL_OBJS)'
+    AM_CONDITIONAL(ENABLE_SSL, true)
     SSLLIB='-lssl -lcrypto'
     USE_OPENSSL=1
   fi
@@ -539,6 +557,7 @@ AC_ARG_WITH(openssl,
   case "$with_ssl" in
   yes)
     USE_OPENSSL=1
+    AM_CONDITIONAL(ENABLE_SSL, true)
     ;;
   no)
     USE_OPENSSL=
@@ -547,6 +566,7 @@ AC_ARG_WITH(openssl,
     SSLLIBDIR="$with_ssl/lib"
     SSLINC="-I$with_ssl/include"
     USE_OPENSSL=1
+    AM_CONDITIONAL(ENABLE_SSL, true)
   esac
 ])
 
@@ -559,11 +579,8 @@ fi
 if test -n "$SSLLIBDIR"; then
   SSLLIB="-L$SSLLIBDIR $SSLLIB"
 fi
-if test -n "$SSLINC"; then
-  CFLAGS="$CFLAGS $SSLINC"
-fi
-AC_SUBST(SSL_OBJS)
 AC_SUBST(SSLLIB)
+AC_SUBST(SSLINC)
 
 AC_ARG_ENABLE(forw-via-db,
 [  --enable-forw-via-db    Enable Forw/Via database],
@@ -662,6 +679,7 @@ AC_ARG_ENABLE(linux-netfilter,
   fi
 ])
 
+AM_CONDITIONAL(MAKE_LEAKFINDER, false)
 dnl Enable Leak Finding Functions
 AC_ARG_ENABLE(leakfinder,
 [  --enable-leakfinder
@@ -672,11 +690,10 @@ AC_ARG_ENABLE(leakfinder,
 [ if test "$enableval" = "yes" ; then
 	echo "Leak-Finding enabled"
 	AC_DEFINE(USE_LEAKFINDER)
-        LEAKFINDER_OBJS='$(LEAKFINDER_OBJS)'
 	USE_LEAKFINDER="yes"
+	AM_CONDITIONAL(MAKE_LEAKFINDER, true)
   fi
 ])
-AC_SUBST(LEAKFINDER_OBJS)
 
 AC_ARG_ENABLE(ident-lookups,
 [  --disable-ident-lookups
@@ -690,6 +707,7 @@ AC_ARG_ENABLE(ident-lookups,
   fi
 ])
 
+AM_CONDITIONAL(USE_DNSSERVER, false)
 use_dnsserver=
 AC_ARG_ENABLE(internal-dns,
 [  --disable-internal-dns  This prevents Squid from directly sending and
@@ -703,13 +721,12 @@ AC_ARG_ENABLE(internal-dns,
 if test "$use_dnsserver" = "yes"; then
     AC_DEFINE(USE_DNSSERVERS)
     OPT_DNSSERVER_EXE='$(OPT_DNSSERVER_EXE)'
-    DNS_OBJS='dns.o'
+    AM_CONDITIONAL(USE_DNSSERVER, true)
 else
     OPT_DNSSERVER_EXE=''
-    DNS_OBJS='dns_internal.o'
 fi
 AC_SUBST(OPT_DNSSERVER_EXE)
-AC_SUBST(DNS_OBJS)
+dnl AC_SUBST(DNSSOURCE)
 
 
 AC_ARG_ENABLE(truncate,
@@ -768,7 +785,7 @@ AC_ARG_ENABLE(auth,
 ])
 echo "Auth scheme modules built: $AUTH_MODULES"
 AC_SUBST(AUTH_MODULES)
-AUTH_OBJS="auth/`echo $AUTH_MODULES|sed -e 's% %.a auth/%g'`.a"
+AUTH_OBJS="auth/lib`echo $AUTH_MODULES|sed -e 's% %.a auth/lib%g'`.a"
 AC_SUBST(AUTH_OBJS)
 AUTH_LIBS="`echo $AUTH_OBJS|sed -e 's%auth/%%g'`"
 AC_SUBST(AUTH_LIBS)
@@ -902,15 +919,11 @@ AC_ARG_ENABLE(unlinkd,
 if test "$use_unlinkd" = "yes"; then
     echo "unlinkd enabled"
     AC_DEFINE(USE_UNLINKD)
-    OPT_UNLINKD_EXE='$(OPT_UNLINKD_EXE)'
-    UNLINKD_OBJS='unlinkd.o'
+    AM_CONDITIONAL(ENABLE_UNLINKD, true)
 else
     echo "unlinkd disabled"
-    OPT_UNLINKD_EXE=''
-    UNLINKD_OBJS=''
+    AM_CONDITIONAL(ENABLE_UNLINKD, false)
 fi
-AC_SUBST(OPT_UNLINKD_EXE)
-AC_SUBST(UNLINKD_OBJS)
 
 dnl Enable backtraces on fatal errors
 AC_ARG_ENABLE(stacktraces,
@@ -966,7 +979,7 @@ AC_PATH_PROG(MV, mv, $FALSE)
 AC_PATH_PROG(MKDIR, mkdir, $FALSE)
 AC_PATH_PROG(LN, ln, cp)
 AC_PATH_PROG(PERL, perl, none)
-AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
+dnl automake handles this AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
 AC_PATH_PROG(AR, ar, $FALSE)
 
 if test "$ac_cv_path_PERL" = "none"; then
@@ -1967,44 +1980,76 @@ AC_SUBST(XTRA_LIBS)
 dnl Clean up after OSF/1 core dump bug
 rm -f core 
 
-FS_MAKEFILES=""
-for fs in $STORE_MODULES none; do
-	if test $fs != none; then
-	    FS_MAKEFILES="$FS_MAKEFILES ./src/fs/$fs/Makefile"
-	fi
-done
-REPL_MAKEFILES=""
-for repl in $REPL_POLICIES none; do
-	if test $repl != none; then
-	    REPL_MAKEFILES="$REPL_MAKEFILES ./src/repl/$repl/Makefile"
-	fi
-done
+dnl FS_MAKEFILES=""
+dnl for fs in $STORE_MODULES none; do
+dnl 	if test $fs != none; then
+dnl	    FS_MAKEFILES="$FS_MAKEFILES ./src/fs/$fs/Makefile"
+dnl 	fi
+dnl done
+dnl REPL_MAKEFILES=""
+dnl for repl in $REPL_POLICIES none; do
+dnl 	if test $repl != none; then
+dnl 	    REPL_MAKEFILES="$REPL_MAKEFILES ./src/repl/$repl/Makefile"
+dnl 	fi
+dnl done
 
 dnl This could actually be used to find all the Makefiles..
-AUTH_MAKEFILES=""
-for auth in `find $srcdir/src/auth -type d -print`; do
-	if test -f $auth/Makefile.in; then
-	    dir=`echo $auth | sed -e "s|^$srcdir/||"`
-            AUTH_MAKEFILES="$AUTH_MAKEFILES ./$dir/Makefile"
-	fi
-done
+dnl One of Automake's limitations is that it needs to know all the created makefiles.
+dnl AUTH_MAKEFILES=""
+dnl for auth in `find $srcdir/src/auth -type d -print`; do
+dnl 	if test -f $auth/Makefile.in; then
+dnl	    dir=`echo $auth | sed -e "s|^$srcdir/||"`
+dnl            AUTH_MAKEFILES="$AUTH_MAKEFILES ./$dir/Makefile"
+dnl	fi
+dnl done
 
-AC_OUTPUT(\
-	./makefile \
-	./lib/Makefile \
-	./include/config.h \
-	./scripts/Makefile \
-	./scripts/RunCache \
-	./scripts/RunAccel \
-	./src/Makefile \
-	./src/fs/Makefile \
-	$FS_MAKEFILES \
-	./src/repl/Makefile \
-	$REPL_MAKEFILES \
-	./src/auth/Makefile \
-	$AUTH_MAKEFILES \
-	./contrib/Makefile \
-	$SNMP_MAKEFILE \
-	./icons/Makefile \
-	./errors/Makefile \
+
+dnl     src/fs/aufs/Makefile \
+dnl     src/fs/coss/Makefile \
+dnl     src/fs/diskd/Makefile \
+dnl     src/fs/null/Makefile \
+dnl     src/fs/ufs/Makefile \
+dnl     src/repl/heap/Makefile \
+dnl     src/repl/lru/Makefile \
+AC_OUTPUT([\
+	Makefile \
+	lib/Makefile \
+	include/config.h \
+	scripts/Makefile \
+	scripts/RunCache \
+	scripts/RunAccel \
+	src/Makefile \
+	src/fs/Makefile \
+	src/repl/Makefile \
+	src/auth/Makefile \
+	src/auth/basic/Makefile \
+	src/auth/basic/helpers/Makefile \
+	src/auth/basic/helpers/LDAP/Makefile \
+	src/auth/basic/helpers/MSNT/Makefile \
+	src/auth/basic/helpers/NCSA/Makefile \
+	src/auth/basic/helpers/PAM/Makefile \
+	src/auth/basic/helpers/SMB/Makefile \
+	src/auth/basic/helpers/YP/Makefile \
+	src/auth/basic/helpers/getpwnam/Makefile \
+	src/auth/basic/helpers/multi-domain-NTLM/Makefile \
+	src/auth/digest/Makefile \
+	src/auth/digest/helpers/Makefile \
+	src/auth/digest/helpers/password/Makefile \
+	src/auth/ntlm/Makefile \
+	src/auth/ntlm/helpers/Makefile \
+	src/auth/ntlm/helpers/fakeauth/Makefile \
+	src/auth/ntlm/helpers/no_check/Makefile \
+	src/auth/ntlm/helpers/NTLMSSP/Makefile \
+	src/auth/ntlm/helpers/NTLMSSP/smbval/Makefile \
+	contrib/Makefile \
+	snmplib/Makefile \
+	icons/Makefile \
+	errors/Makefile \
+     src/fs/aufs/Makefile \
+     src/fs/coss/Makefile \
+     src/fs/diskd/Makefile \
+     src/fs/null/Makefile \
+     src/fs/ufs/Makefile \
+     src/repl/heap/Makefile \
+     src/repl/lru/Makefile \]
 )

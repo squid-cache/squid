@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.80 2001/02/07 18:56:52 hno Exp $
+ * $Id: snmp_agent.cc,v 1.81 2001/08/31 11:19:12 robertc Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -96,8 +96,8 @@ snmp_confFn(variable_list * Var, snint * ErrP)
     case CONF_VERSION_ID:
 	Answer = snmp_var_new(Var->name, Var->name_length);
 	Answer->type = ASN_OCTET_STR;
-	Answer->val_len = strlen(SQUID_VERSION);
-	Answer->val.string = (u_char *) xstrdup(SQUID_VERSION);
+	Answer->val_len = strlen(VERSION);
+	Answer->val.string = (u_char *) xstrdup(VERSION);
 	break;
     case CONF_STORAGE:
 	switch (Var->name[LEN_SQ_CONF + 1]) {

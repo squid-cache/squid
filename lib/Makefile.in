@@ -1,87 +1,415 @@
+# Makefile.in generated automatically by automake 1.4s from Makefile.am.
+
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+@SET_MAKE@
+
 #
-#  $Id: Makefile.in,v 1.49 2001/01/31 22:16:37 hno Exp $
+#  $Id: Makefile.in,v 1.50 2001/08/31 11:19:10 robertc Exp $
 #
-prefix		= @prefix@
-top_srcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
 
+SHELL = @SHELL@
 
-CC		= @CC@
-MAKEDEPEND	= @MAKEDEPEND@
-INSTALL		= @INSTALL@
-INSTALL_BIN 	= @INSTALL_PROGRAM@
-INSTALL_FILE 	= @INSTALL_DATA@
-RANLIB		= @RANLIB@
-AC_CFLAGS	= @CFLAGS@
-LDFLAGS		= @LDFLAGS@
-XTRA_LIBS	= @XTRA_LIBS@
-RM		= @RM@
-LIBOBJS		= @LIBOBJS@
-AR_R		= @AR_R@
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
 
-INCLUDE		= -I../include -I$(top_srcdir)/include
-UTILOBJS	= rfc1123.o \
-		  rfc1738.o \
-		  rfc1035.o \
-		  rfc2617.o \
-		  util.o \
-		  getfullhostname.o \
-		  base64.o \
-		  uudecode.o \
-		  splay.o \
-		  safe_inet_addr.o \
-		  iso3307.o \
-		  snprintf.o \
-		  md5.o \
-		  radix.o \
-		  stub_memaccount.o \
-		  Array.o \
-		  Stack.o \
-		  hash.o \
-		  heap.o \
-                  html_quote.o \
-		  $(LIBOBJS)
-REGEXOBJS	= GNUregex.o
-DLMALLOCOBJS	= dlmalloc.o
-NTLMAUTHOBJS = ntlmauth.o
-LIBS		= libmiscutil.a @LIBREGEX@ @LIBDLMALLOC@ libntlmauth.a
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+top_builddir = ..
 
-CFLAGS		= $(AC_CFLAGS) $(INCLUDE)
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
 
-all: $(LIBS)
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = @program_transform_name@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AIOLIB = @AIOLIB@
+AMTAR = @AMTAR@
+AR = @AR@
+AR_R = @AR_R@
+AUTH_LIBS = @AUTH_LIBS@
+AUTH_MODULES = @AUTH_MODULES@
+AUTH_OBJS = @AUTH_OBJS@
+AWK = @AWK@
+BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
+CACHE_HTTP_PORT = @CACHE_HTTP_PORT@
+CACHE_ICP_PORT = @CACHE_ICP_PORT@
+CC = @CC@
+CPP = @CPP@
+CRYPTLIB = @CRYPTLIB@
+DEPDIR = @DEPDIR@
+DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
+DLLIB = @DLLIB@
+ERR_LANGUAGE = @ERR_LANGUAGE@
+EXEEXT = @EXEEXT@
+FALSE = @FALSE@
+INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LIBDLMALLOC = @LIBDLMALLOC@
+LIBREGEX = @LIBREGEX@
+LIB_MALLOC = @LIB_MALLOC@
+LN = @LN@
+LN_S = @LN_S@
+MKDIR = @MKDIR@
+MV = @MV@
+NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
+OBJEXT = @OBJEXT@
+OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
+OPT_PINGER_EXE = @OPT_PINGER_EXE@
+PACKAGE = @PACKAGE@
+PERL = @PERL@
+PTHREADLIB = @PTHREADLIB@
+RANLIB = @RANLIB@
+REGEXLIB = @REGEXLIB@
+REPL_LIBS = @REPL_LIBS@
+REPL_OBJS = @REPL_OBJS@
+REPL_POLICIES = @REPL_POLICIES@
+RM = @RM@
+SH = @SH@
+SNMPLIB = @SNMPLIB@
+SQUID_AIO_LIB = @SQUID_AIO_LIB@
+SQUID_PTHREAD_LIB = @SQUID_PTHREAD_LIB@
+SSLINC = @SSLINC@
+SSLLIB = @SSLLIB@
+STORE_LIBS = @STORE_LIBS@
+STORE_MODULES = @STORE_MODULES@
+STORE_MODULE_SUBDIRS = @STORE_MODULE_SUBDIRS@
+STORE_OBJS = @STORE_OBJS@
+TRUE = @TRUE@
+VERSION = @VERSION@
+XTRA_LIBS = @XTRA_LIBS@
+XTRA_OBJS = @XTRA_OBJS@
+am__include = @am__include@
+am__quote = @am__quote@
+install_sh = @install_sh@
+makesnmplib = @makesnmplib@
 
-$(UTILOBJS): $(top_srcdir)/include/version.h
+EXTRA_LIBRARIES = libregex.a libdlmalloc.a
+noinst_LIBRARIES = libmiscutil.a @LIBREGEX@ @LIBDLMALLOC@ libntlmauth.a
+libmiscutil_a_SOURCES = rfc1123.c rfc1738.c rfc1035.c rfc2617.c util.c \
+	getfullhostname.c base64.c uudecode.c splay.c safe_inet_addr.c \
+	iso3307.c snprintf.c md5.c radix.c stub_memaccount.c Array.c \
+	Stack.c hash.c heap.c html_quote.c 
 
-libmiscutil.a: $(UTILOBJS)
-	$(RM) -f $@
-	$(AR_R) $@ $(UTILOBJS)
-	$(RANLIB) $@
+libmiscutil_a_LIBADD = @LIBOBJS@
+# $(top_srcdir)/include/version.h should be a dependency
+libregex_a_SOURCES = GNUregex.c
+libdlmalloc_a_SOURCES = dlmalloc.c
+libntlmauth_a_SOURCES = ntlmauth.c
+libntlmauth_a_LIBADD = @LIBOBJS@
 
-libregex.a: $(REGEXOBJS)
-	$(RM) -f $@
-	$(AR_R) $@ $(REGEXOBJS)
-	$(RANLIB) $@
+INCLUDES = -I$(top_builddir)/include -I$(top_srcdir)/include
+subdir = lib
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
+CONFIG_HEADER = $(top_builddir)/include/autoconf.h
+CONFIG_CLEAN_FILES =
+LIBRARIES = $(noinst_LIBRARIES)
 
-libdlmalloc.a: $(DLMALLOCOBJS)
-	$(RM) -f $@
-	$(AR_R) $@ $(DLMALLOCOBJS)
-	$(RANLIB) $@
+libdlmalloc_a_AR = $(AR) cru
+libdlmalloc_a_LIBADD =
+am_libdlmalloc_a_OBJECTS = dlmalloc.$(OBJEXT)
+libdlmalloc_a_OBJECTS = $(am_libdlmalloc_a_OBJECTS)
+libmiscutil_a_AR = $(AR) cru
+libmiscutil_a_DEPENDENCIES = @LIBOBJS@
+am_libmiscutil_a_OBJECTS = rfc1123.$(OBJEXT) rfc1738.$(OBJEXT) \
+	rfc1035.$(OBJEXT) rfc2617.$(OBJEXT) util.$(OBJEXT) \
+	getfullhostname.$(OBJEXT) base64.$(OBJEXT) uudecode.$(OBJEXT) \
+	splay.$(OBJEXT) safe_inet_addr.$(OBJEXT) iso3307.$(OBJEXT) \
+	snprintf.$(OBJEXT) md5.$(OBJEXT) radix.$(OBJEXT) \
+	stub_memaccount.$(OBJEXT) Array.$(OBJEXT) Stack.$(OBJEXT) \
+	hash.$(OBJEXT) heap.$(OBJEXT) html_quote.$(OBJEXT)
+libmiscutil_a_OBJECTS = $(am_libmiscutil_a_OBJECTS)
+libntlmauth_a_AR = $(AR) cru
+libntlmauth_a_DEPENDENCIES = @LIBOBJS@
+am_libntlmauth_a_OBJECTS = ntlmauth.$(OBJEXT)
+libntlmauth_a_OBJECTS = $(am_libntlmauth_a_OBJECTS)
+libregex_a_AR = $(AR) cru
+libregex_a_LIBADD =
+am_libregex_a_OBJECTS = GNUregex.$(OBJEXT)
+libregex_a_OBJECTS = $(am_libregex_a_OBJECTS)
 
-libntlmauth.a: $(NTLMAUTHOBJS)
-	$(RM) -f $@
-	$(AR_R) $@ $(NTLMAUTHOBJS)
-	$(RANLIB) $@
+DEFS = @DEFS@
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)/include
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/Array.Po $(DEPDIR)/GNUregex.Po \
+@AMDEP_TRUE@	$(DEPDIR)/Stack.Po $(DEPDIR)/base64.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dlmalloc.Po $(DEPDIR)/drand48.Po \
+@AMDEP_TRUE@	$(DEPDIR)/getfullhostname.Po $(DEPDIR)/hash.Po \
+@AMDEP_TRUE@	$(DEPDIR)/heap.Po $(DEPDIR)/html_quote.Po \
+@AMDEP_TRUE@	$(DEPDIR)/inet_ntoa.Po $(DEPDIR)/iso3307.Po \
+@AMDEP_TRUE@	$(DEPDIR)/md5.Po $(DEPDIR)/ntlmauth.Po \
+@AMDEP_TRUE@	$(DEPDIR)/radix.Po $(DEPDIR)/rfc1035.Po \
+@AMDEP_TRUE@	$(DEPDIR)/rfc1123.Po $(DEPDIR)/rfc1738.Po \
+@AMDEP_TRUE@	$(DEPDIR)/rfc2617.Po $(DEPDIR)/safe_inet_addr.Po \
+@AMDEP_TRUE@	$(DEPDIR)/snprintf.Po $(DEPDIR)/splay.Po \
+@AMDEP_TRUE@	$(DEPDIR)/strerror.Po $(DEPDIR)/stub_memaccount.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tempnam.Po $(DEPDIR)/util.Po \
+@AMDEP_TRUE@	$(DEPDIR)/uudecode.Po
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CFLAGS = @CFLAGS@
+DIST_SOURCES = $(libdlmalloc_a_SOURCES) $(libmiscutil_a_SOURCES) \
+	$(libntlmauth_a_SOURCES) $(libregex_a_SOURCES)
+DIST_COMMON = Makefile.am Makefile.in drand48.c inet_ntoa.c strerror.c \
+	tempnam.c
+SOURCES = $(libdlmalloc_a_SOURCES) $(libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) $(libregex_a_SOURCES)
 
-clean:
-	-rm -f *.o $(LIBS) core
+all: all-am
 
-distclean: clean
+.SUFFIXES:
+.SUFFIXES: .c .o .obj
+$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --foreign  lib/Makefile
+Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
+
+AR = ar
+
+clean-noinstLIBRARIES:
+	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+libdlmalloc.a: $(libdlmalloc_a_OBJECTS) $(libdlmalloc_a_DEPENDENCIES) 
+	-rm -f libdlmalloc.a
+	$(libdlmalloc_a_AR) libdlmalloc.a $(libdlmalloc_a_OBJECTS) $(libdlmalloc_a_LIBADD)
+	$(RANLIB) libdlmalloc.a
+libmiscutil.a: $(libmiscutil_a_OBJECTS) $(libmiscutil_a_DEPENDENCIES) 
+	-rm -f libmiscutil.a
+	$(libmiscutil_a_AR) libmiscutil.a $(libmiscutil_a_OBJECTS) $(libmiscutil_a_LIBADD)
+	$(RANLIB) libmiscutil.a
+libntlmauth.a: $(libntlmauth_a_OBJECTS) $(libntlmauth_a_DEPENDENCIES) 
+	-rm -f libntlmauth.a
+	$(libntlmauth_a_AR) libntlmauth.a $(libntlmauth_a_OBJECTS) $(libntlmauth_a_LIBADD)
+	$(RANLIB) libntlmauth.a
+libregex.a: $(libregex_a_OBJECTS) $(libregex_a_DEPENDENCIES) 
 	-rm -f libregex.a
-	-rm -f Makefile Makefile.bak
+	$(libregex_a_AR) libregex.a $(libregex_a_OBJECTS) $(libregex_a_LIBADD)
+	$(RANLIB) libregex.a
 
-install: all
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
 
-depend:
-	$(MAKEDEPEND) -I../include -I. -fMakefile *.c
+distclean-compile:
+	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Array.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/GNUregex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Stack.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/base64.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dlmalloc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/drand48.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/getfullhostname.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/heap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/html_quote.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/inet_ntoa.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/iso3307.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/md5.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ntlmauth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/radix.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rfc1035.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rfc1123.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rfc1738.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rfc2617.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/safe_inet_addr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/snprintf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/splay.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strerror.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stub_memaccount.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tempnam.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/util.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/uudecode.Po@am__quote@
+
+distclean-depend:
+	-rm -rf $(DEPDIR)
+
+.c.o:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+
+.c.obj:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `cygpath -w $<`
+CCDEPMODE = @CCDEPMODE@
+uninstall-info-am:
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || etags $(ETAGS_ARGS) $$tags  $$unique $(LISP)
+
+GTAGS:
+	here=`CDPATH=: && cd $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
+
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+
+top_distdir = ..
+distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+check-am: all-am
+check: check-am
+all-am: Makefile $(LIBRARIES)
+
+installdirs:
+
+install: install-am
+install-exec: install-exec-am
+install-data: install-data-am
+uninstall: uninstall-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-am
+
+clean-am: clean-generic clean-noinstLIBRARIES mostlyclean-am
+
+distclean: distclean-am
+
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-tags
+
+dvi: dvi-am
+
+dvi-am:
+
+info: info-am
+
+info-am:
+
+install-data-am:
+
+install-exec-am:
+
+install-info: install-info-am
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-am
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-am
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic
+
+uninstall-am: uninstall-info-am
+
+.PHONY: GTAGS all all-am check check-am clean clean-generic \
+	clean-noinstLIBRARIES distclean distclean-compile \
+	distclean-depend distclean-generic distclean-tags distdir dvi \
+	dvi-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic tags uninstall uninstall-am \
+	uninstall-info-am
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

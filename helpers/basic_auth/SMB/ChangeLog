@@ -1,0 +1,56 @@
+28 September 1999, version 0.05
+
+- Easier debugging: added the -d option to smb_auth.
+
+- Bugfix: a password containing a backslash character was always
+  denied. Reported by Menno Stevens.
+
+- The -S option now accepts both slashes and backslashes and
+  allows the share name to be preceded by a (back)slash.
+
+5 June 1999, version 0.04
+
+- Allow for both \n and \r\n end-of-line termination in the
+  proxyauth file located on the PDC. This eliminates the most
+  common installation problem.
+
+- The location of the proxyauth file can be changed (for each
+  domain) using the new -S option. Useful when the NETLOGON
+  share is located on a FAT filesystem.
+  Thanks to Colin Manning <colinm@officeinfo.com.au>.
+
+2 Februari 1999, version 0.03
+
+- Support for pass-through authentication (trust relationships)
+  added. Suggested by Matthew Wood <woodm@newsltd.com.au>.
+
+- Bugfix: smb_auth.sh searched for the PDC only.
+
+- Many documentation improvements.
+
+9 December 1998, version 0.02
+
+- smb_auth now uses Samba instead of pam_smb. This simplifies the
+  installation of smb_auth and increases platform support.
+
+- Access control by user and group: smb_auth now tries to read
+  the file \netlogon\proxyauth. By restricting read access on
+  this file access to the proxy can be controlled.
+
+- Easier configuration:
+
+  - smb_auth is now fully configurable with command-line options
+    (i.e. in squid.conf). No more hacking in the source code.
+
+  - In most cases it is sufficient to specify just the domain name.
+    smb_auth searches for a working domain controller on each
+    authentication request (note that Squid caches valid requests).
+
+- Easier installation: Makefile added. Simply typing "make install"
+  will work for most people.
+
+- In a multi-domain situation, users must now enter domain\user
+  instead of user\domain. This conforms to NT notation. Thanks to
+  Jason Haar <Jason.Haar@trimble.co.NZ> for pointing this out.
+
+31 July 1998, version 0.01

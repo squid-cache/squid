@@ -3,7 +3,7 @@
 Changes to squid-2.5
 	- Major rewrite of proxy authentication to support other schemes
 	  than basic. First in the line is NTLM support but others can
-	  easily be added (digest is on the way). See Programmers Guide.
+	  easily be added (minimal digest is present). See Programmers Guide.
 	  (Robert Collins & Francesco Chemolli)
 	- Reworked how request bodies are passed down to the protocols.
 	  Now all client side processing is inside client_side.c, and
@@ -22,7 +22,13 @@ Changes to squid-2.5
 	  proxy connections to function correctly in the absence of a Host:
 	  header. This requires --enable-linux-netfilter to be passed through
 	  to configure. (Evan Jones)
-
+	- Added the use of Automake to create the Makefile.in's in the squid
+	  source tree. This will allow libtool in the future, and immediately
+	  allows better dependency tracking - with or without gcc - as well
+	  as the dist-all and distcheck targets for developers which respectively
+	  build a tar.gz and a tar.bz2 distribution, and check that what will be
+	  distributed builds.
+	
 Changes to Squid-2.4.DEVEL4 ():
 
 	- Added --enable-auth-modules=... configure option

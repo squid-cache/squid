@@ -1,11 +1,12 @@
 /*
- * $Id: version.h,v 1.132 2000/11/14 11:57:43 adrian Exp $
+ * $Id: version.h,v 1.133 2001/08/31 11:19:09 robertc Exp $
  *
  *  SQUID_VERSION - String for version id of this distribution
  */
-#ifndef SQUID_VERSION
-#define SQUID_VERSION	"2.5.DEVEL"
-#endif
+
+/*
+ * SQUID_VERSION is now the automake "VERSION" string.
+ */
 
 #ifndef SQUID_RELEASE_TIME
 #define SQUID_RELEASE_TIME squid_curtime
