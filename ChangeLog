@@ -1,5 +1,9 @@
+	- Added Polish error pages from Maciej Kozinski.
 	- Fixed hash_first/hash_next bugs with **Current pointer.
 	  Replaced with *next pointer.
+	- Fixed PUT/POST bugs in client (Henrik Nordstrom).
+	- Deny forwarding loops in httpd accel mode (Henrik Nordstrom).
+	- Fixed eventRun "spin" bug when event delta time == 0.
 
 Changes to squid-1.2.beta21 (May 22, 1998):
 
