@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.117 1997/05/16 07:45:06 wessels Exp $
+ * $Id: ipcache.cc,v 1.118 1997/05/23 16:56:16 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -575,7 +575,8 @@ ipcache_dnsHandleRead(int fd, void *data)
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
 		ipcache_dnsHandleRead,
-		dnsData, 0);
+		dnsData,
+		0);
 	    return;
 	}
 	debug(14, dnsData->flags & DNS_FLAG_CLOSING ? 5 : 1,
@@ -613,6 +614,13 @@ ipcache_dnsHandleRead(int fd, void *data)
 	    ipcache_call_pending(i);
 	}
 	ipcacheUnlockEntry(i);	/* unlock from IP_DISPATCHED */
+    } else {
+	debug(14,5,"ipcache_dnsHandleRead: Incomplete reply\n");
+	    commSetSelect(fd,
+		COMM_SELECT_READ,
+		ipcache_dnsHandleRead,
+		dnsData,
+		0);
     }
     if (dnsData->offset == 0) {
 	dnsData->data = NULL;
