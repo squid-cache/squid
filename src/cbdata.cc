@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: cbdata.cc,v 1.11 1997/12/02 00:17:31 wessels Exp $
+ * $Id: cbdata.cc,v 1.12 1998/01/02 23:41:02 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -68,7 +68,7 @@ static hash_table *htable = NULL;
 static int cbdataCount = 0;
 
 typedef struct _cbdata {
-    void *key;
+    const void *key;
     struct _cbdata *next;
     int valid;
     int locks;
@@ -103,9 +103,9 @@ cbdataInit(void)
 
 void
 #if CBDATA_DEBUG
-cbdataAddDbg(void *p, const char *file, int line)
+cbdataAddDbg(const void *p, const char *file, int line)
 #else
-cbdataAdd(void *p)
+cbdataAdd(const void *p)
 #endif
 {
     cbdata *c;
@@ -145,7 +145,7 @@ cbdataFree(void *p)
 }
 
 void
-cbdataLock(void *p)
+cbdataLock(const void *p)
 {
     cbdata *c;
     if (p == NULL)
@@ -157,7 +157,7 @@ cbdataLock(void *p)
 }
 
 void
-cbdataUnlock(void *p)
+cbdataUnlock(const void *p)
 {
     cbdata *c;
     if (p == NULL)
@@ -173,11 +173,11 @@ cbdataUnlock(void *p)
     cbdataCount--;
     xfree(c);
     debug(45, 3) ("cbdataUnlock: Freeing %p\n", p);
-    xfree(p);
+    xfree((void *)p);
 }
 
 int
-cbdataValid(void *p)
+cbdataValid(const void *p)
 {
     cbdata *c;
     if (p == NULL)
