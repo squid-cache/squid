@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.199 1997/12/30 04:22:06 wessels Exp $
+ * $Id: main.cc,v 1.200 1998/01/02 06:56:52 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -342,7 +342,7 @@ serverConnectionsClose(void)
 	}
     }
     NHttpSockets = 0;
-    if (theInIcpConnection >= 0) {
+    if (theInIcpConnection > -1) {
 	/* NOTE, don't close outgoing ICP connection, we need to write to
 	 * it during shutdown */
 	debug(1, 1) ("FD %d Closing ICP connection\n",
@@ -357,6 +357,14 @@ serverConnectionsClose(void)
 		0);
 	theInIcpConnection = -1;
     }
+    /*
+     * Normally we only write to the outgoing ICP socket, but we
+     * also have a read handler there to catch messages sent to that
+     * specific interface.  During shutdown, we must disable reading
+     * on the outgoing socket.
+     */
+    if (theOutIcpConnection > -1)
+	commSetSelect(theOutIcpConnection, COMM_SELECT_READ, NULL, NULL, 0);
     if (icmp_sock > -1)
 	icmpClose();
 #ifdef SQUID_SNMP
