@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.20 1997/11/21 00:29:35 wessels Exp $
+ * $Id: globals.h,v 1.21 1997/12/03 01:32:26 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -105,4 +105,8 @@ extern char *icp_opcode_str[];
 
 #ifdef HAVE_SYSLOG
 extern int _db_level;
+#endif
+
+#if SQUID_SNMP
+extern struct tree *Mib;
 #endif

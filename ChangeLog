@@ -1,5 +1,53 @@
 	- Fixed accessLogLog() to log ident from Proxy-Authorization
 	  request header (BoB Miorelli).
+	- Fixed #includes, prototypes, etc. in SNMP source files.
+	- Moved 'POLLRDNORM' and 'POLLWRNORM' macro checks from
+	  include/config.h.in to src/squid.h
+	- Moved 'num32' typedefs from src/typedefs.h to
+	  include/config.h.in.
+	- Moved snmplib/md5.c to lib/md5.c.
+	- Added MD5 cache key support.
+	- Removed xmalloc() return check in uudeocde.c
+	- Added 'ifdef' support to cf_gen.c for optional code (e.g. SNMP)
+	- Changed 'client' program to provide easier cache manager access,
+	  e.g.:	'client mgr:info'
+	- Fixed 'client' to send 'Connection' instead of 'Proxy-Connection'
+	  for simulated keep-alive requests.
+	- Removed 'fd' arg from clientProcess* functions.
+	- Fixed bug from using errorSend() on persistent/pipelined
+	  client connections.  A latter request should not be allowed to
+	  write to the client fd until the current request completes.
+	  Now use errorAppendEntry() for such situations.
+	- Fixed content-length bugs.  We were using content-length == 0
+	  to also indicate a lack of content-length reply header.  But
+	  'content-length: 0' might appear in a reply, so now use -1 to
+	  indicate that no content length given.
+	- Split up clientProcessRequest() into smaller chunks so it
+	  might be easier to follow.
+	- renamed various client_side.c functions to start with 'client'
+	  instead of 'icp'.
+	- Fixed a 'cbdata leak' from the comm.c close handlers.
+	- Fixed a 'cbdata leak' from the comm.c connect routines.
+	- Fixed comm_select() and comm_poll() to stop looping on the
+	  incoming HTTP/ICP sockets.  If there are fewer than 7 FD's
+	  ready for I/O, the incoming sockets might not get service, so
+	  comm_select() would be called for up to 7 times until the
+	  'incoming_counter' was incremented enough to trigger a call
+	  to comm_select_incoming().  Now we make sure
+	  comm_select_incoming() gets called if select returns less
+	  than 7 ready FD's.
+	- Added errorpage '%B' token to generate FTP URLs with a '%2f' inserted
+	  at the start of the url-path.  calls ftpUrlWith2f().
+	- Changed fqdncache.c to use LRU double-linked list instead of qsort()
+	  for replacement and cachemgr output.
+	- Changed ipcache.c to use LRU double-linked list instead of qsort()
+	- Changed hash_insert() and hash_join() to return void.
+	  for replacement and cachemgr output.
+	- Moved StoreEntry->method member to MemObject->method.
+	- Made StoreEntry->flags 16 bits.
+	- Made StoreEntry->refcount 16 bits.
+	- Changed URL-based public cache key to always include the request
+	  method.
 
 Changes to squid-1.2.beta7 (Nov 24, 1997):
 
