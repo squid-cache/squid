@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.215 1997/03/29 04:45:22 wessels Exp $
+ * $Id: store.cc,v 1.216 1997/04/02 04:39:59 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -237,7 +237,7 @@ typedef struct swapout_ctrl_t {
 } swapout_ctrl_t;
 
 /* initializtion flag */
-int store_rebuilding = STORE_REBUILDING_SLOW;
+int store_rebuilding = STORE_REBUILDING_DIRTY;
 
 /* Static Functions */
 static const char *storeDescribeStatus _PARAMS((const StoreEntry *));
@@ -332,7 +332,7 @@ static int store_maintain_buckets;
 static int scan_revolutions;
 static struct _bucketOrder *MaintBucketsOrder = NULL;
 
-/* Slow/Fast rebuild status parameter */
+/* Dirty/Clean rebuild status parameter */
 static int store_validating = 1;
 
 static MemObject *
@@ -904,7 +904,10 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     e->expires = expires;
     e->lastmod = lastmod;
     e->ping_status = PING_NONE;
-    BIT_RESET(e->flag, ENTRY_VALIDATED);
+    if (store_rebuilding == STORE_REBUILDING_CLEAN)
+        BIT_SET(e->flag, ENTRY_VALIDATED);
+    else 
+        BIT_RESET(e->flag, ENTRY_VALIDATED);
     return e;
 }
 
@@ -1489,7 +1492,7 @@ storeDoRebuildFromDisk(void *data)
 	    rebuildData->dupcount++;
 	}
 	/* Is the swap file number already taken? */
-	if (file_map_bit_test(sfileno)) {
+	if (storeDirMapBitTest(sfileno)) {
 	    /* Yes it is, we can't use this swapfile */
 	    debug(20, 2, "storeRebuildFromDisk: Line %d Active clash: file #%d\n",
 		rebuildData->linecount,
@@ -1560,13 +1563,8 @@ storeCleanup(void *data)
     validnum++;
     if ((validnum % 4096) == 0)
 	debug(20, 1, "  %7d Entries Validated so far.\n", validnum);
-    if (BIT_TEST(e->flag, ENTRY_VALIDATED)) {
-	xfree(curr->key);
-	xfree(curr);
-	eventAdd("storeCleanup", storeCleanup, NULL, 0);
-	return;
-    }
-    storeValidate(e, storeCleanupComplete, e);
+    if (!BIT_TEST(e->flag, ENTRY_VALIDATED))
+        storeValidate(e, storeCleanupComplete, e);
     xfree(curr->key);
     xfree(curr);
     eventAdd("storeCleanup", storeCleanup, NULL, 0);
@@ -1669,25 +1667,22 @@ storeStartRebuildFromDisk(void)
     int i;
     struct storeRebuild_data *data;
     time_t last_clean;
-
     if (stat(swaplog_file, &sb) < 0) {
 	debug(20, 1, "storeRebuildFromDisk: No log file\n");
 	store_rebuilding = STORE_NOT_REBUILDING;
 	return;
     }
     data = xcalloc(1, sizeof(*data));
-
     for (i = 0; i < ncache_dirs; i++)
 	debug(20, 1, "Rebuilding storage from disk image in %s\n", storeSwapDir(i));
     data->start = getCurrentTime();
-
     /* Check if log is clean */
     sprintf(tmp_filename, "%s-last-clean", swaplog_file);
     if (stat(tmp_filename, &sb) >= 0) {
 	last_clean = sb.st_mtime;
 	if (stat(swaplog_file, &sb) >= 0)
 	    store_rebuilding = (sb.st_mtime <= last_clean) ?
-		STORE_REBUILDING_FAST : STORE_REBUILDING_SLOW;
+		STORE_REBUILDING_CLEAN : STORE_REBUILDING_DIRTY;
     }
     /* Remove timestamp in case we crash during rebuild */
     safeunlink(tmp_filename, 1);
@@ -1710,14 +1705,11 @@ storeStartRebuildFromDisk(void)
 	fatal(tmp_error_buf);
     }
     debug(20, 3, "data->log %d is now '%s'\n", fileno(data->log), swaplog_file);
-    if (store_rebuilding == STORE_REBUILDING_FAST) {
-	store_validating = 0;
-	debug(20, 1, "Rebuilding in FAST MODE.\n");
-    }
+    debug(20, 1, "Rebuilding in %s log.\n",
+	store_rebuilding == STORE_REBUILDING_CLEAN ? "CLEAN" : "DIRTY");
+    store_validating = store_rebuilding == STORE_REBUILDING_CLEAN ? 0 : 1;
     memset(data->line_in, '\0', 4096);
-    /* data->speed = store_rebuilding == STORE_REBUILDING_FAST ? 50 : 5; */
     data->speed = 50;
-
     /* Start reading the log file */
     if (opt_foreground_rebuild) {
 	data->speed = 1 << 30;
@@ -1927,7 +1919,7 @@ storeGetMemSpace(int size)
     pages_needed = (size / SM_PAGE_SIZE) + 1;
     if (sm_stats.n_pages_in_use + pages_needed < store_pages_high)
 	return;
-    if (store_rebuilding == STORE_REBUILDING_FAST)
+    if (store_rebuilding == STORE_REBUILDING_CLEAN)
 	return;
     debug(20, 2, "storeGetMemSpace: Starting, need %d pages\n", pages_needed);
 
@@ -2222,7 +2214,7 @@ storeRelease(StoreEntry * e)
 	if ((hentry = (StoreEntry *) hash_lookup(store_table, hkey)))
 	    storeExpireNow(hentry);
     }
-    if (store_rebuilding == STORE_REBUILDING_FAST) {
+    if (store_rebuilding == STORE_REBUILDING_CLEAN) {
 	debug(20, 2, "storeRelease: Delaying release until store is rebuilt: '%s'\n",
 	    e->key ? e->key : e->url ? e->url : "NO URL");
 	storeExpireNow(e);
@@ -2505,7 +2497,6 @@ void
 storeInit(void)
 {
     int dir_created = 0;
-    wordlist *w = NULL;
     char *fname = NULL;
     storeInitHashValues();
     storeCreateHashTable(urlcmp);
@@ -2583,7 +2574,7 @@ storeMaintainSwapSpace(void *unused)
 
     eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
     /* We can't delete objects while rebuilding swap */
-    if (store_rebuilding == STORE_REBUILDING_FAST)
+    if (store_rebuilding == STORE_REBUILDING_CLEAN)
 	return;
 
     /* Purges expired objects, check one bucket on each calling */

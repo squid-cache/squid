@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.101 1997/03/29 04:45:20 wessels Exp $
+ * $Id: squid.h,v 1.102 1997/04/02 04:39:58 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -233,6 +233,7 @@ typedef struct _aclCheck_t aclCheck_t;
 typedef struct _request request_t;
 typedef struct _MemObject MemObject;
 typedef struct _cachemgr_passwd cachemgr_passwd;
+typedef struct _filemap fileMap;
 
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4
@@ -287,6 +288,7 @@ typedef int (*QS) (const void *, const void *);
 #include "stat.h"
 #include "stmem.h"
 #include "store.h"
+#include "store_dir.h"
 #include "tools.h"
 #include "http.h"
 #include "ftp.h"
