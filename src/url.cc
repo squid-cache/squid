@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.79 1998/02/24 17:00:10 wessels Exp $
+ * $Id: url.cc,v 1.80 1998/02/25 07:12:18 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -250,14 +250,6 @@ urlParse(method_t method, char *url)
         debug(23, 1)("urlParse: Illegal character in hostname '%s'\n", host);
         return NULL;
     }
-    /*
-     * Remove hex escapes
-     */
-    rfc1738_unescape(urlpath);
-    if (strchr(urlpath, '%') != NULL) {
-        debug(23, 1)("urlParse: Illegal escape in URL-Path '%s'\n", urlpath);
-        return NULL;
-    }
     /* remove trailing dots from hostnames */
     while ((l = strlen(host)) > 0 && host[--l] == '.')
 	host[l] = '\0';
@@ -296,7 +288,6 @@ urnParse(method_t method, char *urn)
     request->method = method;
     request->protocol = PROTO_URN;
     xstrncpy(request->urlpath, &urn[4], MAX_URL);
-    rfc1738_unescape(request->urlpath);
     request->max_age = -1;
     request->max_forwards = -1;
     return request;
