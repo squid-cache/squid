@@ -1,7 +1,7 @@
 /*
- * $Id: cf_gen.cc,v 1.19 1997/12/03 01:30:39 wessels Exp $
+ * $Id: cf_gen.cc,v 1.20 1998/02/10 22:17:53 wessels Exp $
  *
- * DEBUG: section 1     Startup and Main Loop
+ * DEBUG: none
  * AUTHOR: Max Okumoto
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

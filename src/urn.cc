@@ -1,6 +1,6 @@
 
 /*
- * DEBUG: section 51    URN Parsing
+ * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -52,21 +52,21 @@ urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
     int rtt;
     wordlist *w;
     wordlist *min_w = NULL;
-    debug(50, 3) ("urnFindMinRtt\n");
+    debug(52, 3) ("urnFindMinRtt\n");
     assert(urls != NULL);
     for (w = urls; w; w = w->next) {
 	r = urlParse(m, w->key);
 	if (r == NULL)
 	    continue;
-	debug(50, 3) ("Parsed %s\n", w->key);
+	debug(52, 3) ("Parsed %s\n", w->key);
 	rtt = netdbHostRtt(r->host);
 	if (rtt == 0) {
-	    debug(50, 3) ("Pinging %s\n", r->host);
+	    debug(52, 3) ("Pinging %s\n", r->host);
 	    netdbPingSite(r->host);
 	    memFree(MEM_REQUEST_T, r);
 	    continue;
 	}
-	debug(50, 3) ("%s rtt=%d\n", r->host, rtt);
+	debug(52, 3) ("%s rtt=%d\n", r->host, rtt);
 	if (rtt == 0)
 	    continue;
 	if (rtt > min_rtt && min_rtt != 0)
@@ -77,7 +77,7 @@ urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
     }
     if (rtt_ret)
 	*rtt_ret = min_rtt;
-    debug(50, 1) ("urnFindMinRtt: Returning '%s' RTT %d\n",
+    debug(52, 1) ("urnFindMinRtt: Returning '%s' RTT %d\n",
 	min_w ? min_w->key : "NONE",
 	min_rtt);
     return min_w;
@@ -93,7 +93,7 @@ urnStart(request_t * r, StoreEntry * e)
     char *host;
     UrnState *urnState;
     StoreEntry *urlres_e;
-    debug(50, 3) ("urnStart: '%s'\n", storeUrl(e));
+    debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
     urnState = xcalloc(1, sizeof(UrnState));
     urnState->entry = e;
     urnState->request = requestLink(r);
@@ -154,7 +154,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     double tmprtt;
     StoreEntry *tmpentry;
 
-    debug(50, 3) ("urnHandleReply: Called with size=%d.\n", size);
+    debug(52, 3) ("urnHandleReply: Called with size=%d.\n", size);
     if (urlres_e->store_status == STORE_ABORTED) {
 	memFree(MEM_4K_BUF, buf);
 	return;
@@ -179,16 +179,16 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     /* we know its STORE_OK */
     s = mime_headers_end(buf);
     if (s == NULL) {
-	debug(50, 1) ("urnHandleReply: didn't find end-of-headers for %s\n",
+	debug(52, 1) ("urnHandleReply: didn't find end-of-headers for %s\n",
 	    storeUrl(e));
 	return;
     }
     assert(urlres_e->mem_obj->reply);
     httpParseReplyHeaders(buf, urlres_e->mem_obj->reply);
-    debug(50, 3) ("mem->reply exists, code=%d.\n",
+    debug(52, 3) ("mem->reply exists, code=%d.\n",
 	urlres_e->mem_obj->reply->code);
     if (urlres_e->mem_obj->reply->code != HTTP_OK) {
-	debug(50, 3) ("urnHandleReply: failed.\n");
+	debug(52, 3) ("urnHandleReply: failed.\n");
 	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
 	err->request = requestLink(urnState->request);
 	err->url = xstrdup(storeUrl(e));
@@ -199,7 +199,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	s++;
     urls = urnParseReply(s);
     if (urls == NULL) {		/* unkown URN error */
-	debug(50, 3) ("urnTranslateDone: unknown URN %s\n", storeUrl(e));
+	debug(52, 3) ("urnTranslateDone: unknown URN %s\n", storeUrl(e));
 	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
 	err->request = requestLink(urnState->request);
 	err->url = xstrdup(storeUrl(e));
@@ -242,7 +242,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     storeAppend(e, hdr, strlen(hdr));
     httpParseReplyHeaders(hdr, e->mem_obj->reply);
     if (EBIT_TEST(urnState->flags, URN_FORCE_MENU)) {
-	debug(51, 3) ("urnHandleReply: forcing menu\n");
+	debug(52, 3) ("urnHandleReply: forcing menu\n");
     } else if (min_w) {
 	l = snprintf(line, 4096, "Location: %s\r\n", min_w->key);
 	storeAppend(e, line, l);
@@ -268,9 +268,9 @@ urnParseReply(const char *inbuf)
     wordlist *u;
     wordlist *head = NULL;
     wordlist **last = &head;
-    debug(50, 3) ("urnParseReply\n");
+    debug(52, 3) ("urnParseReply\n");
     for (token = strtok(buf, crlf); token; token = strtok(NULL, crlf)) {
-	debug(50, 3) ("urnParseReply: got '%s'\n", token);
+	debug(52, 3) ("urnParseReply: got '%s'\n", token);
 	u = xmalloc(sizeof(wordlist));
 	u->key = xstrdup(token);
 	u->next = NULL;
