@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.108 1997/06/01 23:21:38 wessels Exp $
+ * $Id: tools.cc,v 1.109 1997/06/04 06:16:14 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -317,7 +317,7 @@ sigusr2_handle(int sig)
 static void
 shutdownTimeoutHandler(int fd, void *data)
 {
-    debug(21, 1, "Forcing close of FD %d\n", fd);
+    debug(21, 1) ("Forcing close of FD %d\n", fd);
     comm_close(fd);
 }
 
@@ -344,7 +344,7 @@ setSocketShutdownLifetimes(int to)
 void
 normal_shutdown(void)
 {
-    debug(21, 1, "Shutting down...\n");
+    debug(21, 1) ("Shutting down...\n");
     if (Config.pidFilename && strcmp(Config.pidFilename, "none")) {
 	enter_suid();
 	safeunlink(Config.pidFilename, 0);
@@ -373,7 +373,7 @@ normal_shutdown(void)
     file_close(2);
     fdDumpOpen();
     fdFreeMemory();
-    debug(21, 0, "Squid Cache (Version %s): Exiting normally.\n",
+    debug(21, 0) ("Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     fclose(debug_log);
     exit(0);
@@ -420,13 +420,13 @@ fatal_dump(const char *message)
     abort();
 }
 
-/* fatal with dumping core */
 void
-_debug_trap(const char *message)
+debug_trap(const char *message)
 {
     if (!opt_catch_signals)
 	fatal_dump(message);
-    _db_print(0, 0, "WARNING: %s\n", message);
+    _db_level = 0;
+    _db_print("WARNING: %s\n", message);
 }
 
 void
@@ -469,7 +469,7 @@ getMyHostname(void)
     if (!present) {
 	host[0] = '\0';
 	if (gethostname(host, SQUIDHOSTNAMELEN) == -1) {
-	    debug(50, 1, "getMyHostname: gethostname failed: %s\n",
+	    debug(50, 1) ("getMyHostname: gethostname failed: %s\n",
 		xstrerror());
 	    return NULL;
 	} else {
@@ -493,7 +493,7 @@ safeunlink(const char *s, int quiet)
 	quiet ? NULL : xstrdup(s));
 #else
     if (unlink(s) < 0 && !quiet)
-	debug(50, 1, "safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
+	debug(50, 1) ("safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
 #endif
 }
 
@@ -504,7 +504,7 @@ safeunlinkComplete(void *data, int retcode, int errcode)
     char *s = data;
     if (retcode < 0) {
 	errno = errcode;
-	debug(50, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
+	debug(50, 1) ("safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
 	errno = 0;
     }
     xfree(s);
@@ -521,7 +521,7 @@ leave_suid(void)
 {
     struct passwd *pwd = NULL;
     struct group *grp = NULL;
-    debug(21, 3, "leave_suid: PID %d called\n", getpid());
+    debug(21, 3) ("leave_suid: PID %d called\n", getpid());
     if (geteuid() != 0)
 	return;
     /* Started as a root, check suid option */
@@ -531,22 +531,22 @@ leave_suid(void)
 	return;
     if (Config.effectiveGroup && (grp = getgrnam(Config.effectiveGroup))) {
 	if (setgid(grp->gr_gid) < 0)
-	    debug(50, 1, "leave_suid: setgid: %s\n", xstrerror());
+	    debug(50, 1) ("leave_suid: setgid: %s\n", xstrerror());
     } else {
 	if (setgid(pwd->pw_gid) < 0)
-	    debug(50, 1, "leave_suid: setgid: %s\n", xstrerror());
+	    debug(50, 1) ("leave_suid: setgid: %s\n", xstrerror());
     }
-    debug(21, 3, "leave_suid: PID %d giving up root, becoming '%s'\n",
+    debug(21, 3) ("leave_suid: PID %d giving up root, becoming '%s'\n",
 	getpid(), pwd->pw_name);
 #if HAVE_SETRESUID
     if (setresuid(pwd->pw_uid, pwd->pw_uid, 0) < 0)
-	debug(50, 1, "leave_suid: setresuid: %s\n", xstrerror());
+	debug(50, 1) ("leave_suid: setresuid: %s\n", xstrerror());
 #elif HAVE_SETEUID
     if (seteuid(pwd->pw_uid) < 0)
-	debug(50, 1, "leave_suid: seteuid: %s\n", xstrerror());
+	debug(50, 1) ("leave_suid: seteuid: %s\n", xstrerror());
 #else
     if (setuid(pwd->pw_uid) < 0)
-	debug(50, 1, "leave_suid: setuid: %s\n", xstrerror());
+	debug(50, 1) ("leave_suid: setuid: %s\n", xstrerror());
 #endif
 }
 
@@ -554,7 +554,7 @@ leave_suid(void)
 void
 enter_suid(void)
 {
-    debug(21, 3, "enter_suid: PID %d taking root priveleges\n", getpid());
+    debug(21, 3) ("enter_suid: PID %d taking root priveleges\n", getpid());
 #if HAVE_SETRESUID
     setresuid(-1, 0, -1);
 #else
@@ -571,14 +571,14 @@ no_suid(void)
     uid_t uid;
     leave_suid();
     uid = geteuid();
-    debug(21, 3, "leave_suid: PID %d giving up root priveleges forever\n", getpid());
+    debug(21, 3) ("leave_suid: PID %d giving up root priveleges forever\n", getpid());
 #if HAVE_SETRESUID
     if (setresuid(uid, uid, uid) < 0)
-	debug(50, 1, "no_suid: setresuid: %s\n", xstrerror());
+	debug(50, 1) ("no_suid: setresuid: %s\n", xstrerror());
 #else
     setuid(0);
     if (setuid(uid) < 0)
-	debug(50, 1, "no_suid: setuid: %s\n", xstrerror());
+	debug(50, 1) ("no_suid: setuid: %s\n", xstrerror());
 #endif
 }
 
@@ -599,7 +599,7 @@ writePidFile(void)
     umask(old_umask);
     leave_suid();
     if (fd < 0) {
-	debug(50, 0, "%s: %s\n", f, xstrerror());
+	debug(50, 0) ("%s: %s\n", f, xstrerror());
 	debug_trap("Could not write pid file");
 	return;
     }
@@ -647,7 +647,7 @@ setMaxFD(void)
     struct rlimit rl;
 #if defined(RLIMIT_NOFILE)
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-	debug(50, 0, "setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
+	debug(50, 0) ("setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
     } else {
 	rl.rlim_cur = Squid_MaxFD;
 	if (rl.rlim_cur > rl.rlim_max)
@@ -659,7 +659,7 @@ setMaxFD(void)
     }
 #elif defined(RLIMIT_OFILE)
     if (getrlimit(RLIMIT_OFILE, &rl) < 0) {
-	debug(50, 0, "setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
+	debug(50, 0) ("setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
     } else {
 	rl.rlim_cur = Squid_MaxFD;
 	if (rl.rlim_cur > rl.rlim_max)
@@ -671,12 +671,12 @@ setMaxFD(void)
     }
 #endif
 #else /* HAVE_SETRLIMIT */
-    debug(21, 1, "setMaxFD: Cannot increase: setrlimit() not supported on this system\n");
+    debug(21, 1) ("setMaxFD: Cannot increase: setrlimit() not supported on this system\n");
 #endif /* HAVE_SETRLIMIT */
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_DATA)
     if (getrlimit(RLIMIT_DATA, &rl) < 0) {
-	debug(50, 0, "getrlimit: RLIMIT_DATA: %s\n", xstrerror());
+	debug(50, 0) ("getrlimit: RLIMIT_DATA: %s\n", xstrerror());
     } else {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_DATA, &rl) < 0) {
@@ -687,7 +687,7 @@ setMaxFD(void)
 #endif /* RLIMIT_DATA */
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM)
     if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
-	debug(50, 0, "getrlimit: RLIMIT_VMEM: %s\n", xstrerror());
+	debug(50, 0) ("getrlimit: RLIMIT_VMEM: %s\n", xstrerror());
     } else {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
@@ -724,7 +724,7 @@ squid_signal(int sig, void (*func) _PARAMS((int)), int flags)
     sa.sa_flags = flags;
     sigemptyset(&sa.sa_mask);
     if (sigaction(sig, &sa, NULL) < 0)
-	debug(50, 0, "sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
+	debug(50, 0) ("sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
 #else
     (void) signal(sig, func);
 #endif

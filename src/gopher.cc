@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.83 1997/06/02 19:56:02 wessels Exp $
+ * $Id: gopher.cc,v 1.84 1997/06/04 06:15:56 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -415,7 +415,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 		/* there is no complete line in inbuf */
 		/* copy it to temp buffer */
 		if (gopherState->len + len > TEMP_BUF_SIZE) {
-		    debug(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
+		    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
 			entry->url);
 		    len = TEMP_BUF_SIZE - gopherState->len;
 		}
@@ -441,7 +441,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 		/* there is no complete line in inbuf */
 		/* copy it to temp buffer */
 		if ((len - (pos - inbuf)) > TEMP_BUF_SIZE) {
-		    debug(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
+		    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
 			entry->url);
 		    len = TEMP_BUF_SIZE;
 		}
@@ -645,7 +645,7 @@ gopherTimeout(int fd, void *data)
 {
     GopherStateData *gopherState = data;
     StoreEntry *entry = gopherState->entry;
-    debug(10, 4, "gopherTimeout: FD %d: '%s'\n", fd, entry->url);
+    debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_close(fd);
 }
@@ -663,18 +663,18 @@ gopherReadReply(int fd, void *data)
     int off;
     int bin;
     if (protoAbortFetch(entry)) {
-        squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-        comm_close(fd);
-        return;
+	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	comm_close(fd);
+	return;
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->e_current_len;
     off = storeGetLowestReaderOffset(entry);
     if ((clen - off) > GOPHER_DELETE_GAP) {
 	IOStats.Gopher.reads_deferred++;
-	debug(10, 3, "gopherReadReply: Read deferred for Object: %s\n",
+	debug(10, 3) ("gopherReadReply: Read deferred for Object: %s\n",
 	    entry->url);
-	debug(10, 3, "                Current Gap: %d bytes\n", clen - off);
+	debug(10, 3) ("                Current Gap: %d bytes\n", clen - off);
 	/* reschedule, so it will automatically reactivated when
 	 * Gap is big enough.  */
 	commSetSelect(fd,
@@ -697,7 +697,7 @@ gopherReadReply(int fd, void *data)
     /* leave one space for \0 in gopherToHTML */
     len = read(fd, buf, TEMP_BUF_SIZE - 1);
     fd_bytes(fd, len, FD_READ);
-    debug(10, 5, "gopherReadReply: FD %d read len=%d\n", fd, len);
+    debug(10, 5) ("gopherReadReply: FD %d read len=%d\n", fd, len);
     if (len > 0) {
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Gopher.reads++;
@@ -706,7 +706,7 @@ gopherReadReply(int fd, void *data)
 	IOStats.Gopher.read_hist[bin]++;
     }
     if (len < 0) {
-	debug(50, 1, "gopherReadReply: error reading: %s\n", xstrerror());
+	debug(50, 1) ("gopherReadReply: error reading: %s\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
@@ -757,7 +757,7 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = NULL;
     entry = gopherState->entry;
-    debug(10, 5, "gopherSendComplete: FD %d size: %d errflag: %d\n",
+    debug(10, 5) ("gopherSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
@@ -830,7 +830,7 @@ gopherSendRequest(int fd, void *data)
     } else {
 	sprintf(buf, "%s\r\n", gopherState->request);
     }
-    debug(10, 5, "gopherSendRequest: FD %d\n", fd);
+    debug(10, 5) ("gopherSendRequest: FD %d\n", fd);
     comm_write(fd,
 	buf,
 	strlen(buf),
@@ -849,7 +849,7 @@ gopherStart(StoreEntry * entry)
     int fd;
     storeLockObject(entry);
     gopherState->entry = entry;
-    debug(10, 3, "gopherStart: url: %s\n", url);
+    debug(10, 3) ("gopherStart: url: %s\n", url);
     /* Parse url. */
     if (gopher_url_parser(url, gopherState->host, &gopherState->port,
 	    &gopherState->type_id, gopherState->request)) {
@@ -865,7 +865,7 @@ gopherStart(StoreEntry * entry)
 	COMM_NONBLOCKING,
 	url);
     if (fd == COMM_ERROR) {
-	debug(10, 4, "gopherStart: Failed because we're out of sockets.\n");
+	debug(10, 4) ("gopherStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	gopherStateFree(-1, gopherState);
 	return;
@@ -876,7 +876,7 @@ gopherStart(StoreEntry * entry)
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(gopherState->host, 0)) {
-	debug(10, 4, "gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
+	debug(10, 4) ("gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(fd);
 	return;
@@ -941,6 +941,6 @@ static void
 gopherAbort(void *data)
 {
     GopherStateData *gopherState = data;
-    debug(10,1,"gopherAbort: %s\n", gopherState->entry->url);
+    debug(10, 1) ("gopherAbort: %s\n", gopherState->entry->url);
     comm_close(gopherState->fd);
 }

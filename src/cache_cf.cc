@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.195 1997/06/02 19:55:58 wessels Exp $
+ * $Id: cache_cf.cc,v 1.196 1997/06/04 06:15:46 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -382,7 +382,7 @@ parseCacheHostLine(void)
 	} else if (!strncasecmp(token, "round-robin", 11)) {
 	    options |= NEIGHBOR_ROUNDROBIN;
 	} else {
-	    debug(3, 0, "parseCacheHostLine: token='%s'\n", token);
+	    debug(3, 0) ("parseCacheHostLine: token='%s'\n", token);
 	    self_destruct();
 	}
     }
@@ -569,7 +569,7 @@ parsePathname(char **path, int fatal)
     safe_free(*path);
     *path = xstrdup(token);
     if (fatal && stat(token, &sb) < 0) {
-	debug(50, 1, "parsePathname: %s: %s\n", token, xstrerror());
+	debug(50, 1) ("parsePathname: %s: %s\n", token, xstrerror());
 	self_destruct();
     }
 }
@@ -898,7 +898,7 @@ parseConfigFile(const char *file_name)
 	    continue;
 	if (config_input_line[0] == '\0')
 	    continue;
-	debug(3, 5, "Processing: '%s'\n", config_input_line);
+	debug(3, 5) ("Processing: '%s'\n", config_input_line);
 	strcpy(tmp_line, config_input_line);
 	if ((token = strtok(tmp_line, w_space)) == NULL)
 	    continue;
@@ -1197,7 +1197,7 @@ parseConfigFile(const char *file_name)
 
 	/* If unknown, treat as a comment line */
 	else {
-	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
+	    debug(3, 0) ("parseConfigFile: line %d unrecognized: '%s'\n",
 		config_lineno,
 		config_input_line);
 	}
@@ -1468,6 +1468,6 @@ parseTimeUnits(const char *unit)
 	return 86400 * 365.2522;
     if (!strncasecmp(unit, T_DECADE_STR, strlen(T_DECADE_STR)))
 	return 86400 * 365.2522 * 10;
-    debug(3, 1, "parseTimeUnits: unknown time unit '%s'\n", unit);
+    debug(3, 1) ("parseTimeUnits: unknown time unit '%s'\n", unit);
     return 0;
 }

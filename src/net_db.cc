@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.37 1997/06/04 04:32:59 wessels Exp $
+ * $Id: net_db.cc,v 1.38 1997/06/04 06:16:04 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -219,7 +219,7 @@ netdbSendPing(int fdunused, const ipcache_addrs * ia, void *data)
     addr = ia->in_addrs[ia->cur];
     if ((n = netdbLookupHost(hostname)) == NULL)
 	n = netdbAdd(addr, hostname);
-    debug(37, 3, "netdbSendPing: pinging %s\n", hostname);
+    debug(37, 3) ("netdbSendPing: pinging %s\n", hostname);
     icmpDomainPing(addr, hostname);
     n->pings_sent++;
     n->next_ping_time = squid_curtime + Config.Netdb.period;
@@ -284,7 +284,7 @@ netdbPeerAdd(netdbEntry * n, peer * e)
 	    n->n_peers_alloc = 2;
 	else
 	    n->n_peers_alloc <<= 1;
-	debug(37, 3, "netdbPeerAdd: Growing peer list for '%s' to %d\n",
+	debug(37, 3) ("netdbPeerAdd: Growing peer list for '%s' to %d\n",
 	    n->network, n->n_peers_alloc);
 	n->peers = xcalloc(n->n_peers_alloc, sizeof(net_db_peer));
 	meta_data.netdb_peers += n->n_peers_alloc;
@@ -325,7 +325,7 @@ netdbSaveState(void *foo)
     sprintf(path, "%s/netdb_state", storeSwapDir(0));
     fp = fopen(path, "w");
     if (fp == NULL) {
-	debug(50, 1, "netdbSaveState: %s: %s\n", path, xstrerror());
+	debug(50, 1) ("netdbSaveState: %s: %s\n", path, xstrerror());
 	return;
     }
     next = (netdbEntry *) hash_first(addr_table);
@@ -348,7 +348,7 @@ netdbSaveState(void *foo)
     }
     fclose(fp);
     getCurrentTime();
-    debug(37, 0, "NETDB state saved; %d entries, %d msec\n",
+    debug(37, 0) ("NETDB state saved; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
     eventAdd("netdbSaveState", netdbSaveState, NULL, 3617);
 }
@@ -408,7 +408,7 @@ netdbReloadState(void)
     put_free_4k_page(buf);
     fclose(fp);
     getCurrentTime();
-    debug(37, 0, "NETDB state reloaded; %d entries, %d msec\n",
+    debug(37, 0) ("NETDB state reloaded; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
 }
 
@@ -467,7 +467,7 @@ netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt)
 #if USE_ICMP
     netdbEntry *n;
     int N;
-    debug(37, 3, "netdbHandlePingReply: from %s\n", inet_ntoa(from->sin_addr));
+    debug(37, 3) ("netdbHandlePingReply: from %s\n", inet_ntoa(from->sin_addr));
     if ((n = netdbLookupAddr(from->sin_addr)) == NULL)
 	return;
     N = ++n->pings_recv;
@@ -475,7 +475,7 @@ netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt)
 	N = 5;
     n->hops = ((n->hops * (N - 1)) + hops) / N;
     n->rtt = ((n->rtt * (N - 1)) + rtt) / N;
-    debug(37, 3, "netdbHandlePingReply: %s; rtt=%5.1f  hops=%4.1f\n",
+    debug(37, 3) ("netdbHandlePingReply: %s; rtt=%5.1f  hops=%4.1f\n",
 	n->network,
 	n->rtt,
 	n->hops);
@@ -568,7 +568,7 @@ netdbDump(StoreEntry * sentry)
     for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table))
 	*(list + i++) = n;
     if (i != meta_data.netdb_addrs)
-	debug(37, 0, "WARNING: netdb_addrs count off, found %d, expected %d\n",
+	debug(37, 0) ("WARNING: netdb_addrs count off, found %d, expected %d\n",
 	    i, meta_data.netdb_addrs);
     qsort((char *) list,
 	i,
@@ -632,10 +632,10 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
     double rtt = (double) irtt;
     double hops = (double) ihops;
     net_db_peer *p;
-    debug(37, 3, "netdbUpdatePeer: '%s', %d hops, %d rtt\n", r->host, ihops, irtt);
+    debug(37, 3) ("netdbUpdatePeer: '%s', %d hops, %d rtt\n", r->host, ihops, irtt);
     n = netdbLookupHost(r->host);
     if (n == NULL) {
-	debug(37, 3, "netdbUpdatePeer: host '%s' not found\n", r->host);
+	debug(37, 3) ("netdbUpdatePeer: host '%s' not found\n", r->host);
 	return;
     }
     if ((p = netdbPeerByName(n, e->host)) == NULL)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.22 1997/05/15 23:40:58 wessels Exp $
+ * $Id: pinger.cc,v 1.23 1997/06/04 06:16:06 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -123,16 +123,16 @@ pingerOpen(void)
 {
     struct protoent *proto = NULL;
     if ((proto = getprotobyname("icmp")) == 0) {
-	debug(42, 0, "pingerOpen: unknown protocol: icmp\n");
+	debug(42, 0) ("pingerOpen: unknown protocol: icmp\n");
 	exit(1);
     }
     icmp_sock = socket(PF_INET, SOCK_RAW, proto->p_proto);
     if (icmp_sock < 0) {
-	debug(50, 0, "pingerOpen: icmp_sock: %s\n", xstrerror());
+	debug(50, 0) ("pingerOpen: icmp_sock: %s\n", xstrerror());
 	exit(1);
     }
     icmp_ident = getpid() & 0xffff;
-    debug(42, 0, "ICMP socket opened\n", icmp_sock);
+    debug(42, 0) ("ICMP socket opened\n", icmp_sock);
 }
 
 void
@@ -204,7 +204,7 @@ pingerRecv(void)
 	(struct sockaddr *) &from,
 	&fromlen);
     gettimeofday(&now, NULL);
-    debug(42, 9, "pingerRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
+    debug(42, 9) ("pingerRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
     ip = (struct iphdr *) (void *) pkt;
 #if HAVE_IP_HL
     iphdrlen = ip->ip_hl << 2;
@@ -257,7 +257,7 @@ in_cksum(unsigned short *ptr, int size)
 static void
 pingerLog(struct icmphdr *icmp, struct in_addr addr, int rtt, int hops)
 {
-    debug(42, 2, "pingerLog: %9d.%06d %-16s %d %-15.15s %dms %d hops\n",
+    debug(42, 2) ("pingerLog: %9d.%06d %-16s %d %-15.15s %dms %d hops\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec,
 	inet_ntoa(addr),
@@ -309,7 +309,7 @@ pingerSendtoSquid(pingerReplyData * preply)
 {
     int len = sizeof(pingerReplyData) - MAX_PKT_SZ + preply->psize;
     if (send(1, (char *) preply, len, 0) < 0) {
-	debug(50, 0, "pinger: send: %s\n", xstrerror());
+	debug(50, 0) ("pinger: send: %s\n", xstrerror());
 	exit(1);
     }
 }
@@ -354,7 +354,7 @@ main(int argc, char *argv[])
 	    return 1;
 	if (FD_ISSET(0, &R))
 	    if (pingerReadRequest() < 0) {
-		debug(42, 0, "Pinger exiting.\n");
+		debug(42, 0) ("Pinger exiting.\n");
 		return 1;
 	    }
 	if (FD_ISSET(icmp_sock, &R))

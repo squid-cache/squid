@@ -1,5 +1,5 @@
 /*
- * $Id: filemap.cc,v 1.17 1997/05/16 07:44:32 wessels Exp $
+ * $Id: filemap.cc,v 1.18 1997/06/04 06:15:52 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -130,8 +130,8 @@ file_map_create(int n)
     fileMap *fm = xcalloc(1, sizeof(fileMap));
     fm->max_n_files = n;
     fm->nwords = n >> LONG_BIT_SHIFT;
-    debug(8, 3, "file_map_create: creating space for %d files\n", n);
-    debug(8, 5, "--> %d words of %d bytes each\n",
+    debug(8, 3) ("file_map_create: creating space for %d files\n", n);
+    debug(8, 5) ("--> %d words of %d bytes each\n",
 	fm->nwords, sizeof(unsigned long));
     fm->file_map = xcalloc(fm->nwords, sizeof(unsigned long));
     meta_data.misc += fm->nwords * sizeof(unsigned long);
@@ -146,9 +146,9 @@ file_map_bit_set(fileMap * fm, int file_number)
     fm->n_files_in_map++;
     if (!fm->toggle && (fm->n_files_in_map > ((fm->max_n_files * 7) >> 3))) {
 	fm->toggle++;
-	debug(8, 0, "You should increment MAX_SWAP_FILE\n");
+	debug(8, 0) ("You should increment MAX_SWAP_FILE\n");
     } else if (fm->n_files_in_map > (fm->max_n_files - 100)) {
-	debug(8, 0, "You've run out of swap file numbers. Freeing 1MB\n");
+	debug(8, 0) ("You've run out of swap file numbers. Freeing 1MB\n");
 	storeGetSwapSpace(1000000);
     }
     return (file_number);

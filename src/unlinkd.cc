@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.5 1997/04/30 18:34:59 wessels Exp $
+ * $Id: unlinkd.cc,v 1.6 1997/06/04 06:16:15 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -92,11 +92,11 @@ unlinkdCreate(void)
     char buf[HELLO_BUFSIZ];
     struct timeval slp;
     if (pipe(squid_to_unlinkd) < 0) {
-	debug(50, 0, "unlinkdCreate: pipe: %s\n", xstrerror());
+	debug(50, 0) ("unlinkdCreate: pipe: %s\n", xstrerror());
 	return -1;
     }
     if (pipe(unlinkd_to_squid) < 0) {
-	debug(50, 0, "unlinkdCreate: pipe: %s\n", xstrerror());
+	debug(50, 0) ("unlinkdCreate: pipe: %s\n", xstrerror());
 	return -1;
     }
     rfd1 = squid_to_unlinkd[0];
@@ -104,7 +104,7 @@ unlinkdCreate(void)
     rfd2 = unlinkd_to_squid[0];
     wfd2 = unlinkd_to_squid[1];
     if ((pid = fork()) < 0) {
-	debug(50, 0, "unlinkdCreate: fork: %s\n", xstrerror());
+	debug(50, 0) ("unlinkdCreate: fork: %s\n", xstrerror());
 	close(rfd1);
 	close(wfd1);
 	close(rfd2);
@@ -119,12 +119,12 @@ unlinkdCreate(void)
 	fd_bytes(rfd2, n, FD_READ);
 	close(rfd2);
 	if (n <= 0) {
-	    debug(50, 0, "unlinkdCreate: handshake failed\n");
+	    debug(50, 0) ("unlinkdCreate: handshake failed\n");
 	    close(wfd1);
 	    return -1;
 	} else if (strcmp(buf, hello_string)) {
-	    debug(50, 0, "unlinkdCreate: handshake failed\n");
-	    debug(50, 0, "--> got '%s'\n", rfc1738_escape(buf));
+	    debug(50, 0) ("unlinkdCreate: handshake failed\n");
+	    debug(50, 0) ("--> got '%s'\n", rfc1738_escape(buf));
 	    close(wfd1);
 	    return -1;
 	}
@@ -146,7 +146,7 @@ unlinkdCreate(void)
     close(wfd2);		/* close parent's FD */
     commSetCloseOnExec(fileno(debug_log));
     execlp(Config.Program.unlinkd, "(unlinkd)", NULL);
-    debug(50, 0, "unlinkdCreate: %s: %s\n",
+    debug(50, 0) ("unlinkdCreate: %s: %s\n",
 	Config.Program.unlinkd, xstrerror());
     _exit(1);
     return 0;
@@ -193,7 +193,7 @@ unlinkdInit(void)
     unlinkd_fd = unlinkdCreate();
     if (unlinkd_fd < 0)
 	fatal("unlinkdInit: failed to start unlinkd\n");
-    debug(43, 0, "Unlinkd pipe opened on FD %d\n", unlinkd_fd);
+    debug(43, 0) ("Unlinkd pipe opened on FD %d\n", unlinkd_fd);
 }
 
 #endif /* ndef UNLINK_DAEMON */

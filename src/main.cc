@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.150 1997/06/01 23:22:25 wessels Exp $
+ * $Id: main.cc,v 1.151 1997/06/04 06:16:01 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -297,7 +297,7 @@ mainParseOptions(int argc, char *argv[])
 static void
 rotate_logs(int sig)
 {
-    debug(1, 1, "rotate_logs: SIGUSR1 received.\n");
+    debug(1, 1) ("rotate_logs: SIGUSR1 received.\n");
     rotate_pending = 1;
 #if !HAVE_SIGACTION
     signal(sig, rotate_logs);
@@ -317,12 +317,12 @@ void
 shut_down(int sig)
 {
     shutdown_pending = sig == SIGINT ? -1 : 1;
-    debug(1, 1, "Preparing for shutdown after %d connections\n",
+    debug(1, 1) ("Preparing for shutdown after %d connections\n",
 	ntcpconn + nudpconn);
-    debug(1, 1, "Waiting %d seconds for active connections to finish\n",
+    debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
 	shutdown_pending > 0 ? Config.shutdownLifetime : 0);
 #ifdef KILL_PARENT_OPT
-    debug(1, 1, "Killing RunCache, pid %d\n", getppid());
+    debug(1, 1) ("Killing RunCache, pid %d\n", getppid());
     kill(getppid(), sig);
 #endif
 #if SA_RESETHAND == 0
@@ -354,7 +354,7 @@ serverConnectionsOpen(void)
 	    continue;
 	comm_listen(fd);
 	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
-	debug(1, 1, "Accepting HTTP connections on port %d, FD %d.\n",
+	debug(1, 1) ("Accepting HTTP connections on port %d, FD %d.\n",
 	    (int) Config.Port.http[x], fd);
 	HttpSockets[NHttpSockets++] = fd;
     }
@@ -382,7 +382,7 @@ serverConnectionsOpen(void)
 		    theInIcpConnection,
 		    comm_join_mcast_groups,
 		    NULL);
-	    debug(1, 1, "Accepting ICP connections on port %d, FD %d.\n",
+	    debug(1, 1) ("Accepting ICP connections on port %d, FD %d.\n",
 		(int) port, theInIcpConnection);
 
 	    if ((addr = Config.Addrs.udp_outgoing).s_addr != no_addr.s_addr) {
@@ -400,7 +400,7 @@ serverConnectionsOpen(void)
 		    COMM_SELECT_READ,
 		    icpHandleUdp,
 		    NULL, 0);
-		debug(1, 1, "Accepting ICP connections on port %d, FD %d.\n",
+		debug(1, 1) ("Accepting ICP connections on port %d, FD %d.\n",
 		    (int) port, theInIcpConnection);
 		fd_note(theOutIcpConnection, "Outgoing ICP socket");
 		fd_note(theInIcpConnection, "Incoming ICP socket");
@@ -413,7 +413,7 @@ serverConnectionsOpen(void)
 	    x = getsockname(theOutIcpConnection,
 		(struct sockaddr *) &xaddr, &len);
 	    if (x < 0)
-		debug(50, 1, "theOutIcpConnection FD %d: getsockname: %s\n",
+		debug(50, 1) ("theOutIcpConnection FD %d: getsockname: %s\n",
 		    theOutIcpConnection, xstrerror());
 	    else
 		theOutICPAddr = xaddr.sin_addr;
@@ -441,7 +441,7 @@ serverConnectionsOpen(void)
 		(char *) &mr,
 		sizeof(struct ip_mreq));
 	    if (x < 0)
-		debug(50, 1, "IP_ADD_MEMBERSHIP: FD %d, addr %s: %s\n",
+		debug(50, 1) ("IP_ADD_MEMBERSHIP: FD %d, addr %s: %s\n",
 		    vizSock, inet_ntoa(Config.vizHack.addr), xstrerror());
 	    x = setsockopt(vizSock,
 		IPPROTO_IP,
@@ -449,15 +449,15 @@ serverConnectionsOpen(void)
 		&ttl,
 		sizeof(char));
 	    if (x < 0)
-		debug(50, 1, "IP_MULTICAST_TTL: FD %d, TTL %d: %s\n",
+		debug(50, 1) ("IP_MULTICAST_TTL: FD %d, TTL %d: %s\n",
 		    vizSock, Config.vizHack.mcast_ttl, xstrerror());
 	    ttl = 0;
 	    x = sizeof(char);
 	    getsockopt(vizSock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, &x);
-	    debug(1, 0, "vizSock on FD %d, ttl=%d\n", vizSock, (int) ttl);
+	    debug(1, 0) ("vizSock on FD %d, ttl=%d\n", vizSock, (int) ttl);
 	}
 #else
-	debug(1, 0, "vizSock: Could not join multicast group\n");
+	debug(1, 0) ("vizSock: Could not join multicast group\n");
 #endif
 	memset(&Config.vizHack.S, '\0', sizeof(struct sockaddr_in));
 	Config.vizHack.S.sin_family = AF_INET;
@@ -478,7 +478,7 @@ serverConnectionsClose(void)
     int i;
     for (i = 0; i < NHttpSockets; i++) {
 	if (HttpSockets[i] >= 0) {
-	    debug(1, 1, "FD %d Closing HTTP connection\n", HttpSockets[i]);
+	    debug(1, 1) ("FD %d Closing HTTP connection\n", HttpSockets[i]);
 	    comm_close(HttpSockets[i]);
 	    HttpSockets[i] = -1;
 	}
@@ -487,7 +487,7 @@ serverConnectionsClose(void)
     if (theInIcpConnection >= 0) {
 	/* NOTE, don't close outgoing ICP connection, we need to write to
 	 * it during shutdown */
-	debug(1, 1, "FD %d Closing ICP connection\n",
+	debug(1, 1) ("FD %d Closing ICP connection\n",
 	    theInIcpConnection);
 	if (theInIcpConnection != theOutIcpConnection)
 	    comm_close(theInIcpConnection);
@@ -509,7 +509,7 @@ serverConnectionsClose(void)
 static void
 mainReconfigure(void)
 {
-    debug(1, 0, "Restarting Squid Cache (version %s)...\n", version_string);
+    debug(1, 0) ("Restarting Squid Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
     neighborsDestroy();
     parseConfigFile(ConfigFile);
@@ -521,7 +521,7 @@ mainReconfigure(void)
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0 && (!httpd_accel_mode || Config.Accel.withProxy))
 	neighbors_open(theOutIcpConnection);
-    debug(1, 0, "Ready to serve requests.\n");
+    debug(1, 0) ("Ready to serve requests.\n");
 }
 
 static void
@@ -540,10 +540,10 @@ mainInitialize(void)
 
     leave_suid();		/* Run as non privilegied user */
     if (geteuid() == 0) {
-	debug(0, 0, "Squid is not safe to run as root!  If you must\n");
-	debug(0, 0, "start Squid as root, then you must configure\n");
-	debug(0, 0, "it to run as a non-priveledged user with the\n");
-	debug(0, 0, "'cache_effective_user' option in the config file.\n");
+	debug(0, 0) ("Squid is not safe to run as root!  If you must\n");
+	debug(0, 0) ("start Squid as root, then you must configure\n");
+	debug(0, 0) ("it to run as a non-priveledged user with the\n");
+	debug(0, 0) ("'cache_effective_user' option in the config file.\n");
 	fatal("Don't run Squid as root, set 'cache_effective_user'!");
     }
     if (httpPortNumOverride != 1)
@@ -554,10 +554,10 @@ mainInitialize(void)
     _db_init(Config.Log.log, Config.debugOptions);
     fd_open(fileno(debug_log), FD_LOG, Config.Log.log);
 
-    debug(1, 0, "Starting Squid Cache version %s for %s...\n",
+    debug(1, 0) ("Starting Squid Cache version %s for %s...\n",
 	version_string,
 	CONFIG_HOST_TYPE);
-    debug(1, 1, "With %d file descriptors available\n", Squid_MaxFD);
+    debug(1, 1) ("With %d file descriptors available\n", Squid_MaxFD);
 
     if (!configured_once) {
 	stmemInit();		/* stmem must go before at least redirect */
@@ -585,7 +585,7 @@ mainInitialize(void)
 	    /* we were probably started as root, so cd to a swap
 	     * directory in case we dump core */
 	    if (chdir(storeSwapDir(0)) < 0) {
-		debug(50, 0, "%s: %s\n", storeSwapDir(0), xstrerror());
+		debug(50, 0) ("%s: %s\n", storeSwapDir(0), xstrerror());
 		fatal_dump("Cannot cd to swap directory?");
 	    }
 	}
@@ -605,7 +605,7 @@ mainInitialize(void)
     squid_signal(SIGHUP, reconfigure, SA_RESTART);
     squid_signal(SIGTERM, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
     squid_signal(SIGINT, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
-    debug(1, 0, "Ready to serve requests.\n");
+    debug(1, 0) ("Ready to serve requests.\n");
 
     if (!configured_once) {
 	eventAdd("storePurgeOld", storePurgeOld, NULL, Config.cleanRate);
@@ -717,7 +717,7 @@ main(int argc, char **argv)
 	    break;
 	case COMM_ERROR:
 	    errcount++;
-	    debug(1, 0, "Select loop Error. Retry %d\n", errcount);
+	    debug(1, 0) ("Select loop Error. Retry %d\n", errcount);
 	    if (errcount == 10)
 		fatal_dump("Select Loop failed!");
 	    break;

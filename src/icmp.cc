@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.36 1997/06/04 04:32:58 wessels Exp $
+ * $Id: icmp.cc,v 1.37 1997/06/04 06:15:58 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -84,7 +84,7 @@ icmpRecv(int unused1, void *unused2)
 	sizeof(pingerReplyData),
 	0);
     if (n < 0) {
-	debug(50, 0, "icmpRecv: recv: %s\n", xstrerror());
+	debug(50, 0) ("icmpRecv: recv: %s\n", xstrerror());
 	if (++fail_count == 10 || errno == ECONNREFUSED)
 	    icmpClose();
 	return;
@@ -105,7 +105,7 @@ icmpRecv(int unused1, void *unused2)
 	netdbHandlePingReply(&F, preply.hops, preply.rtt);
 	break;
     default:
-	debug(37, 0, "icmpRecv: Bad opcode: %d\n", (int) preply.opcode);
+	debug(37, 0) ("icmpRecv: Bad opcode: %d\n", (int) preply.opcode);
 	break;
     }
 }
@@ -122,7 +122,7 @@ icmpQueueSend(pingerEchoData * pkt,
 	    free_func(pkt);
 	return;
     }
-    debug(37, 3, "icmpQueueSend: Queueing %d bytes\n", len);
+    debug(37, 3) ("icmpQueueSend: Queueing %d bytes\n", len);
     q = xcalloc(1, sizeof(icmpQueueData));
     q->msg = (char *) pkt;
     q->len = len;
@@ -145,13 +145,13 @@ icmpSend(int fd, void *data)
 	if (x < 0) {
 	    if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
 		break;		/* don't de-queue */
-	    debug(50, 0, "icmpSend: send: %s\n", xstrerror());
+	    debug(50, 0) ("icmpSend: send: %s\n", xstrerror());
 	    if (errno == ECONNREFUSED) {
 		icmpClose();
 		return;
 	    }
 	} else if (x != queue->len) {
-	    debug(37, 0, "icmpSend: Wrote %d of %d bytes\n", x, queue->len);
+	    debug(37, 0) ("icmpSend: Wrote %d of %d bytes\n", x, queue->len);
 	}
 	IcmpQueueHead = queue->next;
 	if (queue->free_func)
@@ -180,7 +180,7 @@ icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
     } else {
 	key = storeGeneratePublicKey(url, METHOD_GET);
     }
-    debug(37, 3, "icmpHandleSourcePing: from %s, key=%s\n",
+    debug(37, 3) ("icmpHandleSourcePing: from %s, key=%s\n",
 	inet_ntoa(from->sin_addr),
 	key);
     if ((entry = storeGet(key)) == NULL)
@@ -213,7 +213,7 @@ icmpSourcePing(struct in_addr to, const icp_common_t * header, const char *url)
     char *payload;
     int len;
     int ulen;
-    debug(37, 3, "icmpSourcePing: '%s'\n", url);
+    debug(37, 3) ("icmpSourcePing: '%s'\n", url);
     if ((ulen = strlen(url)) > MAX_URL)
 	return;
     payload = get_free_8k_page();
@@ -230,7 +230,7 @@ void
 icmpDomainPing(struct in_addr to, const char *domain)
 {
 #if USE_ICMP
-    debug(37, 3, "icmpDomainPing: '%s'\n", domain);
+    debug(37, 3) ("icmpDomainPing: '%s'\n", domain);
     icmpSendEcho(to, S_ICMP_DOM, domain, 0);
 #endif
 }
@@ -250,7 +250,7 @@ icmpOpen(void)
 	COMM_NONBLOCKING,
 	"Pinger Socket");
     if (icmp_sock < 0) {
-	debug(50, 0, "icmpOpen: icmp_sock: %s\n", xstrerror());
+	debug(50, 0) ("icmpOpen: icmp_sock: %s\n", xstrerror());
 	return;
     }
     child_sock = comm_open(SOCK_DGRAM,
@@ -260,7 +260,7 @@ icmpOpen(void)
 	0,
 	"ICMP Socket");
     if (child_sock < 0) {
-	debug(50, 0, "icmpOpen: child_sock: %s\n", xstrerror());
+	debug(50, 0) ("icmpOpen: child_sock: %s\n", xstrerror());
 	return;
     }
     getsockname(icmp_sock, (struct sockaddr *) &S, &namelen);
@@ -270,7 +270,7 @@ icmpOpen(void)
     if (comm_connect_addr(icmp_sock, &S) != COMM_OK)
 	fatal_dump(xstrerror());
     if ((pid = fork()) < 0) {
-	debug(50, 0, "icmpOpen: fork: %s\n", xstrerror());
+	debug(50, 0) ("icmpOpen: fork: %s\n", xstrerror());
 	comm_close(icmp_sock);
 	comm_close(child_sock);
 	return;
@@ -287,13 +287,13 @@ icmpOpen(void)
 	fclose(debug_log);
 	enter_suid();
 	execlp(Config.Program.pinger, "(pinger)", NULL);
-	debug(50, 0, "icmpOpen: %s: %s\n", Config.Program.pinger, xstrerror());
+	debug(50, 0) ("icmpOpen: %s: %s\n", Config.Program.pinger, xstrerror());
 	_exit(1);
     }
     comm_close(child_sock);
     commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
     commSetTimeout(icmp_sock, -1, NULL, NULL);
-    debug(29, 0, "Pinger socket opened on FD %d\n", icmp_sock);
+    debug(29, 0) ("Pinger socket opened on FD %d\n", icmp_sock);
 #endif
 }
 
@@ -304,7 +304,7 @@ icmpClose(void)
     icmpQueueData *queue;
     if (icmp_sock < 0)
 	return;
-    debug(29, 0, "Closing ICMP socket on FD %d\n", icmp_sock);
+    debug(29, 0) ("Closing ICMP socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
     commSetSelect(icmp_sock, COMM_SELECT_READ, NULL, NULL, 0);
     commSetSelect(icmp_sock, COMM_SELECT_WRITE, NULL, NULL, 0);

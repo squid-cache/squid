@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.95 1997/05/15 01:18:41 wessels Exp $
+ * $Id: acl.cc,v 1.96 1997/06/04 06:15:44 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -113,7 +113,7 @@ strtokFile(void)
 		t++;
 	    *t = '\0';
 	    if ((aclFile = fopen(fn, "r")) == NULL) {
-		debug(28, 0, "strtokFile: %s not found\n", fn);
+		debug(28, 0) ("strtokFile: %s not found\n", fn);
 		return (NULL);
 	    }
 	    aclFromFile = 1;
@@ -240,7 +240,7 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
     switch (sscanf(asc, "%d.%d.%d.%d", &a1, &a2, &a3, &a4)) {
     case 4:			/* a dotted quad */
 	if (!safe_inet_addr(asc, addr)) {
-	    debug(28, 0, "decode_addr: unsafe IP address: '%s'\n", asc);
+	    debug(28, 0) ("decode_addr: unsafe IP address: '%s'\n", asc);
 	    fatal("decode_addr: unsafe IP address");
 	}
 	break;
@@ -256,7 +256,7 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 	    *addr = inaddrFromHostent(hp);
 	} else {
 	    /* XXX: Here we could use getnetbyname */
-	    debug(28, 0, "decode_addr: Invalid IP address or hostname '%s'\n", asc);
+	    debug(28, 0) ("decode_addr: Invalid IP address or hostname '%s'\n", asc);
 	    return 0;		/* This is not valid address */
 	}
 	break;
@@ -287,7 +287,7 @@ aclParseIpData(const char *t)
     LOCAL_ARRAY(char, addr2, 256);
     LOCAL_ARRAY(char, mask, 256);
     struct _acl_ip_data *q = xcalloc(1, sizeof(struct _acl_ip_data));
-    debug(28, 5, "aclParseIpData: %s\n", t);
+    debug(28, 5) ("aclParseIpData: %s\n", t);
     if (!strcasecmp(t, "all")) {
 	q->addr1.s_addr = 0;
 	q->addr2.s_addr = 0;
@@ -309,31 +309,31 @@ aclParseIpData(const char *t)
 	addr2[0] = '\0';
 	mask[0] = '\0';
     } else {
-	debug(28, 0, "aclParseIpData: Bad host/IP: '%s'\n", t);
+	debug(28, 0) ("aclParseIpData: Bad host/IP: '%s'\n", t);
 	safe_free(q);
 	return NULL;
     }
     /* Decode addr1 */
     if (!decode_addr(addr1, &q->addr1, &q->mask)) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseIpData: Ignoring invalid IP acl entry: unknown first address '%s'\n", addr1);
+	debug(28, 0) ("aclParseIpData: Ignoring invalid IP acl entry: unknown first address '%s'\n", addr1);
 	safe_free(q);
 	return NULL;
     }
     /* Decode addr2 */
     if (*addr2 && !decode_addr(addr2, &q->addr2, &q->mask)) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseIpData: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr2);
+	debug(28, 0) ("aclParseIpData: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr2);
 	safe_free(q);
 	return NULL;
     }
     /* Decode mask */
     if (*mask && !decode_addr(mask, &q->mask, NULL)) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseIpData: Ignoring invalid IP acl entry: unknown netmask '%s'\n", mask);
+	debug(28, 0) ("aclParseIpData: Ignoring invalid IP acl entry: unknown netmask '%s'\n", mask);
 	safe_free(q);
 	return NULL;
     }
@@ -435,9 +435,9 @@ aclParseTimeSpec(void *curlist)
 		    q->weekbits |= ACL_WEEKDAYS;
 		    break;
 		default:
-		    debug(28, 0, "%s line %d: %s\n",
+		    debug(28, 0) ("%s line %d: %s\n",
 			cfg_filename, config_lineno, config_input_line);
-		    debug(28, 0, "aclParseTimeSpec: Bad Day '%c'\n",
+		    debug(28, 0) ("aclParseTimeSpec: Bad Day '%c'\n",
 			*t);
 		    break;
 		}
@@ -445,18 +445,18 @@ aclParseTimeSpec(void *curlist)
 	} else {
 	    /* assume its time-of-day spec */
 	    if (sscanf(t, "%d:%d-%d:%d", &h1, &m1, &h2, &m2) < 4) {
-		debug(28, 0, "%s line %d: %s\n",
+		debug(28, 0) ("%s line %d: %s\n",
 		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseTimeSpec: IGNORING Bad time range\n");
+		debug(28, 0) ("aclParseTimeSpec: IGNORING Bad time range\n");
 		xfree(q);
 		return;
 	    }
 	    q->start = h1 * 60 + m1;
 	    q->stop = h2 * 60 + m2;
 	    if (q->start > q->stop) {
-		debug(28, 0, "%s line %d: %s\n",
+		debug(28, 0) ("%s line %d: %s\n",
 		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseTimeSpec: IGNORING Reversed time range\n");
+		debug(28, 0) ("aclParseTimeSpec: IGNORING Reversed time range\n");
 		xfree(q);
 		return;
 	    }
@@ -486,9 +486,9 @@ aclParseRegexList(void *curlist, int icase)
 	if ((errcode = regcomp(&comp, t, flags)) != 0) {
 	    char errbuf[256];
 	    regerror(errcode, &comp, errbuf, sizeof errbuf);
-	    debug(28, 0, "%s line %d: %s\n",
+	    debug(28, 0) ("%s line %d: %s\n",
 		cfg_filename, config_lineno, config_input_line);
-	    debug(28, 0, "aclParseRegexList: Invalid regular expression '%s': %s\n",
+	    debug(28, 0) ("aclParseRegexList: Invalid regular expression '%s': %s\n",
 		t, errbuf);
 	    continue;
 	}
@@ -580,27 +580,27 @@ aclParseAclLine(void)
 
     /* snarf the ACL name */
     if ((t = strtok(NULL, w_space)) == NULL) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseAclLine: missing ACL name.\n");
+	debug(28, 0) ("aclParseAclLine: missing ACL name.\n");
 	return;
     }
     xstrncpy(aclname, t, ACL_NAME_SZ);
     /* snarf the ACL type */
     if ((t = strtok(NULL, w_space)) == NULL) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseAclLine: missing ACL type.\n");
+	debug(28, 0) ("aclParseAclLine: missing ACL type.\n");
 	return;
     }
     if ((acltype = aclType(t)) == ACL_NONE) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseAclLine: Invalid ACL type '%s'\n", t);
+	debug(28, 0) ("aclParseAclLine: Invalid ACL type '%s'\n", t);
 	return;
     }
     if ((A = aclFindByName(aclname)) == NULL) {
-	debug(28, 3, "aclParseAclLine: Creating ACL '%s'\n", aclname);
+	debug(28, 3) ("aclParseAclLine: Creating ACL '%s'\n", aclname);
 	A = xcalloc(1, sizeof(struct _acl));
 	xstrncpy(A->name, aclname, ACL_NAME_SZ);
 	A->type = acltype;
@@ -608,10 +608,10 @@ aclParseAclLine(void)
 	new_acl = 1;
     } else {
 	if (acltype != A->type) {
-	    debug(28, 0, "aclParseAclLine: ACL '%s' already exists with different type, skipping.\n", A->name);
+	    debug(28, 0) ("aclParseAclLine: ACL '%s' already exists with different type, skipping.\n", A->name);
 	    return;
 	}
-	debug(28, 3, "aclParseAclLine: Appending to '%s'\n", aclname);
+	debug(28, 3) ("aclParseAclLine: Appending to '%s'\n", aclname);
 	new_acl = 0;
     }
     switch (A->type) {
@@ -654,7 +654,7 @@ aclParseAclLine(void)
     if (!new_acl)
 	return;
     if (A->data == NULL) {
-	debug(28, 0, "aclParseAclLine: IGNORING invalid ACL: %s\n",
+	debug(28, 0) ("aclParseAclLine: IGNORING invalid ACL: %s\n",
 	    A->cfgline);
 	xfree(A);
 	return;
@@ -711,9 +711,9 @@ aclParseDenyInfoLine(struct _acl_deny_info_list **head)
 
     /* first expect an url */
     if ((t = strtok(NULL, w_space)) == NULL) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseDenyInfoLine: missing 'url' parameter.\n");
+	debug(28, 0) ("aclParseDenyInfoLine: missing 'url' parameter.\n");
 	return;
     }
     A = xcalloc(1, sizeof(struct _acl_deny_info_list));
@@ -728,9 +728,9 @@ aclParseDenyInfoLine(struct _acl_deny_info_list **head)
 	Tail = &L->next;
     }
     if (A->acl_list == NULL) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseDenyInfoLine: deny_info line contains no ACL's, skipping\n");
+	debug(28, 0) ("aclParseDenyInfoLine: deny_info line contains no ACL's, skipping\n");
 	xfree(A);
 	return;
     }
@@ -751,9 +751,9 @@ aclParseAccessLine(struct _acl_access **head)
 
     /* first expect either 'allow' or 'deny' */
     if ((t = strtok(NULL, w_space)) == NULL) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseAccessLine: missing 'allow' or 'deny'.\n");
+	debug(28, 0) ("aclParseAccessLine: missing 'allow' or 'deny'.\n");
 	return;
     }
     A = xcalloc(1, sizeof(struct _acl_access));
@@ -762,9 +762,9 @@ aclParseAccessLine(struct _acl_access **head)
     else if (!strcmp(t, "deny"))
 	A->allow = 0;
     else {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
+	debug(28, 0) ("aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
 	xfree(A);
 	return;
     }
@@ -780,12 +780,12 @@ aclParseAccessLine(struct _acl_access **head)
 	    L->op = 0;
 	    t++;
 	}
-	debug(28, 3, "aclParseAccessLine: looking for ACL name '%s'\n", t);
+	debug(28, 3) ("aclParseAccessLine: looking for ACL name '%s'\n", t);
 	a = aclFindByName(t);
 	if (a == NULL) {
-	    debug(28, 0, "%s line %d: %s\n",
+	    debug(28, 0) ("%s line %d: %s\n",
 		cfg_filename, config_lineno, config_input_line);
-	    debug(28, 0, "aclParseAccessLine: ACL name '%s' not found.\n", t);
+	    debug(28, 0) ("aclParseAccessLine: ACL name '%s' not found.\n", t);
 	    xfree(L);
 	    continue;
 	}
@@ -794,9 +794,9 @@ aclParseAccessLine(struct _acl_access **head)
 	Tail = &L->next;
     }
     if (A->acl_list == NULL) {
-	debug(28, 0, "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseAccessLine: Access line contains no ACL's, skipping\n");
+	debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
 	xfree(A);
 	return;
     }
@@ -815,7 +815,7 @@ aclMatchIp(void *dataptr, struct in_addr c)
 {
     splayNode **Top = dataptr;
     *Top = splay_splay(&c, *Top, aclIpNetworkCompare);
-    debug(28, 3, "aclMatchIp: '%s' %s\n",
+    debug(28, 3) ("aclMatchIp: '%s' %s\n",
 	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
 }
@@ -826,10 +826,10 @@ aclMatchIp(void *dataptr, struct in_addr c)
 {
     tree **data = dataptr;
     if (tree_srch(data, bintreeIpNetworkCompare, &c)) {
-	debug(28, 3, "aclMatchIp: '%s' found\n", inet_ntoa(c));
+	debug(28, 3) ("aclMatchIp: '%s' found\n", inet_ntoa(c));
 	return 1;
     }
-    debug(28, 3, "aclMatchIp: '%s' NOT found\n", inet_ntoa(c));
+    debug(28, 3) ("aclMatchIp: '%s' NOT found\n", inet_ntoa(c));
     return 0;
 }
 
@@ -847,12 +847,12 @@ aclMatchIp(void *dataptr, struct in_addr c)
     prev = NULL;		/* previous element in the list */
     while (data) {
 	h.s_addr = c.s_addr & data->mask.s_addr;
-	debug(28, 3, "aclMatchIp: h     = %s\n", inet_ntoa(h));
-	debug(28, 3, "aclMatchIp: addr1 = %s\n", inet_ntoa(data->addr1));
-	debug(28, 3, "aclMatchIp: addr2 = %s\n", inet_ntoa(data->addr2));
+	debug(28, 3) ("aclMatchIp: h     = %s\n", inet_ntoa(h));
+	debug(28, 3) ("aclMatchIp: addr1 = %s\n", inet_ntoa(data->addr1));
+	debug(28, 3) ("aclMatchIp: addr2 = %s\n", inet_ntoa(data->addr2));
 	if (!data->addr2.s_addr) {
 	    if (h.s_addr == data->addr1.s_addr) {
-		debug(28, 3, "aclMatchIp: returning 1\n");
+		debug(28, 3) ("aclMatchIp: returning 1\n");
 		if (prev != NULL) {
 		    /* shift the element just found to the second position
 		     * in the list */
@@ -868,7 +868,7 @@ aclMatchIp(void *dataptr, struct in_addr c)
 	    la1 = ntohl(data->addr1.s_addr);
 	    la2 = ntohl(data->addr2.s_addr);
 	    if (lh >= la1 && lh <= la2) {
-		debug(28, 3, "aclMatchIp: returning 1\n");
+		debug(28, 3) ("aclMatchIp: returning 1\n");
 		if (prev != NULL) {
 		    /* shift the element just found to the second position
 		     * in the list */
@@ -882,7 +882,7 @@ aclMatchIp(void *dataptr, struct in_addr c)
 	prev = data;
 	data = data->next;
     }
-    debug(28, 3, "aclMatchIp: returning 0\n");
+    debug(28, 3) ("aclMatchIp: returning 0\n");
     return 0;
 }
 
@@ -899,9 +899,9 @@ aclMatchDomainList(void *dataptr, const char *host)
     splayNode **Top = dataptr;
     if (host == NULL)
 	return 0;
-    debug(28, 3, "aclMatchDomainList: checking '%s'\n", host);
+    debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
     *Top = splay_splay(host, *Top, aclHostDomainCompare);
-    debug(28, 3, "aclMatchDomainList: '%s' %s\n",
+    debug(28, 3) ("aclMatchDomainList: '%s' %s\n",
 	host, splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
 }
@@ -913,12 +913,12 @@ aclMatchDomainList(void *dataptr, const char *host)
     tree **data = dataptr;
     if (host == NULL)
 	return 0;
-    debug(28, 3, "aclMatchDomainList: checking '%s'\n", host);
+    debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
     if (tree_srch(data, bintreeHostDomainCompare, (void *) host)) {
-	debug(28, 3, "aclMatchDomainList: '%s' found\n", host);
+	debug(28, 3) ("aclMatchDomainList: '%s' found\n", host);
 	return 1;
     }
-    debug(28, 3, "aclMatchDomainList: '%s' NOT found\n", host);
+    debug(28, 3) ("aclMatchDomainList: '%s' NOT found\n", host);
     return 0;
 }
 
@@ -931,9 +931,9 @@ aclMatchDomainList(void *dataptr, const char *host)
     wordlist *prev = NULL;
     if (host == NULL)
 	return 0;
-    debug(28, 3, "aclMatchDomainList: checking '%s'\n", host);
+    debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
     for (data = *Head; data; data = data->next) {
-	debug(28, 3, "aclMatchDomainList: looking for '%s'\n", data->key);
+	debug(28, 3) ("aclMatchDomainList: looking for '%s'\n", data->key);
 	if (matchDomainName(data->key, host)) {
 	    if (prev) {
 		/* shift the element just found to the top of the list */
@@ -956,11 +956,11 @@ aclMatchRegex(relist * data, const char *word)
     relist *first, *prev;
     if (word == NULL)
 	return 0;
-    debug(28, 3, "aclMatchRegex: checking '%s'\n", word);
+    debug(28, 3) ("aclMatchRegex: checking '%s'\n", word);
     first = data;
     prev = NULL;
     while (data) {
-	debug(28, 3, "aclMatchRegex: looking for '%s'\n", data->pattern);
+	debug(28, 3) ("aclMatchRegex: looking for '%s'\n", data->pattern);
 	if (regexec(&data->regex, word, 0, 0, 0) == 0) {
 	    if (prev != NULL) {
 		/* shift the element just found to the second position
@@ -982,9 +982,9 @@ aclMatchIdent(wordlist * data, const char *ident)
 {
     if (ident == NULL)
 	return 0;
-    debug(28, 3, "aclMatchIdent: checking '%s'\n", ident);
+    debug(28, 3) ("aclMatchIdent: checking '%s'\n", ident);
     while (data) {
-	debug(28, 3, "aclMatchIdent: looking for '%s'\n", data->key);
+	debug(28, 3) ("aclMatchIdent: looking for '%s'\n", data->key);
 	if (strcmp(data->key, "REQUIRED") == 0 && *ident != '\0')
 	    return 1;
 	if (strcmp(data->key, ident) == 0)
@@ -1030,7 +1030,7 @@ aclMatchTime(struct _acl_time_data *data, time_t when)
 	xmemcpy(&tm, localtime(&when), sizeof(struct tm));
     }
     t = (time_t) (tm.tm_hour * 60 + tm.tm_min);
-    debug(28, 3, "aclMatchTime: checking %d in %d-%d, weekbits=%x\n",
+    debug(28, 3) ("aclMatchTime: checking %d in %d-%d, weekbits=%x\n",
 	(int) t, (int) data->start, (int) data->stop, data->weekbits);
 
     if (t < data->start || t > data->stop)
@@ -1047,7 +1047,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
     int k;
     if (!acl)
 	return 0;
-    debug(28, 3, "aclMatchAcl: checking '%s'\n", acl->cfgline);
+    debug(28, 3) ("aclMatchAcl: checking '%s'\n", acl->cfgline);
     switch (acl->type) {
     case ACL_SRC_IP:
 	return aclMatchIp(&acl->data, checklist->src_addr);
@@ -1061,7 +1061,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	    }
 	    return 0;
 	} else if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NONE) {
-	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		acl->name, r->host);
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_NEEDED;
 	    return 0;
@@ -1076,7 +1076,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	if (fqdn)
 	    return aclMatchDomainList(&acl->data, fqdn);
 	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
-	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		acl->name, inet_ntoa(ia->in_addrs[0]));
 	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
@@ -1088,7 +1088,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	if (fqdn) {
 	    return aclMatchDomainList(&acl->data, fqdn);
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
-	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		acl->name, inet_ntoa(checklist->src_addr));
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
@@ -1109,7 +1109,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	return aclMatchInteger(acl->data, r->port);
 	/* NOTREACHED */
     case ACL_USER:
-	/* debug(28, 0, "aclMatchAcl: ACL_USER unimplemented\n"); */
+	/* debug(28, 0)("aclMatchAcl: ACL_USER unimplemented\n"); */
 	/* return 0; */
 	return aclMatchIdent(acl->data, checklist->ident);
 	/* NOTREACHED */
@@ -1124,7 +1124,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	/* NOTREACHED */
     case ACL_NONE:
     default:
-	debug(28, 0, "aclMatchAcl: '%s' has bad type %d\n",
+	debug(28, 0) ("aclMatchAcl: '%s' has bad type %d\n",
 	    acl->name, acl->type);
 	return 0;
     }
@@ -1136,15 +1136,15 @@ aclMatchAclList(const struct _acl_list *list, aclCheck_t * checklist)
 {
     while (list) {
 	AclMatchedName = list->acl->name;
-	debug(28, 3, "aclMatchAclList: checking %s%s\n",
+	debug(28, 3) ("aclMatchAclList: checking %s%s\n",
 	    list->op ? null_string : "!", list->acl->name);
 	if (aclMatchAcl(list->acl, checklist) != list->op) {
-	    debug(28, 3, "aclMatchAclList: returning 0\n");
+	    debug(28, 3) ("aclMatchAclList: returning 0\n");
 	    return 0;
 	}
 	list = list->next;
     }
-    debug(28, 3, "aclMatchAclList: returning 1\n");
+    debug(28, 3) ("aclMatchAclList: returning 1\n");
     return 1;
 }
 
@@ -1169,7 +1169,7 @@ aclCheck(aclCheck_t * checklist)
     int match;
     ipcache_addrs *ia;
     while ((A = checklist->access_list)) {
-	debug(28, 3, "aclCheck: checking '%s'\n", A->cfgline);
+	debug(28, 3) ("aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
 	match = aclMatchAclList(A->acl_list, checklist);
 	if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NEEDED) {
@@ -1199,13 +1199,13 @@ aclCheck(aclCheck_t * checklist)
 	    return;
 	}
 	if (match) {
-	    debug(28, 3, "aclCheck: match found, returning %d\n", allow);
+	    debug(28, 3) ("aclCheck: match found, returning %d\n", allow);
 	    aclCheckCallback(checklist, allow);
 	    return;
 	}
 	checklist->access_list = A->next;
     }
-    debug(28, 3, "aclCheck: NO match found, returning %d\n", !allow);
+    debug(28, 3) ("aclCheck: NO match found, returning %d\n", !allow);
     aclCheckCallback(checklist, !allow);
 }
 
@@ -1225,7 +1225,7 @@ aclChecklistFree(aclCheck_t * checklist)
 static void
 aclCheckCallback(aclCheck_t * checklist, int answer)
 {
-    debug(28, 3, "aclCheckCallback: answer=%d\n", answer);
+    debug(28, 3) ("aclCheckCallback: answer=%d\n", answer);
     checklist->callback(answer, checklist->callback_data);
     checklist->callback = NULL;
     checklist->callback_data = NULL;
@@ -1351,7 +1351,7 @@ aclDestroyAcls(void)
     struct _acl *next = NULL;
     for (a = AclList; a; a = next) {
 	next = a->next;
-	debug(28, 3, "aclDestroyAcls: '%s'\n", a->cfgline);
+	debug(28, 3) ("aclDestroyAcls: '%s'\n", a->cfgline);
 	switch (a->type) {
 	case ACL_SRC_IP:
 	case ACL_DST_IP:
@@ -1417,7 +1417,7 @@ aclDestroyAccessList(struct _acl_access **list)
     struct _acl_access *l = NULL;
     struct _acl_access *next = NULL;
     for (l = *list; l; l = next) {
-	debug(28, 3, "aclDestroyAccessList: '%s'\n", l->cfgline);
+	debug(28, 3) ("aclDestroyAccessList: '%s'\n", l->cfgline);
 	next = l->next;
 	aclDestroyAclList(l->acl_list);
 	l->acl_list = NULL;

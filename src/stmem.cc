@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.42 1997/06/01 23:21:49 wessels Exp $
+ * $Id: stmem.cc,v 1.43 1997/06/04 06:16:10 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -194,8 +194,8 @@ memFreeDataUpto(mem_ptr mem, int target_offset)
 	return current_offset;
     }
     if (current_offset != target_offset) {
-	debug(19, 1, "memFreeDataUpto: This shouldn't happen. Some odd condition.\n");
-	debug(19, 1, "   Current offset: %d  Target offset: %d  p: %p\n",
+	debug(19, 1) ("memFreeDataUpto: This shouldn't happen. Some odd condition.\n");
+	debug(19, 1) ("   Current offset: %d  Target offset: %d  p: %p\n",
 	    current_offset, target_offset, p);
     }
     return current_offset;
@@ -210,7 +210,7 @@ memAppend(mem_ptr mem, const char *data, int len)
     int avail_len;
     int len_to_copy;
 
-    debug(19, 6, "memAppend: len %d\n", len);
+    debug(19, 6) ("memAppend: len %d\n", len);
 
     /* Does the last block still contain empty space? 
      * If so, fill out the block before dropping into the
@@ -255,7 +255,7 @@ memCopy(const mem_ptr mem, off_t offset, char *buf, size_t size)
     char *ptr_to_buf = NULL;
     int bytes_from_this_packet = 0;
     int bytes_into_this_packet = 0;
-    debug(19, 6, "memCopy: offset %d: size %d\n", offset, size);
+    debug(19, 6) ("memCopy: offset %d: size %d\n", offset, size);
     if (p == NULL)
 	return -1;
     /*      fatal_dump("memCopy: NULL mem_node"); *//* Can happen on async */
@@ -404,7 +404,7 @@ stmemInit(void)
     mem_obj_pool.max_pages = Squid_MaxFD >> 3;
 
 #if PURIFY
-    debug(19, 0, "Disabling stacks under purify\n");
+    debug(19, 0) ("Disabling stacks under purify\n");
     sm_stats.max_pages = 0;
     disk_stats.max_pages = 0;
     request_pool.max_pages = 0;

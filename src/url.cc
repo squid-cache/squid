@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.57 1997/06/02 01:06:18 wessels Exp $
+ * $Id: url.cc,v 1.58 1997/06/04 06:16:16 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -97,7 +97,7 @@ urlInitialize(void)
     unsigned int i;
     char *good =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./-_$";
-    debug(23, 5, "urlInitialize: Initializing...\n");
+    debug(23, 5) ("urlInitialize: Initializing...\n");
     for (i = 0; i < 256; i++)
 	url_acceptable[i] = 0;
     for (; *good; good++)
@@ -207,7 +207,7 @@ urlParse(method_t method, char *url)
     if ((l = strlen(url)) + Config.appendDomainLen > (MAX_URL - 1)) {
 	/* terminate so it doesn't overflow other buffers */
 	*(url + (MAX_URL >> 1)) = '\0';
-	debug(23, 0, "urlParse: URL too large (%d bytes)\n", l);
+	debug(23, 0) ("urlParse: URL too large (%d bytes)\n", l);
 	return NULL;
     }
     if (method == METHOD_CONNECT) {
@@ -240,14 +240,14 @@ urlParse(method_t method, char *url)
     if (Config.appendDomain && !strchr(host, '.'))
 	strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);
     if (port == 0) {
-	debug(23, 0, "urlParse: Invalid port == 0\n");
+	debug(23, 0) ("urlParse: Invalid port == 0\n");
 	return NULL;
     }
 #ifdef HARDCODE_DENY_PORTS
     /* These ports are filtered in the default squid.conf, but
      * maybe someone wants them hardcoded... */
     if (port == 7 || port == 9 || port = 19) {
-	debug(23, 0, "urlParse: Deny access to port %d\n", port);
+	debug(23, 0) ("urlParse: Deny access to port %d\n", port);
 	return NULL;
     }
 #endif
