@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.30 2003/06/09 07:22:48 robertc Exp $
+#  $Id: Makefile.in,v 1.31 2003/06/23 00:13:14 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -217,13 +217,26 @@ INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$
 
 EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
 
-TESTS = rfc1738 refcount splay mem_node_test http_range_test
+TESTS = rfc1738 \
+	refcount\
+	splay\
+	mem_node_test\
+	MemPoolTest\
+	http_range_test
 
-check_PROGRAMS = rfc1738 refcount splay mem_node_test http_range_test
+
+check_PROGRAMS = rfc1738\
+		refcount\
+		splay\
+		MemPoolTest\
+		mem_node_test\
+		http_range_test
+
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
 mem_node_test_SOURCES = mem_node_test.cc
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
+MemPoolTest_SOURCES = MemPoolTest.cc
 refcount_SOURCES = refcount.cc
 
 DEBUG_OBJECTS = $(top_builddir)/src/debug.o\
@@ -251,7 +264,13 @@ CONFIG_CLEAN_FILES =
 EXTRA_PROGRAMS = mem_node_test$(EXEEXT) membanger$(EXEEXT) \
 	splay$(EXEEXT) tcp-banger2$(EXEEXT) rfc1738$(EXEEXT)
 check_PROGRAMS = rfc1738$(EXEEXT) refcount$(EXEEXT) splay$(EXEEXT) \
-	mem_node_test$(EXEEXT) http_range_test$(EXEEXT)
+	MemPoolTest$(EXEEXT) mem_node_test$(EXEEXT) \
+	http_range_test$(EXEEXT)
+am_MemPoolTest_OBJECTS = MemPoolTest.$(OBJEXT)
+MemPoolTest_OBJECTS = $(am_MemPoolTest_OBJECTS)
+MemPoolTest_LDADD = $(LDADD)
+MemPoolTest_DEPENDENCIES =
+MemPoolTest_LDFLAGS =
 am_http_range_test_OBJECTS = http_range_test.$(OBJEXT)
 http_range_test_OBJECTS = $(am_http_range_test_OBJECTS)
 http_range_test_DEPENDENCIES = $(top_builddir)/src/HttpHdrRange.o \
@@ -293,7 +312,8 @@ tcp_banger2_LDFLAGS =
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/http_range_test.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/MemPoolTest.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/http_range_test.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mem_node_test.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/membanger.Po ./$(DEPDIR)/refcount.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/rfc1738.Po ./$(DEPDIR)/splay.Po \
@@ -307,11 +327,11 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-DIST_SOURCES = $(http_range_test_SOURCES) $(mem_node_test_SOURCES) \
-	membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) \
-	$(splay_SOURCES) tcp-banger2.c
+DIST_SOURCES = $(MemPoolTest_SOURCES) $(http_range_test_SOURCES) \
+	$(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) \
+	$(rfc1738_SOURCES) $(splay_SOURCES) tcp-banger2.c
 DIST_COMMON = Makefile.am Makefile.in
-SOURCES = $(http_range_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) tcp-banger2.c
+SOURCES = $(MemPoolTest_SOURCES) $(http_range_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) tcp-banger2.c
 
 all: all-am
 
@@ -325,6 +345,9 @@ Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.s
 
 clean-checkPROGRAMS:
 	-test -z "$(check_PROGRAMS)" || rm -f $(check_PROGRAMS)
+MemPoolTest$(EXEEXT): $(MemPoolTest_OBJECTS) $(MemPoolTest_DEPENDENCIES) 
+	@rm -f MemPoolTest$(EXEEXT)
+	$(CXXLINK) $(MemPoolTest_LDFLAGS) $(MemPoolTest_OBJECTS) $(MemPoolTest_LDADD) $(LIBS)
 http_range_test$(EXEEXT): $(http_range_test_OBJECTS) $(http_range_test_DEPENDENCIES) 
 	@rm -f http_range_test$(EXEEXT)
 	$(CXXLINK) $(http_range_test_LDFLAGS) $(http_range_test_OBJECTS) $(http_range_test_LDADD) $(LIBS)
@@ -353,6 +376,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemPoolTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/http_range_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mem_node_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/membanger.Po@am__quote@
