@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.58 1998/03/13 05:45:35 wessels Exp $
+ * $Id: util.c,v 1.59 1998/05/15 20:50:25 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -229,6 +229,8 @@ static int malloc_count[DBG_ARRY_BKTS][DBG_ARRY_SZ];
 #endif
 static int dbg_initd = 0;
 
+#define DBG_HASH_BUCKET(ptr)   (((((int)ptr)>>4)+(((int)ptr)>>12)+(((int)ptr)>>20))&0xFF)
+
 static void
 check_init(void)
 {
@@ -253,7 +255,7 @@ static void
 check_free(void *s)
 {
     int B, I;
-    B = (((int) s) >> 4) & 0xFF;
+    B = DBG_HASH_BUCKET(s);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] != s)
 	    continue;
@@ -279,7 +281,7 @@ check_malloc(void *p, size_t sz)
     int B, I;
     if (!dbg_initd)
 	check_init();
-    B = (((int) p) >> 4) & 0xFF;
+    B = DBG_HASH_BUCKET(s);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (!(P = malloc_ptrs[B][I]))
 	    continue;
@@ -312,7 +314,7 @@ size_t
 xmallocblksize(void *p)
 {
     int B, I;
-    B = (((int) p) >> 4) & 0xFF;
+    B = DBG_HASH_BUCKET(s);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
 	    return malloc_size[B][I];
@@ -326,7 +328,7 @@ static char *
 malloc_file_name(void *p)
 {
     int B, I;
-    B = (((int) p) >> 4) & 0xFF;
+    B = DBG_HASH_BUCKET(s);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
 	    return malloc_file[B][I];
@@ -337,7 +339,7 @@ int
 malloc_line_number(void *p)
 {
     int B, I;
-    B = (((int) p) >> 4) & 0xFF;
+    B = DBG_HASH_BUCKET(s);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
 	    return malloc_line[B][I];
@@ -348,7 +350,7 @@ int
 malloc_number(void *p)
 {
     int B, I;
-    B = (((int) p) >> 4) & 0xFF;
+    B = DBG_HASH_BUCKET(s);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
 	    return malloc_count[B][I];
@@ -399,7 +401,7 @@ xmalloc_scan_region(void *start, int size, int depth)
     while (ptr <= end) {
 	void *p = *(void **) ptr;
 	if (p && p != start) {
-	    B = (((int) p) >> 4) & 0xFF;
+	    B = DBG_HASH_BUCKET(s);
 	    for (I = 0; I < DBG_ARRY_SZ; I++) {
 		if (malloc_ptrs[B][I] == p) {
 		    if (!malloc_refs[B][I]++) {
