@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.360 2002/10/13 20:35:03 robertc Exp $
+ * $Id: stat.cc,v 1.361 2002/10/14 11:54:18 adrian Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -614,8 +614,8 @@ info_get(StoreEntry * sentry)
 	store_open_disk_fd);
 
     storeAppendPrintf(sentry, "Internal Data Structures:\n");
-    storeAppendPrintf(sentry, "\t%6d StoreEntries\n",
-	storeEntryInUse());
+    storeAppendPrintf(sentry, "\t%6lu StoreEntries\n",
+	(unsigned long int)storeEntryInUse());
     storeAppendPrintf(sentry, "\t%6d StoreEntries with MemObjects\n",
 	memInUse(MEM_MEMOBJECT));
     storeAppendPrintf(sentry, "\t%6d Hot Object Cache Items\n",
@@ -945,7 +945,7 @@ statAvgTick(void *notused)
 	i = mp.arena;
 #endif
 	if (Config.warnings.high_memory < i)
-	    debug(18, 0) ("WARNING: Memory usage at %d MB\n", i >> 20);
+	    debug(18, 0) ("WARNING: Memory usage at %lu MB\n", (unsigned long int)(i >> 20));
     }
 }
 
