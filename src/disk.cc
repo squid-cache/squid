@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.106 1998/02/20 21:04:50 wessels Exp $
+ * $Id: disk.cc,v 1.107 1998/02/24 16:39:22 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -265,6 +265,9 @@ diskHandleWrite(int fd, void *notused)
     }
     ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
     ctrlp->fd = fd;
+#if USE_ASYNC_IO
+    ctrlp->data = fdd->write_q;
+#endif
     assert(fdd->write_q != NULL);
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 #if USE_ASYNC_IO
@@ -295,6 +298,28 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     int do_callback;
     errno = errcode;
     debug(6, 3) ("diskHandleWriteComplete: FD %d len = %d\n", fd, len);
+#if USE_ASYNC_IO
+/*
+ * From:    "Michael O'Reilly" <michael@metal.iinet.net.au>
+ * Date:    24 Feb 1998 15:12:06 +0800
+ *
+ * A small patch to improve the AIO sanity. the patch below makes sure
+ * the write request really does match the data passed back from the
+ * async IO call.  note that I haven't actually rebooted with this
+ * patch yet, so 'provisional' is an understatement.
+ */
+    if (q && q != ctrlp->data) {
+	dwrite_q *p = ctrlp->data;
+	debug(50, 0) ("KARMA: q != data (%p, %p)\n", q, p);
+	debug(50, 0) ("KARMA: (%d, %d, %d FD %d)\n",
+	    q->buf_offset, q->len, len, fd);
+	debug(50, 0) ("KARMA: desc %s, type %d, open %d, flags 0x%x\n",
+	    F->desc, F->type, F->open, F->flags);
+	debug(50, 0) ("KARMA: (%d, %d)\n", p->buf_offset, p->len);
+	len = -1;
+	errcode = EFAULT;
+    }
+#endif
     safe_free(data);
     if (q == NULL)		/* Someone aborted then write completed */
 	return;
