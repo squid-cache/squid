@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.381 2001/07/11 22:57:54 wessels Exp $
+ * $Id: http.cc,v 1.382 2001/09/18 19:04:28 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -436,7 +436,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    || httpHeaderHas(&reply->header, HDR_X_ACCELERATOR_VARY)
 #endif
 	    ) {
-	    const char *vary = httpMakeVaryMark(httpState->request, reply);
+	    const char *vary = httpMakeVaryMark(httpState->orig_request, reply);
 	    if (vary) {
 		entry->mem_obj->vary_headers = xstrdup(vary);
 		/* Kill the old base object if a change in variance is detected */
