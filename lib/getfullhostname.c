@@ -1,6 +1,6 @@
 
 /*
- * $Id: getfullhostname.c,v 1.8 1996/09/17 16:53:56 wessels Exp $
+ * $Id: getfullhostname.c,v 1.9 1996/10/13 06:19:36 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -135,6 +135,9 @@
 #define _SQUID_NETDB_H_
 #include <netdb.h>
 #endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #include "ansiproto.h"
 #include "util.h"
@@ -149,7 +152,6 @@ getfullhostname(void)
 {
     struct hostent *hp = NULL;
     static char buf[SQUIDHOSTNAMELEN + 1];
-    extern int gethostname();	/* UNIX system call */
 
     if (gethostname(buf, SQUIDHOSTNAMELEN) < 0)
 	return (NULL);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.71 1996/10/11 18:04:57 wessels Exp $
+ * $Id: tools.cc,v 1.72 1996/10/13 06:19:52 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -203,7 +203,7 @@ dumpMallocStats(FILE * f)
 }
 
 static int
-PrintRusage(void (*f) (), FILE * lf)
+PrintRusage(void (*f) (void), FILE * lf)
 {
 #if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
     struct rusage rusage;
@@ -217,7 +217,7 @@ PrintRusage(void (*f) (), FILE * lf)
 #endif
     dumpMallocStats(lf);
     if (f)
-	f(0);
+	f();
     return 0;
 }
 
@@ -368,7 +368,7 @@ sig_child(int sig)
 #else
     int status;
 #endif
-    int pid;
+    pid_t pid;
 
     do {
 #ifdef _SQUID_NEXT_
@@ -510,12 +510,13 @@ writePidFile(void)
 }
 
 
-int
+pid_t
 readPidFile(void)
 {
     FILE *pid_fp = NULL;
     char *f = NULL;
-    int pid = -1;
+    pid_t pid = -1;
+    int i;
 
     if ((f = Config.pidFilename) == NULL) {
 	fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
@@ -523,8 +524,9 @@ readPidFile(void)
     }
     pid_fp = fopen(f, "r");
     if (pid_fp != NULL) {
-	if (fscanf(pid_fp, "%d", &pid) != 1)
-	    pid = 0;
+	pid = 0;
+	if (fscanf(pid_fp, "%d", &i) == 1)
+	    pid = (pid_t) i;
 	fclose(pid_fp);
     } else {
 	if (errno != ENOENT) {

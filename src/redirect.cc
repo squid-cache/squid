@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.25 1996/10/11 23:11:17 wessels Exp $
+ * $Id: redirect.cc,v 1.26 1996/10/13 06:19:49 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -86,7 +86,7 @@ static struct redirectQueueData **redirectQueueTailP = &redirectQueueHead;
 static int
 redirectCreateRedirector(char *command)
 {
-    int pid;
+    pid_t pid;
     struct sockaddr_in S;
     static int n_redirector = 0;
     int cfd;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.89 1996/10/11 23:11:52 wessels Exp $
+ * $Id: comm.cc,v 1.90 1996/10/13 06:19:43 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -611,7 +611,7 @@ comm_select_incoming(void)
     int fds[3];
     int N = 0;
     int i = 0;
-    void (*tmp) () = NULL;
+    PF hdl = NULL;
 
     FD_ZERO(&read_mask);
     FD_ZERO(&write_mask);
@@ -643,14 +643,14 @@ comm_select_incoming(void)
 	for (i = 0; i < N; i++) {
 	    fd = fds[i];
 	    if (FD_ISSET(fd, &read_mask)) {
-		tmp = fd_table[fd].read_handler;
+		hdl = fd_table[fd].read_handler;
 		fd_table[fd].read_handler = 0;
-		tmp(fd, fd_table[fd].read_data);
+		hdl(fd, fd_table[fd].read_data);
 	    }
 	    if (FD_ISSET(fd, &write_mask)) {
-		tmp = fd_table[fd].write_handler;
+		hdl = fd_table[fd].write_handler;
 		fd_table[fd].write_handler = 0;
-		tmp(fd, fd_table[fd].write_data);
+		hdl(fd, fd_table[fd].write_data);
 	    }
 	}
     }
@@ -664,7 +664,7 @@ comm_select(time_t sec)
     fd_set exceptfds;
     fd_set readfds;
     fd_set writefds;
-    void (*tmp) () = NULL;
+    PF hdl = NULL;
     int fd;
     int i;
     int maxfd;
@@ -790,31 +790,25 @@ comm_select(time_t sec)
 	    if (FD_ISSET(fd, &readfds)) {
 		debug(5, 6, "comm_select: FD %d ready for reading\n", fd);
 		if (fd_table[fd].read_handler) {
-		    tmp = fd_table[fd].read_handler;
+		    hdl = fd_table[fd].read_handler;
 		    fd_table[fd].read_handler = 0;
-		    debug(5, 10, "calling read handler %p(%d,%p)\n",
-			tmp, fd, fd_table[fd].read_data);
-		    tmp(fd, fd_table[fd].read_data);
+		    hdl(fd, fd_table[fd].read_data);
 		}
 	    }
 	    if (FD_ISSET(fd, &writefds)) {
 		debug(5, 5, "comm_select: FD %d ready for writing\n", fd);
 		if (fd_table[fd].write_handler) {
-		    tmp = fd_table[fd].write_handler;
+		    hdl = fd_table[fd].write_handler;
 		    fd_table[fd].write_handler = 0;
-		    debug(5, 10, "calling write handler %p(%d,%p)\n",
-			tmp, fd, fd_table[fd].write_data);
-		    tmp(fd, fd_table[fd].write_data);
+		    hdl(fd, fd_table[fd].write_data);
 		}
 	    }
 	    if (FD_ISSET(fd, &exceptfds)) {
 		debug(5, 5, "comm_select: FD %d has an exception\n", fd);
 		if (fd_table[fd].except_handler) {
-		    tmp = fd_table[fd].except_handler;
+		    hdl = fd_table[fd].except_handler;
 		    fd_table[fd].except_handler = 0;
-		    debug(5, 10, "calling except handler %p(%d,%p)\n",
-			tmp, fd, fd_table[fd].except_data);
-		    tmp(fd, fd_table[fd].except_data);
+		    hdl(fd, fd_table[fd].except_data);
 		}
 	    }
 	}
@@ -939,9 +933,8 @@ comm_join_mcast_groups(int fd)
     wordlist *s = NULL;
 
     for (s = Config.mcast_group_list; s; s = s->next) {
-	debug(5, 10,
-	    "comm_join_mcast_groups: joining group %s on FD %d\n", s->key, fd);
-
+	debug(5, 10, "comm_join_mcast_groups: joining group %s on FD %d\n",
+		s->key, fd);
 	mr.imr_multiaddr.s_addr = inet_addr(s->key);
 	mr.imr_interface.s_addr = INADDR_ANY;
 	if (setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
@@ -959,7 +952,6 @@ commSetNoLinger(int fd)
     struct linger L;
     L.l_onoff = 0;		/* off */
     L.l_linger = 0;
-    debug(5, 10, "commSetNoLinger: turning off SO_LINGER on FD %d\n", fd);
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
 	debug(5, 0, "commSetNoLinger: FD %d: %s\n", fd, xstrerror());
 }
@@ -968,7 +960,6 @@ static void
 commSetReuseAddr(int fd)
 {
     int on = 1;
-    debug(5, 10, "commSetReuseAddr: turning on SO_REUSEADDR on FD %d\n", fd);
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0)
 	debug(5, 1, "commSetReuseAddr: FD %d: %s\n", fd, xstrerror());
 }
@@ -1151,7 +1142,7 @@ static void
 checkTimeouts(void)
 {
     int fd;
-    void (*hdl) () = NULL;
+    PF hdl = NULL;
     FD_ENTRY *f = NULL;
     void *data;
     /* scan for timeout */
@@ -1176,7 +1167,7 @@ checkLifetimes(void)
     time_t lft;
     FD_ENTRY *fde = NULL;
 
-    void (*func) () = NULL;
+    PF hdl = NULL;
 
     for (fd = 0; fd < FD_SETSIZE; fd++) {
 	if ((lft = comm_get_fd_lifetime(fd)) == -1)
@@ -1185,17 +1176,17 @@ checkLifetimes(void)
 	    continue;
 	debug(5, 5, "checkLifetimes: FD %d Expired\n", fd);
 	fde = &fd_table[fd];
-	if ((func = fde->lifetime_handler) != NULL) {
+	if ((hdl = fde->lifetime_handler) != NULL) {
 	    debug(5, 5, "checkLifetimes: FD %d: Calling lifetime handler\n", fd);
-	    func(fd, fde->lifetime_data);
+	    hdl(fd, fde->lifetime_data);
 	    fde->lifetime_handler = NULL;
-	} else if ((func = fde->read_handler) != NULL) {
+	} else if ((hdl = fde->read_handler) != NULL) {
 	    debug(5, 5, "checkLifetimes: FD %d: Calling read handler\n", fd);
-	    func(fd, fd_table[fd].read_data);
+	    hdl(fd, fd_table[fd].read_data);
 	    fd_table[fd].read_handler = NULL;
-	} else if ((func = fd_table[fd].write_handler)) {
+	} else if ((hdl = fd_table[fd].write_handler)) {
 	    debug(5, 5, "checkLifetimes: FD %d: Calling write handler\n", fd);
-	    func(fd, fde->write_data);
+	    hdl(fd, fde->write_data);
 	    fde->write_handler = NULL;
 	} else {
 	    debug(5, 5, "checkLifetimes: FD %d: No handlers, calling comm_close()\n", fd);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.83 1996/10/10 22:21:00 wessels Exp $
+ * $Id: stat.cc,v 1.84 1996/10/13 06:19:51 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -931,7 +931,6 @@ parameter_get(cacheinfo * obj, StoreEntry * sentry)
 
 #if LOG_FULL_HEADERS
 static char c2x[] =
-{
     "000102030405060708090a0b0c0d0e0f"
     "101112131415161718191a1b1c1d1e1f"
     "202122232425262728292a2b2c2d2e2f"
@@ -947,8 +946,7 @@ static char c2x[] =
     "c0c1c2c3c4c5c6c7c8c9cacbcccdcecf"
     "d0d1d2d3d4d5d6d7d8d9dadbdcdddedf"
     "e0e1e2e3e4e5e6e7e8e9eaebecedeeef"
-    "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
-};
+    "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff";
 
 /* log_quote -- URL-style encoding on MIME headers. */
 

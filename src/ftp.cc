@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.64 1996/10/11 23:11:10 wessels Exp $
+ * $Id: ftp.cc,v 1.65 1996/10/13 06:19:44 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -139,14 +139,6 @@ static void ftpSendComplete _PARAMS((int, char *, int, int, void *));
 static void ftpSendRequest _PARAMS((int, FtpStateData *));
 static void ftpServerClosed _PARAMS((int, void *));
 static void ftp_login_parser _PARAMS((char *, FtpStateData *));
-
-/* Global functions not declared in ftp.h */
-void ftpLifetimeExpire(int fd, FtpStateData * data);
-int ftpReadReply(int fd, FtpStateData * data);
-void ftpSendComplete(int fd, char *buf, int size, int errflag, void *ftpData);
-void ftpSendRequest(int fd, FtpStateData * data);
-void ftpConnInProgress(int fd, FtpStateData * data);
-void ftpServerClose(void);
 
 /* External functions */
 extern char *base64_decode _PARAMS((char *coded));
@@ -696,7 +688,7 @@ ftpServerClose(void)
 int
 ftpInitialize(void)
 {
-    int pid;
+    pid_t pid;
     int cfd;
     int squid_to_ftpget[2];
     int ftpget_to_squid[2];
