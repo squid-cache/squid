@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.42 1998/03/07 23:43:07 rousskov Exp $
+ * $Id: globals.h,v 1.43 1998/03/16 20:30:03 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -93,7 +93,6 @@ extern StatCounters Counter;
 extern char *err_type_str[];
 extern char *icp_opcode_str[];
 extern char *swap_log_op_str[];
-extern struct radix_node_head *AS_tree_head;
 extern double request_failure_ratio;	/* 0.0 */
 extern int store_hash_buckets;	/* 0 */
 extern hash_table *store_table;	/* NULL */
@@ -103,8 +102,4 @@ extern int hot_obj_count;	/* 0 */
 
 #ifdef HAVE_SYSLOG
 extern int _db_level;
-#endif
-
-#if SQUID_SNMP
-extern struct tree *Mib;
 #endif
