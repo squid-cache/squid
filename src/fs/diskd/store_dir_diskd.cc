@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.3 2000/05/12 03:32:24 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.4 2000/05/12 04:06:34 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -497,7 +497,7 @@ storeDiskdDirCallback(SwapDir * SD)
 	    else
 		break;
 	} else if (x != msg_snd_rcv_sz) {
-	    debug(81, 1) ("storeDiskdReadIndividualQueue: msgget returns %d\n",
+	    debug(81, 1) ("storeDiskdDirCallback: msgget returns %d\n",
 		x);
 	    break;
 	}
