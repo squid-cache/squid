@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.251 1998/05/22 23:14:21 wessels Exp $
+ * $Id: stat.cc,v 1.252 1998/05/22 23:42:58 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -606,6 +606,8 @@ info_get(StoreEntry * sentry)
 	hot_obj_count);
     storeAppendPrintf(sentry, "\t%6d Filemap bits set\n",
 	storeDirMapBitsInUse());
+    storeAppendPrintf(sentry, "\t%6d on-disk objects\n",
+	n_disk_objects);
 
 #if XMALLOC_STATISTICS
     storeAppendPrintf(sentry, "Memory allocation statistics\n");
