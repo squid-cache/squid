@@ -1,3 +1,7 @@
+/*
+ * $Id: GNUregex.c,v 1.11 1998/09/23 17:14:20 wessels Exp $
+ */
+
 /* Extended regular expression matching and search library,
  * version 0.12.
  * (Implements POSIX draft P10003.2/D11.2, except for
