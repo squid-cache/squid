@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.44 2003/06/19 19:07:21 hno Exp $
+ * $Id: external_acl.cc,v 1.45 2003/06/27 20:54:45 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -590,11 +590,11 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
      * Register the username for logging purposes
      */
 
-    if (entry->user) {
-        xstrncpy(ch->rfc931, entry->user, USER_IDENT_SZ);
+    if (entry->user.size()) {
+        xstrncpy(ch->rfc931, entry->user.buf(), USER_IDENT_SZ);
 
         if (cbdataReferenceValid(ch->conn()))
-            xstrncpy(ch->conn()->rfc931, entry->user, USER_IDENT_SZ);
+            xstrncpy(ch->conn()->rfc931, entry->user.buf(), USER_IDENT_SZ);
     }
 
     if (ch->request && !ch->request->tag.size())
@@ -857,7 +857,7 @@ free_externalAclState(void *data)
  * Keywords:
  *
  *   user=        The users name (login)
- *   error=       Error description (only defined for ERR results)
+ *   message=     Message describing the reason
  *   tag= 	  A string tag to be applied to the request that triggered the acl match.
  *   			applies to both OK and ERR responses.
  *   			Won't override existing request tags.
@@ -901,8 +901,10 @@ externalAclHandleReply(void *data, char *reply)
 
                 if (strcmp(token, "user") == 0)
                     entryData.user = value;
+                else if (strcmp(token, "message") == 0)
+                    entryData.message = value;
                 else if (strcmp(token, "error") == 0)
-                    entryData.error = value;
+                    entryData.message = value;
             }
         }
     }
