@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.497 2000/09/07 04:03:37 wessels Exp $
+ * $Id: client_side.cc,v 1.498 2000/09/14 15:42:00 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2228,6 +2228,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 #if IPF_TRANSPARENT
     struct natlookup natLookup;
     static int natfd = -1;
+    static int siocgnatl_cmd = SIOCGNATL & 0xff;
+    int x;
 #endif
 
     if ((req_sz = headersEnd(conn->in.buf, conn->in.offset)) == 0) {
@@ -2389,7 +2391,20 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 		    xstrerror());
 		return parseHttpRequestAbort(conn, "error:nat-open-failed");
 	    }
-	    if (ioctl(natfd, SIOCGNATL, &natLookup) < 0) {
+	    /*
+	     * IP-Filter changed the type for SIOCGNATL between
+	     * 3.3 and 3.4.  It also changed the cmd value for
+	     * SIOCGNATL, so at least we can detect it.  We could
+	     * put something in configure and use ifdefs here, but
+	     * this seems simpler.
+	     */
+	    if (63 == siocgnatl_cmd) {
+		struct natlookup *nlp = &natLookup;
+		x = ioctl(natfd, SIOCGNATL, &nlp);
+	    } else {
+		x = ioctl(natfd, SIOCGNATL, &natLookup);
+	    }
+	    if (x < 0) {
 		if (errno != ESRCH) {
 		    debug(50, 1) ("parseHttpRequest: NAT lookup failed: ioctl(SIOCGNATL)\n");
 		    close(natfd);
