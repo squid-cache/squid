@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.76 1996/09/20 06:28:32 wessels Exp $
+ * $Id: comm.cc,v 1.77 1996/09/20 20:27:33 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -701,8 +701,6 @@ comm_select(time_t sec)
 	    debug(5, 2, "comm_select: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
-	if (shutdown_pending || reread_pending)
-	    debug(5, 2, "comm_select: Still waiting on %d FDs\n", nfds);
 	for (;;) {
 #if USE_ASYNC_IO
 	    /* Another CPU vs latency tradeoff for async IO */
