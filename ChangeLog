@@ -1,3 +1,13 @@
+UPCOMING CHANGES:
+
+	- add separate config line (neighbor_type_domain) for modifying
+	  neighbor type (parent vs. sibling) for certain domains.  Adding
+	  it to cache_host_domain doesn't provide needed flexibility.
+	- Send refresh values from refresh_pattern lines as
+	  'Cache-Control: max-stale XXX' in HTTP requests.
+	- Experiment with returning network probe measurments in ICP
+	  replies.
+
 Changes to squid-1.1.beta14 ():
 
 	- Added pw_encrypt() check to configure.
@@ -18,6 +28,8 @@ Changes to squid-1.1.beta14 ():
 	- Added passthrough module (pass.c) for POST, et. al.
 	- Fixed purify bugs in storeCloseLog() and storeSwapInHandle().
 	- Merged store 'pending list' into 'client list.'
+	- Made number of first- and second-level swap directories
+	  configurable (Ralph Loader).
 
 Changes to squid-1.1.beta13 (November 1, 1996):
 
