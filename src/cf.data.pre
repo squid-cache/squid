@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.127 1998/11/26 01:22:26 glenn Exp $
+# $Id: cf.data.pre,v 1.128 1998/12/04 16:37:07 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -667,6 +667,21 @@ DOC_START
 	pathname here.  Note you must give a full filename, not just
 	a directory. Since this is the index for the whole object
 	list you CANNOT periodically rotate it!
+
+	If you have more than one 'cache_dir', these swap logs will
+	have names such as:
+
+		cache_swap_log.00
+		cache_swap_log.01
+		cache_swap_log.02
+
+	The numbered extension (which is added automatically)
+	corresponds to the order of the 'cache_dir' lines in this
+	configuration file.  If you change the order of the 'cache_dir'
+	lines in this file, then these log files will NOT correspond to
+	the correct 'cache_dir' entry (unless you manually rename
+	them).  We recommend that you do NOT use this option.  It is
+	better to keep these log files in each 'cache_dir' directory.
 
 cache_swap_log
 DOC_END
