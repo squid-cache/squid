@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.44 1996/10/15 04:56:08 wessels Exp $
+ * $Id: client_side.cc,v 1.45 1996/10/15 05:35:53 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -411,16 +411,12 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     if (entry->store_status == STORE_ABORTED) {
 	debug(33, 3, "icpHandleIMSReply: ABORTED/%s '%s'\n",
 	    log_tags[entry->mem_obj->abort_code], entry->url);
-	icpSendERROR(fd,
-	    entry->mem_obj->abort_code,
-	    entry->mem_obj->e_abort_msg,
-	    icpState,
-	    400);
-	if (icpState->old_entry)
-	    storeUnlockObject(icpState->old_entry);
-	return 0;
-    }
-    if (mem->reply->code == 0) {
+	/* We have an existing entry, but failed to validate it,
+	 * so send the old one anyway */
+	icpState->log_type = LOG_TCP_EXPIRED_FAIL_HIT;
+	storeUnlockObject(entry);
+	icpState->entry = icpState->old_entry;
+    } else if (mem->reply->code == 0) {
 	debug(33, 3, "icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
 	storeRegister(entry,
@@ -428,8 +424,8 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    (PIF) icpHandleIMSReply,
 	    (void *) icpState);
 	return 0;
-    }
-    if (mem->reply->code == 304 && !BIT_TEST(icpState->request->flags, REQ_IMS)) {
+    } else if (mem->reply->code == 304 && !BIT_TEST(icpState->request->flags, REQ_IMS)) {
+
 	/* We initiated the IMS request, the client is not expecting
 	 * 304, so put the good one back.  First, make sure the old entry
 	 * headers have been loaded from disk. */
