@@ -23,9 +23,12 @@
 #include "valid.h"
 
 /* Path to configuration file */
-#define CONFIGFILE   "/usr/local/squid/etc/msntauth.conf"
-#define DENYUSERSDEFAULT   "/usr/local/squid/etc/denyusers"
-#define ALLOWUSERSDEFAULT  "/usr/local/squid/etc/allowusers"
+#ifndef SYSCONFDIR
+#define SYSCONFDIR "/usr/local/squid/etc"
+#endif
+#define CONFIGFILE   SYSCONFDIR "/msntauth.conf"
+#define DENYUSERSDEFAULT   SYSCONFDIR "/denyusers"
+#define ALLOWUSERSDEFAULT  SYSCONFDIR "/allowusers"
 
 /* Maximum number of servers to query. This number can be increased. */
 #define MAXSERVERS 5

@@ -1,0 +1,13 @@
+
+# Sample MSNT authenticator configuration file
+# Antonino Iannella, Stellar-X Pty Ltd
+# Sun Sep  2 15:52:31 CST 2001
+
+# NT hosts to use. Best to put their IP addresses in /etc/hosts.
+server my_PDC		my_BDC		my_NTdomain
+server other_PDC	other_BDC	otherdomain
+
+# Denied and allowed users. Comment these if not needed.
+#denyusers	/usr/local/squid/etc/msntauth.denyusers
+#allowusers	/usr/local/squid/etc/msntauth.allowusers
+

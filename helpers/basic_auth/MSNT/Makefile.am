@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.7 2002/06/26 11:00:37 hno Exp $
+#  $Id: Makefile.am,v 1.8 2002/06/26 18:44:27 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -20,11 +20,27 @@ msnt_auth_SOURCES = md4.c rfcnb-io.c rfcnb-util.c session.c msntauth.c \
 
 EXTRA_DIST = \
 	COPYING-2.0 \
-	msntauth.conf \
+	msntauth.conf.default \
 	msntauth-v2.0.lsm \
 	README.html
+
+sysconf_DATA = \
+	msntauth.conf.default
 
 LDADD	= @XTRA_LIBS@
 
 INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 		-I$(top_srcdir)/src/
+
+confload.o: confload.c
+	$(COMPILE) -DSYSCONFDIR=\"$(sysconfdir)\" -c $(srcdir)/confload.c -o $@
+
+install-data-local:
+	@if test -f $(DESTDIR)$(sysconfdir)/msntauth.conf ; then \
+		echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/msntauth.conf" ; \
+	else \
+		echo "$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(sysconfdir)/msntauth.conf" ; \
+		$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(sysconfdir)/msntauth.conf ; \
+	fi
+
+	
