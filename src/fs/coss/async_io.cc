@@ -11,7 +11,7 @@
  * supports are read/write, and since COSS works on a single file
  * per storedir it should work just fine.
  *
- * $Id: async_io.cc,v 1.10 2002/07/21 00:25:45 hno Exp $
+ * $Id: async_io.cc,v 1.11 2002/07/21 00:27:31 hno Exp $
  */
 
 #include "squid.h"
@@ -91,7 +91,7 @@ a_file_read(async_queue_t * q, int fd, void *buf, int req_len, off_t offset,
 
     /* Initiate aio */
     if (aio_read(&qe->aq_e_aiocb) < 0) {
-	fatalf(79, 1) ("Aiee! aio_read() returned error (%d)!\n", errno);
+	fatalf("Aiee! aio_read() returned error (%d)!\n", errno);
     }
 }
 
