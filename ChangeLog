@@ -11,6 +11,22 @@ TODO LIST before official squid-1.1:
 		  do refresh time calculation when object is requested.
 		- lose 'max_expire_age' business?
 
+Changes to squid-1.1.beta10 ():
+
+	- Fixed neighborsUdpAck() coredump bug and made debug messages
+	  more consistent.
+	- Removed old REQ_ACCEL test (Miguel A.L. Paraz)
+	- Fixed process RSS value for SGI (Ed Knowles).
+	- Fixed parseAddressLine() to use gethostbyname(3) because
+	  its called before ipcache_init(). (Miguel A.L. Paraz)
+	- Fixed announce bug since beta7 causing caches to be announced
+	  regardless of 'announce_to' setting.  (Paul Southworth)
+	- Fixed pinger 'last_check_time' bug.
+	- Changed storeEntry->flag and storeEntry->refcount back to
+	  32-bit ints.
+	- Removed extra "\r\n" for abort error messages.
+	- Numerous hash fixes from Mark Treacy.
+
 Changes to squid-1.1.beta9 (October 21, 1996):
 
 	- Added 'make depend' target to Makefiles.
