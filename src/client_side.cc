@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.24 1996/09/14 16:05:41 wessels Exp $
+ * $Id: client_side.cc,v 1.25 1996/09/14 16:54:50 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -104,7 +104,7 @@ clientProxyAuthCheck(icpStateData * icpState)
 
 void
 clientAccessCheck(icpStateData * icpState,
-	void (*handler) (icpStateData *,
+    void (*handler) (icpStateData *,
 	int))
 {
     int answer = 1;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.67 1996/09/14 08:45:43 wessels Exp $
+ * $Id: comm.cc,v 1.68 1996/09/14 16:54:51 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -302,7 +302,7 @@ comm_listen(int sock)
 }
 
 /* Connect SOCK to specified DEST_PORT at DEST_HOST. */
-int 
+int
 comm_connect(int sock, char *dest_host, u_short dest_port)
 {
     struct hostent *hp = NULL;

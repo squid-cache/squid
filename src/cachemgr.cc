@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.20 1996/09/14 08:45:39 wessels Exp $
+ * $Id: cachemgr.cc,v 1.21 1996/09/14 16:54:49 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -270,7 +270,7 @@ char *progname = NULL;
 
 static int client_comm_connect(int sock, char *dest_host, u_short dest_port);
 
-void 
+void
 print_trailer(void)
 {
     time_t now = time(NULL);
@@ -287,7 +287,7 @@ print_trailer(void)
     printf("</ADDRESS></BODY></HTML>\n");
 }
 
-void 
+void
 noargs_html(char *host, int port)
 {
     printf("\r\n\r\n");
@@ -386,7 +386,7 @@ fmakeword(FILE * f, char stop, int *cl)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-char 
+char
 x2c(char *what)
 {
     char digit;
@@ -398,7 +398,7 @@ x2c(char *what)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-void 
+void
 unescape_url(char *url)
 {
     int x, y;
@@ -413,7 +413,7 @@ unescape_url(char *url)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-void 
+void
 plustospace(char *str)
 {
     int x;
@@ -424,7 +424,7 @@ plustospace(char *str)
 }
 
 
-void 
+void
 parse_object(char *string)
 {
     char *tmp_line = NULL;
@@ -501,7 +501,7 @@ parse_object(char *string)
     free(status);
 }
 
-int 
+int
 main(int argc, char *argv[])
 {
     static char hostname[256];
@@ -919,7 +919,7 @@ main(int argc, char *argv[])
     return 0;
 }
 
-static int 
+static int
 client_comm_connect(int sock, char *dest_host, u_short dest_port)
 {
     struct hostent *hp;
