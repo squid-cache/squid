@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.84 2002/04/13 23:07:50 hno Exp $
+ * $Id: forward.cc,v 1.85 2002/06/21 12:58:20 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -644,7 +644,7 @@ fwdCheckDeferRead(int fd, void *data)
 #endif
     if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT))
 	return rc;
-    if (mem->inmem_hi - storeLowestMemReaderOffset(e) < READ_AHEAD_GAP)
+    if (mem->inmem_hi - storeLowestMemReaderOffset(e) < Config.readAheadGap)
 	return rc;
     return 1;
 }
