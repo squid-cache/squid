@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.209 1997/10/31 19:34:59 wessels Exp $
+ * $Id: http.cc,v 1.210 1997/10/31 19:54:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -410,7 +410,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	    EBIT_SET(reply->misc_headers, HDR_SET_COOKIE);
 	    ReplyHeaderStats.misc[HDR_SET_COOKIE]++;
 	} else if (!strncasecmp(t, "Proxy-Connection:", 17)) {
-	    for (t += 14; isspace(*t); t++);
+	    for (t += 17; isspace(*t); t++);
 	    if (!strcasecmp(t, "Keep-Alive"))
 		EBIT_SET(reply->misc_headers, HDR_PROXY_KEEPALIVE);
 	}
@@ -909,7 +909,7 @@ httpSendRequest(int fd, void *data)
 	    if ((xcount++ & 0x3F) == 0)
 		debug(0, 0) ("%s Keepalive Ratio = %f\n",
 		    p->host,
-		    p->stats.n_keepalives_recv / p->stats.n_keepalives_sent);
+		    (double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent);
 	}
     }
     len = httpBuildRequestHeader(req,
