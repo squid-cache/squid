@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.1 2003/03/10 04:56:30 robertc Exp $
+ * $Id: ESI.cc,v 1.2 2003/03/11 08:24:42 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -2422,7 +2422,7 @@ esiRemove::operator new(size_t byteCount)
 void
 esiRemove::operator delete (void *address)
 {
-    cbdataFree ((esiRemove *)address);
+    cbdataFree (address);
 }
 
 void
@@ -2772,7 +2772,7 @@ esiAttempt::operator new(size_t byteCount)
 void
 esiAttempt::operator delete (void *address)
 {
-    cbdataFree ((esiAttempt *)address);
+    cbdataFree (address);
 }
 
 #endif
@@ -2797,7 +2797,7 @@ esiExcept::operator new(size_t byteCount)
 void
 esiExcept::operator delete (void *address)
 {
-    cbdataFree ((esiExcept *)address);
+    cbdataFree (address);
 }
 
 #endif
@@ -2822,7 +2822,7 @@ esiVar::operator new(size_t byteCount)
 void
 esiVar::operator delete (void *address)
 {
-    cbdataFree ((esiVar *)address);
+    cbdataFree (address);
 }
 
 #endif
@@ -2876,7 +2876,7 @@ esiVarState::operator new(size_t byteCount)
 void
 esiVarState::operator delete (void *address)
 {
-    cbdataFree ((esiVarState *)address);
+    cbdataFree (address);
 }
 
 void
@@ -3947,7 +3947,7 @@ esiOtherwise::operator new(size_t byteCount)
 void
 esiOtherwise::operator delete (void *address)
 {
-    cbdataFree ((esiOtherwise *)address);
+    cbdataFree (address);
 }
 
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.125 2003/03/04 01:40:30 robertc Exp $
+ * $Id: store_client.cc,v 1.126 2003/03/11 08:24:43 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -76,7 +76,7 @@ store_client::operator new (size_t byteCount)
 void
 store_client::operator delete (void *address)
 {
-    cbdataFree ((store_client *)address);
+    cbdataFree (address);
 }
 
 bool

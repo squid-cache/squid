@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.45 2003/03/10 04:56:37 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.46 2003/03/11 08:24:42 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -250,7 +250,7 @@ clientReplyContext::operator new (size_t byteCount)
 void
 clientReplyContext::operator delete (void *address)
 {
-    cbdataFree ((clientReplyContext *)address);
+    cbdataFree (address);
 }
 
 

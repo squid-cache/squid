@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESISegment.cc,v 1.1 2003/03/10 04:56:36 robertc Exp $
+ * $Id: ESISegment.cc,v 1.2 2003/03/11 08:24:42 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -163,7 +163,7 @@ ESISegment::operator new(size_t byteCount)
 void
 ESISegment::operator delete (void *address)
 {
-    cbdataFree ((ESISegment *)address);
+    cbdataFree (address);
 }
 
 void
