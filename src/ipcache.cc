@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.137 1997/10/27 03:12:12 wessels Exp $
+ * $Id: ipcache.cc,v 1.138 1997/10/27 22:48:56 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -327,12 +327,10 @@ ipcacheExpiredEntry(ipcache_entry * i)
 	return 0;
     if (i->locks != 0)
 	return 0;
+    if (i->addrs.count == 0)
+	return 1;
     if (i->expires > squid_curtime)
 	return 0;
-    if (i->status == IP_CACHED)
-	if (squid_curtime - i->lastref < 60)
-	    if (i->addrs.count > 0)
-		return 0;
     return 1;
 }
 
@@ -717,14 +715,12 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 
     if ((dnsData = dnsGetFirstAvailable())) {
 	ipcache_dnsDispatch(dnsData, i);
-	return;
-    }
-    if (NDnsServersAlloc) {
+    } else if (NDnsServersAlloc) {
 	ipcacheEnqueue(i);
-	return;
+    } else {
+	/* generate abort if we get here */
+	assert(NDnsServersAlloc);
     }
-    ipcache_gethostbyname(name, IP_BLOCKING_LOOKUP);
-    ipcache_call_pending(i);
 }
 
 static void
@@ -741,7 +737,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
     }
     assert(i->status == IP_PENDING);
     buf = xcalloc(1, 256);
-    snprintf(buf, 256, "%1.254s\n", i->name);
+    snprintf(buf, 256, "%s\n", i->name);
     dns->flags |= DNS_FLAG_BUSY;
     dns->data = i;
     i->status = IP_DISPATCHED;
@@ -832,12 +828,7 @@ ipcache_gethostbyname(const char *name, int flags)
 	}
     }
     if (i) {
-	if (i->status == IP_PENDING || i->status == IP_DISPATCHED) {
-	    if (!BIT_TEST(flags, IP_BLOCKING_LOOKUP)) {
-		IpcacheStats.pending_hits++;
-		return NULL;
-	    }
-	} else if (i->status == IP_NEGATIVE_CACHED) {
+	if (i->status == IP_NEGATIVE_CACHED) {
 	    IpcacheStats.negative_hits++;
 	    dns_error_message = i->error_message;
 	    return NULL;
@@ -850,43 +841,6 @@ ipcache_gethostbyname(const char *name, int flags)
     if ((addrs = ipcacheCheckNumeric(name)))
 	return addrs;
     IpcacheStats.misses++;
-    if (BIT_TEST(flags, IP_BLOCKING_LOOKUP)) {
-	if (NDnsServersAlloc)
-	    debug(14, 0) ("WARNING: blocking on gethostbyname() for '%s'\n", name);
-	IpcacheStats.ghbn_calls++;
-	hp = gethostbyname(name);
-	if (hp && hp->h_name && (hp->h_name[0] != '\0') && ip_table) {
-	    /* good address, cached */
-	    if (i == NULL) {
-		i = ipcacheAddNew(name, hp, IP_CACHED);
-	    } else if (i->status == IP_DISPATCHED) {
-		/* only dnsHandleRead() can change from DISPATCHED to CACHED */
-		static_addrs.count = 1;
-		static_addrs.cur = 0;
-		static_addrs.badcount = 0;
-		static_addrs.bad_mask[0] = FALSE;
-		xmemcpy(&static_addrs.in_addrs[0].s_addr,
-		    *(hp->h_addr_list),
-		    hp->h_length);
-		return &static_addrs;
-	    } else {
-		ipcacheAddHostent(i, hp);
-		i->status = IP_CACHED;
-	    }
-	    i->expires = squid_curtime + Config.positiveDnsTtl;
-#if LIBRESOLV_DNS_TTL_HACK
-	    if (_dns_ttl_ > -1)
-		i->expires = squid_curtime + _dns_ttl_;
-#endif /* LIBRESOLV_DNS_TTL_HACK */
-	    return &i->addrs;
-	}
-	/* bad address, negative cached */
-	if (ip_table && i == NULL) {
-	    i = ipcacheAddNew(name, hp, IP_NEGATIVE_CACHED);
-	    i->expires = squid_curtime + Config.negativeDnsTtl;
-	    return NULL;
-	}
-    }
     if (flags & IP_LOOKUP_IF_MISS)
 	ipcache_nbgethostbyname(name, dummy_handler, NULL);
     return NULL;
@@ -1092,7 +1046,7 @@ ipcacheMarkBadAddr(const char *name, struct in_addr addr)
     if (!ia->bad_mask[k]) {
 	ia->bad_mask[k] = TRUE;
 	ia->badcount++;
-	debug(14, 1) ("ipcacheMarkBad: %s [%s]\n",
+	debug(14, 2) ("ipcacheMarkBadAddr: %s [%s]\n",
 	    name, inet_ntoa(ia->in_addrs[k]));
 	if (ia->badcount != ia->count) {
 	    /* at least one good address left */
@@ -1127,7 +1081,7 @@ ipcacheMarkGoodAddr(const char *name, struct in_addr addr)
 	ia->bad_mask[k] = FALSE;
 	ia->badcount--;
 	i->expires = squid_curtime + Config.positiveDnsTtl;
-	debug(14, 1) ("ipcacheMarkGoodAddr: %s [%s]\n",
+	debug(14, 2) ("ipcacheMarkGoodAddr: %s [%s]\n",
 	    name, inet_ntoa(ia->in_addrs[k]));
     }
 }
