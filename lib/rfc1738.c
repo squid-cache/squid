@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.24 2003/01/23 00:37:01 robertc Exp $
+ * $Id: rfc1738.c,v 1.25 2003/06/19 13:12:00 robertc Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -128,8 +128,7 @@ rfc1738_do_escape(const char *url, int encode_reserved)
 	    do_escape = 1;
 	}
 	/* RFC 1738 says any non-US-ASCII are encoded */
-	if (((unsigned char) *p >= (unsigned char) 0x80) &&
-	    ((unsigned char) *p <= (unsigned char) 0xFF)) {
+	if (((unsigned char) *p >= (unsigned char) 0x80)) { 
 	    do_escape = 1;
 	}
 	/* Do the triplet encoding, or just copy the char */

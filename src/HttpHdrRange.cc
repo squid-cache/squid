@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.34 2003/06/18 12:24:02 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.35 2003/06/19 13:12:01 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -612,6 +612,7 @@ void
 HttpHdrRangeIter::updateSpec()
 {
     assert (debt_size == 0);
+    assert (valid);
 
     if (pos.incrementable()) {
         debt(currentSpec()->length);

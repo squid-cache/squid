@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.7 2003/06/12 23:56:38 wessels Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.8 2003/06/19 13:11:59 robertc Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -116,6 +116,7 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
  <item>Complain if open of /dev/null fails; avoids infinite loop in ipcCreate().
  <item>Properly quote the quoting character '%' in log_quote() and username_quote().
  <item>in icmpRecv(), Handle the case when recv() returns EAGAIN and do not treat it like an error.
+ <item>Update squid to build with gcc/g++ 3.3 with no warnings.
 </itemize>
 
 <sect>Changes to squid.conf

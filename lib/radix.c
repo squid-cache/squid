@@ -1,5 +1,5 @@
 /*
- * $Id: radix.c,v 1.19 2003/01/23 00:37:01 robertc Exp $
+ * $Id: radix.c,v 1.20 2003/06/19 13:12:00 robertc Exp $
  *
  * DEBUG: section 53     Radix tree data structure implementation
  * AUTHOR: NetBSD Derived
@@ -950,7 +950,7 @@ squid_rn_walktree(struct squid_radix_node_head *h, int (*f) (struct squid_radix_
 }
 
 int
-squid_rn_inithead(void **head, int off)
+squid_rn_inithead(struct squid_radix_node_head **head, int off)
 {
     register struct squid_radix_node_head *rnh;
     register struct squid_radix_node *t, *tt, *ttt;
@@ -1005,7 +1005,7 @@ squid_rn_init(void)
     addmask_key = cplim = rn_ones + squid_max_keylen;
     while (cp < cplim)
 	*cp++ = -1;
-    if (squid_rn_inithead((void **) &squid_mask_rnhead, 0) == 0) {
+    if (squid_rn_inithead(&squid_mask_rnhead, 0) == 0) {
 	fprintf(stderr, "rn_init2 failed.\n");
 	exit(-1);
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.39 2003/05/20 12:17:39 robertc Exp $
+ * $Id: delay_pools.cc,v 1.40 2003/06/19 13:12:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -803,7 +803,6 @@ template <class Key, class Value>
 bool
 VectorMap<Key,Value>::indexUsed (unsigned char const index) const
 {
-    assert (index <= IND_MAP_SZ);
     return index < size();
 }
 
