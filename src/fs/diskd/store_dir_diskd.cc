@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.45 2001/03/03 10:39:38 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.46 2001/03/04 01:12:13 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1594,7 +1594,13 @@ storeDiskdDirUnlinkFile(SwapDir * SD, sfileno f)
 {
     debug(79, 3) ("storeDiskdDirUnlinkFile: unlinking fileno %08X\n", f);
     /* storeDiskdDirMapBitReset(SD, f); */
+#if USE_UNLINKD
     unlinkdUnlink(storeDiskdDirFullPath(SD, f, NULL));
+#elif USE_TRUNCATE
+    truncate(storeDiskdDirFullPath(SD, f, NULL), 0);
+#else
+    unlink(storeDiskdDirFullPath(SD, f, NULL));
+#endif
 }
 
 /*
