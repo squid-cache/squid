@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.154 2000/07/18 06:16:41 wessels Exp $
+ * $Id: errorpage.cc,v 1.155 2000/11/04 23:04:10 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -423,6 +423,7 @@ errorConvert(char token, ErrorState * err)
     request_t *r = err->request;
     static MemBuf mb = MemBufNULL;
     const char *p = NULL;	/* takes priority over mb if set */
+    int do_quote = 1;
 
     memBufReset(&mb);
     switch (token) {
@@ -524,6 +525,7 @@ errorConvert(char token, ErrorState * err)
 	    memBufPrintf(&mb, "%s", sign_mb.buf);
 	    memBufClean(&sign_mb);
 	    err->page_id = saved_id;
+	    do_quote = 0;
 	} else {
 	    /* wow, somebody put %S into ERR_SIGNATURE, stop recursion */
 	    p = "[%S]";
@@ -561,6 +563,8 @@ errorConvert(char token, ErrorState * err)
 	p = mb.buf;		/* do not use mb after this assignment! */
     assert(p);
     debug(4, 3) ("errorConvert: %%%c --> '%s'\n", token, p);
+    if (do_quote)
+	p = html_quote(p);
     return p;
 }
 

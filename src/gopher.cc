@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.155 2000/06/27 22:06:02 hno Exp $
+ * $Id: gopher.cc,v 1.156 2000/11/04 23:04:10 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -469,19 +469,20 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			    break;
 			}
 
-
 			memset(tmpbuf, '\0', TEMP_BUF_SIZE);
 			if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
 			    if (strlen(escaped_selector) != 0)
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s@%s/\">%s</A>\n",
-				    icon_url, escaped_selector, host, name);
+				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
+				    icon_url, escaped_selector, rfc1738_escape_part(host), 
+				    *port ? ":" : "", port, html_quote(name));
 			    else
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s/\">%s</A>\n",
-				    icon_url, host, name);
+				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
+				    icon_url, rfc1738_escape_part(host), *port ? ":" : "",
+				    port, html_quote(name));
 
 			} else {
 			    snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
-				icon_url, host, gtype, escaped_selector, name);
+				icon_url, host, gtype, escaped_selector, html_quote(name));
 			}
 			safe_free(escaped_selector);
 			strcat(outbuf, tmpbuf);
@@ -515,10 +516,10 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			break;
 
 		    if (gopherState->cso_recno != recno) {
-			snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, result);
+			snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, html_quote(result));
 			gopherState->cso_recno = recno;
 		    } else {
-			snprintf(tmpbuf, TEMP_BUF_SIZE, "%s\n", result);
+			snprintf(tmpbuf, TEMP_BUF_SIZE, "%s\n", html_quote(result));
 		    }
 		    strcat(outbuf, tmpbuf);
 		    gopherState->data_in = 1;
@@ -543,7 +544,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 		    case 502:	/* Too Many Matches */
 			{
 			    /* Print the message the server returns */
-			    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR><H2>%s</H2>\n<PRE>", result);
+			    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR><H2>%s</H2>\n<PRE>", html_quote(result));
 			    strcat(outbuf, tmpbuf);
 			    gopherState->data_in = 1;
 			    break;
