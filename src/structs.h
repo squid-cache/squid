@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.387 2001/04/14 00:25:19 hno Exp $
+ * $Id: structs.h,v 1.388 2001/04/20 12:40:26 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -679,12 +679,6 @@ struct _dnsserver_t {
     char ip_inbuf[DNS_INBUF_SZ];
     struct timeval dispatch_time;
     void *data;
-};
-
-struct _dnsStatData {
-    int requests;
-    int replies;
-    int hist[DefaultDnsChildrenMax];
 };
 
 struct _dwrite_q {

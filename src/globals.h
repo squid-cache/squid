@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.101 2001/01/12 00:37:18 wessels Exp $
+ * $Id: globals.h,v 1.102 2001/04/20 12:40:26 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -61,7 +61,6 @@ extern const char *memStatusStr[];
 extern const char *pingStatusStr[];
 extern const char *storeStatusStr[];
 extern const char *swapStatusStr[];
-extern dnsStatData DnsStats;
 extern fde *fd_table;		/* NULL */
 extern int Biggest_FD;		/* -1 */
 extern int Number_FD;		/* 0 */
