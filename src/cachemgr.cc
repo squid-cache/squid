@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.73 1998/03/03 00:31:02 rousskov Exp $
+ * $Id: cachemgr.cc,v 1.74 1998/03/03 21:58:49 rousskov Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -143,7 +143,7 @@ typedef struct {
 
 /* debugging level 0 (disabled) - 3 (max) */
 #define DEBUG_LEVEL 0
-#define debug(level) ((level) > DEBUG_LEVEL || DEBUG_LEVEL <= 0) ? ((void)0) :
+#define debug(level) if ((level) <= DEBUG_LEVEL && DEBUG_LEVEL > 0)
 
 /*
  * Static variables and constants
@@ -342,11 +342,11 @@ munge_other_line(const char *buf, cachemgr_request * req)
     static const char* ttags[] = { "td", "th" };
     static char html[4096];
     static table_line_num = 0;
+    static next_is_header = 0;
     int is_header = 0;
     const char *ttag;
-    char *cell;
     char *buf_copy;
-    char *x;
+    char *x, *p;
     int l = 0;
     /* does it look like a table? */
     if (!strchr(buf, '\t') || *buf == '\t') {
@@ -356,23 +356,32 @@ munge_other_line(const char *buf, cachemgr_request * req)
 	table_line_num = 0;
 	return html;
     }
-    if (!table_line_num)
-	l += snprintf(html+l, sizeof(html)-l, "</pre><table border=0 cellpadding=3>\n");
-    is_header = !table_line_num && !strchr(buf, ':') && !is_number(buf);
+    /* start html table */
+    if (!table_line_num) {
+	l += snprintf(html+l, sizeof(html)-l, "</pre><table border=1 cellpadding=2 cellspacing=1>\n");
+	next_is_header = 0;
+    }
+    /* remove '\n' */
+    is_header = (!table_line_num || next_is_header) && !strchr(buf, ':') && !is_number(buf);
     ttag = ttags[is_header];
     /* record starts */
     l += snprintf(html+l, sizeof(html)-l, "<tr>");
     /* substitute '\t' */
     buf_copy = x = xstrdup(buf);
-    while (x && (cell = xstrtok(&x, '\t'))) {
-	l += snprintf(html+l, sizeof(html)-l, "<%s align=\"%s\">%s</%s>",
-	    ttag,
+    if ((p = strchr(x, '\n'))) *p = '\0';
+    while (x && strlen(x)) {
+	int column_span = 1;
+	const char *cell = xstrtok(&x, '\t');
+	while (x && *x == '\t') { column_span++; x++; }
+	l += snprintf(html+l, sizeof(html)-l, "<%s colspan=%d align=\"%s\">%s</%s>",
+	    ttag, column_span,
 	    is_header ? "center" : is_number(cell) ? "right" : "left",
 	    cell, ttag);
     }
     xfree(buf_copy);
     /* record ends */
     l += snprintf(html+l, sizeof(html)-l, "</tr>\n");
+    next_is_header = is_header && strstr(buf, "\t\t");
     table_line_num++;
     return html;
 }
@@ -479,7 +488,6 @@ read_reply(int s, cachemgr_request * req)
 	    istate = isError;
 	}
     }
-    /* printf("\n\n\n<pre>%s</pre>\n", req->headers ? req->headers : "no headers"); */
     close(s);
     return 0;
 }
@@ -561,44 +569,6 @@ main(int argc, char *argv[])
     return process_request(req);
 }
 
-#if 0				/* left for parts if request headers will ever be processed */
-static char *
-read_request_headers()
-{
-    extern char **environ;
-    const char **varp = (const char **) environ;
-    char *buf = NULL;
-    int size = 0;
-    if (!varp)
-	return NULL;
-    /* not efficient, but simple */
-    /* first calc the size */
-    for (; *varp; varp++) {
-	if (1 || !strncasecmp(*varp, "HTTP_", 5))
-	    size += strlen(*varp);
-    }
-    if (!size)
-	return NULL;
-    size++;			/* paranoid */
-    size += 1024;		/* @?@?@?@ */
-    /* allocate memory */
-    buf = calloc(1, size);
-    /* parse and put headers */
-    for (varp = (const char **) environ; *varp; varp++) {
-	sprintf(buf + strlen(buf), "%s\r\n", *varp);
-	if (0 && !strncasecmp(*varp, "HTTP_", 5)) {
-	    const char *name = (*varp) + 5;
-	    const char *value = strchr(name, '=');
-	    if (value) {
-		strncat(buf, name, value - name);
-		sprintf(buf + strlen(buf), ": %s\r\n", value + 1);
-	    }
-	}
-    }
-    return buf;
-}
-#endif /* left for parts */
-
 static char *
 read_post_request(void)
 {
@@ -645,7 +615,6 @@ read_request(void)
     if (strlen(buf) == 0)
 	return NULL;
     req = xcalloc(1, sizeof(cachemgr_request));
-    /* req->headers = read_request_headers(); */
     for (s = strtok(buf, "&"); s != NULL; s = strtok(NULL, "&")) {
 	t = xstrdup(s);
 	if ((q = strchr(t, '=')) == NULL)
