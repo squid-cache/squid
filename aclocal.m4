@@ -1012,829 +1012,6 @@ if eval "test \"`echo '$ac_cv_prog_cc_'${ac_cc}_c_o`\" != yes"; then
 fi
 ])
 
-
-# serial 40 AC_PROG_LIBTOOL
-AC_DEFUN(AC_PROG_LIBTOOL,
-[AC_REQUIRE([AC_LIBTOOL_SETUP])dnl
-
-# Save cache, so that ltconfig can load it
-AC_CACHE_SAVE
-
-# Actually configure libtool.  ac_aux_dir is where install-sh is found.
-CC="$CC" CFLAGS="$CFLAGS" CPPFLAGS="$CPPFLAGS" \
-LD="$LD" LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
-LN_S="$LN_S" NM="$NM" RANLIB="$RANLIB" \
-DLLTOOL="$DLLTOOL" AS="$AS" OBJDUMP="$OBJDUMP" \
-${CONFIG_SHELL-/bin/sh} $ac_aux_dir/ltconfig --no-reexec \
-$libtool_flags --no-verify $ac_aux_dir/ltmain.sh $lt_target \
-|| AC_MSG_ERROR([libtool configure failed])
-
-# Reload cache, that may have been modified by ltconfig
-AC_CACHE_LOAD
-
-# This can be used to rebuild libtool when needed
-LIBTOOL_DEPS="$ac_aux_dir/ltconfig $ac_aux_dir/ltmain.sh"
-
-# Always use our own libtool.
-LIBTOOL='$(SHELL) $(top_builddir)/libtool'
-AC_SUBST(LIBTOOL)dnl
-
-# Redirect the config.log output again, so that the ltconfig log is not
-# clobbered by the next message.
-exec 5>>./config.log
-])
-
-AC_DEFUN(AC_LIBTOOL_SETUP,
-[AC_PREREQ(2.13)dnl
-AC_REQUIRE([AC_ENABLE_SHARED])dnl
-AC_REQUIRE([AC_ENABLE_STATIC])dnl
-AC_REQUIRE([AC_ENABLE_FAST_INSTALL])dnl
-AC_REQUIRE([AC_CANONICAL_HOST])dnl
-AC_REQUIRE([AC_CANONICAL_BUILD])dnl
-AC_REQUIRE([AC_PROG_RANLIB])dnl
-AC_REQUIRE([AC_PROG_CC])dnl
-AC_REQUIRE([AC_PROG_LD])dnl
-AC_REQUIRE([AC_PROG_NM])dnl
-AC_REQUIRE([AC_PROG_LN_S])dnl
-dnl
-
-case "$target" in
-NONE) lt_target="$host" ;;
-*) lt_target="$target" ;;
-esac
-
-# Check for any special flags to pass to ltconfig.
-libtool_flags="--cache-file=$cache_file"
-test "$enable_shared" = no && libtool_flags="$libtool_flags --disable-shared"
-test "$enable_static" = no && libtool_flags="$libtool_flags --disable-static"
-test "$enable_fast_install" = no && libtool_flags="$libtool_flags --disable-fast-install"
-test "$ac_cv_prog_gcc" = yes && libtool_flags="$libtool_flags --with-gcc"
-test "$ac_cv_prog_gnu_ld" = yes && libtool_flags="$libtool_flags --with-gnu-ld"
-ifdef([AC_PROVIDE_AC_LIBTOOL_DLOPEN],
-[libtool_flags="$libtool_flags --enable-dlopen"])
-ifdef([AC_PROVIDE_AC_LIBTOOL_WIN32_DLL],
-[libtool_flags="$libtool_flags --enable-win32-dll"])
-AC_ARG_ENABLE(libtool-lock,
-  [  --disable-libtool-lock  avoid locking (might break parallel builds)])
-test "x$enable_libtool_lock" = xno && libtool_flags="$libtool_flags --disable-lock"
-test x"$silent" = xyes && libtool_flags="$libtool_flags --silent"
-
-# Some flags need to be propagated to the compiler or linker for good
-# libtool support.
-case "$lt_target" in
-*-*-irix6*)
-  # Find out which ABI we are using.
-  echo '[#]line __oline__ "configure"' > conftest.$ac_ext
-  if AC_TRY_EVAL(ac_compile); then
-    case "`/usr/bin/file conftest.o`" in
-    *32-bit*)
-      LD="${LD-ld} -32"
-      ;;
-    *N32*)
-      LD="${LD-ld} -n32"
-      ;;
-    *64-bit*)
-      LD="${LD-ld} -64"
-      ;;
-    esac
-  fi
-  rm -rf conftest*
-  ;;
-
-*-*-sco3.2v5*)
-  # On SCO OpenServer 5, we need -belf to get full-featured binaries.
-  SAVE_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS -belf"
-  AC_CACHE_CHECK([whether the C compiler needs -belf], lt_cv_cc_needs_belf,
-    [AC_TRY_LINK([],[],[lt_cv_cc_needs_belf=yes],[lt_cv_cc_needs_belf=no])])
-  if test x"$lt_cv_cc_needs_belf" != x"yes"; then
-    # this is probably gcc 2.8.0, egcs 1.0 or newer; no need for -belf
-    CFLAGS="$SAVE_CFLAGS"
-  fi
-  ;;
-
-ifdef([AC_PROVIDE_AC_LIBTOOL_WIN32_DLL],
-[*-*-cygwin* | *-*-mingw*)
-  AC_CHECK_TOOL(DLLTOOL, dlltool, false)
-  AC_CHECK_TOOL(AS, as, false)
-  AC_CHECK_TOOL(OBJDUMP, objdump, false)
-  ;;
-])
-esac
-])
-
-# AC_LIBTOOL_DLOPEN - enable checks for dlopen support
-AC_DEFUN(AC_LIBTOOL_DLOPEN, [AC_BEFORE([$0],[AC_LIBTOOL_SETUP])])
-
-# AC_LIBTOOL_WIN32_DLL - declare package support for building win32 dll's
-AC_DEFUN(AC_LIBTOOL_WIN32_DLL, [AC_BEFORE([$0], [AC_LIBTOOL_SETUP])])
-
-# AC_ENABLE_SHARED - implement the --enable-shared flag
-# Usage: AC_ENABLE_SHARED[(DEFAULT)]
-#   Where DEFAULT is either `yes' or `no'.  If omitted, it defaults to
-#   `yes'.
-AC_DEFUN(AC_ENABLE_SHARED, [dnl
-define([AC_ENABLE_SHARED_DEFAULT], ifelse($1, no, no, yes))dnl
-AC_ARG_ENABLE(shared,
-changequote(<<, >>)dnl
-<<  --enable-shared[=PKGS]  build shared libraries [default=>>AC_ENABLE_SHARED_DEFAULT],
-changequote([, ])dnl
-[p=${PACKAGE-default}
-case "$enableval" in
-yes) enable_shared=yes ;;
-no) enable_shared=no ;;
-*)
-  enable_shared=no
-  # Look at the argument we got.  We use all the common list separators.
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:,"
-  for pkg in $enableval; do
-    if test "X$pkg" = "X$p"; then
-      enable_shared=yes
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac],
-enable_shared=AC_ENABLE_SHARED_DEFAULT)dnl
-])
-
-# AC_DISABLE_SHARED - set the default shared flag to --disable-shared
-AC_DEFUN(AC_DISABLE_SHARED, [AC_BEFORE([$0],[AC_LIBTOOL_SETUP])dnl
-AC_ENABLE_SHARED(no)])
-
-# AC_ENABLE_STATIC - implement the --enable-static flag
-# Usage: AC_ENABLE_STATIC[(DEFAULT)]
-#   Where DEFAULT is either `yes' or `no'.  If omitted, it defaults to
-#   `yes'.
-AC_DEFUN(AC_ENABLE_STATIC, [dnl
-define([AC_ENABLE_STATIC_DEFAULT], ifelse($1, no, no, yes))dnl
-AC_ARG_ENABLE(static,
-changequote(<<, >>)dnl
-<<  --enable-static[=PKGS]  build static libraries [default=>>AC_ENABLE_STATIC_DEFAULT],
-changequote([, ])dnl
-[p=${PACKAGE-default}
-case "$enableval" in
-yes) enable_static=yes ;;
-no) enable_static=no ;;
-*)
-  enable_static=no
-  # Look at the argument we got.  We use all the common list separators.
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:,"
-  for pkg in $enableval; do
-    if test "X$pkg" = "X$p"; then
-      enable_static=yes
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac],
-enable_static=AC_ENABLE_STATIC_DEFAULT)dnl
-])
-
-# AC_DISABLE_STATIC - set the default static flag to --disable-static
-AC_DEFUN(AC_DISABLE_STATIC, [AC_BEFORE([$0],[AC_LIBTOOL_SETUP])dnl
-AC_ENABLE_STATIC(no)])
-
-
-# AC_ENABLE_FAST_INSTALL - implement the --enable-fast-install flag
-# Usage: AC_ENABLE_FAST_INSTALL[(DEFAULT)]
-#   Where DEFAULT is either `yes' or `no'.  If omitted, it defaults to
-#   `yes'.
-AC_DEFUN(AC_ENABLE_FAST_INSTALL, [dnl
-define([AC_ENABLE_FAST_INSTALL_DEFAULT], ifelse($1, no, no, yes))dnl
-AC_ARG_ENABLE(fast-install,
-changequote(<<, >>)dnl
-<<  --enable-fast-install[=PKGS]  optimize for fast installation [default=>>AC_ENABLE_FAST_INSTALL_DEFAULT],
-changequote([, ])dnl
-[p=${PACKAGE-default}
-case "$enableval" in
-yes) enable_fast_install=yes ;;
-no) enable_fast_install=no ;;
-*)
-  enable_fast_install=no
-  # Look at the argument we got.  We use all the common list separators.
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:,"
-  for pkg in $enableval; do
-    if test "X$pkg" = "X$p"; then
-      enable_fast_install=yes
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac],
-enable_fast_install=AC_ENABLE_FAST_INSTALL_DEFAULT)dnl
-])
-
-# AC_ENABLE_FAST_INSTALL - set the default to --disable-fast-install
-AC_DEFUN(AC_DISABLE_FAST_INSTALL, [AC_BEFORE([$0],[AC_LIBTOOL_SETUP])dnl
-AC_ENABLE_FAST_INSTALL(no)])
-
-# AC_PROG_LD - find the path to the GNU or non-GNU linker
-AC_DEFUN(AC_PROG_LD,
-[AC_ARG_WITH(gnu-ld,
-[  --with-gnu-ld           assume the C compiler uses GNU ld [default=no]],
-test "$withval" = no || with_gnu_ld=yes, with_gnu_ld=no)
-AC_REQUIRE([AC_PROG_CC])dnl
-AC_REQUIRE([AC_CANONICAL_HOST])dnl
-AC_REQUIRE([AC_CANONICAL_BUILD])dnl
-ac_prog=ld
-if test "$ac_cv_prog_gcc" = yes; then
-  # Check if gcc -print-prog-name=ld gives a path.
-  AC_MSG_CHECKING([for ld used by GCC])
-  ac_prog=`($CC -print-prog-name=ld) 2>&5`
-  case "$ac_prog" in
-    # Accept absolute paths.
-changequote(,)dnl
-    [\\/]* | [A-Za-z]:[\\/]*)
-      re_direlt='/[^/][^/]*/\.\./'
-changequote([,])dnl
-      # Canonicalize the path of ld
-      ac_prog=`echo $ac_prog| sed 's%\\\\%/%g'`
-      while echo $ac_prog | grep "$re_direlt" > /dev/null 2>&1; do
-	ac_prog=`echo $ac_prog| sed "s%$re_direlt%/%"`
-      done
-      test -z "$LD" && LD="$ac_prog"
-      ;;
-  "")
-    # If it fails, then pretend we aren't using GCC.
-    ac_prog=ld
-    ;;
-  *)
-    # If it is relative, then search for the first ld in PATH.
-    with_gnu_ld=unknown
-    ;;
-  esac
-elif test "$with_gnu_ld" = yes; then
-  AC_MSG_CHECKING([for GNU ld])
-else
-  AC_MSG_CHECKING([for non-GNU ld])
-fi
-AC_CACHE_VAL(ac_cv_path_LD,
-[if test -z "$LD"; then
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}${PATH_SEPARATOR-:}"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f "$ac_dir/$ac_prog" || test -f "$ac_dir/$ac_prog$ac_exeext"; then
-      ac_cv_path_LD="$ac_dir/$ac_prog"
-      # Check to see if the program is GNU ld.  I'd rather use --version,
-      # but apparently some GNU ld's only accept -v.
-      # Break only if it was the GNU/non-GNU ld that we prefer.
-      if "$ac_cv_path_LD" -v 2>&1 < /dev/null | egrep '(GNU|with BFD)' > /dev/null; then
-	test "$with_gnu_ld" != no && break
-      else
-	test "$with_gnu_ld" != yes && break
-      fi
-    fi
-  done
-  IFS="$ac_save_ifs"
-else
-  ac_cv_path_LD="$LD" # Let the user override the test with a path.
-fi])
-LD="$ac_cv_path_LD"
-if test -n "$LD"; then
-  AC_MSG_RESULT($LD)
-else
-  AC_MSG_RESULT(no)
-fi
-test -z "$LD" && AC_MSG_ERROR([no acceptable ld found in \$PATH])
-AC_PROG_LD_GNU
-])
-
-AC_DEFUN(AC_PROG_LD_GNU,
-[AC_CACHE_CHECK([if the linker ($LD) is GNU ld], ac_cv_prog_gnu_ld,
-[# I'd rather use --version here, but apparently some GNU ld's only accept -v.
-if $LD -v 2>&1 </dev/null | egrep '(GNU|with BFD)' 1>&5; then
-  ac_cv_prog_gnu_ld=yes
-else
-  ac_cv_prog_gnu_ld=no
-fi])
-])
-
-# AC_PROG_NM - find the path to a BSD-compatible name lister
-AC_DEFUN(AC_PROG_NM,
-[AC_MSG_CHECKING([for BSD-compatible nm])
-AC_CACHE_VAL(ac_cv_path_NM,
-[if test -n "$NM"; then
-  # Let the user override the test.
-  ac_cv_path_NM="$NM"
-else
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}${PATH_SEPARATOR-:}"
-  for ac_dir in $PATH /usr/ccs/bin /usr/ucb /bin; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/nm || test -f $ac_dir/nm$ac_exeext ; then
-      # Check to see if the nm accepts a BSD-compat flag.
-      # Adding the `sed 1q' prevents false positives on HP-UX, which says:
-      #   nm: unknown option "B" ignored
-      if ($ac_dir/nm -B /dev/null 2>&1 | sed '1q'; exit 0) | egrep /dev/null >/dev/null; then
-	ac_cv_path_NM="$ac_dir/nm -B"
-	break
-      elif ($ac_dir/nm -p /dev/null 2>&1 | sed '1q'; exit 0) | egrep /dev/null >/dev/null; then
-	ac_cv_path_NM="$ac_dir/nm -p"
-	break
-      else
-	ac_cv_path_NM=${ac_cv_path_NM="$ac_dir/nm"} # keep the first match, but
-	continue # so that we can try to find one that supports BSD flags
-      fi
-    fi
-  done
-  IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_NM" && ac_cv_path_NM=nm
-fi])
-NM="$ac_cv_path_NM"
-AC_MSG_RESULT([$NM])
-])
-
-# AC_CHECK_LIBM - check for math library
-AC_DEFUN(AC_CHECK_LIBM,
-[AC_REQUIRE([AC_CANONICAL_HOST])dnl
-LIBM=
-case "$lt_target" in
-*-*-beos* | *-*-cygwin*)
-  # These system don't have libm
-  ;;
-*-ncr-sysv4.3*)
-  AC_CHECK_LIB(mw, _mwvalidcheckl, LIBM="-lmw")
-  AC_CHECK_LIB(m, main, LIBM="$LIBM -lm")
-  ;;
-*)
-  AC_CHECK_LIB(m, main, LIBM="-lm")
-  ;;
-esac
-])
-
-# AC_LIBLTDL_CONVENIENCE[(dir)] - sets LIBLTDL to the link flags for
-# the libltdl convenience library and INCLTDL to the include flags for
-# the libltdl header and adds --enable-ltdl-convenience to the
-# configure arguments.  Note that LIBLTDL and INCLTDL are not
-# AC_SUBSTed, nor is AC_CONFIG_SUBDIRS called.  If DIR is not
-# provided, it is assumed to be `libltdl'.  LIBLTDL will be prefixed
-# with '${top_builddir}/' and INCLTDL will be prefixed with
-# '${top_srcdir}/' (note the single quotes!).  If your package is not
-# flat and you're not using automake, define top_builddir and
-# top_srcdir appropriately in the Makefiles.
-AC_DEFUN(AC_LIBLTDL_CONVENIENCE, [AC_BEFORE([$0],[AC_LIBTOOL_SETUP])dnl
-  case "$enable_ltdl_convenience" in
-  no) AC_MSG_ERROR([this package needs a convenience libltdl]) ;;
-  "") enable_ltdl_convenience=yes
-      ac_configure_args="$ac_configure_args --enable-ltdl-convenience" ;;
-  esac
-  LIBLTDL='${top_builddir}/'ifelse($#,1,[$1],['libltdl'])/libltdlc.la
-  INCLTDL='-I${top_srcdir}/'ifelse($#,1,[$1],['libltdl'])
-])
-
-# AC_LIBLTDL_INSTALLABLE[(dir)] - sets LIBLTDL to the link flags for
-# the libltdl installable library and INCLTDL to the include flags for
-# the libltdl header and adds --enable-ltdl-install to the configure
-# arguments.  Note that LIBLTDL and INCLTDL are not AC_SUBSTed, nor is
-# AC_CONFIG_SUBDIRS called.  If DIR is not provided and an installed
-# libltdl is not found, it is assumed to be `libltdl'.  LIBLTDL will
-# be prefixed with '${top_builddir}/' and INCLTDL will be prefixed
-# with '${top_srcdir}/' (note the single quotes!).  If your package is
-# not flat and you're not using automake, define top_builddir and
-# top_srcdir appropriately in the Makefiles.
-# In the future, this macro may have to be called after AC_PROG_LIBTOOL.
-AC_DEFUN(AC_LIBLTDL_INSTALLABLE, [AC_BEFORE([$0],[AC_LIBTOOL_SETUP])dnl
-  AC_CHECK_LIB(ltdl, main,
-  [test x"$enable_ltdl_install" != xyes && enable_ltdl_install=no],
-  [if test x"$enable_ltdl_install" = xno; then
-     AC_MSG_WARN([libltdl not installed, but installation disabled])
-   else
-     enable_ltdl_install=yes
-   fi
-  ])
-  if test x"$enable_ltdl_install" = x"yes"; then
-    ac_configure_args="$ac_configure_args --enable-ltdl-install"
-    LIBLTDL='${top_builddir}/'ifelse($#,1,[$1],['libltdl'])/libltdl.la
-    INCLTDL='-I${top_srcdir}/'ifelse($#,1,[$1],['libltdl'])
-  else
-    ac_configure_args="$ac_configure_args --enable-ltdl-install=no"
-    LIBLTDL="-lltdl"
-    INCLTDL=
-  fi
-])
-
-dnl old names
-AC_DEFUN(AM_PROG_LIBTOOL, [indir([AC_PROG_LIBTOOL])])dnl
-AC_DEFUN(AM_ENABLE_SHARED, [indir([AC_ENABLE_SHARED], $@)])dnl
-AC_DEFUN(AM_ENABLE_STATIC, [indir([AC_ENABLE_STATIC], $@)])dnl
-AC_DEFUN(AM_DISABLE_SHARED, [indir([AC_DISABLE_SHARED], $@)])dnl
-AC_DEFUN(AM_DISABLE_STATIC, [indir([AC_DISABLE_STATIC], $@)])dnl
-AC_DEFUN(AM_PROG_LD, [indir([AC_PROG_LD])])dnl
-AC_DEFUN(AM_PROG_NM, [indir([AC_PROG_NM])])dnl
-
-dnl This is just to silence aclocal about the macro not being used
-ifelse([AC_DISABLE_FAST_INSTALL])dnl
-
-
-# serial 6 AC_LIB_LTDL
-
-# AC_WITH_LTDL
-# ------------
-# Clients of libltdl can use this macro to allow the installer to
-# choose between a shipped copy of the ltdl sources or a preinstalled
-# version of the library.
-AC_DEFUN([AC_WITH_LTDL],
-[AC_REQUIRE([AC_LIB_LTDL])
-AC_SUBST([LIBLTDL])
-AC_SUBST([INCLTDL])
-
-# Unless the user asks us to check, assume no installed ltdl exists.
-use_installed_libltdl=no
-
-AC_ARG_WITH([included_ltdl],
-    [  --with-included-ltdl    use the GNU ltdl sources included here])
-
-if test "x$with_included_ltdl" != xyes; then
-  # We are not being forced to use the included libltdl sources, so
-  # decide whether there is a useful installed version we can use.
-  AC_CHECK_HEADER([ltdl.h],
-      [AC_CHECK_LIB([ltdl], [lt_dlcaller_register],
-          [with_included_ltdl=no],
-          [with_included_ltdl=yes])
-  ])
-fi
-
-if test "x$enable_ltdl_install" != xyes; then
-  # If the user did not specify an installable libltdl, then default
-  # to a convenience lib.
-  AC_LIBLTDL_CONVENIENCE
-fi
-
-if test "x$with_included_ltdl" = xno; then
-  # If the included ltdl is not to be used. then Use the
-  # preinstalled libltdl we found.
-  AC_DEFINE([HAVE_LTDL], 1,
-    [Define this if a modern libltdl is already installed])
-  LIBLTDL=-lltdl
-fi
-
-# Report our decision...
-AC_MSG_CHECKING([whether to use included libltdl])
-AC_MSG_RESULT([$with_included_ltdl])
-
-AC_CONFIG_SUBDIRS([libltdl])
-])# AC_WITH_LTDL
-
-
-# AC_LIB_LTDL
-# -----------
-# Perform all the checks necessary for compilation of the ltdl objects
-#  -- including compiler checks and header checks.
-AC_DEFUN([AC_LIB_LTDL],
-[AC_PREREQ(2.50)
-AC_REQUIRE([AC_PROG_CC])
-AC_REQUIRE([AC_C_CONST])
-AC_REQUIRE([AC_HEADER_STDC])
-AC_REQUIRE([AC_HEADER_DIRENT])
-AC_REQUIRE([_LT_AC_CHECK_DLFCN])
-AC_REQUIRE([AC_LTDL_ENABLE_INSTALL])
-AC_REQUIRE([AC_LTDL_SHLIBEXT])
-AC_REQUIRE([AC_LTDL_SHLIBPATH])
-AC_REQUIRE([AC_LTDL_SYSSEARCHPATH])
-AC_REQUIRE([AC_LTDL_OBJDIR])
-AC_REQUIRE([AC_LTDL_DLPREOPEN])
-AC_REQUIRE([AC_LTDL_DLLIB])
-AC_REQUIRE([AC_LTDL_SYMBOL_USCORE])
-AC_REQUIRE([AC_LTDL_DLSYM_USCORE])
-AC_REQUIRE([AC_LTDL_SYS_DLOPEN_DEPLIBS])
-AC_REQUIRE([AC_LTDL_FUNC_ARGZ])
-
-AC_CHECK_HEADERS([assert.h ctype.h errno.h malloc.h memory.h stdlib.h \
-		  stdio.h unistd.h])
-AC_CHECK_HEADERS([dl.h sys/dl.h dld.h mach-o/dyld.h])
-AC_CHECK_HEADERS([string.h strings.h], [break])
-
-AC_CHECK_FUNCS([strchr index], [break])
-AC_CHECK_FUNCS([strrchr rindex], [break])
-AC_CHECK_FUNCS([memcpy bcopy], [break])
-AC_CHECK_FUNCS([memmove strcmp])
-AC_CHECK_FUNCS([closedir opendir readdir])
-])# AC_LIB_LTDL
-
-
-# AC_LTDL_ENABLE_INSTALL
-# ----------------------
-AC_DEFUN([AC_LTDL_ENABLE_INSTALL],
-[AC_ARG_ENABLE([ltdl-install],
-    [AC_HELP_STRING([--enable-ltdl-install], [install libltdl])])
-
-AM_CONDITIONAL(INSTALL_LTDL, test x"${enable_ltdl_install-no}" != xno)
-AM_CONDITIONAL(CONVENIENCE_LTDL, test x"${enable_ltdl_convenience-no}" != xno)
-])])# AC_LTDL_ENABLE_INSTALL
-
-
-# AC_LTDL_SYS_DLOPEN_DEPLIBS
-# --------------------------
-AC_DEFUN([AC_LTDL_SYS_DLOPEN_DEPLIBS],
-[AC_REQUIRE([AC_CANONICAL_HOST])
-AC_CACHE_CHECK([whether deplibs are loaded by dlopen],
-  [libltdl_cv_sys_dlopen_deplibs],
-  [# PORTME does your system automatically load deplibs for dlopen?
-  # or its logical equivalent (e.g. shl_load for HP-UX < 11)
-  # For now, we just catch OSes we know something about -- in the
-  # future, we'll try test this programmatically.
-  libltdl_cv_sys_dlopen_deplibs=unknown
-  case "$host_os" in
-  aix3*|aix4.1.*|aix4.2.*)
-    # Unknown whether this is true for these versions of AIX, but
-    # we want this `case' here to explicitly catch those versions.
-    libltdl_cv_sys_dlopen_deplibs=unknown
-    ;;
-  aix[[45]]*)
-    libltdl_cv_sys_dlopen_deplibs=yes
-    ;;
-  darwin*)
-    # Assuming the user has installed a libdl from somewhere, this is true
-    # If you are looking for one http://www.opendarwin.org/projects/dlcompat
-    libltdl_cv_sys_dlopen_deplibs=yes
-    ;;   
-  gnu* | linux* | kfreebsd*-gnu | knetbsd*-gnu)
-    # GNU and its variants, using gnu ld.so (Glibc)
-    libltdl_cv_sys_dlopen_deplibs=yes
-    ;;
-  hpux10*|hpux11*)
-    libltdl_cv_sys_dlopen_deplibs=yes
-    ;;
-  irix[[12345]]*|irix6.[[01]]*)
-    # Catch all versions of IRIX before 6.2, and indicate that we don't
-    # know how it worked for any of those versions.
-    libltdl_cv_sys_dlopen_deplibs=unknown
-    ;;
-  irix*)
-    # The case above catches anything before 6.2, and it's known that
-    # at 6.2 and later dlopen does load deplibs.
-    libltdl_cv_sys_dlopen_deplibs=yes
-    ;;
-  netbsd*)
-    libltdl_cv_sys_dlopen_deplibs=yes
-    ;;
-  openbsd*)
-    libltdl_cv_sys_dlopen_deplibs=yes
-    ;;
-  osf[[1234]]*)
-    # dlopen did load deplibs (at least at 4.x), but until the 5.x series,
-    # it did *not* use an RPATH in a shared library to find objects the
-    # library depends on, so we explictly say `no'.
-    libltdl_cv_sys_dlopen_deplibs=no
-    ;;
-  osf5.0|osf5.0a|osf5.1)
-    # dlopen *does* load deplibs and with the right loader patch applied
-    # it even uses RPATH in a shared library to search for shared objects
-    # that the library depends on, but there's no easy way to know if that
-    # patch is installed.  Since this is the case, all we can really
-    # say is unknown -- it depends on the patch being installed.  If
-    # it is, this changes to `yes'.  Without it, it would be `no'.
-    libltdl_cv_sys_dlopen_deplibs=unknown
-    ;;
-  osf*)
-    # the two cases above should catch all versions of osf <= 5.1.  Read
-    # the comments above for what we know about them.
-    # At > 5.1, deplibs are loaded *and* any RPATH in a shared library
-    # is used to find them so we can finally say `yes'.
-    libltdl_cv_sys_dlopen_deplibs=yes
-    ;;
-  solaris*)
-    libltdl_cv_sys_dlopen_deplibs=yes
-    ;;
-  esac
-  ])
-if test "$libltdl_cv_sys_dlopen_deplibs" != yes; then
- AC_DEFINE([LTDL_DLOPEN_DEPLIBS], [1],
-    [Define if the OS needs help to load dependent libraries for dlopen().])
-fi
-])# AC_LTDL_SYS_DLOPEN_DEPLIBS
-
-
-# AC_LTDL_SHLIBEXT
-# ----------------
-AC_DEFUN([AC_LTDL_SHLIBEXT],
-[AC_REQUIRE([AC_LIBTOOL_SYS_DYNAMIC_LINKER])
-AC_CACHE_CHECK([which extension is used for loadable modules],
-  [libltdl_cv_shlibext],
-[
-module=yes
-eval libltdl_cv_shlibext=$shrext_cmds
-  ])
-if test -n "$libltdl_cv_shlibext"; then
-  AC_DEFINE_UNQUOTED(LTDL_SHLIB_EXT, "$libltdl_cv_shlibext",
-    [Define to the extension used for shared libraries, say, ".so".])
-fi
-])# AC_LTDL_SHLIBEXT
-
-
-# AC_LTDL_SHLIBPATH
-# -----------------
-AC_DEFUN([AC_LTDL_SHLIBPATH],
-[AC_REQUIRE([AC_LIBTOOL_SYS_DYNAMIC_LINKER])
-AC_CACHE_CHECK([which variable specifies run-time library path],
-  [libltdl_cv_shlibpath_var], [libltdl_cv_shlibpath_var="$shlibpath_var"])
-if test -n "$libltdl_cv_shlibpath_var"; then
-  AC_DEFINE_UNQUOTED(LTDL_SHLIBPATH_VAR, "$libltdl_cv_shlibpath_var",
-    [Define to the name of the environment variable that determines the dynamic library search path.])
-fi
-])# AC_LTDL_SHLIBPATH
-
-
-# AC_LTDL_SYSSEARCHPATH
-# ---------------------
-AC_DEFUN([AC_LTDL_SYSSEARCHPATH],
-[AC_REQUIRE([AC_LIBTOOL_SYS_DYNAMIC_LINKER])
-AC_CACHE_CHECK([for the default library search path],
-  [libltdl_cv_sys_search_path],
-  [libltdl_cv_sys_search_path="$sys_lib_dlsearch_path_spec"])
-if test -n "$libltdl_cv_sys_search_path"; then
-  sys_search_path=
-  for dir in $libltdl_cv_sys_search_path; do
-    if test -z "$sys_search_path"; then
-      sys_search_path="$dir"
-    else
-      sys_search_path="$sys_search_path$PATH_SEPARATOR$dir"
-    fi
-  done
-  AC_DEFINE_UNQUOTED(LTDL_SYSSEARCHPATH, "$sys_search_path",
-    [Define to the system default library search path.])
-fi
-])# AC_LTDL_SYSSEARCHPATH
-
-
-# AC_LTDL_OBJDIR
-# --------------
-AC_DEFUN([AC_LTDL_OBJDIR],
-[AC_CACHE_CHECK([for objdir],
-  [libltdl_cv_objdir],
-  [libltdl_cv_objdir="$objdir"
-  if test -n "$objdir"; then
-    :
-  else
-    rm -f .libs 2>/dev/null
-    mkdir .libs 2>/dev/null
-    if test -d .libs; then
-      libltdl_cv_objdir=.libs
-    else
-      # MS-DOS does not allow filenames that begin with a dot.
-      libltdl_cv_objdir=_libs
-    fi
-  rmdir .libs 2>/dev/null
-  fi
-  ])
-AC_DEFINE_UNQUOTED(LTDL_OBJDIR, "$libltdl_cv_objdir/",
-  [Define to the sub-directory in which libtool stores uninstalled libraries.])
-])# AC_LTDL_OBJDIR
-
-
-# AC_LTDL_DLPREOPEN
-# -----------------
-AC_DEFUN([AC_LTDL_DLPREOPEN],
-[AC_REQUIRE([AC_LIBTOOL_SYS_GLOBAL_SYMBOL_PIPE])
-AC_CACHE_CHECK([whether libtool supports -dlopen/-dlpreopen],
-  [libltdl_cv_preloaded_symbols],
-  [if test -n "$lt_cv_sys_global_symbol_pipe"; then
-    libltdl_cv_preloaded_symbols=yes
-  else
-    libltdl_cv_preloaded_symbols=no
-  fi
-  ])
-if test x"$libltdl_cv_preloaded_symbols" = xyes; then
-  AC_DEFINE(HAVE_PRELOADED_SYMBOLS, 1,
-    [Define if libtool can extract symbol lists from object files.])
-fi
-])# AC_LTDL_DLPREOPEN
-
-
-# AC_LTDL_DLLIB
-# -------------
-AC_DEFUN([AC_LTDL_DLLIB],
-[LIBADD_DL=
-AC_SUBST(LIBADD_DL)
-AC_LANG_PUSH([C])
-
-AC_CHECK_FUNC([shl_load],
-      [AC_DEFINE([HAVE_SHL_LOAD], [1],
-		 [Define if you have the shl_load function.])],
-  [AC_CHECK_LIB([dld], [shl_load],
-	[AC_DEFINE([HAVE_SHL_LOAD], [1],
-		   [Define if you have the shl_load function.])
-	LIBADD_DL="$LIBADD_DL -ldld"],
-    [AC_CHECK_LIB([dl], [dlopen],
-	  [AC_DEFINE([HAVE_LIBDL], [1],
-		     [Define if you have the libdl library or equivalent.])
-	        LIBADD_DL="-ldl" libltdl_cv_lib_dl_dlopen="yes"],
-      [AC_TRY_LINK([#if HAVE_DLFCN_H
-#  include <dlfcn.h>
-#endif
-      ],
-	[dlopen(0, 0);],
-	    [AC_DEFINE([HAVE_LIBDL], [1],
-		             [Define if you have the libdl library or equivalent.]) libltdl_cv_func_dlopen="yes"],
-	[AC_CHECK_LIB([svld], [dlopen],
-	      [AC_DEFINE([HAVE_LIBDL], [1],
-			 [Define if you have the libdl library or equivalent.])
-	            LIBADD_DL="-lsvld" libltdl_cv_func_dlopen="yes"],
-	  [AC_CHECK_LIB([dld], [dld_link],
-	        [AC_DEFINE([HAVE_DLD], [1],
-			   [Define if you have the GNU dld library.])
-	 	LIBADD_DL="$LIBADD_DL -ldld"],
-	 	[AC_CHECK_FUNC([_dyld_func_lookup],
-	 	       [AC_DEFINE([HAVE_DYLD], [1],
-	 	          [Define if you have the _dyld_func_lookup function.])])
-          ])
-        ])
-      ])
-    ])
-  ])
-])
-
-if test x"$libltdl_cv_func_dlopen" = xyes || test x"$libltdl_cv_lib_dl_dlopen" = xyes
-then
-  lt_save_LIBS="$LIBS"
-  LIBS="$LIBS $LIBADD_DL"
-  AC_CHECK_FUNCS([dlerror])
-  LIBS="$lt_save_LIBS"
-fi
-AC_LANG_POP
-])# AC_LTDL_DLLIB
-
-
-# AC_LTDL_SYMBOL_USCORE
-# ---------------------
-# does the compiler prefix global symbols with an underscore?
-AC_DEFUN([AC_LTDL_SYMBOL_USCORE],
-[AC_REQUIRE([AC_LIBTOOL_SYS_GLOBAL_SYMBOL_PIPE])
-AC_CACHE_CHECK([for _ prefix in compiled symbols],
-  [ac_cv_sys_symbol_underscore],
-  [ac_cv_sys_symbol_underscore=no
-  cat > conftest.$ac_ext <<EOF
-void nm_test_func(){}
-int main(){nm_test_func;return 0;}
-EOF
-  if AC_TRY_EVAL(ac_compile); then
-    # Now try to grab the symbols.
-    ac_nlist=conftest.nm
-    if AC_TRY_EVAL(NM conftest.$ac_objext \| $lt_cv_sys_global_symbol_pipe \> $ac_nlist) && test -s "$ac_nlist"; then
-      # See whether the symbols have a leading underscore.
-      if grep '^. _nm_test_func' "$ac_nlist" >/dev/null; then
-        ac_cv_sys_symbol_underscore=yes
-      else
-        if grep '^. nm_test_func ' "$ac_nlist" >/dev/null; then
-	  :
-        else
-	  echo "configure: cannot find nm_test_func in $ac_nlist" >&AC_FD_CC
-        fi
-      fi
-    else
-      echo "configure: cannot run $lt_cv_sys_global_symbol_pipe" >&AC_FD_CC
-    fi
-  else
-    echo "configure: failed program was:" >&AC_FD_CC
-    cat conftest.c >&AC_FD_CC
-  fi
-  rm -rf conftest*
-  ])
-])# AC_LTDL_SYMBOL_USCORE
-
-
-# AC_LTDL_DLSYM_USCORE
-# --------------------
-AC_DEFUN([AC_LTDL_DLSYM_USCORE],
-[AC_REQUIRE([AC_LTDL_SYMBOL_USCORE])
-if test x"$ac_cv_sys_symbol_underscore" = xyes; then
-  if test x"$libltdl_cv_func_dlopen" = xyes ||
-     test x"$libltdl_cv_lib_dl_dlopen" = xyes ; then
-	AC_CACHE_CHECK([whether we have to add an underscore for dlsym],
-	  [libltdl_cv_need_uscore],
-	  [libltdl_cv_need_uscore=unknown
-          save_LIBS="$LIBS"
-          LIBS="$LIBS $LIBADD_DL"
-	  _LT_AC_TRY_DLOPEN_SELF(
-	    [libltdl_cv_need_uscore=no], [libltdl_cv_need_uscore=yes],
-	    [],				 [libltdl_cv_need_uscore=cross])
-	  LIBS="$save_LIBS"
-	])
-  fi
-fi
-
-if test x"$libltdl_cv_need_uscore" = xyes; then
-  AC_DEFINE(NEED_USCORE, 1,
-    [Define if dlsym() requires a leading underscore in symbol names.])
-fi
-])# AC_LTDL_DLSYM_USCORE
-
-# AC_LTDL_FUNC_ARGZ
-# -----------------
-AC_DEFUN([AC_LTDL_FUNC_ARGZ],
-[AC_CHECK_HEADERS([argz.h])
-
-AC_CHECK_TYPES([error_t],
-  [],
-  [AC_DEFINE([error_t], [int],
-    [Define to a type to use for `error_t' if it is not otherwise available.])],
-  [#if HAVE_ARGZ_H
-#  include <argz.h>
-#endif])
-
-AC_CHECK_FUNCS([argz_append argz_create_sep argz_insert argz_next argz_stringify])
-])# AC_LTDL_FUNC_ARGZ
-
 # libtool.m4 - Configure libtool for the host system. -*-Autoconf-*-
 
 # serial 47 AC_PROG_LIBTOOL
@@ -7799,4 +6976,414 @@ done
 SED=$lt_cv_path_SED
 AC_MSG_RESULT([$SED])
 ])
+
+
+# serial 6 AC_LIB_LTDL
+
+# AC_WITH_LTDL
+# ------------
+# Clients of libltdl can use this macro to allow the installer to
+# choose between a shipped copy of the ltdl sources or a preinstalled
+# version of the library.
+AC_DEFUN([AC_WITH_LTDL],
+[AC_REQUIRE([AC_LIB_LTDL])
+AC_SUBST([LIBLTDL])
+AC_SUBST([INCLTDL])
+
+# Unless the user asks us to check, assume no installed ltdl exists.
+use_installed_libltdl=no
+
+AC_ARG_WITH([included_ltdl],
+    [  --with-included-ltdl    use the GNU ltdl sources included here])
+
+if test "x$with_included_ltdl" != xyes; then
+  # We are not being forced to use the included libltdl sources, so
+  # decide whether there is a useful installed version we can use.
+  AC_CHECK_HEADER([ltdl.h],
+      [AC_CHECK_LIB([ltdl], [lt_dlcaller_register],
+          [with_included_ltdl=no],
+          [with_included_ltdl=yes])
+  ])
+fi
+
+if test "x$enable_ltdl_install" != xyes; then
+  # If the user did not specify an installable libltdl, then default
+  # to a convenience lib.
+  AC_LIBLTDL_CONVENIENCE
+fi
+
+if test "x$with_included_ltdl" = xno; then
+  # If the included ltdl is not to be used. then Use the
+  # preinstalled libltdl we found.
+  AC_DEFINE([HAVE_LTDL], 1,
+    [Define this if a modern libltdl is already installed])
+  LIBLTDL=-lltdl
+fi
+
+# Report our decision...
+AC_MSG_CHECKING([whether to use included libltdl])
+AC_MSG_RESULT([$with_included_ltdl])
+
+AC_CONFIG_SUBDIRS([libltdl])
+])# AC_WITH_LTDL
+
+
+# AC_LIB_LTDL
+# -----------
+# Perform all the checks necessary for compilation of the ltdl objects
+#  -- including compiler checks and header checks.
+AC_DEFUN([AC_LIB_LTDL],
+[AC_PREREQ(2.50)
+AC_REQUIRE([AC_PROG_CC])
+AC_REQUIRE([AC_C_CONST])
+AC_REQUIRE([AC_HEADER_STDC])
+AC_REQUIRE([AC_HEADER_DIRENT])
+AC_REQUIRE([_LT_AC_CHECK_DLFCN])
+AC_REQUIRE([AC_LTDL_ENABLE_INSTALL])
+AC_REQUIRE([AC_LTDL_SHLIBEXT])
+AC_REQUIRE([AC_LTDL_SHLIBPATH])
+AC_REQUIRE([AC_LTDL_SYSSEARCHPATH])
+AC_REQUIRE([AC_LTDL_OBJDIR])
+AC_REQUIRE([AC_LTDL_DLPREOPEN])
+AC_REQUIRE([AC_LTDL_DLLIB])
+AC_REQUIRE([AC_LTDL_SYMBOL_USCORE])
+AC_REQUIRE([AC_LTDL_DLSYM_USCORE])
+AC_REQUIRE([AC_LTDL_SYS_DLOPEN_DEPLIBS])
+AC_REQUIRE([AC_LTDL_FUNC_ARGZ])
+
+AC_CHECK_HEADERS([assert.h ctype.h errno.h malloc.h memory.h stdlib.h \
+		  stdio.h unistd.h])
+AC_CHECK_HEADERS([dl.h sys/dl.h dld.h mach-o/dyld.h])
+AC_CHECK_HEADERS([string.h strings.h], [break])
+
+AC_CHECK_FUNCS([strchr index], [break])
+AC_CHECK_FUNCS([strrchr rindex], [break])
+AC_CHECK_FUNCS([memcpy bcopy], [break])
+AC_CHECK_FUNCS([memmove strcmp])
+AC_CHECK_FUNCS([closedir opendir readdir])
+])# AC_LIB_LTDL
+
+
+# AC_LTDL_ENABLE_INSTALL
+# ----------------------
+AC_DEFUN([AC_LTDL_ENABLE_INSTALL],
+[AC_ARG_ENABLE([ltdl-install],
+    [AC_HELP_STRING([--enable-ltdl-install], [install libltdl])])
+
+AM_CONDITIONAL(INSTALL_LTDL, test x"${enable_ltdl_install-no}" != xno)
+AM_CONDITIONAL(CONVENIENCE_LTDL, test x"${enable_ltdl_convenience-no}" != xno)
+])])# AC_LTDL_ENABLE_INSTALL
+
+
+# AC_LTDL_SYS_DLOPEN_DEPLIBS
+# --------------------------
+AC_DEFUN([AC_LTDL_SYS_DLOPEN_DEPLIBS],
+[AC_REQUIRE([AC_CANONICAL_HOST])
+AC_CACHE_CHECK([whether deplibs are loaded by dlopen],
+  [libltdl_cv_sys_dlopen_deplibs],
+  [# PORTME does your system automatically load deplibs for dlopen?
+  # or its logical equivalent (e.g. shl_load for HP-UX < 11)
+  # For now, we just catch OSes we know something about -- in the
+  # future, we'll try test this programmatically.
+  libltdl_cv_sys_dlopen_deplibs=unknown
+  case "$host_os" in
+  aix3*|aix4.1.*|aix4.2.*)
+    # Unknown whether this is true for these versions of AIX, but
+    # we want this `case' here to explicitly catch those versions.
+    libltdl_cv_sys_dlopen_deplibs=unknown
+    ;;
+  aix[[45]]*)
+    libltdl_cv_sys_dlopen_deplibs=yes
+    ;;
+  darwin*)
+    # Assuming the user has installed a libdl from somewhere, this is true
+    # If you are looking for one http://www.opendarwin.org/projects/dlcompat
+    libltdl_cv_sys_dlopen_deplibs=yes
+    ;;   
+  gnu* | linux* | kfreebsd*-gnu | knetbsd*-gnu)
+    # GNU and its variants, using gnu ld.so (Glibc)
+    libltdl_cv_sys_dlopen_deplibs=yes
+    ;;
+  hpux10*|hpux11*)
+    libltdl_cv_sys_dlopen_deplibs=yes
+    ;;
+  irix[[12345]]*|irix6.[[01]]*)
+    # Catch all versions of IRIX before 6.2, and indicate that we don't
+    # know how it worked for any of those versions.
+    libltdl_cv_sys_dlopen_deplibs=unknown
+    ;;
+  irix*)
+    # The case above catches anything before 6.2, and it's known that
+    # at 6.2 and later dlopen does load deplibs.
+    libltdl_cv_sys_dlopen_deplibs=yes
+    ;;
+  netbsd*)
+    libltdl_cv_sys_dlopen_deplibs=yes
+    ;;
+  openbsd*)
+    libltdl_cv_sys_dlopen_deplibs=yes
+    ;;
+  osf[[1234]]*)
+    # dlopen did load deplibs (at least at 4.x), but until the 5.x series,
+    # it did *not* use an RPATH in a shared library to find objects the
+    # library depends on, so we explictly say `no'.
+    libltdl_cv_sys_dlopen_deplibs=no
+    ;;
+  osf5.0|osf5.0a|osf5.1)
+    # dlopen *does* load deplibs and with the right loader patch applied
+    # it even uses RPATH in a shared library to search for shared objects
+    # that the library depends on, but there's no easy way to know if that
+    # patch is installed.  Since this is the case, all we can really
+    # say is unknown -- it depends on the patch being installed.  If
+    # it is, this changes to `yes'.  Without it, it would be `no'.
+    libltdl_cv_sys_dlopen_deplibs=unknown
+    ;;
+  osf*)
+    # the two cases above should catch all versions of osf <= 5.1.  Read
+    # the comments above for what we know about them.
+    # At > 5.1, deplibs are loaded *and* any RPATH in a shared library
+    # is used to find them so we can finally say `yes'.
+    libltdl_cv_sys_dlopen_deplibs=yes
+    ;;
+  solaris*)
+    libltdl_cv_sys_dlopen_deplibs=yes
+    ;;
+  esac
+  ])
+if test "$libltdl_cv_sys_dlopen_deplibs" != yes; then
+ AC_DEFINE([LTDL_DLOPEN_DEPLIBS], [1],
+    [Define if the OS needs help to load dependent libraries for dlopen().])
+fi
+])# AC_LTDL_SYS_DLOPEN_DEPLIBS
+
+
+# AC_LTDL_SHLIBEXT
+# ----------------
+AC_DEFUN([AC_LTDL_SHLIBEXT],
+[AC_REQUIRE([AC_LIBTOOL_SYS_DYNAMIC_LINKER])
+AC_CACHE_CHECK([which extension is used for loadable modules],
+  [libltdl_cv_shlibext],
+[
+module=yes
+eval libltdl_cv_shlibext=$shrext_cmds
+  ])
+if test -n "$libltdl_cv_shlibext"; then
+  AC_DEFINE_UNQUOTED(LTDL_SHLIB_EXT, "$libltdl_cv_shlibext",
+    [Define to the extension used for shared libraries, say, ".so".])
+fi
+])# AC_LTDL_SHLIBEXT
+
+
+# AC_LTDL_SHLIBPATH
+# -----------------
+AC_DEFUN([AC_LTDL_SHLIBPATH],
+[AC_REQUIRE([AC_LIBTOOL_SYS_DYNAMIC_LINKER])
+AC_CACHE_CHECK([which variable specifies run-time library path],
+  [libltdl_cv_shlibpath_var], [libltdl_cv_shlibpath_var="$shlibpath_var"])
+if test -n "$libltdl_cv_shlibpath_var"; then
+  AC_DEFINE_UNQUOTED(LTDL_SHLIBPATH_VAR, "$libltdl_cv_shlibpath_var",
+    [Define to the name of the environment variable that determines the dynamic library search path.])
+fi
+])# AC_LTDL_SHLIBPATH
+
+
+# AC_LTDL_SYSSEARCHPATH
+# ---------------------
+AC_DEFUN([AC_LTDL_SYSSEARCHPATH],
+[AC_REQUIRE([AC_LIBTOOL_SYS_DYNAMIC_LINKER])
+AC_CACHE_CHECK([for the default library search path],
+  [libltdl_cv_sys_search_path],
+  [libltdl_cv_sys_search_path="$sys_lib_dlsearch_path_spec"])
+if test -n "$libltdl_cv_sys_search_path"; then
+  sys_search_path=
+  for dir in $libltdl_cv_sys_search_path; do
+    if test -z "$sys_search_path"; then
+      sys_search_path="$dir"
+    else
+      sys_search_path="$sys_search_path$PATH_SEPARATOR$dir"
+    fi
+  done
+  AC_DEFINE_UNQUOTED(LTDL_SYSSEARCHPATH, "$sys_search_path",
+    [Define to the system default library search path.])
+fi
+])# AC_LTDL_SYSSEARCHPATH
+
+
+# AC_LTDL_OBJDIR
+# --------------
+AC_DEFUN([AC_LTDL_OBJDIR],
+[AC_CACHE_CHECK([for objdir],
+  [libltdl_cv_objdir],
+  [libltdl_cv_objdir="$objdir"
+  if test -n "$objdir"; then
+    :
+  else
+    rm -f .libs 2>/dev/null
+    mkdir .libs 2>/dev/null
+    if test -d .libs; then
+      libltdl_cv_objdir=.libs
+    else
+      # MS-DOS does not allow filenames that begin with a dot.
+      libltdl_cv_objdir=_libs
+    fi
+  rmdir .libs 2>/dev/null
+  fi
+  ])
+AC_DEFINE_UNQUOTED(LTDL_OBJDIR, "$libltdl_cv_objdir/",
+  [Define to the sub-directory in which libtool stores uninstalled libraries.])
+])# AC_LTDL_OBJDIR
+
+
+# AC_LTDL_DLPREOPEN
+# -----------------
+AC_DEFUN([AC_LTDL_DLPREOPEN],
+[AC_REQUIRE([AC_LIBTOOL_SYS_GLOBAL_SYMBOL_PIPE])
+AC_CACHE_CHECK([whether libtool supports -dlopen/-dlpreopen],
+  [libltdl_cv_preloaded_symbols],
+  [if test -n "$lt_cv_sys_global_symbol_pipe"; then
+    libltdl_cv_preloaded_symbols=yes
+  else
+    libltdl_cv_preloaded_symbols=no
+  fi
+  ])
+if test x"$libltdl_cv_preloaded_symbols" = xyes; then
+  AC_DEFINE(HAVE_PRELOADED_SYMBOLS, 1,
+    [Define if libtool can extract symbol lists from object files.])
+fi
+])# AC_LTDL_DLPREOPEN
+
+
+# AC_LTDL_DLLIB
+# -------------
+AC_DEFUN([AC_LTDL_DLLIB],
+[LIBADD_DL=
+AC_SUBST(LIBADD_DL)
+AC_LANG_PUSH([C])
+
+AC_CHECK_FUNC([shl_load],
+      [AC_DEFINE([HAVE_SHL_LOAD], [1],
+		 [Define if you have the shl_load function.])],
+  [AC_CHECK_LIB([dld], [shl_load],
+	[AC_DEFINE([HAVE_SHL_LOAD], [1],
+		   [Define if you have the shl_load function.])
+	LIBADD_DL="$LIBADD_DL -ldld"],
+    [AC_CHECK_LIB([dl], [dlopen],
+	  [AC_DEFINE([HAVE_LIBDL], [1],
+		     [Define if you have the libdl library or equivalent.])
+	        LIBADD_DL="-ldl" libltdl_cv_lib_dl_dlopen="yes"],
+      [AC_TRY_LINK([#if HAVE_DLFCN_H
+#  include <dlfcn.h>
+#endif
+      ],
+	[dlopen(0, 0);],
+	    [AC_DEFINE([HAVE_LIBDL], [1],
+		             [Define if you have the libdl library or equivalent.]) libltdl_cv_func_dlopen="yes"],
+	[AC_CHECK_LIB([svld], [dlopen],
+	      [AC_DEFINE([HAVE_LIBDL], [1],
+			 [Define if you have the libdl library or equivalent.])
+	            LIBADD_DL="-lsvld" libltdl_cv_func_dlopen="yes"],
+	  [AC_CHECK_LIB([dld], [dld_link],
+	        [AC_DEFINE([HAVE_DLD], [1],
+			   [Define if you have the GNU dld library.])
+	 	LIBADD_DL="$LIBADD_DL -ldld"],
+	 	[AC_CHECK_FUNC([_dyld_func_lookup],
+	 	       [AC_DEFINE([HAVE_DYLD], [1],
+	 	          [Define if you have the _dyld_func_lookup function.])])
+          ])
+        ])
+      ])
+    ])
+  ])
+])
+
+if test x"$libltdl_cv_func_dlopen" = xyes || test x"$libltdl_cv_lib_dl_dlopen" = xyes
+then
+  lt_save_LIBS="$LIBS"
+  LIBS="$LIBS $LIBADD_DL"
+  AC_CHECK_FUNCS([dlerror])
+  LIBS="$lt_save_LIBS"
+fi
+AC_LANG_POP
+])# AC_LTDL_DLLIB
+
+
+# AC_LTDL_SYMBOL_USCORE
+# ---------------------
+# does the compiler prefix global symbols with an underscore?
+AC_DEFUN([AC_LTDL_SYMBOL_USCORE],
+[AC_REQUIRE([AC_LIBTOOL_SYS_GLOBAL_SYMBOL_PIPE])
+AC_CACHE_CHECK([for _ prefix in compiled symbols],
+  [ac_cv_sys_symbol_underscore],
+  [ac_cv_sys_symbol_underscore=no
+  cat > conftest.$ac_ext <<EOF
+void nm_test_func(){}
+int main(){nm_test_func;return 0;}
+EOF
+  if AC_TRY_EVAL(ac_compile); then
+    # Now try to grab the symbols.
+    ac_nlist=conftest.nm
+    if AC_TRY_EVAL(NM conftest.$ac_objext \| $lt_cv_sys_global_symbol_pipe \> $ac_nlist) && test -s "$ac_nlist"; then
+      # See whether the symbols have a leading underscore.
+      if grep '^. _nm_test_func' "$ac_nlist" >/dev/null; then
+        ac_cv_sys_symbol_underscore=yes
+      else
+        if grep '^. nm_test_func ' "$ac_nlist" >/dev/null; then
+	  :
+        else
+	  echo "configure: cannot find nm_test_func in $ac_nlist" >&AC_FD_CC
+        fi
+      fi
+    else
+      echo "configure: cannot run $lt_cv_sys_global_symbol_pipe" >&AC_FD_CC
+    fi
+  else
+    echo "configure: failed program was:" >&AC_FD_CC
+    cat conftest.c >&AC_FD_CC
+  fi
+  rm -rf conftest*
+  ])
+])# AC_LTDL_SYMBOL_USCORE
+
+
+# AC_LTDL_DLSYM_USCORE
+# --------------------
+AC_DEFUN([AC_LTDL_DLSYM_USCORE],
+[AC_REQUIRE([AC_LTDL_SYMBOL_USCORE])
+if test x"$ac_cv_sys_symbol_underscore" = xyes; then
+  if test x"$libltdl_cv_func_dlopen" = xyes ||
+     test x"$libltdl_cv_lib_dl_dlopen" = xyes ; then
+	AC_CACHE_CHECK([whether we have to add an underscore for dlsym],
+	  [libltdl_cv_need_uscore],
+	  [libltdl_cv_need_uscore=unknown
+          save_LIBS="$LIBS"
+          LIBS="$LIBS $LIBADD_DL"
+	  _LT_AC_TRY_DLOPEN_SELF(
+	    [libltdl_cv_need_uscore=no], [libltdl_cv_need_uscore=yes],
+	    [],				 [libltdl_cv_need_uscore=cross])
+	  LIBS="$save_LIBS"
+	])
+  fi
+fi
+
+if test x"$libltdl_cv_need_uscore" = xyes; then
+  AC_DEFINE(NEED_USCORE, 1,
+    [Define if dlsym() requires a leading underscore in symbol names.])
+fi
+])# AC_LTDL_DLSYM_USCORE
+
+# AC_LTDL_FUNC_ARGZ
+# -----------------
+AC_DEFUN([AC_LTDL_FUNC_ARGZ],
+[AC_CHECK_HEADERS([argz.h])
+
+AC_CHECK_TYPES([error_t],
+  [],
+  [AC_DEFINE([error_t], [int],
+    [Define to a type to use for `error_t' if it is not otherwise available.])],
+  [#if HAVE_ARGZ_H
+#  include <argz.h>
+#endif])
+
+AC_CHECK_FUNCS([argz_append argz_create_sep argz_insert argz_next argz_stringify])
+])# AC_LTDL_FUNC_ARGZ
 

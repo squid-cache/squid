@@ -15,6 +15,9 @@
 /* Define to 1 if you have the `dlerror' function. */
 #undef HAVE_DLERROR
 
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
 /* define if the compiler supports GCC C++ ABI name demangling */
 #undef HAVE_GCC_ABI_DEMANGLE
 
