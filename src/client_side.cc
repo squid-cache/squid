@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.610 2002/12/19 09:57:09 robertc Exp $
+ * $Id: client_side.cc,v 1.611 2002/12/20 05:47:22 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -423,7 +423,8 @@ clientLogRequest(clientHttpRequest * http)
 	if (http->conn && http->conn->rfc931[0])
 	    http->al.cache.rfc931 = http->conn->rfc931;
 #if USE_SSL
-	http->al.cache.ssluser = sslGetUserEmail(fd_table[http->conn->fd].ssl);
+	if (http->conn)
+	    http->al.cache.ssluser = sslGetUserEmail(fd_table[http->conn->fd].ssl);
 #endif
 	accessLogLog(&http->al);
 	accessLogFreeMemory(&http->al);
