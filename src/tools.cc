@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.19 1996/04/01 18:21:11 wessels Exp $ */
+/* $Id: tools.cc,v 1.20 1996/04/01 23:25:37 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -386,6 +386,6 @@ void setMaxFD()
 
 time_t getCurrentTime()
 {
-	gettimeofday(&current_time, NULL);
-	return cached_curtime = current_time.tv_sec;
+    gettimeofday(&current_time, NULL);
+    return cached_curtime = current_time.tv_sec;
 }
