@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.218 2002/04/11 21:34:03 hno Exp $
+ * $Id: tools.cc,v 1.219 2002/04/27 22:54:49 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -996,12 +996,12 @@ parseEtcHosts(void)
 int
 getMyPort(void)
 {
-#if USE_SSL
     if (Config.Sockaddr.http)
 	return ntohs(Config.Sockaddr.http->s.sin_port);
-    else
+#if USE_SSL
+    if (Config.Sockaddr.https)
 	return ntohs(Config.Sockaddr.https->s.sin_port);
-#else
-    return ntohs(Config.Sockaddr.http->s.sin_port);
 #endif
+    fatal("No port defined");
+    return 0; /* NOT REACHED */
 }
