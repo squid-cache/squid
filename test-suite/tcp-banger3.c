@@ -376,8 +376,11 @@ sig_child(int sig)
 int
 main(int argc, char *argv[])
 {
+    int i;
     signal(SIGCHLD, sig_child);
     create_children(argv);
     parent_main_loop();
-    return 0;
+    for (i=3;i<=maxfd; i++)
+	close(i);
+    sleep(1);
 }
