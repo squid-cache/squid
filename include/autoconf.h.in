@@ -164,9 +164,6 @@
 /* Define if you have the mstats function.  */
 #undef HAVE_MSTATS
 
-/* Define if you have the poll function.  */
-#undef HAVE_POLL
-
 /* Define if you have the random function.  */
 #undef HAVE_RANDOM
 
