@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.525 2000/06/08 18:05:36 hno Exp $
+ * $Id: store.cc,v 1.526 2000/06/25 22:28:43 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -218,7 +218,7 @@ storePurgeMem(StoreEntry * e)
 }
 
 static void
-storeEntryReferenced(StoreEntry *e)
+storeEntryReferenced(StoreEntry * e)
 {
     SwapDir *SD;
 
@@ -229,25 +229,25 @@ storeEntryReferenced(StoreEntry *e)
 	    SD->refobj(SD, e);
     }
     /* Notify the memory cache that we're referencing this object again */
-    if(e->mem_obj) {
+    if (e->mem_obj) {
 	if (mem_policy->Referenced)
 	    mem_policy->Referenced(mem_policy, e, &e->mem_obj->repl);
     }
 }
 
 static void
-storeEntryDereferenced(StoreEntry *e)
+storeEntryDereferenced(StoreEntry * e)
 {
     SwapDir *SD;
 
     /* Notify the fs that we're not referencing this object any more */
     if (e->swap_filen > -1) {
-        SD = INDEXSD(e->swap_dirn);
+	SD = INDEXSD(e->swap_dirn);
 	if (SD->unrefobj != NULL)
 	    SD->unrefobj(SD, e);
     }
     /* Notify the memory cache that we're not referencing this object any more */
-    if(e->mem_obj) {
+    if (e->mem_obj) {
 	if (mem_policy->Dereferenced)
 	    mem_policy->Dereferenced(mem_policy, e, &e->mem_obj->repl);
     }
@@ -714,7 +714,7 @@ storeGetMemSpace(int size)
     debug(20, 2) ("storeGetMemSpace: Starting, need %d pages\n", pages_needed);
     /* XXX what to set as max_scan here? */
     walker = mem_policy->PurgeInit(mem_policy, 100000);
-    while((e = walker->Next(walker))) {
+    while ((e = walker->Next(walker))) {
 	storePurgeMem(e);
 	released++;
 	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_max)
@@ -747,11 +747,11 @@ storeMaintainSwapSpace(void *datanotused)
     /* walk each fs */
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	/* call the maintain function .. */
-	SD = INDEXSD(i); 
+	SD = INDEXSD(i);
 	/* XXX FixMe: This should be done "in parallell" on the different
 	 * cache_dirs, not one at a time.
 	 */
-        if (SD->maintainfs != NULL)
+	if (SD->maintainfs != NULL)
 	    SD->maintainfs(SD);
     }
     if (store_swap_size > Config.Swap.maxSize) {
@@ -1122,8 +1122,8 @@ storeSetMemStatus(StoreEntry * e, int new_status)
 	hot_obj_count++;
     } else {
 	if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-		debug(20, 4) ("storeSetMemStatus: special entry %s\n",
-		    mem->url);
+	    debug(20, 4) ("storeSetMemStatus: special entry %s\n",
+		mem->url);
 	} else {
 	    mem_policy->Remove(mem_policy, e, &mem->repl);
 	    debug(20, 4) ("storeSetMemStatus: removed mem node %s\n",

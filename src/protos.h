@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.371 2000/06/25 21:27:57 wessels Exp $
+ * $Id: protos.h,v 1.372 2000/06/25 22:28:43 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1182,9 +1182,10 @@ extern void logfilePrintf(Logfile * lf, const char *fmt,...);
 extern void logfilePrintf(va_alist);
 #endif
 
-/* Removal Policies */
-RemovalPolicy *
-createRemovalPolicy(RemovalPolicySettings *settings);
+/*
+ * Removal Policies
+ */
+extern RemovalPolicy *createRemovalPolicy(RemovalPolicySettings * settings);
 
 /*
  * prototypes for system functions missing from system includes

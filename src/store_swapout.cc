@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.70 2000/06/02 17:30:48 wessels Exp $
+ * $Id: store_swapout.cc,v 1.71 2000/06/25 22:28:43 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -159,8 +159,8 @@ storeSwapOut(StoreEntry * e)
 	 */
 	if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) - 1 < new_mem_lo)
 	    new_mem_lo = on_disk - 1;
-	if ( new_mem_lo == -1 )
-	    new_mem_lo = 0; /* the above might become -1 */
+	if (new_mem_lo == -1)
+	    new_mem_lo = 0;	/* the above might become -1 */
     } else if (new_mem_lo > 0) {
 	/*
 	 * Its not swap-able, and we're about to delete a chunk,
