@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.355 1997/12/06 05:17:01 wessels Exp $
+ * $Id: store.cc,v 1.356 1997/12/07 00:48:15 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1133,7 +1133,7 @@ storeDoRebuildFromDisk(void *data)
 
 	key = storeKeyScan(keytext);
 	if (key == NULL) {
-	    debug(20,1)("storeDoRebuildFromDisk: bad key: '%s'\n", keytext);
+	    debug(20, 1) ("storeDoRebuildFromDisk: bad key: '%s'\n", keytext);
 	    continue;
 	}
 	e = storeGet(key);
@@ -1398,7 +1398,7 @@ storeCheckCachable(StoreEntry * e)
 	debug(20, 2) ("storeCheckCachable: NO: not cachable\n");
     } else if (EBIT_TEST(e->flag, RELEASE_REQUEST)) {
 	debug(20, 2) ("storeCheckCachable: NO: release requested\n");
-    } else if (e->store_status == STORE_OK && !storeEntryValidLength(e)) {
+    } else if (e->store_status == STORE_OK && EBIT_TEST(e->flag, ENTRY_BAD_LENGTH)) {
 	debug(20, 2) ("storeCheckCachable: NO: wrong content-length\n");
     } else if (EBIT_TEST(e->flag, ENTRY_NEGCACHED)) {
 	debug(20, 2) ("storeCheckCachable: NO: negative cached\n");
@@ -1423,6 +1423,8 @@ storeComplete(StoreEntry * e)
     e->object_len = e->mem_obj->inmem_hi;
     e->store_status = STORE_OK;
     assert(e->mem_status == NOT_IN_MEMORY);
+    if (!storeEntryValidLength(e))
+	EBIT_SET(e->flag, ENTRY_BAD_LENGTH);
     InvokeHandlers(e);
     storeCheckSwapOut(e);
 }
