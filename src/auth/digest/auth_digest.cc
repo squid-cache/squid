@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.29 2003/08/07 13:35:04 robertc Exp $
+ * $Id: auth_digest.cc,v 1.30 2003/08/10 07:27:34 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -711,7 +711,13 @@ digest_request_h::authenticate(request_t * request, ConnStateData::Pointer conn,
             } else {
                 const char *useragent = httpHeaderGetStr(&request->header, HDR_USER_AGENT);
 
-                static struct in_addr last_broken_addr = {0};
+                static struct in_addr last_broken_addr;
+                static int seen_broken_client = 0;
+
+                if (!seen_broken_client) {
+                    last_broken_addr = no_addr;
+                    seen_broken_client = 1;
+                }
 
                 if (memcmp(&last_broken_addr, &request->client_addr, sizeof(last_broken_addr)) != 0) {
                     debug(29, 1) ("\nDigest POST bug detected from %s using '%s'. Please upgrade browser. See Bug #630 for details.\n", inet_ntoa(request->client_addr), useragent ? useragent : "-");
