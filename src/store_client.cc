@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.34 1998/07/22 20:54:01 wessels Exp $
+ * $Id: store_client.cc,v 1.35 1998/07/30 05:52:32 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -174,7 +174,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	return;
     if (sc->flags.store_copying) {
 	sc->flags.copy_event_pending = 1;
-	debug(20, 3) ("storeClientCopy: Queueing storeClientCopyEvent()\n");
+	debug(20, 3) ("storeClientCopy2: Queueing storeClientCopyEvent()\n");
 	eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0.0, 0);
 	return;
     }
