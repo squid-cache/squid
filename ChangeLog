@@ -2,6 +2,7 @@
 	- Fixed not truncating multi-word content-types.
 	- Fixed ABR bug due to too-small redirector buffers.
 	- Fixed ABR in httpBuildRequestHeader().
+	- Removed asynch_io code.
 
 Changes to squid-1.1.beta27 (December 4, 1996):
 
@@ -81,8 +82,6 @@ Changes to squid-1.1.beta21 (November 22, 1996):
 
 	- Fixed setting entry->timestamp for NOT MODIFIED replies.
 	- Changed old HTTP/1.1 Forwarded: header to new Via:.
-	- Changed urlCheckRequest() to allow all FTP requests, including
-	  PUT which should get handled by the passthrough module.
 	- Fixed needlessly calling storeSwapFullPath() in
 	  storeSwapOutHandle() (Mark Treacy).
 	- Simplified hash linking (Mark Treacy).
@@ -266,7 +265,7 @@ Changes to squid-1.1.beta9 (October 21, 1996):
 
 	- Added 'make depend' target to Makefiles.
 	- Fixed changing the wrong instance of 'opt_catch_signals'
-	  in tools.c for beta8tools.c for beta8.
+	  in tools.c for beta8.
 	- Fixed xmemcpy macros in include/config.h (Ed Knowles).
 	- Fixed logging of "TCP_EXPIRED_MISS/304."
 
@@ -571,9 +570,6 @@ Changes to squid-1.1.alpha8:
 	  written to stdout.
 	- Cleaned up pointers in protoUnregister().
 	- Includes all squid-1.0 changes up to squid-1.0.6.
-
-Changes to squid-1.1.alpha7.BuGless:
-
 	- cache_swap 0 is allowed (proxy only server, no swapping), mainly
 	  intended for fast maintenance startups where the system already
 	  has to be running, but the disk(s) have not been fsck'd yet.
@@ -583,10 +579,6 @@ Changes to squid-1.1.alpha7.BuGless:
 	  the config file (the patterns were added only, got duplicates)
 	- ttl_force_pattern a new config option to override the settings
 	  of certain pages despite (or because) of enforced low expiry times
-	- Reduced the struct sentry size.  Moved some attributes to mem_obj,
-	  eliminated some.  On typical 32-bit machines the size was 52 bytes,
-	  now it's 32.
-	- Reduced /cache/log file size (still compatible with old format)
 
 Changes to squid-1.1.alpha7:
 
