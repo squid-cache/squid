@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.21 2003/04/20 03:35:39 robertc Exp $
+# $Id: Makefile.am,v 1.22 2004/10/10 03:02:42 hno Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
@@ -8,7 +8,7 @@ DIST_SUBDIRS	= lib snmplib scripts src icons errors contrib doc helpers test-sui
 SUBDIRS		= lib @makesnmplib@ scripts src icons errors doc helpers test-suite
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
-DEFAULT_PINGER		= $(libexecdir)/pinger$(EXEEXT)
+DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
 
 dist-hook:
 	@ for subdir in include include/samba/nsswitch; do \
