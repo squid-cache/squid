@@ -273,19 +273,37 @@ EXAMPLE:
 	neighbor_type_domain cache.foo.org sibling .au .de
 DOC_END
 
-NAME: neighbor_timeout neighbour_timeout
-COMMENT: (seconds)
-DEFAULT: 2 seconds
-TYPE: time_t
-LOC: Config.neighborTimeout
+NAME: icp_query_timeout
+COMMENT: (msec)
+DEFAULT: 0
+TYPE: int
+LOC: Config.Timeout.icp_query
 DOC_START
-	This controls how long to wait for replies from neighbor caches.
-	If none of the parent or neighbor caches reply before this many
-	seconds (due to dropped packets or slow links), then the object
-	request will be satisfied from the default source.  The default
-	timeout is two seconds.
+	Normally Squid will automatically determine an optimal ICP
+	query timeout value based on the round-trip-time of recent ICP
+	queries.  If you want to override the value determined by
+	Squid, set this 'icp_query_timeout' to a non-zero value.  This
+	value is specified in MILLISECONDS, so, to use a 2-second
+	timeout (the old default), you would write:
 
-neighbor_timeout 2 seconds
+		icp_query_timeout 2000
+
+icp_query_timeout 0
+DOC_END
+
+NAME: mcast_icp_query_timeout
+COMMENT: (msec)
+DEFAULT: 2000
+TYPE: int
+LOC: Config.Timeout.mcast_icp_query
+DOC_START
+	For Multicast peers, Squid regularly sends out ICP "probes" to
+	count how many other peers are listening on the given multicast
+	address.  This value specifies how long Squid should wait to
+	count all the replies.  The default is 2000 msec, or 2
+	seconds.
+
+mcast_icp_query_timeout 2000
 DOC_END
 
 NAME: dead_peer_timeout
@@ -1887,6 +1905,20 @@ DOC_START
 	can speed up the writing slightly (though you are unlikely to
 	need to worry).
 buffered_logs off
+DOC_END
+
+NAME: reload_into_ims
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.reload_into_ims
+DOC_START
+	When you enable this option, client no-cache or ``reload''
+	requests will be changed to If-Modified-Since requests.
+	Doing this VIOLATES the HTTP standard.  Enabling this
+	feature could make you liable for problems which it
+	causes.
+reload_into_ims off
 DOC_END
 
 NAME: always_direct

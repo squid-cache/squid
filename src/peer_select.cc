@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.64 1998/05/28 20:47:54 wessels Exp $
+ * $Id: peer_select.cc,v 1.65 1998/06/05 17:34:19 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -201,7 +201,7 @@ peerSelectCallbackFail(ps_state * psstate)
     debug(44, 1) ("Failed to select source for '%s'\n", url);
     debug(44, 1) ("  always_direct = %d\n", psstate->always_direct);
     debug(44, 1) ("   never_direct = %d\n", psstate->never_direct);
-    debug(44, 1) ("        timeout = %d\n", psstate->icp.timeout);
+    debug(44, 1) ("       timedout = %d\n", psstate->icp.timedout);
     if (cbdataValid(data))
 	psstate->fail_callback(NULL, data);
     cbdataUnlock(data);
@@ -240,7 +240,6 @@ peerSelectFoo(ps_state * psstate)
     StoreEntry *entry = psstate->entry;
     request_t *request = psstate->request;
     int direct;
-    double expected_rtt;
     debug(44, 3) ("peerSelectFoo: '%s %s'\n",
 	RequestMethodStr[request->method],
 	request->host);
@@ -312,17 +311,17 @@ peerSelectFoo(ps_state * psstate)
 	    peerHandleIcpReply,
 	    psstate,
 	    &psstate->icp.n_replies_expected,
-	    &expected_rtt);
+	    &psstate->icp.timeout);
 	if (psstate->icp.n_sent == 0)
 	    debug(44, 0) ("WARNING: neighborsUdpPing returned 0\n");
 	debug(44, 3) ("peerSelectFoo: %d ICP replies expected, RTT %f msec\n",
-	    psstate->icp.n_replies_expected, expected_rtt);
+	    psstate->icp.n_replies_expected, psstate->icp.timeout);
 	if (psstate->icp.n_replies_expected > 0) {
 	    entry->ping_status = PING_WAITING;
 	    eventAdd("peerPingTimeout",
 		peerPingTimeout,
 		psstate,
-		expected_rtt / 1000.0,
+		0.001 * psstate->icp.timeout,
 		0);
 	    return;
 	}
@@ -373,7 +372,7 @@ peerPingTimeout(void *data)
 	debug(44, 3) ("peerPingTimeout: '%s'\n", storeUrl(entry));
     entry->ping_status = PING_TIMEOUT;
     PeerStats.timeouts++;
-    psstate->icp.timeout = 1;
+    psstate->icp.timedout = 1;
     peerSelectFoo(psstate);
 }
 
