@@ -1,5 +1,6 @@
+
 /*
- * $Id: client.cc,v 1.53 1998/02/06 17:33:44 kostas Exp $
+ * $Id: client.cc,v 1.54 1998/02/06 17:50:20 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -198,7 +199,7 @@ main(int argc, char *argv[])
 		    port = CACHE_HTTP_PORT;	/* default */
 		break;
 	    case 'P':
-		put_file=xstrdup(optarg);
+		put_file = xstrdup(optarg);
 		break;
 	    case 'i':		/* IMS */
 		ims = (time_t) atoi(optarg);
@@ -232,13 +233,13 @@ main(int argc, char *argv[])
 	xfree(t);
     }
     if (put_file) {
-	opt_put=1;
-	method=xstrdup("PUT");
-	put_fd=open(put_file,O_RDONLY);
-	if (put_fd<0) {
-		fprintf(stderr,"%s: can't open file (%s)\n", argv[0],
-			xstrerror());
-		exit(-1);
+	opt_put = 1;
+	method = xstrdup("PUT");
+	put_fd = open(put_file, O_RDONLY);
+	if (put_fd < 0) {
+	    fprintf(stderr, "%s: can't open file (%s)\n", argv[0],
+		xstrerror());
+	    exit(-1);
 	}
 	fstat(put_fd, &p);
     }
@@ -247,7 +248,7 @@ main(int argc, char *argv[])
 	snprintf(buf, BUFSIZ, "Pragma: no-cache\r\n");
 	strcat(msg, buf);
     }
-    if (put_fd>0) {
+    if (put_fd > 0) {
 	snprintf(buf, BUFSIZ, "Content-length: %d\r\n", p.st_size);
 	strcat(msg, buf);
     }
@@ -316,16 +317,17 @@ main(int argc, char *argv[])
 	    exit(1);
 	}
 	if (put_file) {
-		int x;
-		while ((x=read(put_fd,msg, BUFSIZ))>0) {
-				x=write(conn, msg, x);
-				if (x<=0) break;
-		} 
-		if (x!=0) {
-			fprintf(stderr,"client: ERROR: Cannot send file.\n");
-			exit(1);
-		}
-		close(put_fd);
+	    int x;
+	    while ((x = read(put_fd, msg, BUFSIZ)) > 0) {
+		x = write(conn, msg, x);
+		if (x <= 0)
+		    break;
+	    }
+	    if (x != 0) {
+		fprintf(stderr, "client: ERROR: Cannot send file.\n");
+		exit(1);
+	    }
+	    close(put_fd);
 	}
 	/* Read the data */
 	while ((len = read(conn, buf, sizeof(buf))) > 0) {

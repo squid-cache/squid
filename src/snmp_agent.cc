@@ -123,12 +123,12 @@ init_agent_auth(void)
 }
 
 int
-snmp_agent_parse(u_char *sn_data,
-     int length,
-     u_char *out_sn_data,
-     int *out_length,
-     u_long sourceip,		/* possibly for authentication */
-     long *ireqid)
+snmp_agent_parse(u_char * sn_data,
+    int length,
+    u_char * out_sn_data,
+    int *out_length,
+    u_long sourceip,		/* possibly for authentication */
+    long *ireqid)
 {
     u_char msgtype, type;
     long zero = 0;
@@ -419,13 +419,13 @@ snmp_agent_parse(u_char *sn_data,
  * If any error occurs, an error code is returned.
  */
 int
-parse_var_op_list(u_char *sn_data,
-     int length,
-     u_char *out_sn_data,
-     int out_length,
-     long *index,
-     int msgtype,
-     int action)
+parse_var_op_list(u_char * sn_data,
+    int length,
+    u_char * out_sn_data,
+    int out_length,
+    long *index,
+    int msgtype,
+    int action)
 {
     u_char type;
     oid var_name[MAX_NAME_LEN];
@@ -606,11 +606,11 @@ parse_var_op_list(u_char *sn_data,
  * Returns 1 upon success and 0 upon failure.
  */
 int
-create_identical(u_char *snmp_in,
-     u_char *snmp_out,
-     int snmp_length,
-     long errstat,
-     long errindex)
+create_identical(u_char * snmp_in,
+    u_char * snmp_out,
+    int snmp_length,
+    long errstat,
+    long errindex)
 {
     u_char *sn_data;
     u_char type;
@@ -655,11 +655,11 @@ create_identical(u_char *snmp_in,
 
 static int
 check_auth(struct snmp_session *session,
-     u_char *sn_data,
-     int length,
-     u_char *pp,
-     int plen,
-     usecEntry **ueret)
+    u_char * sn_data,
+    int length,
+    u_char * pp,
+    int plen,
+    usecEntry ** ueret)
 {
     usecEntry *ue;
     Parameters params;
@@ -776,11 +776,11 @@ goodValue(u_char inType, int inLen, u_char actualType, int actualLen)
 
 
 static void
-setVariable(u_char *var_val,
-     u_char var_val_type,
-     int var_val_len,
-     u_char *statP,
-     int statLen)
+setVariable(u_char * var_val,
+    u_char var_val_type,
+    int var_val_len,
+    u_char * statP,
+    int statLen)
 {
     int buffersize = 1000;
 
@@ -809,13 +809,13 @@ struct repeater {
 
 
 static int
-bulk_var_op_list(u_char *sn_data,
-     int length,
-     u_char *out_sn_data,
-     int out_length,
-     int non_repeaters,
-     int max_repetitions,
-     long *index)
+bulk_var_op_list(u_char * sn_data,
+    int length,
+    u_char * out_sn_data,
+    int out_length,
+    int non_repeaters,
+    int max_repetitions,
+    long *index)
 {
     u_char type;
     oid var_name[MAX_NAME_LEN];

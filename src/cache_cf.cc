@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.246 1998/02/06 00:56:01 wessels Exp $
+ * $Id: cache_cf.cc,v 1.247 1998/02/06 17:50:19 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -359,13 +359,13 @@ dump_acl(StoreEntry * entry, const char *name, acl * acl)
     wordlist *w;
     wordlist *v;
     while (acl != NULL) {
-        v = w = aclDumpGeneric(acl);
+	v = w = aclDumpGeneric(acl);
 	while (v != NULL) {
-            storeAppendPrintf(entry, "%s %s %s %s\n",
-		    name,
-		    acl->name,
-		    aclTypeToStr(acl->type),
-		    v->key);
+	    storeAppendPrintf(entry, "%s %s %s %s\n",
+		name,
+		acl->name,
+		aclTypeToStr(acl->type),
+		v->key);
 	    v = v->next;
 	}
 	wordlistDestroy(&w);
@@ -432,29 +432,29 @@ free_acl(acl ** acl)
 }
 
 static void
-dump_acl_access(StoreEntry * entry, const char *name, acl_access *head)
+dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
     acl_list *l;
     while (head != NULL) {
-	for (l=head->acl_list; l != NULL; l = l->next) {
-	storeAppendPrintf(entry, "%s %s %s%s\n",
+	for (l = head->acl_list; l != NULL; l = l->next) {
+	    storeAppendPrintf(entry, "%s %s %s%s\n",
 		name,
 		head->allow ? "Allow" : "Deny",
 		l->op ? "" : "!",
 		l->acl->name);
-        }
+	}
 	head = head->next;
     }
 }
 
 static void
-parse_acl_access(acl_access **head)
+parse_acl_access(acl_access ** head)
 {
     aclParseAccessLine(head);
 }
 
 static void
-free_acl_access(acl_access **head)
+free_acl_access(acl_access ** head)
 {
     aclDestroyAccessList(head);
 }
@@ -516,7 +516,7 @@ check_null_string(char *s)
 }
 
 static void
-parse_cachedir(cacheSwap *swap)
+parse_cachedir(cacheSwap * swap)
 {
     char *token;
     char *path;
@@ -585,7 +585,7 @@ parse_cachedir(cacheSwap *swap)
 }
 
 static void
-free_cachedir(cacheSwap *swap)
+free_cachedir(cacheSwap * swap)
 {
     SwapDir *s;
     int i;
@@ -723,13 +723,13 @@ free_cachemgrpasswd(cachemgr_passwd ** head)
 
 
 static void
-dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list *var)
+dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var)
 {
     storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
-parse_denyinfo(acl_deny_info_list **var)
+parse_denyinfo(acl_deny_info_list ** var)
 {
     aclParseDenyInfoLine(var);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.136 1998/02/06 06:51:03 wessels Exp $
+ * $Id: acl.cc,v 1.137 1998/02/06 17:50:17 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -59,21 +59,21 @@ static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
 static int aclReadProxyAuth(struct _acl_proxy_auth *p);
-static wordlist * aclDumpIpList(acl_ip_data * ip);
-static wordlist * aclDumpDomainList(void *data);
-static wordlist * aclDumpTimeSpec(acl_time_data *);
-static wordlist * aclDumpRegexList(void *data);
-static wordlist * aclDumpIntlist(void *data);
-static wordlist * aclDumpWordList(wordlist *data);
-static wordlist * aclDumpProtoList(void *data);
-static wordlist * aclDumpMethodList(void *data);
-static wordlist * aclDumpProxyAuth(void *data);
+static wordlist *aclDumpIpList(acl_ip_data * ip);
+static wordlist *aclDumpDomainList(void *data);
+static wordlist *aclDumpTimeSpec(acl_time_data *);
+static wordlist *aclDumpRegexList(void *data);
+static wordlist *aclDumpIntlist(void *data);
+static wordlist *aclDumpWordList(wordlist * data);
+static wordlist *aclDumpProtoList(void *data);
+static wordlist *aclDumpMethodList(void *data);
+static wordlist *aclDumpProxyAuth(void *data);
 
 #if USE_ARP_ACL
 static int checkARP(u_long ip, char *eth);
 static int decode_eth(const char *asc, char *eth);
 static int aclMatchArp(void *dataptr, struct in_addr c);
-static const char * aclDumpArpList(void *data);
+static const char *aclDumpArpList(void *data);
 #endif
 
 #if defined(USE_SPLAY_TREE)
@@ -96,7 +96,7 @@ static int bintreeArpNetworkCompare(void *, void *);
 #endif
 
 #else /* LINKED LIST */
-static void aclDestroyIpList(acl_ip_data *data);
+static void aclDestroyIpList(acl_ip_data * data);
 
 #endif /* USE_SPLAY_TREE */
 
@@ -1595,7 +1595,7 @@ aclDestroyTree(tree ** data)
 
 #elif !defined(USE_SPLAY_TREE)
 static void
-aclDestroyIpList(acl_ip_data *data)
+aclDestroyIpList(acl_ip_data * data)
 {
     acl_ip_data *next = NULL;
     for (; data; data = next) {
@@ -1930,7 +1930,7 @@ aclHostDomainCompare(const char *h, const char *d)
 
 #if defined(USE_BIN_TREE)
 static int
-networkCompare(acl_ip_data *net, acl_ip_data *data)
+networkCompare(acl_ip_data * net, acl_ip_data * data)
 {
     struct in_addr addr;
     acl_ip_data acl_ip;
@@ -1989,7 +1989,7 @@ aclIpNetworkCompare(const void *a, splayNode * n)
 
 #elif defined(USE_BIN_TREE)
 static int
-aclIpNetworkCompare(struct in_addr addr, acl_ip_data *data)
+aclIpNetworkCompare(struct in_addr addr, acl_ip_data * data)
 {
     int rc = 0;
     addr.s_addr &= data->mask.s_addr;	/* apply netmask */
@@ -2089,7 +2089,7 @@ aclDumpDomainList(void *data)
 #endif
 }
 static wordlist *
-aclDumpTimeSpec(acl_time_data *t)
+aclDumpTimeSpec(acl_time_data * t)
 {
     wordlist *W = NULL;
     wordlist **T = &W;
@@ -2098,23 +2098,23 @@ aclDumpTimeSpec(acl_time_data *t)
     while (t != NULL) {
 	w = xcalloc(1, sizeof(wordlist));
 	snprintf(buf, 128, "%c%c%c%c%c%c%c %02d:%02d-%02d:%02d",
-		t->weekbits & ACL_SUNDAY ? 'S' : '-',
-		t->weekbits & ACL_MONDAY ? 'M' : '-',
-		t->weekbits & ACL_TUESDAY ? 'T' : '-',
-		t->weekbits & ACL_WEDNESDAY ? 'W' : '-',
-		t->weekbits & ACL_THURSDAY ? 'H' : '-',
-		t->weekbits & ACL_FRIDAY ? 'F' : '-',
-		t->weekbits & ACL_SATURDAY ? 'A' : '-',
-		t->start / 60,
-		t->start % 60,
-		t->stop / 60,
-		t->stop % 60);
+	    t->weekbits & ACL_SUNDAY ? 'S' : '-',
+	    t->weekbits & ACL_MONDAY ? 'M' : '-',
+	    t->weekbits & ACL_TUESDAY ? 'T' : '-',
+	    t->weekbits & ACL_WEDNESDAY ? 'W' : '-',
+	    t->weekbits & ACL_THURSDAY ? 'H' : '-',
+	    t->weekbits & ACL_FRIDAY ? 'F' : '-',
+	    t->weekbits & ACL_SATURDAY ? 'A' : '-',
+	    t->start / 60,
+	    t->start % 60,
+	    t->stop / 60,
+	    t->stop % 60);
 	w->key = xstrdup(buf);
 	*T = w;
 	T = &w->next;
 	t = t->next;
-	}
-	return W;
+    }
+    return W;
 }
 static wordlist *
 aclDumpRegexList(void *data)
@@ -2131,7 +2131,7 @@ aclDumpIntlist(void *data)
     return w;
 }
 static wordlist *
-aclDumpWordList(wordlist *data)
+aclDumpWordList(wordlist * data)
 {
     wordlist *W = NULL;
     wordlist **T = &W;
