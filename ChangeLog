@@ -15,6 +15,12 @@ Changes to squid-1.1.5 (January 22, 1996):
 	- Fixed *_ip_list parsing bug (Hiroyuki Inoue).
 	- Fixed bad comm_write() calls in passStart() and sslStart()
 	  (Martin Boening).
+	- Changed storeMaintainSwapSpace() to scan hash table buckets in
+	  random order.
+	- Added dynamic LRU Age expiration feature.  Expiration age is
+	  calculated as a function of store_swap_size so that object
+	  deletion rate matches the addition rate and we avoid emergency
+	  object purge mode.
 
 Changes to squid-1.novm.4 (January XX, 1996):
 
