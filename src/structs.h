@@ -457,7 +457,7 @@ struct _hash_table {
     HASHHASH *hash;
     unsigned int size;
     unsigned int current_slot;
-    hash_link *current_ptr;
+    hash_link **Current;
     int count;
 };
 
