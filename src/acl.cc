@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.195 1999/01/24 02:22:53 wessels Exp $
+ * $Id: acl.cc,v 1.196 1999/01/24 04:03:48 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -68,7 +68,9 @@ static squid_acl aclStrToType(const char *s);
 static int decode_addr(const char *, struct in_addr *, struct in_addr *);
 static void aclCheck(aclCheck_t * checklist);
 static void aclCheckCallback(aclCheck_t * checklist, allow_t answer);
+#if USE_IDENT
 static IDCB aclLookupIdentDone;
+#endif
 static IPH aclLookupDstIPDone;
 static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
@@ -171,8 +173,10 @@ aclStrToType(const char *s)
 	return ACL_URL_REGEX;
     if (!strcmp(s, "port"))
 	return ACL_URL_PORT;
+#if USE_IDENT
     if (!strcmp(s, "ident"))
 	return ACL_IDENT;
+#endif
     if (!strncmp(s, "proto", 5))
 	return ACL_PROTO;
     if (!strcmp(s, "method"))
@@ -221,8 +225,10 @@ aclTypeToStr(squid_acl type)
 	return "url_regex";
     if (type == ACL_URL_PORT)
 	return "port";
+#if USE_IDENT
     if (type == ACL_IDENT)
 	return "ident";
+#endif
     if (type == ACL_PROTO)
 	return "proto";
     if (type == ACL_METHOD)
@@ -689,9 +695,11 @@ aclParseAclLine(acl ** head)
     case ACL_URL_PORT:
 	aclParseIntRange(&A->data);
 	break;
+#if USE_IDENT
     case ACL_IDENT:
 	aclParseWordList(&A->data);
 	break;
+#endif
     case ACL_PROTO:
 	aclParseProtoList(&A->data);
 	break;
@@ -1309,14 +1317,16 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     case ACL_URL_PORT:
 	return aclMatchIntegerRange(ae->data, r->port);
 	/* NOTREACHED */
+#if USE_IDENT
     case ACL_IDENT:
-	if (*checklist->ident) {
+	if (checklist->ident[0]) {
 	    return aclMatchUser(ae->data, checklist->ident);
 	} else {
 	    checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
 	/* NOTREACHED */
+#endif
     case ACL_PROTO:
 	return aclMatchInteger(ae->data, r->protocol);
 	/* NOTREACHED */
@@ -1505,7 +1515,9 @@ aclCheck(aclCheck_t * checklist)
 	     */
 	    allow = ACCESS_REQ_PROXY_AUTH;
 	    match = -1;
-	} else if (checklist->state[ACL_IDENT] == ACL_LOOKUP_NEEDED) {
+	}
+#if USE_IDENT
+	else if (checklist->state[ACL_IDENT] == ACL_LOOKUP_NEEDED) {
 	    debug(28, 3) ("aclCheck: Doing ident lookup\n");
 	    if (cbdataValid(checklist->conn)) {
 		identStart(&checklist->conn->me, &checklist->conn->peer,
@@ -1520,6 +1532,7 @@ aclCheck(aclCheck_t * checklist)
 		match = -1;
 	    }
 	}
+#endif
 	/*
 	 * We are done with this _acl_access entry.  Either the request
 	 * is allowed, denied, requires authentication, or we move on to
@@ -1554,10 +1567,12 @@ aclChecklistFree(aclCheck_t * checklist)
     if (checklist->request)
 	requestUnlink(checklist->request);
     checklist->request = NULL;
+#if USE_IDENT
     if (checklist->conn) {
 	cbdataUnlock(checklist->conn);
 	checklist->conn = NULL;
     }
+#endif
     cbdataFree(checklist);
 }
 
@@ -1573,6 +1588,7 @@ aclCheckCallback(aclCheck_t * checklist, allow_t answer)
     aclChecklistFree(checklist);
 }
 
+#if USE_IDENT
 static void
 aclLookupIdentDone(const char *ident, void *data)
 {
@@ -1583,13 +1599,15 @@ aclLookupIdentDone(const char *ident, void *data)
     } else {
 	xstrncpy(checklist->ident, "-", sizeof(checklist->ident));
     }
-    /* Cache the ident result in the connection, to avoid redoing ident lookup
+    /*
+     * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    if (cbdataValid(checklist->conn) && !*checklist->conn->ident)
+    if (cbdataValid(checklist->conn) && !checklist->conn->ident[0])
 	xstrncpy(checklist->conn->ident, checklist->ident, sizeof(checklist->conn->ident));
     aclCheck(checklist);
 }
+#endif
 
 static void
 aclLookupDstIPDone(const ipcache_addrs * ia, void *data)
@@ -1660,8 +1678,10 @@ aclChecklistCreate(const acl_access * A,
 	checklist->state[i] = ACL_LOOKUP_NONE;
     if (user_agent)
 	xstrncpy(checklist->browser, user_agent, BROWSERNAMELEN);
+#if USE_IDENT
     if (ident)
 	xstrncpy(checklist->ident, ident, USER_IDENT_SZ);
+#endif
     checklist->auth_user = NULL;	/* init to NULL */
     return checklist;
 }
@@ -1743,7 +1763,9 @@ aclDestroyAcls(acl ** head)
 #if SQUID_SNMP
 	case ACL_SNMP_COMMUNITY:
 #endif
+#if USE_IDENT
 	case ACL_IDENT:
+#endif
 	case ACL_PROXY_AUTH:
 	    wordlistDestroy((wordlist **) & a->data);
 	    break;
@@ -2067,7 +2089,9 @@ aclDumpGeneric(const acl * a)
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
 #endif
+#if USE_IDENT
     case ACL_IDENT:
+#endif
     case ACL_PROXY_AUTH:
 	return aclDumpDomainList(a->data);
 	break;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.143 1999/01/12 16:42:17 wessels Exp $
+ * $Id: enums.h,v 1.144 1999/01/24 04:03:51 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -97,7 +97,9 @@ typedef enum {
     ACL_URLPATH_REGEX,
     ACL_URL_REGEX,
     ACL_URL_PORT,
+#if USE_IDENT
     ACL_IDENT,
+#endif
     ACL_PROTO,
     ACL_METHOD,
     ACL_BROWSER,
