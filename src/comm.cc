@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.380 2003/07/06 14:16:56 hno Exp $
+ * $Id: comm.cc,v 1.381 2003/07/10 01:31:50 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -53,6 +53,9 @@ class ConnectStateData
 {
 
 public:
+    void *operator new (size_t);
+    void operator delete (void *);
+    void deleteSelf() const;
     static void Connect (int fd, void *me);
     void connect();
     void callCallback(comm_err_t status, int xerrno);
@@ -69,6 +72,9 @@ public:
     int tries;
     int addrcount;
     int connstart;
+
+private:
+    CBDATA_CLASS(ConnectStateData);
 };
 
 /* STATIC */
@@ -87,7 +93,6 @@ static IPH commConnectDnsHandle;
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
 static void requireOpenAndActive(int const fd);
-CBDATA_TYPE(ConnectStateData);
 
 static PF comm_accept_try;
 
@@ -235,7 +240,7 @@ class CommReadCallbackData : public CommCallbackData
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    void deleteSelf() const;
+    virtual void deleteSelf() const;
     CommReadCallbackData(CommCommonCallback const &, CallBack<IOCB> aCallback, int);
     virtual comm_callback_t getType() const { return COMM_CB_READ; }
 
@@ -253,7 +258,7 @@ class CommAcceptCallbackData : public CommCallbackData
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    void deleteSelf() const;
+    virtual void deleteSelf() const;
     CommAcceptCallbackData(int const anFd, CallBack<IOACB>, comm_err_t, int, int, ConnectionDetail const &);
     virtual void callCallback();
 
@@ -270,7 +275,7 @@ class CommFillCallbackData : public CommCallbackData
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    void deleteSelf() const;
+    virtual void deleteSelf() const;
     CommFillCallbackData(int const anFd, CallBack<IOFCB> aCallback, comm_err_t, int);
     virtual void callCallback();
 
@@ -285,7 +290,7 @@ class CommWriteCallbackData : public CommCallbackData
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    void deleteSelf() const;
+    virtual void deleteSelf() const;
     CommWriteCallbackData(int const anFd, CallBack<IOWCB> aCallback, comm_err_t, int, int);
     virtual void callCallback();
 
@@ -1259,12 +1264,33 @@ comm_openex(int sock_type,
     return new_socket;
 }
 
+CBDATA_CLASS_INIT(ConnectStateData);
+
+void *
+ConnectStateData::operator new (size_t size)
+{
+    CBDATA_INIT_TYPE(ConnectStateData);
+    return cbdataAlloc(ConnectStateData);
+}
+
+void
+ConnectStateData::operator delete (void *address)
+{
+    cbdataFree(address);
+}
+
+void
+ConnectStateData::deleteSelf() const
+{
+    delete this;
+}
+
 void
 commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
 {
     ConnectStateData *cs;
     debug(5, 3) ("commConnectStart: FD %d, data %p, %s:%d\n", fd, data, host, (int) port);
-    cs = cbdataAlloc(ConnectStateData);
+    cs = new ConnectStateData;
     cs->fd = fd;
     cs->host = xstrdup(host);
     cs->port = port;
@@ -1326,7 +1352,7 @@ commConnectFree(int fd, void *data)
     debug(5, 3) ("commConnectFree: FD %d\n", fd);
     cbdataReferenceDone(cs->callback.data);
     safe_free(cs->host);
-    cbdataFree(cs);
+    cs->deleteSelf();
 }
 
 static void
@@ -2098,8 +2124,6 @@ comm_init(void) {
      * after accepting a client but before it opens a socket or a file.
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
-
-    CBDATA_INIT_TYPE(ConnectStateData);
 
     comm_write_pool = memPoolCreate("CommWriteStateData", sizeof(CommWriteStateData));
 
