@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.55 2003/02/21 22:50:29 robertc Exp $
+ * $Id: store_dir_aufs.cc,v 1.56 2003/05/11 10:00:41 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -40,8 +40,6 @@
 #include "ufscommon.h"
 #include "SwapDir.h"
 
-MemPool *aufs_qread_pool = NULL;
-MemPool *aufs_qwrite_pool = NULL;
 static int asyncufs_initialised = 0;
 
 /* The MAIN externally visible function */
@@ -143,8 +141,6 @@ static void
 storeAufsDirDone(void)
 {
     aioDone();
-    memPoolDestroy(&aufs_qread_pool);
-    memPoolDestroy(&aufs_qwrite_pool);
     asyncufs_initialised = 0;
 }
 
