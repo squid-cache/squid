@@ -1,3 +1,10 @@
+	- Security controls for the SNMP agent added. Besides communities
+          (like password) and views (part of tree accessible), the snmp_acl
+	  config option can be used to do acl based access checks per
+	  community.
+	- SNMP agent was heavily re-written, based on cmu-snmpV1.8. 
+	  You can now walk through the whole mib tree. Several 
+	  new variables added under cacheProtoAggregateStats
 	- Added rudimental statistics for HTTP headers.
 	- Adjusted StatLogHist to a more "generic"/flexible StatHist.
 	  Moved StatHist implementation into a separate file.
