@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.358 2000/05/02 18:51:51 hno Exp $
+ * $Id: http.cc,v 1.359 2000/05/02 21:21:08 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -327,10 +327,12 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     if (httpState->reply_hdr == NULL)
 	httpState->reply_hdr = memAllocate(MEM_8K_BUF);
     assert(httpState->reply_hdr_state == 0);
-    hdr_len = strlen(httpState->reply_hdr);
+    hdr_len = httpState->reply_hdr_size;
     room = 8191 - hdr_len;
-    strncat(httpState->reply_hdr, buf, room < size ? room : size);
+    memcpy(httpState->reply_hdr + hdr_len, buf, room < size ? room : size);
     hdr_len += room < size ? room : size;
+    httpState->reply_hdr[hdr_len] = '\0';
+    httpState->reply_hdr_size = hdr_len;
     if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
 	debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", httpState->reply_hdr);
 	httpState->reply_hdr_state += 2;
@@ -340,9 +342,17 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     t = httpState->reply_hdr + hdr_len;
     /* headers can be incomplete only if object still arriving */
     if (!httpState->eof) {
-	size_t k = headersEnd(httpState->reply_hdr, 8192);
-	if (0 == k)
-	    return;		/* headers not complete */
+	size_t k = headersEnd(httpState->reply_hdr, hdr_len);
+	if (0 == k) {
+	    if (hdr_len >= 8191 || room == 0) {
+		debug(11, 3) ("httpProcessReplyHeader: Too large HTTP header: '%s'\n", httpState->reply_hdr);
+		httpState->reply_hdr_state += 2;
+		reply->sline.status = HTTP_INVALID_HEADER;
+		return;
+	    } else {
+		return;		/* headers not complete */
+	    }
+	}
 	t = httpState->reply_hdr + k;
     }
     *t = '\0';

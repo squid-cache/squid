@@ -53,6 +53,8 @@ Changes to Squid-2.4.DEVEL3 ():
 	- squid.conf.default now indicates if a directive isn't enabled in
 	  the installed binary, and what configure option to use for enabling it
 	- Fixed a temporary memory leak on persistent POSTs
+	- Fixed a temporary memory leak when the server response headers
+	  includes NULL characters
 
 Changes to Squid-2.4.DEVEL2 ():
 
