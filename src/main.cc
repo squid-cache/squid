@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.312 2000/05/31 05:02:11 wessels Exp $
+ * $Id: main.cc,v 1.313 2000/05/31 07:01:42 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -494,7 +494,9 @@ mainInitialize(void)
 #endif
 
     if (!configured_once) {
+#if USE_UNLINKD
 	unlinkdInit();
+#endif
 	urlInitialize();
 	cachemgrInit();
 	statInit();
@@ -905,7 +907,9 @@ SquidShutdown(void *unused)
 #endif
     releaseServerSockets();
     commCloseAllSockets();
+#if USE_UNLINKD
     unlinkdClose();
+#endif
     storeDirSync();		/* Flush pending object writes/unlinks */
     storeDirWriteCleanLogs(0);
     PrintRusage();
