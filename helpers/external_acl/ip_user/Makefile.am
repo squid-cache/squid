@@ -1,7 +1,7 @@
 #
 #  Makefile for the ip_user external_acl helper by Rodrigo Campos
 #
-#  $Id: Makefile.am,v 1.1 2002/07/06 12:23:13 hno Exp $
+#  $Id: Makefile.am,v 1.2 2002/07/22 00:38:14 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -22,7 +22,7 @@ EXTRA_DIST = \
 	license \
 	README
 
-# sysconf_DATA = \
+# sysconf_DATA = 
 
 LDADD	= @XTRA_LIBS@
 
