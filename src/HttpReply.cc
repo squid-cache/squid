@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.29 1998/07/22 20:36:49 wessels Exp $
+ * $Id: HttpReply.cc,v 1.30 1998/08/14 19:25:11 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -199,7 +199,7 @@ httpPacked304Reply(const HttpReply * rep)
 {
     static const http_hdr_type ImsEntries[] =
     {HDR_DATE, HDR_CONTENT_LENGTH, HDR_CONTENT_TYPE, HDR_EXPIRES, HDR_LAST_MODIFIED, /* eof */ HDR_OTHER};
-    http_hdr_type t;
+    int t;
     MemBuf mb;
     Packer p;
     HttpHeaderEntry *e;

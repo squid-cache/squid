@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.376 1998/08/14 09:22:32 wessels Exp $
+ * $Id: client_side.cc,v 1.377 1998/08/14 19:25:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -581,7 +581,7 @@ httpRequestFree(void *data)
     if (entry)
 	mem = entry->mem_obj;
     if (http->out.size || http->log_type) {
-	http->al.icp.opcode = 0;
+	http->al.icp.opcode = ICP_INVALID;
 	http->al.url = http->log_uri;
 	debug(33, 9) ("httpRequestFree: al.url='%s'\n", http->al.url);
 	if (mem) {

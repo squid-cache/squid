@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.243 1998/08/14 09:22:35 wessels Exp $
+ * $Id: ftp.cc,v 1.244 1998/08/14 19:25:19 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2162,8 +2162,8 @@ ftpSendReply(FtpStateData * ftpState)
 {
     ErrorState *err;
     int code = ftpState->ctrl.replycode;
-    int http_code;
-    int err_code = ERR_NONE;
+    http_status http_code;
+    err_type err_code = ERR_NONE;
     debug(9, 5) ("ftpSendReply: %s, code %d\n",
 	storeUrl(ftpState->entry), code);
     if (cbdataValid(ftpState))

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.22 1998/07/22 20:53:58 wessels Exp $
+ * $Id: icp_v3.cc,v 1.23 1998/08/14 19:25:22 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -81,7 +81,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 		 * count this DENIED query in the clientdb, even though
 		 * we're not sending an ICP reply...
 		 */
-		clientdbUpdate(from.sin_addr, LOG_UDP_DENIED, Config.Port.icp, 0);
+		clientdbUpdate(from.sin_addr, LOG_UDP_DENIED, PROTO_ICP, 0);
 	    } else {
 		reply = icpCreateMessage(ICP_DENIED, 0, url, header.reqnum, 0);
 		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, 0);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.174 1998/07/31 00:15:33 wessels Exp $
+ * $Id: acl.cc,v 1.175 1998/08/14 19:25:13 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -332,7 +332,6 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
     default:
 	debug(28, 0) ("decode_addr: Invalid IP address '%s'\n", asc);
 	return 0;		/* This is not valid address */
-	break;
     }
 
     if (mask != NULL) {		/* mask == NULL if called to decode a netmask */
