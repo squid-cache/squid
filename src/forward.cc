@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.62 1999/06/19 16:34:36 wessels Exp $
+ * $Id: forward.cc,v 1.63 1999/06/24 22:53:45 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -112,7 +112,7 @@ fwdCheckRetry(FwdState * fwdState)
 	return 0;
     if (fwdState->flags.dont_retry)
 	return 0;
-    if (pumpMethod(fwdState->request->method))
+    if (fwdState->request->body)
 	if (0 == pumpRestart(fwdState->request))
 	    return 0;
     return 1;
@@ -361,7 +361,7 @@ fwdReforward(FwdState * fwdState)
     }
     if (fwdState->n_tries > 9)
 	return 0;
-    if (pumpMethod(fwdState->request->method))
+    if (fwdState->request->body)
 	if (0 == pumpRestart(fwdState->request))
 	    return 0;
     assert(fs);
