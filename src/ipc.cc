@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.2 1998/02/02 21:16:26 wessels Exp $
+ * $Id: ipc.cc,v 1.3 1998/02/10 00:58:42 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -244,6 +244,9 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
     if (cwfd != crfd)
 	if (cwfd > 2)
 	    close(cwfd);
+#if HAVE_SETSID
+    setsid();
+#endif
     execvp(prog, args);
     debug(50, 0) ("ipcCreate: %s: %s\n", prog, xstrerror());
     _exit(1);

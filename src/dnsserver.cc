@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.43 1998/02/10 00:42:54 wessels Exp $
+ * $Id: dnsserver.cc,v 1.44 1998/02/10 00:58:44 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -265,9 +265,6 @@ main(int argc, char *argv[])
     int i;
     int c;
 
-#if HAVE_SETSID
-    setsid();
-#endif
     safe_inet_addr("255.255.255.255", &no_addr);
 
 #if HAVE_RES_INIT

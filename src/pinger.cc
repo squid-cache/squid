@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.31 1998/02/10 00:42:55 wessels Exp $
+ * $Id: pinger.cc,v 1.32 1998/02/10 00:58:43 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -319,9 +319,6 @@ main(int argc, char *argv[])
     char *t;
     time_t last_check_time = 0;
 
-#if HAVE_SETSID
-    setsid();
-#endif
     if ((t = getenv("SQUID_DEBUG")))
 	debug_args = xstrdup(t);
     getCurrentTime();
