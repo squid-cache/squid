@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.68 1996/07/15 23:16:32 wessels Exp $
+ * $Id: store.cc,v 1.69 1996/07/17 17:10:00 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -438,7 +438,8 @@ static void storeLog(tag, e)
 	strlen(logmsg),
 	0,
 	NULL,
-	NULL);
+	NULL,
+	xfree);
 }
 
 
@@ -1010,20 +1011,12 @@ void storeAppend(e, data, len)
 
     if (len) {
 	debug(20, 5, "storeAppend: appending %d bytes for '%s'\n", len, e->key);
-
-	/* get some extra storage if needed */
 	(void) storeGetMemSpace(len, 0);
 	store_mem_size += len;
-	debug(20, 8, "storeAppend: growing store_mem_size by %d\n", len);
-	debug(20, 8, "storeAppend: store_mem_size = %d\n", store_mem_size);
-
-	(void) e->mem_obj->data->mem_append(e->mem_obj->data,
-	    data, len);
+	(void) e->mem_obj->data->mem_append(e->mem_obj->data, data, len);
 	e->mem_obj->e_current_len += len;
-	debug(20, 8, "storeAppend: e_current_len = %d\n",
-	    e->mem_obj->e_current_len);
     }
-    if ((e->store_status != STORE_ABORTED) && !(e->flag & DELAY_SENDING))
+    if (e->store_status != STORE_ABORTED && !(e->flag & DELAY_SENDING))
 	InvokeHandlers(e);
 }
 
@@ -1109,7 +1102,7 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
 	debug(20, 0, "storeSwapInHandle: SwapIn failure (err code = %d).\n", flag);
 	put_free_8k_page(mem->e_swap_buf);
 	storeSetMemStatus(e, NOT_IN_MEMORY);
-	file_close(mem->swap_fd);
+	file_close(mem->swapin_fd);
 	swapInError(-1, e);	/* Invokes storeAbort() and completes the I/O */
 	if (mem->swapin_complete_handler) {
 	    (*mem->swapin_complete_handler) (2, mem->swapin_complete_data);
@@ -1129,7 +1122,7 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
 
     if (mem->e_current_len < e->object_len && flag != DISK_EOF) {
 	/* some more data to swap in, reschedule */
-	file_read(mem->swap_fd,
+	file_read(mem->swapin_fd,
 	    mem->e_swap_buf,
 	    SWAP_BUF,
 	    mem->swap_offset,
@@ -1139,7 +1132,7 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
 	/* complete swapping in */
 	storeSetMemStatus(e, IN_MEMORY);
 	put_free_8k_page(mem->e_swap_buf);
-	file_close(mem->swap_fd);
+	file_close(mem->swapin_fd);
 	storeLog(STORE_LOG_SWAPIN, e);
 	debug(20, 5, "storeSwapInHandle: SwapIn complete: <URL:%s> from %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
@@ -1170,17 +1163,18 @@ static int storeSwapInStart(e, swapin_complete_handler, swapin_complete_data)
 {
     int fd;
     char *path = NULL;
+    MemObject *mem = NULL;
 
     /* sanity check! */
     if ((e->swap_status != SWAP_OK) || (e->swap_file_number < 0)) {
 	debug(20, 0, "storeSwapInStart: <No filename:%d> ? <URL:%s>\n",
 	    e->swap_file_number, e->url);
 	if (e->mem_obj)
-	    e->mem_obj->swap_fd = -1;
+	    e->mem_obj->swapin_fd = -1;
 	return -1;
     }
     /* create additional structure for object in memory */
-    e->mem_obj = new_MemObject();
+    e->mem_obj = mem = new_MemObject();
 
     path = storeSwapFullPath(e->swap_file_number, NULL);
     if ((fd = file_open(path, NULL, O_RDONLY)) < 0) {
@@ -1189,24 +1183,24 @@ static int storeSwapInStart(e, swapin_complete_handler, swapin_complete_data)
 	/* Invoke a store abort that should free the memory object */
 	return -1;
     }
-    e->mem_obj->swap_fd = (short) fd;
+    mem->swapin_fd = (short) fd;
     debug(20, 5, "storeSwapInStart: initialized swap file '%s' for <URL:%s>\n",
 	path, e->url);
 
     storeSetMemStatus(e, SWAPPING_IN);
-    e->mem_obj->data = new_MemObjectData();
-    e->mem_obj->swap_offset = 0;
-    e->mem_obj->e_swap_buf = get_free_8k_page();
+    mem->data = new_MemObjectData();
+    mem->swap_offset = 0;
+    mem->e_swap_buf = get_free_8k_page();
 
     /* start swapping daemon */
     file_read(fd,
-	e->mem_obj->e_swap_buf,
+	mem->e_swap_buf,
 	SWAP_BUF,
-	e->mem_obj->swap_offset,
+	mem->swap_offset,
 	(FILE_READ_HD) storeSwapInHandle,
 	(void *) e);
-    e->mem_obj->swapin_complete_handler = swapin_complete_handler;
-    e->mem_obj->swapin_complete_data = swapin_complete_data;
+    mem->swapin_complete_handler = swapin_complete_handler;
+    mem->swapin_complete_data = swapin_complete_data;
     return 0;
 }
 
@@ -1216,19 +1210,18 @@ void storeSwapOutHandle(fd, flag, e)
      StoreEntry *e;
 {
     static char filename[MAX_FILE_NAME_LEN];
-    char *page_ptr = NULL;
+    MemObject *mem = e->mem_obj;
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
 
     e->timestamp = squid_curtime;
     storeSwapFullPath(e->swap_file_number, filename);
-    page_ptr = e->mem_obj->e_swap_buf;
 
     if (flag < 0) {
 	debug(20, 1, "storeSwapOutHandle: SwapOut failure (err code = %d).\n",
 	    flag);
 	e->swap_status = NO_SWAP;
-	put_free_8k_page(page_ptr);
+	put_free_8k_page(mem->e_swap_buf);
 	file_close(fd);
 	storeRelease(e);
 	if (e->swap_file_number != -1) {
@@ -1247,40 +1240,40 @@ void storeSwapOutHandle(fd, flag, e)
 	return;
     }
     debug(20, 6, "storeSwapOutHandle: e->swap_offset    = %d\n",
-	e->mem_obj->swap_offset);
+	mem->swap_offset);
     debug(20, 6, "storeSwapOutHandle: e->e_swap_buf_len = %d\n",
-	e->mem_obj->e_swap_buf_len);
+	mem->e_swap_buf_len);
     debug(20, 6, "storeSwapOutHandle: e->object_len     = %d\n",
 	e->object_len);
     debug(20, 6, "storeSwapOutHandle: store_swap_size   = %dk\n",
 	store_swap_size);
 
-    e->mem_obj->swap_offset += e->mem_obj->e_swap_buf_len;
+    mem->swap_offset += mem->e_swap_buf_len;
     /* round up */
-    store_swap_size += ((e->mem_obj->e_swap_buf_len + 1023) >> 10);
-    if (e->mem_obj->swap_offset >= e->object_len) {
+    store_swap_size += ((mem->e_swap_buf_len + 1023) >> 10);
+    if (mem->swap_offset >= e->object_len) {
 	/* swapping complete */
 	e->swap_status = SWAP_OK;
-	file_close(e->mem_obj->swap_fd);
+	file_close(mem->swapout_fd);
 	storeLog(STORE_LOG_SWAPOUT, e);
 	debug(20, 5, "storeSwapOutHandle: SwapOut complete: <URL:%s> to %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
-	put_free_8k_page(page_ptr);
+	put_free_8k_page(mem->e_swap_buf);
 	sprintf(logmsg, "%s %s %d %d %d\n",
 	    filename,
 	    e->url,
 	    (int) e->expires,
 	    (int) e->timestamp,
 	    e->object_len);
-	/* Automatically freed by file_write because no-handlers */
 	file_write(swaplog_fd,
 	    xstrdup(logmsg),
 	    strlen(logmsg),
 	    swaplog_lock,
 	    NULL,
-	    NULL);
+	    NULL,
+	    xfree);
 	CacheInfo->proto_newobject(CacheInfo,
-	    e->mem_obj->request->protocol,
+	    mem->request->protocol,
 	    e->object_len,
 	    FALSE);
 	/* check if it's request to be released. */
@@ -1292,16 +1285,17 @@ void storeSwapOutHandle(fd, flag, e)
     }
     /* write some more data, reschedule itself. */
     storeCopy(e,
-	e->mem_obj->swap_offset,
+	mem->swap_offset,
 	SWAP_BUF,
-	e->mem_obj->e_swap_buf,
-	&(e->mem_obj->e_swap_buf_len));
-    file_write(e->mem_obj->swap_fd,
-	e->mem_obj->e_swap_buf,
-	e->mem_obj->e_swap_buf_len,
-	e->mem_obj->e_swap_access,
+	mem->e_swap_buf,
+	&(mem->e_swap_buf_len));
+    file_write(mem->swapout_fd,
+	mem->e_swap_buf,
+	mem->e_swap_buf_len,
+	mem->e_swap_access,
 	storeSwapOutHandle,
-	e);
+	e,
+	NULL);
     return;
 
 }
@@ -1313,14 +1307,14 @@ static int storeSwapOutStart(e)
 {
     int fd;
     static char swapfilename[MAX_FILE_NAME_LEN];
-
+    int x;
+    MemObject *mem = e->mem_obj;
     /* Suggest a new swap file number */
     swapfileno = (swapfileno + 1) % (MAX_SWAP_FILE);
     /* Record the number returned */
     swapfileno = file_map_allocate(swapfileno);
     storeSwapFullPath(swapfileno, swapfilename);
-
-    fd = file_open(swapfilename, NULL, O_RDWR | O_CREAT | O_TRUNC);
+    fd = file_open(swapfilename, NULL, O_WRONLY | O_CREAT | O_TRUNC);
     if (fd < 0) {
 	debug(20, 0, "storeSwapOutStart: Unable to open swapfile: %s\n",
 	    swapfilename);
@@ -1328,12 +1322,11 @@ static int storeSwapOutStart(e)
 	e->swap_file_number = -1;
 	return -1;
     }
-    e->mem_obj->swap_fd = (short) fd;
+    mem->swapout_fd = (short) fd;
     debug(20, 5, "storeSwapOutStart: Begin SwapOut <URL:%s> to FD %d FILE %s.\n",
 	e->url, fd, swapfilename);
-
     e->swap_file_number = swapfileno;
-    if ((e->mem_obj->e_swap_access = file_write_lock(e->mem_obj->swap_fd)) < 0) {
+    if ((mem->e_swap_access = file_write_lock(mem->swapout_fd)) < 0) {
 	debug(20, 0, "storeSwapOutStart: Unable to lock swapfile: %s\n",
 	    swapfilename);
 	file_map_bit_reset(e->swap_file_number);
@@ -1341,23 +1334,24 @@ static int storeSwapOutStart(e)
 	return -1;
     }
     e->swap_status = SWAPPING_OUT;
-    e->mem_obj->swap_offset = 0;
-    e->mem_obj->e_swap_buf = get_free_8k_page();
-    e->mem_obj->e_swap_buf_len = 0;
-
-    storeCopy(e, 0, SWAP_BUF, e->mem_obj->e_swap_buf,
-	&(e->mem_obj->e_swap_buf_len));
-
+    mem->swap_offset = 0;
+    mem->e_swap_buf = get_free_8k_page();
+    mem->e_swap_buf_len = 0;
+    storeCopy(e,
+	0,
+	SWAP_BUF,
+	mem->e_swap_buf,
+	&(mem->e_swap_buf_len));
     /* start swapping daemon */
-    if (file_write(e->mem_obj->swap_fd,
-	    e->mem_obj->e_swap_buf,
-	    e->mem_obj->e_swap_buf_len,
-	    e->mem_obj->e_swap_access,
-	    storeSwapOutHandle,
-	    e) != DISK_OK) {
-	/* This shouldn't happen */
-	fatal_dump(NULL);
-    }
+    x = file_write(mem->swapout_fd,
+	mem->e_swap_buf,
+	mem->e_swap_buf_len,
+	mem->e_swap_access,
+	storeSwapOutHandle,
+	e,
+	NULL);
+    if (x != DISK_OK)
+	fatal_dump(NULL);	/* This shouldn't happen */
     return 0;
 }
 
@@ -1384,7 +1378,7 @@ static int storeDoRebuildFromDisk(data)
     /* load a number of objects per invocation */
     for (count = 0; count < data->speed; count++) {
 	if (!fgets(data->line_in, 4095, data->log))
-	    return 0;		/* We are done */
+	    return !diskWriteIsComplete(swaplog_fd);	/* We are done */
 
 	if ((++data->linecount & 0xFFF) == 0)
 	    debug(20, 1, "  %7d Lines read so far.\n", data->linecount);
@@ -1504,7 +1498,8 @@ static int storeDoRebuildFromDisk(data)
 	    strlen(logmsg),
 	    swaplog_lock,
 	    NULL,
-	    NULL);
+	    NULL,
+	    xfree);
 	storeAddDiskRestore(url,
 	    sfileno,
 	    (int) size,
@@ -1515,7 +1510,6 @@ static int storeDoRebuildFromDisk(data)
 	    (int) size,
 	    TRUE);
     }
-
     return 1;
 }
 
@@ -1551,7 +1545,7 @@ static void storeRebuiltFromDisk(data)
     if (file_write_unlock(swaplog_fd, swaplog_lock) != DISK_OK)
 	fatal_dump("storeRebuiltFromDisk: swaplog unlock failed");
     file_close(swaplog_fd);
-    if ((swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT | O_APPEND)) < 0)
+    if ((swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT)) < 0)
 	fatal_dump("storeRebuiltFromDisk: file_open(swaplog_file) failed");
     swaplog_lock = file_write_lock(swaplog_fd);
 }
@@ -1591,8 +1585,7 @@ void storeStartRebuildFromDisk()
     if (swaplog_fd > -1)
 	file_close(swaplog_fd);
     sprintf(tmp_filename, "%s.new", swaplog_file);
-    swaplog_fd = file_open(tmp_filename, NULL,
-	O_WRONLY | O_CREAT | O_APPEND | O_TRUNC);
+    swaplog_fd = file_open(tmp_filename, NULL, O_WRONLY | O_CREAT | O_TRUNC);
     debug(20, 3, "swaplog_fd %d is now '%s'\n", swaplog_fd, tmp_filename);
     if (swaplog_fd < 0) {
 	debug(20, 0, "storeStartRebuildFromDisk: %s: %s\n",
@@ -2630,7 +2623,7 @@ int storeInit()
     if (strcmp((fname = getStoreLogFile()), "none") == 0)
 	storelog_fd = -1;
     else
-	storelog_fd = file_open(fname, NULL, O_WRONLY | O_APPEND | O_CREAT);
+	storelog_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
     if (storelog_fd < 0)
 	debug(20, 1, "Store logging disabled\n");
 
@@ -2643,7 +2636,7 @@ int storeInit()
 
     sprintf(swaplog_file, "%s/log", swappath(0));
 
-    swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT | O_APPEND);
+    swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT);
     debug(20, 3, "swaplog_fd %d is now '%s'\n", swaplog_fd, swaplog_file);
     if (swaplog_fd < 0) {
 	sprintf(tmp_error_buf, "Cannot open swap logfile: %s", swaplog_file);
@@ -2838,7 +2831,7 @@ int storeWriteCleanLog()
 	return 0;
     }
     file_close(swaplog_fd);
-    swaplog_fd = file_open(swaplog_file, NULL, O_RDWR | O_CREAT | O_APPEND);
+    swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT);
     if (swaplog_fd < 0) {
 	sprintf(tmp_error_buf, "Cannot open swap logfile: %s", swaplog_file);
 	fatal(tmp_error_buf);
@@ -2911,7 +2904,7 @@ void storeRotateLog()
 	sprintf(to, "%s.%d", fname, 0);
 	rename(fname, to);
     }
-    storelog_fd = file_open(fname, NULL, O_WRONLY | O_APPEND | O_CREAT);
+    storelog_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
     if (storelog_fd < 0) {
 	debug(20, 0, "storeRotateLog: %s: %s\n", fname, xstrerror());
 	debug(20, 1, "Store logging disabled\n");
