@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.48 1998/03/27 18:41:14 wessels Exp $
+ * $Id: send-announce.cc,v 1.49 1998/04/04 05:17:47 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -39,6 +39,8 @@ start_announce(void *datanotused)
     void *junk;
     if (0 == Config.onoff.announce)
 	return;
+    if (theOutIcpConnection < 0)
+	return;
     cbdataAdd(junk = xmalloc(1), MEM_NONE);
     ipcache_nbgethostbyname(Config.Announce.host, send_announce, junk);
     eventAdd("send_announce", start_announce, NULL, Config.Announce.period);
@@ -49,13 +51,14 @@ send_announce(const ipcache_addrs * ia, void *junk)
 {
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
-    icpUdpData *qdata = NULL;
+    struct sockaddr_in S;
     char *host = Config.Announce.host;
     char *file = NULL;
     u_short port = Config.Announce.port;
     int l;
     int n;
     int fd;
+    int x;
     cbdataFree(junk);
     if (ia == NULL) {
 	debug(27, 1) ("send_announce: Unknown host '%s'\n", host);
@@ -91,15 +94,15 @@ send_announce(const ipcache_addrs * ia, void *junk)
 	    debug(50, 1) ("send_announce: %s: %s\n", file, xstrerror());
 	}
     }
-    qdata = xcalloc(1, sizeof(icpUdpData));
-    qdata->msg = xstrdup(sndbuf);
-    qdata->len = strlen(sndbuf) + 1;
-    qdata->address.sin_family = AF_INET;
-    qdata->address.sin_port = htons(port);
-    qdata->address.sin_addr = ia->in_addrs[0];
-    AppendUdp(qdata);
-    commSetSelect(theOutIcpConnection,
-	COMM_SELECT_WRITE,
-	icpUdpReply,
-	qdata, 0);
+    memset(&S, '\0', sizeof(S));
+    S.sin_family = AF_INET;
+    S.sin_port = htons(port);
+    S.sin_addr = ia->in_addrs[0];
+    assert(theOutIcpConnection > 0);
+    x = comm_udp_sendto(theOutIcpConnection,
+	&S, sizeof(S),
+	sndbuf, strlen(sndbuf) + 1);
+    if (x < 0)
+	debug(27, 1) ("send_announce: FD %d: %s\n", theOutIcpConnection,
+	    xstrerror());
 }

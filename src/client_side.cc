@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.254 1998/04/04 00:23:13 wessels Exp $
+ * $Id: client_side.cc,v 1.255 1998/04/04 05:17:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -525,27 +525,27 @@ clientUpdateCounters(clientHttpRequest * http)
     if (0 != i->stop.tv_sec && 0 != i->start.tv_sec)
 	statHistCount(&Counter.icp.query_svc_time, tvSubUsec(i->start, i->stop));
 #if CACHE_DIGEST
-	assert(http->request->hier.used_icp + http->request->hier.used_cd < 2);
-	if (http->request->hier.used_icp) {
-		statHistCount(&Counter.icp.client_svc_time, svc_time);
-		Counter.icp.times_used++;
-	}
-	if (http->request->hier.used_cd) {
-		statHistCount(&Counter.cd.client_svc_time, svc_time);
-		Counter.cd.times_used++;
-	}
-	t = httpHeaderGetLastStr(, HDR_X_CACHE);
-	if (NULL != t && 0 == strncmp(t, "HIT", 3)) {
-		if (http->request->hier.cd_hit)
-			Counter.cd.true_hits++;
-		else
-			Counter.cd.false_miss++;
-	} else {
-		if (http->request->hier.cd_hit)
-			Counter.cd.false_hit++;
-		else
-			Counter.cd.true_miss++;
-	}
+    assert(http->request->hier.used_icp + http->request->hier.used_cd < 2);
+    if (http->request->hier.used_icp) {
+	statHistCount(&Counter.icp.client_svc_time, svc_time);
+	Counter.icp.times_used++;
+    }
+    if (http->request->hier.used_cd) {
+	statHistCount(&Counter.cd.client_svc_time, svc_time);
+	Counter.cd.times_used++;
+    }
+    t = httpHeaderGetLastStr(, HDR_X_CACHE);
+    if (NULL != t && 0 == strncmp(t, "HIT", 3)) {
+	if (http->request->hier.cd_hit)
+	    Counter.cd.true_hits++;
+	else
+	    Counter.cd.false_miss++;
+    } else {
+	if (http->request->hier.cd_hit)
+	    Counter.cd.false_hit++;
+	else
+	    Counter.cd.true_miss++;
+    }
 #endif
 }
 
@@ -1288,8 +1288,7 @@ clientProcessRequest2(clientHttpRequest * http)
 	 * so we can use std processing routines for IMS and such */
 	if (EBIT_TEST(r->flags, REQ_IMS) && e->lastmod <= r->ims)
 	    return LOG_TCP_IMS_HIT;
-	else
-	if (e->mem_status == IN_MEMORY)
+	else if (e->mem_status == IN_MEMORY)
 	    return LOG_TCP_MEM_HIT;
 	else
 	    return LOG_TCP_HIT;
@@ -1978,22 +1977,6 @@ httpAccept(int sock, void *notused)
     commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
     commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
     commSetDefer(fd, clientReadDefer, connState);
-}
-
-void
-AppendUdp(icpUdpData * item)
-{
-    item->next = NULL;
-    if (UdpQueueHead == NULL) {
-	UdpQueueHead = item;
-	UdpQueueTail = item;
-    } else if (UdpQueueTail == UdpQueueHead) {
-	UdpQueueTail = item;
-	UdpQueueHead->next = item;
-    } else {
-	UdpQueueTail->next = item;
-	UdpQueueTail = item;
-    }
 }
 
 /* return 1 if the request should be aborted */

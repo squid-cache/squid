@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.242 1998/03/31 05:37:38 wessels Exp $
+ * $Id: comm.cc,v 1.243 1998/04/04 05:17:40 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -662,7 +662,7 @@ int
 comm_udp_sendto(int fd,
     const struct sockaddr_in *to_addr,
     int addr_len,
-    const char *buf,
+    const void *buf,
     int len)
 {
     int x;

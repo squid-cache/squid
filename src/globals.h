@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.49 1998/04/02 17:11:23 rousskov Exp $
+ * $Id: globals.h,v 1.50 1998/04/04 05:17:42 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -85,8 +85,6 @@ extern int reconfiguring;	/* 0 */
 extern int store_rebuilding;	/* 1 */
 extern int store_swap_size;	/* 0 */
 extern unsigned long store_mem_size;	/* 0 */
-extern icpUdpData *UdpQueueHead;	/* NULL */
-extern icpUdpData *UdpQueueTail;	/* NULL */
 extern time_t hit_only_mode_until;	/* 0 */
 extern StatCounters Counter;
 extern char *err_type_str[];
@@ -99,4 +97,4 @@ extern dlink_list store_list;
 extern const String StringNull;	/* { 0, 0, NULL } */
 extern int hot_obj_count;	/* 0 */
 extern int _db_level;
-extern CacheDigest *store_digest; /* NULL */
+extern CacheDigest *store_digest;	/* NULL */

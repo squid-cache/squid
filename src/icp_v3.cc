@@ -32,7 +32,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	url = buf + sizeof(icp_common_t) + sizeof(u_num32);
 	if ((icp_request = urlParse(method, url)) == NULL) {
 	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, PROTO_NONE);
+	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
 	    break;
 	}
 	checklist.src_addr = from.sin_addr;
@@ -49,7 +49,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 		clientdbUpdate(from.sin_addr, LOG_UDP_DENIED, Config.Port.icp, 0);
 	    } else {
 		reply = icpCreateMessage(ICP_DENIED, 0, url, header.reqnum, 0);
-		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, icp_request->protocol);
+		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, 0);
 	    }
 	    break;
 	}
@@ -60,19 +60,19 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    icp_opcode_str[header.opcode]);
 	if (icpCheckUdpHit(entry, icp_request)) {
 	    reply = icpCreateMessage(ICP_HIT, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_HIT, icp_request->protocol);
+	    icpUdpSend(fd, &from, reply, LOG_UDP_HIT, 0);
 	    break;
 	}
 	/* if store is rebuilding, return a UDP_HIT, but not a MISS */
 	if (opt_reload_hit_only && store_rebuilding) {
 	    reply = icpCreateMessage(ICP_MISS_NOFETCH, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, icp_request->protocol);
+	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, 0);
 	} else if (hit_only_mode_until > squid_curtime) {
 	    reply = icpCreateMessage(ICP_MISS_NOFETCH, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, icp_request->protocol);
+	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, 0);
 	} else {
 	    reply = icpCreateMessage(ICP_MISS, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS, icp_request->protocol);
+	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS, 0);
 	}
 	break;
 
