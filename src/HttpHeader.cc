@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.67 2000/09/11 22:10:02 hno Exp $
+ * $Id: HttpHeader.cc,v 1.68 2000/12/30 22:15:57 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -933,6 +933,11 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     /* do we have a valid field name within this field? */
     if (!name_len || name_end > field_end)
 	return NULL;
+    if (name_len > 65536) {
+	/* String has a 64K limit */
+	debug(55, 1) ("WARNING: ignoring header name of %d bytes\n", name_len);
+	return NULL;
+    }
     /* now we know we can parse it */
     e = memAllocate(MEM_HTTP_HDR_ENTRY);
     debug(55, 9) ("creating entry %p: near '%s'\n", e, getStringPrefix(field_start, field_end));
@@ -950,6 +955,15 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     /* trim field value */
     while (value_start < field_end && xisspace(*value_start))
 	value_start++;
+    if (field_end - value_start > 65536) {
+	/* String has a 64K limit */
+	debug(55, 1) ("WARNING: ignoring '%s' header of %d bytes\n",
+	    strBuf(e->name), field_end - value_start);
+	if (e->id == HDR_OTHER)
+	    stringClean(&e->name);
+	memFree(e, MEM_HTTP_HDR_ENTRY);
+	return NULL;
+    }
     /* set field value */
     stringLimitInit(&e->value, value_start, field_end - value_start);
     Headers[id].stat.seenCount++;
