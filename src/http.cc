@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.51 1996/04/16 16:35:28 wessels Exp $ */
+/* $Id: http.cc,v 1.52 1996/04/16 18:30:45 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -513,7 +513,7 @@ int proxyhttpStart(e, url, entry)
     request_t *request = NULL;
 
     debug(11, 3, "proxyhttpStart: \"%s %s\"\n",
-	RequestMethodStr[request->method], url);
+	RequestMethodStr[entry->method], url);
     debug(11, 10, "proxyhttpStart: HTTP request header:\n%s\n",
 	entry->mem_obj->mime_hdr);
 
@@ -524,6 +524,7 @@ int proxyhttpStart(e, url, entry)
     data->free_request = 1;
     data->REQ = request;
 
+    request->method = entry->method;
     strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
     request->port = e->ascii_port;
     strncpy(request->urlpath, url, MAX_URL);
