@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.178 1998/08/18 19:19:54 wessels Exp $
+ * $Id: acl.cc,v 1.179 1998/08/18 21:04:42 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,6 +39,15 @@
 static int aclFromFile = 0;
 static FILE *aclFile;
 
+static void aclParseDomainList(void *curlist);
+static void aclParseIpList(void *curlist);
+static void aclParseIntlist(void *curlist);
+static void aclParseWordList(void *curlist);
+static void aclParseProtoList(void *curlist);
+static void aclParseMethodList(void *curlist);
+static void aclParseTimeSpec(void *curlist);
+static void aclParseSnmpComm(void *curlist);
+static char *strtokFile(void);
 static void aclDestroyAclList(acl_list * list);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyProxyAuth(acl_proxy_auth * p);
@@ -58,7 +67,7 @@ static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
 static void aclProxyAuthDone(void *data, char *result);
-static wordlist *aclDumpIpList(acl_ip_data * ip);
+static wordlist *aclDumpIpList(void *);
 static wordlist *aclDumpDomainList(void *data);
 static wordlist *aclDumpTimeSpecList(acl_time_data *);
 static wordlist *aclDumpRegexList(relist * data);
@@ -66,35 +75,21 @@ static wordlist *aclDumpIntlistList(intlist * data);
 static wordlist *aclDumpProtoList(intlist * data);
 static wordlist *aclDumpMethodList(intlist * data);
 static wordlist *aclDumpProxyAuthList(acl_proxy_auth * data);
-static wordlist *aclDumpUnimplemented(void);
+static SPLAYCMP aclIpNetworkCompare;
+static SPLAYCMP aclHostDomainCompare;
+static SPLAYCMP aclDomainCompare;
+static SPLAYWALKEE aclDumpIpListWalkee;
+static SPLAYWALKEE aclDumpDomainListWalkee;
 
 #if USE_ARP_ACL
+static void aclParseArpList(void *curlist);
 static int checkARP(u_long ip, char *eth);
 static int decode_eth(const char *asc, char *eth);
 static int aclMatchArp(void *dataptr, struct in_addr c);
 static wordlist *aclDumpArpList(acl_arp_data *);
+static SPLAYCMP aclArpCompare;
+static SPLAYWALKEE aclDumpArpWalkee;
 #endif
-
-static int aclIpNetworkCompare(const void *, splayNode *);
-static int aclHostDomainCompare(const void *, splayNode *);
-static int aclDomainCompare(const void *, splayNode *);
-#if USE_ARP_ACL
-static int aclArpNetworkCompare(const void *, splayNode *);
-#endif
-
-static void aclParseDomainList(void *curlist);
-static void aclParseIpList(void *curlist);
-#if USE_ARP_ACL
-static void aclParseArpList(void *curlist);
-#endif
-
-static void aclParseIntlist(void *curlist);
-static void aclParseWordList(void *curlist);
-static void aclParseProtoList(void *curlist);
-static void aclParseMethodList(void *curlist);
-static void aclParseTimeSpec(void *curlist);
-static void aclParseSnmpComm(void *curlist);
-static char *strtokFile(void);
 
 static char *
 strtokFile(void)
@@ -1739,18 +1734,50 @@ aclIpNetworkCompare(const void *a, splayNode * n)
     return rc;
 }
 
-/* compare functions for different kind of tree search algorithms */
+static void
+aclDumpIpListWalkee(void *node, void *state)
+{
+    acl_ip_data *ip = node;
+    MemBuf mb;
+    wordlist **W = state;
+    while (*W != NULL)
+	W = &(*W)->next;
+    memBufDefInit(&mb);
+    memBufPrintf(&mb, "%s", inet_ntoa(ip->addr1));
+    if (ip->addr2.s_addr != any_addr.s_addr)
+	memBufPrintf(&mb, "-%s", inet_ntoa(ip->addr2));
+    if (ip->mask.s_addr != no_addr.s_addr)
+	memBufPrintf(&mb, "/%s", inet_ntoa(ip->mask));
+    *W = xcalloc(1, sizeof(wordlist));
+    (*W)->key = xstrdup(mb.buf);
+    memBufClean(&mb);
+}
 
 static wordlist *
-aclDumpIpList(acl_ip_data * ip)
+aclDumpIpList(void * data)
 {
-    return aclDumpUnimplemented();
+    wordlist *w = NULL;
+    splay_walk(data, aclDumpIpListWalkee, &w);
+    return w;
+}
+
+static void
+aclDumpDomainListWalkee(void *node, void *state)
+{
+    char *domain = node;
+    wordlist **W = state;
+    while (*W != NULL)
+	W = &(*W)->next;
+    *W = xcalloc(1, sizeof(wordlist));
+    (*W)->key = xstrdup(domain);
 }
 
 static wordlist *
 aclDumpDomainList(void *data)
 {
-    return aclDumpUnimplemented();
+    wordlist *w = NULL;
+    splay_walk(data, aclDumpDomainListWalkee, &w);
+    return w;
 }
 
 static wordlist *
@@ -1859,14 +1886,6 @@ aclDumpProxyAuthList(acl_proxy_auth * data)
     *T = w;
     T = &w->next;
     return W;
-}
-
-static wordlist *
-aclDumpUnimplemented(void)
-{
-    wordlist *w = xcalloc(1, sizeof(wordlist));
-    w->key = xstrdup("UNIMPLEMENTED");
-    return w;
 }
 
 wordlist *
@@ -2010,30 +2029,62 @@ aclParseArpList(void *curlist)
     while ((t = strtokFile())) {
 	if ((q = aclParseArpData(t)) == NULL)
 	    continue;
-	*Top = splay_insert(q, *Top, aclArpNetworkCompare);
+	*Top = splay_insert(q, *Top, aclArpCompare);
     }
 }
 
 /***************/
 /* aclMatchArp */
 /***************/
+#ifdef _SQUID_LINUX_
 static int
 aclMatchArp(void *dataptr, struct in_addr c)
 {
+    /* WARNING: Untested, added to make it compile! */
+    struct arpreq arpReq;
+    struct sockaddr_in ipAddr;
     splayNode **Top = dataptr;
-    *Top = splay_splay(&eth, *Top, aclArpNetworkCompare);
+    ipAddr.sin_family = AF_INET;
+    ipAddr.sin_port = 0;
+    ipAddr.sin_addr = c;
+    memcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+    arpReq.arp_dev[0] = '\0';
+    arpReq.arp_flags = 0;
+    /* any AF_INET socket will do... gives back hardware type, device, etc */
+    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) == -1) {
+	debug(28, 1) ("ARP query failed - %d", errno);
+	return 0;
+    } else if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
+	debug(28, 1) ("Non-ethernet interface returned from ARP query - %d",
+	    arpReq.arp_ha.sa_family);
+	/* update here and MAC address parsing to handle non-ethernet */
+	return 0;
+    } else
+	*Top = splay_splay(&arpReq.arp_ha.sa_data, *Top, aclArpCompare);
     debug(28, 3) ("aclMatchArp: '%s' %s\n",
 	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
 }
 
-#ifdef _SQUID_LINUX_
+static int
+aclArpCompare(const void *data, splayNode * n)
+{
+    const unsigned short *d1 = data;
+    const unsigned short *d2 = n->data;
+    if(d1[0] != d2[0])
+      return (d1[0] > d2[0]) ? 1 : -1;
+    if(d1[1] != d2[1])
+      return (d1[1] > d2[1]) ? 1 : -1;
+    if(d1[2] != d2[2])
+      return (d1[2] > d2[2]) ? 1 : -1;
+    return 0;
+}
+
 static int
 checkARP(u_long ip, char *eth)
 {
     struct arpreq arpReq;
     struct sockaddr_in ipAddr;
-
     ipAddr.sin_family = AF_INET;
     ipAddr.sin_port = 0;
     ipAddr.sin_addr.s_addr = ip;
@@ -2042,8 +2093,7 @@ checkARP(u_long ip, char *eth)
     arpReq.arp_flags = 0;
     /* any AF_INET socket will do... gives back hardware type, device, etc */
     if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) == -1) {
-	debug(28, 1) ("Non-ethernet interface returned from ARP query - %d",
-	    arpReq.arp_ha.sa_family);
+        debug(28, 1) ("ARP query failed - %d", errno);
 	return 0;
     } else if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
 	debug(28, 1) ("Non-ethernet interface returned from ARP query - %d",
@@ -2054,6 +2104,19 @@ checkARP(u_long ip, char *eth)
 	return !memcmp(&arpReq.arp_ha.sa_data, eth, 6);
 }
 #else
+
+static int
+aclMatchArp(void *dataptr, struct in_addr c)
+{
+	WRITE ME;
+}
+
+static int
+aclArpCompare(const void *data, splayNode * n)
+{
+	WRITE ME;
+}
+
 static int
 checkARP(u_long ip, char *eth)
 {
@@ -2097,22 +2160,26 @@ checkARP(u_long ip, char *eth)
 #endif
 
 static wordlist *
-aclDumpArpList(acl_arp_data * data)
+aclDumpArpWalkee(void *node, void *state)
 {
-    wordlist *W = NULL;
-    wordlist **T = &W;
-    char buf[24];
-    while (data != NULL) {
-	wordlist *w = xcalloc(1, sizeof(wordlist));
-	snprintf(buf, sizeof(buf), "%02x:%02x:02x:02x:02x:02x",
-	    data->eth[0], data->eth[1], data->eth[2], data->eth[3],
-	    data->eth[4], data->eth[5]);
-	w->key = xstrdup(buf);
-	*T = w;
-	T = &w->next;
-	data = data->next;
-    }
-    return W;
+    acl_arp_data *arp = data;
+    wordlist **W = state;
+    static char buf[24];
+    while (*W != NULL)
+	W = &(*W)->next;
+    snprintf(buf, sizeof(buf), "%02x:%02x:02x:02x:02x:02x",
+	data->eth[0], data->eth[1], data->eth[2], data->eth[3],
+	data->eth[4], data->eth[5]);
+    *W = xcalloc(1, sizeof(wordlist));
+    (*W)->key = xstrdup(buf);
+}
+
+static wordlist *
+aclDumpArpList(void * data)
+{
+    wordlist *w = NULL;
+    splay_walk(data, aclDumpArpListWalkee, &w);
+    return w;
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */
