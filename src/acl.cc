@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.210 2000/01/05 23:32:17 wessels Exp $
+ * $Id: acl.cc,v 1.211 2000/01/14 08:37:03 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -336,8 +336,6 @@ aclParseMethodList(void *curlist)
     while ((t = strtokFile())) {
 	q = memAllocate(MEM_INTLIST);
 	q->i = (int) urlParseMethod(t);
-	if (q->i == METHOD_PURGE)
-	    Config.onoff.enable_purge = 1;
 	*(Tail) = q;
 	Tail = &q->next;
     }
@@ -2209,7 +2207,26 @@ aclDumpGeneric(const acl * a)
     return NULL;
 }
 
-
+/*
+ * This function traverses all ACL elements referenced
+ * by an access list (presumably 'http_access').   If 
+ * it finds a PURGE method ACL, then it returns TRUE,
+ * otherwise FALSE.
+ */
+int
+aclPurgeMethodInUse(acl_access * a)
+{
+    acl_list *b;
+    for (; a; a = a->next) {
+	for (b = a->acl_list; b; b = b->next) {
+	    if (ACL_METHOD != b->acl->type)
+		continue;
+	    if (aclMatchInteger(b->acl->data, METHOD_PURGE))
+		return 1;
+	}
+    }
+    return 0;
+}
 
 
 #if USE_ARP_ACL
