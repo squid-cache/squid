@@ -1,3 +1,7 @@
+/*
+ * $Id: snmp_api.h,v 1.11 1998/09/23 17:20:01 wessels Exp $
+ */
+
 #ifndef _SNMP_API_H_
 #define _SNMP_API_H_
 

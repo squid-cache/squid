@@ -1,4 +1,8 @@
 /*
+ * $Id: radix.h,v 1.7 1998/09/23 17:20:00 wessels Exp $
+ */
+
+/*
  * Copyright (c) 1988, 1989, 1993
  *      The Regents of the University of California.  All rights reserved.
  *

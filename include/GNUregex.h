@@ -1,3 +1,7 @@
+/*
+ * $Id: GNUregex.h,v 1.5 1998/09/23 17:19:56 wessels Exp $
+ */
+
 /* Definitions for data structures and routines for the regular
  * expression library, version 0.12.
  * 

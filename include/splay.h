@@ -1,3 +1,7 @@
+/*
+ * $Id: splay.h,v 1.7 1998/09/23 17:20:05 wessels Exp $
+ */
+
 
 typedef struct _splay_node {
     void *data;

@@ -1,3 +1,7 @@
+/*
+ * $Id: cache_snmp.h,v 1.16 1998/09/23 17:19:58 wessels Exp $
+ */
+
 #ifdef SQUID_SNMP
 #ifndef CACHE_SNMP_H
 #define CACHE_SNMP_H

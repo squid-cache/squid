@@ -1,3 +1,7 @@
+/*
+ * $Id: autoconf.h.in,v 1.73 1998/09/23 17:19:57 wessels Exp $
+ */
+
 /* include/autoconf.h.in.  Generated automatically from configure.in by autoheader.  */
 /* 
  * All configurable options are enabled by using --enable-....
