@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.108 1997/05/22 15:51:53 wessels Exp $
+ * $Id: ftp.cc,v 1.109 1997/05/23 05:33:18 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -549,7 +549,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     }
     storeLockObject(entry);
     ftpState->entry = entry;
-    req_hdr = entry->mem_obj->mime_hdr;
+    req_hdr = entry->mem_obj->request_hdr;
     ftpState->request = requestLink(request);
     if (!ftpCheckAuth(ftpState, req_hdr)) {
 	/* This request is not fully authenticated */
