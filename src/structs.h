@@ -667,6 +667,9 @@ struct _clientHttpRequest {
     StoreEntry *entry;
     StoreEntry *old_entry;
     log_type log_type;
+#if SQUID_PEER_DIGEST
+    const char *lookup_type;	/* temporary hack: storeGet() result: HIT/MISS/NONE */
+#endif
     http_status http_code;
     int accel;
     int internal;		/* Set to true on /squid-internal/ request, to prevent looping */
@@ -790,7 +793,10 @@ struct _StoreDigestCBlock {
     int count;
     int del_count;
     int mask_size;
-    int reserved[16-5];
+    unsigned char bits_per_entry;
+    unsigned char hash_func_count;
+    short int reserved_short;
+    int reserved[32-6];
 };
 
 struct _DigestFetchState {
@@ -809,6 +815,7 @@ struct _cd_guess_stats {
     int false_hits;
     int true_misses;
     int false_misses;
+    int close_hits; /* tmp, remove it later */
 };
 
 struct _PeerDigest {
@@ -1301,6 +1308,7 @@ struct _CacheDigest {
     char *mask;			/* bit mask */
     size_t mask_size;		/* mask size in bytes */
     int capacity;		/* expected maximum for .count, not a hard limit */
+    int bits_per_entry;		/* number of bits allocated for each entry from capacity */
     int count;			/* number of digested entries */
     int del_count;		/* number of deletions performed so far */
 };
