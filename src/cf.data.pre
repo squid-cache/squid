@@ -1461,43 +1461,6 @@ DOC_START
 tcp_recv_bufsize 0 bytes
 DOC_END
 
-
-NAME: ssl_proxy
-TYPE: cache_peer
-LOC: Config.sslProxy
-DEFAULT: none
-DOC_START
-	Specify a hostname and port number where all SSL requests
-	should be forwarded to.
-
-	XXX For now, ssl_proxy has the same format as cache_peer
-	because they share the same data structure.  All files
-	must be present in the config file, but some will be ignored.
-
-	Usage: ssl_proxy hostname type-ignored port icpport-ignored
-
-ssl_proxy
-DOC_END
-
-
-NAME: passthrough_proxy
-TYPE: cache_peer
-LOC: Config.passProxy
-DEFAULT: none
-DOC_START
-	Specify a hostname and port number where all non-GET (i.e.
-	POST, PUT) requests should be forwarded to.
-
-	XXX For now, ssl_proxy has the same format as cache_peer
-	because they share the same data structure.  All files
-	must be present in the config file, but some will be ignored.
-
-	Usage: passthrough_proxy hostname type-ignored port icpport-ignored
-
-passthrough_proxy
-DOC_END
-
-
 NAME: proxy_auth_passwd
 TYPE: string
 LOC: Config.proxyAuth.File

@@ -584,5 +584,3 @@ extern void useragentOpenLog _PARAMS((void));
 extern void useragentRotateLog _PARAMS((void));
 extern void logUserAgent _PARAMS((const char *, const char *));
 extern peer_t parseNeighborType _PARAMS((const char *s));
-extern peer *getSslParent _PARAMS((void));
-extern peer *getPassParent _PARAMS((void));

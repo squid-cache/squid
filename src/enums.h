@@ -157,8 +157,6 @@ typedef enum {
     SOURCE_FASTEST,
     SIBLING_UDP_HIT_OBJ,
     PARENT_UDP_HIT_OBJ,
-    PASS_PARENT,
-    SSL_PARENT,
     ROUNDROBIN_PARENT,
     HIER_MAX
 } hier_code;

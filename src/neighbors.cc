@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.149 1997/07/07 05:29:49 wessels Exp $
+ * $Id: neighbors.cc,v 1.150 1997/07/15 23:15:36 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -136,8 +136,6 @@ static struct {
     peer *peers_tail;
     peer *first_ping;
     peer *removed;
-    peer *ssl_parent;
-    peer *pass_parent;
 } Peers = {
 
     0, NULL, NULL, NULL
@@ -344,18 +342,6 @@ getDefaultParent(request_t * request)
 }
 
 peer *
-getSslParent(void)
-{
-	return Peers.ssl_parent;
-}
-
-peer *
-getPassParent(void)
-{
-	return Peers.pass_parent;
-}
-
-peer *
 getNextPeer(peer * p)
 {
     return p->next;
@@ -395,9 +381,7 @@ neighborsDestroy(void)
 {
     peer *p = NULL;
     peer *next = NULL;
-
     debug(15, 3) ("neighborsDestroy: called\n");
-
     for (p = Peers.peers_head; p; p = next) {
 	next = p->next;
 	peerDestroy(p);
