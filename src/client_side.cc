@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.36 1996/09/23 22:13:05 wessels Exp $
+ * $Id: client_side.cc,v 1.37 1996/09/23 22:14:43 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -443,8 +443,8 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    httpParseHeaders(hbuf, entry->mem_obj->reply);
 	    ttlSet(entry);
 	} else {
-	    debug(33,1,"icpHandleIMSReply: No end-of-headers, len=%d\n", len);
-	    debug(33,1,"  --> '%s'\n", entry->url);
+	    debug(33, 1, "icpHandleIMSReply: No end-of-headers, len=%d\n", len);
+	    debug(33, 1, "  --> '%s'\n", entry->url);
 	}
 	put_free_8k_page(hbuf);
 	if (unlink_request) {
