@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.301 2002/04/13 23:07:51 hno Exp $
+ * $Id: neighbors.cc,v 1.302 2002/06/23 14:50:07 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -171,6 +171,8 @@ peerWouldBePinged(const peer * p, request_t * request)
 	return 0;
     if (p->options.no_query)
 	return 0;
+    if (p->options.background_ping && (squid_curtime - p->stats.last_query < Config.backgroundPingRate))
+	return 0;
     if (p->options.mcast_responder)
 	return 0;
     if (p->n_addresses == 0)
@@ -185,8 +187,9 @@ peerWouldBePinged(const peer * p, request_t * request)
     /* Ping dead peers every timeout interval */
     if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
 	return 1;
-    if (!neighborUp(p))
-	return 0;
+    if (p->icp.port == echo_port)
+	if (!neighborUp(p))
+	    return 0;
     return 1;
 }
 
@@ -272,6 +275,43 @@ getRoundRobinParent(request_t * request)
     if (q)
 	q->rr_count++;
     debug(15, 3) ("getRoundRobinParent: returning %s\n", q ? q->host : "NULL");
+    return q;
+}
+
+peer *
+getWeightedRoundRobinParent(request_t * request)
+{
+    peer *p;
+    peer *q = NULL;
+    int weighted_rtt;
+    for (p = Config.peers; p; p = p->next) {
+	if (!p->options.weighted_roundrobin)
+	    continue;
+	if (neighborType(p, request) != PEER_PARENT)
+	    continue;
+	if (!peerHTTPOkay(p, request))
+	    continue;
+	if (q && q->rr_count < p->rr_count)
+	    continue;
+	q = p;
+    }
+    if (q && q->rr_count > 1000000)
+	for (p = Config.peers; p; p = p->next) {
+	    if (!p->options.weighted_roundrobin)
+		continue;
+	    if (neighborType(p, request) != PEER_PARENT)
+		continue;
+	    p->rr_count = 0;
+	}
+    if (q) {
+	weighted_rtt = (q->stats.rtt - q->basetime) / q->weight;
+
+	if (weighted_rtt < 1)
+	    weighted_rtt = 1;
+	q->rr_count += weighted_rtt;
+	debug(15, 3) ("getWeightedRoundRobinParent: weighted_rtt %d\n", (int) weighted_rtt);
+    }
+    debug(15, 3) ("getWeightedRoundRobinParent: returning %s\n", q ? q->host : "NULL");
     return q;
 }
 
@@ -691,7 +731,7 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 static void
 neighborUpdateRtt(peer * p, MemObject * mem)
 {
-    int rtt;
+    int rtt, rtt_av_factor;
     if (!mem)
 	return;
     if (!mem->start_ping.tv_sec)
@@ -699,8 +739,11 @@ neighborUpdateRtt(peer * p, MemObject * mem)
     rtt = tvSubMsec(mem->start_ping, current_time);
     if (rtt < 1 || rtt > 10000)
 	return;
+    rtt_av_factor = RTT_AV_FACTOR;
+    if (p->options.weighted_roundrobin)
+	rtt_av_factor = RTT_BACKGROUND_AV_FACTOR;
     p->stats.rtt = intAverage(p->stats.rtt, rtt,
-	p->stats.pings_acked, RTT_AV_FACTOR);
+	p->stats.pings_acked, rtt_av_factor);
 }
 
 #if USE_HTCP
@@ -1184,6 +1227,8 @@ peerCountMcastPeersDone(void *data)
 static void
 peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void *hdrnotused, void *data)
 {
+    int rtt_av_factor;
+
     ps_state *psstate = data;
     StoreEntry *fake = psstate->entry;
     MemObject *mem = fake->mem_obj;
@@ -1192,7 +1237,10 @@ peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void *hdrnotuse
     assert(fake);
     assert(mem);
     psstate->ping.n_recv++;
-    p->stats.rtt = intAverage(p->stats.rtt, rtt, psstate->ping.n_recv, RTT_AV_FACTOR);
+    rtt_av_factor = RTT_AV_FACTOR;
+    if (p->options.weighted_roundrobin)
+	rtt_av_factor = RTT_BACKGROUND_AV_FACTOR;
+    p->stats.rtt = intAverage(p->stats.rtt, rtt, psstate->ping.n_recv, rtt_av_factor);
 }
 
 static void
@@ -1214,12 +1262,16 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 	storeAppendPrintf(sentry, " proxy-only");
     if (p->options.no_query)
 	storeAppendPrintf(sentry, " no-query");
+    if (p->options.background_ping)
+	storeAppendPrintf(sentry, " background-ping");
     if (p->options.no_digest)
 	storeAppendPrintf(sentry, " no-digest");
     if (p->options.default_parent)
 	storeAppendPrintf(sentry, " default");
     if (p->options.roundrobin)
 	storeAppendPrintf(sentry, " round-robin");
+    if (p->options.weighted_roundrobin)
+	storeAppendPrintf(sentry, " weighted-round-robin");
     if (p->options.mcast_responder)
 	storeAppendPrintf(sentry, " multicast-responder");
     if (p->options.closest_only)

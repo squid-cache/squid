@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.264 2002/06/23 13:32:24 hno Exp $
+# $Id: cf.data.pre,v 1.265 2002/06/23 14:50:06 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -262,10 +262,13 @@ DOC_START
 
 	    options: proxy-only
 		     weight=n
+		     basetime=n
 		     ttl=n
 		     no-query
+		     background-ping
 		     default
 		     round-robin
+		     weighted-round-robin
 		     multicast-responder
 		     closest-only
 		     no-digest
@@ -284,6 +287,12 @@ DOC_START
 		     The weight must be an integer.  The default weight
 		     is 1, larger weights are favored more.
 
+		     use 'basetime=n' to specify a base amount to
+		     be subtracted from round trip times of parents.
+		     It is subtraced before devision by weight in calculating
+		     which parent to fectch from. If the rtt is less than the
+		     base time then the rtt is set to a minimal value.
+
 		     use 'ttl=n' to specify a IP multicast TTL to use
 		     when sending an ICP queries to this address.
 		     Only useful when sending to a multicast group.
@@ -294,6 +303,11 @@ DOC_START
 		     use 'no-query' to NOT send ICP queries to this
 		     neighbor.
 
+		     use 'background-ping' to only send ICP queries to this
+		     neighbor infrequently. This is used to keep the neighbor 
+		     round trip time updated and is usually used in 
+		     conjunction with weighted-round-robin.
+
 		     use 'default' if this is a parent cache which can
 		     be used as a "last-resort." You should probably
 		     only use 'default' in situations where you cannot
@@ -302,6 +316,12 @@ DOC_START
 		     use 'round-robin' to define a set of parents which
 		     should be used in a round-robin fashion in the
 		     absence of any ICP queries.
+
+		     use 'weighted-round-robin' to define a set of parents 
+		     which should be used in a round-robin fashion with the 
+		     frequency of each parent being based on the round trip 
+		     time. Closer parents are used more often. 
+		     Usually used for background-ping parents.
 
 		     'multicast-responder' indicates that the named peer
 		     is a member of a multicast group.  ICP queries will
@@ -535,6 +555,16 @@ NOCOMMENT_START
 acl QUERY urlpath_regex cgi-bin \?
 no_cache deny QUERY
 NOCOMMENT_END
+DOC_END
+
+NAME: background_ping_rate
+COMMENT: time-units
+TYPE: time_t
+DEFAULT: 10 seconds
+LOC: Config.backgroundPingRate
+DOC_START
+	Controls how often the ICP pings are sent to siblings that
+	have background-ping set.
 DOC_END
 
 
