@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.83 1996/11/08 03:45:44 wessels Exp $
+ * $Id: neighbors.cc,v 1.84 1996/11/11 21:57:26 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -325,6 +325,8 @@ neighbors_open(int fd)
     edge **E = NULL;
     struct servent *sep = NULL;
 
+    if (friends == NULL)
+	neighbors_init();
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
 	debug(15, 1, "getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
@@ -336,7 +338,7 @@ neighbors_open(int fd)
 	getCurrentTime();
 	next = e->next;
 	debug(15, 1, "Configuring neighbor %s/%d/%d\n",
-		e->host, e->http_port, e->icp_port);
+	    e->host, e->http_port, e->icp_port);
 	if ((ia = ipcache_gethostbyname(e->host, IP_BLOCKING_LOOKUP)) == NULL) {
 	    debug(0, 0, "WARNING!!: DNS lookup for '%s' failed!\n", e->host);
 	    debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
@@ -400,6 +402,7 @@ neighborsUdpPing(protodispatch_data * proto)
     MemObject *mem = entry->mem_obj;
     int reqnum = 0;
     int flags;
+    icp_common_t *query;
 
     mem->e_pings_n_pings = 0;
     mem->e_pings_n_acks = 0;
@@ -444,12 +447,10 @@ neighborsUdpPing(protodispatch_data * proto)
 	if (e->icp_port == echo_port) {
 	    debug(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
 	    echo_hdr.reqnum = reqnum;
+	    query = icpCreateMessage(ICP_OP_DECHO, 0, url, reqnum, 0);
 	    icpUdpSend(theOutIcpConnection,
-		url,
-		reqnum,
 		&e->in_addr,
-		0,
-		ICP_OP_DECHO,
+		query,
 		LOG_TAG_NONE,
 		PROTO_NONE);
 	} else {
@@ -459,12 +460,10 @@ neighborsUdpPing(protodispatch_data * proto)
 		if (!BIT_TEST(proto->request->flags, REQ_NOCACHE))
 		    if (e->icp_version == ICP_VERSION_2)
 			flags |= ICP_FLAG_HIT_OBJ;
+	    query = icpCreateMessage(ICP_OP_QUERY, flags, url, reqnum, 0);
 	    icpUdpSend(theOutIcpConnection,
-		url,
-		reqnum,
 		&e->in_addr,
-		flags,
-		ICP_OP_QUERY,
+		query,
 		LOG_TAG_NONE,
 		PROTO_NONE);
 	}
@@ -511,12 +510,10 @@ neighborsUdpPing(protodispatch_data * proto)
 		to_addr.sin_family = AF_INET;
 		to_addr.sin_addr = ia->in_addrs[ia->cur];
 		to_addr.sin_port = htons(echo_port);
+		query = icpCreateMessage(ICP_OP_SECHO, 0, url, reqnum, 0);
 		icpUdpSend(theOutIcpConnection,
-		    url,
-		    reqnum,
 		    &to_addr,
-		    entry->flag,
-		    ICP_OP_SECHO,
+		    query,
 		    LOG_TAG_NONE,
 		    PROTO_NONE);
 	    }
@@ -722,47 +719,47 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 
 void
 neighborAdd(const char *host,
-	const char *type,
-	int http_port,
-	int icp_port,
-	int options,
-	int weight,
-	int mcast_ttl)
+    const char *type,
+    int http_port,
+    int icp_port,
+    int options,
+    int weight,
+    int mcast_ttl)
 {
-	edge *e = NULL;
-        const char *me = getMyHostname();
-	if (friends == NULL)
-		neighbors_init();
-	if (!strcmp(host, me) && http_port == Config.Port.http) {
-	    debug(15, 0, "neighbors_init: skipping cache_host %s %s/%d/%d\n",
-		type, host, http_port, icp_port);
-	    return;
-	}
-	e = xcalloc(1, sizeof(edge));
-	e->http_port = http_port;
-	e->icp_port = icp_port;
-	e->mcast_ttl = mcast_ttl;
-	e->options = options;
-	e->weight = weight;
-	e->host = xstrdup(host);
-	e->pinglist = NULL;
-	e->typelist = NULL;
-	e->acls = NULL;
-	e->neighbor_up = 0;
-	e->icp_version = ICP_VERSION_CURRENT;
-	e->type = parseNeighborType(type);
-	if (e->type == EDGE_PARENT)
-	    friends->n_parent++;
-	else if (e->type == EDGE_SIBLING)
-	    friends->n_sibling++;
+    edge *e = NULL;
+    const char *me = getMyHostname();
+    if (friends == NULL)
+	neighbors_init();
+    if (!strcmp(host, me) && http_port == Config.Port.http) {
+	debug(15, 0, "neighbors_init: skipping cache_host %s %s/%d/%d\n",
+	    type, host, http_port, icp_port);
+	return;
+    }
+    e = xcalloc(1, sizeof(edge));
+    e->http_port = http_port;
+    e->icp_port = icp_port;
+    e->mcast_ttl = mcast_ttl;
+    e->options = options;
+    e->weight = weight;
+    e->host = xstrdup(host);
+    e->pinglist = NULL;
+    e->typelist = NULL;
+    e->acls = NULL;
+    e->neighbor_up = 0;
+    e->icp_version = ICP_VERSION_CURRENT;
+    e->type = parseNeighborType(type);
+    if (e->type == EDGE_PARENT)
+	friends->n_parent++;
+    else if (e->type == EDGE_SIBLING)
+	friends->n_sibling++;
 
-	/* Append edge */
-	if (!friends->edges_head)
-	    friends->edges_head = e;
-	if (friends->edges_tail)
-	    friends->edges_tail->next = e;
-	friends->edges_tail = e;
-	friends->n++;
+    /* Append edge */
+    if (!friends->edges_head)
+	friends->edges_head = e;
+    if (friends->edges_tail)
+	friends->edges_tail->next = e;
+    friends->edges_tail = e;
+    friends->n++;
 }
 
 void
@@ -870,14 +867,14 @@ neighborFindByName(const char *name)
 static neighbor_t
 parseNeighborType(const char *s)
 {
-	if (!strcasecmp(s, "parent"))
-		return EDGE_PARENT;
-	if (!strcasecmp(s, "neighbor"))
-		return EDGE_SIBLING;
-	if (!strcasecmp(s, "neighbour"))
-		return EDGE_SIBLING;
-	if (!strcasecmp(s, "sibling"))
-		return EDGE_SIBLING;
-	debug(15,0,"WARNING: Unknown neighbor type: %s\n", s);
+    if (!strcasecmp(s, "parent"))
+	return EDGE_PARENT;
+    if (!strcasecmp(s, "neighbor"))
 	return EDGE_SIBLING;
+    if (!strcasecmp(s, "neighbour"))
+	return EDGE_SIBLING;
+    if (!strcasecmp(s, "sibling"))
+	return EDGE_SIBLING;
+    debug(15, 0, "WARNING: Unknown neighbor type: %s\n", s);
+    return EDGE_SIBLING;
 }
