@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.245 1998/03/31 18:45:58 wessels Exp $
+ * $Id: client_side.cc,v 1.246 1998/04/01 00:07:53 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1544,23 +1544,26 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     } else
 	http_ver = (float) atof(token + 5);
 
-    /*
-     * Skip whitespace at the end of the frist line, up to the
-     * first newline.
-     */
-    while (isspace(*t))
-	if (*(t++) == '\n')
-	    break;
-    req_hdr = t;
-    debug(33, 3) ("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
-
     /* Check if headers are received */
+    req_hdr = t;
     header_sz = headersEnd(req_hdr, conn->in.offset - (req_hdr - inbuf));
     if (0 == header_sz) {
+	debug(33,3)("parseHttpRequest: header_sz == 0\n");
 	xfree(inbuf);
 	*status = 0;
 	return NULL;
     }
+    /*
+     * Skip whitespace at the end of the frist line, up to the
+     * first newline.
+     */
+    while (isspace(*req_hdr)) {
+	header_sz--;
+	if (*(req_hdr++) == '\n')
+	    break;
+    }
+    assert(header_sz > 0);
+    debug(33, 3) ("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
     end = req_hdr + header_sz;
     debug(33, 3) ("parseHttpRequest: end = {%s}\n", end);
 
