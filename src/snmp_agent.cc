@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.52 1998/07/23 03:13:11 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.53 1998/07/30 22:29:36 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -512,8 +512,8 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
     case PERF_SYS_NUMR:
 	*(Answer->val.integer) = IOStats.Http.reads;
 	break;
-    case PERF_SYS_DEFR:
-	*(Answer->val.integer) = IOStats.Http.reads_deferred;
+    case PERF_SYS_DEFR:		/* XXX unused, remove me */
+	*(Answer->val.integer) = 0;
 	break;
     case PERF_SYS_MEMUSAGE:
 	*(Answer->val.integer) = (snint) memTotalAllocated() >> 10;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.114 1998/07/22 20:38:06 wessels Exp $
+ * $Id: wais.cc,v 1.115 1998/07/30 22:29:36 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -96,7 +96,6 @@ waisReadReply(int fd, void *data)
 	return;
     }
     /* check if we want to defer reading */
-    clen = entry->mem_obj->inmem_hi;
     off = storeLowestMemReaderOffset(entry);
     len = read(fd, buf, 4096);
     if (len > 0) {
