@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.137 1996/12/15 23:35:21 wessels Exp $
+ * $Id: http.cc,v 1.138 1996/12/16 16:25:44 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -303,7 +303,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     time_t delta;
     size_t l;
 
-    reply->code = 500;		/* default to Internal Server Error */
+    reply->code = 600;
     ReplyHeaderStats.parsed++;
     xstrncpy(headers, buf, 4096);
     end = mime_headers_end(headers);
@@ -508,6 +508,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	case 304:		/* Not Modified */
 	case 401:		/* Unauthorized */
 	case 407:		/* Proxy Authentication Required */
+	case 600:		/* Squid header parsing error */
 	default:		/* Unknown status code */
 	    httpMakePrivate(entry);
 	    break;
