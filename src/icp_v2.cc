@@ -96,55 +96,6 @@ icpCreateMessage(
     return buf;
 }
 
-#if USE_ICP_HIT_OBJ
-static void *
-icpCreateHitObjMessage(
-    icp_opcode opcode,
-    int flags,
-    const char *url,
-    int reqnum,
-    int pad,
-    StoreEntry * entry)
-{
-    char *buf = NULL;
-    char *entryoffset = NULL;
-    char *urloffset = NULL;
-    icp_common_t *headerp = NULL;
-    int buf_len;
-    u_short data_sz;
-    int size;
-    MemObject *m = entry->mem_obj;
-    assert(m != NULL);
-    buf_len = sizeof(icp_common_t) + strlen(url) + 1 + 2 + entry->object_len;
-    if (opcode == ICP_QUERY)
-	buf_len += sizeof(u_num32);
-    buf = xcalloc(buf_len, 1);
-    headerp = (icp_common_t *) (void *) buf;
-    headerp->opcode = opcode;
-    headerp->version = ICP_VERSION_CURRENT;
-    headerp->length = htons(buf_len);
-    headerp->reqnum = htonl(reqnum);
-    headerp->flags = htonl(flags);
-    headerp->pad = htonl(pad);
-    headerp->shostid = htonl(theOutICPAddr.s_addr);
-    urloffset = buf + sizeof(icp_common_t);
-    xmemcpy(urloffset, url, strlen(url));
-    data_sz = htons((u_short) entry->object_len);
-    entryoffset = urloffset + strlen(url) + 1;
-    xmemcpy(entryoffset, &data_sz, sizeof(u_short));
-    entryoffset += sizeof(u_short);
-    assert(m->data != NULL);
-    size = memCopy(m->data, 0, entryoffset, entry->object_len);
-    if (size < 0 || size != entry->object_len) {
-	debug(12, 1) ("icpCreateHitObjMessage: copy failed, wanted %d got %d bytes\n",
-	    entry->object_len, size);
-	safe_free(buf);
-	return NULL;
-    }
-    return buf;
-}
-#endif
-
 void
 icpUdpSend(int fd,
     const struct sockaddr_in *to,
@@ -159,9 +110,7 @@ icpUdpSend(int fd,
     data->address = *to;
     data->msg = msg;
     data->len = (int) ntohs(msg->length);
-#ifndef LESS_TIMING
     data->start = current_time;	/* wrong for HIT_OBJ */
-#endif
     data->logcode = logcode;
     data->proto = proto;
     AppendUdp(data);
@@ -179,32 +128,8 @@ icpCheckUdpHit(StoreEntry * e, request_t * request)
 	return 1;
     if (refreshCheck(e, request, 30))
 	return 0;
-    /* MUST NOT do UDP_HIT_OBJ if object is not in memory with async_io. The */
-    /* icpHandleV2 code has not been written to support it - squid will die! */
-#if USE_ASYNC_IO || defined(MEM_UDP_HIT_OBJ)
-    if (e->mem_status != IN_MEMORY)
-	return 0;
-#endif
     return 1;
 }
-
-#if USE_ICP_HIT_OBJ
-int
-icpCheckUdpHitObj(StoreEntry * e, request_t * r, icp_common_t * h, int len)
-{
-    if (!(h->flags & ICP_FLAG_HIT_OBJ))		/* not requested */
-	return 0;
-    if (len > Config.udpMaxHitObjsz)	/* too big */
-	return 0;
-    if (refreshCheck(e, r, 0))	/* stale */
-	return 0;
-#ifdef MEM_UDP_HIT_OBJ
-    if (e->mem_status != IN_MEMORY)
-	return 0;
-#endif
-    return 1;
-}
-#endif
 
 static void
 icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
@@ -266,24 +191,9 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	debug(12, 5) ("icpHandleIcpV2: OPCODE %s\n", icp_opcode_str[header.opcode]);
 	if (icpCheckUdpHit(entry, icp_request)) {
 	    pkt_len = sizeof(icp_common_t) + strlen(url) + 1 + 2 + entry->object_len;
-#if USE_ICP_HIT_OBJ
-	    if (icpCheckUdpHitObj(entry, icp_request, &header, pkt_len)) {
-		reply = icpCreateHitObjMessage(ICP_HIT_OBJ,
-		    flags,
-		    url,
-		    header.reqnum,
-		    src_rtt,
-		    entry);
-		icpUdpSend(fd, &from, reply, LOG_UDP_HIT, icp_request->protocol);
-		break;
-	    } else {
-#endif
 		reply = icpCreateMessage(ICP_HIT, flags, url, header.reqnum, src_rtt);
 		icpUdpSend(fd, &from, reply, LOG_UDP_HIT, icp_request->protocol);
 		break;
-#if USE_ICP_HIT_OBJ
-	    }
-#endif
 	}
 	/* if store is rebuilding, return a UDP_HIT, but not a MISS */
 	if (store_rebuilding && opt_reload_hit_only) {
