@@ -54,7 +54,8 @@
  *              sent by squid. Returns OK if the ldap_search 
  *              using the composed filter succeeds.
  *
- * OLD Changes: (from squid_ldap_auth.c)
+ * Changes from squid_ldap_auth.c:
+ *
  * 2001-12-12: Michael Cunningham <m.cunningham@xpedite.com>
  *             - Added TLS support and partial ldap version 3 support. 
  * 2001-09-05: Henrik Nordstrom <hno@squid-cache.org>
@@ -355,7 +356,7 @@ main(int argc, char **argv)
 	ldapServer = "localhost";
 
     if (!basedn || !searchfilter) {
-	fprintf(stderr, "Usage: squid_ldap_match -f basedn -f filter [options] ldap_server_name\n\n");
+	fprintf(stderr, "Usage: squid_ldap_match -b basedn -f filter [options] ldap_server_name\n\n");
 	fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under where to search\n");
 	fprintf(stderr, "\t-f filter (REQUIRED)\tsearch filter pattern. %%v = user, %%a = group\n");
 	fprintf(stderr, "\t-s base|one|sub\t\tsearch scope\n");
