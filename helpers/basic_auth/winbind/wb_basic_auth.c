@@ -145,6 +145,9 @@ void manage_request(void)
     *pass='\0';
     pass++;
 
+    rfc1738_unescape(user);
+    rfc1738_unescape(pass);
+
     do_authenticate(user,pass);
 }
 

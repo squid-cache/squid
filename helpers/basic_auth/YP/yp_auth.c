@@ -63,6 +63,10 @@ main(int argc, char **argv)
 	    printf("ERR\n");
 	    continue;
 	}
+
+	rfc1738_unescape(user);
+	rfc1738_unescape(passwd);
+
 	nispasswd = get_nis_password(user, nisdomain, nismap);
 
 	if (!nispasswd) {

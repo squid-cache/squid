@@ -58,6 +58,8 @@
 #include <lber.h>
 #include <ldap.h>
 
+#include "util.h"
+
 /* Change this to your search base */
 static char *basedn;
 static char *searchfilter = NULL;
@@ -294,6 +296,8 @@ main(int argc, char **argv)
 	    printf("ERR\n");
 	    continue;
 	}
+	rfc1738_unescape(user);
+	rfc1738_unescape(passwd);
 	tryagain = 1;
       recover:
 	if (ld == NULL) {

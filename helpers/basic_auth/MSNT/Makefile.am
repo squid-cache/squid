@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.8 2002/06/26 18:44:27 hno Exp $
+#  $Id: Makefile.am,v 1.9 2002/08/12 01:11:48 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -27,10 +27,9 @@ EXTRA_DIST = \
 sysconf_DATA = \
 	msntauth.conf.default
 
-LDADD	= @XTRA_LIBS@
+LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS)
 
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		-I$(top_srcdir)/src/
+INCLUDES      = -I$(top_srcdir)/include
 
 confload.o: confload.c
 	$(COMPILE) -DSYSCONFDIR=\"$(sysconfdir)\" -c $(srcdir)/confload.c -o $@

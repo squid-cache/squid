@@ -130,6 +130,8 @@ main(int argc, char **argv)
 	    printf("ERR\n");
 	    continue;
 	}
+	rfc1738_unescape(user);
+	rfc1738_unescape(passwd);
 	u = hash_lookup(hash, user);
 	if (u == NULL) {
 	    printf("ERR\n");

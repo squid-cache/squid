@@ -117,6 +117,9 @@ main(int argc, char **argv)
 	}
 	Checktimer();		/* Check if the user lists have changed */
 
+	rfc1738_unescape(username);
+	rfc1738_unescape(password);
+
 	/*
 	 * Check if user is explicitly denied or allowed.
 	 * If user passes both checks, they can be authenticated.

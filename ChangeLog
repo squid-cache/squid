@@ -61,6 +61,9 @@ Changes to squid-2.5 ():
 	  In addition to that they have a new look (background-color, font)
 	  and are valid according to the HTML standards at www.w3.org.
 	  (Clemens Löser)
+	- Login and password send to Basic auth helpers is now URL escaped
+	  to allow for spaces and other "odd" characters in logins and
+	  passwords
 
 Changes to Squid-2.4.STABLE7 (July 2, 2002):
 

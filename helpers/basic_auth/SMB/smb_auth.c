@@ -45,6 +45,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util.h"
+
 #define BUFSIZE			256
 #define NMB_UNICAST		1
 #define NMB_BROADCAST	2
@@ -234,6 +236,8 @@ main(int argc, char *argv[])
 	    (void) printf("ERR\n");
 	    continue;
 	}
+	rfc1738_unescape(user);
+	rfc1738_unescape(pass);
 	(void) fprintf(p, "%s\n", dom->name);
 	(void) fprintf(p, "%s\n", dom->passthrough);
 	(void) fprintf(p, "%s\n", dom->nmbaddr);

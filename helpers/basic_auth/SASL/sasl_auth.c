@@ -1,5 +1,5 @@
 /*
- * $Id: sasl_auth.c,v 1.2 2002/04/01 09:08:38 hno Exp $
+ * $Id: sasl_auth.c,v 1.3 2002/08/12 01:11:51 hno Exp $
  *
  * SASL authenticator module for Squid.
  * Copyright (C) 2002 Ian Castle <ian.castle@coldcomfortfarm.net>
@@ -78,6 +78,9 @@ main()
 			continue;
 		}
 		*password++ = '\0';
+
+		rfc1738_unescape(username);
+		rfc1738_unescape(password);
 
 		rc = sasl_checkpass(conn, username, strlen(username), password, strlen(password), &errstr);
 
