@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.54 1996/09/12 03:24:08 wessels Exp $
+ * $Id: tools.cc,v 1.55 1996/09/12 17:33:01 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -329,6 +329,15 @@ void fatal_dump(message)
     if (opt_catch_signals)
 	storeWriteCleanLog();
     abort();
+}
+
+/* fatal with dumping core */
+void _debug_trap(message)
+     char *message;
+{
+    if (opt_catch_signals)
+	fatal_dump(message);
+    _db_print(0,0,"WARNING: %s\n", message);
 }
 
 void sig_child(sig)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.104 1996/09/12 04:49:44 wessels Exp $
+ * $Id: store.cc,v 1.105 1996/09/12 17:33:00 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -306,8 +306,10 @@ static void destroy_StoreEntry(e)
      StoreEntry *e;
 {
     debug(20, 3, "destroy_StoreEntry: destroying %p\n", e);
-    if (!e)
-	fatal_dump("destroy_StoreEntry: NULL Entry");
+    if (!e) {
+	debug_trap("destroy_StoreEntry: NULL Entry");
+	return;
+    }
     if (e->mem_obj)
 	destroy_MemObject(e->mem_obj);
     if (e->url) {
@@ -375,8 +377,10 @@ static void storeHashMemDelete(e)
      StoreEntry *e;
 {
     hash_link *hptr = hash_lookup(in_mem_table, e->key);
-    if (hptr == NULL)
-	fatal_dump("storeHashMemDelete: key not found");
+    if (hptr == NULL) {
+	debug_trap("storeHashMemDelete: key not found");
+	return;
+    }
     hash_delete_link(in_mem_table, hptr);
     meta_data.hot_vm--;
 }
@@ -407,9 +411,10 @@ void storeSetMemStatus(e, status)
      StoreEntry *e;
      mem_status_t status;
 {
-    if (e->key == NULL)
-	fatal_dump("storeSetMemStatus: NULL key");
-    if (status != IN_MEMORY && e->mem_status == IN_MEMORY)
+    if (e->key == NULL) {
+	debug_trap("storeSetMemStatus: NULL key");
+	return;
+    } else if (status != IN_MEMORY && e->mem_status == IN_MEMORY)
 	storeHashMemDelete(e);
     else if (status == IN_MEMORY && e->mem_status != IN_MEMORY)
 	storeHashMemInsert(e);
@@ -545,8 +550,10 @@ void storeReleaseRequest(e)
 {
     if (e->flag & RELEASE_REQUEST)
 	return;
-    if (!storeEntryLocked(e))
-	fatal_dump("Somebody called storeReleaseRequest on an unlocked entry");
+    if (!storeEntryLocked(e)) {
+	debug_trap("Somebody called storeReleaseRequest on an unlocked entry");
+	return;
+    }
     debug(20, 3, "storeReleaseRequest: FOR '%s'\n", e->key ? e->key : e->url);
     e->flag |= RELEASE_REQUEST;
 }
@@ -650,7 +657,7 @@ char *storeGeneratePublicKey(url, method)
 	/* NOTREACHED */
 	break;
     default:
-	fatal_dump("storeGeneratePublicKey: Unsupported request method");
+	debug_trap("storeGeneratePublicKey: Unsupported request method");
 	break;
     }
     return NULL;
@@ -672,7 +679,8 @@ void storeSetPrivateKey(e)
 	debug(20, 0, "storeSetPrivateKey: Entry already exists with key '%s'\n",
 	    newkey);
 	debug(20, 0, "storeSetPrivateKey: Entry Dump:\n%s\n", storeToString(e2));
-	fatal_dump("Private key already exists.");
+	debug_trap("Private key already exists.");
+	return;
     }
     if (e->key)
 	storeHashDelete(e);
@@ -1017,13 +1025,17 @@ void storeAppend(e, data, len)
      char *data;
      int len;
 {
-    /* validity check -- sometimes it's called with bogus values */
-    if (e == NULL)
-	fatal_dump("storeAppend: NULL entry.");
-    if (e->mem_obj == NULL)
-	fatal_dump("storeAppend: NULL entry->mem_obj");
-    if (e->mem_obj->data == NULL)
-	fatal_dump("storeAppend: NULL entry->mem_obj->data");
+    /* sanity check */
+    if (e == NULL) {
+	debug_trap("storeAppend: NULL entry.");
+	return;
+    } else if (e->mem_obj == NULL) {
+	debug_trap("storeAppend: NULL entry->mem_obj");
+	return;
+    } else if (e->mem_obj->data == NULL) {
+	debug_trap("storeAppend: NULL entry->mem_obj->data");
+	return;
+    }
 
     if (len) {
 	debug(20, 5, "storeAppend: appending %d bytes for '%s'\n", len, e->key);
@@ -1121,9 +1133,6 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
     void *data = NULL;
     debug(20, 2, "storeSwapInHandle: '%s'\n", e->key);
 
-    if (mem == NULL)		/* XXX remove later */
-	fatal_dump(NULL);
-
     if ((flag < 0) && (flag != DISK_EOF)) {
 	debug(20, 0, "storeSwapInHandle: SwapIn failure (err code = %d).\n", flag);
 	put_free_8k_page(mem->e_swap_buf);
@@ -1142,9 +1151,6 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
     debug(20, 5, "storeSwapInHandle: len              = %d\n", len);
     debug(20, 5, "storeSwapInHandle: e->e_current_len = %d\n", mem->e_current_len);
     debug(20, 5, "storeSwapInHandle: e->object_len    = %d\n", e->object_len);
-
-    if (len < 0)		/* XXX remove later */
-	fatal_dump(NULL);
 
     /* always call these, even if len == 0 */
     mem->swap_offset += len;
@@ -1197,12 +1203,16 @@ static int storeSwapInStart(e, swapin_complete_handler, swapin_complete_data)
     MemObject *mem = NULL;
 
     /* sanity check! */
-    if (e->swap_status != SWAP_OK)
-	fatal_dump("storeSwapInStart: bad swap_status");
-    if (e->swap_file_number < 0)
-	fatal_dump("storeSwapInStart: bad swap_file_number");
-    if (e->mem_obj)
-	fatal_dump("storeSwapInStart: mem_obj already present");
+    if (e->swap_status != SWAP_OK) {
+	debug_trap("storeSwapInStart: bad swap_status");
+	return -1;
+    } else if (e->swap_file_number < 0) {
+	debug_trap("storeSwapInStart: bad swap_file_number");
+	return -1;
+    } else if (e->mem_obj) {
+	debug_trap("storeSwapInStart: mem_obj already present");
+	return -1;
+    }
 
     e->mem_obj = mem = new_MemObject();
 
@@ -1264,9 +1274,8 @@ void storeSwapOutHandle(fd, flag, e)
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
     if (mem == NULL) {
-	debug(20, 0, "HELP! Someone is swapping out a bad entry:\n");
 	debug(20, 0, "%s\n", storeToString(e));
-	fatal_dump(NULL);
+	debug_trap("Someone is swapping out a bad entry");
 	return;
     }
     e->timestamp = squid_curtime;
@@ -1706,7 +1715,7 @@ void storeComplete(e)
  * Fetch aborted.  Tell all clients to go home.  Negatively cache
  * abort message, freeing the data for this object 
  */
-int storeAbort(e, msg)
+void storeAbort(e, msg)
      StoreEntry *e;
      char *msg;
 {
@@ -1714,10 +1723,13 @@ int storeAbort(e, msg)
     LOCAL_ARRAY(char, abort_msg, 2000);
     MemObject *mem = e->mem_obj;
 
-    if (e->store_status != STORE_PENDING)	/* XXX remove later */
-	fatal_dump("storeAbort: bad store_status");
-    if (mem == NULL)		/* XXX remove later */
-	fatal_dump("storeAbort: null mem");
+    if (e->store_status != STORE_PENDING) {	/* XXX remove later */
+	debug_trap("storeAbort: bad store_status");
+	return;
+    } else if (mem == NULL) {		/* XXX remove later */
+	debug_trap("storeAbort: null mem");
+	return;
+    }
 
     debug(20, 6, "storeAbort: '%s'\n", e->key);
     storeNegativeCache(e);
@@ -1764,7 +1776,7 @@ int storeAbort(e, msg)
     InvokeHandlers(e);
 
     storeUnlockObject(e);
-    return 0;
+    return;
 }
 
 /* get the first in memory object entry in the storage */
@@ -1908,7 +1920,7 @@ int storeGetMemSpace(size, check_vm_number)
 	    storeRelease(e);
 	    n_released++;
 	} else {
-	    fatal_dump("storeGetMemSpace: Bad Entry in LRU list");
+	    debug_trap("storeGetMemSpace: Bad Entry in LRU list");
 	}
     }
 
@@ -2055,7 +2067,8 @@ int storeGetSwapSpace(size)
 	    list_count,
 	    sizeof(StoreEntry *),
 	    (QS) compareLastRef);
-	list_count = SWAP_LRU_REMOVE_COUNT;	/* chop list */
+	if (list_count > SWAP_LRU_REMOVE_COUNT)
+	    list_count = SWAP_LRU_REMOVE_COUNT;	/* chop list */
 	if (scan_count > SWAP_LRUSCAN_COUNT)
 	    break;
     }				/* for */
@@ -2209,11 +2222,6 @@ int storeOriginalKey(e)
 int storeEntryLocked(e)
      StoreEntry *e;
 {
-    if (!e) {
-	debug(20, 0, "This entry should be valid.\n");
-	debug(20, 0, "%s", storeToString(e));
-	fatal_dump(NULL);
-    }
     if (e->lock_count)
 	return 1;
     if (e->swap_status == SWAPPING_OUT)
