@@ -514,7 +514,7 @@ fi
 
 
 
-# From configure.in Revision: 1.57 
+# From configure.in Revision: 1.58 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -2622,7 +2622,7 @@ case "$host" in
 EOF
 
 		;;
-	*-*-solaris2.0-4)
+	*-*-solaris2.[0-4])
 		cat >> confdefs.h <<\EOF
 #define GETTIMEOFDAY_NO_TZP 1
 EOF
@@ -2722,7 +2722,7 @@ else
 	COMPILE_GNUREGEX="no"
 fi
 case "$host" in
-	*-sun-solaris2.0-4)
+	*-sun-solaris2.[0-4])
 	COMPILE_GNUREGEX="yes"
 	;;
 esac
