@@ -1,7 +1,7 @@
 
 /*
- * $Id: store_dir.cc,v 1.89 1999/05/03 23:00:00 wessels Exp $
- * $Id: store_dir.cc,v 1.89 1999/05/03 23:00:00 wessels Exp $
+ * $Id: store_dir.cc,v 1.90 1999/05/04 19:14:27 wessels Exp $
+ * $Id: store_dir.cc,v 1.90 1999/05/04 19:14:27 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -265,9 +265,6 @@ storeDirUpdateSwapSize(int fn, size_t size, int sign)
 void
 storeDirStats(StoreEntry * sentry)
 {
-#if HAVE_STATVFS
-    struct statvfs sfs;
-#endif
     storeAppendPrintf(sentry, "Store Directory Statistics:\n");
     storeAppendPrintf(sentry, "Store Entries          : %d\n",
 	memInUse(MEM_STOREENTRY));
