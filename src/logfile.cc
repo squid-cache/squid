@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.1 2000/03/14 23:02:18 wessels Exp $
+ * $Id: logfile.cc,v 1.2 2000/03/24 20:40:15 wessels Exp $
  */
 
 #include "squid.h"
@@ -146,6 +146,7 @@ logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
 {
     int s;
     s = write(lf->fd, buf, len);
+    fd_bytes(lf->fd, len, FD_WRITE);
     if (s == len)
 	return;
     fatalf("logfileWrite: %s: %s\n", lf->path, xstrerror());
