@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.247 2001/02/09 19:35:10 hno Exp $
+ * $Id: acl.cc,v 1.248 2001/02/18 11:16:51 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -42,7 +42,9 @@ static FILE *aclFile;
 static void aclParseDomainList(void *curlist);
 static void aclParseUserList(void **current);
 static void aclParseIpList(void *curlist);
+#if UNUSED_CODE
 static void aclParseIntlist(void *curlist);
+#endif
 #if SQUID_SNMP
 static void aclParseWordList(void *curlist);
 #endif
@@ -208,8 +210,10 @@ aclStrToType(const char *s)
     if (!strcmp(s, "snmp_community"))
 	return ACL_SNMP_COMMUNITY;
 #endif
+#if SRC_RTT_NOT_YET_FINISHED
     if (!strcmp(s, "src_rtt"))
 	return ACL_NETDB_SRC_RTT;
+#endif
 #if USE_ARP_ACL
     if (!strcmp(s, "arp"))
 	return ACL_SRC_ARP;
@@ -274,8 +278,10 @@ aclTypeToStr(squid_acl type)
     if (type == ACL_SNMP_COMMUNITY)
 	return "snmp_community";
 #endif
+#if SRC_RTT_NOT_YET_FINISHED
     if (type == ACL_NETDB_SRC_RTT)
 	return "src_rtt";
+#endif
 #if USE_ARP_ACL
     if (type == ACL_SRC_ARP)
 	return "arp";
@@ -297,6 +303,7 @@ aclFindByName(const char *name)
     return NULL;
 }
 
+#if UNUSED_CODE
 static void
 aclParseIntlist(void *curlist)
 {
@@ -311,6 +318,7 @@ aclParseIntlist(void *curlist)
 	Tail = &q->next;
     }
 }
+#endif
 
 static void
 aclParseIntRange(void *curlist)
@@ -779,9 +787,11 @@ aclParseAclLine(acl ** head)
     case ACL_SRC_ASN:
     case ACL_MAXCONN:
     case ACL_DST_ASN:
+#if SRC_RTT_NOT_YET_FINISHED
     case ACL_NETDB_SRC_RTT:
 	aclParseIntlist(&A->data);
 	break;
+#endif
     case ACL_URL_PORT:
     case ACL_MY_PORT:
 	aclParseIntRange(&A->data);
@@ -833,7 +843,7 @@ because no authentication schemes are fully configured.\n", A->cfgline);
 	break;
 #endif
     case ACL_NONE:
-    default:
+    case ACL_ENUM_MAX:
 	fatal("Bad ACL type");
 	break;
     }
@@ -1663,12 +1673,12 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	return aclMatchRegex(ae->data, header);
 	/* NOTREACHED */
     case ACL_NONE:
-    default:
-	debug(28, 0) ("aclMatchAcl: '%s' has bad type %d\n",
-	    ae->name, ae->type);
-	return 0;
+    case ACL_ENUM_MAX:
+	break;
     }
-    /* NOTREACHED */
+    debug(28, 0) ("aclMatchAcl: '%s' has bad type %d\n",
+	ae->name, ae->type);
+    return 0;
 }
 
 int
@@ -2017,7 +2027,9 @@ aclDestroyAcls(acl ** head)
 	case ACL_MY_IP:
 	    splay_destroy(a->data, aclFreeIpData);
 	    break;
+#if USE_ARP_ACL
 	case ACL_SRC_ARP:
+#endif
 	case ACL_DST_DOMAIN:
 	case ACL_SRC_DOMAIN:
 	    splay_destroy(a->data, xfree);
@@ -2047,13 +2059,17 @@ aclDestroyAcls(acl ** head)
 	case ACL_BROWSER:
 	case ACL_SRC_DOM_REGEX:
 	case ACL_DST_DOM_REGEX:
+	case ACL_REP_MIME_TYPE:
+	case ACL_REQ_MIME_TYPE:
 	    aclDestroyRegexList(a->data);
 	    break;
 	case ACL_PROTO:
 	case ACL_METHOD:
 	case ACL_SRC_ASN:
 	case ACL_DST_ASN:
+#if SRC_RTT_NOT_YET_FINISHED
 	case ACL_NETDB_SRC_RTT:
+#endif
 	case ACL_MAXCONN:
 	    intlistDestroy((intlist **) & a->data);
 	    break;
@@ -2062,7 +2078,7 @@ aclDestroyAcls(acl ** head)
 	    aclDestroyIntRange(a->data);
 	    break;
 	case ACL_NONE:
-	default:
+	case ACL_ENUM_MAX:
 	    debug(28, 1) ("aclDestroyAcls: no case for ACL type %d\n", a->type);
 	    break;
 	}
@@ -2367,63 +2383,52 @@ aclDumpGeneric(const acl * a)
     case ACL_DST_IP:
     case ACL_MY_IP:
 	return aclDumpIpList(a->data);
-	break;
     case ACL_SRC_DOMAIN:
     case ACL_DST_DOMAIN:
 	return aclDumpDomainList(a->data);
-	break;
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
 	return wordlistDup(a->data);
-	break;
 #endif
 #if USE_IDENT
     case ACL_IDENT:
 	return aclDumpUserList(a->data);
-	break;
     case ACL_IDENT_REGEX:
 	return aclDumpRegexList(a->data);
-	break;
 #endif
     case ACL_PROXY_AUTH:
 	return aclDumpUserList(a->data);
-	break;
     case ACL_TIME:
 	return aclDumpTimeSpecList(a->data);
-	break;
     case ACL_PROXY_AUTH_REGEX:
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
     case ACL_BROWSER:
     case ACL_SRC_DOM_REGEX:
     case ACL_DST_DOM_REGEX:
+    case ACL_REQ_MIME_TYPE:
+    case ACL_REP_MIME_TYPE:
 	return aclDumpRegexList(a->data);
-	break;
     case ACL_SRC_ASN:
     case ACL_MAXCONN:
     case ACL_DST_ASN:
 	return aclDumpIntlistList(a->data);
-	break;
     case ACL_URL_PORT:
     case ACL_MY_PORT:
 	return aclDumpIntRangeList(a->data);
-	break;
     case ACL_PROTO:
 	return aclDumpProtoList(a->data);
-	break;
     case ACL_METHOD:
 	return aclDumpMethodList(a->data);
-	break;
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
 	return aclDumpArpList(a->data);
-	break;
 #endif
     case ACL_NONE:
-    default:
-	debug(28, 1) ("aclDumpGeneric: no case for ACL type %d\n", a->type);
+    case ACL_ENUM_MAX:
 	break;
     }
+    debug(28, 1) ("aclDumpGeneric: no case for ACL type %d\n", a->type);
     return NULL;
 }
 
