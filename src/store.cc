@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.540 2001/06/29 14:31:34 hno Exp $
+ * $Id: store.cc,v 1.541 2001/09/07 18:02:46 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -781,7 +781,7 @@ storeGetMemSpace(int size)
 	return;
     last_check = squid_curtime;
     pages_needed = (size / SM_PAGE_SIZE) + 1;
-    if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_max)
+    if (memInUse(MEM_MEM_NODE) + pages_needed < store_pages_max)
 	return;
     debug(20, 2) ("storeGetMemSpace: Starting, need %d pages\n", pages_needed);
     /* XXX what to set as max_scan here? */
@@ -789,7 +789,7 @@ storeGetMemSpace(int size)
     while ((e = walker->Next(walker))) {
 	storePurgeMem(e);
 	released++;
-	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_max)
+	if (memInUse(MEM_MEM_NODE) + pages_needed < store_pages_max)
 	    break;
     }
     walker->Done(walker);
