@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.18 1996/04/16 05:05:29 wessels Exp $ */
+/* $Id: squid.h,v 1.19 1996/04/16 05:13:37 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -98,7 +98,7 @@ typedef unsigned long u_num32;
 #include "url.h"
 #include "proto.h"
 #include "icp.h"
-#include "errorpage.h"	/* must go after icp.h */
+#include "errorpage.h"		/* must go after icp.h */
 #include "ipcache.h"
 #include "mime.h"
 #include "neighbors.h"
