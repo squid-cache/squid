@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.188 2003/03/10 04:56:38 robertc Exp $
+ * $Id: errorpage.cc,v 1.189 2003/07/09 14:14:58 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -685,6 +685,11 @@ errorConvert(char token, ErrorState * err)
 
     case 'M':
         p = r ? RequestMethodStr[r->method] : "[unkown method]";
+
+        break;
+
+    case 'o':
+        p = external_acl_message ? external_acl_message : "[not available]";
 
         break;
 

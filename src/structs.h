@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.469 2003/07/06 21:50:56 hno Exp $
+ * $Id: structs.h,v 1.470 2003/07/09 14:14:58 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1713,6 +1713,7 @@ public:
     String tag;			/* Internal tag for this request */
     String extacl_user;		/* User name returned by extacl lookup */
     String extacl_passwd;	/* Password returned by extacl lookup */
+    String extacl_log;		/* String to be used for access.log purposes */
 };
 
 #endif

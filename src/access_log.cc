@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.85 2003/07/09 13:57:43 hno Exp $
+ * $Id: access_log.cc,v 1.86 2003/07/09 14:14:58 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -342,6 +342,7 @@ typedef enum {
     LFT_USER_IDENT,
     /*LFT_USER_REALM, */
     /*LFT_USER_SCHEME, */
+    LFT_USER_EXTERNAL,
 
     LFT_HTTP_CODE,
     /*LFT_HTTP_STATUS, */
@@ -368,6 +369,9 @@ typedef enum {
     /*LFT_REPLY_SIZE_HEADERS, */
     /*LFT_REPLY_SIZE_BODY, */
     /*LFT_REPLY_SIZE_BODY_NO_TE, */
+
+    LFT_TAG,
+    LFT_EXT_LOG,
 
     LFT_PERCENT			/* special string cases for escaped chars */
 } logformat_bcode_t;
@@ -477,6 +481,9 @@ struct logformat_token_table_entry logformat_token_table[] =
         /*{ "<sh", LFT_REPLY_SIZE_HEADERS }, */
         /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
         /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
+
+        {"et", LFT_TAG},
+        {"ea", LFT_EXT_LOG},
 
         {"%", LFT_PERCENT},
 
@@ -647,8 +654,20 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_USER_NAME:
-            out = accessLogFormatName(al->cache.authuser ?
-                                      al->cache.authuser : al->cache.rfc931);
+            out = accessLogFormatName(al->cache.authuser);
+
+            if (!out)
+                out = accessLogFormatName(al->cache.extuser);
+
+#if USE_SSL
+
+            if (!out)
+                out = accessLogFormatName(al->cache.ssluser);
+
+#endif
+
+            if (!out)
+                out = accessLogFormatName(al->cache.rfc931);
 
             dofree = 1;
 
@@ -663,6 +682,13 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_USER_IDENT:
             out = accessLogFormatName(al->cache.rfc931);
+
+            dofree = 1;
+
+            break;
+
+        case LFT_USER_EXTERNAL:
+            out = accessLogFormatName(al->cache.extuser);
 
             dofree = 1;
 
@@ -738,6 +764,22 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             /*case LFT_REPLY_SIZE_HEADERS: */
             /*case LFT_REPLY_SIZE_BODY: */
             /*case LFT_REPLY_SIZE_BODY_NO_TE: */
+
+        case LFT_TAG:
+            if (al->request)
+                out = al->request->tag.buf();
+
+            quote = 1;
+
+            break;
+
+        case LFT_EXT_LOG:
+            if (al->request)
+                out = al->request->extacl_log.buf();
+
+            quote = 1;
+
+            break;
 
         case LFT_PERCENT:
             out = "%";
