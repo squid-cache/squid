@@ -1,5 +1,5 @@
 /*
- * $Id: comm.cc,v 1.188 1997/10/21 15:59:11 wessels Exp $
+ * $Id: comm.cc,v 1.189 1997/10/23 04:01:23 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1060,7 +1060,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->open == FD_OPEN);
-    debug(5, 5) ("commSetSelect: FD %d, type=%d, handler=%p, data=%p\n", fd, type, handler, client_data);
+    debug(5, 5) ("commSetSelect: FD %d type %d\n", fd, type);
     if (type & COMM_SELECT_READ) {
 	F->read_handler = handler;
 	F->read_data = client_data;
@@ -1295,8 +1295,8 @@ commHandleWrite(int fd, void *data)
     int len = 0;
     int nleft;
 
-    debug(5, 5) ("commHandleWrite: FD %d: state=%p, off %d, sz %d.\n",
-	fd, state, state->offset, state->size);
+    debug(5, 5) ("commHandleWrite: FD %d: off %d, sz %d.\n",
+	fd, state->offset, state->size);
 
     nleft = state->size - state->offset;
     len = write(fd, state->buf + state->offset, nleft);
