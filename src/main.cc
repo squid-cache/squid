@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.173 1997/08/25 22:35:57 wessels Exp $
+ * $Id: main.cc,v 1.174 1997/10/20 22:31:36 kostas Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -388,6 +388,26 @@ serverConnectionsOpen(void)
 		theOutICPAddr = xaddr.sin_addr;
 	}
     }
+#ifdef SQUID_SNMP
+   if (Config.Port.snmp) {
+        enter_suid();
+        fd = comm_open(SOCK_STREAM,
+            0,
+            Config.Addrs.snmp_incoming,
+            SQUID_SNMP_PORT,
+            COMM_NONBLOCKING,
+            "SNMP Socket");
+        leave_suid();
+        if (fd < 0)
+            continue;
+        comm_listen(fd);
+        commSetSelect(fd, COMM_SELECT_READ, snmpAccept, NULL, 0);
+        debug(1, 1) ("Accepting SNMP connections on port %d, FD %d.\n",
+            (int) SQUID_SNMP_PORT , fd);
+    }
+#endif /* SQUID_SNMP */
+
+
     clientdbInit();
     icmpOpen();
     netdbInit();

@@ -127,6 +127,9 @@ struct _SquidConfig {
     struct {
 	ushortlist *http;
 	u_short icp;
+#ifdef SQUID_SNMP
+	u_short snmp;
+#endif
     } Port;
     struct {
 	char *log;
@@ -168,6 +171,9 @@ struct _SquidConfig {
 	struct in_addr tcp_incoming;
 	struct in_addr tcp_outgoing;
 	struct in_addr udp_incoming;
+#ifdef SQUID_SNMP
+	struct in_addr snmp_incoming;
+#endif /* SQUID_SNMP */
 	struct in_addr udp_outgoing;
 	struct in_addr client_netmask;
     } Addrs;
