@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.262 1999/01/19 02:24:34 wessels Exp $
+ * $Id: structs.h,v 1.263 1999/01/19 05:24:49 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1596,6 +1596,9 @@ struct _FwdState {
     ErrorState *err;
     time_t start;
     int n_tries;
+    struct {
+	unsigned int dont_retry:1;
+    } flags;
 };
 
 #if USE_HTCP

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.47 1999/01/19 02:24:24 wessels Exp $
+ * $Id: forward.cc,v 1.48 1999/01/19 05:24:48 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -38,7 +38,7 @@
 
 static PSC fwdStartComplete;
 static void fwdDispatch(FwdState *);
-static void fwdConnectStart(FwdState * fwdState);
+static void fwdConnectStart(void *);	/* should be same as EVH */
 static void fwdStateFree(FwdState * fwdState);
 static PF fwdConnectTimeout;
 static PF fwdServerClosed;
@@ -86,6 +86,7 @@ fwdStateFree(FwdState * fwdState)
 	    errorAppendEntry(e, fwdState->err);
 	}
     }
+    assert(!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT));
     fwdServersFree(&fwdState->servers);
     requestUnlink(fwdState->request);
     fwdState->request = NULL;
@@ -114,6 +115,8 @@ fwdCheckRetry(FwdState * fwdState)
 	return 0;
     if (squid_curtime - fwdState->start > 120)
 	return 0;
+    if (fwdState->flags.dont_retry)
+	return 0;
     if (pumpMethod(fwdState->request->method))
 	if (0 == pumpRestart(fwdState->request))
 	    return 0;
@@ -131,7 +134,8 @@ fwdServerClosed(int fd, void *data)
 	debug(17, 3) ("fwdServerClosed: re-forwarding (%d tries, %d secs)\n",
 	    fwdState->n_tries,
 	    (int) (squid_curtime - fwdState->start));
-	fwdConnectStart(fwdState);
+	/* use eventAdd to break potential call sequence loops */
+	eventAdd("fwdConnectStart", fwdConnectStart, fwdState, 0.0, 1);
     } else {
 	fwdStateFree(fwdState);
     }
@@ -144,8 +148,11 @@ fwdConnectDone(int server_fd, int status, void *data)
     FwdServer *fs = fwdState->servers;
     ErrorState *err;
     request_t *request = fwdState->request;
+    static int loop_detect = 0;
+    assert(loop_detect++ == 0);
     assert(fwdState->server_fd == server_fd);
     if (status == COMM_ERR_DNS) {
+	fwdState->flags.dont_retry = 1;
 	debug(17, 4) ("fwdConnectDone: Unknown host: %s\n",
 	    request->host);
 	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
@@ -174,6 +181,7 @@ fwdConnectDone(int server_fd, int status, void *data)
 	fd_table[server_fd].uses++;
 	fwdDispatch(fwdState);
     }
+    loop_detect--;
 }
 
 static void
@@ -194,8 +202,9 @@ fwdConnectTimeout(int fd, void *data)
 }
 
 static void
-fwdConnectStart(FwdState * fwdState)
+fwdConnectStart(void *data)
 {
+    FwdState * fwdState = data;
     const char *url = storeUrl(fwdState->entry);
     int fd;
     ErrorState *err;
