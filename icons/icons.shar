@@ -3,7 +3,7 @@
 # To extract the files from this archive, save it to some FILE, remove
 # everything before the `!/bin/sh' line above, then type `sh FILE'.
 #
-# Made on 1997-07-18 21:15 MDT by <wessels@surf>.
+# Made on 1997-07-18 22:53 MDT by <wessels@surf>.
 # Source directory was `/usr/people/wessels/Edit/squid-1.2/icons'.
 #
 # Existing files will *not* be overwritten unless `-c' is specified.
@@ -72,19 +72,7 @@ else
   export TEXTDOMAIN
   echo="$gettext_dir/gettext -s"
 fi
-touch -am 1231235999 $$.touch >/dev/null 2>&1
-if test ! -f 1231235999 && test -f $$.touch; then
-  shar_touch=touch
-else
-  shar_touch=:
-  echo
-  $echo 'WARNING: not restoring timestamps.  Consider getting and'
-  $echo "installing GNU \`touch', distributed in GNU File Utilities..."
-  echo
-fi
-rm -f 1231235999 $$.touch
-#
-if mkdir _sh23767; then
+if mkdir _sh03044; then
   $echo 'x -' 'creating lock directory'
 else
   $echo 'failed to create lock directory'
@@ -104,7 +92,6 @@ M/`.ZF5M`"F%(`.2*)H*%:)3T3,%B#A!05GA`J=,VBS9+R(YU^1V,@^1IC<+U
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-binhex.gif' &&
   chmod 0440 'anthony-binhex.gif' ||
   $echo 'restore of' 'anthony-binhex.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -134,7 +121,6 @@ M0[^%=D%1<E])S3E=[86OZ75].']:?&84`3ET;(9O%HE:7(UWB$.2DQV9%G9A
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-bomb.gif' &&
   chmod 0440 'anthony-bomb.gif' ||
   $echo 'restore of' 'anthony-bomb.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -163,7 +149,6 @@ IG$4`-;M0>;_69(O]GM=K62TQ(WL=.!V$*(=_`DN-1#$1.Y*3D@\)`#MN
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-box.gif' &&
   chmod 0440 'anthony-box.gif' ||
   $echo 'restore of' 'anthony-box.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -192,7 +177,6 @@ A%MO'+SS=!MS@;B<>@,]7^X!;,DR$3#<;`(F*BXP*"0`[
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-box2.gif' &&
   chmod 0440 'anthony-box2.gif' ||
   $echo 'restore of' 'anthony-box2.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -221,7 +205,6 @@ MD%=KC\L=P6`X`/QTP`K1*%$A=4$A$]:+2G$Y:)52Q%HMW6:VQ^).O\$PE5R^
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-c.gif' &&
   chmod 0440 'anthony-c.gif' ||
   $echo 'restore of' 'anthony-c.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -250,7 +233,6 @@ BJHM3+@"I-L9Q-5_Y>F=BKQ!]/!J",`(Z.BTI!C0T$@D`.\$V
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-compressed.gif' &&
   chmod 0440 'anthony-compressed.gif' ||
   $echo 'restore of' 'anthony-compressed.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -279,7 +261,6 @@ M+0Q7GN\]WPJ($[)X12,,J?P0F\<@]`E=2IM`0FK&Y0YXJ*]X3.8-%J9TYIP`
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-dir.gif' &&
   chmod 0440 'anthony-dir.gif' ||
   $echo 'restore of' 'anthony-dir.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -308,7 +289,6 @@ MAPO#E>L^6`]7,PF#O\!NF`2QF$I=Z>G#**O(XPA')/&R36WX\R6D9FCTH(=:
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-dirup.gif' &&
   chmod 0440 'anthony-dirup.gif' ||
   $echo 'restore of' 'anthony-dirup.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -337,7 +317,6 @@ M)@ST,-,ZBY`R*/*".Y/%"-#Q:,.C[#1<-F5/I5#ZRH*VUU<5K*-]K65S-#RN
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-dvi.gif' &&
   chmod 0440 'anthony-dvi.gif' ||
   $echo 'restore of' 'anthony-dvi.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -366,7 +345,6 @@ M!:LW/`[``:"G&@F"0PD*8+0(B<W*4XEC5GR4J2@J3;YVV*.7V]$NP3DSN4M$
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-f.gif' &&
   chmod 0440 'anthony-f.gif' ||
   $echo 'restore of' 'anthony-f.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -397,7 +375,6 @@ M`P17A(:'@1V*$XZ/+RMFE)5Z)7Z9@)8>=P:CI)^;ER6(!%"LK4]`&4FRLU(1
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-image.gif' &&
   chmod 0440 'anthony-image.gif' ||
   $echo 'restore of' 'anthony-image.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -427,7 +404,6 @@ MIZW*I"-5#@C@,$'5I7*^XC`7RQJ[OV1VU2H_%.YX_%I9"/C_`05[9G:`@(,J
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-image2.gif' &&
   chmod 0440 'anthony-image2.gif' ||
   $echo 'restore of' 'anthony-image2.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -457,7 +433,6 @@ X.`U*+C%$_&7"12!<1`#O/
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-layout.gif' &&
   chmod 0440 'anthony-layout.gif' ||
   $echo 'restore of' 'anthony-layout.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -485,7 +460,6 @@ B<"8L*HN'P/*)'`B@T`SUF7%><PQM]=90]A31L=`\+@``.P-K
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-link.gif' &&
   chmod 0440 'anthony-link.gif' ||
   $echo 'restore of' 'anthony-link.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -514,7 +488,6 @@ MS<147F.:WNRG6@R.2.0N6&'`F+Y541%-08?2:XMXHV*M)-DV&Q:.GR1C,KDL
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-movie.gif' &&
   chmod 0440 'anthony-movie.gif' ||
   $echo 'restore of' 'anthony-movie.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -543,7 +516,6 @@ F?E5,"WFY<CZM6;CQ+G_'.W,M?WAK@X02`4B*BT<V$3^0D4H)`#MV
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-pdf.gif' &&
   chmod 0440 'anthony-pdf.gif' ||
   $echo 'restore of' 'anthony-pdf.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -572,7 +544,6 @@ E6]7@+?6-%-COXF^%MZ.O1X!Z@(%P@X0;-T:*1C(1?(\Z#PD`.PT.
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-portal.gif' &&
   chmod 0440 'anthony-portal.gif' ||
   $echo 'restore of' 'anthony-portal.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -601,7 +572,6 @@ MOE7#-[RFG65(&1A[NYZM\^,9`3N/TF5!2EY8*@]Z]9V&ULGTU:QR641B.,U>
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-ps.gif' &&
   chmod 0440 'anthony-ps.gif' ||
   $echo 'restore of' 'anthony-ps.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -630,7 +600,6 @@ MD,)JS)8Z7L]'J@1Y``JQ<[15EL:=\[GZ#01250<Z:":WU8_T"\;I!*'9$BL@
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-quill.gif' &&
   chmod 0440 'anthony-quill.gif' ||
   $echo 'restore of' 'anthony-quill.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -659,7 +628,6 @@ MNN9QC/<[RF`X`.!4R!'1*!DYA4S1TU+\`7N5:G/:T;ZNL6R4VQVKP#+HD2SP
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-script.gif' &&
   chmod 0440 'anthony-script.gif' ||
   $echo 'restore of' 'anthony-script.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -688,7 +656,6 @@ MUP5$:/RVVVMWX;F$P@WOL#0&D3AF<7J$*J?2*O(JS1H&WV_2U)S1`()!5(<]
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-sound.gif' &&
   chmod 0440 'anthony-sound.gif' ||
   $echo 'restore of' 'anthony-sound.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -717,7 +684,6 @@ MSG:6^[&^SF`X``"#%J)14@.]A,L2$GH\\2C%W9679?I`W&C+=>W&4,^D^%M>
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-tar.gif' &&
   chmod 0440 'anthony-tar.gif' ||
   $echo 'restore of' 'anthony-tar.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -746,7 +712,6 @@ MS0[F8+D?EJLC&!AYPI:2>`0D440*4E+Y^*)%)Q7+U)9PE!NH,_T"NZSJ.%IN
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-tex.gif' &&
   chmod 0440 'anthony-tex.gif' ||
   $echo 'restore of' 'anthony-tex.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -775,7 +740,6 @@ MC;?6X`^`FJWR"TINNQ<%*!P2C2R`=#I]-IT"YE%`[0*L6^P2VO%^QU>G5H2D
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-text.gif' &&
   chmod 0440 'anthony-text.gif' ||
   $echo 'restore of' 'anthony-text.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -804,7 +768,6 @@ ML`KN,-:GG:O2(^DDG0H-0"KM+$L3ZPC[U7R_)P6(S2(MO8[S2SPEQ]4DE-H9
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-unknown.gif' &&
   chmod 0440 'anthony-unknown.gif' ||
   $echo 'restore of' 'anthony-unknown.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -833,7 +796,6 @@ M#M""[E:#X&`G:?E^%"%Q<LQUACS4<XER6J#%CN]*?1V!7=PV&3:.!5B6^0:.
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-xbm.gif' &&
   chmod 0440 'anthony-xbm.gif' ||
   $echo 'restore of' 'anthony-xbm.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -862,7 +824,6 @@ A=GUL`QK;6;?=Y+IN2[?RWWYB5`%$A89#,1%1BU$/"0`[
 `
 end
 SHAR_EOF
-  $shar_touch -am 0127043597 'anthony-xpm.gif' &&
   chmod 0440 'anthony-xpm.gif' ||
   $echo 'restore of' 'anthony-xpm.gif' 'failed'
   if ( md5sum --help 2>&1 | grep 'sage: md5sum \[' ) >/dev/null 2>&1 \
@@ -877,5 +838,5 @@ SHAR_EOF
     $echo 'anthony-xpm.gif:' 'original size' '168,' 'current size' "$shar_count!"
   fi
 fi
-rm -fr _sh23767
+rm -fr _sh03044
 exit 0
