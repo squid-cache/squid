@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.135 1998/02/06 06:44:31 wessels Exp $
+ * $Id: acl.cc,v 1.136 1998/02/06 06:51:03 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -61,7 +61,7 @@ static FQDNH aclLookupDstFQDNDone;
 static int aclReadProxyAuth(struct _acl_proxy_auth *p);
 static wordlist * aclDumpIpList(acl_ip_data * ip);
 static wordlist * aclDumpDomainList(void *data);
-static wordlist * aclDumpTimeSpec(void *data);
+static wordlist * aclDumpTimeSpec(acl_time_data *);
 static wordlist * aclDumpRegexList(void *data);
 static wordlist * aclDumpIntlist(void *data);
 static wordlist * aclDumpWordList(wordlist *data);
@@ -513,6 +513,9 @@ aclParseTimeSpec(void *curlist)
 		    break;
 		case 'D':
 		    q->weekbits |= ACL_WEEKDAYS;
+		    break;
+		case '-':
+		    /* ignore placeholder */
 		    break;
 		default:
 		    debug(28, 0) ("%s line %d: %s\n",
@@ -2088,12 +2091,6 @@ aclDumpDomainList(void *data)
 static wordlist *
 aclDumpTimeSpec(acl_time_data *t)
 {
-struct _acl_time_data {
-    int weekbits;
-    int start;
-    int stop;
-    acl_time_data *next;
-};
     wordlist *W = NULL;
     wordlist **T = &W;
     wordlist *w;
@@ -2116,7 +2113,8 @@ struct _acl_time_data {
 	*T = w;
 	T = &w->next;
 	t = t->next;
-	
+	}
+	return W;
 }
 static wordlist *
 aclDumpRegexList(void *data)
