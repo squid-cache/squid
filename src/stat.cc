@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.148 1997/07/15 03:29:05 wessels Exp $
+ * $Id: stat.cc,v 1.149 1997/07/16 20:32:17 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -109,6 +109,10 @@
 
 #define MAX_LINELEN (4096)
 #define max(a,b)  ((a)>(b)? (a): (b))
+
+#ifdef HIER_EXPERIMENT
+static FILE *hierexplog = NULL;
+#endif
 
 typedef struct _log_read_data_t {
     StoreEntry *sentry;
@@ -281,10 +285,6 @@ describeFlags(const StoreEntry * entry)
     int flags = (int) entry->flag;
     char *t;
     buf[0] = '\0';
-#ifdef OLD_CODE
-    if (BIT_TEST(flags, IP_LOOKUP_PENDING))
-	strcat(buf, "IP,");
-#endif
     if (BIT_TEST(flags, DELETE_BEHIND))
 	strcat(buf, "DB,");
 #ifdef OLD_CODE
@@ -533,16 +533,14 @@ info_get(StoreEntry * sentry)
 {
     const char *tod = NULL;
     float f;
-#if HAVE_MALLINFO
-    int t;
-#endif
-
 #if defined(HAVE_GETRUSAGE) && defined(RUSAGE_SELF)
     struct rusage rusage;
 #endif
-
-#if HAVE_MALLINFO
+#if HAVE_MSTATS && HAVE_GNUMALLOC_H
+    struct mstats ms;
+#elif HAVE_MALLINFO
     struct mallinfo mp;
+    int t;
 #endif
 
     storeAppendPrintf(sentry, open_bracket);
@@ -607,7 +605,15 @@ info_get(StoreEntry * sentry)
 	rusage.ru_majflt);
 #endif
 
-#if HAVE_MALLINFO
+#if HAVE_MSTATS && HAVE_GNUMALLOC_H
+    ms = mstats();
+    storeAppendPrintf(sentry, "{Memory usage for %s via mstats():}\n",
+	appname);
+    storeAppendPrintf(sentry, "{\tTotal space in arena:  %6d KB}\n",
+	ms.bytes_total >> 10);
+    storeAppendPrintf(sentry, "{\tTotal free:            %6d KB %d%%}\n",
+	ms.bytes_free >> 10, percent(ms.bytes_free, ms.bytes_total));
+#elif HAVE_MALLINFO
     mp = mallinfo();
     storeAppendPrintf(sentry, "{Memory usage for %s via mallinfo():}\n",
 	appname);
@@ -644,12 +650,14 @@ info_get(StoreEntry * sentry)
 #endif /* HAVE_MALLINFO */
 
     storeAppendPrintf(sentry, "{File descriptor usage for %s:}\n", appname);
-    storeAppendPrintf(sentry, "{\tMax number of file desc available:    %4d}\n",
+    storeAppendPrintf(sentry, "{\tMaximum number of file descriptors:   %4d}\n",
 	Squid_MaxFD);
     storeAppendPrintf(sentry, "{\tLargest file desc currently in use:   %4d}\n",
 	Biggest_FD);
+    storeAppendPrintf(sentry, "{\tNumber of file desc currently in use: %4d}\n",
+	Number_FD);
     storeAppendPrintf(sentry, "{\tAvailable number of file descriptors: %4d}\n",
-	fdstat_are_n_free_fd(0));
+	Squid_MaxFD - Number_FD);
     storeAppendPrintf(sentry, "{\tReserved number of file descriptors:  %4d}\n",
 	RESERVED_FD);
 

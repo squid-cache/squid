@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.177 1997/07/14 23:45:01 wessels Exp $
+ * $Id: http.cc,v 1.178 1997/07/16 20:32:07 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -204,7 +204,7 @@ static PF httpReadReply;
 static PF httpSendRequest;
 static PF httpStateFree;
 static PF httpTimeout;
-static void httpAppendRequestHeader _PARAMS((char *hdr, const char *line, size_t * sz, size_t max));
+static void httpAppendRequestHeader _PARAMS((char *hdr, const char *line, size_t * sz, size_t max, int));
 static void httpCacheNegatively _PARAMS((StoreEntry *));
 static void httpMakePrivate _PARAMS((StoreEntry *));
 static void httpMakePublic _PARAMS((StoreEntry *));
@@ -477,6 +477,7 @@ httpCheckPublic(struct _http_reply *reply, HttpStateData * httpState)
 	return -1;
 	break;
 	/* Some responses can never be cached */
+    case 206:			/* Partial Content -- Not yet supported */
     case 303:			/* See Other */
     case 304:			/* Not Modified */
     case 401:			/* Unauthorized */
@@ -665,17 +666,19 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 }
 
 static void
-httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max)
+httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, int check)
 {
     size_t n = *sz + strlen(line) + 2;
     if (n >= max)
 	return;
-    if (Config.Options.anonymizer == ANONYMIZER_PARANOID) {
-	if (!httpAnonAllowed(line))
-	    return;
-    } else if (Config.Options.anonymizer == ANONYMIZER_STANDARD) {
-	if (httpAnonDenied(line))
-	    return;
+    if (check) {
+	if (Config.Options.anonymizer == ANONYMIZER_PARANOID) {
+	    if (!httpAnonAllowed(line))
+		return;
+	} else if (Config.Options.anonymizer == ANONYMIZER_STANDARD) {
+	    if (httpAnonDenied(line))
+		return;
+	}
     }
     /* allowed header, explicitly known to be not dangerous */
     debug(11, 5) ("httpAppendRequestHeader: %s\n", line);
@@ -716,11 +719,11 @@ httpBuildRequestHeader(request_t * request,
     sprintf(ybuf, "%s %s HTTP/1.0",
 	RequestMethodStr[request->method],
 	*request->urlpath ? request->urlpath : "/");
-    httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
+    httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     /* Add IMS header */
     if (entry && entry->lastmod && request->method == METHOD_GET) {
 	sprintf(ybuf, "If-Modified-Since: %s", mkrfc1123(entry->lastmod));
-	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
+	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
 	EBIT_SET(hdr_flags, HDR_IMS);
     }
     end = mime_headers_end(hdr_in);
@@ -733,6 +736,11 @@ httpBuildRequestHeader(request_t * request,
 	debug(11, 5) ("httpBuildRequestHeader: %s\n", xbuf);
 	if (strncasecmp(xbuf, "Proxy-Connection:", 17) == 0)
 	    continue;
+#if USE_PROXY_AUTH
+	if (strncasecmp(xbuf, "Proxy-authorization:", 20) == 0)
+	    if (Config.proxyAuth.File)
+		continue;
+#endif
 	if (strncasecmp(xbuf, "Connection:", 11) == 0)
 	    continue;
 	if (strncasecmp(xbuf, "Host:", 5) == 0) {
@@ -763,29 +771,33 @@ httpBuildRequestHeader(request_t * request,
 		sprintf(xbuf, "Max-Forwards: %d", n - 1);
 	    }
 	}
-	httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512);
+	httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512, 1);
     }
-    hdr_len = end - hdr_in;
+    hdr_len = t - hdr_in;
+    if (Config.fake_ua && strstr(hdr_out, "User-Agent") == NULL) {
+	sprintf(ybuf, "User-Agent: %s", Config.fake_ua);
+	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 0);
+    }
     /* Append Via: */
     sprintf(ybuf, "%3.1f %s", orig_request->http_ver, ThisCache);
     strcat(viabuf, ybuf);
-    httpAppendRequestHeader(hdr_out, viabuf, &len, out_sz);
+    httpAppendRequestHeader(hdr_out, viabuf, &len, out_sz, 1);
     /* Append to X-Forwarded-For: */
     strcat(fwdbuf, cfd < 0 ? "unknown" : fd_table[cfd].ipaddr);
-    httpAppendRequestHeader(hdr_out, fwdbuf, &len, out_sz);
+    httpAppendRequestHeader(hdr_out, fwdbuf, &len, out_sz, 1);
     if (!EBIT_TEST(hdr_flags, HDR_HOST)) {
 	sprintf(ybuf, "Host: %s", orig_request->host);
-	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
+	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     }
     if (!EBIT_TEST(cc_flags, CCC_MAXAGE)) {
 	url = entry ? entry->url : urlCanonical(orig_request, NULL);
 	sprintf(ybuf, "Cache-control: Max-age=%d", (int) getMaxAge(url));
-	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
+	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
 	if (request->urlpath) {
 	    assert(strstr(url, request->urlpath));
 	}
     }
-    httpAppendRequestHeader(hdr_out, null_string, &len, out_sz);
+    httpAppendRequestHeader(hdr_out, null_string, &len, out_sz, 1);
     put_free_4k_page(xbuf);
     put_free_4k_page(viabuf);
     put_free_4k_page(fwdbuf);

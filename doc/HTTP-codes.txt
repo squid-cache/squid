@@ -43,7 +43,7 @@ Notes:
 * HTTP 1.1
 c Cached unless a query response without expiry information
 C Cached
-E Negatively cached if no expiry headers.
+E Negatively cached if no expiry headers
 t Cached only if expiry information
 - Not cached
 

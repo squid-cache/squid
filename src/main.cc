@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.164 1997/07/16 04:48:29 wessels Exp $
+ * $Id: main.cc,v 1.165 1997/07/16 20:32:11 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -292,8 +292,13 @@ shut_down(int sig)
     debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
 	shutdown_pending > 0 ? Config.shutdownLifetime : 0);
 #ifdef KILL_PARENT_OPT
-    debug(1, 1) ("Killing RunCache, pid %d\n", getppid());
-    kill(getppid(), sig);
+    {
+	pid_t ppid = getppid();
+	if (ppid > 1) {
+	    debug(1, 1, "Killing RunCache, pid %d\n", ppid);
+	    kill(ppid, sig);
+	}
+    }
 #endif
 #if SA_RESETHAND == 0
     signal(SIGTERM, SIG_DFL);
@@ -414,15 +419,12 @@ serverConnectionsClose(void)
 	    theInIcpConnection);
 	if (theInIcpConnection != theOutIcpConnection)
 	    comm_close(theInIcpConnection);
-	commSetSelect(theInIcpConnection,
-	    COMM_SELECT_READ,
-	    NULL,
-	    NULL, 0);
-	if (theInIcpConnection != theOutIcpConnection)
-	    commSetSelect(theOutIcpConnection,
+	else
+	    commSetSelect(theInIcpConnection,
 		COMM_SELECT_READ,
 		NULL,
-		NULL, 0);
+		NULL,
+		0);
 	theInIcpConnection = -1;
     }
     if (icmp_sock > -1)
@@ -552,6 +554,7 @@ main(int argc, char **argv)
     int n;			/* # of GC'd objects */
     time_t loop_delay;
 
+    debug_log = stderr;
     if (FD_SETSIZE < Squid_MaxFD)
 	Squid_MaxFD = FD_SETSIZE;
 
@@ -577,15 +580,7 @@ main(int argc, char **argv)
     safe_inet_addr("0.0.0.0", &any_addr);
     memset(&no_addr, '\0', sizeof(struct in_addr));
     safe_inet_addr("255.255.255.255", &no_addr);
-
-#if HAVE_SRANDOM
-    srandom(time(NULL));
-#elif HAVE_SRAND48
-    srand48(time(NULL));
-#else
-    srand(time(NULL));
-#endif
-
+    squid_srandom(time(NULL));
     errorInitialize();
 
     squid_starttime = getCurrentTime();
@@ -613,8 +608,6 @@ main(int argc, char **argv)
     fd_open(1, FD_LOG, "stdout");
     fd_open(2, FD_LOG, "stderr");
 
-    /* preinit for debug module */
-    debug_log = stderr;
     hash_init(0);
 
     mainInitialize();

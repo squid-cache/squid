@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.127 1997/07/14 23:48:29 wessels Exp $
+ * $Id: ipcache.cc,v 1.128 1997/07/16 20:32:11 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -328,6 +328,9 @@ ipcacheExpiredEntry(ipcache_entry * i)
 	return 0;
     if (i->expires > squid_curtime)
 	return 0;
+    if (i->status == IP_CACHED)
+	if (squid_curtime - i->lastref < 60)
+	    return 0;
     return 1;
 }
 
@@ -592,6 +595,10 @@ ipcache_dnsHandleRead(int fd, void *data)
     dnsData->offset += len;
     dnsData->ip_inbuf[dnsData->offset] = '\0';
     i = dnsData->data;
+    if (i == NULL) {
+	debug_trap("NULL ipcache_entry");
+	return;
+    }
     if (i->status != IP_DISPATCHED)
 	fatal_dump("ipcache_dnsHandleRead: bad status");
     if (strstr(dnsData->ip_inbuf, "$end\n")) {

@@ -36,7 +36,7 @@ extern int aio_close _PARAMS((int, aio_result_t *));
 extern int aio_stat _PARAMS((const char *, struct stat *, aio_result_t *));
 extern int aio_unlink _PARAMS((const char *, aio_result_t *));
 extern int aio_opendir _PARAMS((void));
-extern aio_result_t *aio_poll_done();
+extern aio_result_t *aio_poll_done _PARAMS((void));
 
 
 extern void aioCancel _PARAMS((int));
@@ -64,11 +64,10 @@ extern void cbdataUnlock _PARAMS((void *p));
 extern int cbdataValid _PARAMS((void *p));
 extern void cbdataDump _PARAMS((StoreEntry *));
 
-void clientdbInit _PARAMS((void));
-void clientdbUpdate _PARAMS((struct in_addr, log_type, protocol_t));
-int clientdbDeniedPercent _PARAMS((struct in_addr));
-void clientdbDump _PARAMS((StoreEntry *));
-extern int client_info_sz;
+extern void clientdbInit _PARAMS((void));
+extern void clientdbUpdate _PARAMS((struct in_addr, log_type, protocol_t));
+extern int clientdbDeniedPercent _PARAMS((struct in_addr));
+extern void clientdbDump _PARAMS((StoreEntry *));
 
 extern void clientAccessCheck _PARAMS((void *));
 extern void clientAccessCheckDone _PARAMS((int, void *));
@@ -78,7 +77,7 @@ extern char *clientConstructTraceEcho _PARAMS((clientHttpRequest *));
 extern void clientPurgeRequest _PARAMS((clientHttpRequest *));
 
 #if USE_PROXY_AUTH
-const char *proxyAuthenticate(const char *headers);
+extern const char *proxyAuthenticate(const char *headers);
 #endif /* USE_PROXY_AUTH */
 
 
@@ -441,7 +440,7 @@ extern void memFreeData _PARAMS((mem_hdr *));
 /* ----------------------------------------------------------------- */
 
 extern StoreEntry *storeGet _PARAMS((const char *));
-extern StoreEntry *storeCreateEntry _PARAMS((const char *, int, method_t));
+extern StoreEntry *storeCreateEntry _PARAMS((const char *, const char *, int, method_t));
 extern void storeSetPublicKey _PARAMS((StoreEntry *));
 extern StoreEntry *storeGetFirst _PARAMS((void));
 extern StoreEntry *storeGetNext _PARAMS((void));
@@ -493,16 +492,13 @@ extern unsigned int storeReqnum _PARAMS((StoreEntry * entry, method_t));
 extern time_t storeExpiredReferenceAge _PARAMS((void));
 extern void storeRegisterAbort _PARAMS((StoreEntry * e, STABH * cb, void *));
 extern void storeUnregisterAbort _PARAMS((StoreEntry * e));
+extern void storeMemObjectDump _PARAMS((MemObject * mem));
 
 #ifdef __STDC__
 extern void storeAppendPrintf _PARAMS((StoreEntry *, const char *,...));
 #else
 extern void storeAppendPrintf _PARAMS(());
 #endif
-
-extern int store_rebuilding;
-extern int store_swap_size;
-extern unsigned long store_mem_size;
 
 extern char *storeSwapFullPath _PARAMS((int, char *));
 extern char *storeSwapSubSubDir _PARAMS((int, char *));
@@ -560,7 +556,7 @@ extern int intAverage _PARAMS((int, int, int, int));
 extern double doubleAverage _PARAMS((double, double, int, int));
 extern void debug_trap _PARAMS((const char *));
 extern void logsFlush _PARAMS((void));
-
+extern char *checkNullString _PARAMS((char *p));
 
 extern void unlinkdInit _PARAMS((void));
 extern void unlinkdClose _PARAMS((void));
@@ -578,6 +574,8 @@ extern void requestUnlink _PARAMS((request_t *));
 extern int matchDomainName _PARAMS((const char *d, const char *h));
 extern int urlCheckRequest _PARAMS((const request_t *));
 extern int urlDefaultPort _PARAMS((protocol_t p));
+extern char *urlClean _PARAMS((char *));
+
 
 extern void useragentOpenLog _PARAMS((void));
 extern void useragentRotateLog _PARAMS((void));

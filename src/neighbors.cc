@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.152 1997/07/16 04:48:29 wessels Exp $
+ * $Id: neighbors.cc,v 1.153 1997/07/16 20:32:12 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -330,6 +330,31 @@ getDefaultParent(request_t * request)
     }
     return NULL;
 }
+
+#ifdef HIER_EXPERIMENT
+peer *
+getRandomParent(request_t * request)
+{
+    peer *e;
+    static peer *f = NULL;
+    peer *next = f;
+    int n = squid_random() % Peers.n;
+    int x = n << 1;
+    while (n && x--) {
+	e = next ? next : Peers.peers_head;
+	next = e->next;
+	if (neighborType(e, request) != PEER_PARENT)
+	    continue;
+	if (!peerHTTPOkay(e, request))
+	    continue;
+	f = e;
+	n--;
+    }
+    if (f && !peerHTTPOkay(f, request))
+	return NULL;
+    return f;
+}
+#endif
 
 peer *
 getNextPeer(peer * p)
@@ -715,7 +740,7 @@ peerDestroy(peer * p)
     struct _domain_ping *nl = NULL;
     if (p == NULL)
 	return;
-    if (!p->tcp_up)
+    if (p->ck_conn_event_pend)
 	eventDelete(peerCheckConnect, p);
     if (p->type == PEER_MULTICAST) {
 	if (p->mcast.flags & PEER_COUNT_EVENT_PENDING)
@@ -791,6 +816,9 @@ peerCheckConnect(void *data)
 {
     peer *p = data;
     int fd;
+    if (p->ck_conn_event_pend != 1)
+	debug_trap("bad ck_conn_event_pend counter");
+    p->ck_conn_event_pend--;
     fd = comm_open(SOCK_STREAM, 0, Config.Addrs.tcp_outgoing,
 	0, COMM_NONBLOCKING, p->host);
     if (fd < 0)
@@ -821,6 +849,7 @@ peerCheckConnectDone(int fd, int status, void *data)
 	debug(15, 0) ("TCP connection to %s/%d succeeded\n",
 	    p->host, p->http_port);
     } else {
+	p->ck_conn_event_pend++;
 	eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
     }
     comm_close(fd);
@@ -835,6 +864,7 @@ peerCheckConnectStart(peer * p)
     debug(15, 0) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
     p->tcp_up = 0;
     p->last_fail_time = squid_curtime;
+    p->ck_conn_event_pend++;
     eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
 }
 
@@ -863,7 +893,7 @@ peerCountMcastPeersStart(void *data)
 	fatal_dump("peerCountMcastPeersStart: non-multicast peer");
     p->mcast.flags &= ~PEER_COUNT_EVENT_PENDING;
     sprintf(url, "http://%s/", inet_ntoa(p->in_addr.sin_addr));
-    fake = storeCreateEntry(url, 0, METHOD_GET);
+    fake = storeCreateEntry(url, url, 0, METHOD_GET);
     psstate->request = requestLink(urlParse(METHOD_GET, url));
     psstate->entry = fake;
     psstate->callback = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.116 1997/07/15 23:23:37 wessels Exp $
+ * $Id: tools.cc,v 1.117 1997/07/16 20:32:21 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -137,12 +137,12 @@ releaseServerSockets(void)
     /* Release the main ports as early as possible */
     for (i = 0; i < NHttpSockets; i++) {
 	if (HttpSockets[i] >= 0)
-	    (void) close(HttpSockets[i]);
+	    close(HttpSockets[i]);
     }
     if (theInIcpConnection >= 0)
-	(void) close(theInIcpConnection);
+	close(theInIcpConnection);
     if (theOutIcpConnection >= 0 && theOutIcpConnection != theInIcpConnection)
-	(void) close(theOutIcpConnection);
+	close(theOutIcpConnection);
 }
 
 static char *
@@ -175,7 +175,14 @@ mail_warranty(void)
 static void
 dumpMallocStats()
 {
-#if HAVE_MALLINFO
+#if HAVE_MSTATS && HAVE_GNUMALLOC_H
+    struct mstats ms = mstats();
+    fprintf(debug_log, "\ttotal space in arena:  %6d KB\n",
+	ms.bytes_total >> 10);
+    fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
+	ms.bytes_free >> 10,
+	percent(ms.bytes_free, ms.bytes_total));
+#elif HAVE_MALLINFO
     struct mallinfo mp;
     int t;
     if (!do_mallinfo)
@@ -675,7 +682,7 @@ setMaxFD(void)
 #if HAVE_SETRLIMIT && defined(RLIMIT_DATA)
     if (getrlimit(RLIMIT_DATA, &rl) < 0) {
 	debug(50, 0) ("getrlimit: RLIMIT_DATA: %s\n", xstrerror());
-    } else {
+    } else if (rl.rlim_max > rl.rlim_cur) {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_DATA, &rl) < 0) {
 	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_DATA: %s", xstrerror());
@@ -686,7 +693,7 @@ setMaxFD(void)
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM)
     if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
 	debug(50, 0) ("getrlimit: RLIMIT_VMEM: %s\n", xstrerror());
-    } else {
+    } else if (rl.rlim_max > rl.rlim_cur) {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
 	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_VMEM: %s", xstrerror());
@@ -724,7 +731,7 @@ squid_signal(int sig, void (*func) _PARAMS((int)), int flags)
     if (sigaction(sig, &sa, NULL) < 0)
 	debug(50, 0) ("sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
 #else
-    (void) signal(sig, func);
+    signal(sig, func);
 #endif
 }
 
@@ -735,6 +742,7 @@ inaddrFromHostent(const struct hostent *hp)
     xmemcpy(&s.s_addr, hp->h_addr, sizeof(s.s_addr));
     return s;
 }
+
 double
 doubleAverage(double cur, double new, int n, int max)
 {
@@ -758,4 +766,10 @@ logsFlush(void)
 	fflush(debug_log);
     if (cache_useragent_log)
 	fflush(cache_useragent_log);
+}
+
+char *
+checkNullString(char *p)
+{
+    return p ? p : "(NULL)";
 }

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: cachemgr.cc,v 1.55 1997/07/15 23:23:16 wessels Exp $
+ * $Id: cachemgr.cc,v 1.56 1997/07/16 20:31:58 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -131,7 +131,9 @@
 #if HAVE_GRP_H
 #include <grp.h>
 #endif
-#if HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#if HAVE_GNUMALLOC_H
+#include <gnumalloc.h>
+#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
 #include <malloc.h>
 #endif
 #if HAVE_MEMORY_H
@@ -984,7 +986,7 @@ main(int argc, char *argv[])
 
     printf("\n</PRE>\n");
     print_trailer();
-    (void) close(conn);
+    close(conn);
     exit(0);
     /* NOTREACHED */
     return 0;

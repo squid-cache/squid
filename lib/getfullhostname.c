@@ -1,6 +1,6 @@
 
 /*
- * $Id: getfullhostname.c,v 1.13 1997/04/28 04:30:04 wessels Exp $
+ * $Id: getfullhostname.c,v 1.14 1997/07/16 20:31:53 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -107,6 +107,9 @@
 
 #include "config.h"
 
+#if HAVE_LIBC_H
+#include <libc.h>
+#endif
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif

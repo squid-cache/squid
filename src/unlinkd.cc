@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.8 1997/07/15 05:34:14 wessels Exp $
+ * $Id: unlinkd.cc,v 1.9 1997/07/16 20:32:21 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -35,6 +35,10 @@ static char hello_string[] = "hi there\n";
 /* This is the external unlinkd process */
 
 #include "config.h"
+
+#if HAVE_LIBC_H
+#include <libc.h>
+#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

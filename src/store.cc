@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.273 1997/07/15 23:23:34 wessels Exp $
+ * $Id: store.cc,v 1.274 1997/07/16 20:32:19 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -243,9 +243,6 @@ typedef struct swapout_ctrl_t {
     StoreEntry *e;
 } swapout_ctrl_t;
 
-/* initializtion flag */
-int store_rebuilding = 1;
-
 /* Static Functions */
 static void storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
@@ -265,8 +262,8 @@ static VCB storeSwapInValidateComplete;
 static void storeSwapInStartComplete _PARAMS((void *, int));
 static int swapInError _PARAMS((int, StoreEntry *));
 static mem_hdr *new_MemObjectData _PARAMS((void));
-static MemObject *new_MemObject _PARAMS((void));
-static StoreEntry *new_StoreEntry _PARAMS((int));
+static MemObject *new_MemObject _PARAMS((const char *));
+static StoreEntry *new_StoreEntry _PARAMS((int, const char *));
 static StoreEntry *storeAddDiskRestore _PARAMS((const char *,
 	int,
 	int,
@@ -308,15 +305,11 @@ static hash_table *store_table = NULL;
 /* hash table for in-memory-only objects */
 static hash_table *in_mem_table = NULL;
 
-/* current memory storage size */
-unsigned long store_mem_size = 0;
-
 static int store_pages_max = 0;
 static int store_pages_high = 0;
 static int store_pages_low = 0;
 
 /* current file name, swap file, use number as a filename */
-int store_swap_size = 0;	/* kilobytes !! */
 static int store_swap_high = 0;
 static int store_swap_low = 0;
 static int storelog_fd = -1;
@@ -332,29 +325,30 @@ static int scan_revolutions;
 static struct _bucketOrder *MaintBucketsOrder = NULL;
 
 static MemObject *
-new_MemObject(void)
+new_MemObject(const char *log_url)
 {
     MemObject *mem = get_free_mem_obj();
     mem->reply = xcalloc(1, sizeof(struct _http_reply));
     mem->reply->date = -2;
     mem->reply->expires = -2;
     mem->reply->last_modified = -2;
-    mem->request = NULL;
+    mem->log_url = xstrdup(log_url);
     meta_data.mem_obj_count++;
     meta_data.misc += sizeof(struct _http_reply);
+    meta_data.url_strings += strlen(log_url);
     debug(20, 3) ("new_MemObject: returning %p\n", mem);
     return mem;
 }
 
 static StoreEntry *
-new_StoreEntry(int mem_obj_flag)
+new_StoreEntry(int mem_obj_flag, const char *log_url)
 {
     StoreEntry *e = NULL;
 
     e = xcalloc(1, sizeof(StoreEntry));
     meta_data.store_entries++;
     if (mem_obj_flag)
-	e->mem_obj = new_MemObject();
+	e->mem_obj = new_MemObject(log_url);
     debug(20, 3) ("new_StoreEntry: returning %p\n", e);
     return e;
 }
@@ -364,9 +358,11 @@ destroy_MemObject(MemObject * mem)
 {
     debug(20, 3) ("destroy_MemObject: destroying %p\n", mem);
     destroy_MemObjectData(mem);
+    meta_data.url_strings -= strlen(mem->log_url);
     safe_free(mem->clients);
     safe_free(mem->reply);
     safe_free(mem->e_abort_msg);
+    safe_free(mem->log_url);
     requestUnlink(mem->request);
     mem->request = NULL;
     put_free_mem_obj(mem);
@@ -492,6 +488,11 @@ storeLog(int tag, const StoreEntry * e)
 	return;
     if (mem == NULL)
 	return;
+    if (mem->log_url == NULL) {
+	debug(20, 1) ("storeLog: NULL log_url for %s\n", e->url);
+	storeMemObjectDump(mem);
+	mem->log_url = xstrdup(e->url);
+    }
     reply = mem->reply;
     sprintf(logmsg, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
 	(int) current_time.tv_sec,
@@ -506,7 +507,7 @@ storeLog(int tag, const StoreEntry * e)
 	reply->content_length,
 	mem->e_current_len - mem->reply->hdr_sz,
 	RequestMethodStr[e->method],
-	e->key);
+	mem->log_url);
     file_write(storelog_fd,
 	xstrdup(logmsg),
 	strlen(logmsg),
@@ -595,7 +596,7 @@ storeGet(const char *url)
     return (StoreEntry *) hash_lookup(store_table, url);
 }
 
-unsigned int
+static unsigned int
 getKeyCounter(void)
 {
     static unsigned int key_counter = 0;
@@ -715,13 +716,13 @@ storeSetPublicKey(StoreEntry * e)
 }
 
 StoreEntry *
-storeCreateEntry(const char *url, int flags, method_t method)
+storeCreateEntry(const char *url, const char *log_url, int flags, method_t method)
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;
     debug(20, 3) ("storeCreateEntry: '%s' icp flags=%x\n", url, flags);
 
-    e = new_StoreEntry(WITH_MEMOBJ);
+    e = new_StoreEntry(WITH_MEMOBJ, log_url);
     e->lock_count = 1;		/* Note lock here w/o calling storeLock() */
     mem = e->mem_obj;
     e->url = xstrdup(url);
@@ -770,7 +771,7 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     /* if you call this you'd better be sure file_number is not 
      * already in use! */
     meta_data.url_strings += strlen(url);
-    e = new_StoreEntry(WITHOUT_MEMOBJ);
+    e = new_StoreEntry(WITHOUT_MEMOBJ, NULL);
     e->url = xstrdup(url);
     e->method = METHOD_GET;
     storeSetPublicKey(e);
@@ -1035,7 +1036,7 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
     assert(e->swap_status == SWAP_OK);
     assert(e->swap_file_number >= 0);
     assert(e->mem_obj == NULL);
-    e->mem_obj = new_MemObject();
+    e->mem_obj = new_MemObject(urlClean(e->url));
     ctrlp = xmalloc(sizeof(swapin_ctrl_t));
     ctrlp->e = e;
     ctrlp->callback = callback;
@@ -2529,7 +2530,9 @@ storeRotateLog(void)
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);
     LOCAL_ARRAY(char, to, MAXPATHLEN);
+#ifdef S_ISREG
     struct stat sb;
+#endif
 
     if (storelog_fd > -1) {
 	file_close(storelog_fd);
@@ -2753,4 +2756,51 @@ storeUnregisterAbort(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     assert(mem);
     mem->abort.callback = NULL;
+}
+
+void
+storeMemObjectDump(MemObject * mem)
+{
+    debug(20, 1) ("MemObject->data: %p\n",
+	mem->data);
+    debug(20, 1) ("MemObject->e_swap_buf: %p %s\n",
+	mem->e_swap_buf,
+	checkNullString(mem->e_swap_buf));
+    debug(20, 1) ("MemObject->w_rtt: %d\n",
+	mem->w_rtt);
+    debug(20, 1) ("MemObject->e_pings_closest_parent: %p\n",
+	mem->e_pings_closest_parent);
+    debug(20, 1) ("MemObject->p_rtt: %d\n",
+	mem->p_rtt);
+    debug(20, 1) ("MemObject->start_ping: %d.%06d\n",
+	mem->start_ping.tv_sec,
+	mem->start_ping.tv_usec);
+    debug(20, 1) ("MemObject->e_swap_buf_len: %d\n",
+	mem->e_swap_buf_len);
+    debug(20, 1) ("MemObject->pending_list_size: %d\n",
+	mem->pending_list_size);
+    debug(20, 1) ("MemObject->e_abort_msg: %p %s\n",
+	mem->e_abort_msg,
+	checkNullString(mem->e_abort_msg));
+    debug(20, 1) ("MemObject->abort_code: %d %s\n",
+	mem->abort_code, log_tags[mem->abort_code]);
+    debug(20, 1) ("MemObject->e_current_len: %d\n",
+	mem->e_current_len);
+    debug(20, 1) ("MemObject->e_lowest_offset: %d\n",
+	mem->e_lowest_offset);
+    debug(20, 1) ("MemObject->clients: %p\n",
+	mem->clients);
+    debug(20, 1) ("MemObject->nclients: %d\n",
+	mem->nclients);
+    debug(20, 1) ("MemObject->swapin_fd: %d\n",
+	mem->swapin_fd);
+    debug(20, 1) ("MemObject->swapout_fd: %d\n",
+	mem->swapout_fd);
+    debug(20, 1) ("MemObject->reply: %p\n",
+	mem->reply);
+    debug(20, 1) ("MemObject->request: %p\n",
+	mem->request);
+    debug(20, 1) ("MemObject->log_url: %p %s\n",
+	mem->log_url,
+	checkNullString(mem->log_url));
 }

@@ -1595,6 +1595,21 @@ DOC_START
 log_icp_queries on
 DOC_END
 
+NAME: icp_hit_stale
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: Config.Options.icp_hit_stale
+DOC_START
+	If you want to return ICP_HIT for stale cache objects, set this
+	option to 'on'.  If you have sibling relationships with caches
+	in other administrative domains, this should be 'off'.  If you only
+	have sibling relationships with caches under your control, then
+	it is probably okay to set this to 'on'.
+
+icp_hit_stale off
+DOC_END
+
 
 NAME: minimum_direct_hops
 TYPE: int
@@ -1802,5 +1817,22 @@ DOC_END
 #DOC_START
 #	XXX need docs
 #DOC_END
+
+NAME: fake_user_agent
+TYPE: eol
+LOC: Config.fake_ua
+DEFAULT: none
+DOC_START
+       If you use the paranoid http_anonymizer setting, Squid will strip
+       your User-agent string from the request.  Some Web servers will
+       refuse your request without a User-agent string.  Use this to
+       fake one up.  For example:
+
+       fake_user_agent Nutscrape/1.0 (CP/M; 8-bit)
+       (credit to Paul Southworth pauls@etext.org for this one!)
+
+fake_user_agent none
+DOC_END
+
 
 EOF

@@ -1,8 +1,7 @@
 
 
-
 /*
- * $Id: client.cc,v 1.19 1997/07/15 23:23:18 wessels Exp $
+ * $Id: client.cc,v 1.20 1997/07/16 20:31:59 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -120,14 +119,16 @@ static void
 usage(const char *progname)
 {
     fprintf(stderr,
-	"Usage: %s [-rs] [-i IMS_time] [-h host] [-p port] [-m method] url\n"
+	"Usage: %s [-ars] [-i IMS] [-h host] [-p port] [-m method] [-t count] url\n"
 	"Options:\n"
+	"    -a         Do NOT include Accept: header.\n"
 	"    -r         Force cache to reload URL.\n"
 	"    -s         Silent.  Do not print data to stdout.\n"
 	"    -i IMS     If-Modified-Since time (in Epoch seconds).\n"
 	"    -h host    Retrieve URL from cache on hostname.  Default is localhost.\n"
 	"    -p port    Port number of cache.  Default is %d.\n"
-	"    -m method  Request method, default is GET.\n",
+	"    -m method  Request method, default is GET.\n"
+	"    -t count   Trace count cache-hops\n",
 	progname, CACHE_HTTP_PORT);
     exit(1);
 }
@@ -138,6 +139,7 @@ main(int argc, char *argv[])
     int conn, c, len, bytesWritten;
     int port, to_stdout, reload;
     int keep_alive = 0;
+    int opt_noaccept = 0;
     char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ], hostname[BUFSIZ];
     const char *method = "GET";
     extern char *optarg;
@@ -156,15 +158,16 @@ main(int argc, char *argv[])
 	strcpy(url, argv[argc - 1]);
 	if (url[0] == '-')
 	    usage(argv[0]);
-	while ((c = getopt(argc, argv, "fsrnkp:c:h:i:m:t:?")) != -1)
+	while ((c = getopt(argc, argv, "ah:i:km:p:rst:?")) != -1)
 	    switch (c) {
+	    case 'a':
+		opt_noaccept = 1;
+		break;
 	    case 'h':		/* host:arg */
-	    case 'c':		/* backward compat */
 		if (optarg != NULL)
 		    strcpy(hostname, optarg);
 		break;
 	    case 's':		/* silent */
-	    case 'n':		/* backward compat */
 		to_stdout = 0;
 		break;
 	    case 'k':		/* backward compat */
@@ -216,8 +219,10 @@ main(int argc, char *argv[])
 	sprintf(buf, "Pragma: no-cache\r\n");
 	strcat(msg, buf);
     }
-    sprintf(buf, "Accept: */*\r\n");
-    strcat(msg, buf);
+    if (opt_noaccept == 0) {
+	sprintf(buf, "Accept: */*\r\n");
+	strcat(msg, buf);
+    }
     if (ims) {
 	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc1123(ims));
 	strcat(msg, buf);

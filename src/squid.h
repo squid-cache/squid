@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.128 1997/07/14 23:45:03 wessels Exp $
+ * $Id: squid.h,v 1.129 1997/07/16 20:32:16 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -88,7 +88,9 @@
 #if HAVE_GRP_H
 #include <grp.h>
 #endif
-#if HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#if HAVE_GNUMALLOC_H
+#include <gnumalloc.h>
+#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
 #include <malloc.h>
 #endif
 #if HAVE_MEMORY_H
