@@ -215,7 +215,7 @@ main(int argc, char **argv)
 
     while (fgets(buf, 256, stdin) != NULL) {
 	user = strtok(buf, " \r\n");
-	passwd = strtok(buf, "\r\n");
+	passwd = strtok(NULL, "\r\n");
 
 	if (!user || !passwd || !passwd[0]) {
 	    printf("ERR\n");
