@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.132 1996/12/05 16:15:32 wessels Exp $
+ * $Id: http.cc,v 1.133 1996/12/06 17:52:38 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -101,6 +101,11 @@
  *   implementation of a set of protocols and formats, some of which
  *   we intend to standardize.  We encourage commercial
  *   re-implementations of code complying to this set of standards.  
+ */
+
+/*
+ * Anonymizing patch by lutz@as-node.jena.thur.de
+ * have a look into http.anon.c to get more informations.
  */
 
 #include "squid.h"
@@ -604,12 +609,24 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
     }
 }
 
+#ifdef USE_ANONYMIZER
+#include "http-anon.c"
+#endif
+
 static void
 httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max)
 {
     size_t n = *sz + strlen(line) + 2;
     if (n >= max)
 	return;
+#ifdef USE_ANONYMIZER
+    if (!httpAnonSearchHeaderField(http_anon_allowed_header, line)) {
+	debug(11, 5, "httpAppendRequestHeader: removed for anonymity: <%s>\n",
+		line);
+	return;
+    }
+#endif
+    /* allowed header, explicitly known to be not dangerous */
     debug(11, 5, "httpAppendRequestHeader: %s\n", line);
     strcpy(hdr + (*sz), line);
     strcat(hdr + (*sz), crlf);
