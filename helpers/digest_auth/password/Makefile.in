@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.40 2003/03/11 22:13:37 robertc Exp $
+#  $Id: Makefile.in,v 1.41 2003/04/01 10:44:18 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -127,6 +127,11 @@ install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
 libexec_PROGRAMS = digest_pw_auth
+digest_pw_auth_SOURCES = digest_pw_auth.c \
+	digest_common.h \
+	text_backend.c \
+	text_backend.h
+
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 		-I$(top_srcdir)/src/
 
@@ -139,8 +144,9 @@ CONFIG_CLEAN_FILES =
 libexec_PROGRAMS = digest_pw_auth$(EXEEXT)
 PROGRAMS = $(libexec_PROGRAMS)
 
-digest_pw_auth_SOURCES = digest_pw_auth.c
-digest_pw_auth_OBJECTS = digest_pw_auth.$(OBJEXT)
+am_digest_pw_auth_OBJECTS = digest_pw_auth.$(OBJEXT) \
+	text_backend.$(OBJEXT)
+digest_pw_auth_OBJECTS = $(am_digest_pw_auth_OBJECTS)
 digest_pw_auth_LDADD = $(LDADD)
 digest_pw_auth_DEPENDENCIES =
 digest_pw_auth_LDFLAGS =
@@ -151,15 +157,16 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/digest_pw_auth.Po
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/digest_pw_auth.Po \
+@AMDEP_TRUE@	$(DEPDIR)/text_backend.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
-DIST_SOURCES = digest_pw_auth.c
+DIST_SOURCES = $(digest_pw_auth_SOURCES)
 DIST_COMMON = Makefile.am Makefile.in
-SOURCES = digest_pw_auth.c
+SOURCES = $(digest_pw_auth_SOURCES)
 
 all: all-am
 
@@ -206,6 +213,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/digest_pw_auth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/text_backend.Po@am__quote@
 
 distclean-depend:
 	-rm -rf $(DEPDIR)
