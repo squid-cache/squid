@@ -2165,6 +2165,18 @@ NAME: incoming_max_rate
 TYPE: int
 LOC: Config.incoming_rate.max
 DEFAULT: 2
-DOC_NONE
+DOC_START
+	These specify how often the "incoming" sockets should be
+	checked, compared with established connections.  Note, the
+	"incoming" sockets are where we accept new HTTP connections and
+	where we process ICP queries.
 
+	If there was just activity on an incoming socket, then we will
+	check the incoming sockets again after processing the next
+	'incoming_max_rate' I/O events.  If there was not any recent
+	incoming activity, we check incoming sockets again after
+	processing the next 'incoming_min_rate' I/O events.
+
+incoming_min_rate 2
+incoming_max_rate 16
 EOF
