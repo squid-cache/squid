@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.337 1998/06/11 05:32:19 wessels Exp $
+ * $Id: client_side.cc,v 1.338 1998/06/28 16:53:09 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1258,9 +1258,11 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     if (size >= 0) {
 	clientSendMoreData(data, buf, size);
     } else if (http->entry == NULL) {
+        memFree(MEM_4K_BUF, buf);
 	debug(33, 3) ("clientCacheHit: request aborted\n");
     } else {
 	/* swap in failure */
+        memFree(MEM_4K_BUF, buf);
 	debug(33, 3) ("clientCacheHit: swapin failure for %s\n", http->uri);
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
 	if ((e = http->entry)) {
