@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.18 1996/04/01 04:27:11 wessels Exp $ */
+/* $Id: store.cc,v 1.19 1996/04/01 18:25:47 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -446,7 +446,7 @@ StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, reques
      int html_request;
      int request_type_id;
 {
-    char key[MAX_URL + 16];
+    static char key[MAX_URL + 16];
     StoreEntry *e = NULL;
 
     debug(20, 5, "storeAdd: %s\n", url);
@@ -473,8 +473,8 @@ StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, reques
 	BIT_RESET(e->flag, RELEASE_REQUEST);
     } else {
 	BIT_RESET(e->flag, CACHABLE);
-	/*after a lock is release, it will be released by storeUnlock */
 	BIT_SET(e->flag, RELEASE_REQUEST);
+	/*after a lock is release, it will be released by storeUnlock */
     }
 
     if (html_request)
@@ -522,9 +522,6 @@ StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, reques
     e->mem_obj->client_list = (ClientStatusEntry **)
 	xcalloc(e->mem_obj->client_list_size, sizeof(ClientStatusEntry *));
 
-    if (table == (HashID) 0) {
-	storeCreateHashTable(urlcmp);
-    }
     storeHashInsert(e);
 
     /* Change the key to something private until we know it is safe
@@ -584,9 +581,6 @@ StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
     e->key = e->url;
     BIT_SET(e->flag, KEY_URL);
 
-    if (!table) {
-	storeCreateHashTable(urlcmp);
-    }
     storeHashInsert(e);
     return e;
 }
@@ -1131,7 +1125,7 @@ void storeRebuildFromDisk()
 
     for (i = 0; i < ncache_dirs; ++i)
 	debug(20, 1, "Rebuilding storage from disk image in %s\n", swappath(i));
-    start = cached_curtime = time(NULL);
+    start = getCurrentTime();
 
     sprintf(line_in, "%s/log-last-clean", swappath(0));
     if (stat(line_in, &sb) >= 0) {
@@ -1162,7 +1156,7 @@ void storeRebuildFromDisk()
     memset(line_in, '\0', 4096);
     while (fgets(line_in, 4096, old_log)) {
 	if ((linecount++ & 0x7F) == 0)	/* update current time */
-	    cached_curtime = time(NULL);
+	    getCurrentTime();
 
 	if ((linecount & 0xFFF) == 0)
 	    debug(20, 1, "  %7d Lines read so far.\n", linecount);
@@ -1178,7 +1172,7 @@ void storeRebuildFromDisk()
 	scan3 = 0;
 	size = 0;
 	if (sscanf(line_in, "%s %s %d %d %d",
-		log_swapfile, url, &scan1, &scan2, &scan3) < 4) {
+		log_swapfile, url, &scan1, &scan2, &scan3) != 5) {
 #ifdef UNLINK_ON_RELOAD
 	    if (log_swapfile[0])
 		safeunlink(log_swapfile, 0);
@@ -1199,8 +1193,7 @@ void storeRebuildFromDisk()
 	 * another cache_dir is added.
 	 */
 
-	if (!scan3 || !fast_mode) {
-
+	if (!fast_mode) {
 	    if (stat(swapfile, &sb) < 0) {
 		if (expires < cached_curtime) {
 		    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
@@ -1268,7 +1261,7 @@ void storeRebuildFromDisk()
     }
     xfree(new_log_name);
 
-    stop = cached_curtime = time(NULL);
+    stop = getCurrentTime();
     r = stop - start;
     debug(20, 1, "Finished rebuilding storage from disk image.\n");
     debug(20, 1, "  %7d Lines read from previous logfile.\n", linecount);
@@ -1454,7 +1447,7 @@ int storeWalkThrough(proc, data)
 
     for (e = storeGetFirst(); e; e = storeGetNext()) {
 	if ((++n & 0xFF) == 0)
-	    cached_curtime = time(NULL);
+	    getCurrentTime();
 	if ((n & 0xFFF) == 0)
 	    debug(20, 2, "storeWalkThrough: %7d objects so far.\n", n);
 	count += proc(e, data);
@@ -1900,7 +1893,7 @@ int storeRelease(e)
     debug(20, 5, "storeRelease: Releasing: %s\n", e->url);
 
     if (table == (HashID) 0)
-	return -1;
+	fatal_dump("storeRelease: Hash table 'table' is zero!\n");
 
     if (e->key == NULL) {
 	debug(20, 0, "storeRelease: NULL key for %s\n", e->url);
@@ -2280,7 +2273,7 @@ static int storeVerifySwapDirs(clean)
 
     for (inx = 0; inx < ncache_dirs; ++inx) {
 	path = swappath(inx);
-	debug(20, 10, "storeInit: Creating swap space in %s\n", path);
+	debug(20, 10, "storeVerifySwapDirs: Creating swap space in %s\n", path);
 	if (stat(path, &sb) < 0) {
 	    /* we need to create a directory for swap file here. */
 	    if (mkdir(path, 0777) < 0) {
@@ -2297,17 +2290,17 @@ static int storeVerifySwapDirs(clean)
 		    path, xstrerror());
 		fatal(tmp_error_buf);
 	    }
-	    debug(20, 1, "storeInit: Created swap directory %s\n", path);
+	    debug(20, 1, "storeVerifySwapDirs: Created swap directory %s\n", path);
 	    directory_created = 1;
 	}
 	if (clean) {
-	    debug(20, 1, "storeInit: Zapping all objects on disk storage.\n");
+	    debug(20, 1, "storeVerifySwapDirs: Zapping all objects on disk storage.\n");
 	    /* This could be dangerous, second copy of cache can destroy
 	     * the existing swap files of the previous cache. We may
 	     * use rc file do it. */
 	    cmdbuf = xcalloc(1, BUFSIZ);
 	    sprintf(cmdbuf, "cd %s; /bin/rm -rf log [0-9][0-9]", path);
-	    debug(20, 1, "storeInit: Running '%s'\n", cmdbuf);
+	    debug(20, 1, "storeVerifySwapDirs: Running '%s'\n", cmdbuf);
 	    system(cmdbuf);	/* XXX should avoid system(3) */
 	    xfree(cmdbuf);
 	}
@@ -2340,6 +2333,7 @@ int storeInit()
 
     file_map_create(MAX_SWAP_FILE);
     dir_created = storeVerifySwapDirs(zap_disk_store);
+    storeCreateHashTable(urlcmp);
 
     sprintf(swaplog_file, "%s/log", swappath(0));
 
@@ -2463,7 +2457,7 @@ int storeMaintainSwapSpace()
     int rm_obj = 0;
 
     if (table == (HashID) 0)
-	return 0;
+	fatal_dump("storeMaintainSwapSpace: Hash table 'table' is zero!\n");
 
     /* Scan row of hash table each second and free storage if we're
      * over the high-water mark */
@@ -2515,7 +2509,7 @@ int storeWriteCleanLog()
 	return 0;
     }
     debug(20, 1, "storeWriteCleanLog: Starting...\n");
-    start = cached_curtime = time(NULL);
+    start = getCurrentTime();
     sprintf(clean_log, "%s/log_clean", swappath(0));
     if ((fp = fopen(clean_log, "a+")) == NULL) {
 	debug(20, 0, "storeWriteCleanLog: %s: %s", clean_log, xstrerror());
@@ -2534,7 +2528,7 @@ int storeWriteCleanLog()
 	    swapfilename, e->url, (int) e->expires, (int) e->timestamp,
 	    e->object_len);
 	if ((++n & 0xFFF) == 0) {
-	    cached_curtime = time(NULL);
+	    getCurrentTime();
 	    debug(20, 1, "  %7d lines written so far.\n", n);
 	}
     }
@@ -2564,7 +2558,7 @@ int storeWriteCleanLog()
     }
     swaplog_lock = file_write_lock(swaplog_fd);
 
-    stop = cached_curtime = time(NULL);
+    stop = getCurrentTime();
     r = stop - start;
     debug(20, 1, "  Finished.  Wrote %d lines.\n", n);
     debug(20, 1, "  Took %d seconds (%6.1lf lines/sec).\n",
