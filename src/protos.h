@@ -261,6 +261,11 @@ extern void httpBodySet(HttpBody * body, const char *content, int size,
 /* pack */
 extern void httpBodyPackInto(const HttpBody * body, Packer * p);
 
+/* Http Extention Header Field */
+extern HttpHdrExtField *httpHdrExtFieldCreate(const char *name, const char *value);
+extern HttpHdrExtField *httpHdrExtFieldParseCreate(const char *field_start, const char *field_end);
+extern void httpHdrExtFieldDestroy(HttpHdrExtField * f);
+extern HttpHdrExtField *httpHdrExtFieldDup(HttpHdrExtField * f);
 
 /* Http Cache Control Header Field */
 extern void httpHdrCcInitModule();

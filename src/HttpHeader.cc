@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.19 1998/03/08 07:28:51 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.20 1998/03/08 18:58:40 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -56,12 +56,6 @@
 /*
  * local types
  */
-
-/* HTTP/1.1 extension-header */
-struct _HttpHeaderExtField {
-    String name;  /* field-name  from HTTP/1.1 (no column after name!) */
-    String value; /* field-value from HTTP/1.1 */
-};
 
 /*
  * HttpHeader entry 
@@ -180,8 +174,9 @@ static int HttpHeaderStatCount = sizeof(HttpHeaderStats) / sizeof(*HttpHeaderSta
 
 /* global counters */
 static int HeaderParsedCount = 0;
+static int HeaderDestroyedCount = 0;
+static int NonEmptyHeaderDestroyedCount = 0;
 static int HeaderEntryParsedCount = 0;
-static int HeaderEntrySurvivedCount = 0; /* survived until header destruction */
 
 /*
  * local routines
@@ -201,8 +196,8 @@ static void httpHeaderGrow(HttpHeader * hdr);
 static void httpHeaderEntryInit(HttpHeaderEntry * e, http_hdr_type id, field_store field);
 static void httpHeaderEntryClean(HttpHeaderEntry * e);
 static int httpHeaderEntryParseInit(HttpHeaderEntry * e, const char *field_start, const char *field_end, int mask);
-static int httpHeaderEntryParseExtFieldInit(HttpHeaderEntry * e, int id, const HttpHeaderExtField * f);
-static int httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtField * f);
+static int httpHeaderEntryParseExtFieldInit(HttpHeaderEntry * e, int id, const HttpHdrExtField * f);
+static int httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHdrExtField * f);
 static HttpHeaderEntry httpHeaderEntryClone(const HttpHeaderEntry * e);
 static void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
 static void httpHeaderEntryPackByType(const HttpHeaderEntry * e, Packer * p);
@@ -213,11 +208,6 @@ static const char *httpHeaderEntryName(const HttpHeaderEntry * e);
 static void httpHeaderFieldInit(field_store * field);
 static field_store httpHeaderFieldDup(field_type type, field_store value);
 static field_store httpHeaderFieldBadValue(field_type type);
-
-static HttpHeaderExtField *httpHeaderExtFieldCreate(const char *name, const char *value);
-static HttpHeaderExtField *httpHeaderExtFieldParseCreate(const char *field_start, const char *field_end);
-static void httpHeaderExtFieldDestroy(HttpHeaderExtField * f);
-static HttpHeaderExtField *httpHeaderExtFieldDup(HttpHeaderExtField * f);
 
 static void httpHeaderStatInit(HttpHeaderStat * hs, const char *label);
 static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
@@ -254,7 +244,7 @@ static field_store
 ptrField(void *p)
 {
     field_store f;
-    f.v_pefield = (HttpHeaderExtField *) p;
+    f.v_pefield = (HttpHdrExtField *) p;
     return f;
 }
 
@@ -331,9 +321,10 @@ httpHeaderClean(HttpHeader * hdr)
     assert(hdr);
 
     statHistCount(&HttpHeaderStats[0].hdrUCountDistr, hdr->ucount);
-    HeaderEntrySurvivedCount += hdr->ucount;
+    HeaderDestroyedCount++;
+    NonEmptyHeaderDestroyedCount += hdr->ucount > 0;
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	/* fix this (for scc too) for req headers @?@ */
+	/* fix this (for cc too) for req headers @?@ */
 	statHistCount(&HttpHeaderStats[0].fieldTypeDistr, e->id);
 	if (e->id == HDR_CACHE_CONTROL)
 	    httpHdrCcUpdateStats(e->field.v_pcc, &HttpHeaderStats[0].ccTypeDistr);
@@ -398,6 +389,7 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
     assert(hdr);
     assert(header_start && header_end);
     debug(55, 7) ("parsing hdr: (%p) '%s'\n...\n", hdr, getStringPrefix(header_start));
+    HeaderParsedCount++;
     /* select appropriate field mask */
     mask = ( /* fix this @?@ @?@ */ 1) ? ReplyHeadersMask : RequestHeadersMask;
     /* commonn format headers are "<name>:[ws]<value>" lines delimited by <CRLF> */
@@ -557,7 +549,6 @@ httpHeaderAddParsedEntry(HttpHeader * hdr, HttpHeaderEntry * e)
     /* there is no good reason to add invalid entries */
     if (!httpHeaderEntryIsValid(e))
 	return;
-
     olde = (e->id == HDR_OTHER) ? NULL : httpHeaderFindEntry(hdr, e->id, NULL);
     if (olde) {
 	if (EBIT_TEST(ListHeadersMask, e->id))
@@ -585,8 +576,6 @@ httpHeaderAddNewEntry(HttpHeader * hdr, const HttpHeaderEntry * e)
     debug(55, 8) ("%p adding entry: %d at %d, (%p:%p)\n",
 	hdr, e->id, hdr->ucount,
 	hdr->entries, hdr->entries + hdr->ucount);
-    if (!hdr->ucount)
-	HeaderParsedCount++;
     if (hdr->ucount >= hdr->capacity)
 	httpHeaderGrow(hdr);
     hdr->entries[hdr->ucount++] = *e;
@@ -691,7 +680,7 @@ httpHeaderSetAuth(HttpHeader * hdr, const char *authScheme, const char *realm)
 void
 httpHeaderAddExt(HttpHeader * hdr, const char *name, const char *value)
 {
-    HttpHeaderExtField *ext = httpHeaderExtFieldCreate(name, value);
+    HttpHdrExtField *ext = httpHdrExtFieldCreate(name, value);
     HttpHeaderEntry e;
 
     debug(55, 8) ("%p adds ext entry '%s:%s'\n", hdr, name, value);
@@ -825,7 +814,7 @@ httpHeaderEntryClean(HttpHeaderEntry * e)
 	break;
     case ftPExtField:
 	if (e->field.v_pefield)
-	    httpHeaderExtFieldDestroy(e->field.v_pefield);
+	    httpHdrExtFieldDestroy(e->field.v_pefield);
 	break;
     default:
 	assert(0);		/* somebody added a new type? */
@@ -840,7 +829,7 @@ httpHeaderEntryClean(HttpHeaderEntry * e)
 static int
 httpHeaderEntryParseInit(HttpHeaderEntry * e, const char *field_start, const char *field_end, int mask)
 {
-    HttpHeaderExtField *f;
+    HttpHdrExtField *f;
     int id;
     int result;
 
@@ -849,7 +838,7 @@ httpHeaderEntryParseInit(HttpHeaderEntry * e, const char *field_start, const cha
     e->id = -1;
     memset(&e->field, 0, sizeof(e->field));
     /* first assume it is just an extension field */
-    f = httpHeaderExtFieldParseCreate(field_start, field_end);
+    f = httpHdrExtFieldParseCreate(field_start, field_end);
     if (!f)			/* total parsing failure */
 	return 0;
     id = httpHeaderIdByName(strBuf(f->name), -1, Headers, countof(Headers), mask);
@@ -864,12 +853,12 @@ httpHeaderEntryParseInit(HttpHeaderEntry * e, const char *field_start, const cha
     /* ok, we got something interesting, parse it further */
     result = httpHeaderEntryParseExtFieldInit(e, id, f);
     /* do not need it anymore */
-    httpHeaderExtFieldDestroy(f);
+    httpHdrExtFieldDestroy(f);
     return result;
 }
 
 static int
-httpHeaderEntryParseExtFieldInit(HttpHeaderEntry * e, int id, const HttpHeaderExtField * f)
+httpHeaderEntryParseExtFieldInit(HttpHeaderEntry * e, int id, const HttpHdrExtField * f)
 {
     assert(e && f);
     assert_eid(id);
@@ -915,7 +904,7 @@ httpHeaderEntryParseExtFieldInit(HttpHeaderEntry * e, int id, const HttpHeaderEx
 }
 
 static int
-httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtField * f)
+httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHdrExtField * f)
 {
     int type;
     field_store field;
@@ -1137,7 +1126,7 @@ httpHeaderFieldDup(field_type type, field_store value)
     case ftPRange:
 	return ptrField(httpHdrRangeDup(value.v_prange));
     case ftPExtField:
-	return ptrField(httpHeaderExtFieldDup(value.v_pefield));
+	return ptrField(httpHdrExtFieldDup(value.v_pefield));
     default:
 	assert(0);		/* dup of invalid/unknown type */
     }
@@ -1170,66 +1159,6 @@ httpHeaderFieldBadValue(field_type type)
 }
 
 /*
- * HttpHeaderExtField
- */
-
-static HttpHeaderExtField *
-httpHeaderExtFieldCreate(const char *name, const char *value)
-{
-    HttpHeaderExtField *f = xcalloc(1, sizeof(HttpHeaderExtField));
-    stringInit(&f->name, name);
-    stringInit(&f->value, value);
-    return f;
-}
-
-/* parses ext field; returns fresh ext field on success and NULL on failure */
-static HttpHeaderExtField *
-httpHeaderExtFieldParseCreate(const char *field_start, const char *field_end)
-{
-    HttpHeaderExtField *f = NULL;
-    /* note: name_start == field_start */
-    const char *name_end = strchr(field_start, ':');
-    const char *value_start;
-    /* note: value_end == field_end */
-
-    if (!name_end || name_end <= field_start || name_end > field_end)
-	return NULL;
-
-    value_start = name_end + 1;	/* skip ':' */
-    /* skip white space */
-    while (value_start < field_end && isspace(*value_start))
-	value_start++;
-
-    /* cut off "; parameter" from Content-Type @?@ why? */
-    if (!strncasecmp(field_start, "Content-Type:", 13)) {
-	const int l = strcspn(value_start, ";\t ");
-	if (l > 0 && value_start + l < field_end)
-	    field_end = value_start + l;
-    }
-    f = xcalloc(1, sizeof(HttpHeaderExtField));
-    stringLimitInit(&f->name, field_start, name_end - field_start);
-    stringLimitInit(&f->value, value_start, field_end - value_start);
-    debug(55, 8) ("got field: '%s: %s' (%p)\n", strBuf(f->name), strBuf(f->value), f);
-    return f;
-}
-
-static void
-httpHeaderExtFieldDestroy(HttpHeaderExtField * f)
-{
-    assert(f);
-    stringClean(&f->name);
-    stringClean(&f->value);
-    xfree(f);
-}
-
-static HttpHeaderExtField *
-httpHeaderExtFieldDup(HttpHeaderExtField * f)
-{
-    assert(f);
-    return httpHeaderExtFieldCreate(strBuf(f->name), strBuf(f->value));
-}
-
-/*
  * Reports
  */
 
@@ -1241,7 +1170,7 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size,
     const char *name = valid_id ? Headers[id].name : "INVALID";
     if (count || valid_id)
 	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
-	    id, name, count, xdiv(count, HeaderParsedCount));
+	    id, name, count, xdiv(count, NonEmptyHeaderDestroyedCount));
 }
 
 static void
@@ -1249,7 +1178,8 @@ httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size
 {
     if (count)
 	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
-	    idx, ((int) (val + size)), count, xpercent(count, HeaderParsedCount));
+	    idx, (int)val, count,
+	    xpercent(count, HeaderDestroyedCount));
 }
 
 
@@ -1298,7 +1228,6 @@ httpHeaderStoreReport(StoreEntry * e)
 	    xpercent(f->stat.errCount, f->stat.parsCount),
 	    xpercent(f->stat.repCount, f->stat.parsCount));
     }
-    storeAppendPrintf(e, "\nSurvived/Parsed ratio: %d/%d (%.2f%%)\n", 
-	HeaderEntrySurvivedCount, HeaderEntryParsedCount,
-	xpercent(HeaderEntrySurvivedCount, HeaderEntryParsedCount));
+    storeAppendPrintf(e, "Headers Parsed: %d\n", HeaderParsedCount);
+    storeAppendPrintf(e, "Hdr Fields Parsed: %d\n", HeaderEntryParsedCount);
 }
