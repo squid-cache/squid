@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.207 1998/05/12 20:14:05 wessels Exp $
+ * $Id: neighbors.cc,v 1.208 1998/05/14 16:33:51 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -555,27 +555,34 @@ peerDigestLookup(peer * p, request_t * request, StoreEntry * entry)
     const cache_key *key = request ? storeKeyPublic(storeUrl(entry), request->method) : NULL;
     assert(p);
     assert(request);
-    debug(15, 5) ("neighborsDigestPeerLookup: peer %s\n", p->host);
+    debug(15, 5) ("peerDigestLookup: peer %s\n", p->host);
     /* does the peeer have a valid digest? */
     if (EBIT_TEST(p->digest.flags, PD_DISABLED)) {
+	debug(15, 5) ("peerDigestLookup: Disabled!\n");
 	return LOOKUP_NONE;
     } else if (!peerAllowedToUse(p, request)) {
+	debug(15, 5) ("peerDigestLookup: !peerAllowedToUse()\n");
 	return LOOKUP_NONE;
     } else if (EBIT_TEST(p->digest.flags, PD_USABLE)) {
+	debug(15, 5) ("peerDigestLookup: Usable!\n");
 	/* fall through; put here to have common case on top */ ;
     } else if (!EBIT_TEST(p->digest.flags, PD_INITED)) {
-	peerDigestInit(p);
+	debug(15, 5) ("peerDigestLookup: !initialized\n");
+	if (!EBIT_TEST(p->digest.flags, PD_INIT_PENDING)) {
+	    EBIT_SET(p->digest.flags, PD_INIT_PENDING);
+	    eventAdd("peerDigestInit", peerDigestInit, p, 0);
+	}
 	return LOOKUP_NONE;
     } else {
-	assert(EBIT_TEST(p->digest.flags, PD_REQUESTED));
+	debug(15, 5) ("peerDigestLookup: Whatever!\n");
 	return LOOKUP_NONE;
     }
-    debug(15, 5) ("neighborsDigestPeerLookup: OK to lookup peer %s\n", p->host);
+    debug(15, 5) ("peerDigestLookup: OK to lookup peer %s\n", p->host);
     assert(p->digest.cd);
     /* does digest predict a hit? */
     if (!cacheDigestTest(p->digest.cd, key))
 	return LOOKUP_MISS;
-    debug(15, 5) ("neighborsDigestPeerLookup: peer %s says HIT!\n", p->host);
+    debug(15, 5) ("peerDigestLookup: peer %s says HIT!\n", p->host);
     return LOOKUP_HIT;
 #endif
     return LOOKUP_NONE;

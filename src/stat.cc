@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.245 1998/04/27 17:25:01 rousskov Exp $
+ * $Id: stat.cc,v 1.246 1998/05/14 16:33:55 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -656,33 +656,6 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
 	x / 1000.0);
 
-#if USE_CACHE_DIGESTS
-    storeAppendPrintf(sentry, "cd.msgs_sent = %f/sec\n",
-	XAVG(cd.msgs_sent));
-    storeAppendPrintf(sentry, "cd.msgs_recv = %f/sec\n",
-	XAVG(cd.msgs_recv));
-    storeAppendPrintf(sentry, "cd.kbytes_sent = %f/sec\n",
-	XAVG(cd.kbytes_sent.kb));
-    storeAppendPrintf(sentry, "cd.kbytes_recv = %f/sec\n",
-	XAVG(cd.kbytes_recv.kb));
-    x = statHistDeltaMedian(&l->cd.client_svc_time,
-	&f->cd.client_svc_time);
-    storeAppendPrintf(sentry, "cd.client_median_svc_time = %f seconds\n",
-	x / 1000.0);
-    x = statHistDeltaMedian(&l->cd.server_svc_time,
-	&f->cd.server_svc_time);
-    storeAppendPrintf(sentry, "cd.server_median_svc_time = %f seconds\n",
-	x / 1000.0);
-    x = statHistDeltaMedian(&l->icp.client_svc_time,
-	&f->icp.client_svc_time);
-    storeAppendPrintf(sentry, "icp.client_median_svc_time = %f seconds\n",
-	x / 1000.0);
-    x = statHistDeltaMedian(&l->icp.server_svc_time,
-	&f->icp.server_svc_time);
-    storeAppendPrintf(sentry, "icp.server_median_svc_time = %f seconds\n",
-	x / 1000.0);
-#endif
-
     storeAppendPrintf(sentry, "server.all.requests = %f/sec\n",
 	XAVG(server.all.requests));
     storeAppendPrintf(sentry, "server.all.errors = %f/sec\n",
@@ -876,18 +849,10 @@ statCountersInitSpecial(StatCounters * C)
      * DNS svc_time hist is kept in milli-seconds; max of 10 minutes.
      */
     statHistLogInit(&C->dns.svc_time, 300, 0.0, 60000.0 * 10.0);
-#if USE_CACHE_DIGESTS
     /*
-     * Digested and ICPed cvs times in milli-seconds; max of 3 hours.
+     * Cache Digest Stuff
      */
-    statHistLogInit(&C->cd.client_svc_time, 300, 0.0, 3600000.0 * 30.0);
-    statHistLogInit(&C->icp.client_svc_time, 300, 0.0, 3600000.0 * 30.0);
-    statHistLogInit(&C->cd.server_svc_time, 300, 0.0, 3600000.0 * 30.0);
-    statHistLogInit(&C->icp.server_svc_time, 300, 0.0, 3600000.0 * 30.0);
-    statHistEnumInit(&C->cd.peer_choice_count, Config.npeers);
-    statHistEnumInit(&C->cd.peer_ichoice_count, Config.npeers);
     statHistEnumInit(&C->cd.on_xition_count, CacheDigestHashFuncCount);
-#endif
 }
 
 /* add special cases here as they arrive */
@@ -902,15 +867,7 @@ statCountersClean(StatCounters * C)
     statHistClean(&C->icp.query_svc_time);
     statHistClean(&C->icp.reply_svc_time);
     statHistClean(&C->dns.svc_time);
-#if USE_CACHE_DIGESTS
-    statHistClean(&C->cd.client_svc_time);
-    statHistClean(&C->icp.client_svc_time);
-    statHistClean(&C->cd.server_svc_time);
-    statHistClean(&C->icp.server_svc_time);
-    statHistClean(&C->cd.peer_choice_count);
-    statHistClean(&C->cd.peer_ichoice_count);
     statHistClean(&C->cd.on_xition_count);
-#endif
 }
 
 /* add special cases here as they arrive */
@@ -931,15 +888,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     statHistCopy(&dest->icp.query_svc_time, &orig->icp.query_svc_time);
     statHistCopy(&dest->icp.reply_svc_time, &orig->icp.reply_svc_time);
     statHistCopy(&dest->dns.svc_time, &orig->dns.svc_time);
-#if USE_CACHE_DIGESTS
-    statHistCopy(&dest->cd.client_svc_time, &orig->cd.client_svc_time);
-    statHistCopy(&dest->icp.client_svc_time, &orig->icp.client_svc_time);
-    statHistCopy(&dest->cd.server_svc_time, &orig->cd.server_svc_time);
-    statHistCopy(&dest->icp.server_svc_time, &orig->icp.server_svc_time);
-    statHistSafeCopy(&dest->cd.peer_choice_count, &orig->cd.peer_choice_count);
-    statHistSafeCopy(&dest->cd.peer_ichoice_count, &orig->cd.peer_ichoice_count);
     statHistCopy(&dest->cd.on_xition_count, &orig->cd.on_xition_count);
-#endif
 }
 
 static void
@@ -954,29 +903,6 @@ statCountersHistograms(StoreEntry * sentry)
     statHistDump(&f->client_http.nm_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
     statHistDump(&f->client_http.hit_svc_time, sentry, NULL);
-#endif
-#if USE_CACHE_DIGESTS
-    StatCounters *f = &Counter;
-    storeAppendPrintf(sentry, "\nicp.query_svc_time histogram:\n");
-    statHistDump(&f->icp.query_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\nicp.reply_svc_time histogram:\n");
-    statHistDump(&f->icp.reply_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\nicp.server_svc_time histogram:\n");
-    statHistDump(&f->icp.server_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\nicp.client_svc_time histogram:\n");
-    statHistDump(&f->icp.client_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\ncd.server_svc_time histogram:\n");
-    statHistDump(&f->cd.server_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\ncd.client_svc_time histogram:\n");
-    statHistDump(&f->cd.client_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\ncd.peer_choice_count histogram:\n");
-    statHistDump(&f->cd.peer_choice_count, sentry, &statHistIntDumper);
-    storeAppendPrintf(sentry, "\ncd.peer_ichoice_count histogram:\n");
-    statHistDump(&f->cd.peer_ichoice_count, sentry, &statHistIntDumper);
-    storeAppendPrintf(sentry, "\ncd.on_xition_count histogram:\n");
-    statHistDump(&f->cd.on_xition_count, sentry, &statHistIntDumper);
-#endif
-#if TOO_MUCH_OUTPUT
     storeAppendPrintf(sentry, "icp.query_svc_time histogram:\n");
     statHistDump(&f->icp.query_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "icp.reply_svc_time histogram:\n");

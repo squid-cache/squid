@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.305 1998/05/13 23:09:47 wessels Exp $
+ * $Id: client_side.cc,v 1.306 1998/05/14 16:33:48 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -537,16 +537,18 @@ checkNegativeHit(StoreEntry * e)
     return 1;
 }
 
+static void
+updateCDJunkStats()
+{
+	/* rewrite */
+}
+
 void
 clientUpdateCounters(clientHttpRequest * http)
 {
     int svc_time = tvSubMsec(http->start, current_time);
     icp_ping_data *i;
-#if USE_CACHE_DIGESTS
-    const HttpReply *reply = NULL;
-    int sst = 0;		/* server-side service time */
     HierarchyLogEntry *H;
-#endif
     Counter.client_http.requests++;
     if (isTcpHit(http->log_type))
 	Counter.client_http.hits++;
@@ -575,81 +577,26 @@ clientUpdateCounters(clientHttpRequest * http)
 	/* make compiler warnings go away */
 	break;
     }
-    i = &http->request->hier.icp;
-    if (0 != i->stop.tv_sec && 0 != i->start.tv_sec)
-	statHistCount(&Counter.icp.query_svc_time, tvSubUsec(i->start, i->stop));
-    if (i->timeout)
-	Counter.icp.query_timeouts++;
-#if USE_CACHE_DIGESTS
     H = &http->request->hier;
-    if (H->peer_select_start.tv_sec && H->store_complete_stop.tv_sec)
-	sst = tvSubMsec(H->peer_select_start, H->store_complete_stop);
-    if (H->alg == PEER_SA_ICP) {
-	statHistCount(&Counter.icp.client_svc_time, svc_time);
-	if (sst)
-	    statHistCount(&Counter.icp.server_svc_time, sst);
-	Counter.icp.times_used++;
-    } else if (H->alg == PEER_SA_DIGEST) {
-	statHistCount(&Counter.cd.client_svc_time, svc_time);
-	if (sst)
-	    statHistCount(&Counter.cd.server_svc_time, sst);
+    switch (H->alg) {
+    case PEER_SA_DIGEST:
 	Counter.cd.times_used++;
-    } else {
-	assert(H->alg == PEER_SA_NONE);
+	break;
+    case PEER_SA_ICP:
+	Counter.icp.times_used++;
+	i = &H->icp;
+	if (0 != i->stop.tv_sec && 0 != i->start.tv_sec)
+	    statHistCount(&Counter.icp.query_svc_time,
+		tvSubUsec(i->start, i->stop));
+	if (i->timeout)
+	    Counter.icp.query_timeouts++;
+	break;
+    case PEER_SA_NETDB:
+	Counter.netdb.times_used++;
+	break;
+    default:
+	break;
     }
-    /* account for outgoing digest traffic */
-    if (http->flags.internal && strStr(http->request->urlpath, StoreDigestUrlPath)) {
-	kb_incr(&Counter.cd.kbytes_sent, http->out.size);
-	Counter.cd.msgs_sent++;
-	debug(33, 1) ("Client %s requested local cache digest (%d bytes)\n",
-	    inet_ntoa(http->request->client_addr), http->out.size);
-    }
-    /* @?@ split this ugly if-monster */
-    if (
-    /* we used ICP or CD for peer selecton */
-	H->alg != PEER_SA_NONE &&
-    /* a successful CD lookup was made */
-	H->cd_lookup != LOOKUP_NONE &&
-    /* it was not a CD miss (we go direct on CD MISSes) */
-	!(H->alg == PEER_SA_DIGEST && H->cd_lookup == LOOKUP_MISS) &&
-    /* request was cachable */
-	!EBIT_TEST(http->request->flags, REQ_NOCACHE) &&
-	EBIT_TEST(http->request->flags, REQ_CACHABLE) &&
-    /* paranoid: we have a reply pointer */
-	(reply = storeEntryReply(http->entry))) {
-
-	/* tmp, remove this later */
-	const char *x_cache_lookup_fld = httpHeaderGetLastStr(&reply->header, HDR_X_CACHE_LOOKUP);
-	const int lookup_hit = x_cache_lookup_fld && !strncmp(x_cache_lookup_fld, "HIT", 3);
-	/* end of tmp hack */
-	const char *x_cache_fld = httpHeaderGetLastStr(&reply->header, HDR_X_CACHE);
-	const int real_hit = x_cache_fld && !strncmp(x_cache_fld, "HIT", 3);
-	const int guess_hit = LOOKUP_HIT == H->cd_lookup;
-	peer *peer = peerFindByName(H->cd_host);
-
-	debug(33, 3) ("clientUpdateCounters: peer %s real/guess: %d/%d (%d) for %s!\n",
-	    H->cd_host, real_hit, guess_hit, lookup_hit, http->request->host);
-	cacheDigestGuessStatsUpdate(&Counter.cd.guess, real_hit, guess_hit);
-	/* tmp hack */
-	if (lookup_hit && guess_hit && !real_hit)
-	    Counter.cd.guess.close_hits++;
-	if (peer) {
-	    cacheDigestGuessStatsUpdate(&peer->digest.stats.guess,
-		real_hit, guess_hit);
-	    /* tmp hack */
-	    if (lookup_hit && guess_hit && !real_hit)
-		peer->digest.stats.guess.close_hits++;
-	} else {
-	    /* temporary paranoid debug @?@ */
-	    static int max_count = 200;
-	    if (max_count > 0) {
-		debug(33, 1) ("clientUpdateCounters: lost peer %s for %s! (%d)\n",
-		    H->cd_host, http->request->host, max_count);
-		max_count--;
-	    }
-	}
-    }
-#endif
 }
 
 static void
