@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.25 1998/08/05 06:05:03 wessels Exp $
+ * $Id: unlinkd.cc,v 1.26 1998/08/14 17:38:19 wessels Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -78,8 +78,10 @@ main(int argc, char *argv[])
 
 #include "squid.h"
 
+#if USE_UNLINKD
 static int unlinkd_wfd = -1;
 static int unlinkd_rfd = -1;
+#endif
 
 void
 unlinkdUnlink(const char *path)
