@@ -2,7 +2,7 @@ COSS notes
 
 Adrian Chadd <adrian@creative.net.au>
 
-$Id: coss-notes.txt,v 1.2 2003/01/23 00:38:13 robertc Exp $
+$Id: coss-notes.txt,v 1.3 2003/08/27 21:19:38 wessels Exp $
 
 
 COSS is a Cyclic Object storage system originally designed by
@@ -89,3 +89,35 @@ well in the current squid codebase, but it would work well in the
 planned rewrite. This would also allow alternate replacement policies
 to be used. Oh, it'd cut down the storage requirements per
 StoreEntry by two pointers (8 bytes on the i386.)
+
+Notes by DW July 23, 2003
+-------------------------
+
+Fixed up swap_filen -> offset implementation.  Now user can use a
+block-size setting to determine the maximum COSS cache_dir size.
+
+Fixed bug when cached response is larger than COSS stripe size.
+Now require max-size to be less than COSS_MEMBUF_SZ.
+
+Fixed a lockcount bug.  Some aborted requests for cache hits failed
+to unlock the CossMemBuf because storeCossReadDone isn't called again.
+Solution is to add locked_membuf pointer to CossState structure and
+always unlock it if set.  This is probably more reliable than
+unlocking based on diskstart/diskend offsets.
+
+I'm worried that COSS is susceptible to a denial-of-service.  If
+the user can create N cache misses for responses about as large as
+COSS_MEMBUF_SZ, then COSS probably allocates N membufs (stripes)
+at the same time.  For large enough values of N, this should cause
+a malloc failure.  Solution may be to refuse to allocate new stripes
+(thus returning failure for cache misses and hits) after so many
+have already been allocated.
+
+Adrian's code has this comment:
+
+    /* Since we're not supporting NOTIFY anymore, lets fail */
+    assert(which != COSS_ALLOC_NOTIFY);
+
+However, COSS_ALLOC_NOTIFY was still present in the store_dir_coss.c
+rebuild routines.  To avoid assertions during rebuild, I commented
+out the storeCossAllocate(SD, e, COSS_ALLOC_NOTIFY) call.

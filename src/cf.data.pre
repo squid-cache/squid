@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.339 2003/08/13 00:37:29 robertc Exp $
+# $Id: cf.data.pre,v 1.340 2003/08/27 21:19:32 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1064,6 +1064,16 @@ DOC_START
 	starts blocking.  If this many messages are in the queues,
 	Squid blocks until it recevies some replies. Default is 72
 
+	The coss store type:
+
+	block-size=n defines the "block size" for COSS cache_dir's.
+	Squid uses file numbers as block numbers.  Since file numbers
+	are limited to 24 bits, the block size determines the maximum
+	size of the COSS partition.  The default is 512 bytes, which
+	leads to a maximum cache_dir size of 512<<24, or 8 GB.  Note
+	that you should not change the coss block size after Squid
+	has written some objects to the cache_dir.
+
 	Common options:
 
 	read-only, this cache_dir is read only.
@@ -1073,6 +1083,10 @@ DOC_START
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first and the
 	ones with no max-size specification last.
+
+	Note that for coss, max-size must be less than COSS_MEMBUF_SZ,
+	which can be changed with the --with-coss-membuf-size=N configure
+	option.
 DOC_END
 
 
