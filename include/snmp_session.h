@@ -1,10 +1,7 @@
-#ifndef _SNMP_H_
-#define _SNMP_H_
+/* -*- c++ -*- */
+#ifndef _SNMP_SESSION_H_
+#define _SNMP_SESSION_H_
 
-/*
- * Definitions for the Simple Network Management Protocol (RFC 1067).
- *
- */
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
@@ -27,53 +24,31 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp.h,v 1.9 1998/02/22 11:48:42 kostas Exp $
+ * $Id: snmp_session.h,v 1.1 1998/02/22 11:48:49 kostas Exp $
  * 
  **********************************************************************/
 
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
+struct snmp_session {
+  int Version; /* SNMP Version for this session */
 
-/* These come first */
-#include "asn1.h"
-#include "snmp_error.h"
-#include "mibii.h"
-#include "snmp_extra.h"
-#include "snmp_dump.h"
 
-/* I didn't touch this */
-#include "snmp_session.h"
+    u_char  *community;	/* community for outgoing requests. */
+    int	    community_len;  /* Length of community name. */
+    int	    retries;	/* Number of retries before timeout. */
+    int    timeout;    /* Number of uS until first timeout, then exponential backoff */
+    char    *peername;	/* Domain name or dotted IP address of default peer */
+    u_short remote_port;/* UDP port number of peer. */
+    u_short local_port; /* My UDP port number, 0 for default, picked randomly */
+  /* This isn't used, but is here so that libraries compiled with this
+   * in place still work.
+   */
+    u_char    *(*authenticator)();
+    int	    (*callback)();  /* Function to interpret incoming data */
+    /* Pointer to data that the callback function may consider important */
+    void    *callback_magic;
+};
 
-/* The various modules */
-#include <snmp_vars.h>
-#include <snmp_pdu.h>
-#include <snmp_msg.h>
+#define RECEIVED_MESSAGE   1
+#define TIMED_OUT	   2
 
-/* Other functions */
-#include <snmp_coexist.h>
-#include <version.h>
-#include <snmp_error.h>
-#include <snmp_api_error.h>
-#include <mini-client.h>
-
-/* Other stuff I didn't touch */
-#include <snmp_impl.h>
-#include <snmp_api.h>
-#include <snmp_client.h>
-#include <snmp-internal.h>
-#include <mib.h>
-#include <parse.h>
-#include <snmp_compat.h>
-
-#ifndef SQUID_H
-#ifdef __STDC__
-void (*snmplib_debug) (int,char *, ...); 
-#else
-void (*snmplib_debug) (va_alist));
-#endif
-#endif
-#endif /* _SNMP_H_ */
+#endif /* _SNMP_SESSION_H_ */

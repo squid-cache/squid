@@ -1,7 +1,9 @@
+#ifndef _SNMP_CLIENT_H_
+#define _SNMP_CLIENT_H_
+
 /*
  * snmp_client.h
  */
-
 /***********************************************************
 	Copyright 1988, 1989 by Carnegie Mellon University
 
@@ -23,12 +25,8 @@ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
-
-#ifndef SNMP_CLIENT_H
-#define SNMP_CLIENT_H
-
 struct synch_state {
-    int waiting;
+    int	waiting;
     int status;
 /* status codes */
 #define STAT_SUCCESS	0
@@ -38,12 +36,26 @@ struct synch_state {
     struct snmp_pdu *pdu;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern struct synch_state snmp_synch_state;
 
-extern struct snmp_pdu *snmp_pdu_create(int cmd);
+/* Synchronize Input with Agent */
+int  snmp_synch_input(int, struct snmp_session *, int,
+		     struct snmp_pdu *, void *);
 
-extern struct snmp_pdu *snmp_fix_pdu(struct snmp_pdu *pdu,
-    int cmd);
-extern char *snmp_errstring(int errstat);
+/* Synchronize Response with Agent */
+int  snmp_synch_response(struct snmp_session *, struct snmp_pdu *, 
+			struct snmp_pdu **);
 
+/* Synchronize Setup */
+void snmp_synch_setup(struct snmp_session *);
+
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* _SNMP_CLIENT_H_ */
+
