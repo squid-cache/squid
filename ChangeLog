@@ -11,6 +11,8 @@ Changes to squid-1.1.beta20 (November 13, 1996):
 	- Fixed Cache-Control counting in HTTP reply header stats.
 	- Relocated rfc1738_unescape() calls in ftpget so that
 	  ftp://foo.org/%2fbar/ works (Jonathan Larmour).
+	- Fixed forwarding loop for a pair of neighbors behind a firewall.
+	- Cleaned up ftpget non-blocking flags (Jean-Hugues ROYER).
 
 Changes to squid-1.1.beta19 (November 13, 1996):
 
