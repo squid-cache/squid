@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.131 1998/12/15 17:34:00 wessels Exp $
+# $Id: cf.data.pre,v 1.132 1999/01/21 23:15:36 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -433,7 +433,7 @@ NAME: cache_mem
 COMMENT: (bytes)
 TYPE: b_size_t
 DEFAULT: 8 MB
-LOC: Config.Mem.maxSize
+LOC: Config.memMaxSize
 DOC_START
 	NOTE: THIS PARAMETER DOES NOT SPECIFY THE MAXIMUM PROCESS
 	SIZE.  IT PLACES A LIMIT ON ONE ASPECT OF SQUID'S MEMORY
@@ -502,30 +502,6 @@ DOC_START
 cache_swap_low  90
 cache_swap_high 95
 DOC_END
-
-
-NAME: cache_mem_low
-COMMENT: (in percent, 0-100)
-TYPE: int
-DEFAULT: 75
-LOC: Config.Mem.lowWaterMark
-DOC_NONE
-
-NAME: cache_mem_high
-COMMENT: (in percent, 0-100)
-TYPE: int
-DEFAULT: 95
-LOC: Config.Mem.highWaterMark
-DOC_START
-	The low- and high-water mark for cache memory storage.  When
-	the amount of RAM used by the hot-object RAM cache reaches this
-	point, the cache starts throwing objects out of the RAM cache
-	(but they remain on disk).  Defaults are 75% and 90%.
-
-cache_mem_low  75
-cache_mem_high 90
-DOC_END
-
 
 NAME: maximum_object_size
 COMMENT: (bytes)

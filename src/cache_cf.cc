@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.318 1999/01/19 20:26:33 wessels Exp $
+ * $Id: cache_cf.cc,v 1.319 1999/01/21 23:15:35 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -204,7 +204,7 @@ configDoConfigure(void)
 	fatal("No cache_dir's specified in config file");
     /* calculate Config.Swap.maxSize */
     storeDirConfigure();
-    if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10))
+    if (Config.Swap.maxSize < (Config.memMaxSize >> 10))
 	fatal("cache_swap is lower than cache_mem");
     if (Config.Announce.period > 0) {
 	Config.onoff.announce = 1;

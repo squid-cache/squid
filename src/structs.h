@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.265 1999/01/19 20:43:46 wessels Exp $
+ * $Id: structs.h,v 1.266 1999/01/21 23:15:41 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -199,7 +199,8 @@ struct _SquidConfig {
 	size_t maxSize;
 	int highWaterMark;
 	int lowWaterMark;
-    } Mem , Swap;
+    } Swap;
+    size_t memMaxSize;
     struct {
 	char *relayHost;
 	u_short relayPort;

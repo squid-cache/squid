@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.38 1998/12/05 00:54:31 wessels Exp $
+ * $Id: mem.cc,v 1.39 1999/01/21 23:15:37 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -278,7 +278,7 @@ memInit(void)
     memDataInit(MEM_SQUIDCONFIG2, "SquidConfig2", sizeof(SquidConfig2), 0);
     memDataInit(MEM_STATCOUNTERS, "StatCounters", sizeof(StatCounters), 0);
     memDataInit(MEM_STMEM_BUF, "Store Mem Buffer", SM_PAGE_SIZE,
-	Config.Mem.maxSize / SM_PAGE_SIZE);
+	Config.memMaxSize / SM_PAGE_SIZE);
     memDataInit(MEM_STOREENTRY, "StoreEntry", sizeof(StoreEntry), 0);
     memDataInit(MEM_STORE_CLIENT, "store_client", sizeof(store_client), 0);
     memDataInit(MEM_SWAPDIR, "SwapDir", sizeof(SwapDir), 0);
