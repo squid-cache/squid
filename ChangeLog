@@ -6,6 +6,8 @@ Changes to squid-2.6 ():
 	- Configuration file can be read from an external program
 	  or preprocessor. See squid.8 man page.
 	- http_port is now optional, allowing for SSL only operation
+	- Satellite and other high latency peering relations enhancements
+	  (Robert Cohren)
 
 Changes to squid-2.5 ():
 
