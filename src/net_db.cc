@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.51 1997/11/05 05:29:32 wessels Exp $
+ * $Id: net_db.cc,v 1.52 1997/12/01 22:45:53 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -31,15 +31,13 @@
 
 #include "squid.h"
 
-#if USE_ICMP
 
-static hash_table *addr_table = NULL;
+#if USE_ICMP
+hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
 static struct in_addr networkFromInaddr(struct in_addr a);
 static void netdbRelease(netdbEntry * n);
-static netdbEntry *netdbGetFirst(hash_table * table);
-static netdbEntry *netdbGetNext(hash_table * table);
 static void netdbHashInsert(netdbEntry * n, struct in_addr addr);
 static void netdbHashDelete(const char *key);
 static void netdbHashLink(netdbEntry * n, const char *hostname);
@@ -115,13 +113,13 @@ netdbLookupHost(const char *key)
     return hptr ? (netdbEntry *) hptr->item : NULL;
 }
 
-static netdbEntry *
+netdbEntry *
 netdbGetFirst(hash_table * table)
 {
     return (netdbEntry *) hash_first(table);
 }
 
-static netdbEntry *
+netdbEntry *
 netdbGetNext(hash_table * table)
 {
     return (netdbEntry *) hash_next(table);

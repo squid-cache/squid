@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.102 1997/11/23 06:47:18 wessels Exp $
+#  $Id: Makefile.in,v 1.103 1997/12/01 22:45:47 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -18,9 +18,9 @@ STORE_KEY_SHA	= # -DSTORE_KEY_SHA=1
 USE_ASYNC_IO	= # -DUSE_ASYNC_IO=1
 
 # define all three for SNMP support
-#SQUID_SNMP		= -DSQUID_SNMP=1
-#SQUID_MIB		= mib.txt 
-#SQUID_SNMP_LIBS	= -L../snmplib -lsnmp
+SQUID_SNMP		= -DSQUID_SNMP=1
+SQUID_MIB		= mib.txt 
+SQUID_SNMP_LIBS	= -L../snmplib -lsnmp
 
 DEFINES         = $(HOST_OPT) \
                   $(ICMP_OPT) $(DELAY_HACK) $(USERAGENT_OPT) \
@@ -40,7 +40,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
-DEFAULT_SNMP_CONF	= $(sysconfdir)/snmp.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/dnsserver
 DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
@@ -52,7 +51,7 @@ DEFAULT_PINGER		= $(libexecdir)/pinger
 DEFAULT_UNLINKD		= $(libexecdir)/unlinkd
 DEFAULT_ICON_DIR	= $(sysconfdir)/icons
 DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
-DEFAULT_MIB_PATH	= $(sysconfdir)/squidmib.txt
+DEFAULT_MIB_PATH	= $(sysconfdir)/mib.txt
 
 CC		= @CC@
 MAKEDEPEND	= @MAKEDEPEND@
@@ -206,7 +205,6 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_STORE_LOG@%$(DEFAULT_STORE_LOG)%g;\
 	s%@DEFAULT_PID_FILE@%$(DEFAULT_PID_FILE)%g;\
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
-	s%@DEFAULT_SNMP_CONF@%$(DEFAULT_SNMP_CONF)%g;\
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
         s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g" < cf.data.pre >$@
@@ -288,13 +286,6 @@ install: all install-mkdirs
 		echo "$(INSTALL_FILE) squid.conf $(sysconfdir)"; \
 		$(INSTALL_FILE) squid.conf $(sysconfdir); \
 	fi
-	$(INSTALL_FILE) snmp.conf $(sysconfdir)/snmp.conf.default
-	@if test -f $(sysconfdir)/snmp.conf ; then \
-                echo "$@ will not overwrite existing $(sysconfdir)/snmp.conf" ; \
-        else \
-                echo "$(INSTALL_FILE) snmp.conf $(sysconfdir)"; \
-                $(INSTALL_FILE) snmp.conf $(sysconfdir); \
-        fi
 
 	$(INSTALL_FILE) mime.conf $(sysconfdir)/mime.conf.default
 	@if test -f $(sysconfdir)/mime.conf ; then \

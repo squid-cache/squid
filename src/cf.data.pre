@@ -1930,6 +1930,59 @@ TYPE: ushort
 LOC: Config.Port.snmp
 DEFAULT: 3401
 DOC_START
+	Port for snmp. <=0 to disable.
+DOC_END
+
+NAME: snmp_config_file
+TYPE: string
+LOC: Config.Snmp.configFile
+DEFAULT: @DEFAULT_SNMP_CONF@
+DOC_START
+	External snmp configuration file, CMU-snmpd style.
+DOC_END
+
+NAME: snmp_do_queueing
+TYPE: onoff
+LOC: Config.Snmp.do_queueing
+DEFAULT: on
+DOC_START
+	If disabled, snmp packets will not be queued but delivered 
+	immediately. This could be performant when you want to monitor
+	a cache in trouble, but this could also bring squid to block.
+DOC_END
+
+NAME: forward_snmpd_port
+TYPE: ushort
+LOC: Config.Snmp.localPort
+DEFAULT: 0
+DOC_START
+	This configures whether we should be forwarding SNMP requests
+	to another snmpd. The reason for putting this piece of functionality
+	into squid was to enable access to the system's installed
+	snmpd with minimal changes.
+	This option is turned off by default, check with your /etc/services
+	for your system's snmp port (usually 161).
+	We do not use getservbyname() to allow you to set squid into port 161
+	and your system's snmpd to another port by changing /etc/services.
+
+        WARNING: Because of squid acting as a proxy snmpd for system  
+        you have to do security checks on THIS snmpd for all objects.
+        Check your snmp_config_file
+DOC_END
+
+NAME: snmp_mib_path
+TYPE: string
+LOC: Config.Snmp.mibPath
+DEFAULT: @DEFAULT_MIB_PATH@
+DOC_START
+	The location of squid's mib.
+DOC_END
+
+NAME: snmp_port
+TYPE: ushort
+LOC: Config.Port.snmp
+DEFAULT: 3401
+DOC_START
        Port for snmp. <=0 to disable.
 DOC_END
 
@@ -1968,13 +2021,43 @@ DOC_START
        snmp_config_file
 DOC_END
 
-NAME: snmp_mib_path
+NAME: trap_sink
 TYPE: string
-LOC: Config.Snmp.mibPath
-DEFAULT: @DEFAULT_MIB_PATH@
+LOC: Config.Snmp.trap_sink
+DEFAULT: 127.0.0.1
 DOC_START
-       The location of squid's mib.
+	Hostname or ip address of trap sink for snmp
 DOC_END
 
+NAME: snmp_trap_community
+TYPE: string
+LOC: Config.Snmp.trap_community
+DEFAULT: public
+DOC_START
+	Community name for traps
+DOC_END
+
+NAME: snmp_enable_authen_traps
+TYPE: onoff
+LOC: Config.Snmp.conf_authtraps
+DEFAULT: off
+DOC_START
+	Enable SNMP authenticated traps
+DOC_END
+
+NAME: snmp_agent_conf
+TYPE: snmp_conf
+LOC: Config.Snmp.snmpconf
+DEFAULT: none
+DOC_START
+	Define snmp views, users and communities 
+	Example:
+		snmp_agent_conf view all .1.3.6	included
+		snmp_agent_conf view squid .1.3.6 included
+		snmp_agent_conf user squid - all all public
+		snmp_agent_conf user all all all all  squid
+		snmp_agent_conf community public squid squid
+		snmp_agent_conf community readwrite all all
+DOC_END
 
 EOF

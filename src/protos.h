@@ -328,6 +328,8 @@ extern void netdbFreeMemory(void);
 extern int netdbHostHops(const char *host);
 extern int netdbHostRtt(const char *host);
 extern void netdbUpdatePeer(request_t *, peer * e, int rtt, int hops);
+extern netdbEntry *netdbGetFirst(hash_table * table);
+extern netdbEntry *netdbGetNext(hash_table * table);
 
 extern void objcachePasswdAdd(cachemgr_passwd **, char *, wordlist *);
 extern void objcachePasswdDestroy(cachemgr_passwd ** a);
@@ -432,6 +434,7 @@ extern int storePendingNClients(const StoreEntry *);
 extern int storeWriteCleanLogs(int reopen);
 extern HASHCMP urlcmp;
 extern EVH storeMaintainSwapSpace;
+
 extern void storeExpireNow(StoreEntry *);
 extern void storeReleaseRequest(StoreEntry *);
 extern void storeRotateLog(void);

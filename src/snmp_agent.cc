@@ -44,12 +44,6 @@ int	create_identical();
 int	parse_var_op_list();
 void setVariable();
 
-#if kinetics
-char	version_descr[];
-oid	version_id[];
-int	version_id_len;
-#endif
-
 struct pbuf *definitelyGetBuf();
 int get_community();
 
@@ -191,16 +185,19 @@ long		*ireqid;
 			create_report( session, out_sn_data, out_length, -ret, reqid );
 			return 1;
 		} else {
+			debug(49,5)("snmp_agent_parse: asn_parse failed\n");
 			return 0;
 		}
 	    } else if( ret > 0 ) {
 		increment_stat( ret );
+		debug(49,5)("snmp_agent_parse: authorization failed>0 ");
 		return 0;
 	    }
 
     } else if( version == SNMP_VERSION_1 ) {
 	    if( (ret = get_community( sid )) != 0 ) {
 		increment_stat(ret);
+		debug(49,5)("snmp_agent_parse: get_community failed\n");
 		return 0;
 	    }
 	    session->version = SNMP_VERSION_1;
@@ -233,8 +230,12 @@ long		*ireqid;
 
     if( msgtype == GETBULK_REQ_MSG ) {
 	if( session->version == SNMP_VERSION_1 ) 
+	{
+		debug(49,5)("snmp_agent_parse: getbulk but version 1\n");
 		return 0;
+	}
     } else if (msgtype != GET_REQ_MSG && msgtype != GETNEXT_REQ_MSG && msgtype != SET_REQ_MSG ) {
+		debug(49,5)("snmp_agent_parse: unknown request type\n");
 	return 0;
     }
     sn_data = asn_parse_int(sn_data, &length, &type, &reqid, sizeof(reqid));
@@ -346,6 +347,7 @@ long		*ireqid;
 		  *out_length = packet_end - out_auth;
 		  return 1;
 	      }
+		debug(49,5)("snmp_agent_parse: problem in ERR_NOERROR\n");
 	      return 0;
 	} else {
 	      parse_var_op_list(sn_data, length, out_sn_data, *out_length,
@@ -405,8 +407,10 @@ long		*ireqid;
 		*out_length = packet_end - out_auth;
 		return 1;
 	    }
+	debug(49,5)("snmp_agent_parse: create_identical failed\n");
 	    return 0;
 	default:
+		debug(49,5)("snmp_agent_parse: hey, something's wrong\n");
 	    return 0;
     }
 
@@ -488,6 +492,7 @@ parse_var_op_list(sn_data, length, out_sn_data, out_length, index, msgtype, acti
 	if (sn_data == NULL)
 	    return PARSE_ERROR;
 	/* now attempt to retrieve the variable on the local entity */
+	debug(49,5)("snmp:before getStatPtr...\n");
 	statP = getStatPtr(var_name, &var_name_len, &statType, &statLen, &acl, 
 		exact, &write_method, session->version, &noSuchObject, 
 		msgtype==SET_REQ_MSG ? session->writeView : session->readView );
@@ -630,7 +635,7 @@ create_identical(snmp_in, snmp_out, snmp_length, errstat, errindex)
     int		    length, headerLength;
     u_char *headerPtr, *reqidPtr, *errstatPtr, *errindexPtr, *varListPtr;
 
-    bcopy((char *)snmp_in, (char *)snmp_out, snmp_length);
+    memcpy((char *)snmp_out, (char *)snmp_in, snmp_length);
     length = snmp_length;
     headerPtr = snmp_auth_parse(snmp_out, &length, sid, &sidlen, (long *)&dummy);
     sid[sidlen] = 0;
@@ -774,8 +779,9 @@ int get_community(sessionid)
 u_char      *sessionid;
 {
     communityEntry *cp;
-
-    for( cp = communities; cp; cp = cp->next ) {
+	debug(49,5)("get_community: %s on %d\n",sessionid, getpid());
+    for( cp = Config.Snmp.communities; cp; cp = cp->next ) {
+		debug(49,5)("get_community: %s\n", cp->name);
         if (!strcmp(cp->name, (char *)sessionid))
             break;
     }

@@ -120,7 +120,7 @@ typedef struct _conf_if_list {
 } conf_if_list;
 
 extern conf_if_list *if_list;
-
+extern void init_mib(const char *);
 extern int read_objid(char *input, oid * output, int *out_len);
 extern void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 extern void sprint_objid(char *buf, oid * id, int idlen);

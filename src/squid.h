@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.137 1997/11/30 02:52:09 wessels Exp $
+ * $Id: squid.h,v 1.138 1997/12/01 22:45:57 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -263,6 +263,10 @@
 #define STORE_KEY_URL 1
 #define storeKeyHashCmp urlcmp
 #define storeKeyHashHash hash4
+#endif
+#ifdef SQUID_SNMP
+#include "snmp.h"
+#include "snmp_config.h"
 #endif
 
 /* Needed for poll() on Linux at least */
