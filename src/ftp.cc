@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.46 1996/07/20 03:16:50 wessels Exp $
+ * $Id: ftp.cc,v 1.47 1996/07/20 04:22:24 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -339,7 +339,7 @@ int ftpReadReply(fd, data)
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     debug(9, 5, "ftpReadReply: FD %d, Read %d bytes\n", fd, len);
     if (len > 0) {
-        IOStats.Ftp.reads++;
+	IOStats.Ftp.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
 	IOStats.Ftp.read_hist[bin]++;

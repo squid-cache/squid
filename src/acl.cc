@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.20 1996/07/20 04:21:54 wessels Exp $
+ * $Id: acl.cc,v 1.21 1996/07/20 04:22:21 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -627,7 +627,7 @@ static int aclMatchTime(data, when)
 
 int aclMatchAcl(acl, checklist)
      struct _acl *acl;
-      aclCheck_t *checklist;
+     aclCheck_t *checklist;
 {
     request_t *r = checklist->request;
     struct hostent *hp = NULL;
@@ -648,7 +648,7 @@ int aclMatchAcl(acl, checklist)
 	for (k = 0; *(hp->h_addr_list + k); k++) {
 	    xmemcpy(&checklist->dst_addr.s_addr,
 		*(hp->h_addr_list + k),
-	  	hp->h_length);
+		hp->h_length);
 	    if (aclMatchIp(acl->data, checklist->dst_addr))
 		return 1;
 	}
