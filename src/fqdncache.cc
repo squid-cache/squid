@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.95 1998/03/28 23:31:21 wessels Exp $
+ * $Id: fqdncache.cc,v 1.96 1998/03/29 08:50:58 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -147,6 +147,7 @@ static void fqdncache_dnsDispatch(dnsserver_t *, fqdncache_entry *);
 static void fqdncacheChangeKey(fqdncache_entry * i);
 static void fqdncacheLockEntry(fqdncache_entry * f);
 static void fqdncacheUnlockEntry(fqdncache_entry * f);
+static FREE fqdncacheFreeEntry;
 
 static hash_table *fqdn_table = NULL;
 static struct fqdncacheQueueData *fqdncacheQueueHead = NULL;
@@ -552,7 +553,7 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
 	fqdncacheAddPending(f, handler, handlerData);
 	if (squid_curtime - f->expires > 600) {
 	    debug(14, 0) ("fqdncache_nbgethostbyname: '%s' PENDING for %d seconds, aborting\n", name,
-	        (int) (squid_curtime + Config.negativeDnsTtl - f->expires));
+		(int) (squid_curtime + Config.negativeDnsTtl - f->expires));
 	    fqdncacheChangeKey(f);
 	    fqdncache_call_pending(f);
 	}
@@ -802,31 +803,22 @@ fqdncacheUnlockEntry(fqdncache_entry * f)
 	fqdncache_release(f);
 }
 
+static void
+fqdncacheFreeEntry(void *data)
+{
+    fqdncache_entry *f = data;
+    int k;
+    for (k = 0; k < (int) f->name_count; k++)
+	safe_free(f->names[k]);
+    safe_free(f->name);
+    safe_free(f->error_message);
+    memFree(MEM_FQDNCACHE_ENTRY, f);
+}
+
 void
 fqdncacheFreeMemory(void)
 {
-    fqdncache_entry *f;
-    fqdncache_entry **list;
-    int i = 0;
-    int j = 0;
-    int k = 0;
-    int n = memInUse(MEM_FQDNCACHE_ENTRY);
-    list = xcalloc(n, sizeof(fqdncache_entry *));
-    f = (fqdncache_entry *) hash_first(fqdn_table);
-    while (f != NULL && i < n) {
-	*(list + i) = f;
-	i++;
-	f = (fqdncache_entry *) hash_next(fqdn_table);
-    }
-    for (j = 0; j < i; j++) {
-	f = *(list + j);
-	for (k = 0; k < (int) f->name_count; k++)
-	    safe_free(f->names[k]);
-	safe_free(f->name);
-	safe_free(f->error_message);
-	memFree(MEM_FQDNCACHE_ENTRY, f);
-    }
-    xfree(list);
+    hashFreeItems(fqdn_table, fqdncacheFreeEntry);
     hashFreeMemory(fqdn_table);
     fqdn_table = NULL;
 }
@@ -905,7 +897,7 @@ fqdn_getMax()
 }
 
 variable_list *
-snmp_fqdncacheFn(variable_list * Var, snint *ErrP)
+snmp_fqdncacheFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
     static fqdncache_entry *fq = NULL;

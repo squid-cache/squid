@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.80 1998/03/27 05:36:56 wessels Exp $
+ * $Id: net_db.cc,v 1.81 1998/03/29 08:51:01 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -51,6 +51,8 @@ static IPH netdbSendPing;
 static QS sortPeerByRtt;
 static QS sortByRtt;
 static QS netdbLRU;
+static FREE netdbFreeNameEntry;
+static FREE netdbFreeNetdbEntry;
 
 /* We have to keep a local list of peer names.  The Peers structure
  * gets freed during a reconfigure.  We want this database to
@@ -527,46 +529,31 @@ netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt)
 #endif
 }
 
+static void
+netdbFreeNetdbEntry(void *data)
+{
+    netdbEntry *n = data;
+    safe_free(n->peers);
+    memFree(MEM_NETDBENTRY, n);
+}
+
+static void
+netdbFreeNameEntry(void *data)
+{
+    net_db_name *x = data;
+    xfree(x->name);
+    memFree(MEM_NET_DB_NAME, x);
+}
+
 void
 netdbFreeMemory(void)
 {
 #if USE_ICMP
-    netdbEntry *n;
-    netdbEntry **L1;
-    net_db_name **L2;
-    net_db_name *x;
-    int i = 0;
-    int j;
-    L1 = xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
-    n = (netdbEntry *) hash_first(addr_table);
-    while (n && i < memInUse(MEM_NETDBENTRY)) {
-	*(L1 + i) = n;
-	i++;
-	n = (netdbEntry *) hash_next(addr_table);
-    }
-    for (j = 0; j < i; j++) {
-	n = *(L1 + j);
-	safe_free(n->peers);
-	memFree(MEM_NETDBENTRY, n);
-    }
-    xfree(L1);
-    i = 0;
-    L2 = xcalloc(memInUse(MEM_NET_DB_NAME), sizeof(net_db_name *));
-    x = (net_db_name *) hash_first(host_table);
-    while (x && i < memInUse(MEM_NET_DB_NAME)) {
-	*(L2 + i) = x;
-	i++;
-	x = (net_db_name *) hash_next(host_table);
-    }
-    for (j = 0; j < i; j++) {
-	x = *(L2 + j);
-	xfree(x->name);
-	memFree(MEM_NET_DB_NAME, x);
-    }
-    xfree(L2);
+    hashFreeItems(addr_table, netdbFreeNetdbEntry);
     hashFreeMemory(addr_table);
-    hashFreeMemory(host_table);
     addr_table = NULL;
+    hashFreeItems(host_table, netdbFreeNameEntry);
+    hashFreeMemory(host_table);
     host_table = NULL;
     wordlistDestroy(&peer_names);
     peer_names = NULL;
@@ -701,7 +688,7 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
 
 #if SQUID_SNMP
 
-int 
+int
 netdbGetRowFn(oid * New, oid * Oid)
 {
     netdbEntry *c = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.43 1998/03/16 20:30:03 wessels Exp $
+ * $Id: globals.h,v 1.44 1998/03/29 08:50:59 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -47,7 +47,6 @@ extern int configured_once;	/* 0 */
 extern int debugLevels[MAX_DEBUG_SECTIONS];
 extern int do_mallinfo;		/* 0 */
 extern int opt_reuseaddr;	/* 1 */
-extern int hash_links_allocated;
 extern int icmp_sock;		/* -1 */
 extern int neighbors_do_private_keys;	/* 1 */
 extern int opt_accel_uses_host;	/* 0 */
@@ -97,7 +96,7 @@ extern double request_failure_ratio;	/* 0.0 */
 extern int store_hash_buckets;	/* 0 */
 extern hash_table *store_table;	/* NULL */
 extern dlink_list store_list;
-extern const String StringNull; /* { 0, 0, NULL } */
+extern const String StringNull;	/* { 0, 0, NULL } */
 extern int hot_obj_count;	/* 0 */
 
 #ifdef HAVE_SYSLOG

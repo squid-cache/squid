@@ -46,10 +46,10 @@ typedef enum {
     ERR_CACHE_ACCESS_DENIED,
     ERR_CACHE_MGR_ACCESS_DENIED,
     ERR_SQUID_SIGNATURE,	/* not really an error */
-    ERR_FTP_PUT_CREATED,	/* !error,a note that the file was created */    
+    ERR_FTP_PUT_CREATED,	/* !error,a note that the file was created */
     ERR_FTP_PUT_MODIFIED,	/* modified, !created */
     ERR_FTP_PUT_ERROR,
-    ERR_ONLY_IF_CACHED_MISS,    /* failure to satisfy only-if-cached request */
+    ERR_ONLY_IF_CACHED_MISS,	/* failure to satisfy only-if-cached request */
     ERR_MAX
 } err_type;
 
@@ -471,6 +471,7 @@ typedef enum {
     MEM_ACL,
     MEM_ACL_LIST,
     MEM_ACL_ACCESS,
+    MEM_ACL_PROXY_AUTH_USER,
     MEM_ACLCHECK_T,
     MEM_AIO_RESULT_T,
     MEM_WORDLIST,

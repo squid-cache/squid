@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.29 1998/03/27 05:36:55 wessels Exp $
+ * $Id: client_db.cc,v 1.30 1998/03/29 08:50:57 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -33,6 +33,7 @@
 
 static hash_table *client_table = NULL;
 static ClientInfo *clientdbAdd(struct in_addr addr);
+static FREE clientdbFreeItem;
 
 static ClientInfo *
 clientdbAdd(struct in_addr addr)
@@ -164,32 +165,22 @@ clientdbDump(StoreEntry * sentry)
     }
 }
 
+static void
+clientdbFreeItem(void *data)
+{
+    memFree(MEM_CLIENT_INFO, data);
+}
+
 void
 clientdbFreeMemory(void)
 {
-    ClientInfo *c;
-    ClientInfo **C;
-    int i = 0;
-    int j;
-    int n = memInUse(MEM_CLIENT_INFO);
-    C = xcalloc(n, sizeof(ClientInfo *));
-    c = (ClientInfo *) hash_first(client_table);
-    while (c && i < n) {
-	*(C + i) = c;
-	i++;
-	c = (ClientInfo *) hash_next(client_table);
-    }
-    for (j = 0; j < i; j++) {
-	c = *(C + j);
-	memFree(MEM_CLIENT_INFO, c);
-    }
-    xfree(C);
+    hashFreeItems(client_table, clientdbFreeItem);
     hashFreeMemory(client_table);
     client_table = NULL;
 }
 
 #if SQUID_SNMP
-int 
+int
 meshCtblGetRowFn(oid * New, oid * Oid)
 {
     ClientInfo *c = NULL;
@@ -263,7 +254,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	break;
     case MESH_CTBL_HTHITS:
 	aggr = 0;
-	for (l = 0; l<LOG_TYPE_MAX; l++) {
+	for (l = 0; l < LOG_TYPE_MAX; l++) {
 	    if (isTcpHit(l))
 		aggr += c->Http.result_hist[l];
 	}
