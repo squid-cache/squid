@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.219 2003/01/23 00:37:20 robertc Exp $
+ * $Id: enums.h,v 1.220 2003/01/27 08:06:57 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -171,13 +171,6 @@ typedef enum {
     PEER_PARENT,
     PEER_MULTICAST
 } peer_t;
-
-typedef enum {
-    PEER_SA_NONE,
-    PEER_SA_DIGEST,
-    PEER_SA_ICP,
-    PEER_SA_NETDB
-} peer_select_alg_t;
 
 typedef enum {
     LOOKUP_NONE,
