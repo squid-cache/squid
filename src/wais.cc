@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.73 1997/06/02 01:06:19 wessels Exp $
+ * $Id: wais.cc,v 1.74 1997/06/02 05:39:51 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -124,6 +124,7 @@ static PF waisReadReply;
 static CWCB waisSendComplete;
 static PF waisSendRequest;
 static CNCB waisConnectDone;
+static STABH waisAbort;
 
 static void
 waisStateFree(int fd, void *data)
@@ -132,6 +133,7 @@ waisStateFree(int fd, void *data)
     if (waisState == NULL)
 	return;
     storeUnlockObject(waisState->entry);
+    storeUnregisterAbort(waisState->entry);
     xfree(waisState);
 }
 
@@ -155,12 +157,16 @@ waisReadReply(int fd, void *data)
 {
     WaisStateData *waisState = data;
     LOCAL_ARRAY(char, buf, 4096);
-    int len;
     StoreEntry *entry = waisState->entry;
+    int len;
     int clen;
     int off;
     int bin;
-
+    if (protoAbortFetch(entry)) {
+        squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+        comm_close(fd);
+        return;
+    }
     if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
 	/* we can terminate connection right now */
 	squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
@@ -171,11 +177,6 @@ waisReadReply(int fd, void *data)
     clen = entry->mem_obj->e_current_len;
     off = storeGetLowestReaderOffset(entry);
     if ((clen - off) > WAIS_DELETE_GAP) {
-	if (entry->flag & CLIENT_ABORT_REQUEST) {
-	    squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	    comm_close(fd);
-	    return;
-	}
 	IOStats.Wais.reads_deferred++;
 	debug(24, 3, "waisReadReply: Read deferred for Object: %s\n",
 	    entry->url);
@@ -326,9 +327,8 @@ waisStart(request_t *request, StoreEntry * entry)
     waisState->fd = fd;
     waisState->entry = entry;
     xstrncpy(waisState->request, url, MAX_URL);
-    comm_add_close_handler(waisState->fd,
-	waisStateFree,
-	waisState);
+    comm_add_close_handler(waisState->fd, waisStateFree, waisState);
+    storeRegisterAbort(entry, waisAbort, waisState);
     commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
     storeLockObject(entry);
     commConnectStart(waisState->fd,
@@ -357,4 +357,12 @@ waisConnectDone(int fd, int status, void *data)
 	COMM_SELECT_WRITE,
 	waisSendRequest,
 	waisState, 0);
+}
+
+static void
+waisAbort(void *data)
+{
+    HttpStateData *waisState = data;
+    debug(24, 1, "waisAbort: %s\n", waisState->entry->url);
+    comm_close(waisState->fd);
 }

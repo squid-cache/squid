@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.139 1997/05/02 21:34:13 wessels Exp $
+ * $Id: stat.cc,v 1.140 1997/06/02 05:39:48 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -333,8 +333,10 @@ describeFlags(const StoreEntry * entry)
 #endif
     if (BIT_TEST(flags, DELETE_BEHIND))
 	strcat(buf, "DB,");
+#ifdef OLD_CODE
     if (BIT_TEST(flags, CLIENT_ABORT_REQUEST))
 	strcat(buf, "CA,");
+#endif
     if (BIT_TEST(flags, DELAY_SENDING))
 	strcat(buf, "DS,");
     if (BIT_TEST(flags, ABORT_MSG_PENDING))

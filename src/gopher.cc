@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.81 1997/05/22 15:51:54 wessels Exp $
+ * $Id: gopher.cc,v 1.82 1997/06/02 05:39:44 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -156,6 +156,7 @@ typedef struct gopher_ds {
     int cso_recno;
     int len;
     char *buf;			/* pts to a 4k page */
+    int fd;
 } GopherStateData;
 
 static PF gopherStateFree;
@@ -178,6 +179,7 @@ static void gopherSendComplete(int fd,
 static PF gopherSendRequest;
 static GopherStateData *CreateGopherStateData _PARAMS((void));
 static CNCB gopherConnectDone;
+static STABH gopherAbort;
 
 static char def_gopher_bin[] = "www/unknown";
 static char def_gopher_text[] = "text/plain";
@@ -188,8 +190,10 @@ gopherStateFree(int fd, void *data)
     GopherStateData *gopherState = data;
     if (gopherState == NULL)
 	return;
-    if (gopherState->entry)
+    if (gopherState->entry) {
 	storeUnlockObject(gopherState->entry);
+	storeUnregisterAbort(gopherState->entry);
+    }
     put_free_4k_page(gopherState->buf);
     xfree(gopherState);
 }
@@ -652,28 +656,21 @@ static void
 gopherReadReply(int fd, void *data)
 {
     GopherStateData *gopherState = data;
+    StoreEntry *entry = gopherState->entry;
     char *buf = NULL;
     int len;
     int clen;
     int off;
-    StoreEntry *entry = NULL;
     int bin;
-
-    entry = gopherState->entry;
     if (protoAbortFetch(entry)) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	comm_close(fd);
-	return;
+        squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+        comm_close(fd);
+        return;
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->e_current_len;
     off = storeGetLowestReaderOffset(entry);
     if ((clen - off) > GOPHER_DELETE_GAP) {
-	if (entry->flag & CLIENT_ABORT_REQUEST) {
-	    squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	    comm_close(fd);
-	    return;
-	}
 	IOStats.Gopher.reads_deferred++;
 	debug(10, 3, "gopherReadReply: Read deferred for Object: %s\n",
 	    entry->url);
@@ -736,12 +733,6 @@ gopherReadReply(int fd, void *data)
 	storeTimestampsSet(entry);
 	BIT_RESET(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
-	comm_close(fd);
-    } else if (entry->flag & CLIENT_ABORT_REQUEST) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	if (gopherState->conversion != NORMAL)
-	    gopherEndHTML(data);
-	BIT_RESET(entry->flag, DELAY_SENDING);
 	comm_close(fd);
     } else {
 	if (gopherState->conversion != NORMAL) {
@@ -879,9 +870,8 @@ gopherStart(StoreEntry * entry)
 	gopherStateFree(-1, gopherState);
 	return;
     }
-    comm_add_close_handler(fd,
-	gopherStateFree,
-	gopherState);
+    comm_add_close_handler(fd, gopherStateFree, gopherState);
+    storeRegisterAbort(entry, gopherAbort, gopherState);
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
@@ -917,6 +907,7 @@ gopherStart(StoreEntry * entry)
 	gopherState->port,
 	gopherConnectDone,
 	gopherState);
+    gopherState->fd = fd;
 }
 
 static void
@@ -944,4 +935,12 @@ CreateGopherStateData(void)
     GopherStateData *gd = xcalloc(1, sizeof(GopherStateData));
     gd->buf = get_free_4k_page();
     return (gd);
+}
+
+static void
+gopherAbort(void *data)
+{
+    GopherStateData *gopherState = data;
+    debug(10,1,"gopherAbort: %s\n", gopherState->entry->url);
+    comm_close(gopherState->fd);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.248 1997/06/02 01:06:17 wessels Exp $
+ * $Id: store.cc,v 1.249 1997/06/02 05:39:50 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -804,7 +804,6 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     e->swap_file_number = file_number;
     e->object_len = size;
     e->lock_count = 0;
-    BIT_RESET(e->flag, CLIENT_ABORT_REQUEST);
     e->refcount = 0;
     e->lastref = timestamp;
     e->timestamp = timestamp;
@@ -1714,6 +1713,10 @@ storeAbort(StoreEntry * e, const char *msg)
     /* We assign an object length here--The only other place we assign the
      * object length is in storeComplete() */
     e->object_len = mem->e_current_len;
+    if (mem->abort.callback) {
+	mem->abort.callback(mem->abort.data);
+	mem->abort.callback = NULL;
+    }
     InvokeHandlers(e);
     storeUnlockObject(e);
     return;
@@ -2779,3 +2782,22 @@ storePutUnusedFileno(int fileno)
     else
 	unlinkdUnlink(storeSwapFullPath(fileno, NULL));
 }
+
+void
+storeRegisterAbort(StoreEntry * e, STABH * cb, void *data)
+{
+    MemObject *mem = e->mem_obj;
+    assert(mem);
+    assert(mem->abort.callback == NULL);
+    mem->abort.callback = cb;
+    mem->abort.data = data;
+}
+
+void
+storeUnregisterAbort(StoreEntry * e)
+{
+    MemObject *mem = e->mem_obj;
+    assert(mem);
+    mem->abort.callback = NULL;
+}
+
