@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.85 1998/09/19 17:06:08 wessels Exp $
+ * $Id: peer_select.cc,v 1.86 1998/10/11 23:19:48 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -303,6 +303,12 @@ peerSelectFoo(ps_state * psstate)
     if ((p = getSingleParent(request))) {
 	psstate->single_parent = p->in_addr;
 	debug(44, 3) ("peerSelect: found single parent, skipping ICP query\n");
+    }
+    if (!request->flags.hierarchical && direct != DIRECT_NO) {
+	debug(44, 3) ("peerSelectFoo: DIRECT for non-hierarchical request\n");
+	hierarchyNote(&request->hier, DIRECT, &psstate->ping, request->host);
+	peerSelectCallback(psstate, NULL);
+	return;
     }
 #if USE_CACHE_DIGESTS
     else if ((p = neighborsDigestSelect(request, entry))) {
