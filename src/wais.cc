@@ -1,5 +1,5 @@
 /*
- * $Id: wais.cc,v 1.31 1996/07/09 03:41:47 wessels Exp $
+ * $Id: wais.cc,v 1.32 1996/07/15 23:14:28 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -114,7 +114,7 @@ typedef struct {
     char *relayhost;
     int relayport;
     char *mime_hdr;
-    char request[MAX_URL];
+    char request[MAX_URL + 1];
 } WaisStateData;
 
 static int waisStateFree _PARAMS((int, WaisStateData *));
