@@ -118,11 +118,11 @@ struct _request {
     char requestbodyfile[256];
     char buf[READ_BUF_SZ * 2 + 1];
     int headfound;
-    long validsize;
-    long validsum;
-    long bodysize;
-    long sum;
+    int validsize;
+    int bodysize;
     int content_length;
+    long validsum;
+    long sum;
 };
 
 struct _f FD[MAX_FDS];
@@ -248,20 +248,19 @@ reply_done(int fd, void *data)
     struct _request *r = data;
     if (opt_range)
 	; /* skip size checks for now */
-    else
-    if (r->bodysize != r->content_length && r->content_length > 0)
-	fprintf(stderr,"ERROR: %s expected %d bytes got %d\n",
-		r->url, r->content_length, r->bodysize);
+    else if (r->bodysize != r->content_length && r->content_length >= 0)
+	fprintf(stderr,"ERROR: %s got %d of %d bytes\n",
+		r->url, r->bodysize, r->content_length);
     else if (r->validsize >= 0) {
 	if (r->validsize != r->bodysize)
 	    fprintf(stderr,"WARNING: %s size mismatch wanted %d bytes got %d\n",
 		    r->url, r->validsize, r->bodysize);
 	else if (opt_checksum && r->validsum != r->sum)
-	    fprintf(stderr,"WARNING: %s invalid checksum wanted %d got %d\n",
+	    fprintf(stderr,"WARNING: %s invalid checksum wanted 0x%lx got 0x%lx\n",
 		    r->url, r->validsum, r->sum);
     }
     if (trace_file) {
-	fprintf(trace_file,"%s %s %s %d %d\n",
+	fprintf(trace_file,"%s %s %s %d 0x%lx\n",
 		r->method, r->url, r->requestbodyfile, r->bodysize, r->sum);
     }
     free(r);
@@ -320,7 +319,7 @@ request(char *urlin)
     else
 	r->validsize=-1; /* Unknown */
     if (checksum && strcmp(checksum,"-")!=0)
-	r->validsum=atoi(checksum);
+	r->validsum=strtoul(checksum,NULL,0);
     r->content_length=-1; /* Unknown */
     msg[0] = '\0';
     sprintf(buf,"%s %s HTTP/1.0\r\n", method, url);
@@ -338,7 +337,7 @@ request(char *urlin)
 	    exit(1);
 	}
 	fstat(f, &st);
-	sprintf(buf,"Content-Length: %d\r\n", st.st_size);
+	sprintf(buf,"Content-Length: %d\r\n", (int)st.st_size);
 	strcat(msg,buf);
     }
     if (opt_range && (lrand48() & 0x03) == 0) {
