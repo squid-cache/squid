@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.301 1997/10/22 17:08:33 wessels Exp $
+ * $Id: store.cc,v 1.302 1997/10/23 04:04:54 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -851,9 +851,6 @@ storeSwapoutFileOpened(void *data, int fd)
 	e->url, fd, swapfilename);
     xfree(swapfilename);
     debug(20, 5) ("swap_file_number=%08X\n", e->swap_file_number);
-    /*mem->swap_offset = 0; */
-    mem->e_swap_buf = get_free_8k_page();
-    mem->e_swap_buf_len = 0;
     storeCheckSwapOut(e);
 }
 
@@ -889,7 +886,6 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
 	debug(20, 1) ("storeSwapOutHandle: SwapOut failure (err code = %d).\n",
 	    flag);
 	e->swap_status = SWAPOUT_NONE;
-	put_free_8k_page(mem->e_swap_buf);
 	file_close(mem->swapout.fd);
 	mem->swapout.fd = -1;
 	if (e->swap_file_number != -1) {
@@ -912,7 +908,6 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
     }
     /* swapping complete */
     file_close(mem->swapout.fd);
-    put_free_8k_page(mem->e_swap_buf);
     mem->swapout.fd = -1;
     debug(20, 5) ("storeSwapOutHandle: SwapOut complete: '%s' to %s.\n",
 	e->url, storeSwapFullPath(e->swap_file_number, NULL));
@@ -938,6 +933,8 @@ storeCheckSwapOut(StoreEntry * e)
     off_t lowest_offset;
     off_t new_mem_lo;
     size_t swapout_size;
+    char *swap_buf;
+    size_t swap_buf_len;
     assert(mem != NULL);
     /* should we swap something out to disk? */
     debug(20, 3) ("storeCheckSwapOut: %s\n", e->url);
@@ -950,6 +947,10 @@ storeCheckSwapOut(StoreEntry * e)
 	(int) mem->inmem_lo);
     debug(20, 3) ("storeCheckSwapOut: mem->inmem_hi = %d\n",
 	(int) mem->inmem_hi);
+    debug(20, 3) ("storeCheckSwapOut: swapout.queue_offset = %d\n",
+	(int) mem->swapout.queue_offset);
+    debug(20, 3) ("storeCheckSwapOut: swapout.done_offset = %d\n",
+	(int) mem->swapout.done_offset);
     assert(mem->inmem_hi >= mem->swapout.queue_offset);
     swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
     lowest_offset = storeLowestMemReaderOffset(e);
@@ -989,12 +990,12 @@ storeCheckSwapOut(StoreEntry * e)
     assert(mem->swapout.fd > -1);
     if (swapout_size > SWAP_BUF)
 	swapout_size = SWAP_BUF;
-    debug(20, 3) ("storeCheckSwapOut: swapout.queue_offset = %d\n", (int) mem->swapout.queue_offset);
+    swap_buf = get_free_8k_page();
     x = storeCopy(e,
 	mem->swapout.queue_offset,
 	swapout_size,
-	mem->e_swap_buf,
-	&mem->e_swap_buf_len);
+	swap_buf,
+	&swap_buf_len);
     if (x < 0) {
 	debug(20, 1) ("storeCopy returned %d for '%s'\n", x, e->key);
 	e->swap_file_number = -1;
@@ -1004,19 +1005,20 @@ storeCheckSwapOut(StoreEntry * e)
 	safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
 	e->swap_file_number = -1;
 	e->swap_status = SWAPOUT_NONE;
+	put_free_8k_page(swap_buf);
 	return;
     }
-    debug(20, 3) ("storeCheckSwapOut: e_swap_buf_len = %d\n", (int) mem->e_swap_buf_len);
-    assert(mem->e_swap_buf_len > 0);
+    debug(20, 3) ("storeCheckSwapOut: swap_buf_len = %d\n", (int) swap_buf_len);
+    assert(swap_buf_len > 0);
     debug(20, 3) ("storeCheckSwapOut: swapping out %d bytes from %d\n",
-	mem->e_swap_buf_len, mem->swapout.queue_offset);
-    mem->swapout.queue_offset += mem->e_swap_buf_len;
+	swap_buf_len, mem->swapout.queue_offset);
     x = file_write(mem->swapout.fd,
-	mem->e_swap_buf,
-	mem->e_swap_buf_len,
+	swap_buf,
+	swap_buf_len,
 	storeSwapOutHandle,
 	e,
-	NULL);
+	put_free_8k_page);
+    mem->swapout.queue_offset += swap_buf_len;
     assert(x == DISK_OK);
 }
 
@@ -2580,14 +2582,9 @@ storeMemObjectDump(MemObject * mem)
 {
     debug(20, 1) ("MemObject->data: %p\n",
 	mem->data);
-    debug(20, 1) ("MemObject->e_swap_buf: %p %s\n",
-	mem->e_swap_buf,
-	checkNullString(mem->e_swap_buf));
     debug(20, 1) ("MemObject->start_ping: %d.%06d\n",
 	mem->start_ping.tv_sec,
 	mem->start_ping.tv_usec);
-    debug(20, 1) ("MemObject->e_swap_buf_len: %d\n",
-	mem->e_swap_buf_len);
     debug(20, 1) ("MemObject->pending_list_size: %d\n",
 	mem->pending_list_size);
     debug(20, 1) ("MemObject->inmem_hi: %d\n",

@@ -297,7 +297,7 @@ struct _dwrite_q {
     int len;
     off_t cur_offset;
     struct _dwrite_q *next;
-    void (*free) (void *);
+    FREE *free;
 };
 
 struct _fde {
@@ -741,8 +741,6 @@ struct _store_client {
 /* This structure can be freed while object is purged out from memory */
 struct _MemObject {
     mem_hdr *data;
-    char *e_swap_buf;
-    size_t e_swap_buf_len;
     unsigned char pending_list_size;
     off_t inmem_hi;
     off_t inmem_lo;
