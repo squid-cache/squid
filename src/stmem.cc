@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.83 2003/09/29 10:24:01 robertc Exp $
+ * $Id: stmem.cc,v 1.84 2003/10/20 03:57:25 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -202,6 +202,7 @@ mem_hdr::copyAvailable(mem_node *aNode, size_t location, size_t amount, char *ta
 void
 mem_hdr::debugDump() const
 {
+    debugs (19, 1, "mem_hdr::debugDump: lowest offset: " << lowestOffset() << " highest offset + 1: " << endOffset() << ".");
     std::ostringstream result;
     PointerPrinter<mem_node *> foo(result, " - ");
     for_each (getNodes().begin(), getNodes().end(), foo);
@@ -240,8 +241,7 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
         debugs(19, 1, "memCopy: could not find offset " << offset <<
                " in memory.");
         debugDump();
-        /* we shouldn't ever ask for absent offsets */
-        assert (0);
+        fatal("Squid has attempted to read data from memory that is not present. This is an indication of of (pre-3.0) code that hasn't been updated to deal with sparse objects in memory. Squid should coredump.allowing to review the cause. Immediately preceeding this message is a dump of the available data in the format [start,end). The [ means from the value, the ) means up to the value. I.e. [1,5) means that there are 4 bytes of data, at offsets 1,2,3,4.\n");
         return 0;
     }
 
