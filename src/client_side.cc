@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.502 2000/10/04 03:41:20 wessels Exp $
+ * $Id: client_side.cc,v 1.503 2000/10/04 15:32:13 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1935,28 +1935,20 @@ clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
 }
 
 /* 
- * Return true if the first range offset is larger than the configured
- * limit, UNLESS the request is a hit AND the bits we want are in
- * the cache.
+ * Return true if we should force a cache miss on this range request.
+ * entry must be non-NULL.
  */
 static int
-clientCheckRangeOffsetLimit(StoreEntry * entry, HttpHdrRange * range)
+clientCheckRangeForceMiss(StoreEntry * entry, HttpHdrRange * range)
 {
-    ssize_t range_start;
     /*
-     * If the range offset limit is disabled, don't force a miss.
+     * If the range_offset_limit is NOT in effect, there
+     * is no reason to force a miss.
      */
-    if (-1 == Config.rangeOffsetLimit)
+    if (0 == httpHdrRangeOffsetLimit(range))
 	return 0;
     /*
-     * If the first range offset is less than the configured limit
-     * we won't force a cache miss.
-     */
-    range_start = httpHdrRangeFirstOffset(range);
-    if (Config.rangeOffsetLimit >= range_start)
-	return 0;
-    /*
-     * Now we know it's possibly a hit.  If we already have the
+     * Here, we know it's possibly a hit.  If we already have the
      * whole object cached, we won't force a miss.
      */
     if (STORE_OK == entry->store_status)
@@ -1967,7 +1959,7 @@ clientCheckRangeOffsetLimit(StoreEntry * entry, HttpHdrRange * range)
      * force a miss.
      */
     assert(NULL != entry->mem_obj);
-    if (range_start <= entry->mem_obj->inmem_hi)
+    if (httpHdrRangeFirstOffset(range) <= entry->mem_obj->inmem_hi)
 	return 0;
     /*
      * Even though we have a PENDING copy of the object, we
@@ -2046,12 +2038,10 @@ clientProcessRequest2(clientHttpRequest * http)
 	 */
 	debug(33, 3) ("clientProcessRequest2: complex range MISS\n");
 	http->entry = NULL;
-	r->flags.we_dont_do_ranges = 1;
 	return LOG_TCP_MISS;
-    } else if (clientCheckRangeOffsetLimit(e, r->range)) {
+    } else if (clientCheckRangeForceMiss(e, r->range)) {
 	debug(33, 3) ("clientProcessRequest2: forcing miss due to range_offset_limit\n");
 	http->entry = NULL;
-	r->flags.we_dont_do_ranges = 1;
 	return LOG_TCP_MISS;
     }
     debug(33, 3) ("clientProcessRequest2: default HIT\n");

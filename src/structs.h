@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.353 2000/10/04 02:14:54 wessels Exp $
+ * $Id: structs.h,v 1.354 2000/10/04 15:32:14 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1399,7 +1399,6 @@ struct _request_flags {
 #endif
     unsigned int accelerated:1;
     unsigned int internal:1;
-    unsigned int we_dont_do_ranges:1;
 };
 
 struct _link_list {

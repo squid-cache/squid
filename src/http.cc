@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.366 2000/07/18 06:16:41 wessels Exp $
+ * $Id: http.cc,v 1.367 2000/10/04 15:32:13 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -667,7 +667,7 @@ httpBuildRequestHeader(request_t * request,
 	we_do_ranges = 0;
     else if (!orig_request->flags.cachable)
 	we_do_ranges = 0;
-    else if (orig_request->flags.we_dont_do_ranges)
+    else if (httpHdrRangeOffsetLimit(orig_request->range))
 	we_do_ranges = 0;
     else
 	we_do_ranges = 1;
