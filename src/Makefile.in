@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.12 1996/04/08 23:25:19 wessels Exp $
+#  $Id: Makefile.in,v 1.13 1996/04/08 23:35:37 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -103,9 +103,9 @@ install-mkdirs:
 		echo "mkdir $(bindir)"; \
 		mkdir $(bindir); \
 	fi
-	@if test ! -d $(confdir); then \
-		echo "mkdir $(confdir)"; \
-		mkdir $(confdir); \
+	@if test ! -d $(sysconfdir); then \
+		echo "mkdir $(sysconfdir)"; \
+		mkdir $(sysconfdir); \
 	fi
 	@if test ! -d $(exec_prefix)/logs; then \
 		echo "mkdir $(exec_prefix)/logs"; \
@@ -125,11 +125,11 @@ install: all install-mkdirs
 		echo $(INSTALL_BIN) $$f $(bindir); \
 		$(INSTALL_BIN) $$f $(bindir); \
 	done
-	@if test -f $(confdir)/cached.conf ; then \
-		echo "$@ will not overwrite existing $(confdir)/cached.conf" ; \
+	@if test -f $(sysconfdir)/cached.conf ; then \
+		echo "$@ will not overwrite existing $(sysconfdir)/cached.conf" ; \
 	else \
-		echo "$(INSTALL_FILE) cached.conf $(confdir)"; \
-		$(INSTALL_FILE) cached.conf $(confdir); \
+		echo "$(INSTALL_FILE) cached.conf $(sysconfdir)"; \
+		$(INSTALL_FILE) cached.conf $(sysconfdir); \
 	fi
 
 clean: 
