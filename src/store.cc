@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.367 1998/01/31 05:32:07 wessels Exp $
+ * $Id: store.cc,v 1.368 1998/02/02 07:20:55 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -282,15 +282,16 @@ static void storeSetMemStatus(StoreEntry * e, int);
 static void storeClientCopy2(StoreEntry *, store_client *);
 static void storeHashInsert(StoreEntry * e, const cache_key *);
 static void storeSwapOutFileClose(StoreEntry * e);
+static void storeEntryDump(StoreEntry * e);
 
 /* functions implementing meta data on store */
 static void storeConvert(void);
 static void
-storeConvertFile(const cache_key *,int,int,time_t,time_t,time_t,time_t,
-		u_num32, u_num32, int);
+     storeConvertFile(const cache_key *, int, int, time_t, time_t, time_t, time_t,
+    u_num32, u_num32, int);
 
 static int storeBuildMetaData(StoreEntry *, char *);
-static int storeGetMetaBuf(const char *,  MemObject *);
+static int storeGetMetaBuf(const char *, MemObject *);
 #if 0
 static int storeParseMetaBuf(StoreEntry *);
 #endif
@@ -442,6 +443,7 @@ storeLog(int tag, const StoreEntry * e)
 	RequestMethodStr[mem->method],
 	mem->log_url);
     file_write(storelog_fd,
+	-1,
 	xstrdup(logmsg),
 	strlen(logmsg),
 	NULL,
@@ -822,7 +824,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 	return;
     }
     mem->swapout.done_offset += len;
-    if (e->store_status == STORE_PENDING || mem->swapout.done_offset < e->object_len + mem->swapout.meta_len ) {
+    if (e->store_status == STORE_PENDING || mem->swapout.done_offset < e->object_len + mem->swapout.meta_len) {
 	storeCheckSwapOut(e);
 	return;
     }
@@ -852,7 +854,7 @@ storeCheckSwapOut(StoreEntry * e)
     char *swap_buf;
     ssize_t swap_buf_len;
     int x;
-    int hdr_len=0;
+    int hdr_len = 0;
     assert(mem != NULL);
     /* should we swap something out to disk? */
     debug(20, 3) ("storeCheckSwapOut: %s\n", mem->url);
@@ -910,15 +912,15 @@ storeCheckSwapOut(StoreEntry * e)
 	return;
     assert(mem->swapout.fd > -1);
     swap_buf = memAllocate(MEM_DISK_BUF, 1);
-    if (mem->swapout.queue_offset==0) 
-	hdr_len= storeBuildMetaData(e, swap_buf);
+    if (mem->swapout.queue_offset == 0)
+	hdr_len = storeBuildMetaData(e, swap_buf);
 
     if (swapout_size > SWAP_BUF - hdr_len)
 	swapout_size = SWAP_BUF - hdr_len;
-    
+
     swap_buf_len = stmemCopy(mem->data,
 	mem->swapout.queue_offset,
-	swap_buf+hdr_len,
+	swap_buf + hdr_len,
 	swapout_size) + hdr_len;
 
     if (swap_buf_len < 0) {
@@ -936,8 +938,9 @@ storeCheckSwapOut(StoreEntry * e)
     assert(swap_buf_len > 0);
     debug(20, 3) ("storeCheckSwapOut: swapping out %d bytes from %d\n",
 	swap_buf_len, mem->swapout.queue_offset);
-    mem->swapout.queue_offset += swap_buf_len-hdr_len;
+    mem->swapout.queue_offset += swap_buf_len - hdr_len;
     x = file_write(mem->swapout.fd,
+	-1,
 	swap_buf,
 	swap_buf_len,
 	storeSwapOutHandle,
@@ -1006,8 +1009,8 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 	    return;
 	}
     }
-    debug(20,3)("storeSwapInStart: called for %08X %s \n",
-		e->swap_file_number, e->key?e->key:"[no key]");
+    debug(20, 3) ("storeSwapInStart: called for %08X %s \n",
+	e->swap_file_number, e->key ? e->key : "[no key]");
 
     assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
     assert(e->swap_file_number >= 0);
@@ -1017,11 +1020,10 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
     ctrlp->callback = callback;
     ctrlp->callback_data = callback_data;
     if (EBIT_TEST(e->flag, ENTRY_VALIDATED)) {
-	debug(20,3)("storeSwapInStart: calling storeSwapInValidateComplete GREEN\n");
+	debug(20, 3) ("storeSwapInStart: calling storeSwapInValidateComplete GREEN\n");
 	storeSwapInValidateComplete(ctrlp);
-    } 
-    else {
-        debug(20,3)("storeSwapInStart: calling storeValidate RED\n");
+    } else {
+	debug(20, 3) ("storeSwapInStart: calling storeValidate RED\n");
 	storeValidate(e, storeSwapInValidateComplete, ctrlp);
 
     }
@@ -1043,7 +1045,7 @@ storeSwapInValidateComplete(void *data)
     }
     ctrlp->path = xstrdup(storeSwapFullPath(e->swap_file_number, NULL));
 
-    debug(20,3)("storeSwapInValidateComplete: Opening %s\n", ctrlp->path);
+    debug(20, 3) ("storeSwapInValidateComplete: Opening %s\n", ctrlp->path);
 
     file_open(ctrlp->path, O_RDONLY, storeSwapInFileOpened, ctrlp);
 }
@@ -1059,7 +1061,7 @@ storeSwapInFileOpened(void *data, int fd)
     assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
     if (fd < 0) {
 	debug(20, 0) ("storeSwapInStartComplete: Failed for '%s' (%s)\n", mem->url,
-		ctrlp->path);
+	    ctrlp->path);
 	/* Invoke a store abort that should free the memory object */
 	(ctrlp->callback) (-1, ctrlp->callback_data);
 	xfree(ctrlp->path);
@@ -1106,7 +1108,7 @@ storeDoConvertFromLog(void *data)
     /* load a number of objects per invocation */
 
     if ((d = RB->rebuild_dir) == NULL) {
-        debug(20,3)("Done Converting, here are the stats.\n");
+	debug(20, 3) ("Done Converting, here are the stats.\n");
 	storeRebuiltFromDisk(RB);
 	return;
     }
@@ -1400,7 +1402,7 @@ storeStartRebuildFromDisk(void)
 {
     struct storeRebuildState *RB;
     struct _rebuild_dir *d;
-    int clean=1;
+    int clean = 1;
     RB = xcalloc(1, sizeof(struct storeRebuildState));
     RB->start = squid_curtime;
     d = xcalloc(1, sizeof(struct _rebuild_dir));
@@ -1408,9 +1410,9 @@ storeStartRebuildFromDisk(void)
     d->speed = opt_foreground_rebuild ? 1 << 30 : 50;
     RB->rebuild_dir = d;
     if (!clean)
-        RB->need_to_validate = 1;
+	RB->need_to_validate = 1;
     debug(20, 1) ("Rebuilding storage (%s)\n",
-	    clean ? "CLEAN" : "DIRTY");
+	clean ? "CLEAN" : "DIRTY");
     if (opt_foreground_rebuild) {
 	storeDoRebuildFromSwapFiles(RB);
     } else {
@@ -1823,13 +1825,13 @@ storeClientCopyHandleRead(int fd, const char *buf, int len, int flagnotused, voi
     store_client *sc = data;
     MemObject *mem = sc->mem;
     STCB *callback = sc->callback;
-    int hdr_len=0;
+    int hdr_len = 0;
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientCopyHandleRead: FD %d, len %d\n", fd, len);
     if (sc->copy_offset == 0 && len > 0 && mem != NULL) {
-	hdr_len=storeGetMetaBuf(buf, mem);
-	memmove((char *)buf, (char *)(buf+hdr_len) , len - hdr_len);
-	len-=hdr_len;
+	hdr_len = storeGetMetaBuf(buf, mem);
+	memmove((char *) buf, (char *) (buf + hdr_len), len - hdr_len);
+	len -= hdr_len;
 	httpParseReplyHeaders(buf, mem->reply);
     }
     sc->callback = NULL;
@@ -1931,21 +1933,20 @@ storeInit(void)
     if (storelog_fd < 0)
 	debug(20, 1) ("Store logging disabled\n");
     if (storeVerifyCacheDirs() < 0) {
-        xstrncpy(tmp_error_buf,
-            "\tFailed to verify one of the swap directories, Check cache.log\n"
-            "\tfor details.  Run 'squid -z' to create swap directories\n"
-            "\tif needed, or if running Squid for the first time.",
-            ERROR_BUF_SZ); 
-        fatal(tmp_error_buf);
-    }   
+	xstrncpy(tmp_error_buf,
+	    "\tFailed to verify one of the swap directories, Check cache.log\n"
+	    "\tfor details.  Run 'squid -z' to create swap directories\n"
+	    "\tif needed, or if running Squid for the first time.",
+	    ERROR_BUF_SZ);
+	fatal(tmp_error_buf);
+    }
     if (opt_convert) {
-    	storeDirOpenSwapLogs();
+	storeDirOpenSwapLogs();
 	storeConvert();
-	debug(0,0)("DONE Converting. Welcome to %s!\n", version_string);
-        storeDirCloseSwapLogs();
+	debug(0, 0) ("DONE Converting. Welcome to %s!\n", version_string);
+	storeDirCloseSwapLogs();
 	exit(0);
     }
-
     storeStartRebuildFromDisk();
     all_list.head = all_list.tail = NULL;
     inmem_list.head = inmem_list.tail = NULL;
@@ -2067,7 +2068,7 @@ storeWriteCleanLogs(int reopen)
 	    storeKeyText(e->key));
 	linelen = strlen(line);
 	/* buffered write */
-	if (linelen + outbuflens[dirn] > CLEAN_BUF_SZ-2) {
+	if (linelen + outbuflens[dirn] > CLEAN_BUF_SZ - 2) {
 	    if (write(fd[dirn], outbufs[dirn], outbuflens[dirn]) < 0) {
 		debug(50, 0) ("storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
 		debug(20, 0) ("storeWriteCleanLogs: Current swap logfile not replaced.\n");
@@ -2394,6 +2395,27 @@ storeMemObjectDump(MemObject * mem)
 	checkNullString(mem->log_url));
 }
 
+static void
+storeEntryDump(StoreEntry * e)
+{
+    debug(20, 1) ("StoreEntry->key: %s\n", storeKeyText(e->key));
+    debug(20, 1) ("StoreEntry->next: %p\n", e->next);
+    debug(20, 1) ("StoreEntry->mem_obj: %p\n", e->mem_obj);
+    debug(20, 1) ("StoreEntry->timestamp: %d\n", (int) e->timestamp);
+    debug(20, 1) ("StoreEntry->lastref: %d\n", (int) e->lastref);
+    debug(20, 1) ("StoreEntry->expires: %d\n", (int) e->expires);
+    debug(20, 1) ("StoreEntry->lastmod: %d\n", (int) e->lastmod);
+    debug(20, 1) ("StoreEntry->object_len: %d\n", e->object_len);
+    debug(20, 1) ("StoreEntry->refcount: %d\n", e->refcount);
+    debug(20, 1) ("StoreEntry->flag: %X\n", e->flag);
+    debug(20, 1) ("StoreEntry->swap_file_number: %d\n", (int) e->swap_file_number);
+    debug(20, 1) ("StoreEntry->lock_count: %d\n", (int) e->lock_count);
+    debug(20, 1) ("StoreEntry->mem_status: %d\n", (int) e->mem_status);
+    debug(20, 1) ("StoreEntry->ping_status: %d\n", (int) e->ping_status);
+    debug(20, 1) ("StoreEntry->store_status: %d\n", (int) e->store_status);
+    debug(20, 1) ("StoreEntry->swap_status: %d\n", (int) e->swap_status);
+}
+
 /* NOTE, this function assumes only two mem states */
 static void
 storeSetMemStatus(StoreEntry * e, int new_status)
@@ -2475,90 +2497,91 @@ storeBufferFlush(StoreEntry * e)
 
 
 static int
-storeGetNextFile(int *sfileno,int *size)
+storeGetNextFile(int *sfileno, int *size)
 {
-    static int dirn, curlvl1, curlvl2, flag, done, in_dir,fn;
+    static int dirn, curlvl1, curlvl2, flag, done, in_dir, fn;
     static struct dirent *entry;
     static DIR *td;
-    int fd = 0, used=0;
+    int fd = 0, used = 0;
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
     LOCAL_ARRAY(char, fullpath, SQUID_MAXPATHLEN);
 
 
     debug(20, 3) ("storeGetNextFile: flag=%d, %d: /%02X/%02X\n", flag,
-        dirn, curlvl1, curlvl2);
+	dirn, curlvl1, curlvl2);
 
     if (done)
-        return -2;
+	return -2;
 
     while (!fd && !done) {
-    fd=0;
-    if (!flag) {                /* initialize, open first file */
-        done = dirn = curlvl1 = curlvl2 = in_dir = 0;
-        flag = 1;
-        assert(Config.cacheSwap.n_configured > 0);
-    }
-    if (!in_dir) {              /* we need to read in a new directory */
-        snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
-            Config.cacheSwap.swapDirs[dirn].path,
-            curlvl1, curlvl2);
-        if (flag && td)
-            closedir(td);
-        td = opendir(fullpath);
-        entry = readdir(td);    /* skip . and .. */
-        entry = readdir(td);
-        if (errno == ENOENT) {
-           debug(20, 3) ("storeGetNextFile: directory does not exist!.\n");
-        }
-        debug(20,3)("storeGetNextFile: Directory %s/%02X/%02X\n",
-            Config.cacheSwap.swapDirs[dirn].path,
-            curlvl1, curlvl2);
-    }
-    if ((entry = readdir(td))) {
-        in_dir++;
-        if (sscanf(entry->d_name, "%x", sfileno) != 1) {
-            debug(20, 3) ("storeGetNextFile: invalid %s\n",
-                entry->d_name);
-            continue;
-        }
-        fn=*sfileno;
-        fn = storeDirProperFileno(dirn, fn);
-        *sfileno=fn;
-        used = storeDirMapBitTest(fn);
-        if (used)  {
-                debug(20,3)("storeGetNextFile: Locked, continuing with next.\n");
-                continue;
-        } 
-        snprintf(fullfilename, SQUID_MAXPATHLEN, "%s/%s", 
-                fullpath, entry->d_name);
-        debug(20, 3) ("storeGetNextFile: Opening %s\n", fullfilename);
-        fd = file_open(fullfilename, O_RDONLY , NULL, NULL);
-        continue;
-    } 
+	fd = 0;
+	if (!flag) {		/* initialize, open first file */
+	    done = dirn = curlvl1 = curlvl2 = in_dir = 0;
+	    flag = 1;
+	    assert(Config.cacheSwap.n_configured > 0);
+	}
+	if (!in_dir) {		/* we need to read in a new directory */
+	    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
+		Config.cacheSwap.swapDirs[dirn].path,
+		curlvl1, curlvl2);
+	    if (flag && td)
+		closedir(td);
+	    td = opendir(fullpath);
+	    entry = readdir(td);	/* skip . and .. */
+	    entry = readdir(td);
+	    if (errno == ENOENT) {
+		debug(20, 3) ("storeGetNextFile: directory does not exist!.\n");
+	    }
+	    debug(20, 3) ("storeGetNextFile: Directory %s/%02X/%02X\n",
+		Config.cacheSwap.swapDirs[dirn].path,
+		curlvl1, curlvl2);
+	}
+	if ((entry = readdir(td))) {
+	    in_dir++;
+	    if (sscanf(entry->d_name, "%x", sfileno) != 1) {
+		debug(20, 3) ("storeGetNextFile: invalid %s\n",
+		    entry->d_name);
+		continue;
+	    }
+	    fn = *sfileno;
+	    fn = storeDirProperFileno(dirn, fn);
+	    *sfileno = fn;
+	    used = storeDirMapBitTest(fn);
+	    if (used) {
+		debug(20, 3) ("storeGetNextFile: Locked, continuing with next.\n");
+		continue;
+	    }
+	    snprintf(fullfilename, SQUID_MAXPATHLEN, "%s/%s",
+		fullpath, entry->d_name);
+	    debug(20, 3) ("storeGetNextFile: Opening %s\n", fullfilename);
+	    fd = file_open(fullfilename, O_RDONLY, NULL, NULL);
+	    continue;
+	}
 #if 0
-	else
-        if (!in_dir) debug(20, 3) ("storeGetNextFile: empty dir.\n");
+	else if (!in_dir)
+	    debug(20, 3) ("storeGetNextFile: empty dir.\n");
 #endif
 
-    in_dir=0;
+	in_dir = 0;
 
-    if ((curlvl2 = (curlvl2 + 1) % Config.cacheSwap.swapDirs[dirn].l2)) 
-        continue;
-    if ((curlvl1 = (curlvl1 + 1) % Config.cacheSwap.swapDirs[dirn].l1)) 
-        continue;
-    if ((dirn = (dirn + 1) % Config.cacheSwap.n_configured)) 
-        continue;
-    else
-        done=1;
+	if ((curlvl2 = (curlvl2 + 1) % Config.cacheSwap.swapDirs[dirn].l2))
+	    continue;
+	if ((curlvl1 = (curlvl1 + 1) % Config.cacheSwap.swapDirs[dirn].l1))
+	    continue;
+	if ((dirn = (dirn + 1) % Config.cacheSwap.n_configured))
+	    continue;
+	else
+	    done = 1;
 
     }
     return fd;
 }
+
 static void
 storeDoRebuildFromSwapFiles(void *data)
 {
     struct storeRebuildState *RB = data;
-    LOCAL_ARRAY(char, hdr_buf, 2*MAX_URL);
+    LOCAL_ARRAY(char, hdr_buf, 2 * MAX_URL);
     LOCAL_ARRAY(cache_key, keybuf, MAX_URL);
     StoreEntry *e = NULL;
     StoreEntry tmpe;
@@ -2572,170 +2595,164 @@ storeDoRebuildFromSwapFiles(void *data)
     int hdr_len = 0;
     int myt, myl;
     int fd = 0;
-    debug(20, 3) (" Starting StoreRebuildFromSwapFiles at speed %d\n",
-        d->speed);
+    debug(20, 3) (" Starting StoreRebuildFromSwapFiles at speed %d\n", d->speed);
 
     for (count = 0; count < d->speed; count++) {
-        if (fd)
-            file_close(fd);
-        fd = storeGetNextFile(&sfileno,&size);
-
-        switch (fd) {
-        case 0:
-                continue;
-        case -1:
-            debug(20, 1) ("  Problem with rebuilding.\n");
+	if (fd)
+	    file_close(fd);
+	fd = storeGetNextFile(&sfileno, &size);
+	if (fd == -2) {
+	    debug(20, 1) ("StoreRebuildFromSwapFiles: done!\n");
+            store_rebuilding = 0;
             return;
-        case -2:
-            debug(20, 1) ("StoreRebuildFromSwapFiles: done!\n");
-            store_rebuilding=0;
-            return;
-        default: 
-        }
-                /* lets get file stats here */
-
-        x=fstat(fd,&fst);
-        assert(x==0);
-
-        if ((++filecount & 0x3FFF) == 0)
-            debug(20, 1) ("  %7d objects read so far.\n", RB->linecount);
-
-        debug(20, 9) ("file_in: fd=%d %08x\n", fd, sfileno);
-
-	x=read(fd,hdr_buf , 4096); 
-	if (x<SWAP_META_TLD_SIZE) {
-		debug(20, 1) (" Error reading header %s, small file, removing (read %d) %s\n",
-                		xstrerror(), x, hdr_buf);
-	        safeunlink(storeSwapFullPath(sfileno, NULL), 1);
-
-            	continue;
-        }
-        if (SwapMetaType(hdr_buf) != META_OK) {
-            debug(20, 1) ("  Found an old-style object or an invalid one\n");
-                safeunlink(storeSwapFullPath(sfileno, NULL), 1);
-            continue;
-        }
-
-        xmemcpy(&hdr_len , SwapMetaSize(hdr_buf), sizeof(int));
-	if (x<hdr_len) {
-        	debug(20, 1) ("  Error header size > x (%d)%d\n", hdr_len,x);
-                safeunlink(storeSwapFullPath(sfileno, NULL), 1);
-		continue;
+	} else if (fd == 0) {
+	    continue;
 	}
-        debug(20, 3) (" header size %d\n", hdr_len);
+	assert(fd > 0);
+
+	/* lets get file stats here */
+
+	x = fstat(fd, &fst);
+	assert(x == 0);
+
+	if ((++filecount & 0x3FFF) == 0)
+	    debug(20, 1) ("  %7d objects read so far.\n", RB->linecount);
+
+	debug(20, 9) ("file_in: fd=%d %08x\n", fd, sfileno);
+
+	x = read(fd, hdr_buf, 4096);
+	if (x < SWAP_META_TLD_SIZE) {
+	    debug(20, 1) (" Error reading header %s, small file, removing (read %d) %s\n",
+		xstrerror(), x, hdr_buf);
+	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    continue;
+	}
+	if (SwapMetaType(hdr_buf) != META_OK) {
+	    debug(20, 1) ("  Found an old-style object or an invalid one\n");
+	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    continue;
+	}
+	xmemcpy(&hdr_len, SwapMetaSize(hdr_buf), sizeof(int));
+	if (x < hdr_len) {
+	    debug(20, 1) ("  Error header size > x (%d)%d\n", hdr_len, x);
+	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    continue;
+	}
+	debug(20, 3) (" header size %d\n", hdr_len);
+
+	/* get key */
+
+	if (0 == getSwapHdr(&myt, &myl, keybuf, hdr_buf, hdr_len)) {
+	    debug(20, 1) ("Error getting SWAP_META_KEY %d\n", x);
+	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    continue;
+	}
+	keybuf[myl] = '\0';
+
+	debug(20, 3) (" hm, we have %s, %d, %d\n", keybuf, myt, myl);
+
+	if (keybuf[0] == '\0' || myt != SWAP_META_KEY) {
+	    debug(20, 1) ("storeDoRebuildFromSwapFiles: bad key\n");
+	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    continue;
+	}
 	
-        /* get key */
-
-        if (!getSwapHdr(&myt, &myl, keybuf, hdr_buf, hdr_len)) {
-          debug(20,1)("Error getting SWAP_META_KEY %d\n",x);
-                safeunlink(storeSwapFullPath(sfileno, NULL), 1);
-          continue;
-        }
-        keybuf[myl]=0;
-
-        debug(20, 3) (" hm, we have %s, %d, %d\n", keybuf, myt, myl);
-
-        if (keybuf == '\0' || myt!=SWAP_META_KEY) {
-            debug(20, 1) ("storeDoRebuildFromSwapFiles: bad key\n");
-                safeunlink(storeSwapFullPath(sfileno, NULL), 1);
-
-            continue;
-        }
-        e = storeGet(keybuf);
 
 	/* get the standard meta data for the StoreEntry */
 
-        if (!getSwapHdr(&myt, &myl, &(tmpe.timestamp), hdr_buf, hdr_len)) {
-          debug(20,1)("storeDoRebuildFromSwapFiles:Error getting SWAP_META_STD %d\n",myl);
-                safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	memset(&tmpe, '\0', sizeof(StoreEntry));
+	if (0 == getSwapHdr(&myt, &myl, &tmpe.timestamp, hdr_buf, hdr_len)) {
+	    debug(20, 1) ("storeDoRebuildFromSwapFiles:Error getting SWAP_META_STD %d\n", myl);
+	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
 
-          continue;
-        }
+	    continue;
+	}
+	assert(myt == SWAP_META_STD);
+	assert(myl == HDR_METASIZE);
+	storeEntryDump(&tmpe);
 
 	/* check sizes */
 
-	if (hdr_len+tmpe.object_len != fst.st_size) {
-		debug(20,1)("storeDoRebuildFromSwapFiles:INVALID swapfile, sizes dont match %d+%d!=%d\n",
-				hdr_len, tmpe.object_len, fst.st_size);
-                safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	if (hdr_len + tmpe.object_len != fst.st_size) {
+	    debug(20, 1) ("storeDoRebuildFromSwapFiles:INVALID swapfile, sizes dont match %d+%d!=%d\n",
+		hdr_len, tmpe.object_len, fst.st_size);
+	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
 	    continue;
 	}
+	if (EBIT_TEST(tmpe.flag, KEY_PRIVATE)) {
+	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    RB->badflags++;
+	    continue;
+	}
+	if ((e = storeGet(keybuf)) != NULL) {
+	    /* URL already exists, this swapfile not being used */
+	    /* junk old, load new */
+	    storeRelease(e);	/* release old entry */
+	    RB->dupcount++;
+	}
+	/* update store_swap_size */
+	RB->objcount++;
+	debug(20, 4) ("storeDoRebuildFromSwapFiles: KEY=%20s , sfileno=%08X exp=%08X timest=%08X\n",
+	    keybuf, sfileno, tmpe.expires, tmpe.timestamp);
+	debug(20, 4) ("     			lastref=%08X lastmod=%08X refcount=%08X flag=%08X\n",
+	    tmpe.lastref, tmpe.lastmod, tmpe.refcount, tmpe.flag);
+	debug(20, 4) ("				len=%d hdr_len=%d file_len=%d\n", tmpe.object_len,
+	    hdr_len, fst.st_size);
 
-        if (EBIT_TEST(tmpe.flag, KEY_PRIVATE)) {
-                safeunlink(storeSwapFullPath(sfileno, NULL), 1);
-            RB->badflags++;
-            continue;
-        }
-
-        if (e) {
-            /* URL already exists, this swapfile not being used */
-            /* junk old, load new */
-            storeRelease(e);    /* release old entry */
-            RB->dupcount++;
-        }
-        /* update store_swap_size */
-        RB->objcount++;
-debug(20,4)("storeDoRebuildFromSwapFiles: KEY=%20s , sfileno=%08X exp=%08X timest=%08X\n",
-                keybuf, sfileno, tmpe.expires, tmpe.timestamp);
-debug(20,4)("     			lastref=%08X lastmod=%08X refcount=%08X flag=%08X\n",
-            tmpe.lastref,tmpe.lastmod,tmpe.refcount,tmpe.flag);
-debug(20,4)("				len=%d hdr_len=%d file_len=%d\n",tmpe.object_len,
-                        hdr_len, fst.st_size);
-
-        e = storeAddDiskRestore(keybuf,
-            sfileno,
-            (int) tmpe.object_len,
-            tmpe.expires,
-            tmpe.timestamp,
-            tmpe.lastref,
-            tmpe.lastmod,
-            (u_num32) tmpe.refcount,    /* refcount */
-            (u_num32) tmpe.flag,        /* flags */
-            d->clean);
-         }
+	e = storeAddDiskRestore(keybuf,
+	    sfileno,
+	    (int) tmpe.object_len,
+	    tmpe.expires,
+	    tmpe.timestamp,
+	    tmpe.lastref,
+	    tmpe.lastmod,
+	    (u_num32) tmpe.refcount,	/* refcount */
+	    (u_num32) tmpe.flag,	/* flags */
+	    d->clean);
+    }
     eventAdd("storeRebuild", storeDoRebuildFromSwapFiles, RB, 0);
 }
 
 
 /* build swapfile header */
-static int 
-storeBuildMetaData(StoreEntry * e,char *swap_buf_c)
+static int
+storeBuildMetaData(StoreEntry * e, char *swap_buf_c)
 {
     MemObject *mem;
     int keylength;
-    int a=SWAP_META_TLD_START;
+    int a = SWAP_META_TLD_START;
     char *meta_buf;
 
-    mem=e->mem_obj;
-    meta_buf=mem->swapout.meta_buf;
+    mem = e->mem_obj;
+    meta_buf = mem->swapout.meta_buf;
 
     debug(20, 3) ("storeBuildSwapFileHeader: called.\n");
     assert(e->swap_status == SWAPOUT_WRITING);
 
     if (!meta_buf)
-        meta_buf=mem->swapout.meta_buf=xmalloc(1024);
+	meta_buf = mem->swapout.meta_buf = xmalloc(1024);
 
 /* construct header */
 
     /* add Length(int)-Type(char)-Data encoded info  */
 
     if (squid_key_size < 0)
-        keylength = strlen(e->key);
+	keylength = strlen(e->key);
     else
-        keylength = squid_key_size;
+	keylength = squid_key_size;
 
-    meta_buf[0]=META_OK;
+    meta_buf[0] = META_OK;
     xmemcpy(&meta_buf[1], &a, sizeof(int));
-    mem->swapout.meta_len=SWAP_META_TLD_START;
+    mem->swapout.meta_len = SWAP_META_TLD_START;
 
-    addSwapHdr(SWAP_META_KEY, keylength, (void *) e->key, 
-                mem->swapout.meta_buf, &mem->swapout.meta_len);
-    addSwapHdr(SWAP_META_STD,HDR_METASIZE,(void *)&e->timestamp, 
-                mem->swapout.meta_buf, &mem->swapout.meta_len);
+    addSwapHdr(SWAP_META_KEY, keylength, (void *) e->key,
+	mem->swapout.meta_buf, &mem->swapout.meta_len);
+    addSwapHdr(SWAP_META_STD, HDR_METASIZE, (void *) &e->timestamp,
+	mem->swapout.meta_buf, &mem->swapout.meta_len);
     debug(20, 3) ("storeBuildSwapFileHeader: len=%d.\n", mem->swapout.meta_len);
 
     if (swap_buf_c)
-        xmemcpy(swap_buf_c, mem->swapout.meta_buf, mem->swapout.meta_len);
+	xmemcpy(swap_buf_c, mem->swapout.meta_buf, mem->swapout.meta_len);
     return mem->swapout.meta_len;
 }
 
@@ -2743,38 +2760,35 @@ storeBuildMetaData(StoreEntry * e,char *swap_buf_c)
 static int
 getSwapHdr(int *type, int *len, void *dst, char *write_buf, int hdr_len)
 {
-    static int cur;
+    static int cur = 0;
     static char *curptr;
     char *tmp_buf;
 
-    if (!cur || curptr!=write_buf) {    /* first call or rewind ! */
-        cur = SWAP_META_TLD_START;
-        curptr=write_buf;
+    if (cur == 0 || curptr != write_buf) {	/* first call or rewind ! */
+	cur = SWAP_META_TLD_START;
+	curptr = write_buf;
     }
-
-    if (cur+SWAP_META_TLD_START>hdr_len) {
-        debug(20,3)("getSwapHdr: overflow, %d %d.\n",cur,hdr_len);
-        cur=0;
-        return -1;
+    if (cur + SWAP_META_TLD_START > hdr_len) {
+	debug(20, 3) ("getSwapHdr: overflow, %d %d.\n", cur, hdr_len);
+	cur = 0;
+	return -1;
     }
+    tmp_buf = &write_buf[cur];		/* position ourselves */
 
-    tmp_buf = (char *) &write_buf[cur]; /* position ourselves */
+    xmemcpy(len, SwapMetaSize(tmp_buf), sizeof(int));	/* length */
+    *type = SwapMetaType(tmp_buf);	/* type */
+    xmemcpy(dst, SwapMetaData(tmp_buf), *len);	/* data */
 
-    xmemcpy(len, SwapMetaSize(tmp_buf),sizeof(int));    /* length */
-    *type=SwapMetaType(tmp_buf);	/* type */
-    xmemcpy(dst, SwapMetaData(tmp_buf), *len);  /* data */
+    cur += SWAP_META_TLD_START + *len;	/* advance position */
 
-    cur += SWAP_META_TLD_START + *len;  /* advance position */
-
-    debug(20, 4) ("getSwapHdr: t=%d l=%d (cur=%d hdr_len=%d) (%p)\n", 
-			*type, *len, cur, hdr_len, dst);
-        if (cur==hdr_len) {
-		debug(20,4)("getSwapHdr: finished with this.\n");
-                cur=0;
-                return 1;
-        }
-
-    return 1;                   /* ok ! */
+    debug(20, 4) ("getSwapHdr: t=%d l=%d (cur=%d hdr_len=%d) (%p)\n",
+	*type, *len, cur, hdr_len, dst);
+    if (cur == hdr_len) {
+	debug(20, 4) ("getSwapHdr: finished with this.\n");
+	cur = 0;
+	return 1;
+    }
+    return 1;			/* ok ! */
 }
 
 
@@ -2782,10 +2796,10 @@ static void
 addSwapHdr(int type, int len, void *src, char *write_buf, int *write_len)
 {
     int hdr_len = *write_len;
-    char *base=&write_buf[hdr_len];
-    debug(20,3) ("addSwapHdr: at %d\n",hdr_len);
+    char *base = &write_buf[hdr_len];
+    debug(20, 3) ("addSwapHdr: at %d\n", hdr_len);
 
-    base[0]=(char)type;
+    base[0] = (char) type;
     xmemcpy(&base[1], &len, sizeof(int));
     xmemcpy(SwapMetaData(base), src, len);
 
@@ -2794,29 +2808,29 @@ addSwapHdr(int type, int len, void *src, char *write_buf, int *write_len)
     /* now we know length */
 
     debug(20, 3) ("addSwapHdr: added type=%d len=%d data=%p. hdr_len=%d\n",
-        type, len, src, hdr_len);
+	type, len, src, hdr_len);
 
     /* update header */
     xmemcpy(&write_buf[1], &hdr_len, sizeof(int));
-    *write_len=hdr_len;
+    *write_len = hdr_len;
 }
 
 static int
-storeGetMetaBuf(const char *buf,  MemObject *mem)
+storeGetMetaBuf(const char *buf, MemObject * mem)
 {
     int hdr_len;
 
-    assert(mem!=NULL);
+    assert(mem != NULL);
 
     /* the key */
     if (SwapMetaType(buf) != META_OK) {
-            debug(20, 1) ("storeGetMetaBuf:Found an old-style object, damn.\n");
-	    return -1;
+	debug(20, 1) ("storeGetMetaBuf:Found an old-style object, damn.\n");
+	return -1;
     }
-    xmemcpy(&hdr_len , SwapMetaSize(buf), sizeof(int));
-    mem->swapout.meta_len=hdr_len;
-    mem->swapout.meta_buf=xmalloc(hdr_len);
-    xmemcpy(mem->swapout.meta_buf,buf, hdr_len);
+    xmemcpy(&hdr_len, SwapMetaSize(buf), sizeof(int));
+    mem->swapout.meta_len = hdr_len;
+    mem->swapout.meta_buf = xmalloc(hdr_len);
+    xmemcpy(mem->swapout.meta_buf, buf, hdr_len);
 
     debug(20, 3) (" header size %d\n", hdr_len);
 
@@ -2825,17 +2839,17 @@ storeGetMetaBuf(const char *buf,  MemObject *mem)
 
 #if 0
 static int
-storeParseMetaBuf(StoreEntry *e) 
+storeParseMetaBuf(StoreEntry * e)
 {
     static char mbuf[1024];
-    int myt,myl;
-    MemObject *mem=e->mem_obj;
+    int myt, myl;
+    MemObject *mem = e->mem_obj;
 
     assert(e && e->mem_obj && e->key);
-    getSwapHdr(&myt,&myl, mbuf , mem->swapout.meta_buf, mem->swapout.meta_len);
-    mbuf[myl]=0;
-    debug(20,3)("storeParseMetaBuf: key=%s\n",mbuf);
-    e->key=xstrdup(storeKeyScan(mbuf));
+    getSwapHdr(&myt, &myl, mbuf, mem->swapout.meta_buf, mem->swapout.meta_len);
+    mbuf[myl] = 0;
+    debug(20, 3) ("storeParseMetaBuf: key=%s\n", mbuf);
+    e->key = xstrdup(storeKeyScan(mbuf));
     getSwapHdr(&myt, &myl, &e->timestamp, mem->swapout.meta_buf, mem->swapout.meta_len);
 
     return 1;
@@ -2853,20 +2867,20 @@ storeConvert(void)
     RB = xcalloc(1, sizeof(struct storeRebuildState));
     RB->start = squid_curtime;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        fp = storeDirOpenTmpSwapLog(i, &clean);
-        if (fp == NULL)
-            continue;
-        d = xcalloc(1, sizeof(struct _rebuild_dir));
-        d->dirn = i;
-        d->log = fp;
-        d->clean = clean;
-        d->speed = 1 << 30;
-        d->next = RB->rebuild_dir;
-        RB->rebuild_dir = d;
-        if (!clean)
-            RB->need_to_validate = 1;
-        debug(20, 1) ("Converting storage in Cache Dir #%d (%s)\n",
-            i, clean ? "CLEAN" : "DIRTY");
+	fp = storeDirOpenTmpSwapLog(i, &clean);
+	if (fp == NULL)
+	    continue;
+	d = xcalloc(1, sizeof(struct _rebuild_dir));
+	d->dirn = i;
+	d->log = fp;
+	d->clean = clean;
+	d->speed = 1 << 30;
+	d->next = RB->rebuild_dir;
+	RB->rebuild_dir = d;
+	if (!clean)
+	    RB->need_to_validate = 1;
+	debug(20, 1) ("Converting storage in Cache Dir #%d (%s)\n",
+	    i, clean ? "CLEAN" : "DIRTY");
     }
     RB->line_in_sz = 4096;
     RB->line_in = xcalloc(1, RB->line_in_sz);
@@ -2886,32 +2900,33 @@ storeConvertFile(const cache_key * key,
     int clean)
 {
     int fd_r, fd_w;
-    int hdr_len,x,y;
+    int hdr_len, x, y;
     LOCAL_ARRAY(char, swapfilename, SQUID_MAXPATHLEN);
     LOCAL_ARRAY(char, copybuf, SWAP_BUF);
     StoreEntry e;
-    e.key=key;
-    e.object_len=size;
-    e.expires=expires;
-    e.lastref=lastref;
-    e.refcount=refcount;
-    e.flag=flags;
-    
-    
+    e.key = key;
+    e.object_len = size;
+    e.expires = expires;
+    e.lastref = lastref;
+    e.refcount = refcount;
+    e.flag = flags;
+
+
     storeSwapFullPath(file_number, swapfilename);
     fd_r = open(swapfilename, O_RDONLY);
-    if (fd_r<0) { /* ERROR */
+    if (fd_r < 0) {		/* ERROR */
 
 	return;
     }
     safeunlink(swapfilename, 1);
     fd_w = open(swapfilename, O_CREAT | O_WRONLY | O_TRUNC);
-  
+
     hdr_len = storeBuildMetaData(&e, copybuf);
-    x=write(fd_w, copybuf, hdr_len);
-    while (x>0) {
-	y=read(fd_r,copybuf, SWAP_BUF);
-	x=write(fd_w, copybuf, y);
+    x = write(fd_w, copybuf, hdr_len);
+    while (x > 0) {
+	y = read(fd_r, copybuf, SWAP_BUF);
+	x = write(fd_w, copybuf, y);
     }
-    close(fd_r); close(fd_w);
+    close(fd_r);
+    close(fd_w);
 }

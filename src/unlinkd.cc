@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.13 1998/01/31 05:32:10 wessels Exp $
+ * $Id: unlinkd.cc,v 1.14 1998/02/02 07:20:58 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -122,6 +122,7 @@ unlinkdUnlink(const char *path)
     strcpy(buf, path);
     strcat(buf, "\n");
     file_write(unlinkd_fd,
+	-1,
 	buf,
 	l,
 	NULL,			/* Handler */

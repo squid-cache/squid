@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.17 1998/01/31 05:31:53 wessels Exp $
+ * $Id: access_log.cc,v 1.18 1998/02/02 07:20:53 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -245,6 +245,7 @@ accessLogLog(AccessLogEntry * al)
 	safe_free(erep);
     }
     x = file_write(LogfileFD,
+	-1,
 	xstrdup(log_buf),
 	l,
 	NULL,
