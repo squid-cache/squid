@@ -19,10 +19,6 @@ Changes to squid-2.5 ():
 	  objects if it needs appending. This fixes weirdnesses where
 	  a machine can think it is "foo.bar.com", and "foo" is requested.
 	  (Brian Degenhardt)
-	- Added support for netfilter in linux-2.4. This allows transparent
-	  proxy connections to function correctly in the absence of a Host:
-	  header. This requires --enable-linux-netfilter to be passed through
-	  to configure. (Evan Jones)
 	- Added the use of Automake to create the Makefile.in's in the squid
 	  source tree. This will allow libtool in the future, and immediately
 	  allows better dependency tracking - with or without gcc - as well
@@ -144,7 +140,10 @@ Changes to Squid-2.4.STABLE1 (Mar 20, 2001):
 	- Added 'minimum_direct_rtt' configuration option.
 	- Added 'ie_refresh' configuration option, which is a hack
 	  to turn IMS requests into no-cache requests.
-	- Added Linux netfilter support for intercepted connections.
+	- Added support for netfilter in linux-2.4. This allows transparent
+	  proxy connections to function correctly in the absence of a Host:
+	  header. This requires --enable-linux-netfilter to be passed through
+	  to configure. (Evan Jones)
 	- Fixed a bug with clientAccessCheck() that allowed proxy
 	  requests in accel mode.
 	- Fixed a bug with 301/302 replies from redirectors.  Now
