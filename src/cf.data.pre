@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.195 2000/08/15 07:14:04 adrian Exp $
+# $Id: cf.data.pre,v 1.196 2000/08/30 19:17:29 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2010,15 +2010,15 @@ NAME: httpd_accel_single_host
 COMMENT: on|off
 TYPE: onoff
 LOC: Config.Accel.single_host
-DEFAULT: on
+DEFAULT: off
 DOC_START
 	If you are running Squid as a accelerator and have a single backend
 	server then set this to on. This causes Squid to forward the request
 	to this server irregardles of what any redirectors or Host headers
 	says.
 
-	Set this to off if you have multiple backend servers, and use a
-	redirector (or host table) to map the requests to the
+	Leave this at off if you have multiple backend servers, and use a
+	redirector (or host table or private DNS) to map the requests to the
 	appropriate backend servers. Note that the mapping needs to be a
 	1-1 mapping between requested and backend (from redirector) domain
 	names or caching will fail, as cacing is performed using the
