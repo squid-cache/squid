@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.326 2003/06/27 22:42:08 hno Exp $
+# $Id: cf.data.pre,v 1.327 2003/07/01 20:42:27 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3375,28 +3375,6 @@ DOC_START
 	(English) error files, either to customize them to suit your
 	language or company copy the template English files to another
 	directory and point this tag at them.
-DOC_END
-
-NAME: minimum_retry_timeout
-COMMENT: (seconds)
-TYPE: time_t
-LOC: Config.retry.timeout
-DEFAULT: 5 seconds
-DOC_START
-	This specifies the minimum connect timeout, for when the
-	connect timeout is reduced to compensate for the availability
-	of multiple IP addresses.
-
-	When a connection to a host is initiated, and that host has
-	several IP addresses, the default connection timeout is reduced
-	by dividing it by the number of addresses.  So, a site with 15
-	addresses would then have a timeout of 8 seconds for each
-	address attempted.  To avoid having the timeout reduced to the
-	point where even a working host would not have a chance to
-	respond, this setting is provided.  The default, and the
-	minimum value, is five seconds, and the maximum value is sixty
-	seconds, or half of connect_timeout, whichever is greater and
-	less than connect_timeout.
 DOC_END
 
 NAME: maximum_single_addr_tries
