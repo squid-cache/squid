@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.600 2002/10/14 08:16:58 robertc Exp $
+ * $Id: client_side.cc,v 1.601 2002/10/14 10:52:05 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1630,8 +1630,8 @@ clientProcessBody(ConnStateData * conn)
 	callback(buf, size, cbdata);
 	if (request != NULL)
 	    requestUnlink(request);	/* Linked in clientReadBody */
-	debug(33, 2) ("clientProcessBody: end fd=%d size=%d body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
-	    conn->fd, size, (unsigned long int) conn->body.size_left,
+	debug(33, 2) ("clientProcessBody: end fd=%d size=%lu body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
+	    conn->fd, (unsigned long int)size, (unsigned long int) conn->body.size_left,
 	    (unsigned long) conn->in.notYetUsed, callback, request);
     }
 }
