@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.303 2003/05/01 17:49:27 hno Exp $
+#  $Id: Makefile.in,v 1.304 2003/05/01 22:05:10 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -268,7 +268,15 @@ EXTRA_squid_SOURCES = \
 	dnsserver.cc \
 	dns_internal.cc \
 	htcp.cc \
-	$(IDENT_ALL_SOURCE)
+	$(IDENT_ALL_SOURCE) \
+	$(ESI_ALL_SOURCE) \
+	ProfStats.cc \
+	leakfinder.cc \
+	snmp_core.cc \
+	snmp_agent.cc \
+	unlinkd.cc \
+	$(SSL_ALL_SOURCE) \
+	win32.cc
 
 
 squid_ACLSOURCES = \
@@ -1743,14 +1751,6 @@ uninstall-info: uninstall-info-recursive
 	uninstall-sbinPROGRAMS uninstall-sysconfDATA
 
 cf_gen.$(OBJEXT): cf_gen_defines.h
-	$(ESI_ALL_SOURCE) \
-	ProfStats.cc \
-	leakfinder.cc \
-	snmp_core.cc \
-	snmp_agent.cc \
-	unlinkd.cc \
-	$(SSL_ALL_SOURCE) \
-	win32.cc
 
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
