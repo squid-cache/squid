@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.362 1998/01/05 21:13:59 wessels Exp $
+ * $Id: store.cc,v 1.363 1998/01/06 00:42:12 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1997,7 +1997,7 @@ storeWriteCleanLogs(int reopen)
 	outbufs[dirn] = xcalloc(Config.cacheSwap.n_configured, CLEAN_BUF_SZ);
 	outbuflens[dirn] = 0;
     }
-    for (m = all_list.tail; m; m = m->prev) {
+    for (m = all_list.head; m; m = m->next) {
 	e = m->data;
 	if (e->swap_file_number < 0)
 	    continue;
