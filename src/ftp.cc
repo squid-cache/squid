@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.65 1996/10/13 06:19:44 wessels Exp $
+ * $Id: ftp.cc,v 1.66 1996/10/15 16:40:06 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -563,6 +563,11 @@ ftpStart(int unusedfd, char *url, request_t * request, StoreEntry * entry)
 
     debug(9, 3, "FtpStart: FD %d <URL:%s>\n", unusedfd, url);
 
+    if (ftpget_server_write < 0) {
+	squid_error_entry(entry, ERR_FTP_DISABLED, NULL);
+	return COMM_ERROR;
+    }
+
     ftpData = xcalloc(1, sizeof(FtpStateData));
     storeLockObject(ftpData->entry = entry, NULL, NULL);
     ftpData->request = requestLink(request);
@@ -658,6 +663,8 @@ ftpServerClosed(int fd, void *nodata)
     if (squid_curtime - last_restart < 2) {
 	debug(9, 0, "ftpget server failing too rapidly\n");
 	debug(9, 0, "WARNING: FTP access is disabled!\n");
+	ftpget_server_write = -1;
+	ftpget_server_read = -1;
 	return;
     }
     last_restart = squid_curtime;
@@ -698,6 +705,10 @@ ftpInitialize(void)
     int len;
     struct timeval slp;
 
+    if (!strcmp(ftpget, "none")) {
+        debug(9, 1, "ftpInitialize: ftpget is disabled.\n");
+	return -1;
+    }
     debug(9, 5, "ftpInitialize: Initializing...\n");
     if (pipe(squid_to_ftpget) < 0) {
 	debug(9, 0, "ftpInitialize: pipe: %s\n", xstrerror());

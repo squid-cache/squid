@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.65 1996/10/15 04:57:54 wessels Exp $
+ * $Id: neighbors.cc,v 1.66 1996/10/15 16:40:09 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -335,6 +335,7 @@ neighbors_open(int fd)
     E = &friends->edges_head;
     next = friends->edges_head;
     while ((e = next)) {
+	getCurrentTime();
 	next = e->next;
 	debug(15, 2, "Finding IP addresses for '%s'\n", e->host);
 	if ((ia = ipcache_gethostbyname(e->host, IP_BLOCKING_LOOKUP)) == NULL) {
