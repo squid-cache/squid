@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.85 1997/01/24 20:39:49 wessels Exp $
+ * $Id: client_side.cc,v 1.86 1997/02/03 23:03:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -607,4 +607,44 @@ clientConstructTraceEcho(icpStateData * icpState)
     icpState->log_type = LOG_TCP_MISS;
     icpState->http_code = 200;
     return buf;
+}
+
+void
+clientPurgeRequest(icpStateData * icpState)
+{
+    char *buf;
+    int fd = icpState->fd;
+    LOCAL_ARRAY(char, msg, 8192);
+    LOCAL_ARRAY(char, line, 256);
+    StoreEntry *entry;
+debug(0,0,"Config.Options.enable_purge = %d\n", Config.Options.enable_purge);
+    if (!Config.Options.enable_purge) {
+	buf = access_denied_msg(icpState->http_code = 401,
+	    icpState->method,
+	    icpState->url,
+	    fd_table[fd].ipaddr);
+	icpSendERROR(fd, LOG_TCP_DENIED, buf, icpState, icpState->http_code);
+	return;
+    }
+    icpState->log_type = TCP_MISS;
+    if ((entry = storeGet(icpState->url)) == NULL) {
+	sprintf(msg, "HTTP/1.0 404 Not Found\r\n");
+	icpState->http_code = 404;
+    } else {
+	storeRelease(entry);
+	sprintf(msg, "HTTP/1.0 200 OK\r\n");
+	icpState->http_code = 200;
+    }
+    sprintf(line, "Date: %s\r\n", mkrfc1123(squid_curtime));
+    strcat(msg, line);
+    sprintf(line, "Server: Squid/%s\r\n", SQUID_VERSION);
+    strcat(msg, line);
+    strcat(msg, "\r\n");
+    comm_write(fd,
+	msg,
+	strlen(msg),
+	30,
+	icpSendERRORComplete,
+	(void *) icpState,
+	NULL);
 }
