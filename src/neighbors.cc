@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.103 1996/12/20 23:46:15 wessels Exp $
+ * $Id: neighbors.cc,v 1.104 1996/12/21 07:54:52 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -317,8 +317,7 @@ neighborRemove(edge * target)
     }
     if (e) {
 	*E = e->next;
-	safe_free(e->host);
-	safe_free(e);
+	edgeDestroy(e);
 	friends.n--;
     }
     friends.first_ping = friends.edges_head;
@@ -902,8 +901,15 @@ neighborUp(edge * e)
 void
 edgeDestroy(edge * e)
 {
+    struct _domain_ping *l = NULL;
+    struct _domain_ping *nl = NULL;
     if (e == NULL)
 	return;
+    for (l = e->pinglist; l; l = nl) {
+	nl = l->next;
+	safe_free(l->domain);
+	safe_free(l);
+    }
     safe_free(e->host);
     safe_free(e);
 }

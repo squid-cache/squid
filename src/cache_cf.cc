@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.160 1996/12/20 23:45:36 wessels Exp $
+ * $Id: cache_cf.cc,v 1.161 1996/12/21 07:54:50 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -198,6 +198,7 @@ struct SquidConfig Config;
 
 #define DefaultLevelOneDirs	16
 #define DefaultLevelTwoDirs	256
+#define DefaultOptionsLogUdp	1	/* on */
 
 int httpd_accel_mode = 0;	/* for fast access */
 const char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -1474,6 +1475,7 @@ configFreeMemory(void)
     wordlistDestroy(&Config.mcast_group_list);
     wordlistDestroy(&Config.inside_firewall_list);
     wordlistDestroy(&Config.dns_testname_list);
+    wordlistDestroy(&Config.cache_stoplist);
     ip_acl_destroy(&Config.local_ip_list);
     ip_acl_destroy(&Config.firewall_ip_list);
     objcachePasswdDestroy(&Config.passwd_list);
@@ -1573,6 +1575,7 @@ configSetFactoryDefaults(void)
     Config.Store.objectsPerBucket = DefaultObjectsPerBucket;
     Config.levelOneDirs = DefaultLevelOneDirs;
     Config.levelTwoDirs = DefaultLevelTwoDirs;
+    Config.Options.log_udp = DefaultOptionsLogUdp;
 }
 
 static void
