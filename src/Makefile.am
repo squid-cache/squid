@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.43 2002/11/22 14:04:31 robertc Exp $
+#  $Id: Makefile.am,v 1.44 2002/12/15 09:00:42 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -243,7 +243,7 @@ nodist_squid_SOURCES = \
 	auth_modules.cc \
 	store_modules.cc \
 	cf_parser.h \
-	globals.c \
+	globals.cc \
 	string_arrays.c
 
 squid_LDADD = \
@@ -272,12 +272,12 @@ dnsserver_SOURCES = dnsserver.cc
 recv_announce_SOURCES = recv-announce.cc
 
 nodist_pinger_SOURCES = \
-	globals.c
+	globals.cc
 
 BUILT_SOURCES = \
 	cf_gen_defines.h \
 	cf_parser.h \
-	globals.c \
+	globals.cc \
 	string_arrays.c \
 	repl_modules.cc \
 	auth_modules.cc \
@@ -327,7 +327,7 @@ $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
 snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
-globals.c: globals.h mk-globals-c.pl
+globals.cc: globals.h mk-globals-c.pl
 	$(PERL) $(srcdir)/mk-globals-c.pl < $(srcdir)/globals.h > $@
 
 string_arrays.c: enums.h mk-string-arrays.pl
@@ -410,7 +410,7 @@ uninstall-local:
 #	fi
 
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
-	globals.c string_arrays.c repl_modules.cc auth_modules.cc store_modules.cc
+	globals.cc string_arrays.c repl_modules.cc auth_modules.cc store_modules.cc
 
 ##install-pinger:
 ##	@f=$(PINGER_EXE); \
