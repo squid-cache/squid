@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.2 1998/03/31 05:35:35 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.3 1998/04/01 00:14:00 rousskov Exp $
  *
  * DEBUG: section ??    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -58,6 +58,16 @@ cacheDigestDestroy(CacheDigest * cd)
     assert(cd);
     xfree(cd->mask);
     xfree(cd);
+}
+
+CacheDigest *
+cacheDigestClone(const CacheDigest * cd)
+{
+    CacheDigest *clone;
+    assert(cd);
+    clone = cacheDigestCreate(cd->capacity);
+    xmemcpy(clone->mask, cd->mask, cd->mask_size);
+    return clone;
 }
 
 void
