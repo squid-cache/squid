@@ -1,5 +1,5 @@
 /*
- * $Id: ntlmauth.c,v 1.3 2001/08/29 14:57:34 robertc Exp $
+ * $Id: ntlmauth.c,v 1.4 2001/10/15 09:57:36 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -23,6 +23,13 @@
 
 #include "ntlmauth.h"
 #include "util.h"		/* for base64-related stuff */
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 #if UNUSED_CODE
 /* Dumps NTLM flags to standard error for debugging purposes */
