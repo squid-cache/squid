@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.10 2003/08/03 21:02:41 robertc Exp $
+ * $Id: win32.cc,v 1.11 2004/09/24 22:01:17 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -373,9 +373,11 @@ WIN32_Exit()
 {
 #if USE_WIN32_SERVICE
 
-    if (!Squid_Aborting) {
-        svcStatus.dwCurrentState = SERVICE_STOPPED;
-        SetServiceStatus(svcHandle, &svcStatus);
+    if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
+        if (!Squid_Aborting) {
+            svcStatus.dwCurrentState = SERVICE_STOPPED;
+            SetServiceStatus(svcHandle, &svcStatus);
+        }
     }
 
 #endif
