@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.132 1997/01/20 18:27:14 wessels Exp $
+ * $Id: main.cc,v 1.133 1997/01/22 22:02:38 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -637,7 +637,7 @@ main(int argc, char **argv)
 #if HAVE_SRANDOM
     srandom(time(NULL));
 #elif HAVE_SRAND48
-    srand48(time(NULL);
+    srand48(time(NULL));
 #else
     srand(time(NULL));
 #endif
