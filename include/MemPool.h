@@ -1,5 +1,5 @@
 /*
- * $Id: MemPool.h,v 1.2 1998/02/21 00:56:34 rousskov Exp $
+ * $Id: MemPool.h,v 1.3 1998/02/25 07:43:02 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -35,21 +35,21 @@
 /* see MemPool.c for documentation */
 
 struct _MemPool {
-	/* public, read only */
-	char *name;      /* an optional label or name for this pool */
-	size_t obj_size;
+    /* public, read only */
+    char *name;      /* an optional label or name for this pool */
+    size_t obj_size;
 
-	/* protected, do not use these, use interface functions instead */
-	char *buf;
-	Stack *static_stack;
-	Stack *dynamic_stack;
+    /* protected, do not use these, use interface functions instead */
+    char *buf;
+    Stack *static_stack;
+    Stack *dynamic_stack;
 
-	size_t alloc_count;
+    size_t alloc_count;
     size_t free_count;
     size_t alloc_high_water;
 
-	/* private, never touch this */
-	char *_buf_end;
+    /* private, never touch this */
+    char *_buf_end;
 };
 
 typedef struct _MemPool MemPool;
