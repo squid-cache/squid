@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.132 2001/08/11 16:34:37 adrian Exp $
+ * $Id: store_dir.cc,v 1.133 2001/08/11 19:09:21 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -224,6 +224,8 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 	most_free = cur_free;
 	dirn = i;
     }
+    if (dirn >= 0)
+        Config.cacheSwap.swapDirs[dirn].flags.selected = 1;
     return dirn;
 }
 
