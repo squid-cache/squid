@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.98 1997/11/21 00:47:54 wessels Exp $
+#  $Id: Makefile.in,v 1.99 1997/11/21 04:45:34 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -129,6 +129,7 @@ OBJS	 	= \
 		redirect.o \
 		refresh.o \
 		send-announce.o \
+		$(SNMP_OBJS) \
 		ssl.o \
 		stack.o \
 		stat.o \
@@ -144,7 +145,6 @@ OBJS	 	= \
 		url.o \
 		useragent.o \
 		wais.o \
-		$(SNMP_OBJS) \
 		$(XTRA_OBJS)
 
 SNMP_OBJS	= \
