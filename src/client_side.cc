@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.615 2003/01/28 01:29:33 robertc Exp $
+ * $Id: client_side.cc,v 1.616 2003/01/28 06:18:12 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1738,7 +1738,6 @@ clientAfterReadingRequests(int fd, ConnStateData *conn, int do_next_read)
 
     clientMaybeReadData (conn, do_next_read);
 }
-
 
 static void
 clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t method, char *prefix, size_t req_line_sz)
