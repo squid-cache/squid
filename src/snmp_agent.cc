@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.60 1998/11/18 00:16:39 glenn Exp $
+ * $Id: snmp_agent.cc,v 1.61 1998/11/18 00:29:27 glenn Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -473,10 +473,10 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 	    x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
 	    break;
         case PERF_MEDIAN_RHR:
-            x = statRequestHitRatio(minutes) * 100;
+            x = statRequestHitRatio(minutes);
             break;
         case PERF_MEDIAN_BHR:
-            x = statByteHitRatio(minutes) * 100;
+            x = statByteHitRatio(minutes);
             break;
 	default:
 	    *ErrP = SNMP_ERR_NOSUCHNAME;

@@ -3,8 +3,12 @@ Changes to Squid-2.2 ():
 	- Removed all SNMP specific ACL code
 	  SNMP now uses generic squid ACL's
 	- Removed view-based access crontrol
-	- Cleaned up and simplified squid.conf
+	- Cleaned up and simplified SNMP section of squid.conf
 	- Changed the SNMP code to use a tree stucture.
+	- Added objects to MIB:	
+		Request Hit Ratio's
+		Byte Hit Ratio's
+		Number of Clients
 	- Added our own assert() macro so we can use debug() instead of
 	  printing to stderr.
 	- Added eventFreeMemory().
