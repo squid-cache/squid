@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.36 1998/10/13 04:46:30 wessels Exp $
+ * $Id: store_swapout.cc,v 1.37 1998/11/25 08:57:53 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -135,21 +135,21 @@ storeCheckSwapOut(StoreEntry * e)
     int hdr_len = 0;
     assert(mem != NULL);
     /* should we swap something out to disk? */
-    debug(20, 3) ("storeCheckSwapOut: %s\n", storeUrl(e));
-    debug(20, 3) ("storeCheckSwapOut: store_status = %s\n",
+    debug(20, 7) ("storeCheckSwapOut: %s\n", storeUrl(e));
+    debug(20, 7) ("storeCheckSwapOut: store_status = %s\n",
 	storeStatusStr[e->store_status]);
     if (e->store_status == STORE_ABORTED) {
 	assert(EBIT_TEST(e->flags, RELEASE_REQUEST));
 	storeSwapOutFileClose(e);
 	return;
     }
-    debug(20, 3) ("storeCheckSwapOut: mem->inmem_lo = %d\n",
+    debug(20, 7) ("storeCheckSwapOut: mem->inmem_lo = %d\n",
 	(int) mem->inmem_lo);
-    debug(20, 3) ("storeCheckSwapOut: mem->inmem_hi = %d\n",
+    debug(20, 7) ("storeCheckSwapOut: mem->inmem_hi = %d\n",
 	(int) mem->inmem_hi);
-    debug(20, 3) ("storeCheckSwapOut: swapout.queue_offset = %d\n",
+    debug(20, 7) ("storeCheckSwapOut: swapout.queue_offset = %d\n",
 	(int) mem->swapout.queue_offset);
-    debug(20, 3) ("storeCheckSwapOut: swapout.done_offset = %d\n",
+    debug(20, 7) ("storeCheckSwapOut: swapout.done_offset = %d\n",
 	(int) mem->swapout.done_offset);
 #if USE_ASYNC_IO
     if (mem->inmem_hi < mem->swapout.queue_offset) {
@@ -162,7 +162,7 @@ storeCheckSwapOut(StoreEntry * e)
     assert(mem->inmem_hi >= mem->swapout.queue_offset);
 #endif
     lowest_offset = storeLowestMemReaderOffset(e);
-    debug(20, 3) ("storeCheckSwapOut: lowest_offset = %d\n",
+    debug(20, 7) ("storeCheckSwapOut: lowest_offset = %d\n",
 	(int) lowest_offset);
     new_mem_lo = lowest_offset;
     assert(new_mem_lo >= mem->inmem_lo);
@@ -182,11 +182,11 @@ storeCheckSwapOut(StoreEntry * e)
     if (!storeSwapOutAble(e))
 	return;
     swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
-    debug(20, 3) ("storeCheckSwapOut: swapout_size = %d\n",
+    debug(20, 7) ("storeCheckSwapOut: swapout_size = %d\n",
 	(int) swapout_size);
     if (swapout_size == 0) {
 	if (e->store_status == STORE_OK && !storeSwapOutWriteQueued(mem)) {
-	    debug(20, 3) ("storeCheckSwapOut: nothing to write for STORE_OK\n");
+	    debug(20, 7) ("storeCheckSwapOut: nothing to write for STORE_OK\n");
 	    if (e->swap_file_number > -1) {
 		storeUnlinkFileno(e->swap_file_number);
 		storeDirMapBitReset(e->swap_file_number);
