@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.8 2002/06/12 11:45:20 robertc Exp $
+# $Id: Makefile.am,v 1.9 2002/06/23 12:57:07 hno Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
@@ -30,4 +30,5 @@ EXTRA_DIST = \
 	INSTALL \
 	QUICKSTART \
 	README \
-	SPONSORS
+	SPONSORS \
+	bootstrap.sh
