@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.54 2000/03/06 16:23:28 wessels Exp $
+ * $Id: access_log.cc,v 1.55 2000/03/14 23:07:51 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -37,10 +37,10 @@
 
 #include "squid.h"
 
-static void accessLogOpen(const char *fname);
 static char *log_quote(const char *header);
-static void accessLogSquid(AccessLogEntry * al, MemBuf * mb);
-static void accessLogCommon(AccessLogEntry * al, MemBuf * mb);
+static void accessLogSquid(AccessLogEntry * al);
+static void accessLogCommon(AccessLogEntry * al);
+static Logfile *logfile = NULL;
 
 #if MULTICAST_MISS_STREAM
 static int mcast_miss_fd = -1;
@@ -93,8 +93,6 @@ static void fvdbClear(void);
 #endif
 
 static int LogfileStatus = LOG_DISABLE;
-static int LogfileFD = -1;
-static char LogfileName[SQUID_MAXPATHLEN];
 #define LOG_BUF_SZ (MAX_URL<<2)
 
 static const char c2x[] =
@@ -185,14 +183,14 @@ log_quote(const char *header)
 }
 
 static void
-accessLogSquid(AccessLogEntry * al, MemBuf * mb)
+accessLogSquid(AccessLogEntry * al)
 {
     const char *client = NULL;
     if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
     if (client == NULL)
 	client = inet_ntoa(al->cache.caddr);
-    memBufPrintf(mb, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s%s/%s %s",
+    logfilePrintf(logfile, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s%s/%s %s",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	al->cache.msec,
@@ -210,14 +208,14 @@ accessLogSquid(AccessLogEntry * al, MemBuf * mb)
 }
 
 static void
-accessLogCommon(AccessLogEntry * al, MemBuf * mb)
+accessLogCommon(AccessLogEntry * al)
 {
     const char *client = NULL;
     if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
     if (client == NULL)
 	client = inet_ntoa(al->cache.caddr);
-    memBufPrintf(mb, "%s %s - [%s] \"%s %s HTTP/%.1f\" %d %d %s:%s",
+    logfilePrintf(logfile, "%s %s - [%s] \"%s %s HTTP/%.1f\" %d %d %s:%s",
 	client,
 	al->cache.ident,
 	mkhttpdlogtime(&squid_curtime),
@@ -230,37 +228,9 @@ accessLogCommon(AccessLogEntry * al, MemBuf * mb)
 	hier_strings[al->hier.code]);
 }
 
-static void
-accessLogOpen(const char *fname)
-{
-    assert(fname);
-    xstrncpy(LogfileName, fname, SQUID_MAXPATHLEN);
-    LogfileFD = file_open(LogfileName, O_WRONLY | O_CREAT);
-    if (LogfileFD == DISK_ERROR) {
-	if (ENOENT == errno) {
-	    fatalf("%s cannot be created, since the\n"
-		"\tdirectory it is to reside in does not exist."
-		"\t(%s)\n", LogfileName, xstrerror());
-	} else if (EACCES == errno) {
-	    fatalf("cannot create %s:\n"
-		"\t%s.\n"
-		"\tThe directory access.log is to reside in needs to be\n"
-		"\twriteable by the user %s, the cache_effective_user\n"
-		"\tset in squid.conf.",
-		LogfileName, xstrerror(), Config.effectiveUser);
-	} else {
-	    debug(50, 0) ("%s: %s\n", LogfileName, xstrerror());
-	    fatalf("Cannot open %s: %s", LogfileName, xstrerror());
-	}
-    }
-    LogfileStatus = LOG_ENABLE;
-}
-
 void
 accessLogLog(AccessLogEntry * al)
 {
-    MemBuf mb;
-    char *xbuf = NULL;
     LOCAL_ARRAY(char, ident_buf, USER_IDENT_SZ);
 
     if (LogfileStatus != LOG_ENABLE)
@@ -282,23 +252,20 @@ accessLogLog(AccessLogEntry * al)
     if (al->hier.host[0] == '\0')
 	xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
 
-    memBufDefInit(&mb);
-
     if (Config.onoff.common_log)
-	accessLogCommon(al, &mb);
+	accessLogCommon(al);
     else
-	accessLogSquid(al, &mb);
+	accessLogSquid(al);
     if (Config.onoff.log_mime_hdrs) {
 	char *ereq = log_quote(al->headers.request);
 	char *erep = log_quote(al->headers.reply);
-	memBufPrintf(&mb, " [%s] [%s]\n", ereq, erep);
+	logfilePrintf(logfile, " [%s] [%s]\n", ereq, erep);
 	safe_free(ereq);
 	safe_free(erep);
     } else {
-	memBufPrintf(&mb, "\n");
+	logfilePrintf(logfile, "\n");
     }
-    file_write_mbuf(LogfileFD, -1, mb, NULL, NULL);
-    safe_free(xbuf);
+    logfileFlush(logfile);
 #if MULTICAST_MISS_STREAM
     if (al->cache.code != LOG_TCP_MISS)
 	(void) 0;
@@ -325,48 +292,19 @@ accessLogLog(AccessLogEntry * al)
 void
 accessLogRotate(void)
 {
-    int i;
-    LOCAL_ARRAY(char, from, MAXPATHLEN);
-    LOCAL_ARRAY(char, to, MAXPATHLEN);
-    char *fname = NULL;
-    struct stat sb;
 #if FORW_VIA_DB
     fvdbClear();
 #endif
-    if ((fname = LogfileName) == NULL)
+    if (NULL == logfile)
 	return;
-#ifdef S_ISREG
-    if (stat(fname, &sb) == 0)
-	if (S_ISREG(sb.st_mode) == 0)
-	    return;
-#endif
-    debug(46, 1) ("accessLogRotate: Rotating\n");
-    /* Rotate numbers 0 through N up one */
-    for (i = Config.Log.rotateNumber; i > 1;) {
-	i--;
-	snprintf(from, MAXPATHLEN, "%s.%d", fname, i - 1);
-	snprintf(to, MAXPATHLEN, "%s.%d", fname, i);
-	xrename(from, to);
-    }
-    /* Rotate the current log to .0 */
-    file_close(LogfileFD);	/* always close */
-    if (Config.Log.rotateNumber > 0) {
-	snprintf(to, MAXPATHLEN, "%s.%d", fname, 0);
-	xrename(fname, to);
-    }
-    /* Reopen the log.  It may have been renamed "manually" */
-    LogfileFD = file_open(fname, O_WRONLY | O_CREAT);
-    if (LogfileFD == DISK_ERROR) {
-	debug(46, 0) ("accessLogRotate: Cannot open logfile: %s\n", fname);
-	LogfileStatus = LOG_DISABLE;
-	fatalf("Cannot open %s: %s", fname, xstrerror());
-    }
+    logfileRotate(logfile);
 }
 
 void
 accessLogClose(void)
 {
-    file_close(LogfileFD);
+    logfileClose(logfile);
+    logfile = NULL;
 }
 
 void
@@ -383,7 +321,8 @@ void
 accessLogInit(void)
 {
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
-    accessLogOpen(Config.Log.access);
+    logfile = logfileOpen(Config.Log.access, MAX_URL << 1);
+    LogfileStatus = LOG_ENABLE;
 #if FORW_VIA_DB
     fvdbInit();
 #endif

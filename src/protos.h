@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.355 2000/03/06 16:23:33 wessels Exp $
+ * $Id: protos.h,v 1.356 2000/03/14 23:07:51 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1227,6 +1227,18 @@ extern void leakInit(void);
 extern void *leakAddFL(void *, const char *, int);
 extern void *leakTouchFL(void *, const char *, int);
 extern void *leakFreeFL(void *, const char *, int);
+#endif
+
+/* logfile.c */
+extern Logfile *logfileOpen(const char *path, size_t bufsz);
+extern void logfileClose(Logfile * lf);
+extern void logfileRotate(Logfile * lf);
+extern void logfileWrite(Logfile * lf, void *buf, size_t len);
+extern void logfileFlush(Logfile * lf);
+#if STDC_HEADERS
+extern void logfilePrintf(Logfile * lf, const char *fmt,...);
+#else
+extern void logfilePrintf(va_alist);
 #endif
 
 /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.19 2000/03/06 16:23:36 wessels Exp $
+ * $Id: useragent.cc,v 1.20 2000/03/14 23:07:51 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -35,31 +35,20 @@
 
 #include "squid.h"
 
+#if USE_USERAGENT_LOG
+static Logfile *useragentlog = NULL;
+#endif
+
 void
 useragentOpenLog(void)
 {
 #if USE_USERAGENT_LOG
-    char *fname = NULL;
-    int log_fd = -1;
-    fname = Config.Log.useragent;
-    /* Close and reopen the log.  It may have been renamed "manually"
-     * before HUP'ing us. */
-    if (cache_useragent_log) {
-	file_close(fileno(cache_useragent_log));
-	fclose(cache_useragent_log);
-	cache_useragent_log = NULL;
-    }
-    if (fname && strcmp(fname, "none") != 0) {
-	log_fd = file_open(fname, O_WRONLY | O_CREAT | O_APPEND);
-	if (log_fd < 0) {
-	    debug(50, 0) ("useragentOpenLog: %s: %s\n", fname, xstrerror());
-	} else if ((cache_useragent_log = fdopen(log_fd, "a")) == NULL) {
-	    file_close(log_fd);
-	    debug(50, 0) ("useragentOpenLog: %s: %s\n", fname, xstrerror());
-	}
-    }
-    if (log_fd < 0 || cache_useragent_log == NULL)
+    assert(NULL == useragentlog);
+    if (0 == strcmp(Config.Log.useragent, "none")) {
 	debug(40, 1) ("User-Agent logging is disabled.\n");
+	return;
+    }
+    logfileOpen(Config.Log.useragent, 0);
 #endif
 }
 
@@ -67,39 +56,9 @@ void
 useragentRotateLog(void)
 {
 #if USE_USERAGENT_LOG
-    char *fname = NULL;
-    int i;
-    LOCAL_ARRAY(char, from, MAXPATHLEN);
-    LOCAL_ARRAY(char, to, MAXPATHLEN);
-    struct stat sb;
-    if ((fname = Config.Log.useragent) == NULL)
+    if (NULL == useragentlog)
 	return;
-    if (strcmp(fname, "none") == 0)
-	return;
-#ifdef S_ISREG
-    if (stat(fname, &sb) == 0)
-	if (S_ISREG(sb.st_mode) == 0)
-	    return;
-#endif
-    debug(40, 1) ("useragentRotateLog: Rotating.\n");
-    /* Rotate numbers 0 through N up one */
-    for (i = Config.Log.rotateNumber; i > 1;) {
-	i--;
-	snprintf(from, MAXPATHLEN, "%s.%d", fname, i - 1);
-	snprintf(to, MAXPATHLEN, "%s.%d", fname, i);
-	xrename(from, to);
-    }
-    if (cache_useragent_log) {
-	file_close(fileno(cache_useragent_log));
-	fclose(cache_useragent_log);
-	cache_useragent_log = NULL;
-    }
-    /* Rotate the current log to .0 */
-    if (Config.Log.rotateNumber > 0) {
-	snprintf(to, MAXPATHLEN, "%s.%d", fname, 0);
-	xrename(fname, to);
-    }
-    useragentOpenLog();
+    logfileRotate(useragentlog);
 #endif
 }
 
@@ -110,18 +69,16 @@ logUserAgent(const char *client, const char *agent)
     static time_t last_time = 0;
     static char time_str[128];
     const char *s;
-    if (!cache_useragent_log)
+    if (NULL == useragentlog)
 	return;
     if (squid_curtime != last_time) {
 	s = mkhttpdlogtime(&squid_curtime);
 	strcpy(time_str, s);
 	last_time = squid_curtime;
     }
-    fprintf(cache_useragent_log, "%s [%s] \"%s\"\n",
+    logfilePrintf(useragentlog, "%s [%s] \"%s\"\n",
 	client,
 	time_str,
 	agent);
-    if (!Config.onoff.buffered_logs)
-	fflush(cache_useragent_log);
 #endif
 }

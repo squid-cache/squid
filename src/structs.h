@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.315 2000/03/14 22:59:13 wessels Exp $
+ * $Id: structs.h,v 1.316 2000/03/14 23:07:51 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1869,4 +1869,12 @@ struct _store_rebuild_data {
     int badflags;		/* # bad e->flags */
     int bad_log_op;
     int zero_object_sz;
+};
+
+struct _Logfile {
+    int fd;
+    char path[MAXPATHLEN];
+    char *buf;
+    size_t bufsz;
+    off_t offset;
 };
