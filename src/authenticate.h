@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.9 2003/07/11 01:40:36 robertc Exp $
+ * $Id: authenticate.h,v 1.10 2003/07/12 12:39:56 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -66,8 +66,10 @@ struct AuthUserIP
     time_t ip_expiretime;
 };
 
-struct AuthUser
+class AuthUser
 {
+
+public:
     /* extra fields for proxy_auth */
     /* this determines what scheme owns the user data. */
     auth_type_t auth_type;

@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.12 2003/02/05 10:36:31 robertc Exp $
+ * $Id: Array.h,v 1.13 2003/07/12 12:39:56 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -56,8 +56,14 @@ template <class C> class VectorIteratorBase {
     bool operator == (VectorIteratorBase const &rhs);
     VectorIteratorBase & operator ++();
     VectorIteratorBase operator ++(int);
-    typename C::value_type & operator *() const;
-    typename C::value_type * operator -> () const;
+    typename C::value_type & operator *() const
+      {
+          return theVector->items[pos];
+      }
+      typename C::value_type * operator -> () const
+      {
+          return &theVector->items[pos];
+      }
     ssize_t operator - (VectorIteratorBase const &rhs) const;
     bool incrementable() const;
   private:
