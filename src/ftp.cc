@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.152 1997/10/26 02:35:30 wessels Exp $
+ * $Id: ftp.cc,v 1.153 1997/10/26 07:16:38 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -593,7 +593,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
     assert(usable <= len);
     if (usable < len) {
 	/* must copy partial line to beginning of buf */
-	linelen = len - usable + 1;
+	linelen = len - usable;
 	assert(linelen > 0);
 	if (linelen > 4096)
 	    linelen = 4096;
