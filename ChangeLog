@@ -16,6 +16,9 @@
 	 10. cacheSec and cacheAccounting groups removed 
 	 11. fixed acl bug when communities not defined
 	 12. snmp_acl now survives bad configuration
+	- Fixed disk.c FD leak for delayed closes in
+	  diskHandleWriteComplete().
+	- Fixed cache announcement feature.
 
 Changes to squid-1.2.beta18 (Mar 23, 1998):
 
