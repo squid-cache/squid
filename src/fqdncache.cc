@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.130 1999/06/17 20:23:11 wessels Exp $
+ * $Id: fqdncache.cc,v 1.131 1999/06/17 22:20:39 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -680,46 +680,50 @@ fqdncache_restart(void)
 variable_list *
 snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer;
-
+    variable_list *Answer = NULL;
     debug(49, 5) ("snmp_netFqdnFn: Processing request:\n", Var->name[LEN_SQ_NET +
 	    1]);
     snmpDebugOid(5, Var->name, Var->name_length);
-
-    Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-    Answer->val_len = sizeof(snint);
-    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-    Answer->type = SMI_COUNTER32;
-
     switch (Var->name[LEN_SQ_NET + 1]) {
     case FQDN_ENT:
-	*(Answer->val.integer) = memInUse(MEM_FQDNCACHE_ENTRY);
-	Answer->type = SMI_GAUGE32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    memInUse(MEM_FQDNCACHE_ENTRY),
+	    SMI_GAUGE32);
 	break;
     case FQDN_REQ:
-	*(Answer->val.integer) = FqdncacheStats.requests;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    FqdncacheStats.requests,
+	    SMI_COUNTER32);
 	break;
     case FQDN_HITS:
-	*(Answer->val.integer) = FqdncacheStats.hits;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    FqdncacheStats.hits,
+	    SMI_COUNTER32);
 	break;
     case FQDN_PENDHIT:
-	*(Answer->val.integer) = FqdncacheStats.pending_hits;
-	Answer->type = SMI_GAUGE32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    FqdncacheStats.pending_hits,
+	    SMI_GAUGE32);
 	break;
     case FQDN_NEGHIT:
-	*(Answer->val.integer) = FqdncacheStats.negative_hits;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    FqdncacheStats.negative_hits,
+	    SMI_COUNTER32);
 	break;
     case FQDN_MISS:
-	*(Answer->val.integer) = FqdncacheStats.misses;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    FqdncacheStats.misses,
+	    SMI_COUNTER32);
 	break;
     case FQDN_GHBN:
-	*(Answer->val.integer) = FqdncacheStats.ghba_calls;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    FqdncacheStats.ghba_calls,
+	    SMI_COUNTER32);
 	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+	break;
     }
     return Answer;
 }

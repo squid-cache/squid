@@ -26,7 +26,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_vars.h,v 1.7 1998/04/04 01:43:51 kostas Exp $
+ * $Id: snmp_vars.h,v 1.8 1999/06/17 22:20:35 wessels Exp $
  * 
  **********************************************************************/
 
@@ -48,6 +48,7 @@ extern "C" {
 #endif
 
     struct variable_list *snmp_var_new(oid *, int);
+    struct variable_list *snmp_var_new_integer(oid *, int, int, unsigned char);
     struct variable_list *snmp_var_clone(struct variable_list *);
     void snmp_var_free(struct variable_list *);
 
@@ -58,8 +59,7 @@ extern "C" {
 }
 
 #endif
-#define MAX_NAME_LEN	64	/* number of subid's in a objid *//*      *RFC 1902:Structure of Management Information for SNMPv2
-*
+#define MAX_NAME_LEN	64	/* number of subid's in a objid *//*      *RFC 1902:Structure of Management Information for SNMPv2      *
       *Defined Types
 *
       */

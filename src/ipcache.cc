@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.216 1999/06/17 20:23:13 wessels Exp $
+ * $Id: ipcache.cc,v 1.217 1999/06/17 22:20:40 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -865,43 +865,50 @@ ipcache_restart(void)
 variable_list *
 snmp_netIpFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer;
-
+    variable_list *Answer = NULL;
     debug(49, 5) ("snmp_netIpFn: Processing request:\n", Var->name[LEN_SQ_NET + 1]);
     snmpDebugOid(5, Var->name, Var->name_length);
-
-    Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-    Answer->val_len = sizeof(snint);
-    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-    Answer->type = SMI_COUNTER32;
-
     switch (Var->name[LEN_SQ_NET + 1]) {
     case IP_ENT:
-	*(Answer->val.integer) = memInUse(MEM_IPCACHE_ENTRY);
-	Answer->type = SMI_GAUGE32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    memInUse(MEM_IPCACHE_ENTRY),
+	    SMI_GAUGE32);
 	break;
     case IP_REQ:
-	*(Answer->val.integer) = IpcacheStats.requests;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    IpcacheStats.requests,
+	    SMI_COUNTER32);
 	break;
     case IP_HITS:
-	*(Answer->val.integer) = IpcacheStats.hits;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    IpcacheStats.hits,
+	    SMI_COUNTER32);
 	break;
     case IP_PENDHIT:
-	*(Answer->val.integer) = IpcacheStats.pending_hits;
-	Answer->type = SMI_GAUGE32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    IpcacheStats.pending_hits,
+	    SMI_GAUGE32);
 	break;
     case IP_NEGHIT:
-	*(Answer->val.integer) = IpcacheStats.negative_hits;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    IpcacheStats.negative_hits,
+	    SMI_COUNTER32);
 	break;
     case IP_MISS:
-	*(Answer->val.integer) = IpcacheStats.misses;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    IpcacheStats.misses,
+	    SMI_COUNTER32);
 	break;
     case IP_GHBN:
-	*(Answer->val.integer) = IpcacheStats.ghbn_calls;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    IpcacheStats.ghbn_calls,
+	    SMI_COUNTER32);
 	break;
     case IP_LOC:
-	*(Answer->val.integer) = IpcacheStats.release_locked;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    IpcacheStats.release_locked,
+	    SMI_COUNTER32);
 	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
