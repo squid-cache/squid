@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.54 1998/02/07 08:13:36 wessels Exp $
+ * $Id: dns.cc,v 1.55 1998/02/18 00:34:36 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -156,16 +156,25 @@ dnsOpenServers(void)
     int wfd;
     LOCAL_ARRAY(char, fd_note_buf, FD_DESC_SZ);
     char *s;
-    char *args[3];
+    char *args[64];
+    int nargs = 0;
+    wordlist *w;
 
     dnsFreeMemory();
     dns_child_table = xcalloc(N, sizeof(dnsserver_t *));
     NDnsServersAlloc = 0;
-    args[0] = "(dnsserver)";
-    args[1] = NULL;
-    args[2] = NULL;
+    args[nargs++] = "(dnsserver)";
     if (Config.onoff.res_defnames)
-	args[1] = "-D";
+	args[nargs++] = "-D";
+    if (Config.dns_nameservers != NULL) {
+	args[nargs++] = "-s";
+	for (w = Config.dns_nameservers; w != NULL; w = w->next) {
+	    if (nargs > 60)
+		break;
+	    args[nargs++] = w->key;
+	}
+    }
+    args[nargs++] = NULL;
     for (k = 0; k < N; k++) {
 	dns_child_table[k] = xcalloc(1, sizeof(dnsserver_t));
 	cbdataAdd(dns_child_table[k], MEM_NONE);
