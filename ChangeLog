@@ -1,3 +1,21 @@
+	- Fix redirector to make sure the redirector child process is 
+	  is alive and not busy before using it (Brent Foster).
+	- Fixed ACL joining bug.
+	- Fixed ftpget to properly handle multi-line replies that
+	  don't begin with "NNN-".
+	- Changed store maintenance to randomize bucket order
+	  each time after completion.
+	- Set RLIMIT_VMEM to the maximum.
+	- Syntax change: "edge" to "peer" everywhere.
+	- Change redirector stats to also show number of rewritten
+	  requests (Andrew Humphrey).
+	- Changed HTTP anonmyizing to remove 'denied' headers
+	  by default.  Define USE_PARANOID_ANONYMIZER to only pass
+	  'allowed' headers instead.
+	- Added 'Splay' trees for fast IP access checking (Ed Knowles).
+	- Fixed 'COMM_INPROGRESS' typo bug (Balint Nagy Endre).
+	- Added support for PURGE method to remove cached objects.
+
 Changes to squid-1.1.5 (January 22, 1996):
 
 	- Fixed ACL parsing to join ACL entries with the same name
