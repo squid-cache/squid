@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.13 1996/07/11 17:42:51 wessels Exp $
+ * $Id: send-announce.cc,v 1.14 1996/07/15 23:10:57 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -83,7 +83,7 @@ void send_announce()
     qdata->len = strlen(sndbuf) + 1;
     qdata->address.sin_family = AF_INET;
     qdata->address.sin_port = htons(port);
-    xmemcpy(&qdata->address.sin_addr, hp->h_addr_list[0], hp->h_length);
+    xmemcpy(&qdata->address.sin_addr, *(hp->h_addr_list + 0), hp->h_length);
     AppendUdp(qdata);
     comm_set_select_handler(theOutIcpConnection,
 	COMM_SELECT_WRITE,
