@@ -29,18 +29,17 @@
 #include "util.h"
 #include "hash.h"
 
-int get_nis_password();
-
+#include "nis_support.h"
 
 int
 main(int argc, char **argv)
 {
     char buf[256];
-    char nispasswd[15];
     char *nisdomain;
     char *nismap;
     char *user, *passwd, *p;
-    int res;
+    char *nispasswd;
+
     setbuf(stdout, NULL);
 
     if (argc != 3) {
@@ -64,17 +63,17 @@ main(int argc, char **argv)
 	    printf("ERR\n");
 	    continue;
 	}
-	res = get_nis_password(user, nispasswd, nisdomain, nismap);
+	nispasswd = get_nis_password(user, nisdomain, nismap);
 
-	if (res) {
+	if (!nispasswd) {
 	    /* User does not exist */
 	    printf("ERR\n");
-	} else if (strcmp(nispasswd, (char *) crypt(passwd, nispasswd))) {
-	    /* Password incorrect */
-	    printf("ERR\n");
-	} else {
+	} else if (strcmp(nispasswd, (char *) crypt(passwd, nispasswd)) == 0) {
 	    /* All ok !, thanks... */
 	    printf("OK\n");
+	} else {
+	    /* Password incorrect */
+	    printf("ERR\n");
 	}
     }
     exit(0);
