@@ -880,7 +880,7 @@ struct _request_t {
 
 struct _cachemgr_passwd {
     char *passwd;
-    long actions;
+    wordlist *actions;
     struct _cachemgr_passwd *next;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.237 1998/02/07 08:13:38 wessels Exp $
+ * $Id: http.cc,v 1.238 1998/02/19 23:09:52 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1133,6 +1133,14 @@ httpReplyHeaderStats(StoreEntry * entry)
 	storeAppendPrintf(entry, "Cache-Control %s: %d\n",
 	    HttpServerCCStr[i],
 	    ReplyHeaderStats.cc[i]);
+}
+
+void
+httpInit(void)
+{
+    cachemgrRegister("reply_headers",
+	"HTTP Reply Header Histograms",
+	httpReplyHeaderStats, 0);
 }
 
 static void

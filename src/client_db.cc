@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.20 1998/02/07 08:13:36 wessels Exp $
+ * $Id: client_db.cc,v 1.21 1998/02/19 23:09:49 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -63,6 +63,10 @@ clientdbInit(void)
 	return;
     client_table = hash_create((HASHCMP *) strcmp, 229, hash_string);
     client_info_sz = sizeof(ClientInfo);
+    cachemgrRegister("client_list",
+	"Cache Client List",
+	clientdbDump,
+	0);
 }
 
 void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.55 1998/02/18 00:34:36 wessels Exp $
+ * $Id: dns.cc,v 1.56 1998/02/19 23:09:50 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -214,6 +214,8 @@ dnsOpenServers(void)
     }
     if (NDnsServersAlloc == 0 && Config.dnsChildren > 0)
 	fatal("Failed to start any dnsservers");
+    cachemgrRegister("dns", "dnsserver child process information",
+	dnsStats, 0);
     debug(34, 1) ("Started %d 'dnsserver' processes\n", NDnsServersAlloc);
 }
 

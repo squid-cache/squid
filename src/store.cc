@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.381 1998/02/12 23:36:01 wessels Exp $
+ * $Id: store.cc,v 1.382 1998/02/19 23:10:02 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -842,6 +842,9 @@ storeInit(void)
     store_list.head = store_list.tail = NULL;
     inmem_list.head = inmem_list.tail = NULL;
     storeRebuildStart();
+    cachemgrRegister("store_dir",
+	"Store Directory Stats",
+	storeDirStats, 0);
 }
 
 void
