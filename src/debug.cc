@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.29 1996/09/24 20:16:39 wessels Exp $
+ * $Id: debug.cc,v 1.30 1996/10/09 15:34:22 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -114,7 +114,9 @@ static char *debug_log_file = NULL;
 #define MAX_DEBUG_SECTIONS 50
 static int debugLevels[MAX_DEBUG_SECTIONS];
 
-#if __STDC__
+static char *accessLogTime _PARAMS((time_t));
+
+#ifdef __STDC__
 void
 _db_print(int section, int level, char *format,...)
 {
@@ -137,7 +139,7 @@ _db_print(va_alist)
     if (debug_log == NULL)
 	return;
 
-#if __STDC__
+#ifdef __STDC__
     va_start(args, format);
 #else
     va_start(args);
@@ -278,7 +280,7 @@ _db_rotate_log(void)
 	debugOpenLog(Config.Log.log);
 }
 
-char *
+static char *
 accessLogTime(time_t t)
 {
     struct tm *tm;

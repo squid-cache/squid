@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.21 1996/09/20 06:28:42 wessels Exp $
+ * $Id: fqdncache.cc,v 1.22 1996/10/09 15:34:25 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -169,8 +169,8 @@ static char fqdncache_status_char[] =
     'D'
 };
 
-long fqdncache_low = 180;
-long fqdncache_high = 200;
+static long fqdncache_low = 180;
+static long fqdncache_high = 200;
 
 static void
 fqdncacheEnqueue(fqdncache_entry * f)

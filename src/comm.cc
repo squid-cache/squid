@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.84 1996/10/08 21:20:50 wessels Exp $
+ * $Id: comm.cc,v 1.85 1996/10/09 15:34:22 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -137,14 +137,15 @@ struct _RWStateData {
 FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
+static int commBind _PARAMS((int s, struct in_addr, u_short port));
+static int comm_cleanup_fd_entry _PARAMS((int));
+static int examine_select _PARAMS((fd_set *, fd_set *, fd_set *));
 static void checkTimeouts _PARAMS((void));
 static void checkLifetimes _PARAMS((void));
 static void Reserve_More_FDs _PARAMS((void));
 static void commSetReuseAddr _PARAMS((int));
-static int examine_select _PARAMS((fd_set *, fd_set *, fd_set *));
 static void commSetNoLinger _PARAMS((int));
 static void comm_select_incoming _PARAMS((void));
-static int commBind _PARAMS((int s, struct in_addr, u_short port));
 static void RWStateCallbackAndFree _PARAMS((int fd, int code));
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay _PARAMS((int));
@@ -504,7 +505,7 @@ comm_close(int fd)
 
 /* use to clean up fdtable when socket is closed without
  * using comm_close */
-int
+static int
 comm_cleanup_fd_entry(int fd)
 {
     FD_ENTRY *conn = &fd_table[fd];
@@ -968,12 +969,10 @@ commSetCloseOnExec(int fd)
     int flags;
     if ((flags = fcntl(fd, F_GETFL)) < 0) {
 	debug(5, 0, "FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
-	return COMM_ERROR;
+	return;
     }
-    if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0) {
-	debug(5, 0, "FD %d: set close-on-exec failed: %s\n",
-	    fd, xstrerror());
-    }
+    if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0)
+	debug(5, 0, "FD %d: set close-on-exec failed: %s\n", fd, xstrerror());
 #endif
 }
 

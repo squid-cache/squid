@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.80 1996/10/08 14:48:34 wessels Exp $
+ * $Id: http.cc,v 1.81 1996/10/09 15:34:29 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -107,7 +107,7 @@
 
 #define HTTP_DELETE_GAP   (1<<18)
 
-struct {
+static struct {
     int parsed;
     int date;
     int lm;

@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.31 1996/10/08 14:43:30 wessels Exp $
+ * $Id: disk.cc,v 1.32 1996/10/09 15:34:24 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -121,6 +121,10 @@ typedef struct _dwalk_ctrl {
 /* table for FILE variable, write lock and queue. Indexed by fd. */
 FileEntry *file_table;
 
+static int diskHandleRead _PARAMS((int, dread_ctrl *));
+static int diskHandleWalk _PARAMS((int, dwalk_ctrl *));
+static int diskHandleWrite _PARAMS((int, FileEntry *));
+
 /* initialize table */
 int
 disk_init(void)
@@ -157,7 +161,7 @@ file_open(char *path, int (*handler) _PARAMS((void)), int mode)
 #if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
     mode |= O_NONBLOCK;
 #else
-     mode |= O_NDELAY;
+    mode |= O_NDELAY;
 #endif
 
     /* Open file */
@@ -185,7 +189,7 @@ file_open(char *path, int (*handler) _PARAMS((void)), int mode)
     memset(conn, '\0', sizeof(FD_ENTRY));
 #ifdef DONT_DO_THIS
     if (commSetNonBlocking(fd) != COMM_ERROR)
-    	conn->comm_type = COMM_NONBLOCKING;
+	conn->comm_type = COMM_NONBLOCKING;
 #endif
     return fd;
 }
@@ -263,7 +267,7 @@ file_write_unlock(int fd, int access_code)
 
 
 /* write handler */
-int
+static int
 diskHandleWrite(int fd, FileEntry * entry)
 {
     int len;
@@ -392,7 +396,7 @@ file_write(int fd,
 
 
 /* Read from FD */
-int
+static int
 diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 {
     int len;
@@ -485,7 +489,7 @@ file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void
 
 
 /* Read from FD and pass a line to routine. Walk to EOF. */
-int
+static int
 diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
 {
     int len;

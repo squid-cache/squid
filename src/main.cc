@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.87 1996/09/24 20:17:31 wessels Exp $
+ * $Id: main.cc,v 1.88 1996/10/09 15:34:32 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -148,14 +148,15 @@ static time_t next_dirclean;
 static time_t next_announce;
 static time_t next_ip_purge;
 
+static time_t mainMaintenance _PARAMS((void));
 static void rotate_logs _PARAMS((int));
 static void reconfigure _PARAMS((int));
 static void mainInitialize _PARAMS((void));
 static void mainReinitialize _PARAMS((void));
-static time_t mainMaintenance _PARAMS((void));
 static void usage _PARAMS((void));
 static void mainParseOptions _PARAMS((int, char **));
 static void sendSignal _PARAMS((void));
+static void serverConnectionsOpen _PARAMS((void));
 
 static void
 usage(void)
@@ -230,7 +231,7 @@ mainParseOptions(int argc, char *argv[])
 	    opt_no_ipcache = 1;
 	    break;
 	case 'k':
-	    if (strlen(optarg) < 1)
+	    if ((int) strlen(optarg) < 1)
 		usage();
 	    if (!strncmp(optarg, "reconfigure", strlen(optarg)))
 		opt_send_signal = SIGHUP;
@@ -256,6 +257,7 @@ mainParseOptions(int argc, char *argv[])
 	    break;
 #else
 	    fatal("Need to add -DMALLOC_DBG when compiling to use -m option");
+	    /* NOTREACHED */
 #endif
 	case 's':
 	    opt_syslog_enable = 1;
@@ -316,7 +318,7 @@ shut_down(int sig)
 #endif
 }
 
-void
+static void
 serverConnectionsOpen(void)
 {
     struct in_addr addr;

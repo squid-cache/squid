@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.34 1996/09/17 02:30:07 wessels Exp $
+ * $Id: url.cc,v 1.35 1996/10/09 15:34:41 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -41,7 +41,7 @@ char *RequestMethodStr[] =
     "CONNECT"
 };
 
-char *ProtocolStr[] =
+static char *ProtocolStr[] =
 {
     "NONE",
     "http",
@@ -54,6 +54,7 @@ char *ProtocolStr[] =
 
 static int url_acceptable[256];
 static char hex[17] = "0123456789abcdef";
+static int urlDefaultPort _PARAMS((protocol_t p));
 
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
@@ -166,7 +167,7 @@ urlParseProtocol(char *s)
 }
 
 
-int
+static int
 urlDefaultPort(protocol_t p)
 {
     switch (p) {

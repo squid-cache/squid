@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.28 1996/09/26 19:54:47 wessels Exp $
+ * $Id: stmem.cc,v 1.29 1996/10/09 15:34:38 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -117,12 +117,16 @@ stmem_stats mem_obj_pool;
 #define USE_MEMALIGN 0
 #endif
 
-static void *get_free_thing _PARAMS((stmem_stats * thing));
-static void put_free_thing _PARAMS((stmem_stats * thing, void *p));
-static void stmemFreeThingMemory _PARAMS((stmem_stats * thing));
+static int memFreeDataUpto _PARAMS((mem_ptr, int));
+static int memAppend _PARAMS((mem_ptr, char *, int));
+static int memCopy _PARAMS((mem_ptr, int, char *, int));
+static void *get_free_thing _PARAMS((stmem_stats *));
+static void put_free_thing _PARAMS((stmem_stats *, void *));
+static void stmemFreeThingMemory _PARAMS((stmem_stats *));
+static void memFree _PARAMS((mem_ptr));
+static void memFreeData _PARAMS((mem_ptr));
 
-
-void
+static void
 memFree(mem_ptr mem)
 {
     mem_node lastp, p = mem->head;
@@ -146,7 +150,7 @@ memFree(mem_ptr mem)
     safe_free(mem);
 }
 
-void
+static void
 memFreeData(mem_ptr mem)
 {
     mem_node lastp, p = mem->head;
@@ -167,7 +171,7 @@ memFreeData(mem_ptr mem)
     mem->origin_offset = 0;
 }
 
-int
+static int
 memFreeDataUpto(mem_ptr mem, int target_offset)
 {
     int current_offset = mem->origin_offset;
@@ -205,7 +209,7 @@ memFreeDataUpto(mem_ptr mem, int target_offset)
 
 
 /* Append incoming data. */
-int
+static int
 memAppend(mem_ptr mem, char *data, int len)
 {
     mem_node p;
@@ -249,7 +253,7 @@ memAppend(mem_ptr mem, char *data, int len)
     return len;
 }
 
-int
+static int
 memCopy(mem_ptr mem, int offset, char *buf, int size)
 {
     mem_node p = mem->head;

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.103 1996/10/08 19:37:33 wessels Exp $
+ * $Id: cache_cf.cc,v 1.104 1996/10/09 15:34:19 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -207,14 +207,18 @@ char *cfg_filename = NULL;	/* just the last part */
 char ForwardedBy[256];
 
 char w_space[] = " \t\n";
-char null_string[] = "";
+static char null_string[] = "";
 char config_input_line[BUFSIZ];
 int config_lineno = 0;
 
+static char fatal_str[BUFSIZ];
 static char *safe_xstrdup _PARAMS((char *p));
+static int ip_acl_match _PARAMS((struct in_addr, ip_acl *));
+static void addToIPACL _PARAMS((ip_acl **, char *, ip_access_type));
 static void parseOnOff _PARAMS((int *));
 static void parseIntegerValue _PARAMS((int *));
-static char fatal_str[BUFSIZ];
+static void self_destruct _PARAMS((void));
+static void wordlistAdd _PARAMS((wordlist **, char *));
 
 static void configDoConfigure _PARAMS((void));
 static void configSetFactoryDefaults _PARAMS((void));
@@ -256,7 +260,7 @@ static void parseWAISRelayLine _PARAMS((void));
 static void parseMinutesLine _PARAMS((int *));
 static void ip_acl_destroy _PARAMS((ip_acl **));
 
-void
+static void
 self_destruct(void)
 {
     sprintf(fatal_str, "Bungled %s line %d: %s",
@@ -264,7 +268,7 @@ self_destruct(void)
     fatal(fatal_str);
 }
 
-int
+static int
 ip_acl_match(struct in_addr c, ip_acl * a)
 {
     static struct in_addr h;
@@ -322,7 +326,7 @@ ip_access_check(struct in_addr address, ip_acl * list)
 }
 
 
-void
+static void
 addToIPACL(ip_acl ** list, char *ip_str, ip_access_type access)
 {
     ip_acl *p, *q;
@@ -412,7 +416,7 @@ wordlistDestroy(wordlist ** list)
     *list = NULL;
 }
 
-void
+static void
 wordlistAdd(wordlist ** list, char *key)
 {
     wordlist *p = NULL;

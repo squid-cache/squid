@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.60 1996/10/08 02:13:57 wessels Exp $
+ * $Id: neighbors.cc,v 1.61 1996/10/09 15:34:33 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -174,7 +174,7 @@ neighborType(edge * e, request_t * request)
     for (d = e->domains; d; d = d->next) {
 	if (matchDomainName(d->domain, request->host))
 	    if (d->neighbor_type != EDGE_NONE)
-	        return d->neighbor_type;
+		return d->neighbor_type;
     }
     return e->type;
 }
@@ -188,7 +188,7 @@ edgeWouldBePinged(edge * e, request_t * request)
     aclCheck_t checklist;
 
     if (BIT_TEST(request->flags, REQ_NOCACHE))
-        if (neighborType(e, request) == EDGE_SIBLING)
+	if (neighborType(e, request) == EDGE_SIBLING)
 	    return 0;
     if (e->domains == NULL && e->acls == NULL)
 	return do_ping;

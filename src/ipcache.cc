@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.66 1996/10/07 15:12:55 wessels Exp $
+ * $Id: ipcache.cc,v 1.67 1996/10/09 15:34:31 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -172,8 +172,8 @@ static char ipcache_status_char[] =
     'D'
 };
 
-long ipcache_low = 180;
-long ipcache_high = 200;
+static long ipcache_low = 180;
+static long ipcache_high = 200;
 
 static void
 ipcacheEnqueue(ipcache_entry * i)
@@ -885,8 +885,8 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 	(int) (i->expires - squid_curtime),
 	i->addr_count);
     for (k = 0; k < (int) i->addr_count; k++)
-        xmemcpy(&addr.s_addr, i->entry.h_addr_list[k], sizeof(struct in_addr));
-        storeAppendPrintf(sentry, " %15s", inet_ntoa(addr));
+	xmemcpy(&addr.s_addr, i->entry.h_addr_list[k], sizeof(struct in_addr));
+    storeAppendPrintf(sentry, " %15s", inet_ntoa(addr));
     for (k = 0; k < (int) i->alias_count; k++)
 	storeAppendPrintf(sentry, " %s", i->entry.h_aliases[k]);
     if (i->entry.h_name && strncmp(i->name, i->entry.h_name, MAX_LINELEN))
