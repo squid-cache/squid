@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.247 1997/06/01 23:21:50 wessels Exp $
+ * $Id: store.cc,v 1.248 1997/06/02 01:06:17 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -198,6 +198,7 @@ struct storeRebuildState {
     int linecount;		/* # lines parsed from cache logfile */
     int clashcount;		/* # swapfile clashes avoided */
     int dupcount;		/* # duplicates purged */
+    int need_to_validate;
     time_t start;
     time_t stop;
     char *line_in;
@@ -327,9 +328,6 @@ static int store_maintain_rate;
 static int store_maintain_buckets;
 static int scan_revolutions;
 static struct _bucketOrder *MaintBucketsOrder = NULL;
-
-/* Dirty/Clean rebuild status parameter */
-static int store_validating = 0;
 
 static MemObject *
 new_MemObject(void)
@@ -571,13 +569,8 @@ storeUnlockObject(StoreEntry * e)
     if (e->lock_count)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING) {
-	if (BIT_TEST(e->flag, ENTRY_DISPATCHED)) {
-	    debug_trap("storeUnlockObject: PENDING and DISPATCHED with 0 locks");
-	    debug(20, 1, "   --> Key '%s'\n", e->key);
-	    e->store_status = STORE_ABORTED;
-	} else {
-	    BIT_SET(e->flag, RELEASE_REQUEST);
-	}
+	assert(!BIT_TEST(e->flag, ENTRY_DISPATCHED));
+	BIT_SET(e->flag, RELEASE_REQUEST);
     }
     if (storePendingNClients(e) > 0)
 	debug_trap("storeUnlockObject: unlocked entry with pending clients\n");
@@ -1398,6 +1391,7 @@ storeDoRebuildFromDisk(void *data)
 	     * newer entry. */
 	    debug(20, 1, "WARNING: newer swaplog entry for fileno %08X\n",
 		sfileno);
+	    assert(newer == 0);
 	    /* I'm tempted to remove the swapfile here just to be safe,
 	     * but there is a bad race condition in the NOVM version if
 	     * the swapfile has recently been opened for writing, but
@@ -1453,7 +1447,7 @@ storeCleanup(void *data)
 	if (++bucketnum >= store_buckets) {
 	    debug(20, 1, "  Completed Validation Procedure\n");
 	    debug(20, 1, "  Validated %d Entries\n", validnum);
-	    store_validating = 0;
+	    store_rebuilding = 0;
 	    return;
 	}
 	link_ptr = hash_get_bucket(store_table, bucketnum);
@@ -1478,11 +1472,10 @@ storeCleanup(void *data)
 	eventAdd("storeCleanup", storeCleanup, NULL, 0);
 	return;
     }
-    if ((validnum % 4096) == 0)
-	debug(20, 1, "  %7d Entries Validated so far.\n", validnum);
     if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
 	storeValidate(e, storeCleanupComplete, e);
-	validnum++;
+        if ((++validnum & 0xFFF) == 0)
+	    debug(20, 1, "  %7d Entries Validated so far.\n", validnum);
     }
     xfree(curr->key);
     xfree(curr);
@@ -1569,13 +1562,14 @@ storeRebuiltFromDisk(struct storeRebuildState *data)
     debug(20, 1, "  Took %d seconds (%6.1lf objects/sec).\n",
 	r > 0 ? r : 0, (double) data->objcount / (r > 0 ? r : 1));
     debug(20, 1, "  store_swap_size = %dk\n", store_swap_size);
-    store_rebuilding = 0;
-    safe_free(data->line_in);
-    safe_free(data);
-    if (store_validating) {
+    if (data->need_to_validate) {
 	debug(20, 1, "Beginning Validation Procedure\n");
 	eventAdd("storeCleanup", storeCleanup, NULL, 0);
+    } else {
+        store_rebuilding = 0;
     }
+    safe_free(data->line_in);
+    safe_free(data);
 }
 
 static void
@@ -1600,7 +1594,7 @@ storeStartRebuildFromDisk(void)
 	d->next = RB->rebuild_dir;
 	RB->rebuild_dir = d;
 	if (!clean)
-	    store_validating = 1;
+	    RB->need_to_validate = 1;
 	debug(20, 1, "Rebuilding storage in Cache Dir #%d (%s)\n",
 	    i, clean ? "CLEAN" : "DIRTY");
     }
@@ -2198,7 +2192,7 @@ storeClientCopy(StoreEntry * e,
     static int recurse_detect = 0;
     assert(seen_offset <= mem->e_current_len);
     assert(copy_offset >= mem->e_lowest_offset);
-    assert(recurse_detect == 0);
+    assert(recurse_detect < 3);	/* could == 1 for IMS not modified's */
     if ((ci = storeClientListSearch(mem, data)) < 0)
 	fatal_dump("storeClientCopy: Unregistered client");
     sc = &mem->clients[ci];
@@ -2213,9 +2207,9 @@ storeClientCopy(StoreEntry * e,
 	return;
     }
     sz = memCopy(mem->data, copy_offset, buf, size);
-    recurse_detect = 1;
+    recurse_detect++;
     callback(data, buf, sz);
-    recurse_detect = 0;
+    recurse_detect--;
     /* see if we can get rid of some data if we are in "delete behind" mode . */
     if (BIT_TEST(e->flag, DELETE_BEHIND))
 	storeDeleteBehind(e);
@@ -2421,10 +2415,6 @@ storeMaintainSwapSpace(void *unused)
     }
     debug(51, rm_obj ? 2 : 9, "Removed %d of %d objects from bucket %d\n",
 	rm_obj, scan_obj, (int) b->bucket);
-    /* Don't remove stuff if we're still validating - we could remove good
-     * stuff when we don't want to */
-    if (store_validating)
-	return;
     /* Scan row of hash table each second and free storage if we're
      * over the high-water mark */
     storeGetSwapSpace(0);
@@ -2536,7 +2526,7 @@ storeWriteCleanLogs(void)
 	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
     /* touch a timestamp file if we're not still validating */
     for (dirn = 0; dirn < ncache_dirs; dirn++) {
-	if (!store_validating)
+	if (!store_rebuilding)
 	    file_close(file_open(cln[dirn],
 		    O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL));
 	safe_free(cur[dirn]);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.114 1997/06/01 18:19:52 wessels Exp $
+ * $Id: ftp.cc,v 1.115 1997/06/02 01:06:11 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -555,12 +555,11 @@ ftpParseListing(FtpStateData * ftpState, int len)
     StoreEntry *e = ftpState->entry;
     len += ftpState->data.offset;
     end = buf + len - 1;
-    debug(0, 0, "buf=\n%s|\n", buf);
     while (*end != '\r' && *end != '\n' && end > buf)
 	end--;
     usable = end - buf;
     if (usable == 0) {
-	debug(0, 0, "ftpParseListing: didn't find end\n");
+	debug(9, 1, "ftpParseListing: didn't find end for %s\n", e->url);
 	return;
     }
     line = get_free_4k_page();
@@ -570,7 +569,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
 	if (linelen > 4096)
 	    linelen = 4096;
 	xstrncpy(line, s, linelen);
-	debug(0, 0, "%s\n", line);
+	debug(9, 7, "%s\n", line);
 	if (!strncmp(line, "total", 5))
 	    continue;
 	t = ftpHtmlifyListEntry(line, ftpState->flags);
@@ -877,7 +876,6 @@ ftpConnect(int fd, const ipcache_addrs * ia, void *data)
     request_t *request = ftpState->request;
     StoreEntry *entry = ftpState->entry;
     EBIT_RESET(ftpState->flags, FTP_IP_LOOKUP_PENDING);
-    debug(0, 0, "ftpConnect\n");
     assert(fd == ftpState->ctrl.fd);
     if (ia == NULL) {
 	debug(9, 4, "ftpConnect: Unknown host: %s\n", request->host);
@@ -885,9 +883,8 @@ ftpConnect(int fd, const ipcache_addrs * ia, void *data)
 	comm_close(fd);
 	return;
     }
-    debug(0, 0, "ftpConnect: %s is %s\n", request->host,
+    debug(9, 3, "ftpConnect: %s is %s\n", request->host,
 	inet_ntoa(ia->in_addrs[0]));
-    debug(0, 0, "ftpConnect: port %d\n", (int) request->port);
     /* Open connection. */
     commSetTimeout(fd, Config.Timeout.connect, ftpTimeout, ftpState);
     commConnectStart(ftpState->ctrl.fd,
@@ -901,7 +898,7 @@ static void
 ftpConnectDone(int fd, int status, void *data)
 {
     FtpStateData *ftpState = data;
-    debug(0, 0, "ftpConnectDone\n");
+    debug(9, 3, "ftpConnectDone\n");
     if (status == COMM_ERROR) {
 	squid_error_entry(ftpState->entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
@@ -924,7 +921,7 @@ ftpConnectDone(int fd, int status, void *data)
 static void
 ftpWriteCommand(const char *buf, FtpStateData * ftpState)
 {
-    debug(0, 0, "ftpWriteCommand: %s\n", buf);
+    debug(9, 5, "ftpWriteCommand: %s\n", buf);
     comm_write(ftpState->ctrl.fd,
 	xstrdup(buf),
 	strlen(buf),
@@ -943,7 +940,7 @@ ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
 {
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
-    debug(0, 0, "ftpWriteCommandCallback: wrote %d bytes\n", size);
+    debug(9, 7, "ftpWriteCommandCallback: wrote %d bytes\n", size);
     if (errflag) {
 	BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(entry);
@@ -963,7 +960,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
     off_t offset;
     size_t linelen;
     int code = -1;
-    debug(0, 0, "ftpParseControlReply\n");
+    debug(9, 5, "ftpParseControlReply\n");
     if (*(buf + len - 1) != '\n')
 	return NULL;
     for (s = buf; s - buf < len; s += strcspn(s, crlf), s += strspn(s, crlf)) {
@@ -979,7 +976,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
 	list = xcalloc(1, sizeof(wordlist));
 	list->key = xmalloc(linelen - offset);
 	xstrncpy(list->key, s + offset, linelen - offset);
-	debug(38, 0, "%p: %s\n", list->key, list->key);
+	debug(9, 7, "%p: %s\n", list->key, list->key);
 	*tail = list;
 	tail = &list->next;
     }
@@ -998,7 +995,7 @@ ftpReadControlReply(int fd, void *data)
     char *oldbuf;
     wordlist **W;
     int len;
-    debug(0, 0, "ftpReadControlReply\n");
+    debug(9, 5, "ftpReadControlReply\n");
     assert(ftpState->ctrl.offset < ftpState->ctrl.size);
     len = read(fd,
 	ftpState->ctrl.buf + ftpState->ctrl.offset,
@@ -1029,7 +1026,7 @@ ftpReadControlReply(int fd, void *data)
 	return;
     }
     if (len == 0) {
-	debug(38, 0, "Read 0 bytes from FTP control socket?\n");
+	debug(9, 1, "Read 0 bytes from FTP control socket?\n");
 	BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(entry);
 	squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
@@ -1043,7 +1040,7 @@ ftpReadControlReply(int fd, void *data)
     ftpState->ctrl.message = ftpParseControlReply(ftpState->ctrl.buf, len,
 	&ftpState->ctrl.replycode);
     if (ftpState->ctrl.message == NULL) {
-	debug(0, 0, "ftpReadControlReply: partial server reply\n");
+	debug(9, 5, "ftpReadControlReply: partial server reply\n");
 	if (len == ftpState->ctrl.size) {
 	    oldbuf = ftpState->ctrl.buf;
 	    ftpState->ctrl.buf = xcalloc(ftpState->ctrl.size << 1, 1);
@@ -1069,7 +1066,7 @@ static void
 ftpReadWelcome(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debug(0, 0, "ftpReadWelcome\n");
+    debug(9, 3, "ftpReadWelcome\n");
     if (EBIT_TEST(ftpState->flags, FTP_PASV_ONLY))
 	ftpState->login_att++;
     if (code == 220) {
@@ -1093,7 +1090,7 @@ static void
 ftpReadUser(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debug(0, 0, "ftpReadUser\n");
+    debug(9, 3, "ftpReadUser\n");
     if (code == 230) {
 	ftpReadPass(ftpState);
     } else if (code == 331) {
@@ -1112,7 +1109,7 @@ ftpReadPass(FtpStateData * ftpState)
     char *t;
     char *filename;
     char mode;
-    debug(0, 0, "ftpReadPass\n");
+    debug(9, 3, "ftpReadPass\n");
     if (code == 230) {
 	t = strrchr(ftpState->request->urlpath, '/');
 	filename = t ? t + 1 : ftpState->request->urlpath;
@@ -1133,7 +1130,7 @@ ftpReadType(FtpStateData * ftpState)
     wordlist **T;
     char *path;
     char *d;
-    debug(38, 1, "This is ftpReadType\n");
+    debug(9, 3, "This is ftpReadType\n");
     if (code == 200) {
 	if (EBIT_TEST(ftpState->flags, FTP_ROOT_DIR)) {
 	    ftpSendPasv(ftpState);
@@ -1158,9 +1155,9 @@ static void
 ftpSendCwd(FtpStateData * ftpState)
 {
     wordlist *w;
-    debug(0, 0, "ftpSendCwd\n");
+    debug(9, 3, "ftpSendCwd\n");
     if ((w = ftpState->pathcomps) == NULL) {
-	debug(0, 0, "the final component was a directory\n");
+	debug(9, 3, "the final component was a directory\n");
 	EBIT_SET(ftpState->flags, FTP_ISDIR);
 	if (!EBIT_TEST(ftpState->flags, FTP_ROOT_DIR))
 	    strcat(ftpState->title_url, "/");
@@ -1178,7 +1175,7 @@ ftpReadCwd(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     size_t len = 0;
     wordlist *w;
-    debug(38, 1, "This is ftpReadCwd\n");
+    debug(9, 3, "This is ftpReadCwd\n");
     w = ftpState->pathcomps;
     assert(w != NULL);
     if (code >= 200 && code < 300) {
@@ -1215,7 +1212,7 @@ static void
 ftpReadMdtm(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debug(38, 1, "This is ftpReadMdtm\n");
+    debug(9, 3, "This is ftpReadMdtm\n");
     if (code == 213) {
 	ftpState->mdtm = parse_iso3307_time(ftpState->ctrl.last_message);
 	assert(ftpState->filepath != NULL);
@@ -1232,7 +1229,7 @@ static void
 ftpReadSize(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debug(38, 1, "This is ftpReadSize\n");
+    debug(9, 3, "This is ftpReadSize\n");
     if (code == 213) {
 	ftpState->size = atoi(ftpState->ctrl.last_message);
 	ftpSendPasv(ftpState);
@@ -1278,36 +1275,36 @@ ftpReadPasv(FtpStateData * ftpState)
     int fd = ftpState->data.fd;
     char *buf = ftpState->ctrl.last_message;
     LOCAL_ARRAY(char, junk, 1024);
-    debug(38, 1, "This is ftpReadPasv\n");
+    debug(9, 3, "This is ftpReadPasv\n");
     if (code != 227) {
-	debug(38, 0, "PASV not supported by remote end\n");
+	debug(9, 3, "PASV not supported by remote end\n");
 	ftpSendPort(ftpState);
 	return;
     }
     if (strlen(buf) > 1024) {
-	debug(38, 0, "Avoiding potential buffer overflow\n");
+	debug(9, 1, "Avoiding potential buffer overflow\n");
 	ftpSendPort(ftpState);
 	return;
     }
     /*  227 Entering Passive Mode (h1,h2,h3,h4,p1,p2).  */
     /*  ANSI sez [^0-9] is undefined, it breaks on Watcom cc */
-    debug(0, 0, "scanning: %s\n", buf);
+    debug(9, 5, "scanning: %s\n", buf);
     n = sscanf(buf, "%[^0123456789]%d,%d,%d,%d,%d,%d",
 	junk, &h1, &h2, &h3, &h4, &p1, &p2);
     if (n != 7 || p1 < 0 || p2 < 0 || p1 > 255 || p2 > 255) {
-	debug(38, 0, "Bad 227 reply\n");
-	debug(38, 0, "n=%d, p1=%d, p2=%d\n", n, p1, p2);
+	debug(9, 3, "Bad 227 reply\n");
+	debug(9, 3, "n=%d, p1=%d, p2=%d\n", n, p1, p2);
 	ftpSendPort(ftpState);
 	return;
     }
     sprintf(junk, "%d.%d.%d.%d", h1, h2, h3, h4);
     if (!safe_inet_addr(junk, NULL)) {
-	debug(38, 0, "unsafe address (%s)\n", junk);
+	debug(9, 1, "unsafe address (%s)\n", junk);
 	ftpSendPort(ftpState);
 	return;
     }
     port = ((p1 << 8) + p2);
-    debug(0, 0, "ftpReadPasv: connecting to %s, port %d\n", junk, port);
+    debug(9, 5, "ftpReadPasv: connecting to %s, port %d\n", junk, port);
     commConnectStart(fd, junk, port, ftpPasvCallback, ftpState);
 }
 
@@ -1315,7 +1312,7 @@ static void
 ftpPasvCallback(int fd, int status, void *data)
 {
     FtpStateData *ftpState = data;
-    debug(0, 0, "ftpPasvCallback\n");
+    debug(9, 3, "ftpPasvCallback\n");
     if (status == COMM_ERROR) {
 	squid_error_entry(ftpState->entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
@@ -1327,20 +1324,20 @@ ftpPasvCallback(int fd, int status, void *data)
 static void
 ftpSendPort(FtpStateData * ftpState)
 {
-    debug(38, 1, "This is ftpSendPort\n");
+    debug(9, 3, "This is ftpSendPort\n");
     EBIT_RESET(ftpState->flags, FTP_PASV_SUPPORTED);
 }
 
 static void
 ftpReadPort(FtpStateData * ftpState)
 {
-    debug(38, 1, "This is ftpReadPort\n");
+    debug(9, 3, "This is ftpReadPort\n");
 }
 
 static void
 ftpRestOrList(FtpStateData * ftpState)
 {
-    debug(38, 1, "This is ftpRestOrList\n");
+    debug(9, 3, "This is ftpRestOrList\n");
     if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	sprintf(cbuf, "LIST\r\n");
 	ftpWriteCommand(cbuf, ftpState);
@@ -1361,7 +1358,7 @@ static void
 ftpReadRest(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debug(38, 1, "This is ftpReadRest\n");
+    debug(9, 3, "This is ftpReadRest\n");
     assert(ftpState->restart_offset > 0);
     if (code == 350) {
 	assert(ftpState->filepath != NULL);
@@ -1369,7 +1366,7 @@ ftpReadRest(FtpStateData * ftpState)
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_RETR;
     } else if (code > 0) {
-	debug(0, 0, "ftpReadRest: REST not supported\n");
+	debug(9, 3, "ftpReadRest: REST not supported\n");
 	EBIT_RESET(ftpState->flags, FTP_REST_SUPPORTED);
     } else {
 	ftpFail(ftpState);
@@ -1380,7 +1377,7 @@ static void
 ftpReadList(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debug(38, 1, "This is ftpReadList\n");
+    debug(9, 3, "This is ftpReadList\n");
     if (code == 150 || code == 125) {
 	ftpAppendSuccessHeader(ftpState);
 	commSetSelect(ftpState->data.fd,
@@ -1405,9 +1402,9 @@ static void
 ftpReadRetr(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debug(38, 1, "This is ftpReadRetr\n");
+    debug(9, 3, "This is ftpReadRetr\n");
     if (code >= 100 && code < 200) {
-	debug(0, 0, "reading data channel\n");
+	debug(9, 3, "reading data channel\n");
 	ftpAppendSuccessHeader(ftpState);
 	commSetSelect(ftpState->data.fd,
 	    COMM_SELECT_READ,
@@ -1424,9 +1421,9 @@ static void
 ftpReadTransferDone(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debug(38, 1, "This is ftpReadTransferDone\n");
+    debug(9, 3, "This is ftpReadTransferDone\n");
     if (code != 226) {
-	debug(38, 1, "Got code %d after reading data, releasing entry\n");
+	debug(9, 1, "Got code %d after reading data, releasing entry\n");
 	storeReleaseRequest(ftpState->entry);
     }
 }
@@ -1434,7 +1431,7 @@ ftpReadTransferDone(FtpStateData * ftpState)
 static void
 ftpDataTransferDone(FtpStateData * ftpState)
 {
-    debug(38, 1, "This is ftpDataTransferDone\n");
+    debug(9, 3, "This is ftpDataTransferDone\n");
     assert(ftpState->data.fd >= 0);
     comm_close(ftpState->data.fd);
     ftpState->data.fd = -1;
@@ -1452,7 +1449,7 @@ ftpReadQuit(FtpStateData * ftpState)
 static void
 ftpFail(FtpStateData * ftpState)
 {
-    debug(0, 0, "ftpFail\n");
+    debug(9, 3, "ftpFail\n");
     comm_close(ftpState->ctrl.fd);
 }
 

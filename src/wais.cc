@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.72 1997/06/01 23:22:29 wessels Exp $
+ * $Id: wais.cc,v 1.73 1997/06/02 01:06:19 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -295,11 +295,12 @@ waisSendRequest(int fd, void *data)
 }
 
 void
-waisStart(method_t method, StoreEntry * entry)
+waisStart(request_t *request, StoreEntry * entry)
 {
     WaisStateData *waisState = NULL;
     int fd;
     char *url = entry->url;
+    method_t method = request->method;
     debug(24, 3, "waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
     if (!Config.Wais.relayHost) {
 	debug(24, 0, "waisStart: Failed because no relay host defined!\n");
@@ -321,7 +322,7 @@ waisStart(method_t method, StoreEntry * entry)
     waisState->method = method;
     waisState->relayhost = Config.Wais.relayHost;
     waisState->relayport = Config.Wais.relayPort;
-    waisState->request_hdr = entry->mem_obj->request_hdr;
+    waisState->request_hdr = request->headers;
     waisState->fd = fd;
     waisState->entry = entry;
     xstrncpy(waisState->request, url, MAX_URL);

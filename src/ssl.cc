@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.52 1997/06/01 23:22:28 wessels Exp $
+ * $Id: ssl.cc,v 1.53 1997/06/02 01:06:16 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -36,7 +36,6 @@ typedef struct {
     char *host;			/* either request->host or proxy host */
     u_short port;
     request_t *request;
-    char *mime_hdr;
     struct {
 	int fd;
 	int len;
@@ -357,7 +356,7 @@ sslConnectDone(int fd, int status, void *data)
 }
 
 void
-sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size_ptr)
+sslStart(int fd, const char *url, request_t * request, int *size_ptr)
 {
     /* Create state structure. */
     SslStateData *sslState = NULL;
@@ -391,7 +390,6 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
     sslState = xcalloc(1, sizeof(SslStateData));
     sslState->url = xstrdup(url);
     sslState->request = requestLink(request);
-    sslState->mime_hdr = mime_hdr;
     sslState->timeout = Config.Timeout.read;
     sslState->size_ptr = size_ptr;
     sslState->client.fd = fd;

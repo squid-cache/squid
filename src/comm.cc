@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.156 1997/06/01 23:22:17 wessels Exp $
+ * $Id: comm.cc,v 1.157 1997/06/02 01:06:10 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -393,7 +393,7 @@ commConnectHandle(int fd, void *data)
 	break;
     default:
 	if (commRetryConnect(fd, connectState)) {
-	    debug(5, 1, "Retrying connection to %s: %s\n",
+	    debug(5, 3, "Retrying connection to %s: %s\n",
 		connectState->host, xstrerror());
 	    connectState->S.sin_addr.s_addr = 0;
 	    ipcacheCycleAddr(connectState->host);
