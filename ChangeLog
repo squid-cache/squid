@@ -14,6 +14,8 @@
 	  for READ_AHEAD_GAP, and calling storeCheckSwapout() in
 	  storeBufferFlush().  Otherwise, the read-past pages would
 	  never be freed.
+	- Fixed DNSSERVER shutdown bugs.  The re-opened dnsserver processes
+	  were being closed by the dnsServerShutdown event.
 	- Modified storeHashInsert() to insert PRIVATE objects at
 	  the tail of the LRU list, and PUBLIC objects at the head.
 	  Thus, PRIVATE objects get kicked out quicker.
