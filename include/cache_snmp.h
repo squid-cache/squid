@@ -29,6 +29,11 @@
 #define CURRENT_MIB_VERSION "-- v 1.14 1998/04/03 kostas@nlanr.net"
 #endif
 
+/* Base value for sysDescr */
+#ifndef SQUID_SYS_DESCR
+#define SQUID_SYS_DESCR "Squid Internet Object Cache"
+#endif
+
 /* MIB definitions
  * We start from the SQUIDMIB as the root of the subtree
  *
@@ -59,14 +64,13 @@
 
 enum {				/* basic system mib info group */
     SYSMIB_START,
-    VERSION_DESCR,
-    VERSION_ID,
-    UPTIME,
-    SYSCONTACT,
-    SYSYSNAME,
-    SYSLOCATION,
-    SYSSERVICES,
-    SYSORLASTCHANGE,
+    SYS_DESCR,
+    SYS_OBJECT_ID,
+    SYS_UPTIME,
+    SYS_CONTACT,
+    SYS_NAME,
+    SYS_LOCATION,
+    SYS_SERVICES,
     SYSMIB_END
 };
 
