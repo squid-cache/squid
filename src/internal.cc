@@ -4,13 +4,18 @@
 void
 internalStart(request_t * request, StoreEntry * entry)
 {
+    ErrorState *err;
     const char *upath = strBuf(request->urlpath);
     debug(0, 1) ("internalStart: %s requesting '%s'\n",
 	inet_ntoa(request->client_addr), upath);
     if (0 == strcmp(upath, "/squid-internal-dynamic/netdb"))
 	netdbBinaryExchange(entry);
-    else
+    else {
 	debug(0, 0) ("internalStart: unknown request '%s'\n", upath);
+	err = errorCon(ERR_INVALID_REQ, HTTP_NOT_FOUND);
+	err->request = requestLink(request);
+	errorAppendEntry(entry, err);
+    }
 }
 
 int
