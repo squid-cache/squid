@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.59 2003/07/14 14:15:59 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.60 2003/07/15 20:45:45 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1883,6 +1883,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
         removeClientStoreReference(&sc, http);
         startError(err);
         httpReplyDestroy(rep);
+        http->log_type = LOG_TCP_DENIED_REPLY;
         return;
     }
 
