@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.440 1998/08/14 23:52:18 wessels Exp $
+ * $Id: store.cc,v 1.441 1998/08/17 16:50:39 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -132,6 +132,7 @@ destroy_MemObject(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     const Ctx ctx = ctx_enter(mem->url);
     debug(20, 3) ("destroy_MemObject: destroying %p\n", mem);
+    e->mem_obj = NULL;
     assert(mem->swapout.fd == -1);
     stmemFree(&mem->data_hdr);
     mem->inmem_hi = 0;
@@ -205,7 +206,6 @@ storePurgeMem(StoreEntry * e)
 	storeKeyText(e->key));
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_MemObject(e);
-    e->mem_obj = NULL;
     if (e->swap_status != SWAPOUT_DONE)
 	storeRelease(e);
 }
