@@ -1,9 +1,9 @@
 /*
- * $Id: snmp_api_util.h,v 1.3 1998/09/23 17:20:01 wessels Exp $
+ * $Id: snmp_api_util.h,v 1.4 2001/10/08 16:18:31 hno Exp $
  */
 
-#ifndef _SNMP_API_UTIL_H_
-#define _SNMP_API_UTIL_H_
+#ifndef SQUID_SNMP_API_UTIL_H
+#define SQUID_SNMP_API_UTIL_H
 
 /***********************************************************
 	Copyright 1997 by Carnegie Mellon University
@@ -94,4 +94,5 @@ extern "C" {
 }
 
 #endif
-#endif				/* _SNMP_API_UTIL_H_ */
+
+#endif				/* SQUID_SNMP_API_UTIL_H */

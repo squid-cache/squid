@@ -1,5 +1,5 @@
 /*
- * $Id: tempnam.h,v 1.10 1998/09/23 17:20:06 wessels Exp $
+ * $Id: tempnam.h,v 1.11 2001/10/08 16:18:31 hno Exp $
  */
 
 
@@ -20,7 +20,7 @@
  * not, write to the Free Software Foundation, Inc., 675 Mass Ave,
  * Cambridge, MA 02139, USA.  */
 
-#ifndef _TEMPNAM_H
-#define _TEMPNAM_H
+#ifndef SQUID_TEMPNAM_H
+#define SQUID_TEMPNAM_H
 extern char *tempnam(const char *, const char *);
-#endif /* _TEMPNAM_H */
+#endif /* SQUID_TEMPNAM_H */

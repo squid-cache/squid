@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
-#ifndef _SNMP_SESSION_H_
-#define _SNMP_SESSION_H_
+#ifndef SQUID_SNMP_SESSION_H
+#define SQUID_SNMP_SESSION_H
 
 /**********************************************************************
  *
@@ -24,7 +24,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp_session.h,v 1.2 1998/04/04 01:43:50 kostas Exp $
+ * $Id: snmp_session.h,v 1.3 2001/10/08 16:18:31 hno Exp $
  * 
  **********************************************************************/
 
@@ -51,4 +51,4 @@ struct snmp_session {
 #define RECEIVED_MESSAGE   1
 #define TIMED_OUT	   2
 
-#endif /* _SNMP_SESSION_H_ */
+#endif /* SQUID_SNMP_SESSION_H */

@@ -1,5 +1,5 @@
-#ifndef _SNMP_H_
-#define _SNMP_H_
+#ifndef SQUID_SNMP_H
+#define SQUID_SNMP_H
 
 /*
  * Definitions for the Simple Network Management Protocol (RFC 1067).
@@ -27,7 +27,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp.h,v 1.13 1998/04/04 01:43:42 kostas Exp $
+ * $Id: snmp.h,v 1.14 2001/10/08 16:18:31 hno Exp $
  * 
  **********************************************************************/
 
@@ -72,4 +72,4 @@
 #include "snmp_compat.h"
 #include "snmp_debug.h"
 
-#endif /* _SNMP_H_ */
+#endif /* SQUID_SNMP_H */

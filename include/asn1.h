@@ -1,5 +1,5 @@
-#ifndef _SNMP_ASN1_H_
-#define _SNMP_ASN1_H_
+#ifndef SQUID_SNMP_ASN1_H
+#define SQUID_SNMP_ASN1_H
 
 /*
  * Definitions for Abstract Syntax Notation One, ASN.1
@@ -28,7 +28,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: asn1.h,v 1.11 2001/01/07 09:55:21 hno Exp $
+ * $Id: asn1.h,v 1.12 2001/10/08 16:18:31 hno Exp $
  * 
  **********************************************************************/
 
@@ -98,4 +98,5 @@ extern "C" {
 }
 
 #endif
-#endif				/* _SNMP_ASN1_H_ */
+
+#endif	/* SQUID_SNMP_ASN1_H */

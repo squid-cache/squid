@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.1 2001/09/25 23:45:15 robertc Exp $
+ * $Id: config.h,v 1.2 2001/10/08 16:18:31 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -31,8 +31,8 @@
  *  
  */
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef SQUID_CONFIG_H
+#define SQUID_CONFIG_H
 
 #include "autoconf.h"	/* For GNU autoconf variables */
 #include "version.h"
@@ -175,4 +175,4 @@
 #define squid_srandom srand
 #endif
 
-#endif /* _CONFIG_H_ */
+#endif /* SQUID_CONFIG_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.401 2001/10/08 15:05:11 hno Exp $
+ * $Id: structs.h,v 1.402 2001/10/08 16:18:33 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -30,6 +30,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#ifndef SQUID_STRUCTS_H
+#define SQUID_STRUCTS_H
 
 #include "config.h"
 #include "splay.h"
@@ -2137,3 +2140,5 @@ struct cache_dir_option {
     void (*parse) (SwapDir * sd, const char *option, const char *value, int reconfiguring);
     void (*dump) (StoreEntry * e, const char *option, SwapDir * sd);
 };
+
+#endif /* SQUID_STRUCTS_H */

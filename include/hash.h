@@ -1,6 +1,9 @@
 /*
- * $Id: hash.h,v 1.4 2000/10/31 23:48:08 wessels Exp $
+ * $Id: hash.h,v 1.5 2001/10/08 16:18:31 hno Exp $
  */
+
+#ifndef SQUID_HASH_H
+#define SQUID_HASH_H
 
 typedef void HASHFREE(void *);
 typedef int HASHCMP(const void *, const void *);
@@ -56,3 +59,5 @@ extern const char *hashKeyStr(hash_link *);
  *  HASH_SIZE 65357             // prime number < 65536
  */
 #define  DEFAULT_HASH_SIZE 7951	/* prime number < 8192 */
+
+#endif /* SQUID_HASH_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.106 2001/08/31 11:19:12 robertc Exp $
+ * $Id: globals.h,v 1.107 2001/10/08 16:18:32 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -30,6 +30,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#ifndef SQUID_GLOBALS_H
+#define SQUID_GLOBALS_H
 
 extern FILE *debug_log;		/* NULL */
 extern SquidConfig Config;
@@ -158,3 +161,5 @@ extern int incoming_sockets_accepted;
 extern unsigned int WIN32_OS_version;	/* 0 */
 extern char *WIN32_OS_string;
 #endif
+
+#endif /* SQUID_GLOBALS_H */

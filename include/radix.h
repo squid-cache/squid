@@ -1,6 +1,9 @@
 /*
- * $Id: radix.h,v 1.9 2001/02/07 19:04:04 hno Exp $
+ * $Id: radix.h,v 1.10 2001/10/08 16:18:31 hno Exp $
  */
+
+#ifndef SQUID_RADIX_H
+#define	SQUID_RADIX_H
 
 /*
  * Copyright (c) 1988, 1989, 1993
@@ -37,8 +40,6 @@
  *      @(#)radix.h     8.2 (Berkeley) 10/31/94
  */
 
-#ifndef _RADIX_H_
-#define	_RADIX_H_
 #undef RN_DEBUG
 #ifndef __P
 #define __P(x) x
@@ -155,4 +156,5 @@ struct radix_node
           *rn_search_m __P((void *, struct radix_node *, void *));
 extern struct radix_node *rn_lookup(void *, void *, struct radix_node_head *);
 #define min(x,y) ((x)<(y)? (x) : (y))
-#endif /* _RADIX_H_ */
+
+#endif /* SQUID_RADIX_H */

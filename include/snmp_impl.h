@@ -1,9 +1,9 @@
 /*
- * $Id: snmp_impl.h,v 1.11 1998/09/23 17:20:03 wessels Exp $
+ * $Id: snmp_impl.h,v 1.12 2001/10/08 16:18:31 hno Exp $
  */
 
-#ifndef _SNMP_IMPL_H_
-#define _SNMP_IMPL_H_
+#ifndef SQUID_SNMP_IMPL_H
+#define SQUID_SNMP_IMPL_H
 
 /*
  * Definitions for SNMP (RFC 1067) implementation.
@@ -97,4 +97,4 @@ struct trapVar {
 /* from snmp.c */
 extern u_char sid[];		/* size SID_MAX_LEN */
 
-#endif /* _SNMP_IMPL_H_ */
+#endif /* SQUID_SNMP_IMPL_H */

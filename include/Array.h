@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.5 2001/02/07 18:56:50 hno Exp $
+ * $Id: Array.h,v 1.6 2001/10/08 16:18:31 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -31,8 +31,8 @@
  *  
  */
 
-#ifndef _ARRAY_H_
-#define _ARRAY_H_
+#ifndef SQUID_ARRAY_H
+#define SQUID_ARRAY_H
 
 /* see Array.c for more documentation */
 
@@ -51,4 +51,4 @@ extern void arrayAppend(Array * s, void *obj);
 extern void arrayPreAppend(Array * s, int app_count);
 
 
-#endif /* ndef _ARRAY_H_ */
+#endif /* SQUID_ARRAY_H */

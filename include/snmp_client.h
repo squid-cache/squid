@@ -1,9 +1,9 @@
 /*
- * $Id: snmp_client.h,v 1.7 2001/01/07 09:55:22 hno Exp $
+ * $Id: snmp_client.h,v 1.8 2001/10/08 16:18:31 hno Exp $
  */
 
-#ifndef _SNMP_CLIENT_H_
-#define _SNMP_CLIENT_H_
+#ifndef SQUID_SNMP_CLIENT_H
+#define SQUID_SNMP_CLIENT_H
 
 /*
  * snmp_client.h
@@ -59,6 +59,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-
 #endif
-#endif				/* _SNMP_CLIENT_H_ */
+
+#endif				/* SQUID_SNMP_CLIENT_H */
