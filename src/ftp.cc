@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.268 1999/01/19 21:40:40 wessels Exp $
+ * $Id: ftp.cc,v 1.269 1999/01/19 23:16:05 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1935,6 +1935,7 @@ ftpReadRest(FtpStateData * ftpState)
     } else if (code > 0) {
 	debug(9, 3) ("ftpReadRest: REST not supported\n");
 	ftpState->flags.rest_supported = 0;
+	ftpSendRetr(ftpState);
     } else {
 	ftpFail(ftpState);
     }
@@ -2160,6 +2161,9 @@ ftpUnhack(FtpStateData * ftpState)
 static void
 ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState)
 {
+    /* Clear some unwanted state */
+    ftpState->restarted_offset = 0;
+    ftpState->restart_offset = 0;
     /* Save old error message & some state info */
     if (ftpState->old_request == NULL) {
 	ftpState->old_request = ftpState->ctrl.last_command;
@@ -2182,7 +2186,7 @@ ftpFail(FtpStateData * ftpState)
     if (!ftpState->flags.isdir &&	/* Not a directory */
 	!ftpState->flags.try_slash_hack &&	/* Not in slash hack */
 	ftpState->mdtm <= 0 && ftpState->size < 0 &&	/* Not known as a file */
-	!strNCaseCmp(ftpState->request->urlpath, "/%2f", 4)) {	/* No slash encoded */
+	strNCaseCmp(ftpState->request->urlpath, "/%2f", 4) != 0) {	/* No slash encoded */
 	switch (ftpState->state) {
 	case SENT_CWD:
 	case SENT_RETR:
