@@ -33,6 +33,7 @@ Changes to squid-2.5 ():
 	- Added 'max-conn' option to 'cache_peer'
 	- Added SSL gatewaying support, allowing Squid to act as a SSL server
 	  in accelerator setups.
+	- SASL authentication helper by Ian Castle
 	- Countless other small things and fixes
 
 Changes to Squid-2.4.STABLE6 (March 19, 2002):

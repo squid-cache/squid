@@ -1,7 +1,7 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.1 2001/08/31 11:19:14 robertc Exp $
+#  $Id: Makefile.am,v 1.2 2002/03/30 16:42:58 hno Exp $
 #
 
-DIST_SUBDIRS	= getpwnam LDAP MSNT multi-domain-NTLM NCSA PAM SMB YP
+DIST_SUBDIRS	= getpwnam LDAP MSNT multi-domain-NTLM NCSA PAM SMB YP SASL
 SUBDIRS		= @BASIC_AUTH_HELPERS@
