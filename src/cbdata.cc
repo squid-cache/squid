@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.17 1998/03/27 18:46:47 wessels Exp $
+ * $Id: cbdata.cc,v 1.18 1998/03/30 22:58:51 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -80,6 +80,7 @@ typedef struct _cbdata {
 
 static HASHCMP cbdata_cmp;
 static HASHHASH cbdata_hash;
+static void cbdataReallyFree(cbdata *c);
 
 static int
 cbdata_cmp(const void *p1, const void *p2)
@@ -128,11 +129,25 @@ cbdataAdd(const void *p, mem_type mem_type)
     cbdataCount++;
 }
 
+static void
+cbdataReallyFree(cbdata *c)
+{
+    mem_type mem_type = c->mem_type;
+    void *p = (void *) c->key;
+    hash_remove_link(htable, (hash_link *) c);
+    cbdataCount--;
+    xfree(c);
+    debug(45, 3) ("cbdataReallyFree: Freeing %p\n", p);
+    if (mem_type == MEM_NONE)
+        xfree(p);
+    else
+        memFree(mem_type, p);
+}
+
 void
 cbdataFree(void *p)
 {
     cbdata *c = (cbdata *) hash_lookup(htable, p);
-    mem_type mem_type;
     assert(p);
     debug(45, 3) ("cbdataFree: %p\n", p);
     assert(c != NULL);
@@ -142,15 +157,7 @@ cbdataFree(void *p)
 	    p, c->locks);
 	return;
     }
-    hash_remove_link(htable, (hash_link *) c);
-    cbdataCount--;
-    mem_type = c->mem_type;
-    xfree(c);
-    debug(45, 3) ("cbdataFree: freeing %p\n", p);
-    if (mem_type == MEM_NONE)
-	xfree(p);
-    else
-	memFree(mem_type, p);
+    cbdataReallyFree(c);
 }
 
 void
@@ -178,11 +185,7 @@ cbdataUnlock(const void *p)
     c->locks--;
     if (c->valid || c->locks)
 	return;
-    hash_remove_link(htable, (hash_link *) c);
-    cbdataCount--;
-    xfree(c);
-    debug(45, 3) ("cbdataUnlock: Freeing %p\n", p);
-    xfree((void *) p);
+    cbdataReallyFree(c);
 }
 
 int
