@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.56 2000/03/25 04:58:39 wessels Exp $
+ * $Id: access_log.cc,v 1.57 2000/05/02 20:15:48 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -37,7 +37,6 @@
 
 #include "squid.h"
 
-static char *log_quote(const char *header);
 static void accessLogSquid(AccessLogEntry * al);
 static void accessLogCommon(AccessLogEntry * al);
 static Logfile *logfile = NULL;
@@ -118,7 +117,7 @@ static const char c2x[] =
 
 /* log_quote -- URL-style encoding on MIME headers. */
 
-static char *
+char *
 log_quote(const char *header)
 {
     int c;
