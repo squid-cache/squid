@@ -1,5 +1,6 @@
+
 /*
- * $Id: ftp.cc,v 1.42 1996/07/15 23:57:51 wessels Exp $
+ * $Id: ftp.cc,v 1.43 1996/07/18 20:27:01 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -305,7 +306,7 @@ int ftpReadReply(fd, data)
      int fd;
      FtpData *data;
 {
-    static char buf[SQUID_TCP_SO_RCVBUF];
+    LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
     int len;
     int clen;
     int off;
@@ -472,8 +473,8 @@ void ftpSendRequest(fd, data)
     char *path = NULL;
     char *mode = NULL;
     char *buf = NULL;
-    static char tbuf[BUFSIZ];
-    static char opts[BUFSIZ];
+    LOCAL_ARRAY(char, tbuf, BUFSIZ);
+    LOCAL_ARRAY(char, opts, BUFSIZ);
     static char *space = " ";
     char *s = NULL;
     int got_timeout = 0;
@@ -592,7 +593,7 @@ int ftpStart(unusedfd, url, request, entry)
      request_t *request;
      StoreEntry *entry;
 {
-    static char realm[8192];
+    LOCAL_ARRAY(char, realm, 8192);
     FtpData *data = NULL;
     char *req_hdr = entry->mem_obj->mime_hdr;
     char *auth_hdr;
@@ -732,7 +733,7 @@ int ftpInitialize()
     int cfd;
     int squid_to_ftpget[2];
     int ftpget_to_squid[2];
-    static char pbuf[128];
+    LOCAL_ARRAY(char, pbuf, 128);
     char *ftpget = getFtpProgram();
     struct sockaddr_in S;
     int len;

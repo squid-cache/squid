@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.44 1996/07/15 23:48:38 wessels Exp $
+ * $Id: tools.cc,v 1.45 1996/07/18 20:27:12 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -122,7 +122,7 @@ Thanks!\n"
 
 static char *dead_msg()
 {
-    static char msg[1024];
+    LOCAL_ARRAY(char, msg, 1024);
     sprintf(msg, DEAD_MSG, version_string, version_string);
     return msg;
 }
@@ -130,8 +130,8 @@ static char *dead_msg()
 void mail_warranty()
 {
     FILE *fp = NULL;
-    static char filename[256];
-    static char command[256];
+    LOCAL_ARRAY(char, filename, 256);
+    LOCAL_ARRAY(char, command, 256);
 
     sprintf(filename, "/tmp/mailin%d", (int) getpid());
     fp = fopen(filename, "w");
@@ -359,7 +359,7 @@ void sig_child(sig)
 
 char *getMyHostname()
 {
-    static char host[SQUIDHOSTNAMELEN + 1];
+    LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
     struct hostent *h = NULL;
     char *t = NULL;

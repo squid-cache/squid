@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.30 1996/07/17 17:50:07 wessels Exp $
+ * $Id: neighbors.cc,v 1.31 1996/07/18 20:27:06 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -173,7 +173,7 @@ void hierarchy_log_append(entry, code, timeout, cache_host)
     char *url = entry->url;
     MemObject *mem = entry->mem_obj;
     static time_t last_time = 0;
-    static char time_str[128];
+    LOCAL_ARRAY(char, time_str, 128);
     char *s = NULL;
 
     if (!cache_hierarchy_log)
@@ -500,7 +500,7 @@ int neighborsUdpPing(proto)
     mem->w_rtt = 0;
     mem->start_ping = current_time;
 
-    if (friends->edges_head == (edge *) NULL)
+    if (friends->edges_head == NULL)
 	return 0;
 
     for (i = 0, e = friends->first_ping; i++ < friends->n; e = e->next) {
@@ -510,7 +510,7 @@ int neighborsUdpPing(proto)
 
 	/* Don't resolve refreshes through neighbors because we don't resolve
 	 * misses through neighbors */
-	if (e->type == EDGE_SIBLING && entry->flag & REFRESH_REQUEST)
+	if (entry->flag & REFRESH_REQUEST && e->type == EDGE_SIBLING)
 	    continue;
 
 	/* skip any cache where we failed to connect() w/in the last 60s */
@@ -535,9 +535,19 @@ int neighborsUdpPing(proto)
 
 	if (e->icp_port == echo_port) {
 	    debug(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
-	    icpUdpSend(friends->fd, url, &echo_hdr, &e->in_addr, ICP_OP_DECHO, LOG_TAG_NONE);
+	    icpUdpSend(friends->fd,
+		url,
+		&echo_hdr,
+		&e->in_addr,
+		ICP_OP_DECHO,
+		LOG_TAG_NONE);
 	} else {
-	    icpUdpSend(friends->fd, url, &e->header, &e->in_addr, ICP_OP_QUERY, LOG_TAG_NONE);
+	    icpUdpSend(friends->fd,
+		url,
+		&e->header,
+		&e->in_addr,
+		ICP_OP_QUERY,
+		LOG_TAG_NONE);
 	}
 
 	e->stats.ack_deficit++;
@@ -907,8 +917,8 @@ void neighbors_rotate_log()
 {
     char *fname = NULL;
     int i;
-    static char from[MAXPATHLEN];
-    static char to[MAXPATHLEN];
+    LOCAL_ARRAY(char, from, MAXPATHLEN);
+    LOCAL_ARRAY(char, to, MAXPATHLEN);
 
     if ((fname = getHierarchyLogFile()) == NULL)
 	return;

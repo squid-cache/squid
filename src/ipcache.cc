@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.32 1996/07/15 23:10:54 wessels Exp $
+ * $Id: ipcache.cc,v 1.33 1996/07/18 20:27:04 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1027,7 +1027,7 @@ void ipcacheOpenServers()
     char *prg = getDnsProgram();
     int k;
     int dnssocket;
-    static char fd_note_buf[FD_ASCII_NOTE_SZ];
+    LOCAL_ARRAY(char, fd_note_buf, FD_ASCII_NOTE_SZ);
 
     /* free old structures if present */
     if (dns_child_table) {

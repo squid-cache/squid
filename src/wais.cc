@@ -1,5 +1,5 @@
 /*
- * $Id: wais.cc,v 1.32 1996/07/15 23:14:28 wessels Exp $
+ * $Id: wais.cc,v 1.33 1996/07/18 20:27:13 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -174,7 +174,7 @@ static void waisReadReply(fd, waisState)
      int fd;
      WaisStateData *waisState;
 {
-    static char buf[4096];
+    LOCAL_ARRAY(char, buf, 4096);
     int len;
     StoreEntry *entry = NULL;
 

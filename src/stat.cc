@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.41 1996/07/17 17:03:20 wessels Exp $
+ * $Id: stat.cc,v 1.42 1996/07/18 20:27:10 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -262,8 +262,8 @@ void stat_objects_get(obj, sentry, vm_or_not)
      StoreEntry *sentry;
      int vm_or_not;
 {
-    static char space[40];
-    static char space2[40];
+    LOCAL_ARRAY(char, space, 40);
+    LOCAL_ARRAY(char, space2, 40);
     int npend = 0;
     StoreEntry *entry = NULL;
     int N = 0;
@@ -522,7 +522,7 @@ static char *host_port_fmt(host, port)
      char *host;
      u_short port;
 {
-    static char buf[32];
+    LOCAL_ARRAY(char, buf, 32);
     sprintf(buf, "%s.%d", host, (int) port);
     return buf;
 }
@@ -894,7 +894,7 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier
      char *ident;
      hier_code hier;
 {
-    static char tmp[6000];	/* MAX_URL is 4096 */
+    LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
     char *buf = NULL;
     int x;
 
@@ -1163,7 +1163,7 @@ void stat_init(object, logfilename)
 char *stat_describe(entry)
      StoreEntry *entry;
 {
-    static char state[256];
+    LOCAL_ARRAY(char, state, 256);
 
     state[0] = '\0';
     switch (entry->store_status) {
@@ -1205,7 +1205,7 @@ char *stat_describe(entry)
 char *mem_describe(entry)
      StoreEntry *entry;
 {
-    static char where[100];
+    LOCAL_ARRAY(char, where, 100);
 
     where[0] = '\0';
     if (entry->swap_file_number >= 0)
@@ -1231,7 +1231,7 @@ char *ttl_describe(entry)
      StoreEntry *entry;
 {
     int hh, mm, ss;
-    static char TTL[60];
+    LOCAL_ARRAY(char, TTL, 60);
     int ttl;
 
     TTL[0] = '\0';
@@ -1281,7 +1281,7 @@ char *elapsed_time(entry, since, TTL)
 char *flags_describe(entry)
      StoreEntry *entry;
 {
-    static char FLAGS[32];
+    LOCAL_ARRAY(char, FLAGS, 32);
     char LOCK_CNT[32];
 
     strcpy(FLAGS, "F:");
@@ -1311,8 +1311,8 @@ char *flags_describe(entry)
 void stat_rotate_log()
 {
     int i;
-    static char from[MAXPATHLEN];
-    static char to[MAXPATHLEN];
+    LOCAL_ARRAY(char, from, MAXPATHLEN);
+    LOCAL_ARRAY(char, to, MAXPATHLEN);
     char *fname = NULL;
 
     if ((fname = CacheInfo->logfilename) == NULL)

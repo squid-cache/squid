@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.4 1996/07/16 01:51:14 wessels Exp $
+ * $Id: redirect.cc,v 1.5 1996/07/18 20:27:07 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -310,7 +310,7 @@ void redirectOpenServers()
     char *prg = getRedirectProgram();
     int k;
     int redirectsocket;
-    static char fd_note_buf[FD_ASCII_NOTE_SZ];
+    LOCAL_ARRAY(char, fd_note_buf, FD_ASCII_NOTE_SZ);
     static int first_time = 0;
 
     if (!do_redirect)

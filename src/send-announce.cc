@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.14 1996/07/15 23:10:57 wessels Exp $
+ * $Id: send-announce.cc,v 1.15 1996/07/18 20:27:08 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -33,8 +33,8 @@
 
 void send_announce()
 {
-    static char tbuf[256];
-    static char sndbuf[BUFSIZ];
+    LOCAL_ARRAY(char, tbuf, 256);
+    LOCAL_ARRAY(char, sndbuf, BUFSIZ);
     icpUdpData *qdata = NULL;
     struct hostent *hp = NULL;
     char *host = NULL;
