@@ -2179,4 +2179,5 @@ DOC_START
 
 incoming_min_rate 2
 incoming_max_rate 16
+DOC_END
 EOF
