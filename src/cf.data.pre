@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.245 2001/12/21 09:47:34 hno Exp $
+# $Id: cf.data.pre,v 1.246 2001/12/25 05:46:35 adrian Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1484,7 +1484,7 @@ DOC_START
 	'Max' is an upper limit on how long objects without an explicit
 	expiry time will be considered fresh.
 
-	options: overrsde-expire
+	options: override-expire
 		 override-lastmod
 		 reload-into-ims
 		 ignore-reload
