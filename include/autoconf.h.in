@@ -275,6 +275,11 @@
  */
 #undef ALLOW_HOSTNAME_UNDERSCORES
 
+/*
+ * Use DISKD
+ */
+#undef USE_DISKD
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
