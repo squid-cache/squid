@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.345 2002/10/21 14:00:02 adrian Exp $
+ * $Id: comm.cc,v 1.346 2002/10/21 14:08:22 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -660,6 +660,32 @@ comm_write_try(int fd, void *data)
         commSetSelect(fd, COMM_SELECT_WRITE, comm_write_try, NULL, 0);
 }
 
+/*
+ * Queue a write. handler/handler_data are called when the write fully
+ * completes, on error, or on file descriptor close.
+ */
+void
+comm_write(int fd, char *buf, int size, IOWCB *handler, void *handler_data)
+{
+	/* Make sure we're not writing anything and we're not closing */
+	assert(fdc_table[fd].active == 1);
+	assert(fdc_table[fd].write.handler == NULL);
+        assert(!fd_table[fd].flags.closing);
+
+	/* Queue a read */
+	fdc_table[fd].write.buf = buf;
+	fdc_table[fd].write.size = size;
+	fdc_table[fd].write.handler = handler;
+	fdc_table[fd].write.handler_data = handler_data;
+	fdc_table[fd].write.curofs = 0;
+
+#if OPTIMISTIC_IO
+        comm_write_try(fd, NULL);
+#else
+	/* Register intrest in a FD read */
+        commSetSelect(fd, COMM_SELECT_WRITE, comm_write_try, NULL, 0);
+#endif
+}
 
 
 /* Older stuff */
