@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.52 2002/12/27 10:26:39 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.53 2003/01/17 08:21:52 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -69,7 +69,7 @@ UfsSwapDir::unlinkFile(char const *path)
 #elif USE_TRUNCATE
     truncate(path, 0);
 #else
-    unlink(path);
+    ::unlink(path);
 #endif
 }
 
@@ -683,7 +683,7 @@ UFSSwapDir::closeTmpSwapLog()
     int fd;
     file_close(swaplog_fd);
 #if defined (_SQUID_OS2_) || defined (_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
-    if (unlink(swaplog_path) < 0) {
+    if (::unlink(swaplog_path) < 0) {
 	debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
 	fatal("commonUfsDirCloseTmpSwapLog: unlink failed");
     }
@@ -892,7 +892,7 @@ UFSSwapDir::writeCleanDone()
 #if defined(_SQUID_OS2_) || defined (_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
 	file_close(state->fd);
 	state->fd = -1;
-	if (unlink(state->cur) < 0)
+	if (::unlink(state->cur) < 0)
 	    debug(50, 0) ("storeDirWriteCleanLogs: unlinkd failed: %s, %s\n",
 		xstrerror(), state->cur);
 #endif

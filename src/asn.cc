@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.86 2002/10/25 07:36:32 robertc Exp $
+ * $Id: asn.cc,v 1.87 2003/01/17 08:21:51 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -153,7 +153,7 @@ asnAclInitialize(acl * acls)
 
 /* initialize the radix tree structure */
 
-extern int squid_max_keylen;	/* yuck.. this is in lib/radix.c */
+SQUIDCEXTERN int squid_max_keylen;	/* yuck.. this is in lib/radix.c */
 
 CBDATA_TYPE(ASState);
 void

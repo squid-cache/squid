@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.58 2002/10/21 06:43:07 adrian Exp $
+ * $Id: snmp_core.cc,v 1.59 2003/01/17 08:21:51 robertc Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -62,7 +62,7 @@ static oid *snmpCreateOid(int length,...);
 static mib_tree_entry *snmpAddNode();
 static oid *snmpCreateOid();
 #endif
-extern void (*snmplib_debug_hook) (int, char *);
+SQUIDCEXTERN void (*snmplib_debug_hook) (int, char *);
 static oid *static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 static oid *time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 static oid *peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
