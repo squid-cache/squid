@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.46 1998/06/25 20:14:36 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.47 1998/06/25 22:54:50 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -572,7 +572,7 @@ httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
     assert(strBuf(s));
     /* temporary warning: remove it! @?@ @?@ @?@ */
     if (!strLen(s))
-	debug(55, 1) ("empty list header: %s (%d)\n", strBuf(Headers[id].name), id);
+	debug(55, 3) ("empty list header: %s (%d)\n", strBuf(Headers[id].name), id);
     debug(55, 6) ("%p: joined for id %d: %s\n", hdr, id, strBuf(s));
     return s;
 }
