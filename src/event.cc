@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.27 1999/04/19 04:45:04 wessels Exp $
+ * $Id: event.cc,v 1.28 1999/04/19 04:49:12 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -49,6 +49,7 @@ struct ev_entry {
 static struct ev_entry *tasks = NULL;
 static OBJH eventDump;
 static int run_id = 0;
+static const char *last_event_ran = NULL;
 
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int weight)
@@ -139,6 +140,8 @@ eventRun(void)
 	}
 	if (valid) {
 	    weight += event->weight;
+	    /* XXX assumes ->name is static memory! */
+	    last_event_ran = event->name;
 	    debug(41, 5) ("eventRun: Running '%s', id %d\n",
 		event->name, event->id);
 	    func(arg);
@@ -168,6 +171,8 @@ static void
 eventDump(StoreEntry * sentry)
 {
     struct ev_entry *e = tasks;
+    if (last_event_ran)
+	storeAppendPrintf(sentry, "Last event to run: %s\n\n", last_event_ran);
     storeAppendPrintf(sentry, "%s\t%s\t%s\t%s\n",
 	"Operation",
 	"Next Execution",
