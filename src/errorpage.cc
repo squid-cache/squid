@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.167 2001/10/24 07:45:34 hno Exp $
+ * $Id: errorpage.cc,v 1.168 2002/01/01 21:24:25 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -470,6 +470,7 @@ errorConvert(char token, ErrorState * err)
     case 'L':
 	if (Config.errHtmlText) {
 	    memBufPrintf(&mb, "%s", Config.errHtmlText);
+	    do_quote = 0;
 	} else
 	    p = "[not available]";
 	break;
