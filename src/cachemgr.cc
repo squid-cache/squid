@@ -1,5 +1,5 @@
 /*
- * $Id: cachemgr.cc,v 1.70 1998/02/26 00:09:23 rousskov Exp $
+ * $Id: cachemgr.cc,v 1.71 1998/02/26 00:19:52 rousskov Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -359,7 +359,7 @@ read_reply(int s, cachemgr_request * req)
 	    }
 	    /* this is a way to pass HTTP status to the Web server */
 	    if (statusStr)
-		printf("Status: %d %s\n", status, statusStr);
+		printf("Status: %d %s", status, statusStr); /* statusStr has '\n' */
 	    break;
 	case isHeaders:
 	    /* forward header field */
