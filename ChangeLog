@@ -1,3 +1,11 @@
+	- Replaced urlcmp with strcmp
+	- Fixed pragma no-cache ejecting ENTRY_SPECIAL objects
+	  (Henrik Nordstrom).
+	- Eliminated unneeded BASE HREF on "root" directories (Henrik
+	  Nordstrom).
+	- Fixed peerDigestFetchFinish() assertion caused by forwarding
+	  failures (e.g. miss_access rules).
+
 Changes to squid-1.2.beta23 (June 22, 1998):
 
 	- Added Turkish error pages by Tural KAPTAN.
