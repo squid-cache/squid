@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.172 1997/11/18 20:38:25 wessels Exp $
+ * $Id: ftp.cc,v 1.173 1997/11/19 06:16:57 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -642,7 +642,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
 static void
 ftpReadComplete(FtpStateData * ftpState)
 {
-    debug(9, 0) ("ftpReadComplete\n");
+    debug(9, 3) ("ftpReadComplete\n");
     /* Connection closed; retrieval done. */
     if (EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
 	ftpListingFinish(ftpState);
