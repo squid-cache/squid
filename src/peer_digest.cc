@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.2 1998/04/08 22:52:38 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.3 1998/04/08 23:05:04 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -50,7 +50,13 @@ static int peerDigestUpdateMask(peer *peer, int offset, const char *buf, int siz
 #define StoreDigestCBlockSize sizeof(StoreDigestCBlock)
 
 /* min interval for requesting digests from the same peer */
-static const time_t PeerDigestRequestMinGap = 15 * 60; /* seconds */
+static const time_t PeerDigestRequestMinGap   = 15 * 60; /* seconds */
+
+/* min interval for requesting digests. period */
+static const time_t GlobalDigestRequestMinGap =  1 * 60; /* seconds */
+
+/* local vars */
+static time_t global_last_req_timestamp = 0;
 
 void 
 peerDigestInit(peer *p)
@@ -110,14 +116,23 @@ peerDigestValidate(peer *p)
     req_time = e ? e->expires : squid_curtime;
     if (req_time < squid_curtime)
 	req_time = squid_curtime;
-    /* do not request too often */
+    /* do not request too often from one peer */
     if (req_time - p->digest.last_req_timestamp < PeerDigestRequestMinGap) {
 	if (do_request) {
-	    debug(72, 2) ("peerDigestValidate: %s, avoiding too close requests (%d secs).\n", 
+	    debug(72, 2) ("peerDigestValidate: %s, avoiding too close peer requests (%d secs).\n", 
 		p->host, req_time - p->digest.last_req_timestamp);
 	    do_request = 0;
 	}
 	req_time = p->digest.last_req_timestamp + PeerDigestRequestMinGap;
+    }
+    /* do not request too often from all peers */
+    if (req_time - global_last_req_timestamp < GlobalDigestRequestMinGap) {
+	if (do_request) {
+	    debug(72, 2) ("peerDigestValidate: %s, avoiding too close requests (%d secs).\n", 
+		p->host, req_time - global_last_req_timestamp);
+	    do_request = 0;
+	}
+	req_time = global_last_req_timestamp + GlobalDigestRequestMinGap;
     }
     /* start request if needed */
     if (do_request) {
@@ -175,8 +190,8 @@ peerDigestRequest(peer *p)
     fetch->peer = p;
     fetch->start_time = squid_curtime;
     p->digest.last_req_timestamp = squid_curtime;
+    global_last_req_timestamp = squid_curtime;
     EBIT_SET(req->flags, REQ_CACHABLE);
-    assert(EBIT_TEST(req->flags, REQ_CACHABLE)); /* @?@ @?@ */
     /* the rest is based on clientProcessExpired() */
     EBIT_SET(req->flags, REQ_REFRESH);
     old_e = fetch->old_entry = storeGet(key);
