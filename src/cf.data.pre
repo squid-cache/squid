@@ -1172,6 +1172,16 @@ DOC_START
 	acl aclname user     username ...	# string match on ident output.
 						# use REQUIRED to accept any
 						# non-null ident.
+	acl aclname src_as   number ... 
+	acl aclname dst_as   number ...
+	  # Except for access control, AS numbers can be used for
+	  # routing of requests to specific caches. Here's an 
+	  # example for routing all requests for AS#1241 and only 
+	  # those to mycache.mydomain.net:
+	  # acl asexample dst_as 1241
+          # cache_host_acl mycache.mydomain.net asexample
+	  # cache_host_acl mycache_mydomain.net !all
+
 	acl aclname proxy_auth passwd_file [ refresh ]
 	  # 'passwd_file' is an Apache-style file of passwords for
 	  # authenticated proxy access. Looks like user:password, with
@@ -1187,7 +1197,7 @@ DOC_START
 acl manager proto cache_object
 acl localhost src 127.0.0.1/255.255.255.255
 acl all src 0.0.0.0/0.0.0.0
-
+acl myexample dst_as 1241
 acl SSL_ports port 443 563
 acl Dangerous_ports port 7 9 19
 acl CONNECT method CONNECT
