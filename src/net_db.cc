@@ -3,11 +3,6 @@
 
 #if USE_ICMP
 
-#define NET_DB_TTL 300
-
-#define NETDB_LOW_MARK 900
-#define NETDB_HIGH_MARK 1000
-
 static HashID addr_table;
 static HashID host_table;
 
@@ -136,7 +131,7 @@ netdbPurgeLRU(void)
 	sizeof(netdbEntry *),
 	(QS) netdbLRU);
     for (k = 0; k < list_count; k++) {
-	if (meta_data.netdb_addrs < NETDB_LOW_MARK)
+	if (meta_data.netdb_addrs < Config.Netdb.low)
 	    break;
 	netdbRelease(*(list + k));
 	removed++;
@@ -155,7 +150,7 @@ static netdbEntry *
 netdbAdd(struct in_addr addr, const char *hostname)
 {
     netdbEntry *n;
-    if (meta_data.netdb_addrs > NETDB_HIGH_MARK)
+    if (meta_data.netdb_addrs > Config.Netdb.high)
 	netdbPurgeLRU();
     if ((n = netdbLookupAddr(addr)) == NULL) {
 	n = xcalloc(1, sizeof(netdbEntry));
@@ -181,7 +176,7 @@ netdbSendPing(int fdunused, const ipcache_addrs * ia, void *data)
     debug(37, 3, "netdbSendPing: pinging %s\n", hostname);
     icmpDomainPing(addr, hostname);
     n->pings_sent++;
-    n->next_ping_time = squid_curtime + NET_DB_TTL;
+    n->next_ping_time = squid_curtime + Config.Netdb.ttl;
     n->last_use_time = squid_curtime;
     xfree(hostname);
 }

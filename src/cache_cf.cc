@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.139 1996/11/15 07:51:05 wessels Exp $
+ * $Id: cache_cf.cc,v 1.140 1996/11/16 07:07:07 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -113,6 +113,8 @@ struct SquidConfig Config;
 #define DefaultSwapMaxSize	(100 << 10)	/* 100 MB (100*1024 kbytes) */
 #define DefaultSwapHighWaterMark 90	/* 90% */
 #define DefaultSwapLowWaterMark  75	/* 75% */
+#define DefaultNetdbHigh	1000	/* counts, not percents */
+#define DefaultNetdbLow		 900
 
 #define DefaultWaisRelayHost	(char *)NULL
 #define DefaultWaisRelayPort	0
@@ -1349,6 +1351,13 @@ parseConfigFile(const char *file_name)
 	else if (!strcmp(token, "swap_level2_dirs"))
 	    parseIntegerValue(&Config.levelTwoDirs);
 
+	else if (!strcmp(token, "netdb_high"))
+	    parseIntegerValue(&Config.Netdb.high);
+	else if (!strcmp(token, "netdb_low"))
+	    parseIntegerValue(&Config.Netdb.low);
+	else if (!strcmp(token, "netdb_ttl"))
+	    parseIntegerValue(&Config.Netdb.ttl);
+
 	/* If unknown, treat as a comment line */
 	else {
 	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
@@ -1462,6 +1471,8 @@ configSetFactoryDefaults(void)
     Config.Swap.maxSize = DefaultSwapMaxSize;
     Config.Swap.highWaterMark = DefaultSwapHighWaterMark;
     Config.Swap.lowWaterMark = DefaultSwapLowWaterMark;
+    Config.Netdb.high = DefaultNetdbHigh;
+    Config.Netdb.low = DefaultNetdbLow;
 
     Config.Wais.relayHost = safe_xstrdup(DefaultWaisRelayHost);
     Config.Wais.relayPort = DefaultWaisRelayPort;
