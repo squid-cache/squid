@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.17 1998/08/26 19:08:00 wessels Exp $
+ * $Id: htcp.cc,v 1.18 1998/08/26 19:53:39 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -782,7 +782,7 @@ htcpRecv(int fd, void *data)
     int flen = sizeof(struct sockaddr_in);
     memset(&from, '\0', flen);
     len = recvfrom(fd, buf, 8192, 0, (struct sockaddr *) &from, &flen);
-    debug(31, 0) ("htcpRecv: FD %d, %d bytes from %s:%d\n",
+    debug(31, 1) ("htcpRecv: FD %d, %d bytes from %s:%d\n",
 	fd, len, inet_ntoa(from.sin_addr), ntohs(from.sin_port));
     htcpHandle(buf, len, &from);
     commSetSelect(fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
@@ -865,7 +865,6 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     htcpSend(pkt, (int) pktlen, &p->in_addr);
     save_key = queried_keys[stuff.msg_id % N_QUERIED_KEYS];
     storeKeyCopy(save_key, e->key);
-    debug(31,1)("htcpQuery: key (%p) %s\n", 30>e->key, storeKeyText(e->key));
     debug(31,1)("htcpQuery: key (%p) %s\n", save_key, storeKeyText(save_key));
     debug(1,1)("%s:%d\n", __FILE__, __LINE__); xfree(pkt);
 }
