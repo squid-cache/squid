@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.144 1999/02/01 05:43:30 wessels Exp $
+# $Id: cf.data.pre,v 1.145 1999/04/07 21:13:20 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -75,7 +75,7 @@ TYPE: ushort
 DEFAULT: 3130
 LOC: Config.Port.icp
 DOC_START
-	The port number where Squid sends and receives ICP requests to
+	The port number where Squid sends and receives ICP queries to
 	and from neighbor caches.  Default is 3130.  To disable use
 	"0".  May be overridden with -u on the command line.
 
@@ -88,7 +88,7 @@ TYPE: ushort
 DEFAULT: 4827
 LOC: Config.Port.htcp
 DOC_START
-	The port number where Squid sends and receives ICP requests to
+	The port number where Squid sends and receives HTCP queries to
 	and from neighbor caches.  Default is 4827.  To disable use
 	"0".
 
@@ -102,7 +102,7 @@ LOC: Config.mcast_group_list
 DEFAULT: none
 DOC_START
 	This tag specifies a list of multicast groups which your server
-	should join to receive multicasted ICP requests.
+	should join to receive multicasted ICP queries.
 
 	NOTE!  Be very careful what you put here!  Be sure you
 	understand the difference between an ICP _query_ and an ICP
@@ -231,7 +231,7 @@ DOC_START
 		     is 1, larger weights are favored more.
 
 		     use 'ttl=n' to specify a IP multicast TTL to use
-		     when sending an ICP request to this address.
+		     when sending an ICP queries to this address.
 		     Only useful when sending to a multicast group.
 		     Because we don't accept ICP replies from random
 		     hosts, you must configure other group members as
@@ -605,7 +605,7 @@ DEFAULT: @DEFAULT_ACCESS_LOG@
 LOC: Config.Log.access
 DOC_START
 	Logs the client request activity.  Contains an entry for
-	every HTTP and ICP request received.
+	every HTTP and ICP queries received.
 
 cache_access_log @DEFAULT_ACCESS_LOG@
 DOC_END
@@ -773,7 +773,7 @@ DOC_START
 
 	To enable ident lookups for specific client addresses, you
 	can follow this example:
- 
+
 	acl ident_aware_hosts src 198.168.1.0/255.255.255.0
 	ident_lookup_access allow ident_aware_hosts
 	ident_lookup_access deny all
@@ -2278,7 +2278,7 @@ TYPE: http_header
 LOC: Config.anonymize_headers
 DEFAULT: none
 DOC_START
-        Usage: anonymize_headers allow|deny header_name ...
+	Usage: anonymize_headers allow|deny header_name ...
 
 	This option replaces the old 'http_anonymizer' option with
 	something that is much more configurable.  You may now
