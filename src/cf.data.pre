@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.161 1999/08/02 06:18:30 wessels Exp $
+# $Id: cf.data.pre,v 1.162 1999/10/04 05:05:01 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -589,15 +589,18 @@ COMMENT_END
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
-DEFAULT_IF_NONE: @DEFAULT_SWAP_DIR@ 100 16 256
+DEFAULT_IF_NONE: ufs @DEFAULT_SWAP_DIR@ 100 16 256
 LOC: Config.cacheSwap
 DOC_START
 	Usage:
 	
-	cache_dir Directory-Name Mbytes Level-1 Level2
+	cache_dir Type Directory-Name Mbytes Level-1 Level2
 
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
+
+	Type specifies the kind of storage system to use.  If you
+	don't know what to put here, then use "ufs".
 
 	'Directory' is a top-level directory where cache swap
 	files will be stored.  If you want to use an entire disk
@@ -619,7 +622,7 @@ DOC_START
 	will be created under each first-level directory.  The default
 	is 256.
 
-cache_dir @DEFAULT_SWAP_DIR@ 100 16 256
+cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
 DOC_END
 
 
@@ -968,6 +971,16 @@ DOC_START
 redirect_rewrites_host_header on
 DOC_END
 
+NAME: redirector_access
+TYPE: acl_access
+DEFAULT: none
+LOC: Config.accessList.redirector
+DOC_START
+	If defined, this access list specifies which requests are
+	sent to the redirector processes.  By default all requests
+	are sent.
+DOC_END
+
 
 NAME: authenticate_program
 TYPE: wordlist
@@ -1018,6 +1031,28 @@ DOC_START
 	a revalidation.
 
 authenticate_ttl 3600
+DOC_END
+
+NAME: authenticate_ip_ttl
+TYPE: int
+LOC: Config.authenticateIpTTL
+DEFAULT: 0
+DOC_START
+	With this option you control how long a proxy authentication
+	will be bound to a specific IP address. If a request using
+	the same user name is received during this time then access
+	will be denied and both users are required to reauthenticate
+	them selves.  The idea behind this is to make it annoying
+	for people to share their password to their friends, but
+	yet allow a dialup user to reconnect on a different dialup
+	port.
+
+	The default is 0 to disable the check. Recommended value
+	if you have dialup users are no more than 60 (seconds). If
+	all your users are stationary then higher values may be
+	used.
+
+authenticate_ip_ttl 0
 DOC_END
 
 COMMENT_START
@@ -1365,6 +1400,7 @@ DOC_START
 	may also set different timeout values for individual neighbors
 	with the 'connect-timeout' option on a 'cache_peer' line.
 peer_connect_timeout 30 seconds
+DOC_END
 
 NAME: siteselect_timeout
 COMMENT: time-units
@@ -1467,6 +1503,10 @@ DOC_START
 	and you enabled 'ident_lookup', then you might be susceptible
 	to denial-of-service by having many ident requests going at
 	once.
+
+	Only src type ACL checks are fully supported.  A src_domain
+	ACL might work at times, but it will not always provide
+	the correct result.
 
 	This option may be disabled by using --disable-ident with
 	the configure script.
@@ -1578,6 +1618,10 @@ DOC_START
 	  # 
 	  #	acl snmppublic snmp_community public
 
+	acl aclname maxconn number
+	  # This will be matched when the client's IP address has
+	  # more than <number> HTTP connections established.
+
 
 Examples:
 acl myexample dst_as 1241
@@ -1590,6 +1634,10 @@ acl manager proto cache_object
 acl localhost src 127.0.0.1/255.255.255.255
 acl SSL_ports port 443 563
 acl Safe_ports port 80 21 443 563 70 210 1025-65535
+acl Safe_ports port 280		# http-mgmt
+acl Safe_ports port 488		# gss-http
+acl Safe_ports port 591		# filemaker
+acl Safe_ports port 777		# multiling http
 acl CONNECT method CONNECT
 NOCOMMENT_END
 DOC_END
@@ -2222,7 +2270,7 @@ LOC: Config.Store.objectsPerBucket
 DOC_START
 	Target number of objects per bucket in the store hash table.
 	Lowering this value increases the total number of buckets and
-	also the storage maintenance rate.  The default is 20.
+	also the storage maintenance rate.  The default is 50.
 
 store_objects_per_bucket 50
 DOC_END
@@ -2537,32 +2585,11 @@ IFDEF: SQUID_SNMP
 DOC_START
 	Squid can now serve statistics and status information via SNMP.
 	By default it listens to port 3401 on the machine. If you don't
-	wish to use SNMP, set this to '-1'.
+	wish to use SNMP, set this to "0".
 
 	NOTE: SNMP support requires use the --enable-snmp configure
 	command line option.
 snmp_port 3401
-DOC_END
-
-NAME: forward_snmpd_port
-TYPE: ushort
-LOC: Config.Snmp.localPort
-DEFAULT: 0
-IFDEF: SQUID_SNMP
-DOC_START
-	This configures whether we should be forwarding SNMP requests
-	to another snmpd. The reason for putting this piece of
-	functionality into Squid was to enable access to the system's
-	installed snmpd with minimal changes.  This option is turned
-	off by default, check with your /etc/services for your system's
-	snmp port (usually 161).  We do not use getservbyname() to
-	allow you to set Squid into port 161 and your system's snmpd to
-	another port by changing /etc/services.
-
-	WARNING: Because of Squid acting as a proxy snmpd for system
-	you have to do security checks on THIS snmpd for all objects.
-	Check your snmp_config_file.
-forward_snmpd_port 0
 DOC_END
 
 NAME: snmp_access
@@ -2992,6 +3019,19 @@ DOC_START
 	redirectors for access control, and you enable this option,
 	then users may have access to pages that they should not
 	be allowed to request.
+DOC_END
+
+NAME: ignore_unknown_nameservers
+TYPE: onoff
+LOC: Config.onoff.ignore_unknown_nameservers
+DEFAULT: on
+DOC_START
+	By default Squid checks that DNS responses are received
+	from the same IP addresses that they are sent to.  If they
+	don't match, Squid ignores the response and writes a warning
+	message to cache.log.  You can allow responses from unknown
+	nameservers by setting this option to 'off'.
+ignore_unknown_nameservers on
 DOC_END
 
 EOF

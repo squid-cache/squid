@@ -13,11 +13,10 @@ se objevila následující chyba:
 <UL>
 <LI>
 <STRONG>
-Connection Lifetime Expired
+Connection Lifetime Expired.
 </STRONG>
 </UL>
 
 <P>
-Squid stornoval po¾adavek z dùvodu pøekoroèní maximální délky trvání
-spojení. 
+Squid stornoval po¾adavek z dùvodu pøekroèení maximální délky trvání spojení. 
 </P>

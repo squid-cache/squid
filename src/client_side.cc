@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.461 1999/08/02 06:18:32 wessels Exp $
+ * $Id: client_side.cc,v 1.462 1999/10/04 05:05:04 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -41,9 +41,21 @@
 #endif
 #include <netinet/tcp.h>
 #include <net/if.h>
+#if HAVE_IP_COMPAT_H
 #include <ip_compat.h>
+#elif HAVE_NETINET_IP_COMPAT_H
+#include <netinet/ip_compat.h>
+#endif
+#if HAVE_IP_FIL_H
 #include <ip_fil.h>
+#elif HAVE_NETINET_IP_FIL_H
+#include <netinet/ip_fil.h>
+#endif
+#if HAVE_IP_NAT_H
 #include <ip_nat.h>
+#elif HAVE_NETINET_IP_NAT_H
+#include <netinet/ip_nat.h>
+#endif
 #endif
 
 
@@ -111,7 +123,7 @@ checkAccelOnly(clientHttpRequest * http)
 }
 
 #if USE_IDENT
-void
+static void
 clientIdentDone(const char *ident, void *data)
 {
     ConnStateData *conn = data;
@@ -192,7 +204,7 @@ clientAccessCheckDone(int answer, void *data)
     ErrorState *err = NULL;
     debug(33, 2) ("The request %s %s is %s, because it matched '%s'\n",
 	RequestMethodStr[http->request->method], http->uri,
-	answer ? "ALLOWED" : "DENIED",
+	answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED",
 	AclMatchedName ? AclMatchedName : "NO ACL's");
     http->acl_checklist = NULL;
     if (answer == ACCESS_ALLOWED) {
@@ -317,7 +329,7 @@ clientProcessExpired(void *data)
     /* delay_id is already set on original store client */
     delaySetStoreClient(entry, http, delayClient(http->request));
 #endif
-    entry->lastmod = http->old_entry->lastmod;
+    http->request->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: lastmod %d\n", (int) entry->lastmod);
     entry->refcount++;		/* EXPIRED CASE */
 #if HEAP_REPLACEMENT
@@ -735,6 +747,7 @@ connStateFree(int fd, void *data)
     clientHttpRequest *http;
     debug(33, 3) ("connStateFree: FD %d\n", fd);
     assert(connState != NULL);
+    clientdbEstablished(connState->peer.sin_addr, -1);	/* decrement */
     while ((http = connState->chr) != NULL) {
 	assert(http->conn == connState);
 	assert(connState->chr != connState->chr->next);
@@ -772,6 +785,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	    no_cache++;
 	stringClean(&s);
     }
+    request->cache_control = httpHeaderGetCc(req_hdr);
     if (request->cache_control)
 	if (EBIT_TEST(request->cache_control->mask, CC_NO_CACHE))
 	    no_cache++;
@@ -823,7 +837,6 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	stringClean(&s);
     }
 #endif
-    request->cache_control = httpHeaderGetCc(req_hdr);
     if (request->method == METHOD_TRACE) {
 	request->max_forwards = httpHeaderGetInt(req_hdr, HDR_MAX_FORWARDS);
     }
@@ -1189,7 +1202,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	http->lookup_type ? http->lookup_type : "NONE",
 	getMyHostname(), Config.Port.http->i);
 #endif
-    if (httpReplyBodySize(request->method, http->entry->mem_obj->reply) < 0) {
+    if (httpReplyBodySize(request->method, rep) < 0) {
 	debug(33, 3) ("clientBuildReplyHeader: can't keep-alive, unknown body size\n");
 	request->flags.proxy_keepalive = 0;
     }
@@ -1213,21 +1226,25 @@ static HttpReply *
 clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
 {
     HttpReply *rep = httpReplyCreate();
-    if (httpReplyParse(rep, buf)) {
+    size_t k = headersEnd(buf, size);
+    if (k && httpReplyParse(rep, buf, k)) {
 	/* enforce 1.0 reply version */
 	rep->sline.version = 1.0;
 	/* do header conversions */
 	clientBuildReplyHeader(http, rep);
 	/* if we do ranges, change status to "Partial Content" */
 	if (http->request->range)
-	    httpStatusLineSet(&rep->sline, rep->sline.version, HTTP_PARTIAL_CONTENT, NULL);
+	    httpStatusLineSet(&rep->sline, rep->sline.version,
+		HTTP_PARTIAL_CONTENT, NULL);
     } else {
 	/* parsing failure, get rid of the invalid reply */
 	httpReplyDestroy(rep);
 	rep = NULL;
 	/* if we were going to do ranges, backoff */
-	if (http->request->range)
-	    clientBuildRangeHeader(http, rep);	/* will fail and destroy request->range */
+	if (http->request->range) {
+	    /* this will fail and destroy request->range */
+	    clientBuildRangeHeader(http, rep);
+	}
     }
     return rep;
 }
@@ -1370,7 +1387,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    storeUnlockObject(e);
 	    e = clientCreateStoreEntry(http, http->request->method, null_request_flags);
 	    http->entry = e;
-	    httpReplyParse(e->mem_obj->reply, mb.buf);
+	    httpReplyParse(e->mem_obj->reply, mb.buf, mb.size);
 	    storeAppend(e, mb.buf, mb.size);
 	    memBufClean(&mb);
 	    storeComplete(e);
@@ -1423,20 +1440,30 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     memBufPrintf(mb, crlf);
 }
 
-/* extracts a "range" from *buf and appends them to mb, updating all offsets and such */
+/*
+ * extracts a "range" from *buf and appends them to mb, updating
+ * all offsets and such.
+ */
 static void
-clientPackRange(clientHttpRequest * http, HttpHdrRangeIter * i, const char **buf, ssize_t * size, MemBuf * mb)
+clientPackRange(clientHttpRequest * http,
+    HttpHdrRangeIter * i,
+    const char **buf,
+    ssize_t * size,
+    MemBuf * mb)
 {
-    const size_t copy_sz = i->debt_size <= *size ? i->debt_size : *size;
+    const ssize_t copy_sz = i->debt_size <= *size ? i->debt_size : *size;
     off_t body_off = http->out.offset - i->prefix_size;
     assert(*size > 0);
     assert(i->spec);
-
-    /* intersection of "have" and "need" ranges must not be empty */
+    /*
+     * intersection of "have" and "need" ranges must not be empty
+     */
     assert(body_off < i->spec->offset + i->spec->length);
     assert(body_off + *size > i->spec->offset);
-
-    /* put boundary and headers at the beginning of a range in a multi-range */
+    /*
+     * put boundary and headers at the beginning of a range in a
+     * multi-range
+     */
     if (http->request->range->specs.count > 1 && i->debt_size == i->spec->length) {
 	assert(http->entry->mem_obj);
 	clientPackRangeHdr(
@@ -1446,18 +1473,22 @@ clientPackRange(clientHttpRequest * http, HttpHdrRangeIter * i, const char **buf
 	    mb
 	    );
     }
-    /* append content */
+    /*
+     * append content
+     */
     debug(33, 3) ("clientPackRange: appending %d bytes\n", copy_sz);
     memBufAppend(mb, *buf, copy_sz);
-
-    /* update offsets */
+    /*
+     * update offsets
+     */
     *size -= copy_sz;
     i->debt_size -= copy_sz;
     body_off += copy_sz;
     *buf += copy_sz;
     http->out.offset = body_off + i->prefix_size;	/* sync */
-
-    /* paranoid check */
+    /*
+     * paranoid check
+     */
     assert(*size >= 0 && i->debt_size >= 0);
 }
 
@@ -1610,6 +1641,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    http->entry = clientCreateStoreEntry(http, http->request->method,
 		null_request_flags);
 	    errorAppendEntry(http->entry, err);
+	    httpReplyDestroy(rep);
 	    return;
 	} else if (rep) {
 	    body_size = size - rep->hdr_sz;
@@ -2241,10 +2273,10 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	strcpy(http->uri, url);
 	http->flags.accel = 0;
     }
-    if (!stringHasWhitespace(http->uri))
+    if (!stringHasCntl((unsigned char *) http->uri))
 	http->log_uri = xstrndup(http->uri, MAX_URL);
     else
-	http->log_uri = xstrndup(rfc1738_escape(http->uri), MAX_URL);
+	http->log_uri = xstrndup(rfc1738_escape_unescaped(http->uri), MAX_URL);
     debug(33, 5) ("parseHttpRequest: Complete request received\n");
     if (free_request)
 	safe_free(url);
@@ -2614,6 +2646,7 @@ httpAccept(int sock, void *data)
 #endif
 	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
 	commSetDefer(fd, clientReadDefer, connState);
+	clientdbEstablished(peer.sin_addr, 1);
 	(*N)++;
     }
 }

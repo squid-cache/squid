@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.81 1999/06/24 22:08:43 wessels Exp $
+ * $Id: redirect.cc,v 1.82 1999/10/04 05:05:24 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -102,6 +102,18 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
     if (Config.Program.redirect == NULL) {
 	handler(data, NULL);
 	return;
+    }
+    if (Config.accessList.redirector) {
+	aclCheck_t ch;
+	memset(&ch, '\0', sizeof(ch));
+	ch.src_addr = http->conn->peer.sin_addr;
+	ch.my_addr = http->conn->me.sin_addr;
+	ch.request = http->request;
+	if (!aclCheckFast(Config.accessList.redirector, &ch)) {
+	    /* denied -- bypass redirector */
+	    handler(data, NULL);
+	    return;
+	}
     }
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
 	/* Skip redirector if there is one request queued */

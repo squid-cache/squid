@@ -1,17 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERREUR: La requete demandee n'a pu etre trait&eacute;e</TITLE>
+<TITLE>ERREUR: La requete demand&eacute;e n'a pu etre effectu&eacute;e</TITLE>
 </HEAD><BODY>
 <H1>ERREUR</H1>
-<H2>La requete demand&eacute;e n'a pu etre trait&eacute;e</H2>
+<H2>La requete demand&eacute;e n'a pu etre effectu&eacute;e</H2>
 <HR>
 <P>
-En tentant de r&eacute;soudre l'URL:
+En essayant de charger l'URL:
 <A HREF="%U">%U</A>
 <P>
-L'erreur suivante a &eacute;t&eacute; rencontr&eacute;e:
+L'erreur suivante fut rencontr&eacute;e:
 <UL>
 <P>
-La mise hors-service de ce cache est en cours et il est impossible
-de traiter votre requete actuellement. Veuillez
-r&eacute;it&eacute;rer votre requete ult&eacute;rieurement.
+Ce cache est en cours de mise hors-service temporaire et il
+lui est impossible de satisfaire votre requete actuellement.
+Veuillez r&eacute;iterer votre requete ult&eacute;rieurement.
 </P>

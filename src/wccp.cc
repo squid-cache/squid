@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.9 1999/08/02 06:18:51 wessels Exp $
+ * $Id: wccp.cc,v 1.10 1999/10/04 05:05:40 wessels Exp $
  *
  * DEBUG: section 80     WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -277,8 +277,7 @@ static void
 wccpAssignBuckets(void *voidnotused)
 {
     struct wccp_assign_bucket_t wccp_assign_bucket;
-    int number_buckets;
-    int loop_buckets;
+    int buckets_per_cache;
     int loop;
     int number_caches;
     int bucket = 0;
@@ -296,12 +295,14 @@ wccpAssignBuckets(void *voidnotused)
 	number_caches = WCCP_ACTIVE_CACHES;
     caches = xmalloc(sizeof(int) * number_caches);
 
-    number_buckets = WCCP_BUCKETS / number_caches;
+    buckets_per_cache = WCCP_BUCKETS / number_caches;
     for (loop = 0; loop < number_caches; loop++) {
+	int i;
 	xmemcpy(&caches[loop],
 	    &wccp_i_see_you.wccp_cache_entry[loop].ip_addr.s_addr,
 	    sizeof(*caches));
-	for (loop_buckets = 0; loop_buckets < number_buckets; loop_buckets++) {
+	for (i = 0; i < buckets_per_cache; i++) {
+	    assert(bucket < WCCP_BUCKETS);
 	    buckets[bucket++] = loop;
 	}
     }

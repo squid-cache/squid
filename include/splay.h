@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.7 1998/09/23 17:20:05 wessels Exp $
+ * $Id: splay.h,v 1.8 1999/10/04 05:04:49 wessels Exp $
  */
 
 
@@ -9,8 +9,8 @@ typedef struct _splay_node {
     struct _splay_node *right;
 } splayNode;
 
-typedef int SPLAYCMP(const void *, splayNode *);
-typedef void SPLAYWALKEE(void *, void *);
+typedef int SPLAYCMP(const void *a, const void *b);
+typedef void SPLAYWALKEE(void *nodedata, void *state);
 typedef void SPLAYFREE(void *);
 
 extern int splayLastResult;

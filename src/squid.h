@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.194 1999/09/28 23:48:49 wessels Exp $
+ * $Id: squid.h,v 1.195 1999/10/04 05:05:27 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -51,16 +51,27 @@
 #define CHANGE_FD_SETSIZE 0
 #endif
 
-/* Cannot increase FD_SETSIZE on FreeBSD before 2.2.0, causes select(2)
- * to return EINVAL. */
-/* Marian Durkovic <marian@svf.stuba.sk> */
-/* Peter Wemm <peter@spinner.DIALix.COM> */
+/*
+ * Cannot increase FD_SETSIZE on FreeBSD before 2.2.0, causes select(2)
+ * to return EINVAL.
+ * --Marian Durkovic <marian@svf.stuba.sk>
+ * --Peter Wemm <peter@spinner.DIALix.COM>
+ */
 #if defined(_SQUID_FREEBSD_)
 #include <osreldate.h>
 #if __FreeBSD_version < 220000
 #undef CHANGE_FD_SETSIZE
 #define CHANGE_FD_SETSIZE 0
 #endif
+#endif
+
+/*
+ * Trying to redefine CHANGE_FD_SETSIZE causes a slew of warnings
+ * on Mac OS X Server.
+ */
+#if defined(_SQUID_APPLE_)
+#undef CHANGE_FD_SETSIZE
+#define CHANGE_FD_SETSIZE 0
 #endif
 
 /* Increase FD_SETSIZE if SQUID_MAXFD is bigger */
@@ -359,7 +370,14 @@ struct rusage {
 #include "globals.h"
 
 #include "util.h"
+
+/*
+ * Mac OS X Server already has radix.h as a standard header, so
+ * this causes conflicts.
+*/
+#ifndef _SQUID_APPLE_
 #include "radix.h"
+#endif
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.207 1999/08/02 06:18:28 wessels Exp $
+ * $Id: acl.cc,v 1.208 1999/10/04 05:04:59 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -175,6 +175,8 @@ aclStrToType(const char *s)
 	return ACL_URL_REGEX;
     if (!strcmp(s, "port"))
 	return ACL_URL_PORT;
+    if (!strcmp(s, "maxconn"))
+	return ACL_MAXCONN;
 #if USE_IDENT
     if (!strcmp(s, "ident"))
 	return ACL_IDENT;
@@ -229,6 +231,8 @@ aclTypeToStr(squid_acl type)
 	return "url_regex";
     if (type == ACL_URL_PORT)
 	return "port";
+    if (type == ACL_MAXCONN)
+	return "maxconn";
 #if USE_IDENT
     if (type == ACL_IDENT)
 	return "ident";
@@ -699,6 +703,7 @@ aclParseAclLine(acl ** head)
 	aclParseRegexList(&A->data);
 	break;
     case ACL_SRC_ASN:
+    case ACL_MAXCONN:
     case ACL_DST_ASN:
     case ACL_NETDB_SRC_RTT:
 	aclParseIntlist(&A->data);
@@ -1076,6 +1081,8 @@ aclMatchProxyAuth(wordlist * data, const char *proxy_auth, acl_proxy_auth_user *
 	    /* store validated user in hash, after filling in expiretime */
 	    xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
 	    auth_user->expiretime = current_time.tv_sec + Config.authenticateTTL;
+	    auth_user->ip_expiretime = squid_curtime + Config.authenticateIpTTL;
+	    auth_user->ipaddr = checklist->src_addr;
 	    hash_join(proxy_auth_cache, (hash_link *) auth_user);
 	    /* Continue checking below, as normal */
 	}
@@ -1089,12 +1096,26 @@ aclMatchProxyAuth(wordlist * data, const char *proxy_auth, acl_proxy_auth_user *
 	return -1;
     } else if ((0 == strcmp(auth_user->passwd, password)) &&
 	(auth_user->expiretime > current_time.tv_sec)) {
-	/* user already known and valid */
-	debug(28, 5) ("aclMatchProxyAuth: user '%s' previously validated\n",
-	    user);
-	/* copy username to request for logging on client-side */
-	xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
-	return aclMatchUser(data, user);
+	if (checklist->src_addr.s_addr == auth_user->ipaddr.s_addr
+	    || auth_user->ip_expiretime <= squid_curtime) {
+	    /* user already known and valid */
+	    debug(28, 5) ("aclMatchProxyAuth: user '%s' previously validated\n",
+		user);
+	    /* Update IP ttl */
+	    auth_user->ip_expiretime = squid_curtime + Config.authenticateIpTTL;
+	    auth_user->ipaddr = checklist->src_addr;
+	    /* copy username to request for logging on client-side */
+	    xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
+	    return aclMatchUser(data, user);
+	} else {
+	    /* user has switched to another IP addr */
+	    debug(28, 1) ("aclMatchProxyAuth: user '%s' has changed IP address\n", user);
+	    /* remove this user from the hash, making him unknown */
+	    hash_remove_link(proxy_auth_cache, (hash_link *) auth_user);
+	    aclFreeProxyAuthUser(auth_user);
+	    /* require the user to reauthenticate */
+	    return -2;
+	}
     } else {
 	/* password mismatch/timeout */
 	debug(28, 4) ("aclMatchProxyAuth: user '%s' password mismatch/timeout\n",
@@ -1337,6 +1358,10 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	k = aclMatchRegex(ae->data, esc_buf);
 	safe_free(esc_buf);
 	return k;
+	/* NOTREACHED */
+    case ACL_MAXCONN:
+	k = clientdbEstablished(checklist->src_addr, 0);
+	return ((k > ((intlist *) ae->data)->i) ? 0 : 1);
 	/* NOTREACHED */
     case ACL_URL_PORT:
 	return aclMatchIntegerRange(ae->data, r->port);
@@ -1813,6 +1838,7 @@ aclDestroyAcls(acl ** head)
 	case ACL_SRC_ASN:
 	case ACL_DST_ASN:
 	case ACL_NETDB_SRC_RTT:
+	case ACL_MAXCONN:
 	    intlistDestroy((intlist **) & a->data);
 	    break;
 	case ACL_URL_PORT:
@@ -1895,10 +1921,10 @@ aclDestroyIntRange(intrange * list)
 /* compare two domains */
 
 static int
-aclDomainCompare(const void *data, splayNode * n)
+aclDomainCompare(const void *a, const void *b)
 {
-    const char *d1 = data;
-    const char *d2 = n->data;
+    const char *d1 = a;
+    const char *d2 = b;
     int l1;
     int l2;
     while ('.' == *d1)
@@ -1933,31 +1959,11 @@ aclDomainCompare(const void *data, splayNode * n)
 /* compare a host and a domain */
 
 static int
-aclHostDomainCompare(const void *data, splayNode * n)
+aclHostDomainCompare(const void *a, const void *b)
 {
-    const char *h = data;
-    char *d = n->data;
-    int l1;
-    int l2;
-    if (matchDomainName(d, h))
-	return 0;
-    l1 = strlen(h);
-    l2 = strlen(d);
-    /* h != d */
-    while (xtolower(h[l1]) == xtolower(d[l2])) {
-	if (l1 == 0)
-	    break;
-	if (l2 == 0)
-	    break;
-	l1--;
-	l2--;
-    }
-    /* a '.' is a special case */
-    if ((h[l1] == '.') || (l1 == 0))
-	return -1;		/* domain(h) < d */
-    if ((d[l2] == '.') || (l2 == 0))
-	return 1;		/* domain(h) > d */
-    return (xtolower(h[l1]) - xtolower(d[l2]));
+    const char *h = a;
+    const char *d = b;
+    return matchDomainName(d, h);
 }
 
 /* compare two network specs
@@ -1974,12 +1980,12 @@ aclHostDomainCompare(const void *data, splayNode * n)
 /* compare an address and a network spec */
 
 static int
-aclIpNetworkCompare(const void *a, splayNode * n)
+aclIpNetworkCompare(const void *a, const void *b)
 {
-    struct in_addr A = *(struct in_addr *) a;
-    acl_ip_data *q = n->data;
-    struct in_addr B = q->addr1;
-    struct in_addr C = q->addr2;
+    struct in_addr A = *(const struct in_addr *) a;
+    const acl_ip_data *q = b;
+    const struct in_addr B = q->addr1;
+    const struct in_addr C = q->addr2;
     int rc = 0;
     A.s_addr &= q->mask.s_addr;	/* apply netmask */
     if (C.s_addr == 0) {	/* single address check */
@@ -2159,6 +2165,7 @@ aclDumpGeneric(const acl * a)
 	return aclDumpRegexList(a->data);
 	break;
     case ACL_SRC_ASN:
+    case ACL_MAXCONN:
     case ACL_DST_ASN:
 	return aclDumpIntlistList(a->data);
 	break;
@@ -2316,10 +2323,10 @@ aclMatchArp(void *dataptr, struct in_addr c)
 }
 
 static int
-aclArpCompare(const void *data, splayNode * n)
+aclArpCompare(const void *a, const void *b)
 {
-    const unsigned short *d1 = data;
-    const unsigned short *d2 = n->data;
+    const unsigned short *d1 = a;
+    const unsigned short *d2 = b;
     if (d1[0] != d2[0])
 	return (d1[0] > d2[0]) ? 1 : -1;
     if (d1[1] != d2[1])

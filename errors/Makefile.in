@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.5 1998/04/24 05:26:39 wessels Exp $
+# $Id: Makefile.in,v 1.6 1999/10/04 05:04:11 wessels Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -43,6 +43,25 @@ install-mkdirs:
 	-@if test ! -d $(DEFAULT_ERROR_DIR); then \
 		echo "mkdir $(DEFAULT_ERROR_DIR)"; \
 		mkdir $(DEFAULT_ERROR_DIR); \
+	fi
+
+# undocumented hack.  You can use this target to create multi-lingual
+# error pages.  For example:
+#
+#	make ADDLANG=English addlang
+#
+# by Andres Kroonmaa <andre@mail.lbi.ee>
+#
+addlang: all
+	-@if test -d $(srcdir)/$(ADDLANG); then \
+	cd $(srcdir)/$(ADDLANG)/ ; \
+	for f in ERR_*; do \
+		if test -f $(DEFAULT_ERROR_DIR)/$$f ; then \
+			echo "appending $(ADDLANG)/$$f"; \
+			echo "<HR>" >> $(DEFAULT_ERROR_DIR)/$$f ; \
+			cat $$f >> $(DEFAULT_ERROR_DIR)/$$f; \
+		fi; \
+	done; \
 	fi
 
 clean:

@@ -10,7 +10,7 @@ Pøi pokusu o pøístup k URL:
 <A HREF="%U">%U</A>
 se objevila chyba FTP.
 <P>
-Squid odeslal následující  FTP pøíkaz:
+Squid odeslal následující FTP pøíkaz:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
 a obdr¾el tuto odpovìï:
 <blockquote><strong><pre>%F</pre></strong></blockquote>

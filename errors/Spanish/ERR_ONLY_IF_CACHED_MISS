@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+No se encontro un documento v&aacute;lido en la cach&eacute; y se 
+especific&oacute; la directiva <code>only-if-cached</code>.
+</STRONG>
+</UL>
+
+<P>
+
+Ud. ha enviado una solicitud con la directiva de control de la cach&eacute;
+<code>only-if-cached</code>. El documento no fue encontrado en la cach&eacute;,
+<em>o</em> requiere revalidaci&oacute;n prohibida por la directiva
+<code>only-if-cached</code>.
+
+</P>

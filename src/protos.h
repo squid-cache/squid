@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.346 1999/09/29 00:22:16 wessels Exp $
+ * $Id: protos.h,v 1.347 1999/10/04 05:05:22 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -129,6 +129,7 @@ extern void clientdbUpdate(struct in_addr, log_type, protocol_t, size_t);
 extern int clientdbCutoffDenied(struct in_addr);
 extern void clientdbDump(StoreEntry *);
 extern void clientdbFreeMemory(void);
+extern int clientdbEstablished(struct in_addr, int);
 
 extern void clientAccessCheck(void *);
 extern void clientAccessCheckDone(int, void *);
@@ -283,13 +284,13 @@ extern int httpCachable(method_t);
 extern void httpStart(FwdState *);
 extern void httpParseReplyHeaders(const char *, http_reply *);
 extern void httpProcessReplyHeader(HttpStateData *, const char *, int);
-extern size_t httpBuildRequestPrefix(request_t * request,
+extern mb_size_t httpBuildRequestPrefix(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
     MemBuf * mb,
     int cfd,
     http_state_flags);
-extern void httpAnonInitModule();
+extern void httpAnonInitModule(void);
 extern int httpAnonHdrAllowed(http_hdr_type hdr_id);
 extern int httpAnonHdrDenied(http_hdr_type hdr_id);
 extern void httpBuildRequestHeader(request_t *, request_t *, StoreEntry *, HttpHeader *, int, http_state_flags);
@@ -327,9 +328,9 @@ extern void httpBodySet(HttpBody * body, MemBuf * mb);
 extern void httpBodyPackInto(const HttpBody * body, Packer * p);
 
 /* Http Cache Control Header Field */
-extern void httpHdrCcInitModule();
-extern void httpHdrCcCleanModule();
-extern HttpHdrCc *httpHdrCcCreate();
+extern void httpHdrCcInitModule(void);
+extern void httpHdrCcCleanModule(void);
+extern HttpHdrCc *httpHdrCcCreate(void);
 extern HttpHdrCc *httpHdrCcParseCreate(const String * str);
 extern void httpHdrCcDestroy(HttpHdrCc * cc);
 extern HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
@@ -349,17 +350,17 @@ extern void httpHdrRangePackInto(const HttpHdrRange * range, Packer * p);
 /* iterate through specs */
 extern HttpHdrRangeSpec *httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangePos * pos);
 /* adjust specs after the length is known */
-extern int httpHdrRangeCanonize(HttpHdrRange * range, size_t clen);
+extern int httpHdrRangeCanonize(HttpHdrRange *, ssize_t);
 /* other */
 extern String httpHdrRangeBoundaryStr(clientHttpRequest * http);
 extern int httpHdrRangeIsComplex(const HttpHdrRange * range);
 extern int httpHdrRangeWillBeComplex(const HttpHdrRange * range);
-extern size_t httpHdrRangeFirstOffset(const HttpHdrRange * range);
-extern size_t httpHdrRangeLowestOffset(const HttpHdrRange * range, size_t size);
+extern ssize_t httpHdrRangeFirstOffset(const HttpHdrRange * range);
+extern ssize_t httpHdrRangeLowestOffset(const HttpHdrRange * range, ssize_t);
 
 
 /* Http Content Range Header Field */
-extern HttpHdrContRange *httpHdrContRangeCreate();
+extern HttpHdrContRange *httpHdrContRangeCreate(void);
 extern HttpHdrContRange *httpHdrContRangeParseCreate(const char *crange_spec);
 /* returns true if range is valid; inits HttpHdrContRange */
 extern int httpHdrContRangeParseInit(HttpHdrContRange * crange, const char *crange_spec);
@@ -367,7 +368,7 @@ extern void httpHdrContRangeDestroy(HttpHdrContRange * crange);
 extern HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
 extern void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
 /* inits with given spec */
-extern void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, size_t ent_len);
+extern void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, ssize_t);
 
 /* Http Header Tools */
 extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
@@ -377,26 +378,25 @@ extern int httpHeaderIdByNameDef(const char *name, int name_len);
 extern void httpHeaderMaskInit(HttpHeaderMask * mask, int value);
 extern void httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count);
 extern int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
-extern void httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, size_t ent_len);
+extern void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, ssize_t);
 extern void strListAdd(String * str, const char *item, char del);
 extern int strListIsMember(const String * str, const char *item, char del);
 extern int strListIsSubstr(const String * list, const char *s, char del);
 extern int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
 extern const char *getStringPrefix(const char *str, const char *end);
 extern int httpHeaderParseInt(const char *start, int *val);
-extern int httpHeaderParseSize(const char *start, size_t * sz);
+extern int httpHeaderParseSize(const char *start, ssize_t * sz);
 extern int httpHeaderReset(HttpHeader * hdr);
 #if STDC_HEADERS
 extern void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...);
 #else
-extern void
-     httpHeaderPutStrf();
+extern void httpHeaderPutStrf();
 #endif
 
 
 /* Http Header */
-extern void httpHeaderInitModule();
-extern void httpHeaderCleanModule();
+extern void httpHeaderInitModule(void);
+extern void httpHeaderCleanModule(void);
 /* init/clean */
 extern void httpHeaderInit(HttpHeader * hdr, http_hdr_owner_type owner);
 extern void httpHeaderClean(HttpHeader * hdr);
@@ -444,16 +444,16 @@ extern int httpMsgIsPersistent(float http_ver, const HttpHeader * hdr);
 extern int httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);
 
 /* Http Reply */
-extern void httpReplyInitModule();
+extern void httpReplyInitModule(void);
 /* create/destroy */
-extern HttpReply *httpReplyCreate();
+extern HttpReply *httpReplyCreate(void);
 extern void httpReplyDestroy(HttpReply * rep);
 /* reset: clean, then init */
 extern void httpReplyReset(HttpReply * rep);
 /* absorb: copy the contents of a new reply to the old one, destroy new one */
 extern void httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep);
 /* parse returns -1,0,+1 on error,need-more-data,success */
-extern int httpReplyParse(HttpReply * rep, const char *buf);	/*, int atEnd); */
+extern int httpReplyParse(HttpReply * rep, const char *buf, ssize_t);
 extern void httpReplyPackInto(const HttpReply * rep, Packer * p);
 /* ez-routines */
 /* mem-pack: returns a ready to use mem buffer with a packed reply */
@@ -1112,6 +1112,7 @@ extern double gb_to_double(const gb_t *);
 extern const char *gb_to_str(const gb_t *);
 extern void gb_flush(gb_t *);	/* internal, do not use this */
 extern int stringHasWhitespace(const char *);
+extern int stringHasCntl(const char *);
 extern void linklistPush(link_list **, void *);
 extern void *linklistShift(link_list **);
 extern int xrename(const char *from, const char *to);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: heap.c,v 1.3 1999/07/05 21:27:07 wessels Exp $
+ * $Id: heap.c,v 1.4 1999/10/04 05:04:50 wessels Exp $
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *
@@ -34,6 +34,7 @@
 
 /****************************************************************************
  * Heap implementation
+ * Copyright (C) 1999 by Hewlett Packard
  ****************************************************************************/
 
 #include "config.h"
@@ -97,11 +98,11 @@ new_heap(int initSize, heap_key_func gen_key)
     heap *hp = malloc(sizeof(*hp));
     assert(hp != NULL);
 
+    if (initSize <= 0)
+	initSize = MinSize;
     hp->nodes = calloc(initSize, sizeof(heap_node *));
     assert(hp->nodes != NULL);
 
-    if (initSize <= 0)
-	initSize = MinSize;
     hp->size = initSize;
     hp->last = 0;
     hp->gen_key = gen_key;

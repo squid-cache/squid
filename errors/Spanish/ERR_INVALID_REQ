@@ -14,19 +14,21 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-Petición no válida.
+Petici&oacute;n no v&aacute;lida.
 </STRONG>
 </UL>
 
 <P>
-Algún aspecto de la petición HTTP no es válido. Posibles problemas:
+Alg&uacute;n aspecto de la petici&oacute;n HTTP no es v&aacute;lido. 
+Posibles problemas:
 <UL>
-<LI>Falta o es desconocido el método de la petición (no es GET ni POST)
+<LI>Falta o es desconocido el m&eacute;todo de la petici&oacute;n (no es 
+    GET ni POST)
 <LI>Falta el URL
 <LI>Falta el identificador HTTP (HTTP/1.0)
-<LI>La petición es demasiado grande.
-<LI>Hay caracteres ilegales en el nombre de máquina;
-    el carácter  subrayado (_) no está permitido.
+<LI>La petici&oacute;n es demasiado grande.
+<LI>Hay caracteres ilegales en el nombre de m&aacute;quina;
+    el car&aacute;cter subrayado (_) no est&aacute; permitido.
 </UL>
-</P>
+
 

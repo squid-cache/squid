@@ -19,9 +19,8 @@ Error de lectura
 <P>
 El sistema ha devuelto el siguiente mensaje:
 <PRE><I>    %E</I></PRE>
-</P>
 
 <P>
-Ha ocurrido algún problema mientras se leían datos de la red.
-Por favor, inténtelo de nuevo.
+Ha ocurrido alg&uacute;n problema mientras se le&iacute;an datos de la red.
+Por favor, int&eacute;ntelo de nuevo.
 </P>

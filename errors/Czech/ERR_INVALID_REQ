@@ -6,7 +6,6 @@
 <H2>Po¾adovaný dokument je nedostupný</H2>
 <HR>
 <P>
-While trying to process the request:
 Pøi provádìní po¾adavku:
 <PRE>
 %R
@@ -16,18 +15,18 @@ se objevila následující chyba:
 <UL>
 <LI>
 <STRONG>
-Invalid Request
+Invalid Request.
 </STRONG>
 </UL>
 
 <P>
-Èáast HTTP po¾adavku je chybná:
+Èást HTTP po¾adavku je chybná:
 <UL>
 <LI>Chybná nebo chybìjící HTTP metoda (POST, GET)
 <LI>Chybìjící URL
 <LI>Chybìjící identifikátor HTTP (HTTP/1.0)
 <LI>Po¾adavek mù¾e být pøíli¹ velký
 <LI>Chybìjící polo¾ka Content-Lenght pro po¾adavky POST a GET
-<LI>Zakázaný znak v hostnam; (podtr¾ítko ??)
+<LI>Chybný znak v hostname (podtr¾ítko ??)
 </UL>
 </P>

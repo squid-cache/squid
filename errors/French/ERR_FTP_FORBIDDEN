@@ -1,17 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>ERREUR: L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>ERREUR</H1>
+<H2>L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</H2>
 <HR>
 <P>
-An FTP authentication failure occurred
-while trying to retrieve the URL:
+Une erreur d'authentification sur un FTP a eu lieu.
+En tentant de charger l'URL:
 <A HREF="%U">%U</A>
 <P>
-Squid sent the following FTP command:
+Squid a envoy&eacute; la commande FTP suivante:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-and then received this reply
+et a recu en r&eacute;ponse
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 </P>

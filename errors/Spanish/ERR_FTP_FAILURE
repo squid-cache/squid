@@ -5,17 +5,13 @@
 <H2>El URL solicitado no se ha podido conseguir</H2>
 <HR>
 <P>
-Ha ocurrido un error de protocolo FTP:
-
+Ha ocurrido un error de protocolo FTP
 mientras se intentaba traer el documento con URL:
 <A HREF="%U">%U</A>
 <P>
-Squid envió la siguiente orden FTP:
+Squid envi&oacute; la siguiente orden FTP:
 <BLOCKQUOTE><PRE><STRONG>%f</STRONG></PRE></BLOCKQUOTE>
-y recibió la siguiente respuesta:
+y recibi&oacute; la siguiente respuesta:
 <BLOCKQUOTE><PRE><STRONG>%F</STRONG></PRE></BLOCKQUOTE>
 <BLOCKQUOTE><PRE><STRONG>%g</STRONG></PRE></BLOCKQUOTE>
 <P>
-Esto puede ser causado por una URL de protocolo FTP con una ruta
-de directorios absoluto(que no cumple el RFC 1738). Si esta es la
-causa, el fichero podría encontrarse en <A HREF="%B">%B</A>.

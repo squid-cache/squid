@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.85 1999/05/04 19:22:21 wessels Exp $
+ * $Id: client.cc,v 1.86 1999/10/04 05:05:03 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -411,7 +411,7 @@ pipe_handler(int sig)
 }
 
 static void
-set_our_signal()
+set_our_signal(void)
 {
 #if HAVE_SIGACTION
     struct sigaction sa;

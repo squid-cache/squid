@@ -1,17 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
 <HR>
 <P>
-An FTP authentication failure occurred
-while trying to retrieve the URL:
+Un errore di autenticazione tramite FTP &egrave; avvenuto
+mentre si cercava di recuperare la URL:
 <A HREF="%U">%U</A>
 <P>
-Squid sent the following FTP command:
+Squid ha inviato il seguente comando FTP:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-and then received this reply
+e ha ricevuto la seguente risposta: 
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 </P>

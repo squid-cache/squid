@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.97 1999/06/30 06:29:04 wessels Exp $
+ * $Id: typedefs.h,v 1.98 1999/10/04 05:05:37 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -246,7 +246,7 @@ typedef unsigned char cache_key;
 typedef int Ctx;
 
 /* in case we want to change it later */
-typedef size_t mb_size_t;
+typedef ssize_t mb_size_t;
 
 /* iteration for HttpHdrRange */
 typedef int HttpHdrRangePos;

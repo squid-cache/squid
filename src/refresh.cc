@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.49 1999/06/10 06:10:34 wessels Exp $
+ * $Id: refresh.cc,v 1.50 1999/10/04 05:05:24 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -386,7 +386,7 @@ refreshStats(StoreEntry * sentry)
 }
 
 void
-refreshInit()
+refreshInit(void)
 {
     memset(refreshCounts, 0, sizeof(refreshCounts));
     refreshCounts[rcHTTP].proto = "HTTP";

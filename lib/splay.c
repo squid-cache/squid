@@ -1,5 +1,5 @@
 /*
- * $Id: splay.c,v 1.11 1999/05/04 21:20:42 wessels Exp $
+ * $Id: splay.c,v 1.12 1999/10/04 05:04:52 wessels Exp $
  */
 
 #include "config.h"
@@ -59,11 +59,11 @@ splay_splay(const void *data, splayNode * top, SPLAYCMP * compare)
     l = r = &N;
 
     for (;;) {
-	splayLastResult = compare(data, top);
+	splayLastResult = compare(data, top->data);
 	if (splayLastResult < 0) {
 	    if (top->left == NULL)
 		break;
-	    if ((splayLastResult = compare(data, top->left)) < 0) {
+	    if ((splayLastResult = compare(data, top->left->data)) < 0) {
 		y = top->left;	/* rotate right */
 		top->left = y->right;
 		y->right = top;
@@ -77,7 +77,7 @@ splay_splay(const void *data, splayNode * top, SPLAYCMP * compare)
 	} else if (splayLastResult > 0) {
 	    if (top->right == NULL)
 		break;
-	    if ((splayLastResult = compare(data, top->right)) > 0) {
+	    if ((splayLastResult = compare(data, top->right->data)) > 0) {
 		y = top->right;	/* rotate left */
 		top->right = y->left;
 		y->left = top;
@@ -115,24 +115,38 @@ splay_walk(splayNode * top, SPLAYWALKEE * walkee, void *state)
 {
     if (top->left)
 	splay_walk(top->left, walkee, state);
+    walkee(top->data, state);
     if (top->right)
 	splay_walk(top->right, walkee, state);
-    walkee(top->data, state);
 }
 
+#ifdef DEBUG
+void
+splay_dump_entry(void *data, int depth)
+{
+    printf("%*s%s\n", depth, "", (char *) data);
+}
 
-
-#ifdef DRIVER
+static void
+splay_do_dump(splayNode * top, void printfunc(void *data, int depth), int depth)
+{
+    if (!top)
+	return;
+    splay_do_dump(top->left, printfunc, depth + 1);
+    printfunc(top->data, depth);
+    splay_do_dump(top->right, printfunc, depth + 1);
+}
 
 void
-splay_print(splayNode * top, void (*printfunc) ())
+splay_dump(splayNode * top, void printfunc(void *data, int depth))
 {
-    if (top == NULL)
-	return;
-    splay_print(top->left, printfunc);
-    printfunc(top->data);
-    splay_print(top->right, printfunc);
+    splay_do_dump(top, printfunc, 0);
 }
+
+
+#endif
+
+#ifdef DRIVER
 
 typedef struct {
     int i;
@@ -147,10 +161,10 @@ compareint(void *a, splayNode * n)
 }
 
 void
-printint(void *a)
+printint(void *a, void *state)
 {
     intnode *A = a;
-    printf("%d\n", A->i);
+    printf("%d\n", "", A->i);
 }
 
 main(int argc, char *argv[])
@@ -164,7 +178,7 @@ main(int argc, char *argv[])
 	I->i = random();
 	top = splay_insert(I, top, compareint);
     }
-    splay_print(top, printint);
+    splay_walk(top, printint, NULL);
     return 0;
 }
 #endif /* DRIVER */

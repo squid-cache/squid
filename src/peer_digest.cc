@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.70 1999/01/29 21:28:17 wessels Exp $
+ * $Id: peer_digest.cc,v 1.71 1999/10/04 05:05:20 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -285,7 +285,8 @@ peerDigestRequest(PeerDigest * pd)
     assert(!req->header.len);
     httpHeaderPutStr(&req->header, HDR_ACCEPT, StoreDigestMimeStr);
     httpHeaderPutStr(&req->header, HDR_ACCEPT, "text/html");
-
+    if (p->login)
+	xstrncpy(req->login, p->login, MAX_LOGIN_SZ);
     /* create fetch state structure */
     fetch = memAllocate(MEM_DIGEST_FETCH_STATE);
     cbdataAdd(fetch, memFree, MEM_DIGEST_FETCH_STATE);
@@ -330,17 +331,18 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 {
     DigestFetchState *fetch = data;
     PeerDigest *pd = fetch->pd;
+    size_t hdr_size;
     assert(pd && buf);
     assert(!fetch->offset);
 
     if (peerDigestFetchedEnough(fetch, buf, size, "peerDigestFetchReply"))
 	return;
 
-    if (headersEnd(buf, size)) {
+    if ((hdr_size = headersEnd(buf, size))) {
 	http_status status;
 	HttpReply *reply = fetch->entry->mem_obj->reply;
 	assert(reply);
-	httpReplyParse(reply, buf);
+	httpReplyParse(reply, buf, hdr_size);
 	status = reply->sline.status;
 	debug(72, 3) ("peerDigestFetchReply: %s status: %d, expires: %d (%+d)\n",
 	    strBuf(pd->host), status,
@@ -410,7 +412,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
     if ((hdr_size = headersEnd(buf, size))) {
 	assert(fetch->entry->mem_obj->reply);
 	if (!fetch->entry->mem_obj->reply->sline.status)
-	    httpReplyParse(fetch->entry->mem_obj->reply, buf);
+	    httpReplyParse(fetch->entry->mem_obj->reply, buf, hdr_size);
 	if (fetch->entry->mem_obj->reply->sline.status != HTTP_OK) {
 	    debug(72, 1) ("peerDigestSwapInHeaders: %s status %d got cached!\n",
 		strBuf(fetch->pd->host), fetch->entry->mem_obj->reply->sline.status);

@@ -3,15 +3,19 @@
 <TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
-<H2>Poøadovaný dokument je nedostupný</H2>
+<H2>Po¾adovaný dokument je nedostupný</H2>
 <HR>
 <P>
 Pøi pokusu o pøístup k:
 <A HREF="%U">%U</A>
 <P>
 se objevila následující chyba:
-<UL>
 <P>
+<UL>
+<LI>
+<STRONG>
 Tento cache server je právì restartován a nemù¾e obslou¾it Vá¹ po¾adavek.
 Zkuste to za chvíli znova.
+</STRONG>
+</UL>
 </P>

@@ -753,6 +753,9 @@ case $os in
 	-xenix)
 		os=-xenix
 		;;
+	-rhapsody*)
+		os=-rhapsody
+		;;
 	-none)
 		;;
 	-os2)

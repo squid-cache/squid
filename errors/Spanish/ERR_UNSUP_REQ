@@ -12,10 +12,10 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-Método de la petición y protocolo no soportados
+M&eacute;todo de la petici&oacute;n y protocolo no soportados
 </STRONG>
 </UL>
 
 <P>
-Squid no admite todos los métodos para todos los protocolos de acceso.
+Squid no admite todos los m&eacute;todos para todos los protocolos de acceso.
 Por ejemplo, no se puede hacer un POST a un servidor Gopher.

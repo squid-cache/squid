@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.46 1999/06/17 22:20:36 wessels Exp $
+ * $Id: client_db.cc,v 1.47 1999/10/04 05:05:03 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -91,6 +91,30 @@ clientdbUpdate(struct in_addr addr, log_type ltype, protocol_t p, size_t size)
     }
 }
 
+/*
+ * clientdbEstablished()
+ * This function tracks the number of currently established connections
+ * for a client IP address.  When a connection is accepted, call this
+ * with delta = 1.  When the connection is closed, call with delta =
+ * -1.  To get the current value, simply call with delta = 0.
+ */
+int
+clientdbEstablished(struct in_addr addr, int delta)
+{
+    char *key;
+    ClientInfo *c;
+    if (!Config.onoff.client_db)
+	return 0;
+    key = inet_ntoa(addr);
+    c = (ClientInfo *) hash_lookup(client_table, key);
+    if (c == NULL)
+	c = clientdbAdd(addr);
+    if (c == NULL)
+	debug_trap("clientdbUpdate: Failed to add entry");
+    c->n_established += delta;
+    return c->n_established;
+}
+
 #define CUTOFF_SECONDS 3600
 int
 clientdbCutoffDenied(struct in_addr addr)
@@ -147,6 +171,8 @@ clientdbDump(StoreEntry * sentry)
     while ((c = (ClientInfo *) hash_next(client_table))) {
 	storeAppendPrintf(sentry, "Address: %s\n", c->key);
 	storeAppendPrintf(sentry, "Name: %s\n", fqdnFromAddr(c->addr));
+	storeAppendPrintf(sentry, "Currently established connections: %d\n",
+	    c->n_established);
 	storeAppendPrintf(sentry, "    ICP Requests %d\n",
 	    c->Icp.n_requests);
 	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {

@@ -1,8 +1,16 @@
-<HTML><HEAD> <meta http-equiv="Content-Type" content="text/html;
-charset=iso-8859-2"> <TITLE>CHYBA: neuspesny FTP upload </TITLE>
-</HEAD><BODY> <H1>CHYBA</H1> <H2>FTP PUT/upload neúspěšný</H2> <HR> <P> Při
-pokusu o PUT následujícího URL: <A HREF="%U">%U</A> <P> odeslal Squid
-následující FTP příkaz: <PRE><STRONG>
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: neuspesny FTP upload </TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>FTP PUT/upload neúspěšný</H2>
+<HR>
+<P>
+Při pokusu o PUT následujícího URL:
+<A HREF="%U">%U</A>
+<P>
+odeslal Squid následující FTP příkaz:
+<PRE><STRONG>
         %f
 </STRONG></PRE>
 a obdržel tuto odpověď
@@ -11,8 +19,10 @@ a obdržel tuto odpověď
 </STRONG></PRE>
 <P>
 Zkuste:
-<PRE>
+<P>
+<UL>
+<LI>
 zkontrolovat cestu, přístupová práva, volné místo na disku a zkuste to znova.
-</PRE>
+</UL>
 </P>
 

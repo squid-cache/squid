@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.15 1999/08/02 06:18:34 wessels Exp $
+ * $Id: dns_internal.cc,v 1.16 1999/10/04 05:05:09 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -130,6 +130,8 @@ idnsParseResolvConf(void)
     idnsFreeNameservers();
     while (fgets(buf, 512, fp)) {
 	t = strtok(buf, w_space);
+	if (t == NULL)
+	    continue;;
 	if (strcasecmp(t, "nameserver"))
 	    continue;
 	t = strtok(NULL, w_space);
@@ -306,12 +308,17 @@ idnsRead(int fd, void *data)
 	    len,
 	    inet_ntoa(from.sin_addr));
 	ns = idnsFromKnownNameserver(&from);
-	if (ns < 0) {
-	    debug(78, 1) ("idnsRead: Reply from unknown nameserver [%s]\n",
-		inet_ntoa(from.sin_addr));
+	if (ns >= 0) {
+	    nameservers[ns].nreplies++;
+	} else if (Config.onoff.ignore_unknown_nameservers) {
+	    static time_t last_warning = 0;
+	    if (squid_curtime - last_warning > 60) {
+		debug(78, 1) ("WARNING: Reply from unknown nameserver [%s]\n",
+		    inet_ntoa(from.sin_addr));
+		last_warning = squid_curtime;
+	    }
 	    continue;
 	}
-	nameservers[ns].nreplies++;
 	idnsGrokReply(rbuf, len);
     }
     if (lru_list.head)

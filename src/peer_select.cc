@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.100 1999/05/19 19:57:49 wessels Exp $
+ * $Id: peer_select.cc,v 1.101 1999/10/04 05:05:21 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -52,7 +52,8 @@ const char *hier_strings[] =
     "SOURCE_FASTEST",
     "ROUNDROBIN_PARENT",
 #if USE_CACHE_DIGESTS
-    "CACHE_DIGEST_HIT",
+    "CD_PARENT_HIT",
+    "CD_SIBLING_HIT",
 #endif
 #if USE_CARP
     "CARP",
@@ -310,7 +311,10 @@ peerGetSomeNeighbor(ps_state * ps)
     }
 #if USE_CACHE_DIGESTS
     if ((p = neighborsDigestSelect(request, entry))) {
-	code = CACHE_DIGEST_HIT;
+	if (neighborType(p, request) == PEER_PARENT)
+	    code = CD_PARENT_HIT;
+	else
+	    code = CD_SIBLING_HIT;
     } else
 #endif
 #if USE_CARP
@@ -534,7 +538,6 @@ static void
 peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
 {
     ps_state *psstate = data;
-    request_t *request = psstate->request;
     debug(44, 3) ("peerHandleIcpReply: %s %s\n",
 	htcp->hit ? "HIT" : "MISS",
 	storeUrl(psstate->entry));

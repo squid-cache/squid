@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.151 1999/06/19 16:34:36 wessels Exp $
+ * $Id: errorpage.cc,v 1.152 1999/10/04 05:05:10 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -67,7 +67,7 @@ static const struct {
 	ERR_SQUID_SIGNATURE,
 	    "\n<br clear=\"all\">\n"
 	    "<hr noshade size=1>\n"
-	    "Generated %T by %h (<a href=\"http://squid.nlanr.net/Squid/\">%s</a>)\n"
+	    "Generated %T by %h (%s)\n"
 	    "</BODY></HTML>\n"
     }
 };
@@ -378,6 +378,9 @@ errorStateFree(ErrorState * err)
     safe_free(err->host);
     safe_free(err->dnsserver_msg);
     safe_free(err->request_hdrs);
+    wordlistDestroy(&err->ftp.server_msg);
+    safe_free(err->ftp.request);
+    safe_free(err->ftp.reply);
     if (err->flags.flag_cbdata)
 	cbdataFree(err);
     else
@@ -451,7 +454,7 @@ errorConvert(char token, ErrorState * err)
 	break;
     case 'g':
 	/* FTP SERVER MESSAGE */
-	wordlistCat(err->ftp_server_msg, &mb);
+	wordlistCat(err->ftp.server_msg, &mb);
 	break;
     case 'h':
 	memBufPrintf(&mb, "%s", getMyHostname());

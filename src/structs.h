@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.306 1999/09/29 00:22:20 wessels Exp $
+ * $Id: structs.h,v 1.307 1999/10/04 05:05:35 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -75,6 +75,8 @@ struct _acl_proxy_auth_user {
     char *passwd;
     int passwd_ok;		/* 1 = passwd checked OK */
     long expiretime;
+    struct in_addr ipaddr;	/* IP addr this user authenticated from */
+    time_t ip_expiretime;
 };
 
 struct _acl_deny_info_list {
@@ -277,7 +279,6 @@ struct _SquidConfig {
     struct {
 	char *configFile;
 	char *agentInfo;
-	u_short localPort;
     } Snmp;
 #endif
 #if USE_WCCP
@@ -310,6 +311,7 @@ struct _SquidConfig {
     int redirectChildren;
     int authenticateChildren;
     int authenticateTTL;
+    int authenticateIpTTL;
     struct {
 	char *host;
 	u_short port;
@@ -396,6 +398,7 @@ struct _SquidConfig {
 	int prefer_direct;
 	int strip_query_terms;
 	int redirector_bypass;
+	int ignore_unknown_nameservers;
     } onoff;
     acl *aclList;
     struct {
@@ -413,6 +416,7 @@ struct _SquidConfig {
 #if USE_IDENT
 	acl_access *identLookup;
 #endif
+	acl_access *redirector;
     } accessList;
     acl_deny_info_list *denyInfoList;
     char *proxyAuthRealm;
@@ -625,8 +629,8 @@ struct _HttpHdrCc {
 
 /* http byte-range-spec */
 struct _HttpHdrRangeSpec {
-    size_t offset;
-    size_t length;
+    ssize_t offset;
+    ssize_t length;
 };
 
 /* There may be more than one byte range specified in the request.
@@ -640,7 +644,7 @@ struct _HttpHdrRange {
 /* http content-range header field */
 struct _HttpHdrContRange {
     HttpHdrRangeSpec spec;
-    size_t elength;		/* entity length, not content length */
+    ssize_t elength;		/* entity length, not content length */
 };
 
 /* some fields can hold either time or etag specs (e.g. If-Range) */
@@ -654,8 +658,8 @@ struct _TimeOrTag {
 struct _HttpHdrRangeIter {
     HttpHdrRangePos pos;
     const HttpHdrRangeSpec *spec;	/* current spec at pos */
-    size_t debt_size;		/* bytes left to send from the current spec */
-    size_t prefix_size;		/* the size of the incoming HTTP msg prefix */
+    ssize_t debt_size;		/* bytes left to send from the current spec */
+    ssize_t prefix_size;	/* the size of the incoming HTTP msg prefix */
     String boundary;		/* boundary for multipart responses */
 };
 
@@ -1437,6 +1441,7 @@ struct _request_t {
     HierarchyLogEntry hier;
     err_type err_type;
     char *peer_login;		/* Configured peer login:password */
+    time_t lastmod;		/* Used on refreshes */
 };
 
 struct _cachemgr_passwd {
@@ -1491,11 +1496,11 @@ struct _ErrorState {
 	unsigned int flag_cbdata:1;
     } flags;
     struct {
+	wordlist *server_msg;
 	char *request;
 	char *reply;
     } ftp;
     char *request_hdrs;
-    wordlist *ftp_server_msg;
 };
 
 /*
@@ -1660,8 +1665,8 @@ struct _storeSwapLogData {
 
 /* object to track per-action memory usage (e.g. #idle objects) */
 struct _MemMeter {
-    size_t level;		/* current level (count or volume) */
-    size_t hwater_level;	/* high water mark */
+    ssize_t level;		/* current level (count or volume) */
+    ssize_t hwater_level;	/* high water mark */
     time_t hwater_stamp;	/* timestamp of last high water mark change */
 };
 
@@ -1699,6 +1704,7 @@ struct _ClientInfo {
 	int n_req;
 	int n_denied;
     } cutoff;
+    int n_established;		/* number of current established connections */
 };
 
 struct _CacheDigest {
@@ -1728,6 +1734,7 @@ struct _FwdState {
     int n_tries;
     struct {
 	unsigned int dont_retry:1;
+	unsigned int ftp_pasv_failed:1;
     } flags;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.160 1999/08/02 06:18:35 wessels Exp $
+ * $Id: enums.h,v 1.161 1999/10/04 05:05:09 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -114,6 +114,7 @@ typedef enum {
     ACL_SRC_ARP,
     ACL_SNMP_COMMUNITY,
     ACL_NETDB_SRC_RTT,
+    ACL_MAXCONN,
     ACL_ENUM_MAX
 } squid_acl;
 
@@ -290,7 +291,8 @@ typedef enum {
     SOURCE_FASTEST,
     ROUNDROBIN_PARENT,
 #if USE_CACHE_DIGESTS
-    CACHE_DIGEST_HIT,
+    CD_PARENT_HIT,
+    CD_SIBLING_HIT,
 #endif
 #if USE_CARP
     CARP,
@@ -457,7 +459,8 @@ enum {
     ENTRY_NEGCACHED,
     ENTRY_VALIDATED,
     ENTRY_BAD_LENGTH,
-    ENTRY_ABORTED
+    ENTRY_ABORTED,
+    ENTRY_DONT_LOG		/* hack for gross 'Pump' entries */
 };
 
 typedef enum {
@@ -526,6 +529,10 @@ typedef enum {
     MEM_HELPER_REQUEST,
     MEM_HELPER_SERVER,
     MEM_HIERARCHYLOGENTRY,
+#if USE_HTCP
+    MEM_HTCP_SPECIFIER,
+    MEM_HTCP_DETAIL,
+#endif
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_CONTENT_RANGE,
     MEM_HTTP_HDR_ENTRY,

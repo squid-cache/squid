@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.139 1999/05/04 21:58:29 wessels Exp $
+ * $Id: net_db.cc,v 1.140 1999/10/04 05:05:20 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -528,7 +528,7 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 	    debug(38, 5) ("netdbExchangeHandleReply: hdr_sz = %d\n", hdr_sz);
 	    rep = ex->e->mem_obj->reply;
 	    if (0 == rep->sline.status)
-		httpReplyParse(rep, buf);
+		httpReplyParse(rep, buf, hdr_sz);
 	    debug(38, 3) ("netdbExchangeHandleReply: reply status %d\n",
 		rep->sline.status);
 	    if (HTTP_OK != rep->sline.status) {
@@ -973,6 +973,8 @@ netdbExchangeStart(void *data)
     storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
 	ex->buf, netdbExchangeHandleReply, ex);
     ex->r->flags.loopdetect = 1;	/* cheat! -- force direct */
+    if (p->login)
+	xstrncpy(ex->r->login, p->login, MAX_LOGIN_SZ);
     fwdStart(-1, ex->e, ex->r, no_addr, no_addr);
 #endif
 }

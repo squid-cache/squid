@@ -15,10 +15,11 @@ se objevila následující chyba:
 <STRONG>
 Access Denied.
 </STRONG>
-<P>
-Pøistup k dokumentu byl stornován v dùsledku nedostatèných pøístupových
-práv. Pokud jste pøesvìdèeni, ¾e se jedná o chybu, kontaktujte správce
-vzdáleného serveru.
 </UL>
 </P>
 
+<P>
+Pøístup k dokumentu byl stornován v dùsledku nedostateèných pøístupových
+práv. Pokud jste pøesvìdèeni, ¾e se jedná o chybu, kontaktujte
+<A HREF="mailto:%w">správce</a> vzdáleného serveru.
+</P>

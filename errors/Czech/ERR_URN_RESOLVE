@@ -1,22 +1,22 @@
 <HTML><HEAD>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2"> 
-<TITLE>CHYBA: Požadované  URN je nedostupné</TITLE>
+<TITLE>CHYBA: Požadované URN je nedostupné</TITLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
-<H2>A URL pro požadované  URN je nedostupné</H2>
+<H2>URL pro požadované URN je nedostupné</H2>
 <HR>
 <P>
-Při pokusu o přístup k  URN:
+Při pokusu o přístup k URN:
 <A HREF="%U">%U</A>
 <P>
 se objevila následující chyba:
 <UL>
 <LI>
 <STRONG>
-Cannot Resolve URN
+Cannot Resolve URN.
 </STRONG>
 </UL>
 
 <P>
-Hey, don't expect too much from URNs on %T :)
+Hey, neočekáváte příliš mnoho od URN na %T :)
 </P>

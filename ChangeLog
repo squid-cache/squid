@@ -1,3 +1,43 @@
+Changes to Squid-2.3.DEVEL2 ():
+
+	- Added --enable-truncate configure option.
+	- Updated Czech error messages ()
+	- Updated French error messages ()
+	- Updated Spanish error messages ()
+	- Added xrename() function for better debugging.
+	- Disallow empty ("") password in aclDecodeProxyAuth()
+	  (BoB Miorelli).
+	- Fixed ACL SPLAY subdomain detection (again).
+	- Increased default 'request_body_max_size' from 100KB
+	  to 1MB in cf.data.pre.
+	- Added 'content_length' member to request_t structure
+	  so we don't have to use httpHdrGetInt() so often.
+	- Fixed repeatedly calling memDataInit() for every reconfigure.
+	- Cleaned up the case when fwdDispatch() cannot forward a
+	  request.  Error messages used to report "[no URL]".
+	- Added a check to return specific error messages for a
+	  "store_digest" request when the digest entry doesn't exist
+	  and we reach internalStart().
+	- Changed the interface of storeSwapInStart() to avoid a bug
+	  where we closed "sc->swapin_sio" but couldn't set the
+	  pointer to NULL.
+	- Changed storeDirClean() so that the rate it gets called
+	  depends on the number of objects deleted.
+	- Some WCCP fixes.
+	- Added 'hostname_aliases' option to detect internal requests
+	  (cache digests) when a cache has more than one hostname
+	  in use.
+	- Async I/O NUMTHREADS now configurable with --enable-async-io=N
+	  (Henrik Nordstrom).
+	- Added queue length to async I/O cachemgr stats (Henrik Nordstrom).
+	- Added OPTIONS request method.
+	- WCCP establishes and registers with the router faster.	
+	- Added 'maxconn' acl type to limit the number of established
+	  connections from a single client IP address.  Submitted
+	  by Vadim Kolontsov.
+	- Close FTP data socket as soon as transfer completes
+	  (Alexander V. Lukyanov).
+
 Changes to Squid-2.3.DEVEL1 ():
 
 	- Added WCCP support.  This adds the 'wccp_router' squid.conf
@@ -25,7 +65,6 @@ Changes to Squid-2.3.DEVEL1 ():
 	- Added 'peer_connect_timeout' squid.conf option.
 	- Added 'redirector_bypass' squid.conf option.
 	- Added RFC 2518 (WEBDAV) request methods.
-	
 
 Changes to Squid-2.2 (April 19, 1999):
 
@@ -232,6 +271,25 @@ Changes to Squid-2.2 (April 19, 1999):
 	- Fixed a store_rebuild bug that caused us to get stuck trying
 	  if a cache_dir subdirectory didn't exist.
 	- Fixed a buffer overrun bug in gb_to_str().
+
+	2.2.STABLE4:
+
+	- Fixed a dread_ctrl leak caused in store_client.c
+	- Fixed a memory leak in eventRun().
+	- Fixed a memory leak of ErrorState structures due to
+	  a bug in forward.c.
+	- Fixed detection of subdomain collisions for SPLAY trees.
+	- Fixed logging of hierarchy codes for SSL requests (Henrik
+	  Nordstrom).
+	- Added some descriptions to mib.txt.
+	- Fixed a bug with non-hierarchical requests (e.g. POST) 
+	  and cache digests.  We used to look up non-hierarchical
+	  requests in peer digests.  A false hit may cause Squid
+	  to forward a request to a sibling.  In combination with
+	  'Cache-control: only-if-cached, this generates 504 Gateway
+	  Timeout responses and the request may not be re-forwardable.
+	- Fixed a filedescriptor leak for some aborted requests.  
+
 
 Changes to Squid-2.1 (November 16, 1998):
 

@@ -1555,4 +1555,90 @@ Squid consists of the following major components
 	Most of the operations are faster than their "ascii string"
 	equivalents.
 
+<sect>File Formats
+
+<sect1><em/swap.state/
+
+<P>
+NOTE: this information is current as of version 2.2.STABLE4.
+
+<P>
+A <em/swap.state/ entry is defined by the <em/storeSwapLogData/
+structure, and has the following elements:
+<verb>
+struct _storeSwapLogData {
+    char op;
+    int swap_file_number;
+    time_t timestamp;
+    time_t lastref;
+    time_t expires;
+    time_t lastmod;
+    size_t swap_file_sz;
+    u_short refcount;
+    u_short flags;
+    unsigned char key[MD5_DIGEST_CHARS];
+};
+</verb>
+
+<descrip>
+<tag/op/
+	Either SWAP_LOG_ADD (1) when an object is added to
+	the disk storage, or SWAP_LOG_DEL (2) when an object is
+	deleted.
+
+<tag/swap_file_number/
+	The 32-bit file number which maps to a pathname.  Only
+	the low 24-bits are relevant.  The high 8-bits are
+	used as an index to an array of storage directories, and
+	are set at run time because the order of storage directories
+	may change over time.
+
+<tag/timestamp/
+	A 32-bit Unix time value that represents the time when
+	the origin server generated this response.  If the response
+	has a valid <em/Date:/ header, this timestamp corresponds
+	to that time.  Otherwise, it is set to the Squid process time
+	when the response is read (as soon as the end of headers are
+	found).
+
+<tag/lastref/
+	The last time that a client requested this object.
+	Strictly speaking, this time is set whenver the StoreEntry
+	is locked (via <em/storeLockObject()/). 
+
+<tag/expires/
+	The value of the response's <em/Expires:/ header, if any.
+	If the response does not have an <em/Expires:/ header, this
+	is set to -1.  If the response has an invalid (unparseable)
+	<em/Expires:/ header, it is also set to -1.  There are some cases
+	where Squid sets <em/expires/ to -2.  This happens for the
+	internal ``netdb'' object and for FTP URL responses.
+
+<tag/lastmod/
+	The value of the response's <em/Last-modified:/ header, if any.
+	This is set to -1 if there is no <em/Last-modified:/ header,
+	or if it is unparseable.
+
+<tag/swap_file_sz/
+	This is the number of bytes that the object occupies on
+	disk.  It includes the Squid ``swap file header''.
+
+<tag/refcount/
+	The number of times that this object has been accessed (referenced).
+	Since its a 16-bit quantity, it is susceptible to overflow
+	if a single object is accessed 65,536 times before being replaced.
+
+<tag/flags/
+	A copy of the <em/StoreEntry/ flags field.  Used as a sanity
+	check when rebuilding the cache at startup.  Objects that
+	have the KEY_PRIVATE flag set are not added back to the cache.
+
+<tag/key/
+	The 128-bit MD5 hash for this object.
+	
+</descrip>
+
+Note that <em/storeSwapLogData/ entries are written in native machine
+byte order.  They are not necessarily portable across architectures.
+
 </article>
