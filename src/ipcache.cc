@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.244 2004/04/10 13:10:17 hno Exp $
+ * $Id: ipcache.cc,v 1.245 2004/10/15 21:12:47 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -332,8 +332,8 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
     if (ipcount > 0) {
         int j, k;
 
-        i->addrs.in_addrs = xcalloc(ipcount, sizeof(struct in_addr));
-        i->addrs.bad_mask = xcalloc(ipcount, sizeof(unsigned char));
+        i->addrs.in_addrs = (struct in_addr *)xcalloc(ipcount, sizeof(struct in_addr));
+        i->addrs.bad_mask = (unsigned char *)xcalloc(ipcount, sizeof(unsigned char));
 
         for (j = 0, k = 0; k < ipcount; k++) {
             if (safe_inet_addr(A[k], &i->addrs.in_addrs[j]))
