@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.25 1996/04/16 20:30:45 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.26 1996/04/17 23:48:23 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -55,21 +55,10 @@ typedef struct _line_entry {
     struct _line_entry *next;
 } line_entry;
 
-#define TEST_SITE 5
-static char *test_site[TEST_SITE] =
-{
-    "internic.net",
-    "usc.edu",
-    "cs.colorado.edu",
-    "mit.edu",
-    "yale.edu"
-};
-
 static dnsserver_entry **dns_child_table = NULL;
 static int last_dns_dispatched = 2;
 static struct hostent *static_result = NULL;
 static int dns_child_alive = 0;
-static int ipcache_initialized = 0;
 
 char *dns_error_message = NULL;	/* possible error message */
 HashID ip_table = 0;
@@ -96,17 +85,16 @@ void update_dns_child_alive()
 
 int ipcache_testname()
 {
-    int success, i;
+    wordlist *w = NULL;
     debug(14, 1, "Performing DNS Tests...\n");
-
-    for (success = i = 0; i < TEST_SITE; i++) {
-	if (gethostbyname(test_site[i]) != NULL)
-	    ++success;
+    if ((w = getDnsTestnameList()) == NULL)
+	return 1;
+    for (; w; w = w->next) {
+	if (gethostbyname(w->key) != NULL)
+	    return 1;
     }
-    return (success == 0) ? -1 : 0;
+    return 0;
 }
-
-
 
 
 /*
@@ -388,8 +376,6 @@ ipcache_entry *ipcache_create()
 void ipcache_add_to_hash(e)
      ipcache_entry *e;
 {
-    if (!ipcache_initialized)
-	ipcache_init();
     if (hash_join(ip_table, (hash_link *) e)) {
 	debug(14, 1, "ipcache_add_to_hash: Cannot add %s (%p) to hash table %d.\n",
 	    e->name, e, ip_table);
@@ -1077,11 +1063,11 @@ void ipcacheOpenServers()
     safe_free(dns_child_table);
     dns_child_table = (dnsserver_entry **) xcalloc(N, sizeof(dnsserver_entry));
     dns_child_alive = 0;
-    debug(14, 1, "ipcache_init: Starting %d 'dns_server' processes\n", N);
+    debug(14, 1, "ipcacheOpenServers: Starting %d 'dns_server' processes\n", N);
     for (i = 0; i < N; i++) {
 	dns_child_table[i] = (dnsserver_entry *) xcalloc(1, sizeof(dnsserver_entry));
 	if ((dnssocket = ipcache_create_dnsserver(prg)) < 0) {
-	    debug(14, 1, "ipcache_init: WARNING: Cannot run 'dnsserver' process.\n");
+	    debug(14, 1, "ipcacheOpenServers: WARNING: Cannot run 'dnsserver' process.\n");
 	    debug(14, 1, "              Fallling back to the blocking version.\n");
 	    dns_child_table[i]->alive = 0;
 	} else {
@@ -1124,7 +1110,7 @@ void ipcacheOpenServers()
 		COMM_SELECT_READ,
 		(PF) ipcache_dnsHandleRead,
 		(void *) dns_child_table[i]);
-	    debug(14, 3, "ipcache_init: 'dns_server' %d started\n", i);
+	    debug(14, 3, "ipcacheOpenServers: 'dns_server' %d started\n", i);
 	}
     }
 }
@@ -1133,10 +1119,7 @@ void ipcacheOpenServers()
 void ipcache_init()
 {
 
-    debug(14, 3, "ipcache_init: Called.  ipcache_initialized=%d  getDnsChildren()=%d\n", ipcache_initialized, getDnsChildren());
-
-    if (ipcache_initialized)
-	return;
+    debug(14, 3, "Initializing IP Cache...\n");
 
     last_dns_dispatched = getDnsChildren() - 1;
     if (!dns_error_message)
@@ -1144,9 +1127,9 @@ void ipcache_init()
 
     /* test naming lookup */
     if (!do_dns_test) {
-	debug(14, 4, "ipcache_init: Skipping DNS name lookup tests, -D flag given.\n");
-    } else if (ipcache_testname() < 0) {
-	fatal("ipcache_init: DNS name lookup appears to be broken on this machine.");
+	debug(14, 4, "ipcache_init: Skipping DNS name lookup tests.\n");
+    } else if (!ipcache_testname()) {
+	fatal("ipcache_init: DNS name lookup tests failed/");
     } else {
 	debug(14, 1, "Successful DNS name lookup tests...\n");
     }
@@ -1166,8 +1149,6 @@ void ipcache_init()
 	    (float) IP_HIGH_WATER) / (float) 100);
     ipcache_low = (long) (((float) MAX_IP *
 	    (float) IP_LOW_WATER) / (float) 100);
-
-    ipcache_initialized = 1;
 }
 
 /* clean up the pending entries in dnsserver */
@@ -1234,9 +1215,6 @@ struct hostent *ipcache_gethostbyname(name)
     ipcache_entry *result;
     unsigned int a1, a2, a3, a4;
     struct hostent *s_result = NULL;
-
-    if (!ipcache_initialized)
-	ipcache_init();
 
     if (!name) {
 	debug(14, 5, "ipcache_gethostbyname: Invalid argument?\n");
