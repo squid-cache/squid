@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.3 1996/02/29 07:23:16 wessels Exp $ */
+/* $Id: main.cc,v 1.4 1996/03/22 17:47:40 wessels Exp $ */
 
 #include "config.h"
 #include <stdlib.h>
@@ -55,6 +55,7 @@ extern int storeMaintainSwapSpace();
 extern void fatal_dump _PARAMS((char *));
 extern void fatal _PARAMS((char *));
 extern void kill_zombie();
+extern int ftpInitialize _PARAMS((void));
 
 static int asciiPortNumOverride = 0;
 static int binaryPortNumOverride = 0;
@@ -285,6 +286,8 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
 
     /* init neighbors */
     neighbors_init();
+
+    ftpInitialize();
 
 
 #if defined(MALLOC_DBG)
