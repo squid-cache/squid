@@ -1656,7 +1656,7 @@ fi
 
 # Define the identity of the package.
 PACKAGE=squid
-VERSION=3.0-DEVEL-refcount
+VERSION=3.0-DEVEL
 
 cat >>confdefs.h <<_ACEOF
 #define PACKAGE "$PACKAGE"
