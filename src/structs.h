@@ -857,7 +857,7 @@ struct _pingerEchoData {
     struct in_addr to;
     unsigned char opcode;
     int psize;
-    char payload[8192];
+    char payload[PINGER_PAYLOAD_SZ];
 };
 
 struct _pingerReplyData {
@@ -866,7 +866,7 @@ struct _pingerReplyData {
     int rtt;
     int hops;
     int psize;
-    char payload[8192];
+    char payload[PINGER_PAYLOAD_SZ];
 };
 
 struct _icp_common_t {
