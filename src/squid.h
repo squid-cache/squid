@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.162 1998/03/07 23:43:10 rousskov Exp $
+ * $Id: squid.h,v 1.163 1998/03/08 08:43:16 rousskov Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -31,8 +31,6 @@
 #ifndef SQUID_H
 #define SQUID_H
 
-/* @?@ @?@ tmp hack until coredumps are gone */
-#define OLD_POST_CODE 1
 
 #include "config.h"
 
