@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.40 1996/04/10 20:45:33 wessels Exp $ */
-#ident "$Id: store.cc,v 1.40 1996/04/10 20:45:33 wessels Exp $"
+/* $Id: store.cc,v 1.41 1996/04/10 20:53:05 wessels Exp $ */
+#ident "$Id: store.cc,v 1.41 1996/04/10 20:53:05 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -934,7 +934,7 @@ int storeAddSwapDisk(path)
     if (cache_dirs == NULL)
 	cache_dirs = create_dynamic_array(5, 5);
     /* XXX note xstrdup here prob means we
-	can't use destroy_dynamic_array() */
+     * can't use destroy_dynamic_array() */
     insert_dynamic_array(cache_dirs, xstrdup(path));
     return ++ncache_dirs;
 }
@@ -1300,10 +1300,8 @@ void storeRebuildFromDisk()
 	size = 0;
 	if (sscanf(line_in, "%s %s %d %d %d",
 		log_swapfile, url, &scan1, &scan2, &scan3) != 5) {
-#ifdef UNLINK_ON_RELOAD
-	    if (log_swapfile[0])
+	    if (opt_unlink_on_reload && log_swapfile[0])
 		safeunlink(log_swapfile, 0);
-#endif
 	    continue;
 	}
 	expires = (time_t) scan1;
@@ -1324,22 +1322,19 @@ void storeRebuildFromDisk()
 	    if (stat(swapfile, &sb) < 0) {
 		if (expires < cached_curtime) {
 		    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
-#ifdef UNLINK_ON_RELOAD
-		    safeunlink(swapfile, 1);
-#endif
+		    if (opt_unlink_on_relaod)
+			safeunlink(swapfile, 1);
 		    expcount++;
 		} else {
 		    debug(20, 3, "storeRebuildFromDisk: Swap file missing: <URL:%s>: %s: %s.\n", url, swapfile, xstrerror());
-#ifdef UNLINK_ON_RELOAD
-		    safeunlink(log_swapfile, 1);
-#endif
+		    if (opt_unlink_on_relaod)
+			safeunlink(log_swapfile, 1);
 		}
 		continue;
 	    }
 	    if ((size = sb.st_size) == 0) {
-#ifdef UNLINK_ON_RELOAD
-		safeunlink(log_swapfile, 1);
-#endif
+		if (opt_unlink_on_relaod)
+		    safeunlink(log_swapfile, 1);
 		continue;
 	    }
 	    /* timestamp might be a little bigger than sb.st_mtime */
@@ -1361,9 +1356,8 @@ void storeRebuildFromDisk()
 	}
 	if (expires < cached_curtime) {
 	    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
-#ifdef UNLINK_ON_RELOAD
-	    safeunlink(swapfile, 1);
-#endif
+	    if (opt_unlink_on_relaod)
+		safeunlink(swapfile, 1);
 	    expcount++;
 	    continue;
 	}
@@ -2427,7 +2421,7 @@ int storeInit()
 
     storelog_fd = file_open("store.log", NULL, O_WRONLY | O_APPEND | O_CREAT);
 
-    for (w = getCacheDirs(); w; w=w->next)
+    for (w = getCacheDirs(); w; w = w->next)
 	storeAddSwapDisk(w->key);
     storeSanityCheck();
     file_map_create(MAX_SWAP_FILE);

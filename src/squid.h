@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.12 1996/04/09 18:18:52 wessels Exp $ */
+/* $Id: squid.h,v 1.13 1996/04/10 20:53:34 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -127,3 +127,4 @@ extern int theAsciiConnection;	/* main.c */
 extern int theUdpConnection;	/* main.c */
 extern int shutdown_pending;	/* main.c */
 extern int reread_pending;	/* main.c */
+extern int opt_unlink_on_reload;	/* main.c */
