@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.272 1998/06/26 04:23:33 wessels Exp $
+ * $Id: comm.cc,v 1.273 1998/07/14 22:55:59 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -777,6 +777,8 @@ comm_incoming(void)
 	icpHandleUdp(theInIcpConnection, &incame);
 	if (theInIcpConnection != theOutIcpConnection)
 	    icpHandleUdp(theOutIcpConnection, &incame);
+	if (IcpQueueHead)
+	    icpUdpSendQueue(theOutIcpConnection, NULL);
     }
     for (j = 0; j < NHttpSockets; j++) {
 	if (HttpSockets[j] < 0)

@@ -440,6 +440,7 @@ extern void *icpCreateMessage(icp_opcode opcode,
     int pad);
 extern int icpUdpSend(int, const struct sockaddr_in *, icp_common_t *, log_type, int);
 extern PF icpHandleUdp;
+extern PF icpUdpSendQueue;
 extern PF httpAccept;
 
 #ifdef SQUID_SNMP
