@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.216 1997/12/31 22:13:20 wessels Exp $
+ * $Id: comm.cc,v 1.217 1998/01/01 05:48:39 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -466,6 +466,7 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
+    assert(F->open);
     if (timeout < 0) {
 	F->timeout_handler = NULL;
 	F->timeout_data = NULL;

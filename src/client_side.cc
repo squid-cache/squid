@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.183 1998/01/01 00:05:52 wessels Exp $
+ * $Id: client_side.cc,v 1.184 1998/01/01 05:48:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1020,10 +1020,16 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 			clientSendMoreData,
 			http);
 	    } else {
-		debug(12, 5) ("clientWriteComplete: FD %d Setting read handler for next request\n", fd);
+		debug(12, 5) ("clientWriteComplete: FD %d reading next request\n", fd);
 		fd_note(fd, "Reading next request");
-		clientReadRequest(fd, conn); /* Read next request */
+		/*
+		 * Set the timeout BEFORE calling clientReadRequest().
+		 */
 		commSetTimeout(fd, 15, requestTimeout, conn);
+		clientReadRequest(fd, conn); /* Read next request */
+		/*
+		 * Note, the FD may be closed at this point.
+		 */
 	    }
 	} else {
 	    comm_close(fd);
