@@ -87,4 +87,4 @@ section 80    WCCP
 section 81    Cache Store
 section 82    External ACL
 section 83    SSL accelerator support
-section 64    Helper process maintenance
+section 84    Helper process maintenance
