@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.209 2001/01/28 00:45:45 hno Exp $
+# $Id: cf.data.pre,v 1.210 2001/01/30 10:06:48 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3237,11 +3237,17 @@ NAME: coredump_dir
 TYPE: string
 LOC: Config.coredump_dir
 DEFAULT: none
+DEFAULT_IF_NONE: none
 DOC_START
-	By default Squid leaves core files in the first cache_dir
-	directory.  If you set 'coredump_dir' to a directory
+	By default Squid leaves core files in the directory from where
+	it was started. If you set 'coredump_dir' to a directory
 	that exists, Squid will chdir() to that directory at startup
 	and coredump files will be left there.
+
+NOCOMMENT_START
+# Leave coredumps in the first cache dir
+coredump_dir @DEFAULT_SWAP_DIR@
+NOCOMMENT_END
 DOC_END
 
 NAME: redirector_bypass
