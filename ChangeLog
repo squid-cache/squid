@@ -7,6 +7,16 @@ Changes to Squid-2.4.DEVEL3 ():
 	- Added --enable-auth-modules=... configure option
 	- Improved ICP dead peer detection to also work when the workload
 	  is low
+	- Improved TCP dead peer detection and recovery
+	- Squid is now a bit more persistent in trying to find a alive
+	  parent when never_direct is used.
+	- nonhierarchical_direct squid.conf directive to make non-ICP
+	  peer selection behave a bit more like ICP selection with respect
+	  to hierarchy.
+	- Bugfix where netdb selection could override never_direct
+	- ICP timeout selection now prefers to use parents only when
+	  calculating the dynamic timeout to compensate for common RTT
+	  differences between parents and siblings.
 
 Changes to Squid-2.4.DEVEL2 ():
 

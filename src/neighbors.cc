@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.280 2000/05/02 18:32:41 hno Exp $
+ * $Id: neighbors.cc,v 1.281 2000/05/02 18:47:34 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -374,6 +374,8 @@ neighborsUdpPing(request_t * request,
     icp_common_t *query;
     int queries_sent = 0;
     int peers_pinged = 0;
+    int parent_timeout = 0, parent_exprep = 0;
+    int sibling_timeout = 0, sibling_exprep = 0;
 
     if (Config.peers == NULL)
 	return 0;
@@ -383,7 +385,6 @@ neighborsUdpPing(request_t * request,
     mem->start_ping = current_time;
     mem->ping_reply_callback = callback;
     mem->ircb_data = callback_data;
-    *timeout = 0.0;
     reqnum = icpSetCacheKey(entry->key);
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
 	if (p == NULL)
@@ -438,8 +439,13 @@ neighborsUdpPing(request_t * request,
 	    (*exprep) += p->mcast.n_replies_expected;
 	} else if (neighborUp(p)) {
 	    /* its alive, expect a reply from it */
-	    (*exprep)++;
-	    (*timeout) += p->stats.rtt;
+	    if (neighborType(p, request) == PEER_PARENT) {
+		parent_exprep++;
+		parent_timeout += p->stats.rtt;
+	    } else {
+		sibling_exprep++;
+		sibling_timeout += p->stats.rtt;
+	    }
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
@@ -489,14 +495,22 @@ neighborsUdpPing(request_t * request,
     }
 #endif
     /*
+     * How many replies to expect?
+     */
+    *exprep = parent_exprep + sibling_exprep;
+
+    /*
      * If there is a configured timeout, use it
      */
     if (Config.Timeout.icp_query)
 	*timeout = Config.Timeout.icp_query;
     else {
-	if (*exprep > 0)
-	    (*timeout) = 2 * (*timeout) / (*exprep);
-	else
+	if (*exprep > 0) {
+	    if (parent_exprep)
+		*timeout = 2 * parent_timeout / parent_exprep;
+	    else
+		*timeout = 2 * sibling_timeout / sibling_exprep;
+	} else
 	    *timeout = 2000;	/* 2 seconds */
 	if (Config.Timeout.icp_query_max)
 	    if (*timeout > Config.Timeout.icp_query_max)
