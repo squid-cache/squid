@@ -34,6 +34,12 @@
 /* Define if you have the getdtablesize function.  */
 #undef HAVE_GETDTABLESIZE
 
+/* Define if you have the mallinfo function.  */
+#undef HAVE_MALLINFO
+
+/* Define if you have the mallopt function.  */
+#undef HAVE_MALLOPT
+
 /* Define if you have the regcomp function.  */
 #undef HAVE_REGCOMP
 
@@ -126,3 +132,15 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
+
+/* Define if you have the bsd library (-lbsd).  */
+#undef HAVE_LIBBSD
+
+/* Define if you have the nsl library (-lnsl).  */
+#undef HAVE_LIBNSL
+
+/* Define if you have the resolv library (-lresolv).  */
+#undef HAVE_LIBRESOLV
+
+/* Define if you have the socket library (-lsocket).  */
+#undef HAVE_LIBSOCKET
