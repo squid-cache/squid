@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.381 2005/03/18 15:36:07 hno Exp $
+# $Id: cf.data.pre,v 1.382 2005/03/18 16:32:37 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -197,6 +197,9 @@ DOC_START
 			    NO_DEFAULT_CA
 				Don't use the default CA list built in
 				to OpenSSL
+			    NO_SESSION_REUSE
+				Don't allow for session reuse. Each connection
+				will result in a new SSL session.
 
 	   sslcontext=	SSL session ID context identifier.
 
