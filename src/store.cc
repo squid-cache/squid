@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.51 1996/04/14 03:03:46 wessels Exp $ */
-#ident "$Id: store.cc,v 1.51 1996/04/14 03:03:46 wessels Exp $"
+/* $Id: store.cc,v 1.52 1996/04/15 22:54:23 wessels Exp $ */
+#ident "$Id: store.cc,v 1.52 1996/04/15 22:54:23 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -64,6 +64,18 @@ static char *storeLogTags[] =
     "RELEASE"
 };
 
+struct storeRebuild_data {
+    FILE *log;
+    int objcount;		/* # objects successfully reloaded */
+    int expcount;		/* # objects expired */
+    int linecount;		/* # lines parsed from cache logfile */
+    int clashcount;		/* # swapfile clashes avoided */
+    int dupcount;		/* # duplicates purged */
+    time_t start, stop;
+    int fast_mode;
+    char line_in[4096];
+};
+
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
 HashID table = 0;
@@ -91,12 +103,13 @@ static unsigned long store_swap_high = 0;
 static unsigned long store_swap_low = 0;
 static int swaplog_fd = -1;
 static int swaplog_lock = 0;
-FILE *swaplog_stream = NULL;
 static int storelog_fd = -1;
 
 /* key temp buffer */
 static char key_temp_buffer[MAX_URL];
 static char swaplog_file[MAX_FILE_NAME_LEN];
+static char tmp_filename[MAX_FILE_NAME_LEN];
+static char logmsg[MAX_URL<<1];
 
 /* patch cache_dir to accomodate multiple disk storage */
 dynamic_array *cache_dirs = NULL;
@@ -272,7 +285,7 @@ void storeFreeEntry(e)
 	/* look up to free client_list */
 	if (e->mem_obj->client_list) {
 	    for (i = 0; i < e->mem_obj->client_list_size; ++i)
-		    safe_free(e->mem_obj->client_list[i]);
+		safe_free(e->mem_obj->client_list[i]);
 	    safe_free(e->mem_obj->client_list);
 	}
     }
@@ -310,7 +323,6 @@ static void storeLog(tag, e)
     int expect_len = 0;
     int actual_len = 0;
     int code = 0;
-    static char logmsg[MAX_URL + 300];
     if (storelog_fd < 0)
 	return;
     t = e->expires - cached_curtime;
@@ -514,6 +526,10 @@ char *storeGeneratePublicKey(url, method)
 	sprintf(key_temp_buffer, "/head/%s", url);
 	return key_temp_buffer;
 	break;
+    case METHOD_CONNECT:
+	sprintf(key_temp_buffer, "/connect/%s", url);
+	return key_temp_buffer;
+	break;
     default:
 	fatal_dump("storeGeneratePublicKey: Unsupported request method");
 	break;
@@ -660,12 +676,17 @@ StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
     debug(20, 5, "StoreAddDiskRestore: <URL:%s>: size %d: expires %d: file_number %d\n",
 	url, size, expires, file_number);
 
+#ifdef EXTRA_CODE
     if (file_map_bit_test(file_number)) {
 	debug(20, 0, "This file number is already allocated!\n");
 	debug(20, 0, "    --> file_number %d\n", file_number);
 	debug(20, 0, "    --> <URL:%s>\n", url);
 	return (NULL);
     }
+#else
+    /* if you call this you'd better be sure file_number is not 
+     * already in use! */
+#endif
     meta_data.store_entries++;
     meta_data.url_strings += strlen(url);
 
@@ -1070,7 +1091,6 @@ void storeSwapOutHandle(fd, flag, e)
      StoreEntry *e;
 {
     static char filename[MAX_FILE_NAME_LEN];
-    static char logmsg[6000];
     char *page_ptr = NULL;
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
@@ -1140,11 +1160,17 @@ void storeSwapOutHandle(fd, flag, e)
 	return;
     }
     /* write some more data, reschedule itself. */
-    storeCopy(e, e->mem_obj->swap_offset, SWAP_BUF,
-	e->mem_obj->e_swap_buf, &(e->mem_obj->e_swap_buf_len));
-    file_write(e->mem_obj->swap_fd, e->mem_obj->e_swap_buf,
-	e->mem_obj->e_swap_buf_len, e->mem_obj->e_swap_access,
-	storeSwapOutHandle, e);
+    storeCopy(e,
+	e->mem_obj->swap_offset,
+	SWAP_BUF,
+	e->mem_obj->e_swap_buf,
+	&(e->mem_obj->e_swap_buf_len));
+    file_write(e->mem_obj->swap_fd,
+	e->mem_obj->e_swap_buf,
+	e->mem_obj->e_swap_buf_len,
+	e->mem_obj->e_swap_access,
+	storeSwapOutHandle,
+	e);
     return;
 
 }
@@ -1205,186 +1231,258 @@ static int storeSwapOutStart(e)
 }
 
 /* recreate meta data from disk image in swap directory */
-void storeRebuildFromDisk()
+
+/* Add one swap file at a time from disk storage */
+static int storeDoRebuildFromDisk(data)
+     struct storeRebuild_data *data;
 {
-    int objcount = 0;		/* # objects successfully reloaded */
-    int expcount = 0;		/* # objects expired */
-    int linecount = 0;		/* # lines parsed from cache logfile */
-    int clashcount = 0;		/* # swapfile clashes avoided */
-    int dupcount = 0;		/* # duplicates purged */
-    static char line_in[4096];
     static char log_swapfile[1024];
     static char swapfile[1024];
     static char url[MAX_URL];
     char *t = NULL;
     StoreEntry *e = NULL;
-    struct stat sb;
-    time_t start, stop, r;
     time_t expires;
     time_t timestamp;
-    time_t last_clean;
     int scan1, scan2, scan3;
-    int delta;
-    int i;
-    int sfileno = 0;
+    struct stat sb;
     off_t size;
-    int fast_mode = 0;
-    FILE *old_log = NULL;
-    FILE *new_log = NULL;
-    char *new_log_name = NULL;
+    int delta;
+    int sfileno = 0;
 
-    if (stat(swaplog_file, &sb) < 0)
+    if (!fgets(data->line_in, 4095, data->log))
+	return 0;
+
+#ifdef NOT_NEEDED
+    if ((data->linecount++ & 0x7F) == 0)	/* update current time */
+	getCurrentTime();
+#else
+    data->linecount++;
+#endif
+
+    if ((data->linecount & 0xFFF) == 0)
+	debug(20, 1, "  %7d Lines read so far.\n", data->linecount);
+
+    debug(20, 10, "line_in: %s", data->line_in);
+    if ((data->line_in[0] == '\0') || (data->line_in[0] == '\n') ||
+	(data->line_in[0] == '#'))
+	return 1;		/* skip bad lines */
+
+    url[0] = log_swapfile[0] = '\0';
+    expires = cached_curtime;
+
+    scan3 = 0;
+    size = 0;
+    if (sscanf(data->line_in, "%s %s %d %d %d",
+	    log_swapfile, url, &scan1, &scan2, &scan3) != 5) {
+	if (opt_unlink_on_reload && log_swapfile[0])
+	    safeunlink(log_swapfile, 0);
+	return 1;
+    }
+    expires = (time_t) scan1;
+    timestamp = (time_t) scan2;
+    size = (off_t) scan3;
+    if ((t = strrchr(log_swapfile, '/')))
+	sfileno = atoi(t + 1);
+    else
+	sfileno = atoi(log_swapfile);
+    storeSwapFullPath(sfileno, swapfile);
+
+    /*
+     * Note that swapfile may be different than log_swapfile if
+     * another cache_dir is added.
+     */
+
+    if (!data->fast_mode) {
+	if (stat(swapfile, &sb) < 0) {
+	    if (expires < cached_curtime) {
+		debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
+		if (opt_unlink_on_reload)
+		    safeunlink(swapfile, 1);
+		data->expcount++;
+	    } else {
+		debug(20, 3, "storeRebuildFromDisk: Swap file missing: <URL:%s>: %s: %s.\n", url, swapfile, xstrerror());
+		if (opt_unlink_on_reload)
+		    safeunlink(log_swapfile, 1);
+	    }
+	    return 1;
+	}
+	/* Empty swap file? */
+	if (sb.st_size == 0) {
+	    if (opt_unlink_on_reload)
+		safeunlink(log_swapfile, 1);
+	    return 1;
+	}
+	/* timestamp might be a little bigger than sb.st_mtime */
+	delta = (int) (timestamp - sb.st_mtime);
+	if (delta > REBUILD_TIMESTAMP_DELTA_MAX || delta < 0) {
+	    /* this log entry doesn't correspond to this file */
+	    data->clashcount++;
+	    return 1;
+	}
+	/* Wrong size? */
+	if (sb.st_size != size) {
+	    /* this log entry doesn't correspond to this file */
+	    data->clashcount++;
+	    return 1;
+	}
+	timestamp = sb.st_mtime;
+	debug(20, 10, "storeRebuildFromDisk: Cached file exists: <URL:%s>: %s\n",
+	    url, swapfile);
+    }
+    if ((e = storeGet(url))) {
+	if (e->timestamp > timestamp) {
+	    /* already have a newer object in memory, throw old one away */
+	    debug(20, 3, "storeRebuildFromDisk: Replaced: %s\n", url);
+	    if (opt_unlink_on_reload)
+		safeunlink(swapfile, 1);
+	    data->dupcount++;
+	    return 1;
+	}
+	debug(20, 6, "storeRebuildFromDisk: Duplicate: <URL:%s>\n", url);
+	storeRelease(e);
+	data->objcount--;
+	data->dupcount++;
+    }
+    if (expires < cached_curtime) {
+	debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
+	if (opt_unlink_on_reload)
+	    safeunlink(swapfile, 1);
+	data->expcount++;
+	return 1;
+    }
+    /* Is the swap file number already taken? */
+    if (file_map_bit_test(sfileno)) {
+	/* Yes is is, we can't use this swapfile */
+	debug(20, 1, "storeRebuildFromDisk: Active clash: file #%d\n",
+	    sfileno);
+	debug(20, 3, "storeRebuildFromDisk: --> <URL:%s>\n", url);
+	if (opt_unlink_on_reload)
+	    safeunlink(swapfile, 1);
+	data->clashcount++;
+	return 1;
+    }
+    /* update store_swap_size */
+    store_swap_size += (int) ((size + 1023) >> 10);
+    data->objcount++;
+
+    sprintf(logmsg, "%s %s %d %d %d\n",
+	swapfile,
+	url,
+	(int) expires,
+	(int) timestamp,
+	(int) size);
+    /* Automatically freed by file_write because no-handlers */
+    file_write(swaplog_fd,
+	xstrdup(logmsg),
+	strlen(logmsg),
+	swaplog_lock,
+	NULL,
+	NULL);
+    storeAddDiskRestore(url,
+	sfileno,
+	(int) size,
+	expires,
+	timestamp);
+    CacheInfo->proto_newobject(CacheInfo,
+	CacheInfo->proto_id(url),
+	(int) size,
+	TRUE);
+
+    return 1;
+}
+
+/* meta data recreated from disk image in swap directory */
+static void storeRebuiltFromDisk(data)
+     struct storeRebuild_data *data;
+{
+    time_t r;
+    time_t stop;
+
+    stop = getCurrentTime();
+    r = stop - data->start;
+    debug(20, 1, "Finished rebuilding storage from disk image.\n");
+    debug(20, 1, "  %7d Lines read from previous logfile.\n", data->linecount);
+    debug(20, 1, "  %7d Objects loaded.\n", data->objcount);
+    debug(20, 1, "  %7d Objects expired.\n", data->expcount);
+    debug(20, 1, "  %7d Duplicate URLs purged.\n", data->dupcount);
+    debug(20, 1, "  %7d Swapfile clashes avoided.\n", data->clashcount);
+    debug(20, 1, "  Took %d seconds (%6.1lf objects/sec).\n",
+	r > 0 ? r : 0, (double) data->objcount / (r > 0 ? r : 1));
+    debug(20, 1, "  store_swap_size = %dk\n", store_swap_size);
+
+    ok_write_clean_log = 1;
+
+    fclose(data->log);
+    safe_free(data);
+    sprintf(tmp_filename, "%s.new", swaplog_file);
+    if (rename(tmp_filename, swaplog_file) < 0) {
+	debug(20, 0, "storeRebuiltFromDisk: rename failed: %s\n",
+	    xstrerror());
+    }
+    file_update_open(swaplog_fd, swaplog_file);
+}
+
+void storeStartRebuildFromDisk()
+{
+    struct stat sb;
+    int i;
+    struct storeRebuild_data *data;
+    time_t last_clean;
+
+    if (stat(swaplog_file, &sb) < 0) {
+	debug(20, 1, "storeRebuildFromDisk: No log file\n");
+	ok_write_clean_log = 1;
 	return;
+    }
+    data = xcalloc(1, sizeof(*data));
 
     for (i = 0; i < ncache_dirs; ++i)
 	debug(20, 1, "Rebuilding storage from disk image in %s\n", swappath(i));
-    start = getCurrentTime();
+    data->start = getCurrentTime();
 
-    sprintf(line_in, "%s/log-last-clean", swappath(0));
-    if (stat(line_in, &sb) >= 0) {
+    /* Check if log is clean */
+    sprintf(tmp_filename, "%s/log-last-clean", swappath(0));
+    if (stat(tmp_filename, &sb) >= 0) {
 	last_clean = sb.st_mtime;
-	sprintf(line_in, "%s/log", swappath(0));
-	if (stat(line_in, &sb) >= 0) {
-	    fast_mode = (sb.st_mtime <= last_clean) ? 1 : 0;
+	sprintf(tmp_filename, "%s/log", swappath(0));
+	if (stat(tmp_filename, &sb) >= 0) {
+	    data->fast_mode = (sb.st_mtime <= last_clean) ? 1 : 0;
 	}
     }
+    /* close the existing write-only swaplog, and open a temporary
+     * write-only swaplog  */
+    if (file_write_unlock(swaplog_fd, swaplog_lock) != DISK_OK)
+	fatal_dump("storeStartRebuildFromDisk: swaplog unlock failed");
+    if (swaplog_fd > -1)
+	file_close(swaplog_fd);
+    sprintf(tmp_filename, "%s.new", swaplog_file);
+    swaplog_fd = file_open(tmp_filename, NULL, O_WRONLY | O_CREAT | O_APPEND);
+    debug(20,3,"swaplog_fd %d is now '%s'\n", swaplog_fd, tmp_filename);
+    if (swaplog_fd < 0) {
+	debug(20, 0, "storeStartRebuildFromDisk: %s: %s\n",
+	    tmp_filename, xstrerror());
+	fatal("storeStartRebuildFromDisk: Can't open tmp swaplog");
+    }
+    swaplog_lock = file_write_lock(swaplog_fd);
+    debug(20,3,"swaplog_lock = %d\n", swaplog_lock);
     /* Open the existing swap log for reading */
-    if ((old_log = fopen(swaplog_file, "r")) == (FILE *) NULL) {
+    if ((data->log = fopen(swaplog_file, "r")) == (FILE *) NULL) {
 	sprintf(tmp_error_buf, "storeRebuildFromDisk: %s: %s",
 	    swaplog_file, xstrerror());
 	fatal(tmp_error_buf);
     }
-    /* Open a new log for writing */
-    sprintf(line_in, "%s.new", swaplog_file);
-    new_log_name = xstrdup(line_in);
-    new_log = fopen(new_log_name, "w");
-    if (new_log == (FILE *) NULL) {
-	sprintf(tmp_error_buf, "storeRebuildFromDisk: %s: %s",
-	    new_log_name, xstrerror());
-	fatal(tmp_error_buf);
-    }
-    if (fast_mode)
+    debug(20,3,"data->log %d is now '%s'\n", fileno(data->log), swaplog_file);
+    if (data->fast_mode)
 	debug(20, 1, "Rebuilding in FAST MODE.\n");
 
-    memset(line_in, '\0', 4096);
-    while (fgets(line_in, 4096, old_log)) {
-	if ((linecount++ & 0x7F) == 0)	/* update current time */
-	    getCurrentTime();
+    memset(data->line_in, '\0', 4096);
 
-	if ((linecount & 0xFFF) == 0)
-	    debug(20, 1, "  %7d Lines read so far.\n", linecount);
-
-	debug(20, 10, "line_in: %s", line_in);
-	if ((line_in[0] == '\0') || (line_in[0] == '\n') ||
-	    (line_in[0] == '#'))
-	    continue;		/* skip bad lines */
-
-	url[0] = log_swapfile[0] = '\0';
-	expires = cached_curtime;
-
-	scan3 = 0;
-	size = 0;
-	if (sscanf(line_in, "%s %s %d %d %d",
-		log_swapfile, url, &scan1, &scan2, &scan3) != 5) {
-	    if (opt_unlink_on_reload && log_swapfile[0])
-		safeunlink(log_swapfile, 0);
-	    continue;
-	}
-	expires = (time_t) scan1;
-	timestamp = (time_t) scan2;
-	size = (off_t) scan3;
-	if ((t = strrchr(log_swapfile, '/')))
-	    sfileno = atoi(t + 1);
-	else
-	    sfileno = atoi(log_swapfile);
-	storeSwapFullPath(sfileno, swapfile);
-
-	/*
-	 * Note that swapfile may be different than log_swapfile if
-	 * another cache_dir is added.
-	 */
-
-	if (!fast_mode) {
-	    if (stat(swapfile, &sb) < 0) {
-		if (expires < cached_curtime) {
-		    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
-		    if (opt_unlink_on_reload)
-			safeunlink(swapfile, 1);
-		    expcount++;
-		} else {
-		    debug(20, 3, "storeRebuildFromDisk: Swap file missing: <URL:%s>: %s: %s.\n", url, swapfile, xstrerror());
-		    if (opt_unlink_on_reload)
-			safeunlink(log_swapfile, 1);
-		}
-		continue;
-	    }
-	    if ((size = sb.st_size) == 0) {
-		if (opt_unlink_on_reload)
-		    safeunlink(log_swapfile, 1);
-		continue;
-	    }
-	    /* timestamp might be a little bigger than sb.st_mtime */
-	    delta = abs((int) (timestamp - sb.st_mtime));
-	    if (delta > REBUILD_TIMESTAMP_DELTA_MAX) {
-		/* this log entry doesn't correspond to this file */
-		clashcount++;
-		continue;
-	    }
-	    timestamp = sb.st_mtime;
-	    debug(20, 10, "storeRebuildFromDisk: Cached file exists: <URL:%s>: %s\n",
-		url, swapfile);
-	}
-	if ((e = storeGet(url))) {
-	    debug(20, 6, "storeRebuildFromDisk: Duplicate: <URL:%s>\n", url);
-	    storeRelease(e);
-	    objcount--;
-	    dupcount++;
-	}
-	if (expires < cached_curtime) {
-	    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
-	    if (opt_unlink_on_reload)
-		safeunlink(swapfile, 1);
-	    expcount++;
-	    continue;
-	}
-	/* update store_swap_size */
-	store_swap_size += (int) ((size + 1023) >> 10);
-	objcount++;
-
-	fprintf(new_log, "%s %s %d %d %d\n",
-	    swapfile, url, (int) expires, (int) timestamp, (int) size);
-	storeAddDiskRestore(url, sfileno, (int) size, expires, timestamp);
-	CacheInfo->proto_newobject(CacheInfo,
-	    CacheInfo->proto_id(url),
-	    (int) size, TRUE);
-    }
-
-    fclose(old_log);
-    fclose(new_log);
-    if (rename(new_log_name, swaplog_file) < 0) {
-	sprintf(tmp_error_buf, "storeRebuildFromDisk: rename: %s",
-	    xstrerror());
-	fatal(tmp_error_buf);
-    }
-    xfree(new_log_name);
-
-    stop = getCurrentTime();
-    r = stop - start;
-    debug(20, 1, "Finished rebuilding storage from disk image.\n");
-    debug(20, 1, "  %7d Lines read from previous logfile.\n", linecount);
-    debug(20, 1, "  %7d Objects loaded.\n", objcount);
-    debug(20, 1, "  %7d Objects expired.\n", expcount);
-    debug(20, 1, "  %7d Duplicate URLs purged.\n", dupcount);
-    debug(20, 1, "  %7d Swapfile clashes avoided.\n", clashcount);
-    debug(20, 1, "  Took %d seconds (%6.1lf objects/sec).\n",
-	r > 0 ? r : 0, (double) objcount / (r > 0 ? r : 1));
-    debug(20, 1, "  store_swap_size = %dk\n", store_swap_size);
-
-    /* touch a timestamp file */
-    sprintf(line_in, "%s/log-last-clean", swappath(0));
-    file_close(file_open(line_in, NULL, O_WRONLY | O_CREAT | O_TRUNC));
+    /* Start reading the log file */
+    runInBackground("storeRebuild",
+	storeDoRebuildFromDisk,
+	data,
+	storeRebuiltFromDisk);
 }
-
 
 /* return current swap size in kilo-bytes */
 int storeGetSwapSize()
@@ -2382,27 +2480,21 @@ int storeInit()
 
     sprintf(swaplog_file, "%s/log", swappath(0));
 
-    if (!zap_disk_store) {
-	ok_write_clean_log = 0;
-	storeRebuildFromDisk();
-	ok_write_clean_log = 1;
-    }
     swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT | O_APPEND);
+    debug(20,3,"swaplog_fd %d is now '%s'\n", swaplog_fd, swaplog_file);
     if (swaplog_fd < 0) {
 	sprintf(tmp_error_buf, "Cannot open swap logfile: %s", swaplog_file);
 	fatal(tmp_error_buf);
     }
-    swaplog_stream = fdopen(swaplog_fd, "w");
-    if (!swaplog_stream) {
-	debug(20, 1, "storeInit: fdopen(%d, \"w\"): %s\n",
-	    swaplog_fd,
-	    xstrerror());
-	sprintf(tmp_error_buf,
-	    "Cannot open a stream for swap logfile: %s\n",
-	    swaplog_file);
-	fatal(tmp_error_buf);
-    }
     swaplog_lock = file_write_lock(swaplog_fd);
+    debug(20,3,"swaplog_lock = %d\n", swaplog_lock);
+
+    if (!zap_disk_store) {
+	ok_write_clean_log = 0;
+	storeStartRebuildFromDisk();
+    } else {
+	ok_write_clean_log = 1;
+    }
 
     if (dir_created || zap_disk_store)
 	storeCreateSwapSubDirs();
@@ -2536,7 +2628,6 @@ int storeWriteCleanLog()
 {
     StoreEntry *e = NULL;
     static char swapfilename[MAX_FILE_NAME_LEN];
-    static char clean_log[MAX_FILE_NAME_LEN];
     FILE *fp = NULL;
     int n = 0;
     time_t start, stop, r;
@@ -2548,9 +2639,9 @@ int storeWriteCleanLog()
     }
     debug(20, 1, "storeWriteCleanLog: Starting...\n");
     start = getCurrentTime();
-    sprintf(clean_log, "%s/log_clean", swappath(0));
-    if ((fp = fopen(clean_log, "a+")) == NULL) {
-	debug(20, 0, "storeWriteCleanLog: %s: %s", clean_log, xstrerror());
+    sprintf(tmp_filename, "%s/log_clean", swappath(0));
+    if ((fp = fopen(tmp_filename, "a+")) == NULL) {
+	debug(20, 0, "storeWriteCleanLog: %s: %s", tmp_filename, xstrerror());
 	return 0;
     }
     for (e = storeGetFirst(); e; e = storeGetNext()) {
@@ -2577,7 +2668,7 @@ int storeWriteCleanLog()
 	debug(20, 0, "storeWriteCleanLog: Current swap logfile not replaced.\n");
 	return 0;
     }
-    if (rename(clean_log, swaplog_file) < 0) {
+    if (rename(tmp_filename, swaplog_file) < 0) {
 	debug(20, 0, "storeWriteCleanLog: rename failed: %s\n",
 	    xstrerror());
 	return 0;
@@ -2586,12 +2677,6 @@ int storeWriteCleanLog()
     swaplog_fd = file_open(swaplog_file, NULL, O_RDWR | O_CREAT | O_APPEND);
     if (swaplog_fd < 0) {
 	sprintf(tmp_error_buf, "Cannot open swap logfile: %s", swaplog_file);
-	fatal(tmp_error_buf);
-    }
-    swaplog_stream = fdopen(swaplog_fd, "w");
-    if (!swaplog_stream) {
-	sprintf(tmp_error_buf, "Cannot open a stream for swap logfile: %s",
-	    swaplog_file);
 	fatal(tmp_error_buf);
     }
     swaplog_lock = file_write_lock(swaplog_fd);
@@ -2603,8 +2688,8 @@ int storeWriteCleanLog()
 	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
 
     /* touch a timestamp file */
-    sprintf(clean_log, "%s/log-last-clean", swappath(0));
-    file_close(file_open(clean_log, NULL, O_WRONLY | O_CREAT | O_TRUNC));
+    sprintf(tmp_filename, "%s/log-last-clean", swappath(0));
+    file_close(file_open(tmp_filename, NULL, O_WRONLY | O_CREAT | O_TRUNC));
     return n;
 }
 
