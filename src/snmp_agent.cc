@@ -144,7 +144,7 @@ snmp_agent_response(struct snmp_pdu *PDU)
     int index = 0;
     oid_ParseFn *ParseFn;
 
-    debug(49, 9) ("Received a %d PDU\n", PDU->command);
+    debug(49, 9) ("snmp_agent_response: Received a %d PDU\n", PDU->command);
 
     /* Create a response */
     Answer = snmp_pdu_create(SNMP_PDU_RESPONSE);
@@ -202,7 +202,7 @@ snmp_agent_response(struct snmp_pdu *PDU)
 
 	if (ParseFn == NULL) {
 	    Answer->errstat = SNMP_ERR_NOSUCHNAME;
-	    debug(49, 9) ("No such oid: ");
+	    debug(49, 9) ("snmp_agent_response: No such oid: ");
 	    print_oid(VarPtr->name, VarPtr->name_length);
 	} else {
 	    xfree(VarPtr->name);
@@ -226,7 +226,7 @@ snmp_agent_response(struct snmp_pdu *PDU)
 	return (Answer);
     }				/* end SNMP_PDU_GETNEXT */
 
-    debug(49, 9) ("Ignoring PDU %d\n", PDU->command);
+    debug(49, 9) ("snmp_agent_response: Ignoring PDU %d\n", PDU->command);
     snmp_free_pdu(Answer);
     return (NULL);
 }
@@ -265,11 +265,13 @@ static int
 community_check(char *b, oid *name, int namelen)
 {
     communityEntry *cp;
-    debug(49,5)("community_check: %s against:\n",b);
+    debug(49,8)("community_check: %s against:\n",b);
     print_oid(name,namelen);
     for (cp = Config.Snmp.communities; cp; cp = cp->next) 
         if (!strcmp(b, cp->name)) {
+#if 0
 	    debug(49,6)("community_check: found %s, comparing with\n",cp->name);
+#endif
             return in_view(name, namelen, cp->readView);
 	}
     return 0;
@@ -346,8 +348,6 @@ snmp_basicFn(variable_list * Var, long *ErrP)
 	snmp_var_free(Answer);
 	return (NULL);
     }
-    debug(49, 5) ("snmp_basicFn: Done. returning a real value!\n");
-
     return (Answer);
 }
 
@@ -381,7 +381,7 @@ snmp_sysFn(variable_list * Var, long *ErrP)
 	break;
     case SYSFDTBL:
 	num = Var->name[11];
-	debug(49, 9) ("snmp_sysFn: num=%d\n", num);
+	debug(49, 9) ("snmp_sysFn: FD Table, num=%d\n", num);
 	while (num && cnt < Squid_MaxFD) {
 	    f = &fd_table[cnt++];
 	    if (!f->open)
@@ -453,7 +453,6 @@ snmp_sysFn(variable_list * Var, long *ErrP)
 	snmp_var_free(Answer);
 	return (NULL);
     }
-    debug(49, 5) ("snmp_sysFn: Done. returning a real value!\n");
     return Answer;
 }
 
