@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.49 1996/08/28 17:44:30 wessels Exp $
+ * $Id: ipcache.cc,v 1.50 1996/08/28 20:11:58 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -323,7 +323,6 @@ static int ipcacheExpiredEntry(i)
 int ipcache_purgelru()
 {
     ipcache_entry *i = NULL;
-    int local_ip_count = 0;
     int local_ip_notpending_count = 0;
     int removed = 0;
     int k;
@@ -338,7 +337,6 @@ int ipcache_purgelru()
 	    removed++;
 	    continue;
 	}
-	local_ip_count++;
 
 	if (LRU_list_count == meta_data.ipcache_count)
 	    break;
@@ -351,11 +349,10 @@ int ipcache_purgelru()
     }
 
     debug(14, 3, "ipcache_purgelru: ipcache_count: %5d\n", meta_data.ipcache_count);
-    debug(14, 3, "                  actual count : %5d\n", local_ip_count);
+    debug(14, 3, "                LRU candidates : %5d\n", LRU_list_count);
     debug(14, 3, "                   high W mark : %5d\n", ipcache_high);
     debug(14, 3, "                   low  W mark : %5d\n", ipcache_low);
     debug(14, 3, "                   not pending : %5d\n", local_ip_notpending_count);
-    debug(14, 3, "                LRU candidates : %5d\n", LRU_list_count);
 
     /* sort LRU candidate list */
     qsort((char *) LRU_list,
