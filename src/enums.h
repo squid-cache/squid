@@ -427,7 +427,12 @@ enum {
     PD_INIT_PENDING
 } peer_cd_t;
 
-/* These are for StoreEntry->flag, which is defined as a SHORT */
+/*
+ * These are for StoreEntry->flag, which is defined as a SHORT
+ *
+ * NOTE: These flags are written to swap.state, so think very carefully
+ * about deleting or re-assigning!
+ */
 enum {
     ENTRY_SPECIAL,
     ENTRY_REVALIDATE,
@@ -437,6 +442,7 @@ enum {
     ENTRY_CACHABLE,
     ENTRY_DISPATCHED,
     KEY_PRIVATE,
+    ENTRY_UNUSED_08,
     ENTRY_NEGCACHED,
     ENTRY_VALIDATED,
     ENTRY_BAD_LENGTH
