@@ -33,6 +33,8 @@
  *             - Added -a to control alias dereferencing
  * 2001-04-17: Henrik Nordstrom <hno@squid-cache.org>
  *             - Added -u, DN username attribute name
+ * 2001-04-18: Henrik Nordstrom <hno@squid-cache.org>
+ *             - Allow full filter specifications in -f
  */
 
 #include <stdio.h>
@@ -228,7 +230,7 @@ checkLDAP(LDAP * ld, char *userid, char *password)
 		return 1;
 	    }
 	}
-	snprintf(filter, sizeof(filter), "%s%s", searchfilter, userid);
+	snprintf(filter, sizeof(filter), searchfilter, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid);
 	if (ldap_search_s(ld, basedn, searchscope, filter, searchattr, 1, &res) != LDAP_SUCCESS) {
 	    int rc = ldap_result2error(ld, res, 0);
 	    if (noreferrals && rc == LDAP_PARTIAL_RESULTS) {
