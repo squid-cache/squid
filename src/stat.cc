@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.362 2002/10/15 08:03:30 robertc Exp $
+ * $Id: stat.cc,v 1.363 2002/10/25 01:00:42 adrian Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -375,7 +375,7 @@ statOpenfdObj(StoreEntry * sentry)
 static void
 info_get_mallstat(int size, int number, int oldnum, void *data)
 {
-    StoreEntry *sentry = data;
+    StoreEntry *sentry = (StoreEntry *)data;
     if (number > 0)
 	storeAppendPrintf(sentry, "%d\t %d\t %d\t %.1f\n", size, number, number - oldnum, xdiv((number - oldnum), xm_deltat));
 }
