@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.59 1997/08/25 22:35:51 wessels Exp $
+ * $Id: cachemgr.cc,v 1.60 1997/08/26 17:30:35 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -248,7 +248,7 @@ static const char *const op_cmds[] =
     "server_list",
     "client_list",
     "log",
-    "parameter",
+    "config",
     "ipcache",
     "fqdncache",
     "dns",
