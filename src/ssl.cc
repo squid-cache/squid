@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.62 1997/10/13 22:09:20 kostas Exp $
+ * $Id: ssl.cc,v 1.63 1997/10/20 19:25:22 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -392,6 +392,10 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
 	sslState);
     commSetTimeout(sslState->client.fd,
 	Config.Timeout.lifetime,
+	sslTimeout,
+	sslState);
+    commSetTimeout(sslState->server.fd,
+	Config.Timeout.connect,
 	sslTimeout,
 	sslState);
     peerSelect(request,
