@@ -560,12 +560,18 @@ storeCleanup(void *datanotused)
 	    continue;
 	if (EBIT_TEST(e->flag, RELEASE_REQUEST)) {
 	    if (e->swap_file_number > -1)
-		debug(20, 1) ("storeCleanup: WARNING: swap_file_number = %08X for RELEASE_REQUEST entry\n",
+		debug(20, 3) ("storeCleanup: swap_file_number = %08X for RELEASE_REQUEST entry\n",
 		    e->swap_file_number);
 	    /*
 	     * I don't think it safe to call storeRelease()
 	     * from inside this loop using link_ptr.
 	     */
+	    /*
+	     * Move to the tail of the LRU list
+	     * so it gets kicked out
+	     */
+	    dlinkDelete(&e->lru, &store_list);
+	    dlinkAddTail(e, &e->lru, &store_list);
 	    continue;
 	}
 	if (opt_store_doublecheck) {
