@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.15 1996/09/24 20:17:28 wessels Exp $
+ * $Id: dns.cc,v 1.16 1996/09/26 19:19:14 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -217,14 +217,9 @@ dnsGetFirstAvailable(void)
 
 
 void
-dnsOpenServers(void)
+dnsFreeMemory(void)
 {
-    int N = Config.dnsChildren;
-    char *prg = Config.Program.dnsserver;
     int k;
-    int dnssocket;
-    LOCAL_ARRAY(char, fd_note_buf, FD_ASCII_NOTE_SZ);
-
     /* free old structures if present */
     if (dns_child_table) {
 	for (k = 0; k < NDnsServersAlloc; k++) {
@@ -233,6 +228,18 @@ dnsOpenServers(void)
 	}
 	safe_free(dns_child_table);
     }
+}
+
+void
+dnsOpenServers(void)
+{
+    int N = Config.dnsChildren;
+    char *prg = Config.Program.dnsserver;
+    int k;
+    int dnssocket;
+    LOCAL_ARRAY(char, fd_note_buf, FD_ASCII_NOTE_SZ);
+
+    dnsFreeMemory();
     dns_child_table = xcalloc(N, sizeof(dnsserver_t *));
     debug(34, 1, "dnsOpenServers: Starting %d 'dns_server' processes\n", N);
     NDnsServersAlloc = 0;

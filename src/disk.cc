@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.28 1996/09/20 06:28:35 wessels Exp $
+ * $Id: disk.cc,v 1.29 1996/09/26 19:19:13 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -585,4 +585,10 @@ int
 diskWriteIsComplete(int fd)
 {
     return file_table[fd].write_q ? 0 : 1;
+}
+
+void
+diskFreeMemory(void)
+{
+	safe_free(file_table);
 }

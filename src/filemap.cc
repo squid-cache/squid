@@ -1,5 +1,5 @@
 /*
- * $Id: filemap.cc,v 1.11 1996/09/20 06:28:41 wessels Exp $
+ * $Id: filemap.cc,v 1.12 1996/09/26 19:19:17 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -213,6 +213,13 @@ file_map_allocate(int suggestion)
     debug(8, 0, "You need to recompile with a larger value for MAX_SWAP_FILE\n");
     fatal_dump(NULL);
     return (0);			/* NOTREACHED */
+}
+
+void
+filemapFreeMemory(void)
+{
+        safe_free(fm->file_map);
+	safe_free(fm);
 }
 
 #ifdef TEST

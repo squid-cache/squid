@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.99 1996/09/24 18:50:05 wessels Exp $
+ * $Id: cache_cf.cc,v 1.100 1996/09/26 19:19:11 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -196,7 +196,7 @@ struct SquidConfig Config;
 #define DefaultIpcacheSize	1024
 #define DefaultIpcacheLow	90
 #define DefaultIpcacheHigh	95
-#define DefaultMaxHotvmObjSize	(12<<10)	/* 12k */
+#define DefaultMaxHotvmObjSize	(256<<10)	/* 256k */
 
 int httpd_accel_mode = 0;	/* for fast access */
 char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -206,6 +206,7 @@ char *cfg_filename = NULL;	/* just the last part */
 char ForwardedBy[256];
 
 char w_space[] = " \t\n";
+char null_string[] = "";
 char config_input_line[BUFSIZ];
 int config_lineno = 0;
 
@@ -215,7 +216,6 @@ static void parseIntegerValue _PARAMS((int *));
 static char fatal_str[BUFSIZ];
 
 static void configDoConfigure _PARAMS((void));
-static void configFreeMemory _PARAMS((void));
 static void configSetFactoryDefaults _PARAMS((void));
 static void parseAccessLogLine _PARAMS((void));
 static void parseAddressLine _PARAMS((struct in_addr *));
@@ -760,7 +760,7 @@ static void
 parseFtpOptionsLine(void)
 {
     char *token;
-    token = strtok(NULL, "");	/* Note "", don't separate these */
+    token = strtok(NULL, null_string);
     if (token == NULL)
 	self_destruct();
     safe_free(Config.Program.ftpget_opts);
@@ -931,7 +931,7 @@ static void
 parseDebugOptionsLine(void)
 {
     char *token;
-    token = strtok(NULL, "");	/* Note "", don't separate these */
+    token = strtok(NULL, null_string);
     safe_free(Config.debugOptions);
     if (token == NULL) {
 	Config.debugOptions = NULL;
@@ -1034,7 +1034,7 @@ static void
 parseErrHtmlLine(void)
 {
     char *token;
-    if ((token = strtok(NULL, "")))
+    if ((token = strtok(NULL, null_string)))
 	Config.errHtmlText = xstrdup(token);
 }
 
@@ -1410,7 +1410,7 @@ safe_xstrdup(char *p)
     return p ? xstrdup(p) : p;
 }
 
-static void
+void
 configFreeMemory(void)
 {
     safe_free(Config.Wais.relayHost);
@@ -1549,6 +1549,6 @@ configDoConfigure(void)
     sprintf(ForwardedBy, "Forwarded: by http://%s:%d/",
 	getMyHostname(), Config.Port.http);
     if (Config.errHtmlText == NULL)
-	Config.errHtmlText = xstrdup("");
+	Config.errHtmlText = xstrdup(null_string);
     storeConfigure();
 }
