@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.21 1998/05/14 16:33:47 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.22 1998/05/22 23:43:48 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -318,7 +318,7 @@ cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
 #endif
 
 static void
-cacheDigestHashKey(const CacheDigest * cd, const cache_key *key)
+cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
 {
     const unsigned int bit_count = cd->mask_size * 8;
     unsigned int tmp_keys[4];
@@ -332,4 +332,3 @@ cacheDigestHashKey(const CacheDigest * cd, const cache_key *key)
 	storeKeyText(key), bit_count,
 	hashed_keys[0], hashed_keys[1], hashed_keys[2], hashed_keys[3]);
 }
-

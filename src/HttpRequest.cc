@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.3 1998/05/11 20:56:06 rousskov Exp $
+ * $Id: HttpRequest.cc,v 1.4 1998/05/22 23:43:56 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -34,7 +34,7 @@
 request_t *
 requestCreate(method_t method, protocol_t protocol, const char *urlpath)
 {
-    request_t * req = memAllocate(MEM_REQUEST_T);
+    request_t *req = memAllocate(MEM_REQUEST_T);
     req->method = method;
     req->protocol = protocol;
     if (urlpath)
@@ -81,7 +81,7 @@ requestUnlink(request_t * request)
 }
 
 int
-httpRequestParseHeader(request_t *req, const char *parse_start)
+httpRequestParseHeader(request_t * req, const char *parse_start)
 {
     const char *blk_start, *blk_end;
     if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end))
@@ -90,7 +90,7 @@ httpRequestParseHeader(request_t *req, const char *parse_start)
 }
 
 void
-httpRequestSetHeaders(request_t *req, method_t method, const char *uri, const char *header_str)
+httpRequestSetHeaders(request_t * req, method_t method, const char *uri, const char *header_str)
 {
     MemBuf mb;
     assert(req && uri && header_str);
@@ -102,12 +102,12 @@ httpRequestSetHeaders(request_t *req, method_t method, const char *uri, const ch
     req->prefix = xstrdup(mb.buf);
     req->prefix_sz = mb.size;
     memBufClean(&mb);
-    httpHeaderParse(&req->header, header_str, header_str+strlen(header_str));
+    httpHeaderParse(&req->header, header_str, header_str + strlen(header_str));
 }
 
 /* returns true if header is allowed to be passed on */
 int
-httpRequestHdrAllowed(const HttpHeaderEntry *e, String *strConn)
+httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
 {
     assert(e);
     /* check connection header first */
@@ -116,10 +116,8 @@ httpRequestHdrAllowed(const HttpHeaderEntry *e, String *strConn)
     /* check with anonymizer tables */
     if (Config.onoff.anonymizer == ANONYMIZER_PARANOID) {
 	return httpAnonHdrAllowed(e->id);
-    } else
-    if (Config.onoff.anonymizer == ANONYMIZER_STANDARD) {
+    } else if (Config.onoff.anonymizer == ANONYMIZER_STANDARD) {
 	return !httpAnonHdrDenied(e->id);
     }
     return 1;
 }
-

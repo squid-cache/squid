@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.7 1998/05/11 18:44:25 rousskov Exp $
+ * $Id: HttpHdrRange.cc,v 1.8 1998/05/22 23:43:51 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -172,7 +172,7 @@ httpHdrRangeCreate()
 }
 
 HttpHdrRange *
-httpHdrRangeParseCreate(const String *str)
+httpHdrRangeParseCreate(const String * str)
 {
     HttpHdrRange *r = httpHdrRangeCreate();
     if (!httpHdrRangeParseInit(r, str)) {
@@ -184,7 +184,7 @@ httpHdrRangeParseCreate(const String *str)
 
 /* returns true if ranges are valid; inits HttpHdrRange */
 int
-httpHdrRangeParseInit(HttpHdrRange * range, const String *str)
+httpHdrRangeParseInit(HttpHdrRange * range, const String * str)
 {
     const char *item;
     const char *pos = NULL;
@@ -197,7 +197,7 @@ httpHdrRangeParseInit(HttpHdrRange * range, const String *str)
     if (strNCaseCmp(*str, "bytes=", 6))
 	return 0;
     /* skip "bytes="; hack! */
-    pos = strBuf(*str)+5;
+    pos = strBuf(*str) + 5;
     /* iterate through comma separated list */
     while (strListGetItem(str, ',', &item, &ilen, &pos)) {
 	HttpHdrRangeSpec *spec = httpHdrRangeSpecParseCreate(item, ilen);

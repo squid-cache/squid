@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.273 1998/05/21 22:01:08 wessels Exp $
+ * $Id: http.cc,v 1.274 1998/05/22 23:44:12 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -606,12 +606,12 @@ void
 httpBuildRequestHeader(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
-    HttpHeader *hdr_out,
+    HttpHeader * hdr_out,
     int cfd,
     int flags)
 {
     /* building buffer for complex strings */
-    #define BBUF_SZ (MAX_URL+32)
+#define BBUF_SZ (MAX_URL+32)
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
     String strConnection = StringNull;
     const HttpHeader *hdr_in = &orig_request->header;
@@ -621,7 +621,7 @@ httpBuildRequestHeader(request_t * request,
     assert(orig_request->prefix != NULL);
     debug(11, 3) ("httpBuildRequestHeader:\n%s", orig_request->prefix);
     httpHeaderInit(hdr_out);
-    
+
     /* append our IMS header */
     if (entry && entry->lastmod && request->method == METHOD_GET)
 	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, entry->lastmod);
@@ -654,7 +654,7 @@ httpBuildRequestHeader(request_t * request,
 		/* sacrificing efficiency over clarity, etc. */
 		const int hops = httpHeaderGetInt(hdr_in, HDR_MAX_FORWARDS);
 		if (hops > 0)
-		    httpHeaderPutInt(hdr_out, HDR_MAX_FORWARDS, hops-1);
+		    httpHeaderPutInt(hdr_out, HDR_MAX_FORWARDS, hops - 1);
 	    }
 	    break;
 	case HDR_PROXY_CONNECTION:
@@ -732,7 +732,7 @@ size_t
 httpBuildRequestPrefix(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
-    MemBuf *mb,
+    MemBuf * mb,
     int cfd,
     int flags)
 {

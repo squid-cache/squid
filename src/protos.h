@@ -308,7 +308,7 @@ extern void httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int coun
 extern int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
 extern void strListAdd(String * str, const char *item, char del);
 extern int strListIsMember(const String * str, const char *item, char del);
-extern int strListIsSubstr(const String *list, const char *s, char del);
+extern int strListIsSubstr(const String * list, const char *s, char del);
 extern int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
 extern const char *getStringPrefix(const char *str, const char *end);
 extern int httpHeaderParseInt(const char *start, int *val);

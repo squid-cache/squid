@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.105 1998/05/21 03:48:19 wessels Exp $
+ * $Id: net_db.cc,v 1.106 1998/05/22 23:44:19 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1071,7 +1071,7 @@ netdbExchangeStart(void *data)
 }
 
 peer *
-netdbClosestParent(request_t *request)
+netdbClosestParent(request_t * request)
 {
 #if USE_ICMP
     peer *p = NULL;
@@ -1101,7 +1101,7 @@ netdbClosestParent(request_t *request)
 	    if (n->rtt < h->rtt)
 		break;
 	p = peerFindByName(h->peername);
-	if (NULL == p)	/* not found */
+	if (NULL == p)		/* not found */
 	    continue;
 	if (!peerHTTPOkay(p, request))	/* not allowed */
 	    continue;

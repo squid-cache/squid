@@ -6,23 +6,23 @@ internalStart(request_t * request, StoreEntry * entry)
 {
     const char *upath = strBuf(request->urlpath);
     debug(0, 1) ("internalStart: %s requesting '%s'\n",
-        inet_ntoa(request->client_addr), upath);
+	inet_ntoa(request->client_addr), upath);
     if (0 == strcmp(upath, "/squid-internal-dynamic/netdb"))
 	netdbBinaryExchange(entry);
     else
-	debug(0,0)("internalStart: unknown request '%s'\n", upath);
+	debug(0, 0) ("internalStart: unknown request '%s'\n", upath);
 }
 
 int
 internalCheck(const char *urlpath)
 {
-	return (0 == strncmp(urlpath, "/squid-internal-", 16));
+    return (0 == strncmp(urlpath, "/squid-internal-", 16));
 }
 
 int
 internalStaticCheck(const char *urlpath)
 {
-	return (0 == strncmp(urlpath, "/squid-internal-static", 22));
+    return (0 == strncmp(urlpath, "/squid-internal-static", 22));
 }
 
 /*

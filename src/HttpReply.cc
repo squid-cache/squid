@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.23 1998/05/22 23:13:44 wessels Exp $
+ * $Id: HttpReply.cc,v 1.24 1998/05/22 23:43:54 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -328,7 +328,7 @@ httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
 		blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
 	    else
 		return 0;
-        }
+	}
 	if (!httpHeaderParse(&rep->header, blk_start, blk_end))
 	    return httpReplyParseError(rep);
 
@@ -430,12 +430,12 @@ httpMsgIsPersistent(float http_ver, const HttpHeader * hdr)
 	 * return false if it is a browser connection.  If there is a
 	 * VIA header, then we assume this is NOT a browser connection.
 	 */
-        const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
+	const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
 	if (agent && !httpHeaderHas(hdr, HDR_VIA)) {
 	    if (!strncasecmp(agent, "Mozilla/3.", 10))
 		return 0;
 	    if (!strncasecmp(agent, "Netscape/3.", 11))
-	        return 0;
+		return 0;
 	}
 	/* for old versions of HTTP: persistent if has "keep-alive" */
 	return httpHeaderHasConnDir(hdr, "keep-alive");

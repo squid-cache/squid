@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.214 1998/05/21 06:41:55 wessels Exp $
+ * $Id: neighbors.cc,v 1.215 1998/05/22 23:44:17 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -386,7 +386,7 @@ neighbors_open(int fd)
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
 	debug(15, 1) ("getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
-    peerRefreshDNS((void *)1);
+    peerRefreshDNS((void *) 1);
     if (0 == echo_hdr.opcode) {
 	echo_hdr.opcode = ICP_SECHO;
 	echo_hdr.version = ICP_VERSION_CURRENT;
@@ -943,7 +943,7 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     if (p->type == PEER_MULTICAST)
 	peerCountMcastPeersSchedule(p, 10);
     if (p->type != PEER_MULTICAST)
-        eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
+	eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
 }
 
 static void
@@ -952,7 +952,7 @@ peerRefreshDNS(void *data)
     peer *p = NULL;
     if (!data && 0 == stat5minClientRequests()) {
 	/* no recent client traffic, wait a bit */
-        eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 180.0, 1);
+	eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 180.0, 1);
 	return;
     }
     for (p = Config.peers; p; p = p->next)

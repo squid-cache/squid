@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.10 1998/05/11 18:44:25 rousskov Exp $
+ * $Id: HttpHdrCc.cc,v 1.11 1998/05/22 23:43:50 wessels Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -51,7 +51,7 @@ HttpHeaderFieldInfo *CcFieldsInfo = NULL;
 static int CcParsedCount = 0;
 
 /* local prototypes */
-static int httpHdrCcParseInit(HttpHdrCc * cc, const String *str);
+static int httpHdrCcParseInit(HttpHdrCc * cc, const String * str);
 
 
 /* module initialization */
@@ -81,7 +81,7 @@ httpHdrCcCreate()
 
 /* creates an cc object from a 0-terminating string */
 HttpHdrCc *
-httpHdrCcParseCreate(const String *str)
+httpHdrCcParseCreate(const String * str)
 {
     HttpHdrCc *cc = httpHdrCcCreate();
     if (!httpHdrCcParseInit(cc, str)) {
@@ -93,7 +93,7 @@ httpHdrCcParseCreate(const String *str)
 
 /* parses a 0-terminating string and inits cc */
 static int
-httpHdrCcParseInit(HttpHdrCc * cc, const String *str)
+httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
 {
     const char *item;
     const char *p;		/* '=' parameter */
@@ -168,8 +168,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 	if (flag == CC_MAX_AGE && cc->max_age >= 0) {
 	    packerPrintf(p, "max-age=%d", (int) cc->max_age);
 	    pcount++;
-	} else
-	if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
+	} else if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
 	    packerPrintf(p, (pcount ? ", %s" : "%s"), strBuf(CcFieldsInfo[flag].name));
 	    pcount++;
 	}
