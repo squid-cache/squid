@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.12 2003/08/05 08:52:36 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.13 2003/08/13 00:39:12 wessels Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -127,6 +127,7 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
  <item>Requests denied due to 'http_reply_access' are now logged with TCP_DENIED_REPLY.
  <item>Added counters for HTCP messages sent and received, reported
        in 'info' cache manager page.
+ <item>Fixed 'ICP dynamic timeout algorithm ignores multicast' bug
 </itemize>
 
 <sect>Changes to squid.conf

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.321 2003/08/10 11:00:43 robertc Exp $
+ * $Id: neighbors.cc,v 1.322 2003/08/13 00:39:16 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -593,6 +593,7 @@ neighborsUdpPing(HttpRequest * request,
     int peers_pinged = 0;
     int parent_timeout = 0, parent_exprep = 0;
     int sibling_timeout = 0, sibling_exprep = 0;
+    int mcast_timeout = 0, mcast_exprep = 0;
 
     if (Config.peers == NULL)
         return 0;
@@ -673,7 +674,8 @@ neighborsUdpPing(HttpRequest * request,
              * says a multicast peer is dead.
              */
             p->stats.last_reply = squid_curtime;
-            (*exprep) += p->mcast.n_replies_expected;
+            mcast_exprep += p->mcast.n_replies_expected;
+            mcast_timeout += (p->stats.rtt * p->mcast.n_replies_expected);
         } else if (neighborUp(p)) {
             /* its alive, expect a reply from it */
 
@@ -742,7 +744,7 @@ neighborsUdpPing(HttpRequest * request,
     /*
      * How many replies to expect?
      */
-    *exprep = parent_exprep + sibling_exprep;
+    *exprep = parent_exprep + sibling_exprep + mcast_exprep;
 
     /*
      * If there is a configured timeout, use it
@@ -753,6 +755,8 @@ neighborsUdpPing(HttpRequest * request,
         if (*exprep > 0) {
             if (parent_exprep)
                 *timeout = 2 * parent_timeout / parent_exprep;
+            else if (mcast_exprep)
+                *timeout = 2 * mcast_timeout / mcast_exprep;
             else
                 *timeout = 2 * sibling_timeout / sibling_exprep;
         } else
