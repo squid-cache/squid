@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.21 1998/07/24 23:53:44 wessels Exp $
+ * $Id: pconn.cc,v 1.22 1998/08/14 17:23:41 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -35,16 +35,15 @@
 
 #include "squid.h"
 
-#define PCONN_MAX_FDS 10
-
 struct _pconn {
     char *key;
     struct _pconn *next;
-    int fds[PCONN_MAX_FDS];
+    int *fds;
+    int nfds_alloc;
     int nfds;
 };
 
-#define PCONN_HIST_SZ 256
+#define PCONN_HIST_SZ (1<<16)
 int client_pconn_hist[PCONN_HIST_SZ];
 int server_pconn_hist[PCONN_HIST_SZ];
 
@@ -70,6 +69,8 @@ pconnNew(const char *key)
 {
     struct _pconn *p = xcalloc(1, sizeof(struct _pconn));
     p->key = xstrdup(key);
+    p->nfds_alloc = 2;
+    p->fds = xcalloc(p->nfds_alloc, sizeof(int));
     debug(48, 3) ("pconnNew: adding %s\n", p->key);
     hash_join(table, (hash_link *) p);
     return p;
@@ -80,6 +81,7 @@ pconnDelete(struct _pconn *p)
 {
     debug(48, 3) ("pconnDelete: deleting %s\n", p->key);
     hash_remove_link(table, (hash_link *) p);
+    xfree(p->fds);
     xfree(p->key);
     xfree(p);
 }
@@ -175,6 +177,7 @@ void
 pconnPush(int fd, const char *host, u_short port)
 {
     struct _pconn *p;
+    int *old;
     LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     LOCAL_ARRAY(char, desc, FD_DESC_SZ);
     if (fdNFree() < (RESERVED_FD << 2)) {
@@ -190,11 +193,13 @@ pconnPush(int fd, const char *host, u_short port)
     p = (struct _pconn *) hash_lookup(table, key);
     if (p == NULL)
 	p = pconnNew(key);
-    if (p->nfds == PCONN_MAX_FDS) {
-	debug(48, 3) ("pconnPush: %s already has %d unused connections\n",
-	    key, p->nfds);
-	comm_close(fd);
-	return;
+    if (p->nfds == p->nfds_alloc) {
+	debug(48, 3) ("pconnPush: growing FD array\n");
+	p->nfds_alloc <<= 1;
+	old = p->fds;
+	p->fds = xmalloc(p->nfds_alloc * sizeof(int));
+	xmemcpy(p->fds, old, p->nfds);
+	xfree(old);
     }
     p->fds[p->nfds++] = fd;
     commSetSelect(fd, COMM_SELECT_READ, pconnRead, p, 0);
