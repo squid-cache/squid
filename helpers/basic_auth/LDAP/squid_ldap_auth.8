@@ -1,12 +1,14 @@
-.TH squid_ldap_auth 8 "1 Mars 2003" "Squid LDAP Auth"
+.TH squid_ldap_auth 8 "17 July 2004" "Squid LDAP Auth"
 .
 .SH NAME
 squid_ldap_auth - Squid LDAP authentication helper
 .
 .SH SYNOPSIS
-squid_ldap_auth -b "base DN" [-u attribute] [options] [ldap_server_name[:port]]...]
-.P
-squid_ldap_auth -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]...]
+.B squid_ldap_auth
+-b "base DN" [-u attribute] [options] [ldap_server_name[:port]|URI]...
+.br
+.B squid_ldap_auth
+-b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]|URI]...
 .
 .SH DESCRIPTION
 This helper allows Squid to connect to a LDAP directory to
@@ -43,6 +45,11 @@ the same position in the LDAP tree and the login name is used for naming
 each user object. If your LDAP tree does not match these criterias or if
 you want to filter who are valid users then you need to use a search filter
 to search for your users DN (-f option).
+.
+.TP
+.BI "-U " passwordattr
+Use ldap_compare instead of ldap_simple_bind to verify the users password.
+passwordattr is the LDAP attribute storing the users password.
 .
 .TP
 .BI "-s " base|one|sub
@@ -86,6 +93,16 @@ be kept open, allowing it to be reused for further user
 validations. Recommended for larger installations.
 .
 .TP
+.BI -O
+Only bind once per LDAP connection. Some LDAP servers do not
+allow re-binding as another user after a successful ldap_bind.
+The use of this option always opens a new connection for each
+login attempt. If combined with the -P option for persistent
+LDAP connection then the connection used for searching for the
+user DN is kept persistent but a new connection is opened
+to verify each users password once the DN is found.
+.
+.TP
 .BI -R
 do not follow referrals
 .
@@ -104,15 +121,18 @@ the base object
 .
 .TP
 .BI -H " ldapuri"
-Specity the LDAP server to connect to by LDAP URI (requires OpenLDAP libraries)
+Specity the LDAP server to connect to by LDAP URI (requires OpenLDAP libraries).
+Servers can also be specified last on the command line.
 .
 .TP
 .BI -h " ldapserver"
-Specify the LDAP server to connect to
+Specify the LDAP server to connect to. Servers can also be specified last
+on the command line.
 .TP
 .BI -p " ldapport"
 Specify an alternate TCP port where the ldap server is listening if
-other than the default LDAP port 389.
+other than the default LDAP port 389. Can also be specified within the
+server specificiation by using servername:port syntax.
 .
 .TP
 .BI -Z
@@ -131,7 +151,7 @@ Netscape LDAP API libraries)
 Specify time limit on LDAP search operations
 .
 .TP
-.BU -d
+.BI -d
 Debug mode where each step taken will get reported in detail.
 Useful for understanding what goes wrong if the results is
 not what is expected.
@@ -141,31 +161,31 @@ For directories using the RFC2307 layout with a single domain, all
 you need to specify is usually the base DN under where your users
 are located and the server name:
 .IP
-squid_ldap_auth -b ou=people,dc=your,dc=domain ldapserver
+squid_ldap_auth -b "ou=people,dc=your,dc=domain" ldapserver
 .P
 If you have sub-domains then you need to use a search filter approach
 to locate your user DNs as these can no longer be constructed direcly
 from the base DN and login name alone:
 .IP
-squid_ldap_auth -b dc=your,dc=domain -f uid=%s ldapserver
+squid_ldap_auth -b "dc=your,dc=domain" -f "uid=%s" ldapserver
 .P
 And similarily if you only want to allow access to users having a
 specific attribute
 .IP
-squid_ldap_auth -b dc=your,dc=domain -f (&(uid=%s)(specialattribute=value)) ldapserver
+squid_ldap_auth -b "dc=your,dc=domain" -f "(&(uid=%s)(specialattribute=value))" ldapserver
 .P
 Or if the user attribute of the user DN is "cn" instead of "uid" and
 you do not want to have to search for the users then you could use something
 like the following example for Active Directory:
 .IP
-squid_ldap_auth -u cn -b cn=Users,dc=your,dc=domain ldapserver
+squid_ldap_auth -u cn -b "cn=Users,dc=your,dc=domain" ldapserver
 .P
 If you want to search for the user DN and your directory does not allow
 anonymous searches then you must also use the -D and -w flags to specify
 a user DN and password to log in as to perform the searches, as in the
 following complex Active Directory example
 .IP
-squid_ldap_auth -p -R -b dc=your,dc=domain -D cn=squid,cn=users,dc=your,dc=domain -w secretsquidpassword -f (&(userPrincipalName=%s)(objectClass=Person)) activedirectoryserver
+squid_ldap_auth -p -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
 .
 .SH NOTES
 .

@@ -1,10 +1,10 @@
-.TH squid_ldap_group 8 "1 Mars 2003" "Squid LDAP Group"
+.TH squid_ldap_group 8 "17 July 2004" "Squid LDAP Group"
 .
 .SH NAME
 squid_ldap_group - Squid LDAP external acl group helper
 .
 .SH SYNOPSIS
-squid_ldap_group -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]...|URI]
+squid_ldap_group -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]|URI]...
 .
 .SH DESCRIPTION
 This helper allows Squid to connect to a LDAP directory to
@@ -139,7 +139,7 @@ Specify time limit on LDAP search operations
 Strip NT domain name component from user names (/ or \\ separated)
 .
 .TP
-.BU -d
+.BI -d
 Debug mode where each step taken will get reported in detail.
 Useful for understanding what goes wrong if the results is
 not what is expected.
