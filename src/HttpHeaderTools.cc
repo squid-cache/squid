@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.7 1998/04/02 05:35:22 rousskov Exp $
+ * $Id: HttpHeaderTools.cc,v 1.8 1998/04/06 22:32:08 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -34,7 +34,7 @@ static int httpHeaderStrCmp(const char *h1, const char *h2, int len);
 
 
 HttpHeaderFieldInfo *
-httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs *attrs, int count)
+httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
 {
     int i;
     HttpHeaderFieldInfo *table = NULL;
@@ -49,7 +49,7 @@ httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs *attrs, int count)
 	/* sanity checks */
 	assert(id >= 0 && id < count);
 	assert(attrs[i].name);
-	assert(info->id == 0 && info->type == 0); /* was not set before */
+	assert(info->id == 0 && info->type == 0);	/* was not set before */
 	/* copy and init fields */
 	info->id = id;
 	info->type = attrs[i].type;
@@ -62,7 +62,7 @@ httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs *attrs, int count)
 }
 
 void
-httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo *table, int count)
+httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * table, int count)
 {
     int i;
     for (i = 0; i < count; ++i)
@@ -71,14 +71,14 @@ httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo *table, int count)
 }
 
 void
-httpHeaderMaskInit(HttpHeaderMask *mask)
+httpHeaderMaskInit(HttpHeaderMask * mask)
 {
     memset(mask, 0, sizeof(*mask));
 }
 
 /* calculates a bit mask of a given array */
 void
-httpHeaderCalcMask(HttpHeaderMask *mask, const int *enums, int count)
+httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count)
 {
     int i;
     assert(mask && enums);
@@ -93,15 +93,15 @@ httpHeaderCalcMask(HttpHeaderMask *mask, const int *enums, int count)
 
 
 int
-httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo *info, int end)
+httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * info, int end)
 {
     int i;
     for (i = 0; i < end; ++i) {
 	if (name_len >= 0 && name_len != strLen(info[i].name))
 	    continue;
 	if (!strncasecmp(name, strBuf(info[i].name),
-	    name_len < 0 ? strLen(info[i].name) + 1 : name_len))
-		return i;
+		name_len < 0 ? strLen(info[i].name) + 1 : name_len))
+	    return i;
     }
     return -1;
 }
@@ -149,7 +149,7 @@ getStringPrefix(const char *str, const char *end)
 {
 #define SHORT_PREFIX_SIZE 512
     LOCAL_ARRAY(char, buf, SHORT_PREFIX_SIZE);
-    const int sz = 1 + (end ? end-str : strlen(str));
+    const int sz = 1 + (end ? end - str : strlen(str));
     xstrncpy(buf, str, (sz > SHORT_PREFIX_SIZE) ? SHORT_PREFIX_SIZE : sz);
     return buf;
 }
@@ -165,13 +165,13 @@ httpHeaderParseInt(const char *start, int *value)
     *value = atoi(start);
     if (!*value && !isdigit(*start)) {
 	debug(66, 2) ("failed to parse an int header field near '%s'\n", start);
-            return 0;
+	return 0;
     }
     return 1;
 }
 
 int
-httpHeaderParseSize(const char *start, size_t *value)
+httpHeaderParseSize(const char *start, size_t * value)
 {
     int v;
     const int res = httpHeaderParseInt(start, &v);
@@ -185,7 +185,8 @@ httpHeaderParseSize(const char *start, size_t *value)
  * parses a given string then packs compiled headers and compares the result
  * with the original, reports discrepancies
  */
-void httpHeaderTestParser(const char *hstr)
+void 
+httpHeaderTestParser(const char *hstr)
 {
     static int bug_count = 0;
     int hstr_len;
@@ -199,24 +200,23 @@ void httpHeaderTestParser(const char *hstr)
     if (!strncasecmp(hstr, "HTTP/", 5)) {
 	const char *p = strchr(hstr, '\n');
 	if (p)
-	    hstr = p+1;
+	    hstr = p + 1;
     }
     /* skip invalid first line if any */
     if (isspace(*hstr)) {
 	const char *p = strchr(hstr, '\n');
 	if (p)
-	    hstr = p+1;
+	    hstr = p + 1;
     }
     hstr_len = strlen(hstr);
     /* skip terminator if any */
     if (strstr(hstr, "\n\r\n"))
 	hstr_len -= 2;
-    else
-    if (strstr(hstr, "\n\n"))
+    else if (strstr(hstr, "\n\n"))
 	hstr_len -= 1;
     httpHeaderInit(&hdr);
     /* debugLevels[55] = 8; */
-    parse_success = httpHeaderParse(&hdr, hstr, hstr+hstr_len);
+    parse_success = httpHeaderParse(&hdr, hstr, hstr + hstr_len);
     /* debugLevels[55] = 2; */
     if (!parse_success) {
 	debug(66, 2) ("TEST (%d): failed to parsed a header: {\n%s}\n", bug_count, hstr);
@@ -229,7 +229,7 @@ void httpHeaderTestParser(const char *hstr)
     if ((pos = abs(httpHeaderStrCmp(hstr, mb.buf, hstr_len)))) {
 	bug_count++;
 	debug(66, 2) ("TEST (%d): hdr parsing bug (pos: %d near '%s'): expected: {\n%s} got: {\n%s}\n",
-	    bug_count, pos, hstr+pos, hstr, mb.buf);
+	    bug_count, pos, hstr + pos, hstr, mb.buf);
     }
     httpHeaderClean(&hdr);
     packerClean(&p);
@@ -237,7 +237,7 @@ void httpHeaderTestParser(const char *hstr)
 }
 
 
-/* like strncasecmp but ignores ws characters */ 
+/* like strncasecmp but ignores ws characters */
 static int
 httpHeaderStrCmp(const char *h1, const char *h2, int len)
 {
@@ -250,12 +250,16 @@ httpHeaderStrCmp(const char *h1, const char *h2, int len)
     while (1) {
 	const char c1 = toupper(h1[len1 += xcountws(h1 + len1)]);
 	const char c2 = toupper(h2[len2 += xcountws(h2 + len2)]);
-        if (c1 < c2) return -len1;
-        if (c1 > c2) return +len1;
+	if (c1 < c2)
+	    return -len1;
+	if (c1 > c2)
+	    return +len1;
 	if (!c1 && !c2)
 	    return 0;
-        if (c1) len1++;
-	if (c2) len2++;
+	if (c1)
+	    len1++;
+	if (c2)
+	    len2++;
     }
     return 0;
 }

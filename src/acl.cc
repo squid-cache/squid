@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.156 1998/04/04 01:44:00 kostas Exp $
+ * $Id: acl.cc,v 1.157 1998/04/06 22:32:11 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -744,17 +744,17 @@ aclParseProxyAuth(void *data)
 static void
 aclParseSnmpComm(void *data)
 {
-    acl_snmp_comm **q=data;
+    acl_snmp_comm **q = data;
     acl_snmp_comm *p;
     char *t;
     t = strtok(NULL, w_space);
     if (t) {
-	p=xcalloc(1, sizeof(acl_snmp_comm));
-	p->name=xstrdup(t);
-	p->community=NULL;
-	*q=p;
+	p = xcalloc(1, sizeof(acl_snmp_comm));
+	p->name = xstrdup(t);
+	p->community = NULL;
+	*q = p;
     }
-    t=strtok(NULL, w_space);
+    t = strtok(NULL, w_space);
     return;
 }
 

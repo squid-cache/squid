@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.30 1998/04/05 20:32:44 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.31 1998/04/06 22:32:07 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -103,7 +103,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
     {"Location", HDR_LOCATION, ftStr},
     {"Max-Forwards", HDR_MAX_FORWARDS, ftInt},
-    {"Mime-Version", HDR_MIME_VERSION, ftStr}, /* for now */
+    {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
     {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
     {"Proxy-Connection", HDR_PROXY_CONNECTION, ftStr},
     {"Public", HDR_PUBLIC, ftStr},
@@ -123,7 +123,7 @@ static HttpHeaderFieldInfo *Headers = NULL;
  * headers with field values defined as #(values) in HTTP/1.1
  * Headers that are currently not recognized, are commented out.
  */
-static HttpHeaderMask ListHeadersMask; /* set run-time using  ListHeadersArr */
+static HttpHeaderMask ListHeadersMask;	/* set run-time using  ListHeadersArr */
 static http_hdr_type ListHeadersArr[] =
 {
     HDR_ACCEPT,
@@ -141,7 +141,7 @@ static http_hdr_type ListHeadersArr[] =
     /* HDR_EXPECT, HDR_TE, HDR_TRAILER */
 };
 
-static HttpHeaderMask ReplyHeadersMask; /* set run-time using ReplyHeaders */
+static HttpHeaderMask ReplyHeadersMask;		/* set run-time using ReplyHeaders */
 static http_hdr_type ReplyHeadersArr[] =
 {
     HDR_ACCEPT, HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
@@ -152,7 +152,7 @@ static http_hdr_type ReplyHeadersArr[] =
     HDR_UPGRADE, HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE, HDR_OTHER
 };
 
-static HttpHeaderMask RequestHeadersMask; /* set run-time using RequestHeaders */
+static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders */
 static http_hdr_type RequestHeadersArr[] =
 {
     HDR_RANGE, HDR_OTHER
@@ -183,7 +183,7 @@ static HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos
 static void httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos);
 /* static int httpHeaderDelById(HttpHeader * hdr, http_hdr_type id); */
 static void httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e);
-static String httpHeaderJoinEntries(const HttpHeader *hdr, http_hdr_type id);
+static String httpHeaderJoinEntries(const HttpHeader * hdr, http_hdr_type id);
 
 static HttpHeaderEntry *httpHeaderEntryCreate(http_hdr_type id, const char *name, const char *value);
 static void httpHeaderEntryDestroy(HttpHeaderEntry * e);
@@ -206,7 +206,7 @@ httpHeaderInitModule()
 {
     int i;
     /* check that we have enough space for masks */
-    assert(8*sizeof(HttpHeaderMask) >= HDR_ENUM_END);
+    assert(8 * sizeof(HttpHeaderMask) >= HDR_ENUM_END);
     Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
     /* create masks */
     httpHeaderCalcMask(&ListHeadersMask, (const int *) ListHeadersArr, countof(ListHeadersArr));
@@ -272,16 +272,16 @@ httpHeaderClean(HttpHeader * hdr)
 	    debug(55, 0) ("httpHeaderClean BUG: entry[%d] is invalid (%d). Ignored.\n",
 		pos, e->id);
 	else
-	/* end of hack */
-	/* yes, this destroy() leaves us in an incosistent state */
-	httpHeaderEntryDestroy(e);
+	    /* end of hack */
+	    /* yes, this destroy() leaves us in an incosistent state */
+	    httpHeaderEntryDestroy(e);
     }
     arrayClean(&hdr->entries);
 }
 
 /* use fresh entries to replace old ones */
 void
-httpHeaderUpdate(HttpHeader *old, const HttpHeader *fresh)
+httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh)
 {
     HttpHeaderEntry *e;
     HttpHeaderEntry *e_clone;
@@ -321,7 +321,7 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
 	const char *field_end = field_start + strcspn(field_start, "\r\n");
 	if (!*field_end || field_end > header_end)
 	    return httpHeaderReset(hdr);	/* missing <CRLF> */
-        e = httpHeaderEntryParseCreate(field_start, field_end);
+	e = httpHeaderEntryParseCreate(field_start, field_end);
 	if (e != NULL)
 	    httpHeaderAddEntry(hdr, e);
 	else
@@ -334,7 +334,7 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
 	if (*field_start == '\n')
 	    field_start++;
     }
-    return 1;  /* even if no fields where found, it is a valid header */
+    return 1;			/* even if no fields where found, it is a valid header */
 }
 
 /*
@@ -362,7 +362,7 @@ httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
     debug(55, 8) ("searching for next e in hdr %p from %d\n", hdr, *pos);
     for ((*pos)++; *pos < hdr->entries.count; (*pos)++) {
 	if (hdr->entries.items[*pos])
-	   return hdr->entries.items[*pos];
+	    return hdr->entries.items[*pos];
     }
     debug(55, 8) ("no more entries in hdr %p\n", hdr);
     return NULL;
@@ -393,7 +393,7 @@ httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id)
     }
     /* hm.. we thought it was there, but it was not found */
     assert(0);
-    return NULL; /* not reached */
+    return NULL;		/* not reached */
 }
 
 /*
@@ -418,7 +418,7 @@ httpHeaderFindLastEntry(const HttpHeader * hdr, http_hdr_type id)
 	if (e->id == id)
 	    result = e;
     }
-    assert(result); /* must be there! */
+    assert(result);		/* must be there! */
     return result;
 }
 
@@ -431,7 +431,7 @@ httpHeaderDelByName(HttpHeader * hdr, const char *name)
     int count = 0;
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
-    httpHeaderMaskInit(&hdr->mask); /* temporal inconsistency */
+    httpHeaderMaskInit(&hdr->mask);	/* temporal inconsistency */
     debug(55, 7) ("deleting '%s' fields in hdr %p\n", name, hdr);
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
 	if (!strCaseCmp(e->name, name)) {
@@ -497,7 +497,7 @@ httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e)
 }
 
 static String
-httpHeaderJoinEntries(const HttpHeader *hdr, http_hdr_type id)
+httpHeaderJoinEntries(const HttpHeader * hdr, http_hdr_type id)
 {
     String s = StringNull;
     HttpHeaderEntry *e;
@@ -534,7 +534,7 @@ void
 httpHeaderPutInt(HttpHeader * hdr, http_hdr_type id, int number)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftInt); /* must be of an appropriatre type */
+    assert(Headers[id].type == ftInt);	/* must be of an appropriatre type */
     assert(number >= 0);
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, xitoa(number)));
 }
@@ -543,7 +543,7 @@ void
 httpHeaderPutTime(HttpHeader * hdr, http_hdr_type id, time_t time)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftDate_1123); /* must be of an appropriatre type */
+    assert(Headers[id].type == ftDate_1123);	/* must be of an appropriatre type */
     assert(time >= 0);
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, mkrfc1123(time)));
 }
@@ -552,7 +552,7 @@ void
 httpHeaderPutStr(HttpHeader * hdr, http_hdr_type id, const char *str)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftStr); /* must be of an appropriatre type */
+    assert(Headers[id].type == ftStr);	/* must be of an appropriatre type */
     assert(str);
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, str));
 }
@@ -614,7 +614,7 @@ httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id)
     assert_eid(id);
     assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
     if ((e = httpHeaderFindEntry(hdr, id))) {
-	httpHeaderNoteParsedEntry(e->id, e->value, 0); /* no errors are possible */
+	httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
 	return strBuf(e->value);
     }
     return NULL;
@@ -628,7 +628,7 @@ httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id)
     assert_eid(id);
     assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
     if ((e = httpHeaderFindLastEntry(hdr, id))) {
-	httpHeaderNoteParsedEntry(e->id, e->value, 0); /* no errors are possible */
+	httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
 	return strBuf(e->value);
     }
     return NULL;
@@ -739,7 +739,7 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     /* note: name_start == field_start */
     const char *name_end = strchr(field_start, ':');
     const int name_len = name_end ? name_end - field_start : 0;
-    const char *value_start = field_start + name_len + 1; /* skip ':' */
+    const char *value_start = field_start + name_len + 1;	/* skip ':' */
     /* note: value_end == field_end */
 
     HeaderEntryParsedCount++;
@@ -794,7 +794,7 @@ httpHeaderNoteParsedEntry(http_hdr_type id, String context, int error)
     Headers[id].stat.parsCount++;
     if (error) {
 	Headers[id].stat.errCount++;
-	debug(55,2) ("cannot parse hdr field: '%s: %s'\n",
+	debug(55, 2) ("cannot parse hdr field: '%s: %s'\n",
 	    strBuf(Headers[id].name), strBuf(context));
     }
 }
@@ -819,7 +819,7 @@ httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size
 {
     if (count)
 	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
-	    idx, (int)val, count,
+	    idx, (int) val, count,
 	    xpercent(count, HeaderDestroyedCount));
 }
 

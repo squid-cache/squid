@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.5 1998/03/11 21:11:47 rousskov Exp $
+ * $Id: HttpHdrRange.cc,v 1.6 1998/04/06 22:32:07 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -31,24 +31,23 @@
 
 #include "squid.h"
 
-#if 0
-    Currently only byte ranges are supported
-
-    Essentially, there are three types of byte ranges:
-
-	1) first-byte-pos "-" last-byte-pos  // range
-	2) first-byte-pos "-"                // trailer
-	3)                "-" suffix-length  // suffix (last length bytes)
-
-
-    When Range field is parsed, we have no clue about the content length of
-    the document. Thus, we simply code an "absent" part using range_spec_unknown
-    constant.
-
-    Note: when response length becomes known, we convert any range spec into
-    type one above. (Canonization process).
-
-#endif
+/*
+ *    Currently only byte ranges are supported
+ *
+ *    Essentially, there are three types of byte ranges:
+ *
+ *      1) first-byte-pos "-" last-byte-pos  // range
+ *      2) first-byte-pos "-"                // trailer
+ *      3)                "-" suffix-length  // suffix (last length bytes)
+ *
+ *
+ *    When Range field is parsed, we have no clue about the content
+ *    length of the document. Thus, we simply code an "absent" part
+ *    using range_spec_unknown constant.
+ *
+ *    Note: when response length becomes known, we convert any range
+ *    spec into type one above. (Canonization process).
+ */
 
 
 /* local constants */
@@ -58,9 +57,9 @@
 #define known_spec(s) ((s) != range_spec_unknown)
 #define size_min(a,b) ((a) <= (b) ? (a) : (b))
 #define size_diff(a,b) ((a) >= (b) ? ((a)-(b)) : 0)
-static HttpHdrRangeSpec *httpHdrRangeSpecDup(const HttpHdrRangeSpec *spec);
-static int httpHdrRangeSpecCanonize(HttpHdrRangeSpec *spec, size_t clen);
-static void httpHdrRangeSpecPackInto(const HttpHdrRangeSpec *spec, Packer *p);
+static HttpHdrRangeSpec *httpHdrRangeSpecDup(const HttpHdrRangeSpec * spec);
+static int httpHdrRangeSpecCanonize(HttpHdrRangeSpec * spec, size_t clen);
+static void httpHdrRangeSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p);
 
 /* globals */
 static int RangeParsedCount = 0;
@@ -79,17 +78,18 @@ httpHdrRangeSpecCreate()
 static HttpHdrRangeSpec *
 httpHdrRangeSpecParseCreate(const char *field, int flen)
 {
-    HttpHdrRangeSpec spec = { range_spec_unknown, range_spec_unknown };
+    HttpHdrRangeSpec spec =
+    {range_spec_unknown, range_spec_unknown};
     const char *p;
     if (flen < 2)
 	return NULL;
     /* is it a suffix-byte-range-spec ? */
     if (*field == '-') {
-	if (!httpHeaderParseSize(field+1, &spec.length))
+	if (!httpHeaderParseSize(field + 1, &spec.length))
 	    return NULL;
     } else
-    /* must have a '-' somewhere in _this_ field */
-    if (!((p = strchr(field, '-')) || (p-field >= flen))) {
+	/* must have a '-' somewhere in _this_ field */
+    if (!((p = strchr(field, '-')) || (p - field >= flen))) {
 	debug(64, 2) ("ignoring invalid (missing '-') range-spec near: '%s'\n", field);
 	return NULL;
     } else {
@@ -100,8 +100,8 @@ httpHdrRangeSpecParseCreate(const char *field, int flen)
 	if (p - field < flen) {
 	    size_t last_pos;
 	    if (!httpHeaderParseSize(p, &last_pos))
-	        return NULL;
-	    spec.length = size_diff(last_pos+1, spec.offset);
+		return NULL;
+	    spec.length = size_diff(last_pos + 1, spec.offset);
 	}
     }
     /* we managed to parse, check if the result makes sence */
@@ -113,14 +113,14 @@ httpHdrRangeSpecParseCreate(const char *field, int flen)
 }
 
 static void
-httpHdrRangeSpecDestroy(HttpHdrRangeSpec *spec)
+httpHdrRangeSpecDestroy(HttpHdrRangeSpec * spec)
 {
     memFree(MEM_HTTP_HDR_RANGE_SPEC, spec);
 }
 
 
 static HttpHdrRangeSpec *
-httpHdrRangeSpecDup(const HttpHdrRangeSpec *spec)
+httpHdrRangeSpecDup(const HttpHdrRangeSpec * spec)
 {
     HttpHdrRangeSpec *dup = httpHdrRangeSpecCreate();
     dup->offset = spec->offset;
@@ -129,29 +129,27 @@ httpHdrRangeSpecDup(const HttpHdrRangeSpec *spec)
 }
 
 static void
-httpHdrRangeSpecPackInto(const HttpHdrRangeSpec *spec, Packer *p)
+httpHdrRangeSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
 {
-    if (!known_spec(spec->offset)) /* suffix */
+    if (!known_spec(spec->offset))	/* suffix */
 	packerPrintf(p, "-%d", spec->length);
-    else
-    if (!known_spec(spec->length)) /* trailer */
+    else if (!known_spec(spec->length))		/* trailer */
 	packerPrintf(p, "%d-", spec->offset);
-    else                           /* range */
-	packerPrintf(p, "%d-%d", 
-	    spec->offset, spec->offset+spec->length-1);
+    else			/* range */
+	packerPrintf(p, "%d-%d",
+	    spec->offset, spec->offset + spec->length - 1);
 }
 
 /* fills "absent" positions in range specification based on response body size 
-   returns true if the range is still valid
-   range is valid if its intersection with [0,length-1] is not empty
-*/
+ * returns true if the range is still valid
+ * range is valid if its intersection with [0,length-1] is not empty
+ */
 static int
-httpHdrRangeSpecCanonize(HttpHdrRangeSpec *spec, size_t clen)
+httpHdrRangeSpecCanonize(HttpHdrRangeSpec * spec, size_t clen)
 {
-    if (!known_spec(spec->offset)) /* suffix */
+    if (!known_spec(spec->offset))	/* suffix */
 	spec->offset = size_diff(clen, spec->length);
-    else
-    if (!known_spec(spec->length)) /* trailer */
+    else if (!known_spec(spec->length))		/* trailer */
 	spec->length = size_diff(clen, spec->offset);
     /* we have a "range" now, adjust length if needed */
     assert(known_spec(spec->length));
@@ -186,7 +184,7 @@ httpHdrRangeParseCreate(const char *str)
 
 /* returns true if ranges are valid; inits HttpHdrRange */
 int
-httpHdrRangeParseInit(HttpHdrRange *range, const char *str)
+httpHdrRangeParseInit(HttpHdrRange * range, const char *str)
 {
     const char *item;
     const char *pos = NULL;
@@ -213,7 +211,7 @@ httpHdrRangeParseInit(HttpHdrRange *range, const char *str)
 }
 
 void
-httpHdrRangeDestroy(HttpHdrRange *range)
+httpHdrRangeDestroy(HttpHdrRange * range)
 {
     assert(range);
     while (range->specs.count)
@@ -257,25 +255,25 @@ httpHdrRangePackInto(const HttpHdrRange * range, Packer * p)
  *   - there is at least one range spec
  */
 int
-httpHdrRangeCanonize(HttpHdrRange *range, size_t clen)
+httpHdrRangeCanonize(HttpHdrRange * range, size_t clen)
 {
     int i;
     assert(range);
     for (i = 0; i < range->specs.count; i++)
-        if (!httpHdrRangeSpecCanonize(range->specs.items[i], clen))
+	if (!httpHdrRangeSpecCanonize(range->specs.items[i], clen))
 	    return 0;
     return range->specs.count;
 }
 
 /* searches for next range, returns true if found */
 int
-httpHdrRangeGetSpec(const HttpHdrRange *range, HttpHdrRangeSpec *spec, int *pos)
+httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangeSpec * spec, int *pos)
 {
     assert(range && spec);
     assert(pos && *pos >= -1 && *pos < range->specs.count);
     (*pos)++;
     if (*pos < range->specs.count) {
-	*spec = *(HttpHdrRangeSpec*)range->specs.items[*pos];
+	*spec = *(HttpHdrRangeSpec *) range->specs.items[*pos];
 	return 1;
     }
     spec->offset = spec->length = 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.1 1998/04/04 01:44:04 kostas Exp $
+ * $Id: snmp_core.cc,v 1.2 1998/04/06 22:32:18 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Kostas Anagnostakis
@@ -174,9 +174,9 @@ snmpHandleUdp(int sock, void *not_used)
 }
 
 void
-snmpAgentParseDone(int errstat, void * data)
+snmpAgentParseDone(int errstat, void *data)
 {
-    snmp_request_t *snmp_rq=(snmp_request_t *)data;
+    snmp_request_t *snmp_rq = (snmp_request_t *) data;
     LOCAL_ARRAY(char, deb_line, 4096);
     int sock = snmp_rq->sock;
     long this_reqid = snmp_rq->reqid;
@@ -185,7 +185,7 @@ snmpAgentParseDone(int errstat, void * data)
 
     if (memcmp(&snmp_rq->from, &local_snmpd, sizeof(struct sockaddr_in)) == 0) {
 	/* look it up */
-	if (snmpFwd_removePending(&snmp_rq->from, this_reqid)) { /* failed */
+	if (snmpFwd_removePending(&snmp_rq->from, this_reqid)) {	/* failed */
 	    debug(49, 2) ("snmp: bogus response from %s.\n",
 		inet_ntoa(snmp_rq->from.sin_addr));
 	    if (snmp_rq->community)
@@ -507,7 +507,7 @@ snmpConnectionClose(void)
 void
 snmpAgentParse(void *data)
 {
-    snmp_request_t * rq=(snmp_request_t *)data;
+    snmp_request_t *rq = (snmp_request_t *) data;
     u_char *buf = rq->buf;
     int len = rq->len;
 
@@ -519,22 +519,22 @@ snmpAgentParse(void *data)
     PDU = snmp_pdu_create(0);
     Community = snmp_parse(Session, PDU, buf, len);
 
-    if (!snmp_coexist_V2toV1(PDU)) {    /* incompatibility */
-        debug(49, 3) ("snmpAgentParse: Incompatible V2 packet.\n");
-        snmp_free_pdu(PDU);
-        snmpAgentParseDone(0, rq);
-        return;
+    if (!snmp_coexist_V2toV1(PDU)) {	/* incompatibility */
+	debug(49, 3) ("snmpAgentParse: Incompatible V2 packet.\n");
+	snmp_free_pdu(PDU);
+	snmpAgentParseDone(0, rq);
+	return;
     }
     rq->community = Community;
     rq->PDU = PDU;
     debug(49, 5) ("snmpAgentParse: reqid=[%d]\n", PDU->reqid);
 
     if (!Community) {
-        debug(49, 2) ("snmpAgentParse: WARNING: Could not parse community\n");
+	debug(49, 2) ("snmpAgentParse: WARNING: Could not parse community\n");
 
-        snmp_free_pdu(PDU);
-        snmpAgentParseDone(0, rq);
-        return;
+	snmp_free_pdu(PDU);
+	snmpAgentParseDone(0, rq);
+	return;
     }
     snmpAclCheckStart(rq);
 }
@@ -553,81 +553,81 @@ snmpAgentResponse(struct snmp_pdu *PDU)
     /* Create a response */
     Answer = snmp_pdu_create(SNMP_PDU_RESPONSE);
     if (Answer == NULL)
-        return (NULL);
+	return (NULL);
     Answer->reqid = PDU->reqid;
     Answer->errindex = 0;
 
     if (PDU->command == SNMP_PDU_GET) {
 
-        RespVars = &(Answer->variables);
-        /* Loop through all variables */
-        for (VarPtrP = &(PDU->variables);
-            *VarPtrP;
-            VarPtrP = &((*VarPtrP)->next_variable)) {
-            VarPtr = *VarPtrP;
+	RespVars = &(Answer->variables);
+	/* Loop through all variables */
+	for (VarPtrP = &(PDU->variables);
+	    *VarPtrP;
+	    VarPtrP = &((*VarPtrP)->next_variable)) {
+	    VarPtr = *VarPtrP;
 
-            index++;
+	    index++;
 
-            /* Find the parsing function for this variable */
-            ParseFn = oidlist_Find(VarPtr->name, VarPtr->name_length);
+	    /* Find the parsing function for this variable */
+	    ParseFn = oidlist_Find(VarPtr->name, VarPtr->name_length);
 
-            if (ParseFn == NULL) {
-                Answer->errstat = SNMP_ERR_NOSUCHNAME;
-                debug(49, 5) ("snmpAgentResponse: No such oid. ");
-            } else
-                VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
+	    if (ParseFn == NULL) {
+		Answer->errstat = SNMP_ERR_NOSUCHNAME;
+		debug(49, 5) ("snmpAgentResponse: No such oid. ");
+	    } else
+		VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
 
-            /* Was there an error? */
-            if ((Answer->errstat != SNMP_ERR_NOERROR) ||
-                (VarNew == NULL)) {
-                Answer->errindex = index;
-                debug(49, 5) ("snmpAgentParse: successful.\n");
-                /* Just copy the rest of the variables.  Quickly. */
-                *RespVars = VarPtr;
-                *VarPtrP = NULL;
-                return (Answer);
-            }
-            /* No error.  Insert this var at the end, and move on to the next.
-             */
-            *RespVars = VarNew;
-            RespVars = &(VarNew->next_variable);
-        }
-     return (Answer);
+	    /* Was there an error? */
+	    if ((Answer->errstat != SNMP_ERR_NOERROR) ||
+		(VarNew == NULL)) {
+		Answer->errindex = index;
+		debug(49, 5) ("snmpAgentParse: successful.\n");
+		/* Just copy the rest of the variables.  Quickly. */
+		*RespVars = VarPtr;
+		*VarPtrP = NULL;
+		return (Answer);
+	    }
+	    /* No error.  Insert this var at the end, and move on to the next.
+	     */
+	    *RespVars = VarNew;
+	    RespVars = &(VarNew->next_variable);
+	}
+	return (Answer);
     } else if (PDU->command == SNMP_PDU_GETNEXT) {
-        oid *TmpOidName;
-        int TmpOidNameLen = 0;
+	oid *TmpOidName;
+	int TmpOidNameLen = 0;
 
-        /* Find the next OID. */
-        VarPtr = PDU->variables;
+	/* Find the next OID. */
+	VarPtr = PDU->variables;
 
-        ParseFn = oidlist_Next(VarPtr->name, VarPtr->name_length,
-            &(TmpOidName), (snint *) & (TmpOidNameLen));
+	ParseFn = oidlist_Next(VarPtr->name, VarPtr->name_length,
+	    &(TmpOidName), (snint *) & (TmpOidNameLen));
 
-        if (ParseFn == NULL) {
-            Answer->errstat = SNMP_ERR_NOSUCHNAME;
-            debug(49, 5) ("snmpAgentResponse: No such oid: ");
-            snmpDebugOid(5, VarPtr->name, VarPtr->name_length);
-        } else {
-            xfree(VarPtr->name);
-            VarPtr->name = TmpOidName;
-            VarPtr->name_length = TmpOidNameLen;
-            VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
-        }
+	if (ParseFn == NULL) {
+	    Answer->errstat = SNMP_ERR_NOSUCHNAME;
+	    debug(49, 5) ("snmpAgentResponse: No such oid: ");
+	    snmpDebugOid(5, VarPtr->name, VarPtr->name_length);
+	} else {
+	    xfree(VarPtr->name);
+	    VarPtr->name = TmpOidName;
+	    VarPtr->name_length = TmpOidNameLen;
+	    VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
+	}
 
-        /* Was there an error? */
-        if (Answer->errstat != SNMP_ERR_NOERROR) {
-            Answer->errindex = 1;
+	/* Was there an error? */
+	if (Answer->errstat != SNMP_ERR_NOERROR) {
+	    Answer->errindex = 1;
 
-            /* Just copy this variable */
-            Answer->variables = VarPtr;
-            PDU->variables = NULL;
-        } else {
-            Answer->variables = VarNew;
-        }
+	    /* Just copy this variable */
+	    Answer->variables = VarPtr;
+	    PDU->variables = NULL;
+	} else {
+	    Answer->variables = VarNew;
+	}
 
-        /* Done.  Return this PDU */
-        return (Answer);
-    }                           /* end SNMP_PDU_GETNEXT */
+	/* Done.  Return this PDU */
+	return (Answer);
+    }				/* end SNMP_PDU_GETNEXT */
     debug(49, 5) ("snmpAgentResponse: Ignoring PDU %d unknown command\n", PDU->command);
     snmp_free_pdu(Answer);
     return (NULL);
@@ -640,8 +640,8 @@ snmpDebugOid(int lvl, oid * Name, snint Len)
     int x;
     objid[0] = '\0';
     for (x = 0; x < Len; x++) {
-        snprintf(mbuf, 16, ".%u", (unsigned char) Name[x]);
-        strcat(objid, mbuf);
+	snprintf(mbuf, 16, ".%u", (unsigned char) Name[x]);
+	strcat(objid, mbuf);
     }
     debug(49, lvl) ("   oid = %s\n", objid);
 }
@@ -655,21 +655,21 @@ oidcmp(oid * A, snint ALen, oid * B, snint BLen)
 
     /* Compare the first M bytes. */
     while (m) {
-        if (*aptr < *bptr)
-            return (-1);
-        if (*aptr++ > *bptr++)
-            return (1);
-        m--;
+	if (*aptr < *bptr)
+	    return (-1);
+	if (*aptr++ > *bptr++)
+	    return (1);
+	m--;
     }
 
     /* The first M bytes were identical.  So, they share the same
      * root.  The shorter one must come first.
      */
     if (ALen < BLen)
-        return (-1);
+	return (-1);
 
     if (ALen > BLen)
-        return (1);
+	return (1);
 
     /* Same length, all bytes identical.  Must be the same OID. */
     return (0);
@@ -685,22 +685,22 @@ oidncmp(oid * A, snint ALen, oid * B, snint BLen, snint CompLen)
 
     /* Compare the first M bytes. */
     while (count != m) {
-        if (*aptr < *bptr)
-            return (-1);
-        if (*aptr++ > *bptr++)
-            return (1);
-        count++;
+	if (*aptr < *bptr)
+	    return (-1);
+	if (*aptr++ > *bptr++)
+	    return (1);
+	count++;
     }
 
     if (m == CompLen)
-        return (0);
+	return (0);
 
 
     if (ALen < BLen)
-        return (-1);
+	return (-1);
 
     if (ALen > BLen)
-        return (1);
+	return (1);
 
     /* Same length, all bytes identical.  Must be the same OID. */
     return (0);
@@ -715,7 +715,7 @@ oiddup(oid * A, snint ALen)
 
     Ans = (oid *) xmalloc(sizeof(oid) * ALen);
     if (Ans)
-        memcpy(Ans, A, (sizeof(oid) * ALen));
+	memcpy(Ans, A, (sizeof(oid) * ALen));
     return (Ans);
 }
 
@@ -733,25 +733,25 @@ oidlist_Find(oid * Src, snint SrcLen)
     int ret;
 
     debug(49, 7) ("oidlist_Find:  Called.\n ");
-    snmpDebugOid(7,  Src, SrcLen);
+    snmpDebugOid(7, Src, SrcLen);
 
     for (Ptr = squidMIBList; Ptr->GetFn; Ptr++) {
 
-        ret = oidncmp(Src, SrcLen, Ptr->Name, Ptr->NameLen, Ptr->NameLen);
+	ret = oidncmp(Src, SrcLen, Ptr->Name, Ptr->NameLen, Ptr->NameLen);
 
-        if (!ret) {
+	if (!ret) {
 
-            /* Cool.  We found the mib it's in.  Let it find the function.
-             */
-            debug(49, 7) ("oidlist_Find:  found, returning GetFn Ptr! \n");
+	    /* Cool.  We found the mib it's in.  Let it find the function.
+	     */
+	    debug(49, 7) ("oidlist_Find:  found, returning GetFn Ptr! \n");
 
-            return ((*Ptr->GetFn) (Src, SrcLen));
-        }
-        if (ret < 0) {
-            debug(49, 7) ("oidlist_Find:  We just passed it, so it doesn't exist.\n ");
-            /* We just passed it, so it doesn't exist. */
-            return (NULL);
-        }
+	    return ((*Ptr->GetFn) (Src, SrcLen));
+	}
+	if (ret < 0) {
+	    debug(49, 7) ("oidlist_Find:  We just passed it, so it doesn't exist.\n ");
+	    /* We just passed it, so it doesn't exist. */
+	    return (NULL);
+	}
     }
 
     debug(49, 5) ("oidlist_Find:  the request was past the end.  It doesn't exist.\n");
@@ -775,39 +775,39 @@ oidlist_Next(oid * Src, snint SrcLen, oid ** DestP, snint * DestLenP)
 
     for (Ptr = squidMIBList; Ptr->GetNextFn; Ptr++) {
 
-        /* Only look at as much as we have stored */
-        ret = oidncmp(Src, SrcLen, Ptr->Name, Ptr->NameLen, Ptr->NameLen);
+	/* Only look at as much as we have stored */
+	ret = oidncmp(Src, SrcLen, Ptr->Name, Ptr->NameLen, Ptr->NameLen);
 
-        if (!ret) {
-            debug(49, 6) ("oidlist_Next: Checking MIB\n");
+	if (!ret) {
+	    debug(49, 6) ("oidlist_Next: Checking MIB\n");
 
-            /* Cool.  We found the mib it's in.  Ask it.
-             */
-            while (Ptr != NULL && Ptr->GetNextFn) {
-                Fn = ((*Ptr->GetNextFn) (Src, SrcLen, DestP, DestLenP));
-                if (Fn == NULL) {
-                    /* If this returned NULL, we're looking for the first
-                     * in the next MIB.
-                     */
-                    debug(49, 6) ("oidlist_Next: Not in this entry. Trying next.\n");
-                    Ptr++;
-                    continue;
-                }
-                return Fn;
-            }
-            /* Return what we found.  NULL if it wasn't in the MIB, and there
-             * were no more MIBs. 
-             */
-            debug(49, 3) ("oidlist_Next: No next mib.\n");
-            return NULL;
-        }
-        if (ret < 0) {
-            /* We just passed the mib it would be in.  Return 
-             * the next in this MIB.
-             */
-            debug(49, 3) ("oidlist_Next: Passed mib.  Checking this one.\n");
-            return ((*Ptr->GetNextFn) (Src, SrcLen, DestP, DestLenP));
-        }
+	    /* Cool.  We found the mib it's in.  Ask it.
+	     */
+	    while (Ptr != NULL && Ptr->GetNextFn) {
+		Fn = ((*Ptr->GetNextFn) (Src, SrcLen, DestP, DestLenP));
+		if (Fn == NULL) {
+		    /* If this returned NULL, we're looking for the first
+		     * in the next MIB.
+		     */
+		    debug(49, 6) ("oidlist_Next: Not in this entry. Trying next.\n");
+		    Ptr++;
+		    continue;
+		}
+		return Fn;
+	    }
+	    /* Return what we found.  NULL if it wasn't in the MIB, and there
+	     * were no more MIBs. 
+	     */
+	    debug(49, 3) ("oidlist_Next: No next mib.\n");
+	    return NULL;
+	}
+	if (ret < 0) {
+	    /* We just passed the mib it would be in.  Return 
+	     * the next in this MIB.
+	     */
+	    debug(49, 3) ("oidlist_Next: Passed mib.  Checking this one.\n");
+	    return ((*Ptr->GetNextFn) (Src, SrcLen, DestP, DestLenP));
+	}
     }
 
     /* We get here if the request was past the end.  It doesn't exist. */
@@ -827,18 +827,17 @@ gen_getMax()
     return &maddr;
 }
 
-int 
+int
 fd_getMax()
 {
     fde *f;
     int cnt = 0, num = 0;
     while (cnt < Squid_MaxFD) {
-        f = &fd_table[cnt++];
-        if (!f->open)
-            continue;
-        if (f->type != FD_SOCKET)
-            num++;
+	f = &fd_table[cnt++];
+	if (!f->open)
+	    continue;
+	if (f->type != FD_SOCKET)
+	    num++;
     }
     return num;
 }
-

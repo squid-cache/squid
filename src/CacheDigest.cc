@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.9 1998/04/04 07:47:53 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.10 1998/04/06 22:32:05 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -33,14 +33,14 @@
 
 /* local types */
 typedef struct {
-    int bit_count;        /* total number of bits */
-    int bit_on_count;     /* #bits turned on */
-    int bseq_len_sum;     /* sum of all bit seq length */
-    int bseq_count;       /* number of bit seqs */
+    int bit_count;		/* total number of bits */
+    int bit_on_count;		/* #bits turned on */
+    int bseq_len_sum;		/* sum of all bit seq length */
+    int bseq_count;		/* number of bit seqs */
 } CacheDigestStats;
 
 /* local functions */
-static void cacheDigestHashKey(int bit_count, const cache_key *key);
+static void cacheDigestHashKey(int bit_count, const cache_key * key);
 
 /* configuration params */
 static const int BitsPerEntry = 4;
@@ -127,7 +127,7 @@ cacheDigestDel(CacheDigest * cd, const cache_key * key)
 
 /* returns mask utilization parameters */
 static void
-cacheDigestStats(const CacheDigest * cd, CacheDigestStats *stats)
+cacheDigestStats(const CacheDigest * cd, CacheDigestStats * stats)
 {
     const int bit_count = cd->capacity * BitsPerEntry;
     int on_count = 0;
@@ -157,34 +157,34 @@ cacheDigestStats(const CacheDigest * cd, CacheDigestStats *stats)
 }
 
 void
-cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e)
+cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e)
 {
     CacheDigestStats stats;
     assert(cd && e);
     cacheDigestStats(cd, &stats);
     storeAppendPrintf(e, "%s digest: size: %d bytes\n",
-	label ? label : "", stats.bit_count/8
-    );
+	label ? label : "", stats.bit_count / 8
+	);
     storeAppendPrintf(e, "\t entries: count: %d capacity: %d util: %d%%\n",
 	cd->count,
 	cd->capacity,
 	xpercentInt(cd->count, cd->capacity)
-    );
-    storeAppendPrintf(e, "\t deletion attempts: %d\n", 
+	);
+    storeAppendPrintf(e, "\t deletion attempts: %d\n",
 	cd->del_count
-    );
-    storeAppendPrintf(e, "\t bits: on: %d capacity: %d util: %d%%\n", 
+	);
+    storeAppendPrintf(e, "\t bits: on: %d capacity: %d util: %d%%\n",
 	stats.bit_on_count, stats.bit_count,
 	xpercentInt(stats.bit_on_count, stats.bit_count)
-    );
-    storeAppendPrintf(e, "\t bit-seq: count: %d avg.len: %.2f\n", 
+	);
+    storeAppendPrintf(e, "\t bit-seq: count: %d avg.len: %.2f\n",
 	stats.bseq_count,
 	xdiv(stats.bseq_len_sum, stats.bseq_count)
-    );
+	);
 }
 
 static void
-cacheDigestHashKey(int bit_count, const cache_key *key)
+cacheDigestHashKey(int bit_count, const cache_key * key)
 {
     /* get four hashed values */
     memcpy(hashed_keys, key, sizeof(hashed_keys));

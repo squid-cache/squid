@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.29 1998/04/04 04:50:32 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.30 1998/04/06 22:32:21 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -560,7 +560,7 @@ storeAddDiskRestore(const cache_key * key,
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flag, ENTRY_VALIDATED);
     storeDirMapBitSet(e->swap_file_number);
-    storeHashInsert(e, key); /* do it after we clear KEY_PRIVATE */
+    storeHashInsert(e, key);	/* do it after we clear KEY_PRIVATE */
     return e;
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.2 1998/04/03 22:05:14 rousskov Exp $
+ * $Id: store_digest.cc,v 1.3 1998/04/06 22:32:21 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -39,13 +39,13 @@ typedef struct {
 
 typedef struct {
     StoreDigestCBlock cblock;
-    int rebuild_lock;         /* bucket number */
-    StoreEntry *rewrite_lock; /* store entry with the digest */
-    const char *other_lock;   /* used buy external modules to pause rebuilds and rewrites */
+    int rebuild_lock;		/* bucket number */
+    StoreEntry *rewrite_lock;	/* store entry with the digest */
+    const char *other_lock;	/* used buy external modules to pause rebuilds and rewrites */
     int rebuild_offset;
     int rewrite_offset;
     int rebuild_count;
-    int rewrite_count;    
+    int rewrite_count;
 } StoreDigestState;
 
 /*
@@ -55,9 +55,9 @@ typedef struct {
 /* fake url suffix */
 static const char *StoreDigestUrl = "cache_digest";
 /* how often we want to rebuild the digest, seconds */
-static const time_t StoreDigestRebuildPeriod = 60*60;
+static const time_t StoreDigestRebuildPeriod = 60 * 60;
 /* how often we want to rewrite the digest, seconds */
-static const time_t StoreDigestRewritePeriod = 60*60;
+static const time_t StoreDigestRewritePeriod = 60 * 60;
 /* how many bytes to swap out at a time */
 static const int StoreDigestSwapOutChunkSize = SM_PAGE_SIZE;
 /* portion (0,1] of a hash table to be rescanned at a time */
@@ -71,9 +71,9 @@ static void storeDigestRebuild(void *datanotused);
 static void storeDigestRebuildFinish();
 static void storeDigestRebuildStep(void *datanotused);
 static void storeDigestRewrite();
-static void storeDigestRewriteFinish(StoreEntry *e);
-static void storeDigestSwapOutStep(StoreEntry *e);
-static void storeDigestCBlockSwapOut(StoreEntry *e);
+static void storeDigestRewriteFinish(StoreEntry * e);
+static void storeDigestSwapOutStep(StoreEntry * e);
+static void storeDigestCBlockSwapOut(StoreEntry * e);
 
 
 void
@@ -86,7 +86,7 @@ storeDigestInit()
      * Use 1.5*max#entries because 2*max#entries gives about 40% utilization.
      */
 #if SQUID_MAINTAIN_CACHE_DIGEST
-    const int cap = (int)(1.5 * Config.Swap.maxSize / Config.Store.avgObjectSize);
+    const int cap = (int) (1.5 * Config.Swap.maxSize / Config.Store.avgObjectSize);
     store_digest = cacheDigestCreate(cap);
     debug(71, 1) ("Using %d byte cache digest; rebuild/rewrite every %d/%d sec\n",
 	store_digest->mask_size, StoreDigestRebuildPeriod, StoreDigestRewritePeriod);
@@ -96,7 +96,7 @@ storeDigestInit()
 #endif
     memset(&sd_state, 0, sizeof(sd_state));
     cachemgrRegister("store_digest", "Store Digest",
-        storeDigestReport, 0);
+	storeDigestReport, 0);
 }
 
 /* you probably want to call this before storeDigestRewriteContinue() */
@@ -108,7 +108,8 @@ storeDigestScheduleRebuild()
 
 /* externally initiated rewrite (inits store entry and pauses) */
 void
-storeDigestRewriteStart(const char *initiator) {
+storeDigestRewriteStart(const char *initiator)
+{
     assert(initiator);
     assert(!sd_state.other_lock);
     sd_state.other_lock = initiator;
@@ -117,7 +118,8 @@ storeDigestRewriteStart(const char *initiator) {
 
 /* continue externally initiated rewrite */
 void
-storeDigestRewriteContinue(const char *initiator) {
+storeDigestRewriteContinue(const char *initiator)
+{
     assert(initiator);
     assert(!strcmp(sd_state.other_lock, initiator));
     assert(sd_state.rewrite_lock);
@@ -139,7 +141,7 @@ storeDigestRebuild(void *datanotused)
     sd_state.rebuild_offset = 0;
     /* not clean()! */
     cacheDigestClear(store_digest);
-    debug(71, 2) ("storeDigestRebuild: start rebuild #%d\n", sd_state.rebuild_count+1);
+    debug(71, 2) ("storeDigestRebuild: start rebuild #%d\n", sd_state.rebuild_count + 1);
     storeDigestRebuildStep(NULL);
 }
 
@@ -161,7 +163,7 @@ storeDigestRebuildFinish()
 static void
 storeDigestRebuildStep(void *datanotused)
 {
-    int bcount = (int)ceil(store_hash_buckets*StoreDigestRebuildChunkPercent);
+    int bcount = (int) ceil(store_hash_buckets * StoreDigestRebuildChunkPercent);
     assert(sd_state.rebuild_lock);
     if (sd_state.rebuild_offset + bcount > store_hash_buckets)
 	bcount = store_hash_buckets - sd_state.rebuild_offset;
@@ -198,7 +200,7 @@ storeDigestRewrite(void *datanotused)
 	debug(71, 1) ("storeDigestRewrite: overlap detected, consider increasing rewrite period\n");
 	return;
     }
-    debug(71, 2) ("storeDigestRewrite: start rewrite #%d\n", sd_state.rewrite_count+1);
+    debug(71, 2) ("storeDigestRewrite: start rewrite #%d\n", sd_state.rewrite_count + 1);
     /* make new store entry */
     snprintf(url, sizeof(url), "http://%s:%d/squid-internal/%s",
 	getMyHostname(), Config.Port.http->i, StoreDigestUrl);
@@ -214,7 +216,7 @@ storeDigestRewrite(void *datanotused)
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
     httpReplyReset(e->mem_obj->reply);
     httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, "Cache Digest OK",
-	"application/cache-digest", store_digest->mask_size+sizeof(sd_state.cblock),
+	"application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
 	squid_curtime, squid_curtime + StoreDigestRewritePeriod);
     storeBuffer(e);
     httpReplySwapOut(e->mem_obj->reply, e);
@@ -229,7 +231,7 @@ storeDigestRewrite(void *datanotused)
 
 /* finishes swap out sequence for the digest; schedules next rewrite */
 static void
-storeDigestRewriteFinish(StoreEntry *e)
+storeDigestRewriteFinish(StoreEntry * e)
 {
     assert(e);
     assert(e == sd_state.rewrite_lock);
@@ -244,7 +246,7 @@ storeDigestRewriteFinish(StoreEntry *e)
 
 /* swaps out one digest "chunk" per invocation; schedules next swap out */
 static void
-storeDigestSwapOutStep(StoreEntry *e)
+storeDigestSwapOutStep(StoreEntry * e)
 {
     int chunk_size = StoreDigestSwapOutChunkSize;
     assert(e);
@@ -266,22 +268,22 @@ storeDigestSwapOutStep(StoreEntry *e)
     if (sd_state.rewrite_offset >= store_digest->mask_size)
 	storeDigestRewriteFinish(e);
     else
-	eventAdd("storeDigestSwapOutStep", (EVH*) storeDigestSwapOutStep, e, 0);
+	eventAdd("storeDigestSwapOutStep", (EVH *) storeDigestSwapOutStep, e, 0);
 }
 
 static void
-storeDigestCBlockSwapOut(StoreEntry *e)
+storeDigestCBlockSwapOut(StoreEntry * e)
 {
     /*
      * when we actually start using control block, do not forget to convert to
      * network byte order if needed
      */
     memset(&sd_state.cblock, 0, sizeof(sd_state.cblock));
-    storeAppend(e, (char*) &sd_state.cblock, sizeof(sd_state.cblock));
+    storeAppend(e, (char *) &sd_state.cblock, sizeof(sd_state.cblock));
 }
 
 void
-storeDigestReport(StoreEntry *e)
+storeDigestReport(StoreEntry * e)
 {
     if (store_digest) {
 	cacheDigestReport(store_digest, "store", e);
@@ -289,4 +291,3 @@ storeDigestReport(StoreEntry *e)
 	storeAppendPrintf(e, "store digest: disabled.\n");
     }
 }
-
