@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.198 2000/10/04 03:18:58 wessels Exp $
+# $Id: cf.data.pre,v 1.199 2000/11/01 04:03:14 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -3269,6 +3269,17 @@ LOC: Config.store_dir_select_algorithm
 DEFAULT: least-load
 DOC_START
 	Set this to 'round-robin' as an alternative.
+DOC_END
+
+NAME: forward_log
+IFDEF: WIP_FWD_LOG
+TYPE: string
+DEFAULT: none
+LOC: Config.Log.forward
+DOC_START
+	Logs the server-side requests.
+
+	This is currently work in progress.
 DOC_END
 
 EOF

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.357 2000/10/31 23:48:15 wessels Exp $
+ * $Id: structs.h,v 1.358 2000/11/01 04:03:15 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -297,6 +297,9 @@ struct _SquidConfig {
 #endif
 #if USE_REFERER_LOG
 	char *referer;
+#endif
+#if WIP_FWD_LOG
+	char *forward;
 #endif
 	int rotateNumber;
     } Log;
@@ -1746,6 +1749,9 @@ struct _FwdState {
     ErrorState *err;
     time_t start;
     int n_tries;
+#if WIP_FWD_LOG
+    http_status last_status;
+#endif
     struct {
 	unsigned int dont_retry:1;
 	unsigned int ftp_pasv_failed:1;

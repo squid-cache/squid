@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.74 2000/10/04 01:12:48 wessels Exp $
+ * $Id: forward.cc,v 1.75 2000/11/01 04:03:14 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -53,6 +53,11 @@ static STABH fwdAbort;
 #define MAX_FWD_STATS_IDX 9
 static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][HTTP_INVALID_HEADER + 1];
 
+#if WIP_FWD_LOG
+static void fwdLog(FwdState * fwdState);
+static Logfile *logfile = NULL;
+#endif
+
 static void
 fwdServerFree(FwdServer * fs)
 {
@@ -70,6 +75,9 @@ fwdStateFree(FwdState * fwdState)
     assert(e->mem_obj);
 #if URL_CHECKSUM_DEBUG
     assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+#endif
+#if WIP_FWD_LOG
+    fwdLog(fwdState);
 #endif
     if (e->store_status == STORE_PENDING) {
 	if (e->mem_obj->inmem_hi == 0) {
@@ -631,6 +639,14 @@ fwdInit(void)
     cachemgrRegister("forward",
 	"Request Forwarding Statistics",
 	fwdStats, 0, 1);
+#if WIP_FWD_LOG
+    if (logfile)
+	(void) 0;
+    else if (NULL == Config.Log.forward)
+	(void) 0;
+    else
+	logfile = logfileOpen(Config.Log.forward, 0, 1);
+#endif
 }
 
 static void
@@ -682,3 +698,39 @@ fwdReforwardableStatus(http_status s)
     }
     /* NOTREACHED */
 }
+
+#if WIP_FWD_LOG
+void
+fwdUninit(void)
+{
+    logfileClose(logfile);
+    logfile = NULL;
+}
+
+void
+fwdLogRotate(void)
+{
+    if (logfile)
+	logfileRotate(logfile);
+}
+
+static void
+fwdLog(FwdState * fwdState)
+{
+    if (NULL == logfile)
+	return;
+    logfilePrintf(logfile, "%9d.%03d %03d %s %s\n",
+	(int) current_time.tv_sec,
+	(int) current_time.tv_usec / 1000,
+	fwdState->last_status,
+	RequestMethodStr[fwdState->request->method],
+	fwdState->request->canonical);
+}
+
+void
+fwdStatus(FwdState * fwdState, http_status s)
+{
+    fwdState->last_status = s;
+}
+
+#endif

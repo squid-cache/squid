@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.385 2000/11/01 03:35:40 wessels Exp $
+ * $Id: protos.h,v 1.386 2000/11/01 04:03:15 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -684,6 +684,11 @@ extern void fwdComplete(FwdState * fwdState);
 extern void fwdInit(void);
 extern int fwdReforwardableStatus(http_status s);
 extern void fwdServersFree(FwdServer ** FS);
+#if WIP_FWD_LOG
+extern void fwdUninit(void);
+extern void fwdLogRotate(void);
+extern void fwdStatus(FwdState *, http_status);
+#endif
 
 extern void urnStart(request_t *, StoreEntry *);
 
