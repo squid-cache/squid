@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.68 1998/09/15 06:34:57 wessels Exp $
+ * $Id: redirect.cc,v 1.69 1998/09/15 06:38:28 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -196,7 +196,7 @@ GetFirstAvailable(void)
 {
     dlink_node *n;
     redirector_t *r = NULL;
-    for (n = redirectors.head; n != NULL; n=n->next) {
+    for (n = redirectors.head; n != NULL; n = n->next) {
 	r = n->data;
 	if (r->flags.busy)
 	    continue;
@@ -392,6 +392,11 @@ redirectShutdown(redirector_t * r)
 	r->index + 1, r->fd);
     r->flags.shutdown = 1;
     r->flags.busy = 1;
+    /*
+     * orphan the redirector, it will have to be freed when its done with
+     * the current request
+     */
+    dlinkDelete(&r->link, &redirectors);
 }
 
 void
@@ -401,7 +406,7 @@ redirectShutdownServers(void *unused)
     redirector_t *redirect = NULL;
     if (Config.Program.redirect == NULL)
 	return;
-    for (n = redirectors.head; n != NULL; n=n->next) {
+    for (n = redirectors.head; n != NULL; n = n->next) {
 	redirect = n->data;
 	redirectShutdown(redirect);
     }
