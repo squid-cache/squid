@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.63 1996/09/13 20:23:03 wessels Exp $
+ * $Id: stat.cc,v 1.64 1996/09/13 20:23:31 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -934,13 +934,12 @@ char *log_quote(header)
 {
     int c, i;
     char *buf, *buf_cursor;
-    
+
     if (header == NULL) {
 	buf = xcalloc(1, 1);
 	*buf = '\0';
 	return buf;
     }
-    
     buf = xcalloc((strlen(header) * 3) + 1, 1);
     buf_cursor = buf;
 
@@ -952,27 +951,27 @@ char *log_quote(header)
      */
     while ((c = *header++)) {
 	if (c <= 0x1F
-	  || c >= 0x7F
-	  || c == '"'
-	  || c == '#'
-	  || c == '%'
-	  || c == ';'
-	  || c == '<'
-	  || c == '>'
-	  || c == '?'
-	  || c == '{'
-	  || c == '}'
-	  || c == '|'
-	  || c == '\\'
-	  || c == '^'
-	  || c == '~'
-	  || c == '`'
-	  || c == '['
-	  || c == ']') {
+	    || c >= 0x7F
+	    || c == '"'
+	    || c == '#'
+	    || c == '%'
+	    || c == ';'
+	    || c == '<'
+	    || c == '>'
+	    || c == '?'
+	    || c == '{'
+	    || c == '}'
+	    || c == '|'
+	    || c == '\\'
+	    || c == '^'
+	    || c == '~'
+	    || c == '`'
+	    || c == '['
+	    || c == ']') {
 	    *buf_cursor++ = '%';
-	    i = c*2;
+	    i = c * 2;
 	    *buf_cursor++ = c2x[i];
-	    *buf_cursor++ = c2x[i+1];
+	    *buf_cursor++ = c2x[i + 1];
 	} else {
 	    *buf_cursor++ = c;
 	}
@@ -984,7 +983,7 @@ char *log_quote(header)
 
 
 void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData, request_hdr, reply_hdr)
-#endif /* LOG_FULL_HEADERS */
+#endif				/* LOG_FULL_HEADERS */
      cacheinfo *obj;
      char *url;
      struct in_addr caddr;
@@ -1062,13 +1061,12 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 	    char *erep = log_quote(reply_hdr);
 
 	    if (msize + strlen(ereq) + strlen(erep) + 7 <= sizeof(tmp))
-		sprintf(tmp+msize-1, " [%s] [%s]\n", ereq, erep);
+		sprintf(tmp + msize - 1, " [%s] [%s]\n", ereq, erep);
 	    else
 		debug(18, 1, "log_append: Long headers not logged.\n");
 	    safe_free(ereq);
 	    safe_free(erep);
 	}
-
 #endif /* LOG_FULL_HEADERS */
 	x = file_write(obj->logfile_fd,
 	    xstrdup(tmp),
