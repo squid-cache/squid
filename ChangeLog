@@ -24,6 +24,10 @@
 	  'info'.
 	- Replaced 'cache_stoplist' with 'no_cache' Access list.
 	- Fixed (hopefully) remaining swapfile-open-at-exit bugs.
+	- Fixed default hierarchy_stoplist to be ``default if none.''
+	- Fixed 'fake a recent reply' hack for detecting DEAD
+	  and ALIVE neighbors (Joe Ramey).
+	- Fixed FTP directory parsing bugs.
 
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
