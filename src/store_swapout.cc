@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.81 2001/06/26 16:44:24 wessels Exp $
+ * $Id: store_swapout.cc,v 1.82 2001/06/27 00:14:11 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -134,6 +134,16 @@ storeSwapOut(StoreEntry * e)
      */
     swapout_size = (ssize_t) (mem->inmem_hi - mem->swapout.queue_offset);
     if ((e->store_status != STORE_OK) && (swapout_size < store_maxobjsize)) {
+	/*
+	 * NOTE: the store_maxobjsize here is the max of optional
+	 * max-size values from 'cache_dir' lines.  It is not the
+	 * same as 'maximum_object_size'.  By default, store_maxobjsize
+	 * will be set to -1.  However, I am worried that this
+	 * deferance may consume a lot of memory in some cases.
+	 * It would be good to make this decision based on reply
+	 * content-length, rather than wait to accumulate huge
+	 * amounts of object data in memory.
+	 */
 	debug(20, 5) ("storeSwapOut: Deferring starting swapping out\n");
 	return;
     }
