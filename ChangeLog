@@ -1,5 +1,6 @@
 	- Fixed ICP bug when we send queries, but expect zero
 	  replies.
+	- Fixed alignment/casting bugs for ICP messages.
 
 Changes to squid-1.2.beta16 (Mar 4, 1998):
 
