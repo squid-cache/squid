@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.139 2002/09/15 06:23:29 adrian Exp $
+ * $Id: wais.cc,v 1.140 2002/10/13 20:35:06 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 typedef struct {
     int fd;
@@ -54,7 +55,7 @@ static PF waisSendRequest;
 static void
 waisStateFree(int fdnotused, void *data)
 {
-    WaisStateData *waisState = data;
+    WaisStateData *waisState = (WaisStateData *)data;
     if (waisState == NULL)
 	return;
     storeUnlockObject(waisState->entry);
@@ -66,7 +67,7 @@ waisStateFree(int fdnotused, void *data)
 static void
 waisTimeout(int fd, void *data)
 {
-    WaisStateData *waisState = data;
+    WaisStateData *waisState = (WaisStateData *)data;
     StoreEntry *entry = waisState->entry;
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     if (entry->store_status == STORE_PENDING) {
@@ -83,7 +84,7 @@ waisTimeout(int fd, void *data)
 static void
 waisReadReply(int fd, void *data)
 {
-    WaisStateData *waisState = data;
+    WaisStateData *waisState = (WaisStateData *)data;
     LOCAL_ARRAY(char, buf, 4096);
     StoreEntry *entry = waisState->entry;
     int len;
@@ -164,7 +165,7 @@ waisReadReply(int fd, void *data)
 static void
 waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
-    WaisStateData *waisState = data;
+    WaisStateData *waisState = (WaisStateData *)data;
     StoreEntry *entry = waisState->entry;
     debug(24, 5) ("waisSendComplete: FD %d size: %d errflag: %d\n",
 	fd, (int) size, errflag);
@@ -196,7 +197,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
 static void
 waisSendRequest(int fd, void *data)
 {
-    WaisStateData *waisState = data;
+    WaisStateData *waisState = (WaisStateData *)data;
     MemBuf mb;
     const char *Method = RequestMethodStr[waisState->method];
     debug(24, 5) ("waisSendRequest: FD %d\n", fd);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.598 2002/10/12 13:41:25 robertc Exp $
+ * $Id: client_side.cc,v 1.599 2002/10/13 20:34:59 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -58,6 +58,9 @@
 #include "squid.h"
 #include "clientStream.h"
 #include "IPInterception.h"
+#include "authenticate.h"
+#include "Store.h"
+
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -126,7 +129,7 @@ static void clientSetKeepaliveFlag(clientHttpRequest *);
 static int clientIsContentLengthValid(request_t * r);
 static DEFER httpAcceptDefer;
 static int clientIsRequestBodyValid(int bodyLength);
-static int clientIsRequestBodyTooLargeForPolicy(int bodyLength);
+static int clientIsRequestBodyTooLargeForPolicy(size_t bodyLength);
 static void clientProcessBody(ConnStateData * conn);
 static clientStreamNode *getTail(clientSocketContext *);
 static void clientSocketRemoveThisFromConnectionList(clientSocketContext *,
@@ -167,7 +170,7 @@ static void connAddContextToQueue(ConnStateData * conn, clientSocketContext * co
 static int connGetConcurrentRequestCount(ConnStateData * conn);
 static int connReadWasError(ConnStateData * conn, int size);
 static int connFinishedWithConn(ConnStateData * conn, int size);
-static void connNoteUseOfBuffer(ConnStateData * conn, int byteCount);
+static void connNoteUseOfBuffer(ConnStateData * conn, size_t byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData * conn);
 static void connCancelIncompleteRequests(ConnStateData * conn);
 static ConnStateData *connStateCreate(struct sockaddr_in peer, struct sockaddr_in me, int fd);
@@ -179,13 +182,13 @@ static void clientPullData(clientSocketContext * context);
 clientStreamNode *
 getTail(clientSocketContext * context)
 {
-    return context->http->client_stream.tail->data;
+    return (clientStreamNode *)context->http->client_stream.tail->data;
 }
 
 clientStreamNode *
 getClientReplyContext(clientSocketContext * context)
 {
-    return context->http->client_stream.tail->prev->data;
+    return (clientStreamNode *)context->http->client_stream.tail->prev->data;
 }
 
 void
@@ -210,7 +213,7 @@ clientSocketRemoveThisFromConnectionList(clientSocketContext * context,
 void
 clientSocketContextFree(void *data)
 {
-    clientSocketContext *context = data;
+    clientSocketContext *context = (clientSocketContext *)data;
     ConnStateData *conn = context->http->conn;
     clientStreamNode *node = getTail(context);
     /* We are *always* the tail - prevent recursive free */
@@ -401,13 +404,13 @@ httpRequestFreeResources(clientHttpRequest * http)
     requestUnlink(http->request);
     http->request = NULL;
     if (http->client_stream.tail)
-	clientStreamAbort(http->client_stream.tail->data, http);
+	clientStreamAbort((clientStreamNode *)http->client_stream.tail->data, http);
 }
 
 void
 httpRequestFree(void *data)
 {
-    clientHttpRequest *http = data;
+    clientHttpRequest *http = (clientHttpRequest *)data;
     request_t *request = NULL;
     assert(http != NULL);
     request = http->request;
@@ -469,7 +472,7 @@ connEmptyOSReadBuffers(int fd)
 static void
 connStateFree(int fd, void *data)
 {
-    ConnStateData *connState = data;
+    ConnStateData *connState = (ConnStateData *)data;
     debug(33, 3) ("connStateFree: FD %d\n", fd);
     assert(connState != NULL);
     clientdbEstablished(connState->peer.sin_addr, -1);	/* decrement */
@@ -540,7 +543,7 @@ clientIsRequestBodyValid(int bodyLength)
 }
 
 int
-clientIsRequestBodyTooLargeForPolicy(int bodyLength)
+clientIsRequestBodyTooLargeForPolicy(size_t bodyLength)
 {
     if (Config.maxRequestBodySize &&
 	bodyLength > Config.maxRequestBodySize)
@@ -560,7 +563,7 @@ clientSocketContext *
 connGetCurrentContext(ConnStateData * conn)
 {
     assert(conn);
-    return conn->currentobject;
+    return (clientSocketContext *)conn->currentobject;
 }
 
 void
@@ -651,7 +654,7 @@ clientSocketRecipient(clientStreamNode * node, clientHttpRequest * http,
     assert(cbdataReferenceValid(node));
     assert(node->data != NULL);
     assert(node->node.next == NULL);
-    context = node->data;
+    context = (clientSocketContext *)node->data;
     assert(connIsUsable(http->conn));
     fd = http->conn->fd;
     if (connGetCurrentContext(http->conn) != context) {
@@ -687,7 +690,7 @@ clientSocketDetach(clientStreamNode * node, clientHttpRequest * http)
     /* Set null by ContextFree */
     assert(node->data == NULL);
     assert(node->node.next == NULL);
-    context = node->data;
+    context = (clientSocketContext *)node->data;
     /* We are only called when the client socket shutsdown.
      * Tell the prev pipeline member we're finished
      */
@@ -695,7 +698,7 @@ clientSocketDetach(clientStreamNode * node, clientHttpRequest * http)
 }
 
 static void
-clientWriteBodyComplete(int fd, char *buf, size_t size, int errflag, void *data)
+clientWriteBodyComplete(int fd, char *buf, size_t size, comm_err_t errflag, void *data)
 {
     clientWriteComplete(fd, NULL, size, errflag, data);
 }
@@ -786,10 +789,10 @@ clientPullData(clientSocketContext * context)
 /* A write has just completed to the client, or we have just realised there is
  * no more data to send.
  */
-static void
-clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
+void
+clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
-    clientSocketContext *context = data;
+    clientSocketContext *context = (clientSocketContext *)data;
     clientHttpRequest *http = context->http;
     StoreEntry *entry = http->entry;
     clientStreamNode *node = getTail(context);
@@ -821,9 +824,9 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     }
 }
 
-extern CSR clientGetMoreData;
-extern CSS clientReplyStatus;
-extern CSD clientReplyDetach;
+extern "C" CSR clientGetMoreData;
+extern "C" CSS clientReplyStatus;
+extern "C" CSD clientReplyDetach;
 
 static clientSocketContext *
 parseHttpRequestAbort(ConnStateData * conn, const char *uri)
@@ -977,7 +980,7 @@ prepareForwardProxyUrl(clientHttpRequest * http, char *url)
     size_t url_sz;
     /* URL may be rewritten later, so make extra room */
     url_sz = strlen(url) + Config.appendDomainLen + 5;
-    http->uri = xcalloc(url_sz, 1);
+    http->uri = (char *)xcalloc(url_sz, 1);
     strcpy(http->uri, url);
     http->flags.accel = 0;
 }
@@ -1012,7 +1015,7 @@ prepareAcceleratedUrl(clientHttpRequest * http, char *url, char *req_hdr)
 		vport = atoi(q);
 	}
 	url_sz = strlen(url) + 32 + Config.appendDomainLen + strlen(t);
-	http->uri = xcalloc(url_sz, 1);
+	http->uri = (char *)xcalloc(url_sz, 1);
 
 #if SSL_FORWARDING_NOT_YET_DONE
 	if (Config.Sockaddr.https->s.sin_port == http->conn->me.sin_port) {
@@ -1026,7 +1029,7 @@ prepareAcceleratedUrl(clientHttpRequest * http, char *url, char *req_hdr)
 	int vport;
 	/* Put the local socket IP address as the hostname */
 	url_sz = strlen(url) + 32 + Config.appendDomainLen;
-	http->uri = xcalloc(url_sz, 1);
+	http->uri = (char *)xcalloc(url_sz, 1);
 	if (vport_mode)
 	    vport = (int) ntohs(http->conn->me.sin_port);
 	else
@@ -1037,7 +1040,7 @@ prepareAcceleratedUrl(clientHttpRequest * http, char *url, char *req_hdr)
     } else {
 	url_sz = strlen(Config2.Accel.prefix) + strlen(url) +
 	    Config.appendDomainLen + 1;
-	http->uri = xcalloc(url_sz, 1);
+	http->uri = (char *)xcalloc(url_sz, 1);
 	snprintf(http->uri, url_sz, "%s%s", Config2.Accel.prefix, url);
     }
     http->flags.accel = 1;
@@ -1078,7 +1081,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     }
     assert(req_sz <= conn->in.notYetUsed);
     /* Use memcpy, not strdup! */
-    inbuf = xmalloc(req_sz + 1);
+    inbuf = (char *)xmalloc(req_sz + 1);
     xmemcpy(inbuf, conn->in.buf, req_sz);
     *(inbuf + req_sz) = '\0';
 
@@ -1125,7 +1128,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
 	clientReplyStatus, clientReplyNewContext(http), clientSocketRecipient,
 	clientSocketDetach, result, tempBuffer);
-    *prefix_p = xmalloc(prefix_sz + 1);
+    *prefix_p = (char *)xmalloc(prefix_sz + 1);
     xmemcpy(*prefix_p, conn->in.buf, prefix_sz);
     *(*prefix_p + prefix_sz) = '\0';
     dlinkAdd(http, &http->active, &ClientActiveRequests);
@@ -1155,7 +1158,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 static int
 clientReadDefer(int fdnotused, void *data)
 {
-    ConnStateData *conn = data;
+    ConnStateData *conn = (ConnStateData *)data;
     if (conn->body.size_left)
 	return conn->in.notYetUsed >= conn->in.allocatedSize - 1;
     else
@@ -1172,7 +1175,7 @@ void
 connMakeSpaceAvailable(ConnStateData * conn)
 {
     if (connGetAvailableBufferLength(conn) < 2) {
-	conn->in.buf = memReallocBuf(conn->in.buf, conn->in.allocatedSize * 2, &conn->in.allocatedSize);
+	conn->in.buf = (char *)memReallocBuf(conn->in.buf, conn->in.allocatedSize * 2, &conn->in.allocatedSize);
 	debug(33, 2) ("growing request buffer: notYetUsed=%ld size=%ld\n",
 	    (long) conn->in.notYetUsed, (long) conn->in.allocatedSize);
     }
@@ -1231,11 +1234,11 @@ connFinishedWithConn(ConnStateData * conn, int size)
 }
 
 void
-connNoteUseOfBuffer(ConnStateData * conn, int byteCount)
+connNoteUseOfBuffer(ConnStateData * conn, size_t byteCount)
 {
     assert(byteCount > 0 && byteCount <= conn->in.notYetUsed);
     conn->in.notYetUsed -= byteCount;
-    debug(33, 5) ("conn->in.notYetUsed = %d\n", (int) conn->in.notYetUsed);
+    debug(33, 5) ("conn->in.notYetUsed = %u\n", (unsigned) conn->in.notYetUsed);
     /*
      * If there is still data that will be used, 
      * move it to the beginning.
@@ -1257,8 +1260,8 @@ connCancelIncompleteRequests(ConnStateData * conn)
     clientSocketContext *context = parseHttpRequestAbort(conn, "error:request-too-large");
     clientStreamNode *node = getClientReplyContext(context);
     assert(!connKeepReadingIncompleteRequest(conn));
-    debug(33, 1) ("Request header is too large (%d bytes)\n",
-	(int) conn->in.notYetUsed);
+    debug(33, 1) ("Request header is too large (%u bytes)\n",
+	(unsigned) conn->in.notYetUsed);
     debug(33, 1) ("Config 'request_header_max_size'= %ld bytes.\n",
 	(long int) Config.maxRequestHeaderSize);
     clientSetReplyToError(node->data, ERR_TOO_BIG,
@@ -1271,7 +1274,7 @@ connCancelIncompleteRequests(ConnStateData * conn)
 static void
 clientReadRequest(int fd, void *data)
 {
-    ConnStateData *conn = data;
+    ConnStateData *conn = (ConnStateData *)data;
     int parser_return_code = 0;
     request_t *request = NULL;
     int size;
@@ -1356,6 +1359,7 @@ clientReadRequest(int fd, void *data)
 	    clientHttpRequest *http = context->http;
 	    /* We have an initial client stream in place should it be needed */
 	    /* setup our private context */
+	    assert (http->req_sz >= 0);
 	    connNoteUseOfBuffer(conn, http->req_sz);
 
 	    connAddContextToQueue(conn, context);
@@ -1487,7 +1491,7 @@ clientReadBody(request_t * request, char *buf, size_t size, CBCB * callback,
     }
     debug(33, 2) ("clientReadBody: start fd=%d body_size=%lu in.notYetUsed=%ld cb=%p req=%p\n",
 	conn->fd, (unsigned long int) conn->body.size_left,
-	(long int) conn->in.notYetUsed, callback, request);
+	(unsigned long int) conn->in.notYetUsed, callback, request);
     conn->body.callback = callback;
     conn->body.cbdata = cbdata;
     conn->body.buf = buf;
@@ -1500,15 +1504,15 @@ clientReadBody(request_t * request, char *buf, size_t size, CBCB * callback,
 static void
 clientProcessBody(ConnStateData * conn)
 {
-    int size;
+    size_t size;
     char *buf = conn->body.buf;
     void *cbdata = conn->body.cbdata;
     CBCB *callback = conn->body.callback;
     request_t *request = conn->body.request;
     /* Note: request is null while eating "aborted" transfers */
-    debug(33, 2) ("clientProcessBody: start fd=%d body_size=%lu in.notYetUsed=%ld cb=%p req=%p\n",
+    debug(33, 2) ("clientProcessBody: start fd=%d body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
 	conn->fd, (unsigned long int) conn->body.size_left,
-	(long int) conn->in.notYetUsed, callback, request);
+	(unsigned long int) conn->in.notYetUsed, callback, request);
     if (conn->in.notYetUsed) {
 	/* Some sanity checks... */
 	assert(conn->body.size_left > 0);
@@ -1543,21 +1547,21 @@ clientProcessBody(ConnStateData * conn)
 	callback(buf, size, cbdata);
 	if (request != NULL)
 	    requestUnlink(request);	/* Linked in clientReadBody */
-	debug(33, 2) ("clientProcessBody: end fd=%d size=%d body_size=%lu in.notYetUsed=%ld cb=%p req=%p\n",
+	debug(33, 2) ("clientProcessBody: end fd=%d size=%d body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
 	    conn->fd, size, (unsigned long int) conn->body.size_left,
-	    (long int) conn->in.notYetUsed, callback, request);
+	    (unsigned long) conn->in.notYetUsed, callback, request);
     }
 }
 
 /* A dummy handler that throws away a request-body */
 static void
-clientReadBodyAbortHandler(char *buf, size_t size, void *data)
+clientReadBodyAbortHandler(char *buf, ssize_t size, void *data)
 {
     static char bodyAbortBuf[SQUID_TCP_SO_RCVBUF];
     ConnStateData *conn = (ConnStateData *) data;
-    debug(33, 2) ("clientReadBodyAbortHandler: fd=%d body_size=%lu in.notYetUsed=%ld\n",
+    debug(33, 2) ("clientReadBodyAbortHandler: fd=%d body_size=%lu in.notYetUsed=%lu\n",
 	conn->fd, (unsigned long int) conn->body.size_left,
-	(long int) conn->in.notYetUsed);
+	(unsigned long) conn->in.notYetUsed);
     if (size != 0 && conn->body.size_left != 0) {
 	debug(33, 3) ("clientReadBodyAbortHandler: fd=%d shedule next read\n",
 	    conn->fd);
@@ -1658,7 +1662,7 @@ requestTimeout(int fd, void *data)
 static void
 clientLifetimeTimeout(int fd, void *data)
 {
-    clientHttpRequest *http = data;
+    clientHttpRequest *http = (clientHttpRequest *)data;
     ConnStateData *conn = http->conn;
     debug(33,
 	1) ("WARNING: Closing client %s connection due to lifetime timeout\n",
@@ -1689,7 +1693,7 @@ connStateCreate(struct sockaddr_in peer, struct sockaddr_in me, int fd)
     result->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
     result->me = me;
     result->fd = fd;
-    result->in.buf = memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
+    result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     return result;
 }
 
@@ -1743,7 +1747,7 @@ httpAccept(int sock, void *data)
 static void
 clientNegotiateSSL(int fd, void *data)
 {
-    ConnStateData *conn = data;
+    ConnStateData *conn = (ConnStateData *)data;
     X509 *client_cert;
     int ret;
 
@@ -1791,7 +1795,7 @@ static void
 httpsAccept(int sock, void *data)
 {
     int *N = &incoming_sockets_accepted;
-    https_port_data *https_port = data;
+    https_port_data *https_port = (https_port_data *)data;
     SSL_CTX *sslContext = https_port->sslContext;
     int fd = -1;
     ConnStateData *connState = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.34 2002/08/09 10:57:43 robertc Exp $
+ * $Id: icp_v3.cc,v 1.35 2002/10/13 20:35:01 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -34,27 +34,68 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+#include "ICP.h"
+
+class ICP3State : public ICPState, public StoreClient {
+public:
+    ICP3State(icp_common_t &aHeader):ICPState(aHeader){}
+    ~ICP3State();
+    void created (StoreEntry *newEntry);
+};
+
+static void
+doV3Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
+{
+    /* We have a valid packet */
+    char *url = buf + sizeof(icp_common_t) + sizeof(u_int32_t);
+    request_t *icp_request = icpGetRequest (url, header.reqnum, fd, &from);
+    if (!icp_request)
+	return;
+    if (!icpAccessAllowed(&from, icp_request)) {
+	icpDenyAccess (&from, url, header.reqnum, fd);
+	requestDestroy(icp_request);
+	return;
+    }
+    /* The peer is allowed to use this cache */
+    ICP3State *state = new ICP3State (header);
+    state->request = icp_request;
+    state->fd = fd;
+    state->from = from;
+    state->url = xstrdup (url);
+    _StoreEntry::getPublic (state, url, METHOD_GET);
+}
+
+ICP3State::~ICP3State ()
+{
+}
+
+void
+ICP3State::created (StoreEntry *newEntry)
+{
+    StoreEntry *entry = newEntry->isNull () ? NULL : newEntry;
+    debug(12, 5) ("icpHandleIcpV3: OPCODE %s\n",
+	icp_opcode_str[header.opcode]);
+    icp_opcode codeToSend;
+    if (icpCheckUdpHit(entry, request)) {
+	codeToSend = ICP_HIT;
+    } else if (icpGetCommonOpcode() == ICP_ERR)
+	codeToSend = ICP_MISS;
+    else
+	codeToSend = icpGetCommonOpcode();
+    icpCreateAndSend (codeToSend, 0, url, header.reqnum, 0, fd, &from);
+    delete this;
+}
 
 /* Currently Harvest cached-2.x uses ICP_VERSION_3 */
 void
 icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 {
-    icp_common_t header;
-    icp_common_t *reply;
-    StoreEntry *entry = NULL;
-    char *url = NULL;
-    const cache_key *key;
-    request_t *icp_request = NULL;
-    int allow = 0;
-    aclCheck_t checklist;
-    xmemcpy(&header, buf, sizeof(icp_common_t));
-    /*
-     * Only these fields need to be converted
-     */
-    header.length = ntohs(header.length);
-    header.reqnum = ntohl(header.reqnum);
-    header.flags = ntohl(header.flags);
-    header.pad = ntohl(header.pad);
+    if (len <= 0) {
+	debug(12, 3) ("icpHandleIcpV3: ICP message is too small\n");
+	return;
+    }
+    icp_common_t header (buf, len);
     /*
      * Length field should match the number of bytes read
      */
@@ -64,59 +105,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     }
     switch (header.opcode) {
     case ICP_QUERY:
-	/* We have a valid packet */
-	url = buf + sizeof(icp_common_t) + sizeof(u_int32_t);
-	if (strpbrk(url, w_space)) {
-	    url = rfc1738_escape(url);
-	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
-	    break;
-	}
-	if ((icp_request = urlParse(METHOD_GET, url)) == NULL) {
-	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
-	    break;
-	}
-	memset(&checklist, '\0', sizeof(checklist));
-	checklist.src_addr = from.sin_addr;
-	checklist.my_addr = no_addr;
-	checklist.request = icp_request;
-	allow = aclCheckFast(Config.accessList.icp, &checklist);
-	if (!allow) {
-	    debug(12, 2) ("icpHandleIcpV3: Access Denied for %s by %s.\n",
-		inet_ntoa(from.sin_addr), AclMatchedName);
-	    if (clientdbCutoffDenied(from.sin_addr)) {
-		/*
-		 * count this DENIED query in the clientdb, even though
-		 * we're not sending an ICP reply...
-		 */
-		clientdbUpdate(from.sin_addr, LOG_UDP_DENIED, PROTO_ICP, 0);
-	    } else {
-		reply = icpCreateMessage(ICP_DENIED, 0, url, header.reqnum, 0);
-		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, 0);
-	    }
-	    break;
-	}
-	/* The peer is allowed to use this cache */
-	entry = storeGetPublic(url, METHOD_GET);
-	debug(12, 5) ("icpHandleIcpV3: OPCODE %s\n",
-	    icp_opcode_str[header.opcode]);
-	if (icpCheckUdpHit(entry, icp_request)) {
-	    reply = icpCreateMessage(ICP_HIT, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_HIT, 0);
-	    break;
-	}
-	/* if store is rebuilding, return a UDP_HIT, but not a MISS */
-	if (opt_reload_hit_only && store_dirs_rebuilding) {
-	    reply = icpCreateMessage(ICP_MISS_NOFETCH, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, 0);
-	} else if (hit_only_mode_until > squid_curtime) {
-	    reply = icpCreateMessage(ICP_MISS_NOFETCH, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, 0);
-	} else {
-	    reply = icpCreateMessage(ICP_MISS, 0, url, header.reqnum, 0);
-	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS, 0);
-	}
+	doV3Query(fd, from,buf, header);
 	break;
 
     case ICP_HIT:
@@ -127,20 +116,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     case ICP_MISS:
     case ICP_DENIED:
     case ICP_MISS_NOFETCH:
-	if (neighbors_do_private_keys && header.reqnum == 0) {
-	    debug(12, 0) ("icpHandleIcpV3: Neighbor %s returned reqnum = 0\n",
-		inet_ntoa(from.sin_addr));
-	    debug(12, 0) ("icpHandleIcpV3: Disabling use of private keys\n");
-	    neighbors_do_private_keys = 0;
-	}
-	url = buf + sizeof(icp_common_t);
-	debug(12, 3) ("icpHandleIcpV3: %s from %s for '%s'\n",
-	    icp_opcode_str[header.opcode],
-	    inet_ntoa(from.sin_addr),
-	    url);
-	key = icpGetCacheKey(url, (int) header.reqnum);
-	/* call neighborsUdpAck even if ping_status != PING_WAITING */
-	neighborsUdpAck(key, &header, &from);
+	header.handleReply(buf, &from);
 	break;
 
     case ICP_INVALID:
@@ -152,6 +128,4 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    header.opcode, inet_ntoa(from.sin_addr));
 	break;
     }
-    if (icp_request)
-	requestDestroy(icp_request);
 }

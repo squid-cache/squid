@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.335 2002/10/02 11:06:31 robertc Exp $
+ * $Id: comm.cc,v 1.336 2002/10/13 20:35:00 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -57,7 +57,7 @@ typedef struct {
 } ConnectStateData;
 
 /* STATIC */
-static int commBind(int s, struct in_addr, u_short port);
+static comm_err_t commBind(int s, struct in_addr, u_short port);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 static void CommWriteStateCallbackAndFree(int fd, comm_err_t code);
@@ -282,7 +282,7 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
 static void
 commConnectDnsHandle(const ipcache_addrs * ia, void *data)
 {
-    ConnectStateData *cs = data;
+    ConnectStateData *cs = (ConnectStateData *)data;
     assert(cs->locks == 1);
     cs->locks--;
     if (ia == NULL) {
@@ -321,7 +321,7 @@ commConnectCallback(ConnectStateData * cs, comm_err_t status)
 static void
 commConnectFree(int fd, void *data)
 {
-    ConnectStateData *cs = data;
+    ConnectStateData *cs = (ConnectStateData *)data;
     debug(5, 3) ("commConnectFree: FD %d\n", fd);
     cbdataReferenceDone(cs->data);
     safe_free(cs->host);
@@ -403,7 +403,7 @@ commRetryConnect(ConnectStateData * cs)
 static void
 commConnectHandle(int fd, void *data)
 {
-    ConnectStateData *cs = data;
+    ConnectStateData *cs = (ConnectStateData *)data;
     if (cs->S.sin_addr.s_addr == 0) {
 	cs->S.sin_family = AF_INET;
 	cs->S.sin_addr = cs->in_addr;
@@ -715,16 +715,16 @@ commSetDefer(int fd, DEFER * func, void *data)
 void
 comm_add_close_handler(int fd, PF * handler, void *data)
 {
-    close_handler *new = memPoolAlloc(conn_close_pool);		/* AAA */
+    close_handler *newHandler = (close_handler *)memPoolAlloc(conn_close_pool);		/* AAA */
     close_handler *c;
     debug(5, 5) ("comm_add_close_handler: FD %d, handler=%p, data=%p\n",
 	fd, handler, data);
     for (c = fd_table[fd].closeHandler; c; c = c->next)
 	assert(c->handler != handler || c->data != data);
-    new->handler = handler;
-    new->data = cbdataReference(data);
-    new->next = fd_table[fd].closeHandler;
-    fd_table[fd].closeHandler = new;
+    newHandler->handler = handler;
+    newHandler->data = cbdataReference(data);
+    newHandler->next = fd_table[fd].closeHandler;
+    fd_table[fd].closeHandler = newHandler;
 }
 
 void
@@ -784,7 +784,7 @@ commSetNonBlocking(int fd)
     int nonblocking = TRUE;
     if (fd_table[fd].type != FD_PIPE) {
 	if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
-	    debug(50, 0) ("commSetNonBlocking: FD %d: %s %D\n", fd, xstrerror(), fd_table[fd].type);
+	    debug(50, 0) ("commSetNonBlocking: FD %d: %s %u\n", fd, xstrerror(), fd_table[fd].type);
 	    return COMM_ERROR;
 	}
     } else {
@@ -852,7 +852,7 @@ commSetTcpNoDelay(int fd)
 void
 comm_init(void)
 {
-    fd_table = xcalloc(Squid_MaxFD, sizeof(fde));
+    fd_table = (fde *)xcalloc(Squid_MaxFD, sizeof(fde));
     /* XXX account fd_table */
     /* Keep a few file descriptors free so that we don't run out of FD's
      * after accepting a client but before it opens a socket or a file.
@@ -867,7 +867,7 @@ comm_init(void)
 static void
 commHandleWrite(int fd, void *data)
 {
-    CommWriteStateData *state = data;
+    CommWriteStateData *state = (CommWriteStateData *)data;
     int len = 0;
     int nleft;
 
@@ -909,7 +909,7 @@ commHandleWrite(int fd, void *data)
     } else {
 	/* A successful write, continue */
 	state->offset += len;
-	if (state->offset < state->size) {
+	if (state->offset < (off_t)state->size) {
 	    /* Not done, reinstall the write handler and write some more */
 	    commSetSelect(fd,
 		COMM_SELECT_WRITE,
@@ -942,7 +942,7 @@ comm_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data
 	memPoolFree(comm_write_pool, state);
 	fd_table[fd].rwstate = NULL;
     }
-    fd_table[fd].rwstate = state = memPoolAlloc(comm_write_pool);
+    fd_table[fd].rwstate = state = (CommWriteStateData *)memPoolAlloc(comm_write_pool);
     state->buf = (char *) buf;
     state->size = size;
     state->offset = 0;

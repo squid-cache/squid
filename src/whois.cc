@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.18 2002/08/22 12:29:15 hno Exp $
+ * $Id: whois.cc,v 1.19 2002/10/13 20:35:06 robertc Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #define WHOIS_PORT 43
 
@@ -66,7 +67,7 @@ whoisStart(FwdState * fwd)
     storeLockObject(p->entry);
     comm_add_close_handler(fd, whoisClose, p);
     l = strLen(p->request->urlpath) + 3;
-    buf = xmalloc(l);
+    buf = (char *)xmalloc(l);
     snprintf(buf, l, "%s\r\n", strBuf(p->request->urlpath) + 1);
     comm_write(fd, buf, strlen(buf), NULL, p, xfree);
     commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, 0);
@@ -78,7 +79,7 @@ whoisStart(FwdState * fwd)
 static void
 whoisTimeout(int fd, void *data)
 {
-    WhoisState *p = data;
+    WhoisState *p = (WhoisState *)data;
     debug(75, 1) ("whoisTimeout: %s\n", storeUrl(p->entry));
     whoisClose(fd, p);
 }
@@ -86,9 +87,9 @@ whoisTimeout(int fd, void *data)
 static void
 whoisReadReply(int fd, void *data)
 {
-    WhoisState *p = data;
+    WhoisState *p = (WhoisState *)data;
     StoreEntry *entry = p->entry;
-    char *buf = memAllocate(MEM_4K_BUF);
+    char *buf = (char *)memAllocate(MEM_4K_BUF);
     MemObject *mem = entry->mem_obj;
     int len;
     statCounter.syscalls.sock.reads++;
@@ -133,7 +134,7 @@ whoisReadReply(int fd, void *data)
 static void
 whoisClose(int fd, void *data)
 {
-    WhoisState *p = data;
+    WhoisState *p = (WhoisState *)data;
     debug(75, 3) ("whoisClose: FD %d\n", fd);
     storeUnlockObject(p->entry);
     cbdataFree(p);

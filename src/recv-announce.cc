@@ -1,6 +1,6 @@
 
 /*
- * $Id: recv-announce.cc,v 1.23 2001/01/12 00:37:20 wessels Exp $
+ * $Id: recv-announce.cc,v 1.24 2002/10/13 20:35:03 robertc Exp $
  *
  * DEBUG: section 0     Announcement Server
  * AUTHOR: Harvest Derived
@@ -45,9 +45,9 @@
 #include <unistd.h>
 #include <signal.h>
 
-#define RECV_BUF_SIZE 8192
+#include "config.h"
 
-extern void xmemcpy(void *from, void *to, int len);
+#define RECV_BUF_SIZE 8192
 
 /*
  * This program must be run from inetd.  First add something like this
@@ -71,7 +71,7 @@ extern void xmemcpy(void *from, void *to, int len);
  */
 
 static void
-sig_handle(void)
+sig_handle(int)
 {
     fflush(stdout);
     close(2);
@@ -86,7 +86,7 @@ main(int argc, char *argv[])
 {
     char buf[RECV_BUF_SIZE];
     struct sockaddr_in R;
-    int len;
+    socklen_t len;
     struct hostent *hp = NULL;
     char logfile[BUFSIZ];
     char ip[4];
@@ -114,7 +114,7 @@ main(int argc, char *argv[])
 	memset(buf, '\0', RECV_BUF_SIZE);
 	memset(&R, '\0', len = sizeof(R));
 
-	if (recvfrom(0, buf, RECV_BUF_SIZE, 0, &R, &len) < 0) {
+	if (recvfrom(0, buf, RECV_BUF_SIZE, 0, (sockaddr *)&R, &len) < 0) {
 	    perror("recv");
 	    exit(2);
 	}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.76 2002/09/24 10:46:43 robertc Exp $
+ * $Id: access_log.cc,v 1.77 2002/10/13 20:34:57 robertc Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -123,11 +123,11 @@ log_quote(const char *header)
     char *buf;
     char *buf_cursor;
     if (header == NULL) {
-	buf = xcalloc(1, 1);
+	buf = static_cast<char *>(xcalloc(1, 1));
 	*buf = '\0';
 	return buf;
     }
-    buf = xcalloc(1, (strlen(header) * 3) + 1);
+    buf = static_cast<char *>(xcalloc(1, (strlen(header) * 3) + 1));
     buf_cursor = buf;
     /*
      * We escape: \x00-\x1F"#%;<>?{}|\\\\^~`\[\]\x7F-\xFF 
@@ -191,11 +191,11 @@ username_quote(const char *header)
     char *buf;
     char *buf_cursor;
     if (header == NULL) {
-	buf = xcalloc(1, 1);
+	buf = static_cast<char *>(xcalloc(1, 1));
 	*buf = '\0';
 	return buf;
     }
-    buf = xcalloc(1, (strlen(header) * 3) + 1);
+    buf = static_cast<char *>(xcalloc(1, (strlen(header) * 3) + 1));
     buf_cursor = buf;
     /*
      * We escape: space \x00-\x1F and space (0x40) and \x7F-\xFF
@@ -450,7 +450,7 @@ fvdbCount(hash_table * hash, const char *key)
 	return;
     fv = hash_lookup(hash, key);
     if (NULL == fv) {
-	fv = xcalloc(1, sizeof(fvdb_entry));
+	fv = static_cast <fvdb_entry *>(xcalloc(1, sizeof(fvdb_entry)));
 	fv->hash.key = xstrdup(key);
 	hash_join(hash, &fv->hash);
     }
@@ -634,3 +634,4 @@ logTypeIsATcpHit(log_type code)
 	return 1;
     return 0;
 }
+

@@ -5,6 +5,7 @@
 
 #include "squid.h"
 #include "store_asyncufs.h"
+#include "Store.h"
 #include "ufscommon.h"
 
 #if ASYNC_READ
@@ -161,7 +162,7 @@ storeAufsRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t of
 	debug(79, 3) ("storeAufsRead: queueing read because FD < 0\n");
 	assert(aiostate->flags.opening);
 	assert(aiostate->pending_reads == NULL);
-	q = memPoolAlloc(aufs_qread_pool);
+	q = (struct _queued_read *)memPoolAlloc(aufs_qread_pool);
 	q->buf = buf;
 	q->size = size;
 	q->offset = offset;
@@ -196,7 +197,7 @@ storeAufsWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
 	/* disk file not opened yet */
 	struct _queued_write *q;
 	assert(aiostate->flags.opening);
-	q = memPoolAlloc(aufs_qwrite_pool);
+	q = (struct _queued_write *)memPoolAlloc(aufs_qwrite_pool);
 	q->buf = buf;
 	q->size = size;
 	q->offset = offset;
@@ -208,7 +209,7 @@ storeAufsWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     if (aiostate->flags.writing) {
 	struct _queued_write *q;
 	debug(79, 3) ("storeAufsWrite: queuing write\n");
-	q = memPoolAlloc(aufs_qwrite_pool);
+	q = (struct _queued_write *)memPoolAlloc(aufs_qwrite_pool);
 	q->buf = buf;
 	q->size = size;
 	q->offset = offset;
@@ -241,7 +242,7 @@ static int
 storeAufsKickWriteQueue(storeIOState * sio)
 {
     squidaiostate_t *aiostate = (squidaiostate_t *) sio->fsstate;
-    struct _queued_write *q = linklistShift(&aiostate->pending_writes);
+    struct _queued_write *q = (struct _queued_write *)linklistShift(&aiostate->pending_writes);
     if (NULL == q)
 	return 0;
     debug(79, 3) ("storeAufsKickWriteQueue: writing queued chunk of %ld bytes\n",
@@ -255,7 +256,7 @@ static int
 storeAufsKickReadQueue(storeIOState * sio)
 {
     squidaiostate_t *aiostate = (squidaiostate_t *) sio->fsstate;
-    struct _queued_read *q = linklistShift(&(aiostate->pending_reads));
+    struct _queued_read *q = (struct _queued_read *)linklistShift(&(aiostate->pending_reads));
     if (NULL == q)
 	return 0;
     debug(79, 3) ("storeAufsKickReadQueue: reading queued request of %ld bytes\n",
@@ -268,7 +269,7 @@ storeAufsKickReadQueue(storeIOState * sio)
 static void
 storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
 {
-    storeIOState *sio = my_data;
+    storeIOState *sio = (storeIOState *)my_data;
     squidaiostate_t *aiostate = (squidaiostate_t *) sio->fsstate;
     debug(79, 3) ("storeAufsOpenDone: FD %d, errflag %d\n", fd, errflag);
     Opening_FD--;
@@ -304,7 +305,7 @@ static void
 storeAufsReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
 #endif
 {
-    storeIOState *sio = my_data;
+    storeIOState *sio = (storeIOState *)my_data;
     squidaiostate_t *aiostate = (squidaiostate_t *) sio->fsstate;
     STRCB *callback = sio->read.callback;
     void *cbdata;
@@ -349,7 +350,7 @@ storeAufsWriteDone(int fd, int errflag, size_t len, void *my_data)
 #endif
 {
     static int loop_detect = 0;
-    storeIOState *sio = my_data;
+    storeIOState *sio = (storeIOState *)my_data;
     squidaiostate_t *aiostate = (squidaiostate_t *) sio->fsstate;
     debug(79, 3) ("storeAufsWriteDone: dirno %d, fileno %08X, FD %d, len %ld, err=%d\n",
 	sio->swap_dirn, sio->swap_filen, fd, (long int) len, errflag);

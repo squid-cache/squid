@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.32 2002/04/13 23:07:51 hno Exp $
+ * $Id: pconn.cc,v 1.33 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 struct _pconn {
     hash_link hash;		/* must be first */
@@ -77,7 +78,7 @@ pconnNew(const char *key)
     p = cbdataAlloc(pconn);
     p->hash.key = xstrdup(key);
     p->nfds_alloc = PCONN_FDS_SZ;
-    p->fds = memPoolAlloc(pconn_fds_pool);
+    p->fds = (int *)memPoolAlloc(pconn_fds_pool);
     debug(48, 3) ("pconnNew: adding %s\n", hashKeyStr(&p->hash));
     hash_join(table, &p->hash);
     return p;
@@ -115,7 +116,7 @@ pconnRemoveFD(struct _pconn *p, int fd)
 static void
 pconnTimeout(int fd, void *data)
 {
-    struct _pconn *p = data;
+    struct _pconn *p = (_pconn *)data;
     assert(table != NULL);
     debug(48, 3) ("pconnTimeout: FD %d %s\n", fd, hashKeyStr(&p->hash));
     pconnRemoveFD(p, fd);
@@ -126,7 +127,7 @@ static void
 pconnRead(int fd, void *data)
 {
     LOCAL_ARRAY(char, buf, 256);
-    struct _pconn *p = data;
+    struct _pconn *p = (_pconn *)data;
     int n;
     assert(table != NULL);
     statCounter.syscalls.sock.reads++;
@@ -211,7 +212,7 @@ pconnPush(int fd, const char *host, u_short port)
 	debug(48, 3) ("pconnPush: growing FD array\n");
 	p->nfds_alloc <<= 1;
 	old = p->fds;
-	p->fds = xmalloc(p->nfds_alloc * sizeof(int));
+	p->fds = (int *)xmalloc(p->nfds_alloc * sizeof(int));
 	xmemcpy(p->fds, old, p->nfds * sizeof(int));
 	if (p->nfds == PCONN_FDS_SZ)
 	    memPoolFree(pconn_fds_pool, old);
@@ -235,7 +236,7 @@ pconnPop(const char *host, u_short port)
     LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     assert(table != NULL);
     strcpy(key, pconnKey(host, port));
-    hptr = hash_lookup(table, key);
+    hptr = (hash_link *)hash_lookup(table, key);
     if (hptr != NULL) {
 	p = (struct _pconn *) hptr;
 	assert(p->nfds > 0);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.6 2002/10/03 06:45:53 hno Exp $
+ * $Id: client_side_request.cc,v 1.7 2002/10/13 20:35:00 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines AUTHOR: Robert Collins
  * (Originally Duane Wessels in client_side.c)
@@ -44,6 +44,7 @@
 #include "squid.h"
 #include "clientStream.h"
 #include "client_side_request.h"
+#include "authenticate.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -73,14 +74,14 @@ static RH clientRedirectDone;
 static void clientCheckNoCache(clientRequestContext * context);
 static void clientCheckNoCacheDone(int answer, void *data);
 void clientProcessRequest(clientHttpRequest *);
-extern CSR clientGetMoreData;
-extern CSS clientReplyStatus;
-extern CSD clientReplyDetach;
+extern "C" CSR clientGetMoreData;
+extern "C" CSS clientReplyStatus;
+extern "C" CSD clientReplyDetach;
 
 void
 clientRequestContextFree(void *data)
 {
-    clientRequestContext *context = data;
+    clientRequestContext *context = (clientRequestContext *)data;
     cbdataReferenceDone(context->http);
     if (context->acl_checklist)
 	aclChecklistFree(context->acl_checklist);
@@ -131,7 +132,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
 				 * accelerator today. TODO: accept flags ? */
     /* allow size for url rewriting */
     url_sz = strlen(url) + Config.appendDomainLen + 5;
-    http->uri = xcalloc(url_sz, 1);
+    http->uri = (char *)xcalloc(url_sz, 1);
     strcpy(http->uri, url);
 
     if ((request = urlParse(method, http->uri)) == NULL) {
@@ -197,7 +198,7 @@ checkAccelOnly(clientHttpRequest * http)
 void
 clientAccessCheck(void *data)
 {
-    clientHttpRequest *http = data;
+    clientHttpRequest *http = (clientHttpRequest *)data;
     clientRequestContext *context = clientRequestContextNew(http);
     if (checkAccelOnly(http)) {
 	/* deny proxy requests in accel_only mode */
@@ -214,11 +215,11 @@ clientAccessCheck(void *data)
 void
 clientAccessCheckDone(int answer, void *data)
 {
-    clientRequestContext *context = data;
+    clientRequestContext *context = (clientRequestContext *)data;
     clientHttpRequest *http = context->http;
     err_type page_id;
     http_status status;
-    char *proxy_auth_msg = NULL;
+    char const *proxy_auth_msg = NULL;
     debug(85, 2) ("The request %s %s is %s, because it matched '%s'\n",
 	RequestMethodStr[http->request->method], http->uri,
 	answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED",
@@ -235,7 +236,7 @@ clientAccessCheckDone(int answer, void *data)
 	redirectStart(http, clientRedirectDone, context);
     } else {
 	/* Send an error */
-	clientStreamNode *node = http->client_stream.tail->prev->data;
+	clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
 	cbdataFree(context);
 	debug(85, 5) ("Access Denied: %s\n", http->uri);
 	debug(85, 5) ("AclMatchedName = %s\n",
@@ -271,7 +272,7 @@ clientAccessCheckDone(int answer, void *data)
 	    NULL, http->conn
 	    && http->conn->auth_user_request ? http->conn->
 	    auth_user_request : http->request->auth_user_request);
-	node = http->client_stream.tail->data;
+	node = (clientStreamNode *)http->client_stream.tail->data;
 	clientStreamRead(node, http, node->readBuffer);
     }
 }
@@ -476,7 +477,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 void
 clientRedirectDone(void *data, char *result)
 {
-    clientRequestContext *context = data;
+    clientRequestContext *context = (clientRequestContext *)data;
     clientHttpRequest *http = context->http;
     request_t *new_request = NULL;
     request_t *old_request = http->request;
@@ -550,7 +551,7 @@ clientCheckNoCache(clientRequestContext * context)
 void
 clientCheckNoCacheDone(int answer, void *data)
 {
-    clientRequestContext *context = data;
+    clientRequestContext *context = (clientRequestContext *)data;
     clientHttpRequest *http = context->http;
     http->request->flags.cachable = answer;
     context->acl_checklist = NULL;
@@ -582,6 +583,6 @@ clientProcessRequest(clientHttpRequest * http)
     /* no one should have touched this */
     assert(http->out.offset == 0);
     /* Use the Stream Luke */
-    node = http->client_stream.tail->data;
+    node = (clientStreamNode *)http->client_stream.tail->data;
     clientStreamRead(node, http, node->readBuffer);
 }

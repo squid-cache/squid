@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.163 2002/09/25 22:23:59 robertc Exp $
+ * $Id: net_db.cc,v 1.164 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -42,6 +42,8 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+
 
 #if USE_ICMP
 #include "StoreClient.h"
@@ -107,7 +109,7 @@ netdbHashInsert(netdbEntry * n, struct in_addr addr)
 static void
 netdbHashDelete(const char *key)
 {
-    hash_link *hptr = hash_lookup(addr_table, key);
+    hash_link *hptr = (hash_link *)hash_lookup(addr_table, key);
     if (hptr == NULL) {
 	debug_trap("netdbHashDelete: key not found");
 	return;
@@ -118,7 +120,7 @@ netdbHashDelete(const char *key)
 static void
 netdbHostInsert(netdbEntry * n, const char *hostname)
 {
-    net_db_name *x = memAllocate(MEM_NET_DB_NAME);
+    net_db_name *x = (net_db_name *)memAllocate(MEM_NET_DB_NAME);
     x->hash.key = xstrdup(hostname);
     x->next = n->hosts;
     n->hosts = x;
@@ -178,8 +180,8 @@ netdbRelease(netdbEntry * n)
 static int
 netdbLRU(const void *A, const void *B)
 {
-    const netdbEntry *const *n1 = A;
-    const netdbEntry *const *n2 = B;
+    const netdbEntry *const *n1 = (const netdbEntry *const *)A;
+    const netdbEntry *const *n2 = (const netdbEntry *const *)B;
     if ((*n1)->last_use_time > (*n2)->last_use_time)
 	return (1);
     if ((*n1)->last_use_time < (*n2)->last_use_time)
@@ -195,7 +197,7 @@ netdbPurgeLRU(void)
     int k = 0;
     int list_count = 0;
     int removed = 0;
-    list = xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
+    list = (netdbEntry **)xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
     hash_first(addr_table);
     while ((n = (netdbEntry *) hash_next(addr_table))) {
 	assert(list_count < memInUse(MEM_NETDBENTRY));
@@ -231,7 +233,7 @@ netdbAdd(struct in_addr addr)
     if (memInUse(MEM_NETDBENTRY) > Config.Netdb.high)
 	netdbPurgeLRU();
     if ((n = netdbLookupAddr(addr)) == NULL) {
-	n = memAllocate(MEM_NETDBENTRY);
+	n = (netdbEntry *)memAllocate(MEM_NETDBENTRY);
 	netdbHashInsert(n, addr);
     }
     return n;
@@ -241,7 +243,7 @@ static void
 netdbSendPing(const ipcache_addrs * ia, void *data)
 {
     struct in_addr addr;
-    char *hostname = ((generic_cbdata *) data)->data;
+    char *hostname = (char *)((generic_cbdata *) data)->data;
     netdbEntry *n;
     netdbEntry *na;
     net_db_name *x;
@@ -318,8 +320,8 @@ networkFromInaddr(struct in_addr a)
 static int
 sortByRtt(const void *A, const void *B)
 {
-    const netdbEntry *const *n1 = A;
-    const netdbEntry *const *n2 = B;
+    const netdbEntry *const *n1 = (const netdbEntry *const *)A;
+    const netdbEntry *const *n2 = (const netdbEntry *const *)B;
     if ((*n1)->rtt > (*n2)->rtt)
 	return 1;
     else if ((*n1)->rtt < (*n2)->rtt)
@@ -356,7 +358,7 @@ netdbPeerAdd(netdbEntry * n, peer * e)
 	    n->n_peers_alloc <<= 1;
 	debug(38, 3) ("netdbPeerAdd: Growing peer list for '%s' to %d\n",
 	    n->network, n->n_peers_alloc);
-	n->peers = xcalloc(n->n_peers_alloc, sizeof(net_db_peer));
+	n->peers = (net_db_peer *)xcalloc(n->n_peers_alloc, sizeof(net_db_peer));
 	for (i = 0; i < osize; i++)
 	    *(n->peers + i) = *(o + i);
 	if (osize) {
@@ -372,8 +374,8 @@ netdbPeerAdd(netdbEntry * n, peer * e)
 static int
 sortPeerByRtt(const void *A, const void *B)
 {
-    const net_db_peer *p1 = A;
-    const net_db_peer *p2 = B;
+    const net_db_peer *p1 = (net_db_peer *)A;
+    const net_db_peer *p2 = (net_db_peer *)B;
     if (p1->rtt > p2->rtt)
 	return 1;
     else if (p1->rtt < p2->rtt)
@@ -460,7 +462,7 @@ netdbReloadState(void)
 	file_close(fd);
 	return;
     }
-    t = buf = xcalloc(1, sb.st_size + 1);
+    t = buf = (char *)xcalloc(1, sb.st_size + 1);
     l = FD_READ_METHOD(fd, buf, sb.st_size);
     file_close(fd);
     if (l <= 0)
@@ -501,7 +503,7 @@ netdbReloadState(void)
 	if ((q = strtok(NULL, w_space)) == NULL)
 	    continue;
 	N.last_use_time = (time_t) atoi(q);
-	n = memAllocate(MEM_NETDBENTRY);
+	n = (netdbEntry *)memAllocate(MEM_NETDBENTRY);
 	xmemcpy(n, &N, sizeof(netdbEntry));
 	netdbHashInsert(n, addr);
 	while ((q = strtok(NULL, w_space)) != NULL) {
@@ -531,7 +533,7 @@ netdbPeerName(const char *name)
 static void
 netdbFreeNetdbEntry(void *data)
 {
-    netdbEntry *n = data;
+    netdbEntry *n = (netdbEntry *)data;
     safe_free(n->peers);
     memFree(n, MEM_NETDBENTRY);
 }
@@ -539,7 +541,7 @@ netdbFreeNetdbEntry(void *data)
 static void
 netdbFreeNameEntry(void *data)
 {
-    net_db_name *x = data;
+    net_db_name *x = (net_db_name *)data;
     xfree(x->hash.key);
     memFree(x, MEM_NET_DB_NAME);
 }
@@ -548,7 +550,7 @@ netdbFreeNameEntry(void *data)
 static void
 netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 {
-    netdbExchangeState *ex = data;
+    netdbExchangeState *ex = (netdbExchangeState *)data;
     int rec_sz = 0;
     off_t o;
     struct in_addr addr;
@@ -596,7 +598,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 		netdbExchangeDone(ex);
 		return;
 	    }
-	    assert(ex->buf_ofs >= hdr_sz);
+	    assert((size_t)ex->buf_ofs >= hdr_sz);
 
 	    /*
 	     * Now, point p to the part of the buffer where the data
@@ -723,7 +725,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 static void
 netdbExchangeDone(void *data)
 {
-    netdbExchangeState *ex = data;
+    netdbExchangeState *ex = (netdbExchangeState *)data;
     debug(38, 3) ("netdbExchangeDone: %s\n", storeUrl(ex->e));
     requestUnlink(ex->r);
     storeUnregister(ex->sc, ex->e, ex);
@@ -782,8 +784,8 @@ netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt)
     N = ++n->pings_recv;
     if (N > 5)
 	N = 5;
-    if (rtt < 1.0)
-	rtt = 1.0;
+    if (rtt < 1)
+	rtt = 1;
     n->hops = ((n->hops * (N - 1)) + hops) / N;
     n->rtt = ((n->rtt * (N - 1)) + rtt) / N;
     debug(38, 3) ("netdbHandlePingReply: %s; rtt=%5.1f  hops=%4.1f\n",
@@ -839,7 +841,7 @@ netdbDump(StoreEntry * sentry)
 	"RTT",
 	"Hops",
 	"Hostnames");
-    list = xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
+    list = (netdbEntry **)xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
     i = 0;
     hash_first(addr_table);
     while ((n = (netdbEntry *) hash_next(addr_table)))
@@ -1018,7 +1020,7 @@ netdbBinaryExchange(StoreEntry * s)
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
-    buf = memAllocate(MEM_4K_BUF);
+    buf = (char *)memAllocate(MEM_4K_BUF);
     i = 0;
     hash_first(addr_table);
     while ((n = (netdbEntry *) hash_next(addr_table))) {
@@ -1069,7 +1071,7 @@ void
 netdbExchangeStart(void *data)
 {
 #if USE_ICMP
-    peer *p = data;
+    peer *p = (peer *)data;
     char *uri;
     netdbExchangeState *ex;
     StoreIOBuffer tempBuffer = EMPTYIOBUFFER;

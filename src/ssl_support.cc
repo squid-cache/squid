@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.6 2002/07/20 23:23:17 hno Exp $
+ * $Id: ssl_support.cc,v 1.7 2002/10/13 20:35:03 robertc Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -42,7 +42,7 @@ void clientNegotiateSSL(int fd, void *data);
 void clientReadSSLRequest(int fd, void *data);
 
 static RSA *
-ssl_temp_rsa_cb(SSL * ssl, int export, int keylen)
+ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 {
     static RSA *rsa = NULL;
 
@@ -314,10 +314,7 @@ sslCreateContext(const char *certfile, const char *keyfile, int version, const c
 }
 
 int
-ssl_read_method(fd, buf, len)
-     int fd;
-     char *buf;
-     int len;
+ssl_read_method(int fd, char *buf, int len)
 {
     int i;
 
@@ -333,16 +330,13 @@ ssl_read_method(fd, buf, len)
 }
 
 int
-ssl_write_method(fd, buf, len)
-     int fd;
-     const char *buf;
-     int len;
+ssl_write_method(int fd, const char *buf, int len)
 {
     return (SSL_write(fd_table[fd].ssl, buf, len));
 }
 
 void
-ssl_shutdown_method(fd)
+ssl_shutdown_method(int fd)
 {
     SSL *ssl = fd_table[fd].ssl;
     if (!fd_table[fd].ssl_shutdown) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.123 2002/10/04 14:00:22 hno Exp $
+ * $Id: ssl.cc,v 1.124 2002/10/13 20:35:03 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -76,7 +76,7 @@ static DEFER sslDeferServerRead;
 static void
 sslServerClosed(int fd, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     debug(26, 3) ("sslServerClosed: FD %d\n", fd);
     assert(fd == sslState->server.fd);
     sslState->server.fd = -1;
@@ -87,7 +87,7 @@ sslServerClosed(int fd, void *data)
 static void
 sslClientClosed(int fd, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     debug(26, 3) ("sslClientClosed: FD %d\n", fd);
     assert(fd == sslState->client.fd);
     sslState->client.fd = -1;
@@ -119,7 +119,7 @@ sslStateFree(SslStateData * sslState)
 static int
 sslDeferServerRead(int fdnotused, void *data)
 {
-    SslStateData *s = data;
+    SslStateData *s = (SslStateData *)data;
     int i = delayBytesWanted(s->delay_id, 0, INT_MAX);
     if (i == INT_MAX)
 	return 0;
@@ -142,7 +142,7 @@ sslSetSelect(SslStateData * sslState)
 		sslState,
 		0);
 	}
-	if (sslState->client.len < read_sz) {
+	if ((size_t)sslState->client.len < read_sz) {
 	    commSetSelect(sslState->client.fd,
 		COMM_SELECT_READ,
 		sslReadClient,
@@ -170,7 +170,7 @@ sslSetSelect(SslStateData * sslState)
 	 */
 	read_sz = delayBytesWanted(sslState->delay_id, 1, read_sz);
 #endif
-	if (sslState->server.len < read_sz) {
+	if ((size_t)sslState->server.len < read_sz) {
 	    /* Have room to read more */
 	    commSetSelect(sslState->server.fd,
 		COMM_SELECT_READ,
@@ -189,7 +189,7 @@ sslSetSelect(SslStateData * sslState)
 static void
 sslReadServer(int fd, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     int len;
     size_t read_sz = SQUID_TCP_SO_RCVBUF - sslState->server.len;
     assert(fd == sslState->server.fd);
@@ -229,7 +229,7 @@ sslReadServer(int fd, void *data)
 static void
 sslReadClient(int fd, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     int len;
     assert(fd == sslState->client.fd);
     debug(26, 3) ("sslReadClient: FD %d, reading %d bytes at offset %d\n",
@@ -270,7 +270,7 @@ sslReadClient(int fd, void *data)
 static void
 sslWriteServer(int fd, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     int len;
     assert(fd == sslState->server.fd);
     debug(26, 3) ("sslWriteServer: FD %d, %d bytes to write\n",
@@ -309,7 +309,7 @@ sslWriteServer(int fd, void *data)
 static void
 sslWriteClient(int fd, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     int len;
     assert(fd == sslState->client.fd);
     debug(26, 3) ("sslWriteClient: FD %d, %d bytes to write\n",
@@ -349,7 +349,7 @@ sslWriteClient(int fd, void *data)
 static void
 sslTimeout(int fd, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     debug(26, 3) ("sslTimeout: FD %d\n", fd);
     if (sslState->client.fd > -1)
 	comm_close(sslState->client.fd);
@@ -360,7 +360,7 @@ sslTimeout(int fd, void *data)
 static void
 sslConnected(int fd, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     debug(26, 3) ("sslConnected: FD %d sslState=%p\n", fd, sslState);
     *sslState->status_ptr = HTTP_OK;
     xstrncpy(sslState->server.buf, conn_established, SQUID_TCP_SO_RCVBUF);
@@ -371,7 +371,7 @@ sslConnected(int fd, void *data)
 static void
 sslErrorComplete(int fdnotused, void *data, size_t sizenotused)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     assert(sslState != NULL);
     if (sslState->client.fd > -1)
 	comm_close(sslState->client.fd);
@@ -383,7 +383,7 @@ sslErrorComplete(int fdnotused, void *data, size_t sizenotused)
 static void
 sslConnectDone(int fdnotused, comm_err_t status, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     request_t *request = sslState->request;
     ErrorState *err = NULL;
     if (sslState->servers->_peer)
@@ -499,8 +499,8 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
     sslState->status_ptr = status_ptr;
     sslState->client.fd = fd;
     sslState->server.fd = sock;
-    sslState->server.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
-    sslState->client.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
+    sslState->server.buf = (char *)xmalloc(SQUID_TCP_SO_RCVBUF);
+    sslState->client.buf = (char *)xmalloc(SQUID_TCP_SO_RCVBUF);
     comm_add_close_handler(sslState->server.fd,
 	sslServerClosed,
 	sslState);
@@ -529,7 +529,7 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
 static void
 sslProxyConnected(int fd, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     MemBuf mb;
     HttpHeader hdr_out;
     Packer p;
@@ -563,7 +563,7 @@ sslProxyConnected(int fd, void *data)
 static void
 sslPeerSelectComplete(FwdServer * fs, void *data)
 {
-    SslStateData *sslState = data;
+    SslStateData *sslState = (SslStateData *)data;
     request_t *request = sslState->request;
     peer *g = NULL;
     if (fs == NULL) {

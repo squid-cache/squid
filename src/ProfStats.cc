@@ -1,6 +1,6 @@
 
 /*
- * $Id: ProfStats.cc,v 1.1 2002/10/02 11:06:31 robertc Exp $
+ * $Id: ProfStats.cc,v 1.2 2002/10/13 20:34:57 robertc Exp $
  *
  * DEBUG: section 81     CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa
@@ -36,6 +36,7 @@
 #include "squid.h"
 
 #ifdef USE_XPROF_STATS
+#include "Store.h"
 
 /* Private stuff */
 
@@ -171,7 +172,7 @@ xprof_average(TimersArray ** list, int secs)
     int doavg = (xprof_events % secs);
 
     if (!*list)
-	*list = xcalloc(XPROF_LAST, sizeof(xprof_stats_node));
+	*list = (TimersArray *)xcalloc(XPROF_LAST, sizeof(xprof_stats_node));
 
     hist = *list;
     now = get_tick();

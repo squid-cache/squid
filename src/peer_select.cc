@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.123 2002/09/15 06:40:57 robertc Exp $
+ * $Id: peer_select.cc,v 1.124 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+#include "ICP.h"
 
 const char *hier_strings[] =
 {
@@ -156,7 +158,7 @@ peerSelect(request_t * request,
 static void
 peerCheckNeverDirectDone(int answer, void *data)
 {
-    ps_state *psstate = data;
+    ps_state *psstate = (ps_state *) data;
     psstate->acl_checklist = NULL;
     debug(44, 3) ("peerCheckNeverDirectDone: %d\n", answer);
     psstate->never_direct = answer ? 1 : -1;
@@ -166,7 +168,7 @@ peerCheckNeverDirectDone(int answer, void *data)
 static void
 peerCheckAlwaysDirectDone(int answer, void *data)
 {
-    ps_state *psstate = data;
+    ps_state *psstate = (ps_state *)data;
     psstate->acl_checklist = NULL;
     debug(44, 3) ("peerCheckAlwaysDirectDone: %d\n", answer);
     psstate->always_direct = answer ? 1 : -1;
@@ -490,7 +492,7 @@ peerGetAllParents(ps_state * ps)
 static void
 peerPingTimeout(void *data)
 {
-    ps_state *psstate = data;
+    ps_state *psstate = (ps_state *)data;
     StoreEntry *entry = psstate->entry;
     if (entry)
 	debug(44, 3) ("peerPingTimeout: '%s'\n", storeUrl(entry));
@@ -549,8 +551,8 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
 static void
 peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
 {
-    ps_state *psstate = data;
-    icp_opcode op = header->opcode;
+    ps_state *psstate = (ps_state *)data;
+    icp_opcode op = header->getOpCode();
     debug(44, 3) ("peerHandleIcpReply: %s %s\n",
 	icp_opcode_str[op],
 	storeUrl(psstate->entry));
@@ -586,7 +588,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
 static void
 peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
 {
-    ps_state *psstate = data;
+    ps_state *psstate = (ps_state *)data;
     debug(44, 3) ("peerHandleIcpReply: %s %s\n",
 	htcp->hit ? "HIT" : "MISS",
 	storeUrl(psstate->entry));
@@ -641,10 +643,10 @@ static void
 peerHandlePingReply(peer * p, peer_t type, protocol_t proto, void *pingdata, void *data)
 {
     if (proto == PROTO_ICP)
-	peerHandleIcpReply(p, type, pingdata, data);
+	peerHandleIcpReply(p, type, (icp_common_t *)pingdata, data);
 #if USE_HTCP
     else if (proto == PROTO_HTCP)
-	peerHandleHtcpReply(p, type, pingdata, data);
+	peerHandleHtcpReply(p, type, (htcpReplyData *)pingdata, data);
 #endif
     else
 	debug(44, 1) ("peerHandlePingReply: unknown protocol_t %d\n", (int) proto);
@@ -653,7 +655,7 @@ peerHandlePingReply(peer * p, peer_t type, protocol_t proto, void *pingdata, voi
 static void
 peerAddFwdServer(FwdServer ** FS, peer * p, hier_code code)
 {
-    FwdServer *fs = memAllocate(MEM_FWD_SERVER);
+    FwdServer *fs = (FwdServer *)memAllocate(MEM_FWD_SERVER);
     debug(44, 5) ("peerAddFwdServer: adding %s %s\n",
 	p ? p->host : "DIRECT",
 	hier_strings[code]);

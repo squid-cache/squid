@@ -1,5 +1,5 @@
 /*
- * $Id: radix.h,v 1.13 2002/04/19 22:23:01 hno Exp $
+ * $Id: radix.h,v 1.14 2002/10/13 20:34:51 robertc Exp $
  */
 
 #ifndef SQUID_RADIX_H
@@ -80,7 +80,7 @@ struct squid_radix_node {
  * Annotations to tree concerning potential routes applying to subtrees.
  */
 
-extern struct squid_radix_mask {
+SQUIDCEXTERN struct squid_radix_mask {
     short rm_b;			/* bit offset; -1-index(netmask) */
     char rm_unused;		/* cf. rn_bmask */
     unsigned char rm_flags;	/* cf. rn_flags */
@@ -118,18 +118,18 @@ struct squid_radix_node_head {
 };
 
 
-extern void squid_rn_init (void);
-extern int squid_rn_inithead(void **, int);
-extern int squid_rn_refines(void *, void *);
-extern int squid_rn_walktree(struct squid_radix_node_head *, int (*)(struct squid_radix_node *, void *), void *);
-extern struct squid_radix_node *squid_rn_addmask(void *, int, int);
-extern struct squid_radix_node *squid_rn_addroute(void *, void *, struct squid_radix_node_head *, struct squid_radix_node[2]);
-extern struct squid_radix_node *squid_rn_delete(void *, void *, struct squid_radix_node_head *);
-extern struct squid_radix_node *squid_rn_insert(void *, struct squid_radix_node_head *, int *, struct squid_radix_node[2]);
-extern struct squid_radix_node *squid_rn_match(void *, struct squid_radix_node_head *);
-extern struct squid_radix_node *squid_rn_newpair(void *, int, struct squid_radix_node[2]);
-extern struct squid_radix_node *squid_rn_search(void *, struct squid_radix_node *);
-extern struct squid_radix_node *squid_rn_search_m(void *, struct squid_radix_node *, void *);
-extern struct squid_radix_node *squid_rn_lookup(void *, void *, struct squid_radix_node_head *);
+SQUIDCEXTERN void squid_rn_init (void);
+SQUIDCEXTERN int squid_rn_inithead(void **, int);
+SQUIDCEXTERN int squid_rn_refines(void *, void *);
+SQUIDCEXTERN int squid_rn_walktree(struct squid_radix_node_head *, int (*)(struct squid_radix_node *, void *), void *);
+SQUIDCEXTERN struct squid_radix_node *squid_rn_addmask(void *, int, int);
+SQUIDCEXTERN struct squid_radix_node *squid_rn_addroute(void *, void *, struct squid_radix_node_head *, struct squid_radix_node[2]);
+SQUIDCEXTERN struct squid_radix_node *squid_rn_delete(void *, void *, struct squid_radix_node_head *);
+SQUIDCEXTERN struct squid_radix_node *squid_rn_insert(void *, struct squid_radix_node_head *, int *, struct squid_radix_node[2]);
+SQUIDCEXTERN struct squid_radix_node *squid_rn_match(void *, struct squid_radix_node_head *);
+SQUIDCEXTERN struct squid_radix_node *squid_rn_newpair(void *, int, struct squid_radix_node[2]);
+SQUIDCEXTERN struct squid_radix_node *squid_rn_search(void *, struct squid_radix_node *);
+SQUIDCEXTERN struct squid_radix_node *squid_rn_search_m(void *, struct squid_radix_node *, void *);
+SQUIDCEXTERN struct squid_radix_node *squid_rn_lookup(void *, void *, struct squid_radix_node_head *);
 
 #endif /* SQUID_RADIX_H */

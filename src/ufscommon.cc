@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.2 2002/10/12 09:52:57 robertc Exp $
+ * $Id: ufscommon.cc,v 1.3 2002/10/13 20:35:06 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -33,17 +33,8 @@
  */
 
 #include "ufscommon.h"
-#if 0
+#include "Store.h"
 
-#include "squid.h"
-
-#include "store_asyncufs.h"
-
-#define DefaultLevelOneDirs     16
-#define DefaultLevelTwoDirs     256
-#define STORE_META_BUFSZ 4096
-
-#endif
 typedef struct _RebuildState RebuildState;
 struct _RebuildState {
     SwapDir *sd;
@@ -388,7 +379,7 @@ commonUfsDirInit(SwapDir * sd)
 void
 commonUfsDirRebuildFromDirectory(void *data)
 {
-    RebuildState *rb = data;
+    RebuildState *rb = (RebuildState *)data;
     SwapDir *SD = rb->sd;
     LOCAL_ARRAY(char, hdr_buf, SM_PAGE_SIZE);
     StoreEntry *e = NULL;
@@ -484,9 +475,9 @@ commonUfsDirRebuildFromDirectory(void *data)
 	/* check sizes */
 	if (tmpe.swap_file_sz == 0) {
 	    tmpe.swap_file_sz = (size_t) sb.st_size;
-	} else if (tmpe.swap_file_sz == sb.st_size - swap_hdr_len) {
+	} else if (tmpe.swap_file_sz == (size_t)(sb.st_size - swap_hdr_len)) {
 	    tmpe.swap_file_sz = (size_t) sb.st_size;
-	} else if (tmpe.swap_file_sz != sb.st_size) {
+	} else if (tmpe.swap_file_sz != (size_t)sb.st_size) {
 	    debug(47, 1) ("commonUfsDirRebuildFromDirectory: SIZE MISMATCH %ld!=%ld\n",
 		(long int) tmpe.swap_file_sz, (long int) sb.st_size);
 	    commonUfsDirUnlinkFile(SD, filn);
@@ -529,7 +520,7 @@ commonUfsDirRebuildFromDirectory(void *data)
 void
 commonUfsDirRebuildFromSwapLog(void *data)
 {
-    RebuildState *rb = data;
+    RebuildState *rb = (RebuildState *)data;
     SwapDir *SD = rb->sd;
     StoreEntry *e = NULL;
     storeSwapLogData s;
@@ -949,7 +940,7 @@ commonUfsDirOpenTmpSwapLog(SwapDir * sd, int *clean_flag, int *zero_flag)
 
 struct _clean_state {
     char *cur;
-    char *new;
+    char *newLog;
     char *cln;
     char *outbuf;
     off_t outbuf_offset;
@@ -967,27 +958,27 @@ struct _clean_state {
 int
 commonUfsDirWriteCleanStart(SwapDir * sd)
 {
-    struct _clean_state *state = xcalloc(1, sizeof(*state));
+    struct _clean_state *state = (struct _clean_state *)xcalloc(1, sizeof(*state));
 #if HAVE_FCHMOD
     struct stat sb;
 #endif
     sd->log.clean.write = NULL;
     sd->log.clean.state = NULL;
-    state->new = xstrdup(commonUfsDirSwapLogFile(sd, ".clean"));
-    state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
+    state->newLog = xstrdup(commonUfsDirSwapLogFile(sd, ".clean"));
+    state->fd = file_open(state->newLog, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
     if (state->fd < 0) {
-	xfree(state->new);
+	xfree(state->newLog);
 	xfree(state);
 	return -1;
     }
     state->cur = xstrdup(commonUfsDirSwapLogFile(sd, NULL));
     state->cln = xstrdup(commonUfsDirSwapLogFile(sd, ".last-clean"));
-    state->outbuf = xcalloc(CLEAN_BUF_SZ, 1);
+    state->outbuf = (char *)xcalloc(CLEAN_BUF_SZ, 1);
     state->outbuf_offset = 0;
     state->walker = sd->repl->WalkInit(sd->repl);
     unlink(state->cln);
     debug(47, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
-	state->new, state->fd);
+	state->newLog, state->fd);
 #if HAVE_FCHMOD
     if (stat(state->cur, &sb) == 0)
 	fchmod(state->fd, sb.st_mode);
@@ -1004,7 +995,7 @@ const StoreEntry *
 commonUfsDirCleanLogNextEntry(SwapDir * sd)
 {
     const StoreEntry *entry = NULL;
-    struct _clean_state *state = sd->log.clean.state;
+    struct _clean_state *state = (struct _clean_state *)sd->log.clean.state;
     if (state->walker)
 	entry = state->walker->Next(state->walker);
     return entry;
@@ -1018,7 +1009,7 @@ commonUfsDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
 {
     storeSwapLogData s;
     static size_t ss = sizeof(storeSwapLogData);
-    struct _clean_state *state = sd->log.clean.state;
+    struct _clean_state *state = (struct _clean_state *)sd->log.clean.state;
     memset(&s, '\0', ss);
     s.op = (char) SWAP_LOG_ADD;
     s.swap_filen = e->swap_filen;
@@ -1036,11 +1027,11 @@ commonUfsDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
     if (state->outbuf_offset + ss > CLEAN_BUF_SZ) {
 	if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	    debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
-		state->new, xstrerror());
+		state->newLog, xstrerror());
 	    debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
 	    file_close(state->fd);
 	    state->fd = -1;
-	    unlink(state->new);
+	    unlink(state->newLog);
 	    safe_free(state);
 	    sd->log.clean.state = NULL;
 	    sd->log.clean.write = NULL;
@@ -1054,7 +1045,7 @@ void
 commonUfsDirWriteCleanDone(SwapDir * sd)
 {
     int fd;
-    struct _clean_state *state = sd->log.clean.state;
+    struct _clean_state *state = (struct _clean_state *)sd->log.clean.state;
     if (NULL == state)
 	return;
     if (state->fd < 0)
@@ -1062,12 +1053,12 @@ commonUfsDirWriteCleanDone(SwapDir * sd)
     state->walker->Done(state->walker);
     if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
-	    state->new, xstrerror());
+	    state->newLog, xstrerror());
 	debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile "
 	    "not replaced.\n");
 	file_close(state->fd);
 	state->fd = -1;
-	unlink(state->new);
+	unlink(state->newLog);
     }
     safe_free(state->outbuf);
     /*
@@ -1086,7 +1077,7 @@ commonUfsDirWriteCleanDone(SwapDir * sd)
 	    debug(50, 0) ("storeDirWriteCleanLogs: unlinkd failed: %s, %s\n",
 		xstrerror(), state->cur);
 #endif
-	xrename(state->new, state->cur);
+	xrename(state->newLog, state->cur);
     }
     /* touch a timestamp file if we're not still validating */
     if (store_dirs_rebuilding)
@@ -1097,7 +1088,7 @@ commonUfsDirWriteCleanDone(SwapDir * sd)
 	file_close(file_open(state->cln, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY));
     /* close */
     safe_free(state->cur);
-    safe_free(state->new);
+    safe_free(state->newLog);
     safe_free(state->cln);
     if (state->fd >= 0)
 	file_close(state->fd);
@@ -1117,7 +1108,7 @@ void
 commonUfsDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
 {
     squidufsinfo_t *ioinfo = (squidufsinfo_t *) sd->fsdata;
-    storeSwapLogData *s = memAllocate(MEM_SWAP_LOG_DATA);
+    storeSwapLogData *s = (storeSwapLogData *)memAllocate(MEM_SWAP_LOG_DATA);
     s->op = (char) op;
     s->swap_filen = e->swap_filen;
     s->timestamp = e->timestamp;
@@ -1148,8 +1139,8 @@ commonUfsDirNewfs(SwapDir * sd)
 static int
 rev_int_sort(const void *A, const void *B)
 {
-    const int *i1 = A;
-    const int *i2 = B;
+    const int *i1 = (const int *)A;
+    const int *i2 = (const int *)B;
     return *i2 - *i1;
 }
 
@@ -1252,7 +1243,7 @@ commonUfsDirCleanEvent(void *unused)
 	 * Initialize the little array that translates AUFS cache_dir
 	 * number into the Config.cacheSwap.swapDirs array index.
 	 */
-	dir_index = xcalloc(n_dirs, sizeof(*dir_index));
+	dir_index = (int *)xcalloc(n_dirs, sizeof(*dir_index));
 	for (i = 0, n = 0; i < Config.cacheSwap.n_configured; i++) {
 	    sd = &Config.cacheSwap.swapDirs[i];
 	    if (!commonUfsDirIs(sd))
@@ -1438,7 +1429,7 @@ commonUfsDirUnrefObj(SwapDir * SD, StoreEntry * e)
 void
 commonUfsDirUnlinkFile(SwapDir * SD, sfileno f)
 {
-    squidufsinfo_t *ioinfo = SD->fsdata;
+    squidufsinfo_t *ioinfo = (squidufsinfo_t *)SD->fsdata;
     debug(79, 3) ("commonUfsDirUnlinkFile: unlinking fileno %08X\n", f);
     /* commonUfsDirMapBitReset(SD, f); */
     assert(ioinfo->io.storeDirUnlinkFile);
@@ -1479,7 +1470,7 @@ commonUfsDirReplRemove(StoreEntry * e)
 void
 commonUfsDirStats(SwapDir * SD, StoreEntry * sentry)
 {
-    squidufsinfo_t *ioinfo = SD->fsdata;
+    squidufsinfo_t *ioinfo = (squidufsinfo_t *)SD->fsdata;
     int totl_kb = 0;
     int free_kb = 0;
     int totl_in = 0;
@@ -1627,7 +1618,7 @@ commonUfsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
 	storeEntryDump(e, 0);
 	return -1;
     }
-    if (e->swap_file_sz != sb.st_size) {
+    if ((off_t)e->swap_file_sz != sb.st_size) {
 	debug(47, 0) ("commonUfsCleanupDoubleCheck: SIZE MISMATCH\n");
 	debug(47, 0) ("commonUfsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
 	debug(47, 0) ("commonUfsCleanupDoubleCheck: PATH %s\n",
@@ -1639,105 +1630,3 @@ commonUfsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
     }
     return 0;
 }
-
-#if 0
-/*
- * commonUfsDirParse *
- * Called when a *new* fs is being setup.
- */
-static void
-commonUfsDirParse(SwapDir * sd, int index, char *path)
-{
-    int i;
-    int size;
-    int l1;
-    int l2;
-    squidufsinfo_t *ioinfo;
-
-    i = GetInteger();
-    size = i << 10;		/* Mbytes to kbytes */
-    if (size <= 0)
-	fatal("commonUfsDirParse: invalid size value");
-    i = GetInteger();
-    l1 = i;
-    if (l1 <= 0)
-	fatal("commonUfsDirParse: invalid level 1 directories value");
-    i = GetInteger();
-    l2 = i;
-    if (l2 <= 0)
-	fatal("commonUfsDirParse: invalid level 2 directories value");
-
-    ioinfo = xmalloc(sizeof(squidufsinfo_t));
-    if (ioinfo == NULL)
-	fatal("commonUfsDirParse: couldn't xmalloc() squidufsinfo_t!\n");
-
-    sd->index = index;
-    sd->path = xstrdup(path);
-    sd->max_size = size;
-    sd->fsdata = ioinfo;
-    ioinfo->l1 = l1;
-    ioinfo->l2 = l2;
-    ioinfo->swaplog_fd = -1;
-    ioinfo->map = NULL;		/* Debugging purposes */
-    ioinfo->suggest = 0;
-    sd->init = commonUfsDirInit;
-    sd->newfs = commonUfsDirNewfs;
-    sd->dump = commonUfsDirDump;
-    sd->freefs = commonUfsDirFree;
-    sd->dblcheck = commonUfsCleanupDoubleCheck;
-    sd->statfs = commonUfsDirStats;
-    sd->maintainfs = commonUfsDirMaintain;
-    sd->checkobj = commonUfsDirCheckObj;
-    sd->refobj = commonUfsDirRefObj;
-    sd->unrefobj = commonUfsDirUnrefObj;
-    sd->callback = aioCheckCallbacks;
-    sd->sync = aioSync;
-    sd->obj.create = commonUfsCreate;
-    sd->obj.open = commonUfsOpen;
-    sd->obj.close = commonUfsClose;
-    sd->obj.read = commonUfsRead;
-    sd->obj.write = commonUfsWrite;
-    sd->obj.unlink = commonUfsUnlink;
-    sd->log.open = commonUfsDirOpenSwapLog;
-    sd->log.close = commonUfsDirCloseSwapLog;
-    sd->log.write = commonUfsDirSwapLog;
-    sd->log.clean.start = commonUfsDirWriteCleanStart;
-    sd->log.clean.nextentry = commonUfsDirCleanLogNextEntry;
-    sd->log.clean.done = commonUfsDirWriteCleanDone;
-
-    parse_cachedir_options(sd, options, 0);
-
-    /* Initialise replacement policy stuff */
-    sd->repl = createRemovalPolicy(Config.replPolicy);
-}
-
-/*
- * Initial setup / end destruction
- */
-static void
-commonUfsDirDone(void)
-{
-    aioDone();
-    memPoolDestroy(&squidaio_state_pool);
-    memPoolDestroy(&aufs_qread_pool);
-    memPoolDestroy(&aufs_qwrite_pool);
-    asyncufs_initialised = 0;
-}
-
-void
-storeFsSetup_aufs(storefs_entry_t * storefs)
-{
-    assert(!asyncufs_initialised);
-    storefs->parsefunc = commonUfsDirParse;
-    storefs->reconfigurefunc = commonUfsDirReconfigure;
-    storefs->donefunc = commonUfsDirDone;
-    squidaio_state_pool = memPoolCreate("AUFS IO State data", sizeof(squidaiostate_t));
-    aufs_qread_pool = memPoolCreate("AUFS Queued read data",
-	sizeof(queued_read));
-    aufs_qwrite_pool = memPoolCreate("AUFS Queued write data",
-	sizeof(queued_write));
-
-    asyncufs_initialised = 1;
-    aioInit();
-}
-#endif

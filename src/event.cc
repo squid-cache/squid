@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.32 2002/04/13 23:07:50 hno Exp $
+ * $Id: event.cc,v 1.33 2002/10/13 20:35:01 robertc Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 /* The list of event processes */
 struct ev_entry {
@@ -54,7 +55,7 @@ static const char *last_event_ran = NULL;
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int weight)
 {
-    struct ev_entry *event = memAllocate(MEM_EVENT);
+    struct ev_entry *event = (ev_entry *)memAllocate(MEM_EVENT);
     struct ev_entry **E;
     event->func = func;
     event->arg = cbdataReference(arg);

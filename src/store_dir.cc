@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.136 2002/03/19 23:40:46 wessels Exp $
+ * $Id: store_dir.cc,v 1.137 2002/10/13 20:35:05 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #if HAVE_STATVFS
 #if HAVE_SYS_STATVFS_H
@@ -262,7 +263,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
     assert(op > SWAP_LOG_NOP && op < SWAP_LOG_MAX);
     debug(20, 3) ("storeDirSwapLog: %s %s %d %08X\n",
 	swap_log_op_str[op],
-	storeKeyText(e->hash.key),
+	storeKeyText((const cache_key *)e->hash.key),
 	e->swap_dirn,
 	e->swap_filen);
     sd = &Config.cacheSwap.swapDirs[e->swap_dirn];
@@ -290,10 +291,10 @@ storeDirStats(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "Store Directory Statistics:\n");
     storeAppendPrintf(sentry, "Store Entries          : %d\n",
-	memInUse(MEM_STOREENTRY));
+	storeEntryInUse());
     storeAppendPrintf(sentry, "Maximum Swap Size      : %8ld KB\n",
 	(long int) Config.Swap.maxSize);
-    storeAppendPrintf(sentry, "Current Store Swap Size: %8d KB\n",
+    storeAppendPrintf(sentry, "Current Store Swap Size: %8lu KB\n",
 	store_swap_size);
     storeAppendPrintf(sentry, "Current Capacity       : %d%% used, %d%% free\n",
 	percent((int) store_swap_size, (int) Config.Swap.maxSize),

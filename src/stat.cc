@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.359 2002/10/06 02:05:23 robertc Exp $
+ * $Id: stat.cc,v 1.360 2002/10/13 20:35:03 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "StoreClient.h"
+#include "Store.h"
 
 #define DEBUG_OPENFD 1
 
@@ -259,7 +260,7 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
     MemObject *mem = e->mem_obj;
     int i;
     dlink_node *node;
-    storeAppendPrintf(s, "KEY %s\n", storeKeyText(e->hash.key));
+    storeAppendPrintf(s, "KEY %s\n", storeKeyText((const cache_key *)e->hash.key));
     if (mem)
 	storeAppendPrintf(s, "\t%s %s\n",
 	    RequestMethodStr[mem->method], mem->log_url);
@@ -281,7 +282,7 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 	    storeAppendPrintf(s, "\tswapout: %d bytes written\n",
 		(int) storeOffset(mem->swapout.sio));
 	for (i = 0, node = mem->clients.head; node; node = node->next, i++)
-	    storeClientDumpStats(node->data, s, i);
+	    storeClientDumpStats((store_client *)node->data, s, i);
     }
     storeAppendPrintf(s, "\n");
 }
@@ -290,7 +291,7 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 static void
 statObjects(void *data)
 {
-    StatObjectsState *state = data;
+    StatObjectsState *state = static_cast<StatObjectsState *>(data);
     StoreEntry *e;
     hash_link *link_ptr = NULL;
     hash_link *link_next = NULL;
@@ -480,7 +481,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tRequest Disk Hit Ratios:\t5min: %3.1f%%, 60min: %3.1f%%\n",
 	statRequestHitDiskRatio(5),
 	statRequestHitDiskRatio(60));
-    storeAppendPrintf(sentry, "\tStorage Swap size:\t%d KB\n",
+    storeAppendPrintf(sentry, "\tStorage Swap size:\t%lu KB\n",
 	store_swap_size);
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%d KB\n",
 	(int) (store_mem_size >> 10));
@@ -614,7 +615,7 @@ info_get(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "Internal Data Structures:\n");
     storeAppendPrintf(sentry, "\t%6d StoreEntries\n",
-	memInUse(MEM_STOREENTRY));
+	storeEntryInUse());
     storeAppendPrintf(sentry, "\t%6d StoreEntries with MemObjects\n",
 	memInUse(MEM_MEMOBJECT));
     storeAppendPrintf(sentry, "\t%6d Hot Object Cache Items\n",
@@ -935,7 +936,7 @@ statAvgTick(void *notused)
 	}
     }
     if (Config.warnings.high_memory) {
-	int i = 0;
+	size_t i = 0;
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
 	struct mstats ms = mstats();
 	i = ms.bytes_total;
@@ -1399,7 +1400,7 @@ statClientRequests(StoreEntry * s)
     StoreEntry *e;
     int fd;
     for (i = ClientActiveRequests.head; i; i = i->next) {
-	http = i->data;
+	http = static_cast<clientHttpRequest *>(i->data);
 	assert(http);
 	conn = http->conn;
 	storeAppendPrintf(s, "Connection: %p\n", conn);
@@ -1427,9 +1428,9 @@ statClientRequests(StoreEntry * s)
 	    (long int) http->out.offset, (unsigned long int) http->out.size);
 	storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);
 	e = http->entry;
-	storeAppendPrintf(s, "entry %p/%s\n", e, e ? storeKeyText(e->hash.key) : "N/A");
+	storeAppendPrintf(s, "entry %p/%s\n", e, e ? storeKeyText((cache_key const *)e->hash.key) : "N/A");
 	e = http->old_entry;
-	storeAppendPrintf(s, "old_entry %p/%s\n", e, e ? storeKeyText(e->hash.key) : "N/A");
+	storeAppendPrintf(s, "old_entry %p/%s\n", e, e ? storeKeyText((cache_key const *)e->hash.key) : "N/A");
 	storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
 	    (long int) http->start.tv_sec,
 	    (int) http->start.tv_usec,

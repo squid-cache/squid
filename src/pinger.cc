@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.47 2002/10/06 02:05:23 robertc Exp $
+ * $Id: pinger.cc,v 1.48 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -150,7 +150,7 @@ pingerSendEcho(struct in_addr to, int opcode, char *payload, int len)
     LOCAL_ARRAY(char, pkt, MAX_PKT_SZ);
     struct icmphdr *icmp = NULL;
     icmpEchoData *echo;
-    int icmp_pktsize = sizeof(struct icmphdr);
+    size_t icmp_pktsize = sizeof(struct icmphdr);
     struct sockaddr_in S;
     memset(pkt, '\0', MAX_PKT_SZ);
     icmp = (struct icmphdr *) (void *) pkt;
@@ -209,7 +209,7 @@ pingerRecv(void)
     static pingerReplyData preply;
 
     if (pkt == NULL)
-	pkt = xmalloc(MAX_PKT_SZ);
+	pkt = (char *)xmalloc(MAX_PKT_SZ);
     fromlen = sizeof(from);
     n = recvfrom(icmp_sock,
 	pkt,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.328 2002/09/15 06:23:29 adrian Exp $
+ * $Id: ftp.cc,v 1.329 2002/10/13 20:35:01 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+
 
 static const char *const crlf = "\r\n";
 static char cbuf[1024];
@@ -263,7 +265,7 @@ FTPSM *FTP_SM_FUNCS[] =
 static void
 ftpStateFree(int fdnotused, void *data)
 {
-    FtpStateData *ftpState = data;
+    FtpStateData *ftpState = (FtpStateData *)data;
     if (ftpState == NULL)
 	return;
     debug(9, 3) ("ftpStateFree: %s\n", storeUrl(ftpState->entry));
@@ -329,7 +331,7 @@ ftpLoginParser(const char *login, FtpStateData * ftpState, int escaped)
 static void
 ftpTimeout(int fd, void *data)
 {
-    FtpStateData *ftpState = data;
+    FtpStateData *ftpState = (FtpStateData *)data;
     StoreEntry *entry = ftpState->entry;
     debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     if (SENT_PASV == ftpState->state && fd == ftpState->data.fd) {
@@ -486,7 +488,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 	return NULL;
     if (*buf == '\0')
 	return NULL;
-    p = xcalloc(1, sizeof(ftpListParts));
+    p = (ftpListParts *)xcalloc(1, sizeof(ftpListParts));
     n_tokens = 0;
     memset(tokens, 0, sizeof(tokens));
     xbuf = xstrdup(buf);
@@ -633,14 +635,14 @@ static const char *
 dots_fill(size_t len)
 {
     static char buf[256];
-    int i = 0;
+    size_t i = 0;
     if (len > Config.Ftp.list_width) {
 	memset(buf, ' ', 256);
 	buf[0] = '\n';
 	buf[Config.Ftp.list_width + 4] = '\0';
 	return buf;
     }
-    for (i = (int) len; i < Config.Ftp.list_width; i++)
+    for (i = len; i < Config.Ftp.list_width; i++)
 	buf[i - len] = (i % 2) ? '.' : ' ';
     buf[i - len] = '\0';
     return buf;
@@ -801,11 +803,11 @@ ftpParseListing(FtpStateData * ftpState)
     size_t linelen;
     size_t usable;
     StoreEntry *e = ftpState->entry;
-    int len = ftpState->data.offset;
+    size_t len = ftpState->data.offset;
     /*
      * We need a NULL-terminated buffer for scanning, ick
      */
-    sbuf = xmalloc(len + 1);
+    sbuf = (char *)xmalloc(len + 1);
     xstrncpy(sbuf, buf, len + 1);
     end = sbuf + len - 1;
     while (*end != '\r' && *end != '\n' && end > sbuf)
@@ -818,7 +820,7 @@ ftpParseListing(FtpStateData * ftpState)
 	return;
     }
     debug(9, 3) ("ftpParseListing: %d bytes to play with\n", len);
-    line = memAllocate(MEM_4K_BUF);
+    line = (char *)memAllocate(MEM_4K_BUF);
     end++;
     storeBuffer(e);
     s = sbuf;
@@ -873,7 +875,7 @@ ftpDataComplete(FtpStateData * ftpState)
 static void
 ftpDataRead(int fd, void *data)
 {
-    FtpStateData *ftpState = data;
+    FtpStateData *ftpState = (FtpStateData *)data;
     int len;
     int j;
     int bin;
@@ -921,7 +923,7 @@ ftpDataRead(int fd, void *data)
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
 		ftpDataRead,
-		data,
+		ftpState,
 		Config.Timeout.read);
 	} else {
 	    ftpFailed(ftpState, ERR_READ_ERROR);
@@ -940,7 +942,7 @@ ftpDataRead(int fd, void *data)
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    ftpDataRead,
-	    data,
+	    ftpState,
 	    Config.Timeout.read);
     }
 }
@@ -1103,9 +1105,9 @@ ftpStart(FwdState * fwd)
 	ftpState->user, ftpState->password);
     ftpState->state = BEGIN;
     ftpState->ctrl.last_command = xstrdup("Connect to server");
-    ftpState->ctrl.buf = memAllocBuf(4096, &ftpState->ctrl.size);
+    ftpState->ctrl.buf = (char *)memAllocBuf(4096, &ftpState->ctrl.size);
     ftpState->ctrl.offset = 0;
-    ftpState->data.buf = memAllocBuf(SQUID_TCP_SO_RCVBUF, &ftpState->data.size);
+    ftpState->data.buf = (char *)memAllocBuf(SQUID_TCP_SO_RCVBUF, &ftpState->data.size);
     ftpScheduleReadControlReply(ftpState, 0);
 }
 
@@ -1130,7 +1132,7 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
 static void
 ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
-    FtpStateData *ftpState = data;
+    FtpStateData *ftpState = (FtpStateData *)data;
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", (int) size);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
@@ -1165,7 +1167,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
     /*
      * We need a NULL-terminated buffer for scanning, ick
      */
-    sbuf = xmalloc(len + 1);
+    sbuf = (char *)xmalloc(len + 1);
     xstrncpy(sbuf, buf, len + 1);
     end = sbuf + len - 1;
     while (*end != '\r' && *end != '\n' && end > sbuf)
@@ -1196,8 +1198,8 @@ ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
 	if (linelen > 3)
 	    if (*s >= '0' && *s <= '9' && (*(s + 3) == '-' || *(s + 3) == ' '))
 		offset = 4;
-	list = memAllocate(MEM_WORDLIST);
-	list->key = xmalloc(linelen - offset);
+	list = (wordlist *)memAllocate(MEM_WORDLIST);
+	list->key = (char *)xmalloc(linelen - offset);
 	xstrncpy(list->key, s + offset, linelen - offset);
 	debug(9, 7) ("%d %s\n", code, list->key);
 	*tail = list;
@@ -1239,15 +1241,15 @@ ftpScheduleReadControlReply(FtpStateData * ftpState, int buffered_ok)
 static void
 ftpReadControlReply(int fd, void *data)
 {
-    FtpStateData *ftpState = data;
+    FtpStateData *ftpState = (FtpStateData *)data;
     StoreEntry *entry = ftpState->entry;
-    int len;
+    size_t len;
     debug(9, 5) ("ftpReadControlReply\n");
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(ftpState->ctrl.fd);
 	return;
     }
-    assert(ftpState->ctrl.offset < ftpState->ctrl.size);
+    assert(ftpState->ctrl.offset < (off_t)ftpState->ctrl.size);
     statCounter.syscalls.sock.reads++;
     len = FD_READ_METHOD(fd,
 	ftpState->ctrl.buf + ftpState->ctrl.offset,
@@ -1294,8 +1296,8 @@ ftpHandleControlReply(FtpStateData * ftpState)
 	ftpState->ctrl.offset, &ftpState->ctrl.replycode, &bytes_used);
     if (ftpState->ctrl.message == NULL) {
 	/* didn't get complete reply yet */
-	if (ftpState->ctrl.offset == ftpState->ctrl.size) {
-	    ftpState->ctrl.buf = memReallocBuf(ftpState->ctrl.buf, ftpState->ctrl.size << 1, &ftpState->ctrl.size);
+	if (ftpState->ctrl.offset == (off_t)ftpState->ctrl.size) {
+	    ftpState->ctrl.buf = (char *)memReallocBuf(ftpState->ctrl.buf, ftpState->ctrl.size << 1, &ftpState->ctrl.size);
 	}
 	ftpScheduleReadControlReply(ftpState, 0);
 	return;
@@ -1780,9 +1782,9 @@ ftpReadPasv(FtpStateData * ftpState)
 }
 
 static void
-ftpPasvCallback(int fd, int status, void *data)
+ftpPasvCallback(int fd, comm_err_t status, void *data)
 {
-    FtpStateData *ftpState = data;
+    FtpStateData *ftpState = (FtpStateData *)data;
     debug(9, 3) ("ftpPasvCallback\n");
     if (status != COMM_OK) {
 	debug(9, 2) ("ftpPasvCallback: failed to connect. Retrying without PASV.\n");
@@ -1894,7 +1896,7 @@ ftpReadPort(FtpStateData * ftpState)
 static void
 ftpAcceptDataConnection(int fd, void *data)
 {
-    FtpStateData *ftpState = data;
+    FtpStateData *ftpState = (FtpStateData *)data;
     struct sockaddr_in my_peer, me;
     debug(9, 3) ("ftpAcceptDataConnection\n");
 
@@ -2213,14 +2215,14 @@ ftpReadTransferDone(FtpStateData * ftpState)
 
 /* This will be called when there is data available to put */
 static void
-ftpRequestBody(char *buf, size_t size, void *data)
+ftpRequestBody(char *buf, ssize_t size, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *) data;
     debug(9, 3) ("ftpRequestBody: buf=%p size=%d ftpState=%p\n", buf, (int) size, data);
     ftpState->data.offset = size;
     if (size > 0) {
 	/* DataWrite */
-	comm_write(ftpState->data.fd, buf, size, ftpDataWriteCallback, data, NULL);
+	comm_write(ftpState->data.fd, buf, size, ftpDataWriteCallback, ftpState, NULL);
     } else if (size < 0) {
 	/* Error */
 	debug(9, 1) ("ftpRequestBody: request aborted");
@@ -2233,7 +2235,7 @@ ftpRequestBody(char *buf, size_t size, void *data)
 
 /* This will be called when the put write is completed */
 static void
-ftpDataWriteCallback(int fd, char *buf, size_t size, int err, void *data)
+ftpDataWriteCallback(int fd, char *buf, size_t size, comm_err_t err, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *) data;
     if (!err) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.49 2001/10/24 08:19:08 hno Exp $
+ * $Id: HttpReply.cc,v 1.50 2002/10/13 20:34:57 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -47,6 +47,13 @@ static http_hdr_type Denied304HeadersArr[] =
     HDR_OTHER
 };
 
+HttpMsgParseState &operator++ (HttpMsgParseState &aState)
+{
+    aState = (HttpMsgParseState)(++(int)aState);
+    return aState;
+}
+
+
 /* local routines */
 static void httpReplyInit(HttpReply * rep);
 static void httpReplyClean(HttpReply * rep);
@@ -71,7 +78,7 @@ httpReplyInitModule(void)
 HttpReply *
 httpReplyCreate(void)
 {
-    HttpReply *rep = memAllocate(MEM_HTTP_REPLY);
+    HttpReply *rep = (HttpReply *)memAllocate(MEM_HTTP_REPLY);
     debug(58, 7) ("creating rep: %p\n", rep);
     httpReplyInit(rep);
     return rep;
@@ -144,7 +151,7 @@ httpReplyParse(HttpReply * rep, const char *buf, ssize_t end)
      * becuase somebody may feed a non NULL-terminated buffer to
      * us.
      */
-    char *headers = memAllocate(MEM_4K_BUF);
+    char *headers = (char *)memAllocate(MEM_4K_BUF);
     int success;
     size_t s = XMIN(end + 1, 4096);
     /* reset current state, because we are not used in incremental fashion */
@@ -394,7 +401,7 @@ httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
 
 	*parse_end_ptr = parse_start;
 	rep->hdr_sz = *parse_end_ptr - buf;
-	rep->pstate++;
+	++rep->pstate;
     }
     if (rep->pstate == psReadyToParseHeaders) {
 	if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
@@ -410,7 +417,7 @@ httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
 
 	*parse_end_ptr = parse_start;
 	rep->hdr_sz = *parse_end_ptr - buf;
-	rep->pstate++;
+	++rep->pstate;
     }
     return 1;
 }

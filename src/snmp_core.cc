@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.54 2002/02/13 17:19:01 hno Exp $
+ * $Id: snmp_core.cc,v 1.55 2002/10/13 20:35:03 robertc Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -475,11 +475,11 @@ snmpHandleUdp(int sock, void *not_used)
 	    len,
 	    inet_ntoa(from.sin_addr));
 
-	snmp_rq = xcalloc(1, sizeof(snmp_request_t));
+	snmp_rq = (snmp_request_t *)xcalloc(1, sizeof(snmp_request_t));
 	snmp_rq->buf = (u_char *) buf;
 	snmp_rq->len = len;
 	snmp_rq->sock = sock;
-	snmp_rq->outbuf = xmalloc(snmp_rq->outlen = SNMP_REQUEST_SIZE);
+	snmp_rq->outbuf = (unsigned char *)xmalloc(snmp_rq->outlen = SNMP_REQUEST_SIZE);
 	xmemcpy(&snmp_rq->from, &from, sizeof(struct sockaddr_in));
 	snmpDecodePacket(snmp_rq);
 	xfree(snmp_rq->outbuf);
@@ -741,7 +741,7 @@ static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
     oid *instance = NULL;
 
     if (*len <= current->len) {
-	instance = xmalloc(sizeof(name) * (*len + 1));
+	instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
 	xmemcpy(instance, name, (sizeof(name) * *len));
 	instance[*len] = 0;
 	*len += 1;
@@ -759,7 +759,7 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     {TIME_INDEX};
 
     if (*len <= current->len) {
-	instance = xmalloc(sizeof(name) * (*len + 1));
+	instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
 	xmemcpy(instance, name, (sizeof(name) * *len));
 	instance[*len] = *index;
 	*len += 1;
@@ -768,7 +768,7 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 	while ((identifier != index[loop]) && (loop < TIME_INDEX_LEN))
 	    loop++;
 	if (loop < TIME_INDEX_LEN - 1) {
-	    instance = xmalloc(sizeof(name) * (*len));
+	    instance = (oid *)xmalloc(sizeof(name) * (*len));
 	    xmemcpy(instance, name, (sizeof(name) * *len));
 	    instance[*len - 1] = index[++loop];
 	}
@@ -792,7 +792,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 	    current = current->leaves[0];
 	instance = client_Inst(current->name, len, current, Fn);
     } else if (*len <= current->len) {
-	instance = xmalloc(sizeof(name) * (*len + 4));
+	instance = (oid *)xmalloc(sizeof(name) * (*len + 4));
 	xmemcpy(instance, name, (sizeof(name) * *len));
 	cp = (u_char *) & (peers->in_addr.sin_addr.s_addr);
 	instance[*len] = *cp++;
@@ -803,7 +803,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     } else {
 	laddr = oid2addr(&name[*len - 4]);
 	host_addr = inet_ntoa(*laddr);
-	last_addr = xmalloc(strlen(host_addr));
+	last_addr = (char *)xmalloc(strlen(host_addr));
 	strncpy(last_addr, host_addr, strlen(host_addr));
 	current_addr = inet_ntoa(peers->in_addr.sin_addr);
 	while ((peers) && (strncmp(last_addr, current_addr, strlen(current_addr)))) {
@@ -818,7 +818,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 	if (peers) {
 	    if (peers->next) {
 		peers = peers->next;
-		instance = xmalloc(sizeof(name) * (*len));
+		instance = (oid *)xmalloc(sizeof(name) * (*len));
 		xmemcpy(instance, name, (sizeof(name) * *len));
 		cp = (u_char *) & (peers->in_addr.sin_addr.s_addr);
 		instance[*len - 4] = *cp++;
@@ -844,7 +844,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
     struct in_addr *laddr = NULL;
 
     if (*len <= current->len) {
-	instance = xmalloc(sizeof(name) * (*len + 4));
+	instance = (oid *)xmalloc(sizeof(name) * (*len + 4));
 	xmemcpy(instance, name, (sizeof(name) * *len));
 	laddr = client_entry(NULL);
 	if (laddr) {
@@ -859,7 +859,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 	laddr = oid2addr(&name[*len - 4]);
 	laddr = client_entry(laddr);
 	if (laddr) {
-	    instance = xmalloc(sizeof(name) * (*len));
+	    instance = (oid *)xmalloc(sizeof(name) * (*len));
 	    xmemcpy(instance, name, (sizeof(name) * *len));
 	    cp = (u_char *) & (laddr->s_addr);
 	    instance[*len - 4] = *cp++;
@@ -957,7 +957,7 @@ snmpAddNode(va_alist)
     snmpDebugOid(6, name, len);
 
     va_start(args, children);
-    entry = xmalloc(sizeof(mib_tree_entry));
+    entry = (mib_tree_entry *)xmalloc(sizeof(mib_tree_entry));
     entry->name = name;
     entry->len = len;
     entry->parsefunction = parsefunction;
@@ -965,7 +965,7 @@ snmpAddNode(va_alist)
     entry->children = children;
 
     if (children > 0) {
-	entry->leaves = xmalloc(sizeof(mib_tree_entry *) * children);
+	entry->leaves = (mib_tree_entry **)xmalloc(sizeof(mib_tree_entry *) * children);
 	for (loop = 0; loop < children; loop++) {
 	    entry->leaves[loop] = va_arg(args, mib_tree_entry *);
 	    entry->leaves[loop]->parent = entry;
@@ -999,7 +999,7 @@ snmpCreateOid(va_alist)
     length va_arg(args, int);
 #endif
 
-    new_oid = xmalloc(sizeof(oid) * length);
+    new_oid = (oid *)xmalloc(sizeof(oid) * length);
 
     if (length > 0) {
 	for (loop = 0; loop < length; loop++) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.14 2001/10/24 08:19:07 hno Exp $
+ * $Id: HttpHdrContRange.cc,v 1.15 2002/10/13 20:34:56 robertc Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -86,8 +86,11 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 	    return 0;
 	spec->length = size_diff(last_pos + 1, spec->offset);
     }
+    /* Ensure typecast is safe */
+    assert (spec->length >= 0);
+	   
     /* we managed to parse, check if the result makes sence */
-    if (known_spec(spec->length) && !spec->length) {
+    if (known_spec((size_t)spec->length) && spec->length != 0) {
 	debug(68, 2) ("invalid range (%ld += %ld) in resp-range-spec near: '%s'\n",
 	    (long int) spec->offset, (long int) spec->length, field);
 	return 0;
@@ -98,7 +101,11 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 static void
 httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
 {
-    if (!known_spec(spec->offset) || !known_spec(spec->length))
+    /* Ensure typecast is safe */
+    assert (spec->length >= 0);
+    assert (spec->length >= 0);
+	
+    if (!known_spec((size_t)spec->offset) || !known_spec((size_t)spec->length))
 	packerPrintf(p, "*");
     else
 	packerPrintf(p, "bytes %ld-%ld",
@@ -112,7 +119,7 @@ httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
 HttpHdrContRange *
 httpHdrContRangeCreate(void)
 {
-    HttpHdrContRange *r = memAllocate(MEM_HTTP_HDR_CONTENT_RANGE);
+    HttpHdrContRange *r = (HttpHdrContRange *)memAllocate(MEM_HTTP_HDR_CONTENT_RANGE);
     r->spec.offset = r->spec.length = range_spec_unknown;
     r->elength = range_spec_unknown;
     return r;
@@ -180,7 +187,9 @@ httpHdrContRangePackInto(const HttpHdrContRange * range, Packer * p)
 {
     assert(range && p);
     httpHdrRangeRespSpecPackInto(&range->spec, p);
-    if (!known_spec(range->elength))
+    /* Ensure typecast is safe */
+    assert (range->elength >= 0);
+    if (!known_spec((size_t)range->elength))
 	packerPrintf(p, "/*");
     else
 	packerPrintf(p, "/%ld", (long int) range->elength);

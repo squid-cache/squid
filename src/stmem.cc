@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.71 2002/09/15 05:41:57 robertc Exp $
+ * $Id: stmem.cc,v 1.72 2002/10/13 20:35:03 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -88,7 +88,6 @@ stmemFreeDataUpto(mem_hdr * mem, int target_offset)
 void
 stmemAppend(mem_hdr * mem, const char *data, int len)
 {
-    mem_node *p;
     int avail_len;
     int len_to_copy;
     debug(19, 6) ("memAppend: len %d\n", len);
@@ -106,7 +105,7 @@ stmemAppend(mem_hdr * mem, const char *data, int len)
     }
     while (len > 0) {
 	len_to_copy = XMIN(len, SM_PAGE_SIZE);
-	p = memAllocate(MEM_MEM_NODE);
+	mem_node *p = static_cast<mem_node *>(memAllocate(MEM_MEM_NODE));
 	p->next = NULL;
 	p->len = len_to_copy;
 	store_mem_size += SM_PAGE_SIZE;
@@ -130,9 +129,6 @@ stmemCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
     mem_node *p = mem->head;
     off_t t_off = mem->origin_offset;
     size_t bytes_to_go = size;
-    char *ptr_to_buf = NULL;
-    int bytes_from_this_packet = 0;
-    int bytes_into_this_packet = 0;
     debug(19, 6) ("memCopy: offset %ld: size %u\n", (long int) offset, size);
     if (p == NULL)
 	return 0;
@@ -150,20 +146,21 @@ stmemCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
     }
     /* Start copying begining with this block until
      * we're satiated */
-    bytes_into_this_packet = offset - t_off;
-    bytes_from_this_packet = XMIN(bytes_to_go, p->len - bytes_into_this_packet);
+    int bytes_into_this_packet = offset - t_off;
+    assert (p->len >= bytes_into_this_packet);
+    int bytes_from_this_packet = XMIN(bytes_to_go, (size_t)(p->len - bytes_into_this_packet));
     xmemcpy(buf, p->data + bytes_into_this_packet, bytes_from_this_packet);
     bytes_to_go -= bytes_from_this_packet;
-    ptr_to_buf = buf + bytes_from_this_packet;
+    char *ptr_to_buf = buf + bytes_from_this_packet;
     p = p->next;
     while (p && bytes_to_go > 0) {
-	if (bytes_to_go > p->len) {
+	if ((int)bytes_to_go > p->len) {
 	    xmemcpy(ptr_to_buf, p->data, p->len);
 	    ptr_to_buf += p->len;
 	    bytes_to_go -= p->len;
 	} else {
 	    xmemcpy(ptr_to_buf, p->data, bytes_to_go);
-	    bytes_to_go -= bytes_to_go;
+	    bytes_to_go = 0;
 	}
 	p = p->next;
     }

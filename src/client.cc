@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.100 2002/09/01 15:16:35 hno Exp $
+ * $Id: client.cc,v 1.101 2002/10/13 20:34:59 robertc Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -44,7 +44,7 @@ static int client_comm_bind(int, const char *);
 static int client_comm_connect(int, const char *, u_short, struct timeval *);
 static void usage(const char *progname);
 static int Now(struct timeval *);
-static SIGHDLR catch;
+static SIGHDLR catchSignal;
 static SIGHDLR pipe_handler;
 static void set_our_signal(void);
 static ssize_t myread(int fd, void *buf, size_t len);
@@ -297,14 +297,14 @@ main(int argc, char *argv[])
 #if HAVE_SIGACTION
 	struct sigaction sa, osa;
 	if (sigaction(SIGINT, NULL, &osa) == 0 && osa.sa_handler == SIG_DFL) {
-	    sa.sa_handler = catch;
+	    sa.sa_handler = catchSignal;
 	    sa.sa_flags = 0;
 	    sigemptyset(&sa.sa_mask);
 	    (void) sigaction(SIGINT, &sa, NULL);
 	}
 #else
 	void (*osig) ();
-	if ((osig = signal(SIGINT, catch)) != SIG_DFL)
+	if ((osig = signal(SIGINT, catchSignal)) != SIG_DFL)
 	    (void) signal(SIGINT, osig);
 #endif
     }
@@ -336,7 +336,7 @@ main(int argc, char *argv[])
 	if (bytesWritten < 0) {
 	    perror("client: ERROR: write");
 	    exit(1);
-	} else if (bytesWritten != strlen(msg)) {
+	} else if ((unsigned) bytesWritten != strlen(msg)) {
 	    fprintf(stderr, "client: ERROR: Cannot send request?: %s\n", msg);
 	    exit(1);
 	}
@@ -458,7 +458,7 @@ Now(struct timeval *tp)
 }				/* ARGSUSED */
 
 static void
-catch(int sig)
+catchSignal(int sig)
 {
     interrupted = 1;
     fprintf(stderr, "Interrupted.\n");

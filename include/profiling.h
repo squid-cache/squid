@@ -86,7 +86,7 @@ typedef enum {
     XPROF_LAST
 } xprof_type;
 
-#define XP_NOBEST 9999999999
+#define XP_NOBEST (hrtime_t)-1
 
 typedef struct _xprof_stats_node xprof_stats_node;
 typedef struct _xprof_stats_data xprof_stats_data;
@@ -114,9 +114,9 @@ extern TimersArray *xprof_Timers;
 extern int xprof_nesting;
 
 /* Exported functions */
-extern void xprof_start(xprof_type type, const char *timer);
-extern void xprof_stop(xprof_type type, const char *timer);
-extern void xprof_event(void *data);
+SQUIDCEXTERN void xprof_start(xprof_type type, const char *timer);
+SQUIDCEXTERN void xprof_stop(xprof_type type, const char *timer);
+SQUIDCEXTERN void xprof_event(void *data);
 
 #define PROF_start(type) xprof_start(XPROF_##type, #type)
 #define PROF_stop(type) xprof_stop(XPROF_##type, #type)

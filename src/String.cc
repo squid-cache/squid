@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.10 2002/02/13 17:22:36 hno Exp $
+ * $Id: String.cc,v 1.11 2002/10/13 20:34:57 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -38,7 +38,7 @@
 static void
 stringInitBuf(String * s, size_t sz)
 {
-    s->buf = memAllocString(sz, &sz);
+    s->buf = (char *)memAllocString(sz, &sz);
     assert(sz < 65536);
     s->size = sz;
 }

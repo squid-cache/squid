@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.87 2002/04/04 23:59:25 hno Exp $
+ * $Id: dns.cc,v 1.88 2002/10/13 20:35:00 robertc Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 static helper *dnsservers = NULL;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.138 2002/09/24 10:46:41 robertc Exp $
+ * $Id: typedefs.h,v 1.139 2002/10/13 20:35:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,7 +35,6 @@
 #define SQUID_TYPEDEFS_H
 
 typedef unsigned int store_status_t;
-typedef unsigned int mem_status_t;
 typedef unsigned int ping_status_t;
 typedef unsigned int swap_status_t;
 typedef signed int sfileno;
@@ -55,10 +54,10 @@ typedef struct _acl_ip_data acl_ip_data;
 typedef struct _acl_time_data acl_time_data;
 typedef struct _acl_name_list acl_name_list;
 typedef struct _acl_deny_info_list acl_deny_info_list;
-typedef struct _auth_user_t auth_user_t;
-typedef struct _auth_user_request_t auth_user_request_t;
-typedef struct _auth_user_hash_pointer auth_user_hash_pointer;
-typedef struct _auth_user_ip_t auth_user_ip_t;
+typedef struct AuthUser auth_user_t;
+typedef struct AuthUserRequest auth_user_request_t;
+typedef struct AuthUserHashPointer auth_user_hash_pointer;
+typedef struct AuthUserIP auth_user_ip_t;
 typedef struct _acl_proxy_auth_match_cache acl_proxy_auth_match_cache;
 typedef struct _authscheme_entry authscheme_entry_t;
 typedef struct _authScheme authScheme;
@@ -106,7 +105,6 @@ typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;
 typedef struct _HttpHeaderStat HttpHeaderStat;
 typedef struct _HttpBody HttpBody;
 typedef struct _HttpReply HttpReply;
-typedef struct _HttpStateData HttpStateData;
 typedef struct _icpUdpData icpUdpData;
 typedef struct _clientHttpRequest clientHttpRequest;
 typedef struct _ConnStateData ConnStateData;
@@ -226,7 +224,7 @@ typedef void UH(void *data, wordlist *);
 typedef int DEFER(int fd, void *data);
 typedef int READ_HANDLER(int, char *, int);
 typedef int WRITE_HANDLER(int, const char *, int);
-typedef void CBCB(char *buf, size_t size, void *data);
+typedef void CBCB(char *buf, ssize_t size, void *data);
 
 typedef void STIOCB(void *their_data, int errflag, storeIOState *);
 typedef void STFNCB(void *their_data, int errflag, storeIOState *);
@@ -285,30 +283,6 @@ typedef void STFSSHUTDOWN(void);
 
 typedef double hbase_f(double);
 typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);
-
-/* authenticate.c authenticate scheme routines typedefs */
-typedef int AUTHSACTIVE(void);
-typedef int AUTHSAUTHED(auth_user_request_t *);
-typedef void AUTHSAUTHUSER(auth_user_request_t *, request_t *, ConnStateData *, http_hdr_type);
-typedef int AUTHSCONFIGURED(void);
-typedef void AUTHSDECODE(auth_user_request_t *, const char *);
-typedef int AUTHSDIRECTION(auth_user_request_t *);
-typedef void AUTHSDUMP(StoreEntry *, const char *, authScheme *);
-typedef void AUTHSFIXERR(auth_user_request_t *, HttpReply *, http_hdr_type, request_t *);
-typedef void AUTHSADDHEADER(auth_user_request_t *, HttpReply *, int);
-typedef void AUTHSADDTRAILER(auth_user_request_t *, HttpReply *, int);
-typedef void AUTHSFREE(auth_user_t *);
-typedef void AUTHSFREECONFIG(authScheme *);
-typedef char *AUTHSUSERNAME(auth_user_t *);
-typedef void AUTHSONCLOSEC(ConnStateData *);
-typedef void AUTHSPARSE(authScheme *, int, char *);
-typedef void AUTHSINIT(authScheme *);
-typedef void AUTHSREQFREE(auth_user_request_t *);
-typedef void AUTHSSETUP(authscheme_entry_t *);
-typedef void AUTHSSHUTDOWN(void);
-typedef void AUTHSSTART(auth_user_request_t *, RH *, void *);
-typedef void AUTHSSTATS(StoreEntry *);
-typedef const char *AUTHSCONNLASTHEADER(auth_user_request_t *);
 
 /* append/vprintf's for Packer */
 typedef void (*append_f) (void *, const char *buf, int size);

@@ -141,29 +141,29 @@ struct _MemPoolGlobalStats {
 /* memPools */
 
 /* Allocator API */
-extern MemPool *memPoolCreate(const char *label, size_t obj_size);
-extern void *memPoolAlloc(MemPool * pool);
-extern void memPoolFree(MemPool * pool, void *obj);
-extern void memPoolDestroy(MemPool ** pool);
+SQUIDCEXTERN MemPool *memPoolCreate(const char *label, size_t obj_size);
+SQUIDCEXTERN void *memPoolAlloc(MemPool * pool);
+SQUIDCEXTERN void memPoolFree(MemPool * pool, void *obj);
+SQUIDCEXTERN void memPoolDestroy(MemPool ** pool);
 
-extern MemPoolIterator * memPoolIterate(void);
-extern MemPool * memPoolIterateNext(MemPoolIterator * iter);
-extern void memPoolIterateDone(MemPoolIterator ** iter);
+SQUIDCEXTERN MemPoolIterator * memPoolIterate(void);
+SQUIDCEXTERN MemPool * memPoolIterateNext(MemPoolIterator * iter);
+SQUIDCEXTERN void memPoolIterateDone(MemPoolIterator ** iter);
 
 /* Tune API */
-extern void memPoolSetChunkSize(MemPool * pool, size_t chunksize);
-extern void memPoolSetIdleLimit(size_t new_idle_limit);
+SQUIDCEXTERN void memPoolSetChunkSize(MemPool * pool, size_t chunksize);
+SQUIDCEXTERN void memPoolSetIdleLimit(size_t new_idle_limit);
 
 /* Stats API */
-extern int memPoolGetStats(MemPoolStats * stats, MemPool * pool);
-extern int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
+SQUIDCEXTERN int memPoolGetStats(MemPoolStats * stats, MemPool * pool);
+SQUIDCEXTERN int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
 
 /* Module housekeeping API */
-extern void memPoolClean(time_t maxage);
+SQUIDCEXTERN void memPoolClean(time_t maxage);
 
 #if UNUSED
 /* Stats history API */
-extern void memPoolCheckRates(); /* stats history checkpoints */
+SQUIDCEXTERN void memPoolCheckRates(); /* stats history checkpoints */
 #endif
 
 #endif /* _MEM_POOLS_H_ */

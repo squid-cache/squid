@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.151 2002/09/15 06:40:57 robertc Exp $
+ * $Id: fqdncache.cc,v 1.152 2002/10/13 20:35:01 robertc Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #define FQDN_LOW_WATER       90
 #define FQDN_HIGH_WATER      95
@@ -117,7 +118,7 @@ fqdncache_get(const char *name)
     static fqdncache_entry *f;
     f = NULL;
     if (fqdn_table) {
-	if ((e = hash_lookup(fqdn_table, name)) != NULL)
+	if ((e = (hash_link *)hash_lookup(fqdn_table, name)) != NULL)
 	    f = (fqdncache_entry *) e;
     }
     return f;
@@ -146,7 +147,7 @@ fqdncache_purgelru(void *notused)
 	if (memInUse(MEM_FQDNCACHE_ENTRY) < fqdncache_low)
 	    break;
 	prev = m->prev;
-	f = m->data;
+	f = (fqdncache_entry *)m->data;
 	if (f->locks != 0)
 	    continue;
 	fqdncacheRelease(f);
@@ -166,7 +167,7 @@ purge_entries_fromhosts(void)
 	    fqdncacheRelease(i);	/* we just override locks */
 	    i = NULL;
 	}
-	t = m->data;
+	t = (fqdncache_entry *)m->data;
 	if (t->flags.fromhosts)
 	    i = t;
 	m = m->next;
@@ -180,7 +181,7 @@ static fqdncache_entry *
 fqdncacheCreateEntry(const char *name)
 {
     static fqdncache_entry *f;
-    f = memAllocate(MEM_FQDNCACHE_ENTRY);
+    f = (fqdncache_entry *)memAllocate(MEM_FQDNCACHE_ENTRY);
     f->hash.key = xstrdup(name);
     f->expires = squid_curtime + Config.negativeDnsTtl;
     return f;
@@ -189,7 +190,7 @@ fqdncacheCreateEntry(const char *name)
 static void
 fqdncacheAddEntry(fqdncache_entry * f)
 {
-    hash_link *e = hash_lookup(fqdn_table, f->hash.key);
+    hash_link *e = (hash_link *)hash_lookup(fqdn_table, f->hash.key);
     if (NULL != e) {
 	/* avoid colission */
 	fqdncache_entry *q = (fqdncache_entry *) e;
@@ -319,8 +320,8 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na)
 #endif
 {
     int n;
-    generic_cbdata *c = data;
-    fqdncache_entry *f = c->data;
+    generic_cbdata *c = (generic_cbdata *)data;
+    fqdncache_entry *f = (fqdncache_entry *)c->data;
     fqdncache_entry *x = NULL;
     cbdataFree(c);
     c = NULL;
@@ -527,7 +528,7 @@ fqdncacheUnlockEntry(fqdncache_entry * f)
 static void
 fqdncacheFreeEntry(void *data)
 {
-    fqdncache_entry *f = data;
+    fqdncache_entry *f = (fqdncache_entry *)data;
     int k;
     for (k = 0; k < (int) f->name_count; k++)
 	safe_free(f->names[k]);

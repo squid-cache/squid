@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.354 2002/10/02 11:06:31 robertc Exp $
+ * $Id: main.cc,v 1.355 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -34,6 +34,9 @@
  */
 
 #include "squid.h"
+#include "authenticate.h"
+#include "Store.h"
+#include "ICP.h"
 
 /* for error reporting from xmalloc and friends */
 extern void (*failure_notify) (const char *);
@@ -351,7 +354,7 @@ mainReconfigure(void)
     idnsInit();
 #endif
     redirectInit();
-    authenticateInit(&Config.authConfig);
+    authenticateInit(&Config.authConfiguration);
     externalAclInit();
 #if USE_WCCP
     wccpInit();
@@ -394,7 +397,7 @@ mainRotate(void)
     dnsInit();
 #endif
     redirectInit();
-    authenticateInit(&Config.authConfig);
+    authenticateInit(&Config.authConfiguration);
     externalAclInit();
 }
 
@@ -476,7 +479,7 @@ mainInitialize(void)
     idnsInit();
 #endif
     redirectInit();
-    authenticateInit(&Config.authConfig);
+    authenticateInit(&Config.authConfiguration);
     externalAclInit();
     useragentOpenLog();
     refererOpenLog();
@@ -549,6 +552,7 @@ mainInitialize(void)
 #if USE_XPROF_STATS
 	eventAdd("cpuProfiling", xprof_event, NULL, 1.0, 1);
 #endif
+	  
 	eventAdd("memPoolCleanIdlePools", memPoolCleanIdlePools, NULL, 15.0, 1);
     }
     configured_once = 1;

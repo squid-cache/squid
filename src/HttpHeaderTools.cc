@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.32 2001/09/06 19:51:56 hno Exp $
+ * $Id: HttpHeaderTools.cc,v 1.33 2002/10/13 20:34:56 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "HttpHeader.h"
 
 #if UNUSED_CODE
 static int httpHeaderStrCmp(const char *h1, const char *h2, int len);
@@ -49,10 +50,10 @@ httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
     assert(attrs && count);
 
     /* allocate space */
-    table = xcalloc(count, sizeof(HttpHeaderFieldInfo));
+    table = (HttpHeaderFieldInfo *)xcalloc(count, sizeof(HttpHeaderFieldInfo));
 
     for (i = 0; i < count; ++i) {
-	const int id = attrs[i].id;
+	const http_hdr_type id = attrs[i].id;
 	HttpHeaderFieldInfo *info = table + id;
 	/* sanity checks */
 	assert(id >= 0 && id < count);
@@ -86,9 +87,9 @@ httpHeaderMaskInit(HttpHeaderMask * mask, int value)
 
 /* calculates a bit mask of a given array; does not reset mask! */
 void
-httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count)
+httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, size_t count)
 {
-    int i;
+    size_t i;
     assert(mask && enums);
     assert(count < sizeof(*mask) * 8);	/* check for overflow */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.51 2001/10/24 06:55:44 hno Exp $
+ * $Id: store_digest.cc,v 1.52 2002/10/13 20:35:05 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -41,6 +41,8 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+
 
 #if USE_CACHE_DIGESTS
 
@@ -135,17 +137,17 @@ storeDigestDel(const StoreEntry * entry)
     }
     assert(entry && store_digest);
     debug(71, 6) ("storeDigestDel: checking entry, key: %s\n",
-	storeKeyText(entry->hash.key));
+	storeKeyText( (const cache_key *)entry->hash.key));
     if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-	if (!cacheDigestTest(store_digest, entry->hash.key)) {
+	if (!cacheDigestTest(store_digest,  (const cache_key *)entry->hash.key)) {
 	    sd_stats.del_lost_count++;
 	    debug(71, 6) ("storeDigestDel: lost entry, key: %s url: %s\n",
-		storeKeyText(entry->hash.key), storeUrl(entry));
+		storeKeyText( (const cache_key *)entry->hash.key), storeUrl(entry));
 	} else {
 	    sd_stats.del_count++;
-	    cacheDigestDel(store_digest, entry->hash.key);
+	    cacheDigestDel(store_digest,  (const cache_key *)entry->hash.key);
 	    debug(71, 6) ("storeDigestDel: deled entry, key: %s\n",
-		storeKeyText(entry->hash.key));
+		storeKeyText((const cache_key *)entry->hash.key));
 	}
     }
 #endif
@@ -187,7 +189,7 @@ storeDigestAddable(const StoreEntry * e)
     /* add some stats! XXX */
 
     debug(71, 6) ("storeDigestAddable: checking entry, key: %s\n",
-	storeKeyText(e->hash.key));
+	storeKeyText((const cache_key *)e->hash.key));
 
     /* check various entry flags (mimics storeCheckCachable XXX) */
     if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
@@ -245,14 +247,14 @@ storeDigestAdd(const StoreEntry * entry)
 
     if (storeDigestAddable(entry)) {
 	sd_stats.add_count++;
-	if (cacheDigestTest(store_digest, entry->hash.key))
+	if (cacheDigestTest(store_digest, (const cache_key *)entry->hash.key))
 	    sd_stats.add_coll_count++;
-	cacheDigestAdd(store_digest, entry->hash.key);
+	cacheDigestAdd(store_digest,  (const cache_key *)entry->hash.key);
 	debug(71, 6) ("storeDigestAdd: added entry, key: %s\n",
-	    storeKeyText(entry->hash.key));
+	    storeKeyText( (const cache_key *)entry->hash.key));
     } else {
 	sd_stats.rej_count++;
-	if (cacheDigestTest(store_digest, entry->hash.key))
+	if (cacheDigestTest(store_digest,  (const cache_key *)entry->hash.key))
 	    sd_stats.rej_coll_count++;
     }
 }
@@ -354,7 +356,7 @@ storeDigestRewriteStart(void *datanotused)
     assert(e);
     sd_state.rewrite_lock = cbdataAlloc(generic_cbdata);
     sd_state.rewrite_lock->data = e;
-    debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, storeKeyText(e->hash.key));
+    debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, storeKeyText( (const cache_key *)e->hash.key));
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
     /* wait for rebuild (if any) to finish */
     if (sd_state.rebuild_lock) {
@@ -372,7 +374,7 @@ storeDigestRewriteResume(void)
 
     assert(sd_state.rewrite_lock);
     assert(!sd_state.rebuild_lock);
-    e = sd_state.rewrite_lock->data;
+    e = (StoreEntry *)sd_state.rewrite_lock->data;
     sd_state.rewrite_offset = 0;
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     /* setting public key will purge old digest entry if any */
@@ -380,7 +382,7 @@ storeDigestRewriteResume(void)
     /* fake reply */
     httpReplyReset(e->mem_obj->reply);
     httpBuildVersion(&version, 1, 0);
-    httpReplySetHeaders(e->mem_obj->reply, version, 200, "Cache Digest OK",
+    httpReplySetHeaders(e->mem_obj->reply, version, HTTP_OK, "Cache Digest OK",
 	"application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
 	squid_curtime, squid_curtime + Config.digest.rewrite_period);
     debug(71, 3) ("storeDigestRewrite: entry expires on %ld (%+d)\n",
@@ -426,14 +428,14 @@ storeDigestSwapOutStep(void *data)
     e = (StoreEntry *) ((generic_cbdata *) data)->data;
     assert(e);
     /* _add_ check that nothing bad happened while we were waiting @?@ @?@ */
-    if (sd_state.rewrite_offset + chunk_size > store_digest->mask_size)
+    if ((size_t)(sd_state.rewrite_offset + chunk_size) > store_digest->mask_size)
 	chunk_size = store_digest->mask_size - sd_state.rewrite_offset;
     storeAppend(e, store_digest->mask + sd_state.rewrite_offset, chunk_size);
     debug(71, 3) ("storeDigestSwapOutStep: size: %d offset: %d chunk: %d bytes\n",
 	store_digest->mask_size, sd_state.rewrite_offset, chunk_size);
     sd_state.rewrite_offset += chunk_size;
     /* are we done ? */
-    if (sd_state.rewrite_offset >= store_digest->mask_size)
+    if ((size_t)sd_state.rewrite_offset >= store_digest->mask_size)
 	storeDigestRewriteFinish(e);
     else
 	eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, data, 0.0, 1);
@@ -466,7 +468,7 @@ storeDigestCalcCap(void)
      */
     const int hi_cap = Config.Swap.maxSize / Config.Store.avgObjectSize;
     const int lo_cap = 1 + store_swap_size / Config.Store.avgObjectSize;
-    const int e_count = memInUse(MEM_STOREENTRY);
+    const int e_count = storeEntryInUse();
     int cap = e_count ? e_count : hi_cap;
     debug(71, 2) ("storeDigestCalcCap: have: %d, want %d entries; limits: [%d, %d]\n",
 	e_count, cap, lo_cap, hi_cap);

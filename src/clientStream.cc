@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.2 2002/09/24 10:46:43 robertc Exp $
+ * $Id: clientStream.cc,v 1.3 2002/10/13 20:34:59 robertc Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -28,7 +28,7 @@
  *  GNU General Public License for more details.
  *  
  *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
+ *  along with thisObject program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
@@ -88,13 +88,13 @@ CBDATA_TYPE(clientStreamNode);
  * If a node's data holds a reference to something that needs to
  * free the stream a circular reference list will occur.
  * This results no data being freed until that reference is removed.
- * One way to accomplish this is to explicitly remove the
+ * One way to accomplish thisObject is to explicitly remove the
  * data from your own node before freeing the stream.
  *
  * (i.e. 
- * mycontext = this->data;
+ * mycontext = thisObject->data;
  * cbdataReferenceDone (mycontext);
- * clientStreamFreeLinst (this->head);
+ * clientStreamFreeLinst (thisObject->head);
  * cbdataFree (mycontext);
  * return;
  */
@@ -135,7 +135,7 @@ clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
     cbdataReference(temp);
     temp->head = list;
     clientStreamInsertHead(list, NULL, callback, cdetach, NULL, callbackdata);
-    temp = list->tail->data;
+    temp = (clientStreamNode *)list->tail->data;
     temp->readBuffer = tailBuffer;
 }
 
@@ -168,16 +168,16 @@ clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
  * Callback the next node the in chain with it's requested data
  */
 void
-clientStreamCallback(clientStreamNode * this, clientHttpRequest * http,
+clientStreamCallback(clientStreamNode * thisObject, clientHttpRequest * http,
     HttpReply * rep, StoreIOBuffer replyBuffer)
 {
     clientStreamNode *next;
-    assert(this && http && this->node.next);
-    next = this->node.next->data;
+    assert(thisObject && http && thisObject->node.next);
+    next = thisObject->next();
 
     debug(87,
 	3) ("clientStreamCallback: Calling %p with cbdata %p from node %p\n",
-	next->callback, next->data, this);
+	next->callback, next->data, thisObject);
     next->callback(next, http, rep, replyBuffer);
 }
 
@@ -185,17 +185,17 @@ clientStreamCallback(clientStreamNode * this, clientHttpRequest * http,
  * Call the previous node in the chain to read some data
  */
 void
-clientStreamRead(clientStreamNode * this, clientHttpRequest * http,
+clientStreamRead(clientStreamNode * thisObject, clientHttpRequest * http,
     StoreIOBuffer readBuffer)
 {
     /* place the parameters on the 'stack' */
     clientStreamNode *prev;
-    assert(this && http && this->node.prev);
-    prev = this->node.prev->data;
+    assert(thisObject && http && thisObject->prev());
+    prev = thisObject->prev();
 
     debug(87, 3) ("clientStreamRead: Calling %p with cbdata %p from node %p\n",
-	prev->readfunc, prev->data, this);
-    this->readBuffer = readBuffer;
+	prev->readfunc, prev->data, thisObject);
+    thisObject->readBuffer = readBuffer;
     prev->readfunc(prev, http);
 }
 
@@ -203,23 +203,20 @@ clientStreamRead(clientStreamNode * this, clientHttpRequest * http,
  * Detach from the stream - only allowed for terminal members
  */
 void
-clientStreamDetach(clientStreamNode * this, clientHttpRequest * http)
+clientStreamDetach(clientStreamNode * thisObject, clientHttpRequest * http)
 {
-    clientStreamNode *prev = NULL;
-    clientStreamNode *temp = this;
+    clientStreamNode *prev = thisObject->prev();
+    clientStreamNode *temp = thisObject;
 
-    if (this->node.prev) {
-	prev = this->node.prev->data;
-    }
-    assert(this->node.next == NULL);
-    debug(87, 3) ("clientStreamDetach: Detaching node %p\n", this);
-    /* And clean up this node */
+    assert(thisObject->node.next == NULL);
+    debug(87, 3) ("clientStreamDetach: Detaching node %p\n", thisObject);
+    /* And clean up thisObject node */
     /* ESI TODO: push refcount class through to head */
     cbdataReferenceDone(temp);
-    cbdataFree(this);
+    cbdataFree(thisObject);
     /* and tell the prev that the detach has occured */
     /*
-     * We do it in this order so that the detaching node is always
+     * We do it in thisObject order so that the detaching node is always
      * at the end of the list
      */
     if (prev) {
@@ -233,17 +230,17 @@ clientStreamDetach(clientStreamNode * this, clientHttpRequest * http)
  * Abort the stream - detach every node in the pipeline.
  */
 void
-clientStreamAbort(clientStreamNode * this, clientHttpRequest * http)
+clientStreamAbort(clientStreamNode * thisObject, clientHttpRequest * http)
 {
     dlink_list *list;
 
-    assert(this != NULL);
+    assert(thisObject != NULL);
     assert(http != NULL);
-    list = this->head;
+    list = thisObject->head;
     debug(87, 3) ("clientStreamAbort: Aborting stream with tail %p\n",
 	list->tail);
     if (list->tail) {
-	clientStreamDetach(list->tail->data, http);
+	clientStreamDetach((clientStreamNode *)list->tail->data, http);
     }
 }
 
@@ -251,11 +248,11 @@ clientStreamAbort(clientStreamNode * this, clientHttpRequest * http)
  * Call the upstream node to find it's status 
  */
 clientStream_status_t
-clientStreamStatus(clientStreamNode * this, clientHttpRequest * http)
+clientStreamStatus(clientStreamNode * thisObject, clientHttpRequest * http)
 {
     clientStreamNode *prev;
-    assert(this && http && this->node.prev);
-    prev = this->node.prev->data;
+    assert(thisObject && http && thisObject->node.prev);
+    prev = (clientStreamNode *)thisObject->node.prev->data;
     return prev->status(prev, http);
 }
 
@@ -263,13 +260,31 @@ clientStreamStatus(clientStreamNode * this, clientHttpRequest * http)
 void
 clientStreamFree(void *foo)
 {
-    clientStreamNode *this = foo;
+    clientStreamNode *thisObject = (clientStreamNode *)foo;
 
-    debug(87, 3) ("Freeing clientStreamNode %p\n", this);
-    if (this->data) {
-	cbdataFree(this->data);
+    debug(87, 3) ("Freeing clientStreamNode %p\n", thisObject);
+    if (thisObject->data) {
+	cbdataFree(thisObject->data);
     }
-    if (this->node.next || this->node.prev) {
-	dlinkDelete(&this->node, this->head);
+    if (thisObject->node.next || thisObject->node.prev) {
+	dlinkDelete(&thisObject->node, thisObject->head);
     }
+}
+
+_clientStreamNode *
+_clientStreamNode::prev() const
+{
+    if (node.prev)
+	return (_clientStreamNode *)node.prev->data;
+    else
+	return NULL;
+}
+
+_clientStreamNode *
+_clientStreamNode::next() const
+{
+    if (node.next)
+	return (_clientStreamNode *)node.next->data;
+    else
+	return NULL;
 }

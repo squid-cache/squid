@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.30 2002/09/24 10:46:42 robertc Exp $
+ * $Id: store_swapin.cc,v 1.31 2002/10/13 20:35:05 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "StoreClient.h"
+#include "Store.h"
 
 static STIOCB storeSwapInFileClosed;
 static STFNCB storeSwapInFileNotify;
@@ -50,7 +51,7 @@ storeSwapInStart(store_client * sc)
 	return;
     }
     debug(20, 3) ("storeSwapInStart: called for %d %08X %s \n",
-	e->swap_dirn, e->swap_filen, storeKeyText(e->hash.key));
+	e->swap_dirn, e->swap_filen, storeKeyText((const cache_key *)e->hash.key));
     if (e->swap_status != SWAPOUT_WRITING && e->swap_status != SWAPOUT_DONE) {
 	debug(20, 1) ("storeSwapInStart: bad swap_status (%s)\n",
 	    swapStatusStr[e->swap_status]);
@@ -70,7 +71,7 @@ storeSwapInStart(store_client * sc)
 static void
 storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
 {
-    store_client *sc = data;
+    store_client *sc = (store_client *)data;
     StoreIOBuffer result =
     {
 	{0}, 0, 0, sc->copyInto.data};
@@ -91,7 +92,7 @@ storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
 static void
 storeSwapInFileNotify(void *data, int errflag, storeIOState * sio)
 {
-    store_client *sc = data;
+    store_client *sc = (store_client *)data;
     StoreEntry *e = sc->entry;
 
     debug(1, 3) ("storeSwapInFileNotify: changing %d/%d to %d/%d\n", e->swap_filen, e->swap_dirn, sio->swap_filen, sio->swap_dirn);

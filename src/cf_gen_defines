@@ -33,5 +33,5 @@ BEGIN {
 	print "},"
 }
 END {
-	print "{(void *)0L, 0}};"
+	print "{(char const *)0L, (char const *)0L, 0}};"
 }

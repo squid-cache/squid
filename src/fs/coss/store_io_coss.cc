@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.18 2002/08/08 20:12:45 hno Exp $
+ * $Id: store_io_coss.cc,v 1.19 2002/10/13 20:35:25 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 #include <aio.h>
 #include "async_io.h"
 #include "store_coss.h"
@@ -89,7 +90,7 @@ storeCossAllocate(SwapDir * SD, const StoreEntry * e, int which)
     assert(which != COSS_ALLOC_NOTIFY);
 
     /* Check if we have overflowed the disk .. */
-    if ((cs->current_offset + allocsize) > (SD->max_size << 10)) {
+    if ((cs->current_offset + allocsize) > (size_t)(SD->max_size << 10)) {
 	/*
 	 * tried to allocate past the end of the disk, so wrap
 	 * back to the beginning
@@ -141,7 +142,7 @@ storeCossCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
 
     CBDATA_INIT_TYPE_FREECB(storeIOState, storeCossIOFreeEntry);
     sio = cbdataAlloc(storeIOState);
-    cstate = memPoolAlloc(coss_state_pool);
+    cstate = (CossState *)memPoolAlloc(coss_state_pool);
     sio->fsstate = cstate;
     sio->offset = 0;
     sio->mode = O_WRONLY | O_BINARY;
@@ -192,7 +193,7 @@ storeCossOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 
     CBDATA_INIT_TYPE_FREECB(storeIOState, storeCossIOFreeEntry);
     sio = cbdataAlloc(storeIOState);
-    cstate = memPoolAlloc(coss_state_pool);
+    cstate = (CossState *)memPoolAlloc(coss_state_pool);
 
     sio->fsstate = cstate;
     sio->swap_filen = f;
@@ -212,7 +213,7 @@ storeCossOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     p = storeCossMemPointerFromDiskOffset(SD, f, NULL);
     /* make local copy so we don't have to lock membuf */
     if (p) {
-	cstate->readbuffer = xmalloc(sio->st_size);
+	cstate->readbuffer = (char *)xmalloc(sio->st_size);
 	xmemcpy(cstate->readbuffer, p, sio->st_size);
     } else {
 	/* Do the allocation */
@@ -336,13 +337,13 @@ storeCossWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
 static void
 storeCossReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
 {
-    storeIOState *sio = my_data;
+    storeIOState *sio = (storeIOState *)my_data;
     char *p;
     STRCB *callback = sio->read.callback;
     void *cbdata;
     SwapDir *SD = INDEXSD(sio->swap_dirn);
     CossState *cstate = (CossState *) sio->fsstate;
-    size_t rlen;
+    ssize_t rlen;
 
     debug(79, 3) ("storeCossReadDone: fileno %d, FD %d, len %d\n",
 	sio->swap_filen, fd, len);
@@ -352,7 +353,7 @@ storeCossReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
 	rlen = -1;
     } else {
 	if (cstate->readbuffer == NULL) {
-	    cstate->readbuffer = xmalloc(sio->st_size);
+	    cstate->readbuffer = (char *)xmalloc(sio->st_size);
 	    p = storeCossMemPointerFromDiskOffset(SD, sio->swap_filen, NULL);
 	    xmemcpy(cstate->readbuffer, p, sio->st_size);
 	    storeCossMemBufUnlock(SD, sio);
@@ -390,7 +391,7 @@ storeCossMemPointerFromDiskOffset(SwapDir * SD, size_t offset, CossMemBuf ** mb)
     CossInfo *cs = (CossInfo *) SD->fsdata;
 
     for (m = cs->membufs.head; m; m = m->next) {
-	t = m->data;
+	t = (CossMemBuf *)m->data;
 	if ((offset >= t->diskstart) && (offset <= t->diskend)) {
 	    if (mb)
 		*mb = t;
@@ -411,8 +412,8 @@ storeCossMemBufLock(SwapDir * SD, storeIOState * e)
     CossInfo *cs = (CossInfo *) SD->fsdata;
 
     for (m = cs->membufs.head; m; m = m->next) {
-	t = m->data;
-	if ((e->swap_filen >= t->diskstart) && (e->swap_filen <= t->diskend)) {
+	t = (CossMemBuf *)m->data;
+	if (((size_t)e->swap_filen >= t->diskstart) && ((size_t)e->swap_filen <= t->diskend)) {
 	    debug(79, 3) ("storeCossMemBufLock: locking %p, lockcount %d\n", t, t->lockcount);
 	    t->lockcount++;
 	    return;
@@ -435,8 +436,8 @@ storeCossMemBufUnlock(SwapDir * SD, storeIOState * e)
 	 * will make m = m->next kinda unworkable. So, get the next pointer.
 	 */
 	n = m->next;
-	t = m->data;
-	if ((e->swap_filen >= t->diskstart) && (e->swap_filen <= t->diskend)) {
+	t = (CossMemBuf *)m->data;
+	if (((size_t)e->swap_filen >= t->diskstart) && ((size_t)e->swap_filen <= t->diskend)) {
 	    t->lockcount--;
 	    debug(79, 3) ("storeCossMemBufUnlock: unlocking %p, lockcount %d\n", t, t->lockcount);
 	}
@@ -460,7 +461,7 @@ storeCossSync(SwapDir * SD)
     if (!cs->membufs.head)
 	return;
     for (m = cs->membufs.head; m; m = m->next) {
-	t = m->data;
+	t = (CossMemBuf *)m->data;
 	if (t->flags.writing)
 	    sleep(5);		/* XXX EEEWWW! */
 	lseek(cs->fd, t->diskstart, SEEK_SET);
@@ -485,7 +486,7 @@ storeCossWriteMemBuf(SwapDir * SD, CossMemBuf * t)
 static void
 storeCossWriteMemBufDone(int fd, int errflag, size_t len, void *my_data)
 {
-    CossMemBuf *t = my_data;
+    CossMemBuf *t = (CossMemBuf *)my_data;
     CossInfo *cs = (CossInfo *) t->SD->fsdata;
 
     debug(79, 3) ("storeCossWriteMemBufDone: buf %p, len %ld\n", t, (long int) len);
@@ -521,7 +522,7 @@ storeCossCreateMemBuf(SwapDir * SD, size_t start,
 
     /* Print out the list of membufs */
     for (m = cs->membufs.head; m; m = m->next) {
-	t = m->data;
+	t = (CossMemBuf *)m->data;
 	debug(79, 3) ("storeCossCreateMemBuf: membuflist %ld lockcount %d\n", (long int) t->diskstart, t->lockcount);
     }
 
@@ -530,11 +531,11 @@ storeCossCreateMemBuf(SwapDir * SD, size_t start,
      */
     for (m = cs->index.tail; m; m = prev) {
 	prev = m->prev;
-	e = m->data;
+	e = (StoreEntry *)m->data;
 	if (curfn == e->swap_filen)
 	    *collision = 1;	/* Mark an object alloc collision */
-	if ((e->swap_filen >= newmb->diskstart) &&
-	    (e->swap_filen <= newmb->diskend)) {
+	if (((size_t)e->swap_filen >= newmb->diskstart) &&
+	    ((size_t)e->swap_filen <= newmb->diskend)) {
 	    storeRelease(e);
 	    numreleased++;
 	} else

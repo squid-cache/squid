@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.54 2002/09/24 10:46:43 robertc Exp $
+ * $Id: client_db.cc,v 1.55 2002/10/13 20:34:59 robertc Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+
 
 static hash_table *client_table = NULL;
 static ClientInfo *clientdbAdd(struct in_addr addr);
@@ -43,7 +45,7 @@ static ClientInfo *
 clientdbAdd(struct in_addr addr)
 {
     ClientInfo *c;
-    c = memAllocate(MEM_CLIENT_INFO);
+    c = (ClientInfo *)memAllocate(MEM_CLIENT_INFO);
     c->hash.key = xstrdup(inet_ntoa(addr));
     c->addr = addr;
     hash_join(client_table, &c->hash);
@@ -156,6 +158,12 @@ clientdbCutoffDenied(struct in_addr addr)
     return 1;
 }
 
+log_type &operator++ (log_type &aLogType)
+{
+    aLogType = (log_type)(++(int)aLogType);
+    return aLogType;
+}
+
 
 void
 clientdbDump(StoreEntry * sentry)
@@ -175,7 +183,7 @@ clientdbDump(StoreEntry * sentry)
 	    c->n_established);
 	storeAppendPrintf(sentry, "    ICP Requests %d\n",
 	    c->Icp.n_requests);
-	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {
+	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
 	    if (c->Icp.result_hist[l] == 0)
 		continue;
 	    icp_total += c->Icp.result_hist[l];
@@ -189,7 +197,7 @@ clientdbDump(StoreEntry * sentry)
 	}
 	storeAppendPrintf(sentry, "    HTTP Requests %d\n",
 	    c->Http.n_requests);
-	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {
+	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
 	    if (c->Http.result_hist[l] == 0)
 		continue;
 	    http_total += c->Http.result_hist[l];
@@ -213,7 +221,7 @@ clientdbDump(StoreEntry * sentry)
 static void
 clientdbFreeItem(void *data)
 {
-    ClientInfo *c = data;
+    ClientInfo *c = (ClientInfo *)data;
     safe_free(c->hash.key);
     memFree(c, MEM_CLIENT_INFO);
 }
@@ -290,7 +298,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	break;
     case MESH_CTBL_HTHITS:
 	aggr = 0;
-	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {
+	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
 	    if (logTypeIsATcpHit(l))
 		aggr += c->Http.result_hist[l];
 	}

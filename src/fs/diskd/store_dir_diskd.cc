@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.71 2002/10/12 09:45:57 robertc Exp $
+ * $Id: store_dir_diskd.cc,v 1.72 2002/10/13 20:35:26 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -70,7 +71,7 @@ storeDiskdDirInit(SwapDir * sd)
     char skey1[32];
     char skey2[32];
     char skey3[32];
-    diskdinfo_t *diskdinfo = sd->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)sd->fsdata;
 
     ikey = (getpid() << 10) + (sd->index << 2);
     ikey &= 0x7fffffff;
@@ -84,19 +85,19 @@ storeDiskdDirInit(SwapDir * sd)
 	debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
 	fatal("msgget failed");
     }
-    diskdinfo->shm.nbufs = diskdinfo->magic2 * 1.3;
+    diskdinfo->shm.nbufs = (int)(diskdinfo->magic2 * 1.3);
     diskdinfo->shm.id = shmget((key_t) (ikey + 2),
 	diskdinfo->shm.nbufs * SHMBUF_BLKSZ, 0600 | IPC_CREAT);
     if (diskdinfo->shm.id < 0) {
 	debug(50, 0) ("storeDiskdInit: shmget: %s\n", xstrerror());
 	fatal("shmget failed");
     }
-    diskdinfo->shm.buf = shmat(diskdinfo->shm.id, NULL, 0);
+    diskdinfo->shm.buf = (char *)shmat(diskdinfo->shm.id, NULL, 0);
     if (diskdinfo->shm.buf == (void *) -1) {
 	debug(50, 0) ("storeDiskdInit: shmat: %s\n", xstrerror());
 	fatal("shmat failed");
     }
-    diskdinfo->shm.inuse_map = xcalloc((diskdinfo->shm.nbufs + 7) / 8, 1);
+    diskdinfo->shm.inuse_map = (char *)xcalloc((diskdinfo->shm.nbufs + 7) / 8, 1);
     diskd_stats.shmbuf_count += diskdinfo->shm.nbufs;
     for (i = 0; i < diskdinfo->shm.nbufs; i++) {
 	CBIT_SET(diskdinfo->shm.inuse_map, i);
@@ -165,7 +166,7 @@ static void
 storeDiskdDirSync(SwapDir * SD)
 {
     static time_t lastmsg = 0;
-    diskdinfo_t *diskdinfo = SD->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)SD->fsdata;
     while (diskdinfo->away > 0) {
 	if (squid_curtime > lastmsg) {
 	    debug(47, 1) ("storeDiskdDirSync: %d messages away\n",
@@ -189,7 +190,7 @@ storeDiskdDirCallback(SwapDir * SD)
 {
     diomsg M;
     int x;
-    diskdinfo_t *diskdinfo = SD->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)SD->fsdata;
     int retval = 0;
 
     if (diskdinfo->away >= diskdinfo->magic2) {
@@ -231,7 +232,7 @@ storeDiskdDirCallback(SwapDir * SD)
 int
 storeDiskdDirCheckObj(SwapDir * SD, const StoreEntry * e)
 {
-    diskdinfo_t *diskdinfo = SD->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)SD->fsdata;
     /* Check the queue length */
     if (diskdinfo->away >= diskdinfo->magic1)
 	return -1;
@@ -261,7 +262,7 @@ void *
 storeDiskdShmGet(SwapDir * sd, off_t * shm_offset)
 {
     char *buf = NULL;
-    diskdinfo_t *diskdinfo = sd->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)sd->fsdata;
     int i;
     for (i = 0; i < diskdinfo->shm.nbufs; i++) {
 	if (CBIT_TEST(diskdinfo->shm.inuse_map, i))
@@ -284,7 +285,7 @@ void
 storeDiskdShmPut(SwapDir * sd, off_t offset)
 {
     int i;
-    diskdinfo_t *diskdinfo = sd->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)sd->fsdata;
     assert(offset >= 0);
     assert(offset < diskdinfo->shm.nbufs * SHMBUF_BLKSZ);
     i = offset / SHMBUF_BLKSZ;
@@ -302,7 +303,7 @@ storeDiskdShmPut(SwapDir * sd, off_t offset)
 void
 storeDiskdDirStats(SwapDir * SD, StoreEntry * sentry)
 {
-    diskdinfo_t *diskdinfo = SD->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)SD->fsdata;
     commonUfsDirStats (SD, sentry);
     storeAppendPrintf(sentry, "Pending operations: %d\n", diskdinfo->away);
 }
@@ -310,7 +311,7 @@ storeDiskdDirStats(SwapDir * SD, StoreEntry * sentry)
 static void
 storeDiskdDirParseQ1(SwapDir * sd, const char *name, const char *value, int reconfiguring)
 {
-    diskdinfo_t *diskdinfo = sd->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)sd->fsdata;
     int old_magic1 = diskdinfo->magic1;
     diskdinfo->magic1 = atoi(value);
     if (!reconfiguring)
@@ -335,14 +336,14 @@ storeDiskdDirParseQ1(SwapDir * sd, const char *name, const char *value, int reco
 static void
 storeDiskdDirDumpQ1(StoreEntry * e, const char *option, SwapDir * sd)
 {
-    diskdinfo_t *diskdinfo = sd->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)sd->fsdata;
     storeAppendPrintf(e, " Q1=%d", diskdinfo->magic1);
 }
 
 static void
 storeDiskdDirParseQ2(SwapDir * sd, const char *name, const char *value, int reconfiguring)
 {
-    diskdinfo_t *diskdinfo = sd->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)sd->fsdata;
     int old_magic2 = diskdinfo->magic2;
     diskdinfo->magic2 = atoi(value);
     if (!reconfiguring)
@@ -361,7 +362,7 @@ storeDiskdDirParseQ2(SwapDir * sd, const char *name, const char *value, int reco
 static void
 storeDiskdDirDumpQ2(StoreEntry * e, const char *option, SwapDir * sd)
 {
-    diskdinfo_t *diskdinfo = sd->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)sd->fsdata;
     storeAppendPrintf(e, " Q2=%d", diskdinfo->magic2);
 }
 
@@ -447,7 +448,7 @@ storeDiskdDirParse(SwapDir * sd, int index, char *path)
     if (l2 <= 0)
 	fatal("storeDiskdDirParse: invalid level 2 directories value");
 
-    sd->fsdata = diskdinfo = xcalloc(1, sizeof(*diskdinfo));
+    sd->fsdata = diskdinfo = (diskdinfo_t *)xcalloc(1, sizeof(*diskdinfo));
     sd->index = index;
     sd->path = xstrdup(path);
     sd->max_size = size;

@@ -1,4 +1,6 @@
 #include "squid.h"
+#include "Store.h"
+
 
 static struct {
     struct {
@@ -20,7 +22,7 @@ OBJH storeIOStats;
 storeIOState *
 storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, void *callback_data)
 {
-    size_t objsize;
+    ssize_t objsize;
     sdirno dirn;
     SwapDir *SD;
     storeIOState *sio;

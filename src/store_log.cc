@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.23 2001/10/17 20:25:03 hno Exp $
+ * $Id: store_log.cc,v 1.24 2002/10/13 20:35:05 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 static const char *storeLogTags[] =
 {
@@ -75,7 +76,7 @@ storeLog(int tag, const StoreEntry * e)
 	    storeLogTags[tag],
 	    e->swap_dirn,
 	    e->swap_filen,
-	    storeKeyText(e->hash.key),
+	    storeKeyText((const cache_key *)e->hash.key),
 	    reply->sline.status,
 	    (int) reply->date,
 	    (int) reply->last_modified,
@@ -93,7 +94,7 @@ storeLog(int tag, const StoreEntry * e)
 	    storeLogTags[tag],
 	    e->swap_dirn,
 	    e->swap_filen,
-	    storeKeyText(e->hash.key));
+	    storeKeyText((const cache_key *)e->hash.key));
     }
 }
 

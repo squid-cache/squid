@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.88 2002/09/24 10:46:42 robertc Exp $
+ * $Id: store_swapout.cc,v 1.89 2002/10/13 20:35:05 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "StoreClient.h"
+#include "Store.h"
 
 static off_t storeSwapOutObjectBytesOnDisk(const MemObject *);
 static void storeSwapOutStart(StoreEntry * e);
@@ -86,8 +87,8 @@ storeSwapOutStart(StoreEntry * e)
 static void
 storeSwapOutFileNotify(void *data, int errflag, storeIOState * sio)
 {
-    generic_cbdata *c = data;
-    StoreEntry *e = c->data;
+    generic_cbdata *c = (generic_cbdata *)data;
+    StoreEntry *e = (StoreEntry *)c->data;
     MemObject *mem = e->mem_obj;
     assert(e->swap_status == SWAPOUT_WRITING);
     assert(mem);
@@ -159,7 +160,7 @@ storeSwapOut(StoreEntry * e)
      */
     if (mem->inmem_hi < lowest_offset)
 	new_mem_lo = lowest_offset;
-    else if (mem->inmem_hi - mem->inmem_lo > Config.Store.maxInMemObjSize)
+    else if (mem->inmem_hi - mem->inmem_lo > (ssize_t)Config.Store.maxInMemObjSize)
 	new_mem_lo = lowest_offset;
     else
 	new_mem_lo = mem->inmem_lo;
@@ -286,7 +287,7 @@ storeSwapOutFileClose(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     assert(mem != NULL);
-    debug(20, 3) ("storeSwapOutFileClose: %s\n", storeKeyText(e->hash.key));
+    debug(20, 3) ("storeSwapOutFileClose: %s\n", storeKeyText((const cache_key *)e->hash.key));
     debug(20, 3) ("storeSwapOutFileClose: sio = %p\n", mem->swapout.sio);
     if (mem->swapout.sio == NULL)
 	return;
@@ -296,8 +297,8 @@ storeSwapOutFileClose(StoreEntry * e)
 static void
 storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
 {
-    generic_cbdata *c = data;
-    StoreEntry *e = c->data;
+    generic_cbdata *c = (generic_cbdata *)data;
+    StoreEntry *e = (StoreEntry *)c->data;
     MemObject *mem = e->mem_obj;
     assert(e->swap_status == SWAPOUT_WRITING);
     cbdataFree(c);
@@ -354,7 +355,7 @@ storeSwapOutObjectBytesOnDisk(const MemObject * mem)
     if (mem->swapout.sio == NULL)
 	return 0;
     nwritten = storeOffset(mem->swapout.sio);
-    if (nwritten <= mem->swap_hdr_sz)
+    if (nwritten <= (off_t)mem->swap_hdr_sz)
 	return 0;
     return nwritten - mem->swap_hdr_sz;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.225 2002/10/06 02:05:23 robertc Exp $
+ * $Id: tools.cc,v 1.226 2002/10/13 20:35:06 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -55,9 +55,9 @@ extern void log_trace_init(char *);
 
 #ifdef _SQUID_LINUX_
 /* Workaround for crappy glic header files */
-extern int backtrace(void *, int);
-extern void backtrace_symbols_fd(void *, int, int);
-extern int setresuid(uid_t, uid_t, uid_t);
+SQUIDCEXTERN int backtrace(void *, int);
+SQUIDCEXTERN void backtrace_symbols_fd(void *, int, int);
+SQUIDCEXTERN int setresuid(uid_t, uid_t, uid_t);
 #endif /* _SQUID_LINUX */
 
 extern void (*failure_notify) (const char *);
@@ -552,7 +552,7 @@ enter_suid(void)
 {
     debug(21, 3) ("enter_suid: PID %d taking root priveleges\n", (int) getpid());
 #if HAVE_SETRESUID
-    setresuid(-1, 0, -1);
+    setresuid((uid_t)-1, 0, (uid_t)-1);
 #else
     setuid(0);
 #endif
@@ -747,19 +747,19 @@ inaddrFromHostent(const struct hostent *hp)
 }
 
 double
-doubleAverage(double cur, double new, int N, int max)
+doubleAverage(double cur, double newD, int N, int max)
 {
     if (N > max)
 	N = max;
-    return (cur * (N - 1.0) + new) / N;
+    return (cur * (N - 1.0) + newD) / N;
 }
 
 int
-intAverage(int cur, int new, int n, int max)
+intAverage(int cur, int newI, int n, int max)
 {
     if (n > max)
 	n = max;
-    return (cur * (n - 1) + new) / n;
+    return (cur * (n - 1) + newI) / n;
 }
 
 void
@@ -781,7 +781,7 @@ dlinkNodeNew()
     if (dlink_node_pool == NULL)
 	dlink_node_pool = memPoolCreate("Dlink list nodes", sizeof(dlink_node));
     /* where should we call memPoolDestroy(dlink_node_pool); */
-    return memPoolAlloc(dlink_node_pool);
+    return (dlink_node *)memPoolAlloc(dlink_node_pool);
 }
 
 /* the node needs to be unlinked FIRST */
@@ -879,7 +879,7 @@ stringHasWhitespace(const char *s)
 void
 linklistPush(link_list ** L, void *p)
 {
-    link_list *l = memAllocate(MEM_LINK_LIST);
+    link_list *l = (link_list *)memAllocate(MEM_LINK_LIST);
     l->next = NULL;
     l->ptr = p;
     while (*L)

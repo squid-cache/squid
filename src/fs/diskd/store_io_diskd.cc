@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.28 2002/10/12 09:45:57 robertc Exp $
+ * $Id: store_io_diskd.cc,v 1.29 2002/10/13 20:35:26 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "config.h"
 #include "squid.h"
+#include "Store.h"
 
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -60,7 +61,7 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     char *buf;
     diskdstate_t *diskdstate;
     off_t shm_offset;
-    diskdinfo_t *diskdinfo = SD->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)SD->fsdata;
     debug(79, 3) ("storeDiskdOpen: fileno %08X\n", f);
     /*
      * Fail on open() if there are too many requests queued.
@@ -72,7 +73,7 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     }
     CBDATA_INIT_TYPE_FREECB(storeIOState, storeDiskdIOFreeEntry);
     sio = cbdataAlloc(storeIOState);
-    sio->fsstate = diskdstate = memPoolAlloc(diskd_state_pool);
+    sio->fsstate = diskdstate = (diskdstate_t *)memPoolAlloc(diskd_state_pool);
 
     sio->swap_filen = f;
     sio->swap_dirn = SD->index;
@@ -86,7 +87,7 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     diskdstate->flags.close_request = 0;
     diskdstate->id = diskd_stats.sio_id++;
 
-    buf = storeDiskdShmGet(SD, &shm_offset);
+    buf = (char *)storeDiskdShmGet(SD, &shm_offset);
     xstrncpy(buf, commonUfsDirFullPath(SD, f, NULL), SHMBUF_BLKSZ);
     x = storeDiskdSend(_MQD_OPEN,
 	SD,
@@ -115,7 +116,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     storeIOState *sio;
     char *buf;
     off_t shm_offset;
-    diskdinfo_t *diskdinfo = SD->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)SD->fsdata;
     diskdstate_t *diskdstate;
     /*
      * Fail on open() if there are too many requests queued.
@@ -130,7 +131,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 
     CBDATA_INIT_TYPE_FREECB(storeIOState, storeDiskdIOFreeEntry);
     sio = cbdataAlloc(storeIOState);
-    sio->fsstate = diskdstate = memPoolAlloc(diskd_state_pool);
+    sio->fsstate = diskdstate = (diskdstate_t *)memPoolAlloc(diskd_state_pool);
 
     sio->swap_filen = f;
     sio->swap_dirn = SD->index;
@@ -144,7 +145,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     diskdstate->flags.close_request = 0;
     diskdstate->id = diskd_stats.sio_id++;
 
-    buf = storeDiskdShmGet(SD, &shm_offset);
+    buf = (char *)storeDiskdShmGet(SD, &shm_offset);
     xstrncpy(buf, commonUfsDirFullPath(SD, f, NULL), SHMBUF_BLKSZ);
     x = storeDiskdSend(_MQD_OPEN,
 	SD,
@@ -170,7 +171,7 @@ void
 storeDiskdClose(SwapDir * SD, storeIOState * sio)
 {
     int x;
-    diskdstate_t *diskdstate = sio->fsstate;
+    diskdstate_t *diskdstate = (diskdstate_t *)sio->fsstate;
     debug(79, 3) ("storeDiskdClose: dirno %d, fileno %08X\n", SD->index,
 	sio->swap_filen);
     x = storeDiskdSend(_MQD_CLOSE,
@@ -194,7 +195,7 @@ storeDiskdRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     int x;
     off_t shm_offset;
     char *rbuf;
-    diskdstate_t *diskdstate = sio->fsstate;
+    diskdstate_t *diskdstate = (diskdstate_t *)sio->fsstate;
     debug(79, 3) ("storeDiskdRead: dirno %d, fileno %08X\n", sio->swap_dirn, sio->swap_filen);
     assert(!diskdstate->flags.close_request);
     if (!cbdataReferenceValid(sio))
@@ -210,7 +211,7 @@ storeDiskdRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     diskdstate->read_buf = buf;	/* the one passed from above */
     sio->offset = offset;
     diskdstate->flags.reading = 1;
-    rbuf = storeDiskdShmGet(SD, &shm_offset);
+    rbuf = (char *)storeDiskdShmGet(SD, &shm_offset);
     assert(rbuf);
     x = storeDiskdSend(_MQD_READ,
 	SD,
@@ -233,7 +234,7 @@ storeDiskdWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t 
     int x;
     char *sbuf;
     off_t shm_offset;
-    diskdstate_t *diskdstate = sio->fsstate;
+    diskdstate_t *diskdstate = (diskdstate_t *)sio->fsstate;
     debug(79, 3) ("storeDiskdWrite: dirno %d, fileno %08X\n", SD->index, sio->swap_filen);
     assert(!diskdstate->flags.close_request);
     if (!cbdataReferenceValid(sio)) {
@@ -241,7 +242,7 @@ storeDiskdWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t 
 	return;
     }
     diskdstate->flags.writing = 1;
-    sbuf = storeDiskdShmGet(SD, &shm_offset);
+    sbuf = (char *)storeDiskdShmGet(SD, &shm_offset);
     xmemcpy(sbuf, buf, size);
     if (free_func)
 	free_func(buf);
@@ -266,7 +267,7 @@ storeDiskdUnlink(SwapDir * SD, StoreEntry * e)
     int x;
     off_t shm_offset;
     char *buf;
-    diskdinfo_t *diskdinfo = SD->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)SD->fsdata;
 
     debug(79, 3) ("storeDiskdUnlink: dirno %d, fileno %08X\n", SD->index,
 	e->swap_filen);
@@ -279,7 +280,7 @@ storeDiskdUnlink(SwapDir * SD, StoreEntry * e)
 	return;
     }
     /* We can attempt a diskd unlink */
-    buf = storeDiskdShmGet(SD, &shm_offset);
+    buf = (char *)storeDiskdShmGet(SD, &shm_offset);
     xstrncpy(buf, commonUfsDirFullPath(SD, e->swap_filen, NULL), SHMBUF_BLKSZ);
     x = storeDiskdSend(_MQD_UNLINK,
 	SD,
@@ -302,7 +303,7 @@ storeDiskdUnlink(SwapDir * SD, StoreEntry * e)
 static void
 storeDiskdOpenDone(diomsg * M)
 {
-    storeIOState *sio = M->callback_data;
+    storeIOState *sio = (storeIOState *)M->callback_data;
     statCounter.syscalls.disk.opens++;
     debug(79, 3) ("storeDiskdOpenDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
@@ -317,7 +318,7 @@ storeDiskdOpenDone(diomsg * M)
 static void
 storeDiskdCloseDone(diomsg * M)
 {
-    storeIOState *sio = M->callback_data;
+    storeIOState *sio = (storeIOState *)M->callback_data;
     statCounter.syscalls.disk.closes++;
     debug(79, 3) ("storeDiskdCloseDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
@@ -333,12 +334,12 @@ storeDiskdCloseDone(diomsg * M)
 static void
 storeDiskdReadDone(diomsg * M)
 {
-    storeIOState *sio = M->callback_data;
+    storeIOState *sio = (storeIOState *)M->callback_data;
     STRCB *callback = sio->read.callback;
     void *cbdata;
     SwapDir *sd = INDEXSD(sio->swap_dirn);
-    diskdstate_t *diskdstate = sio->fsstate;
-    diskdinfo_t *diskdinfo = sd->fsdata;
+    diskdstate_t *diskdstate = (diskdstate_t *)sio->fsstate;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)sd->fsdata;
     char *their_buf = diskdstate->read_buf;
     char *sbuf;
     size_t len;
@@ -373,8 +374,8 @@ storeDiskdReadDone(diomsg * M)
 static void
 storeDiskdWriteDone(diomsg * M)
 {
-    storeIOState *sio = M->callback_data;
-    diskdstate_t *diskdstate = sio->fsstate;
+    storeIOState *sio = (storeIOState *)M->callback_data;
+    diskdstate_t *diskdstate = (diskdstate_t *)sio->fsstate;
     statCounter.syscalls.disk.writes++;
     diskdstate->flags.writing = 0;
     debug(79, 3) ("storeDiskdWriteDone: dirno %d, fileno %08x status %d\n",
@@ -437,7 +438,7 @@ storeDiskdHandle(diomsg * M)
 	     * is most likely the wrong place for this. It should
 	     * be done before the sio becomes invalid, not here.
 	     */
-	    storeIOState *sio = M->callback_data;
+	    storeIOState *sio = (storeIOState *)M->callback_data;
 	    cbdataReferenceDone(sio->read.callback_data);
 	}
     }
@@ -464,7 +465,7 @@ storeDiskdSend(int mtype, SwapDir * sd, int id, storeIOState * sio, int size, in
     static int send_errors = 0;
     static int last_seq_no = 0;
     static int seq_no = 0;
-    diskdinfo_t *diskdinfo = sd->fsdata;
+    diskdinfo_t *diskdinfo = (diskdinfo_t *)sd->fsdata;
     M.mtype = mtype;
     M.callback_data = cbdataReference(sio);
     M.size = size;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.57 2002/06/14 19:26:43 hno Exp $
+ * $Id: refresh.cc,v 1.58 2002/10/13 20:35:03 robertc Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #endif
 
 #include "squid.h"
+#include "Store.h"
 
 typedef enum {
     rcHTTP,
@@ -178,7 +179,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
 	 * stale_age is the Age of the response when it became/becomes
 	 * stale according to the last-modified factor algorithm.
 	 */
-	time_t stale_age = (entry->timestamp - entry->lastmod) * R->pct;
+	time_t stale_age = static_cast<time_t>((entry->timestamp - entry->lastmod) * R->pct);
 	sf->lmfactor = 1;
 	if (age >= stale_age) {
 	    debug(22, 3) ("STALE: age %d > stale_age %d\n",

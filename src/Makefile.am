@@ -1,49 +1,49 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.35 2002/10/12 09:45:55 robertc Exp $
+#  $Id: Makefile.am,v 1.36 2002/10/13 20:34:57 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
 
 if USE_DNSSERVER
-DNSSOURCE = dns.c
+DNSSOURCE = dns.cc
 DNSSERVER = dnsserver
 else
-DNSSOURCE = dns_internal.c
+DNSSOURCE = dns_internal.cc
 DNSSERVER =
 endif
 
 if USE_SNMP
-SNMPSOURCE = snmp_core.c snmp_agent.c
+SNMPSOURCE = snmp_core.cc snmp_agent.cc
 else
 SNMPSOURCE = 
 endif
 
 if USE_DELAY_POOLS
-DELAY_POOL_SOURCE = delay_pools.c
+DELAY_POOL_SOURCE = delay_pools.cc
 else
 DELAY_POOL_SOURCE = 
 endif
 
 if ENABLE_XPROF_STATS
-XPROF_STATS_SOURCE = ProfStats.c
+XPROF_STATS_SOURCE = ProfStats.cc
 else
 XPROF_STATS_SOURCE = 
 endif
 
 if ENABLE_HTCP
-HTCPSOURCE = htcp.c
+HTCPSOURCE = htcp.cc
 endif
 
 if MAKE_LEAKFINDER
-LEAKFINDERSOURCE =  leakfinder.c
+LEAKFINDERSOURCE =  leakfinder.cc
 else
 LEAKFINDERSOURCE = 
 endif
 
 if ENABLE_UNLINKD
-UNLINKDSOURCE = unlinkd.c
+UNLINKDSOURCE = unlinkd.cc
 UNLINKD = unlinkd
 else
 UNLINKDSOURCE = 
@@ -57,18 +57,19 @@ PINGER =
 endif
 
 if ENABLE_SSL
-SSLSOURCE = ssl_support.c
+SSLSOURCE = ssl_support.cc
 else
 SSLSOURCE = 
 endif
 
 if ENABLE_WIN32SPECIFIC
-WIN32SOURCE = win32.c
+WIN32SOURCE = win32.cc
 else
 WIN32SOURCE = 
 endif
 
 AM_CFLAGS = -Werror -Wall
+AM_CXXFLAGS = -Werror -Wall
 
 SUBDIRS		= fs repl auth
 
@@ -77,7 +78,8 @@ INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/incl
 EXTRA_PROGRAMS = \
 	unlinkd \
 	pinger \
-	dnsserver
+	dnsserver \
+	recv-announce
 
 noinst_PROGRAMS = \
 	cf_gen
@@ -94,144 +96,144 @@ libexec_PROGRAMS = \
 	$(UNLINKD) \
 	cachemgr$(CGIEXT)
 
-cf_gen_SOURCES = cf_gen.c defines.h
+cf_gen_SOURCES = cf_gen.cc defines.h
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen.$(OBJEXT): cf_gen_defines.h
-squidclient_SOURCES = client.c
-cachemgr__CGIEXT__SOURCES = cachemgr.c
+squidclient_SOURCES = client.cc
+cachemgr__CGIEXT__SOURCES = cachemgr.cc
 
 EXTRA_squid_SOURCES = \
-	delay_pools.c \
-	dns.c \
-	dnsserver.c \
-	dns_internal.c \
-	htcp.c \
-	leakfinder.c \
-	snmp_core.c \
-	snmp_agent.c \
-	unlinkd.c \
-	ssl_support.c \
+	delay_pools.cc \
+	dns.cc \
+	dnsserver.cc \
+	dns_internal.cc \
+	htcp.cc \
+	leakfinder.cc \
+	snmp_core.cc \
+	snmp_agent.cc \
+	unlinkd.cc \
+	ssl_support.cc \
 	ssl_support.h \
-	win32.c
+	win32.cc
 
 squid_SOURCES = \
-	access_log.c \
-	acl.c \
-	asn.c \
-	authenticate.c \
-	cache_cf.c \
-	CacheDigest.c \
-	cache_manager.c \
-	carp.c \
-	cbdata.c \
-	client_db.c \
-	client_side.c \
-	client_side_reply.c \
-	client_side_request.c \
+	access_log.cc \
+	acl.cc \
+	asn.cc \
+	authenticate.cc \
+	cache_cf.cc \
+	CacheDigest.cc \
+	cache_manager.cc \
+	carp.cc \
+	cbdata.cc \
+	client_db.cc \
+	client_side.cc \
+	client_side_reply.cc \
+	client_side_request.cc \
 	client_side_request.h \
-	clientStream.c \
+	clientStream.cc \
 	clientStream.h \
-	comm.c \
-	comm_select.c \
-	comm_poll.c \
-	comm_kqueue.c \
-	debug.c \
+	comm.cc \
+	comm_select.cc \
+	comm_poll.cc \
+	comm_kqueue.cc \
+	debug.cc \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
-	disk.c \
+	disk.cc \
 	$(DNSSOURCE) \
 	enums.h \
-	errorpage.c \
-	ETag.c \
-	event.c \
-	external_acl.c \
-	fd.c \
-	filemap.c \
-	forward.c \
-	fqdncache.c \
-	ftp.c \
+	errorpage.cc \
+	ETag.cc \
+	event.cc \
+	external_acl.cc \
+	fd.cc \
+	filemap.cc \
+	forward.cc \
+	fqdncache.cc \
+	ftp.cc \
 	globals.h \
-	gopher.c \
-	helper.c \
+	gopher.cc \
+	helper.cc \
 	$(HTCPSOURCE) \
-	http.c \
-	HttpStatusLine.c \
-	HttpHdrCc.c \
-	HttpHdrRange.c \
-	HttpHdrContRange.c \
-	HttpHeader.c \
-	HttpHeaderTools.c \
-	HttpBody.c \
-	HttpMsg.c \
-	HttpReply.c \
-	HttpRequest.c \
-	icmp.c \
-	icp_v2.c \
-	icp_v3.c \
-	ident.c \
-	internal.c \
-	ipc.c \
-	ipcache.c \
-	IPInterception.c \
+	http.cc \
+	HttpStatusLine.cc \
+	HttpHdrCc.cc \
+	HttpHdrRange.cc \
+	HttpHdrContRange.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpBody.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpRequest.cc \
+	icmp.cc \
+	icp_v2.cc \
+	icp_v3.cc \
+	ident.cc \
+	internal.cc \
+	ipc.cc \
+	ipcache.cc \
+	IPInterception.cc \
 	IPInterception.h \
 	$(LEAKFINDERSOURCE) \
-	logfile.c \
-	main.c \
-	mem.c \
-	MemBuf.c \
-	mime.c \
-	multicast.c \
-	neighbors.c \
-	net_db.c \
-	Packer.c \
+	logfile.cc \
+	main.cc \
+	mem.cc \
+	MemBuf.cc \
+	mime.cc \
+	multicast.cc \
+	neighbors.cc \
+	net_db.cc \
+	Packer.cc \
 	$(XPROF_STATS_SOURCE) \
-	pconn.c \
-	peer_digest.c \
-	peer_select.c \
+	pconn.cc \
+	peer_digest.cc \
+	peer_select.cc \
 	protos.h \
-	redirect.c \
-	referer.c \
-	refresh.c \
-	send-announce.c \
+	redirect.cc \
+	referer.cc \
+	refresh.cc \
+	send-announce.cc \
 	$(SNMPSOURCE) \
 	squid.h \
-	ssl.c \
+	ssl.cc \
 	$(SSLSOURCE) \
-	stat.c \
-	StatHist.c \
-	String.c \
-	stmem.c \
-	store.c \
-	store_io.c \
+	stat.cc \
+	StatHist.cc \
+	String.cc \
+	stmem.cc \
+	store.cc \
+	store_io.cc \
 	StoreIOBuffer.h \
-	store_client.c \
+	store_client.cc \
 	StoreClient.h \
-	store_digest.c \
-	store_dir.c \
-	store_key_md5.c \
-	store_log.c \
-	store_rebuild.c \
-	store_swapin.c \
-	store_swapmeta.c \
-	store_swapout.c \
+	store_digest.cc \
+	store_dir.cc \
+	store_key_md5.cc \
+	store_log.cc \
+	store_rebuild.cc \
+	store_swapin.cc \
+	store_swapmeta.cc \
+	store_swapout.cc \
 	structs.h \
-	tools.c \
+	tools.cc \
 	typedefs.h \
-	ufscommon.c \
+	ufscommon.cc \
 	ufscommon.h \
 	$(UNLINKDSOURCE) \
-	url.c \
-	urn.c \
-	useragent.c \
-	wais.c \
-	wccp.c \
-	whois.c \
+	url.cc \
+	urn.cc \
+	useragent.cc \
+	wais.cc \
+	wccp.cc \
+	whois.cc \
 	$(WIN32SOURCE)
 
 nodist_squid_SOURCES = \
-	repl_modules.c \
-	auth_modules.c \
-	store_modules.c \
+	repl_modules.cc \
+	auth_modules.cc \
+	store_modules.cc \
 	cf_parser.h \
 	globals.c \
 	string_arrays.c
@@ -253,12 +255,15 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
 
 unlinkd_SOURCES = 
 unlinkd_LDADD = unlinkd-daemon.o
-unlinkd-daemon.o: unlinkd.c
-	$(COMPILE) -DUNLINK_DAEMON -c $(srcdir)/unlinkd.c -o $@
+unlinkd-daemon.o: unlinkd.cc
+	$(COMPILE) -DUNLINK_DAEMON -c $(srcdir)/unlinkd.cc -o $@
 
 pinger_SOURCES = \
-	pinger.c \
-	debug.c
+	pinger.cc \
+	debug.cc
+
+dnsserver_SOURCES = dnsserver.cc
+recv_announce_SOURCES = recv-announce.cc
 
 nodist_pinger_SOURCES = \
 	globals.c
@@ -268,9 +273,9 @@ BUILT_SOURCES = \
 	cf_parser.h \
 	globals.c \
 	string_arrays.c \
-	repl_modules.c \
-	auth_modules.c \
-	store_modules.c
+	repl_modules.cc \
+	auth_modules.cc \
+	store_modules.cc
 
 sysconf_DATA = \
 	squid.conf.default \
@@ -362,14 +367,14 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_HOSTS@%$(DEFAULT_HOSTS)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
-store_modules.c: store_modules.sh Makefile
-	$(SHELL) $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.c
+store_modules.cc: store_modules.sh Makefile
+	$(SHELL) $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.cc
 
-repl_modules.c: repl_modules.sh Makefile
-	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.c
+repl_modules.cc: repl_modules.sh Makefile
+	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
 
-auth_modules.c: auth_modules.sh Makefile
-	@$(SHELL) $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.c
+auth_modules.cc: auth_modules.sh Makefile
+	@$(SHELL) $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.cc
 
 install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
@@ -397,7 +402,7 @@ uninstall-local:
 	fi
 
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
-	globals.c string_arrays.c repl_modules.c auth_modules.c store_modules.c
+	globals.c string_arrays.c repl_modules.cc auth_modules.cc store_modules.cc
 
 ##install-pinger:
 ##	@f=$(PINGER_EXE); \

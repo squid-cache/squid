@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.67 2002/09/15 05:41:57 robertc Exp $
+ * $Id: mem.cc,v 1.68 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "memMeter.h"
+#include "Store.h"
 
 /* module globals */
 
@@ -264,10 +265,10 @@ memReallocBuf(void *oldbuf, size_t net_size, size_t * gross_size)
 {
     /* XXX This can be optimized on very large buffers to use realloc() */
     /* TODO: if the existing gross size is >= new gross size, do nothing */
-    int new_gross_size;
+    size_t new_gross_size;
     void *newbuf = memAllocBuf(net_size, &new_gross_size);
     if (oldbuf) {
-	int data_size = *gross_size;
+	size_t data_size = *gross_size;
 	if (data_size > net_size)
 	    data_size = net_size;
 	memcpy(newbuf, oldbuf, data_size);
@@ -296,7 +297,7 @@ static double clean_interval = 15.0;	/* time to live of idle chunk before releas
 void
 memPoolCleanIdlePools(void *unused)
 {
-    memPoolClean(clean_interval);
+    memPoolClean(static_cast<time_t>(clean_interval));
     eventAdd("memPoolCleanIdlePools", memPoolCleanIdlePools, NULL, clean_interval, 1);
 }
 
@@ -349,10 +350,6 @@ memInit(void)
     memDataInit(MEM_ACL_LIST, "acl_list", sizeof(acl_list), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
     memDataInit(MEM_ACL_TIME_DATA, "acl_time_data", sizeof(acl_time_data), 0);
-    memDataInit(MEM_AUTH_USER_T, "auth_user_t",
-	sizeof(auth_user_t), 0);
-    memDataInit(MEM_AUTH_USER_HASH, "auth_user_hash_pointer",
-	sizeof(auth_user_hash_pointer), 0);
     memDataInit(MEM_ACL_PROXY_AUTH_MATCH, "acl_proxy_auth_match_cache",
 	sizeof(acl_proxy_auth_match_cache), 0);
     memDataInit(MEM_ACL_USER_DATA, "acl_user_data",
@@ -380,8 +377,6 @@ memInit(void)
     memDataInit(MEM_RELIST, "relist", sizeof(relist), 0);
     memDataInit(MEM_REQUEST_T, "request_t", sizeof(request_t),
 	Squid_MaxFD >> 3);
-    memDataInit(MEM_STOREENTRY, "StoreEntry", sizeof(StoreEntry), 0);
-    memPoolSetChunkSize(MemPools[MEM_STOREENTRY], 2048 * 1024);
     memDataInit(MEM_WORDLIST, "wordlist", sizeof(wordlist), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", MD5_DIGEST_CHARS, 0);
@@ -402,6 +397,12 @@ memInit(void)
 	memStats, 0, 1);
 }
 
+mem_type &operator++ (mem_type &aMem)
+{
+    aMem = (mem_type)(++(int)aMem);
+    return aMem;
+}
+
 /*
  * Test that all entries are initialized
  */
@@ -409,7 +410,7 @@ void
 memCheckInit(void)
 {
     mem_type t;
-    for (t = MEM_NONE, t++; t < MEM_MAX; t++) {
+    for (t = MEM_NONE, ++t; t < MEM_MAX; ++t) {
 	if (MEM_DONTFREE == t)
 	    continue;
 	/*

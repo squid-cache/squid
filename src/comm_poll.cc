@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.6 2002/10/02 11:06:31 robertc Exp $
+ * $Id: comm_poll.cc,v 1.7 2002/10/13 20:35:00 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #ifdef USE_POLL
 
@@ -322,7 +323,6 @@ comm_select(int msec)
 #endif
     PF *hdl = NULL;
     int fd;
-    int i;
     int maxfd;
     unsigned long nfds;
     unsigned long npending;
@@ -351,7 +351,7 @@ comm_select(int msec)
 	nfds = 0;
 	npending = 0;
 	maxfd = Biggest_FD + 1;
-	for (i = 0; i < maxfd; i++) {
+	for (int i = 0; i < maxfd; i++) {
 	    int events;
 	    events = 0;
 	    /* Check each open socket for a handler. */
@@ -420,10 +420,10 @@ comm_select(int msec)
 	 * more frequently to minimize losses due to the 5 connect 
 	 * limit in SunOS */
 	PROF_start(comm_handle_ready_fd);
-	for (i = 0; i < nfds; i++) {
+	for (size_t loopIndex = 0; loopIndex < nfds; loopIndex++) {
 	    fde *F;
-	    int revents = pfds[i].revents;
-	    fd = pfds[i].fd;
+	    int revents = pfds[loopIndex].revents;
+	    fd = pfds[loopIndex].fd;
 	    if (fd == -1)
 		continue;
 	    if (fd_table[fd].flags.read_pending)

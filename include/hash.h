@@ -1,5 +1,5 @@
 /*
- * $Id: hash.h,v 1.5 2001/10/08 16:18:31 hno Exp $
+ * $Id: hash.h,v 1.6 2002/10/13 20:34:51 robertc Exp $
  */
 
 #ifndef SQUID_HASH_H
@@ -26,20 +26,20 @@ struct _hash_table {
     int count;
 };
 
-extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
-extern void hash_join(hash_table *, hash_link *);
-extern void hash_remove_link(hash_table *, hash_link *);
-extern int hashPrime(int n);
-extern void *hash_lookup(hash_table *, const void *);
-extern void hash_first(hash_table *);
-extern void *hash_next(hash_table *);
-extern void hash_last(hash_table *);
-extern hash_link *hash_get_bucket(hash_table *, unsigned int);
-extern void hashFreeMemory(hash_table *);
-extern void hashFreeItems(hash_table *, HASHFREE *);
-extern HASHHASH hash_string;
-extern HASHHASH hash4;
-extern const char *hashKeyStr(hash_link *);
+SQUIDCEXTERN hash_table *hash_create(HASHCMP *, int, HASHHASH *);
+SQUIDCEXTERN void hash_join(hash_table *, hash_link *);
+SQUIDCEXTERN void hash_remove_link(hash_table *, hash_link *);
+SQUIDCEXTERN int hashPrime(int n);
+SQUIDCEXTERN void *hash_lookup(hash_table *, const void *);
+SQUIDCEXTERN void hash_first(hash_table *);
+SQUIDCEXTERN void *hash_next(hash_table *);
+SQUIDCEXTERN void hash_last(hash_table *);
+SQUIDCEXTERN hash_link *hash_get_bucket(hash_table *, unsigned int);
+SQUIDCEXTERN void hashFreeMemory(hash_table *);
+SQUIDCEXTERN void hashFreeItems(hash_table *, HASHFREE *);
+SQUIDCEXTERN HASHHASH hash_string;
+SQUIDCEXTERN HASHHASH hash4;
+SQUIDCEXTERN const char *hashKeyStr(hash_link *);
 
 /*
  *  Here are some good prime number choices.  It's important not to

@@ -25,9 +25,13 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_vars.h,v 1.11 2001/10/08 16:18:31 hno Exp $
+ * $Id: snmp_vars.h,v 1.12 2002/10/13 20:34:51 robertc Exp $
  * 
  **********************************************************************/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct variable_list {
     struct variable_list *next_variable;	/* NULL for last variable */
@@ -72,5 +76,9 @@ u_char *snmp_var_DecodeVarBind(u_char *, int *, struct variable_list **, int);
 #define SMI_ENDOFMIBVIEW   (ASN_CONTEXT | ASN_PRIMITIVE | 0x2)
 typedef struct variable variable;
 typedef struct variable_list variable_list;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SQUID_SNMP_VARS_H */

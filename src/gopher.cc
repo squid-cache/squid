@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.172 2002/09/24 10:46:42 robertc Exp $
+ * $Id: gopher.cc,v 1.173 2002/10/13 20:35:01 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 /* gopher type code from rfc. Anawat. */
 #define GOPHER_FILE         '0'
@@ -107,7 +108,7 @@ static char def_gopher_text[] = "text/plain";
 static void
 gopherStateFree(int fdnotused, void *data)
 {
-    GopherStateData *gopherState = data;
+    GopherStateData *gopherState = (GopherStateData *)data;
     if (gopherState == NULL)
 	return;
     if (gopherState->entry) {
@@ -300,7 +301,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
     entry = gopherState->entry;
 
-    if (gopherState->conversion == HTML_INDEX_PAGE) {
+    if (gopherState->conversion == gopher_ds::HTML_INDEX_PAGE) {
 	char *html_url = html_quote(storeUrl(entry));
 	gopherHTMLHeader(entry, "Gopher Index %s", html_url);
 	storeAppendPrintf(entry,
@@ -314,7 +315,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
 	return;
     }
-    if (gopherState->conversion == HTML_CSO_PAGE) {
+    if (gopherState->conversion == gopher_ds::HTML_CSO_PAGE) {
 	char *html_url = html_quote(storeUrl(entry));
 	gopherHTMLHeader(entry, "CSO Search of %s", html_url);
 	storeAppendPrintf(entry,
@@ -331,7 +332,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     inbuf[len] = '\0';
 
     if (!gopherState->HTML_header_added) {
-	if (gopherState->conversion == HTML_CSO_RESULT)
+	if (gopherState->conversion == gopher_ds::HTML_CSO_RESULT)
 	    gopherHTMLHeader(entry, "CSO Search Result", NULL);
 	else
 	    gopherHTMLHeader(entry, "Gopher Menu", NULL);
@@ -403,8 +404,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	}
 	switch (gopherState->conversion) {
 
-	case HTML_INDEX_RESULT:
-	case HTML_DIR:{
+	case gopher_ds::HTML_INDEX_RESULT:
+	case gopher_ds::HTML_DIR:{
 		tline = line;
 		gtype = *tline++;
 		name = tline;
@@ -518,7 +519,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	    }			/* HTML_DIR, HTML_INDEX_RESULT */
 
 
-	case HTML_CSO_RESULT:{
+	case gopher_ds::HTML_CSO_RESULT:{
 		if (line[0] == '-') {
 		    int code, recno;
 		    char *s_code, *s_recno, *result;
@@ -599,7 +600,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 static void
 gopherTimeout(int fd, void *data)
 {
-    GopherStateData *gopherState = data;
+    GopherStateData *gopherState = (GopherStateData *)data;
     StoreEntry *entry = gopherState->entry;
     debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     if (entry->store_status == STORE_PENDING) {
@@ -616,7 +617,7 @@ gopherTimeout(int fd, void *data)
 static void
 gopherReadReply(int fd, void *data)
 {
-    GopherStateData *gopherState = data;
+    GopherStateData *gopherState = (GopherStateData *)data;
     StoreEntry *entry = gopherState->entry;
     char *buf = NULL;
     int len;
@@ -631,7 +632,7 @@ gopherReadReply(int fd, void *data)
 	return;
     }
     errno = 0;
-    buf = memAllocate(MEM_4K_BUF);
+    buf = (char *)memAllocate(MEM_4K_BUF);
     read_sz = 4096 - 1;		/* leave room for termination */
 #if DELAY_POOLS
     read_sz = delayBytesWanted(delay_id, 1, read_sz);
@@ -658,7 +659,7 @@ gopherReadReply(int fd, void *data)
     if (len < 0) {
 	debug(50, 1) ("gopherReadReply: error reading: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
-	    commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, data, 0);
+	    commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, gopherState, 0);
 	} else if (entry->mem_obj->inmem_hi == 0) {
 	    ErrorState *err;
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
@@ -679,22 +680,22 @@ gopherReadReply(int fd, void *data)
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	/* flush the rest of data in temp buf if there is one. */
-	if (gopherState->conversion != NORMAL)
-	    gopherEndHTML(data);
+	if (gopherState->conversion != gopher_ds::NORMAL)
+	    gopherEndHTML(gopherState);
 	storeTimestampsSet(entry);
 	storeBufferFlush(entry);
 	fwdComplete(gopherState->fwdState);
 	comm_close(fd);
     } else {
-	if (gopherState->conversion != NORMAL) {
-	    gopherToHTML(data, buf, len);
+	if (gopherState->conversion != gopher_ds::NORMAL) {
+	    gopherToHTML(gopherState, buf, len);
 	} else {
 	    storeAppend(entry, buf, len);
 	}
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    gopherReadReply,
-	    data, 0);
+	    gopherState, 0);
     }
     memFree(buf, MEM_4K_BUF);
     return;
@@ -736,24 +737,24 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, void *dat
     case GOPHER_DIRECTORY:
 	/* we got to convert it first */
 	storeBuffer(entry);
-	gopherState->conversion = HTML_DIR;
+	gopherState->conversion = gopher_ds::HTML_DIR;
 	gopherState->HTML_header_added = 0;
 	break;
     case GOPHER_INDEX:
 	/* we got to convert it first */
 	storeBuffer(entry);
-	gopherState->conversion = HTML_INDEX_RESULT;
+	gopherState->conversion = gopher_ds::HTML_INDEX_RESULT;
 	gopherState->HTML_header_added = 0;
 	break;
     case GOPHER_CSO:
 	/* we got to convert it first */
 	storeBuffer(entry);
-	gopherState->conversion = HTML_CSO_RESULT;
+	gopherState->conversion = gopher_ds::HTML_CSO_RESULT;
 	gopherState->cso_recno = 0;
 	gopherState->HTML_header_added = 0;
 	break;
     default:
-	gopherState->conversion = NORMAL;
+	gopherState->conversion = gopher_ds::NORMAL;
     }
     /* Schedule read reply. */
     commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, gopherState, 0);
@@ -766,8 +767,8 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, void *dat
 static void
 gopherSendRequest(int fd, void *data)
 {
-    GopherStateData *gopherState = data;
-    char *buf = memAllocate(MEM_4K_BUF);
+    GopherStateData *gopherState = (GopherStateData *)data;
+    char *buf = (char *)memAllocate(MEM_4K_BUF);
     if (gopherState->type_id == GOPHER_CSO) {
 	const char *t = strchr(gopherState->request, '?');
 	if (t != NULL)
@@ -788,7 +789,7 @@ gopherSendRequest(int fd, void *data)
 	buf,
 	strlen(buf),
 	gopherSendComplete,
-	data,
+	gopherState,
 	memFree4K);
     if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
 	storeSetPublicKey(gopherState->entry);	/* Make it public */
@@ -804,7 +805,7 @@ gopherStart(FwdState * fwdState)
     GopherStateData *gopherState;
     CBDATA_INIT_TYPE(GopherStateData);
     gopherState = cbdataAlloc(GopherStateData);
-    gopherState->buf = memAllocate(MEM_4K_BUF);
+    gopherState->buf = (char *)memAllocate(MEM_4K_BUF);
     storeLockObject(entry);
     gopherState->entry = entry;
     gopherState->fwdState = fwdState;
@@ -831,12 +832,12 @@ gopherStart(FwdState * fwdState)
 	/* We have to generate search page back to client. No need for connection */
 	gopherMimeCreate(gopherState);
 	if (gopherState->type_id == GOPHER_INDEX) {
-	    gopherState->conversion = HTML_INDEX_PAGE;
+	    gopherState->conversion = gopher_ds::HTML_INDEX_PAGE;
 	} else {
 	    if (gopherState->type_id == GOPHER_CSO) {
-		gopherState->conversion = HTML_CSO_PAGE;
+		gopherState->conversion = gopher_ds::HTML_CSO_PAGE;
 	    } else {
-		gopherState->conversion = HTML_INDEX_PAGE;
+		gopherState->conversion = gopher_ds::HTML_INDEX_PAGE;
 	    }
 	}
 	gopherToHTML(gopherState, (char *) NULL, 0);

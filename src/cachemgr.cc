@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.99 2002/09/01 12:37:46 hno Exp $
+ * $Id: cachemgr.cc,v 1.100 2002/10/13 20:34:59 robertc Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -542,7 +542,7 @@ process_request(cachemgr_request * req)
     memset(&S, '\0', sizeof(struct sockaddr_in));
     S.sin_family = AF_INET;
     if ((hp = gethostbyname(req->hostname)) != NULL) {
-	assert(hp->h_length <= sizeof(S.sin_addr.s_addr));
+	assert(hp->h_length >= 0 && (size_t)hp->h_length <= sizeof(S.sin_addr.s_addr));
 	xmemcpy(&S.sin_addr.s_addr, hp->h_addr, hp->h_length);
     } else if (safe_inet_addr(req->hostname, &S.sin_addr))
 	(void) 0;
@@ -601,7 +601,7 @@ read_post_request(void)
 	return NULL;
     if ((len = atoi(s)) <= 0)
 	return NULL;
-    buf = xmalloc(len + 1);
+    buf = (char *)xmalloc(len + 1);
     fread(buf, len, 1, stdin);
     buf[len] = '\0';
     return buf;
@@ -632,7 +632,7 @@ read_request(void)
 	return NULL;
     if (strlen(buf) == 0)
 	return NULL;
-    req = xcalloc(1, sizeof(cachemgr_request));
+    req = (cachemgr_request *)xcalloc(1, sizeof(cachemgr_request));
     for (s = strtok(buf, "&"); s != NULL; s = strtok(NULL, "&")) {
 	t = xstrdup(s);
 	if ((q = strchr(t, '=')) == NULL)
@@ -735,7 +735,7 @@ static const char *
 make_auth_header(const cachemgr_request * req)
 {
     static char buf[1024];
-    off_t l = 0;
+    size_t stringLength = 0;
     const char *str64;
     if (!req->passwd)
 	return "";
@@ -745,9 +745,9 @@ make_auth_header(const cachemgr_request * req)
 	req->passwd);
 
     str64 = base64_encode(buf);
-    l += snprintf(buf, sizeof(buf), "Authorization: Basic %s\r\n", str64);
-    assert(l < sizeof(buf));
-    l += snprintf(&buf[l], sizeof(buf) - l,
+    stringLength += snprintf(buf, sizeof(buf), "Authorization: Basic %s\r\n", str64);
+    assert(stringLength < sizeof(buf));
+    stringLength += snprintf(&buf[stringLength], sizeof(buf) - stringLength,
 	"Proxy-Authorization: Basic %s\r\n", str64);
     return buf;
 }

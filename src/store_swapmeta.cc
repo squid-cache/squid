@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.17 2001/10/24 08:52:37 hno Exp $
+ * $Id: store_swapmeta.cc,v 1.18 2002/10/13 20:35:05 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -34,11 +34,12 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 static tlv **
 storeSwapTLVAdd(int type, const void *ptr, size_t len, tlv ** tail)
 {
-    tlv *t = memAllocate(MEM_TLV);
+    tlv *t = (tlv *)memAllocate(MEM_TLV);
     t->type = (char) type;
     t->length = (int) len;
     t->value = xmalloc(len);
@@ -94,7 +95,7 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     for (t = tlv_list; t; t = t->next)
 	buflen += sizeof(char) + sizeof(int) + t->length;
     buflen++;			/* STORE_META_END */
-    buf = xmalloc(buflen);
+    buf = (char *)xmalloc(buflen);
     buf[j++] = (char) STORE_META_OK;
     xmemcpy(&buf[j], &buflen, sizeof(int));
     j += sizeof(int);
@@ -130,9 +131,9 @@ storeSwapMetaUnpack(const char *buf, int *hdr_len)
      * sanity check on 'buflen' value.  It should be at least big
      * enough to hold one type and one length.
      */
-    if (buflen <= (sizeof(char) + sizeof(int)))
+    if (buflen <= (off_t) (sizeof(char) + sizeof(int)))
 	    return NULL;
-    while (buflen - j > (sizeof(char) + sizeof(int))) {
+    while (buflen - j > (off_t)(sizeof(char) + sizeof(int))) {
 	type = buf[j++];
 	/* VOID is reserved, but allow some slack for new types.. */
 	if (type <= STORE_META_VOID || type > STORE_META_END + 10) {

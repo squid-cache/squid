@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.91 2002/09/29 11:43:17 robertc Exp $
+ * $Id: peer_digest.cc,v 1.92 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #if USE_CACHE_DIGESTS
 
@@ -219,7 +220,7 @@ peerDigestNotePeerGone(PeerDigest * pd)
 static void
 peerDigestCheck(void *data)
 {
-    PeerDigest *pd = data;
+    PeerDigest *pd = (PeerDigest *)data;
     time_t req_time;
 
     assert(!pd->flags.requested);
@@ -345,7 +346,7 @@ peerDigestRequest(PeerDigest * pd)
 static void
 peerDigestHandleReply(void *data, StoreIOBuffer recievedData)
 {
-    DigestFetchState *fetch = data;
+    DigestFetchState *fetch = (DigestFetchState *)data;
     PeerDigest *pd = fetch->pd;
     int retsize = -1;
     digest_read_state_t prevstate;
@@ -381,16 +382,16 @@ peerDigestHandleReply(void *data, StoreIOBuffer recievedData)
 	prevstate = fetch->state;
 	switch (fetch->state) {
 	case DIGEST_READ_REPLY:
-	    retsize = peerDigestFetchReply(data, fetch->buf, fetch->bufofs);
+	    retsize = peerDigestFetchReply(fetch, fetch->buf, fetch->bufofs);
 	    break;
 	case DIGEST_READ_HEADERS:
-	    retsize = peerDigestSwapInHeaders(data, fetch->buf, fetch->bufofs);
+	    retsize = peerDigestSwapInHeaders(fetch, fetch->buf, fetch->bufofs);
 	    break;
 	case DIGEST_READ_CBLOCK:
-	    retsize = peerDigestSwapInCBlock(data, fetch->buf, fetch->bufofs);
+	    retsize = peerDigestSwapInCBlock(fetch, fetch->buf, fetch->bufofs);
 	    break;
 	case DIGEST_READ_MASK:
-	    retsize = peerDigestSwapInMask(data, fetch->buf, fetch->bufofs);
+	    retsize = peerDigestSwapInMask(fetch, fetch->buf, fetch->bufofs);
 	    break;
 	case DIGEST_READ_NONE:
 	    break;
@@ -443,7 +444,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer recievedData)
 static int
 peerDigestFetchReply(void *data, char *buf, ssize_t size)
 {
-    DigestFetchState *fetch = data;
+    DigestFetchState *fetch = (DigestFetchState *)data;
     PeerDigest *pd = fetch->pd;
     size_t hdr_size;
     assert(pd && buf);
@@ -519,7 +520,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 static int
 peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 {
-    DigestFetchState *fetch = data;
+    DigestFetchState *fetch = (DigestFetchState *)data;
     size_t hdr_size;
 
     assert(fetch->state == DIGEST_READ_HEADERS);
@@ -554,13 +555,13 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 static int
 peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
 {
-    DigestFetchState *fetch = data;
+    DigestFetchState *fetch = (DigestFetchState *)data;
 
     assert(fetch->state == DIGEST_READ_CBLOCK);
     if (peerDigestFetchedEnough(fetch, buf, size, "peerDigestSwapInCBlock"))
 	return -1;
 
-    if (size >= StoreDigestCBlockSize) {
+    if (size >= (ssize_t)StoreDigestCBlockSize) {
 	PeerDigest *pd = fetch->pd;
 	HttpReply *rep = fetch->entry->mem_obj->reply;
 
@@ -591,7 +592,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
 static int
 peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 {
-    DigestFetchState *fetch = data;
+    DigestFetchState *fetch = (DigestFetchState *)data;
     PeerDigest *pd;
 
     pd = fetch->pd;
@@ -608,10 +609,10 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 	return -1;
 
     fetch->mask_offset += size;
-    if (fetch->mask_offset >= pd->cd->mask_size) {
+    if (fetch->mask_offset >= (off_t)pd->cd->mask_size) {
 	debug(72, 2) ("peerDigestSwapInMask: Done! Got %d, expected %d\n",
 	    fetch->mask_offset, pd->cd->mask_size);
-	assert(fetch->mask_offset == pd->cd->mask_size);
+	assert(fetch->mask_offset == (off_t)pd->cd->mask_size);
 	assert(peerDigestFetchedEnough(fetch, NULL, 0, "peerDigestSwapInMask"));
 	return -1;		/* XXX! */
     } else {
@@ -663,7 +664,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (!reason && !size) {
 	if (!pd->cd)
 	    reason = "null digest?!";
-	else if (fetch->mask_offset != pd->cd->mask_size)
+	else if (fetch->mask_offset != (off_t)pd->cd->mask_size)
 	    reason = "premature end of digest?!";
 	else if (!peerDigestUseful(pd))
 	    reason = "useless digest";
@@ -877,7 +878,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
 	return 0;
     }
     /* check consistency further */
-    if (cblock.mask_size != cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)) {
+    if ((size_t)cblock.mask_size != cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)) {
 	debug(72, 0) ("%s digest cblock is corrupted (mask size mismatch: %d ? %d).\n",
 	    host, cblock.mask_size, cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry));
 	return 0;
@@ -892,7 +893,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
      * no cblock bugs below this point
      */
     /* check size changes */
-    if (pd->cd && cblock.mask_size != pd->cd->mask_size) {
+    if (pd->cd && cblock.mask_size != (ssize_t)pd->cd->mask_size) {
 	debug(72, 2) ("%s digest changed size: %d -> %d\n",
 	    host, cblock.mask_size, pd->cd->mask_size);
 	freed_size = pd->cd->mask_size;

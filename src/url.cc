@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.137 2002/09/12 05:19:47 wessels Exp $
+ * $Id: url.cc,v 1.138 2002/10/13 20:35:06 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -175,6 +175,13 @@ urlInitialize(void)
     /* more cases? */
 }
 
+method_t &operator++ (method_t &aMethod)
+{
+    aMethod = (method_t)(++(int)aMethod);
+    return aMethod;
+}
+
+
 method_t
 urlParseMethod(const char *s)
 {
@@ -186,7 +193,7 @@ urlParseMethod(const char *s)
      */
     if (*s == '%')
 	return METHOD_NONE;
-    for (method++; method < METHOD_ENUM_END; method++) {
+    for (++method; method < METHOD_ENUM_END; ++method) {
 	if (0 == strcasecmp(s, RequestMethodStr[method]))
 	    return method;
     }
@@ -607,8 +614,8 @@ urlHostname(const char *url)
 static void
 urlExtMethodAdd(const char *mstr)
 {
-    method_t method = 0;
-    for (method++; method < METHOD_ENUM_END; method++) {
+    method_t method = METHOD_NONE;
+    for (++method; method < METHOD_ENUM_END; ++method) {
 	if (0 == strcmp(mstr, RequestMethodStr[method])) {
 	    debug(23, 2) ("Extension method '%s' already exists\n", mstr);
 	    return;

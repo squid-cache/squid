@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.91 2002/07/20 23:51:03 hno Exp $
+ * $Id: redirect.cc,v 1.92 2002/10/13 20:35:03 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include "authenticate.h"
+#include "Store.h"
 
 typedef struct {
     void *data;
@@ -54,7 +56,7 @@ CBDATA_TYPE(redirectStateData);
 static void
 redirectHandleReply(void *data, char *reply)
 {
-    redirectStateData *r = data;
+    redirectStateData *r = static_cast<redirectStateData *>(data);
     char *t;
     void *cbdata;
     debug(61, 5) ("redirectHandleRead: {%s}\n", reply ? reply : "<NULL>");

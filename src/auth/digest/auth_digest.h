@@ -8,11 +8,12 @@
 #include "rfc2617.h"
 
 /* Generic */
-typedef struct {
+class DigestAuthenticateStateData {
+public:
     void *data;
     auth_user_request_t *auth_user_request;
     RH *handler;
-} authenticateStateData;
+};
 
 typedef struct _digest_request_h digest_request_h;
 typedef struct _digest_user_h digest_user_h;
@@ -62,7 +63,7 @@ struct _digest_nonce_h {
     hash_link hash;		/* must be first */
     digest_nonce_data noncedata;
     /* number of uses we've seen of this nonce */
-    long nc;
+    unsigned long nc;
     /* reference count */
     short references;
     /* the auth_user this nonce has been tied to */
@@ -81,7 +82,7 @@ struct _auth_digest_config {
     wordlist *authenticate;
     time_t nonceGCInterval;
     time_t noncemaxduration;
-    int noncemaxuses;
+    unsigned int noncemaxuses;
     int NonceStrictness;
 };
 

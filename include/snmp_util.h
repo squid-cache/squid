@@ -1,9 +1,13 @@
 /*
- * $Id: snmp_util.h,v 1.8 2001/10/08 16:18:31 hno Exp $
+ * $Id: snmp_util.h,v 1.9 2002/10/13 20:34:51 robertc Exp $
  */
 
 #ifndef SQUID_SNMP_UTIL_H
 #define SQUID_SNMP_UTIL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* call a function at regular intervals (in seconds): */
 extern void snmp_alarm(int ival, void (*handler) (void));
@@ -46,4 +50,8 @@ int Util_file_read(char *file, int offset, char *data, int dataSz);
 int Util_file_write(char *file, int offset, char *data, int dataSz);
 
 /* ---------------------------------------------------------------------- */
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* SQUID_SNMP_UTIL_H */

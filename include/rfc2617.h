@@ -14,7 +14,7 @@
 
 
 /*
- * $Id: rfc2617.h,v 1.3 2001/10/08 16:18:31 hno Exp $
+ * $Id: rfc2617.h,v 1.4 2002/10/13 20:34:51 robertc Exp $
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
@@ -56,7 +56,7 @@ typedef char HASH[HASHLEN];
 typedef char HASHHEX[HASHHEXLEN + 1];
 
 /* calculate H(A1) as per HTTP Digest spec */
-void DigestCalcHA1(
+SQUIDCEXTERN void DigestCalcHA1(
     const char *pszAlg,
     const char *pszUserName,
     const char *pszRealm,
@@ -68,7 +68,7 @@ void DigestCalcHA1(
 );
 
 /* calculate request-digest/response-digest as per HTTP Digest spec */
-void DigestCalcResponse(
+SQUIDCEXTERN void DigestCalcResponse(
     const HASHHEX HA1,		/* H(A1) */
     const char *pszNonce,	/* nonce from server */
     const char *pszNonceCount,	/* 8 hex digits */
@@ -80,8 +80,8 @@ void DigestCalcResponse(
     HASHHEX Response		/* request-digest or response-digest */
 );
 
-void CvtHex(const HASH Bin, HASHHEX Hex);
+SQUIDCEXTERN void CvtHex(const HASH Bin, HASHHEX Hex);
 
-void CvtBin(const HASHHEX Hex, HASH Bin);
+SQUIDCEXTERN void CvtBin(const HASHHEX Hex, HASH Bin);
 
 #endif /* SQUID_RFC2617_H */

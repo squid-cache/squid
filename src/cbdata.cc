@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.44 2002/09/24 10:46:43 robertc Exp $
+ * $Id: cbdata.cc,v 1.45 2002/10/13 20:34:59 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -45,6 +45,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 static int cbdataCount = 0;
 #if CBDATA_DEBUG
@@ -70,14 +71,14 @@ typedef struct _cbdata {
 
 static OBJH cbdataDump;
 
-struct {
+struct CBDataIndex {
     MemPool *pool;
     FREE *free_func;
 }     *cbdata_index = NULL;
 int cbdata_types = 0;
 
 #define OFFSET_OF(type, member) ((int)(char *)&((type *)0L)->member)
-#define CBDATA_COOKIE	0xDEADBEEF
+#define CBDATA_COOKIE	(long)0xDEADBEEF
 #define CBDATA_CHECK(c) assert(c->y == ((long)c ^ CBDATA_COOKIE))
 
 static void
@@ -85,14 +86,14 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
 {
     char *label;
     if (type >= cbdata_types) {
-	cbdata_index = xrealloc(cbdata_index, (type + 1) * sizeof(*cbdata_index));
+	cbdata_index = (CBDataIndex *)xrealloc(cbdata_index, (type + 1) * sizeof(*cbdata_index));
 	memset(&cbdata_index[cbdata_types], 0,
 	    (type + 1 - cbdata_types) * sizeof(*cbdata_index));
 	cbdata_types = type + 1;
     }
     if (cbdata_index[type].pool)
 	return;
-    label = xmalloc(strlen(name) + 20);
+    label = (char *)xmalloc(strlen(name) + 20);
     snprintf(label, strlen(name) + 20, "cbdata %s (%d)", name, (int) type);
     assert(OFFSET_OF(cbdata, data) == (sizeof(cbdata) - sizeof(((cbdata *) NULL)->data)));
     cbdata_index[type].pool = memPoolCreate(label, size + OFFSET_OF(cbdata, data));
@@ -104,7 +105,7 @@ cbdataInternalAddType(cbdata_type type, const char *name, int size, FREE * free_
 {
     if (type)
 	return type;
-    type = cbdata_types;
+    type = (cbdata_type)cbdata_types;
     cbdataInternalInitType(type, name, size, free_func);
     return type;
 }
@@ -132,7 +133,6 @@ cbdataInit(void)
     CREATE_CBDATA(helper_server);
     CREATE_CBDATA(statefulhelper);
     CREATE_CBDATA(helper_stateful_server);
-    CREATE_CBDATA(HttpStateData);
     CREATE_CBDATA_FREE(peer, peerDestroy);
     CREATE_CBDATA(ps_state);
     CREATE_CBDATA(RemovalPolicy);
@@ -149,7 +149,7 @@ cbdataInternalAlloc(cbdata_type type)
 {
     cbdata *p;
     assert(type > 0 && type < cbdata_types);
-    p = memPoolAlloc(cbdata_index[type].pool);
+    p = (cbdata *)memPoolAlloc(cbdata_index[type].pool);
     p->type = type;
     p->valid = 1;
     p->locks = 0;

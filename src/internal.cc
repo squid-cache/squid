@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.25 2002/04/11 21:34:03 hno Exp $
+ * $Id: internal.cc,v 1.26 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 /* called when we "miss" on an internal object;
  * generate known dynamic objects, 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.87 2002/09/15 06:40:57 robertc Exp $
+ * $Id: forward.cc,v 1.88 2002/10/13 20:35:01 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -35,6 +35,8 @@
 
 
 #include "squid.h"
+#include "Store.h"
+
 
 static PSC fwdStartComplete;
 static void fwdDispatch(FwdState *);
@@ -145,7 +147,7 @@ fwdCheckRetry(FwdState * fwdState)
 static void
 fwdServerClosed(int fd, void *data)
 {
-    FwdState *fwdState = data;
+    FwdState *fwdState = (FwdState *)data;
     debug(17, 2) ("fwdServerClosed: FD %d %s\n", fd, storeUrl(fwdState->entry));
     assert(fwdState->server_fd == fd);
     fwdState->server_fd = -1;
@@ -179,7 +181,7 @@ fwdServerClosed(int fd, void *data)
 static void
 fwdConnectDone(int server_fd, comm_err_t status, void *data)
 {
-    FwdState *fwdState = data;
+    FwdState *fwdState = (FwdState *)data;
     static FwdState *current = NULL;
     FwdServer *fs = fwdState->servers;
     ErrorState *err;
@@ -242,7 +244,7 @@ fwdConnectDone(int server_fd, comm_err_t status, void *data)
 static void
 fwdConnectTimeout(int fd, void *data)
 {
-    FwdState *fwdState = data;
+    FwdState *fwdState = (FwdState *)data;
     StoreEntry *entry = fwdState->entry;
     ErrorState *err;
     peer *p = fwdStateServerPeer(fwdState);
@@ -320,7 +322,7 @@ getOutgoingTOS(request_t * request)
 static void
 fwdConnectStart(void *data)
 {
-    FwdState *fwdState = data;
+    FwdState *fwdState = (FwdState *)data;
     const char *url = storeUrl(fwdState->entry);
     int fd;
     ErrorState *err;
@@ -401,7 +403,7 @@ fwdConnectStart(void *data)
 static void
 fwdStartComplete(FwdServer * servers, void *data)
 {
-    FwdState *fwdState = data;
+    FwdState *fwdState = (FwdState *)data;
     debug(17, 3) ("fwdStartComplete: %s\n", storeUrl(fwdState->entry));
     if (servers != NULL) {
 	fwdState->servers = servers;
@@ -618,7 +620,7 @@ fwdStart(int fd, StoreEntry * e, request_t * r)
 int
 fwdCheckDeferRead(int fd, void *data)
 {
-    StoreEntry *e = data;
+    StoreEntry *e = (StoreEntry *)data;
     MemObject *mem = e->mem_obj;
     int rc = 0;
     if (mem == NULL)
@@ -644,7 +646,7 @@ fwdCheckDeferRead(int fd, void *data)
 #endif
     if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT))
 	return rc;
-    if (mem->inmem_hi - storeLowestMemReaderOffset(e) < Config.readAheadGap)
+    if ((size_t)mem->inmem_hi - storeLowestMemReaderOffset(e) < Config.readAheadGap)
 	return rc;
     return 1;
 }
@@ -668,7 +670,7 @@ fwdFail(FwdState * fwdState, ErrorState * errorState)
 static void
 fwdAbort(void *data)
 {
-    FwdState *fwdState = data;
+    FwdState *fwdState = (FwdState *)data;
     debug(17, 2) ("fwdAbort: %s\n", storeUrl(fwdState->entry));
     fwdStateFree(fwdState);
 }

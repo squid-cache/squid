@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.10 2001/02/07 18:56:54 hno Exp $
+ * $Id: diskd.cc,v 1.11 2002/10/13 20:35:26 robertc Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -78,7 +78,7 @@ do_open(diomsg * r, int len, const char *buf)
 	}
 	return -errno;
     }
-    fs = xcalloc(1, sizeof(*fs));
+    fs = (file_state *)xcalloc(1, sizeof(*fs));
     fs->id = r->id;
     fs->key = &fs->id;		/* gack */
     fs->fd = fd;
@@ -251,8 +251,8 @@ msg_handle(diomsg * r, int rl, diomsg * s)
 static int
 fsCmp(const void *a, const void *b)
 {
-    const int *A = a;
-    const int *B = b;
+    const int *A = (const int *)a;
+    const int *B = (const int *)b;
     return *A != *B;
 }
 
@@ -260,7 +260,7 @@ static unsigned int
 fsHash(const void *key, unsigned int n)
 {
     /* note, n must be a power of 2! */
-    const int *k = key;
+    const int *k = (const int *)key;
     return (*k & (--n));
 }
 
@@ -304,7 +304,7 @@ main(int argc, char *argv[])
 	perror("shmget");
 	return 1;
     }
-    shmbuf = shmat(shmid, NULL, 0);
+    shmbuf = (char *)shmat(shmid, NULL, 0);
     if (shmbuf == (void *) -1) {
 	perror("shmat");
 	return 1;

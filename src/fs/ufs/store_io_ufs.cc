@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.12 2002/10/12 09:45:58 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.13 2002/10/13 20:35:27 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "store_ufs.h"
+#include "Store.h"
 #include "ufscommon.h"
 
 
@@ -195,7 +196,7 @@ storeUfsUnlink(SwapDir * SD, StoreEntry * e)
 static void
 storeUfsReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
 {
-    storeIOState *sio = my_data;
+    storeIOState *sio = (storeIOState *)my_data;
     ufsstate_t *ufsstate = (ufsstate_t *) sio->fsstate;
     STRCB *callback;
     void *cbdata;
@@ -222,7 +223,7 @@ storeUfsReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
 static void
 storeUfsWriteDone(int fd, int errflag, size_t len, void *my_data)
 {
-    storeIOState *sio = my_data;
+    storeIOState *sio = (storeIOState *)my_data;
     ufsstate_t *ufsstate = (ufsstate_t *) sio->fsstate;
     debug(79, 3) ("storeUfsWriteDone: dirno %d, fileno %08X, FD %d, len %ld\n",
 	sio->swap_dirn, sio->swap_filen, fd, (long int) len);

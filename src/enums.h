@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.216 2002/09/24 10:46:43 robertc Exp $
+ * $Id: enums.h,v 1.217 2002/10/13 20:35:00 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -183,7 +183,8 @@ typedef enum {
 
 /* recognized or "known" header fields; @?@ add more! */
 typedef enum {
-    HDR_ACCEPT,
+    HDR_BAD_HDR = -1,
+    HDR_ACCEPT = 0,
     HDR_ACCEPT_CHARSET,
     HDR_ACCEPT_ENCODING,
     HDR_ACCEPT_LANGUAGE,
@@ -251,7 +252,8 @@ typedef enum {
 } http_hdr_type;
 
 typedef enum {
-    CC_PUBLIC,
+    CC_BADHDR = -1,
+    CC_PUBLIC = 0,
     CC_PRIVATE,
     CC_NO_CACHE,
     CC_NO_STORE,
@@ -343,10 +345,10 @@ typedef enum {
     ICP_END
 } icp_opcode;
 
-enum {
+typedef enum _mem_status_t {
     NOT_IN_MEMORY,
     IN_MEMORY
-};
+} mem_status_t;
 
 enum {
     PING_NONE,
@@ -589,8 +591,6 @@ typedef enum {
     MEM_ACL_IP_DATA,
     MEM_ACL_LIST,
     MEM_ACL_NAME_LIST,
-    MEM_AUTH_USER_T,
-    MEM_AUTH_USER_HASH,
     MEM_ACL_PROXY_AUTH_MATCH,
     MEM_ACL_USER_DATA,
     MEM_ACL_TIME_DATA,
@@ -622,7 +622,6 @@ typedef enum {
     MEM_NET_DB_NAME,
     MEM_RELIST,
     MEM_REQUEST_T,
-    MEM_STOREENTRY,
     MEM_WORDLIST,
 #if !USE_DNSSERVERS
     MEM_IDNS_QUERY,
@@ -720,7 +719,6 @@ typedef enum {
     CBDATA_helper_server,
     CBDATA_statefulhelper,
     CBDATA_helper_stateful_server,
-    CBDATA_HttpStateData,
     CBDATA_peer,
     CBDATA_ps_state,
     CBDATA_RemovalPolicy,
