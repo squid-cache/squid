@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.127 1998/08/18 21:15:43 wessels Exp $
+ * $Id: disk.cc,v 1.128 1998/08/18 22:42:18 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -166,6 +166,9 @@ diskHandleWrite(int fd, void *notused)
     struct _fde_disk *fdd = &F->disk;
     if (!fdd->write_q)
 	return;
+#ifdef OPTIMISTIC_IO
+    assert(!F->flags.calling_io_handler);
+#endif
     debug(6, 3) ("diskHandleWrite: FD %d\n", fd);
     /* We need to combine subsequent write requests after the first */
     /* But only if we don't need to seek() in between them, ugh! */
@@ -329,11 +332,17 @@ diskHandleWriteComplete(int fd, void *data, int len, int errcode)
 	if (fdd->wrt_handle_data != NULL)
 	    cbdataUnlock(fdd->wrt_handle_data);
 	if (do_callback) {
+#ifdef OPTIMISTIC_IO
+	    F->flags.calling_io_handler = 1;
+#endif
 	    fdd->wrt_handle(fd, status, len, fdd->wrt_handle_data);
 	    /*
 	     * NOTE, this callback can close the FD, so we must
 	     * not touch 'F', 'fdd', etc. after this.
 	     */
+#ifdef OPTIMISTIC_IO
+	    F->flags.calling_io_handler = 0;
+#endif
 	    return;
 	}
     }
@@ -381,9 +390,18 @@ file_write(int fd,
 #if USE_ASYNC_IO
 	diskHandleWrite(fd, NULL);
 #else
-	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
+#ifdef OPTIMISTIC_IO
+    if (F->flags.calling_io_handler)
 #endif
+	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
+#ifdef OPTIMISTIC_IO
+    else
+        diskHandleWrite(fd, NULL);
+#endif
+#endif
+#ifndef OPTIMISTIC_IO
 	F->flags.write_daemon = 1;
+#endif
     }
 }
 
@@ -406,6 +424,9 @@ diskHandleRead(int fd, void *data)
     fde *F = &fd_table[fd];
     int len;
 #endif
+#ifdef OPTIMISTIC_IO
+    assert(!F->flags.calling_io_handler);
+#endif /* OPTIMISTIC_IO */
 #if USE_ASYNC_IO
     aioRead(fd,
 	ctrl_dat->offset,
@@ -432,6 +453,9 @@ diskHandleReadComplete(int fd, void *data, int len, int errcode)
 {
     dread_ctrl *ctrl_dat = data;
     int rc = DISK_OK;
+#ifdef OPTIMISTIC_IO
+    fde *F = &fd_table[fd];
+#endif /* OPTIMISTIC_IO */
     errno = errcode;
     if (len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
 	cbdataUnlock(ctrl_dat->client_data);
@@ -450,8 +474,14 @@ diskHandleReadComplete(int fd, void *data, int len, int errcode)
     } else if (len == 0) {
 	rc = DISK_EOF;
     }
+#ifdef OPTIMISTIC_IO
+    F->flags.calling_io_handler = 1;
+#endif /* OPTIMISTIC_IO */
     if (cbdataValid(ctrl_dat->client_data))
 	ctrl_dat->handler(fd, ctrl_dat->buf, len, rc, ctrl_dat->client_data);
+#ifdef OPTIMISTIC_IO
+    F->flags.calling_io_handler = 0;
+#endif /* OPTIMISTIC_IO */
     cbdataUnlock(ctrl_dat->client_data);
     memFree(MEM_DREAD_CTRL, ctrl_dat);
 }
@@ -465,6 +495,9 @@ int
 file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
+#ifdef OPTIMISTIC_IO
+    fde *F = &fd_table[fd];
+#endif /* OPTIMISTIC_IO */
     assert(fd >= 0);
     ctrl_dat = memAllocate(MEM_DREAD_CTRL);
     ctrl_dat->fd = fd;
@@ -478,11 +511,18 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
 #if USE_ASYNC_IO
     diskHandleRead(fd, ctrl_dat);
 #else
+#ifndef OPTIMISTIC_IO
     commSetSelect(fd,
 	COMM_SELECT_READ,
 	diskHandleRead,
 	ctrl_dat,
 	0);
+#else
+    if (F->flags.calling_io_handler)
+	commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
+    else
+        diskHandleRead(fd, ctrl_dat);
+#endif /* OPTIMISTIC_IO */
 #endif
     return DISK_OK;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.36 1998/08/18 03:04:35 wessels Exp $
+ * $Id: store_client.cc,v 1.37 1998/08/18 22:42:22 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -271,14 +271,23 @@ storeClientFileRead(store_client * sc)
 {
     MemObject *mem = sc->entry->mem_obj;
     assert(sc->callback != NULL);
+#ifndef OPTIMISTIC_IO
     if (mem->swap_hdr_sz == 0)
+#else
+    sc->flags.disk_io_pending = 1;
+    if (mem->swap_hdr_sz == 0) {
+#endif
 	file_read(sc->swapin_fd,
 	    sc->copy_buf,
 	    sc->copy_size,
 	    0,
 	    storeClientReadHeader,
 	    sc);
+#ifndef OPTIMISTIC_IO
     else {
+#else
+    } else {
+#endif
 	if (sc->entry->swap_status == SWAPOUT_WRITING)
 	    assert(mem->swapout.done_offset > sc->copy_offset + mem->swap_hdr_sz);
 	file_read(sc->swapin_fd,
@@ -288,7 +297,9 @@ storeClientFileRead(store_client * sc)
 	    storeClientReadBody,
 	    sc);
     }
+#ifndef OPTIMISTIC_IO
     sc->flags.disk_io_pending = 1;
+#endif
 }
 
 static void
