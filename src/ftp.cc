@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.333 2002/10/14 08:49:59 robertc Exp $
+ * $Id: ftp.cc,v 1.334 2002/10/14 11:09:26 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -819,7 +819,7 @@ ftpParseListing(FtpStateData * ftpState)
 	xfree(sbuf);
 	return;
     }
-    debug(9, 3) ("ftpParseListing: %d bytes to play with\n", len);
+    debug(9, 3) ("ftpParseListing: %lu bytes to play with\n", (unsigned long int)len);
     line = (char *)memAllocate(MEM_4K_BUF);
     end++;
     storeBuffer(e);
