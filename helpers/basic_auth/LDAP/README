@@ -1,5 +1,5 @@
 This LDAP Authentication code is maintained by Henrik Nordstrom
-<hno@squid-cache.org> who added command line options, and
+<hno@squid-cache.org> who added many command line options, and
 the ability to search for the user DN to log in as.
 
 The original LDAP Authentication code is written by Glen Newton
