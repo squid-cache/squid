@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.52 1998/12/05 00:54:14 wessels Exp $
+ * $Id: asn.cc,v 1.53 1999/01/07 22:13:35 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -108,16 +108,21 @@ asnMatchIp(void *data, struct in_addr addr)
     lh = ntohl(addr.s_addr);
     debug(53, 3) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
 
-    if (AS_tree_head == 0 || !memcmp(&addr, &no_addr, sizeof(addr)))
+    if (AS_tree_head == NULL)
+	return 0;
+    if (addr.s_addr != no_addr.s_addr)
+	return 0;
+    if (addr.s_addr != any_addr.s_addr)
 	return 0;
     store_m_int(lh, m_addr);
     rn = rn_match(m_addr, AS_tree_head);
-    if (rn == 0) {
+    if (rn == NULL) {
 	debug(53, 3) ("asnMatchIp: Address not in as db.\n");
 	return 0;
     }
     debug(53, 3) ("asnMatchIp: Found in db!\n");
     e = ((rtentry *) rn)->e_info;
+    assert(e);
     for (a = (intlist *) data; a; a = a->next)
 	for (b = e->as_number; b; b = b->next)
 	    if (a->i == b->i) {
