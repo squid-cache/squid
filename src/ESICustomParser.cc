@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESICustomParser.cc,v 1.5 2005/01/06 13:16:38 serassio Exp $
+ * $Id: ESICustomParser.cc,v 1.6 2005/03/28 21:44:12 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -40,6 +40,8 @@
 #include "Array.h"
 
 Trie *ESICustomParser::SearchTrie=NULL;
+
+RegisterESIParser("custom", ESICustomParser);
 
 Trie *
 ESICustomParser::GetTrie()

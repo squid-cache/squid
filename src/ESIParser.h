@@ -1,5 +1,5 @@
 /*
- * $Id: ESIParser.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESIParser.h,v 1.3 2005/03/28 21:44:12 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,6 +48,7 @@ class ESIParser : public RefCountable
 
 public:
     typedef RefCount<ESIParser> Pointer;
+    static void registerParser(const char *name, Pointer (*new_func)(ESIParserClient *aClient));
     static Pointer NewParser(ESIParserClient *aClient);
     static char *Type;
     /* true on success */
@@ -58,7 +59,38 @@ public:
 protected:
     ESIParser(){};
 
+    class Register;
+
 private:
+    static Register *Parser;
+    static Register *Parsers;
+
+public:
 };
 
+class ESIParser::Register
+{
+
+public:
+    Register(const char *_name, ESIParser::Pointer (*_newParser)(ESIParserClient *aClient)) : name(_name), newParser(_newParser)
+    {
+        this->next = ESIParser::Parsers;
+        ESIParser::Parsers = this;
+    }
+
+    const char *name;
+    ESIParser::Pointer (*newParser)(ESIParserClient *aClient);
+    Register * next;
+};
+
+#define RegisterESIParser(name, ThisClass) \
+    ESIParser::Register ThisClass::thisParser(name, &NewParser); \
+    ESIParser::Pointer ThisClass::NewParser(ESIParserClient *aClient) \
+    { \
+	return new ThisClass (aClient); \
+    }
+
+#define ESI_PARSER_TYPE \
+    static ESIParser::Pointer NewParser(ESIParserClient *aClient); \
+    static ESIParser::Register thisParser
 #endif /* SQUID_ESIPARSER_H */

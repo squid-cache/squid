@@ -1,5 +1,5 @@
 /*
- * $Id: ESILibxml2Parser.cc,v 1.1 2004/12/10 00:49:53 hno Exp $
+ * $Id: ESILibxml2Parser.cc,v 1.2 2005/03/28 21:44:12 hno Exp $
  *
  * AUTHOR: Joachim Bauch (mail@joachim-bauch.de)
  *
@@ -50,6 +50,8 @@
 // the global document that will store the resolved entity
 // definitions
 static htmlDocPtr entity_doc = NULL;
+
+RegisterESIParser("libxml2", ESILibxml2Parser);
 
 // the SAX callback functions
 void esi_startElementSAXFunc(void * ctx, const xmlChar * name, const xmlChar ** atts)

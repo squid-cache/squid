@@ -1,5 +1,5 @@
 /*
- * $Id: ESILibxml2Parser.h,v 1.1 2004/12/10 00:49:53 hno Exp $
+ * $Id: ESILibxml2Parser.h,v 1.2 2005/03/28 21:44:12 hno Exp $
  *
  * AUTHOR: Joachim Bauch (mail@joachim-bauch.de)
  *
@@ -69,6 +69,7 @@ public:
     ESIParserClient *getClient() { return theClient; }
 
 private:
+    ESI_PARSER_TYPE;
     mutable xmlParserCtxtPtr parser; /* our parser */
 
     ESIParserClient *theClient;
