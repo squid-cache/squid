@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.292 1997/10/17 20:21:46 wessels Exp $
+ * $Id: store.cc,v 1.293 1997/10/17 23:32:38 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -517,8 +517,6 @@ storeUnlockObject(StoreEntry * e)
     if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	storeRelease(e);
     else if (storeKeepInMemory(e)) {
-	debug(0,0)("storeUnlockObject: %s has %d bytes in memory\n",
-		e->url, (int) (e->mem_obj->inmem_hi - e->mem_obj->inmem_lo));
 	storeSetMemStatus(e, IN_MEMORY);
 	requestUnlink(e->mem_obj->request);
 	e->mem_obj->request = NULL;
@@ -914,12 +912,12 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
 	return;
     }
     storeDirUpdateSwapSize(e->swap_file_number, len, 1);
-    mem->inmem_lo += len;
-    memFreeDataUpto(mem->data, mem->inmem_lo);
-    if (e->store_status == STORE_PENDING || mem->inmem_lo < e->object_len) {
+    mem->swapout.done_offset += len;
+    if (e->store_status == STORE_PENDING || mem->swapout.done_offset < e->object_len) {
 	storeCheckSwapOut(e);
 	return;
     }
+    assert(storeCheckCachable(e));
     /* swapping complete */
     e->swap_status = SWAPOUT_DONE;
     file_close(mem->swapout.fd);
@@ -942,7 +940,8 @@ storeCheckSwapOut(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     int x;
     off_t lowest_offset;
-    size_t copy_size;
+    off_t new_mem_lo;
+    size_t swapout_size;
     assert(mem != NULL);
     /* should we swap something out to disk? */
     debug(20, 3) ("storeCheckSwapOut: %s\n", e->url);
@@ -950,35 +949,54 @@ storeCheckSwapOut(StoreEntry * e)
 	storeStatusStr[e->store_status]);
     if (e->store_status == STORE_ABORTED)
 	return;
-    debug(20, 3) ("storeCheckSwapOut: mem->inmem_lo = %d\n", (int) mem->inmem_lo);
-    debug(20, 3) ("storeCheckSwapOut: mem->inmem_hi = %d\n", (int) mem->inmem_hi);
+
+    debug(20, 3) ("storeCheckSwapOut: mem->inmem_lo = %d\n",
+	(int) mem->inmem_lo);
+    debug(20, 3) ("storeCheckSwapOut: mem->inmem_hi = %d\n",
+	(int) mem->inmem_hi);
+    assert(mem->inmem_hi >= mem->swapout.queue_offset);
+    swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
     lowest_offset = storeLowestMemReaderOffset(e);
-    copy_size = (size_t) (lowest_offset - mem->swapout.offset);
     debug(20, 3) ("storeCheckSwapOut: lowest_offset = %d\n",
 	(int) lowest_offset);
-    debug(20, 3) ("storeCheckSwapOut: copy_size = %d\n",
-	(int) copy_size);
-    assert(mem->inmem_lo <= mem->swapout.offset);
-    assert(copy_size >= 0);
-    if (copy_size == 0)
+    assert(lowest_offset >= mem->inmem_lo);
+
+    new_mem_lo = lowest_offset;
+    if (!BIT_TEST(e->flag, ENTRY_CACHABLE)) {
+	memFreeDataUpto(mem->data, new_mem_lo);
+	mem->inmem_lo = new_mem_lo;
 	return;
-    if (e->store_status == STORE_PENDING && copy_size < VM_WINDOW_SZ)
+    }
+    if (mem->swapout.queue_offset < new_mem_lo)
+	new_mem_lo = mem->swapout.queue_offset;
+    memFreeDataUpto(mem->data, new_mem_lo);
+    mem->inmem_lo = new_mem_lo;
+
+    swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
+    debug(20, 3) ("storeCheckSwapOut: swapout_size = %d\n",
+	(int) swapout_size);
+    if (swapout_size == 0)
+	return;
+    if (e->store_status == STORE_PENDING && swapout_size < VM_WINDOW_SZ)
 	return;			/* wait for a full block */
     /* Ok, we have stuff to swap out.  Is there a swapout.fd open? */
     if (e->swap_status == SWAPOUT_NONE) {
 	assert(mem->swapout.fd == -1);
-	storeSwapOutStart(e);
+	if (storeCheckCachable(e))
+		storeSwapOutStart(e);
+	/* else ENTRY_CACHABLE will be cleared and we'll never get
+	  here again */
 	return;
     }
     if (e->swap_status == SWAPOUT_OPENING)
 	return;
     assert(mem->swapout.fd > -1);
-    if (copy_size > SWAP_BUF)
-	copy_size = SWAP_BUF;
-    debug(20, 3) ("storeCheckSwapOut: swapout.offset = %d\n", (int) mem->swapout.offset);
+    if (swapout_size > SWAP_BUF)
+	swapout_size = SWAP_BUF;
+    debug(20, 3) ("storeCheckSwapOut: swapout.queue_offset = %d\n", (int) mem->swapout.queue_offset);
     x = storeCopy(e,
-	mem->swapout.offset,
-	copy_size,
+	mem->swapout.queue_offset,
+	swapout_size,
 	mem->e_swap_buf,
 	&mem->e_swap_buf_len);
     if (x < 0) {
@@ -995,8 +1013,8 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 3) ("storeCheckSwapOut: e_swap_buf_len = %d\n", (int) mem->e_swap_buf_len);
     assert(mem->e_swap_buf_len > 0);
     debug(20, 3) ("storeCheckSwapOut: swapping out %d bytes from %d\n",
-	mem->e_swap_buf_len, mem->swapout.offset);
-    mem->swapout.offset += mem->e_swap_buf_len;
+	mem->e_swap_buf_len, mem->swapout.queue_offset);
+    mem->swapout.queue_offset += mem->e_swap_buf_len;
     x = file_write(mem->swapout.fd,
 	mem->e_swap_buf,
 	mem->e_swap_buf_len,
@@ -1515,8 +1533,7 @@ storeComplete(StoreEntry * e)
     e->store_status = STORE_OK;
     assert(e->mem_status == NOT_IN_MEMORY);
     InvokeHandlers(e);
-    if (storeCheckCachable(e))
-	storeCheckSwapOut(e);
+    storeCheckSwapOut(e);
 }
 
 /*
@@ -2706,7 +2723,7 @@ static void
 storeInMemAdd(StoreEntry * e)
 {
     struct _mem_entry *m = xmalloc(sizeof(struct _mem_entry));
-    debug(0, 0) ("storeInMemAdd: %s\n", e->url);
+    debug(20, 3) ("storeInMemAdd: %s\n", e->url);
     assert(e->mem_obj->inmem_lo == 0);
     m->e = e;
     m->prev = NULL;
@@ -2728,7 +2745,7 @@ storeInMemDelete(StoreEntry * e)
 	    break;
     }
     assert(m != NULL);
-    debug(0, 0) ("storeInMemDelete: %s\n", e->url);
+    debug(20, 3) ("storeInMemDelete: %s\n", e->url);
     if (m->next)
 	m->next->prev = m->prev;
     if (m->prev)
