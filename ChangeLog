@@ -3,6 +3,8 @@ Changes to Squid-2.1 ():
 	- Changed delayPoolsUpdate() to be called as an event.
 	- Replaced comm_select FD scanning loops with global fd_set
 	  structures.  Inspired by Jeff Mogul's patch for squid 1.1.
+	- Moved functions common to dns.c, redirect.c, authenticate.c,
+	  ipcache.c, and fqdncache.c into helper.c.
 
 Changes to Squid-2.0 (October 2, 1998):
 
