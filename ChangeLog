@@ -44,6 +44,9 @@ Changes to squid-2.5 ():
         - msntauth updated to v2.0.3
 	- no_cache now applies to cache hits as well as cache misses
 	- the Gopher client in Squid has been significantly improved
+	- Squid now sanity checks FTP data connections to ensure the
+ 	  connection is from the requested server. Can be disabled if
+	  needed by turning off the ftp_sanitycheck option.
 	- Countless other small things and fixes
 
 Changes to Squid-2.4.STABLE6 (March 19, 2002):
