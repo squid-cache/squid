@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.23 1998/07/22 20:38:03 wessels Exp $
+ * $Id: unlinkd.cc,v 1.24 1998/08/03 19:29:09 wessels Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -132,7 +132,12 @@ unlinkdInit(void)
     struct timeval slp;
     args[0] = "(unlinkd)";
     args[1] = NULL;
+#if HAVE_POLL && defined(_SQUID_OSF_)
+    /* pipes and poll() don't get along on DUNIX -DW */
+    x = ipcCreate(IPC_TCP_SOCKET,
+#else
     x = ipcCreate(IPC_FIFO,
+#endif
 	Config.Program.unlinkd,
 	args,
 	"unlinkd",
