@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.50 2002/10/21 06:43:07 adrian Exp $
+ * $Id: dns_internal.cc,v 1.51 2003/01/17 05:14:29 robertc Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -634,7 +634,7 @@ idnsInit(void)
 	if (DnsSocket < 0)
 	    fatal("Could not create a DNS socket");
 	/* Ouch... we can't call functions using debug from a debug
-	 * statement. Doing so messes up the internal _db_level
+	 * statement. Doing so messes up the internal Debug::level
 	 */
 	port = comm_local_port(DnsSocket);
 	debug(78, 1) ("DNS Socket created at %s, port %d, FD %d\n",

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.115 2002/12/06 23:19:15 hno Exp $
+ * $Id: globals.h,v 1.116 2003/01/17 05:14:29 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -74,7 +74,6 @@ extern int NHttpSockets;	/* 0 */
 extern int RESERVED_FD;
 extern int Squid_MaxFD;		/* SQUID_MAXFD */
 extern int config_lineno;	/* 0 */
-extern int debugLevels[MAX_DEBUG_SECTIONS];
 extern int do_mallinfo;		/* 0 */
 extern int opt_reuseaddr;	/* 1 */
 extern int icmp_sock;		/* -1 */
@@ -133,7 +132,6 @@ extern dlink_list ClientActiveRequests;
 extern const String StringNull;	/* { 0, 0, NULL } */
 extern const MemBuf MemBufNull;	/* MemBufNULL */
 extern int hot_obj_count;	/* 0 */
-extern int _db_level;
 extern const int CacheDigestHashFuncCount;	/* 4 */
 extern CacheDigest *store_digest;	/* NULL */
 extern const char *StoreDigestFileName;		/* "store_digest" */
