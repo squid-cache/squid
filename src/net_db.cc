@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.46 1997/08/10 04:42:42 wessels Exp $
+ * $Id: net_db.cc,v 1.47 1997/08/25 02:26:04 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -595,6 +595,9 @@ netdbDump(StoreEntry * sentry)
     }
     storeAppendPrintf(sentry, close_bracket);
     xfree(list);
+#else
+    storeAppendPrintf(sentry,
+	"NETDB support not compiled into this Squid cache.\n");
 #endif
 }
 
