@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.11 1999/12/30 17:36:15 wessels Exp $
+ * $Id: rfc1035.c,v 1.12 2000/01/24 21:57:49 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -270,7 +270,7 @@ rfc1035NameUnpack(const char *buf, size_t sz, off_t off, char *name, size_t ns)
     do {
 	c = *(buf + off);
 	if (c > RFC1035_MAXLABELSZ) {
-	    /* fucking compression */
+	    /* blasted compression */
 	    unsigned short s;
 	    off_t ptr;
 	    memcpy(&s, buf + off, sizeof(s));
