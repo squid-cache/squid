@@ -83,6 +83,7 @@ extern int checkNegativeHit(StoreEntry *);
 extern void clientHttpConnectionsOpen(void);
 extern void clientHttpConnectionsClose(void);
 extern StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, int);
+extern int isTcpHit(log_type);
 
 extern int commSetNonBlocking(int fd);
 extern void commSetCloseOnExec(int fd);
