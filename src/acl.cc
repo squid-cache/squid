@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.280 2002/06/23 13:32:23 hno Exp $
+ * $Id: acl.cc,v 1.281 2002/08/09 10:57:43 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -394,7 +394,7 @@ aclParseMethodList(void *curlist)
 static int
 decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 {
-    u_num32 a;
+    u_int32_t a;
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0;
 
     switch (sscanf(asc, "%d.%d.%d.%d", &a1, &a2, &a3, &a4)) {
@@ -417,7 +417,7 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
     if (mask != NULL) {		/* mask == NULL if called to decode a netmask */
 
 	/* Guess netmask */
-	a = (u_num32) ntohl(addr->s_addr);
+	a = (u_int32_t) ntohl(addr->s_addr);
 	if (!(a & 0xFFFFFFFFul))
 	    mask->s_addr = htonl(0x00000000ul);
 	else if (!(a & 0x00FFFFFF))

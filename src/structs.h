@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.422 2002/06/23 14:50:07 hno Exp $
+ * $Id: structs.h,v 1.423 2002/08/09 10:57:43 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1403,10 +1403,10 @@ struct _icp_common_t {
     unsigned char opcode;	/* opcode */
     unsigned char version;	/* version number */
     unsigned short length;	/* total length (bytes) */
-    u_num32 reqnum;		/* req number (req'd for UDP) */
-    u_num32 flags;
-    u_num32 pad;
-    u_num32 shostid;		/* sender host id */
+    u_int32_t reqnum;		/* req number (req'd for UDP) */
+    u_int32_t flags;
+    u_int32_t pad;
+    u_int32_t shostid;		/* sender host id */
 };
 
 struct _iostats {
@@ -1967,7 +1967,7 @@ struct _FwdState {
 struct _htcpReplyData {
     int hit;
     HttpHeader hdr;
-    u_num32 msg_id;
+    u_int32_t msg_id;
     double version;
     struct {
 	/* cache-to-origin */

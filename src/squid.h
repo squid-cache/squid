@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.220 2002/05/19 14:32:09 hno Exp $
+ * $Id: squid.h,v 1.221 2002/08/09 10:57:43 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -102,12 +102,6 @@
 #else
 #define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
 #endif
-
-
-/* 32 bit integer compatability */
-#include "squid_types.h"
-#define num32 int32_t
-#define u_num32 u_int32_t
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: squid_types.h,v 1.4 2002/06/17 18:28:13 hno Exp $
+ * $Id: squid_types.h,v 1.5 2002/08/09 10:57:42 robertc Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -56,15 +56,15 @@
 #include "autoconf.h"
 
 /* This should be in synch with what we have in acinclude.m4 */
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #if STDC_HEADERS
 #include <stdlib.h>
 #include <stddef.h>
 #endif
 #if HAVE_INTTYPES_H
 #include <inttypes.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.37 2002/07/21 00:25:45 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.38 2002/08/09 10:57:45 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -68,8 +68,8 @@ static StoreEntry *storeCossAddDiskRestore(SwapDir * SD, const cache_key * key,
     time_t timestamp,
     time_t lastref,
     time_t lastmod,
-    u_num32 refcount,
-    u_short flags,
+    u_int32_t refcount,
+    u_int16_t flags,
     int clean);
 static void storeCossDirRebuild(SwapDir * sd);
 static void storeCossDirCloseTmpSwapLog(SwapDir * sd);
@@ -305,8 +305,8 @@ storeCossAddDiskRestore(SwapDir * SD, const cache_key * key,
     time_t timestamp,
     time_t lastref,
     time_t lastmod,
-    u_num32 refcount,
-    u_short flags,
+    u_int32_t refcount,
+    u_int16_t flags,
     int clean)
 {
     StoreEntry *e = NULL;

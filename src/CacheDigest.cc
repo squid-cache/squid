@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.32 2001/01/12 00:37:13 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.33 2002/08/09 10:57:43 robertc Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -49,7 +49,7 @@ typedef struct {
 static void cacheDigestHashKey(const CacheDigest * cd, const cache_key * key);
 
 /* static array used by cacheDigestHashKey for optimization purposes */
-static u_num32 hashed_keys[4];
+static u_int32_t hashed_keys[4];
 
 static void
 cacheDigestInit(CacheDigest * cd, int capacity, int bpe)

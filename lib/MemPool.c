@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.c,v 1.11 2002/04/16 00:33:29 hno Exp $
+ * $Id: MemPool.c,v 1.12 2002/08/09 10:57:42 robertc Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa
@@ -80,12 +80,13 @@
  *   Andres Kroonmaa.
  */
 
+#include "config.h"
+
 #define FLUSH_LIMIT 1000	/* Flush memPool counters to memMeters after flush limit calls */
 #define MEM_MAX_MMAP_CHUNKS 2048
 
 #include <assert.h>
 
-#include "config.h"
 #if HAVE_STRING_H
 #include <string.h>
 #endif

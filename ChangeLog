@@ -8,6 +8,8 @@ Changes to squid-2.6 ():
 	- http_port is now optional, allowing for SSL only operation
 	- Satellite and other high latency peering relations enhancements
 	  (Robert Cohren)
+	- Nuked num32 types, and made type detection more robust by the
+	  use of typedefs rather than #defines.
 
 Changes to squid-2.5 ():
 
