@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.109 1997/06/04 06:16:14 wessels Exp $
+ * $Id: tools.cc,v 1.110 1997/06/21 02:38:18 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -356,7 +356,7 @@ normal_shutdown(void)
     PrintRusage();
     dumpMallocStats();
     storeCloseLog();
-    statCloseLog();
+    accessLogClose();
 #if PURIFY
     configFreeMemory();
     storeFreeMemory();
