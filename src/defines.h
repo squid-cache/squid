@@ -151,7 +151,6 @@
 /* flags for peer->mcast.flags */
 #define PEER_COUNT_EVENT_PENDING 1
 #define PEER_COUNTING		 2
-#define ICP_AUTH_SIZE (2)	/* size of authenticator field */
 
 #define PEER_DEAD 0
 #define PEER_ALIVE 1
