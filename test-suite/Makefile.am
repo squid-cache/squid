@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.14 2003/07/14 14:16:12 robertc Exp $
+#  $Id: Makefile.am,v 1.15 2003/07/14 15:07:22 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -12,6 +12,15 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
 
 EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
+
+ESI_ALL_TESTS = \
+	ESIExpressions
+
+if USE_ESI
+  ESI_TESTS = $(ESI_ALL_TESTS)
+else
+  ESI_TESTS = 
+endif
 
 ## Sort by dependencies - test lowest layers first
 TESTS = debug \
@@ -24,11 +33,11 @@ TESTS = debug \
 	mem_node_test\
 	mem_hdr_test\
 	http_range_test \
-	ESIExpressions
+	$(ESI_TESTS)
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS= debug \
-		ESIExpressions \
+		$(ESI_TESTS) \
 		http_range_test \
 		MemPoolTest\
 		mem_node_test\
