@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.15 1998/06/29 21:03:01 wessels Exp $
+ * $Id: forward.cc,v 1.16 1998/07/13 21:37:15 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -67,7 +67,7 @@ fwdStateFree(FwdState * fwdState)
     while ((s = n)) {
 	n = s->next;
 	xfree(s->host);
-	xfree(s);
+	memFree(MEM_FWD_SERVER, s);
     }
     fwdState->servers = NULL;
     requestUnlink(fwdState->request);
@@ -221,7 +221,7 @@ fwdStartComplete(peer * p, void *data)
 {
     FwdState *fwdState = data;
     FwdServer *s;
-    s = xcalloc(1, sizeof(*s));
+    s = memAllocate(MEM_FWD_SERVER);
     if (NULL != p) {
 	s->host = xstrdup(p->host);
 	s->port = p->http_port;
@@ -329,8 +329,8 @@ fwdStart(int fd, StoreEntry * entry, request_t * request)
     default:
 	break;
     }
-    fwdState = xcalloc(1, sizeof(FwdState));
-    cbdataAdd(fwdState, MEM_NONE);
+    fwdState = memAllocate(MEM_FWD_STATE);
+    cbdataAdd(fwdState, MEM_FWD_STATE);
     fwdState->entry = entry;
     fwdState->client_fd = fd;
     fwdState->server_fd = -1;
