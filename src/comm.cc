@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.10 1996/03/28 05:21:46 wessels Exp $ */
+/* $Id: comm.cc,v 1.11 1996/03/28 22:37:54 wessels Exp $ */
 
 #include "squid.h"
 
@@ -296,9 +296,10 @@ int comm_connect_addr(sock, address)
     /* set the lifetime for this client */
     if (status == COMM_OK) {
 	lft = comm_set_fd_lifetime(sock, getClientLifetime());
+        strcpy(conn->ipaddr, inet_ntoa(address->sin_addr));
+	conn->port = ntohs(address->sin_port);
 	debug(0, 10, "comm_connect_addr: FD %d (lifetime %d): connected to %s:%d.\n",
-	    sock, lft, inet_ntoa(address->sin_addr),
-	    ntohs(address->sin_port));
+	    sock, lft, conn->ipaddr, conn->port);
     } else if (status == EINPROGRESS) {
 	lft = comm_set_fd_lifetime(sock, getConnectTimeout());
 	debug(0, 10, "comm_connect_addr: FD %d connection pending, lifetime %d\n",
@@ -307,7 +308,6 @@ int comm_connect_addr(sock, address)
     /* Add new socket to list of open sockets. */
     FD_SET(sock, &send_sockets);
     conn->sender = 1;
-
     return status;
 }
 
@@ -319,13 +319,14 @@ int comm_accept(fd, peer, me)
      struct sockaddr_in *me;
 {
     int sock;
-    struct sockaddr_in S;
+    struct sockaddr_in P;
+    struct sockaddr_in M;
     int Slen;
-    FD_ENTRY *conn;
+    FD_ENTRY *conn = NULL;
     FD_ENTRY *listener = &fd_table[fd];
 
-    Slen = sizeof(S);
-    while ((sock = accept(fd, (struct sockaddr *) &S, &Slen)) < 0) {
+    Slen = sizeof(P);
+    while ((sock = accept(fd, (struct sockaddr *) &P, &Slen)) < 0) {
 	switch (errno) {
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
@@ -346,13 +347,13 @@ int comm_accept(fd, peer, me)
     }
 
     if (peer)
-	*peer = S;
+	*peer = P;
 
     if (me) {
-	Slen = sizeof(S);
-	memset(&S, '\0', Slen);
-	getsockname(sock, (struct sockaddr *) &S, &Slen);
-	*me = S;
+	Slen = sizeof(M);
+	memset(&M, '\0', Slen);
+	getsockname(sock, (struct sockaddr *) &M, &Slen);
+	*me = M;
     }
     /* fdstat update */
     fdstat_open(sock, Socket);
@@ -360,6 +361,7 @@ int comm_accept(fd, peer, me)
     conn->openned = 1;
     conn->sender = 0;		/* This is an accept, therefore receiver. */
     conn->comm_type = listener->comm_type;
+    strcpy(conn->ipaddr, inet_ntoa(P.sin_addr));
 
     FD_SET(sock, &receive_sockets);
     commSetNonBlocking(sock);
