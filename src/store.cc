@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.79 1996/08/12 23:37:25 wessels Exp $
+ * $Id: store.cc,v 1.80 1996/08/14 21:57:08 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1264,6 +1264,12 @@ void storeSwapOutHandle(fd, flag, e)
     MemObject *mem = e->mem_obj;
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
+    if (mem == NULL) {
+	debug(20,0,"HELP! Someone is swapping out a bad entry:\n");
+	debug(20,0,"%s\n", storeToString(e));
+	storeRelease(e);
+	return;
+    }
 
     e->timestamp = squid_curtime;
     storeSwapFullPath(e->swap_file_number, filename);
@@ -1290,14 +1296,10 @@ void storeSwapOutHandle(fd, flag, e)
 	}
 	return;
     }
-    debug(20, 6, "storeSwapOutHandle: e->swap_offset    = %d\n",
-	mem->swap_offset);
-    debug(20, 6, "storeSwapOutHandle: e->e_swap_buf_len = %d\n",
-	mem->e_swap_buf_len);
-    debug(20, 6, "storeSwapOutHandle: e->object_len     = %d\n",
-	e->object_len);
-    debug(20, 6, "storeSwapOutHandle: store_swap_size   = %dk\n",
-	store_swap_size);
+    debug(20, 6, "storeSwapOutHandle: e->swap_offset    = %d\n", mem->swap_offset);
+    debug(20, 6, "storeSwapOutHandle: e->e_swap_buf_len = %d\n", mem->e_swap_buf_len);
+    debug(20, 6, "storeSwapOutHandle: e->object_len     = %d\n", e->object_len);
+    debug(20, 6, "storeSwapOutHandle: store_swap_size   = %dk\n", store_swap_size);
 
     mem->swap_offset += mem->e_swap_buf_len;
     /* round up */
@@ -1665,7 +1667,7 @@ static int storeCheckSwapable(e)
 {
 
     if (e->expires <= squid_curtime) {
-	debug(20, 2, "storeCheckSwapable: NO: already expired\n");
+	debug(20, 2, "storeCheckSwapable: NO: expires now\n");
     } else if (e->method != METHOD_GET) {
 	debug(20, 2, "storeCheckSwapable: NO: non-GET method\n");
     } else if (!BIT_TEST(e->flag, CACHABLE)) {
@@ -1674,6 +1676,9 @@ static int storeCheckSwapable(e)
 	debug(20, 2, "storeCheckSwapable: NO: release requested\n");
     } else if (!storeEntryValidLength(e)) {
 	debug(20, 2, "storeCheckSwapable: NO: wrong content-length\n");
+    } else if (e->expires <= squid_curtime + Config.negativeTtl) {
+	debug(20, 2, "storeCheckSwapable: NO: expires soon\n");
+	return 0;		/* avoid release call below */
     } else
 	return 1;
 
@@ -1714,6 +1719,7 @@ int storeAbort(e, msg)
 {
     LOCAL_ARRAY(char, mime_hdr, 300);
     LOCAL_ARRAY(char, abort_msg, 2000);
+    MemObject *mem = e->mem_obj;
 
     debug(20, 6, "storeAbort: '%s'\n", e->key);
     e->expires = squid_curtime + Config.negativeTtl;
@@ -1732,8 +1738,8 @@ int storeAbort(e, msg)
 
     /* Count bytes faulted through cache but not moved to disk */
     CacheInfo->proto_touchobject(CacheInfo,
-	e->mem_obj->request->protocol,
-	e->mem_obj->e_current_len);
+	mem->request ? mem->request->protocol : PROTO_NONE,
+	mem->e_current_len);
     mk_mime_hdr(mime_hdr,
 	(time_t) Config.negativeTtl,
 	6 + strlen(msg),
@@ -1747,13 +1753,13 @@ int storeAbort(e, msg)
 	    debug(20, 0, "storeAbort: WARNING: Must increase msg length!");
 	}
 	storeAppend(e, abort_msg, strlen(abort_msg));
-	e->mem_obj->e_abort_msg = xstrdup(abort_msg);
+	mem->e_abort_msg = xstrdup(abort_msg);
 	/* Set up object for negative caching */
 	BIT_SET(e->flag, ABORT_MSG_PENDING);
     }
     /* We assign an object length here--The only other place we assign the
      * object length is in storeComplete() */
-    e->object_len = e->mem_obj->e_current_len;
+    e->object_len = mem->e_current_len;
 
     /* Call handlers so they can report error. */
     InvokeHandlers(e);
@@ -1910,9 +1916,7 @@ int storeGetMemSpace(size, check_vm_number)
 
     for (e = storeGetInMemFirst(); e; e = storeGetInMemNext()) {
 	n_scanned++;
-
 	n_inmem++;
-
 	if (e->store_status == STORE_PENDING) {
 	    if (!(e->flag & DELETE_BEHIND)) {
 		/* it's not deleting behind, we can do something about it. */
@@ -1925,6 +1929,10 @@ int storeGetMemSpace(size, check_vm_number)
 	    n_expired++;
 	    /* Delayed release */
 	    storeRelease(e);
+	    continue;
+	}
+	if (squid_curtime + Config.negativeTtl > e->expires) {
+	    debug(20, 2, "storeGetMemSpace: '%s' expires with Negative TTL time\n", e->url);
 	    continue;
 	}
 	if ((e->swap_status == SWAP_OK) && (e->mem_status != SWAPPING_IN) &&
@@ -2971,6 +2979,8 @@ static int storeCheckPurgeMem(e)
     if (storeEntryLocked(e))
 	return 0;
     if (e->store_status != STORE_OK)
+	return 0;
+    if (e->swap_status != SWAP_OK)
 	return 0;
     if (store_hotobj_high)
 	return 0;
