@@ -527,7 +527,7 @@ extern method_t urlParseMethod _PARAMS((const char *));
 extern void urlInitialize _PARAMS((void));
 extern request_t *urlParse _PARAMS((method_t, char *));
 extern char *urlCanonical _PARAMS((const request_t *, char *));
-extern request_t *requestLink _PARAMS((const request_t *));
+extern request_t *requestLink _PARAMS((request_t *));
 extern void requestUnlink _PARAMS((request_t *));
 extern int matchDomainName _PARAMS((const char *d, const char *h));
 extern int urlCheckRequest _PARAMS((const request_t *));
@@ -542,7 +542,7 @@ extern void logUserAgent _PARAMS((const char *, const char *));
 extern peer_t parseNeighborType _PARAMS((const char *s));
 
 extern void errorSend _PARAMS((int fd, ErrorState *));
-extern void errorAppendEntry _PARAMS((const StoreEntry *, ErrorState *));
+extern void errorAppendEntry _PARAMS((StoreEntry *, ErrorState *));
 extern void errorInitialize _PARAMS((void));
 
 extern OBJH stat_io_get;

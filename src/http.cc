@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.181 1997/08/10 04:42:38 wessels Exp $
+ * $Id: http.cc,v 1.182 1997/08/10 06:34:29 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -211,10 +211,11 @@ static void httpMakePublic _PARAMS((StoreEntry *));
 static char *httpStatusString _PARAMS((int status));
 static STABH httpAbort;
 static HttpStateData *httpBuildState _PARAMS((int, StoreEntry *, request_t *, peer *));
-static int httpSocketOpen _PARAMS((StoreEntry *, const request_t *));
+static int httpSocketOpen _PARAMS((StoreEntry *, request_t *));
+static void httpRestart _PARAMS((HttpStateData *));
 
 static void
-httpStateFree(int fdunused, void *data)
+httpStateFree(int fd, void *data)
 {
     HttpStateData *httpState = data;
     if (httpState == NULL)
@@ -668,15 +669,19 @@ httpReadReply(int fd, void *data)
 	debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	httpState->eof = 1;
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_ZERO_SIZE_OBJECT;
-	err->errno = errno;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
-	err->request = requestLink(httpState->request);
-	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
-	comm_close(fd);
+	if (fd_table[fd].uses > 1) {
+	    httpRestart(httpState);
+	} else {
+	    httpState->eof = 1;
+	    err = xcalloc(1, sizeof(ErrorState));
+	    err->type = ERR_ZERO_SIZE_OBJECT;
+	    err->errno = errno;
+	    err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	    err->request = requestLink(httpState->request);
+	    errorAppendEntry(entry, err);
+	    storeAbort(entry, 0);
+	    comm_close(fd);
+	}
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	httpState->eof = 1;
@@ -947,7 +952,7 @@ httpSendRequest(int fd, void *data)
 }
 
 static int
-httpSocketOpen(StoreEntry * entry, const request_t * request)
+httpSocketOpen(StoreEntry * entry, request_t * request)
 {
     int fd;
     ErrorState *err;
@@ -1015,6 +1020,10 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
 	if ((fd = pconnPop(e->host, e->http_port)) >= 0) {
 	    debug(0, 0) ("httpStart: reusing pconn FD %d\n", fd);
 	    httpState = httpBuildState(fd, entry, request, e);
+	    commSetTimeout(httpState->fd,
+		Config.Timeout.connect,
+		httpTimeout,
+		httpState);
 	    httpConnectDone(fd, COMM_OK, httpState);
 	    return;
 	}
@@ -1022,6 +1031,10 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
 	if ((fd = pconnPop(request->host, request->port)) >= 0) {
 	    debug(0, 0) ("httpStart: reusing pconn FD %d\n", fd);
 	    httpState = httpBuildState(fd, entry, request, e);
+	    commSetTimeout(httpState->fd,
+		Config.Timeout.connect,
+		httpTimeout,
+		httpState);
 	    httpConnectDone(fd, COMM_OK, httpState);
 	    return;
 	}
@@ -1030,6 +1043,31 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
 	return;
     httpState = httpBuildState(fd, entry, request, e);
     storeRegisterAbort(entry, httpAbort, httpState);
+    commSetTimeout(httpState->fd,
+	Config.Timeout.connect,
+	httpTimeout,
+	httpState);
+    commConnectStart(httpState->fd,
+	httpState->request->host,
+	httpState->request->port,
+	httpConnectDone,
+	httpState);
+}
+
+static void
+httpRestart(HttpStateData * httpState)
+{
+    /* restart a botched request from a persistent connection */
+    debug(0, 0) ("Retrying HTTP request for %s\n", httpState->entry->url);
+    if (httpState->fd >= 0) {
+	comm_remove_close_handler(httpState->fd, httpStateFree, httpState);
+	comm_close(httpState->fd);
+	httpState->fd = -1;
+    }
+    httpState->fd = httpSocketOpen(httpState->entry, httpState->request);
+    if (httpState->fd < 0)
+	return;
+    comm_add_close_handler(httpState->fd, httpStateFree, httpState);
     commSetTimeout(httpState->fd,
 	Config.Timeout.connect,
 	httpTimeout,
@@ -1073,6 +1111,7 @@ httpConnectDone(int fd, int status, void *data)
 	comm_close(fd);
     } else {
 	fd_note(fd, entry->url);
+	fd_table[fd].uses++;
 	commSetSelect(fd, COMM_SELECT_WRITE, httpSendRequest, httpState, 0);
     }
 }
