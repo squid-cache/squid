@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.13 2000/03/06 16:23:30 wessels Exp $
+ * $Id: delay_pools.cc,v 1.14 2000/05/02 18:55:11 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -222,18 +222,18 @@ delayInitDelayPool(unsigned short pool, u_char class, delaySpecSet * rates)
      */
     switch (class) {
     case 1:
-	delay_data[pool].class1->aggregate = (rates->aggregate.max_bytes *
-	    Config.Delay.initial) / 100;
+	delay_data[pool].class1->aggregate = (int)(((double)rates->aggregate.max_bytes *
+	    Config.Delay.initial) / 100);
 	break;
     case 2:
-	delay_data[pool].class2->aggregate = (rates->aggregate.max_bytes *
-	    Config.Delay.initial) / 100;
+	delay_data[pool].class2->aggregate = (int)(((double)rates->aggregate.max_bytes *
+	    Config.Delay.initial) / 100);
 	delay_data[pool].class2->individual_map[0] = 255;
 	delay_data[pool].class2->individual_255_used = 0;
 	break;
     case 3:
-	delay_data[pool].class3->aggregate = (rates->aggregate.max_bytes *
-	    Config.Delay.initial) / 100;
+	delay_data[pool].class3->aggregate = (int)(((double)rates->aggregate.max_bytes *
+	    Config.Delay.initial) / 100);
 	delay_data[pool].class3->network_map[0] = 255;
 	delay_data[pool].class3->network_255_used = 0;
 	memset(&delay_data[pool].class3->individual_255_used, '\0',
@@ -307,8 +307,8 @@ delayClient(request_t * r)
 	    if (!delay_data[pool].class2->individual_255_used) {
 		delay_data[pool].class2->individual_255_used = 1;
 		delay_data[pool].class2->individual[IND_MAP_SZ - 1] =
-		    (Config.Delay.rates[pool]->individual.max_bytes *
-		    Config.Delay.initial) / 100;
+		    (int)(((double)Config.Delay.rates[pool]->individual.max_bytes *
+		    Config.Delay.initial) / 100);
 	    }
 	    return delayId(pool + 1, 255);
 	}
@@ -320,8 +320,8 @@ delayClient(request_t * r)
 		assert(i < (IND_MAP_SZ - 1));
 		delay_data[pool].class2->individual_map[i + 1] = 255;
 		delay_data[pool].class2->individual[i] =
-		    (Config.Delay.rates[pool]->individual.max_bytes *
-		    Config.Delay.initial) / 100;
+		    (int)(((double)Config.Delay.rates[pool]->individual.max_bytes *
+		    Config.Delay.initial) / 100);
 		break;
 	    }
 	}
@@ -336,8 +336,8 @@ delayClient(request_t * r)
 	if (!delay_data[pool].class3->network_255_used) {
 	    delay_data[pool].class3->network_255_used = 1;
 	    delay_data[pool].class3->network[255] =
-		(Config.Delay.rates[pool]->network.max_bytes *
-		Config.Delay.initial) / 100;
+		(int)(((double)Config.Delay.rates[pool]->network.max_bytes *
+		Config.Delay.initial) / 100);
 	}
     } else {
 	for (i = 0; i < NET_MAP_SZ; i++) {
@@ -349,8 +349,8 @@ delayClient(request_t * r)
 		assert(i < (NET_MAP_SZ - 1));
 		delay_data[pool].class3->network_map[i + 1] = 255;
 		delay_data[pool].class3->network[i] =
-		    (Config.Delay.rates[pool]->network.max_bytes *
-		    Config.Delay.initial) / 100;
+		    (int)(((double)Config.Delay.rates[pool]->network.max_bytes *
+		    Config.Delay.initial) / 100);
 		break;
 	    }
 	}
@@ -362,8 +362,8 @@ delayClient(request_t * r)
 	    delay_data[pool].class3->individual_255_used[i / 8] |= (1 << (i % 8));
 	    assert(position < C3_IND_SZ);
 	    delay_data[pool].class3->individual[position] =
-		(Config.Delay.rates[pool]->individual.max_bytes *
-		Config.Delay.initial) / 100;
+		(int)(((double)Config.Delay.rates[pool]->individual.max_bytes *
+		Config.Delay.initial) / 100);
 	}
 	return delayId(pool + 1, position);
     }
@@ -380,8 +380,8 @@ delayClient(request_t * r)
 	    position |= j;
 	    assert(position < C3_IND_SZ);
 	    delay_data[pool].class3->individual[position] =
-		(Config.Delay.rates[pool]->individual.max_bytes *
-		Config.Delay.initial) / 100;
+		(int)(((double)Config.Delay.rates[pool]->individual.max_bytes *
+		Config.Delay.initial) / 100);
 	    break;
 	}
     }
