@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.103 1997/02/19 17:11:06 wessels Exp $
+ * $Id: ipcache.cc,v 1.104 1997/02/20 20:22:48 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -609,8 +609,8 @@ ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	    i->expires = x->expires;
 	    ipcache_call_pending(i);
 	}
+	ipcacheUnlockEntry(i);	/* unlock from IP_DISPATCHED */
     }
-    ipcacheUnlockEntry(i);	/* unlock from IP_DISPATCHED */
     if (dnsData->offset == 0) {
 	dnsData->data = NULL;
 	dnsData->flags &= ~DNS_FLAG_BUSY;
