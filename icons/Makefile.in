@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.8 1999/04/19 07:18:09 wessels Exp $
+# $Id: Makefile.in,v 1.9 2000/05/02 21:15:51 hno Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -56,7 +56,7 @@ install: install-mkdirs anthony-xpm.gif
 			:; \
 		else \
 			echo "$(INSTALL_FILE) $$f $(DEFAULT_ICON_DIR)"; \
-			$(INSTALL_FILE) $$f $(DEFAULT_ICON_DIR); \
+			$(INSTALL_FILE) $(srcdir)/$$f $(DEFAULT_ICON_DIR); \
 		fi; \
 	done
 
