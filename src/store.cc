@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.209 1997/02/07 04:57:17 wessels Exp $
+ * $Id: store.cc,v 1.210 1997/02/19 17:09:23 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -344,7 +344,7 @@ destroy_StoreEntry(StoreEntry * e)
 	meta_data.url_strings -= strlen(e->url);
 	safe_free(e->url);
     } else {
-	debug(20, 3, "destroy_StoreEntry: WARNING!  Entry without URL string!\n");
+	debug(20, 3, "destroy_StoreEntry: WARNING: Entry without URL string!\n");
     }
     if (BIT_TEST(e->flag, KEY_URL))
 	e->key = NULL;
@@ -1131,7 +1131,7 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
     debug(20, 5, "storeSwapInHandle: SwapIn complete: '%s' from %s.\n",
 	e->url, storeSwapFullPath(e->swap_file_number, NULL));
     if (mem->e_current_len != e->object_len) {
-	debug(20, 0, "storeSwapInHandle: WARNING! Object size mismatch.\n");
+	debug(20, 0, "storeSwapInHandle: WARNING: Object size mismatch.\n");
 	debug(20, 0, "  --> '%s'\n", e->url);
 	debug(20, 0, "  --> Expecting %d bytes from file: %s\n", e->object_len,
 	    storeSwapFullPath(e->swap_file_number, NULL));
@@ -2008,7 +2008,7 @@ storeGetSwapSpace(int size)
     if ((store_swap_size + kb_size > store_swap_high)) {
 	i = 2;
 	if (++swap_help > SWAP_MAX_HELP) {
-	    debug(20, 0, "WARNING! Repeated failures to free up disk space!\n");
+	    debug(20, 0, "WARNING: Repeated failures to free up disk space!\n");
 	    i = 0;
 	}
 	debug(20, i, "storeGetSwapSpace: Disk usage is over high water mark\n");
