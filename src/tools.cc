@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.107 1997/05/23 20:46:13 wessels Exp $
+ * $Id: tools.cc,v 1.108 1997/06/01 23:21:38 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -445,7 +445,7 @@ sig_child(int sig)
 #else
 	pid = waitpid(-1, &status, WNOHANG);
 #endif
-    /* no debug() here; bad things happen if the signal is delivered during _db_print() */
+	/* no debug() here; bad things happen if the signal is delivered during _db_print() */
 #if HAVE_SIGACTION
     } while (pid > 0);
 #else
