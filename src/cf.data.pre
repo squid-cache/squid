@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.239 2001/11/13 06:38:27 hno Exp $
+# $Id: cf.data.pre,v 1.240 2001/11/20 12:26:58 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2840,7 +2840,7 @@ DOC_START
 	some other rule.  Example:
 
 		acl local-external dstdomain external.foo.net
-		acl local-servers dstdomain  foo.net
+		acl local-servers dstdomain  .foo.net
 		always_direct deny local-external
 		always_direct allow local-servers
 
@@ -2863,7 +2863,7 @@ DOC_START
 	servers.  For example, to force the use of a proxy for all
 	requests, except those in your local domain use something like:
 
-		acl local-servers dstdomain foo.net
+		acl local-servers dstdomain .foo.net
 		acl all src 0.0.0.0/0.0.0.0
 		never_direct deny local-servers
 		never_direct allow all
@@ -2871,7 +2871,7 @@ DOC_START
 	or if squid is inside a firewall and there is local intranet
 	servers inside the firewall then use something like:
 
-		acl local-intranet dstdomain foo.net
+		acl local-intranet dstdomain .foo.net
 		acl local-external dstdomain external.foo.net
 		always_direct deny local-external
 		always_direct allow local-intranet
