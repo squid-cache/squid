@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.80 1997/05/15 23:38:00 wessels Exp $
+ * $Id: gopher.cc,v 1.81 1997/05/22 15:51:54 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -660,9 +660,8 @@ gopherReadReply(int fd, void *data)
     int bin;
 
     entry = gopherState->entry;
-    if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
-	/* we can terminate connection right now */
-	squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+    if (protoAbortFetch(entry)) {
+	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
 	return;
     }
@@ -734,18 +733,11 @@ gopherReadReply(int fd, void *data)
 	/* flush the rest of data in temp buf if there is one. */
 	if (gopherState->conversion != NORMAL)
 	    gopherEndHTML(data);
-	if (!(entry->flag & DELETE_BEHIND))
-	    storeTimestampsSet(entry);
+	storeTimestampsSet(entry);
 	BIT_RESET(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
 	comm_close(fd);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
-	/* append the last bit of info we got */
-	if (gopherState->conversion != NORMAL) {
-	    gopherToHTML(data, buf, len);
-	} else {
-	    storeAppend(entry, buf, len);
-	}
 	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	if (gopherState->conversion != NORMAL)
 	    gopherEndHTML(data);

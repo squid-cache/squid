@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.69 1997/05/15 23:35:59 wessels Exp $
+ * $Id: disk.cc,v 1.70 1997/05/22 15:51:51 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -201,36 +201,6 @@ file_open_complete(void *data, int fd, int errcode)
     xfree(ctrlp);
 }
 
-/* must close a disk file */
-
-void
-file_must_close(int fd)
-{
-    dwrite_q *q = NULL;
-    FD_ENTRY *fde = &fd_table[fd];
-    if (fde->type != FD_FILE)
-	fatal_dump("file_must_close: type != FD_FILE");
-    if (!fde->open)
-	fatal_dump("file_must_close: FD not opened");
-    BIT_SET(fde->flags, FD_CLOSE_REQUEST);
-    BIT_RESET(fde->flags, FD_WRITE_DAEMON);
-    BIT_RESET(fde->flags, FD_WRITE_PENDING);
-    /* Drain queue */
-    while (fde->disk.write_q) {
-	q = fde->disk.write_q;
-	fde->disk.write_q = q->next;
-	if (q->free)
-	    (q->free) (q->buf);
-	safe_free(q);
-    }
-    fde->disk.write_q_tail = NULL;
-    if (fde->disk.wrt_handle)
-	fde->disk.wrt_handle(fd, DISK_ERROR, fde->disk.wrt_handle_data);
-    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-    commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-    file_close(fd);
-}
-
 /* close a disk file. */
 void
 file_close(int fd)
@@ -363,7 +333,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	BIT_SET(fde->flags, FD_WRITE_DAEMON);
     }
     if (fdd->wrt_handle)
-	fdd->wrt_handle(fd, status, fdd->wrt_handle_data);
+	fdd->wrt_handle(fd, status, len, fdd->wrt_handle_data);
     if (BIT_TEST(fde->flags, FD_CLOSE_REQUEST))
 	file_close(fd);
 }
@@ -376,7 +346,7 @@ int
 file_write(int fd,
     char *ptr_to_buf,
     int len,
-    FILE_WRITE_HD handle,
+    DWCB handle,
     void *handle_data,
     FREE * free_func)
 {
@@ -513,7 +483,7 @@ diskHandleReadComplete(void *data, int len, int errcode)
  * It must have at least req_len space in there. 
  * call handler when a reading is complete. */
 int
-file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD * handler, void *client_data)
+file_read(int fd, char *buf, int req_len, int offset, DRCB * handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
     if (fd < 0)

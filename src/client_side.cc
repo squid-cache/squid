@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.103 1997/05/15 06:55:44 wessels Exp $
+ * $Id: client_side.cc,v 1.104 1997/05/22 15:51:50 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -353,7 +353,12 @@ icpProcessExpired(int fd, void *data)
     http->out.offset = 0;
     protoDispatch(fd, http->entry, http->request);
     /* Register with storage manager to receive updates when data comes in. */
-    storeRegister(entry, icpHandleIMSReply, http, http->out.offset);
+    storeClientCopy(entry,
+	http->out.offset,
+	4096,
+	get_free_4k_page(),
+	icpHandleIMSReply,
+	http);
 }
 
 static int
@@ -384,13 +389,12 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
 
 
 static void
-icpHandleIMSReply(void *data)
+icpHandleIMSReply(void *data, char *buf, size_t size)
 {
     clientHttpRequest *http = data;
     int fd = http->conn->fd;
     StoreEntry *entry = http->entry;
     MemObject *mem = entry->mem_obj;
-    char *hbuf;
     int len;
     int unlink_request = 0;
     StoreEntry *oldentry;
@@ -409,39 +413,29 @@ icpHandleIMSReply(void *data)
     } else if (mem->reply->code == 0) {
 	debug(33, 3, "icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
-	storeRegister(entry, icpHandleIMSReply, http, http->out.offset);
+	storeClientCopy(entry,
+	    http->out.offset,
+	    4096,
+	    get_free_4k_page(),
+	    icpHandleIMSReply,
+	    http);
 	return;
     } else if (clientGetsOldEntry(entry, http->old_entry, http->request)) {
 	/* We initiated the IMS request, the client is not expecting
 	 * 304, so put the good one back.  First, make sure the old entry
 	 * headers have been loaded from disk. */
 	oldentry = http->old_entry;
-	if (oldentry->mem_obj->e_current_len == 0) {
-	    storeRegister(entry, icpHandleIMSReply, http, http->out.offset);
-	    return;
-	}
 	http->log_type = LOG_TCP_REFRESH_HIT;
-	hbuf = get_free_8k_page();
-	if (storeClientCopy(oldentry, 0, 8191, hbuf, &len, http) < 0) {
-	    debug(33, 1, "icpHandleIMSReply: Couldn't copy old entry\n");
-	} else {
-	    if (oldentry->mem_obj->request == NULL) {
-		oldentry->mem_obj->request = requestLink(mem->request);
-		unlink_request = 1;
-	    }
+	if (oldentry->mem_obj->request == NULL) {
+	    oldentry->mem_obj->request = requestLink(mem->request);
+	    unlink_request = 1;
 	}
+	memcpy(oldentry->mem_obj->reply, entry->mem_obj->reply, sizeof(struct _http_reply));
+	storeTimestampsSet(oldentry);
 	storeUnregister(entry, http);
 	storeUnlockObject(entry);
 	entry = http->entry = oldentry;
-	if (mime_headers_end(hbuf)) {
-	    httpParseReplyHeaders(hbuf, entry->mem_obj->reply);
-	    storeTimestampsSet(entry);
-	} else {
-	    debug(33, 1, "icpHandleIMSReply: No end-of-headers, len=%d\n", len);
-	    debug(33, 1, "  --> '%s'\n", entry->url);
-	}
 	entry->timestamp = squid_curtime;
-	put_free_8k_page(hbuf);
 	if (unlink_request) {
 	    requestUnlink(entry->mem_obj->request);
 	    entry->mem_obj->request = NULL;
@@ -456,9 +450,20 @@ icpHandleIMSReply(void *data)
 	}
 	storeUnregister(http->old_entry, http);
 	storeUnlockObject(http->old_entry);
+#if DONT_USE_VM
+	file_close(http->swapin_fd);
+	http->swapin_fd = storeOpenSwapFileRead(entry);
+	if (http->swapin_fd < 0)
+	    fatal_dump("icpHandleIMSReply: storeOpenSwapFileRead() failed\n");
+#endif
     }
     http->old_entry = NULL;	/* done with old_entry */
-    storeRegister(http->entry, icpHandleStore, http, http->out.offset);
+    storeClientCopy(entry,
+	http->out.offset,
+	4096,
+	get_free_4k_page(),
+	icpSendMoreData,
+	http);
 }
 
 int

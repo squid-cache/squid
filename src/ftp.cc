@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.107 1997/05/15 23:37:58 wessels Exp $
+ * $Id: ftp.cc,v 1.108 1997/05/22 15:51:53 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -274,9 +274,8 @@ ftpReadReply(int fd, void *data)
     StoreEntry *entry = NULL;
 
     entry = ftpState->entry;
-    if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
-	/* we can terminate connection right now */
-	squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+    if (protoAbortFetch(entry)) { 
+	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
 	return;
     }
@@ -349,14 +348,12 @@ ftpReadReply(int fd, void *data)
 	    storeNegativeCache(entry);
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
-	} else if (!(entry->flag & DELETE_BEHIND)) {
+	} else {
 	    storeTimestampsSet(entry);
 	}
 	storeComplete(entry);
 	comm_close(fd);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
-	/* append the last bit of info we get */
-	storeAppend(entry, buf, len);
 	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
     } else {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.153 1997/05/16 07:42:49 wessels Exp $
+ * $Id: comm.cc,v 1.154 1997/05/22 15:51:51 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -760,7 +760,6 @@ comm_poll(time_t sec)
     unsigned long nfds;
     int num;
     static time_t last_timeout = 0;
-    static time_t pending_time;
     int poll_time;
     static int incoming_counter = 0;
     time_t timeout;
@@ -805,23 +804,6 @@ comm_poll(time_t sec)
 	}
 	if (shutdown_pending || reconfigure_pending)
 	    debug(5, 2, "comm_poll: Still waiting on %d FDs\n", nfds);
-#ifdef WTFISTHIS
-	if (pending_time == 0)
-	    pending_time = squid_curtime;
-	if ((squid_curtime - pending_time) > (Config.shutdownLifetime + 5)) {
-	    pending_time = 0;
-	    for (i = 1; i < maxfd; i++) {
-		if ((fd = pfds[i].fd) < 0)
-		    continue;
-		if (fd_table[fd].type == FD_FILE)
-		    file_must_close(fd);
-		else
-		    comm_close(fd);
-		pfds[fd].fd = -1;
-	    }
-	}
-#endif
-	pending_time = 0;
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
 	poll_time = sec > 0 ? 100 : 0;

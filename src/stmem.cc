@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.38 1997/02/26 19:46:23 wessels Exp $
+ * $Id: stmem.cc,v 1.39 1997/05/22 15:51:59 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -117,16 +117,11 @@ stmem_stats mem_obj_pool;
 #define USE_MEMALIGN 0
 #endif
 
-static int memFreeDataUpto _PARAMS((mem_ptr, int));
-static int memAppend _PARAMS((mem_ptr, const char *, int));
-static int memCopy _PARAMS((const mem_ptr, int, char *, int));
 static void *get_free_thing _PARAMS((stmem_stats *));
 static void put_free_thing _PARAMS((stmem_stats *, void *));
 static void stmemFreeThingMemory _PARAMS((stmem_stats *));
-static void memFree _PARAMS((mem_ptr));
-static void memFreeData _PARAMS((mem_ptr));
 
-static void
+void
 memFree(mem_ptr mem)
 {
     mem_node lastp, p = mem->head;
@@ -150,7 +145,7 @@ memFree(mem_ptr mem)
     safe_free(mem);
 }
 
-static void
+void
 memFreeData(mem_ptr mem)
 {
     mem_node lastp, p = mem->head;
@@ -171,7 +166,7 @@ memFreeData(mem_ptr mem)
     mem->origin_offset = 0;
 }
 
-static int
+int
 memFreeDataUpto(mem_ptr mem, int target_offset)
 {
     int current_offset = mem->origin_offset;
@@ -208,7 +203,7 @@ memFreeDataUpto(mem_ptr mem, int target_offset)
 
 
 /* Append incoming data. */
-static int
+int
 memAppend(mem_ptr mem, const char *data, int len)
 {
     mem_node p;
@@ -252,48 +247,34 @@ memAppend(mem_ptr mem, const char *data, int len)
     return len;
 }
 
-static int
-memCopy(const mem_ptr mem, int offset, char *buf, int size)
+size_t
+memCopy(const mem_ptr mem, off_t offset, char *buf, size_t size)
 {
     mem_node p = mem->head;
-    int t_off = mem->origin_offset;
-    int bytes_to_go = size;
+    off_t t_off = mem->origin_offset;
+    size_t bytes_to_go = size;
     char *ptr_to_buf = NULL;
     int bytes_from_this_packet = 0;
     int bytes_into_this_packet = 0;
-
     debug(19, 6, "memCopy: offset %d: size %d\n", offset, size);
-
     if (p == NULL)
 	return -1;
     /*      fatal_dump("memCopy: NULL mem_node"); *//* Can happen on async */
-
-    if (size <= 0)
-	return size;
-
+    assert (size > 0);
     /* Seek our way into store */
     while ((t_off + p->len) < offset) {
 	t_off += p->len;
-	if (p->next)
-	    p = p->next;
-	else {
-	    debug(19, 1, "memCopy: Offset: %d is off limit of current object of %d\n", t_off, offset);
-	    return 0;
-	}
+	assert(p->next);
+	p = p->next;
     }
-
     /* Start copying begining with this block until
      * we're satiated */
-
     bytes_into_this_packet = offset - t_off;
-    bytes_from_this_packet = min(bytes_to_go,
-	p->len - bytes_into_this_packet);
-
+    bytes_from_this_packet = min(bytes_to_go, p->len - bytes_into_this_packet);
     xmemcpy(buf, p->data + bytes_into_this_packet, bytes_from_this_packet);
     bytes_to_go -= bytes_from_this_packet;
     ptr_to_buf = buf + bytes_from_this_packet;
     p = p->next;
-
     while (p && bytes_to_go > 0) {
 	if (bytes_to_go > p->len) {
 	    xmemcpy(ptr_to_buf, p->data, p->len);
@@ -305,8 +286,7 @@ memCopy(const mem_ptr mem, int offset, char *buf, int size)
 	}
 	p = p->next;
     }
-
-    return size;
+    return size - bytes_to_go;
 }
 
 
@@ -316,11 +296,6 @@ memInit(void)
 {
     mem_ptr new = xcalloc(1, sizeof(Mem_Hdr));
     new->tail = new->head = NULL;
-    new->mem_free = memFree;
-    new->mem_free_data = memFreeData;
-    new->mem_free_data_upto = memFreeDataUpto;
-    new->mem_append = memAppend;
-    new->mem_copy = memCopy;
     return new;
 }
 

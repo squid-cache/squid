@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.115 1997/05/16 07:43:08 wessels Exp $
+ * $Id: squid.h,v 1.116 1997/05/22 15:51:59 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -268,7 +268,7 @@ typedef unsigned long u_num32;
 
 typedef void SIH _PARAMS((void *, int));	/* swap in */
 typedef int QS _PARAMS((const void *, const void *));	/* qsort */
-typedef void STCB _PARAMS((void *));	/* store callback */
+typedef void STCB _PARAMS((void *, char *, size_t));	/* store callback */
 
 #include "cache_cf.h"
 #include "fd.h"

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.161 1997/05/15 23:38:01 wessels Exp $
+ * $Id: http.cc,v 1.162 1997/05/22 15:51:54 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -531,9 +531,8 @@ httpReadReply(int fd, void *data)
     StoreEntry *entry = NULL;
 
     entry = httpState->entry;
-    if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
-	/* we can terminate connection right now */
-	squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+    if (protoAbortFetch(entry)) {
+	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
 	return;
     }
@@ -607,8 +606,6 @@ httpReadReply(int fd, void *data)
 	storeComplete(entry);	/* deallocates mem_obj->request */
 	comm_close(fd);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
-	/* append the last bit of info we get */
-	storeAppend(entry, buf, len);
 	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
     } else {
@@ -847,7 +844,11 @@ proxyhttpStart(request_t * orig_request,
     debug(11, 10, "proxyhttpStart: HTTP request header:\n%s\n",
 	entry->mem_obj->mime_hdr);
     if (e->options & NEIGHBOR_PROXY_ONLY)
+#if DONT_USE_VM
+	storeReleaseRequest(entry);
+#else
 	storeStartDeleteBehind(entry);
+#endif
     /* Create socket. */
     fd = comm_open(SOCK_STREAM,
 	0,
