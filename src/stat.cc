@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.188 1998/02/02 21:16:32 wessels Exp $
+ * $Id: stat.cc,v 1.189 1998/02/03 01:17:07 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -261,11 +261,14 @@ static void
 statObjects(StoreEntry * sentry, int vm_or_not)
 {
     StoreEntry *entry = NULL;
+    StoreEntry *next = NULL;
     MemObject *mem;
     int N = 0;
     int i;
     struct _store_client *sc;
-    for (entry = storeGetFirst(); entry != NULL; entry = storeGetNext()) {
+    next = (StoreEntry *) hash_first(store_table);
+    while (entry = next) {
+	next = (StoreEntry *) hash_next(store_table);
 	mem = entry->mem_obj;
 	if (vm_or_not && mem == NULL)
 	    continue;

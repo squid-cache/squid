@@ -362,7 +362,6 @@ extern void shut_down(int);
 extern void start_announce(void *unused);
 extern void sslStart(int fd, const char *, request_t *, size_t * sz);
 extern void waisStart(request_t *, StoreEntry *);
-extern void storeDirClean(void *unused);
 extern void passStart(int, const char *, request_t *, size_t *);
 extern void identStart(int, ConnStateData *, IDCB * callback);
 
@@ -388,11 +387,13 @@ extern void stmemFreeData(mem_hdr *);
 
 /* ----------------------------------------------------------------- */
 
+/*
+ * store.c
+ */
+extern StoreEntry *new_StoreEntry(int, const char *, const char *);
 extern StoreEntry *storeGet(const cache_key *);
 extern StoreEntry *storeCreateEntry(const char *, const char *, int, method_t);
 extern void storeSetPublicKey(StoreEntry *);
-extern StoreEntry *storeGetFirst(void);
-extern StoreEntry *storeGetNext(void);
 extern void storeComplete(StoreEntry *);
 extern void storeInit(void);
 extern int storeClientWaiting(const StoreEntry *);
@@ -414,7 +415,6 @@ extern int storePendingNClients(const StoreEntry *);
 extern int storeWriteCleanLogs(int reopen);
 extern HASHCMP urlcmp;
 extern EVH storeMaintainSwapSpace;
-
 extern void storeExpireNow(StoreEntry *);
 extern void storeReleaseRequest(StoreEntry *);
 extern void storeRotateLog(void);
@@ -424,7 +424,6 @@ extern void storeConfigure(void);
 extern void storeNegativeCache(StoreEntry *);
 extern void storeFreeMemory(void);
 extern int expiresMoreThan(time_t, time_t);
-extern void storeClientListAdd(StoreEntry *, void *);
 extern int storeClientCopyPending(StoreEntry *, void *);
 extern void InvokeHandlers(StoreEntry *);
 extern int storeEntryValidToSend(StoreEntry *);
@@ -433,13 +432,30 @@ extern time_t storeExpiredReferenceAge(void);
 extern void storeRegisterAbort(StoreEntry * e, STABH * cb, void *);
 extern void storeUnregisterAbort(StoreEntry * e);
 extern void storeMemObjectDump(MemObject * mem);
+extern void storeEntryDump(StoreEntry * e);
 extern const char *storeUrl(const StoreEntry *);
 extern void storeCreateMemObject(StoreEntry *, const char *, const char *);
 extern void storeCopyNotModifiedReplyHeaders(MemObject * O, MemObject * N);
 extern void storeBuffer(StoreEntry *);
 extern void storeBufferFlush(StoreEntry *);
+extern void storeHashInsert(StoreEntry * e, const cache_key *);
+extern void storeSetMemStatus(StoreEntry * e, int);
+#if !MONOTONIC_STORE
+extern int storeGetUnusedFileno(void);
+extern void storePutUnusedFileno(StoreEntry * e);
+#endif
+#ifdef __STDC__
+extern void storeAppendPrintf(StoreEntry *, const char *,...);
+#else
+extern void storeAppendPrintf();
+#endif
+extern void storeLog(int tag, const StoreEntry * e);
+extern int storeCheckCachable(StoreEntry * e);
 
-/* storeKey stuff */
+
+/*
+ * store_key_*.c
+ */
 extern const cache_key *storeKeyDup(const cache_key *);
 extern void storeKeyFree(const cache_key *);
 extern const cache_key *storeKeyScan(const char *);
@@ -450,12 +466,14 @@ extern int storeKeyHashBuckets(int);
 extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;
 
-#ifdef __STDC__
-extern void storeAppendPrintf(StoreEntry *, const char *,...);
-#else
-extern void storeAppendPrintf();
-#endif
+/*
+ * store_clean.c
+ */
+extern EVH storeDirClean;
 
+/*
+ * store_dir.c
+ */
 extern char *storeSwapFullPath(int, char *);
 extern char *storeSwapSubSubDir(int, char *);
 extern int storeVerifySwapDirs(void);
@@ -476,6 +494,77 @@ extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
 extern int storeDirProperFileno(int dirn, int fn);
 extern void storeCreateSwapDirectories(void);
 extern int storeVerifyCacheDirs(void);
+
+/*
+ * store_swapmeta.c
+ */
+extern int storeBuildMetaData(StoreEntry * e, char *swap_buf_c);
+extern int getSwapHdr(int *, int *len, void *dst, char *write_buf, int hdr_len);
+extern int getSwapHdr(int *, int *len, void *dst, char *write_buf, int hdr_len);
+extern void addSwapHdr(int, int len, void *src, char *write_buf, int *write_len);
+extern int storeGetMetaBuf(const char *buf, MemObject * mem);
+
+/*
+ * store_rebuild.c
+ */
+extern void storeDoRebuildFromSwapFiles(void *data);
+extern void storeConvert(void);
+extern void storeConvertFile(const cache_key * key,
+    int file_number,
+    int size,
+    time_t expires,
+    time_t timestamp,
+    time_t lastref,
+    time_t lastmod,
+    u_num32 refcount,
+    u_num32 flags,
+    int clean);
+extern int storeGetNextFile(int *sfileno, int *size);
+extern StoreEntry * storeAddDiskRestore(const cache_key * key,
+    int file_number,
+    int size,
+    time_t expires,
+    time_t timestamp,
+    time_t lastref,
+    time_t lastmod,
+    u_num32 refcount,
+    u_num32 flags,
+    int clean);
+extern void storeDoConvertFromLog(void *data);
+extern void storeCleanup(void *datanotused);
+extern void storeValidate(StoreEntry *, STVLDCB, void *callback_data, void *tag);
+extern void storeValidateComplete(void *data, int retcode, int errcode);
+extern void storeStartRebuildFromDisk(void);
+
+
+/*
+ * store_swapin.c
+ */
+extern void storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data);
+extern void storeSwapInValidateComplete(void *data, int retcode, int errcode);
+extern void storeSwapInFileOpened(void *data, int fd, int errcode);
+
+/*
+ * store_swapout.c
+ */
+extern void storeSwapOutStart(StoreEntry * e);
+extern void storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data);
+extern void storeCheckSwapOut(StoreEntry * e);
+extern void storeSwapOutFileClose(StoreEntry * e);
+extern void storeSwapOutFileClose(StoreEntry * e);
+
+/*
+ * store_client.c
+ */
+extern store_client * storeClientListSearch(const MemObject * mem, void *data);
+extern void storeClientListAdd(StoreEntry * e, void *data);
+extern void storeClientCopy(StoreEntry *, off_t , off_t , size_t , char *, STCB *, void *);
+extern int storeClientCopyPending(StoreEntry * e, void *data);
+extern int storeUnregister(StoreEntry * e, void *data);
+extern off_t storeLowestMemReaderOffset(const StoreEntry * entry);
+extern void InvokeHandlers(StoreEntry * e);
+extern int storePendingNClients(const StoreEntry * e);
+
 
 extern const char *getMyHostname(void);
 extern void safeunlink(const char *path, int quiet);

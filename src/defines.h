@@ -182,3 +182,17 @@
 #define IPC_TCP_SOCKET 1
 #define IPC_UDP_SOCKET 2
 #define IPC_FIFO 3
+
+#define STORE_META_KEY STORE_META_KEY_MD5
+
+#define STORE_META_TLD_START sizeof(int)+sizeof(char)
+#define STORE_META_TLD_SIZE STORE_META_TLD_START
+#define SwapMetaType(x) (char)x[0]
+#define SwapMetaSize(x) &x[sizeof(char)]
+#define SwapMetaData(x) &x[STORE_META_TLD_START]
+#define STORE_HDR_METASIZE (4*sizeof(time_t)+2*sizeof(u_short)+sizeof(int))
+
+#define STORE_ENTRY_WITH_MEMOBJ		1
+#define STORE_ENTRY_WITHOUT_MEMOBJ	0
+#define STORE_SWAP_BUF		DISK_PAGE_SIZE
+#define VM_WINDOW_SZ		DISK_PAGE_SIZE
