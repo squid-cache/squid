@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.30 1996/07/09 22:55:14 wessels Exp $
+ * $Id: ipcache.cc,v 1.31 1996/07/12 17:39:51 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -369,13 +369,11 @@ static int ipcache_compareLastRef(e1, e2)
 static int ipcacheExpiredEntry(i)
      ipcache_entry *i;
 {
-    if (i->lock)
-	return 0;
     if (i->status == IP_PENDING)
 	return 0;
     if (i->status == IP_DISPATCHED)
 	return 0;
-    if (i->ttl + i->lastref > squid_curtime)
+    if (i->ttl + i->timestamp > squid_curtime)
 	return 0;
     return 1;
 }
@@ -413,8 +411,6 @@ static int ipcache_purgelru()
 	if (i->status == IP_PENDING)
 	    continue;
 	if (i->status == IP_DISPATCHED)
-	    continue;
-	if (i->lock)
 	    continue;
 	local_ip_notpending_count++;
 	LRU_list[LRU_list_count++] = i;
@@ -1247,11 +1243,10 @@ void stat_ipcache_get(sentry)
 	if (i->status == IP_PENDING || i->status == IP_DISPATCHED)
 	    ttl = 0;
 	else
-	    ttl = (i->ttl - squid_curtime + i->lastref);
-	storeAppendPrintf(sentry, " {%-32.32s %c%c %6d %d",
+	    ttl = (i->ttl - squid_curtime + i->timestamp);
+	storeAppendPrintf(sentry, " {%-32.32s %c %6d %d",
 	    i->name,
 	    ipcache_status_char[i->status],
-	    i->lock ? 'L' : ' ',
 	    ttl,
 	    i->addr_count);
 	for (k = 0; k < (int) i->addr_count; k++) {
@@ -1304,15 +1299,6 @@ static int dummy_handler(u1, u2, u3)
      void *u3;
 {
     return 0;
-}
-
-void ipcacheLockEntry(name)
-     char *name;
-{
-    ipcache_entry *i;
-    if ((i = ipcache_get(name)) == NULL)
-	return;
-    i->lock++;
 }
 
 static int ipcacheHasPending(i)
