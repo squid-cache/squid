@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.86 1998/10/11 23:19:48 wessels Exp $
+ * $Id: peer_select.cc,v 1.87 1998/10/12 21:41:00 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -59,6 +59,7 @@ const char *hier_strings[] =
 #if USE_CARP
     "CARP",
 #endif
+    "ANY_PARENT",
     "INVALID CODE"
 };
 
@@ -140,6 +141,10 @@ peerGetSomeParent(request_t * request, hier_code * code)
     }
     if ((p = getFirstUpParent(request))) {
 	*code = FIRSTUP_PARENT;
+	return p;
+    }
+    if ((p = getAnyParent(request))) {
+	*code = ANY_OLD_PARENT;
 	return p;
     }
     return NULL;

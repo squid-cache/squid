@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.276 1998/10/10 14:57:42 wessels Exp $
+ * $Id: protos.h,v 1.277 1998/10/12 21:41:01 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -578,6 +578,7 @@ extern void neighbors_open(int);
 extern peer *peerFindByName(const char *);
 extern peer *getDefaultParent(request_t * request);
 extern peer *getRoundRobinParent(request_t * request);
+extern peer *getAnyParent(request_t * request);
 extern lookup_t peerDigestLookup(peer * p, request_t * request, StoreEntry * entry);
 extern peer *neighborsDigestSelect(request_t * request, StoreEntry * entry);
 extern void peerNoteDigestLookup(request_t * request, peer * p, lookup_t lookup);

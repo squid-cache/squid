@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.257 1998/10/08 02:40:07 wessels Exp $
+ * $Id: neighbors.cc,v 1.258 1998/10/12 21:40:59 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -271,6 +271,22 @@ getDefaultParent(request_t * request)
 	return p;
     }
     debug(15, 3) ("getDefaultParent: returning NULL\n");
+    return NULL;
+}
+
+peer *
+getAnyParent(request_t * request)
+{
+    peer *p = NULL;
+    for (p = Config.peers; p; p = p->next) {
+	if (neighborType(p, request) != PEER_PARENT)
+	    continue;
+	if (!peerHTTPOkay(p, request))
+	    continue;
+	debug(15, 3) ("getAnyParent: returning %s\n", p->host);
+	return p;
+    }
+    debug(15, 3) ("getAnyParent: returning NULL\n");
     return NULL;
 }
 
