@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.192 2003/09/06 12:47:35 robertc Exp $
+ * $Id: errorpage.cc,v 1.193 2003/09/07 10:11:07 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -354,7 +354,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
          * error message
          */
         assert(EBIT_TEST(entry->flags, ENTRY_ABORTED));
-        assert(mem->nclients == 0);
+        assert(entry->mem_obj->nclients == 0);
         errorStateFree(err);
         return;
     }
