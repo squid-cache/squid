@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.1 2001/08/31 11:19:08 robertc Exp $
+# $Id: Makefile.am,v 1.2 2001/11/14 23:09:10 hno Exp $
 #
 
 errordir = $(sysconfdir)/errors
@@ -20,19 +20,13 @@ LANGUAGES	= Bulgarian Czech Danish Dutch English Estonian Finnish French \
 install-data-local: 
 	-@$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)
 	@for f in $(srcdir)/$(LANGUAGE)/ERR_*; do \
-		if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$f ; then \
-			:; \
-		else \
-			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)"; \
-			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR); \
-		fi; \
+		echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)"; \
+		$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR); \
 	done
 
 uninstall-local:
 	@for f in $(srcdir)/$(LANGUAGE)/ERR_*; do \
-	        if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/`echo $$f | echo "$$f" | sed -e "s/.*\///;"` ; then \
-	                rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/`echo $$f | echo "$$f" | sed -e "s/.*\///;"`; \
-	        fi; \
+		rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/`basename $$f`; \
 	done
 
 # undocumented hack.  You can use this target to create multi-lingual
