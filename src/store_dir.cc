@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.67 1998/05/11 20:06:19 wessels Exp $
+ * $Id: store_dir.cc,v 1.68 1998/05/15 20:31:41 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -39,7 +39,7 @@
 static char *storeSwapSubDir(int dirn, int subdirn);
 static int storeDirSelectSwapDir(void);
 static int storeVerifyDirectory(const char *path);
-static void storeCreateDirectory(const char *path, int lvl);
+static int storeCreateDirectory(const char *path, int);
 static void storeCreateSwapSubDirs(int j);
 
 /* return full name to swapfile */
@@ -122,22 +122,29 @@ storeFilenoBelongsHere(int fn, int F0, int F1, int F2)
     return 1;
 }
 
-static void
-storeCreateDirectory(const char *path, int lvl)
+static int
+storeCreateDirectory(const char *path, int should_exist)
 {
+    int created = 0;
     struct stat st;
-    if (stat(path, &st) == 0 && S_ISDIR(st.st_mode)) {
-	debug(20, lvl) ("%s exists\n", path);
-    } else if (mkdir(path, 0755) == 0) {
-	debug(20, lvl) ("%s created\n", path);
-    } else if (errno == EEXIST) {
-	debug(20, lvl) ("%s exists\n", path);
+    if (0 == stat(path, &st)) {
+	if (S_ISDIR(st.st_mode)) {
+	    debug(20, should_exist ? 3 : 1) ("%s exists\n", path);
+	} else {
+	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
+		"Swap directory %s is not a directory.", path);
+	    fatal(tmp_error_buf);
+	}
+    } else if (0 == mkdir(path, 0755)) {
+	debug(20, should_exist ? 1 : 3) ("%s created\n", path);
+	created = 1;
     } else {
 	snprintf(tmp_error_buf, ERROR_BUF_SZ,
 	    "Failed to make swap directory %s: %s",
 	    path, xstrerror());
 	fatal(tmp_error_buf);
     }
+    return created;
 }
 
 static int
@@ -196,15 +203,19 @@ static void
 storeCreateSwapSubDirs(int j)
 {
     int i, k;
+    int should_exist;
     SwapDir *SD = &Config.cacheSwap.swapDirs[j];
     LOCAL_ARRAY(char, name, MAXPATHLEN);
     for (i = 0; i < SD->l1; i++) {
 	snprintf(name, MAXPATHLEN, "%s/%02X", SD->path, i);
-	storeCreateDirectory(name, 0);
+	if (storeCreateDirectory(name, 0))
+	    should_exist = 0;
+	else
+	    should_exist = 1;
 	debug(47, 1) ("Making directories in %s\n", name);
 	for (k = 0; k < SD->l2; k++) {
 	    snprintf(name, MAXPATHLEN, "%s/%02X/%02X", SD->path, i, k);
-	    storeCreateDirectory(name, 2);
+	    storeCreateDirectory(name, should_exist);
 	}
     }
 }
