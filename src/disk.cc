@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.83 1997/10/23 04:01:51 wessels Exp $
+ * $Id: disk.cc,v 1.84 1997/10/23 23:20:19 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -430,44 +430,24 @@ diskHandleReadComplete(void *data, int len, int errcode)
     disk_ctrl_t *ctrlp = data;
     dread_ctrl *ctrl_dat = ctrlp->data;
     int fd = ctrlp->fd;
+    int rc = DISK_OK;
     errno = errcode;
     xfree(data);
     fd_bytes(fd, len, FD_READ);
     if (len < 0) {
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-	    commSetSelect(fd,
-		COMM_SELECT_READ,
-		diskHandleRead,
-		ctrl_dat,
-		0);
+	    commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
 	    return;
 	}
-	debug(50, 1) ("diskHandleRead: FD %d: error reading: %s\n",
-	    fd, xstrerror());
-	ctrl_dat->handler(fd,
-	    ctrl_dat->buf,
-	    0,
-	    DISK_ERROR,
-	    ctrl_dat->client_data);
-	safe_free(ctrl_dat);
-	return;
+	debug(50, 1) ("diskHandleRead: FD %d: %s\n", fd, xstrerror());
+	len = 0;
+	rc = DISK_ERROR;
     } else if (len == 0) {
-	/* EOF */
-	ctrl_dat->end_of_file = 1;
-	/* call handler */
-	ctrl_dat->handler(fd,
-	    ctrl_dat->buf,
-	    len,
-	    DISK_EOF,
-	    ctrl_dat->client_data);
-	safe_free(ctrl_dat);
-	return;
+	rc = DISK_EOF;
     }
-    ctrl_dat->handler(fd,
-	ctrl_dat->buf,
-	len,
-	DISK_OK,
-	ctrl_dat->client_data);
+    if (cbdataValid(ctrl_dat->client_data))
+        ctrl_dat->handler(fd, ctrl_dat->buf, len, rc, ctrl_dat->client_data);
+    cbdataUnlock(ctrl_dat->client_data);
     safe_free(ctrl_dat);
 }
 
@@ -489,6 +469,7 @@ file_read(int fd, char *buf, int req_len, int offset, DRCB * handler, void *clie
     ctrl_dat->end_of_file = 0;
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = client_data;
+    cbdataLock(client_data);
 #if USE_ASYNC_IO
     diskHandleRead(fd, ctrl_dat);
 #else
