@@ -1,9 +1,3 @@
-UPCOMING CHANGES:
-
-	- Send refresh values from refresh_pattern lines as
-	  'Cache-Control: max-stale XXX' in HTTP requests.
-	- Experiment with returning network probe measurments in ICP
-	  replies.
 
 Changes to squid-1.1.beta20 (November 13, 1996):
 
@@ -14,6 +8,7 @@ Changes to squid-1.1.beta20 (November 13, 1996):
 	- Changed all 'xstrerror' debug messages to section 50.
 	- More const fixes (Markus Gyger).
 	- Added xstrncpy() which null-terminates (Markus Gyger).
+	- Fixed Cache-Control counting in HTTP reply header stats.
 
 Changes to squid-1.1.beta19 (November 13, 1996):
 
