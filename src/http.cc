@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.112 1996/11/24 02:37:35 wessels Exp $
+ * $Id: http.cc,v 1.113 1996/11/24 02:42:03 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -309,6 +309,18 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	    } else if (!strncasecmp(t, "no-cache", 8)) {
 		EBIT_SET(reply->cache_control, SCC_NOCACHE);
 		ReplyHeaderStats.cc[SCC_NOCACHE]++;
+	    } else if (!strncasecmp(t, "no-store", 8)) {
+		EBIT_SET(reply->cache_control, SCC_NOSTORE);
+		ReplyHeaderStats.cc[SCC_NOSTORE]++;
+	    } else if (!strncasecmp(t, "no-transform", 12)) {
+		EBIT_SET(reply->cache_control, SCC_NOTRANSFORM);
+		ReplyHeaderStats.cc[SCC_NOTRANSFORM]++;
+	    } else if (!strncasecmp(t, "must-revalidate", 15)) {
+		EBIT_SET(reply->cache_control, SCC_MUSTREVALIDATE);
+		ReplyHeaderStats.cc[SCC_MUSTREVALIDATE]++;
+	    } else if (!strncasecmp(t, "proxy-revalidate", 16)) {
+		EBIT_SET(reply->cache_control, SCC_PROXYREVALIDATE);
+		ReplyHeaderStats.cc[SCC_PROXYREVALIDATE]++;
 	    } else if (!strncasecmp(t, "max-age", 7)) {
 		if ((t = strchr(t, '='))) {
 		    delta = atoi(++t);
