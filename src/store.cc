@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.135 1996/10/24 21:52:53 wessels Exp $
+ * $Id: store.cc,v 1.136 1996/10/24 22:21:30 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -205,8 +205,6 @@ int store_rebuilding = STORE_REBUILDING_SLOW;
 static char *storeDescribeStatus _PARAMS((StoreEntry *));
 static char *storeSwapFullPath _PARAMS((int, char *));
 static HashID storeCreateHashTable _PARAMS((int (*)_PARAMS((char *, char *))));
-static hash_link *storeFindFirst _PARAMS((HashID));
-static hash_link *storeFindNext _PARAMS((HashID));
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
 static int compareSize _PARAMS((StoreEntry **, StoreEntry **));
 static int storeAddSwapDisk _PARAMS((char *));
@@ -1779,30 +1777,11 @@ storeAbort(StoreEntry * e, char *msg)
 }
 
 /* get the first in memory object entry in the storage */
-static hash_link *
-storeFindFirst(HashID id)
-{
-    if (id == (HashID) 0)
-	return NULL;
-    return (hash_first(id));
-}
-
-/* get the next in memory object entry in the storage for a given
- * search pointer */
-static hash_link *
-storeFindNext(HashID id)
-{
-    if (id == (HashID) 0)
-	return NULL;
-    return (hash_next(id));
-}
-
-/* get the first in memory object entry in the storage */
 static StoreEntry *
 storeGetInMemFirst(void)
 {
     hash_link *first = NULL;
-    first = storeFindFirst(in_mem_table);
+    first = hash_first(in_mem_table);
     return (first ? ((StoreEntry *) first->item) : NULL);
 }
 
@@ -1813,7 +1792,7 @@ static StoreEntry *
 storeGetInMemNext(void)
 {
     hash_link *next = NULL;
-    next = storeFindNext(in_mem_table);
+    next = hash_next(in_mem_table);
     return (next ? ((StoreEntry *) next->item) : NULL);
 }
 
@@ -1821,7 +1800,7 @@ storeGetInMemNext(void)
 StoreEntry *
 storeGetFirst(void)
 {
-    return ((StoreEntry *) storeFindFirst(store_table));
+    return ((StoreEntry *) hash_first(store_table));
 }
 
 
@@ -1829,7 +1808,7 @@ storeGetFirst(void)
 StoreEntry *
 storeGetNext(void)
 {
-    return ((StoreEntry *) storeFindNext(store_table));
+    return ((StoreEntry *) hash_next(store_table));
 }
 
 /* free up all ttl-expired objects */
