@@ -1,5 +1,5 @@
 /*
- * $Id: ESICustomParser.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESICustomParser.h,v 1.5 2005/03/28 21:44:12 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,6 +49,7 @@ public:
     char const * errorString() const;
 
 private:
+    ESI_PARSER_TYPE;
     static Trie *SearchTrie;
     static Trie *GetTrie();
     enum ESITAG_t {

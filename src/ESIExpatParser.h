@@ -1,5 +1,5 @@
 /*
- * $Id: ESIExpatParser.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESIExpatParser.h,v 1.3 2005/03/28 21:44:12 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,6 +48,7 @@ public:
     char const * errorString() const;
 
 private:
+    ESI_PARSER_TYPE;
     mutable XML_Parser p; /* our parser */
     static void Start(void *data, const char *el, const char **attr);
     static void End(void *data, const char *el);

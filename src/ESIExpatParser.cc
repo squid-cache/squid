@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpatParser.cc,v 1.2 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESIExpatParser.cc,v 1.3 2005/03/28 21:44:12 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -35,6 +35,8 @@
 
 #include "squid.h"
 #include "ESIExpatParser.h"
+
+RegisterESIParser("expat", ESIExpatParser);
 
 ESIExpatParser::ESIExpatParser(ESIParserClient *aClient) : theClient (aClient)
 {
