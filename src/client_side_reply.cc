@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.49 2003/04/20 05:28:58 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.50 2003/05/11 13:53:03 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1216,7 +1216,8 @@ clientReplyContext::replyStatus()
         return STREAM_UNPLANNED_COMPLETE;
     }
 
-    if (http->entry->getReply()->isBodyTooLarge(http->out.offset)) {
+    if (http->isReplyBodyTooLarge(http->out.offset - 4096)) {
+        /* 4096 is a margin for the HTTP headers included in out.offset */
         debug(88, 5) ("clientReplyStatus: client reply body is too large\n");
         return STREAM_FAILED;
     }
@@ -1463,6 +1464,7 @@ clientReplyContext::buildReply(const char *buf, size_t size)
             /* this will fail and destroy request->range */
             //          clientBuildRangeHeader(http, holdingReply);
         }
+
     }
 
     /* enforce 1.0 reply version */
@@ -1805,14 +1807,42 @@ clientReplyContext::holdReply(HttpReply *aReply)
     holdingReply = aReply;
 }
 
+/*
+ * Calculates the maximum size allowed for an HTTP response
+ */
+void
+clientReplyContext::buildMaxBodySize(HttpReply * reply)
+{
+    body_size *bs;
+    ACLChecklist *checklist;
+    bs = (body_size *) Config.ReplyBodySize.head;
+
+    while (bs) {
+        checklist = clientAclChecklistCreate(bs->access_list, http);
+        checklist->reply = reply;
+
+        if (1 != aclCheckFast(bs->access_list, checklist)) {
+            /* deny - skip this entry */
+            bs = (body_size *) bs->node.next;
+        } else {
+            /* Allow - use this entry */
+            http->maxReplyBodySize(bs->maxsize);
+            bs = NULL;
+            debug(58, 3) ("httpReplyBodyBuildSize: Setting maxBodySize to %ld\n", (long int) http->maxReplyBodySize());
+        }
+
+        delete checklist;
+    }
+}
+
 void
 clientReplyContext::processReplyAccess ()
 {
     HttpReply *rep = holdingReply;
     holdReply(NULL);
-    httpReplyBodyBuildSize(http->request, rep, &Config.ReplyBodySize);
+    buildMaxBodySize(rep);
 
-    if (rep->isBodyTooLarge(rep->content_length)) {
+    if (http->isReplyBodyTooLarge(rep->content_length)) {
         ErrorState *err =
             clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
                              http->conn ? &http->conn->peer.sin_addr : &no_addr,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.59 2003/03/15 04:17:38 robertc Exp $
+ * $Id: HttpReply.cc,v 1.60 2003/05/11 13:53:03 hno Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -94,7 +94,6 @@ httpReplyInit(HttpReply * rep)
 {
     assert(rep);
     rep->hdr_sz = 0;
-    rep->maxBodySize = 0;
     rep->pstate = psReadyToParseStartLine;
     httpBodyInit(&rep->body);
     httpHeaderInit(&rep->header, hoReply);
@@ -600,34 +599,6 @@ httpReplyBodySize(method_t method, HttpReply const * reply)
     return reply->content_length;
 }
 
-/*
- * Calculates the maximum size allowed for an HTTP response
- */
-void
-httpReplyBodyBuildSize(request_t * request, HttpReply * reply, dlink_list * bodylist)
-{
-    body_size *bs;
-    ACLChecklist *checklist;
-    bs = (body_size *) bodylist->head;
-
-    while (bs) {
-        checklist = aclChecklistCreate(bs->access_list, request, NULL);
-        checklist->reply = reply;
-
-        if (1 != aclCheckFast(bs->access_list, checklist)) {
-            /* deny - skip this entry */
-            bs = (body_size *) bs->node.next;
-        } else {
-            /* Allow - use this entry */
-            reply->maxBodySize = bs->maxsize;
-            bs = NULL;
-            debug(58, 3) ("httpReplyBodyBuildSize: Setting maxBodySize to %ld\n", (long int) reply->maxBodySize);
-        }
-
-        delete checklist;
-    }
-}
-
 MemPool *HttpReply::Pool(NULL);
 void *
 HttpReply::operator new (size_t byteCount)
@@ -645,16 +616,4 @@ void
 HttpReply::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-bool
-HttpReply::isBodyTooLarge(ssize_t clen) const
-{
-    if (0 == maxBodySize)
-        return 0;		/* disabled */
-
-    if (clen < 0)
-        return 0;		/* unknown */
-
-    return (unsigned int)clen > maxBodySize;
 }
