@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.325 1997/10/29 02:32:08 wessels Exp $
+ * $Id: store.cc,v 1.326 1997/10/29 02:36:36 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -214,7 +214,6 @@ typedef struct swapout_ctrl_t {
 } swapout_ctrl_t;
 
 /* Static Functions */
-static int compareLastRef(StoreEntry **, StoreEntry **);
 static int storeCheckExpired(const StoreEntry *, int flag);
 static store_client *storeClientListSearch(const MemObject *, void *);
 static int storeEntryLocked(const StoreEntry *);
@@ -235,7 +234,6 @@ static StoreEntry *storeAddDiskRestore(const char *,
     u_num32,
     u_num32,
     int);
-static unsigned int storeGetBucketNum(void);
 static void destroy_MemObject(MemObject *);
 static void destroy_MemObjectData(MemObject *);
 static void destroy_StoreEntry(StoreEntry *);
@@ -290,7 +288,6 @@ static char key_temp_buffer[MAX_URL + 100];
 static int store_buckets;
 static int store_maintain_rate;
 static int store_maintain_buckets;
-static int scan_revolutions;
 
 static MemObject *
 new_MemObject(const char *log_url)
@@ -1610,29 +1607,6 @@ storeGetMemSpace(int size)
     debug(20, 3) ("  %6d were released\n", n_released);
 }
 
-static int
-compareLastRef(StoreEntry ** e1, StoreEntry ** e2)
-{
-    if (!e1 || !e2)
-	fatal_dump(NULL);
-    if ((*e1)->lastref > (*e2)->lastref)
-	return (1);
-    if ((*e1)->lastref < (*e2)->lastref)
-	return (-1);
-    return (0);
-}
-
-/* returns the bucket number to work on,
- * pointer to next bucket after each calling
- */
-static unsigned int
-storeGetBucketNum(void)
-{
-    static unsigned int bucket = 0;
-    if (bucket >= store_buckets)
-	bucket = 0;
-    return (bucket++);
-}
 /* The maximum objects to scan for maintain storage space */
 #define MAINTAIN_MAX_SCAN	1024
 #define MAINTAIN_MAX_REMOVE	64
