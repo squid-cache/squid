@@ -317,6 +317,9 @@
 /* off_t is defined by the system headers */
 #undef HAVE_OFF_T
 
+/* Define to 1 if you have the <openssl/engine.h> header file. */
+#undef HAVE_OPENSSL_ENGINE_H
+
 /* Define to 1 if you have the <openssl/err.h> header file. */
 #undef HAVE_OPENSSL_ERR_H
 
