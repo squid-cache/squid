@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.303 1998/05/11 21:34:09 wessels Exp $
+ * $Id: client_side.cc,v 1.304 1998/05/13 21:30:14 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1109,7 +1109,6 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	if ((e = http->entry)) {
 	    http->entry = NULL;
 	    storeUnregister(e, http);
-	    storeRelease(e);
 	    storeUnlockObject(e);
 	}
 	clientProcessMiss(http);
