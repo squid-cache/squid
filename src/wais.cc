@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.11 1996/03/28 05:22:53 wessels Exp $ */
+/* $Id: wais.cc,v 1.12 1996/03/28 05:39:21 wessels Exp $ */
 
 #include "squid.h"
 
@@ -38,7 +38,7 @@ void waisReadReplyTimeout(fd, data)
 
     entry = data->entry;
     debug(0, 4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
-    cached_error_entry(entry, ERR_READ_TIMEOUT);
+    cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
     comm_close(fd);
     safe_free(data);
@@ -53,7 +53,7 @@ void waisLifetimeExpire(fd, data)
 
     entry = data->entry;
     debug(0, 4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
-    cached_error_entry(entry, ERR_LIFETIME_EXP);
+    cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
     comm_close(fd);
     safe_free(data);
@@ -106,7 +106,7 @@ void waisReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ);
+	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
 	    comm_close(fd);
 	    safe_free(data);
 	    return;
@@ -127,7 +127,7 @@ void waisReadReply(fd, data)
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
 	    storeComplete(entry);
 	} else {
-	    cached_error_entry(entry, ERR_READ_ERROR);
+	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	}
 	comm_close(fd);
 	safe_free(data);
@@ -206,7 +206,7 @@ void waisSendRequest(fd, data)
     else
 	sprintf(buf, "%s %s%c%c", data->type, data->request, CR, LF);
     debug(0, 6, "waisSendRequest - buf:%s\n", buf);
-    icpWrite(fd, buf, len, 30, waisSendComplete, data);
+    icpWrite(fd, buf, len, 30, waisSendComplete, (caddr_t) data);
 }
 
 int waisStart(unusedfd, url, type, mime_hdr, entry)
@@ -228,7 +228,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 
     if (!getWaisRelayHost()) {
 	debug(0, 0, "waisStart: Failed because no relay host defined!\n");
-	cached_error_entry(entry, ERR_NO_RELAY);
+	cached_error_entry(entry, ERR_NO_RELAY, NULL);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -241,7 +241,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(0, 4, "waisStart: Failed because we're out of sockets.\n");
-	cached_error_entry(entry, ERR_NO_FDS);
+	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
     }
