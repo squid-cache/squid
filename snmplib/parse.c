@@ -1092,9 +1092,13 @@ read_mib(filename)
     char mbuf[256];
     char *p;
 
+    snmplib_debug(0, "reading MIB file: '%s'\n", filename);
+
     fp = fopen(filename, "r");
-    if (fp == NULL)
+    if (fp == NULL) {
+	snmplib_debug(0, "failed to open MIB file: '%s'\n", filename);
 	return(NULL);
+    }
 
     mbuf[0]='\0';
     while ( (p=fgets(mbuf, 256, fp)) && strncmp(&mbuf[4], CURRENT_MIB_VERSION,
