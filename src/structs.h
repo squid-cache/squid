@@ -617,6 +617,7 @@ struct _HierarchyLogEntry {
     char host[SQUIDHOSTNAMELEN];
     icp_ping_data icp;
 #if SQUID_PEER_DIGEST
+    char cd_host[SQUIDHOSTNAMELEN]; /* the host of selected by cd peer */
     peer_select_alg_t alg; /* peer selection algorithm */
     lookup_t cd_lookup;    /* cd prediction: none, miss, hit */
     int n_choices;         /* #peers we selected from (cd only) */
@@ -1200,8 +1201,8 @@ struct _StatCounters {
 #if SQUID_PEER_DIGEST
     struct {
 	int times_used;
-	kb_t kbtes_sent;
-	kb_t kbtes_recv;
+	kb_t kbytes_sent;
+	kb_t kbytes_recv;
 	kb_t memory;
         cd_guess_stats guess;
 	StatHist client_svc_time;

@@ -485,7 +485,9 @@ extern void neighbors_open(int);
 extern peer *peerFindByName(const char *);
 extern peer *getDefaultParent(request_t * request);
 extern peer *getRoundRobinParent(request_t * request);
+extern lookup_t peerDigestLookup(peer *p, request_t * request, StoreEntry * entry);
 extern peer *neighborsDigestSelect(request_t * request, StoreEntry * entry);
+extern void peerNoteDigestLookup(request_t * request, peer *p, lookup_t lookup);
 extern int neighborUp(const peer * e);
 extern void peerDestroy(peer * e);
 extern char *neighborTypeStr(const peer * e);
@@ -515,8 +517,7 @@ extern peer *peerGetSomeParent(request_t *, hier_code *);
 extern void peerSelectInit(void);
 
 /* peer_digest.c */
-extern void peerDigestValidate(peer * p);
-extern void peerDigestRequest(peer * p);
+void peerDigestInit(peer *p);
 
 extern void protoDispatch(int, StoreEntry *, request_t *);
 

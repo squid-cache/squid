@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.46 1998/04/08 19:28:48 wessels Exp $
+ * $Id: peer_select.cc,v 1.47 1998/04/08 22:51:15 rousskov Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -49,6 +49,7 @@ const char *hier_strings[] =
     "ROUNDROBIN_PARENT",
 #if SQUID_PEER_DIGEST
     "CACHE_DIGEST_HIT",
+    "CACHE_DIGEST_MISS",
 #endif
     "INVALID CODE"
 };
@@ -307,35 +308,34 @@ peerSelectFoo(ps_state * psstate)
     } else if (peerSelectIcpPing(request, direct, entry)) {
 	assert(entry->ping_status == PING_NONE);
 #if SQUID_PEER_DIGEST
-	/* always check digests if any */
-	/* @?@ optimize: track if there are any digested peers at all (global counter) */
-	if (1) {
-	    p = neighborsDigestSelect(request, entry);
-	    if (p) {
-		request->hier.cd_lookup = LOOKUP_HIT;
-	    } else
-	    if (request->hier.n_choices) {
-		request->hier.cd_lookup = LOOKUP_MISS;
-	    } else {
-		request->hier.cd_lookup = LOOKUP_NONE;
-	    }
-	    debug(44, 3) ("peerSelect: %s digest lookup: %s choices: %d (%d)\n", 
-		p ? p->host : "",
-		lookup_t_str[request->hier.cd_lookup],
-		request->hier.n_choices, request->hier.n_ichoices);
-	}
-	/* @?@ TEST: randomly choose a peer selection algorithm */
-	if (request->hier.cd_lookup != LOOKUP_NONE && (squid_random() & 1)) {
+	/* which algorithm to use? */
+	if (squid_random() & 1) {
 	    debug(44, 3) ("peerSelect: Using Cache Digest\n");
 	    request->hier.alg = PEER_SA_DIGEST;
-	    if (request->hier.cd_lookup == LOOKUP_HIT) {
+	    if (1 /* global_digested_peer_count */)
+		p = neighborsDigestSelect(request, entry);
+  	    code = DIRECT; /* default @?@: CACHE_DIGEST_NONE */
+	    switch (request->hier.cd_lookup) {
+	    case LOOKUP_HIT:
 		assert(p);
 		code = CACHE_DIGEST_HIT;
 		debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 		hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+		peerSelectCallback(psstate, p); /* @?@: p used to be NULL */
+		return;
+	    case LOOKUP_MISS:
+		code = CACHE_DIGEST_MISS_DIRECT;
+		/* fall through */
+	    case LOOKUP_NONE:
+		/* go direct */
+		debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
+		hierarchyNote(&request->hier, code, &psstate->icp, request->host);
 		peerSelectCallback(psstate, NULL);
 		return;
+	    default:
+		assert(0); /* invalid lookup code */
 	    }
+	    assert(0); /* never reached */
 	} else {
 	    request->hier.alg = PEER_SA_ICP;
 #endif
@@ -456,6 +456,11 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
     debug(44, 3) ("peerHandleIcpReply: %s %s\n",
 	icp_opcode_str[op],
 	storeUrl(psstate->entry));
+#if SQUID_PEER_DIGEST
+    /* do cd lookup to count false misses */
+    peerNoteDigestLookup(request, p, 
+	peerDigestLookup(p, request, psstate->entry));
+#endif
     psstate->icp.n_recv++;
     if (op == ICP_MISS || op == ICP_DECHO) {
 	if (type == PEER_PARENT)

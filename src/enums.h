@@ -263,6 +263,7 @@ typedef enum {
     ROUNDROBIN_PARENT,
 #if SQUID_PEER_DIGEST
     CACHE_DIGEST_HIT,
+    CACHE_DIGEST_MISS_DIRECT,
 #endif
     HIER_MAX
 } hier_code;
