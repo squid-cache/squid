@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.47 2003/03/15 04:17:39 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.48 2003/04/06 08:23:10 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -65,6 +65,10 @@ extern ErrorState *clientBuildError(err_type, http_status, char const *,
 
 clientReplyContext::~clientReplyContext()
 {
+    deleting = true;
+    /* This may trigger a callback back into SendMoreData as the cbdata
+     * is still valid
+     */
     removeStoreReference(&sc, &http->entry);
     /* old_entry might still be set if we didn't yet get the reply
      * code in HandleIMSReply() */
@@ -73,7 +77,7 @@ clientReplyContext::~clientReplyContext()
     cbdataReferenceDone(http);
 }
 
-clientReplyContext::clientReplyContext(clientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL)
+clientReplyContext::clientReplyContext(clientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false)
 {}
 
 /* create an error in the store awaiting the client side to read it. */
@@ -1913,10 +1917,17 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 void
 clientReplyContext::sendMoreData (StoreIOBuffer result)
 {
+    if (deleting)
+        return;
+
     StoreEntry *entry = http->entry;
+
     ConnStateData *conn = http->conn;
+
     int fd = conn ? conn->fd : -1;
+
     char *buf = next()->readBuffer.data;
+
     char *body_buf = buf;
 
     /* This is always valid until we get the headers as metadata from

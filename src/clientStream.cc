@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.7 2003/03/15 04:17:39 robertc Exp $
+ * $Id: clientStream.cc,v 1.8 2003/04/06 08:23:10 robertc Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -97,7 +97,7 @@ CBDATA_TYPE(clientStreamNode);
  * (i.e. 
  * mycontext = thisObject->data;
  * thisObject->data = NULL;
- * clientStreamFreeLinst (thisObject->head);
+ * clientStreamFree (thisObject->head);
  * mycontext = NULL;
  * return;
  */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.1 2003/03/15 04:27:27 robertc Exp $
+ * $Id: client_side_reply.h,v 1.2 2003/04/06 08:23:10 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -151,6 +151,7 @@ private:
 
     StoreEntry *old_entry;
     store_client *old_sc;	/* ... for entry to be validated */
+    bool deleting;
 };
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */
