@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.330 1999/05/22 07:42:05 wessels Exp $
+ * $Id: protos.h,v 1.331 1999/05/25 06:53:44 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -856,11 +856,11 @@ extern int storeTooManyDiskFilesOpen(void);
 extern void storeEntryReset(StoreEntry *);
 
 /* store_io.c */
-extern STOPEN storeOpen;
-extern STCLOSE storeClose;
-extern STREAD storeRead;
-extern STWRITE storeWrite;
-extern STUNLINK storeUnlink;
+extern STOBJOPEN storeOpen;
+extern STOBJCLOSE storeClose;
+extern STOBJREAD storeRead;
+extern STOBJWRITE storeWrite;
+extern STOBJUNLINK storeUnlink;
 extern off_t storeOffset(storeIOState *);
 
 /* store_io_ufs.c */
@@ -940,17 +940,8 @@ extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
 /*
  * store_dir_ufs.c
  */
-extern FILE *storeUfsDirOpenTmpSwapLog(int dirn, int *clean, int *zero);
 extern OBJH storeUfsDirStats;
-extern char *storeUfsDirSwapLogFile(int, const char *);
-extern int storeUfsDirWriteCleanLogs(int reopen);
 extern int storeUfsFilenoBelongsHere(int, int, int, int);
-extern void storeUfsCreateSwapDirectories(void);
-extern void storeUfsDirCloseSwapLogs(void);
-extern void storeUfsDirCloseTmpSwapLog(int dirn);
-extern void storeUfsDirInit(void);
-extern void storeUfsDirOpenSwapLogs(void);
-extern void storeUfsDirSwapLog(const StoreEntry *, int op);
 extern void storeUfsDirParse(cacheSwap * swap);
 extern void storeUfsDirDump(StoreEntry * entry, const char *name, SwapDir * s);
 extern void storeUfsDirFree(SwapDir *);
@@ -967,8 +958,8 @@ extern void storeSwapTLVFree(tlv * n);
 /*
  * store_rebuild.c
  */
-extern void storeDoRebuildFromSwapFiles(void *data);
-extern void storeUfsRebuildStart(void);
+extern void storeRebuildStart(void);
+extern void storeRebuildComplete(struct _store_rebuild_data *);
 
 /*
  * store_swapin.c

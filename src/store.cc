@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.501 1999/05/22 07:42:07 wessels Exp $
+ * $Id: store.cc,v 1.502 1999/05/25 06:53:46 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -637,7 +637,7 @@ storeGetMemSpace(int size)
     pages_needed = (size / SM_PAGE_SIZE) + 1;
     if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_max)
 	return;
-    if (store_rebuilding)
+    if (store_dirs_rebuilding)
 	return;
     debug(20, 2) ("storeGetMemSpace: Starting, need %d pages\n", pages_needed);
     head = inmem_list.head;
@@ -686,7 +686,7 @@ storeMaintainSwapSpace(void *datanotused)
     double f;
     static time_t last_warn_time = 0;
     /* We can't delete objects while rebuilding swap */
-    if (store_rebuilding) {
+    if (store_dirs_rebuilding) {
 	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
 	return;
     } else {
@@ -753,7 +753,7 @@ storeRelease(StoreEntry * e)
 	storeReleaseRequest(e);
 	return;
     }
-    if (store_rebuilding) {
+    if (store_dirs_rebuilding) {
 	storeSetPrivateKey(e);
 	if (e->mem_obj) {
 	    storeSetMemStatus(e, NOT_IN_MEMORY);
@@ -787,7 +787,7 @@ storeLateRelease(void *unused)
     StoreEntry *e;
     int i;
     static int n = 0;
-    if (store_rebuilding) {
+    if (store_dirs_rebuilding) {
 	eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
 	return;
     }
@@ -898,6 +898,7 @@ storeInit(void)
     stackInit(&LateReleaseStack);
     eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
     storeDirInit();
+    storeRebuildStart();
     cachemgrRegister("storedir",
 	"Store Directory Stats",
 	storeDirStats, 0, 1);

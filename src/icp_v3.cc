@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.28 1999/01/29 21:28:14 wessels Exp $
+ * $Id: icp_v3.cc,v 1.29 1999/05/25 06:53:43 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -100,7 +100,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    break;
 	}
 	/* if store is rebuilding, return a UDP_HIT, but not a MISS */
-	if (opt_reload_hit_only && store_rebuilding) {
+	if (opt_reload_hit_only && store_dirs_rebuilding) {
 	    reply = icpCreateMessage(ICP_MISS_NOFETCH, 0, url, header.reqnum, 0);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, 0);
 	} else if (hit_only_mode_until > squid_curtime) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.92 1999/05/22 07:42:11 wessels Exp $
+ * $Id: store_dir.cc,v 1.93 1999/05/25 06:53:48 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -44,19 +44,35 @@ const char *SwapDirType[] =
 void
 storeDirInit(void)
 {
-    storeUfsDirInit();
-}
-
-char *
-storeSwapFullPath(sfileno f, char *buf)
-{
-    return storeUfsFullPath(f, buf);
+    int i;
+    SwapDir *sd;
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	sd = &Config.cacheSwap.swapDirs[i];
+	sd->init(sd);
+    }
 }
 
 void
 storeCreateSwapDirectories(void)
 {
-    storeUfsCreateSwapDirectories();
+    int i;
+    SwapDir *sd;
+    pid_t pid;
+    int status;
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	if (fork())
+	    continue;
+	sd = &Config.cacheSwap.swapDirs[i];
+	sd->newfs(sd);
+	exit(0);
+    }
+    do {
+#ifdef _SQUID_NEXT_
+	pid = wait3(&status, WNOHANG, NULL);
+#else
+	pid = waitpid(-1, &status, 0);
+#endif
+    } while (pid > 0 || (pid < 0 && errno == EINTR));
 }
 
 /*
@@ -245,13 +261,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
 	swap_log_op_str[op],
 	storeKeyText(e->key),
 	e->swap_file_number);
-    storeUfsDirSwapLog(e, op);
-}
-
-char *
-storeDirSwapLogFile(int dirn, const char *ext)
-{
-    return storeUfsDirSwapLogFile(dirn, ext);
+    Config.cacheSwap.swapDirs[dirn].obj.log(e, op);
 }
 
 void
@@ -280,7 +290,7 @@ storeDirStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Current Capacity       : %d%% used, %d%% free\n",
 	percent((int) store_swap_size, (int) Config.Swap.maxSize),
 	percent((int) (Config.Swap.maxSize - store_swap_size), (int) Config.Swap.maxSize));
-    storeUfsDirStats(sentry);
+    storeUfsDirStats(sentry);	/* XXX */
 }
 
 int
@@ -291,17 +301,6 @@ storeDirMapBitsInUse(void)
     for (i = 0; i < Config.cacheSwap.n_configured; i++)
 	n += Config.cacheSwap.swapDirs[i].map->n_files_in_map;
     return n;
-}
-
-/*
- *  storeDirWriteCleanLogs
- * 
- *  Writes a "clean" swap log file from in-memory metadata.
- */
-int
-storeDirWriteCleanLogs(int reopen)
-{
-    return storeUfsDirWriteCleanLogs(reopen);
 }
 
 void
@@ -344,17 +343,94 @@ storeDirDiskFull(int fn)
 void
 storeDirOpenSwapLogs(void)
 {
-    return storeUfsDirOpenSwapLogs();
+    int dirn;
+    SwapDir *sd;
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	sd = &Config.cacheSwap.swapDirs[dirn];
+	sd->log.open(sd);
+    }
 }
 
 void
 storeDirCloseSwapLogs(void)
 {
-    return storeUfsDirCloseSwapLogs();
+    int dirn;
+    SwapDir *sd;
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	sd = &Config.cacheSwap.swapDirs[dirn];
+	sd->log.close(sd);
+    }
 }
 
-void
-storeDirCloseTmpSwapLog(int dirn)
+/*
+ *  storeDirWriteCleanLogs
+ * 
+ *  Writes a "clean" swap log file from in-memory metadata.
+ */
+#define CLEAN_BUF_SZ 16384
+int
+storeDirWriteCleanLogs(int reopen)
 {
-    return storeUfsDirCloseTmpSwapLog(dirn);
+    StoreEntry *e = NULL;
+    int n = 0;
+    time_t start, stop, r;
+    SwapDir *sd;
+    int dirn;
+    int N = Config.cacheSwap.n_configured;
+    dlink_node *m;
+    if (store_dirs_rebuilding) {
+	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
+	debug(20, 1) ("storeDirWriteCleanLogs: Operation aborted.\n");
+	return 0;
+    }
+    debug(20, 1) ("storeDirWriteCleanLogs: Starting...\n");
+    start = squid_curtime;
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	sd = &Config.cacheSwap.swapDirs[dirn];
+	if (sd->log.clean.open(sd) < 0) {
+	    debug(20, 1) ("log.clean.open() failed for dir #%d\n", sd->index);
+	    continue;
+	}
+    }
+    for (m = store_list.tail; m; m = m->prev) {
+	e = m->data;
+	if (e->swap_file_number < 0)
+	    continue;
+	if (e->swap_status != SWAPOUT_DONE)
+	    continue;
+	if (e->swap_file_sz <= 0)
+	    continue;
+	if (EBIT_TEST(e->flags, RELEASE_REQUEST))
+	    continue;
+	if (EBIT_TEST(e->flags, KEY_PRIVATE))
+	    continue;
+	if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
+	    continue;
+	dirn = storeDirNumber(e->swap_file_number);
+	sd = &Config.cacheSwap.swapDirs[dirn];
+	if (NULL == sd->log.clean.write)
+	    continue;
+	sd->log.clean.write(e, sd->log.clean.state);
+	if ((++n & 0xFFFF) == 0) {
+	    getCurrentTime();
+	    debug(20, 1) ("  %7d entries written so far.\n", n);
+	}
+    }
+    /* flush */
+    for (dirn = 0; dirn < N; dirn++) {
+	sd = &Config.cacheSwap.swapDirs[dirn];
+	if (NULL == sd->log.clean.write)
+	    continue;
+	sd->log.clean.write(NULL, sd);
+    }
+    if (reopen)
+	storeDirOpenSwapLogs();
+    stop = squid_curtime;
+    r = stop - start;
+    debug(20, 1) ("  Finished.  Wrote %d entries.\n", n);
+    debug(20, 1) ("  Took %d seconds (%6.1f entries/sec).\n",
+	r > 0 ? (int) r : 0,
+	(double) n / (r > 0 ? r : 1));
+    return n;
 }
+#undef CLEAN_BUF_SZ

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.179 1999/05/19 19:57:56 wessels Exp $
+ * $Id: tools.cc,v 1.180 1999/05/25 06:53:53 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -317,10 +317,10 @@ void
 fatal(const char *message)
 {
     releaseServerSockets();
-    /* check for store_rebuilding flag because fatal() is often
+    /* check for store_dirs_rebuilding because fatal() is often
      * used in early initialization phases, long before we ever
      * get to the store log. */
-    if (!store_rebuilding)
+    if (0 == store_dirs_rebuilding)
 	storeDirWriteCleanLogs(0);
     fatal_common(message);
     exit(shutting_down ? 0 : 1);
