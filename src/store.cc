@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.236 1997/05/16 07:44:57 wessels Exp $
+ * $Id: store.cc,v 1.237 1997/05/22 15:52:00 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -259,7 +259,7 @@ static int storeEntryValidLength _PARAMS((const StoreEntry *));
 static void storeGetMemSpace _PARAMS((int));
 static int storeHashDelete _PARAMS((StoreEntry *));
 static int storeShouldPurgeMem _PARAMS((const StoreEntry *));
-static FILE_READ_HD storeSwapInHandle;
+static DRCB storeSwapInHandle;
 static void storeSwapInValidateComplete _PARAMS((void *, int));
 static void storeSwapInStartComplete _PARAMS((void *, int));
 static int swapInError _PARAMS((int, StoreEntry *));
@@ -284,7 +284,7 @@ static void storeSetMemStatus _PARAMS((StoreEntry *, mem_status_t));
 static void storeStartRebuildFromDisk _PARAMS((void));
 static void storeSwapOutStart _PARAMS((StoreEntry * e));
 static void storeSwapOutStartComplete _PARAMS((void *, int));
-static FILE_WRITE_HD storeSwapOutHandle;
+static DWCB storeSwapOutHandle;
 static void storeHashMemInsert _PARAMS((StoreEntry *));
 static void storeHashMemDelete _PARAMS((StoreEntry *));
 static void storeSetPrivateKey _PARAMS((StoreEntry *));
@@ -413,7 +413,7 @@ destroy_MemObjectData(MemObject * mem)
 	mem->data, mem->e_current_len);
     store_mem_size -= ENTRY_INMEM_SIZE(mem);
     if (mem->data) {
-	mem->data->mem_free(mem->data);
+	memFreeData(mem->data);
 	mem->data = NULL;
 	meta_data.mem_data_count--;
     }
@@ -839,6 +839,7 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     return e;
 }
 
+#if OLD_CODE
 /* Register interest in an object currently being retrieved. */
 void
 storeRegister(StoreEntry * e, STCB * callback, void *data, off_t offset)
@@ -861,6 +862,7 @@ storeRegister(StoreEntry * e, STCB * callback, void *data, off_t offset)
 	callback(data);
     }
 }
+#endif
 
 int
 storeUnregister(StoreEntry * e, void *data)
@@ -907,7 +909,7 @@ storeDeleteBehind(StoreEntry * e)
     int target_offset = storeGetLowestReaderOffset(e);
     if (target_offset == 0)
 	return;
-    new_lowest_offset = (int) mem->data->mem_free_data_upto(mem->data,
+    new_lowest_offset = (int) memFreeDataUpto(mem->data,
 	target_offset);
     store_mem_size -= new_lowest_offset - old_lowest_offset;
     mem->e_lowest_offset = new_lowest_offset;
@@ -919,24 +921,27 @@ InvokeHandlers(StoreEntry * e)
 {
     int i;
     MemObject *mem = e->mem_obj;
-    STCB *handler = NULL;
-    void *data = NULL;
+    STCB *callback = NULL;
     struct _store_client *sc;
+    size_t size;
     if (mem->clients == NULL && mem->nclients) {
 	debug_trap("InvokeHandlers: NULL mem->clients");
 	return;
     }
-    /* walk the entire list looking for valid handlers */
+    /* walk the entire list looking for valid callbacks */
     for (i = 0; i < mem->nclients; i++) {
 	sc = &mem->clients[i];
 	if (sc->callback_data == NULL)
 	    continue;
-	if ((handler = sc->callback) == NULL)
+	if ((callback = sc->callback) == NULL)
 	    continue;
-	data = sc->callback_data;
 	sc->callback = NULL;
 	/* Don't NULL the callback_data, its used to identify the client */
-	handler(data);
+	size = memCopy(mem->data,
+	    sc->offset,
+	    sc->copy_buf,
+	    sc->copy_size);
+	callback(sc->callback_data, sc->copy_buf, size);
     }
 }
 
@@ -989,7 +994,7 @@ storeAppend(StoreEntry * e, const char *data, int len)
 		storeStartDeleteBehind(e);
 	}
 	store_mem_size += len;
-	(void) mem->data->mem_append(mem->data, data, len);
+	(void) memAppend(mem->data, data, len);
 	mem->e_current_len += len;
     }
     if (e->store_status != STORE_ABORTED && !BIT_TEST(e->flag, DELAY_SENDING))
@@ -1166,7 +1171,7 @@ storeSwapInStartComplete(void *data, int fd)
 }
 
 static void
-storeSwapOutHandle(int fd, int flag, void *data)
+storeSwapOutHandle(int fd, int flag, size_t len, void *data)
 {
     StoreEntry *e = data;
     MemObject *mem = e->mem_obj;
@@ -1512,7 +1517,7 @@ storeCleanup(void *data)
 	debug(20, 1, "  %7d Entries Validated so far.\n", validnum);
     if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
 	storeValidate(e, storeCleanupComplete, e);
-        validnum++;
+	validnum++;
     }
     xfree(curr->key);
     xfree(curr);
@@ -2136,21 +2141,10 @@ storeEntryLocked(const StoreEntry * e)
 static int
 storeCopy(const StoreEntry * e, int stateoffset, int maxSize, char *buf, int *size)
 {
-    int available;
     MemObject *mem = e->mem_obj;
-    int s;
-    if (stateoffset < mem->e_lowest_offset) {
-	debug_trap("storeCopy: requested offset < e_lowest_offset");
-	return *size = 0;
-    }
-    s = available = mem->e_current_len - stateoffset;
-    if (s < 0)
-	fatal_dump("storeCopy: offset > e_current_len");
-    if (s > maxSize)
-	s = maxSize;
-    debug(20, 6, "storeCopy: copying %d bytes at offset %d\n", s, stateoffset);
-    if (s > 0)
-	(void) mem->data->mem_copy(mem->data, stateoffset, buf, s);
+    size_t s;
+    assert(stateoffset >= mem->e_lowest_offset);
+    s = memCopy(mem->data, stateoffset, buf, maxSize);
     return *size = s;
 }
 
@@ -2221,43 +2215,39 @@ storeClientListAdd(StoreEntry * e, void *data, int offset)
 
 /* same to storeCopy but also register client fd and last requested offset
  * for each client */
-int
+void
 storeClientCopy(StoreEntry * e,
-    int stateoffset,
-    int maxSize,
+    off_t offset,
+    size_t size,
     char *buf,
-    int *size,
+    STCB * callback,
     void *data)
 {
     int ci;
-    int sz;
+    size_t sz;
     MemObject *mem = e->mem_obj;
-    int available_to_write = mem->e_current_len - stateoffset;
-    if (stateoffset < mem->e_lowest_offset) {
+    if (offset < mem->e_lowest_offset) {
 	debug_trap("storeClientCopy: requested offset < lowest offset");
 	debug(20, 0, " --> %d < %d\n",
-	    stateoffset, mem->e_lowest_offset);
+	    offset, mem->e_lowest_offset);
 	debug(20, 0, "--> '%s'\n", e->url);
-	*size = 0;
-	return 0;
+	return;
     }
-    if ((ci = storeClientListSearch(mem, data)) < 0) {
-	debug_trap("storeClientCopy: Unregistered client");
-	debug(20, 0, "--> '%s'\n", e->url);
-	*size = 0;
-	return 0;
+    if ((ci = storeClientListSearch(mem, data)) < 0)
+	fatal_dump("storeClientCopy: Unregistered client");
+    mem->clients[ci].offset = offset;
+    if (offset >= mem->e_current_len) {
+	mem->clients[ci].callback = callback;
+	mem->clients[ci].copy_buf = buf;
+	mem->clients[ci].copy_size = size;
+	return;
     }
-    sz = (available_to_write >= maxSize) ? maxSize : available_to_write;
-    /* update the lowest requested offset */
-    mem->clients[ci].offset = stateoffset + sz;
-    if (sz > 0)
-	if (mem->data->mem_copy(mem->data, stateoffset, buf, sz) < 0)
-	    return -1;
+    sz = memCopy(mem->data, offset, buf, size);
+debug(0,0,"storeClientCopy: size=%d\n", sz);
+    callback(data, buf, sz);
     /* see if we can get rid of some data if we are in "delete behind" mode . */
     if (BIT_TEST(e->flag, DELETE_BEHIND))
 	storeDeleteBehind(e);
-    *size = sz;
-    return sz;
 }
 
 static int
