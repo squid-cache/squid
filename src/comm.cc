@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.210 1997/11/30 02:40:07 wessels Exp $
+ * $Id: comm.cc,v 1.211 1997/11/30 04:59:05 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -350,6 +350,8 @@ commConnectCallback(ConnectStateData * cs, int status)
     void *data = cs->data;
     int fd = cs->fd;
     comm_remove_close_handler(fd, commConnectFree, cs);
+    cs->callback = NULL;
+    cs->data = NULL;
     commConnectFree(fd, cs);
     if (cbdataValid(data))
 	callback(fd, status, data);
@@ -357,11 +359,14 @@ commConnectCallback(ConnectStateData * cs, int status)
 }
 
 static void
-commConnectFree(int fdnotused, void *data)
+commConnectFree(int fd, void *data)
 {
     ConnectStateData *cs = data;
+    debug(5, 3) ("commConnectFree: FD %d\n", fd);
     if (cs->locks)
 	ipcacheUnregister(cs->host, cs);
+    if (cs->data)
+	cbdataUnlock(cs->data);
     safe_free(cs->host);
     cbdataFree(cs);
 }
@@ -584,6 +589,7 @@ commCallCloseHandlers(int fd)
     debug(5, 5) ("commCallCloseHandlers: FD %d\n", fd);
     while ((ch = F->close_handler) != NULL) {
 	F->close_handler = ch->next;
+	debug(5, 5) ("commCallCloseHandlers: ch->handler=%p\n", ch->handler);
 	if (cbdataValid(ch->data))
 	    ch->handler(fd, ch->data);
 	cbdataUnlock(ch->data);
