@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.32 2003/08/13 00:17:26 robertc Exp $
+ * $Id: client_side_request.cc,v 1.33 2003/09/01 03:49:38 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -276,8 +276,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
                    char *tailbuf, size_t taillen)
 {
     size_t url_sz;
-    http_version_t http_ver =
-        {1, 0};
+    HttpVersion http_ver (1, 0);
     clientHttpRequest *http = new ClientHttpRequest;
     HttpRequest *request;
     StoreIOBuffer tempBuffer;

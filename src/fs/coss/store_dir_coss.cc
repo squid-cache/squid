@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.50 2003/08/31 21:20:10 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.51 2003/09/01 03:49:42 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -840,6 +840,8 @@ CossSwapDir::parse(int anIndex, char *aPath)
     path = xstrdup(aPath);
 
     max_size = size;
+
+    parseOptions(0);
 
     /* Enforce maxobjsize being set to something */
     if (max_objsize == -1)

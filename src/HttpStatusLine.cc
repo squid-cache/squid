@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.27 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpStatusLine.cc,v 1.28 2003/09/01 03:49:37 robertc Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -34,7 +34,7 @@
  */
 
 #include "squid.h"
-
+#include "HttpStatusLine.h"
 
 /* local constants */
 const char *HttpStatusLineFormat = "HTTP/%d.%d %3d %s\r\n";
@@ -42,22 +42,20 @@ const char *HttpStatusLineFormat = "HTTP/%d.%d %3d %s\r\n";
 void
 httpStatusLineInit(HttpStatusLine * sline)
 {
-    http_version_t version;
-    httpBuildVersion(&version, 0, 0);
+    HttpVersion version;
     httpStatusLineSet(sline, version, HTTP_STATUS_NONE, NULL);
 }
 
 void
 httpStatusLineClean(HttpStatusLine * sline)
 {
-    http_version_t version;
-    httpBuildVersion(&version, 0, 0);
+    HttpVersion version;
     httpStatusLineSet(sline, version, HTTP_INTERNAL_SERVER_ERROR, NULL);
 }
 
 /* set values */
 void
-httpStatusLineSet(HttpStatusLine * sline, http_version_t version, http_status status, const char *reason)
+httpStatusLineSet(HttpStatusLine * sline, HttpVersion version, http_status status, const char *reason)
 {
     assert(sline);
     sline->version = version;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.94 2003/08/20 13:34:41 hno Exp $
+ * $Id: access_log.cc,v 1.95 2003/09/01 03:49:37 robertc Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 
 // Store.h Required by configuration directives parsing/dumping only
 #include "Store.h"

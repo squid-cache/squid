@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.82 2003/08/10 11:00:43 robertc Exp $
+ * $Id: icp_v2.cc,v 1.83 2003/09/01 03:49:39 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
+#include "AccessLogEntry.h"
 
 static void icpLogIcp(struct in_addr, log_type, int, const char *, int);
 
@@ -168,8 +169,6 @@ icpLogIcp(struct in_addr caddr, log_type logcode, int len, const char *url, int 
 
     if (!Config.onoff.log_udp)
         return;
-
-    memset(&al, '\0', sizeof(al));
 
     al.icp.opcode = ICP_QUERY;
 

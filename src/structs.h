@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.480 2003/08/18 12:24:45 hno Exp $
+ * $Id: structs.h,v 1.481 2003/09/01 03:49:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -90,11 +90,6 @@ struct _body_size
     size_t maxsize;
 };
 
-struct _http_version_t
-{
-    unsigned int major;
-    unsigned int minor;
-};
 
 #if SQUID_SNMP
 
@@ -832,15 +827,6 @@ struct _Packer
     void *real_handler;		/* first parameter to real append and vprintf */
 };
 
-/* http status line */
-
-struct _HttpStatusLine
-{
-    /* public, read only */
-    http_version_t version;
-    const char *reason;		/* points to a _constant_ string (default or supplied), never free()d */
-    http_status status;
-};
 
 /*
  * Note: HttpBody is used only for messages with a small content that is
@@ -994,68 +980,6 @@ struct _HierarchyLogEntry
     struct timeval store_complete_stop;
 };
 
-struct _AccessLogEntry
-{
-    /* NB: memset is used on AccessLogEntries as at 20030715 RBC */
-    const char *url;
-
-    struct
-    {
-        method_t method;
-        int code;
-        const char *content_type;
-        http_version_t version;
-    }
-
-    http;
-
-    struct
-    {
-        icp_opcode opcode;
-    }
-
-    icp;
-
-    struct
-    {
-
-        struct in_addr caddr;
-        size_t size;
-        off_t highOffset;
-        size_t objectSize;
-        log_type code;
-        int msec;
-        const char *rfc931;
-        const char *authuser;
-#if USE_SSL
-
-        const char *ssluser;
-#endif
-
-        const char *extuser;
-
-    }
-
-    cache;
-
-    struct
-    {
-        char *request;
-        char *reply;
-    }
-
-    headers;
-
-    struct
-    {
-        const char *method_str;
-    }
-
-    _private;
-    HierarchyLogEntry hier;
-    HttpReply *reply;
-    HttpRequest *request;
-};
 
 struct _ipcache_addrs
 {

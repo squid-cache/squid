@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.18 2003/08/13 00:17:26 robertc Exp $
+ * $Id: client_side_request.h,v 1.19 2003/09/01 03:49:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 #include "HttpHeader.h"
 #include "clientStream.h"
 #include "client_side.h"
+#include "AccessLogEntry.h"
 
 /* client_side_request.c - client side request related routines (pure logic) */
 extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
@@ -95,7 +96,7 @@ public:
     log_type logType;
 
     struct timeval start;
-    http_version_t http_ver;
+    HttpVersion http_ver;
     AccessLogEntry al;
 
     struct

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.7 2003/08/10 11:00:40 robertc Exp $
+ * $Id: HttpRequest.h,v 1.8 2003/09/01 03:49:37 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 #include "typedefs.h"
 #include "HttpHeader.h"
 #include "client_side.h"
+#include "HttpVersion.h"
 
 /*  Http Request */
 extern HttpRequest *requestCreate(method_t, protocol_t, const char *urlpath);
@@ -75,7 +76,7 @@ public:
     request_flags flags;
     HttpHdrCc *cache_control;
     HttpHdrRange *range;
-    http_version_t http_ver;
+    HttpVersion http_ver;
     time_t ims;
     int imslen;
     int max_forwards;

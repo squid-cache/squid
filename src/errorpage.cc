@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.190 2003/08/10 11:00:42 robertc Exp $
+ * $Id: errorpage.cc,v 1.191 2003/09/01 03:49:38 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -825,9 +825,8 @@ errorBuildReply(ErrorState * err)
 {
     HttpReply *rep = httpReplyCreate();
     const char *name = errorPageName(err->page_id);
-    http_version_t version;
     /* no LMT for error pages; error pages expire immediately */
-    httpBuildVersion(&version, 1, 0);
+    HttpVersion version(1, 0);
 
     if (strchr(name, ':')) {
         /* Redirection */

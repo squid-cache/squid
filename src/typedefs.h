@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.169 2003/08/10 09:53:49 robertc Exp $
+ * $Id: typedefs.h,v 1.170 2003/09/01 03:49:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -113,8 +113,6 @@ class fde;
 
 typedef struct _fileMap fileMap;
 
-typedef struct _HttpStatusLine HttpStatusLine;
-
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 
 class HttpHeaderFieldInfo;
@@ -201,8 +199,6 @@ typedef struct _body_size body_size;
 
 class HttpRequest;
 
-typedef struct _AccessLogEntry AccessLogEntry;
-
 typedef struct _cachemgr_passwd cachemgr_passwd;
 
 typedef struct _refresh_t refresh_t;
@@ -272,8 +268,6 @@ typedef struct _RemovalPurgeWalker RemovalPurgeWalker;
 typedef struct _RemovalPolicyNode RemovalPolicyNode;
 
 typedef struct _RemovalPolicySettings RemovalPolicySettings;
-
-typedef struct _http_version_t http_version_t;
 
 #if SQUID_SNMP
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);

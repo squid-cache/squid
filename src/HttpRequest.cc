@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.44 2003/08/14 12:15:04 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.45 2003/09/01 03:49:37 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -76,7 +76,7 @@ HttpRequest::HttpRequest()  : header(hoRequest)
     request_flags flags;
     HttpHdrCc *cache_control;
     HttpHdrRange *range;
-    http_version_t http_ver;
+    HttpVersion http_ver;
     time_t ims;
     int imslen;
     int max_forwards;

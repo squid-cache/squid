@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.12 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpMsg.cc,v 1.13 2003/09/01 03:49:37 robertc Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -34,7 +34,7 @@
  */
 
 #include "squid.h"
-
+#include "HttpVersion.h"
 
 /* find end of headers */
 int
@@ -99,7 +99,7 @@ httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const ch
 /* returns true if connection should be "persistent"
  * after processing this message */
 int
-httpMsgIsPersistent(http_version_t http_ver, const HttpHeader * hdr)
+httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
 {
     if ((http_ver.major >= 1) && (http_ver.minor >= 1)) {
         /*

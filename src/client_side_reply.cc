@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.66 2003/08/19 22:30:36 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.67 2003/09/01 03:49:38 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -973,7 +973,6 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     }
 
     HttpReply *r;
-    http_version_t version;
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
 
@@ -1011,7 +1010,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
     r = httpReplyCreate();
 
-    httpBuildVersion(&version, 1, 0);
+    HttpVersion version(1,0);
 
     httpReplySetHeaders(r, version, purgeStatus, NULL, NULL, 0, 0, -1);
 
@@ -1024,7 +1023,6 @@ void
 clientReplyContext::traceReply(clientStreamNode * node)
 {
     HttpReply *rep;
-    http_version_t version;
     clientStreamNode *next = (clientStreamNode *)node->node.next->data;
     StoreIOBuffer tempBuffer;
     assert(http->request->max_forwards == 0);
@@ -1037,7 +1035,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
     storeReleaseRequest(http->storeEntry());
     storeBuffer(http->storeEntry());
     rep = httpReplyCreate();
-    httpBuildVersion(&version, 1, 0);
+    HttpVersion version(1,0);
     httpReplySetHeaders(rep, version, HTTP_OK, NULL, "text/plain",
                         httpRequestPrefixLen(http->request), 0, squid_curtime);
     httpReplySwapOut(rep, http->storeEntry());
@@ -1457,7 +1455,7 @@ clientReplyContext::buildReply(const char *buf, size_t size)
     }
 
     /* enforce 1.0 reply version */
-    httpBuildVersion(&holdingReply->sline.version, 1, 0);
+    holdingReply->sline.version = HttpVersion(1,0);
 
     /* do header conversions */
     buildReplyHeader();
