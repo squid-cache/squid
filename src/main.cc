@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.305 1999/10/04 05:05:17 wessels Exp $
+ * $Id: main.cc,v 1.306 1999/12/10 18:11:02 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -71,6 +71,8 @@ extern void log_trace_init(char *);
 #endif
 static EVH SquidShutdown;
 static void mainSetCwd(void);
+
+static const char *squid_start_script = "squid_start";
 
 #if TEST_ACCESS
 #include "test_access.c"
@@ -716,6 +718,43 @@ sendSignal(void)
     exit(0);
 }
 
+/*
+ * This function is run when Squid is in daemon mode, just
+ * before the parent forks and starts up the child process.
+ * It can be used for admin-specific tasks, such as notifying
+ * someone that Squid is (re)started.
+ */
+static void
+mainStartScript(const char *prog)
+{
+    char script[SQUID_MAXPATHLEN];
+    char *t;
+    size_t sl = 0;
+    pid_t cpid;
+    pid_t rpid;
+    xstrncpy(script, prog, MAXPATHLEN);
+    if ((t = strrchr(script, '/'))) {
+	*(++t) = '\0';
+	sl = strlen(script);
+    }
+    xstrncpy(&script[sl], squid_start_script, MAXPATHLEN - sl);
+    if ((cpid = fork()) == 0) {
+	/* child */
+	execl(script, squid_start_script, 0);
+	_exit(0);
+    } else {
+	do {
+#ifdef _SQUID_NEXT_
+	    union wait status;
+	    rpid = wait3(&status, 0, NULL);
+#else
+	    int status;
+	    rpid = waitpid(-1, &status, 0);
+#endif
+	} while (rpid != cpid);
+    }
+}
+
 static void
 watch_child(char *argv[])
 {
@@ -751,6 +790,7 @@ watch_child(char *argv[])
     umask(0);
 #endif
     for (;;) {
+	mainStartScript(argv[0]);
 	if ((pid = fork()) == 0) {
 	    /* child */
 	    prog = xstrdup(argv[0]);
