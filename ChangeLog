@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta18 (Mar 23, 1998):
+
 	- Added v1.1 'test_reachability' option.
 	- Fixed hash4() len == 0 bug.
 	- Fixed Config.Swap.maxSize reconfigure bug.
