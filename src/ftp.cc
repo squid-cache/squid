@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.57 1996/09/16 21:11:07 wessels Exp $
+ * $Id: ftp.cc,v 1.58 1996/09/17 02:29:56 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -685,7 +685,7 @@ ftpServerClosed(int fd, void *nodata)
 }
 
 void
-ftpServerClose()
+ftpServerClose(void)
 {
     /* NOTE: this function will be called repeatedly while shutdown is
      * pending */
@@ -705,7 +705,7 @@ ftpServerClose()
 
 
 int
-ftpInitialize()
+ftpInitialize(void)
 {
     int pid;
     int cfd;

@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.23 1996/09/14 08:45:45 wessels Exp $
+ * $Id: debug.cc,v 1.24 1996/09/17 02:29:52 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -248,7 +248,7 @@ _db_init(char *logfile, char *options)
 }
 
 void
-_db_rotate_log()
+_db_rotate_log(void)
 {
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);

@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.39 1996/09/16 21:11:03 wessels Exp $
+ * $Id: acl.cc,v 1.40 1996/09/17 02:29:48 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -106,7 +106,7 @@ aclFindByName(char *name)
 
 
 static intlist *
-aclParseIntlist()
+aclParseIntlist(void)
 {
     intlist *head = NULL;
     intlist **Tail = &head;
@@ -122,7 +122,7 @@ aclParseIntlist()
 }
 
 static intlist *
-aclParseProtoList()
+aclParseProtoList(void)
 {
     intlist *head = NULL;
     intlist **Tail = &head;
@@ -138,7 +138,7 @@ aclParseProtoList()
 }
 
 static intlist *
-aclParseMethodList()
+aclParseMethodList(void)
 {
     intlist *head = NULL;
     intlist **Tail = &head;
@@ -210,7 +210,7 @@ decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 
 
 static struct _acl_ip_data *
-aclParseIpList()
+aclParseIpList(void)
 {
     char *t = NULL, *p = NULL;
     struct _acl_ip_data *head = NULL;
@@ -276,7 +276,7 @@ aclParseIpList()
 }
 
 static struct _acl_time_data *
-aclParseTimeSpec()
+aclParseTimeSpec(void)
 {
     struct _acl_time_data *data = NULL;
     int h1, m1, h2, m2;
@@ -350,7 +350,7 @@ aclParseTimeSpec()
 }
 
 static struct _relist *
-aclParseRegexList()
+aclParseRegexList(void)
 {
     relist *head = NULL;
     relist **Tail = &head;
@@ -374,7 +374,7 @@ aclParseRegexList()
 }
 
 static wordlist *
-aclParseWordList()
+aclParseWordList(void)
 {
     wordlist *head = NULL;
     wordlist **Tail = &head;
@@ -390,7 +390,7 @@ aclParseWordList()
 }
 
 static wordlist *
-aclParseDomainList()
+aclParseDomainList(void)
 {
     wordlist *head = NULL;
     wordlist **Tail = &head;
@@ -408,7 +408,7 @@ aclParseDomainList()
 
 
 void
-aclParseAclLine()
+aclParseAclLine(void)
 {
     /* we're already using strtok() to grok the line */
     char *t = NULL;
@@ -860,7 +860,7 @@ aclDestroyRegexList(struct _relist *data)
 }
 
 void
-aclDestroyAcls()
+aclDestroyAcls(void)
 {
     struct _acl *a = NULL;
     struct _acl *next = NULL;

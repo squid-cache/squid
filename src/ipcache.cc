@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.61 1996/09/16 21:20:47 wessels Exp $
+ * $Id: ipcache.cc,v 1.62 1996/09/17 02:29:59 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -185,7 +185,7 @@ ipcacheEnqueue(ipcache_entry * i)
 }
 
 static void *
-ipcacheDequeue()
+ipcacheDequeue(void)
 {
     struct ipcacheQueueData *old = NULL;
     ipcache_entry *i = NULL;
@@ -201,7 +201,7 @@ ipcacheDequeue()
 }
 
 static int
-ipcache_testname()
+ipcache_testname(void)
 {
     wordlist *w = NULL;
     debug(14, 1, "Performing DNS Tests...\n");
@@ -277,14 +277,14 @@ ipcache_get(char *name)
 
 /* get the first ip entry in the storage */
 static ipcache_entry *
-ipcache_GetFirst()
+ipcache_GetFirst(void)
 {
     return (ipcache_entry *) hash_first(ip_table);
 }
 
 /* get the next ip entry in the storage for a given search pointer */
 static ipcache_entry *
-ipcache_GetNext()
+ipcache_GetNext(void)
 {
     return (ipcache_entry *) hash_next(ip_table);
 }
@@ -327,7 +327,7 @@ ipcacheExpiredEntry(ipcache_entry * i)
 
 /* finds the LRU and deletes */
 int
-ipcache_purgelru()
+ipcache_purgelru(void)
 {
     ipcache_entry *i = NULL;
     int local_ip_notpending_count = 0;
@@ -382,7 +382,7 @@ ipcache_purgelru()
 
 /* create blank ipcache_entry */
 static ipcache_entry *
-ipcache_create()
+ipcache_create(void)
 {
     static ipcache_entry *new;
 
@@ -759,7 +759,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
 
 /* initialize the ipcache */
 void
-ipcache_init()
+ipcache_init(void)
 {
     debug(14, 3, "Initializing IP Cache...\n");
 
@@ -995,7 +995,7 @@ ipcacheCheckNumeric(char *name)
 }
 
 int
-ipcacheQueueDrain()
+ipcacheQueueDrain(void)
 {
     ipcache_entry *i;
     dnsserver_t *dnsData;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.112 1996/09/16 21:20:49 wessels Exp $
+ * $Id: store.cc,v 1.113 1996/09/17 02:30:05 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2139,7 +2139,7 @@ storeRelease(StoreEntry * e)
 	if ((hptr = hash_lookup(store_table, e->key)) == NULL) {
 	    debug(20, 0, "storeRelease: Not Found: '%s'\n", e->key);
 	    debug(20, 0, "Dump of Entry 'e':\n %s\n", storeToString(e));
-	    fatal_dump(NULL);
+	    debug_trap("storeRelease: Invalid Entry");
 	}
 	result = (StoreEntry *) hptr;
 	if (result != e) {
@@ -2147,7 +2147,7 @@ storeRelease(StoreEntry * e)
 		result->url ? result->url : "NULL");
 	    debug(20, 0, "Dump of Entry 'e':\n%s", storeToString(e));
 	    debug(20, 0, "Dump of Entry 'result':\n%s", storeToString(result));
-	    fatal_dump(NULL);
+	    debug_trap("storeRelease: Duplicate Entry");
 	}
     }
     if (e->method == METHOD_GET) {

@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.17 1996/09/16 21:20:49 wessels Exp $
+ * $Id: redirect.cc,v 1.18 1996/09/17 02:30:02 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -233,7 +233,7 @@ Enqueue(redirectStateData * r)
 }
 
 static redirectStateData *
-Dequeue()
+Dequeue(void)
 {
     struct redirectQueueData *old = NULL;
     redirectStateData *r = NULL;
@@ -250,7 +250,7 @@ Dequeue()
 }
 
 static redirector_t *
-GetFirstAvailable()
+GetFirstAvailable(void)
 {
     int k;
     redirector_t *redirect = NULL;
@@ -337,7 +337,7 @@ redirectStart(int cfd, icpStateData * icpState, RH handler, void *data)
 }
 
 void
-redirectOpenServers()
+redirectOpenServers(void)
 {
     char *prg = Config.Program.redirect;
     int k;
@@ -390,7 +390,7 @@ redirectOpenServers()
 }
 
 void
-redirectShutdownServers()
+redirectShutdownServers(void)
 {
     redirector_t *redirect = NULL;
     redirectStateData *r = NULL;

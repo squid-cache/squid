@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.25 1996/09/14 16:54:52 wessels Exp $
+ * $Id: disk.cc,v 1.26 1996/09/17 02:29:53 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -123,7 +123,7 @@ FileEntry *file_table;
 
 /* initialize table */
 int
-disk_init()
+disk_init(void)
 {
     int fd;
 

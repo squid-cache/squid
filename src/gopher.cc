@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.47 1996/09/16 21:11:07 wessels Exp $
+ * $Id: gopher.cc,v 1.48 1996/09/17 02:29:58 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -1049,7 +1049,7 @@ gopherStart(int unusedfd, char *url, StoreEntry * entry)
 
 
 static GopherStateData *
-CreateGopherStateData()
+CreateGopherStateData(void)
 {
     GopherStateData *gd = xcalloc(1, sizeof(GopherStateData));
     gd->buf = get_free_4k_page();

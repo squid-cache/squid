@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.59 1996/09/16 21:20:50 wessels Exp $
+ * $Id: tools.cc,v 1.60 1996/09/17 02:30:06 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -121,7 +121,7 @@ and report the trace back to squid-bugs@nlanr.net.\n\
 Thanks!\n"
 
 static char *
-dead_msg()
+dead_msg(void)
 {
     LOCAL_ARRAY(char, msg, 1024);
     sprintf(msg, DEAD_MSG, version_string, version_string);
@@ -129,7 +129,7 @@ dead_msg()
 }
 
 void
-mail_warranty()
+mail_warranty(void)
 {
     FILE *fp = NULL;
     char *filename;
@@ -263,7 +263,7 @@ sigusr2_handle(int sig)
 }
 
 void
-setSocketShutdownLifetimes()
+setSocketShutdownLifetimes(void)
 {
     FD_ENTRY *f = NULL;
     int lft = Config.lifetimeShutdown;
@@ -283,7 +283,7 @@ setSocketShutdownLifetimes()
 }
 
 void
-normal_shutdown()
+normal_shutdown(void)
 {
     debug(21, 1, "Shutting down...\n");
     if (Config.pidFilename) {
@@ -369,7 +369,7 @@ sig_child(int sig)
 }
 
 char *
-getMyHostname()
+getMyHostname(void)
 {
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
@@ -414,7 +414,7 @@ safeunlink(char *s, int quiet)
  * To give upp all posibilites to gain privilegies use no_suid()
  */
 void
-leave_suid()
+leave_suid(void)
 {
     struct passwd *pwd = NULL;
     struct group *grp = NULL;
@@ -444,7 +444,7 @@ leave_suid()
 
 /* Enter a privilegied section */
 void
-enter_suid()
+enter_suid(void)
 {
     debug(21, 3, "enter_suid: PID %d taking root priveleges\n", getpid());
 #if HAVE_SETRESUID
@@ -458,7 +458,7 @@ enter_suid()
  * this should be used before starting a sub process
  */
 void
-no_suid()
+no_suid(void)
 {
     uid_t uid;
     leave_suid();
@@ -473,7 +473,7 @@ no_suid()
 }
 
 void
-writePidFile()
+writePidFile(void)
 {
     FILE *pid_fp = NULL;
     char *f = NULL;
@@ -494,7 +494,7 @@ writePidFile()
 
 
 int
-readPidFile()
+readPidFile(void)
 {
     FILE *pid_fp = NULL;
     char *f = NULL;
@@ -521,7 +521,7 @@ readPidFile()
 
 
 void
-setMaxFD()
+setMaxFD(void)
 {
 #if HAVE_SETRLIMIT
     /* try to use as many file descriptors as possible */
@@ -570,7 +570,7 @@ setMaxFD()
 }
 
 time_t
-getCurrentTime()
+getCurrentTime(void)
 {
 #if GETTIMEOFDAY_NO_TZP
     gettimeofday(&current_time);
