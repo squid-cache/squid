@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.42 2003/05/29 15:54:08 hno Exp $
+ * $Id: external_acl.cc,v 1.43 2003/06/19 18:05:11 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -584,8 +584,12 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
      * Register the username for logging purposes
      */
 
-    if (entry->user && cbdataReferenceValid(ch->conn()) && !ch->conn()->rfc931[0])
-        xstrncpy(ch->conn()->rfc931, entry->user, USER_IDENT_SZ);
+    if (entry->user) {
+        xstrncpy(ch->rfc931, entry->user, USER_IDENT_SZ);
+
+        if (cbdataReferenceValid(ch->conn()))
+            xstrncpy(ch->conn()->rfc931, entry->user, USER_IDENT_SZ);
+    }
 
     if (ch->request && !ch->request->tag.size())
         ch->request->tag = entry->tag;
