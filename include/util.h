@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.54 1999/10/04 05:04:49 wessels Exp $
+ * $Id: util.h,v 1.55 2000/10/17 08:06:01 adrian Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -85,7 +85,7 @@ extern char *rfc1738_escape_part(const char *);
 extern void rfc1738_unescape(char *);
 
 #if XMALLOC_STATISTICS
-extern void malloc_statistics(void (*)(int, int, void *), void *);
+extern void malloc_statistics(void (*)(int, int, int, void *), void *);
 #endif
 
 #if XMALLOC_TRACE

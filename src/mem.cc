@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.48 2000/10/04 00:24:17 wessels Exp $
+ * $Id: mem.cc,v 1.49 2000/10/17 08:06:04 adrian Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -189,6 +189,9 @@ memInit(void)
     memDataInit(MEM_2K_BUF, "2K Buffer", 2048, 10);
     memDataInit(MEM_4K_BUF, "4K Buffer", 4096, 10);
     memDataInit(MEM_8K_BUF, "8K Buffer", 8192, 10);
+    memDataInit(MEM_16K_BUF, "16K Buffer", 16384, 10);
+    memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10);
+    memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10);
     memDataInit(MEM_CLIENT_SOCK_BUF, "Client Socket Buffer", CLIENT_SOCK_SZ, 0);
     memDataInit(MEM_ACCESSLOGENTRY, "AccessLogEntry",
 	sizeof(AccessLogEntry), 10);
@@ -217,6 +220,7 @@ memInit(void)
 #if USE_CACHE_DIGESTS
     memDataInit(MEM_DIGEST_FETCH_STATE, "DigestFetchState", sizeof(DigestFetchState), 0);
 #endif
+    memDataInit(MEM_LINK_LIST, "link_list", sizeof(link_list), 10);
     memDataInit(MEM_DLINK_LIST, "dlink_list", sizeof(dlink_list), 10);
     memDataInit(MEM_DLINK_NODE, "dlink_node", sizeof(dlink_node), 10);
     memDataInit(MEM_DNSSERVER_T, "dnsserver_t", sizeof(dnsserver_t), 0);
@@ -285,6 +289,12 @@ memInit(void)
     memDataInit(MEM_HELPER_SERVER, "helper_server",
 	sizeof(helper_server), 0);
     memDataInit(MEM_STORE_IO, "storeIOState", sizeof(storeIOState), 0);
+    memDataInit(MEM_TLV, "storeSwapTLV", sizeof(tlv), 0);
+    memDataInit(MEM_GEN_CBDATA, "generic_cbdata", sizeof(generic_cbdata), 0);
+    memDataInit(MEM_PUMP_STATE_DATA, "PumpStateData", sizeof(PumpStateData), 0);
+    memDataInit(MEM_CLIENT_REQ_BUF, "clientRequestBuffer", CLIENT_REQ_BUF_SZ, 0);
+    memDataInit(MEM_SWAP_LOG_DATA, "storeSwapLogData", sizeof(storeSwapLogData), 0);
+
     /* init string pools */
     for (i = 0; i < mem_str_pool_count; i++) {
 	StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
@@ -342,4 +352,22 @@ void
 memFree8K(void *p)
 {
     memFree(p, MEM_8K_BUF);
+}
+
+void
+memFree16K(void *p)
+{
+    memFree(p, MEM_16K_BUF);
+}
+
+void
+memFree32K(void *p)
+{
+    memFree(p, MEM_32K_BUF);
+}
+
+void
+memFree64K(void *p)
+{
+    memFree(p, MEM_64K_BUF);
 }

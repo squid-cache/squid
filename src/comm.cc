@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.309 2000/10/10 02:22:25 wessels Exp $
+ * $Id: comm.cc,v 1.310 2000/10/17 08:06:02 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -73,6 +73,7 @@ static CBDUNL commConnectDataFree;
 
 static MemPool *comm_write_pool = NULL;
 static MemPool *conn_state_pool = NULL;
+static MemPool *conn_close_pool = NULL;
 
 static void
 CommWriteStateCallbackAndFree(int fd, int code)
@@ -533,7 +534,7 @@ commCallCloseHandlers(int fd)
 	if (cbdataValid(ch->data))
 	    ch->handler(fd, ch->data);
 	cbdataUnlock(ch->data);
-	safe_free(ch);
+	memPoolFree(conn_close_pool, ch);	// AAA
     }
 }
 
@@ -653,7 +654,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t
 void
 comm_add_close_handler(int fd, PF * handler, void *data)
 {
-    close_handler *new = xmalloc(sizeof(*new));
+    close_handler *new = memPoolAlloc(conn_close_pool);	// AAA
     close_handler *c;
     debug(5, 5) ("comm_add_close_handler: FD %d, handler=%p, data=%p\n",
 	fd, handler, data);
@@ -684,7 +685,7 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     else
 	fd_table[fd].close_handler = p->next;
     cbdataUnlock(p->data);
-    safe_free(p);
+    memPoolFree(conn_close_pool,p);	// AAA
 }
 
 static void
@@ -785,6 +786,7 @@ comm_init(void)
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
     comm_write_pool = memPoolCreate("CommWriteStateData", sizeof(CommWriteStateData));
     conn_state_pool = memPoolCreate("ConnectStateData", sizeof(ConnectStateData));
+    conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
 }
 
 /* Write to FD. */

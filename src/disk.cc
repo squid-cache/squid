@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.150 2000/06/27 22:06:00 hno Exp $
+ * $Id: disk.cc,v 1.151 2000/10/17 08:06:03 adrian Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -146,7 +146,7 @@ diskCombineWrites(struct _fde_disk *fdd)
 	len = 0;
 	for (q = fdd->write_q; q != NULL; q = q->next)
 	    len += q->len - q->buf_offset;
-	wq = xcalloc(1, sizeof(dwrite_q));
+	wq = memAllocate(MEM_DWRITE_Q);
 	wq->buf = xmalloc(len);
 	wq->len = 0;
 	wq->buf_offset = 0;
@@ -160,7 +160,7 @@ diskCombineWrites(struct _fde_disk *fdd)
 	    fdd->write_q = q->next;
 	    if (q->free_func)
 		(q->free_func) (q->buf);
-	    safe_free(q);
+	    if (q) { memFree(q, MEM_DWRITE_Q); q = NULL; }
 	} while (fdd->write_q != NULL);
 	fdd->write_q_tail = wq;
 	fdd->write_q = wq;
@@ -224,7 +224,7 @@ diskHandleWrite(int fd, void *notused)
 		fdd->write_q = q->next;
 		if (q->free_func)
 		    (q->free_func) (q->buf);
-		safe_free(q);
+		if (q) { memFree(q, MEM_DWRITE_Q); q = NULL; }
 	    } while ((q = fdd->write_q));
 	}
 	len = 0;
@@ -241,7 +241,7 @@ diskHandleWrite(int fd, void *notused)
 	    fdd->write_q = q->next;
 	    if (q->free_func)
 		(q->free_func) (q->buf);
-	    safe_free(q);
+	    if (q) { memFree(q, MEM_DWRITE_Q); q = NULL; }
 	}
     }
     if (fdd->write_q == NULL) {
@@ -295,7 +295,7 @@ file_write(int fd,
     assert(fd >= 0);
     assert(F->flags.open);
     /* if we got here. Caller is eligible to write. */
-    wq = xcalloc(1, sizeof(dwrite_q));
+    wq = memAllocate(MEM_DWRITE_Q);
     wq->file_offset = file_offset;
     wq->buf = ptr_to_buf;
     wq->len = len;

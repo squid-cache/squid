@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.225 2000/10/07 16:10:13 wessels Exp $
+ * $Id: ipcache.cc,v 1.226 2000/10/17 08:06:03 adrian Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -413,9 +413,9 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     i->handlerData = handlerData;
     cbdataLock(handlerData);
     i->request_time = current_time;
-    c = xcalloc(1, sizeof(*c));
+    c = memAllocate(MEM_GEN_CBDATA);
     c->data = i;
-    cbdataAdd(c, cbdataXfree, 0);
+    cbdataAdd(c, memFree, MEM_GEN_CBDATA);
 #if USE_DNSSERVERS
     dnsSubmit(i->name, ipcacheHandleReply, c);
 #else

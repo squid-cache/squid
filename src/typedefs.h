@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.109 2000/10/04 00:24:18 wessels Exp $
+ * $Id: typedefs.h,v 1.110 2000/10/17 08:06:05 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -163,7 +163,10 @@ typedef struct _helper_server helper_server;
 typedef struct _helper_request helper_request;
 typedef struct _generic_cbdata generic_cbdata;
 typedef struct _storeIOState storeIOState;
+typedef struct _queued_read queued_read;
+typedef struct _queued_write queued_write;
 typedef struct _link_list link_list;
+typedef struct _PumpStateData PumpStateData;
 typedef struct _storefs_entry storefs_entry_t;
 typedef struct _storerepl_entry storerepl_entry_t;
 typedef struct _diskd_queue diskd_queue;

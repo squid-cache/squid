@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.65 2000/03/06 16:23:34 wessels Exp $
+ * $Id: stmem.cc,v 1.66 2000/10/17 08:06:04 adrian Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -43,7 +43,7 @@ stmemFree(mem_hdr * mem)
 	mem->head = p->next;
 	memFree(p->data, MEM_STMEM_BUF);
 	store_mem_size -= SM_PAGE_SIZE;
-	safe_free(p);
+	if (p) { memFree(p, MEM_MEM_NODE); p = NULL; }
     }
     mem->head = mem->tail = NULL;
     mem->origin_offset = 0;
@@ -67,7 +67,7 @@ stmemFreeDataUpto(mem_hdr * mem, int target_offset)
 	    current_offset += lastp->len;
 	    memFree(lastp->data, MEM_STMEM_BUF);
 	    store_mem_size -= SM_PAGE_SIZE;
-	    safe_free(lastp);
+	    if (lastp) { memFree(lastp, MEM_MEM_NODE); lastp = NULL; }
 	}
     }
     mem->head = p;
@@ -102,7 +102,7 @@ stmemAppend(mem_hdr * mem, const char *data, int len)
     }
     while (len > 0) {
 	len_to_copy = XMIN(len, SM_PAGE_SIZE);
-	p = xcalloc(1, sizeof(mem_node));
+	p = memAllocate(MEM_MEM_NODE);
 	p->next = NULL;
 	p->len = len_to_copy;
 	p->data = memAllocate(MEM_STMEM_BUF);

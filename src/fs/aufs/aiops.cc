@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.2 2000/06/27 08:33:53 hno Exp $
+ * $Id: aiops.cc,v 1.3 2000/10/17 08:06:07 adrian Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -140,6 +140,16 @@ static void aio_poll_threads(void);
 static aio_thread_t *threads;
 static int aio_initialised = 0;
 
+#define AIO_LARGE_BUFS  16384
+#define AIO_MEDIUM_BUFS	AIO_LARGE_BUFS >> 1
+#define AIO_SMALL_BUFS	AIO_LARGE_BUFS >> 2
+#define AIO_TINY_BUFS	AIO_LARGE_BUFS >> 3
+
+static MemPool *aio_large_bufs = NULL;		// 16K
+static MemPool *aio_medium_bufs = NULL;		// 8K
+static MemPool *aio_small_bufs = NULL;		// 4K
+static MemPool *aio_tiny_bufs = NULL;		// 2K
+
 static int request_queue_len = 0;
 static MemPool *aio_request_pool = NULL;
 static aio_request_t *request_queue_head = NULL;
@@ -152,6 +162,49 @@ static aio_thread_t *busy_threads_tail = NULL;
 static pthread_attr_t globattr;
 static struct sched_param globsched;
 static pthread_t main_thread;
+
+static MemPool *
+aio_get_pool(int size)
+{
+    MemPool *p;
+    if (size <= AIO_LARGE_BUFS) {
+        if (size <= AIO_TINY_BUFS)
+           p = aio_tiny_bufs;
+        else if (size <= AIO_SMALL_BUFS)
+           p = aio_small_bufs;
+        else if (size <= AIO_MEDIUM_BUFS)
+           p = aio_medium_bufs;
+        else
+           p = aio_large_bufs;
+    } else
+	p = NULL;
+    return p;
+}
+
+static void *
+aio_xmalloc(int size)
+{
+    void *p;
+    MemPool *pool;
+
+    if ( (pool = aio_get_pool(size)) != NULL) {
+	p = memPoolAlloc(pool);
+    } else
+	p = xmalloc(size);
+
+    return p;
+}
+
+static void
+aio_xfree(void *p, int size)
+{
+    MemPool *pool;
+
+    if ( (pool = aio_get_pool(size)) != NULL) {
+        memPoolFree(pool, p);
+    } else
+        xfree(p);
+}
 
 static void
 aio_init(void)
@@ -206,6 +259,10 @@ aio_init(void)
 
     /* Create request pool */
     aio_request_pool = memPoolCreate("aio_request", sizeof(aio_request_t));
+    aio_large_bufs = memPoolCreate("aio_large_bufs", AIO_LARGE_BUFS);
+    aio_medium_bufs = memPoolCreate("aio_medium_bufs", AIO_MEDIUM_BUFS);
+    aio_small_bufs = memPoolCreate("aio_small_bufs", AIO_SMALL_BUFS);
+    aio_tiny_bufs = memPoolCreate("aio_tiny_bufs", AIO_TINY_BUFS);
 
     aio_initialised = 1;
 }
@@ -463,7 +520,7 @@ aio_cleanup_request(aio_request_t * requestp)
     case _AIO_OP_STAT:
 	if (!cancelled && requestp->ret == 0)
 	    xmemcpy(requestp->statp, requestp->tmpstatp, sizeof(struct stat));
-	xfree(requestp->tmpstatp);
+	aio_xfree(requestp->tmpstatp, sizeof(struct stat));
     case _AIO_OP_OPEN:
 	if (cancelled && requestp->ret >= 0)
 	    /* The open() was cancelled but completed */
@@ -484,7 +541,7 @@ aio_cleanup_request(aio_request_t * requestp)
 	if (!cancelled && requestp->ret > 0)
 	    xmemcpy(requestp->bufferp, requestp->tmpbufp, requestp->ret);
     case _AIO_OP_WRITE:
-	xfree(requestp->tmpbufp);
+	aio_xfree(requestp->tmpbufp, requestp->buflen);
 	break;
     default:
 	break;
@@ -576,11 +633,7 @@ aio_read(int fd, char *bufp, int bufs, off_t offset, int whence, aio_result_t * 
     }
     requestp->fd = fd;
     requestp->bufferp = bufp;
-    if ((requestp->tmpbufp = (char *) xmalloc(bufs)) == NULL) {
-	memPoolFree(aio_request_pool, requestp);
-	errno = ENOMEM;
-	return -1;
-    }
+    requestp->tmpbufp = (char *) aio_xmalloc(bufs);
     requestp->buflen = bufs;
     requestp->offset = offset;
     requestp->whence = whence;
@@ -614,11 +667,7 @@ aio_write(int fd, char *bufp, int bufs, off_t offset, int whence, aio_result_t *
 	return -1;
     }
     requestp->fd = fd;
-    if ((requestp->tmpbufp = (char *) xmalloc(bufs)) == NULL) {
-	memPoolFree(aio_request_pool, requestp);
-	errno = ENOMEM;
-	return -1;
-    }
+    requestp->tmpbufp = (char *) aio_xmalloc(bufs);
     xmemcpy(requestp->tmpbufp, bufp, bufs);
     requestp->buflen = bufs;
     requestp->offset = offset;
@@ -682,19 +731,10 @@ aio_stat(const char *path, struct stat *sb, aio_result_t * resultp)
 	return -1;
     }
     len = strlen(path) + 1;
-    if ((requestp->path = (char *) xmalloc(len)) == NULL) {
-	memPoolFree(aio_request_pool, requestp);
-	errno = ENOMEM;
-	return -1;
-    }
+    requestp->path = (char *) xmalloc(len);
     strncpy(requestp->path, path, len);
     requestp->statp = sb;
-    if ((requestp->tmpstatp = (struct stat *) xmalloc(sizeof(struct stat))) == NULL) {
-	xfree(requestp->path);
-	memPoolFree(aio_request_pool, requestp);
-	errno = ENOMEM;
-	return -1;
-    }
+    requestp->tmpstatp = (struct stat *) aio_xmalloc(sizeof(struct stat));
     requestp->resultp = resultp;
     requestp->request_type = _AIO_OP_STAT;
     requestp->cancelled = 0;
@@ -725,11 +765,7 @@ aio_unlink(const char *path, aio_result_t * resultp)
 	return -1;
     }
     len = strlen(path) + 1;
-    if ((requestp->path = (char *) xmalloc(len)) == NULL) {
-	memPoolFree(aio_request_pool, requestp);
-	errno = ENOMEM;
-	return -1;
-    }
+    requestp->path = (char *) xmalloc(len);
     strncpy(requestp->path, path, len);
     requestp->resultp = resultp;
     requestp->request_type = _AIO_OP_UNLINK;

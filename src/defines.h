@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.82 2000/07/18 06:16:41 wessels Exp $
+ * $Id: defines.h,v 1.83 2000/10/17 08:06:03 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -172,6 +172,7 @@
 
 #define AUTH_MSG_SZ 4096
 #define HTTP_REPLY_BUF_SZ 4096
+#define CLIENT_REQ_BUF_SZ 4096
 
 #if !defined(ERROR_BUF_SZ) && defined(MAX_URL)
 #define ERROR_BUF_SZ (MAX_URL << 2)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.75 2000/08/15 07:14:04 adrian Exp $
+ * $Id: store_swapout.cc,v 1.76 2000/10/17 08:06:04 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -61,9 +61,9 @@ storeSwapOutStart(StoreEntry * e)
     storeSwapTLVFree(tlv_list);
     mem->swap_hdr_sz = (size_t) swap_hdr_sz;
     /* Create the swap file */
-    c = xcalloc(1, sizeof(*c));
+    c = memAllocate(MEM_GEN_CBDATA);
     c->data = e;
-    cbdataAdd(c, cbdataXfree, 0);
+    cbdataAdd(c, memFree, MEM_GEN_CBDATA);
     mem->swapout.sio = storeCreate(e, storeSwapOutFileNotify, storeSwapOutFileClosed, c);
     if (NULL == mem->swapout.sio) {
 	e->swap_status = SWAPOUT_NONE;

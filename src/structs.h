@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.355 2000/10/10 18:15:30 wessels Exp $
+ * $Id: structs.h,v 1.356 2000/10/17 08:06:05 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1843,6 +1843,24 @@ struct _store_rebuild_data {
     int badflags;		/* # bad e->flags */
     int bad_log_op;
     int zero_object_sz;
+};
+
+struct _PumpStateData {
+    FwdState *fwd;
+    request_t *req;
+    store_client *sc;           /* The store client we're using */
+    int c_fd;                   /* client fd */
+    int s_fd;                   /* server end */
+    int rcvd;                   /* bytes received from client */
+    int sent;                   /* bytes sent to server */
+    StoreEntry *request_entry;  /* the request entry */
+    StoreEntry *reply_entry;    /* the reply entry */
+    CWCB *callback;             /* what to do when we finish sending */
+    void *cbdata;               /* callback data passed to callback func */
+    struct {
+        int closing:1;
+    } flags;
+    struct _PumpStateData *next;
 };
 
 /*

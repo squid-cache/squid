@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.173 2000/10/04 00:24:17 wessels Exp $
+ * $Id: enums.h,v 1.174 2000/10/17 08:06:03 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -506,6 +506,9 @@ typedef enum {
     MEM_2K_BUF,
     MEM_4K_BUF,
     MEM_8K_BUF,
+    MEM_16K_BUF,
+    MEM_32K_BUF,
+    MEM_64K_BUF,
     MEM_ACCESSLOGENTRY,
     MEM_ACL,
     MEM_ACLCHECK_T,
@@ -529,6 +532,7 @@ typedef enum {
 #if USE_CACHE_DIGESTS
     MEM_DIGEST_FETCH_STATE,
 #endif
+    MEM_LINK_LIST,
     MEM_DLINK_LIST,
     MEM_DLINK_NODE,
     MEM_DNSSERVER_T,
@@ -598,6 +602,11 @@ typedef enum {
     MEM_IDNS_QUERY,
 #endif
     MEM_EVENT,
+    MEM_TLV,
+    MEM_SWAP_LOG_DATA,
+    MEM_GEN_CBDATA,
+    MEM_PUMP_STATE_DATA,
+    MEM_CLIENT_REQ_BUF,
     MEM_MAX
 } mem_type;
 
