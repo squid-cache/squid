@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.250 1998/04/09 20:52:51 wessels Exp $
+ * $Id: comm.cc,v 1.251 1998/04/09 21:31:36 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -154,10 +154,10 @@ static void commConnectCallback(ConnectStateData * cs, int status);
 static int commDeferRead(int fd);
 #if UNUSED_CODE
 static void commSetConnectTimeout(int fd, time_t timeout);
+static time_t commBackoffTimeout(int);
 #endif
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
-static time_t commBackoffTimeout(int);
 
 static struct timeval zero_tv;
 
@@ -427,6 +427,7 @@ commRetryConnect(ConnectStateData * cs)
     return commResetFD(cs);
 }
 
+#if UNUSED_CODE
 /* Back off the socket timeout if there are several addresses available */
 static time_t
 commBackoffTimeout(int numaddrs)
@@ -440,6 +441,7 @@ commBackoffTimeout(int numaddrs)
     }
     return timeout;
 }
+#endif
 
 /* Connect SOCK to specified DEST_PORT at DEST_HOST. */
 static void
