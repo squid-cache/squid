@@ -20,7 +20,6 @@ Our Todo List
 		- Make sure the lib/*.c files do not use printf/fprintf.
 		- Replace bzero with memset
 		- Replace bcopy with xmemcpy
-(2) **	Add "Squid" trailer to all error messages. (AR)
 (2) **  Fix cachemgr.cgi.  It doesn't understand some of the new
         output formats. (??)
 
@@ -90,3 +89,4 @@ DONE:
 (2) **  copy over -z semantics from 1.1; don't automatically wipeout
 	cache (DW)
 (3) **	Make swap.state binary with fixed-size cache keys (AR)
+(2) **	Add "Squid" trailer to all error messages. (AR)
