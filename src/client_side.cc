@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.635 2003/04/06 08:23:10 robertc Exp $
+ * $Id: client_side.cc,v 1.636 2003/05/19 22:35:28 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1332,7 +1332,7 @@ ClientSocketContext::getNextRangeOffset() const
 {
     if (http->request->range) {
         /* offset in range specs does not count the prefix of an http msg */
-        debug (0,0) ("ClientSocketContext::getNextRangeOffset: http offset %lu\n", (long unsigned)http->out.offset);
+        debug (33,5) ("ClientSocketContext::getNextRangeOffset: http offset %lu\n", (long unsigned)http->out.offset);
         /* check: reply was parsed and range iterator was initialized */
         assert(http->range_iter.valid);
         /* filter out data according to range specs */
