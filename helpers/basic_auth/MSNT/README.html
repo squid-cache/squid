@@ -173,7 +173,7 @@ the msntauth process receives a SIGHUP signal.
 
 <P>
 The denied user file is set using the 'denyusers' directive
-in msntauth.h.  The denied user file
+in msntauth.conf.  The denied user file
 contains a list of usernames in no particular structure or form.
 If the file does not exist, no users are denied.
 The file must be readable by the web proxy user.
@@ -191,7 +191,7 @@ allowed supposed to be accessing a proxy.
 
 <P>
 The allowed user file is set using the 'allowusers' directive
-in msntauth.h.
+in msntauth.conf.
 If the file does not exist or if empty, all users are allowed.
 
 <P>

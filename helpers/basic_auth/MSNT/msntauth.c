@@ -53,6 +53,7 @@ main(int argc, char **argv)
     char username[256];
     char password[256];
     char wstr[256];
+    int err = 0;
 
     openlog("msnt_auth", LOG_PID, LOG_USER);
     setbuf(stdout, NULL);
@@ -89,8 +90,12 @@ main(int argc, char **argv)
 	if (fgets(wstr, 255, stdin) == NULL)
 	    break;
 	/* ignore this line if we didn't get the end-of-line marker */
-	if (NULL == strchr(wstr, '\n'))
-	    break;
+	if (NULL == strchr(wstr, '\n')) {
+	    err = 1;
+	    continue;
+	}
+	if (err)
+	    goto error;
 
 	/*
 	 * extract username and password.
@@ -118,8 +123,11 @@ main(int argc, char **argv)
 	    puts("ERR");
 	else if (QueryServers(username, password) == 0)
 	    puts("OK");
-	else
+	else {
+error:
 	    puts("ERR");
+	}
+	err = 0;
     }
 
     return 0;

@@ -30,7 +30,10 @@ Read_allowusers(void)
 	memset(&AllowUsers, '\0', sizeof(AllowUsers));
 	init = 1;
     }
-    return Read_usersfile(Allowuserpath, &AllowUsers);
+    if (*Allowuserpath)
+	return Read_usersfile(Allowuserpath, &AllowUsers);
+    else
+	return 0;
 }
 
 int
