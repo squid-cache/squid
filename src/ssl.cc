@@ -1,5 +1,5 @@
 /*
- * $Id: ssl.cc,v 1.4 1996/07/09 23:00:26 wessels Exp $
+ * $Id: ssl.cc,v 1.5 1996/07/11 17:42:53 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -216,11 +216,11 @@ static void sslWriteServer(fd, sslState)
 	    COMM_SELECT_READ,
 	    (PF) sslReadClient,
 	    (void *) sslState);
-       comm_set_select_handler_plus_timeout(sslState->server.fd,
-           COMM_SELECT_TIMEOUT,
-           (PF) sslReadTimeout,
-           (void *) sslState,
-           sslState->timeout);
+	comm_set_select_handler_plus_timeout(sslState->server.fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) sslReadTimeout,
+	    (void *) sslState,
+	    sslState->timeout);
     } else {
 	/* still have more to write */
 	comm_set_select_handler(sslState->server.fd,

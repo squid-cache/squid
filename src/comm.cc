@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.36 1996/07/09 22:58:27 wessels Exp $
+ * $Id: comm.cc,v 1.37 1996/07/11 17:42:38 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -663,6 +663,7 @@ int comm_select(sec, failtime)
 	    serverConnectionsClose();
 	    ftpServerClose();
 	    ipcacheShutdownServers();
+	    redirectShutdownServers();
 	    setSocketShutdownLifetimes();
 	}
 	nfds = 0;

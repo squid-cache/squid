@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.57 1996/07/09 05:06:17 wessels Exp $
+ * $Id: cache_cf.cc,v 1.58 1996/07/11 17:42:36 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -130,7 +130,6 @@ static struct {
     int connectTimeout;
     int ageMaxDefault;
     int cleanRate;
-    int dnsChildren;
     int maxRequestSize;
     double hotVmFactor;
     struct {
@@ -151,7 +150,10 @@ static struct {
 	char *ftpget;
 	char *ftpget_opts;
 	char *dnsserver;
+	char *redirect;
     } Program;
+    int dnsChildren;
+    int redirectChildren;
     int sourcePing;
     int quickAbort;
     int commonLogFormat;
@@ -218,7 +220,8 @@ static struct {
 #define DefaultConnectTimeout	(2 * 60)	/* 2 min */
 #define DefaultDefaultAgeMax	(3600 * 24 * 30)	/* 30 days */
 #define DefaultCleanRate	-1	/* disabled */
-#define DefaultDnsChildren	5	/* 3 processes */
+#define DefaultDnsChildren	5	/* 5 processes */
+#define DefaultRedirectChildren	5	/* 5 processes */
 #define DefaultMaxRequestSize	(100 << 10)	/* 100Kb */
 #define DefaultHotVmFactor	0.0	/* disabled */
 
@@ -234,6 +237,7 @@ static struct {
 #define DefaultFtpgetProgram	DEFAULT_FTPGET
 #define DefaultFtpgetOptions	""
 #define DefaultDnsserverProgram DEFAULT_DNSSERVER
+#define DefaultRedirectProgram  (char *)NULL	/* default NONE */
 #define DefaultEffectiveUser	(char *)NULL	/* default NONE */
 #define DefaultEffectiveGroup	(char *)NULL	/* default NONE */
 #define DefaultAppendDomain	(char *)NULL	/* default NONE */
@@ -775,6 +779,14 @@ static void parseDnsChildrenLine()
     Config.dnsChildren = i;
 }
 
+static void parseRedirectChildrenLine()
+{
+    char *token;
+    int i;
+    GetInteger(i);
+    Config.redirectChildren = i;
+}
+
 static void parseRequestSizeLine()
 {
     char *token;
@@ -932,6 +944,16 @@ static void parseDnsProgramLine()
 	self_destruct();
     safe_free(Config.Program.dnsserver);
     Config.Program.dnsserver = xstrdup(token);
+}
+
+static void parseRedirectProgramLine()
+{
+    char *token;
+    token = strtok(NULL, w_space);
+    if (token == NULL)
+	self_destruct();
+    safe_free(Config.Program.redirect);
+    Config.Program.redirect = xstrdup(token);
 }
 
 static void parseEmulateLine()
@@ -1410,6 +1432,11 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "dns_children"))
 	    parseDnsChildrenLine();
 
+	else if (!strcmp(token, "redirect_program"))
+	    parseRedirectProgramLine();
+	else if (!strcmp(token, "redirect_children"))
+	    parseRedirectChildrenLine();
+
 	/* Parse source_ping line */
 	else if (!strcmp(token, "source_ping"))
 	    parseSourcePingLine();
@@ -1526,13 +1553,24 @@ int parseConfigFile(file_name)
     if (getDnsChildren() < 1) {
 	printf("WARNING: dns_children was set to a bad value: %d\n",
 	    getDnsChildren());
-	printf("Setting it to the default (3).\n");
-	Config.dnsChildren = 3;
+	Config.dnsChildren = DefaultDnsChildren;
+	printf("Setting it to the default (%d).\n", DefaultDnsChildren);
     } else if (getDnsChildren() > DefaultDnsChildrenMax) {
 	printf("WARNING: dns_children was set to a bad value: %d\n",
 	    getDnsChildren());
 	printf("Setting it to the maximum (%d).\n", DefaultDnsChildrenMax);
 	Config.dnsChildren = DefaultDnsChildrenMax;
+    }
+    if (getRedirectChildren() < 1) {
+	printf("WARNING: redirect_children was set to a bad value: %d\n",
+	    getRedirectChildren());
+	Config.redirectChildren = DefaultRedirectChildren;
+	printf("Setting it to the default (%d).\n", DefaultRedirectChildren);
+    } else if (getRedirectChildren() > DefaultRedirectChildrenMax) {
+	printf("WARNING: redirect_children was set to a bad value: %d\n",
+	    getRedirectChildren());
+	printf("Setting it to the maximum (%d).\n", DefaultRedirectChildrenMax);
+	Config.redirectChildren = DefaultRedirectChildrenMax;
     }
     fclose(fp);
 
@@ -1652,6 +1690,10 @@ int getDnsChildren()
 {
     return Config.dnsChildren;
 }
+int getRedirectChildren()
+{
+    return Config.redirectChildren;
+}
 int getQuickAbort()
 {
     return Config.quickAbort;
@@ -1699,6 +1741,10 @@ u_short getIcpPortNum()
 char *getDnsProgram()
 {
     return Config.Program.dnsserver;
+}
+char *getRedirectProgram()
+{
+    return Config.Program.redirect;
 }
 char *getFtpProgram()
 {
@@ -1840,6 +1886,7 @@ static void configFreeMemory()
     safe_free(Config.Program.ftpget);
     safe_free(Config.Program.ftpget_opts);
     safe_free(Config.Program.dnsserver);
+    safe_free(Config.Program.redirect);
     safe_free(Config.Accel.host);
     safe_free(Config.Accel.prefix);
     safe_free(Config.appendDomain);
@@ -1891,6 +1938,7 @@ static void configSetFactoryDefaults()
     Config.ageMaxDefault = DefaultDefaultAgeMax;
     Config.cleanRate = DefaultCleanRate;
     Config.dnsChildren = DefaultDnsChildren;
+    Config.redirectChildren = DefaultRedirectChildren;
     Config.hotVmFactor = DefaultHotVmFactor;
     Config.sourcePing = DefaultSourcePing;
     Config.quickAbort = DefaultQuickAbort;
@@ -1914,6 +1962,7 @@ static void configSetFactoryDefaults()
     Config.Program.ftpget = safe_xstrdup(DefaultFtpgetProgram);
     Config.Program.ftpget_opts = safe_xstrdup(DefaultFtpgetOptions);
     Config.Program.dnsserver = safe_xstrdup(DefaultDnsserverProgram);
+    Config.Program.redirect = safe_xstrdup(DefaultRedirectProgram);
     Config.Accel.host = safe_xstrdup(DefaultAccelHost);
     Config.Accel.prefix = safe_xstrdup(DefaultAccelPrefix);
     Config.Accel.port = DefaultAccelPort;
@@ -1940,6 +1989,7 @@ static void configDoConfigure()
     DnsPositiveTtl = Config.positiveDnsTtl;
     sprintf(ForwardedBy, "Forwarded: by http://%s:%d/",
 	getMyHostname(), getHttpPortNum());
+    do_redirect = getRedirectProgram()? 1 : 0;
 
 
 #if !ALLOW_HOT_CACHE
