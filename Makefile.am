@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.12 2002/07/07 18:00:55 hno Exp $
+# $Id: Makefile.am,v 1.13 2002/08/31 13:16:13 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
@@ -20,6 +20,7 @@ dist-hook:
 	    rm -f $(distdir)/$$subdir/autoconf.h; \
 	  fi; \
 	done
+	cp $(top_srcdir)/doc/release-notes/release-2.5.html $(distdir)/RELEASENOTES.html
 
 EXTRA_DIST = \
 	ChangeLog \
