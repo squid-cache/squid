@@ -1,5 +1,6 @@
 	- Added Italian error pages by Alessio Bragadini.
 	- Added Estonian error pages by Toomas Soome.
+	- Added Russian (koi-r) error pages by Andrew L. Davydov.
 	- Fixed asnAclInitialize calling to prevent coredump.
 	- Fixed FTP directory parsing again.
 	- Made FTP directory listing "Generated" tagline like
@@ -19,6 +20,10 @@
 	- Added netdb exchange protocol.
 	- Fixed wordlistDestroy() uninitialized pointer bug in
 	  ftpParseControlReply.
+	- Fixed redirector subprocess to show real program name.
+	- Changed URN menu output to be sorted.
+	- Added fast select(2) timeouts when using ASYNC_IO.
+	- Added ARP ACL support for Linux (David Luyer).
 
 Changes to squid-1.2.beta20 (April 24, 1998):
 

@@ -53,6 +53,7 @@ Our Todo List
 	- A lot of current oddities with freshly added code should go away as
 	  we debug and polish things. Comments discussing current code
 	  problems will be deleted; hopefully, along with the problems.
+(3)	Full request headers for CONNECT requests.
 
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
 	stoplist_pattern, refresh_pattern, ...  (DW)
