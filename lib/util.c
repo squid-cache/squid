@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.74 2000/11/25 16:02:14 adrian Exp $
+ * $Id: util.c,v 1.75 2001/01/07 09:55:22 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -78,7 +78,7 @@ static char msg[128];
 #if !defined(__CYGWIN__)
 extern int sys_nerr;
 #else
-  #define sys_nerr _sys_nerr
+#define sys_nerr _sys_nerr
 #endif
 
 
@@ -124,9 +124,9 @@ DBG_INDEX(int sz)
 	return DBG_MAXINDEX;
 
     if (sz <= DBG_SPLIT)
-	return (sz+DBG_GRAIN_SM-1)/DBG_GRAIN_SM;
+	return (sz + DBG_GRAIN_SM - 1) / DBG_GRAIN_SM;
 
-    return (sz+DBG_GRAIN-1)/DBG_GRAIN + DBG_OFFSET;
+    return (sz + DBG_GRAIN - 1) / DBG_GRAIN + DBG_OFFSET;
 }
 
 static void
@@ -475,7 +475,7 @@ xfree(void *s)
 
 #if XMALLOC_DEBUG
     if (s != NULL)
-        check_free(s);
+	check_free(s);
 #endif
     if (s != NULL)
 	free(s);
@@ -632,7 +632,7 @@ xstrerror(void)
     if (errno < 0 || errno >= sys_nerr)
 	snprintf(xstrerror_buf, BUFSIZ, "(%d) Unknown", errno);
     else
-        snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", errno, strerror(errno));
+	snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", errno, strerror(errno));
     return xstrerror_buf;
 }
 
@@ -749,10 +749,10 @@ xitoa(int num)
 }
 
 /* A default failure notifier when the main program hasn't installed any */
-void default_failure_notify(const char *msg)
+void 
+default_failure_notify(const char *msg)
 {
     write(2, msg, strlen(msg));
     write(2, "\n", 1);
     abort();
 }
-

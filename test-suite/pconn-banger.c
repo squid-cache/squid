@@ -167,7 +167,6 @@ sig_intr(int sig)
 }
 
 int
-
 open_http_socket(void)
 {
     int s;
@@ -191,7 +190,7 @@ open_http_socket(void)
 int
 send_request(int fd, const char *data)
 {
-    char msg[4096],buf[4096];
+    char msg[4096], buf[4096];
     int len;
     time_t w;
     struct _r *r;
@@ -200,24 +199,24 @@ send_request(int fd, const char *data)
     char *tmp = strdup(data);
     struct stat st;
     int file_fd = -1;
-    method=strtok(tmp, " ");
-    url=strtok(NULL, " ");
-    file=strtok(NULL, " ");
-    size=strtok(NULL, " ");
-    checksum=strtok(NULL, " ");
+    method = strtok(tmp, " ");
+    url = strtok(NULL, " ");
+    file = strtok(NULL, " ");
+    size = strtok(NULL, " ");
+    checksum = strtok(NULL, " ");
     if (!url) {
-      url=method;
-      method="GET";
+	url = method;
+	method = "GET";
     }
-    if (file && strcmp(file,"-")==0)
-	file=NULL;
-    if (size && strcmp(size,"-")==0)
-	size=NULL;
-    if (checksum && strcmp(checksum,"-")==0)
-	checksum=NULL;
+    if (file && strcmp(file, "-") == 0)
+	file = NULL;
+    if (size && strcmp(size, "-") == 0)
+	size = NULL;
+    if (checksum && strcmp(checksum, "-") == 0)
+	checksum = NULL;
     msg[0] = '\0';
     sprintf(buf, "%s %s HTTP/1.0\r\n", method, url);
-    strcat(msg,buf);
+    strcat(msg, buf);
     strcat(msg, "Accept: */*\r\n");
     strcat(msg, "Proxy-Connection: Keep-Alive\r\n");
     if (opt_ims && (lrand48() & 0x03) == 0) {
@@ -226,11 +225,11 @@ send_request(int fd, const char *data)
 	strcat(msg, buf);
     }
     if (file) {
-	if ( (file_fd = open(file,O_RDONLY)) < 0) {
+	if ((file_fd = open(file, O_RDONLY)) < 0) {
 	    perror("open");
 	    return -1;
 	}
-	if ( fstat(file_fd, &st) ) {
+	if (fstat(file_fd, &st)) {
 	    perror("fstat");
 	    close(file_fd);
 	    return -1;
@@ -247,7 +246,7 @@ send_request(int fd, const char *data)
 	return -1;
     }
     if (file) {
-	while((len=read(file_fd, buf, sizeof buf)) > 0) {
+	while ((len = read(file_fd, buf, sizeof buf)) > 0) {
 	    if (write(fd, buf, len) < 0) {
 		close(fd);
 		perror("body write");
@@ -302,8 +301,8 @@ get_header_string_value(const char *hdr, const char *buf, const char *end)
 	    t += strlen(hdr);
 	    while (isspace(*t))
 		t++;
-	    strcpy(result,"");
-	    strncat(result,t,strcspn(t, crlf));
+	    strcpy(result, "");
+	    strncat(result, t, strcspn(t, crlf));
 	    return result;
 	}
     }
@@ -315,9 +314,9 @@ request_done(struct _r *r)
 {
 #if 0
     fprintf(stderr, "DONE: %s, (%d+%d)\n",
-	    r->url,
-	    r->hdr_length,
-	    r->content_length);
+	r->url,
+	r->hdr_length,
+	r->content_length);
 #endif
     if (r->content_length != r->bytes_read)
 	fprintf(stderr, "ERROR! Short reply, expected %d bytes got %d\n",
@@ -325,10 +324,10 @@ request_done(struct _r *r)
     else if (r->validsize >= 0) {
 	if (r->validsize != r->bytes_read)
 	    fprintf(stderr, "WARNING: %s Object size mismatch, expected %d got %d\n",
-		    r->url, r->validsize, r->bytes_read);
+		r->url, r->validsize, r->bytes_read);
 	else if (opt_checksum && r->sum != r->validsum)
 	    fprintf(stderr, "WARNING: %s Checksum error. Expected %d got %d\n",
-		    r->url, r->validsum, r->sum);
+		r->url, r->validsum, r->sum);
     }
 }
 int
@@ -338,19 +337,19 @@ handle_read(char *inbuf, int len)
     const char *end;
     const char *url;
     static char buf[READ_BUF_SZ];
-    int hlen,blen;
-    if (len < 0 ) {
+    int hlen, blen;
+    if (len < 0) {
 	perror("read");
 	Requests = r->next;
 	request_done(r);
 	free(r);
 	noutstanding--;
 	if (trace_fd >= 0)
-	    write(trace_fd,"\n[CLOSED]\n",10);
+	    write(trace_fd, "\n[CLOSED]\n", 10);
 	return -1;
     }
     total_bytes_read += len;
-    xmemcpy(buf,inbuf,len);
+    xmemcpy(buf, inbuf, len);
     if (len == 0) {
 	fprintf(stderr, "WARNING: %s, server closed socket after %d+%d bytes\n", r->url, r->hdr_offset, r->bytes_read);
 	/* XXX, If no data was received and it isn't the first request on this
@@ -379,11 +378,12 @@ handle_read(char *inbuf, int len)
 	/* Process headers */
 	if (r->hdr_length == 0 && (end = mime_headers_end(r->reply_hdrs)) != NULL) {
 #if 0
-	    fprintf(stderr, "FOUND EOH FOR %s\n", r->url); */
+	    fprintf(stderr, "FOUND EOH FOR %s\n", r->url);
+	    */
 #endif
-	    r->hdr_length = end - r->reply_hdrs;
+		r->hdr_length = end - r->reply_hdrs;
 #if 0
- 	    fprintf(stderr, "HDR_LENGTH = %d\n", r->hdr_length);
+	    fprintf(stderr, "HDR_LENGTH = %d\n", r->hdr_length);
 #endif
 	    /* "unread" any body contents received */
 	    blen = r->hdr_offset - r->hdr_length;
@@ -393,20 +393,20 @@ handle_read(char *inbuf, int len)
 		xmemcpy(buf, r->reply_hdrs + r->hdr_length, blen);
 		len += blen;
 	    }
-	    r->reply_hdrs[r->hdr_length]='\0'; /* Null terminate headers */
+	    r->reply_hdrs[r->hdr_length] = '\0';	/* Null terminate headers */
 	    /* Parse headers */
 	    r->content_length = get_header_int_value("content-length:", r->reply_hdrs, end);
-/*	    fprintf(stderr, "CONTENT_LENGTH = %d\n", r->content_length); */
+/*          fprintf(stderr, "CONTENT_LENGTH = %d\n", r->content_length); */
 	    url = get_header_string_value("X-Request-URI:", r->reply_hdrs, end);
 	    if (url != NULL && strcmp(r->url, url) != 0)
 		fprintf(stderr, "WARNING: %s got reply %s\n", r->url, url);
 #if XREQUESTURI || 0
-	    fprintf(stderr, "LOCATION = %s\n", get_header_string_value("X-Request-URI:", r->reply_hdrs, end));  
+	    fprintf(stderr, "LOCATION = %s\n", get_header_string_value("X-Request-URI:", r->reply_hdrs, end));
 #endif
 	}
-	if ( !(len==0 || r->hdr_length > 0) ) {
+	if (!(len == 0 || r->hdr_length > 0)) {
 	    fprintf(stderr, "ERROR!!!\n");
-	    assert((len==0 || r->hdr_length > 0));
+	    assert((len == 0 || r->hdr_length > 0));
 	}
 	/* Process body */
 	if (r->hdr_length != 0) {
@@ -415,14 +415,14 @@ handle_read(char *inbuf, int len)
 	    if (r->content_length >= 0) {
 		bytes_left = r->content_length - r->bytes_read;
 		assert(bytes_left >= 0);
-	    	bytes_used = len < bytes_left ? len : bytes_left;
+		bytes_used = len < bytes_left ? len : bytes_left;
 	    } else {
-		bytes_left = len + 1; /* Unknown end... */
+		bytes_left = len + 1;	/* Unknown end... */
 		bytes_used = len;
 	    }
 	    if (opt_checksum) {
-		for(i=0; i<bytes_used; i++)
-		    r->sum += (int)buf[i] & 0xFF;
+		for (i = 0; i < bytes_used; i++)
+		    r->sum += (int) buf[i] & 0xFF;
 	    }
 	    r->bytes_read += bytes_used;
 	    len -= bytes_used;
@@ -462,7 +462,7 @@ main_loop(void)
     static int pconn_fd = -1;
     static char buf[8192];
     struct timeval to;
-    struct timeval now,last,start;
+    struct timeval now, last, start;
     fd_set R;
     struct _r *r;
     struct _r *nextr;
@@ -480,10 +480,10 @@ main_loop(void)
     }
     while (!done_reading_urls || noutstanding) {
 	if (!opt_reopen && pconn_fd < 0) {
-	    fprintf(stderr,"TERMINATED: Connection closed\n");
+	    fprintf(stderr, "TERMINATED: Connection closed\n");
 	    break;
 	}
-	if (pconn_fd<0) {
+	if (pconn_fd < 0) {
 	    pconn_fd = open_http_socket();
 	    if (pconn_fd < 0) {
 		perror("socket");
@@ -491,14 +491,14 @@ main_loop(void)
 	    }
 	    nextr = Requests;
 	    Requests = NULL;
-	    noutstanding=0;
+	    noutstanding = 0;
 	    while ((r = nextr) != NULL) {
 		nextr = r->next;
 		if (send_request(pconn_fd, r->url) != 0) {
 		    close(pconn_fd);
-		    pconn_fd=-1;
+		    pconn_fd = -1;
 		    nextr = r;
-		    for (r = Requests; r!=NULL && r->next; r=r->next);
+		    for (r = Requests; r != NULL && r->next; r = r->next);
 		    if (r != NULL)
 			r->next = nextr;
 		    else
@@ -508,7 +508,7 @@ main_loop(void)
 		free(r);
 	    }
 	    timeouts = 0;
-	    if (pconn_fd <0)
+	    if (pconn_fd < 0)
 		continue;
 	}
 	if (timeouts == 200) {
@@ -520,7 +520,7 @@ main_loop(void)
 	    free(r);
 	    noutstanding--;
 	}
-	if (pconn_fd>=0 && noutstanding < max_outstanding && !done_reading_urls) {
+	if (pconn_fd >= 0 && noutstanding < max_outstanding && !done_reading_urls) {
 	    char *t;
 	    if (fgets(buf, 8191, stdin) == NULL) {
 		fprintf(stderr, "Done Reading URLS\n");
@@ -532,7 +532,7 @@ main_loop(void)
 		*t = '\0';
 	    if (send_request(pconn_fd, buf) != 0) {
 		close(pconn_fd);
-		pconn_fd=-1;
+		pconn_fd = -1;
 		continue;
 	    }
 	    nrequests++;
@@ -560,21 +560,22 @@ main_loop(void)
 		pconn_fd = -1;
 	}
 	gettimeofday(&now, NULL);
-        if (now.tv_sec > last.tv_sec) {
+	if (now.tv_sec > last.tv_sec) {
 	    int dt;
 	    int nreq;
 	    last = now;
 	    dt = (int) (now.tv_sec - start.tv_sec);
-	    nreq=0;
-	    for (r=Requests; r ; r=r->next) nreq++;
+	    nreq = 0;
+	    for (r = Requests; r; r = r->next)
+		nreq++;
 	    printf("T+ %6d: %9d req (%+4d), %4d pend, %3d/sec avg, %dmb, %dkb/sec avg\n",
-		    dt,
-		    nrequests,
-		    reqpersec,
-		    nreq,
-		    (int) (nrequests / dt),
-		    (int)total_bytes_read / 1024 / 1024,
-		    (int)total_bytes_read / 1024 / dt);
+		dt,
+		nrequests,
+		reqpersec,
+		nreq,
+		(int) (nrequests / dt),
+		(int) total_bytes_read / 1024 / 1024,
+		(int) total_bytes_read / 1024 / dt);
 	    reqpersec = 0;
 	}
     }
@@ -616,7 +617,7 @@ main(argc, argv)
 	    lifetime = (time_t) atoi(optarg);
 	    break;
 	case 't':
-	    trace_fd = open(optarg,O_WRONLY|O_CREAT|O_TRUNC,0666);
+	    trace_fd = open(optarg, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	    break;
 	case 'r':
 	    opt_reopen = !opt_reopen;

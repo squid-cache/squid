@@ -28,7 +28,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: asn1.h,v 1.10 1998/04/08 00:33:45 wessels Exp $
+ * $Id: asn1.h,v 1.11 2001/01/07 09:55:21 hno Exp $
  * 
  **********************************************************************/
 
@@ -96,6 +96,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif
 
+#endif
 #endif				/* _SNMP_ASN1_H_ */

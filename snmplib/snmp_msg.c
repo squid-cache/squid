@@ -128,7 +128,7 @@ u_char *
 snmp_msg_Encode(u_char * Buffer, int *BufLenP,
     u_char * Community, int CommLen,
     int Version,
-    struct snmp_pdu * PDU)
+    struct snmp_pdu *PDU)
 {
     u_char *bufp, *tmp;
     u_char *PDUHeaderPtr, *VARHeaderPtr;

@@ -1,5 +1,5 @@
 /*
- * $Id: GNUregex.c,v 1.11 1998/09/23 17:14:20 wessels Exp $
+ * $Id: GNUregex.c,v 1.12 2001/01/07 09:55:22 hno Exp $
  */
 
 /* Extended regular expression matching and search library,
@@ -1576,7 +1576,6 @@ regex_compile(pattern, size, syntax, bufp)
 		    else
 			return REG_ERPAREN;
 		}
-
 	      handle_close:
 		if (fixup_alt_jump) {	/* Push a dummy failure point at the end of the
 					 * alternative for a possible future
@@ -1595,7 +1594,6 @@ regex_compile(pattern, size, syntax, bufp)
 		    else
 			return REG_ERPAREN;
 		}
-
 		/* Since we just checked for an empty stack above, this
 		 * ``can't happen''.  */
 		assert(compile_stack.avail != 0);
