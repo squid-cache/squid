@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.629 2003/03/06 20:11:51 robertc Exp $
+ * $Id: client_side.cc,v 1.630 2003/03/07 04:40:59 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2602,7 +2602,6 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
     debug(33, 4) ("httpAccept: FD %d: accepted\n", newfd);
     fd_note(newfd, "client http connect");
     connState = connStateCreate(&details->peer, &details->me, newfd, s);
-    connState->port = cbdataReference(s);
     comm_add_close_handler(newfd, connStateFree, connState);
 
     if (Config.onoff.log_fqdn)
