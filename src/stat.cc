@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.329 2000/06/26 01:38:37 wessels Exp $
+ * $Id: stat.cc,v 1.330 2000/06/26 03:36:05 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -779,8 +779,12 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 	: 0.0);
     x = statHistDeltaMedian(&l->select_fds_hist, &f->select_fds_hist);
     storeAppendPrintf(sentry, "median_select_fds = %f\n", x);
-    storeAppendPrintf(sentry, "swap_files_cleaned = %f/sec\n",
-	XAVG(swap_files_cleaned));
+    storeAppendPrintf(sentry, "swap.outs = %f/sec\n",
+	XAVG(swap.outs));
+    storeAppendPrintf(sentry, "swap.ins = %f/sec\n",
+	XAVG(swap.ins));
+    storeAppendPrintf(sentry, "swap.files_cleaned = %f/sec\n",
+	XAVG(swap.files_cleaned));
     storeAppendPrintf(sentry, "aborted_requests = %f/sec\n",
 	XAVG(aborted_requests));
 
@@ -1156,8 +1160,12 @@ statCountersDump(StoreEntry * sentry)
 	f->cputime);
     storeAppendPrintf(sentry, "wall_time = %f\n",
 	tvSubDsec(f->timestamp, current_time));
-    storeAppendPrintf(sentry, "swap_files_cleaned = %d\n",
-	f->swap_files_cleaned);
+    storeAppendPrintf(sentry, "swap.outs = %d\n",
+	f->swap.outs);
+    storeAppendPrintf(sentry, "swap.ins = %d\n",
+	f->swap.ins);
+    storeAppendPrintf(sentry, "swap.files_cleaned = %d\n",
+	f->swap.files_cleaned);
     storeAppendPrintf(sentry, "aborted_requests = %d\n",
 	f->aborted_requests);
 }
