@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.12 1996/04/04 05:06:36 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.13 1996/04/04 05:10:16 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -261,8 +261,7 @@ void addToIPACL(list, ip_str, access)
 
 	case 5:
 	    if (m1 < 0 || m1 > 32) {
-		fprintf(stderr,
-		    "cached.conf error in IP acl line %s (ignored)\n",
+		debug(3, 0, "addToIPACL: Ignoring invalid IP acl line '%s'\n",
 		    ip_str);
 		return;
 	    }
@@ -274,8 +273,8 @@ void addToIPACL(list, ip_str, access)
 	    break;
 
 	default:
-	    fprintf(stderr,
-		"cached.conf error in IP acl line %s (ignored)\n", ip_str);
+	    debug(3, 0, "addToIPACL: Ignoring invalid IP acl line '%s'\n",
+		ip_str);
 	    return;
 	}
     }
@@ -460,7 +459,7 @@ static void parseHostDomainLine(line_in)
 static void parseMailTraceLine(line_in)
      char *line_in;
 {
-    fprintf(stderr, "'mail_trace' not supported in this version; ignored.\n");
+    debug(3, 0, "'mail_trace' not supported in this version; ignored.\n");
 }
 
 
