@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.95 2000/06/27 22:06:01 hno Exp $
+ * $Id: globals.h,v 1.96 2000/07/13 06:06:16 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -32,7 +32,6 @@
  */
 
 extern FILE *debug_log;		/* NULL */
-extern FILE *cache_useragent_log;	/* NULL */
 extern SquidConfig Config;
 extern SquidConfig2 Config2;
 extern char *ConfigFile;	/* NULL */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.193 2000/06/27 22:06:05 hno Exp $
+ * $Id: tools.cc,v 1.194 2000/07/13 06:06:16 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -735,8 +735,6 @@ logsFlush(void)
 {
     if (debug_log)
 	fflush(debug_log);
-    if (cache_useragent_log)
-	fflush(cache_useragent_log);
 }
 
 char *
