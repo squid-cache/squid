@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.54 1996/04/17 17:52:22 wessels Exp $ */
+/* $Id: http.cc,v 1.55 1996/04/17 20:58:48 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -516,18 +516,6 @@ int proxyhttpStart(e, url, entry)
     debug(11, 10, "proxyhttpStart: HTTP request header:\n%s\n",
 	entry->mem_obj->mime_hdr);
 
-    data = (HttpData *) xcalloc(1, sizeof(HttpData));
-    data->entry = entry;
-    data->req_hdr = entry->mem_obj->mime_hdr;
-    request = (request_t *) xcalloc(1, sizeof(request_t));
-    data->free_request = 1;
-    data->request = request;
-
-    request->method = entry->method;
-    strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
-    request->port = e->ascii_port;
-    strncpy(request->urlpath, url, MAX_URL);
-
     if (e->proxy_only)
 	storeStartDeleteBehind(entry);
 
@@ -536,14 +524,26 @@ int proxyhttpStart(e, url, entry)
     if (sock == COMM_ERROR) {
 	debug(11, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
-	safe_free(data);
 	return COMM_ERROR;
     }
+
+    data = (HttpData *) xcalloc(1, sizeof(HttpData));
+    data->entry = entry;
+    data->req_hdr = entry->mem_obj->mime_hdr;
+    request = (request_t *) xcalloc(1, sizeof(request_t));
+    data->free_request = 1;
+    data->request = request;
     /* register the handler to free HTTP state data when the FD closes */
     comm_set_select_handler(sock,
 	COMM_SELECT_CLOSE,
 	httpStateFree,
 	(void *) data);
+
+    request->method = entry->method;
+    strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
+    request->port = e->ascii_port;
+    strncpy(request->urlpath, url, MAX_URL);
+
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
@@ -594,19 +594,23 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
 	RequestMethodStr[request->method], url);
     debug(11, 10, "httpStart: req_hdr '%s'\n", req_hdr);
 
-    data = (HttpData *) xcalloc(1, sizeof(HttpData));
-    data->entry = entry;
-    data->req_hdr = req_hdr;
-    data->request = request;
-
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "httpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
-	safe_free(data);
 	return COMM_ERROR;
     }
+
+    data = (HttpData *) xcalloc(1, sizeof(HttpData));
+    data->entry = entry;
+    data->req_hdr = req_hdr;
+    data->request = request;
+    comm_set_select_handler(sock,
+	COMM_SELECT_CLOSE,
+	httpStateFree,
+	(void *) data);
+
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
