@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.283 1999/05/04 21:58:22 wessels Exp $
+ * $Id: ftp.cc,v 1.284 1999/05/11 20:14:14 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1597,6 +1597,12 @@ ftpReadSize(FtpStateData * ftpState)
     if (code == 213) {
 	ftpUnhack(ftpState);
 	ftpState->size = atoi(ftpState->ctrl.last_reply);
+	if (ftpState->size == 0) {
+	    debug(9, 2) ("ftpReadSize: SIZE reported %s on %s\n",
+		ftpState->ctrl.last_reply,
+		ftpState->title_url);
+	    ftpState->size = -1;
+	}
     } else if (code < 0) {
 	ftpFail(ftpState);
     }
