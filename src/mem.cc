@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.59 2001/09/07 18:02:45 adrian Exp $
+ * $Id: mem.cc,v 1.60 2002/02/13 17:22:36 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -136,7 +136,7 @@ memFree(void *p, int type)
 
 /* allocate a variable size buffer using best-fit pool */
 void *
-memAllocBuf(size_t net_size, size_t * gross_size)
+memAllocString(size_t net_size, size_t * gross_size)
 {
     int i;
     MemPool *pool = NULL;
@@ -154,9 +154,9 @@ memAllocBuf(size_t net_size, size_t * gross_size)
     return pool ? memPoolAlloc(pool) : xcalloc(1, net_size);
 }
 
-/* free buffer allocated with memAllocBuf() */
+/* free buffer allocated with memAllocString() */
 void
-memFreeBuf(size_t size, void *buf)
+memFreeString(size_t size, void *buf)
 {
     int i;
     MemPool *pool = NULL;
