@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.58 1997/07/16 20:32:17 wessels Exp $
+ * $Id: tunnel.cc,v 1.59 1997/07/21 07:21:01 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -360,7 +360,7 @@ sslConnectDone(int fd, int status, void *data)
 }
 
 void
-sslStart(int fd, const char *url, request_t * request, int *size_ptr)
+sslStart(int fd, const char *url, request_t * request, size_t *size_ptr)
 {
     /* Create state structure. */
     SslStateData *sslState = NULL;

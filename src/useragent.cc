@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.8 1997/07/15 05:34:14 wessels Exp $
+ * $Id: useragent.cc,v 1.9 1997/07/21 07:21:02 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -112,7 +112,7 @@ logUserAgent(const char *client, const char *agent)
 	client,
 	time_str,
 	agent);
-    if (unbuffered_logs)
+    if (!Config.Options.buffered_logs)
 	fflush(cache_useragent_log);
 #endif
 }

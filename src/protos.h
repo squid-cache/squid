@@ -384,10 +384,10 @@ extern void shut_down _PARAMS((int));
 
 
 extern void start_announce _PARAMS((void *unused));
-extern void sslStart _PARAMS((int fd, const char *, request_t *, int *sz));
+extern void sslStart _PARAMS((int fd, const char *, request_t *, size_t *sz));
 extern void waisStart _PARAMS((request_t *, StoreEntry *));
 extern void storeDirClean _PARAMS((void *unused));
-extern void passStart _PARAMS((int, const char *, request_t *, int *));
+extern void passStart _PARAMS((int, const char *, request_t *, size_t *));
 extern void identStart _PARAMS((int, ConnStateData *, IDCB * callback));
 extern int httpAnonAllowed _PARAMS((const char *line));
 extern int httpAnonDenied _PARAMS((const char *line));

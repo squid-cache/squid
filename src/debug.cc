@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.49 1997/07/16 20:32:02 wessels Exp $
+ * $Id: debug.cc,v 1.50 1997/07/21 07:20:56 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -149,7 +149,7 @@ _db_print(va_alist)
 #endif /* HAVE_SYSLOG */
     /* write to log file */
     vfprintf(debug_log, f, args);
-    if (unbuffered_logs)
+    if (!Config.Options.buffered_logs)
 	fflush(debug_log);
     if (opt_debug_stderr && debug_log != stderr)
 	vfprintf(stderr, f, args);
