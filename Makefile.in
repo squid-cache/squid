@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.27 2002/09/16 12:50:12 robertc Exp $
+# $Id: Makefile.in,v 1.28 2002/09/30 00:18:30 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -93,10 +93,6 @@ MV = @MV@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
 OPT_DEFAULT_HOSTS = @OPT_DEFAULT_HOSTS@
-OPT_DISKD_EXE = @OPT_DISKD_EXE@
-OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
-OPT_PINGER = @OPT_PINGER@
-OPT_PINGER_EXE = @OPT_PINGER_EXE@
 PACKAGE = @PACKAGE@
 PERL = @PERL@
 RANLIB = @RANLIB@
@@ -126,6 +122,7 @@ DIST_SUBDIRS = lib snmplib scripts src icons errors contrib doc helpers
 SUBDIRS = lib @makesnmplib@ scripts src icons errors doc helpers
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
+DEFAULT_PINGER = $(libexecdir)/pinger$(EXEEXT)
 
 EXTRA_DIST = \
 	ChangeLog \
@@ -480,11 +477,15 @@ dist-hook:
 	    rm -f $(distdir)/$$subdir/autoconf.h; \
 	  fi; \
 	done
-	cp $(top_srcdir)/doc/release-notes/release-2.5.html $(distdir)/RELEASENOTES.html
+	@if [ -f $(top_srcdir)/RELEASENOTES.html ]; then \
+	  cp -p $(top_srcdir)/RELEASENOTES.html $(distdir)/RELEASENOTES.html; \
+	else \
+	  cp $(top_srcdir)/doc/release-notes/release-2.5.html $(distdir)/RELEASENOTES.html; \
+	fi
 
 install-pinger:
-	chown root $(libexecdir)/pinger$(EXEEXT)
-	chmod 4711 $(libexecdir)/pinger$(EXEEXT)
+	chown root $(DEFAULT_PINGER) 
+	chmod 4711 $(DEFAULT_PINGER)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
