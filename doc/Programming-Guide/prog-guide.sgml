@@ -1,7 +1,7 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid Programmers Guide</title>
-<author>Duane Wessels, Squid Developers
+<title>Squid v1.2 Programmers Guide</title>
+<author>Duane Wessels, Kostas Anagnostakis, Alex Rousskov, Squid Developers
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -33,9 +33,10 @@ each active request.
 <P>
 The code is often difficult to follow because there are no explicit
 state variables for the active requests.  Instead, thread execution
-progresses as a sequence of ``handler functions'' which get called
-when I/O is ready to occur.  As a handler completes, it will register
-another handler for the next time I/O occurs.
+progresses as a sequence of ``callback functions'' which get executed
+when I/O is ready to occur, or some other event has happened.  As
+a callback function completes, it is responsible for registering the
+next callback function for subsequent I/O.
 
 <P>
 Note there is only a pseudo-consistent naming scheme.  In most 
@@ -53,7 +54,7 @@ name="the Squid Developers">.
 
 <P>
 Function names and file names will be written in a courier font, such
-as <em/store.c/ and <tt/storeRegister()/.  Data structures and their
+as <tt/store.c/ and <tt/storeRegister()/.  Data structures and their
 members will be written in an italicised font, such as <em/StoreEntry/.
 
 <sect>The Big Picture
@@ -64,44 +65,37 @@ Squid consists of the following major components
 <sect1>Client Side
 
 <P>
-    These routines exist primarily in two source files: <em/.cp.c/, and
-    <em/client_side.c/.  The name <em/icp.c/ is misleading, as it
-    has more to do with accepting HTTP requests than the ICP protocol.
-
-<P>
-    This is where new client connections are accepted and processed.
-    This is where we determine if the request is a HIT, REFRESH, MISS, etc.
-    The client-side state for each request is held in an <tt/icpStateData/
-    structure.
+    These routines exist in <tt/client_side.c/.  
+    Here new client connections are accepted, parsed, and processed.
+    This is where we determine if the request is a cache HIT,
+    REFRESH, MISS, etc.  With HTTP/1.1 we may have multiple requests
+    from a single TCP connection.  Per-connection state information
+    is held in a data structure called <em/ConnStateData/.  Per-request
+    state information is stored in the <em/clientHttpRequest/ structure.
     
 <sect1>Server Side
 
 <P>
-    These routines exist in various source files.  <em/proto.c/
-    contains generic server-side functions, notably the neighbor
-    selection algorithms.  Protocol-specific functions are in
-    <em/http.c/,
-    <em/ftp.c/,
-    <em/gopher.c/,
-    <em/wais.c/,
-    <em/ssl.c/,
-    and <em/pass.c/.
-
-<P>
-    This is where server connections are made, and replies are read.
-    Apart from processing headers, HTTP is relatively simple--just
-    copying bytes.  Note that all requests (FTP, Gopher) to other
-    proxies are sent as HTTP requests.  Requests to FTP servers are
-    handled in the external <tt/ftpget/ process, so the <em/ftp.c/
-    functions are simply to communicate with <tt/ftpget/.
-    <em/gopher.c/ is somewhat complex and gross because it must
+    These routines exist in various source files, namely
+    <tt/http.c/,
+    <tt/ftp.c/,
+    <tt/gopher.c/,
+    <tt/wais.c/,
+    <tt/ssl.c/,
+    and <tt/pass.c/.
+    These routines are responsible for forwarding cache misses
+    to other servers, depending on the protocol.  Cache misses
+    may be forwarded to either origin servers, or other proxy caches.
+    Note that all requests (FTP, Gopher) to other
+    proxies are sent as HTTP requests.  
+    <tt/gopher.c/ is somewhat complex and gross because it must
     convert from the Gopher protocol to HTTP.  Wais and Gopher don't
-    receive much attention because they are relatively insignificant
-    compared to HTTP.
+    receive much attention because they comprise a relatively insignificant
+    portion of Internet traffic.
 
 <P>
-    <em/ssl.c/ handles SSL requests (the CONNECT method) and
-    <em/pass.c/ (``passthrough'') handles uncachable requests which
+    <tt/ssl.c/ handles SSL requests (the CONNECT method) and
+    <tt/pass.c/ (``passthrough'') handles uncachable requests which
     the cache doesn't really care about.   These two modules basically
     pass bits back and forth between client and server.  Note they do
     not use a <em/StoreEntry/ to do so.  About the only difference
@@ -113,75 +107,253 @@ Squid consists of the following major components
 <P>
     The Storage Manager is the glue between client and server sides.
     Every object saved in the cache is allocated a <em/StoreEntry/
-    structure.  While the object is being fetched, it also has a 
+    structure.  While the object is being accessed, it also has a 
     <em/MemObject/ structure.
 
 <P>
-    The <em/store.c/ file is quite large.  It includes functions to 
-    allocate and deallocate data structures, accept incoming data from
-    the server side, and maintain the objects in memory and on disk.
-
-<P>
-    Squid can quickly located cached objects because it keeps a hash
-    table of all <em/StoreEntry/'s.  
-    Current versions of Squid hold in-transit objects fully in memory
-    before saving them to disk.  This approach has both advantages
-    and disadvantages.  These ``in-memory'' objects are also indexed
-    by a separate ``in-memory'' hash table.
+    Squid can quickly locate cached objects because it keeps (in memory) a hash
+    table of all <em/StoreEntry/'s.  The keys for the hash
+    table are MD5 checksums of the objects URI.  In addition there is
+    also a doubly-linked list of <em/StoreEntry/'s used for the LRU
+    replacement algorithm.  When an entry is accessed, it is moved to
+    the head of the LRU list.  When Squid needs to replace cached objects,
+    it takes objects from the tail of the LRU list.
 
 <P>
     Objects are saved to disk in a two-level directory structure.  For
     each object the <em/StoreEntry/ includes a 4-byte <em/fileno/
     field.  This file number is converted to a disk pathname by a
     simple algorithm which evenly distributes the files across all 
-    cache directories.
+    cache directories.  A cache swap file consists of two parts:
+    the cache metadata, and the object data.  Note the object 
+    data includes the full HTTP reply---headers and body.  The HTTP
+    reply headers are not the same as the cache metadata.
 
 <P>
-    When new object data arrives on the server side, it is added to the
-    <em/StoreEntry/ with the <tt/storeAppend()/ function.  The client
-    side registers interest in an object with the <tt/storeRegister()/
-    function.  When more data arrives, the client side is notified via
-    the callback it has registered.  The client functions then copy 
-    the new data from the <em/StoreEntry/ and write it to the 
-    client socket.   This approach easily allows multiple clients to
-    read from a single <em/StoreEntry/ as it is being fetched.
+    Client-side reqeusts register themselves with a <em/StoreEntry/
+    to be notified when new data arrives.  Multiple clients may
+    receive data via a single <em/StoreEntry/.  For POST and
+    PUT request, this process works in reverse.  Server-side functions
+    are notified when additional data is read from the client.
+
+<P>
+    The storage manager code resides in a number of files:
+    <tt/store_clean.c/,
+    <tt/store_client.c/,
+    <tt/store_dir.c/,
+    <tt/store_key_md5.c/,
+    <tt/store_log.c/,
+    <tt/store_rebuild.c/,
+    <tt/store_swapin.c/,
+    <tt/store_swapmeta.c/,
+    <tt/store_swapout.c/,
+    and <tt/store.c/.
+
+<sect1>Peer Selection
+
+<P>
+    The functions in <tt/peer_select.c/ are responsible for selecting
+    one (or none) of the neighbor caches as the appropriate forwarding
+    location.
+
+<sect1>Access Control
+
+<P>
+    The functions in <tt/acl.c/ are responsible for allowing
+    or denying a request, based on a number of different parameters.
+    These parameters include the client's IP address, the hostname
+    of the requested resource, the request method, etc.
+    Some of the necessary information may not be immedaitely available,
+    for example the origin server's IP address.  In these cases, 
+    <tt/acl.c/ initiates lookups for the necessary information and
+    continues the access control checks when the information is
+    available.
+
+<sect1>Network Communication
+
+<P>
+    The file <tt/comm.c/ contains routines for communicating over
+    TCP and UDP network sockets.  Here is where sockets are opened,
+    closed, read, and written.  In addition, note that the heart of
+    Squid (<tt/comm_select()/ or <tt/comm_poll()/) exists here, even
+    though it handles all file descriptors, not just network sockets.
+    The <tt/comm.c/ routines do not support queueing multiple
+    blocks of data for writing.  Consequently, a callback occurs
+    for every write request.
+
+<sect1>File/Disk I/O
+
+<P>
+    Routines for reading and writing disk files (and FIFOs) are
+    implemented in <em/disk.c/.  Reasons for separating network and
+    disk I/O functions are partly historical, and partly because of
+    different behaviours.  For example, we don't worry about getting a
+    ``No space left on device'' error for network sockets.  The disk
+    I/O routines support queueing of multiple blocks for writing.
+    In some cases, it is possible to merge multiple blocks into
+    a single write request.  The write callback does not necessarily
+    occur for every write request.
 
 <sect1>Other Components
 
+<sect2>Neighbors
+
 <P>
-<descrip>
-<tag/Neighbors/
-
     Maintains the list of neighbor caches.  Sends and receives 
-    ICP messages to neighbors.  File: <em/neighbors.c/.
+    ICP messages to neighbors.  Decides which neighbors to
+    query for a given request.  File: <tt/neighbors.c/.
 
-<tag>IP/FQDN Cache</tag>
+<sect2>IP/FQDN Cache
 
+<P>
     A cache of name-to-address and address-to-name lookups.  These are
     hash tables keyed on the names and addresses.
     <tt/ipcache_nbgethostbyname()/ and <tt/fqdncache_nbgethostbyaddr()/
-    implement the non-blocking lookups.  Files: <em/ipcache.c/,
-    <em/fqdncache.c/.
+    implement the non-blocking lookups.  Files: <tt/ipcache.c/,
+    <tt/fqdncache.c/.
 
-<tag/DNS Servers/
+<sect2>Cache Manager
 
+<P>
+	This provides access to certain information needed by the
+	cache administrator.  A companion program, <em/cachemgr.cgi/
+	can be used to make this information available via a Web
+	broswer.  Cache manager requests to Squid are made with a 
+	special URL of the form
+<verb>
+	cache_object://hostname/operation
+</verb>
+	The cache manager provides essentially ``read-only'' access
+	to information.  It does not provide a method for configuring
+	Squid while it is running.
+
+<sect2>Network Measurement Database
+
+<P>
+	In a number of situation, Squid finds it useful to know the
+	estimated network round-trip time (RTT) between itself and
+	origin servers.  A particularly useful is example is
+	the peer selection algorithm.  By making RTT measurements, a
+	Squid cache will know if it, or one if its neighbors, is closest
+	to a given origin server.  The actual measurements are made
+	with the <em/pinger/ program, described below.  The measured
+	values are stored in a database indexed under two keys.  The 
+	primary index field is the /24 prefix of the origin server's
+	IP address.  Secondly, a hash table of fully-qualified host
+	names have have data structures with links to the appropriate
+	network entry.  This allows Squid to quickly look up measurements
+	when given either an IP address, or a host name.  The /24 prefix
+	aggregation is used to reduce the overall database size.  File:
+	<tt/net_db.c/.
+
+<sect2>Redirectors
+
+<P>
+	Squid has the ability to rewrite requests from clients.  After
+	checking the access controls, but before checking for cache hits,
+	requested URLs may optionally be written to an external
+	<em/redirector/ process.  This program, which can be highly
+	customized, may return a new URL to replace the original request.
+	Common applications for this feature are extended access controls
+	and local mirroring.  File: <tt/redirect.c/.
+
+<sect2>Autonomous System Numbers
+
+<P>
+	Squid supports Autonomous System (AS) numbers as another 
+	access control element.  The routines in <tt/asn.c/
+	query databases which map AS numbers into lists of CIDR
+	prefixes.  These results are stored in a radix tree which
+	allows fast searching of the AS number for a given IP address.
+	
+<sect2>Asynchronous I/O Operations
+
+<P>
+	These routines in <tt/async_io.c/ and <tt/aiops.c/ 
+	implement blocking disk operations in a set of thread (child)
+	processes.
+
+<sect2>Configuation File Parsing
+
+<P>
+	The primary configuration file specification is in the file
+	<tt/cf.data.pre/.  A simple utility program, <tt/cf_gen/,
+	reads the <tt/cf.data.pre/ file and generates <tt/cf_parser.c/
+	and <tt/squid.conf/.  <tt/cf_parser.c/ is included directly
+	into <tt/cache_cf.c/ at compile time.
+
+<sect2>Callback Data Database
+
+<P>
+	Squid's extensive use of callback functions makes it very
+	susceptible to memory access errors.  Care must be taken
+	so that the <tt/callback_data/ memory is still valid when
+	the callback function is executed.  The routines in <tt/cbdata.c/
+	provide a uniform method for managing callback data memory,
+	cancelling callbacks, and preventing erroneous memory accesses.
+
+<sect2>Debugging
+
+<P>
+	Squid includes extensive debugging statements to assist in
+	tracking down bugs and strange behaviour.  Every debug statement
+	is assigned a section and level.  Usually, every debug statement
+	in the same source file has the same section.  Levels are chosen
+	depending on how much output will be generated, or how useful the
+	provided information will be.  The <em/debug_options/ line 
+	in the configuration file determines which debug statements will
+	be shown and which will not.  The <em/debug_options/ line
+	assigns a maximum level for every section.  If a given debug
+	statement has a level less than or equal to the configured
+	level for that section, it will be shown.  This description
+	probably sounds more complicated than it really is.
+	File: <em/debug.c/.  Note that <tt/debug()/ itself is a macro.
+
+<sect2>Error Generation
+
+<P>
+	The routines in <tt/errorpage.c/ generate error messages from
+	a template file and specific request parameters.  This allows
+	for customized error messages and multilingual support.
+
+<sect2>Event Queue
+
+<P>
+	The routines in <tt/event.c/ maintain a linked-list event
+	queue for functions to be executed at a future time.  The
+	event queue is used for periodic functions such as performing
+	cache replacement, cleaning swap directories, as well as one-time
+	functions such as ICP query timeouts.
+	
+<sect2>Filedescriptor Managment
+<sect2>Hashtable Support
+<sect2>HTTP Anonymization
+<sect2>Internet Cache Protocol
+<sect2>Ident Lookups
+<sect2>Memory Management
+<sect2>Multicast Support
+<sect2>Persistent Server Connections
+<sect2>Refresh Rules
+<sect2>Request Redirection
+<sect2>SNMP Support
+<sect2>URN Support
+
+<sect1>External Programs
+
+<sect2>dnsserver
+
+<P>
     Because the standard <tt/gethostbyname(3)/ library call blocks,
     Squid must use external processes to actually make these calls.
     Typically there will be ten <tt/dnsserver/ processes spawned from
     Squid.  Communication occurs via TCP sockets bound to the loopback
-    interface.  The functions in <em/dns.c/ are primarily concerned
+    interface.  The functions in <tt/dns.c/ are primarily concerned
     with starting and stopping the dnsservers.  Reading and writing to
     and from the dnsservers occurs in the IP and FQDN cache modules.
 
-<tag/Cache Manager/
-
-<tag/Network Probe Database/
-
-<tag/Redirectors/
-
-<tag/Access Controls/
-
-</descrip>
+<sect2>pinger
+<sect2>unlinkd
+<sect2>redirector
 
 <sect1>Function Sequence of a Typical Request
 
@@ -238,7 +410,7 @@ For every open file descriptor, there are N types of handler functions.
 
 <P>
 These handlers are stored in the <em/FD_ENTRY/ structure as defined in
-<em/comm.h/.  <tt/fd_table[]/ is the global array of <em/FD_ENTRY/
+<tt/comm.h/.  <tt/fd_table[]/ is the global array of <em/FD_ENTRY/
 structures.  The handler functions are of type <em/PF/, which is a
 typedef:
 <verb>
@@ -391,6 +563,67 @@ according to the <em/ipcache_high/ threshold.
 
 <!-- %%%% Chapter : Error Pages %%%% -->
 <sect>Error Pages
+
+<sect>Callback Data Database
+
+<P>
+	Squid's extensive use of callback functions makes it very
+	susceptible to memory access errors.  For a blocking operation
+	with callback functions, the normal sequence of events is as
+	follows:
+<verb>
+	callback_data = malloc(...);
+	...
+	fooOperationStart(bar, callback_func, callback_data);
+	...
+	fooOperationComplete(...);
+	callback_func(callback_data, ....);
+	...
+	free(callback_data);
+</verb>
+	However, things become more interesting if we want or need
+	to free the callback_data, or otherwise cancel the callback,
+	before the operation completes.
+
+<P>
+	The callback data database lets us do this in a uniform and
+	safe manner.  Every callback_data pointer must be added to the
+	database.  It is then locked while the blocking operation executes
+	elsewhere, and is freed when the operation completes.  The normal
+	sequence of events is:
+<verb>
+	callback_data = malloc(...);
+	cbdataAdd(callback_data);
+	...
+	cbdataLock(callback_data);
+	fooOperationStart(bar, callback_func, callback_data);
+	...
+	fooOperationComplete(...);
+	if (cbdataValid(callback_data) {
+		callback_func(callback_data, ....);
+	cbdataUnlock(callback_data);
+	cbdataFree(callback_data);
+</verb>
+
+<P>
+	With this scheme, nothing bad happens if <tt/cbdataFree/ gets called
+	before <tt/cbdataUnlock/:
+<verb>
+	callback_data = malloc(...);
+	cbdataAdd(callback_data);
+	...
+	cbdataLock(callback_data);
+	fooOperationStart(bar, callback_func, callback_data);
+	...
+	cbdataFree(callback_data);
+	...
+	fooOperationComplete(...);
+	if (cbdataValid(callback_data) {
+		callback_func(callback_data, ....);
+	cbdataUnlock(callback_data);
+</verb>
+	In this case, <tt/cbdataValid/ returns 0 and the callback_func
+	is never executed.
 
 As of version 1.2, squid has external custom error page support. 
 
