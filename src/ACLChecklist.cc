@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.22 2004/12/20 17:35:58 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.23 2004/12/21 17:28:28 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -272,18 +272,14 @@ ACLChecklist::operator new (size_t size)
     assert (size == sizeof(ACLChecklist));
     CBDATA_INIT_TYPE(ACLChecklist);
     ACLChecklist *result = cbdataAlloc(ACLChecklist);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    return cbdataReference(result);
+    return result;
 }
 
 void
 ACLChecklist::operator delete (void *address)
 {
     ACLChecklist *t = static_cast<ACLChecklist *>(address);
-    cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (t);
+    cbdataFree(t);
 }
 
 ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),

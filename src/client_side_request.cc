@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.42 2004/12/20 16:30:35 robertc Exp $
+ * $Id: client_side_request.cc,v 1.43 2004/12/21 17:28:29 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -91,18 +91,14 @@ ClientRequestContext::operator new (size_t size)
     assert (size == sizeof(ClientRequestContext));
     CBDATA_INIT_TYPE(ClientRequestContext);
     ClientRequestContext *result = cbdataAlloc(ClientRequestContext);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    return cbdataReference(result);
+    return result;
 }
 
 void
 ClientRequestContext::operator delete (void *address)
 {
     ClientRequestContext *t = static_cast<ClientRequestContext *>(address);
-    cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (t);
+    cbdataFree(t);
 }
 
 /* Local functions */
@@ -143,18 +139,14 @@ ClientHttpRequest::operator new (size_t size)
     assert (size == sizeof (ClientHttpRequest));
     CBDATA_INIT_TYPE(ClientHttpRequest);
     ClientHttpRequest *result = cbdataAlloc(ClientHttpRequest);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    return cbdataReference(result);
+    return result;
 }
 
 void
 ClientHttpRequest::operator delete (void *address)
 {
-    ClientHttpRequest *temp = static_cast<ClientHttpRequest *>(address);
-    cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (temp);
+    ClientHttpRequest *t = static_cast<ClientHttpRequest *>(address);
+    cbdataFree(t);
 }
 
 ClientHttpRequest::ClientHttpRequest() : loggingEntry_(NULL)

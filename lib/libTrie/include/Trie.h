@@ -37,7 +37,7 @@
 #ifndef   __cplusplus
 
 /* TODO: provide parameterisation for C bindings */
-void *TrieCreate ();
+void *TrieCreate (void);
 void TrieDestroy (void *);
 void *TrieFind (void *, char const *, size_t);
 int TrieAdd (void *, char const *, size_t, void *);

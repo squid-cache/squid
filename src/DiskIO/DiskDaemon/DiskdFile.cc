@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdFile.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskdFile.cc,v 1.2 2004/12/21 17:28:29 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -57,7 +57,6 @@ DiskdFile::operator new (size_t)
     DiskdFile *result = cbdataAlloc(DiskdFile);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    cbdataReference(result);
     debug (79,3)("diskdFile with base %p allocating\n", result);
     return result;
 }
@@ -65,11 +64,9 @@ DiskdFile::operator new (size_t)
 void
 DiskdFile::operator delete (void *address)
 {
-    debug (79,3)("diskdFile with base %p deleting\n",address);
     DiskdFile *t = static_cast<DiskdFile *>(address);
-    cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (t);
+    debug (79,3)("diskdFile with base %p deleting\n",t);
+    cbdataFree(t);
 }
 
 DiskdFile::DiskdFile (char const *aPath, DiskdIOStrategy *anIO) : errorOccured (false), IO(anIO),

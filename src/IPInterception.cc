@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.8 2004/12/21 16:17:59 hno Exp $
+ * $Id: IPInterception.cc,v 1.9 2004/12/21 17:28:29 robertc Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins

@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.16 2004/12/21 16:17:58 hno Exp $
+ * $Id: hash.c,v 1.17 2004/12/21 17:28:28 robertc Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived

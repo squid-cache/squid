@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.106 2004/12/21 16:17:59 hno Exp $
+ * $Id: cachemgr.cc,v 1.107 2004/12/21 17:28:29 robertc Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels

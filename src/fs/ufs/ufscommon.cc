@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.1 2004/12/20 16:30:45 robertc Exp $
+ * $Id: ufscommon.cc,v 1.2 2004/12/21 17:28:30 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -50,18 +50,14 @@ RebuildState::operator new (size_t size)
     assert (size == sizeof(RebuildState));
     CBDATA_INIT_TYPE(RebuildState);
     RebuildState *result = cbdataAlloc(RebuildState);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    return cbdataReference(result);
+    return result;
 }
 
 void
 RebuildState::operator delete (void *address)
 {
     RebuildState *t = static_cast<RebuildState *>(address);
-    cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (t);
+    cbdataFree(t);
 }
 
 RebuildState::~RebuildState()

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskFile.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskThreadsDiskFile.cc,v 1.2 2004/12/21 17:28:29 robertc Exp $
  *
  * DEBUG: section 79    Disk IO Routines
  * AUTHOR: Robert Collins
@@ -52,18 +52,14 @@ DiskThreadsDiskFile::operator new (size_t)
 {
     CBDATA_INIT_TYPE(DiskThreadsDiskFile);
     DiskThreadsDiskFile *result = cbdataAlloc(DiskThreadsDiskFile);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    return cbdataReference(result);
+    return result;
 }
 
 void
 DiskThreadsDiskFile::operator delete (void *address)
 {
     DiskThreadsDiskFile *t = static_cast<DiskThreadsDiskFile *>(address);
-    cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (t);
+    cbdataFree(t);
 }
 
 DiskThreadsDiskFile::DiskThreadsDiskFile (char const *aPath, DiskThreadsIOStrategy *anIO):fd(-1), errorOccured (false), IO(anIO),
