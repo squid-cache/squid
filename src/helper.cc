@@ -268,7 +268,6 @@ helperHandleRead(int fd, void *data)
     } else if ((t = strchr(srv->buf, '\n'))) {
 	/* end of reply found */
 	debug(29, 3) ("helperHandleRead: end of reply found\n");
-debug(0, 0) ("helperHandleRead: r->callback=%p, r->data=%p, valid=%d\n",
 	r->callback, r->data, cbdataValid(r->data));
 	*t = '\0';
 	if (cbdataValid(r->data))
