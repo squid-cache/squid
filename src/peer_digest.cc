@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.50 1998/09/14 22:17:59 wessels Exp $
+ * $Id: peer_digest.cc,v 1.51 1998/09/14 23:42:07 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -75,7 +75,8 @@ peerDigestInit(void *data)
 {
     peer *p = data;
     assert(p);
-    assert(p->digest.flags == (1 << PD_INIT_PENDING));
+    assert(p->digest.flags.init_pending);
+    assert(!p->digest.flags.inited);
     assert(!p->digest.cd);
     assert(SM_PAGE_SIZE == 4096);	/* we use MEM_4K_BUF */
     if (p->options.no_digest) {
