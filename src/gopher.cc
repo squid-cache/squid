@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.60 1996/11/04 18:12:39 wessels Exp $
+ * $Id: gopher.cc,v 1.61 1996/11/05 16:54:49 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -694,7 +694,7 @@ gopherLifetimeExpire(int fd, GopherStateData * data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
-    debug(10, 4, "gopherLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
+    debug(10, 4, "gopherLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     commSetSelect(fd,
 	COMM_SELECT_READ | COMM_SELECT_WRITE,

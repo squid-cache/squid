@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.50 1996/11/04 18:13:15 wessels Exp $
+ * $Id: wais.cc,v 1.51 1996/11/05 16:54:52 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -158,7 +158,7 @@ waisLifetimeExpire(int fd, WaisStateData * waisState)
     StoreEntry *entry = NULL;
 
     entry = waisState->entry;
-    debug(24, 4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
+    debug(24, 4, "waisLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     commSetSelect(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, NULL, NULL, 0);
     comm_close(fd);
