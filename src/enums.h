@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.138 1998/11/13 21:02:03 rousskov Exp $
+ * $Id: enums.h,v 1.139 1998/11/25 08:58:10 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -290,7 +290,6 @@ typedef enum {
     ROUNDROBIN_PARENT,
 #if USE_CACHE_DIGESTS
     CACHE_DIGEST_HIT,
-    NO_CACHE_DIGEST_DIRECT,
 #endif
 #if USE_CARP
     CARP,

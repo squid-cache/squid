@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.90 1998/11/12 06:33:32 wessels Exp $
+ * $Id: peer_select.cc,v 1.91 1998/11/25 08:58:11 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -54,7 +54,6 @@ const char *hier_strings[] =
     "ROUNDROBIN_PARENT",
 #if USE_CACHE_DIGESTS
     "CACHE_DIGEST_HIT",
-    "NO_CACHE_DIGEST_DIRECT",
 #endif
 #if USE_CARP
     "CARP",
