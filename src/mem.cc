@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.51 2001/01/07 19:55:20 hno Exp $
+ * $Id: mem.cc,v 1.52 2001/01/07 20:11:18 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -204,7 +204,7 @@ memInit(void)
     memDataInit(MEM_ACL_LIST, "acl_list", sizeof(acl_list), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
     memDataInit(MEM_ACL_TIME_DATA, "acl_time_data", sizeof(acl_time_data), 0);
-    memDataInit(MEM_ACL_PROXY_AUTH_DATA, "acl_user_data",
+    memDataInit(MEM_ACL_USER_DATA, "acl_user_data",
 	sizeof(acl_user_data), 0);
     memDataInit(MEM_ACL_PROXY_AUTH_USER, "acl_proxy_auth_user",
 	sizeof(acl_proxy_auth_user), 0);
