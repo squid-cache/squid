@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.433 2002/10/13 20:35:05 robertc Exp $
+ * $Id: structs.h,v 1.434 2002/10/13 23:48:24 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -260,7 +260,7 @@ struct _delaySpecSet {
 struct _delayConfig {
     unsigned short pools;
     unsigned short initial;
-    unsigned char *class;
+    unsigned char *delay_class;
     delaySpecSet **rates;
     acl_access **access;
 };

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.452 2002/10/13 20:35:03 robertc Exp $
+ * $Id: protos.h,v 1.453 2002/10/13 23:48:24 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1137,8 +1137,8 @@ SQUIDCEXTERN peer *carpSelectParent(request_t *);
 SQUIDCEXTERN void delayPoolsInit(void);
 SQUIDCEXTERN void delayInitDelayData(unsigned short pools);
 SQUIDCEXTERN void delayFreeDelayData(unsigned short pools);
-SQUIDCEXTERN void delayCreateDelayPool(unsigned short pool, u_char class);
-SQUIDCEXTERN void delayInitDelayPool(unsigned short pool, u_char class, delaySpecSet * rates);
+SQUIDCEXTERN void delayCreateDelayPool(unsigned short pool, u_char delay_class);
+SQUIDCEXTERN void delayInitDelayPool(unsigned short pool, u_char delay_class, delaySpecSet * rates);
 SQUIDCEXTERN void delayFreeDelayPool(unsigned short pool);
 SQUIDCEXTERN void delayPoolsReconfigure(void);
 SQUIDCEXTERN void delaySetNoDelay(int fd);

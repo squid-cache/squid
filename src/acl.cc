@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.289 2002/10/13 20:34:57 robertc Exp $
+ * $Id: acl.cc,v 1.290 2002/10/13 23:48:23 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2616,7 +2616,7 @@ static acl_arp_data *
 aclParseArpData(const char *t)
 {
     LOCAL_ARRAY(char, eth, 256);
-    acl_arp_data *q = xcalloc(1, sizeof(acl_arp_data));
+    acl_arp_data *q = (acl_arp_data *)xcalloc(1, sizeof(acl_arp_data));
     debug(28, 5) ("aclParseArpData: %s\n", t);
     if (sscanf(t, "%[0-9a-fA-F:]", eth) != 1) {
 	debug(28, 0) ("aclParseArpData: Bad ethernet address: '%s'\n", t);
@@ -2641,7 +2641,7 @@ static void
 aclParseArpList(void *curlist)
 {
     char *t = NULL;
-    splayNode **Top = curlist;
+    splayNode **Top = (splayNode **)curlist;
     acl_arp_data *q = NULL;
     while ((t = strtokFile())) {
 	if ((q = aclParseArpData(t)) == NULL)
@@ -2663,7 +2663,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
     struct ifconf ifc;
     struct ifreq *ifr;
     int offset;
-    splayNode **Top = dataptr;
+    splayNode **Top = (splayNode **)dataptr;
     /*
      * The linux kernel 2.2 maintains per interface ARP caches and
      * thus requires an interface name when doing ARP queries.
@@ -2701,13 +2701,13 @@ aclMatchArp(void *dataptr, struct in_addr c)
     }
     /* lookup list of interface names */
     ifc.ifc_len = sizeof(ifbuffer);
-    ifc.ifc_buf = ifbuffer;
+    ifc.ifc_buf = (char *)ifbuffer;
     if (ioctl(HttpSockets[0], SIOCGIFCONF, &ifc) < 0) {
 	debug(28, 1) ("Attempt to retrieve interface list failed: %s\n",
 	    xstrerror());
 	return 0;
     }
-    if (ifc.ifc_len > sizeof(ifbuffer)) {
+    if (ifc.ifc_len > (int)sizeof(ifbuffer)) {
 	debug(28, 1) ("Interface list too long - %d\n", ifc.ifc_len);
 	return 0;
     }
@@ -2821,8 +2821,8 @@ static int
 aclArpCompare(const void *a, const void *b)
 {
 #if defined(_SQUID_LINUX_)
-    const unsigned short *d1 = a;
-    const unsigned short *d2 = b;
+    const unsigned short *d1 = (const unsigned short *)a;
+    const unsigned short *d2 = (const unsigned short *)b;
     if (d1[0] != d2[0])
 	return (d1[0] > d2[0]) ? 1 : -1;
     if (d1[1] != d2[1])
@@ -2830,8 +2830,8 @@ aclArpCompare(const void *a, const void *b)
     if (d1[2] != d2[2])
 	return (d1[2] > d2[2]) ? 1 : -1;
 #elif defined(_SQUID_SOLARIS_)
-    const unsigned char *d1 = a;
-    const unsigned char *d2 = b;
+    const unsigned char *d1 = (const unsigned char *)a;
+    const unsigned char *d2 = (const unsigned char *)b;
     if (d1[0] != d2[0])
 	return (d1[0] > d2[0]) ? 1 : -1;
     if (d1[1] != d2[1])
@@ -2902,22 +2902,19 @@ checkARP(u_long ip, char *eth)
 static void
 aclDumpArpListWalkee(void *node, void *state)
 {
-    acl_arp_data *arp = node;
-    wordlist **W = state;
+    acl_arp_data *arp = (acl_arp_data *)node;
     static char buf[24];
-    while (*W != NULL)
-	W = &(*W)->next;
     snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
 	arp->eth[0], arp->eth[1], arp->eth[2], arp->eth[3],
 	arp->eth[4], arp->eth[5]);
-    wordlistAdd(state, buf);
+    wordlistAdd((wordlist **)state, buf);
 }
 
 static wordlist *
 aclDumpArpList(void *data)
 {
     wordlist *w = NULL;
-    splay_walk(data, aclDumpArpListWalkee, &w);
+    splay_walk((splayNode *)data, aclDumpArpListWalkee, &w);
     return w;
 }
 
