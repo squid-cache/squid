@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.30 1999/01/26 06:16:34 glenn Exp $
+ * $Id: snmp_core.cc,v 1.31 1999/01/29 20:42:59 glenn Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -671,6 +671,8 @@ snmpDecodePacket(snmp_request_t * rq)
 	debug(49, 5) ("snmpAgentParse: reqid=[%d]\n", PDU->reqid);
 	snmpConstructReponse(rq);
     } else {
+	debug (49,0) ("Failed SNMP agent query from : %s.\n",
+		inet_ntoa(rq->from.sin_addr));
 	snmp_free_pdu(PDU);
     }
 }
