@@ -911,6 +911,7 @@ struct _request_t {
     char *body;
     size_t body_sz;
     struct _HierarchyLogEntry hier;
+    err_type err_type;
 };
 
 struct _cachemgr_passwd {

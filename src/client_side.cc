@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.190 1998/01/05 19:53:29 wessels Exp $
+ * $Id: client_side.cc,v 1.191 1998/01/06 05:12:07 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -53,9 +53,7 @@ static char *clientConstruct304reply(struct _http_reply *);
 static int CheckQuickAbort2(const clientHttpRequest *);
 static int clientCheckTransferDone(clientHttpRequest *);
 static void CheckQuickAbort(clientHttpRequest *);
-#if CHECK_FAILURE_IS_BROKE
-static void checkFailureRatio(log_type, hier_code);
-#endif
+static void checkFailureRatio(err_type, hier_code);
 static void clientProcessMiss(clientHttpRequest *);
 static void clientAppendReplyHeader(char *, const char *, size_t *, size_t);
 size_t clientBuildReplyHeader(clientHttpRequest *, char *, size_t *, char *, size_t);
@@ -553,9 +551,8 @@ httpRequestFree(void *data)
 	redirectUnregister(http->uri, http);
     if (http->acl_checklist)
 	aclChecklistFree(http->acl_checklist);
-#if CHECK_FAILURE_IS_BROKE
-    checkFailureRatio(http->log_type, http->al.hier.code);
-#endif
+    if (request)
+        checkFailureRatio(request->err_type, http->al.hier.code);
     safe_free(http->uri);
     safe_free(http->log_uri);
     safe_free(http->al.headers.reply);
@@ -1967,19 +1964,17 @@ clientConstruct304reply(struct _http_reply *source)
  * Duane W., Sept 16, 1996
  */
 
-#if CHECK_FAILURE_IS_BROKE
 static void
-checkFailureRatio(log_type rcode, hier_code hcode)
+checkFailureRatio(err_type etype, hier_code hcode)
 {
-    static double fail_ratio = 0.0;
-    static double magic_factor = 100;
+    static double magic_factor = 100.0;
     double n_good;
     double n_bad;
     if (hcode == HIER_NONE)
 	return;
-    n_good = magic_factor / (1.0 + fail_ratio);
+    n_good = magic_factor / (1.0 + request_failure_ratio);
     n_bad = magic_factor - n_good;
-    switch (rcode) {
+    switch (etype) {
     case ERR_DNS_FAIL:
     case ERR_CONNECT_FAIL:
     case ERR_READ_ERROR:
@@ -1988,18 +1983,17 @@ checkFailureRatio(log_type rcode, hier_code hcode)
     default:
 	n_good++;
     }
-    fail_ratio = n_bad / n_good;
+    request_failure_ratio = n_bad / n_good;
     if (hit_only_mode_until > squid_curtime)
 	return;
-    if (fail_ratio < 1.0)
+    if (request_failure_ratio < 1.0)
 	return;
-    debug(12, 0) ("Failure Ratio at %4.2f\n", fail_ratio);
+    debug(12, 0) ("Failure Ratio at %4.2f\n", request_failure_ratio);
     debug(12, 0) ("Going into hit-only-mode for %d minutes...\n",
 	FAILURE_MODE_TIME / 60);
     hit_only_mode_until = squid_curtime + FAILURE_MODE_TIME;
-    fail_ratio = 0.8;		/* reset to something less than 1.0 */
+    request_failure_ratio = 0.8;	/* reset to something less than 1.0 */
 }
-#endif
 
 void
 clientHttpConnectionsOpen(void)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.113 1997/12/27 18:15:05 kostas Exp $
+ * $Id: errorpage.cc,v 1.114 1998/01/06 05:12:08 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -159,6 +159,12 @@ errorSend(int fd, ErrorState * err)
     int len;
     debug(4, 3) ("errorSend: FD %d, err=%p\n", fd, err);
     assert(fd >= 0);
+    /*
+     * ugh, this is how we make sure error codes get back to
+     * the client side for logging and error tracking.
+     */
+    if (err->request)
+	err->request->err_type = err->type;
     buf = errorBuildBuf(err, &len);
     EBIT_SET(err->flags, ERR_FLAG_CBDATA);
     cbdataAdd(err);
