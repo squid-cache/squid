@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.155 1996/12/13 20:32:10 wessels Exp $
+ * $Id: cache_cf.cc,v 1.156 1996/12/17 04:06:02 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -907,6 +907,8 @@ parseCacheAnnounceLine(void)
     int i;
     GetInteger(i);
     Config.Announce.rate = i * 3600;	/* hours to seconds */
+    if (Config.Announce.rate > 0)
+       Config.Announce.on = 1;
 }
 
 static void
@@ -1396,8 +1398,10 @@ parseConfigFile(const char *file_name)
     }
     if (Config.cleanRate < 1)
 	Config.cleanRate = 86400 * 365;		/* one year */
-    if (Config.Announce.rate < 1)
+    if (Config.Announce.rate < 1) {
 	Config.Announce.rate = 86400 * 365;	/* one year */
+	Config.Announce.on = 0;
+    }
     if (Config.dnsChildren < 0)
 	Config.dnsChildren = 0;
     if (Config.dnsChildren < 1) {
