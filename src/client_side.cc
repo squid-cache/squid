@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.383 1998/08/19 23:07:23 wessels Exp $
+ * $Id: client_side.cc,v 1.384 1998/08/20 22:45:46 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -680,10 +680,12 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     if (httpHeaderHas(req_hdr, HDR_PRAGMA)) {
 	String s = httpHeaderGetList(req_hdr, HDR_PRAGMA);
 	if (strListIsMember(&s, "no-cache", ',')) {
-	    if (!Config.onoff.reload_into_ims)
-		EBIT_SET(request->flags, REQ_NOCACHE);
+	    if (Config.onoff.reload_into_ims)
+		EBIT_SET(request->flags, REQ_NOCACHE_HACK);
+	    else if (refresh_nocache_hack)
+		EBIT_SET(request->flags, REQ_NOCACHE_HACK);
 	    else
-		EBIT_SET(request->flags, REQ_NOCACHE_IMS);
+		EBIT_SET(request->flags, REQ_NOCACHE);
 	}
 	stringClean(&s);
     }
@@ -1143,10 +1145,25 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	     */
 	    http->log_type = LOG_TCP_MISS;
 	    clientProcessMiss(http);
+	} else if (EBIT_TEST(r->flags, REQ_NOCACHE)) {
+	    /*
+	     * This did not match a refresh pattern that overrides no-cache
+	     * we should honour the client no-cache header.
+	     */
+	    http->log_type = LOG_TCP_CLIENT_REFRESH_MISS;
+	    clientProcessMiss(http);
 	} else if (r->protocol == PROTO_HTTP) {
+	    /*
+	     * Object needs to be revalidated
+	     * XXX This could apply to FTP as well, if Last-Modified is known.
+	     */
 	    http->log_type = LOG_TCP_REFRESH_MISS;
 	    clientProcessExpired(http);
 	} else {
+	    /*
+	     * We don't know how to re-validate other protocols. Handle
+	     * them as if the object has expired.
+	     */
 	    http->log_type = LOG_TCP_MISS;
 	    clientProcessMiss(http);
 	}
@@ -1577,27 +1594,19 @@ clientProcessRequest2(clientHttpRequest * http)
 	/* this object isn't in the cache */
 	return LOG_TCP_MISS;
     } else if (!storeEntryValidToSend(e)) {
-	storeRelease(e);
 	http->entry = NULL;
 	return LOG_TCP_MISS;
     } else if (EBIT_TEST(e->flag, ENTRY_SPECIAL)) {
 	/* Special entries are always hits, no matter what the client says */
 	http->entry = e;
 	return LOG_TCP_HIT;
-    } else if (EBIT_TEST(r->flags, REQ_NOCACHE)) {
-	/* NOCACHE should always eject a negative cached object */
-	if (EBIT_TEST(e->flag, ENTRY_NEGCACHED))
-	    storeRelease(e);
-	/* NOCACHE+IMS should not eject a valid object */
-	else if (EBIT_TEST(r->flags, REQ_IMS))
-	    (void) 0;
-	/* Request-Range should not eject a valid object */
-	else if (EBIT_TEST(r->flags, REQ_RANGE))
-	    (void) 0;
-	else
-	    storeRelease(e);
-	ipcacheReleaseInvalid(r->host);
+    } else if (EBIT_TEST(r->flags, REQ_NOCACHE_HACK)) {
 	http->entry = NULL;
+	ipcacheReleaseInvalid(r->host);
+	return LOG_TCP_CLIENT_REFRESH_MISS;
+    } else if (EBIT_TEST(r->flags, REQ_NOCACHE)) {
+	http->entry = NULL;
+	ipcacheReleaseInvalid(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
     } else {
 	http->entry = e;

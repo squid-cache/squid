@@ -1,6 +1,7 @@
 
+
 /*
- * $Id: refresh.cc,v 1.31 1998/08/17 21:27:32 wessels Exp $
+ * $Id: refresh.cc,v 1.32 1998/08/20 22:45:49 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -102,6 +103,8 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
     time_t max = REFRESH_DEFAULT_MAX;
     int override_expire = 0;
     int override_lastmod = 0;
+    int reload_into_ims = 0;
+    int ignore_reload = 0;
     const char *pattern = ".";
     time_t age;
     double factor;
@@ -117,11 +120,6 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	refreshCounts.revalidate_stale++;
 	return 1;
     }
-    if (EBIT_TEST(request->flags, REQ_NOCACHE_IMS)) {
-	debug(22, 3) ("refreshCheck: YES: Reload into IMS\n");
-	refreshCounts.revalidate_stale++;
-	return 1;
-    }
     if ((R = refreshLimits(uri))) {
 	min = R->min;
 	pct = R->pct;
@@ -129,13 +127,32 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	pattern = R->pattern;
 	override_expire = R->flags.override_expire;
 	override_lastmod = R->flags.override_lastmod;
+	reload_into_ims = R->flags.reload_into_ims;
+	ignore_reload = R->flags.ignore_reload;
     }
+    if (!reload_into_ims)
+	reload_into_ims = Config.onoff.reload_into_ims;
     debug(22, 3) ("refreshCheck: Matched '%s %d %d%% %d'\n",
 	pattern, (int) min, (int) (100.0 * pct), (int) max);
     age = check_time - entry->timestamp;
     debug(22, 3) ("refreshCheck: age = %d\n", (int) age);
     debug(22, 3) ("\tcheck_time:\t%s\n", mkrfc1123(check_time));
     debug(22, 3) ("\tentry->timestamp:\t%s\n", mkrfc1123(entry->timestamp));
+    if (EBIT_TEST(request->flags, REQ_NOCACHE_HACK)) {
+	if (ignore_reload) {
+	    /* The clients no-cache header is ignored */
+	    debug(22, 3) ("refreshCheck: MAYBE: ignore-reload\n");
+	} else if (reload_into_ims) {
+	    /* The clients no-cache header is changed into a IMS query */
+	    debug(22, 3) ("refreshCheck: YES: reload-into-ims\n");
+	    return 1;
+	} else {
+	    /* The clients no-cache header is not overridden on this request */
+	    debug(22, 3) ("refreshCheck: YES: client reload\n");
+	    EBIT_SET(request->flags, REQ_NOCACHE);
+	    return 1;
+	}
+    }
     if (request->max_age > -1) {
 	if (age > request->max_age) {
 	    debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");

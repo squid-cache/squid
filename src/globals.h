@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.63 1998/07/31 00:15:44 wessels Exp $
+ * $Id: globals.h,v 1.64 1998/08/20 22:45:48 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -138,3 +138,4 @@ extern icpUdpData *IcpQueueHead;	/* NULL */
 #if DELAY_POOLS
 extern time_t delay_pools_last_update;	/* 0 */
 #endif
+extern int refresh_nocache_hack;	/* 0 */
