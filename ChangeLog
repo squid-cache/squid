@@ -1,4 +1,4 @@
-Changes to squid-1.1.3 (January 4, 1997):
+Changes to squid-1.1.3 (January 7, 1997):
 
 	- Changed inet_addr("X") to inet_addr("255.255.255.255")
 	  (Dan Riley).
