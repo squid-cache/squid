@@ -1,5 +1,58 @@
+Changes to Squid-2.4.DEVEL3 ():
+
+	- Added Logfile module.
+	- Added DISKD stats via cachemgr.
+	- Added squid.conf options for DISKD magic constants.
+
+Changes to Squid-2.4.DEVEL2 ():
+
+Changes to Squid-2.4.DEVEL1 ():
+
+Changes to Squid-2.3.STABLE1 (Jan 9, 2000):
+
+	- Updated PAM authentication module from Henrik Nordstrom.
+	- Updated Bulgarian error messages from Svetlin Simeonov.
+	- Changed ACL routines so that User-Agent (browser) string
+	  is always taken from compiled HTTP request headers
+	  instead of passed as an argument to aclCreateChecklist.
+	- Added a 'strip' option to the 'uri_whitesace' configuration
+	  directive and made it the default behavior.  Whitespace
+	  found in URI's is now stripped out by default.
+	- Added chroot feature.  The 'chroot_dir' config option enables
+	  it and specifies the directory.
+	- Changed clientBuildReplyHeader so that the Age header is
+	  added only for cache hits, and only when we can calculate
+	  a valid, positive age value.
+	- Changed clientWriteComplete and clientGotNotEnough so
+	  that they keep persistent connections open for more types
+	  of replies that don't have bodies.
+	- Changed filemap.c routines to dynamically grow filemap
+	  space as needed.
+	- Added a hack to ftp.c to deal with ftp.netscape.com, which
+	  sometimes doesn't acknowledge PASV commands.
+	- Fixed FTP bug with ftpScheduleReadControlReply; there
+	  was not always a timeout handler on the control socket
+	  after the transfer completed.
+	- Fixed FTP filedescriptor leak from invalid PASV replies.
+	- Changed httpBuildRequestHeader so that it doesn't
+	  copy the Host header from the client request.  Instead
+	  we should generate our own Host header which is known
+	  to be correct.
+	- Changed storeTimestampsSet to adjust entry->timestamp
+	  if the response includes an Age header.
+	- Removed size limit from storeKeyHashBuckets.
+	- Changed fwdConnectStart from a "heavy" to a "light" event.
+	- Fixed an 'anonymize_headers' bug that affects unknown
+	  HTTP headers.  With the bug, if you list a header that
+	  Squid doesn't know about (such as "Charset"), it would
+	  add HDR_OTHER to the allow/deny mask.  This caused all
+	  unknown headers to be allowed or denied (depending on
+	  the scheme you use).  Now, with the bug fixed, an unknown
+	  header in the 'anonymize_headers' list is simply ignored.
+
 Changes to Squid-2.3.DEVEL3 ():
 
+	- Added MSNT auth module from Antonino Iannella.
 	- Added --enable-underscores configure option.  This allows
 	  Squid to accept hostnames with underscores in them.  Your
 	  DNS resolver may still complain about them, however.
