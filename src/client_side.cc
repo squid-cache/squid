@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.287 1998/04/23 22:04:47 rousskov Exp $
+ * $Id: client_side.cc,v 1.288 1998/04/24 04:23:07 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1467,7 +1467,9 @@ clientProcessRequest2(clientHttpRequest * http)
     const cache_key *key = storeKeyPublic(http->uri, r->method);
     StoreEntry *e;
     e = http->entry = storeGet(key);
+#if SQUID_PEER_DIGEST
     http->lookup_type = e ? "HIT" : "MISS";
+#endif
     if (!e) {
 	/* this object isn't in the cache */
 	return LOG_TCP_MISS;
