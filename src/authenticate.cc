@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.63 2003/08/10 11:00:40 robertc Exp $
+ * $Id: authenticate.cc,v 1.64 2004/04/03 14:42:00 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -553,10 +553,12 @@ authenticateAuthenticateUser(auth_user_request_t * auth_user_request, HttpReques
 }
 
 static auth_user_request_t *
-authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData::Pointer & conn)
+authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData::Pointer & conn, HttpRequest * request)
 {
     if (*auth_user_request)
         return *auth_user_request;
+    else if (request != NULL && request->auth_user_request)
+        return request->auth_user_request;
     else if (conn.getRaw() != NULL)
         return conn->auth_user_request;
     else
@@ -598,7 +600,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
      * connection when we recieve no authentication header.
      */
 
-    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(authTryGetUser(auth_user_request,conn))))
+    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(authTryGetUser(auth_user_request,conn,request))))
             || (conn.getRaw() != NULL  && conn->auth_type == AUTH_BROKEN))
     {
         /* no header or authentication failed/got corrupted - restart */
@@ -797,7 +799,7 @@ auth_acl_t
 AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct in_addr src_addr)
 {
     /* If we have already been called, return the cached value */
-    auth_user_request_t *t = authTryGetUser (auth_user_request, conn);
+    auth_user_request_t *t = authTryGetUser (auth_user_request, conn, request);
 
     if (t && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE
             && t->lastReply != AUTH_ACL_HELPER)
@@ -811,7 +813,7 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_use
     /* ok, call the actual authenticator routine. */
     auth_acl_t result = authenticate(auth_user_request, headertype, request, conn, src_addr);
 
-    t = authTryGetUser (auth_user_request, conn);
+    t = authTryGetUser (auth_user_request, conn, request);
 
     if (t && result != AUTH_ACL_CANNOT_AUTHENTICATE &&
             result != AUTH_ACL_HELPER)
