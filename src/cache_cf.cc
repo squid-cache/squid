@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.286 1998/06/08 17:29:14 wessels Exp $
+ * $Id: cache_cf.cc,v 1.287 1998/07/16 02:39:59 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -781,6 +781,8 @@ parse_peer(peer ** head)
 	} else if (!strncasecmp(token, "htcp", 4)) {
 	    EBIT_SET(p->options, NEIGHBOR_HTCP);
 #endif
+	} else if (!strncasecmp(token, "no-netdb-exchange", 17)) {
+	    EBIT_SET(p->options, NEIGHBOR_NO_NETDB_EXCHANGE);
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
 	    self_destruct();

@@ -498,6 +498,7 @@ enum {
 #if USE_HTCP
     NEIGHBOR_HTCP,
 #endif
+    NEIGHBOR_NO_NETDB_EXCHANGE,
     NEIGHBOR_END
 };
 
