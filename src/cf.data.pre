@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.277 2002/08/24 01:54:34 hno Exp $
+# $Id: cf.data.pre,v 1.278 2002/08/28 04:24:07 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1680,33 +1680,6 @@ refresh_pattern ^gopher:	1440	0%	1440
 refresh_pattern .		0	20%	4320
 NOCOMMENT_END
 DOC_END
-
-NAME: reference_age
-TYPE: time_t
-LOC: Config.referenceAge
-DEFAULT: 1 year
-DOC_START
-	As a part of normal operation, Squid performs Least Recently
-	Used removal of cached objects.  The LRU age for removal is
-	computed dynamically, based on the amount of disk space in
-	use.  The dynamic value can be seen in the Cache Manager 'info'
-	output.
-
-	The 'reference_age' parameter defines the maximum LRU age.  For
-	example, setting reference_age to '1 week' will cause objects
-	to be removed if they have not been accessed for a week or
-	more.  The default value is one year.
-
-	Specify a number here, followed by units of time.  For example:
-		1 week
-		3.5 days
-		4 months
-		2.2 hours
-
-	NOTE: this parameter is not used when using the enhanced
-	replacement policies, GDSH or LFUDA.
-DOC_END
-
 
 NAME: quick_abort_min
 COMMENT: (KB)
