@@ -181,7 +181,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
     /* load a number of objects per invocation */
     for (count = 0; count < d->speed; count++) {
 	if (fread(&s, ss, 1, d->log) != 1) {
-	    debug(20, 1) ("Done reading cache_dir #%d swaplog (%d entries)\n",
+	    debug(20, 1) ("Done reading Cache Dir #%d swaplog (%d entries)\n",
 		d->dirn, d->n_read);
 	    fclose(d->log);
 	    d->log = NULL;
@@ -625,8 +625,8 @@ storeRebuildStart(void)
 	RebuildState.rebuild_dir = d;
 	if (!clean)
 	    RebuildState.need_to_validate = 1;
-	debug(20, 1) ("Rebuilding storage (%s)\n",
-	    clean ? "CLEAN" : "DIRTY");
+	debug(20, 1) ("Rebuilding storage in Cache Dir #%d (%s)\n",
+	    i, clean ? "CLEAN" : "DIRTY");
     }
     eventAdd("storeRebuild", storeRebuildADirectory, NULL, 0);
 }
