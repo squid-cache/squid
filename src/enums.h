@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.135 1998/10/12 21:40:57 wessels Exp $
+ * $Id: enums.h,v 1.136 1998/11/11 20:04:15 glenn Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -105,7 +105,7 @@ typedef enum {
     ACL_SRC_ASN,
     ACL_DST_ASN,
     ACL_SRC_ARP,
-    ACL_SNMP_COMM,
+    ACL_SNMP_COMMUNITY,
     ACL_NETDB_SRC_RTT,
     ACL_ENUM_MAX
 } squid_acl;

@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.27 1998/08/21 09:15:43 wessels Exp $
+ * $Id: cf_gen.cc,v 1.28 1998/11/11 20:04:13 glenn Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -63,10 +63,6 @@
 #endif
 #if HAVE_ASSERT_H
 #include <assert.h>
-#endif
-
-#if SQUID_SNMP
-#include "snmp.h"
 #endif
 
 #define MAX_LINE	1024	/* longest configuration line */

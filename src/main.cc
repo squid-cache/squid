@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.274 1998/10/21 06:54:19 wessels Exp $
+ * $Id: main.cc,v 1.275 1998/11/11 20:04:16 glenn Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -416,6 +416,7 @@ mainInitialize(void)
 #ifdef SQUID_SNMP
     snmpInit();
 #endif
+ 
 
 #if MALLOC_DBG
     malloc_debug(0, malloc_debug_level);

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.122 1998/10/14 21:11:57 wessels Exp $
+# $Id: cf.data.pre,v 1.123 1998/11/11 20:04:12 glenn Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1393,6 +1393,11 @@ DOC_START
 	  # needed during ACL checking the username is NOT logged
 	  # in access.log.
 
+	acl aclname snmp_community string ...
+	  # Example:
+	  # 
+	  #	acl snmppublic snmp_community public
+
 acl manager proto cache_object
 acl localhost src 127.0.0.1/255.255.255.255
 acl all src 0.0.0.0/0.0.0.0
@@ -2283,19 +2288,6 @@ DOC_START
 snmp_port 3401
 DOC_END
 
-NAME: snmp_do_queueing
-TYPE: onoff
-LOC: Config.Snmp.do_queueing
-DEFAULT: on
-IFDEF: SQUID_SNMP
-DOC_START
-	If disabled, snmp packets will not be queued but delivered
-	immediately. This could be useful when you want to monitor a
-	cache in trouble, but this could also make Squid block, slowing
-	connections and possibly worsening the cache status.
-snmp_do_queueing on
-DOC_END
-
 NAME: forward_snmpd_port
 TYPE: ushort
 LOC: Config.Snmp.localPort
@@ -2317,73 +2309,16 @@ DOC_START
 forward_snmpd_port 0
 DOC_END
 
-NAME: snmp_mib_path
-TYPE: string
-LOC: Config.Snmp.mibPath
-DEFAULT: @DEFAULT_MIB_PATH@
-IFDEF: SQUID_SNMP
-DOC_START
-	The location of Squid's mib.
-snmp_mib_path @DEFAULT_MIB_PATH@
-DOC_END
-
-NAME: trap_sink
-TYPE: string
-LOC: Config.Snmp.trap_sink
-DEFAULT: 127.0.0.1
-IFDEF: SQUID_SNMP
-DOC_START
-	Hostname or ip address of trap sink for snmp
-trap_sink 127.0.0.1
-DOC_END
-
-NAME: snmp_trap_community
-TYPE: string
-LOC: Config.Snmp.trap_community
-DEFAULT: public
-IFDEF: SQUID_SNMP
-DOC_START
-	Community name for traps.
-snmp_trap_community public
-DOC_END
-
-NAME: snmp_enable_authen_traps
-TYPE: onoff
-LOC: Config.Snmp.conf_authtraps
-DEFAULT: off
-IFDEF: SQUID_SNMP
-DOC_START
-	Enable SNMP authenticated traps. Set to 'off' or 'on'.
-snmp_enable_authen_traps off
-DOC_END
-
-NAME: snmp_agent_conf
-TYPE: stringlist
-LOC: Config.Snmp.snmpconf
+NAME: snmp_access
+TYPE: acl_access
+LOC: Config.accessList.snmp
 DEFAULT: none
 IFDEF: SQUID_SNMP
 DOC_START
-	Define snmp views, users and communities 
-	Example:
-		snmp_agent_conf view all .1.3.6	included
-		snmp_agent_conf view squid .1.3.6 included
-		snmp_agent_conf user squid - all all public
-		snmp_agent_conf user all all all all  squid
-		snmp_agent_conf community public squid squid
-		snmp_agent_conf community readwrite all all
-DOC_END
+	Allowing or denying access to the SNMP port.
+	usage:
 
-NAME: snmp_acl
-TYPE: snmp_access
-LOC: Config.Snmp.communities
-DEFAULT: none
-IFDEF: SQUID_SNMP
-DOC_START
-	Define access controls per community:
-	snmp_access communityname allow|deny [!]aclname ...
-	Example:
-		snmp_acl public allow adminsubnet
-		snmp_acl public deny all
+	snmp_access allow|deny [!]aclname ...
 DOC_END
 
 NAME: snmp_incoming_address
