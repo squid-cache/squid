@@ -148,6 +148,7 @@ extern void fd_bytes(int fd, int len, unsigned int type);
 extern void fdFreeMemory(void);
 extern void fdDumpOpen(void);
 extern int fdNFree(void);
+extern void fdAdjustReserved(void);
 
 extern fileMap *file_map_create(int);
 extern int file_map_allocate(fileMap *, int);

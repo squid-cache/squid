@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.227 1998/02/10 21:44:31 wessels Exp $
+ * $Id: comm.cc,v 1.228 1998/02/17 23:28:22 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -251,6 +251,7 @@ comm_open(int sock_type,
 	default:
 	    debug(50, 0) ("comm_open: socket failure: %s\n", xstrerror());
 	}
+	fdAdjustReserved();
 	return -1;
     }
     /* update fdstat */
@@ -383,10 +384,12 @@ commResetFD(ConnectStateData * cs)
     fd2 = socket(AF_INET, SOCK_STREAM, 0);
     if (fd2 < 0) {
 	debug(5, 0) ("commResetFD: socket: %s\n", xstrerror());
+	fdAdjustReserved();
 	return 0;
     }
     if (dup2(fd2, cs->fd) < 0) {
 	debug(5, 0) ("commResetFD: dup2: %s\n", xstrerror());
+	fdAdjustReserved();
 	return 0;
     }
     close(fd2);
