@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.34 1996/04/12 21:41:37 wessels Exp $ */
+/* $Id: ftp.cc,v 1.35 1996/04/15 04:08:51 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -242,6 +242,7 @@ static void ftpProcessReplyHeader(data, buf, size)
 	    }
 	    t = strtok(NULL, "\n");
 	}
+	safe_free(headers);
 	if (reply->code)
 	    debug(11, 3, "ftpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
 	switch (reply->code) {

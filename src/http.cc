@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.44 1996/04/12 21:41:38 wessels Exp $ */
+/* $Id: http.cc,v 1.45 1996/04/15 04:08:52 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -216,6 +216,7 @@ static void httpProcessReplyHeader(data, buf, size)
 	    }
 	    t = strtok(NULL, "\n");
 	}
+	safe_free(headers);
 	if (reply->code)
 	    debug(11, 3, "httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
 	switch (reply->code) {
