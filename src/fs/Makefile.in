@@ -1,23 +1,24 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2000/05/03 17:15:46 adrian Exp $
+#  $Id: Makefile.in,v 1.2 2000/08/19 14:23:19 hno Exp $
 #
 
 SUBDIRS		= @STORE_MODULES@
+OUTLIBS		= @STORE_LIBS@
 
 all:
 	@test -z "$(SUBDIRS)" || for dir in $(SUBDIRS); do \
-	   sh -c "cd $$dir && $(MAKE) all" || exit 1; \
+	   sh -c "cd $$dir && $(MAKE) $(MFLAGS) all" || exit 1; \
 	done; \
-	if [ ! -f stamp ]; then \
-	   touch stamp; \
-	fi
+
+$(OUTLIBS):
+	@sh -c "cd `basename $@ .a` && $(MAKE) $(MFLAGS) ../$@"
 
 clean:
 	-rm -f *.a stamp
 	@for dir in *; do \
 	    if [ -f $$dir/Makefile ]; then \
-	       sh -c "cd $$dir && $(MAKE) $@" || exit 1;\
+	       sh -c "cd $$dir && $(MAKE) $(MFLAGS) $@" || exit 1;\
 	    fi; \
 	done
 
@@ -25,11 +26,11 @@ distclean:
 	-rm -f *.a Makefile
 	@for dir in *; do \
 	    if [ -f $$dir/Makefile ]; then \
-		sh -c "cd $$dir && $(MAKE) distclean"; \
+		sh -c "cd $$dir && $(MAKE) $(MFLAGS) distclean"; \
 	    fi; \
 	done
 
 .DEFAULT:
 	@test -z "$(SUBDIRS)" || for dir in $(SUBDIRS); do \
-	   sh -c "cd $$dir && $(MAKE) $@" || exit 1; \
+	   sh -c "cd $$dir && $(MAKE) $(MFLAGS) $@" || exit 1; \
 	done

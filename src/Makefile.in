@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.191 2000/07/13 06:13:42 wessels Exp $
+#  $Id: Makefile.in,v 1.192 2000/08/19 14:23:19 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -197,7 +197,11 @@ LEAKFINDER_OBJS	= \
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
-all:    squid.conf store_modules repl_modules $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
+all:    squid.conf $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
+	@for dir in $(SUBDIRS); do \
+		echo "Making $@ in $$dir..."; \
+		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
+	done
 
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
@@ -241,7 +245,10 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 
 cache_cf.o: cf_parser.c
 
-squid.conf cf_parser.c: cf.data cf_gen
+squid.conf: cf_parser.c
+	@sh -c "test -f squid.conf || ./cg_gen cf.data"
+
+cf_parser.c: cf.data cf_gen
 	./cf_gen cf.data
 
 cf_gen: cf_gen.o
@@ -275,10 +282,8 @@ store_modules.c: store_modules.sh Makefile
 store_modules.o: store_modules.c
 	$(CC) -c store_modules.c $(CFLAGS) -I$(srcdir)
 
-$(STORE_OBJS): fs/stamp
-
-store_modules fs/stamp:
-	@sh -c "cd fs && $(MAKE) all"
+$(STORE_OBJS):
+	@sh -c "cd `dirname $@` && $(MAKE) $(MFLAGS) `basename $@`"
 
 repl_modules.c: repl_modules.sh Makefile 
 	sh $(srcdir)/repl_modules.sh $(REPL_POLICIES) >repl_modules.c
@@ -286,7 +291,8 @@ repl_modules.c: repl_modules.sh Makefile
 repl_modules.o: repl_modules.c
 	$(CC) -c repl_modules.c $(CFLAGS) -I$(srcdir)
 
-$(REPL_OBJS): repl/stamp
+$(REPL_OBJS):
+	@sh -c "cd `dirname $@` && $(MAKE) $(MFLAGS) `basename $@`"
 
 repl_modules repl/stamp:
 	@sh -c "cd repl && $(MAKE) all"
