@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.525 2001/02/09 19:35:11 hno Exp $
+ * $Id: client_side.cc,v 1.526 2001/02/11 20:06:15 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2436,8 +2436,12 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     else if (Config2.Accel.on && *url == '/') {
 	/* prepend the accel prefix */
 	if (opt_accel_uses_host && (t = mime_get_header(req_hdr, "Host"))) {
-	    int vport = (int) Config.Accel.port;
+	    int vport;
 	    char *q;
+	    if (vport_mode)
+		vport = (int) ntohs(http->conn->me.sin_port);
+	    else
+		vport = (int) Config.Accel.port;
 	    /* If a Host: header was specified, use it to build the URL 
 	     * instead of the one in the Config file. */
 	    /*
@@ -2450,7 +2454,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    strtok(t, " /;@");
 	    if ((q = strchr(t, ':'))) {
 		*q++ = '\0';
-		vport = atoi(q);
+		if (vport_mode)
+		    vport = atoi(q);
 	    }
 	    url_sz = strlen(url) + 32 + Config.appendDomainLen +
 		strlen(t);
@@ -2503,6 +2508,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 			inet_ntoa(http->conn->me.sin_addr),
 			vport, url);
 	    } else
+		if (vport_mode)
+		    vport = natLookup.nl_realport;
 		snprintf(http->uri, url_sz, "http://%s:%d%s",
 		    inet_ntoa(natLookup.nl_realip),
 		    vport, url);
@@ -2511,6 +2518,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    /* If the call fails the address structure will be unchanged */
 	    getsockopt(conn->fd, SOL_IP, SO_ORIGINAL_DST, &conn->me, &sock_sz);
 	    debug(33, 5) ("parseHttpRequest: addr = %s", inet_ntoa(conn->me.sin_addr));
+	    if (vport_mode)
+		vport = (int) ntohs(http->conn->me.sin_port);
 #endif
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
 		inet_ntoa(http->conn->me.sin_addr),
