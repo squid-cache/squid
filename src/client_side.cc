@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.278 1998/04/16 18:06:34 wessels Exp $
+ * $Id: client_side.cc,v 1.279 1998/04/17 04:25:35 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -388,15 +388,17 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	storeUnlockObject(http->old_entry);
     }
     http->old_entry = NULL;	/* done with old_entry */
-    /* use clientCacheHit() here as the callback because we might
-     * be swapping in from disk, and the file might not really be
-     * there */
     if (entry->store_status == STORE_ABORTED) {
 	debug(33, 0) ("clientHandleIMSReply: IMS swapin failed on aborted object\n");
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
 	clientProcessMiss(http);
 	return;
     }
+    /*
+     * use clientCacheHit() here as the callback because we might
+     * be swapping in from disk, and the file might not really be
+     * there
+     */
     storeClientCopy(entry,
 	http->out.offset,
 	http->out.offset,
@@ -1019,6 +1021,7 @@ static void
 clientCacheHit(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
+    StoreEntry *e;
     debug(33, 3) ("clientCacheHit: %s, %d bytes\n", http->uri, (int) size);
     if (size >= 0) {
 	clientSendMoreData(data, buf, size);
@@ -1028,8 +1031,12 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	/* swap in failure */
 	debug(33, 3) ("clientCacheHit: swapin failure for %s\n", http->uri);
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
-	if (http->entry)
-	    storeRelease(http->entry);
+	if ((e = http->entry)) {
+	    http->entry = NULL;
+	    storeUnregister(e, http);
+	    storeRelease(e);
+	    storeUnlockObject(e);
+	}
 	clientProcessMiss(http);
     }
 }
@@ -1056,7 +1063,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	debug(0, 0) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
 	freefunc(buf);
 	return;
-    } else if (entry->store_status == STORE_ABORTED) {
+    } else if (entry && entry->store_status == STORE_ABORTED) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
 	freefunc(buf);
@@ -1198,6 +1205,8 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	CheckQuickAbort(http);
 #endif
 	comm_close(fd);
+    } else if (NULL == entry) {
+	comm_close(fd);		/* yuk */
     } else if (entry->store_status == STORE_ABORTED) {
 	comm_close(fd);
     } else if ((done = clientCheckTransferDone(http)) != 0 || size == 0) {
