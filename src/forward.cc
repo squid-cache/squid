@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.61 1999/06/10 21:06:23 wessels Exp $
+ * $Id: forward.cc,v 1.62 1999/06/19 16:34:36 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -72,6 +72,7 @@ fwdStateFree(FwdState * fwdState)
 	if (e->mem_obj->inmem_hi == 0) {
 	    assert(fwdState->err);
 	    errorAppendEntry(e, fwdState->err);
+	    fwdState->err = NULL;
 	} else {
 	    EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
 	    storeComplete(e);
@@ -83,6 +84,8 @@ fwdStateFree(FwdState * fwdState)
     fwdServersFree(&fwdState->servers);
     requestUnlink(fwdState->request);
     fwdState->request = NULL;
+    if (fwdState->err)
+	errorStateFree(fwdState->err);
     storeUnregisterAbort(e);
     storeUnlockObject(e);
     fwdState->entry = NULL;
