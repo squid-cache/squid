@@ -40,6 +40,7 @@
 
 #define COMM_NONBLOCKING	0x01
 #define COMM_NOCLOEXEC		0x02
+#define COMM_REUSEADDR		0x04
 
 #ifdef HAVE_SYSLOG
 #define debug(SECTION, LEVEL) \
