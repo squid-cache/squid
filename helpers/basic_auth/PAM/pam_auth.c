@@ -1,8 +1,8 @@
 /*
- * $Id: pam_auth.c,v 1.2 2001/01/12 00:37:29 wessels Exp $
+ * $Id: pam_auth.c,v 1.3 2001/09/12 09:45:54 hno Exp $
  *
  * PAM authenticator module for Squid.
- * Copyright (C) 1999 Henrik Nordstrom <hno@hem.passagen.se>
+ * Copyright (C) 1999 Henrik Nordstrom <hno@squid-cache.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
