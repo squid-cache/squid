@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.53 1998/08/25 19:10:43 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.54 1998/08/26 05:36:42 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -248,6 +248,9 @@ httpHeaderInitModule()
 	httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
     HttpHeaderStats[hoRequest].owner_mask = &RequestHeadersMask;
     HttpHeaderStats[hoReply].owner_mask = &ReplyHeadersMask;
+#if USE_HTCP
+    HttpHeaderStats[hoHtcpReply].owner_mask = &ReplyHeadersMask;
+#endif
     /* init dependent modules */
     httpHdrCcInitModule();
     /* register with cache manager */

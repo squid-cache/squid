@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.234 1998/08/21 03:15:19 wessels Exp $
+ * $Id: neighbors.cc,v 1.235 1998/08/26 05:36:44 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -737,20 +737,20 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	    /* if we reach here, source-ping reply is the first 'parent',
 	     * so fetch directly from the source */
 	    debug(15, 6) ("Source is the first to respond.\n");
-	    mem->icp_reply_callback(NULL, ntype, header, mem->ircb_data);
+	    mem->icp_reply_callback(NULL, ntype, PROTO_ICP, header, mem->ircb_data);
 	}
     } else if (opcode == ICP_MISS) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
 	} else {
-	    mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
+	    mem->icp_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
 	}
     } else if (opcode == ICP_HIT) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
 	} else {
 	    header->opcode = ICP_HIT;
-	    mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
+	    mem->icp_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
 	}
     } else if (opcode == ICP_DECHO) {
 	if (p == NULL) {
@@ -759,7 +759,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	    debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
 	    debug_trap("neighborsUdpAck: non-ICP neighbors must be a PARENT\n");
 	} else {
-	    mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
+	    mem->icp_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
 	}
     } else if (opcode == ICP_SECHO) {
 	if (p) {
@@ -767,7 +767,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	    neighborCountIgnored(p, opcode);
 #if ALLOW_SOURCE_PING
 	} else if (Config.onoff.source_ping) {
-	    mem->icp_reply_callback(NULL, ntype, header, mem->ircb_data);
+	    mem->icp_reply_callback(NULL, ntype, PROTO_ICP, header, mem->ircb_data);
 #endif
 	} else {
 	    debug(15, 1) ("Unsolicited SECHO from %s\n", inet_ntoa(from->sin_addr));
@@ -786,7 +786,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	    }
 	}
     } else if (opcode == ICP_MISS_NOFETCH) {
-	mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
+	mem->icp_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
     } else {
 	debug(15, 0) ("neighborsUdpAck: Unexpected ICP reply: %s\n", opcode_d);
     }
@@ -1021,12 +1021,13 @@ peerCountMcastPeersDone(void *data)
 }
 
 static void
-peerCountHandleIcpReply(peer * p, peer_t type, icp_common_t * hdrnotused, void *data)
+peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void * hdrnotused, void *data)
 {
     ps_state *psstate = data;
     StoreEntry *fake = psstate->entry;
     MemObject *mem = fake->mem_obj;
     int rtt = tvSubMsec(mem->start_ping, current_time);
+    assert(proto == PROTO_ICP);
     assert(fake);
     assert(mem);
     psstate->icp.n_recv++;
@@ -1142,3 +1143,10 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	    percent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
     }
 }
+
+#if USE_HTCP
+void
+neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const struct sockaddr_in *from)
+{
+}
+#endif

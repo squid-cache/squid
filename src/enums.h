@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.124 1998/08/25 19:19:05 wessels Exp $
+ * $Id: enums.h,v 1.125 1998/08/26 05:36:43 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -376,6 +376,9 @@ typedef enum {
     PROTO_WAIS,
     PROTO_CACHEOBJ,
     PROTO_ICP,
+#if USE_HTCP
+    PROTO_HTCP,
+#endif
     PROTO_URN,
     PROTO_WHOIS,
     PROTO_INTERNAL,

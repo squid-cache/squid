@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.77 1998/08/25 15:58:14 wessels Exp $
+ * $Id: peer_select.cc,v 1.78 1998/08/26 05:36:45 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -76,7 +76,7 @@ static char *DirectStr[] =
 static void peerSelectFoo(ps_state *);
 static void peerPingTimeout(void *data);
 static void peerSelectCallbackFail(ps_state * psstate);
-static IRCB peerHandleIcpReply;
+static IRCB peerHandlePingReply;
 static void peerSelectStateFree(ps_state * psstate);
 static void peerIcpParentMiss(peer *, icp_common_t *, ps_state *);
 static int peerCheckNetdbDirect(ps_state * psstate);
@@ -330,7 +330,7 @@ peerSelectFoo(ps_state * psstate)
 	psstate->icp.start = current_time;
 	psstate->icp.n_sent = neighborsUdpPing(request,
 	    entry,
-	    peerHandleIcpReply,
+	    peerHandlePingReply,
 	    psstate,
 	    &psstate->icp.n_replies_expected,
 	    &psstate->icp.timeout);
@@ -478,4 +478,26 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
     if (psstate->icp.n_recv < psstate->icp.n_replies_expected)
 	return;
     peerSelectFoo(psstate);
+}
+
+#if USE_HTCP
+static void
+peerHandleHtcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
+{
+    ps_state *psstate = data;
+    debug(44,1)("peerHandleHtcpReply: write me\n");
+}
+#endif
+
+static void
+peerHandlePingReply(peer * p, peer_t type, protocol_t proto, void *ping_data, void *data)
+{
+    if (proto == PROTO_ICP)
+	peerHandleIcpReply(p, type, ping_data, data);
+#if USE_HTCP
+    else if (proto == PROTO_HTCP)
+	peerHandleHtcpReply(p, type, ping_data, data);
+#endif
+    else
+	debug(44, 1) ("peerHandlePingReply: unknown protocol_t %d\n", (int) proto);
 }

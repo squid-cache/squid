@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.209 1998/08/21 04:03:49 wessels Exp $
+ * $Id: structs.h,v 1.210 1998/08/26 05:36:46 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1489,3 +1489,11 @@ struct _FwdServer {
     peer *peer;
     struct _FwdServer *next;
 };
+
+#if USE_HTCP
+struct _htcpReplyData {
+	int hit;
+	HttpHeader hdr;
+	u_num32 msg_id;
+};
+#endif
