@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.268 1998/09/20 01:14:24 wessels Exp $
+ * $Id: protos.h,v 1.269 1998/09/21 06:42:57 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -665,7 +665,6 @@ extern double median_svc_get(int, int);
 extern void pconnHistCount(int, int);
 extern int stat5minClientRequests(void);
 extern double stat5minCPUUsage(void);
-extern double statMedianSvc(int, int);
 extern const char *storeEntryFlags(const StoreEntry *);
 
 
