@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.125 1998/11/20 06:13:15 wessels Exp $
+ * $Id: fqdncache.cc,v 1.126 1998/12/05 00:54:24 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -98,7 +98,7 @@ fqdncache_release(fqdncache_entry * f)
     dlinkDelete(&f->lru, &lru_list);
     safe_free(f->name);
     safe_free(f->error_message);
-    memFree(MEM_FQDNCACHE_ENTRY, f);
+    memFree(f, MEM_FQDNCACHE_ENTRY);
 }
 
 /* return match for given name */
@@ -213,7 +213,7 @@ fqdncache_call_pending(fqdncache_entry * f)
 	    p->handler((f->status == FQDN_CACHED) ? f->names[0] : NULL,
 		p->handlerData);
 	}
-	memFree(MEM_FQDNCACHE_PENDING, p);
+	memFree(p, MEM_FQDNCACHE_PENDING);
     }
     f->pending_head = NULL;	/* nuke list */
     debug(35, 10) ("fqdncache_call_pending: Called %d handlers.\n", nhandler);
@@ -366,7 +366,7 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
     /* for HIT, PENDING, DISPATCHED we've returned.  For MISS we submit */
     c = xcalloc(1, sizeof(*c));
     c->data = f;
-    cbdataAdd(c, MEM_NONE);
+    cbdataAdd(c, cbdataXfree, 0);
     f->status = FQDN_DISPATCHED;
     fqdncacheLockEntry(f);	/* lock while FQDN_DISPATCHED */
     dnsSubmit(f->name, fqdncacheHandleReply, c);
@@ -554,13 +554,13 @@ fqdncacheFreeEntry(void *data)
     int k;
     while ((p = f->pending_head)) {
 	f->pending_head = p->next;
-	memFree(MEM_FQDNCACHE_PENDING, p);
+	memFree(p, MEM_FQDNCACHE_PENDING);
     }
     for (k = 0; k < (int) f->name_count; k++)
 	safe_free(f->names[k]);
     safe_free(f->name);
     safe_free(f->error_message);
-    memFree(MEM_FQDNCACHE_ENTRY, f);
+    memFree(f, MEM_FQDNCACHE_ENTRY);
 }
 
 void

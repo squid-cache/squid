@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.33 1998/11/12 06:27:51 wessels Exp $
+ * $Id: HttpReply.cc,v 1.34 1998/12/05 00:54:11 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -141,7 +141,7 @@ httpReplyParse(HttpReply * rep, const char *buf)
     /* put a 0-terminator */
     xstrncpy(headers, buf, 4096);
     success = httpReplyParseStep(rep, headers, 0);
-    memFree(MEM_4K_BUF, headers);
+    memFree(headers, MEM_4K_BUF);
     return success == 1;
 }
 
@@ -279,7 +279,7 @@ httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
 static void
 httpReplyDoDestroy(HttpReply * rep)
 {
-    memFree(MEM_HTTP_REPLY, rep);
+    memFree(rep, MEM_HTTP_REPLY);
 }
 
 /* sync this routine when you update HttpReply struct */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.62 1998/12/05 00:00:44 wessels Exp $
+ * $Id: peer_digest.cc,v 1.63 1998/12/05 00:54:35 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -106,7 +106,7 @@ peerDigestCreate(peer * p)
     /* cannot check cbdataValid(p) because p may not be locked yet */
 
     pd = memAllocate(MEM_PEER_DIGEST);
-    cbdataAdd(pd, MEM_PEER_DIGEST);
+    cbdataAdd(pd, memFree, MEM_PEER_DIGEST);
     peerDigestInit(pd, p);
     cbdataLock(pd->peer);	/* we will use the peer */
 
@@ -290,7 +290,7 @@ peerDigestRequest(PeerDigest * pd)
 
     /* create fetch state structure */
     fetch = memAllocate(MEM_DIGEST_FETCH_STATE);
-    cbdataAdd(fetch, MEM_DIGEST_FETCH_STATE);
+    cbdataAdd(fetch, memFree, MEM_DIGEST_FETCH_STATE);
     fetch->request = requestLink(req);
     fetch->pd = pd;
     fetch->offset = 0;
@@ -451,7 +451,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
 	    /* XXX: soon we will have variable header size */
 	    fetch->offset += StoreDigestCBlockSize;
 	    /* switch to CD buffer and fetch digest guts */
-	    memFree(MEM_4K_BUF, buf);
+	    memFree(buf, MEM_4K_BUF);
 	    buf = NULL;
 	    assert(pd->cd->mask);
 	    storeClientCopy(fetch->entry,
@@ -621,7 +621,7 @@ peerDigestReqFinish(DigestFetchState * fetch, char *buf,
     if (fcb_valid)
 	peerDigestFetchFinish(fetch, err);
     if (buf)
-	memFree(MEM_4K_BUF, buf);
+	memFree(buf, MEM_4K_BUF);
 }
 
 

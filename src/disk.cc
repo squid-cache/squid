@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.136 1998/09/29 01:32:58 wessels Exp $
+ * $Id: disk.cc,v 1.137 1998/12/05 00:54:21 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -465,7 +465,7 @@ diskHandleRead(int fd, void *data)
      * the state data.
      */
     if (fd < 0) {
-	memFree(MEM_DREAD_CTRL, ctrl_dat);
+	memFree(ctrl_dat, MEM_DREAD_CTRL);
 	return;
     }
 #if USE_ASYNC_IO
@@ -503,7 +503,7 @@ diskHandleReadComplete(int fd, void *data, int len, int errcode)
     errno = errcode;
     if (len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
 	cbdataUnlock(ctrl_dat->client_data);
-	memFree(MEM_DREAD_CTRL, ctrl_dat);
+	memFree(ctrl_dat, MEM_DREAD_CTRL);
 	return;
     }
     fd_bytes(fd, len, FD_READ);
@@ -527,7 +527,7 @@ diskHandleReadComplete(int fd, void *data, int len, int errcode)
     F->flags.calling_io_handler = 0;
 #endif /* OPTIMISTIC_IO */
     cbdataUnlock(ctrl_dat->client_data);
-    memFree(MEM_DREAD_CTRL, ctrl_dat);
+    memFree(ctrl_dat, MEM_DREAD_CTRL);
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.51 1998/11/12 06:27:55 wessels Exp $
+ * $Id: asn.cc,v 1.52 1998/12/05 00:54:14 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -181,7 +181,7 @@ asnCacheStart(int as)
     StoreEntry *e;
     request_t *req;
     ASState *asState = xcalloc(1, sizeof(ASState));
-    cbdataAdd(asState, MEM_NONE);
+    cbdataAdd(asState, cbdataXfree, 0);
     debug(53, 3) ("asnCacheStart: AS %d\n", as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;
@@ -217,17 +217,17 @@ asHandleReply(void *data, char *buf, ssize_t size)
     char *t;
     debug(53, 3) ("asHandleReply: Called with size=%d\n", size);
     if (e->store_status == STORE_ABORTED) {
-	memFree(MEM_4K_BUF, buf);
+	memFree(buf, MEM_4K_BUF);
 	asStateFree(asState);
 	return;
     }
     if (size == 0 && e->mem_obj->inmem_hi > 0) {
-	memFree(MEM_4K_BUF, buf);
+	memFree(buf, MEM_4K_BUF);
 	asStateFree(asState);
 	return;
     } else if (size < 0) {
 	debug(53, 1) ("asHandleReply: Called with size=%d\n", size);
-	memFree(MEM_4K_BUF, buf);
+	memFree(buf, MEM_4K_BUF);
 	asStateFree(asState);
 	return;
     }
@@ -272,7 +272,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	    asState);
     } else {
 	debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
-	memFree(MEM_4K_BUF, buf);
+	memFree(buf, MEM_4K_BUF);
 	asStateFree(asState);
     }
 }

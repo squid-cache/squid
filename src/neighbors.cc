@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.263 1998/12/02 05:03:30 wessels Exp $
+ * $Id: neighbors.cc,v 1.264 1998/12/05 00:54:33 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -317,7 +317,7 @@ neighborRemove(peer * target)
     }
     if (p) {
 	*P = p->next;
-	peerDestroy(p);
+	cbdataUnlock(p);
 	Config.npeers--;
     }
     first_ping = Config.peers;
@@ -853,6 +853,20 @@ peerFindByName(const char *name)
     return p;
 }
 
+peer *
+peerFindByNameAndPort(const char *name, unsigned short port)
+{
+    peer *p = NULL;
+    for (p = Config.peers; p; p = p->next) {
+	if (strcasecmp(name, p->host))
+	    continue;
+	if (port != p->http_port)
+	    continue;
+	break;
+    }
+    return p;
+}
+
 int
 neighborUp(const peer * p)
 {
@@ -866,8 +880,9 @@ neighborUp(const peer * p)
 }
 
 void
-peerDestroy(peer * p)
+peerDestroy(void *data, int unused)
 {
+    peer *p = data;
     struct _domain_ping *l = NULL;
     struct _domain_ping *nl = NULL;
     if (p == NULL)
@@ -886,7 +901,7 @@ peerDestroy(peer * p)
 	p->digest = NULL;
     }
 #endif
-    cbdataFree(p);
+    xfree(p);
 }
 
 void
@@ -1040,10 +1055,9 @@ peerCountMcastPeersStart(void *data)
     psstate->request = requestLink(urlParse(METHOD_GET, url));
     psstate->entry = fake;
     psstate->callback = NULL;
-    psstate->fail_callback = NULL;
     psstate->callback_data = p;
     psstate->ping.start = current_time;
-    cbdataAdd(psstate, MEM_NONE);
+    cbdataAdd(psstate, cbdataXfree, 0);
     mem = fake->mem_obj;
     mem->request = requestLink(psstate->request);
     mem->start_ping = current_time;

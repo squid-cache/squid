@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.48 1998/10/13 20:38:42 wessels Exp $
+ * $Id: store_client.cc,v 1.49 1998/12/05 00:54:44 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -116,7 +116,7 @@ storeClientListAdd(StoreEntry * e, void *data)
 	return;
     mem->nclients++;
     sc = memAllocate(MEM_STORE_CLIENT);
-    cbdataAdd(sc, MEM_STORE_CLIENT);	/* sc is callback_data for file_read */
+    cbdataAdd(sc, memFree, MEM_STORE_CLIENT);	/* sc is callback_data for file_read */
     sc->callback_data = data;
     sc->seen_offset = 0;
     sc->copy_offset = 0;
@@ -204,10 +204,10 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     size_t sz;
     if (sc->flags.copy_event_pending)
 	return;
-#ifdef PPNR_WIP
-    if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT))
+    if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
+	debug(20, 5) ("storeClientCopy2: returning because ENTRY_FWD_HDR_WAIT set\n");
 	return;
-#endif /* PPNR_WIP */
+    }
     if (sc->flags.store_copying) {
 	sc->flags.copy_event_pending = 1;
 	debug(20, 3) ("storeClientCopy2: Queueing storeClientCopyEvent()\n");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.9 1998/09/23 21:52:20 rousskov Exp $
+ * $Id: HttpHdrContRange.cc,v 1.10 1998/12/05 00:54:09 wessels Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -162,7 +162,7 @@ void
 httpHdrContRangeDestroy(HttpHdrContRange * range)
 {
     assert(range);
-    memFree(MEM_HTTP_HDR_CONTENT_RANGE, range);
+    memFree(range, MEM_HTTP_HDR_CONTENT_RANGE);
 }
 
 HttpHdrContRange *

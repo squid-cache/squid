@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.68 1998/11/25 09:00:22 wessels Exp $
+ * $Id: icmp.cc,v 1.69 1998/12/05 00:54:29 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -169,7 +169,7 @@ icmpSourcePing(struct in_addr to, const icp_common_t * header, const char *url)
     strcpy(payload + len, url);
     len += ulen + 1;
     icmpSendEcho(to, S_ICMP_ICP, payload, len);
-    memFree(MEM_8K_BUF, payload);
+    memFree(payload, MEM_8K_BUF);
 #endif
 }
 #endif

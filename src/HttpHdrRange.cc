@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.16 1998/11/12 06:27:49 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.17 1998/12/05 00:54:10 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -119,7 +119,7 @@ httpHdrRangeSpecParseCreate(const char *field, int flen)
 static void
 httpHdrRangeSpecDestroy(HttpHdrRangeSpec * spec)
 {
-    memFree(MEM_HTTP_HDR_RANGE_SPEC, spec);
+    memFree(spec, MEM_HTTP_HDR_RANGE_SPEC);
 }
 
 
@@ -265,7 +265,7 @@ httpHdrRangeDestroy(HttpHdrRange * range)
     while (range->specs.count)
 	httpHdrRangeSpecDestroy(stackPop(&range->specs));
     stackClean(&range->specs);
-    memFree(MEM_HTTP_HDR_RANGE, range);
+    memFree(range, MEM_HTTP_HDR_RANGE);
 }
 
 HttpHdrRange *

@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.9 1998/11/12 06:27:56 wessels Exp $
+ * $Id: authenticate.cc,v 1.10 1998/12/05 00:54:15 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -95,7 +95,7 @@ authenticateStart(acl_proxy_auth_user * auth_user, RH * handler, void *data)
 	return;
     }
     r = xcalloc(1, sizeof(authenticateStateData));
-    cbdataAdd(r, MEM_NONE);
+    cbdataAdd(r, cbdataXfree, 0);
     r->handler = handler;
     cbdataLock(data);
     r->data = data;

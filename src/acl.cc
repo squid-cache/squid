@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.190 1998/12/04 22:20:10 wessels Exp $
+ * $Id: acl.cc,v 1.191 1998/12/05 00:54:13 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -878,7 +878,7 @@ aclParseAccessLine(acl_access ** head)
     for (B = *head, T = head; B; T = &B->next, B = B->next);
     *T = A;
     /* We lock _acl_access structures in aclCheck() */
-    cbdataAdd(A, MEM_ACL_ACCESS);
+    cbdataAdd(A, memFree, MEM_ACL_ACCESS);
 }
 
 /**************/
@@ -1584,7 +1584,7 @@ aclChecklistCreate(const acl_access * A,
 {
     int i;
     aclCheck_t *checklist = memAllocate(MEM_ACLCHECK_T);
-    cbdataAdd(checklist, MEM_ACLCHECK_T);
+    cbdataAdd(checklist, memFree, MEM_ACLCHECK_T);
     checklist->access_list = A;
     /*
      * aclCheck() makes sure checklist->access_list is a valid
@@ -1629,7 +1629,7 @@ aclDestroyTimeList(acl_time_data * data)
     acl_time_data *next = NULL;
     for (; data; data = next) {
 	next = data->next;
-	memFree(MEM_ACL_TIME_DATA, data);
+	memFree(data, MEM_ACL_TIME_DATA);
     }
 }
 
@@ -1641,7 +1641,7 @@ aclDestroyRegexList(relist * data)
 	next = data->next;
 	regfree(&data->regex);
 	safe_free(data->pattern);
-	memFree(MEM_RELIST, data);
+	memFree(data, MEM_RELIST);
     }
 }
 
@@ -1651,13 +1651,13 @@ aclFreeProxyAuthUser(void *data)
     acl_proxy_auth_user *u = data;
     xfree(u->user);
     xfree(u->passwd);
-    memFree(MEM_ACL_PROXY_AUTH_USER, u);
+    memFree(u, MEM_ACL_PROXY_AUTH_USER);
 }
 
 static void
 aclFreeIpData(void *p)
 {
-    memFree(MEM_ACL_IP_DATA, p);
+    memFree(p, MEM_ACL_IP_DATA);
 }
 
 void
@@ -1708,7 +1708,7 @@ aclDestroyAcls(acl ** head)
 	    break;
 	}
 	safe_free(a->cfgline);
-	memFree(MEM_ACL, a);
+	memFree(a, MEM_ACL);
     }
     *head = NULL;
 }
@@ -1719,7 +1719,7 @@ aclDestroyAclList(acl_list * list)
     acl_list *next = NULL;
     for (; list; list = next) {
 	next = list->next;
-	memFree(MEM_ACL_LIST, list);
+	memFree(list, MEM_ACL_LIST);
     }
 }
 

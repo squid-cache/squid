@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.332 1998/11/12 06:28:10 wessels Exp $
+ * $Id: http.cc,v 1.333 1998/12/05 00:54:28 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -64,7 +64,7 @@ httpStateFree(int fdnotused, void *data)
 	return;
     storeUnlockObject(httpState->entry);
     if (httpState->reply_hdr) {
-	memFree(MEM_8K_BUF, httpState->reply_hdr);
+	memFree(httpState->reply_hdr, MEM_8K_BUF);
 	httpState->reply_hdr = NULL;
     }
     requestUnlink(httpState->request);
@@ -92,7 +92,7 @@ httpTimeout(int fd, void *data)
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     assert(entry->store_status == STORE_PENDING);
     if (entry->mem_obj->inmem_hi == 0) {
-	fwdFail(httpState->fwdState, ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, 0);
+	fwdFail(httpState->fwd, ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, 0);
     } else {
 	storeAbort(entry, 0);
     }
@@ -470,14 +470,14 @@ httpReadReply(int fd, void *data)
 	if (ignoreErrno(errno)) {
 	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
 	} else if (entry->mem_obj->inmem_hi == 0) {
-	    fwdFail(httpState->fwdState, ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, errno);
+	    fwdFail(httpState->fwd, ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, errno);
 	    comm_close(fd);
 	} else {
 	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
-	fwdFail(httpState->fwdState, ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, errno);
+	fwdFail(httpState->fwd, ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, errno);
 	httpState->eof = 1;
 	comm_close(fd);
     } else if (len == 0) {
@@ -491,23 +491,20 @@ httpReadReply(int fd, void *data)
 	     * we want to process the reply headers.
 	     */
 	    httpProcessReplyHeader(httpState, buf, len);
-#ifdef PPNR_WIP
-	storePPNR(entry);
-#endif /* PPNR_WIP */
-	storeComplete(entry);	/* deallocates mem_obj->request */
+	fwdComplete(httpState->fwd);
 	comm_close(fd);
     } else {
-#ifndef PPNR_WIP
-	if (httpState->reply_hdr_state < 2)
-#else
 	if (httpState->reply_hdr_state < 2) {
-#endif /* PPNR_WIP */
 	    httpProcessReplyHeader(httpState, buf, len);
-#ifdef PPNR_WIP
-	    if (httpState->reply_hdr_state == 2)
-		storePPNR(entry);
+	    if (httpState->reply_hdr_state == 2) {
+		http_status s = entry->mem_obj->reply->sline.status;
+		/* If its "successful" reply, allow the client
+		 * to get it
+		 */
+		if (s >= 200 && s < 300)
+		    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
+	    }
 	}
-#endif /* PPNR_WIP */
 	storeAppend(entry, buf, len);
 #ifdef OPTIMISTIC_IO
 	if (entry->store_status == STORE_ABORTED) {
@@ -525,10 +522,10 @@ httpReadReply(int fd, void *data)
 	    commSetTimeout(fd, -1, NULL, NULL);
 	    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 	    comm_remove_close_handler(fd, httpStateFree, httpState);
-	    storeComplete(entry);	/* deallocates mem_obj->request */
-	    /* call storeComplete BEFORE fwdUnregister or else fwdUnregister
+	    fwdComplete(httpState->fwd);
+	    /* call fwdComplete BEFORE fwdUnregister or else fwdUnregister
 	     * will storeAbort */
-	    fwdUnregister(fd, httpState->fwdState);
+	    fwdUnregister(fd, httpState->fwd);
 	    pconnPush(fd, request->host, request->port);
 	    httpState->fd = -1;
 	    httpStateFree(-1, httpState);
@@ -605,7 +602,7 @@ httpBuildRequestHeader(request_t * request,
      *    - we can actually parse client Range specs
      *    - the specs are expected to be simple enough (e.g. no out-of-order ranges)
      *    - reply will be cachable
-     * (If the reply will be uncachable we have to though it away after 
+     * (If the reply will be uncachable we have to throw it away after 
      *  serving this request, so it is better to forward ranges to 
      *  the server and fetch only the requested content) 
      */
@@ -726,6 +723,8 @@ httpBuildRequestHeader(request_t * request,
 	    if (strLen(request->urlpath))
 		assert(strstr(url, strBuf(request->urlpath)));
 	}
+	if (flags.only_if_cached)
+	    EBIT_SET(cc->mask, CC_ONLY_IF_CACHED);
 	httpHeaderPutCc(hdr_out, cc);
 	httpHdrCcDestroy(cc);
     }
@@ -768,7 +767,6 @@ httpBuildRequestPrefix(request_t * request,
     memBufAppend(mb, "\r\n", 2);
     return mb->size - offset;
 }
-
 /* This will be called when connect completes. Write request. */
 static void
 httpSendRequest(int fd, void *data)
@@ -806,6 +804,9 @@ httpSendRequest(int fd, void *data)
 	httpState->flags.keepalive = 1;
     else if ((double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent > 0.50)
 	httpState->flags.keepalive = 1;
+    if (httpState->peer)
+	if (neighborType(httpState->peer, httpState->request) == PEER_SIBLING)
+	    httpState->flags.only_if_cached = 1;
     memBufDefInit(&mb);
     httpBuildRequestPrefix(req,
 	httpState->orig_request,
@@ -816,23 +817,24 @@ httpSendRequest(int fd, void *data)
     debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
     comm_write_mbuf(fd, mb, sendHeaderDone, httpState);
 }
-
 void
-httpStart(FwdState * fwdState, int fd)
+httpStart(FwdState * fwd)
 {
+    int fd = fwd->server_fd;
     HttpStateData *httpState = memAllocate(MEM_HTTP_STATE_DATA);
     request_t *proxy_req;
-    request_t *orig_req = fwdState->request;
+    request_t *orig_req = fwd->request;
     debug(11, 3) ("httpStart: \"%s %s\"\n",
 	RequestMethodStr[orig_req->method],
-	storeUrl(fwdState->entry));
-    cbdataAdd(httpState, MEM_HTTP_STATE_DATA);
-    storeLockObject(fwdState->entry);
-    httpState->fwdState = fwdState;
-    httpState->entry = fwdState->entry;
+	storeUrl(fwd->entry));
+    cbdataAdd(httpState, memFree, MEM_HTTP_STATE_DATA);
+    storeLockObject(fwd->entry);
+    httpState->fwd = fwd;
+    httpState->entry = fwd->entry;
     httpState->fd = fd;
-    if (fwdState->servers)
-	httpState->peer = fwdState->servers->peer;	/* might be NULL */
+    EBIT_SET(httpState->entry->flags, ENTRY_FWD_HDR_WAIT);
+    if (fwd->servers)
+	httpState->peer = fwd->servers->peer;	/* might be NULL */
     if (httpState->peer) {
 	proxy_req = requestCreate(orig_req->method,
 	    PROTO_NONE, storeUrl(httpState->entry));

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.256 1998/11/23 22:43:30 wessels Exp $
+ * $Id: ftp.cc,v 1.257 1998/12/05 00:54:25 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -125,6 +125,7 @@ typedef struct _Ftpdata {
 	u_short port;
     } data;
     struct _ftp_flags flags;
+    FwdState *fwd;
 } FtpStateData;
 
 typedef struct {
@@ -260,7 +261,7 @@ ftpStateFree(int fdnotused, void *data)
     storeUnregisterAbort(ftpState->entry);
     storeUnlockObject(ftpState->entry);
     if (ftpState->reply_hdr) {
-	memFree(MEM_8K_BUF, ftpState->reply_hdr);
+	memFree(ftpState->reply_hdr, MEM_8K_BUF);
 	ftpState->reply_hdr = NULL;
     }
     requestUnlink(ftpState->request);
@@ -770,7 +771,7 @@ ftpParseListing(FtpStateData * ftpState)
 	xstrncpy(ftpState->data.buf, line, ftpState->data.size);
 	ftpState->data.offset = strlen(ftpState->data.buf);
     }
-    memFree(MEM_4K_BUF, line);
+    memFree(line, MEM_4K_BUF);
     xfree(sbuf);
 }
 
@@ -783,7 +784,7 @@ ftpReadComplete(FtpStateData * ftpState)
 	ftpListingFinish(ftpState);
     if (!ftpState->flags.put) {
 	storeTimestampsSet(ftpState->entry);
-	storeComplete(ftpState->entry);
+	fwdComplete(ftpState->fwd);
     }
     /* expect the "transfer complete" message on the control socket */
     ftpScheduleReadControlReply(ftpState, 1);
@@ -953,15 +954,18 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
 }
 
 void
-ftpStart(request_t * request, StoreEntry * entry, int fd)
+ftpStart(FwdState * fwd)
 {
+    request_t *request = fwd->request;
+    StoreEntry *entry = fwd->entry;
+    int fd = fwd->server_fd;
     LOCAL_ARRAY(char, realm, 8192);
     const char *url = storeUrl(entry);
     FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
     HttpReply *reply;
     StoreEntry *pe = NULL;
     const cache_key *key = NULL;
-    cbdataAdd(ftpState, MEM_NONE);
+    cbdataAdd(ftpState, cbdataXfree, 0);
     debug(9, 3) ("ftpStart: '%s'\n", url);
     Counter.server.all.requests++;
     Counter.server.ftp.requests++;
@@ -973,6 +977,7 @@ ftpStart(request_t * request, StoreEntry * entry, int fd)
     ftpState->size = -1;
     ftpState->flags.pasv_supported = 1;
     ftpState->flags.rest_supported = 1;
+    ftpState->fwd = fwd;
     if (ftpState->request->method == METHOD_PUT)
 	ftpState->flags.put = 1;
     if (!ftpCheckAuth(ftpState, &request->header)) {
@@ -993,7 +998,7 @@ ftpStart(request_t * request, StoreEntry * entry, int fd)
 	/* create appropriate reply */
 	ftpAuthRequired(reply, request, realm);
 	httpReplySwapOut(reply, entry);
-	storeComplete(entry);
+	fwdComplete(ftpState->fwd);
 	ftpStateFree(-1, ftpState);
 	return;
     }

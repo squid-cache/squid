@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.76 1998/11/12 06:28:22 wessels Exp $
+ * $Id: redirect.cc,v 1.77 1998/12/05 00:54:38 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -100,7 +100,7 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
 	return;
     }
     r = xcalloc(1, sizeof(redirectStateData));
-    cbdataAdd(r, MEM_NONE);
+    cbdataAdd(r, cbdataXfree, 0);
     r->orig_url = xstrdup(http->uri);
     r->client_addr = conn->log_addr;
     if (conn->ident.ident == NULL || *conn->ident.ident == '\0') {

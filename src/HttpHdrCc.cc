@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.15 1998/07/22 20:36:43 wessels Exp $
+ * $Id: HttpHdrCc.cc,v 1.16 1998/12/05 00:54:09 wessels Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -144,7 +144,7 @@ void
 httpHdrCcDestroy(HttpHdrCc * cc)
 {
     assert(cc);
-    memFree(MEM_HTTP_HDR_CC, cc);
+    memFree(cc, MEM_HTTP_HDR_CC);
 }
 
 HttpHdrCc *

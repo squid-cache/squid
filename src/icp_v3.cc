@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.26 1998/09/21 06:52:16 wessels Exp $
+ * $Id: icp_v3.cc,v 1.27 1998/12/05 00:54:30 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -112,7 +112,9 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	break;
 
     case ICP_HIT:
+#if ALLOW_SOURCE_PING
     case ICP_SECHO:
+#endif
     case ICP_DECHO:
     case ICP_MISS:
     case ICP_DENIED:

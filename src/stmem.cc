@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.63 1998/07/22 20:37:54 wessels Exp $
+ * $Id: stmem.cc,v 1.64 1998/12/05 00:54:42 wessels Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -41,7 +41,7 @@ stmemFree(mem_hdr * mem)
     mem_node *p;
     while ((p = mem->head)) {
 	mem->head = p->next;
-	memFree(MEM_STMEM_BUF, p->data);
+	memFree(p->data, MEM_STMEM_BUF);
 	store_mem_size -= SM_PAGE_SIZE;
 	safe_free(p);
     }
@@ -65,7 +65,7 @@ stmemFreeDataUpto(mem_hdr * mem, int target_offset)
 	    lastp = p;
 	    p = p->next;
 	    current_offset += lastp->len;
-	    memFree(MEM_STMEM_BUF, lastp->data);
+	    memFree(lastp->data, MEM_STMEM_BUF);
 	    store_mem_size -= SM_PAGE_SIZE;
 	    safe_free(lastp);
 	}

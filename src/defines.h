@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.69 1998/11/30 23:45:39 wessels Exp $
+ * $Id: defines.h,v 1.70 1998/12/05 00:54:21 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -121,9 +121,10 @@
 #define ICP_VERSION_3		3
 #define ICP_VERSION_CURRENT	ICP_VERSION_2
 
-#define DIRECT_NO    0
-#define DIRECT_MAYBE 1
-#define DIRECT_YES   2
+#define DIRECT_UNKNOWN 0
+#define DIRECT_NO    1
+#define DIRECT_MAYBE 2
+#define DIRECT_YES   3
 
 #define REDIRECT_AV_FACTOR 1000
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.209 1998/11/20 06:13:15 wessels Exp $
+ * $Id: ipcache.cc,v 1.210 1998/12/05 00:54:30 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -126,7 +126,7 @@ ipcache_release(ipcache_entry * i)
     }
     safe_free(i->name);
     safe_free(i->error_message);
-    memFree(MEM_IPCACHE_ENTRY, i);
+    memFree(i, MEM_IPCACHE_ENTRY);
     return;
 }
 
@@ -247,7 +247,7 @@ ipcache_call_pending(ipcache_entry * i)
 	    }
 	    cbdataUnlock(p->handlerData);
 	}
-	memFree(MEM_IPCACHE_PENDING, p);
+	memFree(p, MEM_IPCACHE_PENDING);
     }
     i->pending_head = NULL;	/* nuke list */
     debug(14, 10) ("ipcache_call_pending: Called %d handlers.\n", nhandler);
@@ -417,7 +417,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     /* for HIT, PENDING, DISPATCHED we've returned.  For MISS we submit */
     c = xcalloc(1, sizeof(*c));
     c->data = i;
-    cbdataAdd(c, MEM_NONE);
+    cbdataAdd(c, cbdataXfree, 0);
     i->status = IP_DISPATCHED;
     ipcacheLockEntry(i);
     dnsSubmit(i->name, ipcacheHandleReply, c);
@@ -723,13 +723,13 @@ ipcacheFreeEntry(void *data)
     ip_pending *p;
     while ((p = i->pending_head)) {
 	i->pending_head = p->next;
-	memFree(MEM_IPCACHE_PENDING, p);
+	memFree(p, MEM_IPCACHE_PENDING);
     }
     safe_free(i->addrs.in_addrs);
     safe_free(i->addrs.bad_mask);
     safe_free(i->name);
     safe_free(i->error_message);
-    memFree(MEM_IPCACHE_ENTRY, i);
+    memFree(i, MEM_IPCACHE_ENTRY);
 }
 
 void
