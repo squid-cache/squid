@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.123 1997/01/31 22:30:37 wessels Exp $
+ * $Id: stat.cc,v 1.124 1997/02/05 04:53:31 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1141,7 +1141,6 @@ log_append(const cacheinfo * obj,
     x = file_write(obj->logfile_fd,
 	xstrdup(tmp),
 	strlen(tmp),
-	obj->logfile_access,
 	NULL,
 	NULL,
 	xfree);
@@ -1161,7 +1160,6 @@ log_enable(cacheinfo * obj, StoreEntry * sentry)
 	    debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	    obj->logfile_status = LOG_DISABLE;
 	}
-	obj->logfile_access = file_write_lock(obj->logfile_fd);
 
     }
     /* at the moment, store one char to make a storage manager happy */
@@ -1289,7 +1287,6 @@ stat_init(cacheinfo ** object, const char *logfilename)
 	    debug(50, 0, "%s: %s\n", obj->logfilename, xstrerror());
 	    fatal("Cannot open logfile.");
 	}
-	obj->logfile_access = file_write_lock(obj->logfile_fd);
     }
     obj->proto_id = urlParseProtocol;
     obj->proto_newobject = proto_newobject;
@@ -1377,7 +1374,6 @@ stat_rotate_log(void)
 	HTTPCacheInfo->logfile_status = LOG_DISABLE;
 	fatal("Cannot open logfile.");
     }
-    HTTPCacheInfo->logfile_access = file_write_lock(HTTPCacheInfo->logfile_fd);
 }
 
 void
