@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.273 1998/04/10 01:13:05 wessels Exp $
+ * $Id: client_side.cc,v 1.274 1998/04/10 01:27:29 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -573,7 +573,7 @@ clientUpdateCounters(clientHttpRequest * http)
     if (H->alg == PEER_SA_DIGEST) {
 	statHistCount(&Counter.cd.client_svc_time, svc_time);
 	if (sst)
-	    statHistCount(&Counter.cd.server_svc_time, svc_time);
+	    statHistCount(&Counter.cd.server_svc_time, sst);
 	Counter.cd.times_used++;
     } else {
 	assert(H->alg == PEER_SA_NONE);
