@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.51 1996/09/17 16:39:05 wessels Exp $
+ * $Id: squid.h,v 1.52 1996/09/17 16:54:05 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -213,8 +213,8 @@ typedef unsigned long u_num32;
 #define LOCAL_ARRAY(type,name,size) static type name[size]
 #endif
 
-#include "GNUregex.h"
 #include "ansiproto.h"
+#include "GNUregex.h"
 
 typedef void (*SIH) (int, void *);	/* swap in */
 typedef int (*QS) (const void *, const void *);
