@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.61 2004/12/20 16:30:35 robertc Exp $
+ * $Id: client_db.cc,v 1.62 2004/12/22 17:37:37 serassio Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -62,7 +62,7 @@ clientdbAdd(struct in_addr addr)
     hash_join(client_table, &c->hash);
     statCounter.client_http.clients++;
 
-    if ((statCounter.client_http.clients > max_clients) && !cleanup_running && !cleanup_scheduled < 2)
+    if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2)
     {
         cleanup_scheduled++;
         eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 90, 0);
