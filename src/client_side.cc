@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.656 2003/08/13 00:17:26 robertc Exp $
+ * $Id: client_side.cc,v 1.657 2003/08/14 12:15:04 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -136,24 +136,6 @@ static int clientIsContentLengthValid(HttpRequest * r);
 static bool okToAccept();
 static int clientIsRequestBodyValid(int bodyLength);
 static int clientIsRequestBodyTooLargeForPolicy(size_t bodyLength);
-/* convenience class while splitting up body handling */
-/* temporary existence only - on stack use expected */
-
-class ClientBody
-{
-
-public:
-    ClientBody (ConnStateData::Pointer &);
-    void process();
-    void preProcessing();
-    void processBuffer();
-
-private:
-    ConnStateData::Pointer conn;
-    char *buf;
-    CBCB *callback;
-    HttpRequest *request;
-};
 
 static void clientUpdateStatHistCounters(log_type logType, int svc_time);
 static void clientUpdateStatCounters(log_type logType);
@@ -1459,6 +1441,36 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, v
 }
 
 void
+ClientSocketContext::doClose()
+{
+    comm_close(fd());
+}
+
+void
+ClientSocketContext::initiateClose()
+{
+    if (!http || !http->getConn().getRaw()) {
+        doClose();
+        return;
+    }
+
+    if (http->getConn()->body.size_left > 0)  {
+        debug(33, 5) ("ClientSocketContext::initiateClose: closing, but first we need to read the rest of the request\n");
+        /* XXX We assumes the reply does fit in the TCP transmit window.
+         * If not the connection may stall while sending the reply
+         * (before reaching here) if the client does not try to read the
+                * response while sending the request body. As of yet we have
+                * not received any complaints indicating this may be an issue.
+                */
+        http->getConn()->closing(true);
+        clientAbortBody(http->request);
+        return;
+    }
+
+    doClose();
+}
+
+void
 ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag)
 {
     StoreEntry *entry = http->storeEntry();
@@ -1467,10 +1479,11 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
     debug(33, 5) ("clientWriteComplete: FD %d, sz %ld, err %d, off %ld, len %d\n",
                   fd, (long int) size, errflag, (long int) http->out.size, entry ? objectLen(entry) : 0);
     clientUpdateSocketStats(http->logType, size);
+    assert (this->fd() == fd);
 
     if (errflag || clientHttpRequestStatus(fd, http)) {
         debug (33,5)("clientWriteComplete: FD %d, closing connection due to failure, or true requeststatus\n", fd);
-        comm_close(fd);
+        initiateClose();
         /* Do we leak here ? */
         return;
     }
@@ -1490,7 +1503,7 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
         /* fallthrough */
 
     case STREAM_FAILED:
-        comm_close(fd);
+        initiateClose();
         return;
 
     default:
@@ -2515,6 +2528,9 @@ clientReadBodyAbortHandler(char *buf, ssize_t size, void *data)
         conn->body.bufsize = sizeof(bodyAbortBuf);
         conn->body.cbdata = cbdataReference(data);
     }
+
+    if (conn->closing())
+        comm_close(conn->fd);
 }
 
 /* Abort a body request */
@@ -3075,7 +3091,7 @@ ConnStateData::operator delete (void *address)
     cbdataFree(t);
 }
 
-ConnStateData::ConnStateData() : transparent_ (false), reading_ (false)
+ConnStateData::ConnStateData() : transparent_ (false), reading_ (false), closing_ (false)
 {
     openReference = this;
 }
@@ -3103,6 +3119,19 @@ ConnStateData::reading(bool const newBool)
 {
     assert (reading() != newBool);
     reading_ = newBool;
+}
+
+bool
+ConnStateData::closing() const
+{
+    return closing_;
+}
+
+void
+ConnStateData::closing(bool const newBool)
+{
+    assert (closing() != newBool);
+    closing_ = newBool;
 }
 
 char *
