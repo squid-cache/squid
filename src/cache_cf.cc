@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.396 2001/10/24 07:45:34 hno Exp $
+ * $Id: cache_cf.cc,v 1.397 2002/01/06 00:44:13 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -754,7 +754,7 @@ free_delay_pool_count(delayConfig * cfg)
 	}
 	aclDestroyAccessList(&cfg->access[i]);
     }
-    delayFreeDelayData();
+    delayFreeDelayData(cfg->pools);
     xfree(cfg->class);
     xfree(cfg->rates);
     xfree(cfg->access);
