@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>VIGA: FTP PUT eba&otilde;nnestus</TITLE>
+</HEAD><BODY>
+<H1>VIGA</H1>
+<H2>FTP PUT eba&otilde;nnestus</H2>
+<HR>
+<P>
+PUT operatsioon URLil:
+<A HREF="%U">%U</A>
+<P>
+Squid saatis j&auml;rgneva FTP k&auml;su:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+ja sai j&auml;rgneva vastuse
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+Mis t&auml;hendab:
+<PRE>
+Kontrolli failiteed, &otilde;iguseid, ketta ruumi ja proovi uuesti.
+</PRE>
+</P>
+

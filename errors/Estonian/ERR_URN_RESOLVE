@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>VIGA: P&auml;ring URNile ei saa vastust</TITLE>
+</HEAD><BODY>
+<H1>VIGA</H1>
+<H2>P&auml;ring URNile ei saa vastust</H2>
+<HR>
+<P>
+Sooritades p&auml;ringut URNile:
+<A HREF="%U">%U</A>
+<P>
+tekkis j&auml;rgnev viga:
+<UL>
+<LI>
+<STRONG>
+Ei suuda lahendada URN
+</STRONG>
+</UL>
+
+<P>
+Hei, mida sa ootad URNidelt %T peal:)
+</P>

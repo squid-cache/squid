@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>VIGA: Cache haldaja kasutamine blokeeritud</TITLE>
+</HEAD>
+<BODY>
+<H1>VIGA</H1>
+<H2>Cache haldaja kasutamine blokeeritud</H2>
+<HR>
+<P>
+Sooritades p&auml;ringut URLile:
+<A HREF="%U">%U</A>
+<P>
+tekkis j&auml;rgnev viga:
+<UL>
+<LI>
+<STRONG>
+Cache haldaja kasutamine keelatud.
+</STRONG>
+</UL>
+</P>
+
+<P>Vabandust, teil pole &otilde;igust p&auml;ringule:
+<PRE>    %U</PRE>
+sellele cache haldajale, kuni te pole l&auml;binud autoriseerimist.
+</P>
+
+<P> Autoriseerimiseks on teil vaja brauserit mis toetab HTTP/1.1 standardit,
+nagu Netscape versioon 2.0 v&otilde;i uuem, v&otilde;i MS Internet Explorer
+3.0. Palun kontakteeruge <A HREF="mailto:%w">cache administraatoriga</a>,
+kui teil on probleeme autoriseerimisega v&otilde;i kui te <em>olete</em>
+administraator, lugege Squidi dokumentatsiooni cache haldaja interfeisi kohta
+ja kontrollige cache logi vea t&auml;psema kirjelduse saamiseks.</P>

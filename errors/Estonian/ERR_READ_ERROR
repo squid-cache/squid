@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>VIGA: P&auml;ring URLile ei saa vastust</TITLE>
+</HEAD><BODY>
+<H1>VIGA</H1>
+<H2>P&auml;ring URLile ei saa vastust</H2>
+<HR>
+<P>
+Sooritades p&auml;ringut URLile:
+<A HREF="%U">%U</A>
+<P>
+tekkis j&auml;rgnev viga:
+<UL>
+<LI>
+<STRONG>
+Viga lugemisel
+</STRONG>
+</UL>
+
+<P>
+S&uuml;steem vastas:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Andmete lugemisel tekkis veasituatsioon. Palun korrake p&auml;ringut.
+</P>

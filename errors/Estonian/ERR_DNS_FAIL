@@ -1,0 +1,29 @@
+<HTML><HEAD>
+<TITLE>VIGA: P&auml;ring URLile ei saa vastust</TITLE>
+</HEAD><BODY>
+<H2>P&auml;ring URLile ei saa vastust</H2>
+<HR>
+<P>
+Sooritades p&auml;ringut URLile:
+<A HREF="%U">%U</A>
+<P>
+tekkis j&auml;rgnev viga:
+<BLOCKQUOTE>
+Ei &otilde;nnestu saada hosti <I>%H</I> nimele vastavat IP aadressi
+</BLOCKQUOTE>
+</UL>
+
+<P>
+DNS server vastas:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+Mis t&auml;hendab:
+<PRE>
+ Cache ei suutnud lahendada URLis antud hosti nime. Palun kontrollige
+ aadressi korrektsust.
+</PRE>
+</P>
+

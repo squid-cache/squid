@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>VIGA: P&auml;ring URLile ei saa vastust</TITLE>
+</HEAD><BODY>
+<H1>VIGA</H1>
+<H2>P&auml;ring URLile ei saa vastust</H2>
+<HR>
+<P>
+Sooritades p&auml;ringut URLile:
+<A HREF="%U">%U</A>
+<P>
+tekkis j&auml;rgnev viga:
+<UL>
+<LI>
+<STRONG>
+&Uuml;henduse eluaeg l&otilde;ppes
+</STRONG>
+</UL>
+
+<P>
+Squid katkestas p&auml;ringu, kuna see kestis liiga kaua.
+</P>
