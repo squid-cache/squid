@@ -488,7 +488,6 @@ extern void storeAppendPrintf();
 extern char *storeSwapFullPath(int, char *);
 extern char *storeSwapSubSubDir(int, char *);
 extern int storeVerifySwapDirs(void);
-extern void storeCreateSwapSubDirs(int);
 extern const char *storeSwapPath(int);
 extern int storeDirMapBitTest(int fn);
 extern void storeDirMapBitSet(int fn);
@@ -504,6 +503,8 @@ extern void storeDirSwapLog(const StoreEntry *);
 extern int storeDirNumber(int fileno);
 extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
 extern int storeDirProperFileno(int dirn, int fn);
+extern void storeCreateSwapDirectories(void);
+extern int storeVerifyCacheDirs(void);
 
 extern const char *getMyHostname(void);
 extern void safeunlink(const char *path, int quiet);
