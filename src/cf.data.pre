@@ -307,7 +307,8 @@ DOC_END
 
 NAME: hierarchy_stoplist
 TYPE: wordlist
-DEFAULT: cgi-bin ?
+DEFAULT: none
+DEFAULT_IF_NONE: cgi-bin ?
 LOC: Config.hierarchy_stoplist
 DOC_START
 	A list of words which, if found in a URL, cause the object to
