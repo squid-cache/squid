@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.110 1996/11/18 18:22:02 wessels Exp $
+ * $Id: http.cc,v 1.111 1996/11/22 08:37:00 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -598,8 +598,6 @@ httpSendRequest(int fd, void *data)
     char *ybuf = NULL;
     char *buf = NULL;
     char *t = NULL;
-    char *post_buf = NULL;
-    int post_buf_sz = 0;
     const char *const crlf = "\r\n";
     int len = 0;
     int buflen;
@@ -617,14 +615,9 @@ httpSendRequest(int fd, void *data)
 	buflen += httpState->req_hdr_sz + 1;
     buflen += 512;		/* lots of extra */
 
-    if ((req->method == METHOD_POST || req->method == METHOD_PUT) && httpState->req_hdr) {
-	if ((t = mime_headers_end(httpState->req_hdr))) {
-	    post_buf_sz = httpState->req_hdr_sz - (t - httpState->req_hdr);
-	    post_buf = xmalloc(post_buf_sz + 1);
-	    xmemcpy(post_buf, t, post_buf_sz);
-	    *(post_buf + post_buf_sz) = '\0';
-	    *t = '\0';
-	}
+    if ((req->method == METHOD_POST || req->method == METHOD_PUT)) {
+	debug_trap("httpSendRequest: should not be handling POST/PUT request");
+	return;
     }
     if (buflen < DISK_PAGE_SIZE) {
 	buf = get_free_8k_page();
@@ -693,11 +686,6 @@ httpSendRequest(int fd, void *data)
     }
     strcat(buf, crlf);
     len += 2;
-    if (post_buf) {
-	xmemcpy(buf + len, post_buf, post_buf_sz);
-	len += post_buf_sz;
-	xfree(post_buf);
-    }
     debug(11, 6, "httpSendRequest: FD %d:\n%s\n", fd, buf);
     comm_write(fd,
 	buf,
