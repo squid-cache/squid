@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.423 2002/01/13 01:08:44 robertc Exp $
+ * $Id: protos.h,v 1.424 2002/02/13 17:22:36 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -839,9 +839,9 @@ extern void memInitModule(void);
 extern void memCleanModule(void);
 extern void memConfigure(void);
 extern void *memAllocate(mem_type);
-extern void *memAllocBuf(size_t net_size, size_t * gross_size);
+extern void *memAllocString(size_t net_size, size_t * gross_size);
 extern void memFree(void *, int type);
-extern void memFreeBuf(size_t size, void *);
+extern void memFreeString(size_t size, void *);
 extern void memFree2K(void *);
 extern void memFree4K(void *);
 extern void memFree8K(void *);
