@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.142 2003/02/04 21:57:15 robertc Exp $
+ * $Id: store_dir.cc,v 1.143 2003/02/04 22:09:03 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -51,6 +51,7 @@
 static int storeDirValidSwapDirSize(int, ssize_t);
 static STDIRSELECT storeDirSelectSwapDirRoundRobin;
 static STDIRSELECT storeDirSelectSwapDirLeastLoad;
+static void startOneStoreCreation(SwapDir &swapDir);
 
 /*
  * This function pointer is set according to 'store_dir_select_algorithm'
@@ -74,36 +75,38 @@ storeDirInit(void)
 }
 
 void
+startOneStoreCreation(SwapDir &swapDir)
+{
+    /* 
+     * On Windows, fork() is not available.
+     * The following is a workaround for create store directories sequentially
+     * when running on native Windows port.
+     */
+#ifndef _SQUID_MSWIN_
+    if (fork())
+	return;
+#endif
+    swapDir.newFileSystem();
+#ifndef _SQUID_MSWIN_
+    exit(0);
+#endif
+}
+
+void
 storeCreateSwapDirectories(void)
 {
-    int i;
-/* 
- * On Windows, fork() is not available.
- * The following is a workaround for create store directories sequentially
- * when running on native Windows port.
- */
+    for (int i = 0; i < Config.cacheSwap.n_configured; i++)
+	startOneStoreCreation(*INDEXSD(i));
 #ifndef _SQUID_MSWIN_
-    pid_t pid;
-    int status;
-#endif
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-#ifndef _SQUID_MSWIN_
-	if (fork())
-	    continue;
-#endif
-	INDEXSD(i)->newFileSystem();
-#ifndef _SQUID_MSWIN_
-	exit(0);
-    }
     do {
+	pid_t pid;
+	int status;
 #ifdef _SQUID_NEXT_
 	pid = wait3(&status, WNOHANG, NULL);
 #else
 	pid = waitpid(-1, &status, 0);
 #endif
     } while (pid > 0 || (pid < 0 && errno == EINTR));
-#else
-    }
 #endif
 }
 
