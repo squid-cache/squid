@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.599 2002/10/13 20:34:59 robertc Exp $
+ * $Id: client_side.cc,v 1.600 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -60,6 +60,7 @@
 #include "IPInterception.h"
 #include "authenticate.h"
 #include "Store.h"
+#include "comm.h"
 
 
 #if LINGERING_CLOSE
@@ -93,6 +94,10 @@ typedef struct _clientSocketContext {
     struct {
 	int deferred:1;		/* This is a pipelined request waiting for the
 				 * current object to complete */
+	int parsed_ok:1;        /* Was this parsed correctly? */
+	int mayUseConnection:1; /* This request may use the connection -
+				 * don't read anymore requests for now
+				 */
     } flags;
     struct {
 	clientStreamNode *node;
@@ -111,14 +116,14 @@ static clientSocketContext *clientSocketContextNew(clientHttpRequest *);
 /* other */
 static CWCB clientWriteComplete;
 static CWCB clientWriteBodyComplete;
-static PF clientReadRequest;
+static IOCB clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
 static PF clientLifetimeTimeout;
 static void checkFailureRatio(err_type, hier_code);
 static clientSocketContext *parseHttpRequestAbort(ConnStateData * conn,
     const char *uri);
-static clientSocketContext *parseHttpRequest(ConnStateData *, method_t *, int *,
+static clientSocketContext *parseHttpRequest(ConnStateData *, method_t *,
     char **, size_t *);
 #if USE_IDENT
 static IDCB clientIdentDone;
@@ -142,7 +147,6 @@ static MemObject *clientGetMemObject(clientHttpRequest * http);
 static void clientPrepareLogWithRequestDetails(request_t *, AccessLogEntry *);
 static void clientLogRequest(clientHttpRequest *);
 static void httpRequestFreeResources(clientHttpRequest *);
-static void connEmptyOSReadBuffers(int fd);
 static int connIsUsable(ConnStateData * conn);
 static clientSocketContext *connGetCurrentContext(ConnStateData * conn);
 static void contextDeferRecipientForLater(clientSocketContext * context, clientStreamNode * node, HttpReply * rep, StoreIOBuffer recievedData);
@@ -160,7 +164,7 @@ static char *skipLeadingSpace(char *aString);
 static char *findTrailingHTTPVersion(char *uriAndHTTPVersion);
 static void trimTrailingSpaces(char *aString, size_t len);
 static clientSocketContext *parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p, ConnStateData * conn);
-static void setLogUri(clientHttpRequest * http, char *uri);
+static void setLogUri(clientHttpRequest * http, char const *uri);
 static void prepareInternalUrl(clientHttpRequest * http, char *url);
 static void prepareForwardProxyUrl(clientHttpRequest * http, char *url);
 static void prepareAcceleratedUrl(clientHttpRequest * http, char *url, char *req_hdr);
@@ -168,12 +172,12 @@ static int connGetAvailableBufferLength(ConnStateData const *conn);
 static void connMakeSpaceAvailable(ConnStateData * conn);
 static void connAddContextToQueue(ConnStateData * conn, clientSocketContext * context);
 static int connGetConcurrentRequestCount(ConnStateData * conn);
-static int connReadWasError(ConnStateData * conn, int size);
+static int connReadWasError(ConnStateData * conn, comm_err_t, int size);
 static int connFinishedWithConn(ConnStateData * conn, int size);
 static void connNoteUseOfBuffer(ConnStateData * conn, size_t byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData * conn);
 static void connCancelIncompleteRequests(ConnStateData * conn);
-static ConnStateData *connStateCreate(struct sockaddr_in peer, struct sockaddr_in me, int fd);
+static ConnStateData *connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd);
 static clientStreamNode *getClientReplyContext(clientSocketContext * context);
 static int connAreAllContextsForThisConnection(ConnStateData * connState);
 static void connFreeAllContexts(ConnStateData * connState);
@@ -190,6 +194,24 @@ getClientReplyContext(clientSocketContext * context)
 {
     return (clientStreamNode *)context->http->client_stream.tail->prev->data;
 }
+
+/*
+ * This routine should be called to grow the inbuf and then
+ * call comm_read().
+ */
+void
+clientReadSomeData(ConnStateData *conn)
+{
+    size_t len;
+    
+    debug(33, 4) ("clientReadSomeData: FD %d: reading request...\n", conn->fd);
+
+    connMakeSpaceAvailable(conn);
+    len = connGetAvailableBufferLength(conn) - 1;
+    
+    comm_read(conn->fd, conn->in.buf + conn->in.notYetUsed, len, clientReadRequest, conn);
+}
+      
 
 void
 clientSocketRemoveThisFromConnectionList(clientSocketContext * context,
@@ -458,16 +480,6 @@ connFreeAllContexts(ConnStateData * connState)
     }
 }
 
-void
-connEmptyOSReadBuffers(int fd)
-{
-#ifdef _SQUID_LINUX_
-    /* prevent those nasty RST packets */
-    char buf[SQUID_TCP_SO_RCVBUF];
-    while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0);
-#endif
-}
-
 /* This is a handler normally called by comm_close() */
 static void
 connStateFree(int fd, void *data)
@@ -485,7 +497,6 @@ connStateFree(int fd, void *data)
     memFreeBuf(connState->in.allocatedSize, connState->in.buf);
     pconnHistCount(0, connState->nrequests);
     cbdataFree(connState);
-    connEmptyOSReadBuffers(fd);
 }
 
 /*
@@ -714,21 +725,12 @@ connReadNextRequest(ConnStateData * conn)
      */
     commSetTimeout(conn->fd, Config.Timeout.persistent_request,
 	requestTimeout, conn);
-    /*
-     * CYGWIN has a problem and is blocking on read() requests when there
-     * is no data present.
-     * This hack may hit performance a little, but it's better than 
-     * blocking!.
-     */
     conn->defer.until = 0;	/* Kick it to read a new request */
-#ifdef _SQUID_CYGWIN_
-    commSetSelect(conn->fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
-#else
-    clientReadRequest(conn->fd, conn);	/* Read next request */
-#endif
-    /*
-     * Note, the FD may be closed at this point.
-     */
+    /* Make sure we're still reading from the client side! */
+    /* XXX this could take a bit of CPU time! aiee! -- adrian */
+    assert(comm_has_pending_read(conn->fd));
+    /* clientReadSomeData(conn); */
+    /* Please don't do anything with the FD past here! */
 }
 
 void
@@ -839,7 +841,7 @@ parseHttpRequestAbort(ConnStateData * conn, const char *uri)
     http->start = current_time;
     http->req_sz = conn->in.notYetUsed;
     http->uri = xstrdup(uri);
-    http->log_uri = xstrndup(uri, MAX_URL);
+    setLogUri (http, uri);
     context = clientSocketContextNew(http);
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
@@ -958,7 +960,7 @@ clientParseHttpRequestLine(char *inbuf, size_t req_sz, ConnStateData * conn,
 }
 
 void
-setLogUri(clientHttpRequest * http, char *uri)
+setLogUri(clientHttpRequest * http, char const *uri)
 {
     if (!stringHasCntl(uri))
 	http->log_uri = xstrndup(uri, MAX_URL);
@@ -1050,11 +1052,13 @@ prepareAcceleratedUrl(clientHttpRequest * http, char *url, char *req_hdr)
  *  parseHttpRequest()
  * 
  *  Returns
- *   NULL on error or incomplete request
- *    a clientHttpRequest structure on success
+ *  NULL on incomplete requests
+ *  a clientSocketContext structure on success or failure.
+ *  Sets result->flags.parsed_ok to 0 if failed to parse the request.
+ *  Sets result->flags.parsed_ok to 1 if we have a good request.
  */
 static clientSocketContext *
-parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
+parseHttpRequest(ConnStateData * conn, method_t * method_p,
     char **prefix_p, size_t * req_line_sz_p)
 {
     char *inbuf = NULL;
@@ -1072,11 +1076,9 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     /* pre-set these values to make aborting simpler */
     *prefix_p = NULL;
     *method_p = METHOD_NONE;
-    *status = -1;
 
     if ((req_sz = headersEnd(conn->in.buf, conn->in.notYetUsed)) == 0) {
 	debug(33, 5) ("Incomplete request, waiting for end of headers\n");
-	*status = 0;
 	return NULL;
     }
     assert(req_sz <= conn->in.notYetUsed);
@@ -1101,7 +1103,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     header_sz = req_sz - (req_hdr - inbuf);
     if (0 == header_sz) {
 	debug(33, 3) ("parseHttpRequest: header_sz == 0\n");
-	*status = 0;
 	xfree(inbuf);
 	return NULL;
     }
@@ -1151,7 +1152,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     setLogUri(http, http->uri);
     debug(33, 5) ("parseHttpRequest: Complete request received\n");
     xfree(inbuf);
-    *status = 1;
+    result->flags.parsed_ok = 1;
     return result;
 }
 
@@ -1202,8 +1203,12 @@ connGetConcurrentRequestCount(ConnStateData * conn)
 }
 
 int
-connReadWasError(ConnStateData * conn, int size)
+connReadWasError(ConnStateData * conn, comm_err_t flag, int size)
 {
+    if (flag != COMM_OK) {
+	debug(50, 2) ("connReadWasError: FD %d: got flag %d\n", conn->fd, flag);
+	return 1;
+    }
     if (size < 0) {
 	if (!ignoreErrno(errno)) {
 	    debug(50, 2) ("connReadWasError: FD %d: %s\n", conn->fd, xstrerror());
@@ -1272,24 +1277,198 @@ connCancelIncompleteRequests(ConnStateData * conn)
 }
 
 static void
-clientReadRequest(int fd, void *data)
+clientMaybeReadData(ConnStateData *conn, int do_next_read)
+{
+    if (do_next_read) {
+	conn->flags.readMoreRequests = 1;
+	clientReadSomeData(conn);
+    }
+}
+
+static void
+clientAfterReadingRequests(int fd, ConnStateData *conn, int do_next_read)
+{
+    fde *F = &fd_table[fd];
+
+    /* Check if a half-closed connection was aborted in the middle */
+    if (F->flags.socket_eof) {
+       if (conn->in.notYetUsed != conn->body.size_left) {      /* != 0 when no
+request body */
+           /* Partial request received. Abort client connection! */
+           debug(33, 3) ("clientReadRequest: FD %d aborted, partial request\n",+                         fd);
+           comm_close(fd);
+           return;
+       }
+    }
+
+    clientMaybeReadData (conn, do_next_read);
+}
+
+
+static void
+clientProcessRequest(ConnStateData *conn, clientSocketContext *context, method_t method, char *prefix, size_t req_line_sz)
+{
+    clientHttpRequest *http = context->http;
+    request_t *request = NULL;
+    /* We have an initial client stream in place should it be needed */
+    /* setup our private context */
+    connNoteUseOfBuffer(conn, http->req_sz);
+
+    connAddContextToQueue(conn, context);
+
+    if (context->flags.parsed_ok == 0) {
+       clientStreamNode *node = getClientReplyContext(context);
+       debug(33, 1) ("clientReadRequest: Invalid Request\n");
+       clientSetReplyToError(node->data,
+                             ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, NULL,
+                             &conn->peer.sin_addr, NULL, conn->in.buf, NULL);
+       assert(context->http->out.offset == 0);
+       clientPullData(context);
+       conn->flags.readMoreRequests = 0;
+       return;
+    }
+
+    if ((request = urlParse(method, http->uri)) == NULL) {
+       clientStreamNode *node = getClientReplyContext(context);
+       debug(33, 5) ("Invalid URL: %s\n", http->uri);
+       clientSetReplyToError(node->data,
+                             ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri,
+                             &conn->peer.sin_addr, NULL, NULL, NULL);
+       assert(context->http->out.offset == 0);
+       clientPullData(context);
+       conn->flags.readMoreRequests = 0;
+       return;
+    } else {
+
+       /* compile headers */
+       /* we should skip request line! */
+       if (!httpRequestParseHeader(request, prefix + req_line_sz))
+           debug(33, 1) ("Failed to parse request headers: %s\n%s\n",
+                         http->uri, prefix);
+       /* continue anyway? */
+    }
+
+    request->flags.accelerated = http->flags.accel;
+    if (!http->flags.internal) {
+       if (internalCheck(strBuf(request->urlpath))) {
+           if (internalHostnameIs(request->host) &&
+               request->port == getMyPort()) {
+               http->flags.internal = 1;
+           } else if (internalStaticCheck(strBuf(request->urlpath))) {
+               xstrncpy(request->host, internalHostname(),
+                        SQUIDHOSTNAMELEN);
+               request->port = getMyPort();
+               http->flags.internal = 1;
+           }
+       }
+    }
+
+    /*
+     *  cache the Content-length value in request_t.
+     */
+    request->content_length = httpHeaderGetInt(&request->header,
+                                              HDR_CONTENT_LENGTH);
+    request->flags.internal = http->flags.internal;
+    setLogUri (http, urlCanonicalClean(request));
+    request->client_addr = conn->peer.sin_addr;
+    request->my_addr = conn->me.sin_addr;
+    request->my_port = ntohs(conn->me.sin_port);
+    request->http_ver = http->http_ver;
+    if (!urlCheckRequest(request) ||
+       httpHeaderHas(&request->header, HDR_TRANSFER_ENCODING)) {
+       clientStreamNode *node = getClientReplyContext(context);
+       clientSetReplyToError(node->data, ERR_UNSUP_REQ,
+                             HTTP_NOT_IMPLEMENTED, request->method, NULL,
+                             &conn->peer.sin_addr, request, NULL, NULL);
+       assert(context->http->out.offset == 0);
+       clientPullData(context);
+       conn->flags.readMoreRequests = 0;
+       return;
+    }
+
+
+    if (!clientIsContentLengthValid(request)) {
+       clientStreamNode *node = getClientReplyContext(context);
+       clientSetReplyToError(node->data, ERR_INVALID_REQ,
+                             HTTP_LENGTH_REQUIRED, request->method, NULL,
+                             &conn->peer.sin_addr, request, NULL, NULL);
+       assert(context->http->out.offset == 0);
+       clientPullData(context);
+       conn->flags.readMoreRequests = 0;
+       return;
+    }
+
+    http->request = requestLink(request);
+    clientSetKeepaliveFlag(http);
+    /* Do we expect a request-body? */
+    if (request->content_length > 0) {
+       conn->body.size_left = request->content_length;
+       request->body_connection = conn;
+       /* Is it too large? */
+       if (!clientIsRequestBodyValid(request->content_length) ||
+           clientIsRequestBodyTooLargeForPolicy(request->content_length)) {
+           clientStreamNode *node = getClientReplyContext(context);
+           clientSetReplyToError(node->data, ERR_TOO_BIG,
+                                 HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
+                                 &conn->peer.sin_addr, http->request, NULL, NULL);
+           assert(context->http->out.offset == 0);
+           clientPullData(context);
+           conn->flags.readMoreRequests = 0;
+           return;
+       }
+    }
+
+    /* If this is a CONNECT, don't schedule a read - ssl.c will handle it */
+    if (http->request->method == METHOD_CONNECT)
+       context->flags.mayUseConnection = 1;
+    clientAccessCheck(http);
+}
+
+static void
+connStripBufferWhitespace (ConnStateData *conn)
+{
+    while (conn->in.notYetUsed > 0 && xisspace(conn->in.buf[0])) {
+       xmemmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
+       --conn->in.notYetUsed;
+    }
+}
+
+static int
+connOkToAddRequest(ConnStateData *conn)
+{
+    int result = connGetConcurrentRequestCount(conn) < (Config.onoff.pipeline_prefetch ? 2 : 1);
+    if (!result) {
+       debug(33, 3) ("clientReadRequest: FD %d max concurrent requests reached\n",
+           conn->fd);
+       debug(33, 5) ("clientReadRequest: FD %d defering new request until one is done\n",
+           conn->fd);
+    }
+    return result;
+}
+
+static void
+connSetDefer (ConnStateData *conn, size_t milliSeconds)
+{
+    conn->defer.until = squid_curtime + milliSeconds;
+    conn->defer.n++;
+}
+
+static void
+clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
+void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
-    int parser_return_code = 0;
-    request_t *request = NULL;
-    int size;
     method_t method;
     char *prefix = NULL;
-    fde *F = &fd_table[fd];
-    int len;
     clientSocketContext *context;
-    debug(33, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
-    connMakeSpaceAvailable(conn);
-    len = connGetAvailableBufferLength(conn) - 1;
-    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
-    statCounter.syscalls.sock.reads++;
-    /* TODO: read should callback */
-    size = FD_READ_METHOD(fd, conn->in.buf + conn->in.notYetUsed, len);
+    int do_next_read = 1; /* the default _is_ to read data! - adrian */
+
+    assert (fd == conn->fd);
+
+    /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
     /*
      * Don't reset the timeout value here.  The timeout value will be
      * set to Config.Timeout.request by httpAccept() and
@@ -1297,31 +1476,36 @@ clientReadRequest(int fd, void *data)
      * whole, not individual read() calls.  Plus, it breaks our
      * lame half-close detection
      */
-    if (size > 0) {
-	fd_bytes(fd, size, FD_READ);
-	kb_incr(&statCounter.client_http.kbytes_in, size);
-	conn->in.notYetUsed += size;
-	conn->in.buf[conn->in.notYetUsed] = '\0';	/* Terminate the string */
-    } else if (size == 0) {
-	if (connFinishedWithConn(conn, size)) {
-	    comm_close(fd);
-	    return;
-	}
-	/* It might be half-closed, we can't tell */
-	debug(33, 5) ("clientReadRequest: FD %d closed?\n", fd);
-	F->flags.socket_eof = 1;
-	conn->defer.until = squid_curtime + 1;
-	conn->defer.n++;
-	fd_note(fd, "half-closed");
-	/* There is one more close check at the end, to detect aborted
-	 * (partial) requests. At this point we can't tell if the request
-	 * is partial.
-	 */
-	/* Continue to process previously read data */
-    } else if (connReadWasError(conn, size)) {
+    if (connReadWasError(conn, flag, size)) {
 	comm_close(fd);
 	return;
     }
+
+    if (flag == COMM_OK) {
+       if (size > 0) {
+           kb_incr(&statCounter.client_http.kbytes_in, size);
+           conn->in.notYetUsed += size;
+           conn->in.buf[conn->in.notYetUsed] = '\0';   /* Terminate the string
+*/
+       } else if (size == 0) {
+           debug(33, 5) ("clientReadRequest: FD %d closed?\n", fd);
+           if (connFinishedWithConn(conn, size)) {
+               comm_close(fd);
+               return;
+           }
+           /* It might be half-closed, we can't tell */
+           fd_table[fd].flags.socket_eof = 1;
+           connSetDefer (conn, 1);
+           fd_note(fd, "half-closed");
+           /* There is one more close check at the end, to detect aborted
+            * (partial) requests. At this point we can't tell if the request
+            * is partial.
+            */
+           /* Continue to process previously read data */
+       }
+    }
+
+
     /* Process request body if any */
     if (conn->in.notYetUsed > 0 && conn->body.callback != NULL)
 	clientProcessBody(conn);
@@ -1331,151 +1515,50 @@ clientReadRequest(int fd, void *data)
 
     while (conn->in.notYetUsed > 0 && conn->body.size_left == 0) {
 	size_t req_line_sz;
-	/* Skip leading ( or trail from previous request) whitespace */
-	while (conn->in.notYetUsed > 0 && xisspace(conn->in.buf[0])) {
-	    xmemmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
-	    --conn->in.notYetUsed;
+       connStripBufferWhitespace (conn);
+       if (conn->in.notYetUsed == 0) {
+           clientAfterReadingRequests(fd, conn, do_next_read);
+           return;
 	}
-	conn->in.buf[conn->in.notYetUsed] = '\0';	/* Terminate the string */
-	if (conn->in.notYetUsed == 0)
-	    break;
 	/* Limit the number of concurrent requests to 2 */
-	if (connGetConcurrentRequestCount(conn) >= (Config.onoff.pipeline_prefetch ? 2 : 1)) {
-	    debug(33, 3) ("clientReadRequest: FD %d max concurrent requests reached\n",
-		fd);
-	    debug(33, 5) ("clientReadRequest: FD %d defering new request until one is done\n",
-		fd);
-	    conn->defer.until = squid_curtime + 100;	/* Reset when a request is complete */
-	    conn->defer.n++;
+       if (!connOkToAddRequest(conn)) {
+           /* Reset when a request is complete */
+           connSetDefer (conn, 100);
+           clientMaybeReadData (conn, do_next_read);
 	    return;
 	}
-	conn->in.buf[conn->in.notYetUsed] = '\0';	/* Terminate the string */
+       /* Should not be needed anymore */
+       /* Terminate the string */
+       conn->in.buf[conn->in.notYetUsed] = '\0';
 	/* Process request */
 	context = parseHttpRequest(conn,
-	    &method, &parser_return_code, &prefix, &req_line_sz);
-	if (!context)
+	    &method, &prefix, &req_line_sz);
+	/* partial or incomplete request */
+	if (!context) {
 	    safe_free(prefix);
-	if (context) {
-	    clientHttpRequest *http = context->http;
-	    /* We have an initial client stream in place should it be needed */
-	    /* setup our private context */
-	    assert (http->req_sz >= 0);
-	    connNoteUseOfBuffer(conn, http->req_sz);
-
-	    connAddContextToQueue(conn, context);
-	    commSetTimeout(fd, Config.Timeout.lifetime, clientLifetimeTimeout,
-		http);
-	    if (parser_return_code < 0) {
-		clientStreamNode *node = getClientReplyContext(context);
-		debug(33, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
-		clientSetReplyToError(node->data,
-		    ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, NULL,
-		    &conn->peer.sin_addr, NULL, conn->in.buf, NULL);
-		assert(context->http->out.offset == 0);
-		clientPullData(context);
-		safe_free(prefix);
-		break;
-	    }
-	    if ((request = urlParse(method, http->uri)) == NULL) {
-		clientStreamNode *node = getClientReplyContext(context);
-		debug(33, 5) ("Invalid URL: %s\n", http->uri);
-		clientSetReplyToError(node->data,
-		    ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri,
-		    &conn->peer.sin_addr, NULL, NULL, NULL);
-		assert(context->http->out.offset == 0);
-		clientPullData(context);
-		safe_free(prefix);
-		break;
-	    } else {
-		/* compile headers */
-		/* we should skip request line! */
-		if (!httpRequestParseHeader(request, prefix + req_line_sz))
-		    debug(33, 1) ("Failed to parse request headers: %s\n%s\n",
-			http->uri, prefix);
-		/* continue anyway? */
-	    }
-	    request->flags.accelerated = http->flags.accel;
-	    if (!http->flags.internal) {
-		if (internalCheck(strBuf(request->urlpath))) {
-		    if (internalHostnameIs(request->host) &&
-			request->port == getMyPort()) {
-			http->flags.internal = 1;
-		    } else if (internalStaticCheck(strBuf(request->urlpath))) {
-			xstrncpy(request->host, internalHostname(),
-			    SQUIDHOSTNAMELEN);
-			request->port = getMyPort();
-			http->flags.internal = 1;
-		    }
-		}
-	    }
-	    /*
-	     * cache the Content-length value in request_t.
-	     */
-	    request->content_length = httpHeaderGetInt(&request->header,
-		HDR_CONTENT_LENGTH);
-	    request->flags.internal = http->flags.internal;
-	    safe_free(prefix);
-	    safe_free(http->log_uri);
-	    http->log_uri = xstrdup(urlCanonicalClean(request));
-	    request->client_addr = conn->peer.sin_addr;
-	    request->my_addr = conn->me.sin_addr;
-	    request->my_port = ntohs(conn->me.sin_port);
-	    request->http_ver = http->http_ver;
-	    if (!urlCheckRequest(request) ||
-		httpHeaderHas(&request->header, HDR_TRANSFER_ENCODING)) {
-		clientStreamNode *node = getClientReplyContext(context);
-		clientSetReplyToError(node->data, ERR_UNSUP_REQ,
-		    HTTP_NOT_IMPLEMENTED, request->method, NULL,
-		    &conn->peer.sin_addr, request, NULL, NULL);
-		assert(context->http->out.offset == 0);
-		clientPullData(context);
-		break;
-	    }
-	    if (!clientIsContentLengthValid(request)) {
-		clientStreamNode *node = getClientReplyContext(context);
-		clientSetReplyToError(node->data, ERR_INVALID_REQ,
-		    HTTP_LENGTH_REQUIRED, request->method, NULL,
-		    &conn->peer.sin_addr, request, NULL, NULL);
-		assert(context->http->out.offset == 0);
-		clientPullData(context);
-		break;
-	    }
-	    http->request = requestLink(request);
-	    clientSetKeepaliveFlag(http);
-	    /* Do we expect a request-body? */
-	    if (request->content_length > 0) {
-		conn->body.size_left = request->content_length;
-		request->body_connection = conn;
-		/* Is it too large? */
-		if (!clientIsRequestBodyValid(request->content_length) ||
-		    clientIsRequestBodyTooLargeForPolicy(request->content_length)) {
-		    clientStreamNode *node = getClientReplyContext(context);
-		    clientSetReplyToError(node->data, ERR_TOO_BIG,
-			HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
-			&conn->peer.sin_addr, http->request, NULL, NULL);
-		    assert(context->http->out.offset == 0);
-		    clientPullData(context);
-		    break;
-		}
-	    }
-	    clientAccessCheck(http);
-	    continue;		/* while offset > 0 && body.size_left == 0 */
-	} else if (parser_return_code == 0) {
 	    if (!connKeepReadingIncompleteRequest(conn))
-		connCancelIncompleteRequests(conn);
-	    break;
+               connCancelIncompleteRequests(conn);
+           break; /* conn->in.notYetUsed > 0 && conn->body.size_left == 0 */
+       }
+
+       /* status -1 or 1 */
+	if (context) {
+	    commSetTimeout(fd, Config.Timeout.lifetime, clientLifetimeTimeout,
+		context->http);
+
+	    clientProcessRequest(conn, context, method, prefix, req_line_sz);
+
+	    safe_free(prefix);
+           if (!conn->flags.readMoreRequests) {
+               conn->flags.readMoreRequests = 1;
+		break;
+	    }
+	    if (context->flags.mayUseConnection)
+		do_next_read = 0;
+	    continue;		/* while offset > 0 && body.size_left == 0 */
 	}
     }				/* while offset > 0 && conn->body.size_left == 0 */
-    /* Check if a half-closed connection was aborted in the middle */
-    if (F->flags.socket_eof) {
-	if (conn->in.notYetUsed != conn->body.size_left) {	/* != 0 when no request body */
-	    /* Partial request received. Abort client connection! */
-	    debug(33, 3) ("clientReadRequest: FD %d aborted, partial request\n",
-		fd);
-	    comm_close(fd);
-	    return;
-	}
-    }
+    clientAfterReadingRequests(fd, conn, do_next_read);
 }
 
 /* file_read like function, for reading body content */
@@ -1685,60 +1768,59 @@ httpAcceptDefer(int fdunused, void *dataunused)
 }
 
 ConnStateData *
-connStateCreate(struct sockaddr_in peer, struct sockaddr_in me, int fd)
+connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd)
 {
     ConnStateData *result = cbdataAlloc(ConnStateData);
-    result->peer = peer;
-    result->log_addr = peer.sin_addr;
+    result->peer = *peer;
+    result->log_addr = peer->sin_addr;
     result->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
-    result->me = me;
+    result->me = *me;
     result->fd = fd;
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
+    result->flags.readMoreRequests = 1;
     return result;
 }
 
 /* Handle a new connection on HTTP socket. */
 void
-httpAccept(int sock, void *data)
+httpAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *peer,
+  comm_err_t flag, int xerrno, void *data)
 {
     int *N = &incoming_sockets_accepted;
-    int fd = -1;
     ConnStateData *connState = NULL;
-    struct sockaddr_in peer;
-    struct sockaddr_in me;
-    int max = INCOMING_HTTP_MAX;
 #if USE_IDENT
     static aclCheck_t identChecklist;
 #endif
-    commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
-    while (max-- && !httpAcceptDefer(sock, NULL)) {
-	memset(&peer, '\0', sizeof(struct sockaddr_in));
-	memset(&me, '\0', sizeof(struct sockaddr_in));
-	if ((fd = comm_accept(sock, &peer, &me)) < 0) {
-	    if (!ignoreErrno(errno))
-		debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
+    /* kick off another one for later */
+    comm_accept(sock, httpAccept, NULL);
+
+    /* XXX we're not considering httpAcceptDefer yet! */
+
+	if (flag != COMM_OK) {
+	    errno = xerrno;
+	    debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
 		    sock, xstrerror());
-	    break;
+	    return;
 	}
-	debug(33, 4) ("httpAccept: FD %d: accepted\n", fd);
-	connState = connStateCreate(peer, me, fd);
-	comm_add_close_handler(fd, connStateFree, connState);
+	
+	debug(33, 4) ("httpAccept: FD %d: accepted\n", newfd);
+	connState = connStateCreate(peer, me, newfd);
+	comm_add_close_handler(newfd, connStateFree, connState);
 	if (Config.onoff.log_fqdn)
-	    fqdncache_gethostbyaddr(peer.sin_addr, FQDN_LOOKUP_IF_MISS);
-	commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
+	    fqdncache_gethostbyaddr(peer->sin_addr, FQDN_LOOKUP_IF_MISS);
+	commSetTimeout(newfd, Config.Timeout.request, requestTimeout, connState);
 #if USE_IDENT
-	identChecklist.src_addr = peer.sin_addr;
-	identChecklist.my_addr = me.sin_addr;
-	identChecklist.my_port = ntohs(me.sin_port);
+	identChecklist.src_addr = peer->sin_addr;
+	identChecklist.my_addr = me->sin_addr;
+	identChecklist.my_port = ntohs(me->sin_port);
 	if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
-	    identStart(&me, &peer, clientIdentDone, connState);
+	    identStart(me, peer, clientIdentDone, connState);
 #endif
-	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
-	commSetDefer(fd, clientReadDefer, connState);
-	clientdbEstablished(peer.sin_addr, 1);
+	clientReadSomeData(connState);
+	commSetDefer(newfd, clientReadDefer, connState);
+	clientdbEstablished(peer->sin_addr, 1);
 	assert(N);
 	(*N)++;
-    }
 }
 
 #if USE_SSL
@@ -1781,7 +1863,7 @@ clientNegotiateSSL(int fd, void *data)
 	debug(83, 5) ("clientNegotiateSSL: FD %d has no certificate.\n", fd);
     }
 
-    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
+    clientReadSomeData(conn);
 }
 
 struct _https_port_data {
@@ -1792,61 +1874,56 @@ CBDATA_TYPE(https_port_data);
 
 /* handle a new HTTPS connection */
 static void
-httpsAccept(int sock, void *data)
+httpsAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *peer,
+  comm_err_t flag, int xerrno, void *data)
 {
     int *N = &incoming_sockets_accepted;
     https_port_data *https_port = (https_port_data *)data;
     SSL_CTX *sslContext = https_port->sslContext;
-    int fd = -1;
     ConnStateData *connState = NULL;
-    struct sockaddr_in peer;
-    struct sockaddr_in me;
-    int max = INCOMING_HTTP_MAX;
     SSL *ssl;
     int ssl_error;
 #if USE_IDENT
     static aclCheck_t identChecklist;
 #endif
-    commSetSelect(sock, COMM_SELECT_READ, httpsAccept, https_port, 0);
-    while (max-- && !httpAcceptDefer(sock, NULL)) {
-	memset(&peer, '\0', sizeof(struct sockaddr_in));
-	memset(&me, '\0', sizeof(struct sockaddr_in));
-	if ((fd = comm_accept(sock, &peer, &me)) < 0) {
-	    if (!ignoreErrno(errno))
-		debug(50, 1) ("httpsAccept: FD %d: accept failure: %s\n",
-		    sock, xstrerror());
-	    break;
-	}
-	if ((ssl = SSL_new(sslContext)) == NULL) {
-	    ssl_error = ERR_get_error();
-	    debug(83, 1) ("httpsAccept: Error allocating handle: %s\n",
-		ERR_error_string(ssl_error, NULL));
-	    break;
-	}
-	SSL_set_fd(ssl, fd);
-	fd_table[fd].ssl = ssl;
-	fd_table[fd].read_method = &ssl_read_method;
-	fd_table[fd].write_method = &ssl_write_method;
-	debug(50, 5) ("httpsAccept: FD %d accepted, starting SSL negotiation.\n", fd);
 
-	connState = connStateCreate(peer, me, fd);
-	/* XXX account connState->in.buf */
-	comm_add_close_handler(fd, connStateFree, connState);
-	if (Config.onoff.log_fqdn)
-	    fqdncache_gethostbyaddr(peer.sin_addr, FQDN_LOOKUP_IF_MISS);
-	commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
-#if USE_IDENT
-	identChecklist.src_addr = peer.sin_addr;
-	identChecklist.my_addr = me.sin_addr;
-	identChecklist.my_port = ntohs(me.sin_port);
-	if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
-	    identStart(&me, &peer, clientIdentDone, connState);
-#endif
-	commSetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
-	commSetDefer(fd, clientReadDefer, connState);
-	clientdbEstablished(peer.sin_addr, 1);
-	(*N)++;
+    if (flag != COMM_OK) {
+	errno = xerrno;
+	debug(50, 1) ("httpsAccept: FD %d: accept failure: %s\n",
+	    sock, xstrerror());
+	return;
     }
+    
+    if ((ssl = SSL_new(sslContext)) == NULL) {
+	ssl_error = ERR_get_error();
+	debug(83, 1) ("httpsAccept: Error allocating handle: %s\n",
+	    ERR_error_string(ssl_error, NULL));
+	return;
+    }
+
+    SSL_set_fd(ssl, newfd);
+    fd_table[newfd].ssl = ssl;
+    fd_table[newfd].read_method = &ssl_read_method;
+    fd_table[newfd].write_method = &ssl_write_method;
+    debug(50, 5) ("httpsAccept: FD %d accepted, starting SSL negotiation.\n", newfd);
+    
+    connState = connStateCreate(peer, me, newfd);
+    /* XXX account connState->in.buf */
+    comm_add_close_handler(newfd, connStateFree, connState);
+    if (Config.onoff.log_fqdn)
+	fqdncache_gethostbyaddr(peer->sin_addr, FQDN_LOOKUP_IF_MISS);
+    commSetTimeout(newfd, Config.Timeout.request, requestTimeout, connState);
+#if USE_IDENT
+    identChecklist.src_addr = peer->sin_addr;
+    identChecklist.my_addr = me->sin_addr;
+    identChecklist.my_port = ntohs(me->sin_port);
+    if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
+	identStart(me, peer, clientIdentDone, connState);
+#endif
+    commSetSelect(newfd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
+    commSetDefer(newfd, clientReadDefer, connState);
+    clientdbEstablished(peer->sin_addr, 1);
+    (*N)++;
 }
 
 #endif /* USE_SSL */
@@ -1915,7 +1992,7 @@ clientHttpConnectionsOpen(void)
 	if (fd < 0)
 	    continue;
 	comm_listen(fd);
-	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
+	comm_accept(fd, httpAccept, NULL);
 	/*
 	 * We need to set a defer handler here so that we don't
 	 * peg the CPU with select() when we hit the FD limit.
@@ -1954,7 +2031,7 @@ clientHttpsConnectionsOpen(void)
 	    sslCreateContext(s->cert, s->key, s->version, s->cipher,
 	    s->options);
 	comm_listen(fd);
-	commSetSelect(fd, COMM_SELECT_READ, httpsAccept, https_port, 0);
+	comm_accept(fd, httpsAccept, NULL);
 	commSetDefer(fd, httpAcceptDefer, NULL);
 	debug(1, 1) ("Accepting HTTPS connections at %s, port %d, FD %d.\n",
 	    inet_ntoa(s->s.sin_addr), (int) ntohs(s->s.sin_port), fd);

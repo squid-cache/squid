@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.174 2002/10/14 07:35:45 hno Exp $
+ * $Id: gopher.cc,v 1.175 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -87,6 +87,7 @@ typedef struct gopher_ds {
     int fd;
     request_t *req;
     FwdState *fwdState;
+    char replybuf[BUFSIZ];
 } GopherStateData;
 
 static PF gopherStateFree;
@@ -98,7 +99,7 @@ static void gopher_request_parse(const request_t * req,
 static void gopherEndHTML(GopherStateData *);
 static void gopherToHTML(GopherStateData *, char *inbuf, int len);
 static PF gopherTimeout;
-static PF gopherReadReply;
+static IOCB gopherReadReply;
 static CWCB gopherSendComplete;
 static PF gopherSendRequest;
 
@@ -615,51 +616,54 @@ gopherTimeout(int fd, void *data)
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
 static void
-gopherReadReply(int fd, void *data)
+gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *)data;
     StoreEntry *entry = gopherState->entry;
-    char *buf = NULL;
-    int len;
     int clen;
     int bin;
-    size_t read_sz;
+    size_t read_sz = BUFSIZ;
+    int do_next_read = 0;
 #if DELAY_POOLS
     delay_id delayId = delayMostBytesAllowed(entry->mem_obj);
 #endif
+
+    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
+
+    assert(buf == gopherState->replybuf);
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(fd);
 	return;
     }
+
     errno = 0;
-    buf = (char *)memAllocate(MEM_4K_BUF);
-    read_sz = 4096 - 1;		/* leave room for termination */
 #if DELAY_POOLS
     read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
+
     /* leave one space for \0 in gopherToHTML */
-    statCounter.syscalls.sock.reads++;
-    len = FD_READ_METHOD(fd, buf, read_sz);
-    if (len > 0) {
-	fd_bytes(fd, len, FD_READ);
+    if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
 	delayBytesIn(delayId, len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.other.kbytes_in, len);
     }
-    debug(10, 5) ("gopherReadReply: FD %d read len=%d\n", fd, len);
-    if (len > 0) {
+    debug(10, 5) ("gopherReadReply: FD %d read len=%d\n", fd, (int)len);
+    if (flag == COMM_OK && len > 0) {
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Gopher.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
 	IOStats.Gopher.read_hist[bin]++;
     }
-    if (len < 0) {
+    if (flag != COMM_OK || len < 0) {
 	debug(50, 1) ("gopherReadReply: error reading: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
-	    commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, gopherState, 0);
+            do_next_read = 1;
 	} else if (entry->mem_obj->inmem_hi == 0) {
 	    ErrorState *err;
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
@@ -667,8 +671,10 @@ gopherReadReply(int fd, void *data)
 	    err->url = xstrdup(storeUrl(entry));
 	    errorAppendEntry(entry, err);
 	    comm_close(fd);
+            do_next_read = 0;
 	} else {
 	    comm_close(fd);
+            do_next_read = 0;
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
 	ErrorState *err;
@@ -677,6 +683,7 @@ gopherReadReply(int fd, void *data)
 	err->url = xstrdup(gopherState->request);
 	errorAppendEntry(entry, err);
 	comm_close(fd);
+        do_next_read = 0;
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	/* flush the rest of data in temp buf if there is one. */
@@ -686,18 +693,17 @@ gopherReadReply(int fd, void *data)
 	storeBufferFlush(entry);
 	fwdComplete(gopherState->fwdState);
 	comm_close(fd);
+        do_next_read = 0;
     } else {
 	if (gopherState->conversion != gopher_ds::NORMAL) {
 	    gopherToHTML(gopherState, buf, len);
 	} else {
 	    storeAppend(entry, buf, len);
 	}
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    gopherReadReply,
-	    gopherState, 0);
+        do_next_read = 1;
     }
-    memFree(buf, MEM_4K_BUF);
+    if (do_next_read)
+        comm_read(fd, buf, read_sz, gopherReadReply, gopherState);
     return;
 }
 
@@ -757,7 +763,8 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, void *dat
 	gopherState->conversion = gopher_ds::NORMAL;
     }
     /* Schedule read reply. */
-    commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, gopherState, 0);
+    /* XXX this read isn't being bound by delay pools! */
+    comm_read(fd, gopherState->replybuf, BUFSIZ, gopherReadReply, gopherState);
     commSetDefer(fd, fwdCheckDeferRead, entry);
     if (buf)
 	memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
@@ -847,6 +854,6 @@ gopherStart(FwdState * fwdState)
     }
     gopherState->fd = fd;
     gopherState->fwdState = fwdState;
-    commSetSelect(fd, COMM_SELECT_WRITE, gopherSendRequest, gopherState, 0);
+    gopherSendRequest(fd, gopherState);
     commSetTimeout(fd, Config.Timeout.read, gopherTimeout, gopherState);
 }

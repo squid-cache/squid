@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.396 2002/10/14 07:35:46 hno Exp $
+ * $Id: http.cc,v 1.397 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -51,7 +51,7 @@ static const char *const crlf = "\r\n";
 static CWCB httpSendComplete;
 static CWCB httpSendRequestEntity;
 
-static PF httpReadReply;
+static IOCB httpReadReply;
 static void httpSendRequest(HttpStateData *);
 static PF httpStateFree;
 static PF httpTimeout;
@@ -555,16 +555,22 @@ httpPconnTransferDone(HttpStateData * httpState)
  * error or connection closed. */
 /* XXX this function is too long! */
 static void
-httpReadReply(int fd, void *data)
+httpReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno,void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
+    httpState->readReply (fd, buf, len, flag, xerrno, data);
+}
+
+void
+HttpStateData::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrno,void *data)
+{
+    HttpStateData *httpState = static_cast<HttpStateData *>(data);
     StoreEntry *entry = httpState->entry;
     const request_t *request = httpState->request;
-    int len;
     int bin;
     int clen;
-    size_t read_sz;
+    read_sz = SQUID_TCP_SO_RCVBUF;
+    do_next_read = 0;
 #if DELAY_POOLS
     delay_id delayId;
 
@@ -574,21 +580,30 @@ httpReadReply(int fd, void *data)
     else
 	delayId = delayMostBytesAllowed(entry->mem_obj);
 #endif
+
+
+    assert(buf == httpState->buf);
+
+    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
+*/
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
+
+
+    
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-	comm_close(fd);
+	maybeReadData();
 	return;
     }
-    /* check if we want to defer reading */
+
     errno = 0;
-    read_sz = SQUID_TCP_SO_RCVBUF;
+    /* prepare the read size for the next read (if any) */
 #if DELAY_POOLS
     read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
-    statCounter.syscalls.sock.reads++;
-    len = FD_READ_METHOD(fd, buf, read_sz);
-    debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, len);
-    if (len > 0) {
-	fd_bytes(fd, len, FD_READ);
+    debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, (int)len);
+    if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
 	delayBytesIn(delayId, len);
 #endif
@@ -600,40 +615,44 @@ httpReadReply(int fd, void *data)
 	    clen >>= 1;
 	IOStats.Http.read_hist[bin]++;
     }
-    if (!httpState->reply_hdr && len > 0) {
+    if (!httpState->reply_hdr && flag == COMM_OK && len > 0) {
 	/* Skip whitespace */
 	while (len > 0 && xisspace(*buf))
 	    xmemmove(buf, buf + 1, len--);
 	if (len == 0) {
 	    /* Continue to read... */
-	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
+	    do_next_read = 1;
+	    maybeReadData();
 	    return;
 	}
     }
-    if (len < 0) {
+    if (flag != COMM_OK || len < 0) {
 	debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
 	if (ignoreErrno(errno)) {
-	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
+	    do_next_read = 1;
 	} else if (entry->mem_obj->inmem_hi == 0) {
 	    ErrorState *err;
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->request = requestLink((request_t *) request);
 	    err->xerrno = errno;
 	    fwdFail(httpState->fwd, err);
+	    do_next_read = 0;
 	    comm_close(fd);
 	} else {
+	    do_next_read = 0;
 	    comm_close(fd);
 	}
-    } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
+    } else if (flag == COMM_OK && len == 0 && entry->mem_obj->inmem_hi == 0) {
 	ErrorState *err;
 	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->request = requestLink((request_t *) request);
 	fwdFail(httpState->fwd, err);
 	httpState->eof = 1;
+	do_next_read = 0;
 	comm_close(fd);
-    } else if (len == 0) {
+    } else if (flag == COMM_OK && len == 0) {
 	/* Connection closed; retrieval done. */
 	httpState->eof = 1;
 	if (httpState->reply_hdr_state < 2)
@@ -647,6 +666,7 @@ httpReadReply(int fd, void *data)
 	    httpState->processReplyHeader(buf, len);
 	else {
 	    fwdComplete(httpState->fwd);
+	    do_next_read = 0;
 	    comm_close(fd);
 	}
     } else {
@@ -684,7 +704,7 @@ HttpStateData::processReplyData(const char *buf, int len)
 	/* yes we have to clear all these! */
 	commSetDefer(fd, NULL, NULL);
 	commSetTimeout(fd, -1, NULL, NULL);
-	commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+	do_next_read = 0;
 #if DELAY_POOLS
 	delayClearNoDelay(fd);
 #endif
@@ -696,8 +716,16 @@ HttpStateData::processReplyData(const char *buf, int len)
 	httpStateFree(fd, this);
     } else {
 	/* Wait for EOF condition */
-	commSetSelect(fd, COMM_SELECT_READ, httpReadReply, this, 0);
+	do_next_read = 1;
     }
+    maybeReadData();
+}
+
+void
+HttpStateData::maybeReadData()
+{
+    if (do_next_read)
+        comm_read(fd, buf, read_sz, httpReadReply, this);
 }
 
 /* This will be called when request write is complete. Schedule read of
@@ -729,7 +757,8 @@ httpSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
 	return;
     } else {
 	/* Schedule read reply. */
-	commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
+	/* XXX we're not taking into account delay pools on this read! */
+	comm_read(fd, httpState->buf, SQUID_TCP_SO_RCVBUF, httpReadReply, httpState);
 	/*
 	 * Set the read timeout here because it hasn't been set yet.
 	 * We only set the read timeout after the request has been

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.48 2002/10/13 20:35:01 robertc Exp $
+ * $Id: helper.cc,v 1.49 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -38,8 +38,8 @@
 
 #define HELPER_MAX_ARGS 64
 
-static PF helperHandleRead;
-static PF helperStatefulHandleRead;
+static IOCB helperHandleRead;
+static IOCB helperStatefulHandleRead;
 static PF helperServerFree;
 static PF helperStatefulServerFree;
 static void Enqueue(helper * hlp, helper_request *);
@@ -697,21 +697,23 @@ helperStatefulServerFree(int fd, void *data)
 
 
 static void
-helperHandleRead(int fd, void *data)
+helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
-    int len;
     char *t = NULL;
     helper_server *srv = (helper_server *)data;
     helper_request *r;
     helper *hlp = srv->parent;
     assert(fd == srv->rfd);
     assert(cbdataReferenceValid(data));
-    statCounter.syscalls.sock.reads++;
-    len = FD_READ_METHOD(fd, srv->buf + srv->offset, srv->buf_sz - srv->offset);
-    fd_bytes(fd, len, FD_READ);
+
+    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
+
     debug(84, 5) ("helperHandleRead: %d bytes from %s #%d.\n",
-	len, hlp->id_name, srv->index + 1);
-    if (len <= 0) {
+	(int)len, hlp->id_name, srv->index + 1);
+    if (flag != COMM_OK || len <= 0) {
 	if (len < 0)
 	    debug(50, 1) ("helperHandleRead: FD %d read: %s\n", fd, xstrerror());
 	comm_close(fd);
@@ -723,7 +725,7 @@ helperHandleRead(int fd, void *data)
     if (r == NULL) {
 	/* someone spoke without being spoken to */
 	debug(84, 1) ("helperHandleRead: unexpected read from %s #%d, %d bytes\n",
-	    hlp->id_name, srv->index + 1, len);
+	    hlp->id_name, srv->index + 1, (int)len);
 	srv->offset = 0;
     } else if ((t = strchr(srv->buf, '\n'))) {
 	/* end of reply found */
@@ -752,26 +754,28 @@ helperHandleRead(int fd, void *data)
 	} else
 	    helperKickQueue(hlp);
     } else {
-	commSetSelect(srv->rfd, COMM_SELECT_READ, helperHandleRead, srv, 0);
+        comm_read(fd, srv->buf + srv->offset, srv->buf_sz - srv->offset, helperHandleRead, data);
     }
 }
 
 static void
-helperStatefulHandleRead(int fd, void *data)
+helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
-    int len;
     char *t = NULL;
     helper_stateful_server *srv = (helper_stateful_server *)data;
     helper_stateful_request *r;
     statefulhelper *hlp = srv->parent;
     assert(fd == srv->rfd);
     assert(cbdataReferenceValid(data));
-    statCounter.syscalls.sock.reads++;
-    len = FD_READ_METHOD(fd, srv->buf + srv->offset, srv->buf_sz - srv->offset);
-    fd_bytes(fd, len, FD_READ);
+
+    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
+
     debug(84, 5) ("helperStatefulHandleRead: %d bytes from %s #%d.\n",
-	len, hlp->id_name, srv->index + 1);
-    if (len <= 0) {
+	(int)len, hlp->id_name, srv->index + 1);
+    if (flag != COMM_OK || len <= 0) {
 	if (len < 0)
 	    debug(50, 1) ("helperStatefulHandleRead: FD %d read: %s\n", fd, xstrerror());
 	comm_close(fd);
@@ -783,7 +787,7 @@ helperStatefulHandleRead(int fd, void *data)
     if (r == NULL) {
 	/* someone spoke without being spoken to */
 	debug(84, 1) ("helperStatefulHandleRead: unexpected read from %s #%d, %d bytes\n",
-	    hlp->id_name, srv->index + 1, len);
+	    hlp->id_name, srv->index + 1, (int)len);
 	srv->offset = 0;
     } else if ((t = strchr(srv->buf, '\n'))) {
 	/* end of reply found */
@@ -852,7 +856,8 @@ helperStatefulHandleRead(int fd, void *data)
 		helperStatefulKickQueue(hlp);
 	}
     } else {
-	commSetSelect(srv->rfd, COMM_SELECT_READ, helperStatefulHandleRead, srv, 0);
+        comm_read(srv->rfd, srv->buf + srv->offset, srv->buf_sz - srv->offset,
+            helperStatefulHandleRead, srv);
     }
 }
 
@@ -1024,10 +1029,7 @@ helperDispatch(helper_server * srv, helper_request * r)
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
 	NULL);			/* free */
-    commSetSelect(srv->rfd,
-	COMM_SELECT_READ,
-	helperHandleRead,
-	srv, 0);
+    comm_read(srv->rfd, srv->buf + srv->offset, srv->buf_sz - srv->offset, helperHandleRead, srv);
     debug(84, 5) ("helperDispatch: Request sent to %s #%d, %d bytes\n",
 	hlp->id_name, srv->index + 1, (int) strlen(r->buf));
     srv->stats.uses++;
@@ -1078,10 +1080,8 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
 	NULL);			/* free */
-    commSetSelect(srv->rfd,
-	COMM_SELECT_READ,
-	helperStatefulHandleRead,
-	srv, 0);
+    comm_read(srv->rfd, srv->buf + srv->offset, srv->buf_sz - srv->offset,
+      helperStatefulHandleRead, srv);
     debug(84, 5) ("helperStatefulDispatch: Request sent to %s #%d, %d bytes\n",
 	hlp->id_name, srv->index + 1, (int) strlen(r->buf));
     srv->stats.uses++;

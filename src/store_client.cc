@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.116 2002/10/14 07:35:46 hno Exp $
+ * $Id: store_client.cc,v 1.117 2002/10/14 08:16:59 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -194,7 +194,7 @@ storeClientCopy(store_client * sc,
     debug(20, 3) ("storeClientCopy: %s, from %lu, for length %d, cb %p, cbdata %p\n",
 	storeKeyText((const cache_key *)e->hash.key),
 	(unsigned long) copyInto.offset,
-	copyInto.length,
+	(int) copyInto.length,
 	callback,
 	data);
     assert(sc != NULL);

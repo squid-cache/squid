@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.141 2002/10/14 07:35:46 hno Exp $
+ * $Id: wais.cc,v 1.142 2002/10/14 08:16:59 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -44,11 +44,12 @@ typedef struct {
     char url[MAX_URL];
     request_t *request;
     FwdState *fwd;
+    char buf[BUFSIZ]; 
 } WaisStateData;
 
 static PF waisStateFree;
 static PF waisTimeout;
-static PF waisReadReply;
+static IOCB waisReadReply;
 static CWCB waisSendComplete;
 static PF waisSendRequest;
 
@@ -82,53 +83,53 @@ waisTimeout(int fd, void *data)
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
 static void
-waisReadReply(int fd, void *data)
+waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     WaisStateData *waisState = (WaisStateData *)data;
-    LOCAL_ARRAY(char, buf, 4096);
     StoreEntry *entry = waisState->entry;
-    int len;
     int clen;
     int bin;
     size_t read_sz;
 #if DELAY_POOLS
     delay_id delayId = delayMostBytesAllowed(entry->mem_obj);
 #endif
+
+    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
+
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(fd);
 	return;
     }
     errno = 0;
-    read_sz = 4096;
-#if DELAY_POOLS
-    read_sz = delayBytesWanted(delayId, 1, read_sz);
-#endif
-    statCounter.syscalls.sock.reads++;
-    len = FD_READ_METHOD(fd, buf, read_sz);
-    if (len > 0) {
-	fd_bytes(fd, len, FD_READ);
+    read_sz = BUFSIZ;
+    if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
 	delayBytesIn(delayId, len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.other.kbytes_in, len);
     }
-    debug(24, 5) ("waisReadReply: FD %d read len:%d\n", fd, len);
-    if (len > 0) {
+#if DELAY_POOLS
+    read_sz = delayBytesWanted(delay_id, 1, read_sz);
+#endif
+    debug(24, 5) ("waisReadReply: FD %d read len:%d\n", fd, (int)len);
+    if (flag == COMM_OK && len > 0) {
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Wais.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
 	IOStats.Wais.read_hist[bin]++;
     }
-    if (len < 0) {
+    if (flag != COMM_OK || len < 0) {
 	debug(50, 1) ("waisReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
-	if (ignoreErrno(errno)) {
+	if (ignoreErrno(xerrno)) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
-	    commSetSelect(fd, COMM_SELECT_READ,
-		waisReadReply, waisState, 0);
+            comm_read(fd, waisState->buf, read_sz, waisReadReply, waisState);
 	} else {
 	    ErrorState *err;
 	    EBIT_CLR(entry->flags, ENTRY_CACHABLE);
@@ -139,24 +140,21 @@ waisReadReply(int fd, void *data)
 	    errorAppendEntry(entry, err);
 	    comm_close(fd);
 	}
-    } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
+    } else if (flag == COMM_OK && len == 0 && entry->mem_obj->inmem_hi == 0) {
 	ErrorState *err;
 	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->request = requestLink(waisState->request);
 	errorAppendEntry(entry, err);
 	comm_close(fd);
-    } else if (len == 0) {
+    } else if (flag == COMM_OK && len == 0) {
 	/* Connection closed; retrieval done. */
 	entry->expires = squid_curtime;
 	fwdComplete(waisState->fwd);
 	comm_close(fd);
     } else {
 	storeAppend(entry, buf, len);
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    waisReadReply,
-	    waisState, 0);
+        comm_read(fd, waisState->buf, read_sz, waisReadReply, waisState);
     }
 }
 
@@ -185,10 +183,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
 	comm_close(fd);
     } else {
 	/* Schedule read reply. */
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    waisReadReply,
-	    waisState, 0);
+        comm_read(fd, waisState->buf, BUFSIZ, waisReadReply, waisState);
 	commSetDefer(fd, fwdCheckDeferRead, entry);
     }
 }
@@ -241,6 +236,6 @@ waisStart(FwdState * fwd)
     waisState->fwd = fwd;
     comm_add_close_handler(waisState->fd, waisStateFree, waisState);
     storeLockObject(entry);
-    commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
     commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
+    waisSendRequest(fd, waisState);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.60 2002/09/15 06:23:29 adrian Exp $
+ * $Id: ident.cc,v 1.61 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -52,9 +52,10 @@ typedef struct _IdentStateData {
     struct sockaddr_in me;
     struct sockaddr_in my_peer;
     IdentClient *clients;
+    char buf[4096];
 } IdentStateData;
 
-static PF identReadReply;
+static IOCB identReadReply;
 static PF identClose;
 static PF identTimeout;
 static CNCB identConnectDone;
@@ -125,23 +126,20 @@ identConnectDone(int fd, comm_err_t status, void *data)
 	ntohs(state->my_peer.sin_port),
 	ntohs(state->me.sin_port));
     comm_write_mbuf(fd, mb, NULL, state);
-    commSetSelect(fd, COMM_SELECT_READ, identReadReply, state, 0);
+    comm_read(fd, state->buf, BUFSIZ, identReadReply, state);
     commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
 }
 
 static void
-identReadReply(int fd, void *data)
+identReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     IdentStateData *state = data;
-    LOCAL_ARRAY(char, buf, BUFSIZ);
     char *ident = NULL;
     char *t = NULL;
-    int len = -1;
-    buf[0] = '\0';
-    statCounter.syscalls.sock.reads++;
-    len = FD_READ_METHOD(fd, buf, BUFSIZ - 1);
-    fd_bytes(fd, len, FD_READ);
-    if (len <= 0) {
+
+    assert (buf == state->buf);
+    
+    if (if (flag != COMM_OK || len <= 0) {
 	comm_close(fd);
 	return;
     }

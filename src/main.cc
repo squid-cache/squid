@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.355 2002/10/13 20:35:02 robertc Exp $
+ * $Id: main.cc,v 1.356 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -718,6 +718,7 @@ main(int argc, char **argv)
 	eventRun();
 	if ((loop_delay = eventNextTime()) < 0)
 	    loop_delay = 0;
+	comm_calliocallback();
 	switch (comm_select(loop_delay)) {
 	case COMM_OK:
 	    errcount = 0;	/* reset if successful */

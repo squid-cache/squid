@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.82 2002/10/13 20:34:57 robertc Exp $
+ * $Id: asn.cc,v 1.83 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -232,7 +232,7 @@ asHandleReply(void *data, StoreIOBuffer result)
     char *buf = asState->reqbuf;
     int leftoversz = -1;
 
-    debug(53, 3) ("asHandleReply: Called with size=%u\n", result.length);
+    debug(53, 3) ("asHandleReply: Called with size=%u\n", (unsigned int)result.length);
     debug(53, 3) ("asHandleReply: buffer='%s'\n", buf);
 
     /* First figure out whether we should abort the request */
@@ -244,7 +244,7 @@ asHandleReply(void *data, StoreIOBuffer result)
 	asStateFree(asState);
 	return;
     } else if (result.flags.error) {
-	debug(53, 1) ("asHandleReply: Called with Error set and size=%u\n", result.length);
+	debug(53, 1) ("asHandleReply: Called with Error set and size=%u\n", (unsigned int) result.length);
 	asStateFree(asState);
 	return;
     } else if (HTTP_OK != e->mem_obj->reply->sline.status) {

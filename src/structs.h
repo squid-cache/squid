@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.434 2002/10/13 23:48:24 hno Exp $
+ * $Id: structs.h,v 1.435 2002/10/14 08:16:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -997,6 +997,9 @@ struct _ConnStateData {
 	int n;
 	time_t until;
     } defer;
+    struct {
+	int readMoreRequests:1;
+    } flags;
 };
 
 struct _ipcache_addrs {
