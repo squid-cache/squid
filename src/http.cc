@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.215 1997/11/03 22:43:12 wessels Exp $
+ * $Id: http.cc,v 1.216 1997/11/04 22:14:17 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -498,7 +498,8 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     int room;
     int hdr_len;
     struct _http_reply *reply = entry->mem_obj->reply;
-    debug(11, 3) ("httpProcessReplyHeader: key '%s'\n", entry->key);
+    debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
+	storeKeyText(entry->key));
     if (httpState->reply_hdr == NULL)
 	httpState->reply_hdr = get_free_8k_page();
     if (httpState->reply_hdr_state == 0) {
@@ -507,7 +508,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	strncat(httpState->reply_hdr, buf, room < size ? room : size);
 	hdr_len += room < size ? room : size;
 	if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
-	    debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
+	    debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", storeKeyText(entry->key));
 	    httpState->reply_hdr_state += 2;
 	    reply->code = 555;
 	    return;
@@ -907,7 +908,7 @@ httpSendRequest(int fd, void *data)
 	    d = (double) p->stats.n_keepalives_recv /
 		(double) ++p->stats.n_keepalives_sent;
 	    if (d > 0.50 || p->stats.n_keepalives_sent < 10)
-	        BIT_SET(httpState->flags, HTTP_KEEPALIVE);
+		BIT_SET(httpState->flags, HTTP_KEEPALIVE);
 	} else {
 	    BIT_SET(httpState->flags, HTTP_KEEPALIVE);
 	}
