@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.144 1998/04/08 05:54:08 wessels Exp $
+#  $Id: Makefile.in,v 1.145 1998/04/08 06:21:58 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -18,16 +18,25 @@ localstatedir   = @localstatedir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+# Gotta love the DOS legacy
+#
+SQUID_EXE	= squid$(exec_suffix)
+CLIENT_EXE	= client$(exec_suffix)
+DNSSERVER_EXE	= dnsserver$(exec_suffix)
+UNLINKD_EXE	= unlinkd$(exec_suffix)
+PINGER_EXE	= pinger$(exec_suffix)
+CACHEMGR_EXE	= cachemgr$(cgi_suffix)
+
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
-DEFAULT_DNSSERVER       = $(libexecdir)/dnsserver
+DEFAULT_DNSSERVER       = $(libexecdir)/$(DNSSERVER_EXE)
 DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
 DEFAULT_ACCESS_LOG      = $(localstatedir)/logs/access.log
 DEFAULT_STORE_LOG       = $(localstatedir)/logs/store.log
 DEFAULT_PID_FILE        = $(localstatedir)/logs/squid.pid
 DEFAULT_SWAP_DIR        = $(localstatedir)/cache
-DEFAULT_PINGER		= $(libexecdir)/pinger
-DEFAULT_UNLINKD		= $(libexecdir)/unlinkd
+DEFAULT_PINGER		= $(libexecdir)/$(PINGER_EXE)
+DEFAULT_UNLINKD		= $(libexecdir)/$(UNLINKD_EXE)
 DEFAULT_ICON_DIR	= $(sysconfdir)/icons
 DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
 DEFAULT_MIB_PATH	= $(sysconfdir)/mib.txt
@@ -53,15 +62,6 @@ XTRA_OBJS 	= @XTRA_OBJS@
 MV		= @MV@
 RM		= @RM@
 SHELL		= /bin/sh
-
-# Gotta love the DOS legacy
-#
-SQUID_EXE	= squid$(exec_suffix)
-CLIENT_EXE	= client$(exec_suffix)
-DNSSERVER_EXE	= dnsserver$(exec_suffix)
-UNLINKD_EXE	= unlinkd$(exec_suffix)
-PINGER_EXE	= pinger$(exec_suffix)
-CACHEMGR_EXE	= cachemgr$(cgi_suffix)
 
 
 INCLUDE		= -I. -I../include -I$(top_srcdir)/include
@@ -207,7 +207,7 @@ $(CACHEMGR_EXE): cachemgr.o
 $(PINGER_EXE): pinger.o
 	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o globals.o $(PINGER_LIBS)
 
-$(PINGER_EXE): unlinkd-daemon.o
+$(UNLINKD_EXE): unlinkd-daemon.o
 	$(CC) $(LDFLAGS) unlinkd-daemon.o -o $@
 
 unlinkd-daemon.o: unlinkd.c
