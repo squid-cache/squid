@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.21 1996/04/02 00:51:55 wessels Exp $ */
+/* $Id: store.cc,v 1.22 1996/04/02 01:00:31 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -100,6 +100,7 @@ static MemObject *new_MemObject()
 }
 
 static StoreEntry *new_StoreEntry(mem_obj_flag)
+    int mem_obj_flag;
 {
     StoreEntry *e = NULL;
 
