@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.38 1998/08/19 06:05:56 wessels Exp $
+ * $Id: store_client.cc,v 1.39 1998/08/20 22:30:05 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -288,7 +288,7 @@ storeClientFileRead(store_client * sc)
 	    storeClientReadHeader,
 	    sc);
 #ifndef OPTIMISTIC_IO
-    else {
+	else {
 #else
     } else {
 #endif

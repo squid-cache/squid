@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.1 1998/08/18 02:56:42 wessels Exp $
+ * $Id: authenticate.cc,v 1.2 1998/08/20 22:29:54 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -250,7 +250,7 @@ authenticateStart(acl_proxy_auth_user * auth_user, RH * handler, void *data)
     if (!handler)
 	fatal_dump("authenticateStart: NULL handler");
     debug(29, 5) ("authenticateStart: '%s:%s'\n", auth_user->user,
-		  auth_user->passwd);
+	auth_user->passwd);
     if (Config.Program.authenticate == NULL) {
 	handler(data, NULL);
 	return;
@@ -394,7 +394,7 @@ authenticateShutdownServers(void *unused)
 	EBIT_SET(authenticate->flags, HELPER_BUSY);
     }
     if (na)
-      eventAdd("authenticateShutdownServers", authenticateShutdownServers, NULL, 1.0, 1);
+	eventAdd("authenticateShutdownServers", authenticateShutdownServers, NULL, 1.0, 1);
 }
 
 int

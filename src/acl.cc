@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.179 1998/08/18 21:04:42 wessels Exp $
+ * $Id: acl.cc,v 1.180 1998/08/20 22:29:53 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1754,7 +1754,7 @@ aclDumpIpListWalkee(void *node, void *state)
 }
 
 static wordlist *
-aclDumpIpList(void * data)
+aclDumpIpList(void *data)
 {
     wordlist *w = NULL;
     splay_walk(data, aclDumpIpListWalkee, &w);
@@ -2071,12 +2071,12 @@ aclArpCompare(const void *data, splayNode * n)
 {
     const unsigned short *d1 = data;
     const unsigned short *d2 = n->data;
-    if(d1[0] != d2[0])
-      return (d1[0] > d2[0]) ? 1 : -1;
-    if(d1[1] != d2[1])
-      return (d1[1] > d2[1]) ? 1 : -1;
-    if(d1[2] != d2[2])
-      return (d1[2] > d2[2]) ? 1 : -1;
+    if (d1[0] != d2[0])
+	return (d1[0] > d2[0]) ? 1 : -1;
+    if (d1[1] != d2[1])
+	return (d1[1] > d2[1]) ? 1 : -1;
+    if (d1[2] != d2[2])
+	return (d1[2] > d2[2]) ? 1 : -1;
     return 0;
 }
 
@@ -2093,7 +2093,7 @@ checkARP(u_long ip, char *eth)
     arpReq.arp_flags = 0;
     /* any AF_INET socket will do... gives back hardware type, device, etc */
     if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) == -1) {
-        debug(28, 1) ("ARP query failed - %d", errno);
+	debug(28, 1) ("ARP query failed - %d", errno);
 	return 0;
     } else if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
 	debug(28, 1) ("Non-ethernet interface returned from ARP query - %d",
@@ -2108,13 +2108,13 @@ checkARP(u_long ip, char *eth)
 static int
 aclMatchArp(void *dataptr, struct in_addr c)
 {
-	WRITE ME;
+    WRITE ME;
 }
 
 static int
 aclArpCompare(const void *data, splayNode * n)
 {
-	WRITE ME;
+    WRITE ME;
 }
 
 static int
@@ -2175,7 +2175,7 @@ aclDumpArpWalkee(void *node, void *state)
 }
 
 static wordlist *
-aclDumpArpList(void * data)
+aclDumpArpList(void *data)
 {
     wordlist *w = NULL;
     splay_walk(data, aclDumpArpListWalkee, &w);

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.129 1998/08/20 16:04:07 wessels Exp $
+ * $Id: disk.cc,v 1.130 1998/08/20 22:29:57 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -401,12 +401,12 @@ file_write(int fd,
 	diskHandleWrite(fd, NULL);
 #else
 #ifdef OPTIMISTIC_IO
-    if (F->flags.calling_io_handler)
+	if (F->flags.calling_io_handler)
 #endif
-	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
+	    commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
 #ifdef OPTIMISTIC_IO
-    else
-        diskHandleWrite(fd, NULL);
+	else
+	    diskHandleWrite(fd, NULL);
 #endif
 #endif
 #ifndef OPTIMISTIC_IO
@@ -442,7 +442,7 @@ diskHandleRead(int fd, void *data)
      * the state data.
      */
     if (fd < 0) {
-        memFree(MEM_DREAD_CTRL, ctrl_dat);
+	memFree(MEM_DREAD_CTRL, ctrl_dat);
 	return;
     }
 #if USE_ASYNC_IO
@@ -461,7 +461,7 @@ diskHandleRead(int fd, void *data)
     }
     len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
     if (len > 0)
-        F->disk.offset += len;
+	F->disk.offset += len;
     diskHandleReadComplete(fd, ctrl_dat, len, errno);
 #endif
 }
@@ -539,7 +539,7 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
     if (F->flags.calling_io_handler)
 	commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
     else
-        diskHandleRead(fd, ctrl_dat);
+	diskHandleRead(fd, ctrl_dat);
 #endif /* OPTIMISTIC_IO */
 #endif
     return DISK_OK;
