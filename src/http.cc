@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.262 1998/04/01 21:23:01 wessels Exp $
+ * $Id: http.cc,v 1.263 1998/04/05 20:32:45 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -366,7 +366,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	if (EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
 	    if (httpState->peer)
 		httpState->peer->stats.n_keepalives_sent++;
-	if (reply->pconn_keep_alive)
+	if (reply->proxy_keep_alive)
 	    if (httpState->peer)
 		httpState->peer->stats.n_keepalives_recv++;
 	ctx_exit(ctx);

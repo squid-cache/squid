@@ -567,7 +567,7 @@ struct _HttpReply {
     String content_type;
     HttpHdrCc *cache_control;
     HttpHdrContRange *content_range;
-    short int pconn_keep_alive;
+    short int proxy_keep_alive;
 
     /* public, readable */
     HttpMsgParseState pstate;	/* the current parsing state */
