@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.486 2000/05/29 00:52:31 wessels Exp $
+ * $Id: client_side.cc,v 1.487 2000/05/29 01:22:24 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -757,7 +757,7 @@ httpRequestFree(void *data)
      * code in clientHandleIMSReply() */
     if ((e = http->old_entry)) {
 	http->old_entry = NULL;
-	storeUnregister(http->sc, e, http);
+	storeUnregister(http->old_sc, e, http);
 	http->old_sc = NULL;
 	storeUnlockObject(e);
     }
