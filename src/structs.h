@@ -399,7 +399,6 @@ struct _fde {
     PF *timeout_handler;
     time_t timeout;
     void *timeout_data;
-    void *lifetime_data;
     close_handler *close_handler;	/* linked list */
     DEFER *defer_check;		/* check if we should defer read */
     void *defer_data;
