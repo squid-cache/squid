@@ -1,5 +1,5 @@
 /*
- * $Id: radix.c,v 1.15 2001/10/17 17:55:23 hno Exp $
+ * $Id: radix.c,v 1.16 2001/11/13 19:24:34 hno Exp $
  *
  * DEBUG: section 53     Radix tree data structure implementation
  * AUTHOR: NetBSD Derived
@@ -113,17 +113,17 @@
 
 #include "radix.h"
 
-int max_keylen;
-struct radix_mask *rn_mkfreelist;
-struct radix_node_head *mask_rnhead;
+int squid_max_keylen;
+struct squid_radix_mask *squid_rn_mkfreelist;
+struct squid_radix_node_head *squid_mask_rnhead;
 static char *addmask_key;
 static unsigned char normal_chars[] =
 {0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xFF};
 static char *rn_zeros, *rn_ones;
 
-#define rn_masktop (mask_rnhead->rnh_treetop)
-#undef Bcmp
-#define Bcmp(a, b, l) (l == 0 ? 0 : memcmp((caddr_t)(a), (caddr_t)(b), (u_long)l))
+#define rn_masktop (squid_mask_rnhead->rnh_treetop)
+#undef squid_Bcmp
+#define squid_Bcmp(a, b, l) (l == 0 ? 0 : memcmp((caddr_t)(a), (caddr_t)(b), (u_long)l))
 /*
  * The data structure for the keys is a radix tree with one way
  * branching removed.  The index rn_b at an internal node n represents a bit
@@ -158,10 +158,10 @@ static char *rn_zeros, *rn_ones;
  * that governs a subtree.
  */
 
-struct radix_node *
-rn_search(void *v_arg, struct radix_node *head)
+struct squid_radix_node *
+squid_rn_search(void *v_arg, struct squid_radix_node *head)
 {
-    register struct radix_node *x;
+    register struct squid_radix_node *x;
     register caddr_t v;
 
     for (x = head, v = v_arg; x->rn_b >= 0;) {
@@ -173,10 +173,10 @@ rn_search(void *v_arg, struct radix_node *head)
     return (x);
 }
 
-struct radix_node *
-rn_search_m(void *v_arg, struct radix_node *head, void *m_arg)
+struct squid_radix_node *
+squid_rn_search_m(void *v_arg, struct squid_radix_node *head, void *m_arg)
 {
-    register struct radix_node *x;
+    register struct squid_radix_node *x;
     register caddr_t v = v_arg, m = m_arg;
 
     for (x = head; x->rn_b >= 0;) {
@@ -190,7 +190,7 @@ rn_search_m(void *v_arg, struct radix_node *head, void *m_arg)
 }
 
 int
-rn_refines(void *m_arg, void *n_arg)
+squid_rn_refines(void *m_arg, void *n_arg)
 {
     register caddr_t m = m_arg, n = n_arg;
     register caddr_t lim, lim2 = lim = n + *(u_char *) n;
@@ -215,18 +215,18 @@ rn_refines(void *m_arg, void *n_arg)
     return (!masks_are_equal);
 }
 
-struct radix_node *
-rn_lookup(void *v_arg, void *m_arg, struct radix_node_head *head)
+struct squid_radix_node *
+squid_rn_lookup(void *v_arg, void *m_arg, struct squid_radix_node_head *head)
 {
-    register struct radix_node *x;
+    register struct squid_radix_node *x;
     caddr_t netmask = 0;
 
     if (m_arg) {
-	if ((x = rn_addmask(m_arg, 1, head->rnh_treetop->rn_off)) == 0)
+	if ((x = squid_rn_addmask(m_arg, 1, head->rnh_treetop->rn_off)) == 0)
 	    return (0);
 	netmask = x->rn_key;
     }
-    x = rn_match(v_arg, head);
+    x = squid_rn_match(v_arg, head);
     if (x && netmask) {
 	while (x && x->rn_mask != netmask)
 	    x = x->rn_dupedkey;
@@ -235,7 +235,7 @@ rn_lookup(void *v_arg, void *m_arg, struct radix_node_head *head)
 }
 
 static int
-rn_satsifies_leaf (char *trial, register struct radix_node *leaf, int skip)
+rn_satsifies_leaf (char *trial, register struct squid_radix_node *leaf, int skip)
 {
     register char *cp = trial, *cp2 = leaf->rn_key, *cp3 = leaf->rn_mask;
     char *cplim;
@@ -254,19 +254,19 @@ rn_satsifies_leaf (char *trial, register struct radix_node *leaf, int skip)
     return 1;
 }
 
-struct radix_node *
-rn_match(void *v_arg, struct radix_node_head *head)
+struct squid_radix_node *
+squid_rn_match(void *v_arg, struct squid_radix_node_head *head)
 {
     caddr_t v = v_arg;
-    register struct radix_node *t = head->rnh_treetop, *x;
+    register struct squid_radix_node *t = head->rnh_treetop, *x;
     register caddr_t cp = v, cp2;
     caddr_t cplim;
-    struct radix_node *saved_t, *top = t;
+    struct squid_radix_node *saved_t, *top = t;
     int off = t->rn_off, vlen = *(u_char *) cp, matched_off;
     register int test, b, rn_b;
 
     /*
-     * Open code rn_search(v, top) to avoid overhead of extra
+     * Open code squid_rn_search(v, top) to avoid overhead of extra
      * subroutine call.
      */
     for (; t->rn_b >= 0;) {
@@ -327,7 +327,7 @@ rn_match(void *v_arg, struct radix_node_head *head)
     t = saved_t;
     /* start searching up the tree */
     do {
-	register struct radix_mask *m;
+	register struct squid_radix_mask *m;
 	t = t->rn_p;
 	if ((m = t->rn_mklist)) {
 	    /*
@@ -342,7 +342,7 @@ rn_match(void *v_arg, struct radix_node_head *head)
 			return (m->rm_leaf);
 		} else {
 		    off = min(t->rn_off, matched_off);
-		    x = rn_search_m(v, t, m->rm_mask);
+		    x = squid_rn_search_m(v, t, m->rm_mask);
 		    while (x && x->rn_mask != m->rm_mask)
 			x = x->rn_dupedkey;
 		    if (x && rn_satsifies_leaf(v, x, off))
@@ -356,15 +356,15 @@ rn_match(void *v_arg, struct radix_node_head *head)
 
 #ifdef RN_DEBUG
 int rn_nodenum;
-struct radix_node *rn_clist;
+struct squid_radix_node *rn_clist;
 int rn_saveinfo;
 int rn_debug = 1;
 #endif
 
-struct radix_node *
-rn_newpair(void *v, int b, struct radix_node nodes[2])
+struct squid_radix_node *
+squid_rn_newpair(void *v, int b, struct squid_radix_node nodes[2])
 {
-    register struct radix_node *tt = nodes, *t = tt + 1;
+    register struct squid_radix_node *tt = nodes, *t = tt + 1;
     t->rn_b = b;
     t->rn_bmask = 0x80 >> (b & 7);
     t->rn_l = tt;
@@ -383,16 +383,16 @@ rn_newpair(void *v, int b, struct radix_node nodes[2])
     return t;
 }
 
-struct radix_node *
-rn_insert(void *v_arg, struct radix_node_head *head, int *dupentry, struct radix_node nodes[2])
+struct squid_radix_node *
+squid_rn_insert(void *v_arg, struct squid_radix_node_head *head, int *dupentry, struct squid_radix_node nodes[2])
 {
     caddr_t v = v_arg;
-    struct radix_node *top = head->rnh_treetop;
+    struct squid_radix_node *top = head->rnh_treetop;
     int head_off = top->rn_off, vlen = (int) *((u_char *) v);
-    register struct radix_node *t = rn_search(v_arg, top);
+    register struct squid_radix_node *t = squid_rn_search(v_arg, top);
     register caddr_t cp = v + head_off;
     register int b;
-    struct radix_node *tt;
+    struct squid_radix_node *tt;
     /*
      * Find first bit at which v and t->rn_key differ
      */
@@ -413,7 +413,7 @@ rn_insert(void *v_arg, struct radix_node_head *head, int *dupentry, struct radix
 	    cmp_res >>= 1;
     }
     {
-	register struct radix_node *p, *x = top;
+	register struct squid_radix_node *p, *x = top;
 	cp = v;
 	do {
 	    p = x;
@@ -424,10 +424,10 @@ rn_insert(void *v_arg, struct radix_node_head *head, int *dupentry, struct radix
 	} while (b > (unsigned) x->rn_b);	/* x->rn_b < b && x->rn_b >= 0 */
 #ifdef RN_DEBUG
 	if (rn_debug)
-	    fprintf(stderr, "rn_insert: Going In:\n");
+	    fprintf(stderr, "squid_rn_insert: Going In:\n");
 	traverse(p);
 #endif
-	t = rn_newpair(v_arg, b, nodes);
+	t = squid_rn_newpair(v_arg, b, nodes);
 	tt = t->rn_l;
 	if ((cp[p->rn_off] & p->rn_bmask) == 0)
 	    p->rn_l = t;
@@ -443,29 +443,29 @@ rn_insert(void *v_arg, struct radix_node_head *head, int *dupentry, struct radix
 	}
 #ifdef RN_DEBUG
 	if (rn_debug)
-	    log(LOG_DEBUG, "rn_insert: Coming Out:\n"), traverse(p);
+	    log(LOG_DEBUG, "squid_rn_insert: Coming Out:\n"), traverse(p);
 #endif
     }
     return (tt);
 }
 
-struct radix_node *
-rn_addmask(void *n_arg, int search, int skip)
+struct squid_radix_node *
+squid_rn_addmask(void *n_arg, int search, int skip)
 {
     caddr_t netmask = (caddr_t) n_arg;
-    register struct radix_node *x;
+    register struct squid_radix_node *x;
     register caddr_t cp, cplim;
     register int b = 0, mlen, j;
     int maskduplicated, m0, isnormal;
-    struct radix_node *saved_x;
+    struct squid_radix_node *saved_x;
     static int last_zeroed = 0;
 
-    if ((mlen = *(u_char *) netmask) > max_keylen)
-	mlen = max_keylen;
+    if ((mlen = *(u_char *) netmask) > squid_max_keylen)
+	mlen = squid_max_keylen;
     if (skip == 0)
 	skip = 1;
     if (mlen <= skip)
-	return (mask_rnhead->rnh_nodes);
+	return (squid_mask_rnhead->rnh_nodes);
     if (skip > 1)
 	memcpy(addmask_key + 1, rn_ones + 1, skip - 1);
     if ((m0 = mlen) > skip)
@@ -479,26 +479,26 @@ rn_addmask(void *n_arg, int search, int skip)
     if (mlen <= skip) {
 	if (m0 >= last_zeroed)
 	    last_zeroed = mlen;
-	return (mask_rnhead->rnh_nodes);
+	return (squid_mask_rnhead->rnh_nodes);
     }
     if (m0 < last_zeroed)
 	memset(addmask_key + m0, '\0', last_zeroed - m0);
     *addmask_key = last_zeroed = mlen;
-    x = rn_search(addmask_key, rn_masktop);
+    x = squid_rn_search(addmask_key, rn_masktop);
     if (memcmp(addmask_key, x->rn_key, mlen) != 0)
 	x = 0;
     if (x || search)
 	return (x);
-    R_Malloc(x, struct radix_node *, max_keylen + 2 * sizeof(*x));
+    squid_R_Malloc(x, struct squid_radix_node *, squid_max_keylen + 2 * sizeof(*x));
     if ((saved_x = x) == 0)
 	return (0);
-    memset(x, '\0', max_keylen + 2 * sizeof(*x));
+    memset(x, '\0', squid_max_keylen + 2 * sizeof(*x));
     netmask = cp = (caddr_t) (x + 2);
     memcpy(cp, addmask_key, mlen);
-    x = rn_insert(cp, mask_rnhead, &maskduplicated, x);
+    x = squid_rn_insert(cp, squid_mask_rnhead, &maskduplicated, x);
     if (maskduplicated) {
-	fprintf(stderr, "rn_addmask: mask impossibly already in tree");
-	Free(saved_x);
+	fprintf(stderr, "squid_rn_addmask: mask impossibly already in tree");
+	squid_Free(saved_x);
 	return (x);
     }
     /*
@@ -535,12 +535,12 @@ rn_lexobetter(void *m_arg, void *n_arg)
     return 0;
 }
 
-static struct radix_mask *
-rn_new_radix_mask(struct radix_node *tt, struct radix_mask *next)
+static struct squid_radix_mask *
+rn_new_radix_mask(struct squid_radix_node *tt, struct squid_radix_mask *next)
 {
-    register struct radix_mask *m;
+    register struct squid_radix_mask *m;
 
-    MKGet(m);
+    squid_MKGet(m);
     if (m == 0) {
 	fprintf(stderr, "Mask for route not entered\n");
 	return (0);
@@ -557,16 +557,16 @@ rn_new_radix_mask(struct radix_node *tt, struct radix_mask *next)
     return m;
 }
 
-struct radix_node *
-rn_addroute(void *v_arg, void *n_arg, struct radix_node_head *head, struct radix_node treenodes[2])
+struct squid_radix_node *
+squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, struct squid_radix_node treenodes[2])
 {
     caddr_t v = (caddr_t) v_arg, netmask = (caddr_t) n_arg;
-    register struct radix_node *t, *x = NULL, *tt;
-    struct radix_node *saved_tt, *top = head->rnh_treetop;
+    register struct squid_radix_node *t, *x = NULL, *tt;
+    struct squid_radix_node *saved_tt, *top = head->rnh_treetop;
     short b = 0, b_leaf = 0;
     int keyduplicated;
     caddr_t mmask;
-    struct radix_mask *m, **mp;
+    struct squid_radix_mask *m, **mp;
 
     /*
      * In dealing with non-contiguous masks, there may be
@@ -576,7 +576,7 @@ rn_addroute(void *v_arg, void *n_arg, struct radix_node_head *head, struct radix
      * nodes and possibly save time in calculating indices.
      */
     if (netmask) {
-	if ((x = rn_addmask(netmask, 0, top->rn_off)) == 0)
+	if ((x = squid_rn_addmask(netmask, 0, top->rn_off)) == 0)
 	    return (0);
 	b_leaf = x->rn_b;
 	b = -1 - x->rn_b;
@@ -585,7 +585,7 @@ rn_addroute(void *v_arg, void *n_arg, struct radix_node_head *head, struct radix
     /*
      * Deal with duplicated keys: attach node to previous instance
      */
-    saved_tt = tt = rn_insert(v, head, &keyduplicated, treenodes);
+    saved_tt = tt = squid_rn_insert(v, head, &keyduplicated, treenodes);
     if (keyduplicated) {
 	for (t = tt; tt; t = tt, tt = tt->rn_dupedkey) {
 	    if (tt->rn_mask == netmask)
@@ -593,7 +593,7 @@ rn_addroute(void *v_arg, void *n_arg, struct radix_node_head *head, struct radix
 	    if (netmask == 0 ||
 		(tt->rn_mask &&
 		    ((b_leaf < tt->rn_b) ||	/* index(netmask) > node */
-			rn_refines(netmask, tt->rn_mask) ||
+			squid_rn_refines(netmask, tt->rn_mask) ||
 			rn_lexobetter(netmask, tt->rn_mask))))
 		break;
 	}
@@ -608,7 +608,7 @@ rn_addroute(void *v_arg, void *n_arg, struct radix_node_head *head, struct radix
 	 * the head of the list.
 	 */
 	if (tt == saved_tt) {
-	    struct radix_node *xx = x;
+	    struct squid_radix_node *xx = x;
 	    /* link in at head of list */
 	    (tt = treenodes)->rn_dupedkey = t;
 	    tt->rn_flags = t->rn_flags;
@@ -702,26 +702,26 @@ rn_addroute(void *v_arg, void *n_arg, struct radix_node_head *head, struct radix
 	    tt->rn_mklist = m;
 	    return tt;
 	}
-	if (rn_refines(netmask, mmask) || rn_lexobetter(netmask, mmask))
+	if (squid_rn_refines(netmask, mmask) || rn_lexobetter(netmask, mmask))
 	    break;
     }
     *mp = rn_new_radix_mask(tt, *mp);
     return tt;
 }
 
-struct radix_node *
-rn_delete(void *v_arg, void *netmask_arg, struct radix_node_head *head)
+struct squid_radix_node *
+squid_rn_delete(void *v_arg, void *netmask_arg, struct squid_radix_node_head *head)
 {
-    register struct radix_node *t, *p, *x, *tt;
-    struct radix_mask *m, *saved_m, **mp;
-    struct radix_node *dupedkey, *saved_tt, *top;
+    register struct squid_radix_node *t, *p, *x, *tt;
+    struct squid_radix_mask *m, *saved_m, **mp;
+    struct squid_radix_node *dupedkey, *saved_tt, *top;
     caddr_t v, netmask;
     int b, head_off, vlen;
 
     v = v_arg;
     netmask = netmask_arg;
     x = head->rnh_treetop;
-    tt = rn_search(v, x);
+    tt = squid_rn_search(v, x);
     head_off = x->rn_off;
     vlen = *(u_char *) v;
     saved_tt = tt;
@@ -733,7 +733,7 @@ rn_delete(void *v_arg, void *netmask_arg, struct radix_node_head *head)
      * Delete our route from mask lists.
      */
     if (netmask) {
-	if ((x = rn_addmask(netmask, 1, head_off)) == 0)
+	if ((x = squid_rn_addmask(netmask, 1, head_off)) == 0)
 	    return (0);
 	netmask = x->rn_key;
 	while (tt->rn_mask != netmask)
@@ -744,12 +744,12 @@ rn_delete(void *v_arg, void *netmask_arg, struct radix_node_head *head)
 	goto on1;
     if (tt->rn_flags & RNF_NORMAL) {
 	if (m->rm_leaf != tt || m->rm_refs > 0) {
-	    fprintf(stderr, "rn_delete: inconsistent annotation\n");
+	    fprintf(stderr, "squid_rn_delete: inconsistent annotation\n");
 	    return 0;		/* dangling ref could cause disaster */
 	}
     } else {
 	if (m->rm_mask != tt->rn_mask) {
-	    fprintf(stderr, "rn_delete: inconsistent annotation\n");
+	    fprintf(stderr, "squid_rn_delete: inconsistent annotation\n");
 	    goto on1;
 	}
 	if (--m->rm_refs >= 0)
@@ -766,11 +766,11 @@ rn_delete(void *v_arg, void *netmask_arg, struct radix_node_head *head)
     for (mp = &x->rn_mklist; (m = *mp); mp = &m->rm_mklist)
 	if (m == saved_m) {
 	    *mp = m->rm_mklist;
-	    MKFree(m);
+	    squid_MKFree(m);
 	    break;
 	}
     if (m == 0) {
-	fprintf(stderr, "rn_delete: couldn't find our annotation\n");
+	fprintf(stderr, "squid_rn_delete: couldn't find our annotation\n");
 	if (tt->rn_flags & RNF_NORMAL)
 	    return (0);		/* Dangling ref to us */
     }
@@ -802,7 +802,7 @@ rn_delete(void *v_arg, void *netmask_arg, struct radix_node_head *head)
 	    if (p)
 		p->rn_dupedkey = tt->rn_dupedkey;
 	    else
-		fprintf(stderr, "rn_delete: couldn't find us\n");
+		fprintf(stderr, "squid_rn_delete: couldn't find us\n");
 	}
 	t = tt + 1;
 	if (t->rn_flags & RNF_ACTIVE) {
@@ -848,16 +848,16 @@ rn_delete(void *v_arg, void *netmask_arg, struct radix_node_head *head)
 	     * in the same order attached to our mklist */
 	    for (m = t->rn_mklist; m && x; x = x->rn_dupedkey)
 		if (m == x->rn_mklist) {
-		    struct radix_mask *mm = m->rm_mklist;
+		    struct squid_radix_mask *mm = m->rm_mklist;
 		    x->rn_mklist = 0;
 		    if (--(m->rm_refs) < 0)
-			MKFree(m);
+			squid_MKFree(m);
 		    m = mm;
 		}
 #if RN_DEBUG
 	    if (m)
 		fprintf(stderr, "%s %x at %x\n",
-		    "rn_delete: Orphaned Mask", (int) m, (int) x);
+		    "squid_rn_delete: Orphaned Mask", (int) m, (int) x);
 #else
 	    assert(m == NULL);
 #endif
@@ -890,11 +890,11 @@ rn_delete(void *v_arg, void *netmask_arg, struct radix_node_head *head)
 }
 
 int
-rn_walktree(struct radix_node_head *h, int (*f)(struct radix_node *, void *), void *w)
+squid_rn_walktree(struct squid_radix_node_head *h, int (*f)(struct squid_radix_node *, void *), void *w)
 {
     int error;
-    struct radix_node *base, *next;
-    register struct radix_node *rn = h->rnh_treetop;
+    struct squid_radix_node *base, *next;
+    register struct squid_radix_node *rn = h->rnh_treetop;
     /*
      * This gets complicated because we may delete the node
      * while applying the function f to it, so we need to calculate
@@ -926,18 +926,18 @@ rn_walktree(struct radix_node_head *h, int (*f)(struct radix_node *, void *), vo
 }
 
 int
-rn_inithead(void **head, int off)
+squid_rn_inithead(void **head, int off)
 {
-    register struct radix_node_head *rnh;
-    register struct radix_node *t, *tt, *ttt;
+    register struct squid_radix_node_head *rnh;
+    register struct squid_radix_node *t, *tt, *ttt;
     if (*head)
 	return (1);
-    R_Malloc(rnh, struct radix_node_head *, sizeof(*rnh));
+    squid_R_Malloc(rnh, struct squid_radix_node_head *, sizeof(*rnh));
     if (rnh == 0)
 	return (0);
     memset(rnh, '\0', sizeof(*rnh));
     *head = rnh;
-    t = rn_newpair(rn_zeros, off, rnh->rnh_nodes);
+    t = squid_rn_newpair(rn_zeros, off, rnh->rnh_nodes);
     ttt = rnh->rnh_nodes + 2;
     t->rn_r = ttt;
     t->rn_p = t;
@@ -946,42 +946,42 @@ rn_inithead(void **head, int off)
     tt->rn_b = -1 - off;
     *ttt = *tt;
     ttt->rn_key = rn_ones;
-    rnh->rnh_addaddr = rn_addroute;
-    rnh->rnh_deladdr = rn_delete;
-    rnh->rnh_matchaddr = rn_match;
-    rnh->rnh_lookup = rn_lookup;
-    rnh->rnh_walktree = rn_walktree;
+    rnh->rnh_addaddr = squid_rn_addroute;
+    rnh->rnh_deladdr = squid_rn_delete;
+    rnh->rnh_matchaddr = squid_rn_match;
+    rnh->rnh_lookup = squid_rn_lookup;
+    rnh->rnh_walktree = squid_rn_walktree;
     rnh->rnh_treetop = t;
     return (1);
 }
 
 void
-rn_init(void)
+squid_rn_init(void)
 {
     char *cp, *cplim;
 #ifdef KERNEL
     struct domain *dom;
 
     for (dom = domains; dom; dom = dom->dom_next)
-	if (dom->dom_maxrtkey > max_keylen)
-	    max_keylen = dom->dom_maxrtkey;
+	if (dom->dom_maxrtkey > squid_max_keylen)
+	    squid_max_keylen = dom->dom_maxrtkey;
 #endif
-    if (max_keylen == 0) {
+    if (squid_max_keylen == 0) {
 	fprintf(stderr,
-	    "rn_init: radix functions require max_keylen be set\n");
+	    "squid_rn_init: radix functions require squid_max_keylen be set\n");
 	return;
     }
-    R_Malloc(rn_zeros, char *, 3 * max_keylen);
+    squid_R_Malloc(rn_zeros, char *, 3 * squid_max_keylen);
     if (rn_zeros == NULL) {
-	fprintf(stderr, "rn_init failed.\n");
+	fprintf(stderr, "squid_rn_init failed.\n");
 	exit(-1);
     }
-    memset(rn_zeros, '\0', 3 * max_keylen);
-    rn_ones = cp = rn_zeros + max_keylen;
-    addmask_key = cplim = rn_ones + max_keylen;
+    memset(rn_zeros, '\0', 3 * squid_max_keylen);
+    rn_ones = cp = rn_zeros + squid_max_keylen;
+    addmask_key = cplim = rn_ones + squid_max_keylen;
     while (cp < cplim)
 	*cp++ = -1;
-    if (rn_inithead((void **) &mask_rnhead, 0) == 0) {
+    if (squid_rn_inithead((void **) &squid_mask_rnhead, 0) == 0) {
 	fprintf(stderr, "rn_init2 failed.\n");
 	exit(-1);
     }

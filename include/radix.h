@@ -1,5 +1,5 @@
 /*
- * $Id: radix.h,v 1.11 2001/10/17 17:55:23 hno Exp $
+ * $Id: radix.h,v 1.12 2001/11/13 19:24:34 hno Exp $
  */
 
 #ifndef SQUID_RADIX_H
@@ -45,9 +45,9 @@
  * Radix search tree node layout.
  */
 
-struct radix_node {
-    struct radix_mask *rn_mklist;	/* list of masks contained in subtree */
-    struct radix_node *rn_p;	/* parent */
+struct squid_radix_node {
+    struct squid_radix_mask *rn_mklist;	/* list of masks contained in subtree */
+    struct squid_radix_node *rn_p;	/* parent */
     short rn_b;			/* bit offset; -1-index(netmask) */
     char rn_bmask;		/* node: mask for bit test */
     unsigned char rn_flags;	/* enumerated next */
@@ -58,18 +58,18 @@ struct radix_node {
 	struct {		/* leaf only data: */
 	    char *rn_Key;	/* object of search */
 	    char *rn_Mask;	/* netmask, if present */
-	    struct radix_node *rn_Dupedkey;
+	    struct squid_radix_node *rn_Dupedkey;
 	} rn_leaf;
 	struct {		/* node only data: */
 	    int rn_Off;		/* where to start compare */
-	    struct radix_node *rn_L;	/* progeny */
-	    struct radix_node *rn_R;	/* progeny */
+	    struct squid_radix_node *rn_L;	/* progeny */
+	    struct squid_radix_node *rn_R;	/* progeny */
 	} rn_node;
     } rn_u;
 #ifdef RN_DEBUG
     int rn_info;
-    struct radix_node *rn_twin;
-    struct radix_node *rn_ybro;
+    struct squid_radix_node *rn_twin;
+    struct squid_radix_node *rn_ybro;
 #endif
 };
 
@@ -84,75 +84,75 @@ struct radix_node {
  * Annotations to tree concerning potential routes applying to subtrees.
  */
 
-extern struct radix_mask {
+extern struct squid_radix_mask {
     short rm_b;			/* bit offset; -1-index(netmask) */
     char rm_unused;		/* cf. rn_bmask */
     unsigned char rm_flags;	/* cf. rn_flags */
-    struct radix_mask *rm_mklist;	/* more masks to try */
+    struct squid_radix_mask *rm_mklist;	/* more masks to try */
     union {
 	char *rmu_mask;		/* the mask */
-	struct radix_node *rmu_leaf;	/* for normal routes */
+	struct squid_radix_node *rmu_leaf;	/* for normal routes */
     } rm_rmu;
     int rm_refs;		/* # of references to this struct */
-}         *rn_mkfreelist;
+}         *squid_rn_mkfreelist;
 
 #define rm_mask rm_rmu.rmu_mask
 #define rm_leaf rm_rmu.rmu_leaf	/* extra field would make 32 bytes */
 
-#define MKGet(m) {\
-	if (rn_mkfreelist) {\
-		m = rn_mkfreelist; \
-		rn_mkfreelist = (m)->rm_mklist; \
+#define squid_MKGet(m) {\
+	if (squid_rn_mkfreelist) {\
+		m = squid_rn_mkfreelist; \
+		squid_rn_mkfreelist = (m)->rm_mklist; \
 	} else \
-		R_Malloc(m, struct radix_mask *, sizeof (*(m))); }\
+		squid_R_Malloc(m, struct squid_radix_mask *, sizeof (*(m))); }\
 
-#define MKFree(m) { (m)->rm_mklist = rn_mkfreelist; rn_mkfreelist = (m);}
+#define squid_MKFree(m) { (m)->rm_mklist = squid_rn_mkfreelist; squid_rn_mkfreelist = (m);}
 
-struct radix_node_head {
-    struct radix_node *rnh_treetop;
+struct squid_radix_node_head {
+    struct squid_radix_node *rnh_treetop;
     int rnh_addrsize;		/* permit, but not require fixed keys */
     int rnh_pktsize;		/* permit, but not require fixed keys */
-    struct radix_node *(*rnh_addaddr)	/* add based on sockaddr */
+    struct squid_radix_node *(*rnh_addaddr)	/* add based on sockaddr */
                (void *v, void *mask,
-	    struct radix_node_head * head, struct radix_node nodes[]);
-    struct radix_node *(*rnh_addpkt)	/* add based on packet hdr */
+	    struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
+    struct squid_radix_node *(*rnh_addpkt)	/* add based on packet hdr */
                (void *v, void *mask,
-	    struct radix_node_head * head, struct radix_node nodes[]);
-    struct radix_node *(*rnh_deladdr)	/* remove based on sockaddr */
-               (void *v, void *mask, struct radix_node_head * head);
-    struct radix_node *(*rnh_delpkt)	/* remove based on packet hdr */
-               (void *v, void *mask, struct radix_node_head * head);
-    struct radix_node *(*rnh_matchaddr)		/* locate based on sockaddr */
-               (void *v, struct radix_node_head * head);
-    struct radix_node *(*rnh_lookup)	/* locate based on sockaddr */
-               (void *v, void *mask, struct radix_node_head * head);
-    struct radix_node *(*rnh_matchpkt)	/* locate based on packet hdr */
-               (void *v, struct radix_node_head * head);
+	    struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
+    struct squid_radix_node *(*rnh_deladdr)	/* remove based on sockaddr */
+               (void *v, void *mask, struct squid_radix_node_head * head);
+    struct squid_radix_node *(*rnh_delpkt)	/* remove based on packet hdr */
+               (void *v, void *mask, struct squid_radix_node_head * head);
+    struct squid_radix_node *(*rnh_matchaddr)		/* locate based on sockaddr */
+               (void *v, struct squid_radix_node_head * head);
+    struct squid_radix_node *(*rnh_lookup)	/* locate based on sockaddr */
+               (void *v, void *mask, struct squid_radix_node_head * head);
+    struct squid_radix_node *(*rnh_matchpkt)	/* locate based on packet hdr */
+               (void *v, struct squid_radix_node_head * head);
     int (*rnh_walktree)		/* traverse tree */
-        (struct radix_node_head * head, int (*f) (struct radix_node *, void *), void *w);
-    struct radix_node rnh_nodes[3];	/* empty tree for common case */
+        (struct squid_radix_node_head * head, int (*f) (struct squid_radix_node *, void *), void *w);
+    struct squid_radix_node rnh_nodes[3];	/* empty tree for common case */
 };
 
 
-#define Bcmp(a, b, n) memcmp(((char *)(a)), ((char *)(b)), (n))
-#define Bcopy(a, b, n) memcpy(((char *)(b)), ((char *)(a)), (unsigned)(n))
-#define Bzero(p, n) memset((char *)(p),'\0', (int)(n))
-#define R_Malloc(p, t, n) (p = (t) xmalloc((unsigned int)(n)))
-#define Free(p) xfree((char *)p)
+#define squid_Bcmp(a, b, n) memcmp(((char *)(a)), ((char *)(b)), (n))
+#define squid_Bcopy(a, b, n) memcpy(((char *)(b)), ((char *)(a)), (unsigned)(n))
+#define squid_Bzero(p, n) memset((char *)(p),'\0', (int)(n))
+#define squid_R_Malloc(p, t, n) (p = (t) xmalloc((unsigned int)(n)))
+#define squid_Free(p) xfree((char *)p)
 
-extern void rn_init (void);
-extern int rn_inithead(void **, int);
-extern int rn_refines(void *, void *);
-extern int rn_walktree(struct radix_node_head *, int (*)(struct radix_node *, void *), void *);
-extern struct radix_node *rn_addmask(void *, int, int);
-extern struct radix_node *rn_addroute(void *, void *, struct radix_node_head *, struct radix_node[2]);
-extern struct radix_node *rn_delete(void *, void *, struct radix_node_head *);
-extern struct radix_node *rn_insert(void *, struct radix_node_head *, int *, struct radix_node[2]);
-extern struct radix_node *rn_match(void *, struct radix_node_head *);
-extern struct radix_node *rn_newpair(void *, int, struct radix_node[2]);
-extern struct radix_node *rn_search(void *, struct radix_node *);
-extern struct radix_node *rn_search_m(void *, struct radix_node *, void *);
-extern struct radix_node *rn_lookup(void *, void *, struct radix_node_head *);
+extern void squid_rn_init (void);
+extern int squid_rn_inithead(void **, int);
+extern int squid_rn_refines(void *, void *);
+extern int squid_rn_walktree(struct squid_radix_node_head *, int (*)(struct squid_radix_node *, void *), void *);
+extern struct squid_radix_node *squid_rn_addmask(void *, int, int);
+extern struct squid_radix_node *squid_rn_addroute(void *, void *, struct squid_radix_node_head *, struct squid_radix_node[2]);
+extern struct squid_radix_node *squid_rn_delete(void *, void *, struct squid_radix_node_head *);
+extern struct squid_radix_node *squid_rn_insert(void *, struct squid_radix_node_head *, int *, struct squid_radix_node[2]);
+extern struct squid_radix_node *squid_rn_match(void *, struct squid_radix_node_head *);
+extern struct squid_radix_node *squid_rn_newpair(void *, int, struct squid_radix_node[2]);
+extern struct squid_radix_node *squid_rn_search(void *, struct squid_radix_node *);
+extern struct squid_radix_node *squid_rn_search_m(void *, struct squid_radix_node *, void *);
+extern struct squid_radix_node *squid_rn_lookup(void *, void *, struct squid_radix_node_head *);
 #define min(x,y) ((x)<(y)? (x) : (y))
 
 #endif /* SQUID_RADIX_H */
