@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.429 1999/01/11 22:54:17 wessels Exp $
+ * $Id: client_side.cc,v 1.430 1999/01/12 00:20:42 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -698,6 +698,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 {
     request_t *request = http->request;
     const HttpHeader *req_hdr = &request->header;
+    int no_cache = 0;
 #if USE_USERAGENT_LOG
     const char *str;
 #endif
@@ -707,17 +708,22 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	request->flags.ims = 1;
     if (httpHeaderHas(req_hdr, HDR_PRAGMA)) {
 	String s = httpHeaderGetList(req_hdr, HDR_PRAGMA);
-	if (strListIsMember(&s, "no-cache", ',')) {
-#if HTTP_VIOLATIONS
-	    if (Config.onoff.reload_into_ims)
-		request->flags.nocache_hack = 1;
-	    else if (refresh_nocache_hack)
-		request->flags.nocache_hack = 1;
-	    else
-#endif
-		request->flags.nocache = 1;
-	}
+	if (strListIsMember(&s, "no-cache", ','))
+	    no_cache++;
 	stringClean(&s);
+    }
+    if (request->cache_control)
+	if (EBIT_TEST(request->cache_control->mask, CC_NO_CACHE))
+	    no_cache++;
+    if (no_cache) {
+#if HTTP_VIOLATIONS
+	if (Config.onoff.reload_into_ims)
+	    request->flags.nocache_hack = 1;
+	else if (refresh_nocache_hack)
+	    request->flags.nocache_hack = 1;
+	else
+#endif
+	    request->flags.nocache = 1;
     }
     /* ignore range header in non-GETs */
     if (request->method == METHOD_GET) {
