@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.166 2003/07/15 06:50:43 robertc Exp $
+ * $Id: typedefs.h,v 1.167 2003/07/15 11:33:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -244,10 +244,6 @@ typedef struct _helper_stateful statefulhelper;
 typedef struct _helper_server helper_server;
 
 typedef struct _helper_stateful_server helper_stateful_server;
-
-typedef struct _helper_request helper_request;
-
-typedef struct _helper_stateful_request helper_stateful_request;
 
 typedef struct _generic_cbdata generic_cbdata;
 

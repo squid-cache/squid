@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.40 2003/07/15 06:50:41 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.41 2003/07/15 11:33:21 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -31,6 +31,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "HttpRequest.h"
@@ -39,18 +40,24 @@
 #include "HttpHeaderRange.h"
 
 static void httpRequestHdrCacheInit(request_t * req);
+MemPool (*HttpRequest::Pool)(NULL);
 
 void *
-HttpRequest::operator new(size_t amount)
+HttpRequest::operator new (size_t byteCount)
 {
-    // Todo: assign private pool.
-    return static_cast<request_t *>(memAllocate(MEM_REQUEST_T));
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (HttpRequest));
+
+    if (!Pool)
+        Pool = memPoolCreate("HttpRequest", sizeof (HttpRequest));
+
+    return memPoolAlloc(Pool);
 }
 
 void
-HttpRequest::operator delete(void *address)
+HttpRequest::operator delete (void *address)
 {
-    memFree(address, MEM_REQUEST_T);
+    memPoolFree (Pool, address);
 }
 
 void

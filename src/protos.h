@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.483 2003/07/15 06:50:42 robertc Exp $
+ * $Id: protos.h,v 1.484 2003/07/15 11:33:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -204,6 +204,16 @@ SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj,
 /* disk.c */
 SQUIDCEXTERN int file_open(const char *path, int mode);
 SQUIDCEXTERN void file_close(int fd);
+/* Adapter file_write for object callbacks */
+
+template <class O>
+void
+FreeObject(void *address)
+{
+    O *anObject = static_cast <O *>(address);
+    anObject->deleteSelf();
+}
+
 SQUIDCEXTERN void file_write(int, off_t, void const *, int len, DWCB *, void *, FREE *);
 SQUIDCEXTERN void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
 SQUIDCEXTERN void file_read(int, char *, int, off_t, DRCB *, void *);

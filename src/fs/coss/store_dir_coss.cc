@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.44 2003/02/21 22:50:39 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.45 2003/07/15 11:33:23 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -41,6 +41,7 @@
 #include "store_coss.h"
 #include "fde.h"
 #include "SwapDir.h"
+#include "StoreSwapLogData.h"
 
 #define STORE_META_BUFSZ 4096
 
@@ -211,8 +212,8 @@ storeCossRebuildFromSwapLog(void *data)
 {
     RebuildState *rb = (RebuildState *)data;
     StoreEntry *e = NULL;
-    storeSwapLogData s;
-    size_t ss = sizeof(storeSwapLogData);
+    StoreSwapLogData s;
+    size_t ss = sizeof(StoreSwapLogData);
     double x;
     assert(rb != NULL);
     /* load a number of objects per invocation */
@@ -600,9 +601,8 @@ void
 CossCleanLog::write(StoreEntry const &e)
 {
     CossCleanLog *state = this;
-    storeSwapLogData s;
-    static size_t ss = sizeof(storeSwapLogData);
-    memset(&s, '\0', ss);
+    StoreSwapLogData s;
+    static size_t ss = sizeof(StoreSwapLogData);
     s.op = (char) SWAP_LOG_ADD;
     s.swap_filen = e.swap_filen;
     s.timestamp = e.timestamp;
@@ -704,16 +704,10 @@ CossSwapDir::writeCleanDone()
     cleanLog = NULL;
 }
 
-static void
-storeSwapLogDataFree(void *s)
-{
-    memFree(s, MEM_SWAP_LOG_DATA);
-}
-
 void
 CossSwapDir::logEntry(const StoreEntry & e, int op) const
 {
-    storeSwapLogData *s = (storeSwapLogData *)memAllocate(MEM_SWAP_LOG_DATA);
+    StoreSwapLogData *s = new StoreSwapLogData;
     s->op = (char) op;
     s->swap_filen = e.swap_filen;
     s->timestamp = e.timestamp;
@@ -727,10 +721,10 @@ CossSwapDir::logEntry(const StoreEntry & e, int op) const
     file_write(swaplog_fd,
                -1,
                s,
-               sizeof(storeSwapLogData),
+               sizeof(StoreSwapLogData),
                NULL,
                NULL,
-               (FREE *) storeSwapLogDataFree);
+               &FreeObject<StoreSwapLogData>);
 }
 
 void

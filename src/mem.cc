@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.81 2003/07/14 14:16:00 robertc Exp $
+ * $Id: mem.cc,v 1.82 2003/07/15 11:33:22 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -37,7 +37,6 @@
 #include "Mem.h"
 #include "memMeter.h"
 #include "Store.h"
-#include "HttpRequest.h"
 
 /* module globals */
 
@@ -363,7 +362,6 @@ memConfigure(void)
 
 /* XXX make these classes do their own memory management */
 #include "HttpHdrContRange.h"
-#include "HttpRequest.h"
 
 void
 Mem::Init(void)
@@ -409,17 +407,10 @@ Mem::Init(void)
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_RELIST, "relist", sizeof(relist), 0);
-    memDataInit(MEM_REQUEST_T, "request_t", sizeof(request_t),
-                Squid_MaxFD >> 3);
     memDataInit(MEM_WORDLIST, "wordlist", sizeof(wordlist), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", MD5_DIGEST_CHARS, 0);
     memPoolSetChunkSize(MemPools[MEM_MD5_DIGEST], 512 * 1024);
-    memDataInit(MEM_HELPER_REQUEST, "helper_request",
-                sizeof(helper_request), 0);
-    memDataInit(MEM_HELPER_STATEFUL_REQUEST, "helper_stateful_request",
-                sizeof(helper_stateful_request), 0);
-    memDataInit(MEM_SWAP_LOG_DATA, "storeSwapLogData", sizeof(storeSwapLogData), 0);
 
     /* init string pools */
 

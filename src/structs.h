@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.473 2003/07/15 06:50:42 robertc Exp $
+ * $Id: structs.h,v 1.474 2003/07/15 11:33:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1917,24 +1917,6 @@ struct _HttpHeaderStat
     int busyDestroyedCount;
 };
 
-/*
- * Do we need to have the dirn in here? I don't think so, since we already
- * know the dirn .. 
- */
-
-struct _storeSwapLogData
-{
-    char op;
-    sfileno swap_filen;
-    time_t timestamp;
-    time_t lastref;
-    time_t expires;
-    time_t lastmod;
-    size_t swap_file_sz;
-    u_short refcount;
-    u_short flags;
-    unsigned char key[MD5_DIGEST_CHARS];
-};
 
 struct _ClientInfo
 {
@@ -2010,24 +1992,7 @@ unsigned int ftp_pasv_failed:
     flags;
 };
 
-
-struct _helper_request
-{
-    char *buf;
-    HLPCB *callback;
-    void *data;
-
-    struct timeval dispatch_time;
-};
-
-struct _helper_stateful_request
-{
-    char *buf;
-    HLPSCB *callback;
-    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available for deferred requests.*/
-    void *data;
-};
-
+class helper_request;
 
 struct _helper
 {
@@ -2120,6 +2085,7 @@ unsigned int shutdown:
     stats;
 };
 
+class helper_stateful_request;
 
 struct _helper_stateful_server
 {
