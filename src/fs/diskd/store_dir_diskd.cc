@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.36 2001/01/12 00:37:33 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.37 2001/01/15 22:37:10 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -366,7 +366,7 @@ storeDiskdDirInit(SwapDir * sd)
     int x;
     int i;
     int rfd;
-    int ikey = (getpid() << 16) + (sd->index << 4);
+    int ikey;
     char *args[5];
     char skey1[32];
     char skey2[32];
@@ -377,6 +377,8 @@ storeDiskdDirInit(SwapDir * sd)
     "\tfor details.  Run 'squid -z' to create swap directories\n"
     "\tif needed, or if running Squid for the first time.";
 
+    ikey = (getpid() << 10) + (sd->index << 2);
+    ikey &= 0x7fffffff;
     diskdinfo->smsgid = msgget((key_t) ikey, 0700 | IPC_CREAT);
     if (diskdinfo->smsgid < 0) {
 	debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
