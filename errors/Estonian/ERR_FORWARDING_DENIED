@@ -5,7 +5,7 @@
 <H2>P&auml;ring URLile ei saa vastust</H2>
 <HR>
 <P>
-Sooritades p&auml;ringut URLile:
+Sooritades p&auml;ringut URLile
 <A HREF="%U">%U</A>
 <P>
 tekkis j&auml;rgnev viga:
@@ -17,6 +17,6 @@ Edastamine keelatud.
 </UL>
 
 <P>
-See cache ei edasta teie p&auml;ringut, kuna ta kasutab ainult naaber cache
-meetodit. Ilmselt on klient %i cache, mis on vigaselt konfigureeritud.
+Meie cache ei edasta teie p&auml;ringut, kuna ta kasutab andmete edastamisel
+ainult naaber cache meetodit. Ilmselt on %i vigaselt konfigureeritud cache.
 </P>

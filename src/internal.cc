@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.14 1998/08/20 15:30:22 wessels Exp $
+ * $Id: internal.cc,v 1.15 1998/11/12 06:28:11 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -100,4 +100,13 @@ char *
 internalLocalUri(const char *dir, const char *name)
 {
     return internalRemoteUri(getMyHostname(), Config.Port.http->i, dir, name);
+}
+
+const char *
+internalHostname(void)
+{
+    LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
+    xstrncpy(host, getMyHostname(), SQUIDHOSTNAMELEN);
+    Tolower(host);
+    return host;
 }

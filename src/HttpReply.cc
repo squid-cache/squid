@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.32 1998/10/15 23:40:04 wessels Exp $
+ * $Id: HttpReply.cc,v 1.33 1998/11/12 06:27:51 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -266,7 +266,8 @@ httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
     /* clean cache */
     httpReplyHdrCacheClean(rep);
     /* update raw headers */
-    httpHeaderUpdate(&rep->header, &freshRep->header, &Denied304HeadersMask);
+    httpHeaderUpdate(&rep->header, &freshRep->header,
+	(const HttpHeaderMask *) &Denied304HeadersMask);
     /* init cache */
     httpReplyHdrCacheInit(rep);
 }

@@ -1,6 +1,8 @@
 
+
+
 /*
- * $Id: squid.h,v 1.177 1998/08/17 23:00:41 wessels Exp $
+ * $Id: squid.h,v 1.178 1998/11/12 06:28:24 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -222,6 +224,9 @@
 
 /* Make sure syslog goes after stdarg/varargs */
 #ifdef HAVE_SYSLOG_H
+#ifdef _SQUID_AIX_
+#define _XOPEN_EXTENDED_SOURCE
+#endif
 #include <syslog.h>
 #endif
 
@@ -298,6 +303,10 @@ struct rusage {
 
 #if CBDATA_DEBUG
 #define cbdataAdd(a,b)	cbdataAddDbg(a,b,__FILE__,__LINE__)
+#endif
+
+#if defined(_SQUID_NEXT_) && !defined(S_ISDIR)
+#define S_ISDIR(mode) (((mode) & (_S_IFMT)) == (_S_IFDIR))
 #endif
 
 #ifdef USE_GNUREGEX

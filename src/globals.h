@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.69 1998/10/17 04:53:40 rousskov Exp $
+ * $Id: globals.h,v 1.70 1998/11/12 06:28:08 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -132,12 +132,11 @@ extern const int CacheDigestHashFuncCount;	/* 4 */
 extern CacheDigest *store_digest;	/* NULL */
 extern const char *StoreDigestUrlPath;	/* "store_digest" */
 extern const char *StoreDigestMimeStr;	/* "application/cache-digest" */
+#if USE_CACHE_DIGESTS
 extern const Version CacheDigestVer;	/* { 4, 3 } */
+#endif
 extern const char *MultipartMsgBoundaryStr;	/* "Unique-Squid-Separator" */
 extern icpUdpData *IcpQueueHead;	/* NULL */
-#if DELAY_POOLS
-extern time_t delay_pools_last_update;	/* 0 */
-#endif
 #if HTTP_VIOLATIONS
 extern int refresh_nocache_hack;	/* 0 */
 #endif

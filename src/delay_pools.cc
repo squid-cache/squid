@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.5 1998/09/30 04:34:07 wessels Exp $
+ * $Id: delay_pools.cc,v 1.6 1998/11/12 06:28:02 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -405,7 +405,7 @@ delayBytesIn(delay_id d, int qty)
     }
     if (class == 2) {
 	delay_data.class2_aggregate -= qty;
-	delay_data.class3_individual[position] -= qty;
+	delay_data.class2_individual[position] -= qty;
 	return;
     }
     if (class == 3) {

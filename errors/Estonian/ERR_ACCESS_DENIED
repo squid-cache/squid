@@ -5,7 +5,7 @@
 <H2>P&auml;ring URLile ei saa vastust</H2>
 <HR>
 <P>
-Sooritades p&auml;ringut URLile:
+Sooritades p&auml;ringut URLile
 <A HREF="%U">%U</A>
 <P>
 tekkis j&auml;rgnev viga:
@@ -15,9 +15,8 @@ tekkis j&auml;rgnev viga:
 Juurdep&auml;&auml;s keelatud.
 </STRONG>
 <P>
-Juurdep&auml;&auml;su kontrolli konfiguratsioon blokeeris teie p&auml;ringu.
-Palun kontakteeruge oma teenusepakkujaga, kui te arvate, et blokeerimine
-pole &otilde;ige.
+Juurdep&auml;&auml;su kontrolli konfiguratsioon blokeerib teie p&auml;ringut.
+Kui te arvate, et blokeering pole &otilde;ige, kontakteeruge palun teenuse pakkujaga.
 </UL>
 </P>
 

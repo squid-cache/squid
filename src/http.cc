@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.331 1998/10/19 22:37:01 wessels Exp $
+ * $Id: http.cc,v 1.332 1998/11/12 06:28:10 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -175,6 +175,7 @@ httpCachableReply(HttpStateData * httpState)
     HttpReply *rep = httpState->entry->mem_obj->reply;
     HttpHeader *hdr = &rep->header;
     const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
+    const char *v;
     if (EBIT_TEST(cc_mask, CC_PRIVATE))
 	return 0;
     if (EBIT_TEST(cc_mask, CC_NO_CACHE))
@@ -196,6 +197,23 @@ httpCachableReply(HttpStateData * httpState)
      */
     if (httpHeaderHas(hdr, HDR_VARY))
 	return 0;
+    /* Pragma: no-cache in _replies_ is not documented in HTTP,
+     * but servers like "Active Imaging Webcast/2.0" sure do use it */
+    if (httpHeaderHas(hdr, HDR_PRAGMA)) {
+	String s = httpHeaderGetList(hdr, HDR_PRAGMA);
+	const int no_cache = strListIsMember(&s, "no-cache", ',');
+	stringClean(&s);
+	if (no_cache)
+	    return 0;
+    }
+    /*
+     * The "multipart/x-mixed-replace" content type is used for
+     * continuous push replies.  These are generally dynamic and
+     * probably should not be cachable
+     */
+    if ((v = httpHeaderGetStr(hdr, HDR_CONTENT_TYPE)))
+	if (!strncasecmp(v, "multipart/x-mixed-replace", 25))
+	    return 0;
     switch (httpState->entry->mem_obj->reply->sline.status) {
 	/* Responses that are cacheable */
     case HTTP_OK:
@@ -592,7 +610,7 @@ httpBuildRequestHeader(request_t * request,
      *  the server and fetch only the requested content) 
      */
     we_do_ranges =
-	orig_request->range && orig_request->flags.cachable && !httpHdrRangeWillBeComplex(orig_request->range);
+	orig_request->range && orig_request->flags.cachable && !httpHdrRangeWillBeComplex(orig_request->range) && (Config.rangeOffsetLimit == -1 || httpHdrRangeFirstOffset(orig_request->range) <= Config.rangeOffsetLimit);
     debug(11, 8) ("httpBuildRequestHeader: range specs: %p, cachable: %d; we_do_ranges: %d\n",
 	orig_request->range, orig_request->flags.cachable, we_do_ranges);
 
@@ -604,13 +622,20 @@ httpBuildRequestHeader(request_t * request,
 	    continue;
 	switch (e->id) {
 	case HDR_PROXY_AUTHORIZATION:
-	    /* If we're not going to do proxy auth, then it must be passed on */
+	    /* If we're not doing proxy auth, then it must be passed on */
 	    if (!request->flags.used_proxy_auth)
 		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
 	    break;
+	case HDR_AUTHORIZATION:
+	    /* If we're not doing www auth, then it must be passed on */
+	    if (!request->flags.accelerated || !request->flags.used_proxy_auth)
+		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	    else
+		request->flags.auth = 0;	/* We have used the authentication */
+	    break;
 	case HDR_HOST:
 	    /* Don't use client's Host: header for redirected requests */
-	    if (!request->flags.redirected)
+	    if (!request->flags.redirected || !Config.onoff.redir_rewrites_host)
 		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
 	    break;
 	case HDR_IF_MODIFIED_SINCE:
@@ -674,6 +699,20 @@ httpBuildRequestHeader(request_t * request,
 	} else {
 	    httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
 		orig_request->host, (int) orig_request->port);
+	}
+    }
+    /* append Authorization if known in URL, not in header and going direct */
+    if (!httpHeaderHas(hdr_out, HDR_AUTHORIZATION)) {
+	if (!request->flags.proxying && *request->login) {
+	    httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
+		base64_encode(request->login));
+	}
+    }
+    /* append Proxy-Authorization if configured for peer, and proxying */
+    if (!httpHeaderHas(hdr_out, HDR_PROXY_AUTHORIZATION)) {
+	if (request->flags.proxying && request->peer_login) {
+	    httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
+		base64_encode(request->peer_login));
 	}
     }
     /* append Cache-Control, add max-age if not there already */
@@ -800,6 +839,7 @@ httpStart(FwdState * fwdState, int fd)
 	xstrncpy(proxy_req->host, httpState->peer->host, SQUIDHOSTNAMELEN);
 	proxy_req->port = httpState->peer->http_port;
 	proxy_req->flags = orig_req->flags;
+	proxy_req->peer_login = httpState->peer->login;
 	httpState->request = requestLink(proxy_req);
 	httpState->orig_request = requestLink(orig_req);
 	proxy_req->flags.proxying = 1;

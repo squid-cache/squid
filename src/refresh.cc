@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.43 1998/10/19 22:37:02 wessels Exp $
+ * $Id: refresh.cc,v 1.44 1998/11/12 06:28:23 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -267,7 +267,10 @@ refreshCheckICP(const StoreEntry * entry, request_t * request)
 int
 refreshCheckDigest(const StoreEntry * entry, time_t delta)
 {
-    return refreshCheck(entry, NULL, delta, &refreshCounts[rcCDigest]);
+    return refreshCheck(entry,
+	entry->mem_obj ? entry->mem_obj->request : NULL,
+	delta,
+	&refreshCounts[rcCDigest]);
 }
 
 time_t

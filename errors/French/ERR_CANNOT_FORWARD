@@ -1,24 +1,24 @@
 <HTML><HEAD>
-<TITLE>ERREUR: L'URL demand&eacute;e n'a pu etre charg&eacute;e</TITLE>
+<TITLE>ERREUR&nbsp;: L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</TITLE>
 </HEAD><BODY>
 <H1>ERREUR</H1>
-<H2>L'URL demand&eacute;e n'a pu etre charg&eacute;e</H2>
+<H2>L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</H2>
 <HR>
 <P>
-En essayant de charger l'URL:
+En essayant de charger l'URL&nbsp;:
 <A HREF="%U">%U</A>
 <P>
-L'erreur suivante fut rencontr&eacute;e:
+L'erreur suivante a &eacute;t&eacute; rencontr&eacute;e&nbsp;:
 <UL>
 <LI>
 <STRONG>
-Impossible de relayer &agrave; cette heure.
+Impossible de relayer cette requ&ecirc;te en ce moment.
 </STRONG>
 </UL>
 
 <P>
-Cette requete n'a pu etre transmise au serveur d'origine ou &agrave; l'un
-des caches parents. La cause de cette erreur la plus probable est:
+Cette requ&ecirc;te n'a pu &ecirc;tre transmise au serveur d'origine ou &agrave; l'un
+des caches parents. La cause la plus probable de cette erreur est&nbsp;:
 <UL>
 <LI>L'administrateur du cache a interdit &agrave; ce cache de faire des
     connexions directes aux serveurs d'origine, et

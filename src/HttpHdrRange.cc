@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.15 1998/09/29 16:33:39 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.16 1998/11/12 06:27:49 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -405,6 +405,21 @@ httpHdrRangeWillBeComplex(const HttpHdrRange * range)
 	offset = spec->offset;
 	if (known_spec(spec->length))	/* avoid  unknowns */
 	    offset += spec->length;
+    }
+    return 0;
+}
+
+/* hack: returns offset of first range spec */
+size_t
+httpHdrRangeFirstOffset(const HttpHdrRange * range)
+{
+    HttpHdrRangePos pos = HttpHdrRangeInitPos;
+    const HttpHdrRangeSpec *spec;
+    assert(range);
+    while ((spec = httpHdrRangeGetSpec(range, &pos))) {
+	if (!known_spec(spec->offset))	/* ignore unknowns */
+	    continue;
+	return spec->offset;
     }
     return 0;
 }

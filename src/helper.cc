@@ -45,6 +45,7 @@ helperOpenServers(helper * hlp)
     args[nargs++] = NULL;
     assert(nargs <= HELPER_MAX_ARGS);
     for (k = 0; k < hlp->n_to_start; k++) {
+	getCurrentTime();
 	rfd = wfd = -1;
 	x = ipcCreate(hlp->ipc_type,
 	    progname,
@@ -57,8 +58,8 @@ helperOpenServers(helper * hlp)
 	    continue;
 	}
 	hlp->n_running++;
-	srv = xcalloc(1, sizeof(*srv));
-	cbdataAdd(srv, MEM_NONE);
+	srv = memAllocate(MEM_HELPER_SERVER);
+	cbdataAdd(srv, MEM_HELPER_SERVER);
 	srv->flags.alive = 1;
 	srv->index = k;
 	srv->rfd = rfd;
@@ -91,7 +92,7 @@ helperOpenServers(helper * hlp)
 void
 helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
-    helper_request *r = xcalloc(1, sizeof(*r));
+    helper_request *r = memAllocate(MEM_HELPER_REQUEST);
     helper_server *srv;
     if (hlp == NULL) {
 	debug(29, 3) ("helperSubmit: hlp == NULL\n");
@@ -154,10 +155,11 @@ helperStats(StoreEntry * sentry, helper * hlp)
 void
 helperShutdown(helper * hlp)
 {
-    dlink_node *link;
+    dlink_node *link = hlp->servers.head;
     helper_server *srv;
-    for (link = hlp->servers.head; link; link = link->next) {
+    while (link) {
 	srv = link->data;
+	link = link->next;
 	if (!srv->flags.alive) {
 	    debug(34, 3) ("helperShutdown: %s #%d is NOT ALIVE.\n",
 		hlp->id_name, srv->index + 1);
@@ -182,8 +184,8 @@ helperShutdown(helper * hlp)
 helper *
 helperCreate(const char *name)
 {
-    helper *hlp = xcalloc(1, sizeof(*hlp));
-    cbdataAdd(hlp, MEM_NONE);
+    helper *hlp = memAllocate(MEM_HELPER);
+    cbdataAdd(hlp, MEM_HELPER);
     hlp->id_name = name;
     return hlp;
 }
@@ -273,16 +275,17 @@ helperHandleRead(int fd, void *data)
 	    hlp->stats.replies, REDIRECT_AV_FACTOR);
 	if (srv->flags.shutdown)
 	    comm_close(srv->wfd);
+	else
+	    helperKickQueue(hlp);
     } else {
 	commSetSelect(srv->rfd, COMM_SELECT_READ, helperHandleRead, srv, 0);
     }
-    helperKickQueue(hlp);
 }
 
 static void
 Enqueue(helper * hlp, helper_request * r)
 {
-    dlink_node *link = xcalloc(1, sizeof(*link));
+    dlink_node *link = memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
     hlp->stats.queue_size++;
     if (hlp->stats.queue_size < hlp->n_running)
@@ -307,7 +310,7 @@ Dequeue(helper * hlp)
     if ((link = hlp->queue.head)) {
 	r = link->data;
 	dlinkDelete(link, &hlp->queue);
-	safe_free(link);
+	memFree(MEM_DLINK_NODE, link);
 	hlp->stats.queue_size--;
     }
     return r;
@@ -374,5 +377,5 @@ helperRequestFree(helper_request * r)
 {
     cbdataUnlock(r->data);
     xfree(r->buf);
-    xfree(r);
+    memFree(MEM_HELPER_REQUEST, r);
 }

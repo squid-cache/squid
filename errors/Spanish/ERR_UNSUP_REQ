@@ -18,4 +18,4 @@ Método de la petición y protocolo no soportados
 
 <P>
 Squid no admite todos los métodos para todos los protocolos de acceso.
-Por ejemplo, Usted no puede hacer un POST a un servidor Gopher.
+Por ejemplo, no se puede hacer un POST a un servidor Gopher.

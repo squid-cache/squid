@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.52 1998/07/22 20:37:15 wessels Exp $
+ * $Id: dnsserver.cc,v 1.53 1998/11/12 06:28:03 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -289,7 +289,12 @@ main(int argc, char *argv[])
 		_res.options |= RES_INIT;
 		opt_s = 1;
 	    }
+#if HAVE_RES_NSADDR_LIST
 	    safe_inet_addr(optarg, &_res.nsaddr_list[_res.nscount++].sin_addr);
+#elif HAVE_RES_NS_LIST
+	    safe_inet_addr(optarg, &_res.ns_list[_res.nscount++].addr.sin_addr);
+#endif
+	    fprintf(stderr, "-s is not supported on this resolver\n");
 #else
 	    fprintf(stderr, "-s is not supported on this resolver\n");
 #endif /* HAVE_RES_INIT */

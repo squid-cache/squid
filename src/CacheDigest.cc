@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.25 1998/07/22 20:36:40 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.26 1998/11/12 06:27:48 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+
+#if USE_CACHE_DIGESTS
 
 /* local types */
 typedef struct {
@@ -316,3 +318,5 @@ cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
 	storeKeyText(key), bit_count,
 	hashed_keys[0], hashed_keys[1], hashed_keys[2], hashed_keys[3]);
 }
+
+#endif

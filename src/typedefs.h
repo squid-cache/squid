@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.81 1998/11/11 20:04:21 glenn Exp $
+ * $Id: typedefs.h,v 1.82 1998/11/12 06:28:30 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -204,7 +204,7 @@ typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, i
 /* append/vprintf's for Packer */
 typedef void (*append_f) (void *, const char *buf, int size);
 #ifdef __STDC__
-typedef void (*vprintf_f) (void *, const char *fmt,...);
+typedef void (*vprintf_f) (void *, const char *fmt, va_list args);
 #else
 typedef void (*vprintf_f) ();
 #endif

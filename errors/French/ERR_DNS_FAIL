@@ -1,27 +1,27 @@
 <HTML><HEAD>
-<TITLE>ERREUR: L'URL demand&eacute;e n'a pu etre charg&eacute;e</TITLE>
+<TITLE>ERREUR&nbsp;: L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</TITLE>
 </HEAD><BODY>
-<H2>L'URL demand&eacute;e n'a pu etre charg&eacute;e</H2>
+<H2>L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</H2>
 <HR>
 <P>
-En essayant de charger l'URL:
+En essayant de charger l'URL&nbsp;:
 <A HREF="%U">%U</A>
 <P>
-L'erreur suivante fut rencontr&eacute;e:
+L'erreur suivante a &eacute;t&eacute; rencontr&eacute;e&nbsp;:
 <BLOCKQUOTE>
 Impossible d'associer une adresse IP &agrave; la machine
-<I>%H</I>
+<I>%H</I>.
 </BLOCKQUOTE>
 </UL>
 
 <P>
-Le serveur de noms retourna:
+Le serveur de noms a retourn&eacute;&nbsp;:
 <BLOCKQUOTE>
 %z
 </BLOCKQUOTE>
 
 <P>
-En d'autres termes:
+En d'autres termes&nbsp;:
 <PRE>
  Le cache n'a pas &eacute;t&eacute; en mesure de r&eacute;soudre le nom de
 machine pr&eacute;sent&eacute; dans l'URL.

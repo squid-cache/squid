@@ -1,5 +1,8 @@
 Our Todo List
 
+()	dont re-sibling requests which came from a sibling
+()
+
 (1) is high priority, (5) is low priority
 (**) Means we need this for the real 1.2 release
 ==============================================================================

@@ -1,7 +1,6 @@
 
-
 /*
- * $Id: structs.h,v 1.246 1998/11/11 20:04:20 glenn Exp $
+ * $Id: structs.h,v 1.247 1998/11/12 06:28:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -55,11 +54,6 @@ struct _acl_time_data {
 struct _acl_name_list {
     char name[ACL_NAME_SZ];
     acl_name_list *next;
-};
-
-struct _acl_proxy_auth {
-    int timeout;		/* timeout value for cached usercode:password entries */
-    hash_table *hash;
 };
 
 struct _acl_proxy_auth_user {
@@ -259,6 +253,7 @@ struct _SquidConfig {
     int dnsChildren;
     int redirectChildren;
     int authenticateChildren;
+    int authenticateTTL;
     struct {
 	char *host;
 	u_short port;
@@ -341,6 +336,8 @@ struct _SquidConfig {
 	int reload_into_ims;
 #endif
 	int offline;
+	int redir_rewrites_host;
+	int persistent_client_posts;
     } onoff;
     acl *aclList;
     struct {
@@ -407,6 +404,7 @@ struct _SquidConfig {
     } comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;
+    size_t rangeOffsetLimit;
 };
 
 struct _SquidConfig2 {
@@ -729,6 +727,7 @@ struct _AccessLogEntry {
 	method_t method;
 	int code;
 	const char *content_type;
+	float version;
     } http;
     struct {
 	icp_opcode opcode;
@@ -887,6 +886,7 @@ struct _domain_type {
     domain_type *next;
 };
 
+#if USE_CACHE_DIGESTS
 struct _Version {
     short int current;		/* current version */
     short int required;		/* minimal version that can safely handle current version */
@@ -946,6 +946,8 @@ struct _PeerDigest {
 	kb_t kbytes_recv;
     } stats;
 };
+
+#endif
 
 struct _peer {
     char *host;
@@ -1007,7 +1009,9 @@ struct _peer {
 	    unsigned int counting:1;
 	} flags;
     } mcast;
+#if USE_CACHE_DIGESTS
     PeerDigest digest;
+#endif
     int tcp_up;			/* 0 if a connect() fails */
     time_t last_fail_time;
     struct in_addr addresses[10];
@@ -1022,6 +1026,7 @@ struct _peer {
 	float load_factor;
     } carp;
 #endif
+    char *login;		/* Proxy authorization */
 };
 
 struct _net_db_name {
@@ -1073,7 +1078,6 @@ struct _ps_state {
      */
     struct sockaddr_in first_parent_miss;
     struct sockaddr_in closest_parent_miss;
-    struct sockaddr_in single_parent;
     ping_data ping;
     aclCheck_t *acl_checklist;
 };
@@ -1234,6 +1238,8 @@ struct _request_flags {
 #if HTTP_VIOLATIONS
     unsigned int nocache_hack:1;	/* for changing/ignoring no-cache requests */
 #endif
+    unsigned int accelerated:1;
+    unsigned int internal:1;
 };
 
 struct _request_t {
@@ -1263,6 +1269,7 @@ struct _request_t {
 #if DELAY_POOLS
     delay_id delay_id;
 #endif
+    char *peer_login;		/* Configured peer login:password */
 };
 
 struct _cachemgr_passwd {
@@ -1400,7 +1407,9 @@ struct _StatCounters {
 	kb_t memory;
 	int msgs_sent;
 	int msgs_recv;
+#if USE_CACHE_DIGESTS
 	cd_guess_stats guess;
+#endif
 	StatHist on_xition_count;
     } cd;
     struct {

@@ -12,7 +12,7 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-Ha saltado la alarma de tiempo excesivo en la lectura.
+Se acabó el tiempo máximo para lectura de datos de la red.
 </STRONG>
 </UL>
 
@@ -21,7 +21,6 @@ El sistema ha devuelto el siguiente mensaje:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Mientras se esperaba a leer datos de la red ha saltado una alarma
-avisansdo de un exceso en el tiempo transcurrido para la lectura.
-La red o el servidor pueden estar congestionados.
-Por favor, inténtelo de nuevo.
+Se acabó el tiempo máximo de lectura mientras se leían datos de la red.
+La red o el servidor pueden estar congestionados. Por favor, inténtelo de nuevo
+</P>

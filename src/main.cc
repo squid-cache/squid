@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.275 1998/11/11 20:04:16 glenn Exp $
+ * $Id: main.cc,v 1.276 1998/11/12 06:28:14 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -318,7 +318,7 @@ mainReconfigure(void)
     redirectShutdown();
     authenticateShutdown();
     storeDirCloseSwapLogs();
-    errorFree();
+    errorClean();
     parseConfigFile(ConfigFile);
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
@@ -416,7 +416,6 @@ mainInitialize(void)
 #ifdef SQUID_SNMP
     snmpInit();
 #endif
- 
 
 #if MALLOC_DBG
     malloc_debug(0, malloc_debug_level);
@@ -715,7 +714,6 @@ SquidShutdown(void *unused)
 #if PURIFY || XMALLOC_TRACE
     configFreeMemory();
     storeFreeMemory();
-    dnsFreeMemory();
     /*stmemFreeMemory(); */
     netdbFreeMemory();
     ipcacheFreeMemory();
@@ -725,6 +723,8 @@ SquidShutdown(void *unused)
     httpHeaderCleanModule();
     statFreeMemory();
     eventFreeMemory();
+    mimeFreeMemory();
+    errorClean();
 #endif
     memClean();
 #if !XMALLOC_TRACE

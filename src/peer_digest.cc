@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.56 1998/09/29 16:33:48 wessels Exp $
+ * $Id: peer_digest.cc,v 1.57 1998/11/12 06:28:18 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -47,10 +47,10 @@ static void peerDigestDisable(peer * p);
 static void peerDigestDelay(peer * p, int disable, time_t delay);
 static EVH peerDigestValidate;
 static void peerDigestRequest(peer * p);
-static void peerDigestFetchReply(void *data, char *buf, ssize_t size);
+static STCB peerDigestFetchReply;
 static void peerDigestRequest(peer * p);
-static void peerDigestSwapInHeaders(void *data, char *buf, ssize_t size);
-static void peerDigestSwapInCBlock(void *data, char *buf, ssize_t size);
+static STCB peerDigestSwapInHeaders;
+static STCB peerDigestSwapInCBlock;
 static STCB peerDigestSwapInMask;
 static int peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const char *step_name);
 static void peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg);

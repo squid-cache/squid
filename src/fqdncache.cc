@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.121 1998/10/10 14:57:39 wessels Exp $
+ * $Id: fqdncache.cc,v 1.122 1998/11/12 06:28:06 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -233,6 +233,10 @@ fqdncacheParse(const char *inbuf)
     memset(&f, '\0', sizeof(f));
     f.expires = squid_curtime;
     f.status = FQDN_NEGATIVE_CACHED;
+    if (inbuf == NULL) {
+	debug(35, 1) ("fqdncacheParse: Got <NULL> reply\n");
+	return &f;
+    }
     token = strtok(buf, w_space);
     if (NULL == token) {
 	debug(35, 1) ("fqdncacheParse: Got <NULL>, expecting '$name'\n");
@@ -275,24 +279,22 @@ fqdncacheHandleReply(void *data, char *reply)
     generic_cbdata *c = data;
     fqdncache_entry *f = c->data;
     fqdncache_entry *x = NULL;
-    n = ++FqdncacheStats.replies;
     assert(f->status == FQDN_DISPATCHED);
     assert(f->locks);
     cbdataFree(c);
     c = NULL;
+    n = ++FqdncacheStats.replies;
     statHistCount(&Counter.dns.svc_time,
 	tvSubMsec(f->request_time, current_time));
-    if ((x = fqdncacheParse(reply)) == NULL) {
-	debug(35, 0) ("fqdncache_dnsHandleRead: fqdncacheParse failed?!\n");
-    } else {
-	f->name_count = x->name_count;
-	for (n = 0; n < (int) f->name_count; n++)
-	    f->names[n] = x->names[n];
-	f->error_message = x->error_message;
-	f->status = x->status;
-	f->expires = x->expires;
-	fqdncache_call_pending(f);
-    }
+    x = fqdncacheParse(reply);
+    assert(x);
+    f->name_count = x->name_count;
+    for (n = 0; n < (int) f->name_count; n++)
+	f->names[n] = x->names[n];
+    f->error_message = x->error_message;
+    f->status = x->status;
+    f->expires = x->expires;
+    fqdncache_call_pending(f);
     fqdncacheUnlockEntry(f);	/* unlock from FQDN_DISPATCHED */
 }
 

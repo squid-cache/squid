@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.142 1998/09/14 22:17:57 wessels Exp $
+ * $Id: errorpage.cc,v 1.143 1998/11/12 06:28:05 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -81,6 +81,8 @@ static int error_page_count = 0;
 static char *errorTryLoadText(const char *page_name, const char *dir);
 static char *errorLoadText(const char *page_name);
 static const char *errorFindHardText(err_type type);
+static ErrorDynamicPageInfo *errorDynamicPageInfoCreate(int id, const char *page_name);
+static void errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info);
 static MemBuf errorBuildContent(ErrorState * err);
 static const char *errorConvert(char token, ErrorState * err);
 static CWCB errorSendComplete;
@@ -106,18 +108,31 @@ errorInitialize(void)
 	/* hard-coded ? */
 	if ((text = errorFindHardText(i)))
 	    error_text[i] = xstrdup(text);
-	else
+	else if (i < ERR_MAX) {
 	    /* precompiled ? */
-	if (i < ERR_MAX)
 	    error_text[i] = errorLoadText(err_type_str[i]);
-	/* dynamic */
-	else {
+	} else {
+	    /* dynamic */
 	    ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i - ERR_MAX];
 	    assert(info && info->id == i && info->page_name);
 	    error_text[i] = errorLoadText(info->page_name);
 	}
 	assert(error_text[i]);
     }
+}
+
+void
+errorClean(void)
+{
+    if (error_text) {
+	int i;
+	for (i = ERR_NONE + 1; i < error_page_count; i++)
+	    safe_free(error_text[i]);
+	safe_free(error_text);
+    }
+    while (ErrorDynamicPages.count)
+	errorDynamicPageInfoDestroy(stackPop(&ErrorDynamicPages));
+    error_page_count = 0;
 }
 
 static const char *
@@ -169,7 +184,8 @@ errorTryLoadText(const char *page_name, const char *dir)
 	text = NULL;
     }
     file_close(fd);
-    strcat(text, "%S");		/* add signature */
+    if (strstr(text, "%s") == NULL)
+	strcat(text, "%S");	/* add signature */
     return text;
 }
 
@@ -199,16 +215,15 @@ errorReservePageId(const char *page_name)
     return info->id;
 }
 
-void
-errorFree(void)
+static const char *
+errorPageName(int pageId)
 {
-    int i;
-    for (i = ERR_NONE + 1; i < error_page_count; i++)
-	safe_free(error_text[i]);
-    while (ErrorDynamicPages.count)
-	errorDynamicPageInfoDestroy(stackPop(&ErrorDynamicPages));
-    safe_free(error_text);
-    error_page_count = 0;
+    if (pageId >= ERR_NONE && pageId < ERR_MAX)		/* common case */
+	return err_type_str[pageId];
+    if (pageId >= ERR_MAX && pageId - ERR_MAX < ErrorDynamicPages.count)
+	return ((ErrorDynamicPageInfo *) ErrorDynamicPages.
+	    items[pageId - ERR_MAX])->page_name;
+    return "ERR_UNKNOWN";	/* should not happen */
 }
 
 /*
@@ -530,7 +545,7 @@ errorBuildReply(ErrorState * err)
      * X-CACHE-MISS entry should tell us who.
      */
     httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%s %d",
-	err_type_str[err->page_id], err->xerrno);
+	errorPageName(err->page_id), err->xerrno);
     httpBodySet(&rep->body, &content);
     /* do not memBufClean() the content, it was absorbed by httpBody */
     return rep;

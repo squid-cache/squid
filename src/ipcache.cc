@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.205 1998/10/19 04:44:38 wessels Exp $
+ * $Id: ipcache.cc,v 1.206 1998/11/12 06:28:13 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -265,11 +265,15 @@ ipcacheParse(const char *inbuf)
     int ipcount = 0;
     int ttl;
     char A[32][16];
-    xstrncpy(buf, inbuf, DNS_INBUF_SZ);
-    debug(14, 5) ("ipcacheParse: parsing:%s\n", buf);
     memset(&i, '\0', sizeof(i));
     i.expires = squid_curtime;
     i.status = IP_NEGATIVE_CACHED;
+    if (inbuf == NULL) {
+	debug(14, 1) ("ipcacheParse: Got <NULL> reply\n");
+	return &i;
+    }
+    xstrncpy(buf, inbuf, DNS_INBUF_SZ);
+    debug(14, 5) ("ipcacheParse: parsing:%s\n", buf);
     token = strtok(buf, w_space);
     if (NULL == token) {
 	debug(14, 1) ("ipcacheParse: Got <NULL>, expecting '$addr'\n");
@@ -332,15 +336,13 @@ ipcacheHandleReply(void *data, char *reply)
     c = NULL;
     n = ++IpcacheStats.replies;
     statHistCount(&Counter.dns.svc_time, tvSubMsec(i->request_time, current_time));
-    if ((x = ipcacheParse(reply)) == NULL) {
-	debug(14, 0) ("ipcache_dnsHandleRead: ipcacheParse failed?!\n");
-    } else {
-	i->status = x->status;
-	i->addrs = x->addrs;
-	i->error_message = x->error_message;
-	i->expires = x->expires;
-	ipcache_call_pending(i);
-    }
+    x = ipcacheParse(reply);
+    assert(x);
+    i->status = x->status;
+    i->addrs = x->addrs;
+    i->error_message = x->error_message;
+    i->expires = x->expires;
+    ipcache_call_pending(i);
     ipcacheUnlockEntry(i);	/* unlock from IP_DISPATCHED */
 }
 

@@ -1,31 +1,31 @@
 <HTML><HEAD>
-<TITLE>ERREUR: L'URL demand&eacute;e n'a pu etre charg&eacute;e</TITLE>
+<TITLE>ERREUR&nbsp;: L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</TITLE>
 </HEAD><BODY>
 <H1>ERREUR</H1>
-<H2>L'URL demand&eacute;e n'a pu etre charg&eacute;e</H2>
+<H2>L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</H2>
 <HR>
 <P>
-En essayant de traiter la requete:
+En essayant de traiter la requ&ecirc;te&nbsp;:
 <PRE>
 %R
 </PRE>
 <P>
-L'erreur suivante fut rencontr&eacute;e:
+L'erreur suivante a &eacute;t&eacute; rencontr&eacute;e&nbsp;:
 <UL>
 <LI>
 <STRONG>
-Requete invalide
+Requ&ecirc;te invalide
 </STRONG>
 </UL>
 
 <P>
-Quelque chose est invalide dans la requete HTTP. Probl&egrave;mes envisageables:
+Quelque chose est invalide dans la requ&eacute;te HTTP. Probl&egrave;mes envisageables&nbsp;:
 <UL>
-<LI>M&eacute;thode de requete absente ou inconnue (GET, POST)
+<LI>M&eacute;thode de requ&ecirc;te absente ou inconnue (GET, POST)
 <LI>Absence d'URL
 <LI>Absence d'identifiant HTTP (HTTP/1.0)
-<LI>La requete est peut etre trop volumineuse
-<LI>Content-Length absent pour les requetes POST ou PUT
-<LI>Caract&egrave;re ill&eacute;gal dans le nom de la machine; les underscores ne sont pas autoris&eacute;s.
+<LI>La requ&ecirc;te est peut-&ecirc;tre trop volumineuse
+<LI>Champ <code>Content-Length</code> absent pour les requ&ecirc;tes POST ou PUT
+<LI>Caract&egrave;re ill&eacute;gal dans le nom de la machine, les soulign&eacute;s (underscores) ne sont pas autoris&eacute;s.
 </UL>
 </P>

@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.28 1998/11/11 20:04:13 glenn Exp $
+ * $Id: cf_gen.cc,v 1.29 1998/11/12 06:27:58 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -65,6 +65,8 @@
 #include <assert.h>
 #endif
 
+#include "util.h"
+
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.c"
 #define _PATH_SQUID_CONF	"squid.conf"
@@ -73,6 +75,7 @@ enum State {
     sSTART,
     s1,
     sDOC,
+    sNOCOMMENT,
     sEXIT
 };
 
@@ -90,6 +93,7 @@ typedef struct Entry {
     char *comment;
     char *ifdef;
     Line *doc;
+    Line *nocomment;
     struct Entry *next;
 } Entry;
 
@@ -146,14 +150,14 @@ main(int argc, char *argv[])
 		    exit(1);
 		}
 		curr = calloc(1, sizeof(Entry));
-		curr->name = strdup(name);
+		curr->name = xstrdup(name);
 		state = s1;
 	    } else if (!strcmp(buff, "EOF")) {
 		state = sEXIT;
 	    } else if (!strcmp(buff, "COMMENT_START")) {
 		curr = calloc(1, sizeof(Entry));
-		curr->name = strdup("comment");
-		curr->loc = strdup("none");
+		curr->name = xstrdup("comment");
+		curr->loc = xstrdup("none");
 		state = sDOC;
 	    } else {
 		printf("Error on line %d\n", linenum);
@@ -170,35 +174,35 @@ main(int argc, char *argv[])
 		ptr = buff + 8;
 		while (isspace(*ptr))
 		    ptr++;
-		curr->comment = strdup(ptr);
+		curr->comment = xstrdup(ptr);
 	    } else if (!strncmp(buff, "DEFAULT:", 8)) {
 		ptr = buff + 8;
 		while (isspace(*ptr))
 		    ptr++;
-		curr->default_value = strdup(ptr);
+		curr->default_value = xstrdup(ptr);
 	    } else if (!strncmp(buff, "DEFAULT_IF_NONE:", 16)) {
 		ptr = buff + 16;
 		while (isspace(*ptr))
 		    ptr++;
-		curr->default_if_none = strdup(ptr);
+		curr->default_if_none = xstrdup(ptr);
 	    } else if (!strncmp(buff, "LOC:", 4)) {
 		if ((ptr = strtok(buff + 4, WS)) == NULL) {
 		    printf("Error on line %d\n", linenum);
 		    exit(1);
 		}
-		curr->loc = strdup(ptr);
+		curr->loc = xstrdup(ptr);
 	    } else if (!strncmp(buff, "TYPE:", 5)) {
 		if ((ptr = strtok(buff + 5, WS)) == NULL) {
 		    printf("Error on line %d\n", linenum);
 		    exit(1);
 		}
-		curr->type = strdup(ptr);
+		curr->type = xstrdup(ptr);
 	    } else if (!strncmp(buff, "IFDEF:", 6)) {
 		if ((ptr = strtok(buff + 6, WS)) == NULL) {
 		    printf("Error on line %d\n", linenum);
 		    exit(1);
 		}
-		curr->ifdef = strdup(ptr);
+		curr->ifdef = xstrdup(ptr);
 	    } else if (!strcmp(buff, "DOC_START")) {
 		state = sDOC;
 	    } else if (!strcmp(buff, "DOC_NONE")) {
@@ -229,11 +233,35 @@ main(int argc, char *argv[])
 		curr->next = entries;
 		entries = curr;
 		state = sSTART;
+	    } else if (!strcmp(buff, "NOCOMMENT_START")) {
+		state = sNOCOMMENT;
 	    } else {
 		Line *line = calloc(1, sizeof(Line));
-		line->data = strdup(buff);
+		line->data = xstrdup(buff);
 		line->next = curr->doc;
 		curr->doc = line;
+	    }
+	    break;
+
+	case sNOCOMMENT:
+	    if (!strcmp(buff, "NOCOMMENT_END")) {
+		Line *head = NULL;
+		Line *line = curr->nocomment;
+		/* reverse order of lines */
+		while (line != NULL) {
+		    Line *tmp;
+		    tmp = line->next;
+		    line->next = head;
+		    head = line;
+		    line = tmp;
+		}
+		curr->nocomment = head;
+		state = sDOC;
+	    } else {
+		Line *line = calloc(1, sizeof(Line));
+		line->data = xstrdup(buff);
+		line->next = curr->nocomment;
+		curr->nocomment = line;
 	    }
 	    break;
 
@@ -327,6 +355,7 @@ gen_default(Entry * head, FILE * fp)
 	);
     for (entry = head; entry != NULL; entry = entry->next) {
 	assert(entry->name);
+	assert(entry != entry->next);
 
 	if (!strcmp(entry->name, "comment"))
 	    continue;
@@ -497,13 +526,18 @@ gen_conf(Entry * head, FILE * fp)
     for (entry = head; entry != NULL; entry = entry->next) {
 	Line *line;
 
-	if (strcmp(entry->name, "comment"))
+	if (!strcmp(entry->name, "comment"))
+	    (void) 0;
+	else
 	    fprintf(fp, "#  TAG: %s", entry->name);
 	if (entry->comment)
 	    fprintf(fp, "\t%s", entry->comment);
 	fprintf(fp, "\n");
 	for (line = entry->doc; line != NULL; line = line->next) {
 	    fprintf(fp, "#%s\n", line->data);
+	}
+	for (line = entry->nocomment; line != NULL; line = line->next) {
+	    fprintf(fp, "%s\n", line->data);
 	}
 	if (entry->doc != NULL) {
 	    fprintf(fp, "\n");

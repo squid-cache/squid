@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.13 1998/11/11 20:04:19 glenn Exp $
+ * $Id: snmp_core.cc,v 1.14 1998/11/12 06:28:23 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -38,12 +38,12 @@
 #define MAX_PROTOSTAT 5
 
 struct _mib_tree_entry {
-	oid	*name;
-	int	len;
-	oid_ParseFn *parsefunction;
-	int	children;
-	struct _mib_tree_entry **leaves;
-	struct _mib_tree_entry *parent;
+    oid *name;
+    int len;
+    oid_ParseFn *parsefunction;
+    int children;
+    struct _mib_tree_entry **leaves;
+    struct _mib_tree_entry *parent;
 };
 
 struct _snmpUdpData {
@@ -64,19 +64,19 @@ extern void (*snmplib_debug_hook) (int, char *);
 
 static void snmpDecodePacket(snmp_request_t * rq);
 static void snmpConstructReponse(snmp_request_t * rq, struct snmp_session *Session);
-static struct snmp_pdu* snmpAgentResponse(struct snmp_pdu *PDU);
+static struct snmp_pdu *snmpAgentResponse(struct snmp_pdu *PDU);
 
 static void snmpUdpSend(int, const struct sockaddr_in *, void *, int);
 static void snmpUdpReply(int, void *);
 static void snmpAppendUdp(snmpUdpData *);
 
 
-static mib_tree_entry* snmpAddNode(oid *name, int len, oid_ParseFn *parsefunction, int children, ...);
-static oid_ParseFn *snmpTreeNext(oid *Current, snint CurrentLen, oid **Next, snint *NextLen);
-static mib_tree_entry* snmpTreeEntry(oid entry, snint len, mib_tree_entry *current);
+static mib_tree_entry *snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...);
+static oid_ParseFn *snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen);
+static mib_tree_entry *snmpTreeEntry(oid entry, snint len, mib_tree_entry * current);
 
-static oid* snmpCreateOid(int length, ...);
-static oid* snmpOidDup(oid * A, snint ALen);                       
+static oid *snmpCreateOid(int length,...);
+static oid *snmpOidDup(oid * A, snint ALen);
 static void snmpSnmplibDebug(int lvl, char *buf);
 
 
@@ -89,8 +89,8 @@ static void snmpSnmplibDebug(int lvl, char *buf);
  */
 
 /*
-	Turns the MIB into a Tree structure. Called during the startup process.
-*/
+ * Turns the MIB into a Tree structure. Called during the startup process.
+ */
 void
 snmpInit(void)
 {
@@ -348,53 +348,53 @@ snmpConnectionOpen(void)
     socklen_t len;
     int x;
 
-	debug(49, 5) ("snmpConnectionOpen: Called\n");
+    debug(49, 5) ("snmpConnectionOpen: Called\n");
     if ((port = Config.Port.snmp) > (u_short) 0) {
-        enter_suid();
-        theInSnmpConnection = comm_open(SOCK_DGRAM,
-            0,
-            Config.Addrs.snmp_incoming,
-            port,
-            COMM_NONBLOCKING,
-            "SNMP Port");
-        leave_suid();
-        if (theInSnmpConnection < 0)
-            fatal("Cannot open snmp Port");
-        commSetSelect(theInSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
-        debug(1, 1) ("Accepting SNMP messages on port %d, FD %d.\n",
-            (int) port, theInSnmpConnection);
-        if (Config.Addrs.snmp_outgoing.s_addr != no_addr.s_addr) {
-            enter_suid();
-            theOutSnmpConnection = comm_open(SOCK_DGRAM,
-                0,
-                Config.Addrs.snmp_outgoing,
-                port,
-                COMM_NONBLOCKING,
-                "SNMP Port");
-            leave_suid();
-            if (theOutSnmpConnection < 0)
-                fatal("Cannot open Outgoing SNMP Port");
-            commSetSelect(theOutSnmpConnection,
-                COMM_SELECT_READ,
-                snmpHandleUdp,
-                NULL, 0);
-            debug(1, 1) ("Outgoing SNMP messages on port %d, FD %d.\n",
-                (int) port, theOutSnmpConnection);
-            fd_note(theOutSnmpConnection, "Outgoing SNMP socket");
-            fd_note(theInSnmpConnection, "Incoming SNMP socket");
-        } else {
-            theOutSnmpConnection = theInSnmpConnection;
-        }
-        memset(&theOutSNMPAddr, '\0', sizeof(struct in_addr));
-        len = sizeof(struct sockaddr_in);
-        memset(&xaddr, '\0', len);
-        x = getsockname(theOutSnmpConnection,
-            (struct sockaddr *) &xaddr, &len);
-        if (x < 0)
-            debug(51, 1) ("theOutSnmpConnection FD %d: getsockname: %s\n",
-                theOutSnmpConnection, xstrerror());
-        else 
-            theOutSNMPAddr = xaddr.sin_addr;
+	enter_suid();
+	theInSnmpConnection = comm_open(SOCK_DGRAM,
+	    0,
+	    Config.Addrs.snmp_incoming,
+	    port,
+	    COMM_NONBLOCKING,
+	    "SNMP Port");
+	leave_suid();
+	if (theInSnmpConnection < 0)
+	    fatal("Cannot open snmp Port");
+	commSetSelect(theInSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
+	debug(1, 1) ("Accepting SNMP messages on port %d, FD %d.\n",
+	    (int) port, theInSnmpConnection);
+	if (Config.Addrs.snmp_outgoing.s_addr != no_addr.s_addr) {
+	    enter_suid();
+	    theOutSnmpConnection = comm_open(SOCK_DGRAM,
+		0,
+		Config.Addrs.snmp_outgoing,
+		port,
+		COMM_NONBLOCKING,
+		"SNMP Port");
+	    leave_suid();
+	    if (theOutSnmpConnection < 0)
+		fatal("Cannot open Outgoing SNMP Port");
+	    commSetSelect(theOutSnmpConnection,
+		COMM_SELECT_READ,
+		snmpHandleUdp,
+		NULL, 0);
+	    debug(1, 1) ("Outgoing SNMP messages on port %d, FD %d.\n",
+		(int) port, theOutSnmpConnection);
+	    fd_note(theOutSnmpConnection, "Outgoing SNMP socket");
+	    fd_note(theInSnmpConnection, "Incoming SNMP socket");
+	} else {
+	    theOutSnmpConnection = theInSnmpConnection;
+	}
+	memset(&theOutSNMPAddr, '\0', sizeof(struct in_addr));
+	len = sizeof(struct sockaddr_in);
+	memset(&xaddr, '\0', len);
+	x = getsockname(theOutSnmpConnection,
+	    (struct sockaddr *) &xaddr, &len);
+	if (x < 0)
+	    debug(51, 1) ("theOutSnmpConnection FD %d: getsockname: %s\n",
+		theOutSnmpConnection, xstrerror());
+	else
+	    theOutSNMPAddr = xaddr.sin_addr;
     }
 }
 
@@ -402,10 +402,10 @@ void
 snmpConnectionShutdown(void)
 {
     if (theInSnmpConnection < 0)
-        return;
+	return;
     if (theInSnmpConnection != theOutSnmpConnection) {
-        debug(49, 1) ("FD %d Closing SNMP socket\n", theInSnmpConnection);
-        comm_close(theInSnmpConnection);
+	debug(49, 1) ("FD %d Closing SNMP socket\n", theInSnmpConnection);
+	comm_close(theInSnmpConnection);
     }
     /*
      * Here we set 'theInSnmpConnection' to -1 even though the SNMP 'in'
@@ -428,14 +428,14 @@ snmpConnectionClose(void)
 {
     snmpConnectionShutdown();
     if (theOutSnmpConnection > -1) {
-        debug(49, 1) ("FD %d Closing SNMP socket\n", theOutSnmpConnection);
-        comm_close(theOutSnmpConnection);
+	debug(49, 1) ("FD %d Closing SNMP socket\n", theOutSnmpConnection);
+	comm_close(theOutSnmpConnection);
     }
 }
 
 /*
-	Functions for handling the requests.
-*/
+ * Functions for handling the requests.
+ */
 
 /*
  * Accept the UDP packet
@@ -572,7 +572,7 @@ snmpAgentResponse(struct snmp_pdu *PDU)
 	    int NextOidNameLen = 0;
 
 	    ParseFn = snmpTreeNext(PDU->variables->name, PDU->variables->name_length,
-		&(NextOidName), (snint *) &NextOidNameLen);
+		&(NextOidName), (snint *) & NextOidNameLen);
 
 	    if (ParseFn == NULL) {
 		Answer->errstat = SNMP_ERR_NOSUCHNAME;
@@ -582,7 +582,7 @@ snmpAgentResponse(struct snmp_pdu *PDU)
 		xfree(PDU->variables->name);
 		PDU->variables->name = NextOidName;
 		PDU->variables->name_length = NextOidNameLen;
-		VarNew = (*ParseFn) (PDU->variables, (snint *) &Answer->errstat);
+		VarNew = (*ParseFn) (PDU->variables, (snint *) & Answer->errstat);
 	    }
 
 	    /* Was there an error? */
@@ -596,9 +596,9 @@ snmpAgentResponse(struct snmp_pdu *PDU)
 		Answer->variables = VarNew;
 	    }
 
-	}else{
-		snmp_free_pdu(Answer);
-		Answer = NULL;
+	} else {
+	    snmp_free_pdu(Answer);
+	    Answer = NULL;
 	}
     }
     return (Answer);
@@ -620,33 +620,33 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     if (Current[count] == mibTreeEntry->name[count]) {
 	count++;
 	while ((mibTreeEntry) && (count < CurrentLen)) {
-	    mibTreeEntry = snmpTreeEntry(Current[count], count , mibTreeEntry);
+	    mibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
 	    count++;
 	}
 	debug(49, 5) ("snmpTreeNext: Past first\n");
 
 	if (mibTreeEntry->parsefunction) {
-	    while(!new_oid){
-		new_oid = snmpTreeEntry(Current[count]+1, count , mibTreeEntry->parent);
-		if(!new_oid){
+	    while (!new_oid) {
+		new_oid = snmpTreeEntry(Current[count] + 1, count, mibTreeEntry->parent);
+		if (!new_oid) {
 		    mibTreeEntry = mibTreeEntry->parent;
 		    count--;
 		}
 	    }
-	} 
+	}
 	debug(49, 5) ("snmpTreeNext: Past Second\n");
 
 	if ((!mibTreeEntry->parsefunction) && (mibTreeEntry)) {
 	    while (!mibTreeEntry->parsefunction) {
-		mibTreeEntry = snmpTreeEntry(1, count , mibTreeEntry);
+		mibTreeEntry = snmpTreeEntry(1, count, mibTreeEntry);
 		count++;
 	    }
 	}
 	debug(49, 5) ("snmpTreeNext: Past Third\n");
     }
-    if(mibTreeEntry){
-        *Next = snmpOidDup(mibTreeEntry->name, mibTreeEntry->len);
-        *NextLen = mibTreeEntry->len;
+    if (mibTreeEntry) {
+	*Next = snmpOidDup(mibTreeEntry->name, mibTreeEntry->len);
+	*NextLen = mibTreeEntry->len;
 	Fn = mibTreeEntry->parsefunction;
     }
     debug(49, 5) ("snmpTreeNext: return\n");
@@ -661,7 +661,7 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
 
     debug(49, 5) ("snmpTreeEntry: Called\n");
 
-    debug(49, 6) ("snmpTreeEntry: Oid: %d, Len: %d, Current : \n",entry, len);
+    debug(49, 6) ("snmpTreeEntry: Oid: %d, Len: %d, Current : \n", entry, len);
     snmpDebugOid(6, current->name, current->len);
 
     while ((!next) && (count < current->children)) {
@@ -672,22 +672,22 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
 	}
 	count++;
     }
-    if(next){
-    	debug(49, 6) ("snmpTreeEntry: Returned : \n");
-    	snmpDebugOid(6, next->name, next->len);
+    if (next) {
+	debug(49, 6) ("snmpTreeEntry: Returned : \n");
+	snmpDebugOid(6, next->name, next->len);
     }
     return (next);
 }
 
 /*
-	Send the UDP reply.
-*/
+ * Send the UDP reply.
+ */
 void
 snmpUdpSend(int fd, const struct sockaddr_in *to, void *msg, int len)
 {
     snmpUdpData *data = xcalloc(1, sizeof(snmpUdpData));
     debug(49, 5) ("snmpUdpSend: Queueing response for %s\n",
-        inet_ntoa(to->sin_addr));
+	inet_ntoa(to->sin_addr));
     data->address = *to;
     data->msg = msg;
     data->len = len;
@@ -704,29 +704,29 @@ snmpUdpReply(int fd, void *data)
     /* Disable handler, in case of errors. */
     commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
     while ((queue = snmpUdpHead) != NULL) {
-        debug(49, 5) ("snmpUdpReply: FD %d sending %d bytes to %s port %d\n",
-            fd,
-            queue->len,
-            inet_ntoa(queue->address.sin_addr),
-            ntohs(queue->address.sin_port));
-        x = comm_udp_sendto(fd,
-            &queue->address,
-            sizeof(struct sockaddr_in),
-            queue->msg,
-            queue->len);
-        if (x < 0) {
-            if (ignoreErrno(errno))
-                break;          /* don't de-queue */
-        }
-        snmpUdpHead = queue->next;
-        debug(49, 3) ("snmpUdpReply: freeing %p\n", queue->msg);
-        safe_free(queue->msg);
-        debug(49, 3) ("snmpUdpReply: freeing %p\n", queue);
-        safe_free(queue);
+	debug(49, 5) ("snmpUdpReply: FD %d sending %d bytes to %s port %d\n",
+	    fd,
+	    queue->len,
+	    inet_ntoa(queue->address.sin_addr),
+	    ntohs(queue->address.sin_port));
+	x = comm_udp_sendto(fd,
+	    &queue->address,
+	    sizeof(struct sockaddr_in),
+	    queue->msg,
+	    queue->len);
+	if (x < 0) {
+	    if (ignoreErrno(errno))
+		break;		/* don't de-queue */
+	}
+	snmpUdpHead = queue->next;
+	debug(49, 3) ("snmpUdpReply: freeing %p\n", queue->msg);
+	safe_free(queue->msg);
+	debug(49, 3) ("snmpUdpReply: freeing %p\n", queue);
+	safe_free(queue);
     }
     /* Reinstate handler if needed */
     if (snmpUdpHead) {
-        commSetSelect(fd, COMM_SELECT_WRITE, snmpUdpReply, snmpUdpHead, 0);
+	commSetSelect(fd, COMM_SELECT_WRITE, snmpUdpReply, snmpUdpHead, 0);
     }
 }
 
@@ -735,114 +735,112 @@ snmpAppendUdp(snmpUdpData * item)
 {
     item->next = NULL;
     if (snmpUdpHead == NULL) {
-        snmpUdpHead = item;
-        snmpUdpTail = item;
+	snmpUdpHead = item;
+	snmpUdpTail = item;
     } else if (snmpUdpTail == snmpUdpHead) {
-        snmpUdpTail = item;
-        snmpUdpHead->next = item;
+	snmpUdpTail = item;
+	snmpUdpHead->next = item;
     } else {
-        snmpUdpTail->next = item;
-        snmpUdpTail = item;
+	snmpUdpTail->next = item;
+	snmpUdpTail = item;
     }
 
 }
 
 /*
-        Utility functions
-*/
+ * Utility functions
+ */
 
 /*
-        Tree utility functions. 
-*/
+ * Tree utility functions. 
+ */
 
 /*
-        Adds a node to the MIB tree structure and adds the appropriate children
-*/
-mib_tree_entry*
-snmpAddNode(oid *name, int len, oid_ParseFn *parsefunction, int children,  ...)
+ * Adds a node to the MIB tree structure and adds the appropriate children
+ */
+mib_tree_entry *
+snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...)
 {
-        va_list args;
-        int loop;
-        mib_tree_entry *entry = NULL;
+    va_list args;
+    int loop;
+    mib_tree_entry *entry = NULL;
 
-        debug(49, 6) ("snmpAddNode: Children : %d, Oid : \n", children);
-        snmpDebugOid(6, name, len);
+    debug(49, 6) ("snmpAddNode: Children : %d, Oid : \n", children);
+    snmpDebugOid(6, name, len);
 
-        va_start(args, children);
-        entry = xmalloc(sizeof(mib_tree_entry));
-        entry->name = snmpOidDup(name, len);
-        entry->len = len;
-        entry->parsefunction = parsefunction;
-        entry->children = children;
+    va_start(args, children);
+    entry = xmalloc(sizeof(mib_tree_entry));
+    entry->name = snmpOidDup(name, len);
+    entry->len = len;
+    entry->parsefunction = parsefunction;
+    entry->children = children;
 
-        if(children > 0){
-                entry->leaves = xmalloc(sizeof(mib_tree_entry*)*children);
-                for(loop = 0;loop < children;loop++){
-                        entry->leaves[loop] = va_arg(args, mib_tree_entry*);
-			entry->leaves[loop]->parent = entry;
-                }
-        }
-        return(entry);
+    if (children > 0) {
+	entry->leaves = xmalloc(sizeof(mib_tree_entry *) * children);
+	for (loop = 0; loop < children; loop++) {
+	    entry->leaves[loop] = va_arg(args, mib_tree_entry *);
+	    entry->leaves[loop]->parent = entry;
+	}
+    }
+    return (entry);
 }
 /* End of tree utility functions */
 
 /* 
-        Returns the list of parameters in an oid[]
-*/
-oid*
-snmpCreateOid(int length, ...)
+ * Returns the list of parameters in an oid[]
+ */
+oid *
+snmpCreateOid(int length,...)
 {
-        va_list args;
-        oid     *new_oid;
-        int     loop;
+    va_list args;
+    oid *new_oid;
+    int loop;
 
-        va_start(args, length);
-        new_oid = xmalloc(sizeof(oid)*length);
+    va_start(args, length);
+    new_oid = xmalloc(sizeof(oid) * length);
 
-        if(length > 0){
-                for(loop = 0;loop < length;loop++){
-                        new_oid[loop] = va_arg(args, int);
-                }
-        }
-        return(new_oid);
+    if (length > 0) {
+	for (loop = 0; loop < length; loop++) {
+	    new_oid[loop] = va_arg(args, int);
+	}
+    }
+    return (new_oid);
 }
 
 /*
-        Allocate space for, and copy, an OID.  Returns new oid, or NULL.
+ * Allocate space for, and copy, an OID.  Returns new oid, or NULL.
  */
 oid *
 snmpOidDup(oid * A, snint ALen)
 {
     oid *Ans;
- 
-    Ans = (oid *) xmalloc(sizeof(oid) * ALen); 
+
+    Ans = (oid *) xmalloc(sizeof(oid) * ALen);
     if (Ans)
-        memcpy(Ans, A, (sizeof(oid) * ALen));
+	memcpy(Ans, A, (sizeof(oid) * ALen));
     return (Ans);
 }
 
 /*
-        Debug calls, prints out the OID for debugging purposes.
-*/
+ * Debug calls, prints out the OID for debugging purposes.
+ */
 void
 snmpDebugOid(int lvl, oid * Name, snint Len)
-{   
+{
     char mbuf[16], objid[1024];
     int x;
     objid[0] = '\0';
 
     for (x = 0; x < Len; x++) {
-        snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned int) Name[x]);
-        strncat(objid, mbuf, sizeof(objid));
+	snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned int) Name[x]);
+	strncat(objid, mbuf, sizeof(objid));
     }
-    
+
     debug(49, lvl) ("   oid = %s\n", objid);
 }
 
-static void     
+static void
 snmpSnmplibDebug(int lvl, char *buf)
-{           
+{
     debug(49, lvl) ("%s", buf);
-}           
-
-
+}

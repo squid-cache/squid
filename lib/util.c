@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.64 1998/09/15 07:17:50 wessels Exp $
+ * $Id: util.c,v 1.65 1998/11/12 06:30:16 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -62,6 +62,9 @@
 #endif
 #if HAVE_MATH_H
 #include <math.h>
+#endif
+#if HAVE_ASSERT_H
+#include <assert.h>
 #endif
 
 #include "util.h"
@@ -563,9 +566,7 @@ xcalloc(int n, size_t sz)
 char *
 xstrdup(const char *s)
 {
-    char *p = NULL;
     size_t sz;
-
     if (s == NULL) {
 	if (failure_notify) {
 	    (*failure_notify) ("xstrdup: tried to dup a NULL pointer!\n");
@@ -574,10 +575,24 @@ xstrdup(const char *s)
 	}
 	exit(1);
     }
+    /* copy string, including terminating character */
     sz = strlen(s) + 1;
-    p = xmalloc(sz);
-    memcpy(p, s, sz);		/* copy string, including terminating character */
-    return p;
+    return memcpy(xmalloc(sz), s, sz);
+}
+
+/*
+ *  xstrndup() - string dup with length limit.
+ */
+char *
+xstrndup(const char *s, size_t n)
+{
+    size_t sz;
+    assert(s);
+    assert(n);
+    sz = strlen(s) + 1;
+    if (sz > n)
+	sz = n;
+    return xstrncpy(xmalloc(sz), s, sz);
 }
 
 /*
@@ -647,13 +662,14 @@ tvSubDsec(struct timeval t1, struct timeval t2)
 char *
 xstrncpy(char *dst, const char *src, size_t n)
 {
+    char *r = dst;
     if (!n || !dst)
 	return dst;
     if (src)
 	while (--n != 0 && *src != '\0')
 	    *dst++ = *src++;
     *dst = '\0';
-    return dst;
+    return r;
 }
 
 /* returns the number of leading white spaces in str; handy in skipping ws */

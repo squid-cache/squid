@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.81 1998/09/21 06:52:17 wessels Exp $
+ * $Id: mime.cc,v 1.82 1998/11/12 06:28:15 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -363,6 +363,22 @@ mimeInit(char *filename)
     for (m = MimeTable; m != NULL; m = m->next)
 	mimeLoadIconFile(m->icon);
     debug(25, 1) ("Loaded Icons.\n");
+}
+
+void
+mimeFreeMemory(void)
+{
+    mimeEntry *m;
+    while ((m = MimeTable)) {
+	MimeTable = m->next;
+	safe_free(m->pattern);
+	safe_free(m->content_type);
+	safe_free(m->icon);
+	safe_free(m->content_encoding);
+	regfree(&m->compiled_pattern);
+	safe_free(m);
+    }
+    MimeTableTail = &MimeTable;
 }
 
 static void

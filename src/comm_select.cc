@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.21 1998/10/19 22:36:58 wessels Exp $
+ * $Id: comm_select.cc,v 1.22 1998/11/12 06:28:01 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -744,10 +744,10 @@ examine_select(fd_set * readfds, fd_set * writefds)
     int fd = 0;
     fd_set read_x;
     fd_set write_x;
-    int num;
     struct timeval tv;
     close_handler *ch = NULL;
     fde *F = NULL;
+    struct stat sb;
     debug(5, 0) ("examine_select: Examining open file descriptors...\n");
     for (fd = 0; fd < Squid_MaxFD; fd++) {
 	FD_ZERO(&read_x);
@@ -760,8 +760,8 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	else
 	    continue;
 	Counter.syscalls.selects++;
-	num = select(Squid_MaxFD, &read_x, &write_x, NULL, &tv);
-	if (num > -1) {
+	errno = 0;
+	if (!fstat(fd, &sb)) {
 	    debug(5, 5) ("FD %d is valid.\n", fd);
 	    continue;
 	}

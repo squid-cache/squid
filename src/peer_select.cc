@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.88 1998/10/13 23:33:35 wessels Exp $
+ * $Id: peer_select.cc,v 1.89 1998/11/12 06:28:19 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -306,8 +306,11 @@ peerSelectFoo(ps_state * psstate)
 	return;
     }
     if ((p = getSingleParent(request))) {
-	psstate->single_parent = p->in_addr;
-	debug(44, 3) ("peerSelect: found single parent, skipping ICP query\n");
+	code = SINGLE_PARENT;
+	debug(44, 3) ("peerSelectFoo: %s/%s\n", hier_strings[code], p->host);
+	hierarchyNote(&request->hier, code, &psstate->ping, p->host);
+	peerSelectCallback(psstate, p);
+	return;
     }
     if (!request->flags.hierarchical && direct != DIRECT_NO) {
 	debug(44, 3) ("peerSelectFoo: DIRECT for non-hierarchical request\n");
@@ -378,11 +381,6 @@ peerSelectFoo(ps_state * psstate)
 	peerSelectCallback(psstate, p);
     } else if ((p = whichPeer(&psstate->first_parent_miss))) {
 	code = FIRST_PARENT_MISS;
-	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-	hierarchyNote(&request->hier, code, &psstate->ping, p->host);
-	peerSelectCallback(psstate, p);
-    } else if ((p = whichPeer(&psstate->single_parent))) {
-	code = SINGLE_PARENT;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(&request->hier, code, &psstate->ping, p->host);
 	peerSelectCallback(psstate, p);

@@ -2,10 +2,10 @@
 <TITLE>ERROR: El URN solicitado no se ha podido conseguir</TITLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
-<H2>No se ha podido obtener un URL para el URN solicitado</H2>
+<H2>No se ha podido obtener una URL para el URN solicitado</H2>
 <HR>
 <P>
-Mientras se trataba de obtener el URN:
+Mientras se intentaba obtener el URN:
 <A HREF="%U">%U</A>
 <P>
 Ha ocurrido el siguiente problema:
@@ -17,4 +17,5 @@ No se puede resolver el URN
 </UL>
 
 <P>
-No espere mucho sobre URNs en 1998 :)
+Hey, no espere mucho sobre URNs en %T :)
+</P>

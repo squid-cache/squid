@@ -1,23 +1,23 @@
 <HTML><HEAD>
-<TITLE>ERREUR: envoi FTP d&eacute;fectueux</TITLE>
+<TITLE>ERREUR&nbsp;: envoi FTP d&eacute;fectueux</TITLE>
 </HEAD><BODY>
 <H1>ERREUR</H1>
 <H2>FTP PUT/envoi d&eacute;fectueux</H2>
 <HR>
 <P>
-En essayant d'envoyer (PUT) l'URL suivante:
+En essayant d'envoyer (PUT) l'URL suivante&nbsp;:
 <A HREF="%U">%U</A>
 <P>
-Squid a envoy&eacute; la commande FTP suivante:
+Squid a envoy&eacute; la commande FTP suivante&nbsp;:
 <PRE><STRONG>
         %f
 </STRONG></PRE>
-et recut alors cette r&eacute;ponse
+et a re&ccedil;u la r&eacute;ponse&nbsp;:
 <PRE><STRONG>
         %F
 </STRONG></PRE>
 <P>
-En d'autres termes:
+En d'autres termes&nbsp;:
 <PRE>
 V&eacute;rifiez le chemin, les droits, l'espace disque et essayez &agrave; nouveau.
 </PRE>

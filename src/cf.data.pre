@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.123 1998/11/11 20:04:12 glenn Exp $
+# $Id: cf.data.pre,v 1.124 1998/11/12 06:27:57 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -213,6 +213,7 @@ DOC_START
 		     no-digest
 		     no-netdb-exchange
 		     no-delay
+		     login=user:password
 
 		     use 'proxy-only' to specify that objects fetched
 		     from this cache should not be saved locally.
@@ -257,6 +258,9 @@ DOC_START
 
 		     use 'no-delay' to prevent access to this neighbor
 		     from influencing the delay pools.
+
+		     use 'login=user:password' if this is a personal/workgroup
+		     proxy and your parent requires proxy authentication.
 
 	NOTE: non-ICP neighbors must be specified as 'parent'.
 
@@ -944,6 +948,18 @@ DOC_START
 redirect_children 5
 DOC_END
 
+NAME: redirect_rewrites_host_header
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.redir_rewrites_host
+DOC_START
+	By default Squid rewrites any Host: header in redirected requests.
+	If you are running a accelerator then this may not be a wanted effect
+	of a redirector.
+redirect_rewrites_host_header on
+DOC_END
+
+
 NAME: authenticate_program
 TYPE: wordlist
 LOC: Config.Program.authenticate
@@ -980,6 +996,19 @@ DOC_START
 	lots of authenticator processes.
 
 authenticate_children 5
+DOC_END
+
+NAME: authenticate_ttl
+TYPE: int
+DEFAULT: 3600
+LOC: Config.authenticateTTL
+DOC_START
+	The time a checked username/password combination remains cached
+	(default 3600). If a wrong password is given for a cached user,
+	the user gets removed from the username/password cache forcing
+	a revalidation.
+
+authenticate_ttl 3600
 DOC_END
 
 COMMENT_START
@@ -1103,21 +1132,21 @@ DOC_END
 NAME: quick_abort_min
 COMMENT: (KB)
 TYPE: kb_size_t
-DEFAULT: -1 kb
+DEFAULT: 16 KB
 LOC: Config.quickAbort.min
 DOC_NONE
 
 NAME: quick_abort_max
 COMMENT: (KB)
 TYPE: kb_size_t
-DEFAULT: 0 kb
+DEFAULT: 16 kb
 LOC: Config.quickAbort.max
 DOC_NONE
 
 NAME: quick_abort_pct
 COMMENT: (percent)
 TYPE: int
-DEFAULT: 0
+DEFAULT: 95
 LOC: Config.quickAbort.pct
 DOC_START
 	The cache can be configured to continue downloading aborted
@@ -1140,9 +1169,9 @@ DOC_START
 	If more than 'quick_abort_pct' of the transfer has completed,
 	it will finish the retrieval.
 
-quick_abort_min -1 KB
-quick_abort_max 0 KB
-quick_abort_pct 0
+quick_abort_min 16 KB
+quick_abort_max 16 KB
+quick_abort_pct 95
 DOC_END
 
 
@@ -1186,6 +1215,31 @@ DOC_START
 
 negative_dns_ttl 5 minutes
 DOC_END
+
+NAME: range_offset_limit
+COMMENT: (bytes)
+TYPE: b_size_t
+LOC: Config.rangeOffsetLimit
+DEFAULT: 0 KB
+DOC_START
+	Sets a upper limit on how far into the the file a Range request
+	may be to cause Squid to prefetch the whole file. If beyond this
+	limit then Squid forwards the Range request as it is and the result
+	is NOT cached.
+
+	This is to stop a far ahead range request (lets say start at 17MB)
+	from making Squid fetch the whole object up to that point before
+	sending anything to the client.
+
+	A value of -1 causes Squid to always fetch the object from the
+	beginning so that it may cache the result. (2.0 style)
+
+	A value of 0 causes Squid to never fetch more than the client
+	client requested. (default)
+
+range_offset_limit 0 KB
+DOC_END
+
 
 COMMENT_START
  TIMEOUTS
@@ -1363,9 +1417,9 @@ DOC_START
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
 	acl aclname browser  regexp
-	acl aclname user     username ...	# string match on ident output.
-						# use REQUIRED to accept any
-						# non-null ident.
+	acl aclname ident    username ...
+	  # string match on ident output.
+	  # use REQUIRED to accept any non-null ident.
 	acl aclname src_as   number ... 
 	acl aclname dst_as   number ...
 	  # Except for access control, AS numbers can be used for
@@ -1376,36 +1430,41 @@ DOC_START
 	  # cache_peer_access mycache.mydomain.net allow asexample
 	  # cache_peer_access mycache_mydomain.net deny all
 
-	acl aclname proxy_auth [ refresh ]
-	  # Use an EXTERNAL authentication program to check username/password
-	  # combinations (see authenticate_program).
-	  #
-	  # 'timeout' is the time a checked username/password combination
-	  # remains cached (default = 3600 secs). If a wrong password
-	  # is given for a cached user, the user gets removed from the
-	  # username/password cache forcing a revalidation.
-	  #
-	  # When using a proxy_auth ACL in an http_access rule, make sure
-	  # it is the *last* in the list and the only proxy_auth ACL in
-	  # the list.
+	acl aclname proxy_auth username ...
+	  # list of valid usernames
+	  # use REQUIRED to accept any valid username.
 	  #
 	  # NOTE: when a Proxy-Authentication header is sent but it is not
 	  # needed during ACL checking the username is NOT logged
 	  # in access.log.
+	  #
+	  # NOTE: proxy_auth requires a EXTERNAL authentication program
+	  # to check username/password combinations (see
+	  # authenticate_program).
+	  #
+	  # WARNING: proxy_auth can't be used in a transparent proxy. It
+	  # collides with any authentication done by origin servers. It may
+	  # seem like it works at first, but it doesn't.
 
 	acl aclname snmp_community string ...
 	  # Example:
 	  # 
 	  #	acl snmppublic snmp_community public
 
+
+Examples:
+acl myexample dst_as 1241
+acl password proxy_auth 300
+
+Defaults:
+NOCOMMENT_START
+acl all src 0.0.0.0/0.0.0.0
 acl manager proto cache_object
 acl localhost src 127.0.0.1/255.255.255.255
-acl all src 0.0.0.0/0.0.0.0
-acl myexample dst_as 1241
 acl SSL_ports port 443 563
 acl Safe_ports port 80 21 70 1025-65535
 acl CONNECT method CONNECT
-acl password proxy_auth 300
+NOCOMMENT_END
 DOC_END
 
 NAME: http_access
@@ -1433,14 +1492,17 @@ DOC_START
 	good idea to have an "deny all" or "allow all" entry at the end
 	of your access lists to avoid potential confusion.
 
-
-	Only allow access to the cache manager functions from the local host.
-http_access deny manager !localhost
-http_access deny CONNECT !SSL_ports
+Default configuration:
+NOCOMMENT_START
+http_access allow manager localhost
+http_access deny manager
 http_access deny !Safe_ports
-
-	Allow everything else
-http_access allow  all
+http_access deny CONNECT !SSL_ports
+#
+# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+#
+http_access deny all
+NOCOMMENT_END
 DOC_END
 
 
@@ -1451,7 +1513,9 @@ DEFAULT: none
 DOC_START
 	Reply to all ICP queries we receive
 
-icp_access  allow  all
+NOCOMMENT_START
+icp_access allow all
+NOCOMMENT_END
 DOC_END
 
 
@@ -1472,8 +1536,9 @@ DOC_START
 
 	By default, allow all clients who passed the http_access rules
 	to fetch MISSES from us.
-
-miss_access allow  all
+NOCOMMENT_START
+miss_access allow all
+NOCOMMENT_END
 DOC_END
 
 
@@ -2616,4 +2681,16 @@ DOC_START
 uri_whitespace deny
 DOC_END
 
+NAME: persistent_client_posts
+TYPE: onoff
+LOC: Config.onoff.persistent_client_posts
+DEFAULT: on
+DOC_START
+	Turn this 'off' to disable persistent connections for POST
+	requests.  When you disable this, Squid reads all bytes
+	from the client request and sends them to the server.  This
+	makes Squid work with broken HTTP servers which expect the
+	additional CRLF pair from broken web clients.
+persistent_client_posts on
+DOC_END
 EOF

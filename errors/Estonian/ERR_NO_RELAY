@@ -5,7 +5,7 @@
 <H2>P&auml;ring URLile ei saa vastust</H2>
 <HR>
 <P>
-Sooritades p&auml;ringut URLile:
+Sooritades p&auml;ringut URLile
 <A HREF="%U">%U</A>
 <P>
 tekkis j&auml;rgnev viga:
@@ -17,6 +17,6 @@ Wais edastaja puudub
 </UL>
 
 <P>
-Selles Caches on WAISi edastav host kirjeldamata!  Karju natuke administraatori
-peale.
+Selles Caches on WAISi edastav host kirjeldamata!  Kontakteeruge
+administraatoriga.
 </P>
