@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.400 2001/09/27 21:59:22 hno Exp $
+ * $Id: structs.h,v 1.401 2001/10/08 15:05:11 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1481,15 +1481,17 @@ struct _StoreEntry {
     hash_link hash;		/* must be first */
     MemObject *mem_obj;
     RemovalPolicyNode repl;
+    /* START OF ON-DISK STORE_META_STD TLV field */
     time_t timestamp;
     time_t lastref;
     time_t expires;
     time_t lastmod;
     size_t swap_file_sz;
-    sfileno swap_filen:25;
-    sdirno swap_dirn:7;
     u_short refcount;
     u_short flags;
+    /* END OF ON-DISK STORE_META_STD */
+    sfileno swap_filen:25;
+    sdirno swap_dirn:7;
     u_short lock_count;		/* Assume < 65536! */
     mem_status_t mem_status:3;
     ping_status_t ping_status:3;
