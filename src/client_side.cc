@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.473 2000/03/25 05:00:11 wessels Exp $
+ * $Id: client_side.cc,v 1.474 2000/03/28 17:41:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -288,6 +288,9 @@ clientRedirectDone(void *data, char *result)
 	http->request = requestLink(new_request);
     }
     clientInterpretRequestHeaders(http);
+#if HEADERS_LOG
+    headersLog(0, 1, request->method, request);
+#endif
     fd_note(http->conn->fd, http->uri);
     clientProcessRequest(http);
 }
@@ -2514,9 +2517,6 @@ clientReadRequest(int fd, void *data)
 		    break;
 		}
 	    }
-#if HEADERS_LOG
-	    headersLog(0, 1, request->method, request);
-#endif
 	    clientAccessCheck(http);
 	    continue;		/* while offset > 0 */
 	} else if (parser_return_code == 0) {
