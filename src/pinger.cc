@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.36 1998/07/22 20:37:41 wessels Exp $
+ * $Id: pinger.cc,v 1.37 1998/08/18 19:14:06 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -48,6 +48,12 @@
 #endif
 
 #ifdef _SQUID_LINUX_
+#ifdef icmp_id
+#undef icmp_id
+#endif
+#ifdef icmp_seq
+#undef icmp_seq
+#endif
 #define icmp_type type
 #define icmp_code code
 #define icmp_cksum checksum
@@ -173,7 +179,7 @@ static void
 pingerRecv(void)
 {
     int n;
-    int fromlen;
+    socklen_t fromlen;
     struct sockaddr_in from;
     int iphdrlen = 20;
     struct iphdr *ip = NULL;

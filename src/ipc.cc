@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.10 1998/08/11 05:53:50 wessels Exp $
+ * $Id: ipc.cc,v 1.11 1998/08/18 19:14:03 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -66,7 +66,7 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
     int cwfd = -1;
     int pwfd = -1;
     int fd;
-    int len;
+    socklen_t len;
     int tmp_s;
     char *env_str;
     int x;
