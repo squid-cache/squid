@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.563 2002/02/14 00:59:50 hno Exp $
+ * $Id: client_side.cc,v 1.564 2002/02/26 15:48:13 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -103,8 +103,6 @@ static int clientOnlyIfCached(clientHttpRequest * http);
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
 static void clientSetKeepaliveFlag(clientHttpRequest *);
-static void clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb);
-static void clientPackTermBound(String boundary, MemBuf * mb);
 static void clientInterpretRequestHeaders(clientHttpRequest *);
 static void clientProcessRequest(clientHttpRequest *);
 static void clientProcessExpired(void *data);
@@ -208,8 +206,13 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
 #if DELAY_POOLS
     delaySetStoreClient(h->sc, delayClient(h->request));
 #endif
-    storeClientCopy(h->sc, e, 0, 0, CLIENT_SOCK_SZ,
-	memAllocate(MEM_CLIENT_SOCK_BUF), clientSendMoreData, h);
+    h->reqofs = 0;
+    h->reqsize = 0;
+    /* I don't think this is actually needed! -- adrian */
+    /* h->reqbuf = h->norm_reqbuf; */
+    assert(h->reqbuf == h->norm_reqbuf);
+    storeClientCopy(h->sc, e, 0, HTTP_REQBUF_SZ, h->reqbuf,
+      clientSendMoreData, h);
     return e;
 }
 
@@ -373,6 +376,9 @@ clientProcessExpired(void *data)
     http->request->flags.refresh = 1;
     http->old_entry = http->entry;
     http->old_sc = http->sc;
+    http->old_reqsize = http->reqsize;
+    http->old_reqofs = http->reqofs;
+    http->reqbuf = http->ims_reqbuf;
     /*
      * Assert that 'http' is already a client of old_entry.  If 
      * it is not, then the beginning of the object data might get
@@ -397,11 +403,11 @@ clientProcessExpired(void *data)
     /* Register with storage manager to receive updates when data comes in. */
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 	debug(33, 0) ("clientProcessExpired: found ENTRY_ABORTED object\n");
+    http->reqofs = 0;
     storeClientCopy(http->sc, entry,
 	http->out.offset,
-	http->out.offset,
-	CLIENT_SOCK_SZ,
-	memAllocate(MEM_CLIENT_SOCK_BUF),
+	HTTP_REQBUF_SZ,
+	http->reqbuf,
 	clientHandleIMSReply,
 	http);
 }
@@ -453,17 +459,16 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     const char *url = storeUrl(entry);
     int unlink_request = 0;
     StoreEntry *oldentry;
-    int recopy = 1;
     http_status status;
     debug(33, 3) ("clientHandleIMSReply: %s, %ld bytes\n", url, (long int) size);
     if (entry == NULL) {
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     }
     if (size < 0 && !EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     }
+    /* update size of the request */
+    http->reqsize = size + http->reqofs;
     mem = entry->mem_obj;
     status = mem->reply->sline.status;
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
@@ -475,9 +480,12 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	storeUnlockObject(entry);
 	entry = http->entry = http->old_entry;
 	http->sc = http->old_sc;
+        http->reqbuf = http->norm_reqbuf;
+        http->reqofs = http->old_reqofs;
+        http->reqsize = http->old_reqsize;
     } else if (STORE_PENDING == entry->store_status && 0 == status) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
-	if (size >= CLIENT_SOCK_SZ) {
+	if (size + http->reqofs >= HTTP_REQBUF_SZ) {
 	    /* will not get any bigger than that */
 	    debug(33, 3) ("clientHandleIMSReply: Reply is too large '%s', using old entry\n", url);
 	    /* use old entry, this repeats the code abovez */
@@ -486,13 +494,16 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
 	    http->sc = http->old_sc;
+            http->reqbuf = http->norm_reqbuf;
+            http->reqofs = http->old_reqofs;
+            http->reqsize = http->old_reqsize;
 	    /* continue */
 	} else {
+            http->reqofs += size;
 	    storeClientCopy(http->sc, entry,
-		http->out.offset + size,
-		http->out.offset,
-		CLIENT_SOCK_SZ,
-		buf,
+		http->out.offset + http->reqofs,
+		HTTP_REQBUF_SZ - http->reqofs,
+		http->reqbuf + http->reqofs,
 		clientHandleIMSReply,
 		http);
 	    return;
@@ -522,6 +533,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    requestUnlink(entry->mem_obj->request);
 	    entry->mem_obj->request = NULL;
 	}
+        http->reqbuf = http->norm_reqbuf;
+        http->reqofs = http->old_reqofs;
+        http->reqsize = http->old_reqsize;
     } else {
 	/* the client can handle this reply, whatever it is */
 	http->log_type = LOG_TCP_REFRESH_MISS;
@@ -533,22 +547,14 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	}
 	storeUnregister(http->old_sc, http->old_entry, http);
 	storeUnlockObject(http->old_entry);
-	recopy = 0;
     }
     http->old_entry = NULL;	/* done with old_entry */
     http->old_sc = NULL;
+    http->old_reqofs = 0;
+    http->old_reqsize = 0;
     assert(!EBIT_TEST(entry->flags, ENTRY_ABORTED));
-    if (recopy) {
-	storeClientCopy(http->sc, entry,
-	    http->out.offset,
-	    http->out.offset,
-	    CLIENT_SOCK_SZ,
-	    buf,
-	    clientSendMoreData,
-	    http);
-    } else {
-	clientSendMoreData(data, buf, size);
-    }
+
+    clientSendMoreData(data, http->reqbuf, http->reqsize);
 }
 
 int
@@ -620,11 +626,11 @@ clientPurgeRequest(clientHttpRequest * http)
 	    http->entry->mem_obj->method = http->request->method;
 	    http->sc = storeClientListAdd(http->entry, http);
 	    http->log_type = LOG_TCP_HIT;
+            http->reqofs = 0;
 	    storeClientCopy(http->sc, http->entry,
 		http->out.offset,
-		http->out.offset,
-		CLIENT_SOCK_SZ,
-		memAllocate(MEM_CLIENT_SOCK_BUF),
+		HTTP_REQBUF_SZ,
+		http->reqbuf,
 		clientCacheHit,
 		http);
 	    return;
@@ -819,7 +825,6 @@ httpRequestFree(void *data)
     safe_free(http->al.headers.reply);
     safe_free(http->al.cache.authuser);
     safe_free(http->redirect.location);
-    stringClean(&http->range_iter.boundary);
     if ((e = http->entry)) {
 	http->entry = NULL;
 	storeUnregister(http->sc, e, http);
@@ -935,9 +940,17 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     }
     /* ignore range header in non-GETs */
     if (request->method == METHOD_GET) {
-	request->range = httpHeaderGetRange(req_hdr);
-	if (request->range)
-	    request->flags.range = 1;
+       /*
+        * Since we're not doing ranges atm, just set the flag if
+        * the header exists, and then free the range header info
+        * -- adrian
+        */
+       request->range = httpHeaderGetRange(req_hdr);
+       if (request->range) {
+           request->flags.range = 1;
+           httpHdrRangeDestroy(request->range);
+           request->range = NULL;
+       }
     }
     if (httpHeaderHas(req_hdr, HDR_AUTHORIZATION))
 	request->flags.auth = 1;
@@ -1114,152 +1127,6 @@ isTcpHit(log_type code)
     return 0;
 }
 
-/*
- * returns true if If-Range specs match reply, false otherwise
- */
-static int
-clientIfRangeMatch(clientHttpRequest * http, HttpReply * rep)
-{
-    const TimeOrTag spec = httpHeaderGetTimeOrTag(&http->request->header, HDR_IF_RANGE);
-    /* check for parsing falure */
-    if (!spec.valid)
-	return 0;
-    /* got an ETag? */
-    if (spec.tag.str) {
-	ETag rep_tag = httpHeaderGetETag(&rep->header, HDR_ETAG);
-	debug(33, 3) ("clientIfRangeMatch: ETags: %s and %s\n",
-	    spec.tag.str, rep_tag.str ? rep_tag.str : "<none>");
-	if (!rep_tag.str)
-	    return 0;		/* entity has no etag to compare with! */
-	if (spec.tag.weak || rep_tag.weak) {
-	    debug(33, 1) ("clientIfRangeMatch: Weak ETags are not allowed in If-Range: %s ? %s\n",
-		spec.tag.str, rep_tag.str);
-	    return 0;		/* must use strong validator for sub-range requests */
-	}
-	return etagIsEqual(&rep_tag, &spec.tag);
-    }
-    /* got modification time? */
-    if (spec.time >= 0) {
-	return http->entry->lastmod <= spec.time;
-    }
-    assert(0);			/* should not happen */
-    return 0;
-}
-
-/* returns expected content length for multi-range replies
- * note: assumes that httpHdrRangeCanonize has already been called
- * warning: assumes that HTTP headers for individual ranges at the
- *          time of the actuall assembly will be exactly the same as
- *          the headers when clientMRangeCLen() is called */
-static int
-clientMRangeCLen(clientHttpRequest * http)
-{
-    int clen = 0;
-    HttpHdrRangePos pos = HttpHdrRangeInitPos;
-    const HttpHdrRangeSpec *spec;
-    MemBuf mb;
-
-    assert(http->entry->mem_obj);
-
-    memBufDefInit(&mb);
-    while ((spec = httpHdrRangeGetSpec(http->request->range, &pos))) {
-
-	/* account for headers for this range */
-	memBufReset(&mb);
-	clientPackRangeHdr(http->entry->mem_obj->reply,
-	    spec, http->range_iter.boundary, &mb);
-	clen += mb.size;
-
-	/* account for range content */
-	clen += spec->length;
-
-	debug(33, 6) ("clientMRangeCLen: (clen += %ld + %ld) == %d\n",
-	    (long int) mb.size, (long int) spec->length, clen);
-    }
-    /* account for the terminating boundary */
-    memBufReset(&mb);
-    clientPackTermBound(http->range_iter.boundary, &mb);
-    clen += mb.size;
-
-    memBufClean(&mb);
-    return clen;
-}
-
-/* adds appropriate Range headers if needed */
-static void
-clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
-{
-    HttpHeader *hdr = rep ? &rep->header : 0;
-    const char *range_err = NULL;
-    request_t *request = http->request;
-    int is_hit = isTcpHit(http->log_type);
-    assert(request->range);
-    /* check if we still want to do ranges */
-    if (!rep)
-	range_err = "no [parse-able] reply";
-    else if (rep->sline.status != HTTP_OK)
-	range_err = "wrong status code";
-    else if (httpHeaderHas(hdr, HDR_CONTENT_RANGE))
-	range_err = "origin server does ranges";
-    else if (rep->content_length < 0)
-	range_err = "unknown length";
-    else if (rep->content_length != http->entry->mem_obj->reply->content_length)
-	range_err = "INCONSISTENT length";	/* a bug? */
-    else if (httpHeaderHas(&http->request->header, HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
-	range_err = "If-Range match failed";
-    else if (!httpHdrRangeCanonize(http->request->range, rep->content_length))
-	range_err = "canonization failed";
-    else if (httpHdrRangeIsComplex(http->request->range))
-	range_err = "too complex range header";
-    else if (!request->flags.cachable)	/* from we_do_ranges in http.c */
-	range_err = "non-cachable request";
-    else if (!is_hit && httpHdrRangeOffsetLimit(http->request->range))
-	range_err = "range outside range_offset_limit";
-    /* get rid of our range specs on error */
-    if (range_err) {
-	debug(33, 3) ("clientBuildRangeHeader: will not do ranges: %s.\n", range_err);
-	httpHdrRangeDestroy(http->request->range);
-	http->request->range = NULL;
-    } else {
-	const int spec_count = http->request->range->specs.count;
-	int actual_clen = -1;
-
-	debug(33, 3) ("clientBuildRangeHeader: range spec count: %d virgin clen: %d\n",
-	    spec_count, rep->content_length);
-	assert(spec_count > 0);
-	/* ETags should not be returned with Partial Content replies? */
-	httpHeaderDelById(hdr, HDR_ETAG);
-	/* append appropriate header(s) */
-	if (spec_count == 1) {
-	    HttpHdrRangePos pos = HttpHdrRangeInitPos;
-	    const HttpHdrRangeSpec *spec = httpHdrRangeGetSpec(http->request->range, &pos);
-	    assert(spec);
-	    /* append Content-Range */
-	    httpHeaderAddContRange(hdr, *spec, rep->content_length);
-	    /* set new Content-Length to the actual number of bytes
-	     * transmitted in the message-body */
-	    actual_clen = spec->length;
-	} else {
-	    /* multipart! */
-	    /* generate boundary string */
-	    http->range_iter.boundary = httpHdrRangeBoundaryStr(http);
-	    /* delete old Content-Type, add ours */
-	    httpHeaderDelById(hdr, HDR_CONTENT_TYPE);
-	    httpHeaderPutStrf(hdr, HDR_CONTENT_TYPE,
-		"multipart/byteranges; boundary=\"%s\"",
-		strBuf(http->range_iter.boundary));
-	    /* Content-Length is not required in multipart responses
-	     * but it is always nice to have one */
-	    actual_clen = clientMRangeCLen(http);
-	}
-
-	/* replace Content-Length header */
-	assert(actual_clen >= 0);
-	httpHeaderDelById(hdr, HDR_CONTENT_LENGTH);
-	httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, actual_clen);
-	debug(33, 3) ("clientBuildRangeHeader: actual content length: %d\n", actual_clen);
-    }
-}
 
 /*
  * filters out unwanted entries from original reply header
@@ -1304,9 +1171,6 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	httpHeaderDelById(hdr, HDR_CONNECTION);
 	stringClean(&strConnection);
     }
-    /* Handle Ranges */
-    if (request->range)
-	clientBuildRangeHeader(http, rep);
     /*
      * Add a estimated Age header on cache hits.
      */
@@ -1379,19 +1243,10 @@ clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
 	httpBuildVersion(&rep->sline.version, 1, 0);
 	/* do header conversions */
 	clientBuildReplyHeader(http, rep);
-	/* if we do ranges, change status to "Partial Content" */
-	if (http->request->range)
-	    httpStatusLineSet(&rep->sline, rep->sline.version,
-		HTTP_PARTIAL_CONTENT, NULL);
     } else {
 	/* parsing failure, get rid of the invalid reply */
 	httpReplyDestroy(rep);
 	rep = NULL;
-	/* if we were going to do ranges, backoff */
-	if (http->request->range) {
-	    /* this will fail and destroy request->range */
-	    clientBuildRangeHeader(http, rep);
-	}
     }
     return rep;
 }
@@ -1412,12 +1267,10 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     request_t *r = http->request;
     debug(33, 3) ("clientCacheHit: %s, %d bytes\n", http->uri, (int) size);
     if (http->entry == NULL) {
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	debug(33, 3) ("clientCacheHit: request aborted\n");
 	return;
     } else if (size < 0) {
 	/* swap in failure */
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	debug(33, 3) ("clientCacheHit: swapin failure for %s\n", http->uri);
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
 	if ((e = http->entry)) {
@@ -1432,24 +1285,25 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     assert(size > 0);
     mem = e->mem_obj;
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
+    /* update size of the request */
+    http->reqsize = size + http->reqofs;
     if (mem->reply->sline.status == 0) {
 	/*
 	 * we don't have full reply headers yet; either wait for more or
 	 * punt to clientProcessMiss.
 	 */
 	if (e->mem_status == IN_MEMORY || e->store_status == STORE_OK) {
-	    memFree(buf, MEM_CLIENT_SOCK_BUF);
 	    clientProcessMiss(http);
-	} else if (size == CLIENT_SOCK_SZ && http->out.offset == 0) {
-	    memFree(buf, MEM_CLIENT_SOCK_BUF);
+	} else if (size + http->reqofs >= HTTP_REQBUF_SZ && http->out.offset == 0) {
 	    clientProcessMiss(http);
 	} else {
 	    debug(33, 3) ("clientCacheHit: waiting for HTTP reply headers\n");
+            http->reqofs += size;
+            assert(http->reqofs <= HTTP_REQBUF_SZ);
 	    storeClientCopy(http->sc, e,
-		http->out.offset + size,
-		http->out.offset,
-		CLIENT_SOCK_SZ,
-		buf,
+		http->out.offset + http->reqofs,
+		HTTP_REQBUF_SZ,
+		http->reqbuf + http->reqofs,
 		clientCacheHit,
 		http);
 	}
@@ -1471,7 +1325,6 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	/* This is not the correct entity for this request. We need
 	 * to requery the cache.
 	 */
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	http->entry = NULL;
 	storeUnregister(http->sc, e, http);
 	http->sc = NULL;
@@ -1485,12 +1338,10 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     case VARY_CANCEL:
 	/* varyEvaluateMatch found a object loop. Process as miss */
 	debug(33, 1) ("clientProcessHit: Vary object loop!\n");
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	clientProcessMiss(http);
 	return;
     }
     if (r->method == METHOD_PURGE) {
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	http->entry = NULL;
 	storeUnregister(http->sc, e, http);
 	http->sc = NULL;
@@ -1552,7 +1403,6 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    http->log_type = LOG_TCP_MISS;
 	    clientProcessMiss(http);
 	}
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
     } else if (r->flags.ims) {
 	/*
 	 * Handle If-Modified-Since requests from the client
@@ -1560,7 +1410,6 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	if (mem->reply->sline.status != HTTP_OK) {
 	    debug(33, 4) ("clientCacheHit: Reply code %d != 200\n",
 		mem->reply->sline.status);
-	    memFree(buf, MEM_CLIENT_SOCK_BUF);
 	    http->log_type = LOG_TCP_MISS;
 	    clientProcessMiss(http);
 	} else if (modifiedSince(e, http->request)) {
@@ -1570,7 +1419,6 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    time_t timestamp = e->timestamp;
 	    MemBuf mb = httpPacked304Reply(e->mem_obj->reply);
 	    http->log_type = LOG_TCP_IMS_HIT;
-	    memFree(buf, MEM_CLIENT_SOCK_BUF);
 	    storeUnregister(http->sc, e, http);
 	    http->sc = NULL;
 	    storeUnlockObject(e);
@@ -1598,168 +1446,6 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     }
 }
 
-/* put terminating boundary for multiparts */
-static void
-clientPackTermBound(String boundary, MemBuf * mb)
-{
-    memBufPrintf(mb, "\r\n--%s--\r\n", strBuf(boundary));
-    debug(33, 6) ("clientPackTermBound: buf offset: %ld\n", (long int) mb->size);
-}
-
-/* appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
-static void
-clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
-{
-    HttpHeader hdr;
-    Packer p;
-    assert(rep);
-    assert(spec);
-
-    /* put boundary */
-    debug(33, 5) ("clientPackRangeHdr: appending boundary: %s\n", strBuf(boundary));
-    /* rfc2046 requires to _prepend_ boundary with <crlf>! */
-    memBufPrintf(mb, "\r\n--%s\r\n", strBuf(boundary));
-
-    /* stuff the header with required entries and pack it */
-    httpHeaderInit(&hdr, hoReply);
-    if (httpHeaderHas(&rep->header, HDR_CONTENT_TYPE))
-	httpHeaderPutStr(&hdr, HDR_CONTENT_TYPE, httpHeaderGetStr(&rep->header, HDR_CONTENT_TYPE));
-    httpHeaderAddContRange(&hdr, *spec, rep->content_length);
-    packerToMemInit(&p, mb);
-    httpHeaderPackInto(&hdr, &p);
-    packerClean(&p);
-    httpHeaderClean(&hdr);
-
-    /* append <crlf> (we packed a header, not a reply) */
-    memBufPrintf(mb, crlf);
-}
-
-/*
- * extracts a "range" from *buf and appends them to mb, updating
- * all offsets and such.
- */
-static void
-clientPackRange(clientHttpRequest * http,
-    HttpHdrRangeIter * i,
-    const char **buf,
-    ssize_t * size,
-    MemBuf * mb)
-{
-    const ssize_t copy_sz = i->debt_size <= *size ? i->debt_size : *size;
-    off_t body_off = http->out.offset - i->prefix_size;
-    assert(*size > 0);
-    assert(i->spec);
-    /*
-     * intersection of "have" and "need" ranges must not be empty
-     */
-    assert(body_off < i->spec->offset + i->spec->length);
-    assert(body_off + *size > i->spec->offset);
-    /*
-     * put boundary and headers at the beginning of a range in a
-     * multi-range
-     */
-    if (http->request->range->specs.count > 1 && i->debt_size == i->spec->length) {
-	assert(http->entry->mem_obj);
-	clientPackRangeHdr(
-	    http->entry->mem_obj->reply,	/* original reply */
-	    i->spec,		/* current range */
-	    i->boundary,	/* boundary, the same for all */
-	    mb
-	    );
-    }
-    /*
-     * append content
-     */
-    debug(33, 3) ("clientPackRange: appending %ld bytes\n", (long int) copy_sz);
-    memBufAppend(mb, *buf, copy_sz);
-    /*
-     * update offsets
-     */
-    *size -= copy_sz;
-    i->debt_size -= copy_sz;
-    body_off += copy_sz;
-    *buf += copy_sz;
-    http->out.offset = body_off + i->prefix_size;	/* sync */
-    /*
-     * paranoid check
-     */
-    assert(*size >= 0 && i->debt_size >= 0);
-}
-
-/* returns true if there is still data available to pack more ranges
- * increments iterator "i"
- * used by clientPackMoreRanges */
-static int
-clientCanPackMoreRanges(const clientHttpRequest * http, HttpHdrRangeIter * i, ssize_t size)
-{
-    /* first update "i" if needed */
-    if (!i->debt_size) {
-	if ((i->spec = httpHdrRangeGetSpec(http->request->range, &i->pos)))
-	    i->debt_size = i->spec->length;
-    }
-    assert(!i->debt_size == !i->spec);	/* paranoid sync condition */
-    /* continue condition: need_more_data && have_more_data */
-    return i->spec && size > 0;
-}
-
-/* extracts "ranges" from buf and appends them to mb, updating all offsets and such */
-/* returns true if we need more data */
-static int
-clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, MemBuf * mb)
-{
-    HttpHdrRangeIter *i = &http->range_iter;
-    /* offset in range specs does not count the prefix of an http msg */
-    off_t body_off = http->out.offset - i->prefix_size;
-    assert(size >= 0);
-    /* check: reply was parsed and range iterator was initialized */
-    assert(i->prefix_size > 0);
-    /* filter out data according to range specs */
-    while (clientCanPackMoreRanges(http, i, size)) {
-	off_t start;		/* offset of still missing data */
-	assert(i->spec);
-	start = i->spec->offset + i->spec->length - i->debt_size;
-	debug(33, 3) ("clientPackMoreRanges: in:  offset: %ld size: %ld\n",
-	    (long int) body_off, (long int) size);
-	debug(33, 3) ("clientPackMoreRanges: out: start: %ld spec[%ld]: [%ld, %ld), len: %ld debt: %ld\n",
-	    (long int) start, (long int) i->pos, (long int) i->spec->offset, (long int) (i->spec->offset + i->spec->length), (long int) i->spec->length, (long int) i->debt_size);
-	assert(body_off <= start);	/* we did not miss it */
-	/* skip up to start */
-	if (body_off + size > start) {
-	    const size_t skip_size = start - body_off;
-	    body_off = start;
-	    size -= skip_size;
-	    buf += skip_size;
-	} else {
-	    /* has not reached start yet */
-	    body_off += size;
-	    size = 0;
-	    buf = NULL;
-	}
-	/* put next chunk if any */
-	if (size) {
-	    http->out.offset = body_off + i->prefix_size;	/* sync */
-	    clientPackRange(http, i, &buf, &size, mb);
-	    body_off = http->out.offset - i->prefix_size;	/* sync */
-	}
-    }
-    assert(!i->debt_size == !i->spec);	/* paranoid sync condition */
-    debug(33, 3) ("clientPackMoreRanges: buf exhausted: in:  offset: %ld size: %ld need_more: %ld\n",
-	(long int) body_off, (long int) size, (long int) i->debt_size);
-    if (i->debt_size) {
-	debug(33, 3) ("clientPackMoreRanges: need more: spec[%ld]: [%ld, %ld), len: %ld\n",
-	    (long int) i->pos, (long int) i->spec->offset, (long int) (i->spec->offset + i->spec->length), (long int) i->spec->length);
-	/* skip the data we do not need if possible */
-	if (i->debt_size == i->spec->length)	/* at the start of the cur. spec */
-	    body_off = i->spec->offset;
-	else
-	    assert(body_off == i->spec->offset + i->spec->length - i->debt_size);
-    } else if (http->request->range->specs.count > 1) {
-	/* put terminating boundary for multiparts */
-	clientPackTermBound(i->boundary, mb);
-    }
-    http->out.offset = body_off + i->prefix_size;	/* sync */
-    return i->debt_size > 0;
-}
 
 static int
 clientReplyBodyTooLarge(HttpReply * rep, ssize_t clen)
@@ -1830,31 +1516,29 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     MemBuf mb;
     ssize_t check_size = 0;
     debug(33, 5) ("clientSendMoreData: %s, %d bytes\n", http->uri, (int) size);
-    assert(size <= CLIENT_SOCK_SZ);
+    assert(size <= HTTP_REQBUF_SZ);
     assert(http->request != NULL);
     dlinkDelete(&http->active, &ClientActiveRequests);
     dlinkAdd(http, &http->active, &ClientActiveRequests);
     debug(33, 5) ("clientSendMoreData: FD %d '%s', out.offset=%ld \n",
 	fd, storeUrl(entry), (long int) http->out.offset);
+    /* update size of the request */
+    http->reqsize = size + http->reqofs;
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
 	debug(33, 2) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     } else if (entry && EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     } else if (size < 0) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     } else if (size == 0) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
-	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     }
     if (http->out.offset == 0) {
@@ -1886,7 +1570,6 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    body_size = size - rep->hdr_sz;
 	    assert(body_size >= 0);
 	    body_buf = buf + rep->hdr_sz;
-	    http->range_iter.prefix_size = rep->hdr_sz;
 	    debug(33, 3) ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
 		(int) body_size, rep->hdr_sz);
 	    ch = aclChecklistCreate(Config.accessList.reply, http->request, NULL);
@@ -1914,23 +1597,22 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 		return;
 	    }
 	    aclChecklistFree(ch);
-	} else if (size < CLIENT_SOCK_SZ && entry->store_status == STORE_PENDING) {
+	} else if (size + http->reqofs < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
 	    /* wait for more to arrive */
+            http->reqofs += size;
+            assert(http->reqofs <= HTTP_REQBUF_SZ);
 	    storeClientCopy(http->sc, entry,
-		http->out.offset + size,
-		http->out.offset,
-		CLIENT_SOCK_SZ,
-		buf,
+		http->out.offset + http->reqofs,
+		HTTP_REQBUF_SZ - http->reqofs,
+		http->reqbuf + http->reqofs,
 		clientSendMoreData,
 		http);
 	    return;
 	}
-	/* reset range iterator */
-	http->range_iter.pos = HttpHdrRangeInitPos;
-    } else if (!http->request->range) {
-	/* Avoid copying to MemBuf for non-range requests */
-	/* Note, if we're here, then 'rep' is known to be NULL */
+    } else {
+	/* Avoid copying to MemBuf if we know "rep" is NULL, and we only have a body */
 	http->out.offset += body_size;
+        assert(rep == NULL);
 	comm_write(fd, buf, size, clientWriteBodyComplete, http, NULL);
 	/* NULL because clientWriteBodyComplete frees it */
 	return;
@@ -1967,25 +1649,14 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     } else {
 	memBufDefInit(&mb);
     }
-    /* append body if any */
-    if (http->request->range) {
-	/* Only GET requests should have ranges */
-	assert(http->request->method == METHOD_GET);
-	/* clientPackMoreRanges() updates http->out.offset */
-	/* force the end of the transfer if we are done */
-	if (!clientPackMoreRanges(http, body_buf, body_size, &mb))
-	    http->flags.done_copying = 1;
-    } else if (body_buf && body_size) {
+    if (body_buf && body_size) {
 	http->out.offset += body_size;
 	check_size += body_size;
 	memBufAppend(&mb, body_buf, body_size);
     }
-    if (!http->request->range && http->request->method == METHOD_GET)
-	assert(check_size == size);
     /* write */
     comm_write_mbuf(fd, mb, clientWriteComplete, http);
     /* if we don't do it, who will? */
-    memFree(buf, MEM_CLIENT_SOCK_BUF);
 }
 
 /*
@@ -2002,7 +1673,6 @@ clientWriteBodyComplete(int fd, char *buf, size_t size, int errflag, void *data)
      * (second) argument, so we pass in NULL.
      */
     clientWriteComplete(fd, NULL, size, errflag, data);
-    memFree(buf, MEM_CLIENT_SOCK_BUF);
 }
 
 static void
@@ -2047,11 +1717,11 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	if (0 == storeClientCopyPending(http->sc, entry, http)) {
 	    if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 		debug(33, 0) ("clientKeepaliveNextRequest: ENTRY_ABORTED\n");
+            http->reqofs = 0;
 	    storeClientCopy(http->sc, entry,
 		http->out.offset,
-		http->out.offset,
-		CLIENT_SOCK_SZ,
-		memAllocate(MEM_CLIENT_SOCK_BUF),
+		HTTP_REQBUF_SZ,
+		http->reqbuf,
 		clientSendMoreData,
 		http);
 	}
@@ -2106,11 +1776,11 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	 * storage manager. */
 	if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 	    debug(33, 0) ("clientWriteComplete 2: ENTRY_ABORTED\n");
+        http->reqofs = 0;
 	storeClientCopy(http->sc, entry,
 	    http->out.offset,
-	    http->out.offset,
-	    CLIENT_SOCK_SZ,
-	    memAllocate(MEM_CLIENT_SOCK_BUF),
+	    HTTP_REQBUF_SZ,
+	    http->reqbuf,
 	    clientSendMoreData,
 	    http);
     }
@@ -2141,42 +1811,6 @@ clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
     }
     http->entry = clientCreateStoreEntry(http, r->method, null_request_flags);
     errorAppendEntry(http->entry, err);
-}
-
-/* 
- * Return true if we should force a cache miss on this range request.
- * entry must be non-NULL.
- */
-static int
-clientCheckRangeForceMiss(StoreEntry * entry, HttpHdrRange * range)
-{
-    /*
-     * If the range_offset_limit is NOT in effect, there
-     * is no reason to force a miss.
-     */
-    if (0 == httpHdrRangeOffsetLimit(range))
-	return 0;
-    /*
-     * Here, we know it's possibly a hit.  If we already have the
-     * whole object cached, we won't force a miss.
-     */
-    if (STORE_OK == entry->store_status)
-	return 0;		/* we have the whole object */
-    /*
-     * Now we have a hit on a PENDING object.  We need to see
-     * if the part we want is already cached.  If so, we don't
-     * force a miss.
-     */
-    assert(NULL != entry->mem_obj);
-    if (httpHdrRangeFirstOffset(range) <= entry->mem_obj->inmem_hi)
-	return 0;
-    /*
-     * Even though we have a PENDING copy of the object, we
-     * don't want to wait to reach the first range offset,
-     * so we force a miss for a new range request to the
-     * origin.
-     */
-    return 1;
 }
 
 static log_type
@@ -2239,22 +1873,10 @@ clientProcessRequest2(clientHttpRequest * http)
 	http->entry = NULL;
 	return LOG_TCP_CLIENT_REFRESH_MISS;
     }
-    if (NULL == r->range) {
-	(void) 0;
-    } else if (httpHdrRangeWillBeComplex(r->range)) {
-	/*
-	 * Some clients break if we return "200 OK" for a Range
-	 * request.  We would have to return "200 OK" for a _complex_
-	 * Range request that is also a HIT. Thus, let's prevent HITs
-	 * on complex Range requests
-	 */
-	debug(33, 3) ("clientProcessRequest2: complex range MISS\n");
-	http->entry = NULL;
-	return LOG_TCP_MISS;
-    } else if (clientCheckRangeForceMiss(e, r->range)) {
-	debug(33, 3) ("clientProcessRequest2: forcing miss due to range_offset_limit\n");
-	http->entry = NULL;
-	return LOG_TCP_MISS;
+    /* We don't cache any range requests (for now!) -- adrian */
+    if (r->flags.range) {
+        http->entry = NULL;
+        return LOG_TCP_MISS;
     }
     debug(33, 3) ("clientProcessRequest2: default HIT\n");
     http->entry = e;
@@ -2311,11 +1933,12 @@ clientProcessRequest(clientHttpRequest * http)
 #if DELAY_POOLS
 	delaySetStoreClient(http->sc, delayClient(r));
 #endif
+        assert(http->log_type == LOG_TCP_HIT);
+        http->reqofs = 0;
 	storeClientCopy(http->sc, http->entry,
 	    http->out.offset,
-	    http->out.offset,
-	    CLIENT_SOCK_SZ,
-	    memAllocate(MEM_CLIENT_SOCK_BUF),
+	    HTTP_REQBUF_SZ,
+	    http->reqbuf,
 	    clientCacheHit,
 	    http);
     } else {
@@ -2399,7 +2022,7 @@ parseHttpRequestAbort(ConnStateData * conn, const char *uri)
     http->req_sz = conn->in.offset;
     http->uri = xstrdup(uri);
     http->log_uri = xstrndup(uri, MAX_URL);
-    http->range_iter.boundary = StringNull;
+    http->reqbuf = http->norm_reqbuf;
     dlinkAdd(http, &http->active, &ClientActiveRequests);
     return http;
 }
@@ -2542,7 +2165,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     http->conn = conn;
     http->start = current_time;
     http->req_sz = prefix_sz;
-    http->range_iter.boundary = StringNull;
+    http->reqbuf = http->norm_reqbuf;
     *prefix_p = xmalloc(prefix_sz + 1);
     xmemcpy(*prefix_p, conn->in.buf, prefix_sz);
     *(*prefix_p + prefix_sz) = '\0';
@@ -2660,7 +2283,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 			vport, url);
 	    } else {
 		if (vport_mode)
-		    vport = natLookup.nl_realport;
+		    vport = ntohs(natLookup.nl_realport);
 		snprintf(http->uri, url_sz, "http://%s:%d%s",
 		    inet_ntoa(natLookup.nl_realip),
 		    vport, url);

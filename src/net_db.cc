@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.158 2001/06/12 23:52:45 wessels Exp $
+ * $Id: net_db.cc,v 1.159 2002/02/26 15:48:15 adrian Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -33,19 +33,35 @@
  *
  */
 
+/*
+ * XXX XXX XXX
+ *
+ * This code may be slightly broken now. If you're getting consistent
+ * (sometimes working) corrupt data exchanges, please contact adrian
+ * (adrian@squid-cache.org) to sort them out.
+ */
+
 #include "squid.h"
 
 #if USE_ICMP
+#define	NETDB_REQBUF_SZ	4096
+
+typedef enum {
+	STATE_NONE,
+	STATE_HEADER,
+	STATE_BODY
+} netdb_conn_state_t;
 
 typedef struct {
     peer *p;
     StoreEntry *e;
     store_client *sc;
     request_t *r;
-    off_t seen;
     off_t used;
     size_t buf_sz;
-    char *buf;
+    char buf[NETDB_REQBUF_SZ];
+    int buf_ofs;
+    netdb_conn_state_t connstate;
 } netdbExchangeState;
 
 static hash_table *addr_table = NULL;
@@ -526,8 +542,9 @@ netdbFreeNameEntry(void *data)
     memFree(x, MEM_NET_DB_NAME);
 }
 
+
 static void
-netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
+netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
 {
     netdbExchangeState *ex = data;
     int rec_sz = 0;
@@ -540,40 +557,68 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
     HttpReply *rep;
     size_t hdr_sz;
     int nused = 0;
+    int size;
+    int oldbufofs = ex->buf_ofs;
+
     rec_sz = 0;
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
-    ex->seen = ex->used + size;
-    debug(38, 3) ("netdbExchangeHandleReply: %d bytes\n", (int) size);
+    debug(38, 3) ("netdbExchangeHandleReply: %d read bytes\n", (int) retsize);
     if (!cbdataValid(ex->p)) {
 	debug(38, 3) ("netdbExchangeHandleReply: Peer became invalid\n");
 	netdbExchangeDone(ex);
 	return;
     }
     debug(38, 3) ("netdbExchangeHandleReply: for '%s:%d'\n", ex->p->host, ex->p->http_port);
-    p = buf;
-    if (0 == ex->used) {
+    p = ex->buf;
+
+    /* Get the size of the buffer now */
+    size = ex->buf_ofs + retsize;
+    debug(38, 3) ("netdbExchangeHandleReply: %d bytes buf\n", (int) size);
+
+    /* Check if we're still doing headers */
+    if (ex->connstate == STATE_HEADER) {
+
+        ex->buf_ofs += retsize;
+
 	/* skip reply headers */
-	if ((hdr_sz = headersEnd(p, size))) {
+	if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
 	    debug(38, 5) ("netdbExchangeHandleReply: hdr_sz = %d\n", hdr_sz);
 	    rep = ex->e->mem_obj->reply;
 	    if (0 == rep->sline.status)
-		httpReplyParse(rep, buf, hdr_sz);
+		httpReplyParse(rep, ex->buf, hdr_sz);
 	    debug(38, 3) ("netdbExchangeHandleReply: reply status %d\n",
 		rep->sline.status);
 	    if (HTTP_OK != rep->sline.status) {
 		netdbExchangeDone(ex);
 		return;
 	    }
-	    assert(size >= hdr_sz);
-	    ex->used += hdr_sz;
-	    size -= hdr_sz;
+	    assert(ex->buf_ofs >= hdr_sz);
+
+            /*
+             * Now, point p to the part of the buffer where the data
+             * starts, and update the size accordingly
+             */
+            assert(ex->used == 0);
+	    ex->used = hdr_sz;
+	    size = ex->buf_ofs - hdr_sz;
 	    p += hdr_sz;
+
+            /* Finally, set the conn state mode to STATE_BODY */
+            ex->connstate = STATE_BODY;
 	} else {
-	    size = 0;
+            /* Have more headers .. */
+            storeClientCopy(ex->sc, ex->e, ex->buf_ofs,
+              ex->buf_sz - ex->buf_ofs, ex->buf + ex->buf_ofs,
+              netdbExchangeHandleReply, ex);
+            return;
 	}
     }
+
+    assert(ex->connstate == STATE_BODY);
+
+    /* If we get here, we have some body to parse .. */
     debug(38, 5) ("netdbExchangeHandleReply: start parsing loop, size = %d\n",
 	size);
     while (size >= rec_sz) {
@@ -612,27 +657,51 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 	ex->used += rec_sz;
 	size -= rec_sz;
 	p += rec_sz;
-	/*
-	 * This is a fairly cpu-intensive loop, break after adding
-	 * just a few
-	 */
-	if (++nused == 20)
-	    break;
+        nused++;
     }
+
+    /*
+     * Copy anything that is left over to the beginning of the buffer,
+     * and adjust buf_ofs accordingly
+     */
+
+    /*
+     * Evilly, size refers to the buf size left now,
+     * ex->buf_ofs is the original buffer size, so just copy that
+     * much data over
+     */
+    memmove(ex->buf, ex->buf + (ex->buf_ofs - size), size);
+    ex->buf_ofs = size;
+
+    /*
+     * And don't re-copy the remaining data ..
+     */
+    ex->used += size;
+
+    /*
+     * Now the tricky bit - size _included_ the leftover bit from the _last_
+     * storeClientCopy. We don't want to include that, or our offset will be wrong.
+     * So, don't count the size of the leftover buffer we began with.
+     * This can _disappear_ when we're not tracking offsets ..
+     */
+    ex->used -= oldbufofs;
+
+    debug(38, 3) ("netdbExchangeHandleReply: size left over in this buffer: %d bytes\n", size);
+
     debug(38, 3) ("netdbExchangeHandleReply: used %d entries, (x %d bytes) == %d bytes total\n",
 	nused, rec_sz, nused * rec_sz);
-    debug(38, 3) ("netdbExchangeHandleReply: seen %d, used %d\n", ex->seen, ex->used);
+    debug(38, 3) ("netdbExchangeHandleReply: used %ld\n",(long int) ex->used);
     if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
 	debug(38, 3) ("netdbExchangeHandleReply: ENTRY_ABORTED\n");
 	netdbExchangeDone(ex);
     } else if (ex->e->store_status == STORE_PENDING) {
 	debug(38, 3) ("netdbExchangeHandleReply: STORE_PENDING\n");
-	storeClientCopy(ex->sc, ex->e, ex->seen, ex->used, ex->buf_sz,
-	    ex->buf, netdbExchangeHandleReply, ex);
-    } else if (ex->seen < ex->e->mem_obj->inmem_hi) {
+	storeClientCopy(ex->sc, ex->e, ex->used, ex->buf_sz - ex->buf_ofs,
+	    ex->buf + ex->buf_ofs, netdbExchangeHandleReply, ex);
+    } else if (ex->used < ex->e->mem_obj->inmem_hi) {
 	debug(38, 3) ("netdbExchangeHandleReply: ex->e->mem_obj->inmem_hi\n");
-	storeClientCopy(ex->sc, ex->e, ex->seen, ex->used, ex->buf_sz,
-	    ex->buf, netdbExchangeHandleReply, ex);
+	storeClientCopy(ex->sc, ex->e, ex->used, ex->buf_sz - ex->buf_ofs,
+	    ex->buf + ex->buf_ofs, netdbExchangeHandleReply, ex);
     } else {
 	debug(38, 3) ("netdbExchangeHandleReply: Done\n");
 	netdbExchangeDone(ex);
@@ -644,7 +713,6 @@ netdbExchangeDone(void *data)
 {
     netdbExchangeState *ex = data;
     debug(38, 3) ("netdbExchangeDone: %s\n", storeUrl(ex->e));
-    memFree(ex->buf, MEM_4K_BUF);
     requestUnlink(ex->r);
     storeUnregister(ex->sc, ex->e, ex);
     storeUnlockObject(ex->e);
@@ -1007,13 +1075,13 @@ netdbExchangeStart(void *data)
     requestLink(ex->r);
     assert(NULL != ex->r);
     httpBuildVersion(&ex->r->http_ver, 1, 0);
+    ex->connstate = STATE_HEADER;
     ex->e = storeCreateEntry(uri, uri, null_request_flags, METHOD_GET);
-    ex->buf_sz = 4096;
-    ex->buf = memAllocate(MEM_4K_BUF);
+    ex->buf_sz = NETDB_REQBUF_SZ;
     assert(NULL != ex->e);
     ex->sc = storeClientListAdd(ex->e, ex);
-    storeClientCopy(ex->sc, ex->e, ex->seen, ex->used, ex->buf_sz,
-	ex->buf, netdbExchangeHandleReply, ex);
+    storeClientCopy(ex->sc, ex->e, 0, ex->buf_sz, ex->buf,
+        netdbExchangeHandleReply, ex);
     ex->r->flags.loopdetect = 1;	/* cheat! -- force direct */
     if (p->login)
 	xstrncpy(ex->r->login, p->login, MAX_LOGIN_SZ);

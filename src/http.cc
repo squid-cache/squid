@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.386 2002/01/28 17:51:27 hno Exp $
+ * $Id: http.cc,v 1.387 2002/02/26 15:48:14 adrian Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -729,7 +729,6 @@ httpBuildRequestHeader(request_t * request,
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
     String strConnection = StringNull;
     const HttpHeader *hdr_in = &orig_request->header;
-    int we_do_ranges;
     const HttpHeaderEntry *e;
     String strVia;
     String strFwd;
@@ -738,27 +737,6 @@ httpBuildRequestHeader(request_t * request,
     /* append our IMS header */
     if (request->lastmod > -1 && request->method == METHOD_GET)
 	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, request->lastmod);
-
-    /* decide if we want to do Ranges ourselves 
-     * (and fetch the whole object now)
-     * We want to handle Ranges ourselves iff
-     *    - we can actually parse client Range specs
-     *    - the specs are expected to be simple enough (e.g. no out-of-order ranges)
-     *    - reply will be cachable
-     * (If the reply will be uncachable we have to throw it away after 
-     *  serving this request, so it is better to forward ranges to 
-     *  the server and fetch only the requested content) 
-     */
-    if (NULL == orig_request->range)
-	we_do_ranges = 0;
-    else if (!orig_request->flags.cachable)
-	we_do_ranges = 0;
-    else if (httpHdrRangeOffsetLimit(orig_request->range))
-	we_do_ranges = 0;
-    else
-	we_do_ranges = 1;
-    debug(11, 8) ("httpBuildRequestHeader: range specs: %p, cachable: %d; we_do_ranges: %d\n",
-	orig_request->range, orig_request->flags.cachable, we_do_ranges);
 
     strConnection = httpHeaderGetList(hdr_in, HDR_CONNECTION);
     while ((e = httpHeaderGetEntry(hdr_in, &pos))) {
@@ -818,12 +796,6 @@ httpBuildRequestHeader(request_t * request,
 		if (hops > 0)
 		    httpHeaderPutInt(hdr_out, HDR_MAX_FORWARDS, hops - 1);
 	    }
-	    break;
-	case HDR_RANGE:
-	case HDR_IF_RANGE:
-	case HDR_REQUEST_RANGE:
-	    if (!we_do_ranges)
-		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
 	    break;
 	case HDR_PROXY_CONNECTION:
 	case HDR_CONNECTION:

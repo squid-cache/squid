@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.409 2002/02/13 19:34:02 hno Exp $
+ * $Id: structs.h,v 1.410 2002/02/26 15:48:16 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1045,6 +1045,8 @@ struct _clientHttpRequest {
     request_t *request;		/* Parsed URL ... */
     store_client *sc;		/* The store_client we're using */
     store_client *old_sc;	/* ... for entry to be validated */
+    int old_reqofs;		/* ... for the buffer */
+    int old_reqsize;		/* ... again, for the buffer */
     char *uri;
     char *log_uri;
     struct {
@@ -1076,6 +1078,11 @@ struct _clientHttpRequest {
 	char *location;
     } redirect;
     dlink_node active;
+    char norm_reqbuf[HTTP_REQBUF_SZ]; /* For 'normal requests' */
+    char ims_reqbuf[HTTP_REQBUF_SZ];  /* For 'ims' requests */
+    char *reqbuf;
+    int reqofs;
+    int reqsize;
 };
 
 struct _ConnStateData {
@@ -1165,6 +1172,9 @@ struct _DigestFetchState {
 	int msg;
 	int bytes;
     } sent, recv;
+    char buf[SM_PAGE_SIZE];
+    int bufofs;
+    digest_read_state_t state;
 };
 
 /* statistics for cache digests and other hit "predictors" */
@@ -1413,7 +1423,7 @@ struct _mem_hdr {
 struct _store_client {
     int type;
     off_t copy_offset;
-    off_t seen_offset;
+    off_t cmp_offset;
     size_t copy_size;
     char *copy_buf;
     STCB *callback;

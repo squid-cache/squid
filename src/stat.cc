@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.352 2001/12/24 15:33:44 adrian Exp $
+ * $Id: stat.cc,v 1.353 2002/02/26 15:48:15 adrian Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -288,8 +288,6 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 	    storeAppendPrintf(s, "\tClient #%d, %p\n", i, sc->callback_data);
 	    storeAppendPrintf(s, "\t\tcopy_offset: %d\n",
 		(int) sc->copy_offset);
-	    storeAppendPrintf(s, "\t\tseen_offset: %d\n",
-		(int) sc->seen_offset);
 	    storeAppendPrintf(s, "\t\tcopy_size: %d\n",
 		(int) sc->copy_size);
 	    storeAppendPrintf(s, "\t\tflags:");
