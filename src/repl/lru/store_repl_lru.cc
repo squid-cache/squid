@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.14 2003/02/21 22:50:50 robertc Exp $
+ * $Id: store_repl_lru.cc,v 1.15 2003/09/06 12:47:39 robertc Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -317,7 +317,7 @@ lru_free(RemovalPolicy * policy)
     assert(lru->nwalkers);
     assert(lru->count);
     /* Ok, time to destroy this policy */
-    safe_free(policy->_data);
+    safe_free(lru);
     memset(policy, 0, sizeof(*policy));
     cbdataFree(policy);
 }

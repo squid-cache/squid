@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.191 2003/09/01 03:49:38 robertc Exp $
+ * $Id: errorpage.cc,v 1.192 2003/09/06 12:47:35 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -344,8 +344,7 @@ void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
     HttpReply *rep;
-    MemObject *mem = entry->mem_obj;
-    assert(mem != NULL);
+    assert(entry->mem_obj != NULL);
     assert (entry->isEmpty());
 
     if (entry->store_status != STORE_PENDING) {

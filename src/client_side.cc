@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.658 2003/09/01 03:49:38 robertc Exp $
+ * $Id: client_side.cc,v 1.659 2003/09/06 12:47:34 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -142,7 +142,9 @@ static void clientUpdateStatCounters(log_type logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
 static void clientPrepareLogWithRequestDetails(HttpRequest *, AccessLogEntry *);
+#ifndef PURIFY
 static int connIsUsable(ConnStateData::Pointer conn);
+#endif
 static int responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const &recievedData);
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData::Pointer & conn);
 static void clientUpdateSocketStats(log_type logType, size_t size);
@@ -692,6 +694,7 @@ clientIsRequestBodyTooLargeForPolicy(size_t bodyLength)
     return 0;
 }
 
+#ifndef PURIFY
 int
 connIsUsable(ConnStateData::Pointer conn)
 {
@@ -700,6 +703,8 @@ connIsUsable(ConnStateData::Pointer conn)
 
     return 1;
 }
+
+#endif
 
 ClientSocketContext::Pointer
 ConnStateData::getCurrentContext() const
@@ -1243,9 +1248,8 @@ clientSocketDetach(clientStreamNode * node, clientHttpRequest * http)
     assert(cbdataReferenceValid(node));
     /* Set null by ContextFree */
     assert(node->node.next == NULL);
-    ClientSocketContext *context = dynamic_cast<ClientSocketContext *>(node->data.getRaw());
     /* this is the assert discussed above */
-    assert(context == NULL);
+    assert(NULL == dynamic_cast<ClientSocketContext *>(node->data.getRaw()));
     /* We are only called when the client socket shutsdown.
      * Tell the prev pipeline member we're finished
      */

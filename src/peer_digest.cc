@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.99 2003/08/10 11:00:44 robertc Exp $
+ * $Id: peer_digest.cc,v 1.100 2003/09/06 12:47:35 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -400,12 +400,11 @@ static void
 peerDigestHandleReply(void *data, StoreIOBuffer recievedData)
 {
     DigestFetchState *fetch = (DigestFetchState *)data;
-    PeerDigest *pd = fetch->pd;
     int retsize = -1;
     digest_read_state_t prevstate;
     int newsize;
 
-    assert(pd && recievedData.data);
+    assert(fetch->pd && recievedData.data);
     /* The existing code assumes that the recieved pointer is
      * where we asked the data to be put
      */
@@ -649,9 +648,8 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
 
     if (size >= (ssize_t)StoreDigestCBlockSize) {
         PeerDigest *pd = fetch->pd;
-        HttpReply const *rep = fetch->entry->getReply();
 
-        assert(pd && rep);
+        assert(pd && fetch->entry->getReply());
 
         if (peerDigestSetCBlock(pd, buf)) {
             /* XXX: soon we will have variable header size */
