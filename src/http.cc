@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.133 1996/12/06 17:52:38 wessels Exp $
+ * $Id: http.cc,v 1.134 1996/12/06 21:52:01 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -622,7 +622,7 @@ httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max)
 #ifdef USE_ANONYMIZER
     if (!httpAnonSearchHeaderField(http_anon_allowed_header, line)) {
 	debug(11, 5, "httpAppendRequestHeader: removed for anonymity: <%s>\n",
-		line);
+	    line);
 	return;
     }
 #endif
