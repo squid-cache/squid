@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.369 2000/05/31 07:01:42 hno Exp $
+ * $Id: protos.h,v 1.370 2000/06/08 18:05:35 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -849,13 +849,6 @@ extern void storeFsInit(void);
 extern void storeFsDone(void);
 extern void storeFsAdd(char *, STSETUP *);
 
-/* store_heap_replacement.c */
-#ifdef HEAP_REPLACEMENT
-extern heap_key HeapKeyGen_StoreEntry_LFUDA(void *, double);
-extern heap_key HeapKeyGen_StoreEntry_GDSF(void *, double);
-extern heap_key HeapKeyGen_StoreEntry_LRU(void *, double);
-#endif
-
 /* store_modules.c */
 extern void storeFsSetup(void);
 
@@ -1184,6 +1177,10 @@ extern void logfilePrintf(Logfile * lf, const char *fmt,...);
 #else
 extern void logfilePrintf(va_alist);
 #endif
+
+/* Removal Policies */
+RemovalPolicy *
+createRemovalPolicy(RemovalPolicySettings *settings);
 
 /*
  * prototypes for system functions missing from system includes

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.91 2000/05/31 04:26:32 wessels Exp $
+ * $Id: globals.h,v 1.92 2000/06/08 18:05:35 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -125,10 +125,6 @@ extern double request_failure_ratio;	/* 0.0 */
 extern double current_dtime;
 extern int store_hash_buckets;	/* 0 */
 extern hash_table *store_table;	/* NULL */
-#if HEAP_REPLACEMENT
-extern heap *inmem_heap;
-#else
-#endif
 extern dlink_list ClientActiveRequests;
 extern const String StringNull;	/* { 0, 0, NULL } */
 extern const MemBuf MemBufNull;	/* MemBufNULL */
@@ -154,3 +150,4 @@ extern int store_swap_low;	/* 0 */
 extern int store_swap_high;	/* 0 */
 extern int store_pages_max;	/* 0 */
 extern ssize_t store_maxobjsize; /* -1 */
+extern RemovalPolicy *mem_policy;

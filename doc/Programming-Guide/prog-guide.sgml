@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.27 2000/05/03 17:15:40 adrian Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.28 2000/06/08 18:05:33 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -1492,16 +1492,16 @@ Squid consists of the following major components
 	This feature may not be required by some storage systems
 	and can be implemented as a null-function (no-op).
 
-<sect2><tt/log.clean.open()/
+<sect2><tt/log.clean.start()/
 
 	<P>
 <verb>
 	int
-	STLOGCLEANOPEN(SwapDir *);
+	STLOGCLEANSTART(SwapDir *);
 </verb>
 
 	<P>
-	The <tt/log.clean.open/ function, of type <em/STLOGCLEANOPEN/,
+	The <tt/log.clean.start/ function, of type <em/STLOGCLEANSTART/,
 	is used for the process of writing "clean" state-holding
 	log files.  The clean-writing procedure is initiated by
 	the <em/squid -k rotate/ command.  This is a special case
@@ -1514,24 +1514,45 @@ Squid consists of the following major components
 	keep state information for the clean-writing process, but
 	should not be accessed by upper layers.
 
+<sect2><tt/log.clean.nextentry()/
+
+	<P>
+<verb>
+	StoreEntry *
+	STLOGCLEANNEXTENTRY(SwapDir *);
+</verb>
+
+	<P>
+	Gets the next entry that is a candidate for the clean log.
+
+	<P>
+	Returns NULL when there is no more objects to log
+
 <sect2><tt/log.clean.write()/
 
 	<P>
 <verb>
 	void
-	STLOGCLEANWRITE(const StoreEntry *, SwapDir *);
+	STLOGCLEANWRITE(SwapDir *, const StoreEntry *);
 </verb>
 
 	<P>
 	The <tt/log.clean.write/ function, of type <em/STLOGCLEANWRITE/,
 	writes an entry to the clean log file (if any).
 
-	<P>
-	A NULL <em/StoreEntry/ argument indicates the end of
-	the clean-writing process and signals the storage
-	system to close the clean log, and rename or move them
-	to become the official state-holding log.
+<sect2><tt/log.clean.done()/
 
+	<P>
+<verb>
+	void
+	STLOGCLEANDONE(SwapDir *);
+</verb>
+
+	<P>
+	Indicates the end of the clean-writing process and signals
+	the storage system to close the clean log, and rename or
+	move them to become the official state-holding log ready
+	to be opened.
 
 <sect1>Replacement policy implementation
 
@@ -1545,10 +1566,7 @@ replacement policy. Cyclic filesystems such as COSS require this tight
 coupling between the storage layer and the replacement policy.
 
 
-<sect1>Future removal policy
-
-	<P>
-	(replaces the above Replace policy)
+<sect1>Removal policy API
 
 	<P>
 	The removal policy is responsible for determining in which order
@@ -1625,10 +1643,26 @@ coupling between the storage layer and the replacement policy.
 </verb>
 
 	<P>
-	Tells the policy that a StoreEntry has been referenced.
+	Tells the policy that a StoreEntry is going to be referenced. Called
+	whenever a entry gets locked.
 
 	<P>
-	datap is a pointer to where policy specific data is stored
+	node is a pointer to where policy specific data is stored
+	for the store entry, currently the size of one (void *) pointer.
+
+<sect3>policy.Dereferenced()
+
+<P>
+<verb>
+	policy-&gt;Dereferenced(RemovalPolicy *policy, const StoreEntry *, RemovalPolicyNode *node)
+</verb>
+
+	<P>
+	Tells the policy that a StoreEntry has been referenced. Called when
+	an access to the entry has finished.
+
+	<P>
+	node is a pointer to where policy specific data is stored
 	for the store entry, currently the size of one (void *) pointer.
 
 <sect3>policy.WalkInit()
@@ -1821,6 +1855,32 @@ coupling between the storage layer and the replacement policy.
 <P>
 	Prior to returning the created instance must be registered as
 	callback-data by calling cbdataAdd().
+
+<sect2>Design notes/bugs
+
+<P>
+	The RemovalPolicyNode design is incomplete/insufficient. The intention
+	was to abstract the location of the index pointers from the policy
+	implementation to allow the policy to work on both on-disk and memory
+	caches, but unfortunately the purge method for HEAP based policies
+	needs to update this, and it is also preferable if the purge method
+	in general knows how to clear the information. I think the agreement
+	was that the current design of thightly coupling the two together
+	on one StoreEntry is not the best design possible.
+
+<P>
+	It is debated if the design in having the policy index control the
+	clean index writes is the correct approach. Perhaps not. Perhaps a
+	more appropriate design is probably to do the store indexing
+	completely outside the policy implementation (i.e. using the hash
+	index), and only ask the policy to dump it's state somehow.
+
+<P>
+	The Referenced/Dereferenced() calls is today mapped to lock/unlock
+	which is an approximation of when they are intended to be called.
+	However, the real intention is to have Referenced() called whenever
+	an object is referenced, and Dereferenced() only called when the
+	object has actually been used for anything good.
 
 <!-- %%%% Chapter : FORWARDING SELECTION %%%% -->
 <sect>Forwarding Selection

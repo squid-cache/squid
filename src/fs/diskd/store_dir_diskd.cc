@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.10 2000/05/29 03:10:39 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.11 2000/06/08 18:05:38 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -109,9 +109,10 @@ static FILE *storeDiskdDirOpenTmpSwapLog(SwapDir *, int *, int *);
 static STLOGOPEN storeDiskdDirOpenSwapLog;
 static STINIT storeDiskdDirInit;
 static STFREE storeDiskdDirFree;
-static STLOGCLEANOPEN storeDiskdDirWriteCleanOpen;
-static void storeDiskdDirWriteCleanClose(SwapDir * sd);
+static STLOGCLEANSTART storeDiskdDirWriteCleanStart;
+static STLOGCLEANNEXTENTRY storeDiskdDirCleanLogNextEntry;
 static STLOGCLEANWRITE storeDiskdDirWriteCleanEntry;
+static STLOGCLEANDONE storeDiskdDirWriteCleanDone;
 static STLOGCLOSE storeDiskdDirCloseSwapLog;
 static STLOGWRITE storeDiskdDirSwapLog;
 static STNEWFS storeDiskdDirNewfs;
@@ -129,10 +130,6 @@ static int storeDiskdCleanupDoubleCheck(SwapDir *, StoreEntry *);
 static void storeDiskdDirStats(SwapDir *, StoreEntry *);
 static void storeDiskdDirInitBitmap(SwapDir *);
 static int storeDiskdDirValidFileno(SwapDir *, sfileno, int);
-static int storeDiskdDirCheckExpired(SwapDir *, StoreEntry *);
-#if !HEAP_REPLACEMENT
-static time_t storeDiskdDirExpiredReferenceAge(SwapDir *);
-#endif
 static void storeDiskdStats(StoreEntry * sentry);
 static void storeDiskdDirSync(SwapDir *);
 
@@ -475,31 +472,31 @@ storeDiskdDirSync(SwapDir * SD)
  * until the queue is below magic2. Otherwise, we simply return when we
  * don't get a message.
  */
-void
+int
 storeDiskdDirCallback(SwapDir * SD)
 {
     diomsg M;
     int x;
     diskdinfo_t *diskdinfo = SD->fsdata;
+    int retval = 0;
 
-    if (diskdinfo->away >= diskdinfo->magic2)
+    if (diskdinfo->away >= diskdinfo->magic2) {
 	diskd_stats.block_queue_len++;
+        retval = 1; /* We might not have anything to do, but our queue
+                     * is full.. */
+    }
 
     if (diskd_stats.sent_count - diskd_stats.recv_count >
 	diskd_stats.max_away) {
 	diskd_stats.max_away = diskd_stats.sent_count - diskd_stats.recv_count;
 	diskd_stats.max_shmuse = diskd_stats.shmbuf_count;
     }
-    /* if we are above magic2, we do not break under any reason */
     while (1) {
 	memset(&M, '\0', sizeof(M));
 	x = msgrcv(diskdinfo->rmsgid, &M, msg_snd_rcv_sz, 0, IPC_NOWAIT);
-	if (x < 0) {
-	    if (diskdinfo->away >= diskdinfo->magic2)
-		continue;
-	    else
+	if (x < 0)
 		break;
-	} else if (x != msg_snd_rcv_sz) {
+	else if (x != msg_snd_rcv_sz) {
 	    debug(81, 1) ("storeDiskdDirCallback: msgget returns %d\n",
 		x);
 	    break;
@@ -507,9 +504,11 @@ storeDiskdDirCallback(SwapDir * SD)
 	diskd_stats.recv_count++;
 	diskdinfo->away--;
 	storeDiskdHandle(&M);
+        retval = 1; /* Return that we've actually done some work */
 	if (M.shm_offset > -1)
 	    storeDiskdShmPut(SD, M.shm_offset);
     }
+    return retval;
 }
 
 
@@ -761,10 +760,7 @@ storeDiskdDirRebuildFromSwapLog(void *data)
 		e->lastmod = s.lastmod;
 		e->flags = s.flags;
 		e->refcount += s.refcount;
-#if HEAP_REPLACEMENT
-		storeHeapPositionUpdate(e, SD);
 		storeDiskdDirUnrefObj(SD, e);
-#endif
 	    } else {
 		debug_trap("storeDiskdDirRebuildFromSwapLog: bad condition");
 		debug(20, 1) ("\tSee %s:%d\n", __FILE__, __LINE__);
@@ -944,9 +940,6 @@ storeDiskdDirAddDiskRestore(SwapDir * SD, const cache_key * key,
     e->swap_dirn = SD->index;
     e->swap_file_sz = swap_file_sz;
     e->lock_count = 0;
-#if !HEAP_REPLACEMENT
-    e->refcount = 0;
-#endif
     e->lastref = lastref;
     e->timestamp = timestamp;
     e->expires = expires;
@@ -1083,6 +1076,7 @@ struct _clean_state {
     char *outbuf;
     off_t outbuf_offset;
     int fd;
+    RemovalPolicyWalker *walker;
 };
 
 #define CLEAN_BUF_SZ 16384
@@ -1092,7 +1086,7 @@ struct _clean_state {
  * we succeed, and assign the 'func' and 'data' return pointers.
  */
 static int
-storeDiskdDirWriteCleanOpen(SwapDir * sd)
+storeDiskdDirWriteCleanStart(SwapDir * sd)
 {
     struct _clean_state *state = xcalloc(1, sizeof(*state));
     struct stat sb;
@@ -1103,6 +1097,7 @@ storeDiskdDirWriteCleanOpen(SwapDir * sd)
     state->cln = xstrdup(storeDiskdDirSwapLogFile(sd, ".last-clean"));
     state->outbuf = xcalloc(CLEAN_BUF_SZ, 1);
     state->outbuf_offset = 0;
+    state->walker = sd->repl->WalkInit(sd->repl);
     unlink(state->new);
     unlink(state->cln);
     state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
@@ -1120,18 +1115,27 @@ storeDiskdDirWriteCleanOpen(SwapDir * sd)
 }
 
 /*
+ * Get the next entry that is a candidate for clean log writing
+ */
+const StoreEntry *
+storeDiskdDirCleanLogNextEntry(SwapDir * sd)
+{
+    const StoreEntry *entry = NULL;
+    struct _clean_state *state = sd->log.clean.state;
+    if (state->walker)
+	entry = state->walker->Next(state->walker);
+    return entry;
+}
+
+/*
  * "write" an entry to the clean log file.
  */
 static void
-storeDiskdDirWriteCleanEntry(const StoreEntry * e, SwapDir * sd)
+storeDiskdDirWriteCleanEntry(SwapDir *sd, const StoreEntry * e)
 {
     storeSwapLogData s;
     static size_t ss = sizeof(storeSwapLogData);
     struct _clean_state *state = sd->log.clean.state;
-    if (NULL == e) {
-	storeDiskdDirWriteCleanClose(sd);
-	return;
-    }
     memset(&s, '\0', ss);
     s.op = (char) SWAP_LOG_ADD;
     s.swap_filen = e->swap_filen;
@@ -1163,11 +1167,12 @@ storeDiskdDirWriteCleanEntry(const StoreEntry * e, SwapDir * sd)
 }
 
 static void
-storeDiskdDirWriteCleanClose(SwapDir * sd)
+storeDiskdDirWriteCleanDone(SwapDir * sd)
 {
     struct _clean_state *state = sd->log.clean.state;
     if (state->fd < 0)
 	return;
+    state->walker->Done(state->walker);
     if (write(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
 	    state->new, xstrerror());
@@ -1425,30 +1430,18 @@ void
 storeDiskdDirMaintain(SwapDir * SD)
 {
     StoreEntry *e = NULL;
-    int scanned = 0;
-    int locked = 0;
-    int expired = 0;
+    int removed = 0;
     int max_scan;
     int max_remove;
     double f;
-    static time_t last_warn_time = 0;
-#if !HEAP_REPLACEMENT
-    dlink_node *m;
-    dlink_node *prev = NULL;
-#else
-    heap_key age;
-    heap_key min_age = 0.0;
-    link_list *locked_entries = NULL;
-#if HEAP_REPLACEMENT_DEBUG
-    if (!verify_heap_property(SD->repl.heap.heap)) {
-	debug(20, 1) ("Heap property violated!\n");
-    }
-#endif
-#endif
+    RemovalPurgeWalker *walker;
     /* We can't delete objects while rebuilding swap */
     if (store_dirs_rebuilding) {
 	return;
     } else {
+	/* XXX FixMe: This should use the cache_dir hig/low values, not the
+	 * global ones
+	 */
 	f = (double) (store_swap_size - store_swap_low) / (store_swap_high - store_swap_low);
 	f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
 	max_scan = (int) (f * 400.0 + 100.0);
@@ -1456,120 +1449,26 @@ storeDiskdDirMaintain(SwapDir * SD)
 	/*
 	 * This is kinda cheap, but so we need this priority hack?
 	 */
-#if 0
-	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0 - f, 1);
-#endif
     }
     debug(20, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n", f, max_scan, max_remove);
-#if HEAP_REPLACEMENT
-    while (heap_nodes(SD->repl.heap.heap) > 0) {
+    walker = SD->repl->PurgeInit(SD->repl, max_scan);
+    while (1) {
+	/* XXX FixMe: This should use the cache_dir hig/low values, not the
+	 * global ones
+	 */
 	if (store_swap_size < store_swap_low)
 	    break;
-	if (expired >= max_remove)
+	if (removed >= max_remove)
 	    break;
-	if (scanned >= max_scan)
-	    break;
-	age = heap_peepminkey(SD->repl.heap.heap);
-	e = heap_extractmin(SD->repl.heap.heap);
-	e->repl.node = NULL;	/* no longer in the heap */
-	scanned++;
-	if (storeEntryLocked(e)) {
-	    /*
-	     * Entry is in use ... put it in a linked list to ignore it.
-	     */
-	    if (!EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-		/*
-		 * If this was a "SPECIAL" do not add it back into the heap.
-		 * It will always be "SPECIAL" and therefore never removed.
-		 */
-		debug(20, 4) ("storeDiskdDirMaintain: locked url %s\n",
-		    (e->mem_obj && e->mem_obj->url) ? e->mem_obj->url : storeKeyText(e->
-			key));
-		linklistPush(&locked_entries, e);
-	    }
-	    locked++;
-	    continue;
-	} else if (storeDiskdDirCheckExpired(SD, e)) {
-	    /*
-	     * Note: This will not check the reference age ifdef
-	     * HEAP_REPLACEMENT, but it does some other useful
-	     * checks...
-	     */
-	    expired++;
-	    debug(20, 3) ("Released store object age %f size %d refs %d key %s\n",
-		age, e->swap_file_sz, e->refcount, storeKeyText(e->key));
-	    min_age = age;
-	    storeRelease(e);
-	} else {
-	    /*
-	     * Did not expire the object so we need to add it back
-	     * into the heap!
-	     */
-	    debug(20, 5) ("storeMaintainSwapSpace: non-expired %s\n",
-		storeKeyText(e->key));
-	    linklistPush(&locked_entries, e);
-	    continue;
-	}
-	if (store_swap_size < store_swap_low)
-	    break;
-	else if (expired >= max_remove)
-	    break;
-	else if (scanned >= max_scan)
-	    break;
+	e = walker->Next(walker);
+	if (!e)
+	    break;		/* no more objects */
+	removed++;
+	storeRelease(e);
     }
-    /*
-     * Bump the heap age factor.
-     */
-    if (min_age > 0.0)
-	SD->repl.heap.heap->age = min_age;
-    /*
-     * Reinsert all bumped locked entries back into heap...
-     */
-    while ((e = linklistShift(&locked_entries)))
-	e->repl.node = heap_insert(SD->repl.heap.heap, e);
-#else
-    for (m = SD->repl.lru.list.tail; m; m = prev) {
-	prev = m->prev;
-	e = m->data;
-	scanned++;
-	if (storeEntryLocked(e)) {
-	    /*
-	     * If there is a locked entry at the tail of the LRU list,
-	     * move it to the beginning to get it out of the way.
-	     * Theoretically, we might have all locked objects at the
-	     * tail, and then we'll never remove anything here and the
-	     * LRU age will go to zero.
-	     */
-	    if (memInUse(MEM_STOREENTRY) > max_scan) {
-		dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
-		dlinkAdd(e, &e->repl.lru, &SD->repl.lru.list);
-	    }
-	    locked++;
-
-	} else if (storeDiskdDirCheckExpired(SD, e)) {
-	    expired++;
-	    storeRelease(e);
-	}
-	if (expired >= max_remove)
-	    break;
-	if (scanned >= max_scan)
-	    break;
-    }
-#endif
-    debug(20, (expired ? 2 : 3)) ("storeMaintainSwapSpace: scanned %d/%d removed %d/%d locked %d f=%.03f\n",
-	scanned, max_scan, expired, max_remove, locked, f);
-    debug(20, 3) ("storeMaintainSwapSpace stats:\n");
-    debug(20, 3) ("  %6d objects\n", memInUse(MEM_STOREENTRY));
-    debug(20, 3) ("  %6d were scanned\n", scanned);
-    debug(20, 3) ("  %6d were locked\n", locked);
-    debug(20, 3) ("  %6d were expired\n", expired);
-    if (store_swap_size < Config.Swap.maxSize)
-	return;
-    if (squid_curtime - last_warn_time < 10)
-	return;
-    debug(20, 0) ("WARNING: Disk space over limit: %d KB > %d KB\n",
-	store_swap_size, Config.Swap.maxSize);
-    last_warn_time = squid_curtime;
+    walker->Done(walker);
+    debug(20, (removed ? 2 : 3)) ("storeDiskdDirMaintain: %s removed %d/%d f=%.03f max_scan=%d\n",
+	SD->path, removed, max_remove, f, max_scan);
 }
 
 /*
@@ -1585,7 +1484,7 @@ storeDiskdDirCheckObj(SwapDir * SD, const StoreEntry * e)
     int loadav;
 
     diskdinfo_t *diskdinfo = SD->fsdata;
-#if !HEAP_REPLACEMENT
+#if OLD_UNUSED_CODE
     if (storeDiskdDirExpiredReferenceAge(SD) < 300) {
 	debug(20, 3) ("storeDiskdDirCheckObj: NO: LRU Age = %d\n",
 	    storeDiskdDirExpiredReferenceAge(SD));
@@ -1617,16 +1516,8 @@ storeDiskdDirRefObj(SwapDir * SD, StoreEntry * e)
 {
     debug(1, 3) ("storeDiskdDirRefObj: referencing %p %d/%d\n", e, e->swap_dirn,
 	e->swap_filen);
-#if HEAP_REPLACEMENT
-    /* Nothing to do here */
-#else
-    /* Reference the object */
-    if (!EBIT_TEST(e->flags, RELEASE_REQUEST) &&
-	!EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-	dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
-	dlinkAdd(e, &e->repl.lru, &SD->repl.lru.list);
-    }
-#endif
+    if (SD->repl->Referenced)
+	SD->repl->Referenced(SD->repl, e, &e->repl);
 }
 
 /*
@@ -1639,10 +1530,8 @@ storeDiskdDirUnrefObj(SwapDir * SD, StoreEntry * e)
 {
     debug(1, 3) ("storeDiskdDirUnrefObj: referencing %p %d/%d\n", e,
 	e->swap_dirn, e->swap_filen);
-#if HEAP_REPLACEMENT
-    if (e->repl.node)
-	heap_update(SD->repl.heap.heap, e->repl.node, e);
-#endif
+    if (SD->repl->Dereferenced)
+	SD->repl->Dereferenced(SD->repl, e, &e->repl);
 }
 
 /*
@@ -1656,78 +1545,8 @@ void
 storeDiskdDirUnlinkFile(SwapDir * SD, sfileno f)
 {
     debug(79, 3) ("storeDiskdDirUnlinkFile: unlinking fileno %08X\n", f);
-    storeDiskdDirMapBitReset(SD, f);
+    /* storeDiskdDirMapBitReset(SD, f); */
     unlinkdUnlink(storeDiskdDirFullPath(SD, f, NULL));
-}
-
-#if !HEAP_REPLACEMENT
-/*
- * storeDiskdDirExpiredReferenceAge
- *
- * The LRU age is scaled exponentially between 1 minute and
- * Config.referenceAge , when store_swap_low < store_swap_size <
- * store_swap_high.  This keeps store_swap_size within the low and high
- * water marks.  If the cache is very busy then store_swap_size stays
- * closer to the low water mark, if it is not busy, then it will stay
- * near the high water mark.  The LRU age value can be examined on the
- * cachemgr 'info' page.
- */
-static time_t
-storeDiskdDirExpiredReferenceAge(SwapDir * SD)
-{
-    double x;
-    double z;
-    time_t age;
-    long store_high, store_low;
-
-    store_high = (long) (((float) SD->max_size *
-	    (float) Config.Swap.highWaterMark) / (float) 100);
-    store_low = (long) (((float) SD->max_size *
-	    (float) Config.Swap.lowWaterMark) / (float) 100);
-    debug(20, 20) ("RA: Dir %s, hi=%d, lo=%d, cur=%d\n", SD->path, store_high, store_low, SD->cur_size);
-
-    x = (double) (store_high - SD->cur_size) /
-	(store_high - store_low);
-    x = x < 0.0 ? 0.0 : x > 1.0 ? 1.0 : x;
-    z = pow((double) (Config.referenceAge / 60), x);
-    age = (time_t) (z * 60.0);
-    if (age < 60)
-	age = 60;
-    else if (age > Config.referenceAge)
-	age = Config.referenceAge;
-    return age;
-}
-#endif
-
-/*
- * storeDiskdDirCheckExpired
- *
- * Check whether the given object is expired or not
- * It breaks layering a little by calling the upper layers to find
- * out whether the object is locked or not, but we can't help this
- * right now.
- */
-static int
-storeDiskdDirCheckExpired(SwapDir * SD, StoreEntry * e)
-{
-    if (storeEntryLocked(e))
-	return 0;
-    if (EBIT_TEST(e->flags, RELEASE_REQUEST))
-	return 1;
-    if (EBIT_TEST(e->flags, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
-	return 1;
-
-#if HEAP_REPLACEMENT
-    /*
-     * with HEAP_REPLACEMENT we are not using the LRU reference age, the heap
-     * controls the replacement of objects.
-     */
-    return 1;
-#else
-    if (squid_curtime - e->lastref > storeDiskdDirExpiredReferenceAge(SD))
-	return 1;
-    return 0;
-#endif
 }
 
 /*
@@ -1740,17 +1559,7 @@ storeDiskdDirReplAdd(SwapDir * SD, StoreEntry * e)
 {
     debug(20, 4) ("storeDiskdDirReplAdd: added node %p to dir %d\n", e,
 	SD->index);
-#if HEAP_REPLACEMENT
-    if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-	(void) 0;
-    } else {
-	e->repl.node = heap_insert(SD->repl.heap.heap, e);
-	debug(20, 4) ("storeDiskdDirReplAdd: inserted node 0x%x\n", e->repl.node);
-    }
-#else
-    /* Shouldn't we not throw special objects into the lru ? */
-    dlinkAdd(e, &e->repl.lru, &SD->repl.lru.list);
-#endif
+    SD->repl->Add(SD->repl, e, &e->repl);
 }
 
 
@@ -1760,17 +1569,7 @@ storeDiskdDirReplRemove(StoreEntry * e)
     SwapDir *SD = INDEXSD(e->swap_dirn);
     debug(20, 4) ("storeDiskdDirReplRemove: remove node %p from dir %d\n", e,
 	SD->index);
-#if HEAP_REPLACEMENT
-    /* And now, release the object from the replacement policy */
-    if (e->repl.node) {
-	debug(20, 4) ("storeDiskdDirReplRemove: deleting node 0x%x\n",
-	    e->repl.node);
-	heap_delete(SD->repl.heap.heap, e->repl.node);
-	e->repl.node = NULL;
-    }
-#else
-    dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
-#endif
+    SD->repl->Remove(SD->repl, e, &e->repl);
 }
 
 
@@ -1846,15 +1645,15 @@ storeDiskdDirStats(SwapDir * SD, StoreEntry * sentry)
     if (SD->flags.read_only)
 	storeAppendPrintf(sentry, " READ-ONLY");
     storeAppendPrintf(sentry, "\n");
+#if OLD_UNUSED_CODE
 #if !HEAP_REPLACEMENT
     storeAppendPrintf(sentry, "LRU Expiration Age: %6.2f days\n",
 	(double) storeDiskdDirExpiredReferenceAge(SD) / 86400.0);
 #else
-#if 0
     storeAppendPrintf(sentry, "Storage Replacement Threshold:\t%f\n",
 	heap_peepminkey(sd.repl.heap.heap));
 #endif
-#endif
+#endif /* OLD_UNUSED_CODE */
     storeAppendPrintf(sentry, "Pending operations: %d\n", diskdinfo->away);
 }
 
@@ -2072,41 +1871,12 @@ storeDiskdDirParse(SwapDir * sd, int index, char *path)
     sd->log.open = storeDiskdDirOpenSwapLog;
     sd->log.close = storeDiskdDirCloseSwapLog;
     sd->log.write = storeDiskdDirSwapLog;
-    sd->log.clean.open = storeDiskdDirWriteCleanOpen;
+    sd->log.clean.start = storeDiskdDirWriteCleanStart;
+    sd->log.clean.nextentry = storeDiskdDirCleanLogNextEntry;
+    sd->log.clean.done = storeDiskdDirWriteCleanDone;
 
     /* Initialise replacement policy stuff */
-#if HEAP_REPLACEMENT
-    /*
-     * Create new heaps with cache replacement policies attached to them.
-     * The cache replacement policy is specified as either GDSF or LFUDA in
-     * the squid.conf configuration file.  Note that the replacement policy
-     * applies only to the disk replacement algorithm.  Memory replacement
-     * always uses GDSF since we want to maximize object hit rate.
-     */
-    if (Config.replPolicy) {
-	if (tolower(Config.replPolicy[0]) == 'g') {
-	    debug(20, 1) ("Using GDSF disk replacement policy\n");
-	    sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
-	} else if (tolower(Config.replPolicy[0]) == 'l') {
-	    if (tolower(Config.replPolicy[1]) == 'f') {
-		debug(20, 1) ("Using LFUDA disk replacement policy\n");
-		sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_LFUDA);
-	    } else if (tolower(Config.replPolicy[1]) == 'r') {
-		debug(20, 1) ("Using LRU heap disk replacement policy\n");
-		sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_LRU);
-	    }
-	} else {
-	    debug(20, 1) ("Unrecognized replacement_policy; using GDSF\n");
-	    sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
-	}
-    } else {
-	debug(20, 1) ("Using default disk replacement policy (GDSF)\n");
-	sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
-    }
-#else
-    sd->repl.lru.list.head = NULL;
-    sd->repl.lru.list.tail = NULL;
-#endif
+    sd->repl = createRemovalPolicy(Config.replPolicy);
 }
 
 /*

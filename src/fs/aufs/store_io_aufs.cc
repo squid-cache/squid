@@ -204,6 +204,7 @@ storeAufsUnlink(SwapDir * SD, StoreEntry * e)
 {
     debug(78, 3) ("storeAufsUnlink: dirno %d, fileno %08X\n", SD->index, e->swap_filen);
     storeAufsDirReplRemove(e);
+    storeAufsDirMapBitReset(SD, e->swap_filen);
     storeAufsDirUnlinkFile(SD, e->swap_filen);
 }
 

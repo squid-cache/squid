@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.3 2000/05/16 07:09:36 wessels Exp $
+ * $Id: store_io_coss.cc,v 1.4 2000/06/08 18:05:38 hno Exp $
  *
  * DEBUG: section 81    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -74,7 +74,7 @@ storeCossAllocate(SwapDir * SD, const StoreEntry * e, int which)
     else
 	checkf = -1;
 
-    retofs = e->swap_filen;	/* Just for defaults */
+    retofs = e->swap_filen;	/* Just for defaults, or while rebuilding */
 
     if (e->swap_file_sz > 0)
 	allocsize = e->swap_file_sz;
@@ -107,7 +107,7 @@ storeCossAllocate(SwapDir * SD, const StoreEntry * e, int which)
 	}
     }
     if (coll == 0) {
-	cs->current_offset += allocsize;
+	cs->current_offset = retofs + allocsize;
 	return retofs;
     } else {
 	return -1;
@@ -118,7 +118,7 @@ void
 storeCossUnlink(SwapDir * SD, StoreEntry * e)
 {
     debug(81, 3) ("storeCossUnlink: offset %d\n", e->swap_filen);
-    dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
+    storeCossRemove(SD, e);
 }
 
 
@@ -148,15 +148,14 @@ storeCossCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
     sio->callback_data = callback_data;
     cbdataLock(callback_data);
     sio->e = (StoreEntry *) e;
-    sio->st_size = -1;		/* we won't know this until we read the metadata */
 
     cstate->flags.writing = 0;
     cstate->flags.reading = 0;
     cstate->readbuffer = NULL;
     cstate->reqdiskoffset = -1;
 
-    /* Now add it into the LRU */
-    dlinkAdd(e, &e->repl.lru, &SD->repl.lru.list);
+    /* Now add it into the index list */
+    storeCossAdd(SD, e);
 
     storeCossMemBufLock(SD, sio);
     return sio;
@@ -231,10 +230,10 @@ storeCossOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	storeCossMemBufLock(SD, sio);
 
 	/*
-	 * Do the LRU magic to keep the disk and memory LRUs identical
+	 * Do the index magic to keep the disk and memory LRUs identical
 	 */
-	dlinkDelete(&sio->e->repl.lru, &SD->repl.lru.list);
-	dlinkAdd(sio->e, &sio->e->repl.lru, &SD->repl.lru.list);
+	storeCossRemove(SD, e);
+	storeCossAdd(SD, e);
 
 	/*
 	 * Since we've reallocated a spot for this object, we need to
@@ -410,6 +409,22 @@ storeCossMemBufUnlock(SwapDir * SD, storeIOState * e)
     }
 }
 
+void
+storeCossSync(SwapDir * SD)
+{
+    CossInfo *cs = (CossInfo *) SD->fsdata;
+    CossMemBuf *t;
+    int end;
+    if (!cs->membufs)
+	return;
+    for (t=cs->membufs; t; t = t->next) {
+	if (t->flags.writing)
+	    sleep(5);
+	lseek(cs->fd, t->diskstart, SEEK_SET);
+	end = (t == cs->current_membuf) ? cs->current_offset : t->diskend;
+	write(cs->fd, t->buffer, end - t->diskstart);
+    }
+}
 
 static void
 storeCossWriteMemBuf(SwapDir * SD, CossMemBuf * t)
@@ -418,9 +433,9 @@ storeCossWriteMemBuf(SwapDir * SD, CossMemBuf * t)
     debug(81, 3) ("storeCossWriteMemBuf: offset %d, len %d\n",
 	t->diskstart, t->diskend - t->diskstart);
     cbdataAdd(t, storeCossMembufFree, 0);
+    t->flags.writing = 1;
     file_write(cs->fd, t->diskstart, &t->buffer,
 	t->diskend - t->diskstart, storeCossWriteMemBufDone, t, NULL);
-    t->flags.writing = 1;
 }
 
 
@@ -472,15 +487,16 @@ storeCossCreateMemBuf(SwapDir * SD, size_t start,
     newmb->flags.writing = 0;
     newmb->lockcount = 0;
     newmb->SD = SD;
+    /* XXX This should be reversed, with the new buffer last in the chain */
     newmb->next = cs->membufs;
     cs->membufs = newmb;
     for (t = cs->membufs; t; t = t->next)
 	debug(81, 3) ("storeCossCreateMemBuf: membuflist %d lockcount %d\n", t->diskstart, t->lockcount);
 
     /*
-     * XXX more evil LRU specific code. This needs to be replaced.
+     * Kill objects from the tail to make space for a new chunk
      */
-    for (m = SD->repl.lru.list.tail; m; m = prev) {
+    for (m = cs->index.tail; m; m = prev) {
 	prev = m->prev;
 	e = m->data;
 	if (curfn == e->swap_filen)
@@ -495,6 +511,18 @@ storeCossCreateMemBuf(SwapDir * SD, size_t start,
     if (numreleased > 0)
 	debug(81, 3) ("storeCossCreateMemBuf: this allocation released %d storeEntries\n", numreleased);
     return newmb;
+}
+
+/*
+ * Creates the initial membuf after rebuild
+ */
+void
+storeCossStartMembuf(SwapDir *sd)
+{
+    CossInfo *cs = (CossInfo *) sd->fsdata;
+    CossMemBuf *newmb = storeCossCreateMemBuf(sd, cs->current_offset, -1, NULL);
+    assert(!cs->current_membuf);
+    cs->current_membuf = newmb;
 }
 
 /*

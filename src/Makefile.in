@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.188 2000/05/31 08:57:08 hno Exp $
+#  $Id: Makefile.in,v 1.189 2000/06/08 18:05:34 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -18,7 +18,7 @@ localstatedir   = @localstatedir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-SUBDIRS		= fs
+SUBDIRS		= fs repl
 
 # Gotta love the DOS legacy
 #
@@ -67,6 +67,8 @@ XTRA_LIBS	= @XTRA_LIBS@
 XTRA_OBJS 	= @XTRA_OBJS@
 STORE_OBJS	= @STORE_OBJS@
 STORE_MODULES	= @STORE_MODULES@
+REPL_OBJS	= @REPL_OBJS@
+REPL_POLICIES	= @REPL_POLICIES@
 MV		= @MV@
 RM		= @RM@
 SHELL		= /bin/sh
@@ -149,6 +151,7 @@ OBJS	 	= \
 		pump.o \
 		redirect.o \
 		refresh.o \
+		repl_modules.o \
 		send-announce.o \
 		@SNMP_OBJS@ \
 		ssl.o \
@@ -168,7 +171,6 @@ OBJS	 	= \
 		store_swapin.o \
 		store_swapmeta.o \
 		store_swapout.o \
-		store_heap_replacement.o \
 		string_arrays.o \
 		tools.o \
 		@UNLINKD_OBJS@ \
@@ -194,14 +196,14 @@ LEAKFINDER_OBJS	= \
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
-all:    squid.conf store_modules $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
+all:    squid.conf store_modules repl_modules $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
 
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
 $(SNMP_OBJS): ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
-$(SQUID_EXE): $(OBJS) $(STORE_OBJS)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(STORE_OBJS) $(SQUID_LIBS)
+$(SQUID_EXE): $(OBJS) $(STORE_OBJS) $(REPL_OBJS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(STORE_OBJS) $(REPL_OBJS) $(SQUID_LIBS)
 
 globals.o: globals.c Makefile
 	$(CC) -c globals.c $(CFLAGS) -I$(srcdir) $(DEFAULTS)
@@ -267,7 +269,7 @@ cf.data: cf.data.pre Makefile
 	< $(srcdir)/cf.data.pre >$@
 
 store_modules.c: store_modules.sh Makefile 
-	@sh $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.c
+	sh $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.c
 
 store_modules.o: store_modules.c
 	$(CC) -c store_modules.c $(CFLAGS) -I$(srcdir)
@@ -276,6 +278,17 @@ $(STORE_OBJS): fs/stamp
 
 store_modules fs/stamp:
 	@sh -c "cd fs && $(MAKE) all"
+
+repl_modules.c: repl_modules.sh Makefile 
+	sh $(srcdir)/repl_modules.sh $(REPL_POLICIES) >repl_modules.c
+
+repl_modules.o: repl_modules.c
+	$(CC) -c repl_modules.c $(CFLAGS) -I$(srcdir)
+
+$(REPL_OBJS): repl/stamp
+
+repl_modules repl/stamp:
+	@sh -c "cd repl && $(MAKE) all"
 
 install-mkdirs:
 	-@if test ! -d $(prefix); then \

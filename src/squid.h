@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.201 2000/05/03 17:15:42 adrian Exp $
+ * $Id: squid.h,v 1.202 2000/06/08 18:05:35 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -359,9 +359,6 @@ struct rusage {
 
 #include "hash.h"
 #include "rfc1035.h"
-#if HEAP_REPLACEMENT
-#include "heap.h"
-#endif
 
 #include "defines.h"
 #include "enums.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.103 2000/05/12 00:29:09 wessels Exp $
+ * $Id: typedefs.h,v 1.104 2000/06/08 18:05:37 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -171,6 +171,11 @@ typedef struct _link_list link_list;
 typedef struct _storefs_entry storefs_entry_t;
 typedef struct _diskd_queue diskd_queue;
 typedef struct _Logfile Logfile;
+typedef struct _RemovalPolicy RemovalPolicy;
+typedef struct _RemovalPolicyWalker RemovalPolicyWalker;
+typedef struct _RemovalPurgeWalker RemovalPurgeWalker;
+typedef struct _RemovalPolicyNode RemovalPolicyNode;
+typedef struct _RemovalPolicySettings RemovalPolicySettings;
 
 #if SQUID_SNMP
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
@@ -238,7 +243,7 @@ typedef void STREFOBJ(SwapDir *, StoreEntry *);
 typedef void STUNREFOBJ(SwapDir *, StoreEntry *);
 typedef void STSETUP(storefs_entry_t *);
 typedef void STDONE(void);
-typedef void STCALLBACK(SwapDir *);
+typedef int STCALLBACK(SwapDir *);
 typedef void STSYNC(SwapDir *);
 
 typedef storeIOState *STOBJCREATE(SwapDir *, StoreEntry *, STFNCB *, STIOCB *, void *);
@@ -251,8 +256,10 @@ typedef void STOBJUNLINK(SwapDir *, StoreEntry *);
 typedef void STLOGOPEN(SwapDir *);
 typedef void STLOGCLOSE(SwapDir *);
 typedef void STLOGWRITE(const SwapDir *, const StoreEntry *, int);
-typedef int STLOGCLEANOPEN(SwapDir *);
-typedef void STLOGCLEANWRITE(const StoreEntry *, SwapDir *);
+typedef int STLOGCLEANSTART(SwapDir *);
+typedef const StoreEntry *STLOGCLEANNEXTENTRY(SwapDir *);
+typedef void STLOGCLEANWRITE(SwapDir *, const StoreEntry *);
+typedef void STLOGCLEANDONE(SwapDir *);
 
 /* Store dir configuration routines */
 /* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */
@@ -301,4 +308,5 @@ typedef unsigned int delay_id;
 typedef struct _htcpReplyData htcpReplyData;
 #endif
 
+typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist *args);
 #endif /* _TYPEDEFS_H_ */
