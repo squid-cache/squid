@@ -66,6 +66,8 @@ static int version = -1;
 
 static int searchLDAP(LDAP * ld, char *group, char *user, char *extension_dn);
 
+static int readSecret(char *filename);
+
 /* Yuck.. we need to glue to different versions of the API */
 
 #if defined(LDAP_API_VERSION) && LDAP_API_VERSION > 1823
@@ -272,6 +274,9 @@ main(int argc, char **argv)
 	case 'w':
 	    bindpasswd = value;
 	    break;
+	case 'W':
+	    readSecret (value);
+	    break;
 	case 'P':
 	    persistent = !persistent;
 	    break;
@@ -347,6 +352,7 @@ main(int argc, char **argv)
 	fprintf(stderr, "\t-s base|one|sub\t\tsearch scope\n");
 	fprintf(stderr, "\t-D binddn\t\tDN to bind as to perform searches\n");
 	fprintf(stderr, "\t-w bindpasswd\t\tpassword for binddn\n");
+	fprintf(stderr, "\t-W secretfile\t\tread password for binddn from file secretfile\n");
 #if HAS_URI_SUPPORT
 	fprintf(stderr, "\t-H URI\t\t\tLDAPURI (defaults to ldap://localhost)\n");
 #endif
@@ -362,7 +368,7 @@ main(int argc, char **argv)
 	fprintf(stderr, "\t-g\t\t\tfirst query parameter is base DN extension\n\t\t\t\tfor this query\n");
 	fprintf(stderr, "\t-S\t\t\tStrip NT domain from usernames\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd options\n\n");
+	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd or -D binddn -W secretfile options\n\n");
 	exit(1);
     }
     while (fgets(buf, 256, stdin) != NULL) {
@@ -635,4 +641,38 @@ searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
     } else {
 	return searchLDAPGroup(ld, group, login, extension_dn);
     }
+}
+
+
+int readSecret(char *filename)
+{
+  char  buf[BUFSIZ];
+  char  *e=0;
+  FILE  *f;
+
+  if(!(f=fopen(filename, "r"))) {
+    fprintf(stderr, PROGRAM_NAME " ERROR: Can not read secret file %s\n", filename);
+    return 1;
+  }
+
+  if( !fgets(buf, sizeof(buf)-1, f)) {
+    fprintf(stderr, PROGRAM_NAME " ERROR: Secret file %s is empty\n", filename);
+    fclose(f);
+    return 1;
+  }
+
+  /* strip whitespaces on end */
+  if((e = strrchr(buf, '\n'))) *e = 0;
+  if((e = strrchr(buf, '\r'))) *e = 0;
+
+  bindpasswd = (char *) calloc(sizeof(char), strlen(buf)+1);
+  if (bindpasswd) {
+    strcpy(bindpasswd, buf);
+  } else {
+    fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n"); 
+  }
+
+  fclose(f);
+
+  return 0;
 }
