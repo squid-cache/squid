@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.276 1998/04/12 06:13:56 rousskov Exp $
+ * $Id: client_side.cc,v 1.277 1998/04/14 15:16:24 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -587,6 +587,8 @@ clientUpdateCounters(clientHttpRequest * http)
     if (http->internal && strStr(http->request->urlpath, StoreDigestUrlPath)) {
 	kb_incr(&Counter.cd.kbytes_sent, http->out.size);
 	Counter.cd.msgs_sent++;
+	debug(33, 1) ("Client %s requested local cache digest (%d bytes)\n", 
+	    inet_ntoa(http->request->client_addr), http->out.size);
     }
     /* @?@ split this ugly if-monster */
     if (/* we used ICP or CD for peer selecton */
@@ -600,6 +602,7 @@ clientUpdateCounters(clientHttpRequest * http)
 	EBIT_TEST(http->request->flags, REQ_CACHABLE) &&
 	/* paranoid: we have a reply pointer */
 	(reply = storeEntryReply(http->entry))) {
+
 	const char *x_cache_fld = httpHeaderGetLastStr(&reply->header, HDR_X_CACHE);
 	const int real_hit = x_cache_fld && !strncmp(x_cache_fld, "HIT", 3);
 	const int guess_hit = LOOKUP_HIT == H->cd_lookup;
@@ -612,7 +615,7 @@ clientUpdateCounters(clientHttpRequest * http)
 	    cacheDigestGuessStatsUpdate(&peer->digest.stats.guess,
 		real_hit, guess_hit);
 	} else {
-	    /* temporary paranoid debug */
+	    /* temporary paranoid debug @?@ */
 	    static int max_count = 200;
 	    if (max_count > 0) {
 		debug(33,1) ("clientUpdateCounters: lost peer %s for %s! (%d)\n", 
