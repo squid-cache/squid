@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.167 1998/06/03 20:48:18 rousskov Exp $
+ * $Id: acl.cc,v 1.168 1998/07/14 21:29:54 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1122,11 +1122,7 @@ aclMatchProxyAuth(acl_proxy_auth * p, aclCheck_t * checklist)
     char *sent_auth;
     char *passwd = NULL;
     acl_proxy_auth_user *u;
-#if OLD_CODE
-    s = mime_get_header(checklist->request->headers, "Proxy-authorization:");
-#else
     s = httpHeaderGetStr(&checklist->request->header, HDR_PROXY_AUTHORIZATION);
-#endif
     if (s == NULL)
 	return 0;
     if (strlen(s) < SKIP_BASIC_SZ)
