@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.21 1996/08/19 22:46:26 wessels Exp $
+ * $Id: disk.cc,v 1.22 1996/08/30 22:36:28 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -165,6 +165,7 @@ int file_open(path, handler, mode)
     }
     /* update fdstat */
     fdstat_open(fd, FD_FILE);
+    commSetCloseOnExec(fd);
 
     /* init table */
     strncpy(file_table[fd].filename, path, MAX_FILE_NAME_LEN);
