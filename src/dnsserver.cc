@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.30 1996/12/20 23:45:38 wessels Exp $
+ * $Id: dnsserver.cc,v 1.31 1997/01/02 07:20:28 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -261,7 +261,7 @@ main(int argc, char *argv[])
     int i;
     int c;
 
-    inaddr_none = inet_addr("X");
+    inaddr_none = inet_addr("255.255.255.255");
 
 #if HAVE_RES_INIT
     res_init();
