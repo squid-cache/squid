@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.23 1998/08/14 09:22:34 wessels Exp $
+ * $Id: forward.cc,v 1.24 1998/08/17 23:50:16 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -255,6 +255,7 @@ fwdDispatch(FwdState * fwdState)
     peer *p;
     request_t *request = fwdState->request;
     StoreEntry *entry = fwdState->entry;
+    ErrorState *err;
     debug(17, 5) ("fwdDispatch: FD %d: Fetching '%s %s'\n",
 	fwdState->client_fd,
 	RequestMethodStr[request->method],
@@ -298,14 +299,12 @@ fwdDispatch(FwdState * fwdState)
 	    whoisStart(fwdState, fwdState->server_fd);
 	    break;
 	default:
-	    if (request->method == METHOD_CONNECT) {
-		ErrorState *err;
-		debug(17, 1) ("fwdDispatch: Cannot retrieve '%s'\n",
-		    storeUrl(entry));
-		err = errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST);
-		err->request = requestLink(request);
-		errorAppendEntry(entry, err);
-	    }
+	    debug(17, 1) ("fwdDispatch: Cannot retrieve '%s'\n",
+		storeUrl(entry));
+	    err = errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST);
+	    err->request = requestLink(request);
+	    errorAppendEntry(entry, err);
+	    break;
 	}
     }
 }
