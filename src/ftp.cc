@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.115 1997/06/02 01:06:11 wessels Exp $
+ * $Id: ftp.cc,v 1.116 1997/06/02 05:39:43 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -141,6 +141,7 @@ static void ftpRestOrList _PARAMS((FtpStateData * ftpState));
 static void ftpReadQuit _PARAMS((FtpStateData * ftpState));
 static void ftpDataTransferDone _PARAMS((FtpStateData * ftpState));
 static void ftpAppendSuccessHeader _PARAMS((FtpStateData * ftpState));
+static STABH ftpAbort;
 
 static FTPSM ftpReadWelcome;
 static FTPSM ftpReadUser;
@@ -182,6 +183,7 @@ ftpStateFree(int fd, void *data)
     if (ftpState == NULL)
 	return;
     storeUnlockObject(ftpState->entry);
+    storeUnregisterAbort(ftpState->entry);
     if (ftpState->reply_hdr) {
 	put_free_8k_page(ftpState->reply_hdr);
 	ftpState->reply_hdr = NULL;
@@ -598,22 +600,17 @@ ftpReadData(int fd, void *data)
     int clen;
     int off;
     int bin;
-    StoreEntry *entry = NULL;
+    StoreEntry *entry = ftpState->entry;
     assert(fd == ftpState->data.fd);
-    entry = ftpState->entry;
     if (protoAbortFetch(entry)) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	ftpDataTransferDone(ftpState);
-	return;
+        squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+        ftpDataTransferDone(ftpState);
+        return;
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->e_current_len;
     off = storeGetLowestReaderOffset(entry);
     if ((clen - off) > FTP_DELETE_GAP) {
-	if (entry->flag & CLIENT_ABORT_REQUEST) {
-	    squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	    ftpDataTransferDone(ftpState);
-	}
 	IOStats.Ftp.reads_deferred++;
 	debug(9, 3, "ftpReadData: Read deferred for Object: %s\n",
 	    entry->url);
@@ -668,9 +665,6 @@ ftpReadData(int fd, void *data)
 	    ftpListingFinish(ftpState);
 	storeTimestampsSet(entry);
 	storeComplete(entry);
-	ftpDataTransferDone(ftpState);
-    } else if (entry->flag & CLIENT_ABORT_REQUEST) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	ftpDataTransferDone(ftpState);
     } else {
 	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
@@ -866,6 +860,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     ftpState->ctrl.fd = fd;
     comm_add_close_handler(fd, ftpStateFree, ftpState);
     commSetTimeout(fd, Config.Timeout.connect, ftpTimeout, ftpState);
+    storeRegisterAbort(entry, ftpAbort, ftpState);
     ipcache_nbgethostbyname(request->host, fd, ftpConnect, ftpState);
 }
 
@@ -1004,11 +999,6 @@ ftpReadControlReply(int fd, void *data)
     debug(9, 5, "ftpReadControlReply: FD %d, Read %d bytes\n", fd, len);
     if (len > 0)
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
-    if (entry->flag & CLIENT_ABORT_REQUEST) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	comm_close(fd);
-	return;
-    }
     if (len < 0) {
 	debug(50, 1, "ftpReadControlReply: read error: %s\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
@@ -1498,4 +1488,12 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     storeTimestampsSet(e);
     assert(e->flag & KEY_PRIVATE);
     storeSetPublicKey(e);
+}
+
+static void
+ftpAbort(void *data)
+{
+    FtpStateData *ftpState = data;
+    debug(9, 1, "ftpAbort: %s\n", ftpState->entry->url);
+    ftpDataTransferDone(ftpState);
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.166 1997/06/01 23:22:20 wessels Exp $
+ * $Id: http.cc,v 1.167 1997/06/02 05:39:45 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -208,6 +208,7 @@ static void httpAppendRequestHeader _PARAMS((char *hdr, const char *line, size_t
 static void httpCacheNegatively _PARAMS((StoreEntry *));
 static void httpMakePrivate _PARAMS((StoreEntry *));
 static void httpMakePublic _PARAMS((StoreEntry *));
+static STABH httpAbort;
 
 static void
 httpStateFree(int fd, void *data)
@@ -216,6 +217,7 @@ httpStateFree(int fd, void *data)
     if (httpState == NULL)
 	return;
     storeUnlockObject(httpState->entry);
+    storeUnregisterAbort(httpState->entry);
     if (httpState->reply_hdr) {
 	put_free_8k_page(httpState->reply_hdr);
 	httpState->reply_hdr = NULL;
@@ -521,27 +523,20 @@ httpReadReply(int fd, void *data)
 {
     HttpStateData *httpState = data;
     LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
+    StoreEntry *entry = httpState->entry;
     int len;
     int bin;
     int clen;
     int off;
-    StoreEntry *entry = NULL;
-
-    entry = httpState->entry;
     if (protoAbortFetch(entry)) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	comm_close(fd);
-	return;
+        squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+        comm_close(fd);
+        return;
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->e_current_len;
     off = storeGetLowestReaderOffset(entry);
     if ((clen - off) > HTTP_DELETE_GAP) {
-	if (entry->flag & CLIENT_ABORT_REQUEST) {
-	    squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	    comm_close(fd);
-	    return;
-	}
 	IOStats.Http.reads_deferred++;
 	debug(11, 3, "httpReadReply: Read deferred for Object: %s\n",
 	    entry->url);
@@ -601,9 +596,6 @@ httpReadReply(int fd, void *data)
 	    httpProcessReplyHeader(httpState, buf, len);
 	storeAppend(entry, buf, len);	/* invoke handlers! */
 	storeComplete(entry);	/* deallocates mem_obj->request */
-	comm_close(fd);
-    } else if (entry->flag & CLIENT_ABORT_REQUEST) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
     } else {
 	if (httpState->reply_hdr_state < 2)
@@ -897,12 +889,11 @@ httpConnectDone(int fd, int status, void *data)
 	    peerCheckConnectStart(httpState->neighbor);
 	comm_close(fd);
     } else {
-	/* Install connection complete handler. */
 	if (opt_no_ipcache)
 	    ipcacheInvalidate(request->host);
 	fd_note(fd, entry->url);
-	commSetSelect(fd, COMM_SELECT_WRITE,
-	    httpSendRequest, httpState, 0);
+	storeRegisterAbort(entry, httpAbort, httpState);
+	commSetSelect(fd, COMM_SELECT_WRITE, httpSendRequest, httpState, 0);
     }
 }
 
@@ -959,4 +950,12 @@ httpReplyHeaderStats(StoreEntry * entry)
 	    HttpServerCCStr[i],
 	    ReplyHeaderStats.cc[i]);
     storeAppendPrintf(entry, close_bracket);
+}
+
+static void
+httpAbort(void *data)
+{
+    HttpStateData *httpState = data;
+    debug(11, 1, "httpAbort: %s\n", httpState->entry->url);
+    comm_close(httpState->fd);
 }
