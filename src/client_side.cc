@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.479 2000/05/02 22:32:37 hno Exp $
+ * $Id: client_side.cc,v 1.480 2000/05/07 16:18:19 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -192,11 +192,11 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
     if (h->request == NULL)
 	h->request = requestLink(requestCreate(m, PROTO_NONE, null_string));
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
-    storeClientListAdd(e, h);
+    h->sc = storeClientListAdd(e, h);
 #if DELAY_POOLS
-    delaySetStoreClient(e, h, delayClient(h->request));
+    delaySetStoreClient(h->sc, delayClient(h->request));
 #endif
-    storeClientCopy(e, 0, 0, CLIENT_SOCK_SZ,
+    storeClientCopy(h->sc, e, 0, 0, CLIENT_SOCK_SZ,
 	memAllocate(MEM_CLIENT_SOCK_BUF), clientSendMoreData, h);
     return e;
 }
@@ -349,16 +349,18 @@ clientProcessExpired(void *data)
      * it is not, then the beginning of the object data might get
      * freed from memory before we need to access it.
      */
+#if STORE_CLIENT_LIST_SEARCH
     assert(storeClientListSearch(http->old_entry->mem_obj, http));
+#endif
     entry = storeCreateEntry(url,
 	http->log_uri,
 	http->request->flags,
 	http->request->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
-    storeClientListAdd(entry, http);
+    http->sc = storeClientListAdd(entry, http);
 #if DELAY_POOLS
     /* delay_id is already set on original store client */
-    delaySetStoreClient(entry, http, delayClient(http->request));
+    delaySetStoreClient(http->sc, delayClient(http->request));
 #endif
     http->request->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: lastmod %d\n", (int) entry->lastmod);
@@ -368,7 +370,7 @@ clientProcessExpired(void *data)
     /* Register with storage manager to receive updates when data comes in. */
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 	debug(33, 0) ("clientProcessExpired: found ENTRY_ABORTED object\n");
-    storeClientCopy(entry,
+    storeClientCopy(http->sc, entry,
 	http->out.offset,
 	http->out.offset,
 	CLIENT_SOCK_SZ,
@@ -442,7 +444,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	/* We have an existing entry, but failed to validate it */
 	/* Its okay to send the old one anyway */
 	http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
-	storeUnregister(entry, http);
+	storeUnregister(http->sc, entry, http);
 	storeUnlockObject(entry);
 	entry = http->entry = http->old_entry;
     } else if (STORE_PENDING == entry->store_status && 0 == status) {
@@ -452,12 +454,12 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    debug(33, 3) ("clientHandleIMSReply: Reply is too large '%s', using old entry\n", url);
 	    /* use old entry, this repeats the code abovez */
 	    http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
-	    storeUnregister(entry, http);
+	    storeUnregister(http->sc, entry, http);
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
 	    /* continue */
 	} else {
-	    storeClientCopy(entry,
+	    storeClientCopy(http->sc, entry,
 		http->out.offset + size,
 		http->out.offset,
 		CLIENT_SOCK_SZ,
@@ -482,7 +484,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	 * not the body they refer to.  */
 	httpReplyUpdateOnNotModified(oldentry->mem_obj->reply, mem->reply);
 	storeTimestampsSet(oldentry);
-	storeUnregister(entry, http);
+	storeUnregister(http->sc, entry, http);
 	storeUnlockObject(entry);
 	entry = http->entry = oldentry;
 	entry->timestamp = squid_curtime;
@@ -499,14 +501,14 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeTimestampsSet(http->old_entry);
 	    http->log_type = LOG_TCP_REFRESH_HIT;
 	}
-	storeUnregister(http->old_entry, http);
+	storeUnregister(http->sc, http->old_entry, http);
 	storeUnlockObject(http->old_entry);
 	recopy = 0;
     }
     http->old_entry = NULL;	/* done with old_entry */
     assert(!EBIT_TEST(entry->flags, ENTRY_ABORTED));
     if (recopy) {
-	storeClientCopy(entry,
+	storeClientCopy(http->sc, entry,
 	    http->out.offset,
 	    http->out.offset,
 	    CLIENT_SOCK_SZ,
@@ -685,7 +687,7 @@ httpRequestFree(void *data)
 	 */
 	if ((e = http->entry)) {
 	    http->entry = NULL;
-	    storeUnregister(e, http);
+	    storeUnregister(http->sc, e, http);
 	    storeUnlockObject(e);
 	}
 #endif
@@ -740,14 +742,14 @@ httpRequestFree(void *data)
     stringClean(&http->range_iter.boundary);
     if ((e = http->entry)) {
 	http->entry = NULL;
-	storeUnregister(e, http);
+	storeUnregister(http->sc, e, http);
 	storeUnlockObject(e);
     }
     /* old_entry might still be set if we didn't yet get the reply
      * code in clientHandleIMSReply() */
     if ((e = http->old_entry)) {
 	http->old_entry = NULL;
-	storeUnregister(e, http);
+	storeUnregister(http->sc, e, http);
 	storeUnlockObject(e);
     }
     requestUnlink(http->request);
@@ -1300,7 +1302,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
 	if ((e = http->entry)) {
 	    http->entry = NULL;
-	    storeUnregister(e, http);
+	    storeUnregister(http->sc, e, http);
 	    storeUnlockObject(e);
 	}
 	clientProcessMiss(http);
@@ -1322,7 +1324,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    clientProcessMiss(http);
 	} else {
 	    debug(33, 3) ("clientCacheHit: waiting for HTTP reply headers\n");
-	    storeClientCopy(e,
+	    storeClientCopy(http->sc, e,
 		http->out.offset + size,
 		http->out.offset,
 		CLIENT_SOCK_SZ,
@@ -1408,7 +1410,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    MemBuf mb = httpPacked304Reply(e->mem_obj->reply);
 	    http->log_type = LOG_TCP_IMS_HIT;
 	    memFree(buf, MEM_CLIENT_SOCK_BUF);
-	    storeUnregister(e, http);
+	    storeUnregister(http->sc, e, http);
 	    storeUnlockObject(e);
 	    e = clientCreateStoreEntry(http, http->request->method, null_request_flags);
 	    http->entry = e;
@@ -1673,7 +1675,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	if (rep && clientReplyBodyTooLarge(rep->content_length)) {
 	    ErrorState *err = errorCon(ERR_TOO_BIG, HTTP_FORBIDDEN);
 	    err->request = requestLink(http->request);
-	    storeUnregister(http->entry, http);
+	    storeUnregister(http->sc, http->entry, http);
 	    storeUnlockObject(http->entry);
 	    http->entry = clientCreateStoreEntry(http, http->request->method,
 		null_request_flags);
@@ -1689,7 +1691,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 		body_size, rep->hdr_sz);
 	} else if (size < CLIENT_SOCK_SZ && entry->store_status == STORE_PENDING) {
 	    /* wait for more to arrive */
-	    storeClientCopy(entry,
+	    storeClientCopy(http->sc, entry,
 		http->out.offset + size,
 		http->out.offset,
 		CLIENT_SOCK_SZ,
@@ -1783,10 +1785,10 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	debug(33, 1) ("clientKeepaliveNextRequest: FD %d Sending next\n",
 	    conn->fd);
 	assert(entry);
-	if (0 == storeClientCopyPending(entry, http)) {
+	if (0 == storeClientCopyPending(http->sc, entry, http)) {
 	    if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 		debug(33, 0) ("clientKeepaliveNextRequest: ENTRY_ABORTED\n");
-	    storeClientCopy(entry,
+	    storeClientCopy(http->sc, entry,
 		http->out.offset,
 		http->out.offset,
 		CLIENT_SOCK_SZ,
@@ -1845,7 +1847,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	 * storage manager. */
 	if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 	    debug(33, 0) ("clientWriteComplete 2: ENTRY_ABORTED\n");
-	storeClientCopy(entry,
+	storeClientCopy(http->sc, entry,
 	    http->out.offset,
 	    http->out.offset,
 	    CLIENT_SOCK_SZ,
@@ -1874,7 +1876,7 @@ clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
     err->request = requestLink(r);
     err->src_addr = http->conn->peer.sin_addr;
     if (http->entry) {
-	storeUnregister(http->entry, http);
+	storeUnregister(http->sc, http->entry, http);
 	storeUnlockObject(http->entry);
     }
     http->entry = clientCreateStoreEntry(http, r->method, null_request_flags);
@@ -2002,11 +2004,11 @@ clientProcessRequest(clientHttpRequest * http)
 	storeLockObject(http->entry);
 	storeCreateMemObject(http->entry, http->uri, http->log_uri);
 	http->entry->mem_obj->method = r->method;
-	storeClientListAdd(http->entry, http);
+	http->sc = storeClientListAdd(http->entry, http);
 #if DELAY_POOLS
-	delaySetStoreClient(http->entry, http, delayClient(r));
+	delaySetStoreClient(http->sc, delayClient(r));
 #endif
-	storeClientCopy(http->entry,
+	storeClientCopy(http->sc, http->entry,
 	    http->out.offset,
 	    http->out.offset,
 	    CLIENT_SOCK_SZ,
@@ -2037,7 +2039,7 @@ clientProcessMiss(clientHttpRequest * http)
     if (http->entry) {
 	if (EBIT_TEST(http->entry->flags, ENTRY_SPECIAL))
 	    debug(33, 0) ("clientProcessMiss: miss on a special object (%s).\n", url);
-	storeUnregister(http->entry, http);
+	storeUnregister(http->sc, http->entry, http);
 	storeUnlockObject(http->entry);
 	http->entry = NULL;
     }

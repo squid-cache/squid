@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.14 2000/05/02 18:55:11 hno Exp $
+ * $Id: delay_pools.cc,v 1.15 2000/05/07 16:18:19 adrian Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -609,7 +609,9 @@ delayMostBytesWanted(const MemObject * mem, int max)
     int i = 0;
     int found = 0;
     store_client *sc;
-    for (sc = mem->clients; sc; sc = sc->next) {
+    dlink_node *node;
+    for (node = mem->clients.head; node; node = node->next) {
+        sc = (store_client *)node->data;
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
@@ -626,8 +628,10 @@ delayMostBytesAllowed(const MemObject * mem)
     int j;
     int jmax = -1;
     store_client *sc;
+    dlink_node *node;
     delay_id d = 0;
-    for (sc = mem->clients; sc; sc = sc->next) {
+    for (node = mem->clients.head; node; node = node->next) {
+        sc = (store_client *)node->data;
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
@@ -642,9 +646,8 @@ delayMostBytesAllowed(const MemObject * mem)
 }
 
 void
-delaySetStoreClient(StoreEntry * e, void *data, delay_id delay_id)
+delaySetStoreClient(store_client *sc, delay_id delay_id)
 {
-    store_client *sc = storeClientListSearch(e->mem_obj, data);
     assert(sc != NULL);
     sc->delay_id = delay_id;
     delayRegisterDelayIdPtr(&sc->delay_id);

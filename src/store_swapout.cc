@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.65 2000/05/03 17:15:44 adrian Exp $
+ * $Id: store_swapout.cc,v 1.66 2000/05/07 16:18:20 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -346,7 +346,7 @@ storeSwapOutObjectBytesOnDisk(const MemObject * mem)
 int
 storeSwapOutAble(const StoreEntry * e)
 {
-    store_client *sc;
+    dlink_node *node;
     if (e->mem_obj->swapout.sio != NULL)
 	return 1;
     if (e->mem_obj->inmem_lo > 0)
@@ -355,9 +355,10 @@ storeSwapOutAble(const StoreEntry * e)
      * If there are DISK clients, we must write to disk
      * even if its not cachable
      */
-    for (sc = e->mem_obj->clients; sc; sc = sc->next)
-	if (sc->type == STORE_DISK_CLIENT)
-	    return 1;
+    for (node = e->mem_obj->clients.head; node; node = node->next) {
+        if (((store_client *)node->data)->type == STORE_DISK_CLIENT)
+            return 1;
+    }
     if (store_dirs_rebuilding)
 	if (!EBIT_TEST(e->flags, ENTRY_SPECIAL))
 	    return 0;
