@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.17 1998/10/18 08:33:19 wessels Exp $
+ * $Id: comm_select.cc,v 1.18 1998/10/18 08:43:32 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -656,6 +656,7 @@ comm_select(int msec)
 		    Counter.select_fds++;
 		} else {
 		    debug(5, 1)("comm_select: NO READ HANDLER FOR FD %d\n", fd);
+		    debug(5, 1)("comm_select: %s\n", fd_table[fd].desc);
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
@@ -696,6 +697,7 @@ comm_select(int msec)
 		    Counter.select_fds++;
 		} else {
 		    debug(5, 1)("comm_select: NO WRITE HANDLER FOR FD %d\n", fd);
+		    debug(5, 1)("comm_select: %s\n", fd_table[fd].desc);
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
