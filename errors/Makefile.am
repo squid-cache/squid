@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.3 2001/11/28 03:02:37 robertc Exp $
+# $Id: Makefile.am,v 1.4 2001/11/30 14:52:12 hno Exp $
 #
 
-errordir = $(sharedstatedir)/squid/errors
+errordir = $(datadir)/squid/errors
 
 
 ##dist-hook eveything

@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.3 2001/11/28 03:02:43 robertc Exp $
+# $Id: Makefile.am,v 1.4 2001/11/30 14:52:12 hno Exp $
 #
 
 ICON1	=	anthony-binhex.gif
@@ -29,7 +29,7 @@ ICON2 	=	anthony-bomb.gif \
 		anthony-xbm.gif \
 		anthony-xpm.gif
 
-icondir = $(sharedstatedir)/squid/icons
+icondir = $(datadir)/squid/icons
 icon_DATA = $(ICON1) $(ICON2)
 EXTRA_DIST = $(ICON1) $(ICON2) icons.shar
 DISTCLEANFILES = $(ICON1) $(ICON2)
