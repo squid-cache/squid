@@ -10,8 +10,11 @@
 # URLs to request.  Run N of these at the same time to simulate a heavy
 # neighbor cache load.
 
+require 'getopts.pl';
 
 $|=1;
+
+&Getopts('n');
 
 $host=(shift || 'localhost') ;
 $port=(shift || '3130') ;
@@ -59,17 +62,24 @@ $myip=(gethostbyname($me))[4];
 die "socket: $!\n" unless
 	socket (SOCK, &AF_INET, &SOCK_DGRAM, $proto);
 
+$flags = 0;
+$flags |= 0x80000000;
+$flags |= 0x40000000 if ($opt_n);
+$flags = ~0;
+
 while (<>) {
 	chop;
 	$request_template = 'CCnx4Nx4x4a4a' . length;
-	$request = pack($request_template, 1, 2, 24 + length, ~0, $myip, $_);
+	$request = pack($request_template, 1, 2, 24 + length, $flags, $myip, $_);
 	die "send: $!\n" unless
 		send(SOCK, $request, 0, $them);
 	die "recv: $!\n" unless
                 $theiraddr = recv(SOCK, $reply, 1024, 0);
   	($junk, $junk, $sourceaddr, $junk) = unpack($sockaddr, $theiraddr);
   	@theirip = unpack('C4', $sourceaddr);
-        ($type,$ver,$len,$payload) = unpack('CCnx4x8x4A', $reply);
+        ($type,$ver,$len,$flag,$p1,$p2,$payload) = unpack('CCnx4Nnnx4A', $reply);
         print join('.', @theirip) . ' ' . $CODES[$type] . " $_\n";
+	print "hop = $p1\n" if ($opt_n);
+	print "rtt = $p2\n" if ($opt_n);
 }
 
