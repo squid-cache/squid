@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.300 1999/05/25 22:05:50 wessels Exp $
+ * $Id: main.cc,v 1.301 1999/06/17 05:02:21 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -91,7 +91,7 @@ usage(void)
 	"       -z        Create swap directories\n"
 	"       -C        Do not catch fatal signals.\n"
 	"       -D        Disable initial DNS tests.\n"
-	"       -F        Foreground fast store rebuild.\n"
+	"       -F        Don't serve any requests until store is rebuilt.\n"
 	"       -N        No daemon mode.\n"
 	"       -R        Do not set REUSEADDR on port.\n"
 	"       -V        Virtual host httpd-accelerator.\n"
