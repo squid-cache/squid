@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.52 1997/02/05 04:40:43 wessels Exp $
+ * $Id: disk.cc,v 1.53 1997/02/05 04:54:44 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -233,27 +233,18 @@ file_close(int fd)
 static int
 diskHandleWrite(int fd, FileEntry * entry)
 {
-    int len;
-    dwrite_q *q = NULL;
-
+    int rlen = 0;
+    int len = 0;
+    dwrite_q *r = NULL;
     if (file_table[fd].at_eof == NO)
 	lseek(fd, 0, SEEK_END);
-    while (entry->write_q) {
-	len = write(fd,
-	    entry->write_q->buf + entry->write_q->cur_offset,
-	    entry->write_q->len - entry->write_q->cur_offset);
+    while ((r = entry->write_q)) {
+	debug(6, 3, "diskHandleWrite: FD %d, %d bytes\n", fd, r->len - r->cur_offset);
+	len = write(fd, r->buf + r->cur_offset, r->len - r->cur_offset);
 	file_table[fd].at_eof = YES;
 	if (len < 0) {
-	    if (errno == EAGAIN || errno == EWOULDBLOCK) {
-		/* just reschedule us, try again */
-		commSetSelect(fd,
-		    COMM_SELECT_WRITE,
-		    (PF) diskHandleWrite,
-		    (void *) entry,
-		    0);
-		entry->write_daemon = PRESENT;
-		return DISK_OK;
-	    } else {
+	    if (errno == EAGAIN || errno == EWOULDBLOCK)
+		break;
 		/* disk i/o failure--flushing all outstanding writes  */
 		debug(50, 1, "diskHandleWrite: FD %d: disk write error: %s\n",
 		    fd, xstrerror());
@@ -261,43 +252,48 @@ diskHandleWrite(int fd, FileEntry * entry)
 		entry->write_pending = NO_WRT_PENDING;
 		/* call finish handler */
 		do {
-		    q = entry->write_q;
-		    entry->write_q = q->next;
-		    if (q->free)
-			(q->free) (q->buf);
-		    safe_free(q);
+		entry->write_q = r->next;
+		if (r->free)
+		    (r->free) (r->buf);
+		safe_free(r);
 		} while (entry->write_q);
 		if (entry->wrt_handle) {
 		    entry->wrt_handle(fd,
 			errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR,
+		    rlen,
 			entry->wrt_handle_data);
 		}
 		return DISK_ERROR;
 	    }
-	}
-	entry->write_q->cur_offset += len;
-	if (entry->write_q->cur_offset < entry->write_q->len) {
+	rlen += len;
+	r->cur_offset += len;
+	if (r->cur_offset < r->len)
 	    continue;		/* partial write? */
-	} else {
 	    /* complete write */
-	    q = entry->write_q;
-	    entry->write_q = q->next;
-	    if (q->free)
-		(q->free) (q->buf);
-	    safe_free(q);
-	}
+	entry->write_q = r->next;
+	if (r->free)
+	    (r->free) (r->buf);
+	safe_free(r);
     }
+    if (entry->write_q == NULL) {
     /* no more data */
-    entry->write_q = entry->write_q_tail = NULL;
+	entry->write_q_tail = NULL;
     entry->write_pending = NO_WRT_PENDING;
     entry->write_daemon = NOT_PRESENT;
+    } else {
+	commSetSelect(fd,
+	    COMM_SELECT_WRITE,
+	    (PF) diskHandleWrite,
+	    (void *) entry,
+	    0);
+	entry->write_daemon = PRESENT;
+    }
     if (entry->wrt_handle)
 	entry->wrt_handle(fd, DISK_OK, entry->wrt_handle_data);
     if (file_table[fd].close_request == REQUEST)
 	file_close(fd);
     return DISK_OK;
 }
-
 
 
 /* write block to a file */
