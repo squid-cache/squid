@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.56 1996/08/23 21:29:56 wessels Exp $
+ * $Id: comm.cc,v 1.57 1996/08/26 19:09:34 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -323,7 +323,7 @@ int comm_connect(sock, dest_host, dest_port)
     to_addr.sin_family = AF_INET;
 
     if ((hp = ipcache_gethostbyname(dest_host, IP_BLOCKING_LOOKUP)) == 0) {
-	debug(5, 1, "comm_connect: Failure to lookup host: %s.\n", dest_host);
+	debug(5, 3, "comm_connect: Failure to lookup host: %s.\n", dest_host);
 	return (COMM_ERROR);
     }
     xmemcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
@@ -404,7 +404,7 @@ int comm_connect_addr(sock, address)
 	    if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char *) &x, &len) >= 0)
 		errno = x;
 	default:
-	    debug(5, 1, "connect: %s:%d: %s.\n",
+	    debug(5, 3, "connect: %s:%d: %s.\n",
 		fqdnFromAddr(address->sin_addr),
 		ntohs(address->sin_port),
 		xstrerror());
