@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.199 2000/03/06 16:23:34 wessels Exp $
+ * $Id: squid.h,v 1.200 2000/05/02 20:58:30 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -338,12 +338,6 @@ struct rusage {
 #include "GNUregex.h"
 #elif HAVE_REGEX_H
 #include <regex.h>
-#endif
-
-#if USE_ASYNC_IO
-#undef USE_UNLINKD
-#else
-#define USE_UNLINKD 1
 #endif
 
 #include "md5.h"

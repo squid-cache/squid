@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.341 2000/05/02 20:41:22 hno Exp $
+ * $Id: cache_cf.cc,v 1.342 2000/05/02 20:58:30 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -258,7 +258,7 @@ configDoConfigure(void)
 	Config.Announce.period = 86400 * 365;	/* one year */
 	Config.onoff.announce = 0;
     }
-#if USE_DNSSERVER
+#if USE_DNSSERVERS
     if (Config.dnsChildren < 1)
 	fatal("No dnsservers allocated");
     if (Config.dnsChildren > DefaultDnsChildrenMax) {
@@ -343,10 +343,12 @@ configDoConfigure(void)
     }
 #endif
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
-#if USE_DNSSERVER
+#if USE_DNSSERVERS
     requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
 #endif
+#if USE_UNLINKD
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
+#endif
     if (Config.Program.redirect)
 	requirePathnameExists("redirect_program", Config.Program.redirect->key);
     if (Config.Program.authenticate)
@@ -1435,6 +1437,12 @@ parse_refreshpattern(refresh_t ** head)
 	head = &(*head)->next;
     *head = t;
     safe_free(pattern);
+}
+
+static int
+check_null_refreshpattern(refresh_t *data)
+{
+    return data != NULL;
 }
 
 static void

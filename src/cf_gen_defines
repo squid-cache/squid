@@ -1,0 +1,31 @@
+#!/usr/bin/awk -f 
+BEGIN {
+	print "/* Generated automatically from cf.data.pre"
+	print " * DO NOT EDIT"
+	print "*/"
+	print "struct { char *name; char *enable; int defined;} defines[] = {"
+	define["DELAY_POOLS"]="--enable-delaypools"
+	define["HEAP_REPLACEMENT"]="--enable-heap-replacement"
+	define["HTTP_VIOLATIONS"]="--enable-http-violations"
+	define["SQUID_SNMP"]="--enable-snmp"
+	define["USE_CACHE_DIGESTS"]="--enable-cache-digests"
+	define["USE_DNSSERVERS"]="--disable-internal-dns"
+	define["!USE_DNSSERVERS"]="--enable-internal-dns"
+	define["USE_HTCP"]="--enable-htcp"
+	define["USE_ICMP"]="--enable-icmp"
+	define["USE_IDENT"]="--enable-ident-lookups"
+	define["USE_USERAGENT_LOG"]="--enable-useragent-log"
+	define["USE_WCCP"]="--enable-wccp"
+}
+/^IFDEF:/ {
+	print "{\"" $2 "\", \"" (define[$2] != "" ? define[$2] : ("-D" $2)) "\", "
+	print "#if " $2
+	print "1"
+	print "#else"
+	print "0"
+	print "#endif"
+	print "},"
+}
+END {
+	print "{(void *)0L, 0}};"
+}

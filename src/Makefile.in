@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.182 2000/03/14 23:03:03 wessels Exp $
+#  $Id: Makefile.in,v 1.183 2000/05/02 20:58:30 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -254,6 +254,11 @@ squid.conf cf_parser.c: cf.data cf_gen
 cf_gen: cf_gen.o
 	$(CC) -o $@ $(LDFLAGS) cf_gen.o $(STD_APP_LIBS)
 
+cf_gen.o: cf_gen_defines.h Makefile defines.h ../include/autoconf.h
+
+cf_gen_defines.h: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
+	awk -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >cf_gen_defines.h
+
 cf.data: cf.data.pre Makefile
 	sed "\
 	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
@@ -372,7 +377,7 @@ install-pinger:
 
 clean: 
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) $(SUID_UTILS)
-	-rm -f cf_gen cf_parser.c cf.data globals.c string_arrays.c
+	-rm -f cf_gen cf_gen_defines.h cf_parser.c cf.data globals.c string_arrays.c
 
 distclean:	clean
 	-rm -f Makefile squid.conf squid.conf.pre

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.43 2000/03/06 16:23:33 wessels Exp $
+ * $Id: mem.cc,v 1.44 2000/05/02 20:58:30 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -264,10 +264,12 @@ memInit(void)
     memDataInit(MEM_PEER_DIGEST, "PeerDigest", sizeof(PeerDigest), 0);
     memDataInit(MEM_DIGEST_FETCH_STATE, "DigestFetchState", sizeof(DigestFetchState), 0);
 #endif
+#if USE_ICMP
     memDataInit(MEM_PINGERECHODATA, "pingerEchoData",
 	sizeof(pingerEchoData), 0);
     memDataInit(MEM_PINGERREPLYDATA, "pingerReplyData",
 	sizeof(pingerReplyData), 0);
+#endif
     memDataInit(MEM_PS_STATE, "ps_state", sizeof(ps_state), 0);
     memDataInit(MEM_REFRESH_T, "refresh_t", sizeof(refresh_t), 0);
     memDataInit(MEM_RELIST, "relist", sizeof(relist), 0);

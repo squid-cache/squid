@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.324 2000/05/02 20:39:28 hno Exp $
+ * $Id: structs.h,v 1.325 2000/05/02 20:58:30 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -47,12 +47,6 @@ struct _acl_ip_data {
     struct in_addr addr2;
     struct in_addr mask;
     acl_ip_data *next;		/* used for parsing, not for storing */
-};
-
-struct _acl_snmp_comm {
-    char *name;
-    void *community;
-    acl_snmp_comm *next;
 };
 
 struct _acl_time_data {
@@ -1143,7 +1137,7 @@ struct _net_db_name {
 };
 
 struct _net_db_peer {
-    char *peername;
+    const char *peername;
     double hops;
     double rtt;
     time_t expires;
@@ -1198,6 +1192,7 @@ struct _ps_state {
     aclCheck_t *acl_checklist;
 };
 
+#if USE_ICMP
 struct _pingerEchoData {
     struct in_addr to;
     unsigned char opcode;
@@ -1213,6 +1208,7 @@ struct _pingerReplyData {
     int psize;
     char payload[PINGER_PAYLOAD_SZ];
 };
+#endif
 
 struct _icp_common_t {
     unsigned char opcode;	/* opcode */

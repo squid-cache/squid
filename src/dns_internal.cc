@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.19 2000/05/02 20:39:28 hno Exp $
+ * $Id: dns_internal.cc,v 1.20 2000/05/02 20:58:30 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -109,12 +109,14 @@ idnsAddNameserver(const char *buf)
     nns++;
 }
 
+#if UNUSED_CODE
 static void
 idnsFreeNameservers(void)
 {
     safe_free(nameservers);
     nns = nns_alloc = 0;
 }
+#endif
 
 static void
 idnsParseNameservers(void)
