@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.86 2001/01/06 11:39:43 hno Exp $
+ * $Id: defines.h,v 1.87 2001/01/06 11:41:37 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -286,7 +286,7 @@
 #define CBDATA_ALLOC(type, unl) ((type *)cbdataInternalAlloc(CBDATA_##type, unl))
 #define CBDATA_TYPE(type)	static cbdata_type CBDATA_##type = 0
 #define CBDATA_GLOBAL_TYPE(type)	cbdata_type CBDATA_##type
-#define CBDATA_INIT_TYPE(type)	(CBDATA_##type ? (CBDATA_##type = cbdataAddType(CBDATA_##type, #type, sizeof(type))) : 0)
+#define CBDATA_INIT_TYPE(type)	(CBDATA_##type ? 0 : (CBDATA_##type = cbdataAddType(CBDATA_##type, #type, sizeof(type))))
 
 #ifndef O_TEXT
 #define O_TEXT 0
