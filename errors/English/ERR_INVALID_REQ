@@ -24,8 +24,8 @@ Some aspect of the HTTP Request is invalid.  Possible problems:
 <LI>Missing or unknown request method (GET, POST)
 <LI>Missing URL
 <LI>Missing HTTP Identifier (HTTP/1.0)
-<LI>Request may be too large.
-<LI>
+<LI>Request may be too large
+<LI>Content-Length missing for POST or PUT requests
 <LI>Illegal character in hostname; underscores are not allowed
 </UL>
 </P>
