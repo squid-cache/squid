@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.7 1999/04/07 19:48:56 wessels Exp $
+# $Id: Makefile.in,v 1.8 1999/04/19 07:18:09 wessels Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -17,7 +17,6 @@ INSTALL         	= @INSTALL@
 INSTALL_FILE    	= @INSTALL_DATA@
 DEFAULT_ICON_DIR        = $(sysconfdir)/icons
 
-SHARFILE	= $(srcdir)/icons.shar
 ICONS		= anthony-binhex.gif \
 		  anthony-bomb.gif \
 		  anthony-box.gif \
@@ -48,12 +47,7 @@ ICONS		= anthony-binhex.gif \
 
 all:
 
-unshar: anthony-xpm.gif
-
-anthony-xpm.gif: $(SHARFILE)
-	$(SH) $(SHARFILE)
-
-$(SHARFILE):
+icons.shar:
 	shar --no-timestamp $(ICONS) > $@
 
 install: install-mkdirs anthony-xpm.gif
@@ -81,7 +75,7 @@ install-mkdirs:
 	fi
 
 clean:
-	$(RM) -f $(ICONS)
+
 
 distclean: clean
 	-rm -f Makefile
