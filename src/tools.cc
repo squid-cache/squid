@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.167 1998/08/24 22:06:49 wessels Exp $
+ * $Id: tools.cc,v 1.168 1998/09/22 17:50:33 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -439,6 +439,7 @@ safeunlink(const char *s, int quiet)
 	quiet ? NULL : safeunlinkComplete,
 	quiet ? NULL : xstrdup(s));
 #else
+    Counter.syscalls.disk.unlinks++;
     if (unlink(s) < 0 && !quiet)
 	debug(50, 1) ("safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
 #endif
