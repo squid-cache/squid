@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.44 1997/06/26 22:35:55 wessels Exp $
+ * $Id: net_db.cc,v 1.45 1997/07/16 23:01:31 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -212,8 +212,9 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
     struct in_addr addr;
     char *hostname = data;
     netdbEntry *n;
+    cbdataUnlock(hostname);
     if (ia == NULL) {
-	xfree(hostname);
+	cbdataFree(hostname);
 	return;
     }
     addr = ia->in_addrs[ia->cur];
@@ -224,7 +225,7 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
     n->pings_sent++;
     n->next_ping_time = squid_curtime + Config.Netdb.period;
     n->last_use_time = squid_curtime;
-    xfree(hostname);
+    cbdataFree(hostname);
 }
 
 static struct in_addr
@@ -449,10 +450,14 @@ netdbPingSite(const char *hostname)
 {
 #if USE_ICMP
     netdbEntry *n;
+    char *h;
     if ((n = netdbLookupHost(hostname)) != NULL)
 	if (n->next_ping_time > squid_curtime)
 	    return;
-    ipcache_nbgethostbyname(hostname, netdbSendPing, (void *) xstrdup(hostname));
+    h = xstrdup(hostname);
+    cbdataAdd(h);
+    cbdataLock(h);
+    ipcache_nbgethostbyname(hostname, netdbSendPing, h);
 #endif
 }
 
