@@ -36,6 +36,7 @@ void
 fd_open(int fd, unsigned int type, const char *desc)
 {
     fde *F = &fd_table[fd];
+    assert(fd >= 0);
     assert(F->open == 0);
     F->type = type;
     fdUpdateBiggest(fd, F->open = FD_OPEN);
