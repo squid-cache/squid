@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.34 2001/01/12 00:37:18 wessels Exp $
+ * $Id: htcp.cc,v 1.35 2001/04/01 16:33:37 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -747,8 +747,9 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
     hdr.msg_id = ntohl(hdr.msg_id);
     debug(31, 3) ("htcpHandleData: sz = %d\n", sz);
     debug(31, 3) ("htcpHandleData: length = %d\n", (int) hdr.length);
-    if (hdr.opcode > HTCP_END) {
-	debug(31, 0) ("htcpHandleData: opcode %d out of range\n",
+    if (hdr.opcode >= HTCP_END) {
+	debug(31, 0) ("htcpHandleData: client %s, opcode %d out of range\n",
+	    inet_ntoa(from->sin_addr),
 	    (int) hdr.opcode);
 	return;
     }
