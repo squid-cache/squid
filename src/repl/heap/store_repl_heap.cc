@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.14 2003/09/06 12:47:36 robertc Exp $
+ * $Id: store_repl_heap.cc,v 1.15 2004/09/24 22:22:49 hno Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -232,6 +232,7 @@ try_again:
     entry = (StoreEntry *)heap_extractmin(heap->theHeap);
 
     if (storeEntryLocked(entry)) {
+        storeLockObject(entry);
         linklistPush(&heap_walker->locked_entries, entry);
         goto try_again;
     }
@@ -264,6 +265,7 @@ heap_purgeDone(RemovalPurgeWalker * walker)
     while ((entry = (StoreEntry *)linklistShift(&heap_walker->locked_entries))) {
         heap_node *node = heap_insert(heap->theHeap, entry);
         heap->setPolicyNode(entry, node);
+        storeUnlockObject(entry);
     }
 
     safe_free(walker->_data);
