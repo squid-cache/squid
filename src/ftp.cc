@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.217 1998/04/07 23:50:50 wessels Exp $
+ * $Id: ftp.cc,v 1.218 1998/04/08 04:23:52 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -717,6 +717,8 @@ ftpParseListing(FtpStateData * ftpState, int len)
     storeBuffer(e);
     for (s = sbuf; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	linelen = strcspn(s, crlf) + 1;
+	if (linelen < 2)
+	    break;
 	if (linelen > 4096)
 	    linelen = 4096;
 	xstrncpy(line, s, linelen);
@@ -1086,6 +1088,8 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
 	return NULL;
     for (s = buf; s - buf < len; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	linelen = strcspn(s, crlf) + 1;
+	if (linelen < 2)
+	    break;
 	if (linelen > 3)
 	    complete = (*s >= '0' && *s <= '9' && *(s + 3) == ' ');
 	if (complete)
