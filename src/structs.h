@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.440 2002/12/19 09:57:09 robertc Exp $
+ * $Id: structs.h,v 1.441 2002/12/27 10:26:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -546,7 +546,7 @@ struct _SquidConfig {
     } Ftp;
     refresh_t *Refresh;
     struct _cacheSwap {
-	SwapDir *swapDirs;
+	SwapDir **swapDirs;
 	int n_allocated;
 	int n_configured;
     } cacheSwap;
@@ -1367,6 +1367,10 @@ struct _RemovalPurgeWalker {
     void (*Done) (RemovalPurgeWalker * walker);
 };
 
+/* TODO: Move this include and the memobject header to another file
+ * - see the fix_ranges branch 
+ */
+#include "StoreIOState.h"
 /* This structure can be freed while object is purged out from memory */
 struct _MemObject {
     method_t method;
@@ -1379,7 +1383,7 @@ struct _MemObject {
     struct {
 	off_t queue_offset;	/* relative to in-mem data */
 	mem_node *memnode;	/* which node we're currently paging out */
-	storeIOState *sio;
+	StoreIOState::Pointer sio;
     } swapout;
     HttpReply *reply;
     request_t *request;
@@ -1400,61 +1404,6 @@ struct _MemObject {
     unsigned int chksum;
 #endif
     const char *vary_headers;
-};
-
-struct _SwapDir {
-    const char *type;
-    int cur_size;
-    int low_size;
-    int max_size;
-    char *path;
-    int index;			/* This entry's index into the swapDirs array */
-    ssize_t max_objsize;
-    RemovalPolicy *repl;
-    int removals;
-    int scanned;
-    struct {
-	unsigned int selected:1;
-	unsigned int read_only:1;
-    } flags;
-    STINIT *init;		/* Initialise the fs */
-    STNEWFS *newfs;		/* Create a new fs */
-    STDUMP *dump;		/* Dump fs config snippet */
-    STFREE *freefs;		/* Free the fs data */
-    STDBLCHECK *dblcheck;	/* Double check the obj integrity */
-    STSTATFS *statfs;		/* Dump fs statistics */
-    STMAINTAINFS *maintainfs;	/* Replacement maintainence */
-    STCHECKOBJ *checkobj;	/* Check if the fs will store an object */
-    /* These two are notifications */
-    STREFOBJ *refobj;		/* Reference this object */
-    STUNREFOBJ *unrefobj;	/* Unreference this object */
-    STCALLBACK *callback;	/* Handle pending callbacks */
-    STSYNC *sync;		/* Sync the directory */
-    struct {
-	STOBJCREATE *create;
-	STOBJOPEN *open;
-	STOBJCLOSE *close;
-	STOBJREAD *read;
-	STOBJWRITE *write;
-	STOBJUNLINK *unlink;
-    } obj;
-    struct {
-	STLOGOPEN *open;
-	STLOGCLOSE *close;
-	STLOGWRITE *write;
-	struct {
-	    STLOGCLEANSTART *start;
-	    STLOGCLEANNEXTENTRY *nextentry;
-	    STLOGCLEANWRITE *write;
-	    STLOGCLEANDONE *done;
-	    void *state;
-	} clean;
-	int writes_since_clean;
-    } log;
-    struct {
-	int blksize;
-    } fs;
-    void *fsdata;
 };
 
 /* To hard to pull this into another file just yet.
@@ -1499,25 +1448,6 @@ struct _link_list {
     struct _link_list *next;
 };
 
-struct _storeIOState {
-    sdirno swap_dirn;
-    sfileno swap_filen;
-    StoreEntry *e;		/* Need this so the FS layers can play god */
-    mode_t mode;
-    size_t st_size;		/* do stat(2) after read open */
-    off_t offset;		/* current on-disk offset pointer */
-    STFNCB *file_callback;	/* called on delayed sfileno assignments */
-    STIOCB *callback;
-    void *callback_data;
-    struct {
-	STRCB *callback;
-	void *callback_data;
-    } read;
-    struct {
-	unsigned int closing:1;	/* debugging aid */
-    } flags;
-    void *fsstate;
-};
 
 struct _request_t {
     method_t method;
@@ -1985,9 +1915,8 @@ struct _store_rebuild_data {
 
 struct _storefs_entry {
     const char *typestr;
-    STFSPARSE *parsefunc;
-    STFSRECONFIGURE *reconfigurefunc;
     STFSSHUTDOWN *donefunc;
+    STFSNEW *newfunc;
 };
 
 /*
@@ -2031,7 +1960,7 @@ struct _Logfile {
 struct cache_dir_option {
     const char *name;
     void (*parse) (SwapDir * sd, const char *option, const char *value, int reconfiguring);
-    void (*dump) (StoreEntry * e, const char *option, SwapDir * sd);
+    void (*dump) (StoreEntry * e, const char *option, SwapDir const * sd);
 };
 
 #endif /* SQUID_STRUCTS_H */

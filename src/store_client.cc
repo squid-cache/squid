@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.118 2002/10/15 08:03:30 robertc Exp $
+ * $Id: store_client.cc,v 1.119 2002/12/27 10:26:33 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -301,7 +301,7 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
      * if needed.
      */
 
-    if (STORE_DISK_CLIENT == sc->type && NULL == sc->swapin_sio) {
+    if (STORE_DISK_CLIENT == sc->type && sc->swapin_sio.getRaw() == NULL) {
 	debug(20, 3) ("storeClientCopy3: Need to open swap in file\n");
 	/* gotta open the swapin file */
 	if (storeTooManyDiskFilesOpen()) {
@@ -311,7 +311,7 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
 	} else if (!sc->flags.disk_io_pending) {
 	    /* Don't set store_io_pending here */
 	    storeSwapInStart(sc);
-	    if (NULL == sc->swapin_sio) {
+	    if (sc->swapin_sio == NULL) {
 		storeClientCallback(sc, -1);
 		return;
 	    }
@@ -357,7 +357,7 @@ storeClientFileRead(store_client * sc)
 	    sc);
     } else {
 	if (sc->entry->swap_status == SWAPOUT_WRITING)
-	    assert(storeOffset(mem->swapout.sio) > sc->copyInto.offset + (off_t)mem->swap_hdr_sz);
+	    assert(mem->swapout.sio->offset() > sc->copyInto.offset + (off_t)mem->swap_hdr_sz);
 	storeRead(sc->swapin_sio,
 	    sc->copyInto.data,
 	    sc->copyInto.length,
@@ -542,9 +542,9 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     mem->nclients--;
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
 	storeSwapOut(e);
-    if (sc->swapin_sio) {
+    if (sc->swapin_sio.getRaw()) {
 	storeClose(sc->swapin_sio);
-	cbdataReferenceDone(sc->swapin_sio);
+	sc->swapin_sio = NULL;
 	statCounter.swap.ins++;
     }
     if (NULL != sc->callback) {
@@ -581,7 +581,7 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
 	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
 	if (sc->type == STORE_DISK_CLIENT)
-	    if (NULL != sc->swapin_sio)
+	    if (sc->swapin_sio.getRaw())
 		continue;
 	if (sc->copyInto.offset < lowest)
 	    lowest = sc->copyInto.offset;

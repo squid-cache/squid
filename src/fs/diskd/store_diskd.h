@@ -16,53 +16,95 @@
  * is 75% of SHMBUFS. magic1 is the number of messages away which we
  * stop allowing open/create for.
  */
+typedef struct _diomsg diomsg;
+class DiskdIO;
+class DiskdFile : public DiskFile {
+  public:
+    virtual void deleteSelf() const;
+    void * operator new (size_t);
+    void operator delete (void *);
+    DiskdFile (char const *path, DiskdIO *);
+    ~DiskdFile();
+    virtual void open (int, mode_t, IORequestor::Pointer);
+    virtual void create (int, mode_t, IORequestor::Pointer);
+    virtual void read(char *, off_t, size_t);
+    virtual void write(char const *buf, size_t size, off_t offset, FREE *free_func);
+    virtual void close ();
+    virtual bool error() const;
+    virtual bool canRead() const;
 
-struct _diskdinfo_t {
-    /* MUST BE FIRST */
-    squidufsinfo_t commondata;
-    int smsgid;
-    int rmsgid;
-    int wfd;
-    int away;
-    struct {
-	char *buf;
-	char *inuse_map;
-	int id;
-	int nbufs;
-    } shm;
-    int magic1;
-    int magic2;
+    /* Temporary */
+    int getID() const {return id;}
+    void completed (diomsg *);
+      
+  private:
+    int id;
+    char const *path_;
+    bool errorOccured;
+    DiskdIO *IO;
+    IORequestor::Pointer ioRequestor;
+    CBDATA_CLASS(DiskdFile); 
+    void openDone(diomsg *);
+    void createDone (diomsg *);
+    void readDone (diomsg *);
+    void writeDone (diomsg *);
+    void closeDone (diomsg *);
+    int mode;
+    void notifyClient();
+    bool canNotifyClient() const;
 };
 
-struct _diskdstate_t {
+class SharedMemory{
+public:
+    void put(off_t);
+    void *get(off_t *);
+    void init (int ikey, int magic2);
+    int nbufs;
+    char *buf;
+    char *inuse_map;
     int id;
-    struct {
-	unsigned int close_request:1;
-	unsigned int reading:1;
-	unsigned int writing:1;
-    } flags;
-    char *read_buf;
+};
+
+class diskdstate_t : public UFSStoreState {
+  public:
+    virtual void deleteSelf() const {delete this;}
+    void * operator new (size_t);
+    void operator delete (void *);
+    diskdstate_t(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data);
+    ~diskdstate_t();
+
+    void close();
+    
+    void ioCompletedNotification();
+    void readCompleted(const char *buf, int len, int errflag);
+    void writeCompleted(int errflag, size_t len);
+    void closeCompleted();
+  private:
+    CBDATA_CLASS(diskdstate_t);
+    void doCallback(int);
 };
 
 enum {
     _MQD_NOP,
     _MQD_OPEN,
+    _MQD_CREATE,
     _MQD_CLOSE,
     _MQD_READ,
     _MQD_WRITE,
     _MQD_UNLINK
 };
 
-typedef struct _diomsg {
+struct _diomsg {
     mtyp_t mtype;
     int id;
     int seq_no;
-    void *callback_data;
+    void * callback_data;
     int size;
     int offset;
     int status;
+    bool newstyle;
     int shm_offset;
-} diomsg;
+};
 
 struct _diskd_stats {
     int open_fail_queue_len;
@@ -81,32 +123,48 @@ struct _diskd_stats {
 };
 
 typedef struct _diskd_stats diskd_stats_t;
-typedef struct _diskdinfo_t diskdinfo_t;
-typedef struct _diskdstate_t diskdstate_t;
+
 
 static const int msg_snd_rcv_sz = sizeof(diomsg) - sizeof(mtyp_t);
 
-/* The diskd_state memory pool */
-extern MemPool *diskd_state_pool;
-
-extern void storeDiskdShmPut(SwapDir *, off_t);
-extern void *storeDiskdShmGet(SwapDir *, off_t *);
 extern void storeDiskdHandle(diomsg * M);
-extern int storeDiskdDirCallback(SwapDir *);
 
-
-/*
- * Store IO stuff
- */
-extern STOBJCREATE storeDiskdCreate;
-extern STOBJOPEN storeDiskdOpen;
-extern STOBJCLOSE storeDiskdClose;
-extern STOBJREAD storeDiskdRead;
-extern STOBJWRITE storeDiskdWrite;
-extern STOBJUNLINK storeDiskdUnlink;
+#include "SwapDir.h"
+class DiskdSwapDir : public UFSSwapDir
+{
+public:
+    virtual void init();
+    virtual void dump(StoreEntry &)const;
+    virtual void unlink(StoreEntry &);
+    virtual void statfs (StoreEntry &) const;
+    virtual int canStore(StoreEntry const &) const;
+    virtual int callback();
+    virtual void sync();
+    virtual void parse (int index, char *path);
+    virtual void reconfigure (int, char *);
+    virtual void unlinkFile(char const *);
+};
 
 #define SHMBUF_BLKSZ SM_PAGE_SIZE
 
 extern diskd_stats_t diskd_stats;
+class DiskdIO : public UFSStrategy
+{
+public:
+    DiskdIO();
+    virtual bool shedLoad();
+    virtual void deleteSelf() const;
+    virtual void openFailed();
+    virtual int load();
+    virtual StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
+    virtual DiskFile::Pointer newFile (char const *path);
+    int away;
+    int magic1;
+    int magic2;
+    int smsgid;
+    int rmsgid;
+    int wfd;
+    SharedMemory shm;
+};
 
 #endif

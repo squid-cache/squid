@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.551 2002/10/15 09:25:33 robertc Exp $
+ * $Id: store.cc,v 1.552 2002/12/27 10:26:33 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "SwapDir.h"
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 
@@ -268,14 +269,9 @@ storePurgeMem(StoreEntry * e)
 static void
 storeEntryReferenced(StoreEntry * e)
 {
-    SwapDir *SD;
-
     /* Notify the fs that we're referencing this object again */
-    if (e->swap_dirn > -1) {
-	SD = INDEXSD(e->swap_dirn);
-	if (SD->refobj)
-	    SD->refobj(SD, e);
-    }
+    if (e->swap_dirn > -1)
+	INDEXSD(e->swap_dirn)->reference(*e);
     /* Notify the memory cache that we're referencing this object again */
     if (e->mem_obj) {
 	if (mem_policy->Referenced)
@@ -286,14 +282,9 @@ storeEntryReferenced(StoreEntry * e)
 static void
 storeEntryDereferenced(StoreEntry * e)
 {
-    SwapDir *SD;
-
     /* Notify the fs that we're not referencing this object any more */
-    if (e->swap_filen > -1) {
-	SD = INDEXSD(e->swap_dirn);
-	if (SD->unrefobj != NULL)
-	    SD->unrefobj(SD, e);
-    }
+    if (e->swap_filen > -1)
+	INDEXSD(e->swap_dirn)->dereference(*e);
     /* Notify the memory cache that we're not referencing this object any more */
     if (e->mem_obj) {
 	if (mem_policy->Dereferenced)
@@ -888,7 +879,6 @@ storeGetMemSpace(int size)
 /*
  * This routine is to be called by main loop in main.c.
  * It removes expired objects on only one bucket for each time called.
- * returns the number of objects removed
  *
  * This should get called 1/s from main().
  */
@@ -907,8 +897,7 @@ storeMaintainSwapSpace(void *datanotused)
 	/* XXX FixMe: This should be done "in parallell" on the different
 	 * cache_dirs, not one at a time.
 	 */
-	if (SD->maintainfs != NULL)
-	    SD->maintainfs(SD);
+	SD->maintainfs();
     }
     if (store_swap_size > Config.Swap.maxSize) {
 	if (squid_curtime - last_warn_time > 10) {
@@ -963,7 +952,7 @@ storeRelease(StoreEntry * e)
 	storeUnlink(e);
 	if (e->swap_status == SWAPOUT_DONE)
 	    if (EBIT_TEST(e->flags, ENTRY_VALIDATED))
-		storeDirUpdateSwapSize(&Config.cacheSwap.swapDirs[e->swap_dirn], e->swap_file_sz, -1);
+		storeDirUpdateSwapSize(INDEXSD(e->swap_dirn), e->swap_file_sz, -1);
 	if (!EBIT_TEST(e->flags, KEY_PRIVATE))
 	    storeDirSwapLog(e, SWAP_LOG_DEL);
 #if 0

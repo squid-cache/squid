@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.423 2002/12/07 01:55:22 hno Exp $
+ * $Id: cache_cf.cc,v 1.424 2002/12/27 10:26:33 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "authenticate.h"
 #include "Store.h"
+#include "SwapDir.h"
 
 #if SQUID_SNMP
 #include "snmp.h"
@@ -59,9 +60,9 @@ static const char *const B_GBYTES_STR = "GB";
 static const char *const list_sep = ", \t\n\r";
 
 static void parse_cachedir_option_readonly(SwapDir * sd, const char *option, const char *value, int reconfiguring);
-static void dump_cachedir_option_readonly(StoreEntry * e, const char *option, SwapDir * sd);
+static void dump_cachedir_option_readonly(StoreEntry * e, const char *option, SwapDir const * sd);
 static void parse_cachedir_option_maxsize(SwapDir * sd, const char *option, const char *value, int reconfiguring);
-static void dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir * sd);
+static void dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir const * sd);
 static struct cache_dir_option common_cachedir_options[] =
 {
     {"read-only", parse_cachedir_option_readonly, dump_cachedir_option_readonly},
@@ -253,8 +254,9 @@ update_maxobjsize(void)
     ssize_t ms = -1;
 
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-	if (Config.cacheSwap.swapDirs[i].max_objsize > ms)
-	    ms = Config.cacheSwap.swapDirs[i].max_objsize;
+	assert (Config.cacheSwap.swapDirs[i]);
+	if (Config.cacheSwap.swapDirs[i]->max_objsize > ms)
+	    ms = Config.cacheSwap.swapDirs[i]->max_objsize;
     }
     store_maxobjsize = ms;
 }
@@ -1096,7 +1098,7 @@ free_http_header_replace(header_mangler header[])
 #endif
 
 void
-dump_cachedir_options(StoreEntry * entry, struct cache_dir_option *options, SwapDir * sd)
+dump_cachedir_options(StoreEntry * entry, struct cache_dir_option *options, SwapDir const * sd)
 {
     struct cache_dir_option *option;
     if (!options)
@@ -1110,11 +1112,11 @@ dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swa
 {
     SwapDir *s;
     int i;
+    assert (entry);
     for (i = 0; i < swap.n_configured; i++) {
-	s = swap.swapDirs + i;
+	s = swap.swapDirs[i];
 	storeAppendPrintf(entry, "%s %s %s", name, s->type, s->path);
-	if (s->dump)
-	    s->dump(entry, s);
+	s->dump(*entry);
 	dump_cachedir_options(entry, common_cachedir_options, s);
 	storeAppendPrintf(entry, "\n");
     }
@@ -1217,13 +1219,13 @@ allocate_new_swapdir(_SquidConfig::_cacheSwap * swap)
 {
     if (swap->swapDirs == NULL) {
 	swap->n_allocated = 4;
-	swap->swapDirs = static_cast<SwapDir *>(xcalloc(swap->n_allocated, sizeof(SwapDir)));
+	swap->swapDirs = static_cast<SwapDir **>(xcalloc(swap->n_allocated, sizeof(SwapDir *)));
     }
     if (swap->n_allocated == swap->n_configured) {
-	SwapDir *tmp;
+	SwapDir **tmp;
 	swap->n_allocated <<= 1;
-	tmp = static_cast<SwapDir *>(xcalloc(swap->n_allocated, sizeof(SwapDir)));
-	xmemcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir));
+	tmp = static_cast<SwapDir **>(xcalloc(swap->n_allocated, sizeof(SwapDir *)));
+	xmemcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir *));
 	xfree(swap->swapDirs);
 	swap->swapDirs = tmp;
     }
@@ -1275,14 +1277,15 @@ parse_cachedir(_SquidConfig::_cacheSwap * swap)
      */
 
     for (i = 0; i < swap->n_configured; i++) {
-	if (0 == strcasecmp(path_str, swap->swapDirs[i].path)) {
+	assert (swap->swapDirs[i]);
+	if (0 == strcasecmp(path_str, swap->swapDirs[i]->path)) {
 	    /* This is a little weird, you'll appreciate it later */
 	    fs = find_fstype(type_str);
 	    if (fs < 0) {
 		fatalf("Unknown cache_dir type '%s'\n", type_str);
 	    }
-	    sd = swap->swapDirs + i;
-	    storefs_list[fs].reconfigurefunc(sd, i, path_str);
+	    sd = swap->swapDirs[i];
+	    sd->reconfigure (i, path_str);
 	    update_maxobjsize();
 	    return;
 	}
@@ -1296,14 +1299,11 @@ parse_cachedir(_SquidConfig::_cacheSwap * swap)
 	fatalf("Unknown cache_dir type '%s'\n", type_str);
     }
     allocate_new_swapdir(swap);
-    sd = swap->swapDirs + swap->n_configured;
-    sd->type = storefs_list[fs].typestr;
-    /* defaults in case fs implementation fails to set these */
-    sd->max_objsize = -1;
-    sd->fs.blksize = 1024;
+    swap->swapDirs[swap->n_configured] = SwapDir::Factory(storefs_list[fs]);
+    sd = swap->swapDirs[swap->n_configured];
     /* parse the FS parameters and options */
-    storefs_list[fs].parsefunc(sd, swap->n_configured, path_str);
-    swap->n_configured++;
+    sd->parse(swap->n_configured, path_str);
+    ++swap->n_configured;
     /* Update the max object size */
     update_maxobjsize();
 }
@@ -1320,7 +1320,7 @@ parse_cachedir_option_readonly(SwapDir * sd, const char *option, const char *val
 }
 
 static void
-dump_cachedir_option_readonly(StoreEntry * e, const char *option, SwapDir * sd)
+dump_cachedir_option_readonly(StoreEntry * e, const char *option, SwapDir const * sd)
 {
     if (sd->flags.read_only)
 	storeAppendPrintf(e, " %s", option);
@@ -1343,7 +1343,7 @@ parse_cachedir_option_maxsize(SwapDir * sd, const char *option, const char *valu
 }
 
 static void
-dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir * sd)
+dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir const * sd)
 {
     if (sd->max_objsize != -1)
 	storeAppendPrintf(e, " %s=%ld", option, (long int) sd->max_objsize);
@@ -1395,15 +1395,14 @@ parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int recon
 static void
 free_cachedir(_SquidConfig::_cacheSwap * swap)
 {
-    SwapDir *s;
     int i;
     /* DON'T FREE THESE FOR RECONFIGURE */
     if (reconfiguring)
 	return;
     for (i = 0; i < swap->n_configured; i++) {
-	s = swap->swapDirs + i;
-	s->freefs(s);
-	xfree(s->path);
+	SwapDir * s = swap->swapDirs[i];
+	swap->swapDirs[i] = NULL;
+	delete s;
     }
     safe_free(swap->swapDirs);
     swap->swapDirs = NULL;

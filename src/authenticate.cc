@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.46 2002/10/15 09:25:33 robertc Exp $
+ * $Id: authenticate.cc,v 1.47 2002/12/27 10:26:33 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -207,7 +207,7 @@ AuthUser::operator new (size_t byteCount)
     assert (byteCount == sizeof (AuthUser));
     if (!pool)
 	pool = memPoolCreate("Authenticate User Data", sizeof (auth_user_t));
-    return static_cast<auth_user_t *> (memPoolAlloc(pool));
+    return memPoolAlloc(pool);
 }
 
 AuthUser::AuthUser (const char *scheme) :

@@ -1,7 +1,9 @@
 
 /*
- * $Id: StoreClient.h,v 1.4 2002/12/27 10:26:33 robertc Exp $
+ * $Id: StoreIOState.cc,v 1.1 2002/12/27 10:26:33 robertc Exp $
  *
+ * DEBUG: section ??    Swap Dir base object
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -31,52 +33,34 @@
  *
  */
 
-#ifndef SQUID_STORECLIENT_H
-#define SQUID_STORECLIENT_H
+#include "squid.h"
+#include "StoreIOState.h"
+    
+void *
+storeIOState::operator new (size_t amount)
+{
+    assert(0);
+    return (void *)1;
+}
 
-#include "StoreIOBuffer.h"
+void 
+storeIOState::operator delete (void *address){assert (0);}
 
-typedef void STCB(void *, StoreIOBuffer);	/* store callback */
+storeIOState::storeIOState()
+{
+    mode = O_BINARY;
+}
 
-#ifdef __cplusplus
-class _StoreEntry;
-#endif
+off_t
+storeIOState::offset() const
+{
+    return offset_;
+}
 
-#ifdef __cplusplus
-class StoreClient {
-public:
-  virtual ~StoreClient () {}
-  virtual void created (_StoreEntry *newEntry) = 0;
-};
-#endif
-
-/* keep track each client receiving data from that particular StoreEntry */
-struct _store_client {
-    int type;
-    off_t cmp_offset;
-    STCB *callback;
-    void *callback_data;
-#if STORE_CLIENT_LIST_DEBUG
-    void *owner;
-#endif
-    StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
-    StoreIOState::Pointer swapin_sio;
-    struct {
-	unsigned int disk_io_pending:1;
-	unsigned int store_copying:1;
-	unsigned int copy_event_pending:1;
-    } flags;
-#if DELAY_POOLS
-    delay_id delayId;
-#endif
-    dlink_node node;
-    /* Below here is private - do no alter outside storeClient calls */
-    StoreIOBuffer copyInto;
-#ifdef __cplusplus
-#endif
-};
-
-SQUIDCEXTERN void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
-SQUIDCEXTERN void storeClientDumpStats(store_client * thisClient, StoreEntry * output, int clientNumber);
-
-#endif /* SQUID_STORECLIENT_H */
+storeIOState::~storeIOState()
+{
+    if (read.callback_data)
+	cbdataReferenceDone(read.callback_data);
+    if (callback_data)
+	cbdataReferenceDone(callback_data);
+}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.139 2002/10/15 08:03:30 robertc Exp $
+ * $Id: store_dir.cc,v 1.140 2002/12/27 10:26:33 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "SwapDir.h"
 
 #if HAVE_STATVFS
 #if HAVE_SYS_STATVFS_H
@@ -60,11 +61,8 @@ void
 storeDirInit(void)
 {
     int i;
-    SwapDir *sd;
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-	sd = &Config.cacheSwap.swapDirs[i];
-	sd->init(sd);
-    }
+    for (i = 0; i < Config.cacheSwap.n_configured; i++)
+	INDEXSD(i)->init();
     if (0 == strcasecmp(Config.store_dir_select_algorithm, "round-robin")) {
 	storeDirSelectSwapDir = storeDirSelectSwapDirRoundRobin;
 	debug(47, 1) ("Using Round Robin store dir selection\n");
@@ -78,15 +76,12 @@ void
 storeCreateSwapDirectories(void)
 {
     int i;
-    SwapDir *sd;
     pid_t pid;
     int status;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	if (fork())
 	    continue;
-	sd = &Config.cacheSwap.swapDirs[i];
-	if (NULL != sd->newfs)
-	    sd->newfs(sd);
+	INDEXSD(i)->newFileSystem();
 	exit(0);
     }
     do {
@@ -112,7 +107,7 @@ storeDirValidSwapDirSize(int swapdir, ssize_t objsize)
     /*
      * If the swapdir's max_obj_size is -1, then it definitely can
      */
-    if (Config.cacheSwap.swapDirs[swapdir].max_objsize == -1)
+    if (INDEXSD(swapdir)->max_objsize == -1)
 	return 1;
 
     /*
@@ -120,13 +115,13 @@ storeDirValidSwapDirSize(int swapdir, ssize_t objsize)
      * can't store it
      */
     if ((objsize == -1) &&
-	(Config.cacheSwap.swapDirs[swapdir].max_objsize != -1))
+	(INDEXSD(swapdir)->max_objsize != -1))
 	return 0;
 
     /*
      * Else, make sure that the max object size is larger than objsize
      */
-    if (Config.cacheSwap.swapDirs[swapdir].max_objsize > objsize)
+    if (INDEXSD(swapdir)->max_objsize > objsize)
 	return 1;
     else
 	return 0;
@@ -149,7 +144,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
     for (i = 0; i <= Config.cacheSwap.n_configured; i++) {
 	if (++dirn >= Config.cacheSwap.n_configured)
 	    dirn = 0;
-	sd = &Config.cacheSwap.swapDirs[dirn];
+	sd = INDEXSD(dirn);
 	if (sd->flags.read_only)
 	    continue;
 	if (sd->cur_size > sd->max_size)
@@ -157,7 +152,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
 	if (!storeDirValidSwapDirSize(i, objsize))
 	    continue;
 	/* check for error or overload condition */
-	load = sd->checkobj(sd, e);
+	load = sd->canStore(*e);
 	if (load < 0 || load > 1000) {
 	    continue;
 	}
@@ -196,9 +191,9 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
     if (objsize != -1)
 	objsize += e->mem_obj->swap_hdr_sz;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-	SD = &Config.cacheSwap.swapDirs[i];
+	SD = INDEXSD(i);
 	SD->flags.selected = 0;
-	load = SD->checkobj(SD, e);
+	load = SD->canStore(*e);
 	if (load < 0 || load > 1000) {
 	    continue;
 	}
@@ -227,7 +222,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 	dirn = i;
     }
     if (dirn >= 0)
-	Config.cacheSwap.swapDirs[dirn].flags.selected = 1;
+	INDEXSD(dirn)->flags.selected = 1;
     return dirn;
 }
 
@@ -237,7 +232,7 @@ char *
 storeSwapDir(int dirn)
 {
     assert(0 <= dirn && dirn < Config.cacheSwap.n_configured);
-    return Config.cacheSwap.swapDirs[dirn].path;
+    return INDEXSD(dirn)->path;
 }
 
 /*
@@ -252,7 +247,7 @@ storeSwapDir(int dirn)
 void
 storeDirSwapLog(const StoreEntry * e, int op)
 {
-    SwapDir *sd;
+    assert (e);
     assert(!EBIT_TEST(e->flags, KEY_PRIVATE));
     assert(e->swap_filen >= 0);
     /*
@@ -266,8 +261,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
 	e->getMD5Text(),
 	e->swap_dirn,
 	e->swap_filen);
-    sd = &Config.cacheSwap.swapDirs[e->swap_dirn];
-    sd->log.write(sd, e, op);
+    INDEXSD(e->swap_dirn)->logEntry(*e, op);
 }
 
 void
@@ -288,6 +282,7 @@ storeDirStats(StoreEntry * sentry)
 {
     int i;
     SwapDir *SD;
+    assert (sentry);
 
     storeAppendPrintf(sentry, "Store Directory Statistics:\n");
     storeAppendPrintf(sentry, "Store Entries          : %lu\n",
@@ -304,12 +299,12 @@ storeDirStats(StoreEntry * sentry)
     /* Now go through each swapdir, calling its statfs routine */
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	storeAppendPrintf(sentry, "\n");
-	SD = &(Config.cacheSwap.swapDirs[i]);
+	SD = INDEXSD(i);
 	storeAppendPrintf(sentry, "Store Directory #%d (%s): %s\n", i, SD->type,
 	    storeSwapDir(i));
 	storeAppendPrintf(sentry, "FS Block Size %d Bytes\n",
 	    SD->fs.blksize);
-	SD->statfs(SD, sentry);
+	SD->statfs(*sentry);
 	if (SD->repl) {
 	    storeAppendPrintf(sentry, "Removal policy: %s\n", SD->repl->_type);
 	    if (SD->repl->Stats)
@@ -325,7 +320,7 @@ storeDirConfigure(void)
     int i;
     Config.Swap.maxSize = 0;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-	SD = &Config.cacheSwap.swapDirs[i];
+	SD = INDEXSD(i);
 	Config.Swap.maxSize += SD->max_size;
 	SD->low_size = (int) (((float) SD->max_size *
 		(float) Config.Swap.lowWaterMark) / 100.0);
@@ -335,7 +330,7 @@ storeDirConfigure(void)
 void
 storeDirDiskFull(sdirno dirn)
 {
-    SwapDir *SD = &Config.cacheSwap.swapDirs[dirn];
+    SwapDir *SD = INDEXSD(dirn);
     assert(0 <= dirn && dirn < Config.cacheSwap.n_configured);
     if (SD->cur_size >= SD->max_size)
 	return;
@@ -347,25 +342,15 @@ storeDirDiskFull(sdirno dirn)
 void
 storeDirOpenSwapLogs(void)
 {
-    int dirn;
-    SwapDir *sd;
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	sd = &Config.cacheSwap.swapDirs[dirn];
-	if (sd->log.open)
-	    sd->log.open(sd);
-    }
+    for (int dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)
+	INDEXSD(dirn)->openLog();
 }
 
 void
 storeDirCloseSwapLogs(void)
 {
-    int dirn;
-    SwapDir *sd;
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	sd = &Config.cacheSwap.swapDirs[dirn];
-	if (sd->log.close)
-	    sd->log.close(sd);
-    }
+    for (int dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)
+	INDEXSD(dirn)->closeLog();
 }
 
 /*
@@ -377,7 +362,6 @@ storeDirCloseSwapLogs(void)
  *  the run. Thanks goes to Eric Stern, since this solution
  *  came out of his COSS code.
  */
-#define CLEAN_BUF_SZ 16384
 int
 storeDirWriteCleanLogs(int reopen)
 {
@@ -397,35 +381,28 @@ storeDirWriteCleanLogs(int reopen)
     getCurrentTime();
     start = current_time;
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	sd = &Config.cacheSwap.swapDirs[dirn];
-	if (sd->log.clean.start(sd) < 0) {
+	sd = INDEXSD(dirn);
+	if (sd->writeCleanStart() < 0) {
 	    debug(20, 1) ("log.clean.start() failed for dir #%d\n", sd->index);
 	    continue;
 	}
     }
+    /* This writes all logs in parallel. It seems to me to be more efficient
+     * to write them sequentially. - RBC 20021214
+     */
     while (notdone) {
 	notdone = 0;
 	for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	    sd = &Config.cacheSwap.swapDirs[dirn];
-	    if (NULL == sd->log.clean.write)
+	    sd = INDEXSD(dirn);
+	    if (NULL == sd->cleanLog)
 		continue;
-	    e = sd->log.clean.nextentry(sd);
+	    e = sd->cleanLog->nextEntry();
 	    if (!e)
 		continue;
 	    notdone = 1;
-	    if (e->swap_filen < 0)
+	    if (!sd->canLog(*e))
 		continue;
-	    if (e->swap_status != SWAPOUT_DONE)
-		continue;
-	    if (e->swap_file_sz <= 0)
-		continue;
-	    if (EBIT_TEST(e->flags, RELEASE_REQUEST))
-		continue;
-	    if (EBIT_TEST(e->flags, KEY_PRIVATE))
-		continue;
-	    if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
-		continue;
-	    sd->log.clean.write(sd, e);
+	    sd->cleanLog->write(*e);
 	    if ((++n & 0xFFFF) == 0) {
 		getCurrentTime();
 		debug(20, 1) ("  %7d entries written so far.\n", n);
@@ -433,10 +410,8 @@ storeDirWriteCleanLogs(int reopen)
 	}
     }
     /* Flush */
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	sd = &Config.cacheSwap.swapDirs[dirn];
-	sd->log.clean.done(sd);
-    }
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++)
+	INDEXSD(dirn)->writeCleanDone();
     if (reopen)
 	storeDirOpenSwapLogs();
     getCurrentTime();
@@ -446,7 +421,6 @@ storeDirWriteCleanLogs(int reopen)
 	dt, (double) n / (dt > 0.0 ? dt : 1.0));
     return n;
 }
-#undef CLEAN_BUF_SZ
 
 /*
  * sync all avaliable fs'es ..
@@ -454,14 +428,8 @@ storeDirWriteCleanLogs(int reopen)
 void
 storeDirSync(void)
 {
-    int i;
-    SwapDir *SD;
-
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-	SD = &Config.cacheSwap.swapDirs[i];
-	if (SD->sync != NULL)
-	    SD->sync(SD);
-    }
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i)
+	INDEXSD(i)->sync();
 }
 
 /*
@@ -478,10 +446,9 @@ storeDirCallback(void)
 	for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	    if (ndir >= Config.cacheSwap.n_configured)
 		ndir = ndir % Config.cacheSwap.n_configured;
-	    SD = &Config.cacheSwap.swapDirs[ndir++];
-	    if (NULL == SD->callback)
-		continue;
-	    j += SD->callback(SD);
+	    SD = INDEXSD(ndir);
+	    ++ndir;
+	    j += SD->callback();
 	}
     } while (j > 0);
     ndir++;

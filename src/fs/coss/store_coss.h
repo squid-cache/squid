@@ -1,6 +1,8 @@
 #ifndef __COSS_H__
 #define __COSS_H__
 
+#include "SwapDir.h"
+
 #ifndef COSS_MEMBUF_SZ
 #define	COSS_MEMBUF_SZ	1048576
 #endif
@@ -19,33 +21,18 @@
 #define COSS_ALLOC_NOTIFY		0
 #define COSS_ALLOC_ALLOCATE		1
 #define COSS_ALLOC_REALLOC		2
-
+class CossSwapDir;
 struct _cossmembuf {
     dlink_node node;
     size_t diskstart;		/* in blocks */
     size_t diskend;		/* in blocks */
-    SwapDir *SD;
+    CossSwapDir *SD;
     int lockcount;
     char buffer[COSS_MEMBUF_SZ];
     struct _cossmembuf_flags {
 	unsigned int full:1;
 	unsigned int writing:1;
     } flags;
-};
-
-
-/* Per-storedir info */
-struct _cossinfo {
-    dlink_list membufs;
-    struct _cossmembuf *current_membuf;
-    size_t current_offset;	/* in Blocks */
-    int fd;
-    int swaplog_fd;
-    int numcollisions;
-    dlink_list index;
-    int count;
-    async_queue_t aq;
-    dlink_node *walk_current;
 };
 
 struct _cossindex {
@@ -56,8 +43,16 @@ struct _cossindex {
 };
 
 
+
 /* Per-storeiostate info */
-struct _cossstate {
+class CossState : public storeIOState {
+public:
+    virtual void deleteSelf() const {delete this;}
+    void * operator new (size_t);
+    void operator delete (void *);
+    CossState(CossSwapDir *);
+    ~CossState();
+
     char *readbuffer;
     char *requestbuf;
     size_t requestlen;
@@ -67,33 +62,60 @@ struct _cossstate {
 	unsigned int reading:1;
 	unsigned int writing:1;
     } flags;
+    size_t st_size;
+    void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
+    void write(char *buf, size_t size, off_t offset, FREE * free_func);
+    void close();
+
+    CossSwapDir *SD;
+private:
+    static MemPool *Pool;
 };
 
 typedef struct _cossmembuf CossMemBuf;
-typedef struct _cossinfo CossInfo;
-typedef struct _cossstate CossState;
 typedef struct _cossindex CossIndexNode;
 
 /* Whether the coss system has been setup or not */
 extern int coss_initialised;
 extern MemPool *coss_membuf_pool;
-extern MemPool *coss_state_pool;
 extern MemPool *coss_index_pool;
 
-/*
- * Store IO stuff
- */
-extern STOBJCREATE storeCossCreate;
-extern STOBJOPEN storeCossOpen;
-extern STOBJCLOSE storeCossClose;
-extern STOBJREAD storeCossRead;
-extern STOBJWRITE storeCossWrite;
-extern STOBJUNLINK storeCossUnlink;
-extern STSYNC storeCossSync;
+class CossSwapDir : public SwapDir 
+{
+public:
+    CossSwapDir();
+    virtual void init();
+    virtual void newFileSystem();
+    virtual void dump(StoreEntry &)const;
+    ~CossSwapDir();
+    virtual void unlink (StoreEntry &);
+    virtual void statfs (StoreEntry &)const;
+    virtual int canStore(StoreEntry const &)const;
+    virtual int callback();
+    virtual void sync();
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
+    virtual void openLog();
+    virtual void closeLog();
+    virtual int writeCleanStart();
+    virtual void writeCleanDone();
+    virtual void logEntry(const StoreEntry & e, int op) const;
+    virtual void parse (int index, char *path);
+    virtual void reconfigure (int, char *);
+//private:
+    int fd;
+    int swaplog_fd;
+    int count;
+    dlink_list membufs;
+    struct _cossmembuf *current_membuf;
+    size_t current_offset;	/* in Blocks */
+    int numcollisions;
+    dlink_list cossindex;
+    async_queue_t aq;
+};
 
-extern off_t storeCossAllocate(SwapDir * SD, const StoreEntry * e, int which);
-extern void storeCossAdd(SwapDir *, StoreEntry *);
-extern void storeCossRemove(SwapDir *, StoreEntry *);
-extern void storeCossStartMembuf(SwapDir * SD);
-
+extern off_t storeCossAllocate(CossSwapDir * SD, const StoreEntry * e, int which);
+extern void storeCossAdd(CossSwapDir *, StoreEntry *);
+extern void storeCossRemove(CossSwapDir *, StoreEntry *);
+extern void storeCossStartMembuf(CossSwapDir * SD);
 #endif

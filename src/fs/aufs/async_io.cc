@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.19 2002/11/15 13:16:31 hno Exp $
+ * $Id: async_io.cc,v 1.20 2002/12/27 10:26:35 robertc Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -293,7 +293,7 @@ aioTruncate(const char *path, off_t length, AIOCB * callback, void *callback_dat
 
 
 int
-aioCheckCallbacks(SwapDir * SD)
+AUFSSwapDir::callback()
 {
     squidaio_result_t *resultp;
     squidaio_ctrl_t *ctrlp;
@@ -380,14 +380,14 @@ aioStats(StoreEntry * sentry)
 
 /* Flush all pending I/O */
 void
-aioSync(SwapDir * SD)
+AUFSSwapDir::sync()
 {
     if (!initialised)
 	return;			/* nothing to do then */
     /* Flush all pending operations */
     debug(32, 1) ("aioSync: flushing pending I/O operations\n");
     do {
-	aioCheckCallbacks(SD);
+	callback();
     } while (squidaio_sync());
     debug(32, 1) ("aioSync: done\n");
 }

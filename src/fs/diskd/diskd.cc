@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.11 2002/10/13 20:35:26 robertc Exp $
+ * $Id: diskd.cc,v 1.12 2002/12/27 10:26:37 robertc Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -224,10 +224,12 @@ msg_handle(diomsg * r, int rl, diomsg * s)
     s->callback_data = r->callback_data;
     s->shm_offset = r->shm_offset;
     s->id = r->id;
+    s->newstyle = r->newstyle;
     if (s->shm_offset > -1)
 	buf = shmbuf + s->shm_offset;
     switch (r->mtype) {
     case _MQD_OPEN:
+    case _MQD_CREATE:
 	s->status = do_open(r, rl, buf);
 	break;
     case _MQD_CLOSE:

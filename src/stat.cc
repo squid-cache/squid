@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.363 2002/10/25 01:00:42 adrian Exp $
+ * $Id: stat.cc,v 1.364 2002/12/27 10:26:33 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -278,9 +278,9 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 	storeAppendPrintf(s, "\tinmem_hi: %d\n", (int) mem->inmem_hi);
 	storeAppendPrintf(s, "\tswapout: %d bytes queued\n",
 	    (int) mem->swapout.queue_offset);
-	if (mem->swapout.sio)
+	if (mem->swapout.sio.getRaw())
 	    storeAppendPrintf(s, "\tswapout: %d bytes written\n",
-		(int) storeOffset(mem->swapout.sio));
+		(int) mem->swapout.sio->offset());
 	for (i = 0, node = mem->clients.head; node; node = node->next, i++)
 	    storeClientDumpStats((store_client *)node->data, s, i);
     }

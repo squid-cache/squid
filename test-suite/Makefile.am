@@ -1,8 +1,10 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.1 2002/11/21 12:35:53 robertc Exp $
+#  $Id: Makefile.am,v 1.2 2002/12/27 10:26:40 robertc Exp $
 #
+
+AUTOMAKE_OPTIONS = subdir-objects
 
 AM_CFLAGS = -Werror -Wall
 AM_CXXFLAGS = -Werror -Wall
@@ -18,7 +20,6 @@ LDADD = -L$(top_builddir)/lib -lmiscutil
 check_PROGRAMS= refcount
 
 refcount_SOURCES = refcount.cc
-
 
 ## membanger won't link today. Bitrot..
 ##CC	= gcc

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.3 2002/04/16 22:43:05 wessels Exp $
+ * $Id: store_null.cc,v 1.4 2002/12/27 10:26:38 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -39,21 +39,28 @@
 #include <sys/statvfs.h>
 #endif
 #endif
+#include "SwapDir.h"
+#include "Store.h"
+
+class NullSwapDir : public SwapDir 
+{
+public:
+    virtual void init();
+    virtual int canStore(StoreEntry const &)const;
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
+    virtual void parse(int, char*);
+    virtual void reconfigure (int, char *);
+};
 
 static int null_initialised = 0;
-static void storeNullDirInit(SwapDir * sd);
-static void storeNullDirStats(SwapDir * SD, StoreEntry * sentry);
-static STCHECKOBJ storeNullDirCheckObj;
-static STFSRECONFIGURE storeNullDirReconfigure;
-static STLOGCLEANSTART storeNullDirWriteCleanStart;
-static STLOGCLEANDONE storeNullDirWriteCleanDone;
 static EVH storeNullDirRebuildComplete;
 
 /* The only externally visible interface */
 STSETUP storeFsSetup_null;
 
-static void
-storeNullDirReconfigure(SwapDir * sd, int index, char *path)
+void
+NullSwapDir::reconfigure(int index, char *path)
 {
     (void) 0;
 }
@@ -64,18 +71,33 @@ storeNullDirDone(void)
     null_initialised = 0;
 }
 
-static void
-storeNullDirStats(SwapDir * SD, StoreEntry * sentry)
+static SwapDir *
+storeNullNew(void)
 {
-    (void) 0;
+    SwapDir *result = new NullSwapDir;
+    return result;
 }
 
-static void
-storeNullDirInit(SwapDir * sd)
+void
+NullSwapDir::init()
 {
     store_dirs_rebuilding++;
     eventAdd("storeNullDirRebuildComplete", storeNullDirRebuildComplete,
 	NULL, 0.0, 1);
+}
+
+StoreIOState::Pointer
+NullSwapDir::createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *)
+{
+    fatal ("Attempt to get a StoreIO from the NULL store!\n");
+    return NULL;
+}
+
+StoreIOState::Pointer
+NullSwapDir::openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *)
+{
+    fatal ("Attempt to get a StoreIO from the NULL store!\n");
+    return NULL;
 }
 
 static void
@@ -87,35 +109,18 @@ storeNullDirRebuildComplete(void *unused)
     storeRebuildComplete(&counts);
 }
 
-static int
-storeNullDirCheckObj(SwapDir * SD, const StoreEntry * e)
+int
+NullSwapDir::canStore(StoreEntry const &)const
 {
     return -1;
 }
 
-static int
-storeNullDirWriteCleanStart(SwapDir * unused)
+void
+NullSwapDir::parse(int anIndex, char *aPath)
 {
-    return 0;
-}
-
-static void
-storeNullDirWriteCleanDone(SwapDir * unused)
-{
-    (void) 0;
-}
-
-static void
-storeNullDirParse(SwapDir * sd, int index, char *path)
-{
-    sd->index = index;
-    sd->path = xstrdup(path);
-    sd->statfs = storeNullDirStats;
-    sd->init = storeNullDirInit;
-    sd->checkobj = storeNullDirCheckObj;
-    sd->log.clean.start = storeNullDirWriteCleanStart;
-    sd->log.clean.done = storeNullDirWriteCleanDone;
-    parse_cachedir_options(sd, NULL, 0);
+    index = anIndex;
+    path = xstrdup(aPath);
+    parse_cachedir_options(this, NULL, 0);
 }
 
 /* Setup and register the store module */
@@ -124,8 +129,7 @@ void
 storeFsSetup_null(storefs_entry_t * storefs)
 {
     assert(!null_initialised);
-    storefs->parsefunc = storeNullDirParse;
-    storefs->reconfigurefunc = storeNullDirReconfigure;
     storefs->donefunc = storeNullDirDone;
+    storefs->newfunc = storeNullNew;
     null_initialised = 1;
 }

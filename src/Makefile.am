@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.44 2002/12/15 09:00:42 robertc Exp $
+#  $Id: Makefile.am,v 1.45 2002/12/27 10:26:33 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -214,6 +214,8 @@ squid_SOURCES = \
 	Store.h \
 	store_io.cc \
 	StoreIOBuffer.h \
+	StoreIOState.cc \
+	StoreIOState.h \
 	store_client.cc \
 	StoreClient.h \
 	store_digest.cc \
@@ -225,6 +227,8 @@ squid_SOURCES = \
 	store_swapmeta.cc \
 	store_swapout.cc \
 	structs.h \
+	SwapDir.cc \
+	SwapDir.h \
 	tools.cc \
 	typedefs.h \
 	ufscommon.cc \
@@ -259,7 +263,7 @@ squid_LDADD = \
 	@SSLLIB@ \
 	-lmiscutil \
 	@XTRA_LIBS@
-squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
+squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@
 
 unlinkd_SOURCES = unlinkd.cc
 unlinkd_CXXFLAGS = -DUNLINK_DAEMON
