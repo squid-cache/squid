@@ -4,6 +4,7 @@ Squid-2.5:
   - Run a polygraph test of aufs
   - Write release notes
   - HTML tidyups from "PsychoTekk / C.L." (done)
+  - Option to disable Vary caching
 
 Squid-2.6:
 
