@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.53 2002/02/13 00:57:18 hno Exp $
+ * $Id: snmp_core.cc,v 1.54 2002/02/13 17:19:01 hno Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -553,8 +553,6 @@ snmpConstructReponse(snmp_request_t * rq)
 /*
  * Decide how to respond to the request, construct a response and
  * return the response to the requester.
- * 
- * If configured forward any reponses which are not for this agent.
  */
 static struct snmp_pdu *
 snmpAgentResponse(struct snmp_pdu *PDU)
