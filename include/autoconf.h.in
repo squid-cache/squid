@@ -31,9 +31,9 @@
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
    automatically deduced at run-time.
-	STACK_DIRECTION > 0 => grows toward higher addresses
-	STACK_DIRECTION < 0 => grows toward lower addresses
-	STACK_DIRECTION = 0 => direction of growth unknown
+ STACK_DIRECTION > 0 => grows toward higher addresses
+ STACK_DIRECTION < 0 => grows toward lower addresses
+ STACK_DIRECTION = 0 => direction of growth unknown
  */
 #undef STACK_DIRECTION
 
@@ -130,6 +130,9 @@
 /* Define if you have the pw_encrypt function.  */
 #undef HAVE_PW_ENCRYPT
 
+/* Define if you have the random function.  */
+#undef HAVE_RANDOM
+
 /* Define if you have the regcomp function.  */
 #undef HAVE_REGCOMP
 
@@ -162,6 +165,9 @@
 
 /* Define if you have the srand48 function.  */
 #undef HAVE_SRAND48
+
+/* Define if you have the srandom function.  */
+#undef HAVE_SRANDOM
 
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
