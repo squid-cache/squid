@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.393 2001/07/04 00:12:05 hno Exp $
+ * $Id: structs.h,v 1.394 2001/07/09 19:12:21 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1486,7 +1486,6 @@ struct _SwapDir {
     int max_size;
     char *path;
     int index;			/* This entry's index into the swapDirs array */
-    int suggest;
     ssize_t max_objsize;
     RemovalPolicy *repl;
     int removals;
