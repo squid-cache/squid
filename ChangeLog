@@ -16,19 +16,26 @@ TODO LIST before official squid-1.1:
 Changes to squid-1.1.beta7 ():
 
 	- Combined and renamed comm_set_select_handler() functions.
+	- Fixed netdbPingSite() not checking n->next_ping_time.
+	- Fixed acl.c to use regular gethostbyname() because IP cache
+	  isn't initialized while reading config file.
+	- Linked ftpget with debug.o and removed lib/debug.c,
+	  lib/log.c.
 
 Changes to squid-1.1.beta6 ():
 
 	- Fixed lots of function prototypes, etc (Ed Knowles).
 	- Added multicast patch (Martin Hamilton).
-	- Replaced 'struct hostent' with 'struct ipcache_addrs' in IP cache.
+	- Replaced 'struct hostent' with 'struct ipcache_addrs' in IP
+	  cache.
 	- Added ipcacheCycleAddrs() to round-robin IP addresses.
-	- Added ipcacheRemoveBadAddr() to remove addresses from failed connect()'s.
-	- Changed comm_connect() to comm_nbconnect() and removed other nonblocking
-	  connection handling code from other modules.
-	- Improved cache memory usage.  Now cache_mem specifies the size
-	  of the in-memory data pool.  Hot objects use whatever space is
-	  not used by in-transit objects.
+	- Added ipcacheRemoveBadAddr() to remove addresses from failed
+	  connect()'s.
+	- Changed comm_connect() to comm_nbconnect() and removed other
+	  nonblocking connection handling code from other modules.
+	- Improved cache memory usage.  Now cache_mem specifies the
+	  size of the in-memory data pool.  Hot objects use whatever
+	  space is not used by in-transit objects.
 	- Removed 'max_hot_object_size' config option.
 	- Fixed virtual-host coredump bug (Aaron Hopkins).
 

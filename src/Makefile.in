@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.45 1996/09/24 18:50:04 wessels Exp $
+#  $Id: Makefile.in,v 1.46 1996/10/13 10:04:21 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -97,7 +97,7 @@ cachemgr.cgi:	cachemgr.o
 	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
 
 ftpget: ftpget.o
-	$(CC) -o $@ $(LDFLAGS) ftpget.o $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) ftpget.o debug.o $(LIBS)
 
 pinger: pinger.o
 	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o $(LIBS)
