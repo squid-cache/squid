@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.358 2002/10/27 14:19:39 adrian Exp $
+ * $Id: comm.cc,v 1.359 2002/10/28 11:27:47 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -513,7 +513,7 @@ comm_fill_immediate(int fd, StoreIOBuffer sb, IOFCB *callback, void *data)
 static void
 comm_empty_os_read_buffers(int fd)
 {
-#if _SQUID_LINUX_
+#ifdef _SQUID_LINUX_
     /* prevent those nasty RST packets */
     char buf[SQUID_TCP_SO_RCVBUF];
     if (fd_table[fd].flags.nonblocking == 1)
