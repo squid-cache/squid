@@ -200,6 +200,7 @@ main(int argc,char **argv)
 	   assert(mi->my_ptr);
 	   xmemFree(mi); /* xfree(mi->my_ptr); */ 
 	   hash_unlink(mem_table, mem_entry, 1);
+	   free(mi);
 	   mstat.frees++;
 	   break;
 	default:
