@@ -32,6 +32,7 @@ struct storeRebuildState {
     int statcount;		/* # entries from directory walking */
     int clashcount;		/* # swapfile clashes avoided */
     int dupcount;		/* # duplicates purged */
+    int cancelcount;		/* # SWAP_LOG_DEL objects purged */
     int invalid;		/* # bad lines */
     int badflags;		/* # bad e->flags */
     int need_to_validate;
@@ -204,8 +205,22 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	if (s.op == SWAP_LOG_ADD) {
 	    (void) 0;
 	} else if (s.op == SWAP_LOG_DEL) {
-	    if ((e = storeGet(s.key)) != NULL)
-		storeReleaseRequest(e);
+	    if ((e = storeGet(s.key)) != NULL) {
+		/*
+		 * Make sure we don't unlink the file, it might be
+		 * in use by a subsequent entry.  Also note that
+		 * we don't have to subtract from store_swap_size
+		 * because adding to store_swap_size happens in
+		 * the cleanup procedure.
+		 */
+        	storeExpireNow(e);
+        	storeSetPrivateKey(e);
+        	EBIT_SET(e->flag, RELEASE_REQUEST);
+    		storeDirMapBitReset(e->swap_file_number);
+		e->swap_file_number = -1;
+		RebuildState.objcount--;
+		RebuildState.cancelcount++;
+	    }
 	    continue;
 	} else {
 	    x = log(++RebuildState.bad_log_op) / log(10.0);
@@ -496,7 +511,7 @@ storeCleanup(void *datanotused)
 	e = (StoreEntry *) link_ptr;
 	if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
 	    continue;
-	if (EBIT_TEST(e->flag, RELEASE_REQUEST))
+	if (e->swap_file_number < 0)
 	    continue;
 	EBIT_SET(e->flag, ENTRY_VALIDATED);
 	/* Only set the file bit if we know its a valid entry */
@@ -604,6 +619,7 @@ storeRebuildComplete(void)
     debug(20, 1) ("  %7d With invalid flags.\n", RebuildState.badflags);
     debug(20, 1) ("  %7d Objects loaded.\n", RebuildState.objcount);
     debug(20, 1) ("  %7d Objects expired.\n", RebuildState.expcount);
+    debug(20, 1) ("  %7d Objects cancelled.\n", RebuildState.cancelcount);
     debug(20, 1) ("  %7d Duplicate URLs purged.\n", RebuildState.dupcount);
     debug(20, 1) ("  %7d Swapfile clashes avoided.\n", RebuildState.clashcount);
     debug(20, 1) ("  Took %d seconds (%6.1lf objects/sec).\n",

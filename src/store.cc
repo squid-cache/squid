@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.376 1998/02/04 23:41:00 wessels Exp $
+ * $Id: store.cc,v 1.377 1998/02/06 17:47:09 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -158,7 +158,6 @@ static void destroy_MemObject(StoreEntry *);
 static void destroy_MemObjectData(MemObject *);
 static void destroy_StoreEntry(StoreEntry *);
 static void storePurgeMem(StoreEntry *);
-static void storeSetPrivateKey(StoreEntry *);
 static unsigned int getKeyCounter(void);
 static int storeKeepInMemory(const StoreEntry *);
 
@@ -353,7 +352,7 @@ getKeyCounter(void)
     return key_counter;
 }
 
-static void
+void
 storeSetPrivateKey(StoreEntry * e)
 {
     const cache_key *newkey;
