@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.202 1997/11/12 00:08:46 wessels Exp $
+ * $Id: comm.cc,v 1.203 1997/11/14 04:55:06 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -158,7 +158,7 @@ static int fdIsHttpOrIcp(int fd);
 static IPH commConnectDnsHandle;
 static void commConnectCallback(ConnectStateData * cs, int status);
 static int commDeferRead(int fd);
-static int ignoreErrno(int errno);
+static int ignoreErrno(int);
 static void commSetConnectTimeout(int fd, time_t timeout);
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
@@ -1392,17 +1392,17 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
 }
 
 static int
-ignoreErrno(int errno)
+ignoreErrno(int ierrno)
 {
-    if (errno == EWOULDBLOCK)
+    if (ierrno == EWOULDBLOCK)
 	return 1;
 #if EAGAIN != EWOULDBLOCK
-    if (errno == EAGAIN)
+    if (ierrno == EAGAIN)
 	return 1;
 #endif
-    if (errno == EALREADY)
+    if (ierrno == EALREADY)
 	return 1;
-    if (errno == EINTR)
+    if (ierrno == EINTR)
 	return 1;
     return 0;
 }

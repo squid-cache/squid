@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.134 1997/11/10 21:07:05 wessels Exp $
+ * $Id: squid.h,v 1.135 1997/11/14 04:55:08 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -235,6 +235,8 @@
 #endif
 
 #if PURIFY
+/* disable assert() under purify */
+#define NODEBUG
 #define LOCAL_ARRAY(type,name,size) \
         static type *local_##name=NULL; \
         type *name = local_##name ? local_##name : \

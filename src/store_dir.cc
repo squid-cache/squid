@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.37 1997/11/12 00:09:10 wessels Exp $
+ * $Id: store_dir.cc,v 1.38 1997/11/14 04:55:09 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -281,6 +281,8 @@ storeDirCloseSwapLogs(void)
     SwapDir *SD;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	SD = &Config.cacheSwap.swapDirs[i];
+	if (SD->swaplog_fd < 0)	/* not open */
+	    continue;
 	file_close(SD->swaplog_fd);
 	debug(47, 3) ("Cache Dir #%d log closed on FD %d\n", i, SD->swaplog_fd);
 	SD->swaplog_fd = -1;
