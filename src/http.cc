@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.187 1997/08/26 04:21:19 wessels Exp $
+ * $Id: http.cc,v 1.188 1997/10/13 22:09:11 kostas Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -787,13 +787,13 @@ httpBuildRequestHeader(request_t * request,
     debug(11, 3) ("httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
     xstrncpy(fwdbuf, "X-Forwarded-For: ", 4096);
     xstrncpy(viabuf, "Via: ", 4096);
-    sprintf(ybuf, "%s %s HTTP/1.0",
+    snprintf(ybuf, MAX_URL + 32, "%s %s HTTP/1.0",
 	RequestMethodStr[request->method],
 	*request->urlpath ? request->urlpath : "/");
     httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     /* Add IMS header */
     if (entry && entry->lastmod && request->method == METHOD_GET) {
-	sprintf(ybuf, "If-Modified-Since: %s", mkrfc1123(entry->lastmod));
+	snprintf(ybuf, MAX_URL + 32, "If-Modified-Since: %s", mkrfc1123(entry->lastmod));
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
 	EBIT_SET(hdr_flags, HDR_IMS);
     }
@@ -838,30 +838,31 @@ httpBuildRequestHeader(request_t * request,
 	    if (orig_request->method == METHOD_TRACE) {
 		for (s = xbuf + 13; *s && isspace(*s); s++);
 		n = atoi(s);
-		sprintf(xbuf, "Max-Forwards: %d", n - 1);
+		snprintf(xbuf, 4096,  "Max-Forwards: %d", n - 1);
 	    }
 	}
 	httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512, 1);
     }
     hdr_len = t - hdr_in;
     if (Config.fake_ua && strstr(hdr_out, "User-Agent") == NULL) {
-	sprintf(ybuf, "User-Agent: %s", Config.fake_ua);
+	snprintf(ybuf,MAX_URL+32,  "User-Agent: %s", Config.fake_ua);
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 0);
     }
-    /* Append Via: */
-    sprintf(ybuf, "%3.1f %s", orig_request->http_ver, ThisCache);
+    /* Append Via: */ 
+	/* snprintf would fail here too */
+    snprintf(ybuf, MAX_URL+32,  "%3.1f %s", orig_request->http_ver, ThisCache);
     strcat(viabuf, ybuf);
     httpAppendRequestHeader(hdr_out, viabuf, &len, out_sz, 1);
     /* Append to X-Forwarded-For: */
     strcat(fwdbuf, cfd < 0 ? "unknown" : fd_table[cfd].ipaddr);
     httpAppendRequestHeader(hdr_out, fwdbuf, &len, out_sz, 1);
     if (!EBIT_TEST(hdr_flags, HDR_HOST)) {
-	sprintf(ybuf, "Host: %s", orig_request->host);
+	snprintf(ybuf,MAX_URL+32, "Host: %s", orig_request->host);
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     }
     if (!EBIT_TEST(cc_flags, CCC_MAXAGE)) {
 	url = entry ? entry->url : urlCanonical(orig_request, NULL);
-	sprintf(ybuf, "Cache-control: Max-age=%d", (int) getMaxAge(url));
+	snprintf(ybuf, MAX_URL+32, "Cache-control: Max-age=%d", (int) getMaxAge(url));
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
 	if (request->urlpath) {
 	    assert(strstr(url, request->urlpath));
@@ -870,9 +871,9 @@ httpBuildRequestHeader(request_t * request,
     /* maybe append Connection: Keep-Alive */
     if (BIT_TEST(flags, HTTP_KEEPALIVE)) {
 	if (BIT_TEST(flags, HTTP_PROXYING)) {
-	    sprintf(ybuf, "Proxy-Connection: Keep-Alive");
+	    snprintf(ybuf,MAX_URL+32, "Proxy-Connection: Keep-Alive");
 	} else {
-	    sprintf(ybuf, "Connection: Keep-Alive");
+	    snprintf(ybuf,MAX_URL+32, "Connection: Keep-Alive");
 	}
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     }
@@ -1282,7 +1283,7 @@ httpReplyHeader(double ver,
     int l = 0;
     int s = HTTP_REPLY_BUF_SZ;
     /* argh, ../lib/snprintf.c doesn't support '%f' */
-    sprintf(float_buf, "%3.1f", ver);
+    snprintf(float_buf,64, "%3.1f", ver);
     assert(strlen(float_buf) == 3);
     l += snprintf(buf + l, s - l, "HTTP/%s %d %s\r\n",
 	float_buf,

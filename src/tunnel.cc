@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.61 1997/08/10 04:42:46 wessels Exp $
+ * $Id: tunnel.cc,v 1.62 1997/10/13 22:09:20 kostas Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -406,7 +406,7 @@ sslProxyConnected(int fd, void *data)
 {
     SslStateData *sslState = data;
     debug(26, 3) ("sslProxyConnected: FD %d sslState=%p\n", fd, sslState);
-    sprintf(sslState->client.buf, "CONNECT %s HTTP/1.0\r\n\r\n", sslState->url);
+    snprintf(sslState->client.buf, sslState->client.len, "CONNECT %s HTTP/1.0\r\n\r\n", sslState->url);
     debug(26, 3) ("sslProxyConnected: Sending 'CONNECT %s HTTP/1.0'\n", sslState->url);
     sslState->client.len = strlen(sslState->client.buf);
     sslState->client.offset = 0;

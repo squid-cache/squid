@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.42 1997/07/26 04:48:34 wessels Exp $
+ * $Id: send-announce.cc,v 1.43 1997/10/13 22:09:19 kostas Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -60,19 +60,19 @@ send_announce(const ipcache_addrs * ia, void *data)
     }
     debug(27, 0) ("Sending Announcement to %s\n", host);
     sndbuf[0] = '\0';
-    sprintf(tbuf, "cache_version SQUID/%s\n", version_string);
+    snprintf(tbuf,256, "cache_version SQUID/%s\n", version_string);
     strcat(sndbuf, tbuf);
     assert(Config.Port.http);
-    sprintf(tbuf, "Running on %s %d %d\n",
+    snprintf(tbuf,256, "Running on %s %d %d\n",
 	getMyHostname(),
 	(int) Config.Port.http->i,
 	(int) Config.Port.icp);
     strcat(sndbuf, tbuf);
     if (Config.adminEmail) {
-	sprintf(tbuf, "cache_admin: %s\n", Config.adminEmail);
+	snprintf(tbuf,256, "cache_admin: %s\n", Config.adminEmail);
 	strcat(sndbuf, tbuf);
     }
-    sprintf(tbuf, "generated %d [%s]\n",
+    snprintf(tbuf, 256, "generated %d [%s]\n",
 	(int) squid_curtime,
 	mkhttpdlogtime(&squid_curtime));
     strcat(sndbuf, tbuf);

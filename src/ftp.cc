@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.136 1997/07/28 06:40:55 wessels Exp $
+ * $Id: ftp.cc,v 1.137 1997/10/13 22:09:09 kostas Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -360,10 +360,10 @@ ftpListParseParts(const char *buf, int flags)
 	    continue;
 	p->type = *tokens[0];
 	p->size = atoi(tokens[i - 1]);
-	sprintf(sbuf, "%s %2s %5s",
+	snprintf(sbuf, 128, "%s %2s %5s",
 	    tokens[i], tokens[i + 1], tokens[i + 2]);
 	if (!strstr(buf, sbuf))
-	    sprintf(sbuf, "%s %2s %-5s",
+	    snprintf(sbuf, 128, "%s %2s %-5s",
 		tokens[i], tokens[i + 1], tokens[i + 2]);
 	if ((t = strstr(buf, sbuf))) {
 	    p->date = xstrdup(sbuf);
@@ -397,7 +397,7 @@ ftpListParseParts(const char *buf, int flags)
 	    p->type = '-';
 	    p->size = atoi(tokens[2]);
 	}
-	sprintf(sbuf, "%s %s", tokens[0], tokens[1]);
+	snprintf(sbuf, 128, "%s %s", tokens[0], tokens[1]);
 	p->date = xstrdup(sbuf);
 	p->name = xstrdup(tokens[3]);
     }
@@ -474,20 +474,20 @@ ftpHtmlifyListEntry(char *line, int flags)
     ftpListParts *parts;
     /* check .. as special case */
     if (!strcmp(line, "..")) {
-	sprintf(icon, "<IMG BORDER=0 SRC=\"%s%s\" ALT=\"%-6s\">",
+	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s%s\" ALT=\"%-6s\">",
 	    "http://internal.squid/icons/",
 	    ICON_DIRUP,
 	    "[DIR]");
-	sprintf(link, "<A HREF=\"%s\">%s</A>", "../", "Parent Directory");
-	sprintf(html, "%s %s\n", icon, link);
+	snprintf(link, 2048,  "<A HREF=\"%s\">%s</A>", "../", "Parent Directory");
+	snprintf(html, 8192, "%s %s\n", icon, link);
 	return html;
     }
     if (strlen(line) > 1024) {
-	sprintf(html, "%s\n", line);
+	snprintf(html, 8192, "%s\n", line);
 	return html;
     }
     if ((parts = ftpListParseParts(line, flags)) == NULL) {
-	sprintf(html, "%s\n", line);
+	snprintf(html, 8192, "%s\n", line);
 	return html;
     }
     if (!strcmp(parts->name, ".") || !strcmp(parts->name, "..")) {
@@ -507,44 +507,44 @@ ftpHtmlifyListEntry(char *line, int flags)
     ename = xstrdup(rfc1738_escape(parts->name));
     switch (parts->type) {
     case 'd':
-	sprintf(icon, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
+	snprintf(icon, 2048, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
 	    "http://internal.squid/icons/",
 	    ICON_MENU,
 	    "[DIR]");
-	sprintf(link, "<A HREF=\"%s/\">%s</A>%s",
+	snprintf(link, 2048,  "<A HREF=\"%s/\">%s</A>%s",
 	    ename,
 	    parts->showname,
 	    dots_fill(strlen(parts->showname)));
-	sprintf(html, "%s %s  [%s]\n",
+	snprintf(html, 8192, "%s %s  [%s]\n",
 	    icon,
 	    link,
 	    parts->date);
 	break;
     case 'l':
-	sprintf(icon, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
+	snprintf(icon, 2048,  "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
 	    "http://internal.squid/icons/",
 	    ICON_LINK,
 	    "[LINK]");
-	sprintf(link, "<A HREF=\"%s\">%s</A>%s",
+	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>%s",
 	    ename,
 	    parts->showname,
 	    dots_fill(strlen(parts->showname)));
-	sprintf(html, "%s %s  [%s]\n",
+	snprintf(html, 8192, "%s %s  [%s]\n",
 	    icon,
 	    link,
 	    parts->date);
 	break;
     case '-':
     default:
-	sprintf(icon, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
+	snprintf(icon, 2048,  "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
 	    "http://internal.squid/icons/",
 	    mimeGetIcon(parts->name),
 	    "[FILE]");
-	sprintf(link, "<A HREF=\"%s\">%s</A>%s",
+	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>%s",
 	    ename,
 	    parts->showname,
 	    dots_fill(strlen(parts->showname)));
-	sprintf(html, "%s %s  [%s] %6dk\n",
+	snprintf(html, 8192, "%s %s  [%s] %6dk\n",
 	    icon,
 	    link,
 	    parts->date,
@@ -830,7 +830,7 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
     }
     strcat(t, request->host);
     if (request->port != urlDefaultPort(PROTO_FTP))
-	sprintf(&t[strlen(t)], ":%d", request->port);
+	snprintf(&t[strlen(t)], len-strlen(t), ":%d", request->port);
     strcat(t, "/");
     if (!EBIT_TEST(ftpState->flags, FTP_ROOT_DIR))
 	strcat(t, request->urlpath);
@@ -858,9 +858,9 @@ ftpStart(request_t * request, StoreEntry * entry)
     if (!ftpCheckAuth(ftpState, request->headers)) {
 	/* This request is not fully authenticated */
 	if (request->port == 21) {
-	    sprintf(realm, "ftp %s", ftpState->user);
+	    snprintf(realm,8192, "ftp %s", ftpState->user);
 	} else {
-	    sprintf(realm, "ftp %s port %d",
+	    snprintf(realm,8192, "ftp %s port %d",
 		ftpState->user, request->port);
 	}
 	response = ftpAuthRequired(request, realm);
@@ -1120,11 +1120,11 @@ ftpReadWelcome(FtpStateData * ftpState)
 	    if (strstr(ftpState->ctrl.message->key, "NetWare"))
 		EBIT_SET(ftpState->flags, FTP_SKIP_WHITESPACE);
 	if (ftpState->proxy_host != NULL)
-	    sprintf(cbuf, "USER %s@%s\r\n",
+	    snprintf(cbuf,1024, "USER %s@%s\r\n",
 		ftpState->user,
 		ftpState->request->host);
 	else
-	    sprintf(cbuf, "USER %s\r\n", ftpState->user);
+	    snprintf(cbuf,1024, "USER %s\r\n", ftpState->user);
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_USER;
     } else {
@@ -1140,7 +1140,7 @@ ftpReadUser(FtpStateData * ftpState)
     if (code == 230) {
 	ftpReadPass(ftpState);
     } else if (code == 331) {
-	sprintf(cbuf, "PASS %s\r\n", ftpState->password);
+	snprintf(cbuf,1024, "PASS %s\r\n", ftpState->password);
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_PASS;
     } else {
@@ -1160,7 +1160,7 @@ ftpReadPass(FtpStateData * ftpState)
 	t = strrchr(ftpState->request->urlpath, '/');
 	filename = t ? t + 1 : ftpState->request->urlpath;
 	mode = mimeGetTransferMode(filename);
-	sprintf(cbuf, "TYPE %c\r\n", mode);
+	snprintf(cbuf,1024, "TYPE %c\r\n", mode);
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_TYPE;
     } else {
@@ -1211,7 +1211,7 @@ ftpSendCwd(FtpStateData * ftpState)
 	ftpSendPasv(ftpState);
 	return;
     }
-    sprintf(cbuf, "CWD %s\r\n", w->key);
+    snprintf(cbuf, 1024, "CWD %s\r\n", w->key);
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_CWD;
 }
@@ -1249,7 +1249,7 @@ ftpReadCwd(FtpStateData * ftpState)
 	}
 	wordlistDestroy(&ftpState->pathcomps);
 	assert(*ftpState->filepath != '\0');
-	sprintf(cbuf, "MDTM %s\r\n", ftpState->filepath);
+	snprintf(cbuf, 1024, "MDTM %s\r\n", ftpState->filepath);
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_MDTM;
     }
@@ -1267,7 +1267,7 @@ ftpReadMdtm(FtpStateData * ftpState)
     }
     assert(ftpState->filepath != NULL);
     assert(*ftpState->filepath != '\0');
-    sprintf(cbuf, "SIZE %s\r\n", ftpState->filepath);
+    snprintf(cbuf, 1024, "SIZE %s\r\n", ftpState->filepath);
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_SIZE;
 }
@@ -1306,7 +1306,7 @@ ftpSendPasv(FtpStateData * ftpState)
     }
     ftpState->data.fd = fd;
     commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
-    sprintf(cbuf, "PASV\r\n");
+    snprintf(cbuf, 1024, "PASV\r\n");
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_PASV;
 }
@@ -1344,7 +1344,7 @@ ftpReadPasv(FtpStateData * ftpState)
 	ftpSendPort(ftpState);
 	return;
     }
-    sprintf(junk, "%d.%d.%d.%d", h1, h2, h3, h4);
+    snprintf(junk,1024, "%d.%d.%d.%d", h1, h2, h3, h4);
     if (!safe_inet_addr(junk, NULL)) {
 	debug(9, 1) ("unsafe address (%s)\n", junk);
 	ftpSendPort(ftpState);
@@ -1398,16 +1398,16 @@ ftpRestOrList(FtpStateData * ftpState)
 {
     debug(9, 3) ("This is ftpRestOrList\n");
     if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
-	sprintf(cbuf, "LIST\r\n");
+	snprintf(cbuf, 1024, "LIST\r\n");
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_LIST;
     } else if (ftpState->restart_offset > 0) {
-	sprintf(cbuf, "REST\r\n");
+	snprintf(cbuf,1024, "REST\r\n");
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_REST;
     } else {
 	assert(ftpState->filepath != NULL);
-	sprintf(cbuf, "RETR %s\r\n", ftpState->filepath);
+	snprintf(cbuf,1024, "RETR %s\r\n", ftpState->filepath);
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_RETR;
     }
@@ -1421,7 +1421,7 @@ ftpReadRest(FtpStateData * ftpState)
     assert(ftpState->restart_offset > 0);
     if (code == 350) {
 	assert(ftpState->filepath != NULL);
-	sprintf(cbuf, "RETR %s\r\n", ftpState->filepath);
+	snprintf(cbuf,1024, "RETR %s\r\n", ftpState->filepath);
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_RETR;
     } else if (code > 0) {
@@ -1448,7 +1448,7 @@ ftpReadList(FtpStateData * ftpState)
 	return;
     } else if (!EBIT_TEST(ftpState->flags, FTP_TRIED_NLST)) {
 	EBIT_SET(ftpState->flags, FTP_TRIED_NLST);
-	sprintf(cbuf, "NLST\r\n");
+	snprintf(cbuf, 1024, "NLST\r\n");
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_NLST;
     } else {
@@ -1497,7 +1497,7 @@ ftpDataTransferDone(FtpStateData * ftpState)
 	ftpState->data.fd = -1;
     }
     assert(ftpState->ctrl.fd > -1);
-    sprintf(cbuf, "QUIT\r\n");
+    snprintf(cbuf,1024, "QUIT\r\n");
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_QUIT;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.223 1997/08/25 22:35:50 wessels Exp $
+ * $Id: cache_cf.cc,v 1.224 1997/10/13 22:09:03 kostas Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -70,7 +70,7 @@ static void free_all _PARAMS((void));
 static void
 self_destruct(void)
 {
-    sprintf(fatal_str, "Bungled %s line %d: %s",
+    snprintf(fatal_str,BUFSIZ, "Bungled %s line %d: %s",
 	cfg_filename, config_lineno, config_input_line);
     fatal(fatal_str);
 }
@@ -144,7 +144,7 @@ parseConfigFile(const char *file_name)
     free_all();
     default_all();
     if ((fp = fopen(file_name, "r")) == NULL) {
-	sprintf(fatal_str, "Unable to open configuration file: %s: %s",
+	snprintf(fatal_str, BUFSIZ, "Unable to open configuration file: %s: %s",
 	    file_name, xstrerror());
 	fatal(fatal_str);
     }
@@ -232,7 +232,7 @@ configDoConfigure(void)
 	vhost_mode = 1;
     if (Config.Port.http == NULL)
 	fatal("No http_port specified!");
-    sprintf(ThisCache, "%s:%d (Squid/%s)",
+    snprintf(ThisCache, SQUIDHOSTNAMELEN << 1, "%s:%d (Squid/%s)",
 	getMyHostname(),
 	(int) Config.Port.http->i,
 	SQUID_VERSION);

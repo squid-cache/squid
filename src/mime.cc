@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.37 1997/08/25 03:51:50 wessels Exp $
+ * $Id: mime.cc,v 1.38 1997/10/13 22:09:16 kostas Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -212,13 +212,17 @@ mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt)
     expiretime = ttl ? t + ttl : 0;
     date[0] = expires[0] = last_modified[0] = '\0';
     content_length[0] = result[0] = '\0';
-    sprintf(date, "Date: %s\r\n", mkrfc1123(t));
+    snprintf(date,100, "Date: %s\r\n", mkrfc1123(t));
     if (ttl >= 0)
-	sprintf(expires, "Expires: %s\r\n", mkrfc1123(expiretime));
+	snprintf(expires, 100, "Expires: %s\r\n", mkrfc1123(expiretime));
     if (lmt)
-	sprintf(last_modified, "Last-Modified: %s\r\n", mkrfc1123(lmt));
+	snprintf(last_modified,100, "Last-Modified: %s\r\n", mkrfc1123(lmt));
     if (size > 0)
-	sprintf(content_length, "Content-Length: %d\r\n", size);
+	snprintf(content_length,100, "Content-Length: %d\r\n", size);
+
+	/* NOTE: don't know size of result thus didn't change
+	   to snprintf(). Should be done sometime! */
+
     sprintf(result, "Server: %s/%s\r\n%s%s%sContent-Type: %s\r\n%s",
 	appname,
 	version_string,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.34 1997/07/16 20:32:03 wessels Exp $
+ * $Id: dnsserver.cc,v 1.35 1997/10/13 22:09:07 kostas Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -284,7 +284,7 @@ main(int argc, char *argv[])
 	    exit(0);
 	    break;
 	case 'd':
-	    sprintf(buf, "dnsserver.%d.log", (int) getpid());
+	    snprintf(buf, 256, "dnsserver.%d.log", (int) getpid());
 	    logfile = fopen(buf, "a");
 	    do_debug++;
 	    if (!logfile)
@@ -364,10 +364,10 @@ main(int argc, char *argv[])
 	msg[0] = '\0';
 	if (!result) {
 	    if (h_errno == TRY_AGAIN) {
-		sprintf(msg, "Name Server for domain '%s' is unavailable.\n",
+		snprintf(msg, 1024,  "Name Server for domain '%s' is unavailable.\n",
 		    request);
 	    } else {
-		sprintf(msg, "DNS Domain '%s' is invalid: %s.\n",
+		snprintf(msg, 1024, "DNS Domain '%s' is invalid: %s.\n",
 		    request, my_h_msgs(h_errno));
 	    }
 	}

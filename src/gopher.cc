@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.92 1997/07/28 06:40:56 wessels Exp $
+ * $Id: gopher.cc,v 1.93 1997/10/13 22:09:10 kostas Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -208,8 +208,8 @@ gopher_mime_content(char *buf, const char *name, const char *def_ctype)
     char *ctype = mimeGetContentType(name);
     char *cenc = mimeGetContentEncoding(name);
     if (cenc)
-	sprintf(buf + strlen(buf), "Content-Encoding: %s\r\n", cenc);
-    sprintf(buf + strlen(buf), "Content-Type: %s\r\n",
+	snprintf(buf + strlen(buf), MAX_MIME-strlen(buf), "Content-Encoding: %s\r\n", cenc);
+    snprintf(buf + strlen(buf), MAX_MIME-strlen(buf), "Content-Type: %s\r\n",
 	ctype ? ctype : def_ctype);
 }
 
@@ -221,7 +221,7 @@ gopherMimeCreate(GopherStateData * gopherState)
 {
     LOCAL_ARRAY(char, tempMIME, MAX_MIME);
 
-    sprintf(tempMIME,
+    snprintf(tempMIME, MAX_MIME,
 	"HTTP/1.0 200 OK Gatewaying\r\n"
 	"Server: Squid/%s\r\n"
 	"Date: %s\r\n"
@@ -332,7 +332,8 @@ gopherEndHTML(GopherStateData * gopherState)
     LOCAL_ARRAY(char, tmpbuf, TEMP_BUF_SIZE);
 
     if (!gopherState->data_in) {
-	sprintf(tmpbuf, "<HTML><HEAD><TITLE>Server Return Nothing.</TITLE>\n"
+	snprintf(tmpbuf, TEMP_BUF_SIZE,
+		"<HTML><HEAD><TITLE>Server Return Nothing.</TITLE>\n"
 	    "</HEAD><BODY><HR><H1>Server Return Nothing.</H1></BODY></HTML>\n");
 	storeAppend(gopherState->entry, tmpbuf, strlen(tmpbuf));
 	return;
@@ -367,7 +368,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     entry = gopherState->entry;
 
     if (gopherState->conversion == HTML_INDEX_PAGE) {
-	sprintf(outbuf, "<HTML><HEAD><TITLE>Gopher Index %s</TITLE></HEAD>\n"
+	snprintf(outbuf, TEMP_BUF_SIZE << 4, 
+            "<HTML><HEAD><TITLE>Gopher Index %s</TITLE></HEAD>\n"
 	    "<BODY><H1>%s<BR>Gopher Search</H1>\n"
 	    "<p>This is a searchable Gopher index. Use the search\n"
 	    "function of your browser to enter search terms.\n"
@@ -380,7 +382,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	return;
     }
     if (gopherState->conversion == HTML_CSO_PAGE) {
-	sprintf(outbuf, "<HTML><HEAD><TITLE>CSO Search of %s</TITLE></HEAD>\n"
+	snprintf(outbuf, TEMP_BUF_SIZE << 4, 
+            "<HTML><HEAD><TITLE>CSO Search of %s</TITLE></HEAD>\n"
 	    "<BODY><H1>%s<BR>CSO Search</H1>\n"
 	    "<P>A CSO database usually contains a phonebook or\n"
 	    "directory.  Use the search function of your browser to enter\n"
@@ -546,14 +549,14 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			memset(tmpbuf, '\0', TEMP_BUF_SIZE);
 			if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
 			    if (strlen(escaped_selector) != 0)
-				sprintf(tmpbuf, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s@%s/\">%s</A>\n",
+				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s@%s/\">%s</A>\n",
 				    icon_type, escaped_selector, host, name);
 			    else
-				sprintf(tmpbuf, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s/\">%s</A>\n",
+				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s/\">%s</A>\n",
 				    icon_type, host, name);
 
 			} else {
-			    sprintf(tmpbuf, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
+			    snprintf(tmpbuf, TEMP_BUF_SIZE,  "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
 				icon_type, host, gtype, escaped_selector, name);
 			}
 			safe_free(escaped_selector);
@@ -588,10 +591,10 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			break;
 
 		    if (gopherState->cso_recno != recno) {
-			sprintf(tmpbuf, "</PRE><HR><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, result);
+			snprintf(tmpbuf,TEMP_BUF_SIZE, "</PRE><HR><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, result);
 			gopherState->cso_recno = recno;
 		    } else {
-			sprintf(tmpbuf, "%s\n", result);
+			snprintf(tmpbuf,TEMP_BUF_SIZE, "%s\n", result);
 		    }
 		    strcat(outbuf, tmpbuf);
 		    gopherState->data_in = 1;
@@ -616,7 +619,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 		    case 502:	/* Too Many Matches */
 			{
 			    /* Print the message the server returns */
-			    sprintf(tmpbuf, "</PRE><HR><H2>%s</H2>\n<PRE>", result);
+			    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR><H2>%s</H2>\n<PRE>", result);
 			    strcat(outbuf, tmpbuf);
 			    gopherState->data_in = 1;
 			    break;
@@ -812,13 +815,13 @@ gopherSendRequest(int fd, void *data)
     char *t;
     if (gopherState->type_id == GOPHER_CSO) {
 	sscanf(gopherState->request, "?%s", query);
-	sprintf(buf, "query %s\r\nquit\r\n", query);
+	snprintf(buf, 4096, "query %s\r\nquit\r\n", query);
     } else if (gopherState->type_id == GOPHER_INDEX) {
 	if ((t = strchr(gopherState->request, '?')))
 	    *t = '\t';
-	sprintf(buf, "%s\r\n", gopherState->request);
+	snprintf(buf, 4096, "%s\r\n", gopherState->request);
     } else {
-	sprintf(buf, "%s\r\n", gopherState->request);
+	snprintf(buf, 4096, "%s\r\n", gopherState->request);
     }
     debug(10, 5) ("gopherSendRequest: FD %d\n", fd);
     comm_write(fd,

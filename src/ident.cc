@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.32 1997/07/15 23:23:27 wessels Exp $
+ * $Id: ident.cc,v 1.33 1997/10/13 22:09:14 kostas Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -85,7 +85,7 @@ identConnectDone(int fd, int status, void *data)
 	identCallback(connState);
 	return;
     }
-    sprintf(reqbuf, "%d, %d\r\n",
+    snprintf(reqbuf,BUFSIZ, "%d, %d\r\n",
 	ntohs(connState->peer.sin_port),
 	ntohs(connState->me.sin_port));
     comm_write(fd,
