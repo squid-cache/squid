@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.289 1997/10/17 05:20:19 wessels Exp $
+ * $Id: store.cc,v 1.290 1997/10/17 16:21:51 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -943,15 +943,17 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 3) ("storeCheckSwapOut: %s\n", e->url);
     debug(20, 3) ("storeCheckSwapOut: store_status = %s\n",
 	storeStatusStr[e->store_status]);
-    debug(20, 3) ("storeCheckSwapOut: mem->inmem_lo = %d\n", (int) mem->inmem_lo);
-    debug(20, 3) ("storeCheckSwapOut: mem->inmem_hi = %d\n", (int) mem->inmem_hi);
     if (e->store_status == STORE_ABORTED)
 	return;
-    assert(mem->inmem_lo <= mem->swapout.offset);
+    debug(20, 3) ("storeCheckSwapOut: mem->inmem_lo = %d\n", (int) mem->inmem_lo);
+    debug(20, 3) ("storeCheckSwapOut: mem->inmem_hi = %d\n", (int) mem->inmem_hi);
     lowest_offset = storeLowestMemReaderOffset(e);
-    debug(20, 3) ("storeCheckSwapOut: lowest_offset = %d\n", (int) lowest_offset);
-    copy_size = (size_t) (lowest_offset - mem->inmem_lo);
-    debug(20, 3) ("storeCheckSwapOut: copy_size = %d\n", (int) copy_size);
+    copy_size = (size_t) (lowest_offset - mem->swapout.offset);
+    debug(20, 3) ("storeCheckSwapOut: lowest_offset = %d\n",
+	(int) lowest_offset);
+    debug(20, 3) ("storeCheckSwapOut: copy_size = %d\n",
+	(int) copy_size);
+    assert(mem->inmem_lo <= mem->swapout.offset);
     assert(copy_size >= 0);
     if (copy_size == 0)
 	return;
