@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.11 1997/04/30 18:30:58 wessels Exp $
+ * $Id: peer_select.cc,v 1.12 1997/05/02 04:28:37 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -63,6 +63,18 @@ static void peerSelectFoo _PARAMS((ps_state *));
 static void peerPingTimeout _PARAMS((void *data));
 static void peerSelectCallbackFail _PARAMS((ps_state * psstate));
 static void peerHandleIcpReply _PARAMS((peer * p, peer_t type, icp_opcode op, void *data));
+static void peerSelectStateFree _PARAMS((ps_state * psstate));
+
+static void
+peerSelectStateFree(ps_state * psstate)
+{
+    if (psstate->acl_checklist) {
+	debug(0, 0, "calling aclChecklistFree() from peerSelectStateFree\n");
+	aclChecklistFree(psstate->acl_checklist);
+    }
+    requestUnlink(psstate->request);
+    xfree(psstate);
+}
 
 int
 peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
@@ -139,6 +151,7 @@ static void
 peerCheckNeverDirectDone(int answer, void *data)
 {
     ps_state *psstate = data;
+    psstate->acl_checklist = NULL;
     debug(44, 3, "peerCheckNeverDirectDone: %d\n", answer);
     psstate->never_direct = answer ? 1 : -1;
     peerSelectFoo(psstate);
@@ -148,6 +161,7 @@ static void
 peerCheckAlwaysDirectDone(int answer, void *data)
 {
     ps_state *psstate = data;
+    psstate->acl_checklist = NULL;
     debug(44, 3, "peerCheckAlwaysDirectDone: %d\n", answer);
     psstate->always_direct = answer ? 1 : -1;
     peerSelectFoo(psstate);
@@ -163,8 +177,7 @@ peerSelectCallback(ps_state * psstate, peer * p)
 	entry->ping_status = PING_DONE;
     }
     psstate->callback(p, psstate->callback_data);
-    requestUnlink(psstate->request);
-    xfree(psstate);
+    peerSelectStateFree(psstate);
 }
 
 static void
@@ -177,8 +190,7 @@ peerSelectCallbackFail(ps_state * psstate)
     debug(44, 1, "   never_direct = %d\n", psstate->never_direct);
     debug(44, 1, "        timeout = %d\n", psstate->icp.timeout);
     psstate->fail_callback(NULL, psstate->callback_data);
-    requestUnlink(psstate->request);
-    xfree(psstate);
+    peerSelectStateFree(psstate);
 }
 
 static void
@@ -193,22 +205,26 @@ peerSelectFoo(ps_state * psstate)
 	RequestMethodStr[request->method],
 	request->host);
     if (psstate->never_direct == 0 && Config.accessList.NeverDirect) {
-	aclNBCheck(Config.accessList.NeverDirect,
+	psstate->acl_checklist = aclChecklistCreate(
+	    Config.accessList.NeverDirect,
 	    request,
 	    request->client_addr,
 	    NULL,		/* user agent */
-	    NULL,		/* ident */
+	    NULL);		/* ident */
+	aclNBCheck(psstate->acl_checklist,
 	    peerCheckNeverDirectDone,
 	    psstate);
 	return;
     } else if (psstate->never_direct > 0) {
 	direct = DIRECT_NO;
     } else if (psstate->always_direct == 0 && Config.accessList.AlwaysDirect) {
-	aclNBCheck(Config.accessList.AlwaysDirect,
+	psstate->acl_checklist = aclChecklistCreate(
+	    Config.accessList.AlwaysDirect,
 	    request,
 	    request->client_addr,
 	    NULL,		/* user agent */
-	    NULL,		/* ident */
+	    NULL);		/* ident */
+	aclNBCheck(psstate->acl_checklist,
 	    peerCheckAlwaysDirectDone,
 	    psstate);
 	return;

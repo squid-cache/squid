@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.93 1997/04/30 22:46:23 wessels Exp $
+ * $Id: acl.cc,v 1.94 1997/05/02 04:28:32 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -61,8 +61,8 @@ static void aclCheck _PARAMS((aclCheck_t * checklist));
 
 static void aclCheckCallback _PARAMS((aclCheck_t * checklist, int answer));
 static IPH aclLookupDstIPDone;
-static void aclLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
-static void aclLookupDstFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
+static FQDNH aclLookupSrcFQDNDone;
+static FQDNH aclLookupDstFQDNDone;
 
 
 #if defined(USE_SPLAY_TREE)
@@ -1168,6 +1168,7 @@ aclCheck(aclCheck_t * checklist)
     int allow = 0;
     const struct _acl_access *A;
     int match;
+    ipcache_addrs *ia;
     while ((A = checklist->access_list)) {
 	debug(28, 3, "aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
@@ -1182,19 +1183,18 @@ aclCheck(aclCheck_t * checklist)
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEEDED) {
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
 	    fqdncache_nbgethostbyaddr(checklist->src_addr,
-		-1,
 		aclLookupSrcFQDNDone,
 		checklist);
 	    return;
 	} else if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEEDED) {
-	    checklist->dst_ia = ipcacheCheckNumeric(checklist->request->host);
-	    if (checklist->dst_ia == NULL) {
+	    ia = ipcacheCheckNumeric(checklist->request->host);
+	    if (ia == NULL) {
 		checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
 		return;
 	    }
+	    checklist->dst_addr = ia->in_addrs[0];
 	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;
-	    fqdncache_nbgethostbyaddr(checklist->dst_ia->in_addrs[0],
-		-1,
+	    fqdncache_nbgethostbyaddr(checklist->dst_addr,
 		aclLookupDstFQDNDone,
 		checklist);
 	    return;
@@ -1210,20 +1210,27 @@ aclCheck(aclCheck_t * checklist)
     aclCheckCallback(checklist, !allow);
 }
 
+void
+aclChecklistFree(aclCheck_t * checklist)
+{
+    if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_PENDING)
+	fqdncacheUnregister(checklist->src_addr, checklist);
+    if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_PENDING)
+	fqdncacheUnregister(checklist->dst_addr, checklist);
+    if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_PENDING)
+	ipcacheUnregister(checklist->request->host, checklist);
+    requestUnlink(checklist->request);
+    xfree(checklist);
+}
 
 static void
 aclCheckCallback(aclCheck_t * checklist, int answer)
 {
     debug(28, 3, "aclCheckCallback: answer=%d\n", answer);
     checklist->callback(answer, checklist->callback_data);
-    if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_PENDING)
-	fqdncacheUnregister(checklist->src_addr, checklist);
-    if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_PENDING)
-	fqdncacheUnregister(checklist->dst_ia->in_addrs[0], checklist);
-    if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_PENDING)
-	ipcacheUnregister(checklist->request->host, checklist);
-    requestUnlink(checklist->request);
-    xfree(checklist);
+    checklist->callback = NULL;
+    checklist->callback_data = NULL;
+    aclChecklistFree(checklist);
 }
 
 static void
@@ -1235,7 +1242,7 @@ aclLookupDstIPDone(int fd, const ipcache_addrs * ia, void *data)
 }
 
 static void
-aclLookupSrcFQDNDone(int fd, const char *fqdn, void *data)
+aclLookupSrcFQDNDone(const char *fqdn, void *data)
 {
     aclCheck_t *checklist = data;
     checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
@@ -1243,21 +1250,19 @@ aclLookupSrcFQDNDone(int fd, const char *fqdn, void *data)
 }
 
 static void
-aclLookupDstFQDNDone(int fd, const char *fqdn, void *data)
+aclLookupDstFQDNDone(const char *fqdn, void *data)
 {
     aclCheck_t *checklist = data;
     checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
 
-void
-aclNBCheck(const struct _acl_access *A,
+aclCheck_t *
+aclChecklistCreate(const struct _acl_access *A,
     request_t * request,
     struct in_addr src_addr,
     char *user_agent,
-    char *ident,
-    PF callback,
-    void *callback_data)
+    char *ident)
 {
     aclCheck_t *checklist = xcalloc(1, sizeof(aclCheck_t));;
     checklist->access_list = A;
@@ -1267,6 +1272,12 @@ aclNBCheck(const struct _acl_access *A,
 	xstrncpy(checklist->browser, user_agent, BROWSERNAMELEN);
     if (ident)
 	xstrncpy(checklist->ident, ident, ICP_IDENT_SZ);
+    return checklist;
+}
+
+void
+aclNBCheck(aclCheck_t * checklist, PF callback, void *callback_data)
+{
     checklist->callback = callback;
     checklist->callback_data = callback_data;
     aclCheck(checklist);
