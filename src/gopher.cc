@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.95 1997/10/16 19:22:38 kostas Exp $
+ * $Id: gopher.cc,v 1.96 1997/10/16 23:59:56 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -132,7 +132,6 @@
 #define GOPHER_PLUS_SOUND   '<'
 
 #define GOPHER_PORT         70
-#define GOPHER_DELETE_GAP   (64*1024)
 
 #define TAB                 '\t'
 #define TEMP_BUF_SIZE       SM_PAGE_SIZE
@@ -683,9 +682,9 @@ gopherReadReply(int fd, void *data)
 	return;
     }
     /* check if we want to defer reading */
-    clen = entry->mem_obj->e_current_len;
-    off = storeGetLowestReaderOffset(entry);
-    if ((clen - off) > GOPHER_DELETE_GAP) {
+    clen = entry->mem_obj->inmem_hi;
+    off = storeLowestMemReaderOffset(entry);
+    if ((clen - off) > READ_AHEAD_GAP) {
 	IOStats.Gopher.reads_deferred++;
 	debug(10, 3) ("gopherReadReply: Read deferred for Object: %s\n",
 	    entry->url);
@@ -741,7 +740,7 @@ gopherReadReply(int fd, void *data)
 	    	storeAbort(entry, 0);
 	    	comm_close(fd);
 	}
-    } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
+    } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
 		/* was assert */	
         ErrorState *err;
         err=xcalloc(1,sizeof(ErrorState));

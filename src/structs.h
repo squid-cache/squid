@@ -721,16 +721,13 @@ struct _stmem_stats {
 
 /* keep track each client receiving data from that particular StoreEntry */
 struct _store_client {
-#if VM_WINDOW
-    int swapin_fd;
-#else
     off_t copy_offset;
     off_t seen_offset;
     size_t copy_size;
     char *copy_buf;
     STCB *callback;
     void *callback_data;
-#endif
+    short swapin_fd;
 };
 
 
@@ -738,17 +735,16 @@ struct _store_client {
 struct _MemObject {
     mem_hdr *data;
     char *e_swap_buf;
-    int e_swap_buf_len;
+    size_t e_swap_buf_len;
     unsigned char pending_list_size;
-    int e_current_len;
-    off_t e_lowest_offset;
+    off_t inmem_hi;
+    off_t inmem_lo;
     struct _store_client *clients;
     int nclients;
-    off_t swap_offset;
-#if !VM_WINDOW
-    short swapin_fd;
-#endif
-    short swapout_fd;
+    struct {
+	off_t offset;
+	int fd;
+    } swapout;
     struct _http_reply *reply;
     request_t *request;
     struct timeval start_ping;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.83 1997/10/16 19:22:42 kostas Exp $
+ * $Id: wais.cc,v 1.84 1997/10/17 00:00:05 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -106,8 +106,6 @@
 
 #include "squid.h"
 
-#define  WAIS_DELETE_GAP  (64*1024)
-
 typedef struct {
     int fd;
     StoreEntry *entry;
@@ -171,7 +169,6 @@ waisReadReply(int fd, void *data)
     int off;
     int bin;
     if (protoAbortFetch(entry)) {
-	/* was assert */
     	ErrorState *err;
     	err = xcalloc(1, sizeof(ErrorState));
     	err->type = ERR_CLIENT_ABORT;
@@ -182,23 +179,10 @@ waisReadReply(int fd, void *data)
 	comm_close(fd);
 	return;
     }
-    if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
-	/* we can terminate connection right now */
-	/* was assert */
-        ErrorState *err;
-        err = xcalloc(1, sizeof(ErrorState));
-        err->type = ERR_NO_CLIENTS;
-        err->http_status = HTTP_INTERNAL_SERVER_ERROR;
-        err->request = urlParse(METHOD_CONNECT, waisState->request);
-        errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
-	comm_close(fd);
-	return;
-    }
     /* check if we want to defer reading */
-    clen = entry->mem_obj->e_current_len;
-    off = storeGetLowestReaderOffset(entry);
-    if ((clen - off) > WAIS_DELETE_GAP) {
+    clen = entry->mem_obj->inmem_hi;
+    off = storeLowestMemReaderOffset(entry);
+    if ((clen - off) > READ_AHEAD_GAP) {
 	IOStats.Wais.reads_deferred++;
 	debug(24, 3) ("waisReadReply: Read deferred for Object: %s\n",
 	    entry->url);
@@ -252,7 +236,7 @@ waisReadReply(int fd, void *data)
 	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
-    } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
+    } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
 		/* was assert */
             ErrorState *err;
             err = xcalloc(1, sizeof(ErrorState));
@@ -261,7 +245,6 @@ waisReadReply(int fd, void *data)
             err->http_status = HTTP_SERVICE_UNAVAILABLE;
             err->request = urlParse(METHOD_CONNECT, waisState->request);
             errorAppendEntry(entry, err);
-
 	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (len == 0) {

@@ -93,7 +93,7 @@ typedef void IRCB _PARAMS((peer *, peer_t, icp_common_t *, void *data));
 typedef void PSC _PARAMS((peer *, void *));
 typedef void RH _PARAMS((void *data, char *result));
 
-typedef void SIH _PARAMS((void *, int));	/* swap in */
+typedef void SIH _PARAMS((int fd, void *));	/* swap in */
 typedef int QS _PARAMS((const void *, const void *));	/* qsort */
 typedef void STCB _PARAMS((void *, char *, ssize_t));	/* store callback */
 typedef void STABH _PARAMS((void *));

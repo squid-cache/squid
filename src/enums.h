@@ -196,7 +196,6 @@ typedef enum {
 
 enum {
     NOT_IN_MEMORY,
-    SWAPPING_IN,
     IN_MEMORY
 };
 
@@ -214,9 +213,10 @@ enum {
 };
 
 enum {
-    NO_SWAP,
-    SWAPPING_OUT,
-    SWAP_OK
+    SWAPOUT_NONE,
+    SWAPOUT_OPENING,
+    SWAPOUT_WRITING,
+    SWAPOUT_DONE
 };
 
 enum {

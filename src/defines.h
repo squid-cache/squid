@@ -188,7 +188,7 @@
 #define ENTRY_UNUSED04	 	(1<<4)
 #define DELAY_SENDING 		(1<<3)
 #define ENTRY_REVALIDATE 	(1<<2)
-#define DELETE_BEHIND   	(1<<1)
+#define ENTRY_UNUSED01   	(1<<1)
 #define ENTRY_SPECIAL		(1<<0)
 
 #define MAX_FILES_PER_DIR (1<<20)
@@ -230,3 +230,5 @@
 
 #define HTTP_PROXYING		(1<<0)
 #define HTTP_KEEPALIVE		(1<<1)
+
+#define READ_AHEAD_GAP		(1<<14)

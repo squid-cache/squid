@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.160 1997/10/13 22:09:17 kostas Exp $
+ * $Id: neighbors.cc,v 1.161 1997/10/16 23:59:59 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -445,7 +445,7 @@ neighborsUdpPing(request_t * request,
 	debug(15, 0) ("Check 'icp_port' in your config file\n");
 	fatal_dump(NULL);
     }
-    if (entry->swap_status != NO_SWAP)
+    if (entry->swap_status != SWAPOUT_NONE)
 	fatal_dump("neighborsUdpPing: bad swap_status");
     mem->start_ping = current_time;
     mem->icp_reply_callback = callback;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.137 1997/10/13 22:09:09 kostas Exp $
+ * $Id: ftp.cc,v 1.138 1997/10/16 23:59:55 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -30,8 +30,6 @@
  */
 
 #include "squid.h"
-
-#define FTP_DELETE_GAP  (1<<18)
 
 enum {
     FTP_ISDIR,
@@ -621,9 +619,9 @@ ftpReadData(int fd, void *data)
 	return;
     }
     /* check if we want to defer reading */
-    clen = entry->mem_obj->e_current_len;
-    off = storeGetLowestReaderOffset(entry);
-    if ((clen - off) > FTP_DELETE_GAP) {
+    clen = entry->mem_obj->inmem_hi;
+    off = storeLowestMemReaderOffset(entry);
+    if ((clen - off) > READ_AHEAD_GAP) {
 	IOStats.Ftp.reads_deferred++;
 	debug(9, 3) ("ftpReadData: Read deferred for Object: %s\n",
 	    entry->url);
@@ -672,7 +670,7 @@ ftpReadData(int fd, void *data)
 	    storeAbort(entry, 0);
 	    ftpDataTransferDone(ftpState);
 	}
-    } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
+    } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_ZERO_SIZE_OBJECT;
 	err->errno = errno;
@@ -1528,7 +1526,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     if (EBIT_TEST(ftpState->flags, FTP_HTTP_HEADER_SENT))
 	return;
     EBIT_SET(ftpState->flags, FTP_HTTP_HEADER_SENT);
-    assert(e->mem_obj->e_current_len == 0);
+    assert(e->mem_obj->inmem_hi == 0);
     filename = (t = strrchr(urlpath, '/')) ? t + 1 : urlpath;
     if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	mime_type = "text/html";
