@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.35 2004/04/03 15:00:12 hno Exp $
+ * $Id: client_side_request.cc,v 1.36 2004/04/07 08:51:31 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -112,7 +112,6 @@ static void clientAccessCheckDone(int, void *);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
 static void clientInterpretRequestHeaders(clientHttpRequest * http);
-static void clientRedirectStart(clientHttpRequest *http);
 static RH clientRedirectDone;
 extern "C" CSR clientGetMoreData;
 extern "C" CSS clientReplyStatus;
@@ -394,7 +393,7 @@ clientAccessCheckDone(int answer, void *data)
         http->uri = xstrdup(urlCanonical(http->request));
         assert(context->redirect_state == REDIRECT_NONE);
         context->redirect_state = REDIRECT_PENDING;
-        clientRedirectStart(http);
+        redirectStart(http, clientRedirectDone, context);
     } else {
         /* Send an error */
         clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
@@ -441,39 +440,6 @@ clientAccessCheckDone(int answer, void *data)
                                     auth_user_request : http->request->auth_user_request);
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
-    }
-}
-
-static void
-clientRedirectAccessCheckDone(int answer, void *data)
-{
-    clientHttpRequest *http = (clientHttpRequest *)data;
-    ClientRequestContext *context  = (ClientRequestContext *)http;
-
-    context->acl_checklist = NULL;
-
-    if (answer == ACCESS_ALLOWED)
-        redirectStart(http, clientRedirectDone, data);
-    else
-        clientRedirectDone(context, NULL);
-}
-
-static void
-clientRedirectStart(clientHttpRequest *http)
-{
-    ClientRequestContext *context  = (ClientRequestContext *)http;
-    debug(33, 5) ("clientRedirectStart: '%s'\n", http->uri);
-
-    if (Config.Program.redirect == NULL) {
-        clientRedirectDone(http, NULL);
-        return;
-    }
-
-    if (Config.accessList.redirector) {
-        context->acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
-        context->acl_checklist->nonBlockingCheck(clientRedirectAccessCheckDone, context);
-    } else {
-        redirectStart(http, clientRedirectDone, http);
     }
 }
 
