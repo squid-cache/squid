@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.37 1996/07/25 07:10:34 wessels Exp $
+ * $Id: gopher.cc,v 1.38 1996/07/26 17:18:23 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -321,14 +321,8 @@ int gopher_url_parser(url, host, port, type_id, request)
 int gopherCachable(url)
      char *url;
 {
-    wordlist *p = NULL;
     GopherData *data = NULL;
     int cachable = 1;
-
-    /* scan stop list */
-    for (p = Config.gopher_stoplist; p; p = p->next)
-	if (strstr(url, p->key))
-	    return 0;
 
     /* use as temp data structure to parse gopher URL */
     data = CreateGopherData();

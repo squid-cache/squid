@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.66 1996/07/25 07:10:35 wessels Exp $
+ * $Id: http.cc,v 1.67 1996/07/26 17:18:23 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -148,18 +148,9 @@ int httpCachable(url, method)
      char *url;
      int method;
 {
-    wordlist *p = NULL;
-
     /* GET and HEAD are cachable. Others are not. */
     if (method != METHOD_GET && method != METHOD_HEAD)
 	return 0;
-
-    /* scan stop list */
-    for (p = Config.http_stoplist; p; p = p->next) {
-	if (strstr(url, p->key))
-	    return 0;
-    }
-
     /* else cachable */
     return 1;
 }

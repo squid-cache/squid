@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.64 1996/07/25 07:10:27 wessels Exp $
+ * $Id: cache_cf.cc,v 1.65 1996/07/26 17:18:21 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -780,31 +780,6 @@ static void parseIPLine(list)
     }
 }
 
-static void parseHttpStopLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	return;
-    wordlistAdd(&Config.http_stoplist, token);
-}
-
-static void parseGopherStopLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	return;
-    wordlistAdd(&Config.gopher_stoplist, token);
-}
-static void parseFtpStopLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	return;
-    wordlistAdd(&Config.ftp_stoplist, token);
-}
 static void parseHierarchyStoplistLine()
 {
     char *token;
@@ -1127,18 +1102,6 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "icp_access"))
 	    aclParseAccessLine(&ICPAccessList);
 
-	/* Parse a http_stop line */
-	else if (!strcmp(token, "http_stop"))
-	    parseHttpStopLine();
-
-	/* Parse a gopher_stop line */
-	else if (!strcmp(token, "gopher_stop"))
-	    parseGopherStopLine();
-
-	/* Parse a ftp_stop line */
-	else if (!strcmp(token, "ftp_stop"))
-	    parseFtpStopLine();
-
 	/* Parse a hierarchy_stoplist line */
 	else if (!strcmp(token, "hierarchy_stoplist"))
 	    parseHierarchyStoplistLine();
@@ -1413,9 +1376,6 @@ static void configFreeMemory()
     safe_free(Config.Announce.host);
     safe_free(Config.Announce.file);
     wordlistDestroy(&Config.cache_dirs);
-    wordlistDestroy(&Config.http_stoplist);
-    wordlistDestroy(&Config.gopher_stoplist);
-    wordlistDestroy(&Config.ftp_stoplist);
     wordlistDestroy(&Config.hierarchy_stoplist);
     wordlistDestroy(&Config.local_domain_list);
     wordlistDestroy(&Config.inside_firewall_list);

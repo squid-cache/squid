@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.49 1996/07/26 17:00:35 wessels Exp $
+ * $Id: stat.cc,v 1.50 1996/07/26 17:18:26 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -622,7 +622,6 @@ void info_get(obj, sentry)
      StoreEntry *sentry;
 {
     char *tod = NULL;
-    wordlist *p = NULL;
     float f;
 #ifdef HAVE_MALLINFO
     int t;
@@ -729,28 +728,6 @@ void info_get(obj, sentry)
     storeAppendPrintf(sentry, "{\tReserved number of file descriptors:  %4d}\n",
 	RESERVED_FD);
 
-    storeAppendPrintf(sentry, "{Stop List:}\n");
-    if ((p = Config.http_stoplist)) {
-	storeAppendPrintf(sentry, "{\tHTTP:}\n");
-	while (p) {
-	    storeAppendPrintf(sentry, "{\t\t%s}\n", p->key);
-	    p = p->next;
-	}
-    }
-    if ((p = Config.gopher_stoplist)) {
-	storeAppendPrintf(sentry, "{\tGOPHER:}\n");
-	while (p) {
-	    storeAppendPrintf(sentry, "{\t\t%s}\n", p->key);
-	    p = p->next;
-	}
-    }
-    if ((p = Config.ftp_stoplist)) {
-	storeAppendPrintf(sentry, "{\tFTP:}\n");
-	while (p) {
-	    storeAppendPrintf(sentry, "{\t\t%s}\n", p->key);
-	    p = p->next;
-	}
-    }
     storeAppendPrintf(sentry, "{Internal Data Structures:}\n");
     storeAppendPrintf(sentry, "{\tHot Object Cache Items %d}\n",
 	meta_data.hot_vm);
