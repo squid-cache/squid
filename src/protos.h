@@ -847,10 +847,11 @@ extern void gb_flush(gb_t *);	/* internal, do not use this */
 #define strCut(s,pos) (s).buf[pos] = '\0'
 /* #define strCat(s,str)  stringAppend(&(s), (str), strlen(str)+1) */
 extern void stringInit(String *s, const char *str);
+extern void stringLimitInit(String *s, const char *str, int len);
 extern String stringDup(const String *s);
 extern void stringClean(String *s);
 extern void stringReset(String *s, const char *str);
-/* extern void stringAppend(String *s, const char *buf, size_t size); */
+extern void stringAppend(String *s, const char *buf, int len);
 /* extern void stringAppendf(String *s, const char *fmt, ...); */
 
 /*

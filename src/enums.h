@@ -213,7 +213,11 @@ typedef enum {
 typedef enum {
     ftInvalid = HDR_ENUM_END,	/* to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
+#if OLD_CODE
     ftPChar,
+#else
+    ftStr,
+#endif
     ftDate_1123,
     ftPCc,
     ftPRange,
