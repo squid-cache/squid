@@ -512,6 +512,7 @@ extern void netdbUpdatePeer(request_t *, peer * e, int rtt, int hops);
 extern void netdbDeleteAddrNetwork(struct in_addr addr);
 extern int netdbHostPeerRtt(const char *host, peer * peer);
 extern void netdbBinaryExchange(StoreEntry *);
+extern EVH netdbExchangeStart;
 
 extern void cachemgrStart(int fd, request_t * request, StoreEntry * entry);
 extern void cachemgrRegister(const char *, const char *, OBJH *, int);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.84 1998/05/02 06:42:43 wessels Exp $
+ * $Id: net_db.cc,v 1.85 1998/05/05 05:35:40 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -33,6 +33,14 @@
 
 #if USE_ICMP
 
+typedef struct {
+	peer *p;
+	StoreEntry *e;
+	request_t *r;
+	off_t seen;
+	off_t used;
+} netdbExchangeState;
+
 static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
@@ -53,6 +61,8 @@ static QS sortByRtt;
 static QS netdbLRU;
 static FREE netdbFreeNameEntry;
 static FREE netdbFreeNetdbEntry;
+static STCB netdbExchangeHandleReply;
+static void netdbExchangeDone(netdbExchangeState *);
 
 /* We have to keep a local list of peer names.  The Peers structure
  * gets freed during a reconfigure.  We want this database to
@@ -821,8 +831,8 @@ netdbDeleteAddrNetwork(struct in_addr addr)
 void
 netdbBinaryExchange(StoreEntry * s)
 {
-#if USE_ICMP
     http_reply *reply = s->mem_obj->reply;
+#if USE_ICMP
     netdbEntry *n;
     netdbEntry *next;
     int i;
@@ -849,15 +859,15 @@ netdbBinaryExchange(StoreEntry * s)
 	    continue;
 	if (!safe_inet_addr(n->network, &addr))
 	    continue;
-	buf[i++] = (char) NETDB_NETWORK;
+	buf[i++] = (char) NETDB_EX_NETWORK;
 	xmemcpy(&buf[i], &addr.s_addr, sizeof(addr.s_addr));
 	i += sizeof(addr.s_addr);
-	buf[i++] = (char) NETDB_RTT;
-	j = ntohl((int) (n->rtt * 1000));
+	buf[i++] = (char) NETDB_EX_RTT;
+	j = htonl((int) (n->rtt * 1000));
 	xmemcpy(&buf[i], &j, sizeof(int));
 	i += sizeof(int);
-	buf[i++] = (char) NETDB_HOPS;
-	j = ntohl((int) (n->hops * 1000));
+	buf[i++] = (char) NETDB_EX_HOPS;
+	j = htonl((int) (n->hops * 1000));
 	xmemcpy(&buf[i], &j, sizeof(int));
 	i += sizeof(int);
 	if (i + rec_sz > 4096 || next == NULL) {
@@ -867,8 +877,124 @@ netdbBinaryExchange(StoreEntry * s)
     }
     assert(0 == i);
     storeBufferFlush(s);
-    storeComplete(s);
 #else
+    httpReplyReset(reply);
+    httpReplySetHeaders(reply, 1.0, HTTP_BAD_REQUEST, "Bad Request",
+	NULL, -1, squid_curtime, -2);
     storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
 #endif
+    storeComplete(s);
+}
+
+void
+netdbExchangeStart(void *data)
+{
+	peer *p = data;
+	char *uri;
+	netdbExchangeState *ex = xcalloc(1, sizeof(*ex));
+	cbdataAdd(ex, MEM_NONE);
+	cbdataLock(p);
+	ex->p = p;
+	uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");
+	debug(0,0)("netdbExchangeStart: Requesting '%s'\n", uri);
+	assert(NULL != uri);
+	ex->r = requestLink(urlParse(METHOD_GET, uri));
+	assert(NULL != ex->r);
+	ex->r->headers = xstrdup("\r\n");
+	ex->r->headers_sz = strlen(ex->r->headers);
+	ex->e = storeCreateEntry(uri, uri, 0, METHOD_GET);
+	assert(NULL != ex->e);
+	storeClientListAdd(ex->e, ex);
+	storeClientCopy(ex->e, ex->seen, ex->used, 4096,
+		memAllocate(MEM_4K_BUF), netdbExchangeHandleReply, ex);
+	httpStart(ex->r, ex->e, NULL);
+}
+
+static void
+netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
+{
+    netdbExchangeState *ex = data;
+    int rec_sz = 0;
+    off_t o;
+    struct in_addr addr;
+    double rtt;
+    double hops;
+    char *p;
+    int j;
+    HttpReply *rep;
+    size_t hdr_sz;
+    rec_sz = 0;
+    rec_sz += 1 + sizeof(addr.s_addr);
+    rec_sz += 1 + sizeof(int);
+    rec_sz += 1 + sizeof(int);
+    ex->seen += size;
+    debug(0, 0) ("netdbExchangeHandleReply: %d bytes\n", (int) size);
+    if (!cbdataValid(ex->p)) {
+	netdbExchangeDone(ex);
+	return;
+    }
+    p = buf;
+    if (0 == ex->used) {
+	/* skip reply headers */
+	if ((hdr_sz = headersEnd(p, size))) {
+	    rep = ex->e->mem_obj->reply;
+	    if (0 == rep->sline.status)
+		httpReplyParse(rep, buf);
+	    if (HTTP_OK != rep->sline.status) {
+		netdbExchangeDone(ex);
+		return;
+	    }
+	    assert(size > hdr_sz);
+	    ex->used += hdr_sz;
+	    size -= hdr_sz;
+	    p += hdr_sz;
+	} else {
+	    size = 0;
+	}
+    }
+    while (size > rec_sz) {
+	addr.s_addr = 0;
+	hops = rtt = 0.0;
+	for (o = 0; o < rec_sz;) {
+	    switch ((int) *(p + o)) {
+	    case NETDB_EX_NETWORK:
+		o++;
+		xmemcpy(&addr.s_addr, p + o, sizeof(addr.s_addr));
+		o += sizeof(addr.s_addr);
+		break;
+	    case NETDB_EX_RTT:
+		o++;
+		xmemcpy(&j, p + o, sizeof(int));
+		o += sizeof(int);
+		rtt = (double) ntohl(j) / 1000.0;
+		break;
+	    case NETDB_EX_HOPS:
+		o++;
+		xmemcpy(&j, p + o, sizeof(int));
+		o += sizeof(int);
+		hops = (double) ntohl(j) / 1000.0;
+		break;
+	    }
+	}
+	debug(0, 0) ("GOT %s, %f RTT, %f HOPS\n", inet_ntoa(addr), rtt, hops);
+	assert(o == rec_sz);
+	ex->used += rec_sz;
+	size -= rec_sz;
+	p += rec_sz;
+    }
+debug(0,0)("SEEN %d, USED %d\n", (int) ex->seen, (int) ex->used);
+    if (ex->e->store_status != STORE_OK) {
+	storeClientCopy(ex->e, ex->seen, ex->used, 4096,
+	    buf, netdbExchangeHandleReply, ex);
+    }
+}
+
+static void
+netdbExchangeDone(netdbExchangeState *ex)
+{
+	requestUnlink(ex->r);
+	storeUnregister(ex->e, ex);
+	storeUnlockObject(ex->e);
+	cbdataUnlock(ex->p);
+	cbdataFree(ex);
 }
