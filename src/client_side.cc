@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.145 1997/11/12 18:58:39 wessels Exp $
+ * $Id: client_side.cc,v 1.146 1997/11/12 21:04:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -148,7 +148,7 @@ clientConstructProxyAuthReply(clientHttpRequest * http)
 	HTTP_PROXY_AUTHENTICATION_REQUIRED,
 	"text/html",
 	strlen(content),
-	-1,
+	0,
 	squid_curtime);
     snprintf(buf, 8192, "%s%s\r\n%s",
 	hdr,
