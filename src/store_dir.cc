@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.68 1998/05/15 20:31:41 wessels Exp $
+ * $Id: store_dir.cc,v 1.69 1998/05/22 23:14:22 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -579,6 +579,10 @@ storeDirUpdateSwapSize(int fn, size_t size, int sign)
     int k = ((size + 1023) >> 10) * sign;
     Config.cacheSwap.swapDirs[dirn].cur_size += k;
     store_swap_size += k;
+    if (sign > 0)
+	n_disk_objects++;
+    else if (sign < 0)
+	n_disk_objects--;
 }
 
 void
