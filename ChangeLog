@@ -33,6 +33,12 @@
 	  proxy-authentication.
 	- Fixed select-spin bug when an ICP reply actually gets queued
 	  and we failed to execute the write callback.
+	- Fixed a storeCheckSwapOut bug.  We were freeing up to
+	  the queued offset instead of the done offset.  This
+	  resulted in a small chunk of object data not being in
+	  memory and not yet written to disk.  A client could
+	  recieve a partial object because file_read() unexpectedly
+	  returns EOF.
 
 Changes to squid-1.2.beta22 (June 1, 1998):
 
