@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.377 2003/04/27 00:29:07 hno Exp $
+ * $Id: main.cc,v 1.378 2003/05/06 00:17:06 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1097,16 +1097,6 @@ main(int argc, char **argv)
 #endif
 
             serverConnectionsClose();
-#if USE_DNSSERVERS
-
-            dnsShutdown();
-#else
-
-            idnsShutdown();
-#endif
-
-            redirectShutdown();
-            externalAclShutdown();
             eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1);
         }
 
@@ -1420,6 +1410,16 @@ SquidShutdown(void *unused)
 #endif
 
     debug(1, 1) ("Shutting down...\n");
+#if USE_DNSSERVERS
+
+    dnsShutdown();
+#else
+
+    idnsShutdown();
+#endif
+
+    redirectShutdown();
+    externalAclShutdown();
     icpConnectionClose();
 #if USE_HTCP
 
