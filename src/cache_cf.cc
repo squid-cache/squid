@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.8 1996/03/27 18:50:57 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.9 1996/03/27 20:21:41 wessels Exp $ */
 
 #include "squid.h"
 
@@ -30,7 +30,6 @@ static struct {
     struct {
 	int ascii;
 	int udp;
-	int binary;
     } Port;
     struct {
 	char *log;
@@ -92,7 +91,6 @@ static struct {
 #define DefaultHotVmFactor	0.0	/* disabled */
 
 #define DefaultAsciiPortNum	CACHE_HTTP_PORT
-#define DefaultBinaryPortNum	3129
 #define DefaultUdpPortNum	CACHE_ICP_PORT
 
 #define DefaultCacheLogFile	"cache.log"
@@ -1398,10 +1396,6 @@ int getAsciiPortNum()
 {
     return Config.Port.ascii;
 }
-int getBinaryPortNum()
-{
-    return Config.Port.binary;
-}
 int getUdpPortNum()
 {
     return Config.Port.udp;
@@ -1456,11 +1450,6 @@ int setUdpPortNum(p)
      int p;
 {
     return (Config.Port.udp = p);
-}
-int setBinaryPortNum(p)
-     int p;
-{
-    return (Config.Port.binary = p);
 }
 
 
@@ -1518,7 +1507,6 @@ static void configSetFactoryDefaults()
     Config.appendDomain = safe_xstrdup(DefaultAppendDomain);
 
     Config.Port.ascii = DefaultAsciiPortNum;
-    Config.Port.binary = DefaultBinaryPortNum;
     Config.Port.udp = DefaultUdpPortNum;
     Config.Log.log = safe_xstrdup(DefaultCacheLogFile);
     Config.Log.access = safe_xstrdup(DefaultAccessLogFile);

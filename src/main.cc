@@ -1,24 +1,17 @@
-/* $Id: main.cc,v 1.12 1996/03/27 18:50:59 wessels Exp $ */
+/* $Id: main.cc,v 1.13 1996/03/27 20:21:43 wessels Exp $ */
 
 #include "squid.h"
-
-
-/* WRITE_PID_FILE - tries to write a cached.pid file on startup */
-#ifndef WRITE_PID_FILE
-#define WRITE_PID_FILE
-#endif
 
 time_t cached_starttime = 0;
 time_t next_cleaning = 0;
 int theAsciiConnection = -1;
-int theBinaryConnection = -1;
 int theUdpConnection = -1;
 int do_reuse = 1;
 int catch_signals = 1;
 int do_dns_test = 1;
 char *config_file = NULL;
 int vhost_mode = 0;
-int unbuffered_logs = 0;	/* debug and hierarhcy buffered by default */
+int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 
 extern void (*failure_notify) ();	/* for error reporting from xmalloc */
 extern void hash_init _PARAMS((int));
@@ -32,7 +25,6 @@ extern int ftpInitialize _PARAMS((void));
 extern int getMaxFD _PARAMS((void));
 
 static int asciiPortNumOverride = 0;
-static int binaryPortNumOverride = 0;
 static int udpPortNumOverride = 0;
 
 
@@ -74,33 +66,7 @@ int main(argc, argv)
     for (n = getMaxFD(); n > 2; n--)
 	close(n);
 
-    /* try to use as many file descriptors as possible */
-    /* System V uses RLIMIT_NOFILE and BSD uses RLIMIT_OFILE */
-#if defined(HAVE_SETRLIMIT)
-    {
-	struct rlimit rl;
-
-#if defined(RLIMIT_NOFILE)
-	if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-	    perror("getrlimit: RLIMIT_NOFILE");
-	} else {
-	    rl.rlim_cur = rl.rlim_max;	/* set it to the max */
-	    if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
-		perror("setrlimit: RLIMIT_NOFILE");
-	    }
-	}
-#elif defined(RLIMIT_OFILE)
-	if (getrlimit(RLIMIT_OFILE, &rl) < 0) {
-	    perror("getrlimit: RLIMIT_OFILE");
-	} else {
-	    rl.rlim_cur = rl.rlim_max;	/* set it to the max */
-	    if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
-		perror("setrlimit: RLIMIT_OFILE");
-	    }
-	}
-#endif
-    }
-#endif
+    setMaxFD();
 
 #if USE_MALLOPT
     /* set malloc option */
@@ -138,12 +104,15 @@ int main(argc, argv)
     debug_log = stderr;
     hash_init(0);
 
-    while ((c = getopt(argc, argv, "vCDRVsif:a:p:u:m:zh?")) != -1)
+    while ((c = getopt(argc, argv, "vCDRVbsif:a:p:u:m:zh?")) != -1)
 	switch (c) {
 	case 'v':
 	    printf("Harvest Cache: Version %s\n", SQUID_VERSION);
 	    exit(0);
 	    /* NOTREACHED */
+	case 'b':
+	    unbuffered_logs = 0;
+	    break;
 	case 'V':
 	    vhost_mode = 1;
 	    break;
@@ -166,9 +135,6 @@ int main(argc, argv)
 	    break;
 	case 'a':
 	    asciiPortNumOverride = atoi(optarg);
-	    break;
-	case 'p':
-	    binaryPortNumOverride = atoi(optarg);
 	    break;
 	case 'u':
 	    udpPortNumOverride = atoi(optarg);
@@ -205,8 +171,6 @@ int main(argc, argv)
 
     if (asciiPortNumOverride > 0)
 	setAsciiPortNum(asciiPortNumOverride);
-    if (binaryPortNumOverride > 0)
-	setBinaryPortNum(binaryPortNumOverride);
     if (udpPortNumOverride > 0)
 	setUdpPortNum(udpPortNumOverride);
 
@@ -247,22 +211,6 @@ int main(argc, argv)
 	theAsciiConnection);
 
     if (!httpd_accel_mode || getAccelWithProxy()) {
-#ifdef KEEP_BINARY_CONN
-	theBinaryConnection = comm_open(COMM_NONBLOCKING,
-	    binaryPortNum,
-	    0,
-	    "Binary Port");
-
-	if (theBinaryConnection < 0) {
-	    fatal("Cannot open Binary Port\n");
-	}
-	comm_listen(theBinaryConnection);
-	comm_set_select_handler(theBinaryConnection,
-	    COMM_SELECT_READ,
-	    icpHandleTcp,
-	    0);
-	debug(0, 1, "Binary connection opened on fd %d\n", theBinaryConnection);
-#endif
 	if (getUdpPortNum() > -1) {
 	    theUdpConnection = comm_open(COMM_NONBLOCKING | COMM_DGRAM,
 		getUdpPortNum(),
