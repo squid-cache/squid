@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.40 1997/06/17 03:03:25 wessels Exp $
+ * $Id: net_db.cc,v 1.41 1997/06/17 04:54:11 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -33,8 +33,8 @@
 
 #if USE_ICMP
 
-static HashID addr_table = 0;
-static HashID host_table = 0;
+static hash_table * addr_table = NULL;
+static hash_table * host_table = NULL;
 
 static struct in_addr networkFromInaddr _PARAMS((struct in_addr a));
 static void netdbRelease _PARAMS((netdbEntry * n));

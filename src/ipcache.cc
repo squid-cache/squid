@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.122 1997/06/17 03:03:22 wessels Exp $
+ * $Id: ipcache.cc,v 1.123 1997/06/17 04:54:11 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -159,7 +159,7 @@ static void ipcacheChangeKey _PARAMS((ipcache_entry * i));
 static UNREG ipcacheUnregister;
 
 static ipcache_addrs static_addrs;
-static HashID ip_table = 0;
+static hash_table * ip_table = NULL;
 static struct ipcacheQueueData *ipcacheQueueHead = NULL;
 static struct ipcacheQueueData **ipcacheQueueTailP = &ipcacheQueueHead;
 static int queue_length = 0;
