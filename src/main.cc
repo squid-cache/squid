@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.66 1996/08/27 17:57:46 wessels Exp $
+ * $Id: main.cc,v 1.67 1996/08/28 20:12:26 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -137,11 +137,18 @@ static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 #if MALLOC_DBG
 static int malloc_debug_level = 0;
 #endif
+
+static time_t next_cleaning;
+static time_t next_maintain;
+static time_t next_dirclean;
+static time_t next_announce;
+static time_t next_ip_purge;
+
 static void rotate_logs _PARAMS((int));
 static void reconfigure _PARAMS((int));
 static void mainInitialize _PARAMS((void));
 static void mainReinitialize _PARAMS((void));
-static void mainMaintenance _PARAMS((void));
+static time_t mainMaintenance _PARAMS((void));
 static void usage _PARAMS((void));
 static void mainParseOptions _PARAMS((int, char **));
 
@@ -480,52 +487,51 @@ static void mainInitialize()
     squid_signal(SIGTERM, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
     squid_signal(SIGINT, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
     debug(1, 0, "Ready to serve requests.\n");
+
+    if (first_time) {
+	next_cleaning = squid_curtime + Config.cleanRate;
+	next_maintain = squid_curtime + 0;
+	next_dirclean = squid_curtime + 15;
+	next_announce = squid_curtime + Config.Announce.rate;
+	next_ip_purge = squid_curtime + 10;
+    }
     first_time = 0;
 }
 
-
-static void mainMaintenance()
+static time_t mainMaintenance()
 {
-    static time_t last_cleaning = 0;
-    static time_t last_maintain = 0;
-    static time_t last_dirclean = 0;
-    static time_t last_announce = 0;
-    static time_t last_ip_purge = 0;
+    time_t next;
     int n;
-    if (squid_curtime > last_maintain) {
-	storeMaintainSwapSpace();
-	last_maintain = squid_curtime;
-	return;
+    if (squid_curtime >= next_maintain) {
+        storeMaintainSwapSpace();
+        next_maintain = squid_curtime + 1;
     }
-    if (squid_curtime >= last_dirclean + 15
-	&& store_rebuilding == STORE_NOT_REBUILDING) {
+    if (store_rebuilding != STORE_NOT_REBUILDING)
+	goto maintenance_done;
+    if (squid_curtime >= next_ip_purge) {
+	ipcache_purgelru();
+	next_ip_purge = squid_curtime + 10;
+    } else if (squid_curtime >= next_dirclean) {
 	/* clean a cache directory every 15 seconds */
 	/* 15 * 16 * 256 = 17 hrs */
 	storeDirClean();
-	last_dirclean = squid_curtime;
-	return;
+	next_dirclean = squid_curtime + 15;
+    } else if (squid_curtime >= next_cleaning) {
+	n = storePurgeOld();
+	next_cleaning = squid_curtime + Config.cleanRate;
+    } else if (squid_curtime >= next_announce) {
+	send_announce();
+	next_announce = squid_curtime + Config.Announce.rate;
     }
-    if (squid_curtime >= last_ip_purge + 10) {
-	ipcache_purgelru();
-	last_ip_purge = squid_curtime;
-	return;
-    }
-    if (Config.cleanRate > 0) {
-	if (squid_curtime >= last_cleaning + Config.cleanRate) {
-	    debug(1, 1, "Performing a garbage collection...\n");
-	    n = storePurgeOld();
-	    debug(1, 1, "Garbage collection done, %d objects removed\n", n);
-	    last_cleaning = squid_curtime + Config.cleanRate;
-	    return;
-	}
-    }
-    if (Config.Announce.rate > 0) {
-	if (squid_curtime >= last_announce + Config.Announce.rate) {
-	    send_announce();
-	    last_announce = squid_curtime;
-	    return;
-	}
-    }
+  maintenance_done:
+    next = next_ip_purge;
+    if (next_dirclean < next)
+	next = next_dirclean;
+    if (next_cleaning < next)
+	next = next_cleaning;
+    if (next_announce < next)
+	next = next_announce;
+    return next - squid_curtime;
 }
 
 int main(argc, argv)
@@ -588,8 +594,6 @@ int main(argc, argv)
 
     /* main loop */
     for (;;) {
-	loop_delay = (time_t) 10;
-	mainMaintenance();
 	if (rotate_pending) {
 	    ftpServerClose();
 	    _db_rotate_log();	/* cache.log */
@@ -599,9 +603,12 @@ int main(argc, argv)
 	    (void) ftpInitialize();
 	    rotate_pending = 0;
 	}
-	/* do background processing */
+	if ((loop_delay = mainMaintenance()) < 0)
+	    loop_delay = 0;
+	else if (loop_delay > 10)
+	    loop_delay = 10;
 	if (doBackgroundProcessing())
-	    loop_delay = (time_t) 0;
+	    loop_delay = 0;
 	switch (comm_select(loop_delay)) {
 	case COMM_OK:
 	    errcount = 0;	/* reset if successful */
