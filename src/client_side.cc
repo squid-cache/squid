@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.310 1998/05/21 00:57:36 rousskov Exp $
+ * $Id: client_side.cc,v 1.311 1998/05/21 04:01:02 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2180,10 +2180,10 @@ CheckQuickAbort2(const clientHttpRequest * http)
     if ((expectlen - curlen) > Config.quickAbort.max)
 	/* too much left to go */
 	return 1;
-    if (expectlen < 128)
+    if (expectlen < 100)
 	/* avoid FPE */
 	return 0;
-    if ((curlen / (expectlen / QUICK_ABORT_100PCT)) > Config.quickAbort.pct)
+    if ((curlen / (expectlen / 100)) > Config.quickAbort.pct)
 	/* past point of no return */
 	return 0;
     return 1;

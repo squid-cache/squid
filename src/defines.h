@@ -196,8 +196,6 @@
 
 #define PINGER_PAYLOAD_SZ 8192
 
-#define QUICK_ABORT_100PCT	128
-
 #define COUNT_INTERVAL 60
 /*
  * keep 60 minutes' worth of per-minute readings (+ current reading)
