@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.62 1997/04/30 03:12:02 wessels Exp $
+ * $Id: disk.cc,v 1.63 1997/04/30 03:44:41 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -262,8 +262,6 @@ file_close(int fd)
     fde = &fd_table[fd];
     if (!fde->open)
 	fatal_dump("file_close: already closed");
-    if (fde->type != FD_FILE)
-	fatal_dump("file_close: called for non-FILE");
     if (BIT_TEST(fde->flags, FD_WRITE_DAEMON)) {
 	BIT_SET(fde->flags, FD_CLOSE_REQUEST);
 	return;
