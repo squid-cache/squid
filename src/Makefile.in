@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.165 1998/12/11 21:01:12 wessels Exp $
+#  $Id: Makefile.in,v 1.166 1998/12/31 23:50:25 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -185,7 +185,7 @@ ASYNC_OBJS	= \
 		async_io.o
 
 LEAKFINDER_OBJS	= \
-		leakfinder.o \
+		leakfinder.o
 
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
