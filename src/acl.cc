@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.239 2001/01/09 23:55:52 hno Exp $
+ * $Id: acl.cc,v 1.240 2001/01/10 21:12:14 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -488,6 +488,9 @@ aclParseIpData(const char *t)
 	safe_free(q);
 	return NULL;
     }
+    if ((q->addr1.s_addr & q->mask.s_addr) != q->addr1.s_addr ||
+	(q->addr2.s_addr & q->mask.s_addr) != q->addr2.s_addr)
+	debug(28, 0) ("aclParseIpData: WARNING: Netmask masks away part of the specified IP in '%s'\n", t);
     q->addr1.s_addr &= q->mask.s_addr;
     q->addr2.s_addr &= q->mask.s_addr;
     /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
@@ -2807,4 +2810,4 @@ aclDumpArpList(void *data)
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */
-#endif /* USE_ARP_ACL */
+#endif				/* USE_ARP_ACL */
