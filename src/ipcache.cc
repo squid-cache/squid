@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.48 1996/08/28 17:34:29 wessels Exp $
+ * $Id: ipcache.cc,v 1.49 1996/08/28 17:44:30 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -107,7 +107,6 @@
 
 #define MAX_LINELEN (4096)
 
-#define MAX_IP		 1024	/* Maximum cached IP */
 #define IP_LOW_WATER       90
 #define IP_HIGH_WATER      95
 #define MAX_HOST_NAME	  256
@@ -796,10 +795,10 @@ void ipcache_init()
     *(static_result->h_addr_list + 0) = xcalloc(1, 4);
     static_result->h_name = xcalloc(1, MAX_HOST_NAME + 1);
 
-    ipcache_high = (long) (((float) MAX_IP *
-	    (float) IP_HIGH_WATER) / (float) 100);
-    ipcache_low = (long) (((float) MAX_IP *
-	    (float) IP_LOW_WATER) / (float) 100);
+    ipcache_high = (long) (((float) Config.ipcache.size *
+	    (float) Config.ipcache.high) / (float) 100);
+    ipcache_low = (long) (((float) Config.ipcache.size *
+	    (float) Config.ipcache.low) / (float) 100);
 }
 
 /* clean up the pending entries in dnsserver */
