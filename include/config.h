@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.10 2004/11/07 13:55:20 hno Exp $
+ * $Id: config.h,v 1.11 2004/11/07 13:58:30 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -288,6 +288,25 @@ typedef int socklen_t;
 
 #ifndef HAVE_MTYP_T
 typedef long mtyp_t;
+#endif
+
+/*
+ * On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
+ * that is incompatible with the updated Solaris header files.
+ */
+#if defined(_SQUID_SOLARIS_) && (defined(i386) || defined(__i386))
+#ifndef pad128_t
+typedef union {
+	long double	_q;
+	int32_t		_l[4];
+} pad128_t;
+#endif
+#ifndef upda128_t
+typedef union {
+	long double	_q;
+	uint32_t	_l[4];
+} upad128_t;
+#endif
 #endif
 
 #if !defined(CACHEMGR_HOSTNAME)

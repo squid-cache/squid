@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.36 2003/02/21 22:50:09 robertc Exp $
+ * $Id: ipc.cc,v 1.37 2004/11/07 13:58:30 hno Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -78,9 +78,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 {
     pid_t pid;
 
-    struct sockaddr_in CS;
+    struct sockaddr_in ChS;
 
-    struct sockaddr_in PS;
+    struct sockaddr_in PaS;
     int crfd = -1;
     int prfd = -1;
     int cwfd = -1;
@@ -194,26 +194,26 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
-        len = sizeof(PS);
-        memset(&PS, '\0', len);
+        len = sizeof(PaS);
+        memset(&PaS, '\0', len);
 
-        if (getsockname(pwfd, (struct sockaddr *) &PS, &len) < 0) {
+        if (getsockname(pwfd, (struct sockaddr *) &PaS, &len) < 0) {
             debug(50, 0) ("ipcCreate: getsockname: %s\n", xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
         debug(54, 3) ("ipcCreate: FD %d sockaddr %s:%d\n",
-                      pwfd, inet_ntoa(PS.sin_addr), ntohs(PS.sin_port));
-        len = sizeof(CS);
-        memset(&CS, '\0', len);
+                      pwfd, inet_ntoa(PaS.sin_addr), ntohs(PaS.sin_port));
+        len = sizeof(ChS);
+        memset(&ChS, '\0', len);
 
-        if (getsockname(crfd, (struct sockaddr *) &CS, &len) < 0) {
+        if (getsockname(crfd, (struct sockaddr *) &ChS, &len) < 0) {
             debug(50, 0) ("ipcCreate: getsockname: %s\n", xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
         debug(54, 3) ("ipcCreate: FD %d sockaddr %s:%d\n",
-                      crfd, inet_ntoa(CS.sin_addr), ntohs(CS.sin_port));
+                      crfd, inet_ntoa(ChS.sin_addr), ntohs(ChS.sin_port));
     }
 
     if (type == IPC_TCP_SOCKET) {
@@ -243,7 +243,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         cwfd = crfd = -1;
 
         if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
-            if (comm_connect_addr(pwfd, &CS) == COMM_ERROR)
+            if (comm_connect_addr(pwfd, &ChS) == COMM_ERROR)
                 return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -314,7 +314,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         close(crfd);
         cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {
-        if (comm_connect_addr(crfd, &PS) == COMM_ERROR)
+        if (comm_connect_addr(crfd, &PaS) == COMM_ERROR)
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 

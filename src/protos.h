@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.497 2004/11/06 22:20:47 hno Exp $
+ * $Id: protos.h,v 1.498 2004/11/07 13:58:30 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -600,7 +600,7 @@ SQUIDCEXTERN void fwdUnregister(int fd, FwdState *);
 SQUIDCEXTERN void fwdComplete(FwdState * fwdState);
 SQUIDCEXTERN void fwdInit(void);
 SQUIDCEXTERN int fwdReforwardableStatus(http_status s);
-SQUIDCEXTERN void fwdServersFree(FwdServer ** FS);
+SQUIDCEXTERN void fwdServersFree(FwdServer ** FSVR);
 #if WIP_FWD_LOG
 SQUIDCEXTERN void fwdUninit(void);
 SQUIDCEXTERN void fwdLogRotate(void);
