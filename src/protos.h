@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.319 1999/04/19 04:45:06 wessels Exp $
+ * $Id: protos.h,v 1.320 1999/04/19 05:01:24 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -877,7 +877,7 @@ extern void storeDigestInit(void);
 extern void storeDigestNoteStoreReady(void);
 extern void storeDigestScheduleRebuild(void);
 extern void storeDigestDel(const StoreEntry * entry);
-extern void storeDigestReport(void);
+extern void storeDigestReport(StoreEntry *);
 
 /*
  * store_dir.c
