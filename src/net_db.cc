@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.142 2000/03/06 16:23:33 wessels Exp $
+ * $Id: net_db.cc,v 1.143 2000/05/02 20:41:23 hno Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -60,7 +60,7 @@ static void netdbPurgeLRU(void);
 static netdbEntry *netdbLookupHost(const char *key);
 static net_db_peer *netdbPeerByName(const netdbEntry * n, const char *);
 static net_db_peer *netdbPeerAdd(netdbEntry * n, peer * e);
-static char *netdbPeerName(const char *name);
+static const char *netdbPeerName(const char *name);
 static IPH netdbSendPing;
 static QS sortPeerByRtt;
 static QS sortByRtt;
@@ -467,16 +467,15 @@ netdbReloadState(void)
 	count, tvSubMsec(start, current_time));
 }
 
-static char *
+static const char *
 netdbPeerName(const char *name)
 {
-    wordlist *w;
+    const wordlist *w;
     for (w = peer_names; w; w = w->next) {
 	if (!strcmp(w->key, name))
 	    return w->key;
     }
-    w = wordlistAdd(&peer_names, name);
-    return w->key;
+    return wordlistAdd(&peer_names, name);
 }
 
 static void

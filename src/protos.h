@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.361 2000/05/02 20:31:45 hno Exp $
+ * $Id: protos.h,v 1.362 2000/05/02 20:41:23 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -102,7 +102,9 @@ extern int aioQueueSize(void);
 extern int parseConfigFile(const char *file_name);
 extern void intlistDestroy(intlist **);
 extern int intlistFind(intlist * list, int i);
-extern wordlist *wordlistAdd(wordlist **, const char *);
+extern const char *wordlistAdd(wordlist **, const char *);
+extern void wordlistAddWl(wordlist **, wordlist *);
+extern void wordlistJoin(wordlist **, wordlist **);
 extern wordlist *wordlistDup(const wordlist *);
 extern void wordlistDestroy(wordlist **);
 extern void configFreeMemory(void);
