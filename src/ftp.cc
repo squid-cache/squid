@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.43 1996/07/18 20:27:01 wessels Exp $
+ * $Id: ftp.cc,v 1.44 1996/07/19 02:42:21 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -110,8 +110,6 @@
 #define MAGIC_MARKER    "\004\004\004"	/* No doubt this should be more configurable */
 #define MAGIC_MARKER_SZ 3
 
-static char ftpASCII[] = "A";
-static char ftpBinary[] = "I";
 static int ftpget_server_read = -1;
 static int ftpget_server_write = -1;
 static u_short ftpget_port = 0;
@@ -136,6 +134,7 @@ static int ftpStateFree _PARAMS((int fd, FtpData * ftpState));
 static void ftpProcessReplyHeader _PARAMS((FtpData * data, char *buf, int size));
 static void ftpServerClosed _PARAMS((int fd, void *nodata));
 static void ftp_login_parser _PARAMS((char *login, FtpData * data));
+static char *ftpTransferMode _PARAMS((char *urlpath));
 
 /* Global functions not declared in ftp.h */
 void ftpLifetimeExpire _PARAMS((int fd, FtpData * data));
@@ -463,13 +462,30 @@ void ftpSendComplete(fd, buf, size, errflag, data)
     }
 }
 
+static char *ftpTransferMode(urlpath)
+     char *urlpath;
+{
+    static char ftpASCII[] = "A";
+    static char ftpBinary[] = "I";
+    char *ext = NULL;
+    ext_table_entry *mime = NULL;
+    int len;
+    len = strlen(urlpath);
+    if (*(urlpath + len - 1) == '/')
+	return ftpASCII;
+    if ((ext = strrchr(urlpath, '.')) == NULL)
+	return ftpBinary;
+    if ((mime = mime_ext_to_type(++ext)) == NULL)
+	return ftpBinary;
+    if (!strcmp(mime->mime_encoding, "7bit"))
+	return ftpASCII;
+    return ftpBinary;
+}
+
 void ftpSendRequest(fd, data)
      int fd;
      FtpData *data;
 {
-    char *ext = NULL;
-    ext_table_entry *e = NULL;
-    int l;
     char *path = NULL;
     char *mode = NULL;
     char *buf = NULL;
@@ -489,18 +505,7 @@ void ftpSendRequest(fd, data)
     memset(buf, '\0', buflen);
 
     path = data->request->urlpath;
-    l = strlen(path);
-    if (path[l - 1] == '/')
-	mode = ftpASCII;
-    else {
-	if ((ext = strrchr(path, '.')) != NULL) {
-	    ext++;
-	    mode = ((e = mime_ext_to_type(ext)) &&
-		strncmp(e->mime_type, "text", 4) == 0) ? ftpASCII :
-		ftpBinary;
-	} else
-	    mode = ftpBinary;
-    }
+    mode = ftpTransferMode(path);
 
     /* Start building the buffer ... */
     strcat(buf, getFtpProgram());
