@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.44 1997/10/25 17:22:45 wessels Exp $
+ * $Id: icmp.cc,v 1.45 1997/10/26 01:46:09 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -106,9 +106,7 @@ icmpRecv(int unused1, void *unused2)
 }
 
 static void
-icmpQueueSend(pingerEchoData * pkt,
-    int len,
-    FREE *free_func;
+icmpQueueSend(pingerEchoData * pkt, int len, FREE *free_func)
 {
     icmpQueueData *q = NULL;
     icmpQueueData **H = NULL;
