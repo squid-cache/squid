@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.125 2005/02/27 16:36:07 serassio Exp $
+ * $Id: forward.cc,v 1.126 2005/03/18 15:22:05 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -286,7 +286,7 @@ fwdNegotiateSSL(int fd, void *data)
             return;
 
         default:
-            debug(81, 1) ("fwdNegotiateSSL: Error negotiating SSL connection on FD %d: %s (%d/%d)\n", fd, ERR_error_string(ERR_get_error(), NULL), ssl_error, ret);
+            debug(81, 1) ("fwdNegotiateSSL: Error negotiating SSL connection on FD %d: %s (%d/%d/%d)\n", fd, ERR_error_string(ERR_get_error(), NULL), ssl_error, ret, errno);
             err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
 #ifdef EPROTO
 
