@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.181 2000/05/12 03:11:40 wessels Exp $
+# $Id: cf.data.pre,v 1.182 2000/05/12 03:17:50 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -593,7 +593,11 @@ LOC: Config.cacheSwap
 DOC_START
 	Usage:
 	
-	cache_dir Type Maxobjsize Directory-Name Mbytes Level-1 Level2
+	cache_dir Type Maxobjsize Directory-Name Mbytes Level-1 Level2 [...]
+
+	DISKD Usage:
+
+	cache_dir diskd Maxobjsize Directory-Name MB L1 L2 Q1 Q2
 
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
@@ -627,6 +631,13 @@ DOC_START
 	'Level-2' is the number of second-level subdirectories which
 	will be created under each first-level directory.  The default
 	is 256.
+
+	For the diskd type, Q1 specifies the number of unacknowledged
+	I/O requests when Squid stops opening new files.  If this
+	many messages are in the queues, Squid won't open new files.
+	Q2 specifies the number of unacknowledged messages when Squid
+	starts blocking.  If this many messages are in the queues,
+	Squid blocks until it recevies some replies.
 DOC_END
 
 
