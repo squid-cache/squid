@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.157 1998/02/06 06:44:34 wessels Exp $
+ * $Id: squid.h,v 1.158 1998/02/20 21:04:06 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -290,7 +290,7 @@ struct rusage {
 #endif
 
 #if CBDATA_DEBUG
-#define cbdataAdd(a)	cbdataAddDbg(a,__FILE__,__LINE__)
+#define cbdataAdd(a,b)	cbdataAddDbg(a,b,__FILE__,__LINE__)
 #endif
 
 #ifdef USE_GNUREGEX
