@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.141 1997/05/15 23:43:10 wessels Exp $
+ * $Id: neighbors.cc,v 1.142 1997/06/01 23:23:46 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1058,7 +1058,7 @@ peerCountMcastPeersStart(void *data)
 	fatal_dump("peerCountMcastPeersStart: non-multicast peer");
     p->mcast.flags &= ~PEER_COUNT_EVENT_PENDING;
     sprintf(url, "http://%s/", inet_ntoa(p->in_addr.sin_addr));
-    fake = storeCreateEntry(url, NULL, 0, 0, METHOD_GET);
+    fake = storeCreateEntry(url, 0, METHOD_GET);
     psstate->request = requestLink(urlParse(METHOD_GET, url));
     psstate->entry = fake;
     psstate->callback = NULL;
