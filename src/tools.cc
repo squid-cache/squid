@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.173 1999/01/11 21:55:44 wessels Exp $
+ * $Id: tools.cc,v 1.174 1999/04/07 19:59:21 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -407,28 +407,46 @@ getMyHostname(void)
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
     const struct hostent *h = NULL;
-    char *t = NULL;
-
-    if ((t = Config.visibleHostname) != NULL)
-	return t;
-
-    /* Get the host name and store it in host to return */
+    if (Config.visibleHostname != NULL)
+	return Config.visibleHostname;
+    /*
+     * If tcp_incoming is set then try to get the corresponding hostname
+     */
+    if (!present && Config.Addrs.tcp_incoming.s_addr != INADDR_ANY) {
+	host[0] = '\0';
+	h = gethostbyaddr((char *) &Config.Addrs.tcp_incoming,
+	    sizeof(Config.Addrs.tcp_incoming), AF_INET);
+	if (h != NULL) {
+	    /* DNS lookup successful */
+	    /* use the official name from DNS lookup */
+	    strcpy(host, h->h_name);
+	    debug(50, 4) ("getMyHostname: resolved tcp_incoming_addr to '%s'\n",
+		host);
+	    present = 1;
+	} else {
+	    debug(50, 6) ("getMyHostname: failed to resolve tcp_incoming_addr\n");
+	}
+    }
+    /*
+     * Get the host name and store it in host to return
+     */
     if (!present) {
 	host[0] = '\0';
 	if (gethostname(host, SQUIDHOSTNAMELEN) == -1) {
 	    debug(50, 1) ("getMyHostname: gethostname failed: %s\n",
 		xstrerror());
-	    return NULL;
 	} else {
 	    if ((h = gethostbyname(host)) != NULL) {
+		debug(50, 6) ("getMyHostname: '%s' resolved into '%s'\n",
+		    host, h->h_name);
 		/* DNS lookup successful */
 		/* use the official name from DNS lookup */
 		strcpy(host, h->h_name);
 	    }
-	    present = 1;
 	}
+	present = 1;
     }
-    return host;
+    return present ? host : NULL;
 }
 
 const char *
