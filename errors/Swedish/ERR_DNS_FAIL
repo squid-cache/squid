@@ -1,15 +1,15 @@
 <HTML><HEAD>
-<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+<TITLE>FEL: Beg&auml;rd URL kunde inte h&auml;mtas</TITLE>
 </HEAD><BODY>
-<H2>Begärd URL kunde inte hämtas</H2>
+<H2>Beg&auml;rd URL kunde inte h&auml;mtas</H2>
 <HR>
 <P>
-Vid försöket att hämta URL:
+Vid f&ouml;rs&ouml;ket att h&auml;mta URL:
 <A HREF="%U">%U</A>
 <P>
-Mottogs följande fel:
+Mottogs f&ouml;ljande fel:
 <BLOCKQUOTE>
-Kunde inte få fram IP-adressen för värdnamnet.
+Kunde inte f&aring; fram IP-adressen f&ouml;r v&auml;rdnamnet.
 <I>%H</I>
 </BLOCKQUOTE>
 </UL>
@@ -23,8 +23,8 @@ Namnservern returnerade:
 <P>
 Detta betyder att:
 <PRE>
- Cachen kunde inte lösa upp värdnamnet angivet i sökvägen. 
- Kontrollera att adressen är korrekt. 
+ Cachen kunde inte l&ouml;sa upp v&auml;rdnamnet angivet i s&ouml;kv&auml;gen. 
+ Kontrollera att adressen &auml;r korrekt. 
 </PRE>
 </P>
 

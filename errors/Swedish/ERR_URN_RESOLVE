@@ -1,21 +1,21 @@
 <HTML><HEAD>
-<TITLE>FEL: Begärd URN kunde inte hämtas</TITLE>
+<TITLE>FEL: Beg&auml;rd URN kunde inte h&auml;mtas</TITLE>
 </HEAD><BODY>
 <H1>FEL</H1>
-<H2>En URL för begärd URN kunde inte hämtas</H2>
+<H2>En URL f&ouml;r beg&auml;rd URN kunde inte h&auml;mtas</H2>
 <HR>
 <P>
-Vid försöket att hämta URN:
+Vid f&ouml;rs&ouml;ket att h&auml;mta URN:
 <A HREF="%U">%U</A>
 <P>
-Mottogs följande fel:
+Mottogs f&ouml;ljande fel:
 <UL>
 <LI>
 <STRONG>
-Kan inte lösa upp URN namnet
+Kan inte l&ouml;sa upp URN namnet
 </STRONG>
 </UL>
 
 <P>
-Men hallå, förvänta dig inte för mycket från en URNs på %T :)
+Men hall&aring;, f&ouml;rv&auml;nta dig inte f&ouml;r mycket fr&aring;n en URNs p&aring; %T :)
 </P>

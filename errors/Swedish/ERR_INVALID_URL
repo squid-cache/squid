@@ -1,14 +1,14 @@
 <HTML><HEAD>
-<TITLE>FEL: Begärd URL kunde ej hämtas</TITLE>
+<TITLE>FEL: Beg&auml;rd URL kunde ej h&auml;mtas</TITLE>
 </HEAD><BODY>
 <H1>FEL</H1>
-<H2>Begärd URL kunde ej hämtas</H2>
+<H2>Beg&auml;rd URL kunde ej h&auml;mtas</H2>
 <HR>
 <P>
-Vid försöket att hämta URL:
+Vid f&ouml;rs&ouml;ket att h&auml;mta URL:
 <A HREF="%U">%U</A>
 <P>
-Mottogs följande fel:
+Mottogs f&ouml;ljande fel:
 <UL>
 <LI>
 <STRONG>
@@ -17,11 +17,11 @@ Felaktig URL
 </UL>
 
 <P>
-Någon eller några aspekter av begärd URL är inkorrekta.  Möjliga problem:
+N&aring;gon eller n&aring;gra aspekter av beg&auml;rd URL &auml;r inkorrekta.  M&ouml;jliga problem:
 <UL>
-<LI>Avsaknat eller felaktigt tillträdesprotokoll (ska vara `http://'' eller liknande)
-<LI>Avsaknat värdnamn
-<LI>Ej tillåten dubbel-escape i URL-Sökvägen
-<LI>Ej tillåtna tecken i värdnamnet; '_' är ej tillåtna
+<LI>Avsaknat eller felaktigt tilltr&auml;desprotokoll (ska vara `http://'' eller liknande)
+<LI>Avsaknat v&auml;rdnamn
+<LI>Ej till&aring;ten dubbel-escape i URL-S&ouml;kv&auml;gen
+<LI>Ej till&aring;tna tecken i v&auml;rdnamnet; '_' &auml;r ej till&aring;tna
 </UL>
 </P>
