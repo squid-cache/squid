@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.185 2003/11/29 08:37:29 hno Exp $
+ * $Id: gopher.cc,v 1.186 2005/01/28 09:23:41 serassio Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -394,6 +394,13 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         if (gopherState->len != 0) {
             /* there is something left from last tx. */
             xstrncpy(line, gopherState->buf, gopherState->len + 1);
+
+            if (gopherState->len + len > TEMP_BUF_SIZE) {
+                debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
+                              storeUrl(entry));
+                len = TEMP_BUF_SIZE - gopherState->len;
+            }
+
             lpos = (char *) memccpy(line + gopherState->len, inbuf, '\n', len);
 
             if (lpos)
