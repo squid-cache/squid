@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.31 2002/09/24 10:46:43 robertc Exp $
+#  $Id: Makefile.am,v 1.32 2002/09/26 21:13:52 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -118,7 +118,9 @@ squid_SOURCES = \
 	client_side.c \
 	client_side_reply.c \
 	client_side_request.c \
+	client_side_request.h \
 	clientStream.c \
+	clientStream.h \
 	comm.c \
 	comm_select.c \
 	comm_poll.c \
@@ -190,7 +192,9 @@ squid_SOURCES = \
 	stmem.c \
 	store.c \
 	store_io.c \
+	StoreIOBuffer.h \
 	store_client.c \
+	StoreClient.h \
 	store_digest.c \
 	store_dir.c \
 	store_key_md5.c \
