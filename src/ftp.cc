@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.226 1998/05/22 23:44:07 wessels Exp $
+ * $Id: ftp.cc,v 1.227 1998/05/26 16:20:20 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2128,7 +2128,7 @@ ftpPutStart(FtpStateData * ftpState)
 static void
 ftpPutTransferDone(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
-    FtpStateData *ftpState = (FtpStateData *) data;
+    FtpStateData *ftpState = data;
     if (ftpState->data.fd >= 0) {
 	comm_close(ftpState->data.fd);
 	ftpState->data.fd = -1;
