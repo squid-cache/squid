@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.60 1998/04/01 19:39:18 wessels Exp $
+ * $Id: store_dir.cc,v 1.61 1998/04/04 04:52:22 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -625,7 +625,7 @@ storeDirWriteCleanLogs(int reopen)
 	    }
 	    outbufoffset[dirn] = 0;
 	}
-	if ((++n & 0x3FFF) == 0) {
+	if ((++n & 0xFFFF) == 0) {
 	    getCurrentTime();
 	    debug(20, 1) ("  %7d entries written so far.\n", n);
 	}
