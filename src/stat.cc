@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.77 1996/09/23 23:10:33 wessels Exp $
+ * $Id: stat.cc,v 1.78 1996/09/24 20:17:32 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -646,7 +646,7 @@ memoryAccounted(void)
 #if USE_ICMP
 	meta_data.netdb * sizeof(netdbEntry) +
 #endif
-               meta_data.misc;
+	meta_data.misc;
 }
 
 #ifdef UNUSED_CODE

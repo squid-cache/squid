@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.20 1996/09/20 23:26:53 wessels Exp $
+ * $Id: util.c,v 1.21 1996/09/24 20:17:26 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -484,5 +484,5 @@ int
 tvSubMsec(struct timeval t1, struct timeval t2)
 {
     return (t2.tv_sec - t1.tv_sec) * 1000 +
-        (t2.tv_usec - t1.tv_usec) / 1000;
+	(t2.tv_usec - t1.tv_usec) / 1000;
 }
