@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: comm.cc,v 1.2 1996/02/23 06:56:30 wessels Exp $";
+static char rcsid[] = "$Id: comm.cc,v 1.3 1996/02/23 07:12:57 wessels Exp $";
 /* 
  * File:         comm.c
  * Description:  socket-based communication facility.  Adapted from DHT
@@ -312,57 +312,6 @@ int comm_open(io_type, port, handler, note)
     }
     conn->port = port;
 
-#ifdef OLD_CODE
-    if (io_type & COMM_INTERRUPT) {
-#ifdef _HARVEST_HPUX_
-	pid_t my_pid = getpid();
-	int non_zero = 1;
-
-	/* Install interrupt handler. */
-	if ((app_handler = conn->handler = handler) == NULL)
-	    return (COMM_NO_HANDLER);
-
-	/* Set up the environment for handling signals. */
-	signal(SIGIO, comm_handler);
-
-	/* Set the process receiving SIGIO/SIGURG signals to us. */
-	if (ioctl(new_socket, SIOCSPGRP, &my_pid) < 0) {
-	    debug(0, "comm_open: Failure to set SIOCSPGRP: %s\n",
-		xstrerror());
-	    return (COMM_ERROR);
-	}
-	/*
-	 * Set status flags to allow receipt of asychronous I/O signals.
-	 */
-
-	if (ioctl(new_socket, FIOASYNC, &non_zero)) {
-	    debug(0, "comm_open: Failure to set FIOASYNC: %s\n",
-		xstrerror());
-	    return COMM_ERROR;
-	}
-#else
-	/* Install interrupt handler. */
-	if ((app_handler = conn->handler = handler) == NULL)
-	    return (COMM_NO_HANDLER);
-
-	/* Set up the environment for handling signals. */
-	signal(SIGIO, comm_handler);
-
-	/* Set the process receiving SIGIO/SIGURG signals to us. */
-	if (fcntl(new_socket, F_SETOWN, getpid()) < 0) {
-	    debug(0, "comm_open: Failure to set F_SETOWN: %s\n",
-		xstrerror());
-	    return (COMM_ERROR);
-	}
-	/* Set status flags to allow receipt of asychronous I/O signals.  */
-	if (fcntl(new_socket, F_SETFL, FASYNC)) {
-	    debug(0, "comm_open: Failure to set FASYNC: %s\n",
-		xstrerror());
-	    return COMM_ERROR;
-	}
-#endif /* _HARVEST_HPUX_ */
-    }
-#endif /* OLD_CODE */
     if (io_type & COMM_NONBLOCKING) {
 	/*
 	 * Set up the flag NOT to have the socket to wait for message from

@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: ftp.cc,v 1.4 1996/02/23 07:00:58 wessels Exp $";
+static char rcsid[] = "$Id: ftp.cc,v 1.5 1996/02/23 07:12:57 wessels Exp $";
 /* 
  *  File:         ftp.c
  *  Description:  state machine for ftp retrieval protocol.  Based on John's
@@ -386,30 +386,6 @@ int ftpReadReply(fd, data)
     return 0;
 }
 
-
-#ifdef OLD_CODE
-/* This will be called when request write is complete. Schedule read of reply. */
-int ftpSendComplete(fd, buf, size, errflag, data)
-     int fd;
-     char *buf;
-     int size;
-     int errflag;
-     FtpData *data;
-{
-    debug(1, "ftpSendComplete - THIS SHOULD NOT HAPPEN fd: %d size: %d errflag: %d\n",
-	fd, size, errflag);
-    return 0;
-}
-
-/* This will be called when connect completes. Write request. */
-int ftpSendRequest(fd, data)
-     int fd;
-     FtpData *data;
-{
-    debug(1, "ftpSendRequest - THIS SHOULD NOT HAPPEN fd: %d\n", fd);
-    return 0;
-}
-#endif
 
 int ftpStart(unusedfd, url, entry)
      int unusedfd;
