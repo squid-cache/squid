@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.59 1996/10/07 16:47:40 wessels Exp $
+ * $Id: neighbors.cc,v 1.60 1996/10/08 02:13:57 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -365,16 +365,6 @@ neighbors_open(int fd)
 	}
 	e->stats.rtt = 0;
 
-	/* Prepare query packet for future use */
-	e->header.opcode = ICP_OP_QUERY;
-	e->header.version = ICP_VERSION_CURRENT;
-	e->header.length = 0;
-	e->header.reqnum = 0;
-	e->header.flags = 0;
-	e->header.pad = 0;
-	/* memset(e->header.auth, '\0', sizeof(u_num32) * ICP_AUTH_SIZE); */
-	e->header.shostid = name.sin_addr.s_addr;
-
 	ap = &e->in_addr;
 	memset(ap, '\0', sizeof(struct sockaddr_in));
 	ap->sin_family = AF_INET;
@@ -412,6 +402,7 @@ neighborsUdpPing(protodispatch_data * proto)
     int i;
     MemObject *mem = entry->mem_obj;
     int reqnum = 0;
+    int flags;
 
     mem->e_pings_n_pings = 0;
     mem->e_pings_n_acks = 0;
@@ -458,19 +449,24 @@ neighborsUdpPing(protodispatch_data * proto)
 	    echo_hdr.reqnum = reqnum;
 	    icpUdpSend(theOutIcpConnection,
 		url,
-		&echo_hdr,
+		reqnum,
 		&e->in_addr,
-		proto->request->flags,
+		0,
 		ICP_OP_DECHO,
 		LOG_TAG_NONE,
 		PROTO_NONE);
 	} else {
-	    e->header.reqnum = reqnum;
+	    flags = 0;
+	    /* check if we should set ICP_FLAG_HIT_OBJ */
+	    if (opt_udp_hit_obj)
+		if (!BIT_TEST(proto->request->flags, REQ_NOCACHE))
+		    if (e->icp_version == ICP_VERSION_2)
+			flags |= ICP_FLAG_HIT_OBJ;
 	    icpUdpSend(theOutIcpConnection,
 		url,
-		&e->header,
+		reqnum,
 		&e->in_addr,
-		proto->request->flags,
+		flags,
 		ICP_OP_QUERY,
 		LOG_TAG_NONE,
 		PROTO_NONE);
@@ -517,7 +513,7 @@ neighborsUdpPing(protodispatch_data * proto)
 		to_addr.sin_port = htons(echo_port);
 		icpUdpSend(theOutIcpConnection,
 		    url,
-		    &echo_hdr,
+		    reqnum,
 		    &to_addr,
 		    entry->flag,
 		    ICP_OP_SECHO,
@@ -576,6 +572,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	    n = RTT_AV_FACTOR;
 	rtt = tvSubMsec(mem->start_ping, current_time);
 	e->stats.rtt = (e->stats.rtt * (n - 1) + rtt) / n;
+	e->icp_version = (int) header->version;
     }
     /* check if someone is already fetching it */
     if (BIT_TEST(entry->flag, ENTRY_DISPATCHED)) {
@@ -824,6 +821,7 @@ neighbors_init(void)
 	e->domains = t->domains;
 	e->acls = t->acls;
 	e->neighbor_up = 1;
+	e->icp_version = ICP_VERSION_CURRENT;
 	if (!strcmp(t->type, "parent")) {
 	    friends->n_parent++;
 	    e->type = EDGE_PARENT;
