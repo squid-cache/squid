@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.37 1997/11/12 00:08:54 wessels Exp $
+ * $Id: ident.cc,v 1.38 1998/03/17 00:38:53 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -47,9 +47,10 @@ identClose(int fdnotused, void *data)
 
 /* start a TCP connection to the peer host on port 113 */
 void
-identStart(int fd, ConnStateData * connState, IDCB * callback)
+identStart(int fd, ConnStateData * connState, IDCB * callback, void *data)
 {
     connState->ident.callback = callback;
+    connState->ident.callback_data = data;
     connState->ident.state = IDENT_PENDING;
     if (fd < 0) {
 	fd = comm_open(SOCK_STREAM,
@@ -124,5 +125,5 @@ identCallback(ConnStateData * connState)
 {
     connState->ident.state = IDENT_DONE;
     if (connState->ident.callback)
-	connState->ident.callback(connState);
+	connState->ident.callback(connState->ident.callback_data);
 }
