@@ -37,6 +37,10 @@
  * and by the SNMP routines.
  */
 
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+
 #include "md5.h"
 
 /*
@@ -62,8 +66,18 @@
 static void MD5Transform(u_num32[4], unsigned char[64]);
 static void Encode(unsigned char *, u_num32 *, unsigned int);
 static void Decode(u_num32 *, unsigned char *, unsigned int);
+
+#if HAVE_MEMCPY
+#define MD5_memcpy(to,from,count) memcpy(to,from,count)
+#else
 static void MD5_memcpy(unsigned char *, unsigned char *, unsigned int);
+#endif
+
+#if HAVE_MEMSET
+#define MD5_memset(buf,chr,count) memset(buf,chr,count)
+#else
 static void MD5_memset(char *, int, unsigned int);
+#endif
 
 static unsigned char PADDING[64] =
 {
@@ -319,6 +333,7 @@ Decode(u_num32 * output, unsigned char *input, unsigned int len)
 	    (((u_num32) input[j + 2]) << 16) | (((u_num32) input[j + 3]) << 24);
 }
 
+#if !HAVE_MEMCPY
 /*
  * Note: Replace "for loop" with standard memcpy if possible.
  */
@@ -330,7 +345,9 @@ MD5_memcpy(unsigned char *output, unsigned char *input, unsigned int len)
     for (i = 0; i < len; i++)
 	output[i] = input[i];
 }
+#endif
 
+#if !HAVE_MEMSET
 /*
  * Note: Replace "for loop" with standard memset if possible.
  */
@@ -341,3 +358,4 @@ MD5_memset(char *output, int value, unsigned int len)
     for (i = 0; i < len; i++)
 	output[i] = (char) value;
 }
+#endif

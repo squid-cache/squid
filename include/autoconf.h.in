@@ -263,6 +263,9 @@
 /* Define if you have the memmove function.  */
 #undef HAVE_MEMMOVE
 
+/* Define if you have the memset function.  */
+#undef HAVE_MEMSET
+
 /* Define if you have the mktime function.  */
 #undef HAVE_MKTIME
 
