@@ -31,6 +31,10 @@
 	  being used.
 	- Fixed shutdown bug when the incoming and outgoing ICP socket
 	  is the same file descriptor.
+	- Added buffered writes for storeWriteCleanLogs() (Stewart
+	  Forster).
+	- Patches for Qnx4 (Jean-Claude MICHOT).
+	- Fixed returning void functions which seems to be a GCC-ism.
 
 Changes to squid-1.2.beta10 (Jan 1, 1998):
 
