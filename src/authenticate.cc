@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.26 2001/08/07 12:35:26 adrian Exp $
+ * $Id: authenticate.cc,v 1.27 2001/08/09 11:00:10 adrian Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -288,7 +288,7 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
     auth_user->ipcount++;
 
     ip1 = xstrdup(inet_ntoa(ipaddr));
-    debug(29, 1) ("authenticateAuthUserRequestSetIp: user '%s' has been seen at a new IP address (%s, %s)\n ", authenticateUserUsername(auth_user), ip1);
+    debug(29, 1) ("authenticateAuthUserRequestSetIp: user '%s' has been seen at a new IP address (%s)\n ", authenticateUserUsername(auth_user), ip1);
     safe_free(ip1);
 }
 
