@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.5 1998/10/10 14:57:36 wessels Exp $
+ * $Id: authenticate.cc,v 1.6 1998/10/16 20:02:45 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -105,11 +105,10 @@ void
 authenticateInit(void)
 {
     static int init = 0;
-    safe_free(authenticators);
+    assert(authenticators == NULL);
     if (!Config.Program.authenticate)
 	return;
-    authenticators = xcalloc(1, sizeof(*authenticators));
-    authenticators->id_name = "authenticator";
+    authenticators = helperCreate("authenticator");
     authenticators->cmdline = Config.Program.authenticate;
     authenticators->n_to_start = Config.authenticateChildren;
     authenticators->ipc_type = IPC_TCP_SOCKET;
@@ -125,6 +124,9 @@ authenticateInit(void)
 void
 authenticateShutdown(void)
 {
-    if (authenticators)
+    if (authenticators) {
 	helperShutdown(authenticators);
+	helperFree(authenticators);
+	authenticators = NULL;
+    }
 }
