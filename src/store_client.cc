@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.122 2003/02/06 09:57:38 robertc Exp $
+ * $Id: store_client.cc,v 1.123 2003/02/06 23:13:00 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -709,8 +709,10 @@ store_client::callbackPending() const
 
 store_client::Callback::Callback(STCB *function, void *data) : callback_handler(function), callback_data (data) {}
 
+#if DELAY_POOLS
 void
 store_client::setDelayId(DelayId delay_id)
 {
     delayId = delay_id;
 }
+#endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.364 2003/02/05 10:36:53 robertc Exp $
+ * $Id: main.cc,v 1.365 2003/02/06 23:13:00 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -951,7 +951,9 @@ SquidShutdown(void *unused)
 #endif
     releaseServerSockets();
     commCloseAllSockets();
+#if DELAY_POOLS
     DelayPools::FreePools();
+#endif
     authenticateShutdown();
 #if USE_UNLINKD
     unlinkdClose();
