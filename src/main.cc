@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.400 2004/12/28 12:52:05 hno Exp $
+ * $Id: main.cc,v 1.401 2004/12/31 10:29:28 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1310,7 +1310,11 @@ watch_child(char *argv[])
 #endif
 
     pid_t pid;
+#ifdef TIOCNOTTY
+
     int i;
+#endif
+
     int nullfd;
 
     if (*(argv[0]) == '(')
