@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommRead.h,v 1.3 2003/06/23 12:03:07 robertc Exp $
+ * $Id: CommRead.h,v 1.4 2003/07/06 13:43:40 hno Exp $
  *
  * DEBUG: section 5    Comms
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -134,8 +134,6 @@ class DeferredRead
 
 public:
     typedef void DeferrableRead(void *context, CommRead const &);
-    void * operator new(size_t);
-    void operator delete (void *);
     DeferredRead ();
     DeferredRead (DeferrableRead *, void *, CommRead const &);
     void markCancelled();
@@ -145,7 +143,6 @@ public:
     bool cancelled;
 
 private:
-    CBDATA_CLASS(DeferredRead);
 };
 
 class DeferredReadManager
