@@ -108,7 +108,7 @@ asnMatchIp(void *data, struct in_addr addr)
     lh = ntohl(addr.s_addr);
     debug(53, 4) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
 
-    if (AS_tree_head == 0)
+    if (AS_tree_head == 0 || &addr==&no_addr)
 	return 0;
     store_m_int(lh, m_addr);
     rn = rn_match(m_addr, AS_tree_head);
