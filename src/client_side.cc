@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.542 2001/08/03 15:13:03 adrian Exp $
+ * $Id: client_side.cc,v 1.543 2001/08/24 15:02:43 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2682,7 +2682,7 @@ clientReadDefer(int fdnotused, void *data)
 {
     ConnStateData *conn = data;
     if (conn->body.size_left)
-	return conn->in.offset >= conn->in.size;
+	return conn->in.offset >= conn->in.size - 1;
     else
 	return conn->defer.until > squid_curtime;
 }
@@ -2703,6 +2703,7 @@ clientReadRequest(int fd, void *data)
     fde *F = &fd_table[fd];
     int len = conn->in.size - conn->in.offset - 1;
     debug(33, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
+    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
     if (len == 0) {
 	/* Grow the request memory area to accomodate for a large request */
 	conn->in.size += CLIENT_REQ_BUF_SZ;
@@ -2764,15 +2765,12 @@ clientReadRequest(int fd, void *data)
 	    return;
 	} else if (conn->in.offset == 0) {
 	    debug(50, 2) ("clientReadRequest: FD %d: no data to process (%s)\n", fd, xstrerror());
-	    return;
 	}
 	/* Continue to process previously read data */
     }
     /* Process request body if any */
     if (conn->in.offset > 0 && conn->body.callback != NULL)
 	clientProcessBody(conn);
-    if (conn->body.size_left == 0)
-	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
     /* Process next request */
     while (conn->in.offset > 0 && conn->body.size_left == 0) {
 	int nrequests;
@@ -3017,8 +3015,6 @@ clientProcessBody(ConnStateData * conn)
 	    requestUnlink(request);	/* Linked in clientReadBody */
 	debug(33, 2) ("clientProcessBody: end fd=%d size=%d body_size=%d in.offset=%d cb=%p req=%p\n", conn->fd, size, conn->body.size_left, conn->in.offset, callback, request);
     }
-    if (conn->in.offset < conn->in.size - 1 || conn->body.size_left == 0)
-	commSetSelect(conn->fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
 }
 
 /* A dummy handler that throws away a request-body */
