@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.43 2003/06/19 18:05:11 hno Exp $
+ * $Id: external_acl.cc,v 1.44 2003/06/19 19:07:21 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -554,6 +554,12 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
         }
 
         key = makeExternalAclKey(ch, acl);
+
+        if (!key) {
+            /* Not sufficient data to process */
+            return -1;
+        }
+
         entry = static_cast<external_acl_entry *>(hash_lookup(acl->def->cache, key));
 
         if (entry && external_acl_entry_expired(acl->def, entry)) {
@@ -658,7 +664,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
         case _external_acl_format::EXT_ACL_IDENT:
             str = ch->rfc931;
 
-            if (!str) {
+            if (!str || !*str) {
                 ch->changeState(IdentLookup::Instance());
                 return NULL;
             }
