@@ -1566,38 +1566,6 @@ DOC_START
 	for that ACL then Squid returns a redirect to the given URL.
 DOC_END
 
-
-NAME: udp_hit_obj
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-LOC: opt_udp_hit_obj
-DOC_START
-	If set, Squid will request UDP_HIT_OBJ replies from its
-	neighbors.  UDP_HIT_OBJ is nice because it saves bandwidth, but
-	it can cause some other problems.  For one it complicates
-	calculating hit rates.  Also, problems arise because the ICP
-	query does not contain any HTTP request headers which may
-	affect the reply.
-
-udp_hit_obj off
-DOC_END
-
-
-NAME: udp_hit_obj_size
-COMMENT: (bytes)
-TYPE: b_size_t
-LOC: Config.udpMaxHitObjsz
-DEFAULT: 0 bytes
-DOC_START
-	If set, Squid will limit UDP_HIT_OBJ size to be less than
-	this value.  Setting this value to more than SQUID_UDP_SO_SNDBUF
-	will not work as expected.  Set to zero to select the size
-	permited by the socket.
-udp_hit_obj_size     0 bytes
-DOC_END
-
-
 NAME: memory_pools
 COMMENT: on|off
 TYPE: onoff

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.141 1998/01/04 05:43:48 wessels Exp $
+ * $Id: tools.cc,v 1.142 1998/01/31 05:32:09 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -753,7 +753,7 @@ percent(int a, int b)
     return b ? ((int) (100.0 * a / b + 0.5)) : 0;
 }
 
-int
+double
 dpercent(double a, double b)
 {
     return b ? (100.0 * a / b) : 0.0;
@@ -837,4 +837,11 @@ dlinkDelete(dlink_node * m, dlink_list * list)
 	list->head = m->next;
     if (m == list->tail)
 	list->tail = m->prev;
+}
+
+void kb_incr(kb_t *k, size_t v)
+{
+	k->bytes += v;
+	k->kb += (k->bytes >> 10);
+	k->bytes &= 0x3FF;
 }

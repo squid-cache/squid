@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.51 1998/01/12 04:30:36 wessels Exp $
+ * $Id: dns.cc,v 1.52 1998/01/31 05:31:55 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -111,107 +111,8 @@ struct dnsQueueData {
     void *data;
 };
 
-static int dnsOpenServer(const char *command);
 static PF dnsShutdownRead;
 static dnsserver_t **dns_child_table = NULL;
-
-static int
-dnsOpenServer(const char *command)
-{
-    pid_t pid;
-    struct sockaddr_in S;
-    int cfd;
-    int sfd;
-    int fd;
-    int len;
-    LOCAL_ARRAY(char, buf, 128);
-
-    cfd = comm_open(SOCK_STREAM,
-	0,
-	local_addr,
-	0,
-	COMM_NOCLOEXEC,
-	"dnsserver listen socket");
-    if (cfd < 0) {
-	debug(34, 0) ("dnsOpenServer: Failed to create dnsserver\n");
-	return -1;
-    }
-    len = sizeof(S);
-    memset(&S, '\0', len);
-    if (getsockname(cfd, (struct sockaddr *) &S, &len) < 0) {
-	debug(50, 0) ("dnsOpenServer: getsockname: %s\n", xstrerror());
-	comm_close(cfd);
-	return -1;
-    }
-    listen(cfd, 1);
-    /* flush or else we get dup data if unbuffered_logs is set */
-    logsFlush();
-    if ((pid = fork()) < 0) {
-	debug(50, 0) ("dnsOpenServer: fork: %s\n", xstrerror());
-	comm_close(cfd);
-	return -1;
-    }
-    if (pid > 0) {		/* parent */
-	comm_close(cfd);	/* close shared socket with child */
-	/* open new socket for parent process */
-	sfd = comm_open(SOCK_STREAM,
-	    0,			/* protocol */
-	    local_addr,
-	    0,			/* port */
-	    0,			/* flags */
-	    "squid <-> dnsserver");
-	if (sfd == COMM_ERROR)
-	    return -1;
-	if (comm_connect_addr(sfd, &S) == COMM_ERROR) {
-	    comm_close(sfd);
-	    return -1;
-	}
-	if (write(sfd, "$hello\n", 7) < 0) {
-	    debug(34, 0) ("dnsOpenServer: $hello write test failed\n");
-	    comm_close(sfd);
-	    return -1;
-	}
-	memset(buf, '\0', 128);
-	if (read(sfd, buf, 127) < 0) {
-	    debug(50, 0) ("dnsOpenServer: $hello read test failed\n");
-	    debug(50, 0) ("--> read: %s\n", xstrerror());
-	    comm_close(sfd);
-	    return -1;
-	} else if (strcmp(buf, "$alive\n$end\n")) {
-	    debug(50, 0) ("dnsOpenServer: $hello read test failed\n");
-	    debug(50, 0) ("--> got '%s'\n", rfc1738_escape(buf));
-	    comm_close(sfd);
-	    return -1;
-	}
-	commSetTimeout(sfd, -1, NULL, NULL);
-	return sfd;
-    }
-    /* child */
-    no_suid();			/* give up extra priviliges */
-    if ((fd = accept(cfd, NULL, NULL)) < 0) {
-	debug(50, 0) ("dnsOpenServer: FD %d accept: %s\n", cfd, xstrerror());
-	_exit(1);
-    }
-    dup2(fd, 0);
-    dup2(fd, 1);
-    dup2(fileno(debug_log), 2);
-    fclose(debug_log);
-    /*
-     * Solaris pthreads seems to close FD 0 upon fork(), so don't close
-     * this FD if its 0, 1, or 2.
-     * -- Michael O'Reilly <michael@metal.iinet.net.au>
-     */
-    if (fd > 2)
-	close(fd);
-    close(cfd);
-    if (Config.onoff.res_defnames)
-	execlp(command, "(dnsserver)", "-D", NULL);
-    else
-	execlp(command, "(dnsserver)", NULL);
-    debug(50, 0) ("dnsOpenServer: %s: %s\n", command, xstrerror());
-    _exit(1);
-    return 0;
-}
 
 dnsserver_t *
 dnsGetFirstAvailable(void)
@@ -250,17 +151,31 @@ dnsOpenServers(void)
     int N = Config.dnsChildren;
     char *prg = Config.Program.dnsserver;
     int k;
-    int dnssocket;
+    int x;
+    int rfd;
+    int wfd;
     LOCAL_ARRAY(char, fd_note_buf, FD_DESC_SZ);
     char *s;
+    char *args[3];
 
     dnsFreeMemory();
     dns_child_table = xcalloc(N, sizeof(dnsserver_t *));
     NDnsServersAlloc = 0;
+    args[0] = "(dnsserver)";
+    args[1] = NULL;
+    args[2] = NULL;
+    if (Config.onoff.res_defnames)
+	args[1] = "-D";
     for (k = 0; k < N; k++) {
 	dns_child_table[k] = xcalloc(1, sizeof(dnsserver_t));
 	cbdataAdd(dns_child_table[k], MEM_NONE);
-	if ((dnssocket = dnsOpenServer(prg)) < 0) {
+        x = ipcCreate(IPC_TCP_SOCKET,
+		prg,
+		args,
+		"dnsserver",
+		&rfd,
+		&wfd);
+	if (x < 0) {
 	    debug(34, 1) ("dnsOpenServers: WARNING: Failed to start 'dnsserver' #%d.\n", k + 1);
 	    EBIT_CLR(dns_child_table[k]->flags, HELPER_ALIVE);
 	    dns_child_table[k]->id = k + 1;
@@ -268,11 +183,11 @@ dnsOpenServers(void)
 	    dns_child_table[k]->outpipe = -1;
 	} else {
 	    debug(34, 4) ("dnsOpenServers: FD %d connected to %s #%d.\n",
-		dnssocket, prg, k + 1);
+		wfd, prg, k + 1);
 	    EBIT_SET(dns_child_table[k]->flags, HELPER_ALIVE);
 	    dns_child_table[k]->id = k + 1;
-	    dns_child_table[k]->inpipe = dnssocket;
-	    dns_child_table[k]->outpipe = dnssocket;
+	    dns_child_table[k]->inpipe = rfd;
+	    dns_child_table[k]->outpipe = wfd;
 	    dns_child_table[k]->answer = squid_curtime;
 	    dns_child_table[k]->dispatch_time = current_time;
 	    dns_child_table[k]->size = DNS_INBUF_SZ - 1;
@@ -284,7 +199,7 @@ dnsOpenServers(void)
 	    snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", s, dns_child_table[k]->id);
 	    fd_note(dns_child_table[k]->inpipe, fd_note_buf);
 	    commSetNonBlocking(dns_child_table[k]->inpipe);
-	    debug(34, 3) ("dnsOpenServers: 'dns_server' %d started\n", k);
+	    debug(34, 3) ("dnsOpenServers: 'dns_server' %d started\n", k+1);
 	    NDnsServersAlloc++;
 	}
     }

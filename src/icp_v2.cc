@@ -9,12 +9,6 @@ icpLogIcp(icpUdpData * queue)
     icp_common_t *header = (icp_common_t *) (void *) queue->msg;
     char *url = (char *) header + sizeof(icp_common_t);
     AccessLogEntry al;
-    ICPCacheInfo->proto_touchobject(ICPCacheInfo,
-	queue->proto,
-	queue->len);
-    ICPCacheInfo->proto_count(ICPCacheInfo,
-	queue->proto,
-	queue->logcode);
     clientdbUpdate(queue->address.sin_addr, queue->logcode, PROTO_ICP);
     if (!Config.onoff.log_udp)
 	return;
@@ -42,6 +36,8 @@ icpUdpReply(int fd, void *data)
 	    inet_ntoa(queue->address.sin_addr),
 	    ntohs(queue->address.sin_port));
 	Counter.icp.pkts_sent++;
+	if (queue->logcode == LOG_UDP_HIT)
+	    Counter.icp.hits_sent++;
 	x = comm_udp_sendto(fd,
 	    &queue->address,
 	    sizeof(struct sockaddr_in),
@@ -51,7 +47,7 @@ icpUdpReply(int fd, void *data)
 	    if (ignoreErrno(errno))
 		break;		/* don't de-queue */
 	} else {
-	    Counter.icp.bytes_sent += x;
+	    kb_incr(&Counter.icp.kbytes_sent, (size_t) x);
 	}
 	UdpQueueHead = queue->next;
 	if (queue->logcode)
@@ -110,7 +106,7 @@ icpUdpSend(int fd,
     data->address = *to;
     data->msg = msg;
     data->len = (int) ntohs(msg->length);
-    data->start = current_time;	/* wrong for HIT_OBJ */
+    data->start = current_time;
     data->logcode = logcode;
     data->proto = proto;
     AppendUdp(data);
@@ -141,9 +137,6 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     const cache_key *key;
     request_t *icp_request = NULL;
     int allow = 0;
-    char *data = NULL;
-    u_short data_sz = 0;
-    u_short u;
     int pkt_len;
     aclCheck_t checklist;
     icp_common_t *reply;
@@ -208,8 +201,8 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	}
 	break;
 
-    case ICP_HIT_OBJ:
     case ICP_HIT:
+	Counter.icp.hits_recv++;
     case ICP_SECHO:
     case ICP_DECHO:
     case ICP_MISS:
@@ -222,16 +215,6 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    neighbors_do_private_keys = 0;
 	}
 	url = buf + sizeof(header);
-	if (header.opcode == ICP_HIT_OBJ) {
-	    data = url + strlen(url) + 1;
-	    xmemcpy((char *) &u, data, sizeof(u_short));
-	    data += sizeof(u_short);
-	    data_sz = ntohs(u);
-	    if ((int) data_sz > (len - (data - buf))) {
-		debug(12, 0) ("icpHandleIcpV2: ICP_HIT_OBJ object too small\n");
-		break;
-	    }
-	}
 	debug(12, 3) ("icpHandleIcpV2: %s from %s for '%s'\n",
 	    icp_opcode_str[header.opcode],
 	    inet_ntoa(from.sin_addr),
@@ -315,7 +298,7 @@ icpHandleUdp(int sock, void *datanotused)
 	return;
     }
     Counter.icp.pkts_recv++;
-    Counter.icp.bytes_recv += len;
+    kb_incr(&Counter.icp.kbytes_recv, (size_t) len);
     buf[len] = '\0';
     debug(12, 4) ("icpHandleUdp: FD %d: received %d bytes from %s.\n",
 	sock,

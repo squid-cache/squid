@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.12 1998/01/01 05:57:17 wessels Exp $
+ * $Id: unlinkd.cc,v 1.13 1998/01/31 05:32:10 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -27,8 +27,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *  
  */
-
-static char hello_string[] = "hi there\n";
 
 #ifdef UNLINK_DAEMON
 
@@ -62,7 +60,6 @@ main(int argc, char *argv[])
     char buf[UNLINK_BUF_LEN];
     char *t;
     setbuf(stdin, NULL);
-    write(1, hello_string, sizeof(hello_string));
     while (fgets(buf, UNLINK_BUF_LEN, stdin)) {
 	if ((t = strchr(buf, '\n')))
 	    *t = '\0';
@@ -81,80 +78,33 @@ static int unlinkd_fd = -1;
 
 static int unlinkdCreate(void);
 
-#define HELLO_BUFSIZ 128
 static int
 unlinkdCreate(void)
 {
-    pid_t pid;
-    int rfd1, rfd2, wfd1, wfd2;
-    int squid_to_unlinkd[2] =
-    {-1, -1};
-    int unlinkd_to_squid[2] =
-    {-1, -1};
-    int n;
-    char buf[HELLO_BUFSIZ];
-    struct timeval slp;
-    if (pipe(squid_to_unlinkd) < 0) {
-	debug(50, 0) ("unlinkdCreate: pipe: %s\n", xstrerror());
-	return -1;
-    }
-    if (pipe(unlinkd_to_squid) < 0) {
-	debug(50, 0) ("unlinkdCreate: pipe: %s\n", xstrerror());
-	return -1;
-    }
-    rfd1 = squid_to_unlinkd[0];
-    wfd1 = squid_to_unlinkd[1];
-    rfd2 = unlinkd_to_squid[0];
-    wfd2 = unlinkd_to_squid[1];
-    /* flush or else we get dup data if unbuffered_logs is set */
-    logsFlush();
-    if ((pid = fork()) < 0) {
-	debug(50, 0) ("unlinkdCreate: fork: %s\n", xstrerror());
-	close(rfd1);
-	close(wfd1);
-	close(rfd2);
-	close(wfd2);
-	return -1;
-    }
-    if (pid > 0) {		/* parent process */
-	close(rfd1);
-	close(wfd2);
-	memset(buf, '\0', HELLO_BUFSIZ);
-	n = read(rfd2, buf, HELLO_BUFSIZ - 1);
-	fd_bytes(rfd2, n, FD_READ);
-	close(rfd2);
-	if (n <= 0) {
-	    debug(50, 0) ("unlinkdCreate: handshake failed\n");
-	    close(wfd1);
-	    return -1;
-	} else if (strcmp(buf, hello_string)) {
-	    debug(50, 0) ("unlinkdCreate: handshake failed\n");
-	    debug(50, 0) ("--> got '%s'\n", rfc1738_escape(buf));
-	    close(wfd1);
-	    return -1;
-	}
+	int x;
+	int rfd;
+	int wfd;
+	char *args[2];
+	struct timeval slp;
+	args[0] = "(unlinkd)";
+	args[1] = NULL;
+	x = ipcCreate(IPC_FIFO,
+		Config.Program.unlinkd,
+		args,
+		"unlinkd",
+		&rfd,
+		&wfd);
+	if (x < 0)
+		return -1;
 	slp.tv_sec = 0;
 	slp.tv_usec = 250000;
 	select(0, NULL, NULL, NULL, &slp);
-	fd_open(wfd1, FD_PIPE, "squid -> unlinkd");
-	commSetTimeout(wfd1, -1, NULL, NULL);
-	commSetNonBlocking(wfd1);
-	return wfd1;
-    }
-    /* child */
-    no_suid();			/* give up extra priviliges */
-    close(wfd1);
-    close(rfd2);
-    dup2(rfd1, 0);
-    dup2(wfd2, 1);
-    close(rfd1);		/* close FD since we dup'd it */
-    close(wfd2);		/* close parent's FD */
-    commSetCloseOnExec(fileno(debug_log));
-    execlp(Config.Program.unlinkd, "(unlinkd)", NULL);
-    debug(50, 0) ("unlinkdCreate: %s: %s\n",
-	Config.Program.unlinkd, xstrerror());
-    _exit(1);
-    return 0;
+	fd_note(wfd, "squid -> unlinkd");
+	fd_note(rfd, "unlinkd -> squid");
+	commSetTimeout(rfd, -1, NULL, NULL);
+	commSetTimeout(wfd, -1, NULL, NULL);
+	commSetNonBlocking(wfd);
+	return wfd;
 }
 
 void

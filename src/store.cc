@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.366 1998/01/12 04:30:13 wessels Exp $
+ * $Id: store.cc,v 1.367 1998/01/31 05:32:07 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -831,10 +831,6 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 	mem->url, storeSwapFullPath(e->swap_file_number, NULL));
     e->swap_status = SWAPOUT_DONE;
     storeDirUpdateSwapSize(e->swap_file_number, e->object_len, 1);
-    HTTPCacheInfo->proto_newobject(HTTPCacheInfo,
-	mem->request->protocol,
-	e->object_len,
-	FALSE);
     if (storeCheckCachable(e)) {
 	storeLog(STORE_LOG_SWAPOUT, e);
 #if 0
@@ -1483,10 +1479,6 @@ storeAbort(StoreEntry * e, int cbflag)
     storeSetMemStatus(e, NOT_IN_MEMORY);
     /* No DISK swap for negative cached object */
     e->swap_status = SWAPOUT_NONE;
-    /* Count bytes faulted through cache but not moved to disk */
-    HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
-	mem->request ? mem->request->protocol : PROTO_NONE,
-	mem->inmem_hi);
     /* We assign an object length here--The only other place we assign the
      * object length is in storeComplete() */
     e->object_len = mem->inmem_hi;

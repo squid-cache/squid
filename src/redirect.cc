@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.52 1998/01/12 04:30:10 wessels Exp $
+ * $Id: redirect.cc,v 1.53 1998/01/31 05:32:04 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -68,7 +68,6 @@ struct redirectQueueData {
 };
 
 static redirector_t *GetFirstAvailable(void);
-static int redirectCreateRedirector(const char *command);
 static PF redirectHandleRead;
 static redirectStateData *Dequeue(void);
 static void Enqueue(redirectStateData *);
@@ -80,84 +79,6 @@ static int NRedirectors = 0;
 static int NRedirectorsOpen = 0;
 static struct redirectQueueData *redirectQueueHead = NULL;
 static struct redirectQueueData **redirectQueueTailP = &redirectQueueHead;
-
-static int
-redirectCreateRedirector(const char *command)
-{
-    pid_t pid;
-    struct sockaddr_in S;
-    static int n_redirector = 0;
-    int cfd;
-    int sfd;
-    int len;
-    int fd;
-    struct timeval slp;
-    cfd = comm_open(SOCK_STREAM,
-	0,
-	local_addr,
-	0,
-	COMM_NOCLOEXEC,
-	"socket to redirector");
-    if (cfd == COMM_ERROR) {
-	debug(29, 0) ("redirect_create_redirector: Failed to create redirector\n");
-	return -1;
-    }
-    len = sizeof(S);
-    memset(&S, '\0', len);
-    if (getsockname(cfd, (struct sockaddr *) &S, &len) < 0) {
-	debug(50, 0) ("redirect_create_redirector: getsockname: %s\n", xstrerror());
-	comm_close(cfd);
-	return -1;
-    }
-    listen(cfd, 1);
-    /* flush or else we get dup data if unbuffered_logs is set */
-    logsFlush();
-    if ((pid = fork()) < 0) {
-	debug(50, 0) ("redirect_create_redirector: fork: %s\n", xstrerror());
-	comm_close(cfd);
-	return -1;
-    }
-    if (pid > 0) {		/* parent */
-	comm_close(cfd);	/* close shared socket with child */
-	/* open new socket for parent process */
-	sfd = comm_open(SOCK_STREAM,
-	    0,
-	    local_addr,
-	    0,
-	    0,
-	    NULL);		/* blocking! */
-	if (sfd == COMM_ERROR)
-	    return -1;
-	if (comm_connect_addr(sfd, &S) == COMM_ERROR) {
-	    comm_close(sfd);
-	    return -1;
-	}
-	commSetTimeout(sfd, -1, NULL, NULL);
-	debug(29, 4) ("redirect_create_redirector: FD %d connected to %s #%d.\n",
-	    sfd, command, ++n_redirector);
-	slp.tv_sec = 0;
-	slp.tv_usec = 250000;
-	select(0, NULL, NULL, NULL, &slp);
-	return sfd;
-    }
-    /* child */
-    no_suid();			/* give up extra priviliges */
-    if ((fd = accept(cfd, NULL, NULL)) < 0) {
-	debug(50, 0) ("redirect_create_redirector: FD %d accept: %s\n",
-	    cfd, xstrerror());
-	_exit(1);
-    }
-    dup2(fd, 0);
-    dup2(fd, 1);
-    dup2(fileno(debug_log), 2);
-    fclose(debug_log);
-    close(fd);
-    close(cfd);
-    execlp(command, "(redirector)", NULL);
-    debug(50, 0) ("redirect_create_redirector: %s: %s\n", command, xstrerror());
-    _exit(1);
-    return 0;
-}
 
 static void
 redirectHandleRead(int fd, void *data)
@@ -381,6 +302,8 @@ redirectOpenServers(void)
     LOCAL_ARRAY(char, fd_note_buf, FD_DESC_SZ);
     static int first_time = 0;
     char *s;
+    char *args[2];
+    int x;
 
     redirectFreeMemory();
     if (Config.Program.redirect == NULL)
@@ -391,7 +314,15 @@ redirectOpenServers(void)
 	NRedirectors, prg);
     for (k = 0; k < NRedirectors; k++) {
 	redirect_child_table[k] = xcalloc(1, sizeof(redirector_t));
-	if ((redirectsocket = redirectCreateRedirector(prg)) < 0) {
+        args[0] = "(redirector)";
+        args[1] = NULL;
+        x = ipcCreate(IPC_TCP_SOCKET,
+		prg,
+		args,
+		"redirector",
+		&redirectsocket,
+		&redirectsocket);
+	if (x < 0) {
 	    debug(29, 1) ("WARNING: Cannot run '%s' process.\n", prg);
 	    EBIT_CLR(redirect_child_table[k]->flags, HELPER_ALIVE);
 	} else {

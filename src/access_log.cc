@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.16 1998/01/05 21:18:12 wessels Exp $
+ * $Id: access_log.cc,v 1.17 1998/01/31 05:31:53 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -33,6 +33,11 @@
 
 #include "squid.h"
 
+static void accessLogOpen(const char *fname);
+static char *log_quote(const char *header);
+static int accessLogSquid(AccessLogEntry * al);
+static int accessLogCommon(AccessLogEntry * al);
+
 const char *log_tags[] =
 {
     "NONE",
@@ -49,7 +54,6 @@ const char *log_tags[] =
     "TCP_MEM_HIT",
     "TCP_DENIED",
     "UDP_HIT",
-    "UDP_HIT_OBJ",
     "UDP_MISS",
     "UDP_DENIED",
     "UDP_INVALID",
@@ -181,6 +185,19 @@ accessLogCommon(AccessLogEntry * al)
 	hier_strings[al->hier.code]);
 }
 
+static void
+accessLogOpen(const char *fname)
+{
+    assert(fname);
+    xstrncpy(LogfileName, fname, SQUID_MAXPATHLEN);
+    LogfileFD = file_open(LogfileName, O_WRONLY | O_CREAT, NULL, NULL);
+    if (LogfileFD == DISK_ERROR) {
+	debug(50, 0) ("%s: %s\n", LogfileName, xstrerror());
+	fatal("Cannot open logfile.");
+    }
+    LogfileStatus = LOG_ENABLE;
+}
+
 #define SKIP_BASIC_SZ 6
 void
 accessLogLog(AccessLogEntry * al)
@@ -284,19 +301,6 @@ accessLogClose(void)
 }
 
 void
-accessLogOpen(const char *fname)
-{
-    assert(fname);
-    xstrncpy(LogfileName, fname, SQUID_MAXPATHLEN);
-    LogfileFD = file_open(LogfileName, O_WRONLY | O_CREAT, NULL, NULL);
-    if (LogfileFD == DISK_ERROR) {
-	debug(50, 0) ("%s: %s\n", LogfileName, xstrerror());
-	fatal("Cannot open logfile.");
-    }
-    LogfileStatus = LOG_ENABLE;
-}
-
-void
 hierarchyNote(HierarchyLogEntry * hl,
     hier_code code,
     icp_ping_data * icpdata,
@@ -314,4 +318,5 @@ void
 accessLogInit(void)
 {
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
+    accessLogOpen(Config.Log.access);
 }

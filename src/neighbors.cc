@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.171 1998/01/05 00:45:47 wessels Exp $
+ * $Id: neighbors.cc,v 1.172 1998/01/31 05:32:01 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -445,11 +445,6 @@ neighborsUdpPing(request_t * request,
 		PROTO_NONE);
 	} else {
 	    flags = 0;
-	    /* check if we should set ICP_FLAG_HIT_OBJ */
-	    if (opt_udp_hit_obj)
-		if (!EBIT_TEST(request->flags, REQ_NOCACHE))
-		    if (p->icp_version == ICP_VERSION_2)
-			flags |= ICP_FLAG_HIT_OBJ;
 	    if (Config.onoff.query_icmp)
 		if (p->icp_version == ICP_VERSION_2)
 		    flags |= ICP_FLAG_SRC_RTT;
@@ -674,7 +669,7 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
 	} else {
 	    mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
 	}
-    } else if (opcode == ICP_HIT || opcode == ICP_HIT_OBJ) {
+    } else if (opcode == ICP_HIT) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
 	} else {
