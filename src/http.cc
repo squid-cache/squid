@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.144 1997/01/21 18:33:30 wessels Exp $
+ * $Id: http.cc,v 1.145 1997/01/31 20:13:32 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -410,6 +410,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	    }
 	} else if (!strncasecmp(t, "Set-Cookie:", 11)) {
 	    EBIT_SET(reply->misc_headers, HDR_SET_COOKIE);
+	    ReplyHeaderStats.misc[HDR_SET_COOKIE]++;
 	}
     }
     put_free_4k_page(headers);
