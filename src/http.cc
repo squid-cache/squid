@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.139 1996/12/17 07:16:54 wessels Exp $
+ * $Id: http.cc,v 1.140 1996/12/18 03:50:23 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -296,7 +296,7 @@ void
 httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 {
     char *headers = get_free_4k_page();
-    char *line = get_free_4k_page();
+    char *line;
     char *end;
     char *s = NULL;
     char *t;
@@ -307,8 +307,18 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     ReplyHeaderStats.parsed++;
     xstrncpy(headers, buf, 4096);
     end = mime_headers_end(headers);
-    if (end)
-	reply->hdr_sz = end - headers;
+    if (end == NULL) {
+	t = headers;
+        if (!strncasecmp(t, "HTTP/", 5)) {
+	    reply->version = atof(t+5);
+            if ((t = strchr(t, ' ')))
+                reply->code = atoi(++t);
+	}
+        put_free_4k_page(headers);
+        return;
+    }
+    reply->hdr_sz = end - headers;
+    line = get_free_4k_page();
     for (s = headers; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	l = strcspn(s, crlf) + 1;
 	if (l > 4096)
@@ -317,7 +327,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	t = line;
 	debug(11, 3, "httpParseReplyHeaders: %s\n", t);
 	if (!strncasecmp(t, "HTTP/", 5)) {
-	    sscanf(t + 5, "%lf", &reply->version);
+	    reply->version = atof(t+5);
 	    if ((t = strchr(t, ' ')))
 		reply->code = atoi(++t);
 	} else if (!strncasecmp(t, "Content-type:", 13)) {
