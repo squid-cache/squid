@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.10 2000/12/09 03:28:39 wessels Exp $
+# $Id: Makefile.in,v 1.11 2001/01/02 22:41:40 hno Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -47,8 +47,11 @@ ICONS		= anthony-binhex.gif \
 
 all: $(ICONS)
 
-$(ICONS):
-	@$(SHELL) -c "$(SHELL) $(srcdir)/icons.shar"
+.PHONY: extract_icons
+$(ICONS): extract_icons
+
+extract_icons:
+	@$(SHELL) -c "cd $(srcdir); $(SHELL) icons.shar"
 
 icons.shar:
 	shar --no-timestamp $(ICONS) > $@
