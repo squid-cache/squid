@@ -12,6 +12,7 @@ Changes to squid-1.1.beta15 ():
 
 	- Fixed entry->clients[].fd initialization bug causing all
 	  large objects to get stuck.
+	- Changed /www.nlanr.net/Squid/ to /squid.nlanr.net/Squid/.
 
 Changes to squid-1.1.beta14 ():
 
