@@ -17,6 +17,7 @@ Changes to squid-1.1.beta9 (October 21, 1996):
 	- Fixed changing the wrong instance of 'opt_catch_signals'
 	  in tools.c for beta8tools.c for beta8.
 	- Fixed xmemcpy macros in include/config.h (Ed Knowles).
+	- Fixed logging of "TCP_EXPIRED_MISS/304."
 
 Changes to squid-1.1.beta8 ():
 
