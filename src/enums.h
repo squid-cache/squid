@@ -39,6 +39,7 @@ typedef enum {
     ERR_NO_RELAY,
     ERR_ZERO_SIZE_OBJECT,
     ERR_FTP_DISABLED,
+    ERR_FTP_FAILURE,
     ERR_ACCESS_DENIED,
     ERR_MAX
 } err_type;

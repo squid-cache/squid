@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.92 1997/10/29 05:19:57 wessels Exp $
+ * $Id: errorpage.cc,v 1.93 1997/10/29 22:39:51 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -49,6 +49,7 @@ const char *err_string[] =
     "ERR_NO_RELAY",
     "ERR_ZERO_SIZE_OBJECT",
     "ERR_FTP_DISABLED",
+    "ERR_FTP_FAILURE",
     "ERR_ACCESS_DENIED",
     "ERR_MAX"
 };
@@ -179,6 +180,20 @@ errorConvert(char token, ErrorState * err)
 	snprintf(buf, CVT_BUF_SZ, "%s", mkrfc1123(squid_curtime));
 	p = buf;
 	break;
+    case 'f':
+	/* FTP REQUEST LINE */
+	if (err->ftp.request)
+		p = err->ftp.request;
+	else
+		p = "<none>";
+	break;
+    case 'F':
+	/* FTP REPLY LINE */
+	if (err->ftp.request)
+		p = err->ftp.reply;
+	else
+		p = "<none>";
+	break;
 /*
  * e - errno                                    x
  * E - strerror()                               x
@@ -192,6 +207,8 @@ errorConvert(char token, ErrorState * err)
  * h - cache hostname                           x
  * d - seconds elapsed since request received
  * p - URL port #                               x
+ * f - FTP request line				x
+ * F - FTP reply line				x
  */
     default:
 	p = "%UNKNOWN%";

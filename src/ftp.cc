@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.155 1997/10/28 21:59:05 wessels Exp $
+ * $Id: ftp.cc,v 1.156 1997/10/29 22:39:52 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -96,7 +96,8 @@ typedef struct _Ftpdata {
 	off_t offset;
 	FREE *freefunc;
 	wordlist *message;
-	char *last_message;
+	char *last_command;
+	char *last_reply;
 	int replycode;
     } ctrl;
     struct {
@@ -200,7 +201,8 @@ ftpStateFree(int fd, void *data)
 	wordlistDestroy(&ftpState->ctrl.message);
     if (ftpState->cwd_message)
 	wordlistDestroy(&ftpState->cwd_message);
-    safe_free(ftpState->ctrl.last_message);
+    safe_free(ftpState->ctrl.last_reply);
+    safe_free(ftpState->ctrl.last_command);
     safe_free(ftpState->title_url);
     safe_free(ftpState->filepath);
     safe_free(ftpState->data.host);
@@ -367,7 +369,7 @@ ftpListParseParts(const char *buf, int flags)
 		tokens[i], tokens[i + 1], tokens[i + 2]);
 	if ((t = strstr(buf, sbuf))) {
 	    p->date = xstrdup(sbuf);
-	    if (BIT_TEST(flags, FTP_SKIP_WHITESPACE)) {
+	    if (EBIT_TEST(flags, FTP_SKIP_WHITESPACE)) {
 		t += strlen(sbuf);
 		while (strchr(w_space, *t))
 		    t++;
@@ -937,6 +939,8 @@ static void
 ftpWriteCommand(const char *buf, FtpStateData * ftpState)
 {
     debug(9, 5) ("ftpWriteCommand: %s\n", buf);
+    safe_free(ftpState->ctrl.last_command);
+    ftpState->ctrl.last_command = xstrdup(buf);
     comm_write(ftpState->ctrl.fd,
 	xstrdup(buf),
 	strlen(buf),
@@ -1090,8 +1094,8 @@ ftpReadControlReply(int fd, void *data)
 	return;
     }
     for (W = &ftpState->ctrl.message; *W && (*W)->next; W = &(*W)->next);
-    safe_free(ftpState->ctrl.last_message);
-    ftpState->ctrl.last_message = (*W)->key;
+    safe_free(ftpState->ctrl.last_reply);
+    ftpState->ctrl.last_reply = (*W)->key;
     safe_free(*W);
     ftpState->ctrl.offset = 0;
     FTP_SM_FUNCS[ftpState->state] (ftpState);
@@ -1226,6 +1230,9 @@ ftpReadCwd(FtpStateData * ftpState)
 	xfree(w->key);
 	xfree(w);
 	ftpSendCwd(ftpState);
+    } else if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
+	/* CWD FAILED */
+	ftpFail(ftpState);
     } else {
 	/* CWD FAILED */
 	while (w) {
@@ -1252,7 +1259,7 @@ ftpReadMdtm(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadMdtm\n");
     if (code == 213) {
-	ftpState->mdtm = parse_iso3307_time(ftpState->ctrl.last_message);
+	ftpState->mdtm = parse_iso3307_time(ftpState->ctrl.last_reply);
     } else if (code < 0) {
 	ftpFail(ftpState);
     }
@@ -1269,7 +1276,7 @@ ftpReadSize(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadSize\n");
     if (code == 213) {
-	ftpState->size = atoi(ftpState->ctrl.last_message);
+	ftpState->size = atoi(ftpState->ctrl.last_reply);
     } else if (code < 0) {
 	ftpFail(ftpState);
     }
@@ -1311,7 +1318,7 @@ ftpReadPasv(FtpStateData * ftpState)
     int n;
     u_short port;
     int fd = ftpState->data.fd;
-    char *buf = ftpState->ctrl.last_message;
+    char *buf = ftpState->ctrl.last_reply;
     LOCAL_ARRAY(char, junk, 1024);
     debug(9, 3) ("This is ftpReadPasv\n");
     if (code != 227) {
@@ -1393,7 +1400,7 @@ ftpRestOrList(FtpStateData * ftpState)
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_LIST;
     } else if (ftpState->restart_offset > 0) {
-	snprintf(cbuf, 1024, "REST\r\n");
+	snprintf(cbuf, 1024, "REST %d\r\n", ftpState->restart_offset);
 	ftpWriteCommand(cbuf, ftpState);
 	ftpState->state = SENT_REST;
     } else {
@@ -1505,7 +1512,17 @@ ftpReadQuit(FtpStateData * ftpState)
 static void
 ftpFail(FtpStateData * ftpState)
 {
+    /* XXX NEED TO SEND BACK SOME CONTENT! */
+    ErrorState *err;
     debug(9, 3) ("ftpFail\n");
+    err = xcalloc(1, sizeof(ErrorState));
+    err->type = ERR_FTP_FAILURE;
+    err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+    err->request = requestLink(ftpState->request);
+    err->ftp.request = ftpState->ctrl.last_command;
+    err->ftp.reply = ftpState->ctrl.last_reply;
+    errorAppendEntry(ftpState->entry, err);
+    storeAbort(ftpState->entry, 0);
     comm_close(ftpState->ctrl.fd);
 }
 
