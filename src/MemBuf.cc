@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.14 1998/06/03 15:52:16 rousskov Exp $
+ * $Id: MemBuf.cc,v 1.15 1998/06/05 21:21:18 rousskov Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -155,17 +155,27 @@ memBufReset(MemBuf * mb)
 {
     assert(mb);
 
-    if (!mb->buf && !mb->max_capacity && !mb->capacity && !mb->size) {
-	/* Null */
+    if (memBufIsNull(mb)) {
 	memBufDefInit(mb);
     } else {
-	assert(mb->buf);
 	assert(mb->freefunc);	/* not frozen */
 	/* reset */
 	memset(mb->buf, 0, mb->capacity);
 	mb->size = 0;
     }
 }
+
+/* unfirtunate hack to test if the buffer has been Init()ialized */
+int
+memBufIsNull(MemBuf * mb)
+{
+    assert(mb);
+    if (!mb->buf && !mb->max_capacity && !mb->capacity && !mb->size)
+	return 1; /* null, not initialized */
+    assert(mb->buf && mb->max_capacity && mb->capacity); /* paranoid */
+    return 0;
+}
+
 
 /* calls memcpy, appends exactly size bytes, extends buffer if needed */
 void

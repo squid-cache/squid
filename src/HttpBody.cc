@@ -2,7 +2,7 @@
 
 
 /*
- * $Id: HttpBody.cc,v 1.11 1998/05/27 22:51:39 rousskov Exp $
+ * $Id: HttpBody.cc,v 1.12 1998/06/05 21:21:16 rousskov Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -34,63 +34,41 @@
 #include "squid.h"
 
 
-/* local constants */
-
-/* local routines */
-
-
 void
 httpBodyInit(HttpBody * body)
 {
-    body->buf = NULL;
-    body->size = 0;
-    body->freefunc = NULL;
+    body->mb = MemBufNull;
 }
 
 void
 httpBodyClean(HttpBody * body)
 {
     assert(body);
-    if (body->buf) {
-	assert(body->freefunc);
-	(*body->freefunc) (body->buf);
-    }
-    body->buf = NULL;
-    body->size = 0;
+    if (!memBufIsNull(&body->mb))
+	memBufClean(&body->mb);
 }
 
-/* set body, if freefunc is NULL the content will be copied, otherwise not */
+/* set body by absorbing mb */
 void
-httpBodySet(HttpBody * body, const char *buf, int size, FREE * freefunc)
+httpBodySet(HttpBody * body, MemBuf *mb)
 {
     assert(body);
-    assert(!body->buf);
-    assert(buf);
-    assert(size);
-    assert(buf[size - 1] == '\0');	/* paranoid */
-    if (!freefunc) {		/* they want us to make our own copy */
-	body->buf = xmalloc(size);
-	xmemcpy(body->buf, buf, size);
-	freefunc = &xfree;
-    } else {
-	/* @?@ @?@ Fix this cast: we should probably have two httpBodySet()s */
-	body->buf = (char *) buf;
-    }
-    body->freefunc = freefunc;
-    body->size = size;
+    assert(memBufIsNull(&body->mb));
+    body->mb = *mb; /* absorb */
 }
 
 void
 httpBodyPackInto(const HttpBody * body, Packer * p)
 {
     assert(body && p);
-    /* assume it was a 0-terminated buffer */
-    if (body->size)
-	packerAppend(p, body->buf, body->size - 1);
+    if (body->mb.size)
+	packerAppend(p, body->mb.buf, body->mb.size);
 }
 
+#if UNUSED_CODE
 const char *
 httpBodyPtr(const HttpBody * body)
 {
-    return body->buf ? body->buf : "";
+    return body->mb.buf ? body->mb.buf : "";
 }
+#endif

@@ -265,9 +265,8 @@ extern void httpBodyInit(HttpBody * body);
 extern void httpBodyClean(HttpBody * body);
 /* get body ptr (always use this) */
 extern const char *httpBodyPtr(const HttpBody * body);
-/* set body, if freefunc is NULL the content will be copied, otherwise not */
-extern void httpBodySet(HttpBody * body, const char *content, int size,
-    FREE * freefunc);
+/* set body, does not clone mb so you should not reuse it */
+extern void httpBodySet(HttpBody * body, MemBuf *mb);
 
 /* pack */
 extern void httpBodyPackInto(const HttpBody * body, Packer * p);
@@ -490,6 +489,8 @@ extern void memBufDefInit(MemBuf * mb);
 extern void memBufClean(MemBuf * mb);
 /* resets mb preserving (or initializing if needed) memory buffer */
 extern void memBufReset(MemBuf * mb);
+/* unfirtunate hack to test if the buffer has been Init()ialized */
+extern int memBufIsNull(MemBuf * mb);
 /* calls memcpy, appends exactly size bytes, extends buffer if needed */
 extern void memBufAppend(MemBuf * mb, const char *buf, mb_size_t size);
 /* calls snprintf, extends buffer if needed */
