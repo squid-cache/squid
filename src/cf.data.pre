@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.343 2003/10/14 20:18:06 wessels Exp $
+# $Id: cf.data.pre,v 1.344 2004/01/06 03:44:11 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1781,9 +1781,8 @@ DOC_START
 
 	"program" cmdline
 	Specify the command for the external ntlm authenticator.
-	Such a program reads a line containing the uuencoded NEGOTIATE
-	and replies with the ntlm CHALLENGE, then waits for the
-	response and answers with "OK" or "ERR" in an endless loop.
+	Such a program reads exchanged NTLMSSP packets with
+	the browser via Squid until authentication is completed.
 	If you use an ntlm authenticator, make sure you have 1 acl
 	of type proxy_auth.  By default, the ntlm authenticator_program
 	is not used.
