@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.121 1998/09/23 20:13:57 wessels Exp $
+ * $Id: wais.cc,v 1.122 1998/10/12 21:39:06 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -42,7 +42,8 @@ typedef struct {
     char *relayhost;
     int relayport;
     const HttpHeader *request_hdr;
-    char request[MAX_URL];
+    char url[MAX_URL];
+    request_t *request;
 } WaisStateData;
 
 static PF waisStateFree;
@@ -58,6 +59,7 @@ waisStateFree(int fdnotused, void *data)
     if (waisState == NULL)
 	return;
     storeUnlockObject(waisState->entry);
+    requestUnlink(waisState->request);
     cbdataFree(waisState);
 }
 
@@ -70,7 +72,7 @@ waisTimeout(int fd, void *data)
     StoreEntry *entry = waisState->entry;
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
-    err->request = urlParse(METHOD_CONNECT, waisState->request);
+    err->request = requestLink(waisState->request);
     errorAppendEntry(entry, err);
     comm_close(fd);
 }
@@ -127,7 +129,7 @@ waisReadReply(int fd, void *data)
 	    storeReleaseRequest(entry);
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->xerrno = errno;
-	    err->request = urlParse(METHOD_CONNECT, waisState->request);
+	    err->request = requestLink(waisState->request);
 	    errorAppendEntry(entry, err);
 	    comm_close(fd);
 	}
@@ -135,7 +137,7 @@ waisReadReply(int fd, void *data)
 	ErrorState *err;
 	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
-	err->request = urlParse(METHOD_CONNECT, waisState->request);
+	err->request = requestLink(waisState->request);
 	errorAppendEntry(entry, err);
 	comm_close(fd);
     } else if (len == 0) {
@@ -174,7 +176,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	err->xerrno = errno;
 	err->host = xstrdup(waisState->relayhost);
 	err->port = waisState->relayport;
-	err->request = urlParse(METHOD_CONNECT, waisState->request);
+	err->request = requestLink(waisState->request);
 	errorAppendEntry(entry, err);
 	comm_close(fd);
     } else {
@@ -195,7 +197,7 @@ waisSendRequest(int fd, void *data)
     MemBuf mb;
     const char *Method = RequestMethodStr[waisState->method];
     debug(24, 5) ("waisSendRequest: FD %d\n", fd);
-    memBufPrintf(&mb, "%s %s", Method, waisState->request);
+    memBufPrintf(&mb, "%s %s", Method, waisState->url);
     if (waisState->request_hdr) {
 	Packer p;
 	packerToMemInit(&p, &mb);
@@ -222,7 +224,7 @@ waisStart(request_t * request, StoreEntry * entry, int fd)
 	ErrorState *err;
 	debug(24, 0) ("waisStart: Failed because no relay host defined!\n");
 	err = errorCon(ERR_NO_RELAY, HTTP_INTERNAL_SERVER_ERROR);
-	err->request = urlParse(METHOD_CONNECT, waisState->request);
+	err->request = requestLink(request);
 	errorAppendEntry(entry, err);
 	return;
     }
@@ -234,7 +236,8 @@ waisStart(request_t * request, StoreEntry * entry, int fd)
     waisState->request_hdr = &request->header;
     waisState->fd = fd;
     waisState->entry = entry;
-    xstrncpy(waisState->request, url, MAX_URL);
+    xstrncpy(waisState->url, url, MAX_URL);
+    waisState->request = requestLink(request);
     comm_add_close_handler(waisState->fd, waisStateFree, waisState);
     storeLockObject(entry);
     commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
