@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.90 2001/03/03 10:39:31 hno Exp $
+ * $Id: defines.h,v 1.91 2001/03/20 01:10:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -282,7 +282,7 @@
 
 /* cbdata macros */
 #define cbdataAlloc(type) ((type *)cbdataInternalAlloc(CBDATA_##type))
-#define cbdataFree(var) (var = (cbdataInternalFree(var), NULL))
+#define cbdataFree(var) (var = (var != NULL ? cbdataInternalFree(var): NULL))
 #define CBDATA_TYPE(type)	static cbdata_type CBDATA_##type = 0
 #define CBDATA_GLOBAL_TYPE(type)	cbdata_type CBDATA_##type
 #define CBDATA_INIT_TYPE(type)	(CBDATA_##type ? 0 : (CBDATA_##type = cbdataAddType(CBDATA_##type, #type, sizeof(type), NULL)))
