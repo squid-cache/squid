@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.259 1998/07/23 03:13:24 wessels Exp $
+ * $Id: main.cc,v 1.260 1998/07/23 03:22:29 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -554,7 +554,8 @@ main(int argc, char **argv)
 		wait);
 	    do_shutdown = 0;
 	    shutting_down = 1;
-	    eventAdd("force_shutdown", force_shutdown, (double) (wait+1), 1);
+	    eventAdd("force_shutdown", force_shutdown,
+		NULL, (double) (wait+1), 1);
 	}
 	eventRun();
 	if ((loop_delay = eventNextTime()) < 0)
