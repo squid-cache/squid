@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.56 2003/03/02 09:59:32 hno Exp $
+ * $Id: dns_internal.cc,v 1.57 2003/03/09 12:29:41 robertc Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -37,6 +37,11 @@
 #include "Store.h"
 #include "comm.h"
 
+/* MS VisualStudio Projects are monolitich, so we need the following
+   #ifndef to exclude the internal DNS code from compile process when
+   using external DNS process.
+ */
+#ifndef USE_DNSSERVERS
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
 #include <windows.h>
 #endif
@@ -91,7 +96,9 @@ static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
 static void idnsFreeNameservers(void);
 static void idnsParseNameservers(void);
+#ifndef _SQUID_MSWIN_
 static void idnsParseResolvConf(void);
+#endif
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
 static void idnsParseWIN32Registry(void);
 #endif
@@ -167,6 +174,7 @@ idnsParseNameservers(void)
     }
 }
 
+#ifndef _SQUID_MSWIN_
 static void
 idnsParseResolvConf(void)
 {
@@ -180,7 +188,7 @@ idnsParseResolvConf(void)
         return;
     }
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#if defined(_SQUID_CYGWIN_)
     setmode(fileno(fp), O_TEXT);
 
 #endif
@@ -206,6 +214,8 @@ idnsParseResolvConf(void)
 
     fclose(fp);
 }
+
+#endif
 
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
 static void
@@ -917,3 +927,4 @@ snmp_netIdnsFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
+#endif /* USE_DNSSERVERS */

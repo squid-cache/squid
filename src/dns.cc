@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.91 2003/02/21 22:50:08 robertc Exp $
+ * $Id: dns.cc,v 1.92 2003/03/09 12:29:41 robertc Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -36,6 +36,11 @@
 #include "squid.h"
 #include "Store.h"
 
+/* MS VisualStudio Projects are monolitich, so we need the following
+   #if to include the external DNS code in compile process when
+   using external DNS.
+ */
+#if USE_DNSSERVERS
 static helper *dnsservers = NULL;
 
 static void
@@ -167,3 +172,4 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
+#endif /* USE_DNSSERVERS */

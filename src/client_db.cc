@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.57 2003/02/21 22:50:07 robertc Exp $
+ * $Id: client_db.cc,v 1.58 2003/03/09 12:29:40 robertc Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -201,7 +201,8 @@ clientdbCutoffDenied(struct in_addr addr)
 
 log_type &operator++ (log_type &aLogType)
 {
-    aLogType = (log_type)(++(int)aLogType);
+    int tmp = (int)aLogType;
+    aLogType = (log_type)(++tmp);
     return aLogType;
 }
 

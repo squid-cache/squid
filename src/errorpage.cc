@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.186 2003/02/25 02:17:54 hno Exp $
+ * $Id: errorpage.cc,v 1.187 2003/03/09 12:29:41 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -109,7 +109,8 @@ static CWCB errorSendComplete;
 
 err_type &operator++ (err_type &anErr)
 {
-    anErr = (err_type)(++(int)anErr);
+    int tmp = (int)anErr;
+    anErr = (err_type)(++tmp);
     return anErr;
 }
 

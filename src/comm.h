@@ -4,7 +4,7 @@
 #include "StoreIOBuffer.h"
 
 typedef void IOFCB(int fd, StoreIOBuffer recievedData, comm_err_t flag, int xerrno, void *data);
-typedef void IOWCB(int fd, char *data, size_t len, comm_err_t flag, int xerrno, void *data);
+typedef void IOWCB(int fd, char *buffer, size_t len, comm_err_t flag, int xerrno, void *data);
 /* fill sb with up to length data from fd */
 extern void comm_fill_immediate(int fd, StoreIOBuffer sb, IOFCB *callback, void *data);
 

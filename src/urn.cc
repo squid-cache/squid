@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.83 2003/03/06 06:21:38 robertc Exp $
+ * $Id: urn.cc,v 1.84 2003/03/09 12:29:41 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -114,7 +114,8 @@ UrnState::operator new (size_t byteCount)
 void
 UrnState::operator delete (void *address)
 {
-    cbdataFree ((UrnState *)address);
+    UrnState * tmp = (UrnState *)address;
+    cbdataFree (tmp);
 }
 
 UrnState::~UrnState ()
