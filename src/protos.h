@@ -7,15 +7,15 @@ extern void accessLogOpen(const char *);
 extern void hierarchyNote(HierarchyLogEntry *, hier_code, icp_ping_data *, const char *);
 
 extern aclCheck_t *aclChecklistCreate(const struct _acl_access *,
-	request_t *,
-	struct in_addr src,
-	char *ua,
-	char *id);
+    request_t *,
+    struct in_addr src,
+    char *ua,
+    char *id);
 extern void aclNBCheck(aclCheck_t *, PF *, void *);
-extern int aclCheckFast(const struct _acl_access * A, aclCheck_t *);
+extern int aclCheckFast(const struct _acl_access *A, aclCheck_t *);
 extern void aclChecklistFree(aclCheck_t *);
 extern int aclMatchAcl(struct _acl *, aclCheck_t *);
-extern void aclDestroyAccessList(struct _acl_access ** list);
+extern void aclDestroyAccessList(struct _acl_access **list);
 extern void aclDestroyAcls(acl **);
 extern void aclParseAccessLine(struct _acl_access **);
 extern void aclParseAclLine(acl **);
@@ -23,7 +23,7 @@ extern struct _acl *aclFindByName(const char *name);
 extern char *aclGetDenyInfoUrl(struct _acl_deny_info_list **, const char *name);
 extern void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 extern void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
-extern void aclDestroyRegexList(struct _relist * data);
+extern void aclDestroyRegexList(struct _relist *data);
 extern int aclMatchRegex(relist * data, const char *word);
 extern void aclParseRegexList(void *curlist);
 
@@ -101,11 +101,11 @@ extern void comm_remove_close_handler(int fd, PF *, void *);
 extern int comm_udp_send(int fd, const char *host, u_short port, const char *buf, int len);
 extern int comm_udp_sendto(int fd, const struct sockaddr_in *, int size, const char *buf, int len);
 extern void comm_write(int fd,
-	char *buf,
-	int size,
-	CWCB * handler,
-	void *handler_data,
-	FREE *);
+    char *buf,
+    int size,
+    CWCB * handler,
+    void *handler_data,
+    FREE *);
 extern void commCallCloseHandlers(int fd);
 extern int commSetTimeout(int fd, int, PF *, void *);
 extern void commSetDefer(int fd, DEFER * func, void *);
@@ -123,17 +123,17 @@ extern void _db_print();
 extern int file_open(const char *path, int mode, FOCB *, void *callback_data);
 extern void file_close(int fd);
 extern int file_write(int fd,
-	char *buf,
-	int len,
-	DWCB * handle,
-	void *handle_data,
-	FREE *);
+    char *buf,
+    int len,
+    DWCB * handle,
+    void *handle_data,
+    FREE *);
 extern int file_read(int fd,
-	char *buf,
-	int req_len,
-	int offset,
-	DRCB * handler,
-	void *client_data);
+    char *buf,
+    int req_len,
+    int offset,
+    DRCB * handler,
+    void *client_data);
 extern int file_walk(int fd, FILE_WALK_HD *, void *, FILE_WALK_LHD *, void *);
 extern int disk_init(void);
 extern int diskWriteIsComplete(int);
@@ -219,21 +219,21 @@ extern void httpParseReplyHeaders(const char *, struct _http_reply *);
 extern void httpProcessReplyHeader(HttpStateData *, const char *, int);
 extern void httpReplyHeaderStats(StoreEntry *);
 extern size_t httpBuildRequestHeader(request_t * request,
-	request_t * orig_request,
-	StoreEntry * entry,
-	size_t * in_len,
-	char *hdr_out,
-	size_t out_sz,
-	int cfd,
-	int flags);
+    request_t * orig_request,
+    StoreEntry * entry,
+    size_t * in_len,
+    char *hdr_out,
+    size_t out_sz,
+    int cfd,
+    int flags);
 extern int httpAnonAllowed(const char *line);
 extern int httpAnonDenied(const char *line);
 extern char *httpReplyHeader(double ver,
-	http_status status,
-	char *ctype,
-	int clen,
-	time_t lmt,
-	time_t expires);
+    http_status status,
+    char *ctype,
+    int clen,
+    time_t lmt,
+    time_t expires);
 
 
 extern void icmpOpen(void);
@@ -244,15 +244,15 @@ extern void icmpDomainPing(struct in_addr to, const char *domain);
 
 
 extern void *icpCreateMessage(icp_opcode opcode,
-	int flags,
-	const char *url,
-	int reqnum,
-	int pad);
+    int flags,
+    const char *url,
+    int reqnum,
+    int pad);
 extern void icpUdpSend(int fd,
-	const struct sockaddr_in *,
-	icp_common_t * msg,
-	log_type,
-	protocol_t);
+    const struct sockaddr_in *,
+    icp_common_t * msg,
+    log_type,
+    protocol_t);
 extern PF icpHandleUdp;
 extern PF httpAccept;
 extern DEFER httpAcceptDefer;
@@ -260,10 +260,10 @@ extern DEFER httpAcceptDefer;
 extern PF snmpAccept;
 #endif /* SQUID_SNMP */
 extern void icpSendERROR(int fd,
-	log_type errorCode,
-	const char *text,
-	clientHttpRequest *,
-	int httpCode);
+    log_type errorCode,
+    const char *text,
+    clientHttpRequest *,
+    int httpCode);
 extern void AppendUdp(icpUdpData *);
 extern void icpParseRequestHeaders(clientHttpRequest *);
 extern void icpProcessRequest(int, clientHttpRequest *);
@@ -274,8 +274,8 @@ extern STCB clientCacheHit;
 
 
 extern void ipcache_nbgethostbyname(const char *name,
-	IPH * handler,
-	void *handlerData);
+    IPH * handler,
+    void *handlerData);
 extern EVH ipcache_purgelru;
 extern const ipcache_addrs *ipcache_gethostbyname(const char *, int flags);
 extern void ipcacheInvalidate(const char *);
@@ -313,10 +313,10 @@ extern peer *getNextPeer(peer *);
 extern peer *getSingleParent(request_t *);
 extern int neighborsCount(request_t *);
 extern int neighborsUdpPing(request_t *,
-	StoreEntry *,
-	IRCB * callback,
-	void *data,
-	int *exprep);
+    StoreEntry *,
+    IRCB * callback,
+    void *data,
+    int *exprep);
 extern void neighborAddAcl(const char *, const char *);
 extern void neighborsUdpAck(int, const char *, icp_common_t *, const struct sockaddr_in *, StoreEntry *, char *, int);
 extern void neighborAdd(const char *, const char *, int, int, int, int, int);
@@ -329,7 +329,7 @@ extern void peerDestroy(peer * e);
 extern char *neighborTypeStr(const peer * e);
 extern void peerCheckConnectStart(peer *);
 
-extern void netdbHandlePingReply(const struct sockaddr_in * from, int hops, int rtt);
+extern void netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt);
 extern void netdbPingSite(const char *hostname);
 extern void netdbInit(void);
 extern void netdbDump(StoreEntry *);
@@ -435,12 +435,12 @@ extern int storeUnregister(StoreEntry *, void *);
 extern const char *storeGeneratePublicKey(const char *, method_t);
 extern const char *storeGeneratePrivateKey(const char *, method_t, int);
 extern void storeClientCopy(StoreEntry * e,
-	off_t seen_offset,
-	off_t copy_offset,
-	size_t size,
-	char *buf,
-	STCB * callback,
-	void *data);
+    off_t seen_offset,
+    off_t copy_offset,
+    size_t size,
+    char *buf,
+    STCB * callback,
+    void *data);
 extern int storePendingNClients(const StoreEntry *);
 extern int storeWriteCleanLogs(int reopen);
 extern HASHCMP urlcmp;
@@ -509,7 +509,7 @@ extern void normal_shutdown(void);
 extern int percent(int, int);
 extern void squid_signal(int sig, SIGHDLR *, int flags);
 extern pid_t readPidFile(void);
-extern struct in_addr inaddrFromHostent(const struct hostent * hp);
+extern struct in_addr inaddrFromHostent(const struct hostent *hp);
 extern int intAverage(int, int, int, int);
 extern double doubleAverage(double, double, int, int);
 extern void debug_trap(const char *);

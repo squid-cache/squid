@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.178 1997/10/25 17:22:49 wessels Exp $
+ * $Id: main.cc,v 1.179 1997/10/26 02:35:35 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -107,7 +107,7 @@
 #include "squid.h"
 
 /* for error reporting from xmalloc and friends */
-extern void (*failure_notify)(const char *);
+extern void (*failure_notify) (const char *);
 
 static int opt_send_signal = -1;
 static volatile int rotate_pending = 0;		/* set by SIGUSR1 handler */

@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.110 1997/10/25 17:22:33 wessels Exp $
+ * $Id: acl.cc,v 1.111 1997/10/26 02:35:27 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,11 +41,11 @@
 static int aclFromFile = 0;
 static FILE *aclFile;
 
-static void aclDestroyAclList(struct _acl_list * list);
-static void aclDestroyTimeList(struct _acl_time_data * data);
+static void aclDestroyAclList(struct _acl_list *list);
+static void aclDestroyTimeList(struct _acl_time_data *data);
 static int aclMatchAclList(const struct _acl_list *, aclCheck_t *);
 static int aclMatchInteger(intlist * data, int i);
-static int aclMatchTime(struct _acl_time_data * data, time_t when);
+static int aclMatchTime(struct _acl_time_data *data, time_t when);
 static int aclMatchIdent(wordlist * data, const char *ident);
 static int aclMatchIp(void *dataptr, struct in_addr c);
 static int aclMatchDomainList(void *dataptr, const char *);
@@ -56,7 +56,7 @@ static void aclCheckCallback(aclCheck_t * checklist, int answer);
 static IPH aclLookupDstIPDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
-static int aclReadProxyAuth(struct _acl_proxy_auth * p);
+static int aclReadProxyAuth(struct _acl_proxy_auth *p);
 
 #if defined(USE_SPLAY_TREE)
 static int aclIpNetworkCompare(const void *, splayNode *);
@@ -72,7 +72,7 @@ static int aclDomainCompare(const char *d1, const char *d2);
 static void aclDestroyTree(tree **);
 
 #else /* LINKED LIST */
-static void aclDestroyIpList(struct _acl_ip_data * data);
+static void aclDestroyIpList(struct _acl_ip_data *data);
 
 #endif /* USE_SPLAY_TREE */
 
