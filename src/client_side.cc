@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.11 1996/08/26 23:27:12 wessels Exp $
+ * $Id: client_side.cc,v 1.12 1996/08/27 05:17:17 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -93,7 +93,7 @@ static int clientProxyAuthCheck(icpState)
 
     proxy_user = proxyAuthenticate(icpState->request_hdr);
     strncpy(icpState->ident, proxy_user, ICP_IDENT_SZ);
-    debug(12, 6, "jrmt: user = %s\n", icpState->ident);
+    debug(33, 6, "jrmt: user = %s\n", icpState->ident);
 
     if (strcmp(icpState->ident, dash_str) == 0)
 	return 0;
@@ -118,7 +118,7 @@ void clientAccessCheck(icpState, handler)
     if (clientProxyAuthCheck == 0) {
 	char *wbuf = NULL;
 	int fd = icpState->fd;
-	debug(12, 4, "Proxy Denied: %s\n", icpState->url);
+	debug(33, 4, "Proxy Denied: %s\n", icpState->url);
 	icpState->log_type = ERR_PROXY_DENIED;
 	icpState->http_code = 407;
 	wbuf = xstrdup(proxy_denied_msg(icpState->http_code,
@@ -242,7 +242,7 @@ char *proxyAuthenticate(char *headers)
 	 * FIXME: Need a version of mime_get_header that uses strcasecmp()
 	 */
 	if ((s = mime_get_header(headers, "Proxy-Authorization:")) == NULL) {
-	    debug(12, 5, "jrmt: Can't find authorization header\n");
+	    debug(33, 5, "jrmt: Can't find authorization header\n");
 	    return (dash_str);
 	}
     }
@@ -255,7 +255,7 @@ char *proxyAuthenticate(char *headers)
 
     strncpy(sent_user, clear_userandpw, ICP_IDENT_SZ);
     strtok(sent_user, ":");	/* Remove :password */
-    debug(12, 5, "jrmt: user = %s\n", sent_user);
+    debug(33, 5, "jrmt: user = %s\n", sent_user);
 
     /* Look at the Last-modified time of the proxy.passwords
      * file every ten seconds, to see if it's been changed via
@@ -265,20 +265,20 @@ char *proxyAuthenticate(char *headers)
     current_time = time(NULL);
 
     if ((current_time - last_time) > CHECK_PROXY_FILE_TIME) {
-	debug(12, 5, "jrmt: checking password file %s hasn't changed\n", Config.proxyAuthFile);
+	debug(33, 5, "jrmt: checking password file %s hasn't changed\n", Config.proxyAuthFile);
 
 	if (stat(Config.proxyAuthFile, &buf) == 0) {
 	    if (buf.st_mtime != change_time) {
-		debug(12, 0, "jrmt: reloading changed proxy authentication password file %s \n", Config.proxyAuthFile);
+		debug(33, 0, "jrmt: reloading changed proxy authentication password file %s \n", Config.proxyAuthFile);
 		change_time = buf.st_mtime;
 
 		if (passwords != NULL)
 		    xfree(passwords);
 
 		if (validated != 0) {
-		    debug(12, 5, "jrmt: invalidating old entries\n");
+		    debug(33, 5, "jrmt: invalidating old entries\n");
 		    for (i = 0, hashr = hash_first(validated); hashr; hashr = hash_next(validated)) {
-			debug(12, 6, "jrmt: deleting %s\n", hashr->key);
+			debug(33, 6, "jrmt: deleting %s\n", hashr->key);
 			hash_delete(validated, hashr->key);
 		    }
 		} else {
@@ -300,10 +300,10 @@ char *proxyAuthenticate(char *headers)
 		user = strtok(passwords, ":");
 		passwd = strtok(NULL, "\n");
 
-		debug(12, 5, "jrmt: adding new passwords to hash table\n");
+		debug(33, 5, "jrmt: adding new passwords to hash table\n");
 		while (user != NULL) {
 		    if (strlen(user) > 1 && strlen(passwd) > 1) {
-			debug(12, 6, "jrmt: adding %s, %s to hash table\n", user, passwd);
+			debug(33, 6, "jrmt: adding %s, %s to hash table\n", user, passwd);
 			hash_insert(validated, user, (void *) passwd);
 		    }
 		    user = strtok(NULL, ":");
@@ -321,13 +321,13 @@ char *proxyAuthenticate(char *headers)
     hashr = hash_lookup(validated, sent_user);
     if (hashr == NULL) {
 	/* User doesn't exist; deny them */
-	debug(12, 4, "jrmt: user %s doesn't exist\n", sent_user);
+	debug(33, 4, "jrmt: user %s doesn't exist\n", sent_user);
 	xfree(clear_userandpw);
 	return (dash_str);
     }
     /* See if we've already validated them */
     if (strcmp(hashr->item, "OK") == 0) {
-	debug(12, 5, "jrmt: user %s previously validated\n", sent_user);
+	debug(33, 5, "jrmt: user %s previously validated\n", sent_user);
 	xfree(clear_userandpw);
 	return sent_user;
     }
@@ -336,12 +336,12 @@ char *proxyAuthenticate(char *headers)
 
     if (strcmp(hashr->item, (char *) crypt(passwd, hashr->item))) {
 	/* Passwords differ, deny access */
-	debug(12, 4, "jrmt: authentication failed: user %s passwords differ\n", sent_user);
-	debug(12, 6, "jrmt: password given: %s, actual %s\n", passwd, hashr->item);
+	debug(33, 4, "jrmt: authentication failed: user %s passwords differ\n", sent_user);
+	debug(33, 6, "jrmt: password given: %s, actual %s\n", passwd, hashr->item);
 	xfree(clear_userandpw);
 	return (dash_str);
     }
-    debug(12, 5, "jrmt: user %s validated\n", sent_user);
+    debug(33, 5, "jrmt: user %s validated\n", sent_user);
     hash_insert(validated, sent_user, (void *) "OK");
 
     xfree(clear_userandpw);
