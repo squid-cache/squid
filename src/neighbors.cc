@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.25 1996/07/11 17:42:45 wessels Exp $
+ * $Id: neighbors.cc,v 1.26 1996/07/11 22:43:44 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -338,6 +338,7 @@ void neighborRemove(target)
     if (e) {
 	*E = e->next;
 	safe_free(e);
+	friends->n--;
     }
 }
 
