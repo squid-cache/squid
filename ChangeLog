@@ -15,6 +15,7 @@ Changes to squid-1.1.beta14 ():
 	- Removed debug_trap() calls in squid_error_entry().
 	- Removed InvokeHandlers() call from StoreAbort().
 	- Added icpFinishAbort() to deliver abort messages, if at all.
+	- Added passthrough module (pass.c) for POST, et. al.
 
 Changes to squid-1.1.beta13 (November 1, 1996):
 
