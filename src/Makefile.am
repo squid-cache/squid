@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.37 2002/10/14 08:16:58 robertc Exp $
+#  $Id: Makefile.am,v 1.38 2002/10/14 08:29:45 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -254,10 +254,8 @@ squid_LDADD = \
 	@XTRA_LIBS@
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
 
-unlinkd_SOURCES = 
-unlinkd_LDADD = unlinkd-daemon.o
-unlinkd-daemon.o: unlinkd.cc
-	$(COMPILE) -DUNLINK_DAEMON -c $(srcdir)/unlinkd.cc -o $@
+unlinkd_SOURCES = unlinkd.cc
+unlinkd_CXXFLAGS = -DUNLINK_DAEMON
 
 pinger_SOURCES = \
 	pinger.cc \
