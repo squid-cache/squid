@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.21 1998/02/13 20:37:10 wessels Exp $
+ * $Id: asn.cc,v 1.22 1998/03/03 00:31:00 rousskov Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -197,7 +197,7 @@ asnCacheStart(int as)
 	storeClientListAdd(e, asState);
     }
     asState->entry = e;
-    storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF, 1), asHandleReply, asState);
+    storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF), asHandleReply, asState);
 }
 
 static void
@@ -397,7 +397,7 @@ whoisReadReply(int fd, void *data)
 {
     whoisState *p = data;
     StoreEntry *entry = p->entry;
-    char *buf = memAllocate(MEM_4K_BUF, 1);
+    char *buf = memAllocate(MEM_4K_BUF);
     int len;
 
     len = read(fd, buf, 4096);

@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.c,v 1.3 1998/02/26 17:49:54 wessels Exp $
+ * $Id: Stack.c,v 1.4 1998/03/03 00:30:57 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -28,91 +28,98 @@
  */
 
 /*
- * Stack is a (void*) stack with fixed capacity with limited accounting.
- * Errors are handled with asserts.
+ * Stack is a (void*) stack with unlimited capacity and limited accounting.
  */
 
-
-/*
- * To-do:
- *    - stack that grows as needed if a given delta is non zero
- */
-
-
-#if 0
-
-Synopsis(void)
-{
-
-    /*
-     * creating a stack that can hold up to objCnt pointers. 
-     * If objCnt is zero, the stack is always full (disabled)
-     */
-    Stack *s1 = stackCreate(objCnt);
-    Stack *s2 = stackCreate(objCnt * 2);
-
-    /*
-     * pop/push works as expected; it is OK to push a null pointer
-     */
-    if (!s2->is_full && s1->count)
-	stackPush(s2, stackPop(s1));
-
-    /* destroying a stack */
-    stackDestroy(s1);
-}
-
-#endif /* Synopsis */
 
 #include "config.h"
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
+#if HAVE_STRING_H
+#include <string.h>
+#endif
 #include "util.h"
 #include "Stack.h"
 
-/* performance hack instead of non-ANSI inline function */
-#define stackIsFull(s) (s->count >= s->capacity)
+static void stackGrow(Stack * s, int min_capacity);
 
 Stack *
-stackCreate(size_t capacity)
+stackCreate()
 {
-    Stack *s = xcalloc(1, sizeof(Stack));
-    s->buf = capacity > 0 ? xcalloc(capacity, sizeof(void *)) : NULL;
-    s->capacity = capacity;
-    s->count = 0;
-    s->is_full = stackIsFull(s);
-    /* other members are set to 0 in calloc */
+    Stack *s = xmalloc(sizeof(Stack));
+    stackInit(s);
     return s;
+}
+
+void
+stackInit(Stack * s)
+{
+    assert(s);
+    memset(s, 0, sizeof(Stack));
+}
+
+void
+stackClean(Stack * s)
+{
+    assert(s);
+    /* could also warn if some objects are left */
+    xfree(s->items);
+    s->items = NULL;
 }
 
 void
 stackDestroy(Stack * s)
 {
     assert(s);
-    /* could also warn if some objects are left */
-    if (s->buf)
-	xfree(s->buf);
+    stackClean(s);
     xfree(s);
 }
 
 void *
 stackPop(Stack * s)
 {
-    void *popped;
     assert(s);
     assert(s->count);
-    popped = s->buf[--s->count];
-    s->is_full = stackIsFull(s);
-    s->pop_count++;		/* might overflow eventually, but ok */
-    return popped;
+    return s->items[--s->count];
 }
 
 void
 stackPush(Stack * s, void *obj)
 {
     assert(s);
-    assert(!s->is_full);
-    s->buf[s->count++] = obj;
-    s->is_full = stackIsFull(s);
-    s->push_count++;		/* might overflow eventually, but ok */
+    if (s->count >= s->capacity)
+	stackGrow(s, s->count+1);
+    s->items[s->count++] = obj;
+}
+
+/* if you are going to push a known and large number of items, call this first */
+void
+stackPrePush(Stack * s, int push_count)
+{
+    assert(s);
+    if (s->count + push_count > s->capacity)
+	stackGrow(s, s->count + push_count);
+}
+
+/* grows internal buffer to satisfy required minimal capacity */
+static void
+stackGrow(Stack * s, int min_capacity)
+{
+    static const int min_delta = 16;
+    int delta;
+    assert(s->capacity < min_capacity);
+    delta = min_capacity;
+    /* make delta a multiple of min_delta */
+    delta += min_delta-1;
+    delta /= min_delta;
+    delta *= min_delta;
+    /* actual grow */
+    assert(delta > 0);
+    s->capacity += delta;
+    s->items = s->items ?
+	xrealloc(s->items, s->capacity * sizeof(void*)) :
+	xmalloc(s->capacity * sizeof(void*));
+    /* reset, just in case */
+    memset(s->items+s->count, 0, (s->capacity-s->count) * sizeof(void*));
 }

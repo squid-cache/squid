@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.h,v 1.3 1998/02/25 07:43:03 rousskov Exp $
+ * $Id: Stack.h,v 1.4 1998/03/03 00:30:55 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -35,22 +35,21 @@
 struct _Stack {
     /* public, read only */
     size_t capacity;
-    int is_full;         /* true if the stack is full */
-
-    u_num32 push_count;  /* always grows, might overflow, use for stats only */
-    u_num32 pop_count;   /* always grows, might overflow, use for stats only */
 
     /* protected, do not use these, use interface functions instead */
     size_t count;
-    void **buf;
+    void **items;
 };
 
 typedef struct _Stack Stack;
 
-extern Stack *stackCreate(size_t capacity);
+extern Stack *stackCreate();
+extern void stackInit(Stack * s);
+extern void stackClean(Stack * s);
 extern void stackDestroy(Stack *s);
 extern void *stackPop(Stack *s);
 extern void stackPush(Stack *s, void *obj);
+extern void stackPrePush(Stack * s, int push_count);
 
 
 #endif /* ndef _STACK_H_ */

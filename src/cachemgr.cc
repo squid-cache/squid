@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.72 1998/02/26 18:00:38 wessels Exp $
+ * $Id: cachemgr.cc,v 1.73 1998/03/03 00:31:02 rousskov Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -182,6 +182,13 @@ safe_str(const char *str)
     return str ? str : "";
 }
 
+/* relaxed number format */
+static int
+is_number(const char *str)
+{
+    return strspn(str, "\t -+01234567890./\n") == strlen(str);
+}
+
 static char *
 xstrtok(char **str, char del)
 {
@@ -293,37 +300,80 @@ munge_menu_line(const char *buf, cachemgr_request * req)
     const char *d;
     const char *p;
     char *a_url;
-    static char html[1024];
+    char *buf_copy;
+    static char html[2*1024];
     if (strlen(buf) < 1)
 	return buf;
     if (*buf != ' ')
 	return buf;
-    x = xstrdup(buf);
+    buf_copy = x = xstrdup(buf);
     a = xstrtok(&x, '\t');
     d = xstrtok(&x, '\t');
     p = xstrtok(&x, '\t');
     a_url = xstrdup(menu_url(req, a));
     /* no reason to give a url for a disabled action */
     if (!strcmp(p, "disabled"))
-	snprintf(html, 1024, "<LI type=\"circle\">%s (disabled)<A HREF=\"%s\">.</A>\n", d, a_url);
+	snprintf(html, sizeof(html), "<LI type=\"circle\">%s (disabled)<A HREF=\"%s\">.</A>\n", d, a_url);
     else
 	/* disable a hidden action (requires a password, but password is not in squid.conf) */
     if (!strcmp(p, "hidden"))
-	snprintf(html, 1024, "<LI type=\"circle\">%s (hidden)<A HREF=\"%s\">.</A>\n", d, a_url);
+	snprintf(html, sizeof(html), "<LI type=\"circle\">%s (hidden)<A HREF=\"%s\">.</A>\n", d, a_url);
     else
 	/* disable link if authentication is required and we have no password */
     if (!strcmp(p, "protected") && !req->passwd)
-	snprintf(html, 1024, "<LI type=\"circle\">%s (requires <a href=\"%s\">authentication</a>)<A HREF=\"%s\">.</A>\n",
+	snprintf(html, sizeof(html), "<LI type=\"circle\">%s (requires <a href=\"%s\">authentication</a>)<A HREF=\"%s\">.</A>\n",
 	    d, menu_url(req, "authenticate"), a_url);
     else
 	/* highlight protected but probably available entries */
     if (!strcmp(p, "protected"))
-	snprintf(html, 1024, "<LI type=\"square\"><A HREF=\"%s\"><font color=\"#FF0000\">%s</font></A>\n",
+	snprintf(html, sizeof(html), "<LI type=\"square\"><A HREF=\"%s\"><font color=\"#FF0000\">%s</font></A>\n",
 	    a_url, d);
     /* public entry or unknown type of protection */
     else
-	snprintf(html, 1024, "<LI type=\"disk\"><A HREF=\"%s\">%s</A>\n", a_url, d);
+	snprintf(html, sizeof(html), "<LI type=\"disk\"><A HREF=\"%s\">%s</A>\n", a_url, d);
     xfree(a_url);
+    xfree(buf_copy);
+    return html;
+}
+
+static const char *
+munge_other_line(const char *buf, cachemgr_request * req)
+{
+    static const char* ttags[] = { "td", "th" };
+    static char html[4096];
+    static table_line_num = 0;
+    int is_header = 0;
+    const char *ttag;
+    char *cell;
+    char *buf_copy;
+    char *x;
+    int l = 0;
+    /* does it look like a table? */
+    if (!strchr(buf, '\t') || *buf == '\t') {
+	/* nope, just text */
+	snprintf(html, sizeof(html), "%s%s",
+	    table_line_num ? "</table>\n<pre>" : "", buf);
+	table_line_num = 0;
+	return html;
+    }
+    if (!table_line_num)
+	l += snprintf(html+l, sizeof(html)-l, "</pre><table border=0 cellpadding=3>\n");
+    is_header = !table_line_num && !strchr(buf, ':') && !is_number(buf);
+    ttag = ttags[is_header];
+    /* record starts */
+    l += snprintf(html+l, sizeof(html)-l, "<tr>");
+    /* substitute '\t' */
+    buf_copy = x = xstrdup(buf);
+    while (x && (cell = xstrtok(&x, '\t'))) {
+	l += snprintf(html+l, sizeof(html)-l, "<%s align=\"%s\">%s</%s>",
+	    ttag,
+	    is_header ? "center" : is_number(cell) ? "right" : "left",
+	    cell, ttag);
+    }
+    xfree(buf_copy);
+    /* record ends */
+    l += snprintf(html+l, sizeof(html)-l, "</tr>\n");
+    table_line_num++;
     return html;
 }
 
@@ -398,7 +448,7 @@ read_reply(int s, cachemgr_request * req)
 	    if (parse_menu)
 		fputs(munge_menu_line(buf, req), stdout);
 	    else
-		fputs(buf, stdout);
+		fputs(munge_other_line(buf, req), stdout);
 	    break;
 	case isForward:
 	    /* forward: no modifications allowed */
@@ -633,7 +683,7 @@ make_pub_auth(cachemgr_request * req)
     static char buf[1024];
     safe_free(req->pub_auth);
     debug(3) fprintf(stderr, "cmgr: encoding for pub...\n");
-    if (!req->passwd && !strlen(req->passwd))
+    if (!req->passwd || !strlen(req->passwd))
 	return;
     /* host | time | user | passwd */
     snprintf(buf, sizeof(buf), "%s|%d|%s|%s",

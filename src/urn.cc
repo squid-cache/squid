@@ -139,7 +139,7 @@ urnStart(request_t * r, StoreEntry * e)
 	0,
 	0,
 	4096,
-	memAllocate(MEM_4K_BUF, 1),
+	memAllocate(MEM_4K_BUF),
 	urnHandleReply,
 	urnState);
 }

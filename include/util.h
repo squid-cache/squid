@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.42 1998/02/26 22:16:26 kostas Exp $
+ * $Id: util.h,v 1.43 1998/03/03 00:30:56 rousskov Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -189,5 +189,9 @@ extern String *stringCreate(size_t);
 extern void stringAppend(String *, const char *, size_t);
 extern void stringFree(String *);
 #define stringLength(S) (S)->off
+
+extern double xpercent(double part, double whole);
+extern double xdiv(double nom, double denom);
+
 
 #endif /* ndef _UTIL_H_ */

@@ -1,3 +1,15 @@
+	- Added "mem_pools_limit" configuration option. Semantics of
+	  "mem_pools" option has also changed a bit to reflect new memory
+	  management policy.
+	- Reorganized memory pools. Squid now allocates memory in big chunks
+	  and distributes that memory among "frequently allocated" objects.
+	  There is a configurable limit on the total amount of memory to be
+	  allocated for static pools. All requests that exceed that amount are
+	  satisfied using malloc library. Support for variable size objects
+	  (mostly strings) will be enabled soon.
+	- memAllocate() has now only one parameter. Objects are always reset
+	  with 0s. (We actually never used that parameter before; it was
+	  always set to "clear").
 	- Added Squid "signature" to all ERR_ pages. The signature is hard-
 	  -coded and is added on-the-fly. The signature may use %-escapes.
 	  Added interface to add more hard-coded responses if needed (see

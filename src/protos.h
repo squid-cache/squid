@@ -259,6 +259,7 @@ extern void httpBodyPackInto(const HttpBody * body, Packer * p);
 
 /* Http Header */
 extern void httpHeaderInitModule();
+extern void httpHeaderCleanModule();
 /* create/init/clean/destroy */
 extern HttpHeader *httpHeaderCreate();
 extern void httpHeaderInit(HttpHeader * hdr);
@@ -506,13 +507,34 @@ void statHistEnumInit(StatHist * H, int last_enum);
 
 
 extern void memInit(void);
+extern void memClean();
+extern void memInitModule();
+extern void memCleanModule();
+extern void memConfigure();
+#if 0 /* not used */
 extern void memFreeMemory(void);
-extern void *memAllocate(mem_type, int);
+#endif
+extern void *memAllocate(mem_type);
 extern void memFree(mem_type, void *);
 extern void memFree4K(void *);
 extern void memFree8K(void *);
 extern void memFreeDISK(void *);
 extern int memInUse(mem_type);
+
+extern DynPool *dynPoolCreate();
+extern void dynPoolDestroy(DynPool *pool);
+extern void *dynPoolAlloc(DynPool *pool, size_t size);
+extern void dynPoolFree(DynPool *pool, void *obj, size_t size);
+extern MemPool *memPoolCreate(const char *label, size_t obj_size);
+extern void memPoolDestroy(MemPool *pool);
+extern void *memPoolAlloc(MemPool *pool);
+extern void memPoolFree(MemPool *pool, void *obj);
+extern int memPoolWasNeverUsed(const MemPool *pool);
+extern int memPoolIsUsedNow(const MemPool *pool);
+extern int memPoolUsedCount(const MemPool *pool);
+extern void memPoolDescribe(const MemPool *pool);
+extern void memPoolReport(const MemPool *pool, StoreEntry *e);
+extern void memReportTotals(StoreEntry *e);
 
 extern int stmemFreeDataUpto(mem_hdr *, int);
 extern void stmemAppend(mem_hdr *, const char *, int);

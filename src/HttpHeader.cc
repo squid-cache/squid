@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.10 1998/02/26 18:00:31 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.11 1998/03/03 00:30:59 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -29,7 +29,6 @@
  */
 
 #include "squid.h"
-#include "MemPool.h"
 
 /*
  * On naming conventions:
@@ -300,15 +299,17 @@ static void freeShortString(char *str);
 
 static int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
 static const char *getStringPrefix(const char *str);
-static double xpercent(double part, double whole);
-static double xdiv(double nom, double denom);
-
-
-/* delete this when everybody remembers that ':' is not a part of a name */
-#define conversion_period_name_check(name) assert(!strchr((name), ':'))
 
 /* handy to determine the #elements in a static array */
 #define countof(arr) (sizeof(arr)/sizeof(*arr))
+
+/*
+ * some compilers do not want to convert a type into a union which that type
+ * belongs to
+ */
+field_store intField(int n) { field_store f; f.v_int = n; return f; }
+field_store timeField(time_t t) { field_store f; f.v_time = t; return f; }
+field_store ptrField(void *p) { field_store f; f.v_pchar = (char*)p; return f; }
 
 /*
  * Module initialization routines
@@ -328,12 +329,21 @@ httpHeaderInitModule()
     ReplyHeadersMask = httpHeaderCalcMask((const int *) ReplyHeaders, countof(ReplyHeaders));
     RequestHeadersMask = httpHeaderCalcMask((const int *) RequestHeaders, countof(RequestHeaders));
     /* create a pool of short strings @?@ we never destroy it! */
-    shortStrings = memPoolCreate(shortStrPoolCount, shortStrPoolCount / 10, shortStrSize, "shortStr");
+    shortStrings = memPoolCreate("'short http hdr strs'", shortStrSize);
     /* init header stats */
     for (i = 0; i < HttpHeaderStatCount; i++)
 	httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
     cachemgrRegister("http_headers",
 	"HTTP Header Statistics", httpHeaderStoreReport, 0);
+}
+
+void
+httpHeaderCleanModule()
+{
+    if (shortStrings) {
+	memPoolDestroy(shortStrings);
+	shortStrings = NULL;
+    }
 }
 
 static void
@@ -825,7 +835,7 @@ httpHeaderAddExt(HttpHeader * hdr, const char *name, const char *value)
     HttpHeaderEntry e;
 
     debug(55, 8) ("%p adds ext entry '%s:%s'\n", hdr, name, value);
-    httpHeaderEntryInit(&e, HDR_OTHER, ext);
+    httpHeaderEntryInit(&e, HDR_OTHER, ptrField(ext));
     httpHeaderAddNewEntry(hdr, &e);
 }
 
@@ -986,7 +996,7 @@ httpHeaderEntryParseInit(HttpHeaderEntry * e, const char *field_start, const cha
     Headers[id].stat.parsCount++;
     if (id == HDR_OTHER) {
 	/* hm.. it is an extension field indeed */
-	httpHeaderEntryInit(e, id, f);
+	httpHeaderEntryInit(e, id, ptrField(f));
 	return 1;
     }
     /* ok, we got something interesting, parse it further */
@@ -1009,7 +1019,7 @@ httpHeaderEntryParseExtFieldInit(HttpHeaderEntry * e, int id, const HttpHeaderEx
     switch (id) {
     case HDR_PROXY_KEEPALIVE:
 	/*  we treat Proxy-Connection as "keep alive" only if it says so */
-	httpHeaderEntryInit(e, id, (int) !strcasecmp(f->value, "Keep-Alive"));
+	httpHeaderEntryInit(e, id, intField(!strcasecmp(f->value, "Keep-Alive")));
 	break;
     default:
 	/* if we got here, it is something that can be parsed based on value type */
@@ -1201,16 +1211,12 @@ httpHeaderEntryIsValid(const HttpHeaderEntry * e)
 	return e->field.v_int >= 0;
     case ftPChar:
 	return e->field.v_pchar != NULL;
-	break;
     case ftDate_1123:
 	return e->field.v_time >= 0;
-	break;
     case ftPSCC:
 	return e->field.v_pscc != NULL;
-	break;
     case ftPExtField:
 	return e->field.v_pefield != NULL;
-	break;
     default:
 	assert(0);		/* query for invalid/unknown type */
     }
@@ -1244,23 +1250,18 @@ httpHeaderFieldDup(field_type type, field_store value)
     /* type based duplication */
     switch (type) {
     case ftInt:
-	return value.v_int;
-    case ftPChar:
-	return dupShortStr(value.v_pchar);
-	break;
     case ftDate_1123:
-	return value.v_time;
-	break;
+	return value;
+    case ftPChar:
+	return ptrField(dupShortStr(value.v_pchar));
     case ftPSCC:
-	return httpSccDup(value.v_pscc);
-	break;
+	return ptrField(httpSccDup(value.v_pscc));
     case ftPExtField:
-	return httpHeaderExtFieldDup(value.v_pefield);
-	break;
+	return ptrField(httpHeaderExtFieldDup(value.v_pefield));
     default:
 	assert(0);		/* dup of invalid/unknown type */
     }
-    return NULL;		/* not reached */
+    return ptrField(NULL);	/* not reached */
 }
 
 /*
@@ -1272,17 +1273,18 @@ httpHeaderFieldBadValue(field_type type)
 {
     switch (type) {
     case ftInt:
+	return intField(-1);
     case ftDate_1123:
-	return -1;
+	return timeField(-1);
     case ftPChar:
     case ftPSCC:
     case ftPExtField:
-	return NULL;
+	return ptrField(NULL);
     case ftInvalid:
     default:
 	assert(0);		/* query for invalid/unknown type */
     }
-    return NULL;		/* not reached */
+    return ptrField(NULL);	/* not reached */
 }
 
 /*
@@ -1292,7 +1294,7 @@ httpHeaderFieldBadValue(field_type type)
 static HttpScc *
 httpSccCreate()
 {
-    HttpScc *scc = memAllocate(MEM_HTTP_SCC, 1);
+    HttpScc *scc = memAllocate(MEM_HTTP_SCC);
     scc->max_age = -1;
     return scc;
 }
@@ -1484,7 +1486,7 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size,
     const int valid_id = id >= 0 && id < HDR_ENUM_END;
     const char *name = valid_id ? Headers[id].name : "INVALID";
     if (count || valid_id)
-	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2lf\n",
+	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
 	    id, name, count, xdiv(count, HeaderParsedCount));
 }
 
@@ -1495,7 +1497,7 @@ httpHeaderCCStatDumper(StoreEntry * sentry, int idx, double val, double size, in
     const int valid_id = id >= 0 && id < SCC_ENUM_END;
     const char *name = valid_id ? SccAttrs[id].name : "INVALID";
     if (count || valid_id)
-	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2lf\n",
+	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
 	    id, name, count, xdiv(count, CcPasredCount));
 }
 
@@ -1504,7 +1506,7 @@ static void
 httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     if (count)
-	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2lf\n",
+	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
 	    idx, ((int) (val + size)), count, xpercent(count, HeaderEntryParsedCount));
 }
 
@@ -1515,15 +1517,15 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     assert(hs && e);
 
     storeAppendPrintf(e, "\n<h3>Header Stats: %s</h3>\n", hs->label);
-    storeAppendPrintf(e, "\t<h3>Field type distribution</h3>\n");
+    storeAppendPrintf(e, "<h3>Field type distribution</h3>\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
 	"id", "name", "count", "#/header");
     statHistDump(&hs->fieldTypeDistr, e, httpHeaderFieldStatDumper);
-    storeAppendPrintf(e, "\t<h3>Cache-control directives distribution</h3>\n");
+    storeAppendPrintf(e, "<h3>Cache-control directives distribution</h3>\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
 	"id", "name", "count", "#/cc_field");
     statHistDump(&hs->ccTypeDistr, e, httpHeaderCCStatDumper);
-    storeAppendPrintf(e, "\t<h3>Number of fields per header distribution (init size: %d)</h3>\n",
+    storeAppendPrintf(e, "<h3>Number of fields per header distribution (init size: %d)</h3>\n",
 	INIT_FIELDS_PER_HEADER);
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
 	"id", "#flds", "count", "%total");
@@ -1533,10 +1535,11 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
 static void
 shortStringStatDump(StoreEntry * e)
 {
-    storeAppendPrintf(e, "<h3>Short String Stats</h3>\n<p>%s\n</p>\n",
-	memPoolReport(shortStrings));
+    storeAppendPrintf(e, "<h3>Short String Stats</h3>\n<p>");
+	memPoolReport(shortStrings, e);
+    storeAppendPrintf(e, "\n</p>\n");
     storeAppendPrintf(e, "<br><h3>Long String Stats</h3>\n");
-    storeAppendPrintf(e, "\talive: %3d (%5.1lf KB) high-water:  %3d (%5.1lf KB)\n",
+    storeAppendPrintf(e, "alive: %3d (%5.1f KB) high-water:  %3d (%5.1f KB)\n",
 	longStrAliveCount, (double) longStrAliveSize / 1024.,
 	longStrHighWaterCount, (double) longStrHighWaterSize / 1024.);
 }
@@ -1560,7 +1563,7 @@ httpHeaderStoreReport(StoreEntry * e)
 	"id", "name", "#alive", "%err", "%repeat");
     for (ht = 0; ht < HDR_ENUM_END; ht++) {
 	field_attrs_t *f = Headers + ht;
-	storeAppendPrintf(e, "%2d\t %-20s\t %5d\t %6.3lf\t %6.3lf\n",
+	storeAppendPrintf(e, "%2d\t %-20s\t %5d\t %6.3f\t %6.3f\n",
 	    f->id, f->name, f->stat.aliveCount,
 	    xpercent(f->stat.errCount, f->stat.parsCount),
 	    xpercent(f->stat.repCount, f->stat.parsCount));
@@ -1611,8 +1614,7 @@ allocShortBuf(size_t sz)
 {
     char *buf = NULL;
     assert(shortStrings);
-    /* tmp_debug(here) ("allocating short buffer of size %d (max: %d)\n", sz, shortStrings->obj_size); @?@ */
-    if (sz > shortStrings->obj_size) {
+    if (sz > shortStrSize) {
 	buf = xmalloc(sz);
 	longStrAliveCount++;
 	longStrAliveSize += sz;
@@ -1621,7 +1623,7 @@ allocShortBuf(size_t sz)
 	if (longStrHighWaterSize < longStrAliveSize)
 	    longStrHighWaterSize = longStrAliveSize;
     } else
-	buf = memPoolGetObj(shortStrings);
+	buf = memPoolAlloc(shortStrings);
     return buf;
 }
 
@@ -1631,15 +1633,15 @@ freeShortString(char *str)
     assert(shortStrings);
     if (str) {
 	const size_t sz = strlen(str) + 1;
-	debug(55, 9) ("freeing short str of size %d (max: %d) '%s' (%p)\n", sz, shortStrings->obj_size, str, str);
-	if (sz > shortStrings->obj_size) {
-	    debug(55, 9) ("LONG short string[%d>%d]: %s\n", sz, shortStrings->obj_size, str);
+	debug(55, 9) ("freeing short str of size %d (max: %d) '%s' (%p)\n", sz, shortStrSize, str, str);
+	if (sz > shortStrSize) {
+	    debug(55, 9) ("LONG short string[%d>%d]: %s\n", sz, shortStrSize, str);
 	    assert(longStrAliveCount);
 	    xfree(str);
 	    longStrAliveCount--;
 	    longStrAliveSize -= sz;
 	} else
-	    memPoolPutObj(shortStrings, str);
+	    memPoolFree(shortStrings, str);
     }
 }
 
@@ -1692,18 +1694,4 @@ getStringPrefix(const char *str)
     LOCAL_ARRAY(char, buf, SHORT_PREFIX_SIZE);
     xstrncpy(buf, str, SHORT_PREFIX_SIZE);
     return buf;
-}
-
-/* safe percent calculation */
-static double
-xpercent(double part, double whole)
-{
-    return xdiv(100 * part, whole);
-}
-
-/* safe division */
-static double
-xdiv(double nom, double denom)
-{
-    return (denom != 0.0) ? nom / denom : -1;
 }

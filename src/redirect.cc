@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.56 1998/02/19 23:09:59 wessels Exp $
+ * $Id: redirect.cc,v 1.57 1998/03/03 00:31:12 rousskov Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -222,7 +222,7 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
     redirect->dispatch_time = current_time;
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
 	fqdn = dash_str;
-    buf = memAllocate(MEM_8K_BUF, 1);
+    buf = memAllocate(MEM_8K_BUF);
     snprintf(buf, 8192, "%s %s/%s %s %s\n",
 	r->orig_url,
 	inet_ntoa(r->client_addr),
@@ -329,7 +329,7 @@ redirectOpenServers(void)
 	    EBIT_SET(redirect_child_table[k]->flags, HELPER_ALIVE);
 	    redirect_child_table[k]->index = k;
 	    redirect_child_table[k]->fd = redirectsocket;
-	    redirect_child_table[k]->inbuf = memAllocate(MEM_8K_BUF, 1);
+	    redirect_child_table[k]->inbuf = memAllocate(MEM_8K_BUF);
 	    redirect_child_table[k]->size = 8192;
 	    redirect_child_table[k]->offset = 0;
 	    if ((s = strrchr(prg, '/')))

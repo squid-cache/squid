@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.52 1998/02/26 18:00:47 wessels Exp $
+ * $Id: mime.cc,v 1.53 1998/03/03 00:31:10 rousskov Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -454,7 +454,7 @@ mimeLoadIconFile(const char *icon)
     assert(e != NULL);
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
 #if 0				/* use new interface */
-    buf = memAllocate(MEM_4K_BUF, 1);
+    buf = memAllocate(MEM_4K_BUF);
     l = 0;
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "HTTP/1.0 200 OK\r\n");
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "Date: %s\r\n", mkrfc1123(squid_curtime));
@@ -472,7 +472,7 @@ mimeLoadIconFile(const char *icon)
 	type, (int) sb.st_size, sb.st_mtime, squid_curtime + 86400);
     httpReplySwapOut(e->mem_obj->reply, e);
     /* read the file into the buffer and append it to store */
-    buf = memAllocate(MEM_4K_BUF, 1);
+    buf = memAllocate(MEM_4K_BUF);
 #endif
     while ((n = read(fd, buf, 4096)) > 0)
 	storeAppend(e, buf, n);

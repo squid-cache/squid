@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.230 1998/02/27 09:07:24 kostas Exp $
+ * $Id: main.cc,v 1.231 1998/03/03 00:31:08 rousskov Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -745,6 +745,7 @@ normal_shutdown(void)
     ipcacheFreeMemory();
     fqdncacheFreeMemory();
     asnFreeMemory();
+    httpHeaderCleanModule();
 #endif
 #if WHY_DO_THIS
     file_close(0);
@@ -753,6 +754,7 @@ normal_shutdown(void)
 #endif
     fdDumpOpen();
     fdFreeMemory();
+    memClean();
 #if XMALLOC_TRACE
     {
 	extern int xmalloc_total;

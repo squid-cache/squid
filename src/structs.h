@@ -332,6 +332,9 @@ struct _SquidConfig {
 	time_t timeout;
 	int maxtries;
     } retry;
+    struct {
+	size_t limit;
+    } MemPools;
 };
 
 struct _SquidConfig2 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.218 1998/02/26 18:00:40 wessels Exp $
+ * $Id: client_side.cc,v 1.219 1998/03/03 00:31:04 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -188,14 +188,14 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, int flags)
      * so make a fake one.
      */
     if (h->request == NULL) {
-	r = memAllocate(MEM_REQUEST_T, 1);
+	r = memAllocate(MEM_REQUEST_T);
 	r->method = m;
 	r->protocol = PROTO_NONE;
 	h->request = requestLink(r);
     }
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     storeClientListAdd(e, h);
-    storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF, 1), clientSendMoreData, h);
+    storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF), clientSendMoreData, h);
     return e;
 }
 
@@ -319,7 +319,7 @@ clientProcessExpired(void *data)
 	http->out.offset,
 	http->out.offset,
 	4096,
-	memAllocate(MEM_4K_BUF, 1),
+	memAllocate(MEM_4K_BUF),
 	clientHandleIMSReply,
 	http);
 }
@@ -381,7 +381,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    http->out.offset + size,
 	    http->out.offset,
 	    4096,
-	    memAllocate(MEM_4K_BUF, 1),
+	    memAllocate(MEM_4K_BUF),
 	    clientHandleIMSReply,
 	    http);
 	return;
@@ -434,7 +434,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	http->out.offset,
 	http->out.offset,
 	4096,
-	memAllocate(MEM_4K_BUF, 1),
+	memAllocate(MEM_4K_BUF),
 	clientCacheHit,
 	http);
 }
@@ -885,8 +885,8 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	debug(33, 3) ("clientBuildReplyHeader: DIDN'T FIND END-OF-HEADERS\n");
 	return 0;
     }
-    xbuf = memAllocate(MEM_4K_BUF, 1);
-    ybuf = memAllocate(MEM_4K_BUF, 1);
+    xbuf = memAllocate(MEM_4K_BUF);
+    ybuf = memAllocate(MEM_4K_BUF);
     for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
 	hdr_len = t - hdr_in;
 	l = strcspn(t, crlf) + 1;
@@ -1010,7 +1010,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    C = *(buf + size);
 	}
 	*(buf + size) = '\0';
-	newbuf = memAllocate(MEM_8K_BUF, 1);
+	newbuf = memAllocate(MEM_8K_BUF);
 	hdrlen = 0;
 
 	l = clientBuildReplyHeader(http, buf, &hdrlen, newbuf, 8192);
@@ -1114,7 +1114,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 			http->out.offset,
 			http->out.offset,
 			SM_PAGE_SIZE,
-			memAllocate(MEM_4K_BUF, 1),
+			memAllocate(MEM_4K_BUF),
 			clientSendMoreData,
 			http);
 		}
@@ -1142,7 +1142,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    memAllocate(MEM_4K_BUF, 1),
+	    memAllocate(MEM_4K_BUF),
 	    clientSendMoreData,
 	    http);
     }
@@ -1199,7 +1199,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	    http->out.offset + size,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    memAllocate(MEM_4K_BUF, 1),
+	    memAllocate(MEM_4K_BUF),
 	    clientGetHeadersForIMS,
 	    http);
 	return;
@@ -1235,7 +1235,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    memAllocate(MEM_4K_BUF, 1),
+	    memAllocate(MEM_4K_BUF),
 	    clientSendMoreData,
 	    http);
 	return;
@@ -1403,7 +1403,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    memAllocate(MEM_4K_BUF, 1),
+	    memAllocate(MEM_4K_BUF),
 	    clientCacheHit,
 	    http);
 	break;
@@ -1414,7 +1414,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    memAllocate(MEM_4K_BUF, 1),
+	    memAllocate(MEM_4K_BUF),
 	    clientGetHeadersForIMS,
 	    http);
 	break;

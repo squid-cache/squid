@@ -47,7 +47,7 @@ storeClientListAdd(StoreEntry * e, void *data)
     if (storeClientListSearch(mem, data) != NULL)
 	return;
     mem->nclients++;
-    sc = memAllocate(MEM_STORE_CLIENT, 1);
+    sc = memAllocate(MEM_STORE_CLIENT);
     cbdataAdd(sc, MEM_STORE_CLIENT);	/* sc is callback_data for file_read */
     sc->callback_data = data;
     sc->seen_offset = 0;

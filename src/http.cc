@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.242 1998/02/25 09:53:58 rousskov Exp $
+ * $Id: http.cc,v 1.243 1998/03/03 00:31:07 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -303,7 +303,7 @@ httpCacheNegatively(StoreEntry * entry)
 void
 httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 {
-    char *headers = memAllocate(MEM_4K_BUF, 1);
+    char *headers = memAllocate(MEM_4K_BUF);
     char *line;
     char *end;
     char *s = NULL;
@@ -327,7 +327,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	return;
     }
     reply->hdr_sz = end - headers;
-    line = memAllocate(MEM_4K_BUF, 1);
+    line = memAllocate(MEM_4K_BUF);
     for (s = headers; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	l = strcspn(s, crlf) + 1;
 	if (l > 4096)
@@ -526,7 +526,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
 	storeKeyText(entry->key));
     if (httpState->reply_hdr == NULL)
-	httpState->reply_hdr = memAllocate(MEM_8K_BUF, 1);
+	httpState->reply_hdr = memAllocate(MEM_8K_BUF);
     if (httpState->reply_hdr_state == 0) {
 	hdr_len = strlen(httpState->reply_hdr);
 	room = 8191 - hdr_len;
@@ -796,9 +796,9 @@ httpBuildRequestHeader(request_t * request,
 {
     LOCAL_ARRAY(char, ybuf, YBUF_SZ);
     LOCAL_ARRAY(char, no_forward, 1024);
-    char *xbuf = memAllocate(MEM_4K_BUF, 1);
-    char *viabuf = memAllocate(MEM_4K_BUF, 1);
-    char *fwdbuf = memAllocate(MEM_4K_BUF, 1);
+    char *xbuf = memAllocate(MEM_4K_BUF);
+    char *viabuf = memAllocate(MEM_4K_BUF);
+    char *fwdbuf = memAllocate(MEM_4K_BUF);
     char *t = NULL;
     char *s = NULL;
     char *end = NULL;
@@ -946,7 +946,7 @@ httpSendRequest(int fd, void *data)
 	return;
     }
     if (buflen < DISK_PAGE_SIZE) {
-	buf = memAllocate(MEM_8K_BUF, 1);
+	buf = memAllocate(MEM_8K_BUF);
 	buftype = BUF_TYPE_8K;
 	buflen = DISK_PAGE_SIZE;
     } else {
@@ -1021,7 +1021,7 @@ httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
     httpState->entry = entry;
     httpState->fd = fd;
     if (e) {
-	request = memAllocate(MEM_REQUEST_T, 1);
+	request = memAllocate(MEM_REQUEST_T);
 	request->method = orig_request->method;
 	xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
 	request->port = e->http_port;
