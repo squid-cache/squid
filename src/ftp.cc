@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.26 1996/04/09 23:28:32 wessels Exp $ */
+/* $Id: ftp.cc,v 1.27 1996/04/10 00:19:20 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -11,18 +11,16 @@
 #define MAGIC_MARKER    "\004\004\004"	/* No doubt this should be more configurable */
 #define MAGIC_MARKER_SZ 3
 
-static char ftpASCII[] = "A";
-static char ftpBinary[] = "I";
+static char *ftpASCII = "A";
+static char *ftpBinary = "I";
 
 typedef struct _Ftpdata {
     StoreEntry *entry;
-    char type_id;
     char host[SQUIDHOSTNAMELEN + 1];
     char request[MAX_URL];
     char user[MAX_URL];
     char password[MAX_URL];
-    char *type;
-    char *mime_hdr;
+    char *reply_hdr;
     int ftp_fd;
     char *icp_page_ptr;		/* Used to send proxy-http request: 
 				 * put_free_8k_page(me) if the lifetime
@@ -31,6 +29,7 @@ typedef struct _Ftpdata {
 				 * middle of an icpwrite, don't lose the
 				 * icpReadWriteData */
     int got_marker;		/* denotes end of successful request */
+    int reply_hdr_state;
 } FtpData;
 
 static void ftpCloseAndFree(fd, data)
@@ -39,6 +38,18 @@ static void ftpCloseAndFree(fd, data)
 {
     if (fd >= 0)
 	comm_close(fd);
+    if (data) {
+        if (data->reply_hdr) {
+            put_free_8k_page(data->reply_hdr, __FILE__, __LINE__);
+            data->reply_hdr = NULL;
+        }
+        if (data->icp_page_ptr) {
+            put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
+            data->icp_page_ptr = NULL;
+        }
+        if (data->icp_rwd_ptr)
+            safe_free(data->icp_rwd_ptr);
+    }
     xfree(data);
 }
 
@@ -123,15 +134,137 @@ void ftpLifetimeExpire(fd, data)
     StoreEntry *entry = NULL;
     entry = data->entry;
     debug(9, 4, "ftpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
-    if (data->icp_page_ptr) {
-	put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
-	data->icp_page_ptr = NULL;
-    }
-    safe_free(data->icp_rwd_ptr);
     cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     ftpCloseAndFree(fd, data);
 }
 
+
+/* This is too much duplicated code from httpProcessReplyHeader.  Only
+difference is FtpData vs HttpData. */
+static void ftpProcessReplyHeader(data, buf, size)
+     FtpData *data;
+     char *buf;			/* chunk just read by ftpReadReply() */
+     int size;
+{
+    char *s = NULL;
+    char *t = NULL;
+    char *t1 = NULL;
+    char *t2 = NULL;
+    StoreEntry *entry = data->entry;
+    char *headers = NULL;
+    int room;
+    int hdr_len;
+    struct _http_reply *reply = NULL;
+
+    debug(11, 3, "ftpProcessReplyHeader: key '%s'\n", entry->key);
+
+    if (data->reply_hdr == NULL) {
+	data->reply_hdr = get_free_8k_page(__FILE__, __LINE__);
+	memset(data->reply_hdr, '\0', 8192);
+    }
+    if (data->reply_hdr_state == 0) {
+	hdr_len = strlen(data->reply_hdr);
+	room = 8191 - hdr_len;
+	strncat(data->reply_hdr, buf, room < size ? room : size);
+	hdr_len += room < size ? room : size;
+	if (hdr_len > 4 && strncmp(data->reply_hdr, "HTTP/", 5)) {
+	    debug(11, 3, "ftpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
+	    data->reply_hdr_state += 2;
+	    return;
+	}
+	/* need to take the lowest, non-zero pointer to the end of the headers.
+	 * some objects have \n\n separating header and body, but \r\n\r\n in
+	 * body text. */
+	t1 = strstr(data->reply_hdr, "\r\n\r\n");
+	t2 = strstr(data->reply_hdr, "\n\n");
+	if (t1 && t2)
+	    t = t2 < t1 ? t2 : t1;
+	else
+	    t = t2 ? t2 : t1;
+	if (!t)
+	    return;		/* headers not complete */
+	t += (t == t1 ? 4 : 2);
+	*t = '\0';
+	reply = entry->mem_obj->reply;
+	reply->hdr_sz = t - data->reply_hdr;
+	debug(11, 7, "ftpProcessReplyHeader: hdr_sz = %d\n", reply->hdr_sz);
+	data->reply_hdr_state++;
+    }
+    if (data->reply_hdr_state == 1) {
+	headers = xstrdup(data->reply_hdr);
+	data->reply_hdr_state++;
+	debug(11, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
+	    data->reply_hdr);
+	t = strtok(headers, "\n");
+	while (t) {
+	    s = t + strlen(t);
+	    while (*s == '\r')
+		*s-- = '\0';
+	    if (!strncasecmp(t, "HTTP", 4)) {
+		sscanf(t + 1, "%lf", &reply->version);
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    reply->code = atoi(t);
+		}
+	    } else if (!strncasecmp(t, "Content-type:", 13)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    strncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ - 1);
+		}
+	    } else if (!strncasecmp(t, "Content-length:", 15)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    reply->content_length = atoi(t);
+		}
+	    } else if (!strncasecmp(t, "Date:", 5)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    strncpy(reply->date, t, HTTP_REPLY_FIELD_SZ - 1);
+		}
+	    } else if (!strncasecmp(t, "Expires:", 8)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    strncpy(reply->expires, t, HTTP_REPLY_FIELD_SZ - 1);
+		}
+	    } else if (!strncasecmp(t, "Last-Modified:", 14)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    strncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ - 1);
+		}
+	    }
+	    t = strtok(NULL, "\n");
+	}
+	if (reply->code)
+	    debug(11, 3, "ftpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
+	switch (reply->code) {
+	case 200:		/* OK */
+	case 203:		/* Non-Authoritative Information */
+	case 300:		/* Multiple Choices */
+	case 301:		/* Moved Permanently */
+	case 410:		/* Gone */
+	    /* These can be cached for a long time, make the key public */
+	    entry->expires = cached_curtime + ttlSet(entry);
+	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
+		storeSetPublicKey(entry);
+	    break;
+	case 401:		/* Unauthorized */
+	case 407:		/* Proxy Authentication Required */
+	    /* These should never be cached at all */
+	    if (BIT_TEST(entry->flag, ENTRY_PRIVATE))
+		storeSetPrivateKey(entry);
+	    storeExpireNow(entry);
+	    BIT_RESET(entry->flag, CACHABLE);
+	    storeReleaseRequest(entry, __FILE__, __LINE__);
+	    break;
+	default:
+	    /* These can be negative cached, make key public */
+	    entry->expires = cached_curtime + getNegativeTTL();
+	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
+		storeSetPublicKey(entry);
+	    break;
+	}
+    }
+}
 
 
 /* This will be called when data is ready to be read from fd.  Read until
@@ -162,7 +295,8 @@ int ftpReadReply(fd, data)
 		    COMM_SELECT_READ,
 		    (PF) ftpReadReply,
 		    (void *) data);
-		comm_set_stall(fd, getStallDelay());	/* dont try reading again for a while */
+		/* dont try reading again for a while */
+		comm_set_stall(fd, getStallDelay());
 		return 0;
 	    }
 	} else {
@@ -236,6 +370,8 @@ int ftpReadReply(fd, data)
 	    }
 	}
 	storeAppend(entry, buf, len);
+        if (data->reply_hdr_state < 2 && len > 0)
+            ftpProcessReplyHeader(data, buf, len);
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
