@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.47 1996/10/14 23:45:24 wessels Exp $
+#  $Id: Makefile.in,v 1.48 1996/10/15 23:32:50 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -10,7 +10,7 @@ AIO_OPT		= # -DUSE_ASYNC_IO=1
 AIO_LIBS	= # @AIO_LIBS@
 AUTH_OPT	= # -DUSE_PROXY_AUTH=1
 LOG_HDRS_OPT	= # -DLOG_FULL_HEADERS=1
-ICMP_OPT	= # -DUSE_ICMP=1
+ICMP_OPT	= -DUSE_ICMP=1
 DELAY_HACK      = # -DDELAY_HACK=1
 DEFINES		= $(HOST_OPT) $(AIO_OPT) $(AUTH_OPT) $(LOG_HDRS_OPT) $(ICMP_OPT) \
 		  $(DELAY_HACK)

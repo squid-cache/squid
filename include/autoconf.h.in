@@ -13,6 +13,15 @@
 /* Define if you have <alloca.h> and it should be used (not on Ultrix).  */
 #undef HAVE_ALLOCA_H
 
+/* Define to `long' if <sys/types.h> doesn't define.  */
+#undef off_t
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef pid_t
+
+/* Define to `unsigned' if <sys/types.h> doesn't define.  */
+#undef size_t
+
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
    automatically deduced at run-time.
@@ -130,9 +139,6 @@
 /* Define if you have the srand48 function.  */
 #undef HAVE_SRAND48
 
-/* Define if you have the strdup function.  */
-#undef HAVE_STRDUP
-
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
 
@@ -141,9 +147,6 @@
 
 /* Define if you have the syslog function.  */
 #undef HAVE_SYSLOG
-
-/* Define if you have the tempnam function.  */
-#undef HAVE_TEMPNAM
 
 /* Define if you have the timegm function.  */
 #undef HAVE_TIMEGM

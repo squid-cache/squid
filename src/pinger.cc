@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.8 1996/10/15 18:06:25 wessels Exp $
+ * $Id: pinger.cc,v 1.9 1996/10/15 23:32:54 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -164,7 +164,7 @@ pingerSendEcho(struct in_addr to, int opcode, char *payload, int len)
     if (payload) {
 	if (len > MAX_PAYLOAD)
 	    len = MAX_PAYLOAD;
-	memcpy(echo->payload, payload, len);
+	xmemcpy(echo->payload, payload, len);
 	icmp_pktsize += len;
     }
     icmp->icmp_cksum = in_cksum((u_short *) icmp, icmp_pktsize);

@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.21 1996/09/24 20:17:26 wessels Exp $
+ * $Id: util.c,v 1.22 1996/10/15 23:32:48 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -447,27 +447,6 @@ xstrerror(void)
     sprintf(xstrerror_buf, "(%d) %s", errno, sys_errlist[errno]);
 #endif /* HAVE_STRERROR */
     return xstrerror_buf;
-}
-
-#if !HAVE_STRDUP
-/* define for systems that don't have strdup */
-char *
-strdup(char *s)
-{
-    return (xstrdup(s));
-}
-#endif
-
-void
-xmemcpy(void *from, void *to, int len)
-{
-#if HAVE_MEMMOVE
-    (void) memmove(from, to, len);
-#elif HAVE_BCOPY
-    bcopy(to, from, len);
-#else
-    (void) memcpy(from, to, len);
-#endif
 }
 
 void

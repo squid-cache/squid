@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.22 1996/10/09 15:34:15 wessels Exp $
+ * $Id: util.h,v 1.23 1996/10/15 23:32:47 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -127,79 +127,25 @@
 #endif
 #endif
 
-#if !HAVE_STRDUP
-extern char *strdup _PARAMS((char *));
-#endif
+extern char *getfullhostname _PARAMS((void));
+extern char *mkhttpdlogtime _PARAMS((time_t *));
+extern char *mkrfc850 _PARAMS((time_t));
+extern char *uudecode _PARAMS((char *));
 extern char *xstrdup _PARAMS((char *));
-
-/* from xmalloc.c */
-extern void *xmalloc _PARAMS((size_t));
-extern void *xrealloc _PARAMS((void *, size_t));
-extern void *xcalloc _PARAMS((int, size_t));
-extern void xfree _PARAMS((void *));
-extern void xxfree _PARAMS((void *));
 extern char *xstrdup _PARAMS((char *));
 extern char *xstrerror _PARAMS((void));
-extern char *getfullhostname _PARAMS((void));
-extern void xmemcpy _PARAMS((void *, void *, int));
-
 extern int tvSubMsec _PARAMS((struct timeval, struct timeval));
-
+extern time_t parse_rfc850 _PARAMS((char *str));
+extern void *xcalloc _PARAMS((int, size_t));
+extern void *xmalloc _PARAMS((size_t));
+extern void *xrealloc _PARAMS((void *, size_t));
+extern void Tolower _PARAMS((char *));
+extern void xfree _PARAMS((void *));
+extern void xmemcpy _PARAMS((void *, void *, int));
+extern void xxfree _PARAMS((void *));
 
 #if XMALLOC_STATISTICS
 void malloc_statistics _PARAMS((void (*)_PARAMS((int, int, void *)), void *));
 #endif
-
-/* from debug.c */
-#ifndef MAX_DEBUG_LEVELS
-#define MAX_DEBUG_LEVELS 256
-#endif /* MAX_DEBUG_LEVELS */
-
-#ifndef MAIN
-extern int Harvest_do_debug;
-extern int Harvest_debug_levels[];
-#endif /* MAIN */
-
-#undef debug_ok_fast
-#if USE_NO_DEBUGGING
-#define debug_ok_fast(S,L) 0
-#else
-#define debug_ok_fast(S,L) \
-        ( \
-        (Harvest_do_debug) && \
-        ((Harvest_debug_levels[S] == -2) || \
-         ((Harvest_debug_levels[S] != -1) && \
-           ((L) <= Harvest_debug_levels[S]))) \
-        )
-#endif /* USE_NO_DEBUGGING */
-
-#undef Debug
-#if USE_NO_DEBUGGING
-#define Debug(section, level, X) /* empty */;
-#else
-#define Debug(section, level, X) \
-        {if (debug_ok_fast((section),(level))) {Log X;}}
-#endif
-
-void debug_flag _PARAMS((char *));
-
-char *mkhttpdlogtime _PARAMS((time_t *));
-extern char *mkrfc850 _PARAMS((time_t));
-extern time_t parse_rfc850 _PARAMS((char *str));
-extern void init_log3 _PARAMS((char *pn, FILE * a, FILE * b));
-extern void debug_init _PARAMS((void));
-extern void log_errno2 _PARAMS((char *, int, char *));
-
-#ifdef __STDC__
-extern void Log _PARAMS((char *,...));
-extern void errorlog _PARAMS((char *,...));
-#else
-extern void Log _PARAMS(());
-extern void errorlog _PARAMS(());
-#endif /* __STDC__ */
-
-extern void Tolower _PARAMS((char *));
-
-extern char *uudecode _PARAMS((char *));
 
 #endif /* ndef _UTIL_H_ */
