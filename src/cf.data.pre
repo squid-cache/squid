@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.336 2003/08/13 00:24:31 robertc Exp $
+# $Id: cf.data.pre,v 1.337 2003/08/13 00:26:21 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1138,6 +1138,8 @@ DOC_START
 		et	Tag returned by external acl
 		ea	Log string returned by external acl
 		<st	Reply size including HTTP headers
+		<sH     Reply high offset sent
+		<sS	Upstream object size
 		%	a literal % character
 
 logformat squid  %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un %Sh/%<A %mt
