@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.37 1996/04/16 16:35:29 wessels Exp $ */
+/* $Id: main.cc,v 1.38 1996/04/16 18:30:54 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -168,7 +168,7 @@ void serverConnectionsClose()
 
 static void mainReinitialize()
 {
-    debug(1, 0, "Retarting Squid Cache (version %s)...\n", version_string);
+    debug(1, 0, "Restarting Squid Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
     neighborsDestroy();
 
