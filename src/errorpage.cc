@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.90 1997/10/29 04:30:34 wessels Exp $
+ * $Id: errorpage.cc,v 1.91 1997/10/29 04:39:30 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -93,7 +93,7 @@ errorStateFree(ErrorState * err)
     safe_free(err->redirect_url);
     safe_free(err->url);
     safe_free(err->host);
-    safe_free(err->dns_error_message);
+    safe_free(err->dnsserver_msg);
     if (BIT_TEST(err->flags, ERR_FLAG_CBDATA))
         cbdataFree(err);
     else
