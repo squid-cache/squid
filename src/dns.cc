@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.62 1998/07/25 00:16:26 wessels Exp $
+ * $Id: dns.cc,v 1.63 1998/07/29 03:57:37 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -41,7 +41,22 @@ struct dnsQueueData {
 };
 
 static PF dnsShutdownRead;
+static PF dnsFDClosed;
 static dnsserver_t **dns_child_table = NULL;
+static int NDnsServersRunning = 0;
+
+static void
+dnsFDClosed(int fd, void *data)
+{
+    dnsserver_t *dns = data;
+    NDnsServersRunning--;
+    if (shutting_down || reconfiguring)
+	return;
+    debug(34, 0) ("WARNING: DNSSERVER #%d (FD %d) exited\n",
+	dns->id, fd);
+    if (NDnsServersRunning < Config.dnsChildren / 2)
+	fatal("Too few DNSSERVER processes are running");
+}
 
 dnsserver_t *
 dnsGetFirstAvailable(void)
@@ -92,6 +107,7 @@ dnsOpenServers(void)
     dnsFreeMemory();
     dns_child_table = xcalloc(N, sizeof(dnsserver_t *));
     NDnsServersAlloc = 0;
+    NDnsServersRunning = 0;
     args[nargs++] = "(dnsserver)";
     if (Config.onoff.res_defnames)
 	args[nargs++] = "-D";
@@ -137,12 +153,17 @@ dnsOpenServers(void)
 	    snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", s, dns_child_table[k]->id);
 	    fd_note(dns_child_table[k]->inpipe, fd_note_buf);
 	    commSetNonBlocking(dns_child_table[k]->inpipe);
-	    debug(34, 3) ("dnsOpenServers: 'dns_server' %d started\n", k + 1);
+	    comm_add_close_handler(dns_child_table[k]->inpipe, dnsFDClosed,
+		dns_child_table[k]);
+	    debug(34, 3) ("dnsOpenServers: DNSSERVER #%d started\n", k + 1);
 	    NDnsServersAlloc++;
+	    NDnsServersRunning++;
 	}
     }
     if (NDnsServersAlloc == 0 && Config.dnsChildren > 0)
 	fatal("Failed to start any dnsservers");
+    if (NDnsServersRunning < Config.dnsChildren / 2)
+	fatal("Too few DNSSERVER processes are running");
     cachemgrRegister("dns", "dnsserver child process information",
 	dnsStats, 0, 1);
     debug(34, 1) ("Started %d 'dnsserver' processes\n", NDnsServersAlloc);
@@ -213,8 +234,17 @@ dnsShutdownServers(void *notused)
 	}
 	dnsShutdownServer(dns);
     }
+    /*
+     * Here we pass in 'dns_child_table[0]' as callback data so that
+     * if the dns_child_table[] array gets freed, the event will
+     * never execute.
+     */
     if (na)
-	eventAdd("dnsShutdownServers", dnsShutdownServers, NULL, 1.0, 1);
+	eventAdd("dnsShutdownServers",
+	    dnsShutdownServers,
+	    dns_child_table[0],
+	    1.0,
+	    1);
 }
 
 void
