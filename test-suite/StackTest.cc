@@ -1,7 +1,9 @@
+
 /*
- * $Id: Stack.h,v 1.15 2003/07/14 10:36:41 robertc Exp $
+ * $Id: StackTest.cc,v 1.1 2003/07/14 10:36:44 robertc Exp $
  *
- * AUTHOR: Alex Rousskov
+ * DEBUG: section 19    Store Memory Primitives
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,43 +30,29 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *  
+ *
+ * Copyright (c) 2003  Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_STACK_H
-#define SQUID_STACK_H
+#include "squid.h"
+#include "Stack.h"
 
-#include "Array.h"
-
-/* RBC: 20030714 Composition might be better long-term, but for now,
- * there's no reason to do so.
- */
-
-template <class S = void *>
-
-class Stack : public Vector<S>
+int
+main (int argc, char *argv)
 {
-
-public:
-    typedef typename Vector<S>::value_type value_type;
-    typedef typename Vector<S>::pointer pointer;
-    value_type pop()
-    {
-        if (!count)
-            return value_type();
-
-        value_type result = items[--count];
-
-        items[count] = value_type();
-
-        return result;
-    }
-
-    /* todo, fatal on empty Top call */
-    value_type top() const
-    {
-        return count ? items[count - 1] : value_type();
-    }
-};
-
-#endif /* SQUID_STACK_H */
+    Stack<int> aStack;
+    assert (aStack.size() == 0);
+    aStack.push_back(2);
+    assert (aStack.size() == 1);
+    assert (aStack.top() == 2);
+    assert (aStack.pop() == 2);
+    assert (aStack.size() == 0);
+    Stack<> oldStack;
+    assert (oldStack.size() == 0);
+    oldStack.push_back(&aStack);
+    assert (oldStack.size() == 1);
+    assert (oldStack.top() == &aStack);
+    assert (oldStack.pop() == &aStack);
+    assert (oldStack.size() == 0);
+    return 0;
+}
