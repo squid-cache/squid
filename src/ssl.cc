@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.113 2001/04/14 00:03:23 hno Exp $
+ * $Id: ssl.cc,v 1.114 2001/07/17 10:33:28 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -532,6 +532,7 @@ sslProxyConnected(int fd, void *data)
     http_state_flags flags;
     debug(26, 3) ("sslProxyConnected: FD %d sslState=%p\n", fd, sslState);
     memset(&flags, '\0', sizeof(flags));
+    flags.proxying = sslState->request->flags.proxying;
     memBufDefInit(&mb);
     memBufPrintf(&mb, "CONNECT %s HTTP/1.0\r\n", sslState->url);
     httpBuildRequestHeader(sslState->request,
