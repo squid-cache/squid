@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.44 1996/04/11 23:52:00 wessels Exp $ */
-#ident "$Id: store.cc,v 1.44 1996/04/11 23:52:00 wessels Exp $"
+/* $Id: store.cc,v 1.45 1996/04/12 04:53:50 wessels Exp $ */
+#ident "$Id: store.cc,v 1.45 1996/04/12 04:53:50 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -491,9 +491,9 @@ StoreEntry *storeGet(url)
     return NULL;
 }
 
-char *storeGeneratePrivateKey(url, type_id, num)
+char *storeGeneratePrivateKey(url, method, num)
      char *url;
-     int type_id;
+     int method;
      int num;
 {
     if (key_counter == 0)
@@ -504,17 +504,17 @@ char *storeGeneratePrivateKey(url, type_id, num)
     key_temp_buffer[0] = '\0';
     sprintf(key_temp_buffer, "%d/%s/%s",
 	num,
-	RequestMethodStr[type_id],
+	RequestMethodStr[method],
 	url);
     return key_temp_buffer;
 }
 
-char *storeGeneratePublicKey(url, request_type_id)
+char *storeGeneratePublicKey(url, method)
      char *url;
-     int request_type_id;
+     int method;
 {
-    debug(20, 3, "storeGeneratePublicKey: type=%d %s\n", request_type_id, url);
-    switch (request_type_id) {
+    debug(20, 3, "storeGeneratePublicKey: type=%d %s\n", method, url);
+    switch (method) {
     case METHOD_GET:
 	return url;
 	break;
@@ -543,7 +543,7 @@ void storeSetPrivateKey(e)
     if (e->key && BIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already private */
 
-    newkey = storeGeneratePrivateKey(e->url, e->type_id, 0);
+    newkey = storeGeneratePrivateKey(e->url, e->method, 0);
     if ((table_entry = hash_lookup(table, newkey))) {
 	e2 = (StoreEntry *) table_entry;
 	debug(20, 0, "storeSetPrivateKey: Entry already exists with key '%s'\n",
@@ -572,7 +572,7 @@ void storeSetPublicKey(e)
     if (e->key && !BIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already public */
 
-    newkey = storeGeneratePublicKey(e->url, e->type_id);
+    newkey = storeGeneratePublicKey(e->url, e->method);
     while ((table_entry = hash_lookup(table, newkey))) {
 	debug(20, 0, "storeSetPublicKey: Making old '%s' private.\n", newkey);
 	e2 = (StoreEntry *) table_entry;
@@ -583,7 +583,7 @@ void storeSetPublicKey(e)
 	storeHashDelete(e);
     if (e->key && !BIT_TEST(e->flag, KEY_URL))
 	safe_free(e->key);
-    if (e->type_id == METHOD_GET) {
+    if (e->method == METHOD_GET) {
 	e->key = e->url;
 	BIT_SET(e->flag, KEY_URL);
 	BIT_RESET(e->flag, KEY_CHANGE);
@@ -612,7 +612,7 @@ StoreEntry *storeCreateEntry(url, req_hdr, flags, method)
     m = e->mem_obj;
     e->url = xstrdup(url);
     meta_data.url_strings += strlen(url);
-    e->type_id = method;
+    e->method = method;
     if (req_hdr)
 	m->mime_hdr = xstrdup(req_hdr);
     if (BIT_TEST(flags, REQ_NOCACHE))
@@ -684,7 +684,7 @@ StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
     e = new_StoreEntry(WITHOUT_MEMOBJ);
     e->url = xstrdup(url);
     BIT_RESET(e->flag, ENTRY_PRIVATE);
-    e->type_id = METHOD_GET;
+    e->method = METHOD_GET;
     storeSetPublicKey(e);
     e->flag = 0;
     BIT_SET(e->flag, CACHABLE);
@@ -713,12 +713,14 @@ int storeRegister(e, fd, handler, data)
      PIF handler;
      void *data;
 {
-    PendingEntry *pe = (PendingEntry *) xmalloc(sizeof(PendingEntry));
-    int old_size, i, j;
+    PendingEntry *pe = NULL;
+    int old_size;
+    int i;
+    int j;
 
     debug(20, 3, "storeRegister: FD %d '%s'\n", fd, e->key);
 
-    memset(pe, '\0', sizeof(PendingEntry));
+    pe = (PendingEntry *) xcalloc(1, sizeof(PendingEntry));
     pe->fd = fd;
     pe->handler = handler;
     pe->data = data;
@@ -1420,7 +1422,7 @@ static int storeCheckSwapable(e)
 	debug(20, 2, "storeCheckSwapable: NO: private entry\n");
     } else if (e->expires <= cached_curtime) {
 	debug(20, 2, "storeCheckSwapable: NO: already expired\n");
-    } else if (e->type_id != METHOD_GET) {
+    } else if (e->method != METHOD_GET) {
 	debug(20, 2, "storeCheckSwapable: NO: non-GET method\n");
     } else if (!BIT_TEST(e->flag, CACHABLE)) {
 	debug(20, 2, "storeCheckSwapable: NO: not cachable\n");
@@ -2045,7 +2047,7 @@ int storeRelease(e)
 	    fatal_dump(NULL);
 	}
     }
-    if (e->type_id == METHOD_GET) {
+    if (e->method == METHOD_GET) {
 	/* check if coresponding HEAD object exists. */
 	head_table_entry = hash_lookup(table,
 	    storeGeneratePublicKey(e->url, METHOD_HEAD));
