@@ -160,6 +160,11 @@
  */
 #undef USE_CACHE_DIGESTS
 
+/*
+ * Cache Array Routing Protocol
+ */
+#undef USE_CARP
+
 /* Define if struct tm has tm_gmtoff member */
 #undef HAVE_TM_GMTOFF
 
@@ -289,6 +294,9 @@
 
 /* Define if you have the res_init function.  */
 #undef HAVE_RES_INIT
+
+/* Define if you have the rint function.  */
+#undef HAVE_RINT
 
 /* Define if you have the seteuid function.  */
 #undef HAVE_SETEUID
