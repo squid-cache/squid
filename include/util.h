@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.52 1998/11/12 06:30:12 wessels Exp $
+ * $Id: util.h,v 1.53 1999/01/29 19:39:09 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -112,5 +112,9 @@ extern int xpercentInt(double part, double whole);
 extern double xdiv(double nom, double denom);
 
 extern const char *xitoa(int num);
+
+#if !HAVE_DRAND48
+double drand48(void);
+#endif
 
 #endif /* ndef _UTIL_H_ */
