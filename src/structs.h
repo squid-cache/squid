@@ -435,7 +435,7 @@ struct _http_reply {
     double version;
     int code;
     int content_length;
-    int hdr_sz;
+    size_t hdr_sz;
     int cache_control;
     int misc_headers;
     time_t date;
@@ -785,7 +785,7 @@ struct _store_client {
     char *copy_buf;
     STCB *callback;
     void *callback_data;
-    MemObject *mem;		/* ptr to the parent structure, argh! */
+    StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
     int swapin_fd;
     int disk_op_in_progress;
     struct _store_client *next;
@@ -819,6 +819,7 @@ struct _MemObject {
     char *log_url;
     dlink_node lru;
     u_num32 reqnum;
+    ssize_t object_sz;
     size_t swap_hdr_sz;
 };
 
@@ -831,7 +832,7 @@ struct _StoreEntry {
     time_t lastref;
     time_t expires;
     time_t lastmod;
-    int object_len;
+    size_t swap_file_sz;
     u_short refcount;
     u_short flag;
 
@@ -958,14 +959,14 @@ struct _tlv {
     struct _tlv *next;
 };
 
-struct _storeSwapData {
+struct _storeSwapLogData {
     char op;
     int swap_file_number;
     time_t timestamp;
     time_t lastref;
     time_t expires;
     time_t lastmod;
-    int object_len;
+    size_t swap_file_sz;
     u_short refcount;
     u_short flags;
     unsigned char key[MD5_DIGEST_CHARS];

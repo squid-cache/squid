@@ -67,15 +67,16 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
     if (e->store_status == STORE_PENDING) {
 	storeCheckSwapOut(e);
 	return;
-    } else if (mem->swapout.done_offset < e->object_len + mem->swap_hdr_sz) {
+    } else if (mem->swapout.done_offset < objectLen(e) + mem->swap_hdr_sz) {
 	storeCheckSwapOut(e);
 	return;
     }
     /* swapping complete */
     debug(20, 5) ("storeSwapOutHandle: SwapOut complete: '%s' to %s.\n",
 	storeUrl(e), storeSwapFullPath(e->swap_file_number, NULL));
+    e->swap_file_sz = objectLen(e) + mem->swap_hdr_sz;
     e->swap_status = SWAPOUT_DONE;
-    storeDirUpdateSwapSize(e->swap_file_number, e->object_len, 1);
+    storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, 1);
     if (storeCheckCachable(e)) {
 	storeLog(STORE_LOG_SWAPOUT, e);
 	storeDirSwapLog(e, SWAP_LOG_ADD);

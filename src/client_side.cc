@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.206 1998/02/10 21:44:30 wessels Exp $
+ * $Id: client_side.cc,v 1.207 1998/02/12 07:03:04 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -420,7 +420,7 @@ modifiedSince(StoreEntry * entry, request_t * request)
     if (mem->reply->content_length >= 0)
 	object_length = mem->reply->content_length;
     else
-	object_length = entry->object_len - mem->reply->hdr_sz;
+	object_length = contentLen(entry);
     if (entry->lastmod > request->ims) {
 	debug(33, 3) ("--> YES: entry newer than client\n");
 	return 1;
@@ -985,7 +985,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    if (entry->store_status == STORE_PENDING)
 		http->out.offset = entry->mem_obj->inmem_hi;
 	    else
-		http->out.offset = entry->object_len;
+		http->out.offset = objectLen(entry);
 	}
     }
     comm_write(fd, buf, writelen, clientWriteComplete, http, freefunc);
@@ -1000,7 +1000,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     int done;
     http->out.size += size;
     debug(33, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
-	fd, size, errflag, http->out.offset, entry->object_len);
+	fd, size, errflag, http->out.offset, objectLen(entry));
     if (errflag) {
 	CheckQuickAbort(http);
 	comm_close(fd);
@@ -1915,10 +1915,10 @@ clientCheckTransferDone(clientHttpRequest * http)
 	return 0;
     /*
      * Handle STORE_OK and STORE_ABORTED objects.
-     * entry->object_len will be set proprely.
+     * objectLen(entry) will be set proprely.
      */
     if (entry->store_status != STORE_PENDING) {
-	if (http->out.offset >= entry->object_len)
+	if (http->out.offset >= objectLen(entry))
 	    return 1;
 	else
 	    return 0;

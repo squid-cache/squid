@@ -448,6 +448,8 @@ extern void storeAppendPrintf();
 extern int storeCheckCachable(StoreEntry * e);
 extern void storeUnlinkFileno(int fileno);
 extern void storeSetPrivateKey(StoreEntry *);
+extern int objectLen(const StoreEntry * e);
+extern int contentLen(const StoreEntry * e);
 
 /*
  * store_log.c
@@ -518,28 +520,8 @@ void storeSwapTLVFree(tlv * n);
  * store_rebuild.c
  */
 extern void storeDoRebuildFromSwapFiles(void *data);
-extern void storeConvertFile(const cache_key * key,
-    int file_number,
-    int size,
-    time_t expires,
-    time_t timestamp,
-    time_t lastref,
-    time_t lastmod,
-    u_short refcount,
-    u_short flags,
-    int clean);
-extern StoreEntry *storeAddDiskRestore(const cache_key * key,
-    int file_number,
-    int size,
-    time_t expires,
-    time_t timestamp,
-    time_t lastref,
-    time_t lastmod,
-    u_num32 refcount,
-    u_num32 flags,
-    int clean);
 extern void storeCleanup(void *datanotused);
-extern void storeValidate(StoreEntry *, STVLDCB, void *callback_data, void *tag);
+extern void storeValidate(StoreEntry *, STVLDCB *, void *, void *);
 extern void storeValidateComplete(void *data, int retcode, int errcode);
 extern void storeRebuildStart(void);
 

@@ -77,7 +77,7 @@ typedef struct _dlink_node dlink_node;
 typedef struct _dlink_list dlink_list;
 typedef struct _StatCounters StatCounters;
 typedef struct _tlv tlv;
-typedef struct _storeSwapData storeSwapData;
+typedef struct _storeSwapLogData storeSwapLogData;
 typedef struct _cacheSwap cacheSwap;
 
 /* define AIOCB even without USE_ASYNC_IO */

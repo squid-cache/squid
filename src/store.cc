@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.378 1998/02/06 18:54:09 wessels Exp $
+ * $Id: store.cc,v 1.379 1998/02/12 07:03:06 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -184,6 +184,7 @@ new_MemObject(const char *url, const char *log_url)
     mem->url = xstrdup(url);
     mem->log_url = xstrdup(log_url);
     mem->swapout.fd = -1;
+    mem->object_sz = -1;
     meta_data.misc += strlen(log_url);
     debug(20, 3) ("new_MemObject: returning %p\n", mem);
     return mem;
@@ -357,10 +358,9 @@ storeSetPrivateKey(StoreEntry * e)
 {
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (e->key && EBIT_TEST(e->flag, KEY_PRIVATE))
+    if (EBIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already private */
-    if (e->key)
-	storeHashDelete(e);
+    storeHashDelete(e);
     if (mem != NULL) {
 	mem->reqnum = getKeyCounter();
 	newkey = storeKeyPrivate(mem->url, mem->method, mem->reqnum);
@@ -378,7 +378,7 @@ storeSetPublicKey(StoreEntry * e)
     StoreEntry *e2 = NULL;
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (e->key && !EBIT_TEST(e->flag, KEY_PRIVATE))
+    if (!EBIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already public */
     assert(mem);
     newkey = storeKeyPublic(mem->url, mem->method);
@@ -388,8 +388,7 @@ storeSetPublicKey(StoreEntry * e)
 	storeRelease(e2);
 	newkey = storeKeyPublic(mem->url, mem->method);
     }
-    if (e->key)
-	storeHashDelete(e);
+    storeHashDelete(e);
     storeHashInsert(e, newkey);
     EBIT_CLR(e->flag, KEY_PRIVATE);
 }
@@ -522,7 +521,7 @@ void
 storeComplete(StoreEntry * e)
 {
     debug(20, 3) ("storeComplete: '%s'\n", storeKeyText(e->key));
-    e->object_len = e->mem_obj->inmem_hi;
+    e->mem_obj->object_sz = e->mem_obj->inmem_hi;
     e->store_status = STORE_OK;
     assert(e->mem_status == NOT_IN_MEMORY);
     if (!storeEntryValidLength(e))
@@ -551,7 +550,7 @@ storeAbort(StoreEntry * e, int cbflag)
     e->swap_status = SWAPOUT_NONE;
     /* We assign an object length here--The only other place we assign the
      * object length is in storeComplete() */
-    e->object_len = mem->inmem_hi;
+    mem->object_sz = mem->inmem_hi;
     /* Notify the server side */
     if (cbflag && mem->abort.callback) {
 	mem->abort.callback(mem->abort.data);
@@ -718,7 +717,6 @@ storeRelease(StoreEntry * e)
 	storeExpireNow(e);
 	storeSetPrivateKey(e);
 	EBIT_SET(e->flag, RELEASE_REQUEST);
-	storeDirSwapLog(e, SWAP_LOG_DEL);
 	return;
     }
 #endif
@@ -726,7 +724,7 @@ storeRelease(StoreEntry * e)
     if (e->swap_file_number > -1) {
 	storeUnlinkFileno(e->swap_file_number);
 	if (e->swap_status == SWAPOUT_DONE)
-	    storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
+	    storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, -1);
 	storeDirSwapLog(e, SWAP_LOG_DEL);
     }
     storeSetMemStatus(e, NOT_IN_MEMORY);
@@ -754,23 +752,22 @@ static int
 storeEntryValidLength(const StoreEntry * e)
 {
     int diff;
-    int hdr_sz;
-    int content_length;
+    http_reply *reply;
     assert(e->mem_obj != NULL);
-    hdr_sz = e->mem_obj->reply->hdr_sz;
-    content_length = e->mem_obj->reply->content_length;
-
+    reply = e->mem_obj->reply;
     debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", storeKeyText(e->key));
-    debug(20, 5) ("storeEntryValidLength:     object_len = %d\n", e->object_len);
-    debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n", hdr_sz);
-    debug(20, 5) ("storeEntryValidLength: content_length = %d\n", content_length);
-
-    if (content_length < 0) {
+    debug(20, 5) ("storeEntryValidLength:     object_len = %d\n",
+	objectLen(e));
+    debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n",
+	reply->hdr_sz);
+    debug(20, 5) ("storeEntryValidLength: content_length = %d\n",
+	reply->content_length);
+    if (reply->content_length < 0) {
 	debug(20, 5) ("storeEntryValidLength: Unspecified content length: %s\n",
 	    storeKeyText(e->key));
 	return 1;
     }
-    if (hdr_sz == 0) {
+    if (reply->hdr_sz == 0) {
 	debug(20, 5) ("storeEntryValidLength: Zero header size: %s\n",
 	    storeKeyText(e->key));
 	return 1;
@@ -780,11 +777,11 @@ storeEntryValidLength(const StoreEntry * e)
 	    storeKeyText(e->key));
 	return 1;
     }
-    if (e->mem_obj->reply->code == HTTP_NOT_MODIFIED)
+    if (reply->code == HTTP_NOT_MODIFIED)
 	return 1;
-    if (e->mem_obj->reply->code == HTTP_NO_CONTENT)
+    if (reply->code == HTTP_NO_CONTENT)
 	return 1;
-    diff = hdr_sz + content_length - e->object_len;
+    diff = reply->hdr_sz + reply->content_length - objectLen(e);
     if (diff == 0)
 	return 1;
     debug(20, 3) ("storeEntryValidLength: %d bytes too %s; '%s'\n",
@@ -1038,7 +1035,7 @@ storeEntryDump(StoreEntry * e, int l)
     debug(20, l) ("StoreEntry->lastref: %d\n", (int) e->lastref);
     debug(20, l) ("StoreEntry->expires: %d\n", (int) e->expires);
     debug(20, l) ("StoreEntry->lastmod: %d\n", (int) e->lastmod);
-    debug(20, l) ("StoreEntry->object_len: %d\n", e->object_len);
+    debug(20, l) ("StoreEntry->swap_file_sz: %d\n", (int) e->swap_file_sz);
     debug(20, l) ("StoreEntry->refcount: %d\n", e->refcount);
     debug(20, l) ("StoreEntry->flag: %X\n", e->flag);
     debug(20, l) ("StoreEntry->swap_file_number: %d\n", (int) e->swap_file_number);
@@ -1120,9 +1117,25 @@ storeBufferFlush(StoreEntry * e)
 void
 storeUnlinkFileno(int fileno)
 {
+    debug(20, 5) ("storeUnlinkFileno: %08X\n", fileno);
 #if USE_ASYNC_IO
     safeunlink(storeSwapFullPath(fileno, NULL), 1);
 #else
     unlinkdUnlink(storeSwapFullPath(fileno, NULL));
 #endif
+}
+
+int
+objectLen(const StoreEntry * e)
+{
+    assert(e->mem_obj != NULL);
+    return e->mem_obj->object_sz;
+}
+
+int
+contentLen(const StoreEntry * e)
+{
+    assert(e->mem_obj != NULL);
+    assert(e->mem_obj->reply != NULL);
+    return e->mem_obj->object_sz - e->mem_obj->reply->hdr_sz;
 }
