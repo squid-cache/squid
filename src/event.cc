@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.36 2003/02/21 22:50:08 robertc Exp $
+ * $Id: event.cc,v 1.37 2003/05/18 00:34:49 robertc Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -48,6 +48,7 @@ struct ev_entry
     struct ev_entry *next;
     int weight;
     int id;
+    bool cbdata;
 };
 
 static struct ev_entry *tasks = NULL;
@@ -56,18 +57,19 @@ static int run_id = 0;
 static const char *last_event_ran = NULL;
 
 void
-eventAdd(const char *name, EVH * func, void *arg, double when, int weight)
+eventAdd(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
 {
 
     struct ev_entry *event = (ev_entry *)memAllocate(MEM_EVENT);
 
     struct ev_entry **E;
     event->func = func;
-    event->arg = cbdataReference(arg);
+    event->arg = cbdata ? cbdataReference(arg) : arg;
     event->name = name;
     event->when = current_dtime + when;
     event->weight = weight;
     event->id = run_id;
+    event->cbdata = cbdata;
     debug(41, 7) ("eventAdd: Adding '%s', in %f seconds\n", name, when);
     /* Insert after the last event with the same or earlier time */
 
@@ -113,7 +115,8 @@ eventDelete(EVH * func, void *arg)
 
         *E = event->next;
 
-        cbdataReferenceDone(event->arg);
+        if (event->cbdata)
+            cbdataReferenceDone(event->arg);
 
         memFree(event, MEM_EVENT);
 
@@ -159,7 +162,7 @@ eventRun(void)
 
         event->func = NULL;
 
-        if (cbdataReferenceValidDone(event->arg, &cbdata)) {
+        if (!event->cbdata || cbdataReferenceValidDone(event->arg, &cbdata)) {
             weight += event->weight;
             /* XXX assumes ->name is static memory! */
             last_event_ran = event->name;
@@ -209,7 +212,7 @@ eventDump(StoreEntry * sentry)
     while (e != NULL) {
         storeAppendPrintf(sentry, "%s\t%f seconds\t%d\t%s\n",
                           e->name, e->when - current_dtime, e->weight,
-                  e->arg ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
+                  (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
         e = e->next;
     }
 }
@@ -222,7 +225,10 @@ eventFreeMemory(void)
 
     while ((event = tasks)) {
         tasks = event->next;
-        cbdataReferenceDone(event->arg);
+
+        if (event->cbdata)
+            cbdataReferenceDone(event->arg);
+
         memFree(event, MEM_EVENT);
     }
 
