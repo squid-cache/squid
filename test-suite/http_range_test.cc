@@ -1,6 +1,6 @@
 
 /*
- * $Id: http_range_test.cc,v 1.10 2003/08/14 22:27:39 robertc Exp $
+ * $Id: http_range_test.cc,v 1.11 2003/09/22 02:43:11 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -99,7 +99,8 @@ SQUIDCEXTERN HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHea
     return NULL;
 }
 
-int aclCheckFast(const acl_access *A, ACLChecklist *)
+int
+ACLChecklist::fastCheck()
 {
     fatal ("dummy function\n");
     return 0;
