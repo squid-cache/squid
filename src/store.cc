@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.85 1996/08/20 15:44:19 wessels Exp $
+ * $Id: store.cc,v 1.86 1996/08/21 20:09:52 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -503,7 +503,8 @@ int storeLockObject(e, handler, data)
 {
     int status = 0;
     e->lock_count++;
-    debug(20, 3, "storeLockObject: locks %d: '%s'\n", e->lock_count, e->key);
+    debug(20, 3, "storeLockObject: key '%s' count=%d\n",
+	e->key, (int) e->lock_count);
     if (e->mem_status != NOT_IN_MEMORY)
 	/* ok, its either IN_MEMORY or SWAPPING_IN */
 	debug(20, 5, "storeLockObject: OK: mem_status is %s\n", memStatusStr[e->mem_status]);
@@ -923,6 +924,8 @@ int storeUnregister(e, fd)
 	mem->pending[i] = NULL;
 	freed++;
     }
+    if (mem->fd_of_first_client == fd)
+	mem->fd_of_first_client = -1;
     debug(20, 9, "storeUnregister: returning %d\n", freed);
     return freed;
 }
