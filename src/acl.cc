@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.144 1998/02/26 18:00:35 wessels Exp $
+ * $Id: acl.cc,v 1.145 1998/03/04 22:07:54 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -304,15 +304,16 @@ aclParseMethodList(void *curlist)
     }
 }
 
-/* Decode a ascii representation (asc) of a IP adress, and place
+/*
+ * Decode a ascii representation (asc) of a IP adress, and place
  * adress and netmask information in addr and mask.
+ * This function should NOT be called if 'asc' is a hostname!
  */
 static int
 decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 {
     u_num32 a;
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0;
-    struct hostent *hp = NULL;
 
     switch (sscanf(asc, "%d.%d.%d.%d", &a1, &a2, &a3, &a4)) {
     case 4:			/* a dotted quad */
@@ -327,15 +328,8 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 	    break;
 	}
     default:
-	/* Note, must use plain gethostbyname() here because at startup
-	 * ipcache hasn't been initialized */
-	if ((hp = gethostbyname(asc)) != NULL) {
-	    *addr = inaddrFromHostent(hp);
-	} else {
-	    /* XXX: Here we could use getnetbyname */
-	    debug(28, 0) ("decode_addr: Invalid IP address or hostname '%s'\n", asc);
-	    return 0;		/* This is not valid address */
-	}
+	debug(28, 0) ("decode_addr: Invalid IP address '%s'\n", asc);
+	return 0;		/* This is not valid address */
 	break;
     }
 
@@ -370,6 +364,10 @@ aclParseIpData(const char *t)
     LOCAL_ARRAY(char, addr2, 256);
     LOCAL_ARRAY(char, mask, 256);
     acl_ip_data *q = xcalloc(1, sizeof(acl_ip_data));
+    acl_ip_data *r;
+    acl_ip_data **Q;
+    struct hostent *hp;
+    char **x;
     debug(28, 5) ("aclParseIpData: %s\n", t);
     if (!strcasecmp(t, "all")) {
 	q->addr1.s_addr = 0;
@@ -389,8 +387,26 @@ aclParseIpData(const char *t)
     } else if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
 	addr2[0] = '\0';
     } else if (sscanf(t, "%s", addr1) == 1) {
-	addr2[0] = '\0';
-	mask[0] = '\0';
+	/*
+	 * Note, must use plain gethostbyname() here because at startup
+	 * ipcache hasn't been initialized
+	 */
+	if ((hp = gethostbyname(addr1)) == NULL) {
+	    debug(28, 0) ("aclParseIpData: Bad host/IP: '%s'\n", t);
+	    safe_free(q);
+	    return NULL;
+	}
+	Q = &q;
+	for (x = hp->h_addr_list; x != NULL && *x != NULL; x++) {
+	    if ((r = *Q) == NULL)
+		*Q = r = xcalloc(1, sizeof(struct _acl_ip_data));
+	    xmemcpy(&r->addr1.s_addr, *x, sizeof(r->addr1.s_addr));
+	    r->addr2.s_addr = 0;
+	    r->mask.s_addr = 0;
+	    Q = &r->next;
+	    debug(28, 3) ("%s --> %s\n", addr1, inet_ntoa(r->addr1));
+	}
+	return q;
     } else {
 	debug(28, 0) ("aclParseIpData: Bad host/IP: '%s'\n", t);
 	safe_free(q);
@@ -438,9 +454,11 @@ aclParseIpList(void *curlist)
     splayNode **Top = curlist;
     acl_ip_data *q = NULL;
     while ((t = strtokFile())) {
-	if ((q = aclParseIpData(t)) == NULL)
-	    continue;
-	*Top = splay_insert(q, *Top, aclIpNetworkCompare);
+	q = aclParseIpData(t);
+	while (q != NULL) {
+	    *Top = splay_insert(q, *Top, aclIpNetworkCompare);
+	    q = q->next;
+	}
     }
 }
 
@@ -455,9 +473,11 @@ aclParseIpList(void **curtree)
     *curtree = Tree;
     tree_init(Tree);
     while ((t = strtokFile())) {
-	if ((q = aclParseIpData(t)) == NULL)
-	    continue;
-	tree_add(Tree, bintreeNetworkCompare, q, NULL);
+	q = aclParseIpData(t);
+	while (q != NULL) {
+	    tree_add(Tree, bintreeNetworkCompare, q, NULL);
+	    q = q->next;
+	}
     }
 }
 
@@ -470,10 +490,12 @@ aclParseIpList(void *curlist)
     acl_ip_data *q = NULL;
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-	if ((q = aclParseIpData(t)) == NULL)
-	    continue;
+	q = aclParseIpData(t);
 	*(Tail) = q;
-	Tail = &q->next;
+	while (q != NULL) {
+	    Tail = &q->next;
+	    q = q->next;
+	}
     }
 }
 
