@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.20 2002/10/13 20:34:59 robertc Exp $
+ * $Id: carp.cc,v 1.21 2002/11/10 04:22:03 hno Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -48,7 +48,8 @@ static OBJH carpCachemgr;
 static int
 peerSortWeight(const void *a, const void *b)
 {
-    const peer *const *p1 = a, *const *p2 = b;
+    const peer *const *p1 = (const peer *const *)a;
+    const peer *const *p2 = (const peer *const *)b;
     return (*p1)->weight - (*p2)->weight;
 }
 
@@ -80,7 +81,7 @@ carpInit(void)
     }
     if (n_carp_peers == 0)
 	return;
-    carp_peers = xcalloc(n_carp_peers, sizeof(*carp_peers));
+    carp_peers = (peer **)xcalloc(n_carp_peers, sizeof(*carp_peers));
     /* Build a list of the found peers and calculate hashes and load factors */
     for (P = carp_peers, p = Config.peers; p; p = p->next) {
 	if (!p->options.carp)
