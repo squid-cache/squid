@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.35 2003/09/29 10:24:02 robertc Exp $
+ * $Id: wccp.cc,v 1.36 2005/01/28 09:05:25 serassio Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -283,6 +283,18 @@ wccpHandleUdp(int sock, void *not_used)
     if (ntohl(wccp_i_see_you.type) != WCCP_I_SEE_YOU)
         return;
 
+    if (ntohl(wccp_i_see_you.number) > WCCP_ACTIVE_CACHES) {
+        debug(80, 1) ("Ignoring WCCP_I_SEE_YOU from %s with number of caches set to %d\n",
+                      inet_ntoa(from.sin_addr), (int) ntohl(wccp_i_see_you.number));
+        return;
+    }
+
+    if (ntohl(wccp_i_see_you.number) <= 0) {
+        debug(80, 1) ("Ignoring WCCP_I_SEE_YOU from %s with non-positive number of caches\n",
+                      inet_ntoa(from.sin_addr));
+        return;
+    }
+
     if ((0 == change) && (number_caches == (unsigned) ntohl(wccp_i_see_you.number))) {
         if (last_assign_buckets_change == wccp_i_see_you.change) {
             /*
@@ -315,7 +327,13 @@ wccpLowestIP(void)
 {
     unsigned int loop;
 
+    /*
+     * We sanity checked wccp_i_see_you.number back in wccpHandleUdp()
+     */
+
     for (loop = 0; loop < (unsigned) ntohl(wccp_i_see_you.number); loop++) {
+        assert(loop < WCCP_ACTIVE_CACHES);
+
         if (wccp_i_see_you.wccp_cache_entry[loop].ip_addr.s_addr < local_ip.s_addr)
             return 0;
     }
@@ -355,8 +373,8 @@ wccpAssignBuckets(void)
     debug(80, 6) ("wccpAssignBuckets: Called\n");
     number_caches = ntohl(wccp_i_see_you.number);
 
-    if (number_caches > WCCP_ACTIVE_CACHES)
-        number_caches = WCCP_ACTIVE_CACHES;
+    assert(number_caches > 0);
+    assert(number_caches <= WCCP_ACTIVE_CACHES);
 
     wab_len = sizeof(struct wccp_assign_bucket_t);
 
