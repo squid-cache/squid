@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.109 2000/10/17 08:06:04 adrian Exp $
+ * $Id: peer_select.cc,v 1.110 2001/01/01 23:09:59 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -205,24 +205,29 @@ peerSelectCallback(ps_state * psstate)
 static int
 peerCheckNetdbDirect(ps_state * psstate)
 {
-    peer *p = whichPeer(&psstate->closest_parent_miss);
+    peer *p;
     int myrtt;
     int myhops;
-    if (p == NULL)
-	return 0;
     if (psstate->direct == DIRECT_NO)
 	return 0;
     myrtt = netdbHostRtt(psstate->request->host);
     debug(44, 3) ("peerCheckNetdbDirect: MY RTT = %d msec\n", myrtt);
-    debug(44, 3) ("peerCheckNetdbDirect: closest_parent_miss RTT = %d msec\n",
-	psstate->ping.p_rtt);
-    if (myrtt && myrtt < psstate->ping.p_rtt)
+    debug(44, 3) ("peerCheckNetdbDirect: minimum_direct_rtt = %d msec\n",
+	Config.minDirectRtt);
+    if (myrtt && myrtt <= Config.minDirectRtt)
 	return 1;
     myhops = netdbHostHops(psstate->request->host);
     debug(44, 3) ("peerCheckNetdbDirect: MY hops = %d\n", myhops);
     debug(44, 3) ("peerCheckNetdbDirect: minimum_direct_hops = %d\n",
 	Config.minDirectHops);
     if (myhops && myhops <= Config.minDirectHops)
+	return 1;
+    p = whichPeer(&psstate->closest_parent_miss);
+    if (p == NULL)
+	return 0;
+    debug(44, 3) ("peerCheckNetdbDirect: closest_parent_miss RTT = %d msec\n",
+	psstate->ping.p_rtt);
+    if (myrtt && myrtt <= psstate->ping.p_rtt)
 	return 1;
     return 0;
 }
@@ -259,6 +264,8 @@ peerSelectFoo(ps_state * ps)
 	} else if (ps->never_direct > 0) {
 	    ps->direct = DIRECT_NO;
 	} else if (request->flags.loopdetect) {
+	    ps->direct = DIRECT_YES;
+	} else if (peerCheckNetdbDirect(ps)) {
 	    ps->direct = DIRECT_YES;
 	} else {
 	    ps->direct = DIRECT_MAYBE;

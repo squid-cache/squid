@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.202 2000/12/30 23:29:06 wessels Exp $
+# $Id: cf.data.pre,v 1.203 2001/01/01 23:09:59 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2269,6 +2269,14 @@ DOC_START
 	which are no more than this many hops away.
 DOC_END
 
+NAME: minimum_direct_rtt
+TYPE: int
+DEFAULT: 400
+LOC: Config.minDirectRtt
+DOC_START
+	If using the ICMP pinging stuff, do direct fetches for sites
+	which are no more than this many rtt milliseconds away.
+DOC_END
 
 NAME: cachemgr_passwd
 TYPE: cachemgrpasswd
