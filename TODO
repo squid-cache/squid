@@ -52,11 +52,9 @@ Our Todo List
 	  has  been started already.
 	- Statistics collected on Http* objects and memory management
 	  routines will be enhanced.
-	- A lot of current oddities with freshly added code should go
-	  away as we debug and polish things. For example, MemPool object
-	  will be merged with mem.c module. Duplicate Stack objects will
-	  be merged into one. Comments discussing current code problems
-	  will be deleted; hopefully, along with the problems.
+	- A lot of current oddities with freshly added code should go away as
+	  we debug and polish things. Comments discussing current code
+	  problems will be deleted; hopefully, along with the problems.
 
 (4) **	FTP PUT (KA)
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
