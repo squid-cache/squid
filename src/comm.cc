@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.133 1997/02/07 04:53:14 wessels Exp $
+ * $Id: comm.cc,v 1.134 1997/02/07 04:55:56 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1137,10 +1137,8 @@ int
 comm_set_mcast_ttl(int fd, int mcast_ttl)
 {
 #ifdef IP_MULTICAST_TTL
-    debug(5, 10, "comm_set_mcast_ttl: setting multicast TTL %d on FD %d\n",
-	mcast_ttl, fd);
-    if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL,
-	    (char *) &mcast_ttl, sizeof(mcast_ttl)) < 0)
+    char ttl = (char) mcast_ttl;
+    if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, 1) < 0)
 	     debug(50, 1, "comm_set_mcast_ttl: FD %d, TTL: %d: %s\n",
 	    fd, mcast_ttl, xstrerror());
 #endif
