@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.362 2000/12/05 06:24:00 wessels Exp $
+ * $Id: structs.h,v 1.363 2000/12/05 09:16:00 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -846,7 +846,7 @@ struct _AccessLogEntry {
 	method_t method;
 	int code;
 	const char *content_type;
-        http_version_t version;
+	http_version_t version;
     } http;
     struct {
 	icp_opcode opcode;
@@ -1850,7 +1850,7 @@ struct _store_rebuild_data {
     int invalid;		/* # bad lines */
     int badflags;		/* # bad e->flags */
     int missingcount;		/* # swapfiles not on disk */
-    int filesizemismatchcount;  /* # swapfiles with a wrong size */
+    int filesizemismatchcount;	/* # swapfiles with a wrong size */
     int bad_log_op;
     int zero_object_sz;
 };

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.387 2000/11/13 12:25:12 adrian Exp $
+ * $Id: protos.h,v 1.388 2000/12/05 09:15:59 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -284,7 +284,7 @@ extern void httpAnonInitModule(void);
 extern int httpAnonHdrAllowed(http_hdr_type hdr_id);
 extern int httpAnonHdrDenied(http_hdr_type hdr_id);
 extern void httpBuildRequestHeader(request_t *, request_t *, StoreEntry *, HttpHeader *, int, http_state_flags);
-extern void httpBuildVersion(http_version_t *version,unsigned int major,unsigned int minor);
+extern void httpBuildVersion(http_version_t * version, unsigned int major, unsigned int minor);
 
 /* ETag */
 extern int etagParseInit(ETag * etag, const char *str);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.8 2000/11/13 12:25:11 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.9 2000/12/05 09:15:57 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -91,7 +91,7 @@ httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const ch
 int
 httpMsgIsPersistent(http_version_t http_ver, const HttpHeader * hdr)
 {
-    if ((http_ver.major>=1) && (http_ver.minor >= 1)) {
+    if ((http_ver.major >= 1) && (http_ver.minor >= 1)) {
 	/*
 	 * for modern versions of HTTP: persistent unless there is
 	 * a "Connection: close" header.

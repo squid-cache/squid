@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.43 2000/11/13 12:25:11 adrian Exp $
+ * $Id: HttpReply.cc,v 1.44 2000/12/05 09:15:57 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -261,7 +261,7 @@ httpRedirectReply(HttpReply * reply, http_status status, const char *loc)
     HttpHeader *hdr;
     http_version_t ver;
     assert(reply);
-    httpBuildVersion(&ver,1,0);
+    httpBuildVersion(&ver, 1, 0);
     httpStatusLineSet(&reply->sline, ver, status, httpStatusString(status));
     hdr = &reply->header;
     httpHeaderPutStr(hdr, HDR_SERVER, full_appname_string);

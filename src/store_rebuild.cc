@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.72 2000/11/10 09:04:51 adrian Exp $
+ * $Id: store_rebuild.cc,v 1.73 2000/12/05 09:16:00 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -74,7 +74,7 @@ storeCleanup(void *datanotused)
 	    store_dirs_rebuilding--;
 	    assert(0 == store_dirs_rebuilding);
 	    if (opt_store_doublecheck != DBLCHECK_NONE)
-            /* we want to assert here because the storeFScode should auto-clean the entries */
+		/* we want to assert here because the storeFScode should auto-clean the entries */
 		assert(store_errors == 0);
 	    if (store_digest)
 		storeDigestNoteStoreReady();
@@ -93,10 +93,10 @@ storeCleanup(void *datanotused)
 	    if (e->swap_filen < 0)
 		continue;
 	    if (opt_store_doublecheck != DBLCHECK_NONE)
-		if (storeCleanupDoubleCheck(e)){
-                    /* this should never happen as the storeFScode should auto-clean */
+		if (storeCleanupDoubleCheck(e)) {
+		    /* this should never happen as the storeFScode should auto-clean */
 		    store_errors++;
-                }    
+		}
 	    EBIT_SET(e->flags, ENTRY_VALIDATED);
 	    /*
 	     * Only set the file bit if we know its a valid entry
@@ -146,8 +146,8 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
     debug(20, 1) ("  %7d Swapfile clashes avoided.\n", counts.clashcount);
     debug(20, 1) ("  %7d Missing files ignored.\n", counts.missingcount);
     debug(20, 1) ("  %7d Incorrect length swapfiles %s.\n",
-      counts.filesizemismatchcount,
-      (opt_store_doublecheck == DBLCHECK_REPORTONLY) ? "ignored" : "unlinked");
+	counts.filesizemismatchcount,
+	(opt_store_doublecheck == DBLCHECK_REPORTONLY) ? "ignored" : "unlinked");
     debug(20, 1) ("  Took %3.1f seconds (%6.1f objects/sec).\n", dt,
 	(double) counts.objcount / (dt > 0.0 ? dt : 1.0));
     debug(20, 1) ("Beginning Validation Procedure\n");
