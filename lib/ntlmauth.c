@@ -1,5 +1,5 @@
 /*
- * $Id: ntlmauth.c,v 1.4 2001/10/15 09:57:36 hno Exp $
+ * $Id: ntlmauth.c,v 1.5 2001/10/17 12:41:48 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -58,6 +58,7 @@ ntlm_dump_ntlmssp_flags(u_int32_t flags)
 	(flags & REQUEST_NON_NT_SESSION_KEY ? "Req_nonnt_sesskey " : "")
 	);
 }
+
 #endif
 
 #define lstring_zero(s) s.str=NULL; s.l=-1;

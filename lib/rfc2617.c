@@ -13,7 +13,7 @@
 
 
 /*
- * $Id: rfc2617.c,v 1.3 2001/04/14 00:03:20 hno Exp $
+ * $Id: rfc2617.c,v 1.4 2001/10/17 12:41:48 hno Exp $
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
@@ -51,7 +51,7 @@
 #include "rfc2617.h"
 #include "md5.h"
 
-void 
+void
 CvtHex(const HASH Bin, HASHHEX Hex)
 {
     unsigned short i;
@@ -72,7 +72,7 @@ CvtHex(const HASH Bin, HASHHEX Hex)
     Hex[HASHHEXLEN] = '\0';
 };
 
-void 
+void
 CvtBin(const HASHHEX Hex, HASH Bin)
 {
     unsigned short i;
@@ -90,7 +90,7 @@ CvtBin(const HASHHEX Hex, HASH Bin)
 
 
 /* calculate H(A1) as per spec */
-void 
+void
 DigestCalcHA1(
     const char *pszAlg,
     const char *pszUserName,
@@ -126,7 +126,7 @@ DigestCalcHA1(
 };
 
 /* calculate request-digest/response-digest as per HTTP Digest spec */
-void 
+void
 DigestCalcResponse(
     const HASHHEX HA1,		/* H(A1) */
     const char *pszNonce,	/* nonce from server */

@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.11 2001/09/03 10:33:03 robertc Exp $
+ * $Id: auth_basic.cc,v 1.12 2001/10/17 12:41:50 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -176,7 +176,7 @@ authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, reque
 
     assert(auth_user->scheme_data != NULL);
     basic_auth = auth_user->scheme_data;
-    
+
     /* if the password is not ok, do an identity */
     if (basic_auth->flags.credentials_ok != 1)
 	return;

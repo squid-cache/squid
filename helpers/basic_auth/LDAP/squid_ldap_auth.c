@@ -70,19 +70,19 @@ static int checkLDAP(LDAP * ld, char *userid, char *password);
 /* Yuck.. we need to glue to different versions of the API */
 
 #if defined(LDAP_API_VERSION) && LDAP_API_VERSION > 1823
-static int 
+static int
 squid_ldap_errno(LDAP * ld)
 {
     int err = 0;
     ldap_get_option(ld, LDAP_OPT_ERROR_NUMBER, &err);
     return err;
 }
-static void 
+static void
 squid_ldap_set_aliasderef(LDAP * ld, int deref)
 {
     ldap_set_option(ld, LDAP_OPT_DEREF, &deref);
 }
-static void 
+static void
 squid_ldap_set_referrals(LDAP * ld, int referrals)
 {
     int *value = referrals ? LDAP_OPT_ON : LDAP_OPT_OFF;
@@ -90,17 +90,17 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
 }
 
 #else
-static int 
+static int
 squid_ldap_errno(LDAP * ld)
 {
     return ld->ld_errno;
 }
-static void 
+static void
 squid_ldap_set_aliasderef(LDAP * ld, int deref)
 {
     ld->ld_deref = deref;
 }
-static void 
+static void
 squid_ldap_set_referrals(LDAP * ld, int referrals)
 {
     if (referrals)
@@ -244,7 +244,6 @@ main(int argc, char **argv)
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd options\n\n");
 	exit(1);
     }
-
     while (fgets(buf, 256, stdin) != NULL) {
 	user = strtok(buf, " \r\n");
 	passwd = strtok(NULL, "\r\n");

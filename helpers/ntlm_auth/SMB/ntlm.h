@@ -97,7 +97,7 @@ typedef struct _dc dc;
 struct _dc {
     char *domain;
     char *controller;
-    time_t dead; /* 0 if it's alive, otherwise time of death */
+    time_t dead;		/* 0 if it's alive, otherwise time of death */
     dc *next;
 };
 

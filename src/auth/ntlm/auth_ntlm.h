@@ -23,7 +23,7 @@ struct _ntlm_user {
 
 struct _ntlm_request {
     struct {
-        unsigned int credentials_ok:2;  /*0=unchecked,1=ok,2=failed */
+	unsigned int credentials_ok:2;	/*0=unchecked,1=ok,2=failed */
     } flags;
     /* what negotiate string did the client use? */
     char *ntlmnegotiate;
@@ -38,7 +38,7 @@ struct _ntlm_request {
     /* have we got the helper-server in a deferred state? */
     int authserver_deferred;
     /* what connection is this associated with */
-    ConnStateData * conn;
+    ConnStateData *conn;
 };
 
 struct _ntlm_helper_state_t {
