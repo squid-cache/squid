@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.18 2000/03/06 16:23:32 wessels Exp $
+ * $Id: internal.cc,v 1.19 2000/11/13 12:25:12 adrian Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -44,6 +44,7 @@ internalStart(request_t * request, StoreEntry * entry)
 {
     ErrorState *err;
     const char *upath = strBuf(request->urlpath);
+    http_version_t version;
     debug(76, 3) ("internalStart: %s requesting '%s'\n",
 	inet_ntoa(request->client_addr), upath);
     if (0 == strcmp(upath, "/squid-internal-dynamic/netdb")) {
@@ -54,8 +55,9 @@ internalStart(request_t * request, StoreEntry * entry)
 #else
 	const char *msgbuf = "This cache does not suport Cache Digests.\n";
 #endif
+        httpBuildVersion(&version,1,0);
 	httpReplySetHeaders(entry->mem_obj->reply,
-	    1.0,
+	    version,
 	    HTTP_NOT_FOUND,
 	    "Not Found",
 	    "text/plain",

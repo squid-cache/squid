@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.511 2000/11/09 20:20:52 wessels Exp $
+ * $Id: client_side.cc,v 1.512 2000/11/13 12:25:11 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -575,6 +575,7 @@ clientPurgeRequest(clientHttpRequest * http)
     ErrorState *err = NULL;
     HttpReply *r;
     http_status status;
+    http_version_t version;
     debug(33, 3) ("Config2.onoff.enable_purge = %d\n", Config2.onoff.enable_purge);
     if (!Config2.onoff.enable_purge) {
 	http->log_type = LOG_TCP_DENIED;
@@ -602,7 +603,8 @@ clientPurgeRequest(clientHttpRequest * http)
      */
     http->entry = clientCreateStoreEntry(http, http->request->method, null_request_flags);
     httpReplyReset(r = http->entry->mem_obj->reply);
-    httpReplySetHeaders(r, 1.0, status, NULL, NULL, 0, 0, -1);
+    httpBuildVersion(&version,1,0);
+    httpReplySetHeaders(r, version, status, NULL, NULL, 0, 0, -1);
     httpReplySwapOut(r, http->entry);
     storeComplete(http->entry);
 }
@@ -917,8 +919,8 @@ clientSetKeepaliveFlag(clientHttpRequest * http)
 {
     request_t *request = http->request;
     const HttpHeader *req_hdr = &request->header;
-    debug(33, 3) ("clientSetKeepaliveFlag: http_ver = %3.1f\n",
-	request->http_ver);
+    debug(33, 3) ("clientSetKeepaliveFlag: http_ver = %d.%d\n",
+	request->http_ver.major, request->http_ver.minor);
     debug(33, 3) ("clientSetKeepaliveFlag: method = %s\n",
 	RequestMethodStr[request->method]);
     if (!Config.onoff.client_pconns)
@@ -1277,7 +1279,7 @@ clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
     size_t k = headersEnd(buf, size);
     if (k && httpReplyParse(rep, buf, k)) {
 	/* enforce 1.0 reply version */
-	rep->sline.version = 1.0;
+	httpBuildVersion(&rep->sline.version,1,0);
 	/* do header conversions */
 	clientBuildReplyHeader(http, rep);
 	/* if we do ranges, change status to "Partial Content" */
@@ -2075,6 +2077,7 @@ clientProcessRequest(clientHttpRequest * http)
     request_t *r = http->request;
     int fd = http->conn->fd;
     HttpReply *rep;
+    http_version_t version;
     debug(33, 4) ("clientProcessRequest: %s '%s'\n",
 	RequestMethodStr[r->method],
 	url);
@@ -2091,7 +2094,8 @@ clientProcessRequest(clientHttpRequest * http)
 	    storeReleaseRequest(http->entry);
 	    storeBuffer(http->entry);
 	    rep = httpReplyCreate();
-	    httpReplySetHeaders(rep, 1.0, HTTP_OK, NULL, "text/plain",
+            httpBuildVersion(&version,1,0);
+	    httpReplySetHeaders(rep, version, HTTP_OK, NULL, "text/plain",
 		httpRequestPrefixLen(r), 0, squid_curtime);
 	    httpReplySwapOut(rep, http->entry);
 	    httpReplyDestroy(rep);
@@ -2227,7 +2231,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     char *mstr = NULL;
     char *url = NULL;
     char *req_hdr = NULL;
-    float http_ver;
+    http_version_t http_ver;
     char *token = NULL;
     char *t = NULL;
     char *end;
@@ -2304,12 +2308,16 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if (token == NULL) {
 	debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
 #if RELAXED_HTTP_PARSER
-	http_ver = (float) 0.9;	/* wild guess */
+	httpBuildVersion(&http_ver,0,9);	/* wild guess */
 #else
 	return parseHttpRequestAbort(conn, "error:missing-http-ident");
 #endif
     } else {
-	http_ver = (float) atof(token + 5);
+        if (sscanf(token+5, "%d.%d", &http_ver.major, &http_ver.minor)!=2){
+            debug(33, 3) ("parseHttpRequest: Invalid HTTP identifier.\n");
+            return parseHttpRequestAbort(conn, "error: invalid HTTP-ident");
+        }
+        debug(33, 6) ("parseHttpRequest: Client HTTP version %d.%d.\n",http_ver.major, http_ver.minor);
     }
 
     /*

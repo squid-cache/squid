@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.110 2000/10/17 08:06:05 adrian Exp $
+ * $Id: typedefs.h,v 1.111 2000/11/13 12:25:13 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -176,6 +176,8 @@ typedef struct _RemovalPolicyWalker RemovalPolicyWalker;
 typedef struct _RemovalPurgeWalker RemovalPurgeWalker;
 typedef struct _RemovalPolicyNode RemovalPolicyNode;
 typedef struct _RemovalPolicySettings RemovalPolicySettings;
+
+typedef struct _http_version_t http_version_t;
 
 #if SQUID_SNMP
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);

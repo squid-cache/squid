@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.19 2000/03/06 16:23:28 wessels Exp $
+ * $Id: HttpStatusLine.cc,v 1.20 2000/11/13 12:25:11 adrian Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -37,23 +37,27 @@
 
 
 /* local constants */
-const char *HttpStatusLineFormat = "HTTP/%3.1f %3d %s\r\n";
+const char *HttpStatusLineFormat = "HTTP/%d.%d %3d %s\r\n";
 
 void
 httpStatusLineInit(HttpStatusLine * sline)
 {
-    httpStatusLineSet(sline, 0.0, HTTP_STATUS_NONE, NULL);
+    http_version_t version;
+    httpBuildVersion(&version,0,0);
+    httpStatusLineSet(sline, version , HTTP_STATUS_NONE, NULL);
 }
 
 void
 httpStatusLineClean(HttpStatusLine * sline)
 {
-    httpStatusLineSet(sline, 0.0, HTTP_INTERNAL_SERVER_ERROR, NULL);
+    http_version_t version;
+    httpBuildVersion(&version,0,0);
+    httpStatusLineSet(sline, version, HTTP_INTERNAL_SERVER_ERROR, NULL);
 }
 
 /* set values */
 void
-httpStatusLineSet(HttpStatusLine * sline, double version, http_status status, const char *reason)
+httpStatusLineSet(HttpStatusLine * sline, http_version_t version, http_status status, const char *reason)
 {
     assert(sline);
     sline->version = version;
@@ -68,10 +72,11 @@ httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
 {
     assert(sline && p);
     debug(57, 9) ("packing sline %p using %p:\n", sline, p);
-    debug(57, 9) (HttpStatusLineFormat, sline->version, sline->status,
+    debug(57, 9) (HttpStatusLineFormat, sline->version.major, 
+        sline->version.minor, sline->status,
 	sline->reason ? sline->reason : httpStatusString(sline->status));
-    packerPrintf(p, HttpStatusLineFormat,
-	sline->version, sline->status, httpStatusLineReason(sline));
+    packerPrintf(p, HttpStatusLineFormat, sline->version.major, 
+         sline->version.minor, sline->status, httpStatusLineReason(sline));
 }
 
 /* pack fields using Packer */
@@ -85,7 +90,9 @@ httpStatusLineParse(HttpStatusLine * sline, const char *start, const char *end)
     start += 5;
     if (!xisdigit(*start))
 	return 0;
-    sline->version = atof(start);
+    if (sscanf(start, "%d.%d", &sline->version.major, &sline->version.minor)!=2){
+        debug(57, 7) ("httpStatusLineParse: Invalid HTTP identifier.\n");
+    }
     if (!(start = strchr(start, ' ')))
 	return 0;
     sline->status = atoi(++start);
