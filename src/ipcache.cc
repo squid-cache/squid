@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.132 1997/10/17 22:09:04 wessels Exp $
+ * $Id: ipcache.cc,v 1.133 1997/10/21 15:59:38 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1038,7 +1038,8 @@ ipcacheCycleAddr(const char *name)
 	return;
     if (i->status != IP_CACHED)
 	return;
-    if (++i->addrs.cur == i->addrs.count)
+    i->addrs.cur++;
+    if (i->addrs.cur == i->addrs.count)
 	i->addrs.cur = 0;
 }
 
