@@ -139,13 +139,15 @@ netdbHandlePingReply(struct sockaddr_in *from, int hops, int rtt)
 static struct in_addr
 networkFromInaddr(struct in_addr a)
 {
-    struct in_addr b = a;
+    struct in_addr b;
+    b.s_addr = ntohl(a.s_addr);
     if (IN_CLASSC(b.s_addr))
-	b.s_addr &= htonl(IN_CLASSC_NET);
+	b.s_addr &= IN_CLASSC_NET;
     else if (IN_CLASSB(b.s_addr))
-	b.s_addr &= htonl(IN_CLASSB_NET);
+	b.s_addr &= IN_CLASSB_NET;
     else if (IN_CLASSA(b.s_addr))
-	b.s_addr &= htonl(IN_CLASSA_NET);
+	b.s_addr &= IN_CLASSA_NET;
+    b.s_addr = htonl(b.s_addr);
     return b;
 }
 
