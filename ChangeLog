@@ -1,5 +1,8 @@
 
 Changes to squid-2.5
+	- Optimized searching in proxy_auth and ident ACL types. Should
+	  now handle large access lists a lot more efficient.
+	  (Francesco Chemolli)
 	- Fixed forwarding/peer loop detection code (Brian Degenhardt) -
 	  now a peer is ignored if it turns out to be us, rather than
 	  committing suicide
