@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.252 1998/09/19 20:01:06 wessels Exp $
+ * $Id: neighbors.cc,v 1.253 1998/09/24 20:29:14 rousskov Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -503,6 +503,7 @@ peerDigestLookup(peer * p, request_t * request, StoreEntry * entry)
 	debug(15, 5) ("peerDigestLookup: !initialized\n");
 	if (!p->digest.flags.init_pending) {
 	    p->digest.flags.init_pending = 1;
+	    cbdataLock(p);
 	    eventAdd("peerDigestInit", peerDigestInit, p, 0.0, 1);
 	}
 	return LOOKUP_NONE;
