@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.136 1996/12/13 22:10:30 wessels Exp $
+ * $Id: http.cc,v 1.137 1996/12/15 23:35:21 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -137,12 +137,26 @@ enum {
     CCC_ENUM_END
 };
 
-enum {
-    HDR_IMS,
+typedef enum {
+    HDR_ACCEPT,
+    HDR_AGE,
+    HDR_CONTENT_LENGTH,
+    HDR_CONTENT_MD5,
+    HDR_CONTENT_TYPE,
+    HDR_DATE,
+    HDR_ETAG,
+    HDR_EXPIRES,
     HDR_HOST,
-    HDR_MAXAGE,
-    HDR_SET_COOKIE
-};
+    HDR_IMS,
+    HDR_LAST_MODIFIED,
+    HDR_MAX_FORWARDS,
+    HDR_PUBLIC,
+    HDR_RETRY_AFTER,
+    HDR_SET_COOKIE,
+    HDR_UPGRADE,
+    HDR_WARNING,
+    HDR_MISC_END
+} http_hdr_misc_t;
 
 char *HttpServerCCStr[] =
 {
@@ -157,13 +171,31 @@ char *HttpServerCCStr[] =
     "NONE"
 };
 
+static char *HttpHdrMiscStr[] =
+{
+    "Accept",
+    "Age",
+    "Content-Length",
+    "Content-MD5",
+    "Content-Type",
+    "Date",
+    "Etag",
+    "Expires",
+    "Host",
+    "If-Modified-Since",
+    "Last-Modified",
+    "Max-Forwards",
+    "Public",
+    "Retry-After",
+    "Set-Cookie",
+    "Upgrade",
+    "Warning",
+    "NONE"
+};
+
 static struct {
     int parsed;
-    int date;
-    int lm;
-    int exp;
-    int clen;
-    int ctype;
+    int misc[HDR_MISC_END];
     int cc[SCC_ENUM_END];
 } ReplyHeaderStats;
 
@@ -293,15 +325,15 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	    if ((l = strcspn(t, ";\t ")) > 0)
 		*(t + l) = '\0';
 	    xstrncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ);
-	    ReplyHeaderStats.ctype++;
+	    ReplyHeaderStats.misc[HDR_CONTENT_TYPE]++;
 	} else if (!strncasecmp(t, "Content-length:", 15)) {
 	    for (t += 15; isspace(*t); t++);
 	    reply->content_length = atoi(t);
-	    ReplyHeaderStats.clen++;
+	    ReplyHeaderStats.misc[HDR_CONTENT_LENGTH]++;
 	} else if (!strncasecmp(t, "Date:", 5)) {
 	    for (t += 5; isspace(*t); t++);
 	    reply->date = parse_rfc1123(t);
-	    ReplyHeaderStats.date++;
+	    ReplyHeaderStats.misc[HDR_DATE]++;
 	} else if (!strncasecmp(t, "Expires:", 8)) {
 	    for (t += 8; isspace(*t); t++);
 	    reply->expires = parse_rfc1123(t);
@@ -312,11 +344,29 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	     */
 	    if (reply->expires == -1)
 		reply->expires = squid_curtime;
-	    ReplyHeaderStats.exp++;
+	    ReplyHeaderStats.misc[HDR_EXPIRES]++;
 	} else if (!strncasecmp(t, "Last-Modified:", 14)) {
 	    for (t += 14; isspace(*t); t++);
 	    reply->last_modified = parse_rfc1123(t);
-	    ReplyHeaderStats.lm++;
+	    ReplyHeaderStats.misc[HDR_LAST_MODIFIED]++;
+	} else if (!strncasecmp(t, "Accept:", 7)) {
+	    ReplyHeaderStats.misc[HDR_ACCEPT]++;
+	} else if (!strncasecmp(t, "Age:", 4)) {
+	    ReplyHeaderStats.misc[HDR_AGE]++;
+	} else if (!strncasecmp(t, "Content-MD5:", 12)) {
+	    ReplyHeaderStats.misc[HDR_CONTENT_MD5]++;
+	} else if (!strncasecmp(t, "ETag:", 5)) {
+	    ReplyHeaderStats.misc[HDR_ETAG]++;
+	} else if (!strncasecmp(t, "Max-Forwards:", 13)) {
+	    ReplyHeaderStats.misc[HDR_MAX_FORWARDS]++;
+	} else if (!strncasecmp(t, "Public:", 7)) {
+	    ReplyHeaderStats.misc[HDR_PUBLIC]++;
+	} else if (!strncasecmp(t, "Retry-After:", 12)) {
+	    ReplyHeaderStats.misc[HDR_RETRY_AFTER]++;
+	} else if (!strncasecmp(t, "Upgrade:", 8)) {
+	    ReplyHeaderStats.misc[HDR_UPGRADE]++;
+	} else if (!strncasecmp(t, "Warning:", 8)) {
+	    ReplyHeaderStats.misc[HDR_WARNING]++;
 	} else if (!strncasecmp(t, "Cache-Control:", 14)) {
 	    for (t += 14; isspace(*t); t++);
 	    if (!strncasecmp(t, "public", 6)) {
@@ -660,6 +710,7 @@ httpBuildRequestHeader(request_t * request,
     size_t in_sz;
     size_t l;
     int hdr_flags = 0;
+    int cc_flags = 0;
     const char *url = NULL;
 
     debug(11, 3, "httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
@@ -693,7 +744,7 @@ httpBuildRequestHeader(request_t * request,
 	} else if (strncasecmp(xbuf, "Cache-Control:", 14) == 0) {
 	    for (s = xbuf + 14; *s && isspace(*s); s++);
 	    if (strncasecmp(s, "Max-age=", 8) == 0)
-		EBIT_SET(hdr_flags, HDR_MAXAGE);
+		EBIT_SET(cc_flags, CCC_MAXAGE);
 	} else if (strncasecmp(xbuf, "Via:", 4) == 0) {
 	    for (s = xbuf + 4; *s && isspace(*s); s++);
 	    if (strlen(viabuf) + strlen(s) < 4000)
@@ -724,7 +775,7 @@ httpBuildRequestHeader(request_t * request,
 	sprintf(ybuf, "Host: %s", orig_request->host);
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
     }
-    if (!EBIT_TEST(hdr_flags, HDR_MAXAGE)) {
+    if (!EBIT_TEST(cc_flags, CCC_MAXAGE)) {
 	url = entry ? entry->url : urlCanonical(orig_request, NULL);
 	sprintf(ybuf, "Cache-control: Max-age=%d", (int) getMaxAge(url));
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
@@ -949,20 +1000,15 @@ void
 httpReplyHeaderStats(StoreEntry * entry)
 {
     http_server_cc_t i;
+    http_hdr_misc_t j;
     storeAppendPrintf(entry, open_bracket);
     storeAppendPrintf(entry, "{HTTP Reply Headers:}\n");
     storeAppendPrintf(entry, "{       Headers parsed: %d}\n",
 	ReplyHeaderStats.parsed);
-    storeAppendPrintf(entry, "{                 Date: %d}\n",
-	ReplyHeaderStats.date);
-    storeAppendPrintf(entry, "{        Last-Modified: %d}\n",
-	ReplyHeaderStats.lm);
-    storeAppendPrintf(entry, "{              Expires: %d}\n",
-	ReplyHeaderStats.exp);
-    storeAppendPrintf(entry, "{         Content-Type: %d}\n",
-	ReplyHeaderStats.ctype);
-    storeAppendPrintf(entry, "{       Content-Length: %d}\n",
-	ReplyHeaderStats.clen);
+    for (j = HDR_AGE; j < HDR_MISC_END; j++)
+	storeAppendPrintf(entry, "{%21.21s: %d}\n",
+	    HttpHdrMiscStr[j],
+	    ReplyHeaderStats.misc[j]);
     for (i = SCC_PUBLIC; i < SCC_ENUM_END; i++)
 	storeAppendPrintf(entry, "{Cache-Control %7.7s: %d}\n",
 	    HttpServerCCStr[i],
