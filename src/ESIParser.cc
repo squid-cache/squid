@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIParser.cc,v 1.4 2004/12/20 16:30:32 robertc Exp $
+ * $Id: ESIParser.cc,v 1.5 2005/03/19 19:56:15 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -35,9 +35,9 @@
 
 #include "squid.h"
 #include "ESIParser.h"
+#include "ESILibxml2Parser.h"
 #include "ESIExpatParser.h"
 #include "ESICustomParser.h"
-#include "ESILibxml2Parser.h"
 
 char *ESIParser::Type = NULL;
 
