@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.14 2002/05/07 00:10:49 hno Exp $
+# $Id: Makefile.in,v 1.15 2002/05/20 01:18:11 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -472,7 +472,7 @@ dist-hook:
 	    || exit 1; \
 	    cp -p $(srcdir)/$$subdir/*.h  $(distdir)/$$subdir \
 	      || exit 1; \
-	    rm $(distdir)/$$subdir/autoconf.h; \
+	    rm -f $(distdir)/$$subdir/autoconf.h; \
 	  fi; \
 	done
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
