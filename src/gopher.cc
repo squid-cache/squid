@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.142 1999/01/08 21:12:13 wessels Exp $
+ * $Id: gopher.cc,v 1.143 1999/01/12 15:47:52 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -599,6 +599,10 @@ gopherReadReply(int fd, void *data)
 #if DELAY_POOLS
     delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
 #endif
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        comm_close(fd);
+        return;
+    }
     errno = 0;
     buf = memAllocate(MEM_4K_BUF);
     read_sz = 4096 - 1;		/* leave room for termination */
