@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.45 1996/04/12 04:53:50 wessels Exp $ */
-#ident "$Id: store.cc,v 1.45 1996/04/12 04:53:50 wessels Exp $"
+/* $Id: store.cc,v 1.46 1996/04/12 05:15:30 wessels Exp $ */
+#ident "$Id: store.cc,v 1.46 1996/04/12 05:15:30 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -2629,6 +2629,20 @@ int swapInError(fd_unused, entry)
 {
     cached_error_entry(entry, ERR_DISK_IO, xstrerror());
     return 0;
+}
+
+int storePendingFirstFD(e)
+    StoreEntry *e;
+{
+        int s;
+        int i;
+	if (!e->mem_obj)
+		return -1;
+	s = (int) e->mem_obj->pending_list_size;
+	for (i=0; i<s; i++)
+		if (e->mem_obj->pending[i])
+			return e->mem_obj->pending[i]->fd;
+	return -1;
 }
 
 int storePendingNClients(e)
