@@ -6,6 +6,8 @@
 	  Nordstrom).
 	- Fixed peerDigestFetchFinish() assertion caused by forwarding
 	  failures (e.g. miss_access rules).
+	- Changed signal handlers with ASYNC_IO and Linux so that
+	  -k command line options work (Miquel van Smoorenburg).
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
