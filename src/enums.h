@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.153 1999/05/22 07:42:03 wessels Exp $
+ * $Id: enums.h,v 1.154 1999/05/26 20:41:19 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -628,6 +628,6 @@ enum {
 
 typedef enum {
     SWAPDIR_UFS,
-    SWAPDIR_UFS_ASYNC,
+    SWAPDIR_ASYNCUFS,
     SWAPDIR_MAX
 } swapdir_t;
