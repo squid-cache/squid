@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.221 2001/11/28 03:02:42 robertc Exp $
+#  $Id: Makefile.in,v 1.222 2001/11/29 11:16:58 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -112,7 +112,6 @@ SH = @SH@
 SNMPLIB = @SNMPLIB@
 SQUID_AIO_LIB = @SQUID_AIO_LIB@
 SQUID_PTHREAD_LIB = @SQUID_PTHREAD_LIB@
-SSLINC = @SSLINC@
 SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
 STORE_MODULES = @STORE_MODULES@
@@ -438,17 +437,17 @@ pinger_DEPENDENCIES =
 pinger_LDFLAGS =
 @USE_DELAY_POOLS_FALSE@am__objects_3 =
 @USE_DELAY_POOLS_TRUE@am__objects_3 = delay_pools.$(OBJEXT)
-@USE_DNSSERVER_TRUE@am__objects_4 = dns.$(OBJEXT)
 @USE_DNSSERVER_FALSE@am__objects_4 = dns_internal.$(OBJEXT)
+@USE_DNSSERVER_TRUE@am__objects_4 = dns.$(OBJEXT)
 @ENABLE_HTCP_TRUE@am__objects_5 = htcp.$(OBJEXT)
-@MAKE_LEAKFINDER_FALSE@am__objects_6 =
 @MAKE_LEAKFINDER_TRUE@am__objects_6 = leakfinder.$(OBJEXT)
+@MAKE_LEAKFINDER_FALSE@am__objects_6 =
 @USE_SNMP_TRUE@am__objects_7 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
 @USE_SNMP_FALSE@am__objects_7 =
-@ENABLE_SSL_TRUE@am__objects_8 = ssl_support.$(OBJEXT)
 @ENABLE_SSL_FALSE@am__objects_8 =
-@ENABLE_UNLINKD_FALSE@am__objects_9 =
+@ENABLE_SSL_TRUE@am__objects_8 = ssl_support.$(OBJEXT)
 @ENABLE_UNLINKD_TRUE@am__objects_9 = unlinkd.$(OBJEXT)
+@ENABLE_UNLINKD_FALSE@am__objects_9 =
 @ENABLE_WIN32SPECIFIC_FALSE@am__objects_10 =
 @ENABLE_WIN32SPECIFIC_TRUE@am__objects_10 = win32.$(OBJEXT)
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \

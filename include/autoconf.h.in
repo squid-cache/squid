@@ -1,4 +1,4 @@
-/* include/autoconf.h.in.  Generated automatically from configure.in by autoheader 2.13.  */
+/* include/autoconf.h.in.  Generated automatically from configure.in by autoheader.  */
 /* 
  * All configurable options are enabled by using --enable-....
  * when running configure. See configure --help for a list
