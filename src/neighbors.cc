@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.21 1996/04/16 05:05:26 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.22 1996/04/16 18:29:40 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -599,7 +599,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	    debug(15, 6, "Receive MISSes from all neighbors and parents\n");
 	    /* pass in fd=0 here so getFromCache() looks up the real FD
 	     * and resets the timeout handler */
-	    getFromCache(0, entry, NULL, entry->mem_obj->request);
+	    getFromDefaultSource(0, entry);
 	    return;
 	}
     } else {
