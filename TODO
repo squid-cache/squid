@@ -72,7 +72,8 @@ Our Todo List
 (5)	Customizable access logging.
 (5)	Inline DNS queries with native resolver calls.
 (5)	MD5 acl type
-
+(5)	return "ERR_TOO_LARGE" messages for replies with
+	content-lengths larger than some limit.
 
 DONE:
 + s/sprintf/snprintf/g
