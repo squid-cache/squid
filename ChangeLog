@@ -1,3 +1,9 @@
+	- New MIME configuration, regular expression based
+	- Added request_timeout config option
+	- Multiple HTTP sockets (Lincoln Dale).
+	- Moved 'fds_are_n_free' check to httpAccept().
+	- s/USE_POLL/HAVE_POLL/; make poll() default if available.
+
 Changes to squid-1.2.alpha3 ():
 
 	- Implemented persistent connections between clients and squid.
