@@ -31,8 +31,6 @@ helperOpenServers(helper * hlp)
     if (hlp->cmdline == NULL)
 	return;
     progname = hlp->cmdline->key;
-    assert(hlp->servers.head == NULL);
-    assert(hlp->servers.tail == NULL);
     if ((s = strrchr(progname, '/')))
 	shortname = xstrdup(s + 1);
     else
@@ -87,6 +85,7 @@ helperOpenServers(helper * hlp)
     }
     safe_free(shortname);
     safe_free(procname);
+    helperKickQueue(hlp);
 }
 
 void
