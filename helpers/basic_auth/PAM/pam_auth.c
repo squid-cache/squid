@@ -1,5 +1,5 @@
 /*
- * $Id: pam_auth.c,v 1.9 2002/08/12 16:58:11 hno Exp $
+ * $Id: pam_auth.c,v 1.10 2002/10/11 03:01:23 wessels Exp $
  *
  * PAM authenticator module for Squid.
  * Copyright (C) 1999,2002 Henrik Nordstrom <hno@squid-cache.org>
@@ -178,6 +178,9 @@ start:
 	usage(argv[0]);
 	exit(1);
     }
+
+    if (0 != getuid())
+	fprintf(stderr, "WARNING: %s must be started as root\n", argv[0]);
 
     while (fgets(buf, BUFSIZE, stdin)) {
 	user = buf;
