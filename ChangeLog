@@ -44,6 +44,8 @@
 	- Replaced internal proxy_auth code with extern authentication
 	  module (Arjan de Vet).
 	- moved hash.c to libmiscutil.a.
+	- Fixed handling of ICP queries with whitespace in URLs.
+	  Now we return ICP error and escape the URL before logging.
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
