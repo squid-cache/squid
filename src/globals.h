@@ -19,6 +19,7 @@ extern const char *AclMatchedName;	/* NULL */
 extern const char *DefaultConfigFile;	/* DEFAULT_CONFIG_FILE */
 extern const char *DefaultSwapDir;	/* DEFAULT_SWAP_DIR */
 extern const char *RequestMethodStr[];
+extern const char *ProtocolStr[];
 extern const char *cfg_filename;	/* NULL */
 extern const char *const appname;	/* "squid" */
 extern const char *const close_bracket;		/* "}\n" */
