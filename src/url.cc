@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.125 2000/05/16 07:06:08 wessels Exp $
+ * $Id: url.cc,v 1.126 2000/06/25 22:41:22 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -54,6 +54,26 @@ const char *RequestMethodStr[] =
     "MOVE",
     "LOCK",
     "UNLOCK",
+    "%EXT00",
+    "%EXT01",
+    "%EXT02",
+    "%EXT03",
+    "%EXT04",
+    "%EXT05",
+    "%EXT06",
+    "%EXT07",
+    "%EXT08",
+    "%EXT09",
+    "%EXT10",
+    "%EXT11",
+    "%EXT12",
+    "%EXT13",
+    "%EXT14",
+    "%EXT15",
+    "%EXT16",
+    "%EXT17",
+    "%EXT18",
+    "%EXT19",
     "ERROR"
 };
 
@@ -150,6 +170,13 @@ method_t
 urlParseMethod(const char *s)
 {
     method_t method = METHOD_NONE;
+    /*
+     * This check for '%' makes sure that we don't
+     * match one of the extension method placeholders,
+     * which have the form %EXT[0-9][0-9]
+     */
+    if (*s == '%')
+	return METHOD_NONE;
     for (method++; method < METHOD_ENUM_END; method++) {
 	if (0 == strcasecmp(s, RequestMethodStr[method]))
 	    return method;
@@ -558,4 +585,36 @@ urlHostname(const char *url)
 	xmemmove(host, t, strlen(t) + 1);
     }
     return host;
+}
+
+static void
+urlExtMethodAdd(const char *mstr)
+{
+    method_t method = 0;
+    for (method++; method < METHOD_ENUM_END; method++) {
+	if (0 == strcmp(mstr, RequestMethodStr[method])) {
+	    debug(23, 2) ("Extension method '%s' already exists\n", mstr);
+	    return;
+	}
+	if (0 != strncmp("%EXT", RequestMethodStr[method], 4))
+	    continue;
+	/* Don't free statically allocated "%EXTnn" string */
+	RequestMethodStr[method] = xstrdup(mstr);
+	debug(23, 1) ("Extension method '%s' added, enum=%d\n", mstr, (int) method);
+	return;
+    }
+    debug(23, 1) ("WARNING: Could not add new extension method '%s' due to lack of array space\n", mstr);
+}
+
+void
+urlExtMethodConfigure(void)
+{
+    wordlist *w = Config.ext_methods;
+    while (w) {
+	char *s;
+	for (s = w->key; *s; s++)
+	    *s = xtoupper(*s);
+	urlExtMethodAdd(w->key);
+	w = w->next;
+    }
 }

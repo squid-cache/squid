@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.340 2000/06/25 22:28:43 wessels Exp $
+ * $Id: structs.h,v 1.341 2000/06/25 22:41:22 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -498,6 +498,7 @@ struct _SquidConfig {
 	int rebuild_chunk_percentage;
     } digest;
 #endif
+    wordlist *ext_methods;
 };
 
 struct _SquidConfig2 {

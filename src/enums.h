@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.167 2000/05/03 17:15:41 adrian Exp $
+ * $Id: enums.h,v 1.168 2000/06/25 22:41:22 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -384,6 +384,26 @@ enum {
     METHOD_MOVE,
     METHOD_LOCK,
     METHOD_UNLOCK,
+    METHOD_EXT00,
+    METHOD_EXT01,
+    METHOD_EXT02,
+    METHOD_EXT03,
+    METHOD_EXT04,
+    METHOD_EXT05,
+    METHOD_EXT06,
+    METHOD_EXT07,
+    METHOD_EXT08,
+    METHOD_EXT09,
+    METHOD_EXT10,
+    METHOD_EXT11,
+    METHOD_EXT12,
+    METHOD_EXT13,
+    METHOD_EXT14,
+    METHOD_EXT15,
+    METHOD_EXT16,
+    METHOD_EXT17,
+    METHOD_EXT18,
+    METHOD_EXT19,
     METHOD_ENUM_END
 };
 typedef unsigned int method_t;

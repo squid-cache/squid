@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.351 2000/06/25 22:28:42 wessels Exp $
+ * $Id: cache_cf.cc,v 1.352 2000/06/25 22:41:21 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -413,6 +413,7 @@ configDoConfigure(void)
 		xstrerror());
 	Config2.effectiveGroupID = grp->gr_gid;
     }
+    urlExtMethodConfigure();
 }
 
 /* Parse a time specification from the config file.  Store the
