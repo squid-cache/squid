@@ -18,12 +18,13 @@ BEGIN {
 	define["USE_UNLINKD"]="--enable-unlinkd"
 	define["USE_USERAGENT_LOG"]="--enable-useragent-log"
 	define["USE_WCCP"]="--enable-wccp"
+	define["ESI"]="--enable-esi"
 }
 /^IFDEF:/ {
 	if (define[$2] != "")
-	    DEFINE=define[$2]
+	    DEFINE=define[$2] " option"
 	else  
-	    DEFINE="-D" $2
+	    DEFINE="-D" $2 " define"
 	print "{\"" $2 "\", \"" DEFINE "\", "
 	print "#if " $2
 	print "1"
