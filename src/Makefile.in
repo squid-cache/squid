@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.69 1997/04/30 03:11:57 wessels Exp $
+#  $Id: Makefile.in,v 1.70 1997/05/14 21:08:15 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -117,7 +117,6 @@ OBJS	 	= \
 		store.o \
 		store_clean.o \
 		store_dir.o \
-		storetoString.o \
 		tools.o \
 		unlinkd.o \
 		url.o \
@@ -271,7 +270,7 @@ install-pinger:
 clean: 
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) $(SUID_UTILS)
 
-realclean:	clean
+distclean:	clean
 	-rm -f Makefile squid.conf squid.conf.pre
 
 tags:
