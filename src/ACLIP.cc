@@ -399,25 +399,6 @@ ACLIP::match(struct in_addr &clientip)
     return !splayLastResult;
 }
 
-MemPool (*acl_ip_data::Pool)(NULL);
-void *
-acl_ip_data::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (acl_ip_data));
-
-    if (!Pool)
-        Pool = memPoolCreate("acl_ip_data", sizeof (acl_ip_data));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-acl_ip_data::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 acl_ip_data::acl_ip_data () :addr1(any_addr), addr2(any_addr), mask (any_addr), next (NULL) {}
 
 acl_ip_data::acl_ip_data (struct in_addr const &anAddress1, struct in_addr const &anAddress2, struct in_addr const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext){}

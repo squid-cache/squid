@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.46 2004/08/30 03:28:56 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.47 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -40,25 +40,6 @@
 #include "HttpHeaderRange.h"
 
 static void httpRequestHdrCacheInit(HttpRequest * req);
-MemPool (*HttpRequest::Pool)(NULL);
-
-void *
-HttpRequest::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (HttpRequest));
-
-    if (!Pool)
-        Pool = memPoolCreate("HttpRequest", sizeof (HttpRequest));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-HttpRequest::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 HttpRequest::HttpRequest()  : header(hoRequest)
 {

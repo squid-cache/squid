@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.57 2004/08/30 03:28:59 robertc Exp $
+ * $Id: external_acl.cc,v 1.58 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -1262,25 +1262,6 @@ ACLExternal::ACLExternal (ACLExternal const & old) : data (NULL), class_ (old.cl
 {
     /* we don't have copy constructors for the data yet */
     assert (!old.data);
-}
-
-MemPool (*ACLExternal::Pool)(NULL);
-void *
-ACLExternal::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLExternal));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLExternal", sizeof (ACLExternal));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLExternal::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }
 
 char const *

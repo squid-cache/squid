@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLProtocolData.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLProtocolData.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,8 +43,7 @@ class ACLProtocolData : public ACLData<protocol_t>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLProtocolData);
 
     ACLProtocolData();
     ACLProtocolData(ACLProtocolData const &);
@@ -56,9 +55,8 @@ public:
     virtual ACLData<protocol_t> *clone() const;
 
     List<protocol_t> *values;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(ACLProtocolData);
 
 #endif /* SQUID_ACLPROTOCOLDATA_H */

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMethodData.cc,v 1.4 2003/10/20 12:33:01 robertc Exp $
+ * $Id: ACLMethodData.cc,v 1.5 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -37,25 +37,6 @@
 #include "squid.h"
 #include "ACLMethodData.h"
 #include "ACLChecklist.h"
-
-MemPool (*ACLMethodData::Pool)(NULL);
-void *
-ACLMethodData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLMethodData));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLMethodData", sizeof (ACLMethodData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLMethodData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 ACLMethodData::ACLMethodData() : values (NULL)
 {}

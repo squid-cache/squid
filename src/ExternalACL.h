@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACL.h,v 1.5 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ExternalACL.h,v 1.6 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -58,8 +58,7 @@ class ACLExternal : public ACL
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLExternal);
 
     static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *, EAH * callback, void *callback_data);
 
@@ -84,11 +83,12 @@ public:
     virtual bool valid () const;
 
 protected:
-    static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLExternal RegistryEntry_;
     external_acl_data *data;
     char const *class_;
 };
+
+MEMPROXY_CLASS_INLINE(ACLExternal)
 
 #endif /* SQUID_EXTERNALACL_H */

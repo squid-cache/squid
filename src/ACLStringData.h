@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStringData.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ACLStringData.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,12 +39,12 @@
 #include "ACL.h"
 #include "ACLData.h"
 
+
 class ACLStringData : public ACLData<char const *>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLStringData);
 
     ACLStringData();
     ACLStringData(ACLStringData const &);
@@ -56,9 +56,10 @@ public:
     virtual ACLData<char const *> *clone() const;
 
     SplayNode<char *> *values;
-
-private:
-    static MemPool *Pool;
 };
+
+/* TODO move into .cci files */
+
+MEMPROXY_CLASS_INLINE(ACLStringData);
 
 #endif /* SQUID_ACLSTRINGDATA_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.h,v 1.2 2003/08/04 22:14:42 robertc Exp $
+ * $Id: helper.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -42,31 +42,27 @@ class helper_request
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(helper_request);
     char *buf;
     HLPCB *callback;
     void *data;
 
     struct timeval dispatch_time;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(helper_request)
 
 class helper_stateful_request
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(helper_stateful_request);
     char *buf;
     HLPSCB *callback;
     int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available for deferred requests.*/
     void *data;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(helper_stateful_request)
 
 #endif /* SQUID_HELPER_H */

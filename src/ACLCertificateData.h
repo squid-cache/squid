@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLCertificateData.h,v 1.5 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLCertificateData.h,v 1.6 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,8 +45,7 @@ class ACLCertificateData : public ACLData<SSL *>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLCertificateData);
 
     ACLCertificateData(SSLGETATTRIBUTE *);
     ACLCertificateData(ACLCertificateData const &);
@@ -61,8 +60,9 @@ public:
     ACLStringData values;
 
 private:
-    static MemPool *Pool;
     SSLGETATTRIBUTE *sslAttributeCall;
 };
+
+MEMPROXY_CLASS_INLINE(ACLCertificateData)
 
 #endif /* SQUID_ACLCERTIFICATEDATA_H */

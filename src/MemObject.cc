@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.12 2003/08/10 05:11:22 robertc Exp $
+ * $Id: MemObject.cc,v 1.13 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -62,35 +62,12 @@ url_checksum(const char *url)
 
 #endif
 
-MemPool *MemObject::pool = NULL;
-
-void *
-MemObject::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (MemObject));
-
-    if (!pool)
-        pool = memPoolCreate("MemObject", sizeof (MemObject));
-
-    return memPoolAlloc(pool);
-}
-
-void
-MemObject::operator delete (void *address)
-{
-    memPoolFree(pool, address);
-}
-
 size_t
 MemObject::inUseCount()
 {
-    if (!pool)
-        return 0;
-
     MemPoolStats stats;
 
-    memPoolGetStats (&stats, pool);
+    Pool().getStats (&stats);
 
     return stats.items_inuse;
 }

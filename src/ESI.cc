@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.7 2004/08/15 17:42:37 robertc Exp $
+ * $Id: ESI.cc,v 1.8 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -97,8 +97,7 @@ typedef ESIContext::esiKick_t esiKick_t;
 
 struct esiComment : public ESIElement
 {
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    MEMPROXY_CLASS(esiComment);
     ~esiComment();
     esiComment();
     Pointer makeCacheable() const;
@@ -106,16 +105,11 @@ struct esiComment : public ESIElement
 
     void render(ESISegment::Pointer);
     void finish();
-
-private:
-    static MemPool *pool;
 };
 
-MemPool * esiComment::pool = NULL;
-
+MEMPROXY_CLASS_INLINE(esiComment)
 
 #include "ESILiteral.h"
-MemPool *esiLiteral::pool = NULL;
 
 #include "ESISequence.h"
 
@@ -147,8 +141,7 @@ static ESIElement * esiRemoveNew(void);
 
 struct esiTry : public ESIElement
 {
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    MEMPROXY_CLASS(esiTry);
 
     esiTry(esiTreeParentPtr aParent);
     ~esiTry();
@@ -184,7 +177,6 @@ int exceptfailed:
     void finish();
 
 private:
-    static MemPool *Pool;
     void notifyParent();
     esiTreeParentPtr parent;
     ESISegment::Pointer exceptbuffer;
@@ -192,7 +184,7 @@ private:
     esiProcessResult_t bestAttemptRV() const;
 };
 
-MemPool *esiTry::Pool = NULL;
+MEMPROXY_CLASS_INLINE(esiTry)
 
 #include "ESIVar.h"
 
@@ -200,8 +192,7 @@ MemPool *esiTry::Pool = NULL;
 
 struct esiChoose : public ESIElement
 {
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    MEMPROXY_CLASS(esiChoose);
 
     esiChoose(esiTreeParentPtr);
     ~esiChoose();
@@ -224,21 +215,19 @@ struct esiChoose : public ESIElement
     void finish();
 
 private:
-    static MemPool *Pool;
     esiChoose(esiChoose const &);
     esiTreeParentPtr parent;
     void checkValidSource (ESIElement::Pointer source) const;
     void selectElement();
 };
 
-MemPool *esiChoose::Pool = NULL;
+MEMPROXY_CLASS_INLINE(esiChoose)
 
 /* esiWhen */
 
 struct esiWhen : public esiSequence
 {
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    MEMPROXY_CLASS(esiWhen);
     esiWhen(esiTreeParentPtr aParent, int attributes, const char **attr, ESIVarState *);
     ~esiWhen();
     Pointer makeCacheable() const;
@@ -249,7 +238,6 @@ struct esiWhen : public esiSequence
     void setTestResult(bool aBool) {testValue = aBool;}
 
 private:
-    static MemPool *Pool;
     esiWhen (esiWhen const &);
     bool testValue;
     char const *unevaluatedExpression;
@@ -257,7 +245,7 @@ private:
     void evaluate();
 };
 
-MemPool *esiWhen::Pool = NULL;
+MEMPROXY_CLASS_INLINE(esiWhen)
 
 /* esiOtherwise */
 
@@ -1509,23 +1497,6 @@ esiComment::~esiComment()
     debug (86,5)("esiComment::~esiComment %p\n", this);
 }
 
-void *
-esiComment::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (esiComment));
-
-    if (!pool)
-        pool = memPoolCreate ("esiComment", sizeof (esiComment));
-
-    return memPoolAlloc(pool);
-}
-
-void
-esiComment::operator delete (void *address)
-{
-    memPoolFree (pool, address);
-}
-
 esiComment::esiComment()
 {}
 
@@ -1555,23 +1526,6 @@ esiComment::makeUsable(esiTreeParentPtr, ESIVarState &) const
 }
 
 /* esiLiteral */
-void *
-esiLiteral::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (esiLiteral));
-
-    if (!pool)
-        pool = memPoolCreate ("esiLiteral", sizeof (esiLiteral));
-
-    return memPoolAlloc (pool);
-}
-
-void
-esiLiteral::operator delete (void *address)
-{
-    memPoolFree (pool, address);
-}
-
 esiLiteral::~esiLiteral()
 {
     debug (86, 5) ("esiLiteral::~esiLiteral: %p\n", this);
@@ -1746,23 +1700,6 @@ esiRemove::makeUsable(esiTreeParentPtr, ESIVarState &) const
 esiTry::~esiTry()
 {
     debug (86,5)("esiTry::~esiTry %p\n", this);
-}
-
-void *
-esiTry::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (esiTry));
-
-    if (!Pool)
-        Pool = memPoolCreate ("esiTry", sizeof(esiTry));
-
-    return memPoolAlloc (Pool);
-}
-
-void
-esiTry::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }
 
 esiTry::esiTry(esiTreeParentPtr aParent) : parent (aParent) , exceptbuffer(NULL)
@@ -2082,23 +2019,6 @@ esiChoose::~esiChoose()
     debug (86,5)("esiChoose::~esiChoose %p\n", this);
 }
 
-void *
-esiChoose::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (esiChoose));
-
-    if (!Pool)
-        Pool = memPoolCreate ("esiChoose", sizeof(esiChoose));
-
-    return memPoolAlloc (Pool);
-}
-
-void
-esiChoose::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 esiChoose::esiChoose(esiTreeParentPtr aParent) : elements (), chosenelement (-1),parent (aParent)
 {}
 
@@ -2400,23 +2320,6 @@ ElementList::size() const
 }
 
 /* esiWhen */
-void *
-esiWhen::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (esiWhen));
-
-    if (!Pool)
-        Pool = memPoolCreate("esiWhen", sizeof(esiWhen));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-esiWhen::operator delete (void *address)
-{
-    memPoolFree(Pool, address);
-}
-
 esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,ESIVarState *aVar) : esiSequence (aParent)
 {
     varState = NULL;

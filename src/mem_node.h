@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.6 2003/09/22 08:50:51 robertc Exp $
+ * $Id: mem_node.h,v 1.7 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,8 +44,7 @@ public:
     static size_t InUseCount();
     static unsigned long store_mem_size;	/* 0 */
 
-    void operator delete (void *);
-    void *operator new (size_t);
+    MEMPROXY_CLASS(mem_node);
     mem_node(off_t);
     ~mem_node();
     size_t space() const;
@@ -59,10 +58,9 @@ public:
     StoreIOBuffer nodeBuffer;
     /* Private */
     char data[SM_PAGE_SIZE];
-
-private:
-    static MemPool *pool;
 };
+
+MEMPROXY_CLASS_INLINE(mem_node)
 
 inline std::ostream &
 operator << (std::ostream &os, mem_node &aNode)

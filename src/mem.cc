@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.84 2003/09/29 10:24:01 robertc Exp $
+ * $Id: mem.cc,v 1.85 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -44,7 +44,7 @@
 static void memStringStats(StoreEntry * sentry);
 
 /* module locals */
-static MemPool *MemPools[MEM_MAX];
+static MemImplementingAllocator *MemPools[MEM_MAX];
 static double xm_time = 0;
 static double xm_deltat = 0;
 
@@ -72,7 +72,7 @@ StrPoolsAttrs[mem_str_pool_count] = {
 
 static struct
 {
-    MemPool *pool;
+    MemAllocator *pool;
 }
 
 StrPools[mem_str_pool_count];
@@ -98,14 +98,14 @@ memStringStats(StoreEntry * sentry)
     /* table body */
 
     for (i = 0; i < mem_str_pool_count; i++) {
-        const MemPool *pool = StrPools[i].pool;
-        const int plevel = pool->meter.inuse.level;
+        const MemAllocator *pool = StrPools[i].pool;
+        const int plevel = pool->getMeter().inuse.level;
         storeAppendPrintf(sentry, pfmt,
-                          pool->label,
+                          pool->objectType(),
                           xpercentInt(plevel, StrCountMeter.level),
-                          xpercentInt(plevel * pool->obj_size, StrVolumeMeter.level));
+                          xpercentInt(plevel * pool->objectSize(), StrVolumeMeter.level));
         pooled_count += plevel;
-        pooled_volume += plevel * pool->obj_size;
+        pooled_volume += plevel * pool->objectSize();
     }
 
     /* malloc strings */
@@ -139,23 +139,6 @@ Mem::Stats(StoreEntry * sentry)
  * public routines
  */
 
-int
-memPoolInUseCount(MemPool * pool)
-{
-    MemPoolStats stats;
-    assert(pool);
-    memPoolGetStats(&stats, pool);
-    return stats.items_inuse;
-}
-
-int
-memPoolsTotalAllocated(void)
-{
-    MemPoolGlobalStats stats;
-    memPoolGetGlobalStats(&stats);
-    return stats.TheMeter->alloc.level;
-}
-
 /*
  * we have a limit on _total_ amount of idle memory so we ignore
  * max_pages for now
@@ -165,7 +148,7 @@ memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused)
 {
     assert(name && size);
     assert(MemPools[type] == NULL);
-    MemPools[type] = memPoolCreate(name, size);
+    MemPools[type] = MemPools::GetInstance().create(name, size);
 }
 
 
@@ -173,14 +156,14 @@ memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused)
 void *
 memAllocate(mem_type type)
 {
-    return memPoolAlloc(MemPools[type]);
+    return MemPools[type]->alloc();
 }
 
 /* give memory back to the pool */
 void
 memFree(void *p, int type)
 {
-    memPoolFree(MemPools[type], p);
+    MemPools[type]->free(p);
 }
 
 /* allocate a variable size buffer using best-fit pool */
@@ -188,7 +171,7 @@ void *
 memAllocString(size_t net_size, size_t * gross_size)
 {
     int i;
-    MemPool *pool = NULL;
+    MemAllocator *pool = NULL;
     assert(gross_size);
 
     for (i = 0; i < mem_str_pool_count; i++) {
@@ -202,7 +185,7 @@ memAllocString(size_t net_size, size_t * gross_size)
     assert(*gross_size >= net_size);
     memMeterInc(StrCountMeter);
     memMeterAdd(StrVolumeMeter, *gross_size);
-    return pool ? memPoolAlloc(pool) : xcalloc(1, net_size);
+    return pool ? pool->alloc() : xcalloc(1, net_size);
 }
 
 extern size_t memStringCount();
@@ -222,7 +205,7 @@ void
 memFreeString(size_t size, void *buf)
 {
     int i;
-    MemPool *pool = NULL;
+    MemAllocator *pool = NULL;
     assert(size && buf);
 
     for (i = 0; i < mem_str_pool_count; i++) {
@@ -235,7 +218,7 @@ memFreeString(size_t size, void *buf)
 
     memMeterDec(StrCountMeter);
     memMeterDel(StrVolumeMeter, size);
-    pool ? memPoolFree(pool, buf) : xfree(buf);
+    pool ? pool->free(buf) : xfree(buf);
 }
 
 /* Find the best fit MEM_X_BUF type */
@@ -333,16 +316,14 @@ static double clean_interval = 15.0;	/* time to live of idle chunk before releas
 void
 Mem::CleanIdlePools(void *unused)
 {
-    memPoolClean(static_cast<time_t>(clean_interval));
+    MemPools::GetInstance().clean(static_cast<time_t>(clean_interval));
     eventAdd("memPoolCleanIdlePools", CleanIdlePools, NULL, clean_interval, 1);
 }
-
-static unsigned int mem_idle_limit = 0;
 
 void
 memConfigure(void)
 {
-    unsigned int new_pool_limit;
+    size_t new_pool_limit;
     /* set to configured value first */
 
     if (!Config.onoff.mem_pools)
@@ -352,12 +333,10 @@ memConfigure(void)
     else
         new_pool_limit = mem_unlimited_size;
 
-    if (mem_idle_limit > new_pool_limit)
+    if (MemPools::GetInstance().idleLimit() > new_pool_limit)
         debug(13, 1) ("Shrinking idle mem pools to %.2f MB\n", toMB(new_pool_limit));
 
-    memPoolSetIdleLimit(new_pool_limit);
-
-    mem_idle_limit = new_pool_limit;
+    MemPools::GetInstance().setIdleLimit(new_pool_limit);
 }
 
 /* XXX make these classes do their own memory management */
@@ -369,7 +348,7 @@ Mem::Init(void)
     int i;
 
     debug(13, 1) ("Memory pools are '%s'; limit: %.2f MB\n",
-                  (Config.onoff.mem_pools ? "on" : "off"), toMB(mem_idle_limit));
+                  (Config.onoff.mem_pools ? "on" : "off"), toMB(MemPools::GetInstance().idleLimit()));
 
     /* set all pointers to null */
     memset(MemPools, '\0', sizeof(MemPools));
@@ -410,17 +389,15 @@ Mem::Init(void)
     memDataInit(MEM_WORDLIST, "wordlist", sizeof(wordlist), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", MD5_DIGEST_CHARS, 0);
-    memPoolSetChunkSize(MemPools[MEM_MD5_DIGEST], 512 * 1024);
+    MemPools[MEM_MD5_DIGEST]->setChunkSize(512 * 1024);
 
     /* init string pools */
 
     for (i = 0; i < mem_str_pool_count; i++) {
-        StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
+        StrPools[i].pool = MemPools::GetInstance().create(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
 
-        if (StrPools[i].pool->obj_size != StrPoolsAttrs[i].obj_size)
-            debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " <<
-                   StrPools[i].pool->obj_size << " bytes instead of requested "
-                   << StrPoolsAttrs[i].obj_size << " bytes");
+        if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
+            debug(13, 1) ("Notice: %s is %d bytes instead of requested %d bytes\n", StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size, StrPoolsAttrs[i].obj_size);
     }
 
     cachemgrRegister("mem",
@@ -457,9 +434,9 @@ memCheckInit(void)
 
 #if UNUSED_CODE
 /* to-do: make debug level a parameter? */
-static void memPoolDescribe(const MemPool * pool);
+static void memPoolDescribe(const MemAllocator * pool);
 static void
-memPoolDescribe(const MemPool * pool)
+memPoolDescribe(const MemAllocator * pool)
 {
     assert(pool);
     debug(13, 2) ("%-20s: %6d x %4d bytes = %5d KB\n",
@@ -473,8 +450,8 @@ void
 memClean(void)
 {
     MemPoolGlobalStats stats;
-    memPoolSetIdleLimit(0);
-    memPoolClean(0);
+    MemPools::GetInstance().setIdleLimit(0);
+    MemPools::GetInstance().clean(0);
     memPoolGetGlobalStats(&stats);
 
     if (stats.tot_items_inuse)
@@ -629,7 +606,7 @@ Mem::Report(StoreEntry * e)
     static MemPoolGlobalStats mp_total;
     int not_used = 0;
     MemPoolIterator *iter;
-    MemPool *pool;
+    MemAllocator *pool;
 
     /* caption */
     storeAppendPrintf(e, "Current memory usage:\n");
@@ -662,12 +639,12 @@ Mem::Report(StoreEntry * e)
     iter = memPoolIterate();
 
     while ((pool = memPoolIterateNext(iter))) {
-        memPoolGetStats(&mp_stats, pool);
+        pool->getStats(&mp_stats);
 
         if (!mp_stats.pool)	/* pool destroyed */
             continue;
 
-        if (mp_stats.pool->meter.gb_saved.count > 0)	/* this pool has been used */
+        if (mp_stats.pool->getMeter().gb_saved.count > 0)	/* this pool has been used */
             PoolReport(&mp_stats, mp_total.TheMeter, e);
         else
             not_used++;

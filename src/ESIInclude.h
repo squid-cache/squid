@@ -1,5 +1,5 @@
 /*
- * $Id: ESIInclude.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESIInclude.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -69,8 +69,7 @@ class ESIInclude : public ESIElement
 {
 
 public:
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    MEMPROXY_CLASS(ESIInclude);
 
     ESIInclude(esiTreeParentPtr, int attributes, const char **attr, ESIContext *);
     ~ESIInclude();
@@ -104,7 +103,6 @@ int finished:
     void finish();
 
 private:
-    static MemPool *Pool;
     void Start (ESIStreamContext::Pointer, char const *, ESIVarState *);
     esiTreeParentPtr parent;
     void start();
@@ -114,5 +112,7 @@ private:
     bool dataNeeded() const;
     void prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars);
 };
+
+MEMPROXY_CLASS_INLINE(ESIInclude)
 
 #endif /* SQUID_ESIINCLUDE_H */

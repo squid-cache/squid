@@ -45,25 +45,6 @@
 #include "AuthUser.h"
 #include "AuthUserRequest.h"
 
-MemPool (*ACLProxyAuth::Pool)(NULL);
-void *
-ACLProxyAuth::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLProxyAuth));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLProxyAuth", sizeof (ACLProxyAuth));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLProxyAuth::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 ACLProxyAuth::~ACLProxyAuth()
 {
     delete data;

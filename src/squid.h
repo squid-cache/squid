@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.236 2003/07/14 10:36:42 robertc Exp $
+ * $Id: squid.h,v 1.237 2004/08/30 05:12:31 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -402,9 +402,9 @@ max(A const & lhs, A const & rhs)
 #ifndef malloc
 #define malloc +
 #endif
-#ifndef free
-#define free +
-#endif
+template <class V>
+void free(V x) { fatal("Do not use ::free()"); }
+
 #ifndef calloc
 #define calloc +
 #endif

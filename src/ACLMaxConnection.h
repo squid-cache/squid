@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMaxConnection.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLMaxConnection.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,8 +42,7 @@ class ACLMaxConnection : public ACL
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLMaxConnection);
 
     ACLMaxConnection(char const *);
     ACLMaxConnection(ACLMaxConnection const &);
@@ -59,11 +58,12 @@ public:
     virtual void prepareForUse();
 
 protected:
-    static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLMaxConnection RegistryEntry_;
     char const *class_;
     int limit;
 };
+
+MEMPROXY_CLASS_INLINE(ACLMaxConnection)
 
 #endif /* SQUID_ACLMAXCONNECTION_H */

@@ -1,5 +1,5 @@
 /*
- * $Id: uudecode.c,v 1.10 2003/01/23 00:37:02 robertc Exp $
+ * $Id: uudecode.c,v 1.11 2004/08/30 05:12:30 robertc Exp $
  */
 
 #include "config.h"
@@ -42,7 +42,7 @@ uudecode(const char *bufcoded)
      */
     bufin = (const unsigned char *) bufcoded;
     while (pr2six[*(bufin++)] <= 63);
-    nprbytes = (char *) bufin - bufcoded - 1;
+    nprbytes = (const char *) bufin - bufcoded - 1;
     nbytesdecoded = ((nprbytes + 3) / 4) * 3;
 
     bufplain = xmalloc(nbytesdecoded + 1);

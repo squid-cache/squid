@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.15 2003/09/06 12:47:39 robertc Exp $
+ * $Id: store_repl_lru.cc,v 1.16 2004/08/30 05:12:33 robertc Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -105,7 +105,7 @@ lru_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
     LruPolicyData *lru = (LruPolicyData *)policy->_data;
     LruNode *lru_node;
     assert(!node->data);
-    node->data = lru_node = (LruNode *)memPoolAlloc(lru_node_pool);
+    node->data = lru_node = (LruNode *)lru_node_pool->alloc();
     dlinkAddTail(entry, &lru_node->node, &lru->list);
     lru->count += 1;
 
@@ -136,7 +136,7 @@ lru_remove(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 
     dlinkDelete(&lru_node->node, &lru->list);
 
-    memPoolFree(lru_node_pool, lru_node);
+    lru_node_pool->free(lru_node);
 
     lru->count -= 1;
 }
@@ -252,7 +252,7 @@ try_again:
         goto try_again;
     }
 
-    memPoolFree(lru_node_pool, lru_node);
+    lru_node_pool->free(lru_node);
     lru->count -= 1;
     lru->setPolicyNode(entry, NULL);
     return entry;
@@ -332,8 +332,9 @@ createRemovalPolicy_lru(wordlist * args)
     /* Initialize */
 
     if (!lru_node_pool) {
-        lru_node_pool = memPoolCreate("LRU policy node", sizeof(LruNode));
-        memPoolSetChunkSize(lru_node_pool, 512 * 1024);
+        /* Must be chunked */
+        lru_node_pool = new MemPool("LRU policy node", sizeof(LruNode));
+        lru_node_pool->setChunkSize(512 * 1024);
     }
 
     /* Allocate the needed structures */

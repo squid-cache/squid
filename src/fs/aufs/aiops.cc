@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.24 2003/06/19 16:42:40 hno Exp $
+ * $Id: aiops.cc,v 1.25 2004/08/30 05:12:32 robertc Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -140,15 +140,15 @@ static int squidaio_initialised = 0;
 #define AIO_TINY_BUFS	AIO_LARGE_BUFS >> 3
 #define AIO_MICRO_BUFS	128
 
-static MemPool *squidaio_large_bufs = NULL;	/* 16K */
-static MemPool *squidaio_medium_bufs = NULL;	/* 8K */
-static MemPool *squidaio_small_bufs = NULL;	/* 4K */
-static MemPool *squidaio_tiny_bufs = NULL;	/* 2K */
-static MemPool *squidaio_micro_bufs = NULL;	/* 128K */
+static MemAllocatorProxy *squidaio_large_bufs = NULL;	/* 16K */
+static MemAllocatorProxy *squidaio_medium_bufs = NULL;	/* 8K */
+static MemAllocatorProxy *squidaio_small_bufs = NULL;	/* 4K */
+static MemAllocatorProxy *squidaio_tiny_bufs = NULL;	/* 2K */
+static MemAllocatorProxy *squidaio_micro_bufs = NULL;	/* 128K */
 
 static int request_queue_len = 0;
-static MemPool *squidaio_request_pool = NULL;
-static MemPool *squidaio_thread_pool = NULL;
+static MemAllocatorProxy *squidaio_request_pool = NULL;
+static MemAllocatorProxy *squidaio_thread_pool = NULL;
 static squidaio_request_queue_t request_queue;
 
 static struct
@@ -178,10 +178,10 @@ static struct sched_param globsched;
 #endif
 static pthread_t main_thread;
 
-static MemPool *
+static MemAllocatorProxy *
 squidaio_get_pool(int size)
 {
-    MemPool *p;
+    MemAllocatorProxy *p;
 
     if (size <= AIO_LARGE_BUFS) {
         if (size <= AIO_MICRO_BUFS)
@@ -204,10 +204,10 @@ void *
 squidaio_xmalloc(int size)
 {
     void *p;
-    MemPool *pool;
+    MemAllocatorProxy *pool;
 
     if ((pool = squidaio_get_pool(size)) != NULL) {
-        p = memPoolAlloc(pool);
+        p = pool->alloc();
     } else
         p = xmalloc(size);
 
@@ -229,10 +229,10 @@ squidaio_xstrdup(const char *str)
 void
 squidaio_xfree(void *p, int size)
 {
-    MemPool *pool;
+    MemAllocatorProxy *pool;
 
     if ((pool = squidaio_get_pool(size)) != NULL) {
-        memPoolFree(pool, p);
+        pool->free(p);
     } else
         xfree(p);
 }
@@ -240,11 +240,11 @@ squidaio_xfree(void *p, int size)
 static void
 squidaio_xstrfree(char *str)
 {
-    MemPool *pool;
+    MemAllocatorProxy *pool;
     int len = strlen(str) + 1;
 
     if ((pool = squidaio_get_pool(len)) != NULL) {
-        memPoolFree(pool, str);
+        pool->free(str);
     } else
         xfree(str);
 }
@@ -320,12 +320,12 @@ squidaio_init(void)
     done_queue.blocked = 0;
 
     /* Create threads and get them to sit in their wait loop */
-    squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));
+    squidaio_thread_pool = new MemAllocatorProxy("aio_thread", sizeof(squidaio_thread_t));
 
     assert(NUMTHREADS);
 
     for (i = 0; i < NUMTHREADS; i++) {
-        threadp = (squidaio_thread_t *)memPoolAlloc(squidaio_thread_pool);
+        threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();
         threadp->status = _THREAD_STARTING;
         threadp->current_req = NULL;
         threadp->requests = 0;
@@ -340,17 +340,17 @@ squidaio_init(void)
     }
 
     /* Create request pool */
-    squidaio_request_pool = memPoolCreate("aio_request", sizeof(squidaio_request_t));
+    squidaio_request_pool = new MemAllocatorProxy("aio_request", sizeof(squidaio_request_t));
 
-    squidaio_large_bufs = memPoolCreate("squidaio_large_bufs", AIO_LARGE_BUFS);
+    squidaio_large_bufs = new MemAllocatorProxy("squidaio_large_bufs", AIO_LARGE_BUFS);
 
-    squidaio_medium_bufs = memPoolCreate("squidaio_medium_bufs", AIO_MEDIUM_BUFS);
+    squidaio_medium_bufs = new MemAllocatorProxy("squidaio_medium_bufs", AIO_MEDIUM_BUFS);
 
-    squidaio_small_bufs = memPoolCreate("squidaio_small_bufs", AIO_SMALL_BUFS);
+    squidaio_small_bufs = new MemAllocatorProxy("squidaio_small_bufs", AIO_SMALL_BUFS);
 
-    squidaio_tiny_bufs = memPoolCreate("squidaio_tiny_bufs", AIO_TINY_BUFS);
+    squidaio_tiny_bufs = new MemAllocatorProxy("squidaio_tiny_bufs", AIO_TINY_BUFS);
 
-    squidaio_micro_bufs = memPoolCreate("squidaio_micro_bufs", AIO_MICRO_BUFS);
+    squidaio_micro_bufs = new MemAllocatorProxy("squidaio_micro_bufs", AIO_MICRO_BUFS);
 
     squidaio_initialised = 1;
 }
@@ -636,7 +636,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
         resultp->aio_errno = requestp->err;
     }
 
-    memPoolFree(squidaio_request_pool, requestp);
+    squidaio_request_pool->free(requestp);
 }				/* squidaio_cleanup_request */
 
 
@@ -667,7 +667,7 @@ squidaio_open(const char *path, int oflag, mode_t mode, squidaio_result_t * resu
     if (!squidaio_initialised)
         squidaio_init();
 
-    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->path = (char *) squidaio_xstrdup(path);
 
@@ -705,7 +705,7 @@ squidaio_read(int fd, char *bufp, int bufs, off_t offset, int whence, squidaio_r
     if (!squidaio_initialised)
         squidaio_init();
 
-    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->fd = fd;
 
@@ -748,7 +748,7 @@ squidaio_write(int fd, char *bufp, int bufs, off_t offset, int whence, squidaio_
     if (!squidaio_initialised)
         squidaio_init();
 
-    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->fd = fd;
 
@@ -792,7 +792,7 @@ squidaio_close(int fd, squidaio_result_t * resultp)
     if (!squidaio_initialised)
         squidaio_init();
 
-    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->fd = fd;
 
@@ -827,7 +827,7 @@ squidaio_stat(const char *path, struct stat *sb, squidaio_result_t * resultp)
     if (!squidaio_initialised)
         squidaio_init();
 
-    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->path = (char *) squidaio_xstrdup(path);
 
@@ -865,7 +865,7 @@ squidaio_unlink(const char *path, squidaio_result_t * resultp)
     if (!squidaio_initialised)
         squidaio_init();
 
-    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->path = squidaio_xstrdup(path);
 
@@ -898,7 +898,7 @@ squidaio_truncate(const char *path, off_t length, squidaio_result_t * resultp)
     if (!squidaio_initialised)
         squidaio_init();
 
-    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->path = (char *) squidaio_xstrdup(path);
 
@@ -938,7 +938,7 @@ squidaio_opendir(const char *path, squidaio_result_t * resultp)
     if (!squidaio_initialised)
         squidaio_init();
 
-    requestp = memPoolAlloc(squidaio_request_pool);
+    requestp = squidaio_request_pool->alloc();
 
     resultp->result_type = _AIO_OP_OPENDIR;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.63 2004/08/30 03:28:58 robertc Exp $
+ * $Id: cbdata.cc,v 1.64 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -158,7 +158,7 @@ static OBJH cbdataDumpHistory;
 
 struct CBDataIndex
 {
-    MemPool *pool;
+    MemAllocatorProxy *pool;
     FREE *free_func;
 }
 
@@ -202,7 +202,7 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
 
     assert((size_t)cbdata::Offset == (sizeof(cbdata) - ((cbdata *)NULL)->dataSize()));
 
-    cbdata_index[type].pool = memPoolCreate(label, size + cbdata::Offset);
+    cbdata_index[type].pool = new MemAllocatorProxy(label, size + cbdata::Offset);
 
     cbdata_index[type].free_func = free_func;
 }
@@ -260,8 +260,8 @@ cbdataInternalAlloc(cbdata_type type)
 {
     cbdata *p;
     assert(type > 0 && type < cbdata_types);
-    p = new (memPoolAlloc(cbdata_index[type].pool)) cbdata;
-    //    p = (cbdata *)memPoolAlloc(cbdata_index[type].pool);
+    p = new (cbdata_index[type].pool->alloc()) cbdata;
+    //    p = (cbdata *)cbdata_index[type].pool->alloc();
 
     p->type = type;
     p->valid = 1;
@@ -332,7 +332,7 @@ cbdataInternalFree(void *p)
      * we could use the normal delete operator
      * and it would Just Work. RBC 20030902
      */
-    memPoolFree(cbdata_index[theType].pool, c);
+    cbdata_index[theType].pool->free(c);
     return NULL;
 }
 
@@ -430,7 +430,7 @@ cbdataInternalUnlock(const void *p)
      * we could use the normal delete operator
      * and it would Just Work. RBC 20030902
      */
-    memPoolFree(cbdata_index[theType].pool, c);
+    cbdata_index[theType].pool->free(c);
 }
 
 int
@@ -514,11 +514,11 @@ cbdataDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "types\tsize\tallocated\ttotal\n");
 
     for (int i = 1; i < cbdata_types; i++) {
-        MemPool *pool = cbdata_index[i].pool;
+        MemAllocatorProxy *pool = cbdata_index[i].pool;
 
         if (pool) {
-            int obj_size = pool->obj_size - cbdata::Offset;
-            storeAppendPrintf(sentry, "%s\t%d\t%d\t%d\n", pool->label + 7, obj_size, pool->meter.inuse.level, obj_size * pool->meter.inuse.level);
+            int obj_size = pool->objectSize() - cbdata::Offset;
+            storeAppendPrintf(sentry, "%s\t%d\t%d\t%d\n", pool->objectType() + 7, obj_size, pool->getMeter().inuse.level, obj_size * pool->getMeter().inuse.level);
         }
     }
 

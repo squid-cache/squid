@@ -42,25 +42,6 @@
 #include "ACLUserData.h"
 #include "client_side.h"
 
-MemPool (*ACLIdent::Pool)(NULL);
-void *
-ACLIdent::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLIdent));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLIdent", sizeof (ACLIdent));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLIdent::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 ACLIdent::~ACLIdent()
 {
     delete data;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLExtUser.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLExtUser.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,8 +43,7 @@ class ACLExtUser : public ACL
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLExtUser);
 
     ACLExtUser(ACLData<char const *> *newData, char const *);
     ACLExtUser (ACLExtUser const &old);
@@ -61,7 +60,6 @@ public:
     virtual ACL *clone()const;
 
 private:
-    static MemPool *Pool;
     static Prototype UserRegistryProtoype;
     static ACLExtUser UserRegistryEntry_;
     static Prototype RegexRegistryProtoype;
@@ -69,5 +67,7 @@ private:
     ACLData<char const *> *data;
     char const *type_;
 };
+
+MEMPROXY_CLASS_INLINE(ACLExtUser)
 
 #endif /* SQUID_ACLIDENT_H */

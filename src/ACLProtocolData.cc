@@ -1,5 +1,5 @@
 /*
- * $Id: ACLProtocolData.cc,v 1.4 2003/10/20 12:33:01 robertc Exp $
+ * $Id: ACLProtocolData.cc,v 1.5 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -37,25 +37,6 @@
 #include "squid.h"
 #include "ACLProtocolData.h"
 #include "ACLChecklist.h"
-
-MemPool (*ACLProtocolData::Pool)(NULL);
-void *
-ACLProtocolData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLProtocolData));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLProtocolData", sizeof (ACLProtocolData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLProtocolData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 ACLProtocolData::ACLProtocolData() : values (NULL)
 {}

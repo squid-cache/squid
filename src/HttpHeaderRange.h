@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderRange.h,v 1.5 2003/08/04 22:14:40 robertc Exp $
+ * $Id: HttpHeaderRange.h,v 1.6 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,8 +44,7 @@ class HttpHdrRangeSpec
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(HttpHdrRangeSpec);
     typedef Range<ssize_t> HttpRange;
     static ssize_t const UnknownPosition;
 
@@ -59,10 +58,9 @@ public:
     bool mergeWith(const HttpHdrRangeSpec * donor);
     ssize_t offset;
     ssize_t length;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(HttpHdrRangeSpec)
 
 /* There may be more than one byte range specified in the request.
  * This object holds all range specs in order of their appearence
@@ -73,8 +71,7 @@ class HttpHdrRange
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(HttpHdrRange);
 
     static size_t ParsedCount;
     /* Http Range Header Field */
@@ -107,11 +104,12 @@ public:
     Vector<HttpHdrRangeSpec *> specs;
 
 private:
-    static MemPool *Pool;
     void getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy);
     void merge (Vector<HttpHdrRangeSpec *> &basis);
     ssize_t clen;
 };
+
+MEMPROXY_CLASS_INLINE(HttpHdrRange)
 
 /* data for iterating thru range specs */
 

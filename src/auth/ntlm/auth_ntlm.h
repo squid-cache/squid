@@ -36,16 +36,14 @@ class NTLMUser : public AuthUser
 {
 
 public:
+    MEMPROXY_CLASS(NTLMUser);
     virtual void deleteSelf() const;
-    void *operator new(size_t);
-    void operator delete (void *);
     NTLMUser(AuthConfig *);
     ~NTLMUser();
     dlink_list proxy_auth_list;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(NTLMUser)
 
 typedef class NTLMUser ntlm_user_t;
 
@@ -53,8 +51,7 @@ class AuthNTLMUserRequest : public AuthUserRequest
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(AuthNTLMUserRequest);
 
     AuthNTLMUserRequest();
     virtual ~AuthNTLMUserRequest();
@@ -86,10 +83,11 @@ public:
     ConnStateData::Pointer conn;
 
 private:
-    static MemPool *Pool;
     /* the user */
     NTLMUser * _theUser;
 };
+
+MEMPROXY_CLASS_INLINE(AuthNTLMUserRequest)
 
 struct _ntlm_helper_state_t
 {

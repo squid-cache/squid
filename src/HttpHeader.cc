@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.95 2003/09/29 10:24:00 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.96 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1478,25 +1478,6 @@ httpHeaderNameById(int id)
     assert(id >= 0 && id < HDR_ENUM_END);
 
     return HeadersAttrs[id].name;
-}
-
-MemPool (*HttpHeaderEntry::Pool)(NULL);
-void *
-HttpHeaderEntry::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (HttpHeaderEntry));
-
-    if (!Pool)
-        Pool = memPoolCreate("HttpHeaderEntry", sizeof (HttpHeaderEntry));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-HttpHeaderEntry::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }
 
 int

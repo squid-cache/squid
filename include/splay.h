@@ -1,34 +1,11 @@
 /*
- * $Id: splay.h,v 1.26 2003/09/22 08:50:51 robertc Exp $
+ * $Id: splay.h,v 1.27 2004/08/30 05:12:29 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
 #define SQUID_SPLAY_H
 
 #ifndef __cplusplus
-/* legacy C bindings - can be removed when mempool is C++ */
-
-typedef struct _splay_node
-{
-    void *data;
-
-    struct _splay_node *left;
-
-    struct _splay_node *right;
-}
-
-splayNode;
-
-typedef int SPLAYCMP(const void **a, const void **b);
-typedef void SPLAYWALKEE(void **nodedata, void *state);
-
-SQUIDCEXTERN int splayLastResult;
-
-/* MUST match C++ prototypes */
-SQUIDCEXTERN splayNode *splay_insert(void *, splayNode *, SPLAYCMP *);
-SQUIDCEXTERN splayNode *splay_splay(const void **, splayNode *, SPLAYCMP *);
-SQUIDCEXTERN splayNode *splay_delete(const void *, splayNode *, SPLAYCMP *);
-SQUIDCEXTERN void splay_walk(splayNode *, SPLAYWALKEE *, void *);
 #else
 
 #include "Stack.h"
@@ -59,7 +36,7 @@ public:
 
     SplayNode<V> * insert(Value data, SPLAYCMP * compare);
 
-    SplayNode<V> * splay(const Value &data, SPLAYCMP * compare) const;
+    template <class FindValue> SplayNode<V> * splay(const FindValue &data, int( * compare)(FindValue const &a, Value const &b)) const;
 };
 
 typedef SplayNode<void *> splayNode;
@@ -86,7 +63,7 @@ public:
     Splay():head(NULL), elements (0){}
 
     mutable SplayNode<V> * head;
-    Value const *find (Value const &, SPLAYCMP *compare) const;
+    template <class FindValue> Value const *find (FindValue const &, int( * compare)(FindValue const &a, Value const &b)) const;
     void insert(Value const &, SPLAYCMP *compare);
 
     void remove
@@ -240,8 +217,9 @@ SplayNode<V>::insert(Value dataToInsert, SPLAYCMP * compare)
 }
 
 template<class V>
+template<class FindValue>
 SplayNode<V> *
-SplayNode<V>::splay(Value const &dataToFind, SPLAYCMP * compare) const
+SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const &a, Value const &b)) const
 {
     if (this == NULL) {
         /* can't have compared successfully :} */
@@ -249,7 +227,8 @@ SplayNode<V>::splay(Value const &dataToFind, SPLAYCMP * compare) const
         return NULL;
     }
 
-    SplayNode<V> N(dataToFind);
+    Value temp = Value();
+    SplayNode<V> N(temp);
     SplayNode<V> *l;
     SplayNode<V> *r;
     SplayNode<V> *y;
@@ -308,8 +287,9 @@ SplayNode<V>::splay(Value const &dataToFind, SPLAYCMP * compare) const
 }
 
 template <class V>
+template <class FindValue>
 typename Splay<V>::Value const *
-Splay<V>::find (Value const &value, SPLAYCMP *compare) const
+Splay<V>::find (FindValue const &value, int( * compare)(FindValue const &a, Value const &b)) const
 {
     head = head->splay(value, compare);
 

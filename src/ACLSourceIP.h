@@ -41,17 +41,17 @@ class ACLSourceIP : public ACLIP
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLSourceIP);
 
     virtual char const *typeString() const;
     virtual int match(ACLChecklist *checklist);
     virtual ACL *clone()const;
 
 private:
-    static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLSourceIP RegistryEntry_;
 };
+
+MEMPROXY_CLASS_INLINE(ACLSourceIP)
 
 #endif /* SQUID_ACLSOURCEIP_H */

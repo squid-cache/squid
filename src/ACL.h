@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.11 2003/10/20 12:33:01 robertc Exp $
+ * $Id: ACL.h,v 1.12 2004/08/30 05:12:30 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -135,8 +135,7 @@ class ACLList
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLList);
 
     ACLList();
     void negated(bool isNegated);
@@ -144,10 +143,9 @@ public:
     int op;
     ACL *_acl;
     ACLList *next;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(ACLList)
 
 typedef ACLList acl_list;
 #endif /* SQUID_ACL_H */

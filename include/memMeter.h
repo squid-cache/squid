@@ -2,10 +2,10 @@
 #ifndef _MEM_METER_H_
 #define _MEM_METER_H_
 
-typedef struct _MemMeter MemMeter;
-
 /* object to track per-action memory usage (e.g. #idle objects) */
-struct _MemMeter {
+class MemMeter {
+  public:
+    MemMeter() : level(0), hwater_level(0), hwater_stamp(0) {}
     ssize_t level;              /* current level (count or volume) */
     ssize_t hwater_level;       /* high water mark */
     time_t hwater_stamp;        /* timestamp of last high water mark change */

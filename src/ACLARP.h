@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLARP.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLARP.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,8 +48,7 @@ class ACLARP : public ACL
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLARP);
 
     ACLARP(char const *);
     ACLARP(ACLARP const &);
@@ -64,11 +63,12 @@ public:
     virtual bool valid () const;
 
 protected:
-    static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLARP RegistryEntry_;
     SplayNode<acl_arp_data *> *data;
     char const *class_;
 };
+
+MEMPROXY_CLASS_INLINE(ACLARP)
 
 #endif /* SQUID_ACLARP_H */

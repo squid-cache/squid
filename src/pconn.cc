@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.43 2004/04/04 13:44:28 hno Exp $
+ * $Id: pconn.cc,v 1.44 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -64,7 +64,7 @@ static void pconnDelete(struct _pconn *p);
 
 static void pconnRemoveFD(struct _pconn *p, int fd);
 static OBJH pconnHistDump;
-static MemPool *pconn_fds_pool = NULL;
+static MemAllocator *pconn_fds_pool = NULL;
 CBDATA_TYPE(pconn);
 
 
@@ -91,7 +91,7 @@ static struct _pconn *
     p->hash.key = xstrdup(key);
     p->nfds_alloc = PCONN_FDS_SZ;
     p->nfds = 0;
-    p->fds = (int *)memPoolAlloc(pconn_fds_pool);
+    p->fds = (int *)pconn_fds_pool->alloc();
     debug(48, 3) ("pconnNew: adding %s\n", hashKeyStr(&p->hash));
     hash_join(table, &p->hash);
     return p;
@@ -105,7 +105,7 @@ pconnDelete(struct _pconn *p)
     hash_remove_link(table, (hash_link *) p);
 
     if (p->nfds_alloc == PCONN_FDS_SZ)
-        memPoolFree(pconn_fds_pool, p->fds);
+        pconn_fds_pool->free(p->fds);
     else
         xfree(p->fds);
 
@@ -235,7 +235,7 @@ pconnInit(void)
         server_pconn_hist[i] = 0;
     }
 
-    pconn_fds_pool = memPoolCreate("pconn_fds", PCONN_FDS_SZ * sizeof(int));
+    pconn_fds_pool = MemPools::GetInstance().create("pconn_fds", PCONN_FDS_SZ * sizeof(int));
 
     cachemgrRegister("pconn",
                      "Persistent Connection Utilization Histograms",
@@ -277,7 +277,7 @@ pconnPush(int fd, const char *host, u_short port, const char *domain)
         xmemcpy(p->fds, old, p->nfds * sizeof(int));
 
         if (p->nfds == PCONN_FDS_SZ)
-            memPoolFree(pconn_fds_pool, old);
+            pconn_fds_pool->free(old);
         else
             xfree(old);
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.30 2004/08/30 03:29:00 robertc Exp $
+ * $Id: auth_basic.cc,v 1.31 2004/08/30 05:12:32 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -116,25 +116,6 @@ const char *
 AuthBasicConfig::type() const
 {
     return basicScheme::GetInstance().type();
-}
-
-MemPool (*AuthBasicUserRequest::Pool)(NULL);
-void *
-AuthBasicUserRequest::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (AuthBasicUserRequest));
-
-    if (!Pool)
-        Pool = memPoolCreate("AuthBasicUserRequest", sizeof (AuthBasicUserRequest));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-AuthBasicUserRequest::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }
 
 AuthBasicUserRequest::AuthBasicUserRequest() : _theUser(NULL)
@@ -380,29 +361,10 @@ authBasicAuthUserFindUsername(const char *username)
     return NULL;
 }
 
-MemPool *BasicUser::Pool (NULL);
 void
 BasicUser::deleteSelf() const
 {
     delete this;
-}
-
-void *
-BasicUser::operator new(size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (BasicUser));
-
-    if (!Pool)
-        Pool = memPoolCreate("Authenticate Basic User Data", sizeof (BasicUser));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-BasicUser::operator delete (void *address)
-{
-    memPoolFree(Pool, address);
 }
 
 BasicUser::BasicUser(AuthConfig *config) : AuthUser (config) , passwd (NULL), credentials_checkedtime(0), auth_queue(NULL), cleartext (NULL), currentRequest (NULL), httpAuthHeader (NULL)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.12 2003/08/10 11:00:40 robertc Exp $
+ * $Id: Store.h,v 1.13 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -122,7 +122,7 @@ public:
 #endif
 
 private:
-    static MemPool *pool;
+    static MemImplementingAllocator *pool;
 
     bool validLength() const;
 };

@@ -1,5 +1,5 @@
 /*
- * $Id: ESILiteral.h,v 1.3 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESILiteral.h,v 1.4 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -44,8 +44,7 @@ class ESIContext;
 
 struct esiLiteral : public ESIElement
 {
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    MEMPROXY_CLASS(esiLiteral);
 
     esiLiteral(ESISegment::Pointer);
     esiLiteral(ESIContext *, const char *s, int len);
@@ -70,8 +69,9 @@ int donevars:
     void finish();
 
 private:
-    static MemPool *pool;
     esiLiteral(esiLiteral const &);
 };
+
+MEMPROXY_CLASS_INLINE(esiLiteral)
 
 #endif /* SQUID_ESILITERAL_H */

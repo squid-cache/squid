@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.56 2003/08/10 11:00:43 robertc Exp $
+ * $Id: htcp.cc,v 1.57 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -126,8 +126,7 @@ class htcpSpecifier : public StoreClient
 {
 
 public:
-    void *operator new (unsigned int byteCount);
-    void operator delete (void *address);
+    MEMPROXY_CLASS(htcpSpecifier);
 
     void created (StoreEntry *newEntry);
     void checkHit();
@@ -141,12 +140,13 @@ public:
     char *req_hdrs;
 
 private:
-    static MemPool *pool;
     HttpRequest *checkHitRequest;
 
     struct sockaddr_in *from;
     htcpDataHeader *dhdr;
 };
+
+MEMPROXY_CLASS_INLINE(htcpSpecifier)
 
 struct _htcpDetail
 {
@@ -210,8 +210,7 @@ static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
 #define N_QUERIED_KEYS 256
 static cache_key queried_keys[N_QUERIED_KEYS][MD5_DIGEST_CHARS];
-MemPool *htcpSpecifier::pool = NULL;
-static MemPool *htcpDetailPool = NULL;
+static MemAllocator *htcpDetailPool = NULL;
 
 
 static char *htcpBuildPacket(htcpStuff * stuff, ssize_t * len);
@@ -553,24 +552,6 @@ htcpSend(const char *buf, int len, struct sockaddr_in *to)
  * STUFF FOR RECEIVING HTCP MESSAGES
  */
 
-void *
-htcpSpecifier::operator new (unsigned int byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (htcpSpecifier));
-
-    if (!pool)
-        pool = memPoolCreate("htcpSpecifier", sizeof(htcpSpecifier));
-
-    return static_cast<htcpSpecifier *> (memPoolAlloc(pool));
-}
-
-void
-htcpSpecifier::operator delete (void *address)
-{
-    memPoolFree(pool, address);
-}
-
 void
 
 htcpSpecifier::setFrom (struct sockaddr_in *aSocket)
@@ -600,7 +581,7 @@ htcpFreeDetail(htcpDetail * d)
     safe_free(d->resp_hdrs);
     safe_free(d->entity_hdrs);
     safe_free(d->cache_hdrs);
-    memPoolFree(htcpDetailPool, d);
+    htcpDetailPool->free(d);
 }
 
 static int
@@ -688,7 +669,7 @@ htcpUnpackSpecifier(char *buf, int sz)
 static htcpDetail *
 htcpUnpackDetail(char *buf, int sz)
 {
-    htcpDetail *d = static_cast<htcpDetail *>(memPoolAlloc(htcpDetailPool));
+    htcpDetail *d = static_cast<htcpDetail *>(htcpDetailPool->alloc());
     int o;
     debug(31, 3) ("htcpUnpackDetail: %d bytes\n", (int) sz);
     o = htcpUnpackCountstr(buf, sz, &d->resp_hdrs);
@@ -1196,7 +1177,7 @@ htcpInit(void)
     }
 
     if (!htcpDetailPool) {
-        htcpDetailPool = memPoolCreate("htcpDetail", sizeof(htcpDetail));
+        htcpDetailPool = MemPools::GetInstance().create("htcpDetail", sizeof(htcpDetail));
     }
 }
 

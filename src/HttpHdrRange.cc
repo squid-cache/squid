@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.38 2003/09/29 10:24:00 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.39 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -68,25 +68,6 @@ ssize_t const HttpHdrRangeSpec::UnknownPosition = -1;
 /*
  * Range-Spec
  */
-
-MemPool *HttpHdrRangeSpec::Pool = NULL;
-
-void *
-HttpHdrRangeSpec::operator new(size_t size)
-{
-    assert (size == sizeof (HttpHdrRangeSpec));
-
-    if (!Pool)
-        Pool = memPoolCreate ("HttpHdrRangeSpec", sizeof (HttpHdrRangeSpec));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-HttpHdrRangeSpec::operator delete (void *spec)
-{
-    memPoolFree(Pool, spec);
-}
 
 HttpHdrRangeSpec::HttpHdrRangeSpec() : offset(UnknownPosition), length(UnknownPosition){}
 
@@ -244,25 +225,6 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
 /*
  * Range
  */
-
-MemPool *HttpHdrRange::Pool = NULL;
-
-void *
-HttpHdrRange::operator new(size_t size)
-{
-    assert (size == sizeof (HttpHdrRange));
-
-    if (!Pool)
-        Pool = memPoolCreate ("HttpHdrRange", sizeof (HttpHdrRange));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-HttpHdrRange::operator delete (void *address)
-{
-    memPoolFree(Pool, address);
-}
 
 HttpHdrRange::HttpHdrRange () : clen (HttpHdrRangeSpec::UnknownPosition)
 {}

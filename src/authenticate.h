@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.14 2004/08/30 03:28:58 robertc Exp $
+ * $Id: authenticate.h,v 1.15 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,18 +44,17 @@ struct AuthUserHashPointer : public hash_link
 
 public:
     static void removeFromCache (void *anAuthUserHashPointer);
+    MEMPROXY_CLASS(AuthUserHashPointer);
 
     AuthUserHashPointer (AuthUser *);
 
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
     AuthUser *user() const;
 
 private:
-    static MemPool *pool;
-
     AuthUser *auth_user;
 };
+
+MEMPROXY_CLASS_INLINE(AuthUserHashPointer)
 
 class ConnStateData;
 

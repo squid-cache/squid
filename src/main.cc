@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.392 2004/08/30 03:28:59 robertc Exp $
+ * $Id: main.cc,v 1.393 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -104,9 +104,9 @@ usage(void)
 {
     fprintf(stderr,
 #if USE_WIN32_SERVICE
-            "Usage: %s [-dhirsvzCDFNRVYX] [-f config-file] [-[au] port] [-k signal] [-n name] [-O CommandLine]\n"
+            "Usage: %s [-cdhirsvzCDFNRVYX] [-f config-file] [-[au] port] [-k signal] [-n name] [-O CommandLine]\n"
 #else
-            "Usage: %s [-dhsvzCDFNRVYX] [-f config-file] [-[au] port] [-k signal]\n"
+            "Usage: %s [-cdhsvzCDFNRVYX] [-f config-file] [-[au] port] [-k signal]\n"
 #endif
             "       -a port   Specify HTTP port number (default: %d).\n"
             "       -d level  Write debugging to stderr also.\n"

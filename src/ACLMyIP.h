@@ -41,8 +41,7 @@ class ACLMyIP : public ACLIP
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLMyIP);
     static ACLMyIP const &RegistryEntry();
 
     virtual char const *typeString() const;
@@ -50,9 +49,10 @@ public:
     virtual ACL *clone()const;
 
 private:
-    static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLMyIP RegistryEntry_;
 };
+
+MEMPROXY_CLASS_INLINE(ACLMyIP)
 
 #endif /* SQUID_ACLMYIP_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.23 2003/08/31 12:44:31 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.24 2004/08/30 05:12:33 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -538,23 +538,6 @@ UFSStoreState::kickReadQueue()
     return true;
 }
 
-MemPool * UFSStoreState::_queued_read::Pool = NULL;
-
-void *
-UFSStoreState::_queued_read::operator new(size_t size)
-{
-    if (!Pool)
-        Pool = memPoolCreate("AUFS Queued read data",sizeof (_queued_read));
-
-    return memPoolAlloc (Pool);
-}
-
-void
-UFSStoreState::_queued_read::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 void
 UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data)
 {
@@ -568,23 +551,6 @@ UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback, 
     q->callback = callback;
     q->callback_data = cbdataReference(callback_data);
     linklistPush(&pending_reads, q);
-}
-
-MemPool * UFSStoreState::_queued_write::Pool = NULL;
-
-void *
-UFSStoreState::_queued_write::operator new(size_t size)
-{
-    if (!Pool)
-        Pool = memPoolCreate("AUFS Queued write data",sizeof (_queued_write));
-
-    return memPoolAlloc (Pool);
-}
-
-void
-UFSStoreState::_queued_write::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }
 
 bool

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLASN.h,v 1.4 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLASN.h,v 1.5 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,8 +48,7 @@ class ACLASN : public ACLData<struct in_addr>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLASN);
 
     virtual ~ACLASN();
 
@@ -60,12 +59,13 @@ public:
     virtual void prepareForUse();
 
 private:
-    static MemPool *Pool;
     static ACL::Prototype SourceRegistryProtoype;
     static ACLStrategised<struct in_addr> SourceRegistryEntry_;
     static ACL::Prototype DestinationRegistryProtoype;
     static ACLStrategised<struct in_addr> DestinationRegistryEntry_;
     List<int> *data;
 };
+
+MEMPROXY_CLASS_INLINE(ACLASN)
 
 #endif /* SQUID_ACLASN_H */

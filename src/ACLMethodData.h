@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMethodData.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLMethodData.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,8 +43,7 @@ class ACLMethodData : public ACLData<method_t>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLMethodData);
 
     ACLMethodData();
     ACLMethodData(ACLMethodData const &);
@@ -56,9 +55,8 @@ public:
     virtual ACLData<method_t> *clone() const;
 
     List<method_t> *values;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(ACLMethodData)
 
 #endif /* SQUID_ACLMETHODDATA_H */

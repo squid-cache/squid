@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFScoss.cc,v 1.2 2003/08/27 21:19:38 wessels Exp $
+ * $Id: StoreFScoss.cc,v 1.3 2004/08/30 05:12:32 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -65,7 +65,7 @@ StoreFScoss::type() const
 void
 StoreFScoss::done()
 {
-    /*  memPoolDestroy(&coss_index_pool);  XXX Should be here? */
+    /*  delete coss_index_pool;coss_index_pool = NULL;  XXX Should be here? */
     cachemgrRegister("coss", "COSS Stats", storeCossStats, 0, 1);
     initialised = false;
 }
@@ -83,7 +83,7 @@ StoreFScoss::setup()
 {
     assert(!initialised);
 
-    coss_index_pool = memPoolCreate("COSS index data", sizeof(CossIndexNode));
+    coss_index_pool = new MemAllocatorProxy("COSS index data", sizeof(CossIndexNode));
     initialised = true;
 }
 

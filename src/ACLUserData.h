@@ -43,8 +43,7 @@ class ACLUserData : public ACLData<char const *>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLUserData);
 
     virtual ~ACLUserData();
     bool match(char const *user);
@@ -65,9 +64,8 @@ unsigned int required:
     }
 
     flags;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(ACLUserData)
 
 #endif /* SQUID_ACLUSERDATA_H */

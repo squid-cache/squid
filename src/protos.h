@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.494 2004/04/03 14:25:59 hno Exp $
+ * $Id: protos.h,v 1.495 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -185,7 +185,7 @@ SQUIDCEXTERN void _db_print(const char *,...) PRINTF_FORMAT_ARG1;
 #else
 SQUIDCEXTERN void _db_print();
 #endif
-SQUIDCEXTERN void xassert(const char *, const char *, int);
+extern void xassert(const char *, const char *, int);
 
 /* packs, then prints an object using debug() */
 SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
@@ -686,23 +686,9 @@ SQUIDCEXTERN int memInUse(mem_type);
 SQUIDCEXTERN void memDataInit(mem_type, const char *, size_t, int);
 SQUIDCEXTERN void memCheckInit(void);
 
-/* MemPool */
-SQUIDCEXTERN MemPool *memPoolCreate(const char *label, size_t obj_size);
-SQUIDCEXTERN void *memPoolAlloc(MemPool * pool);
-SQUIDCEXTERN void memPoolFree(MemPool * pool, void *obj);
-SQUIDCEXTERN void memPoolDestroy(MemPool ** pool);
-SQUIDCEXTERN MemPoolIterator *memPoolGetFirst(void);
-SQUIDCEXTERN MemPool *memPoolGetNext(MemPoolIterator ** iter);
-SQUIDCEXTERN void memPoolSetChunkSize(MemPool * pool, size_t chunksize);
-SQUIDCEXTERN void memPoolSetIdleLimit(size_t new_idle_limit);
-SQUIDCEXTERN int memPoolGetStats(MemPoolStats * stats, MemPool * pool);
-SQUIDCEXTERN int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
-SQUIDCEXTERN void memPoolClean(time_t maxage);
 
 /* Mem */
 SQUIDCEXTERN void memConfigure(void);
-SQUIDCEXTERN int memPoolInUseCount(MemPool * pool);
-SQUIDCEXTERN int memPoolsTotalAllocated(void);
 
 /* ----------------------------------------------------------------- */
 
