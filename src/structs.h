@@ -508,11 +508,11 @@ struct _ConnStateData {
 };
 
 struct _ipcache_addrs {
+    struct in_addr *in_addrs;
+    unsigned char *bad_mask;
     unsigned char count;
     unsigned char cur;
     unsigned char badcount;
-    struct in_addr *in_addrs;
-    unsigned char *bad_mask;
 };
 
 struct _ipcache_entry {

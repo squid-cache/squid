@@ -1916,8 +1916,6 @@ DOC_START
 	XXX
 DOC_END
 
-EOF
-
 NAME: minimum_retry_timeout
 COMMENT: (seconds)
 TYPE: time_t
@@ -1957,3 +1955,5 @@ DOC_START
 
 maximum_single_addr_tries 3
 DOC_END
+
+EOF
