@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.235 2003/04/25 21:45:29 robertc Exp $
+ * $Id: squid.h,v 1.236 2003/07/14 10:36:42 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -327,8 +327,6 @@ extern "C"
 #if USE_SSL
 #include "ssl_support.h"
 #endif
-
-#include "Stack.h"
 
 /* Needed for poll() on Linux at least */
 #if HAVE_POLL

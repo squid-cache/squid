@@ -1,6 +1,6 @@
 
 /*
- * $Id: Generic.h,v 1.4 2003/02/21 22:50:05 robertc Exp $
+ * $Id: Generic.h,v 1.5 2003/07/14 10:36:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -51,7 +51,6 @@ T& for_each(L const &head, T& visitor)
     return visitor;
 }
 
-
 template <class T>
 T& for_each(dlink_list const &collection, T& visitor)
 {
@@ -60,5 +59,18 @@ T& for_each(dlink_list const &collection, T& visitor)
 
     return visitor;
 }
+
+template <class S>
+
+class Stack;
+
+template <class E, class T>
+T& for_each(Stack<E> const &collection, T& visitor)
+{
+    for (size_t index = 0; index < collection.count; ++index)
+        visitor(*(typename T::argument_type const *)collection.items[index]);
+
+    return visitor;
+};
 
 #endif /* SQUID_GENERIC_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.57 2003/07/14 08:21:56 robertc Exp $
+ * $Id: cbdata.cc,v 1.58 2003/07/14 10:36:42 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -89,18 +89,18 @@ public:
     int type;
 #if CBDATA_DEBUG
 
-    void addHistory(char const *label, char const *file, int line) const
+    void addHistory(char const *label, char const *file, int line)
     {
-        if (calls->count > 1000)
+        if (calls.size() > 1000)
             return;
 
-        stackPush (calls, new CBDataCall(label, file, line));
+        calls.push_back(new CBDataCall(label, file, line));
     }
 
     dlink_node link;
     const char *file;
     int line;
-    Stack *calls;
+    Stack<CBDataCall*> calls;
 #endif
 
     /* cookie used while debugging */
@@ -147,10 +147,8 @@ cbdata::deleteSelf()
 #if CBDATA_DEBUG
     CBDataCall *aCall;
 
-    while ((aCall = (CBDataCall *)stackPop(calls)))
+    while ((aCall = calls.pop()))
         delete aCall;
-
-    stackDestroy(calls);
 
 #endif
 
@@ -252,7 +250,7 @@ cbdataInternalAlloc(cbdata_type type)
 
     p->file = file;
     p->line = line;
-    p->calls = stackCreate();
+    p->calls = Stack<CBDataCall *> ();
     p->addHistory("Alloc", file, line);
     dlinkAdd(p, &p->link, &cbdataEntries);
     debug(45, 3) ("cbdataAlloc: %p %s:%d\n", &p->data, file, line);
@@ -484,15 +482,6 @@ cbdataDump(StoreEntry * sentry)
 
 #if CBDATA_DEBUG
 
-template <class T>
-T& for_each(Stack const &collection, T& visitor)
-{
-    for (size_t index = 0; index < collection.count; ++index)
-        visitor(*(typename T::argument_type const *)collection.items[index]);
-
-    return visitor;
-};
-
 struct CBDataCallDumper : public unary_function<CBDataCall, void>
 {
     CBDataCallDumper (StoreEntry *anEntry):where(anEntry){}
@@ -514,7 +503,7 @@ struct CBDataHistoryDumper : public CBDataDumper
         CBDataDumper::operator()(x);
         storeAppendPrintf(where, "\n");
         storeAppendPrintf(where, "Action\tFile\tLine\n");
-        for_each (*x.calls,callDumper);
+        for_each (x.calls,callDumper);
         storeAppendPrintf(where, "\n");
     }
 

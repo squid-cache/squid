@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.570 2003/06/26 12:51:58 robertc Exp $
+ * $Id: store.cc,v 1.571 2003/07/14 10:36:42 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -46,6 +46,7 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "Stack.h"
 
 static STMCB storeWriteComplete;
 
@@ -108,7 +109,7 @@ static EVH storeLateRelease;
 /*
  * local variables
  */
-static Stack LateReleaseStack;
+static Stack<StoreEntry*> LateReleaseStack;
 MemPool *StoreEntry::pool = NULL;
 
 void *
@@ -1218,7 +1219,7 @@ storeRelease(StoreEntry * e)
              */
             e->lock_count++;
             e->setReleaseFlag();
-            stackPush(&LateReleaseStack, e);
+            LateReleaseStack.push_back(e);
             PROF_stop(storeRelease);
             return;
         } else {
@@ -1264,7 +1265,7 @@ storeLateRelease(void *unused)
     }
 
     for (i = 0; i < 10; i++) {
-        e = static_cast<StoreEntry*>(stackPop(&LateReleaseStack));
+        e = LateReleaseStack.pop();
 
         if (e == NULL) {
             /* done! */
@@ -1382,7 +1383,6 @@ storeInit(void)
     mem_policy = createRemovalPolicy(Config.memPolicy);
     storeDigestInit();
     storeLogOpen();
-    stackInit(&LateReleaseStack);
     eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
     storeDirInit();
     storeRebuildStart();
