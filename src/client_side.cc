@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.347 1998/07/14 19:56:40 wessels Exp $
+ * $Id: client_side.cc,v 1.348 1998/07/14 22:18:20 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -179,6 +179,7 @@ clientAccessCheckDone(int answer, void *data)
 	httpReplySwapOut(rep, http->entry);
 	/* do not need it anymore */
 	httpReplyDestroy(rep);
+	storeComplete(http->entry);
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->uri);
 	debug(33, 5) ("AclMatchedName = %s\n",
