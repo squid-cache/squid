@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.106 1998/09/09 18:21:50 wessels Exp $
+# $Id: cf.data.pre,v 1.107 1998/09/09 20:05:47 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2578,5 +2578,11 @@ incoming_http_average 4
 min_icp_poll_cnt 8
 min_http_poll_cnt 8
 DOC_END
+
+NAME: max_open_disk_fds
+TYPE: int
+LOC: Config.max_open_disk_fds
+DEFAULT: 0
+DOC_NONE
 
 EOF

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.284 1998/09/04 23:05:02 wessels Exp $
+ * $Id: stat.cc,v 1.285 1998/09/09 20:05:50 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -572,6 +572,8 @@ info_get(StoreEntry * sentry)
 	Squid_MaxFD - Number_FD);
     storeAppendPrintf(sentry, "\tReserved number of file descriptors:  %4d\n",
 	RESERVED_FD);
+    storeAppendPrintf(sentry, "\tDisk files open:                      %4d\n",
+	open_disk_fd);
 
     storeAppendPrintf(sentry, "Internal Data Structures:\n");
     storeAppendPrintf(sentry, "\t%6d StoreEntries\n",
