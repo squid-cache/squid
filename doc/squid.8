@@ -1,0 +1,115 @@
+.TH squid 8 "squid version 2.0"
+.\" Copyright and licensing information
+.\" goes here.
+.SH NAME
+squid \- proxy caching server
+.SH SYNOPSIS
+.B squid
+[
+.B \-dhsvzCDFNRVYX
+] [
+.BI \-f " config-file"
+] [
+\-[
+.B au
+] 
+.I port
+] [
+.B \-k " signal"
+]
+.SH DESCRIPTION
+.B squid
+is a high-performance proxy caching server for web clients,
+supporting FTP, gopher, and HTTP data objects.  Unlike traditional
+caching software, 
+.B squid
+handles all requests in a single, non-blocking, I/O-driven process.
+.PP
+.B squid
+keeps meta data and especially hot objects cached in RAM, 
+caches DNS lookups, supports non-blocking DNS lookups, and implements
+negative caching of failed requests.
+.PP
+.B squid
+supports SSL, extensive access controls, and full request 
+logging.  By using the lightweight Internet Cache Protocol, 
+.B squid
+caches can be arranged in a hierarchy or mesh for additional 
+bandwidth savings.
+.PP
+.B squid
+consists of a main server program squid, a Domain Name System
+lookup program dnsserver, some optional programs for rewriting
+requests and performing authentication, and some management and client
+tools.  When squid starts up, it spawns a configurable number of
+dnsserver processes, each of which can perform a single, blocking
+Domain Name System (DNS) lookup.  This reduces the amount of time the
+cache waits for DNS lookups.
+.PP
+.B squid
+is derived from the ARPA-funded Harvest Project 
+http://harvest.cs.colorado.edu/
+.PP
+This manual page only lists the command line arguments.  For details
+on how to configure
+.B squid
+see the file 
+.BI /etc/squid/squid.conf,
+the FAQ included with the distribution
+and the documentation at the
+.B squid
+home page http://www.squid-cache.org
+.PP
+.SH OPTIONS
+.IP "-a port"
+Specify HTTP port number (default: 3128).
+.IP "-d level"
+Write debugging to stderr also.
+.IP "-f file"
+Use the given config-file instead of
+.I /etc/squid/squid.conf
+.IP -h
+Print help message.
+.IP "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
+Parse configuration file, then send signal to running copy 
+(except -k parse) and exit.
+.IP -s
+Enable logging to syslog.
+.IP "-u port"
+Specify ICP port number (default: 3130), disable with 0.
+.IP -v
+Print version.
+.IP -z
+Create swap directories
+.IP -C
+Do not catch fatal signals.
+.IP -D
+Disable initial DNS tests.
+.IP -F
+Don't serve any requests until store is rebuilt.
+.IP -N
+No daemon mode.
+.IP -R
+Do not set REUSEADDR on port.
+.IP -V
+Virtual host httpd-accelerator.
+.IP -X
+Force full debugging.
+.IP -Y
+Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.   
+.SH FILES
+.I /etc/squid/squid.conf
+.RS
+The main configuration file.  You must initially make 
+changes to this file for 
+.B squid
+to work.  For example, the default configuration does not 
+allow access from any browser.
+
+.\" Could add the following sections:
+.\" .SH ENVIRONMENT
+.\" .SH DIAGNOSTICS
+.\" .SH BUGS
+.\" .SH AUTHOR
+.\" .SH SEE ALSO
+
