@@ -1,5 +1,5 @@
 /*
- * $Id: squid_endian.h,v 1.1 2003/08/05 21:40:07 robertc Exp $
+ * $Id: squid_endian.h,v 1.2 2003/08/07 13:31:34 robertc Exp $
  *
  * AUTHOR: Alan Barrett
  *
@@ -65,7 +65,6 @@
  *
  * Some systems define htobe16()/be16toh() and friends in <sys/endian.h>.
  */
-#include <sys/types.h>
 #if HAVE_BYTESWAP_H
 #  include <byteswap.h>
 #endif /* HAVE_BYTESWAP_H */
