@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.484 2003/10/20 12:33:01 robertc Exp $
+ * $Id: structs.h,v 1.485 2004/04/03 14:07:39 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1841,6 +1841,7 @@ struct _FwdState
     ErrorState *err;
     time_t start;
     int n_tries;
+    int origin_tries;
 #if WIP_FWD_LOG
 
     http_status last_status;
