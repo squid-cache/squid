@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.415 2002/09/15 06:40:57 robertc Exp $
+ * $Id: cache_cf.cc,v 1.416 2002/09/29 19:02:00 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -83,12 +83,14 @@ static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
+#if HTTP_VIOLATIONS
 static void dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[]);
 static void parse_http_header_access(header_mangler header[]);
 static void free_http_header_access(header_mangler header[]);
 static void dump_http_header_replace(StoreEntry * entry, const char *name, header_mangler header[]);
 static void parse_http_header_replace(header_mangler * header);
 static void free_http_header_replace(header_mangler * header);
+#endif
 static void parse_denyinfo(acl_deny_info_list ** var);
 static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var);
 static void free_denyinfo(acl_deny_info_list ** var);
@@ -965,6 +967,7 @@ parse_delay_pool_access(delayConfig * cfg)
 }
 #endif
 
+#if HTTP_VIOLATIONS
 static void
 dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[])
 {
@@ -1084,6 +1087,7 @@ free_http_header_replace(header_mangler header[])
 	    safe_free(header[i].replacement);
     }
 }
+#endif
 
 void
 dump_cachedir_options(StoreEntry * entry, struct cache_dir_option *options, SwapDir * sd)
