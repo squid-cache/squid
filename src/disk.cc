@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.16 1996/07/09 04:56:00 wessels Exp $
+ * $Id: disk.cc,v 1.17 1996/07/09 23:01:16 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -228,7 +228,7 @@ int file_close(fd)
 	file_table[fd].write_daemon = NOT_PRESENT;
 	file_table[fd].filename[0] = '\0';
 
-	if (fdstat_type(fd) == FD_SOCKET) {
+	if (fdstatGetType(fd) == FD_SOCKET) {
 	    debug(6, 0, "FD %d: Someone called file_close() on a socket\n", fd);
 	    fatal_dump(NULL);
 	}
