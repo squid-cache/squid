@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.346 1998/07/14 17:03:53 wessels Exp $
+ * $Id: client_side.cc,v 1.347 1998/07/14 19:56:40 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -48,9 +48,6 @@ static CWCB clientWriteComplete;
 static PF clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
-static void clientFinishIMS(clientHttpRequest * http);
-static STCB clientGetHeadersForIMS;
-static STCB clientGetHeadersForSpecialIMS;
 static int CheckQuickAbort2(const clientHttpRequest *);
 static int clientCheckTransferDone(clientHttpRequest *);
 static void CheckQuickAbort(clientHttpRequest *);
@@ -75,6 +72,7 @@ static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
 static int clientCheckContentLength(request_t * r);
 static int httpAcceptDefer(void);
+static log_type clientProcessRequest2(clientHttpRequest * http);
 
 static int
 checkAccelOnly(clientHttpRequest * http)
@@ -324,10 +322,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     const char *url = storeUrl(entry);
     int unlink_request = 0;
     StoreEntry *oldentry;
+    int recopy = 1;
     const http_status status = mem->reply->sline.status;
     debug(33, 3) ("clientHandleIMSReply: %s, %d bytes\n", url, (int) size);
-    memFree(MEM_4K_BUF, buf);
-    buf = NULL;
     if (size < 0 && entry->store_status != STORE_ABORTED)
 	storeAbort(entry, 1);
     if (entry->store_status == STORE_ABORTED) {
@@ -356,7 +353,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 		http->out.offset + size,
 		http->out.offset,
 		4096,
-		memAllocate(MEM_4K_BUF),
+		buf,
 		clientHandleIMSReply,
 		http);
 	    return;
@@ -395,26 +392,21 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	}
 	storeUnregister(http->old_entry, http);
 	storeUnlockObject(http->old_entry);
+	recopy = 0;
     }
     http->old_entry = NULL;	/* done with old_entry */
-    if (entry->store_status == STORE_ABORTED) {
-	debug(33, 0) ("clientHandleIMSReply: IMS swapin failed on aborted object\n");
-	http->log_type = LOG_TCP_SWAPFAIL_MISS;
-	clientProcessMiss(http);
-	return;
+    assert(entry->store_status != STORE_ABORTED);
+    if (recopy) {
+	storeClientCopy(entry,
+	    http->out.offset,
+	    http->out.offset,
+	    4096,
+	    buf,
+	    clientSendMoreData,
+	    http);
+    } else {
+	clientSendMoreData(data, buf, size);
     }
-    /*
-     * use clientCacheHit() here as the callback because we might
-     * be swapping in from disk, and the file might not really be
-     * there
-     */
-    storeClientCopy(entry,
-	http->out.offset,
-	http->out.offset,
-	4096,
-	memAllocate(MEM_4K_BUF),
-	clientCacheHit,
-	http);
 }
 
 int
@@ -503,7 +495,7 @@ clientPurgeRequest(clientHttpRequest * http)
 	storeRelease(entry);
 	http->http_code = HTTP_OK;
     }
-    debug(33, 4) ("clientGetHeadersForIMS: Not modified '%s'\n",
+    debug(33, 4) ("clientPurgeRequest: Not modified '%s'\n",
 	storeUrl(entry));
     /*
      * Make a new entry to hold the reply to be written
@@ -1248,16 +1240,17 @@ static void
 clientCacheHit(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
-    StoreEntry *e;
+    StoreEntry *e = http->entry;
+    MemObject *mem;
+    request_t *r = http->request;
     debug(33, 3) ("clientCacheHit: %s, %d bytes\n", http->uri, (int) size);
-    if (size >= 0) {
-	clientSendMoreData(data, buf, size);
-    } else if (http->entry == NULL) {
-        memFree(MEM_4K_BUF, buf);
+    if (http->entry == NULL) {
+	memFree(MEM_4K_BUF, buf);
 	debug(33, 3) ("clientCacheHit: request aborted\n");
-    } else {
+	return;
+    } else if (size < 0) {
 	/* swap in failure */
-        memFree(MEM_4K_BUF, buf);
+	memFree(MEM_4K_BUF, buf);
 	debug(33, 3) ("clientCacheHit: swapin failure for %s\n", http->uri);
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
 	if ((e = http->entry)) {
@@ -1266,6 +1259,80 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    storeUnlockObject(e);
 	}
 	clientProcessMiss(http);
+	return;
+    }
+    assert(size > 0);
+    mem = e->mem_obj;
+    assert(e->store_status != STORE_ABORTED);
+    if (mem->reply->sline.status == 0) {
+	/*
+	 * we don't have full reply headers yet; either wait for more or
+	 * punt to clientProcessMiss.
+	 */
+	if (e->mem_status == IN_MEMORY) {
+	    clientProcessMiss(http);
+	} else if (size == SM_PAGE_SIZE && http->out.offset == 0) {
+	    clientProcessMiss(http);
+	} else {
+	    debug(33, 3) ("clientCacheHit: waiting for HTTP reply headers\n");
+	    storeClientCopy(e,
+		http->out.offset + size,
+		http->out.offset,
+		SM_PAGE_SIZE,
+		buf,
+		clientCacheHit,
+		http);
+	}
+	return;
+    }
+    /*
+     * Got the headers, now grok them
+     */
+    assert(http->log_type == LOG_TCP_HIT);
+    if (checkNegativeHit(e)) {
+	http->log_type = LOG_TCP_NEGATIVE_HIT;
+	clientSendMoreData(data, buf, size);
+    } else if (refreshCheck(e, r, 0)) {
+	/*
+	 * We hold a stale copy; it needs to be validated
+	 */
+	if (r->protocol == PROTO_HTTP) {
+	    http->log_type = LOG_TCP_REFRESH_MISS;
+	    clientProcessExpired(http);
+	} else {
+	    http->log_type = LOG_TCP_MISS;
+	    clientProcessMiss(http);
+	}
+    } else if (EBIT_TEST(r->flags, REQ_IMS)) {
+	/*
+	 * Handle If-Modified-Since requests from the client
+	 */
+	if (mem->reply->sline.status != HTTP_OK) {
+	    debug(33, 4) ("clientCacheHit: Reply code %d != 200\n",
+		mem->reply->sline.status);
+	    clientProcessMiss(http);
+	} else if (modifiedSince(e, http->request)) {
+	    http->log_type = LOG_TCP_IMS_MISS;
+	    clientSendMoreData(data, buf, size);
+	} else {
+	    MemBuf mb = httpPacked304Reply(e->mem_obj->reply);
+	    http->log_type = LOG_TCP_IMS_HIT;
+	    storeUnregister(e, http);
+	    storeUnlockObject(e);
+	    e = clientCreateStoreEntry(http, http->request->method, 0);
+	    http->entry = e;
+	    httpReplyParse(e->mem_obj->reply, mb.buf);
+	    storeAppend(e, mb.buf, mb.size);
+	    memBufClean(&mb);
+	    storeComplete(e);
+	}
+    } else {
+	/*
+	 * plain ol' cache hit
+	 */
+	if (e->mem_status == IN_MEMORY)
+	    http->log_type = LOG_TCP_MEM_HIT;
+	clientSendMoreData(data, buf, size);
     }
 }
 
@@ -1609,168 +1676,6 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     }
 }
 
-/* called when clientGetHeadersFor*IMS completes */
-static void
-clientFinishIMS(clientHttpRequest * http)
-{
-    StoreEntry *entry = http->entry;
-    MemBuf mb;
-
-    http->log_type = LOG_TCP_IMS_HIT;
-    entry->refcount++;
-    /* All headers are available, double check if object is modified or not */
-    if (modifiedSince(entry, http->request)) {
-	debug(33, 4) ("clientFinishIMS: Modified '%s'\n",
-	    storeUrl(entry));
-	if (entry->store_status == STORE_ABORTED)
-	    debug(33, 0) ("clientFinishIMS: entry->swap_status == STORE_ABORTED\n");
-	storeClientCopy(entry,
-	    http->out.offset,
-	    http->out.offset,
-	    SM_PAGE_SIZE,
-	    memAllocate(MEM_4K_BUF),
-	    clientSendMoreData,
-	    http);
-	return;
-    }
-    debug(33, 4) ("clientFinishIMS: Not modified '%s'\n",
-	storeUrl(entry));
-    /*
-     * Create the Not-Modified reply from the existing entry,
-     * Then make a new entry to hold the reply to be written
-     * to the client.
-     */
-    mb = httpPacked304Reply(entry->mem_obj->reply);
-    storeUnregister(entry, http);
-    storeUnlockObject(entry);
-    http->entry = clientCreateStoreEntry(http, http->request->method, 0);
-    httpReplyParse(http->entry->mem_obj->reply, mb.buf);
-    storeAppend(http->entry, mb.buf, mb.size);
-    memBufClean(&mb);
-    storeComplete(http->entry);
-}
-
-static void
-clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
-{
-    clientHttpRequest *http = data;
-    StoreEntry *entry = http->entry;
-    MemObject *mem;
-    debug(33, 3) ("clientGetHeadersForIMS: %s, %d bytes\n",
-	http->uri, (int) size);
-    assert(size <= SM_PAGE_SIZE);
-    memFree(MEM_4K_BUF, buf);
-    buf = NULL;
-    if (size < 0 || entry->store_status == STORE_ABORTED) {
-	/*
-	 * There are different reasons why we might have size < 0.  One
-	 * being that we failed to open a swapfile.  Another being that
-	 * the request was cancelled from the client-side.  If the client
-	 * cancelled the request, then http->entry will be NULL.
-	 */
-	if (entry != NULL) {
-	    debug(33, 3) ("clientGetHeadersForIMS: storeClientCopy failed for '%s'\n",
-		storeKeyText(entry->key));
-	    clientProcessMiss(http);
-	}
-	return;
-    }
-    mem = entry->mem_obj;
-    if (mem->reply->sline.status == 0) {
-	if (entry->mem_status == IN_MEMORY) {
-	    clientProcessMiss(http);
-	    return;
-	}
-	if (size == SM_PAGE_SIZE && http->out.offset == 0) {
-	    /*
-	     * We can't get any more headers than this, so bail
-	     */
-	    debug(33, 1) ("clientGetHeadersForIMS: failed, forcing cache miss\n");
-	    clientProcessMiss(http);
-	    return;
-	}
-	debug(33, 3) ("clientGetHeadersForIMS: waiting for HTTP reply headers\n");
-	/* All headers are not yet available, wait for more data */
-	if (entry->store_status == STORE_ABORTED)
-	    debug(33, 0) ("clientGetHeadersForIMS: entry->swap_status == STORE_ABORTED\n");
-	storeClientCopy(entry,
-	    http->out.offset + size,
-	    http->out.offset,
-	    SM_PAGE_SIZE,
-	    memAllocate(MEM_4K_BUF),
-	    clientGetHeadersForIMS,
-	    http);
-	return;
-    }
-    /* All headers are available, check if object is modified or not */
-    /* ---------------------------------------------------------------
-     * Removed check for reply->sline.status != 200 because of a potential
-     * problem with ICP.  We will return a HIT for any public, cached
-     * object.  This includes other responses like 301, 410, as coded in
-     * http.c.  It is Bad(tm) to return UDP_HIT and then, if the reply
-     * code is not 200, hand off to clientProcessMiss(), which may disallow
-     * the request based on 'miss_access' rules.  Alternatively, we might
-     * consider requiring returning UDP_HIT only for 200's.  This
-     * problably means an entry->flag bit, which would be lost during
-     * restart because the flags aren't preserved across restarts.
-     * --DW 3/11/96.
-     * ---------------------------------------------------------------- */
-#ifdef CHECK_REPLY_CODE_NOTEQUAL_200
-    /* Only objects with statuscode==200 can be "Not modified" */
-    if (mem->reply->sline.status != 200) {
-	debug(33, 4) ("clientGetHeadersForIMS: Reply code %d!=200\n",
-	    mem->reply->sline.status);
-	clientProcessMiss(http);
-	return;
-    }
-#endif
-    clientFinishIMS(http);
-}
-
-/*
- * client sent an IMS request for ENTRY_SPECIAL;
- * mimic clientGetHeadersForIMS(), but call clientCacheHit()
- *     if something goes wrong;
- * note: clientGetHeadersForIMS frees "buf" earlier than we do
- */
-static void
-clientGetHeadersForSpecialIMS(void *data, char *buf, ssize_t size)
-{
-    clientHttpRequest *http = data;
-    StoreEntry *entry = http->entry;
-    debug(33, 3) ("clientGetHeadersForSpecialIMS: %s, %d bytes\n",
-	http->uri, (int) size);
-    assert(size <= SM_PAGE_SIZE);
-    if (size < 0 || entry->store_status == STORE_ABORTED) {
-	clientCacheHit(data, buf, size);
-	return;
-    }
-    if (entry->mem_obj->reply->sline.status == 0) {
-	if (entry->mem_status == IN_MEMORY) {
-	    clientCacheHit(data, buf, size);
-	    return;
-	}
-	if (size == SM_PAGE_SIZE && http->out.offset == 0) {
-	    clientCacheHit(data, buf, size);
-	    return;
-	}
-	debug(33, 3) ("clientGetHeadersForSpecialIMS: waiting for HTTP reply headers\n");
-	/* All headers are not yet available, wait for more data */
-	if (entry->store_status == STORE_ABORTED)
-	    debug(33, 0) ("clientGetHeadersForSpecialIMS: entry->swap_status == STORE_ABORTED\n");
-	storeClientCopy(entry,
-	    http->out.offset + size,
-	    http->out.offset,
-	    SM_PAGE_SIZE,
-	    buf,
-	    clientGetHeadersForSpecialIMS,
-	    http);
-	return;
-    }
-    memFree(MEM_4K_BUF, buf);
-    clientFinishIMS(http);
-}
-
 /*
  * client issued a request with an only-if-cached cache-control directive;
  * we did not find a cached object that can be returned without
@@ -1800,25 +1705,16 @@ clientProcessRequest2(clientHttpRequest * http)
     const cache_key *key;
     StoreEntry *e;
     if (r->method == METHOD_HEAD)
-        key = storeKeyPublic(http->uri, METHOD_GET);
+	key = storeKeyPublic(http->uri, METHOD_GET);
     else
-        key = storeKeyPublic(http->uri, r->method);
+	key = storeKeyPublic(http->uri, r->method);
     e = http->entry = storeGet(key);
 #if USE_CACHE_DIGESTS
     http->lookup_type = e ? "HIT" : "MISS";
 #endif
-    if (!e) {
+    if (NULL == e) {
 	/* this object isn't in the cache */
 	return LOG_TCP_MISS;
-    } else if (EBIT_TEST(e->flag, ENTRY_SPECIAL)) {
-	/* ideally, special entries should be processed later, 
-	 * so we can use std processing routines for IMS and such */
-	if (EBIT_TEST(r->flags, REQ_IMS) && e->lastmod <= r->ims)
-	    return LOG_TCP_IMS_HIT;
-	else if (e->mem_status == IN_MEMORY)
-	    return LOG_TCP_MEM_HIT;
-	else
-	    return LOG_TCP_HIT;
     } else if (!storeEntryValidToSend(e)) {
 	storeRelease(e);
 	http->entry = NULL;
@@ -1838,27 +1734,8 @@ clientProcessRequest2(clientHttpRequest * http)
 	ipcacheReleaseInvalid(r->host);
 	http->entry = NULL;
 	return LOG_TCP_CLIENT_REFRESH_MISS;
-    } else if (checkNegativeHit(e)) {
-	return LOG_TCP_NEGATIVE_HIT;
-    } else if (refreshCheck(e, r, 0)) {
-	/* The object is in the cache, but it needs to be validated.  Use
-	 * LOG_TCP_REFRESH_MISS for the time being, maybe change it to
-	 * _HIT later in clientHandleIMSReply() */
-	if (r->protocol == PROTO_HTTP)
-	    return LOG_TCP_REFRESH_MISS;
-	else
-	    return LOG_TCP_MISS;	/* XXX zoinks */
-    } else if (EBIT_TEST(r->flags, REQ_IMS)) {
-	/* User-initiated IMS request for something we think is valid */
-	return LOG_TCP_IMS_MISS;
-    } else if (EBIT_TEST(r->flags, REQ_NOCACHE_HACK)) {
-	if (r->protocol == PROTO_HTTP)
-	    return LOG_TCP_REFRESH_MISS;
-	else
-	    return LOG_TCP_MISS;	/* XXX zoinks */
-    } else if (e->mem_status == IN_MEMORY) {
-	return LOG_TCP_MEM_HIT;
     } else {
+	http->entry = e;
 	return LOG_TCP_HIT;
     }
 }
@@ -1867,7 +1744,6 @@ static void
 clientProcessRequest(clientHttpRequest * http)
 {
     char *url = http->uri;
-    StoreEntry *entry = NULL;
     request_t *r = http->request;
     int fd = http->conn->fd;
     HttpReply *rep;
@@ -1891,11 +1767,7 @@ clientProcessRequest(clientHttpRequest * http)
 		httpRequestPrefixLen(r), 0, squid_curtime);
 	    httpReplySwapOut(rep, http->entry);
 	    httpReplyDestroy(rep);
-#if OLD_CODE
-	    storeAppend(http->entry, r->prefix, r->prefix_sz);
-#else
 	    httpRequestSwapOut(r, http->entry);
-#endif
 	    storeComplete(http->entry);
 	    return;
 	}
@@ -1911,46 +1783,23 @@ clientProcessRequest(clientHttpRequest * http)
     debug(33, 4) ("clientProcessRequest: %s for '%s'\n",
 	log_tags[http->log_type],
 	http->uri);
-    if ((entry = http->entry) != NULL) {
-	storeLockObject(entry);
-	storeCreateMemObject(entry, http->uri, http->log_uri);
-	storeClientListAdd(entry, http);
-    }
     http->out.offset = 0;
-    switch (http->log_type) {
-    case LOG_TCP_HIT:
-    case LOG_TCP_NEGATIVE_HIT:
-    case LOG_TCP_MEM_HIT:
-	entry->refcount++;	/* HIT CASE */
-	if (entry->store_status == STORE_ABORTED)
-	    debug(33, 0) ("clientProcessRequest: entry->swap_status == STORE_ABORTED\n");
-	storeClientCopy(entry,
+    if (NULL != http->entry) {
+	storeLockObject(http->entry);
+	storeCreateMemObject(http->entry, http->uri, http->log_uri);
+	storeClientListAdd(http->entry, http);
+	http->entry->refcount++;
+	storeClientCopy(http->entry,
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
 	    memAllocate(MEM_4K_BUF),
 	    clientCacheHit,
 	    http);
-	return;
-    case LOG_TCP_IMS_HIT:
-    case LOG_TCP_IMS_MISS:
-	if (entry->store_status == STORE_ABORTED)
-	    debug(33, 0) ("clientProcessRequest 2: entry->swap_status == STORE_ABORTED\n");
-	storeClientCopy(entry,
-	    http->out.offset,
-	    http->out.offset,
-	    SM_PAGE_SIZE,
-	    memAllocate(MEM_4K_BUF),
-	    (http->log_type == LOG_TCP_IMS_MISS) ?
-	    clientGetHeadersForIMS : clientGetHeadersForSpecialIMS,
-	    http);
-	break;
-    case LOG_TCP_REFRESH_MISS:
-	clientProcessExpired(http);
-	break;
-    default:
+    } else {
+	/* MISS CASE */
+	http->log_type = LOG_TCP_MISS;
 	clientProcessMiss(http);
-	break;
     }
 }
 
@@ -1965,9 +1814,6 @@ clientProcessMiss(clientHttpRequest * http)
     ErrorState *err = NULL;
     debug(33, 4) ("clientProcessMiss: '%s %s'\n",
 	RequestMethodStr[r->method], url);
-#if OLD_CODE
-    debug(33, 10) ("clientProcessMiss: prefix:\n%s\n", r->prefix);
-#endif
     /*
      * We might have a left-over StoreEntry from a failed cache hit
      * or IMS request.
@@ -2398,7 +2244,7 @@ clientReadRequest(int fd, void *data)
 		 * ick; cancel the read handler for NON-GET requests
 		 * until this request is forwarded/resolved
 		 */
-    		commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+		commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 		break;
 	    }
 	    continue;		/* while offset > 0 */
