@@ -96,7 +96,11 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
     int *value = referrals ? LDAP_OPT_ON : LDAP_OPT_OFF;
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
-
+static void
+squid_ldap_memfree(char *p)
+{
+    ldap_memfree(p);
+}
 #else
 static int
 squid_ldap_errno(LDAP * ld)
@@ -115,6 +119,11 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
 	ld->ld_options |= ~LDAP_OPT_REFERRALS;
     else
 	ld->ld_options &= ~LDAP_OPT_REFERRALS;
+}
+static void
+squid_ldap_memfree(char *p)
+{
+    free(p);
 }
 #endif
 
