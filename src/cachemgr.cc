@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.16 1996/08/26 19:57:02 wessels Exp $
+ * $Id: cachemgr.cc,v 1.17 1996/08/30 23:23:27 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -283,30 +283,28 @@ void print_trailer()
     printf("<ADDRESS>\n");
     printf("Generated %s, by %s/%s@%s\n",
 	tbuf, progname, SQUID_VERSION, getfullhostname());
-    printf("</ADDRESS>\n");
+    printf("</ADDRESS></BODY></HTML>\n");
 }
 
 void noargs_html()
 {
     printf("\r\n\r\n");
-    printf("<TITLE>Cache Manager Interface</TITLE>\n");
-    printf("<H1>Cache Manager Interface</H1>\n");
-    printf("<P>\n");
-    printf("This is a WWW interface to the instrumentation interface ");
-    printf("for the Squid object cache.\n");
+    printf("<HTML><HEAD><TITLE>Cache Manager Interface</TITLE></HEAD>\n");
+    printf("<BODY><H1>Cache Manager Interface</H1>\n");
+    printf("<p>This is a WWW interface to the instrumentation interface\n");
+    printf("for the Squid object cache.</p>\n");
     printf("<HR>\n");
-    printf("<P>\n");
-    printf("<FORM METHOD=\"POST\" ACTION=\"%s\">\n", script_name);
     printf("<PRE>\n");
-    printf("<BR><STRONG>Cache Host:</STRONG><INPUT NAME=\"host\" ");
-    printf("SIZE=30 VALUE=\"%s\">\n", CACHEMGR_HOSTNAME);
-    printf("<BR><STRONG>Cache Port:</STRONG><INPUT NAME=\"port\" ");
-    printf("SIZE=30 VALUE=\"%d\">\n", CACHE_HTTP_PORT);
-    printf("<BR><STRONG>Password  :</STRONG><INPUT TYPE=\"password\" ");
-    printf("NAME=\"password\" SIZE=30 VALUE=\"\">\n");
-    printf("<BR><STRONG>URL       :</STRONG><INPUT NAME=\"url\" ");
-    printf("SIZE=30 VALUE=\"\">\n");
-    printf("<BR><STRONG>Operation :</STRONG>");
+    printf("<FORM METHOD=\"POST\" ACTION=\"%s\">\n", script_name);
+    printf("<STRONG>Cache Host:</STRONG><INPUT NAME=\"host\" ");
+    printf("SIZE=30 VALUE=\"%s\">\n\n", CACHEMGR_HOSTNAME);
+    printf("<STRONG>Cache Port:</STRONG><INPUT NAME=\"port\" ");
+    printf("SIZE=30 VALUE=\"%d\">\n\n", CACHE_HTTP_PORT);
+    printf("<STRONG>Password  :</STRONG><INPUT TYPE=\"password\" ");
+    printf("NAME=\"password\" SIZE=30 VALUE=\"\">\n\n");
+    printf("<STRONG>URL       :</STRONG><INPUT NAME=\"url\" ");
+    printf("SIZE=30 VALUE=\"\">\n\n");
+    printf("<STRONG>Operation :</STRONG>");
     printf("<SELECT NAME=\"operation\">\n");
     printf("<OPTION SELECTED VALUE=\"info\">Cache Information\n");
     printf("<OPTION VALUE=\"squid.conf\">Cache Configuration File\n");
@@ -330,11 +328,10 @@ void noargs_html()
 #ifdef REMOVE_OBJECT
     printf("<OPTION VALUE=\"remove\">Remove Object (URL required)\n");
 #endif
-    printf("</SELECT>\n");
-    printf("</PRE>\n");
+    printf("</SELECT>\n\n");
     printf("<HR>\n");
-    printf("<BR><INPUT TYPE=\"submit\"> <INPUT TYPE=\"reset\">\n");
-    printf("</FORM>\n");
+    printf("<INPUT TYPE=\"submit\"> <INPUT TYPE=\"reset\">\n");
+    printf("</FORM></PRE>\n");
     print_trailer();
 }
 
@@ -568,7 +565,7 @@ int main(int argc, char *argv[])
 	else if (!strncmp(entries[x].name, "port", 4))
 	    portnum = atoi(entries[x].val);
 	else {
-	    printf("<P><B>Unknown CGI parameter: %s</B></P>\n",
+	    printf("<P><STRONG>Unknown CGI parameter: %s</STRONG></P>\n",
 		entries[x].name);
 	    noargs_html();
 	    exit(0);
@@ -580,7 +577,7 @@ int main(int argc, char *argv[])
     }
     if (hostname[0] == '\0') {
 	printf("<H1>ERROR</H1>\n");
-	printf("<P><B>You must provide a hostname!\n</B></P><HR>");
+	printf("<P><STRONG>You must provide a hostname!\n</STRONG></P><HR>");
 	noargs_html();
 	exit(0);
     }
@@ -688,8 +685,9 @@ int main(int argc, char *argv[])
     time_val = time(NULL);
     time_string = ctime(&time_val);
 
-    printf("<TITLE>Cache Manager: %s:%s:%d</TITLE>\n", operation, hostname, portnum);
-    printf("<FORM METHOD=\"POST\" ACTION=\"%s\">\n", script_name);
+    printf("<HTML><HEAD><TITLE>Cache Manager: %s:%s:%d</TITLE></HEAD>\n",
+	operation, hostname, portnum);
+    printf("<BODY><FORM METHOD=\"POST\" ACTION=\"%s\">\n", script_name);
     printf("<INPUT TYPE=\"submit\" VALUE=\"Refresh\">\n");
     printf("<SELECT NAME=\"operation\">\n");
     printf("<OPTION SELECTED VALUE=\"%s\">Current\n", operation);
@@ -715,11 +713,12 @@ int main(int argc, char *argv[])
     printf("<INPUT TYPE=\"hidden\" NAME=\"port\" VALUE=\"%d\">\n", portnum);
     printf("<INPUT TYPE=\"hidden\" NAME=\"password\" VALUE=\"NOT_PERMITTED\">\n");
     printf("</FORM>");
-    printf("<H3><I><A HREF=\"%s\">Empty form</A></H3></I>\n", script_name);
+    printf("<p><em><A HREF=\"%s\">Empty form</A></em></p>\n", script_name);
     printf("<HR>\n");
 
-    printf("<H3>%s:  %s:%d - dated %s</H3><P>", operation,
-	hostname, portnum, time_string);
+    printf("<H1>%s:  %s:%d</H1>\n", operation,
+	hostname, portnum);
+    printf("<p>dated %s</p>\n", time_string);
     printf("<PRE>\n");
 
     /* Connect to the server */
@@ -729,7 +728,7 @@ int main(int argc, char *argv[])
     }
     if ((conn = client_comm_connect(conn, hostname, portnum)) < 0) {
 	printf("Error: connecting to cache mgr: %s:%d\n", hostname, portnum);
-	printf("%s</PRE>\n", xstrerror());
+	printf("%s</PRE></BODY></HTML>\n", xstrerror());
 	exit(1);
     }
     bytesWritten = write(conn, msg, strlen(msg));
@@ -761,20 +760,21 @@ int main(int argc, char *argv[])
 	break;
     case PARAM:
 	if (hasTables) {
-	    printf("<table border=1><td><B>Parameter</B><td><B>Value</B><td><B>Description</B><tr>\n");
+	    printf("<table border=1><tr><td><STRONG>Parameter</STRONG><td><STRONG>Value</STRONG><td><STRONG>Description</STRONG>\n");
 	    in_table = 1;
 	} else {
-	    printf("<B>\n %20s %10s %s</B><HR>\n", "Parameter", "Value", "Description");
+	    printf("\n    Parameter   Value   Description\n");
+	    printf("-------------- ------- -------------------------------------\n");
 	}
 	break;
     case STATS_U:
 	if (hasTables) {
-	    printf("<table border=1><td><B>Protocol</B><td><B>Count</B><td><B>Max KB</B><td><B>Current KB</B><td><B>Min KB</B><td><B>Hit Ratio</B><td><B>Transfer Rate</B><td><B>References</B><td><B>Transfered KB</B><tr>\n");
+	    printf("<table border=1><tr><td><STRONG>Protocol</STRONG><td><STRONG>Count</STRONG><td><STRONG>Max KB</STRONG><td><STRONG>Current KB</STRONG><td><STRONG>Min KB</STRONG><td><STRONG>Hit Ratio</STRONG><td><STRONG>Transfer Rate</STRONG><td><STRONG>References</STRONG><td><STRONG>Transfered KB</STRONG>\n");
 	    in_table = 1;
 	} else {
-	    printf("<B>Protocol | Count | Maximum  | Current  | Minimum | Hit   | Transfer | Reference | Transfered |</B>\n");
-	    printf("<B>         |       | KB       | KB       | KB      | Ratio | Rate     | Count     | KB         |</B>\n");
-	    printf("<B>---------|-------|----------|----------|---------|-------|----------|-----------|------------|</B>\n");
+	    printf("Protocol  Count   Maximum   Current   Minimum  Hit  Trans   Transfer Transfered\n");
+	    printf("                  KB        KB        KB       Rate KB/sec  Count     KB\n");
+	    printf("-------- ------- --------- --------- --------- ---- ------ --------- ----------\n");
 	}
 	break;
     default:
@@ -838,19 +838,19 @@ int main(int argc, char *argv[])
 		    d1 = 0;
 		    sscanf(reserve, "%s %d \"%[^\"]", s1, &d1, s2);
 		    if (hasTables)
-			printf("<tr><td><B>%s</B><td>%d<td>%s\n", s1, d1, s2 + 2);
+			printf("<tr><td><STRONG>%s</STRONG><td ALIGN=\"right\">%d<td>%s\n", s1, d1, s2 + 2);
 		    else
-			printf(" %20s %10d %s\n", s1, d1, s2 + 2);
+			printf("%14s %7d %s\n", s1, d1, s2 + 2);
 		    break;
 		case STATS_U:
 		    p_state = 1;
 		    sscanf(reserve, "%s %d %d %d %d %f %d %d %d",
 			s1, &d1, &d2, &d3, &d4, &f1, &d5, &d6, &d7);
 		    if (hasTables)
-			printf("<tr><td align=right><B>%s</B><td align=right>%d<td align=right>%d<td align=right>%d<td align=right>%d<td align=right>%4.2f<td align=right>%d<td align=right>%d<td align=right>%d",
+			printf("<tr><td align=\"right\"><B>%s</B><td align=\"right\">%d<td align=\"right\">%d<td align=\"right\">%d<td align=\"right\">%d<td align=\"right\">%4.2f<td align=\"right\">%d<td align=\"right\">%d<td align=\"right\">%d",
 			    s1, d1, d2, d3, d4, f1, d5, d6, d7);
 		    else
-			printf("%8s %7d %10d %10d %9d    %4.2f %10d  %10d   %10d<BR>\n",
+			printf("%8s %7d %9d %9d %9d %4.2f %6d %9d %10d\n",
 			    s1, d1, d2, d3, d4, f1, d5, d6, d7);
 		    break;
 		case STATS_O:

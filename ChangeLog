@@ -164,6 +164,22 @@ Changes to squid-1.1.alpha2:
 
 ==============================================================================
 
+Changes to squid-1.0.11 (August 30, 1996):
+
+	- Fixed ENTRY_DISPATCHED bug.  Now set ENTRY_DISPATCHED
+	  only in getFromCache().
+	- Added missing newlines to a number of debug messages.
+	- NULL-terminate long URL's in urlParse().
+	- Changed configure to remove libmalloc for FreeBSD
+	- Changed ftpget to assume a single space between date and 
+	  filename in Unix sytle listings.
+	- Added urlCheck() to check for supported method/protocol
+	  combinations and return "501 Not Implemented" when
+	  appropriate.
+	- Added ftpget check for negative port numbers in PASV
+	  reply.
+	- Added shadow password support for cachemgr shutdown.
+
 Changes to squid-1.0.10 (August 26, 1996):
 
 	- Fixed INADDR_NONE not being set for ftpget.c.
