@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.390 2004/03/01 01:37:34 adrian Exp $
+ * $Id: main.cc,v 1.391 2004/04/04 13:48:32 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1188,6 +1188,11 @@ sendSignal(void)
 {
     pid_t pid;
     debug_log = stderr;
+
+    if (strcmp(Config.pidFilename, "none") == 0) {
+        debug(0, 1) ("No pid_filename specified. Trusting you know what you are doing.\n");
+    }
+
     pid = readPidFile();
 
     if (pid > 1) {
