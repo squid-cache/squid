@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.77 2002/10/14 08:16:59 robertc Exp $
+ * $Id: urn.cc,v 1.78 2002/10/14 11:59:33 adrian Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -42,7 +42,7 @@
 class UrnState : public StoreClient {
 public:
     void created (_StoreEntry *newEntry);
-    void *operator new (unsigned int byteCount);
+    void *operator new (size_t byteCount);
     void operator delete (void *address);
     void start (request_t *, StoreEntry *);
     char *getHost (String &urlpath);
@@ -84,7 +84,7 @@ static QS url_entry_sort;
 
 CBDATA_TYPE(UrnState);
 void *
-UrnState::operator new (unsigned int byteCount)
+UrnState::operator new (size_t byteCount)
 {
      /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (UrnState));
