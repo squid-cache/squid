@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.38 1996/09/12 16:39:57 wessels Exp $
+ * $Id: wais.cc,v 1.39 1996/09/12 22:18:01 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -226,10 +226,10 @@ static void waisReadReply(fd, waisState)
     len = read(fd, buf, 4096);
     debug(24, 5, "waisReadReply: FD %d read len:%d\n", fd, len);
     if (len > 0) {
-        IOStats.Wais.reads++;
-        for (clen = len - 1, bin = 0; clen; bin++)
-            clen >>= 1;
-        IOStats.Wais.read_hist[bin]++;
+	IOStats.Wais.reads++;
+	for (clen = len - 1, bin = 0; clen; bin++)
+	    clen >>= 1;
+	IOStats.Wais.read_hist[bin]++;
     }
     if (len < 0) {
 	debug(24, 1, "waisReadReply: FD %d: read failure: %s.\n", xstrerror());
