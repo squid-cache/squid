@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.24 1996/04/08 17:08:04 wessels Exp $ */
+/* $Id: tools.cc,v 1.25 1996/04/08 19:32:42 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -10,6 +10,8 @@
 int do_mallinfo = 0;		/* don't do mallinfo() unless this gets set */
 time_t cached_curtime;
 struct timeval current_time;
+
+extern void serverConnectionsClose _PARAMS((void));
 
 #define DEAD_MSG "\
 The Harvest Cache (version %s) died.\n\
@@ -178,27 +180,9 @@ void shut_down(sig)
      int sig;
 {
     debug(21, 1, "Preparing for shutdown...\n");
-    if (theAsciiConnection) {
-	debug(21, 1, "FD %d Closing Ascii connection\n",
-	    theAsciiConnection);
-	comm_close(theAsciiConnection);
-	comm_set_select_handler(theAsciiConnection,
-	    COMM_SELECT_READ,
-	    NULL,
-	    0);
-	theAsciiConnection = -1;
-    }
-    if (theUdpConnection) {
-	debug(21, 1, "FD %d Closing Udp connection\n",
-	    theUdpConnection);
-	comm_close(theUdpConnection);
-	comm_set_select_handler(theUdpConnection,
-	    COMM_SELECT_READ,
-	    NULL,
-	    0);
-	theUdpConnection = -1;
-    }
+    serverConnectionsClose();
     ipcacheShutdownServers();
+    shutdown_pending = 1;
 }
 #endif
 
@@ -426,4 +410,16 @@ time_t getCurrentTime()
 {
     gettimeofday(&current_time, NULL);
     return cached_curtime = current_time.tv_sec;
+}
+
+
+void usr1_handle(sig)
+     int sig;
+{
+    debug(21, 1, "usr1_handle: SIGUSR1 received.\n");
+
+    reread_pending = 1;
+#if defined(_SQUID_SYSV_SIGNALS_)
+    signal(sig, rotate_logs);
+#endif
 }

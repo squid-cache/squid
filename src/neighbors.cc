@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.11 1996/04/08 17:08:03 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.12 1996/04/08 19:32:40 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -259,12 +259,12 @@ void neighbors_install(host, type, ascii_port, udp_port, proxy_only, domains)
     friends->n++;
 }
 
-static void neighborFriendsFree()
+void neighborsDestroy()
 {
     edge *e = NULL;
     edge *next = NULL;
 
-    debug(15, 1, "neighborFriendsFree()\n");
+    debug(15, 1, "neighborEdgesFree()\n");
 
     for (e = friends->edges_head; e; e = next) {
 	next = e->next;

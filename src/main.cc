@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.21 1996/04/08 17:08:02 wessels Exp $ */
+/* $Id: main.cc,v 1.22 1996/04/08 19:32:39 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -14,6 +14,8 @@ int do_dns_test = 1;
 char *config_file = NULL;
 int vhost_mode = 0;
 int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
+int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
+int reread_pending = 0;		/* set by SIGHUP handler */
 
 extern void (*failure_notify) ();	/* for error reporting from xmalloc */
 
@@ -97,35 +99,8 @@ static void mainParseOptions(argc, argv)
     }
 }
 
-static void mainInitialize()
+void serverConnectionsOpen()
 {
-    parseConfigFile(config_file);
-
-    neighbors_create();
-
-    if (asciiPortNumOverride > 0)
-	setAsciiPortNum(asciiPortNumOverride);
-    if (udpPortNumOverride > 0)
-	setUdpPortNum(udpPortNumOverride);
-
-    _db_init(getCacheLogFile());
-    fdstat_open(fileno(debug_log), LOG);
-    fd_note(fileno(debug_log), getCacheLogFile());
-
-    debug(1, 0, "Starting Harvest Cache (version %s)...\n", SQUID_VERSION);
-
-    /* init ipcache */
-    ipcache_init();
-
-    /* init neighbors */
-    neighbors_init();
-
-    ftpInitialize();
-
-#if defined(MALLOC_DBG)
-    malloc_debug(0, malloc_debug_level);
-#endif
-
     theAsciiConnection = comm_open(COMM_NONBLOCKING,
 	getAsciiPortNum(),
 	0,
@@ -161,26 +136,90 @@ static void mainInitialize()
 		theUdpConnection);
 	}
     }
-    if (theUdpConnection > 0) {
-	/* Now that the fd's are open, initialize neighbor connections */
-	if (!httpd_accel_mode || getAccelWithProxy()) {
-	    neighbors_open(theUdpConnection);
-	}
+}
+
+void serverConnectionsClose()
+{
+    if (theAsciiConnection >= 0) {
+	debug(21, 1, "FD %d Closing Ascii connection\n",
+	    theAsciiConnection);
+	fdstat_close(theAsciiConnection);
+	comm_close(theAsciiConnection);
+	comm_set_select_handler(theAsciiConnection,
+	    COMM_SELECT_READ,
+	    NULL,
+	    0);
+	theAsciiConnection = -1;
     }
+    if (theUdpConnection >= 0) {
+	debug(21, 1, "FD %d Closing Udp connection\n",
+	    theUdpConnection);
+	fdstat_close(theUdpConnection);
+	comm_close(theUdpConnection);
+	comm_set_select_handler(theUdpConnection,
+	    COMM_SELECT_READ,
+	    NULL,
+	    0);
+	theUdpConnection = -1;
+    }
+}
+
+static void mainUninitialize()
+{
+    neighborsDestroy();
+    serverConnectionsClose();
+    /* ipcache_uninit() */
+    /* neighbors_uninit(); */
+}
+
+static void mainInitialize()
+{
+    static int first_time = 1;
+    parseConfigFile(config_file);
+
+    neighbors_create();
+
+    if (asciiPortNumOverride > 0)
+	setAsciiPortNum(asciiPortNumOverride);
+    if (udpPortNumOverride > 0)
+	setUdpPortNum(udpPortNumOverride);
+
+    _db_init(getCacheLogFile());
+    fdstat_open(fileno(debug_log), LOG);
+    fd_note(fileno(debug_log), getCacheLogFile());
+
+    debug(1, 0, "Starting Harvest Cache (version %s)...\n", SQUID_VERSION);
+
+    ipcache_init();
+    neighbors_init();
+    ftpInitialize();
+
+#if defined(MALLOC_DBG)
+    malloc_debug(0, malloc_debug_level);
+#endif
+
+    serverConnectionsOpen();
+
     /* do suid checking here */
     check_suid();
 
-    /* module initialization */
-    disk_init();
-    stat_init(&CacheInfo, getAccessLogFile());
-    storeInit();
-    stmemInit();
-    writePidFile();
+    /* Now that the fd's are open, initialize neighbor connections */
+    if (theUdpConnection >= 0 && (!httpd_accel_mode || getAccelWithProxy()))
+	neighbors_open(theUdpConnection);
 
-    /* after this point we want to see the mallinfo() output */
-    do_mallinfo = 1;
+    if (!first_time) {
+
+	/* module initialization */
+	disk_init();
+	stat_init(&CacheInfo, getAccessLogFile());
+	storeInit();
+	stmemInit();
+	writePidFile();
+
+	/* after this point we want to see the mallinfo() output */
+	do_mallinfo = 1;
+    }
     debug(1, 0, "Ready to serve requests.\n");
-
 }
 
 
@@ -287,8 +326,16 @@ int main(argc, argv)
 	    /* house keeping */
 	    break;
 	case COMM_SHUTDOWN:
-	    normal_shutdown();
-	    exit(0);
+	    if (shutdown_pending) {
+		normal_shutdown();
+		exit(0);
+	    } else if (reread_pending) {
+		mainUninitialize();
+		mainInitialize();
+		reread_pending = 0;	/* reset */
+	    } else {
+		fatal_dump("MAIN: SHUTDOWN from comm_select, but nothing pending.");
+	    }
 	default:
 	    fatal_dump("MAIN: Internal error -- this should never happen.");
 	    break;
