@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.283 1999/01/13 21:00:10 wessels Exp $
+ * $Id: main.cc,v 1.284 1999/01/13 23:24:14 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -360,6 +360,9 @@ static void
 setEffectiveUser(void)
 {
     leave_suid();		/* Run as non privilegied user */
+#ifdef _SQUID_OS2_
+    return;
+#endif
     if (geteuid() == 0) {
 	debug(0, 0) ("Squid is not safe to run as root!  If you must\n");
 	debug(0, 0) ("start Squid as root, then you must configure\n");

@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.29 1998/11/12 06:27:58 wessels Exp $
+ * $Id: cf_gen.cc,v 1.30 1999/01/13 23:24:10 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -119,13 +119,18 @@ main(int argc, char *argv[])
     enum State state;
     int rc = 0;
     char *ptr = NULL;
+#ifdef _SQUID_OS2_
+    const char *rmode = "rt";
+#else
+    const char *rmode = "r";
+#endif
 
     /*-------------------------------------------------------------------*
      * Parse input file
      *-------------------------------------------------------------------*/
 
     /* Open input file */
-    if ((fp = fopen(input_filename, "r")) == NULL) {
+    if ((fp = fopen(input_filename, rmode)) == NULL) {
 	perror(input_filename);
 	exit(1);
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.83 1998/09/23 15:37:43 wessels Exp $
+ * $Id: store_dir.cc,v 1.84 1999/01/13 23:24:15 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -545,6 +545,12 @@ storeDirCloseTmpSwapLog(int dirn)
     SwapDir *SD = &Config.cacheSwap.swapDirs[dirn];
     int fd;
     file_close(SD->swaplog_fd);
+#ifdef _SQUID_OS2_
+    if (unlink(swaplog_path) < 0) {
+	debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
+	fatal("storeDirCloseTmpSwapLog: unlink failed");
+    }
+#endif
     if (rename(new_path, swaplog_path) < 0) {
 	debug(50, 0) ("%s,%s: %s\n", new_path, swaplog_path, xstrerror());
 	fatal("storeDirCloseTmpSwapLog: rename failed");
@@ -767,25 +773,27 @@ storeDirWriteCleanLogs(int reopen)
     }
     safe_free(outbuf);
     safe_free(outbufoffset);
-#ifdef _SQUID_MSWIN_
     /*
      * You can't rename open files on Microsoft "operating systems"
-     * so we close before renaming.
+     * so we have to close before renaming.
      */
     storeDirCloseSwapLogs();
-#endif
     /* rename */
     for (dirn = 0; dirn < N; dirn++) {
 	if (fd[dirn] < 0)
 	    continue;
+#ifdef _SQUID_OS2_
+	file_close(fd[dirn]);
+	fd[dirn] = -1;
+	if (unlink(cur[dirn]) < 0)
+	    debug(50, 0) ("storeDirWriteCleanLogs: unlinkd failed: %s, %s\n",
+		xstrerror(), cur[dirn]);
+#endif
 	if (rename(new[dirn], cur[dirn]) < 0) {
 	    debug(50, 0) ("storeDirWriteCleanLogs: rename failed: %s, %s -> %s\n",
 		xstrerror(), new[dirn], cur[dirn]);
 	}
     }
-#ifndef _SQUID_MSWIN_
-    storeDirCloseSwapLogs();
-#endif
     if (reopen)
 	storeDirOpenSwapLogs();
     stop = squid_curtime;
