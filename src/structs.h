@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.298 1999/06/16 21:23:34 wessels Exp $
+ * $Id: structs.h,v 1.299 1999/06/16 22:10:43 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -246,6 +246,7 @@ struct _SquidConfig {
 	time_t siteSelect;
 	time_t deadPeer;
 	int icp_query;		/* msec */
+	int icp_query_max;	/* msec */
 	int mcast_icp_query;	/* msec */
 #if USE_IDENT
 	time_t ident;
