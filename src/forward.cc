@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.5 1998/06/09 21:18:46 wessels Exp $
+ * $Id: forward.cc,v 1.6 1998/06/09 22:43:48 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -145,6 +145,7 @@ fwdConnectStart(FwdState * fwdState)
     ErrorState *err;
     FwdServer *srv = fwdState->servers;
     assert(srv);
+    assert(fwdState->server_fd == -1);
     debug(17, 3) ("fwdConnectStart: %s\n", url);
     cbdataLock(fwdState);
     if ((fd = pconnPop(srv->host, srv->port)) >= 0) {
