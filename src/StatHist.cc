@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.30 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StatHist.cc,v 1.31 2003/10/16 13:14:49 robertc Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -118,7 +118,7 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
     debug(62, 3) ("statHistCopy: max %f %f\n", Dest->max, Orig->max);
     assert(Dest->max == Orig->max);
     debug(62, 3) ("statHistCopy: scale %f %f\n", Dest->scale, Orig->scale);
-    assert(Dest->scale == Orig->scale);
+    assert(fabs(Dest->scale - Orig->scale) < 0.0000001);
     assert(Dest->val_in == Orig->val_in);
     assert(Dest->val_out == Orig->val_out);
     /* actual copy */
