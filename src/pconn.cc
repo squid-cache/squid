@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.39 2003/06/23 12:11:45 robertc Exp $
+ * $Id: pconn.cc,v 1.40 2003/08/15 13:06:34 robertc Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -282,6 +282,7 @@ pconnPush(int fd, const char *host, u_short port, const char *domain)
             xfree(old);
     }
 
+    assert(!comm_has_incomplete_write(fd));
     p->fds[p->nfds++] = fd;
     comm_read(fd, p->buf, BUFSIZ, pconnRead, p);
     commSetTimeout(fd, Config.Timeout.pconn, pconnTimeout, p);
