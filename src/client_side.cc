@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.519 2001/01/02 00:09:55 wessels Exp $
+ * $Id: client_side.cc,v 1.520 2001/01/04 21:09:01 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1299,6 +1299,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
     httpHeaderPutStr(hdr, HDR_X_REQUEST_URI,
 	http->entry->mem_obj->url ? http->entry->mem_obj->url : http->uri);
 #endif
+    httpHdrMangleList(hdr, request);
 }
 
 static HttpReply *

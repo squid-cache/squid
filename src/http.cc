@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.372 2001/01/02 20:51:17 wessels Exp $
+ * $Id: http.cc,v 1.373 2001/01/04 21:09:01 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -650,6 +650,8 @@ httpBuildRequestHeader(request_t * request,
     const HttpHeader *hdr_in = &orig_request->header;
     int we_do_ranges;
     const HttpHeaderEntry *e;
+    String strVia;
+    String strFwd;
     HttpHeaderPos pos = HttpHeaderInitPos;
     httpHeaderInit(hdr_out, hoRequest);
     /* append our IMS header */
@@ -744,28 +746,21 @@ httpBuildRequestHeader(request_t * request,
 	}
     }
 
-    /* append fake user agent if configured and 
-     * the real one is not supplied by the client */
-    if (Config.fake_ua && !httpHeaderHas(hdr_out, HDR_USER_AGENT))
-	httpHeaderPutStr(hdr_out, HDR_USER_AGENT, Config.fake_ua);
-
     /* append Via */
-    if (httpRequestHdrAllowedByName(HDR_VIA)) {
-	String strVia = httpHeaderGetList(hdr_in, HDR_VIA);
-	snprintf(bbuf, BBUF_SZ, "%d.%d %s",
-	    orig_request->http_ver.major,
-	    orig_request->http_ver.minor, ThisCache);
-	strListAdd(&strVia, bbuf, ',');
-	httpHeaderPutStr(hdr_out, HDR_VIA, strBuf(strVia));
-	stringClean(&strVia);
-    }
+    strVia = httpHeaderGetList(hdr_in, HDR_VIA);
+    snprintf(bbuf, BBUF_SZ, "%d.%d %s",
+	orig_request->http_ver.major,
+	orig_request->http_ver.minor, ThisCache);
+    strListAdd(&strVia, bbuf, ',');
+    httpHeaderPutStr(hdr_out, HDR_VIA, strBuf(strVia));
+    stringClean(&strVia);
+
     /* append X-Forwarded-For */
-    if (httpRequestHdrAllowedByName(HDR_X_FORWARDED_FOR)) {
-	String strFwd = httpHeaderGetList(hdr_in, HDR_X_FORWARDED_FOR);
-	strListAdd(&strFwd, (cfd < 0 ? "unknown" : fd_table[cfd].ipaddr), ',');
-	httpHeaderPutStr(hdr_out, HDR_X_FORWARDED_FOR, strBuf(strFwd));
-	stringClean(&strFwd);
-    }
+    strFwd = httpHeaderGetList(hdr_in, HDR_X_FORWARDED_FOR);
+    strListAdd(&strFwd, (cfd < 0 ? "unknown" : fd_table[cfd].ipaddr), ',');
+    httpHeaderPutStr(hdr_out, HDR_X_FORWARDED_FOR, strBuf(strFwd));
+    stringClean(&strFwd);
+
     /* append Host if not there already */
     if (!httpHeaderHas(hdr_out, HDR_HOST)) {
 	/* use port# only if not default */
@@ -814,6 +809,8 @@ httpBuildRequestHeader(request_t * request,
 	    httpHeaderPutStr(hdr_out, HDR_CONNECTION, "keep-alive");
 	}
     }
+    /* Now mangle the headers. */
+    httpHdrMangleList(hdr_out, request);
     stringClean(&strConnection);
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.390 2001/01/02 01:41:30 wessels Exp $
+ * $Id: protos.h,v 1.391 2001/01/04 21:09:01 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -433,6 +433,7 @@ extern HttpHeaderEntry *httpHeaderEntryClone(const HttpHeaderEntry * e);
 extern void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
 /* store report about current header usage and other stats */
 extern void httpHeaderStoreReport(StoreEntry * e);
+extern void httpHdrMangleList(HttpHeader *, request_t *);
 
 /* Http Msg (currently in HttpReply.c @?@ ) */
 extern int httpMsgIsPersistent(http_version_t http_ver, const HttpHeader * hdr);
