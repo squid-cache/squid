@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.144 1997/11/23 06:52:38 wessels Exp $
+ * $Id: ipcache.cc,v 1.145 1997/11/28 08:13:45 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -130,16 +130,17 @@ static struct {
     int release_locked;
 } IpcacheStats;
 
+static dlink_list lru_list;
+
 static int ipcache_testname(void);
+#if OLD_CODE
 static QS ipcache_compareLastRef;
+#endif
 static QS ipcache_reverseLastRef;
 static PF ipcache_dnsHandleRead;
 static ipcache_entry *ipcache_parsebuffer(const char *buf, dnsserver_t *);
 static void ipcache_release(ipcache_entry *);
-static ipcache_entry *ipcache_GetFirst(void);
-static ipcache_entry *ipcache_GetNext(void);
 static ipcache_entry *ipcache_create(const char *name);
-static void ipcache_add_to_hash(ipcache_entry *);
 static void ipcache_call_pending(ipcache_entry *);
 static ipcache_entry *ipcacheAddNew(const char *, const struct hostent *, ipcache_status_t);
 static void ipcacheAddHostent(ipcache_entry *, const struct hostent *);
@@ -254,6 +255,7 @@ ipcache_release(ipcache_entry * i)
 	    i->name);
 	return;
     }
+    dlinkDelete(&i->lru, &lru_list);
     if (i->status == IP_CACHED) {
 	safe_free(i->addrs.in_addrs);
 	safe_free(i->addrs.bad_mask);
@@ -267,35 +269,14 @@ ipcache_release(ipcache_entry * i)
     return;
 }
 
-/* return match for given name */
 static ipcache_entry *
 ipcache_get(const char *name)
 {
-    hash_link *e;
-    static ipcache_entry *i;
-
-    i = NULL;
-    if (ip_table) {
-	if ((e = hash_lookup(ip_table, name)) != NULL)
-	    i = (ipcache_entry *) e;
-    }
-    return i;
+    assert(ip_table != NULL);
+    return (ipcache_entry *) hash_lookup(ip_table, name);
 }
 
-/* get the first ip entry in the storage */
-static ipcache_entry *
-ipcache_GetFirst(void)
-{
-    return (ipcache_entry *) hash_first(ip_table);
-}
-
-/* get the next ip entry in the storage for a given search pointer */
-static ipcache_entry *
-ipcache_GetNext(void)
-{
-    return (ipcache_entry *) hash_next(ip_table);
-}
-
+#if OLD_CODE
 static int
 ipcache_compareLastRef(const void *A, const void *B)
 {
@@ -308,6 +289,7 @@ ipcache_compareLastRef(const void *A, const void *B)
 	return (-1);
     return (0);
 }
+#endif
 
 static int
 ipcache_reverseLastRef(const void *A, const void *B)
@@ -338,21 +320,48 @@ ipcacheExpiredEntry(ipcache_entry * i)
     return 1;
 }
 
+
+void
+ipcache_purgelru(void *voidnotused)
+{
+    dlink_node *m;
+    dlink_node *prev = NULL;
+    ipcache_entry *i;
+    int removed = 0;
+    for (m = lru_list.tail; m; m = prev) {
+	if (meta_data.ipcache_count < ipcache_low)
+	    break;
+	prev = m->prev;
+	i = m->data;
+	if (i->status == IP_PENDING)
+	    continue;
+	if (i->status == IP_DISPATCHED)
+	    continue;
+	if (i->locks != 0)
+	    continue;
+	ipcache_release(i);
+	removed++;
+    }
+    debug(14, 3) ("ipcache_purgelru: removed %d entries\n", removed);
+}
+
+#if OLD_CODE
 /* finds the LRU and deletes */
 void
 ipcache_purgelru(void *voidnotused)
 {
     ipcache_entry *i = NULL;
+    ipcache_entry *next;
     int local_ip_notpending_count = 0;
     int removed = 0;
     int k;
     ipcache_entry **LRU_list = NULL;
     int LRU_list_count = 0;
-
     eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
     LRU_list = xcalloc(meta_data.ipcache_count, sizeof(ipcache_entry *));
-
-    for (i = ipcache_GetFirst(); i; i = ipcache_GetNext()) {
+    next = (ipcache_entry *) hash_first(ip_table);
+    while ((i = next) != NULL) {
+	next = (ipcache_entry *) hash_next(ip_table);
 	if (ipcacheExpiredEntry(i)) {
 	    ipcache_release(i);
 	    removed++;
@@ -369,7 +378,6 @@ ipcache_purgelru(void *voidnotused)
 	local_ip_notpending_count++;
 	LRU_list[LRU_list_count++] = i;
     }
-
     /* sort LRU candidate list */
     qsort((char *) LRU_list,
 	LRU_list_count,
@@ -387,31 +395,22 @@ ipcache_purgelru(void *voidnotused)
     debug(14, 3) ("ipcache_purgelru: removed %d entries\n", removed);
     safe_free(LRU_list);
 }
-
+#endif
 
 /* create blank ipcache_entry */
 static ipcache_entry *
 ipcache_create(const char *name)
 {
-    static ipcache_entry *new;
+    static ipcache_entry *i;
     if (meta_data.ipcache_count > ipcache_high)
 	ipcache_purgelru(NULL);
     meta_data.ipcache_count++;
-    new = xcalloc(1, sizeof(ipcache_entry));
-    new->name = xstrdup(name);
-    new->expires = squid_curtime + Config.negativeDnsTtl;
-    ipcache_add_to_hash(new);
-    return new;
-}
-
-static void
-ipcache_add_to_hash(ipcache_entry * i)
-{
-    if (hash_join(ip_table, (hash_link *) i)) {
-	debug(14, 1) ("ipcache_add_to_hash: Cannot add %s (%p) to hash table %d.\n",
-	    i->name, i, ip_table);
-    }
-    debug(14, 5) ("ipcache_add_to_hash: name <%s>\n", i->name);
+    i = xcalloc(1, sizeof(ipcache_entry));
+    i->name = xstrdup(name);
+    i->expires = squid_curtime + Config.negativeDnsTtl;
+    hash_join(ip_table, (hash_link *) i);
+    dlinkAdd(i, &i->lru, &lru_list);
+    return i;
 }
 
 static void
@@ -632,8 +631,8 @@ ipcache_dnsHandleRead(int fd, void *data)
 	dnsData->data = NULL;
 	EBIT_CLR(dnsData->flags, HELPER_BUSY);
 	if (EBIT_TEST(dnsData->flags, HELPER_SHUTDOWN))
-		dnsShutdownServer(dnsData);
-        cbdataUnlock(dnsData);
+	    dnsShutdownServer(dnsData);
+	cbdataUnlock(dnsData);
     }
     ipcacheNudgeQueue();
 }
@@ -868,12 +867,8 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 void
 stat_ipcache_get(StoreEntry * sentry)
 {
-    int k;
-    int N;
-    ipcache_entry *i = NULL;
-    ipcache_entry **list = NULL;
-    if (!ip_table)
-	return;
+    dlink_node *m;
+    assert(ip_table != NULL);
     storeAppendPrintf(sentry, "{IP Cache Statistics:\n");
     storeAppendPrintf(sentry, "{IPcache Entries: %d}\n",
 	meta_data.ipcache_count);
@@ -902,20 +897,9 @@ stat_ipcache_get(StoreEntry * sentry)
 	"lstref",
 	"TTL",
 	"N");
-    list = xcalloc(meta_data.ipcache_count, sizeof(ipcache_entry *));
-    N = 0;
-    for (i = ipcache_GetFirst(); i; i = ipcache_GetNext()) {
-	*(list + N) = i;
-	assert(++N <= meta_data.ipcache_count);
-    }
-    qsort((char *) list,
-	N,
-	sizeof(ipcache_entry *),
-	ipcache_reverseLastRef);
-    for (k = 0; k < N; k++)
-	ipcacheStatPrint(*(list + k), sentry);
+    for (m = lru_list.head; m; m = m->next)
+	ipcacheStatPrint(m->data, sentry);
     storeAppendPrintf(sentry, close_bracket);
-    xfree(list);
 }
 
 static void
@@ -986,7 +970,10 @@ ipcacheQueueDrain(void)
 static void
 ipcacheLockEntry(ipcache_entry * i)
 {
-    i->locks++;
+    if (i->locks++ == 0) {
+	dlinkDelete(&i->lru, &lru_list);
+	dlinkAdd(i, &i->lru, &lru_list);
+    }
 }
 
 static void
@@ -1133,7 +1120,7 @@ ipcacheChangeKey(ipcache_entry * i)
     debug(14, 1) ("ipcacheChangeKey: from '%s' to '%s'\n", i->name, new_key);
     safe_free(i->name);
     i->name = xstrdup(new_key);
-    ipcache_add_to_hash(i);
+    hash_join(ip_table, (hash_link *) i);
 }
 
 /* call during reconfigure phase to clear out all the 
