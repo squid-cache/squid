@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.23 1998/12/02 06:00:41 wessels Exp $
+ * $Id: snmp_core.cc,v 1.24 1998/12/08 20:30:10 glenn Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -46,19 +46,9 @@ struct _mib_tree_entry {
     struct _mib_tree_entry *parent;
 };
 
-struct _snmpUdpData {
-    struct sockaddr_in address;
-    void *msg;
-    int len;
-    struct _snmpUdpData *next;
-};
-
-typedef struct _snmpUdpData snmpUdpData;
 typedef struct _mib_tree_entry mib_tree_entry;
 
 mib_tree_entry *mib_tree_head;
-snmpUdpData *snmpUdpHead = NULL;
-snmpUdpData *snmpUdpTail = NULL;
 
 #ifdef __STDC__
 static mib_tree_entry *snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...);
@@ -69,11 +59,8 @@ static oid *snmpCreateOid();
 #endif
 extern void (*snmplib_debug_hook) (int, char *);
 static void snmpDecodePacket(snmp_request_t * rq);
-static void snmpConstructReponse(snmp_request_t * rq, struct snmp_session *Session);
+static void snmpConstructReponse(snmp_request_t * rq);
 static struct snmp_pdu *snmpAgentResponse(struct snmp_pdu *PDU);
-static void snmpUdpSend(int, const struct sockaddr_in *, void *, int);
-static void snmpUdpReply(int, void *);
-static void snmpAppendUdp(snmpUdpData *);
 static oid_ParseFn *snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen);
 static oid_ParseFn *snmpTreeGet(oid * Current, snint CurrentLen);
 static mib_tree_entry *snmpTreeEntry(oid entry, snint len, mib_tree_entry * current);
@@ -555,7 +542,7 @@ void
 snmpDecodePacket(snmp_request_t * rq)
 {
     struct snmp_pdu *PDU;
-    struct snmp_session *Session;
+    struct snmp_session Session;
     aclCheck_t checklist;
     u_char *Community;
     u_char *buf = rq->buf;
@@ -564,13 +551,9 @@ snmpDecodePacket(snmp_request_t * rq)
 
     debug(49, 5) ("snmpDecodePacket: Called.\n");
     /* Now that we have the data, turn it into a PDU */
-    Session = xmalloc(sizeof(struct snmp_session));
-    Session->Version = SNMP_VERSION_1;
-    Session->authenticator = NULL;
-    Session->community = (u_char *) xstrdup("public");
-    Session->community_len = 6;
     PDU = snmp_pdu_create(0);
-    Community = snmp_parse(Session, PDU, buf, len);
+    Session.Version = SNMP_VERSION_1; 
+    Community = snmp_parse(&Session, PDU, buf, len);
 
     checklist.src_addr = rq->from.sin_addr;
     checklist.snmp_community = Community;
@@ -580,7 +563,7 @@ snmpDecodePacket(snmp_request_t * rq)
 	rq->community = Community;
 	rq->PDU = PDU;
 	debug(49, 5) ("snmpAgentParse: reqid=[%d]\n", PDU->reqid);
-	snmpConstructReponse(rq, Session);
+	snmpConstructReponse(rq);
     } else {
 	snmp_free_pdu(PDU);
     }
@@ -590,20 +573,23 @@ snmpDecodePacket(snmp_request_t * rq)
  * Packet OK, ACL Check OK, Create reponse.
  */
 void
-snmpConstructReponse(snmp_request_t * rq, struct snmp_session *Session)
+snmpConstructReponse(snmp_request_t * rq)
 {
+    struct snmp_session Session;
     struct snmp_pdu *RespPDU;
     int ret;
+
     debug(49, 5) ("snmpConstructReponse: Called.\n");
-    Session->community = rq->community;
-    Session->community_len = strlen((char *) rq->community);
     RespPDU = snmpAgentResponse(rq->PDU);
     snmp_free_pdu(rq->PDU);
-    xfree(Session);
     if (RespPDU != NULL) {
-	ret = snmp_build(Session, RespPDU, rq->outbuf, &rq->outlen);
-	snmpUdpSend(rq->sock, &rq->from, rq->outbuf, rq->outlen);
+	Session.Version = SNMP_VERSION_1;
+	Session.community = rq->community;
+	Session.community_len = strlen((char *) rq->community);
+	ret = snmp_build(&Session, RespPDU, rq->outbuf, &rq->outlen);
+	sendto(rq->sock, rq->outbuf, rq->outlen, 0, (struct sockaddr *) &rq->from, sizeof(rq->from));
 	snmp_free_pdu(RespPDU);
+	xfree(rq->outbuf);
     }
 }
 
@@ -874,74 +860,6 @@ snmpAddNode(va_alist)
     return (entry);
 }
 /* End of tree utility functions */
-
-/*
- * Send the UDP reply.
- */
-void
-snmpUdpSend(int fd, const struct sockaddr_in *to, void *msg, int len)
-{
-    snmpUdpData *data = xcalloc(1, sizeof(snmpUdpData));
-    debug(49, 5) ("snmpUdpSend: Queueing response for %s\n",
-	inet_ntoa(to->sin_addr));
-    data->address = *to;
-    data->msg = msg;
-    data->len = len;
-    snmpAppendUdp(data);
-    commSetSelect(fd, COMM_SELECT_WRITE, snmpUdpReply, snmpUdpHead, 0);
-
-}
-
-void
-snmpUdpReply(int fd, void *data)
-{
-    snmpUdpData *queue = data;
-    int x;
-    /* Disable handler, in case of errors. */
-    commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-    while ((queue = snmpUdpHead) != NULL) {
-	debug(49, 5) ("snmpUdpReply: FD %d sending %d bytes to %s port %d\n",
-	    fd,
-	    queue->len,
-	    inet_ntoa(queue->address.sin_addr),
-	    ntohs(queue->address.sin_port));
-	x = comm_udp_sendto(fd,
-	    &queue->address,
-	    sizeof(struct sockaddr_in),
-	    queue->msg,
-	    queue->len);
-	if (x < 0) {
-	    if (ignoreErrno(errno))
-		break;		/* don't de-queue */
-	}
-	snmpUdpHead = queue->next;
-	debug(49, 3) ("snmpUdpReply: freeing %p\n", queue->msg);
-	safe_free(queue->msg);
-	debug(49, 3) ("snmpUdpReply: freeing %p\n", queue);
-	safe_free(queue);
-    }
-    /* Reinstate handler if needed */
-    if (snmpUdpHead) {
-	commSetSelect(fd, COMM_SELECT_WRITE, snmpUdpReply, snmpUdpHead, 0);
-    }
-}
-
-void
-snmpAppendUdp(snmpUdpData * item)
-{
-    item->next = NULL;
-    if (snmpUdpHead == NULL) {
-	snmpUdpHead = item;
-	snmpUdpTail = item;
-    } else if (snmpUdpTail == snmpUdpHead) {
-	snmpUdpTail = item;
-	snmpUdpHead->next = item;
-    } else {
-	snmpUdpTail->next = item;
-	snmpUdpTail = item;
-    }
-
-}
 
 /* 
  * Returns the list of parameters in an oid[]
