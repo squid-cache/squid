@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.61 1998/02/03 04:21:18 wessels Exp $
+ * $Id: net_db.cc,v 1.62 1998/02/05 20:54:38 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -40,8 +40,8 @@ static struct in_addr networkFromInaddr(struct in_addr a);
 static void netdbRelease(netdbEntry * n);
 static void netdbHashInsert(netdbEntry * n, struct in_addr addr);
 static void netdbHashDelete(const char *key);
-static void netdbHashLink(netdbEntry * n, const char *hostname);
-static void netdbHashUnlink(const char *key);
+static void netdbHostInsert(netdbEntry * n, const char *hostname);
+static void netdbHostDelete(const net_db_name * x);
 static void netdbPurgeLRU(void);
 static netdbEntry *netdbLookupHost(const char *key);
 static net_db_peer *netdbPeerByName(const netdbEntry * n, const char *);
@@ -64,8 +64,8 @@ netdbHashInsert(netdbEntry * n, struct in_addr addr)
 {
     xstrncpy(n->network, inet_ntoa(networkFromInaddr(addr)), 16);
     n->key = n->network;
+    assert(hash_lookup(addr_table, n->network) == NULL);
     hash_join(addr_table, (hash_link *) n);
-    meta_data.netdb_addrs++;
 }
 
 static void
@@ -77,60 +77,56 @@ netdbHashDelete(const char *key)
 	return;
     }
     hash_remove_link(addr_table, hptr);
-    meta_data.netdb_addrs--;
 }
 
 static void
-netdbHashLink(netdbEntry * n, const char *hostname)
+netdbHostInsert(netdbEntry * n, const char *hostname)
 {
-    net_db_name *x = xcalloc(1, sizeof(net_db_name));
+    net_db_name *x = memAllocate(MEM_NET_DB_NAME, 0);
     x->name = xstrdup(hostname);
     x->next = n->hosts;
     n->hosts = x;
-    hash_insert(host_table, x->name, n);
+    x->net_db_entry = n;
+    assert(hash_lookup(host_table, hostname) == NULL);
+    hash_join(host_table, (hash_link *) x);
     n->link_count++;
-    meta_data.netdb_hosts++;
 }
 
 static void
-netdbHashUnlink(const char *key)
+netdbHostDelete(const net_db_name * x)
 {
     netdbEntry *n;
-    net_db_name *x;
     net_db_name **X;
-    hash_link *hptr = hash_lookup(host_table, key);
-    assert(hptr != NULL);
-    n = (netdbEntry *) hptr->item;
-    for (X = &n->hosts; (x = *X) != NULL; X = &x->next) {
-	if (strcmp(x->name, key) == 0)
-	    break;
-    }
     assert(x != NULL);
-    *X = x->next;
-    safe_free(x->name);
-    safe_free(x);
-    hash_delete_link(host_table, hptr);
+    assert(x->net_db_entry != NULL);
+    n = x->net_db_entry;
     n->link_count--;
-    meta_data.netdb_hosts--;
+    for (X = &n->hosts; *X; X = &(*X)->next) {
+	if (*X == x) {
+	    *X = x->next;
+	    break;
+	}
+    }
+    hash_remove_link(host_table, (hash_link *) x);
+    xfree(x->name);
+    memFree(MEM_NET_DB_NAME, (void *) x);
 }
 
 static netdbEntry *
 netdbLookupHost(const char *key)
 {
-    hash_link *hptr = hash_lookup(host_table, key);
-    return hptr ? (netdbEntry *) hptr->item : NULL;
+    net_db_name *x = (net_db_name *) hash_lookup(host_table, key);
+    return x ? x->net_db_entry : NULL;
 }
 
 static void
 netdbRelease(netdbEntry * n)
 {
     net_db_name *x;
-    net_db_name *next = NULL;
+    net_db_name *next;
     for (x = n->hosts; x; x = next) {
 	next = x->next;
-	netdbHashUnlink(x->name);
-	safe_free(x->name);
-	safe_free(x);
+	netdbHostDelete(x);
     }
     n->hosts = NULL;
     safe_free(n->peers);
@@ -140,7 +136,7 @@ netdbRelease(netdbEntry * n)
     n->n_peers_alloc = 0;
     if (n->link_count == 0) {
 	netdbHashDelete(n->network);
-	xfree(n);
+	memFree(MEM_NETDBENTRY, n);
     }
 }
 
@@ -164,10 +160,10 @@ netdbPurgeLRU(void)
     int k = 0;
     int list_count = 0;
     int removed = 0;
-    list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
+    list = xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
     n = (netdbEntry *) hash_first(addr_table);
     while (n != NULL) {
-	assert(list_count < meta_data.netdb_addrs);
+	assert(list_count < memInUse(MEM_NETDBENTRY));
 	*(list + list_count) = n;
 	list_count++;
 	n = (netdbEntry *) hash_next(addr_table);
@@ -177,7 +173,7 @@ netdbPurgeLRU(void)
 	sizeof(netdbEntry *),
 	netdbLRU);
     for (k = 0; k < list_count; k++) {
-	if (meta_data.netdb_addrs < Config.Netdb.low)
+	if (memInUse(MEM_NETDBENTRY) < Config.Netdb.low)
 	    break;
 	netdbRelease(*(list + k));
 	removed++;
@@ -188,21 +184,22 @@ netdbPurgeLRU(void)
 static netdbEntry *
 netdbLookupAddr(struct in_addr addr)
 {
+    netdbEntry *n;
     char *key = inet_ntoa(networkFromInaddr(addr));
-    return (netdbEntry *) hash_lookup(addr_table, key);
+    n = (netdbEntry *) hash_lookup(addr_table, key);
+    return n;
 }
 
 static netdbEntry *
-netdbAdd(struct in_addr addr, const char *hostname)
+netdbAdd(struct in_addr addr)
 {
     netdbEntry *n;
-    if (meta_data.netdb_addrs > Config.Netdb.high)
+    if (memInUse(MEM_NETDBENTRY) > Config.Netdb.high)
 	netdbPurgeLRU();
     if ((n = netdbLookupAddr(addr)) == NULL) {
-	n = xcalloc(1, sizeof(netdbEntry));
+	n = memAllocate(MEM_NETDBENTRY, 0);
 	netdbHashInsert(n, addr);
     }
-    netdbHashLink(n, hostname);
     return n;
 }
 
@@ -213,6 +210,8 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
     char *hostname = data;
     netdbEntry *n;
     netdbEntry *na;
+    net_db_name *x;
+    net_db_name **X;
     cbdataUnlock(hostname);
     if (ia == NULL) {
 	cbdataFree(hostname);
@@ -220,17 +219,36 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
     }
     addr = ia->in_addrs[ia->cur];
     if ((n = netdbLookupHost(hostname)) == NULL) {
-	n = netdbAdd(addr, hostname);
+	n = netdbAdd(addr);
+	netdbHostInsert(n, hostname);
     } else if ((na = netdbLookupAddr(addr)) != n) {
 	/*
 	 *hostname moved from 'network n' to 'network na'!
 	 */
 	if (na == NULL)
-	    na = netdbAdd(addr, hostname);
+	    na = netdbAdd(addr);
 	debug(37, 1) ("netdbSendPing: NOTE: %s moved from %s to %s\n",
 	    hostname, n->network, na->network);
-	netdbHashUnlink(hostname);
-	netdbHashLink(na, hostname);
+	x = (net_db_name *) hash_lookup(host_table, hostname);
+	if (x == NULL) {
+	    debug(37, 1) ("netdbSendPing: net_db_name list bug: %s not found", hostname);
+	    cbdataFree(hostname);
+	    return;
+	}
+	/* remove net_db_name from 'network n' linked list */
+	for (X = &n->hosts; *X; X = &(*X)->next) {
+	    if (*X == x) {
+		*X = x->next;
+		break;
+	    }
+	}
+	n->link_count--;
+	/* point to 'network na' from host entry */
+	x->net_db_entry = na;
+	/* link net_db_name to 'network na' */
+	x->next = na->hosts;
+	na->hosts = x;
+	na->link_count++;
 	n = na;
     }
     debug(37, 3) ("netdbSendPing: pinging %s\n", hostname);
@@ -365,6 +383,7 @@ netdbSaveState(void *foo)
 	count++;
     }
     fclose(fp);
+    getCurrentTime();
     debug(37, 0) ("NETDB state saved; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
     eventAdd("netdbSaveState", netdbSaveState, NULL, 3617);
@@ -392,6 +411,8 @@ netdbReloadState(void)
 	    continue;
 	if (!safe_inet_addr(t, &addr))
 	    continue;
+	if (netdbLookupAddr(addr) != NULL)	/* no dups! */
+	    continue;
 	if ((t = strtok(NULL, w_space)) == NULL)
 	    continue;
 	N.pings_sent = atoi(t);
@@ -415,15 +436,19 @@ netdbReloadState(void)
 	if ((t = strtok(NULL, w_space)) == NULL)
 	    continue;
 	N.last_use_time = (time_t) atoi(t);
-	n = xcalloc(1, sizeof(netdbEntry));
+	n = memAllocate(MEM_NETDBENTRY, 0);
 	xmemcpy(n, &N, sizeof(netdbEntry));
 	netdbHashInsert(n, addr);
-	while ((t = strtok(NULL, w_space)) != NULL)
-	    netdbHashLink(n, t);
+	while ((t = strtok(NULL, w_space)) != NULL) {
+	    if (netdbLookupHost(t) != NULL)	/* no dups! */
+		continue;
+	    netdbHostInsert(n, t);
+	}
 	count++;
     }
     memFree(MEM_4K_BUF, buf);
     fclose(fp);
+    getCurrentTime();
     debug(37, 0) ("NETDB state reloaded; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
 }
@@ -505,40 +530,35 @@ netdbFreeMemory(void)
 #if USE_ICMP
     netdbEntry *n;
     netdbEntry **L1;
-    hash_link *h;
-    hash_link **L2;
+    net_db_name **L2;
     net_db_name *x;
     int i = 0;
     int j;
-    L1 = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
+    L1 = xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
     n = (netdbEntry *) hash_first(addr_table);
-    while (n && i < meta_data.netdb_addrs) {
+    while (n && i < memInUse(MEM_NETDBENTRY)) {
 	*(L1 + i) = n;
 	i++;
 	n = (netdbEntry *) hash_next(addr_table);
     }
     for (j = 0; j < i; j++) {
 	n = *(L1 + j);
-	while ((x = n->hosts) != NULL) {
-	    n->hosts = x->next;
-	    safe_free(x);
-	}
 	safe_free(n->peers);
-	xfree(n);
+	memFree(MEM_NETDBENTRY, n);
     }
     xfree(L1);
     i = 0;
-    L2 = xcalloc(meta_data.netdb_hosts, sizeof(hash_link *));
-    h = hash_first(host_table);
-    while (h && i < meta_data.netdb_hosts) {
-	*(L2 + i) = h;
+    L2 = xcalloc(memInUse(MEM_NET_DB_NAME), sizeof(net_db_name *));
+    x = (net_db_name *) hash_first(host_table);
+    while (x && i < memInUse(MEM_NET_DB_NAME)) {
+	*(L2 + i) = x;
 	i++;
-	h = hash_next(host_table);
+	x = (net_db_name *) hash_next(host_table);
     }
     for (j = 0; j < i; j++) {
-	h = *(L2 + j);
-	xfree(h->key);
-	xfree(h);
+	x = *(L2 + j);
+	xfree(x->name);
+	memFree(MEM_NET_DB_NAME, x);
     }
     xfree(L2);
     hashFreeMemory(addr_table);
@@ -582,16 +602,16 @@ netdbDump(StoreEntry * sentry)
 	"RTT",
 	"Hops",
 	"Hostnames");
-    list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
+    list = xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
     i = 0;
     n = (netdbEntry *) hash_first(addr_table);
     while (n != NULL) {
 	*(list + i++) = n;
 	n = (netdbEntry *) hash_next(addr_table);
     }
-    if (i != meta_data.netdb_addrs)
+    if (i != memInUse(MEM_NETDBENTRY))
 	debug(37, 0) ("WARNING: netdb_addrs count off, found %d, expected %d\n",
-	    i, meta_data.netdb_addrs);
+	    i, memInUse(MEM_NETDBENTRY));
     qsort((char *) list,
 	i,
 	sizeof(netdbEntry *),
@@ -750,3 +770,15 @@ var_netdb_entry(struct variable *vp, oid * name, int *length, int exact, int *va
     }
 }
 #endif
+
+void
+netdbDeleteAddrNetwork(struct in_addr addr)
+{
+#if USE_ICMP
+    netdbEntry *n = netdbLookupAddr(addr);
+    if (n == NULL)
+	return;
+    debug(37, 1) ("netdbDeleteAddrNetwork: %s\n", n->network);
+    netdbRelease(n);
+#endif
+}
