@@ -1,3 +1,6 @@
+	- Fixed up poll() #defines in squid.h (Stewart Forster).
+	- Changed poll() timeout from 1000 msec to 50 msec for
+	  better performance under low load (Stewart Forster).
 	- Changed storeWriteCleanLogs() to write objects in the LRU
 	  list order instead of the random hash table order.
 
