@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.8 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ESI.cc,v 1.9 2004/11/06 22:24:22 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -788,7 +788,7 @@ esiProcessStream (clientStreamNode *thisNode, clientHttpRequest *http, HttpReply
         /* Increase our buffer area with incoming data */
         assert (recievedData.length <= HTTP_REQBUF_SZ);
         assert (thisNode->readBuffer.offset == recievedData.offset);
-        debug (86,5)("esiProcessStream found %u bytes of body data at offset %ld\n", recievedData.length, recievedData.offset);
+        debug (86,5)("esiProcessStream found %u bytes of body data at offset %ld\n", recievedData.length, (long)recievedData.offset);
         /* secure the data for later use */
 
         if (!context->incoming.getRaw()) {
