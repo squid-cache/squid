@@ -495,7 +495,6 @@ extern void peerCheckConnectStart(peer *);
 extern void dump_peer_options(StoreEntry *, peer *);
 
 extern void netdbInit(void);
-
 extern void netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt);
 extern void netdbPingSite(const char *hostname);
 extern void netdbInit(void);
@@ -505,6 +504,7 @@ extern void netdbFreeMemory(void);
 extern int netdbHostHops(const char *host);
 extern int netdbHostRtt(const char *host);
 extern void netdbUpdatePeer(request_t *, peer * e, int rtt, int hops);
+extern void netdbDeleteAddrNetwork(struct in_addr addr);
 
 extern void cachemgrStart(int fd, request_t * request, StoreEntry * entry);
 extern void cachemgrRegister(const char *, const char *, OBJH *, int);
