@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.74 2004/10/18 12:20:09 hno Exp $
+ * $Id: client_side_reply.cc,v 1.75 2004/12/08 00:24:42 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1434,7 +1434,7 @@ clientReplyContext::buildReplyHeader()
 
 #endif
 
-    httpHdrMangleList(hdr, request);
+    httpHdrMangleList(hdr, request, ROR_REPLY);
 }
 
 
