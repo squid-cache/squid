@@ -45,6 +45,7 @@ Changes to Squid-2.4.DEVEL3 ():
 	- Squid no longer tries to do Range internally if it is not supported
 	  by the origin server. Doing so could cause bandwidth spikes and/or
 	  negative hit ratio.
+	- httpd_accel_single_host squid.conf directive
 
 Changes to Squid-2.4.DEVEL2 ():
 
