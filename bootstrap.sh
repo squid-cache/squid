@@ -6,7 +6,9 @@
 
 
 bootstrap() {
-  if ! "$@"; then
+  if "$@"; then
+    true # Everything OK
+  else
     echo "$1 failed"
     echo "Autotool bootstrapping failed. You will need to investigate and correct" ;
     echo "before you can develop on this source tree" 
