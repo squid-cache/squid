@@ -1,0 +1,19 @@
+<HTML><HEAD>
+<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>The requested URL could not be retrieved</H2>
+<HR>
+<P>
+An FTP protocol error occurred
+while trying to retrieve the URL:
+<A HREF="%U">%U</A>
+<P>
+Squid sent the following FTP command:
+<PRE><STRONG>
+	%f
+</STRONG></PRE>
+and then received this reply
+<PRE><STRONG>
+	%F
+</STRONG></PRE>
