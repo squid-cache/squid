@@ -53,6 +53,7 @@
 	- Fixed proxy-authentication hangs (Henrik Nordstrom).
 	- Fixed request_t->flags bug causing authenticated, proxied
 	  responses to be cached (Arjan de Vet).
+	- Fixed cachemgr 'objects' implementation.
 
 Changes to squid-1.2.beta22 (June 1, 1998):
 
