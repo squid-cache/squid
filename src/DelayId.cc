@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.10 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayId.cc,v 1.11 2003/07/10 11:04:06 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -109,8 +109,8 @@ DelayId::DelayClient(clientHttpRequest * http)
         ch.my_addr = r->my_addr;
         ch.my_port = r->my_port;
 
-        if (http->conn)
-            ch.conn(cbdataReference(http->conn));
+        if (http->getConn())
+            ch.conn(cbdataReference(http->getConn()));
 
         ch.request = requestLink(r);
 

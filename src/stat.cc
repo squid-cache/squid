@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.376 2003/06/22 21:31:24 wessels Exp $
+ * $Id: stat.cc,v 1.377 2003/07/10 11:04:06 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1582,7 +1582,7 @@ statClientRequests(StoreEntry * s)
     for (i = ClientActiveRequests.head; i; i = i->next) {
         http = static_cast<clientHttpRequest *>(i->data);
         assert(http);
-        conn = http->conn;
+        conn = http->getConn();
         storeAppendPrintf(s, "Connection: %p\n", conn);
 
         if (conn) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.56 2003/07/06 21:50:56 hno Exp $
+ * $Id: client_side_reply.cc,v 1.57 2003/07/10 11:04:06 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -268,7 +268,7 @@ clientReplyContext::processExpired()
                  (long int) entry->lastmod);
     http->storeEntry(entry);
     assert(http->out.offset == 0);
-    fwdStart(http->conn ? http->conn->fd : -1, http->storeEntry(), http->request);
+    fwdStart(http->getConn() ? http->getConn()->fd : -1, http->storeEntry(), http->request);
     /* Register with storage manager to receive updates when data comes in. */
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
@@ -805,7 +805,7 @@ clientReplyContext::processMiss()
         http->al.http.code = HTTP_FORBIDDEN;
         err =
             clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
-                             &http->conn->peer.sin_addr, http->request);
+                             &http->getConn()->peer.sin_addr, http->request);
         createStoreEntry(r->method, request_flags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
@@ -833,7 +833,7 @@ clientReplyContext::processMiss()
         if (http->flags.internal)
             r->protocol = PROTO_INTERNAL;
 
-        fwdStart(http->conn ? http->conn->fd : -1, http->storeEntry(), r);
+        fwdStart(http->getConn() ? http->getConn()->fd : -1, http->storeEntry(), r);
     }
 }
 
@@ -851,7 +851,7 @@ clientReplyContext::processOnlyIfCachedMiss()
                   RequestMethodStr[http->request->method], http->uri);
     http->al.http.code = HTTP_GATEWAY_TIMEOUT;
     err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL,
-                           &http->conn->peer.sin_addr, http->request);
+                           &http->getConn()->peer.sin_addr, http->request);
     removeClientStoreReference(&sc, http);
     startError(err);
 }
@@ -929,7 +929,7 @@ clientReplyContext::purgeRequest()
         http->logType = LOG_TCP_DENIED;
         ErrorState *err =
             clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
-                             &http->conn->peer.sin_addr, http->request);
+                             &http->getConn()->peer.sin_addr, http->request);
         startError(err);
         return;
     }
@@ -1146,7 +1146,7 @@ clientHttpRequestStatus(int fd, clientHttpRequest const *http)
         debug(88, 1) ("WARNING: closing FD %d to prevent counter overflow\n",
                       fd);
         debug(88, 1) ("\tclient %s\n",
-                      inet_ntoa(http->conn ? http->conn->peer.sin_addr : no_addr));
+                      inet_ntoa(http->getConn() ? http->getConn()->peer.sin_addr : no_addr));
         debug(88, 1) ("\treceived %d bytes\n", (int) http->out.size);
         debug(88, 1) ("\tURI %s\n", http->log_uri);
         return 1;
@@ -1158,7 +1158,7 @@ clientHttpRequestStatus(int fd, clientHttpRequest const *http)
         debug(88, 1) ("WARNING: closing FD %d to prevent counter overflow\n",
                       fd);
         debug(88, 1) ("\tclient %s\n",
-                      inet_ntoa(http->conn ? http->conn->peer.sin_addr : no_addr));
+                      inet_ntoa(http->getConn() ? http->getConn()->peer.sin_addr : no_addr));
         debug(88, 1) ("\treceived %d bytes (offset %d)\n", (int) http->out.size,
                       (int) http->out.offset);
         debug(88, 1) ("\tURI %s\n", http->log_uri);
@@ -1859,7 +1859,7 @@ clientReplyContext::processReplyAccess ()
     if (http->isReplyBodyTooLarge(rep->content_length)) {
         ErrorState *err =
             clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
-                             http->conn ? &http->conn->peer.sin_addr : &no_addr,
+                             http->getConn() ? &http->getConn()->peer.sin_addr : &no_addr,
                              http->request);
         removeClientStoreReference(&sc, http);
         startError(err);
@@ -1900,7 +1900,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
         ErrorState *err;
         err =
             clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
-                             http->conn ? &http->conn->peer.sin_addr : &no_addr,
+                             http->getConn() ? &http->getConn()->peer.sin_addr : &no_addr,
                              http->request);
         removeClientStoreReference(&sc, http);
         startError(err);
@@ -1967,7 +1967,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     StoreEntry *entry = http->storeEntry();
 
-    ConnStateData *conn = http->conn;
+    ConnStateData *conn = http->getConn();
 
     int fd = conn ? conn->fd : -1;
 

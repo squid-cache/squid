@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.646 2003/07/06 21:50:55 hno Exp $
+ * $Id: client_side.cc,v 1.647 2003/07/10 11:04:06 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -191,8 +191,8 @@ int
 ClientSocketContext::fd() const
 {
     assert (http);
-    assert (http->conn);
-    return http->conn->fd;
+    assert (http->getConn());
+    return http->getConn()->fd;
 }
 
 clientStreamNode *
@@ -283,16 +283,16 @@ ClientSocketContext::registerWithConn()
 {
     assert (!connRegistered_);
     assert (http);
-    assert (http->conn);
+    assert (http->getConn());
     connRegistered_ = true;
-    http->conn->addContextToQueue(this);
+    http->getConn()->addContextToQueue(this);
 }
 
 void
 ClientSocketContext::deRegisterWithConn()
 {
     assert (connRegistered_);
-    removeFromConnectionList(http->conn);
+    removeFromConnectionList(http->getConn());
     connRegistered_ = false;
 }
 
@@ -300,7 +300,7 @@ void
 ClientSocketContext::connIsFinished()
 {
     assert (http);
-    assert (http->conn);
+    assert (http->getConn());
     deRegisterWithConn();
     /* we can't handle any more stream data - detach */
     clientStreamDetach(getTail(), http);
@@ -510,7 +510,7 @@ ClientHttpRequest::logRequest()
             al.http.content_type = memObject()->getReply()->content_type.buf();
         }
 
-        al.cache.caddr = conn ? conn->log_addr : no_addr;
+        al.cache.caddr = getConn() ? getConn()->log_addr : no_addr;
         al.cache.size = out.size;
         al.cache.code = logType;
         al.cache.msec = tvSubMsec(start, current_time);
@@ -518,13 +518,13 @@ ClientHttpRequest::logRequest()
         if (request)
             clientPrepareLogWithRequestDetails(request, &al);
 
-        if (conn && conn->rfc931[0])
-            al.cache.rfc931 = conn->rfc931;
+        if (getConn() && getConn()->rfc931[0])
+            al.cache.rfc931 = getConn()->rfc931;
 
 #if USE_SSL
 
-        if (conn)
-            al.cache.ssluser = sslGetUserEmail(fd_table[conn->fd].ssl);
+        if (getConn())
+            al.cache.ssluser = sslGetUserEmail(fd_table[getConn()->fd].ssl);
 
 #endif
 
@@ -537,8 +537,8 @@ ClientHttpRequest::logRequest()
             accessLogLog(&al, checklist);
             updateCounters();
 
-            if (conn)
-                clientdbUpdate(conn->peer.sin_addr, logType, PROTO_HTTP, out.size);
+            if (getConn())
+                clientdbUpdate(getConn()->peer.sin_addr, logType, PROTO_HTTP, out.size);
         }
 
         delete checklist;
@@ -576,7 +576,7 @@ ConnStateData::areAllContextsForThisConnection() const
     ClientSocketContext::Pointer context = getCurrentContext();
 
     while (context.getRaw()) {
-        if (context->http->conn != this)
+        if (context->http->getConn() != this)
             return false;
 
         context = context->next;
@@ -1198,11 +1198,11 @@ clientSocketRecipient(clientStreamNode * node, clientHttpRequest * http,
     assert(node->node.next == NULL);
     ClientSocketContext::Pointer context = dynamic_cast<ClientSocketContext *>(node->data.getRaw());
     assert(context.getRaw() != NULL);
-    assert(connIsUsable(http->conn));
-    fd = http->conn->fd;
+    assert(connIsUsable(http->getConn()));
+    fd = http->getConn()->fd;
     /* TODO: check offset is what we asked for */
 
-    if (context != http->conn->getCurrentContext()) {
+    if (context != http->getConn()->getCurrentContext()) {
         context->deferRecipientForLater(node, rep, recievedData);
         return;
     }
@@ -1290,7 +1290,7 @@ ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredReq
 void
 ClientSocketContext::keepaliveNextRequest()
 {
-    ConnStateData *conn = http->conn;
+    ConnStateData *conn = http->getConn();
 
     debug(33, 3) ("ClientSocketContext::keepaliveNextRequest: FD %d\n", conn->fd);
     connIsFinished();
@@ -1491,7 +1491,7 @@ parseHttpRequestAbort(ConnStateData * conn, const char *uri)
     ClientSocketContext *context;
     StoreIOBuffer tempBuffer;
     http = new ClientHttpRequest;
-    http->conn = conn;
+    http->setConn(conn);
     http->req_sz = conn->in.notYetUsed;
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
@@ -1699,17 +1699,17 @@ prepareAcceleratedURL(ConnStateData * conn, clientHttpRequest *http, char *url, 
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 http->conn->port->protocol,
-                 inet_ntoa(http->conn->me.sin_addr),
-                 ntohs(http->conn->me.sin_port), url);
+                 http->getConn()->port->protocol,
+                 inet_ntoa(http->getConn()->me.sin_addr),
+                 ntohs(http->getConn()->me.sin_port), url);
         debug(33, 5) ("ACCEL VPORT REWRITE: '%s'\n", http->uri);
     } else if (vport > 0) {
         /* Put the local socket IP address as the hostname, but static port  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 http->conn->port->protocol,
-                 inet_ntoa(http->conn->me.sin_addr),
+                 http->getConn()->port->protocol,
+                 inet_ntoa(http->getConn()->me.sin_addr),
                  vport, url);
         debug(33, 5) ("ACCEL VPORT REWRITE: '%s'\n", http->uri);
     }
@@ -1743,9 +1743,9 @@ prepareTransparentURL(ConnStateData * conn, clientHttpRequest *http, char *url, 
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 http->conn->port->protocol,
-                 inet_ntoa(http->conn->me.sin_addr),
-                 ntohs(http->conn->me.sin_port), url);
+                 http->getConn()->port->protocol,
+                 inet_ntoa(http->getConn()->me.sin_addr),
+                 ntohs(http->getConn()->me.sin_port), url);
         debug(33, 5) ("TRANSPARENT REWRITE: '%s'\n", http->uri);
     }
 }
@@ -1855,7 +1855,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p,
 
     http->http_ver = http_ver;
 
-    http->conn = conn;
+    http->setConn(conn);
 
     http->req_sz = prefix_sz;
 
@@ -2062,7 +2062,7 @@ clientAfterReadingRequests(int fd, ConnStateData *conn, int do_next_read)
         if (conn->in.notYetUsed != conn->body.size_left) {
             /* != 0 when no request body */
             /* Partial request received. Abort client connection! */
-            debug(33, 3) ("clientAfterReadingRequests: FD %d aborted, partial request\n",+                         fd);
+            debug(33, 3) ("clientAfterReadingRequests: FD %d aborted, partial request\n", fd);
             comm_close(fd);
             return;
         }
@@ -2610,7 +2610,7 @@ static void
 clientLifetimeTimeout(int fd, void *data)
 {
     clientHttpRequest *http = (clientHttpRequest *)data;
-    ConnStateData *conn = http->conn;
+    ConnStateData *conn = http->getConn();
     debug(33,
           1) ("WARNING: Closing client %s connection due to lifetime timeout\n",
               inet_ntoa(conn->peer.sin_addr));
@@ -3017,10 +3017,10 @@ varyEvaluateMatch(StoreEntry * entry, request_t * request)
 }
 
 ACLChecklist *
-clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http)
+clientAclChecklistCreate(const acl_access * acl, clientHttpRequest * http)
 {
     ACLChecklist *ch;
-    ConnStateData *conn = http->conn;
+    ConnStateData *conn = http->getConn();
     ch = aclChecklistCreate(acl, http->request, conn ? conn->rfc931 : dash_str);
 
     /*

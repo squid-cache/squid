@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.25 2003/07/06 21:43:36 hno Exp $
+ * $Id: client_side_request.cc,v 1.26 2003/07/10 11:04:06 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -293,7 +293,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     request_t *request;
     StoreIOBuffer tempBuffer;
     http->http_ver = http_ver;
-    http->conn = NULL;
+    http->setConn(NULL);
     http->start = current_time;
     /* this is only used to adjust the connection offset in client_side.c */
     http->req_sz = 0;
@@ -396,8 +396,8 @@ clientAccessCheckDone(int answer, void *data)
                   RequestMethodStr[http->request->method], http->uri,
                   answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED",
                   AclMatchedName ? AclMatchedName : "NO ACL's");
-    proxy_auth_msg = authenticateAuthUserRequestMessage((http->conn
-                     && http->conn->auth_user_request) ? http->conn->
+    proxy_auth_msg = authenticateAuthUserRequestMessage((http->getConn()
+                     && http->getConn()->auth_user_request) ? http->getConn()->
                      auth_user_request : http->request->auth_user_request);
 
     if (answer == ACCESS_ALLOWED) {
@@ -446,9 +446,9 @@ clientAccessCheckDone(int answer, void *data)
         assert (repContext);
         repContext->setReplyToError(page_id, status,
                                     http->request->method, NULL,
-                                    http->conn ? &http->conn->peer.sin_addr : &no_addr, http->request,
-                                    NULL, http->conn
-                                    && http->conn->auth_user_request ? http->conn->
+                                    http->getConn() ? &http->getConn()->peer.sin_addr : &no_addr, http->request,
+                                    NULL, http->getConn()
+                                    && http->getConn()->auth_user_request ? http->getConn()->
                                     auth_user_request : http->request->auth_user_request);
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
@@ -674,13 +674,13 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 
 #if USE_USERAGENT_LOG
     if ((str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT)))
-        logUserAgent(fqdnFromAddr(http->conn ? http->conn->log_addr : no_addr), str);
+        logUserAgent(fqdnFromAddr(http->getConn() ? http->getConn()->log_addr : no_addr), str);
 
 #endif
 #if USE_REFERER_LOG
 
     if ((str = httpHeaderGetStr(req_hdr, HDR_REFERER)))
-        logReferer(fqdnFromAddr(http->conn ? http->conn->log_addr : no_addr), str, http->log_uri);
+        logReferer(fqdnFromAddr(http->getConn() ? http->getConn()->log_addr : no_addr), str, http->log_uri);
 
 #endif
 #if FORW_VIA_DB
@@ -788,8 +788,8 @@ clientRedirectDone(void *data, char *result)
 #endif
     /* FIXME PIPELINE: This is innacurate during pipelining */
 
-    if (http->conn)
-        fd_note(http->conn->fd, http->uri);
+    if (http->getConn())
+        fd_note(http->getConn()->fd, http->uri);
 
     assert(http->uri);
 

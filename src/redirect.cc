@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.98 2003/05/29 15:54:08 hno Exp $
+ * $Id: redirect.cc,v 1.99 2003/07/10 11:04:06 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -106,7 +106,7 @@ redirectStats(StoreEntry * sentry)
 void
 redirectStart(clientHttpRequest * http, RH * handler, void *data)
 {
-    ConnStateData *conn = http->conn;
+    ConnStateData *conn = http->getConn();
     redirectStateData *r = NULL;
     const char *fqdn;
     char buf[8192];
@@ -121,9 +121,9 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
 
     if (Config.accessList.redirector) {
         ACLChecklist ch;
-        ch.src_addr = http->conn->peer.sin_addr;
-        ch.my_addr = http->conn->me.sin_addr;
-        ch.my_port = ntohs(http->conn->me.sin_port);
+        ch.src_addr = http->getConn()->peer.sin_addr;
+        ch.my_addr = http->getConn()->me.sin_addr;
+        ch.my_port = ntohs(http->getConn()->me.sin_port);
         ch.request = requestLink(http->request);
 
         if (!aclCheckFast(Config.accessList.redirector, &ch)) {
