@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.16 1998/02/02 21:16:38 wessels Exp $
+ * $Id: unlinkd.cc,v 1.17 1998/02/04 23:42:12 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -74,8 +74,6 @@ main(int argc, char *argv[])
 
 #include "squid.h"
 
-#if !USE_ASYNC_IO
-
 static int unlinkd_fd = -1;
 
 static int unlinkdCreate(void);
@@ -83,6 +81,7 @@ static int unlinkdCreate(void);
 static int
 unlinkdCreate(void)
 {
+#if USE_UNLINKD
     int x;
     int rfd;
     int wfd;
@@ -107,11 +106,13 @@ unlinkdCreate(void)
     commSetTimeout(wfd, -1, NULL, NULL);
     commSetNonBlocking(wfd);
     return wfd;
+#endif
 }
 
 void
 unlinkdUnlink(const char *path)
 {
+#if USE_UNLINKD
     char *buf;
     int l;
     if (unlinkd_fd < 0) {
@@ -131,27 +132,31 @@ unlinkdUnlink(const char *path)
 	NULL,			/* Handler-data */
 	xfree);
     Counter.unlink.requests++;
+#endif
 }
 
 void
 unlinkdClose(void)
 {
+#if USE_UNLINKD
     if (unlinkd_fd < 0) {
 	debug_trap("unlinkdClose: unlinkd_fd < 0");
 	return;
     }
     file_close(unlinkd_fd);
     unlinkd_fd = -1;
+#endif
 }
 
 void
 unlinkdInit(void)
 {
+#if USE_UNLINKD
     unlinkd_fd = unlinkdCreate();
     if (unlinkd_fd < 0)
 	fatal("unlinkdInit: failed to start unlinkd\n");
     debug(43, 0) ("Unlinkd pipe opened on FD %d\n", unlinkd_fd);
+#endif
 }
 
-#endif /* !USE_ASYNC_IO */
 #endif /* ndef UNLINK_DAEMON */
