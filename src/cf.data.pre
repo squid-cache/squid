@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.359 2004/10/10 02:49:04 hno Exp $
+# $Id: cf.data.pre,v 1.360 2004/10/18 12:20:09 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -4248,6 +4248,19 @@ DOC_START
 	default, Squid uses persistent connections (when allowed)
 	with its clients and servers.  You can use these options to
 	disable persistent connections with clients and/or servers.
+DOC_END
+
+NAME: balance_on_multiple_ip
+TYPE: onoff
+LOC: Config.onoff.balance_on_multiple_ip
+DEFAULT: on
+DOC_START
+	Some load balancing servers based on round robin DNS have been 
+	found not to preserve user session state across requests
+	to different IP addresses.
+
+	By default Squid rotates IP's per request. By disabling
+	this directive only connection failure triggers rotation.
 DOC_END
 
 NAME: pipeline_prefetch
