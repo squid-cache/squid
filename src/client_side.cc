@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.209 1998/02/18 09:38:14 wessels Exp $
+ * $Id: client_side.cc,v 1.210 1998/02/18 22:31:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1072,7 +1072,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
-    MemObject *mem = entry->mem_obj;
+    MemObject *mem;
     char *reply = NULL;
     debug(33, 3) ("clientGetHeadersForIMS: %s, %d bytes\n",
 	http->uri, (int) size);
@@ -1093,6 +1093,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	}
 	return;
     }
+    mem = entry->mem_obj;
     if (mem->reply->code == 0) {
 	if (entry->mem_status == IN_MEMORY) {
 	    clientProcessMiss(http);
