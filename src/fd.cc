@@ -24,10 +24,8 @@ fd_close(int fd)
 {
     FD_ENTRY *fde = &fd_table[fd];
     if (fde->type == FD_FILE) {
-	if (fde->read_handler)
-	    fatal_dump("file_close: read_handler present");
-	if (fde->write_handler)
-	    fatal_dump("file_close: write_handler present");
+	assert(fde->read_handler == NULL);
+	assert(fde->write_handler == NULL);
     }
     fdUpdateBiggest(fd, fde->open = FD_CLOSE);
     memset(fde, '\0', sizeof(FD_ENTRY));
@@ -58,12 +56,11 @@ fd_bytes(int fd, int len, unsigned int type)
     FD_ENTRY *fde = &fd_table[fd];
     if (len < 0)
 	return;
+    assert (type == FD_READ || type == FD_WRITE);
     if (type == FD_READ)
 	fde->bytes_read += len;
-    else if (type == FD_WRITE)
-	fde->bytes_written += len;
     else
-	fatal_dump("fd_bytes: bad type");
+	fde->bytes_written += len;
 }
 
 void
