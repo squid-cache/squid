@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.179 1997/10/26 02:35:35 wessels Exp $
+ * $Id: main.cc,v 1.180 1997/10/27 23:30:24 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -117,9 +117,11 @@ static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int malloc_debug_level = 0;
 #endif
 
-static void rotate_logs(int);
-static void reconfigure(int);
-static void time_tick(int);
+static SIGHDLR rotate_logs;
+static SIGHDLR reconfigure;
+#if ALARM_UPDATES_TIME
+static SIGHDLR time_tick;
+#endif
 static void mainInitialize(void);
 static void mainReconfigure(void);
 static void usage(void);
@@ -259,6 +261,7 @@ rotate_logs(int sig)
 #endif
 }
 
+#if ALARM_UPDATES_TIME
 static void
 time_tick(int sig)
 {
@@ -268,7 +271,7 @@ time_tick(int sig)
     signal(sig, time_tick);
 #endif
 }
-
+#endif
 
 static void
 reconfigure(int sig)
@@ -553,8 +556,10 @@ mainInitialize(void)
     squid_signal(SIGHUP, reconfigure, SA_RESTART);
     squid_signal(SIGTERM, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
     squid_signal(SIGINT, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
+#if ALARM_UPDATES_TIME
     squid_signal(SIGALRM, time_tick, SA_RESTART);
     alarm(1);
+#endif
     debug(1, 0) ("Ready to serve requests.\n");
 
     if (!configured_once) {
