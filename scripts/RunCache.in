@@ -1,11 +1,11 @@
 #!/bin/sh
 #
-#  $Id: RunCache.in,v 1.9 1999/01/29 18:19:46 wessels Exp $
+#  $Id: RunCache.in,v 1.10 2003/01/09 11:39:53 hno Exp $
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 logdir=@localstatedir@
-PATH=@bindir@:/bin:/usr/bin
+PATH=@sbindir@:/bin:/usr/bin
 export PATH
 
 conf=""
