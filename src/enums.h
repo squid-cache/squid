@@ -132,6 +132,18 @@ typedef enum {
 } peer_t;
 
 typedef enum {
+    PEER_SA_NONE,
+    PEER_SA_DIGEST,
+    PEER_SA_ICP
+} peer_select_alg_t;
+
+typedef enum {
+    LOOKUP_NONE,
+    LOOKUP_HIT,
+    LOOKUP_MISS  
+} lookup_t;
+
+typedef enum {
     MGR_NONE,
     MGR_CLIENT_LIST,
     MGR_CONFIGURATION,
@@ -249,7 +261,7 @@ typedef enum {
     NO_DIRECT_FAIL,
     SOURCE_FASTEST,
     ROUNDROBIN_PARENT,
-#if CACHE_DIGEST
+#if SQUID_PEER_DIGEST
     CACHE_DIGEST_HIT,
 #endif
     HIER_MAX
@@ -381,6 +393,13 @@ typedef enum {
     HTTP_INVALID_HEADER = 600	/* Squid header parsing error */
 } http_status;
 
+enum {
+    PD_INITED,    /* initialized */
+    PD_USABLE,    /* ready to use */
+    PD_REQUESTED, /* we are in the process of receiving a [fresh] digest */
+    PD_DISABLED,  /* do not use/validate the digest */
+} peer_cd_t;
+
 /* These are for StoreEntry->flag, which is defined as a SHORT */
 enum {
     ENTRY_SPECIAL,
@@ -511,6 +530,7 @@ typedef enum {
     MEM_IPCACHE_ENTRY,
     MEM_DOMAIN_PING,
     MEM_DOMAIN_TYPE,
+    MEM_DIGEST_FETCH_STATE,
     MEM_PEER,
     MEM_NET_DB_NAME,
     MEM_NET_DB_PEER,
@@ -530,6 +550,7 @@ typedef enum {
     MEM_SWAPDIR,
     MEM_REQUEST_T,
     MEM_ACCESSLOGENTRY,
+    MEM_CACHE_DIGEST,
     MEM_CACHEMGR_PASSWD,
     MEM_REFRESH_T,
     MEM_COMMWRITESTATEDATA,
