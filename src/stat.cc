@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.74 1996/09/20 06:29:09 wessels Exp $
+ * $Id: stat.cc,v 1.75 1996/09/23 22:13:58 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -643,6 +643,9 @@ memoryAccounted(void)
 	request_pool.total_pages_allocated * request_pool.page_size +
 	mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size +
 	meta_data.url_strings +
+#if USE_ICMP
+	meta_data.netdb * sizeof(struct netdbEntry) +
+#endif
 	meta_data.misc;
 }
 
@@ -834,6 +837,14 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
 	disk_stats.page_size,
 	disk_stats.total_pages_allocated * disk_stats.page_size >> 10,
 	(disk_stats.total_pages_allocated - disk_stats.n_pages_in_use) * disk_stats.page_size >> 10);
+
+#if USE_ICMP
+    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
+	"Network Data Entries",
+	meta_data.netdb,
+	(int) sizeof(netdbEntry),
+	(int) (meta_data.netdb * sizeof(netdbEntry) >> 10));
+#endif
 
     storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
 	"Miscellaneous",
