@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.65 1997/11/12 23:36:23 wessels Exp $
+ * $Id: cachemgr.cc,v 1.66 1998/01/07 22:45:25 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -317,16 +317,10 @@ static char *describeTimeSince(time_t then);
 static void
 print_trailer(void)
 {
-    static char tbuf[128];
-    struct tm *gmt;
-
-    gmt = gmtime(&now);
-    strftime(tbuf, 128, "%A, %d-%b-%y %H:%M:%S GMT", gmt);
-
     printf("<HR>\n");
     printf("<ADDRESS>\n");
     printf("Generated %s, by %s/%s@%s\n",
-	tbuf, progname, SQUID_VERSION, getfullhostname());
+	mkrfc1123(now), progname, SQUID_VERSION, getfullhostname());
     printf("</ADDRESS></BODY></HTML>\n");
 }
 
