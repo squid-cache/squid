@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.314 1998/09/04 23:04:50 wessels Exp $
+ * $Id: http.cc,v 1.315 1998/09/10 19:45:53 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -298,7 +298,8 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->sline.status);
-	httpMaybeRemovePublic(entry, reply->sline.status);
+	if (neighbors_do_private_keys)
+	    httpMaybeRemovePublic(entry, reply->sline.status);
 	switch (httpCachableReply(httpState)) {
 	case 1:
 	    httpMakePublic(entry);
