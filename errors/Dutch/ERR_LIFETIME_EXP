@@ -12,10 +12,10 @@ kwam de volgende fout voor:
 <UL>
 <LI>
 <STRONG>
-De levensduur van de verbindings is verstreken
+De levensduur van de verbindings is verstreken.
 </STRONG>
 </UL>
 
 <P>
-Squid heeft het verzoek afgebroken omdat het de maximale verbindings levensduur heeft overschreden.
+Squid heeft het verzoek afgebroken omdat het de maximale verbindingslevensduur heeft overschreden.
 </P>

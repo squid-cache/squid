@@ -1,26 +1,27 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>FOUT</H1>
+<H2>FOUT: De gevraagde URL kon niet worden opgehaald</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+Tijdens het opvragen van de URL:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+kwam de volgende fout voor:
 <UL>
 <LI>
 <STRONG>
-The request or reply is too large.
+De aanvraag of het antwoord is te groot.
 </STRONG>
 <P>
-If you are making a POST or PUT request, then your request body
-(the thing you are trying to upload) is too large.  If you are 
-making a GET request, then the reply body (what you are trying
-to download) is too large.   These limits have been established
-by the Internet Service Provider who operates this cache.  Please
-contact them directly if you feel this is an error.
+Indien U een POST of PUT aanvraag stuurde, dan was uw aanvraag
+(hetgeen U probeert te verzenden) te groot. Indien u een GET
+aanvraag stuurde, dan was het antwoord (hetgeen U probeert te
+ontvangen) te groot. Deze grootte-beperkingen zijn ingesteld
+door de beheerder van deze cache. Neem contact op met de
+beheerder van deze cache, wanneer U van mening bent dat deze
+beperking onjuist is.
 </UL>
 <P>
-Your cache administrator is <A HREF="mailto:%w">%w</A>.
+De beheerder van deze cache is <A HREF="mailto:%w">%w</A>.

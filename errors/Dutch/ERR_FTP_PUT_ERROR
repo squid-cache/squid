@@ -1,5 +1,5 @@
 <HTML><HEAD>
-<TITLE>FOUT: FTP upload mislukt</TITLE>
+<TITLE>FOUT: FTP PUT/upload mislukt</TITLE>
 </HEAD><BODY>
 <H1>FOUT</H1>
 <H2>FTP PUT/upload mislukt</H2>
@@ -8,17 +8,17 @@
 Bij een poging om naar de volgende URL te schrijven:
 <A HREF="%U">%U</A>
 <P>
-zond Squid de volgende FTP opdracht:
+stuurde Squid de volgende FTP opdracht:
 <PRE><STRONG>
         %f
 </STRONG></PRE>
-en ontving toen dit antwoord
+en ontving daarop dit antwoord:
 <PRE><STRONG>
         %F
 </STRONG></PRE>
 <P>
 Dit betekent dat:
 <PRE>
-Controleer paden, permissies en schijfruimte, en probeer het opnieuw.
+Controleer paden, permissies en schijfruimte en probeer het opnieuw.
 </PRE>
 </P>

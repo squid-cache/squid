@@ -20,6 +20,6 @@ Momenteel niet in staat dit verzoek door te sturen.
 Dit verzoek kon niet worden doorgestuurd naar de oorspronkelijke server of een van de parent caches. De meest waarschijnlijke reden voor deze fout is dat
 <UL>
 <LI>De cache beheerder het deze cache niet toestaat met de oorspronkelijke server te praten, en
-<LI>Alle ingestelde parent caches zijn momenteel onbereikbaar.
+<LI>alle ingestelde parent caches op dit moment onbereikbaar zijn.
 </UL>
 </P>

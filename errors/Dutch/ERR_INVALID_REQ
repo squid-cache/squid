@@ -14,7 +14,7 @@ kwam de volgende fout voor:
 <UL>
 <LI>
 <STRONG>
-Ongeldig verzoek
+Ongeldig verzoek.
 </STRONG>
 </UL>
 
@@ -27,6 +27,6 @@ Een gedeelte van het HTTP verzoek is ongeldig. Mogelijke problemen:
 <LI>Ontbrekende HTTP identificatie (HTTP/1.0)
 <LI>Het verzoek is mogelijk te lang
 <LI>De Content-Length ontbreekt voor het POST of PUT verzoek
-<LI>Er staat een ogeldig teken in de host naam; Het teken '_' is niet toegestaan
+<LI>Er staat een ongeldig teken in de hostnaam; Het teken '_' is niet toegestaan.
 </UL>
 </P>
