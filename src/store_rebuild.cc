@@ -558,7 +558,9 @@ storeCleanup(void *datanotused)
 	if (e->swap_file_number < 0)
 	    continue;
 	if (EBIT_TEST(e->flag, RELEASE_REQUEST)) {
-	    assert(!storeDirMapBitTest(e->swap_file_number));
+	    if (e->swap_file_number > -1)
+		debug(20, 1) ("storeCleanup: WARNING: swap_file_number = %d for RELEASE_REQUEST entry\n",
+		    e->swap_file_number);
 	    /*
 	     * I don't think it safe to call storeRelease()
 	     * from inside this loop using link_ptr.
