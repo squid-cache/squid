@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.109 2002/10/13 20:35:00 robertc Exp $
+ * $Id: defines.h,v 1.110 2002/12/13 03:43:37 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -291,6 +291,8 @@
 #endif
 #define cbdataReference(var)	(cbdataInternalLock(var), var)
 #define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = NULL;}} while(0)
+#define CBDATA_CLASS(type)	static cbdata_type CBDATA_##type
+#define CBDATA_CLASS_INIT(type) cbdata_type type::CBDATA_##type = CBDATA_UNKNOWN
 #define CBDATA_TYPE(type)	static cbdata_type CBDATA_##type = CBDATA_UNKNOWN
 #define CBDATA_GLOBAL_TYPE(type)	cbdata_type CBDATA_##type
 #define CBDATA_INIT_TYPE(type)	(CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL)))
