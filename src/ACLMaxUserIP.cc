@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.2 2003/03/10 20:12:43 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -48,10 +48,10 @@ ACLMaxUserIP::clone() const
     return new ACLMaxUserIP(*this);
 }
 
-ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : class_ (theClass), max(0)
+ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : class_ (theClass), maximum(0)
 {}
 
-ACLMaxUserIP::ACLMaxUserIP (ACLMaxUserIP const & old) :class_ (old.class_), max (old.max), flags (old.flags)
+ACLMaxUserIP::ACLMaxUserIP (ACLMaxUserIP const & old) :class_ (old.class_), maximum (old.maximum), flags (old.flags)
 {}
 
 MemPool *ACLMaxUserIP::Pool(NULL);
@@ -91,13 +91,13 @@ ACLMaxUserIP::typeString() const
 bool
 ACLMaxUserIP::valid () const
 {
-    return max != 0;
+    return maximum != 0;
 }
 
 void
 ACLMaxUserIP::parse()
 {
-    if (max) {
+    if (maximum) {
         debug(28, 1) ("Attempting to alter already set User max IP acl\n");
         return;
     }
@@ -118,9 +118,9 @@ ACLMaxUserIP::parse()
     if (!t)
         fatal("aclParseUserMaxIP: Malformed ACL\n");
 
-    max = atoi(t);
+    maximum = atoi(t);
 
-    debug(28, 5) ("aclParseUserMaxIP: Max IP address's %d\n", (int) max);
+    debug(28, 5) ("aclParseUserMaxIP: Max IP address's %d\n", (int) maximum);
 
     return;
 }
@@ -141,7 +141,7 @@ ACLMaxUserIP::match(auth_user_request_t * auth_user_request,
      * one off is currently undecided (RBC)
      */
 
-    if (authenticateAuthUserRequestIPCount(auth_user_request) <= max)
+    if (authenticateAuthUserRequestIPCount(auth_user_request) <= maximum)
         return 0;
 
     /* this is a match */
@@ -185,7 +185,7 @@ ACLMaxUserIP::match(ACLChecklist *checklist)
 wordlist *
 ACLMaxUserIP::dump() const
 {
-    if (!max)
+    if (!maximum)
         return NULL;
 
     wordlist *W = NULL;
@@ -195,7 +195,7 @@ ACLMaxUserIP::dump() const
 
     char buf[128];
 
-    snprintf(buf, sizeof(buf), "%lu", (unsigned long int) max);
+    snprintf(buf, sizeof(buf), "%lu", (unsigned long int) maximum);
 
     wordlistAdd(&W, buf);
 

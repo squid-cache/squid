@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.5 2003/03/04 01:40:25 robertc Exp $
+ * $Id: DelayId.cc,v 1.6 2003/03/10 20:12:43 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -134,18 +134,18 @@ DelayId::setNoDelay(bool const newValue)
  * into account bytes already buffered - that is up to the caller.
  */
 int
-DelayId::bytesWanted(int min, int max) const
+DelayId::bytesWanted(int minimum, int maximum) const
 {
     /* unlimited */
 
     if (! (*this) || markedAsNoDelay)
-        return XMAX(min, max);
+        return max(minimum, maximum);
 
     /* limited */
-    int nbytes = XMAX(min, max);
+    int nbytes = max(minimum, maximum);
 
     if (compositeId.getRaw())
-        nbytes = compositeId->bytesWanted(min, nbytes);
+        nbytes = compositeId->bytesWanted(minimum, nbytes);
 
     return nbytes;
 }
