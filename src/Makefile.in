@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.113 1998/01/07 21:14:24 wessels Exp $
+#  $Id: Makefile.in,v 1.114 1998/01/07 21:16:29 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -54,7 +54,7 @@ SHELL		= /bin/sh
 
 INCLUDE		= -I. -I../include -I$(srcdir)/../include
 CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
-SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @PTHREADLIB@ \
+SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @SQUID_PTHREAD_LIB@ \
 		  $(SNMPLIB) -lmiscutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
