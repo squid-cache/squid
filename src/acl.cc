@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.81 1997/02/03 23:03:04 wessels Exp $
+ * $Id: acl.cc,v 1.82 1997/02/04 23:18:33 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@ const char *AclMatchedName = NULL;
 
 /* for reading ACL's from files */
 int aclFromFile = 0;
+int aclCompIpResult = 0;
 FILE *aclFile;
 
 /* These three should never be referenced directly in this file! */
@@ -52,7 +53,7 @@ static const char *const w_space = " \t\n\r";	/* Jasper sez so */
 
 static void aclDestroyAclList _PARAMS((struct _acl_list * list));
 static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
-static struct _acl_ip_data *aclSplayInsertIp _PARAMS((struct in_addr, struct in_addr, struct in_addr, struct _acl_ip_data *));
+static struct _acl_ip_data *aclSplayInsertIp _PARAMS((struct _acl_ip_data *, struct _acl_ip_data *));
 static struct _acl_ip_data *aclSplayIp _PARAMS((struct in_addr, struct _acl_ip_data *));
 static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
 static int aclMatchDomainList _PARAMS((wordlist *, const char *));
@@ -328,7 +329,7 @@ aclParseIpList(void *curlist)
     while ((t = strtokFile())) {
 	if ((q = aclParseIpData(t)) == NULL)
 	    continue;
-	*ip_data = aclSplayInsertIp(q->addr1, q->addr2, q->mask, *ip_data);
+	*ip_data = aclSplayInsertIp(q, *ip_data);
     }
 
 }
@@ -357,27 +358,24 @@ aclSplayIpCompare(struct in_addr addr, struct _acl_ip_data *data)
 }
 
 static struct _acl_ip_data *
-aclSplayInsertIp(struct in_addr addr1, struct in_addr addr2, struct in_addr mask, struct _acl_ip_data * t)
+aclSplayInsertIp(struct _acl_ip_data *q, struct _acl_ip_data * t)
 {
     struct _acl_ip_data *new;
-    int c;
-
     new = xmalloc(sizeof(struct _acl_ip_data));
-    new->addr1 = addr1;
-    new->addr2 = addr2;
-    new->mask = mask;
+    new->addr1 = q->addr1;
+    new->addr2 = q->addr2;
+    new->mask = q->mask;
     if (t == NULL) {
 	new->left = new->right = NULL;
 	return new;
     }
-    t = aclSplayIp(addr1, t);
-    c = aclSplayIpCompare(addr1, t);
-    if (c < 0) {
+    t = aclSplayIp(q->addr1, t);
+    if (aclCompIpResult < 0) {
 	new->left = t->left;
 	new->right = t;
 	t->left = NULL;
 	return new;
-    } else if (c > 0) {
+    } else if (aclCompIpResult > 0) {
 	new->right = t->right;
 	new->left = t;
 	t->right = NULL;
@@ -396,15 +394,14 @@ aclSplayIp(struct in_addr addr1, struct _acl_ip_data * t)
     struct _acl_ip_data *l;
     struct _acl_ip_data *r;
     struct _acl_ip_data *y;
-    int c;
     if (t == NULL)
 	return t;
     N.left = N.right = NULL;
     l = r = &N;
 
     for (;;) {
-	c = aclSplayIpCompare(addr1, t);
-	if (c < 0) {
+	aclCompIpResult = aclSplayIpCompare(addr1, t);
+	if (aclCompIpResult < 0) {
 	    if (t->left == NULL)
 		break;
 	    if (aclSplayIpCompare(addr1, t->left) < 0) {
@@ -418,7 +415,7 @@ aclSplayIp(struct in_addr addr1, struct _acl_ip_data * t)
 	    r->left = t;	/* link right */
 	    r = t;
 	    t = t->left;
-	} else if (c > 0) {
+	} else if (aclCompIpResult > 0) {
 	    if (t->right == NULL)
 		break;
 	    if (aclSplayIpCompare(addr1, t->right) > 0) {
@@ -809,9 +806,8 @@ static int
 aclMatchIp(void *dataptr, struct in_addr c)
 {
     struct _acl_ip_data **data = dataptr;
-    struct _acl_ip_data *t;
-    t = *data = aclSplayIp(c, *data);
-    return !aclSplayIpCompare(c, t);
+    *data = aclSplayIp(c, *data);
+    return !aclCompIpResult;
 }
 
 static int
