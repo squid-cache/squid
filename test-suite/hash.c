@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.2 1998/02/27 19:04:15 kostas Exp $
+ * $Id: hash.c,v 1.3 1998/02/28 03:10:35 kostas Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -111,7 +111,12 @@
 #include <ctype.h>
 #include <sys/time.h>
 #include <strings.h>
+#include <assert.h>
 #include "hash.h"
+#undef free
+extern void my_free(char *, int , void *);
+
+#define free(a) my_free(__FILE__, __LINE__, a)
 
 extern void print_stats();
 /*
@@ -367,8 +372,9 @@ hash_unlink(hash_table * hid, hash_link * hl, int FreeLink)
 	    if (walker == hid->current_ptr)
 		hid->current_ptr = walker->next;
 	    if (FreeLink) {
-		if (walker)
+		if (walker) {
 		free(walker);
+		}
 	    }
 	    return 0;
 	}
@@ -471,7 +477,4 @@ main(void)
     exit(0);
 }
 #endif
-void assert(int a) {
-
-}
 
