@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.202 1997/07/14 05:57:51 wessels Exp $
+ * $Id: cache_cf.cc,v 1.203 1997/07/14 19:56:14 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -53,7 +53,6 @@ static void parseTimeLine _PARAMS((time_t *tptr, const char *units));
 
 static void parse_string _PARAMS((char **));
 static void parse_wordlist _PARAMS((wordlist **));
-static void dump_all _PARAMS((void));
 static void default_all _PARAMS((void));
 static int parse_line _PARAMS((char *));
 static cache_peer *configFindPeer _PARAMS((const char *name));
@@ -158,7 +157,7 @@ parseConfigFile(const char *file_name)
 	if (config_input_line[0] == '\0')
 	    continue;
 	debug(3, 5) ("Processing: '%s'\n", config_input_line);
-	strcpy(tmp_line, config_input_line);
+	xstrncpy(tmp_line, config_input_line, BUFSIZ);
 	if (!parse_line(tmp_line)) {
 	    debug(3, 0) ("parseConfigFile: line %d unrecognized: '%s'\n",
 		config_lineno,
@@ -206,7 +205,6 @@ parseConfigFile(const char *file_name)
     }
     fclose(fp);
     configDoConfigure();
-    dump_all();
     return 0;
 }
 
@@ -298,7 +296,7 @@ parseTimeUnits(const char *unit)
 static void
 dump_acl(acl *acl)
 {
-    debug(0,0)("XXX need to fix\n");
+    assert(0);
 }
 
 static void
@@ -316,7 +314,7 @@ free_acl(acl **acl)
 static void
 dump_acl_access(struct _acl_access *head)
 {
-    debug(0,0)("XXX need to fix\n");
+    assert(0);
 }
 
 static void
@@ -362,7 +360,7 @@ free_address(struct in_addr *addr)
 static void
 dump_cachedir(struct _cacheSwap swap)
 {
-    debug(0,0)("XXX need to fix\n");
+    assert(0);
 }
 
 static void
@@ -440,7 +438,7 @@ free_cachedir(struct _cacheSwap *swap)
 static void
 dump_cache_peer(cache_peer *p)
 {
-    debug(0,0)("XXX need to fix\n");
+    assert(0);
 }
 
 static void
@@ -512,7 +510,7 @@ free_cache_peer(cache_peer **P)
 static void
 dump_cachemgrpasswd(cachemgr_passwd *list)
 {
-    debug(0,0)("XXX need to fix\n");
+    assert(0);
 }
 
 static void
@@ -541,7 +539,7 @@ free_cachemgrpasswd(cachemgr_passwd **head)
 static void
 dump_denyinfo(struct _acl_deny_info_list *var)
 {
-    debug(0,0)("XXX need to fix\n");
+    assert(0);
 }
 
 static void
@@ -804,7 +802,7 @@ parse_pathname_stat(char **path)
 static void
 dump_refreshpattern(refresh_t *head)
 {
-    debug(0,0)("XXX need to fix\n");
+    assert(0);
 }
 
 static void
@@ -877,7 +875,7 @@ free_refreshpattern(refresh_t **head)
 static void
 dump_regexlist(relist * var)
 {
-    debug(0,0)("XXX need to fix\n");
+    assert(0);
 }
 
 static void
