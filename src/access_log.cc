@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.25 1998/03/31 05:37:33 wessels Exp $
+ * $Id: access_log.cc,v 1.26 1998/03/31 08:37:29 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -431,7 +431,11 @@ static void
 fvdbClear(void)
 {
     hashFreeItems(via_table, fvdbFreeEntry);
+    hashFreeMemory(via_table);
+    via_table = hash_create((HASHCMP *) strcmp, 977, hash4);
     hashFreeItems(forw_table, fvdbFreeEntry);
+    hashFreeMemory(forw_table);
+    forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
 }
 
 #endif
