@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.4 1998/02/17 23:33:42 wessels Exp $
+# $Id: Makefile.in,v 1.5 1998/04/24 05:26:39 wessels Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -17,7 +17,7 @@ INSTALL         	= @INSTALL@
 INSTALL_FILE    	= @INSTALL_DATA@
 DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
 
-LANGUAGE		= English
+LANGUAGE		= @ERR_LANGUAGE@
 
 all:
 
