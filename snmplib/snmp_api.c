@@ -398,8 +398,8 @@ snmp_build(session, pdu, packet, out_length)
 			   session->community, session->community_len, 
 			   session->Version,
 			   pdu);
-    snmplib_debug(8,"LIBSNMP: snmp_build():  Packet len difference %d, returning %d (requid %d)\n",
-	   (bufp - packet), *out_length, pdu->reqid);
+    snmplib_debug(8,"LIBSNMP: snmp_build():  Packet len %d (requid %d)\n",
+	   *out_length, pdu->reqid);
 
     if (bufp == NULL)
       return(-1);

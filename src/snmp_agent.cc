@@ -15,66 +15,123 @@ enum {
     HTTP_SVC, ICP_SVC, DNS_SVC
 };
 
+void snmpAclCheckDone(int answer, void *);
 static struct snmp_pdu *snmp_agent_response(struct snmp_pdu *PDU);
 static int community_check(char *b, oid *name, int namelen);
 struct snmp_session *Session;
-extern StatCounters *CountHist;
 extern int get_median_svc(int, int);
+extern void snmp_agent_parse_done(int, snmp_request_t *);
+void snmpAclCheckStart(snmp_request_t *rq);
+
 
 /* returns: 
  * 2: no such object in this mib
  * 1: ok
  * 0: failed */
 
-int
-snmp_agent_parse(u_char * buf, int len, u_char * outbuf, int *outlen,
-    u_long from_addr, long *this_reqid)
+void
+snmp_agent_parse(snmp_request_t *rq)
 {
+    long this_reqid;
+    u_char *buf=rq->buf;
+    int len=rq->len;
+    
+    struct snmp_pdu *PDU;
+    u_char *Community;
+
+    /* Now that we have the data, turn it into a PDU */
+    PDU = snmp_pdu_create(0);
+    Community = snmp_parse(Session, PDU, buf, len);
+    rq->community=Community;
+    rq->PDU=PDU;
+    this_reqid=PDU->reqid;
+    debug(49, 5) ("snmp_agent_parse: reqid=%d\n", PDU->reqid);
+
+    if (Community == NULL) {
+	debug(49, 8) ("snmp_agent_parse: Community == NULL\n");
+
+	snmp_free_pdu(PDU);
+    	snmp_agent_parse_done(0, rq);
+    }
+    snmpAclCheckStart(rq);
+}
+
+void
+snmpAclCheckStart(snmp_request_t *rq)
+{
+	communityEntry *cp;
+	cbdataAdd(rq,MEM_NONE);
+	for (cp=Config.Snmp.communities;cp!=NULL;cp=cp->next) 
+		if (!strcmp(rq->community, cp->name) && cp->acls) {
+        		rq->acl_checklist= aclChecklistCreate(cp->acls,
+        			NULL,rq->from.sin_addr, NULL, NULL);
+			aclNBCheck(rq->acl_checklist,snmpAclCheckDone, rq);
+			return;
+		}
+	snmpAclCheckDone(ACCESS_ALLOWED, rq);
+}
+
+void
+snmpAclCheckDone(int answer, void *data)
+{
+    snmp_request_t *rq=data;
+    u_char *outbuf=rq->outbuf;
+    
     struct snmp_pdu *PDU, *RespPDU;
     u_char *Community;
     variable_list *VarPtr;
     variable_list **VarPtrP;
     int ret;
-    /* Now that we have the data, turn it into a PDU */
-    PDU = snmp_pdu_create(0);
-    Community = snmp_parse(Session, PDU, buf, len);
-    if (Community == NULL) {
-	debug(49, 8) ("snmp_agent_parse: Community == NULL\n");
-
-	snmp_free_pdu(PDU);
-	return 0;
+   
+    debug(49,5)("snmpAclCheckDone: called with answer=%d.\n",answer);
+    rq->acl_checklist = NULL;
+    cbdataFree(rq);
+    PDU=rq->PDU;
+    Community=rq->community;
+    if (answer==ACCESS_DENIED) {
+		xfree(Community);
+		debug(49,5)("snmpAclCheckDone: failed on acl.\n");
+    		snmp_agent_parse_done(0, rq);
+		return;
     }
+
     for (VarPtrP = &(PDU->variables);
         *VarPtrP;
         VarPtrP = &((*VarPtrP)->next_variable)) {
         VarPtr = *VarPtrP;
 
+	debug(49,5)("snmpAclCheckDone: checking.");
+	/* access check for each variable */
+
     	if (!community_check(Community, VarPtr->name, VarPtr->name_length)) {
 		xfree(Community);
-	/* Wrong community! XXXXX */
-		return 0;
+		debug(49,5)("snmpAclCheckDone: failed on community_check.\n");
+    		snmp_agent_parse_done(0, rq);
+		return;
     	}
     }
-    xfree(Community);
-    debug(49, 5) ("snmp_agent_parse: reqid=%d\n", PDU->reqid);
+    xfree(Session->community);
+    Session->community=xstrdup(Community);
+    Session->community_len=strlen(Community);
     RespPDU = snmp_agent_response(PDU);
     snmp_free_pdu(PDU);
     if (RespPDU == NULL) {
-	debug(49, 8) ("snmp_agent_parse: RespPDU == NULL\n");
-	return 2;
+	debug(49, 8) ("snmpAclCheckDone: RespPDU == NULL. Returning code 2.\n");
+	xfree(Community);
+	debug(49,5)("snmpAclCheckDone: failed on RespPDU==NULL.\n");
+    	snmp_agent_parse_done(2, rq);
+	return;
     }
-    debug(49, 8) ("snmp_agent_parse: Response pdu (%x) errstat=%d reqid=%d.\n",
+    debug(49, 8) ("snmpAclCheckDone: Response pdu (%x) errstat=%d reqid=%d.\n",
 	RespPDU, RespPDU->errstat, RespPDU->reqid);
-#if 0
-    if (RespPDU->variables) {
-	debug(49, 8) ("snmp_agent_parse: len=%d\n", RespPDU->variables->val_len);
-    }
-#endif
+
     /* Encode it */
-    ret = snmp_build(Session, RespPDU, outbuf, outlen);
+    ret = snmp_build(Session, RespPDU, outbuf, &rq->outlen);
     /* XXXXX Handle failure */
     snmp_free_pdu(RespPDU);
-    return 1;
+    xfree(Community);
+    debug(49,5)("snmpAclCheckDone: ok!\n");
+    snmp_agent_parse_done(1, rq);
 }
 
 
@@ -223,10 +280,6 @@ int
 init_agent_auth()
 {
     Session = (struct snmp_session *) xmalloc(sizeof(struct snmp_session));
-    if (Session == NULL) {
-	perror("malloc");
-	return 3;
-    }
     Session->Version = SNMP_VERSION_1;
     Session->authenticator = NULL;
     Session->community = (u_char *) xstrdup("public");

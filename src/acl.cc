@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.140 1998/02/19 19:27:40 wessels Exp $
+ * $Id: acl.cc,v 1.141 1998/02/25 11:16:38 kostas Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -897,6 +897,7 @@ aclParseAccessLine(acl_access ** head)
 	return;
     }
     A = xcalloc(1, sizeof(acl_access));
+
     if (!strcmp(t, "allow"))
 	A->allow = 1;
     else if (!strcmp(t, "deny"))

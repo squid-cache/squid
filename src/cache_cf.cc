@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.250 1998/02/21 00:18:10 wessels Exp $
+ * $Id: cache_cf.cc,v 1.251 1998/02/25 11:16:39 kostas Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -437,6 +437,28 @@ free_acl(acl ** acl)
 }
 
 static void
+dump_snmp_access(StoreEntry * entry, const char *name, communityEntry * Head)
+{
+    acl_list *l;
+    communityEntry *cp;
+    acl_access *head;
+ 
+    for (cp = Head; cp; cp = cp->next) {
+	head=cp->acls;
+       while (head != NULL) {
+	for (l = head->acl_list; l != NULL; l = l->next) {
+	    storeAppendPrintf(entry, "%s %s %s %s%s\n",
+		name, cp->name, 
+		head->allow ? "Allow" : "Deny",
+		l->op ? "" : "!",
+		l->acl->name);
+	}
+	head = head->next;
+       }
+    }
+}
+
+static void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
     acl_list *l;
@@ -450,6 +472,30 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 	}
 	head = head->next;
     }
+}
+
+static void
+parse_snmp_access(communityEntry  **head)
+{
+    char *t;
+    communityEntry *cp;
+ 
+    t=strtok(NULL, w_space);
+    for (cp = *head; cp; cp = cp->next) 
+        if (!strcmp(t, cp->name)) {
+    		aclParseAccessLine(&cp->acls);
+		return;
+	}
+     debug(15,0)("parse_snmp_access: You need to define community %s first!\n",t);
+}
+
+static void
+free_snmp_access(communityEntry ** Head)
+{
+    communityEntry *cp;
+    
+    for (cp = *Head; cp; cp = cp->next) 
+	aclDestroyAccessList(&cp->acls);
 }
 
 static void
