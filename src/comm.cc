@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.297 1999/01/12 16:42:15 wessels Exp $
+ * $Id: comm.cc,v 1.298 1999/01/12 23:22:28 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -430,7 +430,7 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 	if (x < 0)
 	    debug(5, 9) ("connect FD %d: %s\n", sock, xstrerror());
     } else {
-#if defined(sony)
+#if defined(_SQUID_NEWSOS6_)
 	/* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
 	connect(sock, (struct sockaddr *) address, sizeof(*address));
 	if (errno == EINVAL) {
