@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.147 1999/01/19 05:24:47 wessels Exp $
+ * $Id: errorpage.cc,v 1.148 1999/01/29 21:01:06 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -275,6 +275,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 	errorStateFree(err);
 	return;
     }
+    storeLockObject(entry);
     storeBuffer(entry);
     rep = errorBuildReply(err);
     /* Add authentication header */
@@ -302,6 +303,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     storeComplete(entry);
     storeNegativeCache(entry);
     storeReleaseRequest(entry);
+    storeUnlockObject(entry);
     errorStateFree(err);
 }
 
