@@ -784,7 +784,7 @@ DOC_END
 NAME: redirect_program
 TYPE: pathname_stat
 LOC: Config.Program.redirect
-DEFAULT: /bin/false
+DEFAULT: none
 DOC_START
 	Specify the location of the executable for the URL redirector.
 	Currently, you must provide your own redirector program.

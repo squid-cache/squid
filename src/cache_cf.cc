@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.201 1997/07/14 04:27:37 wessels Exp $
+ * $Id: cache_cf.cc,v 1.202 1997/07/14 05:57:51 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -418,6 +418,7 @@ parse_cachedir(struct _cacheSwap *swap)
     tmp->read_only = readonly;
     tmp->map = file_map_create(MAX_FILES_PER_DIR);
     tmp->swaplog_fd = -1;
+    swap->n_configured++;
 }
 
 static void
