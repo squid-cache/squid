@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.6 1996/03/22 21:13:15 wessels Exp $ */
+/* $Id: comm.cc,v 1.7 1996/03/26 05:16:20 wessels Exp $ */
 
 #include "config.h"
 
@@ -295,7 +295,7 @@ int comm_set_fd_lifetime(fd, lifetime)
      int fd;
      int lifetime;
 {
-    if (fd < 0)
+    if (fd < 0 || fd > getMaxFD())
 	return 0;
     if (lifetime < 0)
 	return fd_lifetime[fd] = -1;
@@ -537,6 +537,15 @@ int comm_udp_recv(fd, buf, size, from_addr, from_size)
     return len;
 }
 
+void comm_set_stall(fd, delta)
+     int fd;
+     int delta;
+{
+    if (fd < 0)
+	return;
+    fd_table[fd].stall_until = cached_curtime + delta;
+}
+
 
 
 /* Select on all sockets; call handlers for those that are ready. */
@@ -575,7 +584,7 @@ int comm_select(sec, usec, failtime)
 
 	for (i = 0; i < fdstat_biggest_fd() + 1; i++) {
 	    /* Check each open socket for a handler. */
-	    if (fd_table[i].read_handler)
+	    if (fd_table[i].read_handler && fd_table[i].stall_until <= cached_curtime)
 		FD_SET(i, &readfds);
 	    if (fd_table[i].write_handler)
 		FD_SET(i, &writefds);
@@ -920,8 +929,7 @@ int comm_init()
 {
     int i, max_fd = getMaxFD();
 
-    fd_table = (FD_ENTRY *) xmalloc(sizeof(FD_ENTRY) * max_fd);
-    memset(fd_table, '\0', sizeof(FD_ENTRY) * max_fd);	/* clear fd_table */
+    fd_table = (FD_ENTRY *) xcalloc(max_fd, sizeof(FD_ENTRY));
     /* Keep a few file descriptors free so that we don't run out of FD's
      * after accepting a client but before it opens a socket or a file.
      * Since getMaxFD can be as high as several thousand, don't waste them */
