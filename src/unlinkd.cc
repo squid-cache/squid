@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.4 1997/04/30 18:31:04 wessels Exp $
+ * $Id: unlinkd.cc,v 1.5 1997/04/30 18:34:59 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -116,7 +116,7 @@ unlinkdCreate(void)
 	close(wfd2);
 	memset(buf, '\0', HELLO_BUFSIZ);
 	n = read(rfd2, buf, HELLO_BUFSIZ - 1);
-	fd_bytes(rfd2, len, FD_READ);
+	fd_bytes(rfd2, n, FD_READ);
 	close(rfd2);
 	if (n <= 0) {
 	    debug(50, 0, "unlinkdCreate: handshake failed\n");
