@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.54 2001/09/03 21:28:57 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.55 2001/10/17 15:00:54 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -83,9 +83,9 @@ static void storeDiskdDirCreateSwapSubDirs(SwapDir *);
 static char *storeDiskdDirSwapLogFile(SwapDir *, const char *);
 static EVH storeDiskdDirRebuildFromDirectory;
 static EVH storeDiskdDirRebuildFromSwapLog;
-static int storeDiskdDirGetNextFile(RebuildState *, int *sfileno, int *size);
+static int storeDiskdDirGetNextFile(RebuildState *, sfileno *, int *size);
 static StoreEntry *storeDiskdDirAddDiskRestore(SwapDir * SD, const cache_key * key,
-    int file_number,
+    sfileno file_number,
     size_t swap_file_sz,
     time_t expires,
     time_t timestamp,
@@ -135,27 +135,24 @@ STSETUP storeFsSetup_diskd;
  */
 
 static int
-storeDiskdDirMapBitTest(SwapDir * SD, int fn)
+storeDiskdDirMapBitTest(SwapDir * SD, sfileno filn)
 {
-    sfileno filn = fn;
     diskdinfo_t *diskdinfo;
     diskdinfo = SD->fsdata;
     return file_map_bit_test(diskdinfo->map, filn);
 }
 
 static void
-storeDiskdDirMapBitSet(SwapDir * SD, int fn)
+storeDiskdDirMapBitSet(SwapDir * SD, sfileno filn)
 {
-    sfileno filn = fn;
     diskdinfo_t *diskdinfo;
     diskdinfo = SD->fsdata;
     file_map_bit_set(diskdinfo->map, filn);
 }
 
 void
-storeDiskdDirMapBitReset(SwapDir * SD, int fn)
+storeDiskdDirMapBitReset(SwapDir * SD, sfileno filn)
 {
-    sfileno filn = fn;
     diskdinfo_t *diskdinfo;
     diskdinfo = SD->fsdata;
     /* 
@@ -546,7 +543,7 @@ storeDiskdDirRebuildFromDirectory(void *data)
     StoreEntry *e = NULL;
     StoreEntry tmpe;
     cache_key key[MD5_DIGEST_CHARS];
-    int sfileno = 0;
+    sfileno filn = 0;
     int count;
     int size;
     struct stat sb;
@@ -558,7 +555,7 @@ storeDiskdDirRebuildFromDirectory(void *data)
     debug(20, 3) ("storeDiskdDirRebuildFromDirectory: DIR #%d\n", rb->sd->index);
     for (count = 0; count < rb->speed; count++) {
 	assert(fd == -1);
-	fd = storeDiskdDirGetNextFile(rb, &sfileno, &size);
+	fd = storeDiskdDirGetNextFile(rb, &filn, &size);
 	if (fd == -2) {
 	    debug(20, 1) ("Done scanning %s swaplog (%d entries)\n",
 		rb->sd->path, rb->n_read);
@@ -583,7 +580,7 @@ storeDiskdDirRebuildFromDirectory(void *data)
 	if ((++rb->counts.scancount & 0xFFFF) == 0)
 	    debug(20, 3) ("  %s %7d files opened so far.\n",
 		rb->sd->path, rb->counts.scancount);
-	debug(20, 9) ("file_in: fd=%d %08X\n", fd, sfileno);
+	debug(20, 9) ("file_in: fd=%d %08X\n", fd, filn);
 	statCounter.syscalls.disk.reads++;
 	if (read(fd, hdr_buf, SM_PAGE_SIZE) < 0) {
 	    debug(20, 1) ("storeDiskdDirRebuildFromDirectory: read(FD %d): %s\n",
@@ -605,7 +602,7 @@ storeDiskdDirRebuildFromDirectory(void *data)
 	if (tlv_list == NULL) {
 	    debug(20, 1) ("storeDiskdDirRebuildFromDirectory: failed to get meta data\n");
 	    /* XXX shouldn't this be a call to storeDiskdUnlink ? */
-	    storeDiskdDirUnlinkFile(SD, sfileno);
+	    storeDiskdDirUnlinkFile(SD, filn);
 	    continue;
 	}
 	debug(20, 3) ("storeDiskdDirRebuildFromDirectory: successful swap meta unpacking\n");
@@ -629,7 +626,7 @@ storeDiskdDirRebuildFromDirectory(void *data)
 	tlv_list = NULL;
 	if (storeKeyNull(key)) {
 	    debug(20, 1) ("storeDiskdDirRebuildFromDirectory: NULL key\n");
-	    storeDiskdDirUnlinkFile(SD, sfileno);
+	    storeDiskdDirUnlinkFile(SD, filn);
 	    continue;
 	}
 	tmpe.hash.key = key;
@@ -641,11 +638,11 @@ storeDiskdDirRebuildFromDirectory(void *data)
 	} else if (tmpe.swap_file_sz != sb.st_size) {
 	    debug(20, 1) ("storeDiskdDirRebuildFromDirectory: SIZE MISMATCH %d!=%d\n",
 		tmpe.swap_file_sz, (int) sb.st_size);
-	    storeDiskdDirUnlinkFile(SD, sfileno);
+	    storeDiskdDirUnlinkFile(SD, filn);
 	    continue;
 	}
 	if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {
-	    storeDiskdDirUnlinkFile(SD, sfileno);
+	    storeDiskdDirUnlinkFile(SD, filn);
 	    rb->counts.badflags++;
 	    continue;
 	}
@@ -664,7 +661,7 @@ storeDiskdDirRebuildFromDirectory(void *data)
 	rb->counts.objcount++;
 	storeEntryDump(&tmpe, 5);
 	e = storeDiskdDirAddDiskRestore(SD, key,
-	    sfileno,
+	    filn,
 	    tmpe.swap_file_sz,
 	    tmpe.expires,
 	    tmpe.timestamp,
@@ -880,7 +877,7 @@ storeDiskdDirRebuildFromSwapLog(void *data)
 }
 
 static int
-storeDiskdDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
+storeDiskdDirGetNextFile(RebuildState * rb, sfileno *filn_p, int *size)
 {
     SwapDir *SD = rb->sd;
     diskdinfo_t *diskdinfo = SD->fsdata;
@@ -962,7 +959,7 @@ storeDiskdDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
 	rb->curlvl1 = 0;
 	rb->done = 1;
     }
-    *sfileno = rb->fn;
+    *filn_p = rb->fn;
     return fd;
 }
 
