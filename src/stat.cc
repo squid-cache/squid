@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.19 1996/04/10 20:45:32 wessels Exp $ */
+/* $Id: stat.cc,v 1.20 1996/04/11 04:47:25 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -48,8 +48,8 @@ void stat_utilization_get(obj, sentry)
      StoreEntry *sentry;
 {
     static char tempbuf[MAX_LINELEN];
-    int proto_id;
-    proto_stat *p = &obj->proto_stat_data[0];
+    protocol_t proto_id;
+    proto_stat *p = &obj->proto_stat_data[PROTO_MAX];
     proto_stat *q = NULL;
     int secs = 0;
 
@@ -69,7 +69,7 @@ void stat_utilization_get(obj, sentry)
 
 
     /* find the total */
-    for (proto_id = 1; proto_id <= PROTOCOL_SUPPORTED; ++proto_id) {
+    for (proto_id = 0; proto_id < PROTO_MAX; ++proto_id) {
 	q = &obj->proto_stat_data[proto_id];
 
 	p->object_count += q->object_count;
@@ -84,7 +84,7 @@ void stat_utilization_get(obj, sentry)
     }
 
     /* dump it */
-    for (proto_id = 0; proto_id < PROTOCOL_SUPPORTED + PROTOCOL_EXTRA; ++proto_id) {
+    for (proto_id = 0; proto_id <= PROTO_MAX; ++proto_id) {
 	p = &obj->proto_stat_data[proto_id];
 	if (p->hit != 0) {
 	    p->hitratio =
@@ -116,13 +116,11 @@ int cache_size_get(obj)
      cacheinfo *obj;
 {
     int size = 0;
-    int proto_id;
+    protocol_t proto_id;
     /* sum all size, exclude total */
-    for (proto_id = 1; proto_id <= PROTOCOL_SUPPORTED + PROTOCOL_EXTRA - 1;
-	++proto_id) {
+    for (proto_id = 0; proto_id < PROTO_MAX; proto_id++)
 	size += obj->proto_stat_data[proto_id].kb.now;
-    }
-    return (size);
+    return size;
 }
 
 /* process general IP cache information */
@@ -408,7 +406,7 @@ void info_get(obj, sentry)
 
     storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
 
-    sprintf(line, "{Harvest Object Cache: Version %s}\n", SQUID_VERSION);
+    sprintf(line, "{Harvest Object Cache: Version %s}\n", version_string);
     storeAppend(sentry, line, strlen(line));
 
     tod = mkrfc850(&cached_starttime);
@@ -890,7 +888,7 @@ void log_clear(obj, sentry)
 
 void proto_newobject(obj, proto_id, size, restart)
      cacheinfo *obj;
-     int proto_id;
+     protocol_t proto_id;
      int size;
      int restart;
 {
@@ -910,7 +908,7 @@ void proto_newobject(obj, proto_id, size, restart)
 
 void proto_purgeobject(obj, proto_id, size)
      cacheinfo *obj;
-     int proto_id;
+     protocol_t proto_id;
      int size;
 {
     proto_stat *p = &obj->proto_stat_data[proto_id];
@@ -927,7 +925,7 @@ void proto_purgeobject(obj, proto_id, size)
 /* update stat for each particular protocol when an object is fetched */
 void proto_touchobject(obj, proto_id, size)
      cacheinfo *obj;
-     int proto_id;
+     protocol_t proto_id;
      int size;
 {
     obj->proto_stat_data[proto_id].refcount++;
@@ -936,38 +934,50 @@ void proto_touchobject(obj, proto_id, size)
 
 void proto_hit(obj, proto_id)
      cacheinfo *obj;
-     int proto_id;
+     protocol_t proto_id;
 {
     obj->proto_stat_data[proto_id].hit++;
 }
 
 void proto_miss(obj, proto_id)
      cacheinfo *obj;
-     int proto_id;
+     protocol_t proto_id;
 {
     obj->proto_stat_data[proto_id].miss++;
 }
 
-int proto_url_to_id(url)
+protocol_t proto_url_to_id(url)
      char *url;
 {
-    if (strncmp(url, "http:", 5) == 0)
-	return HTTP_ID;
-    if (strncmp(url, "ftp:", 4) == 0)
-	return FTP_ID;
-    if (strncmp(url, "gopher:", 7) == 0)
-	return GOPHER_ID;
-    if (strncmp(url, "cache_object:", 13) == 0)
-	return CACHEOBJ_ID;
-    if (strncmp(url, "abort:", 6) == 0)
-	return ABORT_ID;
-    if (strncmp(url, "news:", 5) == 0)
-	return NOTIMPLE_ID;
-    if (strncmp(url, "file:", 5) == 0)
-	return NOTIMPLE_ID;
-    return NOTIMPLE_ID;
+    if (strncasecmp(url, "http", 4) == 0)
+	return PROTO_HTTP;
+    if (strncasecmp(url, "ftp", 3) == 0)
+	return PROTO_FTP;
+    if (strncasecmp(url, "gopher", 6) == 0)
+	return PROTO_GOPHER;
+    if (strncasecmp(url, "cache_object", 12) == 0)
+	return PROTO_CACHEOBJ;
+    if (strncasecmp(url, "file", 4) == 0)
+	return PROTO_FTP;
+    return PROTO_NONE;
 }
 
+int proto_default_port(p)
+	protocol_t p;
+{
+	switch(p) {
+	case PROTO_HTTP:
+		return 80;
+	case PROTO_FTP:
+		return 21;
+	case PROTO_GOPHER:
+		return 70;
+	case PROTO_CACHEOBJ:
+		return CACHE_HTTP_PORT;
+	default:
+		return 0;
+	}
+}
 
 
 void stat_init(object, logfilename)
@@ -1014,40 +1024,28 @@ void stat_init(object, logfilename)
     obj->proto_miss = proto_miss;
     obj->NotImplement = dummyhandler;
 
-    for (i = 0; i < PROTOCOL_SUPPORTED + PROTOCOL_EXTRA; ++i) {
-
+    for (i = 0; i < PROTO_MAX; i++) {
 	switch (i) {
-
-	case TOTAL_ID:
-	    strcpy(obj->proto_stat_data[i].protoname, "TOTAL");
-	    break;
-
-	case HTTP_ID:
+	case PROTO_HTTP:
 	    strcpy(obj->proto_stat_data[i].protoname, "HTTP");
 	    break;
-
-	case GOPHER_ID:
+	case PROTO_GOPHER:
 	    strcpy(obj->proto_stat_data[i].protoname, "GOPHER");
 	    break;
-
-	case FTP_ID:
+	case PROTO_FTP:
 	    strcpy(obj->proto_stat_data[i].protoname, "FTP");
 	    break;
-
-	case CACHEOBJ_ID:
-	    strcpy(obj->proto_stat_data[i].protoname, "CACHEMGR");
+	case PROTO_CACHEOBJ:
+	    strcpy(obj->proto_stat_data[i].protoname, "CACHE_OBJ");
 	    break;
-
-	case ABORT_ID:
-	    strcpy(obj->proto_stat_data[i].protoname, "ABORTED");
+	case PROTO_MAX:
+	    strcpy(obj->proto_stat_data[i].protoname, "TOTAL");
 	    break;
-
-	case NOTIMPLE_ID:
+	case PROTO_NONE:
 	default:
-	    strcpy(obj->proto_stat_data[i].protoname, "UNKNOWN");
+	    strcpy(obj->proto_stat_data[i].protoname, "OTHER");
 	    break;
 	}
-
 	obj->proto_stat_data[i].object_count = 0;
 	obj->proto_stat_data[i].hit = 0;
 	obj->proto_stat_data[i].miss = 0;

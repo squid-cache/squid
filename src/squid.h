@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.13 1996/04/10 20:53:34 wessels Exp $ */
+/* $Id: squid.h,v 1.14 1996/04/11 04:47:25 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -117,6 +117,7 @@ typedef unsigned long u_num32;
 #include "connect.h"
 #include "objcache.h"
 #include "send-announce.h"
+#include "acl.h"
 #include "util.h"
 
 extern time_t cached_starttime;	/* main.c */
@@ -128,3 +129,5 @@ extern int theUdpConnection;	/* main.c */
 extern int shutdown_pending;	/* main.c */
 extern int reread_pending;	/* main.c */
 extern int opt_unlink_on_reload;	/* main.c */
+extern int vhost_mode;		/* main.c */
+extern char *version_string;	/* main.c */

@@ -1,4 +1,4 @@
-/* $Id: send-announce.cc,v 1.7 1996/04/09 18:23:33 wessels Exp $ */
+/* $Id: send-announce.cc,v 1.8 1996/04/11 04:47:24 wessels Exp $ */
 
 /*
  * DEBUG: Section 27          send-announce
@@ -22,7 +22,7 @@ void send_announce()
 
     sndbuf[0] = '\0';
 
-    sprintf(tbuf, "cache_version HARVEST/%s\n", SQUID_VERSION);
+    sprintf(tbuf, "cache_version HARVEST/%s\n", version_string);
     strcat(sndbuf, tbuf);
     sprintf(tbuf, "Running on %s %d %d\n",
 	getMyHostname(),
