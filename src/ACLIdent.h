@@ -57,7 +57,6 @@ class ACLIdent : public ACL
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     ACLIdent(ACLData<char const *> *newData, char const *);
     ACLIdent (ACLIdent const &old);

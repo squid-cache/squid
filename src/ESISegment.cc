@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESISegment.cc,v 1.2 2003/03/11 08:24:42 robertc Exp $
+ * $Id: ESISegment.cc,v 1.3 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -164,12 +164,6 @@ void
 ESISegment::operator delete (void *address)
 {
     cbdataFree (address);
-}
-
-void
-ESISegment::deleteSelf() const
-{
-    delete this;
 }
 
 /* XXX: if needed, make this iterative */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStringData.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
+ * $Id: ACLStringData.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,7 +45,6 @@ class ACLStringData : public ACLData<char const *>
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     ACLStringData();
     ACLStringData(ACLStringData const &);

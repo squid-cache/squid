@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommonPool.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: CommonPool.h,v 1.3 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -57,7 +57,6 @@ class CommonPool
 public:
     void *operator new(size_t);
     void operator delete (void *);
-    void deleteSelf() const;
     static CommonPool *Factory (unsigned char _class, CompositePoolNode::Pointer&);
     char const* theClassTypeLabel() const {return typeLabel.buf();}
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ESIElement.h,v 1.3 2003/07/14 20:29:28 robertc Exp $
+ * $Id: ESIElement.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -99,8 +99,6 @@ public:
         debug (86,5) ("esiProcessComplete: Processed %p\n",this);
         return ESI_PROCESS_COMPLETE;
     }
-
-    virtual void deleteSelf() const = 0;
 
     virtual bool mayFail() const
     {

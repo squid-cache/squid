@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLIntRange.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACLIntRange.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,8 +43,6 @@ class ACLIntRange : public ACLData<int>
 {
 
 public:
-    virtual void deleteSelf() const;
-
     ACLIntRange() : ranges(NULL) {}
 
     virtual ~ACLIntRange();

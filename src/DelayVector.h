@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.h,v 1.8 2003/08/03 09:03:48 robertc Exp $
+ * $Id: DelayVector.h,v 1.9 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,7 +45,6 @@ public:
     typedef RefCount<DelayVector> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const;
     DelayVector();
     virtual ~DelayVector();
     virtual void stats(StoreEntry * sentry);
@@ -64,7 +63,6 @@ class Id:public DelayIdComposite
     public:
         void *operator new(size_t);
         void operator delete (void *);
-        virtual void deleteSelf() const;
 
         Id (RefCount<DelayVector>,CompositeSelectionDetails &);
         ~Id();

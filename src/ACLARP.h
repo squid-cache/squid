@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLARP.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACLARP.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,7 +42,6 @@
 struct acl_arp_data
 {
     char eth[6];
-    void deleteSelf() const {delete this;}
 };
 
 class ACLARP : public ACL
@@ -51,7 +50,6 @@ class ACLARP : public ACL
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     ACLARP(char const *);
     ACLARP(ACLARP const &);

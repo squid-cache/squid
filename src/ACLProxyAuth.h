@@ -68,7 +68,6 @@ class ACLProxyAuth : public ACL
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     ~ACLProxyAuth();
     ACLProxyAuth(ACLData<char const *> *, char const *);

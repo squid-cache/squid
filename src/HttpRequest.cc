@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.41 2003/07/15 11:33:21 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.42 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -58,12 +58,6 @@ void
 HttpRequest::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-HttpRequest::deleteSelf() const
-{
-    delete this;
 }
 
 HttpRequest::HttpRequest()  : header(hoRequest)
@@ -151,7 +145,7 @@ requestDestroy(request_t * req)
         httpHdrCcDestroy(req->cache_control);
 
     if (req->range)
-        req->range->deleteSelf();
+        delete req->range;
 
     req->tag.clean();
 
@@ -161,7 +155,7 @@ requestDestroy(request_t * req)
 
     req->extacl_log.clean();
 
-    req->deleteSelf();
+    delete req;
 }
 
 request_t *

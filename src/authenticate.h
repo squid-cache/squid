@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.11 2003/07/14 14:15:59 robertc Exp $
+ * $Id: authenticate.h,v 1.12 2003/08/04 22:14:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -118,7 +118,6 @@ class AuthUserRequestState
 public:
     void *operator new (size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const = 0;
     virtual ~AuthUserRequestState(){}
 
     virtual int authenticated() const = 0;

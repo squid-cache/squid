@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMeta.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StoreMeta.h,v 1.3 2003/08/04 22:14:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,7 +42,6 @@ class StoreMeta
 {
 
 public:
-    virtual void deleteSelf() = 0;
     static bool validType(char);
     static int const MaximumTLVLength;
     static int const MinimumTLVLength;

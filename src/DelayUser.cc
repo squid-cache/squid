@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.cc,v 1.5 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayUser.cc,v 1.6 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -56,12 +56,6 @@ DelayUser::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (DelayUser);
     ::operator delete (address);
-}
-
-void
-DelayUser::deleteSelf() const
-{
-    delete this;
 }
 
 DelayUser::DelayUser()
@@ -171,12 +165,6 @@ DelayUser::Id::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (Id);
     ::operator delete (address);
-}
-
-void
-DelayUser::Id::deleteSelf() const
-{
-    delete this;
 }
 
 void *

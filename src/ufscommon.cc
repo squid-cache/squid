@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.10 2003/07/15 11:33:22 robertc Exp $
+ * $Id: ufscommon.cc,v 1.11 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -63,12 +63,6 @@ RebuildState::operator delete (void *address)
     cbdataFree(address);
     /* And allow the memory to be freed */
     cbdataReferenceDone (t);
-}
-
-void
-RebuildState::deleteSelf() const
-{
-    delete this;
 }
 
 RebuildState::~RebuildState()
@@ -136,7 +130,7 @@ RebuildState::rebuildFromDirectory()
         if (fd == -2) {
             debug(47, 1) ("Done scanning %s swaplog (%d entries)\n",
                           sd->path, n_read);
-            deleteSelf();
+            delete this;
             return;
         } else if (fd < 0) {
             continue;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACL.h,v 1.4 2003/05/20 12:17:38 robertc Exp $
+ * $Id: ExternalACL.h,v 1.5 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -60,7 +60,6 @@ class ACLExternal : public ACL
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *, EAH * callback, void *callback_data);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLExtUser.h,v 1.1 2003/06/27 22:32:31 hno Exp $
+ * $Id: ACLExtUser.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,7 +45,6 @@ class ACLExtUser : public ACL
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     ACLExtUser(ACLData<char const *> *newData, char const *);
     ACLExtUser (ACLExtUser const &old);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: NullDelayId.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
+ * $Id: NullDelayId.cc,v 1.3 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -56,12 +56,6 @@ NullDelayId::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (NullDelayId);
     ::operator delete (address);
-}
-
-void
-NullDelayId::deleteSelf() const
-{
-    delete this;
 }
 
 #endif

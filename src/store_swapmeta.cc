@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.21 2003/02/21 22:50:12 robertc Exp $
+ * $Id: store_swapmeta.cc,v 1.22 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -47,7 +47,7 @@ storeSwapTLVFree(tlv * n)
     while ((t = n) != NULL) {
         n = t->next;
         xfree(t->value);
-        t->deleteSelf();
+        delete t;
     }
 }
 

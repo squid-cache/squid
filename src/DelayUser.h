@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.h,v 1.6 2003/08/03 09:03:48 robertc Exp $
+ * $Id: DelayUser.h,v 1.7 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -56,7 +56,6 @@ public:
     typedef RefCount<DelayUserBucket> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const {delete this;}
 
     void stats(StoreEntry *)const;
     DelayUserBucket(AuthUser *);
@@ -72,7 +71,6 @@ public:
     typedef RefCount<DelayUser> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const;
     DelayUser();
     virtual ~DelayUser();
     virtual void stats(StoreEntry * sentry);
@@ -90,7 +88,6 @@ class Id:public DelayIdComposite
     public:
         void *operator new(size_t);
         void operator delete (void *);
-        virtual void deleteSelf() const;
         Id (RefCount<DelayUser>, AuthUser *);
         ~Id();
         virtual int bytesWanted (int min, int max) const;

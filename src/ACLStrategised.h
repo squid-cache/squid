@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategised.h,v 1.4 2003/07/14 08:21:56 robertc Exp $
+ * $Id: ACLStrategised.h,v 1.5 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,7 +48,6 @@ public:
     typedef M MatchType;
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     ~ACLStrategised();
     ACLStrategised(ACLData<MatchType> *, ACLStrategy<MatchType> *, char const *);
@@ -100,16 +99,9 @@ ACLStrategised<MatchType>::operator delete (void *address)
 }
 
 template <class MatchType>
-void
-ACLStrategised<MatchType>::deleteSelf() const
-{
-    delete this;
-}
-
-template <class MatchType>
 ACLStrategised<MatchType>::~ACLStrategised()
 {
-    data->deleteSelf();
+    delete data;
 }
 
 template <class MatchType>

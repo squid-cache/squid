@@ -61,15 +61,9 @@ ACLIdent::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLIdent::deleteSelf() const
-{
-    delete this;
-}
-
 ACLIdent::~ACLIdent()
 {
-    data->deleteSelf();
+    delete data;
 }
 
 ACLIdent::ACLIdent(ACLData<char const *> *newData, char const *newType) : data (newData), type_ (newType) {}

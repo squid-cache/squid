@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.424 2003/07/29 11:34:56 robertc Exp $
+ * $Id: http.cc,v 1.425 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1145,7 +1145,7 @@ httpBuildRequestHeader(request_t * request,
         /* don't cache the result */
         orig_request->flags.cachable = 0;
         /* pretend it's not a range request */
-        orig_request->range->deleteSelf();
+        delete orig_request->range;
         orig_request->range = NULL;
         orig_request->flags.range = 0;
     }

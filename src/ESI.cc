@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.4 2003/07/14 14:15:55 robertc Exp $
+ * $Id: ESI.cc,v 1.5 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -99,7 +99,6 @@ struct esiComment : public ESIElement
 {
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf()const;
     ~esiComment();
     esiComment();
     Pointer makeCacheable() const;
@@ -130,7 +129,6 @@ class esiRemove : public ESIElement
 public:
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf() const;
 
     esiRemove();
     void render(ESISegment::Pointer);
@@ -151,7 +149,6 @@ struct esiTry : public ESIElement
 {
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf() const;
 
     esiTry(esiTreeParentPtr aParent);
     ~esiTry();
@@ -205,7 +202,6 @@ struct esiChoose : public ESIElement
 {
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf() const;
 
     esiChoose(esiTreeParentPtr);
     ~esiChoose();
@@ -243,7 +239,6 @@ struct esiWhen : public esiSequence
 {
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf() const;
     esiWhen(esiTreeParentPtr aParent, int attributes, const char **attr, ESIVarState *);
     ~esiWhen();
     Pointer makeCacheable() const;
@@ -270,7 +265,6 @@ struct esiOtherwise : public esiSequence
 {
     //    void *operator new (size_t byteCount);
     //    void operator delete (void *address);
-    void deleteSelf() const;
     esiOtherwise(esiTreeParentPtr aParent) : esiSequence (aParent) {}}
 
 ;
@@ -323,12 +317,6 @@ ESIContext::operator delete (void *address)
     cbdataFree(t);
     /* And allow the memory to be freed */
     cbdataReferenceDone (address);
-}
-
-void
-ESIContext::deleteSelf() const
-{
-    delete this;
 }
 
 void
@@ -1463,7 +1451,7 @@ ESIContext::freeResources ()
     ESISegmentFreeList (buffered);
     ESISegmentFreeList (outbound);
     ESISegmentFreeList (outboundtail);
-    varState->deleteSelf();
+    delete varState;
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
@@ -1537,12 +1525,6 @@ esiComment::operator delete (void *address)
     memPoolFree (pool, address);
 }
 
-void
-esiComment::deleteSelf() const
-{
-    delete this;
-}
-
 esiComment::esiComment()
 {}
 
@@ -1587,12 +1569,6 @@ void
 esiLiteral::operator delete (void *address)
 {
     memPoolFree (pool, address);
-}
-
-void
-esiLiteral::deleteSelf() const
-{
-    delete this;
 }
 
 esiLiteral::~esiLiteral()
@@ -1719,12 +1695,6 @@ esiRemove::operator delete (void *address)
     cbdataFree (address);
 }
 
-void
-esiRemove::deleteSelf() const
-{
-    delete this;
-}
-
 ESIElement *
 esiRemoveNew ()
 {
@@ -1792,12 +1762,6 @@ void
 esiTry::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-esiTry::deleteSelf() const
-{
-    delete this;
 }
 
 esiTry::esiTry(esiTreeParentPtr aParent) : parent (aParent) , exceptbuffer(NULL)
@@ -2070,11 +2034,6 @@ esiAttempt::operator delete (void *address)
 }
 
 #endif
-void
-esiAttempt::deleteSelf() const
-{
-    delete this;
-}
 
 /* esiExcept */
 #if 0
@@ -2095,11 +2054,6 @@ esiExcept::operator delete (void *address)
 }
 
 #endif
-void
-esiExcept::deleteSelf() const
-{
-    delete this;
-}
 
 /* ESIVar */
 #if 0
@@ -2120,12 +2074,6 @@ esiVar::operator delete (void *address)
 }
 
 #endif
-
-void
-ESIVar::deleteSelf() const
-{
-    delete this;
-}
 
 /* esiChoose */
 esiChoose::~esiChoose()
@@ -2148,12 +2096,6 @@ void
 esiChoose::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-esiChoose::deleteSelf() const
-{
-    delete this;
 }
 
 esiChoose::esiChoose(esiTreeParentPtr aParent) : elements (), chosenelement (-1),parent (aParent)
@@ -2474,12 +2416,6 @@ esiWhen::operator delete (void *address)
     memPoolFree(Pool, address);
 }
 
-void
-esiWhen::deleteSelf() const
-{
-    delete this;
-}
-
 esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,ESIVarState *aVar) : esiSequence (aParent)
 {
     varState = NULL;
@@ -2583,12 +2519,6 @@ esiOtherwise::operator delete (void *address)
 }
 
 #endif
-
-void
-esiOtherwise::deleteSelf() const
-{
-    delete this;
-}
 
 /* TODO: implement surrogate targeting and control processing */
 int

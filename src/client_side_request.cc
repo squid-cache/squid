@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.29 2003/08/03 08:09:26 robertc Exp $
+ * $Id: client_side_request.cc,v 1.30 2003/08/04 22:14:41 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -66,7 +66,6 @@ class ClientRequestContext : public RefCountable
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    void deleteSelf() const;
 
     ClientRequestContext();
     ClientRequestContext(ClientHttpRequest *);
@@ -107,12 +106,6 @@ ClientRequestContext::operator delete (void *address)
     cbdataReferenceDone (t);
 }
 
-void
-ClientRequestContext::deleteSelf() const
-{
-    delete this;
-}
-
 /* Local functions */
 /* other */
 static void clientAccessCheckDone(int, void *);
@@ -131,7 +124,7 @@ ClientRequestContext::~ClientRequestContext()
         cbdataReferenceDone(http);
 
     if (acl_checklist)
-        acl_checklist->deleteSelf();
+        delete acl_checklist;
 }
 
 ClientRequestContext::ClientRequestContext() : acl_checklist (NULL), redirect_state (REDIRECT_NONE), http(NULL)
@@ -163,12 +156,6 @@ ClientHttpRequest::operator delete (void *address)
     cbdataFree(address);
     /* And allow the memory to be freed */
     cbdataReferenceDone (temp);
-}
-
-void
-ClientHttpRequest::deleteSelf() const
-{
-    delete this;
 }
 
 ClientHttpRequest::ClientHttpRequest()
@@ -384,7 +371,7 @@ clientAccessCheckDone(int answer, void *data)
     clientHttpRequest *http_ = context->http;
 
     if (!cbdataReferenceValid (http_)) {
-        context->deleteSelf();
+        delete context;
         return;
     }
 
@@ -409,7 +396,7 @@ clientAccessCheckDone(int answer, void *data)
     } else {
         /* Send an error */
         clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
-        context->deleteSelf();
+        delete context;
         debug(85, 5) ("Access Denied: %s\n", http->uri);
         debug(85, 5) ("AclMatchedName = %s\n",
                       AclMatchedName ? AclMatchedName : "<null>");
@@ -719,7 +706,7 @@ clientRedirectDone(void *data, char *result)
     clientHttpRequest *http_ = context->http;
 
     if (!cbdataReferenceValid (http_)) {
-        context->deleteSelf();
+        delete context;
         return;
     }
 
@@ -826,11 +813,11 @@ ClientRequestContext::checkNoCacheDone(int answer)
     clientHttpRequest *http_ = http;
 
     if (!cbdataReferenceValid (http_)) {
-        deleteSelf();
+        delete this;
         return;
     }
 
-    deleteSelf();
+    delete this;
     http_->request->flags.cachable = answer;
     http_->processRequest();
 }

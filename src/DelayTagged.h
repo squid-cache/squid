@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayTagged.h,v 1.3 2003/08/03 09:03:48 robertc Exp $
+ * $Id: DelayTagged.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -56,7 +56,6 @@ public:
     typedef RefCount<DelayTaggedBucket> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const {delete this;}
 
     void stats(StoreEntry *)const;
     DelayTaggedBucket(String &aTag);
@@ -72,7 +71,6 @@ public:
     typedef RefCount<DelayTagged> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const;
     DelayTagged();
     virtual ~DelayTagged();
     virtual void stats(StoreEntry * sentry);
@@ -90,7 +88,6 @@ class Id:public DelayIdComposite
     public:
         void *operator new(size_t);
         void operator delete (void *);
-        virtual void deleteSelf() const;
         Id (RefCount<DelayTagged>, String &);
         ~Id();
         virtual int bytesWanted (int min, int max) const;

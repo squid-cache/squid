@@ -42,7 +42,6 @@ class ntlm_request_t : public AuthUserRequestState
 public:
     void *operator new(size_t);
     void operator delete (void *);
-    void deleteSelf() const;
 
     ~ntlm_request_t();
     virtual int authenticated() const;

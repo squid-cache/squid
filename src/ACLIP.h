@@ -44,7 +44,6 @@ class acl_ip_data
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     static acl_ip_data *FactoryParse(char const *);
     static int NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b);
 
@@ -72,7 +71,6 @@ class ACLIP : public ACL
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const = 0;
 
     ACLIP() : data(NULL){}
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderRange.h,v 1.4 2003/07/14 23:53:40 robertc Exp $
+ * $Id: HttpHeaderRange.h,v 1.5 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,7 +46,6 @@ class HttpHdrRangeSpec
 public:
     void *operator new(size_t);
     void operator delete (void *);
-    void deleteSelf() const;
     typedef Range<ssize_t> HttpRange;
     static ssize_t const UnknownPosition;
 
@@ -76,7 +75,6 @@ class HttpHdrRange
 public:
     void *operator new(size_t);
     void operator delete (void *);
-    void deleteSelf() const;
 
     static size_t ParsedCount;
     /* Http Range Header Field */

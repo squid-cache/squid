@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayIdComposite.h,v 1.3 2003/03/04 01:40:25 robertc Exp $
+ * $Id: DelayIdComposite.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -52,7 +52,6 @@ class DelayIdComposite : public RefCountable
 
 public:
     typedef RefCount<DelayIdComposite> Pointer;
-    virtual void deleteSelf() const = 0;
     virtual inline ~DelayIdComposite(){}
 
     virtual int bytesWanted (int min, int max) const =0;

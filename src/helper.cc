@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.59 2003/07/15 11:33:22 robertc Exp $
+ * $Id: helper.cc,v 1.60 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -1452,7 +1452,7 @@ helperRequestFree(helper_request * r)
 {
     cbdataReferenceDone(r->data);
     xfree(r->buf);
-    r->deleteSelf();
+    delete r;
 }
 
 MemPool (*helper_request::Pool)(NULL);
@@ -1475,18 +1475,12 @@ helper_request::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-helper_request::deleteSelf() const
-{
-    delete this;
-}
-
 static void
 helperStatefulRequestFree(helper_stateful_request * r)
 {
     cbdataReferenceDone(r->data);
     xfree(r->buf);
-    r->deleteSelf();
+    delete r;
 }
 
 MemPool (*helper_stateful_request::Pool)(NULL);
@@ -1507,10 +1501,4 @@ void
 helper_stateful_request::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-helper_stateful_request::deleteSelf() const
-{
-    delete this;
 }

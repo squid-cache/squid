@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIAssign.cc,v 1.1 2003/07/14 14:15:55 robertc Exp $
+ * $Id: ESIAssign.cc,v 1.2 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -55,12 +55,6 @@ void
 ESIAssign::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-ESIAssign::deleteSelf() const
-{
-    delete this;
 }
 
 ESIAssign::~ESIAssign()

@@ -1,6 +1,6 @@
 
 /*
- * $Id: List.h,v 1.2 2003/03/04 01:40:22 robertc Exp $
+ * $Id: List.h,v 1.3 2003/08/04 22:14:37 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,31 +35,35 @@
 #define SQUID_LIST_H
 
 template <class C>
+
 class List
 {
 
 public:
-  void *operator new (size_t);
-  void operator delete (void *);
-  void deleteSelf() const;
-  List (C const &);
-  ~List();
+    void *operator new (size_t);
+    void operator delete (void *);
+    List (C const &);
+    ~List();
 
-  bool find(C const &)const;
-  bool findAndTune(C const &);
-  List *next;
-  C element;
+    bool find(C const &)const;
+    bool findAndTune(C const &);
+    List *next;
+    C element;
+
 private:
-  CBDATA_CLASS(List);
+    CBDATA_CLASS(List);
 #if 0
-  static MemPool *Pool;
+
+    static MemPool *Pool;
 #endif
 };
 
 template<class C>
+
 class ListContainer
 {
-  public:
+
+public:
     ListContainer();
     ~ListContainer();
     List<C> *push_back (C const &);
@@ -73,6 +77,7 @@ class ListContainer
 #if 0
 template <class C>
 MemPool *List<C>::Pool(NULL);
+
 #endif
 template <class C>
 cbdata_type List<C>::CBDATA_List = CBDATA_UNKNOWN;
@@ -84,12 +89,18 @@ List<C>::operator new (size_t byteCount)
 #if 0
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (List<C>));
+
     if (!Pool)
-	Pool = memPoolCreate("List", sizeof (List<C>));
+        Pool = memPoolCreate("List", sizeof (List<C>));
+
     return memPoolAlloc(Pool);
+
 #endif
+
     CBDATA_INIT_TYPE(List);
+
     List<C> *result = cbdataAlloc(List);
+
     return result;
 }
 
@@ -103,22 +114,14 @@ List<C>::operator delete (void *address)
 }
 
 template <class C>
-void
-List<C>::deleteSelf() const
-{
-    delete this;
-}
-
-template <class C>
 List<C>::List(C const &value) : next(NULL), element (value)
-{
-}
+{}
 
 template <class C>
 List<C>::~List()
 {
     if (next)
-	next->deleteSelf();
+        delete next;
 }
 
 template <class C>
@@ -126,9 +129,11 @@ bool
 List<C>::find (C const &toFind) const
 {
     List<C> const *node = NULL;
+
     for (node = this; node; node = node->next)
-	if (node->element == toFind)
-	    return true;
+        if (node->element == toFind)
+            return true;
+
     return false;
 }
 
@@ -137,32 +142,36 @@ bool
 List<C>::findAndTune(C const & toFind)
 {
     List<C> *prev = NULL;
-    for (List<C> *node = this; node; node = node->next) {
-	if (node->element == toFind) {
-	    if (prev != NULL) {
-		/* shift the element just found to the second position
-		 * in the list */
-		prev->next = node->next;
-		node->next = this->next;
-		this->next = node;
-	    }
-	    return true;
-	}
-	prev = node;
+
+    for (List<C> *node = this; node; node = node->
+                                            next) {
+        if (node->element == toFind) {
+            if (prev != NULL) {
+                /* shift the element just found to the second position
+                 * in the list */
+                prev->next = node->next;
+                node->next = this->next;
+                this->next = node;
+            }
+
+            return true;
+        }
+
+        prev = node;
     }
+
     return false;
 }
 
 template <class C>
 ListContainer<C>::ListContainer() : head (NULL)
-{
-}
+{}
 
 template <class C>
 ListContainer<C>::~ListContainer()
 {
     if (head)
-	head->deleteSelf();
+        delete head;
 }
 
 template <class C>
@@ -170,34 +179,41 @@ List<C> *
 ListContainer<C>::push_back (C const &element)
 {
     List<C> *node = new List<C> (element);
+
     if (head) {
-	List<C> *tempNode = NULL;
-	for (tempNode = head; tempNode->next; tempNode = tempNode->next);
-	tempNode->next = node;
+        List<C> *tempNode = NULL;
+
+        for (tempNode = head; tempNode->next; tempNode = tempNode->next)
+
+            ;
+        tempNode->next = node;
     } else
-	head = node;
+        head = node;
+
     return node;
 }
 
 template <class C>
-C 
+C
 ListContainer<C>::pop_front()
 {
     if (head) {
-	C result = head->element;
-	List<C> *node = head;
-	head = head->next;
-	node->next = NULL;
-	node->deleteSelf();
-	return result;
+        C result = head->element;
+        List<C> *node = head;
+        head = head->next;
+        node->next = NULL;
+        delete node;
+        return result;
     }
+
     return C();
 }
 
 template <class C>
-bool 
+bool
 ListContainer<C>::empty() const
 {
     return head == NULL;
 }
+
 #endif /* SQUID_LIST_H */

@@ -57,12 +57,6 @@ ACLDestinationIP::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLDestinationIP::deleteSelf() const
-{
-    delete this;
-}
-
 char const *
 ACLDestinationIP::typeString() const
 {

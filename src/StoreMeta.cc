@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMeta.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StoreMeta.cc,v 1.3 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -137,7 +137,7 @@ StoreMeta::Factory (char type, size_t len, void const *value)
     }
 
     if (!result->validLength(len)) {
-        result->deleteSelf();
+        delete result;
         return NULL;
     }
 
@@ -155,7 +155,7 @@ StoreMeta::FreeList(StoreMeta **head)
     while ((node = *head) != NULL) {
         *head = node->next;
         xfree(node->value);
-        node->deleteSelf();
+        delete node;
     }
 }
 
@@ -189,10 +189,4 @@ StoreMeta::checkConsistency(StoreEntry *e) const
     }
 
     return true;
-}
-
-void
-StoreMeta::deleteSelf()
-{
-    delete this;
 }

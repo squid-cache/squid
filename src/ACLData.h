@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLData.h,v 1.4 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACLData.h,v 1.5 2003/08/04 22:14:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,7 +42,6 @@ class ACLData
 {
 
 public:
-    virtual void deleteSelf() const =0;
 
     virtual ~ACLData() {}
 

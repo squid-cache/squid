@@ -58,12 +58,6 @@ ACLUserData::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLUserData::deleteSelf() const
-{
-    delete this;
-}
-
 template<class T>
 inline void
 xRefFree(T &thing)

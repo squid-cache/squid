@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node_test.cc,v 1.4 2003/06/26 12:52:00 robertc Exp $
+ * $Id: mem_node_test.cc,v 1.5 2003/08/04 22:14:57 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -79,7 +79,7 @@ main (int argc, char *argv)
     assert (mem_node (0) < mem_node (2));
     assert (!(mem_node (0) < mem_node (0)));
     assert (!(mem_node (2) < mem_node (0)));
-    aNode->deleteSelf();
+    delete aNode;
     assert (mem_node::InUseCount() == 0);
     return 0;
 }

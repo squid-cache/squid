@@ -43,7 +43,6 @@ class ACLMyIP : public ACLIP
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     static ACLMyIP const &RegistryEntry();
 
     virtual char const *typeString() const;

@@ -62,15 +62,9 @@ ACLProxyAuth::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLProxyAuth::deleteSelf() const
-{
-    delete this;
-}
-
 ACLProxyAuth::~ACLProxyAuth()
 {
-    data->deleteSelf();
+    delete data;
 }
 
 ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) : data (newData), type_(theType) {}

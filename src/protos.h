@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.486 2003/07/28 09:27:28 robertc Exp $
+ * $Id: protos.h,v 1.487 2003/08/04 22:14:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -210,7 +210,7 @@ void
 FreeObject(void *address)
 {
     O *anObject = static_cast <O *>(address);
-    anObject->deleteSelf();
+    delete anObject;
 }
 
 SQUIDCEXTERN void file_write(int, off_t, void const *, int len, DWCB *, void *, FREE *);

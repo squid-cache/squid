@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.385 2003/08/03 09:21:29 robertc Exp $
+ * $Id: comm.cc,v 1.386 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -55,7 +55,6 @@ class ConnectStateData
 public:
     void *operator new (size_t);
     void operator delete (void *);
-    void deleteSelf() const;
     static void Connect (int fd, void *me);
     void connect();
     void callCallback(comm_err_t status, int xerrno);
@@ -213,7 +212,6 @@ class CommCallbackData
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     CommCallbackData(CommCommonCallback const &);
     virtual ~CommCallbackData() {}
 
@@ -244,7 +242,6 @@ class CommReadCallbackData : public CommCallbackData
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     CommReadCallbackData(CommCommonCallback const &, CallBack<IOCB> aCallback, int);
     virtual comm_callback_t getType() const { return COMM_CB_READ; }
 
@@ -262,7 +259,6 @@ class CommAcceptCallbackData : public CommCallbackData
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     CommAcceptCallbackData(int const anFd, CallBack<IOACB>, comm_err_t, int, int, ConnectionDetail const &);
     virtual void callCallback();
 
@@ -279,7 +275,6 @@ class CommFillCallbackData : public CommCallbackData
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     CommFillCallbackData(int const anFd, CallBack<IOFCB> aCallback, comm_err_t, int);
     virtual void callCallback();
 
@@ -294,7 +289,6 @@ class CommWriteCallbackData : public CommCallbackData
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     CommWriteCallbackData(int const anFd, CallBack<IOWCB> aCallback, comm_err_t, int, int);
     virtual void callCallback();
 
@@ -340,12 +334,6 @@ CommCallbackData::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-CommCallbackData::deleteSelf() const
-{
-    delete this;
-}
-
 MemPool (*CommReadCallbackData::Pool)(NULL);
 void *
 CommReadCallbackData::operator new (size_t byteCount)
@@ -363,12 +351,6 @@ void
 CommReadCallbackData::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-CommReadCallbackData::deleteSelf() const
-{
-    delete this;
 }
 
 MemPool (*CommAcceptCallbackData::Pool)(NULL);
@@ -390,12 +372,6 @@ CommAcceptCallbackData::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-CommAcceptCallbackData::deleteSelf() const
-{
-    delete this;
-}
-
 MemPool (*CommFillCallbackData::Pool)(NULL);
 void *
 CommFillCallbackData::operator new (size_t byteCount)
@@ -415,13 +391,6 @@ CommFillCallbackData::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-CommFillCallbackData::deleteSelf() const
-{
-    delete this;
-}
-
-
 MemPool (*CommWriteCallbackData::Pool)(NULL);
 void *
 CommWriteCallbackData::operator new (size_t byteCount)
@@ -439,12 +408,6 @@ void
 CommWriteCallbackData::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-CommWriteCallbackData::deleteSelf() const
-{
-    delete this;
 }
 
 CommCallbackData::CommCallbackData(CommCommonCallback const &newResults) : result (newResults)
@@ -595,7 +558,7 @@ comm_calliocallback(void)
         dlink_node *node = (dlink_node *)CommCallbackList.head;
         cio = (CommCallbackData *)node->data;
         cio->callACallback();
-        cio->deleteSelf();
+        delete cio;
     }
 
     PROF_stop(comm_calliocallback);
@@ -1284,12 +1247,6 @@ ConnectStateData::operator delete (void *address)
 }
 
 void
-ConnectStateData::deleteSelf() const
-{
-    delete this;
-}
-
-void
 commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
 {
     ConnectStateData *cs;
@@ -1356,7 +1313,7 @@ commConnectFree(int fd, void *data)
     debug(5, 3) ("commConnectFree: FD %d\n", fd);
     cbdataReferenceDone(cs->callback.data);
     safe_free(cs->host);
-    cs->deleteSelf();
+    delete cs;
 }
 
 static void
@@ -1864,7 +1821,7 @@ _comm_close(int fd, char const *file, int line)
         /* We're closing! */
         cio->fdClosing();
         cio->callACallback();
-        cio->deleteSelf();
+        delete cio;
     }
 
     commCallCloseHandlers(fd);

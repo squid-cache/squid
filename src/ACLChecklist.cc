@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.13 2003/07/11 01:40:33 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.14 2003/08/04 22:14:38 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -232,7 +232,7 @@ ACLChecklist::checkCallback(allow_t answer)
     if (cbdataReferenceValidDone(callback_data, &cbdata_))
         callback_(answer, cbdata_);
 
-    deleteSelf();
+    delete this;
 }
 
 void
@@ -283,12 +283,6 @@ ACLChecklist::operator delete (void *address)
     cbdataFree(address);
     /* And allow the memory to be freed */
     cbdataReferenceDone (t);
-}
-
-void
-ACLChecklist::deleteSelf() const
-{
-    delete this;
 }
 
 ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),

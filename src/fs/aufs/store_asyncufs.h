@@ -89,7 +89,6 @@ class AUFSFile : public DiskFile
 {
 
 public:
-    virtual void deleteSelf() const;
     void * operator new (size_t);
     void operator delete (void *);
     AUFSFile (char const *path, AufsIO *);
@@ -165,7 +164,6 @@ public:
     AufsIO();
     virtual bool shedLoad();
     virtual int load();
-    virtual void deleteSelf() const;
     virtual StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
     virtual DiskFile::Pointer newFile(char const *path);
     virtual void unlinkFile (char const *);

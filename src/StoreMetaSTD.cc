@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaSTD.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StoreMetaSTD.cc,v 1.3 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -56,12 +56,6 @@ void
 StoreMetaSTD::operator delete (void *address)
 {
     memPoolFree(pool, address);
-}
-
-void
-StoreMetaSTD::deleteSelf()
-{
-    delete this;
 }
 
 bool

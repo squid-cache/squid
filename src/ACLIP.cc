@@ -418,12 +418,6 @@ acl_ip_data::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-acl_ip_data::deleteSelf() const
-{
-    delete this;
-}
-
 acl_ip_data::acl_ip_data () :addr1(any_addr), addr2(any_addr), mask (any_addr), next (NULL) {}
 
 acl_ip_data::acl_ip_data (struct in_addr const &anAddress1, struct in_addr const &anAddress2, struct in_addr const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext){}

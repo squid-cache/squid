@@ -1,6 +1,6 @@
 
 /*
- * $Id: http_range_test.cc,v 1.8 2003/08/03 22:06:10 robertc Exp $
+ * $Id: http_range_test.cc,v 1.9 2003/08/04 22:14:56 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -171,7 +171,7 @@ testRangeParser(char const *rangestring)
 
     assert (*pos);
 
-    range->deleteSelf();
+    delete range;
 }
 
 HttpHdrRange *
@@ -221,7 +221,7 @@ testRangeCanonization()
 
     assert (range->specs.count == 3);
 
-    range->deleteSelf();
+    delete range;
 
     range=rangeFromString("bytes=0-3, 1-, -2");
 
@@ -231,7 +231,7 @@ testRangeCanonization()
     if (!range->canonize(4))
         exit(1);
 
-    range->deleteSelf();
+    delete range;
 
     range=rangeFromString("bytes=3-6");
 
@@ -241,7 +241,7 @@ testRangeCanonization()
     if (range->canonize(3))
         exit(1);
 
-    range->deleteSelf();
+    delete range;
 
     range=rangeFromString("bytes=3-6");
 
@@ -251,7 +251,7 @@ testRangeCanonization()
     if (!range->canonize(4))
         exit(1);
 
-    range->deleteSelf();
+    delete range;
 
     range=rangeFromString("bytes=1-1,2-3");
 
@@ -262,7 +262,7 @@ testRangeCanonization()
 
     assert (range->specs.count == 2);
 
-    range->deleteSelf();
+    delete range;
 }
 
 int

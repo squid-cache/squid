@@ -1,5 +1,5 @@
 /*
- * $Id: ESIContext.h,v 1.3 2003/07/14 14:15:56 robertc Exp $
+ * $Id: ESIContext.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,7 +52,6 @@ public:
     typedef RefCount<ESIContext> Pointer;
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf() const;
     ESIContext():reading_(true) {}
 
     ~ESIContext();

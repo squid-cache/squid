@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.61 2003/07/29 11:34:56 robertc Exp $
+ * $Id: authenticate.cc,v 1.62 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -294,7 +294,7 @@ AuthUserRequest::~AuthUserRequest()
             if (authscheme_list[auth_user->auth_module - 1].requestFree != NULL)
                 authscheme_list[auth_user->auth_module - 1].requestFree(this);
             else {
-                state()->deleteSelf();
+                delete state();
                 state(NULL);
             }
         }

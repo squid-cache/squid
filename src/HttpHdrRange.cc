@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.36 2003/07/14 14:15:56 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.37 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -86,12 +86,6 @@ void
 HttpHdrRangeSpec::operator delete (void *spec)
 {
     memPoolFree(Pool, spec);
-}
-
-void
-HttpHdrRangeSpec::deleteSelf() const
-{
-    delete this;
 }
 
 HttpHdrRangeSpec::HttpHdrRangeSpec() : offset(UnknownPosition), length(UnknownPosition){}
@@ -270,12 +264,6 @@ HttpHdrRange::operator delete (void *address)
     memPoolFree(Pool, address);
 }
 
-void
-HttpHdrRange::deleteSelf() const
-{
-    delete this;
-}
-
 HttpHdrRange::HttpHdrRange () : clen (HttpHdrRangeSpec::UnknownPosition)
 {}
 
@@ -285,7 +273,7 @@ HttpHdrRange::ParseCreate(const String * range_spec)
     HttpHdrRange *r = new HttpHdrRange;
 
     if (!r->parseInit(range_spec)) {
-        r->deleteSelf();
+        delete r;
         r = NULL;
     }
 
@@ -332,7 +320,7 @@ HttpHdrRange::parseInit(const String * range_spec)
 HttpHdrRange::~HttpHdrRange()
 {
     while (specs.size())
-        specs.pop_back()->deleteSelf();
+        delete specs.pop_back();
 }
 
 HttpHdrRange::HttpHdrRange(HttpHdrRange const &old) : specs()
@@ -398,7 +386,7 @@ HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
     while (i != basis.end()) {
         if (specs.size() && (*i)->mergeWith(specs.back())) {
             /* merged with current so get rid of the prev one */
-            specs.pop_back()->deleteSelf();
+            delete specs.pop_back();
             continue;	/* re-iterate */
         }
 
@@ -420,7 +408,7 @@ HttpHdrRange::getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy)
         if ((*pos)->canonize(clen))
             copy.push_back (*pos);
         else
-            (*pos)->deleteSelf();
+            delete (*pos);
     }
 
     debug(64, 3) ("HttpHdrRange::getCanonizedSpecs: found %d bad specs\n",

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLExtUser.cc,v 1.3 2003/07/14 08:21:56 robertc Exp $
+ * $Id: ACLExtUser.cc,v 1.4 2003/08/04 22:14:38 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -62,15 +62,9 @@ ACLExtUser::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLExtUser::deleteSelf() const
-{
-    delete this;
-}
-
 ACLExtUser::~ACLExtUser()
 {
-    data->deleteSelf();
+    delete data;
 }
 
 ACLExtUser::ACLExtUser(ACLData<char const *> *newData, char const *newType) : data (newData), type_ (newType) {}

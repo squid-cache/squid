@@ -1,6 +1,6 @@
 
 /*
- * $Id: RefCount.h,v 1.7 2003/07/12 23:44:27 robertc Exp $
+ * $Id: RefCount.h,v 1.8 2003/08/04 22:14:37 robertc Exp $
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins
@@ -92,13 +92,14 @@ private:
     void dereference(C const *newP = NULL)
     {
         /* Setting p_ first is important:
-	 * we may be freed ourselves as a result of
-	 * p_->deleteSelf();
-	 */
+        * we may be freed ourselves as a result of
+        * delete p_;
+        */
         C const (*tempP_) (p_);
-	p_ = newP;
+        p_ = newP;
+
         if (tempP_ && tempP_->RefCountDereference() == 0)
-            tempP_->deleteSelf();
+            delete tempP_;
     }
 
     void reference (const RefCount& p)
@@ -117,7 +118,6 @@ struct RefCountable_
 
     virtual ~RefCountable_(){}
 
-    virtual void deleteSelf() const = 0;
     /* Not private, to allow class hierarchies */
     void RefCountReference() const
     {

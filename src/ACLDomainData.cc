@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.4 2003/07/14 08:21:56 robertc Exp $
+ * $Id: ACLDomainData.cc,v 1.5 2003/08/04 22:14:38 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -56,12 +56,6 @@ void
 ACLDomainData::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-ACLDomainData::deleteSelf() const
-{
-    delete this;
 }
 
 template<class T>

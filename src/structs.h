@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.476 2003/07/22 15:23:02 robertc Exp $
+ * $Id: structs.h,v 1.477 2003/08/04 22:14:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1146,7 +1146,6 @@ class PeerDigest
 public:
     void *operator new (size_t);
     void operator delete(void *);
-    void deleteSelf() const;
 
     struct _peer *peer;			/* pointer back to peer structure, argh */
     CacheDigest *cd;		/* actual digest structure */

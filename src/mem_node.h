@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.4 2003/06/26 12:51:57 robertc Exp $
+ * $Id: mem_node.h,v 1.5 2003/08/04 22:14:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,7 +46,6 @@ public:
 
     void operator delete (void *);
     void *operator new (size_t);
-    void deleteSelf() const;
     mem_node(off_t);
     ~mem_node();
     size_t space() const;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: CompositePoolNode.h,v 1.4 2003/05/20 12:17:38 robertc Exp $
+ * $Id: CompositePoolNode.h,v 1.5 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -59,7 +59,6 @@ public:
     typedef RefCount<CompositePoolNode> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const;
     virtual ~CompositePoolNode(){}
 
     virtual void stats(StoreEntry * sentry) =0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.41 2003/08/03 09:03:49 robertc Exp $
+ * $Id: delay_pools.cc,v 1.42 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -69,7 +69,6 @@ public:
     typedef RefCount<Aggregate> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const;
     Aggregate();
     ~Aggregate();
     virtual DelaySpec *rate() {return &spec;}
@@ -91,7 +90,6 @@ class AggregateId:public DelayIdComposite
     public:
         void *operator new(size_t);
         void operator delete (void *);
-        virtual void deleteSelf() const;
         AggregateId (RefCount<Aggregate>);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
@@ -161,7 +159,6 @@ class Id:public DelayIdComposite
     public:
         void *operator new(size_t);
         void operator delete (void *);
-        virtual void deleteSelf() const;
         Id (RefCount<VectorPool>, int);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
@@ -178,7 +175,6 @@ class IndividualPool : public VectorPool
 public:
     void *operator new(size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const;
 
 protected:
     virtual char const *label() const {return "Individual";}
@@ -193,7 +189,6 @@ class ClassCNetPool : public VectorPool
 public:
     void *operator new(size_t);
     void operator delete (void *);
-    virtual void deleteSelf() const;
 
 protected:
     virtual char const *label() const {return "Network";}
@@ -258,7 +253,6 @@ class Id:public DelayIdComposite
     public:
         void *operator new(size_t);
         void operator delete (void *);
-        virtual void deleteSelf() const;
         Id (RefCount<ClassCHostPool>, unsigned char, unsigned char);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
@@ -288,12 +282,6 @@ CommonPool::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (CommonPool);
     ::operator delete (address);
-}
-
-void
-CommonPool::deleteSelf() const
-{
-    delete this;
 }
 
 CommonPool *
@@ -441,12 +429,6 @@ CompositePoolNode::operator delete (void *address)
     ::operator delete (address);
 }
 
-void
-CompositePoolNode::deleteSelf() const
-{
-    delete this;
-}
-
 void *
 Aggregate::operator new(size_t size)
 {
@@ -459,12 +441,6 @@ Aggregate::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (Aggregate);
     ::operator delete (address);
-}
-
-void
-Aggregate::deleteSelf() const
-{
-    delete this;
 }
 
 Aggregate::Aggregate()
@@ -534,12 +510,6 @@ Aggregate::AggregateId::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (AggregateId);
     ::operator delete (address);
-}
-
-void
-Aggregate::AggregateId::deleteSelf() const
-{
-    delete this;
 }
 
 Aggregate::AggregateId::AggregateId(RefCount<Aggregate> anAggregate) : theAggregate(anAggregate)
@@ -732,12 +702,6 @@ IndividualPool::operator delete (void *address)
     ::operator delete (address);
 }
 
-void
-IndividualPool::deleteSelf() const
-{
-    delete this;
-}
-
 VectorPool::VectorPool()
 {
     DelayPools::registerForUpdates (this);
@@ -855,12 +819,6 @@ VectorPool::Id::operator delete (void *address)
     ::operator delete (address);
 }
 
-void
-VectorPool::Id::deleteSelf() const
-{
-    delete this;
-}
-
 VectorPool::Id::Id (VectorPool::Pointer aPool, int anIndex) : theVector (aPool), theIndex (anIndex)
 {}
 
@@ -898,12 +856,6 @@ ClassCNetPool::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (ClassCNetPool);
     ::operator delete (address);
-}
-
-void
-ClassCNetPool::deleteSelf() const
-{
-    delete this;
 }
 
 unsigned int const
@@ -1031,12 +983,6 @@ ClassCHostPool::Id::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (Id);
     ::operator delete (address);
-}
-
-void
-ClassCHostPool::Id::deleteSelf() const
-{
-    delete this;
 }
 
 ClassCHostPool::Id::Id (ClassCHostPool::Pointer aPool, unsigned char aNet, unsigned char aHost) : theClassCHost (aPool), theNet (aNet), theHost (aHost)

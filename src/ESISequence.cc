@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.cc,v 1.2 2003/07/14 14:15:56 robertc Exp $
+ * $Id: ESISequence.cc,v 1.3 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -42,12 +42,6 @@
 class esiExcept;
 
 MemPool *esiSequence::Pool = NULL;
-
-void
-esiSequence::deleteSelf() const
-{
-    delete this;
-}
 
 esiSequence::~esiSequence ()
 {

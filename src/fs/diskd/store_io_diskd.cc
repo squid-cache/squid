@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.35 2003/07/29 11:34:57 robertc Exp $
+ * $Id: store_io_diskd.cc,v 1.36 2003/08/04 22:14:53 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -81,12 +81,6 @@ DiskdIO::load()
     /* Calculate the storedir load relative to magic2 on a scale of 0 .. 1000 */
     /* the parse function guarantees magic2 is positivie */
     return away * 1000 / magic2;
-}
-
-void
-DiskdIO::deleteSelf() const
-{
-    /* do nothing, we use a single instance */
 }
 
 void
@@ -255,9 +249,6 @@ DiskdFile::operator delete (void *address)
     /* And allow the memory to be freed */
     cbdataReferenceDone (t);
 }
-
-void
-DiskdFile::deleteSelf() const {delete this;}
 
 DiskdFile::DiskdFile (char const *aPath, DiskdIO *anIO) : errorOccured (false), IO(anIO),
         inProgressIOs (0)
