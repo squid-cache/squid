@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.261 1998/03/20 20:08:22 wessels Exp $
+ * $Id: cache_cf.cc,v 1.262 1998/03/24 17:41:36 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -197,6 +197,7 @@ configDoConfigure(void)
     if (Config.cacheSwap.swapDirs == NULL)
 	fatal("No cache_dir's specified in config file");
     /* calculate Config.Swap.maxSize */
+    Config.Swap.maxSize = 0;
     for (i = 0; i < Config.cacheSwap.n_configured; i++)
 	Config.Swap.maxSize += Config.cacheSwap.swapDirs[i].max_size;
     if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10))
