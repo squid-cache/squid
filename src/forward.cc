@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.14 1998/06/29 15:22:50 wessels Exp $
+ * $Id: forward.cc,v 1.15 1998/06/29 21:03:01 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -261,6 +261,12 @@ fwdDispatch(FwdState * fwdState)
     assert(entry->lock_count);
     EBIT_SET(entry->flag, ENTRY_DISPATCHED);
     netdbPingSite(request->host);
+    /*
+     * Assert that server_fd is set.  This is to guarantee that fwdState
+     * is attached to something and will be deallocated when server_fd
+     * is closed.
+     */
+    assert(fwdState->server_fd > -1);
     if (fwdState->servers && (p = fwdState->servers->peer)) {
 	p->stats.fetches++;
 	httpStart(fwdState, fwdState->server_fd);
@@ -279,16 +285,14 @@ fwdDispatch(FwdState * fwdState)
 	    waisStart(request, entry, fwdState->server_fd);
 	    break;
 	case PROTO_CACHEOBJ:
-	    cachemgrStart(fwdState->client_fd, request, entry);
+	case PROTO_INTERNAL:
+	    fatal_dump("Should never get here");
 	    break;
 	case PROTO_URN:
 	    urnStart(request, entry);
 	    break;
 	case PROTO_WHOIS:
 	    whoisStart(fwdState, fwdState->server_fd);
-	    break;
-	case PROTO_INTERNAL:
-	    internalStart(request, entry);
 	    break;
 	default:
 	    if (request->method == METHOD_CONNECT) {
@@ -312,6 +316,19 @@ fwdStart(int fd, StoreEntry * entry, request_t * request)
     debug(17, 3) ("fwdStart: '%s'\n", storeUrl(entry));
     entry->mem_obj->request = requestLink(request);
     entry->mem_obj->fd = fd;
+    switch (request->protocol) {
+    /*
+     * Note, don't create fwdState for these requests
+     */
+    case PROTO_INTERNAL:
+	internalStart(request, entry);
+	return;
+    case PROTO_CACHEOBJ:
+	cachemgrStart(fd, request, entry);
+	return;
+    default:
+	break;
+    }
     fwdState = xcalloc(1, sizeof(FwdState));
     cbdataAdd(fwdState, MEM_NONE);
     fwdState->entry = entry;
@@ -320,15 +337,6 @@ fwdStart(int fd, StoreEntry * entry, request_t * request)
     fwdState->request = requestLink(request);
     fwdState->start = squid_curtime;
     storeLockObject(entry);
-    switch (request->protocol) {
-    case PROTO_CACHEOBJ:
-    case PROTO_WAIS:
-    case PROTO_INTERNAL:
-	fwdDispatch(fwdState);
-	return;
-    default:
-	break;
-    }
     storeRegisterAbort(entry, fwdAbort, fwdState);
     peerSelect(request,
 	entry,
