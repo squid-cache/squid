@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.25 1997/10/21 02:45:00 wessels Exp $
+#  $Id: Makefile.in,v 1.26 1997/11/04 00:32:14 wessels Exp $
 #
 prefix		= @prefix@
 srcdir		= @srcdir@
@@ -35,6 +35,7 @@ UTILOBJS	= rfc1123.o \
 		  safe_inet_addr.o \
 		  iso3307.o \
 		  snprintf.o \
+		  sha.o \
 		  $(LIBOBJS)
 REGEXOBJS	= GNUregex.o
 LIBS		= libmiscutil.a @LIBREGEX@
