@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.31 2002/10/13 20:35:05 robertc Exp $
+ * $Id: store_swapin.cc,v 1.32 2002/10/15 08:03:30 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -51,7 +51,7 @@ storeSwapInStart(store_client * sc)
 	return;
     }
     debug(20, 3) ("storeSwapInStart: called for %d %08X %s \n",
-	e->swap_dirn, e->swap_filen, storeKeyText((const cache_key *)e->hash.key));
+	e->swap_dirn, e->swap_filen, e->getMD5Text());
     if (e->swap_status != SWAPOUT_WRITING && e->swap_status != SWAPOUT_DONE) {
 	debug(20, 1) ("storeSwapInStart: bad swap_status (%s)\n",
 	    swapStatusStr[e->swap_status]);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.306 2002/10/13 20:35:02 robertc Exp $
+ * $Id: neighbors.cc,v 1.307 2002/10/15 08:03:29 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -481,7 +481,7 @@ neighborsUdpPing(request_t * request,
     mem->start_ping = current_time;
     mem->ping_reply_callback = callback;
     mem->ircb_data = callback_data;
-    reqnum = icpSetCacheKey((const cache_key *)entry->hash.key);
+    reqnum = icpSetCacheKey((const cache_key *)entry->key);
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
 	if (p == NULL)
 	    p = Config.peers;
@@ -493,7 +493,7 @@ neighborsUdpPing(request_t * request,
 	    p->host, url);
 	if (p->type == PEER_MULTICAST)
 	    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
-	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", storeKeyText((const cache_key *)entry->hash.key));
+	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", entry->getMD5Text());
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
 #if USE_HTCP
@@ -1192,7 +1192,7 @@ peerCountMcastPeersStart(void *data)
     mem->ircb_data = psstate;
     mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
     p->mcast.id = mem->id;
-    reqnum = icpSetCacheKey((const cache_key *)fake->hash.key);
+    reqnum = icpSetCacheKey((const cache_key *)fake->key);
     query = _icp_common_t::createMessage(ICP_QUERY, 0, url, reqnum, 0);
     icpUdpSend(theOutIcpConnection,
 	&p->in_addr,

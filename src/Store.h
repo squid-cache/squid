@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.2 2002/10/14 06:19:49 adrian Exp $
+ * $Id: Store.h,v 1.3 2002/10/15 08:03:29 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,11 +38,10 @@
 class StoreClient;
 #endif
 
-struct _StoreEntry {
-#ifdef __cplusplus
-    public:
-#endif
-    hash_link hash;		/* must be first */
+struct _StoreEntry : public hash_link {
+public:
+    virtual const char *getMD5Text() const;
+  
     MemObject *mem_obj;
     RemovalPolicyNode repl;
     /* START OF ON-DISK STORE_META_STD TLV field */
@@ -85,6 +84,7 @@ public:
     bool isNull() {
 	return true;
     }
+    const char *getMD5Text() const;
     void operator delete(void *address);
          private:
     static NullStoreEntry _instance;

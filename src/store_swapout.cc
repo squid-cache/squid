@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.89 2002/10/13 20:35:05 robertc Exp $
+ * $Id: store_swapout.cc,v 1.90 2002/10/15 08:03:31 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -287,7 +287,7 @@ storeSwapOutFileClose(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     assert(mem != NULL);
-    debug(20, 3) ("storeSwapOutFileClose: %s\n", storeKeyText((const cache_key *)e->hash.key));
+    debug(20, 3) ("storeSwapOutFileClose: %s\n", e->getMD5Text());
     debug(20, 3) ("storeSwapOutFileClose: sio = %p\n", mem->swapout.sio);
     if (mem->swapout.sio == NULL)
 	return;

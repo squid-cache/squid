@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.361 2002/10/14 11:54:18 adrian Exp $
+ * $Id: stat.cc,v 1.362 2002/10/15 08:03:30 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -260,7 +260,7 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
     MemObject *mem = e->mem_obj;
     int i;
     dlink_node *node;
-    storeAppendPrintf(s, "KEY %s\n", storeKeyText((const cache_key *)e->hash.key));
+    storeAppendPrintf(s, "KEY %s\n", e->getMD5Text());
     if (mem)
 	storeAppendPrintf(s, "\t%s %s\n",
 	    RequestMethodStr[mem->method], mem->log_url);
@@ -1428,9 +1428,9 @@ statClientRequests(StoreEntry * s)
 	    (long int) http->out.offset, (unsigned long int) http->out.size);
 	storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);
 	e = http->entry;
-	storeAppendPrintf(s, "entry %p/%s\n", e, e ? storeKeyText((cache_key const *)e->hash.key) : "N/A");
+	storeAppendPrintf(s, "entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
 	e = http->old_entry;
-	storeAppendPrintf(s, "old_entry %p/%s\n", e, e ? storeKeyText((cache_key const *)e->hash.key) : "N/A");
+	storeAppendPrintf(s, "old_entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
 	storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
 	    (long int) http->start.tv_sec,
 	    (int) http->start.tv_usec,

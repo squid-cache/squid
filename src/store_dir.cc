@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.138 2002/10/14 11:57:13 adrian Exp $
+ * $Id: store_dir.cc,v 1.139 2002/10/15 08:03:30 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -263,7 +263,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
     assert(op > SWAP_LOG_NOP && op < SWAP_LOG_MAX);
     debug(20, 3) ("storeDirSwapLog: %s %s %d %08X\n",
 	swap_log_op_str[op],
-	storeKeyText((const cache_key *)e->hash.key),
+	e->getMD5Text(),
 	e->swap_dirn,
 	e->swap_filen);
     sd = &Config.cacheSwap.swapDirs[e->swap_dirn];

@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.3 2002/10/13 20:35:06 robertc Exp $
+ * $Id: ufscommon.cc,v 1.4 2002/10/15 08:03:31 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -471,7 +471,7 @@ commonUfsDirRebuildFromDirectory(void *data)
 	    commonUfsDirUnlinkFile(SD, filn);
 	    continue;
 	}
-	tmpe.hash.key = key;
+	tmpe.key = key;
 	/* check sizes */
 	if (tmpe.swap_file_sz == 0) {
 	    tmpe.swap_file_sz = (size_t) sb.st_size;
@@ -1020,7 +1020,7 @@ commonUfsDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
     s.swap_file_sz = e->swap_file_sz;
     s.refcount = e->refcount;
     s.flags = e->flags;
-    xmemcpy(&s.key, e->hash.key, MD5_DIGEST_CHARS);
+    xmemcpy(&s.key, e->key, MD5_DIGEST_CHARS);
     xmemcpy(state->outbuf + state->outbuf_offset, &s, ss);
     state->outbuf_offset += ss;
     /* buffered write */
@@ -1118,7 +1118,7 @@ commonUfsDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
     s->swap_file_sz = e->swap_file_sz;
     s->refcount = e->refcount;
     s->flags = e->flags;
-    xmemcpy(s->key, e->hash.key, MD5_DIGEST_CHARS);
+    xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
     file_write(ioinfo->swaplog_fd,
 	-1,
 	s,
