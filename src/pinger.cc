@@ -1,9 +1,8 @@
 
-
 /*
- * $Id: pinger.cc,v 1.17 1996/11/15 07:51:11 wessels Exp $
+ * $Id: pinger.cc,v 1.18 1996/12/14 18:55:00 wessels Exp $
  *
- * DEBUG: section 37    ICMP Routines
+ * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -121,7 +120,7 @@ pingerOpen(void)
 {
     struct protoent *proto = NULL;
     if ((proto = getprotobyname("icmp")) == 0) {
-	debug(37, 0, "pingerOpen: unknown protocol: icmp\n");
+	debug(42, 0, "pingerOpen: unknown protocol: icmp\n");
 	exit(1);
     }
     icmp_sock = socket(PF_INET, SOCK_RAW, proto->p_proto);
@@ -130,7 +129,7 @@ pingerOpen(void)
 	exit(1);
     }
     icmp_ident = getpid() & 0xffff;
-    debug(37, 0, "ICMP socket opened\n", icmp_sock);
+    debug(42, 0, "ICMP socket opened\n", icmp_sock);
 }
 
 void
@@ -202,7 +201,7 @@ pingerRecv(void)
 	(struct sockaddr *) &from,
 	&fromlen);
     gettimeofday(&now, NULL);
-    debug(37, 9, "pingerRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
+    debug(42, 9, "pingerRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
     ip = (struct iphdr *) (void *) pkt;
 #if HAVE_IP_HL
     iphdrlen = ip->ip_hl << 2;
@@ -255,7 +254,7 @@ in_cksum(unsigned short *ptr, int size)
 static void
 pingerLog(struct icmphdr *icmp, struct in_addr addr, int rtt, int hops)
 {
-    debug(37, 2, "pingerLog: %9d.%06d %-16s %d %-15.15s %dms %d hops\n",
+    debug(42, 2, "pingerLog: %9d.%06d %-16s %d %-15.15s %dms %d hops\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec,
 	inet_ntoa(addr),
