@@ -1,23 +1,19 @@
 #!/usr/local/bin/perl
 
-# udp-banger.pl 
+# icp-test.pl 
 #
-# Duane Wessels, Dec 1995
+# Duane Wessels, Nov 1996
 #
-# Usage: udp-banger.pl [host [port]] < url-list
+# Usage: icp-test.pl host:port ... < url-list
 #
-# Sends a continuous stream of ICP queries to a cache.  Stdin is a list of
-# URLs to request.  Run N of these at the same time to simulate a heavy
-# neighbor cache load.
+# Sends a continuous stream of ICP queries to a set of caches.  Stdin is
+# a list of URLs to request.
 
 require 'getopts.pl';
 
 $|=1;
 
 &Getopts('n');
-
-$host=(shift || 'localhost') ;
-$port=(shift || '3130') ;
 
 # just copy this from src/proto.c
 @CODES=(
@@ -52,9 +48,7 @@ require 'sys/socket.ph';
 
 $sockaddr = 'S n a4 x8';
 ($name, $aliases, $proto) = getprotobyname("udp");
-($fqdn, $aliases, $type, $len, $themaddr) = gethostbyname($host);
 $thissock = pack($sockaddr, &AF_INET, 0, "\0\0\0\0");
-$them = pack($sockaddr, &AF_INET, $port, $themaddr);
 
 chop($me=`uname -a|cut -f2 -d' '`);
 $myip=(gethostbyname($me))[4];
@@ -67,24 +61,47 @@ $flags |= 0x80000000;
 $flags |= 0x40000000 if ($opt_n);
 $flags = ~0;
 
+while ($ARGV[0] =~ /([^:]+):(\d+)/) {
+	$host = $1;
+	$port = $2;
+	($fqdn, $aliases, $type, $len, $themaddr) = gethostbyname($host);
+	$ADDR{$host} = pack('Sna4x8', &AF_INET, $port, $themaddr);
+	$ip = join('.', unpack('C4', $themaddr));
+	$FQDN{$ip} = $fqdn;
+	shift;
+}
+
 while (<>) {
+	print;
 	chop;
 	$request_template = 'CCnx4Nx4x4a4a' . length;
 	$request = pack($request_template, 1, 2, 24 + length, $flags, $myip, $_);
-	die "send: $!\n" unless
-		send(SOCK, $request, 0, $them);
-        $rin = '';
-        vec($rin,fileno(SOCK),1) = 1;
-        ($nfound,$timeleft) = select($rout=$rin, undef, undef, 2.0);
-	next if ($nfound == 0);
-	die "recv: $!\n" unless
-                $theiraddr = recv(SOCK, $reply, 1024, 0);
-  	($junk, $junk, $sourceaddr, $junk) = unpack($sockaddr, $theiraddr);
-  	@theirip = unpack('C4', $sourceaddr);
-        ($type,$ver,$len,$flag,$p1,$p2,$payload) = unpack('CCnx4Nnnx4A', $reply);
-        print join('.', @theirip) . ' ' . $CODES[$type] . " $_";
-	print " hop=$p1" if ($opt_n);
-	print " rtt=$p2" if ($opt_n);
-	print "\n";
+	$n = 0;
+	foreach $host (keys %ADDR) {
+		$port = $PORT{$host};
+		@ip = split('\.', $IP{$host});
+		$them = pack('SnC4x8', &AF_INET, $port, @ip);
+		($sport,@IP) = unpack('x2nC4x8', $ADDR{$host});
+		die "send: $!\n" unless send(SOCK, $request, 0, $ADDR{$host});
+		$n++;
+	}
+	while ($n > 0) {
+        	$rin = '';
+        	vec($rin,fileno(SOCK),1) = 1;
+        	($nfound,$timeleft) = select($rout=$rin, undef, undef, 2.0);
+		last if ($nfound == 0);
+		die "recv: $!\n" unless
+                	$theiraddr = recv(SOCK, $reply, 1024, 0);
+  		($junk, $junk, $sourceaddr, $junk) = unpack($sockaddr, $theiraddr);
+  		$ip = join('.', unpack('C4', $sourceaddr));
+        	($type,$ver,$len,$flag,$p1,$p2,$payload) = unpack('CCnx4Nnnx4A', $reply);
+        	printf "\t%-20.20s %-10.10s",
+			$FQDN{$ip},
+			$CODES[$type];
+		print " hop=$p1" if ($opt_n);
+		print " rtt=$p2" if ($opt_n);
+		print "\n";
+		$n--;
+	}
 }
 

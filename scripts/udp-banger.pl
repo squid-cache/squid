@@ -73,13 +73,18 @@ while (<>) {
 	$request = pack($request_template, 1, 2, 24 + length, $flags, $myip, $_);
 	die "send: $!\n" unless
 		send(SOCK, $request, 0, $them);
+        $rin = '';
+        vec($rin,fileno(SOCK),1) = 1;
+        ($nfound,$timeleft) = select($rout=$rin, undef, undef, 2.0);
+	next if ($nfound == 0);
 	die "recv: $!\n" unless
                 $theiraddr = recv(SOCK, $reply, 1024, 0);
   	($junk, $junk, $sourceaddr, $junk) = unpack($sockaddr, $theiraddr);
   	@theirip = unpack('C4', $sourceaddr);
         ($type,$ver,$len,$flag,$p1,$p2,$payload) = unpack('CCnx4Nnnx4A', $reply);
-        print join('.', @theirip) . ' ' . $CODES[$type] . " $_\n";
-	print "hop = $p1\n" if ($opt_n);
-	print "rtt = $p2\n" if ($opt_n);
+        print join('.', @theirip) . ' ' . $CODES[$type] . " $_";
+	print " hop=$p1" if ($opt_n);
+	print " rtt=$p2" if ($opt_n);
+	print "\n";
 }
 
