@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.25 1998/10/13 23:33:31 wessels Exp $
+ * $Id: cbdata.cc,v 1.26 1998/12/02 05:14:17 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -111,7 +111,7 @@ cbdataInit(void)
 
 void
 #if CBDATA_DEBUG
-cbdataAddDbg(const void *p, mem_type mem_type, const char *file, int line)
+cbdataAddDbg(const void *p, mem_type mtype, const char *file, int line)
 #else
 cbdataAdd(const void *p, mem_type mtype)
 #endif
