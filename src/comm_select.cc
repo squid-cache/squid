@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.13 1998/10/01 22:28:27 wessels Exp $
+ * $Id: comm_select.cc,v 1.14 1998/10/02 05:02:29 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -38,6 +38,13 @@
 #define MAX_POLL_TIME 10
 #else
 #define MAX_POLL_TIME 1000
+#endif
+
+#ifndef        howmany
+#define howmany(x, y)   (((x)+((y)-1))/(y))
+#endif
+#ifndef        NBBY
+#define        NBBY    8
 #endif
 
 /* STATIC */
@@ -531,8 +538,8 @@ comm_select(int msec)
     int maxindex;
     int k;
     int j;
-    int *fdsp;
-    int tmask;
+    fd_mask *fdsp;
+    fd_mask tmask;
     static time_t last_timeout = 0;
     struct timeval poll_time;
     double timeout = current_dtime + (msec / 1000.0);
@@ -549,14 +556,23 @@ comm_select(int msec)
 	    comm_select_http_incoming();
 	callicp = callhttp = 0;
 	maxfd = Biggest_FD + 1;
-	/* copy whole integers. XXX breaks if fd_mask is long */
+	/* copy whole integers. XXX breaks if fd_mask is a long */
 	xmemcpy(&readfds, &global_readfds, ((maxfd + 31) / 32) * 4);
 	xmemcpy(&writefds, &global_writefds, ((maxfd + 31) / 32) * 4);
 	/* remove stalled FDs */
-	for (i = 0; i < maxfd; i++) {
-	    if (FD_ISSET(i, &readfds))
-		if (commDeferRead(i))
-		    FD_CLR(i, &readfds);
+	maxindex = howmany(maxfd, (sizeof(*fdsp) * NBBY));
+	fdsp = (fd_mask *) & readfds;
+	for (j = 0; j < maxindex; j++) {
+	    if ((tmask = fdsp[j]) == 0)
+		continue;	/* no bits here */
+	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
+		if ((tmask & (1 << k)) == 0)
+		    continue;
+		/* Found a set bit */
+		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
+		if (commDeferRead(fd))
+		    FD_CLR(fd, &readfds);
+	    }
 	}
 #if DEBUG_FDBITS
 	for (i = 0; i < maxfd; i++) {
@@ -605,33 +621,27 @@ comm_select(int msec)
 	if (num == 0)
 	    continue;
 	/* Scan return fd masks for ready descriptors */
-#ifndef        howmany
-#define howmany(x, y)   (((x)+((y)-1))/(y))
-#endif
-#ifndef        NBBY
-#define        NBBY    8
-#endif
-	maxindex = howmany(maxfd, (sizeof(int) * NBBY));
-	fdsp = (int *) &readfds;
+	fdsp = (fd_mask *) & readfds;
+	maxindex = howmany(maxfd, (sizeof(*fdsp) * NBBY));
 	for (j = 0; j < maxindex; j++) {
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
-	    for (k = 0; k < (sizeof(int) * NBBY); k++) {
+	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
 		if ((tmask & (1 << k)) == 0)
-		continue;
+		    continue;
 		/* Found a set bit */
-		fd = (j * (sizeof(int) * NBBY)) + k;
+		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
 #if DEBUG_FDBITS
 		assert(FD_ISSET(fd, &readfds));
 #endif
-	    if (fdIsIcp(fd)) {
-		callicp = 1;
-		continue;
-	    }
-	    if (fdIsHttp(fd)) {
-		callhttp = 1;
-		continue;
-	    }
+		if (fdIsIcp(fd)) {
+		    callicp = 1;
+		    continue;
+		}
+		if (fdIsHttp(fd)) {
+		    callhttp = 1;
+		    continue;
+		}
 		debug(5, 6) ("comm_select: FD %d ready for reading\n", fd);
 		if (fd_table[fd].read_handler) {
 		    hdl = fd_table[fd].read_handler;
@@ -649,15 +659,15 @@ comm_select(int msec)
 		    break;	/* and no more bits left */
 	    }
 	}
-	fdsp = (int *) &writefds;
+	fdsp = (fd_mask *) & writefds;
 	for (j = 0; j < maxindex; j++) {
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
-	    for (k = 0; k < (sizeof(int) * NBBY); k++) {
+	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
 		if ((tmask & (1 << k)) == 0)
 		    continue;
 		/* Found a set bit */
-		fd = (j * (sizeof(int) * NBBY)) + k;
+		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
 #if DEBUG_FDBITS
 		assert(FD_ISSET(fd, &writefds));
 #endif
@@ -668,7 +678,7 @@ comm_select(int msec)
 		if (fdIsHttp(fd)) {
 		    callhttp = 1;
 		    continue;
-	    }
+		}
 		debug(5, 5) ("comm_select: FD %d ready for writing\n", fd);
 		if (fd_table[fd].write_handler) {
 		    hdl = fd_table[fd].write_handler;
@@ -830,25 +840,25 @@ commIncomingStats(StoreEntry * sentry)
 }
 
 void
-commUpdateReadBits(int fd, PF *handler)
+commUpdateReadBits(int fd, PF * handler)
 {
-	if (handler && !FD_ISSET(fd, &global_readfds)) {
-	    FD_SET(fd, &global_readfds);
-	    nreadfds++;
-	} else if (!handler && FD_ISSET(fd, &global_readfds)) {
-	    FD_CLR(fd, &global_readfds);
-	    nreadfds--;
-	}
+    if (handler && !FD_ISSET(fd, &global_readfds)) {
+	FD_SET(fd, &global_readfds);
+	nreadfds++;
+    } else if (!handler && FD_ISSET(fd, &global_readfds)) {
+	FD_CLR(fd, &global_readfds);
+	nreadfds--;
+    }
 }
 
 void
-commUpdateWriteBits(int fd, PF *handler)
+commUpdateWriteBits(int fd, PF * handler)
 {
-	if (handler && !FD_ISSET(fd, &global_writefds)) {
-	    FD_SET(fd, &global_writefds);
-	    nwritefds++;
-	} else if (!handler && FD_ISSET(fd, &global_writefds)) {
-	    FD_CLR(fd, &global_writefds);
-	    nwritefds--;
-	}
+    if (handler && !FD_ISSET(fd, &global_writefds)) {
+	FD_SET(fd, &global_writefds);
+	nwritefds++;
+    } else if (!handler && FD_ISSET(fd, &global_writefds)) {
+	FD_CLR(fd, &global_writefds);
+	nwritefds--;
+    }
 }
