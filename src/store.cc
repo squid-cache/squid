@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.174 1996/12/03 20:27:01 wessels Exp $
+ * $Id: store.cc,v 1.175 1996/12/03 23:30:49 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -283,9 +283,9 @@ new_MemObject(void)
 {
     MemObject *mem = get_free_mem_obj();
     mem->reply = xcalloc(1, sizeof(struct _http_reply));
-    mem->reply->date = -1;
-    mem->reply->expires = -1;
-    mem->reply->last_modified = -1;
+    mem->reply->date = -2;
+    mem->reply->expires = -2;
+    mem->reply->last_modified = -2;
     meta_data.mem_obj_count++;
     meta_data.misc += sizeof(struct _http_reply);
     debug(20, 3, "new_MemObject: returning %p\n", mem);

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.125 1996/12/03 20:26:53 wessels Exp $
+ * $Id: http.cc,v 1.126 1996/12/03 23:30:48 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -257,67 +257,62 @@ httpCacheNegatively(StoreEntry * entry)
 void
 httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 {
-    char *headers = NULL;
-    char *t = NULL;
+    char *headers = get_free_4k_page();
+    char *line = get_free_4k_page();
+    char *end;
     char *s = NULL;
+    char *t;
+    char *q;
     time_t delta;
     size_t l;
 
     ReplyHeaderStats.parsed++;
-    headers = xstrdup(buf);
-    t = strtok(headers, "\n");
-    while (t) {
-	s = t + strlen(t);
-	while (*s == '\r')
-	    *s-- = '\0';
-	if (!strncasecmp(t, "HTTP", 4)) {
-	    sscanf(t + 1, "%lf", &reply->version);
-	    if ((t = strchr(t, ' '))) {
-		t++;
-		reply->code = atoi(t);
-	    }
+    xstrncpy(headers, buf, 4096);
+    end = mime_headers_end(headers);
+    if (end)
+	reply->hdr_sz = end - headers;
+    for (s = headers; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
+	l = strcspn(s, crlf) + 1;
+	if (l > 4096)
+	    l = 4096;
+	xstrncpy(line, s, l);
+	t = line;
+	debug(11, 3, "httpParseReplyHeaders: %s\n", t);
+	if (!strncasecmp(t, "HTTP/", 5)) {
+	    sscanf(t + 5, "%lf", &reply->version);
+	    if ((t = strchr(t, ' ')))
+		reply->code = atoi(++t);
 	} else if (!strncasecmp(t, "Content-type:", 13)) {
-	    if ((t = strchr(t, ' '))) {
-		while (isspace(*t))
-		    t++;
-		l = strcspn(t, crlf) + 1;
-		if (l > HTTP_REPLY_FIELD_SZ)
-		    l = HTTP_REPLY_FIELD_SZ;
-		xstrncpy(reply->content_type, t, l);
-		ReplyHeaderStats.ctype++;
-	    }
+	    for (t += 13; isspace(*t); t++);
+	    xstrncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ);
+	    ReplyHeaderStats.ctype++;
 	} else if (!strncasecmp(t, "Content-length:", 15)) {
-	    if ((t = strchr(t, ' '))) {
-		t++;
-		reply->content_length = atoi(t);
-		ReplyHeaderStats.clen++;
-	    }
+	    for (t += 15; isspace(*t); t++);
+	    if ((q = strchr(t, ';')))
+		*q = '\0';
+	    reply->content_length = atoi(t);
+	    ReplyHeaderStats.clen++;
 	} else if (!strncasecmp(t, "Date:", 5)) {
-	    if ((t = strchr(t, ' '))) {
-		reply->date = parse_rfc1123(++t);
-		ReplyHeaderStats.date++;
-	    }
+	    for (t += 5; isspace(*t); t++);
+	    reply->date = parse_rfc1123(t);
+	    ReplyHeaderStats.date++;
 	} else if (!strncasecmp(t, "Expires:", 8)) {
-	    if ((t = strchr(t, ' '))) {
-		reply->expires = parse_rfc1123(++t);
-		/*
-		 * The HTTP/1.0 specs says that robust implementations
-		 * should consider bad or malformed Expires header as
-		 * equivalent to "expires immediately."
-		 */
-		if (reply->expires == -1)
-		    reply->expires = squid_curtime;
-		ReplyHeaderStats.exp++;
-	    }
+	    for (t += 8; isspace(*t); t++);
+	    reply->expires = parse_rfc1123(t);
+	    /*
+	     * The HTTP/1.0 specs says that robust implementations
+	     * should consider bad or malformed Expires header as
+	     * equivalent to "expires immediately."
+	     */
+	    if (reply->expires == -1)
+		reply->expires = squid_curtime;
+	    ReplyHeaderStats.exp++;
 	} else if (!strncasecmp(t, "Last-Modified:", 14)) {
-	    if ((t = strchr(t, ' '))) {
-		reply->last_modified = parse_rfc1123(++t);
-		ReplyHeaderStats.lm++;
-	    }
+	    for (t += 14; isspace(*t); t++);
+	    reply->last_modified = parse_rfc1123(t);
+	    ReplyHeaderStats.lm++;
 	} else if (!strncasecmp(t, "Cache-Control:", 14)) {
-	    t += 14;
-	    while (*t == ' ' || *t == '\t')
-		t++;
+	    for (t += 14; isspace(*t); t++);
 	    if (!strncasecmp(t, "public", 6)) {
 		EBIT_SET(reply->cache_control, SCC_PUBLIC);
 		ReplyHeaderStats.cc[SCC_PUBLIC]++;
@@ -348,9 +343,9 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 		}
 	    }
 	}
-	t = strtok(NULL, "\n");
     }
-    safe_free(headers);
+    put_free_4k_page(headers);
+    put_free_4k_page(line);
 }
 
 
@@ -361,7 +356,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     StoreEntry *entry = httpState->entry;
     int room;
     int hdr_len;
-    struct _http_reply *reply = NULL;
+    struct _http_reply *reply = entry->mem_obj->reply;
 
     debug(11, 3, "httpProcessReplyHeader: key '%s'\n", entry->key);
 
@@ -377,7 +372,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
 	    debug(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
 	    httpState->reply_hdr_state += 2;
-	    entry->mem_obj->reply->code = 555;
+	    reply->code = 555;
 	    return;
 	}
 	t = httpState->reply_hdr + hdr_len;
@@ -386,9 +381,6 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    if ((t = mime_headers_end(httpState->reply_hdr)) == NULL)
 		return;		/* headers not complete */
 	*t = '\0';
-	reply = entry->mem_obj->reply;
-	reply->hdr_sz = t - httpState->reply_hdr;
-	debug(11, 7, "httpProcessReplyHeader: hdr_sz = %d\n", reply->hdr_sz);
 	httpState->reply_hdr_state++;
     }
     if (httpState->reply_hdr_state == 1) {
