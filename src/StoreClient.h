@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.10 2003/07/11 04:02:01 robertc Exp $
+ * $Id: StoreClient.h,v 1.11 2003/10/20 11:23:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -69,7 +69,6 @@ public:
     void callback(ssize_t len, bool error = false);
     void doCopy (StoreEntry *e);
     void readHeader(const char *buf, ssize_t len);
-    bool callbackPending() const;
     void copy(StoreEntry *, StoreIOBuffer, STCB *, void *);
     void dumpStats(StoreEntry * output, int clientNumber) const;
 
@@ -119,11 +118,16 @@ private:
     int type;
     bool object_ok;
 
+    /* Until we finish stuffing code into store_client */
+
+public:
+
     struct Callback
     {
         Callback ():callback_handler(NULL), callback_data(NULL){}
 
         Callback (STCB *, void *);
+        bool pending() const;
         STCB *callback_handler;
         void *callback_data;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.6 2003/09/22 08:50:51 robertc Exp $
+ * $Id: stmem.h,v 1.7 2003/10/20 11:23:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,7 +52,7 @@ public:
     int lowestOffset () const;
     off_t endOffset () const;
     int freeDataUpto (int);
-    ssize_t copy (off_t, char *, size_t) const;
+    ssize_t copy (StoreIOBuffer const &) const;
     bool hasContigousContentRange(Range<size_t> const &range) const;
     /* success or fail */
     bool write (StoreIOBuffer const &);
