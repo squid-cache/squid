@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.70 2000/07/18 06:16:40 wessels Exp $
+ * $Id: util.c,v 1.71 2000/08/19 06:10:00 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -70,7 +70,9 @@
 #include "util.h"
 #include "snprintf.h"
 
-void (*failure_notify) (const char *) = NULL;
+static void default_failure_notify(const char *);
+
+void (*failure_notify) (const char *) = default_failure_notify;
 static char msg[128];
 
 #if !defined(__CYGWIN__)
@@ -724,3 +726,12 @@ xitoa(int num)
     snprintf(buf, sizeof(buf), "%d", num);
     return buf;
 }
+
+/* A default failure notifier when the main program hasn't installed any */
+void default_failure_notify(const char *msg)
+{
+    write(2, msg, strlen(msg));
+    write(2, "\n", 1);
+    abort();
+}
+
