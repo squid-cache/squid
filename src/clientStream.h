@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.h,v 1.2 2002/10/13 20:34:59 robertc Exp $
+ * $Id: clientStream.h,v 1.3 2003/01/23 00:37:17 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,13 +37,14 @@
 #include "StoreIOBuffer.h"
 
 typedef struct _clientStreamNode clientStreamNode;
+class ClientHttpRequest;
 /* client stream read callback */
-typedef void CSCB(clientStreamNode *, clientHttpRequest *, HttpReply *, StoreIOBuffer);
+typedef void CSCB(clientStreamNode *, ClientHttpRequest *, HttpReply *, StoreIOBuffer);
 /* client stream read */
-typedef void CSR(clientStreamNode *, clientHttpRequest *);
+typedef void CSR(clientStreamNode *, ClientHttpRequest *);
 /* client stream detach */
-typedef void CSD(clientStreamNode *, clientHttpRequest *);
-typedef clientStream_status_t CSS(clientStreamNode *, clientHttpRequest *);
+typedef void CSD(clientStreamNode *, ClientHttpRequest *);
+typedef clientStream_status_t CSS(clientStreamNode *, ClientHttpRequest *);
 
 
 struct _clientStreamNode {
@@ -66,10 +67,10 @@ public:
 SQUIDCEXTERN void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, void *, CSCB *, CSD *, void *, StoreIOBuffer tailBuffer);
 SQUIDCEXTERN void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, void *);
 SQUIDCEXTERN clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, void *);
-SQUIDCEXTERN void clientStreamCallback(clientStreamNode *, clientHttpRequest *, HttpReply *, StoreIOBuffer replyBuffer);
-SQUIDCEXTERN void clientStreamRead(clientStreamNode *, clientHttpRequest *, StoreIOBuffer readBuffer);
-SQUIDCEXTERN void clientStreamDetach(clientStreamNode *, clientHttpRequest *);
-SQUIDCEXTERN void clientStreamAbort(clientStreamNode *, clientHttpRequest *);
-SQUIDCEXTERN clientStream_status_t clientStreamStatus(clientStreamNode *, clientHttpRequest *);
+SQUIDCEXTERN void clientStreamCallback(clientStreamNode *, ClientHttpRequest *, HttpReply *, StoreIOBuffer replyBuffer);
+SQUIDCEXTERN void clientStreamRead(clientStreamNode *, ClientHttpRequest *, StoreIOBuffer readBuffer);
+SQUIDCEXTERN void clientStreamDetach(clientStreamNode *, ClientHttpRequest *);
+SQUIDCEXTERN void clientStreamAbort(clientStreamNode *, ClientHttpRequest *);
+SQUIDCEXTERN clientStream_status_t clientStreamStatus(clientStreamNode *, ClientHttpRequest *);
 
 #endif /* SQUID_CLIENTSTREAM_H */

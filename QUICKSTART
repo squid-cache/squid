@@ -1,7 +1,7 @@
 
 Squid QUICKSTART
 
-$Id: QUICKSTART,v 1.6 2002/08/18 10:48:58 robertc Exp $
+$Id: QUICKSTART,v 1.7 2003/01/23 00:34:50 robertc Exp $
 
 This document is intended only for people who want to get Squid running
 quickly It is not a substitute for the real documentation.  Squid has

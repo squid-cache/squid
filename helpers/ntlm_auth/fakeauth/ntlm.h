@@ -1,5 +1,5 @@
 /*
- * $Id: ntlm.h,v 1.4 2001/08/29 14:57:38 robertc Exp $
+ * $Id: ntlm.h,v 1.5 2003/01/23 00:36:35 robertc Exp $
  *
  * AUTHOR: Andrew Doran <ad@interlude.eu.org>
  *

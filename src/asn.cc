@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.87 2003/01/17 08:21:51 robertc Exp $
+ * $Id: asn.cc,v 1.88 2003/01/23 00:37:16 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "radix.h"
+#include "HttpRequest.h"
 #include "StoreClient.h"
 #include "Store.h"
 
@@ -73,6 +74,7 @@ struct _ASState {
     off_t offset;
     int reqofs;
     char reqbuf[AS_REQBUF_SZ];
+    bool dataRead;
 };
 
 typedef struct _ASState ASState;
@@ -193,8 +195,8 @@ asnCacheStart(int as)
     StoreEntry *e;
     request_t *req;
     ASState *asState;
-    StoreIOBuffer readBuffer = EMPTYIOBUFFER;
     asState = cbdataAlloc(ASState);
+    asState->dataRead = 0;
     debug(53, 3) ("asnCacheStart: AS %d\n", as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;
@@ -212,9 +214,7 @@ asnCacheStart(int as)
     asState->entry = e;
     asState->offset = 0;
     asState->reqofs = 0;
-    readBuffer.offset = asState->offset;
-    readBuffer.length = AS_REQBUF_SZ;
-    readBuffer.data = asState->reqbuf;
+    StoreIOBuffer readBuffer (AS_REQBUF_SZ, asState->offset, asState->reqbuf);
     storeClientCopy(asState->sc,
 	e,
 	readBuffer,
@@ -240,14 +240,15 @@ asHandleReply(void *data, StoreIOBuffer result)
 	asStateFree(asState);
 	return;
     }
-    if (result.length == 0 && e->mem_obj->inmem_hi > 0) {
+    if (result.length == 0 && asState->dataRead) {
+	debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
 	asStateFree(asState);
 	return;
     } else if (result.flags.error) {
 	debug(53, 1) ("asHandleReply: Called with Error set and size=%u\n", (unsigned int) result.length);
 	asStateFree(asState);
 	return;
-    } else if (HTTP_OK != e->mem_obj->reply->sline.status) {
+    } else if (HTTP_OK != e->getReply()->sline.status) {
 	debug(53, 1) ("WARNING: AS %d whois request failed\n",
 	    asState->as_number);
 	asStateFree(asState);
@@ -273,6 +274,7 @@ asHandleReply(void *data, StoreIOBuffer result)
 	debug(53, 3) ("asHandleReply: AS# %s (%d)\n", s, asState->as_number);
 	asnAddNet(s, asState->as_number);
 	s = t + 1;
+	asState->dataRead = 1;
     }
 
     /*
@@ -296,30 +298,26 @@ asHandleReply(void *data, StoreIOBuffer result)
     asState->reqofs = leftoversz;
     debug(53, 3) ("asState->offset = %ld\n", (long int) asState->offset);
     if (e->store_status == STORE_PENDING) {
-	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
 	debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
-	tempBuffer.offset = asState->offset;
-	tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
-	tempBuffer.data = asState->reqbuf + asState->reqofs;
-	storeClientCopy(asState->sc,
-	    e,
-	    tempBuffer,
-	    asHandleReply,
-	    asState);
-    } else if (asState->offset < e->mem_obj->inmem_hi) {
-	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
-	debug(53, 3) ("asHandleReply: asState->offset < e->mem_obj->inmem_hi %s\n", storeUrl(e));
-	tempBuffer.offset = asState->offset;
-	tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
-	tempBuffer.data = asState->reqbuf + asState->reqofs;
+	StoreIOBuffer tempBuffer (AS_REQBUF_SZ - asState->reqofs,
+				  asState->offset, 
+				  asState->reqbuf + asState->reqofs);
 	storeClientCopy(asState->sc,
 	    e,
 	    tempBuffer,
 	    asHandleReply,
 	    asState);
     } else {
-	debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
-	asStateFree(asState);
+	StoreIOBuffer tempBuffer;
+	debug(53, 3) ("asHandleReply: store complete, but data recieved %s\n", storeUrl(e));
+	tempBuffer.offset = asState->offset;
+	tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
+	tempBuffer.data = asState->reqbuf + asState->reqofs;
+	storeClientCopy(asState->sc,
+	    e,
+	    tempBuffer,
+	    asHandleReply,
+	    asState);
     }
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.48 2002/07/21 00:25:44 hno Exp $
+ * $Id: unlinkd.cc,v 1.49 2003/01/23 00:37:29 robertc Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -68,6 +68,8 @@ main(int argc, char *argv[])
 }
 
 #else /* UNLINK_DAEMON */
+
+#include "fde.h"
 
 /* This code gets linked to Squid */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.441 2002/12/27 10:26:34 robertc Exp $
+ * $Id: structs.h,v 1.442 2003/01/23 00:37:27 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -110,12 +110,6 @@ struct _acl_arp_data {
 
 #endif
 
-struct _String {
-    /* never reference these directly! */
-    unsigned short int size;	/* buffer size; 64K limit */
-    unsigned short int len;	/* current length  */
-    char *buf;
-};
 
 struct _header_mangler {
     acl_access *access_list;
@@ -692,71 +686,12 @@ struct _fde_disk {
     off_t offset;
 };
 
-struct _fde {
-    unsigned int type;
-    u_short local_port;
-    u_short remote_port;
-    struct in_addr local_addr;
-    unsigned char tos;
-    char ipaddr[16];		/* dotted decimal address of peer */
-    char desc[FD_DESC_SZ];
-    struct {
-	unsigned int open:1;
-	unsigned int close_request:1;
-	unsigned int write_daemon:1;
-	unsigned int closing:1;
-	unsigned int socket_eof:1;
-	unsigned int nolinger:1;
-	unsigned int nonblocking:1;
-	unsigned int ipc:1;
-	unsigned int called_connect:1;
-	unsigned int nodelay:1;
-	unsigned int close_on_exec:1;
-	unsigned int read_pending:1;
-    } flags;
-    int bytes_read;
-    int bytes_written;
-    int uses;			/* ie # req's over persistent conn */
-    struct _fde_disk disk;
-    PF *read_handler;
-    void *read_data;
-    PF *write_handler;
-    void *write_data;
-    PF *timeout_handler;
-    time_t timeout;
-    void *timeout_data;
-    void *lifetime_data;
-    close_handler *closeHandler;	/* linked list */
-    DEFER *defer_check;		/* check if we should defer read */
-    void *defer_data;
-    CommWriteStateData *rwstate;	/* State data for comm_write */
-    READ_HANDLER *read_method;
-    WRITE_HANDLER *write_method;
-#if USE_SSL
-    SSL *ssl;
-    int ssl_shutdown:1;
-#endif
-};
-
 struct _fileMap {
     int max_n_files;
     int n_files_in_map;
     int toggle;
     int nwords;
     unsigned long *file_map;
-};
-
-/* auto-growing memory-resident buffer with printf interface */
-/* note: when updating this struct, update MemBufNULL #define */
-struct _MemBuf {
-    /* public, read-only */
-    char *buf;
-    mb_size_t size;		/* used space, does not count 0-terminator */
-
-    /* private, stay away; use interface function instead */
-    mb_size_t max_capacity;	/* when grows: assert(new_capacity <= max_capacity) */
-    mb_size_t capacity;		/* allocated space */
-    unsigned stolen:1;		/* the buffer has been stolen for use by someone else */
 };
 
 /* see Packer.c for description */
@@ -779,11 +714,13 @@ struct _HttpStatusLine {
  * Note: HttpBody is used only for messages with a small content that is
  * known a priory (e.g., error messages).
  */
+#include "MemBuf.h"
 struct _HttpBody {
     /* private */
     MemBuf mb;
 };
 
+#include "String.h"
 /* http header extention field */
 struct _HttpHdrExtField {
     String name;		/* field-name  from HTTP/1.1 (no column after name) */
@@ -798,40 +735,11 @@ struct _HttpHdrCc {
     int max_stale;
 };
 
-/* http byte-range-spec */
-struct _HttpHdrRangeSpec {
-    ssize_t offset;
-    ssize_t length;
-};
-
-/* There may be more than one byte range specified in the request.
- * This object holds all range specs in order of their appearence
- * in the request because we SHOULD preserve that order.
- */
-struct _HttpHdrRange {
-    Stack specs;
-};
-
-/* http content-range header field */
-struct _HttpHdrContRange {
-    HttpHdrRangeSpec spec;
-    ssize_t elength;		/* entity length, not content length */
-};
-
 /* some fields can hold either time or etag specs (e.g. If-Range) */
 struct _TimeOrTag {
     ETag tag;			/* entity tag */
     time_t time;
     int valid;			/* true if struct is usable */
-};
-
-/* data for iterating thru range specs */
-struct _HttpHdrRangeIter {
-    HttpHdrRangePos pos;
-    const HttpHdrRangeSpec *spec;	/* current spec at pos */
-    ssize_t debt_size;		/* bytes left to send from the current spec */
-    ssize_t prefix_size;	/* the size of the incoming HTTP msg prefix */
-    String boundary;		/* boundary for multipart responses */
 };
 
 /* per field statistics */
@@ -865,6 +773,7 @@ struct _HttpHeader {
     int len;			/* length when packed, not counting terminating '\0' */
 };
 
+class HttpHdrContRange;
 struct _HttpReply {
     /* unsupported, writable, may disappear/change in the future */
     int hdr_sz;			/* sums _stored_ status-line, headers, and <CRLF> */
@@ -893,6 +802,7 @@ struct _http_state_flags {
     unsigned int proxying:1;
     unsigned int keepalive:1;
     unsigned int only_if_cached:1;
+    unsigned int headers_pushed:1;
     unsigned int front_end_https:2;
 };
 
@@ -951,38 +861,6 @@ struct _AccessLogEntry {
 	const char *method_str;
     } _private;
     HierarchyLogEntry hier;
-};
-
-struct _clientHttpRequest {
-    ConnStateData *conn;
-    request_t *request;		/* Parsed URL ... */
-    char *uri;
-    char *log_uri;
-    struct {
-	off_t offset;
-	size_t size;
-	size_t headers_sz;
-    } out;
-    HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
-    size_t req_sz;		/* raw request size on input, not current request size */
-    StoreEntry *entry;
-    StoreEntry *old_entry;
-    log_type logType;
-    struct timeval start;
-    http_version_t http_ver;
-    AccessLogEntry al;
-    struct {
-	unsigned int accel:1;
-	unsigned int internal:1;
-	unsigned int done_copying:1;
-	unsigned int purging:1;
-    } flags;
-    struct {
-	http_status status;
-	char *location;
-    } redirect;
-    dlink_node active;
-    dlink_list client_stream;
 };
 
 struct _ConnStateData {
@@ -1321,18 +1199,6 @@ struct _iostats {
     } Http, Ftp, Gopher, Wais;
 };
 
-struct _mem_node {
-    char data[SM_PAGE_SIZE];
-    int len;
-    mem_node *next;
-};
-
-struct _mem_hdr {
-    mem_node *head;
-    mem_node *tail;
-    int origin_offset;
-};
-
 /* Removal policies */
 
 struct _RemovalPolicyNode {
@@ -1365,45 +1231,6 @@ struct _RemovalPurgeWalker {
     int scanned, max_scan, locked;
     StoreEntry *(*Next) (RemovalPurgeWalker * walker);
     void (*Done) (RemovalPurgeWalker * walker);
-};
-
-/* TODO: Move this include and the memobject header to another file
- * - see the fix_ranges branch 
- */
-#include "StoreIOState.h"
-/* This structure can be freed while object is purged out from memory */
-struct _MemObject {
-    method_t method;
-    char *url;
-    mem_hdr data_hdr;
-    off_t inmem_hi;
-    off_t inmem_lo;
-    dlink_list clients;
-    int nclients;
-    struct {
-	off_t queue_offset;	/* relative to in-mem data */
-	mem_node *memnode;	/* which node we're currently paging out */
-	StoreIOState::Pointer sio;
-    } swapout;
-    HttpReply *reply;
-    request_t *request;
-    struct timeval start_ping;
-    IRCB *ping_reply_callback;
-    void *ircb_data;
-    int fd;			/* FD of client creating this entry */
-    struct {
-	STABH *callback;
-	void *data;
-    } abort;
-    char *log_url;
-    RemovalPolicyNode repl;
-    int id;
-    ssize_t object_sz;
-    size_t swap_hdr_sz;
-#if URL_CHECKSUM_DEBUG
-    unsigned int chksum;
-#endif
-    const char *vary_headers;
 };
 
 /* To hard to pull this into another file just yet.
@@ -1448,8 +1275,11 @@ struct _link_list {
     struct _link_list *next;
 };
 
+class HttpHdrRange;
+class request_t {
+public:
+    bool multipartRangeRequest() const;
 
-struct _request_t {
     method_t method;
     protocol_t protocol;
     char login[MAX_LOGIN_SZ];
@@ -1683,14 +1513,6 @@ struct _HttpHeaderStat {
     int ccParsedCount;
     int destroyedCount;
     int busyDestroyedCount;
-};
-
-
-struct _tlv {
-    char type;
-    int length;
-    void *value;
-    tlv *next;
 };
 
 /*

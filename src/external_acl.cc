@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.21 2002/12/09 16:55:24 hno Exp $
+ * $Id: external_acl.cc,v 1.22 2003/01/23 00:37:20 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -548,26 +548,26 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 	    str = buf;
 	    break;
 	case _external_acl_format::EXT_ACL_PATH:
-	    str = strBuf(request->urlpath);
+	    str = request->urlpath.buf();
 	    break;
 	case _external_acl_format::EXT_ACL_METHOD:
 	    str = RequestMethodStr[request->method];
 	    break;
 	case _external_acl_format::EXT_ACL_HEADER:
 	    sb = httpHeaderGetByName(&request->header, format->header);
-	    str = strBuf(sb);
+	    str = sb.buf();
 	    break;
 	case _external_acl_format::EXT_ACL_HEADER_ID:
 	    sb = httpHeaderGetStrOrList(&request->header, format->header_id);
-	    str = strBuf(sb);
+	    str = sb.buf();
 	    break;
 	case _external_acl_format::EXT_ACL_HEADER_MEMBER:
 	    sb = httpHeaderGetByNameListMember(&request->header, format->header, format->member, format->separator);
-	    str = strBuf(sb);
+	    str = sb.buf();
 	    break;
 	case _external_acl_format::EXT_ACL_HEADER_ID_MEMBER:
 	    sb = httpHeaderGetListMember(&request->header, format->header_id, format->member, format->separator);
-	    str = strBuf(sb);
+	    str = sb.buf();
 	    break;
 #if USE_SSL
 	case _external_acl_format::EXT_ACL_USER_CERT:
@@ -598,7 +598,7 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 	if (!first)
 	    memBufAppend(&mb, " ", 1);
 	strwordquote(&mb, str);
-	stringClean(&sb);
+	sb.clean();
 	first = 0;
     }
     for (arg = acl_data->arguments; arg; arg = arg->next) {

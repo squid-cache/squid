@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.50 2002/10/13 20:34:57 robertc Exp $
+ * $Id: HttpReply.cc,v 1.51 2003/01/23 00:37:13 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -33,7 +33,11 @@
  *
  */
 
+#include "HttpReply.h"
 #include "squid.h"
+#include "Store.h"
+#include "HttpHeader.h"
+#include "HttpHdrContRange.h"
 
 
 /* local constants */
@@ -130,6 +134,7 @@ httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep)
     assert(rep && new_rep);
     httpReplyClean(rep);
     *rep = *new_rep;
+    new_rep->header.entries.clean();
     /* cannot use Clean() on new reply now! */
     httpReplyDoDestroy(new_rep);
 }
@@ -165,12 +170,18 @@ httpReplyParse(HttpReply * rep, const char *buf, ssize_t end)
 }
 
 void
-httpReplyPackInto(const HttpReply * rep, Packer * p)
+httpReplyPackHeadersInto(const HttpReply * rep, Packer * p)
 {
     assert(rep);
     httpStatusLinePackInto(&rep->sline, p);
     httpHeaderPackInto(&rep->header, p);
     packerAppend(p, "\r\n", 2);
+}
+
+void
+httpReplyPackInto(const HttpReply * rep, Packer * p)
+{
+    httpReplyPackHeadersInto(rep, p);
     httpBodyPackInto(&rep->body, p);
 }
 
@@ -189,16 +200,15 @@ httpReplyPack(const HttpReply * rep)
     return mb;
 }
 
-/* swap: create swap-based packer, pack, destroy packer */
+/* swap: create swap-based packer, pack, destroy packer
+ * This eats the reply.
+ */
 void
-httpReplySwapOut(const HttpReply * rep, StoreEntry * e)
+httpReplySwapOut(HttpReply * rep, StoreEntry * e)
 {
-    Packer p;
     assert(rep && e);
 
-    packerToStoreInit(&p, e);
-    httpReplyPackInto(rep, &p);
-    packerClean(&p);
+    storeEntryReplaceObject(e, rep);
 }
 
 MemBuf
@@ -213,26 +223,48 @@ httpPackedReply(http_version_t ver, http_status status, const char *ctype,
     return mb;
 }
 
+HttpReply *
+httpReplyMake304 (const HttpReply * rep)
+{
+    static const http_hdr_type ImsEntries[] =
+      {HDR_DATE, HDR_CONTENT_TYPE, HDR_EXPIRES, HDR_LAST_MODIFIED, /* eof */ HDR_OTHER};
+    HttpReply *rv;
+    int t;
+    HttpHeaderEntry *e;
+    http_version_t ver;
+    assert(rep);
+
+    rv = httpReplyCreate ();
+    /* rv->content_length; */
+    rv->date = rep->date;
+    rv->last_modified = rep->last_modified;
+    rv->expires = rep->expires;
+    rv->content_type = rep->content_type;
+    /* rv->cache_control */
+    /* rv->content_range */
+    /* rv->keep_alive */
+    httpBuildVersion(&ver, 1, 0);
+    httpStatusLineSet(&rv->sline, ver,
+        HTTP_NOT_MODIFIED, "");
+    for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
+	if ((e = httpHeaderFindEntry(&rep->header, ImsEntries[t])))httpHeaderAddEntry(&rv->header, httpHeaderEntryClone(e));
+    /* rv->body */
+    return rv;
+}
+
 MemBuf
 httpPacked304Reply(const HttpReply * rep)
 {
-    static const http_hdr_type ImsEntries[] =
-    {HDR_DATE, HDR_CONTENT_TYPE, HDR_EXPIRES, HDR_LAST_MODIFIED, /* eof */ HDR_OTHER};
-    int t;
-    MemBuf mb;
-    Packer p;
-    HttpHeaderEntry *e;
-    assert(rep);
-
-    memBufDefInit(&mb);
-    packerToMemInit(&p, &mb);
-    memBufPrintf(&mb, "%s", "HTTP/1.0 304 Not Modified\r\n");
-    for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
-	if ((e = httpHeaderFindEntry(&rep->header, ImsEntries[t])))
-	    httpHeaderEntryPackInto(e, &p);
-    memBufAppend(&mb, "\r\n", 2);
-    packerClean(&p);
-    return mb;
+    /* Not as efficient as skipping the header duplication,
+     * but easier to maintain
+     */
+    HttpReply *temp;
+    MemBuf rv;
+    assert (rep);
+    temp = httpReplyMake304 (rep);
+    rv = httpReplyPack(temp);
+    httpReplyDestroy (temp);
+    return rv;
 }
 
 void
@@ -248,7 +280,7 @@ httpReplySetHeaders(HttpReply * reply, http_version_t ver, http_status status, c
     httpHeaderPutTime(hdr, HDR_DATE, squid_curtime);
     if (ctype) {
 	httpHeaderPutStr(hdr, HDR_CONTENT_TYPE, ctype);
-	stringInit(&reply->content_type, ctype);
+	reply->content_type = ctype;
     } else
 	reply->content_type = StringNull;
     if (clen >= 0)
@@ -280,10 +312,49 @@ httpRedirectReply(HttpReply * reply, http_status status, const char *loc)
     reply->content_length = 0;
 }
 
+/* compare the validators of two replies.
+ * 1 = they match
+ * 0 = they do not match
+ */
+int
+httpReplyValidatorsMatch(HttpReply const * rep, HttpReply const * otherRep) {
+    String one,two;
+    assert (rep && otherRep);
+    /* Numbers first - easiest to check */
+    /* Content-Length */
+    /* TODO: remove -1 bypass */
+    if (rep->content_length != otherRep->content_length
+       && rep->content_length > -1 &&
+       otherRep->content_length > -1)
+       return 0;
+    /* ETag */
+    one = httpHeaderGetStrOrList(&rep->header, HDR_ETAG);
+    two = httpHeaderGetStrOrList(&otherRep->header, HDR_ETAG);
+    if (!one.buf() || !two.buf() || strcasecmp (one.buf(), two.buf())) {
+       one.clean();
+       two.clean();
+       return 0;
+    }
+    if (rep->last_modified != otherRep->last_modified)
+       return 0;
+    /* MD5 */
+    one = httpHeaderGetStrOrList(&rep->header, HDR_CONTENT_MD5);
+    two = httpHeaderGetStrOrList(&otherRep->header, HDR_CONTENT_MD5);
+    if (strcasecmp (one.buf(), two.buf())) {
+       one.clean();
+       two.clean();
+       return 0;
+    }
+    return 1;
+}
+
+
 void
-httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
+httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply const * freshRep)
 {
     assert(rep && freshRep);
+    /* Can not update modified headers that don't match! */
+    assert (httpReplyValidatorsMatch(rep, freshRep));
     /* clean cache */
     httpReplyHdrCacheClean(rep);
     /* update raw headers */
@@ -354,7 +425,7 @@ httpReplyHdrCacheInit(HttpReply * rep)
     rep->last_modified = httpHeaderGetTime(hdr, HDR_LAST_MODIFIED);
     str = httpHeaderGetStr(hdr, HDR_CONTENT_TYPE);
     if (str)
-	stringLimitInit(&rep->content_type, str, strcspn(str, ";\t "));
+	rep->content_type.limitInit(str, strcspn(str, ";\t "));
     else
 	rep->content_type = StringNull;
     rep->cache_control = httpHeaderGetCc(hdr);
@@ -368,7 +439,7 @@ httpReplyHdrCacheInit(HttpReply * rep)
 static void
 httpReplyHdrCacheClean(HttpReply * rep)
 {
-    stringClean(&rep->content_type);
+    rep->content_type.clean();
     if (rep->cache_control)
 	httpHdrCcDestroy(rep->cache_control);
     if (rep->content_range)
@@ -378,7 +449,7 @@ httpReplyHdrCacheClean(HttpReply * rep)
 /*
  * parses a 0-terminating buffer into HttpReply. 
  * Returns:
- *      +1 -- success 
+ *      1 -- success 
  *       0 -- need more data (partial parse)
  *      -1 -- parse error
  */
@@ -457,7 +528,7 @@ httpReplyIsolateStart(const char **parse_start, const char **blk_start, const ch
  * Returns the body size of a HTTP response
  */
 int
-httpReplyBodySize(method_t method, HttpReply * reply)
+httpReplyBodySize(method_t method, HttpReply const * reply)
 {
     if (METHOD_HEAD == method)
 	return 0;

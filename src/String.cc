@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.11 2002/10/13 20:34:57 robertc Exp $
+ * $Id: String.cc,v 1.12 2003/01/23 00:37:15 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -35,77 +35,132 @@
 
 #include "squid.h"
 
-static void
-stringInitBuf(String * s, size_t sz)
+String const String::Null;
+
+void
+String::initBuf(size_t sz)
 {
-    s->buf = (char *)memAllocString(sz, &sz);
+    buf_ = (char *)memAllocString(sz, &sz);
     assert(sz < 65536);
-    s->size = sz;
+    size_ = sz;
 }
 
 void
-stringInit(String * s, const char *str)
+String::init(char const *str)
 {
-    assert(s);
+    assert(this);
     if (str)
-	stringLimitInit(s, str, strlen(str));
+	limitInit(str, strlen(str));
     else
-	*s = StringNull;
+	clean();
+}
+
+String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
+{
+    init (aString);
+}
+
+String &
+String::operator =(char const *aString)
+{
+    clean();
+    init (aString);
+    return *this;
+}
+
+String &
+String::operator = (String const &old)
+{
+    clean ();
+    if (old.len_)
+	limitInit (old.buf_, old.len_);
+    return *this;
+}
+  
+void
+String::limitInit(const char *str, int len)
+{
+    assert(this && str);
+    initBuf(len + 1);
+    len_ = len;
+    xmemcpy(buf_, str, len);
+    buf_[len] = '\0';
+}
+
+String::String (String const &old) : size_(0), len_(0), buf_(NULL)
+{
+    init (old.buf_);
 }
 
 void
-stringLimitInit(String * s, const char *str, int len)
+String::clean()
 {
-    assert(s && str);
-    stringInitBuf(s, len + 1);
-    s->len = len;
-    xmemcpy(s->buf, str, len);
-    s->buf[len] = '\0';
+    assert(this);
+    if (buf_)
+	memFreeString(size_, buf_);
+    len_ = 0;
+    size_ = 0;
+    buf_ = NULL;
 }
 
-String
-stringDup(const String * s)
+String::~String()
 {
-    String dup;
-    assert(s);
-    stringInit(&dup, s->buf);
-    return dup;
+    clean();
 }
 
 void
-stringClean(String * s)
+String::reset(const char *str)
 {
-    assert(s);
-    if (s->buf)
-	memFreeString(s->size, s->buf);
-    *s = StringNull;
+    clean();
+    init(str);
 }
 
 void
-stringReset(String * s, const char *str)
+String::append(const char *str, int len)
 {
-    stringClean(s);
-    stringInit(s, str);
-}
-
-void
-stringAppend(String * s, const char *str, int len)
-{
-    assert(s);
+    assert(this);
     assert(str && len >= 0);
-    if (s->len + len < s->size) {
-	strncat(s->buf, str, len);
-	s->len += len;
+    if (len_ + len < size_) {
+	strncat(buf_, str, len);
+	len_ += len;
     } else {
-	String snew = StringNull;
-	snew.len = s->len + len;
-	stringInitBuf(&snew, snew.len + 1);
-	if (s->buf)
-	    xmemcpy(snew.buf, s->buf, s->len);
+	String snew;
+	snew.len_ = len_ + len;
+	snew.initBuf(snew.len_ + 1);
+	if (buf_)
+	    xmemcpy(snew.buf_, buf_, len_);
 	if (len)
-	    xmemcpy(snew.buf + s->len, str, len);
-	snew.buf[snew.len] = '\0';
-	stringClean(s);
-	*s = snew;
+	    xmemcpy(snew.buf_ + len_, str, len);
+	snew.buf_[snew.len_] = '\0';
+	absorb(snew);
     }
 }
+
+void
+String::append(char const *str)
+{
+    assert (str);
+    append (str, strlen(str));
+}
+
+void
+String::append(String const &old)
+{
+    append (old.buf_, old.len_);
+}
+
+void
+String::absorb(String &old)
+{
+    clean();
+    size_ = old.size_;
+    buf_ = old.buf_;
+    len_ = old.len_;
+    old.size_ = 0;
+    old.buf_ = NULL;
+    old.len_ = 0;
+}
+
+#ifndef _USE_INLINE_
+#include "String.cci"
+#endif

@@ -11,6 +11,6 @@ done
 echo "void storeFsSetup(void)"
 echo "{"
 for module in "$@"; do
-   echo "	storeFsAdd(\"$module\", storeFsSetup_${module});"
+   echo "	StoreEntry::FsAdd(\"$module\", storeFsSetup_${module});"
 done
 echo "}"

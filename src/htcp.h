@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.h,v 1.1 2002/10/13 20:35:01 robertc Exp $
+ * $Id: htcp.h,v 1.2 2003/01/23 00:37:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

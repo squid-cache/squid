@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.23 2001/02/07 18:56:51 hno Exp $
+ * $Id: rfc1738.c,v 1.24 2003/01/23 00:37:01 robertc Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived

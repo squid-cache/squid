@@ -1,7 +1,7 @@
 #!/usr/local/bin/perl -w
 use strict;
 
-# $Id: test-ellipses.pl,v 1.1 1998/03/09 07:32:53 rousskov Exp $
+# $Id: test-ellipses.pl,v 1.2 2003/01/23 00:37:27 robertc Exp $
 
 #
 # Replaces printf-like function calls with printf and compiles with gcc -Wall

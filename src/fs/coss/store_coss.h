@@ -64,7 +64,7 @@ public:
     } flags;
     size_t st_size;
     void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-    void write(char *buf, size_t size, off_t offset, FREE * free_func);
+    void write(char const *buf, size_t size, off_t offset, FREE * free_func);
     void close();
 
     CossSwapDir *SD;

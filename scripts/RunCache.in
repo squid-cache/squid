@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id: RunCache.in,v 1.10 2003/01/09 11:39:53 hno Exp $
+#  $Id: RunCache.in,v 1.11 2003/01/23 00:37:06 robertc Exp $
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@

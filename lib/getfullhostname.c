@@ -1,6 +1,6 @@
 
 /*
- * $Id: getfullhostname.c,v 1.19 2001/01/12 00:37:12 wessels Exp $
+ * $Id: getfullhostname.c,v 1.20 2003/01/23 00:37:01 robertc Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived

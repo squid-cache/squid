@@ -1,5 +1,5 @@
 /*
- * $Id: tempnam.h,v 1.11 2001/10/08 16:18:31 hno Exp $
+ * $Id: tempnam.h,v 1.12 2003/01/23 00:36:48 robertc Exp $
  */
 
 

@@ -24,7 +24,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp_session.h,v 1.4 2001/10/17 19:05:37 hno Exp $
+ * $Id: snmp_session.h,v 1.5 2003/01/23 00:36:48 robertc Exp $
  * 
  **********************************************************************/
 

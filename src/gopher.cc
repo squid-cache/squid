@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.177 2002/10/21 15:31:44 adrian Exp $
+ * $Id: gopher.cc,v 1.178 2003/01/23 00:37:21 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "HttpRequest.h"
 #include "comm.h"
 
 /* gopher type code from rfc. Anawat. */
@@ -196,7 +197,7 @@ gopherMimeCreate(GopherStateData * gopherState)
 static void
 gopher_request_parse(const request_t * req, char *type_id, char *request)
 {
-    const char *path = strBuf(req->urlpath);
+    const char *path = req->urlpath.buf();
 
     if (request)
 	request[0] = '\0';
@@ -338,7 +339,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	    gopherHTMLHeader(entry, "CSO Search Result", NULL);
 	else
 	    gopherHTMLHeader(entry, "Gopher Menu", NULL);
-	strCat(outbuf, "<PRE>");
+	outbuf.append ("<PRE>");
 	gopherState->HTML_header_added = 1;
     }
     while ((pos != NULL) && (pos < inbuf + len)) {
@@ -507,7 +508,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			    }
 			}
 			safe_free(escaped_selector);
-			strCat(outbuf, tmpbuf);
+			outbuf.append(tmpbuf);
 			gopherState->data_in = 1;
 		    } else {
 			memset(line, '\0', TEMP_BUF_SIZE);
@@ -545,7 +546,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 		    } else {
 			snprintf(tmpbuf, TEMP_BUF_SIZE, "%s\n", html_quote(result));
 		    }
-		    strCat(outbuf, tmpbuf);
+		    outbuf.append(tmpbuf);
 		    gopherState->data_in = 1;
 		    break;
 		} else {
@@ -573,7 +574,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			{
 			    /* Print the message the server returns */
 			    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
-			    strCat(outbuf, tmpbuf);
+			    outbuf.append(tmpbuf);
 			    gopherState->data_in = 1;
 			    break;
 			}
@@ -590,12 +591,12 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
     }				/* while loop */
 
-    if (strLen(outbuf) > 0) {
-	storeAppend(entry, strBuf(outbuf), strLen(outbuf));
+    if (outbuf.size() > 0) {
+	storeAppend(entry, outbuf.buf(), outbuf.size());
 	/* now let start sending stuff to client */
 	storeBufferFlush(entry);
     }
-    stringClean(&outbuf);
+    outbuf.clean();
     return;
 }
 
@@ -606,7 +607,7 @@ gopherTimeout(int fd, void *data)
     StoreEntry *entry = gopherState->entry;
     debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     if (entry->store_status == STORE_PENDING) {
-	if (entry->mem_obj->inmem_hi == 0) {
+	if (entry->isEmpty()) {
 	    fwdFail(gopherState->fwdState,
 		errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
 	}
@@ -665,7 +666,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
 	debug(50, 1) ("gopherReadReply: error reading: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
             do_next_read = 1;
-	} else if (entry->mem_obj->inmem_hi == 0) {
+	} else if (entry->isEmpty()) {
 	    ErrorState *err;
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->xerrno = errno;
@@ -677,7 +678,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
 	    comm_close(fd);
             do_next_read = 0;
 	}
-    } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
+    } else if (len == 0 && entry->isEmpty()) {
 	ErrorState *err;
 	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
@@ -766,7 +767,7 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
     /* Schedule read reply. */
     /* XXX this read isn't being bound by delay pools! */
     comm_read(fd, gopherState->replybuf, BUFSIZ, gopherReadReply, gopherState);
-    commSetDefer(fd, fwdCheckDeferRead, entry);
+    commSetDefer(fd, StoreEntry::CheckDeferRead, entry);
     if (buf)
 	memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
 }

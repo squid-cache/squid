@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.2 2002/12/27 10:26:40 robertc Exp $
+#  $Id: Makefile.am,v 1.3 2003/01/23 00:38:34 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -11,15 +11,30 @@ AM_CXXFLAGS = -Werror -Wall
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
 
-EXTRA_PROGRAMS = membanger tcp-banger2
+EXTRA_PROGRAMS = mem_node_test membanger tcp-banger2
 
-TESTS = refcount
+## Sort by dependencies - test lowest layers first
+TESTS = refcount mem_node_test http_range_test
+
+## Sort by dependencies - test lowest layers first
+check_PROGRAMS= refcount mem_node_test http_range_test
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
-
-check_PROGRAMS= refcount
-
+mem_node_test_SOURCES = mem_node_test.cc
+mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
 refcount_SOURCES = refcount.cc
+
+DEBUG_OBJECTS = $(top_builddir)/src/debug.o\
+		$(top_builddir)/src/globals.o
+
+http_range_test_SOURCES = http_range_test.cc
+http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
+		$(top_builddir)/src/HttpHeaderTools.o \
+		$(top_builddir)/src/MemBuf.o \
+		$(top_builddir)/src/Packer.o \
+		$(top_builddir)/src/String.o \
+		$(top_builddir)/src/mem.o \
+		$(DEBUG_OBJECTS) $(LDADD)
 
 ## membanger won't link today. Bitrot..
 ##CC	= gcc

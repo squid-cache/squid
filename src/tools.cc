@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.229 2003/01/17 08:21:51 robertc Exp $
+ * $Id: tools.cc,v 1.230 2003/01/23 00:37:27 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "fde.h"
 
 #define DEAD_MSG "\
 The Squid Cache (version %s) died.\n\

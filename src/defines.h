@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.111 2003/01/17 05:14:29 robertc Exp $
+ * $Id: defines.h,v 1.112 2003/01/23 00:37:19 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -223,17 +223,11 @@
 #define DEFAULT_SQUID_ERROR_DIR "/usr/local/squid/etc/errors"
 #endif
 
-/* iteration for HttpHdrRange */
-#define HttpHdrRangeInitPos (-1)
-
 /* use this and only this to initialize HttpHeaderPos */
 #define HttpHeaderInitPos (-1)
 
 /* handy to determine the #elements in a static array */
 #define countof(arr) (sizeof(arr)/sizeof(*arr))
-
-/* to initialize static variables (see also MemBufNull) */
-#define MemBufNULL { NULL, 0, 0, 0, 0 }
 
 /*
  * Max number of ICP messages to receive per call to icpHandleUdp

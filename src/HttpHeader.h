@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.1 2002/10/13 20:34:56 robertc Exp $
+ * $Id: HttpHeader.h,v 1.2 2003/01/23 00:37:12 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,8 +34,8 @@
 #ifndef SQUID_HTTPHEADER_H
 #define SQUID_HTTPHEADER_H
 
-#ifdef __cplusplus
-#endif
+/* because we pass a spec by value */
+#include "HttpHeaderRange.h"
 
 /* constant attributes of http header fields */
 struct _HttpHeaderFieldAttrs {
@@ -43,5 +43,7 @@ struct _HttpHeaderFieldAttrs {
     http_hdr_type id;
     field_type type;
 };
+
+SQUIDCEXTERN void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, ssize_t);
 
 #endif /* SQUID_HTTPHEADER_H */

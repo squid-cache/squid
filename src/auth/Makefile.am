@@ -1,6 +1,6 @@
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.2 2002/10/13 20:35:16 robertc Exp $
+#  $Id: Makefile.am,v 1.3 2003/01/23 00:37:50 robertc Exp $
 #
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CXXFLAGS = -Werror -Wall

@@ -1,7 +1,7 @@
 #
 #  Makefile for the wb_group external_acl helper
 #
-#  $Id: Makefile.am,v 1.3 2002/09/10 22:22:27 hno Exp $
+#  $Id: Makefile.am,v 1.4 2003/01/23 00:36:20 robertc Exp $
 #
 
 libexec_PROGRAMS = wb_group

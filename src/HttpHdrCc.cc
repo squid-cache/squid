@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.23 2002/10/13 20:34:56 robertc Exp $
+ * $Id: HttpHdrCc.cc,v 1.24 2003/01/23 00:37:12 robertc Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -123,12 +123,12 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
 	type = (http_hdr_cc_type ) httpHeaderIdByName(item, ilen,
 	    CcFieldsInfo, CC_ENUM_END);
 	if (type < 0) {
-	    debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, strBuf(*str));
+	    debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, str->buf());
 	    type = CC_OTHER;
 	}
 	if (EBIT_TEST(cc->mask, type)) {
 	    if (type != CC_OTHER)
-		debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, strBuf(*str));
+		debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str->buf());
 	    CcFieldsInfo[type].stat.repCount++;
 	    continue;
 	}
@@ -194,7 +194,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 	if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
 
 	    /* print option name */
-	    packerPrintf(p, (pcount ? ", %s" : "%s"), strBuf(CcFieldsInfo[flag].name));
+	    packerPrintf(p, (pcount ? ", %s" : "%s"), CcFieldsInfo[flag].name.buf());
 
 	    /* handle options with values */
 	    if (flag == CC_MAX_AGE)
@@ -264,7 +264,7 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
     extern const HttpHeaderStat *dump_stat;	/* argh! */
     const int id = (int) val;
     const int valid_id = id >= 0 && id < CC_ENUM_END;
-    const char *name = valid_id ? strBuf(CcFieldsInfo[id].name) : "INVALID";
+    const char *name = valid_id ? CcFieldsInfo[id].name.buf() : "INVALID";
     if (count || valid_id)
 	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
 	    id, name, count, xdiv(count, dump_stat->ccParsedCount));

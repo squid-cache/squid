@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.25 2002/10/15 08:03:30 robertc Exp $
+ * $Id: store_log.cc,v 1.26 2003/01/23 00:37:27 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "MemObject.h"
 
 static const char *storeLogTags[] =
 {
@@ -51,7 +52,7 @@ void
 storeLog(int tag, const StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
-    HttpReply *reply;
+    HttpReply const *reply;
     if (NULL == storelog)
 	return;
 #if UNUSED_CODE
@@ -61,10 +62,10 @@ storeLog(int tag, const StoreEntry * e)
     if (mem != NULL) {
 	if (mem->log_url == NULL) {
 	    debug(20, 1) ("storeLog: NULL log_url for %s\n", mem->url);
-	    storeMemObjectDump(mem);
+	    mem->dump();
 	    mem->log_url = xstrdup(mem->url);
 	}
-	reply = mem->reply;
+	reply = e->getReply();
 	/*
 	 * XXX Ok, where should we print the dir number here?
 	 * Because if we print it before the swap file number, it'll break
@@ -81,9 +82,9 @@ storeLog(int tag, const StoreEntry * e)
 	    (int) reply->date,
 	    (int) reply->last_modified,
 	    (int) reply->expires,
-	    strLen(reply->content_type) ? strBuf(reply->content_type) : "unknown",
+	    reply->content_type.size() ? reply->content_type.buf() : "unknown",
 	    reply->content_length,
-	    (int) (mem->inmem_hi - mem->reply->hdr_sz),
+	    contentLen(e),
 	    RequestMethodStr[mem->method],
 	    mem->log_url);
     } else {

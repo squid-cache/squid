@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.19 2002/10/15 08:03:31 robertc Exp $
+ * $Id: store_swapmeta.cc,v 1.20 2003/01/23 00:37:27 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -35,18 +35,9 @@
 
 #include "squid.h"
 #include "Store.h"
-
-static tlv **
-storeSwapTLVAdd(int type, const void *ptr, size_t len, tlv ** tail)
-{
-    tlv *t = (tlv *)memAllocate(MEM_TLV);
-    t->type = (char) type;
-    t->length = (int) len;
-    t->value = xmalloc(len);
-    xmemcpy(t->value, ptr, len);
-    *tail = t;
-    return &t->next;		/* return new tail pointer */
-}
+#include "MemObject.h"
+#include "StoreMeta.h"
+#include "StoreMetaUnpacker.h"
 
 void
 storeSwapTLVFree(tlv * n)
@@ -55,7 +46,7 @@ storeSwapTLVFree(tlv * n)
     while ((t = n) != NULL) {
 	n = t->next;
 	xfree(t->value);
-	memFree(t, MEM_TLV);
+	t->deleteSelf();
     }
 }
 
@@ -73,12 +64,33 @@ storeSwapMetaBuild(StoreEntry * e)
     assert(e->swap_status == SWAPOUT_WRITING);
     url = storeUrl(e);
     debug(20, 3) ("storeSwapMetaBuild: %s\n", url);
-    T = storeSwapTLVAdd(STORE_META_KEY, e->key, MD5_DIGEST_CHARS, T);
-    T = storeSwapTLVAdd(STORE_META_STD, &e->timestamp, STORE_HDR_METASIZE, T);
-    T = storeSwapTLVAdd(STORE_META_URL, url, strlen(url) + 1, T);
+    tlv *t = StoreMeta::Factory (STORE_META_KEY,MD5_DIGEST_CHARS, e->key);
+    if (!t) {
+	storeSwapTLVFree(TLV);
+	return NULL;
+    }
+    T = StoreMeta::Add(T, t);
+    t = StoreMeta::Factory(STORE_META_STD,STORE_HDR_METASIZE,&e->timestamp);
+    if (!t) {
+	storeSwapTLVFree(TLV);
+	return NULL;
+    }
+    T = StoreMeta::Add(T, t);
+    t = StoreMeta::Factory(STORE_META_URL, strlen(url) + 1, url);
+    if (!t) {
+	storeSwapTLVFree(TLV);
+	return NULL;
+    }
+    T = StoreMeta::Add(T, t);
     vary = e->mem_obj->vary_headers;
-    if (vary)
-	T = storeSwapTLVAdd(STORE_META_VARY_HEADERS, vary, strlen(vary) + 1, T);
+    if (vary) {
+	t =StoreMeta::Factory(STORE_META_VARY_HEADERS, strlen(vary) + 1, vary);
+	if (!t) {
+	    storeSwapTLVFree(TLV);
+	    return NULL;
+	}
+	StoreMeta::Add (T, t);
+    }
     return TLV;
 }
 
@@ -100,7 +112,7 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     xmemcpy(&buf[j], &buflen, sizeof(int));
     j += sizeof(int);
     for (t = tlv_list; t; t = t->next) {
-	buf[j++] = (char) t->type;
+	buf[j++] = t->getType();
 	xmemcpy(&buf[j], &t->length, sizeof(int));
 	j += sizeof(int);
 	xmemcpy(&buf[j], t->value, t->length);
@@ -110,51 +122,4 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     assert((int) j == buflen);
     *length = buflen;
     return buf;
-}
-
-tlv *
-storeSwapMetaUnpack(const char *buf, int *hdr_len)
-{
-    tlv *TLV;			/* we'll return this */
-    tlv **T = &TLV;
-    char type;
-    int length;
-    int buflen;
-    off_t j = 0;
-    assert(buf != NULL);
-    assert(hdr_len != NULL);
-    if (buf[j++] != (char) STORE_META_OK)
-	return NULL;
-    xmemcpy(&buflen, &buf[j], sizeof(int));
-    j += sizeof(int);
-    /*
-     * sanity check on 'buflen' value.  It should be at least big
-     * enough to hold one type and one length.
-     */
-    if (buflen <= (off_t) (sizeof(char) + sizeof(int)))
-	    return NULL;
-    while (buflen - j > (off_t)(sizeof(char) + sizeof(int))) {
-	type = buf[j++];
-	/* VOID is reserved, but allow some slack for new types.. */
-	if (type <= STORE_META_VOID || type > STORE_META_END + 10) {
-	    debug(20, 0) ("storeSwapMetaUnpack: bad type (%d)!\n", type);
-	    break;
-	}
-	xmemcpy(&length, &buf[j], sizeof(int));
-	if (length < 0 || length > (1 << 16)) {
-	    debug(20, 0) ("storeSwapMetaUnpack: insane length (%d)!\n", length);
-	    break;
-	}
-	j += sizeof(int);
-	if (j + length > buflen) {
-	    debug(20, 0) ("storeSwapMetaUnpack: overflow!\n");
-	    debug(20, 0) ("\ttype=%d, length=%d, buflen=%d, offset=%d\n",
-		type, length, buflen, (int) j);
-	    break;
-	}
-	T = storeSwapTLVAdd(type, &buf[j], (size_t) length, T);
-	j += length;
-    }
-    *hdr_len = buflen;
-    return TLV;
 }

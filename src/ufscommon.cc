@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.6 2003/01/09 11:49:35 hno Exp $
+ * $Id: ufscommon.cc,v 1.7 2003/01/23 00:37:27 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,10 @@
 
 #include "ufscommon.h"
 #include "Store.h"
+#include "fde.h"
+#include "StoreMeta.h"
+#include "Generic.h"
+#include "StoreMetaUnpacker.h"
 #include "RefCount.h"
 
 CBDATA_CLASS_INIT(RebuildState);
@@ -79,6 +83,27 @@ RebuildState::RebuildFromDirectory(void *data)
     rb->rebuildFromDirectory();
 }
 
+struct InitStoreEntry : public unary_function<StoreMeta, void>
+{
+    InitStoreEntry(StoreEntry *anEntry, cache_key *aKey):what(anEntry),index(aKey){}
+    void operator()(StoreMeta const &x) {
+	    switch (x.getType()) {
+	    case STORE_META_KEY:
+		assert(x.length == MD5_DIGEST_CHARS);
+		xmemcpy(index, x.value, MD5_DIGEST_CHARS);
+		break;
+	    case STORE_META_STD:
+		assert(x.length == STORE_HDR_METASIZE);
+		xmemcpy(&what->timestamp, x.value, STORE_HDR_METASIZE);
+		break;
+	    default:
+		break;
+	    }
+    }
+    StoreEntry *what;
+    cache_key *index;
+};
+
 void
 RebuildState::rebuildFromDirectory()
 {
@@ -89,8 +114,7 @@ RebuildState::rebuildFromDirectory()
     struct stat sb;
     int swap_hdr_len;
     int fd = -1;
-    tlv *tlv_list;
-    tlv *t;
+    StoreMeta *tlv_list;
     assert(this != NULL);
     debug(47, 3) ("commonUfsDirRebuildFromDirectory: DIR #%d\n", sd->index);
     for (int count = 0; count < speed; count++) {
@@ -121,7 +145,8 @@ RebuildState::rebuildFromDirectory()
 		sd->path, counts.scancount);
 	debug(47, 9) ("file_in: fd=%d %08X\n", fd, filn);
 	statCounter.syscalls.disk.reads++;
-	if (FD_READ_METHOD(fd, hdr_buf, SM_PAGE_SIZE) < 0) {
+	int len;
+	if ((len = FD_READ_METHOD(fd, hdr_buf, SM_PAGE_SIZE)) < 0) {
 	    debug(47, 1) ("commonUfsDirRebuildFromDirectory: read(FD %d): %s\n",
 		fd, xstrerror());
 	    file_close(fd);
@@ -137,7 +162,14 @@ RebuildState::rebuildFromDirectory()
 	if (sb.st_size == 0)
 	    continue;
 #endif
-	tlv_list = storeSwapMetaUnpack(hdr_buf, &swap_hdr_len);
+        StoreMetaUnpacker aBuilder(hdr_buf, len, &swap_hdr_len);
+	if (!aBuilder.isBufferSane()) {
+	    debug(47, 1) ("commonUfsDirRebuildFromDirectory: Swap data buffer length is not sane.\n");
+	    /* XXX shouldn't this be a call to commonUfsUnlink ? */
+	    sd->unlinkFile ( filn);
+	    continue;
+	}
+        tlv_list = aBuilder.createStoreMeta ();
 	if (tlv_list == NULL) {
 	    debug(47, 1) ("commonUfsDirRebuildFromDirectory: failed to get meta data\n");
 	    /* XXX shouldn't this be a call to commonUfsUnlink ? */
@@ -147,20 +179,8 @@ RebuildState::rebuildFromDirectory()
 	debug(47, 3) ("commonUfsDirRebuildFromDirectory: successful swap meta unpacking\n");
 	memset(key, '\0', MD5_DIGEST_CHARS);
 	memset(&tmpe, '\0', sizeof(StoreEntry));
-	for (t = tlv_list; t; t = t->next) {
-	    switch (t->type) {
-	    case STORE_META_KEY:
-		assert(t->length == MD5_DIGEST_CHARS);
-		xmemcpy(key, t->value, MD5_DIGEST_CHARS);
-		break;
-	    case STORE_META_STD:
-		assert(t->length == STORE_HDR_METASIZE);
-		xmemcpy(&tmpe.timestamp, t->value, STORE_HDR_METASIZE);
-		break;
-	    default:
-		break;
-	    }
-	}
+	InitStoreEntry visitor(&tmpe, key);
+	for_each(*tlv_list, visitor);
 	storeSwapTLVFree(tlv_list);
 	tlv_list = NULL;
 	if (storeKeyNull(key)) {
@@ -473,3 +493,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
     *filn_p = fn;
     return fd;
 }
+
+#ifndef _USE_INLINE_
+#include "ufscommon.cci"
+#endif

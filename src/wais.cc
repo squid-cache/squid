@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.144 2002/10/21 14:00:03 adrian Exp $
+ * $Id: wais.cc,v 1.145 2003/01/23 00:37:29 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -35,8 +35,10 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "HttpRequest.h"
 
-typedef struct {
+class WaisStateData {
+public:
     int fd;
     StoreEntry *entry;
     method_t method;
@@ -44,8 +46,9 @@ typedef struct {
     char url[MAX_URL];
     request_t *request;
     FwdState *fwd;
-    char buf[BUFSIZ]; 
-} WaisStateData;
+    char buf[BUFSIZ];
+    bool dataWritten;
+};
 
 static PF waisStateFree;
 static PF waisTimeout;
@@ -72,7 +75,7 @@ waisTimeout(int fd, void *data)
     StoreEntry *entry = waisState->entry;
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     if (entry->store_status == STORE_PENDING) {
-	if (entry->mem_obj->inmem_hi == 0) {
+	if (!waisState->dataWritten) {
 	    fwdFail(waisState->fwd,
 		errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
 	}
@@ -140,7 +143,7 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
 	    errorAppendEntry(entry, err);
 	    comm_close(fd);
 	}
-    } else if (flag == COMM_OK && len == 0 && entry->mem_obj->inmem_hi == 0) {
+    } else if (flag == COMM_OK && len == 0 && !waisState->dataWritten) {
 	ErrorState *err;
 	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
@@ -153,6 +156,7 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
 	fwdComplete(waisState->fwd);
 	comm_close(fd);
     } else {
+	waisState->dataWritten = 1;
 	storeAppend(entry, buf, len);
         comm_read(fd, waisState->buf, read_sz, waisReadReply, waisState);
     }
@@ -184,7 +188,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
     } else {
 	/* Schedule read reply. */
         comm_read(fd, waisState->buf, BUFSIZ, waisReadReply, waisState);
-	commSetDefer(fd, fwdCheckDeferRead, entry);
+	commSetDefer(fd, StoreEntry::CheckDeferRead, entry);
     }
 }
 
@@ -231,6 +235,7 @@ waisStart(FwdState * fwd)
     waisState->request_hdr = &request->header;
     waisState->fd = fd;
     waisState->entry = entry;
+    waisState->dataWritten = 0;
     xstrncpy(waisState->url, url, MAX_URL);
     waisState->request = requestLink(request);
     waisState->fwd = fwd;

@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.294 2002/12/11 11:57:38 robertc Exp $
+ * $Id: acl.cc,v 1.295 2003/01/23 00:37:15 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "splay.h"
+#include "HttpRequest.h"
 #include "authenticate.h"
 
 static void aclParseDomainList(void *curlist);
@@ -1662,7 +1663,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	return aclMatchTime((acl_time_data *)ae->data, squid_curtime);
 	/* NOTREACHED */
     case ACL_URLPATH_REGEX:
-	esc_buf = xstrdup(strBuf(r->urlpath));
+	esc_buf = xstrdup(r->urlpath.buf());
 	rfc1738_unescape(esc_buf);
 	k = aclMatchRegex((relist *)ae->data, esc_buf);
 	safe_free(esc_buf);

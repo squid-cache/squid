@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.20 2002/12/27 10:26:36 robertc Exp $
+ * $Id: store_io_coss.cc,v 1.21 2003/01/23 00:38:13 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -38,6 +38,8 @@
 #include <aio.h>
 #include "async_io.h"
 #include "store_coss.h"
+#include "MemObject.h"
+#include "fde.h"
 #include "SwapDir.h"
 
 static DWCB storeCossWriteMemBufDone;
@@ -317,7 +319,7 @@ CossState::read_(char *buf, size_t size, off_t offset, STRCB * callback, void *c
 }
 
 void
-CossState::write(char *buf, size_t size, off_t offset, FREE * free_func)
+CossState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
 {
     char *dest;
     CossMemBuf *membuf;
@@ -337,7 +339,7 @@ CossState::write(char *buf, size_t size, off_t offset, FREE * free_func)
     xmemcpy(dest, buf, size);
     offset_ += size;
     if (free_func)
-	(free_func) (buf);
+	(free_func) ((char *)buf);
 }
 
 

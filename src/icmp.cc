@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.81 2003/01/04 01:13:56 hno Exp $
+ * $Id: icmp.cc,v 1.82 2003/01/23 00:37:22 robertc Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels

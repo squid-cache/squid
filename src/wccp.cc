@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.31 2002/11/10 04:37:14 hno Exp $
+ * $Id: wccp.cc,v 1.32 2003/01/23 00:37:29 robertc Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm

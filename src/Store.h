@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.5 2003/01/17 05:49:35 robertc Exp $
+ * $Id: Store.h,v 1.6 2003/01/23 00:37:14 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,14 +34,28 @@
 #ifndef SQUID_STORE_H
 #define SQUID_STORE_H
 
-#ifdef __cplusplus
-class StoreClient;
-#endif
+#include "StoreIOBuffer.h"
 
+class StoreClient;
+class MemObject;
+
+typedef void STSETUP(storefs_entry_t *);
 class StoreEntry : public hash_link {
 public:
-    virtual const char *getMD5Text() const;
+    static int CheckDeferRead(int fd, void *data);
+    static void FsAdd(const char *, STSETUP *);
   
+    virtual const char *getMD5Text() const;
+    virtual HttpReply const *getReply() const;
+    virtual void write (StoreIOBuffer);
+    virtual _SQUID_INLINE_ bool isEmpty() const;
+    virtual int checkDeferRead(int fd) const;
+    virtual void complete();
+    virtual store_client_t storeClientType() const;
+    virtual char const *getSerialisedMetaData();
+    virtual bool swapoutPossible();
+    virtual void trimMemory();
+
     MemObject *mem_obj;
     RemovalPolicyNode repl;
     /* START OF ON-DISK STORE_META_STD TLV field */
@@ -60,12 +74,12 @@ public:
     ping_status_t ping_status:3;
     store_status_t store_status:3;
     swap_status_t swap_status:3;
-#ifdef __cplusplus
 public:
     static size_t inUseCount();
     static void getPublicByRequestMethod(StoreClient * aClient, request_t * request, const method_t method);
     static void getPublicByRequest(StoreClient * aClient, request_t * request);
     static void getPublic(StoreClient * aClient, const char *uri, const method_t method);
+
     virtual bool isNull() {
 	return false;
     }
@@ -73,10 +87,10 @@ public:
     void operator delete(void *address);
 private:
     static MemPool *pool;
-#endif
+
+    bool validLength() const;
 };
 
-#ifdef __cplusplus
 class NullStoreEntry:public StoreEntry
 {
 public:
@@ -85,16 +99,26 @@ public:
 	return true;
     }
     const char *getMD5Text() const;
+    _SQUID_INLINE_ HttpReply const *getReply() const;
+    void write (StoreIOBuffer){}
+    bool isEmpty () const {return true;}
+    int checkDeferRead(int fd) const {return 1;}
     void operator delete(void *address);
+    void complete(){}
          private:
+    store_client_t storeClientType() const{return STORE_MEM_CLIENT;}
+    char const *getSerialisedMetaData();
+    bool swapoutPossible() {return false;}
+    void trimMemory() {}
+
+    
     static NullStoreEntry _instance;
 };
 
-#endif
-
-SQUIDCEXTERN size_t storeEntryInUse();
+SQUIDCEXTERN off_t storeLowestMemReaderOffset(const StoreEntry * entry);
 SQUIDCEXTERN const char *storeEntryFlags(const StoreEntry *);
 SQUIDCEXTERN int storeEntryLocked(const StoreEntry *);
+extern void storeEntryReplaceObject(StoreEntry *, HttpReply *);
 
 SQUIDCEXTERN StoreEntry *new_StoreEntry(int, const char *, const char *);
 SQUIDCEXTERN StoreEntry *storeGet(const cache_key *);
@@ -103,7 +127,7 @@ SQUIDCEXTERN StoreEntry *storeGetPublicByRequest(request_t * request);
 SQUIDCEXTERN StoreEntry *storeGetPublicByRequestMethod(request_t * request, const method_t method);
 SQUIDCEXTERN StoreEntry *storeCreateEntry(const char *, const char *, request_flags, method_t);
 SQUIDCEXTERN void storeSetPublicKey(StoreEntry *);
-SQUIDCEXTERN void storeComplete(StoreEntry *);
+SQUIDCEXTERN void storeCreateMemObject(StoreEntry *, const char *, const char *);
 SQUIDCEXTERN void storeInit(void);
 SQUIDCEXTERN void storeAbort(StoreEntry *);
 SQUIDCEXTERN void storeAppend(StoreEntry *, const char *, int);
@@ -122,11 +146,8 @@ SQUIDCEXTERN int storeEntryValidToSend(StoreEntry *);
 SQUIDCEXTERN void storeTimestampsSet(StoreEntry *);
 SQUIDCEXTERN void storeRegisterAbort(StoreEntry * e, STABH * cb, void *);
 SQUIDCEXTERN void storeUnregisterAbort(StoreEntry * e);
-SQUIDCEXTERN void storeMemObjectDump(MemObject * mem);
 SQUIDCEXTERN void storeEntryDump(const StoreEntry * e, int debug_lvl);
 SQUIDCEXTERN const char *storeUrl(const StoreEntry *);
-SQUIDCEXTERN void storeCreateMemObject(StoreEntry *, const char *, const char *);
-SQUIDCEXTERN void storeCopyNotModifiedReplyHeaders(MemObject * O, MemObject * N);
 SQUIDCEXTERN void storeBuffer(StoreEntry *);
 SQUIDCEXTERN void storeBufferFlush(StoreEntry *);
 SQUIDCEXTERN void storeHashInsert(StoreEntry * e, const cache_key *);
@@ -142,7 +163,6 @@ SQUIDCEXTERN int storeCheckCachable(StoreEntry * e);
 SQUIDCEXTERN void storeSetPrivateKey(StoreEntry *);
 SQUIDCEXTERN ssize_t objectLen(const StoreEntry * e);
 SQUIDCEXTERN int contentLen(const StoreEntry * e);
-SQUIDCEXTERN HttpReply *storeEntryReply(StoreEntry *);
 SQUIDCEXTERN int storeTooManyDiskFilesOpen(void);
 SQUIDCEXTERN void storeEntryReset(StoreEntry *);
 SQUIDCEXTERN void storeHeapPositionUpdate(StoreEntry *, SwapDir *);
@@ -150,10 +170,13 @@ SQUIDCEXTERN void storeSwapFileNumberSet(StoreEntry * e, sfileno filn);
 SQUIDCEXTERN void storeFsInit(void);
 SQUIDCEXTERN void storeFsDone(void);
 typedef void STSETUP(storefs_entry_t *);
-SQUIDCEXTERN void storeFsAdd(const char *, STSETUP *);
 SQUIDCEXTERN void storeReplAdd(const char *, REMOVALPOLICYCREATE *);
 
 /* store_modules.c */
 SQUIDCEXTERN void storeFsSetup(void);
+
+#ifdef _USE_INLINE_
+#include "Store.cci"
+#endif
 
 #endif /* SQUID_STORE_H */

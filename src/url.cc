@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.141 2003/01/18 15:00:39 hno Exp $
+ * $Id: url.cc,v 1.142 2003/01/23 00:37:29 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "HttpRequest.h"
 
 const char *RequestMethodStr[] =
 {
@@ -318,16 +319,16 @@ urlParse(method_t method, char *url)
 	return NULL;
     }
 #endif
-    if (Config.appendDomain && !strchr(host, '.'))
-	strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);
+#if DONT_DO_THIS_IT_BREAKS_SEMANTIC_TRANSPARENCY
     /* remove trailing dots from hostnames */
     while ((l = strlen(host)) > 0 && host[--l] == '.')
 	host[l] = '\0';
-    /* reject duplicate or leading dots */
-    if (strstr(host, "..") || *host == '.') {
-	debug(23, 1) ("urlParse: Illegal hostname '%s'\n", host);
-	return NULL;
-    }
+    /* remove duplicate dots */
+    while ((t = strstr(host, "..")))
+	xmemmove(t, t + 1, strlen(t));
+#endif
+    if (Config.appendDomain && !strchr(host, '.'))
+	strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);
     if (port < 1 || port > 65535) {
 	debug(23, 3) ("urlParse: Invalid port '%d'\n", port);
 	return NULL;
@@ -387,7 +388,7 @@ urlCanonical(request_t * request)
     if (request->canonical)
 	return request->canonical;
     if (request->protocol == PROTO_URN) {
-	snprintf(urlbuf, MAX_URL, "urn:%s", strBuf(request->urlpath));
+	snprintf(urlbuf, MAX_URL, "urn:%s", request->urlpath.buf());
     } else {
 	switch (request->method) {
 	case METHOD_CONNECT:
@@ -403,7 +404,7 @@ urlCanonical(request_t * request)
 		*request->login ? "@" : null_string,
 		request->host,
 		portbuf,
-		strBuf(request->urlpath));
+		request->urlpath.buf());
 	    break;
 	}
     }
@@ -418,7 +419,7 @@ urlCanonicalClean(const request_t * request)
     LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);
     char *t;
     if (request->protocol == PROTO_URN) {
-	snprintf(buf, MAX_URL, "urn:%s", strBuf(request->urlpath));
+	snprintf(buf, MAX_URL, "urn:%s", request->urlpath.buf());
     } else {
 	switch (request->method) {
 	case METHOD_CONNECT:
@@ -440,7 +441,7 @@ urlCanonicalClean(const request_t * request)
 		loginbuf,
 		request->host,
 		portbuf,
-		strBuf(request->urlpath));
+		request->urlpath.buf());
 	    /*
 	     * strip arguments AFTER a question-mark
 	     */

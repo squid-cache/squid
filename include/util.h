@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.66 2003/01/17 04:53:35 robertc Exp $
+ * $Id: util.h,v 1.67 2003/01/23 00:36:48 robertc Exp $
  *
  * AUTHOR: Harvest Derived
  *

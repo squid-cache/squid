@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.36 2003/01/17 05:49:34 robertc Exp $
+ * $Id: icp_v3.cc,v 1.37 2003/01/23 00:37:22 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "ICP.h"
+#include "HttpRequest.h"
 
 class ICP3State : public ICPState, public StoreClient {
 public:

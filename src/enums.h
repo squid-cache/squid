@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.218 2002/12/06 23:19:15 hno Exp $
+ * $Id: enums.h,v 1.219 2003/01/23 00:37:20 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -151,7 +151,7 @@ typedef enum {
     ACL_PROXY_AUTH_NEEDED
 } acl_lookup_state;
 
-enum {
+enum fd_type {
     FD_NONE,
     FD_LOG,
     FD_FILE,
@@ -615,14 +615,10 @@ typedef enum {
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_CONTENT_RANGE,
     MEM_HTTP_HDR_ENTRY,
-    MEM_HTTP_HDR_RANGE,
-    MEM_HTTP_HDR_RANGE_SPEC,
     MEM_HTTP_REPLY,
     MEM_INTLIST,
     MEM_IPCACHE_ENTRY,
     MEM_MD5_DIGEST,
-    MEM_MEMOBJECT,
-    MEM_MEM_NODE,
     MEM_NETDBENTRY,
     MEM_NET_DB_NAME,
     MEM_RELIST,
@@ -632,7 +628,6 @@ typedef enum {
     MEM_IDNS_QUERY,
 #endif
     MEM_EVENT,
-    MEM_TLV,
     MEM_SWAP_LOG_DATA,
 #if USE_SSL
     MEM_ACL_CERT_DATA,
@@ -718,7 +713,6 @@ typedef enum {
     CBDATA_UNDEF = 0,
     CBDATA_acl_access,
     CBDATA_aclCheck_t,
-    CBDATA_clientHttpRequest,
     CBDATA_ConnStateData,
     CBDATA_ErrorState,
     CBDATA_FwdState,

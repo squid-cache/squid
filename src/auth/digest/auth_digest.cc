@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.18 2003/01/09 11:44:08 hno Exp $
+ * $Id: auth_digest.cc,v 1.19 2003/01/23 00:38:00 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -1060,7 +1060,6 @@ authDigestLogUsername(auth_user_request_t * auth_user_request, char *username)
 static void
 authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char *proxy_auth)
 {
-    String temp;
     const char *item;
     const char *p;
     const char *pos = NULL;
@@ -1085,7 +1084,7 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
     while (xisspace(*proxy_auth))
 	proxy_auth++;
 
-    stringInit(&temp, proxy_auth);
+    String temp (proxy_auth);
     while (strListGetItem(&temp, ',', &item, &ilen, &pos)) {
 	if ((p = strchr(item, '=')) && (p - item < ilen))
 	    ilen = p++ - item;
@@ -1163,7 +1162,7 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	    debug(29, 9) ("authDigestDecodeAuth: Found response '%s'\n", digest_request->response);
 	}
     }
-    stringClean(&temp);
+    temp.clean();
 
 
     /* now we validate the data given to us */

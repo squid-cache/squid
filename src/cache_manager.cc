@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.27 2002/10/13 20:34:59 robertc Exp $
+ * $Id: cache_manager.cc,v 1.28 2003/01/23 00:37:16 robertc Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -34,7 +34,10 @@
  */
 
 #include "squid.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 #include "Store.h"
+#include "fde.h"
 
 #define MGR_PASSWD_SZ 128
 
@@ -78,6 +81,7 @@ cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_re
 	debug(16, 3) ("cachemgrRegister: Duplicate '%s'\n", action);
 	return;
     }
+    assert (strstr (" ", action) == NULL);
     a = (action_table *)xcalloc(1, sizeof(action_table));
     a->action = xstrdup(action);
     a->desc = xstrdup(desc);
@@ -236,12 +240,10 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
 	 * password depends on action
 	 */
 	httpHeaderPutAuth(&rep->header, "Basic", mgr->action);
-	/* move info to the mem_obj->reply */
-	httpReplyAbsorb(entry->mem_obj->reply, rep);
 	/* store the reply */
-	httpReplySwapOut(entry->mem_obj->reply, entry);
+	httpReplySwapOut(rep, entry);
 	entry->expires = squid_curtime;
-	storeComplete(entry);
+	entry->complete();
 	cachemgrStateFree(mgr);
 	return;
     }
@@ -255,9 +257,7 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
 	storeBuffer(entry);
     {
 	http_version_t version;
-	HttpReply *rep = entry->mem_obj->reply;
-	/* prove there are no previous reply headers around */
-	assert(0 == rep->sline.status);
+	HttpReply *rep = httpReplyCreate();
 	httpBuildVersion(&version, 1, 0);
 	httpReplySetHeaders(rep,
 	    version,
@@ -272,7 +272,7 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
     a->handler(entry);
     if (a->flags.atomic) {
 	storeBufferFlush(entry);
-	storeComplete(entry);
+	entry->complete();
     }
     cachemgrStateFree(mgr);
 }

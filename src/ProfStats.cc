@@ -1,6 +1,6 @@
 
 /*
- * $Id: ProfStats.cc,v 1.2 2002/10/13 20:34:57 robertc Exp $
+ * $Id: ProfStats.cc,v 1.3 2003/01/23 00:37:14 robertc Exp $
  *
  * DEBUG: section 81     CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa

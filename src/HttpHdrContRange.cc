@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.15 2002/10/13 20:34:56 robertc Exp $
+ * $Id: HttpHdrContRange.cc,v 1.16 2003/01/23 00:37:12 robertc Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "HttpHdrContRange.h"
 
 /*
  *    Currently only byte ranges are supported
@@ -90,7 +91,7 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
     assert (spec->length >= 0);
 	   
     /* we managed to parse, check if the result makes sence */
-    if (known_spec((size_t)spec->length) && spec->length != 0) {
+    if (known_spec((size_t)spec->length) && spec->length == 0) {
 	debug(68, 2) ("invalid range (%ld += %ld) in resp-range-spec near: '%s'\n",
 	    (long int) spec->offset, (long int) spec->length, field);
 	return 0;

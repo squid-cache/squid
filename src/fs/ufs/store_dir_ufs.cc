@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.53 2003/01/17 08:21:52 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.54 2003/01/23 00:38:22 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -35,7 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
-
+#include "fde.h"
 #include "store_ufs.h"
 #include "ufscommon.h"
 

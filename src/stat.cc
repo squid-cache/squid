@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.365 2003/01/18 02:10:40 hno Exp $
+ * $Id: stat.cc,v 1.366 2003/01/23 00:37:25 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -36,6 +36,16 @@
 #include "squid.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "MemObject.h"
+#include "fde.h"
+#include "mem_node.h"
+#include "client_side_request.h"
+
+/* these are included because they expose stats calls */
+/* TODO: provide a self registration mechanism for those classes
+ * to use during static construction
+ */
+#include "comm.h"
 
 #define DEBUG_OPENFD 1
 
@@ -69,7 +79,6 @@ static OBJH statOpenfdObj;
 #endif
 static EVH statObjects;
 static OBJH info_get;
-static OBJH statFiledescriptors;
 static OBJH statCountersDump;
 static OBJH statPeerSelect;
 static OBJH statDigestBlob;
@@ -258,12 +267,7 @@ static void
 statStoreEntry(StoreEntry * s, StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
-    int i;
-    dlink_node *node;
     storeAppendPrintf(s, "KEY %s\n", e->getMD5Text());
-    if (mem)
-	storeAppendPrintf(s, "\t%s %s\n",
-	    RequestMethodStr[mem->method], mem->log_url);
     storeAppendPrintf(s, "\t%s\n", describeStatuses(e));
     storeAppendPrintf(s, "\t%s\n", storeEntryFlags(e));
     storeAppendPrintf(s, "\t%s\n", describeTimestamps(e));
@@ -273,17 +277,8 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 	(int) e->refcount);
     storeAppendPrintf(s, "\tSwap Dir %d, File %#08X\n",
 	e->swap_dirn, e->swap_filen);
-    if (mem != NULL) {
-	storeAppendPrintf(s, "\tinmem_lo: %d\n", (int) mem->inmem_lo);
-	storeAppendPrintf(s, "\tinmem_hi: %d\n", (int) mem->inmem_hi);
-	storeAppendPrintf(s, "\tswapout: %d bytes queued\n",
-	    (int) mem->swapout.queue_offset);
-	if (mem->swapout.sio.getRaw())
-	    storeAppendPrintf(s, "\tswapout: %d bytes written\n",
-		(int) mem->swapout.sio->offset());
-	for (i = 0, node = mem->clients.head; node; node = node->next, i++)
-	    storeClientDumpStats((store_client *)node->data, s, i);
-    }
+    if (mem != NULL)
+	mem->stat (s);
     storeAppendPrintf(s, "\n");
 }
 
@@ -296,7 +291,7 @@ statObjects(void *data)
     hash_link *link_ptr = NULL;
     hash_link *link_next = NULL;
     if (state->bucket >= store_hash_buckets) {
-	storeComplete(state->sentry);
+	state->sentry->complete();
 	storeUnlockObject(state->sentry);
 	cbdataFree(state);
 	return;
@@ -304,7 +299,7 @@ statObjects(void *data)
 	storeUnlockObject(state->sentry);
 	cbdataFree(state);
 	return;
-    } else if (fwdCheckDeferRead(-1, state->sentry)) {
+    } else if (StoreEntry::CheckDeferRead(-1, state->sentry)) {
 	eventAdd("statObjects", statObjects, state, 0.1, 1);
 	return;
     }
@@ -381,48 +376,6 @@ info_get_mallstat(int size, int number, int oldnum, void *data)
 }
 #endif
 
-static const char *
-fdRemoteAddr(const fde * f)
-{
-    LOCAL_ARRAY(char, buf, 32);
-    if (f->type != FD_SOCKET)
-	return null_string;
-    snprintf(buf, 32, "%s.%d", f->ipaddr, (int) f->remote_port);
-    return buf;
-}
-
-static void
-statFiledescriptors(StoreEntry * sentry)
-{
-    int i;
-    fde *f;
-    storeAppendPrintf(sentry, "Active file descriptors:\n");
-    storeAppendPrintf(sentry, "%-4s %-6s %-4s %-7s* %-7s* %-21s %s\n",
-	"File",
-	"Type",
-	"Tout",
-	"Nread",
-	"Nwrite",
-	"Remote Address",
-	"Description");
-    storeAppendPrintf(sentry, "---- ------ ---- -------- -------- --------------------- ------------------------------\n");
-    for (i = 0; i < Squid_MaxFD; i++) {
-	f = &fd_table[i];
-	if (!f->flags.open)
-	    continue;
-	storeAppendPrintf(sentry, "%4d %-6.6s %4d %7d%c %7d%c %-21s %s\n",
-	    i,
-	    fdTypeStr[f->type],
-	    f->timeout_handler ? (int) (f->timeout - squid_curtime) / 60 : 0,
-	    f->bytes_read,
-	    f->read_handler ? '*' : ' ',
-	    f->bytes_written,
-	    f->write_handler ? '*' : ' ',
-	    fdRemoteAddr(f),
-	    f->desc);
-    }
-}
-
 static void
 info_get(StoreEntry * sentry)
 {
@@ -484,7 +437,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tStorage Swap size:\t%lu KB\n",
 	store_swap_size);
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%d KB\n",
-	(int) (store_mem_size >> 10));
+	(int) (mem_node::store_mem_size >> 10));
     storeAppendPrintf(sentry, "\tMean Object Size:\t%0.2f KB\n",
 	n_disk_objects ? (double) store_swap_size / n_disk_objects : 0.0);
     storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%d\n",
@@ -619,9 +572,9 @@ info_get(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "Internal Data Structures:\n");
     storeAppendPrintf(sentry, "\t%6lu StoreEntries\n",
-	(unsigned long int)storeEntryInUse());
-    storeAppendPrintf(sentry, "\t%6d StoreEntries with MemObjects\n",
-	memInUse(MEM_MEMOBJECT));
+	(unsigned long)StoreEntry::inUseCount());
+    storeAppendPrintf(sentry, "\t%6lu StoreEntries with MemObjects\n",
+	(unsigned long)MemObject::inUseCount());
     storeAppendPrintf(sentry, "\t%6d Hot Object Cache Items\n",
 	hot_obj_count);
     storeAppendPrintf(sentry, "\t%6d on-disk objects\n",
@@ -849,7 +802,7 @@ statInit(void)
 	info_get, 0, 1);
     cachemgrRegister("filedescriptors",
 	"Process Filedescriptor Allocation",
-	statFiledescriptors, 0, 1);
+	fde::DumpStats, 0, 1);
     cachemgrRegister("objects",
 	"All Cache Objects",
 	stat_objects_get, 0, 0);

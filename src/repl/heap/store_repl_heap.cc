@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.11 2002/10/13 20:35:29 robertc Exp $
+ * $Id: store_repl_heap.cc,v 1.12 2003/01/23 00:38:28 robertc Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -45,6 +45,7 @@
 #include "heap.h"
 #include "store_heap_replacement.h"
 #include "Store.h"
+#include "MemObject.h"
 
 REMOVALPOLICYCREATE createRemovalPolicy_heap;
 

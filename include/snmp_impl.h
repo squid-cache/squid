@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_impl.h,v 1.14 2002/02/19 00:27:43 hno Exp $
+ * $Id: snmp_impl.h,v 1.15 2003/01/23 00:36:48 robertc Exp $
  */
 
 #ifndef SQUID_SNMP_IMPL_H

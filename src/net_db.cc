@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.167 2003/01/04 01:13:56 hno Exp $
+ * $Id: net_db.cc,v 1.168 2003/01/23 00:37:24 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -43,6 +43,10 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
+#include "MemObject.h"
+#include "fde.h"
 
 
 #if USE_ICMP
@@ -560,7 +564,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
     double hops;
     char *p;
     int j;
-    HttpReply *rep;
+    HttpReply const *rep;
     size_t hdr_sz;
     int nused = 0;
     int size;
@@ -577,6 +581,13 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 	return;
     }
     debug(38, 3) ("netdbExchangeHandleReply: for '%s:%d'\n", ex->p->host, ex->p->http_port);
+
+    if (recievedData.length == 0 && 
+	!recievedData.flags.error) {
+	debug(38, 3) ("netdbExchangeHandleReply: Done\n");
+	netdbExchangeDone(ex);
+	return;
+    }
     p = ex->buf;
 
     /* Get the size of the buffer now */
@@ -591,9 +602,8 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 	/* skip reply headers */
 	if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
 	    debug(38, 5) ("netdbExchangeHandleReply: hdr_sz = %d\n", hdr_sz);
-	    rep = ex->e->mem_obj->reply;
-	    if (0 == rep->sline.status)
-		httpReplyParse(rep, ex->buf, hdr_sz);
+	    rep = ex->e->getReply();
+	    assert (0 != rep->sline.status);
 	    debug(38, 3) ("netdbExchangeHandleReply: reply status %d\n",
 		rep->sline.status);
 	    if (HTTP_OK != rep->sline.status) {
@@ -614,7 +624,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 	    /* Finally, set the conn state mode to STATE_BODY */
 	    ex->connstate = STATE_BODY;
 	} else {
-	    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
+	    StoreIOBuffer tempBuffer;
 	    tempBuffer.offset = ex->buf_ofs;
 	    tempBuffer.length = ex->buf_sz - ex->buf_ofs;
 	    tempBuffer.data = ex->buf + ex->buf_ofs;
@@ -703,24 +713,13 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 	debug(38, 3) ("netdbExchangeHandleReply: ENTRY_ABORTED\n");
 	netdbExchangeDone(ex);
     } else if (ex->e->store_status == STORE_PENDING) {
-	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
+	StoreIOBuffer tempBuffer;
 	tempBuffer.offset = ex->used;
 	tempBuffer.length = ex->buf_sz - ex->buf_ofs;
 	tempBuffer.data = ex->buf + ex->buf_ofs;
-	debug(38, 3) ("netdbExchangeHandleReply: STORE_PENDING\n");
+	debug(38, 3) ("netdbExchangeHandleReply: EOF not recieved\n");
 	storeClientCopy(ex->sc, ex->e, tempBuffer,
 	    netdbExchangeHandleReply, ex);
-    } else if (ex->used < ex->e->mem_obj->inmem_hi) {
-	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
-	tempBuffer.offset = ex->used;
-	tempBuffer.length = ex->buf_sz - ex->buf_ofs;
-	tempBuffer.data = ex->buf + ex->buf_ofs;
-	debug(38, 3) ("netdbExchangeHandleReply: ex->e->mem_obj->inmem_hi\n");
-	storeClientCopy(ex->sc, ex->e, tempBuffer,
-	    netdbExchangeHandleReply, ex);
-    } else {
-	debug(38, 3) ("netdbExchangeHandleReply: Done\n");
-	netdbExchangeDone(ex);
     }
 }
 
@@ -990,7 +989,7 @@ netdbDeleteAddrNetwork(struct in_addr addr)
 void
 netdbBinaryExchange(StoreEntry * s)
 {
-    http_reply *reply = s->mem_obj->reply;
+    http_reply *reply = httpReplyCreate();
     http_version_t version;
 #if USE_ICMP
     netdbEntry *n;
@@ -1000,7 +999,6 @@ netdbBinaryExchange(StoreEntry * s)
     char *buf;
     struct in_addr addr;
     storeBuffer(s);
-    httpReplyReset(reply);
     httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(reply, version, HTTP_OK, "OK",
 	NULL, -1, squid_curtime, -2);
@@ -1043,13 +1041,13 @@ netdbBinaryExchange(StoreEntry * s)
     storeBufferFlush(s);
     memFree(buf, MEM_4K_BUF);
 #else
-    httpReplyReset(reply);
     httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(reply, version, HTTP_BAD_REQUEST, "Bad Request",
 	NULL, -1, squid_curtime, -2);
+    httpReplySwapOut(reply, s);
     storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
 #endif
-    storeComplete(s);
+    s->complete();
 }
 
 #if USE_ICMP
@@ -1063,7 +1061,7 @@ netdbExchangeStart(void *data)
     peer *p = (peer *)data;
     char *uri;
     netdbExchangeState *ex;
-    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
+    StoreIOBuffer tempBuffer;
     CBDATA_INIT_TYPE(netdbExchangeState);
     ex = cbdataAlloc(netdbExchangeState);
     ex->p = cbdataReference(p);

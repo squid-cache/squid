@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.145 2003/01/17 05:49:35 robertc Exp $
+ * $Id: typedefs.h,v 1.146 2003/01/23 00:37:27 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -30,6 +30,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#include "squid.h"
 
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H
@@ -88,7 +90,7 @@ typedef struct _dread_ctrl dread_ctrl;
 typedef struct _dnsserver_t dnsserver_t;
 typedef struct _dwrite_q dwrite_q;
 typedef struct _ETag ETag;
-typedef struct _fde fde;
+class fde;
 typedef struct _fileMap fileMap;
 typedef struct _HttpReply http_reply;
 typedef struct _HttpStatusLine HttpStatusLine;
@@ -96,19 +98,14 @@ typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 typedef struct _HttpHeaderFieldInfo HttpHeaderFieldInfo;
 typedef struct _HttpHeader HttpHeader;
 typedef struct _HttpHdrCc HttpHdrCc;
-typedef struct _HttpHdrRangeSpec HttpHdrRangeSpec;
-typedef struct _HttpHdrRange HttpHdrRange;
-typedef struct _HttpHdrRangeIter HttpHdrRangeIter;
 typedef struct _HttpHdrSc HttpHdrSc;
 typedef struct _HttpHdrScTarget HttpHdrScTarget;
-typedef struct _HttpHdrContRange HttpHdrContRange;
 typedef struct _TimeOrTag TimeOrTag;
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
 typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;
 typedef struct _HttpHeaderStat HttpHeaderStat;
 typedef struct _HttpBody HttpBody;
 typedef struct _HttpReply HttpReply;
-typedef struct _clientHttpRequest clientHttpRequest;
 typedef struct _ConnStateData ConnStateData;
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
 typedef struct _ipcache_addrs ipcache_addrs;
@@ -131,11 +128,8 @@ typedef struct _pingerReplyData pingerReplyData;
 typedef struct _icp_common_t icp_common_t;
 typedef struct _Meta_data Meta_data;
 typedef struct _iostats iostats;
-typedef struct _MemBuf MemBuf;
-typedef struct _mem_node mem_node;
-typedef struct _mem_hdr mem_hdr;
-typedef struct _store_client store_client;
-typedef struct _MemObject MemObject;
+class MemBuf;
+class store_client;
 class StoreEntry;
 class SwapDir;
 typedef struct _helper_flags helper_flags;
@@ -143,7 +137,7 @@ typedef struct _helper_stateful_flags helper_stateful_flags;
 typedef struct _http_state_flags http_state_flags;
 typedef struct _header_mangler header_mangler;
 typedef struct _body_size body_size;
-typedef struct _request_t request_t;
+class request_t;
 typedef struct _AccessLogEntry AccessLogEntry;
 typedef struct _cachemgr_passwd cachemgr_passwd;
 typedef struct _refresh_t refresh_t;
@@ -152,12 +146,10 @@ typedef struct _ErrorState ErrorState;
 typedef struct _dlink_node dlink_node;
 typedef struct _dlink_list dlink_list;
 typedef struct _StatCounters StatCounters;
-typedef struct _tlv tlv;
 typedef struct _storeSwapLogData storeSwapLogData;
 typedef struct _authConfig authConfig;
 typedef struct _cacheSwap cacheSwap;
 typedef struct _StatHist StatHist;
-typedef struct _String String;
 typedef struct _ClientInfo ClientInfo;
 typedef struct _cd_guess_stats cd_guess_stats;
 typedef struct _CacheDigest CacheDigest;
@@ -268,9 +260,6 @@ typedef int Ctx;
 
 /* in case we want to change it later */
 typedef ssize_t mb_size_t;
-
-/* iteration for HttpHdrRange */
-typedef int HttpHdrRangePos;
 
 /*iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;

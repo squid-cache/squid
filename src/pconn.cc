@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.34 2002/10/14 08:16:58 robertc Exp $
+ * $Id: pconn.cc,v 1.35 2003/01/23 00:37:24 robertc Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels

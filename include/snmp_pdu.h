@@ -25,7 +25,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_pdu.h,v 1.10 2002/10/13 20:34:51 robertc Exp $
+ * $Id: snmp_pdu.h,v 1.11 2003/01/23 00:36:48 robertc Exp $
  * 
  **********************************************************************/
 

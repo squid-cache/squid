@@ -26,7 +26,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_coexist.h,v 1.3 2001/10/08 16:18:31 hno Exp $
+ * $Id: snmp_coexist.h,v 1.4 2003/01/23 00:36:47 robertc Exp $
  * 
  **********************************************************************/
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.1 2002/12/27 10:26:33 robertc Exp $
+ * $Id: SwapDir.h,v 1.2 2003/01/23 00:37:15 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -97,5 +97,4 @@ public:
 	int blksize;
     } fs;
 };
-
 #endif /* SQUID_SWAPDIR_H */

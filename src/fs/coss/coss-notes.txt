@@ -2,7 +2,7 @@ COSS notes
 
 Adrian Chadd <adrian@creative.net.au>
 
-$Id: coss-notes.txt,v 1.1 2001/09/19 13:23:30 adrian Exp $
+$Id: coss-notes.txt,v 1.2 2003/01/23 00:38:13 robertc Exp $
 
 
 COSS is a Cyclic Object storage system originally designed by

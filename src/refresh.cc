@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.58 2002/10/13 20:35:03 robertc Exp $
+ * $Id: refresh.cc,v 1.59 2003/01/23 00:37:25 robertc Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -39,6 +39,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "MemObject.h"
 
 typedef enum {
     rcHTTP,
@@ -270,10 +271,18 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 		if (R->flags.ignore_reload && cc->max_age == 0) {
 		} else
 #endif
+		  {
+#if 0
+		    if (cc->max_age == 0) {
+			debug (22,3) ("refreshCheck: YES: client-max-age = 0\n");
+			return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
+		    }
+#endif
 		if (age > cc->max_age) {
 		    debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");
 		    return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
 		}
+		  }
 	    }
 	    if (EBIT_TEST(cc->mask, CC_MAX_STALE) && staleness > -1) {
 		if (cc->max_stale < 0) {
@@ -344,10 +353,10 @@ refreshIsCachable(const StoreEntry * entry)
     if (entry->mem_obj == NULL)
 	/* no mem_obj? */
 	return 1;
-    if (entry->mem_obj->reply == NULL)
+    if (entry->getReply() == NULL)
 	/* no reply? */
 	return 1;
-    if (entry->mem_obj->reply->content_length == 0)
+    if (entry->getReply()->content_length == 0)
 	/* No use refreshing (caching?) 0 byte objects */
 	return 0;
     /* This seems to be refreshable. Cache it */

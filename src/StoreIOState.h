@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.h,v 1.2 2002/12/27 12:37:52 robertc Exp $
+ * $Id: StoreIOState.h,v 1.3 2003/01/23 00:37:14 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,7 +49,7 @@ public:
     off_t offset() const;
 
     virtual void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data) = 0;
-    virtual void write(char *buf, size_t size, off_t offset, FREE * free_func) = 0;
+    virtual void write(char const *buf, size_t size, off_t offset, FREE * free_func) = 0;
     virtual void close() = 0;
     
     sdirno swap_dirn;

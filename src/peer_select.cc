@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.124 2002/10/13 20:35:02 robertc Exp $
+ * $Id: peer_select.cc,v 1.125 2003/01/23 00:37:24 robertc Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "ICP.h"
+#include "HttpRequest.h"
 
 const char *hier_strings[] =
 {

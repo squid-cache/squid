@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.cc,v 1.1 2002/12/27 10:26:33 robertc Exp $
+ * $Id: SwapDir.cc,v 1.2 2003/01/23 00:37:15 robertc Exp $
  *
  * DEBUG: section ??    Swap Dir base object
  * AUTHOR: Robert Collins

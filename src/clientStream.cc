@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.3 2002/10/13 20:34:59 robertc Exp $
+ * $Id: clientStream.cc,v 1.4 2003/01/23 00:37:17 robertc Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -56,6 +56,9 @@
 
 #include "squid.h"
 #include "clientStream.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "client_side_request.h"
 
 CBDATA_TYPE(clientStreamNode);
 

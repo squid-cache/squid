@@ -24,7 +24,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp-internal.h,v 1.3 2001/10/08 16:18:31 hno Exp $
+ * $Id: snmp-internal.h,v 1.4 2003/01/23 00:36:47 robertc Exp $
  * 
  **********************************************************************/
 

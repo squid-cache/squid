@@ -1,0 +1,90 @@
+
+/*
+ * $Id: fde.h,v 1.1 2003/01/23 00:37:20 robertc Exp $
+ *
+ *
+ * SQUID Web Proxy Cache          http://www.squid-cache.org/
+ * ----------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from
+ *  the Internet community; see the CONTRIBUTORS file for full
+ *  details.   Many organizations have provided support for Squid's
+ *  development; see the SPONSORS file for full details.  Squid is
+ *  Copyrighted (C) 2001 by the Regents of the University of
+ *  California; see the COPYRIGHT file for full details.  Squid
+ *  incorporates software developed and/or copyrighted by other
+ *  sources; see the CREDITS file for full details.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+ *
+ */
+
+#ifndef SQUID_FDE_H
+#define SQUID_FDE_H
+
+class fde {
+public:
+    static void DumpStats (StoreEntry *);
+  
+    char const *remoteAddr() const;
+    void dumpStats (StoreEntry &, int);
+    bool readPending(int);
+
+    unsigned int type;
+    u_short local_port;
+    u_short remote_port;
+    struct in_addr local_addr;
+    unsigned char tos;
+    char ipaddr[16];            /* dotted decimal address of peer */
+    char desc[FD_DESC_SZ];
+    struct {
+        unsigned int open:1;
+        unsigned int close_request:1;
+        unsigned int write_daemon:1;
+        unsigned int closing:1;
+        unsigned int socket_eof:1;
+        unsigned int nolinger:1;
+        unsigned int nonblocking:1;
+        unsigned int ipc:1;
+        unsigned int called_connect:1;
+        unsigned int nodelay:1;
+        unsigned int close_on_exec:1;
+        unsigned int read_pending:1;
+    } flags;
+    int bytes_read;
+    int bytes_written;
+    int uses;                   /* ie # req's over persistent conn */
+    struct _fde_disk disk;
+    PF *read_handler;
+    void *read_data;
+    PF *write_handler;
+    void *write_data;
+    PF *timeout_handler;
+    time_t timeout;
+    void *timeout_data;
+    void *lifetime_data;
+    close_handler *closeHandler;        /* linked list */
+    DEFER *defer_check;         /* check if we should defer read */
+    void *defer_data;
+    CommWriteStateData *rwstate;        /* State data for comm_write */
+    READ_HANDLER *read_method;
+    WRITE_HANDLER *write_method;
+#if USE_SSL
+    SSL *ssl;
+    int ssl_shutdown:1;
+#endif
+};
+
+#endif /* SQUID_FDE_H */

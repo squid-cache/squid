@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.181 2003/01/22 10:05:43 robertc Exp $
+ * $Id: errorpage.cc,v 1.182 2003/01/23 00:37:20 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -43,6 +43,10 @@
 #include "squid.h"
 #include "authenticate.h"
 #include "Store.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemObject.h"
+#include "fde.h"
 
 /* local types */
 
@@ -225,14 +229,13 @@ errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info)
 static int
 errorPageId(const char *page_name)
 {
-    int i;
-    for (i = 0; i < ERR_MAX; i++) {
+    for (int i = 0; i < ERR_MAX; i++) {
 	if (strcmp(err_type_str[i], page_name) == 0)
 	    return i;
     }
-    for (size_t in = 0; in < ErrorDynamicPages.count; in++) {
-	if (strcmp(((ErrorDynamicPageInfo *) ErrorDynamicPages.items[in])->page_name, page_name) == 0)
-	    return in + ERR_MAX;
+    for (size_t i = 0; i < ErrorDynamicPages.count; i++) {
+	if (strcmp(((ErrorDynamicPageInfo *) ErrorDynamicPages.items[i])->page_name, page_name) == 0)
+	    return i + ERR_MAX;
     }
     return ERR_NONE;
 }
@@ -297,7 +300,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     HttpReply *rep;
     MemObject *mem = entry->mem_obj;
     assert(mem != NULL);
-    assert(mem->inmem_hi == 0);
+    assert (entry->isEmpty());
     if (entry->store_status != STORE_PENDING) {
 	/*
 	 * If the entry is not STORE_PENDING, then no clients
@@ -325,10 +328,9 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
      */
     authenticateFixHeader(rep, err->auth_user_request, err->request, 0, 1);
     httpReplySwapOut(rep, entry);
-    httpReplyAbsorb(mem->reply, rep);
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     storeBufferFlush(entry);
-    storeComplete(entry);
+    entry->complete();
     storeNegativeCache(entry);
     storeReleaseRequest(entry);
     storeUnlockObject(entry);
@@ -457,7 +459,7 @@ errorDump(ErrorState * err, MemBuf * mb)
 	Packer p;
 	memBufPrintf(&str, "%s %s HTTP/%d.%d\n",
 	    RequestMethodStr[r->method],
-	    strLen(r->urlpath) ? strBuf(r->urlpath) : "/",
+	    r->urlpath.size() ? r->urlpath.buf() : "/",
 	    r->http_ver.major, r->http_ver.minor);
 	packerToMemInit(&p, &str);
 	httpHeaderPackInto(&r->header, &p);
@@ -600,7 +602,7 @@ errorConvert(char token, ErrorState * err)
 	    Packer p;
 	    memBufPrintf(&mb, "%s %s HTTP/%d.%d\n",
 		RequestMethodStr[r->method],
-		strLen(r->urlpath) ? strBuf(r->urlpath) : "/",
+		r->urlpath.size() ? r->urlpath.buf() : "/",
 		r->http_ver.major, r->http_ver.minor);
 	    packerToMemInit(&p, &mb);
 	    httpHeaderPackInto(&r->header, &p);

@@ -8,7 +8,7 @@
 # Check the Squid-1.1.x cache directory for stale objects - i.e. those
 # which exist on disk but aren't listed in cached's log file.
 
-# $Id: check_cache.pl,v 1.4 1997/02/03 23:42:21 wessels Exp $
+# $Id: check_cache.pl,v 1.5 2003/01/23 00:37:06 robertc Exp $
 
 require "getopts.pl";
 &Getopts("c:drt:vh");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.4 2002/12/27 10:26:38 robertc Exp $
+ * $Id: store_null.cc,v 1.5 2003/01/23 00:38:19 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels

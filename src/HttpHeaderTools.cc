@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.34 2003/01/17 05:14:29 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.35 2003/01/23 00:37:12 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "HttpHeader.h"
+#include "HttpHdrContRange.h"
 
 #if UNUSED_CODE
 static int httpHeaderStrCmp(const char *h1, const char *h2, int len);
@@ -62,8 +63,8 @@ httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
 	/* copy and init fields */
 	info->id = id;
 	info->type = attrs[i].type;
-	stringInit(&info->name, attrs[i].name);
-	assert(strLen(info->name));
+	info->name = attrs[i].name;
+	assert(info->name.size());
 	/* init stats */
 	memset(&info->stat, 0, sizeof(info->stat));
     }
@@ -75,7 +76,7 @@ httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * table, int count)
 {
     int i;
     for (i = 0; i < count; ++i)
-	stringClean(&table[i].name);
+	table[i].name.clean();
     xfree(table);
 }
 
@@ -170,7 +171,7 @@ httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
 
     list = httpHeaderGetList(hdr, ht);
     res = strListIsMember(&list, directive, ',');
-    stringClean(&list);
+    list.clean();
     return res;
 }
 
@@ -223,14 +224,14 @@ void
 strListAdd(String * str, const char *item, char del)
 {
     assert(str && item);
-    if (strLen(*str)) {
+    if (str->size()) {
 	char buf[3];
 	buf[0] = del;
 	buf[1] = ' ';
 	buf[2] = '\0';
-	stringAppend(str, buf, 2);
+	str->append(buf, 2);
     }
-    stringAppend(str, item, strlen(item));
+    str->append(item, strlen(item));
 }
 
 /*
@@ -252,7 +253,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
 	else
 	    (*pos)++;
     } else {
-	*pos = strBuf(*str);
+	*pos = str->buf();
 	if (!*pos)
 	    return 0;
     }
@@ -425,7 +426,7 @@ httpHdrMangle(HttpHeaderEntry * e, request_t * request)
 	 * header on the fly, and return that the new header
 	 * is allowed.
 	 */
-	stringReset(&e->value, hm->replacement);
+	e->value = hm->replacement;
 	retval = 1;
     }
 

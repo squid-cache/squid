@@ -1,6 +1,6 @@
 
 /*
- * $Id: Range.h,v 1.1 2003/01/22 11:05:49 robertc Exp $
+ * $Id: Range.h,v 1.2 2003/01/23 00:36:47 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,8 +35,13 @@
 #define SQUID_RANGE_H
 
 /* represents [start, end) */
-template <class C> class Range {
-  public:
+
+template <class C>
+
+class Range
+{
+
+public:
     Range (C start_, C end_);
     C start;
     C end;
@@ -44,17 +49,20 @@ template <class C> class Range {
     size_t size() const;
 };
 
-template<class C> 
+template<class C>
 Range<C>::Range (C start_, C end_) : start(start_), end(end_){}
 
-template<class C> class Range<C>
-Range<C>::intersection (Range const &rhs)
+template<class C>
+
+class Range<C>
+            Range<C>::intersection (Range const &rhs)
 {
     Range<C> result (XMAX(start, rhs.start), XMIN(end, rhs.end));
     return result;
 }
 
-template<class C> size_t
+template<class C>
+size_t
 Range<C>::size() const
 {
     return end > start ? end - start : 0;

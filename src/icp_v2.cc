@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.73 2003/01/17 05:49:34 robertc Exp $
+ * $Id: icp_v2.cc,v 1.74 2003/01/23 00:37:22 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #include "Store.h"
 #include "comm.h"
 #include "ICP.h"
+#include "HttpRequest.h"
 
 static void icpLogIcp(struct in_addr, log_type, int, const char *, int);
 static void icpHandleIcpV2(int, struct sockaddr_in, char *, int);
@@ -82,6 +83,9 @@ _icp_common_t::getOpCode() const
 /* ICPState */
 
 ICPState:: ICPState(icp_common_t & aHeader):header(aHeader)
+    ,request(NULL),
+    fd(-1),
+    url(NULL)
 {
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.2 2002/10/14 08:16:58 robertc Exp $
+ * $Id: http.h,v 1.3 2003/01/23 00:37:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,7 +40,7 @@
 class HttpStateData {
     public:
     void processReplyHeader(const char *, int);
-    void processReplyData(const char *, int);
+    void processReplyData(const char *, size_t);
     IOCB readReply;
     void maybeReadData();
 
@@ -55,9 +55,18 @@ class HttpStateData {
     int fd;
     http_state_flags flags;
     FwdState *fwd;
+    off_t currentOffset;
     int do_next_read;
     size_t read_sz;
     char buf[SQUID_TCP_SO_RCVBUF];
+private:
+    enum ConnectionStatus {
+	INCOMPLETE_MSG,
+	COMPLETE_PERSISTENT_MSG,
+	COMPLETE_NONPERSISTENT_MSG
+    };
+    ConnectionStatus statusIfComplete() const;
+    ConnectionStatus persistentConnStatus() const;
 };
 
 #endif /* SQUID_HTTP_H */

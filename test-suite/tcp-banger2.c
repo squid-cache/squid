@@ -1,32 +1,6 @@
 #include "config.h"
 
-/* $Id: tcp-banger2.c,v 1.23 1999/04/15 06:16:15 wessels Exp $ */
-
-/*
- * On some systems, FD_SETSIZE is set to something lower than the
- * actual number of files which can be opened.  IRIX is one case,
- * NetBSD is another.  So here we increase FD_SETSIZE to our
- * configure-discovered maximum *before* any system includes.
- */
-#define CHANGE_FD_SETSIZE 1
-
-/* Cannot increase FD_SETSIZE on Linux */
-#if defined(_SQUID_LINUX_)
-#undef CHANGE_FD_SETSIZE
-#define CHANGE_FD_SETSIZE 0
-#endif
-
-/* Cannot increase FD_SETSIZE on FreeBSD before 2.2.0, causes select(2)
- * to return EINVAL. */
-/* Marian Durkovic <marian@svf.stuba.sk> */
-/* Peter Wemm <peter@spinner.DIALix.COM> */
-#if defined(_SQUID_FREEBSD_)
-#include <osreldate.h>
-#if __FreeBSD_version < 220000
-#undef CHANGE_FD_SETSIZE
-#define CHANGE_FD_SETSIZE 0
-#endif
-#endif
+/* $Id: tcp-banger2.c,v 1.24 2003/01/23 00:38:34 robertc Exp $ */
 
 /* Increase FD_SETSIZE if SQUID_MAXFD is bigger */
 #if CHANGE_FD_SETSIZE && SQUID_MAXFD > DEFAULT_FD_SETSIZE
@@ -145,14 +119,15 @@ free_request(struct _request *r)
     free(r);
 }
 
+#define RFC1123_STRFTIME "%a, %d %b %Y %H:%M:%S GMT"
 char *
-mkrfc850(t)
+mkrfc1123(t)
      time_t *t;
 {
     static char buf[128];
     struct tm *gmt = gmtime(t);
     buf[0] = '\0';
-    (void) strftime(buf, 127, "%A, %d-%b-%y %H:%M:%S GMT", gmt);
+    (void) strftime(buf, 127, RFC1123_STRFTIME, gmt);
     return buf;
 }
 
@@ -364,7 +339,7 @@ request(char *urlin)
     strcat(msg, "Accept: */*\r\n");
     if (opt_ims && (lrand48() & 0x03) == 0) {
 	w = time(NULL) - (lrand48() & 0x3FFFF);
-	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&w));
+	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc1123(&w));
 	strcat(msg, buf);
     }
     if (file && strcmp(file, "-") != 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.162 2002/10/13 20:35:00 robertc Exp $
+ * $Id: disk.cc,v 1.163 2003/01/23 00:37:19 robertc Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "fde.h"
 
 static PF diskHandleRead;
 static PF diskHandleWrite;
@@ -295,7 +296,7 @@ diskHandleWrite(int fd, void *notused)
 void
 file_write(int fd,
     off_t file_offset,
-    void *ptr_to_buf,
+    void const *ptr_to_buf,
     int len,
     DWCB * handle,
     void *handle_data,

@@ -1,5 +1,5 @@
 /*
- * $Id: snprintf.h,v 1.6 2001/10/08 16:18:31 hno Exp $
+ * $Id: snprintf.h,v 1.7 2003/01/23 00:36:48 robertc Exp $
  */
 
 #ifndef SQUID_SNPRINTF_H

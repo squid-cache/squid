@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.45 2002/10/13 20:35:01 robertc Exp $
+ * $Id: fd.cc,v 1.46 2003/01/23 00:37:20 robertc Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "fde.h"
 
 int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);
