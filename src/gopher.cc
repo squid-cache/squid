@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.106 1997/10/27 18:11:34 wessels Exp $
+ * $Id: gopher.cc,v 1.107 1997/10/27 20:05:13 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -650,13 +650,12 @@ gopherTimeout(int fd, void *data)
     GopherStateData *gopherState = data;
     StoreEntry *entry = gopherState->entry;
     ErrorState *err;
-
     debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, entry->url);
     if (entry->mem_obj->inmem_hi == 0) {
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_READ_TIMEOUT;
 	err->http_status = HTTP_GATEWAY_TIMEOUT;
-	err->url = gopherState->request;
+	err->url = xstrdup(gopherState->request);
 	errorAppendEntry(entry, err);
     }
     storeAbort(entry, 0);
@@ -712,7 +711,7 @@ gopherReadReply(int fd, void *data)
 	    err->type = ERR_READ_ERROR;
 	    err->xerrno = errno;
 	    err->http_status = HTTP_INTERNAL_SERVER_ERROR;
-	    err->url = entry->url;
+	    err->url = xstrdup(entry->url);
 	    errorAppendEntry(entry, err);
 	    storeAbort(entry, 0);
 	    comm_close(fd);
@@ -723,7 +722,7 @@ gopherReadReply(int fd, void *data)
 	err->type = ERR_ZERO_SIZE_OBJECT;
 	err->xerrno = errno;
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
-	err->url = gopherState->request;
+	err->url = xstrdup(gopherState->request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
 	comm_close(fd);
@@ -768,7 +767,7 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	err->host = xstrdup(gopherState->host);
 	err->port = gopherState->port;
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
-	err->url = entry->url;
+	err->url = xstrdup(entry->url);
 	errorAppendEntry(entry, err);
 
 	storeAbort(entry, 0);
@@ -844,21 +843,20 @@ gopherSendRequest(int fd, void *data)
 void
 gopherStart(StoreEntry * entry)
 {
-    char *url = entry->url;
     GopherStateData *gopherState = CreateGopherStateData();
     ErrorState *err;
     int fd;
     storeLockObject(entry);
     gopherState->entry = entry;
-    debug(10, 3) ("gopherStart: url: %s\n", url);
+    debug(10, 3) ("gopherStart: %s\n", entry->url);
     /* Parse url. */
-    if (gopher_url_parser(url, gopherState->host, &gopherState->port,
+    if (gopher_url_parser(entry->url, gopherState->host, &gopherState->port,
 	    &gopherState->type_id, gopherState->request)) {
 	ErrorState *err;
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_INVALID_URL;
 	err->http_status = HTTP_BAD_REQUEST;
-	err->url = url;
+	err->url = xstrdup(entry->url);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
@@ -870,15 +868,14 @@ gopherStart(StoreEntry * entry)
 	Config.Addrs.tcp_outgoing,
 	0,
 	COMM_NONBLOCKING,
-	url);
+	entry->url);
     if (fd == COMM_ERROR) {
 	debug(10, 4) ("gopherStart: Failed because we're out of sockets.\n");
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_SOCKET_FAILURE;
 	err->xerrno = errno;
 	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
-	if (entry && entry->url)
-	    err->url = entry->url;
+	err->url = xstrdup(entry->url);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
@@ -927,7 +924,7 @@ gopherConnectDone(int fd, int status, void *data)
 	err->type = ERR_DNS_FAIL;
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
-	err->url = entry->url;
+	err->url = xstrdup(entry->url);
 	errorAppendEntry(entry, err);
 	storeAbort(gopherState->entry, 0);
 	comm_close(fd);
@@ -939,7 +936,7 @@ gopherConnectDone(int fd, int status, void *data)
 	err->xerrno = errno;
 	err->host = xstrdup(gopherState->host);
 	err->port = gopherState->port;
-	err->url = entry->url;
+	err->url = xstrdup(entry->url);
 	errorAppendEntry(entry, err);
 	storeAbort(gopherState->entry, 0);
 	comm_close(fd);
