@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.268 1997/07/14 21:11:04 wessels Exp $
+ * $Id: store.cc,v 1.269 1997/07/14 23:45:06 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -376,10 +376,7 @@ static void
 destroy_StoreEntry(StoreEntry * e)
 {
     debug(20, 3) ("destroy_StoreEntry: destroying %p\n", e);
-    if (!e) {
-	debug_trap("destroy_StoreEntry: NULL Entry");
-	return;
-    }
+    assert(e != NULL);
     if (e->mem_obj)
 	destroy_MemObject(e->mem_obj);
     if (e->url) {
@@ -443,10 +440,7 @@ static void
 storeHashMemDelete(StoreEntry * e)
 {
     hash_link *hptr = hash_lookup(in_mem_table, e->key);
-    if (hptr == NULL) {
-	debug_trap("storeHashMemDelete: key not found");
-	return;
-    }
+    assert(hptr != NULL);
     hash_delete_link(in_mem_table, hptr);
     meta_data.hot_vm--;
 }
@@ -476,10 +470,8 @@ storeHashDelete(StoreEntry * e)
 static void
 storeSetMemStatus(StoreEntry * e, mem_status_t status)
 {
-    if (e->key == NULL) {
-	debug_trap("storeSetMemStatus: NULL key");
-	return;
-    } else if (status != IN_MEMORY && e->mem_status == IN_MEMORY)
+    assert(e->key != NULL);
+    if (status != IN_MEMORY && e->mem_status == IN_MEMORY)
 	storeHashMemDelete(e);
     else if (status == IN_MEMORY && e->mem_status != IN_MEMORY)
 	storeHashMemInsert(e);
@@ -571,8 +563,7 @@ storeUnlockObject(StoreEntry * e)
 	assert(!BIT_TEST(e->flag, ENTRY_DISPATCHED));
 	BIT_SET(e->flag, RELEASE_REQUEST);
     }
-    if (storePendingNClients(e) > 0)
-	debug_trap("storeUnlockObject: unlocked entry with pending clients\n");
+    assert(storePendingNClients(e) == 0);
     if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
 	storeRelease(e);
     } else if (BIT_TEST(e->flag, ABORT_MSG_PENDING)) {
@@ -660,7 +651,7 @@ storeGeneratePublicKey(const char *url, method_t method)
 	/* NOTREACHED */
 	break;
     default:
-	debug_trap("storeGeneratePublicKey: Unsupported request method");
+	fatal_dump("storeGeneratePublicKey: Unsupported request method");
 	break;
     }
     return NULL;
@@ -669,15 +660,11 @@ storeGeneratePublicKey(const char *url, method_t method)
 static void
 storeSetPrivateKey(StoreEntry * e)
 {
-    hash_link *table_entry = NULL;
     const char *newkey = NULL;
     if (e->key && BIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already private */
     newkey = storeGeneratePrivateKey(e->url, e->method, 0);
-    if ((table_entry = hash_lookup(store_table, newkey))) {
-	debug_trap("storeSetPrivateKey: duplicate private key");
-	return;
-    }
+    assert(hash_lookup(store_table, newkey) == NULL);
     if (e->key)
 	storeHashDelete(e);
     if (e->key && !BIT_TEST(e->flag, KEY_URL))
@@ -702,12 +689,11 @@ storeSetPublicKey(StoreEntry * e)
 
     newkey = storeGeneratePublicKey(e->url, e->method);
     while ((table_entry = hash_lookup(store_table, newkey))) {
-	debug(20, 3) ("storeSetPublicKey: Making old '%s' private.\n", newkey);
+	debug(20, 1) ("storeSetPublicKey: Making old '%s' private.\n", newkey);
 	e2 = (StoreEntry *) table_entry;
 	storeSetPrivateKey(e2);
 	storeRelease(e2);
-	if (loop_detect++ == 10)
-	    fatal_dump("storeSetPublicKey() is looping!!");
+	assert(++loop_detect < 10);
 	newkey = storeGeneratePublicKey(e->url, e->method);
     }
     if (e->key)
@@ -882,10 +868,7 @@ InvokeHandlers(StoreEntry * e)
     STCB *callback = NULL;
     struct _store_client *sc;
     ssize_t size;
-    if (mem->clients == NULL && mem->nclients) {
-	debug_trap("InvokeHandlers: NULL mem->clients");
-	return;
-    }
+    assert(mem->clients != NULL || mem->nclients == 0);
     /* walk the entire list looking for valid callbacks */
     for (i = 0; i < mem->nclients; i++) {
 	sc = &mem->clients[i];
@@ -1011,8 +994,7 @@ storeSwapInHandle(int u1, const char *buf, int len, int flag, void *data)
 	    e);
 	return;
     }
-    if (mem->e_current_len > e->object_len)
-	debug_trap("storeSwapInHandle: Too much data read!");
+    assert(mem->e_current_len <= e->object_len);
     /* complete swapping in */
     storeSetMemStatus(e, IN_MEMORY);
     put_free_8k_page(mem->e_swap_buf);
@@ -1020,14 +1002,7 @@ storeSwapInHandle(int u1, const char *buf, int len, int flag, void *data)
     storeLog(STORE_LOG_SWAPIN, e);
     debug(20, 5) ("storeSwapInHandle: SwapIn complete: '%s' from %s.\n",
 	e->url, storeSwapFullPath(e->swap_file_number, NULL));
-    if (mem->e_current_len != e->object_len) {
-	debug_trap("storeSwapInHandle: Object size mismatch");
-	debug(20, 0) ("  --> '%s'\n", e->url);
-	debug(20, 0) ("  --> Expecting %d bytes from file: %s\n", e->object_len,
-	    storeSwapFullPath(e->swap_file_number, NULL));
-	debug(20, 0) ("  --> Only read %d bytes\n",
-	    mem->e_current_len);
-    }
+    assert(mem->e_current_len == e->object_len);
     e->lock_count++;		/* lock while calling handler */
     InvokeHandlers(e);		/* once more after mem_status state change */
     e->lock_count--;
@@ -1756,7 +1731,7 @@ storeGetMemSpace(int size)
     int n_released = 0;
     int n_locked = 0;
     int i;
-    static time_t last_warning = 0;
+    static int last_warning = 0;
     static time_t last_check = 0;
     int pages_needed;
 
@@ -1810,16 +1785,16 @@ storeGetMemSpace(int size)
 	    /* These will be neg-cached objects */
 	    n_released += storeRelease(e);
 	} else {
-	    debug_trap("storeGetMemSpace: Bad Entry in LRU list");
+	    fatal_dump("storeGetMemSpace: Bad Entry in LRU list");
 	}
     }
 
     i = 3;
     if (sm_stats.n_pages_in_use > store_pages_max) {
-	if (squid_curtime - last_warning > 600) {
+	if (sm_stats.n_pages_in_use > last_warning * 1.05) {
 	    debug(20, 0) ("WARNING: Exceeded 'cache_mem' size (%dK > %dK)\n",
 		sm_stats.n_pages_in_use * 4, store_pages_max * 4);
-	    last_warning = squid_curtime;
+	    last_warning = sm_stats.n_pages_in_use;
 	    debug(20, 0) ("Perhaps you should increase cache_mem?\n");
 	    i = 0;
 	}
@@ -2448,10 +2423,8 @@ storeWriteCleanLogs(void)
 	    continue;
 	if (BIT_TEST(e->flag, KEY_PRIVATE))
 	    continue;
-	if ((dirn = storeDirNumber(e->swap_file_number)) >= Config.cacheSwap.n_configured) {
-	    debug_trap("storeWriteCleanLogss: dirn out of range");
-	    continue;
-	}
+	dirn = storeDirNumber(e->swap_file_number);
+	assert(dirn < Config.cacheSwap.n_configured);
 	if (fd[dirn] < 0)
 	    continue;
 	sprintf(line, "%08x %08x %08x %08x %9d %s\n",

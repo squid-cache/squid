@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.113 1997/07/14 05:57:55 wessels Exp $
+ * $Id: tools.cc,v 1.114 1997/07/14 23:45:07 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -383,7 +383,7 @@ fatal_common(const char *message)
 	syslog(LOG_ALERT, "%s", message);
 #endif
     fprintf(debug_log, "FATAL: %s\n", message);
-    if (opt_debug_stderr)
+    if (opt_debug_stderr && debug_log != stderr)
     	fprintf(stderr, "FATAL: %s\n", message);
     fprintf(debug_log, "Squid Cache (Version %s): Terminated abnormally.\n",
 	version_string);

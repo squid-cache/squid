@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.47 1997/07/14 05:57:54 wessels Exp $
+ * $Id: debug.cc,v 1.48 1997/07/14 23:44:58 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -151,7 +151,7 @@ _db_print(va_alist)
     vfprintf(debug_log, f, args);
     if (unbuffered_logs)
 	fflush(debug_log);
-    if (opt_debug_stderr)
+    if (opt_debug_stderr && debug_log != stderr)
 	vfprintf(stderr, f, args);
     va_end(args);
 }

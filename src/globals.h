@@ -47,7 +47,7 @@ extern int do_mallinfo;
 extern int do_reuse; /* 1 */
 extern int hash_links_allocated;
 extern int icmp_sock;
-extern int neighbors_do_private_keys;
+extern int neighbors_do_private_keys; /* 1 */
 extern int opt_accel_uses_host; /* 0 */
 extern int opt_catch_signals; /* 1 */
 extern int opt_debug_stderr; /* 0 */
@@ -55,7 +55,6 @@ extern int opt_dns_tests; /* 1 */
 extern int opt_foreground_rebuild; /* 0 */
 extern int opt_forwarded_for; /* 1 */
 extern int opt_mem_pools; /* 1 */
-extern int opt_no_ipcache; /* 0 */
 extern int opt_reload_hit_only; /* 0 */
 extern int opt_syslog_enable; /* 0 */
 extern int opt_udp_hit_obj; /* 0 */

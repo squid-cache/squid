@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.160 1997/07/14 19:31:40 wessels Exp $
+ * $Id: main.cc,v 1.161 1997/07/14 23:45:02 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -137,7 +137,6 @@ usage(void)
 	"       -f file   Use given config-file instead of\n"
 	"                 %s\n"
 	"       -h        Print help message.\n"
-	"       -i        Disable IP caching.\n"
 	"       -k reconfigure|rotate|shutdown|interrupt|kill|debug|check\n"
 	"                 Send signal to running copy and exit.\n"
 	"       -s        Enable logging to syslog.\n"
@@ -161,7 +160,7 @@ mainParseOptions(int argc, char *argv[])
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFRVYXa:bdf:hik:m:su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFRVYXa:bdf:hk:m:su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -200,9 +199,6 @@ mainParseOptions(int argc, char *argv[])
 	    break;
 	case 'h':
 	    usage();
-	    break;
-	case 'i':
-	    opt_no_ipcache = 1;
 	    break;
 	case 'k':
 	    if ((int) strlen(optarg) < 1)

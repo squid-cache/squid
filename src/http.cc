@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.176 1997/07/02 22:42:55 wessels Exp $
+ * $Id: http.cc,v 1.177 1997/07/14 23:45:01 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -924,8 +924,6 @@ httpConnectDone(int fd, int status, void *data)
 	    peerCheckConnectStart(httpState->neighbor);
 	comm_close(fd);
     } else {
-	if (opt_no_ipcache)
-	    ipcacheInvalidate(request->host);
 	fd_note(fd, entry->url);
 	commSetSelect(fd, COMM_SELECT_WRITE, httpSendRequest, httpState, 0);
     }

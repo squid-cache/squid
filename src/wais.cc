@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.78 1997/06/19 22:51:57 wessels Exp $
+ * $Id: wais.cc,v 1.79 1997/07/14 23:45:08 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -344,18 +344,12 @@ waisConnectDone(int fd, int status, void *data)
     if (status == COMM_ERR_DNS) {
 	storeAbort(waisState->entry, ERR_DNS_FAIL, dns_error_message, 0);
 	comm_close(fd);
-	return;
     } else if (status != COMM_OK) {
 	storeAbort(waisState->entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	comm_close(fd);
-	return;
+    } else {
+	commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
     }
-    if (opt_no_ipcache)
-	ipcacheInvalidate(waisState->relayhost);
-    commSetSelect(fd,
-	COMM_SELECT_WRITE,
-	waisSendRequest,
-	waisState, 0);
 }
 
 static void
