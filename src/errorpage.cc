@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.172 2002/04/13 15:51:43 hno Exp $
+ * $Id: errorpage.cc,v 1.173 2002/04/18 16:18:04 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -221,7 +221,7 @@ errorPageId(const char *page_name)
 	    return i;
     }
     for (i = 0; i < ErrorDynamicPages.count; i++) {
-	if (strcmp(((ErrorDynamicPageInfo *) ErrorDynamicPages.items[i - ERR_MAX])->page_name, page_name) == 0)
+	if (strcmp(((ErrorDynamicPageInfo *) ErrorDynamicPages.items[i])->page_name, page_name) == 0)
 	    return i + ERR_MAX;
     }
     return ERR_NONE;
