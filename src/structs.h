@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.452 2003/02/21 22:50:12 robertc Exp $
+ * $Id: structs.h,v 1.453 2003/02/22 14:59:35 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1079,8 +1079,7 @@ struct _ConnStateData
     }
 
     body;
-    auth_type_t auth_type;	/* Is this connection based authentication ? if so
-    		        				 * what type it is. */
+    auth_type_t auth_type;	/* Is this connection based authentication? if so what type it is. */
     /* note this is ONLY connection based because NTLM is against HTTP spec */
     /* the user details for connection based authentication */
     auth_user_request_t *auth_user_request;
@@ -1591,7 +1590,7 @@ struct _RemovalPurgeWalker
 
 struct request_flags
 {
-    request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),internal(0),internalclient(0),body_sent(0),destinationIPLookedUp_(0)
+    request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),transparent(0),internal(0),internalclient(0),body_sent(0),destinationIPLookedUp_(0)
     {
 #if HTTP_VIOLATIONS
         nocache_hack = 1;
@@ -1641,6 +1640,9 @@ unsigned int nocache_hack:
 #endif
 
 unsigned int accelerated:
+    1;
+
+unsigned int transparent:
     1;
 
 unsigned int internal:
@@ -2138,8 +2140,7 @@ struct _helper_stateful_request
 {
     char *buf;
     HLPSCB *callback;
-    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper
-    		        				 * to become available for deferred requests.*/
+    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available for deferred requests.*/
     void *data;
 };
 
