@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.115 1997/02/19 23:53:24 wessels Exp $
+ * $Id: neighbors.cc,v 1.116 1997/02/23 08:35:52 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -105,6 +105,8 @@
 
 #include "squid.h"
 
+static int peerAllowedToUse _PARAMS((const peer *, request_t *));
+static int peerHTTPOkay _PARAMS((const peer *, request_t *));
 static int peerWouldBePinged _PARAMS((const peer *, request_t *));
 static void neighborRemove _PARAMS((peer *));
 static peer *whichPeer _PARAMS((const struct sockaddr_in * from));
@@ -153,7 +155,7 @@ const char *hier_strings[] =
 };
 
 char *
-neighborTypeStr(peer * e)
+neighborTypeStr(const peer * e)
 {
     if (e->type == PEER_SIBLING)
 	return "Sibling";
@@ -204,15 +206,13 @@ neighborType(const peer * e, const request_t * request)
 }
 
 /*
- * peerWouldBePinged
+ * peerAllowedToUse
  *
- * NOTE, this is a bit of a misnomer, really this function figures
- * out if it is appropriate to fetch REQUEST from PEER.
- * Whether or not we send the peer an ICP_OP_QUERY is determined
- * in neighborsUdpPing.
+ * this function figures * out if it is appropriate to fetch REQUEST
+ * from PEER.
  */
 static int
-peerWouldBePinged(const peer * e, request_t * request)
+peerAllowedToUse(const peer * e, request_t * request)
 {
     const struct _domain_ping *d = NULL;
     int do_ping = 1;
@@ -243,6 +243,38 @@ peerWouldBePinged(const peer * e, request_t * request)
     return do_ping;
 }
 
+/* Return TRUE if it is okay to send an ICP request to this peer.   */
+static int
+peerWouldBePinged(const peer * e, request_t * request)
+{
+    if (!peerAllowedToUse(e, request))
+	return 0;
+    if (e->options & NEIGHBOR_NO_QUERY)
+	return 0;
+    if (e->options & NEIGHBOR_MCAST_RESPONDER)
+	return 0;
+    /* the case below seems strange, but can happen if the
+     * URL host is on the other side of a firewall */
+    if (e->type == PEER_SIBLING)
+	if (!BIT_TEST(request->flags, REQ_HIERARCHICAL))
+	    return 0;
+    if (e->icp_port == echo_port)
+	if (!neighborUp(e))
+	    return 0;
+    return 1;
+}
+
+/* Return TRUE if it is okay to send an HTTP request to this peer. */
+static int
+peerHTTPOkay(const peer * e, request_t * request)
+{
+    if (!peerAllowedToUse(e, request))
+	return 0;
+    if (!neighborUp(e))
+	return 0;
+    return 1;
+}
+
 int
 neighborsCount(request_t * request)
 {
@@ -260,7 +292,7 @@ getSingleParent(request_t * request)
     peer *p = NULL;
     peer *e = NULL;
     for (e = Peers.peers_head; e; e = e->next) {
-	if (!peerWouldBePinged(e, request))
+	if (!peerHTTPOkay(e, request))
 	    continue;
 	if (neighborType(e, request) != PEER_PARENT)
 	    return NULL;	/* oops, found SIBLING */
@@ -280,7 +312,7 @@ getFirstUpParent(request_t * request)
 	    continue;
 	if (neighborType(e, request) != PEER_PARENT)
 	    continue;
-	if (peerWouldBePinged(e, request))
+	if (peerHTTPOkay(e, request))
 	    return e;
     }
     return NULL;
@@ -296,9 +328,7 @@ getRoundRobinParent(request_t * request)
 	    continue;
 	if (neighborType(e, request) != PEER_PARENT)
 	    continue;
-	if (!neighborUp(e))
-	    continue;
-	if (!peerWouldBePinged(e, request))
+	if (!peerHTTPOkay(e, request))
 	    continue;
 	if (f && f->rr_count < e->rr_count)
 	    continue;
@@ -314,13 +344,11 @@ getDefaultParent(request_t * request)
 {
     peer *e = NULL;
     for (e = Peers.peers_head; e; e = e->next) {
-	if (!neighborUp(e))
-	    continue;
 	if (neighborType(e, request) != PEER_PARENT)
 	    continue;
 	if (!BIT_TEST(e->options, NEIGHBOR_DEFAULT_PARENT))
 	    continue;
-	if (!peerWouldBePinged(e, request))
+	if (!peerHTTPOkay(e, request))
 	    continue;
 	return e;
     }
@@ -487,20 +515,8 @@ neighborsUdpPing(protodispatch_data * proto)
 	if (e == NULL)
 	    e = Peers.peers_head;
 	debug(15, 5, "neighborsUdpPing: Peer %s\n", e->host);
-	/* skip any cache where we failed to connect() w/in the last 60s */
-	if (squid_curtime - e->last_fail_time < 60)
-	    continue;
 	if (!peerWouldBePinged(e, request))
 	    continue;		/* next peer */
-	if (e->options & NEIGHBOR_NO_QUERY)
-	    continue;
-	if (e->options & NEIGHBOR_MCAST_RESPONDER)
-	    continue;
-	/* the case below seems strange, but can happen if the
-	 * URL host is on the other side of a firewall */
-	if (e->type == PEER_SIBLING)
-	    if (!BIT_TEST(request->flags, REQ_HIERARCHICAL))
-		continue;
 	debug(15, 4, "neighborsUdpPing: pinging peer %s for '%s'\n",
 	    e->host, url);
 	if (e->type == PEER_MULTICAST)
@@ -940,7 +956,7 @@ parseNeighborType(const char *s)
 }
 
 int
-neighborUp(peer * e)
+neighborUp(const peer * e)
 {
     if (e->last_fail_time)
 	if (squid_curtime - e->last_fail_time < (time_t) 60)
