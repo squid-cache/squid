@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.181 1996/12/17 07:16:58 wessels Exp $
+ * $Id: store.cc,v 1.182 1996/12/19 21:24:17 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -240,6 +240,7 @@ static void storeHashMemDelete _PARAMS((StoreEntry *));
 static void storeSetPrivateKey _PARAMS((StoreEntry *));
 static void storeDoRebuildFromDisk _PARAMS((void *data));
 static void storeRebuiltFromDisk _PARAMS((struct storeRebuild_data * data));
+static unsigned int getKeyCounter _PARAMS((void));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -621,9 +622,19 @@ unsigned int
 getKeyCounter(void)
 {
     static unsigned int key_counter = 0;
-    if (++key_counter == 0)
-	++key_counter;
+    if (++key_counter == (1<<24))
+	key_counter = 1;
     return key_counter;
+}
+
+unsigned int
+storeReqnum(StoreEntry * entry, method_t method)
+{
+    if (BIT_TEST(entry->flag, KEY_PRIVATE))
+	return atoi(entry->key);
+    if (method == METHOD_GET)
+	return getKeyCounter();
+    return (method << 24) | getKeyCounter();
 }
 
 const char *
@@ -631,6 +642,10 @@ storeGeneratePrivateKey(const char *url, method_t method, int num)
 {
     if (num == 0)
 	num = getKeyCounter();
+    else if (num & 0xFF000000) {
+	method = (method_t) (num >> 24);
+	num &= 0x00FFFFFF;
+    }
     debug(20, 3, "storeGeneratePrivateKey: '%s'\n", url);
     key_temp_buffer[0] = '\0';
     sprintf(key_temp_buffer, "%d/%s/%s",
@@ -650,27 +665,11 @@ storeGeneratePublicKey(const char *url, method_t method)
 	/* NOTREACHED */
 	break;
     case METHOD_POST:
-	sprintf(key_temp_buffer, "/post/%s", url);
-	return key_temp_buffer;
-	/* NOTREACHED */
-	break;
     case METHOD_PUT:
-	sprintf(key_temp_buffer, "/put/%s", url);
-	return key_temp_buffer;
-	/* NOTREACHED */
-	break;
     case METHOD_HEAD:
-	sprintf(key_temp_buffer, "/head/%s", url);
-	return key_temp_buffer;
-	/* NOTREACHED */
-	break;
     case METHOD_CONNECT:
-	sprintf(key_temp_buffer, "/connect/%s", url);
-	return key_temp_buffer;
-	/* NOTREACHED */
-	break;
     case METHOD_TRACE:
-	sprintf(key_temp_buffer, "/trace/%s", url);
+	sprintf(key_temp_buffer, "/%s/%s", RequestMethodStr[method], url);
 	return key_temp_buffer;
 	/* NOTREACHED */
 	break;
