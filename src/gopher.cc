@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.21 1996/04/09 23:28:33 wessels Exp $ */
+/* $Id: gopher.cc,v 1.22 1996/04/10 03:53:59 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -188,19 +188,18 @@ int gopher_url_parser(url, host, port, type_id, request)
      char *type_id;
      char *request;
 {
-    static char atypebuf[MAX_URL];
+    static char proto[MAX_URL];
     static char hostbuf[MAX_URL];
-    char *tmp = NULL;
     int t;
 
-    atypebuf[0] = hostbuf[0] = '\0';
+    proto[0] = hostbuf[0] = '\0';
     host[0] = request[0] = '\0';
     (*port) = 0;
     (*type_id) = 0;
 
-    t = sscanf(url, "%[a-zA-Z]://%[^/]/%c%s", atypebuf, hostbuf,
+    t = sscanf(url, "%[a-zA-Z]://%[^/]/%c%s", proto, hostbuf,
 	type_id, request);
-    if ((t < 2) || strcasecmp(atypebuf, "gopher")) {
+    if ((t < 2) || strcasecmp(proto, "gopher")) {
 	return -1;
     } else if (t == 2) {
 	(*type_id) = GOPHER_DIRECTORY;
@@ -209,9 +208,7 @@ int gopher_url_parser(url, host, port, type_id, request)
 	request[0] = '\0';
     } else {
 	/* convert %xx to char */
-	tmp = url_convert_hex(request);
-	strncpy(request, tmp, MAX_URL);
-	safe_free(tmp);
+	(void) url_convert_hex(request, 0);
     }
 
     host[0] = '\0';
