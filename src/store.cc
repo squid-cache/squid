@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.429 1998/07/20 20:21:11 wessels Exp $
+ * $Id: store.cc,v 1.430 1998/07/21 03:16:08 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -983,10 +983,7 @@ storeTimestampsSet(StoreEntry * entry)
     if (served_date < 0)
 	served_date = squid_curtime;
     entry->expires = reply->expires;
-    if (reply->last_modified > -1)
-	entry->lastmod = reply->last_modified;
-    if (entry->lastmod < 0)
-	entry->lastmod = served_date;
+    entry->lastmod = reply->last_modified;
     entry->timestamp = served_date;
 }
 

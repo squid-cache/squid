@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.25 1998/07/20 17:20:03 wessels Exp $
+ * $Id: refresh.cc,v 1.26 1998/07/21 03:16:07 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -35,6 +35,19 @@
 
 #include "squid.h"
 
+struct {
+    int total;
+    int revalidate_stale;
+    int request_max_age_stale;
+    int response_expires_stale;
+    int response_expires_fresh;
+    int conf_max_age_stale;
+    int last_modified_factor_fresh;
+    int last_modified_factor_stale;
+    int conf_min_age_fresh;
+    int default_stale;
+} refreshCounts;
+
 /*
  * Defaults:
  *      MIN     NONE
@@ -47,6 +60,7 @@
 
 static const refresh_t * refreshLimits(const char *);
 static const refresh_t *refreshUncompiledPattern(const char *);
+static OBJH refreshStats;
 
 static const refresh_t *
 refreshLimits(const char *url)
@@ -91,8 +105,10 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
     else
 	uri = urlCanonical(request);
     debug(22, 3) ("refreshCheck: '%s'\n", uri);
+    refreshCounts.total++;
     if (EBIT_TEST(entry->flag, ENTRY_REVALIDATE)) {
 	debug(22, 3) ("refreshCheck: YES: Required Authorization\n");
+	refreshCounts.revalidate_stale++;
 	return 1;
     }
     if ((R = refreshLimits(uri))) {
@@ -110,41 +126,45 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
     if (request->max_age > -1) {
 	if (age > request->max_age) {
 	    debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");
+	    refreshCounts.request_max_age_stale++;
 	    return 1;
 	}
     }
-    if (age <= min) {
-	debug(22, 3) ("refreshCheck: NO: age < min\n");
-	return 0;
-    }
-    if (-1 < entry->expires) {
+    if (entry->expires > -1) {
 	if (entry->expires <= check_time) {
 	    debug(22, 3) ("refreshCheck: YES: expires <= curtime\n");
+	    refreshCounts.response_expires_stale++;
 	    return 1;
 	} else {
 	    debug(22, 3) ("refreshCheck: NO: expires > curtime\n");
+	    refreshCounts.response_expires_fresh++;
 	    return 0;
 	}
     }
     if (age > max) {
 	debug(22, 3) ("refreshCheck: YES: age > max\n");
+	refreshCounts.conf_max_age_stale++;
 	return 1;
     }
-    if (entry->timestamp <= entry->lastmod) {
-	if (request->protocol != PROTO_HTTP) {
-	    debug(22, 3) ("refreshCheck: NO: non-HTTP request\n");
+    if (entry->lastmod > -1 && entry->timestamp > entry->lastmod) {
+	factor = (double) age / (double) (entry->timestamp - entry->lastmod);
+	debug(22, 3) ("refreshCheck: factor = %f\n", factor);
+	if (factor < pct) {
+	    debug(22, 3) ("refreshCheck: NO: factor < pct\n");
+	    refreshCounts.last_modified_factor_fresh++;
 	    return 0;
+	} else {
+	    debug(22, 3) ("refreshCheck: YES: factor >= pct\n");
+	    refreshCounts.last_modified_factor_stale++;
+	    return 1;
 	}
-	debug(22, 3) ("refreshCheck: YES: lastvalid <= lastmod (%d <= %d)\n",
-	    (int) entry->timestamp, (int) entry->lastmod);
-	return 1;
     }
-    factor = (double) age / (double) (entry->timestamp - entry->lastmod);
-    debug(22, 3) ("refreshCheck: factor = %f\n", factor);
-    if (factor < pct) {
-	debug(22, 3) ("refreshCheck: NO: factor < pct\n");
+    if (age <= min) {
+	debug(22, 3) ("refreshCheck: NO: age < min\n");
+	refreshCounts.conf_min_age_fresh++;
 	return 0;
     }
+    refreshCounts.default_stale++;
     return 1;
 }
 
@@ -212,4 +232,39 @@ getMaxAge(const char *url)
 	return R->max;
     else
 	return REFRESH_DEFAULT_MAX;
+}
+
+static void
+refreshStats(StoreEntry * sentry)
+{
+    storeAppendPrintf(sentry, "refreshCounts.total\t%d\n",
+	refreshCounts.total);
+    storeAppendPrintf(sentry, "refreshCounts.revalidate_stale\t%d\n",
+	refreshCounts.revalidate_stale);
+    storeAppendPrintf(sentry, "refreshCounts.request_max_age_stale\t%d\n",
+	refreshCounts.request_max_age_stale);
+    storeAppendPrintf(sentry, "refreshCounts.response_expires_stale\t%d\n",
+	refreshCounts.response_expires_stale);
+    storeAppendPrintf(sentry, "refreshCounts.response_expires_fresh\t%d\n",
+	refreshCounts.response_expires_fresh);
+    storeAppendPrintf(sentry, "refreshCounts.conf_max_age_stale\t%d\n",
+	refreshCounts.conf_max_age_stale);
+    storeAppendPrintf(sentry, "refreshCounts.last_modified_factor_fresh\t%d\n",
+	refreshCounts.last_modified_factor_fresh);
+    storeAppendPrintf(sentry, "refreshCounts.last_modified_factor_stale\t%d\n",
+	refreshCounts.last_modified_factor_stale);
+    storeAppendPrintf(sentry, "refreshCounts.conf_min_age_fresh\t%d\n",
+	refreshCounts.conf_min_age_fresh);
+    storeAppendPrintf(sentry, "refreshCounts.default_stale\t%d\n",
+	refreshCounts.default_stale);
+}
+
+void
+refreshInit(void)
+{
+    cachemgrRegister("refresh",
+	"Refresh Algorithm Statistics",
+	refreshStats,
+	0,
+	1);
 }
