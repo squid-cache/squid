@@ -298,8 +298,9 @@ icpPktDump(icp_common_t * pkt)
 #endif
 
 void
-icpHandleUdp(int sock, void *datanotused)
+icpHandleUdp(int sock, void *data)
 {
+    int *N = data;
     struct sockaddr_in from;
     int from_len;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
@@ -332,6 +333,7 @@ icpHandleUdp(int sock, void *datanotused)
 		    sock, xstrerror());
 	    break;
 	}
+	(*N)++;
 	icpCount(buf, RECV, (size_t) len, 0);
 	buf[len] = '\0';
 	debug(12, 4) ("icpHandleUdp: FD %d: received %d bytes from %s.\n",
@@ -382,9 +384,10 @@ icpConnectionsOpen(void)
     if (theInIcpConnection < 0)
 	fatal("Cannot open ICP Port");
     commSetSelect(theInIcpConnection,
-	COMM_SELECT_READ,
-	icpHandleUdp,
-	NULL, 0);
+	    COMM_SELECT_READ,
+	    icpHandleUdp,
+	    NULL,
+	    0);
     for (s = Config.mcast_group_list; s; s = s->next)
 	ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
     debug(12, 1) ("Accepting ICP messages on port %d, FD %d.\n",
@@ -403,7 +406,8 @@ icpConnectionsOpen(void)
 	commSetSelect(theOutIcpConnection,
 	    COMM_SELECT_READ,
 	    icpHandleUdp,
-	    NULL, 0);
+	    NULL,
+	    0);
 	debug(12, 1) ("Outgoing ICP messages on port %d, FD %d.\n",
 	    (int) port, theOutIcpConnection);
 	fd_note(theOutIcpConnection, "Outgoing ICP socket");

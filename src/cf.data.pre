@@ -2155,4 +2155,16 @@ DOC_START
 	queried only when Squid starts up, not for every request.
 DOC_END
 
+NAME: incoming_min_rate
+TYPE: int
+LOC: Config.incoming_rate.min
+DEFAULT: 16
+DOC_NONE
+
+NAME: incoming_max_rate
+TYPE: int
+LOC: Config.incoming_rate.max
+DEFAULT: 2
+DOC_NONE
+
 EOF

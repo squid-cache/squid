@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.8 1998/04/27 17:25:03 rousskov Exp $
+ * $Id: StatHist.cc,v 1.9 1998/05/27 20:31:31 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -47,9 +47,7 @@
 static void statHistInit(StatHist * H, int capacity, hbase_f val_in, hbase_f val_out, double min, double max);
 static int statHistBin(const StatHist * H, double v);
 static double statHistVal(const StatHist * H, int bin);
-static void statHistBinDumper(StoreEntry * sentry, int idx, double val, double size, int count);
-
-
+static StatHistBinDumper statHistBinDumper;
 
 /* low level init, higher level functions has less params */
 static void
@@ -194,7 +192,7 @@ statHistBinDumper(StoreEntry * sentry, int idx, double val, double size, int cou
 }
 
 void
-statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd)
+statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper *bd)
 {
     int i;
     double left_border = H->min;
@@ -232,6 +230,7 @@ Null(double x)
 {
     return x;
 }
+
 void
 statHistEnumInit(StatHist * H, int last_enum)
 {
@@ -239,9 +238,22 @@ statHistEnumInit(StatHist * H, int last_enum)
 }
 
 void
-statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     if (count)
 	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\n",
 	    idx, (int) val, count);
+}
+
+void
+statHistIntInit(StatHist * H, int n)
+{
+    statHistInit(H, n, &Null, &Null, 0, n-1);
+}
+
+void
+statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+{
+    if (count)
+	storeAppendPrintf(sentry, "%9d\t%9d\n", (int) val, count);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.315 1998/05/27 18:35:22 wessels Exp $
+ * $Id: client_side.cc,v 1.316 1998/05/27 20:31:33 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -75,6 +75,7 @@ static HttpReply *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
 static int clientCheckContentLength(request_t * r);
+static int httpAcceptDefer(void);
 
 static int
 checkAccelOnly(clientHttpRequest * http)
@@ -2119,8 +2120,8 @@ requestTimeout(int fd, void *data)
     }
 }
 
-int
-httpAcceptDefer(int fdnotused, void *notused)
+static int
+httpAcceptDefer(void)
 {
     static time_t last_warn = 0;
     if (fdNFree() >= RESERVED_FD)
@@ -2134,14 +2135,15 @@ httpAcceptDefer(int fdnotused, void *notused)
 
 /* Handle a new connection on HTTP socket. */
 void
-httpAccept(int sock, void *notused)
+httpAccept(int sock, void *data)
 {
+    int *N = data;
     int fd = -1;
     ConnStateData *connState = NULL;
     struct sockaddr_in peer;
     struct sockaddr_in me;
     int max = 10;
-    while (max-- && !httpAcceptDefer(sock, notused)) {
+    while (max-- && !httpAcceptDefer()) {
 	memset(&peer, '\0', sizeof(struct sockaddr_in));
 	memset(&me, '\0', sizeof(struct sockaddr_in));
 	commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
@@ -2169,6 +2171,7 @@ httpAccept(int sock, void *notused)
 	commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
 	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
 	commSetDefer(fd, clientReadDefer, connState);
+	(*N)++;
     }
 }
 
@@ -2355,7 +2358,7 @@ clientHttpConnectionsOpen(void)
 	    continue;
 	comm_listen(fd);
 	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
-	commSetDefer(fd, httpAcceptDefer, NULL);
+	/*commSetDefer(fd, httpAcceptDefer, NULL);*/
 	debug(1, 1) ("Accepting HTTP connections on port %d, FD %d.\n",
 	    (int) u->i, fd);
 	HttpSockets[NHttpSockets++] = fd;

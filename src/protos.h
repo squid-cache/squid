@@ -412,7 +412,6 @@ extern void *icpCreateMessage(icp_opcode opcode,
 extern int icpUdpSend(int, const struct sockaddr_in *, icp_common_t *, log_type, int);
 extern PF icpHandleUdp;
 extern PF httpAccept;
-extern DEFER httpAcceptDefer;
 
 #ifdef SQUID_SNMP
 extern PF snmpHandleUdp;
@@ -600,7 +599,8 @@ extern double statHistDeltaMedian(const StatHist * A, const StatHist * B);
 extern void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd);
 extern void statHistLogInit(StatHist * H, int capacity, double min, double max);
 extern void statHistEnumInit(StatHist * H, int last_enum);
-extern void statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+extern StatHistBinDumper statHistEnumDumper;
+extern StatHistBinDumper statHistIntDumper;
 
 
 /* MemMeter */

@@ -156,7 +156,7 @@ typedef void SIGHDLR(int sig);
 typedef void STVLDCB(void *, int, int);
 
 typedef double (*hbase_f) (double);
-typedef void (*StatHistBinDumper) (StoreEntry *, int idx, double val, double size, int count);
+typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);
 
 /* append/vprintf's for Packer */
 typedef void (*append_f) (void *, const char *buf, int size);
