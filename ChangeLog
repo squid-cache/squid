@@ -1,3 +1,12 @@
+	- Added basic support for Range requests. For most cachable requests,
+	  Squid replies with an "Accept-Ranges" header. Upon receiving a
+	  potentially cachable Range request for a not cached object, Squid
+	  requests the whole object from origin server and then replies with
+	  specified range(s) to the client. Multi-range requests are
+	  supported.  Limitations: If-Range header is not supported and
+	  ignored; Multi-range requests with out of order or overlapping
+	  ranges are not supported.
+
 Changes to squid-1.2.beta22 (June 1, 1998):
 
 	- do not cut off "; parameter" from "digitized" Content-Type 

@@ -60,7 +60,7 @@ extern void intlistDestroy(intlist **);
 extern int intlistFind(intlist * list, int i);
 extern void wordlistDestroy(wordlist **);
 extern void configFreeMemory(void);
-extern void wordlistCat(const wordlist *, MemBuf * mb);
+extern void wordlistCat(const wordlist *, MemBuf *mb);
 
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
@@ -289,15 +289,24 @@ extern void httpHdrRangeDestroy(HttpHdrRange * range);
 extern HttpHdrRange *httpHdrRangeDup(const HttpHdrRange * range);
 extern void httpHdrRangePackInto(const HttpHdrRange * range, Packer * p);
 /* iterate through specs */
-extern int httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangeSpec * spec, int *pos);
+extern int httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangeSpec * spec, HttpHdrRangePos *pos);
+/* adjust specs after the length is known */
+extern int httpHdrRangeCanonize(HttpHdrRange * range, size_t clen);
+/* other */
+extern String httpHdrRangeBoundaryStr(clientHttpRequest * http);
+extern int httpHdrRangeIsComplex(const HttpHdrRange * range);
+
 
 /* Http Content Range Header Field */
+extern HttpHdrContRange *httpHdrContRangeCreate();
 extern HttpHdrContRange *httpHdrContRangeParseCreate(const char *crange_spec);
 /* returns true if range is valid; inits HttpHdrContRange */
 extern int httpHdrContRangeParseInit(HttpHdrContRange * crange, const char *crange_spec);
 extern void httpHdrContRangeDestroy(HttpHdrContRange * crange);
 extern HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
 extern void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
+/* inits with given spec */
+extern void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, size_t ent_len);
 
 /* Http Header Tools */
 extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
@@ -306,6 +315,7 @@ extern int httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFi
 extern void httpHeaderMaskInit(HttpHeaderMask * mask);
 extern void httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count);
 extern int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
+extern void httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, size_t ent_len);
 extern void strListAdd(String * str, const char *item, char del);
 extern int strListIsMember(const String * str, const char *item, char del);
 extern int strListIsSubstr(const String * list, const char *s, char del);
@@ -314,11 +324,11 @@ extern const char *getStringPrefix(const char *str, const char *end);
 extern int httpHeaderParseInt(const char *start, int *val);
 extern int httpHeaderParseSize(const char *start, size_t * sz);
 #ifdef __STDC__
-extern void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...);
+     extern void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt, ...);
 #else
-extern void 
-httpHeaderPutStrf()
+     extern void httpHeaderPutStrf()
 #endif
+
 
 /* Http Header */
      extern void httpHeaderInitModule();
@@ -328,7 +338,7 @@ httpHeaderPutStrf()
      extern void httpHeaderClean(HttpHeader * hdr);
 /* append/update */
      extern void httpHeaderAppend(HttpHeader * dest, const HttpHeader * src);
-     extern void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
+     extern void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask *denied_mask);
 /* parse/pack */
      extern int httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end);
      extern void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
@@ -339,6 +349,8 @@ httpHeaderPutStrf()
      extern void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str);
      extern void httpHeaderPutAuth(HttpHeader * hdr, const char *authScheme, const char *realm);
      extern void httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc);
+     extern void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange *cr);
+     extern void httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange *range);
      extern void httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value);
      extern int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
      extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
@@ -404,8 +416,8 @@ httpHeaderPutStrf()
      extern request_t *requestLink(request_t *);
      extern void requestUnlink(request_t *);
      extern int httpRequestParseHeader(request_t * req, const char *parse_start);
-     extern void httpRequestSwapOut(const request_t * req, StoreEntry * e);
-     extern int httpRequestPrefixLen(const request_t * req);
+     extern void httpRequestSwapOut(const request_t *req, StoreEntry *e);
+     extern int httpRequestPrefixLen(const request_t *req);
      extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 
      extern void icmpOpen(void);

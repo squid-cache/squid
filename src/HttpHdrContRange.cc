@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.4 1998/04/06 22:32:06 wessels Exp $
+ * $Id: HttpHdrContRange.cc,v 1.5 1998/06/02 21:38:04 rousskov Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -180,4 +180,12 @@ httpHdrContRangePackInto(const HttpHdrContRange * range, Packer * p)
 	packerPrintf(p, "/*");
     else
 	packerPrintf(p, "/%d", range->elength);
+}
+
+void
+httpHdrContRangeSet(HttpHdrContRange *cr, HttpHdrRangeSpec spec, size_t ent_len)
+{
+    assert(cr && ent_len >= 0);
+    cr->spec = spec;
+    cr->elength = ent_len;
 }

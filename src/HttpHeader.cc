@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.39 1998/06/02 04:28:09 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.40 1998/06/02 21:38:05 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -184,7 +184,7 @@ static http_hdr_type ReplyHeadersArr[] =
     HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
     HDR_VARY,
     HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
-    HDR_X_CACHE_LOOKUP,
+    HDR_X_CACHE_LOOKUP, 
     HDR_X_REQUEST_URI,
     HDR_X_SQUID_ERROR
 };
@@ -336,7 +336,7 @@ httpHeaderAppend(HttpHeader * dest, const HttpHeader * src)
 
 /* use fresh entries to replace old ones */
 void
-httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask)
+httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask *denied_mask)
 {
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -509,7 +509,7 @@ httpHeaderDelById(HttpHeader * hdr, http_hdr_type id)
     debug(55, 8) ("%p del-by-id %d\n", hdr, id);
     assert(hdr);
     assert_eid(id);
-    assert_eid(id != HDR_OTHER);	/* does not make sense */
+    assert_eid(id != HDR_OTHER); /* does not make sense */
     if (!CBIT_TEST(hdr->mask, id))
 	return 0;
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
@@ -654,6 +654,44 @@ httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc)
     memBufClean(&mb);
 }
 
+void
+httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange *cr)
+{
+    MemBuf mb;
+    Packer p;
+    assert(hdr && cr);
+    /* remove old directives if any */
+    httpHeaderDelById(hdr, HDR_CONTENT_RANGE);
+    /* pack into mb */
+    memBufDefInit(&mb);
+    packerToMemInit(&p, &mb);
+    httpHdrContRangePackInto(cr, &p);
+    /* put */
+    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_CONTENT_RANGE, NULL, mb.buf));
+    /* cleanup */
+    packerClean(&p);
+    memBufClean(&mb);
+}
+
+void
+httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange *range)
+{
+    MemBuf mb;
+    Packer p;
+    assert(hdr && range);
+    /* remove old directives if any */
+    httpHeaderDelById(hdr, HDR_CONTENT_RANGE);
+    /* pack into mb */
+    memBufDefInit(&mb);
+    packerToMemInit(&p, &mb);
+    httpHdrRangePackInto(range, &p);
+    /* put */
+    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_RANGE, NULL, mb.buf));
+    /* cleanup */
+    packerClean(&p);
+    memBufClean(&mb);
+}
+
 /* add extension header (these fields are not parsed/analyzed/joined, etc.) */
 void
 httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value)
@@ -741,22 +779,20 @@ httpHeaderGetCc(const HttpHeader * hdr)
 HttpHdrRange *
 httpHeaderGetRange(const HttpHeader * hdr)
 {
-    HttpHdrRange *r;
-    String s;
-    if (!CBIT_TEST(hdr->mask, HDR_RANGE))
-	return NULL;
-    s = httpHeaderGetList(hdr, HDR_RANGE);
-    r = httpHdrRangeParseCreate(&s);
-    httpHeaderNoteParsedEntry(HDR_RANGE, s, !r);
-    stringClean(&s);
+    HttpHdrRange *r = NULL;
+    HttpHeaderEntry *e;
+    if ((e = httpHeaderFindEntry(hdr, HDR_RANGE))) {
+	r = httpHdrRangeParseCreate(&e->value);
+	httpHeaderNoteParsedEntry(HDR_RANGE, e->value, !r);
+    }
     return r;
 }
 
 HttpHdrContRange *
 httpHeaderGetContRange(const HttpHeader * hdr)
 {
-    HttpHeaderEntry *e;
     HttpHdrContRange *cr = NULL;
+    HttpHeaderEntry *e;
     if ((e = httpHeaderFindEntry(hdr, HDR_CONTENT_RANGE))) {
 	cr = httpHdrContRangeParseCreate(strBuf(e->value));
 	httpHeaderNoteParsedEntry(e->id, e->value, !cr);
