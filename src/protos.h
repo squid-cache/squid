@@ -485,6 +485,7 @@ extern void neighbors_open(int);
 extern peer *peerFindByName(const char *);
 extern peer *getDefaultParent(request_t * request);
 extern peer *getRoundRobinParent(request_t * request);
+extern peer *neighborsDigestSelect(request_t * request, StoreEntry * entry);
 extern int neighborUp(const peer * e);
 extern void peerDestroy(peer * e);
 extern char *neighborTypeStr(const peer * e);
@@ -668,6 +669,7 @@ extern void storeUnlinkFileno(int fileno);
 extern void storeSetPrivateKey(StoreEntry *);
 extern int objectLen(const StoreEntry * e);
 extern int contentLen(const StoreEntry * e);
+extern HttpReply *storeEntryReply(StoreEntry *);
 
 /*
  * store_log.c
@@ -701,8 +703,7 @@ extern EVH storeDirClean;
 /* store_digest.c */
 extern void storeDigestInit();
 extern void storeDigestScheduleRebuild();
-extern void storeDigestRewriteStart(const char *initiator);
-extern void storeDigestRewriteContinue(const char *initiator);
+extern void storeDigestRewriteStart();
 extern void storeDigestReport();
 
 
@@ -905,13 +906,15 @@ extern int ipcCreate(int type,
 
 /* CacheDigest */
 extern CacheDigest *cacheDigestCreate(int capacity);
+extern CacheDigest *cacheDigestSizedCreate(size_t size, int capacity);
 extern void cacheDigestDestroy(CacheDigest * cd);
 extern CacheDigest *cacheDigestClone(const CacheDigest * cd);
 extern void cacheDigestClear(CacheDigest * cd);
 extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
-extern double cacheDigestUtil(const CacheDigest * cd, int *bit_cnt_p, int *on_cnt_p);
+extern void cacheDigestGuessStatsUpdate(cd_guess_stats *stats, int real_hit, int guess_hit);
+extern void cacheDigestGuessStatsReport(const cd_guess_stats *stats, StoreEntry * sentry, const char *label);
 extern void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
 
 /*
