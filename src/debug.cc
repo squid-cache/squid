@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.87 2003/01/23 00:37:19 robertc Exp $
+ * $Id: debug.cc,v 1.88 2003/02/03 21:33:15 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -239,6 +239,9 @@ _db_rotate_log(void)
 	i--;
 	snprintf(from, MAXPATHLEN, "%s.%d", debug_log_file, i - 1);
 	snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, i);
+#ifdef _SQUID_MSWIN_
+	remove(to);
+#endif
 	rename(from, to);
     }
 /*
@@ -252,6 +255,9 @@ _db_rotate_log(void)
     /* Rotate the current log to .0 */
     if (Config.Log.rotateNumber > 0) {
 	snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, 0);
+#ifdef _SQUID_MSWIN_
+	remove(to);
+#endif
 	rename(debug_log_file, to);
     }
     /* Close and reopen the log.  It may have been renamed "manually"

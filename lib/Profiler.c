@@ -1,6 +1,6 @@
 
 /*
- * $Id: Profiler.c,v 1.2 2003/01/23 00:37:01 robertc Exp $
+ * $Id: Profiler.c,v 1.3 2003/02/03 21:33:14 robertc Exp $
  *
  * DEBUG: section 81     CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa, Sep.2000
@@ -125,7 +125,11 @@ int xprof_nesting = 0;
 
 /* Private stuff */
 
+#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
+static __inline void
+#else
 static inline void
+#endif
 xprof_update(xprof_stats_data * head)
 {
     head->delta = head->stop - head->start;
