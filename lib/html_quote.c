@@ -1,5 +1,5 @@
 /*
- * $Id: html_quote.c,v 1.3 2001/01/12 00:37:12 wessels Exp $
+ * $Id: html_quote.c,v 1.4 2001/10/17 19:46:43 hno Exp $
  * 
  * DEBUG:
  * AUTHOR: Robert Collins
@@ -49,7 +49,7 @@
  */
 static struct {
     unsigned char code;
-    char *quote;
+    const char *quote;
 } htmlstandardentities[] =
 
 {
@@ -98,7 +98,7 @@ html_quote(const char *string)
 	buf = xcalloc(bufsize, 1);
     }
     for (src = string, dst = buf; *src; src++) {
-	char *escape = NULL;
+	const char *escape = NULL;
 	const unsigned char ch = *src;
 
 	/* Walk thru the list of HTML Entities that must be quoted to
