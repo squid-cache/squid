@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.320 1998/05/28 23:35:29 wessels Exp $
+ * $Id: client_side.cc,v 1.321 1998/05/29 04:34:48 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1903,7 +1903,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     header_sz = headersEnd(req_hdr, conn->in.offset - (req_hdr - inbuf));
     if (0 == header_sz) {
 	debug(33, 3) ("parseHttpRequest: header_sz == 0\n");
-	xfree(inbuf);
 	*status = 0;
 	return NULL;
     }
