@@ -336,6 +336,8 @@ netdbDump(StoreEntry * sentry)
     i = 0;
     for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table))
 	*(list + i++) = n;
+    if (i != meta_data.netdb_addrs)
+	debug(37, 0, "netdbDump: WARNING netdb_addrs count off, found %d, expected %d\n", i, meta_data.netdb_addrs);
     qsort((char *) list,
 	i,
 	sizeof(netdbEntry *),
