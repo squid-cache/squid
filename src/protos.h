@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.490 2003/08/10 11:00:44 robertc Exp $
+ * $Id: protos.h,v 1.491 2003/08/17 13:42:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1041,7 +1041,10 @@ SQUIDCEXTERN RemovalPolicy *createRemovalPolicy(RemovalPolicySettings * settings
 
 SQUIDCEXTERN int getrusage(int, struct rusage *);
 SQUIDCEXTERN int getpagesize(void);
+#if !defined(_XPG4_2) && !(defined(__EXTENSIONS__) || \
+        (!defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)))
 SQUIDCEXTERN int gethostname(char *, int);
+#endif
 #endif
 
 /*
