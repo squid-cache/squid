@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.373 2001/01/07 14:47:17 hno Exp $
+ * $Id: structs.h,v 1.374 2001/01/07 19:55:20 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -45,7 +45,7 @@ struct _dlink_list {
     dlink_node *tail;
 };
 
-struct _acl_proxy_auth_data {
+struct _acl_user_data {
     splayNode *names;
     struct {
 	unsigned int case_insensitive:1;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.233 2001/01/07 19:42:00 hno Exp $
+ * $Id: acl.cc,v 1.234 2001/01/07 19:55:20 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,7 +41,7 @@ static FILE *aclFile;
 static hash_table *proxy_auth_cache = NULL;
 
 static void aclParseDomainList(void *curlist);
-static void aclParseProxyAuthList(void **current);
+static void aclParseUserList(void **current);
 static void aclParseIpList(void *curlist);
 static void aclParseIntlist(void *curlist);
 static void aclParseWordList(void *curlist);
@@ -636,25 +636,25 @@ aclParseWordList(void *curlist)
 }
 
 static void
-aclParseProxyAuthList(void **current)
+aclParseUserList(void **current)
 {
     char *t = NULL;
-    acl_proxy_auth_data *data;
+    acl_user_data *data;
     splayNode *Top = NULL;
 
-    debug(28, 2) ("aclParseProxyAuthList: parsing authlist\n");
+    debug(28, 2) ("aclParseUserList: parsing authlist\n");
     if (*current == NULL) {
-	debug(28, 3) ("aclParseProxyAuthList: current is null. Creating\n");
+	debug(28, 3) ("aclParseUserList: current is null. Creating\n");
 	*current = memAllocate(MEM_ACL_PROXY_AUTH_DATA);	/*we rely on mA. zeroing */
     }
     data = *current;
     if ((t = strtokFile())) {
-	debug(28, 5) ("aclParseProxyAuthList: First token is %s\n", t);
+	debug(28, 5) ("aclParseUserList: First token is %s\n", t);
 	if (strcmp("-i", t) == 0) {
-	    debug(28, 5) ("aclParseProxyAuthList: Going case-insensitive\n");
+	    debug(28, 5) ("aclParseUserList: Going case-insensitive\n");
 	    data->flags.case_insensitive = 1;
 	} else if (strcmp("REQUIRED", t) == 0) {
-	    debug(28, 5) ("aclParseProxyAuthList: REQUIRED-type enabled\n");
+	    debug(28, 5) ("aclParseUserList: REQUIRED-type enabled\n");
 	    data->flags.required = 1;
 	} else {
 	    if (data->flags.case_insensitive)
@@ -662,13 +662,13 @@ aclParseProxyAuthList(void **current)
 	    Top = splay_insert(xstrdup(t), Top, (SPLAYCMP *) strcmp);
 	}
     }
-    debug(28, 3) ("aclParseProxyAuthList: Case-insensitive-switch is %d\n",
+    debug(28, 3) ("aclParseUserList: Case-insensitive-switch is %d\n",
 	data->flags.case_insensitive);
     /* we might inherit from a previous declaration */
 
-    debug(28, 4) ("aclParseProxyAuthList: parsing proxy-auth list\n");
+    debug(28, 4) ("aclParseUserList: parsing proxy-auth list\n");
     while ((t = strtokFile())) {
-	debug(28, 6) ("aclParseProxyAuthList: Got token: %s\n", t);
+	debug(28, 6) ("aclParseUserList: Got token: %s\n", t);
 	if (data->flags.case_insensitive)
 	    Tolower(t);
 	Top = splay_insert(xstrdup(t), Top, (SPLAYCMP *) strcmp);
@@ -775,7 +775,7 @@ aclParseAclLine(acl ** head)
 	break;
 #if USE_IDENT
     case ACL_IDENT:
-	aclParseProxyAuthList(&A->data);
+	aclParseUserList(&A->data);
 	break;
     case ACL_IDENT_REGEX:
 	aclParseRegexList(&A->data);
@@ -788,7 +788,7 @@ aclParseAclLine(acl ** head)
 	aclParseMethodList(&A->data);
 	break;
     case ACL_PROXY_AUTH:
-	aclParseProxyAuthList(&A->data);
+	aclParseUserList(&A->data);
 	if (!proxy_auth_cache) {
 	    /* First time around, 7921 should be big enough */
 	    proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -1054,7 +1054,7 @@ aclMatchRegex(relist * data, const char *word)
 static int
 aclMatchUser(void *proxyauth_acl, char *user)
 {
-    acl_proxy_auth_data *data = (acl_proxy_auth_data *) proxyauth_acl;
+    acl_user_data *data = (acl_user_data *) proxyauth_acl;
     splayNode *Top = data->names;
 
     debug(28, 7) ("aclMatchUser: user is %s, case_insensitive is %d\n",
@@ -1949,9 +1949,9 @@ aclFreeIpData(void *p)
 }
 
 static void
-aclFreeProxyAuthData(void *data)
+aclFreeUserData(void *data)
 {
-    acl_proxy_auth_data *d = data;
+    acl_user_data *d = data;
     splay_destroy(d->names, xfree);
     memFree(d, MEM_ACL_PROXY_AUTH_DATA);
 }
@@ -1983,11 +1983,11 @@ aclDestroyAcls(acl ** head)
 #endif
 #if USE_IDENT
 	case ACL_IDENT:
-	    aclFreeProxyAuthData(a->data);
+	    aclFreeUserData(a->data);
 	    break;
 #endif
 	case ACL_PROXY_AUTH:
-	    aclFreeProxyAuthData(a->data);
+	    aclFreeUserData(a->data);
 	    break;
 	case ACL_TIME:
 	    aclDestroyTimeList(a->data);
@@ -2164,14 +2164,14 @@ aclIpNetworkCompare(const void *a, const void *b)
 }
 
 static void
-aclDumpProxyAuthListWalkee(void *node_data, void *outlist)
+aclDumpUserListWalkee(void *node_data, void *outlist)
 {
     /* outlist is really a wordlist ** */
     wordlistAdd(outlist, node_data);
 }
 
 wordlist *
-aclDumpProxyAuthList(acl_proxy_auth_data * data)
+aclDumpUserList(acl_user_data * data)
 {
     wordlist *wl = NULL;
     if ((data->flags.case_insensitive) != 0)
@@ -2180,7 +2180,7 @@ aclDumpProxyAuthList(acl_proxy_auth_data * data)
      * a wordlist this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    splay_walk(data->names, aclDumpProxyAuthListWalkee, &wl);
+    splay_walk(data->names, aclDumpUserListWalkee, &wl);
     return wl;
 }
 
@@ -2330,14 +2330,14 @@ aclDumpGeneric(const acl * a)
 #endif
 #if USE_IDENT
     case ACL_IDENT:
-	return aclDumpProxyAuthList(a->data);
+	return aclDumpUserList(a->data);
 	break;
     case ACL_IDENT_REGEX:
 	return aclDumpRegexList(a->data);
 	break;
 #endif
     case ACL_PROXY_AUTH:
-	return aclDumpProxyAuthList(a->data);
+	return aclDumpUserList(a->data);
 	break;
     case ACL_TIME:
 	return aclDumpTimeSpecList(a->data);
