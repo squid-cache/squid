@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.183 2000/05/16 07:06:03 wessels Exp $
+# $Id: cf.data.pre,v 1.184 2000/05/29 23:29:32 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -615,7 +615,7 @@ DOC_START
 	Type specifies the kind of storage system to use.  Most
 	everyone will want to use "ufs" as the type.  If you are using
 	Async I/O (--enable async-io) on Linux or Solaris, then you may
-	want to try "asyncufs" as the type.  Async IO support may be
+	want to try "aufs" as the type.  Async IO support may be
 	buggy, however, so beware.
 
 	Maxobjsize refers to the max object size this storedir supports.
