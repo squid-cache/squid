@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.94 1996/09/18 21:39:28 wessels Exp $
+ * $Id: cache_cf.cc,v 1.95 1996/09/18 21:41:07 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -275,7 +275,7 @@ ip_acl_match(struct in_addr c, ip_acl * a)
 	return 0;
 }
 
-static void 
+static void
 ip_acl_destroy(a)
      ip_acl **a;
 {

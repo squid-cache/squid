@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.24 1996/09/18 21:39:41 wessels Exp $
+ * $Id: stmem.cc,v 1.25 1996/09/18 21:41:08 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -376,7 +376,7 @@ put_free_thing(stmem_stats * thing, void *p)
     }
 }
 
-void 
+void
 put_free_request_t(req)
      void *req;
 {

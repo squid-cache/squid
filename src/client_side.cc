@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.33 1996/09/18 21:39:30 wessels Exp $
+ * $Id: client_side.cc,v 1.34 1996/09/18 21:41:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -33,7 +33,7 @@
 
 static void clientRedirectDone __P((void *data, char *result));
 static int icpHandleIMSReply __P((int fd, StoreEntry * entry, void *data));
-static void clientLookupDstIPDone __P((int fd, struct hostent *hp, void *data));
+static void clientLookupDstIPDone __P((int fd, struct hostent * hp, void *data));
 static void clientLookupSrcFQDNDone __P((int fd, char *fqdn, void *data));
 
 
@@ -72,6 +72,7 @@ static void
 clientLookupIdentDone(void *data)
 {
 }
+
 #endif
 
 #if USE_PROXY_AUTH
