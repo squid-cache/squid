@@ -646,7 +646,7 @@
 /* If libresolv.a has been hacked to export _dns_ttl_ */
 #undef LIBRESOLV_DNS_TTL_HACK
 
-/* Enable support for Transparent Proxy on Linux 2.4 systems */
+/* Enable support for Transparent Proxy on Linux (Netfilter) systems */
 #undef LINUX_NETFILTER
 
 /* If we need to declare sys_errlist[] as external */
