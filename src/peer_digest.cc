@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.45 1998/08/21 03:15:20 wessels Exp $
+ * $Id: peer_digest.cc,v 1.46 1998/09/01 23:31:25 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -282,7 +282,7 @@ peerDigestRequest(peer * p)
     fetch->offset = 0;
     debug(72, 3) ("peerDigestRequest: forwarding to fwdStart...\n");
     /* push towards peer cache */
-    fwdStart(-1, e, req, any_addr);
+    fwdStart(-1, e, req, no_addr);
     storeClientCopy(e, 0, 0, SM_PAGE_SIZE, memAllocate(MEM_4K_BUF),
 	peerDigestFetchReply, fetch);
 }

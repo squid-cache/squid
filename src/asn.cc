@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.46 1998/08/21 03:25:28 wessels Exp $
+ * $Id: asn.cc,v 1.47 1998/09/01 23:31:22 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -183,7 +183,7 @@ asnCacheStart(int as)
     if ((e = storeGet(k)) == NULL) {
 	e = storeCreateEntry(asres, asres, null_request_flags, METHOD_GET);
 	storeClientListAdd(e, asState);
-	fwdStart(-1, e, asState->request, any_addr);
+	fwdStart(-1, e, asState->request, no_addr);
     } else {
 	storeLockObject(e);
 	storeClientListAdd(e, asState);
