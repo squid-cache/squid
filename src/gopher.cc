@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.16 1996/04/05 17:22:19 wessels Exp $ */
+/* $Id: gopher.cc,v 1.17 1996/04/05 17:47:42 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -633,12 +633,12 @@ int gopherReadReply(fd, data)
 		comm_set_select_handler(fd,
 		    COMM_SELECT_READ,
 		    (PF) gopherReadReply,
-		    (caddr_t) data);
+		    (void *) data);
 		/* don't install read timeout until we are below the GAP */
 		comm_set_select_handler_plus_timeout(fd,
 		    COMM_SELECT_TIMEOUT,
 		    (PF) NULL,
-		    (caddr_t) NULL,
+		    (void *) NULL,
 		    (time_t) 0);
 		comm_set_stall(fd, getStallDelay());	/* dont try reading again for a while */
 		return 0;
@@ -661,9 +661,9 @@ int gopherReadReply(fd, data)
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
-		(PF) gopherReadReply, (caddr_t) data);
+		(PF) gopherReadReply, (void *) data);
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-		(PF) gopherReadReplyTimeout, (caddr_t) data, getReadTimeout());
+		(PF) gopherReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    BIT_SET(entry->flag, RELEASE_REQUEST);
@@ -698,11 +698,11 @@ int gopherReadReply(fd, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) gopherReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) gopherReadReplyTimeout,
-	    (caddr_t) data,
+	    (void *) data,
 	    getReadTimeout());
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we got */
@@ -725,11 +725,11 @@ int gopherReadReply(fd, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) gopherReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) gopherReadReplyTimeout,
-	    (caddr_t) data,
+	    (void *) data,
 	    getReadTimeout());
     }
     put_free_4k_page(buf, __FILE__, __LINE__);
@@ -797,11 +797,11 @@ void gopherSendComplete(fd, buf, size, errflag, data)
     comm_set_select_handler(fd,
 	COMM_SELECT_READ,
 	(PF) gopherReadReply,
-	(caddr_t) data);
+	(void *) data);
     comm_set_select_handler_plus_timeout(fd,
 	COMM_SELECT_TIMEOUT,
 	(PF) gopherReadReplyTimeout,
-	(caddr_t) data,
+	(void *) data,
 	getReadTimeout());
     comm_set_fd_lifetime(fd, -1);	/* disable */
 
@@ -846,7 +846,7 @@ int gopherSendRequest(fd, data)
 	len,
 	30,
 	gopherSendComplete,
-	(caddr_t) data);
+	(void *) data);
     return 0;
 }
 
@@ -922,11 +922,11 @@ int gopherStart(unusedfd, url, entry)
     comm_set_select_handler(sock,
 	COMM_SELECT_LIFETIME,
 	(PF) gopherLifetimeExpire,
-	(caddr_t) data);
+	(void *) data);
     comm_set_select_handler(sock,
 	COMM_SELECT_WRITE,
 	(PF) gopherSendRequest,
-	(caddr_t) data);
+	(void *) data);
     if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
 	storeSetPublicKey(entry);	/* Make it public */
 

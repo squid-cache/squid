@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.12 1996/04/04 05:19:49 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.13 1996/04/05 17:47:45 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -25,7 +25,7 @@ long ipcache_high = 200;
 typedef struct _ip_pending {
     int fd;
     IPH handler;
-    caddr_t data;
+    void * data;
     struct _ip_pending *next;
 } IpPending;
 
@@ -551,7 +551,7 @@ void ipcache_call_pending(entry)
 void ipcache_call_pending_badname(fd, handler, data)
      int fd;
      IPH handler;
-     caddr_t data;
+     void * data;
 {
     debug(14, 4, "ipcache_call_pending_badname: Bad Name: Calling handler with NULL result.\n");
     handler(fd, NULL, data);
@@ -929,7 +929,7 @@ int ipcache_dnsHandleRead(fd, data)
     }
     /* reschedule */
     comm_set_select_handler(data->inpipe, COMM_SELECT_READ,
-	(PF) ipcache_dnsHandleRead, (caddr_t) data);
+	(PF) ipcache_dnsHandleRead, (void *) data);
     return 0;
 }
 
@@ -937,7 +937,7 @@ int ipcache_nbgethostbyname(name, fd, handler, data)
      char *name;
      int fd;
      IPH handler;
-     caddr_t data;
+     void * data;
 {
     ipcache_entry *e;
     IpPending *pending;
@@ -1145,7 +1145,7 @@ void ipcache_init()
 	    comm_set_select_handler(dns_child_table[i]->inpipe,
 		COMM_SELECT_READ,
 		(PF) ipcache_dnsHandleRead,
-		(caddr_t) dns_child_table[i]);
+		(void *) dns_child_table[i]);
 	    debug(14, 3, "ipcache_init: 'dns_server' %d started\n", i);
 	}
     }

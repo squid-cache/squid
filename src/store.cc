@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.30 1996/04/05 16:57:27 wessels Exp $ */
+/* $Id: store.cc,v 1.31 1996/04/05 17:47:48 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -624,7 +624,7 @@ int storeRegister(e, fd, handler, data)
      StoreEntry *e;
      int fd;
      PIF handler;
-     caddr_t data;
+     void * data;
 {
     PendingEntry *pe = (PendingEntry *) xmalloc(sizeof(PendingEntry));
     int old_size, i, j;
@@ -919,7 +919,7 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
 	    SWAP_BUF,
 	    e->mem_obj->swap_offset,
 	    (FILE_READ_HD) storeSwapInHandle,
-	    (caddr_t) e);
+	    (void *) e);
     } else {
 	/* complete swapping in */
 	storeSetMemStatus(e, IN_MEMORY);
@@ -984,7 +984,7 @@ int storeSwapInStart(e)
 	SWAP_BUF,
 	e->mem_obj->swap_offset,
 	(FILE_READ_HD) storeSwapInHandle,
-	(caddr_t) e);
+	(void *) e);
     return 0;
 }
 
@@ -1489,8 +1489,8 @@ StoreEntry *storeGetNext()
 
 /* walk through every single entry in the storage and invoke a given routine */
 int storeWalkThrough(proc, data)
-     int (*proc) _PARAMS((StoreEntry * e, caddr_t data));
-     caddr_t data;
+     int (*proc) _PARAMS((StoreEntry * e, void * data));
+     void * data;
 {
     StoreEntry *e = NULL;
     int count = 0;
@@ -1511,7 +1511,7 @@ int storeWalkThrough(proc, data)
 /* return 1 if it expired, 0 if not */
 int removeOldEntry(e, data)
      StoreEntry *e;
-     caddr_t data;
+     void * data;
 {
     time_t curtime = *((time_t *) data);
 
@@ -1536,7 +1536,7 @@ int storePurgeOld()
     int n;
 
     debug(20, 3, "storePurgeOld: Begin purging TTL-expired objects\n");
-    n = storeWalkThrough(removeOldEntry, (caddr_t) & cached_curtime);
+    n = storeWalkThrough(removeOldEntry, (void *) & cached_curtime);
     debug(20, 3, "storePurgeOld: Done purging TTL-expired objects.\n");
     debug(20, 3, "storePurgeOld: %d objects expired\n", n);
     return n;

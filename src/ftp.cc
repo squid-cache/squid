@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.21 1996/04/04 18:41:24 wessels Exp $ */
+/* $Id: ftp.cc,v 1.22 1996/04/05 17:47:42 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -161,7 +161,7 @@ int ftpReadReply(fd, data)
 		comm_set_select_handler(fd,
 		    COMM_SELECT_READ,
 		    (PF) ftpReadReply,
-		    (caddr_t) data);
+		    (void *) data);
 		comm_set_stall(fd, getStallDelay());	/* dont try reading again for a while */
 		return 0;
 	    }
@@ -182,7 +182,7 @@ int ftpReadReply(fd, data)
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
-		(PF) ftpReadReply, (caddr_t) data);
+		(PF) ftpReadReply, (void *) data);
 	    /* note there is no ftpReadReplyTimeout.  Timeouts are handled
 	     * by `ftpget'. */
 	} else {
@@ -220,7 +220,7 @@ int ftpReadReply(fd, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
-	    (caddr_t) data);
+	    (void *) data);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
@@ -239,11 +239,11 @@ int ftpReadReply(fd, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) ftpLifetimeExpire,
-	    (caddr_t) data,
+	    (void *) data,
 	    getReadTimeout());
     }
     return 0;
@@ -277,11 +277,11 @@ void ftpSendComplete(fd, buf, size, errflag, data)
 	comm_set_select_handler(data->ftp_fd,
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
-	    (caddr_t) data);
+	    (void *) data);
 	comm_set_select_handler_plus_timeout(data->ftp_fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) ftpLifetimeExpire,
-	    (caddr_t) data, getReadTimeout());
+	    (void *) data, getReadTimeout());
     }
 }
 
@@ -367,7 +367,7 @@ void ftpSendRequest(fd, data)
     strcat(buf, data->password);
     strcat(buf, space);
     debug(9, 5, "ftpSendRequest: FD %d: buf '%s'\n", fd, buf);
-    data->icp_rwd_ptr = icpWrite(fd, buf, strlen(buf), 30, ftpSendComplete, (caddr_t) data);
+    data->icp_rwd_ptr = icpWrite(fd, buf, strlen(buf), 30, ftpSendComplete, (void *) data);
 }
 
 void ftpConnInProgress(fd, data)
@@ -386,7 +386,7 @@ void ftpConnInProgress(fd, data)
 	    comm_set_select_handler(fd,
 		COMM_SELECT_WRITE,
 		(PF) ftpConnInProgress,
-		(caddr_t) data);
+		(void *) data);
 	    return;
 	case EISCONN:
 	    debug(9, 5, "ftpConnInProgress: FD %d is now connected.", fd);
@@ -400,7 +400,7 @@ void ftpConnInProgress(fd, data)
     comm_set_select_handler(fd,
 	COMM_SELECT_WRITE,
 	(PF) ftpSendRequest,
-	(caddr_t) data);
+	(void *) data);
 }
 
 
@@ -443,9 +443,9 @@ int ftpStart(unusedfd, url, entry)
 	} else {
 	    debug(9, 5, "ftpStart: FD %d: EINPROGRESS.\n", data->ftp_fd);
 	    comm_set_select_handler(data->ftp_fd, COMM_SELECT_LIFETIME,
-		(PF) ftpLifetimeExpire, (caddr_t) data);
+		(PF) ftpLifetimeExpire, (void *) data);
 	    comm_set_select_handler(data->ftp_fd, COMM_SELECT_WRITE,
-		(PF) ftpConnInProgress, (caddr_t) data);
+		(PF) ftpConnInProgress, (void *) data);
 	    return COMM_OK;
 	}
     }
@@ -458,13 +458,13 @@ int ftpStart(unusedfd, url, entry)
     comm_set_select_handler(data->ftp_fd,
 	COMM_SELECT_WRITE,
 	(PF) ftpSendRequest,
-	(caddr_t) data);
+	(void *) data);
     comm_set_fd_lifetime(data->ftp_fd,
 	getClientLifetime());
     comm_set_select_handler(data->ftp_fd,
 	COMM_SELECT_LIFETIME,
 	(PF) ftpLifetimeExpire,
-	(caddr_t) data);
+	(void *) data);
     if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
 	storeSetPublicKey(entry);	/* Make it public */
 
