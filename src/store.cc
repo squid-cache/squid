@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.142 1996/10/28 07:44:28 wessels Exp $
+ * $Id: store.cc,v 1.143 1996/10/29 02:40:36 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2796,6 +2796,8 @@ storeCheckExpired(StoreEntry * e)
 {
     if (storeEntryLocked(e))
 	return 0;
+    if (BIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
+	return 1;
     if (Config.referenceAge && squid_curtime - e->lastref > Config.referenceAge)
 	return 1;
     return 0;
