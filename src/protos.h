@@ -372,6 +372,8 @@ extern void identStart(int, ConnStateData *, IDCB * callback);
 extern void statInit(void);
 extern void pconnHistCount(int, int);
 extern int statMemoryAccounted(void);
+extern void statLogHistCount(StatLogHist * H, double val);
+
 
 extern void memInit(void);
 extern void memFreeMemory(void);

@@ -924,6 +924,13 @@ struct _ErrorState {
     char *request_hdrs;
 };
 
+struct _StatLogHist {
+    int nbins;
+    int *bins;
+    DTOI *val_to_bin;
+    DTOD *bin_to_val;
+};
+
 struct _StatCounters {
     struct {
 	int requests;
@@ -932,7 +939,14 @@ struct _StatCounters {
 	kb_t kbytes_in;
 	kb_t kbytes_out;
 	kb_t hit_kbytes_out;
+	StatLogHist svc_time;
     } client_http;
+    struct {
+	int requests;
+	int errors;
+	kb_t kbytes_in;
+	kb_t kbytes_out;
+    } server;
     struct {
 	int pkts_sent;
 	int pkts_recv;
@@ -940,6 +954,7 @@ struct _StatCounters {
 	int hits_recv;
 	kb_t kbytes_sent;
 	kb_t kbytes_recv;
+	StatLogHist svc_time;
     } icp;
     struct {
 	int requests;

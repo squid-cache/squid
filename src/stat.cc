@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.196 1998/02/12 23:52:16 wessels Exp $
+ * $Id: stat.cc,v 1.197 1998/02/18 09:38:16 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -114,6 +114,13 @@ static const char *describeTimestamps(const StoreEntry *);
 static void statAvgTick(void *notused);
 static void statAvgDump(StoreEntry *, int minutes);
 static void statCountersDump(StoreEntry * sentry);
+static void statLogHistInit(StatLogHist * H, int n, DTOI *, DTOD);
+static DTOI statIcpSvcTimeBin;
+static DTOI statHttpSvcTimeBin;
+static DTOD statIcpSvcTimeVal;
+static DTOD statHttpSvcTimeVal;
+static void statCounterInit(StatCounters *);
+static double statLogHistDeltaMedian(StatLogHist * A, StatLogHist * B);
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
@@ -674,6 +681,7 @@ statAvgDump(StoreEntry * sentry, int minutes)
     StatCounters *l;
     double dt;
     double ct;
+    double x;
     assert(N_COUNT_HIST > 1);
     assert(minutes > 0);
     f = &CountHist[0];
@@ -692,6 +700,9 @@ statAvgDump(StoreEntry * sentry, int minutes)
 	XAVG(client_http.kbytes_in.kb));
     storeAppendPrintf(sentry, "client_http.kbytes_out = %f/sec\n",
 	XAVG(client_http.kbytes_out.kb));
+    x =	statLogHistDeltaMedian(&l->client_http.svc_time, &f->client_http.svc_time);
+    storeAppendPrintf(sentry, "client_http.median_svc_time = %f seconds\n",
+	x / 1000.0);
     storeAppendPrintf(sentry, "icp.pkts_sent = %f/sec\n",
 	XAVG(icp.pkts_sent));
     storeAppendPrintf(sentry, "icp.pkts_recv = %f/sec\n",
@@ -700,6 +711,9 @@ statAvgDump(StoreEntry * sentry, int minutes)
 	XAVG(icp.kbytes_sent.kb));
     storeAppendPrintf(sentry, "icp.kbytes_recv = %f/sec\n",
 	XAVG(icp.kbytes_recv.kb));
+    x = statLogHistDeltaMedian(&l->icp.svc_time, &f->icp.svc_time);
+    storeAppendPrintf(sentry, "icp.median_svc_time = %f seconds\n",
+	x / 1000000.0);
     storeAppendPrintf(sentry, "unlink.requests = %f/sec\n",
 	XAVG(unlink.requests));
     storeAppendPrintf(sentry, "page_faults = %f/sec\n",
@@ -709,6 +723,26 @@ statAvgDump(StoreEntry * sentry, int minutes)
     storeAppendPrintf(sentry, "cpu_time = %f seconds\n", ct);
     storeAppendPrintf(sentry, "wall_time = %f seconds\n", dt);
     storeAppendPrintf(sentry, "cpu_usage = %f%%\n", dpercent(ct, dt));
+}
+
+static void
+statCounterInit(StatCounters * C)
+{
+    C->timestamp = current_time;
+    /*
+     * HTTP svc_time hist is kept in milli-seconds
+     */
+    statLogHistInit(&C->client_http.svc_time,
+	statHttpSvcTimeBin(3600000.0 * 3.0),
+	statHttpSvcTimeBin,
+	statHttpSvcTimeVal);
+    /*
+     * ICP svc_time hist is kept in micro-seconds
+     */
+    statLogHistInit(&C->icp.svc_time,
+	statIcpSvcTimeBin(1000000.0 * 60.0),
+	statIcpSvcTimeBin,
+	statIcpSvcTimeVal);
 }
 
 void
@@ -722,8 +756,8 @@ statInit(void)
     }
     memset(CountHist, '\0', N_COUNT_HIST * sizeof(StatCounters));
     for (i = 0; i < N_COUNT_HIST; i++)
-	CountHist[i].timestamp = current_time;
-    Counter.timestamp = current_time;
+	statCounterInit(&CountHist[i]);
+    statCounterInit(&Counter);
     eventAdd("statAvgTick", statAvgTick, NULL, 60);
 }
 
@@ -803,4 +837,105 @@ void
 statAvg60min(StoreEntry * e)
 {
     statAvgDump(e, 60);
+}
+
+static void
+statLogHistInit(StatLogHist * H, int n, DTOI * val_to_bin, DTOD * bin_to_val)
+{
+    H->nbins = n;
+    H->bins = xcalloc(n, sizeof(int));
+    H->val_to_bin = val_to_bin;
+    H->bin_to_val = bin_to_val;
+}
+
+void
+statLogHistCount(StatLogHist * H, double val)
+{
+    int bin = H->val_to_bin(val);
+    if (bin >= H->nbins)
+	bin = H->nbins - 1;
+    assert(0 <= bin && bin < H->nbins);
+    H->bins[bin]++;
+}
+
+static double
+statLogHistDeltaMedian(StatLogHist * A, StatLogHist * B)
+{
+    StatLogHist D;
+    int i;
+    int s1 = 0;
+    int h = 0;
+    int a = 0;
+    int b = 0;
+    int I;
+    int J;
+    int K;
+    double f;
+    assert(A->nbins == B->nbins);
+    memset(&D, '\0', sizeof(StatLogHist));
+    D.nbins = A->nbins;
+    D.bins = xcalloc(D.nbins, sizeof(int));
+    for (i = 0; i < A->nbins; i++) {
+	assert(B->bins[i] >= A->bins[i]);
+	D.bins[i] = B->bins[i] - A->bins[i];
+    }
+    for (i = 0; i < A->nbins; i++)
+	s1 += D.bins[i];
+    h = s1 >> 1;
+    I = 0;
+    J = A->nbins;
+    for (i = 0; i < A->nbins; i++) {
+	J = i;
+	b += D.bins[J];
+	if (a <= h && h <= b)
+	    break;
+	I = i;
+	a += D.bins[I];
+    }
+    safe_free(D.bins);
+    if (s1 == 0)
+	return 0.0;
+    if (a > h) {
+	debug(0,0)("statLogHistDeltaMedian: a=%d, h=%d\n", a, h);
+	return 0.0;
+    }
+    if(a >= b) {
+	debug(0,0)("statLogHistDeltaMedian: a=%d, b=%d\n", a, b);
+	return 0.0;
+    }
+    if(I >= J) {
+	debug(0,0)("statLogHistDeltaMedian: I=%d, J=%d\n", I, J);
+	return 0.0;
+    }
+    f = (h - a) / (b - a);
+    K = f * (double) (J - I) + I;
+    return A->bin_to_val(K);
+}
+
+static int
+statHttpSvcTimeBin(double v)
+{
+    if (v <= 1.0)
+	return 0;
+    return (int) (log(v) * 10.0 + 0.5);
+}
+
+static int
+statIcpSvcTimeBin(double v)
+{
+    if (v <= 1.0)
+	return 0;
+    return (int) (log(v) * 50.0 + 0.5);
+}
+
+static double
+statHttpSvcTimeVal(double bin)
+{
+    return exp(bin / 10.0);
+}
+
+static double
+statIcpSvcTimeVal(double bin)
+{
+    return exp(bin / 50.0);
 }
