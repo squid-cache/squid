@@ -1,6 +1,6 @@
 
 /*
- * $Id: Generic.h,v 1.6 2003/09/22 08:50:51 robertc Exp $
+ * $Id: Generic.h,v 1.7 2004/12/20 16:30:32 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -71,6 +71,38 @@ T& for_each(Stack<E> const &collection, T& visitor)
         visitor(*(typename T::argument_type const *)collection.items[index]);
 
     return visitor;
+};
+
+/* RBC 20030718 - use this to provide instance expecting classes a pointer to a
+ * singleton
+ */
+
+template <class C>
+
+class InstanceToSingletonAdapter : public C
+{
+
+public:
+    void *operator new (size_t byteCount) { return ::operator new (byteCount);}
+
+    void operator delete (void *address) { ::operator delete (address);}
+
+    InstanceToSingletonAdapter(C const *instance) : theInstance (instance) {}
+
+    C const * operator-> () const {return theInstance; }
+
+    C * operator-> () {return const_cast<C *>(theInstance); }
+
+    C const & operator * () const {return *theInstance; }
+
+    C & operator * () {return *const_cast<C *>(theInstance); }
+
+    operator C const * () const {return theInstance;}
+
+    operator C *() {return const_cast<C *>(theInstance);}
+
+private:
+    C const *theInstance;
 };
 
 template <class InputIterator , class Visitor>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.114 2003/04/24 06:35:08 hno Exp $
+ * $Id: defines.h,v 1.115 2004/12/20 16:30:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -279,10 +279,34 @@
 #define cbdataInternalLock(a)		cbdataInternalLockDbg(a,__FILE__,__LINE__)
 #define cbdataInternalUnlock(a)		cbdataInternalUnlockDbg(a,__FILE__,__LINE__)
 #define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValidDbg((void **)&(var), (ptr), __FILE__,__LINE__)
+#define CBDATA_CLASS2(type)	\
+	static cbdata_type CBDATA_##type; \
+	public: \
+		void *operator new(size_t size) { \
+		  assert(size == sizeof(type)); \
+		  (CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL))); \
+		  return cbdataInternalAllocDbg(CBDATA_##type,__FILE__,__LINE__); \
+		} \
+  		void operator delete (void *address) { \
+		  if (address) cbdataInternalFreeDbg(address,__FILE__,__LINE__); \
+		} \
+	private:
 #else
 #define cbdataAlloc(type) ((type *)cbdataInternalAlloc(CBDATA_##type))
 #define cbdataFree(var)		do {if (var) {cbdataInternalFree(var); var = NULL;}} while(0)
 #define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValid((void **)&(var), (ptr))
+#define CBDATA_CLASS2(type)	\
+	static cbdata_type CBDATA_##type; \
+	public: \
+		void *operator new(size_t size) { \
+		  assert(size == sizeof(type)); \
+		  (CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL))); \
+		  return (type *)cbdataInternalAlloc(CBDATA_##type); \
+		} \
+  		void operator delete (void *address) { \
+		  if (address) cbdataInternalFree(address);\
+		} \
+	private:
 #endif
 #define cbdataReference(var)	(cbdataInternalLock(var), var)
 #define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = NULL;}} while(0)

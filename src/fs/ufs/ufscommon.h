@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.9 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ufscommon.h,v 1.1 2004/12/20 16:30:45 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -44,6 +44,10 @@
 
 class UFSStrategy;
 
+class ConfigOptionVector;
+
+class DiskIOModule;
+
 class UFSSwapDir : public SwapDir
 {
 
@@ -52,7 +56,7 @@ public:
     static int DirClean(int swap_index);
     static int FilenoBelongsHere(int fn, int F0, int F1, int F2);
 
-    UFSSwapDir(char const *aType);
+    UFSSwapDir(char const *aType, const char *aModuleType);
     virtual void init();
     virtual void newFileSystem();
     virtual void dump(StoreEntry &) const;
@@ -100,7 +104,7 @@ public:
                                int clean);
     int validFileno(sfileno filn, int flag) const;
     int mapBitAllocate();
-    virtual SwapDirOption *getOptionTree() const;
+    virtual ConfigOption *getOptionTree() const;
 
     void *fsdata;
 
@@ -130,138 +134,65 @@ private:
     void createSwapSubDirs();
     void dumpEntry(StoreEntry &) const;
     char *logFile(char const *ext = NULL)const;
+    void changeIO(DiskIOModule *);
+    bool optionIOParse(char const *option, const char *value, int reconfiguring);
+    void optionIODump(StoreEntry * e) const;
+    ConfigOptionVector *currentIOOptions;
+    char const *ioType;
 
 };
 
 #include "RefCount.h"
-
-class IORequestor : public RefCountable
-{
-
-public:
-    typedef RefCount<IORequestor> Pointer;
-    virtual void ioCompletedNotification() = 0;
-    virtual void closeCompleted() = 0;
-    virtual void readCompleted(const char *buf, int len, int errflag) = 0;
-    virtual void writeCompleted(int errflag, size_t len) = 0;
-};
-
-class DiskFile : public RefCountable
-{
-
-public:
-    typedef RefCount<DiskFile> Pointer;
-    virtual void open (int, mode_t, IORequestor::Pointer) = 0;
-    virtual void create (int, mode_t, IORequestor::Pointer) = 0;
-    virtual void read(char *, off_t, size_t) = 0;
-    virtual void write(char const *buf, size_t size, off_t offset, FREE *free_func) = 0;
-    virtual void close () = 0;
-    virtual bool canRead() const = 0;
-    virtual bool canWrite() const {return true;}
-
-    /* During miogration only */
-    virtual int getFD() const {return -1;}
-
-    virtual bool error() const = 0;
-
-    /* Inform callers if there is IO in progress */
-    virtual bool ioInProgress() const = 0;
-};
+#include "DiskIO/IORequestor.h"
 
 /* UFS dir specific IO calls */
+
+class DiskIOStrategy;
+
+class DiskFile;
 
 class UFSStrategy
 {
 
 public:
-    virtual bool shedLoad() = 0;
-    virtual void openFailed(){}
+    UFSStrategy (DiskIOStrategy *);
+    virtual ~UFSStrategy ();
+    /* Not implemented */
+    UFSStrategy (UFSStrategy const &);
+    UFSStrategy &operator=(UFSStrategy const &);
 
-    virtual int load(){return -1;}
+    virtual bool shedLoad();
 
-    virtual StoreIOState::Pointer createState(SwapDir *, StoreEntry *, STIOCB *, void *)const = 0;
+    virtual int load();
+
+    StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
     /* UFS specific */
-    virtual DiskFile::Pointer newFile (char const *path) = 0;
+    virtual RefCount<DiskFile> newFile (char const *path);
     StoreIOState::Pointer open(SwapDir *, StoreEntry *, STFNCB *,
                                STIOCB *, void *);
     StoreIOState::Pointer create(SwapDir *, StoreEntry *, STFNCB *,
                                  STIOCB *, void *);
-    /* virtual void strategyStats(StoreEntry *sentry) const = 0; */
-    /* virtual void dumpCacheDirParams(StoreEntry * e, const char *option) const = 0; */
-    virtual SwapDirOption *getOptionTree() const { return NULL;}
 
-    virtual void unlinkFile (char const *) = 0;
-    virtual void sync() {}
+    virtual void unlinkFile (char const *);
+    virtual void sync();
 
-    virtual int callback() { return 0; }
+    virtual int callback();
 
     /* Init per-instance logic */
-    virtual void init() {}
+    virtual void init();
 
     /* cachemgr output on the IO instance stats */
-    virtual void statfs(StoreEntry & sentry)const {}}
+    virtual void statfs(StoreEntry & sentry)const;
 
-;
+protected:
 
-class IOStrategy
-{
-
-public:
-    virtual ~IOStrategy(){}
-
-    /* Can the IO Strategy handle more requests ? */
-    virtual bool shedLoad() = 0;
-    /* What is the current load? 999 = 99.9% */
-    virtual int load() = 0;
-    /* Return a handle for performing IO operations */
-    virtual DiskFile::Pointer newFile (char const *path) = 0;
-    /* flush all IO operations  */
-    virtual void sync() {}
-
-    /* perform any pending callbacks */
-    virtual int callback() { return 0; }
-
-    /* Init per-instance logic */
-    virtual void init() {}
-
-    /* cachemgr output on the IO instance stats */
-    virtual void statfs(StoreEntry & sentry)const {}}
-
-;
-
-/* RBC 20030718 - use this to provide instance expecting classes a pointer to a
- * singleton
- */
-
-template <class C>
-
-class InstanceToSingletonAdapter : public C
-{
-
-public:
-    void *operator new (size_t byteCount) { return ::operator new (byteCount);}
-
-    void operator delete (void *address) { ::operator delete (address);}
-
-    InstanceToSingletonAdapter(C const *instance) : theInstance (instance) {}
-
-    C const * operator-> () const {return theInstance; }
-
-    C * operator-> () {return const_cast<C *>(theInstance); }
-
-    C const & operator * () const {return *theInstance; }
-
-    C & operator * () {return *const_cast<C *>(theInstance); }
-
-    operator C const * () const {return theInstance;}
-
-    operator C *() {return const_cast<C *>(theInstance);}
-
-private:
-    C const *theInstance;
+    friend class UFSSwapDir;
+    DiskIOStrategy *io;
 };
 
 /* Common ufs-store-dir logic */
+
+class ReadRequest;
 
 class UFSStoreState : public storeIOState, public IORequestor
 {
@@ -275,9 +206,9 @@ public:
     virtual void closeCompleted();
     // protected:
     virtual void ioCompletedNotification();
-    virtual void readCompleted(const char *buf, int len, int errflag);
-    virtual void writeCompleted(int errflag, size_t len);
-    DiskFile::Pointer theFile;
+    virtual void readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest>);
+    virtual void writeCompleted(int errflag, size_t len, RefCount<WriteRequest>);
+    RefCount<DiskFile> theFile;
     bool opening;
     bool creating;
     bool closing;

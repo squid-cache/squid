@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.97 2004/12/20 14:52:26 robertc Exp $
+#  $Id: Makefile.am,v 1.98 2004/12/20 16:30:32 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -167,14 +167,18 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 SUBDIRS		= fs repl auth
 
-INCLUDES        = -I/usr/include/libxml2 -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
+EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
+noinst_LIBRARIES = @DISK_LIBS@
+
+INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
 
 EXTRA_PROGRAMS = \
+	DiskIO/DiskDaemon/diskd \
 	unlinkd \
 	pinger \
 	dnsserver \
 	recv-announce \
-	ufsdump
+	ufsdump 
 
 noinst_PROGRAMS = \
 	cf_gen
@@ -189,6 +193,7 @@ bin_PROGRAMS = \
 libexec_PROGRAMS = \
 	$(PINGER) \
 	$(DNSSERVER) \
+	@DISK_PROGRAMS@ \
 	$(UNLINKD) \
 	cachemgr$(CGIEXT)
 
@@ -205,6 +210,12 @@ all_FSMODULES = \
 	fs/null/StoreFSnull.cc \
 	fs/ufs/StoreFSufs.cc
 
+all_DISKIOMODULES = \
+	DiskIO/AIO/AIODiskIOModule.cc \
+	DiskIO/Blocking/BlockingDiskIOModule.cc \
+	DiskIO/DiskDaemon/DiskDaemonDiskIOModule.cc \
+	DiskIO/DiskThreads/DiskThreadsDiskIOModule.cc
+
 all_AUTHMODULES = \
 	auth/basic/basicScheme.cc \
 	auth/basic/basicScheme.h \
@@ -215,8 +226,10 @@ all_AUTHMODULES = \
 
 EXTRA_squid_SOURCES = \
 	$(all_FSMODULES) \
+	$(all_DISKIOMODULES) \
 	$(all_AUTHMODULES) \
 	$(ARP_ACL_ALL_SOURCE) \
+	ConfigOption.h \
 	$(DELAY_POOL_ALL_SOURCE) \
 	dns.cc \
 	dnsserver.cc \
@@ -342,6 +355,7 @@ squid_SOURCES = \
 	comm_poll.cc \
 	comm_kqueue.cc \
 	CommRead.h \
+	ConfigOption.cc \
 	ConfigParser.h \
 	ConnectionDetail.h \
 	debug.cc \
@@ -349,6 +363,9 @@ squid_SOURCES = \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
+	DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc \
+	DiskIO/WriteRequest.cc \
 	$(DNSSOURCE) \
 	$(EPOLL_SOURCE) \
 	enums.h \
@@ -479,8 +496,6 @@ squid_SOURCES = \
 	SwapDir.h \
 	tools.cc \
 	typedefs.h \
-	ufscommon.cc \
-	ufscommon.h \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	urn.cc \
@@ -500,7 +515,6 @@ noinst_HEADERS = ACLChecklist.cci \
 	Store.cci \
 	String.cci \
 	SquidString.h \
-	ufscommon.cci \
 	squid_windows.h
 
 nodist_squid_SOURCES = \
@@ -512,9 +526,11 @@ nodist_squid_SOURCES = \
 squid_LDADD = \
 	-L../lib \
 	@XTRA_OBJS@ \
+	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
 	@STORE_LINKOBJS@ \
 	@STORE_OBJS@ \
+	@DISK_LIBS@ \
 	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@ \
 	@CRYPTLIB@ \
@@ -526,6 +542,8 @@ squid_LDADD = \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@ @STORE_LINKOBJS@ \
+	@DISK_LIBS@ \
+	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
 	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@
@@ -677,8 +695,6 @@ ufsdump_SOURCES = debug.cc \
 	SwapDir.cc \
 	tools.cc \
 	typedefs.h \
-	ufscommon.cc \
-	ufscommon.h \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	urn.cc \
@@ -727,6 +743,13 @@ data_DATA = \
 
 LDADD = -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@
 
+DISKIODIST = \
+	DiskIO/DiskFile.h \
+	DiskIO/DiskIOStrategy.h \
+	DiskIO/IORequestor.h \
+	DiskIO/DiskIOModule.h \
+	DiskIO/ReadRequest.h
+
 EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
@@ -734,7 +757,45 @@ EXTRA_DIST = \
 	mk-string-arrays.pl \
 	repl_modules.sh \
 	mib.txt \
-	mime.conf.default
+	mime.conf.default \
+	$(DISKIODIST)
+
+libAIO_a_SOURCES = \
+		DiskIO/AIO/async_io.h \
+		DiskIO/AIO/AIODiskFile.cc \
+		DiskIO/AIO/AIODiskFile.h \
+		DiskIO/AIO/AIODiskIOStrategy.cc \
+		DiskIO/AIO/AIODiskIOStrategy.h \
+		DiskIO/AIO/AIODiskIOModule.h 
+
+libBlocking_a_SOURCES = \
+		DiskIO/Blocking/BlockingFile.cc \
+		DiskIO/Blocking/BlockingFile.h \
+		DiskIO/Blocking/BlockingIOStrategy.cc \
+		DiskIO/Blocking/BlockingIOStrategy.h \
+		DiskIO/Blocking/BlockingDiskIOModule.h 
+
+libDiskDaemon_a_SOURCES = \
+		DiskIO/DiskDaemon/DiskdFile.cc \
+		DiskIO/DiskDaemon/DiskdFile.h \
+		DiskIO/DiskDaemon/DiskdIOStrategy.cc \
+		DiskIO/DiskDaemon/DiskdIOStrategy.h \
+		DiskIO/DiskDaemon/diomsg.h \
+		DiskIO/DiskDaemon/DiskDaemonDiskIOModule.h
+
+libDiskThreads_a_SOURCES = \
+	DiskIO/DiskThreads/aiops.cc \
+	DiskIO/DiskThreads/async_io.cc \
+	DiskIO/DiskThreads/DiskThreads.h \
+	DiskIO/DiskThreads/DiskThreadsDiskFile.cc \
+	DiskIO/DiskThreads/DiskThreadsDiskFile.h \
+	DiskIO/DiskThreads/DiskThreadsDiskIOModule.h \
+	DiskIO/DiskThreads/DiskThreadsIOStrategy.cc \
+	DiskIO/DiskThreads/DiskThreadsIOStrategy.h
+
+DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc 
+DiskIO_DiskDaemon_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a @XTRA_LIBS@
+
 
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.123 2004/12/20 14:52:27 robertc Exp $
+ * $Id: forward.cc,v 1.124 2004/12/20 16:30:35 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels

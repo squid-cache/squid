@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.137 2004/12/20 14:52:28 robertc Exp $
+ * $Id: store_client.cc,v 1.138 2004/12/20 16:30:36 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels

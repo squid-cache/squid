@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.7 2004/12/20 14:52:25 robertc Exp $
+ * $Id: ACLTimeData.cc,v 1.8 2004/12/20 16:30:32 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

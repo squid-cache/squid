@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFScoss.cc,v 1.3 2004/08/30 05:12:32 robertc Exp $
+ * $Id: StoreFScoss.cc,v 1.4 2004/12/20 16:30:41 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -35,17 +35,14 @@
  */
 
 #include "StoreFileSystem.h"
-#include "fs/coss/StoreFScoss.h"
-#include "store_coss.h"
+#include "StoreFScoss.h"
 #include "Store.h"
-
-struct _coss_stats coss_stats;
-
-static void storeCossStats(StoreEntry *);
+#include "CossSwapDir.h"
+#include "store_coss.h"
 
 StoreFScoss StoreFScoss::_instance;
 
-StoreFileSystem &
+StoreFScoss &
 StoreFScoss::GetInstance()
 {
     return _instance;
@@ -66,7 +63,7 @@ void
 StoreFScoss::done()
 {
     /*  delete coss_index_pool;coss_index_pool = NULL;  XXX Should be here? */
-    cachemgrRegister("coss", "COSS Stats", storeCossStats, 0, 1);
+    cachemgrRegister("coss", "COSS Stats", Stats, 0, 1);
     initialised = false;
 }
 
@@ -77,7 +74,6 @@ StoreFScoss::createSwapDir()
     return result;
 }
 
-
 void
 StoreFScoss::setup()
 {
@@ -87,33 +83,45 @@ StoreFScoss::setup()
     initialised = true;
 }
 
-static void
-storeCossStats(StoreEntry * sentry)
+void
+StoreFScoss::Stats(StoreEntry * sentry)
+{
+    GetInstance().stat(sentry);
+}
+
+void
+StoreFScoss::stat(StoreEntry *sentry)
+{
+    stats.stat(sentry);
+}
+
+void
+CossStats::stat(StoreEntry *sentry)
 {
     const char *tbl_fmt = "%10s %10d %10d %10d\n";
     storeAppendPrintf(sentry, "\n                   OPS     SUCCESS        FAIL\n");
     storeAppendPrintf(sentry, tbl_fmt,
-                      "open", coss_stats.open.ops, coss_stats.open.success, coss_stats.open.fail);
+                      "open", open.ops, open.success, open.fail);
     storeAppendPrintf(sentry, tbl_fmt,
-                      "create", coss_stats.create.ops, coss_stats.create.success, coss_stats.create.fail);
+                      "create", create.ops, create.success, create.fail);
     storeAppendPrintf(sentry, tbl_fmt,
-                      "close", coss_stats.close.ops, coss_stats.close.success, coss_stats.close.fail);
+                      "close", close.ops, close.success, close.fail);
     storeAppendPrintf(sentry, tbl_fmt,
-                      "unlink", coss_stats.unlink.ops, coss_stats.unlink.success, coss_stats.unlink.fail);
+                      "unlink", unlink.ops, unlink.success, unlink.fail);
     storeAppendPrintf(sentry, tbl_fmt,
-                      "read", coss_stats.read.ops, coss_stats.read.success, coss_stats.read.fail);
+                      "read", read.ops, read.success, read.fail);
     storeAppendPrintf(sentry, tbl_fmt,
-                      "write", coss_stats.write.ops, coss_stats.write.success, coss_stats.write.fail);
+                      "write", write.ops, write.success, write.fail);
     storeAppendPrintf(sentry, tbl_fmt,
-                      "s_write", coss_stats.stripe_write.ops, coss_stats.stripe_write.success, coss_stats.stripe_write.fail);
+                      "s_write", stripe_write.ops, stripe_write.success, stripe_write.fail);
 
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "stripes:          %d\n", coss_stats.stripes);
-    storeAppendPrintf(sentry, "alloc.alloc:      %d\n", coss_stats.alloc.alloc);
-    storeAppendPrintf(sentry, "alloc.realloc:    %d\n", coss_stats.alloc.realloc);
-    storeAppendPrintf(sentry, "alloc.collisions: %d\n", coss_stats.alloc.collisions);
-    storeAppendPrintf(sentry, "disk_overflows:   %d\n", coss_stats.disk_overflows);
-    storeAppendPrintf(sentry, "stripe_overflows: %d\n", coss_stats.stripe_overflows);
-    storeAppendPrintf(sentry, "open_mem_hits:    %d\n", coss_stats.open_mem_hits);
-    storeAppendPrintf(sentry, "open_mem_misses:  %d\n", coss_stats.open_mem_misses);
+    storeAppendPrintf(sentry, "stripes:          %d\n", stripes);
+    storeAppendPrintf(sentry, "alloc.alloc:      %d\n", alloc.alloc);
+    storeAppendPrintf(sentry, "alloc.realloc:    %d\n", alloc.realloc);
+    storeAppendPrintf(sentry, "alloc.collisions: %d\n", alloc.collisions);
+    storeAppendPrintf(sentry, "disk_overflows:   %d\n", disk_overflows);
+    storeAppendPrintf(sentry, "stripe_overflows: %d\n", stripe_overflows);
+    storeAppendPrintf(sentry, "open_mem_hits:    %d\n", open_mem_hits);
+    storeAppendPrintf(sentry, "open_mem_misses:  %d\n", open_mem_misses);
 }

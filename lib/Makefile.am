@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.15 2004/12/20 14:52:24 robertc Exp $
+#  $Id: Makefile.am,v 1.16 2004/12/20 16:30:32 robertc Exp $
 #
 
 DIST_SUBDIRS = libTrie cppunit-1.10.0

@@ -1,13 +1,11 @@
 /*
- * dio.h
+ * diomsg.h
  *
  * Internal declarations for the diskd routines
  */
 
-#ifndef __STORE_DIO_H__
-#define __STORE_DIO_H__
-
-typedef struct _diomsg diomsg;
+#ifndef __SQUID_DIOMSG_H__
+#define __SQUID_DIOMSG_H__
 
 enum {
     _MQD_NOP,
@@ -19,19 +17,22 @@ enum {
     _MQD_UNLINK
 };
 
-struct _diomsg
+struct RefCountable_;
+
+struct diomsg
 {
     mtyp_t mtype;
     int id;
     int seq_no;
     void * callback_data;
+    RefCountable_ * requestor;
     int size;
     int offset;
     int status;
     bool newstyle;
     int shm_offset;
+    static const int msg_snd_rcv_sz;
 };
 
-static const int msg_snd_rcv_sz = sizeof(diomsg) - sizeof(mtyp_t);
 
 #endif

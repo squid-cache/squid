@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.38 2004/12/20 14:52:27 robertc Exp $
+ * $Id: ipc.cc,v 1.39 2004/12/20 16:30:35 robertc Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels

@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.13 2004/12/20 14:52:28 robertc Exp $
+ * $Id: ufscommon.cc,v 1.1 2004/12/20 16:30:45 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins

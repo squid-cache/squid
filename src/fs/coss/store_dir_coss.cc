@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.55 2004/12/20 14:52:31 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.56 2004/12/20 16:30:42 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -34,12 +34,18 @@
  */
 
 #include "squid.h"
+#include "CossSwapDir.h"
 #include "Store.h"
 
 #include "store_coss.h"
 #include "fde.h"
 #include "SwapDir.h"
 #include "StoreSwapLogData.h"
+#include "DiskIO/DiskIOModule.h"
+#include "DiskIO/DiskIOStrategy.h"
+#include "DiskIO/ReadRequest.h"
+#include "ConfigOption.h"
+#include "StoreFScoss.h"
 
 #define STORE_META_BUFSZ 4096
 
@@ -153,19 +159,184 @@ CossSwapDir::closeLog()
 }
 
 void
-CossSwapDir::init()
+CossSwapDir::ioCompletedNotification()
 {
-    a_file_setupqueue(&aq);
-    openLog();
-    storeCossDirRebuild(this);
-    fd = file_open(path, O_RDWR | O_CREAT);
-
-    if (fd < 0) {
+    if (theFile->error()) {
         debug(47, 1) ("%s: %s\n", path, xstrerror());
         fatal("storeCossDirInit: Failed to open a COSS file.");
     }
+}
 
-    n_coss_dirs++;
+void
+CossSwapDir::closeCompleted()
+{
+    theFile = NULL;
+}
+
+void
+CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest> aRequest)
+{
+    CossRead* cossRead= dynamic_cast<CossRead *>(aRequest.getRaw());
+    assert (cossRead);
+    StoreIOState::Pointer sio =  cossRead->sio;
+    void *cbdata;
+    STRCB *callback = sio->read.callback;
+    char *p;
+    CossState *cstate = dynamic_cast<CossState *>(sio.getRaw());
+    ssize_t rlen;
+
+    debug(79, 3) ("storeCossReadDone: fileno %d, len %d\n",
+                  sio->swap_filen, len);
+    cstate->flags.reading = 0;
+
+    if (errflag) {
+        StoreFScoss::GetInstance().stats.read.fail++;
+
+        if (errflag > 0) {
+            errno = errflag;
+            debug(79, 1) ("storeCossReadDone: error: %s\n", xstrerror());
+        } else {
+            debug(79, 1) ("storeCossReadDone: got failure (%d)\n", errflag);
+        }
+
+        rlen = -1;
+    } else {
+        StoreFScoss::GetInstance().stats.read.success++;
+
+        if (cstate->readbuffer == NULL) {
+            cstate->readbuffer = (char *)xmalloc(cstate->st_size);
+            p = storeCossMemPointerFromDiskOffset(storeCossFilenoToDiskOffset(sio->swap_filen),
+                                                  NULL);
+            xmemcpy(cstate->readbuffer, p, cstate->st_size);
+        }
+
+        sio->offset_ += len;
+        xmemcpy(cstate->requestbuf, &cstate->readbuffer[cstate->requestoffset],
+                cstate->requestlen);
+        rlen = (size_t) cstate->requestlen;
+    }
+
+    assert(callback);
+    sio->read.callback = NULL;
+
+    if (cbdataReferenceValidDone(sio->read.callback_data, &cbdata))
+        callback(cbdata, cstate->requestbuf, rlen);
+}
+
+void
+CossSwapDir::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writeRequest)
+{
+    CossWrite* cossWrite= dynamic_cast<CossWrite *>(writeRequest.getRaw());
+    assert (cossWrite);
+
+    debug(79, 3) ("storeCossWriteMemBufDone: buf %p, len %ld\n", cossWrite->membuf, (long int) len);
+
+
+    if (errflag) {
+        StoreFScoss::GetInstance().stats.stripe_write.fail++;
+        debug(79, 1) ("storeCossWriteMemBufDone: got failure (%d)\n", errflag);
+        debug(79, 1) ("size=%x\n", cossWrite->membuf->diskend - cossWrite->membuf->diskstart);
+    } else {
+        StoreFScoss::GetInstance().stats.stripe_write.success++;
+    }
+
+
+    dlinkDelete(&cossWrite->membuf->node, &membufs);
+    cbdataFree(cossWrite->membuf);
+    StoreFScoss::GetInstance().stats.stripes--;
+}
+
+void
+CossSwapDir::changeIO(DiskIOModule *module)
+{
+    DiskIOStrategy *anIO = module->createStrategy();
+    safe_free(ioModule);
+    ioModule = xstrdup(module->type());
+
+    delete io;
+    io = anIO;
+    /* Change the IO Options */
+
+    if (currentIOOptions->options.size() > 3)
+        delete currentIOOptions->options.pop_back();
+
+    /* TODO: factor out these 4 lines */
+    ConfigOption *ioOptions = NULL;
+
+    if (io)
+        ioOptions = io->getOptionTree();
+
+    if (ioOptions)
+        currentIOOptions->options.push_back(ioOptions);
+}
+
+bool
+CossSwapDir::optionIOParse(char const *option, const char *value, int reconfiguring)
+{
+    if (strcmp(option, "IOEngine") != 0)
+        return false;
+
+    if (reconfiguring)
+        /* silently ignore this */
+        return true;
+
+    if (!value)
+        self_destruct();
+
+    DiskIOModule *module = DiskIOModule::Find(value);
+
+    if (!module)
+        self_destruct();
+
+    changeIO(module);
+
+    return true;
+}
+
+void
+CossSwapDir::optionIODump(StoreEntry * e) const
+{
+    storeAppendPrintf(e, " IOEngine=%s", ioModule);
+}
+
+ConfigOption *
+CossSwapDir::getOptionTree() const
+{
+    ConfigOption *parentResult = SwapDir::getOptionTree();
+
+    currentIOOptions->options.push_back(parentResult);
+    currentIOOptions->options.push_back(new ConfigOptionAdapter<CossSwapDir>(*const_cast<CossSwapDir *>(this), &CossSwapDir::optionIOParse, &CossSwapDir::optionIODump));
+    currentIOOptions->options.push_back(
+        new ConfigOptionAdapter<CossSwapDir>(*const_cast<CossSwapDir *>(this),
+                                             &CossSwapDir::optionBlockSizeParse,
+                                             &CossSwapDir::optionBlockSizeDump));
+
+
+    ConfigOption *ioOptions = NULL;
+
+    if (io)
+        ioOptions = io->getOptionTree();
+
+    if (ioOptions)
+        currentIOOptions->options.push_back(ioOptions);
+
+    return currentIOOptions;
+}
+
+void
+CossSwapDir::init()
+{
+    /* FIXME: SwapDirs aren't refcounted. We call IORequestor calls, which
+     * are refcounted. SO, we up our count once to avoid implicit delete's.
+     */
+    RefCountReference();
+    io->init();
+    openLog();
+    storeCossDirRebuild(this);
+    theFile = io->newFile(path);
+    theFile->open(O_RDWR | O_CREAT, 0644, this);
+
+    ++n_coss_dirs;
     /*
      * fs.blksize is normally determined by calling statvfs() etc,
      * but we just set it here.  It is used in accounting the
@@ -200,7 +371,7 @@ storeCossRebuildComplete(void *data)
 {
     RebuildState *rb = (RebuildState *)data;
     CossSwapDir *sd = rb->sd;
-    storeCossStartMembuf(sd);
+    sd->startMembuf();
     store_dirs_rebuilding--;
     storeCossDirCloseTmpSwapLog(rb->sd);
     storeRebuildComplete(&rb->counts);
@@ -363,11 +534,6 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     storeHashInsert(e, key);	/* do it after we clear KEY_PRIVATE */
     storeCossAdd(SD, e);
-#if USE_COSS_ALLOC_NOTIFY
-
-    e->swap_filen = storeCossAllocate(SD, e, COSS_ALLOC_NOTIFY);
-#endif
-
     assert(e->swap_filen >= 0);
     return e;
 }
@@ -514,7 +680,7 @@ class CossCleanLog : public SwapDir::CleanLog
 {
 
 public:
-    CossCleanLog(SwapDir *);
+    CossCleanLog(CossSwapDir *);
     virtual const StoreEntry *nextEntry();
     virtual void write(StoreEntry const &);
     char *cur;
@@ -524,12 +690,12 @@ public:
     off_t outbuf_offset;
     int fd;
     dlink_node *current;
-    SwapDir *sd;
+    CossSwapDir *sd;
 };
 
 #define CLEAN_BUF_SZ 16384
 
-CossCleanLog::CossCleanLog(SwapDir *aSwapDir) : cur(NULL),newLog(NULL),cln(NULL),outbuf(NULL),
+CossCleanLog::CossCleanLog(CossSwapDir *aSwapDir) : cur(NULL),newLog(NULL),cln(NULL),outbuf(NULL),
         outbuf_offset(0), fd(-1),current(NULL), sd(aSwapDir)
 {}
 
@@ -611,24 +777,24 @@ CossCleanLog::write(StoreEntry const &e)
     s.refcount = e.refcount;
     s.flags = e.flags;
     xmemcpy(&s.key, e.key, MD5_DIGEST_CHARS);
-    xmemcpy(state->outbuf + state->outbuf_offset, &s, ss);
-    state->outbuf_offset += ss;
+    xmemcpy(outbuf + outbuf_offset, &s, ss);
+    outbuf_offset += ss;
     /* buffered write */
 
-    if (state->outbuf_offset + ss > CLEAN_BUF_SZ) {
-        if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
+    if (outbuf_offset + ss > CLEAN_BUF_SZ) {
+        if (FD_WRITE_METHOD(fd, outbuf, outbuf_offset) < 0) {
             debug(50, 0) ("storeCossDirWriteCleanLogs: %s: write: %s\n",
-                          state->newLog, xstrerror());
+                          newLog, xstrerror());
             debug(50, 0) ("storeCossDirWriteCleanLogs: Current swap logfile not replaced.\n");
-            file_close(state->fd);
-            state->fd = -1;
-            unlink(state->newLog);
-            delete state;
+            file_close(fd);
+            fd = -1;
+            unlink(newLog);
             sd->cleanLog = NULL;
+            delete state;
             return;
         }
 
-        state->outbuf_offset = 0;
+        outbuf_offset = 0;
     }
 }
 
@@ -738,13 +904,13 @@ CossSwapDir::newFileSystem()
 /* we are shutting down, flush all membufs to disk */
 CossSwapDir::~CossSwapDir()
 {
-    sync();				/* This'll call a_file_syncqueue() */
-    a_file_closequeue(&aq);
-    file_close(fd);
-    fd = -1;
+    io->sync();
+    theFile->close();
+    delete io;
 
     closeLog();
     n_coss_dirs--;
+    safe_free(ioModule);
 }
 
 /*
@@ -758,7 +924,6 @@ CossSwapDir::~CossSwapDir()
 int
 CossSwapDir::canStore(StoreEntry const &e)const
 {
-    int loadav;
 
     /* Check if the object is a special object, we can't cache these */
 
@@ -767,9 +932,7 @@ CossSwapDir::canStore(StoreEntry const &e)const
 
     /* Otherwise, we're ok */
     /* Return load, cs->aq.aq_numpending out of MAX_ASYNCOP */
-    loadav = aq.aq_numpending * 1000 / MAX_ASYNCOP;
-
-    return loadav;
+    return io->load();
 }
 
 /*
@@ -778,7 +941,7 @@ CossSwapDir::canStore(StoreEntry const &e)const
 int
 CossSwapDir::callback()
 {
-    return a_file_callback(&aq);
+    return io->callback();
 }
 
 /* ========== LOCAL FUNCTIONS ABOVE, GLOBAL FUNCTIONS BELOW ========== */
@@ -799,7 +962,7 @@ CossSwapDir::statfs(StoreEntry & sentry) const
                       percent(SD->map->n_files_in_map, SD->map->max_n_files));
 #endif
 
-    storeAppendPrintf(&sentry, "Pending operations: %d out of %d\n", aq.aq_numpending, MAX_ASYNCOP);
+    //    storeAppendPrintf(&sentry, "Pending operations: %d out of %d\n", io->aq.aq_numpending, MAX_ASYNCOP);
     storeAppendPrintf(&sentry, "Flags:");
 
     if (flags.selected)
@@ -887,8 +1050,7 @@ CossSwapDir::dump(StoreEntry &entry)const
     dumpOptions(&entry);
 }
 
-
-CossSwapDir::CossSwapDir() : SwapDir ("coss"), fd (-1), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0), blksz_bits(0)
+CossSwapDir::CossSwapDir() : SwapDir ("coss"), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0),  blksz_bits(0), io (NULL), ioModule(NULL), currentIOOptions(new ConfigOptionVector())
 {
     membufs.head = NULL;
     membufs.tail = NULL;
@@ -947,21 +1109,4 @@ void
 CossSwapDir::optionBlockSizeDump(StoreEntry * e) const
 {
     storeAppendPrintf(e, " block-size=%d", 1 << blksz_bits);
-}
-
-SwapDirOption *
-CossSwapDir::getOptionTree() const
-{
-    SwapDirOption *parentResult = SwapDir::getOptionTree();
-
-    SwapDirOptionVector *result = new SwapDirOptionVector();
-
-    result->options.push_back(parentResult);
-
-    result->options.push_back(
-        new SwapDirOptionAdapter<CossSwapDir>(*const_cast<CossSwapDir *>(this),
-                                              &CossSwapDir::optionBlockSizeParse,
-                                              &CossSwapDir::optionBlockSizeDump));
-
-    return result;
 }

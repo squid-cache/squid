@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.15 2003/02/21 22:50:40 robertc Exp $
+ * $Id: diskd.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -39,13 +39,14 @@
 #include <sys/msg.h>
 #include <sys/shm.h>
 
-#include "dio.h"
+#include "DiskIO/DiskDaemon/diomsg.h"
 
 #undef assert
 #include <assert.h>
 
 
-#define DEBUG(LEVEL) if (LEVEL <= DebugLevel)
+const int diomsg::msg_snd_rcv_sz = sizeof(diomsg) - sizeof(mtyp_t);
+#define DEBUG(LEVEL) if ((LEVEL) <= DebugLevel)
 
 typedef struct _file_state file_state;
 
@@ -61,7 +62,7 @@ struct _file_state
 static hash_table *hash = NULL;
 static pid_t mypid;
 static char *shmbuf;
-static int DebugLevel = 0;
+static int DebugLevel = 1;
 
 static int
 do_open(diomsg * r, int len, const char *buf)
@@ -249,6 +250,7 @@ msg_handle(diomsg * r, int rl, diomsg * s)
     char *buf = NULL;
     s->mtype = r->mtype;
     s->callback_data = r->callback_data;
+    s->requestor = r->requestor;
     s->shm_offset = r->shm_offset;
     s->id = r->id;
     s->newstyle = r->newstyle;
@@ -367,7 +369,10 @@ main(int argc, char *argv[])
     for (;;) {
         alarm(1);
         memset(&rmsg, '\0', sizeof(rmsg));
-        rlen = msgrcv(rmsgid, &rmsg, msg_snd_rcv_sz, 0, 0);
+        DEBUG(2)
+        fprintf(stderr, "msgrcv: %ld, %p, %u, %ld, %d \n",
+                rmsgid, &rmsg, diomsg::msg_snd_rcv_sz, 0, 0);
+        rlen = msgrcv(rmsgid, &rmsg, diomsg::msg_snd_rcv_sz, 0, 0);
 
         if (rlen < 0) {
             if (EINTR == errno) {
@@ -392,7 +397,7 @@ main(int argc, char *argv[])
         alarm(0);
         msg_handle(&rmsg, rlen, &smsg);
 
-        if (msgsnd(smsgid, &smsg, msg_snd_rcv_sz, 0) < 0) {
+        if (msgsnd(smsgid, &smsg, diomsg::msg_snd_rcv_sz, 0) < 0) {
             perror("msgsnd");
             break;
         }

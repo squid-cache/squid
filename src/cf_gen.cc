@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.53 2004/12/20 14:52:27 robertc Exp $
+ * $Id: cf_gen.cc,v 1.54 2004/12/20 16:30:35 robertc Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto

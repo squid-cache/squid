@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.12 2004/12/20 14:52:28 robertc Exp $
+ * $Id: win32.cc,v 1.13 2004/12/20 16:30:37 robertc Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *

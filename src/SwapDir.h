@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.6 2003/07/22 15:23:01 robertc Exp $
+ * $Id: SwapDir.h,v 1.7 2004/12/20 16:30:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,60 +35,11 @@
 #define SQUID_SWAPDIR_H
 
 #include "StoreIOState.h"
-#include "Array.h"
-
-/* cache option parsers */
-
-class SwapDirOption
-{
-
-public:
-    virtual ~SwapDirOption() {}
-
-    virtual bool parse(char const *option, const char *value, int reconfiguring) = 0;
-    virtual void dump (StoreEntry * e) const = 0;
-};
-
-class SwapDirOptionVector : public SwapDirOption
-{
-
-public:
-    virtual ~SwapDirOptionVector();
-    virtual bool parse(char const *option, const char *value, int reconfiguring);
-    virtual void dump(StoreEntry * e) const;
-    Vector<SwapDirOption *>options;
-};
-
-template <class C>
-
-class SwapDirOptionAdapter : public SwapDirOption
-{
-
-public:
-    SwapDirOptionAdapter (C& theObject, bool (C::*parseFP)(char const *option, const char *value, int reconfiguring), void (C::*dumpFP) (StoreEntry * e) const) : object(theObject), parser (parseFP), dumper(dumpFP) {}
-
-    bool parse(char const *option, const char *value, int reconfiguring)
-    {
-        if (parser)
-            return (object.*parser)(option, value, reconfiguring);
-
-        return false;
-    }
-
-    void dump (StoreEntry * e) const
-    {
-        if (dumper)
-            (object.*dumper) (e);
-    }
-
-private:
-    C &object;
-    bool (C::*parser) (char const *option, const char *value, int reconfiguring) ;
-    void (C::*dumper)(StoreEntry * e) const;
-};
 
 /* Store dir configuration routines */
 /* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */
+
+class ConfigOption;
 
 class SwapDir
 {
@@ -106,7 +57,7 @@ public:
 protected:
     void parseOptions(int reconfiguring);
     void dumpOptions(StoreEntry * e) const;
-    virtual SwapDirOption *getOptionTree() const;
+    virtual ConfigOption *getOptionTree() const;
 
 private:
     bool optionReadOnlyParse(char const *option, const char *value, int reconfiguring);
