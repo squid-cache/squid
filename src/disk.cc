@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.15 1996/07/09 04:47:16 wessels Exp $
+ * $Id: disk.cc,v 1.16 1996/07/09 04:56:00 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -131,7 +131,7 @@ int disk_init()
     for (fd = 0; fd < FD_SETSIZE; fd++) {
 	file_table[fd].filename[0] = '\0';
 	file_table[fd].at_eof = NO;
-	file_table[fd].open_stat = NOT_OPEN;
+	file_table[fd].open_stat = FILE_NOT_OPEN;
 	file_table[fd].close_request = NOT_REQUEST;
 	file_table[fd].write_daemon = NOT_PRESENT;
 	file_table[fd].write_lock = UNLOCK;
@@ -163,7 +163,7 @@ int file_open(path, handler, mode)
     /* init table */
     strncpy(file_table[fd].filename, path, MAX_FILE_NAME_LEN);
     file_table[fd].at_eof = NO;
-    file_table[fd].open_stat = OPEN;
+    file_table[fd].open_stat = FILE_OPEN;
     file_table[fd].close_request = NOT_REQUEST;
     file_table[fd].write_lock = UNLOCK;
     file_table[fd].write_pending = NO_WRT_PENDING;
@@ -191,7 +191,7 @@ int file_update_open(fd, path)
     /* init table */
     strncpy(file_table[fd].filename, path, MAX_FILE_NAME_LEN);
     file_table[fd].at_eof = NO;
-    file_table[fd].open_stat = OPEN;
+    file_table[fd].open_stat = FILE_OPEN;
     file_table[fd].close_request = NOT_REQUEST;
     file_table[fd].write_lock = UNLOCK;
     file_table[fd].write_pending = NO_WRT_PENDING;
@@ -216,14 +216,14 @@ int file_close(fd)
      * close it */
     /* save it for later */
 
-    if (file_table[fd].open_stat == NOT_OPEN) {
+    if (file_table[fd].open_stat == FILE_NOT_OPEN) {
 	debug(6, 3, "file_close: FD %d is not OPEN\n", fd);
     } else if (file_table[fd].write_daemon == PRESENT) {
 	debug(6, 3, "file_close: FD %d has a write daemon PRESENT\n", fd);
     } else if (file_table[fd].write_pending == WRT_PENDING) {
 	debug(6, 3, "file_close: FD %d has a write PENDING\n", fd);
     } else {
-	file_table[fd].open_stat = NOT_OPEN;
+	file_table[fd].open_stat = FILE_NOT_OPEN;
 	file_table[fd].write_lock = UNLOCK;
 	file_table[fd].write_daemon = NOT_PRESENT;
 	file_table[fd].filename[0] = '\0';
@@ -400,11 +400,10 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
      void (*handle) ();
      void *handle_data;
 {
-    dwrite_q *wq;
+    dwrite_q *wq = NULL;
 
-    if (file_table[fd].open_stat != OPEN) {
+    if (file_table[fd].open_stat == FILE_NOT_OPEN)
 	return DISK_ERROR;
-    }
     if ((file_table[fd].write_lock == LOCK) &&
 	(file_table[fd].access_code != access_code)) {
 	debug(6, 0, "file write: FD %d access code checked failed.\n", fd);
