@@ -9,6 +9,7 @@
 # the command line like "env acver=.. amver=... ./bootstrap.sh"
 acversions="${acver:-2.59 2.57 2.53 2.52}"
 amversions="${amver:-1.9 1.7 1.6 1.5}"
+ltversions="${ltver:-1.5 1.4}"
 
 check_version()
 {
@@ -54,6 +55,7 @@ bootstrap() {
 # Adjust paths of required autool packages
 amver=`find_version automake ${amversions}`
 acver=`find_version autoconf ${acversions}`
+ltver=`find_version libtool ${ltversions}`
 
 # Set environment variable to tell automake which autoconf to use.
 AUTOCONF="autoconf${acver}" ; export AUTOCONF
