@@ -72,10 +72,8 @@ storeClientCopyEvent(void *data)
     cbdataUnlock(sc);
     if (!valid)
 	return;
-    assert(!sc->flags.store_copying);
-    sc->flags.store_copying = 1;
+    sc->flags.copy_event_pending = 0;
     storeClientCopy2(sc->entry, sc);
-    sc->flags.store_copying = 0;
 }
 
 /* copy bytes requested by the client */
@@ -106,15 +104,7 @@ storeClientCopy(StoreEntry * e,
     sc->copy_buf = buf;
     sc->copy_size = size;
     sc->copy_offset = copy_offset;
-    if (sc->flags.store_copying) {
-	cbdataLock(sc);
-	debug(20, 3) ("storeClientCopy: Queueing storeClientCopyEvent()\n");
-	eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0);
-    } else {
-	sc->flags.store_copying = 1;
-	storeClientCopy2(e, sc);
-	sc->flags.store_copying = 0;
-    }
+    storeClientCopy2(e, sc);
 }
 
 /*
@@ -146,8 +136,16 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     STCB *callback = sc->callback;
     MemObject *mem = e->mem_obj;
     size_t sz;
-    static int loopdetect = 0;
-    assert(++loopdetect < 10);
+    if (sc->flags.copy_event_pending)
+	return;
+    if (sc->flags.store_copying) {
+	sc->flags.copy_event_pending = 1;
+	cbdataLock(sc);
+	debug(20, 3) ("storeClientCopy: Queueing storeClientCopyEvent()\n");
+	eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0);
+	return;
+    }
+    sc->flags.store_copying = 1;
     debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->key));
     assert(callback != NULL);
     if (e->store_status == STORE_ABORTED) {
@@ -214,7 +212,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
 	}
     }
-    --loopdetect;
+    sc->flags.store_copying = 0;
 }
 
 static void
