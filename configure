@@ -520,7 +520,7 @@ fi
 
 
 
-# From configure.in Revision: 1.78 
+# From configure.in Revision: 1.80 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -2854,6 +2854,7 @@ for ac_func in \
 	setrlimit \
 	setsid \
 	sigaction \
+	snprintf \
 	srand48 \
 	srandom \
 	sysconf \
@@ -2864,12 +2865,12 @@ for ac_func in \
 
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
-echo "configure:2868: checking for $ac_func" >&5
+echo "configure:2869: checking for $ac_func" >&5
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2873 "configure"
+#line 2874 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -2892,7 +2893,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:2896: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2897: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -2926,7 +2927,7 @@ case "$host" in
 esac
 
 echo $ac_n "checking if GNUregex needs to be compiled""... $ac_c" 1>&6
-echo "configure:2930: checking if GNUregex needs to be compiled" >&5
+echo "configure:2931: checking if GNUregex needs to be compiled" >&5
 if test "$ac_cv_func_regcomp" = "no" ; then
 	USE_GNUREGEX="yes"
 else
@@ -2955,7 +2956,6 @@ fi
 for ac_func in \
 	tempnam \
 	strerror \
-	snprintf \
 
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
