@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.288 1998/04/24 04:23:07 wessels Exp $
+ * $Id: client_side.cc,v 1.289 1998/04/24 05:05:10 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -82,7 +82,7 @@ checkAccelOnly(clientHttpRequest * http)
 	return 0;
     if (http->request->protocol == PROTO_CACHEOBJ)
 	return 0;
-    if (http->accel)
+    if (http->flags.accel)
 	return 0;
     return 1;
 }
@@ -214,7 +214,7 @@ clientRedirectDone(void *data, char *result)
 	result ? result : "NULL");
     assert(http->redirect_state == REDIRECT_PENDING);
     http->redirect_state = REDIRECT_DONE;
-    if (result)
+    if (result && strcmp(result, http->uri))
 	new_request = urlParse(old_request->method, result);
     if (new_request) {
 	safe_free(http->uri);
@@ -227,6 +227,8 @@ clientRedirectDone(void *data, char *result)
 	new_request->http_ver = old_request->http_ver;
 	new_request->headers = xstrdup(old_request->headers);
 	new_request->headers_sz = old_request->headers_sz;
+	new_request->client_addr = old_request->client_addr;
+	EBIT_SET(new_request->flags, REQ_REDIRECTED);
 	if (old_request->body) {
 	    new_request->body = xmalloc(old_request->body_sz);
 	    xmemcpy(new_request->body, old_request->body, old_request->body_sz);
@@ -596,7 +598,7 @@ clientUpdateCounters(clientHttpRequest * http)
      * account for outgoing digest traffic (this has nothing to do with
      * SQUID_PEER_DIGEST, but counters are all in SQUID_PEER_DIGEST ifdefs)
      */
-    if (http->internal && strStr(http->request->urlpath, StoreDigestUrlPath)) {
+    if (http->flags.internal && strStr(http->request->urlpath, StoreDigestUrlPath)) {
 	kb_incr(&Counter.cd.kbytes_sent, http->out.size);
 	Counter.cd.msgs_sent++;
 	debug(33, 1) ("Client %s requested local cache digest (%d bytes)\n", 
@@ -787,7 +789,7 @@ clientParseRequestHeaders(clientHttpRequest * http)
     }
     if ((t = mime_get_header(request_hdr, "Via"))) {
 	if (strstr(t, ThisCache)) {
-	    if (!http->accel) {
+	    if (!http->flags.accel) {
 		debug(33, 1) ("WARNING: Forwarding loop detected for '%s'\n",
 		    http->uri);
 		debug(33, 1) ("--> %s\n", t);
@@ -1648,7 +1650,7 @@ clientProcessMiss(clientHttpRequest * http)
     ch.src_addr = http->conn->peer.sin_addr;
     ch.request = r;
     answer = aclCheckFast(Config.accessList.miss, &ch);
-    if (answer == 0 || http->internal) {
+    if (answer == 0 || http->flags.internal) {
 	http->al.http.code = HTTP_FORBIDDEN;
 	err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(r);
@@ -1840,10 +1842,10 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*t = '\0';
 
     /* handle internal objects */
-    if (*url == '/' && strncmp(url, "/squid-internal/", 16) == 0) {
+    if (0 == strncmp(url, "/squid-internal/", 16)) {
 	/* prepend our name & port */
 	http->uri = xstrdup(urlInternal(NULL, url + 16));
-	http->internal = 1;
+	http->flags.internal = 1;
     }
     /* see if we running in Config2.Accel.on, if so got to convert it to URL */
     else if (Config2.Accel.on && *url == '/') {
@@ -1879,13 +1881,13 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    http->uri = xcalloc(url_sz, 1);
 	    snprintf(http->uri, url_sz, "%s%s", Config2.Accel.prefix, url);
 	}
-	http->accel = 1;
+	http->flags.accel = 1;
     } else {
 	/* URL may be rewritten later, so make extra room */
 	url_sz = strlen(url) + Config.appendDomainLen + 5;
 	http->uri = xcalloc(url_sz, 1);
 	strcpy(http->uri, url);
-	http->accel = 0;
+	http->flags.accel = 0;
     }
     http->log_uri = xstrdup(http->uri);
     debug(33, 5) ("parseHttpRequest: Complete request received\n");
@@ -2007,11 +2009,11 @@ clientReadRequest(int fd, void *data)
 		safe_free(headers);
 		break;
 	    }
-	    if (0 == http->internal)
+	    if (!http->flags.internal)
 		if (0 == strNCmp(request->urlpath, "/squid-internal/", 16))
 		    if (0 == strcasecmp(request->host, getMyHostname()))
 		        if (request->port == Config.Port.http->i)
-	                    http->internal = 1;
+	                    http->flags.internal = 1;
 	    safe_free(http->log_uri);
 	    http->log_uri = xstrdup(urlCanonicalClean(request));
 	    request->client_addr = conn->peer.sin_addr;
