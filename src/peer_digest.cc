@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.58 1998/11/13 21:02:07 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.59 1998/11/14 18:46:26 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -383,7 +383,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	/* must have a ready-to-use store entry if we got here */
 	/* can we stay with the old in-memory digest? */
 	if (status == HTTP_NOT_MODIFIED && fetch->pd->cd)
-	    peerDigestFetchAbort(fetch, buf, NULL);
+	    peerDigestFetchAbort(fetch, buf, "Not modified");
 	else
 	    storeClientCopy(fetch->entry,	/* have to swap in */
 		0, 0, SM_PAGE_SIZE, buf, peerDigestSwapInHeaders, fetch);
