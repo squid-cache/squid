@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.105 1997/02/20 21:02:38 wessels Exp $
+ * $Id: ipcache.cc,v 1.106 1997/02/24 23:42:00 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -433,8 +433,8 @@ ipcacheAddNew(const char *name, const struct hostent *hp, ipcache_status_t statu
 {
     ipcache_entry *i;
     if (ipcache_get(name))
-	fatal_dump("ipcache_add: somebody adding a duplicate!");
-    debug(14, 10, "ipcache_add: Adding '%s', status=%c\n",
+	fatal_dump("ipcacheAddNew: somebody adding a duplicate!");
+    debug(14, 10, "ipcacheAddNew: Adding '%s', status=%c\n",
 	name,
 	ipcache_status_char[status]);
     i = ipcache_create(name);
@@ -861,7 +861,7 @@ ipcache_gethostbyname(const char *name, int flags)
 	    return &i->addrs;
 	}
 	/* bad address, negative cached */
-	if (ip_table) {
+	if (ip_table && i == NULL) {
 	    i = ipcacheAddNew(name, hp, IP_NEGATIVE_CACHED);
 	    i->expires = squid_curtime + Config.negativeDnsTtl;
 	    return NULL;
