@@ -281,6 +281,8 @@ request(char *urlin)
     struct stat st;
     struct sockaddr_in S;
     struct _request *r;
+    if (*urlin == '\0')
+	return NULL;
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 	perror("socket");
 	return NULL;
@@ -402,12 +404,15 @@ read_url(int fd, void *junk)
     struct _request *r;
     static char buf[8192];
     char *t;
+    buf[0] = '\0';
     if (fgets(buf, 8191, stdin) == NULL) {
 	printf("Done Reading URLS\n");
 	fd_close(0);
 	nfds++;
 	return;
     }
+    if (buf[0] == '\0')
+	return;
     if ((t = strchr(buf, '\n')))
 	*t = '\0';
     r = request(buf);
