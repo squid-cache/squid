@@ -1,7 +1,7 @@
 
 /*
- * $Id: protos.h,v 1.323 1999/04/26 21:04:46 wessels Exp $
- * $Id: protos.h,v 1.323 1999/04/26 21:04:46 wessels Exp $
+ * $Id: protos.h,v 1.324 1999/04/26 21:06:16 wessels Exp $
+ * $Id: protos.h,v 1.324 1999/04/26 21:06:16 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -469,6 +469,7 @@ extern const char *httpReplyContentType(const HttpReply * rep);
 extern time_t httpReplyExpires(const HttpReply * rep);
 extern int httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type);
 extern void httpRedirectReply(HttpReply *, http_status, const char *);
+extern int httpReplyBodySize(method_t, HttpReply *);
 
 /* Http Request */
 extern request_t *requestCreate(method_t, protocol_t, const char *urlpath);
