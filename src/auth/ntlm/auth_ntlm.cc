@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.15 2001/10/24 05:26:16 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.16 2001/11/28 08:01:57 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -284,8 +284,9 @@ authenticateNTLMDirection(auth_user_request_t * auth_user_request)
     /* null auth_user is checked for by authenticateDirection */
     switch (ntlm_request->auth_state) {
     case AUTHENTICATE_STATE_NONE:	/* no progress at all. */
-	if (ntlm_request->flags.credentials_ok != 2)
-	    debug(29, 1) ("authenticateNTLMDirection: called before NTLM Authenticate!. Report a bug to squid-dev. au %p\n", auth_user_request);
+	debug(29, 1) ("authenticateNTLMDirection: called before NTLM Authenticate!. Report a bug to squid-dev. au %x\n", auth_user_request);
+	/* fall thru */
+    case AUTHENTICATE_STATE_FAILED:
 	return -2;
     case AUTHENTICATE_STATE_NEGOTIATE:		/* send to helper */
     case AUTHENTICATE_STATE_RESPONSE:	/*send to helper */
@@ -321,6 +322,7 @@ authenticateNTLMFixErrorHeader(auth_user_request_t * auth_user_request, HttpRepl
 	    ntlm_request = auth_user_request->scheme_data;
 	    switch (ntlm_request->auth_state) {
 	    case AUTHENTICATE_STATE_NONE:
+	    case AUTHENTICATE_STATE_FAILED:
 		debug(29, 9) ("authenticateNTLMFixErrorHeader: Sending type:%d header: 'NTLM'\n", type);
 		httpHeaderPutStrf(&rep->header, type, "NTLM");
 		/* drop the connection */
@@ -442,6 +444,9 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	return S_HELPER_RELEASE;
     }
     if (!reply) {
+        /* TODO: this occurs when a helper crashes. We should clean up that helpers resources
+	 * and queued requests.
+	 */
 	fatal("authenticateNTLMHandleReply: called with no result string\n");
     }
     /* seperate out the useful data */
@@ -486,7 +491,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	assert(ntlm_request->auth_state == AUTHENTICATE_STATE_RESPONSE);
 	ntlm_user->username = xstrndup(reply, MAX_LOGIN_SZ);
 	ntlm_request->authserver = NULL;
-	ntlm_request->flags.credentials_ok = 1;		/* login ok */
 #ifdef NTLM_FAIL_OPEN
     } else if (strncasecmp(reply, "LD ", 3) == 0) {
 	/* This is a variant of BH, which rather than deny access
@@ -508,16 +512,12 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	ntlm_user = auth_user_request->auth_user->scheme_data;
 	assert(ntlm_user != NULL);
 	result = S_HELPER_RELEASE;
-	/* we only expect OK when finishing the handshake */
+	/* we only expect LD when finishing the handshake */
 	assert(ntlm_request->auth_state == AUTHENTICATE_STATE_RESPONSE);
 	ntlm_user->username = xstrndup(reply, MAX_LOGIN_SZ);
 	helperstate = helperStatefulServerGetData(ntlm_request->authserver);
 	ntlm_request->authserver = NULL;
-	ntlm_request->flags.credentials_ok = 1;		/* login ok */
 	/* BH code: mark helper as broken */
-	/* Not a valid helper response to a YR request. Assert so the helper
-	 * programmer will fix their bugs! */
-	assert(ntlm_request->auth_state != AUTHENTICATE_STATE_NEGOTIATE);
 	/* mark it for starving */
 	helperstate->starve = 1;
 #endif
@@ -534,9 +534,8 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	/* todo: action of Negotiate state on error */
 	result = S_HELPER_RELEASE;	/*some error has occured. no more requests */
 	ntlm_request->authserver = NULL;
-	ntlm_request->flags.credentials_ok = 2;		/* Login/Usercode failed */
 	debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '%s'\n", reply);
-	ntlm_request->auth_state = AUTHENTICATE_STATE_NONE;
+	ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
 	if ((t = strchr(reply, ' ')))	/* strip after a space */
 	    *t = '\0';
     } else if (strncasecmp(reply, "NA", 2) == 0) {
@@ -564,31 +563,29 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	if (ntlm_request->auth_state == AUTHENTICATE_STATE_NEGOTIATE) {
 	    /* The helper broke on YR. It automatically
 	     * resets */
-	    ntlm_request->flags.credentials_ok = 3;	/* cannot process */
-	    debug(29, 1) ("authenticateNTLMHandleReply: Error obtaining challenge from helper: %p. Error returned '%s'\n", lastserver, reply);
+	    debug(29, 1) ("authenticateNTLMHandleReply: Error obtaining challenge from helper: %d. Error returned '%s'\n", lastserver, reply);
 	    /* mark it for starving */
 	    helperstate->starve = 1;
 	    /* resubmit the request. This helper is currently busy, so we will get
-	     * a different one. */
+	     * a different one. Our auth state stays the same */
 	    authenticateNTLMStart(auth_user_request, r->handler, r->data);
 	    /* don't call the callback */
 	    cbdataUnlock(r->data);
 	    authenticateStateFree(r);
 	    debug(29, 9) ("NTLM HandleReply, telling stateful helper : %d\n", result);
 	    return result;
-	} else {
-	    /* the helper broke on a KK */
-	    /* first the standard KK stuff */
-	    ntlm_request->flags.credentials_ok = 2;	/* Login/Usercode failed */
-	    debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '%s'\n", reply);
-	    if ((t = strchr(reply, ' ')))	/* strip after a space */
-		*t = '\0';
-	    /* now we mark the helper for resetting. */
-	    helperstate->starve = 1;
-	}
-	ntlm_request->auth_state = AUTHENTICATE_STATE_NONE;
+	} 
+	/* the helper broke on a KK */
+	/* first the standard KK stuff */
+	debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '%s'\n", reply);
+	if ((t = strchr(reply, ' ')))	/* strip after a space */
+	    *t = '\0';
+	/* now we mark the helper for resetting. */
+	helperstate->starve = 1;
+	ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
     } else {
 	/* TODO: only work with auth_user here if it exists */
+        /* TODO: take the request state into consideration */
 	assert(r->auth_user_request != NULL);
 	assert(r->auth_user_request->auth_user->auth_type == AUTH_NTLM);
 	auth_user_request = r->auth_user_request;
@@ -598,10 +595,10 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	ntlm_request = auth_user_request->scheme_data;
 	assert((ntlm_user != NULL) && (ntlm_request != NULL));
 	debug(29, 1) ("authenticateNTLMHandleReply: *** Unsupported helper response ***, '%s'\n", reply);
+	/* **** NOTE THIS CODE IS EFFECTIVELY UNTESTED **** */
 	/* restart the authentication process */
 	ntlm_request->auth_state = AUTHENTICATE_STATE_NONE;
-	ntlm_request->flags.credentials_ok = 3;		/* cannot process */
-	assert(ntlm_request->authserver ? ntlm_request->authserver == lastserver : 1);
+	assert (ntlm_request->authserver ? ntlm_request->authserver == lastserver : 1);
 	ntlm_request->authserver = NULL;
     }
     r->handler(r->data, NULL);
@@ -963,10 +960,6 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
     case AUTHENTICATE_STATE_NONE:
 	/* we've recieved a negotiate request. pass to a helper */
 	debug(29, 9) ("authenticateNTLMAuthenticateUser: auth state ntlm none. %s\n", proxy_auth);
-	if (ntlm_request->flags.credentials_ok == 2) {
-	    /* the authentication fialed badly... */
-	    return;
-	}
 	ntlm_request->auth_state = AUTHENTICATE_STATE_NEGOTIATE;
 	ntlm_request->ntlmnegotiate = xstrndup(proxy_auth, NTLM_CHALLENGE_SZ + 5);
 	conn->auth_type = AUTH_NTLM;
@@ -1023,7 +1016,6 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	    /* get the existing entries details */
 	    ntlm_user = auth_user->scheme_data;
 	    debug(29, 9) ("Username to be used is %s\n", ntlm_user->username);
-	    ntlm_request->flags.credentials_ok = 1;	/* authenticated ok */
 	    /* on ntlm auth we do not unlock the auth_user until the
 	     * connection is dropped. Thank MS for this quirk */
 	    auth_user->expiretime = current_time.tv_sec;
@@ -1069,12 +1061,15 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	/* set these to now because this is either a new login from an 
 	 * existing user or a new user */
 	auth_user->expiretime = current_time.tv_sec;
-	ntlm_request->flags.credentials_ok = 1;		/*authenticated ok */
 	return;
 	break;
     case AUTHENTICATE_STATE_DONE:
 	fatal("authenticateNTLMAuthenticateUser: unexpect auth state DONE! Report a bug to the squid developers.\n");
+	break;
+    case AUTHENTICATE_STATE_FAILED:
+	/* we've failed somewhere in authentication */
+	debug(29, 9) ("authenticateNTLMAuthenticateUser: auth state ntlm failed. %s\n", proxy_auth);
+	return;
     }
-
     return;
 }

@@ -451,7 +451,7 @@ SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
 
 	SSVAL(SMB_Hdr(pkt), SMB_ssetpNTLM_mbs_offset, SMBLIB_MAX_XMIT);
 	SSVAL(SMB_Hdr(pkt), SMB_ssetpNTLM_mmc_offset, 0);
-	SSVAL(SMB_Hdr(pkt), SMB_ssetpNTLM_vcn_offset, 0);
+	SSVAL(SMB_Hdr(pkt), SMB_ssetpNTLM_vcn_offset, 1); /* Thanks Tridge! */
 	SIVAL(SMB_Hdr(pkt), SMB_ssetpNTLM_snk_offset, 0);
 	SSVAL(SMB_Hdr(pkt), SMB_ssetpNTLM_cipl_offset, pass_len);
 	SSVAL(SMB_Hdr(pkt), SMB_ssetpNTLM_cspl_offset, 0);
