@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.502 1999/05/25 06:53:46 wessels Exp $
+ * $Id: store.cc,v 1.503 1999/05/26 04:36:55 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -753,7 +753,7 @@ storeRelease(StoreEntry * e)
 	storeReleaseRequest(e);
 	return;
     }
-    if (store_dirs_rebuilding) {
+    if (store_dirs_rebuilding && e->swap_file_number > -1) {
 	storeSetPrivateKey(e);
 	if (e->mem_obj) {
 	    storeSetMemStatus(e, NOT_IN_MEMORY);
@@ -1073,7 +1073,7 @@ storeMemObjectDump(MemObject * mem)
 }
 
 void
-storeEntryDump(StoreEntry * e, int l)
+storeEntryDump(const StoreEntry * e, int l)
 {
     debug(20, l) ("StoreEntry->key: %s\n", storeKeyText(e->key));
     debug(20, l) ("StoreEntry->next: %p\n", e->next);
