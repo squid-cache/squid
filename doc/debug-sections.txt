@@ -77,3 +77,8 @@ section 69    HTTP Header: Extension Field
 section 70    Cache Digest
 section 71    Store Digest Manager
 section 72    Peer Digest Routines
+section 73    HTTP Request
+section 74    HTTP Message
+section 75    WHOIS protocol
+section 76    Internal Squid Object handling
+section 77    Delay Pools
