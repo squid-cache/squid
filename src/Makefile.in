@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.300 2003/03/13 07:39:53 hno Exp $
+#  $Id: Makefile.in,v 1.301 2003/03/15 04:26:09 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -364,6 +364,7 @@ squid_SOURCES = \
 	client_side.cc \
 	client_side.h \
 	client_side_reply.cc \
+	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
 	clientStream.cc \
@@ -575,7 +576,6 @@ ufsdump_SOURCES = debug.cc \
 	acl.cc \
 	ACLChecklist.cc \
 	$(squid_ACLSOURCES) \
-	ACLChecklist.cc \
 	asn.cc \
 	authenticate.cc \
 	cache_cf.cc \
@@ -960,8 +960,8 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) ACLChecklist.$(OBJEXT) \
-	$(am__objects_4) ACLChecklist.$(OBJEXT) asn.$(OBJEXT) \
-	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
+	$(am__objects_4) asn.$(OBJEXT) authenticate.$(OBJEXT) \
+	cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
