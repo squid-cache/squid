@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.99 2004/12/20 16:30:32 robertc Exp $
+#  $Id: Makefile.in,v 1.100 2004/12/24 08:57:59 robertc Exp $
 #
 
 SOURCES = $(libdlmalloc_a_SOURCES) $(libmiscutil_a_SOURCES) $(EXTRA_libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) $(libregex_a_SOURCES) $(tests_testAll_SOURCES)
@@ -808,7 +808,6 @@ check: check-recursive
 all-am: Makefile $(LIBRARIES)
 installdirs: installdirs-recursive
 installdirs-am:
-install: install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
@@ -817,11 +816,6 @@ install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 
 installcheck: installcheck-recursive
-install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
-	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
-	  `test -z '$(STRIP)' || \
-	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
 
 clean-generic:
@@ -901,6 +895,9 @@ uninstall-info: uninstall-info-recursive
 	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
 	uninstall-info-am
 
+
+install: all
+install-strip: all
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

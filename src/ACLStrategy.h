@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategy.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
+ * $Id: ACLStrategy.h,v 1.2 2004/12/24 08:57:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,6 +49,8 @@ public:
     typedef M MatchType;
     virtual int match (ACLData<M> * &, ACLChecklist *) = 0;
     virtual bool requiresRequest() const {return false;}
+
+    virtual bool requiresReply() const {return false;}
 
     virtual ~ACLStrategy(){}}
 

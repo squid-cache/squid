@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.43 2004/12/20 16:30:49 robertc Exp $
+#  $Id: Makefile.in,v 1.44 2004/12/24 08:58:01 robertc Exp $
 #
 SOURCES = $(ESIExpressions_SOURCES) $(MemPoolTest_SOURCES) $(StackTest_SOURCES) $(VirtualDeleteOperator_SOURCES) $(debug_SOURCES) $(http_range_test_SOURCES) $(mem_hdr_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) $(syntheticoperators_SOURCES) tcp-banger2.c
 

@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.46 2004/12/20 16:30:47 robertc Exp $
+#  $Id: Makefile.in,v 1.47 2004/12/24 08:58:01 robertc Exp $
 #
 
 SOURCES = $(libheap_a_SOURCES) $(liblru_a_SOURCES)
