@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.172 1997/02/19 17:05:21 wessels Exp $
+ * $Id: cache_cf.cc,v 1.173 1997/02/20 22:22:55 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -258,6 +258,7 @@ static void ip_acl_destroy _PARAMS((ip_acl **));
 static void parseCachemgrPasswd _PARAMS((void));
 static void parsePathname _PARAMS((char **));
 static void parseProxyLine _PARAMS((peer **));
+static void parseHttpAnonymizer _PARAMS((int *));
 
 static void
 self_destruct(void)
@@ -1025,6 +1026,21 @@ parseCachemgrPasswd(void)
     wordlistDestroy(&actions);
 }
 
+static void
+parseHttpAnonymizer(int *iptr)
+{
+    char *token;
+    token = strtok(NULL, w_space);
+    if (token == NULL)
+        self_destruct();
+    if (!strcasecmp(token, "off"))
+	*iptr = ANONYMIZER_NONE;
+    else if (!strcasecmp(token, "paranoid"))
+	*iptr = ANONYMIZER_PARANOID;
+    else
+	*iptr = ANONYMIZER_STANDARD;
+}
+
 int
 parseConfigFile(const char *file_name)
 {
@@ -1347,6 +1363,8 @@ parseConfigFile(const char *file_name)
 	    parseOnOff(&opt_forwarded_for);
 	else if (!strcmp(token, "log_icp_queries"))
 	    parseOnOff(&Config.Options.log_udp);
+	else if (!strcmp(token, "http_anonymizer"))
+	    parseHttpAnonymizer(&Config.Options.anonymizer);
 
 	else if (!strcmp(token, "minimum_direct_hops"))
 	    parseIntegerValue(&Config.minDirectHops);
