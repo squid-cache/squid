@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.43 1998/04/01 05:38:59 wessels Exp $
+ * $Id: peer_select.cc,v 1.44 1998/04/04 00:24:06 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -47,6 +47,9 @@ const char *hier_strings[] =
     "NO_DIRECT_FAIL",
     "SOURCE_FASTEST",
     "ROUNDROBIN_PARENT",
+#if CACHE_DIGEST
+    "CACHE_DIGEST_HIT",
+#endif
     "INVALID CODE"
 };
 
@@ -300,23 +303,41 @@ peerSelectFoo(ps_state * psstate)
 	debug(44, 3) ("peerSelect: found single parent, skipping ICP query\n");
     } else if (peerSelectIcpPing(request, direct, entry)) {
 	assert(entry->ping_status == PING_NONE);
-	debug(44, 3) ("peerSelect: Doing ICP pings\n");
-        psstate->icp.start = current_time;
-	psstate->icp.n_sent = neighborsUdpPing(request,
-	    entry,
-	    peerHandleIcpReply,
-	    psstate,
-	    &psstate->icp.n_replies_expected);
-	if (psstate->icp.n_sent == 0)
-	    debug(44, 0) ("WARNING: neighborsUdpPing returned 0\n");
-	if (psstate->icp.n_replies_expected > 0) {
-	    entry->ping_status = PING_WAITING;
-	    eventAdd("peerPingTimeout",
-		peerPingTimeout,
+#if CACHE_DIGEST
+	if (squid_random() & 1) {
+	    debug(44, 3) ("peerSelect: Using Cache Digest\n");
+	    request->hier.used_cd = 1;
+	    p == cacheDigestSelect(request, entry);
+	    if (NULL != p) {
+		request->hier.cd_hit = 1;
+		code = CACHE_DIGEST_HIT;
+		debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
+		hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+		peerSelectCallback(psstate, NULL);
+	    }
+	} else {
+	    request->hier.used_icp = 1;
+#endif
+	    debug(44, 3) ("peerSelect: Doing ICP pings\n");
+	    psstate->icp.start = current_time;
+	    psstate->icp.n_sent = neighborsUdpPing(request,
+		entry,
+		peerHandleIcpReply,
 		psstate,
-		Config.neighborTimeout);
-	    return;
+		&psstate->icp.n_replies_expected);
+	    if (psstate->icp.n_sent == 0)
+		debug(44, 0) ("WARNING: neighborsUdpPing returned 0\n");
+	    if (psstate->icp.n_replies_expected > 0) {
+		entry->ping_status = PING_WAITING;
+		eventAdd("peerPingTimeout",
+		    peerPingTimeout,
+		    psstate,
+		    Config.neighborTimeout);
+		return;
+	    }
+#if CACHE_DIGEST
 	}
+#endif
     }
     debug(44, 3) ("peerSelectFoo: After peerSelectIcpPing.\n");
     if (peerCheckNetdbDirect(psstate)) {

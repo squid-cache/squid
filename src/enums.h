@@ -248,6 +248,9 @@ typedef enum {
     NO_DIRECT_FAIL,
     SOURCE_FASTEST,
     ROUNDROBIN_PARENT,
+#if CACHE_DIGEST
+    CACHE_DIGEST_HIT,
+#endif
     HIER_MAX
 } hier_code;
 
