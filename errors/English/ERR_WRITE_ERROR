@@ -6,23 +6,20 @@
 <HR>
 <P>
 While trying to retrieve the URL:
-<A HREF="%u">%u</A>
+<A HREF="%U">%U</A>
 <P>
 The following error was encountered:
 <UL>
 <LI>
 <STRONG>
-@SHORT_DESCRIPTION@
+Write Error
 </STRONG>
 </UL>
 
 <P>
 The system returned:
-<PRE><I>    @XSTRERROR@</I></PRE>
+<PRE><I>    %E</I></PRE>
 
 <P>
-This means that:
-<PRE>
-    @LONG_DESCRIPTION@
-</PRE>
-
+An error condition occurred while writing to the network.  Please retry your
+request.
