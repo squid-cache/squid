@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.102 2003/01/23 00:37:16 robertc Exp $
+ * $Id: cachemgr.cc,v 1.103 2003/02/04 21:57:15 robertc Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -171,7 +171,11 @@ static void auth_html(const char *host, int port, const char *user_name);
 static void error_html(const char *msg);
 static char *menu_url(cachemgr_request * req, const char *action);
 static int parse_status_line(const char *sline, const char **statusStr);
+#ifdef _SQUID_MSWIN_
+static cachemgr_request *read_request(char *);
+#else
 static cachemgr_request *read_request(void);
+#endif
 static char *read_get_request(void);
 static char *read_post_request(void);
 
@@ -180,6 +184,45 @@ static void decode_pub_auth(cachemgr_request * req);
 static void reset_auth(cachemgr_request * req);
 static const char *make_auth_header(const cachemgr_request * req);
 
+#ifdef _SQUID_MSWIN_
+static int s_iInitCount = 0;
+int Win32SockInit(void)
+{
+    int iVersionRequested;
+    WSADATA wsaData;
+    int err;
+
+    if (s_iInitCount > 0) {
+	s_iInitCount++;
+	return (0);
+    }
+    else if (s_iInitCount < 0)
+	return (s_iInitCount);
+
+    /* s_iInitCount == 0. Do the initailization */
+    iVersionRequested = MAKEWORD(2, 0);
+    err = WSAStartup((WORD) iVersionRequested, &wsaData);
+    if (err) {
+	s_iInitCount = -1;
+	return (s_iInitCount);
+    }
+    if (LOBYTE(wsaData.wVersion) != 2 ||
+	HIBYTE(wsaData.wVersion) != 0) {
+	s_iInitCount = -2;
+	WSACleanup();
+	return (s_iInitCount);
+    }
+    s_iInitCount++;
+    return (s_iInitCount);
+}
+
+void Win32SockCleanup(void)
+{
+    if (--s_iInitCount == 0)
+	WSACleanup();
+    return;
+}
+#endif /* ifdef _SQUID_MSWIN_ */
 
 static const char *
 safe_str(const char *str)
@@ -404,7 +447,12 @@ static int
 read_reply(int s, cachemgr_request * req)
 {
     char buf[4 * 1024];
+#ifdef _SQUID_MSWIN_
+    int reply;
+    FILE *fp = tmpfile();
+#else
     FILE *fp = fdopen(s, "r");
+#endif
     /* interpretation states */
     enum {
 	isStatusLine, isHeaders, isBodyStart, isBody, isForward, isEof, isForwardEof, isSuccess, isError
@@ -421,6 +469,11 @@ read_reply(int s, cachemgr_request * req)
 	perror("fdopen");
 	return 1;
     }
+#ifdef _SQUID_MSWIN_
+    while ((reply=recv(s,buf,sizeof(buf),0))>0)
+	fwrite(buf,1,reply,fp);
+    rewind(fp);
+#endif
     if (parse_menu)
 	action = "menu";
     /* read reply interpreting one line at a time depending on state */
@@ -516,6 +569,9 @@ process_request(cachemgr_request * req)
     static struct sockaddr_in S;
     int s;
     int l;
+#ifdef _SQUID_MSWIN_
+    int answer;
+#endif
     static char buf[2 * 1024];
     if (req == NULL) {
 	auth_html(CACHEMGR_HOSTNAME, CACHE_HTTP_PORT, "");
@@ -567,7 +623,13 @@ process_request(cachemgr_request * req)
 	make_auth_header(req));
     write(s, buf, l);
     debug(1) fprintf(stderr, "wrote request: '%s'\n", buf);
+#ifdef _SQUID_MSWIN_
+    answer=read_reply(s, req);
+    close(s);
+    return answer;
+#else
     return read_reply(s, req);
+#endif
 }
 
 int
@@ -575,16 +637,31 @@ main(int argc, char *argv[])
 {
     char *s;
     cachemgr_request *req;
+#ifdef _SQUID_MSWIN_
+    int answer;
+#endif
     safe_inet_addr("255.255.255.255", &no_addr);
     now = time(NULL);
+#ifdef _SQUID_MSWIN_
+    Win32SockInit();
+    if ((s = strrchr(argv[0], '\\')))
+#else
     if ((s = strrchr(argv[0], '/')))
+#endif
 	progname = xstrdup(s + 1);
     else
 	progname = xstrdup(argv[0]);
     if ((s = getenv("SCRIPT_NAME")) != NULL)
 	script_name = xstrdup(s);
+#ifdef _SQUID_MSWIN_
+    req = read_request(NULL);
+    answer=process_request(req);
+    Win32SockCleanup();
+    return answer;
+#else
     req = read_request();
     return process_request(req);
+#endif
 }
 
 static char *
@@ -616,10 +693,16 @@ read_get_request(void)
     return xstrdup(s);
 }
 
+#ifdef _SQUID_MSWIN_
+static cachemgr_request *
+read_request(char* buf)
+{
+#else
 static cachemgr_request *
 read_request(void)
 {
     char *buf;
+#endif
     cachemgr_request *req;
     char *s;
     char *t;
@@ -630,7 +713,11 @@ read_request(void)
 	(void) 0;
     else
 	return NULL;
+#ifdef _SQUID_MSWIN_
+    if (strlen(buf) == 0 || strlen(buf) == 4000)
+#else
     if (strlen(buf) == 0)
+#endif
 	return NULL;
     req = (cachemgr_request *)xcalloc(1, sizeof(cachemgr_request));
     for (s = strtok(buf, "&"); s != NULL; s = strtok(NULL, "&")) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.62 2003/01/23 00:37:20 robertc Exp $
+ * $Id: dnsserver.cc,v 1.63 2003/02/04 21:57:15 robertc Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -142,7 +142,7 @@
 #include "util.h"
 #include "snprintf.h"
 
-#if !defined(_SQUID_AIX_)
+#if !defined(_SQUID_AIX_) && !defined(_SQUID_MSWIN_)
 extern int h_errno;
 #endif
 
@@ -340,6 +340,14 @@ main(int argc, char *argv[])
 	}
     }
 
+#ifdef _SQUID_MSWIN_
+    {
+	WSADATA wsaData;
+
+	WSAStartup(2, &wsaData);
+    }
+    fflush(stderr);
+#endif
     for (;;) {
 	memset(request, '\0', REQ_SZ);
 	if (fgets(request, REQ_SZ, stdin) == NULL)
