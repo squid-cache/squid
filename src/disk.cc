@@ -1,4 +1,4 @@
-/* $Id: disk.cc,v 1.10 1996/04/15 22:51:38 wessels Exp $ */
+/* $Id: disk.cc,v 1.11 1996/04/17 17:15:23 wessels Exp $ */
 
 /* DEBUG: Section 6             disk: disk I/O routines */
 
@@ -67,7 +67,6 @@ typedef struct _FileEntry {
 
 /* table for FILE variable, write lock and queue. Indexed by fd. */
 FileEntry *file_table;
-static int disk_initialized = 0;
 
 extern int getMaxFD();
 extern void fatal_dump _PARAMS((char *));
@@ -76,9 +75,6 @@ extern void fatal_dump _PARAMS((char *));
 int disk_init()
 {
     int fd, max_fd = getMaxFD();
-
-    if (disk_initialized)
-	return 0;
 
     file_table = (FileEntry *) xmalloc(sizeof(FileEntry) * max_fd);
     memset(file_table, '\0', sizeof(FileEntry) * max_fd);
@@ -94,7 +90,6 @@ int disk_init()
 	file_table[fd].write_pending = NO_WRT_PENDING;
 	file_table[fd].write_q = file_table[fd].write_q_tail = NULL;
     }
-    disk_initialized = 1;
     return 0;
 }
 
@@ -106,10 +101,6 @@ int file_open(path, handler, mode)
 {
     FD_ENTRY *conn;
     int fd;
-
-    /* lazy initialization */
-    if (!disk_initialized)
-	disk_init();
 
     /* Open file */
     if ((fd = open(path, mode | O_NDELAY, 0644)) < 0) {
@@ -162,10 +153,6 @@ int file_update_open(fd, path)
 {
     FD_ENTRY *conn;
 
-    /* lazy initialization */
-    if (!disk_initialized)
-	disk_init();
-
     /* update fdstat */
     fdstat_open(fd, File);
 
@@ -202,9 +189,13 @@ int file_close(fd)
      * close it */
     /* save it for later */
 
-    if ((file_table[fd].open_stat == OPEN) &&
-	(file_table[fd].write_daemon == NOT_PRESENT) &&
-	(file_table[fd].write_pending == NO_WRT_PENDING)) {
+    if (file_table[fd].open_stat == NOT_OPEN) {
+	debug(6, 3, "file_close: FD %d is not OPEN\n", fd);
+    } else if (file_table[fd].write_daemon == PRESENT) {
+	debug(6, 3, "file_close: FD %d has a write daemon PRESENT\n", fd);
+    } else if (file_table[fd].write_pending == WRT_PENDING) {
+	debug(6, 3, "file_close: FD %d has a write PENDING\n", fd);
+    } else {
 	file_table[fd].open_stat = NOT_OPEN;
 	file_table[fd].write_lock = UNLOCK;
 	file_table[fd].write_daemon = NOT_PRESENT;
@@ -221,12 +212,12 @@ int file_close(fd)
 	comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
 	close(fd);
 	return DISK_OK;
-    } else {
-	/* refused to close file if there is a daemon running */
-	/* have pending flag set */
-	file_table[fd].close_request = REQUEST;
-	return DISK_ERROR;
     }
+
+    /* refused to close file if there is a daemon running */
+    /* have pending flag set */
+    file_table[fd].close_request = REQUEST;
+    return DISK_ERROR;
 }
 
 
