@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.78 1996/08/12 23:22:38 wessels Exp $
+ * $Id: store.cc,v 1.79 1996/08/12 23:37:25 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1824,8 +1824,11 @@ int storeWalkThrough(proc, data)
     int n = 0;
 
     for (e = storeGetFirst(); e; e = storeGetNext()) {
-	if ((++n & 0xFF) == 0)
+	if ((++n & 0xFF) == 0) {
 	    getCurrentTime();
+	    if (shutdown_pending || reread_pending)
+		break;
+	}
 	if ((n & 0xFFF) == 0)
 	    debug(20, 2, "storeWalkThrough: %7d objects so far.\n", n);
 	count += proc(e, data);

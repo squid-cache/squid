@@ -6,6 +6,7 @@ Changes to squid-1.1.alpha8:
 	- Fixed "tty input" bug where a reverse lookup request was
 	  written to stdout.
 	- Cleaned up pointers in protoUnregister().
+	- Includes all squid-1.0 changes up to squid-1.0.6.
 
 Changes to squid-1.1.alpha7:
 
