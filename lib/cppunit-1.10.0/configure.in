@@ -5,6 +5,10 @@ AC_INIT(Makefile.am)
 # AC_CREATE_PREFIX_CONFIG_H macro needs the AS_DIRNAME macro.
 AC_PREREQ(2.50)
 
+# This version of cppunit is with maintainer mode support
+# (Squid packaging extension)
+AM_MAINTAINER_MODE
+
 # Making releases:
 #   CPPUNIT_MICRO_VERSION += 1;
 #   CPPUNIT_INTERFACE_AGE += 1;
