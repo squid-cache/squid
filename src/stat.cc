@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.170 1997/11/12 23:47:40 wessels Exp $
+ * $Id: stat.cc,v 1.171 1997/11/14 20:00:39 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -106,18 +106,6 @@
 
 
 #include "squid.h"
-
-#define MAX_LINELEN (4096)
-#define max(a,b)  ((a)>(b)? (a): (b))
-
-typedef struct _log_read_data_t {
-    StoreEntry *sentry;
-} log_read_data_t;
-
-typedef struct _squid_read_data_t {
-    StoreEntry *sentry;
-    int fd;
-} squid_read_data_t;
 
 /* LOCALS */
 static const char *describeStatuses(const StoreEntry *);
