@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.244 1998/04/08 16:34:23 wessels Exp $
+ * $Id: comm.cc,v 1.245 1998/04/08 17:22:12 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -507,9 +507,8 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     /* Establish connection. */
     if (connect(sock, (struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
 	debug(5, 9) ("connect FD %d: %s\n", sock, xstrerror());
-	switch (errno) {
-	case EALREADY:
 #ifdef _SQUID_HPUX_
+	if (EALREADY == errno) {
 	    /*
 	     * On my HP-UX box (HP-UX tirana B.10.10 A 9000/851), 
 	     * we get into fast loops on EALREADY.  select(2) continually
@@ -522,24 +521,18 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 		ntohs(address->sin_port),
 		xstrerror());
 	    return COMM_ERROR;
-	    /* NOTREACHEd */
+	} else
 #endif
-#if EAGAIN != EWOULDBLOCK
-	case EAGAIN:
-#endif
-	case EINTR:
-	case EWOULDBLOCK:
-	case EINPROGRESS:
+	if (ignoreErrno(errno)) {
 	    status = COMM_INPROGRESS;
-	    break;
-	case EISCONN:
+	} else if (EISCONN == errno) {
 	    status = COMM_OK;
-	    break;
-	case EINVAL:
-	    len = sizeof(x);
-	    if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char *) &x, &len) >= 0)
-		errno = x;
-	default:
+	} else {
+	    if (EINVAL == errno) {
+		len = sizeof(x);
+		if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char *) &x, &len) >= 0)
+		    errno = x;
+	    }
 	    debug(50, 2) ("connect: %s:%d: %s.\n",
 		fqdnFromAddr(address->sin_addr),
 		ntohs(address->sin_port),
@@ -569,27 +562,19 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
     struct sockaddr_in M;
     int Slen;
     fde *F = NULL;
-
     Slen = sizeof(P);
-    while ((sock = accept(fd, (struct sockaddr *) &P, &Slen)) < 0) {
-	switch (errno) {
-#if EAGAIN != EWOULDBLOCK
-	case EAGAIN:
-#endif
-	case EWOULDBLOCK:
-	case EINTR:
+    if ((sock = accept(fd, (struct sockaddr *) &P, &Slen)) < 0) {
+	if (ignoreErrno(errno)) {
+	    debug(50, 5) ("comm_accept: FD %d: %s\n", fd, xstrerror());
 	    return COMM_NOMESSAGE;
-	case ENFILE:
-	case EMFILE:
+	} else if (ENFILE == errno || EMFILE == errno) {
+	    debug(50, 3) ("comm_accept: FD %d: %s\n", fd, xstrerror());
 	    return COMM_ERROR;
-	default:
-	    debug(50, 1) ("comm_accept: FD %d: accept failure: %s\n",
-		fd, xstrerror());
+	} else {
+	    debug(50, 1) ("comm_accept: FD %d: %s\n", fd, xstrerror());
 	    return COMM_ERROR;
 	}
-	/* NOTREACHED */
     }
-
     if (peer)
 	*peer = P;
     Slen = sizeof(M);
@@ -1456,17 +1441,19 @@ comm_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data)
 int
 ignoreErrno(int ierrno)
 {
-    if (ierrno == EWOULDBLOCK)
-	return 1;
+    switch (ierrno) {
+    case EWOULDBLOCK:
 #if EAGAIN != EWOULDBLOCK
-    if (ierrno == EAGAIN)
-	return 1;
+    case EAGAIN:
 #endif
-    if (ierrno == EALREADY)
+    case EALREADY:
+    case EINTR:
+    case ERESTART:		/* Solaris only? */
 	return 1;
-    if (ierrno == EINTR)
-	return 1;
-    return 0;
+    default:
+	return 0;
+    }
+    /* NOTREACHED */
 }
 
 static void
