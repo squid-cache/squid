@@ -1,3 +1,6 @@
+	- Added STRICT_HTTP_PARSER pp directive to control parsing of invalid
+	  but commonly used HTTP formats (e.g. buggy SpyGame queries).
+	  STRICT_HTTP_PARSER is "off" by default.
 	- SNMP changes:
 	  1. renovated mib and added descriptions and comments
 	  2. added hit and byte counters to client_db , for cacheClientTable
