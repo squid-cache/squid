@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.207 1998/08/20 22:45:50 wessels Exp $
+ * $Id: structs.h,v 1.208 1998/08/21 03:15:26 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1184,6 +1184,22 @@ struct _SwapDir {
     int swaplog_fd;
 };
 
+struct _request_flags {
+    int range:1;
+    int nocache:1;
+    int ims:1;
+    int auth:1;
+    int cachable:1;
+    int hierarchical:1;
+    int loopdetect:1;
+    int proxy_keepalive:1;
+    int proxying:1;
+    int refresh:1;
+    int used_proxy_auth:1;
+    int redirected:1;
+    int nocache_hack:1;		/* for changing/ignoring no-cache requests */
+};
+
 struct _request_t {
     method_t method;
     protocol_t protocol;
@@ -1194,7 +1210,7 @@ struct _request_t {
     String urlpath;
     char *canonical;
     int link_count;		/* free when zero */
-    int flags;
+    request_flags flags;
     HttpHdrCc *cache_control;
     HttpHdrRange *range;
     time_t max_age;

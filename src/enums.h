@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.121 1998/08/20 22:45:47 wessels Exp $
+ * $Id: enums.h,v 1.122 1998/08/21 03:15:16 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -462,25 +462,6 @@ enum {
 
 enum {
     ERR_FLAG_CBDATA
-};
-
-/*
- * These are request_t->flags
- */
-enum {
-    REQ_RANGE,
-    REQ_NOCACHE,
-    REQ_IMS,
-    REQ_AUTH,
-    REQ_CACHABLE,
-    REQ_HIERARCHICAL,
-    REQ_LOOPDETECT,
-    REQ_PROXY_KEEPALIVE,
-    REQ_PROXYING,
-    REQ_REFRESH,
-    REQ_USED_PROXY_AUTH,
-    REQ_REDIRECTED,
-    REQ_NOCACHE_HACK		/* for changing/ignoring no-cache requests */
 };
 
 enum {

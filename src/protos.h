@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.252 1998/08/20 02:49:11 wessels Exp $
+ * $Id: protos.h,v 1.253 1998/08/21 03:15:22 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -119,7 +119,7 @@ extern void clientPurgeRequest(clientHttpRequest *);
 extern int checkNegativeHit(StoreEntry *);
 extern void clientHttpConnectionsOpen(void);
 extern void clientHttpConnectionsClose(void);
-extern StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, int);
+extern StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, request_flags);
 extern int isTcpHit(log_type);
 
 extern int commSetNonBlocking(int fd);
@@ -728,7 +728,7 @@ extern void stmemFreeData(mem_hdr *);
  */
 extern StoreEntry *new_StoreEntry(int, const char *, const char *);
 extern StoreEntry *storeGet(const cache_key *);
-extern StoreEntry *storeCreateEntry(const char *, const char *, int, method_t);
+extern StoreEntry *storeCreateEntry(const char *, const char *, request_flags, method_t);
 extern void storeSetPublicKey(StoreEntry *);
 extern void storeComplete(StoreEntry *);
 #ifdef PPNR_WIP

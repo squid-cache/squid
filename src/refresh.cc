@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.32 1998/08/20 22:45:49 wessels Exp $
+ * $Id: refresh.cc,v 1.33 1998/08/21 03:15:23 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -138,7 +138,7 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
     debug(22, 3) ("refreshCheck: age = %d\n", (int) age);
     debug(22, 3) ("\tcheck_time:\t%s\n", mkrfc1123(check_time));
     debug(22, 3) ("\tentry->timestamp:\t%s\n", mkrfc1123(entry->timestamp));
-    if (EBIT_TEST(request->flags, REQ_NOCACHE_HACK)) {
+    if (request->flags.nocache_hack) {
 	if (ignore_reload) {
 	    /* The clients no-cache header is ignored */
 	    debug(22, 3) ("refreshCheck: MAYBE: ignore-reload\n");
@@ -149,7 +149,7 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	} else {
 	    /* The clients no-cache header is not overridden on this request */
 	    debug(22, 3) ("refreshCheck: YES: client reload\n");
-	    EBIT_SET(request->flags, REQ_NOCACHE);
+	    request->flags.nocache = 1;
 	    return 1;
 	}
     }

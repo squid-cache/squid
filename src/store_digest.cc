@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.25 1998/07/22 20:37:58 wessels Exp $
+ * $Id: store_digest.cc,v 1.26 1998/08/21 03:15:25 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -290,7 +290,7 @@ storeDigestRebuildStep(void *datanotused)
 static void
 storeDigestRewriteStart(void *datanotused)
 {
-    int flags;
+    request_flags flags;
     char *url;
     StoreEntry *e;
 
@@ -303,8 +303,8 @@ storeDigestRewriteStart(void *datanotused)
     debug(71, 2) ("storeDigestRewrite: start rewrite #%d\n", sd_state.rewrite_count + 1);
     /* make new store entry */
     url = internalLocalUri("/squid-internal-periodic/", StoreDigestUrlPath);
-    flags = 0;
-    EBIT_SET(flags, REQ_CACHABLE);
+    flags = null_request_flags;
+    flags.cachable = 1;
     sd_state.rewrite_lock = e = storeCreateEntry(url, url, flags, METHOD_GET);
     assert(sd_state.rewrite_lock);
     cbdataAdd(sd_state.rewrite_lock, MEM_DONTFREE);
