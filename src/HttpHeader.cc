@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.93 2003/07/15 06:50:39 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.94 2003/07/17 22:08:15 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -374,8 +374,22 @@ httpHeaderClean(HttpHeader * hdr)
     assert(hdr->owner > hoNone && hdr->owner <= hoReply);
     debug(55, 7) ("cleaning hdr: %p owner: %d\n", hdr, hdr->owner);
 
-    statHistCount(&HttpHeaderStats[hdr->owner].hdrUCountDistr, hdr->entries.count);
+    /*
+     * An unfortunate bug.  The hdr->entries array is initialized
+     * such that count is set to zero.  httpHeaderClean() seems to
+     * be called both when 'hdr' is created, and destroyed.  Thus,
+     * we accumulate a large number of zero counts for 'hdr' before
+     * it is ever used.  Can't think of a good way to fix it, except
+     * adding a state variable that indicates whether or not 'hdr'
+     * has been used.  As a hack, just never count zero-sized header
+     * arrays.
+     */
+
+    if (0 != hdr->entries.count)
+        statHistCount(&HttpHeaderStats[hdr->owner].hdrUCountDistr, hdr->entries.count);
+
     HttpHeaderStats[hdr->owner].destroyedCount++;
+
     HttpHeaderStats[hdr->owner].busyDestroyedCount += hdr->entries.count > 0;
 
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
@@ -386,7 +400,7 @@ httpHeaderClean(HttpHeader * hdr)
                           (int) pos, e->id);
         } else {
             statHistCount(&HttpHeaderStats[hdr->owner].fieldTypeDistr, e->id);
-            /* yes, this destroy() leaves us in an incosistent state */
+            /* yes, this destroy() leaves us in an inconsistent state */
             httpHeaderEntryDestroy(e);
         }
     }
