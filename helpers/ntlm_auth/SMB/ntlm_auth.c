@@ -133,7 +133,14 @@ void
 usage()
 {
     fprintf(stderr,
-	"%s usage:\n%s [-b] [-f] [-d] domain\\controller [domain\\controller ...]\n-b, if specified, enables load-balancing among controllers\n-f, if specified, enables failover among controllers (DEPRECATED and always active)\n-l, if specified, changes behavior on domain controller failyures to\tlast-ditch.-d enables debugging statements if DEBUG was defined at build-time.\n\nYou MUST specify at least one Domain Controller.\nYou can use either \\ or / as separator between the domain name \n\tand the controller name\n",
+	"%s usage:\n%s [-b] [-f] [-d] [-l] domain\\controller [domain\\controller ...]\n"
+	"-b enables load-balancing among controllers\n"
+	"-f enables failover among controllers (DEPRECATED and always active)\n"
+	"-l changes behavior on domain controller failyures to last-ditch.\n"
+	"-d enables debugging statements if DEBUG was defined at build-time.\n\n"
+	"You MUST specify at least one Domain Controller.\n"
+	"You can use either \\ or / as separator between the domain name \n"
+	"and the controller name\n",
 	my_program_name, my_program_name);
 }
 
@@ -301,7 +308,7 @@ manage_request()
 	    SEND("NA Broken authentication packet");
 	    return;
 	}
-	switch (fast_header->type) {
+	switch WSWAP(fast_header->type) {
 	case NTLM_NEGOTIATE:
 	    SEND("NA Invalid negotiation request received");
 	    return;

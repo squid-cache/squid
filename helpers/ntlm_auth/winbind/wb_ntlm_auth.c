@@ -314,7 +314,7 @@ try_again:
 	return;
     }
     /* Understand what we got */
-    switch (fast_header->type) {
+    switch WSWAP(fast_header->type) {
     case NTLM_NEGOTIATE:
 	authfail("-", "-", "Received neg-request while expecting auth packet");
 	return;
