@@ -155,9 +155,6 @@ urnStart(request_t * r, StoreEntry * e)
 static void
 urnHandleReply(void *data, char *buf, ssize_t size)
 {
-#if 0
-    LOCAL_ARRAY(char, line, 4096);
-#endif
     UrnState *urnState = data;
     StoreEntry *e = urnState->entry;
     StoreEntry *urlres_e = urnState->urlres_e;
@@ -166,12 +163,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     wordlist *w;
     wordlist *urls;
     wordlist *min_w;
-#if 0
-    int l;
-    String *S;
-#else
     MemBuf mb;
-#endif
     ErrorState *err;
     double tmprtt;
     StoreEntry *tmpentry;

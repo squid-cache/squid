@@ -310,7 +310,6 @@ struct _SquidConfig {
 	int common_log;
 	int log_mime_hdrs;
 	int ident_lookup;
-	int single_parent_bypass;
 	int log_fqdn;
 	int announce;
 	int accel_with_proxy;
@@ -1012,11 +1011,7 @@ struct _request_t {
     char login[MAX_LOGIN_SZ];
     char host[SQUIDHOSTNAMELEN + 1];
     u_short port;
-#if 0				/* trying new interface */
-    char urlpath[MAX_URL];
-#else
     String urlpath;
-#endif
     int link_count;		/* free when zero */
     int flags;
     time_t max_age;
