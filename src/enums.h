@@ -460,15 +460,6 @@ enum {
 };
 
 enum {
-    FD_CLOSE_REQUEST,
-    FD_WRITE_DAEMON,
-    FD_CLOSING,
-    FD_SOCKET_EOF,
-    FD_NOLINGER,
-    FD_NONBLOCKING
-};
-
-enum {
     HELPER_ALIVE,
     HELPER_BUSY,
     HELPER_CLOSING,
@@ -641,8 +632,8 @@ enum {
  * These are field indicators for raw cache-cache netdb transfers
  */
 enum {
-	NETDB_EX_NONE,
-	NETDB_EX_NETWORK,
-	NETDB_EX_RTT,
-	NETDB_EX_HOPS
+    NETDB_EX_NONE,
+    NETDB_EX_NETWORK,
+    NETDB_EX_RTT,
+    NETDB_EX_HOPS
 };

@@ -414,7 +414,14 @@ struct _fde {
     u_short remote_port;
     char ipaddr[16];		/* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
-    int flags;
+    struct {
+	int close_request:1;
+	int write_daemon:1;
+	int closing:1;
+	int socket_eof:1;
+	int nolinger:1;
+	int nonblocking:1;
+    } flags;
     int bytes_read;
     int bytes_written;
     int uses;			/* ie # req's over persistent conn */
@@ -1003,7 +1010,7 @@ struct _store_client {
     StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
     int swapin_fd;
     struct {
-    	int disk_io_pending:1;
+	int disk_io_pending:1;
 	int store_copying:1;
 	int copy_event_pending:1;
     } flags;
