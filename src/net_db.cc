@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.108 1998/05/24 04:15:02 wessels Exp $
+ * $Id: net_db.cc,v 1.109 1998/05/26 19:08:57 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -568,13 +568,14 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 		break;
 	    }
 	}
-	nused++;
 	if (addr.s_addr != any_addr.s_addr && rtt > 0)
 	    netdbExchangeUpdatePeer(addr, ex->p, rtt, hops);
 	assert(o == rec_sz);
 	ex->used += rec_sz;
 	size -= rec_sz;
 	p += rec_sz;
+	if (++nused == 10)
+	    break;
     }
     debug(37, 3) ("netdbExchangeHandleReply: used %d entries, (x %d bytes) == %d bytes total\n",
 	nused, rec_sz, nused * rec_sz);
