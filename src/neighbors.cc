@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.193 1998/04/06 22:24:36 wessels Exp $
+ * $Id: neighbors.cc,v 1.194 1998/04/07 23:44:17 rousskov Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -545,6 +545,67 @@ neighborsUdpPing(request_t * request,
     request->hierarchy.n_expect = *exprep;
 #endif
     return peers_pinged;
+}
+
+peer *
+neighborsDigestSelect(request_t * request, StoreEntry * entry)
+{
+    peer *best_p = NULL;
+#if SQUID_PEER_DIGEST
+    const cache_key *key;
+    int best_rtt = 0;
+    int choice_count = 0;
+    int ichoice_count = 0;
+    peer *p;
+    int p_rtt;
+    int i;
+
+    key = storeKeyPublic(storeUrl(entry), request->method);
+    for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
+	if (!p)
+	    p = Config.peers;
+	if (i == 1)
+	    first_ping = p;
+	debug(15, 5) ("neighborsDigestSelect: considering peer %s\n", p->host);
+	/* does the peeer have a valid digest? */
+	if (EBIT_TEST(p->digest.flags, PD_DISABLED)) {
+	    continue;
+	} else
+	if (EBIT_TEST(p->digest.flags, PD_USABLE)) {
+	    ;
+	} else
+	if (!EBIT_TEST(p->digest.flags, PD_INITED)) {
+	    peerDigestInit(p);
+	    continue;
+	} else {
+	    assert(EBIT_TEST(p->digest.flags, PD_REQUESTED));
+	    continue;
+	}
+	choice_count++;
+	debug(15, 5) ("neighborsDigestSelect: peer %s is a candidate\n", p->host);
+	assert(p->digest.cd);
+	/* does digest predict a hit? */
+	if (!cacheDigestTest(p->digest.cd, key))
+	    continue;
+	p_rtt = netdbHostPeerRtt(request->host, p);
+	debug(15, 5) ("neighborsDigestSelect: peer %s says hit with rtt %d\n",
+	    p->host, p_rtt);
+	/* is this peer better than others in terms of rtt ? */
+	if (!best_p || (p_rtt && p_rtt < best_rtt)) {
+	    best_p = p;
+	    best_rtt = p_rtt;
+	    if (p_rtt) /* informative choice (aka educated guess) */
+		ichoice_count++;
+	    debug(15, 4) ("neighborsDigestSelect: peer %s leads with rtt %d\n",
+		p->host, best_rtt);
+	}
+    }
+    debug(15, 5) ("neighborsDigestSelect: selected peer %s, rtt: %d\n",
+	best_p ? best_p->host : "<none>", best_rtt);
+    request->hier.n_choices = choice_count;
+    request->hier.n_ichoices = ichoice_count;
+#endif
+    return best_p;
 }
 
 static void
