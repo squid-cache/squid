@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.60 2000/01/11 06:02:54 wessels Exp $
+ * $Id: store_swapout.cc,v 1.61 2000/02/01 05:52:15 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -108,7 +108,10 @@ storeSwapOut(StoreEntry * e)
     lowest_offset = storeLowestMemReaderOffset(e);
     debug(20, 7) ("storeSwapOut: lowest_offset = %d\n",
 	(int) lowest_offset);
-    new_mem_lo = lowest_offset;
+    if (mem->inmem_hi - lowest_offset > DISK_PAGE_SIZE)
+        new_mem_lo = lowest_offset;
+    else
+        new_mem_lo = mem->inmem_lo;
     assert(new_mem_lo >= mem->inmem_lo);
     if (storeSwapOutAble(e)) {
 	/*
@@ -119,11 +122,11 @@ storeSwapOut(StoreEntry * e)
 	 */
 	if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) < new_mem_lo)
 	    new_mem_lo = on_disk;
-    } else {
+    } else if (new_mem_lo > 0) {
 	/*
-	 * Its not swap-able, so we must make it PRIVATE.  Even if
-	 * be only one MEM client and all others must read from
-	 * disk.
+	 * Its not swap-able, and we're about to delete a chunk,
+	 * so we must make it PRIVATE.  This is tricky/ugly because
+	 * for the most part, we treat swapable == cachable here.
 	 */
 	storeReleaseRequest(e);
     }
