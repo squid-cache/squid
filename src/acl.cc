@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.46 1996/10/07 22:11:06 wessels Exp $
+ * $Id: acl.cc,v 1.47 1996/10/09 16:27:16 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -33,6 +33,10 @@
 /* Global */
 char *AclMatchedName = NULL;
 
+/* for reading ACL's from files */
+int aclFromFile = 0;
+FILE *aclFile;
+
 /* These three should never be referenced directly in this file! */
 struct _acl_deny_info_list *DenyInfoList = NULL;
 struct _acl_access *HTTPAccessList = NULL;
@@ -57,7 +61,6 @@ static int aclMatchRegex _PARAMS((relist * data, char *word));
 static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
 static intlist *aclParseIntlist _PARAMS((void));
 static struct _acl_ip_data *aclParseIpList _PARAMS((void));
-static struct _acl_ip_data *aclParseIpFile _PARAMS((char *));
 static intlist *aclParseMethodList _PARAMS((void));
 static intlist *aclParseProtoList _PARAMS((void));
 static struct _relist *aclParseRegexList _PARAMS((void));
@@ -67,17 +70,51 @@ static wordlist *aclParseDomainList _PARAMS((void));
 static squid_acl aclType _PARAMS((char *s));
 static int decode_addr _PARAMS((char *, struct in_addr *, struct in_addr *));
 
+char *
+strtokFile(void)
+{
+    char *t, *fn;
+    LOCAL_ARRAY(char, buf, 256);
+
+strtok_again:
+    if (!aclFromFile) {
+	t = (strtok(NULL, w_space));
+	if (t && (*t == '\"' || *t == '\'')) {
+	    /* quote found, start reading from file */
+	    fn = ++t;
+	    while (*t && *t != '\"' && *t != '\'') t++;
+	    *t = '\0';
+	    if ((aclFile = fopen(fn, "r")) == NULL) {
+		debug(28, 0, "strtokFile: %s not found\n", fn);
+		return(NULL);
+	    }
+	    aclFromFile = 1;
+	} else {
+	    return(t);
+	}
+    }
+    /* aclFromFile */
+    if (fgets(buf, 256, aclFile) == NULL) {
+	/* stop reading from file */
+	fclose(aclFile);
+	aclFromFile = 0;
+	goto strtok_again;
+    } else {
+	t = buf;
+	/* skip leading and trailing white space */
+	t += strspn(buf, w_space);
+	t[strcspn(t, w_space)] = '\0';
+	return(t);
+    }
+}
+
 static squid_acl
 aclType(char *s)
 {
     if (!strcmp(s, "src"))
 	return ACL_SRC_IP;
-    if (!strcmp(s, "src_file"))
-	return ACL_SRC_FILE_IP;
     if (!strcmp(s, "dst"))
 	return ACL_DST_IP;
-    if (!strcmp(s, "dst_file"))
-	return ACL_DST_FILE_IP;
     if (!strcmp(s, "domain"))
 	return ACL_DST_DOMAIN;
     if (!strcmp(s, "dstdomain"))
@@ -123,7 +160,7 @@ aclParseIntlist(void)
     intlist **Tail = &head;
     intlist *q = NULL;
     char *t = NULL;
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = atoi(t);
 	*(Tail) = q;
@@ -139,7 +176,7 @@ aclParseProtoList(void)
     intlist **Tail = &head;
     intlist *q = NULL;
     char *t = NULL;
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = (int) urlParseProtocol(t);
 	*(Tail) = q;
@@ -155,7 +192,7 @@ aclParseMethodList(void)
     intlist **Tail = &head;
     intlist *q = NULL;
     char *t = NULL;
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = (int) urlParseMethod(t);
 	*(Tail) = q;
@@ -231,7 +268,7 @@ aclParseIpList(void)
     LOCAL_ARRAY(char, addr2, 256);
     LOCAL_ARRAY(char, mask, 256);
 
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(struct _acl_ip_data));
 	if (!strcasecmp(t, "all")) {
 	    q->addr1.s_addr = 0;
@@ -286,78 +323,6 @@ aclParseIpList(void)
     return head;
 }
 
-static struct _acl_ip_data *
-aclParseIpFile(char *file)
-{
-    char t[256], *p = NULL;
-    struct _acl_ip_data *head = NULL;
-    struct _acl_ip_data **Tail = &head;
-    struct _acl_ip_data *q = NULL;
-    LOCAL_ARRAY(char, addr1, 256);
-    LOCAL_ARRAY(char, addr2, 256);
-    LOCAL_ARRAY(char, mask, 256);
-    FILE *f;
-
-    if ((f = fopen(file, "r")) == NULL) {
-	debug(28, 0, "aclParseIpFile: file %s not found\n", file);
-	return (NULL);
-    }
-    while (fgets(t, 256, f) != NULL) {
-	q = xcalloc(1, sizeof(struct _acl_ip_data));
-	if (!strcasecmp(t, "all")) {
-	    q->addr1.s_addr = 0;
-	    q->addr2.s_addr = 0;
-	    q->mask.s_addr = 0;
-	} else {
-	    p = t;
-	    memset(addr1, 0, sizeof(addr1));
-	    memset(addr2, 0, sizeof(addr2));
-	    memset(mask, 0, sizeof(mask));
-
-	    /* Split the adress in addr1-addr2/mask */
-	    strncpy(addr1, p, strcspn(t, "-/"));
-	    p += strcspn(t, "-/");
-	    if (*p == '-') {
-		p++;
-		strncpy(addr2, p, strcspn(t, "/"));
-		p += strcspn(p, "/");
-	    }
-	    if (*p == '/') {
-		p++;
-		strcpy(mask, p);
-	    }
-	    /* Decode addr1 */
-	    if (!decode_addr(addr1, &q->addr1, &q->mask)) {
-		debug(28, 0, "%s line %d: %s\n",
-		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseIpFile: Ignoring invalid IP acl entry: unknown first address '%s'\n", addr1);
-		safe_free(q);
-		continue;
-	    }
-	    /* Decode addr2 */
-	    if (*addr2 && !decode_addr(addr2, &q->addr2, &q->mask)) {
-		debug(28, 0, "%s line %d: %s\n",
-		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseIpFile: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr1);
-		safe_free(q);
-		continue;
-	    }
-	    /* Decode mask */
-	    if (*mask && !decode_addr(mask, &q->mask, NULL)) {
-		debug(28, 0, "%s line %d: %s\n",
-		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseIpFile: Ignoring invalid IP acl entry: unknown netmask '%s'\n", mask);
-		safe_free(q);
-		continue;
-	    }
-	}
-	*(Tail) = q;
-	Tail = &q->next;
-    }
-    fclose(f);
-    return head;
-}
-
 static struct _acl_time_data *
 aclParseTimeSpec(void)
 {
@@ -366,7 +331,7 @@ aclParseTimeSpec(void)
     char *t = NULL;
 
     data = xcalloc(1, sizeof(struct _acl_time_data));
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = strtokFile())) {
 	if (*t < '0' || *t > '9') {
 	    /* assume its day-of-week spec */
 	    while (*t) {
@@ -440,7 +405,7 @@ aclParseRegexList(void)
     relist *q = NULL;
     char *t = NULL;
     regex_t comp;
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = strtokFile())) {
 	if (regcomp(&comp, t, REG_EXTENDED) != REG_NOERROR) {
 	    debug(28, 0, "%s line %d: %s\n",
 		cfg_filename, config_lineno, config_input_line);
@@ -463,7 +428,7 @@ aclParseWordList(void)
     wordlist **Tail = &head;
     wordlist *q = NULL;
     char *t = NULL;
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(wordlist));
 	q->key = xstrdup(t);
 	*(Tail) = q;
@@ -479,7 +444,7 @@ aclParseDomainList(void)
     wordlist **Tail = &head;
     wordlist *q = NULL;
     char *t = NULL;
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = strtokFile())) {
 	Tolower(t);
 	q = xcalloc(1, sizeof(wordlist));
 	q->key = xstrdup(t);
@@ -526,14 +491,6 @@ aclParseAclLine(void)
     case ACL_SRC_IP:
     case ACL_DST_IP:
 	A->data = (void *) aclParseIpList();
-	break;
-    case ACL_SRC_FILE_IP:
-    case ACL_DST_FILE_IP:
-	if ((t = strtok(NULL, w_space)) == NULL) {
-	    debug(28, 0, "aclParseAclLine: no filename found\n");
-	    return;
-	}
-	A->data = (void *) aclParseIpFile(t);
 	break;
     case ACL_SRC_DOMAIN:
     case ACL_DST_DOMAIN:
@@ -723,8 +680,8 @@ aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
     unsigned long lh, la1, la2;
     struct _acl_ip_data *first, *prev;
 
-    first = data;		/* remember first element, this will never be moved */
-    prev = NULL;		/* previous element in the list */
+    first = data; /* remember first element, this will never be moved */
+    prev = NULL; /* previous element in the list */
     while (data) {
 	h.s_addr = c.s_addr & data->mask.s_addr;
 	debug(28, 3, "aclMatchIp: h     = %s\n", inet_ntoa(h));
@@ -735,7 +692,7 @@ aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
 		debug(28, 3, "aclMatchIp: returning 1\n");
 		if (prev != NULL) {
 		    /* shift the element just found to the second position
-		     * in the list */
+		       in the list */
 		    prev->next = data->next;
 		    data->next = first->next;
 		    first->next = data;
@@ -762,13 +719,26 @@ aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
 static int
 aclMatchDomainList(wordlist * data, char *host)
 {
+    wordlist *first, *prev;
+
     if (host == NULL)
 	return 0;
     debug(28, 3, "aclMatchDomainList: checking '%s'\n", host);
+    first = data;
+    prev = NULL;
     for (; data; data = data->next) {
 	debug(28, 3, "aclMatchDomainList: looking for '%s'\n", data->key);
-	if (matchDomainName(data->key, host))
+	if (matchDomainName(data->key, host)) {
+	    if (prev != NULL) {
+		/* shift the element just found to the second position
+		   in the list */
+		prev->next = data->next;
+		data->next = first->next;
+		first->next = data;
+	    }
 	    return 1;
+    }
+	prev = data;
     }
     return 0;
 }
@@ -776,13 +746,25 @@ aclMatchDomainList(wordlist * data, char *host)
 static int
 aclMatchRegex(relist * data, char *word)
 {
+    relist *first, *prev;
     if (word == NULL)
 	return 0;
     debug(28, 3, "aclMatchRegex: checking '%s'\n", word);
+    first = data;
+    prev = NULL;
     while (data) {
 	debug(28, 3, "aclMatchRegex: looking for '%s'\n", data->pattern);
-	if (regexec(&data->regex, word, 0, 0, 0) == 0)
+	if (regexec(&data->regex, word, 0, 0, 0) == 0) {
+	    if (prev != NULL) {
+		/* shift the element just found to the second position
+		   in the list */
+		prev->next = data->next;
+		data->next = first->next;
+		first->next = data;
+	    }
 	    return 1;
+	}
+	prev = data;
 	data = data->next;
     }
     return 0;
@@ -791,9 +773,21 @@ aclMatchRegex(relist * data, char *word)
 static int
 aclMatchInteger(intlist * data, int i)
 {
+    intlist *first, *prev;
+    first = data;
+    prev = NULL;
     while (data) {
-	if (data->i == i)
+	if (data->i == i) {
+	    if (prev != NULL) {
+		/* shift the element just found to the second position
+		   in the list */
+		prev->next = data->next;
+		data->next = first->next;
+		first->next = data;
+	    }
 	    return 1;
+	}
+	prev = data;
 	data = data->next;
     }
     return 0;
@@ -831,11 +825,9 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
     debug(28, 3, "aclMatchAcl: checking '%s'\n", acl->cfgline);
     switch (acl->type) {
     case ACL_SRC_IP:
-    case ACL_SRC_FILE_IP:
 	return aclMatchIp(acl->data, checklist->src_addr);
 	/* NOTREACHED */
     case ACL_DST_IP:
-    case ACL_DST_FILE_IP:
 	hp = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
 	if (hp) {
 	    for (k = 0; *(hp->h_addr_list + k); k++) {
