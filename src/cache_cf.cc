@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.400 2002/01/15 16:49:19 hno Exp $
+ * $Id: cache_cf.cc,v 1.401 2002/03/09 22:43:12 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1459,7 +1459,7 @@ parse_peer(peer ** head)
 #endif
 	} else if (!strcasecmp(token, "allow-miss")) {
 	    p->options.allow_miss = 1;
-	} else if (!strcasecmp(token, "max-conn=")) {
+	} else if (!strncasecmp(token, "max-conn=", 9)) {
 	    p->max_conn = atoi(token + 9);
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
