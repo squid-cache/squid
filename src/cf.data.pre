@@ -1734,14 +1734,14 @@ DOC_END
 NAME: store_avg_object_size
 COMMENT: (kbytes)
 TYPE: kb_size_t
-DEFAULT: 20 KB
+DEFAULT: 13 KB
 LOC: Config.Store.avgObjectSize
 DOC_START
 	Average object size, used to estimate number of objects your
 	cache can hold.  See doc/Release-Notes-1.1.txt.  The default is
-	20K.
+	13 KB.
 
-store_avg_object_size 20 KB
+store_avg_object_size 13 KB
 DOC_END
 
 NAME: store_objects_per_bucket
