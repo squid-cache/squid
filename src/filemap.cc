@@ -1,6 +1,6 @@
 
 /*
- * $Id: filemap.cc,v 1.24 1998/03/06 22:19:33 wessels Exp $
+ * $Id: filemap.cc,v 1.25 1998/04/16 21:51:55 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -201,6 +201,15 @@ filemapFreeMemory(fileMap * fm)
 {
     safe_free(fm->file_map);
     safe_free(fm);
+}
+
+void
+filemapCopy(fileMap * old, fileMap * new)
+{
+    assert(old->max_n_files <= new->max_n_files);
+    assert(0 == new->n_files_in_map);
+    xmemcpy(new->file_map, old->file_map, old->nwords * sizeof(unsigned long));
+    new->n_files_in_map = old->n_files_in_map;
 }
 
 #ifdef TEST

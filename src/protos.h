@@ -182,6 +182,7 @@ extern int file_map_bit_set(fileMap *, int);
 extern int file_map_bit_test(fileMap *, int);
 extern void file_map_bit_reset(fileMap *, int);
 extern void filemapFreeMemory(fileMap *);
+extern void filemapCopy(fileMap *old, fileMap *new);
 
 
 extern void fqdncache_nbgethostbyaddr(struct in_addr, FQDNH *, void *);
