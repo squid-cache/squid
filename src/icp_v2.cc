@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.70 2002/10/21 05:45:30 adrian Exp $
+ * $Id: icp_v2.cc,v 1.71 2002/10/21 09:18:40 adrian Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -485,7 +485,7 @@ icpHandleUdp(int sock, void *data)
     while (max--) {
 	from_len = sizeof(from);
 	memset(&from, '\0', from_len);
-	len = comm_recvfrom(sock,
+	len = comm_udp_recvfrom(sock,
 	    buf,
 	    SQUID_UDP_SO_RCVBUF - 1,
 	    0,
