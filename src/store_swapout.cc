@@ -200,6 +200,7 @@ storeSwapOutFileClose(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     swapout_ctrl_t *ctrlp;
     assert(mem != NULL);
+    debug(20,3)("storeSwapOutFileClose: %s\n", storeKeyText(e->key));
     if (mem->swapout.fd < 0) {
 #if USE_ASYNC_IO
 	aioCancel(-1, e);	/* Make doubly certain pending ops are gone */
