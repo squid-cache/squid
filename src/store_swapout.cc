@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.63 2000/03/06 16:24:56 wessels Exp $
+ * $Id: store_swapout.cc,v 1.64 2000/04/18 06:06:17 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -108,10 +108,16 @@ storeSwapOut(StoreEntry * e)
     lowest_offset = storeLowestMemReaderOffset(e);
     debug(20, 7) ("storeSwapOut: lowest_offset = %d\n",
 	(int) lowest_offset);
-    if (mem->inmem_hi - lowest_offset > DISK_PAGE_SIZE)
-        new_mem_lo = lowest_offset;
+    /*
+     * Careful.  lowest_offset can be greater than inmem_hi, such
+     * as in the case of a range request.
+     */
+    if (mem->inmem_hi < lowest_offset)
+	new_mem_lo = lowest_offset;
+    else if (mem->inmem_hi - lowest_offset > DISK_PAGE_SIZE)
+	new_mem_lo = lowest_offset;
     else
-        new_mem_lo = mem->inmem_lo;
+	new_mem_lo = mem->inmem_lo;
     assert(new_mem_lo >= mem->inmem_lo);
     if (storeSwapOutAble(e)) {
 	/*
