@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.308 1997/10/24 03:42:29 wessels Exp $
+ * $Id: store.cc,v 1.309 1997/10/24 03:53:10 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -469,8 +469,9 @@ storePurgeMem(StoreEntry * e)
     destroy_MemObject(e->mem_obj);
     e->mem_obj = NULL;
     if (e->swap_status != SWAPOUT_DONE) {
-	debug(0,0)("storePurgeMem: swap_status = %s, releasing\n",
-		swapStatusStr[e->swap_status]);
+	debug(0, 0) ("storePurgeMem: swap_status = %s, releasing\n",
+	    swapStatusStr[e->swap_status]);
+	debug(0,0)("--> %s\n", e->url);
 	storeRelease(e);
     }
 }
