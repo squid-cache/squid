@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommRead.h,v 1.1 2003/03/04 02:57:50 robertc Exp $
+ * $Id: CommRead.h,v 1.2 2003/03/08 09:35:15 robertc Exp $
  *
  * DEBUG: section 5    Comms
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -43,17 +43,59 @@
 #include "squid.h"
 #include "List.h"
 
+template<class C>
+
+class CallBack
+{
+
+public:
+    CallBack() : handler(NULL), data(NULL){}
+
+    CallBack(C *aHandler, void *someData) : handler(aHandler), data(someData){}
+
+    bool operator == (CallBack const &rhs) { return handler==rhs.handler && data==rhs.data;}
+
+#if 0
+    // twould be nice - RBC 20030307
+    C callback;
+#endif
+
+    C *handler;
+    void *data;
+};
+
+#if 0
+// twould be nice - RBC 20030307
+void
+CallBack<IOCB>::callback(int fd, char *buf, size_t size , comm_err_t errcode, int xerrno, void *tempData)
+{
+    assert (tempData == data);
+    handler (fd, buf, size , errcode, xerrno, data);
+    *this = CallBack();
+}
+
+#endif
+
 class CommRead
 {
 
 public:
     CommRead ();
     CommRead (int fd, char *buf, int len, IOCB *handler, void *data);
+    void queueCallback(size_t retval, comm_err_t errcode, int xerrno);
+    bool hasCallback() const;
+    void hasCallbackInvariant() const;
+    void hasNoCallbackInvariant() const;
+    void tryReading();
+    void read();
+    void initiateActualRead();
+    void nullCallback();
+    void doCallback(comm_err_t errcode, int xerrno);
     int fd;
     char *buf;
     int len;
-    IOCB *handler;
-    void *data;
+    CallBack<IOCB> callback;
+    static void ReadTry(int fd, void *data);
 };
 
 class DeferredRead

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.457 2003/03/06 11:51:57 robertc Exp $
+ * $Id: structs.h,v 1.458 2003/03/08 09:35:16 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,8 +36,12 @@
 
 #include "config.h"
 
-struct _dlink_node
+class dlink_node
 {
+
+public:
+    dlink_node() : data(NULL), prev(NULL), next(NULL){}
+
     void *data;
     dlink_node *prev;
     dlink_node *next;

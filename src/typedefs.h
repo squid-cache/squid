@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.158 2003/03/06 11:51:58 robertc Exp $
+ * $Id: typedefs.h,v 1.159 2003/03/08 09:35:16 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -209,7 +209,7 @@ typedef struct _CommWriteStateData CommWriteStateData;
 
 typedef struct _ErrorState ErrorState;
 
-typedef struct _dlink_node dlink_node;
+class dlink_node;
 
 typedef struct _dlink_list dlink_list;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.562 2003/03/04 05:56:02 robertc Exp $
+ * $Id: store.cc,v 1.563 2003/03/08 09:35:15 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -158,8 +158,8 @@ StoreEntry::DeferReader(void *theContext, CommRead const &aRead)
     anEntry->delayAwareRead(aRead.fd,
                             aRead.buf,
                             aRead.len,
-                            aRead.handler,
-                            aRead.data);
+                            aRead.callback.handler,
+                            aRead.callback.data);
 }
 
 void

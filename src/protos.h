@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.471 2003/03/06 11:51:57 robertc Exp $
+ * $Id: protos.h,v 1.472 2003/03/08 09:35:15 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -126,7 +126,6 @@ extern void clientAccessCheck(void *);
 SQUIDCEXTERN void clientSetReplyToError(void *, err_type, http_status, method_t, char const *, struct in_addr *, request_t *, char *, auth_user_request_t * auth_user_request);
 
 /* comm.c */
-extern int comm_existsiocallback(void);
 extern void comm_calliocallback(void);
 
 extern int comm_listen(int fd);
