@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.117 1998/10/08 20:10:15 wessels Exp $
+# $Id: cf.data.pre,v 1.118 1998/10/09 17:52:54 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1016,7 +1016,10 @@ TYPE: refreshpattern
 LOC: Config.Refresh
 DEFAULT: none
 DOC_START
-	usage: refresh_pattern regex min percent max [options]
+	usage: refresh_pattern [-i] regex min percent max [options]
+
+	By default, regular expressions are CASE-SENSITIVE.  To make
+	them case-insensitive, use the -i option.
 
 	min and max are specified in MINUTES.
 	percent is an integer number.
