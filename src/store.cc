@@ -1,5 +1,6 @@
 
-/* $Id: store.cc,v 1.33 1996/04/08 23:25:22 wessels Exp $ */
+/* $Id: store.cc,v 1.34 1996/04/09 18:37:15 wessels Exp $ */
+#ident "$Id: store.cc,v 1.34 1996/04/09 18:37:15 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
