@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.2 1997/08/25 15:55:19 wessels Exp $
+# $Id: Makefile.in,v 1.3 1998/02/05 21:37:48 wessels Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -22,7 +22,7 @@ LANGUAGE		= English
 all:
 
 install: install-mkdirs
-	@for f in $(LANGUAGE)/ERR_*; do \
+	@for f in $(srcdir)/$(LANGUAGE)/ERR_*; do \
 		if test -f $(DEFAULT_ERROR_DIR)/$$f ; then \
 			:; \
 		else \
