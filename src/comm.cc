@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.237 1998/03/25 05:30:54 wessels Exp $
+ * $Id: comm.cc,v 1.238 1998/03/27 19:42:22 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -357,6 +357,7 @@ commConnectCallback(ConnectStateData * cs, int status)
     comm_remove_close_handler(fd, commConnectFree, cs);
     cs->callback = NULL;
     cs->data = NULL;
+    commSetTimeout(fd, -1, NULL, NULL);
     commConnectFree(fd, cs);
     if (cbdataValid(data))
 	callback(fd, status, data);
