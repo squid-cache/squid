@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.485 1999/01/21 21:10:36 wessels Exp $
+ * $Id: store.cc,v 1.486 1999/01/21 23:15:40 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -94,8 +94,7 @@ static EVH storeLateRelease;
  * local variables
  */
 static dlink_list inmem_list;
-static int store_pages_high = 0;
-static int store_pages_low = 0;
+static int store_pages_max = 0;
 static int store_swap_high = 0;
 static int store_swap_low = 0;
 static int store_swap_mid = 0;
@@ -666,7 +665,7 @@ storeGetMemSpace(int size)
 	return;
     last_check = squid_curtime;
     pages_needed = (size / SM_PAGE_SIZE) + 1;
-    if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_high)
+    if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_max)
 	return;
     if (store_rebuilding)
 	return;
@@ -684,7 +683,7 @@ storeGetMemSpace(int size)
 	}
 	released++;
 	storePurgeMem(e);
-	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_high)
+	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_max)
 	    break;
     }
     debug(20, 3) ("storeGetMemSpace stats:\n");
@@ -928,7 +927,7 @@ storeInitHashValues(void)
 	store_hash_buckets,
 	store_maintain_rate,
 	store_maintain_rate == 1 ? null_string : "s");
-    debug(20, 1) ("Max Mem  size: %d KB\n", Config.Mem.maxSize >> 10);
+    debug(20, 1) ("Max Mem  size: %d KB\n", Config.memMaxSize >> 10);
     debug(20, 1) ("Max Swap size: %d KB\n", Config.Swap.maxSize);
 }
 
@@ -966,21 +965,12 @@ storeInit(void)
 void
 storeConfigure(void)
 {
-    int store_mem_high = 0;
-    int store_mem_low = 0;
-    store_mem_high = (long) (Config.Mem.maxSize / 100) *
-	Config.Mem.highWaterMark;
-    store_mem_low = (long) (Config.Mem.maxSize / 100) *
-	Config.Mem.lowWaterMark;
-
     store_swap_high = (long) (((float) Config.Swap.maxSize *
 	    (float) Config.Swap.highWaterMark) / (float) 100);
     store_swap_low = (long) (((float) Config.Swap.maxSize *
 	    (float) Config.Swap.lowWaterMark) / (float) 100);
     store_swap_mid = (store_swap_high >> 1) + (store_swap_low >> 1);
-
-    store_pages_high = store_mem_high / SM_PAGE_SIZE;
-    store_pages_low = store_mem_low / SM_PAGE_SIZE;
+    store_pages_max = Config.memMaxSize / SM_PAGE_SIZE;
 }
 
 static int
