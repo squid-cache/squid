@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.92 2003/06/20 00:13:10 hno Exp $
+#  $Id: Makefile.in,v 1.93 2003/07/15 07:14:08 robertc Exp $
 #
 
 srcdir = @srcdir@
@@ -236,7 +236,6 @@ EXTRA_libmiscutil_a_SOURCES = \
 
 libmiscutil_a_SOURCES = \
 	MemPool.c \
-	Array.cc \
 	base64.c \
 	getfullhostname.c \
 	hash.c \
@@ -291,25 +290,23 @@ libdlmalloc_a_OBJECTS = $(am_libdlmalloc_a_OBJECTS)
 libmiscutil_a_AR = $(AR) cru
 libmiscutil_a_DEPENDENCIES = libTrie/src/Trie.o libTrie/src/TrieNode.o \
 	@LIBOBJS@
-am__libmiscutil_a_SOURCES_DIST = MemPool.c Array.cc base64.c \
-	getfullhostname.c hash.c heap.c html_quote.c iso3307.c md5.c \
-	radix.c rfc1035.c rfc1123.c rfc1738.c rfc2617.c \
-	safe_inet_addr.c snprintf.c Splay.cc stub_memaccount.c util.c \
-	uudecode.c Profiler.c
+am__libmiscutil_a_SOURCES_DIST = MemPool.c base64.c getfullhostname.c \
+	hash.c heap.c html_quote.c iso3307.c md5.c radix.c rfc1035.c \
+	rfc1123.c rfc1738.c rfc2617.c safe_inet_addr.c snprintf.c \
+	Splay.cc stub_memaccount.c util.c uudecode.c Profiler.c
 @NEED_OWN_MD5_TRUE@am__objects_1 = md5.$(OBJEXT)
 @NEED_OWN_MD5_FALSE@am__objects_1 =
 @NEED_OWN_SNPRINTF_TRUE@am__objects_2 = snprintf.$(OBJEXT)
 @NEED_OWN_SNPRINTF_FALSE@am__objects_2 =
 @ENABLE_XPROF_STATS_TRUE@am__objects_3 = Profiler.$(OBJEXT)
 @ENABLE_XPROF_STATS_FALSE@am__objects_3 =
-am_libmiscutil_a_OBJECTS = MemPool.$(OBJEXT) Array.$(OBJEXT) \
-	base64.$(OBJEXT) getfullhostname.$(OBJEXT) hash.$(OBJEXT) \
-	heap.$(OBJEXT) html_quote.$(OBJEXT) iso3307.$(OBJEXT) \
-	$(am__objects_1) radix.$(OBJEXT) rfc1035.$(OBJEXT) \
-	rfc1123.$(OBJEXT) rfc1738.$(OBJEXT) rfc2617.$(OBJEXT) \
-	safe_inet_addr.$(OBJEXT) $(am__objects_2) Splay.$(OBJEXT) \
-	stub_memaccount.$(OBJEXT) util.$(OBJEXT) uudecode.$(OBJEXT) \
-	$(am__objects_3)
+am_libmiscutil_a_OBJECTS = MemPool.$(OBJEXT) base64.$(OBJEXT) \
+	getfullhostname.$(OBJEXT) hash.$(OBJEXT) heap.$(OBJEXT) \
+	html_quote.$(OBJEXT) iso3307.$(OBJEXT) $(am__objects_1) \
+	radix.$(OBJEXT) rfc1035.$(OBJEXT) rfc1123.$(OBJEXT) \
+	rfc1738.$(OBJEXT) rfc2617.$(OBJEXT) safe_inet_addr.$(OBJEXT) \
+	$(am__objects_2) Splay.$(OBJEXT) stub_memaccount.$(OBJEXT) \
+	util.$(OBJEXT) uudecode.$(OBJEXT) $(am__objects_3)
 libmiscutil_a_OBJECTS = $(am_libmiscutil_a_OBJECTS)
 libntlmauth_a_AR = $(AR) cru
 libntlmauth_a_DEPENDENCIES = @LIBOBJS@
@@ -325,10 +322,9 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = $(DEPDIR)/drand48.Po $(DEPDIR)/inet_ntoa.Po \
 @AMDEP_TRUE@	$(DEPDIR)/strerror.Po $(DEPDIR)/tempnam.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/Array.Po ./$(DEPDIR)/GNUregex.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/MemPool.Po ./$(DEPDIR)/Profiler.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/Splay.Po ./$(DEPDIR)/base64.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dlmalloc.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/GNUregex.Po ./$(DEPDIR)/MemPool.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/Profiler.Po ./$(DEPDIR)/Splay.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/base64.Po ./$(DEPDIR)/dlmalloc.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/getfullhostname.Po ./$(DEPDIR)/hash.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/heap.Po ./$(DEPDIR)/html_quote.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/iso3307.Po ./$(DEPDIR)/md5.Po \
@@ -402,7 +398,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/inet_ntoa.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strerror.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tempnam.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Array.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GNUregex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemPool.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Profiler.Po@am__quote@
