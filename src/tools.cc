@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.158 1998/06/08 17:29:21 wessels Exp $
+ * $Id: tools.cc,v 1.159 1998/07/17 04:50:01 rousskov Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -894,4 +894,18 @@ gb_to_str(const gb_t * g)
     else
 	snprintf(buf, sizeof(GbBuf), "%.2f TB", value / 1e12);
     return buf;
+}
+
+void
+debugObj(int section, int level, void *obj, void (*packMeth)(void *obj, Packer *p))
+{
+    MemBuf mb;
+    Packer p;
+    assert(obj);
+    memBufDefInit(&mb);
+    packerToMemInit(&p, &mb);
+    (*packMeth)(obj, &p);
+    debug(section, level) ("%s", mb.buf);
+    packerClean(&p);
+    memBufClean(&mb);
 }
