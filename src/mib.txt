@@ -1,6 +1,6 @@
 SQUID-MIB  DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.21 1998/11/18 00:16:37 glenn Exp $
+-- $Id: mib.txt,v 1.22 1999/01/15 20:48:16 glenn Exp $
 --
 
 IMPORTS
@@ -36,6 +36,10 @@ squid MODULE-IDENTITY
     REVISION      "9809220000Z"
     DESCRIPTION
 		"Move to SMIv2. Prepare to split into proxy/squid."
+    REVISION      "9901010000Z"
+    DESCRIPTION
+		"Added objects and corrected asn.1 syntax and 
+		descriptions."
     ::= { nlanr 1 }
 
 --
@@ -391,7 +395,9 @@ squid MODULE-IDENTITY
 		cacheHttpHitSvcTime 	Integer32,
 		cacheIcpQuerySvcTime 	Integer32,
 		cacheIcpReplySvcTime 	Integer32,
-		cacheDnsSvcTime		Integer32
+		cacheDnsSvcTime		Integer32,
+		cacheRequestHitRatio	Integer32,
+		cacheRequestByteRatio	Integer32
 	}
 
 	cacheMedianTime OBJECT-TYPE
