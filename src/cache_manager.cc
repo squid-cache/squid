@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.4 1998/02/22 07:45:17 rousskov Exp $
+ * $Id: cache_manager.cc,v 1.5 1998/02/23 03:59:41 rousskov Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -196,9 +196,12 @@ cachemgrStart(int fd, request_t *request, StoreEntry * entry)
 	fd_table[fd].ipaddr, mgr->action);
     /* get additional info from request headers */
     cachemgrParseHeaders(mgr, request);
-    debug(16, 1) ("CACHEMGR: %s (user: %s) requesting '%s'\n",
-	fd_table[fd].ipaddr, mgr->user_name ? mgr->user_name : "<unknown>", 
-	mgr->action);
+    if (mgr->user_name)
+	debug(16, 1) ("CACHEMGR: %s@%s requesting '%s'\n",
+	      mgr->user_name, fd_table[fd].ipaddr, mgr->action);
+    else
+	debug(16, 1) ("CACHEMGR: %s requesting '%s'\n",
+	      fd_table[fd].ipaddr, mgr->action);
     /* Check password */
     if (cachemgrCheckPassword(mgr) != 0) {
 #if 0 /* old response, we ask for authentication now */
