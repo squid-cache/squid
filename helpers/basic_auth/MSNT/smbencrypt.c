@@ -28,7 +28,11 @@
 #include <dirent.h>
 #include <string.h>
 #include <ctype.h>
-/* Antonino #include <sys/vfs.h> */
+
+/* AI inclusion for Solaris filesystem */
+#ifdef SOLARIS
+#include <sys/vfs.h>
+#endif
 
 #include "smblib-priv.h"
 #define uchar unsigned char

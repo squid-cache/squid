@@ -123,6 +123,7 @@ int
 Check_ifuserallowed(char *ConnectingUser)
 {
     static char CUBuf[NAMELEN + 1];
+    static char CUBuf1[NAMELEN + 1];
     static int x;
     static char AllowMsg[256];
 
@@ -139,8 +140,8 @@ Check_ifuserallowed(char *ConnectingUser)
      * If so, allow. If not, deny. Reconstruct the username
      * to have whitespace, to avoid finding wrong string subsets. */
 
-    sscanf(ConnectingUser, " %s ", CUBuf);
-    sprintf(CUBuf, " %s ", CUBuf);
+    sscanf(ConnectingUser, " %s ", CUBuf1);
+    sprintf(CUBuf, " %s ", CUBuf1);
 
     for (x = 0; x <= strlen(CUBuf); x++)
 	CUBuf[x] = toupper(CUBuf[x]);
@@ -148,7 +149,7 @@ Check_ifuserallowed(char *ConnectingUser)
     if (strstr(AllowedUsers, CUBuf) != NULL)
 	return 1;
     else {			/* If NULL, they are not allowed to use the proxy */
-	sprintf(AllowMsg, "Denied access to user '%s'.", CUBuf);
+	sprintf(AllowMsg, "Did not allow access to user '%s'.", CUBuf1);
 	syslog(LOG_USER | LOG_ERR, AllowMsg);
 	return 0;
     }

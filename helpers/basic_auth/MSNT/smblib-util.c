@@ -30,8 +30,8 @@
 #include "rfcnb-util.h"
 
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 char *SMB_Prots[] =
 {"PC NETWORK PROGRAM 1.0",

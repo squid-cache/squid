@@ -81,7 +81,9 @@ RFCNB_Set_Timeout(int seconds)
 	for (temp = 0; temp < 32; temp++)
 	    inact.sa_mask.__val[temp] = 0;
 #else
-	inact.sa_mask = 0;
+	/* AI - If you have problems with this line, contact the author */
+	/* AI - This is the old line: inact.sa_mask = 0; */
+	memset(&inact.sa_mask, 0, sizeof(inact.sa_mask));
 #endif
 #endif
 	inact.sa_flags = 0;	/* Don't restart */
