@@ -1,12 +1,12 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2001/01/07 23:36:43 hno Exp $
+#  $Id: Makefile.in,v 1.2 2001/01/10 23:55:59 hno Exp $
 #
 
 # The 'nop' is in the SUBDIRS list because some Unixes that can't
 # handle empty for lists.
 
-SUBDIRS		= @AUTH_BASIC_HELPERS@ nop
+SUBDIRS		= @BASIC_AUTH_HELPERS@ nop
 
 all:
 	@for dir in $(SUBDIRS); do \

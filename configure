@@ -1797,14 +1797,14 @@ if test "${enable_auth_modules+set}" = set; then
   yes) 
     for helper in $srcdir/src/auth/basic/helpers/*; do
 	if test -f $helper/Makefile.in; then
-	    AUTH_BASIC_HELPERS="$AUTH_BASIC_HELPERS `basename $helper`"
+	    BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS `basename $helper`"
 	fi
     done
     ;;
   no)
     ;;
   *)
-    AUTH_BASIC_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+    BASIC_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
   esac
 
 fi
@@ -1817,20 +1817,20 @@ if test "${enable_basic_auth_helpers+set}" = set; then
     BASIC_AUTH_HELPERS=""
     for helper in $srcdir/src/auth/basic/helpers/*; do
 	if test -f $helper/Makefile.in; then
-	    AUTH_BASIC_HELPERS="$AUTH_BASIC_HELPERS `basename $helper`"
+	    BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS `basename $helper`"
 	fi
     done
     ;;
   no)
     ;;
   *)
-    AUTH_BASIC_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+    BASIC_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
   esac
 
 fi
 
-if test -n "$AUTH_BASIC_HELPERS"; then
-    echo "Basic auth helpers built: $AUTH_BASIC_HELPERS"
+if test -n "$BASIC_AUTH_HELPERS"; then
+    echo "Basic auth helpers built: $BASIC_AUTH_HELPERS"
 fi
 
 
@@ -5788,7 +5788,7 @@ s%@DNS_OBJS@%$DNS_OBJS%g
 s%@AUTH_MODULES@%$AUTH_MODULES%g
 s%@AUTH_OBJS@%$AUTH_OBJS%g
 s%@AUTH_LIBS@%$AUTH_LIBS%g
-s%@AUTH_BASIC_HELPERS@%$AUTH_BASIC_HELPERS%g
+s%@BASIC_AUTH_HELPERS@%$BASIC_AUTH_HELPERS%g
 s%@NTLM_AUTH_HELPERS@%$NTLM_AUTH_HELPERS%g
 s%@OPT_UNLINKD_EXE@%$OPT_UNLINKD_EXE%g
 s%@UNLINKD_OBJS@%$UNLINKD_OBJS%g
