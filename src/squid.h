@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.32 1996/07/22 17:19:52 wessels Exp $
+ * $Id: squid.h,v 1.33 1996/07/23 04:11:05 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -274,6 +274,7 @@ extern char appname[];		/* main.c */
 extern struct in_addr local_addr;	/* main.c */
 extern char localhost[];
 extern struct in_addr any_addr;	/* comm.c */
+extern struct in_addr no_addr;	/* comm.c */
 extern int do_redirect;		/* redirect.c */
 
 
