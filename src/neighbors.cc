@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.111 1997/02/06 20:20:47 wessels Exp $
+ * $Id: neighbors.cc,v 1.112 1997/02/07 04:56:17 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -111,10 +111,13 @@ static peer *whichPeer _PARAMS((const struct sockaddr_in * from));
 static void neighborAlive _PARAMS((peer *, const MemObject *, const icp_common_t *));
 static void neighborCountIgnored _PARAMS((peer * e, icp_opcode op_unused));
 static neighbor_t parseNeighborType _PARAMS((const char *s));
-static char *neighborTypeStr _PARAMS((peer * e));
 
 static icp_common_t echo_hdr;
 static u_short echo_port;
+
+static int NLateReplies = 0;
+static int NObjectsQueried = 0;
+static int MulticastFudgeFactor = 0;
 
 static struct {
     int n;
@@ -149,7 +152,7 @@ const char *hier_strings[] =
     "INVALID CODE"
 };
 
-static char *
+char *
 neighborTypeStr(peer * e)
 {
     if (e->type == PEER_SIBLING)
@@ -462,6 +465,8 @@ neighborsUdpPing(protodispatch_data * proto)
     int reqnum = 0;
     int flags;
     icp_common_t *query;
+    int ICP_queries_sent = 0;
+    int ICP_mcasts_sent = 0;
 
     if (Peers.peers_head == NULL)
 	return 0;
@@ -518,6 +523,7 @@ neighborsUdpPing(protodispatch_data * proto)
 		query,
 		LOG_TAG_NONE,
 		PROTO_NONE);
+	    ICP_queries_sent++;
 	} else {
 	    flags = 0;
 	    /* check if we should set ICP_FLAG_HIT_OBJ */
@@ -531,6 +537,7 @@ neighborsUdpPing(protodispatch_data * proto)
 		query,
 		LOG_TAG_NONE,
 		PROTO_NONE);
+	    ICP_queries_sent++;
 	}
 
 	e->stats.ack_deficit++;
@@ -539,6 +546,7 @@ neighborsUdpPing(protodispatch_data * proto)
 	    e->host, e->stats.ack_deficit);
 	if (e->type == PEER_MULTICAST) {
 		e->stats.ack_deficit = 0;
+		ICP_mcasts_sent++;
 	} else if (neighborUp(e)) {
 	    /* its alive, expect a reply from it */
 	        mem->e_pings_n_pings++;
@@ -575,12 +583,17 @@ neighborsUdpPing(protodispatch_data * proto)
 		    query,
 		    LOG_TAG_NONE,
 		    PROTO_NONE);
+	    ICP_queries_sent++;
 	    }
 	} else {
 	    debug(15, 6, "neighborsUdpPing: Source Ping: unknown host: %s\n",
 		host);
 	}
     }
+    if ((ICP_queries_sent))
+	NObjectsQueried++;
+    if ((ICP_mcasts_sent))
+	mem->e_pings_n_pings += MulticastFudgeFactor;
     return mem->e_pings_n_pings;
 }
 
@@ -614,6 +627,7 @@ neighborCountIgnored(peer * e, icp_opcode op_unused)
     if (e == NULL)
 	return;
     e->stats.ignored_replies++;
+    NLateReplies++;
 }
 
 /* I should attach these records to the entry.  We take the first
@@ -956,3 +970,19 @@ peerDestroy(peer * e)
     safe_free(e->host);
     safe_free(e);
 }
+
+void
+peerUpdateFudge(void *unused)
+{
+    if ((NObjectsQueried)) {
+	MulticastFudgeFactor = NLateReplies / NObjectsQueried;
+	if (NObjectsQueried > 20) {
+	    /* Re-scale this so it adjusts faster */
+	    NLateReplies = 20 * NLateReplies / NObjectsQueried;
+	    NObjectsQueried = 20;
+	}
+    }
+    eventAdd("peerUpdateFudge", peerUpdateFudge, NULL, 10);
+    debug(15, 3, "peerUpdateFudge: Factor = %d\n", MulticastFudgeFactor);
+}
+
