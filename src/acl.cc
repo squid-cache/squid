@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.212 2000/03/06 16:23:28 wessels Exp $
+ * $Id: acl.cc,v 1.213 2000/05/01 05:11:55 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2253,9 +2253,14 @@ aclPurgeMethodInUse(acl_access * a)
  *
  * NOTE: Linux code by David Luyer <luyer@ucs.uwa.edu.au>.
  *       Original (BSD-specific) code no longer works.
+ *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
 
+#ifdef _SQUID_SOLARIS_
+#include <sys/sockio.h>
+#else
 #include <sys/sysctl.h>
+#endif
 #ifdef _SQUID_LINUX_
 #include <net/if_arp.h>
 #include <sys/ioctl.h>
@@ -2330,10 +2335,10 @@ aclParseArpList(void *curlist)
 /***************/
 /* aclMatchArp */
 /***************/
-#ifdef _SQUID_LINUX_
 static int
 aclMatchArp(void *dataptr, struct in_addr c)
 {
+#if defined(_SQUID_LINUX_)
     struct arpreq arpReq;
     struct sockaddr_in ipAddr;
     unsigned char ifbuffer[sizeof(struct ifreq) * 64];
@@ -2447,6 +2452,48 @@ aclMatchArp(void *dataptr, struct in_addr c)
 	 * exist on multiple interfaces?
 	 */
     }
+#elif defined(_SQUID_SOLARIS_)
+    struct arpreq arpReq;
+    struct sockaddr_in ipAddr;
+    unsigned char ifbuffer[sizeof(struct ifreq) * 64];
+    struct ifconf ifc;
+    struct ifreq *ifr;
+    int offset;
+    splayNode **Top = dataptr;
+    /*
+     * Set up structures for ARP lookup with blank interface name
+     */
+    ipAddr.sin_family = AF_INET;
+    ipAddr.sin_port = 0;
+    ipAddr.sin_addr = c;
+    memset(&arpReq, '\0', sizeof(arpReq));
+    memcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+    /* Query ARP table */
+    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
+	/*
+	 *  Solaris (at least 2.6/x86) does not use arp_ha.sa_family -
+	 * it returns 00:00:00:00:00:00 for non-ethernet media 
+	 */
+	if (arpReq.arp_ha.sa_data[0] == 0 &&
+	    arpReq.arp_ha.sa_data[1] == 0 &&
+	    arpReq.arp_ha.sa_data[2] == 0 &&
+	    arpReq.arp_ha.sa_data[3] == 0 &&
+	    arpReq.arp_ha.sa_data[4] == 0 &&
+	    arpReq.arp_ha.sa_data[5] == 0)
+	    return 0;
+	debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
+	    arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
+	    arpReq.arp_ha.sa_data[2] & 0xff, arpReq.arp_ha.sa_data[3] & 0xff,
+	    arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
+	/* Do lookup */
+	*Top = splay_splay(&arpReq.arp_ha.sa_data, *Top, aclArpCompare);
+	debug(28, 3) ("aclMatchArp: '%s' %s\n",
+	    inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+	return (0 == splayLastResult);
+    }
+#else
+    WRITE ME;
+#endif
     /*
      * Address was not found on any interface
      */
@@ -2457,6 +2504,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
 static int
 aclArpCompare(const void *a, const void *b)
 {
+#if defined(_SQUID_LINUX_)
     const unsigned short *d1 = a;
     const unsigned short *d2 = b;
     if (d1[0] != d2[0])
@@ -2465,22 +2513,28 @@ aclArpCompare(const void *a, const void *b)
 	return (d1[1] > d2[1]) ? 1 : -1;
     if (d1[2] != d2[2])
 	return (d1[2] > d2[2]) ? 1 : -1;
+#elif defined(_SQUID_SOLARIS_)
+    const unsigned char *d1 = a;
+    const unsigned char *d2 = b;
+    if (d1[0] != d2[0])
+	return (d1[0] > d2[0]) ? 1 : -1;
+    if (d1[1] != d2[1])
+	return (d1[1] > d2[1]) ? 1 : -1;
+    if (d1[2] != d2[2])
+	return (d1[2] > d2[2]) ? 1 : -1;
+    if (d1[3] != d2[3])
+	return (d1[3] > d2[3]) ? 1 : -1;
+    if (d1[4] != d2[4])
+	return (d1[4] > d2[4]) ? 1 : -1;
+    if (d1[5] != d2[5])
+	return (d1[5] > d2[5]) ? 1 : -1;
+#else
+    WRITE ME;
+#endif
     return 0;
 }
-#else
 
-static int
-aclMatchArp(void *dataptr, struct in_addr c)
-{
-    WRITE ME;
-}
-
-static int
-aclArpCompare(const void *data, splayNode * n)
-{
-    WRITE ME;
-}
-
+#if UNUSED_CODE
 /**********************************************************************
 * This is from the pre-splay-tree code for BSD
 * I suspect the Linux approach will work on most O/S and be much
