@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.1 2001/01/07 23:36:48 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.2 2001/01/08 19:36:27 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -235,10 +235,11 @@ authNTLMInit(authScheme * scheme)
 int
 authenticateNTLMActive()
 {
-    if (authntlm_initialised)
-	return 1;
-    else
-	return 0;
+    if ((ntlmConfig != NULL) && (ntlmConfig->authenticate != NULL) &&
+        (ntlmConfig->authenticateChildren != 0) && (ntlmConfig->challengeuses > -1) 
+        && (ntlmConfig->challengelifetime>-1))
+        return 1;
+    return 0;
 }
 
 /* NTLM Scheme */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.15 2001/01/07 23:36:37 hno Exp $
+ * $Id: authenticate.cc,v 1.16 2001/01/08 19:36:26 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -370,7 +370,8 @@ authenticateShutdown(void)
 	    authscheme_list[i].donefunc();
 	else
 	    debug(29, 2) ("authenticateShutdown: scheme %s has not registered a shutdown function.\n", authscheme_list[i].typestr);
-	authscheme_list[i].typestr = NULL;
+	if (!reconfiguring)
+	    authscheme_list[i].typestr = NULL;
     }
 }
 
@@ -634,6 +635,7 @@ void
 authSchemeAdd(char *type, AUTHSSETUP * setup)
 {
     int i;
+    debug(29, 4) ("authSchemeAdd: adding %s", type);
     /* find the number of currently known authscheme types */
     for (i = 0; authscheme_list && authscheme_list[i].typestr; i++) {
 	assert(strcmp(authscheme_list[i].typestr, type) != 0);
