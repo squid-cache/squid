@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.66 1996/10/15 16:40:09 wessels Exp $
+ * $Id: neighbors.cc,v 1.67 1996/10/17 11:30:53 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -490,9 +490,9 @@ neighborsUdpPing(protodispatch_data * proto)
 	    e->neighbor_up = 0;
 	    /* log it once at the threshold */
 	    if ((e->stats.ack_deficit == HIER_MAX_DEFICIT)) {
-		debug(15, 0, "neighborsUdpPing: Detected DEAD %s: %s\n",
+		debug(15, 0, "Detected DEAD %s: %s/%d/%d\n",
 		    e->type == EDGE_SIBLING ? "SIBLING" : "PARENT",
-		    e->host);
+		    e->host, e->http_port, e->icp_port);
 	    }
 	}
 	friends->first_ping = e->next;
@@ -568,9 +568,9 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	ntype = neighborType(e, entry->mem_obj->request);
 	/* Neighbor is alive, reset the ack deficit */
 	if (e->stats.ack_deficit >= HIER_MAX_DEFICIT) {
-	    debug(15, 0, "neighborsUdpAck: Detected REVIVED %s: %s\n",
+	    debug(15, 0, "Detected REVIVED %s: %s/%d/%d\n",
 		e->type == EDGE_PARENT ? "PARENT" : "SIBLING",
-		e->host);
+		e->host, e->http_port, e->icp_port);
 	}
 	e->neighbor_up = 1;
 	e->stats.ack_deficit = 0;
