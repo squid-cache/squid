@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.14 1996/08/20 15:45:46 wessels Exp $
+ * $Id: cachemgr.cc,v 1.15 1996/08/21 20:11:54 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -613,8 +613,8 @@ int main(int argc, char *argv[])
 	!strcmp(operation, "DNS Server Stats")) {
 	op = STATS_D;
     } else if (!strcmp(operation, "stats/redirector") ||
-      !strcmp(operation, "Redirection Server Stats")) {
-      op = STATS_R;
+	!strcmp(operation, "Redirection Server Stats")) {
+	op = STATS_R;
     } else if (!strcmp(operation, "stats/vm_objects") ||
 	!strcmp(operation, "VM_Objects")) {
 	op = STATS_VM;
