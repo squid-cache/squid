@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.382 2003/07/14 08:21:56 robertc Exp $
+ * $Id: comm.cc,v 1.383 2003/07/14 11:03:38 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -115,10 +115,12 @@ public:
     void finished(bool);
 
 private:
-    static size_t const MAX_ACCEPT_PER_LOOP = 10;
+    static size_t const MAX_ACCEPT_PER_LOOP;
     size_t count;
     bool finished_;
 };
+
+size_t const AcceptFD::MAX_ACCEPT_PER_LOOP(10);
 
 class CommWrite
 {
