@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.9 2001/04/17 20:34:53 wessels Exp $
+ * $Id: logfile.cc,v 1.10 2002/04/06 20:48:44 hno Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -82,7 +82,9 @@ logfileClose(Logfile * lf)
 void
 logfileRotate(Logfile * lf)
 {
+#ifdef S_ISREG
     struct stat sb;
+#endif
     int i;
     char from[MAXPATHLEN];
     char to[MAXPATHLEN];
