@@ -498,7 +498,7 @@ DOC_END
 
 NAME: cache_access_log
 TYPE: string
-DEFAULT: /usr/local/squid/logs/access.log
+DEFAULT: @DEFAULT_ACCESS_LOG@
 LOC: Config.Log.access
 DOC_START
 	Logs the client request activity.  Contains an entry for
