@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.2 2002/04/13 23:07:49 hno Exp $
+ * $Id: comm_poll.cc,v 1.3 2002/07/28 21:55:33 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -226,9 +226,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
     }
     if (!nfds)
 	return -1;
-#if !ALARM_UPDATES_TIME
     getCurrentTime();
-#endif
     statCounter.syscalls.polls++;
     if (poll(pfds, npfds, 0) < 1)
 	return incoming_sockets_accepted;
@@ -328,11 +326,9 @@ comm_select(int msec)
     static time_t last_timeout = 0;
     double timeout = current_dtime + (msec / 1000.0);
     do {
-#if !ALARM_UPDATES_TIME
 	double start;
 	getCurrentTime();
 	start = current_dtime;
-#endif
 	/* Handle any fs callbacks that need doing */
 	storeDirCallback();
 #if DELAY_POOLS
@@ -518,10 +514,8 @@ comm_select(int msec)
 	    }
 	}
 #endif
-#if !ALARM_UPDATES_TIME
 	getCurrentTime();
 	statCounter.select_time += (current_dtime - start);
-#endif
 	return COMM_OK;
     }
     while (timeout > current_dtime);
