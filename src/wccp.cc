@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.22 2002/04/18 16:08:21 hno Exp $
+ * $Id: wccp.cc,v 1.23 2002/06/21 13:16:30 hno Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -181,6 +181,7 @@ wccpConnectionShutdown(void)
     if (theInWccpConnection != theOutWccpConnection) {
 	debug(80, 1) ("FD %d Closing WCCP socket\n", theInWccpConnection);
 	comm_close(theInWccpConnection);
+	theInWccpConnection = -1;
     }
     assert(theOutWccpConnection > -1);
     commSetSelect(theOutWccpConnection, COMM_SELECT_READ, NULL, NULL, 0);
