@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.45 1996/10/15 05:35:53 wessels Exp $
+ * $Id: client_side.cc,v 1.46 1996/10/17 11:14:44 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -386,7 +386,7 @@ icpProcessExpired(int fd, icpStateData * icpState)
     debug(33, 5, "icpProcessExpired: setting lmt = %d\n",
 	entry->lastmod);
 
-    entry->refcount++;		/* MISS CASE */
+    entry->refcount++;		/* EXPIRED CASE */
     entry->mem_obj->fd_of_first_client = fd;
     icpState->entry = entry;
     icpState->offset = 0;
@@ -409,7 +409,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     /* unregister this handler */
     storeUnregister(entry, fd);
     if (entry->store_status == STORE_ABORTED) {
-	debug(33, 3, "icpHandleIMSReply: ABORTED/%s '%s'\n",
+	debug(33, 1, "icpHandleIMSReply: ABORTED/%s '%s'\n",
 	    log_tags[entry->mem_obj->abort_code], entry->url);
 	/* We have an existing entry, but failed to validate it,
 	 * so send the old one anyway */
@@ -417,7 +417,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	storeUnlockObject(entry);
 	icpState->entry = icpState->old_entry;
     } else if (mem->reply->code == 0) {
-	debug(33, 3, "icpHandleIMSReply: Incomplete headers for '%s'\n",
+	debug(33, 1, "icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
 	storeRegister(entry,
 	    fd,
@@ -425,7 +425,6 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    (void *) icpState);
 	return 0;
     } else if (mem->reply->code == 304 && !BIT_TEST(icpState->request->flags, REQ_IMS)) {
-
 	/* We initiated the IMS request, the client is not expecting
 	 * 304, so put the good one back.  First, make sure the old entry
 	 * headers have been loaded from disk. */
@@ -446,6 +445,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	}
 	storeUnlockObject(entry);
 	entry = icpState->entry = oldentry;
+	entry->timestamp = squid_curtime;
 	if (mime_headers_end(hbuf)) {
 	    httpParseHeaders(hbuf, entry->mem_obj->reply);
 	    ttlSet(entry);
@@ -460,6 +460,10 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	}
     } else {
 	/* the client can handle this reply, whatever it is */
+	if (mem->reply->code == 304) {
+	    icpState->old_entry->timestamp = squid_curtime;
+	    icpState->old_entry->refcount++;
+	}
 	icpState->log_type = LOG_TCP_EXPIRED_MISS;
 	storeUnlockObject(icpState->old_entry);
     }
