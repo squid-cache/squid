@@ -92,6 +92,21 @@
 /* signed size_t, grr */
 #undef ssize_t
 
+/* Define if you have the setresuid function.  */
+#undef HAVE_SETRESUID
+
+/* Define if you want to use SHA as store index key. */
+#undef STORE_KEY_SHA
+
+/* Define if you want to use MD5 as store index key. */
+#undef STORE_KEY_MD5
+
+/* Define to do simple malloc debugging */
+#undef XMALLOC_DEBUG
+
+/* Define to have malloc statistics */
+#undef XMALLOC_STATISTICS
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 

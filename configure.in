@@ -3,13 +3,13 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.86 1997/12/31 05:06:22 wessels Exp $
+dnl  $Id: configure.in,v 1.87 1997/12/31 20:38:24 wessels Exp $
 dnl
 dnl
 dnl
 AC_INIT(src/main.c)
 AC_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.86 $)dnl
+AC_REVISION($Revision: 1.87 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AC_CONFIG_AUX_DIR(aux)
 
@@ -185,33 +185,42 @@ AC_CHECK_HEADERS( \
 AC_C_CONST
 AC_C_BIGENDIAN
 
-AC_MSG_CHECKING(if ANSI prototypes work)
-AC_TRY_COMPILE([int foo(char *); int foo (char *bar) {return 1;}],
-[foo("bar")],
-[AC_DEFINE(HAVE_ANSI_PROTOTYPES)
-AC_MSG_RESULT(yes)],
-AC_MSG_RESULT(no))
+AC_CACHE_CHECK(if ANSI prototypes work,ac_cv_have_ansi_prototypes, [
+  AC_TRY_COMPILE([int foo(char *); int foo (char *bar) {return 1;}],
+    [foo("bar")],
+    ac_cv_have_ansi_prototypes="yes",
+    ac_cv_have_ansi_prototypes="no")
+])
+if test $ac_cv_have_ansi_prototypes = "yes" ; then
+  AC_DEFINE(HAVE_ANSI_PROTOTYPES)
+fi
 
-AC_MSG_CHECKING(for tm->tm_gmtoff)
-AC_TRY_COMPILE([#include <time.h>
+AC_CACHE_CHECK(for tm->tm_gmtoff,ac_cv_have_tm_gmoff, [
+  AC_TRY_COMPILE([#include <time.h>
 #include <sys/time.h>],
-[struct tm foo;
-foo.tm_gmtoff = 0;],
-[AC_DEFINE(HAVE_TM_GMTOFF)
-AC_MSG_RESULT(yes)],
-AC_MSG_RESULT(no))
+    [struct tm foo;
+      foo.tm_gmtoff = 0;],
+    ac_cv_have_tm_gmoff="yes",
+    ac_cv_have_tm_gmoff="no")
+])
+if test $ac_cv_have_tm_gmoff = "yes" ; then
+  AC_DEFINE(HAVE_TM_GMTOFF)
+fi
 
-AC_MSG_CHECKING(for extended mallinfo)
-AC_TRY_COMPILE([#include <sys/types.h>
+AC_CACHE_CHECK(for extended mallinfo,ac_cv_have_ext_mallinfo, [
+  AC_TRY_COMPILE([#include <sys/types.h>
 #include <malloc.h>],
-[struct mallinfo foo;
-foo.mxfast = 0;],
-[AC_DEFINE(HAVE_EXT_MALLINFO)
-AC_MSG_RESULT(yes)],
-AC_MSG_RESULT(no))
+    [struct mallinfo foo;
+      foo.mxfast = 0;],
+    ac_cv_have_ext_mallinfo="yes",
+    ac_cv_have_ext_mallinfo="no")
+])
+if test $ac_cv_have_ext_mallinfo = "yes" ; then
+  AC_DEFINE(HAVE_EXT_MALLINFO)
+fi
 
-AC_MSG_CHECKING(for ip->ip_hl)
-AC_TRY_COMPILE([#include <sys/types.h>
+AC_CACHE_CHECK(for ip->ip_hl, ac_cv_have_ip_hl, [
+  AC_TRY_COMPILE([#include <sys/types.h>
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
@@ -221,11 +230,14 @@ AC_TRY_COMPILE([#include <sys/types.h>
 #ifndef __linux__
 #define iphdr ip
 #endif],
-[struct iphdr ip;
-ip.ip_hl= 0;],
-[AC_DEFINE(HAVE_IP_HL)
-AC_MSG_RESULT(yes)],
-AC_MSG_RESULT(no))
+    [struct iphdr ip;
+      ip.ip_hl= 0;],
+    ac_cv_have_ip_hl="yes",
+    ac_cv_have_ip_hl="no")
+])
+if test $ac_cv_have_ip_hl = "yes" ; then
+  AC_DEFINE(HAVE_IP_HL)
+fi
 
 dnl Check for typedefs
 AC_CHECK_SIZEOF(int)
@@ -244,7 +256,12 @@ dnl Check for needed libraries
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(socket, main)
 AC_CHECK_LIB(gnumalloc, main)
-if test "$ac_cv_lib_gnumalloc_main" = "no"; then
+if test "$ac_cv_lib_gnumalloc_main" = "yes"; then
+	echo "Disabling extended malloc functions when using gnumalloc"
+	ac_cv_func_mallinfo=no
+	ac_cv_func_mallocblksize=no
+	ac_cv_func_mallopt=no
+else
 	case "$host" in
 		*-sun-solaris*)
         		echo "skipping libmalloc check for $host"
@@ -366,20 +383,57 @@ dnl to know that setresuid() exists, because RedHat 5.0 declares
 dnl setresuid() but doesn't implement it.
 dnl
 AC_CACHE_CHECK(if setresuid is implemented, ac_cv_func_setresuid,
-AC_TRY_RUN([
+  AC_TRY_RUN([
 #include <stdlib.h>
-int 
-main()
-{
-    if (setresuid(-1, -1, -1)) {
-	perror("setresuid:");
-	exit(1);
+  int main() {
+    if(setresuid(-1,-1,-1)) {
+      perror("setresuid:");
+      exit(1);
     }
     exit(0);
-}
-],ac_cv_func_setresuid="yes",ac_cv_func_setresuid="no")
+  }
+  ],ac_cv_func_setresuid="yes",ac_cv_func_setresuid="no")
 )
+if test "$ac_cv_func_setresuid" = "yes" ; then
+  AC_DEFINE(HAVE_SETRESUID)
+fi
 
+AC_ARG_ENABLE(gnuregex,
+[  --enable-gnuregex       Compile GNUregex],
+[USE_GNUREGEX=$enableval])
+
+AC_ARG_ENABLE(hashkey,
+[  --enable-hashkey[=sha|md5]
+                          Use hash function as store index, instead of URL],
+[ case "$enableval" in
+  yes|sha)
+  	echo "Store key set to SHA"
+  	AC_DEFINE(STORE_KEY_SHA)
+      	;;
+  md5)
+  	echo "Store key set to MD5"
+  	AC_DEFINE(STORE_KEY_MD5)
+	;;
+  esac
+])
+
+AC_ARG_ENABLE(xmalloc_debug,
+[  --enable-xmalloc-debug  Do sime simple malloc debugging],
+[ if test "$enableval" = "yes" ; then
+    echo "Malloc debugging enabled"
+    AC_DEFINE(XMALLOC_DEBUG)
+  fi
+])
+
+AC_ARG_ENABLE(xmalloc_statistics,
+[  --enable-xmalloc-statistics
+                          Show malloc statistics in status page],
+[ if test "$enableval" = "yes" ; then
+    echo "Malloc statistics enabled"
+    AC_DEFINE(XMALLOC_STATISTICS)
+  fi
+])
+  
 AC_MSG_CHECKING(if GNUregex needs to be compiled)
 if test "$ac_cv_func_regcomp" = "no" ; then
 	USE_GNUREGEX="yes"
@@ -408,6 +462,7 @@ AC_REPLACE_FUNCS(\
 	strerror \
 )
 
+dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default FD_SETSIZE value)
 AC_TRY_RUN([
 #if HAVE_STDIO_H
@@ -436,6 +491,7 @@ DEFAULT_FD_SETSIZE=256)
 AC_MSG_RESULT($DEFAULT_FD_SETSIZE)
 AC_DEFINE_UNQUOTED(DEFAULT_FD_SETSIZE, $DEFAULT_FD_SETSIZE)
 
+dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Maximum number of filedescriptors we can open)
 AC_TRY_RUN([
 #include <stdio.h>
@@ -492,6 +548,7 @@ SQUID_MAXFD=256)
 AC_MSG_RESULT($SQUID_MAXFD)
 AC_DEFINE_UNQUOTED(SQUID_MAXFD, $SQUID_MAXFD)
 
+dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default UDP send buffer size)
 AC_TRY_RUN([
 #include <stdlib.h>
@@ -515,6 +572,7 @@ SQUID_UDP_SO_SNDBUF=16384)
 AC_MSG_RESULT($SQUID_UDP_SO_SNDBUF)
 AC_DEFINE_UNQUOTED(SQUID_UDP_SO_SNDBUF, $SQUID_UDP_SO_SNDBUF)
 
+dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default UDP receive buffer size)
 AC_TRY_RUN([
 #include <stdlib.h>
@@ -538,6 +596,7 @@ SQUID_UDP_SO_RCVBUF=16384)
 AC_MSG_RESULT($SQUID_UDP_SO_RCVBUF)
 AC_DEFINE_UNQUOTED(SQUID_UDP_SO_RCVBUF, $SQUID_UDP_SO_RCVBUF)
 
+dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default TCP send buffer size)
 AC_TRY_RUN([
 #include <stdlib.h>
@@ -561,6 +620,7 @@ SQUID_TCP_SO_SNDBUF=16384)
 AC_MSG_RESULT($SQUID_TCP_SO_SNDBUF)
 AC_DEFINE_UNQUOTED(SQUID_TCP_SO_SNDBUF, $SQUID_TCP_SO_SNDBUF)
 
+dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default TCP receive buffer size)
 AC_TRY_RUN([
 #include <stdlib.h>
@@ -584,13 +644,16 @@ SQUID_TCP_SO_RCVBUF=16384)
 AC_MSG_RESULT($SQUID_TCP_SO_RCVBUF)
 AC_DEFINE_UNQUOTED(SQUID_TCP_SO_RCVBUF, $SQUID_TCP_SO_RCVBUF)
 
-AC_MSG_CHECKING(if sys_errlist[] is already defined)
-AC_TRY_COMPILE([#include <stdio.h>],
-[char *s = sys_errlist[0];],
-AC_MSG_RESULT(yes),
-[AC_MSG_RESULT(no)
-AC_DEFINE(NEED_SYS_ERRLIST)])
+AC_CACHE_CHECK(if sys_errlist is already defined, ac_cv_needs_sys_errlist,
+  AC_TRY_COMPILE([#include <stdio.h>],[char *s = sys_errlist[0];],
+    ac_cv_needs_sys_errlist="no",
+    ac_cv_needs_sys_errlist="yes")
+)
+if test "$ac_cv_needs_sys_errlist" = "yes" ; then
+  AC_DEFINE(NEED_SYS_ERRLIST)
+fi
 
+dnl Not cached since people are likely to change this
 AC_MSG_CHECKING(for libresolv _dns_ttl_ hack)
 AC_TRY_LINK(extern int _dns_ttl_;,return _dns_ttl_;,
 [AC_MSG_RESULT(yes)
