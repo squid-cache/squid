@@ -1302,16 +1302,16 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 SquidInline="yes"
-            # Check whether --enable-inline or --disable-inline was given.
+# Check whether --enable-inline or --disable-inline was given.
 if test "${enable_inline+set}" = set; then
   enableval="$enable_inline"
    if test "$enableval" = "no" ; then
-                             SquidInline="no"
-                             fi
+       SquidInline="no"
+     fi
 
 fi;
 
-                             if test "$SquidInline" = "yes" ; then
+if test "$SquidInline" = "yes" ; then
 
 cat >>confdefs.h <<\_ACEOF
 #define _SQUID_INLINE_ inline
@@ -1322,16 +1322,16 @@ cat >>confdefs.h <<\_ACEOF
 #define _USE_INLINE_
 _ACEOF
 
-                             else
+else
 
 cat >>confdefs.h <<\_ACEOF
 #define _SQUID_INLINE_
 _ACEOF
 
-                             fi
+fi
 
 # Checks for programs.
-                             ac_ext=cc
+ac_ext=cc
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -1854,7 +1854,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-                             ac_ext=c
+ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -2519,7 +2519,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-                             echo "$as_me:$LINENO: checking whether ${MAKE-make} sets \$(MAKE)" >&5
+echo "$as_me:$LINENO: checking whether ${MAKE-make} sets \$(MAKE)" >&5
 echo $ECHO_N "checking whether ${MAKE-make} sets \$(MAKE)... $ECHO_C" >&6
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y,./+-,__p_,'`
 if eval "test \"\${ac_cv_prog_make_${ac_make}_set+set}\" = set"; then
@@ -2549,7 +2549,7 @@ echo "${ECHO_T}no" >&6
 fi
 
 # for old automakes - like squid-cache.orgs!
-                             am__api_version="1.7"
+am__api_version="1.7"
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
   if test -f $ac_dir/install-sh; then
@@ -3157,7 +3157,7 @@ fi
 
 
 
-                             echo "$as_me:$LINENO: checking whether to enable maintainer-specific portions of Makefiles" >&5
+echo "$as_me:$LINENO: checking whether to enable maintainer-specific portions of Makefiles" >&5
 echo $ECHO_N "checking whether to enable maintainer-specific portions of Makefiles... $ECHO_C" >&6
     # Check whether --enable-maintainer-mode or --disable-maintainer-mode was given.
 if test "${enable_maintainer_mode+set}" = set; then
@@ -3181,7 +3181,7 @@ fi
   MAINT=$MAINTAINER_MODE_TRUE
 
 
-                             if test -n "$ac_tool_prefix"; then
+if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
 set dummy ${ac_tool_prefix}ranlib; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -3262,13 +3262,47 @@ else
 fi
 
 
-                                                          if test "$GCC" = "yes"; then
-                             TRIE_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
-                             TRIE_CXXFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wcomments"
-                             else
-                             TRIE_CFLAGS=
-                             TRIE_CXXFLAGS=
-                             fi
+if test "$GCC" = "yes"; then
+   TRIE_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
+   TRIE_CXXFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wcomments"
+else
+   TRIE_CFLAGS=
+   TRIE_CXXFLAGS=
+fi
+
+
+  echo "$as_me:$LINENO: checking whether compiler accepts -fhuge-objects" >&5
+echo $ECHO_N "checking whether compiler accepts -fhuge-objects... $ECHO_C" >&6
+  if test "${ac_cv_test_checkforhugeobjects+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+    ac_cv_test_checkforhugeobjects=`echo "int foo;" > conftest.cc
+${CXX} -Werror -fhuge-objects -c conftest.cc 2>/dev/null
+res=$?
+rm -f conftest.*
+echo yes
+exit $res` 2> /dev/null
+    if [ $? -ne 0 ]
+    then ac_cv_test_checkforhugeobjects=no
+    else if [ -z "$ac_cv_test_checkforhugeobjects" ]
+         then ac_cv_test_checkforhugeobjects=yes
+    fi ; fi
+
+fi
+ # end of CACHE_VAL
+  echo "$as_me:$LINENO: result: ${ac_cv_test_checkforhugeobjects}" >&5
+echo "${ECHO_T}${ac_cv_test_checkforhugeobjects}" >&6
+
+  if test "X${ac_cv_test_checkforhugeobjects}" != Xno
+  then
+    HUGE_OBJECT_FLAG="-fhuge-objects"
+  else
+    HUGE_OBJECT_FLAG=""
+  fi
+
+TRIE_CXXFLAGS="$TRIE_CXXFLAGS $HUGE_OBJECT_FLAG"
+
 
 
 
@@ -3376,7 +3410,7 @@ _ACEOF
 
 fi
 
-                             ac_ext=c
+ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -3909,9 +3943,9 @@ fi
 
 # Checks for library functions.
 
-                                                                     ac_config_files="$ac_config_files Makefile include/Makefile src/Makefile test/Makefile"
+                                        ac_config_files="$ac_config_files Makefile include/Makefile src/Makefile test/Makefile"
 
-                             cat >confcache <<\_ACEOF
+cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
 # scripts and configure runs, see configure's option --config-cache.

@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.7 2003/07/14 15:14:42 robertc Exp $
+# $Id: Makefile.in,v 1.8 2003/08/19 00:20:27 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -137,9 +137,9 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	installdirs-recursive install-recursive uninstall-recursive \
 	check-recursive installcheck-recursive
 DIST_COMMON = README AUTHORS COPYING ChangeLog INSTALL Makefile.am \
-	Makefile.in NEWS aclocal.m4 config.guess config.h.in config.sub \
-	configure configure.in depcomp install-sh ltmain.sh missing \
-	mkinstalldirs
+	Makefile.in NEWS acinclude.m4 aclocal.m4 config.guess \
+	config.h.in config.sub configure configure.in depcomp \
+	install-sh ltmain.sh missing mkinstalldirs
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -158,7 +158,7 @@ $(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 $(srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.in 
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.in acinclude.m4
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 
 config.h: stamp-h1
