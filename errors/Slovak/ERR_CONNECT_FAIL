@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+Pri pokuse o prístup k:
+<A HREF="%U">%U</A>
+<P>
+došlo k nasledovnej chybe:
+<UL>
+<LI>
+<STRONG>
+Connection Failed
+</STRONG>
+</UL>
+
+<P>
+Systém odpovedal:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Vzdialený server alebo sieť sú nedostupné. Opakujte prosím Vašu požiadavku.
+</P>

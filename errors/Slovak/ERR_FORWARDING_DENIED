@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+Pri pokuse o prístup k:
+<A HREF="%U">%U</A>
+<P>
+došlo k nasledovnej chybe:
+<UL>
+<LI>
+<STRONG>
+Forwarding Denied.
+</STRONG>
+</UL>
+
+<P>
+Tento server nepresmeruje Vašu požiadavku pretože mu to nedovoľujú vzťahy v
+hierarchii cache serverov. Cache server %i je možno zle nakonfigurovaný.
+</P>
