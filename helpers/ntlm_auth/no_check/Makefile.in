@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.2 2001/01/16 21:11:31 hno Exp $
+#  $Id: Makefile.in,v 1.3 2001/04/20 09:58:32 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -10,7 +10,7 @@ prefix		= @prefix@
 exec_prefix	= @exec_prefix@
 exec_suffix	= @exec_suffix@
 top_srcdir	= @top_srcdir@
-bindir		= @bindir@
+libexecdir		= @libexecdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
@@ -36,10 +36,10 @@ INCLUDE		= -I. -I../../../../../include -I$(top_srcdir)/include
 CFLAGS		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
 AUTH_LIBS	= -L../../../../../lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
 
-PROGS		= $(NO_CHECK).pl
+LIBPROGS	= $(NO_CHECK).pl
 OBJS		= $(NO_CHECK)
 
-all:    $(PROGS)
+all:    $(LIBPROGS)
 
 #$(OBJS): 
 
@@ -51,27 +51,27 @@ install-mkdirs:
 		echo "mkdir $(prefix)"; \
 		mkdir -p $(prefix); \
 	fi
-	-@if test ! -d $(bindir); then \
-		echo "mkdir $(bindir)"; \
-		mkdir -p $(bindir); \
+	-@if test ! -d $(libexecdir); then \
+		echo "mkdir $(libexecdir)"; \
+		mkdir -p $(libexecdir); \
 	fi
 
 install: all install-mkdirs
-	@for f in $(PROGS); do \
-		if test -f $(bindir)/$$f; then \
-			echo $(MV) $(bindir)/$$f $(bindir)/-$$f; \
-			$(MV) $(bindir)/$$f $(bindir)/-$$f; \
+	@for f in $(LIBPROGS); do \
+		if test -f $(libexecdir)/$$f; then \
+			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+			$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
 		fi; \
-		echo $(INSTALL_BIN) $$f $(bindir); \
-		$(INSTALL_BIN) $$f $(bindir); \
-		if test -f $(bindir)/-$$f; then \
-			echo $(RM) -f $(bindir)/-$$f; \
-			$(RM) -f $(bindir)/-$$f; \
+		echo $(INSTALL_BIN) $$f $(libexecdir); \
+		$(INSTALL_BIN) $$f $(libexecdir); \
+		if test -f $(libexecdir)/-$$f; then \
+			echo $(RM) -f $(libexecdir)/-$$f; \
+			$(RM) -f $(libexecdir)/-$$f; \
 		fi; \
 	done
 
 clean: 
-	-rm -rf *.o *pure_* core $(PROGS)
+	-rm -rf *.o *pure_* core $(LIBPROGS)
 
 distclean:     clean
 	-rm -f Makefile
