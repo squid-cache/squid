@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.222 1998/09/14 21:58:54 wessels Exp $
+ * $Id: structs.h,v 1.223 1998/09/14 22:18:02 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -699,6 +699,10 @@ struct _HttpReply {
     HttpBody body;		/* for small constant memory-resident text bodies only */
 };
 
+struct _http_state_flags {
+	int proxying:1;
+	int keepalive:1;
+};
 
 struct _HttpStateData {
     StoreEntry *entry;
@@ -709,7 +713,7 @@ struct _HttpStateData {
     int eof;			/* reached end-of-object? */
     request_t *orig_request;
     int fd;
-    int flags;
+    http_state_flags flags;
     FwdState *fwdState;
 };
 
@@ -949,7 +953,13 @@ struct _cd_guess_stats {
 
 struct _PeerDigest {
     CacheDigest *cd;
-    int flags;			/* PD_ */
+    struct {
+	int inited:1;		/* initialized */
+	int usable:1;		/* ready to use */
+	int requested:1;	/* in process of receiving [fresh] digest */
+	int disabled:1;		/* do not use/validate the digest */
+	int init_pending:1;
+    } flags;
     time_t last_fetch_resp_time;
     time_t last_req_timestamp;
     time_t last_dis_delay;	/* last disability delay */
@@ -1018,7 +1028,10 @@ struct _peer {
 	int n_replies_expected;
 	int ttl;
 	int id;
-	int flags;
+	struct {
+		int count_event_pending:1;
+		int counting:1;
+	}
     } mcast;
     PeerDigest digest;
     int tcp_up;			/* 0 if a connect() fails */
@@ -1347,7 +1360,9 @@ struct _ErrorState {
     char *redirect_url;
     ERCB *callback;
     void *callback_data;
-    int flags;
+    struct {
+	int flag_cbdata:1;
+    } flags;
     struct {
 	char *request;
 	char *reply;

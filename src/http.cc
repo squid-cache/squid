@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.318 1998/09/14 21:58:49 wessels Exp $
+ * $Id: http.cc,v 1.319 1998/09/14 22:17:57 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -323,7 +323,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    else if (EBIT_TEST(reply->cache_control->mask, CC_MUST_REVALIDATE))
 		entry->flags.entry_revalidate = 1;
 	}
-	if (EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
+	if (httpState->flags.keepalive)
 	    if (httpState->peer)
 		httpState->peer->stats.n_keepalives_sent++;
 	if (reply->keep_alive)
@@ -344,7 +344,7 @@ httpPconnTransferDone(HttpStateData * httpState)
      * If we didn't send a keep-alive request header, then this
      * can not be a persistent connection.
      */
-    if (!EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
+    if (!httpState->flags.keepalive)
 	return 0;
     /*
      * What does the reply have to say about keep-alive?
@@ -563,7 +563,7 @@ httpBuildRequestHeader(request_t * request,
     StoreEntry * entry,
     HttpHeader * hdr_out,
     int cfd,
-    int flags)
+    http_state_flags flags)
 {
     /* building buffer for complex strings */
 #define BBUF_SZ (MAX_URL+32)
@@ -678,8 +678,8 @@ httpBuildRequestHeader(request_t * request,
 	httpHdrCcDestroy(cc);
     }
     /* maybe append Connection: keep-alive */
-    if (EBIT_TEST(flags, HTTP_KEEPALIVE)) {
-	if (EBIT_TEST(flags, HTTP_PROXYING)) {
+    if (flags.keepalive) {
+	if (flags.proxying) {
 	    httpHeaderPutStr(hdr_out, HDR_PROXY_CONNECTION, "keep-alive");
 	} else {
 	    httpHeaderPutStr(hdr_out, HDR_CONNECTION, "keep-alive");
@@ -696,7 +696,7 @@ httpBuildRequestPrefix(request_t * request,
     StoreEntry * entry,
     MemBuf * mb,
     int cfd,
-    int flags)
+    http_state_flags flags)
 {
     const int offset = mb->size;
     memBufPrintf(mb, "%s %s HTTP/1.0\r\n",
@@ -744,16 +744,16 @@ httpSendRequest(int fd, void *data)
 	cfd = entry->mem_obj->fd;
     assert(-1 == cfd || FD_SOCKET == fd_table[cfd].type);
     if (p != NULL)
-	EBIT_SET(httpState->flags, HTTP_PROXYING);
+	httpState->flags.proxying = 1;
     /*
      * Is keep-alive okay for all request methods?
      */
     if (p == NULL)
-	EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
+	httpState->flags.keepalive = 1;
     else if (p->stats.n_keepalives_sent < 10)
-	EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
+	httpState->flags.keepalive = 1;
     else if ((double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent > 0.50)
-	EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
+	httpState->flags.keepalive = 1;
     memBufDefInit(&mb);
     httpBuildRequestPrefix(req,
 	httpState->orig_request,

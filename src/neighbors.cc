@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.247 1998/09/14 21:58:51 wessels Exp $
+ * $Id: neighbors.cc,v 1.248 1998/09/14 22:17:59 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -490,19 +490,19 @@ peerDigestLookup(peer * p, request_t * request, StoreEntry * entry)
     assert(request);
     debug(15, 5) ("peerDigestLookup: peer %s\n", p->host);
     /* does the peeer have a valid digest? */
-    if (EBIT_TEST(p->digest.flags, PD_DISABLED)) {
+    if (p->digest.flags.disabled) {
 	debug(15, 5) ("peerDigestLookup: Disabled!\n");
 	return LOOKUP_NONE;
     } else if (!peerAllowedToUse(p, request)) {
 	debug(15, 5) ("peerDigestLookup: !peerAllowedToUse()\n");
 	return LOOKUP_NONE;
-    } else if (EBIT_TEST(p->digest.flags, PD_USABLE)) {
+    } else if (p->digest.flags.usable) {
 	debug(15, 5) ("peerDigestLookup: Usable!\n");
 	/* fall through; put here to have common case on top */ ;
-    } else if (!EBIT_TEST(p->digest.flags, PD_INITED)) {
+    } else if (!p->digest.flags.inited) {
 	debug(15, 5) ("peerDigestLookup: !initialized\n");
-	if (!EBIT_TEST(p->digest.flags, PD_INIT_PENDING)) {
-	    EBIT_SET(p->digest.flags, PD_INIT_PENDING);
+	if (!p->digest.flags.init_pending) {
+	    p->digest.flags.init_pending = 1;
 	    eventAdd("peerDigestInit", peerDigestInit, p, 0.0, 1);
 	}
 	return LOOKUP_NONE;
@@ -960,13 +960,13 @@ peerCheckConnectStart(peer * p)
 static void
 peerCountMcastPeersSchedule(peer * p, time_t when)
 {
-    if (p->mcast.flags & PEER_COUNT_EVENT_PENDING)
+    if (p->mcast.flags.count_event_pending)
 	return;
     eventAdd("peerCountMcastPeersStart",
 	peerCountMcastPeersStart,
 	p,
 	(double) when, 1);
-    p->mcast.flags |= PEER_COUNT_EVENT_PENDING;
+    p->mcast.flags.count_event_pending = 1;
 }
 
 static void
@@ -980,7 +980,7 @@ peerCountMcastPeersStart(void *data)
     int reqnum;
     LOCAL_ARRAY(char, url, MAX_URL);
     assert(p->type == PEER_MULTICAST);
-    p->mcast.flags &= ~PEER_COUNT_EVENT_PENDING;
+    p->mcast.flags.count_event_pending = 0;
     snprintf(url, MAX_URL, "http://%s/", inet_ntoa(p->in_addr.sin_addr));
     fake = storeCreateEntry(url, url, null_request_flags, METHOD_GET);
     psstate->request = requestLink(urlParse(METHOD_GET, url));
@@ -1009,7 +1009,7 @@ peerCountMcastPeersStart(void *data)
 	peerCountMcastPeersDone,
 	psstate,
 	(double) Config.Timeout.mcast_icp_query, 1);
-    p->mcast.flags |= PEER_COUNTING;
+    p->mcast.flags.counting = 1;
     peerCountMcastPeersSchedule(p, MCAST_COUNT_RATE);
 }
 
@@ -1019,7 +1019,7 @@ peerCountMcastPeersDone(void *data)
     ps_state *psstate = data;
     peer *p = psstate->callback_data;
     StoreEntry *fake = psstate->entry;
-    p->mcast.flags &= ~PEER_COUNTING;
+    p->mcast.flags.counting = 0;
     p->mcast.avg_n_members = doubleAverage(p->mcast.avg_n_members,
 	(double) psstate->ping.n_recv,
 	++p->mcast.n_times_counted,
