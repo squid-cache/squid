@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.410 1998/04/24 07:09:46 wessels Exp $
+ * $Id: store.cc,v 1.411 1998/05/08 23:54:02 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -180,6 +180,7 @@ new_MemObject(const char *url, const char *log_url)
     mem->log_url = xstrdup(log_url);
     mem->swapout.fd = -1;
     mem->object_sz = -1;
+    mem->fd = -1;
     /* XXX account log_url */
     debug(20, 3) ("new_MemObject: returning %p\n", mem);
     return mem;
