@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.284 1998/04/23 03:21:16 rousskov Exp $
+ * $Id: client_side.cc,v 1.285 1998/04/23 20:08:07 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -342,15 +342,25 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	entry->refcount++;
     } else if (STORE_PENDING == entry->store_status && 0 == status) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
-	if (entry->store_status == STORE_ABORTED)
-	    debug(33, 0) ("clientHandleIMSReply: entry->swap_status == STORE_ABORTED\n");
-	storeClientCopy(entry,
-	    http->out.offset + size,
-	    http->out.offset,
-	    4096,
-	    memAllocate(MEM_4K_BUF),
-	    clientHandleIMSReply,
-	    http);
+	if (size >= 4096) {
+	    /* will not get any bigger than that */
+	    debug(33, 3) ("clientHandleIMSReply: Reply is too large '%s', using old entry\n", url);
+	    /* use old entry, this repeats the code above */
+	    http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
+	    storeUnregister(entry, http);
+	    entry = http->entry = http->old_entry;
+	    entry->refcount++;
+	} else {
+	    if (entry->store_status == STORE_ABORTED)
+		debug(33, 0) ("clientHandleIMSReply: entry->swap_status == STORE_ABORTED\n");
+	    storeClientCopy(entry,
+		http->out.offset + size,
+		http->out.offset,
+		4096,
+		memAllocate(MEM_4K_BUF),
+		clientHandleIMSReply,
+		http);
+	}
 	return;
     } else if (clientGetsOldEntry(entry, http->old_entry, http->request)) {
 	/* We initiated the IMS request, the client is not expecting
