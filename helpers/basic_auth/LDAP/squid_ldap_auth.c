@@ -49,7 +49,7 @@ static char *basedn;
 static char *searchfilter = NULL;
 static char *binddn = NULL;
 static char *bindpasswd = NULL;
-static char *userattr = NULL;
+static char *userattr = "uid";
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int noreferrals = 0;

@@ -1,4 +1,4 @@
-.TH squid_ldap_auth 8 "18 April 2001" "Squid LDAP Auth"
+.TH squid_ldap_auth 8 "30 April 2001" "Squid LDAP Auth"
 .SH NAME
 squid_ldap_auth - Squid LDAP authentication helper
 .SH SYNOPSIS
@@ -80,7 +80,7 @@ you need to specify is usually the base DN under where your users
 are located, and the server name.
 .
 .IP
-squid_ldap_auth -b dc=your,dc=domain ldapserver
+squid_ldap_auth -b ou=peopl,dc=your,dc=domain ldapserver
 .P
 If you have sub-domains then you need to use a search filter to locate
 the users
@@ -88,7 +88,8 @@ the users
 squid_ldap_auth -b dc=your,dc=domain -f uid=%s ldapserver
 .P
 Or if the user attribute of the user DN is "cn" instead of "uid" then 
-you could use something like the following (for Active Directory)
+you could use something like the following (for Active Directory) if
+you do not want to search for the user DN
 .IP
 squid_ldap_auth -u cn -b cn=Users,dc=your,dc=domain ldapserver
 .P
