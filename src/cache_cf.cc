@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.295 1998/08/17 21:27:30 wessels Exp $
+ * $Id: cache_cf.cc,v 1.296 1998/08/17 21:35:49 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -213,6 +213,7 @@ configDoConfigure(void)
     int i;
     SwapDir *SD;
     fileMap *fm;
+    const refresh_t *R;
     int n;
     memset(&Config2, '\0', sizeof(SquidConfig2));
     /* init memory as early as possible */
@@ -312,6 +313,18 @@ configDoConfigure(void)
 	requirePathnameExists("redirect_program", Config.Program.redirect);
     requirePathnameExists("Icon Directory", Config.icons.directory);
     requirePathnameExists("Error Directory", Config.errorDirectory);
+    for (R = Config.Refresh; R; R = R->next) {
+        if (!R->flags.override_expire)
+	    continue;
+        debug(22,1)("WARNING: use of 'override-expire' in 'refresh_pattern' violates HTTP\n");
+        break;
+    }
+    for (R = Config.Refresh; R; R = R->next) {
+        if (!R->flags.override_lastmod)
+	    continue;
+        debug(22,1)("WARNING: use of 'override-lastmod' in 'refresh_pattern' violates HTTP\n");
+        break;
+    }
 }
 
 /* Parse a time specification from the config file.  Store the
