@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.305 2003/02/21 21:01:16 hno Exp $
+# $Id: cf.data.pre,v 1.306 2003/02/22 14:59:33 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2226,9 +2226,9 @@ DOC_START
 	  # to check username/password combinations (see
 	  # auth_param directive).
 	  #
-	  # WARNING: proxy_auth can't be used in a transparent proxy. It
-	  # collides with any authentication done by origin servers. It may
-	  # seem like it works at first, but it doesn't.
+	  # NOTE: proxy_auth can't be used in a transparent proxy as
+	  # the browser needs to be configured for using a proxy in order
+	  # to respond to proxy authentication.
 
 	acl aclname snmp_community string ...
 	  # A community string to limit access to your SNMP Agent

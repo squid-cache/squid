@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.624 2003/02/21 22:50:07 robertc Exp $
+ * $Id: client_side.cc,v 1.625 2003/02/22 14:59:34 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -104,11 +104,10 @@ public:
     {
 
 int deferred:
-        1;		/* This is a pipelined request waiting for the
-        				                				 * current object to complete */
+        1; /* This is a pipelined request waiting for the current object to complete */
 
 int parsed_ok:
-        1;        /* Was this parsed correctly? */
+        1; /* Was this parsed correctly? */
     }
 
     flags;
@@ -151,9 +150,7 @@ int parsed_ok:
 
 private:
     void prepareReply(HttpReply * rep);
-    bool mayUseConnection_; /* This request may use the connection -
-    		        			     * don't read anymore requests for now
-    		        			     */
+    bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
 };
 
 CBDATA_TYPE(ClientSocketContext);
@@ -1690,7 +1687,7 @@ prepareTransparentURL(ConnStateData * conn, clientHttpRequest *http, char *url, 
 {
     char *host;
 
-    http->flags.accel = 1;
+    http->flags.transparent = 1;
 
     if (*url != '/')
         return; /* already in good shape */
@@ -2087,6 +2084,8 @@ clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t
 
     request->flags.accelerated = http->flags.accel;
 
+    request->flags.transparent = http->flags.transparent;
+
     if (!http->flags.internal) {
         if (internalCheck(request->urlpath.buf())) {
             if (internalHostnameIs(request->host) &&
@@ -2230,8 +2229,7 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
         if (size > 0) {
             kb_incr(&statCounter.client_http.kbytes_in, size);
             conn->in.notYetUsed += size;
-            conn->in.buf[conn->in.notYetUsed] = '\0';   /* Terminate the string
-            						                        */
+            conn->in.buf[conn->in.notYetUsed] = '\0';   /* Terminate the string */
         } else if (size == 0) {
             debug(33, 5) ("clientReadRequest: FD %d closed?\n", fd);
 

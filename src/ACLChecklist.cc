@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.7 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.8 2003/02/22 14:59:33 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -47,22 +47,15 @@ ACLChecklist::authenticated()
     if (NULL == request) {
         fatal ("requiresRequest SHOULD have been true for this ACL!!");
         return 0;
-    } else if (!request->flags.accelerated) {
-        /* Proxy authorization on proxy requests */
-        headertype = HDR_PROXY_AUTHORIZATION;
-    } else if (request->flags.internal) {
-        /* WWW authorization on accelerated internal requests */
-        headertype = HDR_AUTHORIZATION;
-    } else {
-#if AUTH_ON_ACCELERATION
+    } else if (request->flags.accelerated) {
         /* WWW authorization on accelerated requests */
         headertype = HDR_AUTHORIZATION;
-#else
-
-        debug(28, 1) ("ACHChecklist::authenticated: authentication not applicable on accelerated requests.\n");
+    } else if (request->flags.transparent) {
+        debug(28, 1) ("ACHChecklist::authenticated: authentication not applicable on transparently intercepted requests.\n");
         return -1;
-#endif
-
+    } else {
+        /* Proxy authorization on proxy requests */
+        headertype = HDR_PROXY_AUTHORIZATION;
     }
 
     /* get authed here */

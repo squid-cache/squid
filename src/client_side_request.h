@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.7 2003/02/21 22:50:07 robertc Exp $
+ * $Id: client_side_request.h,v 1.8 2003/02/22 14:59:34 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -93,6 +93,9 @@ public:
     {
 
 unsigned int accel:
+        1;
+
+unsigned int transparent:
         1;
 
 unsigned int internal:
