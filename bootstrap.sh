@@ -86,8 +86,9 @@ do
 done
 
 echo "Autotool bootstrapping complete."
-echo "bootstrapping sub projects."
-if [ -d lib/libTrie ]; then
+
+#echo "bootstrapping sub projects."
+if [ -d lib/libTrie ] && [ ! -f lib/libTrie/configure ]; then
 	cd lib/libTrie && ./bootstrap.sh
 fi
 
