@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.18 1998/05/11 18:44:24 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.19 1998/05/13 21:16:30 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -40,7 +40,7 @@ typedef struct {
 } CacheDigestStats;
 
 /* local functions */
-static void cacheDigestHashKey(const CacheDigest * cd, const cache_key * key);
+static void cacheDigestHashKey(const CacheDigest * cd, const void * key);
 
 /* static array used by cacheDigestHashKey for optimization purposes */
 static u_num32 hashed_keys[4];
@@ -299,6 +299,10 @@ cacheDigestCalcMaskSize(int cap, int bpe)
     return (size_t) (cap * bpe + 7) / 8;
 }
 
+#if OLD_CODE
+	/*
+	 * This has byte-order bugs
+	 */
 static void
 cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
 {
@@ -310,7 +314,22 @@ cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
     hashed_keys[1] %= bit_count;
     hashed_keys[2] %= bit_count;
     hashed_keys[3] %= bit_count;
-
     debug(70, 9) ("cacheDigestHashKey: %s -(%d)-> %d %d %d %d\n",
 	storeKeyText(key), bit_count, hashed_keys[0], hashed_keys[1], hashed_keys[2], hashed_keys[3]);
 }
+#endif
+
+static void
+cacheDigestHashKey(const CacheDigest * cd, const void *key)
+{
+    const unsigned int bit_count = cd->mask_size * 8;
+    const unsigned int *tmp_keys = key;
+    hashed_keys[0] = htonl(tmp_keys[0]) % bit_count;
+    hashed_keys[1] = htonl(tmp_keys[1]) % bit_count;
+    hashed_keys[2] = htonl(tmp_keys[2]) % bit_count;
+    hashed_keys[3] = htonl(tmp_keys[3]) % bit_count;
+    debug(70, 9) ("cacheDigestHashKey: %s -(%d)-> %d %d %d %d\n",
+	storeKeyText(key), bit_count,
+	hashed_keys[0], hashed_keys[1], hashed_keys[2], hashed_keys[3]);
+}
+
