@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.193 1998/02/06 17:50:24 wessels Exp $
+ * $Id: stat.cc,v 1.194 1998/02/07 08:13:41 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -141,67 +141,64 @@ stat_io_get(StoreEntry * sentry)
 {
     int i;
 
-    storeAppendPrintf(sentry, open_bracket);
-    storeAppendPrintf(sentry, "{HTTP I/O}\n");
-    storeAppendPrintf(sentry, "{number of reads: %d}\n", IOStats.Http.reads);
-    storeAppendPrintf(sentry, "{deferred reads: %d (%d%%)}\n",
+    storeAppendPrintf(sentry, "HTTP I/O\n");
+    storeAppendPrintf(sentry, "number of reads: %d\n", IOStats.Http.reads);
+    storeAppendPrintf(sentry, "deferred reads: %d (%d%%)\n",
 	IOStats.Http.reads_deferred,
 	percent(IOStats.Http.reads_deferred, IOStats.Http.reads));
-    storeAppendPrintf(sentry, "{Read Histogram:}\n");
+    storeAppendPrintf(sentry, "Read Histogram:\n");
     for (i = 0; i < 16; i++) {
-	storeAppendPrintf(sentry, "{%5d-%5d: %9d %2d%%}\n",
+	storeAppendPrintf(sentry, "%5d-%5d: %9d %2d%%\n",
 	    i ? (1 << (i - 1)) + 1 : 1,
 	    1 << i,
 	    IOStats.Http.read_hist[i],
 	    percent(IOStats.Http.read_hist[i], IOStats.Http.reads));
     }
 
-    storeAppendPrintf(sentry, "{}\n");
-    storeAppendPrintf(sentry, "{FTP I/O}\n");
-    storeAppendPrintf(sentry, "{number of reads: %d}\n", IOStats.Ftp.reads);
-    storeAppendPrintf(sentry, "{deferred reads: %d (%d%%)}\n",
+    storeAppendPrintf(sentry, "\n");
+    storeAppendPrintf(sentry, "FTP I/O\n");
+    storeAppendPrintf(sentry, "number of reads: %d\n", IOStats.Ftp.reads);
+    storeAppendPrintf(sentry, "deferred reads: %d (%d%%)\n",
 	IOStats.Ftp.reads_deferred,
 	percent(IOStats.Ftp.reads_deferred, IOStats.Ftp.reads));
-    storeAppendPrintf(sentry, "{Read Histogram:}\n");
+    storeAppendPrintf(sentry, "Read Histogram:\n");
     for (i = 0; i < 16; i++) {
-	storeAppendPrintf(sentry, "{%5d-%5d: %9d %2d%%}\n",
+	storeAppendPrintf(sentry, "%5d-%5d: %9d %2d%%\n",
 	    i ? (1 << (i - 1)) + 1 : 1,
 	    1 << i,
 	    IOStats.Ftp.read_hist[i],
 	    percent(IOStats.Ftp.read_hist[i], IOStats.Ftp.reads));
     }
 
-    storeAppendPrintf(sentry, "{}\n");
-    storeAppendPrintf(sentry, "{Gopher I/O}\n");
-    storeAppendPrintf(sentry, "{number of reads: %d}\n", IOStats.Gopher.reads);
-    storeAppendPrintf(sentry, "{deferred reads: %d (%d%%)}\n",
+    storeAppendPrintf(sentry, "\n");
+    storeAppendPrintf(sentry, "Gopher I/O\n");
+    storeAppendPrintf(sentry, "number of reads: %d\n", IOStats.Gopher.reads);
+    storeAppendPrintf(sentry, "deferred reads: %d (%d%%)\n",
 	IOStats.Gopher.reads_deferred,
 	percent(IOStats.Gopher.reads_deferred, IOStats.Gopher.reads));
-    storeAppendPrintf(sentry, "{Read Histogram:}\n");
+    storeAppendPrintf(sentry, "Read Histogram:\n");
     for (i = 0; i < 16; i++) {
-	storeAppendPrintf(sentry, "{%5d-%5d: %9d %2d%%}\n",
+	storeAppendPrintf(sentry, "%5d-%5d: %9d %2d%%\n",
 	    i ? (1 << (i - 1)) + 1 : 1,
 	    1 << i,
 	    IOStats.Gopher.read_hist[i],
 	    percent(IOStats.Gopher.read_hist[i], IOStats.Gopher.reads));
     }
 
-    storeAppendPrintf(sentry, "{}\n");
-    storeAppendPrintf(sentry, "{WAIS I/O}\n");
-    storeAppendPrintf(sentry, "{number of reads: %d}\n", IOStats.Wais.reads);
-    storeAppendPrintf(sentry, "{deferred reads: %d (%d%%)}\n",
+    storeAppendPrintf(sentry, "\n");
+    storeAppendPrintf(sentry, "WAIS I/O\n");
+    storeAppendPrintf(sentry, "number of reads: %d\n", IOStats.Wais.reads);
+    storeAppendPrintf(sentry, "deferred reads: %d (%d%%)\n",
 	IOStats.Wais.reads_deferred,
 	percent(IOStats.Wais.reads_deferred, IOStats.Wais.reads));
-    storeAppendPrintf(sentry, "{Read Histogram:}\n");
+    storeAppendPrintf(sentry, "Read Histogram:\n");
     for (i = 0; i < 16; i++) {
-	storeAppendPrintf(sentry, "{%5d-%5d: %9d %2d%%}\n",
+	storeAppendPrintf(sentry, "%5d-%5d: %9d %2d%%\n",
 	    i ? (1 << (i - 1)) + 1 : 1,
 	    1 << i,
 	    IOStats.Wais.read_hist[i],
 	    percent(IOStats.Wais.read_hist[i], IOStats.Wais.reads));
     }
-
-    storeAppendPrintf(sentry, close_bracket);
 }
 
 static const char *
@@ -340,58 +337,56 @@ dump_peers(StoreEntry * sentry, peer * peers)
     peer *e = NULL;
     struct _domain_ping *d = NULL;
     icp_opcode op;
-    storeAppendPrintf(sentry, open_bracket);
     if (peers == NULL)
-	storeAppendPrintf(sentry, "{There are no neighbors installed.}\n");
+	storeAppendPrintf(sentry, "There are no neighbors installed.\n");
     for (e = peers; e; e = e->next) {
 	assert(e->host != NULL);
-	storeAppendPrintf(sentry, "\n{%-11.11s: %s/%d/%d}\n",
+	storeAppendPrintf(sentry, "\n%-11.11s: %s/%d/%d\n",
 	    neighborTypeStr(e),
 	    e->host,
 	    e->http_port,
 	    e->icp_port);
-	storeAppendPrintf(sentry, "{Status     : %s}\n",
+	storeAppendPrintf(sentry, "Status     : %s\n",
 	    neighborUp(e) ? "Up" : "Down");
-	storeAppendPrintf(sentry, "{AVG RTT    : %d msec}\n", e->stats.rtt);
-	storeAppendPrintf(sentry, "{LAST QUERY : %8d seconds ago}\n",
+	storeAppendPrintf(sentry, "AVG RTT    : %d msec\n", e->stats.rtt);
+	storeAppendPrintf(sentry, "LAST QUERY : %8d seconds ago\n",
 	    (int) (squid_curtime - e->stats.last_query));
-	storeAppendPrintf(sentry, "{LAST REPLY : %8d seconds ago}\n",
+	storeAppendPrintf(sentry, "LAST REPLY : %8d seconds ago\n",
 	    (int) (squid_curtime - e->stats.last_reply));
-	storeAppendPrintf(sentry, "{PINGS SENT : %8d}\n", e->stats.pings_sent);
-	storeAppendPrintf(sentry, "{PINGS ACKED: %8d %3d%%}\n",
+	storeAppendPrintf(sentry, "PINGS SENT : %8d\n", e->stats.pings_sent);
+	storeAppendPrintf(sentry, "PINGS ACKED: %8d %3d%%\n",
 	    e->stats.pings_acked,
 	    percent(e->stats.pings_acked, e->stats.pings_sent));
-	storeAppendPrintf(sentry, "{FETCHES    : %8d %3d%%}\n",
+	storeAppendPrintf(sentry, "FETCHES    : %8d %3d%%\n",
 	    e->stats.fetches,
 	    percent(e->stats.fetches, e->stats.pings_acked));
-	storeAppendPrintf(sentry, "{IGNORED    : %8d %3d%%}\n",
+	storeAppendPrintf(sentry, "IGNORED    : %8d %3d%%\n",
 	    e->stats.ignored_replies,
 	    percent(e->stats.ignored_replies, e->stats.pings_acked));
-	storeAppendPrintf(sentry, "{Histogram of PINGS ACKED:}\n");
+	storeAppendPrintf(sentry, "Histogram of PINGS ACKED:\n");
 	for (op = ICP_INVALID; op < ICP_END; op++) {
 	    if (e->stats.counts[op] == 0)
 		continue;
-	    storeAppendPrintf(sentry, "{    %12.12s : %8d %3d%%}\n",
+	    storeAppendPrintf(sentry, "    %12.12s : %8d %3d%%\n",
 		icp_opcode_str[op],
 		e->stats.counts[op],
 		percent(e->stats.counts[op], e->stats.pings_acked));
 	}
 	if (e->last_fail_time) {
-	    storeAppendPrintf(sentry, "{Last failed connect() at: %s}\n",
+	    storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
 		mkhttpdlogtime(&(e->last_fail_time)));
 	}
-	storeAppendPrintf(sentry, "{DOMAIN LIST: ");
+	if (e->pinglist != NULL)
+	    storeAppendPrintf(sentry, "DOMAIN LIST: ");
 	for (d = e->pinglist; d; d = d->next) {
 	    if (d->do_ping)
 		storeAppendPrintf(sentry, "%s ", d->domain);
 	    else
 		storeAppendPrintf(sentry, "!%s ", d->domain);
 	}
-	storeAppendPrintf(sentry, close_bracket);	/* } */
-	storeAppendPrintf(sentry, "{Keep-Alive Ratio: %d%%}\n",
+	storeAppendPrintf(sentry, "Keep-Alive Ratio: %d%%\n",
 	    percent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
     }
-    storeAppendPrintf(sentry, close_bracket);
 }
 
 #ifdef XMALLOC_STATISTICS
@@ -399,7 +394,7 @@ static void
 info_get_mallstat(int size, int number, StoreEntry * sentry)
 {
     if (number > 0)
-	storeAppendPrintf(sentry, "{\t%d = %d}\n", size, number);
+	storeAppendPrintf(sentry, "\t%d = %d\n", size, number);
 }
 #endif
 
@@ -418,9 +413,8 @@ statFiledescriptors(StoreEntry * sentry)
 {
     int i;
     fde *f;
-    storeAppendPrintf(sentry, open_bracket);
-    storeAppendPrintf(sentry, "{Active file descriptors:}\n");
-    storeAppendPrintf(sentry, "{%-4s %-6s %-4s %-7s %-7s %-21s %s}\n",
+    storeAppendPrintf(sentry, "Active file descriptors:\n");
+    storeAppendPrintf(sentry, "%-4s %-6s %-4s %-7s %-7s %-21s %s\n",
 	"File",
 	"Type",
 	"Tout",
@@ -428,12 +422,12 @@ statFiledescriptors(StoreEntry * sentry)
 	"Nwrite",
 	"Remote Address",
 	"Description");
-    storeAppendPrintf(sentry, "{---- ------ ---- ------- ------- --------------------- ------------------------------}\n");
+    storeAppendPrintf(sentry, "---- ------ ---- ------- ------- --------------------- ------------------------------\n");
     for (i = 0; i < Squid_MaxFD; i++) {
 	f = &fd_table[i];
 	if (!f->open)
 	    continue;
-	storeAppendPrintf(sentry, "{%4d %-6.6s %4d %7d %7d %-21s %s}\n",
+	storeAppendPrintf(sentry, "%4d %-6.6s %4d %7d %7d %-21s %s\n",
 	    i,
 	    fdstatTypeStr[f->type],
 	    f->timeout_handler ? (f->timeout - squid_curtime) / 60 : 0,
@@ -442,7 +436,6 @@ statFiledescriptors(StoreEntry * sentry)
 	    fdRemoteAddr(f),
 	    f->desc);
     }
-    storeAppendPrintf(sentry, close_bracket);
 }
 
 int
@@ -474,168 +467,165 @@ info_get(StoreEntry * sentry)
     runtime = tvSubDsec(squid_start, current_time);
     if (runtime == 0.0)
 	runtime = 1.0;
-    storeAppendPrintf(sentry, open_bracket);
-    storeAppendPrintf(sentry, "{Squid Object Cache: Version %s}\n",
+    storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
 	version_string);
-    storeAppendPrintf(sentry, "{Start Time:\t%s}\n",
+    storeAppendPrintf(sentry, "Start Time:\t%s\n",
 	mkrfc1123(squid_start.tv_sec));
-    storeAppendPrintf(sentry, "{Current Time:\t%s}\n",
+    storeAppendPrintf(sentry, "Current Time:\t%s\n",
 	mkrfc1123(current_time.tv_sec));
-    storeAppendPrintf(sentry, "{Connection information for %s:}\n",
+    storeAppendPrintf(sentry, "Connection information for %s:\n",
 	appname);
-    storeAppendPrintf(sentry, "{\tNumber of HTTP requests received:\t%u}\n",
+    storeAppendPrintf(sentry, "\tNumber of HTTP requests received:\t%u\n",
 	Counter.client_http.requests);
-    storeAppendPrintf(sentry, "{\tNumber of ICP messages received:\t%u}\n",
+    storeAppendPrintf(sentry, "\tNumber of ICP messages received:\t%u\n",
 	Counter.icp.pkts_recv);
-    storeAppendPrintf(sentry, "{\tNumber of ICP messages sent:\t%u}\n",
+    storeAppendPrintf(sentry, "\tNumber of ICP messages sent:\t%u\n",
 	Counter.icp.pkts_sent);
-    storeAppendPrintf(sentry, "{\tRequest failure ratio:\t%5.2f%%\n",
+    storeAppendPrintf(sentry, "\tRequest failure ratio:\t%5.2f%%\n",
 	request_failure_ratio);
 
-    storeAppendPrintf(sentry, "{\tHTTP requests per minute:\t%.1f}\n",
+    storeAppendPrintf(sentry, "\tHTTP requests per minute:\t%.1f\n",
 	Counter.client_http.requests / (runtime / 60.0));
-    storeAppendPrintf(sentry, "{\tICP messages per minute:\t%.1f}\n",
+    storeAppendPrintf(sentry, "\tICP messages per minute:\t%.1f\n",
 	(Counter.icp.pkts_sent + Counter.icp.pkts_recv) / (runtime / 60.0));
-    storeAppendPrintf(sentry, "{\tSelect loop called: %d times, %0.3f ms avg}\n",
+    storeAppendPrintf(sentry, "\tSelect loop called: %d times, %0.3f ms avg\n",
 	Counter.select_loops, 1000.0 * runtime / Counter.select_loops);
 
-    storeAppendPrintf(sentry, "{Cache information for %s:}\n",
+    storeAppendPrintf(sentry, "Cache information for %s:\n",
 	appname);
-    storeAppendPrintf(sentry, "{\tStorage Swap size:\t%d KB}\n",
+    storeAppendPrintf(sentry, "\tStorage Swap size:\t%d KB\n",
 	store_swap_size);
-    storeAppendPrintf(sentry, "{\tStorage Mem size:\t%d KB}\n",
+    storeAppendPrintf(sentry, "\tStorage Mem size:\t%d KB\n",
 	store_mem_size >> 10);
-    storeAppendPrintf(sentry, "{\tStorage LRU Expiration Age:\t%6.2f days}\n",
+    storeAppendPrintf(sentry, "\tStorage LRU Expiration Age:\t%6.2f days\n",
 	(double) storeExpiredReferenceAge() / 86400.0);
-    storeAppendPrintf(sentry, "{\tRequests given to unlinkd:\t%d}\n",
+    storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%d\n",
 	Counter.unlink.requests);
 
     squid_getrusage(&rusage);
     cputime = rusage_cputime(&rusage);
-    storeAppendPrintf(sentry, "{Resource usage for %s:}\n", appname);
-    storeAppendPrintf(sentry, "{\tUP Time:\t%.3f seconds}\n", runtime);
-    storeAppendPrintf(sentry, "{\tCPU Time:\t%.3f seconds}\n", cputime);
-    storeAppendPrintf(sentry, "{\tCPU Usage:\t%.2f%%}\n",
+    storeAppendPrintf(sentry, "Resource usage for %s:\n", appname);
+    storeAppendPrintf(sentry, "\tUP Time:\t%.3f seconds\n", runtime);
+    storeAppendPrintf(sentry, "\tCPU Time:\t%.3f seconds\n", cputime);
+    storeAppendPrintf(sentry, "\tCPU Usage:\t%.2f%%\n",
 	dpercent(cputime, runtime));
-    storeAppendPrintf(sentry, "{\tMaximum Resident Size: %ld KB}\n",
+    storeAppendPrintf(sentry, "\tMaximum Resident Size: %ld KB\n",
 	rusage_maxrss(&rusage));
-    storeAppendPrintf(sentry, "{\tPage faults with physical i/o: %ld}\n",
+    storeAppendPrintf(sentry, "\tPage faults with physical i/o: %ld\n",
 	rusage_pagefaults(&rusage));
 
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
     ms = mstats();
-    storeAppendPrintf(sentry, "{Memory usage for %s via mstats():}\n",
+    storeAppendPrintf(sentry, "Memory usage for %s via mstats():\n",
 	appname);
-    storeAppendPrintf(sentry, "{\tTotal space in arena:  %6d KB}\n",
+    storeAppendPrintf(sentry, "\tTotal space in arena:  %6d KB\n",
 	ms.bytes_total >> 10);
-    storeAppendPrintf(sentry, "{\tTotal free:            %6d KB %d%%}\n",
+    storeAppendPrintf(sentry, "\tTotal free:            %6d KB %d%%\n",
 	ms.bytes_free >> 10, percent(ms.bytes_free, ms.bytes_total));
 #elif HAVE_MALLINFO
     mp = mallinfo();
-    storeAppendPrintf(sentry, "{Memory usage for %s via mallinfo():}\n",
+    storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",
 	appname);
-    storeAppendPrintf(sentry, "{\tTotal space in arena:  %6d KB}\n",
+    storeAppendPrintf(sentry, "\tTotal space in arena:  %6d KB\n",
 	mp.arena >> 10);
-    storeAppendPrintf(sentry, "{\tOrdinary blocks:       %6d KB %6d blks}\n",
+    storeAppendPrintf(sentry, "\tOrdinary blocks:       %6d KB %6d blks\n",
 	mp.uordblks >> 10, mp.ordblks);
-    storeAppendPrintf(sentry, "{\tSmall blocks:          %6d KB %6d blks}\n",
+    storeAppendPrintf(sentry, "\tSmall blocks:          %6d KB %6d blks\n",
 	mp.usmblks >> 10, mp.smblks);
-    storeAppendPrintf(sentry, "{\tHolding blocks:        %6d KB %6d blks}\n",
+    storeAppendPrintf(sentry, "\tHolding blocks:        %6d KB %6d blks\n",
 	mp.hblkhd >> 10, mp.hblks);
-    storeAppendPrintf(sentry, "{\tFree Small blocks:     %6d KB}\n",
+    storeAppendPrintf(sentry, "\tFree Small blocks:     %6d KB\n",
 	mp.fsmblks >> 10);
-    storeAppendPrintf(sentry, "{\tFree Ordinary blocks:  %6d KB}\n",
+    storeAppendPrintf(sentry, "\tFree Ordinary blocks:  %6d KB\n",
 	mp.fordblks >> 10);
     t = mp.uordblks + mp.usmblks + mp.hblkhd;
-    storeAppendPrintf(sentry, "{\tTotal in use:          %6d KB %d%%}\n",
+    storeAppendPrintf(sentry, "\tTotal in use:          %6d KB %d%%\n",
 	t >> 10, percent(t, mp.arena));
     t = mp.fsmblks + mp.fordblks;
-    storeAppendPrintf(sentry, "{\tTotal free:            %6d KB %d%%}\n",
+    storeAppendPrintf(sentry, "\tTotal free:            %6d KB %d%%\n",
 	t >> 10, percent(t, mp.arena));
 #if HAVE_EXT_MALLINFO
-    storeAppendPrintf(sentry, "{\tmax size of small blocks:\t%d}\n", mp.mxfast);
-    storeAppendPrintf(sentry, "{\tnumber of small blocks in a holding block:\t%d}\n",
+    storeAppendPrintf(sentry, "\tmax size of small blocks:\t%d\n", mp.mxfast);
+    storeAppendPrintf(sentry, "\tnumber of small blocks in a holding block:\t%d\n",
 	mp.nlblks);
-    storeAppendPrintf(sentry, "{\tsmall block rounding factor:\t%d}\n", mp.grain);
-    storeAppendPrintf(sentry, "{\tspace (including overhead) allocated in ord. blks:\t%d}\n"
+    storeAppendPrintf(sentry, "\tsmall block rounding factor:\t%d\n", mp.grain);
+    storeAppendPrintf(sentry, "\tspace (including overhead) allocated in ord. blks:\t%d\n"
 	,mp.uordbytes);
-    storeAppendPrintf(sentry, "{\tnumber of ordinary blocks allocated:\t%d}\n",
+    storeAppendPrintf(sentry, "\tnumber of ordinary blocks allocated:\t%d\n",
 	mp.allocated);
-    storeAppendPrintf(sentry, "{\tbytes used in maintaining the free tree:\t%d}\n",
+    storeAppendPrintf(sentry, "\tbytes used in maintaining the free tree:\t%d\n",
 	mp.treeoverhead);
 #endif /* HAVE_EXT_MALLINFO */
 #endif /* HAVE_MALLINFO */
 
-    storeAppendPrintf(sentry, "{File descriptor usage for %s:}\n", appname);
-    storeAppendPrintf(sentry, "{\tMaximum number of file descriptors:   %4d}\n",
+    storeAppendPrintf(sentry, "File descriptor usage for %s:\n", appname);
+    storeAppendPrintf(sentry, "\tMaximum number of file descriptors:   %4d\n",
 	Squid_MaxFD);
-    storeAppendPrintf(sentry, "{\tLargest file desc currently in use:   %4d}\n",
+    storeAppendPrintf(sentry, "\tLargest file desc currently in use:   %4d\n",
 	Biggest_FD);
-    storeAppendPrintf(sentry, "{\tNumber of file desc currently in use: %4d}\n",
+    storeAppendPrintf(sentry, "\tNumber of file desc currently in use: %4d\n",
 	Number_FD);
-    storeAppendPrintf(sentry, "{\tAvailable number of file descriptors: %4d}\n",
+    storeAppendPrintf(sentry, "\tAvailable number of file descriptors: %4d\n",
 	Squid_MaxFD - Number_FD);
-    storeAppendPrintf(sentry, "{\tReserved number of file descriptors:  %4d}\n",
+    storeAppendPrintf(sentry, "\tReserved number of file descriptors:  %4d\n",
 	RESERVED_FD);
 
-    storeAppendPrintf(sentry, "{Internal Data Structures:}\n");
-    storeAppendPrintf(sentry, "{\t%6d StoreEntries}\n",
+    storeAppendPrintf(sentry, "Internal Data Structures:\n");
+    storeAppendPrintf(sentry, "\t%6d StoreEntries\n",
 	memInUse(MEM_STOREENTRY));
-    storeAppendPrintf(sentry, "{\t%6d StoreEntries with MemObjects}\n",
+    storeAppendPrintf(sentry, "\t%6d StoreEntries with MemObjects\n",
 	memInUse(MEM_MEMOBJECT));
-    storeAppendPrintf(sentry, "{\t%6d StoreEntries with MemObject Data}\n",
+    storeAppendPrintf(sentry, "\t%6d StoreEntries with MemObject Data\n",
 	memInUse(MEM_MEM_HDR));
-    storeAppendPrintf(sentry, "{\t%6d Hot Object Cache Items}\n",
+    storeAppendPrintf(sentry, "\t%6d Hot Object Cache Items\n",
 	meta_data.hot_vm);
 
-    storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
+    storeAppendPrintf(sentry, "\t%-25.25s                      = %6d KB\n",
 	"StoreEntry Keys",
 	meta_data.store_keys >> 10);
 
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
+    storeAppendPrintf(sentry, "\t%-25.25s %7d x %4d bytes = %6d KB\n",
 	"IPCacheEntry",
 	meta_data.ipcache_count,
 	(int) sizeof(ipcache_entry),
 	(int) (meta_data.ipcache_count * sizeof(ipcache_entry) >> 10));
 
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
+    storeAppendPrintf(sentry, "\t%-25.25s %7d x %4d bytes = %6d KB\n",
 	"FQDNCacheEntry",
 	meta_data.fqdncache_count,
 	(int) sizeof(fqdncache_entry),
 	(int) (meta_data.fqdncache_count * sizeof(fqdncache_entry) >> 10));
 
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
+    storeAppendPrintf(sentry, "\t%-25.25s %7d x %4d bytes = %6d KB\n",
 	"Hash link",
 	hash_links_allocated,
 	(int) sizeof(hash_link),
 	(int) (hash_links_allocated * sizeof(hash_link) >> 10));
 
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
+    storeAppendPrintf(sentry, "\t%-25.25s %7d x %4d bytes = %6d KB\n",
 	"NetDB Peer Entries",
 	meta_data.netdb_peers,
 	(int) sizeof(struct _net_db_peer),
 	             (int) (meta_data.netdb_peers * sizeof(struct _net_db_peer) >> 10));
 
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
+    storeAppendPrintf(sentry, "\t%-25.25s %7d x %4d bytes = %6d KB\n",
 	"ClientDB Entries",
 	meta_data.client_info,
 	client_info_sz,
 	(int) (meta_data.client_info * client_info_sz >> 10));
 
-    storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
+    storeAppendPrintf(sentry, "\t%-25.25s                      = %6d KB\n",
 	"Miscellaneous",
 	meta_data.misc >> 10);
 
-    storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
+    storeAppendPrintf(sentry, "\t%-25.25s                      = %6d KB\n",
 	"Total Accounted",
 	statMemoryAccounted() >> 10);
 
 #if XMALLOC_STATISTICS
-    storeAppendPrintf(sentry, "{Memory allocation statistics}\n");
+    storeAppendPrintf(sentry, "Memory allocation statistics\n");
     malloc_statistics(info_get_mallstat, sentry);
 #endif
-
-    storeAppendPrintf(sentry, close_bracket);
 }
 
 static void
