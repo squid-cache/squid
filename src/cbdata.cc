@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.8 1997/11/03 22:43:07 wessels Exp $
+ * $Id: cbdata.cc,v 1.9 1997/11/28 08:01:03 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -64,6 +64,8 @@
 
 static hash_table *htable = NULL;
 
+static int cbdataCount = 0;
+
 typedef struct _cbdata {
     void *key;
     struct _cbdata *next;
@@ -106,6 +108,7 @@ cbdataAdd(void *p)
     c->key = p;
     c->valid = 1;
     hash_join(htable, (hash_link *) c);
+    cbdataCount++;
 }
 
 void
@@ -122,6 +125,7 @@ cbdataFree(void *p)
 	return;
     }
     hash_remove_link(htable, (hash_link *) c);
+    cbdataCount--;
     xfree(c);
     debug(45, 3) ("cbdataFree: freeing %p\n", p);
     xfree(p);
@@ -153,6 +157,7 @@ cbdataUnlock(void *p)
     if (c->valid || c->locks)
 	return;
     hash_remove_link(htable, (hash_link *) c);
+    cbdataCount--;
     xfree(c);
     debug(45, 3) ("cbdataUnlock: Freeing %p\n", p);
     xfree(p);
@@ -177,6 +182,7 @@ cbdataDump(StoreEntry * sentry)
 {
     hash_link *hptr;
     cbdata *c;
+    storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
     for (hptr = hash_first(htable); hptr; hptr = hash_next(htable)) {
 	c = (cbdata *) hptr;
 	storeAppendPrintf(sentry, "%20p %10s %d locks\n",
