@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.12 2003/02/21 22:50:11 robertc Exp $
+ * $Id: ssl_support.cc,v 1.13 2003/04/17 15:25:44 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -419,7 +419,7 @@ ssl_initialize(void)
 }
 
 SSL_CTX *
-sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath)
+sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *dhfile)
 {
     int ssl_error;
     SSL_METHOD *method;
@@ -545,6 +545,30 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     } else {
         debug(83, 9) ("Not requiring any client certificates\n");
         SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
+    }
+
+    if (dhfile) {
+        FILE *in = fopen(dhfile, "r");
+        DH *dh = NULL;
+        int codes;
+
+        if (in) {
+            dh = PEM_read_DHparams(in, NULL, NULL, NULL);
+            fclose(in);
+        }
+
+        if (!dh)
+            debug(83, 1) ("WARNING: Failed to read DH parameters '%s'\n", dhfile);
+        else if (dh && DH_check(dh, &codes) == 0) {
+            if (codes) {
+                debug(83, 1) ("WARNING: Failed to verify DH parameters '%s' (%x)\n", dhfile, codes);
+                DH_free(dh);
+                dh = NULL;
+            }
+        }
+
+        if (dh)
+            SSL_CTX_set_tmp_dh(sslContext, dh);
     }
 
     if (fl & SSL_FLAG_DONT_VERIFY_DOMAIN)

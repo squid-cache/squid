@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.438 2003/03/10 04:56:36 robertc Exp $
+ * $Id: cache_cf.cc,v 1.439 2003/04/17 15:25:43 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2907,6 +2907,9 @@ parse_https_port_list(https_port_list ** head)
         } else if (strncmp(token, "capath=", 7) == 0) {
             safe_free(s->capath);
             s->capath = xstrdup(token + 7);
+        } else if (strncmp(token, "dhparams=", 9) == 0) {
+            safe_free(s->dhfile);
+            s->dhfile = xstrdup(token + 9);
         } else if (strncmp(token, "sslflags=", 9) == 0) {
             safe_free(s->sslflags);
             s->sslflags = xstrdup(token + 9);
@@ -2915,7 +2918,7 @@ parse_https_port_list(https_port_list ** head)
         }
     }
 
-    s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath);
+    s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->dhfile);
 
     if (!s->sslContext)
         self_destruct();
@@ -2952,6 +2955,9 @@ dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
 
         if (s->capath)
             storeAppendPrintf(e, " capath=%s", s->capath);
+
+        if (s->dhfile)
+            storeAppendPrintf(e, " dhparams=%s", s->dhfile);
 
         if (s->sslflags)
             storeAppendPrintf(e, " sslflags=%s", s->sslflags);

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.310 2003/04/14 19:57:10 hno Exp $
+# $Id: cf.data.pre,v 1.311 2003/04/17 15:25:44 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -148,8 +148,10 @@ DOC_START
 			    NO_SSLv2  Disallow the use of SSLv2
 			    NO_SSLv3  Disallow the use of SSLv3
 			    NO_TLSv1  Disallow the use of TLSv1
-			See src/ssl_support.c or OpenSSL documentation
-			for a more complete list.
+			    SINGLE_DH_USE Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
+			documentation for a complete list of options.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate
@@ -160,6 +162,9 @@ DOC_START
 
 	   capath=	Directory containing additional CA certificates
 			to use when verifying client certificates
+
+	   dhparams=	File containing DH parameters for temporary/ephemeral
+			DH key exchanges
 
 	   sslflags=	Various flags modifying the use of SSL:
 			    DELAYED_AUTH
