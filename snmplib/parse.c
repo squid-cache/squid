@@ -472,7 +472,7 @@ build_tree(nodes)
 	snmplib_debug(0, "these nodes are left:\n");
 	for (bucket = 0; bucket < NHASHSIZE; bucket++) {
 	    for (np = nbuckets[bucket]; np; np = np->next)
-		snmplib_debug(0, "%s ::= { %s %d } (%d)\n", np->label, np->parent, np->subid,
+		snmplib_debug(5, "%s ::= { %s %d } (%d)\n", np->label, np->parent, np->subid,
 		    np->type);
 	}
     }
