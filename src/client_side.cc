@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.194 1998/01/07 22:46:11 wessels Exp $
+ * $Id: client_side.cc,v 1.195 1998/01/07 23:15:23 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -942,7 +942,10 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    *p = '\0';
 	    writelen = p - buf;
 	    /* force end */
-	    http->out.offset = entry->mem_obj->inmem_hi;
+	    if (entry->store_status == STORE_PENDING)
+	        http->out.offset = entry->mem_obj->inmem_hi;
+	    else
+	        http->out.offset = entry->object_len;
 	}
     }
     comm_write(fd, buf, writelen, clientWriteComplete, http, freefunc);
