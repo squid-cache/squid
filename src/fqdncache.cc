@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.23 1996/10/10 19:04:14 wessels Exp $
+ * $Id: fqdncache.cc,v 1.24 1996/10/10 22:20:28 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -367,7 +367,6 @@ fqdncache_create(void)
     meta_data.fqdncache_count++;
     new = xcalloc(1, sizeof(fqdncache_entry));
     return new;
-
 }
 
 static void
@@ -878,16 +877,17 @@ fqdncacheFreeMemory(void)
 {
     fqdncache_entry *f;
     fqdncache_entry **list;
+    int i = 0;
+    int j = 0;
     int k = 0;
-    int j;
     list = xcalloc(meta_data.fqdncache_count, sizeof(fqdncache_entry *));
     f = (fqdncache_entry *) hash_first(fqdn_table);
-    while (f && k < meta_data.fqdncache_count) {
-        *(list + k) = f;
-        k++;
+    while (f && i < meta_data.fqdncache_count) {
+        *(list + i) = f;
+        i++;
         f = (fqdncache_entry *) hash_next(fqdn_table);
     }
-    for (j = 0; j < k; j++) {
+    for (j = 0; j < i; j++) {
         f = *(list + j);
         for (k = 0; k < (int) f->name_count; k++)
             safe_free(f->names[k]);

@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.23 1996/10/09 22:49:41 wessels Exp $
+ * $Id: redirect.cc,v 1.24 1996/10/10 22:20:30 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -32,7 +32,7 @@
 
 #define REDIRECT_FLAG_ALIVE		0x01
 #define REDIRECT_FLAG_BUSY		0x02
-#define REDIRECT_FLAG_CLOSING	0x04
+#define REDIRECT_FLAG_CLOSING		0x04
 
 typedef struct {
     int fd;
@@ -76,7 +76,6 @@ static int redirectHandleRead _PARAMS((int, redirector_t *));
 static redirectStateData *Dequeue _PARAMS((void));
 static void Enqueue _PARAMS((redirectStateData *));
 static void redirectDispatch _PARAMS((redirector_t *, redirectStateData *));
-
 
 static redirector_t **redirect_child_table = NULL;
 static int NRedirectors = 0;
@@ -423,6 +422,7 @@ redirectShutdownServers(void)
 	    redirect->index + 1, redirect->fd);
 	comm_close(redirect->fd);
 	redirect->flags |= REDIRECT_FLAG_CLOSING;
+	redirect->flags |= REDIRECT_FLAG_BUSY;
     }
 }
 
