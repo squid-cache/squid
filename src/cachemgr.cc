@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.19 1996/09/13 23:16:36 wessels Exp $
+ * $Id: cachemgr.cc,v 1.20 1996/09/14 08:45:39 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -268,9 +268,10 @@ int hasTables = FALSE;
 char *script_name = "/cgi-bin/cachemgr.cgi";
 char *progname = NULL;
 
-static int client_comm_connect _PARAMS((int, char *, int));
+static int client_comm_connect(int sock, char *dest_host, u_short dest_port);
 
-void print_trailer()
+void 
+print_trailer(void)
 {
     time_t now = time(NULL);
     static char tbuf[128];
@@ -286,7 +287,8 @@ void print_trailer()
     printf("</ADDRESS></BODY></HTML>\n");
 }
 
-void noargs_html(char *host, int port)
+void 
+noargs_html(char *host, int port)
 {
     printf("\r\n\r\n");
     printf("<HTML><HEAD><TITLE>Cache Manager Interface</TITLE></HEAD>\n");
@@ -337,7 +339,8 @@ void noargs_html(char *host, int port)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-char *makeword(char *line, char stop)
+char *
+makeword(char *line, char stop)
 {
     int x = 0, y;
     char *word = xmalloc(sizeof(char) * (strlen(line) + 1));
@@ -355,7 +358,8 @@ char *makeword(char *line, char stop)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-char *fmakeword(FILE * f, char stop, int *cl)
+char *
+fmakeword(FILE * f, char stop, int *cl)
 {
     int wsize = 102400;
     char *word = NULL;
@@ -382,7 +386,8 @@ char *fmakeword(FILE * f, char stop, int *cl)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-char x2c(char *what)
+char 
+x2c(char *what)
 {
     char digit;
 
@@ -393,7 +398,8 @@ char x2c(char *what)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-void unescape_url(char *url)
+void 
+unescape_url(char *url)
 {
     int x, y;
 
@@ -407,7 +413,8 @@ void unescape_url(char *url)
 }
 
 /* A utility function from the NCSA httpd cgi-src utils.c */
-void plustospace(char *str)
+void 
+plustospace(char *str)
 {
     int x;
 
@@ -417,7 +424,8 @@ void plustospace(char *str)
 }
 
 
-void parse_object(char *string)
+void 
+parse_object(char *string)
 {
     char *tmp_line = NULL;
     char *url = NULL;
@@ -493,7 +501,8 @@ void parse_object(char *string)
     free(status);
 }
 
-int main(int argc, char *argv[])
+int 
+main(int argc, char *argv[])
 {
     static char hostname[256];
     static char operation[256];
@@ -866,9 +875,9 @@ int main(int argc, char *argv[])
 		    sn = sscanf(reserve, "%s %d %d %d %d %f %d %d %d",
 			s1, &d1, &d2, &d3, &d4, &f1, &d5, &d6, &d7);
 		    if (sn == 1) {
-		        if (hasTables)
+			if (hasTables)
 			    printf("<tr><td align=\"right\"><B>%s</B>", s1);
-		        else
+			else
 			    printf("%8s", s1);
 			break;
 		    }
@@ -910,10 +919,8 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-static int client_comm_connect(sock, dest_host, dest_port)
-     int sock;			/* Type of communication to use. */
-     char *dest_host;		/* Server's host name. */
-     u_short dest_port;		/* Server's port. */
+static int 
+client_comm_connect(int sock, char *dest_host, u_short dest_port)
 {
     struct hostent *hp;
     static struct sockaddr_in to_addr;
