@@ -356,10 +356,7 @@ storeRebuildADirectory(void *unused)
     if (count < 0) {
 	xfree(d);
     } else {
-	for (D = &RebuildState.rebuild_dir; *D; D = &(*D)->next) {
-		debug(0,0)("D=%p\n", D);
-		debug(0,0)("*D=%p\n", *D);
-	}
+	for (D = &RebuildState.rebuild_dir; *D; D = &(*D)->next);
 	*D = d;
 	d->next = NULL;
     }
