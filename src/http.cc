@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.129 1996/12/04 18:37:30 wessels Exp $
+ * $Id: http.cc,v 1.130 1996/12/05 00:19:48 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -262,7 +262,6 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     char *end;
     char *s = NULL;
     char *t;
-    char *q;
     time_t delta;
     size_t l;
 
@@ -284,12 +283,12 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 		reply->code = atoi(++t);
 	} else if (!strncasecmp(t, "Content-type:", 13)) {
 	    for (t += 13; isspace(*t); t++);
+	    if ((l = strcspn(t, ";\t ")) > 0)
+		*(t + l) = '\0';
 	    xstrncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ);
 	    ReplyHeaderStats.ctype++;
 	} else if (!strncasecmp(t, "Content-length:", 15)) {
 	    for (t += 15; isspace(*t); t++);
-	    if ((q = strchr(t, ';')))
-		*q = '\0';
 	    reply->content_length = atoi(t);
 	    ReplyHeaderStats.clen++;
 	} else if (!strncasecmp(t, "Date:", 5)) {
