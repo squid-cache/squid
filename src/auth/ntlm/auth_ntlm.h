@@ -47,9 +47,6 @@ struct _auth_ntlm_config {
     wordlist *authenticate;
     int challengeuses;
     time_t challengelifetime;
-#if 0
-    char *authenticate_ntlm_default_domain;
-#endif
 };
 
 typedef struct _ntlm_user ntlm_user_t;
