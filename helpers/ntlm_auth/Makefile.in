@@ -15,7 +15,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.10 2002/04/13 15:38:07 hno Exp $
+#  $Id: Makefile.in,v 1.11 2002/05/19 15:16:40 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -118,7 +118,7 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
-DIST_SUBDIRS = fakeauth no_check NTLMSSP
+DIST_SUBDIRS = fakeauth no_check SMB
 SUBDIRS = @NTLM_AUTH_HELPERS@
 subdir = src/auth/ntlm/helpers
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
