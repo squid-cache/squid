@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.63 1997/08/10 06:34:29 wessels Exp $
+ * $Id: errorpage.cc,v 1.64 1997/08/11 16:52:41 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -164,7 +164,7 @@ errorBuildBuf(ErrorState * err, int *len)
 	err->http_status,
 	"text/html",
 	clen,
-	squid_curtime,
+	0,		/* no LMT for error pages */
 	squid_curtime);
     tlen = snprintf(buf, ERROR_BUF_SZ, "%s\r\n%s", hdr, content);
     if (len)
