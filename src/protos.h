@@ -126,7 +126,7 @@ extern int file_open(const char *path, int mode, FOCB *, void *callback_data, vo
 extern void file_close(int fd);
 extern void file_write(int, off_t, void *, int len, DWCB *, void *, FREE *);
 extern int file_read(int, char *, int, off_t, DRCB *, void *);
-extern int disk_init(void);
+extern void disk_init(void);
 extern int diskWriteIsComplete(int);
 
 extern void dnsShutdownServers(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.104 1998/02/10 00:55:03 wessels Exp $
+ * $Id: disk.cc,v 1.105 1998/02/17 23:04:03 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -126,11 +126,12 @@ static PF diskHandleRead;
 static PF diskHandleWrite;
 static void file_open_complete(void *, int, int);
 
-/* initialize table */
-int
+void
 disk_init(void)
 {
-    return 0;
+#if USE_ASYNC_IO
+    aioClose(dup(0));
+#endif
 }
 
 /* Open a disk file. Return a file descriptor */
