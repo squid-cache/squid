@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.211 1999/04/14 05:16:16 wessels Exp $
+ * $Id: ipcache.cc,v 1.212 1999/04/14 06:35:46 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -363,7 +363,7 @@ ipcacheParse(rfc1035_rr * answers, int na)
 		continue;
 	    assert(answers[k].rdlength == 4);
 	    xmemcpy(&i.addrs.in_addrs[j++], answers[k].rdata, 4);
-	    debug(14, 1) ("ipcacheParse: #%d %s\n",
+	    debug(14, 3) ("ipcacheParse: #%d %s\n",
 		j - 1,
 		inet_ntoa(i.addrs.in_addrs[j - 1]));
 	}
