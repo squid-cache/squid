@@ -36,6 +36,8 @@
 #ifndef _RADIX_H_
 #define	_RADIX_H_
 #undef RN_DEBUG
+#ifndef __P
+#define __P(x) x
 /*
  * Radix search tree node layout.
  */
