@@ -19,6 +19,9 @@
 /* Enable for cbdata debug information */
 #undef CBDATA_DEBUG
 
+/* Enable hostname sanity checks */
+#undef CHECK_HOSTNAMES
+
 /* Host type from configure */
 #undef CONFIG_HOST_TYPE
 

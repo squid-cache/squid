@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.139 2002/10/25 07:36:32 robertc Exp $
+ * $Id: url.cc,v 1.140 2003/01/18 02:27:16 hno Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -106,6 +106,7 @@ const char *ProtocolStr[] =
 };
 
 static request_t *urnParse(method_t method, char *urn);
+#if CHECK_HOSTNAMES
 static const char *const valid_hostname_chars =
 #if ALLOW_HOSTNAME_UNDERSCORES
 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -116,6 +117,7 @@ static const char *const valid_hostname_chars =
 "abcdefghijklmnopqrstuvwxyz"
 "0123456789-.";
 #endif
+#endif /* CHECK_HOSTNAMES */
 
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
@@ -310,16 +312,20 @@ urlParse(method_t method, char *url)
 	    *q = '\0';
 	}
     }
+#if CHECK_HOSTNAMES
     if (Config.onoff.check_hostnames && strspn(host, valid_hostname_chars) != strlen(host)) {
 	debug(23, 1) ("urlParse: Illegal character in hostname '%s'\n", host);
 	return NULL;
     }
+#endif
+#if DONT_DO_THIS_IT_BREAKS_SEMANTIC_TRANSPARENCY
     /* remove trailing dots from hostnames */
     while ((l = strlen(host)) > 0 && host[--l] == '.')
 	host[l] = '\0';
     /* remove duplicate dots */
     while ((t = strstr(host, "..")))
 	xmemmove(t, t + 1, strlen(t));
+#endif
     if (Config.appendDomain && !strchr(host, '.'))
 	strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);
     if (port < 1 || port > 65535) {
