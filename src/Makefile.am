@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.7 2001/09/06 21:17:39 hno Exp $
+#  $Id: Makefile.am,v 1.8 2001/09/25 23:56:22 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -263,10 +263,11 @@ DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/@OPT_DNSSERVER_EXE@
-DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
-DEFAULT_ACCESS_LOG      = $(localstatedir)/logs/access.log
-DEFAULT_STORE_LOG       = $(localstatedir)/logs/store.log
-DEFAULT_PID_FILE        = $(localstatedir)/logs/squid.pid
+DEFAULT_LOG_PREFIX	= $(localstatedir)/logs
+DEFAULT_CACHE_LOG       = $(DEFAULT_LOG_PREFIX)/cache.log
+DEFAULT_ACCESS_LOG      = $(DEFAULT_LOG_PREFIX)/access.log
+DEFAULT_STORE_LOG       = $(DEFAULT_LOG_PREFIX)/store.log
+DEFAULT_PID_FILE        = $(DEFAULT_LOG_PREFIX)/squid.pid
 DEFAULT_SWAP_DIR        = $(localstatedir)/cache
 DEFAULT_PINGER		= $(libexecdir)/@OPT_PINGER_EXE@
 DEFAULT_UNLINKD		= $(libexecdir)/$(UNLINKD_EXE)
@@ -348,6 +349,7 @@ install-data-local:
 	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(sysconfdir)/squid.conf"; \
 	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(sysconfdir)/squid.conf; \
 	fi
+	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
 uninstall-local:
 	@if test -f $(DESTDIR)$(sysconfdir)/mime.conf ; then \
