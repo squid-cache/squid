@@ -696,6 +696,12 @@ extern HASHCMP storeKeyHashCmp;
  */
 extern EVH storeDirClean;
 
+/* store_digest.c */
+extern void storeDigestInit();
+extern void storeDigestRebuild();
+extern void storeDigestReport();
+
+
 /*
  * store_dir.c
  */
@@ -900,6 +906,7 @@ extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
 extern double cacheDigestUtil(const CacheDigest * cd, int *bit_cnt_p, int *on_cnt_p);
+extern void cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e);
 
 /*
  * prototypes for system functions missing from system includes

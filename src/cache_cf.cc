@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.269 1998/03/31 05:37:34 wessels Exp $
+ * $Id: cache_cf.cc,v 1.270 1998/04/02 17:11:22 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -681,6 +681,8 @@ parse_peer(peer ** head)
 	    EBIT_SET(p->options, NEIGHBOR_PROXY_ONLY);
 	} else if (!strcasecmp(token, "no-query")) {
 	    EBIT_SET(p->options, NEIGHBOR_NO_QUERY);
+	} else if (!strcasecmp(token, "no-digest")) {
+	    EBIT_SET(p->options, NEIGHBOR_NO_DIGEST);
 	} else if (!strcasecmp(token, "multicast-responder")) {
 	    EBIT_SET(p->options, NEIGHBOR_MCAST_RESPONDER);
 	} else if (!strncasecmp(token, "weight=", 7)) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.188 1998/04/02 07:40:31 wessels Exp $
+ * $Id: neighbors.cc,v 1.189 1998/04/02 17:11:24 rousskov Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1006,6 +1006,8 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 	storeAppendPrintf(sentry, " proxy-only");
     if (EBIT_TEST(p->options, NEIGHBOR_NO_QUERY))
 	storeAppendPrintf(sentry, " no-query");
+    if (EBIT_TEST(p->options, NEIGHBOR_NO_DIGEST))
+	storeAppendPrintf(sentry, " no-digest");
     if (EBIT_TEST(p->options, NEIGHBOR_DEFAULT_PARENT))
 	storeAppendPrintf(sentry, " default");
     if (EBIT_TEST(p->options, NEIGHBOR_ROUNDROBIN))
