@@ -1,21 +1,21 @@
 <HTML><HEAD>
-<TITLE>$B%(%i!<(B: $B%j%/%(%9%H$5$l$?(B URL $B$O<hF@$G$-$^$;$s$G$7$?(B</TITLE>
+<TITLE>¥¨¥é¡¼: ¥ê¥¯¥¨¥¹¥È¤µ¤ì¤¿ URL ¤Ï¼èÆÀ¤Ç¤­¤Þ¤»¤ó¤Ç¤·¤¿</TITLE>
 </HEAD><BODY>
-<H1>$B%(%i!<(B</H1>
-<H2>$B%j%/%(%9%H$5$l$?(B URL $B$O<hF@$G$-$^$;$s$G$7$?(B</H2>
+<H1>¥¨¥é¡¼</H1>
+<H2>¥ê¥¯¥¨¥¹¥È¤µ¤ì¤¿ URL ¤Ï¼èÆÀ¤Ç¤­¤Þ¤»¤ó¤Ç¤·¤¿</H2>
 <HR>
 <P>
-$B0J2<$N(B URL $B$r<hF@$7$?:]$K!$(BFTP $B%W%m%H%3%k%(%i!<$,H/@8$7$^$7$?(B:
+°Ê²¼¤Î URL ¤ò¼èÆÀ¤·¤¿ºÝ¤Ë¡¤FTP ¥×¥í¥È¥³¥ë¥¨¥é¡¼¤¬È¯À¸¤·¤Þ¤·¤¿:
 <A HREF="%U">%U</A>
 <P>
-Squid $B$O0J2<$N(B ftp $B%3%^%s%I$rAw$j$^$7$?$,(B:
+Squid ¤Ï°Ê²¼¤Î ftp ¥³¥Þ¥ó¥É¤òÁ÷¤ê¤Þ¤·¤¿¤¬:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-$B$3$N$h$&$J7k2L$r<u$1<h$j$^$7$?!%(B
+¤³¤Î¤è¤¦¤Ê·ë²Ì¤ò¼õ¤±¼è¤ê¤Þ¤·¤¿¡¥
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 <P>
-$B$*$=$i$/!$(BFTP URL $B$,@dBP%Q%9$H$J$C$F$$$?$+$i$+$b$7$l$^$;$s(B($B$3$l$O(B
-RFC 1738 $B$K=>$C$F$$$^$;$s(B)$B!%$b$7$3$l$,860x$J$i$P!$%U%!%$%k$O(B
-<A HREF="%B">%B</A> $B$K$"$k$+$b$7$l$^$;$s!%(B
+¤ª¤½¤é¤¯¡¤FTP URL ¤¬ÀäÂÐ¥Ñ¥¹¤È¤Ê¤Ã¤Æ¤¤¤¿¤«¤é¤«¤â¤·¤ì¤Þ¤»¤ó(¤³¤ì¤Ï
+RFC 1738 ¤Ë½¾¤Ã¤Æ¤¤¤Þ¤»¤ó)¡¥¤â¤·¤³¤ì¤¬¸¶°ø¤Ê¤é¤Ð¡¤¥Õ¥¡¥¤¥ë¤Ï
+<A HREF="%B">%B</A> ¤Ë¤¢¤ë¤«¤â¤·¤ì¤Þ¤»¤ó¡¥
 </P>
 
