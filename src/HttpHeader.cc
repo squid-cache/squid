@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.5 1998/02/23 05:38:49 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.6 1998/02/23 20:27:17 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -327,7 +327,7 @@ void
 httpHeaderInitModule()
 {
     /* paranoid check if smbd put a big object into field_store */
-    assert(sizeof(field_store) == 4);
+    assert(sizeof(field_store) == sizeof(char*));
     /* have to force removal of const here */
     httpHeaderInitAttrTable((field_attrs_t *)Headers, countof(Headers));
     httpHeaderInitAttrTable((field_attrs_t *)SccAttrs, countof(SccAttrs));
