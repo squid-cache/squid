@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.28 1998/03/31 17:52:08 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.29 1998/04/03 22:26:32 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -397,6 +397,32 @@ httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id)
 }
 
 /*
+ * same as httpHeaderFindEntry
+ */
+static HttpHeaderEntry *
+httpHeaderFindLastEntry(const HttpHeader * hdr, http_hdr_type id)
+{
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    HttpHeaderEntry *e;
+    HttpHeaderEntry *result = NULL;
+    assert(hdr);
+    assert_eid(id);
+    assert(!CBIT_TEST(ListHeadersMask, id));
+
+    debug(55, 8) ("finding entry %d in hdr %p\n", id, hdr);
+    /* check mask first */
+    if (!CBIT_TEST(hdr->mask, id))
+	return NULL;
+    /* looks like we must have it, do linear search */
+    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+	if (e->id == id)
+	    result = e;
+    }
+    assert(result); /* must be there! */
+    return result;
+}
+
+/*
  * deletes all fields with a given name if any, returns #fields deleted; 
  */
 int
@@ -580,6 +606,7 @@ httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id)
     return value;
 }
 
+/* sync httpHeaderGetLastStr */
 const char *
 httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id)
 {
@@ -587,6 +614,20 @@ httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id)
     assert_eid(id);
     assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
     if ((e = httpHeaderFindEntry(hdr, id))) {
+	httpHeaderNoteParsedEntry(e->id, e->value, 0); /* no errors are possible */
+	return strBuf(e->value);
+    }
+    return NULL;
+}
+
+/* unusual */
+const char *
+httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id)
+{
+    HttpHeaderEntry *e;
+    assert_eid(id);
+    assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
+    if ((e = httpHeaderFindLastEntry(hdr, id))) {
 	httpHeaderNoteParsedEntry(e->id, e->value, 0); /* no errors are possible */
 	return strBuf(e->value);
     }

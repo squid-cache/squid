@@ -326,6 +326,7 @@ extern HttpHdrCc *httpHeaderGetCc(const HttpHeader * hdr);
 extern HttpHdrRange *httpHeaderGetRange(const HttpHeader * hdr);
 extern HttpHdrContRange *httpHeaderGetContRange(const HttpHeader * hdr);
 extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
+extern const char *httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id);
 extern int httpHeaderDelByName(HttpHeader * hdr, const char *name);
 extern HttpHeaderEntry *httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id);
 extern void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
