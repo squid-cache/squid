@@ -1,5 +1,5 @@
 /*
- * $Id: cache_diff.cc,v 1.1 1998/03/29 20:02:43 rousskov Exp $
+ * $Id: cache_diff.cc,v 1.2 1998/03/29 20:18:46 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -174,7 +174,7 @@ cacheIndexScan(CacheIndex *idx, const char *fname, FILE *file)
 	    if (!olde)
 		idx->bad_del_count++;
 	    else {
-		hash_delete_link(idx->hash, (hash_link*) olde);
+		hash_remove_link(idx->hash, (hash_link*) olde);
 	    }
 	} else {
 	    fprintf(stderr, "%s:%d: unknown swap log action\n", fname, count);
