@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.580 2002/06/14 18:45:16 hno Exp $
+ * $Id: client_side.cc,v 1.581 2002/06/24 06:07:38 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2581,7 +2581,8 @@ clientReadRequest(int fd, void *data)
 	    request->my_addr = conn->me.sin_addr;
 	    request->my_port = ntohs(conn->me.sin_port);
 	    request->http_ver = http->http_ver;
-	    if (!urlCheckRequest(request)) {
+	    if (!urlCheckRequest(request) ||
+		httpHeaderHas(&request->header, HDR_TRANSFER_ENCODING)) {
 		err = errorCon(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED);
 		err->src_addr = conn->peer.sin_addr;
 		err->request = requestLink(request);
