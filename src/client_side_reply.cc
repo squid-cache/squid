@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.51 2003/05/17 17:35:06 hno Exp $
+ * $Id: client_side_reply.cc,v 1.52 2003/05/25 02:24:05 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -956,7 +956,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 void
 clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
-    if (newEntry) {
+    if (newEntry && !newEntry->isNull()) {
         debug(88, 4) ("clientPurgeRequest: HEAD '%s'\n", storeUrl(newEntry));
         storeRelease(newEntry);
         purgeStatus = HTTP_OK;
