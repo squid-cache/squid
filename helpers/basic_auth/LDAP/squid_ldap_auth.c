@@ -517,6 +517,8 @@ checkLDAP(LDAP * ld, char *userid, char *password)
 		    fprintf(stderr, PROGRAM_NAME ": WARNING, SSL error %d (%s)\n", sslerr, ldapssl_err2string(sslerr));
 		}
 #endif
+		ldap_msgfree(res);
+		return 1;
 	    }
 	}
 	entry = ldap_first_entry(ld, res);
