@@ -1,5 +1,5 @@
 /*
- * $Id: comm.cc,v 1.187 1997/10/20 19:24:59 wessels Exp $
+ * $Id: comm.cc,v 1.188 1997/10/21 15:59:11 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -330,6 +330,7 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
 	commConnectCallback(cs, COMM_ERR_DNS);
 	return;
     }
+    assert(ia->cur < ia->count);
     cs->in_addr = ia->in_addrs[ia->cur];
     commConnectHandle(cs->fd, cs);
 }
