@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.238 2002/07/06 12:24:51 hno Exp $
+#  $Id: Makefile.in,v 1.239 2002/07/12 15:08:03 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -166,8 +166,11 @@ noinst_PROGRAMS = \
 	cf_gen
 
 
+sbin_PROGRAMS = \
+	squid
+
+
 bin_PROGRAMS = \
-	squid \
 	squidclient
 
 
@@ -397,7 +400,7 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 EXTRA_PROGRAMS = unlinkd$(EXEEXT) pinger$(EXEEXT) dnsserver$(EXEEXT)
-bin_PROGRAMS = squid$(EXEEXT) squidclient$(EXEEXT)
+bin_PROGRAMS = squidclient$(EXEEXT)
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@libexec_PROGRAMS = \
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	@OPT_PINGER@ \
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	dnsserver$(EXEEXT) \
@@ -414,7 +417,9 @@ bin_PROGRAMS = squid$(EXEEXT) squidclient$(EXEEXT)
 @ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@	unlinkd$(EXEEXT) \
 @ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@	cachemgr$(CGIEXT)$(EXEEXT)
 noinst_PROGRAMS = cf_gen$(EXEEXT)
-PROGRAMS = $(bin_PROGRAMS) $(libexec_PROGRAMS) $(noinst_PROGRAMS)
+sbin_PROGRAMS = squid$(EXEEXT)
+PROGRAMS = $(bin_PROGRAMS) $(libexec_PROGRAMS) $(noinst_PROGRAMS) \
+	$(sbin_PROGRAMS)
 
 am_cachemgr__CGIEXT__OBJECTS = cachemgr.$(OBJEXT)
 cachemgr__CGIEXT__OBJECTS = $(am_cachemgr__CGIEXT__OBJECTS)
@@ -642,6 +647,29 @@ clean-libexecPROGRAMS:
 
 clean-noinstPROGRAMS:
 	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+install-sbinPROGRAMS: $(sbin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(sbindir)
+	@list='$(sbin_PROGRAMS)'; for p in $$list; do \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	  ; then \
+	    f=`echo $$p1|sed '$(transform);s/$$/$(EXEEXT)/'`; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(sbindir)/$$f"; \
+	   $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(sbindir)/$$f; \
+	  else :; fi; \
+	done
+
+uninstall-sbinPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(sbin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  echo " rm -f $(DESTDIR)$(sbindir)/$$f"; \
+	  rm -f $(DESTDIR)$(sbindir)/$$f; \
+	done
+
+clean-sbinPROGRAMS:
+	-test -z "$(sbin_PROGRAMS)" || rm -f $(sbin_PROGRAMS)
 cachemgr$(CGIEXT)$(EXEEXT): $(cachemgr__CGIEXT__OBJECTS) $(cachemgr__CGIEXT__DEPENDENCIES) 
 	@rm -f cachemgr$(CGIEXT)$(EXEEXT)
 	$(LINK) $(cachemgr__CGIEXT__LDFLAGS) $(cachemgr__CGIEXT__OBJECTS) $(cachemgr__CGIEXT__LDADD) $(LIBS)
@@ -958,7 +986,7 @@ check: check-recursive
 all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(bindir) $(DESTDIR)$(libexecdir) $(DESTDIR)$(datadir) $(DESTDIR)$(sysconfdir)
+	$(mkinstalldirs) $(DESTDIR)$(bindir) $(DESTDIR)$(libexecdir) $(DESTDIR)$(sbindir) $(DESTDIR)$(datadir) $(DESTDIR)$(sysconfdir)
 
 install: install-recursive
 install-exec: install-exec-recursive
@@ -988,7 +1016,7 @@ maintainer-clean-generic:
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic clean-libexecPROGRAMS \
-	clean-noinstPROGRAMS mostlyclean-am
+	clean-noinstPROGRAMS clean-sbinPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
 
@@ -1006,7 +1034,7 @@ info-am:
 install-data-am: install-data-local install-dataDATA
 
 install-exec-am: install-binPROGRAMS install-libexecPROGRAMS \
-	install-sysconfDATA
+	install-sbinPROGRAMS install-sysconfDATA
 
 install-info: install-info-recursive
 
@@ -1023,14 +1051,15 @@ mostlyclean: mostlyclean-recursive
 mostlyclean-am: mostlyclean-compile mostlyclean-generic
 
 uninstall-am: uninstall-binPROGRAMS uninstall-dataDATA uninstall-info-am \
-	uninstall-libexecPROGRAMS uninstall-local uninstall-sysconfDATA
+	uninstall-libexecPROGRAMS uninstall-local \
+	uninstall-sbinPROGRAMS uninstall-sysconfDATA
 
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) GTAGS all all-am check check-am clean \
 	clean-binPROGRAMS clean-generic clean-libexecPROGRAMS \
-	clean-noinstPROGRAMS clean-recursive distclean \
-	distclean-compile distclean-depend distclean-generic \
+	clean-noinstPROGRAMS clean-recursive clean-sbinPROGRAMS \
+	distclean distclean-compile distclean-depend distclean-generic \
 	distclean-recursive distclean-tags distdir dvi dvi-am \
 	dvi-recursive info info-am info-recursive install install-am \
 	install-binPROGRAMS install-data install-data-am \
@@ -1038,15 +1067,15 @@ uninstall-info: uninstall-info-recursive
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
 	install-libexecPROGRAMS install-man install-recursive \
-	install-strip install-sysconfDATA installcheck installcheck-am \
-	installdirs installdirs-am installdirs-recursive \
-	maintainer-clean maintainer-clean-generic \
+	install-sbinPROGRAMS install-strip install-sysconfDATA \
+	installcheck installcheck-am installdirs installdirs-am \
+	installdirs-recursive maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-recursive tags tags-recursive \
 	uninstall uninstall-am uninstall-binPROGRAMS uninstall-dataDATA \
 	uninstall-info-am uninstall-info-recursive \
 	uninstall-libexecPROGRAMS uninstall-local uninstall-recursive \
-	uninstall-sysconfDATA
+	uninstall-sbinPROGRAMS uninstall-sysconfDATA
 
 cf_gen.$(OBJEXT): cf_gen_defines.h
 unlinkd-daemon.o: unlinkd.c
