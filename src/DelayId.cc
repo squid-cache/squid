@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.6 2003/03/10 20:12:43 robertc Exp $
+ * $Id: DelayId.cc,v 1.7 2003/05/15 06:22:42 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -89,8 +89,9 @@ DelayId::operator bool() const
     return pool_ || compositeId.getRaw();
 }
 
+/* create a delay Id for a given request */
 DelayId
-DelayId::DelayClient(clientHttpRequest * http)
+DelayId::DelayClient(clientHttpRequest * http, DelayPools *poolSet)
 {
     request_t *r;
     unsigned short pool;
@@ -102,23 +103,25 @@ DelayId::DelayClient(clientHttpRequest * http)
         return DelayId();
     }
 
-    ACLChecklist ch;
-    ch.src_addr = r->client_addr;
-    ch.my_addr = r->my_addr;
-    ch.my_port = r->my_port;
+    for (pool = 0; pool < poolSet->pools(); pool++) {
+        ACLChecklist ch;
+        ch.src_addr = r->client_addr;
+        ch.my_addr = r->my_addr;
+        ch.my_port = r->my_port;
 
-    if (http->conn)
-        ch.conn(cbdataReference(http->conn));
+        if (http->conn)
+            ch.conn(cbdataReference(http->conn));
 
-    ch.request = requestLink(r);
+        ch.request = requestLink(r);
 
-    for (pool = 0; pool < DelayPools::pools(); pool++)
-        if (DelayPools::delay_data[pool].theComposite().getRaw() &&
-                aclCheckFast(DelayPools::delay_data[pool].access, &ch)) {
+        if (poolSet->pool(pool).theComposite().getRaw() &&
+                aclCheckFast(poolSet->pool(pool).access, &ch)) {
             DelayId result (pool + 1);
-            result.compositePosition(DelayPools::delay_data[pool].theComposite()->id(ch.src_addr, r->auth_user_request));
+            result.compositePosition(poolSet->pool(pool).theComposite()->id(ch.src_addr, r->auth_user_request));
             return result;
         }
+    }
+
 
     return DelayId();
 }
