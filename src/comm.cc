@@ -1,5 +1,7 @@
 
-/* $Id: comm.cc,v 1.12 1996/03/29 01:07:36 wessels Exp $ */
+/* $Id: comm.cc,v 1.13 1996/03/29 21:15:48 wessels Exp $ */
+
+/* DEBUG: Section 5             comm: socket level functions */
 
 #include "squid.h"
 
@@ -43,7 +45,7 @@ extern int fd_of_first_client _PARAMS((StoreEntry *));
 void comm_handler()
 {
     /* Call application installed handler. */
-    debug(0, 5, "comm_handler:\n");
+    debug(5, 5, "comm_handler:\n");
     app_handler();
 }
 
@@ -59,15 +61,15 @@ int comm_port(fd)
 
     /* If the fd is closed already, just return */
     if (!fd_table[fd].openned) {
-	debug(0, 0, "comm_port: FD %d has been closed.\n", fd);
+	debug(5, 0, "comm_port: FD %d has been closed.\n", fd);
 	return (COMM_ERROR);
     }
     addr_len = sizeof(addr);
     if (getsockname(fd, (struct sockaddr *) &addr, &addr_len)) {
-	debug(0, 1, "comm_port: Failed to retrieve TCP/UDP port number for socket: FD %d: %s\n", fd, xstrerror());
+	debug(5, 1, "comm_port: Failed to retrieve TCP/UDP port number for socket: FD %d: %s\n", fd, xstrerror());
 	return (COMM_ERROR);
     }
-    debug(0, 6, "comm_port: FD %d: sockaddr %u.\n", fd, addr.sin_addr.s_addr);
+    debug(5, 6, "comm_port: FD %d: sockaddr %u.\n", fd, addr.sin_addr.s_addr);
     fd_table[fd].port = ntohs(addr.sin_port);
 
     return fd_table[fd].port;
@@ -83,7 +85,7 @@ static int do_bind(s, host, port)
 
     addr = getAddress(host);
     if (addr == (struct in_addr *) NULL) {
-	debug(0, 0, "do_bind: Unknown host: %s\n", host);
+	debug(5, 0, "do_bind: Unknown host: %s\n", host);
 	return COMM_ERROR;
     }
     memset(&S, '\0', sizeof(S));
@@ -94,7 +96,7 @@ static int do_bind(s, host, port)
     if (bind(s, (struct sockaddr *) &S, sizeof(S)) == 0)
 	return COMM_OK;
 
-    debug(0, 0, "do_bind: Cannot bind socket FD %d to %s:%d: %s\n",
+    debug(5, 0, "do_bind: Cannot bind socket FD %d to %s:%d: %s\n",
 	s,
 	S.sin_addr.s_addr == htonl(INADDR_ANY) ? "*" : inet_ntoa(S.sin_addr),
 	port, xstrerror());
@@ -122,11 +124,11 @@ int comm_open(io_type, port, handler, note)
 	switch (errno) {
 	case ENFILE:
 	case EMFILE:
-	    debug(0, 1, "comm_open: socket failure: %s\n", xstrerror());
+	    debug(5, 1, "comm_open: socket failure: %s\n", xstrerror());
 	    Reserve_More_FDs();
 	    break;
 	default:
-	    debug(0, 0, "comm_open: socket failure: %s\n", xstrerror());
+	    debug(5, 0, "comm_open: socket failure: %s\n", xstrerror());
 	}
 	return (COMM_ERROR);
     }
@@ -139,12 +141,12 @@ int comm_open(io_type, port, handler, note)
     conn->openned = 1;
 
     if (fcntl(new_socket, F_SETFD, 1) < 0) {
-	debug(0, 0, "comm_open: FD %d: failed to set close-on-exec flag: %s\n",
+	debug(5, 0, "comm_open: FD %d: failed to set close-on-exec flag: %s\n",
 	    new_socket, xstrerror());
     }
     if (port > 0) {
 	if (commSetNoLinger(new_socket) < 0) {
-	    debug(0, 0, "comm_open: failed to turn off SO_LINGER: %s\n",
+	    debug(5, 0, "comm_open: failed to turn off SO_LINGER: %s\n",
 		xstrerror());
 	}
 	if (do_reuse) {
@@ -168,13 +170,13 @@ int comm_open(io_type, port, handler, note)
 	 */
 #if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
 	if (fcntl(new_socket, F_SETFL, O_NONBLOCK)) {
-	    debug(0, 0, "comm_open: FD %d: Failure to set O_NONBLOCK: %s\n",
+	    debug(5, 0, "comm_open: FD %d: Failure to set O_NONBLOCK: %s\n",
 		new_socket, xstrerror());
 	    return (COMM_ERROR);
 	}
 #else
 	if (fcntl(new_socket, F_SETFL, O_NDELAY)) {
-	    debug(0, 0, "comm_open: FD %d: Failure to set O_NDELAY: %s\n",
+	    debug(5, 0, "comm_open: FD %d: Failure to set O_NDELAY: %s\n",
 		new_socket, xstrerror());
 	    return (COMM_ERROR);
 	}
@@ -197,7 +199,7 @@ int comm_listen(sock)
     int x;
     FD_SET(sock, &receive_sockets);
     if ((x = listen(sock, 50)) < 0) {
-	debug(0, 0, "comm_listen: listen(%d, 50): %s\n",
+	debug(5, 0, "comm_listen: listen(%d, 50): %s\n",
 	    sock, xstrerror());
 	return x;
     }
@@ -218,7 +220,7 @@ int comm_connect(sock, dest_host, dest_port)
     to_addr.sin_family = AF_INET;
 
     if ((hp = ipcache_gethostbyname(dest_host)) == 0) {
-	debug(0, 1, "comm_connect: Failure to lookup host: %s.\n", dest_host);
+	debug(5, 1, "comm_connect: Failure to lookup host: %s.\n", dest_host);
 	return (COMM_ERROR);
     }
     memcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
@@ -265,7 +267,7 @@ int comm_connect_addr(sock, address)
 
     /* sanity check */
     if (ntohs(address->sin_port) == 0) {
-	debug(0, 10, "comm_connect_addr: %s:%d: URL uses port 0?\n",
+	debug(5, 10, "comm_connect_addr: %s:%d: URL uses port 0?\n",
 	    inet_ntoa(address->sin_addr), ntohs(address->sin_port));
 	errno = 0;
 	return COMM_ERROR;
@@ -287,7 +289,7 @@ int comm_connect_addr(sock, address)
 	    if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char *) &x, &len) >= 0)
 		errno = x;
 	default:
-	    debug(0, 1, "comm_connect_addr: %s:%d: socket failure: %s.\n",
+	    debug(5, 1, "comm_connect_addr: %s:%d: socket failure: %s.\n",
 		inet_ntoa(address->sin_addr),
 		ntohs(address->sin_port),
 		xstrerror());
@@ -298,11 +300,11 @@ int comm_connect_addr(sock, address)
 	lft = comm_set_fd_lifetime(sock, getClientLifetime());
 	strcpy(conn->ipaddr, inet_ntoa(address->sin_addr));
 	conn->port = ntohs(address->sin_port);
-	debug(0, 10, "comm_connect_addr: FD %d (lifetime %d): connected to %s:%d.\n",
+	debug(5, 10, "comm_connect_addr: FD %d (lifetime %d): connected to %s:%d.\n",
 	    sock, lft, conn->ipaddr, conn->port);
     } else if (status == EINPROGRESS) {
 	lft = comm_set_fd_lifetime(sock, getConnectTimeout());
-	debug(0, 10, "comm_connect_addr: FD %d connection pending, lifetime %d\n",
+	debug(5, 10, "comm_connect_addr: FD %d connection pending, lifetime %d\n",
 	    sock, lft);
     }
     /* Add new socket to list of open sockets. */
@@ -340,7 +342,7 @@ int comm_accept(fd, peer, me)
 	    Reserve_More_FDs();
 	    return COMM_ERROR;
 	default:
-	    debug(0, 1, "comm_accept: FD %d: accept failure: %s\n",
+	    debug(5, 1, "comm_accept: FD %d: accept failure: %s\n",
 		fd, xstrerror());
 	    return COMM_ERROR;
 	}
@@ -378,7 +380,7 @@ int comm_close(fd)
 	return -1;
 
     if (fdstat_type(fd) == File) {
-	debug(0, 0, "FD %d: Someone called comm_close() on a File\n", fd);
+	debug(5, 0, "FD %d: Someone called comm_close() on a File\n", fd);
 	fatal_dump(NULL);
     }
     conn = &fd_table[fd];
@@ -387,7 +389,7 @@ int comm_close(fd)
     FD_CLR(fd, &send_sockets);
 
     comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
-    debug(0, 10, "comm_close: FD %d\n", fd);
+    debug(5, 10, "comm_close: FD %d\n", fd);
     /* update fdstat */
     fdstat_close(fd);
     memset(conn, '\0', sizeof(FD_ENTRY));
@@ -422,7 +424,7 @@ int comm_udp_send(fd, host, port, buf, len)
     to_addr.sin_family = AF_INET;
 
     if ((hp = ipcache_gethostbyname(host)) == 0) {
-	debug(0, 1, "comm_udp_send: gethostbyname failure: %s: %s\n",
+	debug(5, 1, "comm_udp_send: gethostbyname failure: %s: %s\n",
 	    host, xstrerror());
 	return (COMM_ERROR);
     }
@@ -430,7 +432,7 @@ int comm_udp_send(fd, host, port, buf, len)
     to_addr.sin_port = htons(port);
     if ((bytes_sent = sendto(fd, buf, len, 0, (struct sockaddr *) &to_addr,
 		sizeof(to_addr))) < 0) {
-	debug(0, 1, "comm_udp_send: sendto failure: FD %d: %s\n",
+	debug(5, 1, "comm_udp_send: sendto failure: FD %d: %s\n",
 	    fd, xstrerror());
 	return COMM_ERROR;
     }
@@ -448,10 +450,10 @@ int comm_udp_sendto(fd, to_addr, addr_len, buf, len)
     int bytes_sent;
 
     if ((bytes_sent = sendto(fd, buf, len, 0, (struct sockaddr *) to_addr, addr_len)) < 0) {
-	debug(0, 1, "comm_udp_sendto: sendto failure: FD %d: %s\n", fd, xstrerror());
-	debug(0, 1, "comm_udp_sendto: --> sin_family = %d\n", to_addr->sin_family);
-	debug(0, 1, "comm_udp_sendto: --> sin_port   = %d\n", htons(to_addr->sin_port));
-	debug(0, 1, "comm_udp_sendto: --> sin_addr   = %s\n", inet_ntoa(to_addr->sin_addr));
+	debug(5, 1, "comm_udp_sendto: sendto failure: FD %d: %s\n", fd, xstrerror());
+	debug(5, 1, "comm_udp_sendto: --> sin_family = %d\n", to_addr->sin_family);
+	debug(5, 1, "comm_udp_sendto: --> sin_port   = %d\n", htons(to_addr->sin_port));
+	debug(5, 1, "comm_udp_sendto: --> sin_addr   = %s\n", inet_ntoa(to_addr->sin_addr));
 	return COMM_ERROR;
     }
     return bytes_sent;
@@ -467,7 +469,7 @@ int comm_udp_recv(fd, buf, size, from_addr, from_size)
     int len = recvfrom(fd, buf, size, 0, (struct sockaddr *) from_addr,
 	from_size);
     if (len < 0) {
-	debug(0, 1, "comm_udp_recv: recvfrom failure: FD %d: %s\n", fd,
+	debug(5, 1, "comm_udp_recv: recvfrom failure: FD %d: %s\n", fd,
 	    xstrerror());
 	return COMM_ERROR;
     }
@@ -540,7 +542,7 @@ int comm_select(sec, usec, failtime)
 		break;
 
 	    if (errno != EINTR) {
-		debug(0, 0, "comm_select: select failure: %s (errno %d).\n",
+		debug(5, 0, "comm_select: select failure: %s (errno %d).\n",
 		    xstrerror(), errno);
 		examine_select(&readfds, &writefds, &exceptfds);
 		return COMM_ERROR;
@@ -548,7 +550,7 @@ int comm_select(sec, usec, failtime)
 	    /* if select interrupted, try again */
 	}
 
-	debug(0, num ? 5 : 8, "comm_select: %d sockets ready at %d\n",
+	debug(5, num ? 5 : 8, "comm_select: %d sockets ready at %d\n",
 	    num, cached_curtime);
 
 	/* Check lifetime and timeout handlers ONCE each second.
@@ -617,31 +619,31 @@ int comm_select(sec, usec, failtime)
 		    continue;
 
 		if (FD_ISSET(fd, &readfds)) {
-		    debug(0, 6, "comm_select: FD %d ready for reading\n", fd);
+		    debug(5, 6, "comm_select: FD %d ready for reading\n", fd);
 		    if (fd_table[fd].read_handler) {
 			int (*tmp) () = fd_table[fd].read_handler;
 			fd_table[fd].read_handler = 0;
-			debug(0, 10, "calling read handler %p(%d,%p)\n",
+			debug(5, 10, "calling read handler %p(%d,%p)\n",
 			    tmp, fd, fd_table[fd].read_data);
 			tmp(fd, fd_table[fd].read_data);
 		    }
 		}
 		if (FD_ISSET(fd, &writefds)) {
-		    debug(0, 5, "comm_select: FD %d ready for writing\n", fd);
+		    debug(5, 5, "comm_select: FD %d ready for writing\n", fd);
 		    if (fd_table[fd].write_handler) {
 			int (*tmp) () = fd_table[fd].write_handler;
 			fd_table[fd].write_handler = 0;
-			debug(0, 10, "calling write handler %p(%d,%p)\n",
+			debug(5, 10, "calling write handler %p(%d,%p)\n",
 			    tmp, fd, fd_table[fd].write_data);
 			tmp(fd, fd_table[fd].write_data);
 		    }
 		}
 		if (FD_ISSET(fd, &exceptfds)) {
-		    debug(0, 5, "comm_select: FD %d has an exception\n", fd);
+		    debug(5, 5, "comm_select: FD %d has an exception\n", fd);
 		    if (fd_table[fd].except_handler) {
 			int (*tmp) () = fd_table[fd].except_handler;
 			fd_table[fd].except_handler = 0;
-			debug(0, 10, "calling except handler %p(%d,%p)\n",
+			debug(5, 10, "calling except handler %p(%d,%p)\n",
 			    tmp, fd, fd_table[fd].except_data);
 			tmp(fd, fd_table[fd].except_data);
 		    }
@@ -651,7 +653,7 @@ int comm_select(sec, usec, failtime)
 	}
     }
 
-    debug(0, 8, "comm_select: time out: %d.\n", cached_curtime);
+    debug(5, 8, "comm_select: time out: %d.\n", cached_curtime);
     return COMM_TIMEOUT;
 }
 
@@ -684,12 +686,12 @@ int comm_pending(fd, sec, usec)
 	case EINTR:
 	    break;		/* if select interrupted, try again */
 	default:
-	    debug(0, 1, "comm_pending: select failure: %s\n", xstrerror());
+	    debug(5, 1, "comm_pending: select failure: %s\n", xstrerror());
 	    return COMM_ERROR;
 	}
     }
 
-    debug(0, 5, "comm_pending: %d sockets ready for reading\n", num);
+    debug(5, 5, "comm_pending: %d sockets ready for reading\n", num);
 
     if (num && FD_ISSET(fd, &readfds)) {
 	return COMM_OK;
@@ -723,7 +725,7 @@ int comm_set_select_handler_plus_timeout(fd, type, handler, client_data, timeout
 	fd_table[fd].timeout_handler = handler;
 	fd_table[fd].timeout_data = client_data;
 	if ((timeout <= 0) && handler) {
-	    debug(0, 2, "comm_set_select_handler_plus_timeout: Zero timeout doesn't make sense\n");
+	    debug(5, 2, "comm_set_select_handler_plus_timeout: Zero timeout doesn't make sense\n");
 	}
     }
     if (type & COMM_SELECT_READ) {
@@ -783,7 +785,7 @@ static int commSetNoLinger(fd)
     L.l_onoff = 0;		/* off */
     L.l_linger = 0;
 
-    debug(0, 10, "commSetNoLinger: turning off SO_LINGER on FD %d\n", fd);
+    debug(5, 10, "commSetNoLinger: turning off SO_LINGER on FD %d\n", fd);
     return setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L));
 }
 
@@ -793,17 +795,17 @@ static int commSetReuseAddr(fd)
     int on = 1;
     int rc;
 
-    debug(0, 10, "commSetReuseAddr: turning on SO_REUSEADDR on FD %d\n", fd);
+    debug(5, 10, "commSetReuseAddr: turning on SO_REUSEADDR on FD %d\n", fd);
     rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
     if (rc < 0)
-	debug(0, 1, "commSetReuseAddr: FD=%d: %s\n", fd, xstrerror());
+	debug(5, 1, "commSetReuseAddr: FD=%d: %s\n", fd, xstrerror());
     return rc;
 }
 
 int commSetNonBlocking(fd)
      int fd;
 {
-    debug(0, 10, "commSetNonBlocking: setting FD %d to non-blocking i/o.\n",
+    debug(5, 10, "commSetNonBlocking: setting FD %d to non-blocking i/o.\n",
 	fd);
     /*
      * Set up the flag NOT to have the socket to wait for message from
@@ -812,13 +814,13 @@ int commSetNonBlocking(fd)
 
 #if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
     if (fcntl(fd, F_SETFL, O_NONBLOCK)) {
-	debug(0, 0, "comm_open: FD %d: error setting O_NONBLOCK: %s\n",
+	debug(5, 0, "comm_open: FD %d: error setting O_NONBLOCK: %s\n",
 	    fd, xstrerror());
 	return (COMM_ERROR);
     }
 #else
     if (fcntl(fd, F_SETFL, O_NDELAY)) {
-	debug(0, 0, "comm_open: FD %d: error setting O_NDELAY: %s\n",
+	debug(5, 0, "comm_open: FD %d: error setting O_NDELAY: %s\n",
 	    fd, xstrerror());
 	return (COMM_ERROR);
     }
@@ -834,7 +836,7 @@ char **getAddressList(name)
 	return NULL;
     if ((hp = ipcache_gethostbyname(name)))
 	return hp->h_addr_list;
-    debug(0, 0, "getAddress: gethostbyname failure: %s: %s\n",
+    debug(5, 0, "getAddress: gethostbyname failure: %s: %s\n",
 	name, xstrerror());
     return NULL;
 }
@@ -850,7 +852,7 @@ struct in_addr *getAddress(name)
 	memcpy(&first.s_addr, *list, 4);
 	return (&first);
     }
-    debug(0, 0, "getAddress: gethostbyname failure: %s: %s\n",
+    debug(5, 0, "getAddress: gethostbyname failure: %s: %s\n",
 	name, xstrerror());
     return NULL;
 }
@@ -898,7 +900,7 @@ static int examine_select(readfds, writefds, exceptfds)
     int num;
     struct timeval tv;
 
-    debug(0, 0, "examine_select: Examining open file descriptors...\n");
+    debug(5, 0, "examine_select: Examining open file descriptors...\n");
     for (fd = 0; fd < getMaxFD(); ++fd) {
 	FD_ZERO(&read_x);
 	FD_ZERO(&write_x);
@@ -910,8 +912,8 @@ static int examine_select(readfds, writefds, exceptfds)
 	    FD_SET(fd, &read_x);
 	    num = select(FD_SETSIZE, &read_x, &read_x, &read_x, &tv);
 	    if (num < 0) {
-		debug(0, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
-		debug(0, 0, "Timeout handler:%x read:%x write:%x except:%x\n",
+		debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
+		debug(5, 0, "Timeout handler:%x read:%x write:%x except:%x\n",
 		    fd_table[fd].timeout_handler,
 		    fd_table[fd].read_handler,
 		    fd_table[fd].write_handler,
@@ -926,7 +928,7 @@ static int examine_select(readfds, writefds, exceptfds)
 	    }
 	}
     }
-    debug(0, 0, "examine_select: Finished examining open file descriptors.\n");
+    debug(5, 0, "examine_select: Finished examining open file descriptors.\n");
     return 0;
 }
 
@@ -948,7 +950,7 @@ static void checkTimeouts()
 	if ((fd_table[fd].timeout_handler) &&
 	    (fd_table[fd].timeout_time <= cached_curtime)) {
 	    int (*tmp) () = fd_table[fd].timeout_handler;
-	    debug(0, 5, "comm_select: timeout on socket %d at %d\n",
+	    debug(5, 5, "comm_select: timeout on socket %d at %d\n",
 		fd, cached_curtime);
 	    fd_table[fd].timeout_handler = 0;
 	    tmp(fd, fd_table[fd].timeout_data);
@@ -988,15 +990,15 @@ static void checkLifetimes()
 	    }
 	    if (tmp_local) {
 		if (use_lifetime_handler) {
-		    debug(0, 2, "comm_select: FD %d lifetime expire: %d < %d (Lifetime handler %p)\n",
+		    debug(5, 2, "comm_select: FD %d lifetime expire: %d < %d (Lifetime handler %p)\n",
 			fd, lft, cached_curtime, tmp_local);
 		} else {
-		    debug(0, 2, "comm_select: FD %d lifetime expire: %d < %d (%s handler %p)\n",
+		    debug(5, 2, "comm_select: FD %d lifetime expire: %d < %d (%s handler %p)\n",
 			fd, lft, cached_curtime,
 			use_read ? "read" : "write", tmp_local);
 		}
 	    } else {
-		debug(0, 1, "comm_select: FD %d lifetime expire: %d < %d (handler not available.)\n",
+		debug(5, 1, "comm_select: FD %d lifetime expire: %d < %d (handler not available.)\n",
 		    fd, lft, cached_curtime);
 	    }
 
@@ -1014,20 +1016,20 @@ static void checkLifetimes()
 		}
 		if (fd_table[fd].openned) {
 		    /* hmm.. still openned. do full comm_close */
-		    debug(0, 5, "comm_select: FD %d lifetime expire: %d < %d : Handler did not close the socket.\n comm_select will do.\n",
+		    debug(5, 5, "comm_select: FD %d lifetime expire: %d < %d : Handler did not close the socket.\n comm_select will do.\n",
 			fd, lft, cached_curtime);
 		    comm_close(fd);
 		} else {
 		    /* seems like handle closed it. 
 		     * clean up fd_table just to make sure */
-		    debug(0, 5, "comm_select: FD %d lifetime expire: %d : Handler closed the socket.\n",
+		    debug(5, 5, "comm_select: FD %d lifetime expire: %d : Handler closed the socket.\n",
 			fd, lft);
 		    /* just to make sure here */
 		    comm_cleanup_fd_entry(fd);
 		}
 	    } else {
 		/* no handle. do full comm_close */
-		debug(0, 5, "comm_select: FD %d lifetime expire: %d < %d : No handler to close the socket.\n comm_select will do.\n",
+		debug(5, 5, "comm_select: FD %d lifetime expire: %d < %d : No handler to close the socket.\n comm_select will do.\n",
 		    fd, lft, cached_curtime);
 		comm_close(fd);
 	    }
@@ -1044,7 +1046,7 @@ static void Reserve_More_FDs()
 	RESERVED_FD = RESERVED_FD + 1;
     } else if (RESERVED_FD == getMaxFD() - 64) {
 	RESERVED_FD = RESERVED_FD + 1;
-	debug(0, 0, "Don't you have a tiny open-file table size of %d\n",
+	debug(5, 0, "Don't you have a tiny open-file table size of %d\n",
 	    getMaxFD() - RESERVED_FD);
     }
 }
