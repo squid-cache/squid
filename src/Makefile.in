@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.36 1996/08/29 16:55:46 wessels Exp $
+#  $Id: Makefile.in,v 1.37 1996/09/12 04:49:43 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -55,7 +55,7 @@ PROGS           = squid client
 UTILS           = dnsserver ftpget
 CGIPROGS	= cachemgr.cgi
 OBJS	 	= acl.o async_io.o background.o cache_cf.o errorpage.o \
-		client_side.o comm.o debug.o disk.o dns.o dynamic_array.o \
+		client_side.o comm.o debug.o disk.o dns.o \
 		fdstat.o filemap.o ftp.o fqdncache.o gopher.o \
 		hash.o http.o icp.o ident.o ipcache.o \
 		main.o mime.o neighbors.o objcache.o \
