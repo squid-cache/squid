@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.64 2002/04/06 15:24:41 hno Exp $
+ * $Id: mem.cc,v 1.65 2002/04/13 23:07:50 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -107,7 +107,7 @@ memStringStats(StoreEntry * sentry)
 }
 
 static void
-memBufStats(StoreEntry *sentry)
+memBufStats(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "Large buffers: %d (%d KB)\n",
 	HugeBufCountMeter.level,
@@ -217,24 +217,24 @@ memFindBufSizeType(size_t net_size, size_t * gross_size)
 {
     mem_type type;
     size_t size;
-    if (net_size <= 2*1024) {
+    if (net_size <= 2 * 1024) {
 	type = MEM_2K_BUF;
-	size = 2*1024;
-    } else if (net_size <= 4*1024) {
+	size = 2 * 1024;
+    } else if (net_size <= 4 * 1024) {
 	type = MEM_4K_BUF;
-	size = 4*1024;
-    } else if (net_size <= 8*1024) {
+	size = 4 * 1024;
+    } else if (net_size <= 8 * 1024) {
 	type = MEM_8K_BUF;
-	size = 8*1024;
-    } else if (net_size <= 16*1024) {
+	size = 8 * 1024;
+    } else if (net_size <= 16 * 1024) {
 	type = MEM_16K_BUF;
-	size = 16*1024;
-    } else if (net_size <= 32*1024) {
+	size = 16 * 1024;
+    } else if (net_size <= 32 * 1024) {
 	type = MEM_32K_BUF;
-	size = 32*1024;
-    } else if (net_size <= 64*1024) {
+	size = 32 * 1024;
+    } else if (net_size <= 64 * 1024) {
 	type = MEM_64K_BUF;
-	size = 64*1024;
+	size = 64 * 1024;
     } else {
 	type = MEM_NONE;
 	size = net_size;
@@ -430,6 +430,7 @@ memPoolDescribe(const MemPool * pool)
 	pool->label, memPoolInUseCount(pool), pool->obj_size,
 	toKB(pool->obj_size * pool->meter.inuse.level));
 }
+
 #endif
 
 void
@@ -491,19 +492,18 @@ memFree64K(void *p)
 FREE *
 memFreeBufFunc(size_t size)
 {
-    switch(size)
-    {
-    case 2*1024:
+    switch (size) {
+    case 2 * 1024:
 	return memFree2K;
-    case 4*1024:
+    case 4 * 1024:
 	return memFree4K;
-    case 8*1024:
+    case 8 * 1024:
 	return memFree8K;
-    case 16*1024:
+    case 16 * 1024:
 	return memFree16K;
-    case 32*1024:
+    case 32 * 1024:
 	return memFree32K;
-    case 64*1024:
+    case 64 * 1024:
 	return memFree64K;
     default:
 	memMeterDec(HugeBufCountMeter);
@@ -650,6 +650,6 @@ memReport(StoreEntry * e)
     storeAppendPrintf(e, "Idle pool limit: %.2f MB\n", toMB(mp_total.mem_idle_limit));
     /* limits */
     storeAppendPrintf(e, "Total Pools created: %d\n", mp_total.tot_pools_alloc);
-    storeAppendPrintf(e, "Pools ever used:     %d (shown above)\n",mp_total.tot_pools_alloc - not_used);
+    storeAppendPrintf(e, "Pools ever used:     %d (shown above)\n", mp_total.tot_pools_alloc - not_used);
     storeAppendPrintf(e, "Currently in use:    %d\n", mp_total.tot_pools_inuse);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.89 2002/04/04 23:59:25 hno Exp $
+ * $Id: redirect.cc,v 1.90 2002/04/13 23:07:51 hno Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -55,8 +55,8 @@ static void
 redirectHandleReply(void *data, char *reply)
 {
     redirectStateData *r = data;
-    int valid;
     char *t;
+    void *cbdata;
     debug(29, 5) ("redirectHandleRead: {%s}\n", reply ? reply : "<NULL>");
     if (reply) {
 	if ((t = strchr(reply, ' ')))
@@ -64,10 +64,8 @@ redirectHandleReply(void *data, char *reply)
 	if (*reply == '\0')
 	    reply = NULL;
     }
-    valid = cbdataValid(r->data);
-    cbdataUnlock(r->data);
-    if (valid)
-	r->handler(r->data, reply);
+    if (cbdataReferenceValidDone(r->data, &cbdata))
+	r->handler(cbdata, reply);
     redirectStateFree(r);
 }
 
@@ -135,8 +133,7 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
     }
     r->method_s = RequestMethodStr[http->request->method];
     r->handler = handler;
-    r->data = data;
-    cbdataLock(r->data);
+    r->data = cbdataReference(data);
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
 	fqdn = dash_str;
     snprintf(buf, 8192, "%s %s/%s %s %s\n",

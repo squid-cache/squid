@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.20 2002/01/06 00:44:13 hno Exp $
+ * $Id: delay_pools.cc,v 1.21 2002/04/13 23:07:50 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <david@luyer.net>
@@ -648,8 +648,6 @@ delayMostBytesWanted(const MemObject * mem, int max)
     dlink_node *node;
     for (node = mem->clients.head; node; node = node->next) {
 	sc = (store_client *) node->data;
-	if (sc->callback_data == NULL)	/* open slot */
-	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
 	i = delayBytesWanted(sc->delay_id, i, max);

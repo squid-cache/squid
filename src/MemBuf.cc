@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cc,v 1.29 2002/02/13 19:34:02 hno Exp $
+ * $Id: MemBuf.cc,v 1.30 2002/04/13 23:07:48 hno Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -270,8 +270,8 @@ memBufFreeFunc(MemBuf * mb)
     assert(mb->buf);
     assert(!mb->stolen);	/* not frozen */
 
-    ff = memFreeBufFunc((size_t)mb->capacity);
-    mb->stolen = 1;	/* freeze */
+    ff = memFreeBufFunc((size_t) mb->capacity);
+    mb->stolen = 1;		/* freeze */
     return ff;
 }
 
@@ -287,26 +287,26 @@ memBufGrow(MemBuf * mb, mb_size_t min_cap)
     assert(mb->capacity < min_cap);
 
     /* determine next capacity */
-    if (min_cap > 64*1024) {
-	new_cap = 64*1024;
-	while (new_cap < (size_t)min_cap)
-	    new_cap += 64*1024;	/* increase in reasonable steps */
+    if (min_cap > 64 * 1024) {
+	new_cap = 64 * 1024;
+	while (new_cap < (size_t) min_cap)
+	    new_cap += 64 * 1024;	/* increase in reasonable steps */
     } else {
-	new_cap = (size_t)min_cap;
+	new_cap = (size_t) min_cap;
     }
 
     /* last chance to fit before we assert(!overflow) */
-    if (new_cap > (size_t)mb->max_capacity)
-	new_cap = (size_t)mb->max_capacity;
+    if (new_cap > (size_t) mb->max_capacity)
+	new_cap = (size_t) mb->max_capacity;
 
-    assert(new_cap <= (size_t)mb->max_capacity);	/* no overflow */
-    assert(new_cap > (size_t)mb->capacity);	/* progress */
+    assert(new_cap <= (size_t) mb->max_capacity);	/* no overflow */
+    assert(new_cap > (size_t) mb->capacity);	/* progress */
 
-    buf_cap = (size_t)mb->capacity;
+    buf_cap = (size_t) mb->capacity;
     mb->buf = memReallocBuf(mb->buf, new_cap, &buf_cap);
 
     /* done */
-    mb->capacity = (mb_size_t)buf_cap;
+    mb->capacity = (mb_size_t) buf_cap;
 }
 
 

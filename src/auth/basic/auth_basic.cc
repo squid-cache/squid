@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.16 2002/04/06 08:49:31 adrian Exp $
+ * $Id: auth_basic.cc,v 1.17 2002/04/13 23:07:53 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -261,8 +261,8 @@ authenticateBasicHandleReply(void *data, char *reply)
     auth_user_t *auth_user;
     basic_data *basic_auth;
     auth_basic_queue_node *tmpnode;
-    int valid;
     char *t = NULL;
+    void *cbdata;
     debug(29, 9) ("authenticateBasicHandleReply: {%s}\n", reply ? reply : "<NULL>");
     if (reply) {
 	if ((t = strchr(reply, ' ')))
@@ -279,16 +279,13 @@ authenticateBasicHandleReply(void *data, char *reply)
     else
 	basic_auth->flags.credentials_ok = 3;
     basic_auth->credentials_checkedtime = squid_curtime;
-    valid = cbdataValid(r->data);
-    if (valid)
-	r->handler(r->data, NULL);
-    cbdataUnlock(r->data);
+    if (cbdataReferenceValidDone(r->data, &cbdata))
+	r->handler(cbdata, NULL);
+    cbdataReferenceDone(r->data);
     while (basic_auth->auth_queue) {
 	tmpnode = basic_auth->auth_queue->next;
-	valid = cbdataValid(basic_auth->auth_queue->data);
-	if (valid)
-	    basic_auth->auth_queue->handler(basic_auth->auth_queue->data, NULL);
-	cbdataUnlock(basic_auth->auth_queue->data);
+	if (cbdataReferenceValidDone(basic_auth->auth_queue->data, &cbdata))
+	    basic_auth->auth_queue->handler(cbdata, NULL);
 	xfree(basic_auth->auth_queue);
 	basic_auth->auth_queue = tmpnode;
     }
@@ -584,14 +581,12 @@ authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, vo
 	basic_auth->auth_queue = node;
 	node->auth_user_request = auth_user_request;
 	node->handler = handler;
-	node->data = data;
-	cbdataLock(data);
+	node->data = cbdataReference(data);
 	return;
     } else {
 	r = cbdataAlloc(authenticateStateData);
 	r->handler = handler;
-	cbdataLock(data);
-	r->data = data;
+	r->data = cbdataReference(data);
 	r->auth_user_request = auth_user_request;
 	/* mark the user as haveing verification in progress */
 	basic_auth->flags.credentials_ok = 2;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.328 2002/04/01 06:02:15 wessels Exp $
+ * $Id: comm.cc,v 1.329 2002/04/13 23:07:49 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -82,7 +82,7 @@ CommWriteStateCallbackAndFree(int fd, int code)
 {
     CommWriteStateData *CommWriteState = fd_table[fd].rwstate;
     CWCB *callback = NULL;
-    void *data;
+    void *cbdata;
     fd_table[fd].rwstate = NULL;
     if (CommWriteState == NULL)
 	return;
@@ -94,11 +94,9 @@ CommWriteStateCallbackAndFree(int fd, int code)
 	free_func(free_buf);
     }
     callback = CommWriteState->handler;
-    data = CommWriteState->handler_data;
     CommWriteState->handler = NULL;
-    if (callback && cbdataValid(data))
-	callback(fd, CommWriteState->buf, CommWriteState->offset, code, data);
-    cbdataUnlock(data);
+    if (callback && cbdataReferenceValidDone(CommWriteState->handler_data, &cbdata))
+	callback(fd, CommWriteState->buf, CommWriteState->offset, code, cbdata);
     memPoolFree(comm_write_pool, CommWriteState);
 }
 
@@ -269,8 +267,7 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
     cs->host = xstrdup(host);
     cs->port = port;
     cs->callback = callback;
-    cs->data = data;
-    cbdataLock(cs->data);
+    cs->data = cbdataReference(data);
     comm_add_close_handler(fd, commConnectFree, cs);
     cs->locks++;
     ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
@@ -304,16 +301,15 @@ static void
 commConnectCallback(ConnectStateData * cs, int status)
 {
     CNCB *callback = cs->callback;
-    void *data = cs->data;
+    void *cbdata = cs->data;
     int fd = cs->fd;
     comm_remove_close_handler(fd, commConnectFree, cs);
     cs->callback = NULL;
     cs->data = NULL;
     commSetTimeout(fd, -1, NULL, NULL);
     commConnectFree(fd, cs);
-    if (cbdataValid(data))
-	callback(fd, status, data);
-    cbdataUnlock(data);
+    if (cbdataReferenceValid(cbdata))
+	callback(fd, status, cbdata);
 }
 
 static void
@@ -321,8 +317,7 @@ commConnectFree(int fd, void *data)
 {
     ConnectStateData *cs = data;
     debug(5, 3) ("commConnectFree: FD %d\n", fd);
-    if (cs->data)
-	cbdataUnlock(cs->data);
+    cbdataReferenceDone(cs->data);
     safe_free(cs->host);
     cbdataFree(cs);
 }
@@ -333,7 +328,7 @@ commResetFD(ConnectStateData * cs)
 {
     int fd2;
     fde *F;
-    if (!cbdataValid(cs->data))
+    if (!cbdataReferenceValid(cs->data))
 	return 0;
     statCounter.syscalls.sock.sockets++;
     fd2 = socket(AF_INET, SOCK_STREAM, 0);
@@ -443,15 +438,16 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
     assert(F->flags.open);
+    cbdataReferenceDone(F->timeout_data);
+    F->timeout_handler = NULL;
     if (timeout < 0) {
 	F->timeout_handler = NULL;
-	F->timeout_data = NULL;
 	return F->timeout = 0;
     }
     assert(handler || F->timeout_handler);
     if (handler || data) {
 	F->timeout_handler = handler;
-	F->timeout_data = data;
+	F->timeout_data = cbdataReference(data);
     }
     return F->timeout = squid_curtime + (time_t) timeout;
 }
@@ -568,9 +564,9 @@ commCallCloseHandlers(int fd)
     while ((ch = F->close_handler) != NULL) {
 	F->close_handler = ch->next;
 	debug(5, 5) ("commCallCloseHandlers: ch->handler=%p\n", ch->handler);
-	if (cbdataValid(ch->data))
+	if (cbdataReferenceValid(ch->data))
 	    ch->handler(fd, ch->data);
-	cbdataUnlock(ch->data);
+	cbdataReferenceDone(ch->data);
 	memPoolFree(conn_close_pool, ch);	/* AAA */
     }
 }
@@ -650,6 +646,7 @@ comm_close(int fd)
     if (F->ssl)
 	ssl_shutdown_method(fd);
 #endif
+    commSetTimeout(fd, -1, NULL, NULL);
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
     commCallCloseHandlers(fd);
     if (F->uses)		/* assume persistent connect count */
@@ -708,10 +705,9 @@ comm_add_close_handler(int fd, PF * handler, void *data)
     for (c = fd_table[fd].close_handler; c; c = c->next)
 	assert(c->handler != handler || c->data != data);
     new->handler = handler;
-    new->data = data;
+    new->data = cbdataReference(data);
     new->next = fd_table[fd].close_handler;
     fd_table[fd].close_handler = new;
-    cbdataLock(data);
 }
 
 void
@@ -731,9 +727,8 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
 	last->next = p->next;
     else
 	fd_table[fd].close_handler = p->next;
-    cbdataUnlock(p->data);
-    memPoolFree(conn_close_pool, p);	/* AAA */
-
+    cbdataReferenceDone(p->data);
+    memPoolFree(conn_close_pool, p);
 }
 
 static void
@@ -929,9 +924,8 @@ comm_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data
     state->size = size;
     state->offset = 0;
     state->handler = handler;
-    state->handler_data = handler_data;
+    state->handler_data = cbdataReference(handler_data);
     state->free_func = free_func;
-    cbdataLock(handler_data);
     commSetSelect(fd, COMM_SELECT_WRITE, commHandleWrite, state, 0);
 }
 
@@ -972,7 +966,6 @@ commCloseAllSockets(void)
 {
     int fd;
     fde *F = NULL;
-    PF *callback;
     for (fd = 0; fd <= Biggest_FD; fd++) {
 	F = &fd_table[fd];
 	if (!F->flags.open)
@@ -982,11 +975,13 @@ commCloseAllSockets(void)
 	if (F->flags.ipc)	/* don't close inter-process sockets */
 	    continue;
 	if (F->timeout_handler) {
+	    PF *callback = F->timeout_handler;
+	    void *cbdata = NULL;
+	    F->timeout_handler = NULL;
 	    debug(5, 5) ("commCloseAllSockets: FD %d: Calling timeout handler\n",
 		fd);
-	    callback = F->timeout_handler;
-	    F->timeout_handler = NULL;
-	    callback(fd, F->timeout_data);
+	    if (cbdataReferenceValidDone(F->timeout_data, &cbdata))
+		callback(fd, cbdata);
 	} else {
 	    debug(5, 5) ("commCloseAllSockets: FD %d: calling comm_close()\n", fd);
 	    comm_close(fd);

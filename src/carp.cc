@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.18 2002/04/13 16:24:50 hno Exp $
+ * $Id: carp.cc,v 1.19 2002/04/13 23:07:49 hno Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -63,7 +63,7 @@ carpInit(void)
     char *t;
     /* Clean up */
     for (k = 0; k < n_carp_peers; k++) {
-	cbdataUnlock(carp_peers[k]);
+	cbdataReferenceDone(carp_peers[k]);
     }
     safe_free(carp_peers);
     n_carp_peers = 0;
@@ -97,8 +97,7 @@ carpInit(void)
 	if (floor(p->carp.load_factor * 1000.0) == 0.0)
 	    p->carp.load_factor = 0.0;
 	/* add it to our list of peers */
-	*P++ = p;
-	cbdataLock(p);
+	*P++ = cbdataReference(p);
     }
     /* Sort our list on weight */
     qsort(carp_peers, n_carp_peers, sizeof(*carp_peers), peerSortWeight);

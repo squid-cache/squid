@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.1 2001/12/24 15:33:42 adrian Exp $
+ * $Id: comm_poll.cc,v 1.2 2002/04/13 23:07:49 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -126,24 +126,24 @@ static int incoming_http_interval = 16 << INCOMING_FACTOR;
 
 void
 commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
-  time_t timeout)
+    time_t timeout)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open);
     debug(5, 5) ("commSetSelect: FD %d type %d\n", fd, type);
     if (type & COMM_SELECT_READ) {
-        F->read_handler = handler;
-        F->read_data = client_data;
-        commUpdateReadBits(fd, handler);
+	F->read_handler = handler;
+	F->read_data = client_data;
+	commUpdateReadBits(fd, handler);
     }
     if (type & COMM_SELECT_WRITE) {
-        F->write_handler = handler;
-        F->write_data = client_data;
-        commUpdateWriteBits(fd, handler);
+	F->write_handler = handler;
+	F->write_data = client_data;
+	commUpdateWriteBits(fd, handler);
     }
     if (timeout)
-        F->timeout = squid_curtime + timeout;
+	F->timeout = squid_curtime + timeout;
 }
 
 static int

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.58 2001/04/14 00:03:23 hno Exp $
+ * $Id: ident.cc,v 1.59 2002/04/13 23:07:50 hno Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -70,10 +70,10 @@ identCallback(IdentStateData * state, char *result)
     if (result && *result == '\0')
 	result = NULL;
     while ((client = state->clients)) {
+	void *cbdata;
 	state->clients = client->next;
-	if (cbdataValid(client->callback_data))
-	    client->callback(result, client->callback_data);
-	cbdataUnlock(client->callback_data);
+	if (cbdataReferenceValidDone(client->callback_data, &cbdata))
+	    client->callback(result, cbdata);
 	xfree(client);
     }
 }
@@ -109,10 +109,10 @@ identConnectDone(int fd, int status, void *data)
 	return;
     }
     /*
-     * see if our clients still care
+     * see if any of our clients still care
      */
     for (c = state->clients; c; c = c->next) {
-	if (cbdataValid(c->callback_data))
+	if (cbdataReferenceValid(c->callback_data))
 	    break;
     }
     if (c == NULL) {
@@ -172,8 +172,7 @@ identClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
     IdentClient *c = xcalloc(1, sizeof(*c));
     IdentClient **C;
     c->callback = callback;
-    c->callback_data = callback_data;
-    cbdataLock(callback_data);
+    c->callback_data = cbdataReference(callback_data);
     for (C = &state->clients; *C; C = &(*C)->next);
     *C = c;
 }

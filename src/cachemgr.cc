@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.93 2002/04/11 17:04:02 hno Exp $
+ * $Id: cachemgr.cc,v 1.94 2002/04/13 23:07:49 hno Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -537,8 +537,7 @@ process_request(cachemgr_request * req)
     if ((hp = gethostbyname(req->hostname)) != NULL) {
 	assert(hp->h_length <= sizeof(S.sin_addr.s_addr));
 	xmemcpy(&S.sin_addr.s_addr, hp->h_addr, hp->h_length);
-    }
-    else if (safe_inet_addr(req->hostname, &S.sin_addr))
+    } else if (safe_inet_addr(req->hostname, &S.sin_addr))
 	(void) 0;
     else {
 	snprintf(buf, 1024, "Unknown host: %s\n", req->hostname);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.272 2002/04/11 16:45:28 hno Exp $
+ * $Id: acl.cc,v 1.273 2002/04/13 23:07:48 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1760,14 +1760,17 @@ aclCheck(aclCheck_t * checklist)
     const acl_access *A;
     int match;
     ipcache_addrs *ia;
+    /* NOTE: This holds a cbdata reference to the current access_list
+     * entry, not the whole list.
+     */
     while ((A = checklist->access_list) != NULL) {
 	/*
 	 * If the _acl_access is no longer valid (i.e. its been
 	 * freed because of a reconfigure), then bail on this
 	 * access check.  For now, return ACCESS_DENIED.
 	 */
-	if (!cbdataValid(A)) {
-	    cbdataUnlock(A);
+	if (!cbdataReferenceValid(A)) {
+	    cbdataReferenceDone(checklist->access_list);
 	    break;
 	}
 	debug(28, 3) ("aclCheck: checking '%s'\n", A->cfgline);
@@ -1817,15 +1820,14 @@ aclCheck(aclCheck_t * checklist)
 #if USE_IDENT
 	else if (checklist->state[ACL_IDENT] == ACL_LOOKUP_NEEDED) {
 	    debug(28, 3) ("aclCheck: Doing ident lookup\n");
-	    if (cbdataValid(checklist->conn)) {
+	    if (checklist->conn && cbdataReferenceValid(checklist->conn)) {
 		identStart(&checklist->conn->me, &checklist->conn->peer,
 		    aclLookupIdentDone, checklist);
 		checklist->state[ACL_IDENT] = ACL_LOOKUP_PENDING;
 		return;
 	    } else {
 		debug(28, 1) ("aclCheck: Can't start ident lookup. No client connection\n");
-		cbdataUnlock(checklist->conn);
-		checklist->conn = NULL;
+		cbdataReferenceDone(checklist->conn);
 		allow = 0;
 		match = -1;
 	    }
@@ -1836,18 +1838,17 @@ aclCheck(aclCheck_t * checklist)
 	 * is allowed, denied, requires authentication, or we move on to
 	 * the next entry.
 	 */
-	cbdataUnlock(A);
 	if (match) {
 	    debug(28, 3) ("aclCheck: match found, returning %d\n", allow);
+	    cbdataReferenceDone(checklist->access_list);	/* A */
 	    aclCheckCallback(checklist, allow);
 	    return;
 	}
-	checklist->access_list = A->next;
 	/*
-	 * Lock the next _acl_access entry
+	 * Reference the next _acl_access entry
 	 */
-	if (A->next)
-	    cbdataLock(A->next);
+	checklist->access_list = cbdataReference(A->next);
+	cbdataReferenceDone(A);
     }
     debug(28, 3) ("aclCheck: NO match found, returning %d\n", allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
     aclCheckCallback(checklist, allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
@@ -1859,16 +1860,15 @@ aclChecklistFree(aclCheck_t * checklist)
     if (checklist->request)
 	requestUnlink(checklist->request);
     checklist->request = NULL;
-    if (checklist->conn) {
-	cbdataUnlock(checklist->conn);
-	checklist->conn = NULL;
-    }
+    cbdataReferenceDone(checklist->conn);
     cbdataFree(checklist);
 }
 
 static void
 aclCheckCallback(aclCheck_t * checklist, allow_t answer)
 {
+    PF *callback;
+    void *cbdata;
     debug(28, 3) ("aclCheckCallback: answer=%d\n", answer);
     /* During reconfigure, we can end up not finishing call sequences into the auth code */
     if (checklist->auth_user_request) {
@@ -1880,11 +1880,10 @@ aclCheckCallback(aclCheck_t * checklist, allow_t answer)
 	checklist->conn->auth_type = AUTH_BROKEN;
 	checklist->auth_user_request = NULL;
     }
-    if (cbdataValid(checklist->callback_data))
-	checklist->callback(answer, checklist->callback_data);
-    cbdataUnlock(checklist->callback_data);
+    callback = checklist->callback;
     checklist->callback = NULL;
-    checklist->callback_data = NULL;
+    if (cbdataReferenceValidDone(checklist->callback_data, &cbdata))
+	callback(answer, cbdata);
     aclChecklistFree(checklist);
 }
 
@@ -1905,7 +1904,7 @@ aclLookupIdentDone(const char *ident, void *data)
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    if (cbdataValid(checklist->conn) && !checklist->conn->rfc931[0])
+    if (cbdataReferenceValid(checklist->conn) && !checklist->conn->rfc931[0])
 	xstrncpy(checklist->conn->rfc931, checklist->rfc931, USER_IDENT_SZ);
     aclCheck(checklist);
 }
@@ -1970,12 +1969,7 @@ aclChecklistCreate(const acl_access * A, request_t * request, const char *ident)
     int i;
     aclCheck_t *checklist;
     checklist = cbdataAlloc(aclCheck_t);
-    checklist->access_list = A;
-    /*
-     * aclCheck() makes sure checklist->access_list is a valid
-     * pointer, so lock it.
-     */
-    cbdataLock(A);
+    checklist->access_list = cbdataReference(A);
     if (request != NULL) {
 	checklist->request = requestLink(request);
 	checklist->src_addr = request->client_addr;
@@ -1996,8 +1990,7 @@ void
 aclNBCheck(aclCheck_t * checklist, PF * callback, void *callback_data)
 {
     checklist->callback = callback;
-    checklist->callback_data = callback_data;
-    cbdataLock(callback_data);
+    checklist->callback_data = cbdataReference(callback_data);
     aclCheck(checklist);
 }
 

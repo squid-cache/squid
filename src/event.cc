@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.31 2001/01/12 00:37:17 wessels Exp $
+ * $Id: event.cc,v 1.32 2002/04/13 23:07:50 hno Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -57,13 +57,11 @@ eventAdd(const char *name, EVH * func, void *arg, double when, int weight)
     struct ev_entry *event = memAllocate(MEM_EVENT);
     struct ev_entry **E;
     event->func = func;
-    event->arg = arg;
+    event->arg = cbdataReference(arg);
     event->name = name;
     event->when = current_dtime + when;
     event->weight = weight;
     event->id = run_id;
-    if (NULL != arg)
-	cbdataLock(arg);
     debug(41, 7) ("eventAdd: Adding '%s', in %f seconds\n", name, when);
     /* Insert after the last event with the same or earlier time */
     for (E = &tasks; *E; E = &(*E)->next) {
@@ -100,8 +98,7 @@ eventDelete(EVH * func, void *arg)
 	if (event->arg != arg)
 	    continue;
 	*E = event->next;
-	if (NULL != event->arg)
-	    cbdataUnlock(event->arg);
+	cbdataReferenceDone(event->arg);
 	memFree(event, MEM_EVENT);
 	return;
     }
@@ -112,8 +109,6 @@ void
 eventRun(void)
 {
     struct ev_entry *event = NULL;
-    EVH *func;
-    void *arg;
     int weight = 0;
     if (NULL == tasks)
 	return;
@@ -122,29 +117,24 @@ eventRun(void)
     run_id++;
     debug(41, 5) ("eventRun: RUN ID %d\n", run_id);
     while ((event = tasks)) {
-	int valid = 1;
+	EVH *callback;
+	void *cbdata;
 	if (event->when > current_dtime)
 	    break;
 	if (event->id == run_id)	/* was added during this run */
 	    break;
 	if (weight)
 	    break;
-	func = event->func;
-	arg = event->arg;
-	event->func = NULL;
-	event->arg = NULL;
 	tasks = event->next;
-	if (NULL != arg) {
-	    valid = cbdataValid(arg);
-	    cbdataUnlock(arg);
-	}
-	if (valid) {
+	callback = event->func;
+	event->func = NULL;
+	if (cbdataReferenceValidDone(event->arg, &cbdata)) {
 	    weight += event->weight;
 	    /* XXX assumes ->name is static memory! */
 	    last_event_ran = event->name;
 	    debug(41, 5) ("eventRun: Running '%s', id %d\n",
 		event->name, event->id);
-	    func(arg);
+	    callback(cbdata);
 	}
 	memFree(event, MEM_EVENT);
     }
@@ -181,7 +171,7 @@ eventDump(StoreEntry * sentry)
     while (e != NULL) {
 	storeAppendPrintf(sentry, "%s\t%f seconds\t%d\t%s\n",
 	    e->name, e->when - current_dtime, e->weight,
-	    e->arg ? cbdataValid(e->arg) ? "yes" : "no" : "N/A");
+	    e->arg ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
 	e = e->next;
     }
 }
@@ -192,8 +182,7 @@ eventFreeMemory(void)
     struct ev_entry *event;
     while ((event = tasks)) {
 	tasks = event->next;
-	if (NULL != event->arg)
-	    cbdataUnlock(event->arg);
+	cbdataReferenceDone(event->arg);
 	memFree(event, MEM_EVENT);
     }
     tasks = NULL;

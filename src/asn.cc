@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.79 2002/02/26 15:48:13 adrian Exp $
+ * $Id: asn.cc,v 1.80 2002/04/13 23:07:49 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -228,7 +228,7 @@ asHandleReply(void *data, char *unused_buf, ssize_t retsize)
     char *buf = asState->reqbuf;
     int leftoversz = -1;
 
-    debug(53, 3) ("asHandleReply: Called with size=%d\n", (int)retsize);
+    debug(53, 3) ("asHandleReply: Called with size=%d\n", (int) retsize);
     debug(53, 3) ("asHandleReply: buffer='%s'\n", buf);
 
     /* First figure out whether we should abort the request */
@@ -249,7 +249,6 @@ asHandleReply(void *data, char *unused_buf, ssize_t retsize)
 	asStateFree(asState);
 	return;
     }
-
     /*
      * Next, attempt to parse our request
      * Remembering that the actual buffer size is retsize + reqofs!
@@ -291,7 +290,7 @@ asHandleReply(void *data, char *unused_buf, ssize_t retsize)
      */
     asState->offset += retsize;
     asState->reqofs = leftoversz;
-    debug(53, 3) ("asState->offset = %ld\n",(long int) asState->offset);
+    debug(53, 3) ("asState->offset = %ld\n", (long int) asState->offset);
     if (e->store_status == STORE_PENDING) {
 	debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
 	storeClientCopy(asState->sc,

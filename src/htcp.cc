@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.38 2001/12/12 23:38:29 hno Exp $
+ * $Id: htcp.cc,v 1.39 2002/04/13 23:07:50 hno Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -852,7 +852,7 @@ htcpInit(void)
 	 *      mem.c::memCheckInit() will bail out.
 	 */
 	memDataInit(MEM_HTCP_SPECIFIER, "htcpSpecifier",
-		sizeof(htcpSpecifier), 0);
+	    sizeof(htcpSpecifier), 0);
 	memDataInit(MEM_HTCP_DETAIL, "htcpDetail", sizeof(htcpDetail), 0);
 	htcpInSocket = -1;
 	debug(31, 1) ("HTCP Disabled.\n");

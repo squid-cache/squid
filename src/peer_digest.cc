@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.84 2002/02/26 15:48:15 adrian Exp $
+ * $Id: peer_digest.cc,v 1.85 2002/04/13 23:07:51 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -110,9 +110,9 @@ peerDigestCreate(peer * p)
     CBDATA_INIT_TYPE(PeerDigest);
     pd = cbdataAlloc(PeerDigest);
     peerDigestInit(pd, p);
-    cbdataLock(pd->peer);	/* we will use the peer */
 
-    return pd;
+    /* XXX This does not look right, and the same thing again in the caller */
+    return cbdataReference(pd);
 }
 
 /* call Clean and free/unlock everything */
@@ -122,12 +122,12 @@ peerDigestDestroy(PeerDigest * pd)
     peer *p;
     assert(pd);
 
+    /* inform peer (if any) that we are gone */
     p = pd->peer;
     pd->peer = NULL;
-    /* inform peer (if any) that we are gone */
-    if (cbdataValid(p))
+    if (cbdataReferenceValid(p))
 	peerNoteDigestGone(p);
-    cbdataUnlock(p);		/* must unlock, valid or not */
+    cbdataReferenceDone(p);
 
     peerDigestClean(pd);
     cbdataFree(pd);
@@ -224,14 +224,14 @@ peerDigestCheck(void *data)
     time_t req_time;
 
     /*
-     * you can't assert(cbdataValid(pd)) -- if its not valid this
+     * you can't assert(cbdataReferenceValid(pd)) -- if its not valid this
      * function never gets called
      */
     assert(!pd->flags.requested);
 
     pd->times.next_check = 0;	/* unknown */
 
-    if (!cbdataValid(pd->peer)) {
+    if (!cbdataReferenceValid(pd->peer)) {
 	peerDigestNotePeerGone(pd);
 	return;
     }
@@ -301,7 +301,7 @@ peerDigestRequest(PeerDigest * pd)
     CBDATA_INIT_TYPE(DigestFetchState);
     fetch = cbdataAlloc(DigestFetchState);
     fetch->request = requestLink(req);
-    fetch->pd = pd;
+    fetch->pd = cbdataReference(pd);
     fetch->offset = 0;
     fetch->state = DIGEST_READ_REPLY;
 
@@ -330,8 +330,6 @@ peerDigestRequest(PeerDigest * pd)
     /* push towards peer cache */
     debug(72, 3) ("peerDigestRequest: forwarding to fwdStart...\n");
     fwdStart(-1, e, req);
-    cbdataLock(fetch);
-    cbdataLock(fetch->pd);
     storeClientCopy(fetch->sc, e, 0, SM_PAGE_SIZE, fetch->buf,
 	peerDigestHandleReply, fetch);
 }
@@ -367,44 +365,46 @@ peerDigestHandleReply(void *data, char *buf, ssize_t copysize)
 
     /* Call the right function based on the state */
     /* (Those functions will update the state if needed) */
-    cbdataLock(fetch);
+
+    /* Lock our data to protect us from ourselves */
+    cbdataInternalLock(fetch);
 
     /* Repeat this loop until we're out of data OR the state changes */
     /* (So keep going if the state has changed and we still have data */
     do {
-        prevstate = fetch->state;
-        switch(fetch->state) {
-            case DIGEST_READ_REPLY:
-                retsize = peerDigestFetchReply(data, fetch->buf, fetch->bufofs);
-              break;
-            case DIGEST_READ_HEADERS:
-                retsize = peerDigestSwapInHeaders(data, fetch->buf, fetch->bufofs);
-              break;
-            case DIGEST_READ_CBLOCK:
-                retsize = peerDigestSwapInCBlock(data, fetch->buf, fetch->bufofs);
-              break;
-            case DIGEST_READ_MASK:
-                retsize = peerDigestSwapInMask(data, fetch->buf, fetch->bufofs);
-              break;
-            case DIGEST_READ_NONE:
-              break;
-            case DIGEST_READ_DONE:
-                goto finish;
-              break;
-            default:
-                fatal("Bad digest transfer mode!\n");
-        }
+	prevstate = fetch->state;
+	switch (fetch->state) {
+	case DIGEST_READ_REPLY:
+	    retsize = peerDigestFetchReply(data, fetch->buf, fetch->bufofs);
+	    break;
+	case DIGEST_READ_HEADERS:
+	    retsize = peerDigestSwapInHeaders(data, fetch->buf, fetch->bufofs);
+	    break;
+	case DIGEST_READ_CBLOCK:
+	    retsize = peerDigestSwapInCBlock(data, fetch->buf, fetch->bufofs);
+	    break;
+	case DIGEST_READ_MASK:
+	    retsize = peerDigestSwapInMask(data, fetch->buf, fetch->bufofs);
+	    break;
+	case DIGEST_READ_NONE:
+	    break;
+	case DIGEST_READ_DONE:
+	    goto finish;
+	    break;
+	default:
+	    fatal("Bad digest transfer mode!\n");
+	}
 
-        if (retsize < 0)
-            goto finish;
-        /*
-         * The returned size indicates how much of the buffer was read -
-         * so move the remainder of the buffer to the beginning
-         * and update the bufofs / bufsize
-         */
-        newsize = fetch->bufofs - retsize;
-        xmemmove(fetch->buf, fetch->buf + retsize, fetch->bufofs - newsize);
-        fetch->bufofs = newsize;
+	if (retsize < 0)
+	    goto finish;
+	/*
+	 * The returned size indicates how much of the buffer was read -
+	 * so move the remainder of the buffer to the beginning
+	 * and update the bufofs / bufsize
+	 */
+	newsize = fetch->bufofs - retsize;
+	xmemmove(fetch->buf, fetch->buf + retsize, fetch->bufofs - newsize);
+	fetch->bufofs = newsize;
 
     } while (prevstate != fetch->state && fetch->bufofs > 0);
 
@@ -412,13 +412,13 @@ peerDigestHandleReply(void *data, char *buf, ssize_t copysize)
     fetch->offset += copysize;
 
     /* Schedule another copy */
-    if (cbdataValid(fetch)) {
-        storeClientCopy(fetch->sc, fetch->entry, fetch->offset, SM_PAGE_SIZE - fetch->bufofs,
-          fetch->buf + fetch->bufofs, peerDigestHandleReply, fetch);
+    if (cbdataReferenceValid(fetch)) {
+	storeClientCopy(fetch->sc, fetch->entry, fetch->offset, SM_PAGE_SIZE - fetch->bufofs,
+	    fetch->buf + fetch->bufofs, peerDigestHandleReply, fetch);
     }
-finish:
+  finish:
     /* Unlock our data - we've finished with it for now */
-    cbdataUnlock(fetch);
+    cbdataInternalUnlock(fetch);
 }
 
 
@@ -484,7 +484,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	} else {
 	    /* some kind of a bug */
 	    peerDigestFetchAbort(fetch, buf, httpStatusLineReason(&reply->sline));
-	    return -1; /* XXX -1 will abort stuff in ReadReply! */
+	    return -1;		/* XXX -1 will abort stuff in ReadReply! */
 	}
 	/* must have a ready-to-use store entry if we got here */
 	/* can we stay with the old in-memory digest? */
@@ -493,7 +493,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	    fetch->state = DIGEST_READ_DONE;
 	} else {
 	    fetch->state = DIGEST_READ_HEADERS;
-        }
+	}
     } else {
 	/* need more data, do we have space? */
 	if (size >= SM_PAGE_SIZE)
@@ -528,15 +528,15 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 	    return -1;
 	}
 	fetch->state = DIGEST_READ_CBLOCK;
-	return hdr_size; /* Say how much data we read */
+	return hdr_size;	/* Say how much data we read */
     } else {
 	/* need more data, do we have space? */
 	if (size >= SM_PAGE_SIZE) {
 	    peerDigestFetchAbort(fetch, buf, "stored header too big");
 	    return -1;
 	} else {
-	    return 0; /* We need to read more to parse .. */
-        }
+	    return 0;		/* We need to read more to parse .. */
+	}
     }
     fatal("peerDigestSwapInHeaders() - shouldn't get here!\n");
 }
@@ -560,20 +560,20 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
 	    /* switch to CD buffer and fetch digest guts */
 	    buf = NULL;
 	    assert(pd->cd->mask);
-            fetch->state = DIGEST_READ_MASK;
-            return StoreDigestCBlockSize;
+	    fetch->state = DIGEST_READ_MASK;
+	    return StoreDigestCBlockSize;
 	} else {
 	    peerDigestFetchAbort(fetch, buf, "invalid digest cblock");
-            return -1;
+	    return -1;
 	}
     } else {
 	/* need more data, do we have space? */
 	if (size >= SM_PAGE_SIZE) {
 	    peerDigestFetchAbort(fetch, buf, "digest cblock too big");
-            return -1;
-        } else {
-            return 0; /* We need more data */
-        }
+	    return -1;
+	} else {
+	    return 0;		/* We need more data */
+	}
     }
     fatal("peerDigestSwapInCBlock(): shouldn't get here!\n");
 }
@@ -603,10 +603,10 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 	    fetch->mask_offset, pd->cd->mask_size);
 	assert(fetch->mask_offset == pd->cd->mask_size);
 	assert(peerDigestFetchedEnough(fetch, NULL, 0, "peerDigestSwapInMask"));
-        return -1; /* XXX! */
+	return -1;		/* XXX! */
     } else {
-        /* We always read everything, so return so */
-        return size;
+	/* We always read everything, so return so */
+	return size;
     }
     fatal("peerDigestSwapInMask(): shouldn't get here!\n");
 }
@@ -618,9 +618,9 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     const char *host = "<unknown>";	/* peer host */
     const char *reason = NULL;	/* reason for completion */
     const char *no_bug = NULL;	/* successful completion if set */
-    const int fcb_valid = cbdataValid(fetch);
-    const int pdcb_valid = fcb_valid && cbdataValid(fetch->pd);
-    const int pcb_valid = pdcb_valid && cbdataValid(fetch->pd->peer);
+    const int fcb_valid = cbdataReferenceValid(fetch);
+    const int pdcb_valid = fcb_valid && cbdataReferenceValid(fetch->pd);
+    const int pcb_valid = pdcb_valid && cbdataReferenceValid(fetch->pd->peer);
 
     /* test possible exiting conditions (the same for most steps!)
      * cases marked with '?!' should not happen */
@@ -631,7 +631,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
 	else if (!(pd = fetch->pd))
 	    reason = "peer digest disappeared?!";
 #if DONT
-	else if (!cbdataValid(pd))
+	else if (!cbdataReferenceValid(pd))
 	    reason = "invalidated peer digest?!";
 #endif
 	else
@@ -642,7 +642,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
 
     /* continue checking (with pd and host known and valid) */
     if (!reason) {
-	if (!cbdataValid(pd->peer))
+	if (!cbdataReferenceValid(pd->peer))
 	    reason = "peer disappeared";
 	else if (size < 0)
 	    reason = "swap failure";
@@ -770,8 +770,7 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
 	else
 	    debug(72, 2) ("received valid digest from %s\n", host);
     }
-    fetch->pd = NULL;
-    cbdataUnlock(pd);
+    cbdataReferenceDone(fetch->pd);
 }
 
 /* free fetch state structures
@@ -801,7 +800,6 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     fetch->entry = NULL;
     fetch->request = NULL;
     assert(fetch->pd == NULL);
-    cbdataUnlock(fetch);
     cbdataFree(fetch);
 }
 

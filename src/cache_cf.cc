@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.406 2002/04/13 22:30:53 hno Exp $
+ * $Id: cache_cf.cc,v 1.407 2002/04/13 23:07:49 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1510,8 +1510,11 @@ parse_peer(peer ** head)
     p->test_fd = -1;
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest) {
-	p->digest = peerDigestCreate(p);
-	cbdataLock(p->digest);	/* so we know when/if digest disappears */
+	/* XXX This looks odd.. who has the original pointer
+	 * then?
+	 */
+	PeerDigest *pd = peerDigestCreate(p);
+	p->digest = cbdataReference(pd);
     }
 #endif
     while (*head != NULL)
@@ -1528,9 +1531,7 @@ free_peer(peer ** P)
     while ((p = *P) != NULL) {
 	*P = p->next;
 #if USE_CACHE_DIGESTS
-	if (p->digest)
-	    cbdataUnlock(p->digest);
-	p->digest = NULL;
+	cbdataReferenceDone(p->digest);
 #endif
 	cbdataFree(p);
     }

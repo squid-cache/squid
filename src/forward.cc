@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.83 2002/02/26 08:13:07 hno Exp $
+ * $Id: forward.cc,v 1.84 2002/04/13 23:07:50 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -72,8 +72,7 @@ fwdStateServerPeer(FwdState * fwdState)
 static void
 fwdServerFree(FwdServer * fs)
 {
-    if (fs->peer)
-	cbdataUnlock(fs->peer);
+    cbdataReferenceDone(fs->peer);
     memFree(fs, MEM_FWD_SERVER);
 }
 

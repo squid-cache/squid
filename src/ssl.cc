@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.118 2001/10/29 16:06:31 hno Exp $
+ * $Id: ssl.cc,v 1.119 2002/04/13 23:07:51 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -211,7 +211,7 @@ sslReadServer(int fd, void *data)
 	kb_incr(&statCounter.server.other.kbytes_in, len);
 	sslState->server.len += len;
     }
-    cbdataLock(sslState);
+    cbdataInternalLock(sslState);	/* ??? should be locked by the caller... */
     if (len < 0) {
 	debug(50, ignoreErrno(errno) ? 3 : 1)
 	    ("sslReadServer: FD %d: read failure: %s\n", fd, xstrerror());
@@ -220,9 +220,9 @@ sslReadServer(int fd, void *data)
     } else if (len == 0) {
 	comm_close(sslState->server.fd);
     }
-    if (cbdataValid(sslState))
+    if (cbdataReferenceValid(sslState))
 	sslSetSelect(sslState);
-    cbdataUnlock(sslState);
+    cbdataInternalUnlock(sslState);	/* ??? */
 }
 
 /* Read from client side and queue it for writing to the server */
@@ -245,7 +245,7 @@ sslReadClient(int fd, void *data)
 	kb_incr(&statCounter.client_http.kbytes_in, len);
 	sslState->client.len += len;
     }
-    cbdataLock(sslState);
+    cbdataInternalLock(sslState);	/* ??? should be locked by the caller... */
     if (len < 0) {
 	int level = 1;
 #ifdef ECONNRESET
@@ -261,9 +261,9 @@ sslReadClient(int fd, void *data)
     } else if (len == 0) {
 	comm_close(fd);
     }
-    if (cbdataValid(sslState))
+    if (cbdataReferenceValid(sslState))
 	sslSetSelect(sslState);
-    cbdataUnlock(sslState);
+    cbdataInternalUnlock(sslState);	/* ??? */
 }
 
 /* Writes data from the client buffer to the server side */
@@ -293,16 +293,16 @@ sslWriteServer(int fd, void *data)
 		sslState->client.len);
 	}
     }
-    cbdataLock(sslState);
+    cbdataInternalLock(sslState);	/* ??? should be locked by the caller... */
     if (len < 0) {
 	debug(50, ignoreErrno(errno) ? 3 : 1)
 	    ("sslWriteServer: FD %d: write failure: %s.\n", fd, xstrerror());
 	if (!ignoreErrno(errno))
 	    comm_close(fd);
     }
-    if (cbdataValid(sslState))
+    if (cbdataReferenceValid(sslState))
 	sslSetSelect(sslState);
-    cbdataUnlock(sslState);
+    cbdataInternalUnlock(sslState);	/* ??? */
 }
 
 /* Writes data from the server buffer to the client side */
@@ -334,16 +334,16 @@ sslWriteClient(int fd, void *data)
 		sslState->server.len);
 	}
     }
-    cbdataLock(sslState);
+    cbdataInternalLock(sslState);	/* ??? should be locked by the caller... */
     if (len < 0) {
 	debug(50, ignoreErrno(errno) ? 3 : 1)
 	    ("sslWriteClient: FD %d: write failure: %s.\n", fd, xstrerror());
 	if (!ignoreErrno(errno))
 	    comm_close(fd);
     }
-    if (cbdataValid(sslState))
+    if (cbdataReferenceValid(sslState))
 	sslSetSelect(sslState);
-    cbdataUnlock(sslState);
+    cbdataInternalUnlock(sslState);	/* ??? */
 }
 
 static void

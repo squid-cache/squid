@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.149 2001/10/24 06:16:16 hno Exp $
+ * $Id: fqdncache.cc,v 1.150 2002/04/13 23:07:50 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -204,19 +204,18 @@ fqdncacheAddEntry(fqdncache_entry * f)
 static void
 fqdncacheCallback(fqdncache_entry * f)
 {
-    FQDNH *handler = f->handler;
-    void *handlerData = f->handlerData;
+    FQDNH *callback;
+    void *cbdata;
     f->lastref = squid_curtime;
-    if (NULL == handler)
+    if (!f->handler)
 	return;
     fqdncacheLockEntry(f);
+    callback = f->handler;
     f->handler = NULL;
-    f->handlerData = NULL;
-    if (cbdataValid(handlerData)) {
+    if (cbdataReferenceValidDone(f->handlerData, &cbdata)) {
 	dns_error_message = f->error_message;
-	handler(f->flags.negcached ? NULL : f->names[0], handlerData);
+	callback(f->flags.negcached ? NULL : f->names[0], cbdata);
     }
-    cbdataUnlock(handlerData);
     fqdncacheUnlockEntry(f);
 }
 
@@ -374,8 +373,7 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
 	else
 	    FqdncacheStats.hits++;
 	f->handler = handler;
-	f->handlerData = handlerData;
-	cbdataLock(handlerData);
+	f->handlerData = cbdataReference(handlerData);
 	fqdncacheCallback(f);
 	return;
     }
@@ -384,8 +382,7 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
     FqdncacheStats.misses++;
     f = fqdncacheCreateEntry(name);
     f->handler = handler;
-    f->handlerData = handlerData;
-    cbdataLock(handlerData);
+    f->handlerData = cbdataReference(handlerData);
     f->request_time = current_time;
     c = cbdataAlloc(generic_cbdata);
     c->data = f;
