@@ -460,6 +460,7 @@ extern void storeRegisterAbort(StoreEntry * e, STABH * cb, void *);
 extern void storeUnregisterAbort(StoreEntry * e);
 extern void storeMemObjectDump(MemObject * mem);
 extern const char *storeUrl(const StoreEntry *);
+extern void storeCreateMemObject(StoreEntry *, const char *, const char *);
 
 /* storeKey stuff */
 extern const cache_key *storeKeyDup(const cache_key *);
