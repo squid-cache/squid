@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: ftp.cc,v 1.1 1996/02/22 06:23:54 wessels Exp $";
+static char rcsid[] = "$Id: ftp.cc,v 1.2 1996/02/23 05:41:22 wessels Exp $";
 /* 
  *  File:         ftp.c
  *  Description:  state machine for ftp retrieval protocol.  Based on John's
@@ -218,7 +218,7 @@ void ftpLifetimeExpire(fd, data)
 	210,
 	"Transaction Timeout",
 	"The Network/Remote site may be down or too slow.  Try again later.",
-	HARVEST_VERSION,
+	SQUID_VERSION,
 	comm_hostname());
     storeAbort(entry, tmp_error_buf);
     ftp_close_pipe(data->ftp_fd, data->cpid);
@@ -277,7 +277,7 @@ int ftpReadReply(fd, data)
 		319,
 		"No Client",
 		"All Clients went away before tranmission is complete and object is too big to cache.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 	    ftp_close_pipe(data->ftp_fd, data->cpid);
@@ -307,7 +307,7 @@ int ftpReadReply(fd, data)
 	    305,
 	    "Read Error.",
 	    "Network/Remote Site is down.  Try again later.",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 	ftp_close_pipe(data->ftp_fd, data->cpid);
@@ -357,7 +357,7 @@ int ftpReadReply(fd, data)
 	    307,
 	    "Client Aborted",
 	    "Client(s) dropped connection before transmission is complete.\nObject fetching is aborted.\n",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 	ftp_close_pipe(data->ftp_fd, data->cpid);
@@ -435,7 +435,7 @@ int ftpStart(unusedfd, url, entry)
 	    309,
 	    "Invalid URL syntax: Cannot parse.",
 	    "Please contact your system manager for further help.",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -470,7 +470,7 @@ int ftpStart(unusedfd, url, entry)
 	    308,
 	    "Cannot connect to FTP slave process",
 	    "Please contact your system manager for further help.",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS

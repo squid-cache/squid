@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: cachemgr.cc,v 1.1 1996/02/22 06:23:53 wessels Exp $";
+static char rcsid[] = "$Id: cachemgr.cc,v 1.2 1996/02/23 05:41:20 wessels Exp $";
 /*
  *  cachemgr.c - CGI interface to the Cache Manager.
  *
@@ -109,7 +109,7 @@ void print_trailer()
     printf("<HR>\n");
     printf("<ADDRESS>\n");
     printf("Generated %s, by %s/%s@%s\n",
-	tbuf, progname, HARVEST_VERSION, getfullhostname());
+	tbuf, progname, SQUID_VERSION, getfullhostname());
     printf("</ADDRESS>\n");
 }
 

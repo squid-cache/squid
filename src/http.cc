@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: http.cc,v 1.1 1996/02/22 06:23:55 wessels Exp $";
+static char rcsid[] = "$Id: http.cc,v 1.2 1996/02/23 05:41:24 wessels Exp $";
 /* 
  *  File:         http.c
  *  Description:  state machine for http retrieval protocol.  
@@ -196,7 +196,7 @@ void httpReadReplyTimeout(fd, data)
 	103,
 	"Read timeout",
 	"The Network/Remote site may be down.  Try again later.",
-	HARVEST_VERSION,
+	SQUID_VERSION,
 	comm_hostname());
 
     if (data->icp_rwd_ptr)
@@ -236,7 +236,7 @@ void httpLifetimeExpire(fd, data)
 	110,
 	"Transaction Timeout",
 	"The Network/Remote site may be down or too slow.  Try again later.",
-	HARVEST_VERSION,
+	SQUID_VERSION,
 	comm_hostname());
 
     if (data->icp_page_ptr) {
@@ -317,7 +317,7 @@ void httpReadReply(fd, data)
 		119,
 		"No Client",
 		"All Clients went away before tranmission is complete and object is too big to cache.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 	    comm_close(fd);
@@ -356,7 +356,7 @@ void httpReadReply(fd, data)
 		105,
 		"Read error",
 		"Network/Remote site is down.  Try again later.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 	}
@@ -398,7 +398,7 @@ void httpReadReply(fd, data)
 	    107,
 	    "Client Aborted",
 	    "Client(s) dropped connection before transmission is complete.\nObject fetching is aborted.\n",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 	comm_close(fd);
@@ -450,7 +450,7 @@ void httpSendComplete(fd, buf, size, errflag, data)
 	    101,
 	    "Cannot connect to the original site",
 	    "The remote site may be down.",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 	comm_close(fd);
@@ -519,7 +519,7 @@ void httpSendRequest(fd, data)
 	    if (strncasecmp(t, "User-Agent:", 11) == 0) {
 		ybuf = (char *) get_free_4k_page();
 		memset(ybuf, '\0', SM_PAGE_SIZE);
-		sprintf(ybuf, "%s %s %s", t, HARVEST_PROXY_TEXT, HARVEST_VERSION);
+		sprintf(ybuf, "%s %s %s", t, HARVEST_PROXY_TEXT, SQUID_VERSION);
 		t = ybuf;
 	    }
 	    if (strncasecmp(t, "If-Modified-Since:", 18) == 0)
@@ -574,7 +574,7 @@ void httpConnInProgress(fd, data)
 		104,
 		"Cannot connect to the original site",
 		"The remote site may be down.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -630,7 +630,7 @@ int proxyhttpStart(e, url, entry)
 	    111,
 	    "Cached short of file-descriptors, sorry",
 	    "",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -657,7 +657,7 @@ int proxyhttpStart(e, url, entry)
 	    102,
 	    "DNS name lookup failure",
 	    dns_error_message,
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -682,7 +682,7 @@ int proxyhttpStart(e, url, entry)
 		104,
 		"Cannot connect to the original site",
 		"The remote site may be down.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -744,7 +744,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 	    110,
 	    "Invalid URL syntax:  Cannot parse.",
 	    "Contact your system administrator for further help.",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -769,7 +769,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 	    111,
 	    "Cached short of file-descriptors, sorry",
 	    "",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -796,7 +796,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 	    108,
 	    "DNS name lookup failure",
 	    dns_error_message,
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -821,7 +821,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 		109,
 		"Cannot connect to the original site",
 		"The remote site may be down.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS

@@ -82,7 +82,7 @@ int send_packet(host, port)
     struct sockaddr_in L;
     struct hostent *hp = NULL;
 
-    sprintf(buf, "cache_version HARVEST/%s\n", HARVEST_VERSION);
+    sprintf(buf, "cache_version HARVEST/%s\n", SQUID_VERSION);
     strcat(databuf, buf);
     sprintf(buf, "Running on %s %d %d\n",
 	getfullhostname(),
