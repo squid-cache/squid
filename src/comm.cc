@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.81 1996/09/26 19:19:41 wessels Exp $
+ * $Id: comm.cc,v 1.82 1996/09/26 19:54:45 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1361,4 +1361,5 @@ void
 commFreeMemory(void)
 {
     safe_free(fd_table);
+    safe_free(fd_lifetime);
 }

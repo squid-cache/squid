@@ -1,5 +1,6 @@
+
 /*
- * $Id: stmem.cc,v 1.27 1996/09/26 19:19:21 wessels Exp $
+ * $Id: stmem.cc,v 1.28 1996/09/26 19:54:47 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -451,6 +452,7 @@ stmemFreeThingMemory(stmem_stats * thing)
 	p = pop(&thing->free_page_stack);
 	safe_free(p);
     }
+    stackFreeMemory(&thing->free_page_stack);
 }
 
 void
