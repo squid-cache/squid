@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.49 2002/10/25 03:13:51 robertc Exp $
+ * $Id: cbdata.cc,v 1.50 2003/01/22 10:05:43 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -384,7 +384,7 @@ cbdataDump(StoreEntry * sentry)
 template <class T>
 T& for_each(Stack const &collection, T& visitor)
 {
-    for (int index = 0; index < collection.count; ++index)
+    for (size_t index = 0; index < collection.count; ++index)
 	visitor(*(typename T::argument_type const *)collection.items[index]);
     return visitor;
 };

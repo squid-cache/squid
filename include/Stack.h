@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.h,v 1.12 2002/10/13 20:34:51 robertc Exp $
+ * $Id: Stack.h,v 1.13 2003/01/22 10:05:42 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -42,9 +42,27 @@ typedef Array Stack;
 #define stackInit arrayInit
 #define stackClean arrayClean
 #define stackDestroy arrayDestroy
-SQUIDCEXTERN void *stackPop(Stack * s);
 #define stackPush arrayAppend
 #define stackPrePush arrayPreAppend
-SQUIDCEXTERN void *stackTop(Stack * s);
 
+template <class S>
+typename S::value_type
+stackPop(S * s)
+{
+    assert(s);
+    if (!s->count)
+	return typename S::value_type();
+    typename S::value_type result = s->items[--s->count];
+    s->items[s->count] = typename S::value_type();
+    return result;
+}
+
+/* todo, fatal on empty Top call */
+template <class S>
+typename S::value_type
+stackTop(S * s)
+{
+    assert(s);
+    return s->count ? s->items[s->count - 1] : typename S::value_type();
+}
 #endif /* SQUID_STACK_H */

@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.6 2003/01/18 14:06:32 robertc Exp $
+#  $Id: Makefile.am,v 1.7 2003/01/22 10:05:41 robertc Exp $
 #
 
 if ENABLE_XPROF_STATS
@@ -50,7 +50,6 @@ libmiscutil_a_SOURCES = \
 	safe_inet_addr.c \
 	$(SNPRINTFSOURCE) \
 	splay.c \
-	Stack.c \
 	stub_memaccount.c \
 	util.c \
 	uudecode.c \

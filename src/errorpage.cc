@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.180 2002/10/25 07:36:32 robertc Exp $
+ * $Id: errorpage.cc,v 1.181 2003/01/22 10:05:43 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -230,9 +230,9 @@ errorPageId(const char *page_name)
 	if (strcmp(err_type_str[i], page_name) == 0)
 	    return i;
     }
-    for (i = 0; i < ErrorDynamicPages.count; i++) {
-	if (strcmp(((ErrorDynamicPageInfo *) ErrorDynamicPages.items[i])->page_name, page_name) == 0)
-	    return i + ERR_MAX;
+    for (size_t in = 0; in < ErrorDynamicPages.count; in++) {
+	if (strcmp(((ErrorDynamicPageInfo *) ErrorDynamicPages.items[in])->page_name, page_name) == 0)
+	    return in + ERR_MAX;
     }
     return ERR_NONE;
 }
@@ -255,7 +255,7 @@ errorPageName(int pageId)
 {
     if (pageId >= ERR_NONE && pageId < ERR_MAX)		/* common case */
 	return err_type_str[pageId];
-    if (pageId >= ERR_MAX && pageId - ERR_MAX < ErrorDynamicPages.count)
+    if (pageId >= ERR_MAX && pageId - ERR_MAX < (ssize_t)ErrorDynamicPages.count)
 	return ((ErrorDynamicPageInfo *) ErrorDynamicPages.
 	    items[pageId - ERR_MAX])->page_name;
     return "ERR_UNKNOWN";	/* should not happen */
