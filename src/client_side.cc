@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.299 1998/05/05 23:04:04 wessels Exp $
+ * $Id: client_side.cc,v 1.300 1998/05/09 04:49:09 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1655,7 +1655,6 @@ clientProcessMiss(clientHttpRequest * http)
     }
     assert(http->out.offset == 0);
     http->entry = clientCreateStoreEntry(http, r->method, r->flags);
-    http->entry->mem_obj->fd = http->conn->fd;
     http->entry->refcount++;
     if (http->flags.internal)
 	r->protocol = PROTO_INTERNAL;
