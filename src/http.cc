@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.407 2003/02/12 06:11:03 robertc Exp $
+ * $Id: http.cc,v 1.408 2003/02/13 22:20:37 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -56,7 +56,6 @@ CBDATA_TYPE(HttpStateData);
 
 static const char *const crlf = "\r\n";
 
-static CWCB httpSendComplete;
 static CWCB httpSendRequestEntity;
 
 static IOCB httpReadReply;
@@ -618,17 +617,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
 {
     int bin;
     int clen;
-    read_sz = SQUID_TCP_SO_RCVBUF;
     do_next_read = 0;
-#if DELAY_POOLS
-    DelayId delayId;
-
-    /* special "if" only for http (for nodelay proxy conns) */
-    if (DelayPools::IsNoDelay(fd))
-	delayId = DelayId();
-    else
-	delayId = entry->mem_obj->mostBytesAllowed();
-#endif
 
 
     assert(buf == readBuf);
@@ -648,7 +637,13 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
     errno = 0;
     /* prepare the read size for the next read (if any) */
 #if DELAY_POOLS
-    read_sz = delayId.bytesWanted(1, read_sz);
+    DelayId delayId;
+
+    /* special "if" only for http (for nodelay proxy conns) */
+    if (DelayPools::IsNoDelay(fd))
+	delayId = DelayId();
+    else
+	delayId = entry->mem_obj->mostBytesAllowed();
 #endif
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, (int)len);
     if (flag == COMM_OK && len > 0) {
@@ -821,19 +816,32 @@ HttpStateData::processReplyData(const char *buf, size_t len)
     maybeReadData();
 }
 
+size_t
+HttpStateData::amountToRead()
+{
+    read_sz = SQUID_TCP_SO_RCVBUF;
+#if DELAY_POOLS
+    /* special "if" only for http (for nodelay proxy conns) */
+    if (!DelayPools::IsNoDelay(fd))
+	read_sz = entry->mem_obj->mostBytesAllowed().bytesWanted(1, read_sz);
+#endif
+    debug (11,4)("HttpStateData::amountToRead: Returning %u\n", (unsigned) read_sz);
+    return read_sz;
+}
+
 void
 HttpStateData::maybeReadData()
 {
     if (do_next_read) {
 	do_next_read = 0;
-        comm_read(fd, buf, read_sz, httpReadReply, this);
+        comm_read(fd, buf, amountToRead(), httpReadReply, this);
     }
 }
 
 /* This will be called when request write is complete. Schedule read of
  * reply. */
-static void
-httpSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
+void
+HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     StoreEntry *entry = httpState->entry;
@@ -859,8 +867,7 @@ httpSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
 	return;
     } else {
 	/* Schedule read reply. */
-	/* XXX we're not taking into account delay pools on this read! */
-	comm_read(fd, httpState->buf, SQUID_TCP_SO_RCVBUF, httpReadReply, httpState);
+	comm_read(fd, httpState->buf, httpState->amountToRead(), httpReadReply, httpState);
 	/*
 	 * Set the read timeout here because it hasn't been set yet.
 	 * We only set the read timeout after the request has been
@@ -1162,7 +1169,7 @@ httpSendRequest(HttpStateData * httpState)
     if (httpState->orig_request->body_connection)
 	sendHeaderDone = httpSendRequestEntity;
     else
-	sendHeaderDone = httpSendComplete;
+	sendHeaderDone = HttpStateData::SendComplete;
 
     if (p != NULL)
 	httpState->flags.proxying = 1;
@@ -1263,13 +1270,13 @@ httpSendRequestEntityDone(int fd, void *data)
     ch.request = requestLink(httpState->request);
     if (!Config.accessList.brokenPosts) {
 	debug(11, 5) ("httpSendRequestEntityDone: No brokenPosts list\n");
-	httpSendComplete(fd, NULL, 0, COMM_OK, data);
+	HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, data);
     } else if (!aclCheckFast(Config.accessList.brokenPosts, &ch)) {
 	debug(11, 5) ("httpSendRequestEntityDone: didn't match brokenPosts\n");
-	httpSendComplete(fd, NULL, 0, COMM_OK, data);
+	HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, data);
     } else {
 	debug(11, 2) ("httpSendRequestEntityDone: matched brokenPosts\n");
-	comm_old_write(fd, "\r\n", 2, httpSendComplete, data, NULL);
+	comm_old_write(fd, "\r\n", 2, HttpStateData::SendComplete, data, NULL);
     }
 }
 
@@ -1286,7 +1293,7 @@ httpRequestBodyHandler(char *buf, ssize_t size, void *data)
     } else {
 	/* Failed to get whole body, probably aborted */
 	memFree8K(buf);
-	httpSendComplete(httpState->fd, NULL, 0, COMM_ERR_CLOSING, data);
+	HttpStateData::SendComplete(httpState->fd, NULL, 0, COMM_ERR_CLOSING, data);
     }
 }
 
