@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.288 1997/10/17 04:00:12 wessels Exp $
+ * $Id: store.cc,v 1.289 1997/10/17 05:20:19 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -451,7 +451,7 @@ storeLog(int tag, const StoreEntry * e)
 	(int) reply->expires,
 	reply->content_type[0] ? reply->content_type : "unknown",
 	reply->content_length,
-	mem->inmem_hi - mem->reply->hdr_sz,
+	(int) (mem->inmem_hi - mem->reply->hdr_sz),
 	RequestMethodStr[e->method],
 	mem->log_url);
     file_write(storelog_fd,
