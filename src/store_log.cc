@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.21 2001/01/12 00:37:22 wessels Exp $
+ * $Id: store_log.cc,v 1.22 2001/02/17 07:28:50 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -53,8 +53,10 @@ storeLog(int tag, const StoreEntry * e)
     HttpReply *reply;
     if (NULL == storelog)
 	return;
+#if UNUSED_CODE
     if (EBIT_TEST(e->flags, ENTRY_DONT_LOG))
 	return;
+#endif
     if (mem != NULL) {
 	if (mem->log_url == NULL) {
 	    debug(20, 1) ("storeLog: NULL log_url for %s\n", mem->url);
