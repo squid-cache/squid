@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.28 1996/04/16 23:05:43 wessels Exp $ */
+/* $Id: stat.cc,v 1.29 1996/04/18 20:02:03 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -38,16 +38,11 @@ char *flags_describe();
 char *elapsed_time();
 char *diskFileName();
 
-/* LOCALS */
-static char *open_bracket = "{\n";
-static char *close_bracket = "}\n";
-
 /* process utilization information */
 void stat_utilization_get(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
-    static char tempbuf[MAX_LINELEN];
     protocol_t proto_id;
     proto_stat *p = &obj->proto_stat_data[PROTO_MAX];
     proto_stat *q = NULL;
@@ -55,7 +50,7 @@ void stat_utilization_get(obj, sentry)
 
     secs = (int) (squid_curtime - squid_starttime);
 
-    storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
+    storeAppendPrintf(sentry, "{\n");
 
     p->object_count = 0;
     p->kb.max = 0;
@@ -92,7 +87,7 @@ void stat_utilization_get(obj, sentry)
 		((float) p->hit +
 		(float) p->miss);
 	}
-	sprintf(tempbuf, "{%s %d %d %d %d %4.2f %d %d %d}\n",
+	storeAppendPrintf(sentry, "{%s %d %d %d %d %4.2f %d %d %d}\n",
 	    p->protoname,
 	    p->object_count,
 	    p->kb.max,
@@ -102,10 +97,9 @@ void stat_utilization_get(obj, sentry)
 	    (secs ? p->transferbyte / secs : 0),
 	    p->refcount,
 	    p->transferbyte);
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
     }
 
-    storeAppend(sentry, close_bracket, strlen(close_bracket));
+    storeAppendPrintf(sentry, "}\n");
 }
 
 
@@ -140,7 +134,6 @@ void stat_objects_get(obj, sentry, vm_or_not)
      StoreEntry *sentry;
      int vm_or_not;
 {
-    static char tempbuf[MAX_LINELEN];
     static char space[40];
     static char space2[40];
     int npend = 0;
@@ -148,7 +141,7 @@ void stat_objects_get(obj, sentry, vm_or_not)
     int N = 0;
     int obj_size;
 
-    storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
+    storeAppendPrintf(sentry, "{\n");
 
     for (entry = storeGetFirst();
 	entry != NULL;
@@ -164,8 +157,7 @@ void stat_objects_get(obj, sentry, vm_or_not)
 	npend = storePendingNClients(entry);
 	if (entry->mem_obj)
 	    obj_size = entry->mem_obj->e_current_len;
-	tempbuf[0] = '\0';
-	sprintf(tempbuf, "{ %s %d %s %s %s %s %d %d %s %s }\n",
+	storeAppendPrintf(sentry, "{ %s %d %s %s %s %s %d %d %s %s }\n",
 	    entry->url,
 	    obj_size,
 	    elapsed_time(entry, (int) entry->timestamp, space),
@@ -176,9 +168,8 @@ void stat_objects_get(obj, sentry, vm_or_not)
 	    (int) entry->refcount,
 	    mem_describe(entry),
 	    stat_describe(entry));
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
     }
-    storeAppend(sentry, close_bracket, strlen(close_bracket));
+    storeAppendPrintf(sentry, "}\n");
 }
 
 
@@ -206,15 +197,12 @@ void log_status_get(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
-    static char tempbuf[MAX_LINELEN];
-
     if (obj->logfile_status == LOG_ENABLE) {
-	sprintf(tempbuf, "{\"Logfile is Enabled. Filename: %s\"}\n",
+	storeAppendPrintf(sentry, "{\"Logfile is Enabled. Filename: %s\"}\n",
 	    obj->logfilename);
     } else {
-	sprintf(tempbuf, "{\"Logfile is Disabled.\"}\n");
+	storeAppendPrintf(sentry, "{\"Logfile is Disabled.\"}\n");
     }
-    storeAppend(sentry, tempbuf, strlen(tempbuf));
 }
 
 
@@ -227,12 +215,7 @@ int logReadHandler(fd_unused, buf, size_unused, data)
      int size_unused;
      log_read_data_t *data;
 {
-    static char tempbuf[MAX_LINELEN];
-
-    sprintf(tempbuf, "{%s}\n", buf);
-    storeAppend(data->sentry,
-	tempbuf,
-	(int) strlen(tempbuf) % MAX_LINELEN);
+    storeAppendPrintf(data->sentry, "{%s}\n", buf);
     return 0;
 }
 
@@ -243,7 +226,7 @@ void logReadEndHandler(fd_unused, errflag_unused, data)
      int errflag_unused;
      log_read_data_t *data;
 {
-    storeAppend(data->sentry, close_bracket, strlen(close_bracket));
+    storeAppendPrintf(data->sentry, "}\n");
     storeComplete(data->sentry);
     safe_free(data);
 }
@@ -255,7 +238,6 @@ void log_get_start(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
-    char tmp[3];
     log_read_data_t *data = NULL;
 
     if (obj->logfile_status == LOG_DISABLE) {
@@ -267,8 +249,7 @@ void log_get_start(obj, sentry)
     data = (log_read_data_t *) xmalloc(sizeof(log_read_data_t));
     memset(data, '\0', sizeof(log_read_data_t));
     data->sentry = sentry;
-    strcpy(tmp, open_bracket);
-    storeAppend(sentry, tmp, 2);
+    storeAppendPrintf(sentry, "{\n");
     file_walk(obj->logfile_fd, (FILE_WALK_HD) logReadEndHandler,
 	(void *) data, (FILE_WALK_LHD) logReadHandler, (void *) data);
     return;
@@ -285,10 +266,7 @@ int squidReadHandler(fd_unused, buf, size_unused, data)
 {
     static char tempbuf[MAX_LINELEN];
     tempbuf[0] = '\0';
-    sprintf(tempbuf, "{\"%s\"}\n", buf);
-    storeAppend(data->sentry,
-	tempbuf,
-	(int) strlen(tempbuf) % MAX_LINELEN);
+    storeAppendPrintf(data->sentry, "{\"%s\"}\n", buf);
     return 0;
 }
 
@@ -299,7 +277,7 @@ void squidReadEndHandler(fd_unused, errflag_unused, data)
      int errflag_unused;
      squid_read_data_t *data;
 {
-    storeAppend(data->sentry, close_bracket, strlen(close_bracket));
+    storeAppendPrintf(data->sentry, "}\n");
     storeComplete(data->sentry);
     file_close(data->fd);
     safe_free(data);
@@ -317,7 +295,7 @@ void squid_get_start(obj, sentry)
     memset(data, '\0', sizeof(squid_read_data_t));
     data->sentry = sentry;
     data->fd = file_open((char *) ConfigFile, NULL, O_RDONLY);
-    storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
+    storeAppendPrintf(sentry, "{\n");
     file_walk(data->fd, (FILE_WALK_HD) squidReadEndHandler, (void *) data,
 	(FILE_WALK_LHD) squidReadHandler, (void *) data);
 }
@@ -327,62 +305,48 @@ void dummyhandler(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
-    static char *msg = "{ \"Not_Implemented_yet.\"}\n";
-    storeAppend(sentry, msg, strlen(msg));
+    storeAppendPrintf(sentry, "{ \"Not_Implemented_yet.\"}\n");
 }
 
 void server_list(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
-    static char tempbuf[MAX_LINELEN];
     edge *e = NULL;
     dom_list *d = NULL;
 
-    storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
+    storeAppendPrintf(sentry, "{\n");
 
     if (getFirstEdge() == (edge *) NULL) {
-	sprintf(tempbuf, "{There are no neighbors installed.}\n");
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
+	storeAppendPrintf(sentry, "{There are no neighbors installed.}\n");
     }
     for (e = getFirstEdge(); e; e = getNextEdge(e)) {
 	if (e->host == NULL)
 	    fatal_dump("Found an edge without a hostname!");
-	sprintf(tempbuf, "\n{Hostname:    %s}\n", e->host);
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
-	sprintf(tempbuf, "{Edge type:   %s}\n",
+	storeAppendPrintf(sentry, "\n{Hostname:    %s}\n", e->host);
+	storeAppendPrintf(sentry, "{Edge type:   %s}\n",
 	    e->type == EDGE_PARENT ? "parent" : "neighbor");
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
-	sprintf(tempbuf, "{Status:      %s}\n",
+	storeAppendPrintf(sentry, "{Status:      %s}\n",
 	    e->neighbor_up ? "Up" : "Down");
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
-	sprintf(tempbuf, "{UDP PORT:    %d}\n", e->udp_port);
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
-	sprintf(tempbuf, "{ASCII PORT:  %d}\n", e->ascii_port);
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
-	sprintf(tempbuf, "{ACK DEFICIT: %d}\n", e->ack_deficit);
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
-	sprintf(tempbuf, "{PINGS SENT:  %d}\n", e->num_pings);
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
-	sprintf(tempbuf, "{PINGS ACKED: %d}\n", e->pings_acked);
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
+	storeAppendPrintf(sentry, "{UDP PORT:    %d}\n", e->udp_port);
+	storeAppendPrintf(sentry, "{ASCII PORT:  %d}\n", e->ascii_port);
+	storeAppendPrintf(sentry, "{ACK DEFICIT: %d}\n", e->ack_deficit);
+	storeAppendPrintf(sentry, "{PINGS SENT:  %d}\n", e->num_pings);
+	storeAppendPrintf(sentry, "{PINGS ACKED: %d}\n", e->pings_acked);
 	if (e->last_fail_time) {
-	    sprintf(tempbuf, "{Last failed connect() at: %s}\n",
+	    storeAppendPrintf(sentry, "{Last failed connect() at: %s}\n",
 		mkhttpdlogtime(&(e->last_fail_time)));
-	    storeAppend(sentry, tempbuf, strlen(tempbuf));
 	}
-	sprintf(tempbuf, "{DOMAIN LIST: ");
-	storeAppend(sentry, tempbuf, strlen(tempbuf));
+	storeAppendPrintf(sentry, "{DOMAIN LIST: ");
 	for (d = e->domains; d; d = d->next) {
 	    if (d->do_ping)
-		sprintf(tempbuf, "%s ", d->domain);
+		storeAppendPrintf(sentry, "%s ", d->domain);
 	    else
-		sprintf(tempbuf, "!%s ", d->domain);
-	    storeAppend(sentry, tempbuf, strlen(tempbuf));
+		storeAppendPrintf(sentry, "!%s ", d->domain);
 	}
-	storeAppend(sentry, close_bracket, strlen(close_bracket));	/* } */
+	storeAppendPrintf(sentry, "}\n");
     }
-    storeAppend(sentry, close_bracket, strlen(close_bracket));
+    storeAppendPrintf(sentry, "}\n");
 }
 
 
@@ -405,151 +369,116 @@ void info_get(obj, sentry)
 
     memset(line, '\0', SM_PAGE_SIZE);
 
-    storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
+    storeAppendPrintf(sentry, "{\n");
 
-    sprintf(line, "{Squid Object Cache: Version %s}\n", version_string);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Squid Object Cache: Version %s}\n", version_string);
 
     tod = mkrfc850(&squid_starttime);
 
-    sprintf(line, "{Start Time:\t%s}\n", tod);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Start Time:\t%s}\n", tod);
 
     tod = mkrfc850(&squid_curtime);
-    sprintf(line, "{Current Time:\t%s}\n", tod);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Current Time:\t%s}\n", tod);
 
     /* -------------------------------------------------- */
 
-    sprintf(line, "{Connection information for %s:}\n", appname);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Connection information for %s:}\n", appname);
 
-    sprintf(line, "{\tNumber of connections:\t%lu}\n", nconn);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{\tNumber of connections:\t%lu}\n", nconn);
 
     {
 	float f;
 	f = squid_curtime - squid_starttime;
-	sprintf(line, "{\tConnections per hour:\t%.1f}\n", f == 0.0 ? 0.0 :
+	storeAppendPrintf(sentry, "{\tConnections per hour:\t%.1f}\n", f == 0.0 ? 0.0 :
 	    (nconn / (f / 3600)));
-	storeAppend(sentry, line, strlen(line));
     }
 
     /* -------------------------------------------------- */
 
 
 
-    sprintf(line, "{Cache information for %s:}\n", appname);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Cache information for %s:}\n", appname);
 
-    sprintf(line, "{\tStorage Swap size:\t%d MB}\n", storeGetSwapSize() >> 10);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{\tStorage Swap size:\t%d MB}\n", storeGetSwapSize() >> 10);
 
-    sprintf(line, "{\tStorage Mem size:\t%d KB}\n", storeGetMemSize() >> 10);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{\tStorage Mem size:\t%d KB}\n", storeGetMemSize() >> 10);
 
     tod = mkrfc850(&next_cleaning);
-    sprintf(line, "{\tStorage Expiration at:\t%s}\n", tod);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{\tStorage Expiration at:\t%s}\n", tod);
 
 #if defined(HAVE_GETRUSAGE) && defined(RUSAGE_SELF)
-    sprintf(line, "{Resource usage for %s:}\n", appname);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Resource usage for %s:}\n", appname);
 
     getrusage(RUSAGE_SELF, &rusage);
-    sprintf(line, "{\tCPU Usage: user %d sys %d}\n{\tProcess Size: rss %d KB}\n",
+    storeAppendPrintf(sentry, "{\tCPU Usage: user %d sys %d}\n{\tProcess Size: rss %d KB}\n",
 	rusage.ru_utime.tv_sec, rusage.ru_stime.tv_sec,
 	rusage.ru_maxrss * getpagesize() >> 10);
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\tPage faults with physical i/o:\t%d}\n",
+    storeAppendPrintf(sentry, "{\tPage faults with physical i/o:\t%d}\n",
 	rusage.ru_majflt);
-    storeAppend(sentry, line, strlen(line));
 
 #endif
 
 #if HAVE_MALLINFO
     mp = mallinfo();
 
-    sprintf(line, "{Memory usage for %s via mallinfo():}\n", appname);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Memory usage for %s via mallinfo():}\n", appname);
 
-    sprintf(line, "{\ttotal space in arena:\t%d KB}\n", mp.arena >> 10);
-    storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\tnumber of ordinary blocks:\t%d}\n", mp.ordblks);
-    storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\tnumber of small blocks:\t%d}\n", mp.smblks);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{\ttotal space in arena:\t%d KB}\n", mp.arena >> 10);
+    storeAppendPrintf(sentry, "{\tnumber of ordinary blocks:\t%d}\n", mp.ordblks);
+    storeAppendPrintf(sentry, "{\tnumber of small blocks:\t%d}\n", mp.smblks);
     if (mp.hblks) {
-	sprintf(line, "{\tnumber of holding blocks:\t%d}\n", mp.hblks);
-	storeAppend(sentry, line, strlen(line));
+	storeAppendPrintf(sentry, "{\tnumber of holding blocks:\t%d}\n", mp.hblks);
     }
     if (mp.hblkhd) {
-	sprintf(line, "{\tspace in holding block headers:\t%d}\n", mp.hblkhd);
-	storeAppend(sentry, line, strlen(line));
+	storeAppendPrintf(sentry, "{\tspace in holding block headers:\t%d}\n", mp.hblkhd);
     }
     if (mp.usmblks) {
-	sprintf(line, "{\tspace in small blocks in use:\t%d}\n", mp.usmblks);
-	storeAppend(sentry, line, strlen(line));
+	storeAppendPrintf(sentry, "{\tspace in small blocks in use:\t%d}\n", mp.usmblks);
     }
     if (mp.fsmblks) {
-	sprintf(line, "{\tspace in free blocks:\t%d}\n", mp.fsmblks);
-	storeAppend(sentry, line, strlen(line));
+	storeAppendPrintf(sentry, "{\tspace in free blocks:\t%d}\n", mp.fsmblks);
     }
-    sprintf(line, "{\tspace in ordinary blocks in use:\t%d KB}\n",
+    storeAppendPrintf(sentry, "{\tspace in ordinary blocks in use:\t%d KB}\n",
 	mp.uordblks >> 10);
-    storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\tspace in free ordinary blocks:\t%d KB}\n", mp.fordblks >> 10);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{\tspace in free ordinary blocks:\t%d KB}\n", mp.fordblks >> 10);
     if (mp.keepcost) {
-	sprintf(line, "{\tcost of enabling keep option:\t%d}\n", mp.keepcost);
-	storeAppend(sentry, line, strlen(line));
+	storeAppendPrintf(sentry, "{\tcost of enabling keep option:\t%d}\n", mp.keepcost);
     }
 #if HAVE_EXT_MALLINFO
-    sprintf(line, "{\tmax size of small blocks:\t%d}\n", mp.mxfast);
-    storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\tnumber of small blocks in a holding block:\t%d}\n",
+    storeAppendPrintf(sentry, "{\tmax size of small blocks:\t%d}\n", mp.mxfast);
+    storeAppendPrintf(sentry, "{\tnumber of small blocks in a holding block:\t%d}\n",
 	mp.nlblks);
-    storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\tsmall block rounding factor:\t%d}\n", mp.grain);
-    storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\tspace (including overhead) allocated in ord. blks:\t%d}\n"
+    storeAppendPrintf(sentry, "{\tsmall block rounding factor:\t%d}\n", mp.grain);
+    storeAppendPrintf(sentry, "{\tspace (including overhead) allocated in ord. blks:\t%d}\n"
 	,mp.uordbytes);
-    sprintf(line, "{\tnumber of ordinary blocks allocated:\t%d}\n",
+    storeAppendPrintf(sentry, "{\tnumber of ordinary blocks allocated:\t%d}\n",
 	mp.allocated);
-    storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\tbytes used in maintaining the free tree:\t%d}\n",
+    storeAppendPrintf(sentry, "{\tbytes used in maintaining the free tree:\t%d}\n",
 	mp.treeoverhead);
-    storeAppend(sentry, line, strlen(line));
 
 #endif /* HAVE_EXT_MALLINFO */
 
 #endif /* HAVE_MALLINFO */
 
-    sprintf(line, "{File descriptor usage for %s:}\n", appname);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{File descriptor usage for %s:}\n", appname);
 
-    sprintf(line, "{\tMax number of file desc available:\t%d}\n", getMaxFD());
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{\tMax number of file desc available:\t%d}\n", getMaxFD());
 
-    sprintf(line, "{\tLargest file desc currently in use:\t%d}\n",
+    storeAppendPrintf(sentry, "{\tLargest file desc currently in use:\t%d}\n",
 	fdstat_biggest_fd());
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\tAvailable number of file descriptors :\t%d}\n",
+    storeAppendPrintf(sentry, "{\tAvailable number of file descriptors :\t%d}\n",
 	fdstat_are_n_free_fd(0));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\tReserved number of file descriptors :\t%d}\n",
+    storeAppendPrintf(sentry, "{\tReserved number of file descriptors :\t%d}\n",
 	RESERVED_FD);
-    storeAppend(sentry, line, strlen(line));
 
     {
 	int i, max_fd = getMaxFD();
 	char *s = NULL;
 
-	sprintf(line, "{\tActive file descriptors:}\n");
-	storeAppend(sentry, line, strlen(line));
+	storeAppendPrintf(sentry, "{\tActive file descriptors:}\n");
 
 	for (i = 0; i < max_fd; i++) {
 	    int lft, to;
@@ -561,108 +490,90 @@ void info_get(obj, sentry)
 		/* the lifetime should be greater than curtime */
 		lft = comm_get_fd_lifetime(i);
 		to = comm_get_fd_timeout(i);
-		sprintf(line, "{\t\t(%3d = %3d, %3d) NET %s}\n",
+		storeAppendPrintf(sentry, "{\t\t(%3d = %3d, %3d) NET %s}\n",
 		    i,
 		    (int) (lft > 0 ? lft - squid_curtime : -1),
 		    (int) max((to - squid_curtime), 0),
 		    fd_note(i, NULL));
 		break;
 	    case File:
-		sprintf(line, "{\t\t(%3d = FILE) %s}\n", i,
+		storeAppendPrintf(sentry, "{\t\t(%3d = FILE) %s}\n", i,
 		    (s = diskFileName(i)) ? s : "Unknown");
 		break;
 	    case Pipe:
-		sprintf(line, "{\t\t(%3d = PIPE) %s}\n", i, fd_note(i, NULL));
+		storeAppendPrintf(sentry, "{\t\t(%3d = PIPE) %s}\n", i, fd_note(i, NULL));
 		break;
 	    case LOG:
-		sprintf(line, "{\t\t(%3d = LOG) %s}\n", i, fd_note(i, NULL));
+		storeAppendPrintf(sentry, "{\t\t(%3d = LOG) %s}\n", i, fd_note(i, NULL));
 		break;
 	    case Unknown:
 	    default:
-		sprintf(line, "{\t\t(%3d = UNKNOWN) %s}\n", i, fd_note(i, NULL));
+		storeAppendPrintf(sentry, "{\t\t(%3d = UNKNOWN) %s}\n", i, fd_note(i, NULL));
 		break;
 	    }
-	    storeAppend(sentry, line, strlen(line));
 	}
     }
 
 
-    sprintf(line, "{Stop List:}\n");
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Stop List:}\n");
     if ((p = getHttpStoplist())) {
-	sprintf(line, "{\tHTTP:}\n");
-	storeAppend(sentry, line, strlen(line));
+	storeAppendPrintf(sentry, "{\tHTTP:}\n");
 	while (p) {
-	    sprintf(line, "{\t\t%s}\n", p->key);
-	    storeAppend(sentry, line, strlen(line));
+	    storeAppendPrintf(sentry, "{\t\t%s}\n", p->key);
 	    p = p->next;
 	}
     }
     if ((p = getGopherStoplist())) {
-	sprintf(line, "{\tGOPHER:}\n");
-	storeAppend(sentry, line, strlen(line));
+	storeAppendPrintf(sentry, "{\tGOPHER:}\n");
 	while (p) {
-	    sprintf(line, "{\t\t%s}\n", p->key);
-	    storeAppend(sentry, line, strlen(line));
+	    storeAppendPrintf(sentry, "{\t\t%s}\n", p->key);
 	    p = p->next;
 	}
     }
     if ((p = getFtpStoplist())) {
-	sprintf(line, "{\tFTP:}\n");
-	storeAppend(sentry, line, strlen(line));
+	storeAppendPrintf(sentry, "{\tFTP:}\n");
 	while (p) {
-	    sprintf(line, "{\t\t%s}\n", p->key);
-	    storeAppend(sentry, line, strlen(line));
+	    storeAppendPrintf(sentry, "{\t\t%s}\n", p->key);
 	    p = p->next;
 	}
     }
-    sprintf(line, "{Internal Data Structures:}\n");
-    storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{Meta Data:}\n");
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Internal Data Structures:}\n");
+    storeAppendPrintf(sentry, "{Meta Data:}\n");
 
-    sprintf(line, "{\t\tStoreEntry %d x %d bytes = %d KB}\n",
+    storeAppendPrintf(sentry, "{\t\tStoreEntry %d x %d bytes = %d KB}\n",
 	meta_data.store_entries,
 	(int) sizeof(StoreEntry),
 	(int) (meta_data.store_entries * sizeof(StoreEntry) >> 10));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\t\tStoreMemObject %d x %d bytes = %d KB}\n",
+    storeAppendPrintf(sentry, "{\t\tStoreMemObject %d x %d bytes = %d KB}\n",
 	meta_data.store_in_mem_objects,
 	(int) sizeof(MemObject),
 	(int) (meta_data.store_in_mem_objects * sizeof(MemObject) >> 10));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\t\tIPCacheEntry %d x %d bytes = %d KB}\n",
+    storeAppendPrintf(sentry, "{\t\tIPCacheEntry %d x %d bytes = %d KB}\n",
 	meta_data.ipcache_count,
 	(int) sizeof(ipcache_entry),
 	(int) (meta_data.ipcache_count * sizeof(ipcache_entry) >> 10));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\t\tHash link  %d x %d bytes = %d KB}\n",
+    storeAppendPrintf(sentry, "{\t\tHash link  %d x %d bytes = %d KB}\n",
 	meta_data.hash_links = hash_links_allocated,
 	(int) sizeof(hash_link),
 	(int) (meta_data.hash_links * sizeof(hash_link) >> 10));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\t\tURL strings %d KB}\n",
+    storeAppendPrintf(sentry, "{\t\tURL strings %d KB}\n",
 	meta_data.url_strings >> 10);
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\t\tHot Object Cache Items %d}\n", meta_data.hot_vm);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{\t\tHot Object Cache Items %d}\n", meta_data.hot_vm);
 
-    sprintf(line, "{\t\tPool for disk I/O %d KB (Free %d KB)}\n",
+    storeAppendPrintf(sentry, "{\t\tPool for disk I/O %d KB (Free %d KB)}\n",
 	disk_stats.total_pages_allocated * disk_stats.page_size >> 10,
 	(disk_stats.total_pages_allocated - disk_stats.n_pages_in_use) * disk_stats.page_size >> 10);
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\t\tPool for in-memory objects %d KB (Free %d KB)}\n",
+    storeAppendPrintf(sentry, "{\t\tPool for in-memory objects %d KB (Free %d KB)}\n",
 	sm_stats.total_pages_allocated * sm_stats.page_size >> 10,
 	(sm_stats.total_pages_allocated - sm_stats.n_pages_in_use) * sm_stats.page_size >> 10);
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{\tTotal Accounted %d KB}\n",
+    storeAppendPrintf(sentry, "{\tTotal Accounted %d KB}\n",
 	(int) (meta_data.store_entries * sizeof(StoreEntry) +
 	    meta_data.store_in_mem_objects * sizeof(MemObject) +
 	    meta_data.ipcache_count * sizeof(ipcache_entry) +
@@ -670,9 +581,8 @@ void info_get(obj, sentry)
 	    sm_stats.total_pages_allocated * sm_stats.page_size +
 	    disk_stats.total_pages_allocated * disk_stats.page_size +
 	    meta_data.url_strings) >> 10);
-    storeAppend(sentry, line, strlen(line));
 
-    storeAppend(sentry, close_bracket, strlen(close_bracket));
+    storeAppendPrintf(sentry, "}\n");
 }
 
 
@@ -687,74 +597,57 @@ void parameter_get(obj, sentry)
 
     memset(line, '\0', MAX_LINELEN);
 
-    storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
+    storeAppendPrintf(sentry, "{\n");
 
-    sprintf(line, "{VM-Max %d \"# Maximum hot-vm cache (MB)\"}\n",
+    storeAppendPrintf(sentry, "{VM-Max %d \"# Maximum hot-vm cache (MB)\"}\n",
 	getCacheMemMax() / (1 << 20));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{VM-High %d \"# High water mark hot-vm cache (%%)\"}\n",
+    storeAppendPrintf(sentry, "{VM-High %d \"# High water mark hot-vm cache (%%)\"}\n",
 	getCacheMemHighWaterMark());
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{VM-Low %d \"# Low water-mark hot-vm cache (%%)\"}\n",
+    storeAppendPrintf(sentry, "{VM-Low %d \"# Low water-mark hot-vm cache (%%)\"}\n",
 	getCacheMemLowWaterMark());
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{Swap-Max %d \"# Maximum disk cache (MB)\"}\n",
+    storeAppendPrintf(sentry, "{Swap-Max %d \"# Maximum disk cache (MB)\"}\n",
 	getCacheSwapMax() / (1 << 10));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{Swap-High %d \"# High Water mark disk cache (%%)\"}\n",
+    storeAppendPrintf(sentry, "{Swap-High %d \"# High Water mark disk cache (%%)\"}\n",
 	getCacheSwapHighWaterMark());
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{Swap-Low %d \"# Low water mark disk cache (%%)\"}\n",
+    storeAppendPrintf(sentry, "{Swap-Low %d \"# Low water mark disk cache (%%)\"}\n",
 	getCacheSwapLowWaterMark());
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{HTTP-Max %d\"# Maximum size HTTP objects (KB)\"}\n",
+    storeAppendPrintf(sentry, "{HTTP-Max %d\"# Maximum size HTTP objects (KB)\"}\n",
 	getHttpMax() / (1 << 10));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{HTTP-TTL %d \"# Http object default TTL (hrs)\"}\n", getHttpTTL() / 3600);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{HTTP-TTL %d \"# Http object default TTL (hrs)\"}\n", getHttpTTL() / 3600);
 
-    sprintf(line, "{Gopher-Max %d \"# Maximum size gopher objects (KB)\"}\n",
+    storeAppendPrintf(sentry, "{Gopher-Max %d \"# Maximum size gopher objects (KB)\"}\n",
 	getGopherMax() / (1 << 10));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{Gopher-TTL %d \"# TTL for gopher objects (hrs)\"}\n", getGopherTTL() / 3600);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Gopher-TTL %d \"# TTL for gopher objects (hrs)\"}\n", getGopherTTL() / 3600);
 
-    sprintf(line, "{FTP-Max %d \"# Maximum size FTP objects (KB)\"}\n",
+    storeAppendPrintf(sentry, "{FTP-Max %d \"# Maximum size FTP objects (KB)\"}\n",
 	getFtpMax() / (1 << 10));
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{FTP-TTL %d \"# TTL for FTP objects (hrs)\"}\n", getFtpTTL() / 3600);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{FTP-TTL %d \"# TTL for FTP objects (hrs)\"}\n", getFtpTTL() / 3600);
 
-    sprintf(line, "{Neg-TTL %d \"# TTL for negative cache (s)\"}\n",
+    storeAppendPrintf(sentry, "{Neg-TTL %d \"# TTL for negative cache (s)\"}\n",
 	getNegativeTTL());
-    storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{ReadTimeout %d \"# Maximum idle connection (s)\"}\n", getReadTimeout());
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{ReadTimeout %d \"# Maximum idle connection (s)\"}\n", getReadTimeout());
 
-    sprintf(line, "{ClientLifetime %d \"# Lifetime for incoming ascii port requests or outgoing clients (s)\"}\n", getClientLifetime());
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{ClientLifetime %d \"# Lifetime for incoming ascii port requests or outgoing clients (s)\"}\n", getClientLifetime());
 
-    sprintf(line, "{CleanRate %d \"# Rate for periodic object expiring\"}\n",
+    storeAppendPrintf(sentry, "{CleanRate %d \"# Rate for periodic object expiring\"}\n",
 	getCleanRate());
-    storeAppend(sentry, line, strlen(line));
 
     /* Cachemgr.cgi expects an integer in the second field of the string */
-    sprintf(line, "{HttpAccelMode %d \"# Is operating as an HTTP accelerator\"}\n",
+    storeAppendPrintf(sentry, "{HttpAccelMode %d \"# Is operating as an HTTP accelerator\"}\n",
 	httpd_accel_mode);
-    storeAppend(sentry, line, strlen(line));
 
     /* end of stats */
-    storeAppend(sentry, close_bracket, strlen(close_bracket));
+    storeAppendPrintf(sentry, "}\n");
 }
 
 
@@ -838,7 +731,7 @@ void log_enable(obj, sentry)
 
     }
     /* at the moment, store one char to make a storage manager happy */
-    sprintf(tempbuf, " ");
+    storeAppendPrintf(sentry, " ");
     storeAppend(sentry, tempbuf, strlen(tempbuf));
 }
 
@@ -846,15 +739,12 @@ void log_disable(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
-    static char tempbuf[MAX_LINELEN];
-
     if (obj->logfile_status == LOG_ENABLE)
 	file_close(obj->logfile_fd);
 
     obj->logfile_status = LOG_DISABLE;
     /* at the moment, store one char to make a storage manager happy */
-    sprintf(tempbuf, " ");
-    storeAppend(sentry, tempbuf, strlen(tempbuf));
+    storeAppendPrintf(sentry, " ");
 }
 
 
@@ -881,7 +771,7 @@ void log_clear(obj, sentry)
 	obj->logfile_status = LOG_DISABLE;
     }
     /* at the moment, store one char to make a storage manager happy */
-    sprintf(tempbuf, " ");
+    storeAppendPrintf(sentry, " ");
     storeAppend(sentry, tempbuf, strlen(tempbuf));
 }
 
@@ -1081,7 +971,7 @@ char *mem_describe(entry)
 
     where[0] = '\0';
     if (entry->swap_file_number >= 0)
-	sprintf(where, "D%d", entry->swap_file_number);
+	storeAppendPrintf(entry, "D%d", entry->swap_file_number);
     if (entry->swap_status == SWAPPING_OUT)
 	strncat(where, "/SWAP-OUT", sizeof(where));
     if (entry->swap_status == SWAP_OK)
