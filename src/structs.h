@@ -67,7 +67,7 @@ struct _String {
 
 #if SQUID_SNMP
 
-typedef struct _snmp_request_t {
+struct _snmp_request_t {
     u_char *buf;
     u_char *outbuf;
     int len;
@@ -78,26 +78,26 @@ typedef struct _snmp_request_t {
     struct snmp_pdu *PDU;
     aclCheck_t *acl_checklist;
     u_char *community;
-} snmp_request_t;
+};
 
-typedef struct _viewEntry {
+struct _viewEntry {
     char viewName[32];
     int viewIndex;
     int viewType;
     int viewSubtreeLen;
     oid viewSubtree[32];
     struct _viewEntry *next;
-} viewEntry;
+};
 
-typedef struct _communityEntry {
+struct _communityEntry {
     char name[64];
     int readView;
     int writeView;
     acl_access *acls;
     communityEntry *next;
-} communityEntry;
+};
 
-typedef usecEntry {
+struct _usecEntry {
     u_char userName[32];
     int userLen;
     int qoS;
@@ -108,7 +108,7 @@ typedef usecEntry {
     int authReadView;
     int authWriteView;
     usecEntry *next;
-} usecEntry;
+};
 
 #endif
 

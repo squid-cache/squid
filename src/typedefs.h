@@ -118,6 +118,13 @@ typedef struct _cd_guess_stats cd_guess_stats;
 typedef struct _CacheDigest CacheDigest;
 typedef struct _Version Version;
 
+#if SQUID_SNMP
+typedef struct _snmp_request_t snmp_request_t;
+typedef struct _viewEntry viewEntry;
+typedef struct _communityEntry communityEntry;
+typedef struct _usecEntry usecEntry;
+#endif
+
 /* define AIOCB even without USE_ASYNC_IO */
 typedef void AIOCB(void *, int aio_return, int aio_errno);
 typedef void CWCB(int fd, char *, size_t size, int flag, void *data);
