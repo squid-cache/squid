@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.111 1996/09/15 08:06:31 wessels Exp $
+ * $Id: store.cc,v 1.112 1996/09/16 21:20:49 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2676,7 +2676,6 @@ storeWriteCleanLog(void)
 	return 0;
     }
     for (e = storeGetFirst(); e; e = storeGetNext()) {
-	debug(20, 5, "storeWriteCleanLog: <URL:%s>\n", e->url);
 	if (e->swap_file_number < 0)
 	    continue;
 	if (e->swap_status != SWAP_OK)

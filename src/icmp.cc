@@ -122,7 +122,7 @@ icmpOpen(void)
 	COMM_SELECT_READ,
 	(PF) icmpRecv,
 	(void *) -1);
-    debug(37, 0, "icmpOpen: icmp_sock opened on FD %d\n", icmp_sock);
+    debug(37, 0, "ICMP socket opened on FD %d\n", icmp_sock);
 }
 
 void

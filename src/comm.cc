@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.71 1996/09/16 21:11:05 wessels Exp $
+ * $Id: comm.cc,v 1.72 1996/09/16 21:20:45 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -225,11 +225,11 @@ commBind(int s, struct in_addr in_addr, u_short port)
  * is OR of flags specified in comm.h. */
 int
 comm_open(int sock_type,
-	int proto,
-	struct in_addr addr,
-	u_short port,
-	int flags,
-	char *note)
+    int proto,
+    struct in_addr addr,
+    u_short port,
+    int flags,
+    char *note)
 {
     int new_socket;
     FD_ENTRY *conn = NULL;
