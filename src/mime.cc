@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.67 1998/05/30 19:43:15 rousskov Exp $
+ * $Id: mime.cc,v 1.68 1998/06/03 20:48:19 rousskov Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -246,7 +246,7 @@ mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt)
     expiretime = ttl ? t + ttl : 0;
     date[0] = expires[0] = last_modified[0] = '\0';
     content_length[0] = result[0] = '\0';
-    xsnprintf(date, 100, "Date: %s\r\n", mkrfc1123(t));
+    snprintf(date, 100, "Date: %s\r\n", mkrfc1123(t));
     if (ttl >= 0)
 	snprintf(expires, 100, "Expires: %s\r\n", mkrfc1123(expiretime));
     if (lmt)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.156 1998/06/02 04:12:33 wessels Exp $
+ * $Id: tools.cc,v 1.157 1998/06/03 20:48:21 rousskov Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -706,7 +706,7 @@ setMaxFD(void)
 	if (rl.rlim_cur > rl.rlim_max)
 	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
-	    xsnprintf(tmp_error_buf, ERROR_BUF_SZ,
+	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
 		"setrlimit: RLIMIT_OFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}
