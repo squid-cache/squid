@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.407 2002/04/13 23:07:49 hno Exp $
+ * $Id: cache_cf.cc,v 1.408 2002/06/23 14:50:06 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1435,6 +1435,7 @@ parse_peer(peer ** head)
     p->http_port = CACHE_HTTP_PORT;
     p->icp.port = CACHE_ICP_PORT;
     p->weight = 1;
+    p->basetime = 0;
     p->stats.logged_state = PEER_ALIVE;
     if ((token = strtok(NULL, w_space)) == NULL)
 	self_destruct();
@@ -1451,12 +1452,16 @@ parse_peer(peer ** head)
 	    p->options.proxy_only = 1;
 	} else if (!strcasecmp(token, "no-query")) {
 	    p->options.no_query = 1;
+	} else if (!strcasecmp(token, "background-ping")) {
+	    p->options.background_ping = 1;
 	} else if (!strcasecmp(token, "no-digest")) {
 	    p->options.no_digest = 1;
 	} else if (!strcasecmp(token, "multicast-responder")) {
 	    p->options.mcast_responder = 1;
 	} else if (!strncasecmp(token, "weight=", 7)) {
 	    p->weight = atoi(token + 7);
+	} else if (!strncasecmp(token, "basetime=", 9)) {
+	    p->basetime = atoi(token + 9);
 	} else if (!strcasecmp(token, "closest-only")) {
 	    p->options.closest_only = 1;
 	} else if (!strncasecmp(token, "ttl=", 4)) {
@@ -1469,6 +1474,8 @@ parse_peer(peer ** head)
 	    p->options.default_parent = 1;
 	} else if (!strcasecmp(token, "round-robin")) {
 	    p->options.roundrobin = 1;
+	} else if (!strcasecmp(token, "weighted-round-robin")) {
+	    p->options.weighted_roundrobin = 1;
 #if USE_HTCP
 	} else if (!strcasecmp(token, "htcp")) {
 	    p->options.htcp = 1;

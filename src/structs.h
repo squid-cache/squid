@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.421 2002/06/23 13:32:25 hno Exp $
+ * $Id: structs.h,v 1.422 2002/06/23 14:50:07 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -393,6 +393,7 @@ struct _SquidConfig {
     time_t negativeDnsTtl;
     time_t positiveDnsTtl;
     time_t shutdownLifetime;
+    time_t backgroundPingRate;
     struct {
 	time_t read;
 	time_t lifetime;
@@ -1264,9 +1265,11 @@ struct _peer {
     struct {
 	unsigned int proxy_only:1;
 	unsigned int no_query:1;
+	unsigned int background_ping:1;
 	unsigned int no_digest:1;
 	unsigned int default_parent:1;
 	unsigned int roundrobin:1;
+	unsigned int weighted_roundrobin:1;
 	unsigned int mcast_responder:1;
 	unsigned int closest_only:1;
 #if USE_HTCP
@@ -1282,6 +1285,7 @@ struct _peer {
 #endif
     } options;
     int weight;
+    int basetime;
     struct {
 	double avg_n_members;
 	int n_times_counted;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.121 2002/04/13 23:07:51 hno Exp $
+ * $Id: peer_select.cc,v 1.122 2002/06/23 14:50:07 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -445,6 +445,8 @@ peerGetSomeParent(ps_state * ps)
 #endif
     } else if ((p = getRoundRobinParent(request))) {
 	code = ROUNDROBIN_PARENT;
+    } else if ((p = getWeightedRoundRobinParent(request))) {
+	code = ROUNDROBIN_PARENT;
     } else if ((p = getFirstUpParent(request))) {
 	code = FIRSTUP_PARENT;
     } else if ((p = getAnyParent(request))) {
@@ -534,7 +536,9 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
     /* set FIRST_MISS if there is no CLOSEST parent */
     if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)
 	return;
-    rtt = tvSubMsec(ps->ping.start, current_time) / p->weight;
+    rtt = (tvSubMsec(ps->ping.start, current_time) - p->basetime) / p->weight;
+    if (rtt < 1)
+	rtt = 1;
     if (ps->first_parent_miss.sin_addr.s_addr == any_addr.s_addr ||
 	rtt < ps->ping.w_rtt) {
 	ps->first_parent_miss = p->in_addr;
@@ -622,7 +626,9 @@ peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
     /* set FIRST_MISS if there is no CLOSEST parent */
     if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)
 	return;
-    rtt = tvSubMsec(ps->ping.start, current_time) / p->weight;
+    rtt = (tvSubMsec(ps->ping.start, current_time) - p->basetime) / p->weight;
+    if (rtt < 1)
+	rtt = 1;
     if (ps->first_parent_miss.sin_addr.s_addr == any_addr.s_addr ||
 	rtt < ps->ping.w_rtt) {
 	ps->first_parent_miss = p->in_addr;

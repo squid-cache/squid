@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.104 2002/06/21 12:58:20 hno Exp $
+ * $Id: defines.h,v 1.105 2002/06/23 14:50:07 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -166,6 +166,7 @@
 
 #define PEER_MAX_ADDRESSES 10
 #define RTT_AV_FACTOR      50
+#define RTT_BACKGROUND_AV_FACTOR      25	/* Background pings need a smaller factor since they are sent less frequently */
 
 #define PEER_DEAD 0
 #define PEER_ALIVE 1
