@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.74 1998/08/14 19:25:24 wessels Exp $
+ * $Id: mime.cc,v 1.75 1998/08/17 19:23:49 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -148,53 +148,6 @@ headersEnd(const char *mime, size_t l)
 	return e;
     return 0;
 }
-
-#if UNUSED_CODE
-/*
- *  mk_mime_hdr - Generates a MIME header using the given parameters.
- *  You can call mk_mime_hdr with a 'lmt = time(NULL) - ttl' to
- *  generate a fake Last-Modified-Time for the header.
- *  'ttl' is the number of seconds relative to the current time
- *  that the object is valid.
- *
- *  Returns the MIME header in the provided 'result' buffer, and
- *  returns non-zero on error, or 0 on success.
- */
-static int
-mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt)
-{
-    time_t expiretime;
-    time_t t;
-    LOCAL_ARRAY(char, date, 100);
-    LOCAL_ARRAY(char, expires, 100);
-    LOCAL_ARRAY(char, last_modified, 100);
-    LOCAL_ARRAY(char, content_length, 100);
-
-    if (result == NULL)
-	return 1;
-    t = squid_curtime;
-    expiretime = ttl ? t + ttl : 0;
-    date[0] = expires[0] = last_modified[0] = '\0';
-    content_length[0] = result[0] = '\0';
-    snprintf(date, 100, "Date: %s\r\n", mkrfc1123(t));
-    if (ttl >= 0)
-	snprintf(expires, 100, "Expires: %s\r\n", mkrfc1123(expiretime));
-    if (lmt)
-	snprintf(last_modified, 100, "Last-Modified: %s\r\n", mkrfc1123(lmt));
-    if (size > 0)
-	snprintf(content_length, 100, "Content-Length: %d\r\n", size);
-
-    snprintf(result, MAX_MIME, "Server: %s/%s\r\n%s%s%sContent-Type: %s\r\n%s",
-	appname,
-	version_string,
-	date,
-	expires,
-	last_modified,
-	type,
-	content_length);
-    return 0;
-}
-#endif
 
 const char *
 mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field)
