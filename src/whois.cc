@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.17 2002/06/14 19:31:22 hno Exp $
+ * $Id: whois.cc,v 1.18 2002/08/22 12:29:15 hno Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -121,7 +121,7 @@ whoisReadReply(int fd, void *data)
     } else {
 	storeTimestampsSet(entry);
 	storeBufferFlush(entry);
-	if ( !EBIT_TEST(entry->flags, RELEASE_REQUEST ) )
+	if (!EBIT_TEST(entry->flags, RELEASE_REQUEST))
 	    storeSetPublicKey(entry);
 	fwdComplete(p->fwd);
 	debug(75, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));

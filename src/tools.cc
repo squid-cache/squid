@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.219 2002/04/27 22:54:49 hno Exp $
+ * $Id: tools.cc,v 1.220 2002/08/22 12:29:15 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1003,5 +1003,5 @@ getMyPort(void)
 	return ntohs(Config.Sockaddr.https->s.sin_port);
 #endif
     fatal("No port defined");
-    return 0; /* NOT REACHED */
+    return 0;			/* NOT REACHED */
 }

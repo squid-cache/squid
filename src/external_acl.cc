@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.8 2002/08/21 22:36:56 hno Exp $
+ * $Id: external_acl.cc,v 1.9 2002/08/22 12:29:15 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -234,8 +234,7 @@ parse_externalAclHelper(external_acl ** list)
 		else
 		    format->type = EXT_ACL_HEADER_ID;
 	    }
-	}
-	else if (strcmp(token, "%LOGIN") == 0) {
+	} else if (strcmp(token, "%LOGIN") == 0) {
 	    format->type = EXT_ACL_LOGIN;
 	    a->require_auth = 1;
 	}

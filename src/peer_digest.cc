@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.89 2002/06/18 22:52:32 hno Exp $
+ * $Id: peer_digest.cc,v 1.90 2002/08/22 12:29:15 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -123,7 +123,7 @@ peerDigestDestroy(PeerDigest * pd)
     assert(pd);
 
     /* inform peer (if any) that we are gone */
-    if (cbdataReferenceValidDone(pd->peer, (void **)&p))
+    if (cbdataReferenceValidDone(pd->peer, (void **) &p))
 	peerNoteDigestGone(p);
 
     peerDigestClean(pd);
@@ -362,7 +362,7 @@ peerDigestHandleReply(void *data, char *buf, ssize_t copysize)
     /* Give us a temporary reference. Some of the calls we make may
      * try to destroy the fetch structure, and we like to know if they
      * do
-     */ 
+     */
     fetch = cbdataReference(fetch);
 
     /* Repeat this loop until we're out of data OR the state changes */
@@ -623,7 +623,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (!reason) {
 	if (!(pd = fetch->pd))
 	    reason = "peer digest disappeared?!";
-#if DONT /* WHY NOT? /HNO */
+#if DONT			/* WHY NOT? /HNO */
 	else if (!cbdataReferenceValid(pd))
 	    reason = "invalidated peer digest?!";
 #endif
@@ -631,7 +631,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
 	    host = strBuf(pd->host);
     }
     debug(72, 6) ("%s: peer %s, offset: %d size: %d.\n",
-	step_name, host, 
+	step_name, host,
 	fetch->offset, size);
 
     /* continue checking (with pd and host known and valid) */
