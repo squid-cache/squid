@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.123 1996/12/18 18:35:32 wessels Exp $
+ * $Id: comm.cc,v 1.124 1996/12/20 23:45:38 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -280,7 +280,7 @@ comm_open(int sock_type,
 	if (do_reuse)
 	    commSetReuseAddr(new_socket);
     }
-    if (addr.s_addr != INADDR_NONE)
+    if (addr.s_addr != inaddr_none)
 	if (commBind(new_socket, addr, port) != COMM_OK)
 	    return COMM_ERROR;
     conn->local_port = port;

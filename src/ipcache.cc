@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.90 1996/12/18 00:03:00 wessels Exp $
+ * $Id: ipcache.cc,v 1.91 1996/12/20 23:45:42 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -970,7 +970,7 @@ ipcacheCheckNumeric(const char *name)
 {
     unsigned int ip;
     /* check if it's already a IP address in text form. */
-    if ((ip = inet_addr(name)) == INADDR_NONE)
+    if ((ip = inet_addr(name)) == inaddr_none)
 	return NULL;
     static_addrs.count = 1;
     static_addrs.cur = 0;

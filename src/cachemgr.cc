@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.48 1996/12/14 18:54:58 wessels Exp $
+ * $Id: cachemgr.cc,v 1.49 1996/12/20 23:45:37 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -212,10 +212,6 @@
 #define CR 13
 #endif
 
-#ifndef INADDR_NONE
-#define INADDR_NONE -1
-#endif
-
 typedef enum {
     INFO,
     CACHED,
@@ -302,6 +298,7 @@ static const char *script_name = "/cgi-bin/cachemgr.cgi";
 static const char *const w_space = " \t\n\r";
 static const char *progname = NULL;
 static time_t now;
+static unsigned int inaddr_none;
 
 static char x2c _PARAMS((char *));
 static int client_comm_connect _PARAMS((int sock, char *dest_host, u_short dest_port));
@@ -629,6 +626,7 @@ main(int argc, char *argv[])
     int single = TRUE;
     float f1;
 
+    inaddr_none = inet_addr("X");
     now = time(NULL);
     if ((s = strrchr(argv[0], '/')))
 	progname = xstrdup(s + 1);
@@ -1002,7 +1000,7 @@ client_comm_connect(int sock, char *dest_host, u_short dest_port)
 
     if ((hp = gethostbyname(dest_host)) != NULL)
 	xmemcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
-    else if ((haddr = inet_addr(dest_host)) != INADDR_NONE)
+    else if ((haddr = inet_addr(dest_host)) != inaddr_none)
 	xmemcpy(&to_addr.sin_addr, &haddr, sizeof(haddr));
     else
 	return (-1);
