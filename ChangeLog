@@ -1,12 +1,31 @@
 UPCOMING CHANGES:
 
-	- add separate config line (neighbor_type_domain) for modifying
-	  neighbor type (parent vs. sibling) for certain domains.  Adding
-	  it to cache_host_domain doesn't provide needed flexibility.
 	- Send refresh values from refresh_pattern lines as
 	  'Cache-Control: max-stale XXX' in HTTP requests.
 	- Experiment with returning network probe measurments in ICP
 	  replies.
+
+Changes to squid-1.1.beta16 ():
+
+	- Fixed type of Config.level{One,Two}Dirs.
+	- Fixed calling storeRegister and storeUnregister with NULL a entry.
+	- Fixed objcache "squid.conf" request and now require a
+	  password for it (Jan.Harkes@cwi.nl).
+	- Added check for dotted-quads in matchInsideFirewall()
+	  (Andreas Lamprecht).
+	- Fixed up some HTTP/1.1 Cache-Control parsing (Ed Knowles).
+	- Fixed IP ACL memset() bug when -DPURIFY=1.
+	- Resurrected storeEntryValidToSend().
+	- Moved storeSetPrivateKey() calls to storeReleaseRequest().
+	- Added separate config line (neighbor_type_domain) for modifying
+	  neighbor type (parent vs. sibling) for certain domains.  Adding
+	  it to cache_host_domain doesn't provide needed flexibility.
+	- Added User-Agent log patch (Joe Ramey).
+	- Added httpd-accel Host: patch (Miguel A.L. Paraz).
+	- Changed ident lookup stuff to require the lookup before
+	  checking ACL's.  If you have 'ident_lookup on' then this
+	  may cause noticable delay while waiting for the ident
+	  lookup.
 
 Changes to squid-1.1.beta15 ():
 
