@@ -31,7 +31,16 @@ if test -z "$depmode" || test -z "$source" || test -z "$object"; then
 fi
 # `libtool' can also be set to `yes' or `no'.
 
-depfile=${depfile-`echo "$object" | sed 's,\([^/]*\)$,.deps/\1,;s/\.\([^.]*\)$/.P\1/'`}
+if test -z "$depfile"; then
+   base=`echo "$object" | sed -e 's,^.*/,,' -e 's,\.\([^.]*\)$,.P\1,'`
+   dir=`echo "$object" | sed 's,/.*$,/,'`
+   if test "$dir" = "$object"; then
+      dir=
+   fi
+   # FIXME: should be _deps on DOS.
+   depfile="$dir.deps/$base"
+fi
+
 tmpdepfile=${tmpdepfile-`echo "$depfile" | sed 's/\.\([^.]*\)$/.T\1/'`}
 
 rm -f "$tmpdepfile"
@@ -197,18 +206,53 @@ aix)
   rm -f "$tmpdepfile"
   ;;
 
+icc)
+  # Must come before tru64.
+
+  # Intel's C compiler understands `-MD -MF file'.  However
+  #    icc -MD -MF foo.d -c -o sub/foo.o sub/foo.c
+  # will fill foo.d with something like
+  #    foo.o: sub/foo.c
+  #    foo.o: sub/foo.h
+  # which is wrong.  We want:
+  #    sub/foo.o: sub/foo.c
+  #    sub/foo.o: sub/foo.h
+  #    sub/foo.c:
+  #    sub/foo.h:
+
+  "$@" -MD -MF "$tmpdepfile"
+  stat=$?
+  if test $stat -eq 0; then :
+  else
+    rm -f "$tmpdepfile"
+    exit $stat
+  fi
+  rm -f "$depfile"
+  # Each line is of the form `foo.o: dependent.h'.
+  # Do two passes, one to just change these to
+  # `$object: dependent.h' and one to simply `dependent.h:'.
+  sed -e "s,^[^:]*:,$object :," < "$tmpdepfile" > "$depfile"
+  sed -e "s,^[^:]*: \(.*\)$,\1:," < "$tmpdepfile" >> "$depfile"
+  rm -f "$tmpdepfile"
+  ;;
+
 tru64)
-   # The Tru64 AIX compiler uses -MD to generate dependencies as a side
+   # The Tru64 compiler uses -MD to generate dependencies as a side
    # effect.  `cc -MD -o foo.o ...' puts the dependencies into `foo.o.d'.
-   # At least on Alpha/Redhat 6.1, Compaq CCC V6.2-504 seems to put 
+   # At least on Alpha/Redhat 6.1, Compaq CCC V6.2-504 seems to put
    # dependencies in `foo.d' instead, so we check for that too.
    # Subdirectories are respected.
+   dir=`echo "$object" | sed -e 's|/[^/]*$|/|'`
+   test "x$dir" = "x$object" && dir=
+   base=`echo "$object" | sed -e 's|^.*/||' -e 's/\.o$//' -e 's/\.lo$//'`
 
-   tmpdepfile1="$object.d"
-   tmpdepfile2=`echo "$object" | sed -e 's/.o$/.d/'` 
    if test "$libtool" = yes; then
+      tmpdepfile1="$dir.libs/$base.lo.d"
+      tmpdepfile2="$dir.libs/$base.d"
       "$@" -Wc,-MD
    else
+      tmpdepfile1="$dir$base.o.d"
+      tmpdepfile2="$dir$base.d"
       "$@" -MD
    fi
 
@@ -240,34 +284,42 @@ tru64)
 
 dashmstdout)
   # Important note: in order to support this mode, a compiler *must*
-  # always write the proprocessed file to stdout, regardless of -o,
-  # because we must use -o when running libtool.
-  test -z "$dashmflag" && dashmflag=-M
-  ( IFS=" "
-    case " $* " in
-    *" --mode=compile "*) # this is libtool, let us make it quiet
-      for arg
-      do # cycle over the arguments
-        case "$arg" in
-	"--mode=compile")
-	  # insert --quiet before "--mode=compile"
-	  set fnord "$@" --quiet
-	  shift # fnord
-	  ;;
-	esac
-	set fnord "$@" "$arg"
-	shift # fnord
-	shift # "$arg"
-      done
+  # always write the proprocessed file to stdout, regardless of -o.
+  "$@" || exit $?
+
+  # Remove the call to Libtool.
+  if test "$libtool" = yes; then
+    while test $1 != '--mode=compile'; do
+      shift
+    done
+    shift
+  fi
+
+  # Remove `-o $object'.
+  IFS=" "
+  for arg
+  do
+    case $arg in
+    -o)
+      shift
+      ;;
+    $object)
+      shift
+      ;;
+    *)
+      set fnord "$@" "$arg"
+      shift # fnord
+      shift # $arg
       ;;
     esac
-    "$@" $dashmflag | sed 's:^[^:]*\:[ 	]*:'"$object"'\: :' > "$tmpdepfile"
-  ) &
-  proc=$!
-  "$@"
-  stat=$?
-  wait "$proc"
-  if test "$stat" != 0; then exit $stat; fi
+  done
+
+  test -z "$dashmflag" && dashmflag=-M
+  # Require at least two characters before searching for `:'
+  # in the target name.  This is to cope with DOS-style filenames:
+  # a dependency such as `c:/foo/bar' could be seen as target `c' otherwise.
+  "$@" $dashmflag |
+    sed 's:^[  ]*[^: ][^:][^:]*\:[    ]*:'"$object"'\: :' > "$tmpdepfile"
   rm -f "$depfile"
   cat < "$tmpdepfile" > "$depfile"
   tr ' ' '
@@ -285,36 +337,40 @@ dashXmstdout)
   ;;
 
 makedepend)
-  # X makedepend
-  (
-    shift
-    cleared=no
-    for arg in "$@"; do
-      case $cleared in no)
-        set ""; shift
-	cleared=yes
-      esac
-      case "$arg" in
-        -D*|-I*)
-	  set fnord "$@" "$arg"; shift;;
-	-*)
-	  ;;
-	*)
-	  set fnord "$@" "$arg"; shift;;
-      esac
+  "$@" || exit $?
+  # Remove any Libtool call
+  if test "$libtool" = yes; then
+    while test $1 != '--mode=compile'; do
+      shift
     done
-    obj_suffix="`echo $object | sed 's/^.*\././'`"
-    touch "$tmpdepfile"
-    ${MAKEDEPEND-makedepend} 2>/dev/null -o"$obj_suffix" -f"$tmpdepfile" "$@"
-  ) &
-  proc=$!
-  "$@"
-  stat=$?
-  wait "$proc"
-  if test "$stat" != 0; then exit $stat; fi
+    shift
+  fi
+  # X makedepend
+  shift
+  cleared=no
+  for arg in "$@"; do
+    case $cleared in
+    no)
+      set ""; shift
+      cleared=yes ;;
+    esac
+    case "$arg" in
+    -D*|-I*)
+      set fnord "$@" "$arg"; shift ;;
+    # Strip any option that makedepend may not understand.  Remove
+    # the object too, otherwise makedepend will parse it as a source file.
+    -*|$object)
+      ;;
+    *)
+      set fnord "$@" "$arg"; shift ;;
+    esac
+  done
+  obj_suffix="`echo $object | sed 's/^.*\././'`"
+  touch "$tmpdepfile"
+  ${MAKEDEPEND-makedepend} -o"$obj_suffix" -f"$tmpdepfile" "$@"
   rm -f "$depfile"
   cat < "$tmpdepfile" > "$depfile"
-  tail +3 "$tmpdepfile" | tr ' ' '
+  sed '1,2d' "$tmpdepfile" | tr ' ' '
 ' | \
 ## Some versions of the HPUX 10.20 sed can't process this invocation
 ## correctly.  Breaking it into two sed invocations is a workaround.
@@ -324,35 +380,39 @@ makedepend)
 
 cpp)
   # Important note: in order to support this mode, a compiler *must*
-  # always write the proprocessed file to stdout, regardless of -o,
-  # because we must use -o when running libtool.
-  ( IFS=" "
-    case " $* " in
-    *" --mode=compile "*)
-      for arg
-      do # cycle over the arguments
-        case $arg in
-	"--mode=compile")
-	  # insert --quiet before "--mode=compile"
-	  set fnord "$@" --quiet
-	  shift # fnord
-	  ;;
-	esac
-	set fnord "$@" "$arg"
-	shift # fnord
-	shift # "$arg"
-      done
+  # always write the proprocessed file to stdout.
+  "$@" || exit $?
+
+  # Remove the call to Libtool.
+  if test "$libtool" = yes; then
+    while test $1 != '--mode=compile'; do
+      shift
+    done
+    shift
+  fi
+
+  # Remove `-o $object'.
+  IFS=" "
+  for arg
+  do
+    case $arg in
+    -o)
+      shift
+      ;;
+    $object)
+      shift
+      ;;
+    *)
+      set fnord "$@" "$arg"
+      shift # fnord
+      shift # $arg
       ;;
     esac
-    "$@" -E |
+  done
+
+  "$@" -E |
     sed -n '/^# [0-9][0-9]* "\([^"]*\)".*/ s:: \1 \\:p' |
     sed '$ s: \\$::' > "$tmpdepfile"
-  ) &
-  proc=$!
-  "$@"
-  stat=$?
-  wait "$proc"
-  if test "$stat" != 0; then exit $stat; fi
   rm -f "$depfile"
   echo "$object : \\" > "$depfile"
   cat < "$tmpdepfile" >> "$depfile"
@@ -364,32 +424,25 @@ msvisualcpp)
   # Important note: in order to support this mode, a compiler *must*
   # always write the proprocessed file to stdout, regardless of -o,
   # because we must use -o when running libtool.
-  ( IFS=" "
-    case " $* " in
-    *" --mode=compile "*)
-      for arg
-      do # cycle over the arguments
-        case $arg in
-	"--mode=compile")
-	  # insert --quiet before "--mode=compile"
-	  set fnord "$@" --quiet
-	  shift # fnord
-	  ;;
-	esac
+  "$@" || exit $?
+  IFS=" "
+  for arg
+  do
+    case "$arg" in
+    "-Gm"|"/Gm"|"-Gi"|"/Gi"|"-ZI"|"/ZI")
+	set fnord "$@"
+	shift
+	shift
+	;;
+    *)
 	set fnord "$@" "$arg"
-	shift # fnord
-	shift # "$arg"
-      done
-      ;;
+	shift
+	shift
+	;;
     esac
-    "$@" -E |
-    sed -n '/^#line [0-9][0-9]* "\([^"]*\)"/ s::echo "`cygpath -u \\"\1\\"`":p' | sort | uniq > "$tmpdepfile"
-  ) &
-  proc=$!
-  "$@"
-  stat=$?
-  wait "$proc"
-  if test "$stat" != 0; then exit $stat; fi
+  done
+  "$@" -E |
+  sed -n '/^#line [0-9][0-9]* "\([^"]*\)"/ s::echo "`cygpath -u \\"\1\\"`":p' | sort | uniq > "$tmpdepfile"
   rm -f "$depfile"
   echo "$object : \\" > "$depfile"
   . "$tmpdepfile" | sed 's% %\\ %g' | sed -n '/^\(.*\)$/ s::	\1 \\:p' >> "$depfile"
