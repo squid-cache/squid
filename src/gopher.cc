@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.33 1996/07/18 20:27:01 wessels Exp $
+ * $Id: gopher.cc,v 1.34 1996/07/19 17:38:37 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -772,7 +772,7 @@ int gopherReadReply(fd, data)
 	if (data->conversion != NORMAL)
 	    gopherEndHTML(data);
 	if (!(entry->flag & DELETE_BEHIND))
-	    entry->expires = squid_curtime + ttlSet(entry);
+	    ttlSet(entry);
 	BIT_RESET(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
 	comm_close(fd);
