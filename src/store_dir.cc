@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.146 2003/06/24 12:42:27 robertc Exp $
+ * $Id: store_dir.cc,v 1.147 2003/07/17 15:40:27 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -187,7 +187,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
         if (sd->cur_size > sd->max_size)
             continue;
 
-        if (!storeDirValidSwapDirSize(i, objsize))
+        if (!storeDirValidSwapDirSize(dirn, objsize))
             continue;
 
         /* check for error or overload condition */
