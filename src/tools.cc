@@ -1,13 +1,9 @@
 
-/* $Id: tools.cc,v 1.15 1996/03/28 05:23:31 wessels Exp $ */
+/* $Id: tools.cc,v 1.16 1996/03/28 06:02:09 wessels Exp $ */
 
 #include "squid.h"
 
 int do_mallinfo = 0;		/* don't do mallinfo() unless this gets set */
-
-static int PrintRusage _PARAMS((void (*)(), FILE *));
-
-extern int gethostname _PARAMS((char *name, int namelen));
 
 #define DEAD_MSG "\
 The Harvest Cache (version %s) died.\n\
@@ -39,10 +35,8 @@ void mail_warranty()
 	fprintf(fp, "To: %s\n", getAdminEmail());
 	fprintf(fp, "Subject: %s\n", dead_msg());
 	fclose(fp);
-
 	sprintf(command, "mail %s < %s", getAdminEmail(), filename);
-
-	system(command);
+	system(command);	/* XXX should avoid system(3) */
 	unlink(filename);
     }
 }
@@ -53,6 +47,25 @@ void print_warranty()
 	mail_warranty();
     else
 	puts(dead_msg());
+}
+
+int PrintRusage(f, lf)
+     void (*f) ();
+     FILE *lf;
+{
+#if HAVE_RUSAGE && defined(RUSAGE_SELF)
+    struct rusage rusage;
+    getrusage(RUSAGE_SELF, &rusage);
+    fprintf(lf, "CPU Usage: user %d sys %d\nMemory Usage: rss %d KB\n",
+	rusage.ru_utime.tv_sec, rusage.ru_stime.tv_sec,
+	rusage.ru_maxrss * getpagesize() / 1000);
+    fprintf(lf, "Page faults with physical i/o: %d\n",
+	rusage.ru_majflt);
+#endif
+    dumpMallocStats(lf);
+    if (f)
+	f(0);
+    return 0;
 }
 
 void death(sig)
@@ -177,27 +190,6 @@ void dumpMallocStats(f)
     mallocmap();
 #endif /* PRINT_MMAP */
 #endif /* HAVE_MALLINFO */
-}
-
-int PrintRusage(f, lf)
-     void (*f) ();
-     FILE *lf;
-{
-#if defined(HAVE_RUSAGE) && defined(RUSAGE_SELF)
-    struct rusage rusage;
-
-    getrusage(RUSAGE_SELF, &rusage);
-    fprintf(lf, "CPU Usage: user %d sys %d\nMemory Usage: rss %d KB\n",
-	rusage.ru_utime.tv_sec, rusage.ru_stime.tv_sec,
-	rusage.ru_maxrss * getpagesize() / 1000);
-    fprintf(lf, "Page faults with physical i/o: %d\n",
-	rusage.ru_majflt);
-
-#endif
-    dumpMallocStats(lf);
-    if (f)
-	f(0);
-    return 0;
 }
 
 int getHeapSize()
