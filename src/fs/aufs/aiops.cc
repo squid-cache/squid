@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.19 2003/01/04 01:28:13 hno Exp $
+ * $Id: aiops.cc,v 1.20 2003/01/09 11:45:49 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -147,6 +147,7 @@ static struct {
     NULL, &done_requests.head
 };
 static int done_fd = 0;
+static int done_fd_read = 0;
 static int done_signalled = 0;
 static pthread_attr_t globattr;
 #if HAVE_SCHED_H
@@ -226,9 +227,8 @@ squidaio_xstrfree(char *str)
 static void
 squidaio_fdhandler(int fd, void *data)
 {
-    char buf[256];
-    done_signalled = 0;
-    read(fd, buf, sizeof(buf));
+    char junk[256];
+    read(done_fd_read, junk, sizeof(junk));
     commSetSelect(fd, COMM_SELECT_READ, squidaio_fdhandler, NULL, 0);
 }
 
@@ -283,6 +283,7 @@ squidaio_init(void)
     /* Initialize done pipe signal */
     pipe(done_pipe);
     done_fd = done_pipe[1];
+    done_fd_read = done_pipe[0];
     fd_open(done_pipe[0], FD_PIPE, "async-io completetion event: main");
     fd_open(done_pipe[1], FD_PIPE, "async-io completetion event: threads");
     commSetNonBlocking(done_pipe[0]);
@@ -828,6 +829,11 @@ squidaio_poll_done(void)
   AIO_REPOLL:
     request = done_requests.head;
     if (request == NULL && !polled) {
+	if (done_signalled) {
+	    char junk[256];
+	    read(done_fd_read, junk, sizeof(junk));
+	    done_signalled = 0;
+	}
 	squidaio_poll_queues();
 	polled = 1;
 	request = done_requests.head;
