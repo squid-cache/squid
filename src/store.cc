@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.513 2000/02/01 05:17:58 wessels Exp $
+ * $Id: store.cc,v 1.514 2000/02/01 05:43:02 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -705,8 +705,6 @@ storeGetMemSpace(int size)
     last_check = squid_curtime;
     pages_needed = (size / SM_PAGE_SIZE) + 1;
     if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_max)
-	return;
-    if (store_dirs_rebuilding)
 	return;
     debug(20, 2) ("storeGetMemSpace: Starting, need %d pages\n", pages_needed);
 #if HEAP_REPLACEMENT
