@@ -287,7 +287,6 @@ extern void ipcacheShutdownServers _PARAMS((void));
 extern void ipcache_init _PARAMS((void));
 extern void stat_ipcache_get _PARAMS((StoreEntry *));
 extern int ipcacheQueueDrain _PARAMS((void));
-extern void ipcacheOpenServers _PARAMS((void));
 extern void ipcacheCycleAddr _PARAMS((const char *name));
 extern void ipcacheRemoveBadAddr _PARAMS((const char *name, struct in_addr));
 extern void ipcacheFreeMemory _PARAMS((void));
@@ -329,7 +328,7 @@ extern void neighborsUdpAck _PARAMS((int, const char *, icp_common_t *, const st
 extern void neighborAdd _PARAMS((const char *, const char *, int, int, int, int, int));
 extern void neighbors_open _PARAMS((int));
 extern void neighborsDestroy _PARAMS((void));
-extern peer *neighborFindByName _PARAMS((const char *));
+extern peer *peerFindByName _PARAMS((const char *));
 extern void neighbors_init _PARAMS((void));
 extern peer *getDefaultParent _PARAMS((request_t * request));
 extern peer *getRoundRobinParent _PARAMS((request_t * request));

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.151 1997/07/15 23:23:30 wessels Exp $
+ * $Id: neighbors.cc,v 1.152 1997/07/16 04:48:29 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -129,17 +129,7 @@ static icp_common_t echo_hdr;
 static u_short echo_port;
 
 static int NLateReplies = 0;
-
-static struct {
-    int n;
-    peer *peers_head;
-    peer *peers_tail;
-    peer *first_ping;
-    peer *removed;
-} Peers = {
-
-    0, NULL, NULL, NULL
-};
+static peer *first_ping = NULL;
 
 char *
 neighborTypeStr(const peer * p)
@@ -160,7 +150,7 @@ whichPeer(const struct sockaddr_in *from)
     struct in_addr ip = from->sin_addr;
     peer *p = NULL;
     debug(15, 3) ("whichPeer: from %s port %d\n", inet_ntoa(ip), port);
-    for (p = Peers.peers_head; p; p = p->next) {
+    for (p = Config.peers; p; p = p->next) {
 	for (j = 0; j < p->n_addresses; j++) {
 	    if (ip.s_addr == p->addresses[j].s_addr && port == p->icp_port) {
 		return p;
@@ -260,7 +250,7 @@ neighborsCount(request_t * request)
 {
     peer *p = NULL;
     int count = 0;
-    for (p = Peers.peers_head; p; p = p->next)
+    for (p = Config.peers; p; p = p->next)
 	if (peerWouldBePinged(p, request))
 	    count++;
     debug(15, 3) ("neighborsCount: %d\n", count);
@@ -272,7 +262,7 @@ getSingleParent(request_t * request)
 {
     peer *p = NULL;
     peer *q = NULL;
-    for (q = Peers.peers_head; q; q = q->next) {
+    for (q = Config.peers; q; q = q->next) {
 	if (!peerHTTPOkay(q, request))
 	    continue;
 	if (neighborType(q, request) != PEER_PARENT)
@@ -289,7 +279,7 @@ peer *
 getFirstUpParent(request_t * request)
 {
     peer *p = NULL;
-    for (p = Peers.peers_head; p; p = p->next) {
+    for (p = Config.peers; p; p = p->next) {
 	if (!neighborUp(p))
 	    continue;
 	if (neighborType(p, request) != PEER_PARENT)
@@ -307,7 +297,7 @@ getRoundRobinParent(request_t * request)
 {
     peer *p;
     peer *q = NULL;
-    for (p = Peers.peers_head; p; p = p->next) {
+    for (p = Config.peers; p; p = p->next) {
 	if (!BIT_TEST(p->options, NEIGHBOR_ROUNDROBIN))
 	    continue;
 	if (neighborType(p, request) != PEER_PARENT)
@@ -328,7 +318,7 @@ peer *
 getDefaultParent(request_t * request)
 {
     peer *p = NULL;
-    for (p = Peers.peers_head; p; p = p->next) {
+    for (p = Config.peers; p; p = p->next) {
 	if (neighborType(p, request) != PEER_PARENT)
 	    continue;
 	if (!BIT_TEST(p->options, NEIGHBOR_DEFAULT_PARENT))
@@ -350,7 +340,7 @@ getNextPeer(peer * p)
 peer *
 getFirstPeer(void)
 {
-    return Peers.peers_head;
+    return Config.peers;
 }
 
 static void
@@ -358,8 +348,8 @@ neighborRemove(peer * target)
 {
     peer *p = NULL;
     peer **P = NULL;
-    p = Peers.peers_head;
-    P = &Peers.peers_head;
+    p = Config.peers;
+    P = &Config.peers;
     while (p) {
 	if (target == p)
 	    break;
@@ -368,30 +358,10 @@ neighborRemove(peer * target)
     }
     if (p) {
 	*P = p->next;
-	p->next = Peers.removed;
-	Peers.removed = p;
-	p->stats.ack_deficit = HIER_MAX_DEFICIT;
-	Peers.n--;
-    }
-    Peers.first_ping = Peers.peers_head;
-}
-
-void
-neighborsDestroy(void)
-{
-    peer *p = NULL;
-    peer *next = NULL;
-    debug(15, 3) ("neighborsDestroy: called\n");
-    for (p = Peers.peers_head; p; p = next) {
-	next = p->next;
 	peerDestroy(p);
-	Peers.n--;
+	Config.npeers--;
     }
-    for (p = Peers.removed; p; p = next) {
-	next = p->next;
-	peerDestroy(p);
-    }
-    memset(&Peers, '\0', sizeof(Peers));
+    first_ping = Config.peers;
 }
 
 void
@@ -438,7 +408,7 @@ neighborsUdpPing(request_t * request,
     int queries_sent = 0;
     int peers_pinged = 0;
 
-    if (Peers.peers_head == NULL)
+    if (Config.peers == NULL)
 	return 0;
     if (theOutIcpConnection < 0) {
 	debug(15, 0) ("neighborsUdpPing: There is no ICP socket!\n");
@@ -454,9 +424,9 @@ neighborsUdpPing(request_t * request,
     mem->start_ping = current_time;
     mem->icp_reply_callback = callback;
     mem->ircb_data = callback_data;
-    for (i = 0, p = Peers.first_ping; i++ < Peers.n; p = p->next) {
+    for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
 	if (p == NULL)
-	    p = Peers.peers_head;
+	    p = Config.peers;
 	debug(15, 5) ("neighborsUdpPing: Peer %s\n", p->host);
 	if (!peerWouldBePinged(p, request))
 	    continue;		/* next peer */
@@ -517,11 +487,11 @@ neighborsUdpPing(request_t * request,
 	    }
 	}
     }
-    if ((Peers.first_ping = Peers.first_ping->next) == NULL)
-	Peers.first_ping = Peers.peers_head;
+    if ((first_ping = first_ping->next) == NULL)
+	first_ping = Config.peers;
 
     /* only do source_ping if we have neighbors */
-    if (Peers.n) {
+    if (Config.npeers) {
 	if (!Config.sourcePing) {
 	    debug(15, 6) ("neighborsUdpPing: Source Ping is disabled.\n");
 	} else if ((ia = ipcache_gethostbyname(host, 0))) {
@@ -717,58 +687,11 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
     }
 }
 
-void
-neighborAdd(const char *host,
-    const char *type,
-    int http_port,
-    int icp_port,
-    int options,
-    int weight,
-    int mcast_ttl)
-{
-    peer *p = NULL;
-    ushortlist *u;
-    const char *me = getMyHostname();
-    if (!strcmp(host, me)) {
-	for (u = Config.Port.http; u; u = u->next) {
-	    if (http_port != u->i)
-		continue;
-	    debug(15, 0) ("neighborAdd: skipping cache_host %s %s/%d/%d\n",
-		type, host, http_port, icp_port);
-	    return;
-	}
-    }
-    p = xcalloc(1, sizeof(peer));
-    cbdataAdd(p);
-    p->http_port = http_port;
-    p->icp_port = icp_port;
-    p->mcast.ttl = mcast_ttl;
-    p->options = options;
-    p->weight = weight;
-    p->host = xstrdup(host);
-    p->pinglist = NULL;
-    p->typelist = NULL;
-    p->acls = NULL;
-    p->icp_version = ICP_VERSION_CURRENT;
-    p->type = parseNeighborType(type);
-    p->tcp_up = 1;
-
-    /* Append peer */
-    if (!Peers.peers_head)
-	Peers.peers_head = p;
-    if (Peers.peers_tail)
-	Peers.peers_tail->next = p;
-    Peers.peers_tail = p;
-    Peers.n++;
-    if (!Peers.first_ping)
-	Peers.first_ping = p;
-}
-
 peer *
-neighborFindByName(const char *name)
+peerFindByName(const char *name)
 {
     peer *p = NULL;
-    for (p = Peers.peers_head; p; p = p->next) {
+    for (p = Config.peers; p; p = p->next) {
 	if (!strcasecmp(name, p->host))
 	    break;
     }
@@ -851,7 +774,7 @@ static void
 peerRefreshDNS(void *junk)
 {
     peer *p = NULL;
-    peer *next = Peers.peers_head;
+    peer *next = Config.peers;
     while ((p = next)) {
 	next = p->next;
 	p->ip_lookup_pending = 1;

@@ -22,7 +22,6 @@ typedef struct _wordlist wordlist;
 typedef struct _intlist intlist;
 typedef struct _ushortlist ushortlist;
 typedef struct _relist relist;
-typedef struct _cache_peer cache_peer;
 typedef struct _SquidConfig SquidConfig;
 typedef struct _SquidConfig2 SquidConfig2;
 typedef struct _close_handler close_handler;

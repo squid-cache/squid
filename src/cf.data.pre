@@ -107,8 +107,8 @@ DOC_END
 # OPTIONS WHICH AFFECT THE NEIGHBOR SELECTION ALGORITHM
 #-----------------------------------------------------------------------------
 
-NAME: cache_peer cache_host
-TYPE: cache_peer
+NAME: cache_peer
+TYPE: peer
 DEFAULT: none
 LOC: Config.peers
 DOC_START

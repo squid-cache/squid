@@ -85,20 +85,6 @@ struct _relist {
     struct _relist *next;
 };
 
-struct _cache_peer {
-    char *host;
-    char *type;
-    u_short http;
-    u_short icp;
-    int options;
-    int weight;
-    int mcast_ttl;
-    domain_ping *pinglist;
-    domain_type *typelist;
-    acl_list *acls;
-    struct _cache_peer *next;
-};
-
 struct _SquidConfig {
     struct {
 	size_t maxSize;
@@ -195,9 +181,8 @@ struct _SquidConfig {
     wordlist *mcast_group_list;
     wordlist *dns_testname_list;
     relist *cache_stop_relist;
-    cache_peer *peers;
-    cache_peer *sslProxy;
-    cache_peer *passProxy;
+    peer *peers;
+    int npeers;
     struct {
 	int size;
 	int low;
