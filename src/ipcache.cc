@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.152 1998/01/02 22:03:40 wessels Exp $
+ * $Id: ipcache.cc,v 1.153 1998/01/06 05:15:41 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -872,17 +872,6 @@ ipcacheCheckNumeric(const char *name)
     static_addrs.badcount = 0;
     return &static_addrs;
 }
-
-#if OLD_CODE
-int
-ipcacheQueueDrain(void)
-{
-    if (!ipcacheQueueHead)
-	return 0;
-    ipcacheNudgeQueue();
-    return 1;
-}
-#endif
 
 static void
 ipcacheLockEntry(ipcache_entry * i)

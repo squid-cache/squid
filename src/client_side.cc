@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.191 1998/01/06 05:12:07 wessels Exp $
+ * $Id: client_side.cc,v 1.192 1998/01/06 05:15:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -42,9 +42,6 @@ static const char *const proxy_auth_line =
 
 static CWCB clientHandleIMSComplete;
 static CWCB clientWriteComplete;
-#if UNUSED_CODE
-static CWCB clientShortWriteComplete;
-#endif
 static PF clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
@@ -62,9 +59,6 @@ static RH clientRedirectDone;
 static STCB clientHandleIMSReply;
 static int clientGetsOldEntry(StoreEntry * new, StoreEntry * old, request_t * request);
 static int checkAccelOnly(clientHttpRequest *);
-#if UNUSED_CODE
-static ERCB clientErrorComplete;
-#endif
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
 static void clientParseRequestHeaders(clientHttpRequest *);
@@ -740,17 +734,6 @@ clientHierarchical(clientHttpRequest * http)
     return 1;
 }
 
-#if UNUSED_CODE
-static void
-clientErrorComplete(int fd, void *data, size_t size)
-{
-    clientHttpRequest *http = data;
-    if (http)
-	http->out.size += size;
-    comm_close(fd);
-}
-#endif
-
 int
 isTcpHit(log_type code)
 {
@@ -1137,17 +1120,6 @@ clientHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *d
     if (flag != COMM_ERR_CLOSING)
 	comm_close(fd);
 }
-
-#if UNUSED_CODE
-static void
-clientShortWriteComplete(int fd, char *bufnotused, size_t size, int flag, void *data)
-{
-    clientHttpRequest *http = data;
-    http->out.size += size;
-    if (flag != COMM_ERR_CLOSING)
-	comm_close(fd);
-}
-#endif
 
 static log_type
 clientProcessRequest2(clientHttpRequest * http)

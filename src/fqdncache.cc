@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.76 1998/01/02 22:03:41 wessels Exp $
+ * $Id: fqdncache.cc,v 1.77 1998/01/06 05:15:40 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -792,20 +792,6 @@ fqdnFromAddr(struct in_addr addr)
     xstrncpy(buf, inet_ntoa(addr), 32);
     return buf;
 }
-
-#if OLD_CODE
-int
-fqdncacheQueueDrain(void)
-{
-    fqdncache_entry *i;
-    dnsserver_t *dnsData;
-    if (!fqdncacheQueueHead)
-	return 0;
-    while ((dnsData = dnsGetFirstAvailable()) && (i = fqdncacheDequeue()))
-	fqdncache_dnsDispatch(dnsData, i);
-    return 1;
-}
-#endif
 
 static void
 fqdncacheLockEntry(fqdncache_entry * f)

@@ -59,8 +59,7 @@
 
 #define FD_DESC_SZ		64
 
-#define FQDN_FLAG_UNUSED_01	0x01
-#define FQDN_LOOKUP_IF_MISS	0x02
+#define FQDN_LOOKUP_IF_MISS	0x01
 #define FQDN_MAX_NAMES 5
 #define FQDNCACHE_AV_FACTOR 1000
 
@@ -99,8 +98,7 @@
 #define IDENT_PENDING 1
 #define IDENT_DONE 2
 
-#define IP_UNUSED_FLAG_01	0x01
-#define IP_LOOKUP_IF_MISS	0x02
+#define IP_LOOKUP_IF_MISS	0x01
 
 #define IPCACHE_AV_FACTOR 1000
 
@@ -137,12 +135,6 @@
 
 #define SM_PAGE_SIZE 4096
 #define DISK_PAGE_SIZE  8192
-
-#if UNUSED_CODE
-#define BIT_SET(flag, bit) 	((flag) |= (bit))
-#define BIT_CLR(flag, bit) 	((flag) &= ~(bit))
-#define BIT_TEST(flag, bit) 	((flag) & (bit))
-#endif
 
 #define EBIT_SET(flag, bit) 	((flag) |= ((1<<bit)))
 #define EBIT_CLR(flag, bit) 	((flag) &= ~((1<<bit)))
