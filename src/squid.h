@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.31 1996/07/22 16:40:29 wessels Exp $
+ * $Id: squid.h,v 1.32 1996/07/22 17:19:52 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -267,6 +267,7 @@ extern int opt_unlink_on_reload;	/* main.c */
 extern int opt_reload_hit_only;	/* main.c */
 extern int opt_dns_tests;	/* main.c */
 extern int opt_foreground_rebuild;	/* main.c */
+extern int opt_log_fqdn;	/* main.c */
 extern int vhost_mode;		/* main.c */
 extern char version_string[];	/* main.c */
 extern char appname[];		/* main.c */
