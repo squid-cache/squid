@@ -654,6 +654,251 @@ Squid consists of the following major components
 <!-- %%%% Chapter : STORAGE MANAGER %%%% -->
 <sect>Storage Manager
 
+<!-- %%%% Chapter : FILESYSTEM INTERFACE %%%% -->
+<sect>Filesystem Interface
+
+<sect1>Introduction
+
+	<P>
+	Traditionally, Squid has always used the Unix filesystem (UFS)
+	to store cache objects on disk.  Over the years, the
+	poor performance of UFS has become very obvious.  In most
+	cases, UFS limits Squid to about 30-50 requests per second.
+	Our work indicates that the poor performance is mostly
+	due to the synchronous nature of <tt/open()/ and <tt/unlink()/
+	system calls, and perhaps thrashing of inode/buffer caches.
+
+	<P>
+	We want to try out our own, customized filesystems with Squid.
+	In order to do that, we need a well-defined interface
+	for the bits of Squid that access the permanent storage
+	devices.
+
+<sect1>The Interface
+
+<sect2>Data Structures
+
+<sect3><em/storeIOState/
+
+	<P>
+	Every cache object that is ``opened'' for reading or writing
+	will have an <em/storeIOState/ data structure associated with
+	it.  Currently, this structure looks like:
+<verb>
+        struct _storeIOState {
+            int fd; 
+            sfileno swap_file_number;
+            mode_t mode; 
+            size_t st_size;             /* do stat(2) after read open */
+            off_t offset;               /* current offset pointer */
+            STIOCB *callback;  
+            void *callback_data;
+            struct { 
+                STRCB *callback;
+                void *callback_data;
+            } read;
+            struct {
+                unsigned int closing:1; /* debugging aid */
+            } flags;
+            union {
+                struct {
+                    struct { 
+                        unsigned int close_request:1;
+                        unsigned int reading:1;
+                        unsigned int writing:1;
+                    } flags;
+                } ufs;
+            } type;
+        };      
+</verb>
+
+	<em/fd/ is a filedescriptor, and should be considered ``private''
+	to the underlying implementation.
+
+	<em/swap_file_number/ is the 32-bit swap file number for the
+	object, taken from the <em/StoreEntry/.
+
+	Note that there are two callback functions.  The first,
+	<em/callback/, of type <em/STIOCB/ (store I/O callback),
+	is callback for the <em/storeIOState/ as a whole.  This
+	callback is used to indicate success or failure of accessing
+	the object, whether its for reading or writing.
+	There are no callbacks for open and write operations,
+	unless they fail.
+
+	The second, <em/read.callback/, of type <em/STRCB/ (store
+	read callback) is used for every read operation.
+
+	The ugly union is used to hold filesystem-specific state
+	information.
+
+	<em/storeIOState/ structures are allocated by calling
+	<tt/storeOpen()/, and are will be deallocated by the
+	filesystem layer after
+	<tt/storeClose()/ is called.
+
+<sect2>External Functions
+
+<sect3><tt/storeOpen()/
+
+	<P>
+	Prototype:
+<verb>
+	storeIOState *
+	storeOpen(sfileno f, mode_t mode, STIOCB *callback, void *callback_data)
+</verb>
+
+	<P>
+	<tt/storeOpen()/
+	submits a request to open a cache object for reading or writing.
+	<tt/f/ is the 32-bit swap file number of the cached object.
+	<tt/mode/ should be either <tt/O_RDONLY/ or <tt/O_WRONLY/.
+
+	<P>
+	<tt/callback/ is a function that will be called either when
+	an error is encountered, or when the object is closed (by
+	calling <tt/storeClose()/).  If the open request is
+	successful, there is no callback.  The calling module must
+	assume the open request will succeed, and may begin reading
+	or writing immediately.
+
+<sect3><tt/storeClose()/
+
+	<P>
+	Prototype:
+<verb>
+	void
+	storeClose(storeIOState *sio)
+</verb>
+
+	<P>
+	<tt/storeClose()/
+	submits a request to close the cache object.  It is safe to request
+	a close even if there are read or write operations pending.
+	When the underlying filesystem actually closes the object,
+	the <em/STIOCB/ callback (registered with <tt/storeOpen()/) will
+	be called.
+
+<sect3><tt/storeRead()/
+
+	<P>
+	Prototype:
+<verb>
+	void
+	storeRead(storeIOState *sio, char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data)
+</verb>
+
+	<P>
+	<tt/storeRead()/ is more complicated than the other functions
+	because it requires its own callback function to notify the
+	caller when the requested data has actually been read. 
+	<em/buf/ must be a valid memory buffer of at least <em/size/
+	bytes.  <em/offset/ specifies the byte offset where the
+	read should begin.  Note that with the Swap Meta Headers
+	prepended to each cache object, this offset does not equal
+	the offset into the actual object data.
+
+	<P>
+	The caller is responsible for allocating and freeing <em/buf/
+
+<sect3><tt/storeWrite()/
+
+	<P>
+	Prototype:
+<verb>
+	void
+	storeWrite(storeIOState *sio, char *buf, size_t size, off_t offset, FREE *free_func)
+</verb>
+
+	<P>
+	<tt/storeWrite()/ submits a request to write a block
+	of data to the disk store.  
+	The caller is responsible for allocating <em/buf/, but since
+	there is no per-write callback, this memory must be freed by
+	the lower filesystem implementation.  Therefore, the caller
+	must specify the <em/free_func/ to be used to deallocate
+	the memory.
+
+	<P>
+	If a write operation fails, the filesystem layer notifies the
+	calling module by calling the <em/STIOCB/ callback with an
+	error status code.
+
+<sect3><tt/storeUnlink()/
+
+	<P>
+	Prototype:
+<verb>
+	void
+	storeUnlink(sfileno f)
+</verb>
+
+	<P>
+	<tt/storeUnlink()/ removes the cached object from the disk
+	store.  There is no callback function, and the object
+	does not need to be opened first.  The filesystem
+	layer will remove the object if it exists on the disk.
+
+<sect3><tt/storeOffset()/
+
+	<P>
+	Prototype:
+<verb>
+	off_t
+	storeOffset(storeIOState *sio)
+</verb>
+
+	<P>
+	Returns the current byte-offset of the cache object
+	on disk.
+
+<sect3><em/STIOCB/ callback
+
+	<P>
+	Prototype:
+<verb>
+	void
+	stiocb(void *data, int errorflag, storeIOState *sio)
+</verb>
+
+	<P>
+	The <em/stiocb/ function is passed as a parameter to
+	<tt/storeOpen()/.  The filesystem layer calls <em/stiocb/
+	either when an I/O error occurs, or when the disk
+	object is closed.
+
+	<P>
+	<em/errorflag/ is one of the following:
+<verb>
+	#define DISK_OK                   (0)
+	#define DISK_ERROR               (-1)
+	#define DISK_EOF                 (-2)
+	#define DISK_NO_SPACE_LEFT       (-6)
+</verb>
+
+	<P>
+	Once the The <em/stiocb/ function has been called,
+	the <em/sio/ data should not be accessed further.
+
+<sect3><em/STRCB/ callback
+
+	<P>
+	Prototype:
+<verb>
+	void
+	strcb(void *data, const char *buf, size_t len)
+</verb>
+
+	<P>
+	The <em/strcb/ function is passed as a parameter to
+	<tt/storeRead()/.  The filesystem layer calls <em/strcb/
+	after a block of data has been read from the disk and placed
+	into <em/buf/.  <em/len/ indicates how many bytes were
+	placed into <em/buf/.  The <em/strcb/ function is only
+	called if the read operation is successful.  If it fails,
+	then the <em/STIOCB/ callback will be called instead.
+
+
 <!-- %%%% Chapter : FORWARDING SELECTION %%%% -->
 <sect>Forwarding Selection
 
