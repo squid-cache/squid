@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.65 1998/05/07 20:49:19 wessels Exp $
+ * $Id: store_dir.cc,v 1.66 1998/05/08 23:29:30 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -638,13 +638,6 @@ storeDirWriteCleanLogs(int reopen)
     if (store_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeDirWriteCleanLogs: Operation aborted.\n");
-#if DONT
-	/*
-	 * why did we want to close the current swap logs here?
-	 * DW/1.2.beta19
-	 */
-	storeDirCloseSwapLogs();
-#endif
 	return 0;
     }
     debug(20, 1) ("storeDirWriteCleanLogs: Starting...\n");

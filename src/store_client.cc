@@ -430,21 +430,6 @@ storePendingNClients(const StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     int npend = NULL == mem ? 0 : mem->nclients;
-#if OLD_CODE
-    store_client *sc;
-    store_client *nx = NULL;
-    if (mem == NULL)
-	return 0;
-    for (sc = mem->clients; sc; sc = nx) {
-	nx = sc->next;
-	/* Changed from callback_data to just callback.  There can be no use */
-	/* for callback_data without a callback, and sc->callback we know */
-	/* gets reset, but not necessarily sc->callback_data */
-	if (sc->callback == NULL)
-	    continue;
-	npend++;
-    }
-#endif
     debug(20, 3) ("storePendingNClients: returning %d\n", npend);
     return npend;
 }
