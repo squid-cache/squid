@@ -1,26 +1,29 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<TITLE> ГРЕШКА: Заявеният обект не може да бъде доставен </TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>ГРЕШКА</H1>
+<H2> Заявеният обект не може да бъде доставен </H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+При опит да бъде доставен обектът:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+Възникна следната грешка:
 <UL>
 <LI>
 <STRONG>
-The request or reply is too large.
+Заявката или отговорът са прекалено големи.
 </STRONG>
 <P>
-If you are making a POST or PUT request, then your request body
-(the thing you are trying to upload) is too large.  If you are 
-making a GET request, then the reply body (what you are trying
-to download) is too large.   These limits have been established
-by the Internet Service Provider who operates this cache.  Please
-contact them directly if you feel this is an error.
+Ако правите POST или PUT заявка, значи че размерът на заявката 
+(това което се опитвате да изпратите) е прекалено голям. Ако 
+правите GET заявка , значи че нейният отговор (това което се 
+опитвате да изтеглите) е прекалено голям. Тези ограничения са 
+поставени от Интернет Доставчика които администрира този КЕШ 
+сървър. Ако считате това за неправилно , моля обърнете се към 
+администратора.
 </UL>
 <P>
-Your cache administrator is <A HREF="mailto:%w">%w</A>.
+Адресът на вашият администратор е: <A HREF="mailto:%w">%w</A>.
+</P>
