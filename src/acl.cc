@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.33 1996/09/13 19:11:13 wessels Exp $
+ * $Id: acl.cc,v 1.34 1996/09/14 08:45:32 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,32 +41,32 @@ struct _acl_access *ICPAccessList = NULL;
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
 
-static void aclDestroyAclList _PARAMS((struct _acl_list * list));
-static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
-static void aclDestroyRegexList _PARAMS((struct _relist * data));
-static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
-static int aclMatchDomainList _PARAMS((wordlist *, char *));
-static int aclMatchAclList _PARAMS((struct _acl_list *, aclCheck_t *));
-static int aclMatchInteger _PARAMS((intlist * data, int i));
-static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
-static int aclMatchRegex _PARAMS((relist * data, char *word));
-static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
+static void aclDestroyAclList(struct _acl_list *list);
+static void aclDestroyIpList(struct _acl_ip_data *data);
+static void aclDestroyRegexList(struct _relist *data);
+static void aclDestroyTimeList(struct _acl_time_data *data);
+static int aclMatchDomainList(wordlist *, char *);
+static int aclMatchAclList(struct _acl_list *, aclCheck_t *);
+static int aclMatchInteger(intlist * data, int i);
+static int aclMatchIp(struct _acl_ip_data *data, struct in_addr c);
+static int aclMatchRegex(relist * data, char *word);
+static int aclMatchTime(struct _acl_time_data *data, time_t when);
 #ifdef UNUSED_CODE
-static int aclMatchEndOfWord _PARAMS((wordlist * data, char *word));
+static int aclMatchEndOfWord(wordlist * data, char *word);
 #endif
-static intlist *aclParseIntlist _PARAMS((void));
-static struct _acl_ip_data *aclParseIpList _PARAMS((void));
-static intlist *aclParseMethodList _PARAMS((void));
-static intlist *aclParseProtoList _PARAMS((void));
-static struct _relist *aclParseRegexList _PARAMS((void));
-static struct _acl_time_data *aclParseTimeSpec _PARAMS((void));
-static wordlist *aclParseWordList _PARAMS((void));
-static wordlist *aclParseDomainList _PARAMS((void));
-static squid_acl aclType _PARAMS((char *s));
-static int decode_addr _PARAMS((char *, struct in_addr *, struct in_addr *));
+static intlist *aclParseIntlist(void);
+static struct _acl_ip_data *aclParseIpList(void);
+static intlist *aclParseMethodList(void);
+static intlist *aclParseProtoList(void);
+static struct _relist *aclParseRegexList(void);
+static struct _acl_time_data *aclParseTimeSpec(void);
+static wordlist *aclParseWordList(void);
+static wordlist *aclParseDomainList(void);
+static squid_acl aclType(char *s);
+static int decode_addr(char *, struct in_addr *, struct in_addr *);
 
-static squid_acl aclType(s)
-     char *s;
+static squid_acl
+aclType(char *s)
 {
     if (!strcmp(s, "src"))
 	return ACL_SRC_IP;
@@ -97,8 +97,8 @@ static squid_acl aclType(s)
     return ACL_NONE;
 }
 
-struct _acl *aclFindByName(name)
-     char *name;
+struct _acl *
+aclFindByName(char *name)
 {
     struct _acl *a;
     for (a = AclList; a; a = a->next)
@@ -108,7 +108,8 @@ struct _acl *aclFindByName(name)
 }
 
 
-static intlist *aclParseIntlist()
+static intlist *
+aclParseIntlist()
 {
     intlist *head = NULL;
     intlist **Tail = &head;
@@ -123,7 +124,8 @@ static intlist *aclParseIntlist()
     return head;
 }
 
-static intlist *aclParseProtoList()
+static intlist *
+aclParseProtoList()
 {
     intlist *head = NULL;
     intlist **Tail = &head;
@@ -138,7 +140,8 @@ static intlist *aclParseProtoList()
     return head;
 }
 
-static intlist *aclParseMethodList()
+static intlist *
+aclParseMethodList()
 {
     intlist *head = NULL;
     intlist **Tail = &head;
@@ -156,9 +159,8 @@ static intlist *aclParseMethodList()
 /* Decode a ascii representation (asc) of a IP adress, and place
  * adress and netmask information in addr and mask.
  */
-static int decode_addr(asc, addr, mask)
-     char *asc;
-     struct in_addr *addr, *mask;
+static int
+decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 {
     struct hostent *hp = NULL;
     u_num32 a;
@@ -210,7 +212,8 @@ static int decode_addr(asc, addr, mask)
 }
 
 
-static struct _acl_ip_data *aclParseIpList()
+static struct _acl_ip_data *
+aclParseIpList()
 {
     char *t = NULL, *p = NULL;
     struct _acl_ip_data *head = NULL;
@@ -275,7 +278,8 @@ static struct _acl_ip_data *aclParseIpList()
     return head;
 }
 
-static struct _acl_time_data *aclParseTimeSpec()
+static struct _acl_time_data *
+aclParseTimeSpec()
 {
     struct _acl_time_data *data = NULL;
     int h1, m1, h2, m2;
@@ -348,7 +352,8 @@ static struct _acl_time_data *aclParseTimeSpec()
     return data;
 }
 
-static struct _relist *aclParseRegexList()
+static struct _relist *
+aclParseRegexList()
 {
     relist *head = NULL;
     relist **Tail = &head;
@@ -371,7 +376,8 @@ static struct _relist *aclParseRegexList()
     return head;
 }
 
-static wordlist *aclParseWordList()
+static wordlist *
+aclParseWordList()
 {
     wordlist *head = NULL;
     wordlist **Tail = &head;
@@ -386,7 +392,8 @@ static wordlist *aclParseWordList()
     return head;
 }
 
-static wordlist *aclParseDomainList()
+static wordlist *
+aclParseDomainList()
 {
     wordlist *head = NULL;
     wordlist **Tail = &head;
@@ -403,7 +410,8 @@ static wordlist *aclParseDomainList()
 }
 
 
-void aclParseAclLine()
+void
+aclParseAclLine()
 {
     /* we're already using strtok() to grok the line */
     char *t = NULL;
@@ -479,9 +487,8 @@ void aclParseAclLine()
 /* maex@space.net (06.09.96)
  *    get (if any) the URL from deny_info for a certain acl
  */
-char *aclGetDenyInfoUrl(head, name)
-     struct _acl_deny_info_list **head;
-     char *name;
+char *
+aclGetDenyInfoUrl(struct _acl_deny_info_list **head, char *name)
 {
     struct _acl_deny_info_list *A = NULL;
     struct _acl_name_list *L = NULL;
@@ -510,8 +517,8 @@ char *aclGetDenyInfoUrl(head, name)
  *      - a check, whether the given acl really is defined
  *      - a check, whether an acl is added more than once for the same url
  */
-void aclParseDenyInfoLine(head)
-     struct _acl_deny_info_list **head;
+void
+aclParseDenyInfoLine(struct _acl_deny_info_list **head)
 {
     char *t = NULL;
     struct _acl_deny_info_list *A = NULL;
@@ -551,8 +558,8 @@ void aclParseDenyInfoLine(head)
     *T = A;
 }
 
-void aclParseAccessLine(head)
-     struct _acl_access **head;
+void
+aclParseAccessLine(struct _acl_access **head)
 {
     char *t = NULL;
     struct _acl_access *A = NULL;
@@ -618,9 +625,8 @@ void aclParseAccessLine(head)
     *T = A;
 }
 
-static int aclMatchIp(data, c)
-     struct _acl_ip_data *data;
-     struct in_addr c;
+static int
+aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
 {
     struct in_addr h;
     unsigned long lh, la1, la2;
@@ -652,9 +658,8 @@ static int aclMatchIp(data, c)
 }
 
 #ifdef UNUSED_CODE
-static int aclMatchWord(data, word)
-     wordlist *data;
-     char *word;
+static int
+aclMatchWord(wordlist * data, char *word)
 {
     if (word == NULL)
 	return 0;
@@ -668,9 +673,8 @@ static int aclMatchWord(data, word)
     return 0;
 }
 
-static int aclMatchEndOfWord(data, word)
-     wordlist *data;
-     char *word;
+static int
+aclMatchEndOfWord(wordlist * data, char *word)
 {
     int offset;
     if (word == NULL)
@@ -687,9 +691,8 @@ static int aclMatchEndOfWord(data, word)
 }
 #endif
 
-static int aclMatchDomainList(data, host)
-     wordlist *data;
-     char *host;
+static int
+aclMatchDomainList(wordlist * data, char *host)
 {
     if (host == NULL)
 	return 0;
@@ -702,9 +705,8 @@ static int aclMatchDomainList(data, host)
     return 0;
 }
 
-static int aclMatchRegex(data, word)
-     relist *data;
-     char *word;
+static int
+aclMatchRegex(relist * data, char *word)
 {
     if (word == NULL)
 	return 0;
@@ -718,9 +720,8 @@ static int aclMatchRegex(data, word)
     return 0;
 }
 
-static int aclMatchInteger(data, i)
-     intlist *data;
-     int i;
+static int
+aclMatchInteger(intlist * data, int i)
 {
     while (data) {
 	if (data->i == i)
@@ -730,9 +731,8 @@ static int aclMatchInteger(data, i)
     return 0;
 }
 
-static int aclMatchTime(data, when)
-     struct _acl_time_data *data;
-     time_t when;
+static int
+aclMatchTime(struct _acl_time_data *data, time_t when)
 {
     static time_t last_when = 0;
     static struct tm tm;
@@ -751,9 +751,8 @@ static int aclMatchTime(data, when)
     return data->weekbits & (1 << tm.tm_wday) ? 1 : 0;
 }
 
-int aclMatchAcl(acl, checklist)
-     struct _acl *acl;
-     aclCheck_t *checklist;
+int
+aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 {
     request_t *r = checklist->request;
     struct hostent *hp = NULL;
@@ -833,9 +832,8 @@ int aclMatchAcl(acl, checklist)
     /* NOTREACHED */
 }
 
-static int aclMatchAclList(list, checklist)
-     struct _acl_list *list;
-     aclCheck_t *checklist;
+static int
+aclMatchAclList(struct _acl_list *list, aclCheck_t * checklist)
 {
     while (list) {
 	AclMatchedName = list->acl->name;
@@ -851,9 +849,8 @@ static int aclMatchAclList(list, checklist)
     return 1;
 }
 
-int aclCheck(A, checklist)
-     struct _acl_access *A;
-     aclCheck_t *checklist;
+int
+aclCheck(struct _acl_access *A, aclCheck_t * checklist)
 {
     int allow = 0;
 
@@ -869,8 +866,8 @@ int aclCheck(A, checklist)
     return !allow;
 }
 
-static void aclDestroyIpList(data)
-     struct _acl_ip_data *data;
+static void
+aclDestroyIpList(struct _acl_ip_data *data)
 {
     struct _acl_ip_data *next;
     for (; data; data = next) {
@@ -879,8 +876,8 @@ static void aclDestroyIpList(data)
     }
 }
 
-static void aclDestroyTimeList(data)
-     struct _acl_time_data *data;
+static void
+aclDestroyTimeList(struct _acl_time_data *data)
 {
     struct _acl_time_data *next;
     for (; data; data = next) {
@@ -889,8 +886,8 @@ static void aclDestroyTimeList(data)
     }
 }
 
-static void aclDestroyRegexList(data)
-     struct _relist *data;
+static void
+aclDestroyRegexList(struct _relist *data)
 {
     struct _relist *next;
     for (; data; data = next) {
@@ -901,7 +898,8 @@ static void aclDestroyRegexList(data)
     }
 }
 
-void aclDestroyAcls()
+void
+aclDestroyAcls()
 {
     struct _acl *a = NULL;
     struct _acl *next = NULL;
@@ -942,8 +940,8 @@ void aclDestroyAcls()
     AclListTail = &AclList;
 }
 
-static void aclDestroyAclList(list)
-     struct _acl_list *list;
+static void
+aclDestroyAclList(struct _acl_list *list)
 {
     struct _acl_list *next = NULL;
     for (; list; list = next) {
@@ -952,8 +950,8 @@ static void aclDestroyAclList(list)
     }
 }
 
-void aclDestroyAccessList(list)
-     struct _acl_access **list;
+void
+aclDestroyAccessList(struct _acl_access **list)
 {
     struct _acl_access *l = NULL;
     struct _acl_access *next = NULL;
@@ -970,8 +968,8 @@ void aclDestroyAccessList(list)
 
 /* maex@space.net (06.09.1996)
  *    destroy an _acl_deny_info_list */
-void aclDestroyDenyInfoList(list)
-     struct _acl_deny_info_list **list;
+void
+aclDestroyDenyInfoList(struct _acl_deny_info_list **list)
 {
     struct _acl_deny_info_list *a = NULL;
     struct _acl_deny_info_list *a_next = NULL;
