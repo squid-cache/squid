@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.18 1998/03/30 22:58:51 wessels Exp $
+ * $Id: cbdata.cc,v 1.19 1998/03/31 05:37:36 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -80,7 +80,7 @@ typedef struct _cbdata {
 
 static HASHCMP cbdata_cmp;
 static HASHHASH cbdata_hash;
-static void cbdataReallyFree(cbdata *c);
+static void cbdataReallyFree(cbdata * c);
 
 static int
 cbdata_cmp(const void *p1, const void *p2)
@@ -130,7 +130,7 @@ cbdataAdd(const void *p, mem_type mem_type)
 }
 
 static void
-cbdataReallyFree(cbdata *c)
+cbdataReallyFree(cbdata * c)
 {
     mem_type mem_type = c->mem_type;
     void *p = (void *) c->key;
@@ -139,9 +139,9 @@ cbdataReallyFree(cbdata *c)
     xfree(c);
     debug(45, 3) ("cbdataReallyFree: Freeing %p\n", p);
     if (mem_type == MEM_NONE)
-        xfree(p);
+	xfree(p);
     else
-        memFree(mem_type, p);
+	memFree(mem_type, p);
 }
 
 void

@@ -255,7 +255,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     } else if (min_w) {
 	httpHeaderPutStr(&rep->header, HDR_LOCATION, min_w->key);
     }
-    httpBodySet(&rep->body, mb.buf, mb.size+1, memBufFreeFunc(&mb));
+    httpBodySet(&rep->body, mb.buf, mb.size + 1, memBufFreeFunc(&mb));
     httpReplySwapOut(rep, e);
     storeComplete(e);
     memFree(MEM_4K_BUF, buf);

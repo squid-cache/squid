@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.215 1998/03/28 20:31:51 wessels Exp $
+ * $Id: ftp.cc,v 1.216 1998/03/31 05:37:40 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1574,7 +1574,7 @@ ftpReadPasv(FtpStateData * ftpState)
     }
     port = ((p1 << 8) + p2);
     if (0 == port) {
-	debug(9,1)("ftpReadPasv: Invalid PASV reply: %s\n", buf);
+	debug(9, 1) ("ftpReadPasv: Invalid PASV reply: %s\n", buf);
 	ftpSendPort(ftpState);
 	return;
     }

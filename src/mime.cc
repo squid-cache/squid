@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.56 1998/03/31 05:35:24 wessels Exp $
+ * $Id: mime.cc,v 1.57 1998/03/31 05:37:45 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -184,6 +184,7 @@ mime_headers_end(const char *mime)
 	end += (end == p1 ? 3 : 2);
     return (char *) end;
 }
+
 #endif
 
 size_t
@@ -192,32 +193,32 @@ headersEnd(const char *mime, size_t l)
     size_t e = 0;
     int state = 0;
     while (e < l && state < 3) {
-        switch (state) {
-        case 0:
-            if ('\n' == mime[e]) 
-                state = 1;
-            break;
-        case 1:
-            if ('\r' == mime[e])
-                state = 2;
-            else if ('\n' == mime[e])
-                state = 3;
-            else
-                state = 0;
-            break;
-        case 2:
-            if ('\n' == mime[e])
-                state = 3;
-            else
-                state = 0;
-            break;
-        default:
-                break;
-        }
-        e++;
+	switch (state) {
+	case 0:
+	    if ('\n' == mime[e])
+		state = 1;
+	    break;
+	case 1:
+	    if ('\r' == mime[e])
+		state = 2;
+	    else if ('\n' == mime[e])
+		state = 3;
+	    else
+		state = 0;
+	    break;
+	case 2:
+	    if ('\n' == mime[e])
+		state = 3;
+	    else
+		state = 0;
+	    break;
+	default:
+	    break;
+	}
+	e++;
     }
     if (3 == state)
-        return e;
+	return e;
     return 0;
 }
 

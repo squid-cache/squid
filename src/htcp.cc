@@ -84,13 +84,14 @@ enum {
     HTCP_END
 };
 
-static const char *const htcpOpcodeStr[] = {
-	"HTCP_NOP",
-	"HTCP_TST",
-	"HTCP_MON",
-	"HTCP_SET",
-	"HTCP_CLR",
-	"HTCP_END"
+static const char *const htcpOpcodeStr[] =
+{
+    "HTCP_NOP",
+    "HTCP_TST",
+    "HTCP_MON",
+    "HTCP_SET",
+    "HTCP_CLR",
+    "HTCP_END"
 };
 
 /*
@@ -246,7 +247,7 @@ htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
     if (s < 0)
 	return NULL;
     off += s;
-    hdr.length = htons((u_short)off);
+    hdr.length = htons((u_short) off);
     hdr.major = 0;
     hdr.minor = 0;
     xmemcpy(buf, &hdr, hdr_sz);
@@ -309,107 +310,107 @@ htcpFreeSpecifier(htcpSpecifier * s)
 int
 htcpUnpackCountstr(char *buf, int sz, char **str)
 {
-	u_short l;
-	debug(31,1)("htcpUnpackCountstr: sz = %d\n", sz);
-	if (sz < 2) {
-	    debug(31,1)("htcpUnpackCountstr: sz < 2\n");
-	    return -1;
-	}
-	xmemcpy(&l, buf, 2);
-	l = ntohl(l);
-	buf += 2;
-	sz -= 2;
-	debug(31,1)("htcpUnpackCountstr: LENGTH = %d\n", (int) l);
-	if (sz < l) {
-	    debug(31,1)("htcpUnpackCountstr: sz(%d) < l(%d)\n", sz, l);
-	    return -1;
-	}
-	if (str) {
-		*str = xmalloc(l+1);
-		xstrncpy(*str, buf, l+1);
-		debug(31,1)("htcpUnpackCountstr: TEXT = %s\n", *str);
-	}
-	return (int)l+2;
+    u_short l;
+    debug(31, 1) ("htcpUnpackCountstr: sz = %d\n", sz);
+    if (sz < 2) {
+	debug(31, 1) ("htcpUnpackCountstr: sz < 2\n");
+	return -1;
+    }
+    xmemcpy(&l, buf, 2);
+    l = ntohl(l);
+    buf += 2;
+    sz -= 2;
+    debug(31, 1) ("htcpUnpackCountstr: LENGTH = %d\n", (int) l);
+    if (sz < l) {
+	debug(31, 1) ("htcpUnpackCountstr: sz(%d) < l(%d)\n", sz, l);
+	return -1;
+    }
+    if (str) {
+	*str = xmalloc(l + 1);
+	xstrncpy(*str, buf, l + 1);
+	debug(31, 1) ("htcpUnpackCountstr: TEXT = %s\n", *str);
+    }
+    return (int) l + 2;
 }
 
 
 htcpSpecifier *
 htcpUnpackSpecifier(char *buf, int sz)
 {
-	htcpSpecifier *s = xcalloc(1, sizeof(htcpSpecifier));
-	int o;
+    htcpSpecifier *s = xcalloc(1, sizeof(htcpSpecifier));
+    int o;
 
-	o = htcpUnpackCountstr(buf, sz, &s->method);
-	if (o < 0) {
-		debug(31,1)("htcpUnpackSpecifier: failed to unpack METHOD\n");
-		htcpFreeSpecifier(s);
-		return NULL;
-	}
-	buf += o;
-	sz -= o;
+    o = htcpUnpackCountstr(buf, sz, &s->method);
+    if (o < 0) {
+	debug(31, 1) ("htcpUnpackSpecifier: failed to unpack METHOD\n");
+	htcpFreeSpecifier(s);
+	return NULL;
+    }
+    buf += o;
+    sz -= o;
 
-	o = htcpUnpackCountstr(buf, sz, &s->uri);
-	if (o < 0) {
-		debug(31,1)("htcpUnpackSpecifier: failed to unpack URI\n");
-		htcpFreeSpecifier(s);
-		return NULL;
-	}
-	buf += o;
-	sz -= o;
+    o = htcpUnpackCountstr(buf, sz, &s->uri);
+    if (o < 0) {
+	debug(31, 1) ("htcpUnpackSpecifier: failed to unpack URI\n");
+	htcpFreeSpecifier(s);
+	return NULL;
+    }
+    buf += o;
+    sz -= o;
 
-	o = htcpUnpackCountstr(buf, sz, &s->version);
-	if (o < 0) {
-		debug(31,1)("htcpUnpackSpecifier: failed to unpack VERSION\n");
-		htcpFreeSpecifier(s);
-		return NULL;
-	}
-	buf += o;
-	sz -= o;
+    o = htcpUnpackCountstr(buf, sz, &s->version);
+    if (o < 0) {
+	debug(31, 1) ("htcpUnpackSpecifier: failed to unpack VERSION\n");
+	htcpFreeSpecifier(s);
+	return NULL;
+    }
+    buf += o;
+    sz -= o;
 
-	o = htcpUnpackCountstr(buf, sz, &s->req_hdrs);
-	if (o < 0) {
-		debug(31,1)("htcpUnpackSpecifier: failed to unpack REQ-HDRS\n");
-		htcpFreeSpecifier(s);
-		return NULL;
-	}
-	buf += o;
-	sz -= o;
+    o = htcpUnpackCountstr(buf, sz, &s->req_hdrs);
+    if (o < 0) {
+	debug(31, 1) ("htcpUnpackSpecifier: failed to unpack REQ-HDRS\n");
+	htcpFreeSpecifier(s);
+	return NULL;
+    }
+    buf += o;
+    sz -= o;
 
-	return s;
+    return s;
 }
 
 static void
 htcpHandleNop(char *buf, int sz, struct sockaddr_in *from)
 {
-	debug(31,1)("htcpHandleNop: Unimplemented\n");
+    debug(31, 1) ("htcpHandleNop: Unimplemented\n");
 }
 
 static void
 htcpHandleTst(char *buf, int sz, struct sockaddr_in *from)
 {
-	/* buf should be a SPECIFIER */
-	htcpSpecifier *s = htcpUnpackSpecifier(buf, sz);
-	if (NULL == s) {
-		debug(31,1)("htcpHandleTst: htcpUnpackSpecifier failed\n");
-		return;
-	}
-	debug(31,1)("htcpHandleTst: %s %s %s\n",
-		s->method,
-		s->uri,
-		s->version);
-	debug(31,1)("htcpHandleTst: %s\n", s->req_hdrs);
+    /* buf should be a SPECIFIER */
+    htcpSpecifier *s = htcpUnpackSpecifier(buf, sz);
+    if (NULL == s) {
+	debug(31, 1) ("htcpHandleTst: htcpUnpackSpecifier failed\n");
+	return;
+    }
+    debug(31, 1) ("htcpHandleTst: %s %s %s\n",
+	s->method,
+	s->uri,
+	s->version);
+    debug(31, 1) ("htcpHandleTst: %s\n", s->req_hdrs);
 }
 
 static void
 htcpHandleMon(char *buf, int sz, struct sockaddr_in *from)
 {
-	debug(31,1)("htcpHandleMon: Unimplemented\n");
+    debug(31, 1) ("htcpHandleMon: Unimplemented\n");
 }
 
 static void
 htcpHandleSet(char *buf, int sz, struct sockaddr_in *from)
 {
-	debug(31,1)("htcpHandleSet: Unimplemented\n");
+    debug(31, 1) ("htcpHandleSet: Unimplemented\n");
 }
 
 static void
@@ -417,31 +418,31 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 {
     htcpDataHeader hdr;
     if (sz < sizeof(htcpDataHeader)) {
-	debug(31,0)("htcpHandleData: msg size less than htcpDataHeader size\n");
+	debug(31, 0) ("htcpHandleData: msg size less than htcpDataHeader size\n");
 	return;
     }
     xmemcpy(&hdr, buf, sizeof(htcpDataHeader));
     hdr.length = ntohs(hdr.length);
     hdr.msg_id = ntohs(hdr.msg_id);
-    debug(31,1)("htcpHandleData: length = %d\n", (int) hdr.length);
+    debug(31, 1) ("htcpHandleData: length = %d\n", (int) hdr.length);
     if (hdr.opcode < HTCP_NOP || hdr.opcode > HTCP_END) {
-	debug(31,0)("htcpHandleData: opcode %d out of range\n",
+	debug(31, 0) ("htcpHandleData: opcode %d out of range\n",
 	    (int) hdr.opcode);
 	return;
     }
-    debug(31,1)("htcpHandleData: opcode = %d %s\n",
+    debug(31, 1) ("htcpHandleData: opcode = %d %s\n",
 	(int) hdr.opcode, htcpOpcodeStr[hdr.opcode]);
-    debug(31,1)("htcpHandleData: response = %d\n", (int) hdr.response);
-    debug(31,1)("htcpHandleData: F1 = %d\n", (int) hdr.F1);
-    debug(31,1)("htcpHandleData: RR = %d\n", (int) hdr.RR);
-    debug(31,1)("htcpHandleData: msg_id = %#x\n", (int) hdr.msg_id);
+    debug(31, 1) ("htcpHandleData: response = %d\n", (int) hdr.response);
+    debug(31, 1) ("htcpHandleData: F1 = %d\n", (int) hdr.F1);
+    debug(31, 1) ("htcpHandleData: RR = %d\n", (int) hdr.RR);
+    debug(31, 1) ("htcpHandleData: msg_id = %#x\n", (int) hdr.msg_id);
     if (sz < hdr.length) {
-	debug(31,0)("htcpHandle: sz < hdr.length\n");
+	debug(31, 0) ("htcpHandle: sz < hdr.length\n");
 	return;
     }
     buf += sizeof(htcpDataHeader);
     sz -= sizeof(htcpDataHeader);
-    switch(hdr.opcode) {
+    switch (hdr.opcode) {
     case HTCP_NOP:
 	htcpHandleNop(buf, sz, from);
 	break;
@@ -465,16 +466,16 @@ htcpHandle(char *buf, int sz, struct sockaddr_in *from)
 {
     htcpHeader htcpHdr;
     if (sz < sizeof(htcpHeader)) {
-	debug(31,0)("htcpHandle: msg size less than htcpHeader size\n");
+	debug(31, 0) ("htcpHandle: msg size less than htcpHeader size\n");
 	return;
     }
     xmemcpy(&htcpHdr, buf, sizeof(htcpHeader));
     htcpHdr.length = ntohs(htcpHdr.length);
-    debug(31,1)("htcpHandle: htcpHdr.length = %d\n", (int) htcpHdr.length);
-    debug(31,1)("htcpHandle: htcpHdr.major = %d\n", (int) htcpHdr.major);
-    debug(31,1)("htcpHandle: htcpHdr.minor = %d\n", (int) htcpHdr.minor);
+    debug(31, 1) ("htcpHandle: htcpHdr.length = %d\n", (int) htcpHdr.length);
+    debug(31, 1) ("htcpHandle: htcpHdr.major = %d\n", (int) htcpHdr.major);
+    debug(31, 1) ("htcpHandle: htcpHdr.minor = %d\n", (int) htcpHdr.minor);
     if (sz != htcpHdr.length) {
-	debug(31,0)("htcpHandle: sz != htcpHdr.length\n");
+	debug(31, 0) ("htcpHandle: sz != htcpHdr.length\n");
 	return;
     }
     buf += sizeof(htcpHeader);
@@ -536,39 +537,39 @@ htcpInit(void)
 /*  
  * htcpSocketShutdown only closes the 'in' socket if it is
  * different than the 'out' socket.
- */ 
+ */
 void
 htcpSocketShutdown(void)
-{   
+{
     if (htcpInSocket < 0)
-        return;
-    if (htcpInSocket != htcpOutSocket) { 
-        debug(12, 1) ("FD %d Closing HTCP socket\n", htcpInSocket);
-        comm_close(htcpInSocket);
-    }       
+	return;
+    if (htcpInSocket != htcpOutSocket) {
+	debug(12, 1) ("FD %d Closing HTCP socket\n", htcpInSocket);
+	comm_close(htcpInSocket);
+    }
     /*      
      * Here we set 'htcpInSocket' to -1 even though the HTCP 'in'
      * and 'out' sockets might be just one FD.  This prevents this
      * function from executing repeatedly.  When we are really ready to
      * exit or restart, main will comm_close the 'out' descriptor.
-     */     
+     */
     htcpInSocket = -1;
     /*      
      * Normally we only write to the outgoing HTCP socket, but
      * we also have a read handler there to catch messages sent
      * to that specific interface.  During shutdown, we must
      * disable reading on the outgoing socket.
-     */     
+     */
     assert(htcpOutSocket > -1);
     commSetSelect(htcpOutSocket, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
-void    
+void
 htcpSocketClose(void)
 {
     htcpSocketShutdown();
     if (htcpOutSocket > -1) {
-        debug(12, 1) ("FD %d Closing HTCP socket\n", htcpOutSocket);
-        comm_close(htcpOutSocket);
-    }   
-}   
+	debug(12, 1) ("FD %d Closing HTCP socket\n", htcpOutSocket);
+	comm_close(htcpOutSocket);
+    }
+}

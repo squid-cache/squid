@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.76 1998/03/27 22:44:25 wessels Exp $
+ * $Id: ssl.cc,v 1.77 1998/03/31 05:37:49 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -344,10 +344,10 @@ sslConnectDone(int fdnotused, int status, void *data)
 	    sslProxyConnected(sslState->server.fd, sslState);
 	else
 	    sslConnected(sslState->server.fd, sslState);
-    commSetTimeout(sslState->server.fd,
-	Config.Timeout.read,
-	sslTimeout,
-	sslState);
+	commSetTimeout(sslState->server.fd,
+	    Config.Timeout.read,
+	    sslTimeout,
+	    sslState);
     }
 }
 

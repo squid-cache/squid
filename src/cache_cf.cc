@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.268 1998/03/31 04:09:48 wessels Exp $
+ * $Id: cache_cf.cc,v 1.269 1998/03/31 05:37:34 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -442,16 +442,15 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 static void
 parse_snmp_access(communityEntry ** head)
 {
-    char *t=NULL;
+    char *t = NULL;
     communityEntry *cp;
 /* This is tricky: we need to define the communities here, assuming that 
-   communities and the MIB have already been defined */
-    
+ * communities and the MIB have already been defined */
+
     if (!snmpInitConfig()) {
-	debug(15,0)("parse_snmp_access: Access lists NOT defined.\n");
+	debug(15, 0) ("parse_snmp_access: Access lists NOT defined.\n");
 	return;
     }
-
     t = strtok(NULL, w_space);
     for (cp = *head; cp; cp = cp->next)
 	if (!strcmp(t, cp->name)) {
