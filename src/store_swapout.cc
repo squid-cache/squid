@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.80 2001/03/03 10:39:34 hno Exp $
+ * $Id: store_swapout.cc,v 1.81 2001/06/26 16:44:24 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -143,7 +143,7 @@ storeSwapOut(StoreEntry * e)
      */
     if (mem->inmem_hi < lowest_offset)
 	new_mem_lo = lowest_offset;
-    else if (mem->inmem_hi - lowest_offset > Config.Store.maxInMemObjSize)
+    else if (mem->inmem_hi - mem->inmem_lo > Config.Store.maxInMemObjSize)
 	new_mem_lo = lowest_offset;
     else
 	new_mem_lo = mem->inmem_lo;
