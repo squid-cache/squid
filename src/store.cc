@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.5 1996/03/22 17:48:18 wessels Exp $ */
+/* $Id: store.cc,v 1.6 1996/03/23 00:03:04 wessels Exp $ */
 
 /* 
  * Here is a summary of the routines which change mem_status and swap_status:
@@ -54,6 +54,7 @@
 #include "filemap.h"
 #include "stmem.h"
 #include "mime.h"
+#include "cached_error.h"
 
 extern time_t cached_curtime;
 extern char *storeToString _PARAMS((StoreEntry * e));
@@ -2552,16 +2553,7 @@ int swapInError(fd_unused, entry)
      int fd_unused;
      StoreEntry *entry;
 {
-    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	entry->url,
-	entry->url,
-	"DISK I/O",
-	102,
-	"Cache Disk I/O Failure",
-	"",
-	SQUID_VERSION,
-	comm_hostname());
-    storeAbort(entry, tmp_error_buf);
+    cached_error(entry, ERR_DISK_IO, xstrerror());
     return 0;
 }
 
