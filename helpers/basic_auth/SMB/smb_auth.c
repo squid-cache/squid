@@ -215,6 +215,9 @@ main(int argc, char *argv[])
 	pass = s + 1;
 	domname = NULL;
 
+	rfc1738_unescape(user);
+	rfc1738_unescape(pass);
+
 	if ((s = strchr(user, '\\')) != NULL) {
 	    *s = '\0';
 	    domname = user;
@@ -236,8 +239,6 @@ main(int argc, char *argv[])
 	    (void) printf("ERR\n");
 	    continue;
 	}
-	rfc1738_unescape(user);
-	rfc1738_unescape(pass);
 	(void) fprintf(p, "%s\n", dom->name);
 	(void) fprintf(p, "%s\n", dom->passthrough);
 	(void) fprintf(p, "%s\n", dom->nmbaddr);
