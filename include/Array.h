@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.10 2003/01/23 00:36:46 robertc Exp $
+ * $Id: Array.h,v 1.11 2003/01/23 11:51:33 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -235,28 +235,28 @@ Vector<E>::size() const
 }
 
 template<class E>
-Vector<E>::iterator
+typename Vector<E>::iterator
 Vector<E>::begin()
 {
     return iterator (0, *this);
 }
 
 template<class E>
-Vector<E>::iterator
+typename Vector<E>::iterator
 Vector<E>::end()
 {
     return iterator(size(), *this);
 }
 
 template<class E>
-Vector<E>::const_iterator
+typename Vector<E>::const_iterator
 Vector<E>::begin() const
 {
     return const_iterator (0, *this);
 }
 
 template<class E>
-Vector<E>::const_iterator
+typename Vector<E>::const_iterator
 Vector<E>::end() const
 {
     return const_iterator(size(), *this);
