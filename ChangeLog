@@ -19,6 +19,8 @@ Changes to squid-1.1.beta8 ():
 	  to view client list.
 	- Stop sending ICP_OP_DENIED to clients if 95% of their
 	  queries are denied (then they'll think we're dead).
+	- Fixed objects getting stuck in VM when handling aborted
+	  requests in icpHandleIMSReply().
 
 Changes to squid-1.1.beta7 (October 14, 1996):
 
