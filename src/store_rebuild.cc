@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.71 2000/11/01 03:35:41 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.72 2000/11/10 09:04:51 adrian Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -73,7 +73,8 @@ storeCleanup(void *datanotused)
 	    debug(20, 1) ("  store_swap_size = %dk\n", store_swap_size);
 	    store_dirs_rebuilding--;
 	    assert(0 == store_dirs_rebuilding);
-	    if (opt_store_doublecheck)
+	    if (opt_store_doublecheck != DBLCHECK_NONE)
+            /* we want to assert here because the storeFScode should auto-clean the entries */
 		assert(store_errors == 0);
 	    if (store_digest)
 		storeDigestNoteStoreReady();
@@ -91,9 +92,11 @@ storeCleanup(void *datanotused)
 	     */
 	    if (e->swap_filen < 0)
 		continue;
-	    if (opt_store_doublecheck)
-		if (storeCleanupDoubleCheck(e))
+	    if (opt_store_doublecheck != DBLCHECK_NONE)
+		if (storeCleanupDoubleCheck(e)){
+                    /* this should never happen as the storeFScode should auto-clean */
 		    store_errors++;
+                }    
 	    EBIT_SET(e->flags, ENTRY_VALIDATED);
 	    /*
 	     * Only set the file bit if we know its a valid entry
@@ -121,6 +124,8 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
     counts.invalid += dc->invalid;
     counts.badflags += dc->badflags;
     counts.bad_log_op += dc->bad_log_op;
+    counts.missingcount += dc->missingcount;
+    counts.filesizemismatchcount += dc->filesizemismatchcount;
     counts.zero_object_sz += dc->zero_object_sz;
     /*
      * When store_dirs_rebuilding == 1, it means we are done reading
@@ -139,6 +144,10 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
     debug(20, 1) ("  %7d Objects cancelled.\n", counts.cancelcount);
     debug(20, 1) ("  %7d Duplicate URLs purged.\n", counts.dupcount);
     debug(20, 1) ("  %7d Swapfile clashes avoided.\n", counts.clashcount);
+    debug(20, 1) ("  %7d Missing files ignored.\n", counts.missingcount);
+    debug(20, 1) ("  %7d Incorrect length swapfiles %s.\n",
+      counts.filesizemismatchcount,
+      (opt_store_doublecheck == DBLCHECK_REPORTONLY) ? "ignored" : "unlinked");
     debug(20, 1) ("  Took %3.1f seconds (%6.1f objects/sec).\n", dt,
 	(double) counts.objcount / (dt > 0.0 ? dt : 1.0));
     debug(20, 1) ("Beginning Validation Procedure\n");

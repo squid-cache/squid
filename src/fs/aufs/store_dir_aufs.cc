@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.14 2000/11/01 22:04:28 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.15 2000/11/10 09:04:52 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -119,6 +119,7 @@ static EVH storeAufsDirCleanEvent;
 static int storeAufsDirIs(SwapDir * sd);
 static int storeAufsFilenoBelongsHere(int fn, int F0, int F1, int F2);
 static int storeAufsCleanupDoubleCheck(SwapDir *, StoreEntry *);
+static int storeAufsCheckFile(SwapDir * sd, sfileno filn, size_t swap_file_sz );
 static void storeAufsDirStats(SwapDir *, StoreEntry *);
 static void storeAufsDirInitBitmap(SwapDir *);
 static int storeAufsDirValidFileno(SwapDir *, sfileno, int);
@@ -477,6 +478,7 @@ storeAufsDirRebuildFromDirectory(void *data)
 	    debug(20, 1) ("storeAufsDirRebuildFromDirectory: SIZE MISMATCH %d!=%d\n",
 		tmpe.swap_file_sz, (int) sb.st_size);
 	    storeAufsDirUnlinkFile(SD, sfileno);
+            rb->counts.filesizemismatchcount++;
 	    continue;
 	}
 	if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {
@@ -524,6 +526,7 @@ storeAufsDirRebuildFromSwapLog(void *data)
     int count;
     int used;			/* is swapfile already in use? */
     int disk_entry_newer;	/* is the log entry newer than current entry? */
+    int file_bad;
     double x;
     assert(rb != NULL);
     /* load a number of objects per invocation */
@@ -609,7 +612,21 @@ storeAufsDirRebuildFromSwapLog(void *data)
 	 * appear to have a newer entry?  Compare 'lastref' from the
 	 * swap log to e->lastref. */
 	disk_entry_newer = e ? (s.lastref > e->lastref ? 1 : 0) : 0;
-	if (used && !disk_entry_newer) {
+        if (!used && (rb->flags.need_to_validate ||
+            (opt_store_doublecheck != DBLCHECK_NONE))){
+            file_bad = storeAufsCheckFile(SD, s.swap_filen, s.swap_file_sz);
+        } else
+            file_bad = 0;
+        if (file_bad){
+            if (file_bad==-2){
+                  if (opt_store_doublecheck == DBLCHECK_FORCE)
+                      storeAufsDirUnlinkFile(SD, s.swap_filen);
+                  rb->counts.filesizemismatchcount++;
+                  continue;
+            }
+            rb->counts.missingcount++;
+            continue;
+	} else if (used && !disk_entry_newer) {
 	    /* log entry is old, ignore it */
 	    rb->counts.clashcount++;
 	    continue;
@@ -1588,25 +1605,34 @@ storeAufsDirFullPath(SwapDir * SD, sfileno filn, char *fullpath)
 static int
 storeAufsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
 {
+    int rv= storeAufsCheckFile(sd, e->swap_filen, e->swap_file_sz);
+    if (rv) storeEntryDump(e, 0);
+    return rv;
+}
+
+/*
+ * storeAufsCheckFile
+ *
+ * This is called by storerebuildFromSwapLog if -S was given on the command 
+ * line. or a Dirty state is found
+ */
+static int
+storeAufsCheckFile(SwapDir * sd, sfileno filen, size_t swap_file_sz )
+{
     struct stat sb;
 
-    if (stat(storeAufsDirFullPath(sd, e->swap_filen, NULL), &sb) < 0) {
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: MISSING SWAP FILE\n");
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
-	    storeAufsDirFullPath(sd, e->swap_filen, NULL));
-	storeEntryDump(e, 0);
-	return -1;
+    if (stat(storeAufsDirFullPath(sd, filen, NULL), &sb) < 0) {
+        debug(20, 1) ("storeAufsCheckFile: MISSING SWAP FILE\n");
+        debug(20, 1) ("storeAufsCheckFile: FILENO %08X\n", filen);
+        debug(20, 1) ("storeAufsCheckFile: PATH %s\n", storeAufsDirFullPath(sd, filen, NULL));
+        return -1;
     }
-    if (e->swap_file_sz != sb.st_size) {
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: SIZE MISMATCH\n");
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
-	    storeAufsDirFullPath(sd, e->swap_filen, NULL));
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: ENTRY SIZE: %d, FILE SIZE: %d\n",
-	    e->swap_file_sz, (int) sb.st_size);
-	storeEntryDump(e, 0);
-	return -1;
+    if (swap_file_sz != sb.st_size) {
+        debug(20, 1) ("storeAufsCheckFile: SIZE MISMATCH\n");
+        debug(20, 1) ("storeAufsCheckFile: FILENO %08X\n", filen);
+        debug(20, 1) ("storeAufsCheckFile: PATH %s\n", storeAufsDirFullPath(sd, filen, NULL));
+        debug(20, 1) ("storeAufsCheckFile: ENTRY SIZE: %d, FILE SIZE: %d\n", swap_file_sz, (int) sb.st_size);
+        return -2;
     }
     return 0;
 }

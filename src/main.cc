@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.321 2000/11/01 04:03:14 wessels Exp $
+ * $Id: main.cc,v 1.322 2000/11/10 09:04:51 adrian Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -101,7 +101,8 @@ usage(void)
 	"       -F        Don't serve any requests until store is rebuilt.\n"
 	"       -N        No daemon mode.\n"
 	"       -R        Do not set REUSEADDR on port.\n"
-	"       -S        Double-check swap during rebuild.\n"
+	"       -S force  Force double-check swap during rebuild.\n"
+        "       -S reportonly Force double-check but do not attempt repair.\n"
 	"       -V        Virtual host httpd-accelerator.\n"
 	"       -X        Force full debugging.\n"
 	"       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
@@ -115,7 +116,7 @@ mainParseOptions(int argc, char *argv[])
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFNRSVYXa:d:f:hk:m::su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFNRS:VYXa:d:f:hk:m::su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -133,7 +134,14 @@ mainParseOptions(int argc, char *argv[])
 	    opt_reuseaddr = 0;
 	    break;
 	case 'S':
-	    opt_store_doublecheck = 1;
+            if ((int) strlen(optarg) < 1) 
+                usage();
+            else if (!strncmp(optarg, "force", strlen(optarg)))
+                opt_store_doublecheck = DBLCHECK_FORCE; /* trigger a doublecheck on startup */
+            else if (!strncmp(optarg, "reportonly", strlen(optarg)))
+                opt_store_doublecheck = DBLCHECK_REPORTONLY; /* trigger a doublecheck that doesn't repair */ 
+            else
+                usage();
 	    break;
 	case 'V':
 	    vhost_mode = 1;
