@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.332 2002/10/14 08:43:46 hno Exp $
+ * $Id: ftp.cc,v 1.333 2002/10/14 08:49:59 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2139,7 +2139,7 @@ ftpReadRetr(FtpStateData * ftpState)
 	/* XXX what about Config.Timeout.read? */
 	size_t read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
-	read_sz = delayBytesWanted(delayId, 1, read_sz);
+	read_sz = delayBytesWanted(delayMostBytesAllowed(ftpState->entry->mem_obj), 1, read_sz);
 #endif
 	comm_read(ftpState->data.fd, ftpState->data.buf + ftpState->data.offset,
 		  read_sz, ftpDataRead, ftpState);
