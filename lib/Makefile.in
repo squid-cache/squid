@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.4 1996/02/23 06:13:56 wessels Exp $
+#  $Id: Makefile.in,v 1.5 1996/02/23 06:21:00 wessels Exp $
 #
 prefix = @prefix@
 INSTALL_BINDIR	= $(prefix)/bin
@@ -15,12 +15,12 @@ INSTALL		= @INSTALL@
 INSTALL_BIN 	= @INSTALL_PROGRAM@
 INSTALL_FILE 	= @INSTALL_DATA@
 RANLIB		= @RANLIB@
-CFLAGS		= @CFLAGS@
-LDFLAGS		= @LDFLAGS@
+STD_CFLAGS	= @STD_CFLAGS@
+STD_LDFLAGS	= @STD_LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
 XTRA_CFLAGS     = @XTRA_CFLAGS@
 
-LIBDIR		= .
+INCLUDE		= -I../include
 UTILOBJS	= rfc850.o \
 		  rfc1738.o \
 		  util.o \
@@ -31,6 +31,8 @@ UTILOBJS	= rfc850.o \
 REGEXOBJS	= GNUregex.o
 LIBS		= libutil.a libregex.a
 
+CFLAGS		= $(STD_CFLAGS) $(INCLUDE)
+LDFLAGS		= $(STD_LDFLAGS)
 
 all: $(LIBS)
 

@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.3 
+# From configure.in Revision: 1.4 
 
 
 if test -n "$prefix"; then
@@ -1697,21 +1697,21 @@ if test -x "/bin/uname"; then
         XXMyOs=`/bin/uname`;
 fi
 
-if test -z "$CFLAGS"; then
+if test -z "$STD_CFLAGS"; then
     if test "HP-UX" = "$XXMyOs"; then
-    	CFLAGS='#-g #-O'
+    	STD_CFLAGS=''
     else
-    	CFLAGS='-g'
+    	STD_CFLAGS='-g'
     fi
     XXXCC=`echo $CC | awk '{print $1}'`
     if test "`basename $XXXCC`" = "gcc"; then
-	CFLAGS="$CFLAGS -Wall"
+	STD_CFLAGS="$STD_CFLAGS -Wall"
     fi
 fi
 
 
-if test -z "$LDFLAGS"; then
-    LDFLAGS='-g #-O'
+if test -z "$STD_LDFLAGS"; then
+    STD_LDFLAGS='-g'
 fi
 
 
@@ -1878,6 +1878,8 @@ s%@PERL@%$PERL%g
 s%@XTRA_OBJS@%$XTRA_OBJS%g
 s%@CRYPT_LIB@%$CRYPT_LIB%g
 s%@XTRA_LIBS@%$XTRA_LIBS%g
+s%@STD_CFLAGS@%$STD_CFLAGS%g
+s%@STD_LDFLAGS@%$STD_LDFLAGS%g
 
 CEOF
 EOF
