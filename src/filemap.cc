@@ -1,6 +1,6 @@
 
 /*
- * $Id: filemap.cc,v 1.31 1998/07/22 20:37:19 wessels Exp $
+ * $Id: filemap.cc,v 1.32 1999/12/01 04:28:07 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -53,35 +53,47 @@
 #define ALL_ONES (unsigned long) 0xFFFFFFFF
 #endif
 
+#define FM_INITIAL_NUMBER (1<<14)
+
 fileMap *
-file_map_create(int n)
+file_map_create(void)
 {
     fileMap *fm = xcalloc(1, sizeof(fileMap));
-    fm->max_n_files = n;
-    fm->nwords = n >> LONG_BIT_SHIFT;
-    debug(8, 3) ("file_map_create: creating space for %d files\n", n);
+    fm->max_n_files = FM_INITIAL_NUMBER;
+    fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
+    debug(8, 3) ("file_map_create: creating space for %d files\n", fm->max_n_files);
     debug(8, 5) ("--> %d words of %d bytes each\n",
-	fm->nwords, sizeof(unsigned long));
-    fm->file_map = xcalloc(fm->nwords, sizeof(unsigned long));
+	fm->nwords, sizeof(*fm->file_map));
+    fm->file_map = xcalloc(fm->nwords, sizeof(*fm->file_map));
     /* XXX account fm->file_map */
     return fm;
+}
+
+static void
+file_map_grow(fileMap * fm)
+{
+    int old_sz = fm->nwords * sizeof(*fm->file_map);
+    void *old_map = fm->file_map;
+    fm->max_n_files <<= 1;
+    assert(fm->max_n_files <= (1 << 30));
+    fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
+    debug(8, 3) ("file_map_grow: creating space for %d files\n", fm->max_n_files);
+    fm->file_map = xcalloc(fm->nwords, sizeof(*fm->file_map));
+    debug(8, 3) ("copying %d old bytes\n", old_sz);
+    xmemcpy(fm->file_map, old_map, old_sz);
+    xfree(old_map);
+    /* XXX account fm->file_map */
 }
 
 int
 file_map_bit_set(fileMap * fm, int file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
+    while (file_number >= fm->max_n_files)
+	file_map_grow(fm);
     fm->file_map[file_number >> LONG_BIT_SHIFT] |= bitmask;
     fm->n_files_in_map++;
-    if (!fm->toggle && (fm->n_files_in_map > ((fm->max_n_files * 7) >> 3))) {
-	fm->toggle++;
-	debug(8, 0) ("WARNING: filemap utilization at %d%%\n"
-	    "\tConsider decreasing store_avg_object_size in squid.conf\n",
-	    percent(fm->n_files_in_map, fm->max_n_files));
-    } else if (fm->n_files_in_map == fm->max_n_files) {
-	fatal_dump("You've run out of swap file numbers.");
-    }
-    return (file_number);
+    return file_number;
 }
 
 void
@@ -96,6 +108,8 @@ int
 file_map_bit_test(fileMap * fm, int file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
+    if (file_number >= fm->max_n_files)
+	return 0;
     /* be sure the return value is an int, not a u_long */
     return (fm->file_map[file_number >> LONG_BIT_SHIFT] & bitmask ? 1 : 0);
 }
@@ -123,8 +137,9 @@ file_map_allocate(fileMap * fm, int suggestion)
 	    return file_map_bit_set(fm, suggestion);
 	}
     }
-    fatal("file_map_allocate: Exceeded filemap limit");
-    return 0;			/* NOTREACHED */
+    debug(8, 3) ("growing from file_map_allocate\n");
+    file_map_grow(fm);
+    return file_map_allocate(fm, fm->max_n_files >> 1);
 }
 
 void
@@ -132,15 +147,6 @@ filemapFreeMemory(fileMap * fm)
 {
     safe_free(fm->file_map);
     safe_free(fm);
-}
-
-void
-filemapCopy(fileMap * old, fileMap * new)
-{
-    assert(old->max_n_files <= new->max_n_files);
-    assert(0 == new->n_files_in_map);
-    xmemcpy(new->file_map, old->file_map, old->nwords * sizeof(unsigned long));
-    new->n_files_in_map = old->n_files_in_map;
 }
 
 #ifdef TEST
