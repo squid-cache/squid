@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.13 1996/04/04 05:10:16 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.14 1996/04/04 17:45:53 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -158,7 +158,7 @@ void self_destruct(in_string)
     fatal(fatal_str);
 }
 
-#ifdef IPACL_IN_ADDR
+#ifndef IPACL_INTS
 int ip_acl_match(c, a)
      struct in_addr c;
      ip_acl *a;
@@ -173,14 +173,12 @@ int ip_acl_match(c, a)
 }
 
 
-ip_access_type
-ip_access_check(address, list)
+ip_access_type ip_access_check(address, list)
      struct in_addr address;
      ip_acl *list;
 {
-    static struct in_addr localhost =
-    {0};
-    ip_acl *p;
+    static struct in_addr localhost = {0};
+    ip_acl *p = NULL;
     struct in_addr naddr;	/* network byte-order IP addr */
     static char buf[100];
 
@@ -283,6 +281,7 @@ void addToIPACL(list, ip_str, access)
     q->addr.s_addr = htonl(a1 * 0x1000000 + a2 * 0x10000 + a3 * 0x100 + a4);
     q->mask.s_addr = lmask.s_addr;
 }
+
 #else /* original code using ints */
 
 int ip_acl_match(c1, c2, c3, c4, a1, a2, a3, a4)
@@ -307,8 +306,7 @@ int ip_acl_match(c1, c2, c3, c4, a1, a2, a3, a4)
     return 1;
 }
 
-ip_access_type
-ip_access_check(address, list)
+ip_access_type ip_access_check(address, list)
      struct in_addr address;
      ip_acl *list;
 {
@@ -381,7 +379,7 @@ void addToIPACL(list, ip_str, access)
 
 }
 
-#endif
+#endif /* ndef IPACL_INTS */
 
 void addToStopList(list, key)
      stoplist **list;
