@@ -59,3 +59,5 @@
 	- Added ftpProcessReplyHeader() (a twin of the one in http.c).
 	- Fixed bad free() in ipcacheShtudownServers()
 	- Cleaned up FTP url parsing; support port.
+	- SIGHUP reconfigures the cache
+	- SIGUSR1 rotates logfiles.
