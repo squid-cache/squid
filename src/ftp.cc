@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.329 2002/10/13 20:35:01 robertc Exp $
+ * $Id: ftp.cc,v 1.330 2002/10/14 07:35:45 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -883,7 +883,7 @@ ftpDataRead(int fd, void *data)
     size_t read_sz;
 #if DELAY_POOLS
     MemObject *mem = entry->mem_obj;
-    delay_id delay_id = delayMostBytesAllowed(mem);
+    delay_id delayId = delayMostBytesAllowed(mem);
 #endif
     assert(fd == ftpState->data.fd);
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
@@ -893,7 +893,7 @@ ftpDataRead(int fd, void *data)
     errno = 0;
     read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delay_id, 1, read_sz);
+    read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
     memset(ftpState->data.buf + ftpState->data.offset, '\0', read_sz);
     statCounter.syscalls.sock.reads++;
@@ -901,7 +901,7 @@ ftpDataRead(int fd, void *data)
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS
-	delayBytesIn(delay_id, len);
+	delayBytesIn(delayId, len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.ftp.kbytes_in, len);

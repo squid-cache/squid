@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.173 2002/10/13 20:35:01 robertc Exp $
+ * $Id: gopher.cc,v 1.174 2002/10/14 07:35:45 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -625,7 +625,7 @@ gopherReadReply(int fd, void *data)
     int bin;
     size_t read_sz;
 #if DELAY_POOLS
-    delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
+    delay_id delayId = delayMostBytesAllowed(entry->mem_obj);
 #endif
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(fd);
@@ -635,7 +635,7 @@ gopherReadReply(int fd, void *data)
     buf = (char *)memAllocate(MEM_4K_BUF);
     read_sz = 4096 - 1;		/* leave room for termination */
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delay_id, 1, read_sz);
+    read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
     /* leave one space for \0 in gopherToHTML */
     statCounter.syscalls.sock.reads++;
@@ -643,7 +643,7 @@ gopherReadReply(int fd, void *data)
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS
-	delayBytesIn(delay_id, len);
+	delayBytesIn(delayId, len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.other.kbytes_in, len);

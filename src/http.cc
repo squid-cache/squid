@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.395 2002/10/13 20:35:01 robertc Exp $
+ * $Id: http.cc,v 1.396 2002/10/14 07:35:46 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -566,13 +566,13 @@ httpReadReply(int fd, void *data)
     int clen;
     size_t read_sz;
 #if DELAY_POOLS
-    delay_id delay_id;
+    delay_id delayId;
 
     /* special "if" only for http (for nodelay proxy conns) */
     if (delayIsNoDelay(fd))
-	delay_id = 0;
+	delayId = 0;
     else
-	delay_id = delayMostBytesAllowed(entry->mem_obj);
+	delayId = delayMostBytesAllowed(entry->mem_obj);
 #endif
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(fd);
@@ -582,7 +582,7 @@ httpReadReply(int fd, void *data)
     errno = 0;
     read_sz = SQUID_TCP_SO_RCVBUF;
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delay_id, 1, read_sz);
+    read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
     statCounter.syscalls.sock.reads++;
     len = FD_READ_METHOD(fd, buf, read_sz);
@@ -590,7 +590,7 @@ httpReadReply(int fd, void *data)
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS
-	delayBytesIn(delay_id, len);
+	delayBytesIn(delayId, len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.http.kbytes_in, len);

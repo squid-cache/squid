@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.115 2002/10/13 20:35:05 robertc Exp $
+ * $Id: store_client.cc,v 1.116 2002/10/14 07:35:46 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -145,7 +145,7 @@ storeClientListAdd(StoreEntry * e, void *data)
 	assert(e->swap_filen > -1 || storeSwapOutAble(e));
     dlinkAdd(sc, &sc->node, &mem->clients);
 #if DELAY_POOLS
-    sc->delay_id = 0;
+    sc->delayId = 0;
 #endif
     return sc;
 }
@@ -554,7 +554,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 	storeClientCallback(sc, -1);
     }
 #if DELAY_POOLS
-    delayUnregisterDelayIdPtr(&sc->delay_id);
+    delayUnregisterDelayIdPtr(&sc->delayId);
 #endif
 #if STORE_CLIENT_LIST_DEBUG
     cbdataReferenceDone(sc->owner);
