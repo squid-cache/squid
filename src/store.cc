@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.484 1999/01/19 02:24:33 wessels Exp $
+ * $Id: store.cc,v 1.485 1999/01/21 21:10:36 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -478,7 +478,7 @@ storeTooManyDiskFilesOpen(void)
 {
     if (Config.max_open_disk_fds == 0)
 	return 0;
-    if (open_disk_fd > Config.max_open_disk_fds)
+    if (store_open_disk_fd > Config.max_open_disk_fds)
 	return 1;
     return 0;
 }
@@ -511,11 +511,18 @@ storeCheckCachable(StoreEntry * e)
     } else if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
 	debug(20, 3) ("storeCheckCachable: NO: private key\n");
 	store_check_cachable_hist.no.private_key++;
+    } else if (e->swap_status != SWAPOUT_NONE) {
+	/*
+	 * here we checked the swap_status because the remaining
+	 * cases are only relevant only if we haven't started swapping
+	 * out the object yet.
+	 */
+	return 1;
     } else if (storeTooManyDiskFilesOpen()) {
 	debug(20, 2) ("storeCheckCachable: NO: too many disk files open\n");
 	store_check_cachable_hist.no.too_many_open_files++;
     } else if (fdNFree() < RESERVED_FD) {
-	debug(20, 2) ("storeCheckCachable: NO: too FD's open\n");
+	debug(20, 2) ("storeCheckCachable: NO: too many FD's open\n");
 	store_check_cachable_hist.no.too_many_open_fds++;
     } else if (storeExpiredReferenceAge() < 300) {
 	debug(20, 2) ("storeCheckCachable: NO: LRU Age = %d\n",

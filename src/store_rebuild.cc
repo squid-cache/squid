@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.54 1999/01/12 23:38:39 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.55 1999/01/21 21:10:37 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -137,6 +137,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    debug(20, 1) ("storeRebuildFromDirectory: fstat(FD %d): %s\n",
 		fd, xstrerror());
 	    file_close(fd);
+	    store_open_disk_fd--;
 	    fd = -1;
 	    continue;
 	}
@@ -149,10 +150,12 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    debug(20, 1) ("storeRebuildFromDirectory: read(FD %d): %s\n",
 		fd, xstrerror());
 	    file_close(fd);
+	    store_open_disk_fd--;
 	    fd = -1;
 	    continue;
 	}
 	file_close(fd);
+	    store_open_disk_fd--;
 	fd = -1;
 	swap_hdr_len = 0;
 #if USE_TRUNCATE_NOT_UNLINK
@@ -522,6 +525,7 @@ storeGetNextFile(rebuild_dir * d, int *sfileno, int *size)
 	    if (fd < 0)
 		debug(50, 1) ("storeGetNextFile: %s: %s\n", d->fullfilename, xstrerror());
 	    continue;
+	    store_open_disk_fd++;
 	}
 	d->in_dir = 0;
 	if (++d->curlvl2 < Config.cacheSwap.swapDirs[d->dirn].l2)
