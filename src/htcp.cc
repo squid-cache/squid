@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.16 1998/08/26 05:34:51 wessels Exp $
+ * $Id: htcp.cc,v 1.17 1998/08/26 19:08:00 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -106,6 +106,7 @@ struct _htcpStuff {
     int rr;
     int f1;
     int response;
+    u_num32 msg_id;
     htcpSpecifier S;
     htcpDetail D;
 };
@@ -152,6 +153,8 @@ enum {
 static u_num32 msg_id_counter = 0;
 static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
+#define N_QUERIED_KEYS 256
+static cache_key queried_keys[N_QUERIED_KEYS][MD5_DIGEST_CHARS];
 
 static char *htcpBuildPacket(htcpStuff * stuff, ssize_t * len);
 static htcpSpecifier *htcpUnpackSpecifier(char *buf, int sz);
@@ -174,8 +177,8 @@ static void htcpHandleSet(htcpDataHeader *, char *buf, int sz, struct sockaddr_i
 static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
 static void htcpRecv(int fd, void *data);
 static void htcpSend(const char *buf, int len, struct sockaddr_in *to);
-static void htcpTstReply(StoreEntry *, htcpSpecifier *, struct sockaddr_in *);
-static void htcpHandleTstRequest(char *buf, int sz, struct sockaddr_in *from);
+static void htcpTstReply(htcpDataHeader *, StoreEntry *, htcpSpecifier *, struct sockaddr_in *);
+static void htcpHandleTstRequest(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
 static void htcpHandleTstResponse(htcpDataHeader *, char *, int, struct sockaddr_in *);
 
 static void
@@ -340,7 +343,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
     hdr.response = stuff->response;
     hdr.RR = stuff->rr;
     hdr.F1 = stuff->f1;
-    hdr.msg_id = ++msg_id_counter;
+    hdr.msg_id = stuff->msg_id;
     /* convert multi-byte fields */
     hdr.length = htons(hdr.length);
     hdr.msg_id = htonl(hdr.msg_id);
@@ -402,20 +405,20 @@ htcpSend(const char *buf, int len, struct sockaddr_in *to)
 static void
 htcpFreeSpecifier(htcpSpecifier * s)
 {
-    safe_free(s->method);
-    safe_free(s->uri);
-    safe_free(s->version);
-    safe_free(s->req_hdrs);
-    xfree(s);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(s->method);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(s->uri);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(s->version);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(s->req_hdrs);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); xfree(s);
 }
 
 static void
 htcpFreeDetail(htcpDetail * d)
 {
-    safe_free(d->resp_hdrs);
-    safe_free(d->entity_hdrs);
-    safe_free(d->cache_hdrs);
-    xfree(d);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(d->resp_hdrs);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(d->entity_hdrs);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(d->cache_hdrs);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); xfree(d);
 }
 
 static int
@@ -522,7 +525,7 @@ htcpUnpackDetail(char *buf, int sz)
 }
 
 static void
-htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
+htcpTstReply(htcpDataHeader *dhdr, StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
 {
     htcpStuff stuff;
     char *pkt;
@@ -538,6 +541,7 @@ htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
     stuff.op = HTCP_TST;
     stuff.rr = RR_RESPONSE;
     stuff.f1 = e ? 0 : 1;
+    stuff.msg_id = dhdr->msg_id;
     if (spec) {
 	memBufDefInit(&mb);
 	packerToMemInit(&p, &mb);
@@ -584,7 +588,7 @@ htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
 	return;
     }
     htcpSend(pkt, (int) pktlen, from);
-    xfree(pkt);
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); xfree(pkt);
 }
 
 static void
@@ -598,7 +602,7 @@ htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 {
     debug(31, 1) ("htcpHandleTst: sz = %d\n", (int) sz);
     if (hdr->RR == RR_REQUEST)
-	htcpHandleTstRequest(buf, sz, from);
+	htcpHandleTstRequest(hdr, buf, sz, from);
     else
 	htcpHandleTstResponse(hdr, buf, sz, from);
 }
@@ -608,34 +612,38 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
 {
     htcpReplyData htcpReply;
     cache_key *key = NULL;
-    htcpDetail *d;
+    htcpDetail *d = NULL;
     char *t;
     memset(&htcpReply, '\0', sizeof(htcpReply));
     httpHeaderInit(&htcpReply.hdr, hoHtcpReply);
-    htcpReply.msg_id = ntohl(hdr->msg_id);
+    htcpReply.msg_id = hdr->msg_id;
+    debug(31,1)("htcpHandleTstResponse: msg_id = %d\n", (int) htcpReply.msg_id);
     htcpReply.hit = hdr->F1 ? 0 : 1;
-    if (hdr->F1)
+    if (hdr->F1) {
 	debug(31, 1) ("htcpHandleTstResponse: MISS\n");
-    else
+    } else {
 	debug(31, 1) ("htcpHandleTstResponse: HIT\n");
-    d = htcpUnpackDetail(buf, sz);
-    if (d == NULL) {
-	debug(31,1)("htcpHandleTstResponse: bad DETAIL\n");
-	return;
+	d = htcpUnpackDetail(buf, sz);
+	if (d == NULL) {
+	    debug(31, 1) ("htcpHandleTstResponse: bad DETAIL\n");
+	    return;
+	}
+	if ((t = d->resp_hdrs))
+	    httpHeaderParse(&htcpReply.hdr, t, t + strlen(t));
+	if ((t = d->entity_hdrs))
+	    httpHeaderParse(&htcpReply.hdr, t, t + strlen(t));
+	if ((t = d->cache_hdrs))
+	    httpHeaderParse(&htcpReply.hdr, t, t + strlen(t));
     }
-    if ((t = d->resp_hdrs))
-        httpHeaderParse(&htcpReply.hdr, t, t+strlen(t));
-    if ((t = d->entity_hdrs))
-        httpHeaderParse(&htcpReply.hdr, t, t+strlen(t));
-    if ((t = d->cache_hdrs))
-        httpHeaderParse(&htcpReply.hdr, t, t+strlen(t));
-    assert(key);
+    key = queried_keys[htcpReply.msg_id % N_QUERIED_KEYS];
+    debug(31,1)("htcpHandleTstResponse: key (%p) %s\n", key, storeKeyText(key));
     neighborsHtcpReply(key, &htcpReply, from);
-    htcpFreeDetail(d);
+    if (d)
+        htcpFreeDetail(d);
 }
 
 static void
-htcpHandleTstRequest(char *buf, int sz, struct sockaddr_in *from)
+htcpHandleTstRequest(htcpDataHeader *dhdr, char *buf, int sz, struct sockaddr_in *from)
 {
     /* buf should be a SPECIFIER */
     htcpSpecifier *s;
@@ -661,15 +669,15 @@ htcpHandleTstRequest(char *buf, int sz, struct sockaddr_in *from)
     e = storeGet(key);
     if (NULL == e) {
 	/* cache miss */
-	htcpTstReply(NULL, NULL, from);
+	htcpTstReply(dhdr, NULL, NULL, from);
 #if WIP
     } else if (!checkHeaders()) {
 	/* refresh/other miss */
-	htcpTstReply(NULL, NULL, from);
+	htcpTstReply(dhdr, NULL, NULL, from);
 #endif
     } else {
 	/* hit */
-	htcpTstReply(e, s, from);
+	htcpTstReply(dhdr, e, s, from);
     }
     htcpFreeSpecifier(s);
 }
@@ -696,7 +704,7 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
     }
     xmemcpy(&hdr, buf, sizeof(htcpDataHeader));
     hdr.length = ntohs(hdr.length);
-    hdr.msg_id = ntohs(hdr.msg_id);
+    hdr.msg_id = ntohl(hdr.msg_id);
     debug(31, 1) ("htcpHandleData: sz = %d\n", sz);
     debug(31, 1) ("htcpHandleData: length = %d\n", (int) hdr.length);
     if (hdr.opcode < HTCP_NOP || hdr.opcode > HTCP_END) {
@@ -709,7 +717,7 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
     debug(31, 1) ("htcpHandleData: response = %d\n", (int) hdr.response);
     debug(31, 1) ("htcpHandleData: F1 = %d\n", (int) hdr.F1);
     debug(31, 1) ("htcpHandleData: RR = %d\n", (int) hdr.RR);
-    debug(31, 1) ("htcpHandleData: msg_id = %#x\n", (int) hdr.msg_id);
+    debug(31, 1) ("htcpHandleData: msg_id = %d\n", (int) hdr.msg_id);
     if (sz < hdr.length) {
 	debug(31, 0) ("htcpHandle: sz < hdr.length\n");
 	return;
@@ -825,6 +833,7 @@ htcpInit(void)
 void
 htcpQuery(StoreEntry * e, request_t * req, peer * p)
 {
+    cache_key *save_key;
     char *pkt;
     ssize_t pktlen;
     char vbuf[32];
@@ -837,6 +846,7 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     stuff.rr = RR_REQUEST;
     stuff.f1 = 1;
     stuff.response = 0;
+    stuff.msg_id = ++msg_id_counter;
     stuff.S.method = RequestMethodStr[req->method];
     stuff.S.uri = storeUrl(e);
     stuff.S.version = vbuf;
@@ -853,7 +863,11 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
 	return;
     }
     htcpSend(pkt, (int) pktlen, &p->in_addr);
-    xfree(pkt);
+    save_key = queried_keys[stuff.msg_id % N_QUERIED_KEYS];
+    storeKeyCopy(save_key, e->key);
+    debug(31,1)("htcpQuery: key (%p) %s\n", 30>e->key, storeKeyText(e->key));
+    debug(31,1)("htcpQuery: key (%p) %s\n", save_key, storeKeyText(save_key));
+    debug(1,1)("%s:%d\n", __FILE__, __LINE__); xfree(pkt);
 }
 
 /*  
