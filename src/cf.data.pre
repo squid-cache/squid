@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.379 2005/03/06 21:08:13 serassio Exp $
+# $Id: cf.data.pre,v 1.380 2005/03/09 20:14:37 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3990,10 +3990,13 @@ IFDEF: DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This is used to determine which delay pool a request falls into.
-	The first matched delay pool is always used, i.e., if a request falls
-	into delay pool number one, no more delay are checked, otherwise the
-	rest are checked in order of their delay pool number until they have
-	all been checked.  For example, if you want some_big_clients in delay
+
+	delay_access is sorted per pool and the matching starts with pool 1,
+	then pool 2, ..., and finally pool N. The first delay pool where the
+	request is allowed is selected for the request. If it does not allow
+	the request to any pool then the request is not delayed (default).
+
+	For example, if you want some_big_clients in delay
 	pool 1 and lotsa_little_clients in delay pool 2:
 
 Example:
