@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.574 2003/09/01 03:49:39 robertc Exp $
+ * $Id: store.cc,v 1.575 2003/09/25 00:06:56 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -673,6 +673,8 @@ storeSetPublicKey(StoreEntry * e)
 
 #endif
             storeSetPublicKey(pe);
+
+            storeBuffer(pe);
 
             /* TODO: remove this when the metadata is separated */
             {
