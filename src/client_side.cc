@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.660 2003/09/21 00:30:46 robertc Exp $
+ * $Id: client_side.cc,v 1.661 2003/09/27 23:17:46 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2873,8 +2873,12 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
     identChecklist.my_port = ntohs(details->me.sin_port);
 
-    if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
+    identChecklist.accessList = Config.accessList.identLookup;
+
+    if (identChecklist.fastCheck())
         identStart(&details->me, &details->peer, clientIdentDone, connState);
+
+    identChecklist.accessList = NULL;
 
 #endif
 
