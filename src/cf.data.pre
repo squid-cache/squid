@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.232 2001/10/10 15:17:40 adrian Exp $
+# $Id: cf.data.pre,v 1.233 2001/10/19 22:34:48 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -90,7 +90,7 @@ TYPE: https_port_list
 DEFAULT: none
 LOC: Config.Sockaddr.https
 DOC_START
-        Usage:  [ip:]port cert=certificate.pem [key=key.pem]
+        Usage:  [ip:]port cert=certificate.pem [key=key.pem] [...]
 
         The socket address where Squid will listen for HTTPS client
         requests.
@@ -102,23 +102,35 @@ DOC_START
 	If key is not specified then the given certificate is assumed to be a
 	combined certificate and key file.
 
+	Other options:
+
+	  version=	The version of SSL/TLS supported
+		  1	automatic (default)
+		  2	SSLv2 only
+		  3	SSLv3 only
+		  4	TLSv1 only
+
+	  cipher=	Colon separated list of supported ciphers
+
+	  options=	Varions SSL engine options. The most important being:
+		  NO_SSLv2  Disallow the use of SSLv2
+		  NO_SSLv3  Disallow the use of SSLv3
+		  NO_TLSv1  Disallow the use of TLSv1
+			See src/ssl_support.c or OpenSSL documentation for
+			a more complete list.
+
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate.
 DOC_END
 
-NAME: ssl_version
-IFDEF: USE_SSL
-TYPE: int
-DEFAULT: 1
-LOC: Config.SSL.version
+NAME: ssl_unclean_shutdown
+TYPE: onoff
+DEFAULT: off
+LOC: Config.SSL.unclean_shutdown
 DOC_START
-        Determines the version of SSL/TLS used.
-        1:      SSLv2/SSLv3
-        2:      SSLv2 only
-        3:      SSLv3 only
-        4:      TLSv1
+	Some browsers (especially MSIE) bugs out on SSL shutdown
+	messages.
 DOC_END
-
 
 NAME: icp_port udp_port
 TYPE: ushort
