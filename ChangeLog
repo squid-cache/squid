@@ -1,3 +1,5 @@
+Changes to squid-1.1.beta28 (December 5, 1996):
+
 	- Fixed missing CR on Not-Modified replies (Balint Nagy Endre)
 	- Fixed not truncating multi-word content-types.
 	- Fixed ABR bug due to too-small redirector buffers.
