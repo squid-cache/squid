@@ -257,7 +257,6 @@ recover:
 static int
 searchLDAP(LDAP * ld, char *group, char *member, char *grouprdn)
 {
-int rc;
 char filter[256];
 static char searchbase[256];
 LDAPMessage *res = NULL;
