@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.35 2001/04/01 16:33:37 wessels Exp $
+ * $Id: htcp.cc,v 1.36 2001/04/01 16:52:31 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -784,6 +784,10 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 	break;
     case HTCP_SET:
 	htcpHandleSet(&hdr, buf, sz, from);
+	break;
+    case HTCP_CLR:
+	debug(31, 1) ("htcpHandleData: client %s, CLR not supported\n",
+	    inet_ntoa(from->sin_addr));
 	break;
     default:
 	assert(0);
