@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.13 1996/04/08 23:35:37 wessels Exp $
+#  $Id: Makefile.in,v 1.14 1996/04/09 18:18:45 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -58,7 +58,7 @@ OBJS	 	= blocklist.o cache_cf.o cached_error.o comm.o \
 		fdstat.o filemap.o ftp.o gopher.o \
 		hash.o http.o icp.o ipcache.o \
 		main.o mime.o neighbors.o objcache.o \
-		proto.o stack.o stat.o stmem.o \
+		proto.o send-announce.o stack.o stat.o stmem.o \
 		store.o storetoString.o tools.o ttl.o \
 		url.o wais.o $(XTRA_OBJS)
 

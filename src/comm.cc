@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.18 1996/04/08 17:10:43 wessels Exp $ */
+/* $Id: comm.cc,v 1.19 1996/04/09 18:18:48 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -487,26 +487,26 @@ void comm_set_stall(fd, delta)
 
 
 /* Select on all sockets; call handlers for those that are ready. */
-int comm_select(sec, usec, failtime)
-     long sec, usec;
+int comm_select(sec, failtime)
+     time_t sec;
      time_t failtime;
 {
+    fd_set exceptfds;
+    fd_set read_mask;
+    fd_set readfds;
+    fd_set write_mask;
+    fd_set writefds;
+    int (*tmp) () = NULL;
     int fd;
     int i;
-    fd_set readfds;
-    fd_set writefds;
-    fd_set exceptfds;
+    int maxfd;
+    int nfds;
     int num;
-    time_t timeout;
+    int sel_fd_width;
     static time_t last_timeout = 0;
     struct timeval poll_time;
     struct timeval zero_tv;
-    int sel_fd_width;
-    int nfds;
-
-    fd_set read_mask, write_mask;
-    int (*tmp) () = NULL;
-    int maxfd;
+    time_t timeout;
 
     /* assume all process are very fast (less than 1 second). Call
      * time() only once */
@@ -550,11 +550,9 @@ int comm_select(sec, usec, failtime)
 	while (1) {
 	    poll_time.tv_sec = 1;
 	    poll_time.tv_usec = 0;
-	    num = select(fdstat_biggest_fd() + 1,
-		&readfds, &writefds, &exceptfds, &poll_time);
+	    num = select(maxfd, &readfds, &writefds, &exceptfds, &poll_time);
 	    if (num >= 0)
 		break;
-
 	    /* break on interrupt so outer loop will reset FD_SET's */
 	    if (errno == EINTR)
 		break;
@@ -576,100 +574,98 @@ int comm_select(sec, usec, failtime)
 	    checkTimeouts();
 	    checkLifetimes();
 	}
+	if (num == 0)
+	    continue;
+
 	/* scan each socket but the accept socket. Poll this 
 	 * more frequently to minimiize losses due to the 5 connect 
 	 * limit in SunOS */
 
-	if (num) {
-	    maxfd = fdstat_biggest_fd() + 1;
-	    for (fd = 0; fd < maxfd && num > 0; fd++) {
+	maxfd = fdstat_biggest_fd() + 1;
+	for (fd = 0; fd < maxfd && num > 0; fd++) {
 
-		if (!(FD_ISSET(fd, &readfds) || FD_ISSET(fd, &writefds) ||
-			FD_ISSET(fd, &exceptfds)))
-		    continue;
+	    if (!(FD_ISSET(fd, &readfds) || FD_ISSET(fd, &writefds) ||
+		    FD_ISSET(fd, &exceptfds)))
+		continue;
+	    else
+		--num;
+
+	    /*
+	     * Admit more connections quickly until we hit the hard limit.
+	     * Don't forget to keep the UDP acks coming and going.
+	     */
+
+	    FD_ZERO(&read_mask);
+	    FD_ZERO(&write_mask);
+
+	    if (theAsciiConnection >= 0) {
+		if ((fdstat_are_n_free_fd(RESERVED_FD))
+		    && (fd_table[theAsciiConnection].read_handler))
+		    FD_SET(theAsciiConnection, &read_mask);
 		else
-		    --num;
-
-		/*
-		 * Admit more connections quickly until we hit the hard limit.
-		 * Don't forget to keep the UDP acks coming and going.
-		 */
-		{
-
-		    FD_ZERO(&read_mask);
-		    FD_ZERO(&write_mask);
-
-		    if (theAsciiConnection >= 0) {
-			if ((fdstat_are_n_free_fd(RESERVED_FD))
-			    && (fd_table[theAsciiConnection].read_handler))
-			    FD_SET(theAsciiConnection, &read_mask);
-			else
-			    FD_CLR(theAsciiConnection, &read_mask);
-		    }
-		    if (theUdpConnection >= 0) {
-			if (fd_table[theUdpConnection].read_handler)
-			    FD_SET(theUdpConnection, &read_mask);
-			if (fd_table[theUdpConnection].write_handler)
-			    FD_SET(theUdpConnection, &write_mask);
-		    }
-		    sel_fd_width = max(theAsciiConnection, theUdpConnection) + 1;
-		    if (select(sel_fd_width, &read_mask, &write_mask, NULL, &zero_tv) > 0) {
-			if (FD_ISSET(theAsciiConnection, &read_mask)) {
-			    tmp = fd_table[theAsciiConnection].read_handler;
-			    fd_table[theAsciiConnection].read_handler = 0;
-			    tmp(theAsciiConnection, fd_table[theAsciiConnection].read_data);
-			}
-			if ((theUdpConnection >= 0)) {
-			    if (FD_ISSET(theUdpConnection, &read_mask)) {
-				tmp = fd_table[theUdpConnection].read_handler;
-				fd_table[theUdpConnection].read_handler = 0;
-				tmp(theUdpConnection, fd_table[theUdpConnection].read_data);
-			    }
-			    if (FD_ISSET(theUdpConnection, &write_mask)) {
-				tmp = fd_table[theUdpConnection].write_handler;
-				fd_table[theUdpConnection].write_handler = 0;
-				tmp(theUdpConnection, fd_table[theUdpConnection].write_data);
-			    }
-			}
-		    }
+		    FD_CLR(theAsciiConnection, &read_mask);
+	    }
+	    if (theUdpConnection >= 0) {
+		if (fd_table[theUdpConnection].read_handler)
+		    FD_SET(theUdpConnection, &read_mask);
+		if (fd_table[theUdpConnection].write_handler)
+		    FD_SET(theUdpConnection, &write_mask);
+	    }
+	    sel_fd_width = max(theAsciiConnection, theUdpConnection) + 1;
+	    if (select(sel_fd_width, &read_mask, &write_mask, NULL, &zero_tv) > 0) {
+		if (FD_ISSET(theAsciiConnection, &read_mask)) {
+		    tmp = fd_table[theAsciiConnection].read_handler;
+		    fd_table[theAsciiConnection].read_handler = 0;
+		    tmp(theAsciiConnection, fd_table[theAsciiConnection].read_data);
 		}
-
-		if ((fd == theUdpConnection) || (fd == theAsciiConnection))
-		    continue;
-
-		if (FD_ISSET(fd, &readfds)) {
-		    debug(5, 6, "comm_select: FD %d ready for reading\n", fd);
-		    if (fd_table[fd].read_handler) {
-			tmp = fd_table[fd].read_handler;
-			fd_table[fd].read_handler = 0;
-			debug(5, 10, "calling read handler %p(%d,%p)\n",
-			    tmp, fd, fd_table[fd].read_data);
-			tmp(fd, fd_table[fd].read_data);
+		if ((theUdpConnection >= 0)) {
+		    if (FD_ISSET(theUdpConnection, &read_mask)) {
+			tmp = fd_table[theUdpConnection].read_handler;
+			fd_table[theUdpConnection].read_handler = 0;
+			tmp(theUdpConnection, fd_table[theUdpConnection].read_data);
 		    }
-		}
-		if (FD_ISSET(fd, &writefds)) {
-		    debug(5, 5, "comm_select: FD %d ready for writing\n", fd);
-		    if (fd_table[fd].write_handler) {
-			tmp = fd_table[fd].write_handler;
-			fd_table[fd].write_handler = 0;
-			debug(5, 10, "calling write handler %p(%d,%p)\n",
-			    tmp, fd, fd_table[fd].write_data);
-			tmp(fd, fd_table[fd].write_data);
-		    }
-		}
-		if (FD_ISSET(fd, &exceptfds)) {
-		    debug(5, 5, "comm_select: FD %d has an exception\n", fd);
-		    if (fd_table[fd].except_handler) {
-			tmp = fd_table[fd].except_handler;
-			fd_table[fd].except_handler = 0;
-			debug(5, 10, "calling except handler %p(%d,%p)\n",
-			    tmp, fd, fd_table[fd].except_data);
-			tmp(fd, fd_table[fd].except_data);
+		    if (FD_ISSET(theUdpConnection, &write_mask)) {
+			tmp = fd_table[theUdpConnection].write_handler;
+			fd_table[theUdpConnection].write_handler = 0;
+			tmp(theUdpConnection, fd_table[theUdpConnection].write_data);
 		    }
 		}
 	    }
-	    return COMM_OK;
+	    if ((fd == theUdpConnection) || (fd == theAsciiConnection))
+		continue;
+
+	    if (FD_ISSET(fd, &readfds)) {
+		debug(5, 6, "comm_select: FD %d ready for reading\n", fd);
+		if (fd_table[fd].read_handler) {
+		    tmp = fd_table[fd].read_handler;
+		    fd_table[fd].read_handler = 0;
+		    debug(5, 10, "calling read handler %p(%d,%p)\n",
+			tmp, fd, fd_table[fd].read_data);
+		    tmp(fd, fd_table[fd].read_data);
+		}
+	    }
+	    if (FD_ISSET(fd, &writefds)) {
+		debug(5, 5, "comm_select: FD %d ready for writing\n", fd);
+		if (fd_table[fd].write_handler) {
+		    tmp = fd_table[fd].write_handler;
+		    fd_table[fd].write_handler = 0;
+		    debug(5, 10, "calling write handler %p(%d,%p)\n",
+			tmp, fd, fd_table[fd].write_data);
+		    tmp(fd, fd_table[fd].write_data);
+		}
+	    }
+	    if (FD_ISSET(fd, &exceptfds)) {
+		debug(5, 5, "comm_select: FD %d has an exception\n", fd);
+		if (fd_table[fd].except_handler) {
+		    tmp = fd_table[fd].except_handler;
+		    fd_table[fd].except_handler = 0;
+		    debug(5, 10, "calling except handler %p(%d,%p)\n",
+			tmp, fd, fd_table[fd].except_data);
+		    tmp(fd, fd_table[fd].except_data);
+		}
+	    }
 	}
+	return COMM_OK;
     }
 
     debug(5, 8, "comm_select: time out: %d.\n", cached_curtime);

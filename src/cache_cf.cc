@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.25 1996/04/08 23:25:20 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.26 1996/04/09 18:18:46 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -66,6 +66,12 @@ static struct {
     char *pidFilename;
     char *visibleHostname;
     char *ftpUser;
+    struct {
+	char *host;
+	int port;
+	char *file;
+	int rate;
+    } Announce;
 } Config;
 
 #define DefaultMemMaxSize 	(16 << 20)	/* 16 MB */
@@ -127,6 +133,10 @@ static struct {
 #define DefaultPidFilename      (char *)NULL	/* default NONE */
 #define DefaultVisibleHostname  (char *)NULL	/* default NONE */
 #define DefaultFtpUser		"cached@"	/* Default without domain */
+#define DefaultAnnounceHost	"sd.cache.nlanr.net"
+#define DefaultAnnouncePort	3131
+#define DefaultAnnounceFile	(char *)NULL    /* default NONE */
+#define DefaultAnnounceRate	86400		/* every 24 hours */
 
 extern char *config_file;
 
@@ -1160,9 +1170,9 @@ static void parseFtpUserLine(line_in)
 {
     char *token;
     token = strtok(NULL, w_space);
-    safe_free(Config.ftpUser);
     if (token == (char *) NULL)
 	self_destruct(line_in);
+    safe_free(Config.ftpUser);
     Config.ftpUser = xstrdup(token);
 }
 
@@ -1171,7 +1181,6 @@ static void parseConnectPortsLine(line_in)
 {
     char *token;
     static char origPortList = 1;
-
     if (origPortList) {
 	connect_port_list = NULL;
 	origPortList = 0;
@@ -1179,6 +1188,37 @@ static void parseConnectPortsLine(line_in)
     while ((token = strtok(NULL, w_space))) {
 	addToIntList(&connect_port_list, token);
     }
+}
+
+static void parseCacheAnnounceLine(line_in)
+     char *line_in;
+{
+    char *token;
+    int i;
+    GetInteger(i);
+    Config.Announce.rate = i * 3600;	/* hours to seconds */
+}
+
+static void parseAnnounceToLine(line_in)
+     char *line_in;
+{
+    char *token;
+    int i;
+    token = strtok(NULL, w_space);
+    if (token == (char *) NULL)
+	self_destruct(line_in);
+    safe_free(Config.Announce.host);
+    Config.Announce.host = xstrdup(token);
+    if ((token = strchr(Config.Announce.host, ':'))) {
+	*token++ = '\0';
+	if (sscanf(token, "%d", &i) != 1)
+	    Config.Announce.port = i;
+    }
+    token = strtok(NULL, w_space);
+    if (token == (char *) NULL)
+	return;
+    safe_free(Config.Announce.file);
+    Config.Announce.file = xstrdup(token);
 }
 
 
@@ -1454,6 +1494,12 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "connect_ports"))
 	    parseConnectPortsLine(line_in);
 
+	else if (!strcmp(token, "cache_announce"))
+	    parseCacheAnnounceLine(line_in);
+
+	else if (!strcmp(token, "announce_to"))
+	    parseAnnounceToLine(line_in);
+
 	/* If unknown, treat as a comment line */
 	else {
 	    /* EMPTY */ ;
@@ -1700,6 +1746,22 @@ char *getFtpUser()
 {
     return Config.ftpUser;
 }
+char *getAnnounceHost()
+{
+    return Config.Announce.host;
+}
+int getAnnouncePort()
+{
+    return Config.Announce.port;
+}
+char *getAnnounceFile()
+{
+    return Config.Announce.file;
+}
+int getAnnounceRate()
+{
+    return Config.Announce.rate;
+}
 
 int setAsciiPortNum(p)
      int p;
@@ -1783,6 +1845,10 @@ static void configSetFactoryDefaults()
     Config.pidFilename = safe_xstrdup(DefaultPidFilename);
     Config.visibleHostname = safe_xstrdup(DefaultVisibleHostname);
     Config.ftpUser = safe_xstrdup(DefaultFtpUser);
+    Config.Announce.host = safe_xstrdup(DefaultAnnounceHost);
+    Config.Announce.port = DefaultAnnouncePort;
+    Config.Announce.file = safe_xstrdup(DefaultAnnounceFile);
+    Config.Announce.rate = DefaultAnnounceRate;
 }
 
 static void configDoConfigure()

@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.23 1996/04/08 23:25:21 wessels Exp $ */
+/* $Id: main.cc,v 1.24 1996/04/09 18:18:50 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -230,6 +230,7 @@ int main(argc, argv)
     int errcount = 0;
     int n;			/* # of GC'd objects */
     time_t last_maintain = 0;
+    time_t last_announce = 0;
 
     errorInitialize();
 
@@ -297,7 +298,7 @@ int main(argc, argv)
 	    storeMaintainSwapSpace();
 	    last_maintain = cached_curtime;
 	}
-	switch (comm_select((long) 60, (long) 0, next_cleaning)) {
+	switch (comm_select((time_t) 60, next_cleaning)) {
 	case COMM_OK:
 	    /* do nothing */
 	    break;
@@ -316,6 +317,11 @@ int main(argc, argv)
 		n = storePurgeOld();
 		debug(1, 1, "Garbage collection done, %d objects removed\n", n);
 		next_cleaning = cached_curtime + getCleanRate();
+	    }
+	    if ((n = getAnnounceRate()) > 0) {
+		if (cached_curtime > last_announce + n)
+			send_announce();
+			last_announce = cached_curtime;
 	    }
 	    /* house keeping */
 	    break;
