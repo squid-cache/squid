@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.156 2003/10/11 22:33:51 hno Exp $
+ * $Id: fqdncache.cc,v 1.157 2003/12/04 10:17:16 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -364,7 +364,7 @@ fqdncacheParse(rfc1035_rr * answers, int nr)
 
         f.flags.negcached = 0;
 
-        f.names[0] = xstrdup(answers[k].rdata);
+        f.names[0] = xstrndup(answers[k].rdata, answers[k].rdlength);
 
         f.name_count = 1;
 
