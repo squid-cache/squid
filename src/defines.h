@@ -235,3 +235,9 @@
  */
 #define INCOMING_HTTP_MAX 10
 #define INCOMING_TOTAL_MAX (INCOMING_ICP_MAX+INCOMING_HTTP_MAX)
+
+/*
+ * This many TCP connections must FAIL before we mark the
+ * peer as DEAD
+ */
+#define PEER_TCP_MAGIC_COUNT 10

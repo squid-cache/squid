@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.257 1998/05/28 23:35:33 wessels Exp $
+ * $Id: stat.cc,v 1.258 1998/06/08 17:29:19 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -471,6 +471,8 @@ info_get(StoreEntry * sentry)
 	mkrfc1123(current_time.tv_sec));
     storeAppendPrintf(sentry, "Connection information for %s:\n",
 	appname);
+    storeAppendPrintf(sentry, "\tNumber of clients accessing cache:\t%u\n",
+	Counter.client_http.clients);
     storeAppendPrintf(sentry, "\tNumber of HTTP requests received:\t%u\n",
 	Counter.client_http.requests);
     storeAppendPrintf(sentry, "\tNumber of ICP messages received:\t%u\n",
