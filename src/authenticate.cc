@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.44 2002/10/13 20:34:58 robertc Exp $
+ * $Id: authenticate.cc,v 1.45 2002/10/14 10:47:51 adrian Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -201,7 +201,7 @@ authenticateValidateUser(auth_user_request_t * auth_user_request)
 }
 
 void *
-AuthUser::operator new (unsigned int byteCount)
+AuthUser::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (AuthUser));
@@ -235,7 +235,7 @@ authenticateAuthUserNew(const char *scheme)
 }
 
 void *
-AuthUserRequest::operator new (unsigned int byteCount)
+AuthUserRequest::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (AuthUserRequest));
@@ -1073,7 +1073,7 @@ AuthUserHashPointer::removeFromCache(void *usernamehash_p)
 }
 
 void *
-AuthUserHashPointer::operator new (unsigned int byteCount)
+AuthUserHashPointer::operator new (size_t byteCount)
 {
     assert (byteCount == sizeof (AuthUserHashPointer));
     if (!pool)
