@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.75 1998/08/17 19:23:49 wessels Exp $
+ * $Id: mime.cc,v 1.76 1998/08/17 19:31:39 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -134,7 +134,9 @@ headersEnd(const char *mime, size_t l)
 		state = 0;
 	    break;
 	case 2:
-	    if ('\n' == mime[e])
+	    if ('\r' == mime[e])	/* ignore repeated CR */
+		(void) 0;
+	    else if ('\n' == mime[e])
 		state = 3;
 	    else
 		state = 0;
