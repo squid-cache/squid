@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.38 2003/05/06 20:11:50 hno Exp $
+ * $Id: external_acl.cc,v 1.39 2003/05/11 10:11:31 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -1089,6 +1089,7 @@ ExternalACLLookup::LookupDone(void *data, void *result)
     ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
     checklist->asyncInProgress(false);
+    checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->check();
 }
 
