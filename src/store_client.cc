@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.57 1999/01/19 19:03:05 wessels Exp $
+ * $Id: store_client.cc,v 1.58 1999/01/22 04:09:38 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -449,6 +449,7 @@ storeUnregister(StoreEntry * e, void *data)
     if (sc->swapin_fd > -1) {
 	commSetSelect(sc->swapin_fd, COMM_SELECT_READ, NULL, NULL, 0);
 	file_close(sc->swapin_fd);
+	store_open_disk_fd--;
 	/* XXX this probably leaks file_read handler structures */
     }
 #if USE_ASYNC_IO
