@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.104 2004/04/03 15:00:12 hno Exp $
+ * $Id: redirect.cc,v 1.105 2004/04/07 08:51:31 hno Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -113,6 +113,33 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
     assert(http);
     assert(handler);
     debug(61, 5) ("redirectStart: '%s'\n", http->uri);
+
+    if (Config.Program.redirect == NULL) {
+        handler(data, NULL);
+        return;
+    }
+
+    if (Config.accessList.redirector) {
+        ACLChecklist ch;
+
+        if (conn.getRaw() != NULL) {
+            ch.src_addr = conn->peer.sin_addr;
+            ch.my_addr = conn->me.sin_addr;
+            ch.my_port = ntohs(conn->me.sin_port);
+        }
+
+        ch.request = requestLink(http->request);
+        ch.accessList = Config.accessList.redirector;
+
+        if (!ch.fastCheck()) {
+            ch.accessList = NULL;
+            /* denied -- bypass redirector */
+            handler(data, NULL);
+            return;
+        }
+
+        ch.accessList = NULL;
+    }
 
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */
