@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.90 1998/05/08 06:34:59 wessels Exp $
+ * $Id: url.cc,v 1.91 1998/05/08 23:29:31 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -277,11 +277,7 @@ urlParse(method_t method, char *url)
     xstrncpy(request->host, host, SQUIDHOSTNAMELEN);
     xstrncpy(request->login, login, MAX_LOGIN_SZ);
     request->port = (u_short) port;
-#if OLD_CODE
-    xstrncpy(request->urlpath, urlpath, MAX_URL);
-#else
     stringReset(&request->urlpath, urlpath);
-#endif
     request->max_age = -1;
     request->max_forwards = -1;
     return request;
@@ -295,11 +291,7 @@ urnParse(method_t method, char *urn)
     request = memAllocate(MEM_REQUEST_T);
     request->method = method;
     request->protocol = PROTO_URN;
-#if OLD_CODE
-    xstrncpy(request->urlpath, &urn[4], MAX_URL);
-#else
     stringReset(&request->urlpath, urn + 4);
-#endif
     request->max_age = -1;
     request->max_forwards = -1;
     return request;

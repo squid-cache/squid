@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.94 1998/05/08 21:22:16 wessels Exp $
+ * $Id: net_db.cc,v 1.95 1998/05/08 23:29:28 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -863,9 +863,6 @@ variable_list *
 snmp_netdbFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
-#if 0
-    int cnt;
-#endif
     static char key[15];
 
     static netdbEntry *n = NULL;

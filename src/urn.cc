@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.30 1998/05/08 21:59:49 wessels Exp $
+ * $Id: urn.cc,v 1.31 1998/05/08 23:29:32 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -113,14 +113,8 @@ urnStart(request_t * r, StoreEntry * e)
     if (strncasecmp(strBuf(r->urlpath), "menu.", 5) == 0) {
 	char *new_path = xstrdup(strBuf(r->urlpath) + 5);
 	EBIT_SET(urnState->flags, URN_FORCE_MENU);
-#if OLD_CODE
-	t = xstrdup(strBuf(r->urlpath) + 5);
-	xstrncpy(r->urlpath, t, MAX_URL);
-	xfree(t);
-#else
 	stringReset(&r->urlpath, new_path);
 	xfree(new_path);
-#endif
     }
     if ((t = strChr(r->urlpath, ':')) != NULL) {
 	strSet(r->urlpath, t, '\0');

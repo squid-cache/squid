@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.182 1998/04/24 07:09:37 wessels Exp $
+ * $Id: ipcache.cc,v 1.183 1998/05/08 23:29:27 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -878,30 +878,6 @@ ipcacheUnlockEntry(ipcache_entry * i)
     if (ipcacheExpiredEntry(i))
 	ipcache_release(i);
 }
-
-#if OLD_CODE
-void
-ipcacheCycleAddr(const char *name)
-{
-    ipcache_entry *i;
-    unsigned char fullcircle;
-    if ((i = ipcache_get(name)) == NULL)
-	return;
-    if (i->status != IP_CACHED)
-	return;
-    ia = &i->addrs;
-    fullcircle = ia->cur;
-    while (ia->bad_mask[ia->cur]) {
-	if (++ia->cur == ia->count)
-	    ia->cur = 0;
-	if (ia->cur == fullcircle) {	/* All bad, just use next one */
-	    if (++ia->cur == ia->count)
-		ia->cur = 0;
-	    break;
-	}
-    }
-}
-#endif
 
 void
 ipcacheCycleAddr(const char *name, ipcache_addrs * ia)

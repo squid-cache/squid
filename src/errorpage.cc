@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.130 1998/05/08 22:35:06 wessels Exp $
+ * $Id: errorpage.cc,v 1.131 1998/05/08 23:29:26 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -242,12 +242,10 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
     HttpReply *rep;
     MemObject *mem = entry->mem_obj;
-#if 0
     /*
      *  Kostas sez PUT "success" replies might not be STORE_PENDING?
      */
-    assert(entry->store_status == STORE_PENDING);
-#endif
+    /* assert(entry->store_status == STORE_PENDING); */
     assert(mem != NULL);
     assert(mem->inmem_hi == 0);
     storeBuffer(entry);

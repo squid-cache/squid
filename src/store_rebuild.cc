@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.35 1998/04/27 19:16:12 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.36 1998/05/08 23:29:30 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -179,17 +179,6 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    continue;
 	}
 	tmpe.key = key;
-#if OLD_CODE
-	if (tmpe.swap_file_sz == 0) {
-	    RebuildState.invalid++;
-	    x = log(++RebuildState.zero_object_sz) / log(10.0);
-	    if (0.0 == x - (double) (int) x)
-		debug(20, 1) ("WARNING: %d swapfiles found with ZERO size\n",
-		    RebuildState.zero_object_sz);
-	    storeUnlinkFileno(sfileno);
-	    continue;
-	}
-#endif
 	/* check sizes */
 	if (tmpe.swap_file_sz == 0) {
 	    tmpe.swap_file_sz = sb.st_size;
