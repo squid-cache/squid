@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.36 1996/07/25 05:47:33 wessels Exp $
+ * $Id: gopher.cc,v 1.37 1996/07/25 07:10:34 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -326,7 +326,7 @@ int gopherCachable(url)
     int cachable = 1;
 
     /* scan stop list */
-    for (p = getGopherStoplist(); p; p = p->next)
+    for (p = Config.gopher_stoplist; p; p = p->next)
 	if (strstr(url, p->key))
 	    return 0;
 
@@ -726,7 +726,7 @@ int gopherReadReply(fd, data)
 		    (PF) NULL,
 		    (void *) NULL,
 		    (time_t) 0);
-		comm_set_stall(fd, getStallDelay());	/* dont try reading again for a while */
+		comm_set_stall(fd, Config.stallDelay);	/* dont try reading again for a while */
 		return 0;
 	    }
 	} else {
@@ -749,7 +749,7 @@ int gopherReadReply(fd, data)
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
 		(PF) gopherReadReply, (void *) data);
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-		(PF) gopherReadReplyTimeout, (void *) data, getReadTimeout());
+		(PF) gopherReadReplyTimeout, (void *) data, Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
@@ -771,7 +771,7 @@ int gopherReadReply(fd, data)
 	BIT_RESET(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
 	comm_close(fd);
-    } else if (((entry->mem_obj->e_current_len + len) > getGopherMax()) &&
+    } else if (((entry->mem_obj->e_current_len + len) > Config.Gopher.maxObjSize) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
@@ -789,7 +789,7 @@ int gopherReadReply(fd, data)
 	    COMM_SELECT_TIMEOUT,
 	    (PF) gopherReadReplyTimeout,
 	    (void *) data,
-	    getReadTimeout());
+	    Config.readTimeout);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we got */
 	if (data->conversion != NORMAL) {
@@ -816,7 +816,7 @@ int gopherReadReply(fd, data)
 	    COMM_SELECT_TIMEOUT,
 	    (PF) gopherReadReplyTimeout,
 	    (void *) data,
-	    getReadTimeout());
+	    Config.readTimeout);
     }
     put_free_4k_page(buf);
     return 0;
@@ -889,7 +889,7 @@ void gopherSendComplete(fd, buf, size, errflag, data)
 	COMM_SELECT_TIMEOUT,
 	(PF) gopherReadReplyTimeout,
 	(void *) gopherState,
-	getReadTimeout());
+	Config.readTimeout);
     comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
 
     if (buf)
@@ -954,7 +954,7 @@ int gopherStart(unusedfd, url, entry)
 	return COMM_ERROR;
     }
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, getTcpOutgoingAddr(), 0, url);
+    sock = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
     if (sock == COMM_ERROR) {
 	debug(10, 4, "gopherStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.33 1996/07/23 04:11:05 wessels Exp $
+ * $Id: squid.h,v 1.34 1996/07/25 07:10:41 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -267,7 +267,7 @@ extern int opt_unlink_on_reload;	/* main.c */
 extern int opt_reload_hit_only;	/* main.c */
 extern int opt_dns_tests;	/* main.c */
 extern int opt_foreground_rebuild;	/* main.c */
-extern int opt_log_fqdn;	/* main.c */
+extern int opt_zap_disk_store;	/* main.c */
 extern int vhost_mode;		/* main.c */
 extern char version_string[];	/* main.c */
 extern char appname[];		/* main.c */
@@ -275,8 +275,6 @@ extern struct in_addr local_addr;	/* main.c */
 extern char localhost[];
 extern struct in_addr any_addr;	/* comm.c */
 extern struct in_addr no_addr;	/* comm.c */
-extern int do_redirect;		/* redirect.c */
-
 
 /* Prototypes and definitions which don't really deserve a seaprate
  * include file */

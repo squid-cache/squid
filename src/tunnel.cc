@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.8 1996/07/20 04:22:27 wessels Exp $
+ * $Id: tunnel.cc,v 1.9 1996/07/25 07:10:41 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -437,7 +437,7 @@ int sslStart(fd, url, request, mime_hdr, size_ptr)
 	RequestMethodStr[request->method], url);
 
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, getTcpOutgoingAddr(), 0, url);
+    sock = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
     if (sock == COMM_ERROR) {
 	debug(26, 4, "sslStart: Failed because we're out of sockets.\n");
 	buf = squid_error_url(url,
@@ -459,7 +459,7 @@ int sslStart(fd, url, request, mime_hdr, size_ptr)
     sslState->url = xstrdup(url);
     sslState->request = requestLink(request);
     sslState->mime_hdr = mime_hdr;
-    sslState->timeout = getReadTimeout();
+    sslState->timeout = Config.readTimeout;
     sslState->size_ptr = size_ptr;
     sslState->client.fd = fd;
     sslState->server.fd = sock;

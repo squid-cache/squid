@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.65 1996/07/20 04:22:25 wessels Exp $
+ * $Id: http.cc,v 1.66 1996/07/25 07:10:35 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -155,7 +155,7 @@ int httpCachable(url, method)
 	return 0;
 
     /* scan stop list */
-    for (p = getHttpStoplist(); p; p = p->next) {
+    for (p = Config.http_stoplist; p; p = p->next) {
 	if (strstr(url, p->key))
 	    return 0;
     }
@@ -216,7 +216,7 @@ static void httpMakePrivate(entry)
 static void httpCacheNegatively(entry)
      StoreEntry *entry;
 {
-    entry->expires = squid_curtime + getNegativeTTL();
+    entry->expires = squid_curtime + Config.negativeTtl;
     if (BIT_TEST(entry->flag, CACHABLE))
 	storeSetPublicKey(entry);
     /* XXX: mark object "not to store on disk"? */
@@ -435,7 +435,7 @@ static void httpReadReply(fd, httpState)
 	    (time_t) 0);
 	comm_set_fd_lifetime(fd, 3600);		/* limit during deferring */
 	/* dont try reading again for a while */
-	comm_set_stall(fd, getStallDelay());
+	comm_set_stall(fd, Config.stallDelay);
 	return;
     }
     errno = 0;
@@ -457,7 +457,7 @@ static void httpReadReply(fd, httpState)
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
 		(PF) httpReadReply, (void *) httpState);
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-		(PF) httpReadReplyTimeout, (void *) httpState, getReadTimeout());
+		(PF) httpReadReplyTimeout, (void *) httpState, Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
@@ -473,7 +473,7 @@ static void httpReadReply(fd, httpState)
 	/* Connection closed; retrieval done. */
 	storeComplete(entry);
 	comm_close(fd);
-    } else if ((entry->mem_obj->e_current_len + len) > getHttpMax() &&
+    } else if ((entry->mem_obj->e_current_len + len) > Config.Http.maxObjSize &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
@@ -485,7 +485,7 @@ static void httpReadReply(fd, httpState)
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
-	    (void *) httpState, getReadTimeout());
+	    (void *) httpState, Config.readTimeout);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
@@ -503,7 +503,7 @@ static void httpReadReply(fd, httpState)
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
 	    (void *) httpState,
-	    getReadTimeout());
+	    Config.readTimeout);
     }
 }
 
@@ -537,7 +537,7 @@ static void httpSendComplete(fd, buf, size, errflag, data)
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
 	    (void *) httpState,
-	    getReadTimeout());
+	    Config.readTimeout);
 	comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
     }
 }
@@ -687,7 +687,7 @@ int proxyhttpStart(e, url, entry)
 	storeStartDeleteBehind(entry);
 
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, getTcpOutgoingAddr(), 0, url);
+    sock = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
@@ -779,7 +779,7 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
     debug(11, 10, "httpStart: req_hdr '%s'\n", req_hdr);
 
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, getTcpOutgoingAddr(), 0, url);
+    sock = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "httpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());

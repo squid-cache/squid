@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.47 1996/07/20 04:22:24 wessels Exp $
+ * $Id: ftp.cc,v 1.48 1996/07/25 07:10:34 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -179,7 +179,7 @@ static void ftp_login_parser(login, data)
 
     if (!*user && !*password) {
 	strcpy(user, "anonymous");
-	strcpy(password, getFtpUser());
+	strcpy(password, Config.ftpUser);
     }
 }
 
@@ -189,7 +189,7 @@ int ftpCachable(url)
     wordlist *p = NULL;
 
     /* scan stop list */
-    for (p = getFtpStoplist(); p; p = p->next) {
+    for (p = Config.ftp_stoplist; p; p = p->next) {
 	if (strstr(url, p->key))
 	    return 0;
     }
@@ -283,7 +283,7 @@ static void ftpProcessReplyHeader(data, buf, size)
 	    break;
 	default:
 	    /* These can be negative cached, make key public */
-	    entry->expires = squid_curtime + getNegativeTTL();
+	    entry->expires = squid_curtime + Config.negativeTtl;
 	    if (BIT_TEST(entry->flag, CACHABLE))
 		storeSetPublicKey(entry);
 	    break;
@@ -332,7 +332,7 @@ int ftpReadReply(fd, data)
 	    (void *) data);
 	/* NOTE there is no read timeout handler to disable */
 	/* dont try reading again for a while */
-	comm_set_stall(fd, getStallDelay());
+	comm_set_stall(fd, Config.stallDelay);
 	return 0;
     }
     errno = 0;
@@ -371,7 +371,7 @@ int ftpReadReply(fd, data)
 	     * failed and arrange so the object gets ejected and
 	     * never gets to disk. */
 	    debug(9, 1, "ftpReadReply: Purging '%s'\n", entry->url);
-	    entry->expires = squid_curtime + getNegativeTTL();
+	    entry->expires = squid_curtime + Config.negativeTtl;
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
 	} else if (!(entry->flag & DELETE_BEHIND)) {
@@ -380,7 +380,7 @@ int ftpReadReply(fd, data)
 	/* update fdstat and fdtable */
 	storeComplete(entry);
 	comm_close(fd);
-    } else if (((entry->mem_obj->e_current_len + len) > getFtpMax()) &&
+    } else if (((entry->mem_obj->e_current_len + len) > Config.Ftp.maxObjSize) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
@@ -414,7 +414,7 @@ int ftpReadReply(fd, data)
 	    COMM_SELECT_TIMEOUT,
 	    (PF) ftpLifetimeExpire,
 	    (void *) data,
-	    getReadTimeout());
+	    Config.readTimeout);
     }
     return 0;
 }
@@ -449,7 +449,7 @@ void ftpSendComplete(fd, buf, size, errflag, data)
 	comm_set_select_handler_plus_timeout(ftpState->ftp_fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) ftpLifetimeExpire,
-	    (void *) ftpState, getReadTimeout());
+	    (void *) ftpState, Config.readTimeout);
     }
 }
 
@@ -498,10 +498,10 @@ void ftpSendRequest(fd, data)
     mode = ftpTransferMode(path);
 
     /* Start building the buffer ... */
-    strcat(buf, getFtpProgram());
+    strcat(buf, Config.Program.ftpget);
     strcat(buf, space);
 
-    strncpy(opts, getFtpOptions(), BUFSIZ);
+    strncpy(opts, Config.Program.ftpget_opts, BUFSIZ);
     for (s = strtok(opts, w_space); s; s = strtok(NULL, w_space)) {
 	strcat(buf, s);
 	strcat(buf, space);
@@ -511,18 +511,18 @@ void ftpSendRequest(fd, data)
 	    got_negttl = 1;
     }
     if (!got_timeout) {
-	sprintf(tbuf, "-t %d ", getReadTimeout());
+	sprintf(tbuf, "-t %d ", Config.readTimeout);
 	strcat(buf, tbuf);
     }
     if (!got_negttl) {
-	sprintf(tbuf, "-n %d ", getNegativeTTL());
+	sprintf(tbuf, "-n %d ", Config.negativeTtl);
 	strcat(buf, tbuf);
     }
     if (data->request->port) {
 	sprintf(tbuf, "-P %d ", data->request->port);
 	strcat(buf, tbuf);
     }
-    if ((s = getVisibleHostname())) {
+    if ((s = Config.visibleHostname)) {
 	sprintf(tbuf, "-H %s ", s);
 	strcat(buf, tbuf);
     }
@@ -680,7 +680,7 @@ int ftpStart(unusedfd, url, request, entry)
 	(PF) ftpSendRequest,
 	(void *) data);
     comm_set_fd_lifetime(data->ftp_fd,
-	getClientLifetime());
+	Config.lifetimeDefault);
     comm_set_select_handler(data->ftp_fd,
 	COMM_SELECT_LIFETIME,
 	(PF) ftpLifetimeExpire,
@@ -730,7 +730,7 @@ int ftpInitialize()
     int squid_to_ftpget[2];
     int ftpget_to_squid[2];
     LOCAL_ARRAY(char, pbuf, 128);
-    char *ftpget = getFtpProgram();
+    char *ftpget = Config.Program.ftpget;
     struct sockaddr_in S;
     int len;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: wais.cc,v 1.34 1996/07/20 03:16:58 wessels Exp $
+ * $Id: wais.cc,v 1.35 1996/07/25 07:10:45 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -202,7 +202,7 @@ static void waisReadReply(fd, waisState)
 		    (void *) NULL,
 		    (time_t) 0);
 		/* dont try reading again for a while */
-		comm_set_stall(fd, getStallDelay());
+		comm_set_stall(fd, Config.stallDelay);
 		return;
 	    }
 	} else {
@@ -223,7 +223,7 @@ static void waisReadReply(fd, waisState)
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
 		(PF) waisReadReply, (void *) waisState);
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-		(PF) waisReadReplyTimeout, (void *) waisState, getReadTimeout());
+		(PF) waisReadReplyTimeout, (void *) waisState, Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
@@ -240,7 +240,7 @@ static void waisReadReply(fd, waisState)
 	entry->expires = squid_curtime;
 	storeComplete(entry);
 	comm_close(fd);
-    } else if (((entry->mem_obj->e_current_len + len) > getWAISMax()) &&
+    } else if (((entry->mem_obj->e_current_len + len) > Config.Wais.maxObjSize) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
@@ -253,7 +253,7 @@ static void waisReadReply(fd, waisState)
 	    COMM_SELECT_TIMEOUT,
 	    (PF) waisReadReplyTimeout,
 	    (void *) waisState,
-	    getReadTimeout());
+	    Config.readTimeout);
     } else {
 	storeAppend(entry, buf, len);
 	comm_set_select_handler(fd,
@@ -264,7 +264,7 @@ static void waisReadReply(fd, waisState)
 	    COMM_SELECT_TIMEOUT,
 	    (PF) waisReadReplyTimeout,
 	    (void *) waisState,
-	    getReadTimeout());
+	    Config.readTimeout);
     }
 }
 
@@ -295,7 +295,7 @@ static void waisSendComplete(fd, buf, size, errflag, data)
 	    COMM_SELECT_TIMEOUT,
 	    (PF) waisReadReplyTimeout,
 	    (void *) waisState,
-	    getReadTimeout());
+	    Config.readTimeout);
     }
 }
 
@@ -376,12 +376,12 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
 
     debug(24, 3, "waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
     debug(24, 4, "            header: %s\n", mime_hdr);
-    if (!getWaisRelayHost()) {
+    if (!Config.Wais.relayHost) {
 	debug(24, 0, "waisStart: Failed because no relay host defined!\n");
 	squid_error_entry(entry, ERR_NO_RELAY, NULL);
 	return COMM_ERROR;
     }
-    fd = comm_open(COMM_NONBLOCKING, getTcpOutgoingAddr(), 0, url);
+    fd = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
     if (fd == COMM_ERROR) {
 	debug(24, 4, "waisStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
@@ -390,8 +390,8 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
     waisState = xcalloc(1, sizeof(WaisStateData));
     storeLockObject(waisState->entry = entry, NULL, NULL);
     waisState->method = method;
-    waisState->relayhost = getWaisRelayHost();
-    waisState->relayport = getWaisRelayPort();
+    waisState->relayhost = Config.Wais.relayHost;
+    waisState->relayport = Config.Wais.relayPort;
     waisState->mime_hdr = mime_hdr;
     waisState->fd = fd;
     strncpy(waisState->request, url, MAX_URL);

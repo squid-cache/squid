@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.15 1996/07/25 05:49:17 wessels Exp $
+ * $Id: stmem.cc,v 1.16 1996/07/25 07:10:43 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -462,7 +462,7 @@ void stmemInit()
     sm_stats.total_pages_allocated = 0;
     sm_stats.n_pages_free = 0;
     sm_stats.n_pages_in_use = 0;
-    sm_stats.max_pages = (getCacheMemMax() / SM_PAGE_SIZE) >> 1;
+    sm_stats.max_pages = (Config.Mem.maxSize / SM_PAGE_SIZE) >> 1;
 
     disk_stats.page_size = DISK_PAGE_SIZE;
     disk_stats.total_pages_allocated = 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.3 1996/07/25 05:49:15 wessels Exp $
+ * $Id: fqdncache.cc,v 1.4 1996/07/25 07:10:33 wessels Exp $
  *
  * DEBUG: section 34    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -407,11 +407,11 @@ static void fqdncache_add(name, f, hp, cached)
 	}
 	f->lastref = f->timestamp = squid_curtime;
 	f->status = FQDN_CACHED;
-	f->ttl = DnsPositiveTtl;
+	f->ttl = Config.positiveDnsTtl;
     } else {
 	f->lastref = f->timestamp = squid_curtime;
 	f->status = FQDN_NEGATIVE_CACHED;
-	f->ttl = getNegativeDNSTTL();
+	f->ttl = Config.negativeDnsTtl;
     }
     fqdncache_add_to_hash(f);
 }
@@ -541,7 +541,7 @@ static int fqdncache_parsebuffer(buf, offset, dnsData)
 		line_cur = line_head->next;
 		f = dnsData->data;
 		f->lastref = f->timestamp = squid_curtime;
-		f->ttl = getNegativeDNSTTL();
+		f->ttl = Config.negativeDnsTtl;
 		f->status = FQDN_NEGATIVE_CACHED;
 		if (line_cur && !strncmp(line_cur->line, "$message", 8))
 		    f->error_message = xstrdup(line_cur->line + 8);
@@ -561,7 +561,7 @@ static int fqdncache_parsebuffer(buf, offset, dnsData)
 		    debug(34, 0, "fqdncache_parsebuffer: DNS record already resolved.\n");
 		} else {
 		    f->lastref = f->timestamp = squid_curtime;
-		    f->ttl = DnsPositiveTtl;
+		    f->ttl = Config.positiveDnsTtl;
 		    f->status = FQDN_CACHED;
 
 		    line_cur = line_head->next;

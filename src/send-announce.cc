@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.15 1996/07/18 20:27:08 wessels Exp $
+ * $Id: send-announce.cc,v 1.16 1996/07/25 07:10:40 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -44,8 +44,8 @@ void send_announce()
     int l;
     int n;
 
-    host = getAnnounceHost();
-    port = getAnnouncePort();
+    host = Config.Announce.host;
+    port = Config.Announce.port;
 
     if ((hp = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) == NULL) {
 	debug(27, 1, "send_announce: Unknown host '%s'\n", host);
@@ -56,11 +56,11 @@ void send_announce()
     strcat(sndbuf, tbuf);
     sprintf(tbuf, "Running on %s %d %d\n",
 	getMyHostname(),
-	getHttpPortNum(),
-	getIcpPortNum());
+	Config.Port.http,
+	Config.Port.icp);
     strcat(sndbuf, tbuf);
-    if (getAdminEmail()) {
-	sprintf(tbuf, "cache_admin: %s\n", getAdminEmail());
+    if (Config.adminEmail) {
+	sprintf(tbuf, "cache_admin: %s\n", Config.adminEmail);
 	strcat(sndbuf, tbuf);
     }
     sprintf(tbuf, "generated %d [%s]\n",
@@ -69,7 +69,7 @@ void send_announce()
     strcat(sndbuf, tbuf);
     l = strlen(sndbuf);
 
-    if ((file = getAnnounceFile())) {
+    if ((file = Config.Announce.file)) {
 	fd = file_open(file, NULL, O_RDONLY);
 	if (fd > -1 && (n = read(fd, sndbuf + l, BUFSIZ - l - 1)) > 0) {
 	    l += n;

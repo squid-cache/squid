@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.6 1996/07/20 03:16:54 wessels Exp $
+ * $Id: redirect.cc,v 1.7 1996/07/25 07:10:40 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -66,9 +66,6 @@ struct redirectQueueData {
     struct redirectQueueData *next;
     redirectStateData *redirectState;
 };
-
-/* GLOBALS */
-int do_redirect = 0;
 
 static redirector_t *GetFirstAvailable _PARAMS((void));
 static int redirectCreateRedirector _PARAMS((char *command));
@@ -291,7 +288,7 @@ void redirectStart(url, fd, handler, data)
     redirector_t *redirector = NULL;
     if (!handler)
 	fatal_dump("redirectStart: NULL handler");
-    if (!do_redirect) {
+    if (Config.Program.redirect == NULL) {
 	(*handler) (data, NULL);
 	return;
     }
@@ -308,13 +305,13 @@ void redirectStart(url, fd, handler, data)
 
 void redirectOpenServers()
 {
-    char *prg = getRedirectProgram();
+    char *prg = Config.Program.redirect;
     int k;
     int redirectsocket;
     LOCAL_ARRAY(char, fd_note_buf, FD_ASCII_NOTE_SZ);
     static int first_time = 0;
 
-    if (!do_redirect)
+    if (Config.Program.redirect == NULL)
 	return;
     /* free old structures if present */
     if (redirect_child_table) {
@@ -322,7 +319,7 @@ void redirectOpenServers()
 	    safe_free(redirect_child_table[k]);
 	safe_free(redirect_child_table);
     }
-    NRedirectors = NRedirectorsOpen = getRedirectChildren();
+    NRedirectors = NRedirectorsOpen = Config.redirectChildren;
     redirect_child_table = xcalloc(NRedirectors, sizeof(redirector_t *));
     debug(29, 1, "redirectOpenServers: Starting %d '%s' processes\n",
 	NRedirectors, prg);
@@ -362,7 +359,7 @@ void redirectShutdownServers()
 {
     redirector_t *redirect = NULL;
     int k;
-    if (!do_redirect)
+    if (Config.Program.redirect == NULL)
 	return;
     for (k = 0; k < NRedirectors; k++) {
 	redirect = *(redirect_child_table + k);
@@ -389,7 +386,7 @@ int redirectUnregister(url, fd)
     struct redirectQueueData *rq = NULL;
     int k;
     int n = 0;
-    if (!do_redirect)
+    if (Config.Program.redirect == NULL)
 	return 0;
     debug(29, 3, "redirectUnregister: FD %d '%s'\n", fd, url);
     for (k = 0; k < NRedirectors; k++) {

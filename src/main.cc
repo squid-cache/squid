@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.54 1996/07/22 17:19:51 wessels Exp $
+ * $Id: main.cc,v 1.55 1996/07/25 07:10:38 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -116,6 +116,7 @@ int opt_reload_hit_only = 0;	/* only UDP_HIT during store relaod */
 int catch_signals = 1;
 int opt_dns_tests = 1;
 int opt_foreground_rebuild = 0;
+int opt_zap_disk_store = 0;
 int vhost_mode = 0;
 int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
@@ -124,7 +125,6 @@ char version_string[] = SQUID_VERSION;
 char appname[] = "squid";
 char localhost[] = "127.0.0.1";
 struct in_addr local_addr;
-int opt_log_fqdn = 1;
 
 /* for error reporting from xmalloc and friends */
 extern void (*failure_notify) _PARAMS((char *));
@@ -225,7 +225,7 @@ static void mainParseOptions(argc, argv)
 	    exit(0);
 	    /* NOTREACHED */
 	case 'z':
-	    zap_disk_store = 1;
+	    opt_zap_disk_store = 1;
 	    break;
 	case '?':
 	default:
@@ -250,7 +250,7 @@ void reconfigure(sig)
 {
     debug(21, 1, "reconfigure: SIGHUP received\n");
     debug(21, 1, "Waiting %d seconds for active connections to finish\n",
-	getShutdownLifetime());
+	Config.lifetimeShutdown);
     reread_pending = 1;
 #if !HAVE_SIGACTION
     signal(sig, reconfigure);
@@ -263,7 +263,7 @@ void shut_down(sig)
     debug(21, 1, "Preparing for shutdown after %d connections\n",
 	ntcpconn + nudpconn);
     debug(21, 1, "Waiting %d seconds for active connections to finish\n",
-	getShutdownLifetime());
+	Config.lifetimeShutdown);
     shutdown_pending = 1;
 }
 
@@ -276,8 +276,8 @@ void serverConnectionsOpen()
     /* Open server ports */
     enter_suid();
     theHttpConnection = comm_open(COMM_NONBLOCKING,
-	getTcpIncomingAddr(),
-	getHttpPortNum(),
+	Config.Addrs.tcp_incoming,
+	Config.Port.http,
 	"HTTP Port");
     leave_suid();
     if (theHttpConnection < 0) {
@@ -292,10 +292,10 @@ void serverConnectionsOpen()
     debug(1, 1, "Accepting HTTP connections on FD %d.\n",
 	theHttpConnection);
 
-    if (!httpd_accel_mode || getAccelWithProxy()) {
-	if ((port = getIcpPortNum()) > 0) {
+    if (!httpd_accel_mode || Config.Accel.withProxy) {
+	if ((port = Config.Port.icp) > 0) {
 	    theInIcpConnection = comm_open(COMM_NONBLOCKING | COMM_DGRAM,
-		getUdpIncomingAddr(),
+		Config.Addrs.udp_incoming,
 		port,
 		"ICP Port");
 	    if (theInIcpConnection < 0)
@@ -308,7 +308,7 @@ void serverConnectionsOpen()
 	    debug(1, 1, "Accepting ICP connections on FD %d.\n",
 		theInIcpConnection);
 
-	    if ((addr = getUdpOutgoingAddr()).s_addr != INADDR_NONE) {
+	    if ((addr = Config.Addrs.udp_outgoing).s_addr != INADDR_NONE) {
 		theOutIcpConnection = comm_open(COMM_NONBLOCKING | COMM_DGRAM,
 		    addr,
 		    port,
@@ -371,13 +371,13 @@ static void mainReinitialize()
     neighborsDestroy();
 
     parseConfigFile(ConfigFile);
-    _db_init(getCacheLogFile(), getDebugOptions());
+    _db_init(Config.Log.log, Config.debugOptions);
     neighbors_init();
     dnsOpenServers();
     redirectOpenServers();
     serverConnectionsOpen();
     (void) ftpInitialize();
-    if (theOutIcpConnection >= 0 && (!httpd_accel_mode || getAccelWithProxy()))
+    if (theOutIcpConnection >= 0 && (!httpd_accel_mode || Config.Accel.withProxy))
 	neighbors_open(theOutIcpConnection);
     debug(1, 0, "Ready to serve requests.\n");
 }
@@ -411,9 +411,9 @@ static void mainInitialize()
     if (icpPortNumOverride != 1)
 	setIcpPortNum((u_short) icpPortNumOverride);
 
-    _db_init(getCacheLogFile(), getDebugOptions());
+    _db_init(Config.Log.log, Config.debugOptions);
     fdstat_open(fileno(debug_log), FD_LOG);
-    fd_note(fileno(debug_log), getCacheLogFile());
+    fd_note(fileno(debug_log), Config.Log.log);
 
     debug(1, 0, "Starting Squid Cache version %s for %s...\n",
 	version_string,
@@ -440,10 +440,10 @@ static void mainInitialize()
 	first_time = 0;
 	/* module initialization */
 	urlInitialize();
-	stat_init(&CacheInfo, getAccessLogFile());
+	stat_init(&CacheInfo, Config.Log.access);
 	storeInit();
 
-	if (getEffectiveUser()) {
+	if (Config.effectiveUser) {
 	    /* we were probably started as root, so cd to a swap
 	     * directory in case we dump core */
 	    if (chdir(swappath(0)) < 0) {
@@ -455,7 +455,7 @@ static void mainInitialize()
 	do_mallinfo = 1;
     }
     serverConnectionsOpen();
-    if (theOutIcpConnection >= 0 && (!httpd_accel_mode || getAccelWithProxy()))
+    if (theOutIcpConnection >= 0 && (!httpd_accel_mode || Config.Accel.withProxy))
 	neighbors_open(theOutIcpConnection);
 
     squid_signal(SIGUSR1, rotate_logs, SA_RESTART);
@@ -531,8 +531,8 @@ int main(argc, argv)
     mainInitialize();
 
     /* main loop */
-    if (getCleanRate() > 0)
-	next_cleaning = time(NULL) + getCleanRate();
+    if (Config.cleanRate > 0)
+	next_cleaning = time(NULL) + Config.cleanRate;
     for (;;) {
 	loop_delay = (time_t) 10;
 	/* maintain cache storage */
@@ -564,13 +564,13 @@ int main(argc, argv)
 		fatal_dump("Select Loop failed!");
 	    break;
 	case COMM_TIMEOUT:
-	    if (getCleanRate() > 0 && squid_curtime >= next_cleaning) {
+	    if (Config.cleanRate > 0 && squid_curtime >= next_cleaning) {
 		debug(1, 1, "Performing a garbage collection...\n");
 		n = storePurgeOld();
 		debug(1, 1, "Garbage collection done, %d objects removed\n", n);
-		next_cleaning = squid_curtime + getCleanRate();
+		next_cleaning = squid_curtime + Config.cleanRate;
 	    }
-	    if ((n = getAnnounceRate()) > 0) {
+	    if ((n = Config.Announce.rate) > 0) {
 		if (squid_curtime > last_announce + n)
 		    send_announce();
 		last_announce = squid_curtime;
