@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.303 1998/08/04 21:38:52 wessels Exp $
+ * $Id: http.cc,v 1.304 1998/08/12 22:32:57 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -142,7 +142,7 @@ httpCachableReply(HttpStateData * httpState)
     if (EBIT_TEST(httpState->request->flags, REQ_AUTH)) {
 	/*
 	 * Responses to requests with authorization may be cached
-	 * only if a Cache-Control: pubic reply header is present.
+	 * only if a Cache-Control: public reply header is present.
 	 * RFC 2068, sec 14.9.4
 	 */
 	if (!EBIT_TEST(cc_mask, CC_PUBLIC))
