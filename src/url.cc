@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.108 1998/08/26 19:53:41 wessels Exp $
+ * $Id: url.cc,v 1.109 1998/10/14 21:12:04 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -216,7 +216,7 @@ urlParse(method_t method, char *url)
     } else if (!strncmp(url, "urn:", 4)) {
 	return urnParse(method, url);
     } else {
-	if (sscanf(url, "%[^:]://%[^/]%s", proto, host, urlpath) < 2)
+	if (sscanf(url, "%[^:]://%[^/]%[^\r\n]", proto, host, urlpath) < 2)
 	    return NULL;
 	protocol = urlParseProtocol(proto);
 	port = urlDefaultPort(protocol);
@@ -256,6 +256,22 @@ urlParse(method_t method, char *url)
 	return NULL;
     }
 #endif
+    if (stringHasWhitespace(urlpath)) {
+	debug(23, 1) ("urlParse: URI has whitespace: {%s}\n", url);
+	switch (Config.uri_whitespace) {
+	case URI_WHITESPACE_DENY:
+	    return NULL;
+	case URI_WHITESPACE_ALLOW:
+	    break;
+	case URI_WHITESPACE_ENCODE:
+	    t = rfc1738_escape(urlpath);
+	    xstrncpy(urlpath, t, MAX_URL);
+	    break;
+	case URI_WHITESPACE_CHOP:
+	    *(urlpath + strcspn(urlpath, w_space)) = '\0';
+	    break;
+	}
+    }
     request = requestCreate(method, protocol, urlpath);
     xstrncpy(request->host, host, SQUIDHOSTNAMELEN);
     xstrncpy(request->login, login, MAX_LOGIN_SZ);
@@ -310,7 +326,7 @@ urlCanonicalClean(const request_t * request)
     char *t;
     if (request->protocol == PROTO_URN) {
 	snprintf(buf, MAX_URL, "urn:%s", strBuf(request->urlpath));
-    } else
+    } else {
 	switch (request->method) {
 	case METHOD_CONNECT:
 	    snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
@@ -339,6 +355,9 @@ urlCanonicalClean(const request_t * request)
 		*(++t) = '\0';
 	    break;
 	}
+    }
+    if (stringHasWhitespace(buf))
+	xstrncpy(buf, rfc1738_escape(buf), MAX_URL);
     return buf;
 }
 

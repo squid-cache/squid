@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.307 1998/10/13 23:33:31 wessels Exp $
+ * $Id: cache_cf.cc,v 1.308 1998/10/14 21:11:55 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1406,6 +1406,42 @@ parse_stringlist(wordlist ** list)
 #endif /* SQUID_SNMP */
 
 #define free_wordlist wordlistDestroy
+
+#define free_uri_whitespace free_int
+
+static void
+parse_uri_whitespace(int *var)
+{
+    char *token = strtok(NULL, w_space);
+    if (token == NULL)
+	self_destruct();
+    if (!strcasecmp(token, "deny"))
+	*var = URI_WHITESPACE_DENY;
+    else if (!strcasecmp(token, "allow"))
+	*var = URI_WHITESPACE_ALLOW;
+    else if (!strcasecmp(token, "encode"))
+	*var = URI_WHITESPACE_ENCODE;
+    else if (!strcasecmp(token, "chop"))
+	*var = URI_WHITESPACE_CHOP;
+    else
+	self_destruct();
+}
+
+
+static void
+dump_uri_whitespace(StoreEntry * entry, const char *name, int var)
+{
+    char *s;
+    if (var == URI_WHITESPACE_ALLOW)
+	s = "allow";
+    else if (var == URI_WHITESPACE_ENCODE)
+	s = "encode";
+    else if (var == URI_WHITESPACE_CHOP)
+	s = "chop";
+    else
+	s = "deny";
+    storeAppendPrintf(entry, "%s %s\n", name, s);
+}
 
 #include "cf_parser.c"
 
