@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.102 2005/03/06 14:46:29 serassio Exp $
+ * $Id: HttpHeader.cc,v 1.103 2005/03/11 20:50:09 serassio Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -555,13 +555,21 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
         }
 
         if (e->id == HDR_CONTENT_LENGTH && (e2 = httpHeaderFindEntry(hdr, e->id)) != NULL) {
-            if (!Config.onoff.relaxed_header_parser || e->value.cmp(e2->value.buf()) != 0) {
+            if (e->value.cmp(e2->value.buf()) != 0) {
                 debug(55, 1) ("WARNING: found two conflicting content-length headers in {%s}\n", getStringPrefix(header_start, header_end));
                 httpHeaderEntryDestroy(e);
                 return httpHeaderReset(hdr);
             } else {
                 debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
                 ("NOTICE: found double content-length header\n");
+
+                if (Config.onoff.relaxed_header_parser) {
+                    httpHeaderEntryDestroy(e);
+                    continue;
+                } else {
+                    httpHeaderEntryDestroy(e);
+                    return httpHeaderReset(hdr);
+                }
             }
         }
 
