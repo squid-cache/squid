@@ -23,6 +23,8 @@
 	- Fixed snmpwalk crash. snmpwalks do not crash squid anymore.
 	- Fixed snmp system Group; all objects are now returned.
 	- Fixed snmp system Group sysDescr and sysContact.
+	- Allocate FwdState from mem pools.
+	- Minor HTCP progress.
 
 Changes to squid-1.2.beta22 (June 1, 1998):
 
