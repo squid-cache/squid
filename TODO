@@ -13,3 +13,5 @@
 	- stoplist_pattern, refresh_pattern, ...
 + Finish hacking at storeCopy() to achieve in-memory sliding window
   for objects being retrieved.
++ support ftp://host/pub;type=d
++ X-Proxy-hops header
