@@ -8,6 +8,7 @@ typedef RBHD(rebuild_dir * d);
 
 struct _rebuild_dir {
     int dirn;
+    int n_read;
     FILE *log;
     int speed;
     int clean;
@@ -179,13 +180,15 @@ storeRebuildFromSwapLog(rebuild_dir * d)
     assert(d != NULL);
     /* load a number of objects per invocation */
     for (count = 0; count < d->speed; count++) {
-	if (fread(&s, ss, 1, d->log) != ss) {
-	    debug(20, 1) ("Done reading Cache Dir #%d swap log\n", d->dirn);
+	if (fread(&s, ss, 1, d->log) != 1) {
+	    debug(20, 1) ("Done reading cache_dir #%d swaplog (%d entries)\n",
+		d->dirn, d->n_read);
 	    fclose(d->log);
 	    d->log = NULL;
 	    storeDirCloseTmpSwapLog(d->dirn);
 	    return -1;
 	}
+	d->n_read++;
 	if (s.op == SWAP_LOG_ADD) {
 	    (void) 0;
 	} else if (s.op == SWAP_LOG_DEL) {
