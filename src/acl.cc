@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.209 1999/12/30 17:36:20 wessels Exp $
+ * $Id: acl.cc,v 1.210 2000/01/05 23:32:17 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1274,6 +1274,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     const char *fqdn = NULL;
     char *esc_buf;
     const char *header;
+    const char *browser;
     int k;
     if (!ae)
 	return 0;
@@ -1398,7 +1399,10 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	return aclMatchInteger(ae->data, r->method);
 	/* NOTREACHED */
     case ACL_BROWSER:
-	return aclMatchRegex(ae->data, checklist->browser);
+	browser = httpHeaderGetStr(&checklist->request->header, HDR_USER_AGENT);
+	if (NULL == browser)
+	    return 0;
+	return aclMatchRegex(ae->data, browser);
 	/* NOTREACHED */
     case ACL_PROXY_AUTH:
 	if (NULL == r) {
@@ -1724,7 +1728,6 @@ aclLookupProxyAuthDone(void *data, char *result)
 aclCheck_t *
 aclChecklistCreate(const acl_access * A,
     request_t * request,
-    const char *user_agent,
     const char *ident)
 {
     int i;
@@ -1744,8 +1747,6 @@ aclChecklistCreate(const acl_access * A,
     }
     for (i = 0; i < ACL_ENUM_MAX; i++)
 	checklist->state[i] = ACL_LOOKUP_NONE;
-    if (user_agent)
-	xstrncpy(checklist->browser, user_agent, BROWSERNAMELEN);
 #if USE_IDENT
     if (ident)
 	xstrncpy(checklist->ident, ident, USER_IDENT_SZ);

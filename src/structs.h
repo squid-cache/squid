@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.309 2000/01/05 22:44:03 wessels Exp $
+ * $Id: structs.h,v 1.310 2000/01/05 23:32:22 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -150,7 +150,6 @@ struct _aclCheck_t {
     ConnStateData *conn;	/* hack for ident */
     char ident[USER_IDENT_SZ];
 #endif
-    char browser[BROWSERNAMELEN];
     acl_proxy_auth_user *auth_user;
     acl_lookup_state state[ACL_ENUM_MAX];
 #if SQUID_SNMP
