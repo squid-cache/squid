@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.19 1996/09/20 06:29:05 wessels Exp $
+ * $Id: redirect.cc,v 1.20 1996/09/26 19:19:20 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -337,6 +337,20 @@ redirectStart(int cfd, icpStateData * icpState, RH handler, void *data)
 }
 
 void
+redirectFreeMemory(void)
+{
+    int k;
+    /* free old structures if present */
+    if (redirect_child_table) {
+	for (k = 0; k < NRedirectors; k++) {
+	    put_free_4k_page(redirect_child_table[k]->inbuf);
+	    safe_free(redirect_child_table[k]);
+	}
+	safe_free(redirect_child_table);
+    }
+}
+
+void
 redirectOpenServers(void)
 {
     char *prg = Config.Program.redirect;
@@ -345,14 +359,9 @@ redirectOpenServers(void)
     LOCAL_ARRAY(char, fd_note_buf, FD_ASCII_NOTE_SZ);
     static int first_time = 0;
 
+    redirectFreeMemory();
     if (Config.Program.redirect == NULL)
 	return;
-    /* free old structures if present */
-    if (redirect_child_table) {
-	for (k = 0; k < NRedirectors; k++)
-	    safe_free(redirect_child_table[k]);
-	safe_free(redirect_child_table);
-    }
     NRedirectors = NRedirectorsOpen = Config.redirectChildren;
     redirect_child_table = xcalloc(NRedirectors, sizeof(redirector_t *));
     debug(29, 1, "redirectOpenServers: Starting %d '%s' processes\n",

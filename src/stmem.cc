@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.26 1996/09/20 06:29:11 wessels Exp $
+ * $Id: stmem.cc,v 1.27 1996/09/26 19:19:21 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -118,6 +118,7 @@ stmem_stats mem_obj_pool;
 
 static void *get_free_thing _PARAMS((stmem_stats * thing));
 static void put_free_thing _PARAMS((stmem_stats * thing, void *p));
+static void stmemFreeThingMemory _PARAMS((stmem_stats * thing));
 
 
 void
@@ -440,4 +441,23 @@ stmemInit(void)
     init_stack(&disk_stats.free_page_stack, disk_stats.max_pages);
     init_stack(&request_pool.free_page_stack, request_pool.max_pages);
     init_stack(&mem_obj_pool.free_page_stack, mem_obj_pool.max_pages);
+}
+
+static void
+stmemFreeThingMemory(stmem_stats * thing)
+{
+    void *p;
+    while (!empty_stack(&thing->free_page_stack)) {
+	p = pop(&thing->free_page_stack);
+	safe_free(p);
+    }
+}
+
+void
+stmemFreeMemory(void)
+{
+    stmemFreeThingMemory(&sm_stats);
+    stmemFreeThingMemory(&disk_stats);
+    stmemFreeThingMemory(&request_pool);
+    stmemFreeThingMemory(&mem_obj_pool);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.79 1996/09/24 20:17:28 wessels Exp $
+ * $Id: comm.cc,v 1.80 1996/09/26 19:19:12 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1355,4 +1355,10 @@ comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handl
 	COMM_SELECT_WRITE,
 	(PF) commHandleWrite,
 	fd_table[fd].rwstate);
+}
+
+void
+commFreeMemory(void)
+{
+	safe_free(fd_table);
 }

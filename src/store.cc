@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.120 1996/09/20 23:27:00 wessels Exp $
+ * $Id: store.cc,v 1.121 1996/09/26 19:19:23 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2656,6 +2656,10 @@ storeWriteCleanLog(void)
 	    continue;
 	if (e->object_len <= 0)
 	    continue;
+        if (BIT_TEST(e->flag, RELEASE_REQUEST))
+	    continue;
+	if (BIT_TEST(e->flag, KEY_PRIVATE))
+	    continue;
 	storeSwapFullPath(e->swap_file_number, swapfilename);
 	x = fprintf(fp, "%08x %08x %08x %08x %9d %s\n",
 	    (int) e->swap_file_number,
@@ -2837,4 +2841,17 @@ storeNegativeCache(StoreEntry * e)
 {
     e->expires = squid_curtime + Config.negativeTtl;
     BIT_SET(e->flag, ENTRY_NEGCACHED);
+}
+
+void
+storeFreeMemory(void)
+{
+    StoreEntry *e;
+#ifdef THIS_IS_SLOW
+    while ((e = (StoreEntry *) storeFindFirst(store_table))) {
+	storeHashDelete(e);
+	destroy_StoreEntry(e);
+    }
+#endif
+    hashFreeMemory(store_table);
 }
