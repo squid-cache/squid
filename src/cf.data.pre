@@ -1917,3 +1917,43 @@ DOC_START
 DOC_END
 
 EOF
+
+NAME: minimum_retry_timeout
+COMMENT: (seconds)
+TYPE: time_t
+LOC: Config.retry.timeout
+DEFAULT: 5 seconds
+DOC_START
+	This specifies the minimum connect timeout, for when the
+	connect timeout is reduced to compensate for the availability
+	of multiple IP addresses.
+
+	When a connection to a host is initiated, and that host
+	has several IP addresses, the default connection timeout
+	is reduced by dividing it by the number of addresses.  So,
+	a site with 15 addresses would then have a timeout of 8
+	seconds for each address attempted.  To avoid having the
+	timeout reduced to the point where even a working host
+	would not have a chance to respond, this setting is provided.
+	The default, and the minimum value, is five seconds, and
+	the maximum value is sixty seconds, or half of connect_timeout,
+	whichever is greater and less than connect_timeout.
+
+minimum_retry_timeout 5
+DOC_END
+
+NAME: maximum_single_addr_tries
+TYPE: int
+LOC: Config.retry.maxtries
+DEFAULT: 3
+DOC_START
+	This sets the maximum number of connection attempts for a
+	host that only has one address (for multiple-address hosts,
+	each address is tried once).
+
+	The default value is three tries, the (not recommended)
+	maximum is 255 tries.  A warning message will be generated
+	if it is set to a value greater than ten.
+
+maximum_single_addr_tries 3
+DOC_END

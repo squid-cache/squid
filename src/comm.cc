@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.196 1997/10/26 02:33:17 wessels Exp $
+ * $Id: comm.cc,v 1.197 1997/10/26 06:26:25 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -124,10 +124,12 @@ typedef struct {
     struct sockaddr_in S;
     CNCB *callback;
     void *data;
-    int tries;
     struct in_addr in_addr;
     int locks;
     int fd;
+    int tries;
+    int addrcount;
+    int connstart;
 } ConnectStateData;
 
 /* STATIC */
@@ -157,6 +159,10 @@ static IPH commConnectDnsHandle;
 static void commConnectCallback(ConnectStateData * cs, int status);
 static int commDeferRead(int fd);
 static int ignoreErrno(int errno);
+static void commSetConnectTimeout(int fd, time_t timeout);
+static int commResetFD(ConnectStateData * cs);
+static int commRetryConnect(ConnectStateData * cs);
+static time_t commBackoffTimeout(unsigned char numaddrs);
 
 static struct timeval zero_tv;
 
@@ -335,6 +341,10 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
     }
     assert(ia->cur < ia->count);
     cs->in_addr = ia->in_addrs[ia->cur];
+    ipcacheCycleAddr(cs->host);
+    cs->addrcount = ia->count;
+    cs->connstart = squid_curtime;
+    commSetConnectTimeout(cs->fd, commBackoffTimeout(ia->count));
     commConnectHandle(cs->fd, cs);
 }
 
@@ -361,26 +371,57 @@ commConnectFree(int fdunused, void *data)
     cbdataFree(cs);
 }
 
+/* Reset FD so that we can connect() again */
 static int
-commRetryConnect(int fd, ConnectStateData * cs)
+commResetFD(ConnectStateData * cs)
 {
     int fd2;
-    if (++cs->tries == 4)
-	return 0;
     if (!cbdataValid(cs->data))
 	return 0;
     fd2 = socket(AF_INET, SOCK_STREAM, 0);
     if (fd2 < 0) {
-	debug(5, 0) ("commRetryConnect: socket: %s\n", xstrerror());
+	debug(5, 0) ("commResetFD: socket: %s\n", xstrerror());
 	return 0;
     }
-    if (dup2(fd2, fd) < 0) {
-	debug(5, 0) ("commRetryConnect: dup2: %s\n", xstrerror());
+    if (dup2(fd2, cs->fd) < 0) {
+	debug(5, 0) ("commResetFD: dup2: %s\n", xstrerror());
 	return 0;
     }
-    commSetNonBlocking(fd);
     close(fd2);
+    commSetConnectTimeout(cs->fd, commBackoffTimeout(cs->addrcount));
+    commSetNonBlocking(cs->fd);
     return 1;
+}
+
+static int
+commRetryConnect(ConnectStateData * cs)
+{
+    assert(cs->addrcount > 0);
+    if (cs->addrcount == 1) {
+	if (cs->tries >= Config.retry.maxtries)
+	    return 0;
+	if (squid_curtime - cs->connstart > Config.Timeout.connect)
+	    return 0;
+	commSetConnectTimeout(cs->fd, commBackoffTimeout((unsigned char) 100));
+    } else {
+	if (cs->tries > cs->addrcount)
+	    return 0;
+    }
+    return commResetFD(cs);
+}
+
+/* Back off the socket timeout if there are several addresses available */
+static time_t
+commBackoffTimeout(unsigned char numaddrs)
+{
+    time_t timeout;
+    timeout = (time_t) Config.Timeout.connect;
+    if (numaddrs > 2) {
+	timeout = (time_t) (Config.Timeout.connect / numaddrs);
+	if (timeout < Config.retry.timeout)
+	    timeout = (time_t) Config.retry.timeout;
+    }
+    return timeout;
 }
 
 /* Connect SOCK to specified DEST_PORT at DEST_HOST. */
@@ -401,24 +442,22 @@ commConnectHandle(int fd, void *data)
 	commSetSelect(fd, COMM_SELECT_WRITE, commConnectHandle, cs, 0);
 	break;
     case COMM_OK:
-	ipcacheCycleAddr(cs->host);
+	ipcacheMarkGoodAddr(cs->host, cs->S.sin_addr);
 	commConnectCallback(cs, COMM_OK);
 	break;
     default:
-	if (commRetryConnect(fd, cs)) {
-	    debug(5, 2) ("Retrying connection to %s: %s\n",
-		cs->host, xstrerror());
-	    cs->S.sin_addr.s_addr = 0;
-	    ipcacheCycleAddr(cs->host);
+	cs->tries++;
+	ipcacheMarkBadAddr(cs->host, cs->S.sin_addr);
+	if (commRetryConnect(cs)) {
 	    cs->locks++;
 	    ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
 	} else {
-	    ipcacheRemoveBadAddr(cs->host, cs->S.sin_addr);
 	    commConnectCallback(cs, COMM_ERR_CONNECT);
 	}
 	break;
     }
 }
+
 int
 commSetTimeout(int fd, int timeout, PF * handler, void *data)
 {
@@ -1390,4 +1429,11 @@ ignoreErrno(int errno)
     if (errno == EINTR)
 	return 1;
     return 0;
+}
+
+static void
+commSetConnectTimeout(int fd, time_t timeout)
+{
+    fde *F = &fd_table[fd];
+    F->connect_timeout = timeout;
 }
