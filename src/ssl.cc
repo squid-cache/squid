@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.119 2002/04/13 23:07:51 hno Exp $
+ * $Id: ssl.cc,v 1.120 2002/07/20 12:30:04 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -431,7 +431,7 @@ sslConnectDone(int fdnotused, int status, void *data)
 
 CBDATA_TYPE(SslStateData);
 void
-sslStart(int fd, const char *url, request_t * request, size_t * size_ptr, int *status_ptr)
+sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
 {
     /* Create state structure. */
     SslStateData *sslState = NULL;
@@ -439,6 +439,9 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr, int *s
     ErrorState *err = NULL;
     aclCheck_t ch;
     int answer;
+    int fd = http->conn->fd;
+    request_t *request = http->request;
+    char *url = http->uri;
     /*
      * client_addr == no_addr indicates this is an "internal" request
      * from peer_digest.c, asn.c, netdb.c, etc and should always
@@ -487,7 +490,7 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr, int *s
     CBDATA_INIT_TYPE(SslStateData);
     sslState = cbdataAlloc(SslStateData);
 #if DELAY_POOLS
-    sslState->delay_id = delayClient(request);
+    sslState->delay_id = delayClient(http);
     delayRegisterDelayIdPtr(&sslState->delay_id);
 #endif
     sslState->url = xstrdup(url);
