@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.22 1998/03/03 22:49:28 wessels Exp $
+ * $Id: fd.cc,v 1.23 1998/03/04 06:14:54 rousskov Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -132,7 +132,8 @@ fdDumpOpen(void)
 	if (i == fileno(debug_log))
 	    continue;
 	debug(51, 1) ("Open FD %s %4d %s\n",
-	    i, F->type == FD_READ ? "reading" : "writing", F->desc);
+	    F->type == FD_READ ? "reading" : "writing",
+	    i, F->desc);
     }
 }
 
