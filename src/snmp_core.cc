@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.50 2001/05/27 23:37:51 hno Exp $
+ * $Id: snmp_core.cc,v 1.51 2001/08/30 09:51:40 hno Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -729,7 +729,10 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 	*NextLen = mibTreeEntry->len;
 	*Next = (*mibTreeEntry->instancefunction) (mibTreeEntry->name, NextLen, mibTreeEntry, &Fn);
     }
-    return (Fn);
+    if (*Next)
+	return (Fn);
+    else
+	return NULL;
 }
 
 static oid *
