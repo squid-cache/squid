@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.45 1999/01/21 21:10:39 wessels Exp $
+ * $Id: store_swapout.cc,v 1.46 1999/01/29 17:36:37 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -301,7 +301,12 @@ storeSwapOutFileOpened(void *data, int fd, int errcode)
     if (fd < 0) {
 	debug(20, 0) ("storeSwapOutFileOpened: Unable to open swapfile: %s\n\t%s\n",
 	    ctrlp->swapfilename, xstrerror());
-	storeDirMapBitReset(e->swap_file_number);
+	/*
+	 * yuck.  don't clear the filemap bit for some errors so that
+	 * we don't try re-using it over and over
+	 */
+	if (errno != EPERM)
+	    storeDirMapBitReset(e->swap_file_number);
 	e->swap_file_number = -1;
 	e->swap_status = ctrlp->oldswapstatus;
 	xfree(ctrlp->swapfilename);
