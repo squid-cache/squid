@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.99 1997/04/28 04:23:08 wessels Exp $
+ * $Id: ftp.cc,v 1.100 1997/04/28 05:32:42 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -300,8 +300,8 @@ ftpReadReply(int fd, FtpStateData * data)
 	 * when Gap is big enough. */
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
-	    (PF) ftpReadReply,
-	    (void *) data, 0);
+	    ftpReadReply,
+	    data, 0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
 	    /* NOTE there is no read timeout handler to disable */
 	    BIT_SET(entry->flag, READ_DEFERRED);
@@ -327,7 +327,7 @@ ftpReadReply(int fd, FtpStateData * data)
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    commSetSelect(fd, COMM_SELECT_READ,
-		(PF) ftpReadReply, (void *) data, 0);
+		ftpReadReply, data, 0);
 	    /* note there is no ftpReadReplyTimeout.  Timeouts are handled
 	     * by `ftpget'. */
 	} else {
@@ -382,12 +382,12 @@ ftpReadReply(int fd, FtpStateData * data)
 	    ftpProcessReplyHeader(data, buf, len);
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
-	    (PF) ftpReadReply,
-	    (void *) data, 0);
+	    ftpReadReply,
+	    data, 0);
 	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
-	    (PF) ftpLifetimeExpire,
-	    (void *) data,
+	    ftpLifetimeExpire,
+	    data,
 	    Config.readTimeout);
     }
     return 0;
@@ -414,12 +414,12 @@ ftpSendComplete(int fd, char *buf, int size, int errflag, void *data)
     }
     commSetSelect(ftpState->ftp_fd,
 	COMM_SELECT_READ,
-	(PF) ftpReadReply,
-	(void *) ftpState, 0);
+	ftpReadReply,
+	ftpState, 0);
     commSetSelect(ftpState->ftp_fd,
 	COMM_SELECT_TIMEOUT,
-	(PF) ftpLifetimeExpire,
-	(void *) ftpState, Config.readTimeout);
+	ftpLifetimeExpire,
+	ftpState, Config.readTimeout);
 }
 
 static const char *
@@ -516,7 +516,7 @@ ftpSendRequest(int fd, FtpStateData * data)
 	strlen(buf),
 	30,
 	ftpSendComplete,
-	(void *) data,
+	data,
 	put_free_8k_page);
 }
 
@@ -634,8 +634,8 @@ ftpStartComplete(void *data, int status)
     /* Pipe/socket created ok */
     /* register close handler */
     comm_add_close_handler(ftpData->ftp_fd,
-	(PF) ftpStateFree,
-	(void *) ftpData);
+	ftpStateFree,
+	ftpData);
     /* Now connect ... */
     commConnectStart(ftpData->ftp_fd,
 	localhost,
@@ -659,14 +659,14 @@ ftpConnectDone(int fd, int status, void *data)
     fd_note(fd, ftpData->entry->url);
     commSetSelect(fd,
 	COMM_SELECT_WRITE,
-	(PF) ftpSendRequest,
-	(void *) data, 0);
+	ftpSendRequest,
+	data, 0);
     comm_set_fd_lifetime(fd,
 	Config.lifetimeDefault);
     commSetSelect(fd,
 	COMM_SELECT_LIFETIME,
-	(PF) ftpLifetimeExpire,
-	(void *) ftpData, 0);
+	ftpLifetimeExpire,
+	ftpData, 0);
     if (opt_no_ipcache)
 	ipcacheInvalidate(ftpData->request->host);
 }
@@ -697,8 +697,8 @@ ftpServerClose(void)
 	return;
     commSetSelect(ftpget_server_read,
 	COMM_SELECT_READ,
-	(PF) NULL,
-	(void *) NULL, 0);
+	NULL,
+	NULL, 0);
     fdstat_close(ftpget_server_read);
     close(ftpget_server_read);
     fdstat_close(ftpget_server_write);
@@ -772,8 +772,8 @@ ftpInitialize(void)
 	/* if ftpget -S goes away, this handler should get called */
 	commSetSelect(ftpget_to_squid[0],
 	    COMM_SELECT_READ,
-	    (PF) ftpServerClosed,
-	    (void *) NULL, 0);
+	    ftpServerClosed,
+	    NULL, 0);
 	ftpget_server_write = squid_to_ftpget[1];
 	ftpget_server_read = ftpget_to_squid[0];
 	slp.tv_sec = 0;

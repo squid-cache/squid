@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.96 1997/04/28 04:23:00 wessels Exp $
+ * $Id: client_side.cc,v 1.97 1997/04/28 05:32:40 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -193,7 +193,7 @@ clientRedirectDone(void *data, char *result)
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    icpDetectClientClose,
-	    (void *) icpState,
+	    icpState,
 	    0);
     }
     icpProcessRequest(fd, icpState);
@@ -287,7 +287,7 @@ proxyAuthenticate(const char *headers)
 		while (user != NULL) {
 		    if (strlen(user) > 1 && strlen(passwd) > 1) {
 			debug(33, 6, "proxyAuthenticate: adding %s, %s to hash table\n", user, passwd);
-			hash_insert(validated, xstrdup(user), (void *) xstrdup(passwd));
+			hash_insert(validated, xstrdup(user), xstrdup(passwd));
 		    }
 		    user = strtok(NULL, ":");
 		    passwd = strtok(NULL, "\n");
@@ -328,7 +328,7 @@ proxyAuthenticate(const char *headers)
     }
     debug(33, 5, "proxyAuthenticate: user %s validated\n", sent_user);
     hash_delete(validated, sent_user);
-    hash_insert(validated, xstrdup(sent_user), (void *) xstrdup(passwd));
+    hash_insert(validated, xstrdup(sent_user), xstrdup(passwd));
 
     xfree(clear_userandpw);
     return (sent_user);
@@ -364,7 +364,7 @@ icpProcessExpired(int fd, void *data)
     icpState->entry = entry;
     icpState->out_offset = 0;
     /* Register with storage manager to receive updates when data comes in. */
-    storeRegister(entry, fd, icpHandleIMSReply, (void *) icpState);
+    storeRegister(entry, fd, icpHandleIMSReply, icpState);
     protoDispatch(fd, icpState->entry, icpState->request);
 }
 
@@ -422,7 +422,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	storeRegister(entry,
 	    fd,
 	    icpHandleIMSReply,
-	    (void *) icpState);
+	    icpState);
 	return;
     } else if (clientGetsOldEntry(entry, icpState->old_entry, icpState->request)) {
 	/* We initiated the IMS request, the client is not expecting
@@ -433,7 +433,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    storeRegister(entry,
 		fd,
 		icpHandleIMSReply,
-		(void *) icpState);
+		icpState);
 	    return;
 	}
 	icpState->log_type = LOG_TCP_REFRESH_HIT;
@@ -573,6 +573,6 @@ clientPurgeRequest(icpStateData * icpState)
 	strlen(msg),
 	30,
 	icpSendERRORComplete,
-	(void *) icpState,
+	icpState,
 	NULL);
 }

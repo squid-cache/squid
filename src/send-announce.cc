@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.30 1997/03/04 05:16:40 wessels Exp $
+ * $Id: send-announce.cc,v 1.31 1997/04/28 05:32:48 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -95,6 +95,6 @@ send_announce(int fd, const ipcache_addrs * ia, void *data)
     AppendUdp(qdata);
     commSetSelect(theOutIcpConnection,
 	COMM_SELECT_WRITE,
-	(PF) icpUdpReply,
-	(void *) qdata, 0);
+	icpUdpReply,
+	qdata, 0);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.133 1997/04/28 04:23:28 wessels Exp $
+ * $Id: stat.cc,v 1.134 1997/04/28 05:32:50 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -503,10 +503,10 @@ log_get_start(const cacheinfo * obj, StoreEntry * sentry)
     data->sentry = sentry;
     storeAppendPrintf(sentry, "{\n");
     file_walk(fd,
-	(FILE_WALK_HD) logReadEndHandler,
-	(void *) data,
-	(FILE_WALK_LHD) logReadHandler,
-	(void *) data);
+	logReadEndHandler,
+	data,
+	logReadHandler,
+	data);
     return;
 }
 
@@ -542,8 +542,8 @@ squid_get_start(const cacheinfo * obj, StoreEntry * sentry)
     data->sentry = sentry;
     data->fd = file_open(ConfigFile, NULL, O_RDONLY, NULL, NULL);
     storeAppendPrintf(sentry, open_bracket);
-    file_walk(data->fd, (FILE_WALK_HD) squidReadEndHandler, (void *) data,
-	(FILE_WALK_LHD) squidReadHandler, (void *) data);
+    file_walk(data->fd, squidReadEndHandler, data,
+	squidReadHandler, data);
 }
 
 

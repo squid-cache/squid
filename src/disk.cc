@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.58 1997/04/28 04:23:03 wessels Exp $
+ * $Id: disk.cc,v 1.59 1997/04/28 05:32:41 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -376,13 +376,13 @@ diskHandleWrite(int fd, FileEntry * entry)
     }
     ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
     ctrlp->fd = fd;
-    ctrlp->data = (void *) entry;
+    ctrlp->data = entry;
 #if USE_ASYNC_IO
     aioWrite(fd,
 	entry->write_q->buf + entry->write_q->cur_offset,
 	entry->write_q->len - entry->write_q->cur_offset,
 	diskHandleWriteComplete,
-	(void *) ctrlp);
+	ctrlp);
     return DISK_OK;
 #else
     len = write(fd,
@@ -443,8 +443,8 @@ diskHandleWriteComplete(void *data, int retcode, int errcode)
 	/* another block is queued */
 	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
-	    (PF) diskHandleWrite,
-	    (void *) entry,
+	    diskHandleWrite,
+	    entry,
 	    0);
 	return DISK_OK;
     }
@@ -503,8 +503,8 @@ file_write(int fd,
 #else
 	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
-	    (PF) diskHandleWrite,
-	    (void *) &file_table[fd],
+	    diskHandleWrite,
+	    &file_table[fd],
 	    0);
 #endif
 	file_table[fd].write_daemon = PRESENT;
@@ -522,7 +522,7 @@ diskHandleRead(int fd, dread_ctrl * ctrl_dat)
     disk_ctrl_t *ctrlp;
     ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
     ctrlp->fd = fd;
-    ctrlp->data = (void *) ctrl_dat;
+    ctrlp->data = ctrl_dat;
     /* go to requested position. */
     lseek(fd, ctrl_dat->offset, SEEK_SET);
     file_table[fd].at_eof = NO;
@@ -531,7 +531,7 @@ diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 	ctrl_dat->buf + ctrl_dat->cur_len,
 	ctrl_dat->req_len - ctrl_dat->cur_len,
 	diskHandleReadComplete,
-	(void *) ctrlp);
+	ctrlp);
     return DISK_OK;
 #else
     len = read(fd,
@@ -554,8 +554,8 @@ diskHandleReadComplete(void *data, int retcode, int errcode)
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
-		(PF) diskHandleRead,
-		(void *) ctrl_dat,
+		diskHandleRead,
+		ctrl_dat,
 		0);
 	    return DISK_OK;
 	}
@@ -586,8 +586,8 @@ diskHandleReadComplete(void *data, int retcode, int errcode)
     if (ctrl_dat->cur_len < ctrl_dat->req_len) {
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
-	    (PF) diskHandleRead,
-	    (void *) ctrl_dat,
+	    diskHandleRead,
+	    ctrl_dat,
 	    0);
 	return DISK_OK;
     } else {
@@ -628,8 +628,8 @@ file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void
 #else
     commSetSelect(fd,
 	COMM_SELECT_READ,
-	(PF) diskHandleRead,
-	(void *) ctrl_dat,
+	diskHandleRead,
+	ctrl_dat,
 	0);
 #endif
     return DISK_OK;
@@ -644,7 +644,7 @@ diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
     disk_ctrl_t *ctrlp;
     ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
     ctrlp->fd = fd;
-    ctrlp->data = (void *) walk_dat;
+    ctrlp->data = walk_dat;
 
     lseek(fd, walk_dat->offset, SEEK_SET);
     file_table[fd].at_eof = NO;
@@ -652,7 +652,7 @@ diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
     aioRead(fd, walk_dat->buf,
 	DISK_LINE_LEN - 1,
 	diskHandleWalkComplete,
-	(void *) ctrlp);
+	ctrlp);
     return DISK_OK;
 #else
     len = read(fd, walk_dat->buf, DISK_LINE_LEN - 1);
@@ -681,8 +681,8 @@ diskHandleWalkComplete(void *data, int retcode, int errcode)
 
     if (len < 0) {
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-	    commSetSelect(fd, COMM_SELECT_READ, (PF) diskHandleWalk,
-		(void *) walk_dat, 0);
+	    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk,
+		walk_dat, 0);
 	    return DISK_OK;
 	}
 	debug(50, 1, "diskHandleWalk: FD %d: error readingd: %s\n",
@@ -721,8 +721,8 @@ diskHandleWalkComplete(void *data, int retcode, int errcode)
     walk_dat->offset += used_bytes;
 
     /* reschedule it for next line. */
-    commSetSelect(fd, COMM_SELECT_READ, (PF) diskHandleWalk,
-	(void *) walk_dat,
+    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk,
+	walk_dat,
 	0);
     return DISK_OK;
 }
@@ -754,8 +754,8 @@ file_walk(int fd,
 #if USE_ASYNC_IO
     diskHandleWalk(fd, walk_dat);
 #else
-    commSetSelect(fd, COMM_SELECT_READ, (PF) diskHandleWalk,
-	(void *) walk_dat,
+    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk,
+	walk_dat,
 	0);
 #endif
     return DISK_OK;
