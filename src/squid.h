@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.193 1999/06/24 20:20:07 wessels Exp $
+ * $Id: squid.h,v 1.194 1999/09/28 23:48:49 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -299,6 +299,8 @@ struct rusage {
 
 #if CBDATA_DEBUG
 #define cbdataAdd(a,b,c)	cbdataAddDbg(a,b,c,__FILE__,__LINE__)
+#define cbdataLock(a)		cbdataLockDbg(a,__FILE__,__LINE__)
+#define cbdataUnlock(a)		cbdataUnlockDbg(a,__FILE__,__LINE__)
 #endif
 
 #if USE_LEAKFINDER
