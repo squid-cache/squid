@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.296 2003/02/01 13:35:17 hno Exp $
+# $Id: cf.data.pre,v 1.297 2003/02/06 12:03:14 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3521,9 +3521,10 @@ DOC_START
 	and here would be:
 
 Example:
- delay_pools 2      # 2 delay pools
+ delay_pools 3      # 2 delay pools
  delay_class 1 2    # pool 1 is a class 2 pool
  delay_class 2 3    # pool 2 is a class 3 pool
+ delay_class 3 4    # pool 3 is a class 4 pool
 
 	The delay pool classes are:
 
@@ -3539,6 +3540,12 @@ Example:
 				from bits 17 through 24 of the IP address and a
 				"individual" bucket chosen from bits 17 through
 				32 of the IP address.
+				
+		class 4		Everything in a class 3 delay pool, with an 
+				additional limit on a per user basis. This
+				only takes effect if the username is established
+				in advance - by forcing authentication in your
+				http_access rules.
 
 	NOTE: If an IP address is a.b.c.d
 		-> bits 25 through 32 are "d"
@@ -3564,6 +3571,7 @@ Example:
  delay_access 1 deny all
  delay_access 2 allow lotsa_little_clients
  delay_access 2 deny all
+ delay_access 3 allow authenticated_clients
 DOC_END
 
 NAME: delay_parameters
@@ -3586,6 +3594,10 @@ delay_parameters pool aggregate individual
 
 delay_parameters pool aggregate network individual
 
+	For a class 4 delay pool:
+
+delay_parameters pool aggregate network individual user
+
 	The variables here are:
 
 		pool		a pool number - ie, a number between 1 and the
@@ -3600,6 +3612,9 @@ delay_parameters pool aggregate network individual
 
 		network		the "delay parameters" for the network buckets
 				(class 3).
+
+		user		the delay parameters for the user buckets
+				(class 4).
 
 	A pair of delay parameters is written restore/maximum, where restore is
 	the number of bytes (not bits - modem and network speeds are usually
@@ -3625,6 +3640,11 @@ delay_parameters 1 -1/-1 8000/8000
 delay_parameters 2 32000/32000 8000/8000 600/64000
 
 	There must be one delay_parameters line for each delay pool.
+
+	Finally, for a class 4 delay pool as in the example - each user will
+	be limited to 128Kb no matter how many workstations they are logged into.:
+	
+delay_parameters 4 32000/32000 8000/8000 600/64000 16000/16000
 DOC_END
 
 NAME: delay_initial_bucket_level
