@@ -1,25 +1,4 @@
 /* include/autoconf.h.in.  Generated automatically from configure.in by autoheader.  */
-/* 
- * All configurable options are enabled by using --enable-....
- * when running configure. See configure --help for a list
- * of all available options.
- *
- * You are free to edit this file, but it will be overwritten
- * each time you run configure. You may need to edit this file
- * if configure falsely picks up a library function or structure
- * that doesn't really work on your system.
- *
- * Another way to block a function that should not be detected
- * is to
- * setenv ac_cv_func_<functionname> no
- * before running configure, as in
- * setenv ac_cv_func_setresuid no
- *
- * It is possible to enable some of the configurable options
- * by editing this file alone, but some of them requires changes
- * in the Makefiles, wich is done automatically by configure.
- *
- */
 
 /* Define if using alloca.c.  */
 #undef C_ALLOCA
@@ -586,6 +565,9 @@
 
 /* Define if you have the gnumalloc library (-lgnumalloc).  */
 #undef HAVE_LIBGNUMALLOC
+
+/* Define if you have the intl library (-lintl).  */
+#undef HAVE_LIBINTL
 
 /* Define if you have the m library (-lm).  */
 #undef HAVE_LIBM
