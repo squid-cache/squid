@@ -503,6 +503,9 @@
 /* Define if you have the 44bsd library (-l44bsd).  */
 #undef HAVE_LIB44BSD
 
+/* Define if you have the bind library (-lbind).  */
+#undef HAVE_LIBBIND
+
 /* Define if you have the bsd library (-lbsd).  */
 #undef HAVE_LIBBSD
 
