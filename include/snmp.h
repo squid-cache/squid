@@ -3,7 +3,7 @@
  *
  *
  */
-/***********************************************************
+/*
 	Copyright 1988, 1989 by Carnegie Mellon University
 
                       All Rights Reserved
@@ -23,7 +23,7 @@ ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
 WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
-******************************************************************/
+*/
 
 #ifndef SNMP_H
 #define SNMP_H
@@ -121,7 +121,6 @@ typedef struct _conf_if_list {
 
 extern conf_if_list *if_list;
 
-#ifndef SQUID_SNMP
 /*extern void init_snmp(); */
 
 extern int read_objid(char *input,
@@ -129,19 +128,12 @@ extern int read_objid(char *input,
     int *out_len);
 
 extern void sprint_objid(char *buf, oid * id, int idlen);
-extern void print_objid(oid * id,
-    int idlen);
-void snmp_add_null_var(struct snmp_pdu *,
-    oid *,
-    int);
-extern void xdump(u_char * cp,
-    int length,
-    char *prefix);
-
+extern void print_objid(oid * id, int idlen);
+void snmp_add_null_var(struct snmp_pdu *, oid *, int);
+extern void xdump(u_char * cp, int length, char *prefix);
 extern void snmp_synch_setup(struct snmp_session *session);
-
 extern int snmp_synch_response(struct snmp_session *ss,
     struct snmp_pdu *pdu,
     struct snmp_pdu **response);
-#endif
+
 #endif

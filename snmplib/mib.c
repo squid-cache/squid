@@ -904,14 +904,10 @@ parse_subtree(subtree, input, output, out_len)
 }
 
 void
-sprint_objid(buf, objid, objidlen)
-     char *buf;
-     oid *objid;
-     int objidlen;		/* number of subidentifiers */
+sprint_objid(char *buf, oid * objid, int objidlen)
 {
     char tempbuf[2048], *cp;
     struct tree *subtree = Mib;
-
     *tempbuf = '.';		/* this is a fully qualified name */
     get_symbol(objid, objidlen, subtree, tempbuf + 1);
     if (Suffix) {
@@ -929,7 +925,6 @@ sprint_objid(buf, objid, objidlen)
 	cp++;
 	if (cp < tempbuf)
 	    cp = tempbuf;
-
     } else {
 	cp = tempbuf;
 	if ((strlen(tempbuf) > strlen((char *) RFC1213_MIB_text))
@@ -960,7 +955,6 @@ sprint_objid(buf, objid, objidlen)
     }
     strcpy(buf, cp);
 }
-
 
 void
 print_objid(objid, objidlen)

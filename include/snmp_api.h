@@ -179,7 +179,6 @@ struct variable_list {
     int val_len;
 };
 
-#ifndef SQUID_SNMP
 /*
  * struct snmp_session *snmp_open(session)
  *      struct snmp_session *session;
@@ -315,7 +314,6 @@ void snmp_timeout _ANSI_ARGS_((void));
  * Any data in the pdu must be copied because it will be freed elsewhere.
  * Operations are defined below:
  */
-#endif
 
 #define RECEIVED_MESSAGE   1
 #define TIMED_OUT	   2
