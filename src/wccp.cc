@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.28 2002/10/21 06:43:08 adrian Exp $
+ * $Id: wccp.cc,v 1.29 2002/10/21 16:12:47 hno Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -270,7 +270,7 @@ wccpHereIam(void *voidnotused)
     debug(80, 6) ("wccpHereIam: Called\n");
 
     wccp_here_i_am.id = wccp_i_see_you.id;
-    comm_send(theOutWccpConnection,
+    comm_udp_send(theOutWccpConnection,
 	&wccp_here_i_am,
 	sizeof(wccp_here_i_am),
 	0);
@@ -327,7 +327,7 @@ wccpAssignBuckets(void)
     wccp_assign_bucket->id = wccp_i_see_you.id;
     wccp_assign_bucket->number = wccp_i_see_you.number;
 
-    comm_send(theOutWccpConnection,
+    comm_udp_send(theOutWccpConnection,
 	buf,
 	wab_len + WCCP_BUCKETS + cache_len,
 	0);
