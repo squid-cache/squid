@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.67 2000/05/12 00:29:09 wessels Exp $
+ * $Id: store_swapout.cc,v 1.68 2000/05/29 23:36:23 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -154,9 +154,13 @@ storeSwapOut(StoreEntry * e)
 	 * to disk, not what has been queued for writing.  Otherwise
 	 * there will be a chunk of the data which is not in memory
 	 * and is not yet on disk.
+	 * The -1 makes sure the page isn't freed until storeSwapOut has
+	 * walked to the next page. (mem->swapout.memnode)
 	 */
-	if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) < new_mem_lo)
-	    new_mem_lo = on_disk;
+	if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) - 1 < new_mem_lo)
+	    new_mem_lo = on_disk - 1;
+	if ( new_mem_lo == -1 )
+	    new_mem_lo = 0; /* the above might become -1 */
     } else if (new_mem_lo > 0) {
 	/*
 	 * Its not swap-able, and we're about to delete a chunk,
