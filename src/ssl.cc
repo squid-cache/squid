@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.88 1998/08/20 22:30:01 wessels Exp $
+ * $Id: ssl.cc,v 1.89 1998/09/04 23:05:00 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -186,6 +186,7 @@ sslReadServer(int fd, void *data)
 #if DELAY_POOLS
     read_sz = delayBytesWanted(sslState->request->delay_id, 1, read_sz);
 #endif
+    Counter.syscalls.sock.reads++;
     len = read(fd, sslState->server.buf + sslState->server.len, read_sz);
     debug(26, 3) ("sslReadServer: FD %d, read   %d bytes\n", fd, len);
     if (len > 0) {
@@ -221,6 +222,7 @@ sslReadClient(int fd, void *data)
     debug(26, 3) ("sslReadClient: FD %d, reading %d bytes at offset %d\n",
 	fd, SQUID_TCP_SO_RCVBUF - sslState->client.len,
 	sslState->client.len);
+    Counter.syscalls.sock.reads++;
     len = read(fd,
 	sslState->client.buf + sslState->client.len,
 	SQUID_TCP_SO_RCVBUF - sslState->client.len);
@@ -253,6 +255,7 @@ sslWriteServer(int fd, void *data)
     assert(fd == sslState->server.fd);
     debug(26, 3) ("sslWriteServer: FD %d, %d bytes to write\n",
 	fd, sslState->client.len);
+    Counter.syscalls.sock.writes++;
     len = write(fd,
 	sslState->client.buf,
 	sslState->client.len);
@@ -291,6 +294,7 @@ sslWriteClient(int fd, void *data)
     assert(fd == sslState->client.fd);
     debug(26, 3) ("sslWriteClient: FD %d, %d bytes to write\n",
 	fd, sslState->server.len);
+    Counter.syscalls.sock.writes++;
     len = write(fd,
 	sslState->server.buf,
 	sslState->server.len);

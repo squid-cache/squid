@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm_select.cc,v 1.7 1998/09/03 03:48:39 wessels Exp $
+ * $Id: comm_select.cc,v 1.8 1998/09/04 23:04:42 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -176,6 +176,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 #if !ALARM_UPDATES_TIME
     getCurrentTime();
 #endif
+    Counter.syscalls.polls++;
     if (poll(pfds, npfds, 0) < 1)
 	return incame;
     for (i = 0; i < npfds; i++) {
@@ -309,6 +310,7 @@ comm_poll(int msec)
 	if (msec > MAX_POLL_TIME)
 	    msec = MAX_POLL_TIME;
 	for (;;) {
+	    Counter.syscalls.polls++;
 	    num = poll(pfds, nfds, msec);
 	    Counter.select_loops++;
 	    if (num >= 0)
@@ -440,6 +442,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 #if !ALARM_UPDATES_TIME
     getCurrentTime();
 #endif
+    Counter.syscalls.selects++;
     if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
 	return incame;
     for (i = 0; i < nfds; i++) {
@@ -573,6 +576,7 @@ comm_select(int msec)
 	for (;;) {
 	    poll_time.tv_sec = msec / 1000;
 	    poll_time.tv_usec = (msec % 1000) * 1000;
+	    Counter.syscalls.selects++;
 	    num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
 	    Counter.select_loops++;
 	    if (num >= 0)
@@ -618,7 +622,7 @@ comm_select(int msec)
 		    hdl = fd_table[fd].read_handler;
 		    fd_table[fd].read_handler = NULL;
 		    hdl(fd, fd_table[fd].read_data);
-	            Counter.select_fds++;
+		    Counter.select_fds++;
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
@@ -631,7 +635,7 @@ comm_select(int msec)
 		    hdl = fd_table[fd].write_handler;
 		    fd_table[fd].write_handler = NULL;
 		    hdl(fd, fd_table[fd].write_data);
-	            Counter.select_fds++;
+		    Counter.select_fds++;
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
@@ -692,6 +696,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	    FD_SET(fd, &write_x);
 	else
 	    continue;
+	Counter.syscalls.selects++;
 	num = select(Squid_MaxFD, &read_x, &write_x, NULL, &tv);
 	if (num > -1) {
 	    debug(5, 5) ("FD %d is valid.\n", fd);

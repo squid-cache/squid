@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.64 1998/07/25 00:16:29 wessels Exp $
+ * $Id: redirect.cc,v 1.65 1998/09/04 23:04:58 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -93,6 +93,7 @@ redirectHandleRead(int fd, void *data)
     char *t = NULL;
     int n;
 
+    Counter.syscalls.sock.reads++;
     len = read(fd,
 	redirector->inbuf + redirector->offset,
 	redirector->size - redirector->offset);
