@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.210 1998/02/18 22:31:31 wessels Exp $
+ * $Id: client_side.cc,v 1.211 1998/02/19 23:07:36 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -842,7 +842,9 @@ clientBuildReplyHeader(clientHttpRequest * http,
     }
     hdr_len = end - hdr_in;
     /* Append X-Cache: */
-    snprintf(ybuf, 4096, "X-Cache: %s", isTcpHit(http->log_type) ? "HIT" : "MISS");
+    snprintf(ybuf, 4096, "X-Cache: %s from %s",
+	isTcpHit(http->log_type) ? "HIT" : "MISS",
+	getMyHostname());
     clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
     /* Append Proxy-Connection: */
     if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
