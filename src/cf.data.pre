@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.347 2004/04/04 15:05:13 hno Exp $
+# $Id: cf.data.pre,v 1.348 2004/04/04 23:17:48 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3524,6 +3524,19 @@ DEFAULT: @DEFAULT_ICON_DIR@
 DOC_START
 	Where the icons are stored. These are normally kept in
 	@DEFAULT_ICON_DIR@
+DOC_END
+
+NAME: short_icon_urls
+TYPE: onoff
+LOC: Config.icons.use_short_names
+DEFAULT: on
+DOC_START
+	If this is enabled then Squid will use short URLs for icons.
+	If disabled it will revert to the old behaviour of including
+	it's own name and port in the URL.
+
+	If you run a complex cache hierarchy with a mix of Squid and
+	other proxies then you may need to disable this directive.
 DOC_END
 
 NAME: error_directory
