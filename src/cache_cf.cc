@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.97 1996/09/20 20:55:29 wessels Exp $
+ * $Id: cache_cf.cc,v 1.98 1996/09/23 22:32:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -283,7 +283,7 @@ ip_acl_destroy(ip_acl ** a)
 	n = b->next;
 	safe_free(b);
     }
-    a = NULL;
+    *a = NULL;
 }
 
 ip_access_type
