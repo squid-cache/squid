@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.35 1997/04/30 03:12:08 wessels Exp $
+ * $Id: icmp.cc,v 1.36 1997/06/04 04:32:58 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -50,11 +50,11 @@ typedef struct _icmpQueueData {
 
 static icmpQueueData *IcmpQueueHead = NULL;
 
-static void icmpRecv _PARAMS((int, void *));
+static PF icmpRecv;
 static void icmpQueueSend _PARAMS((pingerEchoData * pkt,
 	int len,
 	void          (*free_func) _PARAMS((void *))));
-static void icmpSend _PARAMS((int fd, icmpQueueData * queue));
+static PF icmpSend;
 static void icmpHandleSourcePing _PARAMS((const struct sockaddr_in * from, const char *buf));
 
 static void
@@ -77,10 +77,7 @@ icmpRecv(int unused1, void *unused2)
     static int fail_count = 0;
     pingerReplyData preply;
     static struct sockaddr_in F;
-    commSetSelect(icmp_sock,
-	COMM_SELECT_READ,
-	icmpRecv,
-	-1, 0);
+    commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
     memset(&preply, '\0', sizeof(pingerReplyData));
     n = recv(icmp_sock,
 	(char *) &preply,
@@ -132,15 +129,13 @@ icmpQueueSend(pingerEchoData * pkt,
     q->free_func = free_func;
     for (H = &IcmpQueueHead; *H; H = &(*H)->next);
     *H = q;
-    commSetSelect(icmp_sock,
-	COMM_SELECT_WRITE,
-	icmpSend,
-	IcmpQueueHead, 0);
+    commSetSelect(icmp_sock, COMM_SELECT_WRITE, icmpSend, IcmpQueueHead, 0);
 }
 
 static void
-icmpSend(int fd, icmpQueueData * queue)
+icmpSend(int fd, void *data)
 {
+    icmpQueueData *queue = data;
     int x;
     while ((queue = IcmpQueueHead)) {
 	x = send(icmp_sock,
@@ -165,15 +160,9 @@ icmpSend(int fd, icmpQueueData * queue)
     }
     /* Reinstate handler if needed */
     if (IcmpQueueHead) {
-	commSetSelect(fd,
-	    COMM_SELECT_WRITE,
-	    icmpSend,
-	    IcmpQueueHead, 0);
+	commSetSelect(fd, COMM_SELECT_WRITE, icmpSend, IcmpQueueHead, 0);
     } else {
-	commSetSelect(fd,
-	    COMM_SELECT_WRITE,
-	    NULL,
-	    NULL, 0);
+	commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
     }
 }
 
@@ -302,10 +291,7 @@ icmpOpen(void)
 	_exit(1);
     }
     comm_close(child_sock);
-    commSetSelect(icmp_sock,
-	COMM_SELECT_READ,
-	icmpRecv,
-	-1, 0);
+    commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
     commSetTimeout(icmp_sock, -1, NULL, NULL);
     debug(29, 0, "Pinger socket opened on FD %d\n", icmp_sock);
 #endif
