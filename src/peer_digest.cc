@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.8 1998/04/09 21:15:02 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.9 1998/04/09 23:22:52 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -47,7 +47,7 @@ static void peerDigestFetchReply(void *data, char *buf, ssize_t size);
 static void peerDigestRequest(peer *p);
 static void peerDigestSwapInHeaders(void *data, char *buf, ssize_t size);
 static void peerDigestSwapInCBlock(void *data, char *buf, ssize_t size);
-static void peerDigestSwapInMask(void *data, char *buf, ssize_t size);
+static STCB peerDigestSwapInMask;
 static int peerDigestFetchedEnough(DigestFetchState *fetch, char *buf, ssize_t size, const char *step_name);
 static void peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg);
 static int peerDigestSetCBlock(peer *p, const char *buf);
@@ -397,8 +397,14 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
     if (size >= StoreDigestCBlockSize) {
 	if (peerDigestSetCBlock(peer, buf)) {
 	    fetch->offset += StoreDigestCBlockSize;
-	    storeClientCopy(fetch->entry, seen, fetch->offset,
-		SM_PAGE_SIZE, buf,
+	    memFree(MEM_4K_BUF, buf);
+	    buf = NULL;
+	    assert(peer->digest.cd->mask);
+	    storeClientCopy(fetch->entry,
+		seen,
+		fetch->offset,
+		peer->digest.cd->mask_size,
+		peer->digest.cd->mask,
 		peerDigestSwapInMask, fetch);
 	} else {
 	    peerDigestFetchFinish(fetch, buf, "invalid digest cblock");
@@ -419,19 +425,30 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
     DigestFetchState *fetch = data;
     peer *peer = fetch->peer;
     HttpReply *rep = fetch->entry->mem_obj->reply;
-    const int seen = fetch->offset + size;
+    size_t copy_sz;
     assert(peer && buf && rep);
-    if (peerDigestFetchedEnough(fetch, buf, size, "peerDigestSwapInMask"))
+    /*
+     * NOTE! buf points to the middle of peer->digest.cd->mask!
+     */
+    if (peerDigestFetchedEnough(fetch, NULL, size, "peerDigestSwapInMask"))
 	return;
-    if (peerDigestUpdateMask(peer, fetch->mask_offset, buf, size)) {
-	fetch->offset += size;
-	fetch->mask_offset += size;
-	storeClientCopy(fetch->entry, seen, fetch->offset,
-	    SM_PAGE_SIZE, buf,
-	    peerDigestSwapInMask, fetch);
-    } else {
-	peerDigestFetchFinish(fetch, buf, "invalid mask");
+    fetch->offset += size;
+    fetch->mask_offset += size;
+    if (fetch->mask_offset >= peer->digest.cd->mask_size) {
+	debug(72, 1) ("peerDigestSwapInMask: Done! Got %d, expected %d\n",
+	    fetch->mask_offset, peer->digest.cd->mask_size);
+ 	assert(fetch->mask_offset == peer->digest.cd->mask_size);
+	peerDigestFetchFinish(fetch, NULL, NULL);
+	return;
     }
+    copy_sz = peer->digest.cd->mask_size - fetch->mask_offset;
+    assert(copy_sz > 0);
+    storeClientCopy(fetch->entry,
+	fetch->mask_offset,
+	fetch->mask_offset,
+	copy_sz,
+	peer->digest.cd->mask + fetch->mask_offset,
+	peerDigestSwapInMask, fetch);
 }
 
 static int
@@ -510,7 +527,9 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
     fetch->entry = NULL;
     cbdataFree(fetch);
     fetch = NULL;
-    memFree(MEM_4K_BUF, buf);
+    if (buf)
+        memFree(MEM_4K_BUF, buf);
+    buf = NULL;
     /* set it here and in peerDigestRequest to protect against long downloads */
     peer->digest.last_req_timestamp = squid_curtime;
     peer->digest.last_fetch_resp_time = fetch_resp_time;
