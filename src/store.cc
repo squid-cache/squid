@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.448 1998/08/21 03:15:24 wessels Exp $
+ * $Id: store.cc,v 1.449 1998/08/21 08:40:59 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -232,6 +232,12 @@ storeReleaseRequest(StoreEntry * e)
     assert(storeEntryLocked(e));
     debug(20, 3) ("storeReleaseRequest: '%s'\n", storeKeyText(e->key));
     EBIT_SET(e->flag, RELEASE_REQUEST);
+    /*
+     * Clear cachable flag here because we might get called before
+     * anyone else even looks at the cachability flag.  Also, this
+     * prevents httpMakePublic from really setting a public key.
+     */
+    EBIT_CLR(entry->flag, ENTRY_CACHABLE);
     storeSetPrivateKey(e);
 }
 
@@ -311,6 +317,14 @@ storeSetPublicKey(StoreEntry * e)
     if (e->key && !EBIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already public */
     assert(mem);
+    /*
+     * We can't make RELEASE_REQUEST objects public.  Depending on
+     * when RELEASE_REQUEST gets set, we might not be swapping out
+     * the object.  If we're not swapping out, then subsequent
+     * store clients won't be able to access object data which has
+     * been freed from memory.
+     */
+    assert(!EBIT_TEST(e->flag, RELEASE_REQUEST));
     newkey = storeKeyPublic(mem->url, mem->method);
     if ((e2 = (StoreEntry *) hash_lookup(store_table, newkey))) {
 	debug(20, 3) ("storeSetPublicKey: Making old '%s' private.\n", mem->url);
