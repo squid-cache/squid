@@ -1,3 +1,7 @@
+/*
+ * $Id: safe_inet_addr.c,v 1.8 1998/09/23 17:16:12 wessels Exp $
+ */
+
 #include "config.h"
 
 #if HAVE_STDIO_H

@@ -1,4 +1,8 @@
 /*
+ * $Id: md5-test.c,v 1.2 1998/09/23 17:16:11 wessels Exp $
+ */
+
+/*
  * COMPILE WITH:
  *      gcc -Wall md5-test.c -I../include md5.o
  */

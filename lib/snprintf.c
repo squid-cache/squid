@@ -1,3 +1,6 @@
+/*
+ * $Id: snprintf.c,v 1.15 1998/09/23 17:14:23 wessels Exp $
+ */
 
 /* ====================================================================
  * Copyright (c) 1995-1997 The Apache Group.  All rights reserved.

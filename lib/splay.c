@@ -1,3 +1,6 @@
+/*
+ * $Id: splay.c,v 1.10 1998/09/23 17:14:23 wessels Exp $
+ */
 
 #include "config.h"
 

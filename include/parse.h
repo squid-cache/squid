@@ -1,3 +1,7 @@
+/*
+ * $Id: parse.h,v 1.8 1998/09/23 17:19:59 wessels Exp $
+ */
+
 #ifndef _HAVE_PARSE_H_
 #define _HAVE_PARSE_H_
 

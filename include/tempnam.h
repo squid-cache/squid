@@ -1,3 +1,7 @@
+/*
+ * $Id: tempnam.h,v 1.10 1998/09/23 17:20:06 wessels Exp $
+ */
+
 
 /* Copyright (C) 1991, 1992, 1993 Free Software Foundation, Inc.
  * This file is part of the GNU C Library.

@@ -1,3 +1,7 @@
+/*
+ * $Id: hash.h,v 1.2 1998/09/23 17:19:58 wessels Exp $
+ */
+
 typedef void HASHFREE(void *);
 typedef int HASHCMP(const void *, const void *);
 typedef unsigned int HASHHASH(const void *, unsigned int);

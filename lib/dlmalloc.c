@@ -1,3 +1,7 @@
+/*
+ * $Id: dlmalloc.c,v 1.2 1998/09/23 17:16:10 wessels Exp $
+ */
+
 /* ---------- To make a malloc.h, start cutting here ------------ */
 
 /* 

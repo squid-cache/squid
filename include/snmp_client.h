@@ -1,3 +1,7 @@
+/*
+ * $Id: snmp_client.h,v 1.6 1998/09/23 17:20:02 wessels Exp $
+ */
+
 #ifndef _SNMP_CLIENT_H_
 #define _SNMP_CLIENT_H_
 

@@ -1,3 +1,7 @@
+/*
+ * $Id: md5.h,v 1.6 1998/09/23 17:19:59 wessels Exp $
+ */
+
 #ifndef MD5_H
 #define MD5_H
 /* MD5.H - header file for MD5C.C

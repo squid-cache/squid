@@ -1,6 +1,6 @@
-
-
-
+/*
+ * $Id: md5.c,v 1.8 1998/09/23 17:14:21 wessels Exp $
+ */
 
 /* taken from RFC-1321/Appendix A.3 */
 
