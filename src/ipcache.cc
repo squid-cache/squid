@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.104 1997/02/20 20:22:48 wessels Exp $
+ * $Id: ipcache.cc,v 1.105 1997/02/20 21:02:38 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1014,6 +1014,10 @@ ipcacheLockEntry(ipcache_entry * i)
 static void
 ipcacheUnlockEntry(ipcache_entry * i)
 {
+    if (i->locks == 0) {
+	debug_trap("ipcacheUnlockEntry: Entry has no locks");
+	return;
+    }
     i->locks--;
     if (ipcacheExpiredEntry(i))
 	ipcache_release(i);
