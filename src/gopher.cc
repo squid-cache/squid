@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.163 2002/04/21 21:23:15 hno Exp $
+ * $Id: gopher.cc,v 1.164 2002/04/21 22:14:08 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -743,16 +743,16 @@ gopherSendRequest(int fd, void *data)
 {
     GopherStateData *gopherState = data;
     char *buf = memAllocate(MEM_4K_BUF);
-    char *t;
     if (gopherState->type_id == GOPHER_CSO) {
-	t = strchr(gopherState->request, '?');
-	if (t)
-	    t++;
+	const char *t = strchr(gopherState->request, '?');
+	if (t != NULL)
+	    t++; /* skip the ? */
 	else
 	    t = "";
 	snprintf(buf, 4096, "query %s\r\nquit\r\n", t);
     } else if (gopherState->type_id == GOPHER_INDEX) {
-	if ((t = strchr(gopherState->request, '?')))
+	char *t = strchr(gopherState->request, '?');
+	if (t != NULL)
 	    *t = '\t';
 	snprintf(buf, 4096, "%s\r\n", gopherState->request);
     } else {
