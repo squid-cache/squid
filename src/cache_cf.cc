@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.14 1996/04/04 17:45:53 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.15 1996/04/04 18:39:55 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -198,7 +198,7 @@ ip_access_type ip_access_check(address, list)
     for (p = list; p; p = p->next) {
 	sprintf(buf, "%s", inet_ntoa(naddr));
 	sprintf(&buf[strlen(buf)], " vs %s", inet_ntoa(p->addr));
-	sprintf(&buf[strlen(buf)], "/%s\n", inet_ntoa(p->mask));
+	sprintf(&buf[strlen(buf)], "/%s", inet_ntoa(p->mask));
 	debug(3, 1, "IP access check  %s\n", buf);
 
 	if (ip_acl_match(naddr, p))
