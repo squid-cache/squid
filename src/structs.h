@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.489 2004/08/30 05:12:31 robertc Exp $
+ * $Id: structs.h,v 1.490 2004/09/25 15:46:45 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -387,6 +387,11 @@ struct _SquidConfig
 #endif
 
         char *diskd;
+#if USE_SSL
+
+        char *ssl_password;
+#endif
+
     }
 
     Program;

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.354 2004/08/14 21:15:15 hno Exp $
+# $Id: cf.data.pre,v 1.355 2004/09/25 15:46:44 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -292,6 +292,18 @@ DOC_START
 				verify.
 	    NO_DEFAULT_CA	Don't use the default CA list built in
 				to OpenSSL.
+DOC_END
+
+NAME: sslpassword_program
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Config.Program.ssl_password
+TYPE: string
+DOC_START
+	Specify a program used for entering SSL key passphrases
+	when using encrypted SSL certificate keys. If not specified
+	keys must either be unencrypted, or Squid started with the -N
+	option to allow it to query interactively for the passphrase.
 DOC_END
 
 NAME: icp_port udp_port

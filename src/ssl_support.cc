@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.15 2003/04/19 22:19:45 hno Exp $
+ * $Id: ssl_support.cc,v 1.16 2004/09/25 15:46:44 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -35,6 +35,40 @@
 
 #include "squid.h"
 #include "fde.h"
+
+static int
+ssl_ask_password_cb(char *buf, int size, int rwflag, void *userdata)
+{
+    FILE *in;
+    int len = 0;
+    char cmdline[1024];
+
+    snprintf(cmdline, sizeof(cmdline), "\"%s\" \"%s\"", Config.Program.ssl_password, (const char *)userdata);
+    in = popen(cmdline, "r");
+
+    if (fgets(buf, size, in))
+
+        len = strlen(buf);
+
+    while (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
+
+        len--;
+
+    buf[len] = '\0';
+
+    pclose(in);
+
+    return len;
+}
+
+static void
+ssl_ask_password(SSL_CTX * context, const char * prompt)
+{
+    if (Config.Program.ssl_password) {
+        SSL_CTX_set_default_passwd_cb(context, ssl_ask_password_cb);
+        SSL_CTX_set_default_passwd_cb_userdata(context, (void *)prompt);
+    }
+}
 
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
@@ -488,6 +522,7 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     }
 
     debug(83, 1) ("Using private key in %s\n", keyfile);
+    ssl_ask_password(sslContext, keyfile);
 
     if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
         ssl_error = ERR_get_error();
@@ -649,6 +684,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
         }
 
         debug(83, 1) ("Using private key in %s\n", keyfile);
+        ssl_ask_password(sslContext, keyfile);
 
         if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
             ssl_error = ERR_get_error();
