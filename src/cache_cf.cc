@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.104 1996/10/09 15:34:19 wessels Exp $
+ * $Id: cache_cf.cc,v 1.105 1996/10/09 15:43:49 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -247,6 +247,7 @@ static void parseIPLine _PARAMS((ip_acl ** list));
 static void parseIcpPortLine _PARAMS((void));
 static void parseLocalDomainFile _PARAMS((char *fname));
 static void parseLocalDomainLine _PARAMS((void));
+static void parseMcastGroupLine _PARAMS((void));
 static void parseLogLine _PARAMS((void));
 static void parseMemLine _PARAMS((void));
 static void parseMgrLine _PARAMS((void));
@@ -473,6 +474,7 @@ parseCacheHostLine(void)
     u_short icp_port = CACHE_ICP_PORT;
     int options = 0;
     int weight = 1;
+    int mcast_ttl = 0;
     int i;
 
     if (!(hostname = strtok(NULL, w_space)))
@@ -491,6 +493,8 @@ parseCacheHostLine(void)
 	    options |= NEIGHBOR_NO_QUERY;
 	} else if (!strncasecmp(token, "weight=", 7)) {
 	    weight = atoi(token + 7);
+	} else if (!strncasecmp(token, "ttl=", 4)) {
+	    mcast_ttl = atoi(token + 4);
 	} else {
 	    debug(3, 0, "parseCacheHostLine: token='%s'\n", token);
 	    self_destruct();
@@ -498,7 +502,8 @@ parseCacheHostLine(void)
     }
     if (weight < 1)
 	weight = 1;
-    neighbors_cf_add(hostname, type, http_port, icp_port, options, weight);
+    neighbors_cf_add(hostname, type, http_port, icp_port, options,
+	weight, mcast_ttl);
 }
 
 static neighbor_t
@@ -933,6 +938,14 @@ parseLocalDomainLine(void)
 }
 
 static void
+parseMcastGroupLine(void)
+{
+    char *token = NULL;
+    while ((token = strtok(NULL, w_space)))
+	wordlistAdd(&Config.mcast_group_list, token);
+}
+
+static void
 parseHttpPortLine(void)
 {
     char *token;
@@ -1287,6 +1300,9 @@ parseConfigFile(char *file_name)
 	else if (!strcmp(token, "local_domain"))
 	    parseLocalDomainLine();
 
+	else if (!strcmp(token, "mcast_groups"))
+	    parseMcastGroupLine();
+
 	else if (!strcmp(token, "tcp_incoming_address"))
 	    parseAddressLine(&Config.Addrs.tcp_incoming);
 
@@ -1476,6 +1492,7 @@ configFreeMemory(void)
     wordlistDestroy(&Config.cache_dirs);
     wordlistDestroy(&Config.hierarchy_stoplist);
     wordlistDestroy(&Config.local_domain_list);
+    wordlistDestroy(&Config.mcast_group_list);
     wordlistDestroy(&Config.inside_firewall_list);
     wordlistDestroy(&Config.dns_testname_list);
     ip_acl_destroy(&Config.local_ip_list);

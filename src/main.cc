@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.88 1996/10/09 15:34:32 wessels Exp $
+ * $Id: main.cc,v 1.89 1996/10/09 15:43:52 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -363,6 +363,7 @@ serverConnectionsOpen(void)
 		COMM_SELECT_READ,
 		icpHandleUdp,
 		0);
+	    comm_join_mcast_groups(theInIcpConnection);
 	    debug(1, 1, "Accepting ICP connections on FD %d.\n",
 		theInIcpConnection);
 
