@@ -445,6 +445,13 @@ storeDiskdSend(int mtype, SwapDir * sd, int id, storeIOState * sio, int size, in
 	    cbdataUnlock(M.callback_data);
 	assert(++send_errors < 100);
     }
+    /*
+     * We have to drain the queue here if necessary.  If we don't,
+     * then we can have a lot of messages in the queue (probably
+     * up to 2*magic1) and we can run out of shared memory buffers.
+     */
+    if (diskdinfo->away > diskdinfo->magic2)
+	storeDiskdDirCallback(sd);
     return x;
 }
 
