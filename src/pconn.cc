@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.40 2003/08/15 13:06:34 robertc Exp $
+ * $Id: pconn.cc,v 1.41 2003/08/16 10:04:34 adrian Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -332,7 +332,7 @@ pconnPop(const char *host, u_short port, const char *domain)
     }
 
     /* Nothing (valid!) found */
-    return fd;
+    return -1;
 }
 
 void
