@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.45 2003/09/01 03:49:37 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.46 2004/08/30 03:28:56 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -36,7 +36,7 @@
 
 #include "HttpRequest.h"
 #include "squid.h"
-#include "authenticate.h"
+#include "AuthUserRequest.h"
 #include "HttpHeaderRange.h"
 
 static void httpRequestHdrCacheInit(HttpRequest * req);
@@ -131,7 +131,7 @@ requestDestroy(HttpRequest * req)
         fatal ("request being destroyed with body connection intact\n");
 
     if (req->auth_user_request)
-        authenticateAuthUserRequestUnlock(req->auth_user_request);
+        req->auth_user_request->unlock();
 
     safe_free(req->canonical);
 

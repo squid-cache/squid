@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.69 2004/04/04 13:52:42 hno Exp $
+ * $Id: client_side_reply.cc,v 1.70 2004/08/30 03:28:58 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -41,7 +41,7 @@
 #include "HttpRequest.h"
 
 #include "clientStream.h"
-#include "authenticate.h"
+#include "AuthUserRequest.h"
 #if ESI
 #include "ESI.h"
 #endif
@@ -108,7 +108,10 @@ clientReplyContext::setReplyToError(
     if (auth_user_request)
     {
         errstate->auth_user_request = auth_user_request;
-        authenticateAuthUserRequestLock(errstate->auth_user_request);
+
+        errstate->auth_user_request->lock()
+
+        ;
     }
 
     assert(errstate->callback_data == NULL);

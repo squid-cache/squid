@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.670 2004/04/04 23:21:53 hno Exp $
+ * $Id: client_side.cc,v 1.671 2004/08/30 03:28:58 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -59,7 +59,7 @@
 #include "client_side.h"
 #include "clientStream.h"
 #include "IPInterception.h"
-#include "authenticate.h"
+#include "AuthUserRequest.h"
 #include "Store.h"
 #include "comm.h"
 #include "HttpReply.h"
@@ -466,15 +466,15 @@ clientPrepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogE
     aLogEntry->cache.extuser = request->extacl_user.buf();
 
     if (request->auth_user_request) {
-        if (authenticateUserRequestUsername(request->auth_user_request))
-            aLogEntry->cache.authuser =
-                xstrdup(authenticateUserRequestUsername(request->auth_user_request));
 
-        authenticateAuthUserRequestUnlock(request->auth_user_request);
+        if (request->auth_user_request->username())
+            aLogEntry->cache.authuser =
+                xstrdup(request->auth_user_request->username());
+
+        request->auth_user_request->unlock();
 
         request->auth_user_request = NULL;
     }
-
 }
 
 void
@@ -597,7 +597,9 @@ ConnStateData::close()
     clientdbEstablished(peer.sin_addr, -1);	/* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
-    authenticateOnCloseConnection(this);
+
+    if (auth_user_request != NULL)
+        auth_user_request->onConnectionClose(this);
 }
 
 bool
@@ -615,7 +617,7 @@ ConnStateData::~ConnStateData()
         close();
 
     if (auth_user_request)
-        authenticateAuthUserRequestUnlock(auth_user_request);
+        auth_user_request->unlock();
 
     auth_user_request = NULL;
 

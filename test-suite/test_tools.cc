@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_tools.cc,v 1.4 2003/07/08 23:10:59 hno Exp $
+ * $Id: test_tools.cc,v 1.5 2004/08/30 03:29:03 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -120,6 +120,41 @@ fatal(const char *message) {
     exit (1);
 }
 
+/* used by fatalf */
+static void
+fatalvf(const char *fmt, va_list args) {
+    static char fatal_str[BUFSIZ];
+    vsnprintf(fatal_str, sizeof(fatal_str), fmt, args);
+    fatal(fatal_str);
+}
+
+/* printf-style interface for fatal */
+#if STDC_HEADERS
+void
+fatalf(const char *fmt,...)
+{
+    va_list args;
+    va_start(args, fmt);
+#else
+void
+fatalf(va_alist)
+va_dcl
+{
+    va_list args;
+    const char *fmt = NULL;
+    va_start(args);
+    fmt = va_arg(args, char *);
+#endif
+
+    fatalvf(fmt, args);
+    va_end(args);
+}
+
+void
+debug_trap(const char *message) {
+    fatal(message);
+}
+
 std::ostream &
 Debug::getDebugOut()
 {
@@ -137,3 +172,93 @@ Debug::finishDebug()
 }
 
 std::ostringstream *Debug::CurrentDebug (NULL);
+
+MemPool *dlink_node_pool = NULL;
+
+dlink_node *
+dlinkNodeNew()
+{
+    if (dlink_node_pool == NULL)
+        dlink_node_pool = memPoolCreate("Dlink list nodes", sizeof(dlink_node));
+
+    /* where should we call memPoolDestroy(dlink_node_pool); */
+    return (dlink_node *)memPoolAlloc(dlink_node_pool);
+}
+
+/* the node needs to be unlinked FIRST */
+void
+dlinkNodeDelete(dlink_node * m)
+{
+    if (m == NULL)
+        return;
+
+    memPoolFree(dlink_node_pool, m);
+}
+
+void
+dlinkAdd(void *data, dlink_node * m, dlink_list * list)
+{
+    m->data = data;
+    m->prev = NULL;
+    m->next = list->head;
+
+    if (list->head)
+        list->head->prev = m;
+
+    list->head = m;
+
+    if (list->tail == NULL)
+        list->tail = m;
+}
+
+void
+dlinkAddAfter(void *data, dlink_node * m, dlink_node * n, dlink_list * list)
+{
+    m->data = data;
+    m->prev = n;
+    m->next = n->next;
+
+    if (n->next)
+        n->next->prev = m;
+    else {
+        assert(list->tail == n);
+        list->tail = m;
+    }
+
+    n->next = m;
+}
+
+void
+dlinkAddTail(void *data, dlink_node * m, dlink_list * list)
+{
+    m->data = data;
+    m->next = NULL;
+    m->prev = list->tail;
+
+    if (list->tail)
+        list->tail->next = m;
+
+    list->tail = m;
+
+    if (list->head == NULL)
+        list->head = m;
+}
+
+void
+dlinkDelete(dlink_node * m, dlink_list * list)
+{
+    if (m->next)
+        m->next->prev = m->prev;
+
+    if (m->prev)
+        m->prev->next = m->next;
+
+    if (m == list->head)
+        list->head = m->next;
+
+    if (m == list->tail)
+        list->tail = m->prev;
+
+    m->next = m->prev = NULL;
+}
+

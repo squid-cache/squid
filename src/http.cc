@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.430 2004/04/03 14:17:36 hno Exp $
+ * $Id: http.cc,v 1.431 2004/08/30 03:28:59 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -40,7 +40,7 @@
 
 #include "squid.h"
 #include "http.h"
-#include "authenticate.h"
+#include "AuthUserRequest.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -1273,7 +1273,7 @@ httpBuildRequestHeader(HttpRequest * request,
             const char *username = "-";
 
             if (orig_request->auth_user_request)
-                username = authenticateUserRequestUsername(orig_request->auth_user_request);
+                username = orig_request->auth_user_request->username();
             else if (orig_request->extacl_user.size())
                 username = orig_request->extacl_user.buf();
 

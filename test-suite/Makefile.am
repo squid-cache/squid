@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.16 2003/07/16 05:27:17 robertc Exp $
+#  $Id: Makefile.am,v 1.17 2004/08/30 03:29:03 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -50,19 +50,16 @@ check_PROGRAMS= debug \
 		syntheticoperators \
 		VirtualDeleteOperator
 
-LDADD = -L$(top_builddir)/lib -lmiscutil
+LDADD =$(top_builddir)/src/globals.o -L$(top_builddir)/lib -lmiscutil
 DEBUG_SOURCE = test_tools.cc
-DEBUG_OBJECTS = $(top_builddir)/src/globals.o
 debug_SOURCES = debug.cc $(DEBUG_SOURCE)
-debug_LDADD = $(DEBUG_OBJECTS) $(LDADD)
 ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)
 ESIExpressions_LDADD = $(top_builddir)/src/ESIExpression.o \
-		$(DEBUG_OBJECTS) $(LDADD)
+		$(LDADD)
 mem_node_test_SOURCES = mem_node_test.cc
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
 mem_hdr_test_SOURCES = mem_hdr_test.cc $(DEBUG_SOURCE)
 mem_hdr_test_LDADD = $(top_builddir)/src/stmem.o \
-		     $(DEBUG_OBJECTS) \
 		     $(top_builddir)/src/mem_node.o $(LDADD)
 MemPoolTest_SOURCES = MemPoolTest.cc
 refcount_SOURCES = refcount.cc
@@ -74,12 +71,11 @@ http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
 		$(top_builddir)/src/Packer.o \
 		$(top_builddir)/src/String.o \
 		$(top_builddir)/src/mem.o \
-		$(DEBUG_OBJECTS) $(LDADD)
+		$(LDADD)
 
 splay_SOURCES = splay.cc
 
 StackTest_SOURCES = StackTest.cc $(DEBUG_SOURCE)
-
 syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
 VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc $(DEBUG_SOURCE)
 

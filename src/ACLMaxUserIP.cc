@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.4 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.5 2004/08/30 03:28:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "ACLMaxUserIP.h"
+#include "AuthUserRequest.h"
 #include "authenticate.h"
 
 ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.105 2004/04/07 08:51:31 hno Exp $
+ * $Id: redirect.cc,v 1.106 2004/08/30 03:28:59 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -34,7 +34,7 @@
  */
 
 #include "squid.h"
-#include "authenticate.h"
+#include "AuthUserRequest.h"
 #include "Store.h"
 #include "client_side_request.h"
 #include "ACLChecklist.h"
@@ -153,7 +153,7 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
     r->client_addr = conn.getRaw() != NULL ? conn->log_addr : no_addr;
 
     if (http->request->auth_user_request)
-        r->client_ident = authenticateUserRequestUsername(http->request->auth_user_request);
+        r->client_ident = http->request->auth_user_request->username();
     else if (conn.getRaw() != NULL && conn->rfc931[0]) {
         r->client_ident = conn->rfc931;
     } else {

@@ -7,6 +7,9 @@
 #define __AUTH_DIGEST_H__
 #include "rfc2617.h"
 #include "authenticate.h"
+#include "AuthUser.h"
+#include "AuthUserRequest.h"
+#include "AuthConfig.h"
 /* Generic */
 
 class DigestAuthenticateStateData
@@ -22,17 +25,16 @@ typedef struct _digest_nonce_data digest_nonce_data;
 
 typedef struct _digest_nonce_h digest_nonce_h;
 
-class digest_user_h
+class DigestUser : public AuthUser
 {
 
 public:
     void *operator new(size_t);
     void operator delete (void *);
 
-    digest_user_h();
-    ~digest_user_h();
+    DigestUser(AuthConfig *);
+    ~DigestUser();
     int authenticated() const;
-    char *username;
     HASH HA1;
     int HA1created;
 
@@ -43,9 +45,11 @@ private:
     static MemPool *Pool;
 };
 
+typedef class DigestUser digest_user_h;
+
 /* the digest_request structure is what follows the http_request around */
 
-class digest_request_h : public AuthUserRequestState
+class AuthDigestUserRequest : public AuthUserRequest
 {
 
 public:
@@ -53,14 +57,24 @@ public:
     void *operator new(size_t);
     void operator delete (void *);
 
-    digest_request_h();
-    digest_request_h(auth_user_t *);
-    ~digest_request_h();
+    AuthDigestUserRequest();
+    virtual ~AuthDigestUserRequest();
 
-    int authenticated() const;
+    virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type);
-    virtual int direction();
+    virtual int module_direction();
     virtual void addHeader(HttpReply * rep, int accel);
+#if WAITING_FOR_TE
+
+    virtual void addTrailer(HttpReply * rep, int accel);
+#endif
+
+    virtual void module_start(RH *, void *);
+    virtual AuthUser *user() {return _theUser;}
+
+    virtual const AuthUser *user() const {return _theUser;}
+
+    virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<DigestUser *>(aUser);}
 
     CredentialsState credentials() const;
     void credentials(CredentialsState);
@@ -94,10 +108,10 @@ unsigned int helper_queried:
 
     flags;
     digest_nonce_h *nonce;
-    auth_user_t *theUser;
 
 private:
     static MemPool *Pool;
+    DigestUser *_theUser;
     CredentialsState credentials_ok;
 };
 
@@ -121,7 +135,7 @@ struct _digest_nonce_h : public hash_link
     /* reference count */
     short references;
     /* the auth_user this nonce has been tied to */
-    auth_user_t *auth_user;
+    DigestUser *user;
     /* has this nonce been invalidated ? */
 
     struct
@@ -139,8 +153,20 @@ unsigned int incache:
 
 /* configuration runtime data */
 
-struct _auth_digest_config
+class AuthDigestConfig : public AuthConfig
 {
+
+public:
+    AuthDigestConfig::AuthDigestConfig();
+    virtual bool active() const;
+    virtual bool configured() const;
+    virtual AuthUserRequest *decode(char const *proxy_auth);
+    virtual void done();
+    virtual void dump(StoreEntry *, const char *, AuthConfig *);
+    virtual void fixHeader(auth_user_request_t *, HttpReply *, http_hdr_type, HttpRequest *);
+    virtual void init(AuthConfig *);
+    virtual void parse(AuthConfig *, int, char *);
+    virtual const char * type() const;
     int authenticateChildren;
     char *digestAuthRealm;
     wordlist *authenticate;
@@ -152,7 +178,7 @@ struct _auth_digest_config
     int PostWorkaround;
 };
 
-typedef struct _auth_digest_config auth_digest_config;
+typedef class AuthDigestConfig auth_digest_config;
 
 /* strings */
 #define QOP_AUTH "auth"

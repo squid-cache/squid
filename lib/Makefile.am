@@ -1,9 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.12 2003/07/15 06:50:38 robertc Exp $
+#  $Id: Makefile.am,v 1.13 2004/08/30 03:28:54 robertc Exp $
 #
 
-SUBDIRS = libTrie
+DIST_SUBDIRS = libTrie cppunit-1.10.0
+SUBDIRS= libTrie @SQUID_CPPUNIT_DIR@
 
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
@@ -72,4 +73,14 @@ libntlmauth_a_SOURCES = \
 libntlmauth_a_LIBADD = \
 	@LIBOBJS@
 
-INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include
+INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
+##FIXME - set these in configure.in and reuse
+
+TESTS=$(check_PROGRAMS)
+check_PROGRAMS=tests/testAll
+
+tests_testAll_SOURCES= tests/testArray.cc tests/testMain.cc  tests/testArray.h
+
+tests_testAll_LDADD= @SQUID_CPPUNIT_LA@
+
+tests_testAll_LDFLAGS = $(LIBADD_DL)

@@ -6,6 +6,9 @@
 #ifndef __AUTH_NTLM_H__
 #define __AUTH_NTLM_H__
 #include "authenticate.h"
+#include "AuthUser.h"
+#include "AuthUserRequest.h"
+#include "AuthConfig.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
@@ -29,24 +32,44 @@ typedef struct
 
 authenticateStateData;
 
-struct _ntlm_user
+class NTLMUser : public AuthUser
 {
-    /* what username did this connection get? */
-    char *username;
+
+public:
+    virtual void deleteSelf() const;
+    void *operator new(size_t);
+    void operator delete (void *);
+    NTLMUser(AuthConfig *);
+    ~NTLMUser();
     dlink_list proxy_auth_list;
+
+private:
+    static MemPool *Pool;
 };
 
-class ntlm_request_t : public AuthUserRequestState
+typedef class NTLMUser ntlm_user_t;
+
+class AuthNTLMUserRequest : public AuthUserRequest
 {
 
 public:
     void *operator new(size_t);
     void operator delete (void *);
 
-    ~ntlm_request_t();
+    AuthNTLMUserRequest();
+    virtual ~AuthNTLMUserRequest();
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type);
-    virtual int direction();
+    virtual int module_direction();
+    virtual void onConnectionClose(ConnStateData *);
+    virtual const char *connLastHeader();
+    virtual void module_start(RH *, void *);
+    virtual AuthUser *user() {return _theUser;}
+
+    virtual const AuthUser *user() const {return _theUser;}
+
+    virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<NTLMUser *>(aUser);}
+
     /* what negotiate string did the client use? */
     char *ntlmnegotiate;
     /* what challenge did we give the client? */
@@ -64,6 +87,8 @@ public:
 
 private:
     static MemPool *Pool;
+    /* the user */
+    NTLMUser * _theUser;
 };
 
 struct _ntlm_helper_state_t
@@ -76,8 +101,20 @@ struct _ntlm_helper_state_t
 
 /* configuration runtime data */
 
-struct _auth_ntlm_config
+class AuthNTLMConfig : public AuthConfig
 {
+
+public:
+    AuthNTLMConfig::AuthNTLMConfig();
+    virtual bool active() const;
+    virtual bool configured() const;
+    virtual AuthUserRequest *decode(char const *proxy_auth);
+    virtual void done();
+    virtual void dump(StoreEntry *, const char *, AuthConfig *);
+    virtual void fixHeader(auth_user_request_t *, HttpReply *, http_hdr_type, HttpRequest *);
+    virtual void init(AuthConfig *);
+    virtual void parse(AuthConfig *, int, char *);
+    virtual const char * type() const;
     int authenticateChildren;
     wordlist *authenticate;
     int challengeuses;
@@ -91,11 +128,8 @@ struct ProxyAuthCachePointer : public hash_link
     auth_user_t *auth_user;
 };
 
-typedef struct _ntlm_user ntlm_user_t;
-
-
 typedef struct _ntlm_helper_state_t ntlm_helper_state_t;
 
-typedef struct _auth_ntlm_config auth_ntlm_config;
+typedef class AuthNTLMConfig auth_ntlm_config;
 
 #endif

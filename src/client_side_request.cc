@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.36 2004/04/07 08:51:31 hno Exp $
+ * $Id: client_side_request.cc,v 1.37 2004/08/30 03:28:58 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -44,7 +44,7 @@
 #include "squid.h"
 #include "clientStream.h"
 #include "client_side_request.h"
-#include "authenticate.h"
+#include "AuthUserRequest.h"
 #include "HttpRequest.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
@@ -379,14 +379,16 @@ clientAccessCheckDone(int answer, void *data)
     clientHttpRequest *http = context->http;
     err_type page_id;
     http_status status;
-    char const *proxy_auth_msg = NULL;
     debug(85, 2) ("The request %s %s is %s, because it matched '%s'\n",
                   RequestMethodStr[http->request->method], http->uri,
                   answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED",
                   AclMatchedName ? AclMatchedName : "NO ACL's");
-    proxy_auth_msg = authenticateAuthUserRequestMessage((http->getConn().getRaw() != NULL
-                     && http->getConn()->auth_user_request) ? http->getConn()->
-                     auth_user_request : http->request->auth_user_request);
+    char const *proxy_auth_msg = "<null>";
+
+    if (http->getConn().getRaw() != NULL && http->getConn()->auth_user_request != NULL)
+        proxy_auth_msg = http->getConn()->auth_user_request->denyMessage("<null>");
+    else if (http->request->auth_user_request != NULL)
+        proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
 
     if (answer == ACCESS_ALLOWED) {
         safe_free(http->uri);
@@ -753,7 +755,10 @@ clientRedirectDone(void *data, char *result)
 
         if (old_request->auth_user_request) {
             new_request->auth_user_request = old_request->auth_user_request;
-            authenticateAuthUserRequestLock(new_request->auth_user_request);
+
+            new_request->auth_user_request->lock()
+
+            ;
         }
 
         if (old_request->body_connection.getRaw() != NULL) {

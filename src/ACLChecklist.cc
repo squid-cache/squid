@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.16 2003/09/21 12:06:06 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.17 2004/08/30 03:28:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,6 +39,7 @@
 #include "authenticate.h"
 #include "ACLProxyAuth.h"
 #include "client_side.h"
+#include "AuthUserRequest.h"
 
 int
 ACLChecklist::authenticated()
@@ -61,7 +62,7 @@ ACLChecklist::authenticated()
 
     /* get authed here */
     /* Note: this fills in auth_user_request when applicable */
-    switch (authenticateTryToAuthenticateAndSetAuthUser(&auth_user_request, headertype, request, conn(), src_addr)) {
+    switch (AuthUserRequest::tryToAuthenticateAndSetAuthUser (&auth_user_request, headertype, request, conn(), src_addr)) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
         debug(28, 4) ("aclMatchAcl: returning  0 user authenticated but not authorised.\n");
@@ -224,7 +225,7 @@ ACLChecklist::checkCallback(allow_t answer)
 
     if (auth_user_request) {
         /* the checklist lock */
-        authenticateAuthUserRequestUnlock(auth_user_request);
+        auth_user_request->unlock();
         /* it might have been connection based */
         assert(conn().getRaw() != NULL);
         conn()->auth_user_request = NULL;

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.92 2003/10/20 11:23:38 robertc Exp $
+#  $Id: Makefile.am,v 1.93 2004/08/30 03:28:56 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -21,6 +21,9 @@ SNMPSOURCE = snmp_core.cc snmp_agent.cc
 else
 SNMPSOURCE = 
 endif
+
+TESTS=$(check_PROGRAMS)
+check_PROGRAMS=
 
 DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
@@ -200,8 +203,14 @@ all_FSMODULES = \
 	fs/null/StoreFSnull.cc \
 	fs/ufs/StoreFSufs.cc
 
+all_AUTHMODULES = \
+	auth/basic/basicScheme.cc \
+	auth/digest/digestScheme.cc \
+	auth/ntlm/ntlmScheme.cc 
+
 EXTRA_squid_SOURCES = \
 	$(all_FSMODULES) \
+	$(all_AUTHMODULES) \
 	$(ARP_ACL_ALL_SOURCE) \
 	$(DELAY_POOL_ALL_SOURCE) \
 	dns.cc \
@@ -302,6 +311,12 @@ squid_SOURCES = \
 	asn.cc \
 	authenticate.cc \
 	authenticate.h \
+	AuthConfig.cc \
+	AuthConfig.h \
+	AuthScheme.cc \
+	AuthScheme.h \
+	AuthUser.cc \
+	AuthUserRequest.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
 	cache_manager.cc \
@@ -471,6 +486,9 @@ squid_SOURCES = \
 	$(WIN32SOURCE)
 
 noinst_HEADERS = ACLChecklist.cci \
+	AuthUser.cci \
+	AuthUser.h \
+	AuthUserRequest.h \
 	client_side_request.cci \
 	MemBuf.cci \
 	MemBuf.h \
@@ -482,7 +500,6 @@ noinst_HEADERS = ACLChecklist.cci \
 
 nodist_squid_SOURCES = \
 	repl_modules.cc \
-	auth_modules.cc \
 	cf_parser.h \
 	globals.cc \
 	string_arrays.c
@@ -493,6 +510,7 @@ squid_LDADD = \
 	@REPL_OBJS@ \
 	@STORE_LINKOBJS@ \
 	@STORE_OBJS@ \
+	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
@@ -502,7 +520,10 @@ squid_LDADD = \
 	-lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@
-squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@ @STORE_LINKOBJS@
+squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@ @STORE_LINKOBJS@ \
+	@REPL_OBJS@ \
+	@AUTH_LINKOBJS@ \
+	@AUTH_OBJS@
 
 unlinkd_SOURCES = unlinkd.cc SquidNew.cc
 unlinkd_CXXFLAGS = -DUNLINK_DAEMON
@@ -540,6 +561,7 @@ ufsdump_SOURCES = debug.cc \
 	$(squid_ACLSOURCES) \
 	asn.cc \
 	authenticate.cc \
+	AuthUser.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
 	cache_manager.cc \
@@ -677,7 +699,6 @@ ufsdump_LDADD = \
 ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
 nodist_ufsdump_SOURCES = \
 	repl_modules.cc \
-	auth_modules.cc \
 	cf_parser.h \
 	globals.cc \
 	string_arrays.c
@@ -690,8 +711,7 @@ BUILT_SOURCES = \
 	cf_parser.h \
 	globals.cc \
 	string_arrays.c \
-	repl_modules.cc \
-	auth_modules.cc
+	repl_modules.cc
 
 sysconf_DATA = \
 	squid.conf.default \
@@ -707,7 +727,6 @@ EXTRA_DIST = \
 	cf.data.pre \
 	mk-globals-c.pl \
 	mk-string-arrays.pl \
-	auth_modules.sh \
 	repl_modules.sh \
 	mib.txt \
 	mime.conf.default
@@ -786,9 +805,6 @@ cf.data: cf.data.pre Makefile
 repl_modules.cc: repl_modules.sh Makefile
 	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
 
-auth_modules.cc: auth_modules.sh Makefile
-	@$(SHELL) $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.cc
-
 install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
@@ -817,7 +833,7 @@ uninstall-local:
 #	fi
 
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
-	globals.cc string_arrays.c repl_modules.cc auth_modules.cc 
+	globals.cc string_arrays.c repl_modules.cc 
 
 ##install-pinger:
 ##	@f=$(PINGER_EXE); \
@@ -832,3 +848,29 @@ DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
 ##		$(RM) -f $(libexecdir)/-$$f; \
 ##	fi
 
+TESTSOURCES=../test-suite/test_tools.cc
+
+check_PROGRAMS+=tests/testAuth
+tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(TESTSOURCES) \
+	AuthScheme.cc globals.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
+	tests/stub_acl.cc tests/stub_cache_cf.cc \
+	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
+	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
+	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
+	tests/stub_HttpRequest.cc
+##	acl.cc cache_cf.cc tools.cc \
+##	helper.cc String.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
+##	HttpHeader.cc url.cc event.cc mem.cc HttpRequest.cc Packer.cc access_log.cc \
+##	MemBuf.cc StatHist.cc logfile.cc
+
+tests_testAuth_LDADD= \
+	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
+	-L../lib -lmiscutil \
+	@SQUID_CPPUNIT_LA@
+tests_testAuth_LDFLAGS = $(LIBADD_DL)
+tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	@AUTH_LINKOBJS@ \
+	@AUTH_OBJS@ \
+	@SQUID_CPPUNIT_LA@

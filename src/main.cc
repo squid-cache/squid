@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.391 2004/04/04 13:48:32 hno Exp $
+ * $Id: main.cc,v 1.392 2004/08/30 03:28:59 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -989,8 +989,6 @@ main(int argc, char **argv)
 
         /* Shouldn't be needed for config parsing, but have not audited for such */
         StoreFileSystem::SetupAllFs();
-
-        authenticateSchemeInit();	/* required for config parsign */
 
         parse_err = parseConfigFile(ConfigFile);
 
