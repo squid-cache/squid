@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.4 2000/11/10 21:42:03 hno Exp $
+ * $Id: aiops.cc,v 1.5 2000/12/09 04:43:30 wessels Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -776,7 +776,7 @@ aio_poll_queues(void)
 {
     /* kick "overflow" request queue */
     if (request_queue2.head &&
-	    pthread_mutex_trylock(&request_queue.mutex) == 0) {
+	pthread_mutex_trylock(&request_queue.mutex) == 0) {
 	*request_queue.tailp = request_queue2.head;
 	request_queue.tailp = request_queue2.tailp;
 	pthread_cond_signal(&request_queue.cond);
@@ -792,15 +792,23 @@ aio_poll_queues(void)
 	pthread_mutex_unlock(&done_queue.mutex);
 	*done_requests.tailp = requests;
 	request_queue_len -= 1;
-	while(requests->next) {
+	while (requests->next) {
 	    requests = requests->next;
 	    request_queue_len -= 1;
 	}
 	done_requests.tailp = &requests->next;
     }
     /* Give up the CPU to allow the threads to do their work */
+    /*
+     * For Andres thoughts about yield(), see
+     * http://www.squid-cache.org/mail-archive/squid-dev/200012/0001.html
+     */
     if (done_queue.head || request_queue.head)
+#ifndef _SQUID_SOLARIS_
 	sched_yield();
+#else
+	yield();
+#endif
 }
 
 aio_result_t *
