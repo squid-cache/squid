@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.58 2003/07/14 10:36:42 robertc Exp $
+ * $Id: cbdata.cc,v 1.59 2003/07/16 07:18:16 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -277,6 +277,7 @@ cbdataInternalFree(void *p)
 #endif
 
     c->check();
+    assert(c->valid);
     c->valid = 0;
 #if CBDATA_DEBUG
 
