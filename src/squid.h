@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.141 1997/12/02 17:59:37 kostas Exp $
+ * $Id: squid.h,v 1.142 1997/12/03 01:32:38 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -275,7 +275,6 @@
 #include "snmp.h"
 #include "snmp_impl.h"
 #include "snmp_vars.h"
-#include "snmp_config.h"
 #include "cache_snmp.h"
 #endif
 
