@@ -4,6 +4,7 @@ Changes to squid-1.1.alpha17:
 	  expired objects in the cache.  Log type will be either
 	  TCP_EXPIRED_HIT if the server sends "304 Not Modified" or
 	  TCP_EXPIRED_MISS if the server send a new object.
+	- Added Config.expireAge and 'expire_age' to config.
 	- Fixed storeGetMemSpace() bug; need to check
 	  storeCheckPurgeMem() instead of storeEntryLocked().
 	- Renamed icp_hit_or_miss() to icpProcessRequest().
@@ -26,6 +27,9 @@ Changes to squid-1.1.alpha17:
 	- Removed storeWalkThrough() and removeOldEntry(), changed
 	  storePurgeOld() to do the walking through instead.
 	- Added storeConfigure() so HUP signal affects store_swap size.
+	- Replaced some parsing functions with parseMinutesLine().
+	- Added StoreEntry flag bit ENTRY_NEGCACHED.
+	- Added storeNegativeCache().
 
 Changes to squid-1.1.alpha16:
 
