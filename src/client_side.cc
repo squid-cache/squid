@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.680 2005/02/09 13:01:40 serassio Exp $
+ * $Id: client_side.cc,v 1.681 2005/03/06 21:08:13 serassio Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2653,12 +2653,11 @@ clientAbortBody(HttpRequest * request)
     ConnStateData::Pointer conn = request->body_connection;
     char *buf;
     CBCB *callback;
-    request->body_connection = NULL;
 
     if (conn.getRaw() == NULL || conn->body.size_left <= 0)
         return 0;		/* No body to abort */
 
-    if (conn->body.callback != NULL) {
+    if (conn->body.callback != NULL || conn->body.request != request) {
         buf = conn->body.buf;
         callback = conn->body.callback;
         assert(request == conn->body.request);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.446 2005/03/06 19:37:17 serassio Exp $
+ * $Id: http.cc,v 1.447 2005/03/06 21:08:13 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -47,6 +47,7 @@
 #include "MemObject.h"
 #include "HttpHdrContRange.h"
 #include "ACLChecklist.h"
+#include "fde.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -78,6 +79,15 @@ httpStateFree(int fd, void *data)
 
     if (httpState == NULL)
         return;
+
+    if (httpState->body_buf) {
+        clientAbortBody(httpState->orig_request);
+
+        if (httpState->body_buf) {
+            memFree(httpState->body_buf, MEM_8K_BUF);
+            httpState->body_buf = NULL;
+        }
+    }
 
     storeUnlockObject(httpState->entry);
 
@@ -799,9 +809,16 @@ no_cache:
         if (_peer)
             _peer->stats.n_keepalives_sent++;
 
-    if (entry->getReply()->keep_alive)
+    if (entry->getReply()->keep_alive) {
         if (_peer)
             _peer->stats.n_keepalives_recv++;
+
+        if (Config.onoff.detect_broken_server_pconns && httpReplyBodySize(request->method, reply) == -1) {
+            debug(11, 1) ("httpProcessReplyHeader: Impossible keep-alive header from '%s'\n", storeUrl(entry));
+            debug(11, 2) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n", reply_hdr.buf);
+            flags.keepalive_broken = 1;
+        }
+    }
 
     if (entry->getReply()->date > -1 && !_peer) {
         int skew = abs((int)(entry->getReply()->date - squid_curtime));
@@ -941,7 +958,6 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
 
         kb_incr(&statCounter.server.all.kbytes_in, len);
         kb_incr(&statCounter.server.http.kbytes_in, len);
-        commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
         IOStats.Http.reads++;
 
         for (clen = len - 1, bin = 0; clen; bin++)
@@ -950,7 +966,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
         IOStats.Http.read_hist[bin]++;
     }
 
-    if (!memBufIsNull(&reply_hdr) && flag == COMM_OK && len > 0) {
+    if (!memBufIsNull(&reply_hdr) && flag == COMM_OK && len > 0 && fd_table[fd].uses > 1) {
         /* Skip whitespace */
 
         while (len > 0 && xisspace(*buf))
@@ -958,6 +974,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
 
         if (len == 0) {
             /* Continue to read... */
+            /* Timeout NOT increased. This whitespace was from previous reply */
             do_next_read = 1;
             maybeReadData();
             return;
@@ -1111,7 +1128,14 @@ HttpStateData::processReplyData(const char *buf, size_t len)
         switch (persistentConnStatus()) {
 
         case INCOMPLETE_MSG:
-            /* Wait for EOF condition */
+            /* Wait for more data or EOF condition */
+
+            if (flags.keepalive_broken) {
+                commSetTimeout(fd, 10, NULL, NULL);
+            } else {
+                commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
+            }
+
             do_next_read = 1;
             break;
 
@@ -1196,8 +1220,6 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
         comm_close(fd);
         return;
     } else {
-        /* Schedule read reply. */
-        entry->delayAwareRead(fd, httpState->buf, SQUID_TCP_SO_RCVBUF, httpReadReply, httpState);
         /*
          * Set the read timeout here because it hasn't been set yet.
          * We only set the read timeout after the request has been
@@ -1625,9 +1647,14 @@ httpSendRequest(HttpStateData * httpState)
     StoreEntry *entry = httpState->entry;
     peer *p = httpState->_peer;
     CWCB *sendHeaderDone;
+    int fd = httpState->fd;
 
-    debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", httpState->fd,
+    debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", fd,
                   httpState);
+
+    /* Schedule read reply. */
+    commSetTimeout(fd, Config.Timeout.lifetime, httpTimeout, httpState);
+    entry->delayAwareRead(fd, httpState->buf, SQUID_TCP_SO_RCVBUF, httpReadReply, httpState);
 
     if (httpState->orig_request->body_connection.getRaw() != NULL)
         sendHeaderDone = httpSendRequestEntity;
@@ -1674,8 +1701,8 @@ httpSendRequest(HttpStateData * httpState)
                            entry,
                            &mb,
                            httpState->flags);
-    debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", httpState->fd, mb.buf);
-    comm_old_write_mbuf(httpState->fd, mb, sendHeaderDone, httpState);
+    debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
+    comm_old_write_mbuf(fd, mb, sendHeaderDone, httpState);
 }
 
 void
@@ -1789,8 +1816,22 @@ static void
 httpRequestBodyHandler(char *buf, ssize_t size, void *data)
 {
     HttpStateData *httpState = (HttpStateData *) data;
+    httpState->body_buf = NULL;
 
     if (size > 0) {
+        if (httpState->reply_hdr_state >= 2 && !httpState->flags.abuse_detected) {
+            httpState->flags.abuse_detected = 1;
+            debug(11, 1) ("httpSendRequestEntryDone: Likely proxy abuse detected '%s' -> '%s'\n",
+                          inet_ntoa(httpState->orig_request->client_addr),
+                          storeUrl(httpState->entry));
+
+            if (httpState->entry->getReply()->sline.status == HTTP_INVALID_HEADER) {
+                memFree8K(buf);
+                comm_close(httpState->fd);
+                return;
+            }
+        }
+
         comm_old_write(httpState->fd, buf, size, httpSendRequestEntity, data, memFree8K);
     } else if (size == 0) {
         /* End of body */
@@ -1835,7 +1876,8 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
         return;
     }
 
-    clientReadBody(httpState->orig_request, (char *)memAllocate(MEM_8K_BUF), 8192, httpRequestBodyHandler, httpState);
+    httpState->body_buf = (char *)memAllocate(MEM_8K_BUF);
+    clientReadBody(httpState->orig_request, httpState->body_buf, 8192, httpRequestBodyHandler, httpState);
 }
 
 void

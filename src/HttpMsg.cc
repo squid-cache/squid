@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.13 2003/09/01 03:49:37 robertc Exp $
+ * $Id: HttpMsg.cc,v 1.14 2005/03/06 21:08:13 serassio Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -101,6 +101,8 @@ httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const ch
 int
 httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
 {
+#if WHEN_SQUID_IS_NOT_HTTP1_1
+
     if ((http_ver.major >= 1) && (http_ver.minor >= 1)) {
         /*
          * for modern versions of HTTP: persistent unless there is
@@ -108,6 +110,9 @@ httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
          */
         return !httpHeaderHasConnDir(hdr, "close");
     } else {
+#else
+    {
+#endif
         /*
          * Persistent connections in Netscape 3.x are allegedly broken,
          * return false if it is a browser connection.  If there is a
@@ -115,7 +120,8 @@ httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
          */
         const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
 
-        if (agent && !httpHeaderHas(hdr, HDR_VIA)) {
+        if (agent && !httpHeaderHas(hdr, HDR_VIA))
+        {
             if (!strncasecmp(agent, "Mozilla/3.", 10))
                 return 0;
 
