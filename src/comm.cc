@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.60 1996/08/28 20:11:49 wessels Exp $
+ * $Id: comm.cc,v 1.61 1996/08/30 22:36:21 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -261,12 +261,8 @@ int comm_open(io_type, addr, port, note)
 	fd_note(new_socket, note);
     conn->openned = 1;
 
-    if (!(io_type & COMM_NOCLOEXEC)) {
-	if (fcntl(new_socket, F_SETFD, 1) < 0) {
-	    debug(5, 0, "comm_open: FD %d: set close-on-exec failed: %s\n",
-		new_socket, xstrerror());
-	}
-    }
+    if (!(io_type & COMM_NOCLOEXEC))
+	commSetCloseOnExec(new_socket);
     if (port > 0) {
 	commSetNoLinger(new_socket);
 	if (do_reuse)
@@ -471,6 +467,7 @@ int comm_accept(fd, peer, me)
 	getsockname(sock, (struct sockaddr *) &M, &Slen);
 	*me = M;
     }
+    commSetCloseOnExec(sock);
     /* fdstat update */
     fdstat_open(sock, FD_SOCKET);
     conn = &fd_table[sock];
@@ -970,7 +967,6 @@ static void commSetTcpRcvbuf(fd, size)
 	    fd, size, xstrerror());
 }
 
-
 int commSetNonBlocking(fd)
      int fd;
 {
@@ -988,6 +984,17 @@ int commSetNonBlocking(fd)
     }
 #endif
     return 0;
+}
+
+void commSetCloseOnExec(fd)
+     int fd;
+{
+#ifdef FD_CLOEXEC
+    if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+	debug(5, 0, "comm_open: FD %d: set close-on-exec failed: %s\n",
+	    fd, xstrerror());
+    }
+#endif
 }
 
 char **getAddressList(name)
