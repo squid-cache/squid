@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayBucket.cc,v 1.3 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayBucket.cc,v 1.4 2003/03/08 09:43:49 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -51,7 +51,7 @@
 #include "client_side_request.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
-#include "Config.h"
+#include "ConfigParser.h"
 #include "DelayId.h"
 #include "Array.h"
 #include "String.h"

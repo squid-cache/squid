@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.37 2003/03/06 11:51:55 robertc Exp $
+ * $Id: delay_pools.cc,v 1.38 2003/03/08 09:43:50 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -47,7 +47,7 @@
 #include "Store.h"
 #include "MemObject.h"
 #include "client_side_request.h"
-#include "Config.h"
+#include "ConfigParser.h"
 #include "DelayId.h"
 #include "Array.h"
 #include "SquidString.h"
