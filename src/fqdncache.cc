@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.99 1998/04/22 01:40:16 wessels Exp $
+ * $Id: fqdncache.cc,v 1.100 1998/05/13 21:24:46 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -199,11 +199,7 @@ fqdncache_release(fqdncache_entry * f)
     assert(f->status != FQDN_PENDING);
     assert(f->status != FQDN_DISPATCHED);
     assert(f->pending_head == NULL);
-    if (hash_remove_link(fqdn_table, (hash_link *) f)) {
-	debug(35, 0) ("fqdncache_release: hash_remove_link() failed for '%s'\n",
-	    f->name);
-	return;
-    }
+    hash_remove_link(fqdn_table, (hash_link *) f);
     if (f->status == FQDN_CACHED) {
 	for (k = 0; k < (int) f->name_count; k++)
 	    safe_free(f->names[k]);
@@ -819,10 +815,7 @@ fqdncacheChangeKey(fqdncache_entry * f)
 	debug_trap("fqdncacheChangeKey: f != table_entry!");
 	return;
     }
-    if (hash_remove_link(fqdn_table, table_entry)) {
-	debug_trap("fqdncacheChangeKey: hash_remove_link() failed\n");
-	return;
-    }
+    hash_remove_link(fqdn_table, table_entry);
     snprintf(new_key, 256, "%d/", ++index);
     strncat(new_key, f->name, 128);
     debug(14, 1) ("fqdncacheChangeKey: from '%s' to '%s'\n", f->name, new_key);

@@ -213,7 +213,7 @@ extern void whoisStart(request_t * req, StoreEntry *);
 
 extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
 extern void hash_join(hash_table *, hash_link *);
-extern int hash_remove_link(hash_table *, hash_link *);
+extern void hash_remove_link(hash_table *, hash_link *);
 extern int hashPrime(int n);
 extern void *hash_lookup(hash_table *, const void *);
 extern void *hash_first(hash_table *);
