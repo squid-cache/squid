@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.132 1998/11/12 06:28:17 wessels Exp $
+ * $Id: net_db.cc,v 1.133 1998/11/13 20:50:53 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -266,11 +266,13 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
 	na->link_count++;
 	n = na;
     }
-    debug(38, 3) ("netdbSendPing: pinging %s\n", hostname);
-    icmpDomainPing(addr, hostname);
-    n->pings_sent++;
-    n->next_ping_time = squid_curtime + Config.Netdb.period;
-    n->last_use_time = squid_curtime;
+    if (n->next_ping_time <= squid_curtime) {
+	debug(38, 3) ("netdbSendPing: pinging %s\n", hostname);
+	icmpDomainPing(addr, hostname);
+	n->pings_sent++;
+	n->next_ping_time = squid_curtime + Config.Netdb.period;
+	n->last_use_time = squid_curtime;
+    }
     cbdataFree(hostname);
 }
 

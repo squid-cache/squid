@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.66 1998/09/23 17:09:43 wessels Exp $
+ * $Id: icmp.cc,v 1.67 1998/11/13 20:50:51 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -39,12 +39,16 @@
 #if USE_ICMP
 
 #define S_ICMP_ECHO	1
+#if ALLOW_SOURCE_PING
 #define S_ICMP_ICP	2
+#endif
 #define S_ICMP_DOM	3
 
 static PF icmpRecv;
 static void icmpSend(pingerEchoData * pkt, int len);
+#if ALLOW_SOURCE_PING
 static void icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf);
+#endif
 
 static void
 icmpSendEcho(struct in_addr to, int opcode, const char *payload, int len)
@@ -88,9 +92,11 @@ icmpRecv(int unused1, void *unused2)
     switch (preply.opcode) {
     case S_ICMP_ECHO:
 	break;
+#if ALLOW_SOURCE_PING
     case S_ICMP_ICP:
 	icmpHandleSourcePing(&F, preply.payload);
 	break;
+#endif
     case S_ICMP_DOM:
 	netdbHandlePingReply(&F, preply.hops, preply.rtt);
 	break;
@@ -118,6 +124,7 @@ icmpSend(pingerEchoData * pkt, int len)
     }
 }
 
+#if ALLOW_SOURCE_PING
 static void
 icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
 {
@@ -132,6 +139,7 @@ icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
     /* call neighborsUdpAck even if ping_status != PING_WAITING */
     neighborsUdpAck(key, &header, from);
 }
+#endif
 
 #endif /* USE_ICMP */
 
@@ -143,6 +151,7 @@ icmpPing(struct in_addr to)
 #endif
 }
 
+#if ALLOW_SOURCE_PING
 void
 icmpSourcePing(struct in_addr to, const icp_common_t * header, const char *url)
 {
@@ -162,6 +171,7 @@ icmpSourcePing(struct in_addr to, const icp_common_t * header, const char *url)
     memFree(MEM_8K_BUF, payload);
 #endif
 }
+#endif
 
 void
 icmpDomainPing(struct in_addr to, const char *domain)
