@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.531 2000/10/31 23:48:14 wessels Exp $
+ * $Id: store.cc,v 1.532 2000/11/18 10:46:32 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1292,8 +1292,10 @@ createRemovalPolicy(RemovalPolicySettings * settings)
 	if (strcmp(r->typestr, settings->type) == 0)
 	    return r->create(settings->args);
     }
-    debug(20, 1) ("Unknown policy %s\n", settings->type);
-    return NULL;
+    debug(20, 1) ("ERROR: Unknown policy %s\n", settings->type);
+    debug(20, 1) ("ERROR: Be sure to have set cache_replacement_policy\n");
+    debug(20, 1) ("ERROR:   and memory_replacement_policy in squid.conf!\n");
+    fatalf("ERROR: Unknown policy %s\n", settings->type);
 }
 
 #if 0
