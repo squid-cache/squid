@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.124 1998/11/20 05:16:27 wessels Exp $
+ * $Id: fqdncache.cc,v 1.125 1998/11/20 06:13:15 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -151,7 +151,7 @@ fqdncache_purgelru(void *notused)
 	fqdncache_release(f);
 	removed++;
     }
-    debug(35, 3) ("fqdncache_purgelru: removed %d entries\n", removed);
+    debug(35, 9) ("fqdncache_purgelru: removed %d entries\n", removed);
 }
 
 /* create blank fqdncache_entry */

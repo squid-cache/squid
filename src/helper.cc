@@ -209,10 +209,16 @@ helperServerFree(int fd, void *data)
 {
     helper_server *srv = data;
     helper *hlp = srv->parent;
+    helper_request *r;
     assert(srv->rfd == fd);
     if (srv->buf) {
 	memFree(MEM_8K_BUF, srv->buf);
 	srv->buf = NULL;
+    }
+    if ((r = srv->request)) {
+	if (cbdataValid(r->data))
+	    r->callback(r->data, srv->buf);
+	helperRequestFree(r);
     }
     if (srv->wfd != srv->rfd)
 	comm_close(srv->wfd);
@@ -262,6 +268,8 @@ helperHandleRead(int fd, void *data)
     } else if ((t = strchr(srv->buf, '\n'))) {
 	/* end of reply found */
 	debug(29, 3) ("helperHandleRead: end of reply found\n");
+debug(0, 0) ("helperHandleRead: r->callback=%p, r->data=%p, valid=%d\n",
+	r->callback, r->data, cbdataValid(r->data));
 	*t = '\0';
 	if (cbdataValid(r->data))
 	    r->callback(r->data, srv->buf);
