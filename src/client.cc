@@ -1,4 +1,5 @@
-/* $Id: client.cc,v 1.2 1996/02/29 07:23:06 wessels Exp $ */
+
+/* $Id: client.cc,v 1.3 1996/03/22 17:48:14 wessels Exp $ */
 
 #include "config.h"
 #include <stdio.h>

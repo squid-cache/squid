@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.5 1996/02/29 07:23:15 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.6 1996/03/22 17:48:17 wessels Exp $ */
 
 #include "config.h"
 #include <sys/types.h>
@@ -257,7 +257,7 @@ int ipcache_create_dnsserver(command)
     execlp(command, "(dnsserver)", "-p", socketname, NULL);
     perror(command);
     _exit(1);
-    return (0); /* NOTREACHED */
+    return (0);			/* NOTREACHED */
 }
 
 #endif /* else USE_DNS_PIPE */
