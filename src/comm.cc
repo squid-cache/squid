@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.26 1996/04/16 20:29:26 wessels Exp $ */
+/* $Id: comm.cc,v 1.27 1996/04/17 15:07:26 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -21,7 +21,7 @@ FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
 static int *fd_lifetime = NULL;
-static void checkTimeouts  _PARAMS((void));
+static void checkTimeouts _PARAMS((void));
 static void checkLifetimes _PARAMS((void));
 static void Reserve_More_FDs _PARAMS((void));
 static int commSetReuseAddr _PARAMS((int));
@@ -497,7 +497,7 @@ static void comm_select_incoming()
     if (maxfd++ == 0)
 	return;
     if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) > 0) {
-	for (i=0; i<N; i++) {
+	for (i = 0; i < N; i++) {
 	    fd = fds[i];
 	    if (FD_ISSET(fd, &read_mask)) {
 		tmp = fd_table[fd].read_handler;

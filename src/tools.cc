@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.37 1996/04/16 20:32:53 wessels Exp $ */
+/* $Id: tools.cc,v 1.38 1996/04/17 15:07:32 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -174,7 +174,7 @@ void shut_down(sig)
 	f = &fd_table[i];
 	if (f->read_handler || f->write_handler || f->except_handler)
 	    if (fdstatGetType(i) == Socket)
-	        comm_set_fd_lifetime(i, 30);
+		comm_set_fd_lifetime(i, 30);
     }
     shutdown_pending = 1;
     /* reinstall signal handler? */
@@ -420,7 +420,7 @@ void reconfigure(sig)
 	f = &fd_table[i];
 	if (f->read_handler || f->write_handler || f->except_handler)
 	    if (fdstatGetType(i) == Socket)
-	        comm_set_fd_lifetime(i, 30);
+		comm_set_fd_lifetime(i, 30);
     }
 #if defined(_SQUID_SYSV_SIGNALS_)
     signal(sig, reconfigure);
