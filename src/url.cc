@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.78 1998/02/23 23:47:23 rousskov Exp $
+ * $Id: url.cc,v 1.79 1998/02/24 17:00:10 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -296,6 +296,7 @@ urnParse(method_t method, char *urn)
     request->method = method;
     request->protocol = PROTO_URN;
     xstrncpy(request->urlpath, &urn[4], MAX_URL);
+    rfc1738_unescape(request->urlpath);
     request->max_age = -1;
     request->max_forwards = -1;
     return request;
