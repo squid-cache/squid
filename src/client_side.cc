@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.301 1998/05/11 18:44:34 rousskov Exp $
+ * $Id: client_side.cc,v 1.302 1998/05/11 20:56:07 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -124,12 +124,8 @@ clientOnlyIfCached(clientHttpRequest * http)
 {
     const request_t *r = http->request;
     assert(r);
-    if (EBIT_TEST(r->flags, REQ_CC_ONLY_IF_CACHED)) {
-	/* future interface: 
-	 * if (r->cache_control && EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED)) { */
-	return 1;
-    } else
-	return 0;
+    return  r->cache_control && 
+	EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED);
 }
 
 static HttpReply *
