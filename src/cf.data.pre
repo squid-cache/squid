@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.101 1998/08/30 05:21:38 wessels Exp $
+# $Id: cf.data.pre,v 1.102 1998/09/09 17:47:09 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1637,6 +1637,10 @@ DOC_START
 
 	If you want virtual host support then specify the hostname
 	as "virtual".
+
+	NOTE: enabling httpd_accel_host disables proxy-caching and
+	ICP.  If you want these features enabled also, then set
+	the 'httpd_accel_with_proxy' option.
 
 httpd_accel_host hostname
 httpd_accel_port port
