@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.26 1998/10/08 20:10:21 wessels Exp $
+ * $Id: htcp.cc,v 1.27 1999/06/10 06:10:30 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -180,6 +180,7 @@ static void htcpSend(const char *buf, int len, struct sockaddr_in *to);
 static void htcpTstReply(htcpDataHeader *, StoreEntry *, htcpSpecifier *, struct sockaddr_in *);
 static void htcpHandleTstRequest(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
 static void htcpHandleTstResponse(htcpDataHeader *, char *, int, struct sockaddr_in *);
+static StoreEntry *htcpCheckHit(const htcpSpecifier *);
 
 static void
 htcpHexdump(const char *tag, const char *s, int sz)
@@ -600,6 +601,27 @@ htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
     debug(31, 3) ("htcpHandleNop: Unimplemented\n");
 }
 
+static StoreEntry *
+htcpCheckHit(const htcpSpecifier * s)
+{
+    request_t *request;
+    method_t m = urlParseMethod(s->method);
+    StoreEntry *e = storeGetPublic(s->uri, m);
+    if (NULL == e)
+	return NULL;
+    if (!storeEntryValidToSend(e))
+	return NULL;
+    request = urlParse(m, s->uri);
+    if (NULL == request)
+	return NULL;
+    if (!httpRequestParseHeader(request, s->req_hdrs))
+	e = NULL;
+    else if (refreshCheckHTCP(e, request))
+	e = NULL;
+    requestDestroy(request);
+    return e;
+}
+
 static void
 htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 {
@@ -655,7 +677,6 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_i
     /* buf should be a SPECIFIER */
     htcpSpecifier *s;
     StoreEntry *e;
-    method_t m;
     if (sz == 0) {
 	debug(31, 3) ("htcpHandleTst: nothing to do\n");
 	return;
@@ -671,21 +692,11 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_i
 	s->method,
 	s->uri,
 	s->version);
-    m = urlParseMethod(s->method);
     debug(31, 3) ("htcpHandleTstRequest: %s\n", s->req_hdrs);
-    e = storeGetPublic(s->uri, m);
-    if (NULL == e) {
-	/* cache miss */
-	htcpTstReply(dhdr, NULL, NULL, from);
-#if WIP
-    } else if (!checkHeaders()) {
-	/* refresh/other miss */
-	htcpTstReply(dhdr, NULL, NULL, from);
-#endif
-    } else {
-	/* hit */
-	htcpTstReply(dhdr, e, s, from);
-    }
+    if ((e = htcpCheckHit(s)))
+	htcpTstReply(dhdr, e, s, from);		/* hit */
+    else
+	htcpTstReply(dhdr, NULL, NULL, from);	/* cache miss */
     htcpFreeSpecifier(s);
 }
 
