@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.96 2003/07/11 04:02:01 robertc Exp $
+ * $Id: store_swapout.cc,v 1.97 2003/09/06 12:59:04 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -68,7 +68,6 @@ storeSwapOutStart(StoreEntry * e)
 
     if (NULL == sio.getRaw()) {
         e->swap_status = SWAPOUT_NONE;
-        cbdataFree(c);
         storeLog(STORE_LOG_SWAPOUTFAIL, e);
         return;
     }
