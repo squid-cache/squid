@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.43 1998/02/18 01:00:48 wessels Exp $
+ * $Id: util.c,v 1.44 1998/02/18 08:21:31 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -280,8 +280,8 @@ check_malloc(void *p, size_t sz)
 #endif
 
 #if XMALLOC_TRACE && !HAVE_MALLOCBLKSIZE
-int
-mallocblksize(void *p)
+size_t
+xmallocblksize(void *p)
 {
     int B, I;
     B = (((int) p) >> 4) & 0xFF;
@@ -332,11 +332,14 @@ xmalloc_show_trace(void *p, int sign)
 {
     int statMemoryAccounted();
     static size_t last_total = 0, last_accounted = 0, last_mallinfo = 0;
-    struct mallinfo mp = mallinfo();
     size_t accounted = statMemoryAccounted();
-    size_t mi = mp.uordblks + mp.usmblks + mp.hblkhd;
+    size_t mi = 0;
     size_t sz;
-    sz = mallocblksize(p) * sign;
+#if HAVE_MALLINFO
+    struct mallinfo mp = mallinfo();
+    mi = mp.uordblks + mp.usmblks + mp.hblkhd;
+#endif
+    sz = xmallocblksize(p) * sign;
     xmalloc_total += sz;
     xmalloc_count += sign > 0;
     if (xmalloc_trace) {
