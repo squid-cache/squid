@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.364 2000/12/05 10:10:59 wessels Exp $
+ * $Id: structs.h,v 1.365 2000/12/08 23:58:09 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -69,6 +69,7 @@ struct _acl_proxy_auth_user {
     long expiretime;
     struct in_addr ipaddr;	/* IP addr this user authenticated from */
     time_t ip_expiretime;
+    char *message;
 };
 
 struct _acl_deny_info_list {
@@ -1507,6 +1508,7 @@ struct _ErrorState {
     char *host;
     u_short port;
     char *dnsserver_msg;
+    char *proxy_auth_msg;
     time_t ttl;
     struct in_addr src_addr;
     char *redirect_url;

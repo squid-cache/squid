@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.225 2000/10/31 23:48:13 wessels Exp $
+ * $Id: acl.cc,v 1.226 2000/12/08 23:58:08 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1770,10 +1770,15 @@ aclLookupProxyAuthDone(void *data, char *result)
     checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_DONE;
     debug(28, 4) ("aclLookupProxyAuthDone: result = %s\n",
 	result ? result : "NULL");
-    if (result && (strncasecmp(result, "OK", 2) == 0))
-	checklist->auth_user->passwd_ok = 1;
-    else
+    if (NULL == result)
 	checklist->auth_user->passwd_ok = 0;
+    else if (0 == strncasecmp(result, "OK", 2))
+	checklist->auth_user->passwd_ok = 1;
+    else {
+	if (strlen(result) > sizeof("ERR "))
+	    checklist->auth_user->message = xstrdup(result+4);
+	checklist->auth_user->passwd_ok = 0;
+    }
     aclCheck(checklist);
 }
 
