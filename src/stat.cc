@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.345 2001/03/03 10:39:33 hno Exp $
+ * $Id: stat.cc,v 1.346 2001/05/27 23:13:43 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1004,6 +1004,7 @@ statCountersClean(StatCounters * C)
     statHistClean(&C->dns.svc_time);
     statHistClean(&C->cd.on_xition_count);
     statHistClean(&C->comm_icp_incoming);
+    statHistClean(&C->comm_dns_incoming);
     statHistClean(&C->comm_http_incoming);
     statHistClean(&C->select_fds_hist);
 }
