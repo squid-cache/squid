@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.106 1997/01/24 08:16:18 wessels Exp $
+ * $Id: neighbors.cc,v 1.107 1997/01/31 21:03:10 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -145,6 +145,7 @@ const char *hier_strings[] =
     "PARENT_UDP_HIT_OBJ",
     "PASSTHROUGH_PARENT",
     "SSL_PARENT_MISS",
+    "ROUNDROBIN_PARENT",
     "INVALID CODE"
 };
 
@@ -270,6 +271,25 @@ getFirstUpParent(request_t * request)
 	    return e;
     }
     return NULL;
+}
+
+edge *
+getRoundRobinParent(request_t * request)
+{
+    edge *e;
+    edge *f = NULL;
+    for (e = friends.edges_head; e; e = e->next) {
+	if (!neighborUp(e))
+	    continue;
+	if (!BIT_TEST(e->options, NEIGHBOR_ROUNDROBIN))
+	    continue;
+	if (f && f->rr_count < e->rr_count)
+	    continue;
+	f = e;
+    }
+    if (f)
+	f->rr_count++;
+    return f;
 }
 
 edge *
