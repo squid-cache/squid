@@ -235,6 +235,8 @@ handle_read(char *buf, int len)
     if (len < 0) {
 	perror("read");
 	Requests = r->next;
+	free(r);
+	noutstanding--;
 	return -1;
     }
     if (len == 0) {
@@ -306,7 +308,16 @@ main_loop(void)
     struct _r *r;
     struct _r *nextr;
     int x;
+    int timeouts;
     while (!done_reading_urls || noutstanding) {
+	if (timeouts == 20) {
+	    close(pconn_fd);
+	    pconn_fd = -1;
+	    r = Requests;
+	    Requests = Requests->next;
+	    free(r);
+	    noutstanding--;
+	}
 	if (pconn_fd < 0) {
 	    pconn_fd = open_http_socket();
 	    if (pconn_fd < 0) {
@@ -321,6 +332,7 @@ main_loop(void)
 		free(r);
 		noutstanding--;
 	    }
+	    timeouts = 0;
 	}
 	if (noutstanding < 10 && !done_reading_urls) {
 	    char *t;
@@ -332,6 +344,7 @@ main_loop(void)
 	    if ((t = strchr(buf, '\n')))
 		*t = '\0';
 	    send_request(pconn_fd, buf);
+	    timeouts = 0;
 	}
 	FD_ZERO(&R);
 	to.tv_sec = 1;
@@ -344,10 +357,12 @@ main_loop(void)
 	    continue;
 	} else if (x == 0) {
 	    assert(Requests != NULL);
-	    fprintf(stderr, "TIMEOUT waiting for %s\n", Requests->url);
+	    fprintf(stderr, "TIMEOUT %s; %d, %d\n", Requests->url,
+		++timeouts, noutstanding);
 	    continue;
 	}
 	if (FD_ISSET(pconn_fd, &R)) {
+	    timeouts = 0;
 	    if (read_reply(pconn_fd) != 0)
 		pconn_fd = -1;
 	}
