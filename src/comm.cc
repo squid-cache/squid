@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.236 1998/03/25 05:21:47 wessels Exp $
+ * $Id: comm.cc,v 1.237 1998/03/25 05:30:54 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -896,6 +896,7 @@ comm_poll(time_t sec)
 #if USE_ASYNC_IO
 	aioCheckCallbacks();
 #endif
+	comm_poll_incoming();
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
 	for (i = 0; i < maxfd; i++) {
@@ -949,19 +950,16 @@ comm_poll(time_t sec)
 	    int revents;
 	    if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
 		continue;
-	    if (fdIsHttpOrIcp(fd)) {
-		if (num < 7)
-		    comm_poll_incoming();
+	    if (fdIsHttpOrIcp(fd))
 		continue;
-	    } else if ((incoming_counter++ & (lastinc > 0 ? 1 : 7)) == 0) {
-		comm_poll_incoming();
-	    }
 	    if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
 		debug(5, 6) ("comm_poll: FD %d ready for reading\n", fd);
 		if ((hdl = fd_table[fd].read_handler)) {
 		    fd_table[fd].read_handler = NULL;
 		    hdl(fd, fd_table[fd].read_data);
 		}
+		if ((++incoming_counter & 15) == 0)
+		    comm_poll_incoming();
 	    }
 	    if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
 		debug(5, 5) ("comm_poll: FD %d ready for writing\n", fd);
@@ -969,6 +967,8 @@ comm_poll(time_t sec)
 		    fd_table[fd].write_handler = NULL;
 		    hdl(fd, fd_table[fd].write_data);
 		}
+		if ((++incoming_counter & 15) == 0)
+		    comm_poll_incoming();
 	    }
 	    if (revents & POLLNVAL) {
 		close_handler *ch;
@@ -1052,6 +1052,7 @@ comm_select(time_t sec)
 	    else
 		setSocketShutdownLifetimes(1);
 	}
+	comm_select_incoming();
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
 	for (i = 0; i < maxfd; i++) {
@@ -1105,13 +1106,8 @@ comm_select(time_t sec)
 	for (fd = 0; fd < maxfd; fd++) {
 	    if (!FD_ISSET(fd, &readfds) && !FD_ISSET(fd, &writefds))
 		continue;
-	    if (fdIsHttpOrIcp(fd)) {
-		if (num < 7)
-		    comm_select_incoming();
+	    if (fdIsHttpOrIcp(fd))
 		continue;
-	    } else if ((incoming_counter++ & (lastinc > 0 ? 1 : 7)) == 0) {
-		comm_select_incoming();
-	    }
 	    if (FD_ISSET(fd, &readfds)) {
 		debug(5, 6) ("comm_select: FD %d ready for reading\n", fd);
 		if (fd_table[fd].read_handler) {
@@ -1119,6 +1115,8 @@ comm_select(time_t sec)
 		    fd_table[fd].read_handler = NULL;
 		    hdl(fd, fd_table[fd].read_data);
 		}
+		if ((++incoming_counter & 15) == 0)
+		    comm_select_incoming();
 	    }
 	    if (FD_ISSET(fd, &writefds)) {
 		debug(5, 5) ("comm_select: FD %d ready for writing\n", fd);
@@ -1127,6 +1125,8 @@ comm_select(time_t sec)
 		    fd_table[fd].write_handler = NULL;
 		    hdl(fd, fd_table[fd].write_data);
 		}
+		if ((++incoming_counter & 15) == 0)
+		    comm_select_incoming();
 	    }
 	    lastinc = polledinc;
 	}
