@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.208 1998/11/20 05:16:29 wessels Exp $
+ * $Id: ipcache.cc,v 1.209 1998/11/20 06:13:15 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -175,7 +175,7 @@ ipcache_purgelru(void *voidnotused)
 	ipcache_release(i);
 	removed++;
     }
-    debug(14, 3) ("ipcache_purgelru: removed %d entries\n", removed);
+    debug(14, 9) ("ipcache_purgelru: removed %d entries\n", removed);
 }
 
 /* create blank ipcache_entry */
@@ -270,6 +270,7 @@ ipcacheParse(const char *inbuf)
     i.status = IP_NEGATIVE_CACHED;
     if (inbuf == NULL) {
 	debug(14, 1) ("ipcacheParse: Got <NULL> reply\n");
+	i.error_message = xstrdup("Internal Squid Error");
 	return &i;
     }
     xstrncpy(buf, inbuf, DNS_INBUF_SZ);
