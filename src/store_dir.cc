@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.81 1998/09/22 18:55:01 wessels Exp $
+ * $Id: store_dir.cc,v 1.82 1998/09/22 19:47:46 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -602,9 +602,9 @@ storeDirStats(StoreEntry * sentry)
         (((fsbs) != 0 && (fsbs) < (bs)) ? \
                 (num) / ((bs) / (fsbs)) : (num) * ((fsbs) / (bs)))
 	if (!statvfs(SD->path, &sfs)) {
-	    storeAppendPrintf(sentry, "Filesystem Space in use: %d/%d (%d%%)\n",
-		fsbtoblk((sfs.f_blocks - sfs.f_bfree), sfs.f_bsize, 1024),
-		fsbtoblk(sfs.f_blocks, sfs.f_bsize, 1024),
+	    storeAppendPrintf(sentry, "Filesystem Space in use: %d/%d KB (%d%%)\n",
+		fsbtoblk((sfs.f_blocks - sfs.f_bfree), sfs.f_frsize, 1024),
+		fsbtoblk(sfs.f_blocks, sfs.f_frsize, 1024),
 		percent(sfs.f_blocks - sfs.f_bfree, sfs.f_blocks));
 	    storeAppendPrintf(sentry, "Filesystem Inodes in use: %d/%d (%d%%)\n",
 		sfs.f_files - sfs.f_ffree, sfs.f_files,
