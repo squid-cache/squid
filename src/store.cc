@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.548 2002/10/13 20:35:04 robertc Exp $
+ * $Id: store.cc,v 1.549 2002/10/14 11:55:17 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -99,7 +99,7 @@ static Stack LateReleaseStack;
 MemPool *_StoreEntry::pool = NULL;
 
 void *
-_StoreEntry::operator new (unsigned int bytecount)
+_StoreEntry::operator new (size_t bytecount)
 {
     assert (bytecount == sizeof (_StoreEntry));
     if (!pool) {
