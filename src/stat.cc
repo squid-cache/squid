@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.52 1996/08/12 23:22:37 wessels Exp $
+ * $Id: stat.cc,v 1.53 1996/08/14 21:58:03 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -903,7 +903,7 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 	ident = dash;
     if (hierData) {
 	hier_code = hierData->code;
-	hier_host = hierData->host;
+	hier_host = hierData->host ? hierData->host : dash;
 	hier_timeout = hierData->timeout;
     }
     if (obj->logfile_status == LOG_ENABLE) {
