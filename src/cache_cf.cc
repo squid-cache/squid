@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.6 1996/03/27 18:15:40 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.7 1996/03/27 18:50:20 wessels Exp $ */
 
 #include "squid.h"
 
@@ -60,6 +60,7 @@ static struct {
     } Accel;
     char *appendDomain;
     char *debugOptions;
+    char *pidFilename;
 } Config;
 
 #define DefaultMemMaxSize 	(16 << 20)	/* 16 MB */
@@ -106,7 +107,7 @@ static struct {
 #define DefaultEffectiveGroup	(char *)NULL	/* default NONE */
 #define DefaultAppendDomain	(char *)NULL	/* default NONE */
 
-#define DefaultDebugOptions	"ALL,1"
+#define DefaultDebugOptions	"ALL,1"		/* All sections at level 1 */
 #define DefaultAccelHost	(char *)NULL	/* default NONE */
 #define DefaultAccelPrefix	(char *)NULL	/* default NONE */
 #define DefaultAccelPort	0	/* default off */
@@ -117,6 +118,9 @@ static struct {
 #define DefaultNeighborTimeout  2	/* 2 seconds */
 #define DefaultStallDelay	3	/* 3 seconds */
 #define DefaultSingleParentBypass 0	/* default off */
+#define DefaultPidFilename      (char *)NULL    /* default NONE */
+
+extern char *config_file;
 
 stoplist *http_stoplist = NULL;
 stoplist *gopher_stoplist = NULL;
@@ -141,11 +145,6 @@ char w_space[] = " \t\n";
 
 static void configSetFactoryDefaults();
 static void configDoConfigure();
-
-extern int getMaxFD();
-extern void fatal _PARAMS((char *));
-extern void neighbors_cf_add _PARAMS((char *, char *, int, int, int));
-extern int neighbors_cf_domain _PARAMS((char *, char *));
 
 void self_destruct(in_string)
      char *in_string;
@@ -946,6 +945,17 @@ static void parseDebugOptionsLine(line_in)
     Config.debugOptions = xstrdup(token);
 }
 
+static void parsePidFilenameLine(line_in)
+     char *line_in;
+{
+    char *token;
+    token = strtok(NULL, w_space);
+    safe_free(Config.pidFilename);
+    if (token == (char *) NULL)
+	self_destruct(line_in);
+    Config.pidFilename = xstrdup(token);
+}
+
 int parseConfigFile(file_name)
      char *file_name;
 {
@@ -1198,6 +1208,9 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "debug_options"))
 	    parseDebugOptionsLine(line_in);
 
+	else if (!strcmp(token, "pid_filename"))
+	    parsePidFilenameLine(line_in);
+
 	/* If unknown, treat as a comment line */
 	else {
 	    /* EMPTY */ ;
@@ -1259,22 +1272,18 @@ int getHttpMax()
 {
     return Config.Http.maxObjSize;
 }
-
 int getHttpTTL()
 {
     return Config.Http.defaultTtl;
 }
-
 int getGopherMax()
 {
     return Config.Gopher.maxObjSize;
 }
-
 int getGopherTTL()
 {
     return Config.Gopher.defaultTtl;
 }
-
 int getWAISMax()
 {
     return Config.Wais.maxObjSize;
@@ -1287,99 +1296,80 @@ int getWaisRelayPort()
 {
     return Config.Wais.relayPort;
 }
-
 int getFtpMax()
 {
     return Config.Ftp.maxObjSize;
 }
-
 int getFtpTTL()
 {
     return Config.Ftp.defaultTtl;
 }
-
 int getNegativeTTL()
 {
     return Config.negativeTtl;
 }
-
 int getCacheMemMax()
 {
     return Config.Mem.maxSize;
 }
-
 int getCacheMemHighWaterMark()
 {
     return Config.Mem.highWatherMark;
 }
-
 int getCacheMemLowWaterMark()
 {
     return Config.Mem.lowWaterMark;
 }
-
 double getCacheHotVmFactor()
 {
     return Config.hotVmFactor;
 }
-
 int getCacheSwapHighWaterMark()
 {
     return Config.Swap.highWatherMark;
 }
-
 int getCacheSwapLowWaterMark()
 {
     return Config.Swap.lowWaterMark;
 }
-
 int getCacheSwapMax()
 {
     return Config.Swap.maxSize;
 }
-
 int setCacheSwapMax(size)
      int size;
 {
     Config.Swap.maxSize = size;
     return Config.Swap.maxSize;
 }
-
 int getReadTimeout()
 {
     return Config.readTimeout;
 }
-
 int getClientLifetime()
 {
     return Config.lifetimeDefault;
 }
-
 int getConnectTimeout()
 {
     return Config.connectTimeout;
 }
-
 int getCleanRate()
 {
     return Config.cleanRate;
 }
-
 int getSourcePing()
 {
     return Config.sourcePing;
 }
-
 int getDnsChildren()
 {
     return Config.dnsChildren;
 }
-
 int getQuickAbort()
 {
     return Config.quickAbort;
 }
-
 char *getAccelPrefix()
 {
     return Config.Accel.prefix;
@@ -1452,6 +1442,11 @@ char *getEffectiveGroup()
 {
     return Config.effectiveGroup;
 }
+char *getPidFilename()
+{
+    return Config.pidFilename;
+}
+
 int setAsciiPortNum(p)
      int p;
 {
@@ -1536,7 +1531,7 @@ static void configSetFactoryDefaults()
     Config.Accel.prefix = safe_xstrdup(DefaultAccelPrefix);
     Config.Accel.port = DefaultAccelPort;
     Config.Accel.withProxy = DefaultAccelWithProxy;
-
+    Config.pidFilename = safe_xstrdup(DefaultPidFilename);
 }
 
 static void configDoConfigure()
