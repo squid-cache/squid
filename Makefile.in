@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.2 2001/09/25 23:45:12 robertc Exp $
+# $Id: Makefile.in,v 1.3 2001/10/03 14:56:50 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -85,6 +85,7 @@ LIBREGEX = @LIBREGEX@
 LIB_MALLOC = @LIB_MALLOC@
 LN = @LN@
 LN_S = @LN_S@
+MAINT = @MAINT@
 MKDIR = @MKDIR@
 MV = @MV@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
@@ -145,20 +146,20 @@ DIST_COMMON = README ./include/autoconf.h.in ./include/stamp-h.in \
 all: all-recursive
 
 .SUFFIXES:
-$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --foreign  Makefile
-Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && \
 	  CONFIG_HEADERS= CONFIG_LINKS= \
 	  CONFIG_FILES=$@ $(SHELL) ./config.status
 
 $(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
-$(srcdir)/configure:  $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+$(srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-$(ACLOCAL_M4):  configure.in 
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.in 
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 include/autoconf.h: include/stamp-h
 	@if test ! -f $@; then \
@@ -172,7 +173,7 @@ include/stamp-h: $(srcdir)/./include/autoconf.h.in $(top_builddir)/config.status
 	  && CONFIG_FILES= CONFIG_HEADERS=include/autoconf.h \
 	     $(SHELL) ./config.status
 	@mv include/stamp-hT include/stamp-h
-$(srcdir)/./include/autoconf.h.in:  $(srcdir)/./include/stamp-h.in
+$(srcdir)/./include/autoconf.h.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/./include/stamp-h.in
 	@if test ! -f $@; then \
 		rm -f $(srcdir)/./include/stamp-h.in; \
 		$(MAKE) $(srcdir)/./include/stamp-h.in; \

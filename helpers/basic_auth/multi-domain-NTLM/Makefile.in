@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.2 2001/09/25 23:45:30 robertc Exp $
+#  $Id: Makefile.in,v 1.3 2001/10/03 14:57:02 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -89,6 +89,7 @@ LIBREGEX = @LIBREGEX@
 LIB_MALLOC = @LIB_MALLOC@
 LN = @LN@
 LN_S = @LN_S@
+MAINT = @MAINT@
 MKDIR = @MKDIR@
 MV = @MV@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
@@ -137,10 +138,10 @@ DIST_COMMON = Makefile.am Makefile.in
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --foreign  src/auth/basic/helpers/multi-domain-NTLM/Makefile
-Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && \
 	  CONFIG_HEADERS= CONFIG_LINKS= \
 	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
