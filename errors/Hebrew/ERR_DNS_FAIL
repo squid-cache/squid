@@ -2,6 +2,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
 <TITLE>שגיאה: הכתובת המבוקשת לא נגישה</TITLE>
 </HEAD><BODY>
+<div dir="rtl" align="right">
 <H2>לא ניתן לגשת אל הכתובת המבוקשת</H2>
 <HR>
 <P>
@@ -26,3 +27,4 @@
  בדוק את הכתובת.
 </PRE>
 <P>מנהל השרת הוא <A HREF="mailto:%w">%w</A>. 
+</div>
