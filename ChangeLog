@@ -1,3 +1,17 @@
+Changes to squid-1.2.beta10 (Jan 1, 1998):
+
+	- Fixed content-length bugs for 204 replies, 304 replies,
+	  and HEAD requests (Henrik Nordstrom).
+	- Fixed errorAppendEntry() bug in gopherReadReply().
+	- Basic support for FTP URL typecodes (;type=X).
+	- Support for access controls based on ehternet MAC addresses
+	  (Dale).
+	- Initial URN support; see
+	  http://squid.nlanr.net/Squid/urn-support.html
+	- Fixed client-side persistent connections for objects with
+	  bad content lengths (Henrik Nordstrom).
+	- Fixed bad call to storeDirUpdateSwapSize() for objects which
+	  never reach SWAPOUT_DONE state.
 	- Fixed up poll() #defines in squid.h (Stewart Forster).
 	- Changed poll() timeout from 1000 msec to 50 msec for
 	  better performance under low load (Stewart Forster).
@@ -20,21 +34,6 @@
 	  for pipelined requests (Henrik Nordstrom).
 	- Fixed 4k page leak in icpHandleIMSReply();
 	- Renamed 'icp*' functions to 'client*' names in client_side.c.
-
-Changes to squid-1.2.beta10 (Dec 30, 1997):
-
-	- Fixed content-length bugs for 204 replies, 304 replies,
-	  and HEAD requests (Henrik Nordstrom).
-	- Fixed errorAppendEntry() bug in gopherReadReply().
-	- Basic support for FTP URL typecodes (;type=X).
-	- Support for access controls based on ehternet MAC addresses
-	  (Dale).
-	- Initial URN support; see
-	  http://squid.nlanr.net/Squid/urn-support.html
-	- Fixed client-side persistent connections for objects with
-	  bad content lengths (Henrik Nordstrom).
-	- Fixed bad call to storeDirUpdateSwapSize() for objects which
-	  never reach SWAPOUT_DONE state.
 
 Changes to squid-1.2.beta8 (Dec 2, 1997):
 
