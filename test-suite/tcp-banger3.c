@@ -322,15 +322,20 @@ parent_main_loop(void)
     char *url;
     fd_set R2;
     int x;
+    struct timeval to;
     FD_ZERO(&R1);
     for (;;) {
 	while ((t = get_idle_thing()) && (url = parent_read_url()))
 	    dispatch(t, url);
 	R2 = R1;
-	x = select(maxfd + 1, &R2, NULL, NULL, NULL);
+	to.tv_sec = 60;
+	to.tv_usec = 0;
+	x = select(maxfd + 1, &R2, NULL, NULL, &to);
 	if (x < 0) {
 	    perror("select");
 	    continue;
+	} else if (x == 0) {
+	    return;
 	}
 	for (t = things; t; t = t->next) {
 	    if (t->state != 1)
