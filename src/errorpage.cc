@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.104 1997/11/23 06:51:19 wessels Exp $
+ * $Id: errorpage.cc,v 1.105 1997/11/24 18:27:15 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -192,9 +192,10 @@ errorStateFree(ErrorState * err)
  * d - seconds elapsed since request received
  * e - errno                                    x
  * E - strerror()                               x
- * F - FTP reply line                           x
  * f - FTP request line                         x
+ * F - FTP reply line                           x
  * h - cache hostname                           x
+ * H - server host name                         x
  * i - client IP address                        x
  * I - server IP address                        x
  * L - HREF link for more info/contact          x
@@ -204,6 +205,8 @@ errorStateFree(ErrorState * err)
  * R - Full HTTP Request                        x
  * t - local time                               x
  * T - UTC                                      x
+ * U - URL without password                     x
+ * u - URL without password, %2f added to path  x
  * w - cachemgr email address                   x
  * z - dns server error message                 x
  */

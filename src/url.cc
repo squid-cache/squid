@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.66 1997/11/05 05:29:40 wessels Exp $
+ * $Id: url.cc,v 1.67 1997/11/24 18:27:17 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -303,6 +303,7 @@ urlCanonicalClean(const request_t * request)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
     LOCAL_ARRAY(char, portbuf, 32);
+    LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);
     char *t;
     switch (request->method) {
     case METHOD_CONNECT:
@@ -312,8 +313,16 @@ urlCanonicalClean(const request_t * request)
 	portbuf[0] = '\0';
 	if (request->port != urlDefaultPort(request->protocol))
 	    snprintf(portbuf, 32, ":%d", request->port);
-	snprintf(buf, MAX_URL, "%s://%s%s%s",
+	loginbuf[0] = '\0';
+	if (strlen(request->login) > 0) {
+	    strcpy(loginbuf, request->login);
+	    if ((t = strchr(loginbuf, ':')))
+		*t = '\0';
+	    strcat(loginbuf, "@");
+	}
+	snprintf(buf, MAX_URL, "%s://%s%s%s%s",
 	    ProtocolStr[request->protocol],
+	    loginbuf,
 	    request->host,
 	    portbuf,
 	    request->urlpath);
