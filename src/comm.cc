@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.291 1998/11/12 23:07:34 wessels Exp $
+ * $Id: comm.cc,v 1.292 1998/11/20 23:58:50 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -155,7 +155,6 @@ comm_open(int sock_type,
 {
     int new_socket;
     fde *F = NULL;
-    int tcp_rcv_bufsz = Config.tcpRcvBufsz;
 
     /* Create socket for accepting new connections. */
     Counter.syscalls.sock.sockets++;
@@ -202,8 +201,8 @@ comm_open(int sock_type,
     if (sock_type == SOCK_STREAM)
 	commSetTcpNoDelay(new_socket);
 #endif
-    if (tcp_rcv_bufsz > 0 && sock_type == SOCK_STREAM)
-	commSetTcpRcvbuf(new_socket, tcp_rcv_bufsz);
+    if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
+	commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
     return new_socket;
 }
 
