@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.17 1998/04/06 22:32:22 wessels Exp $
+ * $Id: test_cache_digest.cc,v 1.18 1998/04/22 21:28:24 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -272,7 +272,7 @@ cacheResetDigest(Cache * cache)
     if (cache->digest)
 	cacheDigestDestroy(cache->digest);
     hash = cache->hash;
-    cache->digest = cacheDigestCreate(2 * cache->count + 1);	/* 50% utilization */
+    cache->digest = cacheDigestCreate(cache->count+1, 6);
     if (!cache->count)
 	return;
     gettimeofday(&t_start, NULL);
