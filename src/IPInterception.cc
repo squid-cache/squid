@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.4 2003/01/23 00:37:13 robertc Exp $
+ * $Id: IPInterception.cc,v 1.5 2003/02/21 19:53:01 hno Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -78,23 +78,15 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-void
-rewriteURIwithInterceptedDetails(char const *originalURL, char *uriBuffer, size_t bufferLength, int fd, struct sockaddr_in me, struct sockaddr_in peer, int vport)
-{
 #if IPF_TRANSPARENT
+int
+clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+{
     struct natlookup natLookup;
     static int natfd = -1;
     static int siocgnatl_cmd = SIOCGNATL & 0xff;
     int x;
-#endif
-#if PF_TRANSPARENT
-    struct pfioc_natlook nl;
-    static int pffd = -1;
-#endif
-#if LINUX_NETFILTER
-    size_t sock_sz = sizeof(me);
-#endif
-#if IPF_TRANSPARENT
+
     natLookup.nl_inport = me.sin_port;
     natLookup.nl_outport = peer.sin_port;
     natLookup.nl_inip = me.sin_addr;
@@ -109,13 +101,11 @@ rewriteURIwithInterceptedDetails(char const *originalURL, char *uriBuffer, size_
 	errno = save_errno;
     }
     if (natfd < 0) {
-	debug(89, 1) ("rewriteURIwithInterceptedDetails: NAT open failed: %s\n",
+	debug(50, 1) ("parseHttpRequest: NAT open failed: %s\n",
 	    xstrerror());
-	cbdataFree(context);
-	xfree(inbuf);
-	return rewriteURIwithInterceptedDetailsAbort(conn, "error:nat-open-failed");
+	return -1;
     }
-    /* 
+    /*
      * IP-Filter changed the type for SIOCGNATL between
      * 3.3 and 3.4.  It also changed the cmd value for
      * SIOCGNATL, so at least we can detect it.  We could
@@ -130,32 +120,51 @@ rewriteURIwithInterceptedDetails(char const *originalURL, char *uriBuffer, size_
     }
     if (x < 0) {
 	if (errno != ESRCH) {
-	    debug(89, 1) ("rewriteURIwithInterceptedDetails: NAT lookup failed: ioctl(SIOCGNATL)\n");
+	    debug(50, 1) ("parseHttpRequest: NAT lookup failed: ioctl(SIOCGNATL)\n");
 	    close(natfd);
 	    natfd = -1;
-	    cbdataFree(context);
-	    xfree(inbuf);
-	    return rewriteURIwithInterceptedDetailsAbort(conn,
-		"error:nat-lookup-failed");
-	} else
-	    snprintf(uriBuffer, bufferLength, "http://%s:%d%s",
-		inet_ntoa(me.sin_addr), vport, originalURL);
+	}
+	return -1;
     } else {
-	if (vport_mode)
-	    vport = ntohs(natLookup.nl_realport);
-	snprintf(uriBuffer, bufferLength, "http://%s:%d%s",
-	    inet_ntoa(natLookup.nl_realip), vport, originalURL);
+	if (me.sin_addr.s_addr != natLookup.nl_realip.s_addr)
+	    dst->sin_family = AF_INET;
+	    dst->sin_port = natLookup.nl_realport;
+	    dst->sin_addr = natLookup.nl_realip;
+	    return 0;
+	} else {
+	    return -1;
+	}
     }
+}
+#elif LINUX_NETFILTER
+int
+clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+{
+    size_t sock_sz = sizeof(*dst);
+    memcpy(dst, &me, sizeof(*dst));
+    if (getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, dst, &sock_sz) != 0)
+	return -1;
+
+    debug(33, 5) ("clientNatLookup: addr = %s", inet_ntoa(dst->sin_addr));
+    if (me.sin_addr.s_addr != dst->sin_addr.s_addr)
+	return 0;
+    else
+	return -1;
+}
 #elif PF_TRANSPARENT
+int
+clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+{
+    struct pfioc_natlook nl;
+    static int pffd = -1;
     if (pffd < 0)
 	pffd = open("/dev/pf", O_RDWR);
     if (pffd < 0) {
-	debug(89, 1) ("rewriteURIwithInterceptedDetails: PF open failed: %s\n",
+	debug(50, 1) ("parseHttpRequest: PF open failed: %s\n",
 	    xstrerror());
-	cbdataFree(context);
-	xfree(inbuf);
-	return rewriteURIwithInterceptedDetailsAbort(conn, "error:pf-open-failed");
+	return -1;
     }
+    memset(dst, 0, sizeof(*dst));
     memset(&nl, 0, sizeof(struct pfioc_natlook));
     nl.saddr.v4.s_addr = peer.sin_addr.s_addr;
     nl.sport = peer.sin_port;
@@ -166,29 +175,28 @@ rewriteURIwithInterceptedDetails(char const *originalURL, char *uriBuffer, size_
     nl.direction = PF_OUT;
     if (ioctl(pffd, DIOCNATLOOK, &nl)) {
 	if (errno != ENOENT) {
-	    debug(89, 1) ("rewriteURIwithInterceptedDetails: PF lookup failed: ioctl(DIOCNATLOOK)\n");
+	    debug(50, 1) ("parseHttpRequest: PF lookup failed: ioctl(DIOCNATLOOK)\n");
 	    close(pffd);
 	    pffd = -1;
-	    cbdataFree(context);
-	    xfree(inbuf);
-	    return rewriteURIwithInterceptedDetailsAbort(conn,
-		"error:pf-lookup-failed");
-	} else
-	    snprintf(uriBuffer, bufferLength, "http://%s:%d%s",
-		inet_ntoa(me.sin_addr), vport, originalURL);
-    } else
-	snprintf(uriBuffer, bufferLength, "http://%s:%d%s",
-	    inet_ntoa(nl.rdaddr.v4), ntohs(nl.rdport), originalURL);
-#else
-#if LINUX_NETFILTER
-    /* If the call fails the address structure will be unchanged */
-    getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, &me, &sock_sz);
-    debug(89, 5) ("rewriteURIwithInterceptedDetails: addr = %s",
-	inet_ntoa(me.sin_addr));
-    if (vport_mode)
-	vport = (int) ntohs(me.sin_port);
-#endif
-    snprintf(uriBuffer, bufferLength, "http://%s:%d%s",
-	inet_ntoa(me.sin_addr), vport, originalURL);
-#endif
+	}
+	return -1;
+    } else {
+	int natted = me.sin_addr.s_addr != nt.rdaddr.v4.s_addr;
+	dst->sin_family = AF_INET;
+	dst->sin_port = nl.rdport;
+	dst->sin_addr = nl.rdaddr.v4;
+	if (natted)
+	    return 0;
+	else
+	    return -1;
+    }
 }
+#else
+int
+clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+{
+    debug(33, 1) ("WARNING: transparent proxying not supported\n");
+    return -1;
+}
+#endif
+

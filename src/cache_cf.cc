@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.432 2003/02/17 08:39:43 robertc Exp $
+ * $Id: cache_cf.cc,v 1.433 2003/02/21 19:53:01 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -99,11 +99,17 @@ static void free_http_header_replace(header_mangler * header);
 static void parse_denyinfo(acl_deny_info_list ** var);
 static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var);
 static void free_denyinfo(acl_deny_info_list ** var);
+#if CURRENTLY_UNUSED
 static void parse_sockaddr_in_list(sockaddr_in_list **);
 static void dump_sockaddr_in_list(StoreEntry *, const char *, const sockaddr_in_list *);
 static void free_sockaddr_in_list(sockaddr_in_list **);
-#if 0
 static int check_null_sockaddr_in_list(const sockaddr_in_list *);
+#endif /* CURRENTLY_UNUSED */
+static void parse_http_port_list(http_port_list **);
+static void dump_http_port_list(StoreEntry *, const char *, const http_port_list *);
+static void free_http_port_list(http_port_list **);
+#if UNUSED_CODE
+static int check_null_http_port_list(const http_port_list *);
 #endif
 #if USE_SSL
 static void parse_https_port_list(https_port_list **);
@@ -354,7 +360,6 @@ parseConfigFile(const char *file_name)
 static void
 configDoConfigure(void)
 {
-    LOCAL_ARRAY(char, buf, BUFSIZ);
     memset(&Config2, '\0', sizeof(SquidConfig2));
     /* init memory as early as possible */
     memConfigure();
@@ -384,22 +389,12 @@ configDoConfigure(void)
 	    wordlistDestroy(&Config.Program.redirect);
 	}
     }
-    if (Config.Accel.host) {
-	snprintf(buf, BUFSIZ, "http://%s:%d", Config.Accel.host, Config.Accel.port);
-	Config2.Accel.prefix = xstrdup(buf);
-	Config2.Accel.on = 1;
-    }
     if (Config.appendDomain)
 	if (*Config.appendDomain != '.')
 	    fatal("append_domain must begin with a '.'");
     if (Config.errHtmlText == NULL)
 	Config.errHtmlText = xstrdup(null_string);
     storeConfigure();
-    if (Config2.Accel.on && !strcmp(Config.Accel.host, "virtual")) {
-	vhost_mode = 1;
-	if (Config.Accel.port == 0)
-	    vport_mode = 1;
-    }
     snprintf(ThisCache, sizeof(ThisCache), "%s (%s)",
 	uniqueHostname(),
 	full_appname_string);
@@ -2239,6 +2234,10 @@ parseNeighborType(const char *s)
     return PEER_SIBLING;
 }
 
+#if CURRENTLY_UNUSED
+/* This code was previously used by http_port. Left as it really should
+ * be used by icp_port and htcp_port
+ */
 void
 parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
 {
@@ -2308,9 +2307,165 @@ free_sockaddr_in_list(sockaddr_in_list ** head)
     }
 }
 
-#if 0
 static int
 check_null_sockaddr_in_list(const sockaddr_in_list * s)
+{
+    return NULL == s;
+}
+#endif /* CURRENTLY_UNUSED */
+
+static void
+parse_http_port_specification(http_port_list * s, char *token)
+{
+    char *host = NULL;
+    const struct hostent *hp;
+    unsigned short port = 0;
+    char *t;
+    if ((t = strchr(token, ':'))) {
+	/* host:port */
+	host = token;
+	*t = '\0';
+	port = (unsigned short) atoi(t + 1);
+	if (0 == port)
+	    self_destruct();
+    } else if ((port = atoi(token)) > 0) {
+	/* port */
+    } else {
+	self_destruct();
+    }
+    s->s.sin_port = htons(port);
+    if (NULL == host)
+	s->s.sin_addr = any_addr;
+    else if (1 == safe_inet_addr(host, &s->s.sin_addr))
+	(void) 0;
+    else if ((hp = gethostbyname(host))) {
+	/* dont use ipcache */
+	s->s.sin_addr = inaddrFromHostent(hp);
+	s->defaultsite = xstrdup(host);
+    } else
+	self_destruct();
+}
+
+static void
+parse_http_port_option(http_port_list * s, char *token)
+{
+    if (strncmp(token, "defaultsite=", 12) == 0) {
+	safe_free(s->defaultsite);
+	s->defaultsite = xstrdup(token + 12);
+	s->accel = 1;
+    } else if (strncmp(token, "name=", 5) == 0) {
+	safe_free(s->name);
+	s->name = xstrdup(token + 5);
+    } else if (strcmp(token, "transparent") == 0) {
+	s->transparent = 1;
+    } else if (strcmp(token, "vhost") == 0) {
+	s->vhost = 1;
+	s->accel = 1;
+    } else if (strcmp(token, "vport") == 0) {
+	s->vport = -1;
+	s->accel = 1;
+    } else if (strncmp(token, "vport=", 6) == 0) {
+	s->vport = atoi(token + 6);
+	s->accel = 1;
+    } else if (strncmp(token, "protocol=", 9) == 0) {
+	s->protocol = xstrdup(token + 9);
+	s->accel = 1;
+    } else if (strcmp(token, "accel") == 0) {
+	s->accel = 1;
+    } else {
+	self_destruct();
+    }
+}
+
+static void
+free_generic_http_port_data(http_port_list * s)
+{
+    safe_free(s->name);
+    safe_free(s->defaultsite);
+}
+
+static void
+cbdataFree_http_port(void *data)
+{
+    free_generic_http_port_data((http_port_list *)data);
+}
+
+
+static http_port_list *
+create_http_port(char *portspec)
+{
+    CBDATA_TYPE(http_port_list);
+    CBDATA_INIT_TYPE_FREECB(http_port_list, cbdataFree_http_port);
+
+    http_port_list *s = cbdataAlloc(http_port_list);
+    s->protocol = xstrdup("http");
+    parse_http_port_specification(s, portspec);
+    return s;
+}
+
+void
+add_http_port(char *portspec)
+{
+    http_port_list *s = create_http_port(portspec);
+    s->next = Config.Sockaddr.http;
+    Config.Sockaddr.http = s;
+}
+
+static void
+parse_http_port_list(http_port_list ** head)
+{
+    char *token = strtok(NULL, w_space);
+    if (!token)
+	self_destruct();
+    http_port_list *s = create_http_port(token);
+    /* parse options ... */
+    while ((token = strtok(NULL, w_space))) {
+	parse_http_port_option(s, token);
+    }
+    while (*head)
+	head = &(*head)->next;
+    *head = s;
+}
+
+static void
+dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
+{
+    storeAppendPrintf(e, "%s %s:%d",
+	n,
+	inet_ntoa(s->s.sin_addr),
+	ntohs(s->s.sin_port));
+    if (s->defaultsite)
+	storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
+    if (s->transparent)
+	storeAppendPrintf(e, " transparent");
+    if (s->vhost)
+	storeAppendPrintf(e, " vhost");
+    if (s->vport)
+	storeAppendPrintf(e, " vport");
+}
+static void
+dump_http_port_list(StoreEntry * e, const char *n, const http_port_list * s)
+{
+    while (s) {
+	dump_generic_http_port(e, n, s);
+	storeAppendPrintf(e, "\n");
+	s = s->next;
+    }
+}
+
+static void
+free_http_port_list(http_port_list ** head)
+{
+    http_port_list *s;
+    while ((s = *head) != NULL) {
+	*head = s->next;
+	cbdataFree(s);
+    }
+}
+
+#if UNUSED_CODE
+static int
+check_null_http_port_list(const http_port_list * s)
 {
     return NULL == s;
 }
@@ -2318,41 +2473,27 @@ check_null_sockaddr_in_list(const sockaddr_in_list * s)
 
 #if USE_SSL
 static void
+cbdataFree_https_port(void *data)
+{
+    https_port_list *s = (https_port_list *)data;
+    free_generic_http_port_data(&s->http);
+    safe_free(s->cert);
+    safe_free(s->key);
+}
+
+static void
 parse_https_port_list(https_port_list ** head)
 {
+    CBDATA_TYPE(https_port_list);
     char *token;
-    char *t;
-    char *host;
-    const struct hostent *hp;
-    unsigned short port;
     https_port_list *s;
+    CBDATA_INIT_TYPE_FREECB(https_port_list, cbdataFree_https_port);
     token = strtok(NULL, w_space);
     if (!token)
 	self_destruct();
-    host = NULL;
-    port = 0;
-    if ((t = strchr(token, ':'))) {
-	/* host:port */
-	host = token;
-	*t = '\0';
-	port = (unsigned short) xatoi(t + 1);
-	if (0 == port)
-	    self_destruct();
-    } else if ((port = xatoi(token)) > 0) {
-	/* port */
-    } else {
-	self_destruct();
-    }
-    s = (https_port_list *)xcalloc(1, sizeof(*s));
-    s->s.sin_port = htons(port);
-    if (NULL == host)
-	s->s.sin_addr = any_addr;
-    else if (1 == safe_inet_addr(host, &s->s.sin_addr))
-	(void) 0;
-    else if ((hp = gethostbyname(host)))	/* dont use ipcache */
-	s->s.sin_addr = inaddrFromHostent(hp);
-    else
-	self_destruct();
+    s = cbdataAlloc(https_port_list);
+    s->http.protocol = xstrdup("https");
+    parse_http_port_specification(&s->http, token);
     /* parse options ... */
     while ((token = strtok(NULL, w_space))) {
 	if (strncmp(token, "cert=", 5) == 0) {
@@ -2382,14 +2523,14 @@ parse_https_port_list(https_port_list ** head)
 	    safe_free(s->sslflags);
 	    s->sslflags = xstrdup(token + 9);
 	} else {
-	    self_destruct();
+	    parse_http_port_option(&s->http, token);
 	}
     }
-    while (*head)
-	head = &(*head)->next;
     s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath);
     if (!s->sslContext)
 	self_destruct();
+    while (*head)
+	head = (https_port_list **)&(*head)->http.next;
     *head = s;
 }
 
@@ -2397,10 +2538,7 @@ static void
 dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
 {
     while (s) {
-	storeAppendPrintf(e, "%s %s:%d",
-	    n,
-	    inet_ntoa(s->s.sin_addr),
-	    ntohs(s->s.sin_port));
+	dump_generic_http_port(e, n, &s->http);
 	if (s->cert)
 	    storeAppendPrintf(e, " cert=%s", s->cert);
 	if (s->key)
@@ -2418,7 +2556,7 @@ dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
 	if (s->sslflags)
 	    storeAppendPrintf(e, " sslflags=%s", s->sslflags);
 	storeAppendPrintf(e, "\n");
-	s = s->next;
+	s = (https_port_list *) s->http.next;
     }
 }
 
@@ -2427,10 +2565,8 @@ free_https_port_list(https_port_list ** head)
 {
     https_port_list *s;
     while ((s = *head) != NULL) {
-	*head = s->next;
-	safe_free(s->cert);
-	safe_free(s->key);
-	safe_free(s);
+	*head = (https_port_list *) s->http.next;
+	cbdataFree(s);
     }
 }
 
@@ -2447,7 +2583,6 @@ check_null_https_port_list(const https_port_list * s)
 void
 configFreeMemory(void)
 {
-    safe_free(Config2.Accel.prefix);
     free_all();
 }
 

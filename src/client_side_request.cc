@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.16 2003/02/13 08:07:47 robertc Exp $
+ * $Id: client_side_request.cc,v 1.17 2003/02/21 19:53:01 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -107,7 +107,6 @@ ClientRequestContext::deleteSelf() const
 
 /* Local functions */
 /* other */
-static int checkAccelOnly(clientHttpRequest *);
 static void clientAccessCheckDone(int, void *);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
@@ -312,38 +311,11 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     return 0;
 }
 
-static int
-checkAccelOnly(clientHttpRequest * http)
-{
-    /*
-     * return TRUE if someone makes a proxy request to us and we are in
-     * httpd-accel only mode
-     */
-    if (!Config2.Accel.on)
-	return 0;
-    if (Config.onoff.accel_with_proxy)
-	return 0;
-    if (http->request->protocol == PROTO_CACHEOBJ)
-	return 0;
-    if (http->flags.accel)
-	return 0;
-    if (http->request->method == METHOD_PURGE)
-	return 0;
-    return 1;
-}
-
 /* This is the entry point for external users of the client_side routines */
 void
 clientAccessCheck(ClientHttpRequest *http)
 {
     ClientRequestContext *context = new ClientRequestContext(http);
-    if (checkAccelOnly(http)) {
-	/* deny proxy requests in accel_only mode */
-	debug(85,
-	    1) ("clientAccessCheck: proxy request denied in accel_only mode\n");
-	clientAccessCheckDone(ACCESS_DENIED, context);
-	return;
-    }
     context->acl_checklist =
 	clientAclChecklistCreate(Config.accessList.http, http);
     context->acl_checklist->nonBlockingCheck(clientAccessCheckDone, context);
@@ -667,7 +639,7 @@ clientRedirectDone(void *data, char *result)
 	new_request->client_addr = old_request->client_addr;
 	new_request->my_addr = old_request->my_addr;
 	new_request->my_port = old_request->my_port;
-	new_request->flags.redirected = 1;
+	new_request->flags = old_request->flags;
 	if (old_request->auth_user_request) {
 	    new_request->auth_user_request = old_request->auth_user_request;
 	    authenticateAuthUserRequestLock(new_request->auth_user_request);

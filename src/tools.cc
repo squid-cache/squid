@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.231 2003/02/08 02:32:53 robertc Exp $
+ * $Id: tools.cc,v 1.232 2003/02/21 19:53:02 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -455,7 +455,7 @@ getMyHostname(void)
 	memcpy(&sa, &Config.Sockaddr.http->s.sin_addr, sizeof(sa));
 #if USE_SSL
     if (Config.Sockaddr.https && sa.s_addr == any_addr.s_addr)
-	memcpy(&sa, &Config.Sockaddr.https->s.sin_addr, sizeof(sa));
+	memcpy(&sa, &Config.Sockaddr.https->http.s.sin_addr, sizeof(sa));
 #endif
     /*
      * If the first http_port address has a specific address, try a
@@ -1006,7 +1006,7 @@ getMyPort(void)
 	return ntohs(Config.Sockaddr.http->s.sin_port);
 #if USE_SSL
     if (Config.Sockaddr.https)
-	return ntohs(Config.Sockaddr.https->s.sin_port);
+	return ntohs(Config.Sockaddr.https->http.s.sin_port);
 #endif
     fatal("No port defined");
     return 0;			/* NOT REACHED */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.450 2003/02/17 07:01:37 robertc Exp $
+ * $Id: structs.h,v 1.451 2003/02/21 19:53:02 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -162,10 +162,21 @@ struct _sockaddr_in_list {
     sockaddr_in_list *next;
 };
 
+struct _http_port_list {
+    http_port_list *next;
+    struct sockaddr_in s;
+    char *protocol;		/* protocol name */
+    char *name;			/* visible name */
+    char *defaultsite;		/* default web site */
+    unsigned int transparent:1;	/* transparent proxy */
+    unsigned int accel:1;	/* HTTP accelerator */
+    unsigned int vhost:1;	/* uses host header */
+    int vport;			/* virtual port support, -1 for dynamic, >0 static*/
+};
+
 #if USE_SSL
 struct _https_port_list {
-    https_port_list *next;
-    struct sockaddr_in s;
+    http_port_list http;	/* must be first */
     char *cert;
     char *key;
     int version;
@@ -254,7 +265,7 @@ struct _SquidConfig {
 #endif
     } Port;
     struct {
-	sockaddr_in_list *http;
+	http_port_list *http;
 #if USE_SSL
 	https_port_list *https;
 #endif
@@ -313,11 +324,6 @@ struct _SquidConfig {
     time_t authenticateGCInterval;
     time_t authenticateTTL;
     time_t authenticateIpTTL;
-    struct {
-	int single_host;
-	char *host;
-	u_short port;
-    } Accel;
     char *appendDomain;
     size_t appendDomainLen;
     char *debugOptions;
@@ -391,7 +397,6 @@ struct _SquidConfig {
 	int log_mime_hdrs;
 	int log_fqdn;
 	int announce;
-	int accel_with_proxy;
 	int mem_pools;
 	int test_reachability;
 	int half_closed_clients;
@@ -531,10 +536,6 @@ struct _SquidConfig {
 };
 
 struct _SquidConfig2 {
-    struct {
-	char *prefix;
-	int on;
-    } Accel;
     struct {
 	int enable_purge;
     } onoff;
@@ -808,6 +809,8 @@ struct _ConnStateData {
 	int readMoreRequests:1;
     } flags;
     bool reading;
+    http_port_list *port;
+    int transparent;
 };
 
 struct _ipcache_addrs {

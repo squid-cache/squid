@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.95 2003/02/15 00:15:51 hno Exp $
+ * $Id: forward.cc,v 1.96 2003/02/21 19:53:01 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -436,12 +436,6 @@ fwdConnectStart(void *data)
 	port = fs->_peer->http_port;
 	ctimeout = fs->_peer->connect_timeout > 0 ? fs->_peer->connect_timeout
 	    : Config.Timeout.peer_connect;
-    } else if (fwdState->request->flags.accelerated &&
-	!fwdState->request->flags.internalclient &&
-	Config.Accel.single_host && Config.Accel.host) {
-	host = Config.Accel.host;
-	port = Config.Accel.port;
-	ctimeout = Config.Timeout.connect;
     } else {
 	host = fwdState->request->host;
 	port = fwdState->request->port;

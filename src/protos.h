@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.466 2003/02/15 18:13:36 hno Exp $
+ * $Id: protos.h,v 1.467 2003/02/21 19:53:02 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -67,6 +67,8 @@ SQUIDCEXTERN void wordlistCat(const wordlist *, MemBuf * mb);
 SQUIDCEXTERN void allocate_new_swapdir(cacheSwap *);
 SQUIDCEXTERN void self_destruct(void);
 SQUIDCEXTERN int GetInteger(void);
+SQUIDCEXTERN void add_http_port(char *portspec);
+
 
 /* extra functions from cache_cf.c useful for lib modules */
 SQUIDCEXTERN void parse_int(int *var);
