@@ -139,7 +139,7 @@ struct _aclCheck_t {
     struct in_addr src_addr;
     struct in_addr dst_addr;
     request_t *request;
-    char ident[ICP_IDENT_SZ];
+    char ident[USER_IDENT_SZ];
     char browser[BROWSERNAMELEN];
     acl_lookup_state state[ACL_ENUM_MAX];
     PF *callback;
@@ -754,7 +754,7 @@ struct _ConnStateData {
     struct in_addr log_addr;
     struct {
 	int fd;
-	char ident[ICP_IDENT_SZ];
+	char ident[USER_IDENT_SZ];
 	IDCB *callback;
 	int state;
 	void *callback_data;
@@ -1123,6 +1123,7 @@ struct _request_t {
     protocol_t protocol;
     char login[MAX_LOGIN_SZ];
     char host[SQUIDHOSTNAMELEN + 1];
+    char user_ident[USER_IDENT_SZ];	/* from proxy auth or ident server */
     u_short port;
     String urlpath;
     int link_count;		/* free when zero */

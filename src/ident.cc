@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.41 1998/05/30 19:43:11 rousskov Exp $
+ * $Id: ident.cc,v 1.42 1998/07/14 22:28:12 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -124,7 +124,7 @@ identReadReply(int fd, void *data)
 	if (strstr(buf, "USERID")) {
 	    if ((t = strrchr(buf, ':'))) {
 		while (isspace(*++t));
-		xstrncpy(connState->ident.ident, t, ICP_IDENT_SZ);
+		xstrncpy(connState->ident.ident, t, USER_IDENT_SZ);
 	    }
 	}
     }
