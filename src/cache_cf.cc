@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.385 2001/06/14 19:15:04 hno Exp $
+ * $Id: cache_cf.cc,v 1.386 2001/06/27 17:46:42 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -426,6 +426,14 @@ configDoConfigure(void)
 	Config2.effectiveGroupID = grp->gr_gid;
     }
     urlExtMethodConfigure();
+    if (0 == Config.onoff.client_db) {
+	acl *a;
+	for (a = Config.aclList; a; a = a->next) {
+	    if (ACL_MAXCONN != a->type)
+		continue;
+	    debug(22, 0) ("WARNING: 'maxconn' ACL (%s) won't work with client_db disabled\n", a->name);
+	}
+    }
 }
 
 /* Parse a time specification from the config file.  Store the
