@@ -388,7 +388,7 @@ sync_with_agent(struct snmp_session *session)
     session->qoS = USEC_QOS_GENREPORT;
     session->userLen = 6;
     session->version = SNMP_VERSION_2;
-    strcpy(session->userName, "public");
+    strcpy((char *)session->userName, "public");
 
     snmp_synch_setup(session);
     pdu = snmp_pdu_create(GET_REQ_MSG);
@@ -851,7 +851,7 @@ snmp_send(struct snmp_session *session, struct snmp_pdu *pdu)
 	return 0;
     }
     if (snmp_dump_packet) {
-	snmp_print_packet(packet, length, pdu->address, 1);
+	snmp_print_packet((char *)packet, length, pdu->address, 1);
     }
     gettimeofday(&tv, (struct timezone *) 0);
     if (sendto(isp->sd, (char *) packet, length, 0, (struct sockaddr *) &pdu->address, sizeof(pdu->address)) < 0) {
@@ -956,7 +956,7 @@ snmp_read(fd_set * fdset)
 		return;
 	    }
 	    if (snmp_dump_packet) {
-		snmp_print_packet(packet, length, from, 0);
+		snmp_print_packet((char *)packet, length, from, 0);
 	    }
 	    pdu = xcalloc(1, sizeof(struct snmp_pdu));
 #if NOT_NEEDED
@@ -1144,7 +1144,7 @@ snmp_timeout(void)
 #endif
 		    }
 		    if (snmp_dump_packet) {
-			snmp_print_packet(packet, length, rp->pdu->address, 1);
+			snmp_print_packet((char *)packet, length, rp->pdu->address, 1);
 		    }
 		    gettimeofday(&tv, (struct timezone *) 0);
 		    if (sendto(isp->sd, (char *) packet, length, 0, (struct sockaddr *) &rp->pdu->address, sizeof(rp->pdu->address)) < 0) {
