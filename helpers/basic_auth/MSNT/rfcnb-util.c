@@ -36,7 +36,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 
-char *RFCNB_Error_Strings[] =
+const char *RFCNB_Error_Strings[] =
 {
 
     "RFCNBE_OK: Routine completed successfully.",
@@ -59,7 +59,9 @@ char *RFCNB_Error_Strings[] =
 
 };
 
+#ifdef RFCNB_DEBUG
 extern void (*Prot_Print_Routine) ();	/* Pointer to protocol print routine */
+#endif
 
 /* Convert name and pad to 16 chars as needed */
 /* Name 1 is a C string with null termination, name 2 may not be */

@@ -36,15 +36,18 @@
 
 int RFCNB_Timeout = 0;		/* Timeout in seconds ... */
 
-void
+#ifdef NOT_USED
+static void
 rfcnb_alarm(int sig)
 {
     syslog(LOG_ERR, "%s:%d: IO Timed out ...\n", __FILE__, __LINE__);
 }
+#endif
 
 /* Set timeout value and setup signal handling */
 
-int
+#ifdef NOT_USED
+static int
 RFCNB_Set_Timeout(int seconds)
 {
 #ifdef SA_RESTART
@@ -69,6 +72,7 @@ RFCNB_Set_Timeout(int seconds)
     }
     return 0;
 }
+#endif
 
 
 /*
@@ -76,7 +80,7 @@ RFCNB_Set_Timeout(int seconds)
  * in the buffer we allocated or were passed ...
  */
 
-int
+static int
 RFCNB_Discard_Rest(struct RFCNB_Con *con, int len)
 {
     char temp[100];		/* Read into here */

@@ -45,7 +45,7 @@
  * up with a different answer to the one above)
  */
 
-
+#include "smbdes.h"
 
 static int perm1[56] =
 {57, 49, 41, 33, 25, 17, 9,

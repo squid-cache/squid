@@ -5,14 +5,10 @@
 #include "smblib.h"
 #include "valid.h"
 
-extern int SMB_Init(void);
-extern int SMB_Logon_Server(SMB_Handle_Type, char *, char *);
-
-
 int
 Valid_User(char *USERNAME, char *PASSWORD, char *SERVER, char *BACKUP, char *DOMAIN)
 {
-    char *SMB_Prots[] =
+    const char *SMB_Prots[] =
     {"PC NETWORK PROGRAM 1.0",
 	"MICROSOFT NETWORKS 1.03",
 	"MICROSOFT NETWORKS 3.0",

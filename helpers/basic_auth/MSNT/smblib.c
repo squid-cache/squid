@@ -32,6 +32,7 @@ int SMBlib_SMB_Error;
 #include "rfcnb-priv.h"
 #include "rfcnb.h"
 #include "rfcnb-util.h"
+#include "smbencrypt.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -41,13 +42,10 @@ int SMBlib_SMB_Error;
 
 SMB_State_Types SMBlib_State;
 
-extern int RFCNB_Set_Sock_NoDelay(RFCNB_Con *, BOOL);
-extern void SMB_Get_My_Name(char *, int);
-
 /* Initialize the SMBlib package     */
 
 int
-SMB_Init()
+SMB_Init(void)
 {
 
     SMBlib_State = SMB_State_Started;
@@ -65,20 +63,6 @@ SMB_Init()
 
 }
 
-int
-SMB_Term()
-{
-
-#ifdef SMBLIB_INSTRUMENT
-
-    SMBlib_Instrument_Term();	/* Clean up and print results */
-
-#endif
-
-    return 0;
-
-}
-
 /* SMB_Create: Create a connection structure and return for later use */
 /* We have other helper routines to set variables                     */
 
@@ -88,23 +72,6 @@ SMB_Create_Con_Handle(void)
 
     SMBlib_errno = SMBlibE_NotImpl;
     return (NULL);
-
-}
-
-int
-SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, BOOL yn)
-{
-
-
-    if (RFCNB_Set_Sock_NoDelay(Con_Handle->Trans_Connect, yn) < 0) {
-
-#ifdef DEBUG
-#endif
-
-	fprintf(stderr, "Setting no-delay on TCP socket failed ...\n");
-
-    }
-    return (0);
 
 }
 
@@ -199,7 +166,7 @@ SMB_Connect_Server(SMB_Handle_Type Con_Handle,
 /* If Con_Handle == NULL then create a handle and connect, otherwise  */
 /* use the handle passed                                              */
 
-char *SMB_Prots_Restrict[] =
+const char *SMB_Prots_Restrict[] =
 {"PC NETWORK PROGRAM 1.0",
     NULL};
 
