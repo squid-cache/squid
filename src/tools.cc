@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.70 1996/10/10 22:20:30 wessels Exp $
+ * $Id: tools.cc,v 1.71 1996/10/11 18:04:57 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -307,7 +307,9 @@ normal_shutdown(void)
     fdstatFreeMemory();
     errorpageFreeMemory();
     stmemFreeMemory();
+#if USE_ICMP
     netdbFreeMemory();
+#endif
     ipcacheFreeMemory();
     fqdncacheFreeMemory();
     debug(21, 0, "Squid Cache (Version %s): Exiting normally.\n",
