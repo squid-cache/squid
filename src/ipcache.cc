@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.198 1998/07/31 21:15:57 wessels Exp $
+ * $Id: ipcache.cc,v 1.199 1998/08/21 08:41:57 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -946,12 +946,6 @@ ipcache_restart(void)
 	    continue;
 	if (this->status == IP_NEGATIVE_CACHED)
 	    continue;
-#if DONT
-	/* else its PENDING or DISPATCHED; there are no dnsservers
-	 * running, so abort it */
-	this->status = IP_NEGATIVE_CACHED;
-	ipcache_release(this);
-#endif
     }
     /* recalculate these while we're at it */
     ipcache_high = (long) (((float) Config.ipcache.size *

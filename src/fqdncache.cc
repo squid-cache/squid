@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.111 1998/07/31 21:15:58 wessels Exp $
+ * $Id: fqdncache.cc,v 1.112 1998/08/21 08:41:56 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -789,12 +789,6 @@ fqdncache_restart(void)
 	    continue;
 	if (this->status == FQDN_NEGATIVE_CACHED)
 	    continue;
-#if DONT
-	/* else its PENDING or DISPATCHED; there are no dnsservers
-	 * running, so abort it */
-	this->status = FQDN_NEGATIVE_CACHED;
-	fqdncache_release(this);
-#endif
     }
     fqdncache_high = (long) (((float) MAX_FQDN *
 	    (float) FQDN_HIGH_WATER) / (float) 100);
