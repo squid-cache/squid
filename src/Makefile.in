@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.310 2003/06/21 00:13:07 hno Exp $
+#  $Id: Makefile.in,v 1.311 2003/06/28 00:13:09 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -382,6 +382,8 @@ squid_ACLSOURCES = \
 	ACLDestinationIP.h \
 	ACLDomainData.h \
 	ACLDomainData.cc \
+	ACLExtUser.h \
+	ACLExtUser.cc \
 	ACLIntRange.cc \
 	ACLIntRange.h \
 	ACLIP.cc \
@@ -956,24 +958,25 @@ am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
 	ACLDestinationASN.h ACLSourceASN.h ACLBrowser.cc ACLBrowser.h \
 	ACLData.h ACLDestinationDomain.cc ACLDestinationDomain.h \
 	ACLDestinationIP.cc ACLDestinationIP.h ACLDomainData.h \
-	ACLDomainData.cc ACLIntRange.cc ACLIntRange.h ACLIP.cc ACLIP.h \
-	ACLMaxConnection.cc ACLMaxConnection.h ACLMaxUserIP.cc \
-	ACLMaxUserIP.h ACLMethod.cc ACLMethod.h ACLMethodData.cc \
-	ACLMethodData.h ACLMyIP.cc ACLMyIP.h ACLMyPort.cc ACLMyPort.h \
-	ACLProtocol.cc ACLProtocol.h ACLProtocolData.cc \
-	ACLProtocolData.h ACLProxyAuth.cc ACLProxyAuth.h ACLReferer.cc \
-	ACLReferer.h ACLRegexData.cc ACLRegexData.h \
-	ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc ACLReplyMIMEType.h \
-	ACLRequestHeaderStrategy.h ACLRequestMIMEType.cc \
-	ACLRequestMIMEType.h ACLSourceDomain.cc ACLSourceDomain.h \
-	ACLSourceIP.cc ACLSourceIP.h ACLStrategised.cc ACLStrategised.h \
-	ACLStrategy.h ACLStringData.cc ACLStringData.h ACLTime.cc \
-	ACLTime.h ACLTimeData.cc ACLTimeData.h ACLUrl.cc ACLUrl.h \
-	ACLUrlPath.cc ACLUrlPath.h ACLUrlPort.cc ACLUrlPort.h \
-	ACLUserData.cc ACLUserData.h asn.cc authenticate.cc \
-	authenticate.h cache_cf.cc CacheDigest.cc cache_manager.cc \
-	carp.cc cbdata.cc client_db.cc client_side.cc client_side.h \
-	client_side_reply.cc client_side_reply.h client_side_request.cc \
+	ACLDomainData.cc ACLExtUser.h ACLExtUser.cc ACLIntRange.cc \
+	ACLIntRange.h ACLIP.cc ACLIP.h ACLMaxConnection.cc \
+	ACLMaxConnection.h ACLMaxUserIP.cc ACLMaxUserIP.h ACLMethod.cc \
+	ACLMethod.h ACLMethodData.cc ACLMethodData.h ACLMyIP.cc \
+	ACLMyIP.h ACLMyPort.cc ACLMyPort.h ACLProtocol.cc ACLProtocol.h \
+	ACLProtocolData.cc ACLProtocolData.h ACLProxyAuth.cc \
+	ACLProxyAuth.h ACLReferer.cc ACLReferer.h ACLRegexData.cc \
+	ACLRegexData.h ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc \
+	ACLReplyMIMEType.h ACLRequestHeaderStrategy.h \
+	ACLRequestMIMEType.cc ACLRequestMIMEType.h ACLSourceDomain.cc \
+	ACLSourceDomain.h ACLSourceIP.cc ACLSourceIP.h \
+	ACLStrategised.cc ACLStrategised.h ACLStrategy.h \
+	ACLStringData.cc ACLStringData.h ACLTime.cc ACLTime.h \
+	ACLTimeData.cc ACLTimeData.h ACLUrl.cc ACLUrl.h ACLUrlPath.cc \
+	ACLUrlPath.h ACLUrlPort.cc ACLUrlPort.h ACLUserData.cc \
+	ACLUserData.h asn.cc authenticate.cc authenticate.h cache_cf.cc \
+	CacheDigest.cc cache_manager.cc carp.cc cbdata.cc client_db.cc \
+	client_side.cc client_side.h client_side_reply.cc \
+	client_side_reply.h client_side_request.cc \
 	client_side_request.h clientStream.cc clientStream.h comm.cc \
 	comm.h comm_select.cc comm_poll.cc comm_kqueue.cc comm_epoll.cc \
 	CommRead.h ConfigParser.h ConnectionDetail.h debug.cc Debug.h \
@@ -1023,7 +1026,8 @@ am__objects_1 = ACLARP.$(OBJEXT)
 @ENABLE_ARP_ACL_FALSE@am__objects_2 =
 am__objects_3 = $(am__objects_2) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
 	ACLDestinationDomain.$(OBJEXT) ACLDestinationIP.$(OBJEXT) \
-	ACLDomainData.$(OBJEXT) ACLIntRange.$(OBJEXT) ACLIP.$(OBJEXT) \
+	ACLDomainData.$(OBJEXT) ACLExtUser.$(OBJEXT) \
+	ACLIntRange.$(OBJEXT) ACLIP.$(OBJEXT) \
 	ACLMaxConnection.$(OBJEXT) ACLMaxUserIP.$(OBJEXT) \
 	ACLMethod.$(OBJEXT) ACLMethodData.$(OBJEXT) ACLMyIP.$(OBJEXT) \
 	ACLMyPort.$(OBJEXT) ACLProtocol.$(OBJEXT) \
@@ -1129,23 +1133,24 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	ACLDestinationASN.h ACLSourceASN.h ACLBrowser.cc ACLBrowser.h \
 	ACLData.h ACLDestinationDomain.cc ACLDestinationDomain.h \
 	ACLDestinationIP.cc ACLDestinationIP.h ACLDomainData.h \
-	ACLDomainData.cc ACLIntRange.cc ACLIntRange.h ACLIP.cc ACLIP.h \
-	ACLMaxConnection.cc ACLMaxConnection.h ACLMaxUserIP.cc \
-	ACLMaxUserIP.h ACLMethod.cc ACLMethod.h ACLMethodData.cc \
-	ACLMethodData.h ACLMyIP.cc ACLMyIP.h ACLMyPort.cc ACLMyPort.h \
-	ACLProtocol.cc ACLProtocol.h ACLProtocolData.cc \
-	ACLProtocolData.h ACLProxyAuth.cc ACLProxyAuth.h ACLReferer.cc \
-	ACLReferer.h ACLRegexData.cc ACLRegexData.h \
-	ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc ACLReplyMIMEType.h \
-	ACLRequestHeaderStrategy.h ACLRequestMIMEType.cc \
-	ACLRequestMIMEType.h ACLSourceDomain.cc ACLSourceDomain.h \
-	ACLSourceIP.cc ACLSourceIP.h ACLStrategised.cc ACLStrategised.h \
-	ACLStrategy.h ACLStringData.cc ACLStringData.h ACLTime.cc \
-	ACLTime.h ACLTimeData.cc ACLTimeData.h ACLUrl.cc ACLUrl.h \
-	ACLUrlPath.cc ACLUrlPath.h ACLUrlPort.cc ACLUrlPort.h \
-	ACLUserData.cc ACLUserData.h asn.cc authenticate.cc cache_cf.cc \
-	CacheDigest.cc cache_manager.cc carp.cc cbdata.cc client_db.cc \
-	client_side.cc client_side_reply.cc client_side_request.cc \
+	ACLDomainData.cc ACLExtUser.h ACLExtUser.cc ACLIntRange.cc \
+	ACLIntRange.h ACLIP.cc ACLIP.h ACLMaxConnection.cc \
+	ACLMaxConnection.h ACLMaxUserIP.cc ACLMaxUserIP.h ACLMethod.cc \
+	ACLMethod.h ACLMethodData.cc ACLMethodData.h ACLMyIP.cc \
+	ACLMyIP.h ACLMyPort.cc ACLMyPort.h ACLProtocol.cc ACLProtocol.h \
+	ACLProtocolData.cc ACLProtocolData.h ACLProxyAuth.cc \
+	ACLProxyAuth.h ACLReferer.cc ACLReferer.h ACLRegexData.cc \
+	ACLRegexData.h ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc \
+	ACLReplyMIMEType.h ACLRequestHeaderStrategy.h \
+	ACLRequestMIMEType.cc ACLRequestMIMEType.h ACLSourceDomain.cc \
+	ACLSourceDomain.h ACLSourceIP.cc ACLSourceIP.h \
+	ACLStrategised.cc ACLStrategised.h ACLStrategy.h \
+	ACLStringData.cc ACLStringData.h ACLTime.cc ACLTime.h \
+	ACLTimeData.cc ACLTimeData.h ACLUrl.cc ACLUrl.h ACLUrlPath.cc \
+	ACLUrlPath.h ACLUrlPort.cc ACLUrlPort.h ACLUserData.cc \
+	ACLUserData.h asn.cc authenticate.cc cache_cf.cc CacheDigest.cc \
+	cache_manager.cc carp.cc cbdata.cc client_db.cc client_side.cc \
+	client_side_reply.cc client_side_request.cc \
 	client_side_request.h clientStream.cc clientStream.h comm.cc \
 	comm.h comm_select.cc comm_poll.cc comm_kqueue.cc comm_epoll.cc \
 	defines.h CommonPool.h CompositePoolNode.h delay_pools.cc \
@@ -1246,7 +1251,8 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/ACLChecklist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ACLDestinationDomain.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ACLDestinationIP.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ACLDomainData.Po ./$(DEPDIR)/ACLIP.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLDomainData.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLExtUser.Po ./$(DEPDIR)/ACLIP.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ACLIdent.Po ./$(DEPDIR)/ACLIntRange.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ACLMaxConnection.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ACLMaxUserIP.Po \
@@ -1514,6 +1520,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLDestinationDomain.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLDestinationIP.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLDomainData.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLExtUser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLIP.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLIdent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLIntRange.Po@am__quote@
