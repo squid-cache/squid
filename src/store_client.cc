@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.45 1998/09/19 23:10:30 wessels Exp $
+ * $Id: store_client.cc,v 1.46 1998/09/20 01:14:25 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -127,7 +127,7 @@ storeClientListAdd(StoreEntry * e, void *data)
     if (sc->type == STORE_DISK_CLIENT)
 	/* assert we'll be able to get the data we want */
 	/* maybe we should open swapin_fd here */
-	assert(e->swap_file_number > -1);
+	assert(e->swap_file_number > -1 || storeSwapOutAble(e));
     for (T = &mem->clients; *T; T = &(*T)->next);
     *T = sc;
 }

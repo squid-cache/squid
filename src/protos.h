@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.267 1998/09/15 19:37:56 wessels Exp $
+ * $Id: protos.h,v 1.268 1998/09/20 01:14:24 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -895,6 +895,7 @@ extern void storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data);
 extern void storeCheckSwapOut(StoreEntry * e);
 extern void storeSwapOutFileClose(StoreEntry * e);
 extern int storeSwapOutWriteQueued(MemObject * mem);
+extern int storeSwapOutAble(const StoreEntry * e);
 
 /*
  * store_client.c
