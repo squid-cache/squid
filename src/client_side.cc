@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.583 2002/07/20 23:23:17 hno Exp $
+ * $Id: client_side.cc,v 1.584 2002/08/09 11:13:33 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1697,6 +1697,7 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 {
     ConnStateData *conn = http->conn;
     StoreEntry *entry;
+
     debug(33, 3) ("clientKeepaliveNextRequest: FD %d\n", conn->fd);
     conn->defer.until = 0;	/* Kick it to read a new request */
     httpRequestFree(http);
@@ -1734,13 +1735,28 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	if (0 == storeClientCopyPending(http->sc, entry, http)) {
 	    if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 		debug(33, 0) ("clientKeepaliveNextRequest: ENTRY_ABORTED\n");
-	    http->reqofs = 0;
-	    storeClientCopy(http->sc, entry,
-		http->out.offset,
-		HTTP_REQBUF_SZ,
-		http->reqbuf,
-		clientSendMoreData,
-		http);
+            /* If we have any data in our reqbuf, use it */
+	    if (http->reqsize > 0) {
+		/*
+                 * We can pass in reqbuf/size here, since clientSendMoreData ignores what
+                 * is passed and uses them itself.. :-)
+                 * -- adrian
+                 */
+                clientSendMoreData(http, http->reqbuf, http->reqsize);
+	    } else {
+		assert(http->out.offset == 0);
+                /*
+	         * here - have no data (don't ever think we get here..)
+                 * so lets start copying..
+	         * -- adrian
+	         */
+	        storeClientCopy(http->sc, entry,
+	  	    http->out.offset,
+		    HTTP_REQBUF_SZ,
+		    http->reqbuf,
+		    clientSendMoreData,
+		    http);
+            }
 	}
     }
 }
