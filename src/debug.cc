@@ -1,5 +1,5 @@
 
-/* $Id: debug.cc,v 1.14 1996/04/15 18:01:19 wessels Exp $ */
+/* $Id: debug.cc,v 1.15 1996/04/15 22:51:20 wessels Exp $ */
 
 #include "squid.h"
 
@@ -113,7 +113,7 @@ static void debugOpenLog(logfile)
 	xfree(debug_log_file);
     debug_log_file = xstrdup(logfile);	/* keep a static copy */
     if (debug_log)
-    	fclose(debug_log);
+	fclose(debug_log);
     debug_log = fopen(logfile, "a+");
     if (!debug_log) {
 	fprintf(stderr, "WARNING: Cannot write log file: %s\n", logfile);

@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.18 1996/04/15 19:20:25 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.19 1996/04/15 22:53:46 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -594,7 +594,6 @@ void neighborsUdpAck(fd, url, header, from, entry)
 		m->w_rtt = w_rtt;
 	    }
 	}
-
 	if (m->e_pings_n_acks == m->e_pings_n_pings) {
 	    BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	    entry->ping_status = DONE;
@@ -616,7 +615,7 @@ void neighbors_cf_add(host, type, ascii_port, udp_port, proxy_only, weight)
      int ascii_port;
      int udp_port;
      int proxy_only;
-    int weight;
+     int weight;
 {
     struct neighbor_cf *t, *u;
 
