@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.79 1996/08/29 16:55:47 wessels Exp $
+ * $Id: cache_cf.cc,v 1.80 1996/08/29 17:57:37 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1135,7 +1135,7 @@ int parseConfigFile(file_name)
 	    parseIntegerValue(&Config.Swap.highWaterMark);
 
 	else if (!strcmp(token, "cache_swap_low"))
-	    parseIntegerValue(&Config.Swap.highWaterMark);
+	    parseIntegerValue(&Config.Swap.lowWaterMark);
 
 	else if (!strcmp(token, "cache_mem_high"))
 	    parseIntegerValue(&Config.Mem.highWaterMark);
