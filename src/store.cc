@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.515 2000/03/06 16:23:35 wessels Exp $
+ * $Id: store.cc,v 1.516 2000/03/09 04:50:13 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -890,7 +890,7 @@ storeMaintainSwapSpace(void *datanotused)
 	    if (ndir >= Config.cacheSwap.n_configured)
 		ndir = ndir % Config.cacheSwap.n_configured;
 	    sd = &Config.cacheSwap.swapDirs[ndir++];
-	    if (sd->cur_size < sd->high_size)
+	    if (sd->cur_size < sd->low_size)
 		continue;
 	    if (NULL == sd->lru_walker)
 		continue;
