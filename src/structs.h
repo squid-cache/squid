@@ -410,7 +410,6 @@ struct _fde {
 struct _fileMap {
     int max_n_files;
     int n_files_in_map;
-    int last_file_number_allocated;
     int toggle;
     int nwords;
     unsigned long *file_map;
