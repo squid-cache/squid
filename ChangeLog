@@ -83,3 +83,7 @@ alpha19
 	  HIT on neg-cache objects
 	- Fixed swaplog lock bug
 	- change ftpget to use select(2) on I/O for timeouts
+	- note # connections in shutdown message
+	- Added close handler to be called from comm_close().  Now
+	  all the *CloseAndFree() calls have been changed back to
+	  comm_close() which calls *StateFree, etc.
