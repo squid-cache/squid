@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.42 2003/05/05 22:56:14 hno Exp $
+#  $Id: Makefile.in,v 1.43 2003/05/29 00:13:12 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -211,8 +211,8 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
 libexec_PROGRAMS = ncsa_auth
-ncsa_auth_SOURCES = ncsa_auth.c
-LDADD = -L$(top_builddir)/lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
+ncsa_auth_SOURCES = ncsa_auth.c crypt_md5.c crtpe_md5.h
+LDADD = -L$(top_builddir)/lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS) $(SSLLIB)
 INCLUDES = -I$(top_srcdir)/include
 subdir = helpers/basic_auth/NCSA
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -222,7 +222,7 @@ CONFIG_CLEAN_FILES =
 libexec_PROGRAMS = ncsa_auth$(EXEEXT)
 PROGRAMS = $(libexec_PROGRAMS)
 
-am_ncsa_auth_OBJECTS = ncsa_auth.$(OBJEXT)
+am_ncsa_auth_OBJECTS = ncsa_auth.$(OBJEXT) crypt_md5.$(OBJEXT)
 ncsa_auth_OBJECTS = $(am_ncsa_auth_OBJECTS)
 ncsa_auth_LDADD = $(LDADD)
 ncsa_auth_DEPENDENCIES =
@@ -231,7 +231,8 @@ ncsa_auth_LDFLAGS =
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/ncsa_auth.Po
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/crypt_md5.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ncsa_auth.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -283,6 +284,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypt_md5.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ncsa_auth.Po@am__quote@
 
 distclean-depend:
