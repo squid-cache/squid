@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.43 2002/04/13 23:07:49 hno Exp $
+ * $Id: cbdata.cc,v 1.44 2002/09/24 10:46:43 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -138,7 +138,6 @@ cbdataInit(void)
     CREATE_CBDATA(RemovalPolicy);
     CREATE_CBDATA(RemovalPolicyWalker);
     CREATE_CBDATA(RemovalPurgeWalker);
-    CREATE_CBDATA(store_client);
 }
 
 void *

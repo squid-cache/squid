@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.4 2002/09/23 03:59:15 wessels Exp $
+ * $Id: client_side_request.cc,v 1.5 2002/09/24 10:46:43 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines AUTHOR: Robert Collins
  * (Originally Duane Wessels in client_side.c)
@@ -42,6 +42,8 @@
  */
 
 #include "squid.h"
+#include "clientStream.h"
+#include "client_side_request.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -113,15 +115,18 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     {1, 0};
     clientHttpRequest *http = cbdataAlloc(clientHttpRequest);
     request_t *request;
+    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
     http->http_ver = http_ver;
     http->conn = NULL;
     http->start = current_time;
     /* this is only used to adjust the connection offset in client_side.c */
     http->req_sz = 0;
+    tempBuffer.length = taillen;
+    tempBuffer.data = tailbuf;
     /* client stream setup */
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
 	clientReplyStatus, clientReplyNewContext(http), streamcallback,
-	streamdetach, streamdata, tailbuf, taillen);
+	streamdetach, streamdata, tempBuffer);
     /* make it visible in the 'current acctive requests list' */
     dlinkAdd(http, &http->active, &ClientActiveRequests);
     /* Set flags */
@@ -294,8 +299,7 @@ clientAccessCheckDone(int answer, void *data)
 	    && http->conn->auth_user_request ? http->conn->
 	    auth_user_request : http->request->auth_user_request);
 	node = http->client_stream.tail->data;
-	clientStreamRead(node, http, node->readoff, node->readlen,
-	    node->readbuf);
+	clientStreamRead(node, http, node->readBuffer);
     }
 }
 
@@ -553,6 +557,7 @@ clientRedirectDone(void *data, char *result)
     /* FIXME PIPELINE: This is innacurate during pipelining */
     if (http->conn)
 	fd_note(http->conn->fd, http->uri);
+    assert(http->uri);
     clientCheckNoCache(context);
 }
 
@@ -605,5 +610,5 @@ clientProcessRequest(clientHttpRequest * http)
     assert(http->out.offset == 0);
     /* Use the Stream Luke */
     node = http->client_stream.tail->data;
-    clientStreamRead(node, http, node->readoff, node->readlen, node->readbuf);
+    clientStreamRead(node, http, node->readBuffer);
 }

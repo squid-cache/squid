@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.1 2002/09/15 05:41:56 robertc Exp $
+ * $Id: clientStream.cc,v 1.2 2002/09/24 10:46:43 robertc Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -55,6 +55,7 @@
  */
 
 #include "squid.h"
+#include "clientStream.h"
 
 CBDATA_TYPE(clientStreamNode);
 
@@ -126,7 +127,7 @@ clientStreamNew(CSR * readfunc, CSCB * callback, CSD * detach, CSS * status,
 void
 clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
     void *readdata, CSCB * callback, CSD * cdetach, void *callbackdata,
-    char *tailbuf, size_t taillen)
+    StoreIOBuffer tailBuffer)
 {
     clientStreamNode *temp = clientStreamNew(func, NULL, rdetach, readstatus,
 	readdata);
@@ -135,8 +136,7 @@ clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
     temp->head = list;
     clientStreamInsertHead(list, NULL, callback, cdetach, NULL, callbackdata);
     temp = list->tail->data;
-    temp->readbuf = tailbuf;
-    temp->readlen = taillen;
+    temp->readBuffer = tailBuffer;
 }
 
 /*
@@ -157,8 +157,7 @@ clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
     assert(list->head);
     temp = clientStreamNew(func, callback, detach, status, data);
     temp->head = list;
-    debug(87,
-	3)
+    debug(87, 3)
 	("clientStreamInsertHead: Inserted node %p with data %p after head\n",
 	temp, data);
     dlinkAddAfter(temp, &temp->node, list->head, list);
@@ -170,7 +169,7 @@ clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
  */
 void
 clientStreamCallback(clientStreamNode * this, clientHttpRequest * http,
-    HttpReply * rep, const char *body_data, ssize_t body_size)
+    HttpReply * rep, StoreIOBuffer replyBuffer)
 {
     clientStreamNode *next;
     assert(this && http && this->node.next);
@@ -179,7 +178,7 @@ clientStreamCallback(clientStreamNode * this, clientHttpRequest * http,
     debug(87,
 	3) ("clientStreamCallback: Calling %p with cbdata %p from node %p\n",
 	next->callback, next->data, this);
-    next->callback(next, http, rep, body_data, body_size);
+    next->callback(next, http, rep, replyBuffer);
 }
 
 /*
@@ -187,7 +186,7 @@ clientStreamCallback(clientStreamNode * this, clientHttpRequest * http,
  */
 void
 clientStreamRead(clientStreamNode * this, clientHttpRequest * http,
-    off_t readoff, size_t readlen, char *readbuf)
+    StoreIOBuffer readBuffer)
 {
     /* place the parameters on the 'stack' */
     clientStreamNode *prev;
@@ -196,9 +195,7 @@ clientStreamRead(clientStreamNode * this, clientHttpRequest * http,
 
     debug(87, 3) ("clientStreamRead: Calling %p with cbdata %p from node %p\n",
 	prev->readfunc, prev->data, this);
-    this->readoff = readoff;
-    this->readlen = readlen;
-    this->readbuf = readbuf;
+    this->readBuffer = readBuffer;
     prev->readfunc(prev, http);
 }
 

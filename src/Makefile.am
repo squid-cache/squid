@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.30 2002/09/15 06:40:56 robertc Exp $
+#  $Id: Makefile.am,v 1.31 2002/09/24 10:46:43 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -57,6 +57,8 @@ WIN32SOURCE = win32.c
 else
 WIN32SOURCE = 
 endif
+
+AM_CFLAGS = -Werror -Wall
 
 SUBDIRS		= fs repl auth
 
@@ -158,6 +160,8 @@ squid_SOURCES = \
 	internal.c \
 	ipc.c \
 	ipcache.c \
+	IPInterception.c \
+	IPInterception.h \
 	$(LEAKFINDERSOURCE) \
 	logfile.c \
 	main.c \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.74 2002/09/01 12:37:46 hno Exp $
+ * $Id: urn.cc,v 1.75 2002/09/24 10:46:41 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "StoreClient.h"
 
 #define	URN_REQBUF_SZ	4096
 
@@ -110,6 +111,7 @@ urnStart(request_t * r, StoreEntry * e)
     UrnState *urnState;
     StoreEntry *urlres_e;
     ErrorState *err;
+    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
     debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
     CBDATA_INIT_TYPE(UrnState);
     urnState = cbdataAlloc(UrnState);
@@ -151,10 +153,11 @@ urnStart(request_t * r, StoreEntry * e)
     urnState->urlres_e = urlres_e;
     urnState->urlres_r = requestLink(urlres_r);
     urnState->reqofs = 0;
+    tempBuffer.offset = urnState->reqofs;
+    tempBuffer.length = URN_REQBUF_SZ;
+    tempBuffer.data = urnState->reqbuf;
     storeClientCopy(urnState->sc, urlres_e,
-	0,
-	URN_REQBUF_SZ,
-	urnState->reqbuf,
+	tempBuffer,
 	urnHandleReply,
 	urnState);
 }
@@ -175,7 +178,7 @@ url_entry_sort(const void *A, const void *B)
 }
 
 static void
-urnHandleReply(void *data, char *unused_buf, ssize_t size)
+urnHandleReply(void *data, StoreIOBuffer result)
 {
     UrnState *urnState = data;
     StoreEntry *e = urnState->entry;
@@ -192,18 +195,19 @@ urnHandleReply(void *data, char *unused_buf, ssize_t size)
     int urlcnt = 0;
     http_version_t version;
     char *buf = urnState->reqbuf;
+    StoreIOBuffer tempBuffer;
 
-    debug(52, 3) ("urnHandleReply: Called with size=%d.\n", (int) size);
+    debug(52, 3) ("urnHandleReply: Called with size=%u.\n", result.length);
     if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED)) {
 	goto error;
     }
-    if (size == 0) {
+    if (result.length == 0) {
 	goto error;
-    } else if (size < 0) {
+    } else if (result.flags.error < 0) {
 	goto error;
     }
     /* Update reqofs to point to where in the buffer we'd be */
-    urnState->reqofs += size;
+    urnState->reqofs += result.length;
 
     /* Handle reqofs being bigger than normal */
     if (urnState->reqofs >= URN_REQBUF_SZ) {
@@ -212,10 +216,11 @@ urnHandleReply(void *data, char *unused_buf, ssize_t size)
     /* If we haven't received the entire object (urn), copy more */
     if (urlres_e->store_status == STORE_PENDING &&
 	urnState->reqofs < URN_REQBUF_SZ) {
+	tempBuffer.offset = urnState->reqofs;
+	tempBuffer.length = URN_REQBUF_SZ;
+	tempBuffer.data = urnState->reqbuf + urnState->reqofs;
 	storeClientCopy(urnState->sc, urlres_e,
-	    urnState->reqofs,
-	    URN_REQBUF_SZ,
-	    urnState->reqbuf + urnState->reqofs,
+	    tempBuffer,
 	    urnHandleReply,
 	    urnState);
 	return;

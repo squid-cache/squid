@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.80 2002/04/13 23:07:49 hno Exp $
+ * $Id: asn.cc,v 1.81 2002/09/24 10:46:43 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "radix.h"
+#include "StoreClient.h"
 
 #define WHOIS_PORT 43
 #define	AS_REQBUF_SZ	4096
@@ -191,6 +192,7 @@ asnCacheStart(int as)
     StoreEntry *e;
     request_t *req;
     ASState *asState;
+    StoreIOBuffer readBuffer = EMPTYIOBUFFER;
     asState = cbdataAlloc(ASState);
     debug(53, 3) ("asnCacheStart: AS %d\n", as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
@@ -209,17 +211,18 @@ asnCacheStart(int as)
     asState->entry = e;
     asState->offset = 0;
     asState->reqofs = 0;
+    readBuffer.offset = asState->offset;
+    readBuffer.length = AS_REQBUF_SZ;
+    readBuffer.data = asState->reqbuf;
     storeClientCopy(asState->sc,
 	e,
-	asState->offset,
-	AS_REQBUF_SZ,
-	asState->reqbuf,
+	readBuffer,
 	asHandleReply,
 	asState);
 }
 
 static void
-asHandleReply(void *data, char *unused_buf, ssize_t retsize)
+asHandleReply(void *data, StoreIOBuffer result)
 {
     ASState *asState = data;
     StoreEntry *e = asState->entry;
@@ -228,7 +231,7 @@ asHandleReply(void *data, char *unused_buf, ssize_t retsize)
     char *buf = asState->reqbuf;
     int leftoversz = -1;
 
-    debug(53, 3) ("asHandleReply: Called with size=%d\n", (int) retsize);
+    debug(53, 3) ("asHandleReply: Called with size=%u\n", result.length);
     debug(53, 3) ("asHandleReply: buffer='%s'\n", buf);
 
     /* First figure out whether we should abort the request */
@@ -236,11 +239,11 @@ asHandleReply(void *data, char *unused_buf, ssize_t retsize)
 	asStateFree(asState);
 	return;
     }
-    if (retsize == 0 && e->mem_obj->inmem_hi > 0) {
+    if (result.length == 0 && e->mem_obj->inmem_hi > 0) {
 	asStateFree(asState);
 	return;
-    } else if (retsize < 0) {
-	debug(53, 1) ("asHandleReply: Called with size=%d\n", retsize);
+    } else if (result.flags.error) {
+	debug(53, 1) ("asHandleReply: Called with Error set and size=%u\n", result.length);
 	asStateFree(asState);
 	return;
     } else if (HTTP_OK != e->mem_obj->reply->sline.status) {
@@ -254,7 +257,7 @@ asHandleReply(void *data, char *unused_buf, ssize_t retsize)
      * Remembering that the actual buffer size is retsize + reqofs!
      */
     s = buf;
-    while (s - buf < (retsize + asState->reqofs) && *s != '\0') {
+    while (s - buf < (result.length + asState->reqofs) && *s != '\0') {
 	while (*s && xisspace(*s))
 	    s++;
 	for (t = s; *t; t++) {
@@ -276,7 +279,7 @@ asHandleReply(void *data, char *unused_buf, ssize_t retsize)
      * out how much data is left in our buffer, which we need to keep
      * around for the next request
      */
-    leftoversz = (asState->reqofs + retsize) - (s - buf);
+    leftoversz = (asState->reqofs + result.length) - (s - buf);
     assert(leftoversz >= 0);
 
     /*
@@ -288,25 +291,29 @@ asHandleReply(void *data, char *unused_buf, ssize_t retsize)
     /*
      * Next, update our offset and reqofs, and kick off a copy if required
      */
-    asState->offset += retsize;
+    asState->offset += result.length;
     asState->reqofs = leftoversz;
     debug(53, 3) ("asState->offset = %ld\n", (long int) asState->offset);
     if (e->store_status == STORE_PENDING) {
+	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
 	debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
+	tempBuffer.offset = asState->offset;
+	tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
+	tempBuffer.data = asState->reqbuf + asState->reqofs;
 	storeClientCopy(asState->sc,
 	    e,
-	    asState->offset,
-	    AS_REQBUF_SZ - asState->reqofs,
-	    asState->reqbuf + asState->reqofs,
+	    tempBuffer,
 	    asHandleReply,
 	    asState);
     } else if (asState->offset < e->mem_obj->inmem_hi) {
+	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
 	debug(53, 3) ("asHandleReply: asState->offset < e->mem_obj->inmem_hi %s\n", storeUrl(e));
+	tempBuffer.offset = asState->offset;
+	tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
+	tempBuffer.data = asState->reqbuf + asState->reqofs;
 	storeClientCopy(asState->sc,
 	    e,
-	    asState->offset,
-	    AS_REQBUF_SZ - asState->reqofs,
-	    asState->reqbuf + asState->reqofs,
+	    tempBuffer,
 	    asHandleReply,
 	    asState);
     } else {

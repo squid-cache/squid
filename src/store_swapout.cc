@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.87 2002/04/13 23:07:51 hno Exp $
+ * $Id: store_swapout.cc,v 1.88 2002/09/24 10:46:42 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "StoreClient.h"
 
 static off_t storeSwapOutObjectBytesOnDisk(const MemObject *);
 static void storeSwapOutStart(StoreEntry * e);
