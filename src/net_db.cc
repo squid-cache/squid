@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.166 2002/10/25 07:36:32 robertc Exp $
+ * $Id: net_db.cc,v 1.167 2003/01/04 01:13:56 hno Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -917,21 +917,8 @@ netdbHostData(const char *host, int *samp, int *rtt, int *hops)
     *samp = n->pings_recv;
     *rtt = (int) (n->rtt + 0.5);
     *hops = (int) (n->hops + 0.5);
+    n->last_use_time = squid_curtime;
 #endif
-}
-
-int
-netdbHostPeerRtt(const char *host, peer * p)
-{
-#if USE_ICMP
-    const netdbEntry *n = netdbLookupHost(host);
-    if (n) {
-	const net_db_peer *np = netdbPeerByName(n, p->host);
-	if (np && np->expires >= squid_curtime)
-	    return (int) (np->rtt + 0.5);
-    }
-#endif
-    return 0;
 }
 
 void
@@ -1128,6 +1115,7 @@ netdbClosestParent(request_t * request)
 	return NULL;
     if (0 == n->n_peers)
 	return NULL;
+    n->last_use_time = squid_curtime;
     /* 
      * Find the parent with the least RTT to the origin server.
      * Make sure we don't return a parent who is farther away than
