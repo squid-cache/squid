@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.22 1999/01/13 21:55:23 wessels Exp $
+ * $Id: StatHist.cc,v 1.23 1999/01/19 02:24:20 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -253,7 +253,7 @@ Log(double x)
     return log(x + 1.0);
 }
 
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__) 
+#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
 static
 #endif
 double
@@ -270,7 +270,7 @@ statHistLogInit(StatHist * H, int capacity, double min, double max)
 
 /* linear histogram for enums */
 /* we want to be have [-1,last_enum+1] range to track out of range enums */
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__) 
+#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
 static
 #endif
 double

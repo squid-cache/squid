@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.19 1999/01/13 23:24:09 wessels Exp $
+ * $Id: cache_manager.cc,v 1.20 1999/01/19 02:24:21 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -112,10 +112,10 @@ cachemgrParseUrl(const char *url)
     if (t < 2) {
 	xstrncpy(request, "menu", MAX_URL);
 #ifdef _SQUID_OS2_
-    /*
-     * emx's sscanf insists of returning 2 because it sets request
-     * to null
-     */
+	/*
+	 * emx's sscanf insists of returning 2 because it sets request
+	 * to null
+	 */
     } else if (request[0] == '\0') {
 	xstrncpy(request, "menu", MAX_URL);
 #endif

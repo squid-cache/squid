@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.83 1998/09/24 20:35:11 rousskov Exp $
+ * $Id: cachemgr.cc,v 1.84 1999/01/19 02:24:22 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -154,7 +154,6 @@ typedef struct {
  */
 static const time_t passwd_ttl = 60 * 60 * 3;	/* in sec */
 static const char *script_name = "/cgi-bin/cachemgr.cgi";
-static const char *const w_space = " \t\n\r";
 static const char *progname = NULL;
 static time_t now;
 static struct in_addr no_addr;

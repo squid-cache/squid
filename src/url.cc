@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.112 1999/01/12 23:38:41 wessels Exp $
+ * $Id: url.cc,v 1.113 1999/01/19 02:24:35 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -66,7 +66,6 @@ const char *ProtocolStr[] =
     "TOTAL"
 };
 
-static const char *const hex = "0123456789abcdef";
 static request_t *urnParse(method_t method, char *urn);
 static const char *const valid_hostname_chars =
 #if ALLOW_HOSTNAME_UNDERSCORES

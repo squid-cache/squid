@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.483 1999/01/18 22:23:42 wessels Exp $
+ * $Id: store.cc,v 1.484 1999/01/19 02:24:33 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -280,7 +280,10 @@ storeGet(const cache_key * key)
 StoreEntry *
 storeGetPublic(const char *uri, const method_t method)
 {
-    return storeGet(storeKeyPublic(uri, method));
+    StoreEntry *e = storeGet(storeKeyPublic(uri, method));
+    if (e == NULL && squid_curtime < 922500000)
+	e = storeGet(storeKeyPublicOld(uri, method));
+    return e;
 }
 
 static int
@@ -847,8 +850,12 @@ storeEntryLocked(const StoreEntry * e)
 	return 1;
     if (e->store_status == STORE_PENDING)
 	return 1;
+    /*
+     * SPECIAL, PUBLIC entries should be "locked"
+     */
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
-	return 1;
+	if (!EBIT_TEST(e->flags, KEY_PRIVATE))
+	    return 1;
     return 0;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.10 1999/01/11 21:55:37 wessels Exp $
+ * $Id: Packer.cc,v 1.11 1999/01/19 02:24:20 wessels Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -108,7 +108,7 @@ packerToStoreInit(Packer * p, StoreEntry * e)
 {
     assert(p && e);
     p->append = (append_f) store_append;
-    p->vprintf = (vprintf_f) storeAppendVPrintf;
+    p->vprintf = (vprintf_f) store_vprintf;
     p->real_handler = e;
 }
 

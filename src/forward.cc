@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.46 1999/01/15 06:11:42 wessels Exp $
+ * $Id: forward.cc,v 1.47 1999/01/19 02:24:24 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -451,7 +451,7 @@ fwdCheckDeferRead(int fdnotused, void *data)
 }
 
 void
-fwdFail(FwdState * fwdState, ErrorState *errorState)
+fwdFail(FwdState * fwdState, ErrorState * errorState)
 {
     assert(EBIT_TEST(fwdState->entry->flags, ENTRY_FWD_HDR_WAIT));
     debug(17, 3) ("fwdFail: %s \"%s\"\n\t%s\n",

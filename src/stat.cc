@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.308 1999/01/18 22:23:40 wessels Exp $
+ * $Id: stat.cc,v 1.309 1999/01/19 02:24:31 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -285,6 +285,14 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 		(int) sc->copy_size);
 	    storeAppendPrintf(s, "\t\tswapin_fd: %d\n",
 		(int) sc->swapin_fd);
+	    storeAppendPrintf(s, "\t\tflags:");
+	    if (sc->flags.disk_io_pending)
+		storeAppendPrintf(s, " disk_io_pending");
+	    if (sc->flags.store_copying)
+		storeAppendPrintf(s, " store_copying");
+	    if (sc->flags.copy_event_pending)
+		storeAppendPrintf(s, " copy_event_pending");
+	    storeAppendPrintf(s, "\n");
 	}
     }
     storeAppendPrintf(s, "\n");

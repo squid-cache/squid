@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.431 1999/01/18 23:15:42 wessels Exp $
+ * $Id: client_side.cc,v 1.432 1999/01/19 02:24:23 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -348,8 +348,10 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     int recopy = 1;
     const http_status status = mem->reply->sline.status;
     debug(33, 3) ("clientHandleIMSReply: %s, %d bytes\n", url, (int) size);
-    if (size < 0 && !EBIT_TEST(entry->flags, ENTRY_ABORTED))
+    if (size < 0 && !EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
+    }
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	debug(33, 3) ("clientHandleIMSReply: ABORTED '%s'\n", url);
 	/* We have an existing entry, but failed to validate it */
@@ -1310,7 +1312,7 @@ clientPackRange(clientHttpRequest * http, HttpHdrRangeIter * i, const char **buf
 	packerClean(&p);
 	httpHeaderClean(&hdr);
 	/* append <crlf> (we packed a header, not a reply */
-	memBufPrintf(mb, "\r\n");
+	memBufPrintf(mb, crlf);
     }
     /* append */
     debug(33, 3) ("clientPackRange: appending %d bytes\n", copy_sz);
@@ -1502,8 +1504,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	httpReplyDestroy(rep);
 	rep = NULL;
     } else {
-	/* leave space for growth in case we do ranges */
-	memBufInit(&mb, CLIENT_SOCK_SZ, 2 * CLIENT_SOCK_SZ);
+	memBufDefInit(&mb);
     }
     /* append body if any */
     if (http->request->range) {
