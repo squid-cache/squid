@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.170 2003/03/06 11:51:56 robertc Exp $
+ * $Id: net_db.cc,v 1.171 2003/04/20 05:28:59 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -528,7 +528,7 @@ netdbReloadState(void)
      * Solaris bugs, its a bad idea.  fopen can fail if more than
      * 256 FDs are open.
      */
-    fd = file_open(path, O_RDONLY | O_TEXT);
+    fd = file_open(path, O_RDONLY | O_BINARY);
 
     if (fd < 0)
         return;

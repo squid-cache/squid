@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.372 2003/03/10 04:56:37 robertc Exp $
+ * $Id: comm.cc,v 1.373 2003/04/20 05:28:58 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1186,7 +1186,12 @@ comm_openex(int sock_type,
 
     if (port > (u_short) 0)
     {
-        commSetNoLinger(new_socket);
+#ifdef _SQUID_MSWIN_
+
+        if (sock_type != SOCK_DGRAM)
+#endif
+
+            commSetNoLinger(new_socket);
 
         if (opt_reuseaddr)
             commSetReuseAddr(new_socket);
@@ -1952,19 +1957,22 @@ commSetTcpRcvbuf(int fd, int size)
 int
 commSetNonBlocking(int fd)
 {
+#ifndef _SQUID_MSWIN_
     int flags;
     int dummy = 0;
-#ifdef _SQUID_CYGWIN_
+#endif
+#if defined (_SQUID_CYGWIN_) || defined (_SQUID_MSWIN_)
 
     int nonblocking = TRUE;
 
     if (fd_table[fd].type != FD_PIPE) {
         if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
-            debug(50, 0) ("commSetNonBlocking: FD %d: %s %D\n", fd, xstrerror(), fd_table[fd].type);
+            debug(50, 0) ("commSetNonBlocking: FD %d: %s %d\n", fd, xstrerror(), fd_table[fd].type);
             return COMM_ERROR;
         }
     } else {
 #endif
+#ifndef _SQUID_MSWIN_
 
         if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
             debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
@@ -1976,7 +1984,8 @@ commSetNonBlocking(int fd)
             return COMM_ERROR;
         }
 
-#ifdef _SQUID_CYGWIN_
+#endif
+#if defined (_SQUID_CYGWIN_) || defined (_SQUID_MSWIN_)
 
     }
 
@@ -1989,6 +1998,11 @@ commSetNonBlocking(int fd)
 int
 commUnsetNonBlocking(int fd)
 {
+#ifdef _SQUID_MSWIN_
+    int nonblocking = FALSE;
+
+    if (ioctlsocket(fd, FIONBIO, (unsigned long *) &nonblocking) < 0) {
+#else
     int flags;
     int dummy = 0;
 
@@ -1998,6 +2012,7 @@ commUnsetNonBlocking(int fd)
     }
 
     if (fcntl(fd, F_SETFL, flags & (~SQUID_NONBLOCK)) < 0) {
+#endif
         debug(50, 0) ("commUnsetNonBlocking: FD %d: %s\n", fd, xstrerror());
         return COMM_ERROR;
     }
@@ -2007,8 +2022,7 @@ commUnsetNonBlocking(int fd)
 }
 
 void
-commSetCloseOnExec(int fd)
-{
+commSetCloseOnExec(int fd) {
 #ifdef FD_CLOEXEC
     int flags;
     int dummy = 0;
@@ -2028,8 +2042,7 @@ commSetCloseOnExec(int fd)
 
 #ifdef TCP_NODELAY
 static void
-commSetTcpNoDelay(int fd)
-{
+commSetTcpNoDelay(int fd) {
     int on = 1;
 
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0)
@@ -2042,8 +2055,7 @@ commSetTcpNoDelay(int fd)
 
 
 void
-comm_init(void)
-{
+comm_init(void) {
     fd_table =(fde *) xcalloc(Squid_MaxFD, sizeof(fde));
     fdd_table = (fd_debug_t *)xcalloc(Squid_MaxFD, sizeof(fd_debug_t));
     fdc_table = new fdc_t[Squid_MaxFD];
@@ -2066,8 +2078,7 @@ comm_init(void)
 
 /* Write to FD. */
 static void
-commHandleWrite(int fd, void *data)
-{
+commHandleWrite(int fd, void *data) {
     CommWriteStateData *state = (CommWriteStateData *)data;
     int len = 0;
     int nleft;
@@ -2138,8 +2149,7 @@ commHandleWrite(int fd, void *data)
  * free_func is used to free the passed buffer when the write has completed.
  */
 void
-comm_old_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func)
-{
+comm_old_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func) {
     CommWriteStateData *state = fd_table[fd].rwstate;
 
     assert(!fd_table[fd].flags.closing);
@@ -2165,8 +2175,7 @@ comm_old_write(int fd, const char *buf, int size, CWCB * handler, void *handler_
 
 /* a wrapper around comm_write to allow for MemBuf to be comm_written in a snap */
 void
-comm_old_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data)
-{
+comm_old_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data) {
     comm_old_write(fd, mb.buf, mb.size, handler, handler_data, memBufFreeFunc(&mb));
 }
 
@@ -2176,8 +2185,7 @@ comm_old_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data)
  * like to use it.
  */
 int
-ignoreErrno(int ierrno)
-{
+ignoreErrno(int ierrno) {
     switch (ierrno) {
 
     case EINPROGRESS:
@@ -2206,8 +2214,7 @@ ignoreErrno(int ierrno)
 }
 
 void
-commCloseAllSockets(void)
-{
+commCloseAllSockets(void) {
     int fd;
     fde *F = NULL;
 
@@ -2240,8 +2247,7 @@ commCloseAllSockets(void)
 }
 
 static bool
-AlreadyTimedOut(fde *F)
-{
+AlreadyTimedOut(fde *F) {
     if (!F->flags.open)
         return true;
 
@@ -2255,8 +2261,7 @@ AlreadyTimedOut(fde *F)
 }
 
 void
-checkTimeouts(void)
-{
+checkTimeouts(void) {
     int fd;
     fde *F = NULL;
     PF *callback;
@@ -2289,8 +2294,7 @@ checkTimeouts(void)
  * accept()ed.
  */
 int
-comm_listen(int sock)
-{
+comm_listen(int sock) {
     int x;
 
     if ((x = listen(sock, Squid_MaxFD >> 2)) < 0) {
@@ -2304,20 +2308,17 @@ comm_listen(int sock)
 }
 
 void
-fdc_t::beginAccepting()
-{
+fdc_t::beginAccepting() {
     accept.accept.beginAccepting();
 }
 
 int
-fdc_t::acceptCount() const
-{
+fdc_t::acceptCount() const {
     return accept.accept.acceptCount();
 }
 
 void
-fdc_t::acceptOne(int fd)
-{
+fdc_t::acceptOne(int fd) {
     /* If we're out of fds, register an event and return now */
 
     if (fdNFree() < RESERVED_FD) {
@@ -2359,20 +2360,17 @@ fdc_t::acceptOne(int fd)
 }
 
 bool
-AcceptFD::finished() const
-{
+AcceptFD::finished() const {
     return finished_;
 }
 
 void
-AcceptFD::finished(bool newValue)
-{
+AcceptFD::finished(bool newValue) {
     finished_ = newValue;
 }
 
 bool
-AcceptFD::finishedAccepting() const
-{
+AcceptFD::finishedAccepting() const {
     return acceptCount() >= MAX_ACCEPT_PER_LOOP || finished();
 }
 
@@ -2381,8 +2379,7 @@ AcceptFD::finishedAccepting() const
  * to dupe itself and fob off an accept()ed connection
  */
 static void
-comm_accept_try(int fd, void *data)
-{
+comm_accept_try(int fd, void *data) {
     assert(fdc_table[fd].active == 1);
 
     fdc_table[fd].beginAccepting();
@@ -2397,8 +2394,7 @@ comm_accept_try(int fd, void *data)
  *   this isn't very optimal and should be revisited at a later date.
  */
 void
-comm_accept(int fd, IOACB *handler, void *handler_data)
-{
+comm_accept(int fd, IOACB *handler, void *handler_data) {
     fdc_t *Fc;
 
     assert(fd_table[fd].flags.open == 1);
@@ -2421,8 +2417,7 @@ comm_accept(int fd, IOACB *handler, void *handler_data)
 #endif
 }
 
-void CommIO::Initialise()
-{
+void CommIO::Initialise() {
     /* Initialize done pipe signal */
     int DonePipe[2];
     pipe(DonePipe);
@@ -2442,22 +2437,19 @@ int CommIO::DoneFD = -1;
 int CommIO::DoneReadFD = -1;
 
 void
-CommIO::FlushPipe()
-{
+CommIO::FlushPipe() {
     char buf[256];
     read(DoneReadFD, buf, sizeof(buf));
 }
 
 void
-CommIO::NULLFDHandler(int fd, void *data)
-{
+CommIO::NULLFDHandler(int fd, void *data) {
     FlushPipe();
     commSetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
 }
 
 void
-CommIO::ResetNotifications()
-{
+CommIO::ResetNotifications() {
     if (DoneSignalled) {
         FlushPipe();
         DoneSignalled = false;
@@ -2466,14 +2458,12 @@ CommIO::ResetNotifications()
 
 AcceptLimiter AcceptLimiter::Instance_;
 
-AcceptLimiter &AcceptLimiter::Instance()
-{
+AcceptLimiter &AcceptLimiter::Instance() {
     return Instance_;
 }
 
 void
-AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data)
-{
+AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data) {
     Acceptor temp;
     temp.theFunction = aFunc;
     temp.acceptFD = fd;
@@ -2482,8 +2472,7 @@ AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data)
 }
 
 void
-AcceptLimiter::kick()
-{
+AcceptLimiter::kick() {
     if (!deferred.size())
         return;
 
@@ -2496,8 +2485,7 @@ AcceptLimiter::kick()
 }
 
 void
-commMarkHalfClosed(int fd)
-{
+commMarkHalfClosed(int fd) {
     assert (fdc_table[fd].active && !fdc_table[fd].half_closed);
     AbortChecker::Instance().monitor(fd);
     fdc_table[fd].half_closed = true;
@@ -2508,8 +2496,7 @@ AbortChecker &AbortChecker::Instance() {return Instance_;}
 AbortChecker AbortChecker::Instance_;
 
 void
-AbortChecker::AbortCheckReader(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data)
-{
+AbortChecker::AbortCheckReader(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data) {
     assert (size == 0);
     /* sketch:
      * if the read is ok and 0, the conn is still open.
@@ -2523,8 +2510,7 @@ AbortChecker::AbortCheckReader(int fd, char *, size_t size, comm_err_t flag, int
 }
 
 void
-AbortChecker::monitor(int fd)
-{
+AbortChecker::monitor(int fd) {
     assert (!contains(fd));
 
     add
@@ -2534,8 +2520,7 @@ AbortChecker::monitor(int fd)
 }
 
 void
-AbortChecker::stopMonitoring (int fd)
-{
+AbortChecker::stopMonitoring (int fd) {
     assert (contains (fd));
 
     remove
@@ -2546,8 +2531,7 @@ AbortChecker::stopMonitoring (int fd)
 
 #include "splay.h"
 void
-AbortChecker::doIOLoop()
-{
+AbortChecker::doIOLoop() {
     if (checking) {
         /*
         fds->walk(RemoveCheck, this);
@@ -2567,29 +2551,25 @@ AbortChecker::doIOLoop()
 }
 
 void
-AbortChecker::AddCheck (int const &fd, void *data)
-{
+AbortChecker::AddCheck (int const &fd, void *data) {
     AbortChecker *me = (AbortChecker *)data;
     me->addCheck(fd);
 }
 
 void
-AbortChecker::RemoveCheck (int const &fd, void *data)
-{
+AbortChecker::RemoveCheck (int const &fd, void *data) {
     AbortChecker *me = (AbortChecker *)data;
     me->removeCheck(fd);
 }
 
 
 int
-AbortChecker::IntCompare (int const &lhs, int const &rhs)
-{
+AbortChecker::IntCompare (int const &lhs, int const &rhs) {
     return lhs - rhs;
 }
 
 bool
-AbortChecker::contains (int const fd) const
-{
+AbortChecker::contains (int const fd) const {
     fds = fds->splay(fd, IntCompare);
 
     if (splayLastResult != 0)
@@ -2601,8 +2581,7 @@ AbortChecker::contains (int const fd) const
 void
 
 AbortChecker::remove
-    (int const fd)
-{
+    (int const fd) {
 
     fds = fds->remove
           (fd, IntCompare);
@@ -2611,56 +2590,46 @@ AbortChecker::remove
 void
 
 AbortChecker::add
-    (int const fd)
-{
+    (int const fd) {
     fds = fds->insert (fd, IntCompare);
 }
 
 void
-AbortChecker::addCheck (int const fd)
-{
+AbortChecker::addCheck (int const fd) {
     /* assert comm_is_open (fd); */
     comm_read(fd, NULL, 0, AbortCheckReader, NULL);
 }
 
 void
-AbortChecker::removeCheck (int const fd)
-{
+AbortChecker::removeCheck (int const fd) {
     /*
       comm_read_cancel(fd, AbortCheckReader, NULL);
     */
 }
 
-CommRead::CommRead() : fd(-1), buf(NULL), len(0)
-{}
+CommRead::CommRead() : fd(-1), buf(NULL), len(0) {}
 
 CommRead::CommRead(int fd_, char *buf_, int len_, IOCB *handler_, void *data_)
-        : fd(fd_), buf(buf_), len(len_), callback(handler_, data_)
-{}
+        : fd(fd_), buf(buf_), len(len_), callback(handler_, data_) {}
 
-DeferredRead::DeferredRead () : theReader(NULL), theContext(NULL), theRead(), cancelled(false)
-{}
+DeferredRead::DeferredRead () : theReader(NULL), theContext(NULL), theRead(), cancelled(false) {}
 
-DeferredRead::DeferredRead (DeferrableRead *aReader, void *data, CommRead const &aRead) : theReader(aReader), theContext (data), theRead(aRead), cancelled(false)
-{}
+DeferredRead::DeferredRead (DeferrableRead *aReader, void *data, CommRead const &aRead) : theReader(aReader), theContext (data), theRead(aRead), cancelled(false) {}
 
-DeferredReadManager::~DeferredReadManager()
-{
+DeferredReadManager::~DeferredReadManager() {
     flushReads();
     assert (deferredReads.empty());
 }
 
 void
-DeferredReadManager::delayRead(DeferredRead const &aRead)
-{
+DeferredReadManager::delayRead(DeferredRead const &aRead) {
     debug (5, 3)("Adding deferred read on fd %d\n", aRead.theRead.fd);
     List<DeferredRead> *temp = deferredReads.push_back(aRead);
     comm_add_close_handler (aRead.theRead.fd, CloseHandler, temp);
 }
 
 void
-DeferredReadManager::CloseHandler(int fd, void *thecbdata)
-{
+DeferredReadManager::CloseHandler(int fd, void *thecbdata) {
     if (!cbdataReferenceValid (thecbdata))
         return;
 
@@ -2670,8 +2639,7 @@ DeferredReadManager::CloseHandler(int fd, void *thecbdata)
 }
 
 DeferredRead
-DeferredReadManager::popHead(ListContainer<DeferredRead> &deferredReads)
-{
+DeferredReadManager::popHead(ListContainer<DeferredRead> &deferredReads) {
     assert (!deferredReads.empty());
 
     if (!deferredReads.head->element.cancelled)
@@ -2683,8 +2651,7 @@ DeferredReadManager::popHead(ListContainer<DeferredRead> &deferredReads)
 }
 
 void
-DeferredReadManager::kickReads(int const count)
-{
+DeferredReadManager::kickReads(int const count) {
     /* if we had List::size() we could consolidate this and flushReads */
 
     if (count < 1) {
@@ -2704,8 +2671,7 @@ DeferredReadManager::kickReads(int const count)
 }
 
 void
-DeferredReadManager::flushReads()
-{
+DeferredReadManager::flushReads() {
     ListContainer<DeferredRead> reads;
     reads = deferredReads;
     deferredReads = ListContainer<DeferredRead>();
@@ -2717,8 +2683,7 @@ DeferredReadManager::flushReads()
 }
 
 void
-DeferredReadManager::kickARead(DeferredRead const &aRead)
-{
+DeferredReadManager::kickARead(DeferredRead const &aRead) {
     if (aRead.cancelled)
         return;
 
@@ -2728,13 +2693,11 @@ DeferredReadManager::kickARead(DeferredRead const &aRead)
 }
 
 void
-DeferredRead::markCancelled()
-{
+DeferredRead::markCancelled() {
     cancelled = true;
 }
 
-ConnectionDetail::ConnectionDetail()
-{
+ConnectionDetail::ConnectionDetail() {
     bzero(&me, sizeof(me));
     bzero(&peer, sizeof(peer));
 }

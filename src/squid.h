@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.232 2003/03/10 04:56:38 robertc Exp $
+ * $Id: squid.h,v 1.233 2003/04/20 05:29:00 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -368,6 +368,7 @@ extern "C"
 
 template<class A>
 inline A const &
+#ifndef min
 min(A const & lhs, A const & rhs)
 {
     if (rhs < lhs)
@@ -376,7 +377,10 @@ min(A const & lhs, A const & rhs)
     return lhs;
 }
 
+#endif
+
 #define XMIN(x,y) (min (x,y))
+#ifndef max
 template<class A>
 inline A const &
 max(A const & lhs, A const & rhs)
@@ -386,6 +390,8 @@ max(A const & lhs, A const & rhs)
 
     return lhs;
 }
+
+#endif
 
 #define XMAX(a,b) (max (a,b))
 

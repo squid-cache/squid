@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.369 2003/02/25 12:24:35 robertc Exp $
+ * $Id: main.cc,v 1.370 2003/04/20 05:28:58 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -306,9 +306,11 @@ static void
 rotate_logs(int sig)
 {
     do_rotate = 1;
+#ifndef _SQUID_MSWIN_
 #if !HAVE_SIGACTION
 
     signal(sig, rotate_logs);
+#endif
 #endif
 }
 
@@ -317,9 +319,11 @@ static void
 reconfigure(int sig)
 {
     do_reconfigure = 1;
+#ifndef _SQUID_MSWIN_
 #if !HAVE_SIGACTION
 
     signal(sig, reconfigure);
+#endif
 #endif
 }
 
@@ -327,6 +331,7 @@ void
 shut_down(int sig)
 {
     do_shutdown = sig == SIGINT ? -1 : 1;
+#ifndef _SQUID_MSWIN_
 #ifdef KILL_PARENT_OPT
 
     if (getppid() > 1) {
@@ -342,6 +347,7 @@ shut_down(int sig)
 
     signal(SIGINT, SIG_DFL);
 
+#endif
 #endif
 }
 
@@ -1001,6 +1007,7 @@ sendSignal(void)
     exit(0);
 }
 
+#ifndef _SQUID_MSWIN_
 /*
  * This function is run when Squid is in daemon mode, just
  * before the parent forks and starts up the child process.
@@ -1043,6 +1050,8 @@ mainStartScript(const char *prog)
     }
 }
 
+#endif /* _SQUID_MSWIN_ */
+
 static int
 checkRunningPid(void)
 {
@@ -1064,6 +1073,7 @@ checkRunningPid(void)
 static void
 watch_child(char *argv[])
 {
+#ifndef _SQUID_MSWIN_
     char *prog;
     int failcount = 0;
     time_t start;
@@ -1200,6 +1210,7 @@ watch_child(char *argv[])
     }
 
     /* NOTREACHED */
+#endif /* _SQUID_MSWIN_ */
 }
 
 static void
