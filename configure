@@ -15765,7 +15765,7 @@ rm -f core
 
 
 
-ac_config_files="$ac_config_files Makefile lib/Makefile scripts/Makefile scripts/RunCache scripts/RunAccel src/Makefile src/fs/Makefile src/repl/Makefile src/auth/Makefile contrib/Makefile snmplib/Makefile icons/Makefile errors/Makefile src/fs/aufs/Makefile src/fs/coss/Makefile src/fs/diskd/Makefile src/fs/null/Makefile src/fs/ufs/Makefile src/repl/heap/Makefile src/repl/lru/Makefile doc/Makefile helpers/Makefile helpers/basic_auth/Makefile helpers/basic_auth/LDAP/Makefile helpers/basic_auth/MSNT/Makefile helpers/basic_auth/NCSA/Makefile helpers/basic_auth/PAM/Makefile helpers/basic_auth/SMB/Makefile helpers/basic_auth/YP/Makefile helpers/basic_auth/getpwnam/Makefile helpers/basic_auth/multi-domain-NTLM/Makefile helpers/basic_auth/SASL/Makefile helpers/basic_auth/winbind/Makefile helpers/digest_auth/Makefile helpers/digest_auth/password/Makefile helpers/ntlm_auth/Makefile helpers/ntlm_auth/fakeauth/Makefile helpers/ntlm_auth/no_check/Makefile helpers/ntlm_auth/SMB/Makefile helpers/ntlm_auth/SMB/smbval/Makefile helpers/ntlm_auth/winbind/Makefile helpers/external_acl/Makefile helpers/external_acl/ip_user/Makefile helpers/external_acl/ldap_group/Makefile helpers/external_acl/unix_group/Makefile helpers/external_acl/wbinfo_group/Makefile helpers/external_acl/winbind_group/Makefile"
+ac_config_files="$ac_config_files Makefile lib/Makefile scripts/Makefile scripts/RunCache scripts/RunAccel src/Makefile src/fs/Makefile src/repl/Makefile src/auth/Makefile contrib/Makefile snmplib/Makefile icons/Makefile errors/Makefile src/fs/aufs/Makefile src/fs/coss/Makefile src/fs/diskd/Makefile src/fs/null/Makefile src/fs/ufs/Makefile doc/Makefile helpers/Makefile helpers/basic_auth/Makefile helpers/basic_auth/LDAP/Makefile helpers/basic_auth/MSNT/Makefile helpers/basic_auth/NCSA/Makefile helpers/basic_auth/PAM/Makefile helpers/basic_auth/SMB/Makefile helpers/basic_auth/YP/Makefile helpers/basic_auth/getpwnam/Makefile helpers/basic_auth/multi-domain-NTLM/Makefile helpers/basic_auth/SASL/Makefile helpers/basic_auth/winbind/Makefile helpers/digest_auth/Makefile helpers/digest_auth/password/Makefile helpers/ntlm_auth/Makefile helpers/ntlm_auth/fakeauth/Makefile helpers/ntlm_auth/no_check/Makefile helpers/ntlm_auth/SMB/Makefile helpers/ntlm_auth/SMB/smbval/Makefile helpers/ntlm_auth/winbind/Makefile helpers/external_acl/Makefile helpers/external_acl/ip_user/Makefile helpers/external_acl/ldap_group/Makefile helpers/external_acl/unix_group/Makefile helpers/external_acl/wbinfo_group/Makefile helpers/external_acl/winbind_group/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -16267,8 +16267,6 @@ do
   "src/fs/diskd/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/fs/diskd/Makefile" ;;
   "src/fs/null/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/fs/null/Makefile" ;;
   "src/fs/ufs/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/fs/ufs/Makefile" ;;
-  "src/repl/heap/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/repl/heap/Makefile" ;;
-  "src/repl/lru/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/repl/lru/Makefile" ;;
   "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
   "helpers/Makefile" ) CONFIG_FILES="$CONFIG_FILES helpers/Makefile" ;;
   "helpers/basic_auth/Makefile" ) CONFIG_FILES="$CONFIG_FILES helpers/basic_auth/Makefile" ;;
