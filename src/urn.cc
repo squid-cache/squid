@@ -101,20 +101,21 @@ urnStart(request_t *r, StoreEntry *e)
     urnState->entry = e;
     urnState->request = requestLink(r);
     cbdataAdd(urnState);
+    storeLockObject(urnState->entry);
     snprintf(urlres, 4096, "http://%s/uri-res/N2L?%s", r->urlpath, t+1);
     k = storeKeyPublic(urlres, METHOD_GET);
     urlres_r = urlParse(METHOD_GET, urlres);
-    urlres_r->headers = xstrdup("Accept: */*\r\n\r\n");
+    urlres_r->headers = xstrdup("Accept: text/plain\r\n\r\n");
     urlres_r->headers_sz = strlen(urlres_r->headers);
     if ((urlres_e = storeGet(k)) == NULL) {
 	urlres_e = storeCreateEntry(urlres, urlres, 0, METHOD_GET);
 	storeClientListAdd(urlres_e, urnState);
 	protoDispatch(0, urlres_e, urlres_r);
     } else {
+        storeLockObject(urlres_e);
         storeClientListAdd(urlres_e, urnState);
     }
     urnState->urlres_e = urlres_e;
-    storeLockObject(urlres_e);
     storeClientCopy(urlres_e,
 	0,
 	0,
@@ -219,6 +220,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	0,
 	squid_curtime);
     storeAppend(e, hdr, strlen(hdr));
+    httpParseReplyHeaders(hdr, e->mem_obj->reply);
     if (min_w) {
 	l = snprintf(line, 4096, "Location: %s\r\n", min_w->key);
         storeAppend(e, line, l);
@@ -228,7 +230,11 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     storeComplete(e);
     put_free_4k_page(buf);
     stringFree(S);
+    storeUnregister(urlres_e, urnState);
     storeUnlockObject(urlres_e);
+    storeUnlockObject(urnState->entry);
+    requestUnlink(urnState->request);
+    cbdataFree(urnState);
 }
 
 static wordlist *
