@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.362 2003/01/23 00:37:18 robertc Exp $
+ * $Id: comm.cc,v 1.363 2003/02/09 17:24:02 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -664,25 +664,20 @@ comm_write_try(int fd, void *data)
 	retval = FD_WRITE_METHOD(fd, Fc->write.buf + Fc->write.curofs, Fc->write.size - Fc->write.curofs);
 	debug(5, 3) ("comm_write_try: fd %d: tried to write %d bytes, retval %d, errno %d\n",
 	    fd, Fc->write.size - Fc->write.curofs, retval, errno);
+
 	if (retval < 0 && !ignoreErrno(errno)) {
 		debug(5, 3) ("comm_write_try: can't ignore error: scheduling COMM_ERROR callback\n");
 		comm_add_write_callback(fd, 0, COMM_ERROR, errno);
 		return;
-	};
-
-	/* See if we wrote it all */
-	/* Note - write 0 == socket EOF, which is a valid read */
-	if (retval == 0) {
-		comm_add_write_callback(fd, retval, COMM_OK, 0);
-		return;
 	}
+
 	if (retval >= 0) {
-                fd_bytes(fd, retval, FD_WRITE);
+		fd_bytes(fd, retval, FD_WRITE);
 		Fc->write.curofs += retval;
 		assert(Fc->write.curofs <= Fc->write.size);
 		/* All? */
 		if (Fc->write.curofs == Fc->write.size) {
-			comm_add_write_callback(fd, retval, COMM_OK, 0);
+			comm_add_write_callback(fd, Fc->write.size, COMM_OK, 0);
 			return;
 		}
 	}
