@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.5 2002/12/27 10:26:34 robertc Exp $
+ * $Id: ufscommon.cc,v 1.6 2003/01/09 11:49:35 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -259,7 +259,8 @@ RebuildState::rebuildFromSwapLog()
 	if (s.op == SWAP_LOG_ADD) {
 	    (void) 0;
 	} else if (s.op == SWAP_LOG_DEL) {
-	    if ((e = storeGet(s.key)) != NULL) {
+	    /* Delete unless we already have a newer copy */
+	    if ((e = storeGet(s.key)) != NULL && s.lastref > e->lastref) {
 		/*
 		 * Make sure we don't unlink the file, it might be
 		 * in use by a subsequent entry.  Also note that
