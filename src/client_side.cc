@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.84 1997/01/23 17:29:10 wessels Exp $
+ * $Id: client_side.cc,v 1.85 1997/01/24 20:39:49 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -297,7 +297,6 @@ proxyAuthenticate(const char *headers)
     char *user = NULL;
     char *passwd = NULL;
     char *clear_userandpw = NULL;
-    time_t current_time;
     struct stat buf;
     int i;
     hash_link *hashr = NULL;
@@ -326,9 +325,7 @@ proxyAuthenticate(const char *headers)
      * a cgi-bin script, etc. If so, reload a fresh copy into memory
      */
 
-    current_time = time(NULL);
-
-    if ((current_time - last_time) > CHECK_PROXY_FILE_TIME) {
+    if ((squid_curtime - last_time) > CHECK_PROXY_FILE_TIME) {
 	debug(33, 5, "proxyAuthenticate: checking password file %s hasn't changed\n", Config.proxyAuthFile);
 
 	if (stat(Config.proxyAuthFile, &buf) == 0) {
@@ -381,7 +378,7 @@ proxyAuthenticate(const char *headers)
 	    return (dash_str);
 	}
     }
-    last_time = current_time;
+    last_time = squid_curtime;
 
     hashr = hash_lookup(validated, sent_user);
     if (hashr == NULL) {
