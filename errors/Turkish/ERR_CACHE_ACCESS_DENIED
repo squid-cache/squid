@@ -25,5 +25,5 @@ adresine bu Cache Sunucusunu kullanarak ulaþamazsýnýz.
 Netscape 2.0 veya üstü, Microsoft Internet Exporer 3.0 veya üstü, veya herhangi HTTP/1.1 uyumlu
 tarayýcý kullandýðýnýza emin olun. Lütfen <A HREF="mailto:%w">Cache Yöneticisi</a> ile 
 baðlantýya geçin, veya þifrenizi deðiþtirmek için 
-<A HREF=\"http://%h/cgi-bin/chpasswd.cgi\">buraya</a> týklayýn. 
+<A HREF="http://%h/cgi-bin/chpasswd.cgi">buraya</a> týklayýn. 
 </P>
