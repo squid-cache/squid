@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.134 1998/09/04 23:04:43 wessels Exp $
+ * $Id: disk.cc,v 1.135 1998/09/23 15:36:49 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -81,6 +81,7 @@ file_open(const char *path, int mode, FOCB * callback, void *callback_data, void
 	return DISK_OK;
     }
 #endif
+    errno = 0;
     fd = open(path, mode, 0644);
     fileOpenComplete(-1, ctrlp, fd, errno);
     if (fd < 0)
@@ -238,6 +239,7 @@ diskHandleWrite(int fd, void *notused)
 #else
     debug(6, 3) ("diskHandleWrite: FD %d writing %d bytes\n",
 	fd, (int) (fdd->write_q->len - fdd->write_q->buf_offset));
+    errno = 0;
     len = write(fd,
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset);
@@ -481,6 +483,7 @@ diskHandleRead(int fd, void *data)
 	Counter.syscalls.disk.seeks++;
 	F->disk.offset = ctrl_dat->offset;
     }
+    errno = 0;
     len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
     if (len > 0)
 	F->disk.offset += len;
