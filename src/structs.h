@@ -528,13 +528,6 @@ struct _ipcache_entry {
     ipcache_status_t status:3;
 };
 
-struct _ext_table_entry {
-    char *name;
-    char *mime_type;
-    char *mime_encoding;
-    char *icon;
-};
-
 struct _domain_ping {
     char *domain;
     int do_ping;		/* boolean */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.133 1997/11/03 22:43:20 wessels Exp $
+ * $Id: squid.h,v 1.134 1997/11/10 21:07:05 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -275,7 +275,5 @@
 #if !HAVE_SNPRINTF
 #include "snprintf.h"
 #endif
-
-#define OR(A,B) (A ? A : B)
 
 #endif /* SQUID_H */
