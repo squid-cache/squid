@@ -1056,7 +1056,7 @@ struct _store_client {
 struct _MemObject {
     method_t method;
     char *url;
-    mem_hdr *data;
+    mem_hdr data_hdr;
     off_t inmem_hi;
     off_t inmem_lo;
     store_client *clients;

@@ -134,13 +134,13 @@ storeCheckSwapOut(StoreEntry * e)
     if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
 	if (!EBIT_TEST(e->flag, KEY_PRIVATE))
 	    debug(20, 3) ("storeCheckSwapOut: Attempt to swap out a non-cacheable non-private object!\n");
-	stmemFreeDataUpto(mem->data, new_mem_lo);
+	stmemFreeDataUpto(&mem->data_hdr, new_mem_lo);
 	mem->inmem_lo = new_mem_lo;
 	return;
     }
     if (mem->swapout.queue_offset < new_mem_lo)
 	new_mem_lo = mem->swapout.queue_offset;
-    stmemFreeDataUpto(mem->data, new_mem_lo);
+    stmemFreeDataUpto(&mem->data_hdr, new_mem_lo);
     mem->inmem_lo = new_mem_lo;
 
     swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
@@ -165,7 +165,7 @@ storeCheckSwapOut(StoreEntry * e)
     if (swapout_size > STORE_SWAP_BUF)
 	swapout_size = STORE_SWAP_BUF;
     swap_buf = memAllocate(MEM_DISK_BUF);
-    swap_buf_len = stmemCopy(mem->data,
+    swap_buf_len = stmemCopy(&mem->data_hdr,
 	mem->swapout.queue_offset,
 	swap_buf,
 	swapout_size);

@@ -178,7 +178,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     } else if (sc->copy_offset >= mem->inmem_lo && sc->copy_offset < mem->inmem_hi) {
 	/* What the client wants is in memory */
 	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
-	sz = stmemCopy(mem->data, sc->copy_offset, sc->copy_buf, sc->copy_size);
+	sz = stmemCopy(&mem->data_hdr, sc->copy_offset, sc->copy_buf, sc->copy_size);
 #if USE_ASYNC_IO
 	if (sc->flags.disk_io_pending) {
 	    if (sc->swapin_fd >= 0)
