@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.60 2005/03/18 17:17:51 hno Exp $
+ * $Id: external_acl.cc,v 1.61 2005/03/19 19:43:39 serassio Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -344,9 +344,9 @@ parse_externalAclHelper(external_acl ** list)
 #if USE_SSL
 
         else if (strcmp(token, "%USER_CERT") == 0)
-            format->type = EXT_ACL_USER_CERT_RAW;
+            format->type = _external_acl_format::EXT_ACL_USER_CERT_RAW;
         else if (strcmp(token, "%USER_CERTCHAIN") == 0)
-            format->type = EXT_ACL_USER_CERTCHAIN_RAW;
+            format->type = _external_acl_format::EXT_ACL_USER_CERTCHAIN_RAW;
         else if (strncmp(token, "%USER_CERT_", 11)) {
             format->type = _external_acl_format::EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);

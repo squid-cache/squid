@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.30 2005/03/18 17:17:51 hno Exp $
+ * $Id: ssl_support.cc,v 1.31 2005/03/19 19:43:39 serassio Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -581,7 +581,7 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     SSL_CTX_set_options(sslContext, ssl_parse_options(options));
 
     if (context && *context) {
-        SSL_CTX_set_session_id_context(sslContext, context, strlen(context));
+        SSL_CTX_set_session_id_context(sslContext, (const unsigned char *)context, strlen(context));
     }
 
     if (fl & SSL_FLAG_NO_SESSION_REUSE) {
