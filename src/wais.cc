@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.105 1998/03/28 23:24:54 wessels Exp $
+ * $Id: wais.cc,v 1.106 1998/03/31 05:37:55 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -188,7 +188,7 @@ waisReadReply(int fd, void *data)
     }
     if (len < 0) {
 	debug(50, 1) ("waisReadReply: FD %d: read failure: %s.\n",
-		fd, xstrerror());
+	    fd, xstrerror());
 	if (ignoreErrno(errno)) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
@@ -360,7 +360,7 @@ waisConnectDone(int fd, int status, void *data)
 	comm_close(fd);
     } else {
 	commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
-        commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
+	commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
     }
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.77 1998/03/07 20:17:44 rousskov Exp $
+ * $Id: cachemgr.cc,v 1.78 1998/03/31 05:37:35 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -662,7 +662,7 @@ make_pub_auth(cachemgr_request * req)
     /* host | time | user | passwd */
     snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
 	req->hostname,
-	(int)now,
+	(int) now,
 	req->user_name ? req->user_name : "",
 	req->passwd);
     debug(3) fprintf(stderr, "cmgr: pre-encoded for pub: %s\n", buf);

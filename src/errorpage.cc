@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.123 1998/03/28 05:24:34 wessels Exp $
+ * $Id: errorpage.cc,v 1.124 1998/03/31 05:37:39 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -53,9 +53,10 @@ typedef struct {
  * to give you more control on the format
  */
 static const struct {
-    int type; /* and page_id */
+    int type;			/* and page_id */
     const char *text;
 } error_hard_text[] = {
+
     {
 	ERR_SQUID_SIGNATURE,
 	    "\n<br clear=\"all\">\n"
@@ -95,19 +96,19 @@ errorInitialize(void)
     int i;
     const char *text;
     error_page_count = ERR_MAX + ErrorDynamicPages.count;
-    error_text = xcalloc(error_page_count, sizeof(char*));
+    error_text = xcalloc(error_page_count, sizeof(char *));
     for (i = ERR_NONE + 1; i < error_page_count; i++) {
 	safe_free(error_text[i]);
 	/* hard-coded ? */
 	if ((text = errorFindHardText(i)))
 	    error_text[i] = xstrdup(text);
 	else
-	/* precompiled ? */
+	    /* precompiled ? */
 	if (i < ERR_MAX)
 	    error_text[i] = errorLoadText(err_type_str[i]);
 	/* dynamic */
 	else {
-	    ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i-ERR_MAX];
+	    ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i - ERR_MAX];
 	    assert(info && info->id == i && info->page_name);
 	    error_text[i] = errorLoadText(info->page_name);
 	}
@@ -179,7 +180,7 @@ errorDynamicPageInfoCreate(int id, const char *page_name)
 }
 
 static void
-errorDynamicPageInfoDestroy(ErrorDynamicPageInfo *info)
+errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info)
 {
     assert(info);
     xfree(info->page_name);
@@ -189,8 +190,8 @@ errorDynamicPageInfoDestroy(ErrorDynamicPageInfo *info)
 int
 errorReservePageId(const char *page_name)
 {
-    ErrorDynamicPageInfo *info = 
-	errorDynamicPageInfoCreate(ERR_MAX + ErrorDynamicPages.count, page_name);
+    ErrorDynamicPageInfo *info =
+    errorDynamicPageInfoCreate(ERR_MAX + ErrorDynamicPages.count, page_name);
     stackPush(&ErrorDynamicPages, info);
     return info->id;
 }
@@ -216,7 +217,7 @@ ErrorState *
 errorCon(int type, http_status status)
 {
     ErrorState *err = xcalloc(1, sizeof(ErrorState));
-    err->page_id = type; /* has to be reset manually if needed */
+    err->page_id = type;	/* has to be reset manually if needed */
     err->type = type;
     err->http_status = status;
     return err;

@@ -1,5 +1,6 @@
+
 /*
- * $Id: test_cache_digest.cc,v 1.4 1998/03/31 00:10:10 rousskov Exp $
+ * $Id: test_cache_digest.cc,v 1.5 1998/03/31 05:37:52 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -37,10 +38,10 @@ typedef struct {
     const char *name;
     hash_table *hash;
     CacheDigest *digest;
-    int count;          /* #currently cached entries */
-    int scanned_count;  /* #scanned entries */
-    int bad_add_count;  /* #duplicate adds */
-    int bad_del_count;  /* #dels with no prior add */
+    int count;			/* #currently cached entries */
+    int scanned_count;		/* #scanned entries */
+    int bad_add_count;		/* #duplicate adds */
+    int bad_del_count;		/* #dels with no prior add */
 } CacheIndex;
 
 
@@ -68,34 +69,34 @@ const char *RequestMethodStr[] =
 
 static CacheIndex *Peer = NULL;
 
-static int cacheIndexScanCleanPrefix(CacheIndex *idx, const char *fname, FILE *file);
-static int cacheIndexScanAccessLog(CacheIndex *idx, const char *fname, FILE *file);
+static int cacheIndexScanCleanPrefix(CacheIndex * idx, const char *fname, FILE * file);
+static int cacheIndexScanAccessLog(CacheIndex * idx, const char *fname, FILE * file);
 
 /* copied from url.c */
 static method_t
 cacheIndexParseMethod(const char *s)
 {
     if (strcasecmp(s, "GET") == 0) {
-        return METHOD_GET;
+	return METHOD_GET;
     } else if (strcasecmp(s, "POST") == 0) {
-        return METHOD_POST;
+	return METHOD_POST;
     } else if (strcasecmp(s, "PUT") == 0) {
-        return METHOD_PUT;
+	return METHOD_PUT;
     } else if (strcasecmp(s, "HEAD") == 0) {
-        return METHOD_HEAD;
+	return METHOD_HEAD;
     } else if (strcasecmp(s, "CONNECT") == 0) {
-        return METHOD_CONNECT;
+	return METHOD_CONNECT;
     } else if (strcasecmp(s, "TRACE") == 0) {
-        return METHOD_TRACE;
+	return METHOD_TRACE;
     } else if (strcasecmp(s, "PURGE") == 0) {
-        return METHOD_PURGE;
+	return METHOD_PURGE;
     }
     return METHOD_NONE;
 }
 
 
 static CacheEntry *
-cacheEntryCreate(const storeSwapLogData *s)
+cacheEntryCreate(const storeSwapLogData * s)
 {
     CacheEntry *e = xcalloc(1, sizeof(CacheEntry));
     assert(s);
@@ -106,7 +107,7 @@ cacheEntryCreate(const storeSwapLogData *s)
 }
 
 static void
-cacheEntryDestroy(CacheEntry *e)
+cacheEntryDestroy(CacheEntry * e)
 {
     assert(e);
     xfree(e);
@@ -127,14 +128,14 @@ cacheIndexCreate(const char *name)
 }
 
 static void
-cacheIndexDestroy(CacheIndex *idx)
+cacheIndexDestroy(CacheIndex * idx)
 {
     hash_link *hashr = NULL;
     if (idx) {
 	/* destroy hash list contents */
 	for (hashr = hash_first(idx->hash); hashr; hashr = hash_next(idx->hash)) {
 	    hash_remove_link(idx->hash, hashr);
-	    cacheEntryDestroy((CacheEntry*)hashr);
+	    cacheEntryDestroy((CacheEntry *) hashr);
 	}
 	/* destroy the hash table itself */
 	hashFreeMemory(idx->hash);
@@ -146,25 +147,25 @@ cacheIndexDestroy(CacheIndex *idx)
 
 /* makes digest based on currently hashed entries */
 static void
-cacheIndexInitDigest(CacheIndex *idx)
+cacheIndexInitDigest(CacheIndex * idx)
 {
     hash_link *hashr = NULL;
     struct timeval t_start, t_end;
     assert(idx && !idx->digest);
     fprintf(stderr, "%s: init-ing digest with %d entries\n", idx->name, idx->count);
-    idx->digest = cacheDigestCreate(2*idx->count); /* 50% utilization */
+    idx->digest = cacheDigestCreate(2 * idx->count);	/* 50% utilization */
     gettimeofday(&t_start, NULL);
     for (hashr = hash_first(idx->hash); hashr; hashr = hash_next(idx->hash)) {
 	cacheDigestAdd(idx->digest, hashr->key);
     }
     gettimeofday(&t_end, NULL);
     assert(idx->digest->count == idx->count);
-    fprintf(stderr, "%s: init-ed  digest with %d entries\n", 
+    fprintf(stderr, "%s: init-ed  digest with %d entries\n",
 	idx->name, idx->digest->count);
     fprintf(stderr, "%s: init took: %f sec, %f sec/M\n",
 	idx->name,
 	tvSubDsec(t_start, t_end),
-	(double)1e6*tvSubDsec(t_start, t_end)/idx->count);
+	(double) 1e6 * tvSubDsec(t_start, t_end) / idx->count);
     /* check how long it takes to traverse the hash */
     gettimeofday(&t_start, NULL);
     for (hashr = hash_first(idx->hash); hashr; hashr = hash_next(idx->hash)) {
@@ -173,11 +174,11 @@ cacheIndexInitDigest(CacheIndex *idx)
     fprintf(stderr, "%s: hash scan took: %f sec, %f sec/M\n",
 	idx->name,
 	tvSubDsec(t_start, t_end),
-	(double)1e6*tvSubDsec(t_start, t_end)/idx->count);
+	(double) 1e6 * tvSubDsec(t_start, t_end) / idx->count);
 }
 
 static int
-cacheIndexAddLog(CacheIndex *idx, const char *fname)
+cacheIndexAddLog(CacheIndex * idx, const char *fname)
 {
     FILE *file;
     int scanned_count = 0;
@@ -195,20 +196,20 @@ cacheIndexAddLog(CacheIndex *idx, const char *fname)
 }
 
 static void
-cacheIndexInitReport(CacheIndex *idx)
+cacheIndexInitReport(CacheIndex * idx)
 {
     assert(idx);
     fprintf(stderr, "%s: bad swap_add:  %d\n",
 	idx->name, idx->bad_add_count);
-    fprintf(stderr, "%s: bad swap_del:  %d\n", 
+    fprintf(stderr, "%s: bad swap_del:  %d\n",
 	idx->name, idx->bad_del_count);
-    fprintf(stderr, "%s: scanned lines: %d\n", 
+    fprintf(stderr, "%s: scanned lines: %d\n",
 	idx->name, idx->scanned_count);
 }
 
 #if 0
 static int
-cacheIndexGetLogEntry(CacheIndex *idx, storeSwapLogData *s)
+cacheIndexGetLogEntry(CacheIndex * idx, storeSwapLogData * s)
 {
     if (!idx->has_log_entry)
 	cacheIndexStepLogEntry();
@@ -220,7 +221,7 @@ cacheIndexGetLogEntry(CacheIndex *idx, storeSwapLogData *s)
 }
 
 static int
-cacheIndexStepLogEntry(CacheIndex *idx)
+cacheIndexStepLogEntry(CacheIndex * idx)
 {
     if (fread(&idx->log_entry_buf, sizeof(idx->log_entry_buf), 1, idx->log) == 1) {
 	int op = (int) idx->log_entry_buf.op;
@@ -235,7 +236,7 @@ cacheIndexStepLogEntry(CacheIndex *idx)
 }
 
 static int
-cacheIndexScan(CacheIndex *idx, const char *fname, FILE *file)
+cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file)
 {
     int count = 0;
     int del_count = 0;
@@ -250,17 +251,16 @@ cacheIndexScan(CacheIndex *idx, const char *fname, FILE *file)
 		idx->bad_add_count++;
 	    } else {
 		CacheEntry *e = cacheEntryCreate(&s);
-		hash_join(idx->hash, (hash_link*) e);
+		hash_join(idx->hash, (hash_link *) e);
 		idx->count++;
 	    }
-	} else
-	if (s.op == SWAP_LOG_DEL) {
+	} else if (s.op == SWAP_LOG_DEL) {
 	    CacheEntry *olde = (CacheEntry *) hash_lookup(idx->hash, s.key);
 	    if (!olde)
 		idx->bad_del_count++;
 	    else {
 		assert(idx->count);
-		hash_remove_link(idx->hash, (hash_link*) olde);
+		hash_remove_link(idx->hash, (hash_link *) olde);
 		cacheEntryDestroy(olde);
 		idx->count--;
 	    }
@@ -271,14 +271,14 @@ cacheIndexScan(CacheIndex *idx, const char *fname, FILE *file)
 	}
     }
     fprintf(stderr, "%s scanned %d entries, alloc: %d bytes\n",
-	fname, count, 
-	(int)(count*sizeof(CacheEntry)));
+	fname, count,
+	(int) (count * sizeof(CacheEntry)));
     return count;
 }
 #endif
 
 static int
-cacheIndexScanCleanPrefix(CacheIndex *idx, const char *fname, FILE *file)
+cacheIndexScanCleanPrefix(CacheIndex * idx, const char *fname, FILE * file)
 {
     int count = 0;
     storeSwapLogData s;
@@ -292,11 +292,10 @@ cacheIndexScanCleanPrefix(CacheIndex *idx, const char *fname, FILE *file)
 		idx->bad_add_count++;
 	    } else {
 		CacheEntry *e = cacheEntryCreate(&s);
-		hash_join(idx->hash, (hash_link*) e);
+		hash_join(idx->hash, (hash_link *) e);
 		idx->count++;
 	    }
-	} else
-	if (s.op == SWAP_LOG_DEL) {
+	} else if (s.op == SWAP_LOG_DEL) {
 	    break;
 	} else {
 	    fprintf(stderr, "%s:%d: unknown swap log action\n", fname, count);
@@ -304,8 +303,8 @@ cacheIndexScanCleanPrefix(CacheIndex *idx, const char *fname, FILE *file)
 	}
     }
     fprintf(stderr, "%s scanned %d entries, alloc: %d bytes\n",
-	fname, count, 
-	(int)(count*sizeof(CacheEntry)));
+	fname, count,
+	(int) (count * sizeof(CacheEntry)));
     return count;
 }
 
@@ -318,7 +317,7 @@ static int we_false_hit_count = 0;
 static int we_false_miss_count = 0;
 
 static void
-cacheIndexQueryPeer(CacheIndex *idx, const cache_key *key)
+cacheIndexQueryPeer(CacheIndex * idx, const cache_key * key)
 {
     const int peer_has_it = hash_lookup(Peer->hash, key) != NULL;
     const int we_think_we_have_it = cacheDigestTest(Peer->digest, key);
@@ -329,33 +328,32 @@ cacheIndexQueryPeer(CacheIndex *idx, const cache_key *key)
 	    we_true_hit_count++;
 	else
 	    we_false_miss_count++;
+    else if (we_think_we_have_it)
+	we_false_hit_count++;
     else
-	if (we_think_we_have_it)
-	    we_false_hit_count++;
-	else
-	    we_true_miss_count++;
+	we_true_miss_count++;
 }
 
 static void
-cacheIndexIcpReport(CacheIndex *idx)
+cacheIndexIcpReport(CacheIndex * idx)
 {
     fprintf(stdout, "we: icp: %d\n", we_icp_query_count);
     fprintf(stdout, "we: t-hit: %d (%d%%) t-miss: %d (%d%%) t-*: %d (%d%%)\n",
 	we_true_hit_count, xpercentInt(we_true_hit_count, we_icp_query_count),
 	we_true_miss_count, xpercentInt(we_true_miss_count, we_icp_query_count),
-	we_true_hit_count+we_true_miss_count, 
-	    xpercentInt(we_true_hit_count+we_true_miss_count, we_icp_query_count)
-    );
+	we_true_hit_count + we_true_miss_count,
+	xpercentInt(we_true_hit_count + we_true_miss_count, we_icp_query_count)
+	);
     fprintf(stdout, "we: f-hit: %d (%d%%) f-miss: %d (%d%%) f-*: %d (%d%%)\n",
 	we_false_hit_count, xpercentInt(we_false_hit_count, we_icp_query_count),
 	we_false_miss_count, xpercentInt(we_false_miss_count, we_icp_query_count),
-	we_false_hit_count+we_false_miss_count, 
-	    xpercentInt(we_false_hit_count+we_false_miss_count, we_icp_query_count)
-    );
+	we_false_hit_count + we_false_miss_count,
+	xpercentInt(we_false_hit_count + we_false_miss_count, we_icp_query_count)
+	);
 }
 
 static int
-cacheIndexAddAccessLog(CacheIndex *idx, const char *fname)
+cacheIndexAddAccessLog(CacheIndex * idx, const char *fname)
 {
     FILE *file;
     int scanned_count = 0;
@@ -373,7 +371,7 @@ cacheIndexAddAccessLog(CacheIndex *idx, const char *fname)
 }
 
 static int
-cacheIndexScanAccessLog(CacheIndex *idx, const char *fname, FILE *file)
+cacheIndexScanAccessLog(CacheIndex * idx, const char *fname, FILE * file)
 {
     static char buf[4096];
     int count = 0;
@@ -390,11 +388,11 @@ cacheIndexScanAccessLog(CacheIndex *idx, const char *fname, FILE *file)
 
 	scanned_count++;
 	if (!(scanned_count % 50000))
-	    fprintf(stderr, "%s scanned %d K entries (%d bad)\n", 
-		fname, scanned_count/1000, scanned_count-count-1);
+	    fprintf(stderr, "%s scanned %d K entries (%d bad)\n",
+		fname, scanned_count / 1000, scanned_count - count - 1);
 	if (!url || !hier) {
 	    /*fprintf(stderr, "%s:%d: strange access log entry '%s'\n", 
-		fname, scanned_count, buf);*/
+	     * fname, scanned_count, buf); */
 	    continue;
 	}
 	method = url;
@@ -407,16 +405,17 @@ cacheIndexScanAccessLog(CacheIndex *idx, const char *fname, FILE *file)
 	method_id = cacheIndexParseMethod(method);
 	if (method_id == METHOD_NONE) {
 	    /*fprintf(stderr, "%s:%d: invalid method %s in '%s'\n", 
-		fname, scanned_count, method, buf);*/
+	     * fname, scanned_count, method, buf); */
 	    continue;
 	}
-	while (*url) url--;
+	while (*url)
+	    url--;
 	url++;
 	*hier = '\0';
 	hier += 3;
 	*strchr(hier, '/') = '\0';
 	/*fprintf(stdout, "%s:%d: %s %s %s\n",
-	    fname, count, method, url, hier);*/
+	 * fname, count, method, url, hier); */
 	count++;
 	/* no ICP lookup for these status codes */
 	if (!strcmp(hier, "NONE") ||
@@ -432,12 +431,12 @@ cacheIndexScanAccessLog(CacheIndex *idx, const char *fname, FILE *file)
 	    continue;
 	key = storeKeyPublic(url, method_id);
 	/*fprintf(stdout, "%s:%d: %s %s %s %s\n",
-	    fname, count, method, storeKeyText(key), url, hier);*/
+	 * fname, count, method, storeKeyText(key), url, hier); */
 	cacheIndexQueryPeer(idx, key);
 	icp_count++;
     }
     fprintf(stderr, "%s: scanned %d access log entries; bad: %d\n",
-	fname, scanned_count, scanned_count-count);
+	fname, scanned_count, scanned_count - count);
     fprintf(stderr, "%s: icp: %d (%d%%)\n",
 	fname, icp_count, xpercentInt(icp_count, count));
     return count;

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_diff.cc,v 1.6 1998/03/29 21:01:49 rousskov Exp $
+ * $Id: cache_diff.cc,v 1.7 1998/03/31 05:37:35 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -38,10 +38,10 @@
 typedef struct {
     const char *name;
     hash_table *hash;
-    int count;          /* #currently cached entries */
-    int scanned_count;  /* #scanned entries */
-    int bad_add_count;  /* #duplicate adds */
-    int bad_del_count;  /* #dels with no prior add */
+    int count;			/* #currently cached entries */
+    int scanned_count;		/* #scanned entries */
+    int bad_add_count;		/* #duplicate adds */
+    int bad_del_count;		/* #dels with no prior add */
 } CacheIndex;
 
 
@@ -67,11 +67,11 @@ const char *RequestMethodStr[] =
 };
 
 
-static int cacheIndexScan(CacheIndex *idx, const char *fname, FILE *file);
+static int cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file);
 
 
 static CacheEntry *
-cacheEntryCreate(const storeSwapLogData *s)
+cacheEntryCreate(const storeSwapLogData * s)
 {
     CacheEntry *e = xcalloc(1, sizeof(CacheEntry));
     assert(s);
@@ -82,7 +82,7 @@ cacheEntryCreate(const storeSwapLogData *s)
 }
 
 static void
-cacheEntryDestroy(CacheEntry *e)
+cacheEntryDestroy(CacheEntry * e)
 {
     assert(e);
     xfree(e);
@@ -103,14 +103,14 @@ cacheIndexCreate(const char *name)
 }
 
 static void
-cacheIndexDestroy(CacheIndex *idx)
+cacheIndexDestroy(CacheIndex * idx)
 {
     hash_link *hashr = NULL;
     if (idx) {
 	/* destroy hash list contents */
 	for (hashr = hash_first(idx->hash); hashr; hashr = hash_next(idx->hash)) {
 	    hash_remove_link(idx->hash, hashr);
-	    cacheEntryDestroy((CacheEntry*)hashr);
+	    cacheEntryDestroy((CacheEntry *) hashr);
 	}
 	/* destroy the hash table itself */
 	hashFreeMemory(idx->hash);
@@ -119,7 +119,7 @@ cacheIndexDestroy(CacheIndex *idx)
 }
 
 static int
-cacheIndexAddLog(CacheIndex *idx, const char *fname)
+cacheIndexAddLog(CacheIndex * idx, const char *fname)
 {
     FILE *file;
     int scanned_count = 0;
@@ -131,7 +131,6 @@ cacheIndexAddLog(CacheIndex *idx, const char *fname)
 	fprintf(stderr, "cannot open %s: %s\n", fname, strerror(errno));
 	return 0;
     }
-
     scanned_count = cacheIndexScan(idx, fname, file);
 
     fclose(file);
@@ -139,19 +138,19 @@ cacheIndexAddLog(CacheIndex *idx, const char *fname)
 }
 
 static void
-cacheIndexInitReport(CacheIndex *idx)
+cacheIndexInitReport(CacheIndex * idx)
 {
     assert(idx);
     fprintf(stderr, "%s: bad swap_add:  %d\n",
 	idx->name, idx->bad_add_count);
-    fprintf(stderr, "%s: bad swap_del:  %d\n", 
+    fprintf(stderr, "%s: bad swap_del:  %d\n",
 	idx->name, idx->bad_del_count);
-    fprintf(stderr, "%s: scanned lines: %d\n", 
+    fprintf(stderr, "%s: scanned lines: %d\n",
 	idx->name, idx->scanned_count);
 }
 
 static int
-cacheIndexScan(CacheIndex *idx, const char *fname, FILE *file)
+cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file)
 {
     int count = 0;
     storeSwapLogData s;
@@ -160,24 +159,23 @@ cacheIndexScan(CacheIndex *idx, const char *fname, FILE *file)
 	count++;
 	idx->scanned_count++;
 	/* if (s.op <= SWAP_LOG_NOP || s.op >= SWAP_LOG_MAX)
-	    continue; */
+	 * continue; */
 	if (s.op == SWAP_LOG_ADD) {
 	    CacheEntry *olde = (CacheEntry *) hash_lookup(idx->hash, s.key);
 	    if (olde) {
 		idx->bad_add_count++;
 	    } else {
 		CacheEntry *e = cacheEntryCreate(&s);
-		hash_join(idx->hash, (hash_link*) e);
+		hash_join(idx->hash, (hash_link *) e);
 		idx->count++;
 	    }
-	} else
-	if (s.op == SWAP_LOG_DEL) {
+	} else if (s.op == SWAP_LOG_DEL) {
 	    CacheEntry *olde = (CacheEntry *) hash_lookup(idx->hash, s.key);
 	    if (!olde)
 		idx->bad_del_count++;
 	    else {
 		assert(idx->count);
-		hash_remove_link(idx->hash, (hash_link*) olde);
+		hash_remove_link(idx->hash, (hash_link *) olde);
 		cacheEntryDestroy(olde);
 		idx->count--;
 	    }
@@ -186,13 +184,13 @@ cacheIndexScan(CacheIndex *idx, const char *fname, FILE *file)
 	    exit(-3);
 	}
     }
-    fprintf(stderr, "%s:%d: scanned (size: %d bytes)\n", 
-	fname, count, (int)(count*sizeof(CacheEntry)));
+    fprintf(stderr, "%s:%d: scanned (size: %d bytes)\n",
+	fname, count, (int) (count * sizeof(CacheEntry)));
     return count;
 }
 
 static void
-cacheIndexCmpReport(CacheIndex *idx, int shared_count)
+cacheIndexCmpReport(CacheIndex * idx, int shared_count)
 {
     assert(idx && shared_count <= idx->count);
 
@@ -201,12 +199,12 @@ cacheIndexCmpReport(CacheIndex *idx, int shared_count)
 	idx->count,
 	idx->count - shared_count,
 	shared_count,
-	xpercent(idx->count-shared_count, idx->count),
+	xpercent(idx->count - shared_count, idx->count),
 	xpercent(shared_count, idx->count));
 }
 
 static void
-cacheIndexCmp(CacheIndex *idx1, CacheIndex *idx2)
+cacheIndexCmp(CacheIndex * idx1, CacheIndex * idx2)
 {
     int shared_count = 0;
     int hashed_count = 0;
@@ -256,12 +254,12 @@ main(int argc, char *argv[])
 	const int len = strlen(argv[i]);
 	if (!len)
 	    return usage(argv[0]);
-	if (argv[i][len-1] == ':') {
+	if (argv[i][len - 1] == ':') {
 	    idxCount++;
 	    if (len < 2 || idxCount > 2)
 		return usage(argv[0]);
 	    idx = cacheIndexCreate(argv[i]);
-	    CacheIdx[idxCount-1] = idx;
+	    CacheIdx[idxCount - 1] = idx;
 	} else {
 	    if (!idx)
 		return usage(argv[0]);

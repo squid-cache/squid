@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.241 1998/03/31 05:35:22 wessels Exp $
+ * $Id: client_side.cc,v 1.242 1998/03/31 05:37:37 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -277,7 +277,7 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
      * need to send the old object */
     if (modifiedSince(old_entry, request)) {
 	debug(33, 5) ("clientGetsOldEntry: YES, modified since %d\n",
-		(int) request->ims);
+	    (int) request->ims);
 	return 1;
     }
     debug(33, 5) ("clientGetsOldEntry: NO, new one is fine\n");
@@ -959,7 +959,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    size_t k;
 	    if ((k = headersEnd(buf, size))) {
 		safe_free(http->al.headers.reply);
-		http->al.headers.reply = xcalloc(k+1, 1);
+		http->al.headers.reply = xcalloc(k + 1, 1);
 		xstrncpy(http->al.headers.reply, buf, k);
 	    }
 	}
@@ -1539,7 +1539,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*status = -1;
 	return http;
 #else
-	http_ver = (float) 0.9; /* wild guess */
+	http_ver = (float) 0.9;	/* wild guess */
 #endif
     } else
 	http_ver = (float) atof(token + 5);
@@ -2194,4 +2194,3 @@ clientHttpConnectionsClose(void)
     }
     NHttpSockets = 0;
 }
-

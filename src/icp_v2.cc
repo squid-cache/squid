@@ -47,7 +47,7 @@ icpUdpReply(int fd, void *data)
 	} else {
 	    Counter.icp.pkts_sent++;
 	    if (queue->logcode == LOG_UDP_HIT)
-	        Counter.icp.hits_sent++;
+		Counter.icp.hits_sent++;
 	    kb_incr(&Counter.icp.kbytes_sent, (size_t) x);
 	}
 	UdpQueueHead = queue->next;
@@ -202,7 +202,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 		 * count this DENIED query in the clientdb, even though
 		 * we're not sending an ICP reply...
 		 */
-		clientdbUpdate(from.sin_addr, LOG_UDP_DENIED, Config.Port.icp,0);
+		clientdbUpdate(from.sin_addr, LOG_UDP_DENIED, Config.Port.icp, 0);
 	    } else {
 		reply = icpCreateMessage(ICP_DENIED, 0, url, header.reqnum, 0);
 		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, icp_request->protocol);

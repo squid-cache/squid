@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.39 1998/03/27 22:44:23 wessels Exp $
+ * $Id: ident.cc,v 1.40 1998/03/31 05:37:45 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -50,7 +50,7 @@ static void
 identTimeout(int fd, void *data)
 {
     ConnStateData *connState = data;
-    debug(30,3)("identTimeout: FD %d, %s\n", fd,
+    debug(30, 3) ("identTimeout: FD %d, %s\n", fd,
 	inet_ntoa(connState->peer.sin_addr));
     comm_close(fd);
 }

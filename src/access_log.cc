@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.24 1998/03/31 03:57:14 wessels Exp $
+ * $Id: access_log.cc,v 1.25 1998/03/31 05:37:33 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -63,15 +63,15 @@ const char *log_tags[] =
 
 #if FORW_VIA_DB
 typedef struct {
-        char *key;
-        void *next;
-        int n;
+    char *key;
+    void *next;
+    int n;
 } fvdb_entry;
 static hash_table *via_table = NULL;
 static hash_table *forw_table = NULL;
 static void fvdbInit(void);
-static void fvdbDumpTable(StoreEntry *e, hash_table *hash);
-static void fvdbCount(hash_table *hash, const char *key);
+static void fvdbDumpTable(StoreEntry * e, hash_table * hash);
+static void fvdbCount(hash_table * hash, const char *key);
 static OBJH fvdbDumpVia;
 static OBJH fvdbDumpForw;
 static FREE fvdbFreeEntry;
@@ -355,7 +355,7 @@ accessLogTime(time_t t)
 
 
 #if FORW_VIA_DB
-    
+
 static void
 fvdbInit(void)
 {
@@ -363,67 +363,68 @@ fvdbInit(void)
     forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
     cachemgrRegister("via_headers", "Via Request Headers", fvdbDumpVia, 0);
     cachemgrRegister("forw_headers", "X-Forwarded-For Request Headers",
-        fvdbDumpForw, 0);
+	fvdbDumpForw, 0);
 }
 
 static void
-fvdbCount(hash_table *hash, const char *key)
-{   
-        fvdb_entry *fv;
-        if (NULL == hash)
-                return;
-        fv = hash_lookup(hash, key);
-        if (NULL == fv) {
-                fv = xcalloc(1, sizeof(fvdb_entry));
-                fv->key = xstrdup(key);
-                hash_join(hash, (hash_link *) fv);
-        }
-        fv->n++;
+fvdbCount(hash_table * hash, const char *key)
+{
+    fvdb_entry *fv;
+    if (NULL == hash)
+	return;
+    fv = hash_lookup(hash, key);
+    if (NULL == fv) {
+	fv = xcalloc(1, sizeof(fvdb_entry));
+	fv->key = xstrdup(key);
+	hash_join(hash, (hash_link *) fv);
+    }
+    fv->n++;
 }
 
 void
 fvdbCountVia(const char *key)
 {
-	fvdbCount(via_table, key);
+    fvdbCount(via_table, key);
 }
 
 void
 fvdbCountForw(const char *key)
 {
-	fvdbCount(forw_table, key);
-}
-
-static void 
-fvdbDumpTable(StoreEntry *e, hash_table *hash)
-{
-        hash_link *h;
-        fvdb_entry *fv;
-        if (hash == NULL)  
-                return;
-        for (h = hash_first(hash); h != NULL; h = hash_next(hash)) {
-                fv = (fvdb_entry *) h;
-                storeAppendPrintf(e, "%9d %s\n", fv->n, fv->key);
-        }
+    fvdbCount(forw_table, key);
 }
 
 static void
-fvdbDumpVia(StoreEntry *e)
+fvdbDumpTable(StoreEntry * e, hash_table * hash)
 {
-        fvdbDumpTable(e, via_table);
+    hash_link *h;
+    fvdb_entry *fv;
+    if (hash == NULL)
+	return;
+    for (h = hash_first(hash); h != NULL; h = hash_next(hash)) {
+	fv = (fvdb_entry *) h;
+	storeAppendPrintf(e, "%9d %s\n", fv->n, fv->key);
+    }
 }
-    
+
 static void
-fvdbDumpForw(StoreEntry *e)
+fvdbDumpVia(StoreEntry * e)
 {
-        fvdbDumpTable(e, forw_table); 
+    fvdbDumpTable(e, via_table);
+}
+
+static void
+fvdbDumpForw(StoreEntry * e)
+{
+    fvdbDumpTable(e, forw_table);
 }
 
 static
-void fvdbFreeEntry(void *data)
+void 
+fvdbFreeEntry(void *data)
 {
-	fvdb_entry *fv = data;
-	xfree(fv->key);
-	xfree(fv);
+    fvdb_entry *fv = data;
+    xfree(fv->key);
+    xfree(fv);
 }
 
 static void
@@ -433,4 +434,4 @@ fvdbClear(void)
     hashFreeItems(forw_table, fvdbFreeEntry);
 }
 
-#endif  
+#endif

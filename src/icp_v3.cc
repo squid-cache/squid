@@ -24,8 +24,8 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 
     method = header.reqnum >> 24;
     /* Squid-1.1 doesn't use the "method bits" for METHOD_GET */
-    if (METHOD_NONE == method || METHOD_ENUM_END <= method) 
-        method = METHOD_GET;
+    if (METHOD_NONE == method || METHOD_ENUM_END <= method)
+	method = METHOD_GET;
     switch (header.opcode) {
     case ICP_QUERY:
 	/* We have a valid packet */
@@ -46,7 +46,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 		 * count this DENIED query in the clientdb, even though
 		 * we're not sending an ICP reply...
 		 */
-		clientdbUpdate(from.sin_addr, LOG_UDP_DENIED, Config.Port.icp,0);
+		clientdbUpdate(from.sin_addr, LOG_UDP_DENIED, Config.Port.icp, 0);
 	    } else {
 		reply = icpCreateMessage(ICP_DENIED, 0, url, header.reqnum, 0);
 		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, icp_request->protocol);

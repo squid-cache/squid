@@ -425,6 +425,6 @@ storePendingNClients(const StoreEntry * e)
 	npend++;
     }
 #endif
-    debug(20,3)("storePendingNClients: returning %d\n", npend);
+    debug(20, 3) ("storePendingNClients: returning %d\n", npend);
     return npend;
 }

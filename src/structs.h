@@ -1,5 +1,6 @@
 
 
+
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
     struct in_addr addr2;
@@ -1202,9 +1203,9 @@ struct _ClientInfo {
 
 struct _CacheDigest {
     /* public, read-only */
-    char *mask;       /* bit mask */
-    size_t mask_size; /* mask size in bytes */
-    int capacity;     /* expected maximum for .count, not a hard limit */
-    int count;        /* number of digested entries */
-    int del_count;    /* number of deletions performed so far */
+    char *mask;			/* bit mask */
+    size_t mask_size;		/* mask size in bytes */
+    int capacity;		/* expected maximum for .count, not a hard limit */
+    int count;			/* number of digested entries */
+    int del_count;		/* number of deletions performed so far */
 };

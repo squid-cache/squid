@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.220 1998/03/28 23:24:49 wessels Exp $
+ * $Id: stat.cc,v 1.221 1998/03/31 05:37:50 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1076,4 +1076,5 @@ statGraphDump(StoreEntry * e)
     GENGRAPH(select_loops, "select_loops", "System Select Loop calls/sec");
     GENGRAPH(cputime, "cputime", "CPU utilisation");
 }
+
 #endif /* STAT_GRAPHS */

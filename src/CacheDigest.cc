@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.1 1998/03/30 21:03:33 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.2 1998/03/31 05:35:35 wessels Exp $
  *
  * DEBUG: section ??    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -44,16 +44,16 @@ CacheDigest *
 cacheDigestCreate(int capacity)
 {
     CacheDigest *cd = xcalloc(1, sizeof(CacheDigest));
-    assert(MD5_DIGEST_CHARS == 16); /* our hash functions rely on 16 byte keys */
+    assert(MD5_DIGEST_CHARS == 16);	/* our hash functions rely on 16 byte keys */
     assert(capacity > 0);
     cd->capacity = capacity;
-    cd->mask_size = (size_t) (capacity * BitsPerEntry + 7)/ 8;
+    cd->mask_size = (size_t) (capacity * BitsPerEntry + 7) / 8;
     cd->mask = xcalloc(cd->mask_size, 1);
     return cd;
 }
 
 void
-cacheDigestDestroy(CacheDigest *cd)
+cacheDigestDestroy(CacheDigest * cd)
 {
     assert(cd);
     xfree(cd->mask);
@@ -61,7 +61,7 @@ cacheDigestDestroy(CacheDigest *cd)
 }
 
 void
-cacheDigestAdd(CacheDigest *cd, const cache_key *key)
+cacheDigestAdd(CacheDigest * cd, const cache_key * key)
 {
     assert(cd && key);
     /* hash */
@@ -76,13 +76,13 @@ cacheDigestAdd(CacheDigest *cd, const cache_key *key)
 
 /* returns true if the key belongs to the digest */
 int
-cacheDigestTest(const CacheDigest *cd, const cache_key *key)
+cacheDigestTest(const CacheDigest * cd, const cache_key * key)
 {
     assert(cd && key);
     /* hash */
     cacheDigestHashKey(cd->capacity * BitsPerEntry, key);
     /* test corresponding bits */
-    return 
+    return
 	CBIT_TEST(cd->mask, hashed_keys[0]) &&
 	CBIT_TEST(cd->mask, hashed_keys[1]) &&
 	CBIT_TEST(cd->mask, hashed_keys[2]) &&
@@ -90,7 +90,7 @@ cacheDigestTest(const CacheDigest *cd, const cache_key *key)
 }
 
 void
-cacheDigestDel(CacheDigest *cd, const cache_key *key)
+cacheDigestDel(CacheDigest * cd, const cache_key * key)
 {
     assert(cd && key);
     cd->del_count++;
@@ -109,5 +109,3 @@ cacheDigestHashKey(int bit_count, const char *key)
     hashed_keys[2] %= bit_count;
     hashed_keys[3] %= bit_count;
 }
-
-
