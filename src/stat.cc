@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.216 1998/03/12 17:51:21 wessels Exp $
+ * $Id: stat.cc,v 1.217 1998/03/16 20:11:53 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -137,7 +137,7 @@ static int NCountHist = 0;
 static StatCounters CountHourHist[N_COUNT_HOUR_HIST];
 static int NCountHourHist = 0;
 
-void
+static void
 statUtilization(StoreEntry * e)
 {
     storeAppendPrintf(e, "Cache Utilisation:\n");
@@ -182,7 +182,7 @@ statUtilization(StoreEntry * e)
     statCountersDump(e);
 }
 
-void
+static void
 stat_io_get(StoreEntry * sentry)
 {
     int i;
@@ -359,13 +359,13 @@ statObjects(StoreEntry * sentry, int vm_or_not)
     }
 }
 
-void
+static void
 stat_objects_get(StoreEntry * e)
 {
     statObjects(e, 0);
 }
 
-void
+static void
 stat_vmobjects_get(StoreEntry * e)
 {
     statObjects(e, 1);
@@ -390,7 +390,7 @@ fdRemoteAddr(const fde * f)
     return buf;
 }
 
-void
+static void
 statFiledescriptors(StoreEntry * sentry)
 {
     int i;
@@ -420,7 +420,7 @@ statFiledescriptors(StoreEntry * sentry)
     }
 }
 
-void
+static void
 info_get(StoreEntry * sentry)
 {
     struct rusage rusage;
@@ -788,7 +788,7 @@ statCountersInitSpecial(StatCounters * C)
 }
 
 /* add special cases here as they arrive */
-void
+static void
 statCountersClean(StatCounters * C)
 {
     assert(C);
@@ -802,7 +802,7 @@ statCountersClean(StatCounters * C)
 }
 
 /* add special cases here as they arrive */
-void
+static void
 statCountersCopy(StatCounters * dest, const StatCounters * orig)
 {
     assert(dest && orig);
@@ -922,19 +922,19 @@ statCountersDump(StoreEntry * sentry)
 	tvSubDsec(f->timestamp, current_time));
 }
 
-void
+static void
 statCounters(StoreEntry * e)
 {
     statCountersDump(e);
 }
 
-void
+static void
 statAvg5min(StoreEntry * e)
 {
     statAvgDump(e, 5, 0);
 }
 
-void
+static void
 statAvg60min(StoreEntry * e)
 {
     statAvgDump(e, 60, 0);
