@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.271 1997/07/15 04:03:11 wessels Exp $
+ * $Id: store.cc,v 1.272 1997/07/15 15:46:27 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -685,13 +685,11 @@ storeSetPublicKey(StoreEntry * e)
     hash_link *table_entry = NULL;
     const char *newkey = NULL;
     int loop_detect = 0;
-
     if (e->key && !BIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already public */
-
     newkey = storeGeneratePublicKey(e->url, e->method);
     while ((table_entry = hash_lookup(store_table, newkey))) {
-	debug(20, 1) ("storeSetPublicKey: Making old '%s' private.\n", newkey);
+	debug(20, 3) ("storeSetPublicKey: Making old '%s' private.\n", newkey);
 	e2 = (StoreEntry *) table_entry;
 	storeSetPrivateKey(e2);
 	storeRelease(e2);
@@ -780,8 +778,7 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     e->url = xstrdup(url);
     e->method = METHOD_GET;
     storeSetPublicKey(e);
-    BIT_SET(e->flag, ENTRY_CACHABLE);
-    BIT_RESET(e->flag, RELEASE_REQUEST);
+    assert(e->key);
     e->store_status = STORE_OK;
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAP_OK;
@@ -795,6 +792,9 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     e->lastmod = lastmod;
     e->refcount = refcount;
     e->flag = flags;
+    BIT_SET(e->flag, ENTRY_CACHABLE);
+    BIT_RESET(e->flag, RELEASE_REQUEST);
+    BIT_RESET(e->flag, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     if (clean) {
 	BIT_SET(e->flag, ENTRY_VALIDATED);
@@ -1619,6 +1619,8 @@ storeCheckSwapable(StoreEntry * e)
 	return 0;		/* avoid release call below */
     } else if (e->mem_obj->e_current_len > Config.Store.maxObjectSize) {
 	debug(20, 2) ("storeCheckSwapable: NO: too big\n");
+    } else if (BIT_TEST(e->flag, KEY_PRIVATE)) {
+	debug(20, 1) ("storeCheckSwapable: NO: private key\n");
     } else {
 	return 1;
     }
