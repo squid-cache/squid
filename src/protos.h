@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.274 1998/09/30 04:34:08 wessels Exp $
+ * $Id: protos.h,v 1.275 1998/10/01 22:28:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -153,6 +153,7 @@ extern void commSetDefer(int fd, DEFER * func, void *);
 extern int ignoreErrno(int);
 extern void commCloseAllSockets(void);
 
+
 /*
  * comm_select.c
  */
@@ -162,6 +163,8 @@ extern int comm_poll(int);
 #else
 extern int comm_select(int);
 #endif
+extern void commUpdateReadBits(int, PF *);
+extern void commUpdateWriteBits(int, PF *);
 
 extern void packerToStoreInit(Packer * p, StoreEntry * e);
 extern void packerToMemInit(Packer * p, MemBuf * mb);

@@ -1,7 +1,6 @@
 
-
 /*
- * $Id: comm_select.cc,v 1.12 1998/09/30 04:34:06 wessels Exp $
+ * $Id: comm_select.cc,v 1.13 1998/10/01 22:28:27 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -57,6 +56,10 @@ static int comm_check_incoming_select_handlers(int nfds, int *fds);
 #endif
 
 static struct timeval zero_tv;
+static fd_set global_readfds;
+static fd_set global_writefds;
+static int nreadfds;
+static int nwritefds;
 
 /*
  * Automatic tuning for incoming requests:
@@ -523,9 +526,13 @@ comm_select(int msec)
     int fd;
     int i;
     int maxfd;
-    int nfds;
     int num;
     int callicp = 0, callhttp = 0;
+    int maxindex;
+    int k;
+    int j;
+    int *fdsp;
+    int tmask;
     static time_t last_timeout = 0;
     struct timeval poll_time;
     double timeout = current_dtime + (msec / 1000.0);
@@ -536,27 +543,33 @@ comm_select(int msec)
 #if USE_ASYNC_IO
 	aioCheckCallbacks();
 #endif
-	FD_ZERO(&readfds);
-	FD_ZERO(&writefds);
 	if (commCheckICPIncoming)
 	    comm_select_icp_incoming();
 	if (commCheckHTTPIncoming)
 	    comm_select_http_incoming();
 	callicp = callhttp = 0;
-	nfds = 0;
 	maxfd = Biggest_FD + 1;
+	/* copy whole integers. XXX breaks if fd_mask is long */
+	xmemcpy(&readfds, &global_readfds, ((maxfd + 31) / 32) * 4);
+	xmemcpy(&writefds, &global_writefds, ((maxfd + 31) / 32) * 4);
+	/* remove stalled FDs */
+	for (i = 0; i < maxfd; i++) {
+	    if (FD_ISSET(i, &readfds))
+		if (commDeferRead(i))
+		    FD_CLR(i, &readfds);
+	}
+#if DEBUG_FDBITS
 	for (i = 0; i < maxfd; i++) {
 	    /* Check each open socket for a handler. */
 	    if (fd_table[i].read_handler && !commDeferRead(i)) {
-		nfds++;
-		FD_SET(i, &readfds);
+		assert(FD_ISSET(i, &readfds));
 	    }
 	    if (fd_table[i].write_handler) {
-		nfds++;
-		FD_SET(i, &writefds);
+		assert(FD_ISSET(i, &writefds));
 	    }
 	}
-	if (nfds == 0) {
+#endif
+	if (nreadfds + nwritefds == 0) {
 	    assert(shutting_down);
 	    return COMM_SHUTDOWN;
 	}
@@ -591,12 +604,26 @@ comm_select(int msec)
 	}
 	if (num == 0)
 	    continue;
-	/* scan each socket but the accept socket. Poll this 
-	 * more frequently to minimize losses due to the 5 connect 
-	 * limit in SunOS */
-	for (fd = 0; fd < maxfd; fd++) {
-	    if (!FD_ISSET(fd, &readfds) && !FD_ISSET(fd, &writefds))
+	/* Scan return fd masks for ready descriptors */
+#ifndef        howmany
+#define howmany(x, y)   (((x)+((y)-1))/(y))
+#endif
+#ifndef        NBBY
+#define        NBBY    8
+#endif
+	maxindex = howmany(maxfd, (sizeof(int) * NBBY));
+	fdsp = (int *) &readfds;
+	for (j = 0; j < maxindex; j++) {
+	    if ((tmask = fdsp[j]) == 0)
+		continue;	/* no bits here */
+	    for (k = 0; k < (sizeof(int) * NBBY); k++) {
+		if ((tmask & (1 << k)) == 0)
 		continue;
+		/* Found a set bit */
+		fd = (j * (sizeof(int) * NBBY)) + k;
+#if DEBUG_FDBITS
+		assert(FD_ISSET(fd, &readfds));
+#endif
 	    if (fdIsIcp(fd)) {
 		callicp = 1;
 		continue;
@@ -605,11 +632,11 @@ comm_select(int msec)
 		callhttp = 1;
 		continue;
 	    }
-	    if (FD_ISSET(fd, &readfds)) {
 		debug(5, 6) ("comm_select: FD %d ready for reading\n", fd);
 		if (fd_table[fd].read_handler) {
 		    hdl = fd_table[fd].read_handler;
 		    fd_table[fd].read_handler = NULL;
+		    commUpdateReadBits(fd, NULL);
 		    hdl(fd, fd_table[fd].read_data);
 		    Counter.select_fds++;
 		}
@@ -617,12 +644,36 @@ comm_select(int msec)
 		    comm_select_icp_incoming();
 		if (commCheckHTTPIncoming)
 		    comm_select_http_incoming();
+		tmask = tmask - (1 << k);	/* this bit is done */
+		if (tmask == 0)
+		    break;	/* and no more bits left */
 	    }
-	    if (FD_ISSET(fd, &writefds)) {
+	}
+	fdsp = (int *) &writefds;
+	for (j = 0; j < maxindex; j++) {
+	    if ((tmask = fdsp[j]) == 0)
+		continue;	/* no bits here */
+	    for (k = 0; k < (sizeof(int) * NBBY); k++) {
+		if ((tmask & (1 << k)) == 0)
+		    continue;
+		/* Found a set bit */
+		fd = (j * (sizeof(int) * NBBY)) + k;
+#if DEBUG_FDBITS
+		assert(FD_ISSET(fd, &writefds));
+#endif
+		if (fdIsIcp(fd)) {
+		    callicp = 1;
+		    continue;
+		}
+		if (fdIsHttp(fd)) {
+		    callhttp = 1;
+		    continue;
+	    }
 		debug(5, 5) ("comm_select: FD %d ready for writing\n", fd);
 		if (fd_table[fd].write_handler) {
 		    hdl = fd_table[fd].write_handler;
 		    fd_table[fd].write_handler = NULL;
+		    commUpdateWriteBits(fd, NULL);
 		    hdl(fd, fd_table[fd].write_data);
 		    Counter.select_fds++;
 		}
@@ -630,6 +681,9 @@ comm_select(int msec)
 		    comm_select_icp_incoming();
 		if (commCheckHTTPIncoming)
 		    comm_select_http_incoming();
+		tmask = tmask - (1 << k);	/* this bit is done */
+		if (tmask == 0)
+		    break;	/* and no more bits left */
 	    }
 	}
 	if (callicp)
@@ -651,6 +705,9 @@ comm_select_init(void)
     cachemgrRegister("comm_incoming",
 	"comm_incoming() stats",
 	commIncomingStats, 0, 1);
+    FD_ZERO(&global_readfds);
+    FD_ZERO(&global_writefds);
+    nreadfds = nwritefds = 0;
 }
 
 #if !HAVE_POLL
@@ -770,4 +827,28 @@ commIncomingStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "HTTP Messages handled per comm_select_http_incoming() call:\n");
 #endif
     statHistDump(&f->comm_http_incoming, sentry, statHistIntDumper);
+}
+
+void
+commUpdateReadBits(int fd, PF *handler)
+{
+	if (handler && !FD_ISSET(fd, &global_readfds)) {
+	    FD_SET(fd, &global_readfds);
+	    nreadfds++;
+	} else if (!handler && FD_ISSET(fd, &global_readfds)) {
+	    FD_CLR(fd, &global_readfds);
+	    nreadfds--;
+	}
+}
+
+void
+commUpdateWriteBits(int fd, PF *handler)
+{
+	if (handler && !FD_ISSET(fd, &global_writefds)) {
+	    FD_SET(fd, &global_writefds);
+	    nwritefds++;
+	} else if (!handler && FD_ISSET(fd, &global_writefds)) {
+	    FD_CLR(fd, &global_writefds);
+	    nwritefds--;
+	}
 }

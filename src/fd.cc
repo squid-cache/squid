@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.27 1998/09/09 20:05:49 wessels Exp $
+ * $Id: fd.cc,v 1.28 1998/10/01 22:28:28 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -79,6 +79,8 @@ fd_close(int fd)
     Number_FD--;
     if (F->type == FD_FILE)
 	open_disk_fd--;
+    commUpdateReadBits(fd, NULL);
+    commUpdateWriteBits(fd, NULL);
     memset(F, '\0', sizeof(fde));
     F->timeout = 0;
 }
