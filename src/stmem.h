@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.4 2003/06/26 12:51:57 robertc Exp $
+ * $Id: stmem.h,v 1.5 2003/09/22 03:31:03 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -61,6 +61,10 @@ public:
     /* Not an iterator - thus the start, not begin() */
     mem_node const *start() const;
     mem_node *getBlockContainingLocation (size_t location) const;
+    /* access the contained nodes - easier than punning
+     * as a contianer ourselves 
+     */
+    const Splay<mem_node *> &getNodes() const;
 
     /* Only for use of MemObject */
     void internalAppend(const char *data, int len);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_hdr_test.cc,v 1.3 2003/09/22 02:43:11 robertc Exp $
+ * $Id: mem_hdr_test.cc,v 1.4 2003/09/22 03:31:02 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -38,6 +38,7 @@
 #include "stmem.h"
 #include "mem_node.h"
 #include <iostream>
+#include "Generic.h"
 
 void
 testLowAndHigh()
@@ -72,14 +73,14 @@ testSplayOfNodes()
     temp5->nodeBuffer.length = 10;
     aSplay.insert (temp5, mem_hdr::NodeCompare);
     assert (aSplay.start()->data == temp5);
-    assert (aSplay.end()->data == temp5);
+    assert (aSplay.finish()->data == temp5);
 
     mem_node *temp0;
     temp0 = new mem_node(0);
     temp0->nodeBuffer.length = 5;
     aSplay.insert (temp0, mem_hdr::NodeCompare);
     assert (aSplay.start()->data == temp0);
-    assert (aSplay.end()->data == temp5);
+    assert (aSplay.finish()->data == temp5);
 
     mem_node *temp14;
     temp14 = new mem_node (14);
@@ -94,6 +95,29 @@ testSplayOfNodes()
     aSplay.destroy(SplayNode<mem_node *>::DefaultFree);
 }
 
+struct mem_node_print
+{
+    mem_node_print(std::ostream &astream) : os(astream) {}
+
+    void operator () (mem_node *aNode)
+    {}
+
+    std::ostream &os;
+};
+
+void
+testHdrVisit()
+{
+    mem_hdr aHeader;
+    char * sampleData = xstrdup ("A");
+    assert (aHeader.write (StoreIOBuffer(1, 100, sampleData)));
+    safe_free (sampleData);
+    sampleData = xstrdup ("B");
+    assert (aHeader.write (StoreIOBuffer(1, 102, sampleData)));
+    safe_free (sampleData);
+    //for_each (aHeader.getNodes().begin(). aHeader.getNodes().end(), mem_node_print(std::cout));
+}
+
 int
 main (int argc, char *argv)
 {
@@ -101,6 +125,8 @@ main (int argc, char *argv)
     testLowAndHigh();
     assert (mem_node::InUseCount() == 0);
     testSplayOfNodes();
+    assert (mem_node::InUseCount() == 0);
+    testHdrVisit();
     assert (mem_node::InUseCount() == 0);
     return 0;
 }
