@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.13 2003/08/13 00:39:12 wessels Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.14 2003/08/13 16:06:13 wessels Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -128,6 +128,7 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
  <item>Added counters for HTCP messages sent and received, reported
        in 'info' cache manager page.
  <item>Fixed 'ICP dynamic timeout algorithm ignores multicast' bug
+ <item>Bug #743: "#ifdef HTTP_VIOLATIONS" should be "#if HTTP_VIOLATIONS"
 </itemize>
 
 <sect>Changes to squid.conf
