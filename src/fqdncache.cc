@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.7 1996/08/12 23:22:35 wessels Exp $
+ * $Id: fqdncache.cc,v 1.8 1996/08/14 21:54:48 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -903,8 +903,6 @@ char *fqdncache_gethostbyaddr(addr, flags)
     struct hostent *hp = NULL;
     unsigned int ip;
 
-    if (fqdn_table == 0)
-	return NULL;
     if (!name)
 	fatal_dump("fqdncache_gethostbyaddr: NULL name");
     FqdncacheStats.requests++;
