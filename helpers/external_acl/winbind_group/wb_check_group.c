@@ -1,5 +1,5 @@
 /*
- * $Id: wb_check_group.c,v 1.6 2002/10/22 09:45:16 hno Exp $
+ * $Id: wb_check_group.c,v 1.7 2002/11/29 21:35:07 hno Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Guido Serassio <squidnt@serassio.it>
@@ -283,7 +283,7 @@ main (int argc, char *argv[])
 	if ((p = strchr(buf, '\r')) != NULL)
 	    *p = '\0';		/* strip \r */
 
-	debug("Got '%s' from Squid (length: %d).\n",buf,sizeof(buf));
+	debug("Got '%s' from Squid (length: %d).\n",buf,strlen(buf));
 
 	if (buf[0] == '\0') {
 	    warn("Invalid Request\n");
