@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.127 2001/02/23 20:59:51 hno Exp $
+ * $Id: store_dir.cc,v 1.128 2001/03/13 19:11:25 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -334,7 +334,8 @@ storeDirOpenSwapLogs(void)
     SwapDir *sd;
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	sd = &Config.cacheSwap.swapDirs[dirn];
-	sd->log.open(sd);
+	if (sd->log.open)
+	    sd->log.open(sd);
     }
 }
 
@@ -345,7 +346,8 @@ storeDirCloseSwapLogs(void)
     SwapDir *sd;
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	sd = &Config.cacheSwap.swapDirs[dirn];
-	sd->log.close(sd);
+	if (sd->log.close)
+	    sd->log.close(sd);
     }
 }
 
