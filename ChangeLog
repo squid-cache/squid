@@ -13,6 +13,7 @@ Changes to squid-1.2.beta7 (Nov 24, 1997):
 	- Fixed some pipelined request bugs.  storeClientCopy() was
 	  being given the wrong StoreEntry, and we had a race condition
 	  which is now handled by storeClientCopyPending().
+	- Added initial SNMP support.
 
 Changes to squid-1.2.beta6 (Nov 13, 1997):
 
