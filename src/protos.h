@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.408 2001/07/28 09:21:32 hno Exp $
+ * $Id: protos.h,v 1.409 2001/08/03 15:13:04 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -738,7 +738,7 @@ extern void authenticateShutdown(void);
 extern void authenticateFixHeader(HttpReply *, auth_user_request_t *, request_t *, int, int);
 extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, request_t *, int);
 extern auth_user_request_t *authenticateGetAuthUser(const char *proxy_auth);
-extern void authenticateAuthenticateUser(auth_user_request_t *, request_t *, ConnStateData *, http_hdr_type);
+extern auth_acl_t authenticateAuthenticate(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData *, struct in_addr);
 extern void authenticateAuthUserUnlock(auth_user_t * auth_user);
 extern void authenticateAuthUserLock(auth_user_t * auth_user);
 extern void authenticateAuthUserRequestUnlock(auth_user_request_t *);
@@ -746,6 +746,9 @@ extern void authenticateAuthUserRequestLock(auth_user_request_t *);
 extern char *authenticateAuthUserRequestMessage(auth_user_request_t *);
 extern int authenticateAuthUserInuse(auth_user_t * auth_user);
 extern void authenticateAuthUserRequestSetIp(auth_user_request_t *, struct in_addr);
+extern void authenticateAuthUserRequestRemoveIp(auth_user_request_t *, struct in_addr);
+extern void authenticateAuthUserRequestClearIp(auth_user_request_t *);
+extern size_t authenticateAuthUserRequestIPCount(auth_user_request_t *);
 extern int authenticateDirection(auth_user_request_t *);
 extern FREE authenticateFreeProxyAuthUser;
 extern void authenticateFreeProxyAuthUserACLResults(void *data);

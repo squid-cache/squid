@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.28 2001/05/21 04:50:57 hno Exp $
+ * $Id: helper.cc,v 1.29 2001/08/03 15:13:04 adrian Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -183,6 +183,10 @@ helperStatefulOpenServers(statefulhelper * hlp)
 	srv->flags.alive = 1;
 	srv->flags.reserved = S_HELPER_FREE;
 	srv->deferred_requests = 0;
+	srv->stats.deferbyfunc = 0;
+	srv->stats.deferbycb = 0;
+	srv->stats.submits = 0;
+	srv->stats.releases = 0;
 	srv->index = k;
 	srv->rfd = rfd;
 	srv->wfd = wfd;
@@ -260,8 +264,19 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     cbdataLock(r->data);
     if ((buf != NULL) && lastserver) {
 	debug(29, 5) ("StatefulSubmit with lastserver %d\n", lastserver);
-	if (lastserver->flags.reserved != S_HELPER_RESERVED)
+	/* the queue doesn't count for this assert because queued requests
+	 * have already gone through here and been tested.
+	 * It's legal to have deferred_requests == 0 and queue entries 
+	 * and status of S_HELPEER_DEFERRED.
+	 * BUT:  It's not legal to submit a new request w/lastserver in
+	 * that state.
+	 */
+	assert(!(lastserver->deferred_requests == 0 &&
+		lastserver->flags.reserved == S_HELPER_DEFERRED));
+	if (lastserver->flags.reserved != S_HELPER_RESERVED) {
+	    lastserver->stats.submits++;
 	    lastserver->deferred_requests--;
+	}
 	if (!(lastserver->request)) {
 	    debug(29, 5) ("StatefulSubmit dispatching\n");
 	    helperStatefulDispatch(lastserver, r);
@@ -314,8 +329,20 @@ helperStatefulDefer(statefulhelper * hlp)
 	debug(29, 1) ("helperStatefulDefer: None available.\n");
 	return NULL;
     }
+    /* consistency check:
+     * when the deferred count is 0,
+     *   submits + releases == deferbyfunc + deferbycb
+     * Or in english, when there are no deferred requests, the amount
+     * we have submitted to the queue or cancelled must equal the amount
+     * we have said we wanted to be able to submit or cancel
+     */
+    if (rv->deferred_requests == 0)
+	assert(rv->stats.submits + rv->stats.releases ==
+	    rv->stats.deferbyfunc + rv->stats.deferbycb);
+
     rv->flags.reserved = S_HELPER_DEFERRED;
     rv->deferred_requests++;
+    rv->stats.deferbyfunc++;
     return rv;
 }
 
@@ -337,7 +364,6 @@ helperStatefulReset(helper_stateful_server * srv)
 	helperStatefulRequestFree(r);
 	srv->request = NULL;
     }
-    debug(29, 1) ("helperStatefulReset reset helper %s #%d\n", hlp->id_name, srv->index + 1);
     srv->flags.busy = 0;
     if (srv->queue.head) {
 	srv->flags.reserved = S_HELPER_DEFERRED;
@@ -354,8 +380,11 @@ void
 helperStatefulReleaseServer(helper_stateful_server * srv)
 /*decrease the number of 'waiting' clients that set the helper to be DEFERRED */
 {
-    if (srv->deferred_requests > 0)
+    srv->stats.releases++;
+    if (srv->flags.reserved == S_HELPER_DEFERRED) {
+	assert(srv->deferred_requests);
 	srv->deferred_requests--;
+    }
     if (!(srv->deferred_requests) && (srv->flags.reserved == S_HELPER_DEFERRED) && !(srv->queue.head)) {
 	srv->flags.reserved = S_HELPER_FREE;
 	if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
@@ -747,7 +776,7 @@ helperStatefulHandleRead(int fd, void *data)
 		fatal("helperStatefulHandleRead: either a non-state aware callback was give to the stateful helper routines, or an uninitialised callback response was recieved.\n");
 		break;
 	    case S_HELPER_RELEASE:	/* helper finished with */
-		if (!srv->queue.head) {
+		if (!srv->deferred_requests && !srv->queue.head) {
 		    srv->flags.reserved = S_HELPER_FREE;
 		    if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
 			srv->parent->OnEmptyQueue(srv->data);
@@ -759,6 +788,7 @@ helperStatefulHandleRead(int fd, void *data)
 		break;
 	    case S_HELPER_RESERVE:	/* 'pin' this helper for the caller */
 		if (!srv->queue.head) {
+		    assert(srv->deferred_requests == 0);
 		    srv->flags.reserved = S_HELPER_RESERVED;
 		    debug(29, 5) ("StatefulHandleRead: reserving %s #%d\n", hlp->id_name, srv->index + 1);
 		} else {
@@ -771,6 +801,7 @@ helperStatefulHandleRead(int fd, void *data)
 		 */
 		srv->flags.reserved = S_HELPER_DEFERRED;
 		srv->deferred_requests++;
+		srv->stats.deferbycb++;
 		debug(29, 5) ("StatefulHandleRead: reserving %s #%d for deferred requests.\n", hlp->id_name, srv->index + 1);
 		break;
 	    default:

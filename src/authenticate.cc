@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.24 2001/07/12 22:30:25 hno Exp $
+ * $Id: authenticate.cc,v 1.25 2001/08/03 15:13:03 adrian Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -39,6 +39,8 @@
 
 
 #include "squid.h"
+
+CBDATA_TYPE(auth_user_ip_t);
 
 static void
      authenticateDecodeAuth(const char *proxy_auth, auth_user_request_t * auth_user_request);
@@ -175,6 +177,7 @@ authenticateAuthUserNew(const char *scheme)
     auth_user_t *temp_auth;
     temp_auth = memAllocate(MEM_AUTH_USER_T);
     assert(temp_auth != NULL);
+    memset(temp_auth, '\0', sizeof(auth_user_t));
     temp_auth->auth_type = AUTH_UNKNOWN;
     temp_auth->references = 0;
     temp_auth->auth_module = authenticateAuthSchemeId(scheme) + 1;
@@ -241,10 +244,109 @@ authenticateAuthUserRequestMessage(auth_user_request_t * auth_user_request)
 void
 authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct in_addr ipaddr)
 {
-    if (auth_user_request->auth_user)
-	if (!auth_user_request->auth_user->ipaddr.s_addr)
-	    auth_user_request->auth_user->ipaddr = ipaddr;
+    auth_user_ip_t *ipdata, *tempnode;
+    auth_user_t *auth_user;
+    char *ip1;
+    CBDATA_INIT_TYPE(auth_user_ip_t);
+    if (!auth_user_request->auth_user)
+	return;
+    auth_user = auth_user_request->auth_user;
+    ipdata = (auth_user_ip_t *) auth_user->ip_list.head;
+    /* we walk the entire list to prevent the first item in the list preventing
+     * old entries being flushed and locking a user out after a timeout+reconfigure
+     */
+    while (ipdata) {
+	tempnode = (auth_user_ip_t *) ipdata->node.next;
+	/* walk the ip list */
+	if (ipdata->ipaddr.s_addr == ipaddr.s_addr) {
+	    /* This ip has alreadu been seen. */
+	    /* update IP ttl */
+	    ipdata->ip_expiretime = squid_curtime;
+	} else if (ipdata->ip_expiretime + Config.authenticateIpTTL < squid_curtime) {
+	    /* This IP has expired - remove from the seen list */
+	    dlinkDelete(&ipdata->node, &auth_user->ip_list);
+	    cbdataFree(ipdata);
+	    /* catch incipient underflow */
+	    assert(auth_user->ipcount);
+	    auth_user->ipcount--;
+	}
+	ipdata = tempnode;
+    }
+
+    /* This ip is not in the seen list */
+    ipdata = cbdataAlloc(auth_user_ip_t);
+    ipdata->ip_expiretime = squid_curtime;
+    ipdata->ipaddr = ipaddr;
+    dlinkAddTail(ipdata, &ipdata->node, &auth_user->ip_list);
+    auth_user->ipcount++;
+
+    ip1 = xstrdup(inet_ntoa(ipaddr));
+    debug(29, 1) ("authenticateAuthUserRequestSetIp: user '%s' has been seen at a new IP address (%s, %s)\n ", authenticateUserUsername(auth_user), ip1);
+    safe_free(ip1);
 }
+
+void
+authenticateAuthUserRequestRemoveIp(auth_user_request_t * auth_user_request, struct in_addr ipaddr)
+{
+    auth_user_ip_t *ipdata;
+    auth_user_t *auth_user;
+    if (!auth_user_request->auth_user)
+	return;
+    auth_user = auth_user_request->auth_user;
+    ipdata = (auth_user_ip_t *) auth_user->ip_list.head;
+    while (ipdata) {
+	/* walk the ip list */
+	if (ipdata->ipaddr.s_addr == ipaddr.s_addr) {
+	    /* remove the node */
+	    dlinkDelete(&ipdata->node, &auth_user->ip_list);
+	    cbdataFree(ipdata);
+	    /* catch incipient underflow */
+	    assert(auth_user->ipcount);
+	    auth_user->ipcount--;
+	    return;
+	}
+	ipdata = (auth_user_ip_t *) ipdata->node.next;
+    }
+
+}
+
+static void
+authenticateAuthUserClearIp(auth_user_t * auth_user)
+{
+    auth_user_ip_t *ipdata, *tempnode;
+    if (!auth_user)
+	return;
+    ipdata = (auth_user_ip_t *) auth_user->ip_list.head;
+    while (ipdata) {
+	tempnode = (auth_user_ip_t *) ipdata->node.next;
+	/* walk the ip list */
+	dlinkDelete(&ipdata->node, &auth_user->ip_list);
+	cbdataFree(ipdata);
+	/* catch incipient underflow */
+	assert(auth_user->ipcount);
+	auth_user->ipcount--;
+	ipdata = tempnode;
+    }
+    /* integrity check */
+    assert(auth_user->ipcount == 0);
+}
+
+
+void
+authenticateAuthUserRequestClearIp(auth_user_request_t * auth_user_request)
+{
+    if (auth_user_request)
+	authenticateAuthUserClearIp(auth_user_request->auth_user);
+}
+
+size_t
+authenticateAuthUserRequestIPCount(auth_user_request_t * auth_user_request)
+{
+    assert(auth_user_request);
+    assert(auth_user_request->auth_user);
+    return auth_user_request->auth_user->ipcount;
+}
+
 
 /* Get Auth User: Return a filled out auth_user structure for the given
  * Proxy Auth (or Auth) header. It may be a cached Auth User or a new
@@ -256,6 +358,7 @@ authenticateGetAuthUser(const char *proxy_auth)
     auth_user_request_t *auth_user_request = authenticateAuthUserRequestNew();
     /* and lock for the callers instance */
     authenticateAuthUserRequestLock(auth_user_request);
+    /* The scheme is allowed to provide a cached auth_user or a new one */
     authenticateDecodeAuth(proxy_auth, auth_user_request);
     return auth_user_request;
 }
@@ -275,17 +378,191 @@ authenticateUserAuthenticated(auth_user_request_t * auth_user_request)
 }
 
 /*
- * authenticateAuthenticateUser: log this user request in.
+ * authenticateAuthenticateUser: call the module specific code to 
+ * log this user request in.
  * Cache hits may change the auth_user pointer in the structure if needed.
  * This is basically a handle approach.
  */
-void
+static void
 authenticateAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData * conn, http_hdr_type type)
 {
     assert(auth_user_request != NULL);
     if (auth_user_request->auth_user->auth_module > 0)
 	authscheme_list[auth_user_request->auth_user->auth_module - 1].authAuthenticate(auth_user_request, request, conn, type);
 }
+
+/* returns one of
+ * AUTH_ACL_CHALLENGE,
+ * AUTH_ACL_HELPER,
+ * AUTH_ACL_CANNOT_AUTHENTICATE,
+ * AUTH_AUTHENTICATED
+ *
+ * How to use: In your proxy-auth dependent acl code, use the following 
+ * construct:
+ * int rv;
+ * if ((rv = AuthenticateAuthenticate()) != AUTH_AUTHENTICATED)
+ *   return rv;
+ * 
+ * when this code is reached, the request/connection is authenticated.
+ *
+ * if you have non-acl code, but want to force authentication, you need a 
+ * callback mechanism like the acl testing routines that will send a 40[1|7] to
+ * the client when rv==AUTH_ACL_CHALLENGE, and will communicate with 
+ * the authenticateStart routine for rv==AUTH_ACL_HELPER
+ */
+auth_acl_t
+authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
+{
+    const char *proxy_auth;
+    assert(headertype != 0);
+    proxy_auth = httpHeaderGetStr(&request->header, headertype);
+
+    if (conn == NULL) {
+	debug(28, 1) ("authenticateAuthenticate: no connection data, cannot process authentication\n");
+	/*
+	 * deny access: clientreadrequest requires conn data, and it is always
+	 * compiled in so we should have it too.
+	 */
+	return AUTH_ACL_CANNOT_AUTHENTICATE;
+    }
+    /*
+     * a note on proxy_auth logix here:
+     * proxy_auth==NULL -> unauthenticated request || already authenticated connection
+     * so we test for an authenticated connection when we recieve no authentication
+     * header.
+     */
+    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(*auth_user_request ? *auth_user_request : conn->auth_user_request)))
+	|| (conn->auth_type == AUTH_BROKEN)) {
+	/* no header or authentication failed/got corrupted - restart */
+	conn->auth_type = AUTH_UNKNOWN;
+	debug(28, 4) ("authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.\n");
+	/* something wrong with the AUTH credentials. Force a new attempt */
+	conn->auth_user_request = NULL;
+	if (*auth_user_request) {
+	    /* unlock the ACL lock */
+	    authenticateAuthUserRequestUnlock(*auth_user_request);
+	    auth_user_request = NULL;
+	}
+	return AUTH_ACL_CHALLENGE;
+    }
+    /* 
+     * Is this an already authenticated connection with a new auth header?
+     * No check for function required in the if: its compulsory for conn based 
+     * auth modules
+     */
+    if (proxy_auth && conn->auth_user_request &&
+	authenticateUserAuthenticated(conn->auth_user_request) &&
+	strcmp(proxy_auth, authscheme_list[conn->auth_user_request->auth_user->auth_module - 1].authConnLastHeader(conn->auth_user_request))) {
+	debug(28, 1) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. Current user '%s' proxy_auth %s\n", authenticateUserRequestUsername(conn->auth_user_request), proxy_auth);
+	/* remove this request struct - the link is already authed and it can't be to 
+	 * reauth.
+	 */
+
+	/* This should _only_ ever occur on the first pass through 
+	 * authenticateAuthenticate 
+	 */
+	assert(*auth_user_request == NULL);
+	/* unlock the conn lock on the auth_user_request */
+	authenticateAuthUserRequestUnlock(conn->auth_user_request);
+	/* mark the conn as non-authed. */
+	conn->auth_user_request = NULL;
+	/* Set the connection auth type */
+	conn->auth_type = AUTH_UNKNOWN;
+    }
+    /* we have a proxy auth header and as far as we know this connection has
+     * not had bungled connection oriented authentication happen on it. */
+    debug(28, 9) ("authenticateAuthenticate: header %s.\n", proxy_auth);
+    if (*auth_user_request == NULL) {
+	debug(28, 9) ("authenticateAuthenticate: This is a new checklist test on FD:%d\n",
+	    conn->fd);
+	if ((!request->auth_user_request)
+	    && (conn->auth_type == AUTH_UNKNOWN)) {
+	    /* beginning of a new request check */
+	    debug(28, 4) ("authenticateAuthenticate: no connection authentication type\n");
+	    if (!authenticateValidateUser(*auth_user_request =
+		    authenticateGetAuthUser(proxy_auth))) {
+		/* the decode might have left a username for logging, or a message to
+		 * the user */
+		if (authenticateUserRequestUsername(*auth_user_request)) {
+		    /* lock the user for the request structure link */
+		    authenticateAuthUserRequestLock(*auth_user_request);
+		    request->auth_user_request = *auth_user_request;
+		    /* unlock the ACL reference. */
+		    authenticateAuthUserRequestUnlock(*auth_user_request);
+		}
+		*auth_user_request = NULL;
+		return AUTH_ACL_CHALLENGE;
+	    }
+	    /* the user_request comes prelocked for the caller to GetAuthUser (us) */
+	} else if (request->auth_user_request) {
+	    *auth_user_request = request->auth_user_request;
+	    /* lock the user request for this ACL processing */
+	    authenticateAuthUserRequestLock(*auth_user_request);
+	} else {
+	    if (conn->auth_user_request != NULL) {
+		*auth_user_request = conn->auth_user_request;
+		/* lock the user request for this ACL processing */
+		authenticateAuthUserRequestLock(*auth_user_request);
+	    } else {
+		/* failed connection based authentication */
+		debug(28, 4) ("authenticateAuthenticate: Auth user request %d conn-auth user request %d conn type %d authentication failed.\n",
+		    *auth_user_request, conn->auth_user_request, conn->auth_type);
+		authenticateAuthUserRequestUnlock(*auth_user_request);
+		*auth_user_request = NULL;
+		return AUTH_ACL_CHALLENGE;
+	    }
+	}
+    }
+    if (!authenticateUserAuthenticated(*auth_user_request)) {
+	/* User not logged in. Log them in */
+	authenticateAuthenticateUser(*auth_user_request, request,
+	    conn, headertype);
+	switch (authenticateDirection(*auth_user_request)) {
+	case 1:
+	    /* this ACL check is finished. Unlock. */
+	    authenticateAuthUserRequestUnlock(*auth_user_request);
+	    *auth_user_request = NULL;
+	    return AUTH_ACL_CHALLENGE;
+	case -1:
+	    /* we are partway through authentication within squid,
+	     * the *auth_user_request variables stores the auth_user_request
+	     * for the callback to here - Do not Unlock */
+	    return AUTH_ACL_HELPER;
+	case -2:
+	    /* this ACL check is finished. Unlock. */
+	    authenticateAuthUserRequestUnlock(*auth_user_request);
+	    *auth_user_request = NULL;
+	    return AUTH_ACL_CHALLENGE;
+	}
+	/* on 0 the authentication is finished - fallthrough */
+	/* See of user authentication failed for some reason */
+	if (!authenticateUserAuthenticated(*auth_user_request)) {
+	    if ((authenticateUserRequestUsername(*auth_user_request))) {
+		if (!request->auth_user_request) {
+		    /* lock the user for the request structure link */
+		    authenticateAuthUserRequestLock(*auth_user_request);
+		    request->auth_user_request = *auth_user_request;
+		}
+	    }
+	    /* this ACL check is finished. Unlock. */
+	    authenticateAuthUserRequestUnlock(*auth_user_request);
+	    *auth_user_request = NULL;
+	    return AUTH_ACL_CHALLENGE;
+	}
+    }
+    /* copy username to request for logging on client-side */
+    /* the credentials are correct at this point */
+    if (!request->auth_user_request) {
+	/* lock the user for the request structure link */
+	authenticateAuthUserRequestLock(*auth_user_request);
+	request->auth_user_request = *auth_user_request;
+	authenticateAuthUserRequestSetIp(*auth_user_request, src_addr);
+    }
+    /* Unlock the request - we've authenticated it */
+    authenticateAuthUserRequestUnlock(*auth_user_request);
+    return AUTH_AUTHENTICATED;
+}
+
 
 /* authenticateUserUsername: return a pointer to the username in the */
 char *
@@ -414,7 +691,7 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 	    || (rep->sline.status == HTTP_UNAUTHORIZED)) && internal)
 	/* this is a authenticate-needed response */
     {
-	if ((auth_user_request != NULL) && (auth_user_request->auth_user->auth_module > 0) &! authenticateUserAuthenticated(auth_user_request))
+	if ((auth_user_request != NULL) && (auth_user_request->auth_user->auth_module > 0) & !authenticateUserAuthenticated(auth_user_request))
 	    authscheme_list[auth_user_request->auth_user->auth_module - 1].authFixHeader(auth_user_request, rep, type, request);
 	else {
 	    int i;
@@ -563,6 +840,8 @@ authenticateFreeProxyAuthUser(void *data)
     }
     /* free cached acl results */
     aclCacheMatchFlush(&u->proxy_match_cache);
+    /* free seen ip address's */
+    authenticateAuthUserClearIp(u);
     if (u->scheme_data && u->auth_module > 0)
 	authscheme_list[u->auth_module - 1].FreeUser(u);
     /* prevent accidental reuse */
@@ -672,46 +951,4 @@ authenticateUserNameCacheAdd(auth_user_t * auth_user)
     auth_user->usernamehash = usernamehash;
     /* lock for presence in the cache */
     authenticateAuthUserLock(auth_user);
-}
-
-
-
-/*
- * check the user for ip changes timeouts
- * 0 = failed check
- * 1 = ip requirements are ok.
- */
-/* TODO:
- * ip_expire data should be in a struct of it's own - for code reuse */
-int
-authenticateCheckAuthUserIP(struct in_addr request_src_addr, auth_user_request_t * auth_user_request)
-{
-    char *username = authenticateUserRequestUsername(auth_user_request);
-    if (request_src_addr.s_addr == auth_user_request->auth_user->ipaddr.s_addr || auth_user_request->auth_user->ip_expiretime + Config.authenticateIpTTL <= squid_curtime) {
-	/* user has not moved ip or had the ip timeout expire */
-	if ((auth_user_request->auth_user->auth_type == AUTH_UNKNOWN) ||
-	    (auth_user_request->auth_user->auth_type == AUTH_BROKEN)) {
-	    debug(29, 1) ("authenticateCheckProxyAuthIP: broken or unknown auth type %d.\n", auth_user_request->auth_user->auth_type);
-	    return 0;
-	}
-	username = authenticateUserRequestUsername(auth_user_request);
-	/* Update IP ttl */
-	auth_user_request->auth_user->ip_expiretime = squid_curtime;
-	auth_user_request->auth_user->ipaddr = request_src_addr;
-	return 1;
-    } else {
-	char *ip1 = xstrdup(inet_ntoa(auth_user_request->auth_user->ipaddr));
-	char *ip2 = xstrdup(inet_ntoa(request_src_addr));
-	if (Config.onoff.authenticateIpTTLStrict) {
-	    debug(29, 1) ("aclMatchProxyAuth: user '%s' tried to use multiple IP addresses! (%s, %s)\n ", username, ip1, ip2);
-	} else {
-	    /* Non-strict mode. Reassign ownership to the new IP */
-	    auth_user_request->auth_user->ipaddr.s_addr = request_src_addr.s_addr;
-	    debug(29, 1) ("aclMatchProxyAuth: user '%s' has changed IP address (%s, %s)\n ", username, ip1, ip2);
-	}
-	safe_free(ip1);
-	safe_free(ip2);
-	/* and deny access */
-	return 0;
-    }
 }

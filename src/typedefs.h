@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.129 2001/07/28 09:21:32 hno Exp $
+ * $Id: typedefs.h,v 1.130 2001/08/03 15:13:04 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -64,10 +64,12 @@ typedef struct _acl_deny_info_list acl_deny_info_list;
 typedef struct _auth_user_t auth_user_t;
 typedef struct _auth_user_request_t auth_user_request_t;
 typedef struct _auth_user_hash_pointer auth_user_hash_pointer;
+typedef struct _auth_user_ip_t auth_user_ip_t;
 typedef struct _acl_proxy_auth_match_cache acl_proxy_auth_match_cache;
 typedef struct _authscheme_entry authscheme_entry_t;
 typedef struct _authScheme authScheme;
 typedef struct _acl_user_data acl_user_data;
+typedef struct _acl_user_ip_data acl_user_ip_data;
 typedef struct _acl_arp_data acl_arp_data;
 typedef struct _acl acl;
 typedef struct _acl_snmp_comm acl_snmp_comm;
@@ -313,6 +315,7 @@ typedef void AUTHSSETUP(authscheme_entry_t *);
 typedef void AUTHSSHUTDOWN(void);
 typedef void AUTHSSTART(auth_user_request_t *, RH *, void *);
 typedef void AUTHSSTATS(StoreEntry *);
+typedef const char *AUTHSCONNLASTHEADER(auth_user_request_t *);
 
 /* append/vprintf's for Packer */
 typedef void (*append_f) (void *, const char *buf, int size);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.395 2001/07/28 09:21:32 hno Exp $
+ * $Id: structs.h,v 1.396 2001/08/03 15:13:04 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,6 +53,12 @@ struct _acl_user_data {
     } flags;
 };
 
+struct _acl_user_ip_data {
+    size_t max;
+    struct {
+	unsigned int strict:1;
+    } flags;
+};
 
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
@@ -87,6 +93,13 @@ struct _auth_user_hash_pointer {
     dlink_node link;		/* other hash entries that point to the same auth_user */
 };
 
+struct _auth_user_ip_t {
+    dlink_node node;
+    /* IP addr this user authenticated from */
+    struct in_addr ipaddr;
+    time_t ip_expiretime;
+};
+
 struct _auth_user_t {
     /* extra fields for proxy_auth */
     /* this determines what scheme owns the user data. */
@@ -98,13 +111,12 @@ struct _auth_user_t {
     /* we may have many proxy-authenticate strings that decode to the same user */
     dlink_list proxy_auth_list;
     dlink_list proxy_match_cache;
+    dlink_list ip_list;
+    size_t ipcount;
     struct {
 	unsigned int credentials_ok:2;	/*0=unchecked,1=ok,2=failed */
     } flags;
     long expiretime;
-    /* IP addr this user authenticated from */
-    struct in_addr ipaddr;
-    time_t ip_expiretime;
     /* how many references are outstanding to this instance */
     size_t references;
     /* the auth scheme has it's own private data area */
@@ -146,6 +158,7 @@ struct _authscheme_entry {
     AUTHSFREECONFIG *freeconfig;
     AUTHSUSERNAME *authUserUsername;
     AUTHSONCLOSEC *oncloseconnection;	/*optional */
+    AUTHSCONNLASTHEADER *authConnLastHeader;
     AUTHSDECODE *decodeauth;
     AUTHSDIRECTION *getdirection;
     AUTHSPARSE *parse;
@@ -553,7 +566,6 @@ struct _SquidConfig {
 	int digest_generation;
 #endif
 	int log_ip_on_direct;
-	int authenticateIpTTLStrict;
 	int ie_refresh;
 	int vary_ignore_expire;
 	int pipeline_prefetch;
@@ -2039,6 +2051,10 @@ struct _helper_stateful_server {
     } flags;
     struct {
 	int uses;
+	int submits;
+	int releases;
+	int deferbyfunc;
+	int deferbycb;
     } stats;
     size_t deferred_requests;	/* current number of deferred requests */
     void *data;			/* State data used by the calling routines */

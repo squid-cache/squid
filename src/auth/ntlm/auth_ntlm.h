@@ -28,10 +28,12 @@ struct _ntlm_request {
     char *authchallenge;
     /* what authenticate string did we get? */
     char *ntlmauthenticate;
-    /*we need to store the NTLM helper between requests */
-    helper_stateful_server *authhelper;
+    /*we need to store the NTLM server between requests */
+    helper_stateful_server *authserver;
     /* how far through the authentication process are we? */
     auth_state_t auth_state;
+    /* have we got the helper-server in a deferred state? */
+    int authserver_deferred;
 };
 
 struct _ntlm_helper_state_t {

@@ -213,7 +213,7 @@ const char *
 obtain_challenge()
 {
     int j = 0;
-    const char *ch;
+    const char *ch = NULL;
     debug("obtain_challenge: getting new challenge\n");
     for (j = 0; j < numcontrollers; j++) {
 	if (current_dc->status == DC_OK) {
