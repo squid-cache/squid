@@ -60,6 +60,27 @@ Changes to squid-2.5 ():
 	  and are valid according to the HTML standards at www.w3.org.
 	  (Clemens Löser)
 
+Changes to Squid-2.4.STABLE7 (July 2, 2002):
+
+	- Squid now drops any requests using transfer-encoding.
+	  Squid is a HTTP/1.0 proxy and as such do not support
+	  the use of transfer-encoding.
+	- The MSNT auth helper has been updated to v2.0.3+fixes for
+	  buffer overflow security issues found in this helper.
+	- A security issue in how Squid forwards proxy authentication
+	  credentials has been fixed
+	- Minor changes to support Apple MAC OS X and some other platforms
+	  more easily.
+	- The client -T option has been implemented
+	- HTCP related bugfixes in "squid -k reconfigure"
+	- Several bugfixes and cleanup of the Gopher client, both
+	  to correct some security issues and to make Squid properly
+	  render certain Gopher menus.
+	- FTP data channels are now sanity checked to match the address of
+	  the requested FTP server. This to prevent theft or injection of
+	  data. See the new ftp_sanitycheck directive if this is not desired.
+	- Security fixes in how Squid parses FTP directory listings into HTML
+
 Changes to Squid-2.4.STABLE6 (March 19, 2002):
 
 	- The patch for 2.4.STABLE5 was insufficiently tested and
