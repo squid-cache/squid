@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.223 2000/10/03 22:38:13 wessels Exp $
+ * $Id: acl.cc,v 1.224 2000/10/04 00:24:16 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1686,8 +1686,6 @@ aclCheck(aclCheck_t * checklist)
 void
 aclChecklistFree(aclCheck_t * checklist)
 {
-    if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_PENDING)
-	ipcacheUnregister(checklist->request->host, checklist);
     if (checklist->request)
 	requestUnlink(checklist->request);
     checklist->request = NULL;

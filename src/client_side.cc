@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.498 2000/09/14 15:42:00 wessels Exp $
+ * $Id: client_side.cc,v 1.499 2000/10/04 00:24:16 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1989,10 +1989,10 @@ clientProcessRequest2(clientHttpRequest * http)
     }
     /* Release negatively cached IP-cache entries on reload */
     if (r->flags.nocache)
-	ipcacheReleaseInvalid(r->host);
+	ipcacheInvalidate(r->host);
 #if HTTP_VIOLATIONS
     else if (r->flags.nocache_hack)
-	ipcacheReleaseInvalid(r->host);
+	ipcacheInvalidate(r->host);
 #endif
 #if USE_CACHE_DIGESTS
     http->lookup_type = e ? "HIT" : "MISS";
@@ -2031,7 +2031,7 @@ clientProcessRequest2(clientHttpRequest * http)
     if (r->flags.nocache) {
 	debug(33, 3) ("clientProcessRequest2: no-cache REFRESH MISS\n");
 	http->entry = NULL;
-	ipcacheReleaseInvalid(r->host);
+	ipcacheInvalidate(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
     }
     if (NULL == r->range) {

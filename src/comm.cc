@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.306 2000/06/27 22:06:00 hno Exp $
+ * $Id: comm.cc,v 1.307 2000/10/04 00:24:17 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -282,8 +282,6 @@ commConnectFree(int fd, void *data)
 {
     ConnectStateData *cs = data;
     debug(5, 3) ("commConnectFree: FD %d\n", fd);
-    if (cs->locks)
-	ipcacheUnregister(cs->host, cs);
     if (cs->data)
 	cbdataUnlock(cs->data);
     safe_free(cs->host);
