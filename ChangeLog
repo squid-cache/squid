@@ -4,6 +4,8 @@
 	- Fixed HTCP compile-time bugs.
 	- Fixed quick_abort bugs.  Configured values are stored as
 	  Kbytes, not bytes.
+	- Changed storeDirSelectSwapDir() to skip swap directories
+	  when their utilization is over the high water mark ratio.
 
 Changes to squid-1.2.beta25 (September 21, 1998):
 
