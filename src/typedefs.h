@@ -74,6 +74,7 @@ typedef struct _CommWriteStateData CommWriteStateData;
 typedef struct _ErrorState ErrorState;
 typedef struct _dlink_node dlink_node;
 typedef struct _dlink_list dlink_list;
+
 typedef void AIOCB(void *, int aio_return, int aio_errno);
 typedef void CWCB(int fd, char *, int size, int errflag, void *data);
 typedef void CNCB(int fd, int status, void *);
@@ -86,8 +87,8 @@ typedef void DWCB(int, int, size_t, void *);
 typedef void FILE_WALK_HD(int fd, int errflag, void *data);
 typedef void FILE_WALK_LHD(int fd, const char *buf, int size, void *line_data);
 typedef void FQDNH(const char *, void *);
-typedef int HASHCMP(const char *, const char *);
-typedef unsigned int HASHHASH(const char *, unsigned int);
+typedef int HASHCMP(const void *, const void *);
+typedef unsigned int HASHHASH(const void *, unsigned int);
 typedef void IDCB(void *);
 typedef void IPH(const ipcache_addrs *, void *);
 typedef void IRCB(peer *, peer_t, icp_common_t *, void *data);
@@ -102,3 +103,23 @@ typedef void STABH(void *);
 typedef void ERCB(int fd, void *, int size);
 typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
+
+/* 32 bit integer compatability hack */
+#if SIZEOF_INT == 4
+typedef int num32;
+typedef unsigned int u_num32;
+#elif SIZEOF_LONG == 4
+typedef long num32;
+typedef unsigned long u_num32;
+#else
+typedef long num32;		/* assume that long's are 32bit */
+typedef unsigned long u_num32;
+#endif
+#define NUM32LEN sizeof(num32)	/* this should always be 4 */
+
+#if STORE_KEY_SHA
+typedef int cache_key;
+#endif
+#if STORE_KEY_URL
+typedef char cache_key;
+#endif

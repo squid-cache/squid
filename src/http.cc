@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.214 1997/10/31 23:37:24 wessels Exp $
+ * $Id: http.cc,v 1.215 1997/11/03 22:43:12 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -250,7 +250,7 @@ httpTimeout(int fd, void *data)
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
     ErrorState *err;
-    debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, entry->url);
+    debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     assert(entry->store_status == STORE_PENDING);
     if (entry->mem_obj->inmem_hi == 0) {
 	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
@@ -831,7 +831,7 @@ httpBuildRequestHeader(request_t * request,
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     }
     if (!EBIT_TEST(cc_flags, CCC_MAXAGE)) {
-	url = entry ? entry->url : urlCanonical(orig_request, NULL);
+	url = entry ? storeUrl(entry) : urlCanonical(orig_request, NULL);
 	snprintf(ybuf, YBUF_SZ, "Cache-control: Max-age=%d", (int) getMaxAge(url));
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
 	if (request->urlpath) {
@@ -943,7 +943,7 @@ httpSocketOpen(StoreEntry * entry, request_t * request)
 	Config.Addrs.tcp_outgoing,
 	0,
 	COMM_NONBLOCKING,
-	entry->url);
+	storeUrl(entry));
     if (fd < 0) {
 	debug(11, 4) ("httpSocketOpen: Failed because we're out of sockets.\n");
 	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
@@ -970,7 +970,7 @@ httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
 	request->method = orig_request->method;
 	xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
 	request->port = e->http_port;
-	xstrncpy(request->urlpath, entry->url, MAX_URL);
+	xstrncpy(request->urlpath, storeUrl(entry), MAX_URL);
 	httpState->request = requestLink(request);
 	httpState->peer = e;
 	httpState->orig_request = requestLink(orig_request);
@@ -990,7 +990,7 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
     HttpStateData *httpState;
     int fd;
     debug(11, 3) ("httpStart: \"%s %s\"\n",
-	RequestMethodStr[request->method], entry->url);
+	RequestMethodStr[request->method], storeUrl(entry));
     if (e) {
 	if (e->options & NEIGHBOR_PROXY_ONLY)
 	    storeReleaseRequest(entry);
@@ -1034,7 +1034,7 @@ static void
 httpRestart(HttpStateData * httpState)
 {
     /* restart a botched request from a persistent connection */
-    debug(11, 2) ("Retrying HTTP request for %s\n", httpState->entry->url);
+    debug(11, 2) ("Retrying HTTP request for %s\n", storeUrl(httpState->entry));
     if (httpState->fd >= 0) {
 	comm_remove_close_handler(httpState->fd, httpStateFree, httpState);
 	comm_close(httpState->fd);
@@ -1082,7 +1082,7 @@ httpConnectDone(int fd, int status, void *data)
 	    peerCheckConnectStart(httpState->peer);
 	comm_close(fd);
     } else {
-	fd_note(fd, entry->url);
+	fd_note(fd, storeUrl(entry));
 	fd_table[fd].uses++;
 	commSetSelect(fd, COMM_SELECT_WRITE, httpSendRequest, httpState, 0);
     }
@@ -1112,7 +1112,7 @@ static void
 httpAbort(void *data)
 {
     HttpStateData *httpState = data;
-    debug(11, 2) ("httpAbort: %s\n", httpState->entry->url);
+    debug(11, 2) ("httpAbort: %s\n", storeUrl(httpState->entry));
     comm_close(httpState->fd);
 }
 

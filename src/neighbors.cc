@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.164 1997/10/27 22:54:37 wessels Exp $
+ * $Id: neighbors.cc,v 1.165 1997/11/03 22:43:16 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -400,7 +400,7 @@ neighborsUdpPing(request_t * request,
     int *exprep)
 {
     char *host = request->host;
-    char *url = entry->url;
+    const char *url = storeUrl(entry);
     MemObject *mem = entry->mem_obj;
     const ipcache_addrs *ia = NULL;
     struct sockaddr_in to_addr;
@@ -420,8 +420,7 @@ neighborsUdpPing(request_t * request,
 	debug(15, 0) ("Check 'icp_port' in your config file\n");
 	fatal_dump(NULL);
     }
-    if (entry->swap_status != SWAPOUT_NONE)
-	fatal_dump("neighborsUdpPing: bad swap_status");
+    assert(entry->swap_status == SWAPOUT_NONE);
     mem->start_ping = current_time;
     mem->icp_reply_callback = callback;
     mem->ircb_data = callback_data;
@@ -436,7 +435,7 @@ neighborsUdpPing(request_t * request,
 	    p->host, url);
 	if (p->type == PEER_MULTICAST)
 	    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
-	reqnum = storeReqnum(entry, request->method);
+	reqnum = mem->reqnum;
 	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", entry->key);
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
@@ -918,7 +917,7 @@ peerCountMcastPeersStart(void *data)
     mem->icp_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;
     mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
-    p->mcast.reqnum = storeReqnum(fake, METHOD_GET);
+    p->mcast.reqnum = mem->reqnum;
     query = icpCreateMessage(ICP_OP_QUERY, 0, url, p->mcast.reqnum, 0);
     icpUdpSend(theOutIcpConnection,
 	&p->in_addr,

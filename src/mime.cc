@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.41 1997/10/25 17:22:50 wessels Exp $
+ * $Id: mime.cc,v 1.42 1997/11/03 22:43:15 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -397,8 +397,10 @@ mimeLoadIconFile(const char *icon)
     LOCAL_ARRAY(char, path, MAXPATHLEN);
     LOCAL_ARRAY(char, url, MAX_URL);
     char *buf;
+    const cache_key *key;
     snprintf(url, MAX_URL, "http://internal.squid/icons/%s", icon);
-    if (storeGet(url))
+    key = storeKeyPublic(url, METHOD_GET);
+    if (storeGet(key))
 	return;
     snprintf(path, MAXPATHLEN, "%s/%s", Config.icons.directory, icon);
     fd = file_open(path, O_RDONLY, NULL, NULL);

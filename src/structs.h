@@ -575,7 +575,7 @@ struct _peer {
 	int n_times_counted;
 	int n_replies_expected;
 	int ttl;
-	int reqnum;
+	u_num32 reqnum;
 	int flags;
     } mcast;
     int tcp_up;			/* 0 if a connect() fails */
@@ -655,7 +655,6 @@ struct _icp_common_t {
     u_num32 reqnum;		/* req number (req'd for UDP) */
     u_num32 flags;
     u_num32 pad;
-    /* u_num32 auth[ICP_AUTH_SIZE];     authenticator (old) */
     u_num32 shostid;		/* sender host id */
 };
 
@@ -692,9 +691,9 @@ struct _Meta_data {
     int netdb_addrs;
     int netdb_hosts;
     int netdb_peers;
-    int url_strings;
     int misc;
     int client_info;
+    int store_keys;
 };
 
 struct _cacheinfo {
@@ -765,6 +764,7 @@ struct _dlink_list {
 
 /* This structure can be freed while object is purged out from memory */
 struct _MemObject {
+    char *url;
     mem_hdr *data;
     off_t inmem_hi;
     off_t inmem_lo;
@@ -787,14 +787,13 @@ struct _MemObject {
     } abort;
     char *log_url;
     dlink_node lru;
+    u_num32 reqnum;
 };
 
-/* A cut down structure for store manager */
 struct _StoreEntry {
     /* first two items must be same as hash_link in hash.h */
-    char *key;
+    const cache_key *key;
     struct _StoreEntry *next;
-    char *url;
     MemObject *mem_obj;
     u_num32 flag;
     u_num32 refcount;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.94 1997/10/30 03:31:26 wessels Exp $
+ * $Id: wais.cc,v 1.95 1997/11/03 22:43:26 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -142,7 +142,7 @@ waisTimeout(int fd, void *data)
     WaisStateData *waisState = data;
     ErrorState *err;
     StoreEntry *entry = waisState->entry;
-    debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, entry->url);
+    debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
     err->request = urlParse(METHOD_CONNECT, waisState->request);
     errorAppendEntry(entry, err);
@@ -285,7 +285,7 @@ waisStart(request_t * request, StoreEntry * entry)
 {
     WaisStateData *waisState = NULL;
     int fd;
-    char *url = entry->url;
+    const char *url = storeUrl(entry);
     method_t method = request->method;
     debug(24, 3) ("waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
     if (!Config.Wais.relayHost) {
@@ -365,6 +365,6 @@ static void
 waisAbort(void *data)
 {
     HttpStateData *waisState = data;
-    debug(24, 1) ("waisAbort: %s\n", waisState->entry->url);
+    debug(24, 1) ("waisAbort: %s\n", storeUrl(waisState->entry));
     comm_close(waisState->fd);
 }

@@ -1,5 +1,6 @@
+
 /*
- * $Id: globals.h,v 1.14 1997/10/31 04:09:07 wessels Exp $
+ * $Id: globals.h,v 1.15 1997/11/03 22:43:10 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */

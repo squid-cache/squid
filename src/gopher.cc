@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.109 1997/10/30 02:41:01 wessels Exp $
+ * $Id: gopher.cc,v 1.110 1997/11/03 22:43:11 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -372,7 +372,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	    "<BODY><H1>%s<BR>Gopher Search</H1>\n"
 	    "<p>This is a searchable Gopher index. Use the search\n"
 	    "function of your browser to enter search terms.\n"
-	    "<ISINDEX></BODY></HTML>\n", entry->url, entry->url);
+	    "<ISINDEX></BODY></HTML>\n", storeUrl(entry), storeUrl(entry));
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
 	BIT_CLR(entry->flag, DELAY_SENDING);
@@ -387,7 +387,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	    "<P>A CSO database usually contains a phonebook or\n"
 	    "directory.  Use the search function of your browser to enter\n"
 	    "search terms.</P><ISINDEX></BODY></HTML>\n",
-	    entry->url, entry->url);
+	    storeUrl(entry), storeUrl(entry));
 
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
@@ -420,7 +420,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 		/* copy it to temp buffer */
 		if (gopherState->len + len > TEMP_BUF_SIZE) {
 		    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
-			entry->url);
+			storeUrl(entry));
 		    len = TEMP_BUF_SIZE - gopherState->len;
 		}
 		xmemcpy(gopherState->buf + gopherState->len, inbuf, len);
@@ -446,7 +446,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 		/* copy it to temp buffer */
 		if ((len - (pos - inbuf)) > TEMP_BUF_SIZE) {
 		    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
-			entry->url);
+			storeUrl(entry));
 		    len = TEMP_BUF_SIZE;
 		}
 		if (len > (pos - inbuf)) {
@@ -650,7 +650,7 @@ gopherTimeout(int fd, void *data)
     GopherStateData *gopherState = data;
     StoreEntry *entry = gopherState->entry;
     ErrorState *err;
-    debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, entry->url);
+    debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     if (entry->mem_obj->inmem_hi == 0) {
 	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	err->url = xstrdup(gopherState->request);
@@ -707,7 +707,7 @@ gopherReadReply(int fd, void *data)
 	    ErrorState *err;
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->xerrno = errno;
-	    err->url = xstrdup(entry->url);
+	    err->url = xstrdup(storeUrl(entry));
 	    errorAppendEntry(entry, err);
 	    storeAbort(entry, 0);
 	    comm_close(fd);
@@ -759,7 +759,7 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	err->xerrno = errno;
 	err->host = xstrdup(gopherState->host);
 	err->port = gopherState->port;
-	err->url = xstrdup(entry->url);
+	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
 
 	storeAbort(entry, 0);
@@ -840,13 +840,13 @@ gopherStart(StoreEntry * entry)
     int fd;
     storeLockObject(entry);
     gopherState->entry = entry;
-    debug(10, 3) ("gopherStart: %s\n", entry->url);
+    debug(10, 3) ("gopherStart: %s\n", storeUrl(entry));
     /* Parse url. */
-    if (gopher_url_parser(entry->url, gopherState->host, &gopherState->port,
+    if (gopher_url_parser(storeUrl(entry), gopherState->host, &gopherState->port,
 	    &gopherState->type_id, gopherState->request)) {
 	ErrorState *err;
 	err = errorCon(ERR_INVALID_URL, HTTP_BAD_REQUEST);
-	err->url = xstrdup(entry->url);
+	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
@@ -858,12 +858,12 @@ gopherStart(StoreEntry * entry)
 	Config.Addrs.tcp_outgoing,
 	0,
 	COMM_NONBLOCKING,
-	entry->url);
+	storeUrl(entry));
     if (fd == COMM_ERROR) {
 	debug(10, 4) ("gopherStart: Failed because we're out of sockets.\n");
 	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->xerrno = errno;
-	err->url = xstrdup(entry->url);
+	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
@@ -910,7 +910,7 @@ gopherConnectDone(int fd, int status, void *data)
 	debug(10, 4) ("gopherConnectDone: Unknown host: %s\n", gopherState->host);
 	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->dnsserver_msg = xstrdup(dns_error_message);
-	err->url = xstrdup(entry->url);
+	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
 	storeAbort(gopherState->entry, 0);
 	comm_close(fd);
@@ -920,7 +920,7 @@ gopherConnectDone(int fd, int status, void *data)
 	err->xerrno = errno;
 	err->host = xstrdup(gopherState->host);
 	err->port = gopherState->port;
-	err->url = xstrdup(entry->url);
+	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
 	storeAbort(gopherState->entry, 0);
 	comm_close(fd);
@@ -943,6 +943,6 @@ static void
 gopherAbort(void *data)
 {
     GopherStateData *gopherState = data;
-    debug(10, 1) ("gopherAbort: %s\n", gopherState->entry->url);
+    debug(10, 1) ("gopherAbort: %s\n", storeUrl(gopherState->entry));
     comm_close(gopherState->fd);
 }
