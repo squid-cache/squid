@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.385 2003/07/22 15:23:02 robertc Exp $
+ * $Id: main.cc,v 1.386 2003/08/17 13:22:30 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1274,7 +1274,7 @@ checkRunningPid(void)
     if (kill(pid, 0) < 0)
         return 0;
 
-    debug(0, 0) ("Squid is already running!  Process ID %d\n", pid);
+    debugs(0, 0, "Squid is already running!  Process ID " <<  pid);
 
     return 1;
 }
