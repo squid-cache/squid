@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.82 1998/08/14 19:25:14 wessels Exp $
+ * $Id: cachemgr.cc,v 1.83 1998/09/24 20:35:11 rousskov Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -162,7 +162,7 @@ static struct in_addr no_addr;
 /*
  * Function prototypes
  */
-#define safe_free(str) if (str) { xfree(str); (str) = NULL; }
+#define safe_free(str) { if (str) { xfree(str); (str) = NULL; } }
 static const char *safe_str(const char *str);
 static char *xstrtok(char **str, char del);
 static void print_trailer(void);
