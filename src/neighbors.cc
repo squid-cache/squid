@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.192 1998/04/04 08:13:49 wessels Exp $
+ * $Id: neighbors.cc,v 1.193 1998/04/06 22:24:36 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -462,7 +462,7 @@ neighborsUdpPing(request_t * request,
 		&p->in_addr,
 		query,
 		LOG_TAG_NONE,
-		PROTO_NONE);
+		0);
 	} else {
 	    flags = 0;
 	    if (Config.onoff.query_icmp)
@@ -473,7 +473,7 @@ neighborsUdpPing(request_t * request,
 		&p->in_addr,
 		query,
 		LOG_TAG_NONE,
-		PROTO_NONE);
+		0);
 	}
 	queries_sent++;
 
@@ -532,7 +532,7 @@ neighborsUdpPing(request_t * request,
 		    &to_addr,
 		    query,
 		    LOG_TAG_NONE,
-		    PROTO_NONE);
+		    0);
 	    }
 	} else {
 	    debug(15, 6) ("neighborsUdpPing: Source Ping: unknown host: %s\n",
@@ -951,7 +951,7 @@ peerCountMcastPeersStart(void *data)
 	&p->in_addr,
 	query,
 	LOG_TAG_NONE,
-	PROTO_NONE);
+	0);
     fake->ping_status = PING_WAITING;
     eventAdd("peerCountMcastPeersDone",
 	peerCountMcastPeersDone,
