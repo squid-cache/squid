@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.97 1996/10/18 20:36:24 wessels Exp $
+ * $Id: main.cc,v 1.98 1996/10/24 05:07:22 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -122,6 +122,7 @@ static int opt_send_signal = -1;	/* no signal to send */
 int opt_udp_hit_obj = 1;
 int opt_mem_pools = 1;
 int opt_forwarded_for = 1;
+int opt_read_only = 0;
 int vhost_mode = 0;
 volatile int unbuffered_logs = 1;	/* debug and hierarchy unbuffered by default */
 volatile int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
@@ -141,6 +142,7 @@ static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 #if MALLOC_DBG
 static int malloc_debug_level = 0;
 #endif
+static char *get_url;
 
 static time_t next_cleaning;
 static time_t next_maintain;
@@ -280,6 +282,12 @@ mainParseOptions(int argc, char *argv[])
 	    break;
 	}
     }
+    argc -= optind;
+    argv += optind;
+    if (argc) {
+	opt_read_only = 1;
+	get_url = xstrdup(*argv);
+    }
 }
 
 static void
@@ -323,9 +331,7 @@ serverConnectionsOpen(void)
 {
     struct in_addr addr;
     u_short port;
-    /* Get our real priviliges */
-
-    /* Open server ports */
+    if (!opt_read_only) {
     enter_suid();
     theHttpConnection = comm_open(SOCK_STREAM,
 	0,
@@ -345,9 +351,12 @@ serverConnectionsOpen(void)
 	NULL, 0);
     debug(1, 1, "Accepting HTTP connections on FD %d.\n",
 	theHttpConnection);
+    }
 
     if (!httpd_accel_mode || Config.Accel.withProxy) {
 	if ((port = Config.Port.icp) > (u_short) 0) {
+	    if (opt_read_only)
+		Config.Port.icp = port = 0;
 	    enter_suid();
 	    theInIcpConnection = comm_open(SOCK_DGRAM,
 		0,
@@ -568,7 +577,8 @@ mainMaintenance(void)
 	    storePurgeOld();
 	    next_cleaning = squid_curtime + Config.cleanRate;
 	} else if (squid_curtime >= next_announce) {
-	    send_announce();
+	    if (Config.Announce.on)
+	    	send_announce();
 	    next_announce = squid_curtime + Config.Announce.rate;
 	}
     }
@@ -643,6 +653,10 @@ main(int argc, char **argv)
     hash_init(0);
 
     mainInitialize();
+    if (get_url) {
+	sigusr2_handle(0);
+	icpFakeRequest(get_url);
+    }
 
     /* main loop */
     for (;;) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.27 1996/10/11 23:11:54 wessels Exp $
+ * $Id: fqdncache.cc,v 1.28 1996/10/24 05:07:18 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -392,7 +392,7 @@ fqdncache_add(char *name, fqdncache_entry * f, struct hostent *hp, int cached)
     f->name = xstrdup(name);
     if (cached) {
 	f->name_count = 0;
-	f->names[f->name_count++] = xstrdup(hp->h_name);
+	f->names[f->name_count++] = xstrdup((char *)hp->h_name);
 	for (k = 0; hp->h_aliases[k]; k++) {
 	    f->names[f->name_count++] = xstrdup(hp->h_aliases[k]);
 	    if (f->name_count == FQDN_MAX_NAMES)
