@@ -80,6 +80,20 @@
  */
 #undef CACHEMGR_HOSTNAME
 
+/*
+ * What default TCP port to use for HTTP listening?
+ */
+#ifndef CACHE_HTTP_PORT
+#undef CACHE_HTTP_PORT
+#endif
+
+/*
+ * What default UDP port to use for ICP listening?
+ */
+#ifndef CACHE_ICP_PORT
+#undef CACHE_ICP_PORT
+#endif
+
 /* Define to do simple malloc debugging */
 #undef XMALLOC_DEBUG
 
@@ -569,9 +583,6 @@
 
 /* Define if you have the <byteswap.h> header file.  */
 #undef HAVE_BYTESWAP_H
-
-/* Define if you have the <config.h> header file.  */
-#undef HAVE_CONFIG_H
 
 /* Define if you have the <crypt.h> header file.  */
 #undef HAVE_CRYPT_H
