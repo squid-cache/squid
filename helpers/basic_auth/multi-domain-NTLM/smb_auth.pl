@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: smb_auth.pl,v 1.4 2003/01/23 00:35:50 robertc Exp $
+# $Id: smb_auth.pl,v 1.5 2003/05/17 17:13:05 hno Exp $
 
 #if you define this, debugging output will be printed to STDERR.
 #$debug=1;
@@ -38,11 +38,12 @@ use Authen::Smb;
 
 $|=1;
 while (<>) {
-	if (! m;([^\\]+)(\\|/|%2f|%5c)(\S+)\s(.*); ) { #parse the line
+	chomp;
+	if (! m;^(\S+)(/|%5c)(\S+)\s(\S+)$; ) { #parse the line
 		print "ERR\n";
 		next;
 	}
-        $domain=$1;
+	$domain=$1;
 	$user=$3;
 	$pass=$4;
 	$domain =~ s/%([0-9a-f][0-9a-f])/pack("H2",$1)/gie;
