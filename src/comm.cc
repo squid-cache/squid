@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.295 1999/01/11 21:29:46 wessels Exp $
+ * $Id: comm.cc,v 1.296 1999/01/11 22:46:16 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -305,6 +305,7 @@ commResetFD(ConnectStateData * cs)
 	return 0;
     Counter.syscalls.sock.sockets++;
     fd2 = socket(AF_INET, SOCK_STREAM, 0);
+    Counter.syscalls.sock.sockets++;
     if (fd2 < 0) {
 	debug(5, 0) ("commResetFD: socket: %s\n", xstrerror());
 	fdAdjustReserved();
@@ -317,7 +318,23 @@ commResetFD(ConnectStateData * cs)
     }
     close(fd2);
     fd_table[cs->fd].flags.called_connect = 0;
+    /*
+     * yuck, this has assumptions about comm_open() arguments for
+     * the original socket
+     */
+    commSetCloseOnExec(cs->fd);
+    if (Config.Addrs.tcp_outgoing.s_addr != no_addr.s_addr) {
+	if (commBind(cs->fd, Config.Addrs.tcp_outgoing, 0) != COMM_OK) {
+	    comm_close(cs->fd);
+	    return 0;
+	}
+    }
     commSetNonBlocking(cs->fd);
+#ifdef TCP_NODELAY
+    commSetTcpNoDelay(cs->fd);
+#endif
+    if (Config.tcpRcvBufsz > 0)
+	commSetTcpRcvbuf(cs->fd, Config.tcpRcvBufsz);
     return 1;
 }
 
