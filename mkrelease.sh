@@ -50,3 +50,4 @@ cp -p $tmpdir/CONTRIBUTORS	$dst/CONTRIBUTORS.txt
 cp -p $tmpdir/COPYING		$dst/COPYING.txt
 cp -p $tmpdir/COPYRIGHT		$dst/COPYRIGHT.txt
 cp -p $tmpdir/CREDITS		$dst/CREDITS.txt
+cp -p $tmpdir/ChangeLog		$dst/ChangeLog.txt
