@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.2 1998/08/14 09:22:34 wessels Exp $
+ * $Id: delay_pools.cc,v 1.3 1998/08/17 16:44:03 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -38,7 +38,6 @@
 #if DELAY_POOLS
 #include "squid.h"
 
-
 struct _delayData {
     int class1_aggregate;
     int class2_aggregate;
@@ -72,7 +71,8 @@ int
 delayClient(clientHttpRequest * http)
 {
     aclCheck_t ch;
-    int i, j;
+    int i;
+    int j;
     unsigned int host;
     unsigned char net;
     unsigned char class = 0;
@@ -340,7 +340,7 @@ delayPoolsInit(void)
  * into account bytes already buffered - that is up to the caller.
  */
 int
-delayBytesWanted(delay_id d, int max)
+delayBytesWanted(delay_id d, int min, int max)
 {
     int position = d & 0xFFFF;
     unsigned char class = (d & 0xFF0000) >> 16;
@@ -374,15 +374,16 @@ delayBytesWanted(delay_id d, int max)
 	fatalf("delayBytesWanted: Invalid class %d\n", class);
 	break;
     }
-    assert(nbytes > 0);
+    nbytes = XMAX(min, nbytes);
+    assert(nbytes >= min);
     assert(nbytes <= max);
     return nbytes;
 }
 
 /*
  * this records actual bytes recieved.  always recorded, even if the
- * class is disabled - see above for all the cases which would be needed
- * to efficiently not record it, so it's just ignored if not wanted.
+ * class is disabled - it's more efficient to just do it than to do all
+ * the checks.
  */
 void
 delayBytesIn(delay_id d, int qty)
@@ -413,22 +414,24 @@ int
 delayMostBytesWanted(const MemObject * mem, int max)
 {
     int i = 0;
+    int found = 0;
     store_client *sc;
     for (sc = mem->clients; sc; sc = sc->next) {
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
-	i = XMAX(delayBytesWanted(sc->delay_id, max), i);
+	i = delayBytesWanted(sc->delay_id, i, max);
+        found = 1;
     }
-    return i;
+    return found ? i : max;
 }
 
 delay_id
 delayMostBytesAllowed(const MemObject * mem)
 {
     int j;
-    int jmax = 0;
+    int jmax = -1;
     store_client *sc;
     delay_id d = 0;
     for (sc = mem->clients; sc; sc = sc->next) {
@@ -436,7 +439,7 @@ delayMostBytesAllowed(const MemObject * mem)
 	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
-	j = delayBytesWanted(sc->delay_id, SQUID_TCP_SO_RCVBUF);
+	j = delayBytesWanted(sc->delay_id, 0, SQUID_TCP_SO_RCVBUF);
 	if (j > jmax) {
 	    jmax = j;
 	    d = sc->delay_id;

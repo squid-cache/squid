@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.306 1998/08/14 19:25:20 wessels Exp $
+ * $Id: http.cc,v 1.307 1998/08/17 16:44:07 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -373,8 +373,7 @@ httpReadReply(int fd, void *data)
     errno = 0;
     read_sz = SQUID_TCP_SO_RCVBUF;
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delay_id, read_sz);
-    assert(read_sz > 0);
+    read_sz = delayBytesWanted(delay_id, 1, read_sz);
 #endif
     len = read(fd, buf, read_sz);
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, len);

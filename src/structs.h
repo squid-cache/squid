@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.198 1998/08/16 06:35:18 wessels Exp $
+ * $Id: structs.h,v 1.199 1998/08/17 16:44:12 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -201,10 +201,12 @@ struct _relist {
     relist *next;
 };
 
+#if DELAY_POOLS
 struct _delay_spec {
     int restore_bps;
     int max_bytes;
 };
+#endif
 
 struct _SquidConfig {
     struct {
