@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.14 2001/01/12 00:37:22 wessels Exp $
+ * $Id: store_swapmeta.cc,v 1.15 2001/02/01 19:48:25 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -135,7 +135,7 @@ storeSwapMetaUnpack(const char *buf, int *hdr_len)
 	    break;
 	}
 	xmemcpy(&length, &buf[j], sizeof(int));
-	if (length < 0 || length > (1 << 10)) {
+	if (length < 0 || length > (1 << 16)) {
 	    debug(20, 0) ("storeSwapMetaUnpack: insane length (%d)!\n", length);
 	    break;
 	}
