@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.151 1998/03/17 00:09:10 wessels Exp $
+ * $Id: acl.cc,v 1.152 1998/03/17 03:59:21 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -887,11 +887,7 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     }
     A = xcalloc(1, sizeof(acl_deny_info_list));
     A->err_page_id = errorReservePageId(t);
-#if 0
-    xstrncpy(A->url, t, MAX_URL);
-#else
     A->err_page_name = xstrdup(t);
-#endif
     A->next = (acl_deny_info_list *) NULL;
     /* next expect a list of ACL names */
     Tail = &A->acl_list;
@@ -1281,6 +1277,7 @@ aclMatchAcl(acl * acl, aclCheck_t * checklist)
     request_t *r = checklist->request;
     const ipcache_addrs *ia = NULL;
     const char *fqdn = NULL;
+    char *esc_buf;
     int k;
     if (!acl)
 	return 0;
@@ -1362,10 +1359,18 @@ aclMatchAcl(acl * acl, aclCheck_t * checklist)
 	return aclMatchTime(acl->data, squid_curtime);
 	/* NOTREACHED */
     case ACL_URLPATH_REGEX:
-	return aclMatchRegex(acl->data, strBuf(r->urlpath));
+	esc_buf = xstrdup(strBuf(r->urlpath));
+	rfc1738_unescape(esc_buf);
+	k = aclMatchRegex(acl->data, esc_buf);
+	safe_free(esc_buf);
+	return k;
 	/* NOTREACHED */
     case ACL_URL_REGEX:
-	return aclMatchRegex(acl->data, urlCanonical(r, NULL));
+	esc_buf = xstrdup(urlCanonical(r, NULL));
+	rfc1738_unescape(esc_buf);
+	k = aclMatchRegex(acl->data, esc_buf);
+	safe_free(esc_buf);
+	return k;
 	/* NOTREACHED */
     case ACL_URL_PORT:
 	return aclMatchInteger(acl->data, r->port);
