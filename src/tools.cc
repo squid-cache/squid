@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.94 1997/01/13 22:58:04 wessels Exp $
+ * $Id: tools.cc,v 1.95 1997/01/31 20:28:17 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -626,6 +626,17 @@ setMaxFD(void)
 	}
     }
 #endif /* RLIMIT_DATA */
+#if HAVE_SETRLIMIT && defined(RLIMIT_VMEM)
+    if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
+	debug(50, 0, "getrlimit: RLIMIT_VMEM: %s\n", xstrerror());
+    } else {
+	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
+	if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
+	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_VMEM: %s", xstrerror());
+	    fatal_dump(tmp_error_buf);
+	}
+    }
+#endif /* RLIMIT_VMEM */
 }
 
 time_t
