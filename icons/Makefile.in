@@ -13,7 +13,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.49 2003/02/17 07:06:54 robertc Exp $
+# $Id: Makefile.in,v 1.50 2003/02/22 01:10:48 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -150,7 +150,7 @@ ICON2 = anthony-bomb.gif \
 icondir = $(datadir)/icons
 icon_DATA = $(ICON1) $(ICON2)
 EXTRA_DIST = $(ICON1) $(ICON2) icons.shar
-DISTCLEANFILES = $(ICON1) $(ICON2)
+DISTCLEANFILES = 
 subdir = icons
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
