@@ -40,7 +40,7 @@
 #include "msntauth.h"
 
 extern char version[];
-char msntauth_version[] = "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella.";
+char msntauth_version[] = "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella.\nModified by the Squid HTTP Proxy team 26 Jun 2002";
 
 /* Main program for simple authentication.
  * Reads the denied user file. Sets alarm timer.
