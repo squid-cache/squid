@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.19 1998/05/26 19:08:59 wessels Exp $
+ * $Id: store_digest.cc,v 1.20 1998/06/05 22:37:45 rousskov Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -63,7 +63,7 @@ typedef struct {
  */
 
 /* #bits per entry in store digest */
-static const int StoreDigestBitsPerEntry = 6;
+static const int StoreDigestBitsPerEntry = 5;
 /* how often we want to rebuild the digest, in seconds */
 static const time_t StoreDigestRebuildPeriod = 60 * 60;
 /* how often we want to rewrite the digest after rebuild, in seconds */
