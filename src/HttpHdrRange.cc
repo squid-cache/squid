@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.33 2003/05/24 12:43:30 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.34 2003/06/18 12:24:02 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -590,7 +590,7 @@ HttpHdrRange::offsetLimitExceeded() const
 
     if (firstOffset() == -1)
         /* tail request */
-        return false;
+        return true;
 
     if ((ssize_t)Config.rangeOffsetLimit >= firstOffset())
         /* below the limit */
