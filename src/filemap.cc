@@ -1,4 +1,4 @@
-/* $Id: filemap.cc,v 1.5 1996/03/27 01:46:03 wessels Exp $ */
+/* $Id: filemap.cc,v 1.6 1996/03/27 18:15:44 wessels Exp $ */
 
 #include "squid.h"
 
@@ -32,8 +32,8 @@ fileMap *file_map_create(n)
 
     fm->max_n_files = n;
     fm->nwords = n >> LONG_BIT_SHIFT;
-    debug(1, "file_map_create: creating space for %d files\n", n);
-    debug(5, "--> %d words of %d bytes each\n",
+    debug(0, 1, "file_map_create: creating space for %d files\n", n);
+    debug(0, 5, "--> %d words of %d bytes each\n",
 	fm->nwords, sizeof(unsigned long));
     fm->file_map = (unsigned long *) xcalloc(fm->nwords, sizeof(unsigned long));
     return (fm);
@@ -46,7 +46,7 @@ int file_map_bit_set(file_number)
 
 #ifdef XTRA_DEBUG
     if (fm->file_map[file_number >> LONG_BIT_SHIFT] & bitmask)
-	debug(0, "file_map_bit_set: WARNING: file number %d is already set!\n",
+	debug(0, 0, "file_map_bit_set: WARNING: file number %d is already set!\n",
 	    file_number);
 #endif
 
@@ -55,9 +55,9 @@ int file_map_bit_set(file_number)
     fm->n_files_in_map++;
     if (!fm->toggle && (fm->n_files_in_map > ((fm->max_n_files * 7) >> 3))) {
 	fm->toggle++;
-	debug(0, "You should increment MAX_SWAP_FILE\n");
+	debug(0, 0, "You should increment MAX_SWAP_FILE\n");
     } else if (fm->n_files_in_map > (fm->max_n_files - 100)) {
-	debug(0, "You've run out of swap file numbers. Freeing 1MB\n");
+	debug(0, 0, "You've run out of swap file numbers. Freeing 1MB\n");
 	storeGetSwapSpace(1000000);
     }
     return (file_number);
@@ -106,8 +106,8 @@ int file_map_allocate(suggestion)
 	}
     }
 
-    debug(0, "file_map_allocate: All %d files are in use!\n", fm->max_n_files);
-    debug(0, "You need to recompile with a larger value for MAX_SWAP_FILE\n");
+    debug(0, 0, "file_map_allocate: All %d files are in use!\n", fm->max_n_files);
+    debug(0, 0, "You need to recompile with a larger value for MAX_SWAP_FILE\n");
     fatal_dump(NULL);
     return (0);			/* NOTREACHED */
 }

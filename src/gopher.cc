@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.8 1996/03/27 01:46:06 wessels Exp $ */
+/* $Id: gopher.cc,v 1.9 1996/03/27 18:15:45 wessels Exp $ */
 
 #include "squid.h"
 
@@ -329,7 +329,7 @@ void gopherToHTML(data, inbuf, len)
 		/* there is no complete line in inbuf */
 		/* copy it to temp buffer */
 		if (data->len + len > TEMP_BUF_SIZE) {
-		    debug(1, "GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
+		    debug(0, 1, "GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
 			entry->url);
 		    len = TEMP_BUF_SIZE - data->len;
 		}
@@ -355,7 +355,7 @@ void gopherToHTML(data, inbuf, len)
 		/* there is no complete line in inbuf */
 		/* copy it to temp buffer */
 		if ((len - (pos - inbuf)) > TEMP_BUF_SIZE) {
-		    debug(1, "GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
+		    debug(0, 1, "GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
 			entry->url);
 		    len = TEMP_BUF_SIZE;
 		}
@@ -561,7 +561,7 @@ int gopherReadReplyTimeout(fd, data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
-    debug(4, "GopherReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
+    debug(0, 4, "GopherReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
     cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     if (data->icp_page_ptr)
 	put_free_4k_page(data->icp_page_ptr);
@@ -579,7 +579,7 @@ void gopherLifetimeExpire(fd, data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
-    debug(4, "gopherLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
+    debug(0, 4, "gopherLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     if (data->icp_page_ptr)
 	put_free_4k_page(data->icp_page_ptr);
@@ -614,9 +614,9 @@ int gopherReadReply(fd, data)
 	    clen = entry->mem_obj->e_current_len;
 	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > GOPHER_DELETE_GAP) {
-		debug(3, "gopherReadReply: Read deferred for Object: %s\n",
+		debug(0, 3, "gopherReadReply: Read deferred for Object: %s\n",
 		    entry->key);
-		debug(3, "                Current Gap: %d bytes\n",
+		debug(0, 3, "                Current Gap: %d bytes\n",
 		    clen - off);
 
 		/* reschedule, so it will automatically reactivated when
@@ -652,10 +652,10 @@ int gopherReadReply(fd, data)
     }
     buf = get_free_4k_page();
     len = read(fd, buf, TEMP_BUF_SIZE - 1);	/* leave one space for \0 in gopherToHTML */
-    debug(5, "gopherReadReply - fd: %d read len:%d\n", fd, len);
+    debug(0, 5, "gopherReadReply - fd: %d read len:%d\n", fd, len);
 
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
-	debug(1, "gopherReadReply - error reading: %s\n",
+	debug(0, 1, "gopherReadReply - error reading: %s\n",
 	    xstrerror());
 	cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	comm_close(fd);
@@ -724,7 +724,7 @@ void gopherSendComplete(fd, buf, size, errflag, data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
-    debug(5, "gopherSendComplete - fd: %d size: %d errflag: %d\n",
+    debug(0, 5, "gopherSendComplete - fd: %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
 	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
@@ -818,7 +818,7 @@ int gopherSendRequest(fd, data)
 	sprintf(buf, "%s%c%c", data->request, CR, LF);
     }
 
-    debug(5, "gopherSendRequest - fd: %d\n", fd);
+    debug(0, 5, "gopherSendRequest - fd: %d\n", fd);
     data->icp_rwd_ptr = icpWrite(fd,
 	buf,
 	len,
@@ -839,7 +839,7 @@ int gopherStart(unusedfd, url, entry)
 
     data->entry = entry;
 
-    debug(3, "gopherStart - url: %s\n", url);
+    debug(0, 3, "gopherStart - url: %s\n", url);
 
     /* Parse url. */
     if (gopher_url_parser(url, data->host, &data->port,
@@ -851,7 +851,7 @@ int gopherStart(unusedfd, url, entry)
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
-	debug(4, "gopherStart: Failed because we're out of sockets.\n");
+	debug(0, 4, "gopherStart: Failed because we're out of sockets.\n");
 	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
 	freeGopherData(data);
 	return COMM_ERROR;
@@ -860,7 +860,7 @@ int gopherStart(unusedfd, url, entry)
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->host)) {
-	debug(4, "gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
+	debug(0, 4, "gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
 	comm_close(sock);
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	freeGopherData(data);
@@ -896,7 +896,7 @@ int gopherStart(unusedfd, url, entry)
 	    freeGopherData(data);
 	    return COMM_ERROR;
 	} else {
-	    debug(5, "startGopher - conn %d EINPROGRESS\n", sock);
+	    debug(0, 5, "startGopher - conn %d EINPROGRESS\n", sock);
 	}
     }
     /* Install connection complete handler. */
