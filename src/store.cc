@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.254 1997/06/17 03:44:35 wessels Exp $
+ * $Id: store.cc,v 1.255 1997/06/17 04:54:12 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -247,7 +247,7 @@ typedef struct swapout_ctrl_t {
 int store_rebuilding = 1;
 
 /* Static Functions */
-static HashID storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
+static void storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
 static int compareSize _PARAMS((StoreEntry **, StoreEntry **));
 static int compareBucketOrder _PARAMS((struct _bucketOrder *, struct _bucketOrder *));
@@ -302,9 +302,9 @@ static int storeGetUnusedFileno _PARAMS((void));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
-static HashID store_table = 0;
+static hash_table * store_table = NULL;
 /* hash table for in-memory-only objects */
-static HashID in_mem_table = 0;
+static hash_table * in_mem_table = NULL;
 
 /* current memory storage size */
 unsigned long store_mem_size = 0;
@@ -425,12 +425,11 @@ destroy_MemObjectData(MemObject * mem)
  * objects in the memory.
  */
 
-static HashID
-storeCreateHashTable(int (*cmp_func) (const char *, const char *))
+static void
+storeCreateHashTable(HASHCMP *cmp_func)
 {
     store_table = hash_create(cmp_func, store_buckets, hash4);
     in_mem_table = hash_create(cmp_func, STORE_IN_MEM_BUCKETS, hash4);
-    return store_table;
 }
 
 static void
@@ -1404,7 +1403,6 @@ storeDoRebuildFromDisk(void *data)
 	    /* junk old, load new */
 	    storeRelease(e);	/* release old entry */
 	    RB->dupcount++;
-	    continue;
 	} else {
 	    /* URL doesnt exist, swapfile not in use */
 	    /* load new */
@@ -1564,6 +1562,7 @@ storeRebuiltFromDisk(struct storeRebuildState *data)
     debug(20, 1) ("  Took %d seconds (%6.1lf objects/sec).\n",
 	r > 0 ? r : 0, (double) data->objcount / (r > 0 ? r : 1));
     debug(20, 1) ("  store_swap_size = %dk\n", store_swap_size);
+debug(0,0)("meta_data.store_entries=%d\n", meta_data.store_entries);
     if (data->need_to_validate) {
 	debug(20, 1) ("Beginning Validation Procedure\n");
 	eventAdd("storeCleanup", storeCleanup, NULL, 0);

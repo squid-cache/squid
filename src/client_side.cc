@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.111 1997/06/04 06:15:47 wessels Exp $
+ * $Id: client_side.cc,v 1.112 1997/06/17 04:54:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -202,7 +202,7 @@ proxyAuthenticate(const char *headers)
      * table of users and passwords handy */
     static time_t last_time = 0;
     static time_t change_time = 0;
-    static HashID validated = 0;
+    static hash_table * validated = NULL;
     static char *passwords = NULL;
     LOCAL_ARRAY(char, sent_user, ICP_IDENT_SZ);
 

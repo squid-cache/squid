@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.11 1997/05/15 01:06:51 wessels Exp $
+ * $Id: client_db.cc,v 1.12 1997/06/17 04:54:08 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -43,8 +43,7 @@ typedef struct _client_info {
 
 int client_info_sz;
 
-static HashID client_table = 0;
-
+static hash_table * client_table = NULL;
 static ClientInfo *clientdbAdd _PARAMS((struct in_addr addr));
 
 static ClientInfo *
