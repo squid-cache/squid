@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.161 2002/04/17 21:53:26 hno Exp $
+ * $Id: net_db.cc,v 1.162 2002/06/26 09:55:56 hno Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -459,7 +459,7 @@ netdbReloadState(void)
 	return;
     }
     t = buf = xcalloc(1, sb.st_size + 1);
-    l = read(fd, buf, sb.st_size);
+    l = FD_READ_METHOD(fd, buf, sb.st_size);
     file_close(fd);
     if (l <= 0)
 	return;

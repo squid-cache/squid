@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.66 2002/05/19 16:40:59 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.67 2002/06/26 09:55:58 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -579,7 +579,7 @@ storeDiskdDirRebuildFromDirectory(void *data)
 		rb->sd->path, rb->counts.scancount);
 	debug(20, 9) ("file_in: fd=%d %08X\n", fd, filn);
 	statCounter.syscalls.disk.reads++;
-	if (read(fd, hdr_buf, SM_PAGE_SIZE) < 0) {
+	if (FD_READ_METHOD(fd, hdr_buf, SM_PAGE_SIZE) < 0) {
 	    debug(20, 1) ("storeDiskdDirRebuildFromDirectory: read(FD %d): %s\n",
 		fd, xstrerror());
 	    file_close(fd);
@@ -1206,7 +1206,7 @@ storeDiskdDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
     state->outbuf_offset += ss;
     /* buffered write */
     if (state->outbuf_offset + ss > CLEAN_BUF_SZ) {
-	if (write(state->fd, state->outbuf, state->outbuf_offset) < 0) {
+	if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	    debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
 		state->new, xstrerror());
 	    debug(20, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
@@ -1231,7 +1231,7 @@ storeDiskdDirWriteCleanDone(SwapDir * sd)
     if (state->fd < 0)
 	return;
     state->walker->Done(state->walker);
-    if (write(state->fd, state->outbuf, state->outbuf_offset) < 0) {
+    if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
 	    state->new, xstrerror());
 	debug(20, 0) ("storeDirWriteCleanLogs: Current swap logfile "
