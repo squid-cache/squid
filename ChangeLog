@@ -1,10 +1,12 @@
 Changes to squid-1.1.alpha12:
 
-	- Added debugging output for error pages
-	- Rewrote storeGetMemSpace()
-	- Fixed hot_vm accounting.
+	- Rewrote storeGetMemSpace().
+	- Fixed hot_vm accounting; only count objects which are added
+	  to the IN_MEMORY table.
 	- Changed protoUndispatch() to never call squid_error_entry().
-	- report all error pages to the debug log
+	  Should fix storeSwapOutHandle() and 'HELP! Someone is
+	  swapping out a bad entry' coredumps.
+	- Report all error pages to the debug log.
 	- Added -i option which forces IP cache entry to be invalidated
 	  just after an object retrieval begins.
 	- Includes all squid-1.0 changes up to squid-1.0.10.
