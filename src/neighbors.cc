@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.303 2002/07/30 04:23:10 wessels Exp $
+ * $Id: neighbors.cc,v 1.304 2002/08/28 04:40:04 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -347,6 +347,12 @@ getDefaultParent(request_t * request)
     return NULL;
 }
 
+/*
+ * XXX DW thinks this function is equivalent to/redundant with
+ * getFirstUpParent().  peerHTTPOkay() only returns true if the
+ * peer is UP anyway, so this function would not return a 
+ * DOWN parent.
+ */
 peer *
 getAnyParent(request_t * request)
 {
