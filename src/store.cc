@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.541 2001/09/07 18:02:46 adrian Exp $
+ * $Id: store.cc,v 1.542 2001/10/17 20:25:03 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1319,7 +1319,7 @@ storeFsDone(void)
  * called to add another store fs module
  */
 void
-storeFsAdd(char *type, STSETUP * setup)
+storeFsAdd(const char *type, STSETUP * setup)
 {
     int i;
     /* find the number of currently known storefs types */
@@ -1338,7 +1338,7 @@ storeFsAdd(char *type, STSETUP * setup)
  * called to add another store removal policy module
  */
 void
-storeReplAdd(char *type, REMOVALPOLICYCREATE * create)
+storeReplAdd(const char *type, REMOVALPOLICYCREATE * create)
 {
     int i;
     /* find the number of currently known repl types */

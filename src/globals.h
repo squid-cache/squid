@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.107 2001/10/08 16:18:32 hno Exp $
+ * $Id: globals.h,v 1.108 2001/10/17 20:25:02 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,7 +39,7 @@ extern SquidConfig Config;
 extern SquidConfig2 Config2;
 extern char *ConfigFile;	/* NULL */
 extern char *IcpOpcodeStr[];
-extern char *dns_error_message;	/* NULL */
+extern const char *dns_error_message;	/* NULL */
 extern const char *log_tags[];
 extern char tmp_error_buf[ERROR_BUF_SZ];
 extern char *volatile debug_options;	/* NULL */

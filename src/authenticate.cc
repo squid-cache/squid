@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.30 2001/10/03 20:12:47 hno Exp $
+ * $Id: authenticate.cc,v 1.31 2001/10/17 20:25:01 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -931,7 +931,7 @@ authenticateUserCacheRestart(void)
  * called to add another auth scheme module
  */
 void
-authSchemeAdd(char *type, AUTHSSETUP * setup)
+authSchemeAdd(const char *type, AUTHSSETUP * setup)
 {
     int i;
     debug(29, 4) ("authSchemeAdd: adding %s\n", type);

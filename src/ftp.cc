@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.312 2001/10/10 15:17:41 adrian Exp $
+ * $Id: ftp.cc,v 1.313 2001/10/17 20:25:02 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -163,7 +163,7 @@ static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 static void ftpUnhack(FtpStateData * ftpState);
 static void ftpScheduleReadControlReply(FtpStateData *, int);
 static void ftpHandleControlReply(FtpStateData *);
-static char *ftpHtmlifyListEntry(char *line, FtpStateData * ftpState);
+static char *ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState);
 static void ftpFailed(FtpStateData *, err_type);
 static void ftpFailedErrorMessage(FtpStateData *, err_type);
 
@@ -635,7 +635,7 @@ dots_fill(size_t len)
 }
 
 static char *
-ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
+ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState)
 {
     LOCAL_ARRAY(char, icon, 2048);
     LOCAL_ARRAY(char, href, 2048 + 40);
@@ -687,7 +687,7 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	return html;
     }
     if ((parts = ftpListParseParts(line, ftpState->flags)) == NULL) {
-	char *p;
+	const char *p;
 	snprintf(html, 8192, "%s\n", line);
 	for (p = line; *p && xisspace(*p); p++);
 	if (*p && !xisspace(*p))
@@ -2378,7 +2378,7 @@ static void
 ftpFailedErrorMessage(FtpStateData * ftpState, err_type error)
 {
     ErrorState *err;
-    char *command, *reply;
+    const char *command, *reply;
     /* Translate FTP errors into HTTP errors */
     err = NULL;
     switch (error) {
@@ -2471,8 +2471,8 @@ ftpSendReply(FtpStateData * ftpState)
 static void
 ftpAppendSuccessHeader(FtpStateData * ftpState)
 {
-    char *mime_type = NULL;
-    char *mime_enc = NULL;
+    const char *mime_type = NULL;
+    const char *mime_enc = NULL;
     String urlpath = ftpState->request->urlpath;
     const char *filename = NULL;
     const char *t = NULL;

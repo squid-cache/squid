@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.30 2001/08/29 14:57:35 robertc Exp $
+ * $Id: helper.cc,v 1.31 2001/10/17 20:25:02 hno Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -64,7 +64,7 @@ helperOpenServers(helper * hlp)
     char *progname;
     char *shortname;
     char *procname;
-    char *args[HELPER_MAX_ARGS];
+    const char *args[HELPER_MAX_ARGS];
     char fd_note_buf[FD_DESC_SZ];
     helper_server *srv;
     int nargs = 0;
@@ -140,7 +140,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
     char *progname;
     char *shortname;
     char *procname;
-    char *args[HELPER_MAX_ARGS];
+    const char *args[HELPER_MAX_ARGS];
     char fd_note_buf[FD_DESC_SZ];
     helper_stateful_server *srv;
     int nargs = 0;

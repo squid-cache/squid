@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.93 2001/02/23 20:59:50 hno Exp $
+ * $Id: client.cc,v 1.94 2001/10/17 20:25:01 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -40,8 +40,8 @@
 #endif
 
 /* Local functions */
-static int client_comm_bind(int, char *);
-static int client_comm_connect(int, char *, u_short, struct timeval *);
+static int client_comm_bind(int, const char *);
+static int client_comm_connect(int, const char *, u_short, struct timeval *);
 static void usage(const char *progname);
 static int Now(struct timeval *);
 static SIGHDLR catch;
@@ -90,7 +90,7 @@ main(int argc, char *argv[])
     int keep_alive = 0;
     int opt_noaccept = 0;
     int opt_verbose = 0;
-    char *hostname, *localhost;
+    const char *hostname, *localhost;
     char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ];
     char extra_hdrs[BUFSIZ];
     const char *method = "GET";
@@ -355,7 +355,7 @@ main(int argc, char *argv[])
 }
 
 static int
-client_comm_bind(int sock, char *local_host)
+client_comm_bind(int sock, const char *local_host)
 {
     static const struct hostent *hp = NULL;
     static struct sockaddr_in from_addr;
@@ -374,7 +374,7 @@ client_comm_bind(int sock, char *local_host)
 }
 
 static int
-client_comm_connect(int sock, char *dest_host, u_short dest_port, struct timeval *tvp)
+client_comm_connect(int sock, const char *dest_host, u_short dest_port, struct timeval *tvp)
 {
     static const struct hostent *hp = NULL;
     static struct sockaddr_in to_addr;

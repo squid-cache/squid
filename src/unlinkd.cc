@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.43 2001/02/23 20:59:51 hno Exp $
+ * $Id: unlinkd.cc,v 1.44 2001/10/17 20:25:03 hno Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -159,7 +159,7 @@ void
 unlinkdInit(void)
 {
     int x;
-    char *args[2];
+    const char *args[2];
     struct timeval slp;
     args[0] = "(unlinkd)";
     args[1] = NULL;

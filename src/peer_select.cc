@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.115 2001/04/14 00:25:18 hno Exp $
+ * $Id: peer_select.cc,v 1.116 2001/10/17 20:25:02 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -66,7 +66,7 @@ static struct {
     int timeouts;
 } PeerStats;
 
-static char *DirectStr[] =
+static const char *DirectStr[] =
 {
     "DIRECT_UNKNOWN",
     "DIRECT_NO",

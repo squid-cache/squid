@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.321 2001/10/10 15:17:40 adrian Exp $
+ * $Id: comm.cc,v 1.322 2001/10/17 20:25:01 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -920,7 +920,7 @@ commHandleWrite(int fd, void *data)
 /* Select for Writing on FD, until SIZE bytes are sent.  Call
  * *HANDLER when complete. */
 void
-comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func)
+comm_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func)
 {
     CommWriteStateData *state = fd_table[fd].rwstate;
     debug(5, 5) ("comm_write: FD %d: sz %d: hndl %p: data %p.\n",
@@ -931,7 +931,7 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
 	fd_table[fd].rwstate = NULL;
     }
     fd_table[fd].rwstate = state = memPoolAlloc(comm_write_pool);
-    state->buf = buf;
+    state->buf = (char *) buf;
     state->size = size;
     state->offset = 0;
     state->handler = handler;
