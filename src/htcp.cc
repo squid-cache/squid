@@ -1,12 +1,15 @@
+
+/*
+ * DEBUG: section 31    HTCP
+ */
+
 #include "squid.h"
 
 typedef struct _Countstr Countstr;
 typedef struct _htcpHeader htcpHeader;
 typedef struct _htcpDataHeader htcpDataHeader;
 typedef struct _htcpAuthHeader htcpAuthHeader;
-typedef struct _Specifier Specifier;
-typedef struct _Detail Detail;
-typedef struct _Identity Identity;
+typedef struct _htcpStuff htcpStuff;
 
 struct _Countstr {
     u_short length;
@@ -41,22 +44,15 @@ struct _htcpAuthHeader {
     Countstr signature;
 };
 
-struct _Specifier {
-    Countstr method;
-    Countstr URI;
-    Countstr version;
-    Countstr req_hdrs;
-};
-
-struct _Detail {
-    Countstr resp_hdrs;
-    Countstr entity_hdrs;
-    Countstr cache_hdrs;
-};
-
-struct _Identity {
-    Specifier specifier;
-    Detail detail;
+struct _htcpStuff {
+    int op;
+    int rr;
+    int f1;
+    int response;
+    const char *method;
+    const char *uri;
+    const char *version;
+    const char *req_hdrs;
 };
 
 enum {
@@ -87,9 +83,12 @@ enum {
     RR_RESPONSE
 };
 
+static u_num32 msg_id_counter = 0;
+static int htcpInSocket = -1;
+static int htcpOutSocket = -1;
 
-size_t
-htpcBuildAuth(char *buf, size_t buflen)
+ssize_t
+htcpBuildAuth(char *buf, size_t buflen)
 {
     htcpAuthHeader auth;
     size_t copy_sz = 0;
@@ -101,50 +100,209 @@ htpcBuildAuth(char *buf, size_t buflen)
     return copy_sz;
 }
 
-Specifier *
-htcpBuildSpecifier(char *buf, size_t buflen, HtcpStuff *stuff)
+ssize_t
+htcpBuildCountstr(char *buf, size_t buflen, const char *s)
 {
-	off_t off = 0;
-	...
+    u_short length;
+    size_t len = strlen(s);
+    off_t off = 0;
+    if (buflen - off < 2)
+	return -1;
+    length = htons((u_short) len);
+    xmemcpy(buf + off, &length, 2);
+    off += 2;
+    if (buflen - off < len)
+	return -1;
+    xmemcpy(buf + off, s, len);
+    off += len;
+    return off;
 }
 
-size_t
-htcpBuildTstOpData(char *buf, size_t buflen, HtcpStuff *stuff)
+
+ssize_t
+htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff)
 {
-	return htcpBuildSpecifier(buf, buflen, stuff);
+    ssize_t off = 0;
+    ssize_t s;
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->method);
+    if (s < 0)
+	return s;
+    off += s;
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->uri);
+    if (s < 0)
+	return s;
+    off += s;
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->version);
+    if (s < 0)
+	return s;
+    off += s;
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->req_hdrs);
+    if (s < 0)
+	return s;
+    off += s;
+    return off;
 }
 
-size_t
-htcpBuildOpData(char *buf, size_t buflen, HtcpStuff *stuff)
+ssize_t
+htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
-	off_t off = 0;
-	switch(stuff->op) {
-	case HTCP_TST:
-		off = htcpBuildTstOpData(buf + off, buflen, stuff);
-		break:
-	default:
-		assert(0);
-		break;
-	}
-	return off;
+    return htcpBuildSpecifier(buf, buflen, stuff);
 }
 
-size_t
-htcpBuildData(char *buf, size_t buflen, HtcpStuff *stuff)
+ssize_t
+htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
-	off_t off = 0;
-	off += sizeof(htcpDataHeader);	/* skip! */
-	htcpBuildOpData(buf + off, buflen - off, stuff);
-	...
+    ssize_t off = 0;
+    switch (stuff->op) {
+    case HTCP_TST:
+	off = htcpBuildTstOpData(buf + off, buflen, stuff);
+	break;
+    default:
+	assert(0);
+	break;
+    }
+    return off;
 }
 
-htcpBuildPacket(HtcpStuff *stuff)
+ssize_t
+htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
 {
-	size_t buflen = 8192;
-	off_t off = 0;
-	char *buf = xcalloc(buflen, 1);
-	/* skip the header -- we don't know the overall length */
-	off += sizeof(htcpHeader);
-	off += htcpBuildData(buf + off, buflen-off, stuff);
-	...
+    ssize_t off = 0;
+    ssize_t op_data_sz;
+    size_t hdr_sz = sizeof(htcpDataHeader);
+    htcpDataHeader hdr;
+    if (buflen < hdr_sz)
+	return -1;
+    off += hdr_sz;		/* skip! */
+    op_data_sz = htcpBuildOpData(buf + off, buflen - off, stuff);
+    if (op_data_sz < 0)
+	return op_data_sz;
+    off += op_data_sz;
+    hdr.length = (u_short) off;
+    hdr.opcode = stuff->op;
+    hdr.response = stuff->response;
+    hdr.RR = stuff->rr;
+    hdr.F1 = stuff->f1;
+    hdr.msg_id = ++msg_id_counter;
+    /* convert multi-byte fields */
+    hdr.length = htons(hdr.length);
+    hdr.msg_id = htons(hdr.msg_id);
+    xmemcpy(buf, &hdr, hdr_sz);
+    return off;
+}
+
+char *
+htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
+{
+    size_t buflen = 8192;
+    size_t s;
+    ssize_t off = 0;
+    size_t hdr_sz = sizeof(htcpHeader);
+    htcpHeader hdr;
+    char *buf = xcalloc(buflen, 1);
+    /* skip the header -- we don't know the overall length */
+    if (buflen < hdr_sz)
+	return NULL;
+    off += hdr_sz;
+    s = htcpBuildData(buf + off, buflen - off, stuff);
+    if (s < 0)
+	return NULL;
+    off += s;
+    s = htcpBuildAuth(buf + off, buflen - off);
+    if (s < 0)
+	return NULL;
+    off += s;
+    hdr.length = (u_short) off;
+    hdr.major = 0;
+    hdr.minor = 0;
+    xmemcpy(buf, &hdr, hdr_sz);
+    *len = off;
+    return buf;
+}
+
+void
+htcpSend(const char *buf, int len, peer * p)
+{
+    int x;
+    x = comm_udp_sendto(htcpOutSocket,
+	&p->in_addr,
+	sizeof(struct sockaddr_in),
+	buf,
+	len);
+    if (x < 0)
+	debug(31, 0) ("htcpSend: FD %d sendto: %s\n", htcpOutSocket, xstrerror());
+}
+
+void
+htcpRecv(int fd, void *data)
+{
+    char buf[8192];
+    int x;
+    x = recv(fd, buf, 8192, 0);
+    debug(31, 0) ("htcpRecv: FD %d, %d bytes\n", fd, x);
+}
+
+void
+htcpQuery(StoreEntry * e, request_t * req, peer * p)
+{
+    char *pkt;
+    ssize_t pktlen;
+    int x;
+    char vbuf[32];
+    htcpStuff stuff;
+    snprintf(vbuf, 32, "%3.1f", req->http_ver);
+    stuff.op = HTCP_TST;
+    stuff.rr = RR_REQUEST;
+    stuff.f1 = 1;
+    stuff.response = 0;
+    stuff.method = RequestMethodStr[req->method];
+    stuff.uri = storeUrl(e);
+    stuff.version = vbuf;
+    stuff.req_hdrs = req->headers;
+    pkt = htcpBuildPacket(&stuff, &pktlen);
+    if (pkt == NULL) {
+	debug(31, 0) ("htcpQuery: htcpBuildPacket() failed\n");
+	return;
+    }
+    htcpSend(pkt, (int) pktlen, p);
+    xfree(pkt);
+}
+
+void
+htcpInit(void)
+{
+    wordlist *s;
+    enter_suid();
+    htcpInSocket = comm_open(SOCK_DGRAM,
+	0,
+	Config.Addrs.udp_incoming,
+	Config.Port.htcp,
+	COMM_NONBLOCKING,
+	"HTCP Socket");
+    leave_suid();
+    if (htcpInSocket < 0)
+	fatal("Cannot open HTCP Socket");
+    commSetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
+    for (s = Config.mcast_group_list; s; s = s->next)
+	ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
+    debug(12, 1) ("Accepting HTCP messages on port %d, FD %d.\n",
+	(int) Config.Port.htcp, htcpInSocket);
+    if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr) {
+	enter_suid();
+	htcpOutSocket = comm_open(SOCK_DGRAM,
+	    0,
+	    Config.Addrs.udp_outgoing,
+	    Config.Port.htcp,
+	    COMM_NONBLOCKING,
+	    "Outgoing HTCP Socket");
+	leave_suid();
+	if (htcpOutSocket < 0)
+	    fatal("Cannot open Outgoing HTCP Socket");
+	commSetSelect(htcpOutSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
+	debug(12, 1) ("Outgoing HTCP messages on port %d, FD %d.\n",
+	    (int) Config.Port.htcp, htcpOutSocket);
+	fd_note(htcpInSocket, "Incoming HTCP socket");
+    } else {
+	htcpOutSocket = htcpInSocket;
+    }
 }
