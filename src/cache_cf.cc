@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.465 2005/03/09 19:42:05 serassio Exp $
+ * $Id: cache_cf.cc,v 1.466 2005/03/18 14:38:10 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2948,7 +2948,7 @@ dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
             storeAppendPrintf(e, " cert=%s", s->cert);
 
         if (s->key)
-            storeAppendPrintf(e, " key=%s", s->cert);
+            storeAppendPrintf(e, " key=%s", s->key);
 
         if (s->version)
             storeAppendPrintf(e, " version=%d", s->version);
