@@ -101,6 +101,7 @@ static struct timeval now;
 static long total_bytes_written = 0;
 static long total_bytes_read = 0;
 static int opt_checksum = 0;
+FILE *trace_file = NULL;
 
 typedef void (CB) (int, void *);
 
@@ -113,6 +114,8 @@ struct _f {
 struct _request {
     int fd;
     char url[8192];
+    char method[16];
+    char requestbodyfile[256];
     char buf[READ_BUF_SZ * 2 + 1];
     int headfound;
     long validsize;
@@ -256,9 +259,10 @@ reply_done(int fd, void *data)
 	else if (opt_checksum && r->validsum != r->sum)
 	    fprintf(stderr,"WARNING: %s invalid checksum wanted %d got %d\n",
 		    r->url, r->validsum, r->sum);
-    } else if (opt_checksum) {
-	fprintf(stderr,"DONE: %s checksum %d size %d\n",
-		r->url, r->sum, r->bodysize);
+    }
+    if (trace_file) {
+	fprintf(trace_file,"%s %s %s %d %d\n",
+		r->method, r->url, r->requestbodyfile, r->bodysize, r->sum);
     }
     free(r);
 }
@@ -299,9 +303,17 @@ request(char *urlin)
 	url=method;
 	method="GET";
     }
+    if (!file)
+	file="-";
+    if (!size)
+	size="-";
+    if (!checksum)
+	checksum="-";
     r=calloc(1,sizeof *r);
     assert(r!=NULL);
     strcpy(r->url, url);
+    strcpy(r->method, method);
+    strcpy(r->requestbodyfile, file);
     r->fd = s;
     if (size && strcmp(size,"-")!=0)
 	r->validsize=atoi(size);
@@ -309,6 +321,7 @@ request(char *urlin)
 	r->validsize=-1; /* Unknown */
     if (checksum && strcmp(checksum,"-")!=0)
 	r->validsum=atoi(checksum);
+    r->content_length=-1; /* Unknown */
     msg[0] = '\0';
     sprintf(buf,"%s %s HTTP/1.0\r\n", method, url);
     strcat(msg, buf);
@@ -409,7 +422,11 @@ read_url(int fd, void *junk)
 void
 usage(void)
 {
-    fprintf(stderr, "usage: %s: [-cir] -p port -h host -n max\n", progname);
+    fprintf(stderr, "usage: %s: -p port -h host -n max\n", progname);
+    fprintf(stderr, " -t <tracefile>  Save request trace\n");
+    fprintf(stderr, " -c              Check checksum agains trace\n");
+    fprintf(stderr, " -i              Send random If-Modified-Since times\n");
+    fprintf(stderr, " -l <seconds>    Connection lifetime timeout (default 60)\n");
 }
 
 int
@@ -430,7 +447,7 @@ main(argc, argv)
     progname = strdup(argv[0]);
     gettimeofday(&now, NULL);
     start = last = now;
-    while ((c = getopt(argc, argv, "p:h:n:icrl:")) != -1) {
+    while ((c = getopt(argc, argv, "p:h:n:icrl:t:")) != -1) {
 	switch (c) {
 	case 'p':
 	    proxy_port = atoi(optarg);
@@ -449,6 +466,11 @@ main(argc, argv)
 	    break;
 	case 'c':
 	    opt_checksum = 1;
+	    break;
+	case 't':
+	    opt_checksum = 1; /* Tracing requires checksums */
+	    trace_file = fopen(optarg,"w");
+	    assert(trace_file);
 	    break;
 	case 'r':
 	    opt_range = 1;
