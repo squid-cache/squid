@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.206 1997/02/05 04:40:45 wessels Exp $
+ * $Id: store.cc,v 1.207 1997/02/06 20:00:33 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2553,7 +2553,7 @@ storeMaintainSwapSpace(void *unused)
 	    if (bucket_index >= store_buckets) {
 		bucket_index = 0;
 		scan_revolutions++;
-		debug(20, 1, "Completed %d full expiration scans of store table\n",
+		debug(51, 1, "Completed %d full expiration scans of store table\n",
 		    scan_revolutions);
 		storeRandomizeBuckets();
 	    }
@@ -2570,7 +2570,7 @@ storeMaintainSwapSpace(void *unused)
 	    }
 	}
     }
-    debug(20, rm_obj ? 1 : 2, "Removed %d of %d objects from bucket %d\n",
+    debug(51, 2, "Removed %d of %d objects from bucket %d\n",
 	rm_obj, scan_obj, (int) bucket);
     /* Scan row of hash table each second and free storage if we're
      * over the high-water mark */
