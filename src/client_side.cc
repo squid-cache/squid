@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.606 2002/10/25 03:47:03 robertc Exp $
+ * $Id: client_side.cc,v 1.607 2002/11/10 04:23:08 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -263,7 +263,7 @@ clientSocketContextNew(clientHttpRequest * http)
 static void
 clientIdentDone(const char *ident, void *data)
 {
-    ConnStateData *conn = data;
+    ConnStateData *conn = (ConnStateData *)data;
     xstrncpy(conn->rfc931, ident ? ident : dash_str, USER_IDENT_SZ);
 }
 
