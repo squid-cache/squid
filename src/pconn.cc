@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.20 1998/07/24 22:48:15 wessels Exp $
+ * $Id: pconn.cc,v 1.21 1998/07/24 23:53:44 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -183,7 +183,7 @@ pconnPush(int fd, const char *host, u_short port)
 	return;
     } else if (shutting_down) {
 	comm_close(fd);
-	return
+	return;
     }
     assert(table != NULL);
     strcpy(key, pconnKey(host, port));
