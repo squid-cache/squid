@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.98 2004/12/20 16:30:32 robertc Exp $
+#  $Id: Makefile.am,v 1.99 2004/12/20 18:01:06 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -365,7 +365,9 @@ squid_SOURCES = \
 	disk.cc \
 	DiskIO/DiskIOModule.cc \
 	DiskIO/ReadRequest.cc \
+	DiskIO/ReadRequest.h \
 	DiskIO/WriteRequest.cc \
+	DiskIO/WriteRequest.h \
 	$(DNSSOURCE) \
 	$(EPOLL_SOURCE) \
 	enums.h \

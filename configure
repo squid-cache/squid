@@ -2136,7 +2136,7 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
 AMTAR=${AMTAR-"${am_missing_run}tar"}
 
-am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
+am__tar='${AMTAR} chf - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 
 
@@ -22455,7 +22455,7 @@ if test "${enable_auth+set}" = set; then
 
 else
    if test -z "$AUTH_MODULES"; then
-    AUTH_MODULES="basic"
+    AUTH_MODULES="basic digest ntlm"
   fi
 
 fi;

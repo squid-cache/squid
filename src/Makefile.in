@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.329 2004/12/20 16:30:33 robertc Exp $
+#  $Id: Makefile.in,v 1.330 2004/12/20 18:01:06 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -169,7 +169,8 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
 	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
 	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
 	NullDelayId.cc NullDelayId.h disk.cc DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc DiskIO/WriteRequest.cc dns_internal.cc \
+	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h dns_internal.cc \
 	dns.cc comm_epoll.cc enums.h errorpage.cc ElementList.h ESI.cc \
 	ESI.h ESIAssign.cc ESIAssign.h ESIAttempt.h ESIContext.cc \
 	ESIContext.h ESICustomParser.cc ESICustomParser.h ESIElement.h \
@@ -965,7 +966,9 @@ squid_SOURCES = \
 	disk.cc \
 	DiskIO/DiskIOModule.cc \
 	DiskIO/ReadRequest.cc \
+	DiskIO/ReadRequest.h \
 	DiskIO/WriteRequest.cc \
+	DiskIO/WriteRequest.h \
 	$(DNSSOURCE) \
 	$(EPOLL_SOURCE) \
 	enums.h \
