@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.32 1999/01/30 00:40:40 wessels Exp $
+ * $Id: snmp_core.cc,v 1.33 1999/01/30 00:43:25 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -930,7 +930,7 @@ snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...)
 #else
 snmpAddNode(va_alist)
      va_dcl
-#else
+#endif
 {
 #if STDC_HEADERS
     va_list args;
