@@ -189,7 +189,6 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	    sc->swapin_fd);
 	assert(sc->type == STORE_DISK_CLIENT);
 	if (sc->disk_op_in_progress == 0) {
-	    sc->disk_op_in_progress = 1;
 	    storeClientFileRead(sc);
 	} else {
 	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
@@ -233,6 +232,7 @@ storeClientFileRead(store_client * sc)
 	    sc->copy_offset + mem->swap_hdr_sz,
 	    storeClientReadBody,
 	    sc);
+    sc->disk_op_in_progress = 1;
 }
 
 static void
