@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.h,v 1.6 1998/03/20 18:07:35 rousskov Exp $
+ * $Id: Stack.h,v 1.7 1998/06/04 20:17:56 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -41,5 +41,6 @@ typedef Array Stack;
 extern void *stackPop(Stack *s);
 #define stackPush arrayAppend
 #define stackPrePush arrayPreAppend
+extern void *stackTop(Stack *s);
 
 #endif /* ndef _STACK_H_ */
