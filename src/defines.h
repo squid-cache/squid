@@ -228,6 +228,8 @@
 #define ERROR_BUF_SZ (MAX_URL << 2)
 #endif
 
+#define ERR_FLAG_CBDATA		0x01
+
 #define HTTP_PROXYING		(1<<0)
 #define HTTP_KEEPALIVE		(1<<1)
 

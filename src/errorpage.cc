@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.88 1997/10/28 20:42:50 wessels Exp $
+ * $Id: errorpage.cc,v 1.89 1997/10/28 21:54:30 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -93,7 +93,10 @@ errorStateFree(ErrorState * err)
     safe_free(err->redirect_url);
     safe_free(err->url);
     safe_free(err->host);
-    cbdataFree(err);
+    if (BIT_TEST(err->flags, ERR_FLAG_CBDATA))
+        cbdataFree(err);
+    else
+	safe_free(err);
 }
 
 #define CVT_BUF_SZ 512
@@ -261,6 +264,7 @@ errorSend(int fd, ErrorState * err)
     buf = errorBuildBuf(err, &len);
     cbdataAdd(err);
     cbdataLock(err);
+    BIT_SET(err->flags, ERR_FLAG_CBDATA);
     comm_write(fd, xstrdup(buf), len, errorSendComplete, err, xfree);
 }
 
