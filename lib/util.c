@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.49 1998/02/27 07:24:55 kostas Exp $
+ * $Id: util.c,v 1.50 1998/02/27 07:29:35 kostas Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -146,7 +146,7 @@ static FILE *tracefp=NULL;
 void
 log_trace_init(char *fn)
 {
-        tracefp=fopen(fn,"w+");
+        tracefp=fopen(fn,"a+");
         if (!tracefp) {
             perror("log_trace_init");
             exit(1);
