@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.44 1998/04/04 01:44:02 kostas Exp $
+ * $Id: snmp_agent.cc,v 1.45 1998/07/08 17:36:18 glenn Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -61,38 +61,43 @@ snmp_basicFn(variable_list * Var, snint * ErrP)
     *ErrP = SNMP_ERR_NOERROR;
 
     switch (Var->name[7]) {
-    case VERSION_DESCR:
-    case VERSION_ID:
+    case SYS_DESCR:
+	pp = SQUID_SYS_DESCR;
+        Answer->type = ASN_OCTET_STR;
+        Answer->val_len = strlen(pp);
+        Answer->val.string = (u_char *) xstrdup(pp);
+        break;
+    case SYS_OBJECT_ID:
 	pp = SQUID_VERSION;
 	Answer->type = ASN_OCTET_STR;
 	Answer->val_len = strlen(pp);
 	Answer->val.string = (u_char *) xstrdup(pp);
 	break;
-    case UPTIME:
-    case SYSORLASTCHANGE:
+    case SYS_UPTIME:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = SMI_TIMETICKS;
 	*(Answer->val.integer) = (snint) (tvSubDsec(squid_start, current_time));
 	break;
-    case SYSCONTACT:
+    case SYS_CONTACT:
 	Answer->type = ASN_OCTET_STR;
 	Answer->val_len = strlen(Config.adminEmail);
 	Answer->val.string = (u_char *) xstrdup(Config.adminEmail);
-    case SYSYSNAME:
+	break;
+    case SYS_NAME:
 	if ((pp = Config.visibleHostname) == NULL)
 	    pp = (char *) getMyHostname();
 	Answer->type = ASN_OCTET_STR;
 	Answer->val_len = strlen(pp);
 	Answer->val.string = (u_char *) xstrdup(pp);
 	break;
-    case SYSLOCATION:
+    case SYS_LOCATION:
 	pp = "Cyberspace";
 	Answer->type = ASN_OCTET_STR;
 	Answer->val_len = strlen(pp);
 	Answer->val.string = (u_char *) xstrdup(pp);
 	break;
-    case SYSSERVICES:
+    case SYS_SERVICES:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = ASN_INTEGER;
