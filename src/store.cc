@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.458 1998/09/14 21:28:12 wessels Exp $
+ * $Id: store.cc,v 1.459 1998/09/15 04:23:39 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -878,6 +878,7 @@ storeInitHashValues(void)
 void
 storeInit(void)
 {
+    assert(sizeof(store_flags) == sizeof(unsigned short));
     storeKeyInit();
     storeInitHashValues();
     store_table = hash_create(storeKeyHashCmp,

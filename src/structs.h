@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.227 1998/09/14 23:35:25 wessels Exp $
+ * $Id: structs.h,v 1.228 1998/09/15 04:23:37 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1221,22 +1221,45 @@ struct _store_flags {
      * NOTE: These flags are written to swap.state, so think very carefully
      * about deleting or re-assigning!
      */
-    unsigned int entry_special:1;
-    unsigned int entry_revalidate:1;
-    unsigned int delay_sending:1;
-    unsigned int release_request:1;
-    unsigned int refresh_request:1;
-    unsigned int entry_cachable:1;
-    unsigned int entry_dispatched:1;
-    unsigned int key_private:1;
+#if WORDS_BIGENDIAN
+    unsigned short entry_special:1;
+    unsigned short entry_revalidate:1;
+    unsigned short delay_sending:1;
+    unsigned short release_request:1;
+    unsigned short refresh_request:1;
+    unsigned short entry_cachable:1;
+    unsigned short entry_dispatched:1;
+    unsigned short key_private:1;
 #ifndef PPNR_WIP
-    unsigned int entry_unused_08:1;
+    unsigned short entry_unused_08:1;
 #else
-    unsigned int entry_fwd_hdr_wait:1;
+    unsigned short entry_fwd_hdr_wait:1;
 #endif				/* PPNR_WIP */
-    unsigned int entry_negcached:1;
-    unsigned int entry_validated:1;
-    unsigned int entry_bad_length:1;
+    unsigned short entry_negcached:1;
+    unsigned short entry_validated:1;
+    unsigned short entry_bad_length:1;
+#else	/* ENDIAN */
+    unsigned short entry_unused_15:1;
+    unsigned short entry_unused_14:1;
+    unsigned short entry_unused_13:1;
+    unsigned short entry_unused_12:1;
+    unsigned short entry_bad_length:1;
+    unsigned short entry_validated:1;
+    unsigned short entry_negcached:1;
+#ifndef PPNR_WIP
+    unsigned short entry_unused_08:1;
+#else
+    unsigned short entry_fwd_hdr_wait:1;
+#endif                          /* PPNR_WIP */
+    unsigned short key_private:1;
+    unsigned short entry_dispatched:1;
+    unsigned short entry_cachable:1;
+    unsigned short refresh_request:1;
+    unsigned short release_request:1;
+    unsigned short delay_sending:1;
+    unsigned short entry_revalidate:1;
+    unsigned short entry_special:1;
+#endif	/* ENDIAN */
 };
 
 struct _StoreEntry {
