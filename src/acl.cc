@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.52 1996/10/18 20:36:21 wessels Exp $
+ * $Id: acl.cc,v 1.53 1996/10/24 20:56:33 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -252,8 +252,6 @@ decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 	    mask->s_addr = htonl(0xFFFFFF00ul);
 	else
 	    mask->s_addr = htonl(0xFFFFFFFFul);
-	addr->s_addr &= mask->s_addr;
-	/* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
     }
     return 1;
 }
@@ -319,6 +317,9 @@ aclParseIpList(void)
 		safe_free(q);
 		continue;
 	    }
+	    q->addr1.s_addr &= q->mask.s_addr;
+	    q->addr2.s_addr &= q->mask.s_addr;
+	    /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
 	}
 	*(Tail) = q;
 	Tail = &q->next;
