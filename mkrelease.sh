@@ -2,7 +2,7 @@
 if [ $# -ne 1 -a $# -ne 2 ]; then
 	echo "Usage: $0 revision [destination]"
 	exit 1
-i
+fi
 package=squid
 module=squid3
 rev=`echo $1 | sed -e "s/^${package}-//"`
