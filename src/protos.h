@@ -323,7 +323,6 @@ extern int neighborUp(const peer * e);
 extern void peerDestroy(peer * e);
 extern char *neighborTypeStr(const peer * e);
 extern void peerCheckConnectStart(peer *);
-extern void dump_peers(StoreEntry *, peer *);
 
 extern void netdbInit(void);
 
