@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.155 1996/11/07 18:53:18 wessels Exp $
+ * $Id: store.cc,v 1.156 1996/11/07 20:52:52 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -237,6 +237,7 @@ static void storeSwapLog _PARAMS((const StoreEntry *));
 static void storeSwapOutHandle _PARAMS((int, int, StoreEntry *));
 static void storeHashMemInsert _PARAMS((StoreEntry *));
 static void storeHashMemDelete _PARAMS((StoreEntry *));
+static void storeSetPrivateKey _PARAMS((StoreEntry *));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -567,6 +568,7 @@ storeReleaseRequest(StoreEntry * e)
     }
     debug(20, 3, "storeReleaseRequest: FOR '%s'\n", e->key ? e->key : e->url);
     e->flag |= RELEASE_REQUEST;
+    storeSetPrivateKey(e);
 }
 
 /* unlock object, return -1 if object get released after unlock
@@ -671,7 +673,7 @@ storeGeneratePublicKey(const char *url, method_t method)
     return NULL;
 }
 
-void
+static void
 storeSetPrivateKey(StoreEntry * e)
 {
     StoreEntry *e2 = NULL;
@@ -2809,3 +2811,17 @@ expiresMoreThan(time_t expires, time_t when)
 	return 0;
     return (expires > squid_curtime + when);
 }
+
+int
+storeEntryValidToSend(StoreEntry * e)
+{
+    if (BIT_TEST(e->flag, RELEASE_REQUEST))
+	return 0;
+    if (BIT_TEST(e->flag, ENTRY_NEGCACHED))
+	if (entry->expires <= squid_curtime)
+	    return 0;
+    if (e->store_status == STORE_ABORTED)
+	return 0;
+    return 1;
+}
+

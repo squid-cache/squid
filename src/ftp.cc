@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.77 1996/11/06 23:14:34 wessels Exp $
+ * $Id: ftp.cc,v 1.78 1996/11/07 20:52:49 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -255,7 +255,6 @@ ftpProcessReplyHeader(FtpStateData * data, const char *buf, int size)
 	case 401:		/* Unauthorized */
 	case 407:		/* Proxy Authentication Required */
 	    /* These should never be cached at all */
-	    storeSetPrivateKey(entry);
 	    storeExpireNow(entry);
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);

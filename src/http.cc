@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.99 1996/11/07 18:53:15 wessels Exp $
+ * $Id: http.cc,v 1.100 1996/11/07 20:52:50 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -226,7 +226,6 @@ httpMakePublic(StoreEntry * entry)
 static void
 httpMakePrivate(StoreEntry * entry)
 {
-    storeSetPrivateKey(entry);
     storeExpireNow(entry);
     BIT_RESET(entry->flag, ENTRY_CACHABLE);
     storeReleaseRequest(entry);	/* delete object when not used */
