@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.467 2005/03/18 15:36:07 hno Exp $
+ * $Id: cache_cf.cc,v 1.468 2005/03/18 17:12:34 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -629,7 +629,7 @@ configDoConfigure(void)
 
     debug(3, 1) ("Initializing https proxy context\n");
 
-    Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath);
+    Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
 
     {
 
@@ -638,7 +638,7 @@ configDoConfigure(void)
         for (p = Config.peers; p != NULL; p = p->next) {
             if (p->use_ssl) {
                 debug(3, 1) ("Initializing cache_peer %s SSL context\n", p->name);
-                p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath);
+                p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
             }
         }
     }
@@ -649,7 +649,7 @@ configDoConfigure(void)
 
         for (s = Config.Sockaddr.https; s != NULL; s = (https_port_list *) s->http.next) {
             debug(3, 1) ("Initializing https_port %s:%d SSL context\n", inet_ntoa(s->http.s.sin_addr), ntohs(s->http.s.sin_port));
-            s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->dhfile, s->sslcontext);
+            s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->crlfile, s->dhfile, s->sslcontext);
         }
     }
 
@@ -1638,10 +1638,13 @@ parse_peer(peer ** head)
             p->sslcipher = xstrdup(token + 10);
         } else if (strncmp(token, "sslcafile=", 10) == 0) {
             safe_free(p->sslcafile);
-            p->sslcipher = xstrdup(token + 10);
+            p->sslcafile = xstrdup(token + 10);
         } else if (strncmp(token, "sslcapath=", 10) == 0) {
             safe_free(p->sslcapath);
-            p->sslcipher = xstrdup(token + 10);
+            p->sslcapath = xstrdup(token + 10);
+        } else if (strncmp(token, "sslcrlfile=", 11) == 0) {
+            safe_free(p->sslcrlfile);
+            p->sslcapath = xstrdup(token + 10);
         } else if (strncmp(token, "sslflags=", 9) == 0) {
             safe_free(p->sslflags);
             p->sslflags = xstrdup(token + 9);
@@ -2921,6 +2924,9 @@ parse_https_port_list(https_port_list ** head)
         } else if (strncmp(token, "capath=", 7) == 0) {
             safe_free(s->capath);
             s->capath = xstrdup(token + 7);
+        } else if (strncmp(token, "crlfile=", 8) == 0) {
+            safe_free(s->crlfile);
+            s->crlfile = xstrdup(token + 8);
         } else if (strncmp(token, "dhparams=", 9) == 0) {
             safe_free(s->dhfile);
             s->dhfile = xstrdup(token + 9);
@@ -2967,6 +2973,9 @@ dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
 
         if (s->capath)
             storeAppendPrintf(e, " capath=%s", s->capath);
+
+        if (s->crlfile)
+            storeAppendPrintf(e, " crlfile=%s", s->crlfile);
 
         if (s->dhfile)
             storeAppendPrintf(e, " dhparams=%s", s->dhfile);
