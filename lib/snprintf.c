@@ -221,7 +221,7 @@ dopr(buffer, format, args)
 		dopr_outch(ch);
 		continue;
 	    default:
-		dostr("???????");
+		dostr("UNSUPPORTED");
 	    }
 	    longflag = 0;
 	    break;
