@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.310 2001/04/14 00:25:18 hno Exp $
+ * $Id: ftp.cc,v 1.311 2001/09/18 13:55:00 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2458,8 +2458,10 @@ ftpSendReply(FtpStateData * ftpState)
 	err->ftp.request = xstrdup(ftpState->ctrl.last_command);
     if (ftpState->old_reply)
 	err->ftp.reply = xstrdup(ftpState->old_reply);
-    else
+    else if (ftpState->ctrl.last_reply)
 	err->ftp.reply = xstrdup(ftpState->ctrl.last_reply);
+    else
+	err->ftp.reply = xstrdup("");
     errorAppendEntry(ftpState->entry, err);
     storeBufferFlush(ftpState->entry);
     ftpSendQuit(ftpState);
