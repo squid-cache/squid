@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.2 1999/04/26 21:04:49 wessels Exp $
+ * $Id: wccp.cc,v 1.3 1999/04/27 05:46:13 glenn Exp $
  *
  * DEBUG: section 80     WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -33,6 +33,8 @@
  *
  */
 #include "squid.h"
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
 
 #define WCCP_PORT 2048
 #define WCCP_VERSION 4
@@ -45,6 +47,15 @@
 #define WCCP_HERE_I_AM 7
 #define WCCP_I_SEE_YOU 8
 #define WCCP_ASSIGN_BUCKET 9
+
+#define GRE_PROTOCOL_TYPE 0x883E
+#define GRE_PROTOCOL 47
+#define GRE_REQUEST_SIZE 65536
+
+struct gre_packet_t {
+    int header;
+    char *data;
+};
 
 struct wccp_here_i_am_t {
     int type;
@@ -75,7 +86,7 @@ struct wccp_assign_bucket_t {
     int type;
     int id;
     int number;
-    int ip_addr[32];
+    int ip_addr[WCCP_ACTIVE_CACHES];
     char bucket[WCCP_BUCKETS];
 };
 
@@ -131,14 +142,14 @@ wccpConnectionOpen(void)
 	    COMM_NONBLOCKING,
 	    "WCCP Port");
 	theInGreConnection = comm_open(SOCK_RAW,
-	    47,
+	    GRE_PROTOCOL,
 	    Config.Addrs.wccp_incoming,
 	    0,
 	    COMM_NONBLOCKING,
 	    "GRE Port");
 	leave_suid();
 	if ((theInWccpConnection < 0) || (theInGreConnection < 0))
-	    fatal("Cannot open wccp Port");
+	    fatal("Cannot open WCCP Port");
 	commSetSelect(theInWccpConnection, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
 	commSetSelect(theInGreConnection, COMM_SELECT_READ, wccpHandleGre, NULL, 0);
 	debug(1, 1) ("Accepting WCCP UDP messages on port %d, FD %d.\n",
@@ -153,12 +164,22 @@ wccpConnectionOpen(void)
 		port,
 		COMM_NONBLOCKING,
 		"WCCP Port");
+	    theOutGreConnection = comm_open(SOCK_RAW,
+		GRE_PROTOCOL,
+		Config.Addrs.wccp_outgoing,
+		0,
+		COMM_NONBLOCKING,
+		"GRE Port");
 	    leave_suid();
-	    if (theOutWccpConnection < 0)
+	    if ((theOutWccpConnection < 0) || (theOutGreConnection < 0))
 		fatal("Cannot open Outgoing WCCP Port");
 	    commSetSelect(theOutWccpConnection,
 		COMM_SELECT_READ,
 		wccpHandleUdp,
+		NULL, 0);
+	    commSetSelect(theInGreConnection,
+		COMM_SELECT_READ,
+		wccpHandleGre,
 		NULL, 0);
 	    debug(1, 1) ("Outgoing WCCP messages on port %d, FD %d.\n",
 		(int) port, theOutWccpConnection);
@@ -182,18 +203,6 @@ wccpConnectionShutdown(void)
 	debug(80, 1) ("FD %d Closing WCCP socket\n", theInWccpConnection);
 	comm_close(theInWccpConnection);
     }
-    /*
-     * Here we set 'theInWccpConnection' to -1 even though the WCCP 'in'
-     * and 'out' sockets might be just one FD.  This prevents this
-     * function from executing repeatedly.  When we are really ready to
-     * exit or restart, main will comm_close the 'out' descriptor.
-     */ theInWccpConnection = -1;
-    /*
-     * Normally we only write to the outgoing WCCP socket, but we
-     * also have a read handler there to catch messages sent to that
-     * specific interface.  During shutdown, we must disable reading
-     * on the outgoing socket.
-     */
     assert(theOutWccpConnection > -1);
     commSetSelect(theOutWccpConnection, COMM_SELECT_READ, NULL, NULL, 0);
 }
@@ -218,55 +227,38 @@ wccpConnectionClose(void)
 void
 wccpHandleGre(int sock, void *not_used)
 {
-    struct wccp_i_see_you_t wccp_i_see_you;
+    struct gre_packet_t *gre_packet = NULL;
     struct sockaddr_in from;
+    struct ip *ip_header = NULL;
+    char buf[GRE_REQUEST_SIZE];
     socklen_t from_len;
     int len;
 
-    debug(80, 6) ("wccpHandleUdp: Called.\n");
+    debug(80, 6) ("wccpHandleGre: Called.\n");
 
-    commSetSelect(sock, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
+    commSetSelect(sock, COMM_SELECT_READ, wccpHandleGre, NULL, 0);
     from_len = sizeof(struct sockaddr_in);
     memset(&from, '\0', from_len);
 
     Counter.syscalls.sock.recvfroms++;
 
     len = recvfrom(sock,
-	&wccp_i_see_you,
-	WCCP_RESPONSE_SIZE,
+	buf,
+	GRE_REQUEST_SIZE,
 	0,
 	(struct sockaddr *) &from,
 	&from_len);
 
     if (len > 0) {
-	debug(80, 5) ("wccpHandleUdp: FD %d: received %d bytes from %s.\n",
+	debug(80, 1) ("wccpHandleGre: FD %d: received %d bytes from %s.\n",
 	    sock,
 	    len,
 	    inet_ntoa(from.sin_addr));
-	if (Config.Wccp.router.s_addr != ntohl(from.sin_addr.s_addr)) {
-	    if ((ntohl(wccp_i_see_you.version) == WCCP_VERSION) && (ntohl(wccp_i_see_you.type) == WCCP_I_SEE_YOU)) {
-		debug(80, 5) ("wccpHandleUdp: Valid WCCP packet recieved.\n");
-		wccp_here_i_am.id = wccp_i_see_you.id;
-		if (change != wccp_i_see_you.change) {
-		    change = wccp_i_see_you.change;
-		    if (last_assign)
-			last_assign = 0;
-		    else
-			last_change = 4;
-		}
-		if (last_change) {
-		    last_change--;
-		    if (!last_change) {
-			wccpAssignBuckets(&wccp_i_see_you);
-			last_assign = 1;
-		    }
-		}
-	    } else {
-		debug(80, 5) ("wccpHandleUdp: Invalid WCCP packet recieved.\n");
-	    }
-	} else {
-	    debug(80, 5) ("wccpHandleUdp: WCCP packet recieved from invalid address.\n");
-	}
+	buf[len] = '\0';
+	ip_header = (struct ip *) buf;
+	len = ip_header->ip_hl << 2;
+	gre_packet = (struct gre_packet_t *) (buf + len);
+	debug(80, 1) ("wccpHandleGre: Packet %x, IP Len %d.\n", ntohl(gre_packet->header), len);
     }
 }
 
