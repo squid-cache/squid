@@ -15,10 +15,10 @@ membanger: $(OBJS) $(TARGLIB)
 	$(CC) -o membanger $(OBJS) $(LIB)
 
 tcp-banger2: tcp-banger2.o
-	$(CC) -o $@ tcp-banger2.o
+	$(CC) -g -o $@ tcp-banger2.o
 
 tcp-banger2.o: tcp-banger2.c
-	$(CC) -c -I../include tcp-banger2.c
+	$(CC) -c $(CFLAGS) tcp-banger2.c
 
 $(OBJS): Makefile
 
