@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.40 1997/11/03 22:43:08 wessels Exp $
+ * $Id: client.cc,v 1.41 1997/11/21 00:29:34 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -270,7 +270,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "client: ERROR: Cannot connect to %s:%d: Host unknown.\n", hostname, port);
 	    } else {
 		char tbuf[BUFSIZ];
-		sprintf(tbuf, "client: ERROR: Cannot connect to %s:%d",
+		snprintf(tbuf, BUFSIZ, "client: ERROR: Cannot connect to %s:%d",
 		    hostname, port);
 		perror(tbuf);
 	    }

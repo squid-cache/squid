@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.19 1997/11/20 06:25:26 wessels Exp $
+ * $Id: globals.h,v 1.20 1997/11/21 00:29:35 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -68,6 +68,11 @@ extern int opt_zap_disk_store;	/* 0 */
 extern int syslog_enable;	/* 0 */
 extern int theInIcpConnection;	/* -1 */
 extern int theOutIcpConnection;	/* -1 */
+#ifdef SQUID_SNMP
+extern int theInSnmpConnection;	/* -1 */
+extern int theOutSnmpConnection;	/* -1 */
+extern char *snmp_agentinfo;
+#endif
 extern int vhost_mode;		/* 0 */
 extern int vizSock;		/* -1 */
 extern iostats IOStats;
@@ -80,6 +85,7 @@ extern struct in_addr any_addr;
 extern struct in_addr local_addr;
 extern struct in_addr no_addr;
 extern struct in_addr theOutICPAddr;
+extern struct in_addr theOutSNMPAddr;
 extern struct timeval current_time;
 extern struct timeval squid_start;
 extern time_t squid_curtime;	/* 0 */

@@ -50,6 +50,8 @@ mandir='${prefix}/man'
 # Initialize some other variables.
 subdirs=
 MFLAGS= MAKEFLAGS=
+SNMPLIB='libsnmp.a'
+
 # Maximum number of lines to put in a shell here document.
 ac_max_here_lines=12
 
@@ -3608,6 +3610,7 @@ s%@host_os@%$host_os%g
 s%@CACHE_HTTP_PORT@%$CACHE_HTTP_PORT%g
 s%@CACHE_ICP_PORT@%$CACHE_ICP_PORT%g
 s%@CC@%$CC%g
+s%@SNMPLIB@%$SNMPLIB%g
 s%@CPP@%$CPP%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
@@ -3677,6 +3680,7 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	./lib/Makefile \
 	./include/config.h \
 	./scripts/Makefile \
+	./snmplib/Makefile \
 	./scripts/RunCache \
 	./scripts/RunAccel \
 	./src/Makefile \

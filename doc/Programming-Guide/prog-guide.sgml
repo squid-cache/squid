@@ -64,7 +64,7 @@ Squid consists of the following major components
 <sect1>Client Side
 
 <P>
-    These routines exist primarily in two source files: <em/cp.c/, and
+    These routines exist primarily in two source files: <em/.cp.c/, and
     <em/client_side.c/.  The name <em/icp.c/ is misleading, as it
     has more to do with accepting HTTP requests than the ICP protocol.
 
