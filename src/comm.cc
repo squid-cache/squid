@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.331 2002/04/19 06:26:26 hno Exp $
+ * $Id: comm.cc,v 1.332 2002/09/12 09:43:51 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -908,8 +908,12 @@ commHandleWrite(int fd, void *data)
 
 
 
-/* Select for Writing on FD, until SIZE bytes are sent.  Call
- * *HANDLER when complete. */
+/*
+ * Queue a write. handler/handler_data are called when the write
+ * completes, on error, or on file descriptor close.
+ *
+ * free_func is used to free the passed buffer when the write has completed.
+ */
 void
 comm_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func)
 {
