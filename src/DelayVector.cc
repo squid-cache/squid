@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.cc,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelayVector.cc,v 1.2 2003/02/06 09:57:36 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -141,11 +141,17 @@ DelayVector::Id::deleteSelf() const
 
 DelayVector::Id::Id(DelayVector::Pointer aDelayVector,struct in_addr &src_addr, AuthUserRequest *authUser) : theVector(aDelayVector)
 {
+    debug(77,3)("DelayVector::Id::Id\n");
     DelayVector::iterator pos = theVector->pools.begin();
     while (pos != theVector->pools.end()) {
 	ids.push_back ((*pos)->id (src_addr, authUser));
 	++pos;
     }
+}
+
+DelayVector::Id::~Id()
+{
+    debug(77,3)("DelayVector::Id::~Id\n");
 }
 
 int

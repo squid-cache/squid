@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.50 2003/02/02 13:35:53 robertc Exp $
+ * $Id: authenticate.cc,v 1.51 2003/02/06 09:57:36 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -1012,9 +1012,11 @@ AuthUser::cacheCleanup(void *datanotused)
 	if (auth_user->expiretime + Config.authenticateTTL <= current_time.tv_sec) {
 	    debug(29, 5) ("AuthUser::cacheCleanup: Removing user %s from cache due to timeout.\n", username);
 	    /* the minus 1 accounts for the cache lock */
-	    if ((authenticateAuthUserInuse(auth_user) - 1))
-		debug(29, 4) ("AuthUser::cacheCleanup: this cache entry has expired AND has a non-zero ref count.\n");
-	    else
+	    if (!(authenticateAuthUserInuse(auth_user) - 1))
+		/* we don't warn if we leave the user in the cache, 
+		 * because other modules (ie delay pools) may keep
+		 * locks on users, and thats legitimate
+		 */
 		authenticateAuthUserUnlock(auth_user);
 	}
     }

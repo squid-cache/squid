@@ -92,3 +92,4 @@ section 85    Client side request management - after parsing, before caching
 section 87    client side stream management
 section 88    Client side reply management - from store to stream
 section 89    NAT / IP Interception
+section 90    Store Client
