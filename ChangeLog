@@ -21,6 +21,9 @@ Changes to squid-1.1.beta8 ():
 	  queries are denied (then they'll think we're dead).
 	- Fixed objects getting stuck in VM when handling aborted
 	  requests in icpHandleIMSReply().
+	- If IMS verification fails, send the old object and log it
+	  as TCP_EXP_FAIL_HIT.
+	- Added Host: header to HTTP requests.
 
 Changes to squid-1.1.beta7 (October 14, 1996):
 
