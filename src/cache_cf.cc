@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.445 2003/07/06 21:50:55 hno Exp $
+ * $Id: cache_cf.cc,v 1.446 2003/07/16 12:54:42 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -70,6 +70,8 @@ static void parse_cachedir_option_maxsize(SwapDir * sd, const char *option, cons
 static void dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir const * sd);
 static void parse_logformat(logformat ** logformat_definitions);
 static void parse_access_log(customlog ** customlog_definitions);
+static int check_null_access_log(customlog *customlog_definitions);
+
 static void dump_logformat(StoreEntry * entry, const char *name, logformat * definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, customlog * definitions);
 static void free_logformat(logformat ** definitions);
@@ -3180,6 +3182,12 @@ done:
         logs = &(*logs)->next;
 
     *logs = cl;
+}
+
+static int
+check_null_access_log(customlog *customlog_definitions)
+{
+    return customlog_definitions == NULL;
 }
 
 static void
