@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.57 1999/07/13 14:51:26 wessels Exp $
+ * $Id: store_swapout.cc,v 1.58 1999/08/02 06:18:47 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -111,22 +111,23 @@ storeSwapOut(StoreEntry * e)
 	(int) lowest_offset);
     new_mem_lo = lowest_offset;
     assert(new_mem_lo >= mem->inmem_lo);
-    /*
-     * We should only free up to what we know has been written to
-     * disk, not what has been queued for writing.  Otherwise there
-     * will be a chunk of the data which is not in memory and is
-     * not yet on disk.
-     */
     if (storeSwapOutAble(e)) {
+	/*
+	 * We should only free up to what we know has been written
+	 * to disk, not what has been queued for writing.  Otherwise
+	 * there will be a chunk of the data which is not in memory
+	 * and is not yet on disk.
+	 */
 	if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) < new_mem_lo)
 	    new_mem_lo = on_disk;
-    }
-    /*
-     * Else its not swap-able, and if we're freeing its data then
-     * we must make it private
-     */
-    else if (new_mem_lo > 0)
+    } else {
+	/*
+	 * Its not swap-able, so we must make it PRIVATE.  Even if
+	 * be only one MEM client and all others must read from
+	 * disk.
+	 */
 	storeReleaseRequest(e);
+    }
     stmemFreeDataUpto(&mem->data_hdr, new_mem_lo);
     mem->inmem_lo = new_mem_lo;
     if (e->swap_status == SWAPOUT_WRITING)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.159 1999/07/13 14:51:12 wessels Exp $
+ * $Id: enums.h,v 1.160 1999/08/02 06:18:35 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -364,6 +364,7 @@ enum {
     METHOD_CONNECT,		/* 101 */
     METHOD_TRACE,		/* 110 */
     METHOD_PURGE,		/* 111 */
+    METHOD_OPTIONS,
 #ifndef RFC_2518
     METHOD_PROPFIND,
     METHOD_PROPPATCH,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.304 1999/07/13 14:51:27 wessels Exp $
+ * $Id: structs.h,v 1.305 1999/08/02 06:18:48 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -321,6 +321,7 @@ struct _SquidConfig {
     char *mimeTablePathname;
     char *visibleHostname;
     char *uniqueHostname;
+    wordlist *hostnameAliases;
     char *errHtmlText;
     struct {
 	char *host;
@@ -1392,6 +1393,7 @@ struct _storeIOState {
 	    } flags;
 	    const char *read_buf;
 	    link_list *pending_writes;
+	    link_list *pending_reads;
 	} aufs;
 #if USE_DISKD
 	struct {
@@ -1428,6 +1430,7 @@ struct _request_t {
     HttpHeader header;
     char *body;
     size_t body_sz;
+    int content_length;
     HierarchyLogEntry hier;
     err_type err_type;
     char *peer_login;		/* Configured peer login:password */

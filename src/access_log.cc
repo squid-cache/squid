@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.51 1999/05/26 17:07:56 wessels Exp $
+ * $Id: access_log.cc,v 1.52 1999/08/02 06:18:26 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -314,13 +314,13 @@ accessLogRotate(void)
 	i--;
 	snprintf(from, MAXPATHLEN, "%s.%d", fname, i - 1);
 	snprintf(to, MAXPATHLEN, "%s.%d", fname, i);
-	rename(from, to);
+	xrename(from, to);
     }
     /* Rotate the current log to .0 */
     file_close(LogfileFD);	/* always close */
     if (Config.Log.rotateNumber > 0) {
 	snprintf(to, MAXPATHLEN, "%s.%d", fname, 0);
-	rename(fname, to);
+	xrename(fname, to);
     }
     /* Reopen the log.  It may have been renamed "manually" */
     LogfileFD = file_open(fname, O_WRONLY | O_CREAT);

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.160 1999/07/13 14:51:07 wessels Exp $
+# $Id: cf.data.pre,v 1.161 1999/08/02 06:18:30 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1060,7 +1060,7 @@ DOC_END
 NAME: request_body_max_size
 COMMENT: (KB)
 TYPE: b_size_t
-DEFAULT: 100 KB
+DEFAULT: 1 MB
 LOC: Config.maxRequestBodySize
 DOC_START
 	This specifies the maximum size for an HTTP request body.
@@ -1069,7 +1069,7 @@ DOC_START
 	than this limit receives an "Invalid Request" error message.
 	If you set this parameter to a zero, there will be no limit
 	imposed.
-request_body_max_size 100 KB
+request_body_max_size 1 MB
 DOC_END
 
 NAME: reply_body_max_size
@@ -1793,6 +1793,15 @@ DOC_START
 	'unique_hostname' so that forwarding loops can be detected.
 
 unique_hostname www-cache1.foo.org
+DOC_END
+
+
+NAME: hostname_aliases
+TYPE: wordlist
+LOC: Config.hostnameAliases
+DEFAULT: none
+DOC_START
+	A list of other DNS names that your cache has.
 DOC_END
 
 COMMENT_START

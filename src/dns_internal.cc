@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.14 1999/07/13 14:51:11 wessels Exp $
+ * $Id: dns_internal.cc,v 1.15 1999/08/02 06:18:34 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -354,7 +354,6 @@ void
 idnsInit(void)
 {
     static int init = 0;
-    memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
     if (DnsSocket < 0) {
 	DnsSocket = comm_open(SOCK_DGRAM,
 	    0,
@@ -369,11 +368,12 @@ idnsInit(void)
     if (nns == 0)
 	idnsParseResolvConf();
     if (!init) {
+	memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
 	cachemgrRegister("idns",
 	    "Internal DNS Statistics",
 	    idnsStats, 0, 1);
+	init++;
     }
-    init++;
 }
 
 void

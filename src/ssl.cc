@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.98 1999/07/13 14:51:18 wessels Exp $
+ * $Id: ssl.cc,v 1.99 1999/08/02 06:18:41 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -526,6 +526,12 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
 	sslState->port = g->http_port;
     } else {
 	sslState->port = CACHE_HTTP_PORT;
+    }
+    if (fs->peer) {
+	sslState->request->peer_login = fs->peer->login;
+	sslState->request->flags.proxying = 1;
+    } else {
+	sslState->request->flags.proxying = 0;
     }
 #if DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since ssl is nice and simple */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.206 1999/07/07 02:13:40 wessels Exp $
+ * $Id: acl.cc,v 1.207 1999/08/02 06:18:28 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -993,7 +993,6 @@ aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *b
 {
     char *sent_auth;
     char *cleartext;
-
     debug(28, 6) ("aclDecodeProxyAuth: header = '%s'\n", proxy_auth);
     if (proxy_auth == NULL)
 	return 0;
@@ -1016,6 +1015,11 @@ aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *b
 	*(*password)++ = '\0';
     if (*password == NULL) {
 	debug(28, 1) ("aclDecodeProxyAuth: no password in proxy authorization header '%s'\n", proxy_auth);
+	return 0;
+    }
+    if (**password == '\0') {
+	debug(28, 1) ("aclDecodeProxyAuth: Disallowing empty password,"
+	    "user is '%s'\n", *user);
 	return 0;
     }
     return 1;
@@ -1043,7 +1047,8 @@ aclMatchProxyAuth(wordlist * data, const char *proxy_auth, acl_proxy_auth_user *
     debug(28, 5) ("aclMatchProxyAuth: checking user '%s'\n", user);
 
     if (auth_user) {
-	/* This should be optimized to a boolean argument indicating that the
+	/*
+	 * This should be optimized to a boolean argument indicating that the
 	 * password is invalid, instead of passing full acl_proxy_auth_user
 	 * structures, and all messing with checklist->proxy_auth should
 	 * be restricted the functions that deal with the authenticator.
@@ -1057,8 +1062,11 @@ aclMatchProxyAuth(wordlist * data, const char *proxy_auth, acl_proxy_auth_user *
 	    debug(28, 4) ("aclMatchProxyAuth: authentication failed for user '%s'\n",
 		user);
 	    aclFreeProxyAuthUser(auth_user);
-	    /* copy username to request for logging on client-side unless ident
-	     * is known (do not override ident with false proxy auth names) */
+	    /*
+	     * copy username to request for logging on client-side
+	     * unless ident is known (do not override ident with
+	     * false proxy auth names)
+	     */
 	    if (!*checklist->request->user_ident)
 		xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
 	    return -2;
@@ -1899,11 +1907,9 @@ aclDomainCompare(const void *data, splayNode * n)
 	d2++;
     l1 = strlen(d1);
     l2 = strlen(d2);
-    while (d1[l1] == d2[l2]) {
+    while (d1[--l1] == d2[--l2]) {
 	if ((l1 == 0) && (l2 == 0))
 	    return 0;		/* d1 == d2 */
-	l1--;
-	l2--;
 	if (0 == l1) {
 	    if ('.' == d2[l2 - 1]) {
 		debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d2, d1);

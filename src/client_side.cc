@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.460 1999/07/13 14:51:09 wessels Exp $
+ * $Id: client_side.cc,v 1.461 1999/08/02 06:18:32 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -861,7 +861,7 @@ clientSetKeepaliveFlag(clientHttpRequest * http)
 static int
 clientCheckContentLength(request_t * r)
 {
-    int has_cont_len = (httpHeaderGetInt(&r->header, HDR_CONTENT_LENGTH) >= 0);
+    int has_cont_len = (r->content_length >= 0);
     switch (r->method) {
     case METHOD_PUT:
     case METHOD_POST:
@@ -1914,7 +1914,7 @@ clientProcessRequest(clientHttpRequest * http)
 	}
 	/* yes, continue */
 	http->log_type = LOG_TCP_MISS;
-    } else if (r->body) {
+    } else if (r->content_length > 0) {
 	http->log_type = LOG_TCP_MISS;
 	/* XXX oof, POST can be cached! */
 	pumpInit(fd, r, http->uri);
@@ -2268,7 +2268,6 @@ clientReadRequest(int fd, void *data)
     int k;
     request_t *request = NULL;
     int size;
-    int cont_len;
     method_t method;
     clientHttpRequest *http = NULL;
     clientHttpRequest **H = NULL;
@@ -2394,7 +2393,7 @@ clientReadRequest(int fd, void *data)
 	    request->flags.accelerated = http->flags.accel;
 	    if (!http->flags.internal) {
 		if (internalCheck(strBuf(request->urlpath))) {
-		    if (0 == strcasecmp(request->host, internalHostname()) &&
+		    if (internalHostnameIs(request->host) &&
 			request->port == Config.Port.http->i) {
 			http->flags.internal = 1;
 		    } else if (internalStaticCheck(strBuf(request->urlpath))) {
@@ -2404,6 +2403,11 @@ clientReadRequest(int fd, void *data)
 		    }
 		}
 	    }
+	    /*
+	     * cache the Content-length value in request_t.
+	     */
+	    request->content_length = httpHeaderGetInt(&request->header,
+		HDR_CONTENT_LENGTH);
 	    request->flags.internal = http->flags.internal;
 	    safe_free(prefix);
 	    safe_free(http->log_uri);
@@ -2442,9 +2446,8 @@ clientReadRequest(int fd, void *data)
 	     * because there is a reqeust body following and we
 	     * don't want to parse it as though it was new request.
 	     */
-	    cont_len = httpHeaderGetInt(&request->header, HDR_CONTENT_LENGTH);
-	    if (cont_len >= 0) {
-		int copy_len = XMIN(conn->in.offset, cont_len);
+	    if (request->content_length >= 0) {
+		int copy_len = XMIN(conn->in.offset, request->content_length);
 		if (copy_len > 0) {
 		    assert(conn->in.offset >= copy_len);
 		    request->body_sz = copy_len;
@@ -2459,11 +2462,11 @@ clientReadRequest(int fd, void *data)
 		 * be arriving on the client socket.  Lets cancel
 		 * the read handler until this request gets forwarded.
 		 */
-		if (request->body_sz < cont_len)
+		if (request->body_sz < request->content_length)
 		    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-		if (cont_len < 0)
+		if (request->content_length < 0)
 		    (void) 0;
-		else if (cont_len > Config.maxRequestBodySize) {
+		else if (request->content_length > Config.maxRequestBodySize) {
 		    err = errorCon(ERR_TOO_BIG, HTTP_REQUEST_ENTITY_TOO_LARGE);
 		    err->request = requestLink(request);
 		    http->entry = clientCreateStoreEntry(http,
@@ -2482,12 +2485,16 @@ clientReadRequest(int fd, void *data)
 	    k = conn->in.size - 1 - conn->in.offset;
 	    if (k == 0) {
 		if (conn->in.offset >= Config.maxRequestHeaderSize) {
+		    int fd = open("/tmp/error:request-too-large", O_WRONLY | O_CREAT | O_TRUNC);
+		    if (fd >= 0) {
+			write(fd, conn->in.buf, conn->in.offset);
+			close(fd);
+		    }
 		    /* The request is too large to handle */
-		    debug(33, 0) ("Request won't fit in buffer.\n");
-		    debug(33, 0) ("Config 'request_header_max_size'= %d bytes.\n",
-			Config.maxRequestHeaderSize);
-		    debug(33, 0) ("This request = %d bytes.\n",
+		    debug(33, 0) ("Request header is too large (%d bytes)\n",
 			(int) conn->in.offset);
+		    debug(33, 1) ("Config 'request_header_max_size'= %d bytes.\n",
+			Config.maxRequestHeaderSize);
 		    err = errorCon(ERR_TOO_BIG, HTTP_REQUEST_ENTITY_TOO_LARGE);
 		    http = parseHttpRequestAbort(conn, "error:request-too-large");
 		    /* add to the client request queue */

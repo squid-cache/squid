@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.506 1999/07/13 14:51:21 wessels Exp $
+ * $Id: store.cc,v 1.507 1999/08/02 06:18:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -185,7 +185,7 @@ storeHashInsert(StoreEntry * e, const cache_key * key)
     hash_join(store_table, (hash_link *) e);
 #if HEAP_REPLACEMENT
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-	debug(20, 4) ("storeHashInsert: not inserting special into store heap\n");
+	(void) 0;
     } else {
 	e->node = heap_insert(store_heap, e);
 	debug(20, 4) ("storeHashInsert: inserted node 0x%x\n", e->node);
@@ -235,10 +235,12 @@ storeLockObject(StoreEntry * e)
 {
     if (e->lock_count++ == 0) {
 #if HEAP_REPLACEMENT
-	/* there is no reason to take any action here.
-	 * Squid by default is moving locked objects to the end of the LRU
-	 * list to keep them from getting bumped into by the replacement
-	 * algorithm.  We can't do that so we will just have to handle them.
+	/*
+	 * There is no reason to take any action here.  Squid by
+	 * default is moving locked objects to the end of the LRU
+	 * list to keep them from getting bumped into by the
+	 * replacement algorithm.  We can't do that so we will just
+	 * have to handle them.
 	 */
 	debug(20, 4) ("storeLockObject: just locked node 0x%x\n", e->node);
 #else
@@ -294,7 +296,8 @@ storeUnlockObject(StoreEntry * e)
 	     * Squid/LRU is moving things around in the linked list in order
 	     * to keep from bumping into them when purging from the LRU list.
 	     */
-	    debug(20, 4) ("storeUnlockObject: purged private node 0x%x\n", e->node);
+	    debug(20, 4) ("storeUnlockObject: purged private node 0x%x\n",
+		e->node);
 #else
 	    dlinkDelete(&e->lru, &store_list);
 	    dlinkAddTail(e, &e->lru, &store_list);
@@ -372,7 +375,8 @@ storeSetPublicKey(StoreEntry * e)
      */
 #if HEAP_REPLACEMENT
     if (EBIT_TEST(e->flags, RELEASE_REQUEST))
-	debug(20, 1) ("assertion failed: RELEASE key %s, url %s\n", e->key, mem->url);
+	debug(20, 1) ("assertion failed: RELEASE key %s, url %s\n",
+	    e->key, mem->url);
 #endif
     assert(!EBIT_TEST(e->flags, RELEASE_REQUEST));
     newkey = storeKeyPublic(mem->url, mem->method);
@@ -558,8 +562,9 @@ storeCheckCachable(StoreEntry * e)
 	store_check_cachable_hist.no.too_many_open_fds++;
 #if HEAP_REPLACEMENT
 	/*
-	 * With the HEAP-based replacement policies a low reference age should not
-	 * prevent cacheability of an object.  We do not use LRU age at all.
+	 * With the HEAP-based replacement policies a low reference
+	 * age should not prevent cacheability of an object.  We
+	 * do not use LRU age at all.
 	 */
 #else
     } else if (storeExpiredReferenceAge() < 300) {
@@ -711,7 +716,8 @@ storeGetMemSpace(int size)
 	e->mem_obj->node = NULL;	/* no longer in the heap */
 	if (storeEntryLocked(e)) {
 	    locked++;
-	    debug(20, 5) ("storeGetMemSpace: locked key %s\n", storeKeyText(e->key));
+	    debug(20, 5) ("storeGetMemSpace: locked key %s\n",
+		storeKeyText(e->key));
 	    linklistPush(e, &locked_entries);
 	    continue;
 	}
@@ -829,8 +835,9 @@ storeMaintainSwapSpace(void *datanotused)
 	    continue;
 	} else if (storeCheckExpired(e)) {
 	    /*
-	     * Note: This will not check the reference age ifdef HEAP_REPLACEMENT,
-	     * but it does some other useful checks...
+	     * Note: This will not check the reference age ifdef
+	     * HEAP_REPLACEMENT, but it does some other useful
+	     * checks...
 	     */
 	    expired++;
 	    debug(20, 3) ("Released store object age %f size %d refs %d key %s\n",
@@ -839,9 +846,11 @@ storeMaintainSwapSpace(void *datanotused)
 	    storeRelease(e);
 	} else {
 	    /*
-	     * Did not expire the object so we need to add it back into the heap!
+	     * Did not expire the object so we need to add it back
+	     * into the heap!
 	     */
-	    debug(20, 5) ("storeMaintainSwapSpace: non-expired %s\n", storeKeyText(e->key));
+	    debug(20, 5) ("storeMaintainSwapSpace: non-expired %s\n",
+		storeKeyText(e->key));
 	    linklistAdd(e, &locked_entries);
 	    continue;
 	}
@@ -1051,69 +1060,7 @@ storeInitHashValues(void)
 }
 
 #if HEAP_REPLACEMENT
-
-/*
- * For a description of these cache replacement policies see --
- *  http://www.hpl.hp.com/personal/John_Dilley/caching/wcw.html
- */
-
-/*
- * Key generation function to implement the LFU-DA policy (Least
- * Frequently Used with Dynamic Aging).  Similar to classical LFU
- * but with aging to handle turnover of the popular document set.
- * Maximizes byte hit rate by keeping more currently popular objects
- * in cache regardless of size.  Achieves lower hit rate than GDS
- * because there are more large objects in cache (so less room for
- * smaller popular objects).
- * 
- * This version implements a tie-breaker based upon recency
- * (e->lastref): for objects that have the same reference count
- * the most recent object wins (gets a higher key value).
- */
-static heap_key
-HeapKeyGen_StoreEntry_LFUDA(void *entry, double age)
-{
-    StoreEntry *e = entry;
-    double tie = (e->lastref > 1) ? (1.0 / e->lastref) : 1;
-    return age + e->refcount - tie;
-}
-
-
-/*
- * Key generation function to implement the GDS-Frequency policy.
- * Similar to Greedy Dual-Size Hits policy, but adds aging of
- * documents to prevent pollution.  Maximizes object hit rate by
- * keeping more small, popular objects in cache.  Achieves lower
- * byte hit rate than LFUDA because there are fewer large objects
- * in cache.
- * 
- * This version implements a tie-breaker based upon recency
- * (e->lastref): for objects that have the same reference count
- * the most recent object wins (gets a higher key value).
- */
-static heap_key
-HeapKeyGen_StoreEntry_GDSF(void *entry, double age)
-{
-    StoreEntry *e = entry;
-    double size = e->swap_file_sz ? e->swap_file_sz : 1.0;
-    double tie = (e->lastref > 1) ? (1.0 / e->lastref) : 1;
-    return age + ((double) e->refcount / size) - tie;
-}
-
-/* 
- * Key generation function to implement the LRU policy.  Normally
- * one would not do this with a heap -- use the linked list instead.
- * For testing and performance characterization it was useful.
- * Don't use it unless you are trying to compare performance among
- * heap-based replacement policies...
- */
-static heap_key
-HeapKeyGen_StoreEntry_LRU(void *entry, double age)
-{
-    StoreEntry *e = entry;
-    return (heap_key) e->lastref;
-}
-
+#include "store_heap_replacement.c"
 #endif
 
 void
@@ -1370,7 +1317,9 @@ storeEntryDump(const StoreEntry * e, int l)
     debug(20, l) ("StoreEntry->swap_status: %d\n", (int) e->swap_status);
 }
 
-/* NOTE, this function assumes only two mem states */
+/*
+ * NOTE, this function assumes only two mem states
+ */
 void
 storeSetMemStatus(StoreEntry * e, int new_status)
 {
@@ -1383,10 +1332,12 @@ storeSetMemStatus(StoreEntry * e, int new_status)
 #if HEAP_REPLACEMENT
 	if (mem->node == NULL) {
 	    if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-		debug(20, 4) ("storeSetMemStatus: not inserting special %s\n", mem->url);
+		debug(20, 4) ("storeSetMemStatus: not inserting special %s\n",
+		    mem->url);
 	    } else {
 		mem->node = heap_insert(inmem_heap, e);
-		debug(20, 4) ("storeSetMemStatus: inserted mem node 0x%x\n", mem->node);
+		debug(20, 4) ("storeSetMemStatus: inserted mem node 0x%x\n",
+		    mem->node);
 	    }
 	}
 #else

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.343 1999/07/21 22:08:12 glenn Exp $
+ * $Id: protos.h,v 1.344 1999/08/02 06:18:39 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -79,7 +79,9 @@ extern aio_result_t *aio_poll_done(void);
 extern int aio_operations_pending(void);
 extern int aio_overloaded(void);
 extern int aio_sync(void);
+extern int aio_get_queue_len(void);
 
+extern void aioInit(void);
 extern void aioCancel(int);
 extern void aioOpen(const char *, int, mode_t, AIOCB *, void *);
 extern void aioClose(int);
@@ -89,6 +91,7 @@ extern void aioStat(char *, struct stat *, AIOCB *, void *);
 extern void aioUnlink(const char *, AIOCB *, void *);
 extern void aioCheckCallbacks(void);
 extern void aioSync(void);
+extern int aioQueueSize(void);
 #endif
 
 /*
@@ -524,9 +527,6 @@ extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
 
 #if USE_WCCP
-extern PF wccpHandleUdp;
-extern EVH wccpHereIam;
-extern EVH wccpAssignBuckets;
 extern void wccpInit(void);
 extern void wccpConnectionOpen(void);
 extern void wccpConnectionShutdown(void);
@@ -995,7 +995,7 @@ extern void storeRebuildComplete(struct _store_rebuild_data *);
 /*
  * store_swapin.c
  */
-extern storeIOState *storeSwapInStart(StoreEntry *);
+extern void storeSwapInStart(store_client *);
 
 /*
  * store_swapout.c
@@ -1112,6 +1112,7 @@ extern void gb_flush(gb_t *);	/* internal, do not use this */
 extern int stringHasWhitespace(const char *);
 extern void linklistPush(link_list **, void *);
 extern void *linklistShift(link_list **);
+extern int xrename(const char *from, const char *to);
 
 #if USE_HTCP
 extern void htcpInit(void);
@@ -1173,6 +1174,7 @@ extern int internalStaticCheck(const char *urlpath);
 extern char *internalLocalUri(const char *dir, const char *name);
 extern char *internalRemoteUri(const char *, u_short, const char *, const char *);
 extern const char *internalHostname(void);
+extern int internalHostnameIs(const char *);
 
 #if USE_CARP
 extern void carpInit(void);

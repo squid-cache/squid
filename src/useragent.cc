@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.17 1999/05/26 17:08:06 wessels Exp $
+ * $Id: useragent.cc,v 1.18 1999/08/02 06:18:50 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -87,7 +87,7 @@ useragentRotateLog(void)
 	i--;
 	snprintf(from, MAXPATHLEN, "%s.%d", fname, i - 1);
 	snprintf(to, MAXPATHLEN, "%s.%d", fname, i);
-	rename(from, to);
+	xrename(from, to);
     }
     if (cache_useragent_log) {
 	file_close(fileno(cache_useragent_log));
@@ -97,7 +97,7 @@ useragentRotateLog(void)
     /* Rotate the current log to .0 */
     if (Config.Log.rotateNumber > 0) {
 	snprintf(to, MAXPATHLEN, "%s.%d", fname, 0);
-	rename(fname, to);
+	xrename(fname, to);
     }
     useragentOpenLog();
 #endif
