@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.26 1998/07/22 20:37:06 wessels Exp $
+ * $Id: cf_gen.cc,v 1.27 1998/08/21 09:15:43 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -346,7 +346,7 @@ gen_default(Entry * head, FILE * fp)
 	}
 	assert(entry->default_value);
 	if (entry->ifdef)
-	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
+	    fprintf(fp, "#if %s\n", entry->ifdef);
 	if (strcmp(entry->default_value, "none") == 0) {
 	    fprintf(fp, "\t/* No default for %s */\n", entry->name);
 	} else {
@@ -377,7 +377,7 @@ gen_default_if_none(Entry * head, FILE * fp)
 	if (entry->default_if_none == NULL)
 	    continue;
 	if (entry->ifdef)
-	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
+	    fprintf(fp, "#if %s\n", entry->ifdef);
 	fprintf(fp,
 	    "\tif (check_null_%s(%s))\n"
 	    "\t\tdefault_line(\"%s %s\");\n",
@@ -417,7 +417,7 @@ gen_parse(Entry * head, FILE * fp)
 	    );
 	assert(entry->loc);
 	if (entry->ifdef)
-	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
+	    fprintf(fp, "#if %s\n", entry->ifdef);
 	if (strcmp(entry->loc, "none") == 0) {
 	    fprintf(fp,
 		"\t\tparse_%s();\n",
@@ -458,7 +458,7 @@ gen_dump(Entry * head, FILE * fp)
 	if (strcmp(entry->name, "comment") == 0)
 	    continue;
 	if (entry->ifdef)
-	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
+	    fprintf(fp, "#if %s\n", entry->ifdef);
 	fprintf(fp, "\tdump_%s(entry, \"%s\", %s);\n",
 	    entry->type,
 	    entry->name,
@@ -485,7 +485,7 @@ gen_free(Entry * head, FILE * fp)
 	if (strcmp(entry->name, "comment") == 0)
 	    continue;
 	if (entry->ifdef)
-	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
+	    fprintf(fp, "#if %s\n", entry->ifdef);
 	fprintf(fp, "\tfree_%s(&%s);\n", entry->type, entry->loc);
 	if (entry->ifdef)
 	    fprintf(fp, "#endif\n");
