@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.26 2002/07/01 16:11:23 hno Exp $
+#  $Id: Makefile.am,v 1.27 2002/07/12 15:00:10 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -70,8 +70,10 @@ EXTRA_PROGRAMS = \
 noinst_PROGRAMS = \
 	cf_gen
 
+sbin_PROGRAMS = \
+	squid
+
 bin_PROGRAMS = \
-	squid \
 	squidclient
 
 libexec_PROGRAMS = \
