@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.13 1996/09/20 06:28:36 wessels Exp $
+ * $Id: dns.cc,v 1.14 1996/09/24 18:47:22 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -126,6 +126,7 @@ dnsOpenServer(char *command)
     struct sockaddr_in S;
     int cfd;
     int sfd;
+    int fd;
     int len;
     LOCAL_ARRAY(char, buf, 128);
 
@@ -185,10 +186,17 @@ dnsOpenServer(char *command)
     }
     /* child */
     no_suid();			/* give up extra priviliges */
+    if ((fd = accept(cfd, NULL, NULL)) < 0) {
+        debug(34, 0, "dnsOpenServer: FD %d accept: %s\n", cfd, xstrerror());
+        _exit(1);
+    }
+    dup2(fd, 0);
+    dup2(fd, 1);
     dup2(fileno(debug_log), 2);
-    dup2(cfd, 3);
+    fclose(debug_log);
+    close(fd);
     close(cfd);
-    execlp(command, "(dnsserver)", "-t", NULL);
+    execlp(command, "(dnsserver)", NULL);
     debug(34, 0, "dnsOpenServer: %s: %s\n", command, xstrerror());
     _exit(1);
     return 0;
