@@ -1,5 +1,10 @@
 Future/Current Changes to squid-1.2.beta16 (Feb 23, 1998):
 
+	- Removed unused urlClean() function from url.c.	
+
+	- Fixed a bug that allow '?' parts of urls to be recorded in
+	  store.log.  Logged urls are now "clean".
+
 	- Cache Manager got new Web interface (cachemgr.cgi). New .cgi script
 	  forwards basic authentication from browser to squid. Authentication
 	  info is encoded within all dynamically generated pages so you do not

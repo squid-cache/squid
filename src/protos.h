@@ -619,7 +619,6 @@ extern void requestUnlink(request_t *);
 extern int matchDomainName(const char *d, const char *h);
 extern int urlCheckRequest(const request_t *);
 extern int urlDefaultPort(protocol_t p);
-extern char *urlClean(char *);
 extern char *urlCanonicalClean(const request_t *);
 
 extern void useragentOpenLog(void);
