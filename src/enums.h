@@ -230,7 +230,7 @@ typedef enum {
     ftDate_1123,
     ftPCc,
     ftPRange,
-    ftPContRange,
+    ftPContRange
 } field_type;
 
 typedef enum {
