@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.13 2003/07/10 11:04:06 robertc Exp $
+ * $Id: client_side_request.h,v 1.14 2003/07/11 01:40:36 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 
 #include "HttpHeader.h"
 #include "clientStream.h"
+#include "client_side.h"
 
 /* client_side_request.c - client side request related routines (pure logic) */
 extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
@@ -71,9 +72,9 @@ public:
     _SQUID_INLINE_ StoreEntry *storeEntry() const;
     void storeEntry(StoreEntry *);
 
-    _SQUID_INLINE_ ConnStateData *getConn();
-    _SQUID_INLINE_ ConnStateData const *getConn() const;
-    _SQUID_INLINE_ void setConn(ConnStateData *);
+    _SQUID_INLINE_ ConnStateData::Pointer getConn();
+    _SQUID_INLINE_ ConnStateData::Pointer const getConn() const;
+    _SQUID_INLINE_ void setConn(ConnStateData::Pointer);
     request_t *request;		/* Parsed URL ... */
     char *uri;
     char *log_uri;
@@ -134,7 +135,7 @@ private:
     CBDATA_CLASS(ClientHttpRequest);
     ssize_t maxReplyBodySize_;
     StoreEntry *entry_;
-    ConnStateData *conn_;
+    ConnStateData::Pointer conn_;
 };
 
 /* client http based routines */

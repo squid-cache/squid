@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.24 2003/06/19 19:56:11 hno Exp $
+ * $Id: auth_digest.cc,v 1.25 2003/07/11 01:40:41 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -43,6 +43,7 @@
 #include "auth_digest.h"
 #include "authenticate.h"
 #include "Store.h"
+#include "HttpRequest.h"
 
 extern AUTHSSETUP authSchemeSetup_digest;
 
@@ -643,7 +644,7 @@ digest_request_h::authenticated() const
 /* log a digest user in
  */
 void
-digest_request_h::authenticate(request_t * request, ConnStateData * conn, http_hdr_type type)
+digest_request_h::authenticate(request_t * request, ConnStateData::Pointer conn, http_hdr_type type)
 {
     auth_user_t *auth_user;
     digest_request_h *digest_request;

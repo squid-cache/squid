@@ -1,5 +1,5 @@
 /*
- * $Id: ACLUrlPath.cc,v 1.1 2003/02/17 07:01:35 robertc Exp $
+ * $Id: ACLUrlPath.cc,v 1.2 2003/07/11 01:40:34 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "ACLUrlPath.h"
 #include "ACLChecklist.h"
 #include "ACLRegexData.h"
+#include "HttpRequest.h"
 
 ACL::Prototype ACLUrlPath::LegacyRegistryProtoype(&ACLUrlPath::RegistryEntry_, "pattern");
 ACL::Prototype ACLUrlPath::RegistryProtoype(&ACLUrlPath::RegistryEntry_, "urlpath_regex");

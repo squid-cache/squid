@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "ACLDestinationIP.h"
 #include "ACLChecklist.h"
+#include "HttpRequest.h"
 
 MemPool *ACLDestinationIP::Pool(NULL);
 void *

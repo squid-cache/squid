@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.105 2003/07/09 11:02:28 hno Exp $
+ * $Id: forward.cc,v 1.106 2003/07/11 01:40:36 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -182,7 +182,7 @@ fwdCheckRetriable(FwdState * fwdState)
      * even if the method is indempotent
      */
 
-    if (fwdState->request->body_connection)
+    if (fwdState->request->body_connection.getRaw() != NULL)
         return 0;
 
     /* RFC2616 9.1 Safe and Idempotent Methods */

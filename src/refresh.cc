@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.60 2003/02/21 22:50:10 robertc Exp $
+ * $Id: refresh.cc,v 1.61 2003/07/11 01:40:37 robertc Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -40,6 +40,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "MemObject.h"
+#include "HttpRequest.h"
 
 typedef enum {
     rcHTTP,

@@ -41,6 +41,7 @@
 #include "ACLUserData.h"
 #include "ACLRegexData.h"
 #include "client_side.h"
+#include "HttpRequest.h"
 
 MemPool *ACLProxyAuth::Pool(NULL);
 void *
@@ -181,7 +182,7 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
         /* OR the connection was closed, there's no way to continue */
         authenticateAuthUserRequestUnlock(checklist->auth_user_request);
 
-        if (checklist->conn()) {
+        if (checklist->conn().getRaw() != NULL) {
             checklist->conn()->auth_user_request = NULL;
             checklist->conn()->auth_type = AUTH_BROKEN;
         }

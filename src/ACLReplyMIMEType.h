@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLReplyMIMEType.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
+ * $Id: ACLReplyMIMEType.h,v 1.2 2003/07/11 01:40:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,6 +40,7 @@
 #include "ACLReplyHeaderStrategy.h"
 #include "ACLStrategised.h"
 #include "ACLChecklist.h"
+#include "HttpRequest.h"
 
 class ACLReplyMIMEType
 {

@@ -46,7 +46,7 @@ public:
 
     ~ntlm_request_t();
     virtual int authenticated() const;
-    virtual void authenticate(request_t * request, ConnStateData * conn, http_hdr_type type);
+    virtual void authenticate(request_t * request, ConnStateData::Pointer conn, http_hdr_type type);
     virtual int direction();
     /* what negotiate string did the client use? */
     char *ntlmnegotiate;
@@ -61,7 +61,7 @@ public:
     /* have we got the helper-server in a deferred state? */
     int authserver_deferred;
     /* what connection is this associated with */
-    ConnStateData *conn;
+    ConnStateData::Pointer conn;
 
 private:
     static MemPool *Pool;

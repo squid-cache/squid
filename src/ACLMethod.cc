@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMethod.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLMethod.cc,v 1.2 2003/07/11 01:40:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 #include "ACLMethod.h"
 #include "ACLMethodData.h"
 #include "ACLChecklist.h"
+#include "HttpRequest.h"
 
 ACL::Prototype ACLMethod::RegistryProtoype(&ACLMethod::RegistryEntry_, "method");
 ACLStrategised<method_t> ACLMethod::RegistryEntry_(new ACLMethodData, ACLMethodStrategy::Instance(), "method");

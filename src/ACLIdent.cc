@@ -147,7 +147,7 @@ IdentLookup::checkForAsync(ACLChecklist *checklist)const
     checklist->asyncInProgress(true);
     debug(28, 3) ("IdentLookup::checkForAsync: Doing ident lookup\n");
 
-    if (checklist->conn() && cbdataReferenceValid(checklist->conn())) {
+    if (checklist->conn().getRaw() != NULL) {
         identStart(&checklist->conn()->me, &checklist->conn()->peer,
                    LookupDone, checklist);
     } else {
@@ -173,7 +173,7 @@ IdentLookup::LookupDone(const char *ident, void *data)
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    if (cbdataReferenceValid(checklist->conn()) && !checklist->conn()->rfc931[0])
+    if (checklist->conn().getRaw() != NULL && !checklist->conn()->rfc931[0])
         xstrncpy(checklist->conn()->rfc931, checklist->rfc931, USER_IDENT_SZ);
 
     checklist->asyncInProgress(false);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLProtocol.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLProtocol.cc,v 1.2 2003/07/11 01:40:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 #include "ACLProtocol.h"
 #include "ACLProtocolData.h"
 #include "ACLChecklist.h"
+#include "HttpRequest.h"
 
 ACL::Prototype ACLProtocol::RegistryProtoype(&ACLProtocol::RegistryEntry_, "proto");
 ACLStrategised<protocol_t> ACLProtocol::RegistryEntry_(new ACLProtocolData, ACLProtocolStrategy::Instance(), "proto");

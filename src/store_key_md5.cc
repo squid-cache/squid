@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.29 2003/02/21 22:50:12 robertc Exp $
+ * $Id: store_key_md5.cc,v 1.30 2003/07/11 01:40:37 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "HttpRequest.h"
 
 static cache_key null_key[MD5_DIGEST_CHARS];
 

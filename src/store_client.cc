@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.128 2003/06/24 12:42:27 robertc Exp $
+ * $Id: store_client.cc,v 1.129 2003/07/11 01:40:37 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -44,6 +44,7 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "HttpRequest.h"
 
 CBDATA_TYPE(store_client);
 

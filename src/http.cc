@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.417 2003/06/27 22:32:31 hno Exp $
+ * $Id: http.cc,v 1.418 2003/07/11 01:40:36 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1513,7 +1513,7 @@ httpSendRequest(HttpStateData * httpState)
     debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", httpState->fd,
                   httpState);
 
-    if (httpState->orig_request->body_connection)
+    if (httpState->orig_request->body_connection.getRaw() != NULL)
         sendHeaderDone = httpSendRequestEntity;
     else
         sendHeaderDone = HttpStateData::SendComplete;
