@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.4 2001/12/27 13:02:38 hno Exp $
+# $Id: Makefile.am,v 1.5 2001/12/27 13:09:35 hno Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects VERSION=1.5
@@ -20,4 +20,13 @@ dist-hook:
 	  fi; \
 	done
 
-##&&  cp -p $(srcdir)/$$subdir/*.in  $(distdir)/$$subdir
+EXTRA_DIST = \
+	ChangeLog \
+	CONTRIBUTORS \
+	COPYING \
+	COPYRIGHT \
+	CREDITS \
+	INSTALL \
+	QUICKSTART \
+	README \
+	SPONSORS
