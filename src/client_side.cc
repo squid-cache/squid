@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.476 2000/05/02 19:53:53 hno Exp $
+ * $Id: client_side.cc,v 1.477 2000/05/02 20:18:21 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -569,6 +569,8 @@ clientPurgeRequest(clientHttpRequest * http)
 	return;
     }
     http->log_type = LOG_TCP_MISS;
+    /* Release both IP and object cache entries */
+    ipcacheInvalidate(http->request->host);
     if ((entry = storeGetPublic(http->uri, METHOD_GET)) == NULL) {
 	http->http_code = HTTP_NOT_FOUND;
     } else {
@@ -1882,6 +1884,13 @@ clientProcessRequest2(clientHttpRequest * http)
 	/* We can generate a HEAD reply from a cached GET object */
 	e = http->entry = storeGetPublic(http->uri, METHOD_GET);
     }
+    /* Release negatively cached IP-cache entries on reload */
+    if (r->flags.nocache)
+	ipcacheReleaseInvalid(r->host);
+#if HTTP_VIOLATIONS
+    else if (r->flags.nocache_hack)
+	ipcacheReleaseInvalid(r->host);
+#endif
 #if USE_CACHE_DIGESTS
     http->lookup_type = e ? "HIT" : "MISS";
 #endif
@@ -1907,12 +1916,6 @@ clientProcessRequest2(clientHttpRequest * http)
 	return LOG_TCP_HIT;
     }
 #if HTTP_VIOLATIONS
-    if (r->flags.nocache_hack) {
-	/* if nocache_hack is set, nocache should always be clear, right? */
-	assert(!r->flags.nocache);
-	ipcacheReleaseInvalid(r->host);
-	/* continue! */
-    }
     if (e->store_status == STORE_PENDING) {
 	if (r->flags.nocache || r->flags.nocache_hack) {
 	    debug(33, 3) ("Clearing no-cache for STORE_PENDING request\n\t%s\n",
