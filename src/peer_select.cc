@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.73 1998/07/22 20:37:41 wessels Exp $
+ * $Id: peer_select.cc,v 1.74 1998/08/19 23:10:30 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -225,7 +225,7 @@ peerSelectCallbackFail(ps_state * psstate)
 static int
 peerCheckNetdbDirect(ps_state * psstate)
 {
-    peer *p = psstate->closest_parent_miss;
+    peer *p = whichPeer(&psstate->closest_parent_miss);
     int myrtt;
     int myhops;
     if (p == NULL)
@@ -294,11 +294,12 @@ peerSelectFoo(ps_state * psstate)
 	peerSelectCallback(psstate, NULL);
 	return;
     }
-    psstate->single_parent = getSingleParent(request);
-    if (psstate->single_parent != NULL) {
+    if ((p = getSingleParent(request))) {
+    	psstate->single_parent = p->in_addr;
 	debug(44, 3) ("peerSelect: found single parent, skipping ICP query\n");
+    }
 #if USE_CACHE_DIGESTS
-    } else if ((p = neighborsDigestSelect(request, entry))) {
+    else if ((p = neighborsDigestSelect(request, entry))) {
 	debug(44, 2) ("peerSelect: Using Cache Digest\n");
 	request->hier.alg = PEER_SA_DIGEST;
 	code = CACHE_DIGEST_HIT;
@@ -306,14 +307,16 @@ peerSelectFoo(ps_state * psstate)
 	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
 	return;
+    }
 #endif
 #if USE_CARP
-    } else if ((p = carpSelectParent(request))) {
+    else if ((p = carpSelectParent(request))) {
 	hierarchyNote(&request->hier, CARP, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
 	return;
+    }
 #endif
-    } else if ((p = netdbClosestParent(request))) {
+    else if ((p = netdbClosestParent(request))) {
 	request->hier.alg = PEER_SA_NETDB;
 	code = CLOSEST_PARENT;
 	debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
@@ -351,17 +354,17 @@ peerSelectFoo(ps_state * psstate)
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
 	hierarchyNote(&request->hier, code, &psstate->icp, request->host);
 	peerSelectCallback(psstate, NULL);
-    } else if ((p = psstate->closest_parent_miss) != NULL) {
+    } else if ((p = whichPeer(&psstate->closest_parent_miss))) {
 	code = CLOSEST_PARENT_MISS;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
-    } else if ((p = psstate->first_parent_miss) != NULL) {
+    } else if ((p = whichPeer(&psstate->first_parent_miss))) {
 	code = FIRST_PARENT_MISS;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
-    } else if ((p = psstate->single_parent)) {
+    } else if ((p = whichPeer(&psstate->single_parent))) {
 	code = SINGLE_PARENT;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
@@ -420,7 +423,7 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
 	    if (rtt > 0 && rtt < 0xFFFF)
 		netdbUpdatePeer(ps->request, p, rtt, hops);
 	    if (rtt && (ps->icp.p_rtt == 0 || rtt < ps->icp.p_rtt)) {
-		ps->closest_parent_miss = p;
+		ps->closest_parent_miss = p->in_addr;
 		ps->icp.p_rtt = rtt;
 	    }
 	}
@@ -428,12 +431,12 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
     /* if closest-only is set, the don't allow FIRST_PARENT_MISS */
     if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
 	return;
-    /* set FIRST_MISS if thre is no CLOSEST parent */
-    if (ps->closest_parent_miss != NULL)
+    /* set FIRST_MISS if there is no CLOSEST parent */
+    if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)
 	return;
     rtt = tvSubMsec(ps->icp.start, current_time) / p->weight;
     if (ps->icp.w_rtt == 0 || rtt < ps->icp.w_rtt) {
-	ps->first_parent_miss = p;
+	ps->first_parent_miss = p->in_addr;
 	ps->icp.w_rtt = rtt;
     }
 }
