@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.64 1996/09/12 03:24:02 wessels Exp $
+ * $Id: comm.cc,v 1.65 1996/09/12 16:59:43 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1163,20 +1163,21 @@ char *fd_note(fd, s)
 static void checkTimeouts()
 {
     int fd;
-    int (*tmp) () = NULL;
+    int (*hdl) () = NULL;
     FD_ENTRY *f = NULL;
-
+    void *data;
     /* scan for timeout */
     for (fd = 0; fd < FD_SETSIZE; ++fd) {
 	f = &fd_table[fd];
-	if ((f->timeout_handler) &&
-	    (f->timeout_time <= squid_curtime)) {
-	    tmp = f->timeout_handler;
-	    debug(5, 5, "comm_select: timeout on socket %d at %d\n",
-		fd, squid_curtime);
-	    f->timeout_handler = 0;
-	    tmp(fd, f->timeout_data);
-	}
+	if ((hdl = f->timeout_handler) == NULL)
+	    continue;
+	if (f->timeout_time > squid_curtime)
+	    continue;
+	debug(5, 5, "checkTimeouts: FD %d timeout at %d\n", fd, squid_curtime);
+	data = f->timeout_data;
+	f->timeout_handler = NULL;
+	f->timeout_data = NULL;
+	hdl(fd, data);
     }
 }
 
