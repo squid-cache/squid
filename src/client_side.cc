@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.420 1998/10/19 06:15:29 rousskov Exp $
+ * $Id: client_side.cc,v 1.421 1998/11/11 20:04:14 glenn Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1950,6 +1950,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	return parseHttpRequestAbort(conn, "error:missing-http-ident");
 #endif
     } else {
+debug(0, 0) ("parseHttpRequest: VER is {%s}\n", token);
 	http_ver = (float) atof(token + 5);
     }
 

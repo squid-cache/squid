@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.308 1998/10/14 21:11:55 wessels Exp $
+ * $Id: cache_cf.cc,v 1.309 1998/11/11 20:04:12 glenn Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -64,10 +64,6 @@ static int parseTimeUnits(const char *unit);
 static void parseTimeLine(time_t * tptr, const char *units);
 static void parse_string(char **);
 static void parse_wordlist(wordlist **);
-#if SQUID_SNMP
-/* sigh, stringlist is only used for SNMP stuff now */
-static void parse_stringlist(wordlist **);
-#endif
 static void default_all(void);
 static void defaults_if_none(void);
 static int parse_line(char *);
@@ -447,31 +443,6 @@ free_acl(acl ** ae)
     aclDestroyAcls(ae);
 }
 
-#if SQUID_SNMP
-
-static void
-dump_snmp_access(StoreEntry * entry, const char *name, communityEntry * Head)
-{
-    acl_list *l;
-    communityEntry *cp;
-    acl_access *head;
-
-    for (cp = Head; cp; cp = cp->next) {
-	head = cp->acls;
-	while (head != NULL) {
-	    for (l = head->acl_list; l != NULL; l = l->next) {
-		storeAppendPrintf(entry, "%s %s %s %s%s\n",
-		    name, cp->name,
-		    head->allow ? "Allow" : "Deny",
-		    l->op ? null_string : "!",
-		    l->acl->name);
-	    }
-	    head = head->next;
-	}
-    }
-}
-#endif
-
 static void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
@@ -489,39 +460,6 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 	head = head->next;
     }
 }
-
-#if SQUID_SNMP
-
-static void
-parse_snmp_access(communityEntry ** head)
-{
-    char *t = NULL;
-    communityEntry *cp;
-/* This is tricky: we need to define the communities here, assuming that 
- * communities and the MIB have already been defined */
-
-    if (!snmpInitConfig()) {
-	debug(15, 0) ("parse_snmp_access: Access lists NOT defined.\n");
-	return;
-    }
-    t = strtok(NULL, w_space);
-    for (cp = *head; cp; cp = cp->next)
-	if (!strcmp(t, cp->name)) {
-	    aclParseAccessLine(&cp->acls);
-	    return;
-	}
-    debug(15, 0) ("parse_snmp_access: Unknown community %s!\n", t);
-}
-
-static void
-free_snmp_access(communityEntry ** Head)
-{
-    communityEntry *cp;
-
-    for (cp = *Head; cp; cp = cp->next)
-	aclDestroyAccessList(&cp->acls);
-}
-#endif
 
 static void
 parse_acl_access(acl_access ** head)
@@ -1392,18 +1330,6 @@ check_null_wordlist(wordlist * w)
 {
     return w == NULL;
 }
-
-#if SQUID_SNMP
-static void
-parse_stringlist(wordlist ** list)
-{
-    char *token;
-    while ((token = strtok(NULL, null_string)))
-	wordlistAdd(list, token);
-}
-#define free_stringlist free_wordlist
-#define dump_stringlist dump_wordlist
-#endif /* SQUID_SNMP */
 
 #define free_wordlist wordlistDestroy
 

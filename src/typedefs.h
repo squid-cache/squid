@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.80 1998/10/15 17:34:34 wessels Exp $
+ * $Id: typedefs.h,v 1.81 1998/11/11 20:04:21 glenn Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -163,10 +163,8 @@ typedef struct _helper_request helper_request;
 typedef struct _generic_cbdata generic_cbdata;
 
 #if SQUID_SNMP
+typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
 typedef struct _snmp_request_t snmp_request_t;
-typedef struct _viewEntry viewEntry;
-typedef struct _communityEntry communityEntry;
-typedef struct _usecEntry usecEntry;
 #endif
 
 /* define AIOCB even without USE_ASYNC_IO */

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.245 1998/10/19 22:37:05 wessels Exp $
+ * $Id: structs.h,v 1.246 1998/11/11 20:04:20 glenn Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -109,36 +109,6 @@ struct _snmp_request_t {
     u_char *community;
 };
 
-struct _viewEntry {
-    char viewName[32];
-    int viewIndex;
-    int viewType;
-    int viewSubtreeLen;
-    oid viewSubtree[32];
-    struct _viewEntry *next;
-};
-
-struct _communityEntry {
-    char name[64];
-    int readView;
-    int writeView;
-    acl_access *acls;
-    communityEntry *next;
-};
-
-struct _usecEntry {
-    u_char userName[32];
-    int userLen;
-    int qoS;
-    u_char authKey[16];
-    u_char privKey[16];
-    int noauthReadView;
-    int noauthWriteView;
-    int authReadView;
-    int authWriteView;
-    usecEntry *next;
-};
-
 #endif
 
 struct _acl {
@@ -171,6 +141,9 @@ struct _aclCheck_t {
     char browser[BROWSERNAMELEN];
     acl_proxy_auth_user *auth_user;
     acl_lookup_state state[ACL_ENUM_MAX];
+#if SQUID_SNMP
+    char *snmp_community;
+#endif
     PF *callback;
     void *callback_data;
 };
@@ -261,16 +234,7 @@ struct _SquidConfig {
     struct {
 	char *configFile;
 	char *agentInfo;
-	char *mibPath;
-	char *trap_community;
-	char *trap_sink;
 	u_short localPort;
-	int do_queueing;
-	int conf_authtraps;
-	wordlist *snmpconf;
-	viewEntry *views;
-	usecEntry *users;
-	communityEntry *communities;
     } Snmp;
 #endif
     char *as_whois_server;
@@ -387,6 +351,9 @@ struct _SquidConfig {
 	acl_access *AlwaysDirect;
 	acl_access *ASlists;
 	acl_access *noCache;
+#if SQUID_SNMP
+	acl_access *snmp;
+#endif
     } accessList;
     acl_deny_info_list *denyInfoList;
     char *proxyAuthRealm;

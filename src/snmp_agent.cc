@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.58 1998/09/29 16:33:49 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.59 1998/11/11 20:04:18 glenn Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -35,17 +35,9 @@
 
 
 #include "squid.h"
-
-#include "snmp.h"
-#include "snmp_impl.h"
-#include "asn1.h"
-#include "snmp_api.h"
-#include "snmp_vars.h"
-#include "snmp_oidlist.h"
 #include "cache_snmp.h"
 
 extern StatCounters *snmpStatGet(int);
-
 
 /************************************************************************
 
