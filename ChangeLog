@@ -6,6 +6,7 @@
 	  Kbytes, not bytes.
 	- Changed storeDirSelectSwapDir() to skip swap directories
 	  when their utilization is over the high water mark ratio.
+	- Fixed off-by-one bug for dead neighbor detection (Joe Ramey).
 	- fixed bugs in Content-Range header generation
 	- changed the way Range requests are handled:
 	        - do not "advertise" our ability to process ranges at all
@@ -17,7 +18,6 @@
 	  response instead of "206" (because we cannot handle complex ranges,
 	  even for hits) Note: Support for complex ranges requires storage of
 	  partial objects.
-
 
 Changes to squid-1.2.beta25 (September 21, 1998):
 
