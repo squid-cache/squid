@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>ERREUR: L'URN suivante n'a pu etre charg&eacute;e</TITLE>
+</HEAD><BODY>
+<H1>ERREUR</H1>
+<H2>Une URL de l'URN n'a pu etre charg&eacute;e</H2>
+<HR>
+<P>
+En essayant de charger l'URN:
+<A HREF="%U">%U</A>
+<P>
+L'erreur suivante fut rencontr&eacute;e:
+<UL>
+<LI>
+<STRONG>
+Impossible de r&eacute;soudre l'URN
+</STRONG>
+</UL>
+
+<P>
+H&eacute; ! N'en esp&eacute;rez pas trop des URNs de %T :)
+</P>
