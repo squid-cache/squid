@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.231 1997/11/12 23:36:22 wessels Exp $
+ * $Id: cache_cf.cc,v 1.232 1997/11/12 23:38:08 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -435,7 +435,7 @@ static void
 parse_cachedir(struct _cacheSwap *swap)
 {
     char *token;
-    char *path;
+    ehar *path;
     int i;
     int size;
     int l1;
@@ -444,8 +444,6 @@ parse_cachedir(struct _cacheSwap *swap)
     SwapDir *tmp = NULL;
     if ((path = strtok(NULL, w_space)) == NULL)
 	self_destruct();
-    if (strlen(path) > (SQUID_MAXPATHLEN - 32))
-	fatal_dump("cache_dir pathname is too long");
     GetInteger(i);
     size = i << 10;		/* Mbytes to kbytes */
     GetInteger(i);
