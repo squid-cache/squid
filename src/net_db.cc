@@ -3,7 +3,7 @@
 
 #include "squid.h"
 
-#define NET_DB_TTL 5
+#define NET_DB_TTL 300
 
 #define NETDB_LOW_MARK 900
 #define NETDB_HIGH_MARK 1000
@@ -172,16 +172,16 @@ netdbAdd(struct in_addr addr, char *hostname)
 }
 
 static void
-netdbSendPing(int fdunused, struct hostent *hp, void *data)
+netdbSendPing(int fdunused, ipcache_addrs * ia, void *data)
 {
     struct in_addr addr;
     char *hostname = data;
     netdbEntry *n;
-    if (hp == NULL) {
+    if (ia == NULL) {
 	xfree(hostname);
 	return;
     }
-    addr = inaddrFromHostent(hp);
+    addr = ia->in_addrs[ia->cur];
     if ((n = netdbLookupHost(hostname)) == NULL)
 	n = netdbAdd(addr, hostname);
     debug(37, 3, "netdbSendPing: pinging %s\n", hostname);
@@ -296,4 +296,26 @@ netdbHops(struct in_addr addr)
     }
     return 256;
 }
+
+void
+netdbFreeMemory(void)
+{
+    netdbEntry *e;
+    netdbEntry **list;
+    int i = 0;
+    int j;
+    list = xcalloc(meta_data.netdb, sizeof(netdbEntry));
+    e = (netdbEntry *) hash_first(addr_table);
+    while (e && i < meta_data.netdb) {
+	*(list + i) = e;
+	i++;
+	e = (netdbEntry *) hash_next(addr_table);
+    }
+    for (j = 0; j < i; j++)
+	xfree(*(list + j));
+    xfree(list);
+    hashFreeMemory(addr_table);
+    hashFreeMemory(host_table);
+}
+
 #endif /* USE_ICMP */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.62 1996/10/09 15:34:26 wessels Exp $
+ * $Id: ftp.cc,v 1.63 1996/10/09 22:49:31 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -124,34 +124,35 @@ typedef struct _Ftpdata {
     int got_marker;		/* denotes end of successful request */
     int reply_hdr_state;
     int authenticated;		/* This ftp request is authenticated */
-} FtpData;
+    ConnectStateData connectState;
+} FtpStateData;
 
 /* Local functions */
 static char *ftpTransferMode _PARAMS((char *));
 static char *ftpGetBasicAuth _PARAMS((char *));
-static int ftpReadReply _PARAMS((int, FtpData *));
-static int ftpStateFree _PARAMS((int, FtpData *));
-static void ftpConnInProgress _PARAMS((int, FtpData *));
-static void ftpLifetimeExpire _PARAMS((int, FtpData *));
-static void ftpProcessReplyHeader _PARAMS((FtpData *, char *, int));
+static int ftpReadReply _PARAMS((int, FtpStateData *));
+static int ftpStateFree _PARAMS((int, FtpStateData *));
+static void ftpConnectDone _PARAMS((int fd, int status, void *data));
+static void ftpLifetimeExpire _PARAMS((int, FtpStateData *));
+static void ftpProcessReplyHeader _PARAMS((FtpStateData *, char *, int));
 static void ftpSendComplete _PARAMS((int, char *, int, int, void *));
-static void ftpSendRequest _PARAMS((int, FtpData *));
+static void ftpSendRequest _PARAMS((int, FtpStateData *));
 static void ftpServerClosed _PARAMS((int, void *));
-static void ftp_login_parser _PARAMS((char *, FtpData *));
+static void ftp_login_parser _PARAMS((char *, FtpStateData *));
 
 /* Global functions not declared in ftp.h */
-void ftpLifetimeExpire(int fd, FtpData * data);
-int ftpReadReply(int fd, FtpData * data);
+void ftpLifetimeExpire(int fd, FtpStateData * data);
+int ftpReadReply(int fd, FtpStateData * data);
 void ftpSendComplete(int fd, char *buf, int size, int errflag, void *ftpData);
-void ftpSendRequest(int fd, FtpData * data);
-void ftpConnInProgress(int fd, FtpData * data);
+void ftpSendRequest(int fd, FtpStateData * data);
+void ftpConnInProgress(int fd, FtpStateData * data);
 void ftpServerClose(void);
 
 /* External functions */
 extern char *base64_decode _PARAMS((char *coded));
 
 static int
-ftpStateFree(int fd, FtpData * ftpState)
+ftpStateFree(int fd, FtpStateData * ftpState)
 {
     if (ftpState == NULL)
 	return 1;
@@ -166,7 +167,7 @@ ftpStateFree(int fd, FtpData * ftpState)
 }
 
 static void
-ftp_login_parser(char *login, FtpData * data)
+ftp_login_parser(char *login, FtpStateData * data)
 {
     char *user = data->user;
     char *password = data->password;
@@ -189,7 +190,7 @@ ftp_login_parser(char *login, FtpData * data)
 
 /* This will be called when socket lifetime is expired. */
 static void
-ftpLifetimeExpire(int fd, FtpData * data)
+ftpLifetimeExpire(int fd, FtpStateData * data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
@@ -200,9 +201,9 @@ ftpLifetimeExpire(int fd, FtpData * data)
 
 
 /* This is too much duplicated code from httpProcessReplyHeader.  Only
- * difference is FtpData vs HttpData. */
+ * difference is FtpStateData vs HttpData. */
 static void
-ftpProcessReplyHeader(FtpData * data, char *buf, int size)
+ftpProcessReplyHeader(FtpStateData * data, char *buf, int size)
 {
     char *t = NULL;
     StoreEntry *entry = data->entry;
@@ -281,7 +282,7 @@ ftpProcessReplyHeader(FtpData * data, char *buf, int size)
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
 static int
-ftpReadReply(int fd, FtpData * data)
+ftpReadReply(int fd, FtpStateData * data)
 {
     LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
     int len;
@@ -412,7 +413,7 @@ ftpReadReply(int fd, FtpData * data)
 static void
 ftpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
-    FtpData *ftpState = (FtpData *) data;
+    FtpStateData *ftpState = (FtpStateData *) data;
     StoreEntry *entry = NULL;
 
     entry = ftpState->entry;
@@ -460,7 +461,7 @@ ftpTransferMode(char *urlpath)
 }
 
 static void
-ftpSendRequest(int fd, FtpData * data)
+ftpSendRequest(int fd, FtpStateData * data)
 {
     char *path = NULL;
     char *mode = NULL;
@@ -540,38 +541,6 @@ ftpSendRequest(int fd, FtpData * data)
 	put_free_8k_page);
 }
 
-static void
-ftpConnInProgress(int fd, FtpData * data)
-{
-    StoreEntry *entry = data->entry;
-
-    debug(9, 5, "ftpConnInProgress: FD %d\n", fd);
-
-    if (comm_connect(fd, localhost, ftpget_port) != COMM_OK) {
-	switch (errno) {
-	case EINPROGRESS:
-	case EALREADY:
-	    /* schedule this handler again */
-	    comm_set_select_handler(fd,
-		COMM_SELECT_WRITE,
-		(PF) ftpConnInProgress,
-		(void *) data);
-	    return;
-	default:
-	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(fd);
-	    return;
-	}
-    }
-    /* Call the real write handler, now that we're fully connected */
-    comm_set_select_handler(fd,
-	COMM_SELECT_WRITE,
-	(PF) ftpSendRequest,
-	(void *) data);
-    if (opt_no_ipcache)
-	ipcacheInvalidate(data->request->host);
-}
-
 static char *
 ftpGetBasicAuth(char *req_hdr)
 {
@@ -595,98 +564,98 @@ int
 ftpStart(int unusedfd, char *url, request_t * request, StoreEntry * entry)
 {
     LOCAL_ARRAY(char, realm, 8192);
-    FtpData *data = NULL;
+    FtpStateData *ftpData = NULL;
     char *req_hdr = entry->mem_obj->mime_hdr;
     char *response;
     char *auth;
 
-    int status;
-
     debug(9, 3, "FtpStart: FD %d <URL:%s>\n", unusedfd, url);
 
-    data = xcalloc(1, sizeof(FtpData));
-    storeLockObject(data->entry = entry, NULL, NULL);
-    data->request = requestLink(request);
+    ftpData = xcalloc(1, sizeof(FtpStateData));
+    storeLockObject(ftpData->entry = entry, NULL, NULL);
+    ftpData->request = requestLink(request);
 
     /* Parse login info. */
     if ((auth = ftpGetBasicAuth(req_hdr))) {
-	ftp_login_parser(auth, data);
-	data->authenticated = 1;
+	ftp_login_parser(auth, ftpData);
+	ftpData->authenticated = 1;
     } else {
-	ftp_login_parser(request->login, data);
-	if (*data->user && !*data->password) {
+	ftp_login_parser(request->login, ftpData);
+	if (*ftpData->user && !*ftpData->password) {
 	    /* This request is not fully authenticated */
 	    if (request->port == 21) {
-		sprintf(realm, "ftp %s", data->user);
+		sprintf(realm, "ftp %s", ftpData->user);
 	    } else {
 		sprintf(realm, "ftp %s port %d",
-		    data->user, request->port);
+		    ftpData->user, request->port);
 	    }
 	    response = authorization_needed_msg(request, realm);
 	    storeAppend(entry, response, strlen(response));
 	    httpParseHeaders(response, entry->mem_obj->reply);
 	    storeComplete(entry);
-	    ftpStateFree(-1, data);
+	    ftpStateFree(-1, ftpData);
 	    return COMM_OK;
 	}
     }
 
     debug(9, 5, "FtpStart: FD %d, host=%s, path=%s, user=%s, passwd=%s\n",
-	unusedfd, data->request->host, data->request->urlpath,
-	data->user, data->password);
+	unusedfd, ftpData->request->host, ftpData->request->urlpath,
+	ftpData->user, ftpData->password);
 
-    data->ftp_fd = comm_open(SOCK_STREAM,
+    ftpData->ftp_fd = comm_open(SOCK_STREAM,
 	0,
 	local_addr,
 	0,
 	COMM_NONBLOCKING,
 	url);
-    if (data->ftp_fd == COMM_ERROR) {
+    if (ftpData->ftp_fd == COMM_ERROR) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	ftpStateFree(-1, data);
+	ftpStateFree(-1, ftpData);
 	return COMM_ERROR;
     }
     /* Pipe/socket created ok */
 
     /* register close handler */
-    comm_add_close_handler(data->ftp_fd,
+    comm_add_close_handler(ftpData->ftp_fd,
 	(PF) ftpStateFree,
-	(void *) data);
+	(void *) ftpData);
 
     /* Now connect ... */
-    if ((status = comm_connect(data->ftp_fd, localhost, ftpget_port))) {
-	if (status != EINPROGRESS) {
-	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(data->ftp_fd);
-	    return COMM_ERROR;
-	} else {
-	    debug(9, 5, "ftpStart: FD %d: EINPROGRESS.\n", data->ftp_fd);
-	    comm_set_select_handler(data->ftp_fd, COMM_SELECT_LIFETIME,
-		(PF) ftpLifetimeExpire, (void *) data);
-	    comm_set_select_handler(data->ftp_fd, COMM_SELECT_WRITE,
-		(PF) ftpConnInProgress, (void *) data);
-	    return COMM_OK;
-	}
-    }
-    fdstat_open(data->ftp_fd, FD_SOCKET);
-    commSetNonBlocking(data->ftp_fd);
-    (void) fd_note(data->ftp_fd, entry->url);
+    ftpData->connectState.fd = ftpData->ftp_fd;
+    ftpData->connectState.host = localhost;
+    ftpData->connectState.port = ftpget_port;
+    ftpData->connectState.handler = ftpConnectDone;
+    ftpData->connectState.data = ftpData;
+    comm_nbconnect(ftpData->ftp_fd, &ftpData->connectState);
+    return COMM_OK;
+}
 
+static void
+ftpConnectDone(int fd, int status, void *data)
+{
+    FtpStateData *ftpData = data;
+    if (status == COMM_ERROR) {
+	squid_error_entry(ftpData->entry, ERR_CONNECT_FAIL, xstrerror());
+	comm_close(fd);
+	return;
+    }
+    fdstat_open(fd, FD_SOCKET);
+    commSetNonBlocking(fd);
+    (void) fd_note(fd, ftpData->entry->url);
     /* Install connection complete handler. */
-    fd_note(data->ftp_fd, entry->url);
-    comm_set_select_handler(data->ftp_fd,
+    fd_note(fd, ftpData->entry->url);
+    comm_set_select_handler(fd,
 	COMM_SELECT_WRITE,
 	(PF) ftpSendRequest,
 	(void *) data);
-    comm_set_fd_lifetime(data->ftp_fd,
+    comm_set_fd_lifetime(fd,
 	Config.lifetimeDefault);
-    comm_set_select_handler(data->ftp_fd,
+    comm_set_select_handler(fd,
 	COMM_SELECT_LIFETIME,
 	(PF) ftpLifetimeExpire,
-	(void *) data);
+	(void *) ftpData);
     if (opt_no_ipcache)
-	ipcacheInvalidate(data->request->host);
-    return COMM_OK;
+	ipcacheInvalidate(ftpData->request->host);
 }
 
 static void

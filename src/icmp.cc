@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.13 1996/09/24 20:17:30 wessels Exp $
+ * $Id: icmp.cc,v 1.14 1996/10/09 22:49:34 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -121,7 +121,14 @@ icmpOpen(void)
 void
 icmpClose(void)
 {
+    icmpQueueData *queue;
     comm_close(icmp_sock);
+    while ((queue = IcmpQueueHead)) {
+	IcmpQueueHead = queue->next;
+	if (queue->free)
+	    queue->free(queue->msg);
+	safe_free(queue);
+    }
 }
 
 static void

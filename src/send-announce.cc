@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.19 1996/09/17 02:30:02 wessels Exp $
+ * $Id: send-announce.cc,v 1.20 1996/10/09 22:49:42 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -37,7 +37,7 @@ send_announce(void)
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
     icpUdpData *qdata = NULL;
-    struct hostent *hp = NULL;
+    ipcache_addrs *ia = NULL;
     char *host = NULL;
     char *file = NULL;
     u_short port;
@@ -48,7 +48,7 @@ send_announce(void)
     host = Config.Announce.host;
     port = Config.Announce.port;
 
-    if ((hp = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) == NULL) {
+    if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) == NULL) {
 	debug(27, 1, "send_announce: Unknown host '%s'\n", host);
 	return;
     }
@@ -84,7 +84,7 @@ send_announce(void)
     qdata->len = strlen(sndbuf) + 1;
     qdata->address.sin_family = AF_INET;
     qdata->address.sin_port = htons(port);
-    qdata->address.sin_addr = inaddrFromHostent(hp);
+    qdata->address.sin_addr = ia->in_addrs[0];
     AppendUdp(qdata);
     comm_set_select_handler(theOutIcpConnection,
 	COMM_SELECT_WRITE,

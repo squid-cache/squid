@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.86 1996/10/09 15:43:51 wessels Exp $
+ * $Id: comm.cc,v 1.87 1996/10/09 22:49:29 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -307,24 +307,43 @@ comm_listen(int sock)
 }
 
 /* Connect SOCK to specified DEST_PORT at DEST_HOST. */
-int
-comm_connect(int sock, char *dest_host, u_short dest_port)
+void
+comm_nbconnect(int fd, void *data)
 {
-    struct hostent *hp = NULL;
-    static struct sockaddr_in to_addr;
-
-    /* Set up the destination socket address for message to send to. */
-    to_addr.sin_family = AF_INET;
-
-    if ((hp = ipcache_gethostbyname(dest_host, IP_BLOCKING_LOOKUP)) == 0) {
-	debug(5, 3, "comm_connect: Failure to lookup host: %s.\n", dest_host);
-	return (COMM_ERROR);
+    ConnectStateData *connectState = data;
+    ipcache_addrs *ia = NULL;
+    if (connectState->S.sin_addr.s_addr == 0) {
+	ia = ipcache_gethostbyname(connectState->host, IP_BLOCKING_LOOKUP);
+	if (ia == NULL) {
+	    debug(5, 3, "comm_nbconnect: Unknown host: %s\n",
+		connectState->host);
+	    connectState->handler(fd,
+		COMM_ERROR,
+		connectState->data);
+	    return;
+	}
+	connectState->S.sin_family = AF_INET;
+	connectState->S.sin_addr = ia->in_addrs[ia->cur];
+	connectState->S.sin_port = htons(connectState->port);
+	if (Config.Log.log_fqdn)
+	    fqdncache_gethostbyaddr(connectState->S.sin_addr, FQDN_LOOKUP_IF_MISS);
     }
-    to_addr.sin_addr = inaddrFromHostent(hp);
-    to_addr.sin_port = htons(dest_port);
-    if (Config.Log.log_fqdn)
-	fqdncache_gethostbyaddr(to_addr.sin_addr, FQDN_LOOKUP_IF_MISS);
-    return comm_connect_addr(sock, &to_addr);
+    switch (comm_connect_addr(fd, &connectState->S)) {
+    case COMM_INPROGRESS:
+	comm_set_select_handler(fd,
+	    COMM_SELECT_WRITE,
+	    comm_nbconnect,
+	    (void *) connectState);
+	break;
+    case COMM_OK:
+	connectState->handler(fd, COMM_OK, connectState->data);
+	ipcacheCycleAddr(connectState->host);
+	break;
+    default:
+	ipcacheRemoveBadAddr(connectState->host, connectState->S.sin_addr);
+	connectState->handler(fd, COMM_ERROR, connectState->data);
+	break;
+    }
 }
 
 int
@@ -376,7 +395,7 @@ comm_connect_addr(int sock, struct sockaddr_in *address)
 	return COMM_ERROR;
     }
     /* Establish connection. */
-    if (connect(sock, (struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0)
+    if (connect(sock, (struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
 	switch (errno) {
 	case EALREADY:
 	    return COMM_ERROR;
@@ -386,7 +405,7 @@ comm_connect_addr(int sock, struct sockaddr_in *address)
 #endif
 	case EWOULDBLOCK:
 	case EINPROGRESS:
-	    status = EINPROGRESS;
+	    status = COMM_INPROGRESS;
 	    break;
 	case EISCONN:
 	    status = COMM_OK;
@@ -402,6 +421,7 @@ comm_connect_addr(int sock, struct sockaddr_in *address)
 		xstrerror());
 	    return COMM_ERROR;
 	}
+    }
     strcpy(conn->ipaddr, inet_ntoa(address->sin_addr));
     conn->remote_port = ntohs(address->sin_port);
     /* set the lifetime for this client */
@@ -519,19 +539,19 @@ comm_cleanup_fd_entry(int fd)
 int
 comm_udp_send(int fd, char *host, u_short port, char *buf, int len)
 {
-    struct hostent *hp = NULL;
+    ipcache_addrs *ia = NULL;
     static struct sockaddr_in to_addr;
     int bytes_sent;
 
     /* Set up the destination socket address for message to send to. */
     to_addr.sin_family = AF_INET;
 
-    if ((hp = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) == 0) {
+    if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) == 0) {
 	debug(5, 1, "comm_udp_send: gethostbyname failure: %s: %s\n",
 	    host, xstrerror());
 	return (COMM_ERROR);
     }
-    to_addr.sin_addr = inaddrFromHostent(hp);
+    to_addr.sin_addr = ia->in_addrs[ia->cur];
     to_addr.sin_port = htons(port);
     if ((bytes_sent = sendto(fd, buf, len, 0, (struct sockaddr *) &to_addr,
 		sizeof(to_addr))) < 0) {
@@ -590,7 +610,7 @@ comm_select_incoming(void)
     int fds[3];
     int N = 0;
     int i = 0;
-    int (*tmp) () = NULL;
+    void (*tmp) () = NULL;
 
     FD_ZERO(&read_mask);
     FD_ZERO(&write_mask);
@@ -643,7 +663,7 @@ comm_select(time_t sec)
     fd_set exceptfds;
     fd_set readfds;
     fd_set writefds;
-    int (*tmp) () = NULL;
+    void (*tmp) () = NULL;
     int fd;
     int i;
     int maxfd;
@@ -843,7 +863,7 @@ comm_set_select_handler_plus_timeout(int fd, unsigned int type, PF handler, void
 int
 comm_get_select_handler(int fd,
     unsigned int type,
-    int (**handler_ptr) _PARAMS((int, void *)),
+    void (**handler_ptr) _PARAMS((int, void *)),
     void **client_data_ptr)
 {
     if (type & COMM_SELECT_TIMEOUT) {
@@ -1012,35 +1032,6 @@ commSetTcpNoDelay(int fd)
 }
 #endif
 
-char **
-getAddressList(char *name)
-{
-    struct hostent *hp = NULL;
-    if (name == NULL)
-	return NULL;
-    if ((hp = ipcache_gethostbyname(name, IP_BLOCKING_LOOKUP)))
-	return hp->h_addr_list;
-    debug(5, 0, "getAddress: gethostbyname failure: %s: %s\n",
-	name, xstrerror());
-    return NULL;
-}
-
-struct in_addr *
-getAddress(char *name)
-{
-    static struct in_addr first;
-    char **list = NULL;
-    if (name == NULL)
-	return NULL;
-    if ((list = getAddressList(name))) {
-	xmemcpy(&first.s_addr, *list, 4);
-	return (&first);
-    }
-    debug(5, 0, "getAddress: gethostbyname failure: %s: %s\n",
-	name, xstrerror());
-    return NULL;
-}
-
 /*
  *  the fd_lifetime is used as a hardlimit to timeout dead sockets.
  *  The basic problem is that many WWW clients are abusive and
@@ -1165,7 +1156,7 @@ static void
 checkTimeouts(void)
 {
     int fd;
-    int (*hdl) () = NULL;
+    void (*hdl) () = NULL;
     FD_ENTRY *f = NULL;
     void *data;
     /* scan for timeout */
@@ -1190,7 +1181,7 @@ checkLifetimes(void)
     time_t lft;
     FD_ENTRY *fde = NULL;
 
-    int (*func) () = NULL;
+    void (*func) () = NULL;
 
     for (fd = 0; fd < FD_SETSIZE; fd++) {
 	if ((lft = comm_get_fd_lifetime(fd)) == -1)

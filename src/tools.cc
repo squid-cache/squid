@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.67 1996/10/09 15:34:41 wessels Exp $
+ * $Id: tools.cc,v 1.68 1996/10/09 22:49:44 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -308,6 +308,7 @@ normal_shutdown(void)
     fdstatFreeMemory();
     errorpageFreeMemory();
     stmemFreeMemory();
+    netdbFreeMemory();
     debug(21, 0, "Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     exit(0);
@@ -399,7 +400,7 @@ getMyHostname(void)
 		xstrerror());
 	    return NULL;
 	} else {
-	    if ((h = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) != NULL) {
+	    if ((h = gethostbyname(host)) != NULL) {
 		/* DNS lookup successful */
 		/* use the official name from DNS lookup */
 		strcpy(host, h->h_name);
