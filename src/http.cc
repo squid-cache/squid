@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.336 1999/01/11 16:50:32 wessels Exp $
+ * $Id: http.cc,v 1.337 1999/01/12 15:47:53 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -430,6 +430,10 @@ httpReadReply(int fd, void *data)
 #if DELAY_POOLS
     delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
 #endif
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+	comm_close(fd);
+	return;
+    }
     /* check if we want to defer reading */
     errno = 0;
     read_sz = SQUID_TCP_SO_RCVBUF;
@@ -920,5 +924,5 @@ httpSendRequestEntry(int fd, char *bufnotused, size_t size, int errflag, void *d
 	comm_close(fd);
 	return;
     }
-    pumpStart(fd, entry, httpState->orig_request, httpSendComplete, httpState);
+    pumpStart(fd, httpState->fwd, httpSendComplete, httpState);
 }
