@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.92 2002/10/13 20:35:02 robertc Exp $
+ * $Id: peer_digest.cc,v 1.93 2002/10/18 22:46:46 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -328,7 +328,7 @@ peerDigestRequest(PeerDigest * pd)
     debug(72, 3) ("peerDigestRequest: forwarding to fwdStart...\n");
     fwdStart(-1, e, req);
     tempBuffer.offset = 0;
-    tempBuffer.length =  SM_PAGE_SIZE;
+    tempBuffer.length = SM_PAGE_SIZE;
     tempBuffer.data = fetch->buf;
     storeClientCopy(fetch->sc, e, tempBuffer,
 	peerDigestHandleReply, fetch);
