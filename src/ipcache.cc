@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.69 1996/10/10 19:04:16 wessels Exp $
+ * $Id: ipcache.cc,v 1.70 1996/10/10 22:20:57 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1021,16 +1021,16 @@ ipcacheFreeMemory(void)
     list = xcalloc(meta_data.ipcache_count, sizeof(ipcache_entry *));
     i = (ipcache_entry *) hash_first(ip_table);
     while (i && k < meta_data.ipcache_count) {
-        *(list + k) = i;
-        k++;
-        i = (ipcache_entry *) hash_next(ip_table);
+	*(list + k) = i;
+	k++;
+	i = (ipcache_entry *) hash_next(ip_table);
     }
     for (j = 0; j < k; j++) {
 	i = *(list + j);
-        safe_free(i->addrs.in_addrs);
-        safe_free(i->name);
-        safe_free(i->error_message);
-        safe_free(i);
+	safe_free(i->addrs.in_addrs);
+	safe_free(i->name);
+	safe_free(i->error_message);
+	safe_free(i);
     }
     xfree(list);
     hashFreeMemory(ip_table);

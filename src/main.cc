@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.90 1996/10/10 22:20:29 wessels Exp $
+ * $Id: main.cc,v 1.91 1996/10/10 22:20:58 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -432,7 +432,7 @@ serverConnectionsClose(void)
     }
 #if USE_ICMP
     if (icmp_sock > -1)
-        icmpClose();
+	icmpClose();
 #endif
 }
 

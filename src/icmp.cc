@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.16 1996/10/10 22:20:28 wessels Exp $
+ * $Id: icmp.cc,v 1.17 1996/10/10 22:20:56 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -122,7 +122,7 @@ void
 icmpClose(void)
 {
     icmpQueueData *queue;
-    debug(29,0,"Closing ICMP socket on FD %d\n", icmp_sock);
+    debug(29, 0, "Closing ICMP socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
     comm_set_select_handler(icmp_sock,
 	COMM_SELECT_READ,
