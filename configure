@@ -1545,7 +1545,7 @@ fi
 if test "${enable_err_language+set}" = set; then
   enableval="$enable_err_language"
   
-    if test -d errors/$enableval; then
+    if test -d $srcdir/errors/$enableval; then
 	ERR_LANGUAGE=$enableval
     else
 	echo "ERROR! Unknown language $enableval, see errors/"
