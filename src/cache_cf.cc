@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.96 1996/09/20 06:28:27 wessels Exp $
+ * $Id: cache_cf.cc,v 1.97 1996/09/20 20:55:29 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -138,7 +138,6 @@ struct SquidConfig Config;
 #define DefaultDnsChildren	5	/* 5 processes */
 #define DefaultRedirectChildren	5	/* 5 processes */
 #define DefaultMaxRequestSize	(100 << 10)	/* 100Kb */
-#define DefaultHotVmFactor	0.0	/* disabled */
 
 #define DefaultHttpPortNum	CACHE_HTTP_PORT
 #define DefaultIcpPortNum	CACHE_ICP_PORT
@@ -196,6 +195,7 @@ struct SquidConfig Config;
 #define DefaultIpcacheSize	1024
 #define DefaultIpcacheLow	90
 #define DefaultIpcacheHigh	95
+#define DefaultMaxHotvmObjSize	(12<<10)	/* 12k */
 
 int httpd_accel_mode = 0;	/* for fast access */
 char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -234,7 +234,6 @@ static void parseGopherLine _PARAMS((void));
 static void parseWordlist _PARAMS((wordlist **));
 static void parseHostAclLine _PARAMS((void));
 static void parseHostDomainLine _PARAMS((void));
-static void parseHotVmFactorLine _PARAMS((void));
 static void parseHttpLine _PARAMS((void));
 static void parseHttpPortLine _PARAMS((void));
 static void parseHttpdAccelLine _PARAMS((void));
@@ -525,22 +524,6 @@ parseMemLine(void)
     int i;
     GetInteger(i);
     Config.Mem.maxSize = i << 20;
-}
-
-static void
-parseHotVmFactorLine(void)
-{
-    char *token = NULL;
-    double d;
-
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    if (sscanf(token, "%lf", &d) != 1)
-	self_destruct();
-    if (d < 0)
-	self_destruct();
-    Config.hotVmFactor = d;
 }
 
 static void
@@ -1143,9 +1126,6 @@ parseConfigFile(char *file_name)
 	else if (!strcmp(token, "cache_mem_low"))
 	    parseIntegerValue(&Config.Mem.lowWaterMark);
 
-	else if (!strcmp(token, "cache_hot_vm_factor"))
-	    parseHotVmFactorLine();
-
 	else if (!strcmp(token, "cache_mem"))
 	    parseMemLine();
 
@@ -1355,6 +1335,9 @@ parseConfigFile(char *file_name)
 	else if (!strcmp(token, "forwarded_for"))
 	    parseOnOff(&opt_forwarded_for);
 
+	else if (!strcmp(token, "max_hotvm_obj_size"))
+	    parseIntegerValue(&Config.maxHotvmObjSize);
+
 	/* If unknown, treat as a comment line */
 	else {
 	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
@@ -1500,7 +1483,6 @@ configSetFactoryDefaults(void)
     Config.cleanRate = DefaultCleanRate;
     Config.dnsChildren = DefaultDnsChildren;
     Config.redirectChildren = DefaultRedirectChildren;
-    Config.hotVmFactor = DefaultHotVmFactor;
     Config.sourcePing = DefaultSourcePing;
     Config.quickAbort.min = DefaultQuickAbortMin;
     Config.quickAbort.pct = DefaultQuickAbortPct;
@@ -1555,6 +1537,7 @@ configSetFactoryDefaults(void)
     Config.ipcache.size = DefaultIpcacheSize;
     Config.ipcache.low = DefaultIpcacheLow;
     Config.ipcache.high = DefaultIpcacheHigh;
+    Config.maxHotvmObjSize = DefaultMaxHotvmObjSize;
 }
 
 static void

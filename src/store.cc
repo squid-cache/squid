@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.118 1996/09/20 20:28:12 wessels Exp $
+ * $Id: store.cc,v 1.119 1996/09/20 20:55:31 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -221,6 +221,7 @@ static void storeHashMemInsert _PARAMS((StoreEntry *));
 static void storeHashMemDelete _PARAMS((StoreEntry *));
 static int storeCopy _PARAMS((StoreEntry *, int, int, char *, int *));
 static int storeGetMemSpace _PARAMS((int size));
+static int storeShouldPurgeMem _PARAMS((StoreEntry *e));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -232,12 +233,6 @@ HashID in_mem_table = 0;
 static unsigned long store_mem_size = 0;
 static unsigned long store_mem_high = 0;
 static unsigned long store_mem_low = 0;
-
-/* current hotvm object */
-/* defaults for 16M cache and 12.5 cache_hot_vm_factor */
-static int store_hotobj_high = 180;
-static int store_hotobj_low = 120;
-
 
 /* current file name, swap file, use number as a filename */
 static unsigned long swapfileno = 0;
@@ -586,7 +581,7 @@ storeUnlockObject(StoreEntry * e)
 	e->object_len = mem->e_current_len = strlen(mem->e_abort_msg);
 	BIT_RESET(e->flag, ABORT_MSG_PENDING);
 	e->lock_count--;
-    } else if (meta_data.hot_vm > store_hotobj_high && storeCheckPurgeMem(e)) {
+    } else if (storeShouldPurgeMem(e)) {
 	storePurgeMem(e);
     }
     return 0;
@@ -1294,7 +1289,7 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 	/* check if it's request to be released. */
 	if (e->flag & RELEASE_REQUEST)
 	    storeRelease(e);
-	else if (meta_data.hot_vm > store_hotobj_high && storeCheckPurgeMem(e))
+	else if (storeShouldPurgeMem(e))
 	    storePurgeMem(e);
 	return;
     }
@@ -1851,8 +1846,9 @@ storeGetMemSpace(int size)
     if (squid_curtime == last_check)
 	return 0;
     last_check = squid_curtime;
-
-    if (meta_data.hot_vm < store_hotobj_high && ((store_mem_size + size) < store_mem_high))
+    if ((store_mem_size + size) < store_mem_high)
+	return 0;
+    if (store_rebuilding == STORE_REBUILDING_FAST)
 	return 0;
     debug(20, 2, "storeGetMemSpace: Starting...\n");
 
@@ -1890,7 +1886,6 @@ storeGetMemSpace(int size)
 
     /* Kick LRU out until we have enough memory space */
     for (i = 0; i < list_count; i++) {
-	if (meta_data.hot_vm < store_hotobj_low)
 	    if (store_mem_size + size < store_mem_low)
 		break;
 	e = *(list + i);
@@ -1906,14 +1901,7 @@ storeGetMemSpace(int size)
     }
 
     i = 3;
-    if (meta_data.hot_vm > store_hotobj_high) {
-	if (squid_curtime - last_warning > 600) {
-	    debug(20, 0, "WARNING: Over hot_vm object count (%d > %d)\n",
-		meta_data.hot_vm, store_hotobj_high);
-	    last_warning = squid_curtime;
-	    i = 0;
-	}
-    } else if (store_mem_size + size > store_mem_high) {
+    if (store_mem_size + size > store_mem_high) {
 	if (squid_curtime - last_warning > 600) {
 	    debug(20, 0, "WARNING: Over store_mem high-water mark (%d > %d)\n",
 		store_mem_size + size, store_mem_high);
@@ -2542,23 +2530,6 @@ storeConfigure(void)
     store_mem_low = (long) (Config.Mem.maxSize / 100) *
 	Config.Mem.lowWaterMark;
 
-    store_hotobj_high = (int) (Config.hotVmFactor *
-	store_mem_high / (1 << 20));
-    store_hotobj_low = (int) (Config.hotVmFactor *
-	store_mem_low / (1 << 20));
-
-    /* Note, there will always be a few 'hot_vm' objects as the
-     * make the transition from STORE_PENDING to SWAPPING_OUT.
-     Set some minimum values to prevent thrasing and warning
-     messages. */
-    if (store_hotobj_high < 32) {
-	store_hotobj_high = 32;
-	store_hotobj_low = 16;
-    }
-    /* check for validity */
-    if (store_hotobj_low > store_hotobj_high)
-	store_hotobj_low = store_hotobj_high;
-
     store_swap_high = (long) (((float) Config.Swap.maxSize *
 	    (float) Config.Swap.highWaterMark) / (float) 100);
     store_swap_low = (long) (((float) Config.Swap.maxSize *
@@ -2801,6 +2772,17 @@ storeRotateLog(void)
 	debug(20, 1, "Store logging disabled\n");
     }
 }
+
+static int
+storeShouldPurgeMem(StoreEntry *e)
+{
+    if (storeCheckPurgeMem(e) == 0)
+	return 0;
+    if (e->object_len > Config.maxHotvmObjSize)
+	return 1;
+    return 0;
+}
+
 
 /*
  * Check if its okay to remove the memory data for this object, but 
