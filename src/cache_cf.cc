@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.370 2001/01/25 22:54:52 hno Exp $
+ * $Id: cache_cf.cc,v 1.371 2001/01/25 23:01:56 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -403,7 +403,7 @@ configDoConfigure(void)
     		    Config.effectiveUser,
     		    xstrerror());
     	    Config2.effectiveUserID = pwd->pw_uid;
-	    Config2.effectiveGroupID = pwd->pwd_gid;
+	    Config2.effectiveGroupID = pwd->pw_gid;
        	}
     } else {
 	Config2.effectiveUserID = geteuid();
