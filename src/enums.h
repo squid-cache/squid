@@ -12,13 +12,14 @@ typedef enum {
     LOG_TCP_IMS_MISS,		/* 8 */
     LOG_TCP_SWAPFAIL_MISS,	/* 9 */
     LOG_TCP_NEGATIVE_HIT,	/* 10 */
-    LOG_UDP_HIT,		/* 11 */
-    LOG_UDP_HIT_OBJ,		/* 12 */
-    LOG_UDP_MISS,		/* 13 */
-    LOG_UDP_DENIED,		/* 14 */
-    LOG_UDP_INVALID,		/* 15 */
-    LOG_UDP_MISS_NOFETCH,	/* 16 */
-    LOG_TYPE_MAX
+    LOG_TCP_MEM_HIT,		/* 11 */
+    LOG_UDP_HIT,		/* 12 */
+    LOG_UDP_HIT_OBJ,		/* 13 */
+    LOG_UDP_MISS,		/* 14 */
+    LOG_UDP_DENIED,		/* 15 */
+    LOG_UDP_INVALID,		/* 16 */
+    LOG_UDP_MISS_NOFETCH,	/* 17 */
+    LOG_TYPE_MAX		/* 18 */
 } log_type;
 
 typedef enum {
