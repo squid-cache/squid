@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.c,v 1.7 1999/04/18 05:48:05 wessels Exp $
+ * $Id: rfc1035.c,v 1.8 1999/04/18 06:02:55 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -333,7 +333,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t off, rfc1035_rr * RR)
 	memcpy(RR->rdata, buf + off, RR->rdlength);
 	break;
     }
-    off += RR->rdlength;
+    off += ntohs(s);
     assert(off <= sz);
     return off;
 }
