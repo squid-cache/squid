@@ -1,5 +1,5 @@
 /*
- * $Id: wb_check_group.c,v 1.8 2003/01/23 00:36:20 robertc Exp $
+ * $Id: wb_check_group.c,v 1.9 2003/02/11 14:34:41 hno Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Guido Serassio <squidnt@serassio.it>
@@ -38,8 +38,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "winbind_nss_config.h"
-#include "winbindd_nss.h"
+#include "nsswitch/winbind_nss_config.h"
+#include "nsswitch/winbindd_nss.h"
 
 #define BUFSIZE 8192		/* the stdin buffer size */
 char debug_enabled=0;

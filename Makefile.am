@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.18 2003/01/23 00:34:50 robertc Exp $
+# $Id: Makefile.am,v 1.19 2003/02/11 14:34:30 hno Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
@@ -11,7 +11,7 @@ DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
 DEFAULT_PINGER		= $(libexecdir)/pinger$(EXEEXT)
 
 dist-hook:
-	@ for subdir in "include"; do \
+	@ for subdir in "include include/samba/nsswitch"; do \
 	  if test "$$subdir" = .; then :; else \
 	    test -d $(distdir)/$$subdir \
 	    || mkdir $(distdir)/$$subdir \

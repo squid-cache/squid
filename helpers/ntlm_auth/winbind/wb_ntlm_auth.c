@@ -44,8 +44,8 @@
 #include <getopt.h>
 #endif
 
-#include "winbind_nss_config.h"
-#include "winbindd_nss.h"
+#include "nsswitch/winbind_nss_config.h"
+#include "nsswitch/winbindd_nss.h"
 
 #ifndef min
 #define min(x,y) ((x)<(y)?(x):(y))
