@@ -3,7 +3,7 @@ DOC	= prog-guide
 all: $(DOC).html $(DOC).ps
 
 $(DOC).ps: $(DOC).dvi
-	dvips $(DOC).dvi
+	dvips -o $(DOC).ps $(DOC).dvi
 
 $(DOC).dvi: $(DOC).sgml
 	sgml2latex $(DOC)
