@@ -54,8 +54,8 @@ struct radix_node {
 #define RNF_ACTIVE	4	/* This node is alive (for rtfree) */
     union {
 	struct {		/* leaf only data: */
-	    void * rn_Key;	/* object of search */
-	    void * rn_Mask;	/* netmask, if present */
+	    char * rn_Key;	/* object of search */
+	    char * rn_Mask;	/* netmask, if present */
 	    struct radix_node *rn_Dupedkey;
 	} rn_leaf;
 	struct {		/* node only data: */
@@ -88,7 +88,7 @@ extern struct radix_mask {
     unsigned char rm_flags;		/* cf. rn_flags */
     struct radix_mask *rm_mklist;	/* more masks to try */
     union {
-	void * rmu_mask;	/* the mask */
+	char * rmu_mask;	/* the mask */
 	struct radix_node *rmu_leaf;	/* for normal routes */
     } rm_rmu;
     int rm_refs;		/* # of references to this struct */
