@@ -1,7 +1,7 @@
 /*
- * $Id: rfc1035.h,v 1.3 2000/07/14 17:45:52 wessels Exp $
+ * $Id: rfc1035.h,v 1.4 2000/07/18 06:47:06 wessels Exp $
  *
- * AUTHOR: Harvest Derived
+ * AUTHOR: Duane Wessels
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
