@@ -341,18 +341,6 @@ acl QUERY urlpath_regex cgi-bin \?
 no_cache deny QUERY
 DOC_END
 
-NAME: cache_stoplist_pattern
-TYPE: regexlist
-LOC: Config.cache_stop_relist
-DEFAULT: none
-DOC_START
-	Just like 'cache_stoplist' but you can use regular expressions
-	instead of simple string matching.  There is no default.
-	Insert -i to get case-insensitive regular expressions.
-
-cache_stoplist_pattern
-DOC_END
-
 
 COMMENT_START
  OPTIONS WHICH AFFECT THE CACHE SIZE
