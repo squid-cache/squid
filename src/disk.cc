@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.51 1997/01/07 20:31:20 wessels Exp $
+ * $Id: disk.cc,v 1.52 1997/02/05 04:40:43 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -139,8 +139,6 @@ disk_init(void)
 	file_table[fd].open_stat = FILE_NOT_OPEN;
 	file_table[fd].close_request = NOT_REQUEST;
 	file_table[fd].write_daemon = NOT_PRESENT;
-	file_table[fd].write_lock = UNLOCK;
-	file_table[fd].access_code = 0;
 	file_table[fd].write_pending = NO_WRT_PENDING;
 	file_table[fd].write_q = file_table[fd].write_q_tail = NULL;
     }
@@ -177,10 +175,8 @@ file_open(const char *path, int (*handler) _PARAMS((void)), int mode)
     file_table[fd].at_eof = NO;
     file_table[fd].open_stat = FILE_OPEN;
     file_table[fd].close_request = NOT_REQUEST;
-    file_table[fd].write_lock = UNLOCK;
     file_table[fd].write_pending = NO_WRT_PENDING;
     file_table[fd].write_daemon = NOT_PRESENT;
-    file_table[fd].access_code = 0;
     file_table[fd].write_q = NULL;
 
     conn = &fd_table[fd];
@@ -210,7 +206,6 @@ file_close(int fd)
 	debug(6, 3, "file_close: FD %d has a write PENDING\n", fd);
     } else {
 	file_table[fd].open_stat = FILE_NOT_OPEN;
-	file_table[fd].write_lock = UNLOCK;
 	file_table[fd].write_daemon = NOT_PRESENT;
 	file_table[fd].filename[0] = '\0';
 
@@ -233,35 +228,6 @@ file_close(int fd)
     return DISK_ERROR;
 }
 
-/* grab a writing lock for file */
-int
-file_write_lock(int fd)
-{
-    if (file_table[fd].write_lock == LOCK) {
-	debug(6, 0, "trying to lock a locked file\n");
-	return DISK_WRT_LOCK_FAIL;
-    } else {
-	file_table[fd].write_lock = LOCK;
-	file_table[fd].access_code += 1;
-	file_table[fd].access_code %= 65536;
-	return file_table[fd].access_code;
-    }
-}
-
-
-/* release a writing lock for file */
-int
-file_write_unlock(int fd, int access_code)
-{
-    if (file_table[fd].access_code == access_code) {
-	file_table[fd].write_lock = UNLOCK;
-	return DISK_OK;
-    } else {
-	debug(6, 0, "trying to unlock the file with the wrong access code\n");
-	return DISK_WRT_WRONG_CODE;
-    }
-}
-
 
 /* write handler */
 static int
@@ -272,7 +238,6 @@ diskHandleWrite(int fd, FileEntry * entry)
 
     if (file_table[fd].at_eof == NO)
 	lseek(fd, 0, SEEK_END);
-
     while (entry->write_q) {
 	len = write(fd,
 	    entry->write_q->buf + entry->write_q->cur_offset,
@@ -342,7 +307,6 @@ int
 file_write(int fd,
     char *ptr_to_buf,
     int len,
-    int access_code,
     FILE_WRITE_HD handle,
     void *handle_data,
     void (*free_func) _PARAMS((void *)))
@@ -351,11 +315,6 @@ file_write(int fd,
 
     if (file_table[fd].open_stat == FILE_NOT_OPEN)
 	return DISK_ERROR;
-    if ((file_table[fd].write_lock == LOCK) &&
-	(file_table[fd].access_code != access_code)) {
-	debug(6, 0, "file write: FD %d access code checked failed.\n", fd);
-	return DISK_WRT_WRONG_CODE;
-    }
     /* if we got here. Caller is eligible to write. */
     wq = xcalloc(1, sizeof(dwrite_q));
     wq->buf = ptr_to_buf;
@@ -413,7 +372,7 @@ diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 		fd, xstrerror());
 	    ctrl_dat->handler(fd, ctrl_dat->buf,
 		ctrl_dat->cur_len, DISK_ERROR,
-		ctrl_dat->client_data, ctrl_dat->offset);
+		ctrl_dat->client_data);
 	    safe_free(ctrl_dat);
 	    return DISK_ERROR;
     } else if (len == 0) {
@@ -421,7 +380,7 @@ diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 	ctrl_dat->end_of_file = 1;
 	/* call handler */
 	ctrl_dat->handler(fd, ctrl_dat->buf, ctrl_dat->cur_len, DISK_EOF,
-	    ctrl_dat->client_data, ctrl_dat->offset);
+	    ctrl_dat->client_data);
 	safe_free(ctrl_dat);
 	return DISK_OK;
     }
@@ -443,8 +402,7 @@ diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 	    ctrl_dat->buf,
 	    ctrl_dat->cur_len,
 	    DISK_OK,
-	    ctrl_dat->client_data,
-	    ctrl_dat->offset);
+	    ctrl_dat->client_data);
 	safe_free(ctrl_dat);
 	return DISK_OK;
     }
@@ -459,7 +417,8 @@ int
 file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
-
+    if (fd < 0)
+       fatal_dump("file_read: bad FD");
     ctrl_dat = xcalloc(1, sizeof(dread_ctrl));
     ctrl_dat->fd = fd;
     ctrl_dat->offset = offset;
@@ -469,7 +428,6 @@ file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void
     ctrl_dat->end_of_file = 0;
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = client_data;
-
     commSetSelect(fd,
 	COMM_SELECT_READ,
 	(PF) diskHandleRead,
