@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.11 1998/03/28 23:24:46 wessels Exp $
+ * $Id: event.cc,v 1.12 1998/04/05 22:29:00 rousskov Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -60,6 +60,17 @@ eventAdd(const char *name, EVH * func, void *arg, time_t when)
     }
     event->next = *E;
     *E = event;
+}
+
+/* same as eventAdd but adds a random offset within +-1/3 of delta_ish */
+void
+eventAddIsh(const char *name, EVH * func, void *arg, time_t delta_ish)
+{
+    if (delta_ish >= 3) {
+	const time_t two_third = (2*delta_ish)/3;
+	delta_ish = two_third + (squid_random() % two_third);
+    }
+    eventAdd(name, func, arg, delta_ish);
 }
 
 void
