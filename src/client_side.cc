@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.13 1996/08/28 17:22:52 wessels Exp $
+ * $Id: client_side.cc,v 1.14 1996/08/29 16:55:48 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -86,11 +86,11 @@ static int clientProxyAuthCheck(icpState)
      * an object of type cacheobj:// */
     if (Config.proxyAuthFile == NULL)
 	return 1;
-    if (strstr(icpState->url, Config.proxyAuthIgnoreDomain))
-	return 1;
     if (urlParseProtocol(icpState->url) == PROTO_CACHEOBJ)
 	return 1;
-
+    if (Config.proxyAuthIgnoreDomain != NULL)
+	if (matchDomainName(Config.proxyAuthIgnoreDomain, icpState->request->host))
+	    return 1;
     proxy_user = proxyAuthenticate(icpState->request_hdr);
     strncpy(icpState->ident, proxy_user, ICP_IDENT_SZ);
     debug(33, 6, "jrmt: user = %s\n", icpState->ident);
@@ -126,6 +126,7 @@ void clientAccessCheck(icpState, handler)
 		icpState->url,
 		fd_table[fd].ipaddr));
 	icpSendERROR(fd, icpState->log_type, wbuf, icpState, icpState->http_code);
+	safe_free(icpState->aclChecklist);
 	return;
     }
 #endif /* USE_PROXY_AUTH */
@@ -234,17 +235,12 @@ char *proxyAuthenticate(char *headers)
     hash_link *hashr = NULL;
     FILE *f = NULL;
 
-    /* Look for Proxy-[Aa]uthorization: Basic in the
+    /* Look for Proxy-authorization: Basic in the
      * headers sent by the client
      */
     if ((s = mime_get_header(headers, "Proxy-authorization:")) == NULL) {
-	/* Check for MS Internet Explorer too, as well as Netscape
-	 * FIXME: Need a version of mime_get_header that uses strcasecmp()
-	 */
-	if ((s = mime_get_header(headers, "Proxy-Authorization:")) == NULL) {
-	    debug(33, 5, "jrmt: Can't find authorization header\n");
-	    return (dash_str);
-	}
+	debug(33, 5, "jrmt: Can't find authorization header\n");
+	return (dash_str);
     }
     /* Skip the 'Basic' part */
     s += strlen(" Basic");
@@ -258,7 +254,7 @@ char *proxyAuthenticate(char *headers)
     debug(33, 5, "jrmt: user = %s\n", sent_user);
 
     /* Look at the Last-modified time of the proxy.passwords
-     * file every ten seconds, to see if it's been changed via
+     * file every five minutes, to see if it's been changed via
      * a cgi-bin script, etc. If so, reload a fresh copy into memory
      */
 
@@ -272,9 +268,6 @@ char *proxyAuthenticate(char *headers)
 		debug(33, 0, "jrmt: reloading changed proxy authentication password file %s \n", Config.proxyAuthFile);
 		change_time = buf.st_mtime;
 
-		if (passwords != NULL)
-		    xfree(passwords);
-
 		if (validated != 0) {
 		    debug(33, 5, "jrmt: invalidating old entries\n");
 		    for (i = 0, hashr = hash_first(validated); hashr; hashr = hash_next(validated)) {
@@ -282,10 +275,11 @@ char *proxyAuthenticate(char *headers)
 			hash_delete(validated, hashr->key);
 		    }
 		} else {
-		    /* First time around, 7921 should be big enough for GDS :-) */
+		    /* First time around, 7921 should be big enough */
 		    if ((validated = hash_create(urlcmp, 7921, hash_string)) < 0) {
 			debug(1, 1, "ERK: can't create hash table. Turning auth off");
-			Config.proxyAuthOn = 0;
+			xfree(Config.proxyAuthFile);
+			Config.proxyAuthFile = NULL;
 			return (dash_str);
 		    }
 		}
@@ -304,15 +298,18 @@ char *proxyAuthenticate(char *headers)
 		while (user != NULL) {
 		    if (strlen(user) > 1 && strlen(passwd) > 1) {
 			debug(33, 6, "jrmt: adding %s, %s to hash table\n", user, passwd);
-			hash_insert(validated, user, (void *) passwd);
+			hash_insert(validated, xstrdup(user), (void *) xstrdup(passwd));
 		    }
 		    user = strtok(NULL, ":");
 		    passwd = strtok(NULL, "\n");
 		}
+
+		xfree(passwords);
 	    }
 	} else {
-	    debug(1, 1, "ERK: can't access proxy_auth_file %s. Turning authentication off until SIGHUPed", Config.proxyAuthFile);
-	    Config.proxyAuthOn = 0;
+	    debug(1, 1, "ERK: can't access proxy_auth file %s. Turning authentication off", Config.proxyAuthFile);
+	    xfree(Config.proxyAuthFile);
+	    Config.proxyAuthFile = NULL;
 	    return (dash_str);
 	}
     }
@@ -325,24 +322,24 @@ char *proxyAuthenticate(char *headers)
 	xfree(clear_userandpw);
 	return (dash_str);
     }
+    passwd = strstr(clear_userandpw, ":");
+    passwd++;
+
     /* See if we've already validated them */
-    if (strcmp(hashr->item, "OK") == 0) {
+    if (strcmp(hashr->item, passwd) == 0) {
 	debug(33, 5, "jrmt: user %s previously validated\n", sent_user);
 	xfree(clear_userandpw);
 	return sent_user;
     }
-    passwd = strstr(clear_userandpw, ":");
-    passwd++;
-
     if (strcmp(hashr->item, (char *) crypt(passwd, hashr->item))) {
 	/* Passwords differ, deny access */
 	debug(33, 4, "jrmt: authentication failed: user %s passwords differ\n", sent_user);
-	debug(33, 6, "jrmt: password given: %s, actual %s\n", passwd, hashr->item);
 	xfree(clear_userandpw);
 	return (dash_str);
     }
     debug(33, 5, "jrmt: user %s validated\n", sent_user);
-    hash_insert(validated, sent_user, (void *) "OK");
+    hash_delete(validated, sent_user);
+    hash_insert(validated, xstrdup(sent_user), (void *) xstrdup(passwd));
 
     xfree(clear_userandpw);
     return (sent_user);

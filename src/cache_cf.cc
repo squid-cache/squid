@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.78 1996/08/28 20:12:52 wessels Exp $
+ * $Id: cache_cf.cc,v 1.79 1996/08/29 16:55:47 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -147,7 +147,7 @@ struct SquidConfig Config;
 #define DefaultStoreLogFile	DEFAULT_STORE_LOG
 #if USE_PROXY_AUTH
 #define DefaultProxyAuthFile    (char *)NULL	/* default NONE */
-#define DefaultProxyAuthIgnoreDomain "none-at-all"
+#define DefaultProxyAuthIgnoreDomain (char *)NULL	/* default NONE */
 #endif /* USE_PROXY_AUTH */
 #define DefaultLogRotateNumber  10
 #define DefaultAdminEmail	"webmaster"
@@ -1231,7 +1231,7 @@ int parseConfigFile(file_name)
 	    parseIntegerValue(&Config.redirectChildren);
 
 #if USE_PROXY_AUTH
-	else if (!strcmp(token, "proxy_authentication"))
+	else if (!strcmp(token, "proxy_auth"))
 	    parseProxyAuthLine();
 #endif /* USE_PROXY_AUTH */
 
