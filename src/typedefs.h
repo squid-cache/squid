@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.68 1998/08/17 16:44:13 wessels Exp $
+ * $Id: typedefs.h,v 1.69 1998/08/17 23:00:43 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -81,8 +81,6 @@ typedef struct _fde fde;
 typedef struct _fileMap fileMap;
 typedef struct _fqdncache_entry fqdncache_entry;
 typedef struct _fqdn_pending fqdn_pending;
-typedef struct _hash_link hash_link;
-typedef struct _hash_table hash_table;
 typedef struct _HttpReply http_reply;
 typedef struct _HttpStatusLine HttpStatusLine;
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
@@ -175,8 +173,6 @@ typedef void PF(int, void *);
 typedef void DRCB(int fd, const char *buf, int size, int errflag, void *data);
 typedef void DWCB(int, int, size_t, void *);
 typedef void FQDNH(const char *, void *);
-typedef int HASHCMP(const void *, const void *);
-typedef unsigned int HASHHASH(const void *, unsigned int);
 typedef void IDCB(void *);
 typedef void IPH(const ipcache_addrs *, void *);
 typedef void IRCB(peer *, peer_t, icp_common_t *, void *data);

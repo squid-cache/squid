@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.249 1998/08/17 22:05:01 wessels Exp $
+ * $Id: protos.h,v 1.250 1998/08/17 23:00:39 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -251,20 +251,6 @@ extern int gopherCachable(const char *);
 
 
 extern void whoisStart(FwdState *, int fd);
-
-extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
-extern void hash_join(hash_table *, hash_link *);
-extern void hash_remove_link(hash_table *, hash_link *);
-extern int hashPrime(int n);
-extern void *hash_lookup(hash_table *, const void *);
-extern void hash_first(hash_table *);
-extern void *hash_next(hash_table *);
-extern hash_link *hash_get_bucket(hash_table *, unsigned int);
-extern void hashFreeMemory(hash_table *);
-extern void hashFreeItems(hash_table *, FREE *);
-extern HASHHASH hash_string;
-extern HASHHASH hash_url;
-extern HASHHASH hash4;
 
 extern int httpCachable(method_t);
 extern void httpStart(FwdState *, int fd);
