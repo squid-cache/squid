@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.15 1996/03/29 21:19:21 wessels Exp $ */
+/* $Id: http.cc,v 1.16 1996/03/30 00:09:04 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -450,7 +450,10 @@ void httpConnInProgress(fd, data)
 {
     StoreEntry *entry = data->entry;
 
-    if (comm_connect(fd, data->host, data->port) != COMM_OK)
+    debug(11, 5, "httpConnInProgress: FD %d data=%p\n", fd, data);
+
+    if (comm_connect(fd, data->host, data->port) != COMM_OK) {
+	debug(11, 5, "httpConnInProgress: FD %d errno=%d\n", fd, errno);
 	switch (errno) {
 	case EINPROGRESS:
 	case EALREADY:
@@ -467,6 +470,7 @@ void httpConnInProgress(fd, data)
 	    httpCloseAndFree(fd, data);
 	    return;
 	}
+    }
     /* Call the real write handler, now that we're fully connected */
     comm_set_select_handler(fd, COMM_SELECT_WRITE,
 	(PF) httpSendRequest, (caddr_t) data);
