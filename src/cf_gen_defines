@@ -17,6 +17,7 @@ BEGIN {
 	define["USE_USERAGENT_LOG"]="--enable-useragent-log"
 	define["USE_WCCP"]="--enable-wccp"
 	define["USE_UNLINKD"]="--enable-unlinkd"
+	define["USE_REFERER_LOG"]="--enable-referer-log"
 }
 /^IFDEF:/ {
 	print "{\"" $2 "\", \"" (define[$2] != "" ? define[$2] : ("-D" $2)) "\", "
