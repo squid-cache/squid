@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.53 1998/09/21 06:52:15 wessels Exp $
+ * $Id: icp_v2.cc,v 1.54 1998/10/13 20:35:55 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -381,7 +381,7 @@ icpHandleUdp(int sock, void *data)
 	else if (icp_version == ICP_VERSION_3)
 	    icpHandleIcpV3(sock, from, buf, len);
 	else
-	    debug(12, 0) ("WARNING: Unused ICP version %d received from %s:%d\n",
+	    debug(12, 1) ("WARNING: Unused ICP version %d received from %s:%d\n",
 		icp_version,
 		inet_ntoa(from.sin_addr),
 		ntohs(from.sin_port));
