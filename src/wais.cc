@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.20 1996/04/08 18:28:59 wessels Exp $ */
+/* $Id: wais.cc,v 1.21 1996/04/09 23:28:01 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -130,7 +130,7 @@ void waisReadReply(fd, data)
 		(PF) waisReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    BIT_SET(entry->flag, RELEASE_REQUEST);
+	    storeReleaseRequest(entry, __FILE__,__LINE__);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    waisCloseAndFree(fd, data);
 	}
@@ -208,10 +208,8 @@ void waisSendRequest(fd, data)
      int fd;
      WAISData *data;
 {
-#define CR '\015'
-#define LF '\012'
     int len = strlen(data->request) + 4;
-    char *buf;
+    char *buf = NULL;
 
     debug(24, 5, "waisSendRequest - fd: %d\n", fd);
 
@@ -223,12 +221,19 @@ void waisSendRequest(fd, data)
     buf = (char *) xcalloc(1, len + 1);
 
     if (data->mime_hdr)
-	sprintf(buf, "%s %s %s%c%c", data->type, data->request,
-	    data->mime_hdr, CR, LF);
+	sprintf(buf, "%s %s %s\r\n", data->type, data->request,
+	    data->mime_hdr);
     else
-	sprintf(buf, "%s %s%c%c", data->type, data->request, CR, LF);
+	sprintf(buf, "%s %s\r\n", data->type, data->request);
     debug(24, 6, "waisSendRequest - buf:%s\n", buf);
-    icpWrite(fd, buf, len, 30, waisSendComplete, (void *) data);
+    icpWrite(fd,
+	buf,
+	len,
+	30,
+	waisSendComplete,
+	(void *) data);
+    if (!BIT_TEST(data->entry->flag, ENTRY_PRIVATE))
+	storeSetPublicKey(data->entry);	/* Make it public */
 }
 
 int waisStart(unusedfd, url, type, mime_hdr, entry)
@@ -291,7 +296,5 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	(PF) waisLifetimeExpire, (void *) data);
     comm_set_select_handler(sock, COMM_SELECT_WRITE,
 	(PF) waisSendRequest, (void *) data);
-    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
-	storeSetPublicKey(entry);	/* Make it public */
     return COMM_OK;
 }

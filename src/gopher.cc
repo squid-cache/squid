@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.19 1996/04/08 18:39:29 wessels Exp $ */
+/* $Id: gopher.cc,v 1.20 1996/04/09 23:27:55 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -62,7 +62,6 @@ typedef struct gopher_ds {
 } GopherData;
 
 GopherData *CreateGopherData();
-
 
 char def_gopher_bin[] = "www/unknown";
 char def_gopher_text[] = "text/plain";
@@ -664,7 +663,7 @@ int gopherReadReply(fd, data)
 		(PF) gopherReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    BIT_SET(entry->flag, RELEASE_REQUEST);
+	    storeReleaseRequest(entry, __FILE__,__LINE__);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    gopherCloseAndFree(fd, data);
 	}
@@ -810,12 +809,10 @@ void gopherSendComplete(fd, buf, size, errflag, data)
 }
 
 /* This will be called when connect completes. Write request. */
-int gopherSendRequest(fd, data)
+void gopherSendRequest(fd, data)
      int fd;
      GopherData *data;
 {
-#define CR '\015'
-#define LF '\012'
     int len;
     static char query[MAX_URL];
     char *buf = get_free_4k_page(__FILE__, __LINE__);
@@ -825,17 +822,17 @@ int gopherSendRequest(fd, data)
     if (data->type_id == GOPHER_CSO) {
 	sscanf(data->request, "?%s", query);
 	len = strlen(query) + 15;
-	sprintf(buf, "query %s%c%cquit%c%c", query, CR, LF, CR, LF);
+	sprintf(buf, "query %s\r\nquit\r\n", query);
     } else if (data->type_id == GOPHER_INDEX) {
 	char *c_ptr = strchr(data->request, '?');
 	if (c_ptr) {
 	    *c_ptr = '\t';
 	}
 	len = strlen(data->request) + 3;
-	sprintf(buf, "%s%c%c", data->request, CR, LF);
+	sprintf(buf, "%s\r\n", data->request);
     } else {
 	len = strlen(data->request) + 3;
-	sprintf(buf, "%s%c%c", data->request, CR, LF);
+	sprintf(buf, "%s\r\n", data->request);
     }
 
     debug(10, 5, "gopherSendRequest: FD %d\n", fd);
@@ -845,7 +842,8 @@ int gopherSendRequest(fd, data)
 	30,
 	gopherSendComplete,
 	(void *) data);
-    return 0;
+    if (!BIT_TEST(data->entry->flag, ENTRY_PRIVATE))
+	storeSetPublicKey(data->entry);	/* Make it public */
 }
 
 int gopherStart(unusedfd, url, entry)
@@ -925,9 +923,6 @@ int gopherStart(unusedfd, url, entry)
 	COMM_SELECT_WRITE,
 	(PF) gopherSendRequest,
 	(void *) data);
-    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
-	storeSetPublicKey(entry);	/* Make it public */
-
     return COMM_OK;
 }
 

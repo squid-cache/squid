@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.24 1996/04/08 23:25:21 wessels Exp $ */
+/* $Id: ftp.cc,v 1.25 1996/04/09 23:27:55 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -187,7 +187,7 @@ int ftpReadReply(fd, data)
 	     * by `ftpget'. */
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    BIT_SET(entry->flag, RELEASE_REQUEST);
+	    storeReleaseRequest(entry, __FILE__,__LINE__);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    ftpCloseAndFree(fd, data);
 	}
@@ -205,7 +205,7 @@ int ftpReadReply(fd, data)
 	    debug(9, 1, "ftpReadReply: Didn't see magic marker, purging <URL:%s>.\n", entry->url);
 	    entry->expires = cached_curtime + getNegativeTTL();
 	    BIT_RESET(entry->flag, CACHABLE);
-	    BIT_SET(entry->flag, RELEASE_REQUEST);
+	    storeReleaseRequest(entry, __FILE__,__LINE__);
 	} else if (!(entry->flag & DELETE_BEHIND)) {
 	    entry->expires = cached_curtime + ttlSet(entry);
 	}
@@ -367,7 +367,14 @@ void ftpSendRequest(fd, data)
     strcat(buf, data->password);
     strcat(buf, space);
     debug(9, 5, "ftpSendRequest: FD %d: buf '%s'\n", fd, buf);
-    data->icp_rwd_ptr = icpWrite(fd, buf, strlen(buf), 30, ftpSendComplete, (void *) data);
+    data->icp_rwd_ptr = icpWrite(fd,
+	buf,
+	strlen(buf),
+	30,
+	ftpSendComplete,
+	(void *) data);
+    if (!BIT_TEST(data->entry->flag, ENTRY_PRIVATE))
+	storeSetPublicKey(data->entry);	/* Make it public */
 }
 
 void ftpConnInProgress(fd, data)
@@ -465,9 +472,6 @@ int ftpStart(unusedfd, url, entry)
 	COMM_SELECT_LIFETIME,
 	(PF) ftpLifetimeExpire,
 	(void *) data);
-    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
-	storeSetPublicKey(entry);	/* Make it public */
-
     return COMM_OK;
 }
 
