@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.23 1996/04/10 00:18:50 wessels Exp $ */
+/* $Id: wais.cc,v 1.24 1996/04/12 21:41:44 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -129,7 +129,7 @@ void waisReadReply(fd, data)
 		(PF) waisReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__, __LINE__);
+	    storeReleaseRequest(entry);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    waisCloseAndFree(fd, data);
 	}

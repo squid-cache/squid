@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.48 1996/04/12 21:22:58 wessels Exp $ */
-#ident "$Id: store.cc,v 1.48 1996/04/12 21:22:58 wessels Exp $"
+/* $Id: store.cc,v 1.49 1996/04/12 21:41:42 wessels Exp $ */
+#ident "$Id: store.cc,v 1.49 1996/04/12 21:41:42 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -423,15 +423,12 @@ int storeLockObject(e)
     return status;
 }
 
-void storeReleaseRequest(e, file, line)
+void storeReleaseRequest(e)
      StoreEntry *e;
-     char *file;
-     int line;
 {
     if (e->flag & RELEASE_REQUEST)
 	return;
-    debug(20, 3, "storeReleaseRequest: FROM %s:%d FOR '%s'\n",
-	file, line, e->key ? e->key : e->url);
+    debug(20, 3, "storeReleaseRequest: FOR '%s'\n", e->key ? e->key : e->url);
     e->flag |= RELEASE_REQUEST;
 }
 
@@ -580,7 +577,7 @@ void storeSetPublicKey(e)
 	debug(20, 0, "storeSetPublicKey: Making old '%s' private.\n", newkey);
 	e2 = (StoreEntry *) table_entry;
 	storeSetPrivateKey(e2);
-	storeReleaseRequest(e2, __FILE__, __LINE__);
+	storeReleaseRequest(e2);
     }
     if (e->key)
 	storeHashDelete(e);
@@ -626,7 +623,7 @@ StoreEntry *storeCreateEntry(url, req_hdr, flags, method)
 	BIT_RESET(e->flag, ENTRY_PRIVATE);
     } else {
 	BIT_RESET(e->flag, CACHABLE);
-	storeReleaseRequest(e, __FILE__, __LINE__);
+	storeReleaseRequest(e);
 	BIT_SET(e->flag, ENTRY_PRIVATE);
     }
     if (neighbors_do_private_keys || !BIT_TEST(flags, REQ_PUBLIC))
@@ -891,7 +888,7 @@ void storeStartDeleteBehind(e)
     /* change its key, so it couldn't be found by other client */
     storeSetPrivateKey(e);
     BIT_SET(e->flag, DELETE_BEHIND);
-    storeReleaseRequest(e, __FILE__, __LINE__);
+    storeReleaseRequest(e);
     BIT_RESET(e->flag, CACHABLE);
     storeExpireNow(e);
 }
@@ -987,7 +984,7 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
 
     if ((flag < 0) && (flag != DISK_EOF)) {
 	debug(20, 0, "storeSwapInHandle: SwapIn failure (err code = %d).\n", flag);
-	put_free_8k_page(e->mem_obj->e_swap_buf, __FILE__, __LINE__);
+	put_free_8k_page(e->mem_obj->e_swap_buf);
 	storeSetMemStatus(e, NOT_IN_MEMORY);
 	file_close(e->mem_obj->swap_fd);
 	swapInError(-1, e);	/* Invokes storeAbort() and completes the I/O */
@@ -1017,7 +1014,7 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
     } else {
 	/* complete swapping in */
 	storeSetMemStatus(e, IN_MEMORY);
-	put_free_8k_page(e->mem_obj->e_swap_buf, __FILE__, __LINE__);
+	put_free_8k_page(e->mem_obj->e_swap_buf);
 	file_close(e->mem_obj->swap_fd);
 	storeLog(STORE_LOG_SWAPIN, e);
 	debug(20, 5, "storeSwapInHandle: SwapIn complete: <URL:%s> from %s.\n",
@@ -1071,7 +1068,7 @@ int storeSwapInStart(e)
     storeSetMemStatus(e, SWAPPING_IN);
     e->mem_obj->data = new_MemObjectData();
     e->mem_obj->swap_offset = 0;
-    e->mem_obj->e_swap_buf = get_free_8k_page(__FILE__, __LINE__);
+    e->mem_obj->e_swap_buf = get_free_8k_page();
 
     /* start swapping daemon */
     file_read(fd,
@@ -1102,9 +1099,9 @@ void storeSwapOutHandle(fd, flag, e)
 	debug(20, 1, "storeSwapOutHandle: SwapOut failure (err code = %d).\n",
 	    flag);
 	e->swap_status = NO_SWAP;
-	put_free_8k_page(page_ptr, __FILE__, __LINE__);
+	put_free_8k_page(page_ptr);
 	file_close(fd);
-	storeReleaseRequest(e, __FILE__, __LINE__);
+	storeReleaseRequest(e);
 	if (e->swap_file_number != -1) {
 	    file_map_bit_reset(e->swap_file_number);
 	    safeunlink(filename, 0);	/* remove it */
@@ -1139,7 +1136,7 @@ void storeSwapOutHandle(fd, flag, e)
 	storeLog(STORE_LOG_SWAPOUT, e);
 	debug(20, 5, "storeSwapOutHandle: SwapOut complete: <URL:%s> to %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
-	put_free_8k_page(page_ptr, __FILE__, __LINE__);
+	put_free_8k_page(page_ptr);
 	sprintf(logmsg, "%s %s %d %d %d\n",
 	    filename,
 	    e->url,
@@ -1204,7 +1201,7 @@ static int storeSwapOutStart(e)
     }
     e->swap_status = SWAPPING_OUT;
     e->mem_obj->swap_offset = 0;
-    e->mem_obj->e_swap_buf = get_free_8k_page(__FILE__, __LINE__);
+    e->mem_obj->e_swap_buf = get_free_8k_page();
     e->mem_obj->e_swap_buf_len = 0;
 
     storeCopy(e, 0, SWAP_BUF, e->mem_obj->e_swap_buf,
@@ -1436,7 +1433,7 @@ static int storeCheckSwapable(e)
     } else
 	return 1;
 
-    storeReleaseRequest(e, __FILE__, __LINE__);
+    storeReleaseRequest(e);
     BIT_RESET(e->flag, CACHABLE);
     return 0;
 }
@@ -2032,7 +2029,7 @@ int storeRelease(e)
     if (storeEntryLocked(e)) {
 	storeExpireNow(e);
 	debug(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit\n");
-	storeReleaseRequest(e, __FILE__, __LINE__);
+	storeReleaseRequest(e);
 	return -1;
     }
     if (e->key != NULL) {

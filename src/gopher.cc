@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.24 1996/04/11 04:47:22 wessels Exp $ */
+/* $Id: gopher.cc,v 1.25 1996/04/12 21:41:37 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -72,7 +72,7 @@ static void gopherCloseAndFree(fd, data)
 {
     if (fd > +0)
 	comm_close(fd);
-    put_free_4k_page(data->buf, __FILE__, __LINE__);
+    put_free_4k_page(data->buf);
     xfree(data);
 }
 
@@ -569,7 +569,7 @@ int gopherReadReplyTimeout(fd, data)
     debug(10, 4, "GopherReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
     cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     if (data->icp_page_ptr)
-	put_free_4k_page(data->icp_page_ptr, __FILE__, __LINE__);
+	put_free_4k_page(data->icp_page_ptr);
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
     gopherCloseAndFree(fd, data);
@@ -586,7 +586,7 @@ void gopherLifetimeExpire(fd, data)
     debug(10, 4, "gopherLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     if (data->icp_page_ptr)
-	put_free_4k_page(data->icp_page_ptr, __FILE__, __LINE__);
+	put_free_4k_page(data->icp_page_ptr);
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
     comm_set_select_handler(fd,
@@ -644,7 +644,7 @@ int gopherReadReply(fd, data)
 	    return 0;
 	}
     }
-    buf = get_free_4k_page(__FILE__, __LINE__);
+    buf = get_free_4k_page();
     errno = 0;
     len = read(fd, buf, TEMP_BUF_SIZE - 1);	/* leave one space for \0 in gopherToHTML */
     debug(10, 5, "gopherReadReply: FD %d read len=%d\n", fd, len);
@@ -660,7 +660,7 @@ int gopherReadReply(fd, data)
 		(PF) gopherReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__, __LINE__);
+	    storeReleaseRequest(entry);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    gopherCloseAndFree(fd, data);
 	}
@@ -726,7 +726,7 @@ int gopherReadReply(fd, data)
 	    (void *) data,
 	    getReadTimeout());
     }
-    put_free_4k_page(buf, __FILE__, __LINE__);
+    put_free_4k_page(buf);
     return 0;
 }
 
@@ -747,7 +747,7 @@ void gopherSendComplete(fd, buf, size, errflag, data)
 	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	gopherCloseAndFree(fd, data);
 	if (buf)
-	    put_free_4k_page(buf, __FILE__, __LINE__);	/* Allocated by gopherSendRequest. */
+	    put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
 	return;
     }
     /* 
@@ -800,7 +800,7 @@ void gopherSendComplete(fd, buf, size, errflag, data)
     comm_set_fd_lifetime(fd, -1);	/* disable */
 
     if (buf)
-	put_free_4k_page(buf, __FILE__, __LINE__);	/* Allocated by gopherSendRequest. */
+	put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
     data->icp_page_ptr = NULL;
     data->icp_rwd_ptr = NULL;
 }
@@ -812,7 +812,7 @@ void gopherSendRequest(fd, data)
 {
     int len;
     static char query[MAX_URL];
-    char *buf = get_free_4k_page(__FILE__, __LINE__);
+    char *buf = get_free_4k_page();
 
     data->icp_page_ptr = buf;
 
@@ -927,6 +927,6 @@ int gopherStart(unusedfd, url, entry)
 GopherData *CreateGopherData()
 {
     GopherData *gd = (GopherData *) xcalloc(1, sizeof(GopherData));
-    gd->buf = get_free_4k_page(__FILE__, __LINE__);
+    gd->buf = get_free_4k_page();
     return (gd);
 }
