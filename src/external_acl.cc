@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.45 2003/06/27 20:54:45 hno Exp $
+ * $Id: external_acl.cc,v 1.46 2003/06/27 22:32:31 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -134,6 +134,7 @@ struct _external_acl_format
         EXT_ACL_USER_CERT,
         EXT_ACL_CA_CERT,
 #endif
+        EXT_ACL_EXT_USER,
         EXT_ACL_END
     } type;
     external_acl_format *next;
@@ -316,6 +317,8 @@ parse_externalAclHelper(external_acl ** list)
         }
 
 #endif
+        else if (strcmp(token, "%EXT_USER") == 0)
+            format->type = _external_acl_format::EXT_ACL_EXT_USER;
         else {
             self_destruct();
         }
@@ -407,6 +410,8 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 storeAppendPrintf(sentry, " %%USER_CERT_%s", format->header);
                 break;
 #endif
+
+                DUMP_EXT_ACL_TYPE(EXT_USER);
 
             case _external_acl_format::EXT_ACL_UNKNOWN:
 
@@ -585,20 +590,17 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
     external_acl_cache_touch(acl->def, entry);
     result = entry->result;
     debug(82, 2) ("aclMatchExternal: %s = %d\n", acl->def->name, result);
-    /* FIXME: This should allocate it's own storage in the request. This
-     * piggy backs on ident, and may fail if there is child proxies..
-     * Register the username for logging purposes
-     */
 
-    if (entry->user.size()) {
-        xstrncpy(ch->rfc931, entry->user.buf(), USER_IDENT_SZ);
+    if (ch->request) {
+        if (entry->user.size())
+            ch->request->extacl_user = entry->user;
 
-        if (cbdataReferenceValid(ch->conn()))
-            xstrncpy(ch->conn()->rfc931, entry->user.buf(), USER_IDENT_SZ);
+        if (entry->password.size())
+            ch->request->extacl_passwd = entry->password;
+
+        if (!ch->request->tag.size())
+            ch->request->tag = entry->tag;
     }
-
-    if (ch->request && !ch->request->tag.size())
-        ch->request->tag = entry->tag;
 
     return result;
 }
@@ -740,6 +742,10 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 
             break;
 #endif
+
+        case _external_acl_format::EXT_ACL_EXT_USER:
+            str = request->extacl_user.buf();
+            break;
 
         case _external_acl_format::EXT_ACL_UNKNOWN:
 
@@ -896,15 +902,20 @@ externalAclHandleReply(void *data, char *reply)
             if (value) {
                 *value++ = '\0';	/* terminate the token, and move up to the value */
 
-                if (strcmp(token, "tag") == 0)
-                    entryData.tag = value;
-
                 if (strcmp(token, "user") == 0)
                     entryData.user = value;
                 else if (strcmp(token, "message") == 0)
                     entryData.message = value;
                 else if (strcmp(token, "error") == 0)
                     entryData.message = value;
+                else if (strcmp(token, "tag") == 0)
+                    entryData.tag = value;
+                else if (strcmp(token, "password") == 0)
+                    entryData.password = value;
+                else if (strcmp(token, "passwd") == 0)
+                    entryData.password = value;
+                else if (strcmp(token, "login") == 0)
+                    entryData.user = value;
             }
         }
     }

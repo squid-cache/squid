@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.416 2003/06/24 12:42:25 robertc Exp $
+ * $Id: http.cc,v 1.417 2003/06/27 22:32:31 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -206,6 +206,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
         /*
          * Any 2xx response should eject previously cached entities...
          */
+
         if (status >= 200 && status < 300)
             remove
                 = 1;
@@ -1217,13 +1218,20 @@ httpBuildRequestHeader(request_t * request,
 
             if (orig_request->auth_user_request)
                 username = orig_request->auth_user_request->username();
+            else if (orig_request->extacl_user.size())
+                username = orig_request->extacl_user.buf();
 
             snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
             httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
                               base64_encode(loginbuf));
         } else if (strcmp(orig_request->peer_login, "PASS") == 0) {
-            /* Nothing to do */
+            if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
+                char loginbuf[256];
+                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.buf(), orig_request->extacl_passwd.buf());
+                httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
+                                  base64_encode(loginbuf));
+            }
         } else if (strcmp(orig_request->peer_login, "PROXYPASS") == 0) {
             /* Nothing to do */
         } else {
@@ -1239,11 +1247,17 @@ httpBuildRequestHeader(request_t * request,
             /* No credentials to forward.. (should have been done above if available) */
         } else if (strcmp(orig_request->peer_login, "PROXYPASS") == 0) {
             /* Special mode, convert proxy authentication to WWW authentication
+            * (also applies to authentication provided by external acl)
              */
             const char *auth = httpHeaderGetStr(hdr_in, HDR_PROXY_AUTHORIZATION);
 
             if (auth && strncasecmp(auth, "basic ", 6) == 0) {
                 httpHeaderPutStr(hdr_out, HDR_AUTHORIZATION, auth);
+            } else if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
+                char loginbuf[256];
+                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.buf(), orig_request->extacl_passwd.buf());
+                httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
+                                  base64_encode(loginbuf));
             }
         } else if (*orig_request->peer_login == '*') {
             /* Special mode, to pass the username to the upstream cache */
@@ -1252,6 +1266,8 @@ httpBuildRequestHeader(request_t * request,
 
             if (orig_request->auth_user_request)
                 username = authenticateUserRequestUsername(orig_request->auth_user_request);
+            else if (orig_request->extacl_user.size())
+                username = orig_request->extacl_user.buf();
 
             snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
@@ -1264,8 +1280,7 @@ httpBuildRequestHeader(request_t * request,
         }
     }
 
-    /* append Cache-Control, add max-age if not there already */
-    {
+    /* append Cache-Control, add max-age if not there already */ {
         HttpHdrCc *cc = httpHeaderGetCc(hdr_in);
 
         if (!cc)
@@ -1329,7 +1344,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
          */
 
         if (flags.proxying && orig_request->peer_login &&
-                strcmp(orig_request->peer_login, "PASS") == 0) {
+                (strcmp(orig_request->peer_login, "PASS") == 0 ||
+                 strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
             httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
         }
 
@@ -1345,7 +1361,9 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
              * (see also below for proxy->server authentication)
              */
 
-            if (orig_request->peer_login && (strcmp(orig_request->peer_login, "PASS") == 0 || strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
+            if (orig_request->peer_login &&
+                    (strcmp(orig_request->peer_login, "PASS") == 0 ||
+                     strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
                 httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
             }
         }

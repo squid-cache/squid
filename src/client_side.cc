@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.643 2003/06/23 14:13:03 robertc Exp $
+ * $Id: client_side.cc,v 1.644 2003/06/27 22:32:30 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -476,6 +476,8 @@ clientPrepareLogWithRequestDetails(request_t * request, AccessLogEntry * aLogEnt
     aLogEntry->http.version = request->http_ver;
     aLogEntry->headers.request = xstrdup(mb.buf);
     aLogEntry->hier = request->hier;
+
+    aLogEntry->cache.extuser = request->extacl_user.buf();
 
     if (request->auth_user_request) {
         if (authenticateUserRequestUsername(request->auth_user_request))
