@@ -24,6 +24,7 @@
  */
 
 #include "smblib-priv.h"
+#include "smblib.h"
 
 #include "rfcnb.h"
 #include "rfcnb-priv.h"
@@ -33,7 +34,7 @@
 #include <string.h>
 #include <unistd.h>
 
-char *SMB_Prots[] =
+const char *SMB_Prots[] =
 {"PC NETWORK PROGRAM 1.0",
     "MICROSOFT NETWORKS 1.03",
     "MICROSOFT NETWORKS 3.0",
@@ -63,139 +64,12 @@ int SMB_Types[] =
     SMB_P_NT1,
     -1};
 
-/* Print out an SMB pkt in all its gory detail ... */
-
-void
-SMB_Print_Pkt(FILE fd, RFCNB_Pkt * pkt, BOOL command, int Offset, int Len)
-{
-
-    /* Well, just how do we do this ... print it I suppose */
-
-    /* Print out the SMB header ...                        */
-
-    /* Print the command                                   */
-
-    /* Print the other bits in the header                  */
-
-
-    /* etc                                                 */
-
-}
-
-/* Convert a DOS Date_Time to a local host type date time for printing */
-
-char *
-SMB_DOSTimToStr(int DOS_time)
-{
-    static char SMB_Time_Temp[48];
-    int DOS_sec, DOS_min, DOS_hour, DOS_day, DOS_month, DOS_year;
-
-    SMB_Time_Temp[0] = 0;
-
-    DOS_sec = (DOS_time & 0x001F) * 2;
-    DOS_min = (DOS_time & 0x07E0) >> 5;
-    DOS_hour = ((DOS_time & 0xF800) >> 11);
-
-    DOS_day = (DOS_time & 0x001F0000) >> 16;
-    DOS_month = (DOS_time & 0x01E00000) >> 21;
-    DOS_year = ((DOS_time & 0xFE000000) >> 25) + 80;
-
-    sprintf(SMB_Time_Temp, "%2d/%02d/%2d %2d:%02d:%02d", DOS_day, DOS_month,
-	DOS_year, DOS_hour, DOS_min, DOS_sec);
-
-    return (SMB_Time_Temp);
-
-}
-
-/* Convert an attribute byte/word etc to a string ... We return a pointer
- * to a static string which we guarantee is long enough. If verbose is 
- * true, we print out long form of strings ...                            */
-
-char *
-SMB_AtrToStr(int attribs, BOOL verbose)
-{
-    static char SMB_Attrib_Temp[128];
-
-    SMB_Attrib_Temp[0] = 0;
-
-    if (attribs & SMB_FA_ROF)
-	strcat(SMB_Attrib_Temp, (verbose ? "Read Only " : "R"));
-
-    if (attribs & SMB_FA_HID)
-	strcat(SMB_Attrib_Temp, (verbose ? "Hidden " : "H"));
-
-    if (attribs & SMB_FA_SYS)
-	strcat(SMB_Attrib_Temp, (verbose ? "System " : "S"));
-
-    if (attribs & SMB_FA_VOL)
-	strcat(SMB_Attrib_Temp, (verbose ? "Volume " : "V"));
-
-    if (attribs & SMB_FA_DIR)
-	strcat(SMB_Attrib_Temp, (verbose ? "Directory " : "D"));
-
-    if (attribs & SMB_FA_ARC)
-	strcat(SMB_Attrib_Temp, (verbose ? "Archive " : "A"));
-
-    return (SMB_Attrib_Temp);
-
-}
-
-/* Pick up the Max Buffer Size from the Tree Structure ... */
-
-int
-SMB_Get_Tree_MBS(SMB_Tree_Handle tree)
-{
-    if (tree != NULL) {
-	return (tree->mbs);
-    } else {
-	return (SMBlibE_BAD);
-    }
-}
-
-/* Pick up the Max buffer size */
-
-int
-SMB_Get_Max_Buf_Siz(SMB_Handle_Type Con_Handle)
-{
-    if (Con_Handle != NULL) {
-	return (Con_Handle->max_xmit);
-    } else {
-	return (SMBlibE_BAD);
-    }
-
-}
-/* Pickup the protocol index from the connection structure                 */
-
-int
-SMB_Get_Protocol_IDX(SMB_Handle_Type Con_Handle)
-{
-    if (Con_Handle != NULL) {
-	return (Con_Handle->prot_IDX);
-    } else {
-	return (0xFFFF);	/* Invalid protocol */
-    }
-
-}
-
-/* Pick up the protocol from the connection structure                       */
-
-int
-SMB_Get_Protocol(SMB_Handle_Type Con_Handle)
-{
-    if (Con_Handle != NULL) {
-	return (Con_Handle->protocol);
-    } else {
-	return (0xFFFF);	/* Invalid protocol */
-    }
-
-}
-
 /* Figure out what protocol was accepted, given the list of dialect strings */
 /* We offered, and the index back from the server. We allow for a user      */
 /* supplied list, and assume that it is a subset of our list                */
 
-int
-SMB_Figure_Protocol(char *dialects[], int prot_index)
+static int
+SMB_Figure_Protocol(const char *dialects[], int prot_index)
 {
     int i;
 
@@ -228,7 +102,7 @@ SMB_Figure_Protocol(char *dialects[], int prot_index)
 /* none acceptible, and our return value is 0 if ok, <0 if problems       */
 
 int
-SMB_Negotiate(SMB_Handle_Type Con_Handle, char *Prots[])
+SMB_Negotiate(SMB_Handle_Type Con_Handle, const char *Prots[])
 {
     struct RFCNB_Pkt *pkt;
     int prots_len, i, pkt_len, prot, alloc_len;
@@ -461,7 +335,7 @@ SMB_TreeConnect(SMB_Handle_Type Con_Handle,
     SMB_Tree_Handle Tree_Handle,
     char *path,
     char *password,
-    char *device)
+    const char *device)
 {
     struct RFCNB_Pkt *pkt;
     int param_len, pkt_len;
@@ -622,106 +496,6 @@ SMB_TreeConnect(SMB_Handle_Type Con_Handle,
 
 }
 
-int
-SMB_TreeDisconnect(SMB_Tree_Handle Tree_Handle, BOOL discard)
-{
-    struct RFCNB_Pkt *pkt;
-    int pkt_len;
-
-    pkt_len = SMB_tdis_len;
-
-    pkt = (struct RFCNB_Pkt *) RFCNB_Alloc_Pkt(pkt_len);
-
-    if (pkt == NULL) {
-
-	SMBlib_errno = SMBlibE_NoSpace;
-	return (SMBlibE_BAD);	/* Should handle the error */
-
-    }
-    /* Now plug in the values ... */
-
-    bzero(SMB_Hdr(pkt), SMB_tdis_len);
-    SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);	/* Plunk in IDF */
-    *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBtdis;
-    SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, Tree_Handle->con->pid);
-    SSVAL(SMB_Hdr(pkt), SMB_hdr_mid_offset, Tree_Handle->con->mid);
-    SSVAL(SMB_Hdr(pkt), SMB_hdr_uid_offset, Tree_Handle->con->uid);
-    *(SMB_Hdr(pkt) + SMB_hdr_wct_offset) = 0;
-
-    SSVAL(SMB_Hdr(pkt), SMB_hdr_tid_offset, Tree_Handle->tid);
-    SSVAL(SMB_Hdr(pkt), SMB_tcon_bcc_offset, 0);
-
-    /* Now send the packet and sit back ... */
-
-    if (RFCNB_Send(Tree_Handle->con->Trans_Connect, pkt, pkt_len) < 0) {
-
-#ifdef DEBUG
-	fprintf(stderr, "Error sending TDis request\n");
-#endif
-
-	RFCNB_Free_Pkt(pkt);
-	SMBlib_errno = -SMBlibE_SendFailed;
-	return (SMBlibE_BAD);
-
-    }
-    /* Now get the response ... */
-
-    if (RFCNB_Recv(Tree_Handle->con->Trans_Connect, pkt, pkt_len) < 0) {
-
-#ifdef DEBUG
-	fprintf(stderr, "Error receiving response to TCon\n");
-#endif
-
-	RFCNB_Free_Pkt(pkt);
-	SMBlib_errno = -SMBlibE_RecvFailed;
-	return (SMBlibE_BAD);
-
-    }
-    /* Check out the response type ... */
-
-    if (CVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset) != SMBC_SUCCESS) {	/* Process error */
-
-#ifdef DEBUG
-	fprintf(stderr, "SMB_TDis failed with errorclass = %i, Error Code = %i\n",
-	    CVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset),
-	    SVAL(SMB_Hdr(pkt), SMB_hdr_err_offset));
-#endif
-
-	SMBlib_SMB_Error = IVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset);
-	RFCNB_Free_Pkt(pkt);
-	SMBlib_errno = SMBlibE_Remote;
-	return (SMBlibE_BAD);
-
-    }
-    Tree_Handle->tid = 0xFFFF;	/* Invalid TID */
-    Tree_Handle->mbs = 0;	/* Invalid     */
-
-#ifdef DEBUG
-
-    fprintf(stderr, "Tree disconnect successful ...\n");
-
-#endif
-
-    /* What about the tree handle ? */
-
-    if (discard == TRUE) {	/* Unlink it and free it ... */
-
-	if (Tree_Handle->next == NULL)
-	    Tree_Handle->con->first_tree = Tree_Handle->prev;
-	else
-	    Tree_Handle->next->prev = Tree_Handle->prev;
-
-	if (Tree_Handle->prev == NULL)
-	    Tree_Handle->con->last_tree = Tree_Handle->next;
-	else
-	    Tree_Handle->prev->next = Tree_Handle->next;
-
-    }
-    RFCNB_Free_Pkt(pkt);
-    return (0);
-
-}
-
 /* Pick up the last LMBlib error ... */
 
 int
@@ -747,7 +521,7 @@ SMB_Get_Last_SMB_Err()
 
 /* Keep this table in sync with the message codes in smblib-common.h */
 
-static char *SMBlib_Error_Messages[] =
+static const char *SMBlib_Error_Messages[] =
 {
 
     "Request completed sucessfully.",

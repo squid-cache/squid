@@ -14,10 +14,9 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <string.h>
 #include "usersfile.h"
-
-extern int Check_ifuserallowed(const char *);
-extern void Check_forallowchange(void);
+#include "msntauth.h"
 
 static usersfile DenyUsers;
 static int init = 0;
@@ -35,7 +34,7 @@ Read_denyusers(void)
     return Read_usersfile(Denyuserpath, &DenyUsers);
 }
 
-void
+static void
 Check_fordenychange(void)
 {
     Check_forfilechange(&DenyUsers);
@@ -47,7 +46,7 @@ Check_fordenychange(void)
  * user list. Returns 0 if the user was not found, and 1 if they were.
  */
 
-int
+static int
 Check_ifuserdenied(char *ConnectingUser)
 {
     /* If user string is empty, deny */
@@ -86,7 +85,7 @@ Check_user(char *ConnectingUser)
  */
 
 void
-Check_forchange()
+Check_forchange(int signal)
 {
     Check_fordenychange();
     Check_forallowchange();
@@ -110,7 +109,7 @@ Checktimer()
     if (difftime(Currenttime, Lasttime) < 60)
 	return;
     else {
-	Check_forchange();
+	Check_forchange(-1);
 	Lasttime = Currenttime;
     }
 }

@@ -40,12 +40,13 @@ extern int DEBUGLEVEL;
 
 #include "byteorder.h"
 
-char *StrnCpy(char *dest, char *src, int n);
-void strupper(char *s);
-extern void E_P16(unsigned char *, unsigned char *);
-extern void E_P24(unsigned char *, unsigned char *, unsigned char *);
-extern void mdfour(unsigned char *, unsigned char *, int);
+#include "md4.h"
+#include "smbdes.h"
+#include "smbencrypt.h"
 
+static void E_md4hash(unsigned char *passwd, unsigned char *p16);
+static char *StrnCpy(char *dest, char *src, int n);
+static void strupper(char *s);
 
 /*
  * This implements the X/Open SMB password encryption

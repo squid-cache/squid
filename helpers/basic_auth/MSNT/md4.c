@@ -20,6 +20,7 @@
  */
 
 #include <string.h>
+#include "md4.h"
 
 /* NOTE: This code makes no attempt to be fast! 
  * 

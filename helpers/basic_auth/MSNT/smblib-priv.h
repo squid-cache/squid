@@ -499,7 +499,7 @@ typedef enum {
 /* We must make it possible for callers to specify these ... */
 
 
-extern char *SMB_Prots[];
+extern const char *SMB_Prots[];
 extern int SMB_Types[];
 
 typedef struct SMB_Status {

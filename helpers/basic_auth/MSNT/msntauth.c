@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <syslog.h>
+#include <string.h>
 #include <sys/time.h>
 
 #include "msntauth.h"

@@ -30,7 +30,7 @@
 
 /* Create a handle to allow us to set/override some parameters ...       */
 
-SMB_Handle_Type SMB_Create_Con_Handle();
+SMB_Handle_Type SMB_Create_Con_Handle(void);
 
 /* Connect to a server, but do not do a tree con etc ... */
 
@@ -47,12 +47,12 @@ SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
 
 /* Negotiate a protocol                                                  */
 
-int SMB_Negotiate(void *Con_Handle, char *Prots[]);
+int SMB_Negotiate(SMB_Handle_Type Con_Handle, const char *Prots[]);
 
 /* Connect to a tree ...                                                 */
 
-void *SMB_TreeConnect(void *con_handle, void *tree_handle,
-    char *path, char *password, char *dev);
+SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con_handle, SMB_Tree_Handle tree_handle,
+    char *path, char *password, const char *dev);
 
 /* Disconnect a tree ...                                                 */
 
@@ -88,11 +88,18 @@ int SMB_Delete_Dir(void *tree, char *dir_name);
 
 int SMB_Check_Dir(void *tree, char *dir_name);
 
-int SMB_Get_Last_Error();
+int SMB_Get_Last_Error(void);
 
-int SMB_Get_Last_SMB_Err();
+int SMB_Get_Last_SMB_Err(void);
 
-int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
+void SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
 
 void *SMB_Logon_And_TCon(void *con, void *tree, char *user, char *pass,
     char *service, char *st);
+
+void SMB_Get_My_Name(char *, int);
+
+int SMB_Init(void);
+
+extern int SMB_Logon_Server(SMB_Handle_Type, char *, char *);
+

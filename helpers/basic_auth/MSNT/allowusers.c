@@ -13,7 +13,9 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <string.h>
 #include "usersfile.h"
+#include "msntauth.h"
 
 static usersfile AllowUsers;
 static int init = 0;
