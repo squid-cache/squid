@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.3 2002/07/28 21:55:33 hno Exp $
+ * $Id: comm_poll.cc,v 1.4 2002/09/15 06:23:28 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -307,7 +307,7 @@ comm_poll_http_incoming(void)
 }
 
 /* poll all sockets; call handlers for those that are ready. */
-int
+comm_err_t
 comm_select(int msec)
 {
     struct pollfd pfds[SQUID_MAXFD];

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.135 2002/09/15 05:41:57 robertc Exp $
+ * $Id: typedefs.h,v 1.136 2002/09/15 06:23:29 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -209,8 +209,8 @@ typedef void CSR(clientStreamNode *, clientHttpRequest *);
 typedef void CSD(clientStreamNode *, clientHttpRequest *);
 typedef clientStream_status_t CSS(clientStreamNode *, clientHttpRequest *);
 
-typedef void CWCB(int fd, char *, size_t size, int flag, void *data);
-typedef void CNCB(int fd, int status, void *);
+typedef void CWCB(int fd, char *, size_t size, comm_err_t flag, void *data);
+typedef void CNCB(int fd, comm_err_t status, void *);
 
 typedef void FREE(void *);
 typedef void CBDUNL(void *);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.332 2002/09/12 09:43:51 adrian Exp $
+ * $Id: comm.cc,v 1.333 2002/09/15 06:23:28 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -60,7 +60,7 @@ typedef struct {
 static int commBind(int s, struct in_addr, u_short port);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
-static void CommWriteStateCallbackAndFree(int fd, int code);
+static void CommWriteStateCallbackAndFree(int fd, comm_err_t code);
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay(int);
 #endif
@@ -69,7 +69,7 @@ static PF commConnectFree;
 static PF commConnectHandle;
 static PF commHandleWrite;
 static IPH commConnectDnsHandle;
-static void commConnectCallback(ConnectStateData * cs, int status);
+static void commConnectCallback(ConnectStateData * cs, comm_err_t status);
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
 CBDATA_TYPE(ConnectStateData);
@@ -78,7 +78,7 @@ static MemPool *comm_write_pool = NULL;
 static MemPool *conn_close_pool = NULL;
 
 static void
-CommWriteStateCallbackAndFree(int fd, int code)
+CommWriteStateCallbackAndFree(int fd, comm_err_t code)
 {
     CommWriteStateData *CommWriteState = fd_table[fd].rwstate;
     CWCB *callback = NULL;
@@ -125,7 +125,7 @@ comm_local_port(int fd)
     return F->local_port;
 }
 
-static int
+static comm_err_t
 commBind(int s, struct in_addr in_addr, u_short port)
 {
     struct sockaddr_in S;
@@ -298,7 +298,7 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
 }
 
 static void
-commConnectCallback(ConnectStateData * cs, int status)
+commConnectCallback(ConnectStateData * cs, comm_err_t status)
 {
     CNCB *callback = cs->callback;
     void *cbdata = cs->data;
@@ -457,7 +457,7 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 int
 comm_connect_addr(int sock, const struct sockaddr_in *address)
 {
-    int status = COMM_OK;
+    comm_err_t status = COMM_OK;
     fde *F = &fd_table[sock];
     int x;
     int err = 0;

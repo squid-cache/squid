@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.1 2002/01/01 09:47:48 adrian Exp $
+ * $Id: comm_kqueue.cc,v 1.2 2002/09/15 06:23:28 adrian Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -217,7 +217,7 @@ commSetSelect(int fd, unsigned int type, PF * handler,
  * events.
  */
 
-int
+comm_err_t
 comm_select(int msec)
 {
     int num, i;

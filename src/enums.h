@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.212 2002/09/15 05:41:57 robertc Exp $
+ * $Id: enums.h,v 1.213 2002/09/15 06:23:29 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -751,6 +751,19 @@ typedef enum {
     DIGEST_READ_MASK,
     DIGEST_READ_DONE
 } digest_read_state_t;
+
+typedef enum {
+    COMM_OK 		= 0,
+    COMM_ERROR		= -1,
+    COMM_NOMESSAGE	= -3,
+    COMM_TIMEOUT	= -4,
+    COMM_SHUTDOWN	= -5,
+    COMM_INPROGRESS	= -6,
+    COMM_ERR_CONNECT	= -7,
+    COMM_ERR_DNS	= -8,
+    COMM_ERR_CLOSING	= -9
+} comm_err_t;
+
 
 /* CygWin & Windows NT Port */
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)

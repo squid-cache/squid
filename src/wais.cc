@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.138 2001/10/24 08:19:09 hno Exp $
+ * $Id: wais.cc,v 1.139 2002/09/15 06:23:29 adrian Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -162,7 +162,7 @@ waisReadReply(int fd, void *data)
 /* This will be called when request write is complete. Schedule read of
  * reply. */
 static void
-waisSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
+waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
     WaisStateData *waisState = data;
     StoreEntry *entry = waisState->entry;
