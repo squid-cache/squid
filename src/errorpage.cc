@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.70 1997/10/13 22:09:08 kostas Exp $
+ * $Id: errorpage.cc,v 1.71 1997/10/14 18:24:32 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -36,7 +36,6 @@ const char *err_string[] =
     "ERR_NONE",
     "ERR_READ_TIMEOUT",
     "ERR_LIFETIME_EXP",
-    "ERR_NO_CLIENTS",
     "ERR_READ_ERROR",
     "ERR_WRITE_ERROR",
     "ERR_CLIENT_ABORT",
@@ -46,14 +45,10 @@ const char *err_string[] =
     "ERR_INVALID_URL",
     "ERR_SOCKET_FAILURE",
     "ERR_DNS_FAIL",
-    "ERR_NOT_IMPLEMENTED",
     "ERR_CANNOT_FORWARD",
     "ERR_NO_RELAY",
-    "ERR_DISK_IO",
     "ERR_ZERO_SIZE_OBJECT",
     "ERR_FTP_DISABLED",
-    "ERR_PROXY_DENIED",
-    "ERR_CACHE_MISS_DENIED",
     "ERR_ACCESS_DENIED",
     "ERR_MAX"
 };
