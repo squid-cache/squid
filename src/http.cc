@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.95 1996/11/05 17:08:12 wessels Exp $
+ * $Id: http.cc,v 1.96 1996/11/05 20:43:52 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -114,6 +114,11 @@ static struct {
     int exp;
     int clen;
     int ctype;
+    struct {
+	int private;
+	int cachable;
+	int nocache;
+    } cc;
 } ReplyHeaderStats;
 
 static void httpStateFree _PARAMS((int fd, void *));
@@ -259,12 +264,16 @@ httpParseHeaders(const char *buf, struct _http_reply *reply)
 	    }
 	} else if (!strncasecmp(t, "Cache-Control:", 14)) {
 	    if ((t = strtok(NULL, w_space))) {
-		if (!strncasecmp(t, "private", 7))
+		if (!strncasecmp(t, "private", 7)) {
 		    reply->cache_control |= HTTP_CC_PRIVATE;
-		else if (!strncasecmp(t, "cachable", 8))
+		    ReplyHeaderStats.cc.private++;
+		} else if (!strncasecmp(t, "cachable", 8)) {
 		    reply->cache_control |= HTTP_CC_CACHABLE;
-		else if (!strncasecmp(t, "no-cache", 8))
+		    ReplyHeaderStats.cc.cachable++;
+		} else if (!strncasecmp(t, "no-cache", 8)) {
 		    reply->cache_control |= HTTP_CC_NOCACHE;
+		    ReplyHeaderStats.cc.nocache++;
+		}
 	    }
 	}
 	t = strtok(NULL, "\n");
@@ -810,5 +819,11 @@ httpReplyHeaderStats(StoreEntry * entry)
 	ReplyHeaderStats.ctype);
     storeAppendPrintf(entry, "{Content-Length: %d}\n",
 	ReplyHeaderStats.clen);
+    storeAppendPrintf(entry, "{Cache-Control Private: %d}\n",
+	ReplyHeaderStats.cc.private);
+    storeAppendPrintf(entry, "{Cache-Control Cachable: %d}\n",
+	ReplyHeaderStats.cc.cachable);
+    storeAppendPrintf(entry, "{Cache-Control Nocache: %d}\n",
+	ReplyHeaderStats.cc.nocache);
     storeAppendPrintf(entry, close_bracket);
 }

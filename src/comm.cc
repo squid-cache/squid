@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.96 1996/11/04 18:12:19 wessels Exp $
+ * $Id: comm.cc,v 1.97 1996/11/05 20:43:51 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -572,19 +572,23 @@ comm_udp_send(int fd, const char *host, u_short port, const char *buf, int len)
 
 /* Send a udp datagram to specified TO_ADDR. */
 int
-comm_udp_sendto(int fd, const struct sockaddr_in *to_addr, int addr_len, const char *buf, int len)
+comm_udp_sendto(int fd,
+    const struct sockaddr_in *to_addr,
+    int addr_len,
+    const char *buf,
+    int len)
 {
-    int bytes_sent;
-
-    if ((bytes_sent = sendto(fd, buf, len, 0, to_addr, addr_len)) < 0) {
-	debug(5, 1, "comm_udp_sendto: sendto failure: FD %d: %s\n", fd, xstrerror());
-	debug(5, 1, "comm_udp_sendto: --> sin_family = %d\n", to_addr->sin_family);
-	debug(5, 1, "comm_udp_sendto: --> sin_port   = %d\n", htons(to_addr->sin_port));
-	debug(5, 1, "comm_udp_sendto: --> sin_addr   = %s\n", inet_ntoa(to_addr->sin_addr));
-	debug(5, 1, "comm_udp_sendto: --> length     = %d\n", len);
+    int x;
+    x = sendto(fd, buf, len, 0, (struct sockaddr *) to_addr, addr_len);
+    if (x < 0) {
+	debug(5, 1, "comm_udp_sendto: FD %d, %s, port %d: %s\n",
+	    fd,
+	    inet_ntoa(to_addr->sin_addr),
+	    (int) htons(to_addr->sin_port),
+	    xstrerror());
 	return COMM_ERROR;
     }
-    return bytes_sent;
+    return x;
 }
 
 void
