@@ -1,4 +1,4 @@
-/* $Id: disk.cc,v 1.5 1996/03/27 18:15:43 wessels Exp $ */
+/* $Id: disk.cc,v 1.6 1996/03/28 05:21:46 wessels Exp $ */
 
 #include "squid.h"
 
@@ -143,8 +143,8 @@ int file_open(path, handler, mode)
 	return DISK_ERROR;
     }
 #else
-    if (fcntl(fd, F_SETFL, FNDELAY) < 0) {
-	debug(0, 0, "file_open: FD %d: Failure to set FNDELAY: %s\n",
+    if (fcntl(fd, F_SETFL, O_NDELAY) < 0) {
+	debug(0, 0, "file_open: FD %d: Failure to set O_NDELAY: %s\n",
 	    fd, xstrerror());
 	return DISK_ERROR;
     }

@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.9 1996/03/27 18:15:41 wessels Exp $ */
+/* $Id: comm.cc,v 1.10 1996/03/28 05:21:46 wessels Exp $ */
 
 #include "squid.h"
 
@@ -173,8 +173,8 @@ int comm_open(io_type, port, handler, note)
 	    return (COMM_ERROR);
 	}
 #else
-	if (fcntl(new_socket, F_SETFL, FNDELAY)) {
-	    debug(0, 0, "comm_open: FD %d: Failure to set FNDELAY: %s\n",
+	if (fcntl(new_socket, F_SETFL, O_NDELAY)) {
+	    debug(0, 0, "comm_open: FD %d: Failure to set O_NDELAY: %s\n",
 		new_socket, xstrerror());
 	    return (COMM_ERROR);
 	}
@@ -815,8 +815,8 @@ int commSetNonBlocking(fd)
 	return (COMM_ERROR);
     }
 #else
-    if (fcntl(fd, F_SETFL, FNDELAY)) {
-	debug(0, 0, "comm_open: FD %d: error setting FNDELAY: %s\n",
+    if (fcntl(fd, F_SETFL, O_NDELAY)) {
+	debug(0, 0, "comm_open: FD %d: error setting O_NDELAY: %s\n",
 	    fd, xstrerror());
 	return (COMM_ERROR);
     }
