@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.68 2001/04/10 17:01:35 hno Exp $
+ * $Id: access_log.cc,v 1.69 2001/08/22 23:26:05 robertc Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -264,16 +264,17 @@ static void
 accessLogCommon(AccessLogEntry * al)
 {
     const char *client = NULL;
-    char *user = NULL;
+    char *user1 = NULL, *user2 = NULL;
     if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
     if (client == NULL)
 	client = inet_ntoa(al->cache.caddr);
-    user = accessLogFormatName(al->cache.authuser);
+    user1 = accessLogFormatName(al->cache.authuser);
+    user2 = accessLogFormatName(al->cache.rfc931);
     logfilePrintf(logfile, "%s %s %s [%s] \"%s %s HTTP/%d.%d\" %d %d %s:%s",
 	client,
-	accessLogFormatName(al->cache.rfc931),
-	user ? user : dash_str,
+	user2 ? user2 : dash_str,
+	user1 ? user1 : dash_str,
 	mkhttpdlogtime(&squid_curtime),
 	al->private.method_str,
 	al->url,
@@ -282,7 +283,8 @@ accessLogCommon(AccessLogEntry * al)
 	al->cache.size,
 	log_tags[al->cache.code],
 	hier_strings[al->hier.code]);
-    safe_free(user);
+    safe_free(user1);
+    safe_free(user2);
 }
 
 void
