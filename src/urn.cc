@@ -93,6 +93,7 @@ urnStart(request_t * r, StoreEntry * e)
     char *host;
     UrnState *urnState;
     StoreEntry *urlres_e;
+    ErrorState *err;
     debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
     urnState = xcalloc(1, sizeof(UrnState));
     urnState->entry = e;
@@ -116,6 +117,13 @@ urnStart(request_t * r, StoreEntry * e)
     safe_free(host);
     k = storeKeyPublic(urlres, METHOD_GET);
     urlres_r = urlParse(METHOD_GET, urlres);
+    if (urlres_r == NULL) {
+	debug(52, 3) ("urnStart: Bad uri-res URL %s\n", urlres);
+	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
+	err->url = xstrdup(urlres);
+	errorAppendEntry(e, err);
+	return;
+    }
     urlres_r->headers = xstrdup("Accept: text/plain\r\n\r\n");
     urlres_r->headers_sz = strlen(urlres_r->headers);
     if ((urlres_e = storeGet(k)) == NULL) {
