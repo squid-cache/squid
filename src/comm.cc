@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.116 1996/12/05 21:23:54 wessels Exp $
+ * $Id: comm.cc,v 1.117 1996/12/06 05:44:41 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -645,8 +645,6 @@ comm_select_incoming(void)
 	if (pfds[i].events == 0)
 	    pfds[i].fd = -1;
     }
-    pfds[N].fd = -1;		/* just in case... */
-    pfds[N].events = 0;
     if (poll(pfds, N, (int) 0) < 1)
 	return;
     getCurrentTime();
