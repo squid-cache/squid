@@ -1,5 +1,5 @@
 /*
- * $Id: strerror.c,v 1.1 1997/02/25 05:44:13 wessels Exp $
+ * $Id: strerror.c,v 1.2 1997/02/25 16:09:10 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Duane Wessels
@@ -42,5 +42,5 @@ extern char *sys_errlist[];
 char *
 strerror(int ern)
 {
-	return sys_errlist[ern];
+    return sys_errlist[ern];
 }

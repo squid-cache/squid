@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.121 1997/02/25 00:18:52 wessels Exp $
+ * $Id: neighbors.cc,v 1.122 1997/02/25 16:09:12 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -114,7 +114,7 @@ static void neighborAlive _PARAMS((peer *, const MemObject *, const icp_common_t
 static void neighborCountIgnored _PARAMS((peer * e, icp_opcode op_unused));
 static neighbor_t parseNeighborType _PARAMS((const char *s));
 static void peerRefreshDNS _PARAMS((void *));
-static void peerDNSConfigure _PARAMS((int fd, const ipcache_addrs *ia, void *data));
+static void peerDNSConfigure _PARAMS((int fd, const ipcache_addrs * ia, void *data));
 
 static icp_common_t echo_hdr;
 static u_short echo_port;
@@ -964,15 +964,15 @@ peerUpdateFudge(void *unused)
 }
 
 static void
-peerDNSConfigure(int fd, const ipcache_addrs *ia, void *data)
+peerDNSConfigure(int fd, const ipcache_addrs * ia, void *data)
 {
     peer *e = data;
     struct sockaddr_in *ap;
     int j;
     if (e->n_addresses == 0) {
-        debug(15, 1, "Configuring %s %s/%d/%d\n", neighborTypeStr(e),
+	debug(15, 1, "Configuring %s %s/%d/%d\n", neighborTypeStr(e),
 	    e->host, e->http_port, e->icp_port);
-        if (e->type == PEER_MULTICAST)
+	if (e->type == PEER_MULTICAST)
 	    debug(15, 1, "    Multicast TTL = %d\n", e->mcast_ttl);
     }
     e->n_addresses = 0;
