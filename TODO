@@ -1,41 +1,57 @@
-+ copy over new -z semantics; don't automatically wipeout cache
+Our Todo List
 
-+ request-range
-+ hit metering
-+ we don't properly handle the HTTP/1.1 'Connection' header
-+ single linked list for disk LRU replacement
-+ ETag support (makes metadata bigger--ack!)
-+ Incorporate Pelletier's latest retry patch for 1.1
-+ FTP PUT
-+ REST for failed ftp transfers.
-+ be more persistent in forwarding requests; return fewer error pages
-+ AS # routing
-+ Send full HTTP requests in ICP messages
-+ Everywhere that we use 'pattern' or such, use ACL elements instead.
-	- stoplist_pattern, refresh_pattern, ...
-+ support ftp://host/pub;type=d
-+ X-Proxy-hops header
-+ SNMP interface
-+ URLs --> MD5?
-+ redo cachemgr utilization
-+ internalize redirectors?
-+ should we write clean store logs from the double-linked list so
-  that they are sorted in order of last reference?  Then upon
-  restart we won't have to worry about the list being unsorted
-  and causing problems with the LRU magic value.
+(1) is high priority, (5) is low priority
+==============================================================================
 
-+ Efficient public peer access control *without ACLs*
-  Bill Wichers <billw@unix0.waveform.net>
-  Dave Zarzycki <zarzycki@ricochet.net>
-  # distant_peer_deny (icmp rtt) (hops)
-  #    If the ICP client is farther than "z" hops away,
-  #    or if more than y% of pings to the client exceed
-  #    x milliseconds, then deny.
-  distant_peer_deny   200  75  10
+(1) reconfigure (SIGHUP) causes problems with Config.cacheSwap.swapDirs[].
+(1) A customizable cache replacement policy.  Ugh, this could be
+    interesting since we just optimized the LRU replacement with a 
+    doubly-linked list.
+(1) Send full HTTP requests in ICP messages
 
-+ #ifdefs to disable IP caching
-+ convert ipcache/fqdncache to double-linked list
-  and lose qsort() calls.
+(2) copy over new -z semantics; don't automatically wipeout cache
+(2) we don't properly handle the HTTP/1.1 'Connection' header
+(2) be more persistent in forwarding requests; return fewer error pages
+(2) SNMP interface
+(2) Fix some problems with peer-selection.
+	- Allow for 'backup' parents
+	- An orderd list of siblings to try.
+	- Hash function load balancing
+
+(3) request-range
+(3) hit metering
+(3) ETag support (makes metadata bigger--ack!)
+(3) AS # routing
+(3) URLs --> MD5?
+(3) Efficient public peer access control *without ACLs*
+    Bill Wichers <billw@unix0.waveform.net>
+    Dave Zarzycki <zarzycki@ricochet.net>
+    # distant_peer_deny (icmp rtt) (hops)
+    #    If the ICP client is farther than "z" hops away,
+    #    or if more than y% of pings to the client exceed
+    #    x milliseconds, then deny.
+    distant_peer_deny   200  75  10
+(3) Resource limits.
+
+(4) support ftp://host/pub;type=d
+(4) FTP PUT
+(4) Everywhere that we use 'pattern' or such, use ACL elements instead.
+    stoplist_pattern, refresh_pattern, ...
+
+(5) X-Proxy-hops header?
+(5) internalize redirectors?
+(5) should we write clean store logs from the double-linked list so
+    that they are sorted in order of last reference?  Then upon
+    restart we won't have to worry about the list being unsorted
+    and causing problems with the LRU magic value.
+(5) For _popular_ objects, return hits if known to be stale, but then
+    initiate an IMS/refresh in the background.
+(5) #ifdefs to disable IP caching
+(5) convert ipcache/fqdncache to double-linked list
+    and lose qsort() calls.
+(5) REST for failed ftp transfers.
+(5) Customizable access logging.
+(5) Inline DNS queries with native resolver calls.
 
 
 DONE:
@@ -45,3 +61,5 @@ DONE:
 + Finish hacking at storeCopy() to achieve in-memory sliding window
   for objects being retrieved.
 + make USE_PROXY_AUTH standard
++ single linked list for disk LRU replacement
++ Incorporate Pelletier's latest retry patch for 1.1
