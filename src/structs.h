@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.390 2001/05/08 15:24:35 hno Exp $
+ * $Id: structs.h,v 1.391 2001/06/29 14:37:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1455,7 +1455,7 @@ struct _MemObject {
 #if URL_CHECKSUM_DEBUG
     unsigned int chksum;
 #endif
-    const char *vary_headers;
+    char *vary_headers;
 };
 
 struct _StoreEntry {
