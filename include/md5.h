@@ -1,11 +1,16 @@
 /*
- * $Id: md5.h,v 1.11 2001/10/17 13:30:49 hno Exp $
+ * $Id: md5.h,v 1.12 2001/11/13 19:25:08 hno Exp $
  */
 
 #ifndef SQUID_MD5_H
 #define SQUID_MD5_H
 
 #if USE_OPENSSL
+
+/*
+ * If Squid is compiled with OpenSSL then we use the MD5 routines
+ * from there via some wrapper macros, and the rest of this file is ignored..
+ */
 
 #if HAVE_OPENSSL_MD5_H
 #include <openssl/md5.h>
