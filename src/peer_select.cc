@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.76 1998/08/21 03:15:21 wessels Exp $
+ * $Id: peer_select.cc,v 1.77 1998/08/25 15:58:14 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -428,7 +428,7 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
 	    }
 	}
     }
-    /* if closest-only is set, the don't allow FIRST_PARENT_MISS */
+    /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
     if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
 	return;
     /* set FIRST_MISS if there is no CLOSEST parent */
