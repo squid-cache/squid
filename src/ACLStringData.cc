@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStringData.cc,v 1.3 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ACLStringData.cc,v 1.4 2003/08/10 01:01:22 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -78,11 +78,10 @@ ACLStringData::~ACLStringData()
         values->destroy(xRefFree);
 }
 
-template<class T>
-inline int
-splaystrcmp (T&l, T&r)
+static int
+splaystrcmp (char * const &l, char * const &r)
 {
-    return strcmp ((char *)l,(char *)r);
+    return strcmp (l,r);
 }
 
 bool

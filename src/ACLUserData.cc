@@ -71,16 +71,14 @@ ACLUserData::~ACLUserData()
         names->destroy(xRefFree);
 }
 
-template<class T>
-inline int
-splaystrcasecmp (T&l, T&r)
+static int
+splaystrcasecmp (char * const &l, char * const &r)
 {
     return strcasecmp ((char *)l,(char *)r);
 }
 
-template<class T>
-inline int
-splaystrcmp (T&l, T&r)
+static int
+splaystrcmp (char * const &l, char * const &r)
 {
     return strcmp ((char *)l,(char *)r);
 }
