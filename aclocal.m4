@@ -29,7 +29,8 @@ define(<<AC_CV_NAME>>, translit(ac_cv_sizeof_$1, [ *], [_p]))dnl
 changequote([, ])dnl
 AC_MSG_CHECKING(size of $1)
 AC_CACHE_VAL(AC_CV_NAME,
-[AC_TRY_RUN([#include <stdio.h>
+[AC_TRY_RUN([
+#include <stdio.h>
 #if STDC_HEADERS
 #include <stdlib.h>
 #include <stddef.h>
@@ -40,13 +41,17 @@ AC_CACHE_VAL(AC_CV_NAME,
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#if HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif
 int main()
 {
   FILE *f=fopen("conftestval", "w");
   if (!f) return(1);
   fprintf(f, "%d\n", sizeof($1));
   return(0);
-}], AC_CV_NAME=`cat conftestval`, AC_CV_NAME=0, ifelse([$2], , , AC_CV_NAME=$2))])dnl
+}
+], AC_CV_NAME=`cat conftestval`, AC_CV_NAME=0, ifelse([$2], , , AC_CV_NAME=$2))])dnl
 AC_MSG_RESULT($AC_CV_NAME)
 AC_DEFINE_UNQUOTED(AC_TYPE_NAME, $AC_CV_NAME)
 undefine([AC_TYPE_NAME])dnl
@@ -61,7 +66,12 @@ AC_CACHE_VAL(ac_cv_type_$1,
 [AC_EGREP_CPP(dnl
 changequote(<<,>>)dnl
 <<(^|[^a-zA-Z_0-9])$1[^a-zA-Z_0-9]>>dnl
-changequote([,]), [#include <sys/types.h>
+changequote([,]), [
+/* What a mess.. many systems have added the (now standard) bit types
+ * in their own ways, so we need to scan a wide variety of headers to
+ * find them..
+ */
+#include <sys/types.h>
 #if STDC_HEADERS
 #include <stdlib.h>
 #include <stddef.h>
@@ -71,7 +81,11 @@ changequote([,]), [#include <sys/types.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif], ac_cv_type_$1=yes, ac_cv_type_$1=no)])dnl
+#endif
+#if HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif
+], ac_cv_type_$1=yes, ac_cv_type_$1=no)])dnl
 AC_MSG_RESULT($ac_cv_type_$1)
 if test $ac_cv_type_$1 = no; then
   AC_DEFINE($1, $2)
