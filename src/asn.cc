@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.84 2002/10/14 08:43:24 hno Exp $
+ * $Id: asn.cc,v 1.85 2002/10/14 10:44:30 adrian Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -86,7 +86,7 @@ struct _rtentry {
     m_int e_mask;
 };
 
-typedef struct _rtentry rtentry;
+typedef struct _rtentry rtentry_t;
 
 static int asnAddNet(char *, int);
 static void asnCacheStart(int as);
@@ -125,7 +125,7 @@ asnMatchIp(void *data, struct in_addr addr)
 	return 0;
     }
     debug(53, 3) ("asnMatchIp: Found in db!\n");
-    e = ((rtentry *) rn)->e_info;
+    e = ((rtentry_t *) rn)->e_info;
     assert(e);
     for (a = (intlist *) data; a; a = a->next)
 	for (b = e->as_number; b; b = b->next)
@@ -341,7 +341,7 @@ asStateFree(void *data)
 static int
 asnAddNet(char *as_string, int as_number)
 {
-    rtentry *e = (rtentry *)xmalloc(sizeof(rtentry));
+    rtentry_t *e = (rtentry_t *)xmalloc(sizeof(rtentry_t));
     struct squid_radix_node *rn;
     char dbg1[32], dbg2[32];
     intlist **Tail = NULL;
@@ -373,12 +373,12 @@ asnAddNet(char *as_string, int as_number)
     addr = ntohl(addr);
     /*mask = ntohl(mask); */
     debug(53, 3) ("asnAddNet: called for %s/%s\n", dbg1, dbg2);
-    memset(e, '\0', sizeof(rtentry));
+    memset(e, '\0', sizeof(rtentry_t));
     store_m_int(addr, e->e_addr);
     store_m_int(mask, e->e_mask);
     rn = squid_rn_lookup(e->e_addr, e->e_mask, AS_tree_head);
     if (rn != NULL) {
-	asinfo = ((rtentry *) rn)->e_info;
+	asinfo = ((rtentry_t *) rn)->e_info;
 	if (intlistFind(asinfo->as_number, as_number)) {
 	    debug(53, 3) ("asnAddNet: Ignoring repeated network '%s/%d' for AS %d\n",
 		dbg1, bitl, as_number);
@@ -415,7 +415,7 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
     struct squid_radix_node_head *rnh = (struct squid_radix_node_head *) w;
 
     if (rn && !(rn->rn_flags & RNF_ROOT)) {
-	rtentry *e = (rtentry *) rn;
+	rtentry_t *e = (rtentry_t *) rn;
 	rn = squid_rn_delete(rn->rn_key, rn->rn_mask, rnh);
 	if (rn == 0)
 	    debug(53, 3) ("destroyRadixNode: internal screwup\n");
@@ -455,7 +455,7 @@ static int
 printRadixNode(struct squid_radix_node *rn, void *_sentry)
 {
     StoreEntry *sentry = (StoreEntry *)_sentry;
-    rtentry *e = (rtentry *) rn;
+    rtentry_t *e = (rtentry_t *) rn;
     intlist *q;
     as_info *asinfo;
     struct in_addr addr;
