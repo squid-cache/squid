@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.91 2001/03/20 01:10:25 hno Exp $
+ * $Id: defines.h,v 1.92 2001/04/20 12:40:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -51,8 +51,6 @@
 #define ACL_ALLWEEK	0x7F
 #define ACL_WEEKDAYS	0x3E
 
-#define DefaultDnsChildrenMax		32	/* 32 processes */
-#define DefaultRedirectChildrenMax	32	/* 32 processes */
 #define MAXHTTPPORTS			12
 
 #define COMM_OK		  (0)

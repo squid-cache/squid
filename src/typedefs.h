@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.125 2001/04/14 00:03:24 hno Exp $
+ * $Id: typedefs.h,v 1.126 2001/04/20 12:40:26 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -85,7 +85,6 @@ typedef struct _SquidConfig2 SquidConfig2;
 typedef struct _close_handler close_handler;
 typedef struct _dread_ctrl dread_ctrl;
 typedef struct _dnsserver_t dnsserver_t;
-typedef struct _dnsStatData dnsStatData;
 typedef struct _dwrite_q dwrite_q;
 typedef struct _ETag ETag;
 typedef struct _fde fde;

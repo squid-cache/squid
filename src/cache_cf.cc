@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.378 2001/03/03 10:39:30 hno Exp $
+ * $Id: cache_cf.cc,v 1.379 2001/04/20 12:40:25 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -284,23 +284,11 @@ configDoConfigure(void)
 #if USE_DNSSERVERS
     if (Config.dnsChildren < 1)
 	fatal("No dnsservers allocated");
-    if (Config.dnsChildren > DefaultDnsChildrenMax) {
-	debug(3, 0) ("WARNING: dns_children was set to a bad value: %d\n",
-	    Config.dnsChildren);
-	debug(3, 0) ("Setting it to the maximum (%d).\n",
-	    DefaultDnsChildrenMax);
-	Config.dnsChildren = DefaultDnsChildrenMax;
-    }
 #endif
     if (Config.Program.redirect) {
 	if (Config.redirectChildren < 1) {
 	    Config.redirectChildren = 0;
 	    wordlistDestroy(&Config.Program.redirect);
-	} else if (Config.redirectChildren > DefaultRedirectChildrenMax) {
-	    debug(3, 0) ("WARNING: redirect_children was set to a bad value: %d\n",
-		Config.redirectChildren);
-	    debug(3, 0) ("Setting it to the maximum (%d).\n", DefaultRedirectChildrenMax);
-	    Config.redirectChildren = DefaultRedirectChildrenMax;
 	}
     }
     if (Config.Accel.host) {

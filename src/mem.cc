@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.56 2001/04/09 21:55:50 hno Exp $
+ * $Id: mem.cc,v 1.57 2001/04/20 12:40:26 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -227,7 +227,6 @@ memInit(void)
     memDataInit(MEM_DLINK_LIST, "dlink_list", sizeof(dlink_list), 10);
     memDataInit(MEM_DLINK_NODE, "dlink_node", sizeof(dlink_node), 10);
     memDataInit(MEM_DNSSERVER_T, "dnsserver_t", sizeof(dnsserver_t), 0);
-    memDataInit(MEM_DNSSTATDATA, "dnsStatData", sizeof(dnsStatData), 0);
     memDataInit(MEM_DOMAIN_PING, "domain_ping", sizeof(domain_ping), 0);
     memDataInit(MEM_DOMAIN_TYPE, "domain_type", sizeof(domain_type), 0);
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
