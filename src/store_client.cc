@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.50 1999/01/08 21:12:16 wessels Exp $
+ * $Id: store_client.cc,v 1.51 1999/01/08 22:07:54 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -529,7 +529,7 @@ CheckQuickAbort2(StoreEntry * entry)
     MemObject *mem = entry->mem_obj;
     assert(mem);
     debug(20, 3) ("CheckQuickAbort2: entry=%p, mem=%p\n", entry, mem);
-    if (!mem->request->flags.cachable) {
+    if (mem->request && !mem->request->flags.cachable) {
 	debug(20, 3) ("CheckQuickAbort2: YES !mem->request->flags.cachable\n");
 	return 1;
     }
