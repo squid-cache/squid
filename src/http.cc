@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.62 1996/07/18 20:27:02 wessels Exp $
+ * $Id: http.cc,v 1.63 1996/07/19 17:38:38 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -203,7 +203,7 @@ static void httpLifetimeExpire(fd, httpState)
 static void httpMakePublic(entry)
      StoreEntry *entry;
 {
-    entry->expires = squid_curtime + ttlSet(entry);
+    ttlSet(entry);
     if (BIT_TEST(entry->flag, CACHABLE))
 	storeSetPublicKey(entry);
 }

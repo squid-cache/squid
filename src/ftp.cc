@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.44 1996/07/19 02:42:21 wessels Exp $
+ * $Id: ftp.cc,v 1.45 1996/07/19 17:38:36 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -274,7 +274,7 @@ static void ftpProcessReplyHeader(data, buf, size)
 	case 301:		/* Moved Permanently */
 	case 410:		/* Gone */
 	    /* These can be cached for a long time, make the key public */
-	    entry->expires = squid_curtime + ttlSet(entry);
+	    ttlSet(entry);
 	    if (BIT_TEST(entry->flag, CACHABLE))
 		storeSetPublicKey(entry);
 	    break;
@@ -382,7 +382,7 @@ int ftpReadReply(fd, data)
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
 	} else if (!(entry->flag & DELETE_BEHIND)) {
-	    entry->expires = squid_curtime + ttlSet(entry);
+	    ttlSet(entry);
 	}
 	/* update fdstat and fdtable */
 	storeComplete(entry);
