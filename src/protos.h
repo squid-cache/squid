@@ -499,6 +499,7 @@ extern int netdbHops(struct in_addr);
 extern void netdbFreeMemory(void);
 extern int netdbHostHops(const char *host);
 extern int netdbHostRtt(const char *host);
+extern int netdbHostPeerRtt(const char *host, peer * peer);
 extern void netdbUpdatePeer(request_t *, peer * e, int rtt, int hops);
 extern void netdbDeleteAddrNetwork(struct in_addr addr);
 extern int netdbHostPeerRtt(const char *host, peer * peer);
@@ -510,6 +511,10 @@ extern void cachemgrInit(void);
 extern void peerSelect(request_t *, StoreEntry *, PSC *, PSC *, void *data);
 extern peer *peerGetSomeParent(request_t *, hier_code *);
 extern void peerSelectInit(void);
+
+/* peer_digest.c */
+extern void peerDigestValidate(peer *p);
+extern void peerDigestRequest(peer *p);
 
 extern void protoDispatch(int, StoreEntry *, request_t *);
 
@@ -821,6 +826,8 @@ extern method_t urlParseMethod(const char *);
 extern void urlInitialize(void);
 extern request_t *urlParse(method_t, char *);
 extern char *urlCanonical(const request_t *, char *);
+extern char *urlRInternal(const char *host, int port, const char *dir, const char *name);
+extern char *urlInternal(const char *dir, const char *name);
 extern request_t *requestLink(request_t *);
 extern void requestUnlink(request_t *);
 extern int matchDomainName(const char *d, const char *h);
