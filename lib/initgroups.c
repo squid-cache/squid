@@ -18,6 +18,9 @@
 #if HAVE_LIMITS_H
 #include <limits.h>
 #endif
+#if !HAVE_INITGROUPS
+#include "initgroups.h"
+#endif
 
 int initgroups(const char *name, gid_t basegid)
 {
