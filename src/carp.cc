@@ -1,7 +1,7 @@
 /*
- * $Id: carp.cc,v 1.4 1998/07/22 20:37:04 wessels Exp $
+ * $Id: carp.cc,v 1.5 1998/08/13 21:14:39 wessels Exp $
  *
- * DEBUG: section 44    Cache Array Routing Protocol
+ * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -86,7 +86,7 @@ carpSelectParent(request_t * request)
     unsigned long high_score = 0;
     const char *url = urlCanonical(request);
     /* calculate url hash */
-    debug(44, 2) ("carpSelectParent: CARP Calculating hash for %s\n", url);
+    debug(39, 2) ("carpSelectParent: CARP Calculating hash for %s\n", url);
     for (c = url; *c != 0; c++)
 	url_hash += (url_hash << 19) + *c;
     /* select peer */
@@ -98,7 +98,7 @@ carpSelectParent(request_t * request)
 	combined_hash += combined_hash * 0x62531965;
 	combined_hash = combined_hash << 21;
 	combined_hash = combined_hash * tp->carp.load_multiplier;
-	debug(44, 3) ("carpSelectParent: %s combined_hash %d\n",
+	debug(39, 3) ("carpSelectParent: %s combined_hash %d\n",
 	    tp->host, combined_hash);
 	if ((combined_hash > high_score) && neighborUp(tp)) {
 	    p = tp;
@@ -106,7 +106,7 @@ carpSelectParent(request_t * request)
 	}
     }
     if (p)
-	debug(44, 3) ("carpSelectParent: selected CARP %s\n", p->host);
+	debug(39, 3) ("carpSelectParent: selected CARP %s\n", p->host);
     return p;
 }
 #endif

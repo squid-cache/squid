@@ -1,8 +1,7 @@
 
 /*
- * $Id: ETag.cc,v 1.4 1998/07/22 20:36:41 wessels Exp $
+ * $Id: ETag.cc,v 1.5 1998/08/13 21:14:39 wessels Exp $
  *
- * DEBUG: section 7?    HTTP ETag
  * AUTHOR: Alex Rousskov
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
