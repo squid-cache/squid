@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.19 1998/02/10 00:58:44 wessels Exp $
+ * $Id: unlinkd.cc,v 1.20 1998/02/10 02:47:35 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -74,40 +74,8 @@ main(int argc, char *argv[])
 
 #include "squid.h"
 
-static int unlinkd_fd = -1;
-
-static int unlinkdCreate(void);
-
-static int
-unlinkdCreate(void)
-{
-#if USE_UNLINKD
-    int x;
-    int rfd;
-    int wfd;
-    char *args[2];
-    struct timeval slp;
-    args[0] = "(unlinkd)";
-    args[1] = NULL;
-    x = ipcCreate(IPC_FIFO,
-	Config.Program.unlinkd,
-	args,
-	"unlinkd",
-	&rfd,
-	&wfd);
-    if (x < 0)
-	return -1;
-    slp.tv_sec = 0;
-    slp.tv_usec = 250000;
-    select(0, NULL, NULL, NULL, &slp);
-    fd_note(wfd, "squid -> unlinkd");
-    fd_note(rfd, "unlinkd -> squid");
-    commSetTimeout(rfd, -1, NULL, NULL);
-    commSetTimeout(wfd, -1, NULL, NULL);
-    commSetNonBlocking(wfd);
-    return wfd;
-#endif
-}
+static int unlinkd_wfd = -1;
+static int unlinkd_rfd = -1;
 
 void
 unlinkdUnlink(const char *path)
@@ -115,8 +83,8 @@ unlinkdUnlink(const char *path)
 #if USE_UNLINKD
     char *buf;
     int l;
-    if (unlinkd_fd < 0) {
-	debug_trap("unlinkdUnlink: unlinkd_fd < 0");
+    if (unlinkd_wfd < 0) {
+	debug_trap("unlinkdUnlink: unlinkd_wfd < 0");
 	safeunlink(path, 0);
 	return;
     }
@@ -124,7 +92,7 @@ unlinkdUnlink(const char *path)
     buf = xcalloc(1, l + 1);
     strcpy(buf, path);
     strcat(buf, "\n");
-    file_write(unlinkd_fd,
+    file_write(unlinkd_wfd,
 	-1,
 	buf,
 	l,
@@ -139,13 +107,15 @@ void
 unlinkdClose(void)
 {
 #if USE_UNLINKD
-    if (unlinkd_fd < 0) {
-	debug_trap("unlinkdClose: unlinkd_fd < 0");
+    if (unlinkd_wfd < 0) {
+	debug_trap("unlinkdClose: unlinkd_wfd < 0");
 	return;
     }
-    debug(43, 1)("Closing unlinkd pipe on FD %d\n", unlinkd_fd);
-    file_close(unlinkd_fd);
-    unlinkd_fd = -1;
+    debug(43, 1) ("Closing unlinkd pipe on FD %d\n", unlinkd_wfd);
+    file_close(unlinkd_wfd);
+    file_close(unlinkd_rfd);
+    unlinkd_wfd = -1;
+    unlinkd_rfd = -1;
 #endif
 }
 
@@ -153,10 +123,29 @@ void
 unlinkdInit(void)
 {
 #if USE_UNLINKD
-    unlinkd_fd = unlinkdCreate();
-    if (unlinkd_fd < 0)
-	fatal("unlinkdInit: failed to start unlinkd\n");
-    debug(43, 0) ("Unlinkd pipe opened on FD %d\n", unlinkd_fd);
+    int x;
+    char *args[2];
+    struct timeval slp;
+    args[0] = "(unlinkd)";
+    args[1] = NULL;
+    x = ipcCreate(IPC_FIFO,
+	Config.Program.unlinkd,
+	args,
+	"unlinkd",
+	&unlinkd_rfd,
+	&unlinkd_wfd);
+    if (x < 0)
+	fatal("Failed to create unlinkd subprocess");
+    slp.tv_sec = 0;
+    slp.tv_usec = 250000;
+    select(0, NULL, NULL, NULL, &slp);
+    fd_note(unlinkd_wfd, "squid -> unlinkd");
+    fd_note(unlinkd_rfd, "unlinkd -> squid");
+    commSetTimeout(unlinkd_rfd, -1, NULL, NULL);
+    commSetTimeout(unlinkd_wfd, -1, NULL, NULL);
+    commSetNonBlocking(unlinkd_wfd);
+    commSetNonBlocking(unlinkd_rfd);
+    debug(43, 0) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
 #endif
 }
 
