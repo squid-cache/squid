@@ -1033,7 +1033,7 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
   
 
-# From configure.in Revision: 1.276 
+# From configure.in Revision: 1.277 
 echo $ac_n "checking whether to enable maintainer-specific portions of Makefiles""... $ac_c" 1>&6
 echo "configure:1039: checking whether to enable maintainer-specific portions of Makefiles" >&5
     # Check whether --enable-maintainer-mode or --disable-maintainer-mode was given.
@@ -8815,6 +8815,7 @@ trap 'rm -fr `echo "\
 	helpers/external_acl/ldap_group/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
+	helpers/external_acl/winbind_group/Makefile \
  include/autoconf.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -9037,6 +9038,7 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	helpers/external_acl/ldap_group/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
+	helpers/external_acl/winbind_group/Makefile \
 "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
