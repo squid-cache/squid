@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.c,v 1.5 1999/04/18 05:10:07 wessels Exp $
+ * $Id: rfc1035.c,v 1.6 1999/04/18 05:26:22 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -495,7 +495,6 @@ rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t * szp)
 	(i >> 16) & 255,
 	(i >> 8) & 255,
 	i & 255);
-    printf("rfc1035BuildPTRQuery: {%s}\n", rev);
     h.id = rfc1035Qid();
     h.qr = 0;
     h.rd = 1;
