@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.274 1997/07/16 20:32:19 wessels Exp $
+ * $Id: store.cc,v 1.275 1997/07/16 22:57:24 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -267,6 +267,7 @@ static StoreEntry *new_StoreEntry _PARAMS((int, const char *));
 static StoreEntry *storeAddDiskRestore _PARAMS((const char *,
 	int,
 	int,
+	time_t,
 	time_t,
 	time_t,
 	time_t,
@@ -764,7 +765,16 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
 static StoreEntry *
-storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, time_t timestamp, time_t lastmod, u_num32 refcount, u_num32 flags, int clean)
+storeAddDiskRestore(const char *url,
+	int file_number,
+	int size,
+	time_t expires,
+	time_t timestamp,
+	time_t lastref,
+	time_t lastmod,
+	u_num32 refcount,
+	u_num32 flags,
+	int clean)
 {
     StoreEntry *e = NULL;
     debug(20, 5) ("StoreAddDiskRestore: %s, fileno=%08X\n", url, file_number);
@@ -783,7 +793,7 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     e->object_len = size;
     e->lock_count = 0;
     e->refcount = 0;
-    e->lastref = timestamp;
+    e->lastref = lastref;
     e->timestamp = timestamp;
     e->expires = expires;
     e->lastmod = lastmod;
@@ -1271,6 +1281,7 @@ storeDoRebuildFromDisk(void *data)
     StoreEntry *e = NULL;
     time_t expires;
     time_t timestamp;
+    time_t lastref;
     time_t lastmod;
     int scan1;
     int scan2;
@@ -1278,6 +1289,7 @@ storeDoRebuildFromDisk(void *data)
     int scan4;
     int scan5;
     int scan6;
+    int scan7;
     off_t size;
     int sfileno = 0;
     int count;
@@ -1318,21 +1330,25 @@ storeDoRebuildFromDisk(void *data)
 	scan2 = 0;
 	scan3 = 0;
 	scan4 = 0;
-	x = sscanf(RB->line_in, "%x %x %x %x %d %d %x %s",
+	scan5 = 0;
+	scan6 = 0;
+	scan7 = 0;
+	x = sscanf(RB->line_in, "%x %x %x %x %x %d %d %x %s",
 	    &sfileno,		/* swap_file_number */
 	    &scan1,		/* timestamp */
-	    &scan2,		/* expires */
-	    &scan3,		/* last modified */
-	    &scan4,		/* size */
-	    &scan5,		/* refcount */
-	    &scan6,		/* flags */
+	    &scan2,		/* lastref */
+	    &scan3,		/* expires */
+	    &scan4,		/* last modified */
+	    &scan5,		/* size */
+	    &scan6,		/* refcount */
+	    &scan7,		/* flags */
 	    url);		/* url */
 	if (x < 1) {
 	    RB->invalid++;
 	    continue;
 	}
 	storeSwapFullPath(sfileno, swapfile);
-	if (x != 8) {
+	if (x != 9) {
 	    RB->invalid++;
 	    continue;
 	}
@@ -1340,15 +1356,16 @@ storeDoRebuildFromDisk(void *data)
 	    RB->invalid++;
 	    continue;
 	}
-	if (BIT_TEST(scan6, KEY_PRIVATE)) {
+	if (BIT_TEST(scan7, KEY_PRIVATE)) {
 	    RB->badflags++;
 	    continue;
 	}
 	sfileno = storeDirProperFileno(d->dirn, sfileno);
 	timestamp = (time_t) scan1;
-	expires = (time_t) scan2;
-	lastmod = (time_t) scan3;
-	size = (off_t) scan4;
+	lastref = (time_t) scan2;
+	expires = (time_t) scan3;
+	lastmod = (time_t) scan4;
+	size = (off_t) scan5;
 
 	e = storeGet(url);
 	used = storeDirMapBitTest(sfileno);
@@ -1369,8 +1386,8 @@ storeDoRebuildFromDisk(void *data)
 	    e->timestamp = timestamp;
 	    e->expires = expires;
 	    e->lastmod = lastmod;
-	    e->flag |= (u_num32) scan5;
-	    e->refcount += (u_num32) scan6;
+	    e->flag |= (u_num32) scan6;
+	    e->refcount += (u_num32) scan7;
 	    continue;
 	} else if (used) {
 	    /* swapfile in use, not by this URL, log entry is newer */
@@ -1410,9 +1427,10 @@ storeDoRebuildFromDisk(void *data)
 	    (int) size,
 	    expires,
 	    timestamp,
+	    lastref,
 	    lastmod,
-	    (u_num32) scan5,	/* refcount */
-	    (u_num32) scan6,	/* flags */
+	    (u_num32) scan6,	/* refcount */
+	    (u_num32) scan7,	/* flags */
 	    d->clean);
 	storeDirSwapLog(e);
 	HTTPCacheInfo->proto_newobject(HTTPCacheInfo,
@@ -1804,7 +1822,7 @@ storeGetMemSpace(int size)
 
     i = 3;
     if (sm_stats.n_pages_in_use > store_pages_max) {
-	if (sm_stats.n_pages_in_use > last_warning * 1.05) {
+	if (sm_stats.n_pages_in_use > last_warning * 1.10) {
 	    debug(20, 0) ("WARNING: Exceeded 'cache_mem' size (%dK > %dK)\n",
 		sm_stats.n_pages_in_use * 4, store_pages_max * 4);
 	    last_warning = sm_stats.n_pages_in_use;
@@ -2447,9 +2465,10 @@ storeWriteCleanLogs(void)
 	assert(dirn < Config.cacheSwap.n_configured);
 	if (fd[dirn] < 0)
 	    continue;
-	sprintf(line, "%08x %08x %08x %08x %9d %6d %08x %s\n",
+	sprintf(line, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
 	    (int) e->swap_file_number,
 	    (int) e->timestamp,
+	    (int) e->lastref,
 	    (int) e->expires,
 	    (int) e->lastmod,
 	    e->object_len,
@@ -2677,7 +2696,6 @@ storeFreeMemory(void)
     xfree(list);
     hashFreeMemory(store_table);
     safe_free(MaintBucketsOrder);
-    storeDirCloseSwapLogs();
 }
 
 int
