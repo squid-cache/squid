@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.47 1998/02/27 05:51:15 kostas Exp $
+ * $Id: util.c,v 1.48 1998/02/27 07:13:53 kostas Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -492,7 +492,7 @@ xmalloc(size_t sz)
     xmalloc_show_trace(p, 1);
 #endif
 #if MEM_GEN_TRACE
-	fprintf(tracefp, "m:%d:%x\n",sz,p);
+	fprintf(tracefp, "m:%d:%p\n",sz,p);
 #endif
     return (p);
 }
@@ -513,7 +513,7 @@ xfree(void *s)
     if (s != NULL)
 	free(s);
 #if MEM_GEN_TRACE
-    fprintf(tracefp,"f:%x\n",s);
+    fprintf(tracefp,"f:%p\n",s);
 #endif
 }
 
@@ -529,7 +529,7 @@ xxfree(void *s)
 #endif
     free(s);
 #if MEM_GEN_TRACE
-    fprintf(tracefp,"f:%x\n",s);
+    fprintf(tracefp,"f:%p\n",s);
 #endif
 }
 
@@ -603,7 +603,7 @@ xcalloc(int n, size_t sz)
     xmalloc_show_trace(p, 1);
 #endif
 #if MEM_GEN_TRACE
-	fprintf(tracefp,"c:%d:%d:%x\n", n, sz,p);
+	fprintf(tracefp,"c:%d:%d:%p\n", n, sz,p);
 #endif
     return (p);
 }
