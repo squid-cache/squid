@@ -38,3 +38,5 @@
 	- eliminated dual logging to stderr/debug_log
 	- added 'ftp_user' to config
 	- added improved IP ACL routines; now handles netmasks.
+	- Added storeEntryValidLength().  Objects with invalid 
+	  content lengths will be ejected.
