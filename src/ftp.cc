@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.290 2000/05/02 20:20:10 hno Exp $
+ * $Id: ftp.cc,v 1.291 2000/05/02 20:25:33 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -896,7 +896,7 @@ ftpDataRead(int fd, void *data)
 	ftpListingStart(ftpState);
     }
     if (len < 0) {
-	debug(50, 1) ("ftpDataRead: read error: %s\n", xstrerror());
+	debug(50, ignoreErrno(errno) ? 3 : 1) ("ftpDataRead: read error: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
@@ -1247,7 +1247,7 @@ ftpReadControlReply(int fd, void *data)
     }
     debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, len);
     if (len < 0) {
-	debug(50, 1) ("ftpReadControlReply: read error: %s\n", xstrerror());
+	debug(50, ignoreErrno(errno) ? 3 : 1) ("ftpReadControlReply: read error: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
 	    ftpScheduleReadControlReply(ftpState, 0);
 	} else {
