@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.208 1998/05/14 16:33:51 wessels Exp $
+ * $Id: neighbors.cc,v 1.209 1998/05/14 20:48:05 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -939,7 +939,7 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     ap->sin_port = htons(p->icp_port);
     if (p->type == PEER_MULTICAST)
 	peerCountMcastPeersSchedule(p, 10);
-    eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30);
+    eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30, 1);
 }
 
 static void
@@ -954,7 +954,7 @@ peerRefreshDNS(void *datanotused)
 	ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
     }
     /* Reconfigure the peers every hour */
-    eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 3600);
+    eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 3600, 1);
 }
 
 /*
@@ -994,7 +994,7 @@ peerCheckConnectDone(int fd, int status, void *data)
 	debug(15, 0) ("TCP connection to %s/%d succeeded\n",
 	    p->host, p->http_port);
     } else {
-	eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
+	eventAdd("peerCheckConnect", peerCheckConnect, p, 80, 1);
     }
     comm_close(fd);
     return;
@@ -1008,7 +1008,7 @@ peerCheckConnectStart(peer * p)
     debug(15, 0) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
     p->tcp_up = 0;
     p->last_fail_time = squid_curtime;
-    eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
+    eventAdd("peerCheckConnect", peerCheckConnect, p, 80, 1);
 }
 
 static void
@@ -1019,7 +1019,7 @@ peerCountMcastPeersSchedule(peer * p, time_t when)
     eventAdd("peerCountMcastPeersStart",
 	peerCountMcastPeersStart,
 	p,
-	when);
+	when, 1);
     p->mcast.flags |= PEER_COUNT_EVENT_PENDING;
 }
 
@@ -1059,7 +1059,7 @@ peerCountMcastPeersStart(void *data)
     eventAdd("peerCountMcastPeersDone",
 	peerCountMcastPeersDone,
 	psstate,
-	Config.neighborTimeout);
+	Config.neighborTimeout, 1);
     p->mcast.flags |= PEER_COUNTING;
     peerCountMcastPeersSchedule(p, MCAST_COUNT_RATE);
 }

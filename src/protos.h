@@ -165,8 +165,8 @@ extern dnsserver_t *dnsGetFirstAvailable(void);
 extern void dnsStats(StoreEntry *);
 extern void dnsFreeMemory(void);
 
-extern void eventAdd(const char *name, EVH * func, void *arg, time_t when);
-extern void eventAddIsh(const char *name, EVH * func, void *arg, time_t delta_ish);
+extern void eventAdd(const char *name, EVH * func, void *arg, time_t when, int);
+extern void eventAddIsh(const char *name, EVH * func, void *arg, time_t delta_ish, int);
 extern void eventRun(void);
 extern time_t eventNextTime(void);
 extern void eventDelete(EVH * func, void *arg);

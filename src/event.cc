@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.15 1998/05/13 21:20:42 wessels Exp $
+ * $Id: event.cc,v 1.16 1998/05/14 20:47:59 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -38,13 +38,14 @@ struct ev_entry {
     const char *name;
     time_t when;
     struct ev_entry *next;
+    int weight;
 };
 
 static struct ev_entry *tasks = NULL;
 static OBJH eventDump;
 
 void
-eventAdd(const char *name, EVH * func, void *arg, time_t when)
+eventAdd(const char *name, EVH * func, void *arg, time_t when, int weight)
 {
     struct ev_entry *event = xcalloc(1, sizeof(struct ev_entry));
     struct ev_entry **E;
@@ -52,6 +53,7 @@ eventAdd(const char *name, EVH * func, void *arg, time_t when)
     event->arg = arg;
     event->name = name;
     event->when = squid_curtime + when;
+    event->weight = weight;
     if (NULL != arg)
         cbdataLock(arg);
     debug(41, 7) ("eventAdd: Adding '%s', in %d seconds\n", name, (int) when);
@@ -66,13 +68,13 @@ eventAdd(const char *name, EVH * func, void *arg, time_t when)
 
 /* same as eventAdd but adds a random offset within +-1/3 of delta_ish */
 void
-eventAddIsh(const char *name, EVH * func, void *arg, time_t delta_ish)
+eventAddIsh(const char *name, EVH * func, void *arg, time_t delta_ish, int weight)
 {
     if (delta_ish >= 3) {
 	const time_t two_third = (2 * delta_ish) / 3;
 	delta_ish = two_third + (squid_random() % two_third);
     }
-    eventAdd(name, func, arg, delta_ish);
+    eventAdd(name, func, arg, delta_ish, weight);
 }
 
 void
@@ -100,24 +102,28 @@ eventRun(void)
     struct ev_entry *event = NULL;
     EVH *func;
     void *arg;
-    if ((event = tasks) == NULL)
-	return;
-    if (event->when > squid_curtime)
-	return;
-    func = event->func;
-    arg = event->arg;
-    event->func = NULL;
-    event->arg = NULL;
-    tasks = event->next;
-    if (NULL != arg) {
-        int valid = cbdataValid(arg);
-        cbdataUnlock(arg);
-        if (!valid)
-	    return;
+    int weight = 0;
+    while (0 == weight) {
+        if ((event = tasks) == NULL)
+	    break;
+        if (event->when > squid_curtime)
+	    break;
+        func = event->func;
+        arg = event->arg;
+        event->func = NULL;
+        event->arg = NULL;
+        tasks = event->next;
+        if (NULL != arg) {
+            int valid = cbdataValid(arg);
+            cbdataUnlock(arg);
+            if (!valid)
+	        return;
+        }
+        weight += event->weight;
+        debug(41, 7) ("eventRun: Running '%s'\n", event->name);
+        func(arg);
+        safe_free(event);
     }
-    debug(41, 7) ("eventRun: Running '%s'\n", event->name);
-    func(arg);
-    safe_free(event);
 }
 
 time_t
