@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.621 2003/02/14 23:11:36 hno Exp $
+ * $Id: client_side.cc,v 1.622 2003/02/20 00:13:04 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1373,7 +1373,7 @@ parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p,
 	if (sscanf(token + 5, "%d.%d", &http_ver_p->major,
 		&http_ver_p->minor) != 2) {
 	    debug(33, 3) ("parseHttpRequest: Invalid HTTP identifier.\n");
-	    return parseHttpRequestAbort(conn, "error: invalid HTTP-ident");
+	    return parseHttpRequestAbort(conn, "error:invalid-http-ident");
 	}
 	debug(33, 6) ("parseHttpRequest: Client HTTP version %d.%d.\n",
 	    http_ver_p->major, http_ver_p->minor);
