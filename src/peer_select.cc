@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.83 1998/09/18 21:44:17 wessels Exp $
+ * $Id: peer_select.cc,v 1.84 1998/09/19 15:28:44 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -396,15 +396,15 @@ peerPingTimeout(void *data)
 {
     ps_state *psstate = data;
     StoreEntry *entry = psstate->entry;
+    if (entry)
+	debug(44, 3) ("peerPingTimeout: '%s'\n", storeUrl(entry));
+    entry->ping_status = PING_TIMEOUT;
     if (!cbdataValid(psstate->callback_data)) {
 	/* request aborted */
 	cbdataUnlock(psstate->callback_data);
 	peerSelectStateFree(psstate);
 	return;
     }
-    if (entry)
-	debug(44, 3) ("peerPingTimeout: '%s'\n", storeUrl(entry));
-    entry->ping_status = PING_TIMEOUT;
     PeerStats.timeouts++;
     psstate->ping.timedout = 1;
     peerSelectFoo(psstate);
