@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
+<META CONTENT-TYPE=text/html; charset=iso-8859-2>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>URL-ul cerut nu a putut fi citit</H2>
+<HR>
+<P>
+În timp ce citeam URL-ul:
+<A HREF="%U">%U</A>
+<P>
+Am întâlnit următoarea eroare:
+<UL>
+<LI>
+<STRONG>
+URL invalid
+</STRONG>
+</UL>
+
+<P>
+Câteva aspecte ale URL-ului cerunt sunt incorecte. Probleme posibile:
+<UL>
+<LI>Lipseşte sau este incorect protocolul de access (ar trebui să fie `http://' sau ceva similar)
+<LI>Lipseşte numele calculatorului
+<LI>Caracterul escape-dublu este ilegal în calea URL
+<LI>Caracter(e) ilegal în numele calculatorului; underscore (_) nu este acceptat
+</UL>
+</P>

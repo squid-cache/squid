@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
+<META CONTENT-TYPE=text/html; charset=iso-8859-2>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>URL-ul cerut nu a putut fi citit</H2>
+<HR>
+<P>
+O eroare de FTP a survenit în
+timp ce încercam să citesc URL-ul:
+<A HREF="%U">%U</A>
+<P>
+Squid a trimis următoarea comandă FTP:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+şi a primit această replică
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+Acest lucru ar putea fi cauzat de un URL FTP cu o cale absolută
+(fapt care nu este coform cu standardul RFC 1738). Dacă aceasta 
+este cauza, atunci fişierul poate fi găsit la adresa
+<A HREF="%B">%B</A>.
+</P>

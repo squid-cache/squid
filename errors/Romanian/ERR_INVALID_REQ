@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
+<META CONTENT-TYPE=text/html; charset=iso-8859-2>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>URL-ul cerut nu a putut fi citit</H2>
+<HR>
+<P>
+În timp ce citeam URL-ul:
+<A HREF="%U">%U</A>
+<P>
+Am întâlnit următoarea eroare:
+<UL>
+<LI>
+<STRONG>
+Cerere invalidă
+</STRONG>
+</UL>
+
+<P>
+Câteva aspecte ale cererii HTTP sunt invalide. Probleme posibile:
+<UL>
+<LI>Comanda din cerere lipseşte sau este necunoscută
+<LI>URL-ul lipseşte
+<LI>Lipseşte identificatorul HTTP (HTTP/1.0)
+<LI>Cererea este prea mare
+<LI>Câmpul <B>Content-Length</B> lipseşte pentru cereri POST sau PUT
+<LI>Caracter(e) ilegal în numele calculatorului; underscore (_) nu este acceptat
+</UL>
+</P>
