@@ -1,5 +1,5 @@
 /*
- * $Id: cache_diff.cc,v 1.3 1998/03/29 20:32:16 rousskov Exp $
+ * $Id: cache_diff.cc,v 1.4 1998/03/29 20:39:53 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -174,7 +174,10 @@ cacheIndexScan(CacheIndex *idx, const char *fname, FILE *file)
 	    if (!olde)
 		idx->bad_del_count++;
 	    else {
+		assert(idx->count);
 		hash_remove_link(idx->hash, (hash_link*) olde);
+		cacheEntryDestroy(olde);
+		idx->count--;
 	    }
 	} else {
 	    fprintf(stderr, "%s:%d: unknown swap log action\n", fname, count);
@@ -203,6 +206,7 @@ static void
 cacheIndexCmp(CacheIndex *idx1, CacheIndex *idx2)
 {
     int shared_count = 0;
+    int hashed_count = 0;
     hash_link *hashr = NULL;
     CacheIndex *small_idx = idx1;
     CacheIndex *large_idx = idx2;
@@ -215,9 +219,11 @@ cacheIndexCmp(CacheIndex *idx1, CacheIndex *idx2)
     }
     /* find shared_count */
     for (hashr = hash_first(small_idx->hash); hashr; hashr = hash_next(small_idx->hash)) {
+	hashed_count++;
 	if (hash_lookup(large_idx->hash, hashr->key))
 	    shared_count++;
     }
+    assert(hashed_count == small_idx->count);
 
     cacheIndexCmpReport(idx1, shared_count);
     cacheIndexCmpReport(idx2, shared_count);
