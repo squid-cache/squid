@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.328 1999/05/04 20:49:36 wessels Exp $
+ * $Id: cache_cf.cc,v 1.329 1999/05/10 19:27:50 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -406,7 +406,7 @@ parseBytesLine(size_t * bptr, const char *units)
 	self_destruct();
     d = atof(token);
     m = u;			/* default to 'units' if none specified */
-    if (0 == d)
+    if (0.0 == d)
 	(void) 0;
     else if ((token = strtok(NULL, w_space)) == NULL)
 	debug(3, 0) ("WARNING: No units on '%s', assuming %f %s\n",
