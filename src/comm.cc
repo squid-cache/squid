@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.311 2000/10/20 23:51:00 hno Exp $
+ * $Id: comm.cc,v 1.312 2000/11/01 03:58:51 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -534,7 +534,7 @@ commCallCloseHandlers(int fd)
 	if (cbdataValid(ch->data))
 	    ch->handler(fd, ch->data);
 	cbdataUnlock(ch->data);
-	memPoolFree(conn_close_pool, ch);	// AAA
+	memPoolFree(conn_close_pool, ch);	/* AAA */
     }
 }
 
@@ -654,7 +654,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t
 void
 comm_add_close_handler(int fd, PF * handler, void *data)
 {
-    close_handler *new = memPoolAlloc(conn_close_pool);	// AAA
+    close_handler *new = memPoolAlloc(conn_close_pool);		/* AAA */
     close_handler *c;
     debug(5, 5) ("comm_add_close_handler: FD %d, handler=%p, data=%p\n",
 	fd, handler, data);
@@ -685,7 +685,8 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     else
 	fd_table[fd].close_handler = p->next;
     cbdataUnlock(p->data);
-    memPoolFree(conn_close_pool,p);	// AAA
+    memPoolFree(conn_close_pool, p);	/* AAA */
+
 }
 
 static void
@@ -720,27 +721,26 @@ commSetNonBlocking(int fd)
 {
     int flags;
     int dummy = 0;
-#ifdef _SQUID_CYGWIN_ 
+#ifdef _SQUID_CYGWIN_
     int nonblocking = TRUE;
-    if(fd_table[fd].type != FD_PIPE) {
-        if(ioctl(fd, FIONBIO, &nonblocking) < 0) {
-            debug(50, 0) ("commSetNonBlocking: FD %d: %s %D\n", fd, xstrerror(), fd_table[fd].type);
-            return COMM_ERROR;
-        }
+    if (fd_table[fd].type != FD_PIPE) {
+	if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
+	    debug(50, 0) ("commSetNonBlocking: FD %d: %s %D\n", fd, xstrerror(), fd_table[fd].type);
+	    return COMM_ERROR;
+	}
+    } else {
+#endif
+	if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
+	    debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
+	    return COMM_ERROR;
+	}
+	if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
+	    debug(50, 0) ("commSetNonBlocking: FD %d: %s\n", fd, xstrerror());
+	    return COMM_ERROR;
+	}
+#ifdef _SQUID_CYGWIN_
     }
-    else {
-#endif 
-    if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
-	debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
-	return COMM_ERROR;
-    }
-    if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
-	debug(50, 0) ("commSetNonBlocking: FD %d: %s\n", fd, xstrerror());
-	return COMM_ERROR;
-    }
-#ifdef _SQUID_CYGWIN_ 
-   } 
-#endif 
+#endif
     fd_table[fd].flags.nonblocking = 1;
     return 0;
 }
