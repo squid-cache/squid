@@ -31,6 +31,13 @@
  *
  * History:
  *
+ * Version 1.20
+ * 10-05-2003 Roberto Moreda
+ *              Added support for domain-qualified group Microsoft notation
+ *              (DOMAIN\Groupname). 
+ *            Guido Serassio
+ *              More debug info.
+ *              Updated documentation.
  * Version 1.10
  * 26-04-2003 Guido Serassio
  *              Added option for case insensitive group name comparation.
@@ -64,16 +71,13 @@
 
 #include "nsswitch/winbind_nss_config.h"
 #include "nsswitch/winbindd_nss.h"
+#include "wb_common.h"
 
 #define BUFSIZE 8192		/* the stdin buffer size */
 char debug_enabled=0;
-char *myname;
+const char *myname;
 pid_t mypid;
-int use_case_insensitive_compare=0;
-
-NSS_STATUS winbindd_request(int req_type,
-			    struct winbindd_request *request,
-			    struct winbindd_response *response);
+static int use_case_insensitive_compare=0;
 
 static char *
 strwordtok(char *buf, char **t)
@@ -121,7 +125,7 @@ strwordtok(char *buf, char **t)
 }
 
 
-int strCaseCmp (const char *s1, const char *s2)
+static int strCaseCmp (const char *s1, const char *s2)
 {
     while (*s1 && toupper (*s1) == toupper (*s2)) s1++, s2++;
     return *s1 - *s2;
@@ -129,7 +133,7 @@ int strCaseCmp (const char *s1, const char *s2)
 
 /* Convert sid to string */
 
-char * wbinfo_lookupsid(char * group, char *sid)
+static char * wbinfo_lookupsid(char * group, char *sid)
 {
     struct winbindd_request request;
     struct winbindd_response response;
@@ -147,13 +151,15 @@ char * wbinfo_lookupsid(char * group, char *sid)
 
     /* Display response */
 
-    strcpy(group,response.data.name.name);
+    strcpy(group,response.data.name.dom_name);
+    strcat(group,"\\");
+    strcat(group,response.data.name.name);
     return group;
 }
 
 /* Convert gid to sid */
 
-char * wbinfo_gid_to_sid(char * sid, gid_t gid)
+static char * wbinfo_gid_to_sid(char * sid, gid_t gid)
 {
     struct winbindd_request request;
     struct winbindd_response response;
@@ -179,9 +185,21 @@ char * wbinfo_gid_to_sid(char * sid, gid_t gid)
 /* returns 0 on match, -1 if no match */
 static inline int strcmparray(const char *str, const char **array)
 {
+    const char *wgroup;
+
     while (*array) {
-    	debug("Windows group: %s, Squid group: %s\n", str, *array);
-	if ((use_case_insensitive_compare ? strCaseCmp(str, *array) : strcmp(str, *array)) == 0)
+	/* If the groups we want to match are specified as 'group', and
+	 * not as 'DOMAIN\group' we strip the domain from the group to
+	 * match against */
+	if (strstr(*array,"\\") == NULL) {
+	    wgroup = strstr(str,"\\") + 1;
+	    debug("Stripping domain from group name %s\n", str); 
+	} else {
+	    wgroup = str;
+	}
+	
+    	debug("Windows group: %s, Squid group: %s\n", wgroup, *array);
+	if ((use_case_insensitive_compare ? strCaseCmp(wgroup, *array) : strcmp(wgroup, *array)) == 0)
 	    return 0;
 	array++;
     }
@@ -189,7 +207,7 @@ static inline int strcmparray(const char *str, const char **array)
 }
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Groups(char *UserName, const char **UserGroups)
 {
     struct winbindd_request request;
@@ -217,8 +235,10 @@ Valid_Groups(char *UserName, const char **UserGroups)
     for (i = 0; i < response.data.num_entries; i++) {
     	if ((wbinfo_gid_to_sid(sid, (int)((gid_t *)response.extra_data)[i])) != NULL) {
     	    debug("SID: %s\n", sid);	
-	    if (wbinfo_lookupsid(group,sid) == NULL)
+	    if (wbinfo_lookupsid(group,sid) == NULL) {
+	    	warn("Can't lookup group SID.\n");
     		break;
+    	    }
 	    if (strcmparray(group, UserGroups) == 0) {
 		match = 1;
 		break;
@@ -242,7 +262,7 @@ usage(char *program)
 		program);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt;

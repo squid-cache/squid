@@ -43,6 +43,9 @@ http_access deny all
 In the previous example all validated NT users member of ProxyUsers Global 
 domain group are allowed to use the cache.
 
+Groups name can be specified in both domain-qualified group notation
+(DOMAIN\Groupname) or simple group name notation.
+
 Groups with spaces in name, for example "Domain Users", must be quoted and
 the acl data ("Domain Users") must be placed into a separate file included
 by specifying "/path/to/file". The previous example will be:
@@ -52,7 +55,6 @@ acl ProxyUsers external NT_global_group "/usr/local/squid/etc/DomainUsers"
 and the DomainUsers files will contain only the following line:
 
 "Domain Users"
-
 
 NOTE: the standard group name comparation is case sensitive, so group name
 must be specified with same case as in the NT/2000 Domain.

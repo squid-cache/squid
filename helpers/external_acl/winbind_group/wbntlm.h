@@ -38,8 +38,8 @@
 /************* END CONFIGURATION *************/
 
 /* Debugging stuff */
-extern char *myname;
-static char *__foo;
+extern const char *myname;
+static const char *__foo;
 extern pid_t mypid;
 extern char debug_enabled;
 
