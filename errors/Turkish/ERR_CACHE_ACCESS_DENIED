@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>HATA: Cache Sunucusu Kullanamazsınız</TITLE>
+<META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
+</HEAD>
+<BODY>
+<H1>HATA</H1>
+<H2>Cache Sunucusunu Kullanamazsınız</H2>
+<HR>
+<P>
+<A HREF="%U">%U</A>
+<P>
+adresine ulaşırken aşağıdaki hata oluştu 
+<UL>
+<LI>
+<STRONG>
+Cache Sunucusunu Kullanamazsınız.
+</STRONG>
+</UL>
+</P>
+
+<P>Özür dilerim, istediğiniz:
+<PRE>    %U</PRE>
+adresine bu cache sunucusunu kullanarak ulaşamazsınız.
+</P>
+
+<P>
+Netscape 2.0 ve yenisi, Microsoft Internet Exporer 3.0 ve yenisi, veya herhangi HTTP/1.1 uyumlu
+tarayıcı kullandığınıza emin olun. Lütfen <A HREF="mailto:%w">cache yöneticisi</a> ile 
+bağlantıya geçin, veya şifrenizi değiştirmek için 
+<A HREF=\"http://%h/cgi-bin/chpasswd.cgi\">buraya</a> tıklayın. 
+</P>

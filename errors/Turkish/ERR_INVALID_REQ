@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<TITLE>HATA:  İstenilen URL'e ulaşılamadı </TITLE>
+<META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
+</HEAD><BODY>
+<H1>HATA</H1>
+<H2>İstenilen URL'e ulaşılamadı</H2>
+<HR>
+<P>
+<A HREF="%U">%U</A>
+<P>
+adresine ulaşırken aşağıdaki hata oluştu
+<P>
+<UL>
+<LI>
+<STRONG>
+Yanlış İstek.
+</STRONG>
+</UL>
+
+<P>
+Vermiş olduğunuz HTTP isteği yanlış. Bunun nedenler bunlar olabilir:
+<UL>
+<LI>Eksik veya bilinmeyen metod (GET, POST)
+<LI>Eksik URL
+<LI>Eksik HTTP Belirleyici (HTTP/1.0)
+<LI>İstek çok büyük olabilir
+<LI>Content-Length, POST veya PUT istekleri için eksik
+<LI>Adreste yanlış karakterler; alt çizgi kullanılamaz
+</UL>
+</P>

@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>HATA:  FTP dosya yüklemesi yapılamadı</TITLE>
+<META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
+</HEAD><BODY>
+<H1>HATA</H1>
+<H2>FTP dosya yüklemesi yapılamadı</H2>
+<HR>
+<P>
+<A HREF="%U">%U</A>
+<P>
+adresine FTP ile dosya yüklemesi sırasında
+<P>
+Squid aşağıdaki FTP komutları gönderdi:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+ve bu mesajı aldı
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+<PRE>
+Lütfen dizin ismini, boş alanı ve yetkilerinizi kontrol edin ve tekrar deneyin.
+</PRE>
+</P>
+

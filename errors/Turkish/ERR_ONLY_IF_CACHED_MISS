@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>HATA:  İstenilen URL'e ulaşılamadı </TITLE>
+<META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
+</HEAD><BODY>
+<H1>HATA</H1>
+<H2>İstenilen URL'e ulaşılamadı</H2>
+<HR>
+<P>
+<A HREF="%U">%U</A>
+<P>
+adresine ulaşırken aşağıdaki hata oluştu
+<P>
+<UL>
+<LI>
+<STRONG>
+İstediğiniz doğru doküman cache sunucusunda bulunamadı ve <code>only-if-cached</code> 
+(sadece cache sunucu içinde ise) tanımlı.
+</STRONG>
+</UL>
+
+<P>
+
+<code>only-if-cached</code> kontrol mekanizmalı istekte bulundunuz. Bu doküman 
+cache sunucusunda bulunamadı veya bu kontrolün izin vermediği tazeleme yapılması gerekiyor.
+
+</P>

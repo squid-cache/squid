@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<TITLE>HATA:  İstenilen URL'e ulaşılamadı </TITLE>
+<META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
+</HEAD><BODY>
+<H1>HATA</H1>
+<H2>İstenilen URL'e ulaşılamadı</H2>
+<HR>
+<P>
+<A HREF="%U">%U</A>
+<P>
+adresine ulaşırken aşağıdaki hata oluştu
+<P>
+<UL>
+<LI>
+<STRONG>
+Desteklenmeyen istek metodu ve protokol
+</STRONG>
+</UL>
+
+<P>
+Squid tüm istek metodları mevcut tüm protokler için desteklemiyor.
+Örneğin Gopher isteğinizde POST yapamazsınız.
+</P>
+
