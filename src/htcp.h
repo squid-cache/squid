@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.h,v 1.2 2003/01/23 00:37:22 robertc Exp $
+ * $Id: htcp.h,v 1.3 2003/07/14 14:16:00 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,5 +33,28 @@
 
 #ifndef SQUID_HTCP_H
 #define SQUID_HTCP_H
+
+#if USE_HTCP
+#include "HttpHeader.h"
+
+struct _htcpReplyData
+{
+    int hit;
+    HttpHeader hdr;
+    u_int32_t msg_id;
+    double version;
+
+    struct
+    {
+        /* cache-to-origin */
+        double rtt;
+        int samp;
+        int hops;
+    }
+
+    cto;
+};
+
+#endif
 
 #endif /* SQUID_HTCP_H */

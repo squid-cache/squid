@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.13 2003/07/11 01:40:34 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.14 2003/07/14 14:15:55 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,8 @@
 #include "client_side.h"
 
 class ExternalACLEntry;
+
+class ConnStateData;
 
 class ACLChecklist
 {

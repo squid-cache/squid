@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.418 2003/07/11 01:40:36 robertc Exp $
+ * $Id: http.cc,v 1.419 2003/07/14 14:16:00 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -65,7 +65,6 @@ static PF httpTimeout;
 static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
-static int httpCachableReply(HttpStateData *);
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, request_t * request, request_t * orig_request,
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
@@ -349,21 +348,21 @@ cacheControlAllowsCaching(HttpHdrCc *cc)
     return 1;
 }
 
-static int
-httpCachableReply(HttpStateData * httpState)
+int
+HttpStateData::cacheableReply()
 {
-    HttpReply const *rep = httpState->entry->getReply();
+    HttpReply const *rep = entry->getReply();
     HttpHeader const *hdr = &rep->header;
     const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
     const char *v;
 
-    if (httpState->surrogateNoStore)
+    if (surrogateNoStore)
         return 0;
 
     if (!cacheControlAllowsCaching(rep->cache_control))
         return 0;
 
-    if (!httpState->ignoreCacheControl) {
+    if (!ignoreCacheControl) {
         if (EBIT_TEST(cc_mask, CC_PRIVATE))
             return 0;
 
@@ -374,7 +373,7 @@ httpCachableReply(HttpStateData * httpState)
             return 0;
     }
 
-    if (httpState->request->flags.auth) {
+    if (request->flags.auth) {
         /*
          * Responses to requests with authorization may be cached
          * only if a Cache-Control: public reply header is present.
@@ -405,7 +404,7 @@ httpCachableReply(HttpStateData * httpState)
         if (!strncasecmp(v, "multipart/x-mixed-replace", 25))
             return 0;
 
-    switch (httpState->entry->getReply()->sline.status) {
+    switch (entry->getReply()->sline.status) {
         /* Responses that are cacheable */
 
     case HTTP_OK:
@@ -422,7 +421,7 @@ httpCachableReply(HttpStateData * httpState)
          * unless we know how to refresh it.
          */
 
-        if (!refreshIsCachable(httpState->entry))
+        if (!refreshIsCachable(entry))
             return 0;
 
         /* don't cache objects from peers w/o LMT, Date, or Expires */
@@ -431,7 +430,7 @@ httpCachableReply(HttpStateData * httpState)
             return 1;
         else if (rep->last_modified > -1)
             return 1;
-        else if (!httpState->_peer)
+        else if (!_peer)
             return 1;
 
         /* @?@ (here and 302): invalid expires header compiles to squid_curtime */
@@ -500,7 +499,7 @@ httpCachableReply(HttpStateData * httpState)
         return 0;
 
     default:			/* Unknown status code */
-        debug (11,0)("httpCachableReply: unknown http status code in reply\n");
+        debug (11,0)("HttpStateData::cacheableReply: unknown http status code in reply\n");
 
         return 0;
 
@@ -677,7 +676,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     if (neighbors_do_private_keys)
         httpMaybeRemovePublic(entry, entry->getReply()->sline.status);
 
-    switch (httpCachableReply(this)) {
+    switch (cacheableReply()) {
 
     case 1:
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.14 2003/07/11 01:40:36 robertc Exp $
+ * $Id: client_side_request.h,v 1.15 2003/07/14 14:16:00 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,6 +44,8 @@ extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, ClientStrea
 class MemObject;
 
 typedef class ClientHttpRequest clientHttpRequest;
+
+class ConnStateData;
 
 class ClientHttpRequest
 {

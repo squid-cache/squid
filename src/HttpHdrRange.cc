@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.35 2003/06/19 13:12:01 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.36 2003/07/14 14:15:56 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -37,6 +37,7 @@
 #include "Store.h"
 #include "HttpHeaderRange.h"
 #include "client_side_request.h"
+#include "HttpReply.h"
 
 /*
  *    Currently only byte ranges are supported

@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.cc,v 1.1 2003/03/10 04:56:36 robertc Exp $
+ * $Id: ESISequence.cc,v 1.2 2003/07/14 14:15:56 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -333,7 +333,7 @@ esiSequence::process (int inheritedVarsFlag)
 }
 
 void
-esiSequence::fail (ESIElement *source)
+esiSequence::fail (ESIElement *source, char const *anError)
 {
     failed = true;
 
@@ -343,7 +343,7 @@ esiSequence::fail (ESIElement *source)
     }
 
     debug (86,5)("esiSequence::fail: %p has failed.\n", this);
-    parent->fail (this);
+    parent->fail (this, anError);
     elements.setNULL(0, elements.size());
     parent = NULL;
 }
@@ -367,7 +367,7 @@ esiSequence::makeCachableElements(esiSequence const &old)
 }
 
 void
-esiSequence::makeUsableElements(esiSequence const &old, esiVarState &newVarState)
+esiSequence::makeUsableElements(esiSequence const &old, ESIVarState &newVarState)
 {
     for (size_t counter = 0; counter < old.elements.size(); ++counter) {
         ESIElement::Pointer newElement = old.elements[counter]->makeUsable (this, newVarState);
@@ -397,7 +397,7 @@ esiSequence::makeCacheable() const
 }
 
 ESIElement::Pointer
-esiSequence::makeUsable(esiTreeParentPtr newParent, esiVarState &newVarState) const
+esiSequence::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) const
 {
     debug (86,5)("esiSequence::makeUsable: Creating usable Sequence\n");
     assert (processedcount == 0);

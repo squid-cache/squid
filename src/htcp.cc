@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.52 2003/02/23 00:08:04 robertc Exp $
+ * $Id: htcp.cc,v 1.53 2003/07/14 14:16:00 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "htcp.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "HttpRequest.h"

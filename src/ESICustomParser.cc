@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESICustomParser.cc,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id: ESICustomParser.cc,v 1.2 2003/07/14 14:15:56 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -36,10 +36,10 @@
 #include "squid.h"
 #include "ESICustomParser.h"
 #include "Trie.h"
+#include "TrieCharTransform.h"
 #include "Array.h"
 
 Trie *ESICustomParser::SearchTrie=NULL;
-bool ESICustomParser::TrieInited;
 
 Trie *
 ESICustomParser::GetTrie()
@@ -47,7 +47,7 @@ ESICustomParser::GetTrie()
     if (SearchTrie)
         return SearchTrie;
 
-    SearchTrie = new Trie;
+    SearchTrie = new Trie(new TrieCaseless);
 
     assert (SearchTrie->add
             ("<esi:",5,(void *)ESITAG));
@@ -76,16 +76,16 @@ ESICustomParser::~ESICustomParser()
 }
 
 char const *
-ESICustomParser::findTag(char const *a, size_t b)
+ESICustomParser::findTag(char const *buffer, size_t bufferLength)
 {
     size_t myOffset (0);
     void *resulttype (NULL);
 
-    while (myOffset < b &&
-            (resulttype =GetTrie()->findPrefix (a + myOffset, b + myOffset)) == NULL)
+    while (myOffset < bufferLength &&
+            (resulttype =GetTrie()->findPrefix (buffer + myOffset, bufferLength - myOffset)) == NULL)
         ++myOffset;
 
-    if (myOffset == b)
+    if (myOffset == bufferLength)
         return NULL;
 
     debug (86,9)("ESICustomParser::findTag: found %p\n", resulttype);
@@ -93,7 +93,7 @@ ESICustomParser::findTag(char const *a, size_t b)
     /* Yuck! */
     lastTag = static_cast<ESITAG_t>((int)resulttype);
 
-    return a + myOffset;
+    return buffer + myOffset;
 }
 
 bool

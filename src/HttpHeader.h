@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.4 2003/03/10 04:56:36 robertc Exp $
+ * $Id: HttpHeader.h,v 1.5 2003/07/14 14:15:56 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,5 +50,21 @@ extern int httpHeaderParseQuotedString (const char *start, String *val);
 extern void httpHeaderPutSc(HttpHeader *hdr, const HttpHdrSc *sc);
 extern HttpHdrSc *httpHeaderGetSc(const HttpHeader *hdr);
 SQUIDCEXTERN void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, ssize_t);
+extern int httpHeaderHasListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator);
+SQUIDCEXTERN void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
+
+class HttpHeader
+{
+
+public:
+    /* Interface functions */
+    void update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask);
+    void removeConnectionHeaderEntries();
+    /* protected, do not use these, use interface functions instead */
+    Array entries;		/* parsed fields in raw format */
+    HttpHeaderMask mask;	/* bit set <=> entry present */
+    http_hdr_owner_type owner;	/* request or reply */
+    int len;			/* length when packed, not counting terminating '\0' */
+};
 
 #endif /* SQUID_HTTPHEADER_H */

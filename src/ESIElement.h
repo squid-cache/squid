@@ -1,5 +1,5 @@
 /*
- * $Id: ESIElement.h,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id: ESIElement.h,v 1.2 2003/07/14 14:15:56 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,7 +53,7 @@ struct esiTreeParent : public RefCountable
         assert (0);
     }
 
-    virtual void fail(ESIElement * source) {}
+    virtual void fail(ESIElement * source, char const *reason = NULL) {}
 
     virtual ~esiTreeParent(){}}
 
@@ -61,7 +61,7 @@ struct esiTreeParent : public RefCountable
 
 typedef RefCount<esiTreeParent> esiTreeParentPtr;
 
-class esiVarState;
+class ESIVarState;
 
 struct ESIElement : public esiTreeParent
 {
@@ -79,7 +79,8 @@ struct ESIElement : public esiTreeParent
         ESI_ELEMENT_VARS,
         ESI_ELEMENT_CHOOSE,
         ESI_ELEMENT_WHEN,
-        ESI_ELEMENT_OTHERWISE
+        ESI_ELEMENT_OTHERWISE,
+        ESI_ELEMENT_ASSIGN
     };
     static ESIElementType_t IdentifyElement (const char *);
     virtual bool addElement(ESIElement::Pointer)
@@ -105,7 +106,7 @@ struct ESIElement : public esiTreeParent
     }
 
     virtual Pointer makeCacheable() const = 0;
-    virtual Pointer makeUsable(esiTreeParentPtr, esiVarState &) const = 0;
+    virtual Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const = 0;
 
     /* The top level no longer needs this element */
     virtual void finish() = 0;

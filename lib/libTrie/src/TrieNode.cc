@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 Robert Collins <rbtcollins@hotmail.com>
+ * Copyright (c) 2002,2003 Robert Collins <rbtcollins@hotmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@
  */
 
 #include "TrieNode.h"
+#include "TrieCharTransform.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <ctype.h>
 
-TrieNode::TrieNode ()
+TrieNode::TrieNode () : _privateData (NULL)
 {
     for (int i = 0; i < 256; ++i)
         internal[i] = NULL;
@@ -39,24 +39,18 @@ TrieNode::~TrieNode ()
 bool
 
 TrieNode::add
-    (char const *aString, size_t theLength, void *privatedata)
+    (char const *aString, size_t theLength, void *privatedata, TrieCharTransform *transform)
 {
     /* We trust that privatedata and existant keys have already been checked */
 
     if (theLength) {
-        int index;
+        int index = transform ? (*transform) (*aString): *aString;
 
-        if (internal[*aString])
-            index = *aString;
-        else if (internal[tolower(*aString)])
-            index = tolower (*aString);
-        else {
-            index = *aString;
+        if (!internal[index])
             internal[index] = new TrieNode;
-        }
 
-        internal[index]->add
-        (aString + 1, theLength - 1, privatedata);
+        return internal[index]->add
+               (aString + 1, theLength - 1, privatedata, transform);
     } else {
         /* terminal node */
 
@@ -72,4 +66,3 @@ TrieNode::add
 #ifndef _USE_INLINE_
 #include "TrieNode.cci"
 #endif
-

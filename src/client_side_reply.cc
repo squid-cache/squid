@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.58 2003/07/11 01:40:36 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.59 2003/07/14 14:15:59 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1277,29 +1277,7 @@ void
 clientReplyContext::obeyConnectionHeader()
 {
     HttpHeader *hdr = &holdingReply->header;
-
-    if (httpHeaderHas(hdr, HDR_CONNECTION)) {
-        /* anything that matches Connection list member will be deleted */
-        String strConnection = httpHeaderGetList(hdr, HDR_CONNECTION);
-        const HttpHeaderEntry *e;
-        HttpHeaderPos pos = HttpHeaderInitPos;
-        /*
-         * think: on-average-best nesting of the two loops (hdrEntry
-         * and strListItem) @?@
-         */
-        /*
-         * maybe we should delete standard stuff ("keep-alive","close")
-         * from strConnection first?
-         */
-
-        while ((e = httpHeaderGetEntry(hdr, &pos))) {
-            if (strListIsMember(&strConnection, e->name.buf(), ','))
-                httpHeaderDelAt(hdr, pos);
-        }
-
-        httpHeaderDelById(hdr, HDR_CONNECTION);
-        strConnection.clean();
-    }
+    hdr->removeConnectionHeaderEntries();
 }
 
 /*

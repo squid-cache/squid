@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.94 2003/07/14 08:21:56 robertc Exp $
+ * $Id: asn.cc,v 1.95 2003/07/14 14:15:58 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -43,6 +43,7 @@
 #include "ACLSourceASN.h"
 #include "ACLDestinationASN.h"
 #include "ACLDestinationIP.h"
+#include "HttpReply.h"
 
 #define WHOIS_PORT 43
 #define	AS_REQBUF_SZ	4096

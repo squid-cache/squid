@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.80 2003/07/11 01:40:36 robertc Exp $
+ * $Id: mem.cc,v 1.81 2003/07/14 14:16:00 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -37,6 +37,7 @@
 #include "Mem.h"
 #include "memMeter.h"
 #include "Store.h"
+#include "HttpRequest.h"
 
 /* module globals */
 

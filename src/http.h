@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.7 2003/03/10 04:56:38 robertc Exp $
+ * $Id: http.h,v 1.8 2003/07/14 14:16:00 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,6 +46,7 @@ public:
     void processReplyData(const char *, size_t);
     IOCB readReply;
     void maybeReadData();
+    int cacheableReply();
 
     StoreEntry *entry;
     request_t *request;

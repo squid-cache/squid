@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpression.cc,v 1.2 2003/06/09 05:22:33 robertc Exp $
+ * $Id: ESIExpression.cc,v 1.3 2003/07/14 14:15:56 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "ESIExpression.h"
 
 /* stack precedence rules:
  * before pushing an operator onto the stack, the 
@@ -144,13 +145,6 @@ static char const *trim (char const *s);
 static stackmember getsymbol (const char *s, char const **endptr);
 static void printliteral (stackmember s);
 static void printmember (stackmember s);
-
-
-
-
-extern int
-    esiExpressionEval (char const *s);
-
 
 /* -2 = failed to compate
  * -1 = a less than b
@@ -784,11 +778,21 @@ getsymbol (const char *s, char const **endptr)
             *endptr = origs;
         } else {
             *endptr = t + 1;
-            rv.value.string = xstrndup (s + 1, t - s - 1);
+            /* Special case for zero length strings */
+
+            if (t - s - 1)
+                rv.value.string = xstrndup (s + 1, t - s - 1);
+            else
+                rv.value.string = static_cast<char *>(xcalloc (1,1));
+
             rv.eval = evalliteral;
+
             rv.valuestored = ESI_LITERAL_STRING;
+
             rv.valuetype = ESI_EXPR_LITERAL;
+
             rv.precedence = 1;
+
             debug (86,6) ("found  string '%s'\n", rv.value.string);
         }
     } else if ('(' == *s) {
@@ -1010,7 +1014,7 @@ addmember (stackmember * stack, int *stackdepth, stackmember * candidate)
 }
 
 int
-esiExpressionEval (char const *s)
+ESIExpression::Evaluate (char const *s)
 {
     stackmember stack[20];
     int stackdepth = 0;
@@ -1066,32 +1070,3 @@ esiExpressionEval (char const *s)
 
     return stack[0].value.integral ? 1 : 0;
 }
-
-#if TESTING
-int
-main ()
-{
-    char const *expressions[] = {
-                                    "!(1==1)", "!(1!=1)", "1!=1", "!1==1", "1==1",
-                                    "1 <=1","2<=1", "1 < 1", "1 < 2", "-1 < 1","!-1<1",
-                                    "1>2","2>1","2>=2", "2>3", "1==1&1==1","1==1&1==0",
-                                    "!('a'<='c')",
-                                    "(1==1)|('abc'=='def')",
-                                    "(4!=5)&(4==5)",
-                                    "(1==1)|(2==3)&(3==4)",	/* should be true because of precedence */
-                                    "(1 & 4)",
-                                    "(\"abc\" | \"edf\")", "1==1==1",
-                                };
-
-    int i = 0;
-
-    while (strlen (expressions[i])) {
-        printf("Expr '%s' = '%s'\n", expressions[i],
-               expreval (expressions[i]) ? "true" : "false");
-        ++i;
-    }
-
-    return 0;
-}
-
-#endif

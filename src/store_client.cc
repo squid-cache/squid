@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.130 2003/07/11 04:02:01 robertc Exp $
+ * $Id: store_client.cc,v 1.131 2003/07/14 14:16:02 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -116,6 +116,7 @@ storeClientIsThisAClient(store_client * sc, void *someClient)
 }
 
 #endif
+#include "HttpRequest.h"
 
 /* add client with fd to client list */
 store_client *

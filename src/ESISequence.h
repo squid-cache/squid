@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.h,v 1.1 2003/03/10 04:56:36 robertc Exp $
+ * $Id: ESISequence.h,v 1.2 2003/07/14 14:15:56 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -59,11 +59,11 @@ public:
     void provideData (ESISegment::Pointer, ESIElement*);
     bool mayFail () const;
     void wontFail();
-    void fail(ESIElement *);
+    void fail(ESIElement *, char const *anError = NULL);
     void makeCachableElements(esiSequence const &old);
     Pointer makeCacheable() const;
-    void makeUsableElements(esiSequence const &old, esiVarState &);
-    Pointer makeUsable(esiTreeParentPtr, esiVarState &) const;
+    void makeUsableElements(esiSequence const &old, ESIVarState &);
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
 
     ElementList elements; /* unprocessed or rendered nodes */
     size_t processedcount;

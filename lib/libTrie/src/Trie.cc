@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 Robert Collins <rbtcollins@hotmail.com>
+ * Copyright (c) 2002,2003 Robert Collins <rbtcollins@hotmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,9 @@
 #include <unistd.h>
 #endif
 #include "TrieNode.h"
+#include "TrieCharTransform.h"
 
-Trie::Trie () : head (0)
+Trie::Trie (TrieCharTransform *aTransform) : head (0) , transform (aTransform)
 {}
 
 extern "C" void *TrieCreate ()
@@ -34,6 +35,7 @@ extern "C" void *TrieCreate ()
 Trie::~Trie ()
 {
     delete head;
+    delete transform;
 }
 
 extern "C" void TrieDestroy (void *aTrie)
@@ -59,13 +61,13 @@ Trie::add
             return false;
 
         return head->add
-               (aString, theLength, privatedata);
+               (aString, theLength, privatedata, transform);
     }
 
     head = new TrieNode;
 
     return head->add
-           (aString, theLength, privatedata);
+           (aString, theLength, privatedata, transform);
 }
 
 extern "C" int TrieAdd (void *aTrie, char const *aString, size_t theLength, void *privatedata)

@@ -1,5 +1,5 @@
 /*
- * $Id: ESISegment.h,v 1.1 2003/03/10 04:56:36 robertc Exp $
+ * $Id: ESISegment.h,v 1.2 2003/07/14 14:15:56 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,7 @@
  */
 
 #include "RefCount.h"
+#include "SquidString.h"
 
 class ESISegment : public RefCountable
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.91 2003/07/14 08:21:56 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.92 2003/07/14 14:15:56 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -406,11 +406,18 @@ httpHeaderAppend(HttpHeader * dest, const HttpHeader * src)
 void
 httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask)
 {
+    assert (old);
+    old->update (fresh, denied_mask);
+}
+
+void
+HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
+{
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
-    assert(old && fresh);
-    assert(old != fresh);
-    debug(55, 7) ("updating hdr: %p <- %p\n", old, fresh);
+    assert(this && fresh);
+    assert(this != fresh);
+    debug(55, 7) ("updating hdr: %p <- %p\n", this, fresh);
 
     while ((e = httpHeaderGetEntry(fresh, &pos))) {
         /* deny bad guys (ok to check for HDR_OTHER) here */
@@ -418,9 +425,9 @@ httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMas
         if (denied_mask && CBIT_TEST(*denied_mask, e->id))
             continue;
 
-        httpHeaderDelByName(old, e->name.buf());
+        httpHeaderDelByName(this, e->name.buf());
 
-        httpHeaderAddEntry(old, httpHeaderEntryClone(e));
+        httpHeaderAddEntry(this, httpHeaderEntryClone(e));
     }
 }
 
@@ -1469,4 +1476,56 @@ void
 HttpHeaderEntry::operator delete (void *address)
 {
     memPoolFree (Pool, address);
+}
+
+int
+httpHeaderHasListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator)
+{
+    int result = 0;
+    const char *pos = NULL;
+    const char *item;
+    int ilen;
+    int mlen = strlen(member);
+
+    assert(hdr);
+    assert(id >= 0);
+
+    String header (httpHeaderGetStrOrList(hdr, id));
+
+    while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
+        if (strncmp(item, member, mlen) == 0
+                && (item[mlen] == '=' || item[mlen] == separator || item[mlen] == ';' || item[mlen] == '\0')) {
+            result = 1;
+            break;
+        }
+    }
+
+    return result;
+}
+
+void
+HttpHeader::removeConnectionHeaderEntries()
+{
+    if (httpHeaderHas(this, HDR_CONNECTION)) {
+        /* anything that matches Connection list member will be deleted */
+        String strConnection = httpHeaderGetList(this, HDR_CONNECTION);
+        const HttpHeaderEntry *e;
+        HttpHeaderPos pos = HttpHeaderInitPos;
+        /*
+         * think: on-average-best nesting of the two loops (hdrEntry
+         * and strListItem) @?@
+         */
+        /*
+         * maybe we should delete standard stuff ("keep-alive","close")
+         * from strConnection first?
+         */
+
+        while ((e = httpHeaderGetEntry(this, &pos))) {
+            if (strListIsMember(&strConnection, e->name.buf(), ','))
+                httpHeaderDelAt(this, pos);
+        }
+
+        httpHeaderDelById(this, HDR_CONNECTION);
+        strConnection.clean();
+    }
 }
