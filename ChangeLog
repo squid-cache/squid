@@ -13,6 +13,7 @@ Changes to squid-1.1.alpha12:
 		- quick_abort min pct max
 	- Added a proxy authentication patch from Jon Thackray
 	  <jrmt@uk.gdscorp.com>.  Must add -DUSE_PROXY_AUTH=1 to src/Makefile.
+	- Cleaned up calling maintenance functions from main().
 
 Changes to squid-1.1.alpha11:
 
