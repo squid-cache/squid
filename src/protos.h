@@ -100,7 +100,7 @@ extern void comm_lingering_close(int fd);
 #endif
 extern void commConnectStart(int fd, const char *, u_short, CNCB *, void *);
 extern int comm_connect_addr(int sock, const struct sockaddr_in *);
-extern int comm_init(void);
+extern void comm_init(void);
 extern int comm_listen(int sock);
 extern int comm_open(int, int, struct in_addr, u_short port, int, const char *note);
 extern u_short comm_local_port(int fd);
