@@ -758,7 +758,7 @@ get_community(char *sessionid)
 	return SNMP_STAT_V1_BAD_COMMUNITY_NAMES;
     }
     memset(session, 0, sizeof(*session));
-    session->community = sessionid;
+    session->community = (unsigned char *)sessionid;
     session->community_len = strlen(sessionid);
     session->readView = cp->readView;
     session->writeView = cp->writeView;
