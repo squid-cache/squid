@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.328 1999/05/04 21:58:31 wessels Exp $
+ * $Id: protos.h,v 1.329 1999/05/19 21:57:49 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -852,7 +852,7 @@ extern void storeEntryReset(StoreEntry *);
 extern storeIOState *storeOpen(sfileno f, mode_t mode, STIOCB * callback, void *callback_data);
 extern void storeClose(storeIOState * sio);
 extern void storeRead(storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-extern void storeWrite(storeIOState * sio, char *buf, size_t size, off_t offset);
+extern void storeWrite(storeIOState * sio, char *buf, size_t size, off_t offset, FREE *);
 extern void storeUnlink(int fileno);
 extern off_t storeOffset(storeIOState *);
 
@@ -860,7 +860,7 @@ extern off_t storeOffset(storeIOState *);
 extern storeIOState *storeUfsOpen(sfileno f, mode_t mode, STIOCB * callback, void *callback_data);
 extern void storeUfsClose(storeIOState * sio);
 extern void storeUfsRead(storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-extern void storeUfsWrite(storeIOState * sio, char *buf, size_t size, off_t offset);
+extern void storeUfsWrite(storeIOState * sio, char *buf, size_t size, off_t offset, FREE *);
 extern void storeUfsUnlink(int fileno);
 extern char *storeUfsFullPath(sfileno fn, char *fullpath);	/* XXX want this to be static */
 
