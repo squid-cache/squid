@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.83 2003/09/14 22:41:24 robertc Exp $
+ * $Id: mem.cc,v 1.84 2003/09/29 10:24:01 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -120,9 +120,9 @@ memStringStats(StoreEntry * sentry)
 static void
 memBufStats(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "Large buffers: %d (%d KB)\n",
-                      HugeBufCountMeter.level,
-                      HugeBufVolumeMeter.level / 1024);
+    storeAppendPrintf(sentry, "Large buffers: %ld (%ld KB)\n",
+                      (long int) HugeBufCountMeter.level,
+                      (long int) HugeBufVolumeMeter.level / 1024);
 }
 
 void
@@ -418,7 +418,9 @@ Mem::Init(void)
         StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
 
         if (StrPools[i].pool->obj_size != StrPoolsAttrs[i].obj_size)
-            debug(13, 1) ("Notice: %s is %d bytes instead of requested %d bytes\n", StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size, StrPoolsAttrs[i].obj_size);
+            debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " <<
+                   StrPools[i].pool->obj_size << " bytes instead of requested "
+                   << StrPoolsAttrs[i].obj_size << " bytes");
     }
 
     cachemgrRegister("mem",
@@ -592,25 +594,25 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, Store
      */
 
     storeAppendPrintf(e,
-                      "%d\t %d\t %d\t %.2f\t %.1f\t"	/* alloc */
-                      "%d\t %d\t %d\t %.1f\t"	/* in use */
-                      "%d\t %d\t %d\t"	/* idle */
+                      "%d\t %ld\t %ld\t %.2f\t %.1f\t"	/* alloc */
+                      "%d\t %ld\t %ld\t %.1f\t"	/* in use */
+                      "%d\t %ld\t %ld\t"	/* idle */
                       "%.0f\t %.1f\t %.1f\t %.1f\n",	/* saved */
                       /* alloc */
                       mp_st->items_alloc,
-                      toKB(mp_st->obj_size * pm->alloc.level),
-                      toKB(mp_st->obj_size * pm->alloc.hwater_level),
+                      (long) toKB(mp_st->obj_size * pm->alloc.level),
+                      (long) toKB(mp_st->obj_size * pm->alloc.hwater_level),
                       (double) ((squid_curtime - pm->alloc.hwater_stamp) / 3600.),
                       xpercent(mp_st->obj_size * pm->alloc.level, AllMeter->alloc.level),
                       /* in use */
                       mp_st->items_inuse,
-                      toKB(mp_st->obj_size * pm->inuse.level),
-                      toKB(mp_st->obj_size * pm->inuse.hwater_level),
+                      (long) toKB(mp_st->obj_size * pm->inuse.level),
+                      (long) toKB(mp_st->obj_size * pm->inuse.hwater_level),
                       xpercent(pm->inuse.level, pm->alloc.level),
                       /* idle */
                       mp_st->items_idle,
-                      toKB(mp_st->obj_size * pm->idle.level),
-                      toKB(mp_st->obj_size * pm->idle.hwater_level),
+                      (long) toKB(mp_st->obj_size * pm->idle.level),
+                      (long) toKB(mp_st->obj_size * pm->idle.hwater_level),
                       /* saved */
                       pm->gb_saved.count,
                       xpercent(pm->gb_saved.count, AllMeter->gb_saved.count),

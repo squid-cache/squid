@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.34 2003/02/23 00:08:04 robertc Exp $
+ * $Id: wccp.cc,v 1.35 2003/09/29 10:24:02 robertc Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -277,13 +277,13 @@ wccpHandleUdp(int sock, void *not_used)
     if (Config.Wccp.router.s_addr != from.sin_addr.s_addr)
         return;
 
-    if (ntohl(wccp_i_see_you.version) != (unsigned)Config.Wccp.version)
+    if ((unsigned) ntohl(wccp_i_see_you.version) != (unsigned) Config.Wccp.version)
         return;
 
     if (ntohl(wccp_i_see_you.type) != WCCP_I_SEE_YOU)
         return;
 
-    if ((0 == change) && (number_caches == ntohl(wccp_i_see_you.number))) {
+    if ((0 == change) && (number_caches == (unsigned) ntohl(wccp_i_see_you.number))) {
         if (last_assign_buckets_change == wccp_i_see_you.change) {
             /*
              * After a WCCP_ASSIGN_BUCKET message, the router should
@@ -315,7 +315,7 @@ wccpLowestIP(void)
 {
     unsigned int loop;
 
-    for (loop = 0; loop < ntohl(wccp_i_see_you.number); loop++) {
+    for (loop = 0; loop < (unsigned) ntohl(wccp_i_see_you.number); loop++) {
         if (wccp_i_see_you.wccp_cache_entry[loop].ip_addr.s_addr < local_ip.s_addr)
             return 0;
     }
