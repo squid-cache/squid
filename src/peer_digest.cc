@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.11 1998/04/09 23:51:41 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.12 1998/04/10 00:39:32 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -487,7 +487,8 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
     request_t *req = mem->request;
     const time_t expires = fetch->entry->expires;
     const time_t fetch_resp_time = squid_curtime - fetch->start_time;
-    const off_t b_read = (fetch->entry->swap_status == STORE_PENDING) ? mem->inmem_hi : mem->object_sz;
+    const int b_read = (fetch->entry->store_status == STORE_PENDING) ? 
+	mem->inmem_hi : mem->object_sz;
     if (!err_msg && !peer->digest.cd)
 	err_msg = "null digest (internal bug?)";
     if (!err_msg && fetch->mask_offset != peer->digest.cd->mask_size)
@@ -500,6 +501,8 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	fetch->old_entry = NULL;
     }
     assert(fetch->entry);
+    debug(72, 3) ("peerDigestFetchFinish: %s, read %d bytes\n",
+	peer->host, b_read);
     if (err_msg) {
 	debug(72, 1) ("disabling corrupted (%s) digest from %s\n",
 	    err_msg, peer->host);
@@ -516,6 +519,7 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	/* release buggy entry */
 	storeReleaseRequest(fetch->entry);
     } else {
+	debug(72, 2) ("received valid digest from %s\n", peer->host);
         storeComplete(fetch->entry);
 	EBIT_SET(peer->digest.flags, PD_USABLE);
 	EBIT_CLR(peer->digest.flags, PD_DISABLED);
@@ -523,6 +527,18 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	peerDigestDelay(peer, 0,
 	    max_delay(peerDigestExpiresDelay(peer, fetch->entry), 0));
     }
+    /* note: outgoing numbers are not precise! @?@ */
+    /* update global stats */
+    kb_incr(&Counter.cd.kbytes_sent, req->headers_sz);
+    kb_incr(&Counter.cd.kbytes_recv, (size_t)b_read);
+    Counter.cd.msgs_sent++;
+    Counter.cd.msgs_recv++;
+    /* update peer stats */
+    kb_incr(&peer->digest.stats.kbytes_sent, req->headers_sz);
+    kb_incr(&peer->digest.stats.kbytes_recv, (size_t)b_read);
+    peer->digest.stats.msgs_sent++;
+    peer->digest.stats.msgs_recv++;
+    /* unlock everything */
     storeUnregister(fetch->entry, fetch);
     storeUnlockObject(fetch->entry);
     requestUnlink(req);
@@ -536,12 +552,6 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
     peer->digest.last_req_timestamp = squid_curtime;
     peer->digest.last_fetch_resp_time = fetch_resp_time;
     EBIT_CLR(peer->digest.flags, PD_REQUESTED);
-    /* update global stats */
-    kb_incr(&Counter.cd.kbytes_recv, (size_t)b_read);
-    Counter.cd.msgs_recv++;
-    /* update peer stats */
-    kb_incr(&peer->digest.stats.kbytes_recv, (size_t)b_read);
-    peer->digest.stats.msgs_recv++;
     debug(72, 2) ("peerDigestFetchFinish: %s done; took: %d secs; expires: %s\n",
 	peer->host, fetch_resp_time, mkrfc1123(expires));
 }
