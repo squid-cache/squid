@@ -473,11 +473,7 @@ typedef enum {
     MEM_FQDNCACHE_PENDING,
     MEM_HASH_LINK,
     MEM_HASH_TABLE,
-#if 0				/* renamed to detect all old uses */
-    MEM_HTTP_REPLY,
-#else
     MEM_HTTPREPLY,
-#endif
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_RANGE_SPEC,
     MEM_HTTP_HDR_RANGE,

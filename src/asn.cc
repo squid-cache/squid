@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.22 1998/03/03 00:31:00 rousskov Exp $
+ * $Id: asn.cc,v 1.23 1998/03/06 23:22:23 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -231,7 +231,6 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	    asState);
 	return;
     }
-/* XXX do the processing here */
     s = buf;
     while (*s) {
 	for (t = s; *t; t++) {

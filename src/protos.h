@@ -539,9 +539,6 @@ extern void memClean();
 extern void memInitModule();
 extern void memCleanModule();
 extern void memConfigure();
-#if 0				/* not used */
-extern void memFreeMemory(void);
-#endif
 extern void *memAllocate(mem_type);
 extern void memFree(mem_type, void *);
 extern void memFree4K(void *);

@@ -847,15 +847,6 @@ struct _icp_common_t {
     u_num32 shostid;		/* sender host id */
 };
 
-#if 0				/* this struct is not used */
-struct _Stack {
-    void **base;
-    void **top;
-    int stack_size;
-};
-
-#endif
-
 struct _iostats {
     struct {
 	int reads;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.233 1998/03/06 22:19:38 wessels Exp $
+ * $Id: main.cc,v 1.234 1998/03/06 23:22:29 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -461,7 +461,6 @@ mainInitialize(void)
 	cachemgrInit();
 	statInit();
 	storeInit();
-	httpInit();
 	asnAclInitialize(Config.aclList);
 	if (Config.effectiveUser) {
 	    /* we were probably started as root, so cd to a swap
@@ -624,11 +623,6 @@ main(int argc, char **argv)
 #endif
 	    if (shutdown_pending) {
 		normal_shutdown();
-#if 0
-	    } else if (reconfigure_pending) {
-		mainReconfigure();
-		reconfigure_pending = 0;	/* reset */
-#endif
 	    } else {
 		fatal_dump("MAIN: SHUTDOWN from comm_select, but nothing pending.");
 	    }
