@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL solicitada n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>A URL solicitada n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+A seguite URL n&atilde;o pode ser recuperada (n&atilde;o foi encontrada):
+<A HREF="%U">%U</A>
+<P>
+Squid emitiu o seguinte comando FTP:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+e recebeu esta resposta:
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+Isto pode ter como causa uma URL de FTP com caminho absoluto (quen&atilde;o
+est&aacute; de acordo com a RFC 1738). Se a causa for essa, ent&atilde;o
+o arquivo pode ser encontrado em <A HREF="%B">%B</A>.
+</P>
+

@@ -106,6 +106,45 @@ Changes to Squid-2.2 ():
 	  the number of open disk FD's is above the 'max_open_disk_fds'
 	  limit.  Otherwise, a very loaded cache will end up with
 	  all disk files open for reading, and none for writing.
+	- Added lib/inet_ntoa.c from BSD Unix for systems that have
+	  broken inet_ntoa().  (Erik Hofman).
+	- Added more specific FTP error messages for "permission
+	  denied, "file not found," and "service unavailable."
+	  (Tony Finch)
+	- Added xisspace(), xisdigit(), etc, macros to cast function
+	  args and eliminate compiler warnings.
+	- Fixed case-sensitive comparisons of domain names (Henrik
+	  Nordstrom).
+	- Added proxy-authentication to cachemgr.cgi's requests
+	  (Henrik Nordstrom).
+	- Changed Squid to *truncate* rather than *unlink* purged
+	  swap files.  Can be reversed by undefining 
+	  USE_TRUNCATE_NOT_UNLINK in src/defines.h.
+	- Changed internal icon headers to use Cache-control
+	  Max-age instead of Expires.
+	- Changed storeMaintainSwapSpace behavior to be adjusted
+	  smoothly, instead of discretely, between store_swap_low
+	  and store_swap_high.  This includes the number of
+	  objects to scan, number to remove, and time until the
+	  next storeMaintainSwapSpace event.
+	- Fixed a quick_abort bug that incorrectly calculated
+	  content lengths.
+	- Added getpwnam() auth module from Erik Hofman.
+	- Added 'coredump_dir' option.
+	- Fixed a peerDestroy() assertion that required peer->digest
+	  to be NULL at the end of peerDestroy().
+	- configure script now automatically enables dlmalloc for
+	  Solaris/x86.
+	- configure enables poll() on linux 2.2 and later (Henrik).
+	- Icon files are now distributed in binary format, install
+	  will not need to run 'sh' and 'uudecode'.
+	- Fixed some bugs with large responses (>READ_AHEAD_GAP) and
+	  re-forwarding requests and ENTRY_FWD_HDR_WAIT.
+	  fwdCheckDeferRead() will NOT defer reading if the
+	  ENTRY_FWD_HDR_WAIT bit is set.
+	- Fixed a "F->flags.open" assertion for aborted FTP PUT's.
+	- Fixed a (double) cast problem that caused statAvgTick()
+	  events to be added as fast as possible.
 
 Changes to Squid-2.1 (November 16, 1998):
 
@@ -647,6 +686,12 @@ Changes to squid-1.2.beta20 (April 24, 1998):
 	- Fixed "huge 304 reply" loop bug.
 	- Fixed --enable-splaytree compile bugs.
 	- Removed ASN lookup code in peer_select.c.
+	- Added warnings if ACL code detects subdomains in SPLAY
+	  trees.
+	- Rewrote some bits of httpRequestFree() to eliminate
+	  possible bugs that could cause an "e->lock_count" asseertion.
+	- Added value/bounds checking to _db_init() when setting
+	  the debugLevels[] array.
 
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 

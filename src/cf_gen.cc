@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.31 1999/01/24 04:29:43 wessels Exp $
+ * $Id: cf_gen.cc,v 1.32 1999/04/15 06:15:47 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -177,17 +177,17 @@ main(int argc, char *argv[])
 		(void) 0;
 	    } else if (!strncmp(buff, "COMMENT:", 8)) {
 		ptr = buff + 8;
-		while (isspace(*ptr))
+		while (xisspace(*ptr))
 		    ptr++;
 		curr->comment = xstrdup(ptr);
 	    } else if (!strncmp(buff, "DEFAULT:", 8)) {
 		ptr = buff + 8;
-		while (isspace(*ptr))
+		while (xisspace(*ptr))
 		    ptr++;
 		curr->default_value = xstrdup(ptr);
 	    } else if (!strncmp(buff, "DEFAULT_IF_NONE:", 16)) {
 		ptr = buff + 16;
-		while (isspace(*ptr))
+		while (xisspace(*ptr))
 		    ptr++;
 		curr->default_if_none = xstrdup(ptr);
 	    } else if (!strncmp(buff, "LOC:", 4)) {

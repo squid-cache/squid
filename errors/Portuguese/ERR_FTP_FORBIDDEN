@@ -1,0 +1,18 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL solicitada n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>A URL solicitada n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+Ocorreu uma falha na autentica&ccedil;&atilde;o no FTP,
+na tentativa de recuperar a seguinte URL:
+<A HREF="%U">%U</A>
+<P>
+Squid emitiu o seguinte comando FTP:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+e recebeu esta resposta:
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+</P>
+

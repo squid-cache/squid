@@ -1,5 +1,5 @@
 /*
- * $Id: cache_snmp.h,v 1.22 1999/01/26 06:16:30 glenn Exp $
+ * $Id: cache_snmp.h,v 1.23 1999/04/15 06:15:35 wessels Exp $
  */
 
 #ifdef SQUID_SNMP
@@ -35,6 +35,9 @@
 
 #define SQUIDMIB 1, 3, 6, 1, 4, 1, 3495, 1
 #define LEN_SQUIDMIB 8
+#define INSTANCE 0
+#define TIME_INDEX 1, 5, 60
+#define TIME_INDEX_LEN 3
 
 /* basic groups under .squid */
 
@@ -61,6 +64,9 @@ enum {
     SYS_END
 };
 
+#define LEN_SYS LEN_SQ_SYS + 1
+#define LEN_SYS_INST LEN_SQ_SYS + 2
+
 /* 
 	cacheConfig group 
 */
@@ -75,6 +81,9 @@ enum {
     CONF_END
 };
 
+#define LEN_CONF LEN_SQ_CONF + 1
+#define LEN_CONF_INST LEN_SQ_CONF + 2
+
 enum {
     CONF_ST_START,
     CONF_ST_MMAXSZ,
@@ -83,6 +92,9 @@ enum {
     CONF_ST_SWLOWM,
     CONF_ST_END
 };
+
+#define LEN_CONF_ST LEN_CONF + 1
+#define LEN_CONF_ST_INST LEN_CONF + 2
 
 /* 
 	cacheMesh group 
@@ -132,6 +144,14 @@ enum {				/* cacheClientTable */
 */
 
 enum {
+    NET_START,
+    NET_IP_CACHE,
+    NET_FQDN_CACHE,
+    NET_DNS_CACHE,
+    NET_END
+};
+
+enum {
     IP_START,
     IP_ENT,
     IP_REQ,
@@ -172,7 +192,6 @@ enum {
     PERF_START,
     PERF_SYS,
     PERF_PROTO,
-    PERF_PEER,
     PERF_END
 };
 

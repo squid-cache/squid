@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.55 1999/04/07 21:17:50 wessels Exp $
+ * $Id: forward.cc,v 1.56 1999/04/15 06:15:55 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -367,18 +367,7 @@ fwdReforward(FwdState * fwdState)
     }
     s = e->mem_obj->reply->sline.status;
     debug(17, 3) ("fwdReforward: status %d\n", (int) s);
-    switch (s) {
-    case HTTP_FORBIDDEN:
-    case HTTP_INTERNAL_SERVER_ERROR:
-    case HTTP_NOT_IMPLEMENTED:
-    case HTTP_BAD_GATEWAY:
-    case HTTP_SERVICE_UNAVAILABLE:
-    case HTTP_GATEWAY_TIMEOUT:
-	return 1;
-    default:
-	return 0;
-    }
-    /* NOTREACHED */
+    return fwdReforwardableStatus(s);
 }
 
 /* PUBLIC FUNCTIONS */
@@ -465,6 +454,8 @@ fwdCheckDeferRead(int fd, void *data)
 	    if (delayMostBytesWanted(mem, 1) == 0)
 		return 1;
 #endif
+    if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT))
+	return 0;
     if (mem->inmem_hi - storeLowestMemReaderOffset(e) < READ_AHEAD_GAP)
 	return 0;
     return 1;
@@ -582,4 +573,21 @@ fwdStats(StoreEntry * s)
 	}
 	storeAppendPrintf(s, "\n");
     }
+}
+
+int
+fwdReforwardableStatus(http_status s)
+{
+    switch (s) {
+    case HTTP_FORBIDDEN:
+    case HTTP_INTERNAL_SERVER_ERROR:
+    case HTTP_NOT_IMPLEMENTED:
+    case HTTP_BAD_GATEWAY:
+    case HTTP_SERVICE_UNAVAILABLE:
+    case HTTP_GATEWAY_TIMEOUT:
+	return 1;
+    default:
+	return 0;
+    }
+    /* NOTREACHED */
 }

@@ -1,0 +1,17 @@
+<HTML><HEAD>
+<TITLE>VIGA: P&auml;ring URLile ei saa vastust</TITLE>
+</HEAD><BODY>
+<H1>VIGA</H1>
+<H2>P&auml;ring URLile ei saa vastust</H2>
+<HR>
+<P>
+FTP server oli j&auml;rgneva URLi lugemise ajal liiga koormatud:
+<A HREF="%U">%U</A>
+<P>
+Squid saatis j&auml;rgneva FTP k&auml;su:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+ja sai sellise vastuse
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+</P>
+

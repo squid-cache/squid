@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.325 1999/04/07 21:39:04 wessels Exp $
+ * $Id: cache_cf.cc,v 1.326 1999/04/15 06:15:45 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -327,7 +327,7 @@ configDoConfigure(void)
 	    cbdataFree(Config.Wais.peer);
 	Config.Wais.peer = memAllocate(MEM_PEER);
 	cbdataAdd(Config.Wais.peer, peerDestroy, MEM_PEER);
-	Config.Wais.peer->host = Config.Wais.relayHost;
+	Config.Wais.peer->host = xstrdup(Config.Wais.relayHost);
 	Config.Wais.peer->http_port = Config.Wais.relayPort;
     }
 }
@@ -771,7 +771,7 @@ parse_cachedir(cacheSwap * swap)
     int size;
     int l1;
     int l2;
-    int read_only = 0;
+    unsigned int read_only = 0;
     SwapDir *tmp = NULL;
     if ((path = strtok(NULL, w_space)) == NULL)
 	self_destruct();
@@ -801,10 +801,10 @@ parse_cachedir(cacheSwap * swap)
 		debug(3, 1) ("Cache dir '%s' size changed to %d KB\n",
 		    path, size);
 	    tmp->max_size = size;
-	    if (tmp->read_only != read_only)
+	    if (tmp->flags.read_only != read_only)
 		debug(3, 1) ("Cache dir '%s' now %s\n",
 		    path, read_only ? "Read-Only" : "Read-Write");
-	    tmp->read_only = read_only;
+	    tmp->flags.read_only = read_only;
 	    return;
 	}
     }
@@ -824,7 +824,7 @@ parse_cachedir(cacheSwap * swap)
     tmp->max_size = size;
     tmp->l1 = l1;
     tmp->l2 = l2;
-    tmp->read_only = read_only;
+    tmp->flags.read_only = read_only;
     tmp->swaplog_fd = -1;
     swap->n_configured++;
 }
@@ -886,7 +886,7 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
 	    p->http_port,
 	    p->icp.port);
 	dump_peer_options(entry, p);
-	for (d = p->pinglist; d; d = d->next) {
+	for (d = p->peer_domain; d; d = d->next) {
 	    storeAppendPrintf(entry, "cache_peer_domain %s %s%s\n",
 		p->host,
 		d->do_ping ? null_string : "!",
@@ -997,7 +997,8 @@ parse_peer(peer ** head)
 	    p->carp.hash += (p->carp.hash << 19) + *token;
     }
 #endif
-    cbdataAdd(p, peerDestroy, MEM_PEER);	/* must preceed peerDigestCreate */
+    /* This must preceed peerDigestCreate */
+    cbdataAdd(p, peerDestroy, MEM_PEER);
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest) {
 	p->digest = peerDigestCreate(p);
@@ -1146,7 +1147,7 @@ parse_hostdomain(void)
 	    domain++;
 	}
 	l->domain = xstrdup(domain);
-	for (L = &(p->pinglist); *L; L = &((*L)->next));
+	for (L = &(p->peer_domain); *L; L = &((*L)->next));
 	*L = l;
     }
 }

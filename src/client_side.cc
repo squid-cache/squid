@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.442 1999/03/24 04:16:08 rousskov Exp $
+ * $Id: client_side.cc,v 1.443 1999/04/15 06:15:50 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -201,10 +201,16 @@ clientAccessCheckDone(int answer, void *data)
 	debug(33, 5) ("Access Denied: %s\n", http->uri);
 	debug(33, 5) ("AclMatchedName = %s\n",
 	    AclMatchedName ? AclMatchedName : "<null>");
+	/*
+	 * NOTE: get page_id here, based on AclMatchedName because
+	 * if USE_DELAY_POOLS is enabled, then AclMatchedName gets
+	 * clobbered in the clientCreateStoreEntry() call
+	 * just below.  Pedro Ribeiro <pribeiro@isel.pt>
+	 */
+	page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
 	http->log_type = LOG_TCP_DENIED;
 	http->entry = clientCreateStoreEntry(http, http->request->method,
 	    null_request_flags);
-	page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
 	if (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName)) {
 	    if (!http->flags.accel) {
 		/* Proxy authorisation needed */
@@ -291,13 +297,18 @@ clientProcessExpired(void *data)
     }
     http->request->flags.refresh = 1;
     http->old_entry = http->entry;
+    /*
+     * Assert that 'http' is already a client of old_entry.  If 
+     * it is not, then the beginning of the object data might get
+     * freed from memory before we need to access it.
+     */
+    assert(storeClientListSearch(http->old_entry->mem_obj, http));
     entry = storeCreateEntry(url,
 	http->log_uri,
 	http->request->flags,
 	http->request->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
     storeClientListAdd(entry, http);
-    storeClientListAdd(http->old_entry, http);
 #if DELAY_POOLS
     /* delay_id is already set on original store client */
     delaySetStoreClient(entry, http, delayClient(http->request));
@@ -364,17 +375,23 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
-    MemObject *mem = entry->mem_obj;
+    MemObject *mem;
     const char *url = storeUrl(entry);
     int unlink_request = 0;
     StoreEntry *oldentry;
     int recopy = 1;
-    const http_status status = mem->reply->sline.status;
+    http_status status;
     debug(33, 3) ("clientHandleIMSReply: %s, %d bytes\n", url, (int) size);
+    if (entry == NULL) {
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
+	return;
+    }
     if (size < 0 && !EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
     }
+    mem = entry->mem_obj;
+    status = mem->reply->sline.status;
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	debug(33, 3) ("clientHandleIMSReply: ABORTED '%s'\n", url);
 	/* We have an existing entry, but failed to validate it */
@@ -605,20 +622,22 @@ httpRequestFree(void *data)
     clientHttpRequest *http = data;
     clientHttpRequest **H;
     ConnStateData *conn = http->conn;
-    StoreEntry *entry = http->entry;
+    StoreEntry *e;
     request_t *request = http->request;
     MemObject *mem = NULL;
-    debug(33, 3) ("httpRequestFree: %s\n", storeUrl(entry));
+    debug(33, 3) ("httpRequestFree: %s\n", storeUrl(http->entry));
     if (!clientCheckTransferDone(http)) {
-	if (entry)
-	    storeUnregister(entry, http);
-	entry = http->entry;	/* reset, IMS might have changed it */
-	if (entry && entry->ping_status == PING_WAITING)
-	    storeReleaseRequest(entry);
+	if ((e = http->entry)) {
+	    http->entry = NULL;
+	    storeUnregister(e, http);
+	    storeUnlockObject(e);
+	}
+	if (http->entry && http->entry->ping_status == PING_WAITING)
+	    storeReleaseRequest(http->entry);
     }
     assert(http->log_type < LOG_TYPE_MAX);
-    if (entry)
-	mem = entry->mem_obj;
+    if (http->entry)
+	mem = http->entry->mem_obj;
     if (http->out.size || http->log_type) {
 	http->al.icp.opcode = ICP_INVALID;
 	http->al.url = http->log_uri;
@@ -662,17 +681,17 @@ httpRequestFree(void *data)
     safe_free(http->al.headers.reply);
     safe_free(http->redirect.location);
     stringClean(&http->range_iter.boundary);
-    if (entry) {
+    if ((e = http->entry)) {
 	http->entry = NULL;
-	storeUnregister(entry, http);
-	storeUnlockObject(entry);
+	storeUnregister(e, http);
+	storeUnlockObject(e);
     }
     /* old_entry might still be set if we didn't yet get the reply
      * code in clientHandleIMSReply() */
-    if (http->old_entry) {
-	storeUnregister(http->old_entry, http);
-	storeUnlockObject(http->old_entry);
+    if ((e = http->old_entry)) {
 	http->old_entry = NULL;
+	storeUnregister(e, http);
+	storeUnlockObject(e);
     }
     requestUnlink(http->request);
     assert(http != http->next);
@@ -2020,19 +2039,19 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	debug(33, 1) ("parseHttpRequest: Missing URL\n");
 	return parseHttpRequestAbort(conn, "error:missing-url");
     }
-    while (isspace(*url))
+    while (xisspace(*url))
 	url++;
     t = url + strlen(url);
     assert(*t == '\0');
     token = NULL;
     while (t > url) {
 	t--;
-	if (isspace(*t) && !strncmp(t + 1, "HTTP/", 5)) {
+	if (xisspace(*t) && !strncmp(t + 1, "HTTP/", 5)) {
 	    token = t + 1;
 	    break;
 	}
     }
-    while (t > url && isspace(*t))
+    while (t > url && xisspace(*t))
 	*(t--) = '\0';
     debug(33, 5) ("parseHttpRequest: URI is '%s'\n", url);
     if (token == NULL) {
@@ -2247,7 +2266,7 @@ clientReadRequest(int fd, void *data)
     while (conn->in.offset > 0) {
 	int nrequests;
 	size_t req_line_sz;
-	while (conn->in.offset > 0 && isspace(conn->in.buf[0])) {
+	while (conn->in.offset > 0 && xisspace(conn->in.buf[0])) {
 	    xmemmove(conn->in.buf, conn->in.buf + 1, conn->in.offset - 1);
 	    conn->in.offset--;
 	}
@@ -2316,9 +2335,9 @@ clientReadRequest(int fd, void *data)
 	    request->flags.accelerated = http->flags.accel;
 	    if (!http->flags.internal) {
 		if (internalCheck(strBuf(request->urlpath))) {
-		    if (0 == strcasecmp(request->host, internalHostname())) {
-			if (request->port == Config.Port.http->i)
-			    http->flags.internal = 1;
+		    if (0 == strcasecmp(request->host, internalHostname()) &&
+			request->port == Config.Port.http->i) {
+			http->flags.internal = 1;
 		    } else if (internalStaticCheck(strBuf(request->urlpath))) {
 			xstrncpy(request->host, internalHostname(), SQUIDHOSTNAMELEN);
 			request->port = Config.Port.http->i;
@@ -2512,6 +2531,7 @@ httpAccept(int sock, void *data)
 	commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
 #if USE_IDENT
 	identChecklist.src_addr = peer.sin_addr;
+	identChecklist.my_addr = me.sin_addr;
 	if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
 	    identStart(&me, &peer, clientIdentDone, connState);
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.49 1999/01/24 05:24:22 wessels Exp $
+ * $Id: ident.cc,v 1.50 1999/04/15 06:15:59 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -159,7 +159,7 @@ identReadReply(int fd, void *data)
     debug(30, 5) ("identReadReply: FD %d: Read '%s'\n", fd, buf);
     if (strstr(buf, "USERID")) {
 	if ((ident = strrchr(buf, ':'))) {
-	    while (isspace(*++ident));
+	    while (xisspace(*++ident));
 	    identCallback(state, ident);
 	}
     }

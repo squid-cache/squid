@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.39 1998/11/21 16:54:28 wessels Exp $
+ * $Id: pinger.cc,v 1.40 1999/04/15 06:16:05 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -152,6 +152,14 @@ pingerSendEcho(struct in_addr to, int opcode, char *payload, int len)
     struct sockaddr_in S;
     memset(pkt, '\0', MAX_PKT_SZ);
     icmp = (struct icmphdr *) (void *) pkt;
+
+    /*
+     * cevans - beware signed/unsigned issues in untrusted data from
+     * the network!!
+     */
+    if (len < 0) {
+	len = 0;
+    }
     icmp->icmp_type = ICMP_ECHO;
     icmp->icmp_code = 0;
     icmp->icmp_cksum = 0;
@@ -169,6 +177,9 @@ pingerSendEcho(struct in_addr to, int opcode, char *payload, int len)
     }
     icmp->icmp_cksum = in_cksum((u_short *) icmp, icmp_pktsize);
     S.sin_family = AF_INET;
+    /*
+     * cevans: alert: trusting to-host, was supplied in network packet
+     */
     S.sin_addr = to;
     S.sin_port = 0;
     assert(icmp_pktsize <= MAX_PKT_SZ);
@@ -294,9 +305,12 @@ pingerReadRequest(void)
     if (n < 0)
 	return n;
     guess_size = n - (sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ);
-    if (guess_size != pecho.psize)
+    if (guess_size != pecho.psize) {
 	fprintf(stderr, "size mismatch, guess=%d psize=%d\n",
 	    guess_size, pecho.psize);
+	errno = 0;
+	return -1;
+    }
     pingerSendEcho(pecho.to,
 	pecho.opcode,
 	pecho.payload,
@@ -336,12 +350,19 @@ main(int argc, char *argv[])
     char *t;
     time_t last_check_time = 0;
 
+/*
+ * cevans - do this first. It grabs a raw socket. After this we can
+ * drop privs
+ */
+    pingerOpen();
+    setgid(getgid());
+    setuid(getuid());
+
     if ((t = getenv("SQUID_DEBUG")))
 	debug_args = xstrdup(t);
     getCurrentTime();
     _db_init(NULL, debug_args);
 
-    pingerOpen();
     for (;;) {
 	tv.tv_sec = 10;
 	tv.tv_usec = 0;

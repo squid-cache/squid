@@ -1,17 +1,20 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>ERRO: A URL solicitada n&atilde;o pode ser recuperada</TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>ERRO</H1>
+<H2>A URL solicitada n&atilde;o pode ser recuperada</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
-<A HREF="%U">%U</A>
+Enquanto tentava recuperar a URL:
+<A HREF="%U">%U</A>,
 <P>
-The following error was encountered:
+o seguite erro foi encontrado:
 <UL>
 <P>
-This cache is in the process of shutting down and can not
-service your request at this time.  Please retry your
-request again soon.
+Este servidor de cache est&aacute; em procedimento de 
+<STRONG>shutting down</STRONG> e n&atilde;o pode servir
+sua requisi&ccedil;&atilde;o neste momento. Por favor,
+tente mais tarde. Voc&ecirc; pode tentar usar outro servidor
+de cache, ou desligar o <STRONG>proxy</STRONG>, alterando a 
+configura&ccedil;&atilde;o de seu <STRONG>browser</STRONG>.
 </P>

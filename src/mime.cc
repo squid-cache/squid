@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.84 1998/12/05 00:54:32 wessels Exp $
+ * $Id: mime.cc,v 1.85 1999/04/15 06:16:01 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -84,11 +84,11 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
     for (p = mime; *p; p += strcspn(p, "\n\r")) {
 	if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
 	    return NULL;
-	while (isspace(*p))
+	while (xisspace(*p))
 	    p++;
 	if (strncasecmp(p, name, namelen))
 	    continue;
-	if (!isspace(p[namelen]) && p[namelen] != ':')
+	if (!xisspace(p[namelen]) && p[namelen] != ':')
 	    continue;
 	l = strcspn(p, "\n\r") + 1;
 	if (l > GET_HDR_SZ)
@@ -99,12 +99,12 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
 	q += namelen;
 	if (*q == ':')
 	    q++, got = 1;
-	while (isspace(*q))
+	while (xisspace(*q))
 	    q++, got = 1;
 	if (got && prefix) {
 	    /* we could process list entries here if we had strcasestr(). */
 	    /* make sure we did not match a part of another field-value */
-	    got = !strncasecmp(q, prefix, preflen) && !isalpha(q[preflen]);
+	    got = !strncasecmp(q, prefix, preflen) && !xisalpha(q[preflen]);
 	}
 	if (got) {
 	    debug(25, 5) ("mime_get_header: returning '%s'\n", q);
@@ -393,6 +393,7 @@ mimeLoadIconFile(const char *icon)
     LOCAL_ARRAY(char, url, MAX_URL);
     char *buf;
     const char *type = mimeGetContentType(icon);
+    HttpReply *reply;
     if (type == NULL)
 	fatal("Unknown icon format while reading mime.conf\n");
     buf = internalLocalUri("/squid-internal-static/icons/", icon);
@@ -418,10 +419,13 @@ mimeLoadIconFile(const char *icon)
     assert(e != NULL);
     storeSetPublicKey(e);
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
-    httpReplyReset(e->mem_obj->reply);
-    httpReplySetHeaders(e->mem_obj->reply, 1.0, HTTP_OK, NULL,
-	type, (int) sb.st_size, sb.st_mtime, squid_curtime + 86400);
-    httpReplySwapOut(e->mem_obj->reply, e);
+    httpReplyReset(reply = e->mem_obj->reply);
+    httpReplySetHeaders(reply, 1.0, HTTP_OK, NULL,
+	type, (int) sb.st_size, sb.st_mtime, -1);
+    reply->cache_control = httpHdrCcCreate();
+    httpHdrCcSetMaxAge(reply->cache_control, 86400);
+    httpHeaderPutCc(&reply->header, reply->cache_control);
+    httpReplySwapOut(reply, e);
     /* read the file into the buffer and append it to store */
     buf = memAllocate(MEM_4K_BUF);
     while ((n = read(fd, buf, 4096)) > 0)

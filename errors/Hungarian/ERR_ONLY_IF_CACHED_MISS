@@ -21,6 +21,6 @@ direktíva volt beállítva.
 
 Olyan kérést küldött el, amelyben <code>only-if-cached</code> cache vezérlõ direktíva  
 található. A dokumentum nincs a cache-ben <em>vagy</em> a dokumentum
-érvényesség-ellenõrzést igényelt volna, ezt azonban a <code>only-if-cached</code>
+érvényesség-ellenõrzést igényelt volna, ezt azonban az <code>only-if-cached</code>
 direktíva megtiltotta.
 </P>

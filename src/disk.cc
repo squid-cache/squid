@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.141 1999/01/29 17:33:05 wessels Exp $
+ * $Id: disk.cc,v 1.142 1999/04/15 06:15:53 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -75,6 +75,7 @@ file_open(const char *path, int mode, FOCB * callback, void *callback_data, void
     mode |= SQUID_NONBLOCK;
 
     /* Open file */
+    Opening_FD++;
 #if USE_ASYNC_IO
     if (callback != NULL) {
 	aioOpen(path, mode, 0644, fileOpenComplete, ctrlp, tag);
@@ -97,6 +98,7 @@ fileOpenComplete(int unused, void *data, int fd, int errcode)
     debug(6, 5) ("fileOpenComplete: FD %d, data %p, errcode %d\n",
 	fd, data, errcode);
     Counter.syscalls.disk.opens++;
+    Opening_FD--;
     if (fd == -2 && errcode == -2) {	/* Cancelled - clean up */
 	if (ctrlp->callback)
 	    (ctrlp->callback) (ctrlp->callback_data, fd, errcode);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.84 1999/01/19 02:24:22 wessels Exp $
+ * $Id: cachemgr.cc,v 1.85 1999/04/15 06:15:46 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -206,9 +206,9 @@ xstrtok(char **str, char del)
 	    *str = NULL;
 	/* trim */
 	len = strlen(tok);
-	while (len && isspace(tok[len - 1]))
+	while (len && xisspace(tok[len - 1]))
 	    tok[--len] = '\0';
-	while (isspace(*tok))
+	while (xisspace(*tok))
 	    tok++;
 	return tok;
     } else
@@ -273,8 +273,8 @@ parse_status_line(const char *sline, const char **statusStr)
 	*statusStr = NULL;
     if (strncasecmp(sline, "HTTP/", 5) || !sp)
 	return -1;
-    while (isspace(*++sp));
-    if (!isdigit(*sp))
+    while (xisspace(*++sp));
+    if (!xisdigit(*sp))
 	return -1;
     if (statusStr)
 	*statusStr = sp;
@@ -725,6 +725,7 @@ static const char *
 make_auth_header(const cachemgr_request * req)
 {
     static char buf[1024];
+    off_t l = 0;
     const char *str64;
     if (!req->passwd)
 	return "";
@@ -734,6 +735,8 @@ make_auth_header(const cachemgr_request * req)
 	req->passwd);
 
     str64 = base64_encode(buf);
-    snprintf(buf, sizeof(buf), "Authorization: Basic %s\r\n", str64);
+    l += snprintf(buf, sizeof(buf), "Authorization: Basic %s\r\n", str64);
+    l += snprintf(&buf[l], sizeof(buf) - l,
+	"Proxy-Authorization: Basic %s\r\n", str64);
     return buf;
 }

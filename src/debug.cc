@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.74 1999/01/11 21:55:38 wessels Exp $
+ * $Id: debug.cc,v 1.75 1999/04/15 06:15:51 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -115,7 +115,6 @@ debugArg(const char *arg)
     int s = 0;
     int l = 0;
     int i;
-
     if (!strncasecmp(arg, "ALL", 3)) {
 	s = -1;
 	arg += 4;
@@ -124,7 +123,12 @@ debugArg(const char *arg)
 	while (*arg && *arg++ != ',');
     }
     l = atoi(arg);
-
+    assert(s >= -1);
+    assert(s < MAX_DEBUG_SECTIONS);
+    if (l < 0)
+	l = 0;
+    if (l > 10)
+	l = 10;
     if (s >= 0) {
 	debugLevels[s] = l;
 	return;

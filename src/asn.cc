@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.56 1999/01/29 21:28:07 wessels Exp $
+ * $Id: asn.cc,v 1.57 1999/04/15 06:15:44 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -238,10 +238,10 @@ asHandleReply(void *data, char *buf, ssize_t size)
     }
     s = buf;
     while (s - buf < size && *s != '\0') {
-	while (*s && isspace(*s))
+	while (*s && xisspace(*s))
 	    s++;
 	for (t = s; *t; t++) {
-	    if (isspace(*t))
+	    if (xisspace(*t))
 		break;
 	}
 	if (*t == '\0') {

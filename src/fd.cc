@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.35 1999/01/21 21:13:01 wessels Exp $
+ * $Id: fd.cc,v 1.36 1999/04/15 06:15:54 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -173,7 +173,7 @@ fdDumpOpen(void)
 int
 fdNFree(void)
 {
-    return Squid_MaxFD - Number_FD;
+    return Squid_MaxFD - Number_FD - Opening_FD;
 }
 
 /* Called when we runs out of file descriptors */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.61 1999/01/24 02:26:19 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.62 1999/04/15 06:15:40 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -819,7 +819,7 @@ httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *authSche
     if (!l || strncasecmp(field, authScheme, l))	/* wrong scheme */
 	return NULL;
     field += l;
-    if (!isspace(*field))	/* wrong scheme */
+    if (!xisspace(*field))	/* wrong scheme */
 	return NULL;
     /* skip white space */
     field += xcountws(field);
@@ -933,7 +933,7 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     else
 	e->name = Headers[id].name;
     /* trim field value */
-    while (value_start < field_end && isspace(*value_start))
+    while (value_start < field_end && xisspace(*value_start))
 	value_start++;
     /* set field value */
     stringLimitInit(&e->value, value_start, field_end - value_start);

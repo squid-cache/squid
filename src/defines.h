@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.71 1999/02/02 23:57:22 wessels Exp $
+ * $Id: defines.h,v 1.72 1999/04/15 06:15:52 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -201,7 +201,7 @@
 #define SwapMetaType(x) (char)x[0]
 #define SwapMetaSize(x) &x[sizeof(char)]
 #define SwapMetaData(x) &x[STORE_META_TLD_START]
-#define STORE_HDR_METASIZE (4*sizeof(time_t)+2*sizeof(u_short)+sizeof(int))
+#define STORE_HDR_METASIZE (4*sizeof(time_t)+2*sizeof(u_short)+sizeof(size_t))
 
 #define STORE_ENTRY_WITH_MEMOBJ		1
 #define STORE_ENTRY_WITHOUT_MEMOBJ	0

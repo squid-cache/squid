@@ -22,6 +22,6 @@ A hiba oka valószínûleg alábbiakban rejlik:
 <UL>
 <LI>A cache adminisztrátor nem engedélyezi a forrás szerverekhez való közvetlen
     kapcsolat felépítését és
-<LI>minden általunk használt szülõ cache szerver nem érhetõ el jelenleg.
+<LI>egyik általunk használt szülõ cache szerver sem érhetõ el jelenleg.
 </UL>
 </P>

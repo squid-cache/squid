@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.61 1999/04/14 06:36:09 wessels Exp $
+ * $Id: store_client.cc,v 1.62 1999/04/15 06:16:11 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -132,6 +132,9 @@ storeClientListAdd(StoreEntry * e, void *data)
 	assert(e->swap_file_number > -1 || storeSwapOutAble(e));
     for (T = &mem->clients; *T; T = &(*T)->next);
     *T = sc;
+#if DELAY_POOLS
+    delayRegisterDelayIdPtr(&sc->delay_id);
+#endif
 }
 
 static void
@@ -466,6 +469,9 @@ storeUnregister(StoreEntry * e, void *data)
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, -1);
     }
+#if DELAY_POOLS
+    delayUnregisterDelayIdPtr(&sc->delay_id);
+#endif
     cbdataFree(sc);
     assert(e->lock_count > 0);
     if (mem->nclients == 0)
@@ -541,7 +547,7 @@ CheckQuickAbort2(StoreEntry * entry)
 	debug(20, 3) ("CheckQuickAbort2: YES KEY_PRIVATE\n");
 	return 1;
     }
-    expectlen = mem->reply->content_length;
+    expectlen = mem->reply->content_length + mem->reply->hdr_sz;
     curlen = (int) mem->inmem_hi;
     minlen = (int) Config.quickAbort.min << 10;
     if (minlen < 0) {
