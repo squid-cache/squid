@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.281 2002/09/01 15:13:08 hno Exp $
+# $Id: cf.data.pre,v 1.282 2002/09/04 03:51:41 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1831,15 +1831,6 @@ DOC_START
 	connection to a peer cache.  The default is 30 seconds.   You
 	may also set different timeout values for individual neighbors
 	with the 'connect-timeout' option on a 'cache_peer' line.
-DOC_END
-
-NAME: siteselect_timeout
-COMMENT: time-units
-TYPE: time_t
-LOC: Config.Timeout.siteSelect
-DEFAULT: 4 seconds
-DOC_START
-	For URN to multiple URL's URL selection
 DOC_END
 
 NAME: read_timeout
