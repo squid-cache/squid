@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.487 2003/08/04 22:14:42 robertc Exp $
+ * $Id: protos.h,v 1.488 2003/08/10 05:11:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -299,7 +299,6 @@ SQUIDCEXTERN mb_size_t httpBuildRequestPrefix(request_t * request,
         request_t * orig_request,
         StoreEntry * entry,
         MemBuf * mb,
-        int cfd,
         http_state_flags);
 SQUIDCEXTERN void httpAnonInitModule(void);
 SQUIDCEXTERN int httpAnonHdrAllowed(http_hdr_type hdr_id);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.6 2003/07/12 07:22:09 robertc Exp $
+ * $Id: MemObject.h,v 1.7 2003/08/10 05:11:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -117,7 +117,6 @@ public:
     struct timeval start_ping;
     IRCB *ping_reply_callback;
     void *ircb_data;
-    int fd;                     /* FD of client creating this entry */
 
     struct
     {

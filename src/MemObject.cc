@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.11 2003/08/03 10:37:30 robertc Exp $
+ * $Id: MemObject.cc,v 1.12 2003/08/10 05:11:22 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -106,7 +106,6 @@ MemObject::MemObject(char const *aUrl, char const *aLog_url) :
 
     log_url = xstrdup(aLog_url);
     object_sz = -1;
-    fd = -1;
     /* XXX account log_url */
     debug(20, 3) ("MemObject::MemObject: initialized %p\n", this);
 }
@@ -125,11 +124,14 @@ MemObject::~MemObject()
 
     data_hdr.freeContent();
 
+#if 0
     /*
      * There is no way to abort FD-less clients, so they might
-     * still have mem->clients set if mem->fd == -1
+     * still have mem->clients set.
      */
-    assert(fd == -1 || clients.head == NULL);
+    assert(clients.head == NULL);
+
+#endif
 
     httpReplyDestroy((HttpReply *)_reply);
 
