@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.179 1999/07/13 14:51:05 wessels Exp $
+#  $Id: Makefile.in,v 1.180 1999/12/10 18:13:50 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -27,6 +27,7 @@ UNLINKD_EXE	= unlinkd$(exec_suffix)
 PINGER_EXE	= pinger$(exec_suffix)
 CACHEMGR_EXE	= cachemgr$(cgi_suffix)
 DISKD_EXE	= diskd$(exec_suffix)
+OPT_DISKD_EXE	= @OPT_DISKD_EXE@
 
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
@@ -65,7 +66,6 @@ MV		= @MV@
 RM		= @RM@
 SHELL		= /bin/sh
 
-
 INCLUDE		= -I. -I../include -I$(top_srcdir)/include
 CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
 SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @SQUID_PTHREAD_LIB@ \
@@ -77,7 +77,7 @@ PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 STD_APP_LIBS    = -L../lib -lmiscutil $(XTRA_LIBS)
 
 PROGS           = $(SQUID_EXE) $(CLIENT_EXE)
-UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE)
+UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE) $(OPT_DISKD_EXE)
 SUID_UTILS	= $(PINGER_EXE)
 CGIPROGS	= $(CACHEMGR_EXE)
 OBJS	 	= \
@@ -156,7 +156,7 @@ OBJS	 	= \
 		store.o \
 		store_io.o \
 		store_io_ufs.o \
-		diskd.o \
+		@DISKD_OBJS@ \
 		store_client.o \
 		store_digest.o \
 		store_dir.o \
