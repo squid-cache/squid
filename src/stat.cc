@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.178 1997/12/02 00:17:43 wessels Exp $
+ * $Id: stat.cc,v 1.179 1997/12/03 01:31:40 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -115,7 +115,6 @@ static void proto_count(cacheinfo *, protocol_t, log_type);
 static void proto_newobject(cacheinfo *, protocol_t, int, int);
 static void proto_purgeobject(cacheinfo *, protocol_t, int);
 static void proto_touchobject(cacheinfo *, protocol_t, int);
-int memoryAccounted(void);
 static void statAvgTick(void *notused);
 
 #ifdef XMALLOC_STATISTICS
@@ -497,7 +496,7 @@ statFiledescriptors(StoreEntry * sentry)
 }
 
 int
-memoryAccounted(void)
+statMemoryAccounted(void)
 {
     return (int)
 	meta_data.store_entries * sizeof(StoreEntry) +
@@ -733,7 +732,7 @@ info_get(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
 	"Total Accounted",
-	memoryAccounted() >> 10);
+	statMemoryAccounted() >> 10);
 
 #if XMALLOC_STATISTICS
     storeAppendPrintf(sentry, "{Memory allocation statistics}\n");

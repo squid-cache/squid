@@ -251,6 +251,10 @@ extern PF snmpHandleUdp;
 extern void snmpInit(void);
 extern void snmpConnectionOpen(void);
 extern void snmpConnectionClose(void);
+extern int create_view (char **);
+extern int create_user (char **);
+extern int create_community (char **);
+extern void tokenize (char *, char **, int);
 #endif /* SQUID_SNMP */
 
 extern void AppendUdp(icpUdpData *);
@@ -381,6 +385,7 @@ extern void stackFreeMemory(Stack *);
 extern void stat_init(cacheinfo **, const char *);
 extern void pconnHistCount(int, int);
 extern void statAvgInit(void);
+extern int statMemoryAccounted(void);
 
 /* To reduce memory fragmentation, we now store the memory version of an
  * object in fixed size blocks of size PAGE_SIZE and instead of calling 
