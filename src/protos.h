@@ -84,6 +84,7 @@ extern void clientHttpConnectionsOpen(void);
 extern void clientHttpConnectionsClose(void);
 extern StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, int);
 extern int isTcpHit(log_type);
+extern int handleConnectionHeader(int flag, char *where, char *what);
 
 extern int commSetNonBlocking(int fd);
 extern void commSetCloseOnExec(int fd);
@@ -870,6 +871,16 @@ extern void stringAppend(String * s, const char *buf, int len);
 /* extern void stringAppendf(String *s, const char *fmt, ...); */
 
 /*
+ * ipc.c
+ */
+extern int ipcCreate(int type,
+    const char *prog,
+    char *const args[],
+    const char *name,
+    int *rfd,
+    int *wfd);
+
+/*
  * prototypes for system functions missing from system includes
  */
 
@@ -878,12 +889,3 @@ int getrusage(int, struct rusage *);
 int getpagesize(void);
 int gethostname(char *, int);
 #endif
-
-extern int ipcCreate(int type,
-    const char *prog,
-    char *const args[],
-    const char *name,
-    int *rfd,
-    int *wfd);
-
-extern int handleConnectionHeader(int, char *, char *);
