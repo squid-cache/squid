@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.339 2000/05/02 18:51:50 hno Exp $
+ * $Id: cache_cf.cc,v 1.340 2000/05/02 20:31:44 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1037,6 +1037,7 @@ parse_peer(peer ** head)
 	head = &(*head)->next;
     *head = p;
     Config.npeers++;
+    peerClearRR(p);
 }
 
 static void
