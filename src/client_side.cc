@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.12 1996/08/27 05:17:17 wessels Exp $
+ * $Id: client_side.cc,v 1.13 1996/08/28 17:22:52 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -115,7 +115,7 @@ void clientAccessCheck(icpState, handler)
 	icpState->aclChecklist->request = requestLink(icpState->request);
     }
 #if USE_PROXY_AUTH
-    if (clientProxyAuthCheck == 0) {
+    if (clientProxyAuthCheck(icpState) == 0) {
 	char *wbuf = NULL;
 	int fd = icpState->fd;
 	debug(33, 4, "Proxy Denied: %s\n", icpState->url);
