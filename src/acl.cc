@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.117 1997/11/12 23:36:21 wessels Exp $
+ * $Id: acl.cc,v 1.118 1997/11/13 05:25:48 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -164,6 +164,10 @@ aclType(const char *s)
 	return ACL_BROWSER;
     if (!strcmp(s, "proxy_auth"))
 	return ACL_PROXY_AUTH;
+    if (!strcmp(s, "src_as"))
+	return ACL_SRC_ASN;
+    if (!strcmp(s, "dst_as"))
+	return ACL_DST_ASN;
     return ACL_NONE;
 }
 
@@ -688,9 +692,13 @@ aclParseAclLine(acl ** head)
     case ACL_PROXY_AUTH:
 	aclParseProxyAuth(&A->data);
 	break;
+    case ACL_SRC_ASN:
+    case ACL_DST_ASN:
+	aclParseIntlist(&A->data);
+	break;
     case ACL_NONE:
     default:
-	debug_trap("Bad ACL type");
+	fatal("Bad ACL type");
 	break;
     }
     if (!new_acl)
@@ -1232,6 +1240,11 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	    return 1;
 	}
 	/* NOTREACHED */
+    case ACL_SRC_ASN:
+	return asnMatchIp(&acl->data, checklist->src_addr);
+    case ACL_DST_ASN:
+	assert(0);
+	return 0;
     case ACL_NONE:
     default:
 	debug(28, 0) ("aclMatchAcl: '%s' has bad type %d\n",
@@ -1523,6 +1536,10 @@ aclDestroyAcls(acl ** head)
 	    break;
 	case ACL_PROXY_AUTH:
 	    aclDestroyProxyAuth(a->data);
+	    break;
+	case ACL_SRC_ASN:
+	case ACL_DST_ASN:
+	    intlistDestroy(a->data);
 	    break;
 	case ACL_NONE:
 	default:
