@@ -11,3 +11,4 @@
 	- fix byte order conversion bug on echo port
 	- Removed all code and references to binary port
 	- WAIS fully compiled in always.
+	- Implemented IMS-GET and change-key-until-headers-read
