@@ -1,6 +1,6 @@
 
 /*
- * $Id: Debug.h,v 1.4 2003/07/07 22:44:28 robertc Exp $
+ * $Id: Debug.h,v 1.5 2003/07/08 23:01:46 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -49,7 +49,7 @@ public:
     static void finishDebug();
 
 private:
-    static std::ostringstream *currentDebug;
+    static std::ostringstream *CurrentDebug;
 };
 
 /* Debug stream */
