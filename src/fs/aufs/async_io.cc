@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.14 2002/07/28 11:31:06 robertc Exp $
+ * $Id: async_io.cc,v 1.15 2002/10/02 22:32:22 robertc Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -59,14 +59,20 @@ typedef struct squidaio_ctrl_t {
 } squidaio_ctrl_t;
 
 static struct {
-    int open;
-    int close;
-    int cancel;
-    int write;
-    int read;
-    int stat;
-    int unlink;
-    int check_callback;
+     int open_start;
+     int open_finish;
+     int close_start;
+     int close_finish;
+     int cancel;
+     int write_start;
+     int write_finish;
+     int read_start;
+     int read_finish;
+     int stat_start;
+     int stat_finish;
+     int unlink_start;
+     int unlink_finish;
+     int check_callback;
 } squidaio_counts;
 
 typedef struct squidaio_unlinkq_t {
@@ -112,7 +118,7 @@ aioOpen(const char *path, int oflag, mode_t mode, AIOCB * callback, void *callba
     squidaio_ctrl_t *ctrlp;
 
     assert(initialised);
-    squidaio_counts.open++;
+    squidaio_counts.open_start++;
     ctrlp = memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
@@ -130,7 +136,7 @@ aioClose(int fd)
     squidaio_ctrl_t *ctrlp;
 
     assert(initialised);
-    squidaio_counts.close++;
+    squidaio_counts.close_start++;
     aioCancel(fd);
     ctrlp = memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = fd;
@@ -180,7 +186,7 @@ aioWrite(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callba
     int seekmode;
 
     assert(initialised);
-    squidaio_counts.write++;
+    squidaio_counts.write_start++;
     ctrlp = memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = fd;
     ctrlp->done_handler = callback;
@@ -207,7 +213,7 @@ aioRead(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callbac
     int seekmode;
 
     assert(initialised);
-    squidaio_counts.read++;
+    squidaio_counts.read_start++;
     ctrlp = memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = fd;
     ctrlp->done_handler = callback;
@@ -231,7 +237,7 @@ aioStat(char *path, struct stat *sb, AIOCB * callback, void *callback_data)
     squidaio_ctrl_t *ctrlp;
 
     assert(initialised);
-    squidaio_counts.stat++;
+    squidaio_counts.stat_start++;
     ctrlp = memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
@@ -248,7 +254,7 @@ aioUnlink(const char *path, AIOCB * callback, void *callback_data)
 {
     squidaio_ctrl_t *ctrlp;
     assert(initialised);
-    squidaio_counts.unlink++;
+    squidaio_counts.unlink_start++;
     ctrlp = memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
@@ -264,7 +270,7 @@ aioTruncate(const char *path, off_t length, AIOCB * callback, void *callback_dat
 {
     squidaio_ctrl_t *ctrlp;
     assert(initialised);
-    squidaio_counts.unlink++;
+    squidaio_counts.unlink_start++;
     ctrlp = memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
@@ -289,6 +295,30 @@ aioCheckCallbacks(SwapDir * SD)
 	if ((resultp = squidaio_poll_done()) == NULL)
 	    break;
 	ctrlp = (squidaio_ctrl_t *) resultp->data;
+	switch (resultp->result_type){
+	    case _AIO_OP_NONE:
+	    case _AIO_OP_TRUNCATE:
+	    case _AIO_OP_OPENDIR:
+		 break;
+	    case _AIO_OP_OPEN:
+		 ++squidaio_counts.open_finish;
+		 break;
+	    case _AIO_OP_READ:
+		 ++squidaio_counts.read_finish;
+		 break;
+	    case _AIO_OP_WRITE:
+		 ++squidaio_counts.write_finish;
+		 break;
+	    case _AIO_OP_CLOSE:
+		 ++squidaio_counts.close_finish;
+		 break;
+	    case _AIO_OP_UNLINK:
+		 ++squidaio_counts.unlink_finish;
+		 break;
+	    case _AIO_OP_STAT:
+		 ++squidaio_counts.stat_finish;
+		 break;
+	}
 	if (ctrlp == NULL)
 	    continue;		/* XXX Should not happen */
 	dlinkDelete(&ctrlp->node, &used_list);
@@ -316,16 +346,16 @@ void
 aioStats(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "ASYNC IO Counters:\n");
-    storeAppendPrintf(sentry, "Operation\t# Requests\n");
-    storeAppendPrintf(sentry, "open\t%d\n", squidaio_counts.open);
-    storeAppendPrintf(sentry, "close\t%d\n", squidaio_counts.close);
-    storeAppendPrintf(sentry, "cancel\t%d\n", squidaio_counts.cancel);
-    storeAppendPrintf(sentry, "write\t%d\n", squidaio_counts.write);
-    storeAppendPrintf(sentry, "read\t%d\n", squidaio_counts.read);
-    storeAppendPrintf(sentry, "stat\t%d\n", squidaio_counts.stat);
-    storeAppendPrintf(sentry, "unlink\t%d\n", squidaio_counts.unlink);
-    storeAppendPrintf(sentry, "check_callback\t%d\n", squidaio_counts.check_callback);
-    storeAppendPrintf(sentry, "queue\t%d\n", squidaio_get_queue_len());
+    storeAppendPrintf(sentry, "Operation\t# Requests\tNumber serviced\n");
+    storeAppendPrintf(sentry, "open\t%d\t%d\n", squidaio_counts.open_start,squidaio_counts.open_finish);
+    storeAppendPrintf(sentry, "close\t%d\t%d\n", squidaio_counts.close_start,squidaio_counts.close_finish);
+    storeAppendPrintf(sentry, "cancel\t%d\t-\n", squidaio_counts.cancel);
+    storeAppendPrintf(sentry, "write\t%d\t%d\n", squidaio_counts.write_start,squidaio_counts.write_finish);
+    storeAppendPrintf(sentry, "read\t%d\t%d\n", squidaio_counts.read_start,squidaio_counts.read_finish);
+    storeAppendPrintf(sentry, "stat\t%d\t%d\n", squidaio_counts.stat_start,squidaio_counts.stat_finish);
+    storeAppendPrintf(sentry, "unlink\t%d\t%d\n", squidaio_counts.unlink_start,squidaio_counts.unlink_finish);
+    storeAppendPrintf(sentry, "check_callback\t%d\t-\n", squidaio_counts.check_callback);
+    storeAppendPrintf(sentry, "queue\t%d\t-\n", squidaio_get_queue_len());
 }
 
 /* Flush all pending I/O */

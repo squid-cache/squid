@@ -25,9 +25,23 @@
 #define ASYNC_WRITE 0
 #define ASYNC_READ 1
 
+enum _squidaio_request_type {
+    _AIO_OP_NONE = 0,
+    _AIO_OP_OPEN,
+    _AIO_OP_READ,
+    _AIO_OP_WRITE,
+    _AIO_OP_CLOSE,
+    _AIO_OP_UNLINK,
+    _AIO_OP_TRUNCATE,
+    _AIO_OP_OPENDIR,
+    _AIO_OP_STAT
+};
+typedef enum _squidaio_request_type squidaio_request_type;
+
 struct _squidaio_result_t {
     int aio_return;
     int aio_errno;
+    enum _squidaio_request_type result_type;
     void *_data;		/* Internal housekeeping */
     void *data;			/* Available to the caller */
 };
