@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.43 2001/10/24 06:16:16 hno Exp $
+ * $Id: dns_internal.cc,v 1.44 2001/10/24 07:45:34 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -335,7 +335,7 @@ idnsStats(StoreEntry * sentry)
     for (n = lru_list.head; n; n = n->next) {
 	q = n->data;
 	storeAppendPrintf(sentry, "%#06x %4d %5d %10.3f %9.3f\n",
-	    (int) q->id, q->sz, q->nsends,
+	    (int) q->id, (int) q->sz, q->nsends,
 	    tvSubDsec(q->start_t, current_time),
 	    tvSubDsec(q->sent_t, current_time));
     }
@@ -520,7 +520,7 @@ idnsRead(int fd, void *data)
 	(*N)++;
 	debug(78, 3) ("idnsRead: FD %d: received %d bytes from %s.\n",
 	    fd,
-	    len,
+	    (int) len,
 	    inet_ntoa(from.sin_addr));
 	ns = idnsFromKnownNameserver(&from);
 	if (ns >= 0) {

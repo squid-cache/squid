@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.554 2001/10/24 06:55:44 hno Exp $
+ * $Id: client_side.cc,v 1.555 2001/10/24 07:45:34 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -114,7 +114,7 @@ static int clientHierarchical(clientHttpRequest * http);
 static int clientCheckContentLength(request_t * r);
 static DEFER httpAcceptDefer;
 static log_type clientProcessRequest2(clientHttpRequest * http);
-static int clientReplyBodyTooLarge(HttpReply *, int clen);
+static int clientReplyBodyTooLarge(HttpReply *, ssize_t clen);
 static int clientRequestBodyTooLarge(int clen);
 static void clientProcessBody(ConnStateData * conn);
 
@@ -390,7 +390,7 @@ clientProcessExpired(void *data)
     delaySetStoreClient(http->sc, delayClient(http->request));
 #endif
     http->request->lastmod = http->old_entry->lastmod;
-    debug(33, 5) ("clientProcessExpired: lastmod %d\n", (int) entry->lastmod);
+    debug(33, 5) ("clientProcessExpired: lastmod %ld\n", (long int) entry->lastmod);
     http->entry = entry;
     http->out.offset = 0;
     fwdStart(http->conn->fd, http->entry, http->request);
@@ -435,8 +435,8 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
     /* If the client IMS time is prior to the entry LASTMOD time we
      * need to send the old object */
     if (modifiedSince(old_entry, request)) {
-	debug(33, 5) ("clientGetsOldEntry: YES, modified since %d\n",
-	    (int) request->ims);
+	debug(33, 5) ("clientGetsOldEntry: YES, modified since %ld\n",
+	    (long int) request->ims);
 	return 1;
     }
     debug(33, 5) ("clientGetsOldEntry: NO, new one is fine\n");
@@ -455,7 +455,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     StoreEntry *oldentry;
     int recopy = 1;
     http_status status;
-    debug(33, 3) ("clientHandleIMSReply: %s, %d bytes\n", url, (int) size);
+    debug(33, 3) ("clientHandleIMSReply: %s, %ld bytes\n", url, (long int) size);
     if (entry == NULL) {
 	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
@@ -560,7 +560,7 @@ modifiedSince(StoreEntry * entry, request_t * request)
     debug(33, 3) ("modifiedSince: '%s'\n", storeUrl(entry));
     if (mod_time < 0)
 	mod_time = entry->timestamp;
-    debug(33, 3) ("modifiedSince: mod_time = %d\n", (int) mod_time);
+    debug(33, 3) ("modifiedSince: mod_time = %ld\n", (long int) mod_time);
     if (mod_time < 0)
 	return 1;
     /* Find size of the object */
@@ -1176,8 +1176,8 @@ clientMRangeCLen(clientHttpRequest * http)
 	/* account for range content */
 	clen += spec->length;
 
-	debug(33, 6) ("clientMRangeCLen: (clen += %d + %d) == %d\n",
-	    mb.size, spec->length, clen);
+	debug(33, 6) ("clientMRangeCLen: (clen += %ld + %ld) == %d\n",
+	    (long int) mb.size, (long int) spec->length, clen);
     }
     /* account for the terminating boundary */
     memBufReset(&mb);
@@ -1606,7 +1606,7 @@ static void
 clientPackTermBound(String boundary, MemBuf * mb)
 {
     memBufPrintf(mb, "\r\n--%s--\r\n", strBuf(boundary));
-    debug(33, 6) ("clientPackTermBound: buf offset: %d\n", mb->size);
+    debug(33, 6) ("clientPackTermBound: buf offset: %ld\n", (long int) mb->size);
 }
 
 /* appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
@@ -1673,7 +1673,7 @@ clientPackRange(clientHttpRequest * http,
     /*
      * append content
      */
-    debug(33, 3) ("clientPackRange: appending %d bytes\n", copy_sz);
+    debug(33, 3) ("clientPackRange: appending %ld bytes\n", (long int) copy_sz);
     memBufAppend(mb, *buf, copy_sz);
     /*
      * update offsets
@@ -1721,10 +1721,10 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
 	off_t start;		/* offset of still missing data */
 	assert(i->spec);
 	start = i->spec->offset + i->spec->length - i->debt_size;
-	debug(33, 3) ("clientPackMoreRanges: in:  offset: %d size: %d\n",
-	    (int) body_off, size);
-	debug(33, 3) ("clientPackMoreRanges: out: start: %d spec[%d]: [%d, %d), len: %d debt: %d\n",
-	    (int) start, (int) i->pos, i->spec->offset, (int) (i->spec->offset + i->spec->length), i->spec->length, i->debt_size);
+	debug(33, 3) ("clientPackMoreRanges: in:  offset: %ld size: %ld\n",
+	    (long int) body_off, (long int) size);
+	debug(33, 3) ("clientPackMoreRanges: out: start: %ld spec[%ld]: [%ld, %ld), len: %ld debt: %ld\n",
+	    (long int) start, (long int) i->pos, (long int) i->spec->offset, (long int) (i->spec->offset + i->spec->length), (long int) i->spec->length, (long int) i->debt_size);
 	assert(body_off <= start);	/* we did not miss it */
 	/* skip up to start */
 	if (body_off + size > start) {
@@ -1746,11 +1746,11 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
 	}
     }
     assert(!i->debt_size == !i->spec);	/* paranoid sync condition */
-    debug(33, 3) ("clientPackMoreRanges: buf exhausted: in:  offset: %d size: %d need_more: %d\n",
-	(int) body_off, size, i->debt_size);
+    debug(33, 3) ("clientPackMoreRanges: buf exhausted: in:  offset: %ld size: %ld need_more: %ld\n",
+	(long int) body_off, (long int) size, (long int) i->debt_size);
     if (i->debt_size) {
-	debug(33, 3) ("clientPackMoreRanges: need more: spec[%d]: [%d, %d), len: %d\n",
-	    (int) i->pos, i->spec->offset, (int) (i->spec->offset + i->spec->length), i->spec->length);
+	debug(33, 3) ("clientPackMoreRanges: need more: spec[%ld]: [%ld, %ld), len: %ld\n",
+	    (long int) i->pos, (long int) i->spec->offset, (long int) (i->spec->offset + i->spec->length), (long int) i->spec->length);
 	/* skip the data we do not need if possible */
 	if (i->debt_size == i->spec->length)	/* at the start of the cur. spec */
 	    body_off = i->spec->offset;
@@ -1765,7 +1765,7 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
 }
 
 static int
-clientReplyBodyTooLarge(HttpReply * rep, int clen)
+clientReplyBodyTooLarge(HttpReply * rep, ssize_t clen)
 {
     if (0 == rep->maxBodySize)
 	return 0;		/* disabled */
@@ -1837,8 +1837,8 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     assert(http->request != NULL);
     dlinkDelete(&http->active, &ClientActiveRequests);
     dlinkAdd(http, &http->active, &ClientActiveRequests);
-    debug(33, 5) ("clientSendMoreData: FD %d '%s', out.offset=%d \n",
-	fd, storeUrl(entry), (int) http->out.offset);
+    debug(33, 5) ("clientSendMoreData: FD %d '%s', out.offset=%ld \n",
+	fd, storeUrl(entry), (long int) http->out.offset);
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
 	debug(33, 1) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
@@ -1891,7 +1891,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    body_buf = buf + rep->hdr_sz;
 	    http->range_iter.prefix_size = rep->hdr_sz;
 	    debug(33, 3) ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
-		body_size, rep->hdr_sz);
+		(int) body_size, rep->hdr_sz);
 	    ch = aclChecklistCreate(Config.accessList.reply, http->request, NULL);
 	    ch->reply = rep;
 	    rv = aclCheckFast(Config.accessList.reply, ch);
@@ -2068,8 +2068,8 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     StoreEntry *entry = http->entry;
     int done;
     http->out.size += size;
-    debug(33, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
-	fd, size, errflag, (int) http->out.offset, entry ? objectLen(entry) : 0);
+    debug(33, 5) ("clientWriteComplete: FD %d, sz %ld, err %d, off %ld, len %d\n",
+	fd, (long int) size, errflag, (long int) http->out.offset, entry ? objectLen(entry) : 0);
     if (size > 0) {
 	kb_incr(&statCounter.client_http.kbytes_out, size);
 	if (isTcpHit(http->log_type))
@@ -2102,7 +2102,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	} else {
 	    comm_close(fd);
 	}
-    } else if (clientReplyBodyTooLarge(entry->mem_obj->reply, (int) http->out.offset)) {
+    } else if (clientReplyBodyTooLarge(entry->mem_obj->reply, http->out.offset)) {
 	comm_close(fd);
     } else {
 	/* More data will be coming from primary server; register with 
@@ -2943,8 +2943,8 @@ clientReadRequest(int fd, void *data)
 		/* The request is too large to handle */
 		debug(33, 1) ("Request header is too large (%d bytes)\n",
 		    (int) conn->in.offset);
-		debug(33, 1) ("Config 'request_header_max_size'= %d bytes.\n",
-		    Config.maxRequestHeaderSize);
+		debug(33, 1) ("Config 'request_header_max_size'= %ld bytes.\n",
+		    (long int) Config.maxRequestHeaderSize);
 		err = errorCon(ERR_TOO_BIG, HTTP_REQUEST_ENTITY_TOO_LARGE);
 		http = parseHttpRequestAbort(conn, "error:request-too-large");
 		/* add to the client request queue */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.33 2001/10/24 06:55:44 hno Exp $
+ * $Id: authenticate.cc,v 1.34 2001/10/24 07:45:34 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -740,7 +740,7 @@ authenticateAuthUserLock(auth_user_t * auth_user)
     debug(29, 9) ("authenticateAuthUserLock auth_user '%p'.\n", auth_user);
     assert(auth_user != NULL);
     auth_user->references++;
-    debug(29, 9) ("authenticateAuthUserLock auth_user '%p' now at '%d'.\n", auth_user, auth_user->references);
+    debug(29, 9) ("authenticateAuthUserLock auth_user '%p' now at '%ld'.\n", auth_user, (long int) auth_user->references);
 }
 
 void
@@ -753,7 +753,7 @@ authenticateAuthUserUnlock(auth_user_t * auth_user)
     } else {
 	debug(29, 1) ("Attempt to lower Auth User %p refcount below 0!\n", auth_user);
     }
-    debug(29, 9) ("authenticateAuthUserUnlock auth_user '%p' now at '%d'.\n", auth_user, auth_user->references);
+    debug(29, 9) ("authenticateAuthUserUnlock auth_user '%p' now at '%ld'.\n", auth_user, (long int) auth_user->references);
     if (auth_user->references == 0)
 	authenticateFreeProxyAuthUser(auth_user);
 }
@@ -764,7 +764,7 @@ authenticateAuthUserRequestLock(auth_user_request_t * auth_user_request)
     debug(29, 9) ("authenticateAuthUserRequestLock auth_user request '%p'.\n", auth_user_request);
     assert(auth_user_request != NULL);
     auth_user_request->references++;
-    debug(29, 9) ("authenticateAuthUserRequestLock auth_user request '%p' now at '%d'.\n", auth_user_request, auth_user_request->references);
+    debug(29, 9) ("authenticateAuthUserRequestLock auth_user request '%p' now at '%ld'.\n", auth_user_request, (long int) auth_user_request->references);
 }
 
 void
@@ -777,7 +777,7 @@ authenticateAuthUserRequestUnlock(auth_user_request_t * auth_user_request)
     } else {
 	debug(29, 1) ("Attempt to lower Auth User request %p refcount below 0!\n", auth_user_request);
     }
-    debug(29, 9) ("authenticateAuthUserRequestUnlock auth_user_request '%p' now at '%d'.\n", auth_user_request, auth_user_request->references);
+    debug(29, 9) ("authenticateAuthUserRequestUnlock auth_user_request '%p' now at '%ld'.\n", auth_user_request, (long int) auth_user_request->references);
     if (auth_user_request->references == 0) {
 	/* not locked anymore */
 	authenticateAuthUserRequestFree(auth_user_request);
@@ -825,7 +825,7 @@ authenticateFreeProxyAuthUser(void *data)
     auth_user_request_t *auth_user_request;
     dlink_node *link, *tmplink;
     assert(data != NULL);
-    debug(29, 5) ("authenticateFreeProxyAuthUser: Freeing auth_user '%p' with refcount '%d'.\n", u, u->references);
+    debug(29, 5) ("authenticateFreeProxyAuthUser: Freeing auth_user '%p' with refcount '%ld'.\n", u, (long int) u->references);
     assert(u->references == 0);
     /* were they linked in by username ? */
     if (u->usernamehash) {
@@ -891,7 +891,7 @@ authenticateProxyUserCacheCleanup(void *datanotused)
 
 	/* if we need to have inpedendent expiry clauses, insert a module call
 	 * here */
-	debug(29, 4) ("authenticateProxyUserCacheCleanup: Cache entry:\n\tType: %d\n\tUsername: %s\n\texpires: %ld\n\treferences: %d\n", auth_user->auth_type, username, (long int) (auth_user->expiretime + Config.authenticateTTL), auth_user->references);
+	debug(29, 4) ("authenticateProxyUserCacheCleanup: Cache entry:\n\tType: %d\n\tUsername: %s\n\texpires: %ld\n\treferences: %ld\n", auth_user->auth_type, username, (long int) (auth_user->expiretime + Config.authenticateTTL), (long int) auth_user->references);
 	if (auth_user->expiretime + Config.authenticateTTL <= current_time.tv_sec) {
 	    debug(29, 5) ("authenticateProxyUserCacheCleanup: Removing user %s from cache due to timeout.\n", username);
 	    /* the minus 1 accounts for the cache lock */

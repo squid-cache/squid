@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.37 2001/10/24 06:55:45 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.38 2001/10/24 07:45:38 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -471,7 +471,7 @@ storeUfsDirRebuildFromDirectory(void *data)
 	    tmpe.swap_file_sz = sb.st_size;
 	} else if (tmpe.swap_file_sz != sb.st_size) {
 	    debug(20, 1) ("storeUfsDirRebuildFromDirectory: SIZE MISMATCH %ld!=%ld\n",
-		(long int)tmpe.swap_file_sz, (long int) sb.st_size);
+		(long int) tmpe.swap_file_sz, (long int) sb.st_size);
 	    storeUfsDirUnlinkFile(SD, filn);
 	    continue;
 	}
@@ -686,7 +686,7 @@ storeUfsDirRebuildFromSwapLog(void *data)
 }
 
 static int
-storeUfsDirGetNextFile(RebuildState * rb, sfileno *filn_p, int *size)
+storeUfsDirGetNextFile(RebuildState * rb, sfileno * filn_p, int *size)
 {
     SwapDir *SD = rb->sd;
     ufsinfo_t *ufsinfo = (ufsinfo_t *) SD->fsdata;
@@ -1588,7 +1588,7 @@ storeUfsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
 	debug(20, 0) ("storeUfsCleanupDoubleCheck: PATH %s\n",
 	    storeUfsDirFullPath(sd, e->swap_filen, NULL));
 	debug(20, 0) ("storeUfsCleanupDoubleCheck: ENTRY SIZE: %ld, FILE SIZE: %ld\n",
-	    (long int)e->swap_file_sz, (long int) sb.st_size);
+	    (long int) e->swap_file_sz, (long int) sb.st_size);
 	storeEntryDump(e, 0);
 	return -1;
     }

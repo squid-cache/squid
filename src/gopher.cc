@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.161 2001/04/14 00:03:22 hno Exp $
+ * $Id: gopher.cc,v 1.162 2001/10/24 07:45:35 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -682,7 +682,7 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;
     debug(10, 5) ("gopherSendComplete: FD %d size: %d errflag: %d\n",
-	fd, size, errflag);
+	fd, (int) size, errflag);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
 	kb_incr(&statCounter.server.all.kbytes_out, size);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.32 2001/10/24 06:16:16 hno Exp $
+ * $Id: helper.cc,v 1.33 2001/10/24 07:45:35 hno Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -482,7 +482,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
 	    srv->rfd,
 	    srv->pid,
 	    srv->stats.uses,
-	    srv->deferred_requests,
+	    (int) srv->deferred_requests,
 	    srv->flags.alive ? 'A' : ' ',
 	    srv->flags.busy ? 'B' : ' ',
 	    srv->flags.closing ? 'C' : ' ',
@@ -1014,7 +1014,7 @@ helperDispatch(helper_server * srv, helper_request * r)
 	helperHandleRead,
 	srv, 0);
     debug(29, 5) ("helperDispatch: Request sent to %s #%d, %d bytes\n",
-	hlp->id_name, srv->index + 1, strlen(r->buf));
+	hlp->id_name, srv->index + 1, (int) strlen(r->buf));
     srv->stats.uses++;
     hlp->stats.requests++;
 }
@@ -1067,7 +1067,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
 	helperStatefulHandleRead,
 	srv, 0);
     debug(29, 5) ("helperStatefulDispatch: Request sent to %s #%d, %d bytes\n",
-	hlp->id_name, srv->index + 1, strlen(r->buf));
+	hlp->id_name, srv->index + 1, (int) strlen(r->buf));
     srv->stats.uses++;
     hlp->stats.requests++;
 }
