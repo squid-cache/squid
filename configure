@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.44 
+# From configure.in Revision: 1.45 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -592,7 +592,7 @@ if test -z "$LDFLAGS"; then
 	LDFLAGS="-g"
 fi
 
-PREST_CFLAGS="$CFLAGS"
+PRESET_CFLAGS="$CFLAGS"
 
 # Extract the first word of "gcc", so it can be a program name with args.
 set dummy gcc; ac_word=$2
@@ -2785,9 +2785,10 @@ if test "$HAVE_LIBMALLOC" = "yes" ; then
 fi
 
 
-XTRA_LIBS="$LIBS"
-LIBS=''
-
+if test -z "$XTRA_LIBS"; then
+	XTRA_LIBS="$LIBS"
+	LIBS=''
+fi
 
 
 rm -f core 
