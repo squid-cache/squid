@@ -1,0 +1,124 @@
+.TH squid_ldap_auth 8 "18 April 2001" "Squid LDAP Auth"
+.SH NAME
+squid_ldap_auth - Squid LDAP authentication helper
+.SH SYNOPSIS
+squid_ldap_auth [options] ldap_server_name
+.SH DESCRIPTION
+This helper allows Squid to connect to a LDAP directory to
+validate the user name and password of Basic HTTP authentication.
+.TP
+.BI "-b " "basedn " (REQUIRED)
+Specifies the base DN under which the users are located.
+.TP
+.BI "-f " filter
+search filter to locate the user DN. Required if the users
+are in a hierarchy below the base DN, or if the login
+name is not what builds the user specific part of the
+users DN.
+.IP
+The search filter can contain up to 15 occurances of %s
+which will be replaced by the username, as in "uid=%s" for
+RFC2037 directories.
+.TP
+.BI "-u " userattr
+The name of the DN attribute which makes the username.
+Defaults to RFC2307 standard "uid". Some LDAP directories uses
+"cn" instead of "uid" (for example Microsoft Active Directory).
+.IP
+This is used to directly construct a user DN when the
+.B -f
+search option is not used.
+.TP
+.BI "-s " base|one|sub
+search scope when performing user DN searches specified
+by the -f option.
+.
+.IP
+.B base
+object only,
+.B one
+level below the base object or
+.BR sub tree
+below the base object
+.
+.TP
+.BI "-D " "binddn " "-w " password
+The DN and password to bind as while performing searches. Required by the
+.BI -f
+flag if the directory does not allow anonymous searches.
+.IP
+As the password needs to be printed in plain text in your Squid configuration
+it is stronly recommended to use a account with minimal associated privilegies.
+This to limit the damage in case someone could get hold of a copy of your
+Squid configuration file.
+.TP
+.BI -p
+Use a persistent LDAP connection. Normally the LDAP connection
+is only open while validating a username to preserve resources
+at the LDAP server. This option causes the LDAP connection to
+be kept open, allowing it to be reused for further user
+validations. Recommended for larger installations.
+.TP
+.BI -R
+do not follow referrals
+.TP
+.BI "-a " never|always|search|find
+when to dereference aliases
+.IP
+.BI never
+dereference aliases (default),
+.BI always
+dereference aliases, only while
+.BR search ing
+or only to
+.B find
+the base object
+.
+.SH EXAMPLES
+For directories using the RFC2307 layout with a single domain, all
+you need to specify is usually the base DN under where your users
+are located, and the server name.
+.
+.IP
+squid_ldap_auth -b dc=your,dc=domain ldapserver
+.P
+If you have sub-domains then you need to use a search filter to locate
+the users
+.IP
+squid_ldap_auth -b dc=your,dc=domain -f uid=%s ldapserver
+.P
+Or if the user attribute of the user DN is "cn" instead of "uid" then 
+you could use something like the following (for Active Directory)
+.IP
+squid_ldap_auth -u cn -b cn=Users,dc=your,dc=domain ldapserver
+.P
+And if your directory does not allow searches for anonymous users
+you must also use the -D and -w flags to specify a user DN and
+password to log in as to perform the searches, as in the following
+Active Directory example
+.IP
+squid_ldap_auth -b dc=your,dc=domain -D cn=squid,cn=users,cn=your,cn=domain -w secretsquidpassword -f userPrincipalName=%s activedirectoryserver
+.
+.SH AUTHOR
+This manual page was written by 
+.I Henrik Nordstrom <hno@squid-cache.org>
+.P
+squid_ldap_auth is written by 
+.I Glenn Newton <gnewton@wapiti.cisti.nrc.ca>
+and
+.I Henrik Nordstrom <hno@squid-cache.org>
+.
+.SH KNOWN ISSUES
+Will crash if other % values than %s is used in -f, or if more than 15 %s
+is used.
+.
+.SH QUESTIONS
+Any questions on usage can be sent to 
+.IR "Squid Users <squid-users@squid-cache.org>" ,
+or to
+your favorite LDAP list/friend if the question is more related to LDAP than
+Squid.
+.
+.SH REPORTING BUGS
+Report bugs or bug-fixes to
+.I Squid Developers <squid-dev@squid-cache.org>
