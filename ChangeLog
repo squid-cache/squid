@@ -12,6 +12,8 @@ Changes to Squid-2.1 ():
 	  operation (Quinton Dolan).
 	- Rewrote base64_decode.c because of potential buffer overrun
 	  bugs.
+	- Configurable handling of whitespace in request URI's.
+	  See 'uri_whitespace' in squid.conf.
 
 Changes to Squid-2.0 (October 2, 1998):
 
