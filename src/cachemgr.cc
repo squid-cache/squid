@@ -1,5 +1,5 @@
 /*
- * $Id: cachemgr.cc,v 1.67 1998/02/22 20:40:24 wessels Exp $
+ * $Id: cachemgr.cc,v 1.68 1998/02/23 13:03:01 rousskov Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -128,12 +128,26 @@ typedef struct {
     char *hostname;
     int port;
     char *action;
+    char *user_name;
     char *passwd;
+    char *pub_auth;
 } cachemgr_request;
 
 /*
- * static variables
+ * Debugging macros (info goes to error_log on your web server)
+ * Note: do not run cache manager with non zero debugging level 
+ *       if you do not debug, it may write a lot of [sensitive]
+ *       information to your error log.
  */
+
+/* debugging level 0 (disabled) - 3 (max) */
+#define DEBUG_LEVEL 0
+#define debug(level) ((level) > DEBUG_LEVEL || DEBUG_LEVEL <= 0) ? ((void)0) :
+
+/*
+ * Static variables and constants
+ */
+static const time_t passwd_ttl = 60*60*3; /* in sec */
 static const char *script_name = "/cgi-bin/cachemgr.cgi";
 static const char *const w_space = " \t\n\r";
 static const char *progname = NULL;
@@ -143,13 +157,48 @@ static struct in_addr no_addr;
 /*
  * Function prototypes
  */
+#define safe_free(str) if (str) { xfree(str); (str) = NULL; }
+static const char *safe_str(const char *str);
+static char *xstrtok(char **str, char del);
 static void print_trailer(void);
-static void noargs_html(char *host, int port);
+static void auth_html(char *host, int port, const char *user_name);
 static void error_html(const char *msg);
+static char *menu_url(cachemgr_request * req, const char *action);
+static int parse_status_line(const char *sline, const char **statusStr);
 static cachemgr_request *read_request(void);
 static char *read_get_request(void);
 static char *read_post_request(void);
 
+static void make_pub_auth(cachemgr_request *req);
+static void decode_pub_auth(cachemgr_request *req);
+static void reset_auth(cachemgr_request *req);
+static const char *make_auth_header(const cachemgr_request *req);
+
+
+static const char *safe_str(const char *str)
+{
+    return str ? str : "";
+}
+
+static char *xstrtok(char **str, char del)
+{
+    if (*str) {
+	char *p = strchr(*str, del);
+	char *tok = *str;
+	int len;
+	if (p) {
+	    *str = p+1;
+	    *p = '\0';
+	} else
+	    *str = NULL;
+	/* trim */
+	len = strlen(tok);
+	while (len && isspace(tok[len-1])) tok[--len] = '\0';
+	while (isspace(*tok)) tok++;
+  	return tok;
+    } else
+	return "";
+}
 
 static void
 print_trailer(void)
@@ -162,23 +211,29 @@ print_trailer(void)
 }
 
 static void
-noargs_html(char *host, int port)
+auth_html(char *host, int port, const char *user_name)
 {
+    if (!user_name)
+	user_name = "";
     printf("Content-type: text/html\r\n\r\n");
     printf("<HTML><HEAD><TITLE>Cache Manager Interface</TITLE></HEAD>\n");
     printf("<BODY><H1>Cache Manager Interface</H1>\n");
     printf("<P>This is a WWW interface to the instrumentation interface\n");
     printf("for the Squid object cache.</P>\n");
     printf("<HR>\n");
-    printf("<PRE>\n");
     printf("<FORM METHOD=\"POST\" ACTION=\"%s\">\n", script_name);
-    printf("<STRONG>Cache Host:</STRONG><INPUT NAME=\"host\" ");
-    printf("SIZE=30 VALUE=\"%s\"><BR>\n", host);
-    printf("<STRONG>Cache Port:</STRONG><INPUT NAME=\"port\" ");
-    printf("SIZE=30 VALUE=\"%d\"><BR>\n", port);
-    printf("</SELECT><BR>\n");
+    printf("<TABLE BORDER=0>\n");
+    printf("<TR><TH ALIGN=\"left\">Cache Host:</TH><TD><INPUT NAME=\"host\" ");
+    printf("SIZE=30 VALUE=\"%s\"></TD></TR>\n", host ? host : "localhost");
+    printf("<TR><TH ALIGN=\"left\">Cache Port:</TH><TD><INPUT NAME=\"port\" ");
+    printf("SIZE=30 VALUE=\"%d\"></TD></TR>\n", port);
+    printf("<TR><TH ALIGN=\"left\">Manager name:</TH><TD><INPUT NAME=\"user_name\" ");
+    printf("SIZE=30 VALUE=\"%s\"></TD></TR>\n", user_name);
+    printf("<TR><TH ALIGN=\"left\">Password:</TH><TD><INPUT TYPE=\"password\" NAME=\"passwd\" ");
+    printf("SIZE=30 VALUE=\"\"></TD></TR>\n");
+    printf("</TABLE><BR CLEAR=\"all\">\n");
     printf("<INPUT TYPE=\"submit\" VALUE=\"Continue...\">\n");
-    printf("</FORM></PRE>\n");
+    printf("</FORM>\n");
     print_trailer();
 }
 
@@ -192,15 +247,34 @@ error_html(const char *msg)
     print_trailer();
 }
 
+/* returns http status extracted from status line or -1 on parsing failure */
+static int
+parse_status_line(const char *sline, const char **statusStr)
+{
+    const char *sp = strchr(sline, ' ');
+    if (statusStr)
+	*statusStr = NULL;
+    if (strncasecmp(sline, "HTTP/", 5) || !sp)
+	return -1;
+    while (isspace(*++sp));
+    if (!isdigit(*sp))
+	return -1;
+    if (statusStr)
+	*statusStr = sp;
+    return atoi(sp);
+}
+
 static char *
-menu_url(cachemgr_request * req, char *action)
+menu_url(cachemgr_request * req, const char *action)
 {
     static char url[1024];
-    snprintf(url, 1024, "%s?host=%s&port=%d&operation=%s",
+    snprintf(url, 1024, "%s?host=%s&port=%d&user_name=%s&operation=%s&auth=%s",
 	script_name,
 	req->hostname,
 	req->port,
-	action);
+	safe_str(req->user_name),
+	action,
+	safe_str(req->pub_auth));
     return url;
 }
 
@@ -208,30 +282,55 @@ static const char *
 munge_menu_line(const char *buf, cachemgr_request * req)
 {
     char *x;
-    char *a;
-    char *d;
+    const char *a;
+    const char *d;
+    const char *p;
+    char *a_url;
     static char html[1024];
     if (strlen(buf) < 1)
 	return buf;
     if (*buf != ' ')
 	return buf;
     x = xstrdup(buf);
-    if ((a = strtok(x, w_space)) == NULL)
-	return buf;
-    if ((d = strtok(NULL, "")) == NULL)
-	return buf;
-    snprintf(html, 1024, "<LI><A HREF=\"%s\">%s</A>\n",
-	menu_url(req, a), d);
+    a = xstrtok(&x, '\t');
+    d = xstrtok(&x, '\t');
+    p = xstrtok(&x, '\t');
+    a_url = xstrdup(menu_url(req, a));
+    /* no reason to give a url for a disabled action */
+    if (!strcmp(p, "disabled"))
+	snprintf(html, 1024, "<LI type=\"circle\">%s (disabled)<A HREF=\"%s\">.</A>\n", d, a_url);
+    else
+    /* disable a hidden action (requires a password, but password is not in squid.conf) */
+    if (!strcmp(p, "hidden"))
+	snprintf(html, 1024, "<LI type=\"circle\">%s (hidden)<A HREF=\"%s\">.</A>\n", d, a_url);
+    else
+    /* disable link if authentication is required and we have no password */
+    if (!strcmp(p, "protected") && !req -> passwd)
+	snprintf(html, 1024, "<LI type=\"circle\">%s (requires <a href=\"%s\">authentication</a>)<A HREF=\"%s\">.</A>\n",
+	    d, menu_url(req, "authenticate"), a_url);
+    else
+    /* highlight protected but probably available entries */
+    if (!strcmp(p, "protected"))
+	snprintf(html, 1024, "<LI type=\"square\"><A HREF=\"%s\"><font color=\"#FF0000\">%s</font></A>\n",
+	    a_url, d);
+    /* public entry or unknown type of protection */
+    else
+	snprintf(html, 1024, "<LI type=\"disk\"><A HREF=\"%s\">%s</A>\n", a_url, d);
+    xfree(a_url);
     return html;
 }
 
 static int
 read_reply(int s, cachemgr_request * req)
 {
-    char buf[1024];
+    char buf[4*1024];
     FILE *fp = fdopen(s, "r");
-    int state = 0;
+    /* interpretation states */
+    enum { isStatusLine, isHeaders, isBodyStart, isBody, isForward, isEof, isForwardEof, isSuccess, isError } istate = isStatusLine;
     int parse_menu = 0;
+    const char *action = req->action;
+    const char *statusStr = NULL;
+    int status = -1;
     if (0 == strlen(req->action))
 	parse_menu = 1;
     else if (0 == strcasecmp(req->action, "menu"))
@@ -240,29 +339,89 @@ read_reply(int s, cachemgr_request * req)
 	perror("fdopen");
 	return 1;
     }
-    printf("Content-Type: text/html\r\n\r\n");
-    if (parse_menu) {
-	printf("<H2>Cache Manager menu for %s:</H2>", req->hostname);
-	printf("<UL>\n");
-    } else {
-	printf("<P><A HREF=\"%s\">%s</A>\n<HR>\n",
-	    menu_url(req, "menu"), "Cache Manager menu");
-	printf("<PRE>\n");
-    }
-    while (fgets(buf, 1024, fp) != NULL) {
-	if (1 == state)
+    if (parse_menu)
+	action = "menu";
+    /* read reply interpreting one line at a time depending on state */
+    while (istate < isEof) {
+	if (!fgets(buf, sizeof(buf), fp))
+	    istate = istate == isForward ? isForwardEof : isEof;
+	switch (istate) {
+	case isStatusLine:
+	    /* get HTTP status */
+	    /* uncomment the following if you want to debug headers */
+            /* fputs("\r\n\r\n", stdout); */
+	    status = parse_status_line(buf, &statusStr);
+	    istate = status == 200 ? isHeaders : isForward;
+	    /* if cache asks for authentication, we have to reset our info */
+	    if (status == 401 || status == 407) {
+		reset_auth(req);
+		status = 403; /* Forbiden, see comments in case isForward: */
+	    }
+	    /* this is a way to pass HTTP status to the Web server */
+	    if (statusStr)
+		printf("Status: %d %s", status, statusStr);
+	    break;
+	case isHeaders:
+	    /* forward header field */
+	    if (!strcmp(buf, "\r\n")) { /* end of headers */
+		fputs("Content-Type: text/html\r\n", stdout); /* add our type */
+		istate = isBodyStart;
+	    }
+	    if (strncasecmp(buf, "Content-Type:", 13)) /* filter out their type */
+	        fputs(buf, stdout);
+	    break;
+	case isBodyStart:
+	    printf("<HTML><HEAD><TITLE>CacheMgr@%s: %s</TITLE></HEAD><BODY>\n",
+		   req->hostname, action);
+	    if (parse_menu) {
+		printf("<H2><a href=\"%s\">Cache Manager</a> menu for %s:</H2>",
+		    menu_url(req, "authenticate"), req->hostname);
+		printf("<UL>\n");
+	    } else {
+		printf("<P><A HREF=\"%s\">%s</A>\n<HR>\n",
+		    menu_url(req, "menu"), "Cache Manager menu");
+		printf("<PRE>\n");
+	    }
+	    istate = isBody;
+	    break;
+	case isBody:
+	    /* interpret [and reformat] cache response */
 	    if (parse_menu)
 		fputs(munge_menu_line(buf, req), stdout);
 	    else
 		fputs(buf, stdout);
-	if (0 == strcmp(buf, "\r\n"))
-	    state++;
+	    break;
+	case isForward:
+	    /* forward: no modifications allowed */
+	    /*
+	     * Note: we currently do not know any way to get browser.reply to
+	     * 401 to .cgi because web server filters out all auth info. Thus we
+	     * disable authentication headers for now.
+	     */
+	    if (!strncasecmp(buf, "WWW-Authenticate:", 17) || !strncasecmp(buf, "Proxy-Authenticate:", 19))
+		; /* skip */
+	    else
+	 	fputs(buf, stdout);
+	    break;
+	case isEof:
+	    /* print trailers */
+	    if (parse_menu)
+		printf("</UL>\n");
+	    else
+		printf("</PRE>\n");
+	    print_trailer();
+	    istate = isSuccess;
+	    break;
+	case isForwardEof:
+	    /* indicate that we finished processing an "error" sequence */
+	    istate = isError;
+	    break;
+	default:
+	    printf("%s: internal bug: invalid state reached: %d", script_name, istate);
+	    istate = isError;
+	}
     }
-    if (parse_menu)
-	printf("</UL>\n");
-    else
-	printf("</PRE>\n");
-    print_trailer();
+    /* printf("\n\n\n<pre>%s</pre>\n", req->headers ? req->headers : "no headers"); */
     close(s);
     return 0;
 }
@@ -274,9 +433,9 @@ process_request(cachemgr_request * req)
     static struct sockaddr_in S;
     int s;
     int l;
-    static char buf[1024];
+    static char buf[2*1024];
     if (req == NULL) {
-	noargs_html(CACHEMGR_HOSTNAME, CACHE_HTTP_PORT);
+	auth_html(CACHEMGR_HOSTNAME, CACHE_HTTP_PORT, "");
 	return 1;
     }
     if (req->hostname == NULL) {
@@ -287,6 +446,10 @@ process_request(cachemgr_request * req)
     }
     if (req->action == NULL) {
 	req->action = xstrdup("");
+    }
+    if (!strcmp(req->action, "authenticate")) {
+	auth_html(req->hostname, req->port, req->user_name);
+	return 0;
     }
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 	snprintf(buf, 1024, "socket: %s\n", xstrerror());
@@ -310,13 +473,16 @@ process_request(cachemgr_request * req)
 	error_html(buf);
 	return 1;
     }
-    l = snprintf(buf, 1024,
+    l = snprintf(buf, sizeof(buf),
 	"GET cache_object://%s/%s HTTP/1.0\r\n"
 	"Accept: */*\r\n"
+	"%s" /* Authentication info or nothing */
 	"\r\n",
 	req->hostname,
-	req->action);
+	req->action,
+	make_auth_header(req));
     write(s, buf, l);
+    debug(1) fprintf(stderr, "wrote request: '%s'\n", buf);
     return read_reply(s, req);
 }
 
@@ -336,6 +502,44 @@ main(int argc, char *argv[])
     req = read_request();
     return process_request(req);
 }
+
+#if 0 /* left for parts if request headers will ever be processed */
+static char *
+read_request_headers()
+{
+    extern char **environ;
+    const char **varp = (const char**) environ;
+    char *buf = NULL;
+    int size = 0;
+    if (!varp)
+	return NULL;
+    /* not efficient, but simple */
+    /* first calc the size */
+    for (; *varp; varp++) {
+	if (1 || !strncasecmp(*varp, "HTTP_", 5))
+		size += strlen(*varp);
+    }
+    if (!size)
+	return NULL;
+    size++; /* paranoid */
+    size += 1024; /* @?@?@?@ */
+    /* allocate memory */
+    buf = calloc(1, size);
+    /* parse and put headers */
+    for (varp =  (const char**) environ; *varp; varp++) {
+	sprintf(buf + strlen(buf), "%s\r\n", *varp);
+	if (0 && !strncasecmp(*varp, "HTTP_", 5)) {
+	    const char *name = (*varp) + 5;
+	    const char *value = strchr(name, '=');
+	    if (value) {
+		strncat(buf, name, value-name);
+		sprintf(buf + strlen(buf), ": %s\r\n", value+1);
+	    }
+	}
+    }
+    return buf;
+}
+#endif /* left for parts */
 
 static char *
 read_post_request(void)
@@ -383,19 +587,123 @@ read_request(void)
     if (strlen(buf) == 0)
 	return NULL;
     req = xcalloc(1, sizeof(cachemgr_request));
+    /* req->headers = read_request_headers(); */
     for (s = strtok(buf, "&"); s != NULL; s = strtok(NULL, "&")) {
 	t = xstrdup(s);
 	if ((q = strchr(t, '=')) == NULL)
 	    continue;
 	*q++ = '\0';
-	if (0 == strcasecmp(t, "host"))
+	if (0 == strcasecmp(t, "host") && strlen(q))
 	    req->hostname = xstrdup(q);
-	if (0 == strcasecmp(t, "port"))
+	else
+	if (0 == strcasecmp(t, "port") && strlen(q))
 	    req->port = atoi(q);
-	if (0 == strcasecmp(t, "password"))
+	else
+	if (0 == strcasecmp(t, "user_name") && strlen(q))
+	    req->user_name = xstrdup(q);
+	else
+	if (0 == strcasecmp(t, "passwd") && strlen(q))
 	    req->passwd = xstrdup(q);
+	else
+	if (0 == strcasecmp(t, "auth") && strlen(q))
+	    req->pub_auth = xstrdup(q), decode_pub_auth(req);
+	else
 	if (0 == strcasecmp(t, "operation"))
 	    req->action = xstrdup(q);
     }
+    make_pub_auth(req);
+    debug(1) fprintf(stderr, "cmgr: got req: host: '%s' port: %d uname: '%s' passwd: '%s' auth: '%s' oper: '%s'\n",
+	safe_str(req->hostname), req->port, safe_str(req->user_name), safe_str(req->passwd), safe_str(req->pub_auth), safe_str(req->action));
     return req;
+}
+
+
+/* Routines to support authentication */
+
+/*
+ * Encodes auth info into a "public" form. 
+ * Currently no powerful encryption is used.
+ */
+static void
+make_pub_auth(cachemgr_request *req)
+{
+    static char buf[1024];
+    safe_free(req->pub_auth);
+    debug(3) fprintf(stderr, "cmgr: encoding for pub...\n");
+    if (!req->passwd && !strlen(req->passwd))
+	return;
+    /* host | time | user | passwd */
+    snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
+	req->hostname,
+	now,
+	req->user_name ? req->user_name : "",
+	req->passwd);
+    debug(3) fprintf(stderr, "cmgr: pre-encoded for pub: %s\n", buf);
+    debug(3) fprintf(stderr, "cmgr: encoded: '%s'\n", base64_encode(buf));
+    req->pub_auth = xstrdup(base64_encode(buf));
+}
+
+static void
+decode_pub_auth(cachemgr_request *req)
+{
+    char *buf;
+    const char *host_name;
+    const char *time_str;
+    const char *user_name;
+    const char *passwd;
+
+    debug(2) fprintf(stderr, "cmgr: decoding pub: '%s'\n", safe_str(req->pub_auth));
+    safe_free(req->passwd);
+    if (!req->pub_auth || strlen(req->pub_auth) < 4 + strlen(safe_str(req->hostname)))
+	return;
+    buf = xstrdup(base64_decode(req->pub_auth));
+    debug(3) fprintf(stderr, "cmgr: length ok\n");
+    /* parse ( a lot of memory leaks, but that is cachemgr style :) */
+    if ((host_name = strtok(buf, "|")) == NULL)
+	return;
+    debug(3) fprintf(stderr, "cmgr: decoded host: '%s'\n", host_name);
+    if ((time_str = strtok(NULL, "|")) == NULL)
+	return;
+    debug(3) fprintf(stderr, "cmgr: decoded time: '%s' (now: %d)\n", time_str, (int)now);
+    if ((user_name = strtok(NULL, "|")) == NULL)
+	return;
+    debug(3) fprintf(stderr, "cmgr: decoded uname: '%s'\n", user_name);
+    if ((passwd = strtok(NULL, "|")) == NULL)
+	return;
+    debug(2) fprintf(stderr, "cmgr: decoded passwd: '%s'\n", passwd);
+    /* verify freshness and validity */
+    if (atoi(time_str) + passwd_ttl < now)
+	return;
+    if (strcasecmp(host_name, req->hostname))
+	return;
+    debug(1) fprintf(stderr, "cmgr: verified auth. info.\n");
+    /* ok, accept */
+    xfree(req->user_name);
+    req->user_name = xstrdup(user_name);
+    req->passwd = xstrdup(passwd);
+    xfree(buf);
+}
+
+static void
+reset_auth(cachemgr_request *req)
+{
+    safe_free(req->passwd);
+    safe_free(req->pub_auth);
+}
+
+static const char *
+make_auth_header(const cachemgr_request *req)
+{
+    static char buf[1024];
+    const char *str64;
+    if (!req -> passwd)
+	return "";
+
+    snprintf(buf, sizeof(buf), "%s:%s", 
+	req->user_name ? req->user_name : "",
+	req -> passwd);
+
+    str64 = base64_encode(buf);
+    snprintf(buf, sizeof(buf), "Authorization: Basic %s\r\n", str64);
+    return buf;
 }

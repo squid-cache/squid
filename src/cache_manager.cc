@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.5 1998/02/23 03:59:41 rousskov Exp $
+ * $Id: cache_manager.cc,v 1.6 1998/02/23 13:03:01 rousskov Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -58,6 +58,7 @@ static void cachemgrParseHeaders(cachemgrStateData *mgr, const request_t *reques
 static int cachemgrCheckPassword(cachemgrStateData *);
 static void cachemgrStateFree(cachemgrStateData *mgr);
 static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
+static const char *cachemgrActionProtection(const action_table *at);
 static OBJH cachemgrShutdown;
 static OBJH cachemgrMenu;
 
@@ -102,12 +103,19 @@ cachemgrParseUrl(const char *url)
     LOCAL_ARRAY(char, password, MAX_URL);
     action_table *a;
     cachemgrStateData *mgr = NULL;
+    const char *prot;
     t = sscanf(url, "cache_object://%[^/]/%[^@]@%s", host, request, password);
     if (t < 2) {
 	xstrncpy(request, "menu", MAX_URL);
     } else if ((a = cachemgrFindAction(request)) == NULL) {
 	debug(16, 0) ("cachemgrParseUrl: action '%s' not found\n", request);
 	return NULL;
+    } else {
+    	prot = cachemgrActionProtection(a);
+	if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
+	    debug(16, 0) ("cachemgrParseUrl: action '%s' is %s\n", request, prot);
+	    return NULL;
+	}
     }
     /* set absent entries to NULL so we can test if they are present later */
     mgr = xcalloc(1, sizeof(cachemgrStateData));
@@ -196,7 +204,7 @@ cachemgrStart(int fd, request_t *request, StoreEntry * entry)
 	fd_table[fd].ipaddr, mgr->action);
     /* get additional info from request headers */
     cachemgrParseHeaders(mgr, request);
-    if (mgr->user_name)
+    if (mgr->user_name && strlen(mgr->user_name))
 	debug(16, 1) ("CACHEMGR: %s@%s requesting '%s'\n",
 	      mgr->user_name, fd_table[fd].ipaddr, mgr->action);
     else
@@ -269,13 +277,29 @@ cachemgrShutdown(StoreEntry * entryunused)
     shut_down(0);
 }
 
+static const char *
+cachemgrActionProtection(const action_table *at)
+{
+    char *pwd;
+    assert(at);
+    pwd = cachemgrPasswdGet(Config.passwd_list, at->action);
+    if (!pwd)
+	return at->pw_req_flag ? "hidden" : "public";
+    if (!strcmp(pwd, "disable"))
+	return "disabled";
+    if (strcmp(pwd, "none") == 0)
+	return "public";
+    return "protected";
+}
+
 static void
 cachemgrMenu(StoreEntry *sentry)
 {
-	action_table *a;
-	for (a = ActionTable; a != NULL; a = a->next) {
-		storeAppendPrintf(sentry, " %-22s\t%s\n", a->action, a->desc);
-	}
+    action_table *a;
+    for (a = ActionTable; a != NULL; a = a->next) {
+	storeAppendPrintf(sentry, " %-22s\t%s\t%s\n",
+	    a->action, a->desc, cachemgrActionProtection(a));
+    }
 }
 
 static char *
