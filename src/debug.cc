@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.85 2002/09/01 15:16:35 hno Exp $
+ * $Id: debug.cc,v 1.86 2003/01/17 05:14:29 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -34,6 +34,10 @@
  */
 
 #include "squid.h"
+#include "Debug.h"
+
+int Debug::Levels[MAX_DEBUG_SECTIONS];
+int Debug::level;
 
 static char *debug_log_file = NULL;
 static int Ctx_Lock = 0;
@@ -105,7 +109,7 @@ _db_print_file(const char *format, va_list args)
 static void
 _db_print_stderr(const char *format, va_list args)
 {
-    if (opt_debug_stderr < _db_level)
+    if (opt_debug_stderr < Debug::level)
 	return;
     if (debug_log == stderr)
 	return;
@@ -118,14 +122,14 @@ _db_print_syslog(const char *format, va_list args)
 {
     LOCAL_ARRAY(char, tmpbuf, BUFSIZ);
     /* level 0,1 go to syslog */
-    if (_db_level > 1)
+    if (Debug::level > 1)
 	return;
     if (0 == opt_syslog_enable)
 	return;
     tmpbuf[0] = '\0';
     vsnprintf(tmpbuf, BUFSIZ, format, args);
     tmpbuf[BUFSIZ - 1] = '\0';
-    syslog(_db_level == 0 ? LOG_WARNING : LOG_NOTICE, "%s", tmpbuf);
+    syslog(Debug::level == 0 ? LOG_WARNING : LOG_NOTICE, "%s", tmpbuf);
 }
 #endif /* HAVE_SYSLOG */
 
@@ -150,11 +154,11 @@ debugArg(const char *arg)
     if (l > 10)
 	l = 10;
     if (s >= 0) {
-	debugLevels[s] = l;
+	Debug::Levels[s] = l;
 	return;
     }
     for (i = 0; i < MAX_DEBUG_SECTIONS; i++)
-	debugLevels[i] = l;
+	Debug::Levels[i] = l;
 }
 
 static void
@@ -190,7 +194,7 @@ _db_init(const char *logfile, const char *options)
     char *s = NULL;
 
     for (i = 0; i < MAX_DEBUG_SECTIONS; i++)
-	debugLevels[i] = -1;
+	Debug::Levels[i] = -1;
 
     if (options) {
 	p = xstrdup(options);

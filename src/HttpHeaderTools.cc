@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.33 2002/10/13 20:34:56 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.34 2003/01/17 05:14:29 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -346,9 +346,9 @@ httpHeaderTestParser(const char *hstr)
     else if (strstr(hstr, "\n\n"))
 	hstr_len -= 1;
     httpHeaderInit(&hdr, hoReply);
-    /* debugLevels[55] = 8; */
+    /* Debug::Levels[55] = 8; */
     parse_success = httpHeaderParse(&hdr, hstr, hstr + hstr_len);
-    /* debugLevels[55] = 2; */
+    /* Debug::Levels[55] = 2; */
     if (!parse_success) {
 	debug(66, 2) ("TEST (%d): failed to parsed a header: {\n%s}\n", bug_count, hstr);
 	return;
