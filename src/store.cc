@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.67 1996/07/11 17:26:05 wessels Exp $
+ * $Id: store.cc,v 1.68 1996/07/15 23:16:32 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -185,7 +185,7 @@ static int storeCheckPurgeMem _PARAMS((StoreEntry * e));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
-HashID table = 0;
+HashID store_table = 0;
 /* hash table for in-memory-only objects */
 HashID in_mem_table = 0;
 
@@ -210,7 +210,7 @@ static int swaplog_lock = 0;
 static int storelog_fd = -1;
 
 /* key temp buffer */
-static char key_temp_buffer[MAX_URL];
+static char key_temp_buffer[MAX_URL + 100];
 static char swaplog_file[MAX_FILE_NAME_LEN];
 static char tmp_filename[MAX_FILE_NAME_LEN];
 static char logmsg[MAX_URL << 1];
@@ -322,9 +322,9 @@ static void destroy_MemObjectData(mem)
 HashID storeCreateHashTable(cmp_func)
      int (*cmp_func) (char *, char *);
 {
-    table = hash_create(cmp_func, STORE_BUCKETS);
-    in_mem_table = hash_create(cmp_func, STORE_IN_MEM_BUCKETS);
-    return (table);
+    store_table = hash_create(cmp_func, STORE_BUCKETS, hash_url);
+    in_mem_table = hash_create(cmp_func, STORE_IN_MEM_BUCKETS, hash_url);
+    return store_table;
 }
 
 /*
@@ -338,7 +338,7 @@ static int storeHashInsert(e)
 	e, e->key);
     if (e->mem_status == IN_MEMORY)
 	hash_insert(in_mem_table, e->key, e);
-    return (hash_join(table, (hash_link *) e));
+    return (hash_join(store_table, (hash_link *) e));
 }
 
 /*
@@ -356,7 +356,7 @@ int storeHashDelete(hash_ptr)
 	if ((hptr = hash_lookup(in_mem_table, e->key)))
 	    hash_delete_link(in_mem_table, hptr);
     }
-    return (hash_remove_link(table, hash_ptr));
+    return (hash_remove_link(store_table, hash_ptr));
 }
 
 /*
@@ -570,7 +570,7 @@ StoreEntry *storeGet(url)
 
     debug(20, 3, "storeGet: looking up %s\n", url);
 
-    if ((hptr = hash_lookup(table, url)) != NULL)
+    if ((hptr = hash_lookup(store_table, url)) != NULL)
 	return (StoreEntry *) hptr;
     return NULL;
 }
@@ -647,7 +647,7 @@ void storeSetPrivateKey(e)
 	return;			/* is already private */
 
     newkey = storeGeneratePrivateKey(e->url, e->method, 0);
-    if ((table_entry = hash_lookup(table, newkey))) {
+    if ((table_entry = hash_lookup(store_table, newkey))) {
 	e2 = (StoreEntry *) table_entry;
 	debug(20, 0, "storeSetPrivateKey: Entry already exists with key '%s'\n",
 	    newkey);
@@ -677,7 +677,7 @@ void storeSetPublicKey(e)
 	return;			/* is already public */
 
     newkey = storeGeneratePublicKey(e->url, e->method);
-    while ((table_entry = hash_lookup(table, newkey))) {
+    while ((table_entry = hash_lookup(store_table, newkey))) {
 	debug(20, 3, "storeSetPublicKey: Making old '%s' private.\n", newkey);
 	e2 = (StoreEntry *) table_entry;
 	storeSetPrivateKey(e2);
@@ -1369,7 +1369,7 @@ static int storeDoRebuildFromDisk(data)
 {
     static char log_swapfile[MAXPATHLEN];
     static char swapfile[MAXPATHLEN];
-    static char url[MAX_URL];
+    static char url[MAX_URL + 1];
     char *t = NULL;
     StoreEntry *e = NULL;
     time_t expires;
@@ -1779,14 +1779,14 @@ StoreEntry *storeGetInMemNext()
 /* get the first entry in the storage */
 StoreEntry *storeGetFirst()
 {
-    return ((StoreEntry *) storeFindFirst(table));
+    return ((StoreEntry *) storeFindFirst(store_table));
 }
 
 
 /* get the next entry in the storage for a given search pointer */
 StoreEntry *storeGetNext()
 {
-    return ((StoreEntry *) storeFindNext(table));
+    return ((StoreEntry *) storeFindNext(store_table));
 }
 
 
@@ -2112,7 +2112,7 @@ int storeGetSwapSpace(size)
     for (i = 0; i < STORE_BUCKETS; ++i) {
 	int expired_in_one_bucket = 0;
 
-	link_ptr = hash_get_bucket(table, storeGetBucketNum());
+	link_ptr = hash_get_bucket(store_table, storeGetBucketNum());
 	if (link_ptr == NULL)
 	    continue;
 	/* this while loop handles one bucket of hash table */
@@ -2265,7 +2265,7 @@ int storeRelease(e)
 	return -1;
     }
     if (e->key != NULL) {
-	if ((hptr = hash_lookup(table, e->key)) == NULL) {
+	if ((hptr = hash_lookup(store_table, e->key)) == NULL) {
 	    debug(20, 0, "storeRelease: Not Found: '%s'\n", e->key);
 	    debug(20, 0, "Dump of Entry 'e':\n %s\n", storeToString(e));
 	    fatal_dump(NULL);
@@ -2281,7 +2281,7 @@ int storeRelease(e)
     }
     if (e->method == METHOD_GET) {
 	/* check if coresponding HEAD object exists. */
-	head_table_entry = hash_lookup(table,
+	head_table_entry = hash_lookup(store_table,
 	    storeGeneratePublicKey(e->url, METHOD_HEAD));
 	if (head_table_entry) {
 	    head_result = (StoreEntry *) head_table_entry;
@@ -2749,7 +2749,7 @@ int storeMaintainSwapSpace()
 	last_time = squid_curtime;
 	if (bucket >= STORE_BUCKETS)
 	    bucket = 0;
-	link_ptr = hash_get_bucket(table, bucket++);
+	link_ptr = hash_get_bucket(store_table, bucket++);
 	while (link_ptr) {
 	    next = link_ptr->next;
 	    e = (StoreEntry *) link_ptr;
