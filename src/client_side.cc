@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.224 1998/03/11 22:18:47 rousskov Exp $
+ * $Id: client_side.cc,v 1.225 1998/03/13 05:39:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -67,6 +67,7 @@ static HttpReply *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
 static int isTcpHit(log_type code);
+static int clientCheckContentLength(request_t *r);
 
 static int
 checkAccelOnly(clientHttpRequest * http)
@@ -689,6 +690,31 @@ clientParseRequestHeaders(clientHttpRequest * http)
 }
 
 static int
+clientCheckContentLength(request_t *r)
+{
+    char *t;
+    int len;
+    /*
+     * We only require a request content-length for POST and PUT
+     */
+    switch(r->method) {
+    case METHOD_POST:
+    case METHOD_PUT:
+	break;
+    default:
+	return 1;
+	break;
+    }
+    t = mime_get_header(r->headers, "Content-Length");
+    if (t == NULL)
+	return 0;
+    len = atoi(t);
+    if (len < 0)
+	return 0;
+    return 1;
+}
+
+static int
 clientCachable(clientHttpRequest * http)
 {
     const char *url = http->uri;
@@ -1256,7 +1282,8 @@ clientProcessRequest(clientHttpRequest * http)
 	    storeReleaseRequest(http->entry);
 	    storeBuffer(http->entry);
 	    rep = httpReplyCreate();
-	    httpReplySetHeaders(rep, 1.0, HTTP_OK, NULL, "text/plain", r->headers_sz, 0, squid_curtime);
+	    httpReplySetHeaders(rep, 1.0, HTTP_OK, NULL, "text/plain",
+		r->headers_sz, 0, squid_curtime);
 	    httpReplySwapOut(rep, http->entry);
 	    httpReplyDestroy(rep);
 	    storeAppend(http->entry, r->headers, r->headers_sz);
@@ -1264,19 +1291,12 @@ clientProcessRequest(clientHttpRequest * http)
 	    return;
 	}
 	/* yes, continue */
-    } else if (r->protocol != PROTO_HTTP) {
-	(void) 0;		/* fallthrough */
-#if OLD_POST_CODE
-    } else if (r->method == METHOD_POST) {
+    } else if (r->method == METHOD_PUT || r->method == METHOD_POST)  {
 	http->log_type = LOG_TCP_MISS;
-	passStart(fd, url, r, &http->out.size);
-	return;
-#else
-    }
-    if ( r->method == METHOD_PUT || r->method == METHOD_POST )  {
-	http->log_type = LOG_TCP_MISS;
+	/* XXX oof, POST can be cached! */
 	pumpInit(fd, r, http->uri);
-#endif
+    } else {
+        http->log_type = clientProcessRequest2(http);
     }
     http->log_type = clientProcessRequest2(http);
     debug(33, 4) ("clientProcessRequest: %s for '%s'\n",
@@ -1708,6 +1728,15 @@ clientReadRequest(int fd, void *data)
 	    request->headers_sz = headers_sz;
 	    if (!urlCheckRequest(request)) {
 		err = errorCon(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED);
+		err->src_addr = conn->peer.sin_addr;
+		err->request = requestLink(request);
+		http->al.http.code = err->http_status;
+		http->entry = clientCreateStoreEntry(http, request->method, 0);
+		errorAppendEntry(http->entry, err);
+		break;
+	    }
+	    if (0 == clientCheckContentLength(request)) {
+		err = errorCon(ERR_INVALID_REQ, HTTP_LENGTH_REQUIRED);
 		err->src_addr = conn->peer.sin_addr;
 		err->request = requestLink(request);
 		http->al.http.code = err->http_status;
