@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.91 1996/12/20 23:45:42 wessels Exp $
+ * $Id: ipcache.cc,v 1.92 1996/12/21 00:43:52 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -684,6 +684,11 @@ ipcache_nbgethostbyname(const char *name, int fd, IPH handler, void *handlerData
 	debug(14, 4, "ipcache_nbgethostbyname: PENDING for '%s'\n", name);
 	IpcacheStats.pending_hits++;
 	ipcacheAddPending(i, fd, handler, handlerData);
+        if (squid_curtime - i->expires > 60) {
+	    i->status = IP_NEGATIVE_CACHED;
+	    ipcache_call_pending(i);
+	    ipcache_release(i);
+	}
 	return;
     } else {
 	fatal_dump("ipcache_nbgethostbyname: BAD ipcache_entry status");
