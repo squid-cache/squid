@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.29 2000/03/06 16:23:29 wessels Exp $
+ * $Id: cbdata.cc,v 1.30 2000/10/17 08:06:02 adrian Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -87,6 +87,7 @@ static HASHCMP cbdata_cmp;
 static HASHHASH cbdata_hash;
 static void cbdataReallyFree(cbdata * c);
 static OBJH cbdataDump;
+static MemPool *cbdata_pool = NULL;
 
 static int
 cbdata_cmp(const void *p1, const void *p2)
@@ -105,6 +106,9 @@ void
 cbdataInit(void)
 {
     debug(45, 3) ("cbdataInit\n");
+    if (cbdata_pool == NULL) {
+	cbdata_pool = memPoolCreate("cbdata", sizeof(cbdata));
+    }
     htable = hash_create(cbdata_cmp, 1 << 8, cbdata_hash);
     cachemgrRegister("cbdata",
 	"Callback Data Registry Contents",
@@ -123,7 +127,7 @@ cbdataAdd(const void *p, CBDUNL * unlock_func, int id)
     debug(45, 3) ("cbdataAdd: %p\n", p);
     assert(htable != NULL);
     assert(hash_lookup(htable, p) == NULL);
-    c = xcalloc(1, sizeof(cbdata));
+    c = memPoolAlloc(cbdata_pool);
     c->key = p;
     c->valid = 1;
     c->unlock_func = unlock_func;
@@ -144,7 +148,7 @@ cbdataReallyFree(cbdata * c)
     int id = c->id;
     hash_remove_link(htable, (hash_link *) c);
     cbdataCount--;
-    xfree(c);
+    memPoolFree(cbdata_pool,c);
     debug(45, 3) ("cbdataReallyFree: Freeing %p\n", p);
     if (unlock_func)
 	unlock_func(p, id);

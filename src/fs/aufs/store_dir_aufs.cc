@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.9 2000/10/13 06:35:54 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.10 2000/10/17 08:06:07 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -72,6 +72,8 @@ struct _RebuildState {
 static int n_asyncufs_dirs = 0;
 static int *asyncufs_dir_index = NULL;
 MemPool *aio_state_pool = NULL;
+MemPool *aio_qread_pool = NULL;
+MemPool *aio_qwrite_pool = NULL;
 static int asyncufs_initialised = 0;
 
 static char *storeAufsDirSwapSubDir(SwapDir *, int subdirn);
@@ -1076,10 +1078,16 @@ storeAufsDirWriteCleanDone(SwapDir * sd)
 }
 
 static void
+storeSwapLogDataFree(void *s)
+{
+    memFree(s, MEM_SWAP_LOG_DATA);
+}
+
+static void
 storeAufsDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
 {
     aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
-    storeSwapLogData *s = xcalloc(1, sizeof(storeSwapLogData));
+    storeSwapLogData *s = memAllocate(MEM_SWAP_LOG_DATA);
     s->op = (char) op;
     s->swap_filen = e->swap_filen;
     s->timestamp = e->timestamp;
@@ -1096,7 +1104,7 @@ storeAufsDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
 	sizeof(storeSwapLogData),
 	NULL,
 	NULL,
-	xfree);
+	(FREE *) storeSwapLogDataFree);
 }
 
 static void
@@ -1689,6 +1697,8 @@ storeAufsDirDone(void)
 {
     aioDone();
     memPoolDestroy(aio_state_pool);
+    memPoolDestroy(aio_qread_pool);
+    memPoolDestroy(aio_qwrite_pool);
     asyncufs_initialised = 0;
 }
 
@@ -1700,6 +1710,11 @@ storeFsSetup_aufs(storefs_entry_t * storefs)
     storefs->reconfigurefunc = storeAufsDirReconfigure;
     storefs->donefunc = storeAufsDirDone;
     aio_state_pool = memPoolCreate("AUFS IO State data", sizeof(aiostate_t));
+    aio_qread_pool = memPoolCreate("AUFS Queued read data",
+        sizeof(queued_read));
+    aio_qwrite_pool = memPoolCreate("AUFS Queued write data",
+        sizeof(queued_write));
+
     asyncufs_initialised = 1;
     aioInit();
 }

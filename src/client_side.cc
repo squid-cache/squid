@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.505 2000/10/04 17:09:24 wessels Exp $
+ * $Id: client_side.cc,v 1.506 2000/10/17 08:06:02 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -70,7 +70,6 @@
 
 static const char *const crlf = "\r\n";
 
-#define REQUEST_BUF_SIZE 4096
 #define FAILURE_MODE_TIME 300
 
 /* Local functions */
@@ -799,7 +798,10 @@ connStateFree(int fd, void *data)
 	assert(connState->chr != connState->chr->next);
 	httpRequestFree(http);
     }
-    safe_free(connState->in.buf);
+    if (connState->in.size == CLIENT_REQ_BUF_SZ)
+	memFree(connState->in.buf, MEM_CLIENT_REQ_BUF);
+    else
+	safe_free(connState->in.buf);
     /* XXX account connState->in.buf */
     pconnHistCount(0, connState->nrequests);
     cbdataFree(connState);
@@ -2184,8 +2186,8 @@ clientProcessMiss(clientHttpRequest * http)
 static clientHttpRequest *
 parseHttpRequestAbort(ConnStateData * conn, const char *uri)
 {
-    clientHttpRequest *http = xcalloc(1, sizeof(clientHttpRequest));
-    cbdataAdd(http, cbdataXfree, 0);
+    clientHttpRequest *http = memAllocate(MEM_CLIENTHTTPREQUEST);
+    cbdataAdd(http, memFree, MEM_CLIENTHTTPREQUEST);
     http->conn = conn;
     http->start = current_time;
     http->req_sz = conn->in.offset;
@@ -2318,8 +2320,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     assert(prefix_sz <= conn->in.offset);
 
     /* Ok, all headers are received */
-    http = xcalloc(1, sizeof(clientHttpRequest));
-    cbdataAdd(http, cbdataXfree, 0);
+    http = memAllocate(MEM_CLIENTHTTPREQUEST);
+    cbdataAdd(http, memFree, MEM_CLIENTHTTPREQUEST);
     http->http_ver = http_ver;
     http->conn = conn;
     http->start = current_time;
@@ -2462,6 +2464,7 @@ clientReadRequest(int fd, void *data)
     int k;
     request_t *request = NULL;
     int size;
+    void *p;
     method_t method;
     clientHttpRequest *http = NULL;
     clientHttpRequest **H = NULL;
@@ -2695,8 +2698,14 @@ clientReadRequest(int fd, void *data)
 		    return;
 		}
 		/* Grow the request memory area to accomodate for a large request */
-		conn->in.size += REQUEST_BUF_SIZE;
-		conn->in.buf = xrealloc(conn->in.buf, conn->in.size);
+		conn->in.size += CLIENT_REQ_BUF_SZ;
+		if (conn->in.size == 2 * CLIENT_REQ_BUF_SZ) {
+		    p = conn->in.buf;	/* get rid of fixed size Pooled buffer */
+		    conn->in.buf = xcalloc(2, CLIENT_REQ_BUF_SZ);
+		    xmemcpy(conn->in.buf, p, CLIENT_REQ_BUF_SZ);
+		    memFree(p, MEM_CLIENT_REQ_BUF);
+		} else
+		    conn->in.buf = xrealloc(conn->in.buf, conn->in.size);
 		/* XXX account conn->in.buf */
 		debug(33, 3) ("Handling a large request, offset=%d inbufsize=%d\n",
 		    (int) conn->in.offset, conn->in.size);
@@ -2800,14 +2809,14 @@ httpAccept(int sock, void *data)
 	}
 	debug(33, 4) ("httpAccept: FD %d: accepted\n", fd);
 	connState = memAllocate(MEM_CONNSTATEDATA);
+	cbdataAdd(connState, memFree, MEM_CONNSTATEDATA);
 	connState->peer = peer;
 	connState->log_addr = peer.sin_addr;
 	connState->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
 	connState->me = me;
 	connState->fd = fd;
-	connState->in.size = REQUEST_BUF_SIZE;
-	connState->in.buf = xcalloc(connState->in.size, 1);
-	cbdataAdd(connState, memFree, MEM_CONNSTATEDATA);
+	connState->in.size = CLIENT_REQ_BUF_SZ;
+	connState->in.buf = memAllocate(MEM_CLIENT_REQ_BUF);
 	/* XXX account connState->in.buf */
 	comm_add_close_handler(fd, connStateFree, connState);
 	if (Config.onoff.log_fqdn)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.317 2000/07/16 01:11:49 hno Exp $
+ * $Id: main.cc,v 1.318 2000/10/17 08:06:03 adrian Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -621,11 +621,11 @@ main(int argc, char **argv)
 	if (!ConfigFile)
 	    ConfigFile = xstrdup(DefaultConfigFile);
 	assert(!configured_once);
+	memInit();		/* memInit is required for config parsing */
 	cbdataInit();
 #if USE_LEAKFINDER
 	leakInit();
 #endif
-	memInit();		/* memInit is required for config parsing */
 	eventInit();		/* eventInit() is required for config parsing */
 	storeFsInit();		/* required for config parsing */
 	parse_err = parseConfigFile(ConfigFile);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.71 2000/08/19 06:10:00 hno Exp $
+ * $Id: util.c,v 1.72 2000/10/17 08:06:01 adrian Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -106,19 +106,34 @@ log_trace_done()
 
 #if XMALLOC_STATISTICS
 #define DBG_MAXSIZE   (1024*1024)
+#define DBG_SPLIT     (256)	/* mallocs below this value are tracked with DBG_GRAIN_SM precision instead of DBG_GRAIN */
 #define DBG_GRAIN     (16)
-#define DBG_MAXINDEX  (DBG_MAXSIZE/DBG_GRAIN)
-#define DBG_INDEX(sz) (sz<DBG_MAXSIZE?(sz+DBG_GRAIN-1)/DBG_GRAIN:DBG_MAXINDEX)
+#define DBG_GRAIN_SM  (4)
+#define DBG_OFFSET    (DBG_SPLIT/DBG_GRAIN_SM - DBG_SPLIT/DBG_GRAIN )
+#define DBG_MAXINDEX  (DBG_MAXSIZE/DBG_GRAIN + DBG_OFFSET)
+// #define DBG_INDEX(sz) (sz<DBG_MAXSIZE?(sz+DBG_GRAIN-1)/DBG_GRAIN:DBG_MAXINDEX)
 static int malloc_sizes[DBG_MAXINDEX + 1];
+static int malloc_histo[DBG_MAXINDEX + 1];
 static int dbg_stat_init = 0;
 
+static int
+DBG_INDEX(int sz)
+{
+    if (sz >= DBG_MAXSIZE)
+	return DBG_MAXINDEX;
+
+    if (sz <= DBG_SPLIT)
+	return (sz+DBG_GRAIN_SM-1)/DBG_GRAIN_SM;
+
+    return (sz+DBG_GRAIN-1)/DBG_GRAIN + DBG_OFFSET;
+}
 
 static void
 stat_init(void)
 {
     int i;
     for (i = 0; i <= DBG_MAXINDEX; i++)
-	malloc_sizes[i] = 0;
+	malloc_sizes[i] = malloc_histo[i] = 0;
     dbg_stat_init = 1;
 }
 
@@ -131,11 +146,15 @@ malloc_stat(int sz)
 }
 
 void
-malloc_statistics(void (*func) (int, int, void *), void *data)
+malloc_statistics(void (*func) (int, int, int, void *), void *data)
 {
     int i;
-    for (i = 0; i <= DBG_MAXSIZE; i += DBG_GRAIN)
-	func(i, malloc_sizes[DBG_INDEX(i)], data);
+    for (i = 0; i <= DBG_SPLIT; i += DBG_GRAIN_SM)
+	func(i, malloc_sizes[DBG_INDEX(i)], malloc_histo[DBG_INDEX(i)], data);
+    i -= DBG_GRAIN_SM;
+    for (i = i; i <= DBG_MAXSIZE; i += DBG_GRAIN)
+	func(i, malloc_sizes[DBG_INDEX(i)], malloc_histo[DBG_INDEX(i)], data);
+    xmemcpy(&malloc_histo, &malloc_sizes, sizeof(malloc_sizes));
 }
 #endif /* XMALLOC_STATISTICS */
 

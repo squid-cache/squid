@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.9 2000/10/13 06:35:57 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.10 2000/10/17 08:06:09 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -959,7 +959,7 @@ storeUfsDirWriteCleanStart(SwapDir * sd)
     unlink(state->cln);
     state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
     if (state->fd < 0)
-	return -1;
+	return -1;	/* state not free'd - possible leak */
     debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
 	state->new, state->fd);
 #if HAVE_FCHMOD
@@ -1076,10 +1076,16 @@ storeUfsDirWriteCleanDone(SwapDir * sd)
 }
 
 static void
+storeSwapLogDataFree(void *s)
+{
+    memFree(s, MEM_SWAP_LOG_DATA);
+}
+
+static void
 storeUfsDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
 {
     ufsinfo_t *ufsinfo = (ufsinfo_t *) sd->fsdata;
-    storeSwapLogData *s = xcalloc(1, sizeof(storeSwapLogData));
+    storeSwapLogData *s = memAllocate(MEM_SWAP_LOG_DATA);
     s->op = (char) op;
     s->swap_filen = e->swap_filen;
     s->timestamp = e->timestamp;
@@ -1096,7 +1102,7 @@ storeUfsDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
 	sizeof(storeSwapLogData),
 	NULL,
 	NULL,
-	xfree);
+	(FREE *) storeSwapLogDataFree);
 }
 
 static void

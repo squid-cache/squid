@@ -74,11 +74,28 @@ struct _aiostate_t {
     link_list *pending_reads;
 };
 
+struct _queued_write {
+    char *buf;
+    size_t size;
+    off_t offset;
+    FREE *free_func;
+};
+
+struct _queued_read {
+    char *buf;
+    size_t size;
+    off_t offset;
+    STRCB *callback;
+    void *callback_data;
+};
+
 typedef struct _aioinfo_t aioinfo_t;
 typedef struct _aiostate_t aiostate_t;
 
-/* The aio_state memory pool */
+/* The aio_state memory pools */
 extern MemPool *aio_state_pool;
+extern MemPool *aio_qread_pool;
+extern MemPool *aio_qwrite_pool;
 
 extern void storeAufsDirMapBitReset(SwapDir *, sfileno);
 extern int storeAufsDirMapBitAllocate(SwapDir *);

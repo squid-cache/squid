@@ -14,21 +14,6 @@ static int storeAufsSomethingPending(storeIOState *);
 static int storeAufsKickWriteQueue(storeIOState * sio);
 static void storeAufsIOFreeEntry(void *, int);
 
-struct _queued_write {
-    char *buf;
-    size_t size;
-    off_t offset;
-    FREE *free_func;
-};
-
-struct _queued_read {
-    char *buf;
-    size_t size;
-    off_t offset;
-    STRCB *callback;
-    void *callback_data;
-};
-
 /* === PUBLIC =========================================================== */
 
 /* open for reading */
@@ -137,7 +122,7 @@ storeAufsRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t of
 	debug(78, 3) ("storeAufsRead: queueing read because FD < 0\n");
 	assert(aiostate->flags.opening);
 	assert(aiostate->pending_reads == NULL);
-	q = xcalloc(1, sizeof(*q));
+	q = memPoolAlloc(aio_qread_pool);
 	q->buf = buf;
 	q->size = size;
 	q->offset = offset;
@@ -169,7 +154,7 @@ storeAufsWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
 	/* disk file not opened yet */
 	struct _queued_write *q;
 	assert(aiostate->flags.opening);
-	q = xcalloc(1, sizeof(*q));
+	q = memPoolAlloc(aio_qwrite_pool);
 	q->buf = buf;
 	q->size = size;
 	q->offset = offset;
@@ -180,7 +165,7 @@ storeAufsWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     if (aiostate->flags.writing) {
 	struct _queued_write *q;
 	debug(78, 3) ("storeAufsWrite: queuing write\n");
-	q = xcalloc(1, sizeof(*q));
+	q = memPoolAlloc(aio_qwrite_pool);
 	q->buf = buf;
 	q->size = size;
 	q->offset = offset;
@@ -220,7 +205,7 @@ storeAufsKickWriteQueue(storeIOState * sio)
     debug(78, 3) ("storeAufsKickWriteQueue: writing queued chunk of %d bytes\n",
 	q->size);
     storeAufsWrite(INDEXSD(sio->swap_dirn), sio, q->buf, q->size, q->offset, q->free_func);
-    xfree(q);
+    memPoolFree(aio_qwrite_pool, q);
     return 1;
 }
 
@@ -234,7 +219,7 @@ storeAufsKickReadQueue(storeIOState * sio)
     debug(78, 3) ("storeAufsKickReadQueue: reading queued request of %d bytes\n",
 	q->size);
     storeAufsRead(INDEXSD(sio->swap_dirn), sio, q->buf, q->size, q->offset, q->callback, q->callback_data);
-    xfree(q);
+    memPoolFree(aio_qread_pool, q);
     return 1;
 }
 

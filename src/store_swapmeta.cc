@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.11 2000/07/18 06:16:42 wessels Exp $
+ * $Id: store_swapmeta.cc,v 1.12 2000/10/17 08:06:04 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -38,7 +38,7 @@
 static tlv **
 storeSwapTLVAdd(int type, const void *ptr, size_t len, tlv ** tail)
 {
-    tlv *t = xcalloc(1, sizeof(tlv));
+    tlv *t = memAllocate(MEM_TLV);
     t->type = (char) type;
     t->length = (int) len;
     t->value = xmalloc(len);
@@ -54,7 +54,7 @@ storeSwapTLVFree(tlv * n)
     while ((t = n) != NULL) {
 	n = t->next;
 	xfree(t->value);
-	xfree(t);
+	memFree(t, MEM_TLV);
     }
 }
 
