@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.194 1997/11/21 01:59:16 wessels Exp $
+ * $Id: main.cc,v 1.195 1997/11/21 05:55:53 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -130,10 +130,6 @@ static void mainParseOptions(int, char **);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
 static void watch_child(char **);
-#ifdef SQUID_SNMP
-extern void init_snmp();
-extern void initSquidSnmp();
-#endif
 static void
 usage(void)
 {
@@ -404,7 +400,7 @@ serverConnectionsOpen(void)
 	}
     }
 #ifdef SQUID_SNMP
-    initSquidSnmp();
+    snmpConnectionOpen();
 #endif
 
     clientdbInit();
@@ -570,9 +566,8 @@ mainInitialize(void)
 	statAvgInit();
     }
     configured_once = 1;
-
 #ifdef SQUID_SNMP
-    init_snmp();
+    snmpInit();
 #endif
 }
 

@@ -48,6 +48,8 @@ SOFTWARE.
 
 #include "asn1.h"
 
+#include <assert.h>
+
 #ifndef NULL
 #define NULL	0
 #endif
@@ -464,6 +466,7 @@ asn_build_sequence(data, datalength, type, length)
      u_char type;		/* IN - ASN type of object */
      int length;		/* IN - length of object */
 {
+	assert (*datalength >= 0);
     *datalength -= 4;
     if (*datalength < 0) {
 	*datalength += 4;	/* fix up before punting */
