@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.146 2003/09/21 00:30:47 robertc Exp $
+ * $Id: tunnel.cc,v 1.147 2004/12/20 20:15:27 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -173,7 +173,7 @@ SslStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
     return delayId.bytesWanted(lowerbound, upperbound);
 #else
 
-    return INT_MAX;
+    return upperbound;
 #endif
 }
 
