@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.71 1997/05/15 01:06:49 wessels Exp $
+#  $Id: Makefile.in,v 1.72 1997/05/26 04:04:54 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -33,7 +33,6 @@ VPATH		= @srcdir@
 
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
-DEFAULT_FTPGET          = $(libexecdir)/ftpget
 DEFAULT_DNSSERVER       = $(libexecdir)/dnsserver
 DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
 DEFAULT_ACCESS_LOG      = $(localstatedir)/logs/access.log
@@ -72,7 +71,7 @@ FTPGET_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 
 PROGS           = squid client
-UTILS           = dnsserver ftpget unlinkd
+UTILS           = dnsserver unlinkd
 SUID_UTILS	= pinger
 CGIPROGS	= cachemgr.cgi
 OBJS	 	= \
@@ -155,9 +154,6 @@ dnsserver: dnsserver.o
 
 cachemgr.cgi:	cachemgr.o
 	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
-
-ftpget: ftpget.o
-	$(CC) -o $@ $(LDFLAGS) ftpget.o debug.o mime.o $(FTPGET_LIBS) $(REGEXLIB)
 
 pinger: pinger.o
 	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o $(PINGER_LIBS)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.154 1997/05/22 15:51:51 wessels Exp $
+ * $Id: comm.cc,v 1.155 1997/05/26 04:04:56 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -773,7 +773,6 @@ comm_poll(time_t sec)
 	    fatal_dump(NULL);
 	if (shutdown_pending || reconfigure_pending) {
 	    serverConnectionsClose();
-	    ftpServerClose();
 	    dnsShutdownServers();
 	    redirectShutdownServers();
 	    /* shutdown_pending will be set to
@@ -926,7 +925,6 @@ comm_select(time_t sec)
 
 	if (shutdown_pending || reconfigure_pending) {
 	    serverConnectionsClose();
-	    ftpServerClose();
 	    dnsShutdownServers();
 	    redirectShutdownServers();
 	    /* shutdown_pending will be set to

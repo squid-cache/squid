@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.148 1997/05/16 07:42:38 wessels Exp $
+ * $Id: main.cc,v 1.149 1997/05/26 04:05:00 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -514,7 +514,6 @@ mainReconfigure(void)
     dnsOpenServers();
     redirectOpenServers();
     serverConnectionsOpen();
-    (void) ftpInitialize();
     if (theOutIcpConnection >= 0 && (!httpd_accel_mode || Config.Accel.withProxy))
 	neighbors_open(theOutIcpConnection);
     debug(1, 0, "Ready to serve requests.\n");
@@ -564,7 +563,6 @@ mainInitialize(void)
     dnsOpenServers();
     redirectOpenServers();
     useragentOpenLog();
-    (void) ftpInitialize();
 
 #if MALLOC_DBG
     malloc_debug(0, malloc_debug_level);
@@ -692,14 +690,12 @@ main(int argc, char **argv)
     /* main loop */
     for (;;) {
 	if (rotate_pending) {
-	    ftpServerClose();
 	    icmpClose();
 	    _db_rotate_log();	/* cache.log */
 	    storeWriteCleanLogs();
 	    storeRotateLog();	/* store.log */
 	    stat_rotate_log();	/* access.log */
 	    useragentRotateLog();	/* useragent.log */
-	    (void) ftpInitialize();
 	    icmpOpen();
 	    rotate_pending = 0;
 	}

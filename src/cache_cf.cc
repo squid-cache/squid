@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.191 1997/05/23 19:45:25 wessels Exp $
+ * $Id: cache_cf.cc,v 1.192 1997/05/26 04:04:55 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -208,6 +208,11 @@ struct SquidConfig Config;
 #define DefaultOptionsEnablePurge 0	/* default off */
 #define DefaultOptionsClientDb	1	/* default on */
 #define DefaultOptionsQueryIcmp	0	/* default off */
+
+#define DefaultFtpIconPrefix	"internal-"
+#define DefaultFtpIconSuffix	null_string
+#define DefaultFtpListWidth	32
+#define DefaultFtpListWrap	0
 
 static const char *const T_SECOND_STR = "second";
 static const char *const T_MINUTE_STR = "minute";
@@ -1430,6 +1435,10 @@ configSetFactoryDefaults(void)
     Config.Options.enable_purge = DefaultOptionsEnablePurge;
     Config.Options.client_db = DefaultOptionsClientDb;
     Config.Options.query_icmp = DefaultOptionsQueryIcmp;
+    Config.Ftp.icon_prefix = safe_xstrdup(DefaultFtpIconPrefix);
+    Config.Ftp.icon_suffix = safe_xstrdup(DefaultFtpIconSuffix);
+    Config.Ftp.list_width = DefaultFtpListWidth;
+    Config.Ftp.list_wrap = DefaultFtpListWrap;
 }
 
 static void
