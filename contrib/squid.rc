@@ -5,7 +5,7 @@
 # This is squid's startup file /sbin/init.d/squid or /etc/init.d/squid
 
 
-PATH=/opt/squid/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PATH=/usr/local/squid/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 
 
