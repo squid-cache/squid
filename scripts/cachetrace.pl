@@ -8,6 +8,7 @@ $port = 3128;
 
 $url = "http://$url/" if ($url =~ /^[-\w\.]+$/);
 print "Querying cache path to $url\n";
+$host = $1 if ($url =~ /^[^:]+:\/\/([^\/:])+/);
 
 $sockaddr = 'S n a4 x8';
 ($name, $aliases, $proto) = getprotobyname("tcp");
@@ -32,7 +33,7 @@ sub try_http_11 {
                 connect (SOCK, $that);
         select (SOCK); $| = 1;
         select (STDOUT);
-	print SOCK "TRACE $url HTTP/1.1\r\nAccept: */*\r\n\r\n";
+	print SOCK "TRACE $url HTTP/1.1\r\nHost: $host\r\nAccept: */*\r\n\r\n";
 	while (<SOCK>) {
 		s/\r//g;
 		s/\n//g;
