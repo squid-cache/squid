@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.37 2001/02/14 20:58:10 hno Exp $
+ * $Id: dns_internal.cc,v 1.38 2001/05/04 13:37:42 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -338,7 +338,7 @@ idnsGrokReply(const char *buf, size_t sz)
 static void
 idnsRead(int fd, void *data)
 {
-    int *N = data;
+    int *N = &incoming_sockets_accepted;
     ssize_t len;
     struct sockaddr_in from;
     socklen_t from_len;

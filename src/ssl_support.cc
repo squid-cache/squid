@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.1 2001/04/14 18:23:41 hno Exp $
+ * $Id: ssl_support.cc,v 1.2 2001/05/04 13:37:42 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 81     SSL accelerator support
@@ -42,8 +42,6 @@ void clientNegotiateSSL(int fd, void *data);
 void clientReadSSLRequest(int fd, void *data);
 void connFreeSSL(int fd, void *data);
 
-SSL_CTX *sslContext = NULL;
-SSL **ssl_table = NULL;
 
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int export, int keylen)
@@ -90,14 +88,18 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     return ok;
 }
 
-void 
-sslInit(const char *certfile, const char *keyfile)
+SSL_CTX *
+sslLoadCert(const char *certfile, const char *keyfile)
 {
     int ssl_error;
     SSL_METHOD *method;
-    SSL_load_error_strings();
-    SSLeay_add_ssl_algorithms();
-
+    SSL_CTX *sslContext;
+    static int ssl_initialized = 0;
+    if (!ssl_initialized) {
+	ssl_initialized = 1;
+	SSL_load_error_strings();
+	SSLeay_add_ssl_algorithms();
+    }
     if (!keyfile)
 	keyfile = certfile;
     if (!certfile)
@@ -163,11 +165,10 @@ sslInit(const char *certfile, const char *keyfile)
     }
     debug(81, 9) ("Set client certifying authority list.\n");
     SSL_CTX_set_client_CA_list(sslContext, SSL_load_client_CA_file(certfile));
-
-    ssl_table = xcalloc(Squid_MaxFD, sizeof(SSL *));
+    return sslContext;
 }
 
-int 
+int
 ssl_read_method(fd, buf, len)
      int fd;
      char *buf;
@@ -176,7 +177,7 @@ ssl_read_method(fd, buf, len)
     return (SSL_read(fd_table[fd].ssl, buf, len));
 }
 
-int 
+int
 ssl_write_method(fd, buf, len)
      int fd;
      const char *buf;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.65 2001/01/12 00:37:18 wessels Exp $
+ * $Id: icp_v2.cc,v 1.66 2001/05/04 13:37:42 hno Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -337,7 +337,7 @@ icpPktDump(icp_common_t * pkt)
 void
 icpHandleUdp(int sock, void *data)
 {
-    int *N = data;
+    int *N = &incoming_sockets_accepted;
     struct sockaddr_in from;
     socklen_t from_len;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
