@@ -1,5 +1,5 @@
 /*
- * $Id: cache_snmp.h,v 1.16 1998/09/23 17:19:58 wessels Exp $
+ * $Id: cache_snmp.h,v 1.17 1998/09/23 21:31:29 glenn Exp $
  */
 
 #ifdef SQUID_SNMP
@@ -30,33 +30,25 @@
 /* mib stuff here */
 
 #ifndef CURRENT_MIB_VERSION
-#define CURRENT_MIB_VERSION "-- v 1.14 1998/04/03 kostas@nlanr.net"
-#endif
-
-/* Base value for sysDescr, this will need to be changed */
-#ifndef SQUID_SYS_DESCR
-#define SQUID_SYS_DESCR "Squid Internet Object Cache"
+#define CURRENT_MIB_VERSION "-- v 1.16 1998/09/22 glenn@ircache.net"
 #endif
 
 /* MIB definitions
- * We start from the SQUIDMIB as the root of the subtree
+ * SQUID-MIB
+ * 	.iso.org.dod.internet.private.enterprises.nlanr.squid
+ *	  1   3   6     1        4         1      3495    1
  *
- * we are under : iso.org.dod.internet.experimental.nsfnet.squid
- *                 1   3   6     1          3         25     17
+ * PROXY-MIB
+ *	.iso.org.dod.internet.experimental.nsfnet.proxy
+ *	  1   3   6     1          3         25    17
  */
 
-#define SQUIDMIB 1, 3, 6, 1, 3, 25, 17	/* length is 7 */
-#define LEN_SQUIDMIB 7
-
-#define SYSMIB 1, 3, 6, 1, 2, 1, 1	/* basic system vars */
-#define LEN_SYSMIB 7
-
-#define SQUID_OBJ_ID 1,3,6,1,4,1,25,17 /* Object Identifier */
-#define LEN_SQUID_OBJ_ID 8
+#define SQUIDMIB 1, 3, 6, 1, 4, 1, 3495, 1
+#define LEN_SQUIDMIB 8
 
 /* basic groups under .squid */
 
-#define SQ_SYS  SQUIDMIB, 1	/* length is 8 */
+#define SQ_SYS  SQUIDMIB, 1
 #define LEN_SQ_SYS LEN_SQUIDMIB+1
 #define SQ_CONF SQUIDMIB, 2
 #define LEN_SQ_CONF LEN_SQUIDMIB+1
@@ -66,40 +58,28 @@
 #define LEN_SQ_NET LEN_SQUIDMIB+1
 #define SQ_MESH  SQUIDMIB, 5
 #define LEN_SQ_MESH LEN_SQUIDMIB+1
-#define SQ_ACC  SQUIDMIB, 6
-#define LEN_SQ_ACC LEN_SQUIDMIB+1
 
-enum {				/* basic system mib info group */
-    SYSMIB_START,
-    SYS_DESCR,
-    SYS_OBJECT_ID,
-    SYS_UPTIME,
-    SYS_CONTACT,
-    SYS_NAME,
-    SYS_LOCATION,
-    SYS_SERVICES,
-    SYSMIB_END
-};
-
-/* cacheSystem group */
+/* 
+	cacheSystem group 
+*/
 
 enum {
     SYS_START,
     SYSVMSIZ,
     SYSSTOR,
-    SYSCONNTBL,
-    SYSFDTBL,
+    SYS_UPTIME,
     SYS_END
 };
 
-/* cacheConfig group */
+/* 
+	cacheConfig group 
+*/
 
 enum {
     CONF_START,
     CONF_ADMIN,
     CONF_VERSION,
     CONF_VERSION_ID,
-    CONF_UPTIME,
     CONF_LOG_FAC,
     CONF_STORAGE,
     CONF_END
@@ -116,7 +96,9 @@ enum {
     CONF_ST_END
 };
 
-/* cacheMesh group */
+/* 
+	cacheMesh group 
+*/
 
 enum {
     MESH_START,
@@ -157,63 +139,48 @@ enum {				/* cacheClientTable */
     MESH_CTBL_END
 };
 
-/* cacheNetwork group */
+/* 
+	cacheNetwork group 
+*/
 
 enum {
-    NETDB_START,
-    NETDB_NET,
-    NETDB_PING_S,
-    NETDB_PING_R,
-    NETDB_HOPS,
-    NETDB_RTT,
-    NETDB_PINGTIME,
-    NETDB_LASTUSE,
-    NETDB_END
+    IP_START,
+    IP_ENT,
+    IP_REQ,
+    IP_HITS,
+    IP_PENDHIT,
+    IP_NEGHIT,
+    IP_MISS,
+    IP_GHBN,
+    IP_LOC,
+    IP_LENG,
+    IP_END
 };
 
 enum {
-    NET_IPC_START,
-    NET_IPC_ID,
-    NET_IPC_NAME,
-    NET_IPC_IP,
-    NET_IPC_STATE,
-    NET_IPC_END
+    FQDN_START,
+    FQDN_ENT,
+    FQDN_REQ,
+    FQDN_HITS,
+    FQDN_PENDHIT,
+    FQDN_NEGHIT,
+    FQDN_MISS,
+    FQDN_GHBN,
+    FQDN_LENG,
+    FQDN_END
 };
 
 enum {
-    NET_DNS_START,
-    NET_DNS_IPCACHE,
-    NET_DNS_FQDNCACHE,
-    NET_DNS_END
+    DNS_START,
+    DNS_REQ,
+    DNS_REP,
+    DNS_SERVERS,
+    DNS_END
 };
 
-
-enum {
-    NET_FQDN_START,
-    NET_FQDN_ID,
-    NET_FQDN_NAME,
-    NET_FQDN_IP,
-    NET_FQDN_LASTREF,
-    NET_FQDN_EXPIRES,
-    NET_FQDN_STATE,
-    NET_FQDN_END
-};
-
-enum {
-    NET_START,
-    NET_NETDBTBL,
-    NET_DNS,
-    NET_NETSTAT,
-    NET_END
-};
-
-enum {
-    NETSTAT_START,
-    NETSTAT_TCPCONNS,
-    NETSTAT_UDPCONNS,
-    NETSTAT_INTHRPUT,
-    NETSTAT_OUTHRPUT
-};
+/* 
+	Cache Performance Group 
+*/
 
 enum {
     PERF_START,
@@ -278,47 +245,27 @@ enum {
     PERF_MEDIAN_END
 };
 
-enum {
-    SYS_FD_START,
-    SYS_FD_NUMBER,
-    SYS_FD_NREAD,
-    SYS_FD_NWRITE,
-    SYS_FD_NAME,
-    SYS_FD_END
-};
-
-enum {
-    SYS_CONN_START,
-    SYS_CONN_FDNUM,
-    SYS_CONN_READ,
-    SYS_CONN_WRITE,
-    SYS_CONN_ADDR,
-    SYS_CONN_NAME,
-    SYS_CONN_PORT,
-    SYS_CONN_END
-};
-
 /* First, we have a huge array of MIBs this agent knows about */
 
 struct MIBListEntry {
-    oid Name[9];		/* Change as appropriate */
+    oid Name[10];		/* This needs to be fixed, a static is ugly */
     snint NameLen;
     oid_GetFn *GetFn;
     oid_GetNextFn *GetNextFn;
 };
 
 variable_list *snmp_basicFn(variable_list *, snint *);
-variable_list *snmp_meshPtblFn(variable_list *, snint *);
-variable_list *snmp_meshCtblFn(variable_list *, snint *);
 variable_list *snmp_confFn(variable_list *, snint *);
 variable_list *snmp_sysFn(variable_list *, snint *);
 variable_list *snmp_prfSysFn(variable_list *, snint *);
 variable_list *snmp_prfProtoFn(variable_list *, snint *);
 variable_list *snmp_prfPeerFn(variable_list *, snint *);
-variable_list *snmp_netdbFn(variable_list *, snint *);
-variable_list *snmp_dnsFn(variable_list *, snint *);
-variable_list *snmp_ipcacheFn(variable_list *, snint *);
-variable_list *snmp_fqdncacheFn(variable_list *, snint *);
+variable_list *snmp_netIpFn(variable_list *, snint *);
+variable_list *snmp_netFqdnFn(variable_list *, snint *);
+variable_list *snmp_netDnsFn(variable_list *, snint *);
+variable_list *snmp_meshPtblFn(variable_list *, snint *);
+variable_list *snmp_meshCtblFn(variable_list *, snint *);
+
 
 extern int snmpInitAgentAuth();
 extern void snmpAgentParse(void *);
@@ -326,9 +273,6 @@ extern int snmpDefaultAuth();
 extern int get_median_svc(int, int);
 extern void snmpAgentParseDone(int, void *);
 extern int meshCtblGetRowFn(oid *, oid *);
-extern int netdbGetRowFn(oid *, oid *);
-extern int fqdn_getMax();
-extern int ipcache_getMax();
 extern struct snmp_pdu *snmpAgentResponse(struct snmp_pdu *PDU);
 extern void snmpAclCheckStart(void *);
 extern struct snmp_session *Session;
@@ -343,14 +287,8 @@ extern oid *oiddup(oid * A, snint ALen);
 
 /* group handler definition */
 
-extern oid_ParseFn *basicGetFn(oid *, snint);
-extern oid_ParseFn *basicGetNextFn(oid *, snint, oid **, snint *);
 extern oid_ParseFn *sysGetFn(oid *, snint);
 extern oid_ParseFn *sysGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *sysFdGetFn(oid *, snint);
-extern oid_ParseFn *sysFdGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *sysConnGetFn(oid *, snint);
-extern oid_ParseFn *sysConnGetNextFn(oid *, snint, oid **, snint *);
 extern oid_ParseFn *confGetFn(oid *, snint);
 extern oid_ParseFn *confGetNextFn(oid *, snint, oid **, snint *);
 extern oid_ParseFn *confStGetNextFn(oid *, snint, oid **, snint *);
@@ -359,21 +297,19 @@ extern oid_ParseFn *prfSysGetFn(oid *, snint);
 extern oid_ParseFn *prfSysGetNextFn(oid *, snint, oid **, snint *);
 extern oid_ParseFn *prfProtoGetFn(oid *, snint);
 extern oid_ParseFn *prfProtoGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *netdbGetFn(oid *, snint);
-extern oid_ParseFn *netdbGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *dnsGetFn(oid *, snint);
-extern oid_ParseFn *dnsGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *netIpGetFn(oid *, snint);
+extern oid_ParseFn *netDnsGetFn(oid *, snint);
+extern oid_ParseFn *netFqdnGetFn(oid *, snint);
+extern oid_ParseFn *netFqdnGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *netIpGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *netDnsGetNextFn(oid *, snint, oid **, snint *);
 extern oid_ParseFn *meshGetFn(oid *, snint);
 extern oid_ParseFn *meshPtblGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *meshCtblGetNextFn(oid *, snint, oid **, snint *);
 extern int meshPtblGetRowFn(oid *, oid *);
 extern int sysConnGetRowFn(oid *, oid *);
 extern int meshCtblGetRowFn(oid *, oid *);
-extern int netdbGetRowFn(oid *, oid *);
-oid_ParseFn *meshCtblGetNextFn(oid *, snint, oid **, snint *);
 
-extern int fqdn_getMax();
-extern int ipcache_getMax();
-extern int fd_getMax();
 extern struct in_addr *gen_getMax();
 
 #endif
