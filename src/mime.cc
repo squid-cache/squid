@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.47 1998/02/02 21:15:03 wessels Exp $
+ * $Id: mime.cc,v 1.48 1998/02/13 17:55:19 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -375,10 +375,10 @@ mimeInit(char *filename)
 	    m->transfer_mode = 'A';
 	else
 	    m->transfer_mode = 'I';
-	mimeLoadIconFile(m->icon);
-	debug(25, 5) ("mimeInit: added '%s'\n", buf);
 	*MimeTableTail = m;
 	MimeTableTail = &m->next;
+	mimeLoadIconFile(m->icon);
+	debug(25, 5) ("mimeInit: added '%s'\n", buf);
     }
     fclose(fp);
     mimeLoadIconFile(ICON_MENU);
@@ -400,6 +400,9 @@ mimeLoadIconFile(const char *icon)
     LOCAL_ARRAY(char, url, MAX_URL);
     char *buf;
     const cache_key *key;
+    const char *type = mimeGetContentType(icon);
+    if (type == NULL)
+	fatal("Unknown icon format while reading mime.conf\n");
     snprintf(url, MAX_URL, "http://internal.squid/icons/%s", icon);
     key = storeKeyPublic(url, METHOD_GET);
     if (storeGet(key))
@@ -427,7 +430,7 @@ mimeLoadIconFile(const char *icon)
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "HTTP/1.0 200 OK\r\n");
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "Date: %s\r\n", mkrfc1123(squid_curtime));
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "Server: Squid/%s\r\n", version_string);
-    l += snprintf(buf + l, SM_PAGE_SIZE - l, "Content-Type: %s\r\n", Config.icons.content_type);
+    l += snprintf(buf + l, SM_PAGE_SIZE - l, "Content-Type: %s\r\n", type);
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "Content-Length: %d\r\n", (int) sb.st_size);
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "Last-Modified: %s\r\n", mkrfc1123(sb.st_mtime));
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "Expires: %s\r\n", mkrfc1123(squid_curtime + 86400));

@@ -302,8 +302,6 @@ struct _SquidConfig {
     struct {
 	size_t list_width;
 	int list_wrap;
-	char *icon_prefix;
-	char *icon_suffix;
 	char *anon_user;
     } Ftp;
     refresh_t *Refresh;
@@ -315,7 +313,6 @@ struct _SquidConfig {
     char *fake_ua;
     struct {
 	char *directory;
-	char *content_type;
     } icons;
     char *errorDirectory;
     struct {
