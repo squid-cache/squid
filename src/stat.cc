@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.55 1996/08/27 05:51:38 wessels Exp $
+ * $Id: stat.cc,v 1.56 1996/08/29 16:54:16 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -548,7 +548,6 @@ static void statFiledescriptors(sentry)
 	"Remote Address",
 	"Description");
     storeAppendPrintf(sentry, "{---- ------ ---- ---- --------------------- ------------------------------}\n");
-    storeAppendPrintf(sentry, "{}\n");
     for (i = 0; i < FD_SETSIZE; i++) {
 	if (!fdstat_isopen(i))
 	    continue;
