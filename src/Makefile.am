@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.95 2004/10/25 12:40:20 hno Exp $
+#  $Id: Makefile.am,v 1.96 2004/12/10 00:49:53 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -75,6 +75,8 @@ ESI_ALL_SOURCE = \
 	ESIInclude.cc \
 	ESIInclude.h \
 	ESILiteral.h \
+	ESILibxml2Parser.cc \
+	ESILibxml2Parser.h \
 	ESIParser.cc \
 	ESIParser.h \
 	ESISegment.cc \
@@ -165,7 +167,7 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 SUBDIRS		= fs repl auth
 
-INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
+INCLUDES        = -I/usr/include/libxml2 -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
 
 EXTRA_PROGRAMS = \
 	unlinkd \

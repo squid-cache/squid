@@ -1,9 +1,7 @@
-
 /*
- * $Id: ESIParser.cc,v 1.2 2004/12/10 00:49:53 hno Exp $
+ * $Id: ESILibxml2Parser.h,v 1.1 2004/12/10 00:49:53 hno Exp $
  *
- * DEBUG: section 86    ESI processing
- * AUTHOR: Robert Collins
+ * AUTHOR: Joachim Bauch (mail@joachim-bauch.de)
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -23,7 +21,7 @@
  *  (at your option) any later version.
  *  
  *  This program is distributed in the hope that it will be useful,
- ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *  
@@ -33,27 +31,47 @@
  *
  */
 
-#include "squid.h"
+/*
+ * The ESI Libxml2 parser is Copyright (c) 2004 by Joachim Bauch
+ * http://www.joachim-bauch.de
+ * mail@joachim-bauch.de
+ */
+
+#ifndef SQUID_ESILIBXML2PARSER_H
+#define SQUID_ESILIBXML2PARSER_H
+
 #include "ESIParser.h"
-#include "ESIExpatParser.h"
-#include "ESICustomParser.h"
-#include "ESILibxml2Parser.h"
+// workaround for definition of "free" that prevents include of
+// parser.h from libxml2 without errors
+#ifdef free
+#define OLD_FREE free
+#undef free
+#endif
+#include <libxml/parser.h>
+#include <libxml/HTMLparser.h>
+#include <libxml/HTMLtree.h>
 
-char *ESIParser::Type = NULL;
+#ifdef OLD_FREE
+#define free OLD_FREE
+#endif
 
-ESIParser::Pointer
-ESIParser::NewParser(ESIParserClient *aClient)
+class ESILibxml2Parser : public ESIParser
 {
-    if (!strcasecmp("libxml2", Type))
-        return new ESILibxml2Parser (aClient);
 
-    if (!strcasecmp("expat", Type))
-        return new ESIExpatParser (aClient);
+public:
+    ESILibxml2Parser(ESIParserClient *);
+    ~ESILibxml2Parser();
+    /* true on success */
+    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
+    size_t lineNumber() const;
+    char const * errorString() const;
 
-    if (!strcasecmp("custom", Type))
-        return new ESICustomParser (aClient);
+    ESIParserClient *getClient() { return theClient; }
 
-    fatal ("Unknown ESI Parser type");
+private:
+    mutable xmlParserCtxtPtr parser; /* our parser */
 
-    return NULL;
-}
+    ESIParserClient *theClient;
+};
+
+#endif /* SQUID_ESILIBXML2PARSER_H */
