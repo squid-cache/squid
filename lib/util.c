@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.36 1997/12/02 00:17:27 wessels Exp $
+ * $Id: util.c,v 1.37 1998/01/02 22:39:17 kostas Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -208,7 +208,7 @@ check_free(void *s)
 	break;
     }
     if (I == DBG_ARRY_SZ) {
-	sprintf(msg, "xfree: ERROR: s=%p not found!", s);
+	snprintf(msg, 128, "xfree: ERROR: s=%p not found!", s);
 	(*failure_notify) (msg);
     }
 }
@@ -224,7 +224,7 @@ check_malloc(void *p, size_t sz)
 	    continue;
 	Q = P + malloc_size[B][I];
 	if (P <= p && p < Q) {
-	    sprintf(msg, "xmalloc: ERROR: p=%p falls in P=%p+%d",
+	    snprintf(msg, 128, "xmalloc: ERROR: p=%p falls in P=%p+%d",
 		p, P, malloc_size[B][I]);
 	    (*failure_notify) (msg);
 	}
@@ -285,7 +285,7 @@ xmalloc(size_t sz)
 	sz = 1;
     if ((p = malloc(sz)) == NULL) {
 	if (failure_notify) {
-	    sprintf(msg, "xmalloc: Unable to allocate %d bytes!\n",
+	    snprintf(msg, 128, "xmalloc: Unable to allocate %d bytes!\n",
 		(int) sz);
 	    (*failure_notify) (msg);
 	} else {
@@ -351,7 +351,7 @@ xrealloc(void *s, size_t sz)
 	sz = 1;
     if ((p = realloc(s, sz)) == NULL) {
 	if (failure_notify) {
-	    sprintf(msg, "xrealloc: Unable to reallocate %d bytes!\n",
+	    snprintf(msg, 128, "xrealloc: Unable to reallocate %d bytes!\n",
 		(int) sz);
 	    (*failure_notify) (msg);
 	} else {
@@ -386,7 +386,7 @@ xcalloc(int n, size_t sz)
 	sz = 1;
     if ((p = calloc(n, sz)) == NULL) {
 	if (failure_notify) {
-	    sprintf(msg, "xcalloc: Unable to allocate %d blocks of %d bytes!\n",
+	    snprintf(msg, 128, "xcalloc: Unable to allocate %d blocks of %d bytes!\n",
 		(int) n, (int) sz);
 	    (*failure_notify) (msg);
 	} else {
@@ -440,7 +440,7 @@ xstrerror(void)
     static char xstrerror_buf[BUFSIZ];
     if (errno < 0 || errno >= sys_nerr)
 	return ("Unknown");
-    sprintf(xstrerror_buf, "(%d) %s", errno, strerror(errno));
+    snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", errno, strerror(errno));
     return xstrerror_buf;
 }
 
@@ -454,7 +454,7 @@ xbstrerror(int err)
     static char xbstrerror_buf[BUFSIZ];
     if (err < 0 || err >= sys_nerr)
 	return ("Unknown");
-    sprintf(xbstrerror_buf, "(%d) %s", err, strerror(err));
+    snprintf(xbstrerror_buf, BUFSIZ, "(%d) %s", err, strerror(err));
     return xbstrerror_buf;
 }
 #endif
