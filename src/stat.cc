@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.199 1998/02/18 22:54:02 wessels Exp $
+ * $Id: stat.cc,v 1.200 1998/02/18 22:55:44 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -721,7 +721,7 @@ statAvgDump(StoreEntry * sentry, int minutes)
 	x / 1000000.0);
     x = statLogHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
     storeAppendPrintf(sentry, "dns.median_svc_time = %f seconds\n",
-	x / 1000000.0);
+	x / 1000.0);
     storeAppendPrintf(sentry, "unlink.requests = %f/sec\n",
 	XAVG(unlink.requests));
     storeAppendPrintf(sentry, "page_faults = %f/sec\n",
