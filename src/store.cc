@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.231 1997/05/08 23:23:18 wessels Exp $
+ * $Id: store.cc,v 1.232 1997/05/14 21:07:21 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -721,20 +721,13 @@ storeGeneratePublicKey(const char *url, method_t method)
 static void
 storeSetPrivateKey(StoreEntry * e)
 {
-    StoreEntry *e2 = NULL;
     hash_link *table_entry = NULL;
     const char *newkey = NULL;
-
     if (e->key && BIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already private */
-
     newkey = storeGeneratePrivateKey(e->url, e->method, 0);
     if ((table_entry = hash_lookup(store_table, newkey))) {
-	e2 = (StoreEntry *) table_entry;
-	debug(20, 0, "storeSetPrivateKey: Entry already exists with key '%s'\n",
-	    newkey);
-	debug(20, 0, "storeSetPrivateKey: Entry Dump:\n%s\n", storeToString(e2));
-	debug_trap("Private key already exists.");
+	debug_trap("storeSetPrivateKey: duplicate private key");
 	return;
     }
     if (e->key)
@@ -1220,11 +1213,8 @@ storeSwapOutHandle(int fd, int flag, void *data)
     StoreEntry *e = data;
     MemObject *mem = e->mem_obj;
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
-    if (mem == NULL) {
-	debug(20, 0, "%s\n", storeToString(e));
-	debug_trap("Someone is swapping out a bad entry");
-	return;
-    }
+    if (mem == NULL)
+	fatal_dump("storeSwapOutHandle: NULL mem_obj");
     if (flag < 0) {
 	debug(20, 1, "storeSwapOutHandle: SwapOut failure (err code = %d).\n",
 	    flag);
@@ -2129,13 +2119,9 @@ storeGetSwapSpace(int size)
 int
 storeRelease(StoreEntry * e)
 {
-    StoreEntry *result = NULL;
     StoreEntry *hentry = NULL;
-    hash_link *hptr = NULL;
     const char *hkey;
-
     debug(20, 3, "storeRelease: Releasing: '%s'\n", e->key);
-
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
     if (storeEntryLocked(e)) {
@@ -2143,23 +2129,6 @@ storeRelease(StoreEntry * e)
 	debug(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit\n");
 	storeReleaseRequest(e);
 	return 0;
-    }
-    if (e->key != NULL) {
-	if ((hptr = hash_lookup(store_table, e->key)) == NULL) {
-	    debug(20, 0, "storeRelease: Not Found: '%s'\n", e->key);
-	    debug(20, 0, "Dump of Entry 'e':\n %s\n", storeToString(e));
-	    debug_trap("storeRelease: Invalid Entry");
-	    return 0;
-	}
-	result = (StoreEntry *) hptr;
-	if (result != e) {
-	    debug(20, 0, "storeRelease: Duplicated entry? '%s'\n",
-		result->url ? result->url : "NULL");
-	    debug(20, 0, "Dump of Entry 'e':\n%s", storeToString(e));
-	    debug(20, 0, "Dump of Entry 'result':\n%s", storeToString(result));
-	    debug_trap("storeRelease: Duplicate Entry");
-	    return 0;
-	}
     }
     /* check if coresponding HEAD object exists. */
     if (e->method == METHOD_GET) {
@@ -2174,11 +2143,6 @@ storeRelease(StoreEntry * e)
 	storeSetPrivateKey(e);
 	return 0;
     }
-    if (e->key)
-	debug(20, 5, "storeRelease: Release object key: %s\n", e->key);
-    else
-	debug(20, 5, "storeRelease: Release anonymous object\n");
-
     if (e->swap_status == SWAP_OK && (e->swap_file_number > -1)) {
 	if (BIT_TEST(e->flag, ENTRY_VALIDATED))
 	    storePutUnusedFileno(e->swap_file_number);

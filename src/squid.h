@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.109 1997/05/08 07:22:07 wessels Exp $
+ * $Id: squid.h,v 1.110 1997/05/14 21:07:22 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -355,7 +355,6 @@ extern char ThisCache[];	/* main.c */
 
 extern void start_announce _PARAMS((void *unused));
 extern int sslStart _PARAMS((int fd, const char *, request_t *, char *, int *sz));
-extern const char *storeToString _PARAMS((const StoreEntry *));
 extern int waisStart _PARAMS((method_t, char *, StoreEntry *));
 extern void storeDirClean _PARAMS((void *unused));
 extern int passStart _PARAMS((int fd,
