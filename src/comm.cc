@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.115 1996/12/03 20:26:51 wessels Exp $
+ * $Id: comm.cc,v 1.116 1996/12/05 21:23:54 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -767,11 +767,6 @@ comm_select(time_t sec)
 	for (i = 0; i < maxfd; i++) {
 	    pfds[nfds].fd = -1;
 	    pfds[nfds].events = 0;
-#if USE_ASYNC_IO
-	    /* Using async IO for disk handle, so don't select on them */
-	    if (fdstatGetType(i) == FD_FILE)
-		continue;
-#endif
 	    /* Check each open socket for a handler. */
 	    incnfd = 0;
 	    if (fd_table[i].read_handler && fd_table[i].stall_until <= squid_curtime) {
@@ -802,12 +797,7 @@ comm_select(time_t sec)
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
 	for (;;) {
-#if USE_ASYNC_IO
-	    /* Another CPU vs latency tradeoff for async IO */
-	    poll_time = 250;
-#else
 	    poll_time = sec > 0 ? 1000 : 0;
-#endif
 	    num = poll(pfds, nfds, poll_time);
 	    getCurrentTime();
 	    if (num >= 0)
@@ -828,9 +818,6 @@ comm_select(time_t sec)
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
-#if USE_ASYNC_IO
-	aioExamine();		/* See if any IO completed */
-#endif
 	if (num < 0)
 	    continue;		/* redo the top loop */
 	debug(5, num ? 5 : 8, "comm_select: %d sockets ready at %d\n",
@@ -955,11 +942,6 @@ comm_select(time_t sec)
 	nfds = 0;
 	maxfd = fdstat_biggest_fd() + 1;
 	for (i = 0; i < maxfd; i++) {
-#if USE_ASYNC_IO
-	    /* Using async IO for disk handle, so don't select on them */
-	    if (fdstatGetType(i) == FD_FILE)
-		continue;
-#endif
 	    /* Check each open socket for a handler. */
 	    if (fd_table[i].read_handler && fd_table[i].stall_until <= squid_curtime) {
 		nfds++;
@@ -978,14 +960,8 @@ comm_select(time_t sec)
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
 	for (;;) {
-#if USE_ASYNC_IO
-	    /* Another CPU vs latency tradeoff for async IO */
-	    poll_time.tv_sec = 0;
-	    poll_time.tv_usec = 250000;
-#else
 	    poll_time.tv_sec = sec > 0 ? 1 : 0;
 	    poll_time.tv_usec = 0;
-#endif
 	    num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
 	    getCurrentTime();
 	    if (num >= 0)
@@ -998,9 +974,6 @@ comm_select(time_t sec)
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
-#if USE_ASYNC_IO
-	aioExamine();		/* See if any IO completed */
-#endif
 	if (num < 0)
 	    continue;
 	debug(5, num ? 5 : 8, "comm_select: %d sockets ready at %d\n",

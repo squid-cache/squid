@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.70 1996/12/03 20:26:49 wessels Exp $
+ * $Id: client_side.cc,v 1.71 1996/12/05 21:23:53 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -74,6 +74,7 @@ clientLookupIdentDone(void *data)
 }
 
 #if USE_PROXY_AUTH
+/* ProxyAuth code by Jon Thackray <jrmt@uk.gdscorp.com> */
 /* return 1 if allowed, 0 if denied */
 static int
 clientProxyAuthCheck(icpStateData * icpState)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.49 1996/11/28 07:54:52 wessels Exp $
+ * $Id: url.cc,v 1.50 1996/12/05 21:23:57 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -327,9 +327,9 @@ urlCheckRequest(const request_t * r)
     switch (r->protocol) {
     case PROTO_HTTP:
     case PROTO_CACHEOBJ:
-    case PROTO_FTP:
 	rc = 1;
 	break;
+    case PROTO_FTP:
     case PROTO_GOPHER:
     case PROTO_WAIS:
 	if (r->method == METHOD_GET)

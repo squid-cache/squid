@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.84 1996/12/05 18:25:20 wessels Exp $
+ * $Id: squid.h,v 1.85 1996/12/05 21:23:56 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -156,9 +156,6 @@
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
-#endif
-#if USE_ASYNC_IO && HAVE_AIO_H
-#include <aio.h>
 #endif
 #if HAVE_GETOPT_H
 #include <getopt.h>

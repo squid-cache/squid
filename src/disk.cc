@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.48 1996/12/02 05:55:06 wessels Exp $
+ * $Id: disk.cc,v 1.49 1996/12/05 21:23:54 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -378,18 +378,12 @@ file_write(int fd,
 
     if (file_table[fd].write_daemon == PRESENT)
 	return DISK_OK;
-#if USE_ASYNC_IO
-    return aioFileQueueWrite(fd,
-	aioFileWriteComplete,
-	&file_table[fd]);
-#else
     commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	(PF) diskHandleWrite,
 	(void *) &file_table[fd],
 	0);
     return DISK_OK;
-#endif
 }
 
 
@@ -476,16 +470,12 @@ file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = client_data;
 
-#if USE_ASYNC_IO
-    return aioFileQueueRead(fd, aioFileReadComplete, ctrl_dat);
-#else
     commSetSelect(fd,
 	COMM_SELECT_READ,
 	(PF) diskHandleRead,
 	(void *) ctrl_dat,
 	0);
     return DISK_OK;
-#endif
 }
 
 
