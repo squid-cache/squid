@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.392 1998/09/11 17:07:41 wessels Exp $
+ * $Id: client_side.cc,v 1.393 1998/09/14 02:33:01 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1051,9 +1051,6 @@ static HttpReply *
 clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
 {
     HttpReply *rep = httpReplyCreate();
-#if DOUBTFUL
-    assert(size <= 4096);	/* httpReplyParse depends on this */
-#endif
     if (httpReplyParse(rep, buf)) {
 	/* enforce 1.0 reply version */
 	rep->sline.version = 1.0;
