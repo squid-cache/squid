@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.38 1998/10/17 04:41:48 rousskov Exp $
+ * $Id: refresh.cc,v 1.39 1998/10/17 17:03:42 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -233,17 +233,17 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
 
 int
 refreshCheckHTTP(const StoreEntry * entry, request_t * request) {
-    return refreshCheck(entry, request, 0, refreshCounts + rcHTTP);
+    return refreshCheck(entry, request, 0, &refreshCounts[rcHTTP]);
 }
 
 int
 refreshCheckICP(const StoreEntry * entry, request_t * request) {
-    return refreshCheck(entry, request, 30, refreshCounts + rcICP);
+    return refreshCheck(entry, request, 30, &refreshCounts[rcICP]);
 }
 
 int
 refreshCheckDigest(const StoreEntry * entry, time_t delta) {
-    return refreshCheck(entry, NULL, delta, refreshCounts + rcCDigest);
+    return refreshCheck(entry, NULL, delta, &refreshCounts[rcCDigest]);
 }
 
 time_t
@@ -307,7 +307,7 @@ refreshStats(StoreEntry * sentry)
     /* per protocol histograms */
     storeAppendPrintf(sentry, "\n\nRefreshCheck histograms for various protocols\n");
     for (i = 0; i < rcCount; ++i)
-	refreshCountsStats(sentry, refreshCounts + i);
+	refreshCountsStats(sentry, &refreshCounts[i]);
 }
 
 void
