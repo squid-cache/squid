@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.393 2001/01/07 23:36:39 hno Exp $
+ * $Id: protos.h,v 1.394 2001/01/09 00:18:44 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -994,7 +994,8 @@ extern void storeDirSync(void);
 extern void storeDirCallback(void);
 extern void storeDirLRUDelete(StoreEntry *);
 extern void storeDirLRUAdd(StoreEntry *);
-int storeDirGetBlkSize(const char *path, int *blksize);
+extern int storeDirGetBlkSize(const char *path, int *blksize);
+extern int storeDirGetUFSStats(const char *, int *, int *, int *, int *);
 
 /*
  * store_swapmeta.c
