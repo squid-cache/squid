@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.45 1998/04/07 23:53:20 rousskov Exp $
+ * $Id: peer_select.cc,v 1.46 1998/04/08 19:28:48 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -147,6 +147,9 @@ peerSelect(request_t * request,
     psstate->callback_data = callback_data;
     cbdataLock(callback_data);
     peerSelectCheckAS(psstate);
+#if SQUID_PEER_DIGEST
+    request->hier.peer_select_start = current_time;
+#endif
 }
 
 static void

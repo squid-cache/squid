@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.225 1998/04/07 23:58:31 rousskov Exp $
+ * $Id: stat.cc,v 1.226 1998/04/08 19:28:50 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -654,9 +654,17 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 	&f->cd.client_svc_time);
     storeAppendPrintf(sentry, "cd.client_median_svc_time = %f seconds\n",
 	x / 1000.0);
+    x = statHistDeltaMedian(&l->cd.server_svc_time,
+	&f->cd.server_svc_time);
+    storeAppendPrintf(sentry, "cd.server_median_svc_time = %f seconds\n",
+	x / 1000.0);
     x = statHistDeltaMedian(&l->icp.client_svc_time,
 	&f->icp.client_svc_time);
     storeAppendPrintf(sentry, "icp.client_median_svc_time = %f seconds\n",
+	x / 1000.0);
+    x = statHistDeltaMedian(&l->icp.server_svc_time,
+	&f->icp.server_svc_time);
+    storeAppendPrintf(sentry, "icp.server_median_svc_time = %f seconds\n",
 	x / 1000.0);
 #endif
 
@@ -838,6 +846,8 @@ statCountersInitSpecial(StatCounters * C)
      */
     statHistLogInit(&C->cd.client_svc_time, 300, 0.0, 3600000.0 * 30.0);
     statHistLogInit(&C->icp.client_svc_time, 300, 0.0, 3600000.0 * 30.0);
+    statHistLogInit(&C->cd.server_svc_time, 300, 0.0, 3600000.0 * 30.0);
+    statHistLogInit(&C->icp.server_svc_time, 300, 0.0, 3600000.0 * 30.0);
 #endif
 }
 
@@ -856,6 +866,8 @@ statCountersClean(StatCounters * C)
 #if SQUID_PEER_DIGEST
     statHistClean(&C->cd.client_svc_time);
     statHistClean(&C->icp.client_svc_time);
+    statHistClean(&C->cd.server_svc_time);
+    statHistClean(&C->icp.server_svc_time);
 #endif
 }
 
@@ -880,6 +892,8 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 #if SQUID_PEER_DIGEST
     statHistCopy(&dest->cd.client_svc_time, &orig->cd.client_svc_time);
     statHistCopy(&dest->icp.client_svc_time, &orig->icp.client_svc_time);
+    statHistCopy(&dest->cd.server_svc_time, &orig->cd.server_svc_time);
+    statHistCopy(&dest->icp.server_svc_time, &orig->icp.server_svc_time);
 #endif
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.262 1998/04/08 00:34:01 wessels Exp $
+ * $Id: client_side.cc,v 1.263 1998/04/08 19:28:47 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -520,6 +520,8 @@ clientUpdateCounters(clientHttpRequest * http)
     icp_ping_data *i;
 #if SQUID_PEER_DIGEST
     const HttpReply *reply = NULL;
+    int sst = 0;		/* server-side service time */
+    HierarchyLogEntry *H;
 #endif
     Counter.client_http.requests++;
     kb_incr(&Counter.client_http.kbytes_in, http->req_sz);
@@ -557,29 +559,35 @@ clientUpdateCounters(clientHttpRequest * http)
     if (0 != i->stop.tv_sec && 0 != i->start.tv_sec)
 	statHistCount(&Counter.icp.query_svc_time, tvSubUsec(i->start, i->stop));
 #if SQUID_PEER_DIGEST
-    if (http->request->hier.alg == PEER_SA_ICP) {
+    H = &http->request->hier;
+    if (H->peer_select_start.tv_sec && H->store_complete_stop.tv_sec)
+	sst = tvSubMsec(H->peer_select_start, H->store_complete_stop);
+    if (H->alg == PEER_SA_ICP) {
 	statHistCount(&Counter.icp.client_svc_time, svc_time);
+	if (sst)
+	    statHistCount(&Counter.icp.server_svc_time, svc_time);
 	Counter.icp.times_used++;
     } else
-    if (http->request->hier.alg == PEER_SA_DIGEST) {
+    if (H->alg == PEER_SA_DIGEST) {
 	statHistCount(&Counter.cd.client_svc_time, svc_time);
+	if (sst)
+	    statHistCount(&Counter.cd.server_svc_time, svc_time);
 	Counter.cd.times_used++;
     } else {
-	assert(http->request->hier.alg == PEER_SA_NONE);
+	assert(H->alg == PEER_SA_NONE);
     }
     if (/* we used ICP or CD for peer selecton */
-	http->request->hier.alg != PEER_SA_NONE &&
+	H->alg != PEER_SA_NONE &&
 	/* a CD lookup found peers with digests */
-	http->request->hier.cd_lookup != LOOKUP_NONE &&
+	H->cd_lookup != LOOKUP_NONE &&
 	/* paranoid: we have a reply pointer */
 	(reply = storeEntryReply(http->entry))) {
 	const char *x_cache_fld = httpHeaderGetLastStr(&reply->header, HDR_X_CACHE);
 	const int real_hit = x_cache_fld && !strncmp(x_cache_fld, "HIT", 3);
-	const int guess_hit = http->request->hier.cd_lookup == LOOKUP_HIT;
-	peer *peer = peerFindByName(http->request->hier.host);
+	const int guess_hit = H->cd_lookup == LOOKUP_HIT;
+	peer *peer = peerFindByName(H->host);
 
-	cacheDigestGuessStatsUpdate(&Counter.cd.guess_stats,
-	    real_hit, guess_hit);
+	cacheDigestGuessStatsUpdate(&Counter.cd.guess, real_hit, guess_hit);
 	if (peer)
 	    cacheDigestGuessStatsUpdate(&peer->digest.stats.guess,
 		real_hit, guess_hit);

@@ -621,6 +621,8 @@ struct _HierarchyLogEntry {
     lookup_t cd_lookup;    /* cd prediction: none, miss, hit */
     int n_choices;         /* #peers we selected from (cd only) */
     int n_ichoices;        /* #peers with known rtt we selected from (cd only) */
+    struct timeval peer_select_start;
+    struct timeval store_complete_stop;
 #endif
 };
 
@@ -1185,6 +1187,7 @@ struct _StatCounters {
 	StatHist reply_svc_time;
 #if SQUID_PEER_DIGEST
 	StatHist client_svc_time;
+	StatHist server_svc_time;
 	int times_used;
 #endif
     } icp;
@@ -1202,6 +1205,7 @@ struct _StatCounters {
 	kb_t memory;
         cd_guess_stats guess;
 	StatHist client_svc_time;
+	StatHist server_svc_time;
     } cd;
 #endif
     int page_faults;
