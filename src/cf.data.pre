@@ -867,7 +867,7 @@ DOC_END
 
 NAME: request_size
 COMMENT: (KB)
-TYPE: kb_size_t
+TYPE: b_size_t
 DEFAULT: 100 KB
 LOC: Config.maxRequestSize
 DOC_START
