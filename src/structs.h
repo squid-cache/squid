@@ -1133,7 +1133,7 @@ struct _request_t {
     char user_ident[USER_IDENT_SZ];	/* from proxy auth or ident server */
     u_short port;
     String urlpath;
-    const char *canonical;
+    char *canonical;
     int link_count;		/* free when zero */
     int flags;
     HttpHdrCc *cache_control;
