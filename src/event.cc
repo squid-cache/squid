@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.9 1997/11/05 05:29:23 wessels Exp $
+ * $Id: event.cc,v 1.10 1998/03/23 22:37:10 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -41,6 +41,7 @@ struct ev_entry {
 };
 
 static struct ev_entry *tasks = NULL;
+static OBJH eventDump;
 
 void
 eventAdd(const char *name, EVH * func, void *arg, time_t when)
@@ -104,4 +105,26 @@ eventNextTime(void)
     if (!tasks)
 	return (time_t) 10;
     return tasks->when - squid_curtime;
+}
+
+void
+eventInit(void)
+{
+    cachemgrRegister("events",
+	"Event Queue",
+	eventDump, 0);
+}
+
+static void
+eventDump(StoreEntry * sentry)
+{
+    struct ev_entry *e = tasks;
+    storeAppendPrintf(sentry, "%s\t%s\n",
+	"Operation",
+	"Next Execution");
+    while (e != NULL) {
+	storeAppendPrintf(sentry, "%s\t%d seconds\n",
+	    e->name, e->when - squid_curtime);
+	e = e->next;
+    }
 }
