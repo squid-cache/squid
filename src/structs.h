@@ -1138,6 +1138,7 @@ struct _ErrorState {
 	char *reply;
     } ftp;
     char *request_hdrs;
+    wordlist *ftp_server_msg;
 };
 
 /*

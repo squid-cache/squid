@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.218 1998/04/08 04:23:52 wessels Exp $
+ * $Id: ftp.cc,v 1.219 1998/04/21 20:41:21 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -692,7 +692,7 @@ static void
 ftpParseListing(FtpStateData * ftpState, int len)
 {
     char *buf = ftpState->data.buf;
-    char *sbuf;		/* NULL-terminated copy of buf */
+    char *sbuf;			/* NULL-terminated copy of buf */
     char *end;
     char *line;
     char *s;
@@ -700,29 +700,39 @@ ftpParseListing(FtpStateData * ftpState, int len)
     size_t linelen;
     size_t usable;
     StoreEntry *e = ftpState->entry;
+    /*
+     * There may have been 'data.offset' bytes left over from a previous
+     * call here
+     */
     len += ftpState->data.offset;
-    end = buf + len - 1;
-    while (*end != '\r' && *end != '\n' && end > buf)
+    /*
+     * We need a NULL-terminated buffer for scanning, ick
+     */
+    sbuf = xmalloc(len + 1);
+    xstrncpy(sbuf, buf, len + 1);
+    end = sbuf + len - 1;
+    while (*end != '\r' && *end != '\n' && end > sbuf)
 	end--;
-    usable = end - buf;
+    usable = end - sbuf;
     if (usable == 0) {
 	debug(9, 3) ("ftpParseListing: didn't find end for %s\n", storeUrl(e));
+	xfree(sbuf);
 	return;
     }
+    debug(9, 3) ("ftpParseListing: %d bytes to play with\n", len);
     line = memAllocate(MEM_4K_BUF);
     end++;
-    /* XXX, buf needs to be NULL terminated, copying is gross */
-    sbuf = xmalloc(len+1);
-    xstrncpy(sbuf, buf, len+1);
     storeBuffer(e);
-    for (s = sbuf; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
+    for (s = sbuf; s < end; s += strcspn(s, crlf)) {
+	s += strspn(s, crlf);
+	debug(9, 3) ("ftpParseListing: s = {%s}\n", s);
 	linelen = strcspn(s, crlf) + 1;
 	if (linelen < 2)
 	    break;
 	if (linelen > 4096)
 	    linelen = 4096;
 	xstrncpy(line, s, linelen);
-	debug(9, 7) ("%s\n", line);
+	debug(9, 7) ("ftpParseListing: {%s}\n", line);
 	if (!strncmp(line, "total", 5))
 	    continue;
 	t = ftpHtmlifyListEntry(line, ftpState);
@@ -1160,6 +1170,7 @@ ftpReadControlReply(int fd, void *data)
 		err = errorCon(ERR_FTP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 		err->xerrno = 0;
 		err->request = requestLink(ftpState->request);
+		err->ftp_server_msg = ftpState->ctrl.message;
 		errorAppendEntry(entry, err);
 	    }
 	}
@@ -2025,6 +2036,7 @@ ftpFail(FtpStateData * ftpState)
     }
     err = errorCon(ERR_FTP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
     err->request = requestLink(ftpState->request);
+    err->ftp_server_msg = ftpState->ctrl.message;
     if (ftpState->old_request)
 	err->ftp.request = ftpState->old_request;
     else
