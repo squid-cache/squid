@@ -35,6 +35,7 @@ Our Todo List
 (3) Resource limits.
 (3) SIGHUP should reread error text files
 (3) Make swap.state binary with fixed-size cache keys
+(3) Make checkFailureRatio() work again.
 
 (4) support ftp://host/pub;type=d
 (4) FTP PUT

@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta6 (Nov 13, 1997):
+
 	- Fixed Authorized responses getting swapped out when they
 	  don't have Proxy-Revalidate reply header.
 	- Fixed Proxy Authentication support.  We never sent back
