@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.236 2003/04/29 16:08:19 hno Exp $
+ * $Id: tools.cc,v 1.237 2003/06/23 00:41:31 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1182,8 +1182,7 @@ parseEtcHosts(void)
         wordlist *hosts = NULL;
         char *addr;
 
-        if (buf[0] == '#')	/* MS-windows likes to add comments */
-            continue;
+        strtok(buf, "#");	/* chop everything following a comment marker */
 
         lt = buf;
 
