@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.558 2003/02/08 17:45:09 hno Exp $
+ * $Id: store.cc,v 1.559 2003/02/13 21:04:51 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -586,7 +586,7 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
 	EBIT_SET(e->flags, ENTRY_CACHABLE);
 	EBIT_CLR(e->flags, RELEASE_REQUEST);
     } else {
-	EBIT_CLR(e->flags, ENTRY_CACHABLE);
+	/* storeReleaseRequest() clears ENTRY_CACHABLE */
 	storeReleaseRequest(e);
     }
     e->store_status = STORE_PENDING;
@@ -688,7 +688,6 @@ struct _store_check_cachable_hist {
     struct {
 	int non_get;
 	int not_entry_cachable;
-	int release_request;
 	int wrong_content_length;
 	int negative_cached;
 	int too_big;
@@ -740,9 +739,6 @@ storeCheckCachable(StoreEntry * e)
     if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
 	debug(20, 2) ("storeCheckCachable: NO: not cachable\n");
 	store_check_cachable_hist.no.not_entry_cachable++;
-    } else if (EBIT_TEST(e->flags, RELEASE_REQUEST)) {
-	debug(20, 2) ("storeCheckCachable: NO: release requested\n");
-	store_check_cachable_hist.no.release_request++;
     } else if (e->store_status == STORE_OK && EBIT_TEST(e->flags, ENTRY_BAD_LENGTH)) {
 	debug(20, 2) ("storeCheckCachable: NO: wrong content-length\n");
 	store_check_cachable_hist.no.wrong_content_length++;
@@ -782,7 +778,7 @@ storeCheckCachable(StoreEntry * e)
 	return 1;
     }
     storeReleaseRequest(e);
-    EBIT_CLR(e->flags, ENTRY_CACHABLE);
+    /* storeReleaseRequest() cleared ENTRY_CACHABLE */
     return 0;
 }
 
@@ -797,8 +793,6 @@ storeCheckCachableStats(StoreEntry * sentry)
 #endif
     storeAppendPrintf(sentry, "no.not_entry_cachable\t%d\n",
 	store_check_cachable_hist.no.not_entry_cachable);
-    storeAppendPrintf(sentry, "no.release_request\t%d\n",
-	store_check_cachable_hist.no.release_request);
     storeAppendPrintf(sentry, "no.wrong_content_length\t%d\n",
 	store_check_cachable_hist.no.wrong_content_length);
     storeAppendPrintf(sentry, "no.negative_cached\t%d\n",
