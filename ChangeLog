@@ -5,6 +5,13 @@ UPCOMING CHANGES:
 	- Experiment with returning network probe measurments in ICP
 	  replies.
 
+Changes to squid-1.1.beta19 (November 13, 1996):
+
+	- Fixed InvokeHandlers() debug_trap bug.
+	- Lock entry while calling swapin handler in case someone tries to
+	  release it.
+	- Changed configure to allow overriding of XTRA_LIBS in config.site.
+
 Changes to squid-1.1.beta18 (November 13, 1996):
 
 	- Fixed 'void *buf' bug icpCreateMessage() (Jean-Hugues ROYER).
