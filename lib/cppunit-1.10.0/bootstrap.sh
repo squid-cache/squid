@@ -51,9 +51,6 @@ bootstrap() {
   fi
 }
 
-# Make sure cfgaux exists
-mkdir -p cfgaux
-
 # Adjust paths of required autool packages
 amver=`find_version automake ${amversions}`
 acver=`find_version autoconf ${acversions}`
@@ -69,6 +66,6 @@ if grep m4_regex aclocal.m4 >/dev/null; then
     perl -i.bak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
 fi
 bootstrap autoheader$acver
-#bootstrap libtoolize --automake
+bootstrap libtoolize --automake --force --copy
 bootstrap automake$amver --add-missing
 bootstrap autoconf$acver
