@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.9 1996/04/08 17:08:03 wessels Exp $ */
+/* $Id: squid.h,v 1.10 1996/04/08 18:28:58 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -114,6 +114,7 @@ typedef unsigned long u_num32;
 #include "ftp.h"
 #include "gopher.h"
 #include "wais.h"
+#include "connect.h"
 #include "objcache.h"
 #include "util.h"
 

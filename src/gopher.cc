@@ -1,12 +1,10 @@
-/* $Id: gopher.cc,v 1.17 1996/04/05 17:47:42 wessels Exp $ */
+/* $Id: gopher.cc,v 1.18 1996/04/08 18:28:56 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
  */
 
 #include "squid.h"
-
-extern char *dns_error_message;
 
 /* gopher type code from rfc. Anawat. */
 #define GOPHER_FILE         '0'
@@ -73,7 +71,7 @@ static void gopherCloseAndFree(fd, data)
      int fd;
      GopherData *data;
 {
-    if (fd > 0)
+    if (fd >+ 0)
 	comm_close(fd);
     put_free_4k_page(data->buf, __FILE__, __LINE__);
     xfree(data);

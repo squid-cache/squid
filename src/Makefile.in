@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.10 1996/03/28 05:28:02 wessels Exp $
+#  $Id: Makefile.in,v 1.11 1996/04/08 18:28:53 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -57,17 +57,19 @@ CLIENT_LIBS	= -L../lib -lutil $(XTRA_LIBS)
 PROGS		= cached 
 UTILS		= client dnsserver ftpget
 CGIPROGS	= cachemgr.cgi
-OBJS	 	= blocklist.o cached_error.o \
-		  comm.o cache_cf.o debug.o disk.o dynamic_array.o \
-		  fdstat.o filemap.o ftp.o gopher.o hash.o \
-		  http.o icp.o ipcache.o mime.o neighbors.o objcache.o \
-		  proto.o stack.o stat.o stmem.o store.o storetoString.o \
-		  tools.o ttl.o url.o wais.o $(XTRA_OBJS)
+OBJS	 	= blocklist.o cache_cf.o cached_error.o comm.o \
+		connect.o debug.o disk.o dynamic_array.o \
+		fdstat.o filemap.o ftp.o gopher.o \
+		hash.o http.o icp.o ipcache.o \
+		main.o mime.o neighbors.o objcache.o \
+		proto.o stack.o stat.o stmem.o \
+		store.o storetoString.o tools.o ttl.o \
+		url.o wais.o $(XTRA_OBJS)
 
 all:	$(PROGS) $(UTILS) $(CGIPROGS)
 
-cached:	main.o $(OBJS)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS) main.o $(CRYPT_LIB) $(LIBS)
+cached:	$(OBJS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(CRYPT_LIB) $(LIBS)
 
 client:	client.o
 	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)

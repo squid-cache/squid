@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.22 1996/04/05 17:47:42 wessels Exp $ */
+/* $Id: ftp.cc,v 1.23 1996/04/08 18:28:56 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -37,7 +37,7 @@ static void ftpCloseAndFree(fd, data)
      int fd;
      FtpData *data;
 {
-    if (fd > -1)
+    if (fd >= 0)
 	comm_close(fd);
     xfree(data);
 }

@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.31 1996/04/05 17:47:43 wessels Exp $ */
+/* $Id: http.cc,v 1.32 1996/04/08 18:28:57 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -9,9 +9,6 @@
 #define HTTP_PORT         80
 #define HTTP_DELETE_GAP   (64*1024)
 #define READBUFSIZ	4096
-
-extern int errno;
-extern char *dns_error_message;
 
 typedef struct _httpdata {
     StoreEntry *entry;
@@ -46,7 +43,7 @@ static void httpCloseAndFree(fd, data)
      int fd;
      HttpData *data;
 {
-    if (fd > 0)
+    if (fd >= 0)
 	comm_close(fd);
     if (data) {
 	if (data->reply_hdr) {
