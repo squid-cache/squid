@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.301 2001/01/05 09:51:37 adrian Exp $
+ * $Id: ftp.cc,v 1.302 2001/01/05 20:40:52 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1078,10 +1078,6 @@ ftpStart(FwdState * fwd)
 	    snprintf(realm, 8192, "ftp %s port %d",
 		ftpState->user, request->port);
 	}
-	/* eject any old cached object */
-	key = storeKeyPublic(entry->mem_obj->url, entry->mem_obj->method);
-	if ((pe = storeGet(key)) != NULL)
-	    storeRelease(pe);
 	/* create reply */
 	reply = entry->mem_obj->reply;
 	assert(reply != NULL);
