@@ -1,3 +1,5 @@
+Changes to squid-2.6 ():
+
 Changes to squid-2.5 ():
 
 	- Major rewrite of proxy authentication to support other schemes
