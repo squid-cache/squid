@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.10 1996/04/11 22:52:32 wessels Exp $ */
+/* $Id: url.cc,v 1.11 1996/04/11 22:53:42 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -174,15 +174,15 @@ protocol_t urlParseProtocol(s)
      char *s;
 {
     if (strncasecmp(s, "http", 4) == 0)
-        return PROTO_HTTP;
+	return PROTO_HTTP;
     if (strncasecmp(s, "ftp", 3) == 0)
-        return PROTO_FTP;
+	return PROTO_FTP;
     if (strncasecmp(s, "gopher", 6) == 0)
-        return PROTO_GOPHER;
+	return PROTO_GOPHER;
     if (strncasecmp(s, "cache_object", 12) == 0)
-        return PROTO_CACHEOBJ;
+	return PROTO_CACHEOBJ;
     if (strncasecmp(s, "file", 4) == 0)
-        return PROTO_FTP;
+	return PROTO_FTP;
     return PROTO_NONE;
 }
 
@@ -192,14 +192,14 @@ int urlDefaultPort(p)
 {
     switch (p) {
     case PROTO_HTTP:
-        return 80;
+	return 80;
     case PROTO_FTP:
-        return 21;
+	return 21;
     case PROTO_GOPHER:
-        return 70;
+	return 70;
     case PROTO_CACHEOBJ:
-        return CACHE_HTTP_PORT;
+	return CACHE_HTTP_PORT;
     default:
-        return 0;
+	return 0;
     }
 }

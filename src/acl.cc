@@ -1,4 +1,4 @@
-#ident "$Id: acl.cc,v 1.8 1996/04/11 22:52:24 wessels Exp $"
+#ident "$Id: acl.cc,v 1.9 1996/04/11 22:53:39 wessels Exp $"
 
 /*
  * DEBUG: Section 28          acl
@@ -129,7 +129,7 @@ struct _acl_ip_data *aclParseIpList()
 		break;
 	    case 5:
 		if (m1 < 0 || m1 > 32) {
-	            debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+		    debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
 		    debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry '%s'\n", t);
 		    safe_free(q);
 		    continue;
@@ -140,7 +140,7 @@ struct _acl_ip_data *aclParseIpList()
 		lmask.s_addr = htonl(m1 * 0x1000000 + m2 * 0x10000 + m3 * 0x100 + m4);
 		break;
 	    default:
-	        debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+		debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
 		debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry '%s'\n", t);
 		safe_free(q);
 		continue;
@@ -333,7 +333,7 @@ void aclParseAclLine()
 }
 
 void aclParseAccessLine(head)
-    struct _acl_access **head;
+     struct _acl_access **head;
 {
     char *t = NULL;
     struct _acl_access *A = NULL;
@@ -391,7 +391,7 @@ void aclParseAccessLine(head)
 	return;
     }
     A->cfgline = xstrdup(config_input_line);
-    for (B=*head, T=head; B; T=&B->next, B=B->next);	/* find the tail */
+    for (B = *head, T = head; B; T = &B->next, B = B->next);	/* find the tail */
     *T = A;
 }
 
@@ -453,25 +453,24 @@ int aclMatchInteger(data, i)
 }
 
 int aclMatchTime(data, when)
-	struct _acl_time_data *data;
-	time_t when;
+     struct _acl_time_data *data;
+     time_t when;
 {
-	static time_t last_when = 0;
-	static struct tm tm;
-	time_t t;
+    static time_t last_when = 0;
+    static struct tm tm;
+    time_t t;
 
-	if (when != last_when) {
-		last_when = when;
-		memcpy(&tm, localtime(&when), sizeof(struct tm));
-	}
+    if (when != last_when) {
+	last_when = when;
+	memcpy(&tm, localtime(&when), sizeof(struct tm));
+    }
+    debug(28, 1, "aclMatchTime: checking %d-%d, weekbits=%x\n",
+	data->start, data->stop, data->weekbits);
 
-	debug(28, 1, "aclMatchTime: checking %d-%d, weekbits=%x\n",
-		data->start, data->stop, data->weekbits);
-
-	t = (time_t) (tm.tm_hour * 60 + tm.tm_min);
-	if (t < data->start || t > data->stop)
-		return 0;
-	return data->weekbits & tm.tm_wday ? 1 : 0;
+    t = (time_t) (tm.tm_hour * 60 + tm.tm_min);
+    if (t < data->start || t > data->stop)
+	return 0;
+    return data->weekbits & tm.tm_wday ? 1 : 0;
 }
 
 static int aclMatchAcl(acl, c, m, pr, h, po, r)
@@ -575,97 +574,97 @@ int aclCheck(A, cli_addr, method, proto, host, port, request)
 }
 
 static void aclDestroyIpList(data)
-	struct _acl_ip_data *data;
+     struct _acl_ip_data *data;
 {
-	struct _acl_ip_data *next;
-	for (; data; data=next) {
-		next = data->next;
-		safe_free(data);
-	}
+    struct _acl_ip_data *next;
+    for (; data; data = next) {
+	next = data->next;
+	safe_free(data);
+    }
 }
 
 static void aclDestroyTimeList(data)
-	struct _acl_time_data *data;
+     struct _acl_time_data *data;
 {
-	struct _acl_time_data *next;
-	for (; data; data=next) {
-		next = data->next;
-		safe_free(data);
-	}
+    struct _acl_time_data *next;
+    for (; data; data = next) {
+	next = data->next;
+	safe_free(data);
+    }
 }
 
 static void aclDestroyRegexList(data)
-	struct _relist *data;
+     struct _relist *data;
 {
-	struct _relist *next;
-	for (; data; data=next) {
-		next = data->next;
-		regfree(&data->regex);
-		safe_free(data->pattern);
-		safe_free(data);
-	}
+    struct _relist *next;
+    for (; data; data = next) {
+	next = data->next;
+	regfree(&data->regex);
+	safe_free(data->pattern);
+	safe_free(data);
+    }
 }
 
-void aclDestroyAcls() {
-	struct _acl *a = NULL;
-	struct _acl *next = NULL;
-	for (a=AclList; a; a=next) {
-		next = a->next;
-		debug(28,1,"aclDestroyAcls: '%s'\n", a->cfgline);
-		switch(a->type) {
-    		case ACL_SRC_IP:
-			aclDestroyIpList(a->data);
-			break;
-    		case ACL_DST_DOMAIN:
-    		case ACL_USER:
-			wordlistDestroy((wordlist **) &a->data);
-			break;
-    		case ACL_TIME:
-			aclDestroyTimeList(a->data);
-			break;
-    		case ACL_URL_REGEX:
-			aclDestroyRegexList(a->data);
-			break;
-    		case ACL_URL_PORT:
-    		case ACL_PROTO:
-    		case ACL_METHOD:
-			intlistDestroy((intlist **) &a->data);
-			break;
-		case ACL_NONE:
-		default:
-			fatal_dump("aclDestroyAcls: Found ACL_NONE?");
-			break;
-		}
-		safe_free(a->cfgline);
-		safe_free(a);
+void aclDestroyAcls()
+{
+    struct _acl *a = NULL;
+    struct _acl *next = NULL;
+    for (a = AclList; a; a = next) {
+	next = a->next;
+	debug(28, 1, "aclDestroyAcls: '%s'\n", a->cfgline);
+	switch (a->type) {
+	case ACL_SRC_IP:
+	    aclDestroyIpList(a->data);
+	    break;
+	case ACL_DST_DOMAIN:
+	case ACL_USER:
+	    wordlistDestroy((wordlist **) & a->data);
+	    break;
+	case ACL_TIME:
+	    aclDestroyTimeList(a->data);
+	    break;
+	case ACL_URL_REGEX:
+	    aclDestroyRegexList(a->data);
+	    break;
+	case ACL_URL_PORT:
+	case ACL_PROTO:
+	case ACL_METHOD:
+	    intlistDestroy((intlist **) & a->data);
+	    break;
+	case ACL_NONE:
+	default:
+	    fatal_dump("aclDestroyAcls: Found ACL_NONE?");
+	    break;
 	}
-	AclList = NULL;
-        AclListTail = &AclList;
+	safe_free(a->cfgline);
+	safe_free(a);
+    }
+    AclList = NULL;
+    AclListTail = &AclList;
 }
 
 void aclDestroyAclList(list)
-	struct _acl_list *list;
+     struct _acl_list *list;
 {
-	struct _acl_list *next = NULL;
-	for (; list ; list=next) {
-		next = list->next;
-		safe_free(list);
-	}
+    struct _acl_list *next = NULL;
+    for (; list; list = next) {
+	next = list->next;
+	safe_free(list);
+    }
 }
 
 void aclDestroyAccessList(list)
-	struct _acl_access **list;
+     struct _acl_access **list;
 {
-	struct _acl_access *l = NULL;
-	struct _acl_access *next = NULL;
-	for (l=*list; l ; l=next) {
-		debug(28,1,"aclDestroyAccessList: '%s'\n", l->cfgline);
-		next = l->next;
-		aclDestroyAclList(l->acl_list);
-		l->acl_list = NULL;
-		safe_free(l->cfgline);
-		safe_free(l);
-	}
-	*list = NULL;
+    struct _acl_access *l = NULL;
+    struct _acl_access *next = NULL;
+    for (l = *list; l; l = next) {
+	debug(28, 1, "aclDestroyAccessList: '%s'\n", l->cfgline);
+	next = l->next;
+	aclDestroyAclList(l->acl_list);
+	l->acl_list = NULL;
+	safe_free(l->cfgline);
+	safe_free(l);
+    }
+    *list = NULL;
 }
-
