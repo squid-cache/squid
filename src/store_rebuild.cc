@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.28 1998/04/03 22:05:15 rousskov Exp $
+ * $Id: store_rebuild.cc,v 1.29 1998/04/04 04:50:32 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -134,7 +134,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    fd = -1;
 	    continue;
 	}
-	if ((++RebuildState.statcount & 0x3FFF) == 0)
+	if ((++RebuildState.statcount & 0xFFFF) == 0)
 	    debug(20, 1) ("  %7d files opened so far.\n",
 		RebuildState.statcount);
 	debug(20, 9) ("file_in: fd=%d %08X\n", fd, sfileno);
@@ -289,7 +289,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	    RebuildState.invalid++;
 	    continue;
 	}
-	if ((++RebuildState.linecount & 0x3FFF) == 0)
+	if ((++RebuildState.linecount & 0xFFFF) == 0)
 	    debug(20, 1) ("  %7d Entries read so far.\n",
 		RebuildState.linecount);
 	if (!storeDirValidFileno(s.swap_file_number)) {
@@ -572,6 +572,7 @@ storeCleanup(void *datanotused)
     static int store_errors = 0;
     StoreEntry *e;
     hash_link *link_ptr = NULL;
+    hash_link *link_next = NULL;
     if (++bucketnum >= store_hash_buckets) {
 	debug(20, 1) ("  Completed Validation Procedure\n");
 	debug(20, 1) ("  Validated %d Entries\n", validnum);
@@ -583,27 +584,16 @@ storeCleanup(void *datanotused)
 	    storeDigestRewriteContinue("store-rebuild");
 	return;
     }
-    link_ptr = hash_get_bucket(store_table, bucketnum);
-    for (; link_ptr; link_ptr = link_ptr->next) {
+    link_next = hash_get_bucket(store_table, bucketnum);
+    while (NULL != (link_ptr = link_next)) {
+	link_next = link_ptr->next;
 	e = (StoreEntry *) link_ptr;
 	if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
 	    continue;
 	if (e->swap_file_number < 0)
 	    continue;
 	if (EBIT_TEST(e->flag, RELEASE_REQUEST)) {
-	    if (e->swap_file_number > -1)
-		debug(20, 3) ("storeCleanup: swap_file_number = %08X for RELEASE_REQUEST entry\n",
-		    e->swap_file_number);
-	    /*
-	     * I don't think it safe to call storeRelease()
-	     * from inside this loop using link_ptr.
-	     */
-	    /*
-	     * Move to the tail of the LRU list
-	     * so it gets kicked out
-	     */
-	    dlinkDelete(&e->lru, &store_list);
-	    dlinkAddTail(e, &e->lru, &store_list);
+	    storeRelease(e);
 	    continue;
 	}
 	if (opt_store_doublecheck) {
