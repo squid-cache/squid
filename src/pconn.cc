@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.42 2004/04/03 14:25:59 hno Exp $
+ * $Id: pconn.cc,v 1.43 2004/04/04 13:44:28 hno Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -120,7 +120,7 @@ pconnFindFDIndex (struct _pconn *p, int fd)
 {
     int result;
 
-    for (result = 0; result < p->nfds; ++result)
+    for (result = p->nfds - 1; result >= 0; --result)
     {
         if (p->fds[result] == fd)
             return result;
@@ -142,7 +142,7 @@ static void
 pconnPreventHandingOutFD(struct _pconn *p, int fd)
 {
     int i = pconnFindFDIndex (p, fd);
-    assert(i < p->nfds);
+    assert(i >= 0);
     debug(48, 3) ("pconnRemoveFD: found FD %d at index %d\n", fd, i);
     pconnRemoveFDByIndex(p, i);
 }
@@ -319,7 +319,7 @@ pconnPop(const char *host, u_short port, const char *domain)
         assert(p->nfds > 0);
 
         for (int i = 0; i < p->nfds; i++) {
-            fd = p->fds[0];
+            fd = p->fds[p->nfds - 1];
             /* If there are pending read callbacks - we're about to close it, so don't issue it! */
 
             if (!comm_has_pending_read_callback(fd)) {
