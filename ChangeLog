@@ -1,3 +1,9 @@
+	- Added NAT/Transparent hijacking code from Quinton Dolan.
+	- Added actual filesystem usage to cachemgr 'storedir' page.
+	  Only works for some operating systems.
+
+Changes to squid-1.2.beta25 (September 21, 1998):
+
 	- Fixed async IO bugs from adding filedescriptor arg to AIOCB
 	  callbacks (Henrik Nordstrom).
 	- Fixed store_swapout.c assertion.  We were freeing object data
