@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.347 2002/10/21 14:48:15 adrian Exp $
+ * $Id: comm.cc,v 1.348 2002/10/21 15:13:23 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -283,7 +283,7 @@ comm_add_write_callback(int fd, size_t retval, comm_err_t errcode, int xerrno)
 	cio->xerrno = xerrno;
 	cio->errcode = errcode;
 	cio->c.w_callback = fdc_table[fd].write.handler;
-	cio->callback_data = fdc_table[fd].fill.handler_data;
+	cio->callback_data = fdc_table[fd].write.handler_data;
 	cio->seqnum = CommCallbackSeqnum;
 	cio->type = COMM_CB_WRITE;
 	cio->retval = retval;
