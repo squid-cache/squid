@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.16 1996/04/15 22:54:07 wessels Exp $ */
+/* $Id: squid.h,v 1.17 1996/04/15 22:56:06 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -87,7 +87,6 @@ typedef unsigned long u_num32;
 
 #include "GNUregex.h"
 #include "ansihelp.h"
-#include "blocklist.h"
 #include "cache_cf.h"
 #include "comm.h"
 #include "debug.h"
