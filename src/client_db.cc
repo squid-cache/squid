@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.8 1996/12/14 18:54:59 wessels Exp $
+ * $Id: client_db.cc,v 1.9 1996/12/20 23:21:26 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -35,10 +35,10 @@ typedef struct _client_info {
     char *key;
     struct client_info *next;
     struct in_addr addr;
-    int result_hist[ERR_MAX];
-    int n_http;
-    int n_icp;
-    int n_requests;
+    struct {
+	int result_hist[ERR_MAX];
+	int n_requests;
+    } Http, Icp;
 } ClientInfo;
 
 int client_info_sz;
@@ -79,12 +79,13 @@ clientdbUpdate(struct in_addr addr, log_type log_type, u_short port)
 	c = clientdbAdd(addr);
     if (c == NULL)
 	debug_trap("clientdbUpdate: Failed to add entry");
-    c->result_hist[log_type]++;
-    if (port == Config.Port.http)
-	c->n_http++;
-    else if (port == Config.Port.icp)
-	c->n_icp++;
-    c->n_requests++;
+    if (port == Config.Port.http) {
+	c->Http.n_requests++;
+	c->Http.result_hist[log_type]++;
+    } else if (port == Config.Port.icp) {
+	c->Icp.n_requests++;
+	c->Icp.result_hist[log_type]++;
+    }
 }
 
 int
@@ -95,9 +96,9 @@ clientdbDeniedPercent(struct in_addr addr)
     ClientInfo *c = (ClientInfo *) hash_lookup(client_table, key);
     if (c == NULL)
 	return 0;
-    if (c->n_icp > 100)
-	n = c->n_icp;
-    return 100 * c->result_hist[ICP_OP_DENIED] / n;
+    if (c->Icp.n_requests > 100)
+	n = c->Icp.n_requests;
+    return 100 * c->Icp.result_hist[ICP_OP_DENIED] / n;
 }
 
 void
@@ -110,19 +111,27 @@ clientdbDump(StoreEntry * sentry)
     while (c) {
 	storeAppendPrintf(sentry, "{Address: %s}\n", c->key);
 	storeAppendPrintf(sentry, "{Name: %s}\n", fqdnFromAddr(c->addr));
-	storeAppendPrintf(sentry, "{    HTTP Requests %d}\n",
-	    c->n_http);
 	storeAppendPrintf(sentry, "{    ICP Requests %d}\n",
-	    c->n_icp);
-	storeAppendPrintf(sentry, "{    Log Code Histogram:}\n");
+	    c->Icp.n_requests);
 	for (l = LOG_TAG_NONE; l < ERR_MAX; l++) {
-	    if (c->result_hist[l] == 0)
+	    if (c->Icp.result_hist[l] == 0)
 		continue;
 	    storeAppendPrintf(sentry,
 		"{        %-20.20s %7d %3d%%}\n",
 		log_tags[l],
-		c->result_hist[l],
-		percent(c->result_hist[l], c->n_requests));
+		c->Icp.result_hist[l],
+		percent(c->Icp.result_hist[l], c->Icp.n_requests));
+	}
+	storeAppendPrintf(sentry, "{    HTTP Requests %d}\n",
+	    c->Http.n_requests);
+	for (l = LOG_TAG_NONE; l < ERR_MAX; l++) {
+	    if (c->Http.result_hist[l] == 0)
+		continue;
+	    storeAppendPrintf(sentry,
+		"{        %-20.20s %7d %3d%%}\n",
+		log_tags[l],
+		c->Http.result_hist[l],
+		percent(c->Http.result_hist[l], c->Http.n_requests));
 	}
 	storeAppendPrintf(sentry, "{}\n");
 	c = (ClientInfo *) hash_next(client_table);
