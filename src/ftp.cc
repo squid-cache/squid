@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.263 1999/01/12 23:37:43 wessels Exp $
+ * $Id: ftp.cc,v 1.264 1999/01/14 23:55:40 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2198,6 +2198,10 @@ ftpFail(FtpStateData * ftpState)
 	err->ftp.request = ftpState->old_request;
     else
 	err->ftp.request = ftpState->ctrl.last_command;
+    if (err->ftp.request) {
+        if (!strncmp(err->ftp.request, "PASS", 4))
+	    err->ftp.request = "PASS <yourpassword>";
+    }
     if (ftpState->old_reply)
 	err->ftp.reply = ftpState->old_reply;
     else
