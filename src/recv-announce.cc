@@ -1,7 +1,7 @@
 /*
- * $Id: recv-announce.cc,v 1.12 1996/11/06 23:14:51 wessels Exp $
+ * $Id: recv-announce.cc,v 1.13 1997/10/24 04:55:35 wessels Exp $
  *
- * DEBUG: section 0     Announement Server
+ * DEBUG: section 0     Announcement Server
  * AUTHOR: Harvest Derived
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
