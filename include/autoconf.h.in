@@ -81,7 +81,7 @@
 #undef XMALLOC_STATISTICS
 
 /* Define to have a detailed trace of memory allocations */
-#undef XMALLOC_COUNT
+#undef XMALLOC_TRACE
 
 /* Define to use async disk I/O operations */
 #undef USE_ASYNC_IO

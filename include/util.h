@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.37 1997/12/30 02:50:32 wessels Exp $
+ * $Id: util.h,v 1.38 1998/02/06 00:55:56 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -152,6 +152,18 @@ void rfc1738_unescape(char *);
 
 #if XMALLOC_STATISTICS
 void malloc_statistics(void (*)(int, int, void *), void *);
+#endif
+
+#if XMALLOC_TRACE
+#define xmalloc(size) (xmalloc_func="xmalloc",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xmalloc(size))
+#define xfree(ptr) (xmalloc_func="xfree",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xfree(ptr))
+#define xxfree(ptr) (xmalloc_func="xxfree",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xxfree(ptr))
+#define xrealloc(ptr,size) (xmalloc_func="xrealloc",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xrealloc(ptr,size))
+#define xcalloc(n,size) (xmalloc_func="xcalloc",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xcalloc(n,size))
+#define xstrdup(ptr) (xmalloc_func="xstrdup",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xstrdup(ptr))
+extern int xmalloc_line;
+extern char *xmalloc_file;
+extern char *xmalloc_func;
 #endif
 
 typedef struct in_addr SIA;
