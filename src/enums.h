@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.215 2002/09/23 03:59:15 wessels Exp $
+ * $Id: enums.h,v 1.216 2002/09/24 10:46:43 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -726,7 +726,6 @@ typedef enum {
     CBDATA_RemovalPolicy,
     CBDATA_RemovalPolicyWalker,
     CBDATA_RemovalPurgeWalker,
-    CBDATA_store_client,
     CBDATA_FIRST_CUSTOM_TYPE = 1000
 } cbdata_type;
 

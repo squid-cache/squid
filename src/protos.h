@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.446 2002/09/15 06:23:29 adrian Exp $
+ * $Id: protos.h,v 1.447 2002/09/24 10:46:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,7 @@ extern void accessLogLog(AccessLogEntry *);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);
 extern void accessLogInit(void);
+extern void accessLogFreeMemory(AccessLogEntry * aLogEntry);
 extern const char *accessLogTime(time_t);
 extern void hierarchyNote(HierarchyLogEntry *, hier_code, const char *);
 #if FORW_VIA_DB
@@ -48,6 +49,7 @@ extern void fvdbCountForw(const char *key);
 extern void headersLog(int cs, int pq, method_t m, void *data);
 #endif
 char *log_quote(const char *header);
+extern int logTypeIsATcpHit(log_type);
 
 /* acl.c */
 extern aclCheck_t *aclChecklistCreate(const struct _acl_access *,
@@ -138,29 +140,15 @@ extern void clientAccessCheck(void *);
 extern char *clientConstructTraceEcho(clientHttpRequest *);
 extern void clientOpenListenSockets(void);
 extern void clientHttpConnectionsClose(void);
-extern int isTcpHit(log_type);
 extern void clientReadBody(request_t * req, char *buf, size_t size, CBCB * callback, void *data);
 extern int clientAbortBody(request_t * req);
 extern void httpRequestFree(void *);
-
-/* client_side_request.c - client side request related routines (pure logic) */
-extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, void *, HttpHeader const *, char *, size_t);
 
 /* client_side_reply.c - client side reply related routines (pure logic, no comms) */
 extern int clientCheckTransferDone(clientHttpRequest const *);
 extern void *clientReplyNewContext(clientHttpRequest *);
 extern int clientHttpRequestStatus(int fd, clientHttpRequest const *http);
 extern void clientSetReplyToError(void *, err_type, http_status, method_t, char const *, struct in_addr *, request_t *, char *, auth_user_request_t * auth_user_request);
-
-/* clientStream.c */
-extern void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, void *, CSCB *, CSD *, void *, char *, size_t);
-extern void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, void *);
-extern clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, void *);
-extern void clientStreamCallback(clientStreamNode *, clientHttpRequest *, HttpReply *, const char *, ssize_t);
-extern void clientStreamRead(clientStreamNode *, clientHttpRequest *, off_t, size_t, char *);
-extern void clientStreamDetach(clientStreamNode *, clientHttpRequest *);
-extern void clientStreamAbort(clientStreamNode *, clientHttpRequest *);
-extern clientStream_status_t clientStreamStatus(clientStreamNode *, clientHttpRequest *);
 
 extern int commSetNonBlocking(int fd);
 extern int commUnsetNonBlocking(int fd);
@@ -1064,13 +1052,12 @@ extern int storeSwapOutAble(const StoreEntry * e);
  * store_client.c
  */
 extern store_client *storeClientListAdd(StoreEntry * e, void *data);
-extern void storeClientCopyOld(store_client *, StoreEntry *, off_t, off_t, size_t, char *, STCB *, void *);
-extern void storeClientCopy(store_client *, StoreEntry *, off_t, size_t, char *, STCB *, void *);
 extern int storeClientCopyPending(store_client *, StoreEntry * e, void *data);
 extern int storeUnregister(store_client * sc, StoreEntry * e, void *data);
 extern off_t storeLowestMemReaderOffset(const StoreEntry * entry);
 extern void InvokeHandlers(StoreEntry * e);
 extern int storePendingNClients(const StoreEntry * e);
+extern int storeClientIsThisAClient(store_client * sc, void *someClient);
 
 
 extern const char *getMyHostname(void);

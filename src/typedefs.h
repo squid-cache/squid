@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.137 2002/09/15 06:40:58 robertc Exp $
+ * $Id: typedefs.h,v 1.138 2002/09/24 10:46:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -108,7 +108,6 @@ typedef struct _HttpBody HttpBody;
 typedef struct _HttpReply HttpReply;
 typedef struct _HttpStateData HttpStateData;
 typedef struct _icpUdpData icpUdpData;
-typedef struct _clientStreamNode clientStreamNode;
 typedef struct _clientHttpRequest clientHttpRequest;
 typedef struct _ConnStateData ConnStateData;
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
@@ -186,7 +185,6 @@ typedef struct _RemovalPolicyWalker RemovalPolicyWalker;
 typedef struct _RemovalPurgeWalker RemovalPurgeWalker;
 typedef struct _RemovalPolicyNode RemovalPolicyNode;
 typedef struct _RemovalPolicySettings RemovalPolicySettings;
-
 typedef struct _http_version_t http_version_t;
 
 #if SQUID_SNMP
@@ -199,15 +197,6 @@ typedef struct _delayConfig delayConfig;
 typedef struct _delaySpecSet delaySpecSet;
 typedef struct _delaySpec delaySpec;
 #endif
-
-/* client_side.c callbacks and callforwards */
-/* client stream read callback */
-typedef void CSCB(clientStreamNode *, clientHttpRequest *, HttpReply *, const char *, ssize_t);
-/* client stream read */
-typedef void CSR(clientStreamNode *, clientHttpRequest *);
-/* client stream detach */
-typedef void CSD(clientStreamNode *, clientHttpRequest *);
-typedef clientStream_status_t CSS(clientStreamNode *, clientHttpRequest *);
 
 typedef void CWCB(int fd, char *, size_t size, comm_err_t flag, void *data);
 typedef void CNCB(int fd, comm_err_t status, void *);
@@ -245,7 +234,6 @@ typedef void STRCB(void *their_data, const char *buf, ssize_t len);
 
 typedef void SIH(storeIOState *, void *);	/* swap in */
 typedef int QS(const void *, const void *);	/* qsort */
-typedef void STCB(void *, char *, ssize_t);	/* store callback */
 typedef void STABH(void *);
 typedef void ERCB(int fd, void *, size_t);
 typedef void OBJH(StoreEntry *);

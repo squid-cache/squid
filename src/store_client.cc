@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.112 2002/09/15 05:41:57 robertc Exp $
+ * $Id: store_client.cc,v 1.113 2002/09/24 10:46:42 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -34,6 +34,9 @@
  */
 
 #include "squid.h"
+#include "StoreClient.h"
+
+CBDATA_TYPE(store_client);
 
 /*
  * NOTE: 'Header' refers to the swapfile metadata header.
@@ -63,7 +66,15 @@ storeClientListSearch(const MemObject * mem, void *data)
     }
     return NULL;
 }
+
+int
+storeClientIsThisAClient(store_client * sc, void *someClient)
+{
+    return sc->owner == someClient;
+}
+
 #endif
+
 
 static store_client_t
 storeClientType(StoreEntry * e)
@@ -117,11 +128,11 @@ storeClientListAdd(StoreEntry * e, void *data)
 #endif
     e->refcount++;
     mem->nclients++;
+    CBDATA_INIT_TYPE(store_client);
     sc = cbdataAlloc(store_client);
 #if STORE_CLIENT_LIST_DEBUG
     sc->owner = cbdataReference(data);
 #endif
-    sc->copy_offset = 0;
     sc->cmp_offset = 0;
     sc->flags.disk_io_pending = 0;
     sc->entry = e;
@@ -142,13 +153,20 @@ storeClientCallback(store_client * sc, ssize_t sz)
 {
     STCB *callback = sc->callback;
     void *cbdata;
-    char *buf = sc->copy_buf;
+    StoreIOBuffer result =
+    {
+	{0}, sz, 0, sc->copyInto.data};
+    if (sz < 0) {
+	result.flags.error = 1;
+	result.length = 0;
+    }
+    result.offset = sc->cmp_offset;
     assert(sc->callback);
-    sc->cmp_offset = sc->copy_offset + sz;
+    sc->cmp_offset = sc->copyInto.offset + sz;
     sc->callback = NULL;
-    sc->copy_buf = NULL;
+    sc->copyInto.data = NULL;
     if (cbdataReferenceValidDone(sc->callback_data, &cbdata))
-	callback(cbdata, buf, sz);
+	callback(cbdata, result);
 }
 
 static void
@@ -162,30 +180,19 @@ storeClientCopyEvent(void *data)
     storeClientCopy2(sc->entry, sc);
 }
 
-void
-storeClientCopyOld(store_client * sc, StoreEntry * e, off_t seen_offset,
-    off_t copy_offset, size_t size, char *buf, STCB * callback, void *data)
-{
-    /* OLD API -- adrian */
-    fatal("storeClientCopyOld() has been called!\n");
-}
-
-
 /* copy bytes requested by the client */
 void
 storeClientCopy(store_client * sc,
     StoreEntry * e,
-    off_t copy_offset,
-    size_t size,
-    char *buf,
+    StoreIOBuffer copyInto,
     STCB * callback,
     void *data)
 {
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
-    debug(20, 3) ("storeClientCopy: %s, want %d, size %d, cb %p, cbdata %p\n",
+    debug(20, 3) ("storeClientCopy: %s, from %lu, for length %d, cb %p, cbdata %p\n",
 	storeKeyText(e->hash.key),
-	(int) copy_offset,
-	(int) size,
+	copyInto.offset,
+	copyInto.length,
 	callback,
 	data);
     assert(sc != NULL);
@@ -194,13 +201,12 @@ storeClientCopy(store_client * sc,
 #endif
     assert(sc->callback == NULL);
     assert(sc->entry == e);
-    assert(sc->cmp_offset == copy_offset);
-    sc->copy_offset = copy_offset;
+    assert(sc->cmp_offset == copyInto.offset);
     sc->callback = callback;
     sc->callback_data = cbdataReference(data);
-    sc->copy_buf = buf;
-    sc->copy_size = size;
-    sc->copy_offset = copy_offset;
+    sc->copyInto.data = copyInto.data;
+    sc->copyInto.length = copyInto.length;
+    sc->copyInto.offset = copyInto.offset;
 
     storeClientCopy2(e, sc);
 }
@@ -222,7 +228,7 @@ storeClientNoMoreToSend(StoreEntry * e, store_client * sc)
 	return 0;
     if ((len = objectLen(e)) < 0)
 	return 0;
-    if (sc->copy_offset < len)
+    if (sc->copyInto.offset < len)
 	return 0;
     return 1;
 }
@@ -269,7 +275,7 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
     MemObject *mem = e->mem_obj;
     size_t sz;
 
-    debug(33, 5) ("co: %ld, hi: %ld\n", (long int) sc->copy_offset, (long int) mem->inmem_hi);
+    debug(33, 5) ("co: %lu, hi: %ld\n", sc->copyInto.offset, (long int) mem->inmem_hi);
 
     if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
@@ -277,7 +283,7 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
 	return;
     }
     /* Check that we actually have data */
-    if (e->store_status == STORE_PENDING && sc->copy_offset >= mem->inmem_hi) {
+    if (e->store_status == STORE_PENDING && sc->copyInto.offset >= mem->inmem_hi) {
 	debug(20, 3) ("storeClientCopy3: Waiting for more\n");
 	return;
     }
@@ -316,12 +322,12 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
 	    return;
 	}
     }
-    if (sc->copy_offset >= mem->inmem_lo && sc->copy_offset < mem->inmem_hi) {
+    if (sc->copyInto.offset >= mem->inmem_lo && sc->copyInto.offset < mem->inmem_hi) {
 	/* What the client wants is in memory */
 	/* Old style */
 	debug(20, 3) ("storeClientCopy3: Copying normal from memory\n");
-	sz = stmemCopy(&mem->data_hdr, sc->copy_offset, sc->copy_buf,
-	    sc->copy_size);
+	sz = stmemCopy(&mem->data_hdr, sc->copyInto.offset, sc->copyInto.data,
+	    sc->copyInto.length);
 	storeClientCallback(sc, sz);
 	return;
     }
@@ -342,18 +348,18 @@ storeClientFileRead(store_client * sc)
     sc->flags.disk_io_pending = 1;
     if (mem->swap_hdr_sz == 0) {
 	storeRead(sc->swapin_sio,
-	    sc->copy_buf,
-	    sc->copy_size,
+	    sc->copyInto.data,
+	    sc->copyInto.length,
 	    0,
 	    storeClientReadHeader,
 	    sc);
     } else {
 	if (sc->entry->swap_status == SWAPOUT_WRITING)
-	    assert(storeOffset(mem->swapout.sio) > sc->copy_offset + mem->swap_hdr_sz);
+	    assert(storeOffset(mem->swapout.sio) > sc->copyInto.offset + mem->swap_hdr_sz);
 	storeRead(sc->swapin_sio,
-	    sc->copy_buf,
-	    sc->copy_size,
-	    sc->copy_offset + mem->swap_hdr_sz,
+	    sc->copyInto.data,
+	    sc->copyInto.length,
+	    sc->copyInto.offset + mem->swap_hdr_sz,
 	    storeClientReadBody,
 	    sc);
     }
@@ -368,8 +374,8 @@ storeClientReadBody(void *data, const char *buf, ssize_t len)
     sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientReadBody: len %d\n", (int) len);
-    if (sc->copy_offset == 0 && len > 0 && mem->reply->sline.status == 0)
-	httpReplyParse(mem->reply, sc->copy_buf, headersEnd(sc->copy_buf, len));
+    if (sc->copyInto.offset == 0 && len > 0 && mem->reply->sline.status == 0)
+	httpReplyParse(mem->reply, sc->copyInto.data, headersEnd(sc->copyInto.data, len));
     storeClientCallback(sc, len);
 }
 
@@ -465,17 +471,17 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
      * it to them, otherwise schedule another read.
      */
     body_sz = len - swap_hdr_sz;
-    if (sc->copy_offset < body_sz) {
+    if (sc->copyInto.offset < body_sz) {
 	/*
 	 * we have (part of) what they want
 	 */
-	copy_sz = XMIN(sc->copy_size, body_sz);
+	copy_sz = XMIN(sc->copyInto.length, body_sz);
 	debug(20, 3) ("storeClientReadHeader: copying %d bytes of body\n",
 	    (int) copy_sz);
-	xmemmove(sc->copy_buf, sc->copy_buf + swap_hdr_sz, copy_sz);
-	if (sc->copy_offset == 0 && len > 0 && mem->reply->sline.status == 0)
-	    httpReplyParse(mem->reply, sc->copy_buf,
-		headersEnd(sc->copy_buf, copy_sz));
+	xmemmove(sc->copyInto.data, sc->copyInto.data + swap_hdr_sz, copy_sz);
+	if (sc->copyInto.offset == 0 && len > 0 && mem->reply->sline.status == 0)
+	    httpReplyParse(mem->reply, sc->copyInto.data,
+		headersEnd(sc->copyInto.data, copy_sz));
 	storeClientCallback(sc, copy_sz);
 	return;
     }
@@ -575,8 +581,8 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
 	if (sc->type == STORE_DISK_CLIENT)
 	    if (NULL != sc->swapin_sio)
 		continue;
-	if (sc->copy_offset < lowest)
-	    lowest = sc->copy_offset;
+	if (sc->copyInto.offset < lowest)
+	    lowest = sc->copyInto.offset;
     }
     return lowest;
 }
@@ -680,4 +686,25 @@ CheckQuickAbort(StoreEntry * entry)
 	return;
     statCounter.aborted_requests++;
     storeAbort(entry);
+}
+
+void
+storeClientDumpStats(store_client * thisClient, StoreEntry * output, int clientNumber)
+{
+    if (thisClient->callback_data == NULL)
+	return;
+    storeAppendPrintf(output, "\tClient #%d, %p\n", clientNumber, thisClient->callback_data);
+    storeAppendPrintf(output, "\t\tcopy_offset: %lu\n",
+	thisClient->copyInto.offset);
+    storeAppendPrintf(output, "\t\tcopy_size: %d\n",
+	(int) thisClient->copyInto.length);
+    storeAppendPrintf(output, "\t\tflags:");
+    if (thisClient->flags.disk_io_pending)
+	storeAppendPrintf(output, " disk_io_pending");
+    if (thisClient->flags.store_copying)
+	storeAppendPrintf(output, " store_copying");
+    if (thisClient->flags.copy_event_pending)
+	storeAppendPrintf(output, " copy_event_pending");
+    storeAppendPrintf(output, "\n");
+
 }

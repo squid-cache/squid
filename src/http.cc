@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.392 2002/09/15 06:40:57 robertc Exp $
+ * $Id: http.cc,v 1.393 2002/09/24 10:46:42 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -209,6 +209,10 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 	    assert(e != pe);
 	    storeRelease(pe);
 	}
+	break;
+    default:
+	/* Keep GCC happy. The methods above are all mutating HTTP methods 
+	 */
 	break;
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.29 2002/04/13 23:07:51 hno Exp $
+ * $Id: store_swapin.cc,v 1.30 2002/09/24 10:46:42 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "StoreClient.h"
 
 static STIOCB storeSwapInFileClosed;
 static STFNCB storeSwapInFileNotify;
@@ -70,14 +71,19 @@ static void
 storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
 {
     store_client *sc = data;
+    StoreIOBuffer result =
+    {
+	{0}, 0, 0, sc->copyInto.data};
     STCB *callback;
     debug(20, 3) ("storeSwapInFileClosed: sio=%p, errflag=%d\n",
 	sio, errflag);
+    if (errflag)
+	result.flags.error = 1;
     cbdataReferenceDone(sc->swapin_sio);
     if ((callback = sc->callback)) {
 	assert(errflag <= 0);
 	sc->callback = NULL;
-	callback(sc->callback_data, sc->copy_buf, errflag);
+	callback(sc->callback_data, result);
     }
     statCounter.swap.ins++;
 }

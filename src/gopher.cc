@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.171 2002/09/01 12:37:46 hno Exp $
+ * $Id: gopher.cc,v 1.172 2002/09/24 10:46:42 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -703,7 +703,7 @@ gopherReadReply(int fd, void *data)
 /* This will be called when request write is complete. Schedule read of
  * reply. */
 static void
-gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
+gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;

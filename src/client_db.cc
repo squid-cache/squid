@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.53 2001/02/23 20:59:50 hno Exp $
+ * $Id: client_db.cc,v 1.54 2002/09/24 10:46:43 robertc Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -80,7 +80,7 @@ clientdbUpdate(struct in_addr addr, log_type ltype, protocol_t p, size_t size)
 	c->Http.n_requests++;
 	c->Http.result_hist[ltype]++;
 	kb_incr(&c->Http.kbytes_out, size);
-	if (isTcpHit(ltype))
+	if (logTypeIsATcpHit(ltype))
 	    kb_incr(&c->Http.hit_kbytes_out, size);
     } else if (p == PROTO_ICP) {
 	c->Icp.n_requests++;
@@ -193,7 +193,7 @@ clientdbDump(StoreEntry * sentry)
 	    if (c->Http.result_hist[l] == 0)
 		continue;
 	    http_total += c->Http.result_hist[l];
-	    if (isTcpHit(l))
+	    if (logTypeIsATcpHit(l))
 		http_hits += c->Http.result_hist[l];
 	    storeAppendPrintf(sentry,
 		"        %-20.20s %7d %3d%%\n",
@@ -291,7 +291,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     case MESH_CTBL_HTHITS:
 	aggr = 0;
 	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {
-	    if (isTcpHit(l))
+	    if (logTypeIsATcpHit(l))
 		aggr += c->Http.result_hist[l];
 	}
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,

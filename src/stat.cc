@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.357 2002/09/15 06:40:58 robertc Exp $
+ * $Id: stat.cc,v 1.358 2002/09/24 10:46:42 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -33,8 +33,8 @@
  *
  */
 
-
 #include "squid.h"
+#include "StoreClient.h"
 
 #define DEBUG_OPENFD 1
 
@@ -258,7 +258,6 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     int i;
-    struct _store_client *sc;
     dlink_node *node;
     storeAppendPrintf(s, "KEY %s\n", storeKeyText(e->hash.key));
     if (mem)
@@ -281,24 +280,8 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 	if (mem->swapout.sio)
 	    storeAppendPrintf(s, "\tswapout: %d bytes written\n",
 		(int) storeOffset(mem->swapout.sio));
-	for (i = 0, node = mem->clients.head; node; node = node->next, i++) {
-	    sc = (store_client *) node->data;
-	    if (sc->callback_data == NULL)
-		continue;
-	    storeAppendPrintf(s, "\tClient #%d, %p\n", i, sc->callback_data);
-	    storeAppendPrintf(s, "\t\tcopy_offset: %d\n",
-		(int) sc->copy_offset);
-	    storeAppendPrintf(s, "\t\tcopy_size: %d\n",
-		(int) sc->copy_size);
-	    storeAppendPrintf(s, "\t\tflags:");
-	    if (sc->flags.disk_io_pending)
-		storeAppendPrintf(s, " disk_io_pending");
-	    if (sc->flags.store_copying)
-		storeAppendPrintf(s, " store_copying");
-	    if (sc->flags.copy_event_pending)
-		storeAppendPrintf(s, " copy_event_pending");
-	    storeAppendPrintf(s, "\n");
-	}
+	for (i = 0, node = mem->clients.head; node; node = node->next, i++)
+	    storeClientDumpStats(node->data, s, i);
     }
     storeAppendPrintf(s, "\n");
 }
@@ -1426,7 +1409,7 @@ statClientRequests(StoreEntry * s)
 		fd_table[fd].bytes_read, fd_table[fd].bytes_written);
 	    storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
 	    storeAppendPrintf(s, "\tin: buf %p, offset %ld, size %ld\n",
-		conn->in.buf, (long int) conn->in.offset, (long int) conn->in.size);
+		conn->in.buf, (long int) conn->in.notYetUsed, (long int) conn->in.allocatedSize);
 	    storeAppendPrintf(s, "\tpeer: %s:%d\n",
 		inet_ntoa(conn->peer.sin_addr),
 		ntohs(conn->peer.sin_port));

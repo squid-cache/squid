@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.430 2002/09/15 06:40:58 robertc Exp $
+ * $Id: structs.h,v 1.431 2002/09/24 10:46:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1048,19 +1048,6 @@ struct _AccessLogEntry {
     HierarchyLogEntry hier;
 };
 
-struct _clientStreamNode {
-    dlink_node node;
-    dlink_list *head;		/* sucks I know, but hey, the interface is limited */
-    CSR *readfunc;
-    CSCB *callback;
-    CSD *detach;		/* tell this node the next one downstream wants no more data */
-    CSS *status;
-    void *data;			/* Context for the node */
-    char *readbuf;		/* where *this* node wants its data returned; */
-    size_t readlen;		/* how much data *this* node can handle */
-    off_t readoff;		/* where *this* node wants it's data read from in the stream */
-};
-
 struct _clientHttpRequest {
     ConnStateData *conn;
     request_t *request;		/* Parsed URL ... */
@@ -1096,8 +1083,8 @@ struct _ConnStateData {
     int fd;
     struct {
 	char *buf;
-	off_t offset;
-	size_t size;
+	off_t notYetUsed;
+	size_t allocatedSize;
     } in;
     struct {
 	size_t size_left;	/* How much body left to process */
@@ -1431,32 +1418,6 @@ struct _mem_hdr {
     mem_node *tail;
     int origin_offset;
 };
-
-/* keep track each client receiving data from that particular StoreEntry */
-struct _store_client {
-    int type;
-    off_t copy_offset;
-    off_t cmp_offset;
-    size_t copy_size;
-    char *copy_buf;
-    STCB *callback;
-    void *callback_data;
-#if STORE_CLIENT_LIST_DEBUG
-    void *owner;
-#endif
-    StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
-    storeIOState *swapin_sio;
-    struct {
-	unsigned int disk_io_pending:1;
-	unsigned int store_copying:1;
-	unsigned int copy_event_pending:1;
-    } flags;
-#if DELAY_POOLS
-    delay_id delay_id;
-#endif
-    dlink_node node;
-};
-
 
 /* Removal policies */
 
