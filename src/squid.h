@@ -1,7 +1,7 @@
 
 /*
- * $Id: squid.h,v 1.188 1999/04/23 02:57:32 wessels Exp $
- * $Id: squid.h,v 1.188 1999/04/23 02:57:32 wessels Exp $
+ * $Id: squid.h,v 1.189 1999/04/26 21:36:02 wessels Exp $
+ * $Id: squid.h,v 1.189 1999/04/26 21:36:02 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -391,5 +391,14 @@ struct rusage {
 extern struct snmp_mib_tree *Mib;
 #endif
 
+/*
+ * Hey dummy, don't be tempted to move this to lib/config.h.in again.  O_NONBLOCK
+ * will not be defined there because you didn't #include <fcntl.h> yet.
+ */
+#if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
+#define SQUID_NONBLOCK O_NONBLOCK
+#else
+#define SQUID_NONBLOCK O_NDELAY
+#endif
 
 #endif /* SQUID_H */
