@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.126 1997/01/04 08:34:49 wessels Exp $
+ * $Id: comm.cc,v 1.127 1997/01/07 20:31:19 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -299,7 +299,7 @@ comm_open(int sock_type,
 }
 
    /*
-    * NOTE: set the listen queue to SQUID_MAXFD/4 and rely on the kernel to      
+    * NOTE: set the listen queue to Squid_MaxFD/4 and rely on the kernel to      
     * impose an upper limit.  Solaris' listen(3n) page says it has   
     * no limit on this parameter, but sys/socket.h sets SOMAXCONN 
     * to 5.  HP-UX currently has a limit of 20.  SunOS is 5 and
@@ -309,9 +309,9 @@ int
 comm_listen(int sock)
 {
     int x;
-    if ((x = listen(sock, SQUID_MAXFD >> 2)) < 0) {
+    if ((x = listen(sock, Squid_MaxFD >> 2)) < 0) {
 	debug(50, 0, "comm_listen: listen(%d, %d): %s\n",
-	    SQUID_MAXFD >> 2,
+	    Squid_MaxFD >> 2,
 	    sock, xstrerror());
 	return x;
     }
@@ -363,7 +363,7 @@ int
 comm_set_fd_lifetime(int fd, int lifetime)
 {
     debug(5, 3, "comm_set_fd_lifetime: FD %d lft %d\n", fd, lifetime);
-    if (fd < 0 || fd > SQUID_MAXFD)
+    if (fd < 0 || fd > Squid_MaxFD)
 	return 0;
     if (lifetime < 0)
 	return fd_lifetime[fd] = -1;
@@ -524,7 +524,7 @@ comm_close(int fd)
 {
     FD_ENTRY *conn = NULL;
     debug(5, 5, "comm_close: FD %d\n", fd);
-    if (fd < 0 || fd >= SQUID_MAXFD)
+    if (fd < 0 || fd >= Squid_MaxFD)
 	return;
     conn = &fd_table[fd];
     if (!conn->openned)
@@ -1255,17 +1255,17 @@ comm_init(void)
 {
     int i;
 
-    fd_table = xcalloc(SQUID_MAXFD, sizeof(FD_ENTRY));
-    meta_data.misc += SQUID_MAXFD * sizeof(FD_ENTRY);
+    fd_table = xcalloc(Squid_MaxFD, sizeof(FD_ENTRY));
+    meta_data.misc += Squid_MaxFD * sizeof(FD_ENTRY);
     /* Keep a few file descriptors free so that we don't run out of FD's
      * after accepting a client but before it opens a socket or a file.
-     * Since SQUID_MAXFD can be as high as several thousand, don't waste them */
-    RESERVED_FD = min(100, SQUID_MAXFD / 4);
+     * Since Squid_MaxFD can be as high as several thousand, don't waste them */
+    RESERVED_FD = min(100, Squid_MaxFD / 4);
     /* hardwired lifetimes */
-    fd_lifetime = xmalloc(sizeof(int) * SQUID_MAXFD);
-    for (i = 0; i < SQUID_MAXFD; i++)
+    fd_lifetime = xmalloc(sizeof(int) * Squid_MaxFD);
+    for (i = 0; i < Squid_MaxFD; i++)
 	comm_set_fd_lifetime(i, -1);	/* denotes invalid */
-    meta_data.misc += SQUID_MAXFD * sizeof(int);
+    meta_data.misc += Squid_MaxFD * sizeof(int);
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
     return 0;
@@ -1296,7 +1296,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
     FD_ENTRY *f = NULL;
 
     debug(5, 0, "examine_select: Examining open file descriptors...\n");
-    for (fd = 0; fd < SQUID_MAXFD; fd++) {
+    for (fd = 0; fd < Squid_MaxFD; fd++) {
 	FD_ZERO(&read_x);
 	FD_ZERO(&write_x);
 	tv.tv_sec = tv.tv_usec = 0;
@@ -1306,7 +1306,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	    FD_SET(fd, &write_x);
 	else
 	    continue;
-	num = select(SQUID_MAXFD, &read_x, &write_x, NULL, &tv);
+	num = select(Squid_MaxFD, &read_x, &write_x, NULL, &tv);
 	if (num > -1) {
 	    debug(5, 5, "FD %d is valid.\n", fd);
 	    continue;
@@ -1367,7 +1367,7 @@ checkTimeouts(void)
     FD_ENTRY *f = NULL;
     void *data;
     /* scan for timeout */
-    for (fd = 0; fd < SQUID_MAXFD; ++fd) {
+    for (fd = 0; fd < Squid_MaxFD; ++fd) {
 	f = &fd_table[fd];
 	if ((hdl = f->timeout_handler) == NULL)
 	    continue;
@@ -1390,7 +1390,7 @@ checkLifetimes(void)
 
     PF hdl = NULL;
 
-    for (fd = 0; fd < SQUID_MAXFD; fd++) {
+    for (fd = 0; fd < Squid_MaxFD; fd++) {
 	if ((lft = comm_get_fd_lifetime(fd)) == -1)
 	    continue;
 	if (lft > squid_curtime)
@@ -1429,12 +1429,12 @@ checkLifetimes(void)
 static void
 Reserve_More_FDs(void)
 {
-    if (RESERVED_FD < SQUID_MAXFD - 64) {
+    if (RESERVED_FD < Squid_MaxFD - 64) {
 	RESERVED_FD = RESERVED_FD + 1;
-    } else if (RESERVED_FD == SQUID_MAXFD - 64) {
+    } else if (RESERVED_FD == Squid_MaxFD - 64) {
 	RESERVED_FD = RESERVED_FD + 1;
 	debug(5, 0, "Don't you have a tiny open-file table size of %d\n",
-	    SQUID_MAXFD - RESERVED_FD);
+	    Squid_MaxFD - RESERVED_FD);
     }
 }
 

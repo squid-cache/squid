@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.50 1997/01/03 21:07:10 wessels Exp $
+ * $Id: disk.cc,v 1.51 1997/01/07 20:31:20 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -131,9 +131,9 @@ disk_init(void)
 {
     int fd;
 
-    file_table = xcalloc(SQUID_MAXFD, sizeof(FileEntry));
-    meta_data.misc += SQUID_MAXFD * sizeof(FileEntry);
-    for (fd = 0; fd < SQUID_MAXFD; fd++) {
+    file_table = xcalloc(Squid_MaxFD, sizeof(FileEntry));
+    meta_data.misc += Squid_MaxFD * sizeof(FileEntry);
+    for (fd = 0; fd < Squid_MaxFD; fd++) {
 	file_table[fd].filename[0] = '\0';
 	file_table[fd].at_eof = NO;
 	file_table[fd].open_stat = FILE_NOT_OPEN;
