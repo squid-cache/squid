@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.447 2002/09/24 10:46:42 robertc Exp $
+ * $Id: protos.h,v 1.448 2002/09/26 13:33:08 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -145,7 +145,6 @@ extern int clientAbortBody(request_t * req);
 extern void httpRequestFree(void *);
 
 /* client_side_reply.c - client side reply related routines (pure logic, no comms) */
-extern int clientCheckTransferDone(clientHttpRequest const *);
 extern void *clientReplyNewContext(clientHttpRequest *);
 extern int clientHttpRequestStatus(int fd, clientHttpRequest const *http);
 extern void clientSetReplyToError(void *, err_type, http_status, method_t, char const *, struct in_addr *, request_t *, char *, auth_user_request_t * auth_user_request);
@@ -755,7 +754,7 @@ extern void authenticateInit(authConfig *);
 extern void authenticateShutdown(void);
 extern void authenticateFixHeader(HttpReply *, auth_user_request_t *, request_t *, int, int);
 extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, request_t *, int);
-extern auth_acl_t authenticateAuthenticate(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData *, struct in_addr);
+extern auth_acl_t authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData *, struct in_addr);
 extern void authenticateAuthUserUnlock(auth_user_t * auth_user);
 extern void authenticateAuthUserLock(auth_user_t * auth_user);
 extern void authenticateAuthUserRequestUnlock(auth_user_request_t *);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.431 2002/09/24 10:46:42 robertc Exp $
+ * $Id: structs.h,v 1.432 2002/09/26 13:33:08 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -138,6 +138,11 @@ struct _auth_user_request_t {
     void *scheme_data;
     /* how many 'processes' are working on this data */
     size_t references;
+    /* We only attempt authentication once per http request. This 
+     * is to allow multiple auth acl references from different _access areas
+     * when using connection based authentication
+     */
+    auth_acl_t lastReply;
 };
 
 
@@ -1056,6 +1061,7 @@ struct _clientHttpRequest {
     struct {
 	off_t offset;
 	size_t size;
+	size_t headers_sz;
     } out;
     HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
     size_t req_sz;		/* raw request size on input, not current request size */

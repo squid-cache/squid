@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.285 2002/09/15 06:40:56 robertc Exp $
+ * $Id: acl.cc,v 1.286 2002/09/26 13:33:07 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1405,7 +1405,7 @@ aclAuthenticated(aclCheck_t * checklist)
     }
     /* get authed here */
     /* Note: this fills in checklist->auth_user_request when applicable */
-    switch (authenticateAuthenticate(&checklist->auth_user_request, headertype, checklist->request, checklist->conn, checklist->src_addr)) {
+    switch (authenticateTryToAuthenticateAndSetAuthUser(&checklist->auth_user_request, headertype, checklist->request, checklist->conn, checklist->src_addr)) {
     case AUTH_ACL_CANNOT_AUTHENTICATE:
 	debug(28, 4) ("aclMatchAcl: returning  0 user authenticated but not authorised.\n");
 	return 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.8 2002/09/24 12:09:24 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.9 2002/09/26 13:33:08 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -90,7 +90,7 @@ extern ErrorState *clientBuildError(err_type, http_status, char const *,
 
 static void startError(clientReplyContext * context, clientHttpRequest * http, ErrorState * err);
 static void triggerStoreReadWithClientParameters(clientReplyContext * context, clientHttpRequest * http);
-
+static int clientCheckTransferDone(clientReplyContext * context);
 
 /* The clientReply clean interface */
 /* privates */
@@ -886,8 +886,9 @@ clientTraceReply(clientStreamNode * node, clientReplyContext * context)
 #define SENDING_BODY 0
 #define SENDING_HDRSONLY 1
 int
-clientCheckTransferDone(clientHttpRequest const *http)
+clientCheckTransferDone(clientReplyContext * context)
 {
+    clientHttpRequest *http = context->http;
     int sending = SENDING_BODY;
     StoreEntry *entry = http->entry;
     MemObject *mem;
@@ -905,9 +906,10 @@ clientCheckTransferDone(clientHttpRequest const *http)
      * Handle STORE_OK objects.
      * objectLen(entry) will be set proprely.
      * RC: Does objectLen(entry) include the Headers? 
+     * RC: Yes.
      */
     if (entry->store_status == STORE_OK) {
-	if (http->out.offset >= objectLen(entry))
+	if (http->out.offset >= objectLen(entry) - context->headers_sz)
 	    return 1;
 	else
 	    return 0;
@@ -918,8 +920,9 @@ clientCheckTransferDone(clientHttpRequest const *http)
     mem = entry->mem_obj;
     assert(mem != NULL);
     assert(http->request != NULL);
+    /* mem->reply was wrong because it uses the UPSTREAM header length!!! */
     reply = mem->reply;
-    if (reply->hdr_sz == 0)
+    if (context->headers_sz == 0)
 	return 0;		/* haven't found end of headers yet */
     else if (reply->sline.status == HTTP_OK)
 	sending = SENDING_BODY;
@@ -938,16 +941,15 @@ clientCheckTransferDone(clientHttpRequest const *http)
      * If we are sending a body and we don't have a content-length,
      * then we must wait for the object to become STORE_OK.
      */
-    if (sending == SENDING_HDRSONLY)
-	sendlen = reply->hdr_sz;
-    else if (reply->content_length < 0)
+    sendlen = http->out.headers_sz;
+    if (reply->content_length < 0)
 	return 0;
     else
-	sendlen = reply->content_length + reply->hdr_sz;
+	sendlen += reply->content_length;
     /*
      * Now that we have the expected length, did we send it all?
      */
-    if (http->out.offset < sendlen)
+    if (http->out.size < sendlen)
 	return 0;
     else
 	return 1;
@@ -1026,27 +1028,33 @@ clientReplyStatus(clientStreamNode * this, clientHttpRequest * http)
 	 * complete. Should we tcp reset such connections ?
 	 */
 	return STREAM_FAILED;
-    if ((done = clientCheckTransferDone(http)) != 0 || context->flags.complete) {
+    if ((done = clientCheckTransferDone(context)) != 0 || context->flags.complete) {
 	debug(88, 5) ("clientReplyStatus: transfer is DONE\n");
 	/* Ok we're finished, but how? */
 	if (httpReplyBodySize(http->request->method,
 		http->entry->mem_obj->reply) < 0) {
-	    debug(88, 5) ("clientWriteComplete: closing, content_length < 0\n");
+	    debug(88, 5) ("clientReplyStatus: closing, content_length < 0\n");
 	    return STREAM_FAILED;
-	} else if (!done) {
-	    debug(88, 5) ("clientWriteComplete: closing, !done, but read 0 bytes\n");
+	}
+	if (!done) {
+	    debug(88, 5) ("clientReplyStatus: closing, !done, but read 0 bytes\n");
 	    return STREAM_FAILED;
-	} else if (clientGotNotEnough(http)) {
-	    debug(88, 5) ("clientWriteComplete: client didn't get all it expected\n");
+	}
+	if (clientGotNotEnough(http)) {
+	    debug(88, 5) ("clientReplyStatus: client didn't get all it expected\n");
 	    return STREAM_UNPLANNED_COMPLETE;
-	} else if (http->request->flags.proxy_keepalive) {
+	}
+	if (http->request->flags.proxy_keepalive) {
+	    debug(88, 5) ("clientReplyStatus: stream complete and can keepalive\n");
 	    return STREAM_COMPLETE;
 	}
+	debug(88, 5) ("clientReplyStatus: stream was not expected to complete!\n");
 	return STREAM_UNPLANNED_COMPLETE;
-
     }
-    if (clientReplyBodyTooLarge(http->entry->mem_obj->reply, http->out.offset))
+    if (clientReplyBodyTooLarge(http->entry->mem_obj->reply, http->out.offset)) {
+	debug(88, 5) ("clientReplyStatus: client reply body is too large\n");
 	return STREAM_FAILED;
+    }
     return STREAM_NONE;
 }
 
@@ -1496,6 +1504,8 @@ clientSendMoreData(void *data, StoreIOBuffer result)
 	    (int) body_size, rep->hdr_sz);
 	ch = aclChecklistCreate(Config.accessList.reply, http->request, NULL);
 	ch->reply = rep;
+	if (http->conn)
+	    ch->conn = cbdataReference(http->conn);	/* acl.c frees */
 	rv = aclCheckFast(Config.accessList.reply, ch);
 	aclChecklistFree(ch);
 	ch = NULL;
