@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.23 2003/02/06 10:00:25 robertc Exp $
+#  $Id: Makefile.in,v 1.24 2003/02/12 01:12:37 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -103,6 +103,7 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
+SAMBASOURCES = @SAMBASOURCES@
 SH = @SH@
 SNMPLIB = @SNMPLIB@
 SSLLIB = @SSLLIB@
@@ -121,13 +122,13 @@ install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
 libexec_PROGRAMS = wb_ntlmauth
-wb_ntlmauth_SOURCES = wb_ntlm_auth.c wb_common.c samba_nss.h winbindd_nss.h wbntlm.h winbind_nss_config.h
+wb_ntlmauth_SOURCES = wb_ntlm_auth.c wb_common.c wbntlm.h
 EXTRA_DIST = \
 	patches/wb_common.patch \
 	patches/winbind_nss_config.patch
 
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-    -I$(top_srcdir)/src
+    -I$(top_srcdir)/src -I@SAMBASOURCES@
 
 LDADD = -L$(top_builddir)/lib -lmiscutil -lntlmauth $(XTRA_LIBS)
 subdir = helpers/ntlm_auth/winbind

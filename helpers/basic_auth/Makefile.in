@@ -15,7 +15,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.31 2003/02/06 09:59:57 robertc Exp $
+#  $Id: Makefile.in,v 1.32 2003/02/12 01:11:13 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -102,6 +102,7 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
+SAMBASOURCES = @SAMBASOURCES@
 SH = @SH@
 SNMPLIB = @SNMPLIB@
 SSLLIB = @SSLLIB@

@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.42 2003/02/06 09:59:47 robertc Exp $
+# $Id: Makefile.in,v 1.43 2003/02/12 01:10:52 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -101,6 +101,7 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
+SAMBASOURCES = @SAMBASOURCES@
 SH = @SH@
 SNMPLIB = @SNMPLIB@
 SSLLIB = @SSLLIB@
@@ -467,7 +468,7 @@ uninstall-info: uninstall-info-recursive
 
 
 dist-hook:
-	@ for subdir in "include"; do \
+	@ for subdir in "include include/samba/nsswitch"; do \
 	  if test "$$subdir" = .; then :; else \
 	    test -d $(distdir)/$$subdir \
 	    || mkdir $(distdir)/$$subdir \
