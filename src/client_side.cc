@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.458 1999/06/24 20:20:01 wessels Exp $
+ * $Id: client_side.cc,v 1.459 1999/06/24 22:53:43 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -861,12 +861,21 @@ clientSetKeepaliveFlag(clientHttpRequest * http)
 static int
 clientCheckContentLength(request_t * r)
 {
-    /* We only require a content-length for "upload" methods */
-    if (!pumpMethod(r->method))
+    int has_cont_len = (httpHeaderGetInt(&r->header, HDR_CONTENT_LENGTH) >= 0);
+    switch (r->method) {
+    case METHOD_PUT:
+    case METHOD_POST:
+	/* PUT/POST requires a request entity */
+	return has_cont_len;
+    case METHOD_GET:
+    case METHOD_HEAD:
+	/* We do not want to see a request entity on GET/HEAD requests */
+	return !has_cont_len;
+    default:
+	/* For other types of requests we don't care */
 	return 1;
-    if (httpHeaderGetInt(&r->header, HDR_CONTENT_LENGTH) < 0)
-	return 0;
-    return 1;
+    }
+    /* NOT REACHED */
 }
 
 static int
@@ -1905,7 +1914,7 @@ clientProcessRequest(clientHttpRequest * http)
 	}
 	/* yes, continue */
 	http->log_type = LOG_TCP_MISS;
-    } else if (pumpMethod(r->method)) {
+    } else if (r->body) {
 	http->log_type = LOG_TCP_MISS;
 	/* XXX oof, POST can be cached! */
 	pumpInit(fd, r, http->uri);
@@ -2259,6 +2268,7 @@ clientReadRequest(int fd, void *data)
     int k;
     request_t *request = NULL;
     int size;
+    int cont_len;
     method_t method;
     clientHttpRequest *http = NULL;
     clientHttpRequest **H = NULL;
@@ -2428,12 +2438,12 @@ clientReadRequest(int fd, void *data)
 	     */
 	    clientSetKeepaliveFlag(http);
 	    /*
-	     * break here for NON-GET because most likely there is a
-	     * reqeust body following and we don't want to parse it
-	     * as though it was new request
+	     * break here if the request has a content-length
+	     * because there is a reqeust body following and we
+	     * don't want to parse it as though it was new request.
 	     */
-	    if (request->method != METHOD_GET) {
-		int cont_len = httpHeaderGetInt(&request->header, HDR_CONTENT_LENGTH);
+	    cont_len = httpHeaderGetInt(&request->header, HDR_CONTENT_LENGTH);
+	    if (cont_len >= 0) {
 		int copy_len = XMIN(conn->in.offset, cont_len);
 		if (copy_len > 0) {
 		    assert(conn->in.offset >= copy_len);
