@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.27 1996/04/17 15:07:26 wessels Exp $ */
+/* $Id: comm.cc,v 1.28 1996/04/17 17:40:15 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -367,6 +367,8 @@ int comm_close(fd)
     debug(5, 10, "comm_close: FD %d\n", fd);
     /* update fdstat */
     fdstat_close(fd);
+    if (conn->close_handler)
+	conn->close_handler(fd, conn->close_data);
     memset(conn, '\0', sizeof(FD_ENTRY));
     return close(fd);
 }
@@ -700,22 +702,19 @@ int comm_pending(fd, sec, usec)
     return COMM_TIMEOUT;
 }
 
-int comm_set_select_handler(fd, type, handler, client_data)
+void comm_set_select_handler(fd, type, handler, client_data)
      int fd;
      unsigned int type;
-/* 01 - read; 10 - write; 100 - except; 1000 - timeout ; 10000 - lifetime */
      int (*handler) ();
      void *client_data;
 {
 
-    return (comm_set_select_handler_plus_timeout(fd, type, handler, client_data, 0));
+    comm_set_select_handler_plus_timeout(fd, type, handler, client_data, 0);
 }
 
-/* Should use var args here PBD */
-int comm_set_select_handler_plus_timeout(fd, type, handler, client_data, timeout)
+void comm_set_select_handler_plus_timeout(fd, type, handler, client_data, timeout)
      int fd;
      unsigned int type;
-/* 01 - read; 10 - write; 100 - except; 1000 - timeout ; 10000 - lifetime */
      int (*handler) ();
      void *client_data;
      time_t timeout;
@@ -745,7 +744,10 @@ int comm_set_select_handler_plus_timeout(fd, type, handler, client_data, timeout
 	fd_table[fd].lifetime_handler = handler;
 	fd_table[fd].lifetime_data = client_data;
     }
-    return 0;			/* XXX What is meaningful? */
+    if (type & COMM_SELECT_CLOSE) {
+	fd_table[fd].close_handler = handler;
+	fd_table[fd].close_data = client_data;
+    }
 }
 
 int comm_get_select_handler(fd, type, handler_ptr, client_data_ptr)
@@ -904,7 +906,7 @@ static int examine_select(readfds, writefds, exceptfds)
     int num;
     int maxfd = getMaxFD();
     struct timeval tv;
-    int (*tmp) () = NULL;
+    FD_ENTRY *f = NULL;
 
     debug(5, 0, "examine_select: Examining open file descriptors...\n");
     for (fd = 0; fd < maxfd; fd++) {
@@ -918,25 +920,30 @@ static int examine_select(readfds, writefds, exceptfds)
 	    FD_SET(fd, &read_x);
 	    num = select(FD_SETSIZE, &read_x, &read_x, &read_x, &tv);
 	    if (num < 0) {
+		f = &fd_table[fd];
 		debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
 		debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p expt:%p\n",
-		    fd_table[fd].lifetime_handler,
-		    fd_table[fd].timeout_handler,
-		    fd_table[fd].read_handler,
-		    fd_table[fd].write_handler,
-		    fd_table[fd].except_handler);
-		if ((tmp = fd_table[fd].lifetime_handler)) {
+		    f->lifetime_handler,
+		    f->timeout_handler,
+		    f->read_handler,
+		    f->write_handler,
+		    f->except_handler);
+		if (f->close_handler) {
+		    debug(5, 0, "examine_select: Calling Close Handler\n");
+		    f->close_handler(fd, f->close_data);
+		} else if (f->lifetime_handler) {
 		    debug(5, 0, "examine_select: Calling Lifetime Handler\n");
-		    tmp(fd, fd_table[fd].lifetime_data);
-		} else if ((tmp = fd_table[fd].timeout_handler)) {
+		    f->lifetime_handler(fd, f->lifetime_data);
+		} else if (f->timeout_handler) {
 		    debug(5, 0, "examine_select: Calling Timeout Handler\n");
-		    tmp(fd, fd_table[fd].timeout_data);
+		    f->timeout_handler(fd, f->timeout_data);
 		}
-		fd_table[fd].lifetime_handler = 0;
-		fd_table[fd].timeout_handler = 0;
-		fd_table[fd].read_handler = 0;
-		fd_table[fd].write_handler = 0;
-		fd_table[fd].except_handler = 0;
+		f->close_handler = 0;
+		f->lifetime_handler = 0;
+		f->timeout_handler = 0;
+		f->read_handler = 0;
+		f->write_handler = 0;
+		f->except_handler = 0;
 		FD_CLR(fd, readfds);
 		FD_CLR(fd, writefds);
 		FD_CLR(fd, exceptfds);
