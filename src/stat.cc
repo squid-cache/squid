@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.105 1996/11/15 00:36:22 wessels Exp $
+ * $Id: stat.cc,v 1.106 1996/11/22 05:07:15 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -643,7 +643,7 @@ statFiledescriptors(StoreEntry * sentry)
 	"Remote Address",
 	"Description");
     storeAppendPrintf(sentry, "{---- ------ ---- ---- --------------------- ------------------------------}\n");
-    for (i = 0; i < FD_SETSIZE; i++) {
+    for (i = 0; i < SQUID_MAXFD; i++) {
 	if (!fdstat_isopen(i))
 	    continue;
 	j = fdstatGetType(i);
@@ -825,7 +825,7 @@ info_get(const cacheinfo * obj, StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "{File descriptor usage for %s:}\n", appname);
     storeAppendPrintf(sentry, "{\tMax number of file desc available:    %4d}\n",
-	FD_SETSIZE);
+	SQUID_MAXFD);
     storeAppendPrintf(sentry, "{\tLargest file desc currently in use:   %4d}\n",
 	fdstat_biggest_fd());
     storeAppendPrintf(sentry, "{\tAvailable number of file descriptors: %4d}\n",

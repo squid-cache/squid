@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.47 
+# From configure.in Revision: 1.48 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -2613,7 +2613,7 @@ done
 
 echo $ac_n "checking Maximum number of filedescriptors we can open""... $ac_c" 1>&6
 if test "$cross_compiling" = yes; then
-  SQUID_FD_SETSIZE=256
+  SQUID_MAXFD=256
 else
 cat > conftest.$ac_ext <<EOF
 #line 2620 "configure"
@@ -2669,15 +2669,15 @@ main() {
 EOF
 eval $ac_link
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
-  SQUID_FD_SETSIZE=`cat conftestval`
+  SQUID_MAXFD=`cat conftestval`
 else
-  SQUID_FD_SETSIZE=256
+  SQUID_MAXFD=256
 fi
 fi
 rm -fr conftest*
-echo "$ac_t""$SQUID_FD_SETSIZE" 1>&6
+echo "$ac_t""$SQUID_MAXFD" 1>&6
 cat >> confdefs.h <<EOF
-#define SQUID_FD_SETSIZE $SQUID_FD_SETSIZE
+#define SQUID_MAXFD $SQUID_MAXFD
 EOF
 
 

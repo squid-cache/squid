@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.114 1996/11/15 00:36:21 wessels Exp $
+ * $Id: main.cc,v 1.115 1996/11/22 05:07:14 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -494,7 +494,7 @@ mainInitialize(void)
     debug(1, 0, "Starting Squid Cache version %s for %s...\n",
 	version_string,
 	CONFIG_HOST_TYPE);
-    debug(1, 1, "With %d file descriptors available\n", FD_SETSIZE);
+    debug(1, 1, "With %d file descriptors available\n", SQUID_MAXFD);
 
     if (first_time) {
 	stmemInit();		/* stmem must go before at least redirect */
@@ -599,7 +599,7 @@ main(int argc, char **argv)
     setMaxFD();
 
     if (opt_catch_signals)
-	for (n = FD_SETSIZE; n > 2; n--)
+	for (n = SQUID_MAXFD; n > 2; n--)
 	    close(n);
 
     /*init comm module */

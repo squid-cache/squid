@@ -44,7 +44,7 @@
 #undef HAVE_EXT_MALLINFO
 
 /* Maximum number of open filedescriptors */
-#undef SQUID_FD_SETSIZE
+#undef SQUID_MAXFD
 
 /* UDP send buffer size */
 #undef SQUID_UDP_SO_SNDBUF
