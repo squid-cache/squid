@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.19 1996/04/04 22:01:54 wessels Exp $ */
+/* $Id: main.cc,v 1.20 1996/04/05 23:21:12 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -52,6 +52,8 @@ int main(argc, argv)
     char *s = NULL;
     int n;			/* # of GC'd objects */
     time_t last_maintain = 0;
+
+    errorInitialize();
 
     cached_starttime = getCurrentTime();
     failure_notify = fatal_dump;
