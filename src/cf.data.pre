@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.272 2002/07/14 23:51:06 hno Exp $
+# $Id: cf.data.pre,v 1.273 2002/07/22 11:48:32 adrian Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -289,7 +289,7 @@ DOC_START
 
 		     use 'basetime=n' to specify a base amount to
 		     be subtracted from round trip times of parents.
-		     It is subtraced before devision by weight in calculating
+		     It is subtracted before division by weight in calculating
 		     which parent to fectch from. If the rtt is less than the
 		     base time then the rtt is set to a minimal value.
 
