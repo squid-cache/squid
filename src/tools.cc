@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.76 1996/10/22 03:36:32 wessels Exp $
+ * $Id: tools.cc,v 1.77 1996/10/24 06:11:56 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -210,11 +210,15 @@ PrintRusage(void (*f) (void), FILE * lf)
     getrusage(RUSAGE_SELF, &rusage);
     fprintf(lf, "CPU Usage: user %d sys %d\n",
 	(int) rusage.ru_utime.tv_sec, (int) rusage.ru_stime.tv_sec);
+#ifdef _SQUID_SGI_
+    fprintf(lf, "Memory Usage: rss %ld KB\n", rusage.ru_maxrss);
+#else
     fprintf(lf, "Memory Usage: rss %ld KB\n",
-	rusage.ru_maxrss * getpagesize() >> 10);
+	(rusage.ru_maxrss * getpagesize()) >> 10);
+#endif /* _SQUID_SGI_ */
     fprintf(lf, "Page faults with physical i/o: %ld\n",
 	rusage.ru_majflt);
-#endif
+#endif /* HAVE_GETRUSAGE */
     dumpMallocStats(lf);
     if (f)
 	f();
