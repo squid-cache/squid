@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.21 1996/09/12 00:32:33 wessels Exp $
+ * $Id: client_side.cc,v 1.22 1996/09/12 03:24:01 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -394,7 +394,7 @@ int icpProcessExpired(fd, icpState)
 }
 
 
-int icpHandleIMSReply(fd, entry, data)
+static int icpHandleIMSReply(fd, entry, data)
      int fd;
      StoreEntry *entry;
      void *data;

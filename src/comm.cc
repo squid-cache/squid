@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.63 1996/09/12 00:31:34 wessels Exp $
+ * $Id: comm.cc,v 1.64 1996/09/12 03:24:02 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -204,10 +204,14 @@ u_short comm_local_port(fd)
     return fde->local_port;
 }
 
+#ifdef __STDC__
+static int commBind (int s, struct in_addr in_addr, u_short port)
+#else /* K&R C */
 static int commBind(s, in_addr, port)
      int s;
      struct in_addr in_addr;
      u_short port;
+#endif
 {
     struct sockaddr_in S;
 
@@ -226,11 +230,15 @@ static int commBind(s, in_addr, port)
 
 /* Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in comm.h. */
+#ifdef __STDC__
+int comm_open(unsigned int io_type, struct in_addr addr, u_short port, char *note)
+#else /* K&R C */
 int comm_open(io_type, addr, port, note)
      unsigned int io_type;
      struct in_addr addr;
      u_short port;
      char *note;
+#endif
 {
     int new_socket;
     FD_ENTRY *conn = NULL;
@@ -264,7 +272,7 @@ int comm_open(io_type, addr, port, note)
 
     if (!(io_type & COMM_NOCLOEXEC))
 	commSetCloseOnExec(new_socket);
-    if (port > 0) {
+    if (port > (u_short) 0) {
 	commSetNoLinger(new_socket);
 	if (do_reuse)
 	    commSetReuseAddr(new_socket);
@@ -523,12 +531,17 @@ int comm_cleanup_fd_entry(fd)
 
 
 /* Send a udp datagram to specified PORT at HOST. */
+#ifdef __STDC__
+int
+comm_udp_send(int fd, char *host, u_short port, char *buf, int len)
+#else /* K&R C */
 int comm_udp_send(fd, host, port, buf, len)
      int fd;
      char *host;
      u_short port;
      char *buf;
      int len;
+#endif
 {
     struct hostent *hp = NULL;
     static struct sockaddr_in to_addr;
@@ -722,7 +735,7 @@ int comm_select(sec)
 	    return COMM_SHUTDOWN;
 	if (shutdown_pending || reread_pending)
 	    debug(5, 2, "comm_select: Still waiting on %d FDs\n", nfds);
-	while (1) {
+	for (;;) {
 #if USE_ASYNC_IO
 	    /* Another CPU vs latency tradeoff for async IO */
 	    poll_time.tv_sec = 0;

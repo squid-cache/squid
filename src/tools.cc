@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.53 1996/09/11 22:41:15 wessels Exp $
+ * $Id: tools.cc,v 1.54 1996/09/12 03:24:08 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -474,6 +474,32 @@ void writePidFile()
 	debug(21, 0, "WARNING: Could not write pid file\n");
 	debug(21, 0, "         %s: %s\n", f, xstrerror());
     }
+}
+
+
+int readPidFile()
+{
+    FILE *pid_fp = NULL;
+    char *f = NULL;
+    int pid = -1;
+
+    if ((f = Config.pidFilename) == NULL) {
+	fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
+	exit(1);
+    }
+    pid_fp = fopen(f, "r");
+    if (pid_fp != NULL) {
+	if (fscanf(pid_fp, "%d", &pid) != 1)
+	    pid = 0;
+	fclose(pid_fp);
+    } else {
+	if (errno != ENOENT) {
+	    fprintf(stderr, "%s: ERROR: Could not read pid file\n", appname);
+	    fprintf(stderr, "\t%s: %s\n", f, xstrerror());
+	    exit(1);
+	}
+    }
+    return pid;
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.47 1996/09/12 00:31:12 wessels Exp $
+ * $Id: neighbors.cc,v 1.48 1996/09/12 03:24:06 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -264,7 +264,7 @@ edge *getFirstEdge()
     return friends->edges_head;
 }
 
-void neighborRemove(target)
+static void neighborRemove(target)
      edge *target;
 {
     edge *e = NULL;
