@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.356 2000/11/25 14:51:04 adrian Exp $
+ * $Id: cache_cf.cc,v 1.357 2000/12/04 20:40:36 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1049,11 +1049,11 @@ parse_peer(peer ** head)
 	for (s = Config.Sockaddr.http; s; s = s->next) {
 	    if (p->http_port != ntohs(s->s.sin_port))
 		continue;
-            debug(15, 1) ("parse_peer: Peer looks like myself: Ignoring %s %s/%d/%d\n",
-                 neighborTypeStr(p), p->host, p->http_port, p->icp.port);
-            xfree( p->host );
-            memFree( p, MEM_PEER );
-            return;
+	    debug(15, 1) ("parse_peer: Peer looks like myself: Ignoring %s %s/%d/%d\n",
+		neighborTypeStr(p), p->host, p->http_port, p->icp.port);
+	    xfree(p->host);
+	    memFree(p, MEM_PEER);
+	    return;
 	}
     }
     while ((token = strtok(NULL, w_space))) {
@@ -1233,11 +1233,11 @@ free_denyinfo(acl_deny_info_list ** list)
 	for (l = a->acl_list; l; l = l_next) {
 	    l_next = l->next;
 	    memFree(l, MEM_ACL_NAME_LIST);
-            l = NULL;
+	    l = NULL;
 	}
 	a_next = a->next;
-        memFree(a, MEM_ACL_DENY_INFO_LIST);
-        a = NULL;
+	memFree(a, MEM_ACL_DENY_INFO_LIST);
+	a = NULL;
     }
     *list = NULL;
 }
