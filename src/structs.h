@@ -731,6 +731,7 @@ struct _stmem_stats {
 
 /* keep track each client receiving data from that particular StoreEntry */
 struct _store_client {
+    int type;
     off_t copy_offset;
     off_t seen_offset;
     size_t copy_size;
@@ -739,13 +740,13 @@ struct _store_client {
     void *callback_data;
     MemObject *mem;		/* ptr to the parent structure, argh! */
     short swapin_fd;
+    struct _store_client *next;
 };
 
 
 /* This structure can be freed while object is purged out from memory */
 struct _MemObject {
     mem_hdr *data;
-    unsigned char pending_list_size;
     off_t inmem_hi;
     off_t inmem_lo;
     struct _store_client *clients;
