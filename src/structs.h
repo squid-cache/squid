@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.477 2003/08/04 22:14:42 robertc Exp $
+ * $Id: structs.h,v 1.478 2003/08/10 11:00:44 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1052,7 +1052,7 @@ struct _AccessLogEntry
     _private;
     HierarchyLogEntry hier;
     HttpReply *reply;
-    request_t *request;
+    HttpRequest *request;
 };
 
 struct _ipcache_addrs
@@ -1109,7 +1109,7 @@ struct _DigestFetchState
     StoreEntry *old_entry;
     store_client *sc;
     store_client *old_sc;
-    request_t *request;
+    HttpRequest *request;
     int offset;
     int mask_offset;
     time_t start_time;
@@ -1420,7 +1420,7 @@ struct _netdbEntry
 
 struct _ps_state
 {
-    request_t *request;
+    HttpRequest *request;
     StoreEntry *entry;
     int always_direct;
     int never_direct;
@@ -1675,7 +1675,7 @@ struct _ErrorState
     int page_id;
     http_status httpStatus;
     auth_user_request_t *auth_user_request;
-    request_t *request;
+    HttpRequest *request;
     char *url;
     int xerrno;
     char *host;
@@ -1975,7 +1975,7 @@ struct _FwdState
 {
     int client_fd;
     StoreEntry *entry;
-    request_t *request;
+    HttpRequest *request;
     FwdServer *servers;
     int server_fd;
     ErrorState *err;

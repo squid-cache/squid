@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.36 2003/08/04 22:14:53 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.37 2003/08/10 11:00:52 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -363,7 +363,7 @@ ntlm_request_t::direction()
  * else.
  */
 static void
-authenticateNTLMFixErrorHeader(auth_user_request_t * auth_user_request, HttpReply * rep, http_hdr_type type, request_t * request)
+authenticateNTLMFixErrorHeader(auth_user_request_t * auth_user_request, HttpReply * rep, http_hdr_type type, HttpRequest * request)
 {
     ntlm_request_t *ntlm_request;
 
@@ -1065,13 +1065,13 @@ ntlm_request_t::authenticated() const
 }
 
 void
-ntlm_request_t::authenticate(request_t * request, ConnStateData::Pointer conn, http_hdr_type type)
+ntlm_request_t::authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type)
 {
     fatal ("unusable");
 }
 
 static void
-authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData::Pointer conn, http_hdr_type type)
+authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type)
 {
     const char *proxy_auth;
 

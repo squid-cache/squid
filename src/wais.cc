@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.149 2003/06/20 01:01:01 robertc Exp $
+ * $Id: wais.cc,v 1.150 2003/08/10 11:00:45 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -51,7 +51,7 @@ public:
     method_t method;
     const HttpHeader *request_hdr;
     char url[MAX_URL];
-    request_t *request;
+    HttpRequest *request;
     FwdState *fwd;
     char buf[BUFSIZ];
     bool dataWritten;
@@ -253,7 +253,7 @@ void
 waisStart(FwdState * fwd)
 {
     WaisStateData *waisState = NULL;
-    request_t *request = fwd->request;
+    HttpRequest *request = fwd->request;
     StoreEntry *entry = fwd->entry;
     int fd = fwd->server_fd;
     const char *url = storeUrl(entry);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.425 2003/08/04 22:14:42 robertc Exp $
+ * $Id: http.cc,v 1.426 2003/08/10 11:00:43 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -66,9 +66,9 @@ static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
-static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, request_t * request, request_t * orig_request,
+static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request,
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
-static int decideIfWeDoRanges (request_t * orig_request);
+static int decideIfWeDoRanges (HttpRequest * orig_request);
 
 
 static void
@@ -516,7 +516,7 @@ HttpStateData::cacheableReply()
  * Returns false if the variance cannot be stored
  */
 const char *
-httpMakeVaryMark(request_t * request, HttpReply const * reply)
+httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
 {
     String vary, hdr;
     const char *pos = NULL;
@@ -898,7 +898,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
         } else if (entry->isEmpty()) {
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
-            err->request = requestLink((request_t *) request);
+            err->request = requestLink((HttpRequest *) request);
             err->xerrno = errno;
             fwdFail(fwd, err);
             do_next_read = 0;
@@ -911,7 +911,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
         ErrorState *err;
         err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
         err->xerrno = errno;
-        err->request = requestLink((request_t *) request);
+        err->request = requestLink((HttpRequest *) request);
         fwdFail(fwd, err);
         eof = 1;
         do_next_read = 0;
@@ -1112,8 +1112,8 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
  * note: initialised the HttpHeader, the caller is responsible for Clean()-ing
  */
 void
-httpBuildRequestHeader(request_t * request,
-                       request_t * orig_request,
+httpBuildRequestHeader(HttpRequest * request,
+                       HttpRequest * orig_request,
                        StoreEntry * entry,
                        HttpHeader * hdr_out,
                        http_state_flags flags)
@@ -1330,7 +1330,7 @@ httpBuildRequestHeader(request_t * request,
 
 
 void
-copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, request_t * request, request_t * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
+copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
 {
     debug(11, 5) ("httpBuildRequestHeader: %s: %s\n",
                   e->name.buf(), e->value.buf());
@@ -1457,7 +1457,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
 }
 
 int
-decideIfWeDoRanges (request_t * orig_request)
+decideIfWeDoRanges (HttpRequest * orig_request)
 {
     int result = 1;
     /* decide if we want to do Ranges ourselves
@@ -1485,8 +1485,8 @@ decideIfWeDoRanges (request_t * orig_request)
 /* build request prefix and append it to a given MemBuf;
  * return the length of the prefix */
 mb_size_t
-httpBuildRequestPrefix(request_t * request,
-                       request_t * orig_request,
+httpBuildRequestPrefix(HttpRequest * request,
+                       HttpRequest * orig_request,
                        StoreEntry * entry,
                        MemBuf * mb,
                        http_state_flags flags)
@@ -1518,7 +1518,7 @@ static void
 httpSendRequest(HttpStateData * httpState)
 {
     MemBuf mb;
-    request_t *req = httpState->request;
+    HttpRequest *req = httpState->request;
     StoreEntry *entry = httpState->entry;
     peer *p = httpState->_peer;
     CWCB *sendHeaderDone;
@@ -1580,8 +1580,8 @@ httpStart(FwdState * fwd)
 {
     int fd = fwd->server_fd;
     HttpStateData *httpState;
-    request_t *proxy_req;
-    request_t *orig_req = fwd->request;
+    HttpRequest *proxy_req;
+    HttpRequest *orig_req = fwd->request;
     debug(11, 3) ("httpStart: \"%s %s\"\n",
                   RequestMethodStr[orig_req->method],
                   storeUrl(fwd->entry));

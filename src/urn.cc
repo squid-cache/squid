@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.84 2003/03/09 12:29:41 robertc Exp $
+ * $Id: urn.cc,v 1.85 2003/08/10 11:00:45 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -48,11 +48,11 @@ public:
     void created (StoreEntry *newEntry);
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void start (request_t *, StoreEntry *);
+    void start (HttpRequest *, StoreEntry *);
     char *getHost (String &urlpath);
-    void setUriResFromRequest(request_t *);
-    bool RequestNeedsMenu(request_t *r);
-    void updateRequestURL(request_t *r, char const *newPath);
+    void setUriResFromRequest(HttpRequest *);
+    bool RequestNeedsMenu(HttpRequest *r);
+    void updateRequestURL(HttpRequest *r, char const *newPath);
     void createUriResRequest (String &uri);
 
     virtual ~UrnState();
@@ -61,8 +61,8 @@ public:
     StoreEntry *entry;
     store_client *sc;
     StoreEntry *urlres_e;
-    request_t *request;
-    request_t *urlres_r;
+    HttpRequest *request;
+    HttpRequest *urlres_r;
 
     struct
     {
@@ -187,13 +187,13 @@ UrnState::getHost (String &urlpath)
 }
 
 bool
-UrnState::RequestNeedsMenu(request_t *r)
+UrnState::RequestNeedsMenu(HttpRequest *r)
 {
     return strncasecmp(r->urlpath.buf(), "menu.", 5) == 0;
 }
 
 void
-UrnState::updateRequestURL(request_t *r, char const *newPath)
+UrnState::updateRequestURL(HttpRequest *r, char const *newPath)
 {
     char *new_path = xstrdup (newPath);
     r->urlpath = new_path;
@@ -213,7 +213,7 @@ UrnState::createUriResRequest (String &uri)
 }
 
 void
-UrnState::setUriResFromRequest(request_t *r)
+UrnState::setUriResFromRequest(HttpRequest *r)
 {
     if (RequestNeedsMenu(r)) {
         updateRequestURL(r, r->urlpath.buf() + 5);
@@ -236,7 +236,7 @@ UrnState::setUriResFromRequest(request_t *r)
 }
 
 void
-UrnState::start(request_t * r, StoreEntry * e)
+UrnState::start(HttpRequest * r, StoreEntry * e)
 {
     debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
     entry = e;
@@ -276,7 +276,7 @@ UrnState::created(StoreEntry *newEntry)
 }
 
 void
-urnStart(request_t * r, StoreEntry * e)
+urnStart(HttpRequest * r, StoreEntry * e)
 {
     UrnState *anUrn = new UrnState();
     anUrn->start (r, e);

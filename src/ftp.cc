@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.352 2003/08/07 13:16:30 robertc Exp $
+ * $Id: ftp.cc,v 1.353 2003/08/10 11:00:43 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -138,7 +138,7 @@ public:
     void operator delete (void *);
     ~FtpStateData();
     StoreEntry *entry;
-    request_t *request;
+    HttpRequest *request;
     char user[MAX_URL];
     char password[MAX_URL];
     int password_url;
@@ -244,7 +244,7 @@ static void ftpLoginParser(const char *, FtpStateData *, int escaped);
 static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
 static int ftpRestartable(FtpStateData * ftpState);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
-static void ftpAuthRequired(HttpReply * reply, request_t * request, const char *realm);
+static void ftpAuthRequired(HttpReply * reply, HttpRequest * request, const char *realm);
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 static void ftpUnhack(FtpStateData * ftpState);
 static void ftpScheduleReadControlReply(FtpStateData *, int);
@@ -1267,7 +1267,7 @@ ftpCheckAuth(FtpStateData * ftpState, const HttpHeader * req_hdr)
 static void
 ftpCheckUrlpath(FtpStateData * ftpState)
 {
-    request_t *request = ftpState->request;
+    HttpRequest *request = ftpState->request;
     int l;
     const char *t;
 
@@ -1303,7 +1303,7 @@ ftpCheckUrlpath(FtpStateData * ftpState)
 static void
 ftpBuildTitleUrl(FtpStateData * ftpState)
 {
-    request_t *request = ftpState->request;
+    HttpRequest *request = ftpState->request;
 
     ftpState->title_url = "ftp://";
 
@@ -1348,7 +1348,7 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
 void
 ftpStart(FwdState * fwd)
 {
-    request_t *request = fwd->request;
+    HttpRequest *request = fwd->request;
     StoreEntry *entry = fwd->entry;
     int fd = fwd->server_fd;
     LOCAL_ARRAY(char, realm, 8192);
@@ -3125,7 +3125,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 }
 
 static void
-ftpAuthRequired(HttpReply * old_reply, request_t * request, const char *realm)
+ftpAuthRequired(HttpReply * old_reply, HttpRequest * request, const char *realm)
 {
     ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED);
     HttpReply *rep;
@@ -3139,7 +3139,7 @@ ftpAuthRequired(HttpReply * old_reply, request_t * request, const char *realm)
 }
 
 char *
-ftpUrlWith2f(const request_t * request)
+ftpUrlWith2f(const HttpRequest * request)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
     LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);

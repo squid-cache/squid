@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.91 2003/07/28 08:57:49 adrian Exp $
+ * $Id: access_log.cc,v 1.92 2003/08/10 11:00:40 robertc Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1659,7 +1659,7 @@ void
 headersLog(int cs, int pq, method_t m, void *data)
 {
     HttpReply *rep;
-    request_t *req;
+    HttpRequest *req;
     unsigned short magic = 0;
     unsigned char M = (unsigned char) m;
     unsigned short S;

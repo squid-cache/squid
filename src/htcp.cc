@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.55 2003/07/17 22:22:53 wessels Exp $
+ * $Id: htcp.cc,v 1.56 2003/08/10 11:00:43 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -142,7 +142,7 @@ public:
 
 private:
     static MemPool *pool;
-    request_t *checkHitRequest;
+    HttpRequest *checkHitRequest;
 
     struct sockaddr_in *from;
     htcpDataHeader *dhdr;
@@ -1201,7 +1201,7 @@ htcpInit(void)
 }
 
 void
-htcpQuery(StoreEntry * e, request_t * req, peer * p)
+htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 {
     cache_key *save_key;
     char *pkt;

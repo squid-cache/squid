@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.30 2003/08/04 22:14:41 robertc Exp $
+ * $Id: client_side_request.cc,v 1.31 2003/08/10 11:00:42 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -277,7 +277,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     http_version_t http_ver =
         {1, 0};
     clientHttpRequest *http = new ClientHttpRequest;
-    request_t *request;
+    HttpRequest *request;
     StoreIOBuffer tempBuffer;
     http->http_ver = http_ver;
     http->setConn(NULL);
@@ -445,7 +445,7 @@ clientAccessCheckDone(int answer, void *data)
 static int
 clientCachable(clientHttpRequest * http)
 {
-    request_t *req = http->request;
+    HttpRequest *req = http->request;
     method_t method = req->method;
 
     if (req->protocol == PROTO_HTTP)
@@ -487,7 +487,7 @@ static int
 clientHierarchical(clientHttpRequest * http)
 {
     const char *url = http->uri;
-    request_t *request = http->request;
+    HttpRequest *request = http->request;
     method_t method = request->method;
     const wordlist *p = NULL;
 
@@ -539,7 +539,7 @@ clientHierarchical(clientHttpRequest * http)
 static void
 clientInterpretRequestHeaders(clientHttpRequest * http)
 {
-    request_t *request = http->request;
+    HttpRequest *request = http->request;
     const HttpHeader *req_hdr = &request->header;
     int no_cache = 0;
 #if !(ESI) || defined(USE_USERAGENT_LOG) || defined(USE_REFERER_LOG)
@@ -711,8 +711,8 @@ clientRedirectDone(void *data, char *result)
     }
 
     clientHttpRequest *http = context->http;
-    request_t *new_request = NULL;
-    request_t *old_request = http->request;
+    HttpRequest *new_request = NULL;
+    HttpRequest *old_request = http->request;
     debug(85, 5) ("clientRedirectDone: '%s' result=%s\n", http->uri,
                   result ? result : "NULL");
     assert(context->redirect_state == REDIRECT_PENDING);

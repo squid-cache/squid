@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.6 2003/08/04 22:14:41 robertc Exp $
+ * $Id: HttpRequest.h,v 1.7 2003/08/10 11:00:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,14 +39,14 @@
 #include "client_side.h"
 
 /*  Http Request */
-extern request_t *requestCreate(method_t, protocol_t, const char *urlpath);
-extern void requestDestroy(request_t *);
-extern request_t *requestLink(request_t *);
-extern void requestUnlink(request_t *);
-extern int httpRequestParseHeader(request_t * req, const char *parse_start);
-extern void httpRequestSwapOut(const request_t * req, StoreEntry * e);
-extern void httpRequestPack(const request_t * req, Packer * p);
-extern int httpRequestPrefixLen(const request_t * req);
+extern HttpRequest *requestCreate(method_t, protocol_t, const char *urlpath);
+extern void requestDestroy(HttpRequest *);
+extern HttpRequest *requestLink(HttpRequest *);
+extern void requestUnlink(HttpRequest *);
+extern int httpRequestParseHeader(HttpRequest * req, const char *parse_start);
+extern void httpRequestSwapOut(const HttpRequest * req, StoreEntry * e);
+extern void httpRequestPack(const HttpRequest * req, Packer * p);
+extern int httpRequestPrefixLen(const HttpRequest * req);
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 extern int httpRequestHdrAllowedByName(http_hdr_type id);
 
@@ -103,7 +103,5 @@ public:
 private:
     static MemPool *Pool;
 };
-
-typedef HttpRequest request_t;
 
 #endif /* SQUID_HTTPREQUEST_H */

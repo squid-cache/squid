@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.7 2003/08/10 03:59:19 robertc Exp $
+ * $Id: client_side.h,v 1.8 2003/08/10 11:00:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -161,7 +161,7 @@ public:
     struct
     {
         size_t size_left;	/* How much body left to process */
-        request_t *request;	/* Parameters passed to clientReadBody */
+        HttpRequest *request;	/* Parameters passed to clientReadBody */
         char *buf;
         size_t bufsize;
         CBCB *callback;

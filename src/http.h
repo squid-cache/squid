@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.8 2003/07/14 14:16:00 robertc Exp $
+ * $Id: http.h,v 1.9 2003/08/10 11:00:43 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,13 +49,13 @@ public:
     int cacheableReply();
 
     StoreEntry *entry;
-    request_t *request;
+    HttpRequest *request;
     char *reply_hdr;
     size_t reply_hdr_size;
     int reply_hdr_state;
     peer *_peer;		/* peer request made to */
     int eof;			/* reached end-of-object? */
-    request_t *orig_request;
+    HttpRequest *orig_request;
     int fd;
     http_state_flags flags;
     FwdState *fwd;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.23 2003/02/21 22:50:07 robertc Exp $
+ * $Id: carp.cc,v 1.24 2003/08/10 11:00:42 robertc Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -154,7 +154,7 @@ carpInit(void)
 }
 
 peer *
-carpSelectParent(request_t * request)
+carpSelectParent(HttpRequest * request)
 {
     int k;
     const char *c;

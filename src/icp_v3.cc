@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.38 2003/02/21 22:50:09 robertc Exp $
+ * $Id: icp_v3.cc,v 1.39 2003/08/10 11:00:43 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -54,7 +54,7 @@ doV3Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
 {
     /* We have a valid packet */
     char *url = buf + sizeof(icp_common_t) + sizeof(u_int32_t);
-    request_t *icp_request = icpGetRequest (url, header.reqnum, fd, &from);
+    HttpRequest *icp_request = icpGetRequest (url, header.reqnum, fd, &from);
 
     if (!icp_request)
         return;

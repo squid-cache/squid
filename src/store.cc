@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.572 2003/07/22 15:23:02 robertc Exp $
+ * $Id: store.cc,v 1.573 2003/08/10 11:00:44 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -489,7 +489,7 @@ storeGet(const cache_key * key)
 }
 
 void
-StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, request_t * request, const method_t method)
+StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const method_t method)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublicByRequestMethod( request, method);
@@ -501,7 +501,7 @@ StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, request_t * request
 }
 
 void
-StoreEntry::getPublicByRequest (StoreClient *aClient, request_t * request)
+StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublicByRequest (request);
@@ -531,13 +531,13 @@ storeGetPublic(const char *uri, const method_t method)
 }
 
 StoreEntry *
-storeGetPublicByRequestMethod(request_t * req, const method_t method)
+storeGetPublicByRequestMethod(HttpRequest * req, const method_t method)
 {
     return storeGet(storeKeyPublicByRequestMethod(req, method));
 }
 
 StoreEntry *
-storeGetPublicByRequest(request_t * req)
+storeGetPublicByRequest(HttpRequest * req)
 {
     StoreEntry *e = storeGetPublicByRequestMethod(req, req->method);
 
@@ -621,7 +621,7 @@ storeSetPublicKey(StoreEntry * e)
 
     if (mem->request) {
         StoreEntry *pe;
-        request_t *request = mem->request;
+        HttpRequest *request = mem->request;
 
         if (!mem->vary_headers) {
             /* First handle the case where the object no longer varies */
@@ -1846,7 +1846,7 @@ StoreEntry::trimMemory()
 }
 
 bool
-StoreEntry::modifiedSince(request_t * request) const
+StoreEntry::modifiedSince(HttpRequest * request) const
 {
     int object_length;
     time_t mod_time = lastmod;

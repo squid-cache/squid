@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.96 2003/08/04 22:14:41 robertc Exp $
+ * $Id: asn.cc,v 1.97 2003/08/10 11:00:40 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -79,7 +79,7 @@ struct _ASState
 {
     StoreEntry *entry;
     store_client *sc;
-    request_t *request;
+    HttpRequest *request;
     int as_number;
     off_t offset;
     int reqofs;
@@ -215,7 +215,7 @@ asnCacheStart(int as)
 {
     LOCAL_ARRAY(char, asres, 4096);
     StoreEntry *e;
-    request_t *req;
+    HttpRequest *req;
     ASState *asState;
     asState = cbdataAlloc(ASState);
     asState->dataRead = 0;

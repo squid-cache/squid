@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.42 2003/08/04 22:14:40 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.43 2003/08/10 11:00:40 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -39,7 +39,7 @@
 #include "authenticate.h"
 #include "HttpHeaderRange.h"
 
-static void httpRequestHdrCacheInit(request_t * req);
+static void httpRequestHdrCacheInit(HttpRequest * req);
 MemPool (*HttpRequest::Pool)(NULL);
 
 void *
@@ -99,10 +99,10 @@ HttpRequest::HttpRequest()  : header(hoRequest)
 #endif
 }
 
-request_t *
+HttpRequest *
 requestCreate(method_t method, protocol_t protocol, const char *aUrlpath)
 {
-    request_t *req = new HttpRequest;
+    HttpRequest *req = new HttpRequest;
     req->method = method;
     req->protocol = protocol;
 
@@ -123,7 +123,7 @@ requestCreate(method_t method, protocol_t protocol, const char *aUrlpath)
 }
 
 void
-requestDestroy(request_t * req)
+requestDestroy(HttpRequest * req)
 {
     assert(req);
 
@@ -158,8 +158,8 @@ requestDestroy(request_t * req)
     delete req;
 }
 
-request_t *
-requestLink(request_t * request)
+HttpRequest *
+requestLink(HttpRequest * request)
 {
     assert(request);
     request->link_count++;
@@ -167,7 +167,7 @@ requestLink(request_t * request)
 }
 
 void
-requestUnlink(request_t * request)
+requestUnlink(HttpRequest * request)
 {
     if (!request)
         return;
@@ -181,7 +181,7 @@ requestUnlink(request_t * request)
 }
 
 int
-httpRequestParseHeader(request_t * req, const char *parse_start)
+httpRequestParseHeader(HttpRequest * req, const char *parse_start)
 {
     const char *blk_start, *blk_end;
 
@@ -198,7 +198,7 @@ httpRequestParseHeader(request_t * req, const char *parse_start)
 
 /* swaps out request using httpRequestPack */
 void
-httpRequestSwapOut(const request_t * req, StoreEntry * e)
+httpRequestSwapOut(const HttpRequest * req, StoreEntry * e)
 {
     Packer p;
     assert(req && e);
@@ -209,7 +209,7 @@ httpRequestSwapOut(const request_t * req, StoreEntry * e)
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-httpRequestPack(const request_t * req, Packer * p)
+httpRequestPack(const HttpRequest * req, Packer * p)
 {
     assert(req && p);
     /* pack request-line */
@@ -223,7 +223,7 @@ httpRequestPack(const request_t * req, Packer * p)
 
 #if UNUSED_CODE
 void
-httpRequestSetHeaders(request_t * req, method_t method, const char *uri, const char *header_str)
+httpRequestSetHeaders(HttpRequest * req, method_t method, const char *uri, const char *header_str)
 {
     assert(req && uri && header_str);
     assert(!req->header.len);
@@ -234,7 +234,7 @@ httpRequestSetHeaders(request_t * req, method_t method, const char *uri, const c
 
 /* returns the length of request line + headers + crlf */
 int
-httpRequestPrefixLen(const request_t * req)
+httpRequestPrefixLen(const HttpRequest * req)
 {
     assert(req);
     return strlen(RequestMethodStr[req->method]) + 1 +
@@ -259,9 +259,9 @@ httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
     return 1;
 }
 
-/* sync this routine when you update request_t struct */
+/* sync this routine when you update HttpRequest struct */
 static void
-httpRequestHdrCacheInit(request_t * req)
+httpRequestHdrCacheInit(HttpRequest * req)
 {
     const HttpHeader *hdr = &req->header;
     /*  const char *str; */
@@ -316,7 +316,7 @@ request_flags::clearResetTCP()
 }
 
 bool
-request_t::multipartRangeRequest() const
+HttpRequest::multipartRangeRequest() const
 {
     return (range && range->specs.count > 1);
 }

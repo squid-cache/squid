@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.26 2003/07/14 14:16:02 robertc Exp $
+ * $Id: whois.cc,v 1.27 2003/08/10 11:00:45 robertc Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -49,7 +49,7 @@ public:
     void readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrno);
     void setReplyToOK(StoreEntry *entry);
     StoreEntry *entry;
-    request_t *request;
+    HttpRequest *request;
     FwdState *fwd;
     char buf[BUFSIZ];
     bool dataWritten;

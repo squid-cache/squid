@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.12 2003/07/11 01:40:34 robertc Exp $
+ * $Id: DelayId.cc,v 1.13 2003/08/10 11:00:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -93,7 +93,7 @@ DelayId::operator bool() const
 DelayId
 DelayId::DelayClient(clientHttpRequest * http)
 {
-    request_t *r;
+    HttpRequest *r;
     unsigned short pool;
     assert(http);
     r = http->request;

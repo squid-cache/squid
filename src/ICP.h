@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICP.h,v 1.5 2003/03/09 12:29:40 robertc Exp $
+ * $Id: ICP.h,v 1.6 2003/08/10 11:00:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -80,7 +80,7 @@ public:
     ICPState(icp_common_t &);
     virtual ~ ICPState();
     icp_common_t header;
-    request_t *request;
+    HttpRequest *request;
     int fd;
 
     struct sockaddr_in from;
@@ -109,11 +109,11 @@ struct _icpUdpData
 };
 
 
-request_t *
+HttpRequest *
 
 icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in *from);
 
-int icpAccessAllowed(struct sockaddr_in *from, request_t * icp_request);
+int icpAccessAllowed(struct sockaddr_in *from, HttpRequest * icp_request);
 
 SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const struct sockaddr_in *from);
 extern icp_opcode icpGetCommonOpcode();
@@ -126,7 +126,7 @@ SQUIDCEXTERN PF icpHandleUdp;
 SQUIDCEXTERN PF icpUdpSendQueue;
 
 SQUIDCEXTERN void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
-SQUIDCEXTERN int icpCheckUdpHit(StoreEntry *, request_t * request);
+SQUIDCEXTERN int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
 SQUIDCEXTERN void icpConnectionsOpen(void);
 SQUIDCEXTERN void icpConnectionShutdown(void);
 SQUIDCEXTERN void icpConnectionClose(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.28 2003/02/21 22:50:09 robertc Exp $
+ * $Id: internal.cc,v 1.29 2003/08/10 11:00:43 robertc Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -43,7 +43,7 @@
  * return HTTP_NOT_FOUND for others
  */
 void
-internalStart(request_t * request, StoreEntry * entry)
+internalStart(HttpRequest * request, StoreEntry * entry)
 {
     ErrorState *err;
     const char *upath = request->urlpath.buf();

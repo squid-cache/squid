@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.11 2003/07/22 15:23:01 robertc Exp $
+ * $Id: Store.h,v 1.12 2003/08/10 11:00:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -69,7 +69,7 @@ public:
     void delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data);
 
     void setNoDelay (bool const);
-    bool modifiedSince(request_t * request) const;
+    bool modifiedSince(HttpRequest * request) const;
 
     MemObject *mem_obj;
     RemovalPolicyNode repl;
@@ -104,8 +104,8 @@ swap_status_t swap_status:
 
 public:
     static size_t inUseCount();
-    static void getPublicByRequestMethod(StoreClient * aClient, request_t * request, const method_t method);
-    static void getPublicByRequest(StoreClient * aClient, request_t * request);
+    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const method_t method);
+    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
     static void getPublic(StoreClient * aClient, const char *uri, const method_t method);
 
     virtual bool isNull()
@@ -169,8 +169,8 @@ extern void storeEntryReplaceObject(StoreEntry *, HttpReply *);
 SQUIDCEXTERN StoreEntry *new_StoreEntry(int, const char *, const char *);
 SQUIDCEXTERN StoreEntry *storeGet(const cache_key *);
 SQUIDCEXTERN StoreEntry *storeGetPublic(const char *uri, const method_t method);
-SQUIDCEXTERN StoreEntry *storeGetPublicByRequest(request_t * request);
-SQUIDCEXTERN StoreEntry *storeGetPublicByRequestMethod(request_t * request, const method_t method);
+SQUIDCEXTERN StoreEntry *storeGetPublicByRequest(HttpRequest * request);
+SQUIDCEXTERN StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const method_t method);
 SQUIDCEXTERN StoreEntry *storeCreateEntry(const char *, const char *, request_flags, method_t);
 SQUIDCEXTERN void storeSetPublicKey(StoreEntry *);
 SQUIDCEXTERN void storeCreateMemObject(StoreEntry *, const char *, const char *);

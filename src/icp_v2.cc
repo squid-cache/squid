@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.81 2003/07/06 21:50:56 hno Exp $
+ * $Id: icp_v2.cc,v 1.82 2003/08/10 11:00:43 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -309,7 +309,7 @@ icpUdpSend(int fd,
 }
 
 int
-icpCheckUdpHit(StoreEntry * e, request_t * request)
+icpCheckUdpHit(StoreEntry * e, HttpRequest * request)
 {
     if (e == NULL)
         return 0;
@@ -393,7 +393,7 @@ icpDenyAccess(struct sockaddr_in *from, char *url, int reqnum, int fd)
 
 int
 
-icpAccessAllowed(struct sockaddr_in *from, request_t * icp_request)
+icpAccessAllowed(struct sockaddr_in *from, HttpRequest * icp_request)
 {
     ACLChecklist checklist;
     checklist.src_addr = from->sin_addr;
@@ -411,7 +411,7 @@ icpGetUrlToSend(char *url)
         return url;
 }
 
-request_t *
+HttpRequest *
 
 icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in * from)
 {
@@ -422,7 +422,7 @@ icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in * from)
         return NULL;
     }
 
-    request_t *result;
+    HttpRequest *result;
 
     if ((result = urlParse(METHOD_GET, url)) == NULL)
         icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from);
@@ -440,7 +440,7 @@ doV2Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
     u_int32_t flags = 0;
     /* We have a valid packet */
     char *url = buf + sizeof(icp_common_t) + sizeof(u_int32_t);
-    request_t *icp_request = icpGetRequest(url, header.reqnum, fd, &from);
+    HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, &from);
 
     if (!icp_request)
         return;

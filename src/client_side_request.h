@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.16 2003/08/04 22:14:41 robertc Exp $
+ * $Id: client_side_request.h,v 1.17 2003/08/10 11:00:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -76,7 +76,7 @@ public:
     _SQUID_INLINE_ ConnStateData::Pointer getConn();
     _SQUID_INLINE_ ConnStateData::Pointer const getConn() const;
     _SQUID_INLINE_ void setConn(ConnStateData::Pointer);
-    request_t *request;		/* Parsed URL ... */
+    HttpRequest *request;		/* Parsed URL ... */
     char *uri;
     char *log_uri;
 

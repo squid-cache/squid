@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.320 2003/07/14 14:16:00 robertc Exp $
+ * $Id: neighbors.cc,v 1.321 2003/08/10 11:00:43 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -44,8 +44,8 @@
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
 
-static int peerAllowedToUse(const peer *, request_t *);
-static int peerWouldBePinged(const peer *, request_t *);
+static int peerAllowedToUse(const peer *, HttpRequest *);
+static int peerWouldBePinged(const peer *, HttpRequest *);
 static void neighborRemove(peer *);
 static void neighborAlive(peer *, const MemObject *, const icp_common_t *);
 #if USE_HTCP
@@ -113,7 +113,7 @@ whichPeer(const struct sockaddr_in * from)
 }
 
 peer_t
-neighborType(const peer * p, const request_t * request)
+neighborType(const peer * p, const HttpRequest * request)
 {
 
     const struct _domain_type *d = NULL;
@@ -134,7 +134,7 @@ neighborType(const peer * p, const request_t * request)
  * from PEER.
  */
 static int
-peerAllowedToUse(const peer * p, request_t * request)
+peerAllowedToUse(const peer * p, HttpRequest * request)
 {
 
     const struct _domain_ping *d = NULL;
@@ -201,7 +201,7 @@ peerAllowedToUse(const peer * p, request_t * request)
 
 /* Return TRUE if it is okay to send an ICP request to this peer.   */
 static int
-peerWouldBePinged(const peer * p, request_t * request)
+peerWouldBePinged(const peer * p, HttpRequest * request)
 {
     if (!peerAllowedToUse(p, request))
         return 0;
@@ -240,7 +240,7 @@ peerWouldBePinged(const peer * p, request_t * request)
 
 /* Return TRUE if it is okay to send an HTTP request to this peer. */
 int
-peerHTTPOkay(const peer * p, request_t * request)
+peerHTTPOkay(const peer * p, HttpRequest * request)
 {
     if (!peerAllowedToUse(p, request))
         return 0;
@@ -256,7 +256,7 @@ peerHTTPOkay(const peer * p, request_t * request)
 }
 
 int
-neighborsCount(request_t * request)
+neighborsCount(HttpRequest * request)
 {
     peer *p = NULL;
     int count = 0;
@@ -272,7 +272,7 @@ neighborsCount(request_t * request)
 
 #if UNUSED_CODE
 peer *
-getSingleParent(request_t * request)
+getSingleParent(HttpRequest * request)
 {
     peer *p = NULL;
     peer *q = NULL;
@@ -301,7 +301,7 @@ getSingleParent(request_t * request)
 #endif
 
 peer *
-getFirstUpParent(request_t * request)
+getFirstUpParent(HttpRequest * request)
 {
     peer *p = NULL;
 
@@ -323,7 +323,7 @@ getFirstUpParent(request_t * request)
 }
 
 peer *
-getRoundRobinParent(request_t * request)
+getRoundRobinParent(HttpRequest * request)
 {
     peer *p;
     peer *q = NULL;
@@ -353,7 +353,7 @@ getRoundRobinParent(request_t * request)
 }
 
 peer *
-getWeightedRoundRobinParent(request_t * request)
+getWeightedRoundRobinParent(HttpRequest * request)
 {
     peer *p;
     peer *q = NULL;
@@ -417,7 +417,7 @@ peerClearRR(void *data)
 }
 
 peer *
-getDefaultParent(request_t * request)
+getDefaultParent(HttpRequest * request)
 {
     peer *p = NULL;
 
@@ -447,7 +447,7 @@ getDefaultParent(request_t * request)
  * DOWN parent.
  */
 peer *
-getAnyParent(request_t * request)
+getAnyParent(HttpRequest * request)
 {
     peer *p = NULL;
 
@@ -575,7 +575,7 @@ neighbors_init(void)
 }
 
 int
-neighborsUdpPing(request_t * request,
+neighborsUdpPing(HttpRequest * request,
                  StoreEntry * entry,
                  IRCB * callback,
                  void *callback_data,
@@ -771,7 +771,7 @@ neighborsUdpPing(request_t * request,
 
 /* lookup the digest of a given peer */
 lookup_t
-peerDigestLookup(peer * p, request_t * request)
+peerDigestLookup(peer * p, HttpRequest * request)
 {
 #if USE_CACHE_DIGESTS
     const cache_key *key = request ? storeKeyPublicByRequest(request) : NULL;
@@ -818,7 +818,7 @@ peerDigestLookup(peer * p, request_t * request)
 
 /* select best peer based on cache digests */
 peer *
-neighborsDigestSelect(request_t * request)
+neighborsDigestSelect(HttpRequest * request)
 {
     peer *best_p = NULL;
 #if USE_CACHE_DIGESTS
@@ -885,7 +885,7 @@ neighborsDigestSelect(request_t * request)
 }
 
 void
-peerNoteDigestLookup(request_t * request, peer * p, lookup_t lookup)
+peerNoteDigestLookup(HttpRequest * request, peer * p, lookup_t lookup)
 {
 #if USE_CACHE_DIGESTS
 
