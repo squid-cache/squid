@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.217 1997/11/05 05:29:27 wessels Exp $
+ * $Id: http.cc,v 1.218 1997/11/06 18:29:31 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -512,7 +512,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	strncat(httpState->reply_hdr, buf, room < size ? room : size);
 	hdr_len += room < size ? room : size;
 	if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
-	    debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", storeKeyText(entry->key));
+	    debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", httpState->reply_hdr);
 	    httpState->reply_hdr_state += 2;
 	    reply->code = 555;
 	    return;
