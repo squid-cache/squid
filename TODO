@@ -16,6 +16,7 @@ Our Todo List
 	- Allow for 'backup' parents
 	- An orderd list of siblings to try.
 	- Hash function load balancing
+(2) Write src/store_key_md5.c and lib/md5.c
 
 (3) request-range
 (3) hit metering
@@ -33,6 +34,7 @@ Our Todo List
     distant_peer_deny   200  75  10
 (3) Resource limits.
 (3) SIGHUP should reread error text files
+(3) Make swap.state binary with fixed-size cache keys
 
 (4) support ftp://host/pub;type=d
 (4) FTP PUT
