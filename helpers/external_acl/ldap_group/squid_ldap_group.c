@@ -1,7 +1,7 @@
 /*
  * squid_ldap_group: lookup group membership in LDAP
  *
- * (C)2002 MARA Systems AB
+ * (C)2002,2003 MARA Systems AB
  *
  * License: squid_ldap_group is free software; you can redistribute it
  * and/or modify it under the terms of the GNU General Public License
@@ -10,7 +10,7 @@
  * 
  * Authors:
  *  Flavio Pescuma <flavio@marasystems.com>
- *  Henriok Nordstrom <hno@marasystems.com>
+ *  Henrik Nordstrom <hno@marasystems.com>
  *  MARA Systems AB, Sweden <http://www.marasystems.com>
  *
  * With contributions from others mentioned in the change histor section
@@ -35,6 +35,10 @@
  *
  * History:
  *
+ * Version 2.9
+ * 2003-01-03 Henrik Nordstrom <hno@marasystems.com>
+ *		Fixed missing string termination on ldap_escape_vale,
+ *		and corrected build problem with LDAPv2 libraries
  * Version 2.8
  * 2002-11-27 Henrik Nordstrom <hno@marasystems.com>
  * 		Replacement for ldap_build_filter. Also changed
@@ -139,9 +143,11 @@ static int noreferrals = 0;
 static int debug = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
 
+#ifdef LDAP_VERSION3
 /* Added for TLS support and version 3 */
 static int use_tls = 0;
 static int version = -1;
+#endif
 
 static int searchLDAP(LDAP * ld, char *group, char *user, char *extension_dn);
 
@@ -349,6 +355,7 @@ main(int argc, char **argv)
 	case 'R':
 	    noreferrals = !noreferrals;
 	    break;
+#ifdef LDAP_VERSION3
 	case 'v':
 	    switch (atoi(value)) {
 	    case 2:
@@ -371,6 +378,7 @@ main(int argc, char **argv)
 	    version = LDAP_VERSION3;
 	    use_tls = 1;
 	    break;
+#endif
 	case 'd':
 	    debug = 1;
 	    break;
@@ -449,6 +457,7 @@ main(int argc, char **argv)
 			ldapServer, port);
 		    break;
 		}
+#ifdef LDAP_VERSION3
 		if (version == -1) {
 		    version = LDAP_VERSION2;
 		}
@@ -466,6 +475,7 @@ main(int argc, char **argv)
 		    ld = NULL;
 		    break;
 		}
+#endif
 		squid_ldap_set_referrals(ld, !noreferrals);
 		squid_ldap_set_aliasderef(ld, aliasderef);
 		if (binddn && bindpasswd && *binddn && *bindpasswd) {
@@ -512,10 +522,10 @@ main(int argc, char **argv)
 }
 
 static int
-ldap_escape_value(char *filter, int size, const char *src)
+ldap_escape_value(char *escaped, int size, const char *src)
 {
     int n = 0;
-    while (size > 0 && *src) {
+    while (size > 4 && *src) {
 	switch(*src) {
 	case '*':
 	case '(':
@@ -524,17 +534,18 @@ ldap_escape_value(char *filter, int size, const char *src)
 	    n += 3;
 	    size -= 3;
 	    if (size > 0) {
-		*filter++ = '\\';
-		snprintf(filter, 3, "%02x", (int)*src++);
-		filter+=2;
+		*escaped++ = '\\';
+		snprintf(escaped, 3, "%02x", (int)*src++);
+		escaped+=2;
 	    }
 	    break;
 	default:
-	    *filter++ = *src++;
+	    *escaped++ = *src++;
 	    n++;
 	    size--;
 	}
     }
+    *escaped = '\0';
     return n;
 }
 
