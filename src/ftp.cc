@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.171 1997/11/18 01:02:37 wessels Exp $
+ * $Id: ftp.cc,v 1.172 1997/11/18 20:38:25 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -717,7 +717,6 @@ ftpReadData(int fd, void *data)
     } else {
 	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	    ftpParseListing(ftpState, len);
-	    InvokeHandlers(entry);
 	} else {
 	    assert(ftpState->data.offset == 0);
 	    storeAppend(entry, ftpState->data.buf, len);
