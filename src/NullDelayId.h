@@ -1,6 +1,6 @@
 
 /*
- * $Id: NullDelayId.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
+ * $Id: NullDelayId.h,v 1.3 2003/03/10 11:13:36 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -53,7 +53,7 @@ public:
     void *operator new(size_t);
     void operator delete (void *);
     virtual void deleteSelf() const;
-    virtual int bytesWanted (int min, int max) const {return XMAX(min,max);}
+    virtual int bytesWanted (int minimum, int maximum) const {return max(minimum,maximum);}
 
     virtual void bytesIn(int qty) {}}
 
