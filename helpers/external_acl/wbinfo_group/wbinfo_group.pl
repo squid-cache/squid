@@ -12,12 +12,11 @@
 #   Jerry Murdock <jmurdock@itraktech.com>
 #
 # Version history:
+#   2004-08-15 Henrik Nordstrom <hno@squid-cache.org>
+#		Helper protocol changed to URL escaped in Squid-3.0
 #   2002-07-05 Jerry Murdock <jmurdock@itraktech.com>
 #		Initial release
 #
-
-# external_acl uses shell style lines in it's protocol
-require 'shellwords.pl';
 
 # Disable output buffering
 $|=1;           
@@ -47,7 +46,9 @@ sub check {
 while (<STDIN>) {
         chop;
 	&debug ("Got $_ from squid");
-        ($user, $group) = &shellwords;
+        ($user, $group) = split(/\s+/);
+	$user =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("c",hex($1))/eg;
+	$group =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("c",hex($1))/eg;
 	$ans = &check($user, $group);
 	&debug ("Sending $ans to squid");
 	print "$ans\n";
