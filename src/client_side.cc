@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.640 2003/06/19 18:56:59 hno Exp $
+ * $Id: client_side.cc,v 1.641 2003/06/20 01:01:00 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -462,15 +462,6 @@ ClientHttpRequest::updateCounters()
     clientUpdateHierCounters(&request->hier);
 }
 
-MemObject *
-ClientHttpRequest::memObject() const
-{
-    if (entry)
-        return entry->mem_obj;
-
-    return NULL;
-}
-
 void
 clientPrepareLogWithRequestDetails(request_t * request, AccessLogEntry * aLogEntry)
 {
@@ -873,9 +864,9 @@ ClientSocketContext::packRange(const char **buf,
          */
 
         if (http->multipartRangeRequest() && i->debt() == i->currentSpec()->length) {
-            assert(http->entry->mem_obj);
+            assert(http->memObject());
             clientPackRangeHdr(
-                http->entry->mem_obj->getReply(),	/* original reply */
+                http->memObject()->getReply(),	/* original reply */
                 i->currentSpec(),		/* current range */
                 i->boundary,	/* boundary, the same for all */
                 mb);
@@ -939,7 +930,7 @@ ClientHttpRequest::mRangeCLen()
     int clen = 0;
     MemBuf mb;
 
-    assert(entry->mem_obj);
+    assert(memObject());
 
     memBufDefInit(&mb);
     HttpHdrRange::iterator pos = request->range->begin();
@@ -947,7 +938,7 @@ ClientHttpRequest::mRangeCLen()
     while (pos != request->range->end()) {
         /* account for headers for this range */
         memBufReset(&mb);
-        clientPackRangeHdr(entry->mem_obj->getReply(),
+        clientPackRangeHdr(memObject()->getReply(),
                            *pos, range_iter.boundary, &mb);
         clen += mb.size;
 
@@ -1003,7 +994,7 @@ clientIfRangeMatch(clientHttpRequest * http, HttpReply * rep)
 
     /* got modification time? */
     if (spec.time >= 0) {
-        return http->entry->lastmod <= spec.time;
+        return http->storeEntry()->lastmod <= spec.time;
     }
 
     assert(0);			/* should not happen */
@@ -1019,7 +1010,7 @@ ClientHttpRequest::rangeBoundaryStr() const
     const char *key;
     String b (full_appname_string);
     b.append (":",1);
-    key = entry->getMD5Text();
+    key = storeEntry()->getMD5Text();
     b.append(key, strlen(key));
     return b;
 }
@@ -1048,7 +1039,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
 
     else if (rep->content_length < 0)
         range_err = "unknown length";
-    else if (rep->content_length != http->entry->mem_obj->getReply()->content_length)
+    else if (rep->content_length != http->memObject()->getReply()->content_length)
         range_err = "INCONSISTENT length";	/* a bug? */
     else if (httpHeaderHas(&http->request->header, HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
         range_err = "If-Range match failed";
@@ -1439,7 +1430,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, v
 void
 ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag)
 {
-    StoreEntry *entry = http->entry;
+    StoreEntry *entry = http->storeEntry();
     http->out.size += size;
     assert(fd > -1);
     debug(33, 5) ("clientWriteComplete: FD %d, sz %ld, err %d, off %ld, len %d\n",

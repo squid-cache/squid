@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.22 2003/05/18 00:04:07 robertc Exp $
+ * $Id: client_side_request.cc,v 1.23 2003/06/20 01:01:00 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -52,6 +52,7 @@
 #include "client_side_reply.h"
 #include "Store.h"
 #include "HttpReply.h"
+#include "MemObject.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -867,8 +868,9 @@ ClientHttpRequest::httpStart()
 bool
 ClientHttpRequest::gotEnough() const
 {
+    /** TODO: should be querying the stream. */
     int contentLength =
-        httpReplyBodySize(request->method, entry->mem_obj->getReply());
+        httpReplyBodySize(request->method, memObject()->getReply());
     assert(contentLength >= 0);
 
     if (out.offset < contentLength)
@@ -900,3 +902,14 @@ ClientHttpRequest::isReplyBodyTooLarge(ssize_t clen) const
 
     return clen > maxReplyBodySize();
 }
+
+void
+ClientHttpRequest::storeEntry(StoreEntry *newEntry)
+{
+    entry_ = newEntry;
+}
+
+
+#ifndef _USE_INLINE_
+#include "client_side_request.cci"
+#endif

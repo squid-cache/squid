@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.148 2003/03/04 01:40:31 robertc Exp $
+ * $Id: wais.cc,v 1.149 2003/06/20 01:01:01 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #include "HttpRequest.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
+#include "MemObject.h"
 #endif
 #include "comm.h"
 
