@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.262 1997/06/21 04:55:58 wessels Exp $
+ * $Id: store.cc,v 1.263 1997/06/26 22:36:00 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1395,8 +1395,8 @@ storeDoRebuildFromDisk(void *data)
 	     * swapfiles back to StoreEntrys, we don't know the state
 	     * of the entry using that file.  */
 	    /* We'll assume the existing entry is valid, probably because
-	       were in a slow rebuild and the the swap file number got taken
-	       and the validation procedure hasn't run. */
+	     * were in a slow rebuild and the the swap file number got taken
+	     * and the validation procedure hasn't run. */
 	    assert(RB->need_to_validate);
 	    RB->clashcount++;
 	    continue;
@@ -1470,7 +1470,7 @@ storeCleanup(void *data)
     list = list->next;
     e = (StoreEntry *) hash_lookup(store_table, curr->key);
     if (e && !BIT_TEST(e->flag, ENTRY_VALIDATED)) {
-        storeLockObject(e);
+	storeLockObject(e);
 	storeValidate(e, storeCleanupComplete, e);
 	if ((++validnum & 0xFFF) == 0)
 	    debug(20, 1) ("  %7d Entries Validated so far.\n", validnum);
@@ -1670,7 +1670,7 @@ storeAbort(StoreEntry * e, log_type abort_code, const char *msg, int cbflag)
     assert(mem != NULL);
     safe_free(mem->e_abort_msg);
     if (msg)
-        mem->e_abort_msg = xstrdup(msg);
+	mem->e_abort_msg = xstrdup(msg);
     debug(20, 6) ("storeAbort: %s %s\n", log_tags[abort_code], e->key);
     storeNegativeCache(e);
     storeReleaseRequest(e);
@@ -2757,6 +2757,7 @@ void
 storeRegisterAbort(StoreEntry * e, STABH * cb, void *data)
 {
     MemObject *mem = e->mem_obj;
+    debug(0, 0) ("storeRegisterAbort: %s\n", e->url);
     assert(mem);
     assert(mem->abort.callback == NULL);
     mem->abort.callback = cb;
@@ -2767,6 +2768,7 @@ void
 storeUnregisterAbort(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
+    debug(0, 0) ("storeUnregisterAbort: %s\n", e->url);
     assert(mem);
     mem->abort.callback = NULL;
 }

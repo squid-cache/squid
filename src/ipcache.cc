@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.124 1997/06/18 00:19:56 wessels Exp $
+ * $Id: ipcache.cc,v 1.125 1997/06/26 22:35:53 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -158,7 +158,7 @@ static void ipcacheNudgeQueue _PARAMS((void));
 static void ipcacheChangeKey _PARAMS((ipcache_entry * i));
 
 static ipcache_addrs static_addrs;
-static hash_table * ip_table = NULL;
+static hash_table *ip_table = NULL;
 static struct ipcacheQueueData *ipcacheQueueHead = NULL;
 static struct ipcacheQueueData **ipcacheQueueTailP = &ipcacheQueueHead;
 static int queue_length = 0;
@@ -242,7 +242,7 @@ ipcache_release(ipcache_entry * i)
 	debug(14, 0) ("ipcache_release: Could not find key '%s'\n", i->name);
 	return;
     }
-    assert (i == (ipcache_entry *) table_entry);
+    assert(i == (ipcache_entry *) table_entry);
     if (i->locks) {
 	i->expires = squid_curtime;
 	ipcacheChangeKey(i);
@@ -450,20 +450,20 @@ ipcache_call_pending(ipcache_entry * i)
     i->lastref = squid_curtime;
     ipcacheLockEntry(i);
     while (i->pending_head != NULL) {
-        p = i->pending_head;
-        i->pending_head = p->next;
-        if (p->handler) {
-            nhandler++;
-            dns_error_message = i->error_message;
- 	    if (cbdataValid(p->handlerData)) {
-                p->handler(i->status == IP_CACHED ? &i->addrs : NULL,
-                    p->handlerData);
+	p = i->pending_head;
+	i->pending_head = p->next;
+	if (p->handler) {
+	    nhandler++;
+	    dns_error_message = i->error_message;
+	    if (cbdataValid(p->handlerData)) {
+		p->handler(i->status == IP_CACHED ? &i->addrs : NULL,
+		    p->handlerData);
 	    }
-            cbdataUnlock(p->handlerData);
-        }
-        safe_free(p);
+	    cbdataUnlock(p->handlerData);
+	}
+	safe_free(p);
     }
-    i->pending_head = NULL;     /* nuke list */
+    i->pending_head = NULL;	/* nuke list */
     debug(14, 10) ("ipcache_call_pending: Called %d handlers.\n", nhandler);
     ipcacheUnlockEntry(i);
 }
@@ -788,17 +788,17 @@ ipcacheUnregister(const char *name, void *data)
     int n = 0;
     debug(14, 3) ("ipcacheUnregister: FD %d, name '%s'\n", name);
     if ((i = ipcache_get(name)) == NULL)
-        return 0;
+	return 0;
     if (i->status == IP_PENDING || i->status == IP_DISPATCHED) {
-        for (p = i->pending_head; p; p = p->next) {
-            if (p->handlerData != data)
-                continue;
-            p->handler = NULL;
-            n++;
-        }
+	for (p = i->pending_head; p; p = p->next) {
+	    if (p->handlerData != data)
+		continue;
+	    p->handler = NULL;
+	    n++;
+	}
     }
     if (n == 0)
-        debug_trap("ipcacheUnregister: callback data not found");
+	debug_trap("ipcacheUnregister: callback data not found");
     debug(14, 3) ("ipcacheUnregister: unregistered %d handlers\n", n);
     return n;
 }

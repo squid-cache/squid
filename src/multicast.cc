@@ -1,6 +1,6 @@
 
 /*
- * $Id: multicast.cc,v 1.1 1997/06/16 22:02:04 wessels Exp $
+ * $Id: multicast.cc,v 1.2 1997/06/26 22:35:54 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Martin Hamilton
@@ -106,6 +106,6 @@ mcastJoinVizSock(void)
 	debug(1, 0) ("vizSock on FD %d, ttl=%d\n", vizSock, (int) ttl);
     }
 #else
-        debug(1, 0) ("vizSock: Could not join multicast group\n");
+    debug(1, 0) ("vizSock: Could not join multicast group\n");
 #endif
 }

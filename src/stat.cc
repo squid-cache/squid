@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.145 1997/06/21 02:38:16 wessels Exp $
+ * $Id: stat.cc,v 1.146 1997/06/26 22:35:57 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -880,7 +880,7 @@ stat_init(cacheinfo ** object, const char *logfilename)
     debug(18, 5) ("stat_init: Initializing...\n");
     obj = xcalloc(1, sizeof(cacheinfo));
     if (logfilename)
-    	accessLogOpen(logfilename);
+	accessLogOpen(logfilename);
     obj->proto_id = urlParseProtocol;
     obj->proto_newobject = proto_newobject;
     obj->proto_purgeobject = proto_purgeobject;
