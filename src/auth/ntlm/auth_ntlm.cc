@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.16 2001/11/28 08:01:57 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.17 2001/11/30 09:53:15 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -284,7 +284,7 @@ authenticateNTLMDirection(auth_user_request_t * auth_user_request)
     /* null auth_user is checked for by authenticateDirection */
     switch (ntlm_request->auth_state) {
     case AUTHENTICATE_STATE_NONE:	/* no progress at all. */
-	debug(29, 1) ("authenticateNTLMDirection: called before NTLM Authenticate!. Report a bug to squid-dev. au %x\n", auth_user_request);
+	debug(29, 1) ("authenticateNTLMDirection: called before NTLM Authenticate!. Report a bug to squid-dev. au %p\n", auth_user_request);
 	/* fall thru */
     case AUTHENTICATE_STATE_FAILED:
 	return -2;
@@ -563,7 +563,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	if (ntlm_request->auth_state == AUTHENTICATE_STATE_NEGOTIATE) {
 	    /* The helper broke on YR. It automatically
 	     * resets */
-	    debug(29, 1) ("authenticateNTLMHandleReply: Error obtaining challenge from helper: %d. Error returned '%s'\n", lastserver, reply);
+	    debug(29, 1) ("authenticateNTLMHandleReply: Error obtaining challenge from helper: %p. Error returned '%s'\n", lastserver, reply);
 	    /* mark it for starving */
 	    helperstate->starve = 1;
 	    /* resubmit the request. This helper is currently busy, so we will get
