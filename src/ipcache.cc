@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.20 1996/04/10 20:53:46 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.21 1996/04/11 22:52:29 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -912,6 +912,8 @@ int ipcache_dnsHandleRead(fd, data)
 	data->alive = 0;
 	update_dns_child_alive();
 	ipcache_cleanup_pendinglist(data);
+	close(fd);
+	fdstat_close(fd);
 	return 0;
     }
     data->offset += len;

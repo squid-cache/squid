@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.33 1996/04/11 19:23:37 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.34 1996/04/11 22:52:25 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -315,7 +315,7 @@ void addToIPACL(list, ip_str, access)
     q->mask.s_addr = lmask.s_addr;
 }
 
-static void wordlistDestroy(list)
+void wordlistDestroy(list)
      wordlist **list;
 {
     wordlist *w = NULL;
@@ -352,11 +352,25 @@ void wordlistAdd(list, key)
     }
 }
 
-static void addToIntList(list, str)
+void intlistDestroy(list)
+     intlist **list;
+{
+    intlist *w = NULL;
+    intlist *n = NULL;
+
+    for (w = *list; w; w = n) {
+	n = w->next;
+	safe_free(w);
+    }
+    *list = NULL;
+}
+
+static void intlistAdd(list, str)
      intlist **list;
      char *str;
 {
-    intlist *p, *q;
+    intlist *p = NULL;
+    intlist *q = NULL;
 
     if (!(*list)) {
 	/* empty list */
@@ -818,6 +832,7 @@ static void parseWAISRelayLine()
     Config.Wais.maxObjSize = i << 20;
 }
 
+#ifdef OLD_CODE
 static void parseProxyAllowLine()
 {
     char *token;
@@ -871,6 +886,7 @@ static void parseManagerDenyLine()
 	return;
     addToIPACL(&manager_ip_acl, token, IP_DENY);
 }
+#endif
 
 static void parseLocalIPLine()
 {
@@ -1038,7 +1054,7 @@ static void parseConnectPortsLine()
 	origPortList = 0;
     }
     while ((token = strtok(NULL, w_space))) {
-	addToIntList(&connect_port_list, token);
+	intlistAdd(&connect_port_list, token);
     }
 }
 
@@ -1081,6 +1097,9 @@ int parseConfigFile(file_name)
 
     configFreeMemory();
     configSetFactoryDefaults();
+    aclDestroyAcls();
+    aclDestroyAccessList(&HTTPAccessList);
+    aclDestroyAccessList(&ICPAccessList);
 
     if ((fp = fopen(file_name, "r")) == NULL) {
 	sprintf(fatal_str, "Unable to open configuration file: %s", file_name);
@@ -1098,7 +1117,7 @@ int parseConfigFile(file_name)
 	    continue;
 	debug(3, 5, "Processing: '%s'\n", config_input_line);
 	strcpy(tmp_line, config_input_line);
-	if ((token = strtok(config_input_line, w_space)) == NULL)
+	if ((token = strtok(tmp_line, w_space)) == NULL)
 	    continue;
 
 	/* Parse a cache_host line */
@@ -1180,6 +1199,7 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "cache_mgr"))
 	    parseMgrLine();
 
+#ifdef OLD_CODE
 	/* Parse a proxy_allow line */
 	else if (!strcmp(token, "proxy_allow"))
 	    parseProxyAllowLine();
@@ -1203,12 +1223,16 @@ int parseConfigFile(file_name)
 	/* Parse a manager_deny line */
 	else if (!strcmp(token, "manager_deny"))
 	    parseManagerDenyLine();
+#endif /* OLD_CODE */
 
 	else if (!strcmp(token, "acl"))
 	    aclParseAclLine();
 
-	else if (!strcmp(token, "access"))
-	    aclParseAccessLine();
+	else if (!strcmp(token, "http_access"))
+	    aclParseAccessLine(&HTTPAccessList);
+
+	else if (!strcmp(token, "icp_access"))
+	    aclParseAccessLine(&ICPAccessList);
 
 	/* Parse a http_stop line */
 	else if (!strcmp(token, "http_stop"))
@@ -1355,7 +1379,9 @@ int parseConfigFile(file_name)
 
 	/* If unknown, treat as a comment line */
 	else {
-	    /* EMPTY */ ;
+	    debug(3,0,"parseConfigFile: line %d unrecognized: '%s'\n",
+		config_lineno,
+		config_input_line);
 	}
     }
 

@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.14 1996/04/11 04:47:25 wessels Exp $ */
+/* $Id: squid.h,v 1.15 1996/04/11 22:52:30 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -96,6 +96,7 @@ typedef unsigned long u_num32;
 #include "fdstat.h"
 #include "filemap.h"
 #include "hash.h"
+#include "url.h"
 #include "proto.h"
 #include "icp.h"
 #include "cached_error.h"	/* must go after icp.h */
@@ -108,7 +109,6 @@ typedef unsigned long u_num32;
 #include "store.h"
 #include "tools.h"
 #include "ttl.h"
-#include "url.h"
 #include "storetoString.h"
 #include "http.h"
 #include "ftp.h"
