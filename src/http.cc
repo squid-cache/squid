@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.251 1998/03/13 05:40:46 wessels Exp $
+ * $Id: http.cc,v 1.252 1998/03/13 06:37:40 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -881,6 +881,11 @@ httpRestart(HttpStateData * httpState)
 {
     /* restart a botched request from a persistent connection */
     debug(11, 2) ("Retrying HTTP request for %s\n", storeUrl(httpState->entry));
+    if (httpState->orig_request->method != METHOD_GET) {
+        debug(11, 1)("Potential Coredump: httpRestart %s %s\n",
+		RequestMethodStr[httpState->orig_request->method],
+		storeUrl(httpState->entry));
+    }
     if (httpState->fd >= 0) {
 	comm_remove_close_handler(httpState->fd, httpStateFree, httpState);
 	comm_close(httpState->fd);
