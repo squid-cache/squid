@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.9 1996/11/24 04:17:05 wessels Exp $
+ * $Id: refresh.cc,v 1.10 1996/11/26 16:59:40 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -116,7 +116,7 @@ refreshAddToList(const char *pattern, int opts, time_t min, int pct, time_t max)
  *     return 1 if its time to revalidate this entry, 0 otherwise
  */
 int
-refreshCheck(const StoreEntry * entry, const request_t * request)
+refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
 {
     refresh_t *R;
     time_t min = REFRESH_DEFAULT_MIN;
@@ -125,6 +125,7 @@ refreshCheck(const StoreEntry * entry, const request_t * request)
     const char *pattern = ".";
     time_t age;
     int factor;
+    time_t check_time = squid_curtime + delta;
     debug(22, 3, "refreshCheck: '%s'\n", entry->url);
     for (R = Refresh_tbl; R; R = R->next) {
 	if (regexec(&(R->compiled_pattern), entry->url, 0, 0, 0) != 0)
@@ -137,7 +138,7 @@ refreshCheck(const StoreEntry * entry, const request_t * request)
     }
     debug(22, 3, "refreshCheck: Matched '%s %d %d%% %d'\n",
 	pattern, (int) min, pct, (int) max);
-    age = squid_curtime - entry->timestamp;
+    age = check_time - entry->timestamp;
     debug(22, 3, "refreshCheck: age = %d\n", (int) age);
     if (request->max_age > -1) {
 	if (age > request->max_age) {
@@ -150,7 +151,7 @@ refreshCheck(const StoreEntry * entry, const request_t * request)
 	return 0;
     }
     if (-1 < entry->expires) {
-	if (entry->expires <= squid_curtime) {
+	if (entry->expires <= check_time) {
 	    debug(22, 3, "refreshCheck: YES: expires <= curtime\n");
 	    return 1;
 	} else {
