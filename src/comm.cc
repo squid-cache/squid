@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.384 2003/07/28 09:27:28 robertc Exp $
+ * $Id: comm.cc,v 1.385 2003/08/03 09:21:29 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -162,14 +162,16 @@ public:
 
     CommWrite write;
 
-    struct
+    class Accept
     {
+
+    public:
         /* how often (in msec) to re-check if we're out of fds on an accept() */
         AcceptFD accept;
         ConnectionDetail connDetails;
-    }
+    };
 
-    accept;
+    Accept accept;
 
     struct CommFiller
     {
