@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.12 2000/06/21 07:32:13 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.13 2000/06/26 03:36:15 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1353,7 +1353,7 @@ storeDiskdDirClean(int swap_index)
 #else
 	safeunlink(p2, 0);
 #endif
-	Counter.swap_files_cleaned++;
+	Counter.swap.files_cleaned++;
     }
     debug(36, 3) ("Cleaned %d unused files from %s\n", k, p1);
     return k;

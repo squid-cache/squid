@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.4 2000/06/08 18:05:37 hno Exp $
+ * $Id: store_dir_aufs.cc,v 1.5 2000/06/26 03:36:13 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1177,7 +1177,7 @@ storeAufsDirClean(int swap_index)
 #else
 	safeunlink(p2, 0);
 #endif
-	Counter.swap_files_cleaned++;
+	Counter.swap.files_cleaned++;
     }
     debug(36, 3) ("Cleaned %d unused files from %s\n", k, p1);
     return k;
