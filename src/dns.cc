@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.25 1996/12/02 04:15:09 wessels Exp $
+ * $Id: dns.cc,v 1.26 1996/12/04 16:28:34 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -244,13 +244,11 @@ dnsOpenServers(void)
 
     dnsFreeMemory();
     dns_child_table = xcalloc(N, sizeof(dnsserver_t *));
-    debug(34, 1, "dnsOpenServers: Starting %d 'dnsserver' processes\n", N);
     NDnsServersAlloc = 0;
     for (k = 0; k < N; k++) {
 	dns_child_table[k] = xcalloc(1, sizeof(dnsserver_t));
 	if ((dnssocket = dnsOpenServer(prg)) < 0) {
-	    debug(34, 1, "dnsOpenServers: WARNING: Cannot run 'dnsserver' process.\n");
-	    debug(34, 1, "              Fallling back to the blocking version.\n");
+	    debug(34, 1, "dnsOpenServers: WARNING: Failed to start 'dnsserver' #%d.\n", k+1);
 	    dns_child_table[k]->flags &= ~DNS_FLAG_ALIVE;
 	} else {
 	    debug(34, 4, "dnsOpenServers: FD %d connected to %s #%d.\n",
@@ -263,9 +261,7 @@ dnsOpenServers(void)
 	    dns_child_table[k]->size = DNS_INBUF_SZ - 1;
 	    dns_child_table[k]->offset = 0;
 	    dns_child_table[k]->ip_inbuf = xcalloc(DNS_INBUF_SZ, 1);
-
 	    /* update fd_stat */
-
 	    sprintf(fd_note_buf, "%s #%d", prg, dns_child_table[k]->id);
 	    fd_note(dns_child_table[k]->inpipe, fd_note_buf);
 	    commSetNonBlocking(dns_child_table[k]->inpipe);
@@ -273,6 +269,9 @@ dnsOpenServers(void)
 	    NDnsServersAlloc++;
 	}
     }
+    if (NDnsServersAlloc == 0)
+	fatal("Failed to start any dnsservers");
+    debug(34, 1, "Started %d 'dnsserver' processes\n", NDnsServersAlloc);
 }
 
 
