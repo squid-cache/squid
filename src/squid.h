@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.208 2001/01/06 11:14:42 hno Exp $
+ * $Id: squid.h,v 1.209 2001/01/10 20:18:42 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -231,10 +231,24 @@
 #endif /* HAVE_POLL_H */
 #endif /* HAVE_POLL */
 
-#if STDC_HEADERS
+#if defined(HAVE_STDARG_H)
 #include <stdarg.h>
+#define HAVE_STDARGS            /* let's hope that works everywhere (mj) */
+#define VA_LOCAL_DECL va_list ap;
+#define VA_START(f) va_start(ap, f)
+#define VA_SHIFT(v,t) ;         /* no-op for ANSI */
+#define VA_END va_end(ap)
 #else
+#if defined(HAVE_VARARGS_H)
 #include <varargs.h>
+#undef HAVE_STDARGS
+#define VA_LOCAL_DECL va_list ap;
+#define VA_START(f) va_start(ap)        /* f is ignored! */
+#define VA_SHIFT(v,t) v = va_arg(ap,t)
+#define VA_END va_end(ap)
+#else
+#error XX **NO VARARGS ** XX
+#endif
 #endif
 
 /* Make sure syslog goes after stdarg/varargs */
