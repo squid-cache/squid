@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.223 2000/10/04 01:02:13 wessels Exp $
+ * $Id: ipcache.cc,v 1.224 2000/10/04 19:34:14 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -49,7 +49,7 @@ struct _ipcache_entry {
     char *error_message;
     struct timeval request_time;
     dlink_node lru;
-    unsigned char locks;
+    unsigned short locks;
     struct {
 	unsigned int negcached:1;
     } flags;
