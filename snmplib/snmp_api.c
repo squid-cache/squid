@@ -146,6 +146,8 @@ snmp_parse(struct snmp_session * session,
     if (bufp == NULL)
 	return (NULL);
 
-    strcpy((char *) bufp, (char *) Community);
+    strncpy((char *) bufp, (char *) Community, CommunityLen);
+    bufp[CommunityLen] = '\0';
+
     return (bufp);
 }
