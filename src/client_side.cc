@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.469 2000/01/14 08:37:05 wessels Exp $
+ * $Id: client_side.cc,v 1.470 2000/01/19 21:57:30 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1963,8 +1963,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    clientCacheHit,
 	    http);
     } else {
-	/* MISS CASE */
-	http->log_type = LOG_TCP_MISS;
+	/* MISS CASE, http->log_type is already set! */
 	clientProcessMiss(http);
     }
 }
