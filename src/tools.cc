@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.216 2002/04/06 08:49:28 adrian Exp $
+ * $Id: tools.cc,v 1.217 2002/04/11 17:05:31 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -443,24 +443,32 @@ getMyHostname(void)
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
     const struct hostent *h = NULL;
+    struct in_addr sa;
     if (Config.visibleHostname != NULL)
 	return Config.visibleHostname;
     if (present)
 	return host;
     host[0] = '\0';
-    if (Config.Sockaddr.http->s.sin_addr.s_addr != any_addr.s_addr) {
-	/*
-	 * If the first http_port address has a specific address, try a
-	 * reverse DNS lookup on it.
-	 */
-	h = gethostbyaddr((char *) &Config.Sockaddr.http->s.sin_addr,
-	    sizeof(Config.Sockaddr.http->s.sin_addr), AF_INET);
+    memcpy(&sa, &any_addr, sizeof(sa));
+    if (Config.Sockaddr.http && sa.s_addr == any_addr.s_addr)
+	memcpy(&sa, &Config.Sockaddr.http->s.sin_addr, sizeof(sa));
+#if USE_SSL
+    if (Config.Sockaddr.https && sa.s_addr == any_addr.s_addr)
+	memcpy(&sa, &Config.Sockaddr.https->s.sin_addr, sizeof(sa));
+#endif
+    /*
+     * If the first http_port address has a specific address, try a
+     * reverse DNS lookup on it.
+     */
+    if (sa.s_addr != any_addr.s_addr) {
+	h = gethostbyaddr((char *) &sa,
+	    sizeof(sa), AF_INET);
 	if (h != NULL) {
 	    /* DNS lookup successful */
 	    /* use the official name from DNS lookup */
 	    xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
 	    debug(50, 4) ("getMyHostname: resolved %s to '%s'\n",
-		inet_ntoa(Config.Sockaddr.http->s.sin_addr),
+		inet_ntoa(sa),
 		host);
 	    present = 1;
 	    if (strchr(host, '.'))
@@ -468,7 +476,7 @@ getMyHostname(void)
 
 	}
 	debug(50, 1) ("WARNING: failed to resolve %s to a fully qualified hostname\n",
-	    inet_ntoa(Config.Sockaddr.http->s.sin_addr));
+	    inet_ntoa(sa));
     }
     /*
      * Get the host name and store it in host to return
