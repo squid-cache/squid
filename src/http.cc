@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.134 1996/12/06 21:52:01 wessels Exp $
+ * $Id: http.cc,v 1.135 1996/12/13 20:33:41 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -140,7 +140,8 @@ enum {
 enum {
     HDR_IMS,
     HDR_HOST,
-    HDR_MAXAGE
+    HDR_MAXAGE,
+    HDR_SET_COOKIE
 };
 
 char *HttpServerCCStr[] =
@@ -347,6 +348,8 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 		    ReplyHeaderStats.cc[SCC_MAXAGE]++;
 		}
 	    }
+	} else if (!strncasecmp(t, "Set-Cookie:", 11)) {
+	    EBIT_SET(reply->misc_headers, HDR_SET_COOKIE);
 	}
     }
     put_free_4k_page(headers);
@@ -408,6 +411,8 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    if (EBIT_TEST(reply->cache_control, SCC_PRIVATE))
 		httpMakePrivate(entry);
 	    else if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
+		httpMakePrivate(entry);
+	    else if (EBIT_TEST(reply->misc_headers, HDR_SET_COOKIE))
 		httpMakePrivate(entry);
 	    else if (reply->date > -1)
 		httpMakePublic(entry);
