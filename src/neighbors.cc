@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.14 1996/04/10 20:45:31 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.15 1996/04/12 21:21:06 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -378,7 +378,10 @@ int neighborsUdpPing(proto)
 	    e->host, url);
 
 	/* e->header.reqnum++; */
-	e->header.reqnum = atoi(entry->key);
+        if (BIT_TEST(entry->flag, KEY_PRIVATE))
+		e->header.reqnum = atoi(entry->key);
+	else
+		e->header.reqnum = getKeyCounter();
 	debug(15, 3, "neighborsUdpPing: key = '%s'\n", entry->key);
 	debug(15, 3, "neighborsUdpPing: reqnum = %d\n", e->header.reqnum);
 
