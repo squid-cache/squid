@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.52 1996/08/12 23:37:22 wessels Exp $
+ * $Id: comm.cc,v 1.53 1996/08/14 22:57:09 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1088,6 +1088,8 @@ static int examine_select(readfds, writefds, exceptfds)
 	    if (num < 0) {
 		f = &fd_table[fd];
 		debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
+		debug(5, 0, "FD %d is a %s\n", fd, fdstatTypeStr[fdstatGetType(fd)]);
+		debug(5, 0, "--> %s\n", fd_note(fd, NULL));
 		debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p expt:%p\n",
 		    f->lifetime_handler,
 		    f->timeout_handler,
