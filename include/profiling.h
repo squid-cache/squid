@@ -107,6 +107,7 @@ typedef enum {
 #endif
     XPROF_storeClient_kickReads,
     XPROF_eventRun,
+    XPROF_storeDirCallback,
     XPROF_comm_calliocallback,
     XPROF_CommReadCallbackData_callCallback,
     XPROF_CommAcceptCallbackData_callCallback,
