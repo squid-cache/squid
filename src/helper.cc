@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.27 2001/04/14 00:03:23 hno Exp $
+ * $Id: helper.cc,v 1.28 2001/05/21 04:50:57 hno Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -235,6 +235,9 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
     debug(29, 9) ("helperSubmit: %s\n", buf);
 }
 
+/* lastserver = "server last used as part of a deferred or reserved
+ * request sequence"
+ */
 void
 helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver)
 {
@@ -247,10 +250,13 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     }
     r->callback = callback;
     r->data = data;
-    if (buf != NULL)
+    if (buf != NULL) {
 	r->buf = xstrdup(buf);
-    else
+	r->placeholder = 0;
+    } else {
+	r->buf = NULL;
 	r->placeholder = 1;
+    }
     cbdataLock(r->data);
     if ((buf != NULL) && lastserver) {
 	debug(29, 5) ("StatefulSubmit with lastserver %d\n", lastserver);
@@ -987,24 +993,22 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     debug(29, 9) ("helperStatefulDispatch busying helper %s #%d\n", hlp->id_name, srv->index + 1);
     if (r->placeholder == 1) {
 	/* a callback is needed before this request can _use_ a helper. */
-	if (cbdataValid(r->data)) {
-	    /* we don't care about releasing/deferring this helper. The request NEVER
-	     * gets to the helper. So we throw away the return code */
-	    r->callback(r->data, srv, NULL);
-	    /* throw away the placeholder */
-	    helperStatefulRequestFree(r);
-	    /* and push the queue. Note that the callback may have call submit again - 
-	     * which is why we test for the request*/
-	    if (srv->request == NULL) {
-		if (srv->flags.shutdown) {
-		    comm_close(srv->wfd);
-		    srv->wfd = -1;
-		} else {
-		    if (srv->queue.head)
-			helperStatefulServerKickQueue(srv);
-		    else
-			helperStatefulKickQueue(hlp);
-		}
+	/* we don't care about releasing/deferring this helper. The request NEVER
+	 * gets to the helper. So we throw away the return code */
+	r->callback(r->data, srv, NULL);
+	/* throw away the placeholder */
+	helperStatefulRequestFree(r);
+	/* and push the queue. Note that the callback may have submitted a new 
+	 * request to the helper which is why we test for the request*/
+	if (srv->request == NULL) {
+	    if (srv->flags.shutdown) {
+		comm_close(srv->wfd);
+		srv->wfd = -1;
+	    } else {
+		if (srv->queue.head)
+		    helperStatefulServerKickQueue(srv);
+		else
+		    helperStatefulKickQueue(hlp);
 	    }
 	}
 	return;

@@ -1,7 +1,8 @@
 #!/usr/bin/perl
+# $Id: smb_auth.pl,v 1.2 2001/05/21 04:50:58 hno Exp $
 
 #if you define this, debugging output will be printed to STDERR.
-$debug=1;
+#$debug=1;
 
 #to force using some DC for some domains, fill in this hash.
 #the key is a regexp matched against the domain name
@@ -10,12 +11,11 @@ $debug=1;
 #i.e.:
 # %controllers = ( "domain" => ["pdc","bdc"]);
 
-#%controllers = ( ".*" => ["tlc5",undef]);
+#%controllers = ( ".*" => ["pdcname","bdcname"]);
 
 #define this if you wish to use a WINS server. If undefined, broadcast
 # will be attempted.
-$wins_server="c0wins";
-
+#$wins_server="winsservername";
 
 # Some servers (at least mine) really really want to be called by address.
 # If this variable is defined, we'll ask nmblookup to do a reverse DNS on the
@@ -36,6 +36,7 @@ use Authen::Smb;
 # %pdc used to cache the domain -> pdc_ip values. IT NEVER EXPIRES!
 
 
+$|=1;
 while (<>) {
 	if (! m;([^\\]+)(\\|/)(\S+)\s(.*); ) { #parse the line
 		print "ERR\n";

@@ -1,5 +1,5 @@
 
-From: "Chemolli Francesco (USI)" <ChemolliF@GruppoCredit.it>
+From: "Francesco Chemolli" <kinkie@kame.usr.dsi.unimi.it>
 Subject: Multiple NT domains authenticator
 Date: Fri, 7 Jul 2000 15:37:32 +0200 
 
