@@ -1,4 +1,4 @@
-/* $Id: stmem.cc,v 1.6 1996/04/04 18:41:27 wessels Exp $ */
+/* $Id: stmem.cc,v 1.7 1996/04/04 21:34:25 wessels Exp $ */
 
 /* 
  * DEBUG: Section 19          stmem:
@@ -175,12 +175,12 @@ int memGrep(mem, string, nbytes)
 	    str_i = string;
 	}
 
+	i++;
+	blk_idx++;
+
 	/* Return offset of byte beyond the matching string */
 	if (state == goal)
 	    return (i + 1);
-
-	i++;
-	blk_idx++;
 
 	if (blk_idx >= p->len) {
 	    if (p->next) {
