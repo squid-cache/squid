@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.605 2002/10/21 14:09:52 adrian Exp $
+ * $Id: client_side.cc,v 1.606 2002/10/25 03:47:03 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -410,6 +410,7 @@ clientLogRequest(clientHttpRequest * http)
 	if (http->conn && http->conn->rfc931[0])
 	    http->al.cache.rfc931 = http->conn->rfc931;
 	accessLogLog(&http->al);
+	accessLogFreeMemory(&http->al);
 	clientUpdateCounters(http);
 	if (http->conn)
 	    clientdbUpdate(http->conn->peer.sin_addr, http->logType, PROTO_HTTP,
@@ -962,6 +963,7 @@ clientParseHttpRequestLine(char *inbuf, size_t req_sz, ConnStateData * conn,
 void
 setLogUri(clientHttpRequest * http, char const *uri)
 {
+    safe_free(http->log_uri);
     if (!stringHasCntl(uri))
 	http->log_uri = xstrndup(uri, MAX_URL);
     else
