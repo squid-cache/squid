@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.118 1997/05/23 16:56:16 wessels Exp $
+ * $Id: ipcache.cc,v 1.119 1997/06/01 23:22:23 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -248,7 +248,7 @@ ipcache_release(ipcache_entry * i)
 	fatal_dump("ipcache_release: i != table_entry!");
     if (i->locks) {
 	i->expires = squid_curtime;
-        ipcacheChangeKey(i);
+	ipcacheChangeKey(i);
 	IpcacheStats.release_locked++;
 	return;
     }
@@ -615,12 +615,12 @@ ipcache_dnsHandleRead(int fd, void *data)
 	}
 	ipcacheUnlockEntry(i);	/* unlock from IP_DISPATCHED */
     } else {
-	debug(14,5,"ipcache_dnsHandleRead: Incomplete reply\n");
-	    commSetSelect(fd,
-		COMM_SELECT_READ,
-		ipcache_dnsHandleRead,
-		dnsData,
-		0);
+	debug(14, 5, "ipcache_dnsHandleRead: Incomplete reply\n");
+	commSetSelect(fd,
+	    COMM_SELECT_READ,
+	    ipcache_dnsHandleRead,
+	    dnsData,
+	    0);
     }
     if (dnsData->offset == 0) {
 	dnsData->data = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.51 1997/05/15 23:38:02 wessels Exp $
+ * $Id: ssl.cc,v 1.52 1997/06/01 23:22:28 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -46,7 +46,6 @@ typedef struct {
     time_t timeout;
     int *size_ptr;		/* pointer to size in an ConnStateData for logging */
     int proxying;
-    int ip_lookup_pending;
 } SslStateData;
 
 static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
@@ -58,7 +57,6 @@ static void sslWriteServer _PARAMS((int fd, void *));
 static void sslWriteClient _PARAMS((int fd, void *));
 static void sslConnected _PARAMS((int fd, void *));
 static void sslProxyConnected _PARAMS((int fd, void *));
-static IPH sslConnect;
 static void sslErrorComplete _PARAMS((int, char *, int, int, void *));
 static void sslClose _PARAMS((SslStateData * sslState));
 static void sslClientClosed _PARAMS((int fd, void *));
@@ -115,8 +113,6 @@ sslStateFree(int fd, void *data)
     safe_free(sslState->client.buf);
     xfree(sslState->url);
     requestUnlink(sslState->request);
-    if (sslState->ip_lookup_pending)
-	ipcacheUnregister(sslState->host, sslState);
     safe_free(sslState);
 }
 
@@ -317,13 +313,12 @@ sslErrorComplete(int fd, char *buf, int size, int errflag, void *sslState)
 
 
 static void
-sslConnect(int fd, const ipcache_addrs * ia, void *data)
+sslConnectDone(int fd, int status, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;
     char *buf = NULL;
-    sslState->ip_lookup_pending = 0;
-    if (ia == NULL) {
+    if (status == COMM_ERR_DNS) {
 	debug(26, 4, "sslConnect: Unknown host: %s\n", sslState->host);
 	buf = squid_error_url(sslState->url,
 	    request->method,
@@ -338,27 +333,7 @@ sslConnect(int fd, const ipcache_addrs * ia, void *data)
 	    sslState,
 	    xfree);
 	return;
-    }
-    debug(26, 5, "sslConnect: client=%d server=%d\n",
-	sslState->client.fd,
-	sslState->server.fd);
-    commSetTimeout(sslState->server.fd,
-	Config.Timeout.read,
-	sslTimeout,
-	sslState);
-    commConnectStart(fd,
-	sslState->host,
-	sslState->port,
-	sslConnectDone,
-	sslState);
-}
-
-static void
-sslConnectDone(int fd, int status, void *data)
-{
-    SslStateData *sslState = data;
-    char *buf = NULL;
-    if (status == COMM_ERROR) {
+    } else if (status != COMM_OK) {
 	buf = squid_error_url(sslState->url,
 	    sslState->request->method,
 	    ERR_CONNECT_FAIL,
@@ -477,10 +452,10 @@ sslPeerSelectComplete(peer * p, void *data)
     } else {
 	sslState->port = CACHE_HTTP_PORT;
     }
-    sslState->ip_lookup_pending = 1;
-    ipcache_nbgethostbyname(sslState->host,
-	sslState->server.fd,
-	sslConnect,
+    commConnectStart(sslState->server.fd,
+	sslState->host,
+	sslState->port,
+	sslConnectDone,
 	sslState);
 }
 

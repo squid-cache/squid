@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.71 1997/05/23 05:21:04 wessels Exp $
+ * $Id: wais.cc,v 1.72 1997/06/01 23:22:29 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -116,7 +116,6 @@ typedef struct {
     int relayport;
     char *request_hdr;
     char request[MAX_URL];
-    int ip_lookup_pending;
 } WaisStateData;
 
 static PF waisStateFree;
@@ -124,7 +123,6 @@ static PF waisTimeout;
 static PF waisReadReply;
 static CWCB waisSendComplete;
 static PF waisSendRequest;
-static IPH waisConnect;
 static CNCB waisConnectDone;
 
 static void
@@ -134,8 +132,6 @@ waisStateFree(int fd, void *data)
     if (waisState == NULL)
 	return;
     storeUnlockObject(waisState->entry);
-    if (waisState->ip_lookup_pending)
-	ipcacheUnregister(waisState->relayhost, waisState);
     xfree(waisState);
 }
 
@@ -334,26 +330,7 @@ waisStart(method_t method, StoreEntry * entry)
 	waisState);
     commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
     storeLockObject(entry);
-    waisState->ip_lookup_pending = 1;
-    ipcache_nbgethostbyname(waisState->relayhost,
-	waisState->fd,
-	waisConnect,
-	waisState);
-}
-
-static void
-waisConnect(int fd, const ipcache_addrs * ia, void *data)
-{
-    WaisStateData *waisState = data;
-    waisState->ip_lookup_pending = 0;
-    if (!ipcache_gethostbyname(waisState->relayhost, 0)) {
-	debug(24, 4, "waisstart: Unknown host: %s\n", waisState->relayhost);
-	squid_error_entry(waisState->entry, ERR_DNS_FAIL, dns_error_message);
-	comm_close(waisState->fd);
-	return;
-    }
-    commSetTimeout(fd, Config.Timeout.connect, waisTimeout, waisState);
-    commConnectStart(fd,
+    commConnectStart(waisState->fd,
 	waisState->relayhost,
 	waisState->relayport,
 	waisConnectDone,
@@ -364,12 +341,15 @@ static void
 waisConnectDone(int fd, int status, void *data)
 {
     WaisStateData *waisState = data;
-    if (status == COMM_ERROR) {
+    if (status == COMM_ERR_DNS) {
+	squid_error_entry(waisState->entry, ERR_DNS_FAIL, dns_error_message);
+	comm_close(fd);
+	return;
+    } else if (status != COMM_OK) {
 	squid_error_entry(waisState->entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
 	return;
     }
-    /* Install connection complete handler. */
     if (opt_no_ipcache)
 	ipcacheInvalidate(waisState->relayhost);
     commSetSelect(fd,
