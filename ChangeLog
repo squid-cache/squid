@@ -1,3 +1,22 @@
+Changes to squid-1.1.alpha6:
+
+	- Changed storage manager to use a two level directory
+	  structure.  This makes squid-1.1 incompatible with squid-1.0!
+	- Added last modification time to the StoreEntry structure, and
+	  the swap log.
+	- Changed how memory passed to comm_write() gets freed.  Now
+	  pass in a free handler function which gets called when the
+	  RWStateData structure is destroyed.
+	- Other misc cleanup.
+	- Added a reverse-address-lookup cache (``fqdncache'').
+	- Added support for threaded ACLs for destination IP addresses
+	  and source hostnames.
+	- Use aclMatchDomainList() instead of aclMatchWord() for domain names.
+	- Renamed cachemgr 'stats/general' to 'stats/ipcache'.
+	- Added 'log_fqdn' option to config file.
+	- Added 'client_netmask' to config file.
+
+
 Changes to squid-1.1.alpha5:
 
 	- Got Asynchronous I/O stuff to compile and run on IRIX 5.3
