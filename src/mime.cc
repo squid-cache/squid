@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.29 1997/05/15 01:18:46 wessels Exp $
+ * $Id: mime.cc,v 1.30 1997/06/04 06:16:02 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -133,7 +133,7 @@ mime_get_header(const char *mime, const char *name)
     if (!mime || !name)
 	return NULL;
 
-    debug(25, 5, "mime_get_header: looking for '%s'\n", name);
+    debug(25, 5) ("mime_get_header: looking for '%s'\n", name);
 
     for (p = mime; *p; p += strcspn(p, "\n\r")) {
 	if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
@@ -148,7 +148,7 @@ mime_get_header(const char *mime, const char *name)
 	if (l > GET_HDR_SZ)
 	    l = GET_HDR_SZ;
 	xstrncpy(header, p, l);
-	debug(25, 5, "mime_get_header: checking '%s'\n", header);
+	debug(25, 5) ("mime_get_header: checking '%s'\n", header);
 	q = header;
 	q += namelen;
 	if (*q == ':')
@@ -156,7 +156,7 @@ mime_get_header(const char *mime, const char *name)
 	while (isspace(*q))
 	    q++, got = 1;
 	if (got) {
-	    debug(25, 5, "mime_get_header: returning '%s'\n", q);
+	    debug(25, 5) ("mime_get_header: returning '%s'\n", q);
 	    return q;
 	}
     }
@@ -317,7 +317,7 @@ mimeInit(char *filename)
     if (filename == NULL)
 	return;
     if ((fp = fopen(filename, "r")) == NULL) {
-	debug(50, 1, "mimeInit: %s: %s\n", filename, xstrerror());
+	debug(50, 1) ("mimeInit: %s: %s\n", filename, xstrerror());
 	return;
     }
     if (MimeTableTail == NULL)
@@ -329,27 +329,27 @@ mimeInit(char *filename)
 	    continue;
 	xstrncpy(chopbuf, buf, BUFSIZ);
 	if ((pattern = strtok(chopbuf, w_space)) == NULL) {
-	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
 	    continue;
 	}
 	if ((type = strtok(NULL, w_space)) == NULL) {
-	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
 	    continue;
 	}
 	if ((icon = strtok(NULL, w_space)) == NULL) {
-	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
 	    continue;
 	}
 	if ((encoding = strtok(NULL, w_space)) == NULL) {
-	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
 	    continue;
 	}
 	if ((mode = strtok(NULL, w_space)) == NULL) {
-	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
 	    continue;
 	}
 	if (regcomp(&re, pattern, re_flags) != 0) {
-	    debug(25, 1, "mimeInit: regcomp error: '%s'\n", buf);
+	    debug(25, 1) ("mimeInit: regcomp error: '%s'\n", buf);
 	    continue;
 	}
 	m = xcalloc(1, sizeof(mimeEntry));
@@ -364,7 +364,7 @@ mimeInit(char *filename)
 	    m->transfer_mode = 'A';
 	else
 	    m->transfer_mode = 'I';
-	debug(25, 5, "mimeInit: added '%s'\n", buf);
+	debug(25, 5) ("mimeInit: added '%s'\n", buf);
 	*MimeTableTail = m;
 	MimeTableTail = &m->next;
     }

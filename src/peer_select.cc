@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.12 1997/05/02 04:28:37 wessels Exp $
+ * $Id: peer_select.cc,v 1.13 1997/06/04 06:16:05 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -69,7 +69,7 @@ static void
 peerSelectStateFree(ps_state * psstate)
 {
     if (psstate->acl_checklist) {
-	debug(0, 0, "calling aclChecklistFree() from peerSelectStateFree\n");
+	debug(0, 0) ("calling aclChecklistFree() from peerSelectStateFree\n");
 	aclChecklistFree(psstate->acl_checklist);
     }
     requestUnlink(psstate->request);
@@ -152,7 +152,7 @@ peerCheckNeverDirectDone(int answer, void *data)
 {
     ps_state *psstate = data;
     psstate->acl_checklist = NULL;
-    debug(44, 3, "peerCheckNeverDirectDone: %d\n", answer);
+    debug(44, 3) ("peerCheckNeverDirectDone: %d\n", answer);
     psstate->never_direct = answer ? 1 : -1;
     peerSelectFoo(psstate);
 }
@@ -162,7 +162,7 @@ peerCheckAlwaysDirectDone(int answer, void *data)
 {
     ps_state *psstate = data;
     psstate->acl_checklist = NULL;
-    debug(44, 3, "peerCheckAlwaysDirectDone: %d\n", answer);
+    debug(44, 3) ("peerCheckAlwaysDirectDone: %d\n", answer);
     psstate->always_direct = answer ? 1 : -1;
     peerSelectFoo(psstate);
 }
@@ -185,10 +185,10 @@ peerSelectCallbackFail(ps_state * psstate)
 {
     request_t *request = psstate->request;
     char *url = psstate->entry ? psstate->entry->url : urlCanonical(request, NULL);
-    debug(44, 1, "Failed to select source for '%s'\n", url);
-    debug(44, 1, "  always_direct = %d\n", psstate->always_direct);
-    debug(44, 1, "   never_direct = %d\n", psstate->never_direct);
-    debug(44, 1, "        timeout = %d\n", psstate->icp.timeout);
+    debug(44, 1) ("Failed to select source for '%s'\n", url);
+    debug(44, 1) ("  always_direct = %d\n", psstate->always_direct);
+    debug(44, 1) ("   never_direct = %d\n", psstate->never_direct);
+    debug(44, 1) ("        timeout = %d\n", psstate->icp.timeout);
     psstate->fail_callback(NULL, psstate->callback_data);
     peerSelectStateFree(psstate);
 }
@@ -201,7 +201,7 @@ peerSelectFoo(ps_state * psstate)
     StoreEntry *entry = psstate->entry;
     request_t *request = psstate->request;
     int direct;
-    debug(44, 3, "peerSelect: '%s %s'\n",
+    debug(44, 3) ("peerSelect: '%s %s'\n",
 	RequestMethodStr[request->method],
 	request->host);
     if (psstate->never_direct == 0 && Config.accessList.NeverDirect) {
@@ -233,9 +233,9 @@ peerSelectFoo(ps_state * psstate)
     } else {
 	direct = DIRECT_MAYBE;
     }
-    debug(44, 3, "peerSelect: direct = %d\n", direct);
+    debug(44, 3) ("peerSelect: direct = %d\n", direct);
     if (direct == DIRECT_YES) {
-	debug(44, 3, "peerSelect: DIRECT\n");
+	debug(44, 3) ("peerSelect: DIRECT\n");
 	hierarchyNote(request, DIRECT, &psstate->icp, request->host);
 	peerSelectCallback(psstate, NULL);
 	return;
@@ -243,7 +243,7 @@ peerSelectFoo(ps_state * psstate)
     if (peerSelectIcpPing(request, direct, entry)) {
 	if (entry->ping_status != PING_NONE)
 	    fatal_dump("peerSelectFoo: bad ping_status");
-	debug(44, 3, "peerSelect: Doing ICP pings\n");
+	debug(44, 3) ("peerSelect: Doing ICP pings\n");
 	psstate->icp.n_sent = neighborsUdpPing(request,
 	    entry,
 	    peerHandleIcpReply,
@@ -261,16 +261,16 @@ peerSelectFoo(ps_state * psstate)
     }
     if ((p = psstate->first_parent_miss)) {
 	code = FIRST_PARENT_MISS;
-	debug(44, 3, "peerSelect: %s/%s\n", hier_strings[code], p->host);
+	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(request, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
     } else if (direct != DIRECT_NO) {
 	code = DIRECT;
-	debug(44, 3, "peerSelect: %s/%s\n", hier_strings[code], request->host);
+	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
 	hierarchyNote(request, code, &psstate->icp, request->host);
 	peerSelectCallback(psstate, NULL);
     } else if ((p = peerGetSomeParent(request, &code))) {
-	debug(44, 3, "peerSelect: %s/%s\n", hier_strings[code], p->host);
+	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(request, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
     } else {
@@ -285,7 +285,7 @@ peerPingTimeout(void *data)
 {
     ps_state *psstate = data;
     StoreEntry *entry = psstate->entry;
-    debug(44, 3, "peerPingTimeout: '%s'\n", entry->url);
+    debug(44, 3) ("peerPingTimeout: '%s'\n", entry->url);
     entry->ping_status = PING_TIMEOUT;
     PeerStats.timeouts++;
     psstate->icp.timeout = 1;

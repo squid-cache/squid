@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.72 1997/06/04 05:50:27 wessels Exp $
+ * $Id: disk.cc,v 1.73 1997/06/04 06:15:50 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -184,7 +184,7 @@ file_open_complete(void *data, int fd, int errcode)
     FD_ENTRY *fde;
     if (fd < 0) {
 	errno = errcode;
-	debug(50, 0, "file_open: error opening file %s: %s\n", ctrlp->path,
+	debug(50, 0) ("file_open: error opening file %s: %s\n", ctrlp->path,
 	    xstrerror());
 	if (ctrlp->callback)
 	    (ctrlp->callback) (ctrlp->callback_data, DISK_ERROR);
@@ -296,7 +296,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	    (void) 0;
 	} else {
 	    status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
-	    debug(50, 1, "diskHandleWrite: FD %d: disk write error: %s\n",
+	    debug(50, 1) ("diskHandleWrite: FD %d: disk write error: %s\n",
 		fd, xstrerror());
 	    if (fdd->wrt_handle == NULL) {
 		/* FLUSH PENDING BUFFERS */
@@ -432,7 +432,7 @@ diskHandleReadComplete(void *data, int len, int errcode)
 		0);
 	    return;
 	}
-	debug(50, 1, "diskHandleRead: FD %d: error reading: %s\n",
+	debug(50, 1) ("diskHandleRead: FD %d: error reading: %s\n",
 	    fd, xstrerror());
 	ctrl_dat->handler(fd, ctrl_dat->buf,
 	    ctrl_dat->offset,
@@ -555,7 +555,7 @@ diskHandleWalkComplete(void *data, int retcode, int errcode)
 	    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk, walk_dat, 0);
 	    return;
 	}
-	debug(50, 1, "diskHandleWalk: FD %d: error readingd: %s\n",
+	debug(50, 1) ("diskHandleWalk: FD %d: error readingd: %s\n",
 	    fd, xstrerror());
 	walk_dat->handler(fd, DISK_ERROR, walk_dat->client_data);
 	safe_free(walk_dat->buf);

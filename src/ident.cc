@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.29 1997/05/08 07:22:05 wessels Exp $
+ * $Id: ident.cc,v 1.30 1997/06/04 06:16:00 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -102,7 +102,7 @@ identConnectDone(int fd, int status, void *data)
 static void
 identRequestComplete(int fd, char *buf, int size, int errflag, void *data)
 {
-    debug(30, 5, "identRequestComplete: FD %d: wrote %d bytes\n", fd, size);
+    debug(30, 5) ("identRequestComplete: FD %d: wrote %d bytes\n", fd, size);
 }
 
 static void
@@ -121,7 +121,7 @@ identReadReply(int fd, void *data)
 	    *t = '\0';
 	if ((t = strchr(buf, '\n')))
 	    *t = '\0';
-	debug(30, 5, "identReadReply: FD %d: Read '%s'\n", fd, buf);
+	debug(30, 5) ("identReadReply: FD %d: Read '%s'\n", fd, buf);
 	if (strstr(buf, "USERID")) {
 	    if ((t = strrchr(buf, ':'))) {
 		while (isspace(*++t));

@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.44 1997/05/15 23:33:43 wessels Exp $
+ * $Id: debug.cc,v 1.45 1997/06/04 06:15:49 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -107,16 +107,17 @@
 
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
-
-#define MAX_DEBUG_SECTIONS 100
-static int debugLevels[MAX_DEBUG_SECTIONS];
-
+int debugLevels[MAX_DEBUG_SECTIONS];
 static char *accessLogTime _PARAMS((time_t));
 extern int opt_debug_stderr;
 
+#ifdef HAVE_SYSLOG
+int _db_level = 0;
+#endif
+
 #ifdef __STDC__
 void
-_db_print(int section, int level, const char *format,...)
+_db_print(const char *format,...)
 {
     va_list args;
 #else
@@ -125,8 +126,6 @@ _db_print(va_alist)
      va_dcl
 {
     va_list args;
-    int section;
-    int level;
     const char *format = NULL;
 #endif
     LOCAL_ARRAY(char, f, BUFSIZ);
@@ -135,17 +134,9 @@ _db_print(va_alist)
 #endif
 
 #ifdef __STDC__
-    if (level > debugLevels[section])
-	return;
     va_start(args, format);
 #else
     va_start(args);
-    section = va_arg(args, int);
-    level = va_arg(args, int);
-    if (level > debugLevels[section]) {
-	va_end(args);
-	return;
-    }
     format = va_arg(args, const char *);
 #endif
 
@@ -156,7 +147,7 @@ _db_print(va_alist)
 	format);
 #if HAVE_SYSLOG
     /* level 0 go to syslog */
-    if (level == 0 && opt_syslog_enable) {
+    if (_db_level == 0 && opt_syslog_enable) {
 	tmpbuf[0] = '\0';
 	vsprintf(tmpbuf, format, args);
 	tmpbuf[1023] = '\0';

@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.7 1997/05/17 15:59:45 wessels Exp $
+ * $Id: event.cc,v 1.8 1997/06/04 06:15:51 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -51,7 +51,7 @@ eventAdd(const char *name, EVH * func, void *arg, time_t when)
     event->arg = arg;
     event->name = name;
     event->when = squid_curtime + when;
-    debug(41, 7, "eventAdd: Adding '%s', in %d seconds\n", name, when);
+    debug(41, 7) ("eventAdd: Adding '%s', in %d seconds\n", name, when);
     /* Insert after the last event with the same or earlier time */
     for (E = &tasks; *E; E = &(*E)->next) {
 	if ((*E)->when > event->when)
@@ -88,7 +88,7 @@ eventRun(void)
 	return;
     if (event->when > squid_curtime)
 	return;
-    debug(41, 7, "eventRun: Running '%s'\n", event->name);
+    debug(41, 7) ("eventRun: Running '%s'\n", event->name);
     func = event->func;
     arg = event->arg;
     event->func = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.75 1997/06/02 19:56:04 wessels Exp $
+ * $Id: wais.cc,v 1.76 1997/06/04 06:16:17 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -143,7 +143,7 @@ waisTimeout(int fd, void *data)
 {
     WaisStateData *waisState = data;
     StoreEntry *entry = waisState->entry;
-    debug(24, 4, "waisTimeout: FD %d: '%s'\n", fd, entry->url);
+    debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_close(fd);
 }
@@ -163,9 +163,9 @@ waisReadReply(int fd, void *data)
     int off;
     int bin;
     if (protoAbortFetch(entry)) {
-        squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-        comm_close(fd);
-        return;
+	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	comm_close(fd);
+	return;
     }
     if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
 	/* we can terminate connection right now */
@@ -178,9 +178,9 @@ waisReadReply(int fd, void *data)
     off = storeGetLowestReaderOffset(entry);
     if ((clen - off) > WAIS_DELETE_GAP) {
 	IOStats.Wais.reads_deferred++;
-	debug(24, 3, "waisReadReply: Read deferred for Object: %s\n",
+	debug(24, 3) ("waisReadReply: Read deferred for Object: %s\n",
 	    entry->url);
-	debug(24, 3, "                Current Gap: %d bytes\n", clen - off);
+	debug(24, 3) ("                Current Gap: %d bytes\n", clen - off);
 	/* reschedule, so it will automatically reactivated
 	 * when Gap is big enough. */
 	commSetSelect(fd,
@@ -200,7 +200,7 @@ waisReadReply(int fd, void *data)
     }
     len = read(fd, buf, 4096);
     fd_bytes(fd, len, FD_READ);
-    debug(24, 5, "waisReadReply: FD %d read len:%d\n", fd, len);
+    debug(24, 5) ("waisReadReply: FD %d read len:%d\n", fd, len);
     if (len > 0) {
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Wais.reads++;
@@ -209,7 +209,7 @@ waisReadReply(int fd, void *data)
 	IOStats.Wais.read_hist[bin]++;
     }
     if (len < 0) {
-	debug(50, 1, "waisReadReply: FD %d: read failure: %s.\n", xstrerror());
+	debug(50, 1) ("waisReadReply: FD %d: read failure: %s.\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
@@ -247,7 +247,7 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
     WaisStateData *waisState = data;
     StoreEntry *entry = waisState->entry;
-    debug(24, 5, "waisSendComplete: FD %d size: %d errflag: %d\n",
+    debug(24, 5) ("waisSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
@@ -270,7 +270,7 @@ waisSendRequest(int fd, void *data)
     char *buf = NULL;
     const char *Method = RequestMethodStr[waisState->method];
 
-    debug(24, 5, "waisSendRequest: FD %d\n", fd);
+    debug(24, 5) ("waisSendRequest: FD %d\n", fd);
 
     if (Method)
 	len += strlen(Method);
@@ -284,7 +284,7 @@ waisSendRequest(int fd, void *data)
 	    waisState->request_hdr);
     else
 	sprintf(buf, "%s %s\r\n", Method, waisState->request);
-    debug(24, 6, "waisSendRequest: buf: %s\n", buf);
+    debug(24, 6) ("waisSendRequest: buf: %s\n", buf);
     comm_write(fd,
 	buf,
 	len,
@@ -296,15 +296,15 @@ waisSendRequest(int fd, void *data)
 }
 
 void
-waisStart(request_t *request, StoreEntry * entry)
+waisStart(request_t * request, StoreEntry * entry)
 {
     WaisStateData *waisState = NULL;
     int fd;
     char *url = entry->url;
     method_t method = request->method;
-    debug(24, 3, "waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
+    debug(24, 3) ("waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
     if (!Config.Wais.relayHost) {
-	debug(24, 0, "waisStart: Failed because no relay host defined!\n");
+	debug(24, 0) ("waisStart: Failed because no relay host defined!\n");
 	squid_error_entry(entry, ERR_NO_RELAY, NULL);
 	return;
     }
@@ -315,7 +315,7 @@ waisStart(request_t *request, StoreEntry * entry)
 	COMM_NONBLOCKING,
 	url);
     if (fd == COMM_ERROR) {
-	debug(24, 4, "waisStart: Failed because we're out of sockets.\n");
+	debug(24, 4) ("waisStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	return;
     }
@@ -363,6 +363,6 @@ static void
 waisAbort(void *data)
 {
     HttpStateData *waisState = data;
-    debug(24, 1, "waisAbort: %s\n", waisState->entry->url);
+    debug(24, 1) ("waisAbort: %s\n", waisState->entry->url);
     comm_close(waisState->fd);
 }

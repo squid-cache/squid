@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.169 1997/06/03 20:08:23 wessels Exp $
+ * $Id: http.cc,v 1.170 1997/06/04 06:15:57 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -242,7 +242,7 @@ httpTimeout(int fd, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
-    debug(11, 4, "httpTimeout: FD %d: '%s'\n", fd, entry->url);
+    debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_close(fd);
 }
@@ -308,7 +308,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	    l = 4096;
 	xstrncpy(line, s, l);
 	t = line;
-	debug(11, 3, "httpParseReplyHeaders: %s\n", t);
+	debug(11, 3) ("httpParseReplyHeaders: %s\n", t);
 	if (!strncasecmp(t, "HTTP/", 5)) {
 	    reply->version = atof(t + 5);
 	    if ((t = strchr(t, ' ')))
@@ -410,7 +410,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     int hdr_len;
     struct _http_reply *reply = entry->mem_obj->reply;
 
-    debug(11, 3, "httpProcessReplyHeader: key '%s'\n", entry->key);
+    debug(11, 3) ("httpProcessReplyHeader: key '%s'\n", entry->key);
 
     if (httpState->reply_hdr == NULL)
 	httpState->reply_hdr = get_free_8k_page();
@@ -420,7 +420,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	strncat(httpState->reply_hdr, buf, room < size ? room : size);
 	hdr_len += room < size ? room : size;
 	if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
-	    debug(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
+	    debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
 	    httpState->reply_hdr_state += 2;
 	    reply->code = 555;
 	    return;
@@ -435,13 +435,13 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     }
     if (httpState->reply_hdr_state == 1) {
 	httpState->reply_hdr_state++;
-	debug(11, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
+	debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
 	    httpState->reply_hdr);
 	/* Parse headers into reply structure */
 	httpParseReplyHeaders(httpState->reply_hdr, reply);
 	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
-	debug(11, 3, "httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
+	debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
 	switch (reply->code) {
 	    /* Responses that are cacheable */
 	case 200:		/* OK */
@@ -529,18 +529,18 @@ httpReadReply(int fd, void *data)
     int clen;
     int off;
     if (protoAbortFetch(entry)) {
-        squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-        comm_close(fd);
-        return;
+	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	comm_close(fd);
+	return;
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->e_current_len;
     off = storeGetLowestReaderOffset(entry);
     if ((clen - off) > HTTP_DELETE_GAP) {
 	IOStats.Http.reads_deferred++;
-	debug(11, 3, "httpReadReply: Read deferred for Object: %s\n",
+	debug(11, 3) ("httpReadReply: Read deferred for Object: %s\n",
 	    entry->url);
-	debug(11, 3, "                Current Gap: %d bytes\n", clen - off);
+	debug(11, 3) ("                Current Gap: %d bytes\n", clen - off);
 	/* reschedule, so it will be automatically reactivated
 	 * when Gap is big enough. */
 	commSetSelect(fd,
@@ -561,7 +561,7 @@ httpReadReply(int fd, void *data)
     errno = 0;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     fd_bytes(fd, len, FD_READ);
-    debug(11, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
+    debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, len);
     if (len > 0) {
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Http.reads++;
@@ -581,7 +581,7 @@ httpReadReply(int fd, void *data)
 	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    comm_close(fd);
 	}
-	debug(50, 2, "httpReadReply: FD %d: read failure: %s.\n",
+	debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
 	httpState->eof = 1;
@@ -617,7 +617,7 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
     StoreEntry *entry = NULL;
 
     entry = httpState->entry;
-    debug(11, 5, "httpSendComplete: FD %d: size %d: errflag %d.\n",
+    debug(11, 5) ("httpSendComplete: FD %d: size %d: errflag %d.\n",
 	fd, size, errflag);
 
     if (errflag) {
@@ -647,7 +647,7 @@ httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max)
 	    return;
     }
     /* allowed header, explicitly known to be not dangerous */
-    debug(11, 5, "httpAppendRequestHeader: %s\n", line);
+    debug(11, 5) ("httpAppendRequestHeader: %s\n", line);
     strcpy(hdr + (*sz), line);
     strcat(hdr + (*sz), crlf);
     *sz = n;
@@ -679,7 +679,7 @@ httpBuildRequestHeader(request_t * request,
     char *hdr_in = orig_request->headers;
 
     assert(hdr_in != NULL);
-    debug(11, 3, "httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
+    debug(11, 3) ("httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
     xstrncpy(fwdbuf, "X-Forwarded-For: ", 4096);
     xstrncpy(viabuf, "Via: ", 4096);
     sprintf(ybuf, "%s %s HTTP/1.0",
@@ -699,7 +699,7 @@ httpBuildRequestHeader(request_t * request,
 	if (l > 4096)
 	    l = 4096;
 	xstrncpy(xbuf, t, l);
-	debug(11, 5, "httpBuildRequestHeader: %s\n", xbuf);
+	debug(11, 5) ("httpBuildRequestHeader: %s\n", xbuf);
 	if (strncasecmp(xbuf, "Proxy-Connection:", 17) == 0)
 	    continue;
 	if (strncasecmp(xbuf, "Connection:", 11) == 0)
@@ -761,7 +761,7 @@ httpBuildRequestHeader(request_t * request,
 	debug_trap("httpBuildRequestHeader: size mismatch");
 	len = l;
     }
-    debug(11, 3, "httpBuildRequestHeader: OUTPUT:\n%s\n", hdr_out);
+    debug(11, 3) ("httpBuildRequestHeader: OUTPUT:\n%s\n", hdr_out);
     return len;
 }
 
@@ -778,7 +778,7 @@ httpSendRequest(int fd, void *data)
     StoreEntry *entry = httpState->entry;
     int cfd;
 
-    debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
+    debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     buflen = strlen(req->urlpath);
     if (req->headers)
 	buflen += req->headers_sz + 1;
@@ -809,7 +809,7 @@ httpSendRequest(int fd, void *data)
 	buf,
 	buflen,
 	cfd);
-    debug(11, 6, "httpSendRequest: FD %d:\n%s\n", fd, buf);
+    debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, buf);
     comm_write(fd,
 	buf,
 	len,
@@ -828,7 +828,7 @@ proxyhttpStart(request_t * orig_request,
     HttpStateData *httpState;
     request_t *request;
     int fd;
-    debug(11, 3, "proxyhttpStart: \"%s %s\"\n",
+    debug(11, 3) ("proxyhttpStart: \"%s %s\"\n",
 	RequestMethodStr[orig_request->method], entry->url);
     if (e->options & NEIGHBOR_PROXY_ONLY)
 #if DONT_USE_VM
@@ -844,7 +844,7 @@ proxyhttpStart(request_t * orig_request,
 	COMM_NONBLOCKING,
 	entry->url);
     if (fd == COMM_ERROR) {
-	debug(11, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
+	debug(11, 4) ("proxyhttpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	return;
     }
@@ -880,7 +880,7 @@ httpConnectDone(int fd, int status, void *data)
     request_t *request = httpState->request;
     StoreEntry *entry = httpState->entry;
     if (status == COMM_ERR_DNS) {
-	debug(11, 4, "httpConnectDone: Unknown host: %s\n", request->host);
+	debug(11, 4) ("httpConnectDone: Unknown host: %s\n", request->host);
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(fd);
     } else if (status != COMM_OK) {
@@ -902,7 +902,7 @@ httpStart(request_t * request, StoreEntry * entry)
 {
     int fd;
     HttpStateData *httpState;
-    debug(11, 3, "httpStart: \"%s %s\"\n",
+    debug(11, 3) ("httpStart: \"%s %s\"\n",
 	RequestMethodStr[request->method], entry->url);
     /* Create socket. */
     fd = comm_open(SOCK_STREAM,
@@ -912,7 +912,7 @@ httpStart(request_t * request, StoreEntry * entry)
 	COMM_NONBLOCKING,
 	entry->url);
     if (fd == COMM_ERROR) {
-	debug(11, 4, "httpStart: Failed because we're out of sockets.\n");
+	debug(11, 4) ("httpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	return;
     }
@@ -956,6 +956,6 @@ static void
 httpAbort(void *data)
 {
     HttpStateData *httpState = data;
-    debug(11, 1, "httpAbort: %s\n", httpState->entry->url);
+    debug(11, 1) ("httpAbort: %s\n", httpState->entry->url);
     comm_close(httpState->fd);
 }

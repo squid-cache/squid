@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.142 1997/06/01 23:23:46 wessels Exp $
+ * $Id: neighbors.cc,v 1.143 1997/06/04 06:16:03 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -160,7 +160,7 @@ whichPeer(const struct sockaddr_in *from)
     u_short port = ntohs(from->sin_port);
     struct in_addr ip = from->sin_addr;
     peer *p = NULL;
-    debug(15, 3, "whichPeer: from %s port %d\n", inet_ntoa(ip), port);
+    debug(15, 3) ("whichPeer: from %s port %d\n", inet_ntoa(ip), port);
     for (p = Peers.peers_head; p; p = p->next) {
 	for (j = 0; j < p->n_addresses; j++) {
 	    if (ip.s_addr == p->addresses[j].s_addr && port == p->icp_port) {
@@ -279,7 +279,7 @@ neighborsCount(request_t * request)
     for (p = Peers.peers_head; p; p = p->next)
 	if (peerWouldBePinged(p, request))
 	    count++;
-    debug(15, 3, "neighborsCount: %d\n", count);
+    debug(15, 3) ("neighborsCount: %d\n", count);
     return count;
 }
 
@@ -297,7 +297,7 @@ getSingleParent(request_t * request)
 	    return NULL;	/* oops, found second parent */
 	p = q;
     }
-    debug(15, 3, "getSingleParent: returning %s\n", p ? p->host : "NULL");
+    debug(15, 3) ("getSingleParent: returning %s\n", p ? p->host : "NULL");
     return p;
 }
 
@@ -314,7 +314,7 @@ getFirstUpParent(request_t * request)
 	    continue;
 	break;
     }
-    debug(15, 3, "getFirstUpParent: returning %s\n", p ? p->host : "NULL");
+    debug(15, 3) ("getFirstUpParent: returning %s\n", p ? p->host : "NULL");
     return p;
 }
 
@@ -336,7 +336,7 @@ getRoundRobinParent(request_t * request)
     }
     if (q)
 	q->rr_count++;
-    debug(15, 3, "getRoundRobinParent: returning %s\n", q ? q->host : "NULL");
+    debug(15, 3) ("getRoundRobinParent: returning %s\n", q ? q->host : "NULL");
     return q;
 }
 
@@ -351,7 +351,7 @@ getDefaultParent(request_t * request)
 	    continue;
 	if (!peerHTTPOkay(p, request))
 	    continue;
-	debug(15, 3, "getDefaultParent: returning %s\n", p->host);
+	debug(15, 3) ("getDefaultParent: returning %s\n", p->host);
 	return p;
     }
     return NULL;
@@ -398,7 +398,7 @@ neighborsDestroy(void)
     peer *p = NULL;
     peer *next = NULL;
 
-    debug(15, 3, "neighborsDestroy: called\n");
+    debug(15, 3) ("neighborsDestroy: called\n");
 
     for (p = Peers.peers_head; p; p = next) {
 	next = p->next;
@@ -420,7 +420,7 @@ neighbors_open(int fd)
     struct servent *sep = NULL;
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
-	debug(15, 1, "getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
+	debug(15, 1) ("getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
     peerRefreshDNS(NULL);
     if (0 == echo_hdr.opcode) {
 	echo_hdr.opcode = ICP_OP_SECHO;
@@ -459,9 +459,9 @@ neighborsUdpPing(request_t * request,
     if (Peers.peers_head == NULL)
 	return 0;
     if (theOutIcpConnection < 0) {
-	debug(15, 0, "neighborsUdpPing: There is no ICP socket!\n");
-	debug(15, 0, "Cannot query neighbors for '%s'.\n", url);
-	debug(15, 0, "Check 'icp_port' in your config file\n");
+	debug(15, 0) ("neighborsUdpPing: There is no ICP socket!\n");
+	debug(15, 0) ("Cannot query neighbors for '%s'.\n", url);
+	debug(15, 0) ("Check 'icp_port' in your config file\n");
 	fatal_dump(NULL);
     }
     if (entry->swap_status != NO_SWAP)
@@ -475,20 +475,20 @@ neighborsUdpPing(request_t * request,
     for (i = 0, p = Peers.first_ping; i++ < Peers.n; p = p->next) {
 	if (p == NULL)
 	    p = Peers.peers_head;
-	debug(15, 5, "neighborsUdpPing: Peer %s\n", p->host);
+	debug(15, 5) ("neighborsUdpPing: Peer %s\n", p->host);
 	if (!peerWouldBePinged(p, request))
 	    continue;		/* next peer */
 	peers_pinged++;
-	debug(15, 4, "neighborsUdpPing: pinging peer %s for '%s'\n",
+	debug(15, 4) ("neighborsUdpPing: pinging peer %s for '%s'\n",
 	    p->host, url);
 	if (p->type == PEER_MULTICAST)
 	    comm_set_mcast_ttl(theOutIcpConnection, p->mcast.ttl);
 	reqnum = storeReqnum(entry, request->method);
-	debug(15, 3, "neighborsUdpPing: key = '%s'\n", entry->key);
-	debug(15, 3, "neighborsUdpPing: reqnum = %d\n", reqnum);
+	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", entry->key);
+	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
 	if (p->icp_port == echo_port) {
-	    debug(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
+	    debug(15, 4) ("neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
 	    echo_hdr.reqnum = reqnum;
 	    query = icpCreateMessage(ICP_OP_DECHO, 0, url, reqnum, 0);
 	    icpUdpSend(theOutIcpConnection,
@@ -517,7 +517,7 @@ neighborsUdpPing(request_t * request,
 
 	p->stats.ack_deficit++;
 	p->stats.pings_sent++;
-	debug(15, 3, "neighborsUdpPing: %s: ack_deficit = %d\n",
+	debug(15, 3) ("neighborsUdpPing: %s: ack_deficit = %d\n",
 	    p->host, p->stats.ack_deficit);
 	if (p->type == PEER_MULTICAST) {
 	    p->stats.ack_deficit = 0;
@@ -529,7 +529,7 @@ neighborsUdpPing(request_t * request,
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
 	    if ((p->stats.ack_deficit == HIER_MAX_DEFICIT)) {
-		debug(15, 0, "Detected DEAD %s: %s/%d/%d\n",
+		debug(15, 0) ("Detected DEAD %s: %s/%d/%d\n",
 		    neighborTypeStr(p),
 		    p->host, p->http_port, p->icp_port);
 	    }
@@ -541,9 +541,9 @@ neighborsUdpPing(request_t * request,
     /* only do source_ping if we have neighbors */
     if (Peers.n) {
 	if (!Config.sourcePing) {
-	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
+	    debug(15, 6) ("neighborsUdpPing: Source Ping is disabled.\n");
 	} else if ((ia = ipcache_gethostbyname(host, 0))) {
-	    debug(15, 6, "neighborsUdpPing: Source Ping: to %s for '%s'\n",
+	    debug(15, 6) ("neighborsUdpPing: Source Ping: to %s for '%s'\n",
 		host, url);
 	    echo_hdr.reqnum = reqnum;
 	    if (icmp_sock != -1) {
@@ -560,7 +560,7 @@ neighborsUdpPing(request_t * request,
 		    PROTO_NONE);
 	    }
 	} else {
-	    debug(15, 6, "neighborsUdpPing: Source Ping: unknown host: %s\n",
+	    debug(15, 6) ("neighborsUdpPing: Source Ping: unknown host: %s\n",
 		host);
 	}
     }
@@ -578,7 +578,7 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
     int n;
     /* Neighbor is alive, reset the ack deficit */
     if (p->stats.ack_deficit >= HIER_MAX_DEFICIT) {
-	debug(15, 0, "Detected REVIVED %s: %s/%d/%d\n",
+	debug(15, 0) ("Detected REVIVED %s: %s/%d/%d\n",
 	    neighborTypeStr(p),
 	    p->host, p->http_port, p->icp_port);
     }
@@ -635,7 +635,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
     char *opcode_d;
     icp_opcode opcode = (icp_opcode) header->opcode;
 
-    debug(15, 6, "neighborsUdpAck: opcode %d '%s'\n", (int) opcode, url);
+    debug(15, 6) ("neighborsUdpAck: opcode %d '%s'\n", (int) opcode, url);
     if ((p = whichPeer(from)))
 	neighborAlive(p, mem, header);
     if (opcode > ICP_OP_END)
@@ -643,26 +643,26 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
     opcode_d = IcpOpcodeStr[opcode];
     /* check if someone is already fetching it */
     if (BIT_TEST(entry->flag, ENTRY_DISPATCHED)) {
-	debug(15, 3, "neighborsUdpAck: '%s' already being fetched.\n", url);
+	debug(15, 3) ("neighborsUdpAck: '%s' already being fetched.\n", url);
 	neighborCountIgnored(p, opcode);
 	return;
     }
     if (mem == NULL) {
-	debug(15, 2, "Ignoring %s for missing mem_obj: %s\n", opcode_d, url);
+	debug(15, 2) ("Ignoring %s for missing mem_obj: %s\n", opcode_d, url);
 	neighborCountIgnored(p, opcode);
 	return;
     }
     if (entry->ping_status != PING_WAITING) {
-	debug(15, 2, "neighborsUdpAck: Unexpected %s for %s\n", opcode_d, url);
+	debug(15, 2) ("neighborsUdpAck: Unexpected %s for %s\n", opcode_d, url);
 	neighborCountIgnored(p, opcode);
 	return;
     }
     if (entry->lock_count == 0) {
-	debug(12, 1, "neighborsUdpAck: '%s' has no locks\n", url);
+	debug(12, 1) ("neighborsUdpAck: '%s' has no locks\n", url);
 	neighborCountIgnored(p, opcode);
 	return;
     }
-    debug(15, 3, "neighborsUdpAck: %s for '%s' from %s \n",
+    debug(15, 3) ("neighborsUdpAck: %s for '%s' from %s \n",
 	opcode_d, url, p ? p->host : "source");
     if (p)
 	ntype = neighborType(p, mem->request);
@@ -671,17 +671,17 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
     } else if (opcode == ICP_OP_SECHO) {
 	/* Received source-ping reply */
 	if (p) {
-	    debug(15, 1, "Ignoring SECHO from neighbor %s\n", p->host);
+	    debug(15, 1) ("Ignoring SECHO from neighbor %s\n", p->host);
 	    neighborCountIgnored(p, opcode);
 	} else {
 	    /* if we reach here, source-ping reply is the first 'parent',
 	     * so fetch directly from the source */
-	    debug(15, 6, "Source is the first to respond.\n");
+	    debug(15, 6) ("Source is the first to respond.\n");
 	    mem->icp_reply_callback(NULL, ntype, opcode, mem->ircb_data);
 	}
     } else if (opcode == ICP_OP_MISS) {
 	if (p == NULL) {
-	    debug(15, 1, "Ignoring MISS from non-peer %s\n",
+	    debug(15, 1) ("Ignoring MISS from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else if (ntype != PEER_PARENT) {
 	    (void) 0;		/* ignore MISS from non-parent */
@@ -690,14 +690,14 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_HIT || opcode == ICP_OP_HIT_OBJ) {
 	if (p == NULL) {
-	    debug(15, 1, "Ignoring HIT from non-peer %s\n",
+	    debug(15, 1) ("Ignoring HIT from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else {
 	    mem->icp_reply_callback(p, ntype, ICP_OP_HIT, mem->ircb_data);
 	}
     } else if (opcode == ICP_OP_DECHO) {
 	if (p == NULL) {
-	    debug(15, 1, "Ignoring DECHO from non-peer %s\n",
+	    debug(15, 1) ("Ignoring DECHO from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else if (ntype == PEER_SIBLING) {
 	    debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
@@ -707,21 +707,21 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_SECHO) {
 	if (p) {
-	    debug(15, 1, "Ignoring SECHO from neighbor %s\n", p->host);
+	    debug(15, 1) ("Ignoring SECHO from neighbor %s\n", p->host);
 	    neighborCountIgnored(p, opcode);
 	} else if (!Config.sourcePing) {
-	    debug(15, 1, "Unsolicited SECHO from %s\n", inet_ntoa(from->sin_addr));
+	    debug(15, 1) ("Unsolicited SECHO from %s\n", inet_ntoa(from->sin_addr));
 	} else {
 	    mem->icp_reply_callback(NULL, ntype, opcode, mem->ircb_data);
 	}
     } else if (opcode == ICP_OP_DENIED) {
 	if (p == NULL) {
-	    debug(15, 1, "Ignoring DENIED from non-peer %s\n",
+	    debug(15, 1) ("Ignoring DENIED from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else if (p->stats.pings_acked > 100) {
 	    if (100 * p->stats.counts[ICP_OP_DENIED] / p->stats.pings_acked > 95) {
-		debug(15, 0, "95%% of replies from '%s' are UDP_DENIED\n", p->host);
-		debug(15, 0, "Disabling '%s', please check your configuration.\n", p->host);
+		debug(15, 0) ("95%% of replies from '%s' are UDP_DENIED\n", p->host);
+		debug(15, 0) ("Disabling '%s', please check your configuration.\n", p->host);
 		neighborRemove(p);
 		p = NULL;
 	    } else {
@@ -731,7 +731,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
     } else if (opcode == ICP_OP_MISS_NOFETCH) {
 	mem->icp_reply_callback(p, ntype, opcode, mem->ircb_data);
     } else {
-	debug(15, 0, "neighborsUdpAck: Unexpected ICP reply: %s\n", opcode_d);
+	debug(15, 0) ("neighborsUdpAck: Unexpected ICP reply: %s\n", opcode_d);
     }
 }
 
@@ -750,7 +750,7 @@ neighborAdd(const char *host,
     if (!strcmp(host, me)) {
 	for (j = 0; j < Config.Port.n_http; j++) {
 	    if (http_port == Config.Port.http[j]) {
-		debug(15, 0, "neighborAdd: skipping cache_host %s %s/%d/%d\n",
+		debug(15, 0) ("neighborAdd: skipping cache_host %s %s/%d/%d\n",
 		    type, host, http_port, icp_port);
 		return;
 	    }
@@ -788,7 +788,7 @@ neighborAddDomainPing(const char *host, const char *domain)
     struct _domain_ping **L = NULL;
     peer *p;
     if ((p = neighborFindByName(host)) == NULL) {
-	debug(15, 0, "%s, line %d: No cache_host '%s'\n",
+	debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
 	    cfg_filename, config_lineno, host);
 	return;
     }
@@ -811,7 +811,7 @@ neighborAddDomainType(const char *host, const char *domain, const char *type)
     struct _domain_type **L = NULL;
     peer *p;
     if ((p = neighborFindByName(host)) == NULL) {
-	debug(15, 0, "%s, line %d: No cache_host '%s'\n",
+	debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
 	    cfg_filename, config_lineno, host);
 	return;
     }
@@ -832,7 +832,7 @@ neighborAddAcl(const char *host, const char *aclname)
     struct _acl *a = NULL;
 
     if ((p = neighborFindByName(host)) == NULL) {
-	debug(15, 0, "%s, line %d: No cache_host '%s'\n",
+	debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
 	    cfg_filename, config_lineno, host);
 	return;
     }
@@ -842,20 +842,20 @@ neighborAddAcl(const char *host, const char *aclname)
 	L->op = 0;
 	aclname++;
     }
-    debug(15, 3, "neighborAddAcl: looking for ACL name '%s'\n", aclname);
+    debug(15, 3) ("neighborAddAcl: looking for ACL name '%s'\n", aclname);
     a = aclFindByName(aclname);
     if (a == NULL) {
-	debug(15, 0, "%s line %d: %s\n",
+	debug(15, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(15, 0, "neighborAddAcl: ACL name '%s' not found.\n", aclname);
+	debug(15, 0) ("neighborAddAcl: ACL name '%s' not found.\n", aclname);
 	xfree(L);
 	return;
     }
 #ifdef NOW_SUPPORTED
     if (a->type == ACL_SRC_IP) {
-	debug(15, 0, "%s line %d: %s\n",
+	debug(15, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(15, 0, "neighborAddAcl: 'src' ACL's not supported for 'cache_host_acl'\n");
+	debug(15, 0) ("neighborAddAcl: 'src' ACL's not supported for 'cache_host_acl'\n");
 	xfree(L);
 	return;
     }
@@ -889,7 +889,7 @@ parseNeighborType(const char *s)
 	return PEER_SIBLING;
     if (!strcasecmp(s, "multicast"))
 	return PEER_MULTICAST;
-    debug(15, 0, "WARNING: Unknown neighbor type: %s\n", s);
+    debug(15, 0) ("WARNING: Unknown neighbor type: %s\n", s);
     return PEER_SIBLING;
 }
 
@@ -937,23 +937,23 @@ peerDNSConfigure(int fd, const ipcache_addrs * ia, void *data)
     int j;
     p->ip_lookup_pending = 0;
     if (p->n_addresses == 0) {
-	debug(15, 1, "Configuring %s %s/%d/%d\n", neighborTypeStr(p),
+	debug(15, 1) ("Configuring %s %s/%d/%d\n", neighborTypeStr(p),
 	    p->host, p->http_port, p->icp_port);
 	if (p->type == PEER_MULTICAST)
-	    debug(15, 1, "    Multicast TTL = %d\n", p->mcast.ttl);
+	    debug(15, 1) ("    Multicast TTL = %d\n", p->mcast.ttl);
     }
     p->n_addresses = 0;
     if (ia == NULL) {
-	debug(0, 0, "WARNING: DNS lookup for '%s' failed!\n", p->host);
+	debug(0, 0) ("WARNING: DNS lookup for '%s' failed!\n", p->host);
 	return;
     }
     if ((int) ia->count < 1) {
-	debug(0, 0, "WARNING: No IP address found for '%s'!\n", p->host);
+	debug(0, 0) ("WARNING: No IP address found for '%s'!\n", p->host);
 	return;
     }
     for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
 	p->addresses[j] = ia->in_addrs[j];
-	debug(15, 2, "--> IP address #%d: %s\n", j, inet_ntoa(p->addresses[j]));
+	debug(15, 2) ("--> IP address #%d: %s\n", j, inet_ntoa(p->addresses[j]));
 	p->n_addresses++;
     }
     ap = &p->in_addr;
@@ -1013,7 +1013,7 @@ peerCheckConnectDone(int fd, int status, void *data)
     peer *p = data;
     p->tcp_up = status == COMM_OK ? 1 : 0;
     if (p->tcp_up) {
-	debug(15, 0, "TCP connection to %s/%d succeeded\n",
+	debug(15, 0) ("TCP connection to %s/%d succeeded\n",
 	    p->host, p->http_port);
     } else {
 	eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
@@ -1027,7 +1027,7 @@ peerCheckConnectStart(peer * p)
 {
     if (!p->tcp_up)
 	return;
-    debug(15, 0, "TCP connection to %s/%d failed\n", p->host, p->http_port);
+    debug(15, 0) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
     p->tcp_up = 0;
     p->last_fail_time = squid_curtime;
     eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
@@ -1098,7 +1098,7 @@ peerCountMcastPeersDone(void *data)
 	(double) psstate->icp.n_recv,
 	++p->mcast.n_times_counted,
 	10);
-    debug(15, 1, "Group %s: %d replies, %4.1f average\n",
+    debug(15, 1) ("Group %s: %d replies, %4.1f average\n",
 	p->host,
 	psstate->icp.n_recv,
 	p->mcast.avg_n_members);

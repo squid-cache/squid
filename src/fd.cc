@@ -83,6 +83,6 @@ fdDumpOpen(void)
 	    continue;
 	if (i == fileno(debug_log))
 	    continue;
-	debug(5, 1, "Open FD %4d %s\n", i, fde->desc);
+	debug(5, 1) ("Open FD %4d %s\n", i, fde->desc);
     }
 }

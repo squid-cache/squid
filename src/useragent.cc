@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.6 1997/05/02 21:34:18 wessels Exp $
+ * $Id: useragent.cc,v 1.7 1997/06/04 06:16:16 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -50,14 +50,14 @@ useragentOpenLog(void)
     if (fname && strcmp(fname, "none") != 0) {
 	log_fd = file_open(fname, O_WRONLY | O_CREAT | O_APPEND, NULL, NULL);
 	if (log_fd < 0) {
-	    debug(50, 0, "useragentOpenLog: %s: %s\n", fname, xstrerror());
+	    debug(50, 0) ("useragentOpenLog: %s: %s\n", fname, xstrerror());
 	} else if ((cache_useragent_log = fdopen(log_fd, "a")) == NULL) {
 	    file_close(log_fd);
-	    debug(50, 0, "useragentOpenLog: %s: %s\n", fname, xstrerror());
+	    debug(50, 0) ("useragentOpenLog: %s: %s\n", fname, xstrerror());
 	}
     }
     if (log_fd < 0 || cache_useragent_log == NULL)
-	debug(40, 1, "User-Agent logging is disabled.\n");
+	debug(40, 1) ("User-Agent logging is disabled.\n");
 #endif
 }
 
@@ -79,7 +79,7 @@ useragentRotateLog(void)
 	if (S_ISREG(sb.st_mode) == 0)
 	    return;
 #endif
-    debug(40, 1, "useragentRotateLog: Rotating.\n");
+    debug(40, 1) ("useragentRotateLog: Rotating.\n");
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
 	i--;

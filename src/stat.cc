@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.140 1997/06/02 05:39:48 wessels Exp $
+ * $Id: stat.cc,v 1.141 1997/06/04 06:16:10 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -396,7 +396,7 @@ stat_objects_get(const cacheinfo * obj, StoreEntry * sentry, int vm_or_not)
 	    continue;
 	if ((++N & 0xFF) == 0) {
 	    getCurrentTime();
-	    debug(18, 3, "stat_objects_get:  Processed %d objects...\n", N);
+	    debug(18, 3) ("stat_objects_get:  Processed %d objects...\n", N);
 	}
 	storeAppendPrintf(sentry, "{%s %dL %-25s %s %3d %2d %8d %s}\n",
 	    describeStatuses(entry),
@@ -496,7 +496,7 @@ log_get_start(const cacheinfo * obj, StoreEntry * sentry)
     }
     fd = file_open(obj->logfilename, O_RDONLY, NULL, NULL);
     if (fd < 0) {
-	debug(50, 0, "Cannot open logfile: %s: %s\n",
+	debug(50, 0) ("Cannot open logfile: %s: %s\n",
 	    obj->logfilename, xstrerror());
 	return;
     }
@@ -1148,7 +1148,7 @@ log_append(const cacheinfo * obj,
 	if (msize + strlen(ereq) + strlen(erep) + 7 <= sizeof(tmp))
 	    sprintf(tmp + msize - 1, " [%s] [%s]\n", ereq, erep);
 	else
-	    debug(18, 1, "log_append: Long headers not logged.\n");
+	    debug(18, 1) ("log_append: Long headers not logged.\n");
 	safe_free(ereq);
 	safe_free(erep);
     }
@@ -1160,7 +1160,7 @@ log_append(const cacheinfo * obj,
 	NULL,
 	xfree);
     if (x != DISK_OK)
-	debug(18, 1, "log_append: File write failed.\n");
+	debug(18, 1) ("log_append: File write failed.\n");
 }
 
 static void
@@ -1172,7 +1172,7 @@ log_enable(cacheinfo * obj, StoreEntry * sentry)
 	/* open the logfile */
 	obj->logfile_fd = file_open(obj->logfilename, O_WRONLY | O_CREAT, NULL, NULL);
 	if (obj->logfile_fd == DISK_ERROR) {
-	    debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
+	    debug(18, 0) ("Cannot open logfile: %s\n", obj->logfilename);
 	    obj->logfile_status = LOG_DISABLE;
 	}
     }
@@ -1205,7 +1205,7 @@ log_clear(cacheinfo * obj, StoreEntry * sentry)
     /* reopen it anyway */
     obj->logfile_fd = file_open(obj->logfilename, O_WRONLY | O_CREAT, NULL, NULL);
     if (obj->logfile_fd == DISK_ERROR) {
-	debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
+	debug(18, 0) ("Cannot open logfile: %s\n", obj->logfilename);
 	obj->logfile_status = LOG_DISABLE;
     }
     /* at the moment, store one char to make a storage manager happy */
@@ -1278,7 +1278,7 @@ stat_init(cacheinfo ** object, const char *logfilename)
     cacheinfo *obj = NULL;
     int i;
 
-    debug(18, 5, "stat_init: Initializing...\n");
+    debug(18, 5) ("stat_init: Initializing...\n");
     obj = xcalloc(1, sizeof(cacheinfo));
     obj->stat_get = stat_get;
     obj->info_get = info_get;
@@ -1298,7 +1298,7 @@ stat_init(cacheinfo ** object, const char *logfilename)
 	xstrncpy(obj->logfilename, logfilename, SQUID_MAXPATHLEN);
 	obj->logfile_fd = file_open(obj->logfilename, O_WRONLY | O_CREAT, NULL, NULL);
 	if (obj->logfile_fd == DISK_ERROR) {
-	    debug(50, 0, "%s: %s\n", obj->logfilename, xstrerror());
+	    debug(50, 0) ("%s: %s\n", obj->logfilename, xstrerror());
 	    fatal("Cannot open logfile.");
 	}
     }
@@ -1365,7 +1365,7 @@ stat_rotate_log(void)
 	    return;
 #endif
 
-    debug(18, 1, "stat_rotate_log: Rotating\n");
+    debug(18, 1) ("stat_rotate_log: Rotating\n");
 
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
@@ -1384,7 +1384,7 @@ stat_rotate_log(void)
     file_close(HTTPCacheInfo->logfile_fd);
     HTTPCacheInfo->logfile_fd = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL);
     if (HTTPCacheInfo->logfile_fd == DISK_ERROR) {
-	debug(18, 0, "stat_rotate_log: Cannot open logfile: %s\n", fname);
+	debug(18, 0) ("stat_rotate_log: Cannot open logfile: %s\n", fname);
 	HTTPCacheInfo->logfile_status = LOG_DISABLE;
 	fatal("Cannot open logfile.");
     }
