@@ -1,4 +1,4 @@
-/* $Id: debug.cc,v 1.9 1996/03/27 20:20:44 wessels Exp $ */
+/* $Id: debug.cc,v 1.10 1996/04/01 03:42:30 wessels Exp $ */
 
 #include "squid.h"
 
@@ -15,7 +15,7 @@ static char the_time[81];
 static int debugLevels[MAX_DEBUG_SECTIONS];
 
 #if defined(__STRICT_ANSI__)
-void _db_print(int section,...)
+void _db_print(int section, int level, char *format...)
 {
     va_list args;
 #else
@@ -24,9 +24,9 @@ void _db_print(va_alist)
 {
     va_list args;
     int section;
-#endif
     int level;
     char *format = NULL;
+#endif
     static char f[BUFSIZ];
     static char tmpbuf[BUFSIZ];
     char *s = NULL;
@@ -35,13 +35,13 @@ void _db_print(va_alist)
 	return;
 
 #if defined(__STRICT_ANSI__)
-    va_start(args, section);
+    va_start(args, format);
 #else
     va_start(args);
     section = va_arg(args, int);
-#endif
     level = va_arg(args, int);
     format = va_arg(args, char *);
+#endif
 
     if (level > debugLevels[section]) {
 	va_end(args);
