@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.241 1997/05/23 05:21:02 wessels Exp $
+ * $Id: store.cc,v 1.242 1997/05/23 05:30:36 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1084,6 +1084,7 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
     assert(e->swap_status == SWAP_OK);
     assert(e->swap_file_number >= 0);
     assert(e->mem_obj == NULL);
+    e->mem_obj = new_MemObject();
     ctrlp = xmalloc(sizeof(swapin_ctrl_t));
     ctrlp->e = e;
     ctrlp->callback = callback;
@@ -1115,10 +1116,10 @@ storeSwapInValidateComplete(void *data, int status)
 static void
 storeSwapInStartComplete(void *data, int fd)
 {
-    MemObject *mem = NULL;
     swapin_ctrl_t *ctrlp = (swapin_ctrl_t *) data;
     StoreEntry *e = ctrlp->e;
-    assert(e->mem_obj == NULL);
+    MemObject *mem = e->mem_obj;
+    assert(e->mem_obj != NULL);
     assert(e->mem_status == NOT_IN_MEMORY);
     assert(e->swap_status == SWAP_OK);
     if (fd < 0) {
@@ -1130,7 +1131,6 @@ storeSwapInStartComplete(void *data, int fd)
 	return;
     }
     storeSetMemStatus(e, SWAPPING_IN);
-    mem = e->mem_obj = new_MemObject();
     mem->swapin_fd = (short) fd;
     debug(20, 5, "storeSwapInStart: initialized swap file '%s' for '%s'\n",
 	ctrlp->path, e->url);
