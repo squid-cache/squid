@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.393 2002/09/24 10:46:42 robertc Exp $
+ * $Id: http.cc,v 1.394 2002/10/04 09:53:35 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -54,6 +54,12 @@ static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
 static int httpCachableReply(HttpStateData *);
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
+static mb_size_t httpBuildRequestPrefix(request_t * request,
+    request_t * orig_request,
+    StoreEntry * entry,
+    MemBuf * mb,
+    http_state_flags);
+static void httpProcessReplyHeader(HttpStateData *, const char *, int);
 
 static void
 httpStateFree(int fd, void *data)
@@ -725,7 +731,6 @@ httpBuildRequestHeader(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
     HttpHeader * hdr_out,
-    int cfd,
     http_state_flags flags)
 {
     /* building buffer for complex strings */
@@ -829,7 +834,10 @@ httpBuildRequestHeader(request_t * request,
     }
     /* append X-Forwarded-For */
     strFwd = httpHeaderGetList(hdr_in, HDR_X_FORWARDED_FOR);
-    strListAdd(&strFwd, (cfd < 0 ? "unknown" : fd_table[cfd].ipaddr), ',');
+    if (opt_forwarded_for && orig_request->client_addr.s_addr != no_addr.s_addr)
+	strListAdd(&strFwd, inet_ntoa(orig_request->client_addr), ',');
+    else
+	strListAdd(&strFwd, "unknown", ',');
     httpHeaderPutStr(hdr_out, HDR_X_FORWARDED_FOR, strBuf(strFwd));
     stringClean(&strFwd);
 
@@ -904,7 +912,6 @@ httpBuildRequestPrefix(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
     MemBuf * mb,
-    int cfd,
     http_state_flags flags)
 {
     const int offset = mb->size;
@@ -915,7 +922,7 @@ httpBuildRequestPrefix(request_t * request,
     {
 	HttpHeader hdr;
 	Packer p;
-	httpBuildRequestHeader(request, orig_request, entry, &hdr, cfd, flags);
+	httpBuildRequestHeader(request, orig_request, entry, &hdr, flags);
 	packerToMemInit(&p, mb);
 	httpHeaderPackInto(&hdr, &p);
 	httpHeaderClean(&hdr);
@@ -932,7 +939,6 @@ httpSendRequest(HttpStateData * httpState)
     MemBuf mb;
     request_t *req = httpState->request;
     StoreEntry *entry = httpState->entry;
-    int cfd;
     peer *p = httpState->_peer;
     CWCB *sendHeaderDone;
 
@@ -943,13 +949,6 @@ httpSendRequest(HttpStateData * httpState)
     else
 	sendHeaderDone = httpSendComplete;
 
-    if (!opt_forwarded_for)
-	cfd = -1;
-    else if (entry->mem_obj == NULL)
-	cfd = -1;
-    else
-	cfd = entry->mem_obj->fd;
-    assert(-1 == cfd || FD_SOCKET == fd_table[cfd].type);
     if (p != NULL)
 	httpState->flags.proxying = 1;
     else
@@ -974,7 +973,6 @@ httpSendRequest(HttpStateData * httpState)
 	httpState->orig_request,
 	entry,
 	&mb,
-	cfd,
 	httpState->flags);
     debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", httpState->fd, mb.buf);
     comm_write_mbuf(httpState->fd, mb, sendHeaderDone, httpState);

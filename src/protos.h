@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.449 2002/10/03 06:45:53 hno Exp $
+ * $Id: protos.h,v 1.450 2002/10/04 09:53:35 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -144,7 +144,7 @@ extern int clientAbortBody(request_t * req);
 extern void httpRequestFree(void *);
 
 extern void clientAccessCheck(void *);
-extern aclCheck_t * clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http);
+extern aclCheck_t *clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http);
 
 /* client_side_reply.c - client side reply related routines (pure logic, no comms) */
 extern void *clientReplyNewContext(clientHttpRequest *);
@@ -306,18 +306,10 @@ extern void whoisStart(FwdState *);
 /* http.c */
 extern int httpCachable(method_t);
 extern void httpStart(FwdState *);
-extern void httpParseReplyHeaders(const char *, http_reply *);
-extern void httpProcessReplyHeader(HttpStateData *, const char *, int);
-extern mb_size_t httpBuildRequestPrefix(request_t * request,
-    request_t * orig_request,
-    StoreEntry * entry,
-    MemBuf * mb,
-    int cfd,
-    http_state_flags);
 extern void httpAnonInitModule(void);
 extern int httpAnonHdrAllowed(http_hdr_type hdr_id);
 extern int httpAnonHdrDenied(http_hdr_type hdr_id);
-extern void httpBuildRequestHeader(request_t *, request_t *, StoreEntry *, HttpHeader *, int, http_state_flags);
+extern void httpBuildRequestHeader(request_t *, request_t *, StoreEntry *, HttpHeader *, http_state_flags);
 extern void httpBuildVersion(http_version_t * version, unsigned int major, unsigned int minor);
 extern const char *httpMakeVaryMark(request_t * request, HttpReply * reply);
 
