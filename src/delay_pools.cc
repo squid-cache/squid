@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.4 1998/08/20 22:29:56 wessels Exp $
+ * $Id: delay_pools.cc,v 1.5 1998/09/30 04:34:07 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -58,6 +58,7 @@ struct _delayData {
 
 static struct _delayData delay_data;
 static OBJH delayPoolStats;
+static time_t delay_pools_last_update = 0;
 static delay_id delayId(unsigned char class, int position);
 
 static delay_id
@@ -156,13 +157,18 @@ delayClient(clientHttpRequest * http)
 
 
 void
-delayPoolsUpdate(int incr)
+delayPoolsUpdate(void *unused)
 {
+    int incr = squid_curtime - delay_pools_last_update;
     int i;
     int j;
     int mpos;
     int individual_restore_bytes;
     int network_restore_bytes;
+    eventAdd("delayPoolsUpdate", delayPoolsUpdate, NULL, 1.0, 1);
+    if (incr < 1)
+	return;
+    delay_pools_last_update = squid_curtime;
     /* Increment 3 aggregate pools */
     if (Config.Delay.class1.aggregate.restore_bps != -1 &&
 	(delay_data.class1_aggregate +=
@@ -333,6 +339,7 @@ delayPoolsInit(void)
     delay_data.class3_aggregate = Config.Delay.class3.aggregate.restore_bps;
     delay_data.class3_network_map[0] = 255;
     cachemgrRegister("delay", "Delay Pool Levels", delayPoolStats, 0, 1);
+    eventAdd("delayPoolsUpdate", delayPoolsUpdate, NULL, 1.0, 1);
 }
 
 /*
