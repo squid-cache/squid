@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.328 1997/10/30 00:50:36 wessels Exp $
+ * $Id: store.cc,v 1.329 1997/10/30 20:37:56 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -718,6 +718,7 @@ storeAddDiskRestore(const char *url,
 	/* Only set the file bit if we know its a valid entry */
 	/* otherwise, set it in the validation procedure */
 	storeDirMapBitSet(file_number);
+	storeDirUpdateSwapSize(e->swap_file_number, size, 1);
     } else {
 	BIT_CLR(e->flag, ENTRY_VALIDATED);
     }
@@ -1265,7 +1266,6 @@ storeDoRebuildFromDisk(void *data)
 	    (void) 0;
 	}
 	/* update store_swap_size */
-	storeDirUpdateSwapSize(sfileno, size, 1);
 	RB->objcount++;
 	e = storeAddDiskRestore(url,
 	    sfileno,
@@ -1397,6 +1397,7 @@ storeValidateComplete(void *data, int retcode, int errcode)
     } else {
 	BIT_SET(e->flag, ENTRY_VALIDATED);
 	storeDirMapBitSet(e->swap_file_number);
+	storeDirUpdateSwapSize(e->swap_file_number, e->object_len, 1);
     }
     errno = errcode;
     ctrlp->callback(ctrlp->callback_data);
