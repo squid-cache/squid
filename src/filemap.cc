@@ -1,6 +1,6 @@
 
 /*
- * $Id: filemap.cc,v 1.35 2000/04/28 19:06:51 adrian Exp $
+ * $Id: filemap.cc,v 1.36 2000/10/13 08:45:07 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -96,6 +96,12 @@ file_map_bit_set(fileMap * fm, int file_number)
     return file_number;
 }
 
+/*
+ * WARNING: file_map_bit_reset does not perform array bounds
+ * checking!  It assumes that 'file_number' is valid, and that the
+ * bit is already set.  The caller must verify both of those
+ * conditions by calling file_map_bit_test() first.
+ */
 void
 file_map_bit_reset(fileMap * fm, int file_number)
 {
