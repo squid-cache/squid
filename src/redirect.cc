@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.97 2003/03/04 01:40:29 robertc Exp $
+ * $Id: redirect.cc,v 1.98 2003/05/29 15:54:08 hno Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -183,6 +183,8 @@ redirectInit(void)
     redirectors->cmdline = Config.Program.redirect;
 
     redirectors->n_to_start = Config.redirectChildren;
+
+    redirectors->concurrency = Config.redirectConcurrency;
 
     redirectors->ipc_type = IPC_STREAM;
 

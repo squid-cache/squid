@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.24 2003/02/21 22:50:26 robertc Exp $
+ * $Id: auth_basic.cc,v 1.25 2003/05/29 15:54:09 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -352,10 +352,12 @@ authBasicCfgDump(StoreEntry * entry, const char *name, authScheme * scheme)
         list = list->next;
     }
 
-    storeAppendPrintf(entry, "\n%s %s realm %s\n%s %s children %d\n%s %s credentialsttl %d seconds\n",
-                      name, "basic", config->basicAuthRealm,
-                      name, "basic", config->authenticateChildren,
-                      name, "basic", (int) config->credentialsTTL);
+    storeAppendPrintf(entry, "\n");
+
+    storeAppendPrintf(entry, "%s basic realm %s\n", name, config->basicAuthRealm);
+    storeAppendPrintf(entry, "%s basic children %d\n", name, config->authenticateChildren);
+    storeAppendPrintf(entry, "%s basic concurrency %d\n", name, config->authenticateConcurrency);
+    storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) config->credentialsTTL);
 
 }
 
@@ -383,6 +385,8 @@ authBasicParse(authScheme * scheme, int n_configured, char *param_str)
         requirePathnameExists("authparam basic program", basicConfig->authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
         parse_int(&basicConfig->authenticateChildren);
+    } else if (strcasecmp(param_str, "concurrency") == 0) {
+        parse_int(&basicConfig->authenticateConcurrency);
     } else if (strcasecmp(param_str, "realm") == 0) {
         parse_eol(&basicConfig->basicAuthRealm);
     } else if (strcasecmp(param_str, "credentialsttl") == 0) {
@@ -624,6 +628,8 @@ authBasicInit(authScheme * scheme)
         basicauthenticators->cmdline = basicConfig->authenticate;
 
         basicauthenticators->n_to_start = basicConfig->authenticateChildren;
+
+        basicauthenticators->concurrency = basicConfig->authenticateConcurrency;
 
         basicauthenticators->ipc_type = IPC_STREAM;
 

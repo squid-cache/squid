@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.317 2003/05/21 02:58:11 robertc Exp $
+# $Id: cf.data.pre,v 1.318 2003/05/29 15:54:07 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1473,6 +1473,16 @@ DOC_START
 	and other system resources.
 DOC_END
 
+NAME: redirect_concurrency
+TYPE: int
+DEFAULT: 0
+LOC: Config.redirectConcurrency
+DOC_START
+	The number of requests each redirector helper can handle in
+	parallell. Defaults to 0 which indicates that the redirector
+	is a old-style singlethreaded redirector.
+DOC_END
+
 NAME: redirect_rewrites_host_header
 TYPE: onoff
 DEFAULT: on
@@ -1549,6 +1559,12 @@ DOC_START
 	network you are likely to need lots of authenticator
 	processes.
 	auth_param basic children 5
+
+	"concurrency" concurrency
+	The number of concurrent requests the helper can process.
+	The default of 0 is used for helpers who only supports
+	one request at a time.
+	auth_param basic concurrency 0
 
 	"realm" realmstring
 	Specifies the realm name which is to be reported to the
@@ -1732,6 +1748,9 @@ DOC_START
 	  		as ttl)
 	  children=n	Number of acl helper processes spawn to service
 			external acl lookups of this type.
+	  concurrency=n	concurrency level per process. Use 0 for old style
+			helpers who can only process a single request at a
+			time.
 	  cache=n	result cache size, 0 is unbounded (default)
 	
 	FORMAT specifications
