@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.259 1998/05/27 20:31:34 wessels Exp $
+ * $Id: comm.cc,v 1.260 1998/05/28 02:50:48 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1489,7 +1489,7 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
     debug(5, 5) ("comm_write: FD %d: sz %d: hndl %p: data %p.\n",
 	fd, size, handler, handler_data);
     if (NULL != state) {
-	debug(5, 1) ("comm_write: fd_table[%d].rwstate != NULL", fd);
+	debug(5, 1) ("comm_write: fd_table[%d].rwstate != NULL\n", fd);
 	safe_free(state);
 	fd_table[fd].rwstate = NULL;
     }
