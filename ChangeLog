@@ -1,3 +1,10 @@
+	- Track the 'keep-alive ratio' for a peer as the ratio of
+	  the number of replies including 'Proxy-Connection: Keep-Alive'
+	  compared to the number of requests sent.  If the peer does
+	  not support Persistent connections then this ratio will tend
+	  toward zero.  If the ratio is less than 50% after 10 requests
+	  then we'll stop sending Keep-Alive.
+
 Changes to squid-1.2.beta4 (Oct 30, 1997):
 
 	- Fixed DST bug in rfc1123.c
