@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.18 1998/05/26 17:37:23 wessels Exp $
+ * $Id: event.cc,v 1.19 1998/05/26 19:08:54 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -39,22 +39,24 @@ struct ev_entry {
     double when;
     struct ev_entry *next;
     int weight;
+    int id;
 };
 
 static struct ev_entry *tasks = NULL;
 static OBJH eventDump;
+static int run_id = 0;
 
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int weight)
 {
     struct ev_entry *event = xcalloc(1, sizeof(struct ev_entry));
     struct ev_entry **E;
-    assert(when > 0.0);
     event->func = func;
     event->arg = arg;
     event->name = name;
     event->when = current_dtime + when;
     event->weight = weight;
+    event->id = run_id;
     if (NULL != arg)
 	cbdataLock(arg);
     debug(41, 7) ("eventAdd: Adding '%s', in %f seconds\n", name, when);
@@ -108,10 +110,18 @@ eventRun(void)
     EVH *func;
     void *arg;
     int weight = 0;
-    while (0 == weight) {
-	if ((event = tasks) == NULL)
-	    break;
+    if (NULL == tasks)
+	return;
+    if (tasks->when > current_dtime)
+	return;
+    run_id++;
+    debug(41, 5) ("eventRun: RUN ID %d\n", run_id);
+    while ((event = tasks)) {
 	if (event->when > current_dtime)
+	    break;
+	if (event->id == run_id)	/* was added during this run */
+	    break;
+	if (weight)
 	    break;
 	func = event->func;
 	arg = event->arg;
@@ -125,7 +135,7 @@ eventRun(void)
 		return;
 	}
 	weight += event->weight;
-	debug(41, 7) ("eventRun: Running '%s'\n", event->name);
+	debug(41, 5) ("eventRun: Running '%s', id %d\n", event->name, event->id);
 	func(arg);
 	safe_free(event);
     }

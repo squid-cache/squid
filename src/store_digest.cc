@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.18 1998/05/26 17:37:26 wessels Exp $
+ * $Id: store_digest.cc,v 1.19 1998/05/26 19:08:59 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -200,7 +200,7 @@ storeDigestRebuildResume()
     if (!storeDigestResize())
 	cacheDigestClear(store_digest);		/* not clean()! */
     memset(&sd_stats, 0, sizeof(sd_stats));
-    eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0.001, 1);
+    eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0.0, 1);
 }
 
 /* finishes swap out sequence for the digest; schedules next rebuild */
@@ -238,7 +238,7 @@ storeDigestRebuildStep(void *datanotused)
     if (sd_state.rebuild_offset >= store_hash_buckets)
 	storeDigestRebuildFinish();
     else
-	eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0.001, 1);
+	eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0.0, 1);
 }
 
 
@@ -295,7 +295,7 @@ storeDigestRewriteResume()
     httpReplySwapOut(e->mem_obj->reply, e);
     storeDigestCBlockSwapOut(e);
     storeBufferFlush(e);
-    eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, sd_state.rewrite_lock, 0.001, 1);
+    eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, sd_state.rewrite_lock, 0.0, 1);
 }
 
 /* finishes swap out sequence for the digest; schedules next rewrite */
@@ -343,7 +343,7 @@ storeDigestSwapOutStep(void *data)
     if (sd_state.rewrite_offset >= store_digest->mask_size)
 	storeDigestRewriteFinish(e);
     else
-	eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, e, 0.001, 1);
+	eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, e, 0.0, 1);
 }
 
 static void
