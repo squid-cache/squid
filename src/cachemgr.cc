@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.17 1996/08/30 23:23:27 wessels Exp $
+ * $Id: cachemgr.cc,v 1.18 1996/09/13 18:51:21 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -286,7 +286,7 @@ void print_trailer()
     printf("</ADDRESS></BODY></HTML>\n");
 }
 
-void noargs_html()
+void noargs_html(char *host, int port)
 {
     printf("\r\n\r\n");
     printf("<HTML><HEAD><TITLE>Cache Manager Interface</TITLE></HEAD>\n");
@@ -295,11 +295,12 @@ void noargs_html()
     printf("for the Squid object cache.</p>\n");
     printf("<HR>\n");
     printf("<PRE>\n");
-    printf("<FORM METHOD=\"POST\" ACTION=\"%s\">\n", script_name);
+    printf("<FORM METHOD=\"POST\" ACTION=\"%s?%s:%d\">\n",
+	script_name, host, port);
     printf("<STRONG>Cache Host:</STRONG><INPUT NAME=\"host\" ");
-    printf("SIZE=30 VALUE=\"%s\">\n\n", CACHEMGR_HOSTNAME);
+    printf("SIZE=30 VALUE=\"%s\">\n\n", host);
     printf("<STRONG>Cache Port:</STRONG><INPUT NAME=\"port\" ");
-    printf("SIZE=30 VALUE=\"%d\">\n\n", CACHE_HTTP_PORT);
+    printf("SIZE=30 VALUE=\"%d\">\n\n", port);
     printf("<STRONG>Password  :</STRONG><INPUT TYPE=\"password\" ");
     printf("NAME=\"password\" SIZE=30 VALUE=\"\">\n\n");
     printf("<STRONG>URL       :</STRONG><INPUT NAME=\"url\" ");
@@ -506,6 +507,9 @@ int main(int argc, char *argv[])
     char *time_string = NULL;
     char *agent = NULL;
     char *s = NULL;
+    char *qs = NULL;
+    char query_host[256];
+    int query_port;
     int got_data = 0;
     int x;
     int cl;
@@ -530,6 +534,18 @@ int main(int argc, char *argv[])
 	progname = strdup(s + 1);
     else
 	progname = strdup(argv[0]);
+
+    if ((qs = getenv("QUERY_STRING")) != NULL) {
+	s = strchr(qs, ':');	/* A colon separates the port from the host */
+	if (!s)
+	    s = qs + strlen(qs);
+	strncpy(query_host, qs, (s - qs));	/* host */
+	query_host[s - qs] = '\0';
+	query_port = atoi(s + 1);	/* port */
+    } else {
+	strcpy(query_host, CACHEMGR_HOSTNAME);
+	query_port = CACHE_HTTP_PORT;
+    }
     if ((s = getenv("SCRIPT_NAME")) != NULL) {
 	script_name = strdup(s);
     }
@@ -543,7 +559,7 @@ int main(int argc, char *argv[])
     }
     hostname[0] = '\0';
     if ((s = getenv("CONTENT_LENGTH")) == NULL) {
-	noargs_html();
+	noargs_html(query_host, query_port);
 	exit(0);
     }
     cl = atoi(s);
@@ -567,18 +583,18 @@ int main(int argc, char *argv[])
 	else {
 	    printf("<P><STRONG>Unknown CGI parameter: %s</STRONG></P>\n",
 		entries[x].name);
-	    noargs_html();
+	    noargs_html(query_host, query_port);
 	    exit(0);
 	}
     }
     if (!got_data) {		/* prints HTML form if no args */
-	noargs_html();
+	noargs_html(query_host, query_port);
 	exit(0);
     }
     if (hostname[0] == '\0') {
 	printf("<H1>ERROR</H1>\n");
 	printf("<P><STRONG>You must provide a hostname!\n</STRONG></P><HR>");
-	noargs_html();
+	noargs_html(query_host, query_port);
 	exit(0);
     }
     close(0);
@@ -687,7 +703,8 @@ int main(int argc, char *argv[])
 
     printf("<HTML><HEAD><TITLE>Cache Manager: %s:%s:%d</TITLE></HEAD>\n",
 	operation, hostname, portnum);
-    printf("<BODY><FORM METHOD=\"POST\" ACTION=\"%s\">\n", script_name);
+    printf("<BODY><FORM METHOD=\"POST\" ACTION=\"%s?%s:%d\">\n",
+	script_name, query_host, query_port);
     printf("<INPUT TYPE=\"submit\" VALUE=\"Refresh\">\n");
     printf("<SELECT NAME=\"operation\">\n");
     printf("<OPTION SELECTED VALUE=\"%s\">Current\n", operation);
@@ -713,7 +730,8 @@ int main(int argc, char *argv[])
     printf("<INPUT TYPE=\"hidden\" NAME=\"port\" VALUE=\"%d\">\n", portnum);
     printf("<INPUT TYPE=\"hidden\" NAME=\"password\" VALUE=\"NOT_PERMITTED\">\n");
     printf("</FORM>");
-    printf("<p><em><A HREF=\"%s\">Empty form</A></em></p>\n", script_name);
+    printf("<p><em><A HREF=\"%s?%s:%d\">Empty form</A></em></p>\n", script_name,
+	query_host, query_port);
     printf("<HR>\n");
 
     printf("<H1>%s:  %s:%d</H1>\n", operation,
