@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.59 1999/12/30 17:36:59 wessels Exp $
+ * $Id: store_swapout.cc,v 1.60 2000/01/11 06:02:54 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -50,7 +50,7 @@ storeSwapOutStart(StoreEntry * e)
     char *buf;
     assert(mem);
     storeLockObject(e);
-    e->swap_file_number = storeDirMapAllocate();
+    storeSwapFileNumberSet(e, storeDirMapAllocate());
     c = xcalloc(1, sizeof(*c));
     c->data = e;
     cbdataAdd(c, cbdataXfree, 0);
@@ -58,8 +58,7 @@ storeSwapOutStart(StoreEntry * e)
 	O_WRONLY, storeSwapOutFileClosed, c);
     if (NULL == mem->swapout.sio) {
 	e->swap_status = SWAPOUT_NONE;
-	storeDirMapBitReset(e->swap_file_number);
-	e->swap_file_number = -1;
+	storeSwapFileNumberSet(e, -1);
 	cbdataFree(c);
 	storeUnlockObject(e);
 	return;
@@ -176,8 +175,7 @@ storeSwapOut(StoreEntry * e)
 	if (swap_buf_len < 0) {
 	    debug(20, 1) ("stmemCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));
 	    storeUnlink(e->swap_file_number);
-	    storeDirMapBitReset(e->swap_file_number);
-	    e->swap_file_number = -1;
+	    storeSwapFileNumberSet(e, -1);
 	    e->swap_status = SWAPOUT_NONE;
 	    memFree(swap_buf, MEM_DISK_BUF);
 	    storeReleaseRequest(e);
@@ -233,21 +231,22 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
     assert(e->swap_status == SWAPOUT_WRITING);
     cbdataFree(c);
     if (errflag) {
+	sfileno bad = e->swap_file_number;
 	debug(20, 1) ("storeSwapOutFileClosed: swapfile %08X, errflag=%d\n\t%s\n",
-	    e->swap_file_number, errflag, xstrerror());
+	    bad, errflag, xstrerror());
+	storeSwapFileNumberSet(e, -1);
 	/*
-	 * yuck.  don't clear the filemap bit for some errors so that
+	 * yuck.  re-set the filemap bit for some errors so that
 	 * we don't try re-using it over and over
 	 */
-	if (errno != EPERM)
-	    storeDirMapBitReset(e->swap_file_number);
+	if (errno == EPERM)
+	    storeDirMapBitSet(bad);
 	if (errflag == DISK_NO_SPACE_LEFT) {
 	    storeDirDiskFull(e->swap_file_number);
 	    storeDirConfigure();
 	    storeConfigure();
 	}
 	storeReleaseRequest(e);
-	e->swap_file_number = -1;
 	e->swap_status = SWAPOUT_NONE;
     } else {
 	/* swapping complete */
