@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.76 2000/12/05 06:24:00 wessels Exp $
+ * $Id: forward.cc,v 1.77 2000/12/17 13:31:29 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -623,7 +623,7 @@ void
 fwdUnregister(int fd, FwdState * fwdState)
 {
     debug(17, 3) ("fwdUnregister: %s\n", storeUrl(fwdState->entry));
-    assert(fd = fwdState->server_fd);
+    assert(fd == fwdState->server_fd);
     assert(fd > -1);
     comm_remove_close_handler(fd, fwdServerClosed, fwdState);
     fwdState->server_fd = -1;
