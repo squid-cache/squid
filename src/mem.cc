@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.75 2003/02/25 12:24:35 robertc Exp $
+ * $Id: mem.cc,v 1.76 2003/03/06 11:51:56 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -205,6 +205,18 @@ memAllocString(size_t net_size, size_t * gross_size)
     return pool ? memPoolAlloc(pool) : xcalloc(1, net_size);
 }
 
+extern size_t memStringCount();
+size_t
+memStringCount()
+{
+    size_t result = 0;
+
+    for (int counter = 0; counter < mem_str_pool_count; ++counter)
+        result += memPoolInUseCount(StrPools[counter].pool);
+
+    return result;
+}
+
 /* free buffer allocated with memAllocString() */
 void
 memFreeString(size_t size, void *buf)
@@ -388,8 +400,6 @@ Mem::Init(void)
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
     memDataInit(MEM_FWD_SERVER, "FwdServer", sizeof(FwdServer), 0);
-    memDataInit(MEM_HTTP_REPLY, "HttpReply", sizeof(HttpReply), 0);
-    memDataInit(MEM_HTTP_HDR_ENTRY, "HttpHeaderEntry", sizeof(HttpHeaderEntry), 0);
     memDataInit(MEM_HTTP_HDR_CC, "HttpHdrCc", sizeof(HttpHdrCc), 0);
     memDataInit(MEM_HTTP_HDR_CONTENT_RANGE, "HttpHdrContRange", sizeof(HttpHdrContRange), 0);
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);

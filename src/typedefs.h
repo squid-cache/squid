@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.157 2003/03/04 01:40:31 robertc Exp $
+ * $Id: typedefs.h,v 1.158 2003/03/06 11:51:58 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -111,13 +111,11 @@ class fde;
 
 typedef struct _fileMap fileMap;
 
-typedef struct _HttpReply http_reply;
-
 typedef struct _HttpStatusLine HttpStatusLine;
 
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 
-typedef struct _HttpHeaderFieldInfo HttpHeaderFieldInfo;
+class HttpHeaderFieldInfo;
 
 typedef struct _HttpHeader HttpHeader;
 
@@ -129,15 +127,15 @@ typedef struct _HttpHdrScTarget HttpHdrScTarget;
 
 typedef struct _TimeOrTag TimeOrTag;
 
-typedef struct _HttpHeaderEntry HttpHeaderEntry;
+class HttpHeaderEntry;
 
-typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;
+class HttpHeaderFieldStat;
 
 typedef struct _HttpHeaderStat HttpHeaderStat;
 
 typedef struct _HttpBody HttpBody;
 
-typedef struct _HttpReply HttpReply;
+class HttpReply;
 
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
 
@@ -155,7 +153,7 @@ typedef struct _StoreDigestCBlock StoreDigestCBlock;
 
 typedef struct _DigestFetchState DigestFetchState;
 
-typedef struct _PeerDigest PeerDigest;
+class PeerDigest;
 
 typedef struct _peer peer;
 

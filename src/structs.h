@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.456 2003/03/04 01:40:31 robertc Exp $
+ * $Id: structs.h,v 1.457 2003/03/06 11:51:57 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -824,7 +824,7 @@ struct _HttpBody
 #include "SquidString.h"
 /* http header extention field */
 
-struct _HttpHdrExtField
+class HttpHdrExtField
 {
     String name;		/* field-name  from HTTP/1.1 (no column after name) */
     String value;		/* field-value from HTTP/1.1 */
@@ -851,8 +851,12 @@ struct _TimeOrTag
 
 /* per field statistics */
 
-struct _HttpHeaderFieldStat
+class HttpHeaderFieldStat
 {
+
+public:
+    HttpHeaderFieldStat() : aliveCount(0), seenCount(0), parsCount(0), errCount(0), repCount(0){}
+
     int aliveCount;		/* created but not destroyed (count) */
     int seenCount;		/* #fields we've seen */
     int parsCount;		/* #parsing attempts */
@@ -862,19 +866,30 @@ struct _HttpHeaderFieldStat
 
 /* compiled version of HttpHeaderFieldAttrs plus stats */
 
-struct _HttpHeaderFieldInfo
+class HttpHeaderFieldInfo
 {
+
+public:
+    HttpHeaderFieldInfo() : id (HDR_ACCEPT), type (ftInvalid){}
+
     http_hdr_type id;
     String name;
     field_type type;
     HttpHeaderFieldStat stat;
 };
 
-struct _HttpHeaderEntry
+class HttpHeaderEntry
 {
+
+public:
+    void *operator new (size_t);
+    void operator delete (void *);
     http_hdr_type id;
     String name;
     String value;
+
+private:
+    static MemPool *Pool;
 };
 
 struct _HttpHeader
@@ -888,8 +903,12 @@ struct _HttpHeader
 
 class HttpHdrContRange;
 
-struct _HttpReply
+class HttpReply
 {
+
+public:
+    void *operator new (size_t);
+    void operator delete (void *);
     /* unsupported, writable, may disappear/change in the future */
     int hdr_sz;			/* sums _stored_ status-line, headers, and <CRLF> */
 
@@ -911,6 +930,9 @@ struct _HttpReply
     HttpHeader header;
     HttpBody body;		/* for small constant memory-resident text bodies only */
     size_t maxBodySize;
+
+private:
+    static MemPool *Pool;
 };
 
 struct _http_state_flags
@@ -1106,8 +1128,13 @@ struct _cd_guess_stats
     int close_hits;		/* tmp, remove it later */
 };
 
-struct _PeerDigest
+class PeerDigest
 {
+
+public:
+    void *operator new (size_t);
+    void operator delete(void *);
+    void deleteSelf() const;
 
     struct _peer *peer;			/* pointer back to peer structure, argh */
     CacheDigest *cd;		/* actual digest structure */
@@ -1159,6 +1186,9 @@ unsigned int requested:
     }
 
     stats;
+
+private:
+    CBDATA_CLASS(PeerDigest);
 };
 
 #endif

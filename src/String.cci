@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cci,v 1.2 2003/03/06 06:21:37 robertc Exp $
+ * $Id: String.cci,v 1.3 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -34,7 +34,11 @@
  */
 
 String::String() : size_(0), len_(0), buf_ (NULL)
-{}
+{
+#if DEBUGSTRINGS
+    StringRegistry::Instance().add(this);
+#endif
+}
 
 int
 String::size() const

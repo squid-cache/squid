@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderRange.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpHeaderRange.h,v 1.3 2003/03/06 11:51:55 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,7 +36,7 @@
 
 #include "Range.h"
 
-typedef struct _HttpReply HttpReply;
+class HttpReply;
 /* http byte-range-spec */
 
 class HttpHdrRangeSpec

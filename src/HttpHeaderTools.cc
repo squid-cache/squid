@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.39 2003/03/06 06:21:37 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.40 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -52,7 +52,7 @@ httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
     assert(attrs && count);
 
     /* allocate space */
-    table = (HttpHeaderFieldInfo *)xcalloc(count, sizeof(HttpHeaderFieldInfo));
+    table = new HttpHeaderFieldInfo[count];
 
     for (i = 0; i < count; ++i) {
         const http_hdr_type id = attrs[i].id;
@@ -60,14 +60,12 @@ httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
         /* sanity checks */
         assert(id >= 0 && id < count);
         assert(attrs[i].name);
-        assert(info->id == 0 && info->type == 0);	/* was not set before */
+        assert(info->id == HDR_ACCEPT && info->type == ftInvalid);	/* was not set before */
         /* copy and init fields */
         info->id = id;
         info->type = attrs[i].type;
         info->name = attrs[i].name;
         assert(info->name.size());
-        /* init stats */
-        memset(&info->stat, 0, sizeof(info->stat));
     }
 
     return table;
@@ -81,7 +79,7 @@ httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * table, int count)
     for (i = 0; i < count; ++i)
         table[i].name.clean();
 
-    xfree(table);
+    delete table;
 }
 
 void

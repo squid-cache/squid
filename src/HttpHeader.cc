@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.86 2003/03/06 06:21:36 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.87 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1121,7 +1121,7 @@ httpHeaderEntryCreate(http_hdr_type id, const char *name, const char *value)
 {
     HttpHeaderEntry *e;
     assert_eid(id);
-    e = (HttpHeaderEntry *)memAllocate(MEM_HTTP_HDR_ENTRY);
+    e = new HttpHeaderEntry;
     e->id = id;
 
     if (id != HDR_OTHER)
@@ -1157,7 +1157,7 @@ httpHeaderEntryDestroy(HttpHeaderEntry * e)
 
     e->id = HDR_BAD_HDR;
 
-    memFree(e, MEM_HTTP_HDR_ENTRY);
+    delete e;
 }
 
 /* parses and inits header entry, returns new entry on success */
@@ -1186,7 +1186,7 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     }
 
     /* now we know we can parse it */
-    e = (HttpHeaderEntry *)memAllocate(MEM_HTTP_HDR_ENTRY);
+    e = new HttpHeaderEntry;
 
     debug(55, 9) ("creating entry %p: near '%s'\n", e, getStringPrefix(field_start, field_end));
 
@@ -1218,7 +1218,7 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
         if (e->id == HDR_OTHER)
             e->name.clean();
 
-        memFree(e, MEM_HTTP_HDR_ENTRY);
+        delete e;
 
         return NULL;
     }
@@ -1397,4 +1397,23 @@ httpHeaderNameById(int id)
     assert(id >= 0 && id < HDR_ENUM_END);
 
     return HeadersAttrs[id].name;
+}
+
+MemPool *HttpHeaderEntry::Pool(NULL);
+void *
+HttpHeaderEntry::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (HttpHeaderEntry));
+
+    if (!Pool)
+        Pool = memPoolCreate("HttpHeaderEntry", sizeof (HttpHeaderEntry));
+
+    return memPoolAlloc(Pool);
+}
+
+void
+HttpHeaderEntry::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
 }

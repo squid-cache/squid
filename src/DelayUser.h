@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.h,v 1.3 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayUser.h,v 1.4 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -100,6 +100,8 @@ class Id:public DelayIdComposite
         DelayUser::Pointer theUser;
         DelayUserBucket::Pointer theBucket;
     };
+
+    friend class Id;
 
     DelaySpec spec;
     Splay<DelayUserBucket::Pointer> buckets;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.228 2003/02/25 12:22:34 robertc Exp $
+ * $Id: enums.h,v 1.229 2003/03/06 11:51:55 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -549,8 +549,6 @@ typedef enum {
     MEM_HELPER_STATEFUL_REQUEST,
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_CONTENT_RANGE,
-    MEM_HTTP_HDR_ENTRY,
-    MEM_HTTP_REPLY,
     MEM_IPCACHE_ENTRY,
     MEM_MD5_DIGEST,
     MEM_NETDBENTRY,
