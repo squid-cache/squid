@@ -48,6 +48,7 @@ Changes to Squid-2.4.DEVEL3 ():
 	- httpd_accel_single_host squid.conf directive
 	- "round-robin" cache_peer counters are reset every 5 minutes to
 	  compensate previously dead peers
+	- DNS retransmit parameters
 
 Changes to Squid-2.4.DEVEL2 ():
 
