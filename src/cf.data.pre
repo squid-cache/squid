@@ -1510,6 +1510,9 @@ DOC_START
 	a big security hole.  We recommend that this option remain
 	disabled unless you are sure of what you are doing.
 
+	However, you will need to enable this option if you run Squid
+	as a transparent proxy.  Otherwise, virtual servers which
+	require the Host: header will not be properly cached.
 httpd_accel_uses_host_header off
 DOC_END
 
