@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.81 1997/10/21 16:06:26 kostas Exp $
+ * $Id: errorpage.cc,v 1.82 1997/10/21 16:35:50 kostas Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -79,7 +79,7 @@ errorInitialize(void)
 	if (fstat(fd, &sb) < 0)
 	    fatal_dump("stat() failed on error text file");
 	safe_free(error_text[i]);
-	error_text[i] = xcalloc(sb.st_size+1, 1);
+	error_text[i] = xcalloc(sb.st_size + 1, 1);
 	if (read(fd, error_text[i], sb.st_size) != sb.st_size)
 	    fatal_dump("failed to fully read error text file");
 	file_close(fd);
@@ -124,7 +124,10 @@ errorConvert(char token, ErrorState * err)
 	p = r ? (char *) RequestMethodStr[r->method] : "[unkown method]";
 	break;
     case 'z':
-	p = err->dnsserver_msg;
+	if (err->dnsserver_msg)
+	    p = err->dnsserver_msg;
+	else
+	    p = "UNKNOWN\n";
 	break;
     case 'e':
 	snprintf(buf, CVT_BUF_SZ, "%d", err->errno);
@@ -146,13 +149,30 @@ errorConvert(char token, ErrorState * err)
 	p = buf;
 	break;
     case 't':
-	xstrncpy(buf, 128 , mkhttpdlogtime(squid_curtime));
-	p=buf;
+	xstrncpy(buf, mkhttpdlogtime(&squid_curtime), 128);
+	p = buf;
 	break;
+    case 'L':
+	snprintf(buf, CVT_BUF_SZ, "%s", Config.errHtmlText);
+	p = buf;
+	break;
+    case 'i':
+	snprintf(buf, CVT_BUF_SZ, "%s", inet_ntoa(err->src_addr));
+	p = buf;
+	break;
+    case 'I':
+	if (err->host) {
+	    snprintf(buf, CVT_BUF_SZ, "%s", err->host);
+	    p = buf;
+	} else
+	    p = "unknown\n";
+	break;
+
+
 /*
  * e - errno                                    x
  * E - strerror()                               x
- * t - local time				x
+ * t - local time                               x
  * T - UTC
  * c - Squid error code
  * I - server IP address
