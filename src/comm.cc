@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.122 1996/12/18 05:09:05 wessels Exp $
+ * $Id: comm.cc,v 1.123 1996/12/18 18:35:32 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -630,7 +630,7 @@ comm_select_incoming(void)
     if (theInIcpConnection >= 0)
 	fds[N++] = theInIcpConnection;
     if (theInIcpConnection != theOutIcpConnection)
-        if (theOutIcpConnection >= 0)
+	if (theOutIcpConnection >= 0)
 	    fds[N++] = theOutIcpConnection;
     if (theHttpConnection >= 0 && fdstat_are_n_free_fd(RESERVED_FD))
 	fds[N++] = theHttpConnection;
