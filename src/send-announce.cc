@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.24 1996/11/12 22:37:16 wessels Exp $
+ * $Id: send-announce.cc,v 1.25 1996/11/13 06:52:27 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -45,6 +45,8 @@ send_announce(void *unused)
     int l;
     int n;
 
+    if (!Config.Announce.on)
+	return;
     eventAdd("send_announce", send_announce, NULL, Config.Announce.rate);
     if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) == NULL) {
 	debug(27, 1, "send_announce: Unknown host '%s'\n", host);

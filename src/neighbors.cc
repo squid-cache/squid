@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.85 1996/11/12 22:37:11 wessels Exp $
+ * $Id: neighbors.cc,v 1.86 1996/11/13 06:52:25 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -111,11 +111,21 @@ static edge *whichEdge _PARAMS((const struct sockaddr_in * from));
 static void neighborAlive _PARAMS((edge *, const MemObject *, const icp_common_t *));
 static void neighborCountIgnored _PARAMS((edge * e, icp_opcode op_unused));
 static neighbor_t parseNeighborType _PARAMS((const char *s));
-static void neighbors_init _PARAMS((void));
 
-static neighbors *friends = NULL;
 static icp_common_t echo_hdr;
 static u_short echo_port;
+
+static struct {
+    int n;
+    int n_parent;
+    int n_sibling;
+    edge *edges_head;
+    edge *edges_tail;
+    edge *first_ping;
+} friends = {
+
+    0, 0, 0, NULL, NULL, NULL
+};
 
 const char *hier_strings[] =
 {
@@ -145,7 +155,7 @@ whichEdge(const struct sockaddr_in *from)
     struct in_addr ip = from->sin_addr;
     edge *e = NULL;
     debug(15, 3, "whichEdge: from %s port %d\n", inet_ntoa(ip), port);
-    for (e = friends->edges_head; e; e = e->next) {
+    for (e = friends.edges_head; e; e = e->next) {
 	for (j = 0; j < e->n_addresses; j++) {
 	    if (ip.s_addr == e->addresses[j].s_addr && port == e->icp_port) {
 		return e;
@@ -213,9 +223,9 @@ getSingleParent(request_t * request, int *n)
     edge *e = NULL;
     int count = 0;
 
-    if (n == NULL && friends->n_parent < 1)
+    if (n == NULL && friends.n_parent < 1)
 	return NULL;
-    for (e = friends->edges_head; e; e = e->next) {
+    for (e = friends.edges_head; e; e = e->next) {
 	if (!edgeWouldBePinged(e, request))
 	    continue;
 	count++;
@@ -248,9 +258,9 @@ edge *
 getFirstUpParent(request_t * request)
 {
     edge *e = NULL;
-    if (friends->n_parent < 1)
+    if (friends.n_parent < 1)
 	return NULL;
-    for (e = friends->edges_head; e; e = e->next) {
+    for (e = friends.edges_head; e; e = e->next) {
 	if (!e->neighbor_up)
 	    continue;
 	if (neighborType(e, request) != EDGE_PARENT)
@@ -270,7 +280,7 @@ getNextEdge(edge * e)
 edge *
 getFirstEdge(void)
 {
-    return friends->edges_head;
+    return friends.edges_head;
 }
 
 static void
@@ -278,8 +288,8 @@ neighborRemove(edge * target)
 {
     edge *e = NULL;
     edge **E = NULL;
-    e = friends->edges_head;
-    E = &friends->edges_head;
+    e = friends.edges_head;
+    E = &friends.edges_head;
     while (e) {
 	if (target == e)
 	    break;
@@ -290,7 +300,7 @@ neighborRemove(edge * target)
 	*E = e->next;
 	safe_free(e->host);
 	safe_free(e);
-	friends->n--;
+	friends.n--;
     }
 }
 
@@ -302,14 +312,13 @@ neighborsDestroy(void)
 
     debug(15, 3, "neighborsDestroy: called\n");
 
-    for (e = friends->edges_head; e; e = next) {
+    for (e = friends.edges_head; e; e = next) {
 	next = e->next;
 	safe_free(e->host);
 	safe_free(e);
-	friends->n--;
+	friends.n--;
     }
-    safe_free(friends);
-    friends = NULL;
+    memset(&friends, '\0', sizeof(friends));
 }
 
 void
@@ -325,15 +334,13 @@ neighbors_open(int fd)
     edge **E = NULL;
     struct servent *sep = NULL;
 
-    if (friends == NULL)
-	neighbors_init();
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
 	debug(15, 1, "getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
 
     /* Prepare neighbor connections, one at a time */
-    E = &friends->edges_head;
-    next = friends->edges_head;
+    E = &friends.edges_head;
+    next = friends.edges_head;
     while ((e = next)) {
 	getCurrentTime();
 	next = e->next;
@@ -409,7 +416,7 @@ neighborsUdpPing(protodispatch_data * proto)
     mem->w_rtt = 0;
     mem->start_ping = current_time;
 
-    if (friends->edges_head == NULL)
+    if (friends.edges_head == NULL)
 	return 0;
     if (theOutIcpConnection < 0) {
 	debug(15, 0, "neighborsUdpPing: There is no ICP socket!\n");
@@ -417,11 +424,11 @@ neighborsUdpPing(protodispatch_data * proto)
 	debug(15, 0, "Check 'icp_port' in your config file\n");
 	fatal_dump(NULL);
     }
-    for (i = 0, e = friends->first_ping; i++ < friends->n; e = e->next) {
+    for (i = 0, e = friends.first_ping; i++ < friends.n; e = e->next) {
 	if (entry->swap_status != NO_SWAP)
 	    fatal_dump("neighborsUdpPing: bad swap_status");
 	if (e == (edge *) NULL)
-	    e = friends->edges_head;
+	    e = friends.edges_head;
 	debug(15, 5, "neighborsUdpPing: Edge %s\n", e->host);
 
 	/* skip any cache where we failed to connect() w/in the last 60s */
@@ -492,11 +499,11 @@ neighborsUdpPing(protodispatch_data * proto)
 		    e->host, e->http_port, e->icp_port);
 	    }
 	}
-	friends->first_ping = e->next;
+	friends.first_ping = e->next;
     }
 
     /* only do source_ping if we have neighbors */
-    if (friends->n) {
+    if (friends.n) {
 	if (!proto->source_ping) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
 	} else if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP))) {
@@ -727,10 +734,8 @@ neighborAdd(const char *host,
 {
     edge *e = NULL;
     const char *me = getMyHostname();
-    if (friends == NULL)
-	neighbors_init();
     if (!strcmp(host, me) && http_port == Config.Port.http) {
-	debug(15, 0, "neighbors_init: skipping cache_host %s %s/%d/%d\n",
+	debug(15, 0, "neighborAdd: skipping cache_host %s %s/%d/%d\n",
 	    type, host, http_port, icp_port);
 	return;
     }
@@ -748,17 +753,17 @@ neighborAdd(const char *host,
     e->icp_version = ICP_VERSION_CURRENT;
     e->type = parseNeighborType(type);
     if (e->type == EDGE_PARENT)
-	friends->n_parent++;
+	friends.n_parent++;
     else if (e->type == EDGE_SIBLING)
-	friends->n_sibling++;
+	friends.n_sibling++;
 
     /* Append edge */
-    if (!friends->edges_head)
-	friends->edges_head = e;
-    if (friends->edges_tail)
-	friends->edges_tail->next = e;
-    friends->edges_tail = e;
-    friends->n++;
+    if (!friends.edges_head)
+	friends.edges_head = e;
+    if (friends.edges_tail)
+	friends.edges_tail->next = e;
+    friends.edges_tail = e;
+    friends.n++;
 }
 
 void
@@ -843,20 +848,11 @@ neighborAddAcl(const char *host, const char *aclname)
     *Tail = L;
 }
 
-static void
-neighbors_init(void)
-{
-    debug(15, 1, "neighbors_init: Initializing Neighbors...\n");
-    if (friends == NULL)
-	friends = xcalloc(1, sizeof(neighbors));
-    any_addr.s_addr = inet_addr("0.0.0.0");
-}
-
 edge *
 neighborFindByName(const char *name)
 {
     edge *e = NULL;
-    for (e = friends->edges_head; e; e = e->next) {
+    for (e = friends.edges_head; e; e = e->next) {
 	if (!strcasecmp(name, e->host))
 	    break;
     }
