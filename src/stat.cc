@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.249 1998/05/15 17:16:21 wessels Exp $
+ * $Id: stat.cc,v 1.250 1998/05/21 03:22:46 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1188,6 +1188,13 @@ StatCounters *
 snmpStatGet(int minutes)
 {
     return &CountHist[minutes];
+}
+
+int
+stat5minClientRequests(void)
+{
+	assert(N_COUNT_HIST > 5);
+	return Counter.client_http.requests - CountHist[5].client_http.requests;
 }
 
 
