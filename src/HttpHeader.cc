@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.29 1998/04/03 22:26:32 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.30 1998/04/05 20:32:44 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -130,7 +130,7 @@ static http_hdr_type ListHeadersArr[] =
     HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
     HDR_ACCEPT_RANGES,
     /* HDR_ALLOW, */
-    HDR_CACHE_CONTROL, HDR_CONNECTION,
+    HDR_CACHE_CONTROL,
     HDR_CONTENT_ENCODING,
     /* HDR_CONTENT_LANGUAGE, */
     /*  HDR_IF_MATCH, HDR_IF_NONE_MATCH, HDR_PRAGMA, */
