@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.311 2000/01/11 05:32:58 wessels Exp $
+ * $Id: structs.h,v 1.312 2000/01/14 08:37:08 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -378,7 +378,6 @@ struct _SquidConfig {
     } Netdb;
     struct {
 	int log_udp;
-	int enable_purge;
 	int res_defnames;
 	int anonymizer;
 	int client_db;
@@ -492,6 +491,9 @@ struct _SquidConfig2 {
 	char *prefix;
 	int on;
     } Accel;
+    struct {
+	int enable_purge;
+    } onoff;
 };
 
 struct _close_handler {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.468 2000/01/05 23:32:19 wessels Exp $
+ * $Id: client_side.cc,v 1.469 2000/01/14 08:37:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -524,8 +524,8 @@ clientPurgeRequest(clientHttpRequest * http)
     StoreEntry *entry;
     ErrorState *err = NULL;
     HttpReply *r;
-    debug(33, 3) ("Config.onoff.enable_purge = %d\n", Config.onoff.enable_purge);
-    if (!Config.onoff.enable_purge) {
+    debug(33, 1) ("Config2.onoff.enable_purge = %d\n", Config2.onoff.enable_purge);
+    if (!Config2.onoff.enable_purge) {
 	http->log_type = LOG_TCP_DENIED;
 	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(http->request);

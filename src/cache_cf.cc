@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.335 1999/12/30 17:36:23 wessels Exp $
+ * $Id: cache_cf.cc,v 1.336 2000/01/14 08:37:04 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -352,6 +352,8 @@ configDoConfigure(void)
 	Config.Wais.peer->host = xstrdup(Config.Wais.relayHost);
 	Config.Wais.peer->http_port = Config.Wais.relayPort;
     }
+    if (aclPurgeMethodInUse(Config.accessList.http))
+	Config2.onoff.enable_purge = 1;
 }
 
 /* Parse a time specification from the config file.  Store the
