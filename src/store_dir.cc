@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.40 1998/01/12 04:30:14 wessels Exp $
+ * $Id: store_dir.cc,v 1.41 1998/02/02 07:20:57 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -274,6 +274,7 @@ storeDirSwapLog(const StoreEntry * e)
 	e->flag,
 	storeKeyText(e->key));
     file_write(Config.cacheSwap.swapDirs[dirn].swaplog_fd,
+	-1,
 	xstrdup(logmsg),
 	strlen(logmsg),
 	NULL,

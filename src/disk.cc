@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.95 1997/11/14 17:21:17 wessels Exp $
+ * $Id: disk.cc,v 1.96 1998/02/02 07:20:54 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -225,20 +225,21 @@ diskHandleWrite(int fd, void *notused)
     if (!fdd->write_q)
 	return;
     /* We need to combine subsequent write requests after the first */
+    /* But only if we don't need to seek() in betwen them, ugh! */
     if (fdd->write_q->next != NULL && fdd->write_q->next->next != NULL) {
 	len = 0;
 	for (q = fdd->write_q->next; q != NULL; q = q->next)
-	    len += q->len - q->cur_offset;
+	    len += q->len - q->buf_offset;
 	wq = xcalloc(1, sizeof(dwrite_q));
 	wq->buf = xmalloc(len);
 	wq->len = 0;
-	wq->cur_offset = 0;
+	wq->buf_offset = 0;
 	wq->next = NULL;
 	wq->free = xfree;
 	do {
 	    q = fdd->write_q->next;
-	    len = q->len - q->cur_offset;
-	    xmemcpy(wq->buf + wq->len, q->buf + q->cur_offset, len);
+	    len = q->len - q->buf_offset;
+	    xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
 	    wq->len += len;
 	    fdd->write_q->next = q->next;
 	    if (q->free)
@@ -251,17 +252,17 @@ diskHandleWrite(int fd, void *notused)
     ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
     ctrlp->fd = fd;
     assert(fdd->write_q != NULL);
-    assert(fdd->write_q->len > fdd->write_q->cur_offset);
+    assert(fdd->write_q->len > fdd->write_q->buf_offset);
 #if USE_ASYNC_IO
     aioWrite(fd,
-	fdd->write_q->buf + fdd->write_q->cur_offset,
-	fdd->write_q->len - fdd->write_q->cur_offset,
+	fdd->write_q->buf + fdd->write_q->buf_offset,
+	fdd->write_q->len - fdd->write_q->buf_offset,
 	diskHandleWriteComplete,
 	ctrlp);
 #else
     len = write(fd,
-	fdd->write_q->buf + fdd->write_q->cur_offset,
-	fdd->write_q->len - fdd->write_q->cur_offset);
+	fdd->write_q->buf + fdd->write_q->buf_offset,
+	fdd->write_q->len - fdd->write_q->buf_offset);
     diskHandleWriteComplete(ctrlp, len, errno);
 #endif
 }
@@ -299,9 +300,9 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     }
     if (q != NULL) {
 	/* q might become NULL from write failure above */
-	q->cur_offset += len;
-	assert(q->cur_offset <= q->len);
-	if (q->cur_offset == q->len) {
+	q->buf_offset += len;
+	assert(q->buf_offset <= q->len);
+	if (q->buf_offset == q->len) {
 	    /* complete write */
 	    fdd->write_q = q->next;
 	    if (q->free)
@@ -331,6 +332,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 /* call a handle when writing is complete. */
 int
 file_write(int fd,
+    off_t file_offset,
     char *ptr_to_buf,
     int len,
     DWCB handle,
@@ -343,9 +345,10 @@ file_write(int fd,
     assert(F->open);
     /* if we got here. Caller is eligible to write. */
     wq = xcalloc(1, sizeof(dwrite_q));
+    wq->file_offset = file_offset;
     wq->buf = ptr_to_buf;
     wq->len = len;
-    wq->cur_offset = 0;
+    wq->buf_offset = 0;
     wq->next = NULL;
     wq->free = free_func;
     F->disk.wrt_handle = handle;
@@ -436,7 +439,7 @@ diskHandleReadComplete(void *data, int len, int errcode)
  * It must have at least req_len space in there. 
  * call handler when a reading is complete. */
 int
-file_read(int fd, char *buf, int req_len, int offset, DRCB * handler, void *client_data)
+file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
     assert(fd >= 0);

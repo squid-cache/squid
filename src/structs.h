@@ -367,9 +367,10 @@ struct _dnsStatData {
 };
 
 struct _dwrite_q {
+    off_t file_offset;
     char *buf;
     int len;
-    off_t cur_offset;
+    off_t buf_offset;
     struct _dwrite_q *next;
     FREE *free;
 };

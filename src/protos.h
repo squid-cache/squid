@@ -121,18 +121,8 @@ extern void _db_print();
 
 extern int file_open(const char *path, int mode, FOCB *, void *callback_data);
 extern void file_close(int fd);
-extern int file_write(int fd,
-    char *buf,
-    int len,
-    DWCB * handle,
-    void *handle_data,
-    FREE *);
-extern int file_read(int fd,
-    char *buf,
-    int req_len,
-    int offset,
-    DRCB * handler,
-    void *client_data);
+extern int file_write(int, off_t, char *, int len, DWCB *, void *, FREE *);
+extern int file_read(int, char *, int, off_t, DRCB *, void *);
 extern int disk_init(void);
 extern int diskWriteIsComplete(int);
 
