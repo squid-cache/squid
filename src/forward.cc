@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.37 1998/12/14 05:19:36 wessels Exp $
+ * $Id: forward.cc,v 1.38 1998/12/16 06:04:15 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -46,6 +46,11 @@ static CNCB fwdConnectDone;
 static int fwdCheckRetry(FwdState * fwdState);
 static int fwdReforward(FwdState *);
 static void fwdStartFail(FwdState *);
+static void fwdLogReplyStatus(int tries, http_status status);
+static OBJH fwdStats;
+
+#define MAX_FWD_STATS_IDX 9
+static int FwdReplyCodes[MAX_FWD_STATS_IDX+1][HTTP_INVALID_HEADER+1];
 
 static void
 fwdServerFree(FwdServer * fs)
@@ -493,6 +498,7 @@ fwdComplete(FwdState * fwdState)
 	    storeUrl(e));
 	if (fwdState->server_fd > -1)
 	    fwdUnregister(fwdState->server_fd, fwdState);
+	fwdLogReplyStatus(fwdState->n_tries, e->mem_obj->reply->sline.status);
 	storeEntryReset(e);
 	fwdStartComplete(fwdState->servers, fwdState);
     } else {
@@ -507,4 +513,38 @@ fwdComplete(FwdState * fwdState)
 	if (fwdState->server_fd < 0)
 	    fwdStateFree(fwdState);
     }
+}
+
+void
+fwdInit(void)
+{
+	cachemgrRegister("forward",
+		"Request Forwarding Statistics",
+		fwdStats, 0, 1);
+}
+
+static void
+fwdLogReplyStatus(int tries, http_status status)
+{
+    if (status > HTTP_INVALID_HEADER)
+	return;
+    assert(tries);
+    tries--;
+    if (tries > MAX_FWD_STATS_IDX)
+	tries = MAX_FWD_STATS_IDX;
+    FwdReplyCodes[tries][status]++;
+}
+
+static void
+fwdStats(StoreEntry *s)
+{
+	int i;
+	int j;
+	for (i=0; i<=(int) HTTP_INVALID_HEADER; i++) {
+		storeAppendPrintf(s, "%3d", i);
+		for (j=0; j<=MAX_FWD_STATS_IDX; j++) {
+		    storeAppendPrintf(s, "\t%d", FwdReplyCodes[j][i]);
+		}
+		storeAppendPrintf(s, "\n");
+	}
 }
