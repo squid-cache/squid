@@ -5,9 +5,9 @@ Samba Winbindd from Samba 2.2.4 or greater.
 
 This helper must be used in with an authentication scheme, tipically 
 basic or NTLM, based on Windows NT/2000 domain users. 
-It reads two new line terminated arguments from the standard input
-(the domain username and group) and tries to match it against
-the domain global groups membership of the specified username.
+It reads from the standard input the domain username and a list of groups
+and tries to match it against the groups membership of the specified
+username.
 
 For Winbindd configuration, look the Squid winbind authenticators
 instructions.
@@ -17,9 +17,10 @@ instructions.
 Program Syntax
 ==============
 
-wb_group [-d]
+wb_group [-d][-h]
 
 -d enable debug mode
+-h this message
 
 
 ================
