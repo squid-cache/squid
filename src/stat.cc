@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.159 1997/10/17 00:00:46 wessels Exp $
+ * $Id: stat.cc,v 1.160 1997/10/20 22:49:42 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -337,7 +337,11 @@ statObjects(StoreEntry * sentry, int vm_or_not)
     StoreEntry *entry = NULL;
     MemObject *mem;
     int N = 0;
+    int i;
+    struct _store_client *sc;
+#if OLD_CODE
     storeAppendPrintf(sentry, open_bracket);
+#endif
     for (entry = storeGetFirst(); entry != NULL; entry = storeGetNext()) {
 	mem = entry->mem_obj;
 	if (vm_or_not && mem == NULL)
@@ -345,6 +349,7 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	if ((++N & 0xFF) == 0) {
 	    debug(18, 3) ("stat_objects_get:  Processed %d objects...\n", N);
 	}
+#if OLD_CODE
 	storeAppendPrintf(sentry, "{%s %dL %-25s %s %3d %2d %8d %s}\n",
 	    describeStatuses(entry),
 	    (int) entry->lock_count,
@@ -354,8 +359,45 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	    storePendingNClients(entry),
 	    mem ? mem->inmem_hi : entry->object_len,
 	    entry->url);
+#else
+	storeAppendPrintf(sentry, "%s %s\n",
+	    RequestMethodStr[entry->method], entry->url);
+	storeAppendPrintf(sentry, "\t%s\n", describeStatuses(entry));
+	storeAppendPrintf(sentry, "\t%s\n", describeFlags(entry));
+	storeAppendPrintf(sentry, "\t%s\n", describeTimestamps(entry));
+	storeAppendPrintf(sentry, "\t%d locks, %d clients, %d refs\n",
+	    (int) entry->lock_count,
+	    storePendingNClients(entry),
+	    (int) entry->refcount);
+	storeAppendPrintf(sentry, "\tSwap File %#08X\n",
+	    entry->swap_file_number);
+	if (mem == NULL)
+	    continue;
+	storeAppendPrintf(sentry, "\tinmem_lo: %d\n", (int) mem->inmem_lo);
+	storeAppendPrintf(sentry, "\tinmem_hi: %d\n", (int) mem->inmem_hi);
+	storeAppendPrintf(sentry, "\tswapout: %d bytes done, %d queued, FD %d\n",
+	    mem->swapout.done_offset,
+	    mem->swapout.queue_offset,
+	    mem->swapout.fd);
+	for (i = 0; i < mem->nclients; i++) {
+	    sc = &mem->clients[i];
+	    if (sc->callback_data == NULL)
+		continue;
+	    storeAppendPrintf(sentry, "\tClient #%d\n", i);
+	    storeAppendPrintf(sentry, "\t\tcopy_offset: %d\n",
+		(int) sc->copy_offset);
+	    storeAppendPrintf(sentry, "\t\tseen_offset: %d\n",
+		(int) sc->seen_offset);
+	    storeAppendPrintf(sentry, "\t\tcopy_size: %d\n",
+		(int) sc->copy_size);
+	    storeAppendPrintf(sentry, "\t\tswapin_fd: %d\n",
+		(int) sc->swapin_fd);
+	}
+#endif
     }
+#if OLD_CODE
     storeAppendPrintf(sentry, close_bracket);
+#endif
 }
 
 void
