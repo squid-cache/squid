@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.52 1997/01/10 23:14:23 wessels Exp $
+ * $Id: cachemgr.cc,v 1.53 1997/01/13 22:47:03 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -303,7 +303,7 @@ static unsigned int inaddr_none;
 static char x2c _PARAMS((char *));
 static int client_comm_connect _PARAMS((int sock, char *dest_host, u_short dest_port));
 static void print_trailer _PARAMS((void));
-static void noargs_html _PARAMS((char *, int, char *));
+static void noargs_html _PARAMS((char *, int, char *, char *));
 static void unescape_url _PARAMS((char *));
 static void plustospace _PARAMS((char *));
 static void parse_object _PARAMS((char *));
@@ -337,7 +337,7 @@ print_option(op_t current_opt, op_t opt_nr)
 
 
 static void
-noargs_html(char *host, int port, char *url)
+noargs_html(char *host, int port, char *url, char *password)
 {
     op_t op = INFO;
 
@@ -354,7 +354,7 @@ noargs_html(char *host, int port, char *url)
     printf("<STRONG>Cache Port:</STRONG><INPUT NAME=\"port\" ");
     printf("SIZE=30 VALUE=\"%d\"><BR>\n", port);
     printf("<STRONG>Password  :</STRONG><INPUT TYPE=\"password\" ");
-    printf("NAME=\"password\" SIZE=30 VALUE=\"\"><BR>\n");
+    printf("NAME=\"password\" SIZE=30 VALUE=\"%s\"><BR>\n", password);
     printf("<STRONG>URL       :</STRONG><INPUT NAME=\"url\" ");
     printf("SIZE=30 VALUE=\"%s\"><BR>\n", url);
     printf("<STRONG>Operation :</STRONG>");
@@ -692,7 +692,7 @@ main(int argc, char *argv[])
 	} else {
 	    printf("<P><STRONG>Unknown CGI parameter: %s</STRONG></P>\n",
 		s);
-	    noargs_html(hostname, portnum, url);
+	    noargs_html(hostname, portnum, url, password);
 	    exit(0);
 	}
     }
@@ -707,13 +707,13 @@ main(int argc, char *argv[])
     }
     /* prints HTML form if no args */
     if (!operation[0] || !strcmp(operation, "empty")) {
-	noargs_html(hostname, portnum, url);
+	noargs_html(hostname, portnum, url, password);
 	exit(0);
     }
     if (hostname[0] == '\0') {
 	printf("<H1>ERROR</H1>\n");
 	printf("<P><STRONG>You must provide a hostname!\n</STRONG></P><HR>");
-	noargs_html(hostname, portnum, url);
+	noargs_html(hostname, portnum, url, password);
 	exit(0);
     }
     close(0);
@@ -791,7 +791,7 @@ main(int argc, char *argv[])
     printf("</SELECT>\n");
     printf("<INPUT TYPE=\"hidden\" NAME=\"host\" VALUE=\"%s\">\n", hostname);
     printf("<INPUT TYPE=\"hidden\" NAME=\"port\" VALUE=\"%d\">\n", portnum);
-    printf("<INPUT TYPE=\"hidden\" NAME=\"password\" VALUE=\"NOT_PERMITTED\">\n");
+    printf("<INPUT TYPE=\"hidden\" NAME=\"password\" VALUE=\"%s\">\n", password);
     printf("<INPUT TYPE=\"hidden\" NAME=\"url\" VALUE=\"%s\">\n", url);
     printf("</FORM>\n");
     printf("<HR>\n");
