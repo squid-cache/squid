@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.51 1996/04/16 23:05:44 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.52 1996/04/16 23:06:26 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -172,7 +172,7 @@ int single_parent_bypass = 0;
 int DnsPositiveTtl = DefaultPositiveDnsTtl;
 char *DefaultSwapDir = DEFAULT_SWAP_DIR;
 char *DefaultConfigFile = DEFAULT_CONFIG_FILE;
-char *ConfigFile = NULL		/* the whole thing */
+char *ConfigFile = NULL;	/* the whole thing */
 char *cfg_filename = NULL;	/* just the last part */
 
 char w_space[] = " \t\n";
@@ -1356,7 +1356,6 @@ int parseConfigFile(file_name)
 	printf("         For this run, however, %s will use %d minutes for clean_rate.\n", appname, (int) (getCleanRate() / 60));
 	fflush(stdout);		/* print message */
     }
-
     if (getDnsChildren() < 1) {
 	printf("WARNING: dns_children was set to a bad value: %d\n",
 	    getDnsChildren());
