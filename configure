@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.7 
+# From configure.in Revision: 1.8 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -1702,7 +1702,7 @@ case "$host" in
 		;;
 	*-sgi-irix*)
         	echo "Removing -lsocket for IRIX..."
-        	XTRA_LIBS=`echo $XTRA_LIBS | sed -e s/-lmalloc//`
+        	XTRA_LIBS=`echo $XTRA_LIBS | sed -e s/-lsocket//`
         	echo "Removing -lnsl for IRIX..."
         	XTRA_LIBS=`echo $XTRA_LIBS | sed -e s/-lnsl//`
 		;;
