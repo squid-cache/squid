@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.333 2001/01/31 00:25:59 hno Exp $
+ * $Id: main.cc,v 1.334 2001/03/28 23:24:18 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -901,6 +901,15 @@ watch_child(char *argv[])
 	if (WIFEXITED(status))
 	    if (WEXITSTATUS(status) == 0)
 		exit(0);
+	if (WIFSIGNALED(status)) {
+	    switch (WTERMSIG(status)) {
+	    case SIGKILL:
+		exit(0);
+		break;
+	    default:
+		break;
+	    }
+	}
 	squid_signal(SIGINT, SIG_DFL, SA_RESTART);
 	sleep(3);
     }
