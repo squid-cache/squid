@@ -1,5 +1,5 @@
 /*
- * $Id: base64.c,v 1.19 2001/06/29 20:20:01 wessels Exp $
+ * $Id: base64.c,v 1.20 2002/04/19 21:03:48 hno Exp $
  */
 
 #include "config.h"
@@ -58,7 +58,7 @@ base64_decode(const char *p)
 	if (++c < 4)
 	    continue;
 	/* One quantum of four encoding characters/24 bit */
-	result[j++] = val >> 16;	/* High 8 bits */
+	result[j++] = (val >> 16) & 0xff;	/* High 8 bits */
 	result[j++] = (val >> 8) & 0xff;	/* Mid 8 bits */
 	result[j++] = val & 0xff;	/* Low 8 bits */
 	val = c = 0;
