@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.116 1997/01/13 22:58:03 wessels Exp $
+ * $Id: stat.cc,v 1.117 1997/01/15 18:41:48 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1342,9 +1342,13 @@ stat_rotate_log(void)
     LOCAL_ARRAY(char, from, MAXPATHLEN);
     LOCAL_ARRAY(char, to, MAXPATHLEN);
     char *fname = NULL;
+    struct stat sb;
 
     if ((fname = HTTPCacheInfo->logfilename) == NULL)
 	return;
+    if (stat(fname, &sb) == 0)
+	if (S_ISREG(sb.st_mode) == 0)
+	    return;
 
     debug(18, 1, "stat_rotate_log: Rotating\n");
 

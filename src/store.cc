@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.191 1997/01/15 18:35:33 wessels Exp $
+ * $Id: store.cc,v 1.192 1997/01/15 18:41:49 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2538,7 +2538,7 @@ storeMaintainSwapSpace(void *unused)
 	return;
 
 #ifdef AUTO_ADJUST_REF_AGE
-	storeAdjustReferenceAge();
+    storeAdjustReferenceAge();
 #endif
 
     /* Purges expired objects, check one bucket on each calling */
@@ -2697,6 +2697,7 @@ storeRotateLog(void)
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);
     LOCAL_ARRAY(char, to, MAXPATHLEN);
+    struct stat sb;
 
     if (storelog_fd > -1) {
 	file_close(storelog_fd);
@@ -2704,9 +2705,11 @@ storeRotateLog(void)
     }
     if ((fname = Config.Log.store) == NULL)
 	return;
-
     if (strcmp(fname, "none") == 0)
 	return;
+    if (stat(fname, &sb) == 0)
+	if (S_ISREG(sb.st_mode) == 0)
+	    return;
 
     debug(20, 1, "storeRotateLog: Rotating.\n");
 
@@ -2796,6 +2799,7 @@ storeAdjustReferenceAge(void)
 	(int) delta, (int) Config.referenceAge);
     last_above = above;
 }
+
 #endif
 
 static const char *
