@@ -1,14 +1,22 @@
 
-/* $Id: mime.cc,v 1.7 1996/04/01 04:08:25 wessels Exp $ */
+/* $Id: mime.cc,v 1.8 1996/04/01 04:31:29 wessels Exp $ */
 
 #include "squid.h"
 #include "mime_table.h"
 
+#define GET_HDR_SZ 1024
+
+/* XXX This function frightens me for performance reasons.  It uses
+ * lots of strcmp, strlen, and strcspn.  Can there be a better way? - DPW */
+
 char *mime_get_header(char *mime, char *name)
 {
-    static char header[1024];
-    char *p;
+    static char header[GET_HDR_SZ];
+    char *p = NULL;
     char got = 0;
+
+    if (!mime || !name)
+	return NULL;
 
     for (p = mime; *p; p += strcspn(p, "\n\r")) {
 	if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
@@ -17,8 +25,8 @@ char *mime_get_header(char *mime, char *name)
 	    p++;
 	if (strncasecmp(p, name, strlen(name)) == 0 &&
 	    (isspace(p[strlen(name)]) || p[strlen(name)] == ':')) {
-	    strncpy(header, p, sizeof(header));
-	    header[sizeof(header) - 1] = 0;
+	    strncpy(header, p, GET_HDR_SZ);
+	    header[GET_HDR_SZ - 1] = 0;
 	    header[strcspn(header, "\n\r")] = 0;
 	    p = header;
 	    p += strlen(name);
@@ -36,9 +44,10 @@ char *mime_get_header(char *mime, char *name)
 int mime_refresh_request(mime)
      char *mime;
 {
-    char *pr;
-    pr = mime_get_header(mime, "pragma");
-    if (pr && strstr(pr, "no-cache"))
+    char *pr = NULL;
+    if ((pr = mime_get_header(mime, "pragma")) == NULL)
+	return 0;
+    if (strstr(pr, "no-cache"))		/* why strstr and not strcmp? -DPW */
 	return 1;
     return 0;
 }
@@ -46,8 +55,12 @@ int mime_refresh_request(mime)
 ext_table_entry *mime_ext_to_type(extension)
      char *extension;
 {
-    int i, low, high, comp;
-    char ext[16], *cp;
+    int i;
+    int low;
+    int high;
+    int comp;
+    static char ext[16];
+    char *cp = NULL;
 
     if (!extension || strlen(extension) >= (sizeof(ext) - 1))
 	return NULL;
@@ -84,12 +97,11 @@ int mk_mime_hdr(result, ttl, size, lmt, type)
      int size;
      time_t ttl, lmt;
 {
-    extern char *mkrfc850();
     time_t expiretime;
     time_t t;
-    char date[100];
-    char expire[100];
-    char last_modified_time[100];
+    static char date[100];
+    static char expire[100];
+    static char last_modified_time[100];
 
     if (result == NULL)
 	return 1;
