@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.103 2000/01/11 06:01:08 wessels Exp $
+ * $Id: store_dir.cc,v 1.104 2000/01/14 07:14:12 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -443,7 +443,6 @@ storeDirWriteCleanLogs(int reopen)
     double dt;
     SwapDir *sd;
     int dirn;
-    int N = Config.cacheSwap.n_configured;
 #if HEAP_REPLACEMENT
     int node;
 #else
