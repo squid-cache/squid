@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.65 2004/08/30 03:28:57 robertc Exp $
+ * $Id: authenticate.cc,v 1.66 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -46,14 +46,6 @@
 #include "AuthUser.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-
-/*
- *
- * Private Data
- *
- */
-
-MemPool *AuthUserHashPointer::pool = NULL;
 
 /**** PUBLIC FUNCTIONS (ALL GENERIC!)  ****/
 
@@ -162,23 +154,6 @@ AuthUserHashPointer::removeFromCache(void *usernamehash_p)
     /* TODO: change behaviour - we remove from the auth user list here, and then unlock, and the
      * delete ourselves.
      */
-}
-
-void *
-AuthUserHashPointer::operator new (size_t byteCount)
-{
-    assert (byteCount == sizeof (AuthUserHashPointer));
-
-    if (!pool)
-        pool = memPoolCreate("Auth user hash link", sizeof(AuthUserHashPointer));
-
-    return static_cast<AuthUserHashPointer *>(memPoolAlloc(pool));
-}
-
-void
-AuthUserHashPointer::operator delete (void *address)
-{
-    memPoolFree(pool, address);
 }
 
 AuthUserHashPointer::AuthUserHashPointer (auth_user_t * anAuth_user):

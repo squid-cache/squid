@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.60 2003/08/04 22:14:42 robertc Exp $
+ * $Id: helper.cc,v 1.61 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -232,7 +232,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->parent = cbdataReference(hlp);
 
         if (hlp->datapool != NULL)
-            srv->data = memPoolAlloc(hlp->datapool);
+            srv->data = hlp->datapool->alloc();
 
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
@@ -846,7 +846,7 @@ helperStatefulServerFree(int fd, void *data)
     }
 
     if (srv->data != NULL)
-        memPoolFree(hlp->datapool, srv->data);
+        hlp->datapool->free(srv->data);
 
     cbdataReferenceDone(srv->parent);
 
@@ -1455,50 +1455,10 @@ helperRequestFree(helper_request * r)
     delete r;
 }
 
-MemPool (*helper_request::Pool)(NULL);
-
-void *
-helper_request::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (helper_request));
-
-    if (!Pool)
-        Pool = memPoolCreate("helper_request", sizeof (helper_request));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-helper_request::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 static void
 helperStatefulRequestFree(helper_stateful_request * r)
 {
     cbdataReferenceDone(r->data);
     xfree(r->buf);
     delete r;
-}
-
-MemPool (*helper_stateful_request::Pool)(NULL);
-
-void *
-helper_stateful_request::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (helper_stateful_request));
-
-    if (!Pool)
-        Pool = memPoolCreate("helper_stateful_request", sizeof (helper_stateful_request));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-helper_stateful_request::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }

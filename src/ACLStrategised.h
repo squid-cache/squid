@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategised.h,v 1.6 2003/08/10 09:53:49 robertc Exp $
+ * $Id: ACLStrategised.h,v 1.7 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -67,7 +67,7 @@ public:
     virtual ACL *clone()const;
 
 private:
-    static MemPool *Pool;
+    static MemAllocator *Pool;
     ACLData<MatchType> *data;
     char const *type_;
     ACLStrategy<MatchType> *matcher;
@@ -76,7 +76,7 @@ private:
 /* implementation follows */
 
 template <class MatchType>
-MemPool *ACLStrategised<MatchType>::Pool = NULL;
+MemAllocator *ACLStrategised<MatchType>::Pool = NULL;
 
 template <class MatchType>
 void *
@@ -86,16 +86,16 @@ ACLStrategised<MatchType>::operator new (size_t byteCount)
     assert (byteCount == sizeof (ACLStrategised<MatchType>));
 
     if (!Pool)
-        Pool = memPoolCreate("ACLStrategised", sizeof (ACLStrategised<MatchType>));
+        Pool = MemPools::GetInstance().create("ACLStrategised", sizeof (ACLStrategised<MatchType>));
 
-    return memPoolAlloc(Pool);
+    return Pool->alloc();
 }
 
 template <class MatchType>
 void
 ACLStrategised<MatchType>::operator delete (void *address)
 {
-    memPoolFree (Pool, address);
+    Pool->free(address);
 }
 
 template <class MatchType>

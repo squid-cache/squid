@@ -37,25 +37,6 @@
 #include "ACLSourceIP.h"
 #include "ACLChecklist.h"
 
-MemPool (*ACLSourceIP::Pool)(NULL);
-void *
-ACLSourceIP::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLSourceIP));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLSourceIP", sizeof (ACLSourceIP));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLSourceIP::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 char const *
 ACLSourceIP::typeString() const
 {

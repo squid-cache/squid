@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.9 2003/10/16 21:40:17 robertc Exp $
+ * $Id: HttpRequest.h,v 1.10 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -58,8 +58,7 @@ class HttpRequest
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
     virtual ~HttpRequest() {}
 
@@ -101,9 +100,8 @@ public:
     String extacl_user;		/* User name returned by extacl lookup */
     String extacl_passwd;	/* Password returned by extacl lookup */
     String extacl_log;		/* String to be used for access.log purposes */
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(HttpRequest)
 
 #endif /* SQUID_HTTPREQUEST_H */

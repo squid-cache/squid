@@ -1,5 +1,5 @@
 /*
- * $Id: MemPoolTest.cc,v 1.2 2004/08/30 03:29:03 robertc Exp $
+ * $Id: MemPoolTest.cc,v 1.3 2004/08/30 05:12:33 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -60,18 +60,18 @@ void
 MemPoolTest::run()
 {
     assert (Pool == NULL);
-    Pool = memPoolCreate ("Test Pool", sizeof(SomethingToAlloc));
+    Pool = new MemPool ("Test Pool", sizeof(SomethingToAlloc));
     assert (Pool);
-    SomethingToAlloc *something = static_cast<SomethingToAlloc *>(memPoolAlloc(Pool));
+    SomethingToAlloc *something = static_cast<SomethingToAlloc *>(Pool->alloc());
     assert (something);
     assert (something->aValue == 0);
     something->aValue = 5;
-    memPoolFree (Pool, something);
-    SomethingToAlloc *otherthing = static_cast<SomethingToAlloc *>(memPoolAlloc (Pool));
+    Pool->free(something);
+    SomethingToAlloc *otherthing = static_cast<SomethingToAlloc *>(Pool->alloc());
     assert (otherthing == something);
     assert (otherthing->aValue == 0);
-    memPoolFree (Pool, otherthing);
-    memPoolDestroy (&Pool);
+    Pool->free (otherthing);
+    delete Pool;
 }
 
 int

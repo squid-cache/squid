@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_tools.cc,v 1.5 2004/08/30 03:29:03 robertc Exp $
+ * $Id: test_tools.cc,v 1.6 2004/08/30 05:12:33 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -173,16 +173,16 @@ Debug::finishDebug()
 
 std::ostringstream *Debug::CurrentDebug (NULL);
 
-MemPool *dlink_node_pool = NULL;
+MemImplementingAllocator *dlink_node_pool = NULL;
 
 dlink_node *
 dlinkNodeNew()
 {
     if (dlink_node_pool == NULL)
-        dlink_node_pool = memPoolCreate("Dlink list nodes", sizeof(dlink_node));
+        dlink_node_pool = MemPools::GetInstance().create("Dlink list nodes", sizeof(dlink_node));
 
     /* where should we call memPoolDestroy(dlink_node_pool); */
-    return (dlink_node *)memPoolAlloc(dlink_node_pool);
+    return static_cast<dlink_node *>(dlink_node_pool->alloc());
 }
 
 /* the node needs to be unlinked FIRST */
@@ -192,7 +192,7 @@ dlinkNodeDelete(dlink_node * m)
     if (m == NULL)
         return;
 
-    memPoolFree(dlink_node_pool, m);
+    dlink_node_pool->free(m);
 }
 
 void

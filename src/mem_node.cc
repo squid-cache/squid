@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.cc,v 1.5 2003/08/04 22:14:42 robertc Exp $
+ * $Id: mem_node.cc,v 1.6 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -36,26 +36,7 @@
 #include "squid.h"
 #include "mem_node.h"
 
-MemPool *mem_node::pool = NULL;
 unsigned long mem_node::store_mem_size;
-
-void *
-mem_node::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (mem_node));
-
-    if (!pool)
-        pool = memPoolCreate("mem_node", sizeof (mem_node));
-
-    return memPoolAlloc(pool);
-}
-
-void
-mem_node::operator delete (void *address)
-{
-    memPoolFree(pool, address);
-}
 
 mem_node::mem_node(off_t offset):nodeBuffer(0,offset,data)
 {}
@@ -68,12 +49,9 @@ mem_node::~mem_node()
 size_t
 mem_node::InUseCount()
 {
-    if (!pool)
-        return 0;
-
     MemPoolStats stats;
 
-    memPoolGetStats (&stats, pool);
+    Pool().getStats (&stats);
 
     return stats.items_inuse;
 }

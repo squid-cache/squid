@@ -83,8 +83,7 @@ class CossState : public storeIOState
 {
 
 public:
-    void * operator new (size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(CossState);
     CossState(CossSwapDir *);
     ~CossState();
 
@@ -113,10 +112,9 @@ unsigned int writing:
     void close();
 
     CossSwapDir *SD;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(CossState)
 
 typedef struct _cossmembuf CossMemBuf;
 
@@ -124,8 +122,8 @@ typedef struct _cossindex CossIndexNode;
 
 /* Whether the coss system has been setup or not */
 extern int coss_initialised;
-extern MemPool *coss_membuf_pool;
-extern MemPool *coss_index_pool;
+extern MemAllocatorProxy *coss_membuf_pool;
+extern MemAllocatorProxy *coss_index_pool;
 
 class CossSwapDir : public SwapDir
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: List.h,v 1.3 2003/08/04 22:14:37 robertc Exp $
+ * $Id: List.h,v 1.4 2004/08/30 05:12:29 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,10 +52,6 @@ public:
 
 private:
     CBDATA_CLASS(List);
-#if 0
-
-    static MemPool *Pool;
-#endif
 };
 
 template<class C>
@@ -86,17 +82,6 @@ template <class C>
 void *
 List<C>::operator new (size_t byteCount)
 {
-#if 0
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (List<C>));
-
-    if (!Pool)
-        Pool = memPoolCreate("List", sizeof (List<C>));
-
-    return memPoolAlloc(Pool);
-
-#endif
-
     CBDATA_INIT_TYPE(List);
 
     List<C> *result = cbdataAlloc(List);
@@ -108,8 +93,6 @@ template <class C>
 void
 List<C>::operator delete (void *address)
 {
-    // MemPoolFree
-    // List<C> *t = static_cast<List<C> *>(address);
     cbdataFree(address);
 }
 

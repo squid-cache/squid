@@ -42,8 +42,7 @@ class acl_ip_data
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(acl_ip_data);
     static acl_ip_data *FactoryParse(char const *);
     static int NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b);
 
@@ -62,8 +61,9 @@ public:
 private:
 
     static bool DecodeAddress(const char *asc, struct in_addr *addr, struct in_addr *mask);
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(acl_ip_data)
 
 class ACLIP : public ACL
 {

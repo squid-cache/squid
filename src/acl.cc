@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.313 2003/10/20 12:33:01 robertc Exp $
+ * $Id: acl.cc,v 1.314 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -596,25 +596,6 @@ acl_access::containsPURGE() const
 }
 
 /* to be split into separate files in the future */
-
-MemPool (*ACLList::Pool)(NULL);
-void *
-ACLList::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLList));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLList", sizeof (ACLList));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLList::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 CBDATA_CLASS_INIT(acl_access);
 

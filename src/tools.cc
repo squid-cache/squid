@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.242 2004/08/30 03:28:59 robertc Exp $
+ * $Id: tools.cc,v 1.243 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -63,7 +63,7 @@ SQUIDCEXTERN int setresuid(uid_t, uid_t, uid_t);
 
 SQUIDCEXTERN void (*failure_notify) (const char *);
 
-MemPool *dlink_node_pool = NULL;
+MemAllocator *dlink_node_pool = NULL;
 
 void
 releaseServerSockets(void)
@@ -965,10 +965,10 @@ dlink_node *
 dlinkNodeNew()
 {
     if (dlink_node_pool == NULL)
-        dlink_node_pool = memPoolCreate("Dlink list nodes", sizeof(dlink_node));
+        dlink_node_pool = MemPools::GetInstance().create("Dlink list nodes", sizeof(dlink_node));
 
-    /* where should we call memPoolDestroy(dlink_node_pool); */
-    return (dlink_node *)memPoolAlloc(dlink_node_pool);
+    /* where should we call delete dlink_node_pool;dlink_node_pool = NULL; */
+    return (dlink_node *)dlink_node_pool->alloc();
 }
 
 /* the node needs to be unlinked FIRST */
@@ -978,7 +978,7 @@ dlinkNodeDelete(dlink_node * m)
     if (m == NULL)
         return;
 
-    memPoolFree(dlink_node_pool, m);
+    dlink_node_pool->free(m);
 }
 
 void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.8 2003/08/04 22:14:42 robertc Exp $
+ * $Id: ufscommon.h,v 1.9 2004/08/30 05:12:31 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -293,31 +293,25 @@ protected:
     {
 
     public:
-        void *operator new(size_t);
-        void operator delete (void *);
+        MEMPROXY_CLASS(UFSStoreState::_queued_read);
         char *buf;
         size_t size;
         off_t offset;
         STRCB *callback;
         void *callback_data;
 
-    private:
-        static MemPool *Pool;
     };
 
     class _queued_write
     {
 
     public:
-        void *operator new(size_t);
-        void operator delete (void *);
+        MEMPROXY_CLASS(UFSStoreState::_queued_write);
         char const *buf;
         size_t size;
         off_t offset;
         FREE *free_func;
 
-    private:
-        static MemPool *Pool;
     };
 
     /* These should be in the IO strategy */
@@ -340,6 +334,9 @@ private:
     CBDATA_CLASS(UFSStoreState);
     void openDone();
 };
+
+MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read)
+MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_write)
 
 class RebuildState : public RefCountable
 {

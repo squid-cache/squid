@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.11 2003/10/20 11:23:38 robertc Exp $
+ * $Id: StoreClient.h,v 1.12 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -60,7 +60,7 @@ class store_client
 
 public:
     void *operator new (size_t);
-    void operator delete(void *);
+    void operator delete (void *);
     store_client(StoreEntry *);
     ~store_client();
     bool memReaderHasLowerOffset(off_t) const;
@@ -106,8 +106,7 @@ unsigned int copy_event_pending:
     StoreIOBuffer copyInto;
 
 private:
-    static MemPool *pool;
-
+    CBDATA_CLASS(store_client);
     void fileRead();
     void scheduleDiskRead();
     void scheduleMemRead();

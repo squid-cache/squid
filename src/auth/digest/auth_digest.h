@@ -29,8 +29,7 @@ class DigestUser : public AuthUser
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(DigestUser);
 
     DigestUser(AuthConfig *);
     ~DigestUser();
@@ -41,9 +40,9 @@ public:
     /* what nonces have been allocated to this user */
     dlink_list nonces;
 
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(DigestUser)
 
 typedef class DigestUser digest_user_h;
 
@@ -54,8 +53,7 @@ class AuthDigestUserRequest : public AuthUserRequest
 
 public:
     enum CredentialsState {Unchecked, Ok, Pending, Failed};
-    void *operator new(size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(AuthDigestUserRequest);
 
     AuthDigestUserRequest();
     virtual ~AuthDigestUserRequest();
@@ -110,10 +108,11 @@ unsigned int helper_queried:
     digest_nonce_h *nonce;
 
 private:
-    static MemPool *Pool;
     DigestUser *_theUser;
     CredentialsState credentials_ok;
 };
+
+MEMPROXY_CLASS_INLINE(AuthDigestUserRequest)
 
 /* data to be encoded into the nonce's b64 representation */
 

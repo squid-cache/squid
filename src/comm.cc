@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.394 2004/04/03 14:07:38 hno Exp $
+ * $Id: comm.cc,v 1.395 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -214,8 +214,7 @@ class CommCallbackData
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(CommCallbackData);
     CommCallbackData(CommCommonCallback const &);
     virtual ~CommCallbackData() {}
 
@@ -235,72 +234,73 @@ protected:
     friend void comm_calliocallback(void);
 
 private:
-    static MemPool *Pool;
     dlink_node fd_node;
     dlink_node h_node;
 };
+
+MEMPROXY_CLASS_INLINE(CommCallbackData)
 
 class CommReadCallbackData : public CommCallbackData
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(CommReadCallbackData);
     CommReadCallbackData(CommCommonCallback const &, CallBack<IOCB> aCallback, int);
     virtual comm_callback_t getType() const { return COMM_CB_READ; }
 
     virtual void callCallback();
 
 private:
-    static MemPool *Pool;
     CallBack<IOCB> callback;
     int retval;
 };
+
+MEMPROXY_CLASS_INLINE(CommReadCallbackData);
 
 class CommAcceptCallbackData : public CommCallbackData
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(CommAcceptCallbackData);
     CommAcceptCallbackData(int const anFd, CallBack<IOACB>, comm_err_t, int, int, ConnectionDetail const &);
     virtual void callCallback();
 
 private:
-    static MemPool *Pool;
     CallBack<IOACB> callback;
     int newfd;
     ConnectionDetail details;
 };
 
+MEMPROXY_CLASS_INLINE(CommAcceptCallbackData)
+
 class CommFillCallbackData : public CommCallbackData
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(CommFillCallbackData);
     CommFillCallbackData(int const anFd, CallBack<IOFCB> aCallback, comm_err_t, int);
     virtual void callCallback();
 
 private:
-    static MemPool *Pool;
     CallBack<IOFCB> callback;
 };
+
+MEMPROXY_CLASS_INLINE(CommFillCallbackData)
 
 class CommWriteCallbackData : public CommCallbackData
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(CommWriteCallbackData);
     CommWriteCallbackData(int const anFd, CallBack<IOWCB> aCallback, comm_err_t, int, int);
     virtual void callCallback();
 
 private:
-    static MemPool *Pool;
     CallBack<IOWCB> callback;
     int retval;
 };
+
+MEMPROXY_CLASS_INLINE(CommWriteCallbackData)
 
 struct _fd_debug_t
 {
@@ -310,109 +310,14 @@ struct _fd_debug_t
 
 typedef struct _fd_debug_t fd_debug_t;
 
-static MemPool *comm_write_pool = NULL;
-static MemPool *conn_close_pool = NULL;
+static MemAllocator *comm_write_pool = NULL;
+static MemAllocator *conn_close_pool = NULL;
 fdc_t *fdc_table = NULL;
 fd_debug_t *fdd_table = NULL;
 dlink_list CommCallbackList;
 
 
 /* New and improved stuff */
-
-MemPool (*CommCallbackData::Pool)(NULL);
-void *
-CommCallbackData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (CommCallbackData));
-
-    if (!Pool)
-        Pool = memPoolCreate("CommCallbackData", sizeof (CommCallbackData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-CommCallbackData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
-MemPool (*CommReadCallbackData::Pool)(NULL);
-void *
-CommReadCallbackData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (CommReadCallbackData));
-
-    if (!Pool)
-        Pool = memPoolCreate("CommReadCallbackData", sizeof (CommReadCallbackData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-CommReadCallbackData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
-MemPool (*CommAcceptCallbackData::Pool)(NULL);
-void *
-CommAcceptCallbackData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (CommAcceptCallbackData));
-
-    if (!Pool)
-        Pool = memPoolCreate("CommAcceptCallbackData", sizeof (CommAcceptCallbackData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-CommAcceptCallbackData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
-MemPool (*CommFillCallbackData::Pool)(NULL);
-void *
-CommFillCallbackData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (CommFillCallbackData));
-
-    if (!Pool)
-        Pool = memPoolCreate("CommFillCallbackData", sizeof (CommFillCallbackData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-CommFillCallbackData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
-MemPool (*CommWriteCallbackData::Pool)(NULL);
-void *
-CommWriteCallbackData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (CommWriteCallbackData));
-
-    if (!Pool)
-        Pool = memPoolCreate("CommWriteCallbackData", sizeof (CommWriteCallbackData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-CommWriteCallbackData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 CommCallbackData::CommCallbackData(CommCommonCallback const &newResults) : result (newResults)
 {
@@ -1073,7 +978,7 @@ CommWriteStateCallbackAndFree(int fd, comm_err_t code)
     if (callback && cbdataReferenceValidDone(CommWriteState->handler_data, &cbdata))
         callback(fd, CommWriteState->buf, CommWriteState->offset, code, cbdata);
 
-    memPoolFree(comm_write_pool, CommWriteState);
+    comm_write_pool->free(CommWriteState);
 }
 
 /* Return the local port associated with fd. */
@@ -1691,7 +1596,7 @@ commCallCloseHandlers(int fd)
 
     while (F->closeHandler != NULL) {
         close_handler ch = *F->closeHandler;
-        memPoolFree(conn_close_pool, F->closeHandler);	/* AAA */
+        conn_close_pool->free(F->closeHandler);	/* AAA */
         F->closeHandler = ch.next;
         ch.next = NULL;
         debug(5, 5) ("commCallCloseHandlers: ch->handler=%p data=%p\n", ch.handler, ch.data);
@@ -1952,7 +1857,7 @@ comm_udp_sendto(int fd,
 void
 comm_add_close_handler(int fd, PF * handler, void *data)
 {
-    close_handler *newHandler = (close_handler *)memPoolAlloc(conn_close_pool);		/* AAA */
+    close_handler *newHandler = (close_handler *)conn_close_pool->alloc();		/* AAA */
     close_handler *c;
     debug(5, 5) ("comm_add_close_handler: FD %d, handler=%p, data=%p\n",
                  fd, handler, data);
@@ -1993,7 +1898,7 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
 
     cbdataReferenceDone(p->data);
 
-    memPoolFree(conn_close_pool, p);
+    conn_close_pool->free(p);
 }
 
 static void
@@ -2142,9 +2047,9 @@ comm_init(void) {
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
 
-    comm_write_pool = memPoolCreate("CommWriteStateData", sizeof(CommWriteStateData));
+    comm_write_pool = MemPools::GetInstance().create("CommWriteStateData", sizeof(CommWriteStateData));
 
-    conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
+    conn_close_pool = MemPools::GetInstance().create("close_handler", sizeof(close_handler));
 }
 
 /* Write to FD. */
@@ -2231,11 +2136,11 @@ comm_old_write(int fd, const char *buf, int size, CWCB * handler, void *handler_
          * triggered yet 
          */
         fatalf ("comm_write: fd_table[%d].wstate != NULL\n", fd);
-        memPoolFree(comm_write_pool, state);
+        comm_write_pool->free(state);
         fd_table[fd].wstate = NULL;
     }
 
-    fd_table[fd].wstate = state = (CommWriteStateData *)memPoolAlloc(comm_write_pool);
+    fd_table[fd].wstate = state = (CommWriteStateData *)comm_write_pool->alloc();
     state->buf = (char *) buf;
     state->size = size;
     state->offset = 0;

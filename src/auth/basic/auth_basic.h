@@ -41,9 +41,9 @@ class BasicUser : public AuthUser
 {
 
 public:
+    MEMPROXY_CLASS(BasicUser);
+
     virtual void deleteSelf() const;
-    void *operator new(size_t);
-    void operator delete (void *);
     BasicUser(AuthConfig *);
     ~BasicUser();
     bool authenticated() const;
@@ -70,7 +70,6 @@ unsigned int credentials_ok:
     BasicAuthQueueNode *auth_queue;
 
 private:
-    static MemPool *Pool;
     void decodeCleartext();
     void extractUsername();
     void extractPassword();
@@ -78,6 +77,8 @@ private:
     AuthUserRequest *currentRequest;
     char const *httpAuthHeader;
 };
+
+MEMPROXY_CLASS_INLINE(BasicUser)
 
 typedef class BasicUser basic_data;
 
@@ -87,8 +88,8 @@ class AuthBasicUserRequest : public AuthUserRequest
 {
 
 public:
-    void *operator new (size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(AuthBasicUserRequest);
+
     AuthBasicUserRequest();
     virtual ~AuthBasicUserRequest();
 
@@ -103,9 +104,10 @@ public:
     virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<BasicUser *>(aUser);}
 
 private:
-    static MemPool *Pool;
     BasicUser *_theUser;
 };
+
+MEMPROXY_CLASS_INLINE(AuthBasicUserRequest)
 
 /* configuration runtime data */
 

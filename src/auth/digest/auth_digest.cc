@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.33 2004/08/30 03:29:00 robertc Exp $
+ * $Id: auth_digest.cc,v 1.34 2004/08/30 05:12:32 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -60,7 +60,7 @@ static hash_table *digest_nonce_cache;
 static AuthDigestConfig digestConfig;
 
 static int authdigest_initialised = 0;
-static MemPool *digest_nonce_pool = NULL;
+static MemAllocatorProxy *digest_nonce_pool = NULL;
 
 CBDATA_TYPE(DigestAuthenticateStateData);
 
@@ -105,7 +105,7 @@ authDigestNonceEncode(digest_nonce_h * nonce)
 static digest_nonce_h *
 authenticateDigestNonceNew(void)
 {
-    digest_nonce_h *newnonce = static_cast < digest_nonce_h * >(memPoolAlloc(digest_nonce_pool));
+    digest_nonce_h *newnonce = static_cast < digest_nonce_h * >(digest_nonce_pool->alloc());
     digest_nonce_h *temp;
 
     /* NONCE CREATION - NOTES AND REASONING. RBC 20010108
@@ -190,7 +190,7 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
 
         safe_free(nonce->key);
 
-        memPoolFree(digest_nonce_pool, nonce);
+        digest_nonce_pool->free(nonce);
     }
 }
 
@@ -198,7 +198,7 @@ static void
 authenticateDigestNonceSetup(void)
 {
     if (!digest_nonce_pool)
-        digest_nonce_pool = memPoolCreate("Digest Scheme nonce's", sizeof(digest_nonce_h));
+        digest_nonce_pool = new MemAllocatorProxy("Digest Scheme nonce's", sizeof(digest_nonce_h));
 
     if (!digest_nonce_cache) {
         digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -227,7 +227,8 @@ authenticateDigestNonceShutdown(void)
 
 #if DEBUGSHUTDOWN
     if (digest_nonce_pool) {
-        memPoolDestroy(&digest_nonce_pool);
+        delete digest_nonce_pool;
+        digest_nonce_pool = NULL;
     }
 
 #endif
@@ -1355,26 +1356,6 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     helperSubmit(digestauthenticators, buf, authenticateDigestHandleReply, r);
 }
 
-
-MemPool (*DigestUser::Pool)(NULL);
-void *
-DigestUser::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (DigestUser));
-
-    if (!Pool)
-        Pool = memPoolCreate("Authentication Digest User data", sizeof (DigestUser));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-DigestUser::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 DigestUser::DigestUser (AuthConfig *config) : AuthUser (config), HA1created (0)
 {}
 
@@ -1406,25 +1387,6 @@ void
 AuthDigestUserRequest::credentials(CredentialsState newCreds)
 {
     credentials_ok = newCreds;
-}
-
-MemPool (*AuthDigestUserRequest::Pool)(NULL);
-void *
-AuthDigestUserRequest::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (AuthDigestUserRequest));
-
-    if (!Pool)
-        Pool = memPoolCreate("AuthDigestUserRequest", sizeof (AuthDigestUserRequest));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-AuthDigestUserRequest::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }
 
 AuthDigestUserRequest::AuthDigestUserRequest() : nonceb64(NULL) ,cnonce(NULL) ,realm(NULL),

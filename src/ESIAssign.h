@@ -1,5 +1,5 @@
 /*
- * $Id: ESIAssign.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESIAssign.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -64,8 +64,7 @@ class ESIAssign : public ESIElement
 {
 
 public:
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    MEMPROXY_CLASS(ESIAssign);
     ESIAssign (esiTreeParentPtr, int, const char **, ESIContext *);
     ESIAssign (ESIAssign const &);
     ESIAssign &operator=(ESIAssign const &);
@@ -79,7 +78,6 @@ public:
     void finish();
 
 private:
-    static MemPool *Pool;
     void evaluateVariable();
     esiTreeParentPtr parent;
     ESIVarState *varState;
@@ -88,5 +86,7 @@ private:
     ESIElement::Pointer variable;
     String unevaluatedVariable;
 };
+
+MEMPROXY_CLASS_INLINE(ESIAssign)
 
 #endif /* SQUID_ESIASSIGN_H */

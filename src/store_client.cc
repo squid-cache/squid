@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.134 2003/10/20 11:23:38 robertc Exp $
+ * $Id: store_client.cc,v 1.135 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -46,8 +46,6 @@
 #endif
 #include "HttpRequest.h"
 
-CBDATA_TYPE(store_client);
-
 /*
  * NOTE: 'Header' refers to the swapfile metadata header.
  * 	 'OBJHeader' refers to the object header, with cannonical
@@ -63,21 +61,21 @@ static EVH storeClientCopyEvent;
 static int CheckQuickAbort2(StoreEntry * entry);
 static void CheckQuickAbort(StoreEntry * entry);
 
-MemPool *store_client::pool = NULL;
+CBDATA_CLASS_INIT(store_client);
 
 void *
-store_client::operator new (size_t byteCount)
+store_client::operator new (size_t)
 {
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (store_client));
     CBDATA_INIT_TYPE(store_client);
-    return cbdataAlloc(store_client);
+    store_client *result = cbdataAlloc(store_client);
+    return result;
 }
 
 void
 store_client::operator delete (void *address)
 {
-    cbdataFree (address);
+    store_client *t = static_cast<store_client *>(address);
+    cbdataFree(t);
 }
 
 bool

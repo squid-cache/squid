@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaURL.cc,v 1.3 2003/08/04 22:14:41 robertc Exp $
+ * $Id: StoreMetaURL.cc,v 1.4 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -37,26 +37,6 @@
 #include "StoreMetaURL.h"
 #include "Store.h"
 #include "MemObject.h"
-
-MemPool *StoreMetaURL::pool = NULL;
-
-void *
-StoreMetaURL::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (StoreMetaURL));
-
-    if (!pool)
-        pool = memPoolCreate("StoreMetaURL", sizeof (StoreMetaURL));
-
-    return memPoolAlloc(pool);
-}
-
-void
-StoreMetaURL::operator delete (void *address)
-{
-    memPoolFree(pool, address);
-}
 
 bool
 StoreMetaURL::checkConsistency(StoreEntry *e) const

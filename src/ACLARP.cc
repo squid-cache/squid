@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.4 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLARP.cc,v 1.5 2004/08/30 05:12:30 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -82,25 +82,6 @@ ACLARP::ACLARP (ACLARP const & old) : data (NULL), class_ (old.class_)
 {
     /* we don't have copy constructors for the data yet */
     assert (!old.data);
-}
-
-MemPool (*ACLARP::Pool)(NULL);
-void *
-ACLARP::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLARP));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLARP", sizeof (ACLARP));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLARP::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }
 
 ACLARP::~ACLARP()

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMaxUserIP.h,v 1.3 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLMaxUserIP.h,v 1.4 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,8 +42,7 @@ class ACLMaxUserIP : public ACL
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLMaxUserIP);
 
     ACLMaxUserIP(char const *);
     ACLMaxUserIP(ACLMaxUserIP const &);
@@ -59,7 +58,6 @@ public:
     virtual bool requiresRequest() const {return true;}
 
 private:
-    static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLMaxUserIP RegistryEntry_;
 
@@ -77,5 +75,7 @@ unsigned int strict:
 
     flags;
 };
+
+MEMPROXY_CLASS_INLINE(ACLMaxUserIP)
 
 #endif /* SQUID_ACLMAXUSERIP_H */

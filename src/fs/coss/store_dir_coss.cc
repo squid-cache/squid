@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.52 2004/03/03 09:34:58 adrian Exp $
+ * $Id: store_dir_coss.cc,v 1.53 2004/08/30 05:12:32 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -45,7 +45,7 @@
 
 int n_coss_dirs = 0;
 /* static int last_coss_pick_index = -1; */
-MemPool *coss_index_pool = NULL;
+MemAllocatorProxy *coss_index_pool = NULL;
 
 typedef struct _RebuildState RebuildState;
 
@@ -181,14 +181,14 @@ storeCossRemove(CossSwapDir * sd, StoreEntry * e)
     CossIndexNode *coss_node = (CossIndexNode *)e->repl.data;
     e->repl.data = NULL;
     dlinkDelete(&coss_node->node, &sd->cossindex);
-    memPoolFree(coss_index_pool, coss_node);
+    coss_index_pool->free(coss_node);
     sd->count -= 1;
 }
 
 void
 storeCossAdd(CossSwapDir * sd, StoreEntry * e)
 {
-    CossIndexNode *coss_node = (CossIndexNode *)memPoolAlloc(coss_index_pool);
+    CossIndexNode *coss_node = (CossIndexNode *)coss_index_pool->alloc();
     assert(!e->repl.data);
     e->repl.data = coss_node;
     dlinkAdd(e, &coss_node->node, &sd->cossindex);

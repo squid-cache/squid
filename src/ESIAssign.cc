@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIAssign.cc,v 1.2 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESIAssign.cc,v 1.3 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -37,25 +37,6 @@
 #include "ESIAssign.h"
 #include "ESIContext.h"
 #include "ESISequence.h"
-
-MemPool *ESIAssign::Pool = NULL;
-
-void *
-ESIAssign::operator new (size_t byteCount)
-{
-    assert (byteCount == sizeof (ESIAssign));
-
-    if (!Pool)
-        Pool = memPoolCreate ("ESIAssign", sizeof (ESIAssign));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ESIAssign::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 ESIAssign::~ESIAssign()
 {

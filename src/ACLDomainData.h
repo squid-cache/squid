@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLDomainData.h,v 1.4 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLDomainData.h,v 1.5 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,8 +43,7 @@ class ACLDomainData : public ACLData<char const *>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLDomainData);
 
     virtual ~ACLDomainData();
     bool match(char const *);
@@ -53,9 +52,8 @@ public:
     virtual ACLData<char const *> *clone() const;
 
     SplayNode<char *> *domains;
-
-private:
-    static MemPool *Pool;
 };
+
+MEMPROXY_CLASS_INLINE(ACLDomainData)
 
 #endif /* SQUID_ACLDOMAINDATA_H */

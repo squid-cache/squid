@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLRegexData.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ACLRegexData.h,v 1.5 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -41,8 +41,7 @@ class ACLRegexData : public ACLData<char const *>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLRegexData);
 
     virtual ~ACLRegexData();
     virtual bool match(char const *user);
@@ -51,8 +50,9 @@ public:
     virtual ACLData<char const *> *clone() const;
 
 private:
-    static MemPool *Pool;
     relist *data;
 };
+
+MEMPROXY_CLASS_INLINE(ACLRegexData)
 
 #endif /* SQUID_ACLREGEXDATA_H */

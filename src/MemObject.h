@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.8 2003/08/10 11:00:40 robertc Exp $
+ * $Id: MemObject.h,v 1.9 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,10 +50,9 @@ class MemObject
 
 public:
     static size_t inUseCount();
+    MEMPROXY_CLASS(MemObject);
 
     void dump() const;
-    void *operator new (size_t);
-    void operator delete (void *);
     MemObject(char const *, char const *);
     ~MemObject();
 
@@ -141,12 +140,12 @@ public:
     void kickReads();
 
 private:
-    static MemPool *pool;
-
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
     HttpReply const *_reply;
     DeferredReadManager deferredReads;
 };
+
+MEMPROXY_CLASS_INLINE(MemObject)
 
 #endif /* SQUID_MEMOBJECT_H */

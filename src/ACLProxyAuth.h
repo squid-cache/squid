@@ -66,8 +66,7 @@ class ACLProxyAuth : public ACL
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLProxyAuth);
 
     ~ACLProxyAuth();
     ACLProxyAuth(ACLData<char const *> *, char const *);
@@ -87,7 +86,6 @@ public:
     virtual int matchForCache(ACLChecklist *checklist);
 
 private:
-    static MemPool *Pool;
     static Prototype UserRegistryProtoype;
     static ACLProxyAuth UserRegistryEntry_;
     static Prototype RegexRegistryProtoype;
@@ -97,5 +95,7 @@ private:
     ACLData<char const *> *data;
     char const *type_;
 };
+
+MEMPROXY_CLASS_INLINE(ACLProxyAuth)
 
 #endif /* SQUID_ACLPROXYAUTH_H */

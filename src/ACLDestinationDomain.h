@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLDestinationDomain.h,v 1.5 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLDestinationDomain.h,v 1.6 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,8 +55,7 @@ class ACLDestinationDomain : public ACL
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLDestinationDomain);
 
     ~ACLDestinationDomain();
     ACLDestinationDomain(ACLData<char const *> *, char const *);
@@ -73,7 +72,6 @@ public:
     virtual ACL *clone()const;
 
 private:
-    static MemPool *Pool;
     static Prototype LiteralRegistryProtoype;
     static Prototype LegacyRegistryProtoype;
     static ACLDestinationDomain LiteralRegistryEntry_;
@@ -82,5 +80,7 @@ private:
     ACLData<char const *> *data;
     char const *type_;
 };
+
+MEMPROXY_CLASS_INLINE(ACLDestinationDomain)
 
 #endif /* SQUID_ACLDESTINATIONDOMAIN_H */

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLRegexData.cc,v 1.6 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLRegexData.cc,v 1.7 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,25 +39,6 @@
 #include "authenticate.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
-
-MemPool (*ACLRegexData::Pool)(NULL);
-void *
-ACLRegexData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLRegexData));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLRegexData", sizeof (ACLRegexData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLRegexData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 static void aclDestroyRegexList(relist * data);
 void

@@ -38,25 +38,6 @@
 #include "ACLChecklist.h"
 #include "HttpRequest.h"
 
-MemPool (*ACLDestinationIP::Pool)(NULL);
-void *
-ACLDestinationIP::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLDestinationIP));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLDestinationIP", sizeof (ACLDestinationIP));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLDestinationIP::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 char const *
 ACLDestinationIP::typeString() const
 {

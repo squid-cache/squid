@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.488 2004/08/30 03:28:59 robertc Exp $
+ * $Id: structs.h,v 1.489 2004/08/30 05:12:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -895,15 +895,17 @@ class HttpHeaderEntry
 {
 
 public:
-    void *operator new (size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(HttpHeaderEntry);
     http_hdr_type id;
     String name;
     String value;
-
-private:
-    static MemPool *Pool;
 };
+
+/* bah. remove this when HttpHeaderEntry is moved
+ * out
+ */
+extern void xassert(const char *, const char *, int);
+MEMPROXY_CLASS_INLINE(HttpHeaderEntry)
 
 /* http surogate control header field */
 
@@ -1889,7 +1891,7 @@ struct _helper_stateful
     int n_to_start;
     int n_running;
     int ipc_type;
-    MemPool *datapool;
+    MemAllocatorProxy *datapool;
     HLPSAVAIL *IsAvailable;
     HLPSONEQ *OnEmptyQueue;
     time_t last_queue_warn;

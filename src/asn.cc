@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.98 2003/10/20 12:33:01 robertc Exp $
+ * $Id: asn.cc,v 1.99 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -557,25 +557,6 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
     storeAppendPrintf(sentry, "\n");
 
     return 0;
-}
-
-MemPool (*ACLASN::Pool)(NULL);
-void *
-ACLASN::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLASN));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLASN", sizeof (ACLASN));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLASN::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }
 
 ACLASN::~ACLASN()

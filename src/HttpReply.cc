@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.65 2003/12/22 10:45:32 robertc Exp $
+ * $Id: HttpReply.cc,v 1.66 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -590,23 +590,4 @@ httpReplyBodySize(method_t method, HttpReply const * reply)
         return 0;
 
     return reply->content_length;
-}
-
-MemPool (*HttpReply::Pool)(NULL);
-void *
-HttpReply::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (HttpReply));
-
-    if (!Pool)
-        Pool = memPoolCreate("HttpReply", sizeof (HttpReply));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-HttpReply::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
 }

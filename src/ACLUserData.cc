@@ -39,25 +39,6 @@
 #include "authenticate.h"
 #include "ACLChecklist.h"
 
-MemPool (*ACLUserData::Pool)(NULL);
-void *
-ACLUserData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLUserData));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLUserData", sizeof (ACLUserData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLUserData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 template<class T>
 inline void
 xRefFree(T &thing)

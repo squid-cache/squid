@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.24 2003/07/22 15:23:10 robertc Exp $
+ * $Id: async_io.cc,v 1.25 2004/08/30 05:12:32 robertc Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -96,7 +96,7 @@ squidaio_unlinkq_t;
 
 static dlink_list used_list;
 static OBJH aioStats;
-static MemPool *squidaio_ctrl_pool;
+static MemAllocatorProxy *squidaio_ctrl_pool;
 static void aioFDWasClosed(int fd);
 
 static void
@@ -112,7 +112,7 @@ AufsIO::init(void)
     if (initialised)
         return;
 
-    squidaio_ctrl_pool = memPoolCreate("aio_ctrl", sizeof(squidaio_ctrl_t));
+    squidaio_ctrl_pool = new MemAllocatorProxy("aio_ctrl", sizeof(squidaio_ctrl_t));
 
     cachemgrRegister("squidaio_counts", "Async IO Function Counters",
                      aioStats, 0, 1);
@@ -126,7 +126,9 @@ AufsIO::done(void)
     if (!initialised)
         return;
 
-    memPoolDestroy(&squidaio_ctrl_pool);
+    delete squidaio_ctrl_pool;
+
+    squidaio_ctrl_pool = NULL;
 
     initialised = false;
 }
@@ -138,7 +140,7 @@ aioOpen(const char *path, int oflag, mode_t mode, AIOCB * callback, void *callba
 
     assert(AufsIO::Instance.initialised);
     squidaio_counts.open_start++;
-    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)squidaio_ctrl_pool->alloc();
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -157,7 +159,7 @@ aioClose(int fd)
     assert(AufsIO::Instance.initialised);
     squidaio_counts.close_start++;
     aioCancel(fd);
-    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)squidaio_ctrl_pool->alloc();
     ctrlp->fd = fd;
     ctrlp->done_handler = NULL;
     ctrlp->done_handler_data = NULL;
@@ -205,7 +207,7 @@ aioCancel(int fd)
         }
 
         dlinkDelete(m, &used_list);
-        memPoolFree(squidaio_ctrl_pool, ctrlp);
+        squidaio_ctrl_pool->free(ctrlp);
     }
 }
 
@@ -218,7 +220,7 @@ aioWrite(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callba
 
     assert(AufsIO::Instance.initialised);
     squidaio_counts.write_start++;
-    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)squidaio_ctrl_pool->alloc();
     ctrlp->fd = fd;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -247,7 +249,7 @@ aioRead(int fd, int offset, int len, AIOCB * callback, void *callback_data)
 
     assert(AufsIO::Instance.initialised);
     squidaio_counts.read_start++;
-    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)squidaio_ctrl_pool->alloc();
     ctrlp->fd = fd;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -276,7 +278,7 @@ aioStat(char *path, struct stat *sb, AIOCB * callback, void *callback_data)
 
     assert(AufsIO::Instance.initialised);
     squidaio_counts.stat_start++;
-    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)squidaio_ctrl_pool->alloc();
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -293,7 +295,7 @@ aioUnlink(const char *path, AIOCB * callback, void *callback_data)
     squidaio_ctrl_t *ctrlp;
     assert(AufsIO::Instance.initialised);
     squidaio_counts.unlink_start++;
-    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)squidaio_ctrl_pool->alloc();
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -309,7 +311,7 @@ aioTruncate(const char *path, off_t length, AIOCB * callback, void *callback_dat
     squidaio_ctrl_t *ctrlp;
     assert(AufsIO::Instance.initialised);
     squidaio_counts.unlink_start++;
-    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)squidaio_ctrl_pool->alloc();
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -406,7 +408,7 @@ AufsIO::callback()
         if (ctrlp->operation == _AIO_CLOSE)
             aioFDWasClosed(ctrlp->fd);
 
-        memPoolFree(squidaio_ctrl_pool, ctrlp);
+        squidaio_ctrl_pool->free(ctrlp);
     }
 
     return retval;
@@ -450,5 +452,5 @@ AufsIO::AufsIO() : initialised (false) {}
 int
 aioQueueSize(void)
 {
-    return memPoolInUseCount(squidaio_ctrl_pool);
+    return squidaio_ctrl_pool->inUseCount();
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.40 2004/08/30 03:29:00 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.41 2004/08/30 05:12:32 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -69,8 +69,8 @@ CBDATA_TYPE(authenticateStateData);
 
 static int authntlm_initialised = 0;
 
-static MemPool *ntlm_helper_state_pool = NULL;
-static MemPool *ntlm_user_hash_pool = NULL;
+static MemAllocatorProxy *ntlm_helper_state_pool = NULL;
+static MemAllocatorProxy *ntlm_user_hash_pool = NULL;
 
 static auth_ntlm_config ntlmConfig;
 
@@ -105,8 +105,15 @@ ntlmScheme::done()
 #if DEBUGSHUTDOWN
 
     if (ntlm_helper_state_pool) {
-        memPoolDestroy(&ntlm_helper_state_pool);
+        delete ntlm_helper_state_pool;
+        ntlm_helper_state_pool = NULL;
     }
+
+    /* Removed for some reason..
+        if (ntlm_user_pool) {
+    	delete ntlm_user_pool;ntlm_user_pool = NULL;
+        }
+        */
 
 #endif
     debug(29, 2) ("authNTLMDone: NTLM authentication Shutdown.\n");
@@ -193,11 +200,11 @@ AuthNTLMConfig::init(AuthConfig * scheme)
 
     if (authenticate) {
         if (!ntlm_helper_state_pool)
-            ntlm_helper_state_pool = memPoolCreate("NTLM Helper State data", sizeof(ntlm_helper_state_t));
+            ntlm_helper_state_pool = new MemAllocatorProxy("NTLM Helper State data", sizeof(ntlm_helper_state_t));
 
         if (!ntlm_user_hash_pool)
 
-            ntlm_user_hash_pool = memPoolCreate("NTLM Header Hash Data", sizeof(struct ProxyAuthCachePointer));
+            ntlm_user_hash_pool = new MemAllocatorProxy("NTLM Header Hash Data", sizeof(struct ProxyAuthCachePointer));
 
         authntlm_initialised = 1;
 
@@ -372,7 +379,7 @@ NTLMUser::~NTLMUser()
         hash_remove_link(proxy_auth_cache, (hash_link *) proxy_auth_hash);
         /* free the key (usually the proxy_auth header) */
         xfree(proxy_auth_hash->key);
-        memPoolFree(ntlm_user_hash_pool, proxy_auth_hash);
+        ntlm_user_hash_pool->free(proxy_auth_hash);
     }
 
 }
@@ -932,7 +939,7 @@ authenticateProxyAuthCacheAddLink(const char *key, auth_user_t * auth_user)
         node = node->next;
     }
 
-    proxy_auth_hash = static_cast<ProxyAuthCachePointer *>(memPoolAlloc(ntlm_user_hash_pool));
+    proxy_auth_hash = static_cast<ProxyAuthCachePointer *>(ntlm_user_hash_pool->alloc());
     proxy_auth_hash->key = xstrdup(key);
     proxy_auth_hash->auth_user = auth_user;
     dlinkAddTail(proxy_auth_hash, &proxy_auth_hash->link, &ntlm_user->proxy_auth_list);
@@ -1124,25 +1131,6 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
     return;
 }
 
-MemPool (*AuthNTLMUserRequest::Pool)(NULL);
-void *
-AuthNTLMUserRequest::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (AuthNTLMUserRequest));
-
-    if (!Pool)
-        Pool = memPoolCreate("AuthNTLMUserRequest", sizeof (AuthNTLMUserRequest));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-AuthNTLMUserRequest::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 AuthNTLMUserRequest::AuthNTLMUserRequest() : ntlmnegotiate(NULL), authchallenge(NULL), ntlmauthenticate(NULL),
         authserver(NULL), auth_state(AUTHENTICATE_STATE_NONE),
         authserver_deferred(0), conn(NULL), _theUser(NULL)
@@ -1166,29 +1154,10 @@ AuthNTLMUserRequest::~AuthNTLMUserRequest()
     }
 }
 
-MemPool *NTLMUser::Pool (NULL);
 void
 NTLMUser::deleteSelf() const
 {
     delete this;
-}
-
-void *
-NTLMUser::operator new(size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (NTLMUser));
-
-    if (!Pool)
-        Pool = memPoolCreate("Authenticate NTLM User Data", sizeof (NTLMUser));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-NTLMUser::operator delete (void *address)
-{
-    memPoolFree(Pool, address);
 }
 
 NTLMUser::NTLMUser (AuthConfig *config) : AuthUser (config)

@@ -55,8 +55,7 @@ class ACLIdent : public ACL
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLIdent);
 
     ACLIdent(ACLData<char const *> *newData, char const *);
     ACLIdent (ACLIdent const &old);
@@ -73,7 +72,6 @@ public:
     virtual ACL *clone()const;
 
 private:
-    static MemPool *Pool;
     static Prototype UserRegistryProtoype;
     static ACLIdent UserRegistryEntry_;
     static Prototype RegexRegistryProtoype;
@@ -81,5 +79,7 @@ private:
     ACLData<char const *> *data;
     char const *type_;
 };
+
+MEMPROXY_CLASS_INLINE(ACLIdent)
 
 #endif /* SQUID_ACLIDENT_H */

@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.13 2004/08/30 03:28:54 robertc Exp $
+#  $Id: Makefile.am,v 1.14 2004/08/30 05:12:30 robertc Exp $
 #
 
 DIST_SUBDIRS = libTrie cppunit-1.10.0
@@ -39,7 +39,7 @@ EXTRA_libmiscutil_a_SOURCES = \
 	Profiler.c \
 	snprintf.c
 libmiscutil_a_SOURCES = \
-	MemPool.c \
+	MemPool.cc \
 	base64.c \
 	getfullhostname.c \
 	hash.c \

@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.h,v 1.3 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESISequence.h,v 1.4 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -46,8 +46,7 @@ class esiSequence : public ESIElement
 {
 
 public:
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    MEMPROXY_CLASS(esiSequence);
 
     esiSequence(esiTreeParentPtr, bool = false);
     ~esiSequence();
@@ -82,7 +81,6 @@ protected:
     esiTreeParentPtr parent;
 
 private:
-    static MemPool *Pool;
     int elementIndex (ESIElement::Pointer anElement) const;
     bool mayFail_;
     bool failed;
@@ -96,5 +94,7 @@ private:
     bool finishedProcessing() const;
     void processStep(int dovars);
 };
+
+MEMPROXY_CLASS_INLINE(esiSequence)
 
 #endif /* SQUID_ESISEQUENCE_H */

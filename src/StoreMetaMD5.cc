@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaMD5.cc,v 1.3 2003/08/04 22:14:41 robertc Exp $
+ * $Id: StoreMetaMD5.cc,v 1.4 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -37,26 +37,6 @@
 #include "StoreMetaMD5.h"
 #include "Store.h"
 #include "MemObject.h"
-
-MemPool *StoreMetaMD5::pool = NULL;
-
-void *
-StoreMetaMD5::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (StoreMetaMD5));
-
-    if (!pool)
-        pool = memPoolCreate("StoreMetaMD5", sizeof (StoreMetaMD5));
-
-    return memPoolAlloc(pool);
-}
-
-void
-StoreMetaMD5::operator delete (void *address)
-{
-    memPoolFree(pool, address);
-}
 
 bool
 StoreMetaMD5::validLength(int len) const

@@ -4,18 +4,9 @@
 
 #include "config.h"
 #include "util.h"
-#ifdef __cplusplus
 
-template <class V>
-
-class SplayNode;
-
-typedef SplayNode<void *> splayNode;
-
-#else
-#include "splay.h"
-#endif
 #include "memMeter.h"
+#include "splay.h"
 
 #if HAVE_GNUMALLOC_H
 #include <gnumalloc.h>
@@ -33,10 +24,6 @@ typedef SplayNode<void *> splayNode;
 #endif
 #endif
 
-#if PURIFY
-#define DISABLE_POOLS 1		/* Disabling Memory pools under purify */
-#endif
-
 #define MB ((size_t)1024*1024)
 #define mem_unlimited_size 2 * 1024 * MB
 #define toMB(size) ( ((double) size) / MB )
@@ -48,38 +35,35 @@ typedef SplayNode<void *> splayNode;
 #define MEM_MIN_FREE  32
 #define MEM_MAX_FREE  65535	/* ushort is max number of items per chunk */
 
-typedef struct _MemPoolMeter MemPoolMeter;
-
-typedef struct _MemPool MemPool;
-
-typedef struct _MemChunk MemChunk;
-
-typedef struct _MemPoolStats MemPoolStats;
+class MemImplementingAllocator;
+class MemChunk;
+class MemPoolStats;
 
 typedef struct _MemPoolGlobalStats MemPoolGlobalStats;
 
-typedef struct _MemPoolIterator MemPoolIterator;
-
-struct _MemPoolIterator
+class MemPoolIterator
 {
-    MemPool *pool;
+  public:
+    MemImplementingAllocator *pool;
     MemPoolIterator * next;
 };
 
 /* object to track per-pool cumulative counters */
 
-typedef struct
+class mgb_t
 {
+  public:
+    mgb_t() : count(0), bytes(0){}
     double count;
     double bytes;
-}
-
-mgb_t;
+};
 
 /* object to track per-pool memory usage (alloc = inuse+idle) */
 
-struct _MemPoolMeter
+class MemPoolMeter
 {
+  public:
+    void flush();
     MemMeter alloc;
     MemMeter inuse;
     MemMeter idle;
@@ -88,41 +72,184 @@ struct _MemPoolMeter
     mgb_t gb_freed;		/* account Free calls */
 };
 
+class MemImplementingAllocator;
+
+class MemPools 
+{
+  public:
+    static MemPools &GetInstance();
+    MemPools();
+    void init();
+    void flushMeters();
+    MemImplementingAllocator * create(const char *label, size_t obj_size);
+    MemImplementingAllocator * create(const char *label, size_t obj_size, bool const chunked);
+    void setIdleLimit(size_t new_idle_limit);
+    size_t const idleLimit() const;
+    void clean(time_t maxage);
+    void setDefaultPoolChunking(bool const &);
+    MemImplementingAllocator *pools;
+    int mem_idle_limit;
+    int poolCount;
+    bool defaultIsChunked;
+  private:
+    static MemPools *Instance;
+};
+
 /* a pool is a [growing] space for objects of the same size */
 
-struct _MemPool
+class MemAllocator
 {
+public:
+    MemAllocator (char const *aLabel);
+    virtual ~MemAllocator() {}
+    virtual int getStats(MemPoolStats * stats) = 0;
+    virtual MemPoolMeter const &getMeter() const = 0;
+    virtual void *alloc() = 0;
+    virtual void free(void *) = 0;
+    virtual char const *objectType() const;
+    virtual size_t objectSize() const = 0;
+private:
     const char *label;
+};
+
+/* Support late binding of pool type for allocator agnostic classes */
+class MemAllocatorProxy
+{
+  public:
+    inline MemAllocatorProxy(char const *aLabel, size_t const &);
+    void *alloc();
+    void free(void *);
+    int inUseCount() const;
+    size_t objectSize() const;
+    MemPoolMeter const &getMeter() const;
+    int getStats(MemPoolStats * stats);
+    char const * objectType() const;
+  private:
+    MemAllocator *getAllocator() const;
+    const char *label;
+    size_t size;
+    mutable MemAllocator *theAllocator;
+};
+/* help for classes */
+/* Put this in the class */
+#define MEMPROXY_CLASS(CLASS) \
+/* TODO change syntax to allow moving into .cci files */ \
+    inline void *operator new(size_t); \
+    inline void operator delete(void *); \
+    static inline MemAllocatorProxy &Pool()
+
+/* put this in the class .h, or .cci as appropriate */
+#define MEMPROXY_CLASS_INLINE(CLASS) \
+MemAllocatorProxy& CLASS::Pool() \
+{ \
+    static MemAllocatorProxy thePool(#CLASS, sizeof (CLASS)); \
+    return thePool; \
+} \
+\
+void * \
+CLASS::operator new (size_t byteCount) \
+{ \
+    /* derived classes with different sizes must implement their own new */ \
+    assert (byteCount == sizeof (CLASS)); \
+\
+    return Pool().alloc(); \
+}  \
+\
+void \
+CLASS::operator delete (void *address) \
+{ \
+    Pool().free(address); \
+}
+
+class MemImplementingAllocator : public MemAllocator
+{
+  public:
+    MemImplementingAllocator(char const *aLabel, size_t aSize);
+    virtual MemPoolMeter const &getMeter() const;
+    virtual MemPoolMeter &getMeter();
+    virtual void flushMetersFull();
+    virtual void flushMeters();
+    virtual void *alloc();
+    virtual void free(void *);
+    virtual bool idleTrigger(int shift) const = 0;
+    virtual void clean(time_t maxage) = 0;
+    /* Hint to the allocator - may be ignored */
+    virtual void setChunkSize(size_t chunksize) {}
+    virtual size_t objectSize() const;
+  protected:
+    virtual void *allocate() = 0;
+    virtual void deallocate(void *) = 0;
+  private:
+    MemPoolMeter meter;
+  public:
+    MemImplementingAllocator *next;
+  public:
+    size_t alloc_calls;
+    size_t free_calls;
     size_t obj_size;
+};
+
+class MemPool : public MemImplementingAllocator
+{
+  public:
+    friend class MemChunk;
+    MemPool(const char *label, size_t obj_size);
+    ~MemPool();
+    void convertFreeCacheToChunkFreeCache();
+    virtual void clean(time_t maxage);
+    virtual int getStats(MemPoolStats * stats);
+    void createChunk();
+    void *get();
+    void push(void *obj);
+  protected:
+    virtual void *allocate();
+    virtual void deallocate(void *);
+  public:
+    virtual void setChunkSize(size_t chunksize);
+    virtual bool idleTrigger(int shift) const;
+
     size_t chunk_size;
     int chunk_capacity;
     int memPID;
     int chunkCount;
-    size_t alloc_calls;
-    size_t free_calls;
     size_t inuse;
     size_t idle;
     void *freeCache;
     MemChunk *nextFreeChunk;
     MemChunk *Chunks;
-    MemPoolMeter meter;
-    splayNode *allChunks;
-    MemPool *next;
+    Splay<MemChunk *> allChunks;
 };
 
-struct _MemChunk
+class MemMalloc : public MemImplementingAllocator
 {
+  public:
+    MemMalloc(char const *label, size_t aSize);
+    virtual bool idleTrigger(int shift) const;
+    virtual void clean(time_t maxage);
+    virtual int getStats(MemPoolStats * stats);
+  protected:
+    virtual void *allocate();
+    virtual void deallocate(void *);
+};
+
+class MemChunk
+{
+  public:
+    MemChunk(MemPool *pool);
+    ~MemChunk();
     void *freeList;
     void *objCache;
     int inuse_count;
     MemChunk *nextFreeChunk;
     MemChunk *next;
     time_t lastref;
+    MemPool *pool;
 };
 
-struct _MemPoolStats
+class MemPoolStats
 {
-    MemPool *pool;
+  public:
+    MemAllocator *pool;
     const char *label;
     MemPoolMeter *meter;
     int obj_size;
@@ -164,32 +291,20 @@ struct _MemPoolGlobalStats
 
 #define SIZEOF_CHUNK  ( ( sizeof(MemChunk) + sizeof(double) -1) / sizeof(double) ) * sizeof(double);
 
-/* memPools */
-
 /* Allocator API */
-SQUIDCEXTERN MemPool *memPoolCreate(const char *label, size_t obj_size);
-SQUIDCEXTERN void *memPoolAlloc(MemPool * pool);
-SQUIDCEXTERN void memPoolFree(MemPool * pool, void *obj);
-SQUIDCEXTERN void memPoolDestroy(MemPool ** pool);
+extern MemPoolIterator * memPoolIterate(void);
+extern MemImplementingAllocator * memPoolIterateNext(MemPoolIterator * iter);
+extern void memPoolIterateDone(MemPoolIterator ** iter);
 
-SQUIDCEXTERN MemPoolIterator * memPoolIterate(void);
-SQUIDCEXTERN MemPool * memPoolIterateNext(MemPoolIterator * iter);
-SQUIDCEXTERN void memPoolIterateDone(MemPoolIterator ** iter);
+/* Stats API - not sured how to refactor yet */
+extern int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
 
-/* Tune API */
-SQUIDCEXTERN void memPoolSetChunkSize(MemPool * pool, size_t chunksize);
-SQUIDCEXTERN void memPoolSetIdleLimit(size_t new_idle_limit);
+extern int memPoolInUseCount(MemAllocator *);
+extern int memPoolsTotalAllocated(void);
 
-/* Stats API */
-SQUIDCEXTERN int memPoolGetStats(MemPoolStats * stats, MemPool * pool);
-SQUIDCEXTERN int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
+MemAllocatorProxy::MemAllocatorProxy(char const *aLabel, size_t const &aSize) : label (aLabel), size(aSize), theAllocator (NULL)
+{
+}
 
-/* Module housekeeping API */
-SQUIDCEXTERN void memPoolClean(time_t maxage);
-
-#if UNUSED
-/* Stats history API */
-SQUIDCEXTERN void memPoolCheckRates(); /* stats history checkpoints */
-#endif
 
 #endif /* _MEM_POOLS_H_ */

@@ -1,5 +1,5 @@
 /*
- * $Id: splay.cc,v 1.6 2003/09/22 03:31:02 robertc Exp $
+ * $Id: splay.cc,v 1.7 2004/08/30 05:12:33 robertc Exp $
  *
  * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
  * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl
@@ -141,18 +141,18 @@ main(int argc, char *argv[])
         for (i = 0; i < 100; i++) {
             I = (intnode *)xcalloc(sizeof(intnode), 1);
             I->i = random();
-            top = splay_insert(I, top, compareintvoid);
+            top = top->insert(I, compareintvoid);
         }
 
         SplayCheck::BeginWalk();
-        splay_walk(top, SplayCheck::WalkVoid, NULL);
+        top->walk(SplayCheck::WalkVoid, NULL);
 
         SplayCheck::BeginWalk();
         top->walk(SplayCheck::WalkVoid, NULL);
         top->destroy(destintvoid);
         /* check we don't segfault on NULL splay calls */
         top = NULL;
-        top->splay(NULL, compareintvoid);
+        top->splay((void *)NULL, compareintvoid);
     }
 
     /* test typesafe splay containers */
@@ -174,7 +174,7 @@ main(int argc, char *argv[])
         safeTop->destroy(destint);
         /* check we don't segfault on NULL splay calls */
         safeTop = NULL;
-        safeTop->splay(NULL, compareint);
+        safeTop->splay((intnode *)NULL, compareint);
     }
     {
         /* intnode */

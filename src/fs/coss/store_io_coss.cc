@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.24 2003/08/30 06:39:24 robertc Exp $
+ * $Id: store_io_coss.cc,v 1.25 2004/08/30 05:12:33 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -58,23 +58,6 @@ static void storeCossMemBufDescribe(CossMemBuf * t, int level, int line);
 CBDATA_TYPE(CossMemBuf);
 
 /* === PUBLIC =========================================================== */
-
-MemPool *CossState::Pool = NULL;
-
-void *
-CossState::operator new (size_t)
-{
-    if (!Pool)
-        Pool = memPoolCreate("Squid COSS State Data", sizeof (CossState));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-CossState::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 CossState::CossState(CossSwapDir *aCSD):SD (aCSD)
 {}

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificateData.cc,v 1.6 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLCertificateData.cc,v 1.7 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,25 +38,6 @@
 #include "ACLCertificateData.h"
 #include "authenticate.h"
 #include "ACLChecklist.h"
-
-MemPool (*ACLCertificateData::Pool)(NULL);
-void *
-ACLCertificateData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLCertificateData));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLCertificateData", sizeof (ACLCertificateData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLCertificateData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 ACLCertificateData::ACLCertificateData(SSLGETATTRIBUTE *sslStrategy) : attribute (NULL), values (), sslAttributeCall (sslStrategy)
 {}

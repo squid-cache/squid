@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.cc,v 1.3 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESISequence.cc,v 1.4 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -41,30 +41,10 @@
 
 class esiExcept;
 
-MemPool *esiSequence::Pool = NULL;
-
 esiSequence::~esiSequence ()
 {
     debug (86,5)("esiSequence::~esiSequence %p\n", this);
 }
-
-void *
-esiSequence::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (esiSequence));
-
-    if (!Pool)
-        Pool = memPoolCreate ("esiSequence", sizeof (esiSequence));
-
-    return memPoolAlloc (Pool);
-}
-
-void
-esiSequence::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
 
 esiSequence::esiSequence(esiTreeParentPtr aParent, bool incrementalFlag) : elements(), parent (aParent), mayFail_(true), failed (false), provideIncrementalData (incrementalFlag), processing (false), processingResult (ESI_PROCESS_COMPLETE), nextElementToProcess_ (0)
 {}

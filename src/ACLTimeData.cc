@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.4 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ACLTimeData.cc,v 1.5 2004/08/30 05:12:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,25 +38,6 @@
 #include "ACLTimeData.h"
 #include "authenticate.h"
 #include "ACLChecklist.h"
-
-MemPool (*ACLTimeData::Pool)(NULL);
-void *
-ACLTimeData::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLTimeData));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLTimeData", sizeof (ACLTimeData));
-
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLTimeData::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
 
 ACLTimeData::ACLTimeData () : weekbits (0), start (0), stop (0), next (NULL) {}
 

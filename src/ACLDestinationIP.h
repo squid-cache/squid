@@ -54,8 +54,7 @@ class ACLDestinationIP : public ACLIP
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(ACLDestinationIP);
 
     virtual char const *typeString() const;
     virtual int match(ACLChecklist *checklist);
@@ -64,9 +63,10 @@ public:
     virtual ACL *clone()const;
 
 private:
-    static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLDestinationIP RegistryEntry_;
 };
+
+MEMPROXY_CLASS_INLINE(ACLDestinationIP)
 
 #endif /* SQUID_ACLDESTINATIONIP_H */
