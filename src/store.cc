@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.258 1997/06/18 03:06:22 wessels Exp $
+ * $Id: store.cc,v 1.259 1997/06/18 16:15:53 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -866,8 +866,7 @@ storeDeleteBehind(StoreEntry * e)
     int target_offset = storeGetLowestReaderOffset(e);
     if (target_offset == 0)
 	return;
-    new_lowest_offset = (int) memFreeDataUpto(mem->data,
-	target_offset);
+    new_lowest_offset = (int) memFreeDataUpto(mem->data, target_offset);
     store_mem_size -= new_lowest_offset - old_lowest_offset;
     mem->e_lowest_offset = new_lowest_offset;
 }
@@ -2199,13 +2198,12 @@ storeClientCopy(StoreEntry * e,
 	sc->copy_offset = copy_offset;
 	return;
     }
+    if (BIT_TEST(e->flag, DELETE_BEHIND))
+	storeDeleteBehind(e);
     sz = memCopy(mem->data, copy_offset, buf, size);
     recurse_detect++;
     callback(data, buf, sz);
     recurse_detect--;
-    /* see if we can get rid of some data if we are in "delete behind" mode . */
-    if (BIT_TEST(e->flag, DELETE_BEHIND))
-	storeDeleteBehind(e);
 }
 
 static int
