@@ -1,3 +1,4 @@
+	- Added Bulgarian error pages by Evgeny Gechev.
 	- Changed StoreEntry->lock_count to a u_short.
 	- Replaced urlcmp with strcmp
 	- Fixed pragma no-cache ejecting ENTRY_SPECIAL objects
@@ -33,6 +34,16 @@
 	  (this needs more work!)
 	- Fixed memory access errors in statAvgTick().
 	- Fixed duplicate requestUnlink() bug in forward.c
+	- Fixed possible memory access bugs from not setting e->mem_obj
+	  = NULL in destroy_MemObject().
+	- Deleted TCP_IMS_MISS tag.  Always use TCP_IMS_HIT instead.
+	- Modified headersEnd and httpMsgIsolateHeaders to account
+	  for funky line terminations such as CRCRNL.
+	  (``but Netscape and IE _tolerate_ this'')
+	- Fixed carp functions (Eric Stern).
+	- Replaced internal proxy_auth code with extern authentication
+	  module (Arjan de Vet).
+	- moved hash.c to libmiscutil.a.
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
