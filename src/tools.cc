@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.164 1998/07/22 20:38:02 wessels Exp $
+ * $Id: tools.cc,v 1.165 1998/07/25 00:16:30 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -48,7 +48,6 @@ Thanks!\n"
 static void fatal_common(const char *);
 static void fatalvf(const char *fmt, va_list args);
 static void mail_warranty(void);
-static void shutdownTimeoutHandler(int fd, void *data);
 #if USE_ASYNC_IO
 static void safeunlinkComplete(void *data, int retcode, int errcode);
 #endif
@@ -287,33 +286,6 @@ sigusr2_handle(int sig)
 #if !HAVE_SIGACTION
     signal(sig, sigusr2_handle);	/* reinstall */
 #endif
-}
-
-static void
-shutdownTimeoutHandler(int fd, void *datanotused)
-{
-    debug(21, 1) ("Forcing close of FD %d\n", fd);
-    comm_close(fd);
-}
-
-void
-setSocketShutdownLifetimes(int to)
-{
-    fde *f = NULL;
-    int i;
-    for (i = Biggest_FD; i >= 0; i--) {
-	f = &fd_table[i];
-	if (!f->read_handler && !f->write_handler)
-	    continue;
-	if (f->type != FD_SOCKET)
-	    continue;
-	if (f->timeout > 0 && (int) (f->timeout - squid_curtime) <= to)
-	    continue;
-	commSetTimeout(i,
-	    to,
-	    f->timeout_handler ? f->timeout_handler : shutdownTimeoutHandler,
-	    f->timeout_data);
-    }
 }
 
 static void

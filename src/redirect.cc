@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.63 1998/07/22 20:37:44 wessels Exp $
+ * $Id: redirect.cc,v 1.64 1998/07/25 00:16:29 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -370,11 +370,12 @@ redirectOpenServers(void)
 }
 
 void
-redirectShutdownServers(void)
+redirectShutdownServers(void *unused)
 {
     redirector_t *redirect = NULL;
     redirectStateData *r = NULL;
     int k;
+    int na = 0;
     if (Config.Program.redirect == NULL)
 	return;
     if (redirectQueueHead) {
@@ -386,18 +387,21 @@ redirectShutdownServers(void)
 	redirect = *(redirect_child_table + k);
 	if (!EBIT_TEST(redirect->flags, HELPER_ALIVE))
 	    continue;
-	if (EBIT_TEST(redirect->flags, HELPER_BUSY))
-	    continue;
 	if (EBIT_TEST(redirect->flags, HELPER_CLOSING))
 	    continue;
+	if (EBIT_TEST(redirect->flags, HELPER_BUSY)) {
+	    na++;
+	    continue;
+	}
 	debug(29, 3) ("redirectShutdownServers: closing redirector #%d, FD %d\n",
 	    redirect->index + 1, redirect->fd);
 	comm_close(redirect->fd);
 	EBIT_SET(redirect->flags, HELPER_CLOSING);
 	EBIT_SET(redirect->flags, HELPER_BUSY);
     }
+    if (na)
+	eventAdd("redirectShutdownServers", redirectShutdownServers, NULL, 1.0, 1);
 }
-
 
 int
 redirectUnregister(const char *url, void *data)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.241 1998/07/23 19:57:52 wessels Exp $
+ * $Id: protos.h,v 1.242 1998/07/25 00:16:28 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -151,6 +151,7 @@ extern void commCallCloseHandlers(int fd);
 extern int commSetTimeout(int fd, int, PF *, void *);
 extern void commSetDefer(int fd, DEFER * func, void *);
 extern int ignoreErrno(int);
+extern void commCloseAllSockets(void);
 
 /*
  * comm_select.c
@@ -195,7 +196,7 @@ extern int file_read(int, char *, int, off_t, DRCB *, void *);
 extern void disk_init(void);
 extern int diskWriteIsComplete(int);
 
-extern void dnsShutdownServers(void);
+extern void dnsShutdownServers(void *);
 extern void dnsShutdownServer(dnsserver_t * dns);
 extern void dnsOpenServers(void);
 extern dnsserver_t *dnsGetFirstAvailable(void);
@@ -508,7 +509,6 @@ extern EVH ipcache_purgelru;
 extern const ipcache_addrs *ipcache_gethostbyname(const char *, int flags);
 extern void ipcacheInvalidate(const char *);
 extern void ipcacheReleaseInvalid(const char *);
-extern void ipcacheShutdownServers(void);
 extern void ipcache_init(void);
 extern void stat_ipcache_get(StoreEntry *);
 extern int ipcacheQueueDrain(void);
@@ -637,7 +637,7 @@ extern void urnStart(request_t *, StoreEntry *);
 
 extern void redirectStart(clientHttpRequest *, RH *, void *);
 extern void redirectOpenServers(void);
-extern void redirectShutdownServers(void);
+extern void redirectShutdownServers(void *);
 extern void redirectStats(StoreEntry *);
 extern int redirectUnregister(const char *url, void *);
 extern void redirectFreeMemory(void);

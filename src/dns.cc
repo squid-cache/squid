@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.61 1998/07/22 20:37:14 wessels Exp $
+ * $Id: dns.cc,v 1.62 1998/07/25 00:16:26 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -189,10 +189,11 @@ dnsStats(StoreEntry * sentry)
 }
 
 void
-dnsShutdownServers(void)
+dnsShutdownServers(void *notused)
 {
     dnsserver_t *dns = NULL;
     int k;
+    int na = 0;
     debug(34, 3) ("dnsShutdownServers:\n");
     for (k = 0; k < NDnsServersAlloc; k++) {
 	dns = *(dns_child_table + k);
@@ -203,6 +204,7 @@ dnsShutdownServers(void)
 	if (EBIT_TEST(dns->flags, HELPER_BUSY)) {
 	    debug(34, 3) ("dnsShutdownServers: #%d is BUSY.\n", dns->id);
 	    EBIT_SET(dns->flags, HELPER_SHUTDOWN);
+	    na++;
 	    continue;
 	}
 	if (EBIT_TEST(dns->flags, HELPER_CLOSING)) {
@@ -211,6 +213,8 @@ dnsShutdownServers(void)
 	}
 	dnsShutdownServer(dns);
     }
+    if (na)
+	eventAdd("dnsShutdownServers", dnsShutdownServers, NULL, 1.0, 1);
 }
 
 void
