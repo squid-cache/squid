@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.344 1997/11/17 22:11:09 wessels Exp $
+ * $Id: store.cc,v 1.345 1997/11/18 00:48:46 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -930,13 +930,16 @@ storeAppend(StoreEntry * e, const char *buf, int len)
     assert(mem != NULL);
     assert(len >= 0);
     if (len) {
-	debug(20, 5) ("storeAppend: appending %d bytes for '%s'\n", len, storeKeyText(e->key));
+	debug(20, 5) ("storeAppend: appending %d bytes for '%s'\n",
+	    len,
+	    storeKeyText(e->key));
 	storeGetMemSpace(len);
 	memAppend(mem->data, buf, len);
 	mem->inmem_hi += len;
     }
-    if (e->store_status != STORE_ABORTED && !EBIT_TEST(e->flag, DELAY_SENDING))
-	InvokeHandlers(e);
+    if (EBIT_TEST(e->flag, DELAY_SENDING))
+	return;
+    InvokeHandlers(e);
     storeCheckSwapOut(e);
 }
 
