@@ -21,6 +21,11 @@ Changes to squid-1.1.2 (December 18, 1996):
 	  bad 304 replies from squid-1.1.beta27 and earlier.
 	- Changed reqnum passed in ICP replies to encode request method
 	  in high byte.
+	- Fixed neighbor round-robin bug (Uwe Doering).
+	- Calculate accurage percentages for ICP and HTTP requests in
+	  cachemgr 'client list'.
+	- Fixed refresh lm-factor calculations to allow percent = 0.
+	- Make sure DNS lookups don't remain PENDING for a very long time.
 
 Changes to squid-1.1.1 (December 15, 1996):
 
