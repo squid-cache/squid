@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.86 2002/08/12 01:21:06 hno Exp $
+ * $Id: util.c,v 1.87 2002/10/02 11:06:30 robertc Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -36,6 +36,7 @@
 #define _etext etext
 
 #include "config.h"
+#include "profiling.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -427,10 +428,14 @@ xmalloc(size_t sz)
 {
     void *p;
 
+    PROF_start(xmalloc);
     if (sz < 1)
 	sz = 1;
 
-    if ((p = malloc(sz)) == NULL) {
+    PROF_start(malloc);
+    p = malloc(sz);
+    PROF_stop(malloc);
+    if (p == NULL) {
 	if (failure_notify) {
 	    snprintf(msg, 128, "xmalloc: Unable to allocate %d bytes!\n",
 		(int) sz);
@@ -453,6 +458,7 @@ xmalloc(size_t sz)
     if (tracefp)
 	fprintf(tracefp, "m:%d:%p\n", sz, p);
 #endif
+    PROF_stop(xmalloc);
     return (p);
 }
 
@@ -462,6 +468,7 @@ xmalloc(size_t sz)
 void
 xfree(void *s)
 {
+    PROF_start(xfree);
 #if XMALLOC_TRACE
     xmalloc_show_trace(s, -1);
 #endif
@@ -476,13 +483,15 @@ xfree(void *s)
     if (tracefp && s)
 	fprintf(tracefp, "f:%p\n", s);
 #endif
+    PROF_stop(xfree);
 }
 
 /* xxfree() - like xfree(), but we already know s != NULL */
 void
 xxfree(const void *s_const)
 {
-    void *s = (void *) s_const;
+    void *s = (void *)s_const;
+    PROF_start(xxfree);
 #if XMALLOC_TRACE
     xmalloc_show_trace(s, -1);
 #endif
@@ -494,6 +503,7 @@ xxfree(const void *s_const)
     if (tracefp && s)
 	fprintf(tracefp, "f:%p\n", s);
 #endif
+    PROF_stop(xxfree);
 }
 
 /*
@@ -505,6 +515,7 @@ xrealloc(void *s, size_t sz)
 {
     void *p;
 
+    PROF_start(xrealloc);
 #if XMALLOC_TRACE
     xmalloc_show_trace(s, -1);
 #endif
@@ -538,6 +549,7 @@ xrealloc(void *s, size_t sz)
     if (tracefp)		/* new ptr, old ptr, new size */
 	fprintf(tracefp, "r:%p:%p:%d\n", p, s, sz);
 #endif
+    PROF_stop(xrealloc);
     return (p);
 }
 
@@ -550,11 +562,15 @@ xcalloc(size_t n, size_t sz)
 {
     void *p;
 
+    PROF_start(xcalloc);
     if (n < 1)
 	n = 1;
     if (sz < 1)
 	sz = 1;
-    if ((p = calloc(n, sz)) == NULL) {
+    PROF_start(calloc);
+    p = calloc(n, sz);
+    PROF_stop(calloc);
+    if (p == NULL) {
 	if (failure_notify) {
 	    snprintf(msg, 128, "xcalloc: Unable to allocate %u blocks of %u bytes!\n",
 		(unsigned int) n, (unsigned int) sz);
@@ -577,6 +593,7 @@ xcalloc(size_t n, size_t sz)
     if (tracefp)
 	fprintf(tracefp, "c:%u:%u:%p\n", (unsigned int) n, (unsigned int) sz, p);
 #endif
+    PROF_stop(xcalloc);
     return (p);
 }
 
@@ -588,6 +605,8 @@ char *
 xstrdup(const char *s)
 {
     size_t sz;
+    void *p;
+    PROF_start(xstrdup);
     if (s == NULL) {
 	if (failure_notify) {
 	    (*failure_notify) ("xstrdup: tried to dup a NULL pointer!\n");
@@ -598,7 +617,9 @@ xstrdup(const char *s)
     }
     /* copy string, including terminating character */
     sz = strlen(s) + 1;
-    return memcpy(xmalloc(sz), s, sz);
+    p = memcpy(xmalloc(sz), s, sz);
+    PROF_stop(xstrdup);
+    return p;
 }
 
 /*
@@ -608,12 +629,16 @@ char *
 xstrndup(const char *s, size_t n)
 {
     size_t sz;
+    void *p;
+    PROF_start(xstrndup);
     assert(s);
     assert(n);
     sz = strlen(s) + 1;
     if (sz > n)
 	sz = n;
-    return xstrncpy(xmalloc(sz), s, sz);
+    p = xstrncpy(xmalloc(sz), s, sz);
+    PROF_stop(xstrndup);
+    return p;
 }
 
 /*
@@ -674,12 +699,14 @@ char *
 xstrncpy(char *dst, const char *src, size_t n)
 {
     char *r = dst;
+    PROF_start(xstrncpy);
     if (!n || !dst)
 	return dst;
     if (src)
 	while (--n != 0 && *src != '\0')
 	    *dst++ = *src++;
     *dst = '\0';
+    PROF_stop(xstrncpy);
     return r;
 }
 
@@ -688,12 +715,14 @@ size_t
 xcountws(const char *str)
 {
     size_t count = 0;
+    PROF_start(xcountws);
     if (str) {
 	while (xisspace(*str)) {
 	    str++;
 	    count++;
 	}
     }
+    PROF_stop(xcountws);
     return count;
 }
 

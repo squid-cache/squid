@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.59 2002/09/15 15:00:44 robertc Exp $
+ * $Id: comm_select.cc,v 1.60 2002/10/02 11:06:31 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -202,7 +202,6 @@ commGetSlowFd(void)
     return retfd;
 }
 #endif
-
 
 static int
 comm_check_incoming_select_handlers(int nfds, int *fds)

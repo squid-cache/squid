@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.222 2002/09/01 15:16:35 hno Exp $
+ * $Id: squid.h,v 1.223 2002/10/02 11:06:31 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -396,11 +396,11 @@ struct rusage {
 #include "enums.h"
 #include "typedefs.h"
 #include "util.h"
+#include "profiling.h"
 #include "MemPool.h"
 #include "structs.h"
 #include "protos.h"
 #include "globals.h"
-
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"

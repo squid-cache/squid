@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.33 2002/09/29 12:55:52 hno Exp $
+#  $Id: Makefile.am,v 1.34 2002/10/02 11:06:31 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -24,6 +24,12 @@ if USE_DELAY_POOLS
 DELAY_POOL_SOURCE = delay_pools.c
 else
 DELAY_POOL_SOURCE = 
+endif
+
+if ENABLE_XPROF_STATS
+XPROF_STATS_SOURCE = ProfStats.c
+else
+XPROF_STATS_SOURCE = 
 endif
 
 if ENABLE_HTCP
@@ -178,6 +184,7 @@ squid_SOURCES = \
 	neighbors.c \
 	net_db.c \
 	Packer.c \
+	$(XPROF_STATS_SOURCE) \
 	pconn.c \
 	peer_digest.c \
 	peer_select.c \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.160 2002/09/01 15:16:35 hno Exp $
+ * $Id: disk.cc,v 1.161 2002/10/02 11:06:31 robertc Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -60,6 +60,7 @@ int
 file_open(const char *path, int mode)
 {
     int fd;
+    PROF_start(file_open);
     if (FILE_MODE(mode) == O_WRONLY)
 	mode |= O_APPEND;
     mode |= SQUID_NONBLOCK;
@@ -75,6 +76,7 @@ file_open(const char *path, int mode)
 	commSetCloseOnExec(fd);
 	fd_open(fd, FD_FILE, path);
     }
+    PROF_stop(file_open);
     return fd;
 }
 
@@ -85,6 +87,7 @@ file_close(int fd)
 {
     fde *F = &fd_table[fd];
     PF *read_callback;
+    PROF_start(file_close);
     assert(fd >= 0);
     assert(F->flags.open);
     if ((read_callback = F->read_handler)) {
@@ -102,6 +105,7 @@ file_close(int fd)
 #else
 	F->flags.close_request = 1;
 	debug(6, 2) ("file_close: FD %d, delaying close\n", fd);
+	PROF_stop(file_close);
 	return;
 #endif
     }
@@ -119,6 +123,7 @@ file_close(int fd)
 	("file_close: FD %d, really closing\n", fd);
     fd_close(fd);
     statCounter.syscalls.disk.closes++;
+    PROF_stop(file_close);
 }
 
 /*
@@ -182,6 +187,7 @@ diskHandleWrite(int fd, void *notused)
     int do_close;
     if (NULL == q)
 	return;
+    PROF_start(diskHandleWrite);
     debug(6, 3) ("diskHandleWrite: FD %d\n", fd);
     F->flags.write_daemon = 0;
     assert(fdd->write_q != NULL);
@@ -272,12 +278,14 @@ diskHandleWrite(int fd, void *notused)
 	     * NOTE, this callback can close the FD, so we must
 	     * not touch 'F', 'fdd', etc. after this.
 	     */
+	    PROF_stop(diskHandleWrite);
 	    return;
 	    /* XXX But what about close_request??? */
 	}
     }
     if (do_close)
 	file_close(fd);
+    PROF_stop(diskHandleWrite);
 }
 
 
@@ -295,6 +303,7 @@ file_write(int fd,
 {
     dwrite_q *wq = NULL;
     fde *F = &fd_table[fd];
+    PROF_start(file_write);
     assert(fd >= 0);
     assert(F->flags.open);
     /* if we got here. Caller is eligible to write. */
@@ -323,6 +332,7 @@ file_write(int fd,
     if (!F->flags.write_daemon) {
 	diskHandleWrite(fd, NULL);
     }
+    PROF_stop(file_write);
 }
 
 /*
@@ -351,6 +361,7 @@ diskHandleRead(int fd, void *data)
 	memFree(ctrl_dat, MEM_DREAD_CTRL);
 	return;
     }
+    PROF_start(diskHandleRead);
     if (F->disk.offset != ctrl_dat->offset) {
 	debug(6, 3) ("diskHandleRead: FD %d seeking to offset %d\n",
 	    fd, (int) ctrl_dat->offset);
@@ -367,6 +378,7 @@ diskHandleRead(int fd, void *data)
     if (len < 0) {
 	if (ignoreErrno(errno)) {
 	    commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
+	    PROF_stop(diskHandleRead);
 	    return;
 	}
 	debug(50, 1) ("diskHandleRead: FD %d: %s\n", fd, xstrerror());
@@ -379,6 +391,7 @@ diskHandleRead(int fd, void *data)
 	ctrl_dat->handler(fd, ctrl_dat->buf, len, rc, ctrl_dat->client_data);
     cbdataReferenceDone(ctrl_dat->client_data);
     memFree(ctrl_dat, MEM_DREAD_CTRL);
+    PROF_stop(diskHandleRead);
 }
 
 
@@ -390,6 +403,7 @@ void
 file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
+    PROF_start(file_read);
     assert(fd >= 0);
     ctrl_dat = memAllocate(MEM_DREAD_CTRL);
     ctrl_dat->fd = fd;
@@ -400,4 +414,5 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = cbdataReference(client_data);
     diskHandleRead(fd, ctrl_dat);
+    PROF_stop(file_read);
 }
