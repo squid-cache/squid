@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.556 2003/02/05 10:36:55 robertc Exp $
+ * $Id: store.cc,v 1.557 2003/02/06 00:16:16 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -956,8 +956,8 @@ storeMaintainSwapSpace(void *datanotused)
     }
     if (store_swap_size > Config.Swap.maxSize) {
 	if (squid_curtime - last_warn_time > 10) {
-	    debug(20, 0) ("WARNING: Disk space over limit: %ld KB > %ld KB\n",
-		(long int) store_swap_size, (long int) Config.Swap.maxSize);
+	    debug(20, 0) ("WARNING: Disk space over limit: %lu KB > %lu KB\n",
+		(long unsigned) store_swap_size, (long unsigned) Config.Swap.maxSize);
 	    last_warn_time = squid_curtime;
 	}
     }
