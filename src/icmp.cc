@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.57 1998/03/19 07:13:29 wessels Exp $
+ * $Id: icmp.cc,v 1.58 1998/03/30 23:00:12 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -38,31 +38,21 @@
 #define S_ICMP_ICP	2
 #define S_ICMP_DOM	3
 
-typedef struct _icmpQueueData {
-    char *msg;
-    int len;
-    struct _icmpQueueData *next;
-    void (*free_func) (void *);
-} icmpQueueData;
-
-static icmpQueueData *IcmpQueueHead = NULL;
-
 static PF icmpRecv;
-static void icmpQueueSend(pingerEchoData * pkt, int len, FREE * free_func);
-static PF icmpSend;
+static void icmpSend(pingerEchoData * pkt, int len);
 static void icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf);
 
 static void
 icmpSendEcho(struct in_addr to, int opcode, const char *payload, int len)
 {
-    pingerEchoData *pecho = xcalloc(1, sizeof(pingerEchoData));
+    pingerEchoData pecho;
     if (payload && len == 0)
 	len = strlen(payload);
-    pecho->to = to;
-    pecho->opcode = (unsigned char) opcode;
-    pecho->psize = len;
-    xmemcpy(pecho->payload, payload, len);
-    icmpQueueSend(pecho, sizeof(pingerEchoData) - 8192 + len, xfree);
+    pecho.to = to;
+    pecho.opcode = (unsigned char) opcode;
+    pecho.psize = len;
+    xmemcpy(pecho.payload, payload, len);
+    icmpSend(&pecho, sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ + len);
 }
 
 static void
@@ -106,56 +96,20 @@ icmpRecv(int unused1, void *unused2)
 }
 
 static void
-icmpQueueSend(pingerEchoData * pkt, int len, FREE * free_func)
+icmpSend(pingerEchoData * pkt, int len)
 {
-    icmpQueueData *q = NULL;
-    icmpQueueData **H = NULL;
-    if (icmp_sock < 0) {
-	if (free_func)
-	    free_func(pkt);
-	return;
-    }
-    debug(37, 3) ("icmpQueueSend: Queueing %d bytes\n", len);
-    q = xcalloc(1, sizeof(icmpQueueData));
-    q->msg = (char *) pkt;
-    q->len = len;
-    q->free_func = free_func;
-    for (H = &IcmpQueueHead; *H; H = &(*H)->next);
-    *H = q;
-    commSetSelect(icmp_sock, COMM_SELECT_WRITE, icmpSend, IcmpQueueHead, 0);
-}
-
-static void
-icmpSend(int fd, void *data)
-{
-    icmpQueueData *queue = data;
     int x;
-    while ((queue = IcmpQueueHead) != NULL) {
-	x = send(icmp_sock,
-	    queue->msg,
-	    queue->len,
-	    0);
-	if (x < 0) {
-	    if (ignoreErrno(errno))
-		break;		/* don't de-queue */
-	    debug(50, 0) ("icmpSend: send: %s\n", xstrerror());
-	    if (errno == ECONNREFUSED) {
-		icmpClose();
-		return;
-	    }
-	} else if (x != queue->len) {
-	    debug(37, 0) ("icmpSend: Wrote %d of %d bytes\n", x, queue->len);
+    if (icmp_sock < 0)
+	return;
+    x = send(icmp_sock, pkt, len, 0);
+    if (x < 0) {
+	debug(50, 1) ("icmpSend: send: %s\n", xstrerror());
+	if (errno == ECONNREFUSED) {
+	    icmpClose();
+	    return;
 	}
-	IcmpQueueHead = queue->next;
-	if (queue->free_func)
-	    queue->free_func(queue->msg);
-	safe_free(queue);
-    }
-    /* Reinstate handler if needed */
-    if (IcmpQueueHead) {
-	commSetSelect(fd, COMM_SELECT_WRITE, icmpSend, IcmpQueueHead, 0);
-    } else {
-	commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+    } else if (x != len) {
+	debug(37, 1) ("icmpSend: Wrote %d of %d bytes\n", x, len);
     }
 }
 
@@ -246,17 +200,10 @@ void
 icmpClose(void)
 {
 #if USE_ICMP
-    icmpQueueData *queue;
     if (icmp_sock < 0)
 	return;
     debug(29, 0) ("Closing Pinger socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
     icmp_sock = -1;
-    while ((queue = IcmpQueueHead) != NULL) {
-	IcmpQueueHead = queue->next;
-	if (queue->free_func)
-	    queue->free_func(queue->msg);
-	safe_free(queue);
-    }
 #endif
 }
