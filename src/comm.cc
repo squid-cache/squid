@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.143 1997/04/29 22:12:50 wessels Exp $
+ * $Id: comm.cc,v 1.144 1997/04/29 23:34:46 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -201,7 +201,7 @@ comm_local_port(int fd)
     FD_ENTRY *fde = &fd_table[fd];
 
     /* If the fd is closed already, just return */
-    if (!fde->openned) {
+    if (!fde->open) {
 	debug(5, 0, "comm_local_port: FD %d has been closed.\n", fd);
 	return 0;
     }
@@ -247,7 +247,7 @@ comm_open(int sock_type,
     const char *note)
 {
     int new_socket;
-    FD_ENTRY *conn = NULL;
+    FD_ENTRY *fde = NULL;
     int tcp_rcv_bufsz = Config.tcpRcvBufsz;
 
     /* Create socket for accepting new connections. */
@@ -269,12 +269,12 @@ comm_open(int sock_type,
     /* update fdstat */
     fdstat_open(new_socket, FD_SOCKET);
 
-    conn = &fd_table[new_socket];
-    memset(conn, '\0', sizeof(FD_ENTRY));
+    fde = &fd_table[new_socket];
+    memset(fde, '\0', sizeof(FD_ENTRY));
     if (note)
 	fd_note(new_socket, note);
-    conn->openned = 1;
-    conn->lifetime = -1;
+    fde->open = 1;
+    fde->lifetime = -1;
     if (!BIT_TEST(flags, COMM_NOCLOEXEC))
 	commSetCloseOnExec(new_socket);
     if (port > (u_short) 0) {
@@ -285,7 +285,7 @@ comm_open(int sock_type,
     if (addr.s_addr != no_addr.s_addr)
 	if (commBind(new_socket, addr, port) != COMM_OK)
 	    return COMM_ERROR;
-    conn->local_port = port;
+    fde->local_port = port;
 
     if (BIT_TEST(flags, COMM_NONBLOCKING))
 	if (commSetNonBlocking(new_socket) == COMM_ERROR)
@@ -296,7 +296,6 @@ comm_open(int sock_type,
 #endif
     if (tcp_rcv_bufsz > 0 && sock_type == SOCK_STREAM)
 	commSetTcpRcvbuf(new_socket, tcp_rcv_bufsz);
-    conn->comm_type = sock_type;
     return new_socket;
 }
 
@@ -405,7 +404,7 @@ int
 comm_connect_addr(int sock, const struct sockaddr_in *address)
 {
     int status = COMM_OK;
-    FD_ENTRY *conn = &fd_table[sock];
+    FD_ENTRY *fde = &fd_table[sock];
     int len;
     int x;
     int lft;
@@ -446,20 +445,19 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 	    return COMM_ERROR;
 	}
     }
-    strcpy(conn->ipaddr, inet_ntoa(address->sin_addr));
-    conn->remote_port = ntohs(address->sin_port);
+    xstrncpy(fde->ipaddr, inet_ntoa(address->sin_addr), 16);
+    fde->remote_port = ntohs(address->sin_port);
     /* set the lifetime for this client */
     if (status == COMM_OK) {
 	lft = comm_set_fd_lifetime(sock, Config.lifetimeDefault);
 	debug(5, 10, "comm_connect_addr: FD %d connected to %s:%d, lifetime %d.\n",
-	    sock, conn->ipaddr, conn->remote_port, lft);
+	    sock, fde->ipaddr, fde->remote_port, lft);
     } else if (status == COMM_INPROGRESS) {
 	lft = comm_set_fd_lifetime(sock, Config.connectTimeout);
 	debug(5, 10, "comm_connect_addr: FD %d connection pending, lifetime %d\n",
 	    sock, lft);
     }
     /* Add new socket to list of open sockets. */
-    conn->sender = 1;
     return status;
 }
 
@@ -472,8 +470,7 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
     struct sockaddr_in P;
     struct sockaddr_in M;
     int Slen;
-    FD_ENTRY *conn = NULL;
-    FD_ENTRY *listener = &fd_table[fd];
+    FD_ENTRY *fde = NULL;
 
     Slen = sizeof(P);
     while ((sock = accept(fd, (struct sockaddr *) &P, &Slen)) < 0) {
@@ -505,13 +502,11 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
     commSetCloseOnExec(sock);
     /* fdstat update */
     fdstat_open(sock, FD_SOCKET);
-    conn = &fd_table[sock];
-    conn->openned = 1;
-    conn->sender = 0;		/* This is an accept, therefore receiver. */
-    conn->comm_type = listener->comm_type;
-    strcpy(conn->ipaddr, inet_ntoa(P.sin_addr));
-    conn->remote_port = htons(P.sin_port);
-    conn->local_port = htons(M.sin_port);
+    fde = &fd_table[sock];
+    fde->open = 1;
+    strcpy(fde->ipaddr, inet_ntoa(P.sin_addr));
+    fde->remote_port = htons(P.sin_port);
+    fde->local_port = htons(M.sin_port);
     commSetNonBlocking(sock);
     return sock;
 }
@@ -519,11 +514,11 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 void
 commCallCloseHandlers(int fd)
 {
-    FD_ENTRY *conn = &fd_table[fd];
+    FD_ENTRY *fde = &fd_table[fd];
     struct close_handler *ch;
     debug(5, 5, "commCallCloseHandlers: FD %d\n", fd);
-    while ((ch = conn->close_handler) != NULL) {
-	conn->close_handler = ch->next;
+    while ((ch = fde->close_handler) != NULL) {
+	fde->close_handler = ch->next;
 	ch->handler(fd, ch->data);
 	safe_free(ch);
     }
@@ -532,26 +527,26 @@ commCallCloseHandlers(int fd)
 void
 comm_close(int fd)
 {
-    FD_ENTRY *conn = NULL;
+    FD_ENTRY *fde = NULL;
     debug(5, 5, "comm_close: FD %d\n", fd);
-    if (fd < 0 || fd >= Squid_MaxFD)
+    if (fd < 0)
+    	fatal_dump("comm_close: bad FD");
+    if (fd >= Squid_MaxFD)
+    	fatal_dump("comm_close: bad FD");
+    fde = &fd_table[fd];
+    if (!fde->open)
 	return;
-    conn = &fd_table[fd];
-    if (!conn->openned)
-	return;
-    if (fdstatGetType(fd) == FD_FILE) {
-	debug(5, 0, "FD %d: Someone called comm_close() on a File\n", fd);
-	fatal_dump(NULL);
-    }
-    conn->openned = 0;
+    if (fd_table[fd].type == FD_FILE)
+	fatal_dump("comm_close: not a SOCKET");
+    fde->open = 0;
     RWStateCallbackAndFree(fd, COMM_ERROR);
     fdstat_close(fd);		/* update fdstat */
     commCallCloseHandlers(fd);
-    memset(conn, '\0', sizeof(FD_ENTRY));
+    memset(fde, '\0', sizeof(FD_ENTRY));
 #if USE_ASYNC_IO
     aioClose(fd);
 #else
-    conn->lifetime = -1;
+    fde->lifetime = -1;
     close(fd);
 #endif
 }
@@ -561,9 +556,9 @@ comm_close(int fd)
 static int
 comm_cleanup_fd_entry(int fd)
 {
-    FD_ENTRY *conn = &fd_table[fd];
+    FD_ENTRY *fde = &fd_table[fd];
     RWStateCallbackAndFree(fd, COMM_ERROR);
-    memset(conn, 0, sizeof(FD_ENTRY));
+    memset(fde, 0, sizeof(FD_ENTRY));
     return 0;
 }
 
@@ -820,7 +815,7 @@ comm_select(time_t sec)
 		for (i = 1; i < maxfd; i++) {
 		    if ((fd = pfds[i].fd) < 0)
 			continue;
-		    if (fdstatGetType(fd) == FD_FILE)
+		    if (fd_table[fd].type == FD_FILE)
 			file_must_close(fd);
 		    else
 			comm_close(fd);
@@ -900,7 +895,7 @@ comm_select(time_t sec)
 		struct close_handler *next;
 		FD_ENTRY *f = &fd_table[fd];
 		debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
-		debug(5, 0, "FD %d is a %s\n", fd, fdstatTypeStr[fdstatGetType(fd)]);
+		debug(5, 0, "FD %d is a %s\n", fd, fdstatTypeStr[fd_table[fd].type]);
 		debug(5, 0, "--> %s\n", fd_note(fd, NULL));
 		debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p\n",
 		    f->lifetime_handler,
@@ -1362,7 +1357,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
 	debug(5, 0, "FD %d is a %s called '%s'\n",
 	    fd,
-	    fdstatTypeStr[fdstatGetType(fd)],
+	    fdstatTypeStr[fd_table[fd].type],
 	    fd_note(fd, NULL));
 	debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p\n",
 	    f->lifetime_handler,
@@ -1415,7 +1410,7 @@ checkTimeouts(void)
     /* scan for timeout */
     for (fd = 0; fd <= Biggest_FD; fd++) {
 	f = &fd_table[fd];
-	if (!f->openned)
+	if (!f->open)
 	    continue;
 	if ((hdl = f->timeout_handler) == NULL)
 	    continue;
@@ -1439,7 +1434,7 @@ checkLifetimes(void)
 
     for (fd = 0; fd <= Biggest_FD; fd++) {
 	fde = &fd_table[fd];
-	if (!fde->openned)
+	if (!fde->open)
 	    continue;
 	if (fde->lifetime < 0)
 	    continue;
@@ -1463,7 +1458,7 @@ checkLifetimes(void)
 	    comm_close(fd);
 	    comm_cleanup_fd_entry(fd);
 	}
-	if (fde->openned) {
+	if (fde->open) {
 	    /* still opened */
 	    debug(5, 5, "checkLifetimes: FD %d: Forcing comm_close()\n", fd);
 	    comm_close(fd);

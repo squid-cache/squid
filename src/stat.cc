@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.135 1997/04/29 22:13:08 wessels Exp $
+ * $Id: stat.cc,v 1.136 1997/04/29 23:34:53 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -631,8 +631,6 @@ static void
 statFiledescriptors(StoreEntry * sentry)
 {
     int i;
-    int j;
-    char *s = NULL;
     int lft;
     int to;
     FD_ENTRY *f;
@@ -651,11 +649,10 @@ statFiledescriptors(StoreEntry * sentry)
 	f = &fd_table[i];
 	if (!fdstat_isopen(i))
 	    continue;
-	j = fdstatGetType(i);
 	storeAppendPrintf(sentry, "{%4d %-6s ",
 	    i,
-	    fdstatTypeStr[j]);
-	switch (j) {
+	    fdstatTypeStr[f->type]);
+	switch (f->type) {
 	case FD_SOCKET:
 	    if ((lft = f->lifetime) < 0)
 		lft = 0;
@@ -664,18 +661,18 @@ statFiledescriptors(StoreEntry * sentry)
 		lft = (lft - squid_curtime) / 60;
 	    if (to > 0)
 		to = (to - squid_curtime) / 60;
-	    if (fd_table[i].timeout_handler == NULL)
+	    if (f->timeout_handler == NULL)
 		to = 0;
 	    storeAppendPrintf(sentry, "%4d %4d %-21s %s}\n",
 		lft,
 		to,
-		host_port_fmt(fd_table[i].ipaddr, fd_table[i].remote_port),
+		host_port_fmt(f->ipaddr, f->remote_port),
 		fd_note(i, NULL));
 	    break;
 	case FD_FILE:
 	    storeAppendPrintf(sentry, "%31s %s}\n",
 		null_string,
-		(s = diskFileName(i)) ? s : "-");
+		f->disk.filename);
 	    break;
 	case FD_PIPE:
 	    storeAppendPrintf(sentry, "%31s %s}\n", null_string, fd_note(i, NULL));

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.105 1997/04/29 22:13:07 wessels Exp $
+ * $Id: squid.h,v 1.106 1997/04/29 23:34:52 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -270,6 +270,8 @@ typedef int QS _PARAMS((const void *, const void *));	/* qsort */
 
 #include "cache_cf.h"
 #include "comm.h"
+#include "disk.h"
+#include "fd.h"
 #include "debug.h"
 #include "fdstat.h"
 #include "hash.h"
@@ -305,7 +307,6 @@ typedef int QS _PARAMS((const void *, const void *));	/* qsort */
 #include "objcache.h"
 #include "refresh.h"
 #include "unlinkd.h"
-#include "disk.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"

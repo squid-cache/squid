@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.99 1997/04/28 04:23:32 wessels Exp $
+ * $Id: tools.cc,v 1.100 1997/04/29 23:34:54 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -324,7 +324,7 @@ setSocketShutdownLifetimes(int lft)
 	f = &fd_table[i];
 	if (!f->read_handler && !f->write_handler)
 	    continue;
-	if (fdstatGetType(i) != FD_SOCKET)
+	if (fd_table[i].type != FD_SOCKET)
 	    continue;
 	if (f->lifetime > 0 && (f->lifetime - squid_curtime) <= lft)
 	    continue;
@@ -355,7 +355,6 @@ normal_shutdown(void)
     filemapFreeMemory();
     dnsFreeMemory();
     redirectFreeMemory();
-    fdstatFreeMemory();
     errorpageFreeMemory();
     stmemFreeMemory();
     netdbFreeMemory();
