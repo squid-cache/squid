@@ -557,7 +557,7 @@ fi
 
 
 
-# From configure.in Revision: 1.108 
+# From configure.in Revision: 1.109 
 ac_aux_dir=
 for ac_dir in cfgaux $srcdir/cfgaux; do
   if test -f $ac_dir/install-sh; then
@@ -3605,7 +3605,7 @@ fi
 
 echo $ac_n "checking if GNUregex needs to be compiled""... $ac_c" 1>&6
 echo "configure:3608: checking if GNUregex needs to be compiled" >&5
-if test "$ac_cv_func_regcomp" = "no" ; then
+if test "$ac_cv_func_regcomp" = "no" || test "$USE_GNUREGEX" = "yes" ; then
 	USE_GNUREGEX="yes"
 else
 	USE_GNUREGEX="no"
