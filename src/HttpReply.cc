@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.26 1998/05/28 05:14:01 wessels Exp $
+ * $Id: HttpReply.cc,v 1.27 1998/07/20 17:19:07 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

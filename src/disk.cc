@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.119 1998/07/06 19:43:21 wessels Exp $
+ * $Id: disk.cc,v 1.120 1998/07/20 17:19:32 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

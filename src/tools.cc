@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.161 1998/07/17 05:09:03 rousskov Exp $
+ * $Id: tools.cc,v 1.162 1998/07/20 17:20:18 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

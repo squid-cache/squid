@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.51 1998/05/15 15:16:32 wessels Exp $
+ * $Id: send-announce.cc,v 1.52 1998/07/20 17:20:04 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

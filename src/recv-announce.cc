@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: recv-announce.cc,v 1.18 1998/02/06 17:50:21 wessels Exp $
+ * $Id: recv-announce.cc,v 1.19 1998/07/20 17:20:01 wessels Exp $
  *
  * DEBUG: section 0     Announcement Server
  * AUTHOR: Harvest Derived
@@ -26,7 +26,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

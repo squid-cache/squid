@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.5 1998/02/18 23:37:40 wessels Exp $
+ * $Id: ipc.cc,v 1.6 1998/07/20 17:19:48 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

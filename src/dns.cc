@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.58 1998/04/03 07:36:02 wessels Exp $
+ * $Id: dns.cc,v 1.59 1998/07/20 17:19:33 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

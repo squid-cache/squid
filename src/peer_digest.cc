@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.40 1998/07/14 06:13:00 wessels Exp $
+ * $Id: peer_digest.cc,v 1.41 1998/07/20 17:19:58 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

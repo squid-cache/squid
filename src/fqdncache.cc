@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.105 1998/06/02 04:18:20 wessels Exp $
+ * $Id: fqdncache.cc,v 1.106 1998/07/20 17:19:40 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -26,7 +26,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.24 1998/05/28 23:41:20 wessels Exp $
+ * $Id: cf_gen.cc,v 1.25 1998/07/20 17:19:25 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -24,7 +24,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

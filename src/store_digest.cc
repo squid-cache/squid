@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.22 1998/07/14 21:25:54 wessels Exp $
+ * $Id: store_digest.cc,v 1.23 1998/07/20 17:20:15 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -24,7 +24,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

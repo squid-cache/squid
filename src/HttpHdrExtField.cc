@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrExtField.cc,v 1.4 1998/05/27 22:51:40 rousskov Exp $
+ * $Id: HttpHdrExtField.cc,v 1.5 1998/07/20 17:19:03 wessels Exp $
  *
  * DEBUG: section 69    HTTP Header: Extension Field
  * AUTHOR: Alex Rousskov
@@ -25,7 +25,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.79 1998/05/30 19:43:03 rousskov Exp $
+ * $Id: cachemgr.cc,v 1.80 1998/07/20 17:19:23 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -25,7 +25,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
 

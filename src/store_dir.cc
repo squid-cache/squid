@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.71 1998/06/08 17:00:06 wessels Exp $
+ * $Id: store_dir.cc,v 1.72 1998/07/20 17:20:16 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.60 1998/05/08 22:00:23 wessels Exp $
+ * $Id: redirect.cc,v 1.61 1998/07/20 17:20:02 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

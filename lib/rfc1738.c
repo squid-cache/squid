@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.15 1998/02/02 21:16:13 wessels Exp $
+ * $Id: rfc1738.c,v 1.16 1998/07/20 17:18:57 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -24,7 +24,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

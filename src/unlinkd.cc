@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.21 1998/02/10 22:17:56 wessels Exp $
+ * $Id: unlinkd.cc,v 1.22 1998/07/20 17:20:19 wessels Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -24,7 +24,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

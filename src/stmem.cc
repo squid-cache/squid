@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.61 1998/07/07 02:54:15 wessels Exp $
+ * $Id: stmem.cc,v 1.62 1998/07/20 17:20:11 wessels Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

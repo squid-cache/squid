@@ -1,6 +1,6 @@
 
 /*
- * $Id: multicast.cc,v 1.5 1998/02/10 22:17:54 wessels Exp $
+ * $Id: multicast.cc,v 1.6 1998/07/20 17:19:53 wessels Exp $
  *
  * DEBUG: section 7     Multicast
  * AUTHOR: Martin Hamilton
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

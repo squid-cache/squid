@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.65 1998/04/27 19:16:08 wessels Exp $
+ * $Id: debug.cc,v 1.66 1998/07/20 17:19:31 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

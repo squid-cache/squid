@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.c,v 1.6 1998/06/04 20:17:55 rousskov Exp $
+ * $Id: Stack.c,v 1.7 1998/07/20 17:18:54 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -23,7 +23,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 
