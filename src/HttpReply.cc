@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.30 1998/08/14 19:25:11 wessels Exp $
+ * $Id: HttpReply.cc,v 1.31 1998/08/18 05:44:53 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -377,7 +377,7 @@ httpReplyIsolateStart(const char **parse_start, const char **blk_start, const ch
 
     *blk_start = *parse_start;
     *blk_end = *blk_start + slen;
-    if (**blk_end == '\r')	/* CR */
+    while (**blk_end == '\r')	/* CR */
 	(*blk_end)++;
     if (**blk_end == '\n')	/* LF */
 	(*blk_end)++;
