@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.16 1998/02/20 21:04:05 wessels Exp $
+ * $Id: cbdata.cc,v 1.17 1998/03/27 18:46:47 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -189,6 +189,7 @@ int
 cbdataValid(const void *p)
 {
     cbdata *c;
+    /* Maybe NULL should be considered valid? */
     if (p == NULL)
 	return 0;
     c = (cbdata *) hash_lookup(htable, p);
