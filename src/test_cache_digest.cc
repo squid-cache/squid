@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.10 1998/04/01 07:07:17 rousskov Exp $
+ * $Id: test_cache_digest.cc,v 1.11 1998/04/01 07:14:06 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -351,9 +351,10 @@ cacheReport(Cache * cache)
     if (cache->digest) {
 	int bit_count, on_count;
 	cacheDigestUtil(cache->digest, &bit_count, &on_count);
-	fprintf(stdout, "%s: digest entries: cnt: %d cap: %d util: %d%% size: %d b\n", 
+	fprintf(stdout, "%s: digest entries: cnt: %d (-=%d) cap: %d util: %d%% size: %d b\n", 
 	    cache->name, 
-	    cache->digest->count, cache->digest->capacity,
+	    cache->digest->count, cache->digest->del_count,
+	    cache->digest->capacity,
 	    xpercentInt(cache->digest->count, cache->digest->capacity),
 	    bit_count/8
 	);
@@ -457,7 +458,7 @@ accessLogReader(FileIterator * fi)
 
 
 static void
-cachePurge(Cache *cache, storeSwapLogData *s)
+cachePurge(Cache *cache, storeSwapLogData *s, int update_digest)
 {
     CacheEntry *olde = (CacheEntry *) hash_lookup(cache->hash, s->key);
     if (!olde) {
@@ -465,6 +466,8 @@ cachePurge(Cache *cache, storeSwapLogData *s)
     } else {
 	assert(cache->count);
 	hash_remove_link(cache->hash, (hash_link *) olde);
+	if (update_digest)
+	    cacheDigestDel(cache->digest, s->key);
 	cacheEntryDestroy(olde);
 	cache->count--;
     }
@@ -493,7 +496,7 @@ cacheUpdateStore(Cache *cache, storeSwapLogData *s, int update_digest)
 	    cacheStore(cache, s, update_digest);
 	    break;
 	case SWAP_LOG_DEL:
-	    cachePurge(cache, s);
+	    cachePurge(cache, s, update_digest);
 	    break;
 	default:
 	    assert(0);

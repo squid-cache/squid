@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.5 1998/04/01 07:07:16 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.6 1998/04/01 07:14:05 rousskov Exp $
  *
  * DEBUG: section ??    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -98,8 +98,6 @@ cacheDigestAdd(CacheDigest * cd, const cache_key * key)
     CBIT_SET(cd->mask, hashed_keys[2]);
     CBIT_SET(cd->mask, hashed_keys[3]);
     cd->count++;
-
-    assert(cacheDigestTest(cd, key));
 }
 
 void
