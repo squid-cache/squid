@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.2 1996/03/27 04:42:09 wessels Exp $ */
+/* $Id: squid.h,v 1.3 1996/03/27 05:12:39 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -17,24 +17,24 @@
 #include <netdb.h>
 #include <pwd.h>
 #include <signal.h>
-#include <string.h>
-#include <strings.h>
+#include <time.h>
 #include <sys/param.h>
-#include <sys/resource.h>
-#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/resource.h>	/* needs sys/time.h above it */
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
-#include <sys/time.h>
 #include <sys/un.h>
 #include <sys/wait.h>
-#include <syslog.h>
-#include <time.h>
 
-#if HAVE_SYS_SELECT_H
-#include <sys/select.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 
 #if HAVE_BSTRING_H
@@ -43,6 +43,14 @@
 
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
+#endif
+
+#ifdef HAVE_SYSLOG_H
+#include <syslog.h>
+#endif
+
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 #if defined(__STRICT_ANSI__)
