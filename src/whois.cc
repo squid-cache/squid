@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.11 2000/05/16 07:06:08 wessels Exp $
+ * $Id: whois.cc,v 1.12 2000/06/27 22:06:06 hno Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -88,7 +88,7 @@ whoisReadReply(int fd, void *data)
     char *buf = memAllocate(MEM_4K_BUF);
     MemObject *mem = entry->mem_obj;
     int len;
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd, buf, 4095);
     buf[len] = '\0';
     debug(75, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
@@ -97,8 +97,8 @@ whoisReadReply(int fd, void *data)
 	if (0 == mem->inmem_hi)
 	    mem->reply->sline.status = HTTP_OK;
 	fd_bytes(fd, len, FD_READ);
-	kb_incr(&Counter.server.all.kbytes_in, len);
-	kb_incr(&Counter.server.http.kbytes_in, len);
+	kb_incr(&statCounter.server.all.kbytes_in, len);
+	kb_incr(&statCounter.server.http.kbytes_in, len);
 	storeAppend(entry, buf, len);
 	commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
     } else if (len < 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.489 2000/05/31 04:59:23 wessels Exp $
+ * $Id: client_side.cc,v 1.490 2000/06/27 22:05:59 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -617,16 +617,16 @@ clientUpdateCounters(clientHttpRequest * http)
     int svc_time = tvSubMsec(http->start, current_time);
     ping_data *i;
     HierarchyLogEntry *H;
-    Counter.client_http.requests++;
+    statCounter.client_http.requests++;
     if (isTcpHit(http->log_type))
-	Counter.client_http.hits++;
+	statCounter.client_http.hits++;
     if (http->log_type == LOG_TCP_HIT)
-	Counter.client_http.disk_hits++;
+	statCounter.client_http.disk_hits++;
     else if (http->log_type == LOG_TCP_MEM_HIT)
-	Counter.client_http.mem_hits++;
+	statCounter.client_http.mem_hits++;
     if (http->request->err_type != ERR_NONE)
-	Counter.client_http.errors++;
-    statHistCount(&Counter.client_http.all_svc_time, svc_time);
+	statCounter.client_http.errors++;
+    statHistCount(&statCounter.client_http.all_svc_time, svc_time);
     /*
      * The idea here is not to be complete, but to get service times
      * for only well-defined types.  For example, we don't include
@@ -635,19 +635,19 @@ clientUpdateCounters(clientHttpRequest * http)
      */
     switch (http->log_type) {
     case LOG_TCP_REFRESH_HIT:
-	statHistCount(&Counter.client_http.nh_svc_time, svc_time);
+	statHistCount(&statCounter.client_http.nh_svc_time, svc_time);
 	break;
     case LOG_TCP_IMS_HIT:
-	statHistCount(&Counter.client_http.nm_svc_time, svc_time);
+	statHistCount(&statCounter.client_http.nm_svc_time, svc_time);
 	break;
     case LOG_TCP_HIT:
     case LOG_TCP_MEM_HIT:
     case LOG_TCP_OFFLINE_HIT:
-	statHistCount(&Counter.client_http.hit_svc_time, svc_time);
+	statHistCount(&statCounter.client_http.hit_svc_time, svc_time);
 	break;
     case LOG_TCP_MISS:
     case LOG_TCP_CLIENT_REFRESH_MISS:
-	statHistCount(&Counter.client_http.miss_svc_time, svc_time);
+	statHistCount(&statCounter.client_http.miss_svc_time, svc_time);
 	break;
     default:
 	/* make compiler warnings go away */
@@ -656,19 +656,19 @@ clientUpdateCounters(clientHttpRequest * http)
     H = &http->request->hier;
     switch (H->alg) {
     case PEER_SA_DIGEST:
-	Counter.cd.times_used++;
+	statCounter.cd.times_used++;
 	break;
     case PEER_SA_ICP:
-	Counter.icp.times_used++;
+	statCounter.icp.times_used++;
 	i = &H->ping;
 	if (0 != i->stop.tv_sec && 0 != i->start.tv_sec)
-	    statHistCount(&Counter.icp.query_svc_time,
+	    statHistCount(&statCounter.icp.query_svc_time,
 		tvSubUsec(i->start, i->stop));
 	if (i->timeout)
-	    Counter.icp.query_timeouts++;
+	    statCounter.icp.query_timeouts++;
 	break;
     case PEER_SA_NETDB:
-	Counter.netdb.times_used++;
+	statCounter.netdb.times_used++;
 	break;
     default:
 	break;
@@ -1852,9 +1852,9 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     debug(33, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
 	fd, size, errflag, (int) http->out.offset, entry ? objectLen(entry) : 0);
     if (size > 0) {
-	kb_incr(&Counter.client_http.kbytes_out, size);
+	kb_incr(&statCounter.client_http.kbytes_out, size);
 	if (isTcpHit(http->log_type))
-	    kb_incr(&Counter.client_http.hit_kbytes_out, size);
+	    kb_incr(&statCounter.client_http.hit_kbytes_out, size);
     }
     if (errflag) {
 	/*
@@ -2392,11 +2392,11 @@ clientReadRequest(int fd, void *data)
     fde *F = &fd_table[fd];
     int len = conn->in.size - conn->in.offset - 1;
     debug(33, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     size = read(fd, conn->in.buf + conn->in.offset, len);
     if (size > 0) {
 	fd_bytes(fd, size, FD_READ);
-	kb_incr(&Counter.client_http.kbytes_in, size);
+	kb_incr(&statCounter.client_http.kbytes_in, size);
     }
     /*
      * Don't reset the timeout value here.  The timeout value will be

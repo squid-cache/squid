@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.74 2000/05/07 16:18:19 adrian Exp $
+ * $Id: peer_digest.cc,v 1.75 2000/06/27 22:06:03 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -690,10 +690,10 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
 	fetch->old_entry = NULL;
     }
     /* update global stats */
-    kb_incr(&Counter.cd.kbytes_sent, (size_t) fetch->sent.bytes);
-    kb_incr(&Counter.cd.kbytes_recv, (size_t) fetch->recv.bytes);
-    Counter.cd.msgs_sent += fetch->sent.msg;
-    Counter.cd.msgs_recv += fetch->recv.msg;
+    kb_incr(&statCounter.cd.kbytes_sent, (size_t) fetch->sent.bytes);
+    kb_incr(&statCounter.cd.kbytes_recv, (size_t) fetch->recv.bytes);
+    statCounter.cd.msgs_sent += fetch->sent.msg;
+    statCounter.cd.msgs_recv += fetch->recv.msg;
 
     /* unlock everything */
     storeUnregister(fetch->sc, fetch->entry, fetch);
@@ -799,7 +799,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
 	    host, cblock.mask_size, (int) (cblock.mask_size - freed_size));
 	pd->cd = cacheDigestCreate(cblock.capacity, cblock.bits_per_entry);
 	if (cblock.mask_size >= freed_size)
-	    kb_incr(&Counter.cd.memory, cblock.mask_size - freed_size);
+	    kb_incr(&statCounter.cd.memory, cblock.mask_size - freed_size);
     }
     assert(pd->cd);
     /* these assignments leave us in an inconsistent state until we finish reading the digest */

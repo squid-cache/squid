@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.14 2000/06/26 07:17:55 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.15 2000/06/27 22:06:23 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -560,7 +560,7 @@ storeDiskdDirRebuildFromDirectory(void *data)
 	    debug(20, 3) ("  %s %7d files opened so far.\n",
 		rb->sd->path, rb->counts.scancount);
 	debug(20, 9) ("file_in: fd=%d %08X\n", fd, sfileno);
-	Counter.syscalls.disk.reads++;
+	statCounter.syscalls.disk.reads++;
 	if (read(fd, hdr_buf, SM_PAGE_SIZE) < 0) {
 	    debug(20, 1) ("storeDiskdDirRebuildFromDirectory: read(FD %d): %s\n",
 		fd, xstrerror());
@@ -1353,7 +1353,7 @@ storeDiskdDirClean(int swap_index)
 #else
 	safeunlink(p2, 0);
 #endif
-	Counter.swap.files_cleaned++;
+	statCounter.swap.files_cleaned++;
     }
     debug(36, 3) ("Cleaned %d unused files from %s\n", k, p1);
     return k;

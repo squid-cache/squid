@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.52 2000/05/16 07:06:05 wessels Exp $
+ * $Id: ident.cc,v 1.53 2000/06/27 22:06:02 hno Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -139,7 +139,7 @@ identReadReply(int fd, void *data)
     char *t = NULL;
     int len = -1;
     buf[0] = '\0';
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd, buf, BUFSIZ - 1);
     fd_bytes(fd, len, FD_READ);
     if (len <= 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.295 2000/06/25 22:28:42 wessels Exp $
+ * $Id: ftp.cc,v 1.296 2000/06/27 22:06:01 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -873,15 +873,15 @@ ftpDataRead(int fd, void *data)
     read_sz = delayBytesWanted(delay_id, 1, read_sz);
 #endif
     memset(ftpState->data.buf + ftpState->data.offset, '\0', read_sz);
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd, ftpState->data.buf + ftpState->data.offset, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS
 	delayBytesIn(delay_id, len);
 #endif
-	kb_incr(&Counter.server.all.kbytes_in, len);
-	kb_incr(&Counter.server.ftp.kbytes_in, len);
+	kb_incr(&statCounter.server.all.kbytes_in, len);
+	kb_incr(&statCounter.server.ftp.kbytes_in, len);
 	ftpState->data.offset += len;
     }
     debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, len);
@@ -1042,8 +1042,8 @@ ftpStart(FwdState * fwd)
     const cache_key *key = NULL;
     cbdataAdd(ftpState, cbdataXfree, 0);
     debug(9, 3) ("ftpStart: '%s'\n", url);
-    Counter.server.all.requests++;
-    Counter.server.ftp.requests++;
+    statCounter.server.all.requests++;
+    statCounter.server.ftp.requests++;
     storeLockObject(entry);
     ftpState->entry = entry;
     ftpState->request = requestLink(request);
@@ -1126,8 +1126,8 @@ ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, int errflag, void
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", size);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.all.kbytes_out, size);
-	kb_incr(&Counter.server.ftp.kbytes_out, size);
+	kb_incr(&statCounter.server.all.kbytes_out, size);
+	kb_incr(&statCounter.server.ftp.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;
@@ -1240,14 +1240,14 @@ ftpReadControlReply(int fd, void *data)
 	return;
     }
     assert(ftpState->ctrl.offset < ftpState->ctrl.size);
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd,
 	ftpState->ctrl.buf + ftpState->ctrl.offset,
 	ftpState->ctrl.size - ftpState->ctrl.offset);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
-	kb_incr(&Counter.server.all.kbytes_in, len);
-	kb_incr(&Counter.server.ftp.kbytes_in, len);
+	kb_incr(&statCounter.server.all.kbytes_in, len);
+	kb_incr(&statCounter.server.ftp.kbytes_in, len);
     }
     debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, len);
     if (len < 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.106 2000/05/30 09:27:18 hno Exp $
+ * $Id: tunnel.cc,v 1.107 2000/06/27 22:06:04 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -198,7 +198,7 @@ sslReadServer(int fd, void *data)
 #if DELAY_POOLS
     read_sz = delayBytesWanted(sslState->delay_id, 1, read_sz);
 #endif
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd, sslState->server.buf + sslState->server.len, read_sz);
     debug(26, 3) ("sslReadServer: FD %d, read   %d bytes\n", fd, len);
     if (len > 0) {
@@ -206,8 +206,8 @@ sslReadServer(int fd, void *data)
 #if DELAY_POOLS
 	delayBytesIn(sslState->delay_id, len);
 #endif
-	kb_incr(&Counter.server.all.kbytes_in, len);
-	kb_incr(&Counter.server.other.kbytes_in, len);
+	kb_incr(&statCounter.server.all.kbytes_in, len);
+	kb_incr(&statCounter.server.other.kbytes_in, len);
 	sslState->server.len += len;
     }
     cbdataLock(sslState);
@@ -234,14 +234,14 @@ sslReadClient(int fd, void *data)
     debug(26, 3) ("sslReadClient: FD %d, reading %d bytes at offset %d\n",
 	fd, SQUID_TCP_SO_RCVBUF - sslState->client.len,
 	sslState->client.len);
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd,
 	sslState->client.buf + sslState->client.len,
 	SQUID_TCP_SO_RCVBUF - sslState->client.len);
     debug(26, 3) ("sslReadClient: FD %d, read   %d bytes\n", fd, len);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
-	kb_incr(&Counter.client_http.kbytes_in, len);
+	kb_incr(&statCounter.client_http.kbytes_in, len);
 	sslState->client.len += len;
     }
     cbdataLock(sslState);
@@ -274,15 +274,15 @@ sslWriteServer(int fd, void *data)
     assert(fd == sslState->server.fd);
     debug(26, 3) ("sslWriteServer: FD %d, %d bytes to write\n",
 	fd, sslState->client.len);
-    Counter.syscalls.sock.writes++;
+    statCounter.syscalls.sock.writes++;
     len = write(fd,
 	sslState->client.buf,
 	sslState->client.len);
     debug(26, 3) ("sslWriteServer: FD %d, %d bytes written\n", fd, len);
     if (len > 0) {
 	fd_bytes(fd, len, FD_WRITE);
-	kb_incr(&Counter.server.all.kbytes_out, len);
-	kb_incr(&Counter.server.other.kbytes_out, len);
+	kb_incr(&statCounter.server.all.kbytes_out, len);
+	kb_incr(&statCounter.server.other.kbytes_out, len);
 	assert(len <= sslState->client.len);
 	sslState->client.len -= len;
 	if (sslState->client.len > 0) {
@@ -313,14 +313,14 @@ sslWriteClient(int fd, void *data)
     assert(fd == sslState->client.fd);
     debug(26, 3) ("sslWriteClient: FD %d, %d bytes to write\n",
 	fd, sslState->server.len);
-    Counter.syscalls.sock.writes++;
+    statCounter.syscalls.sock.writes++;
     len = write(fd,
 	sslState->server.buf,
 	sslState->server.len);
     debug(26, 3) ("sslWriteClient: FD %d, %d bytes written\n", fd, len);
     if (len > 0) {
 	fd_bytes(fd, len, FD_WRITE);
-	kb_incr(&Counter.client_http.kbytes_out, len);
+	kb_incr(&statCounter.client_http.kbytes_out, len);
 	assert(len <= sslState->server.len);
 	sslState->server.len -= len;
 	/* increment total object size */
@@ -459,8 +459,8 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
     }
     debug(26, 3) ("sslStart: '%s %s'\n",
 	RequestMethodStr[request->method], url);
-    Counter.server.all.requests++;
-    Counter.server.other.requests++;
+    statCounter.server.all.requests++;
+    statCounter.server.other.requests++;
     /* Create socket. */
     sock = comm_open(SOCK_STREAM,
 	0,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.72 2000/06/26 03:36:06 wessels Exp $
+ * $Id: store_swapout.cc,v 1.73 2000/06/27 22:06:05 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -303,7 +303,7 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
 	    storeLog(STORE_LOG_SWAPOUT, e);
 	    storeDirSwapLog(e, SWAP_LOG_ADD);
 	}
-	Counter.swap.outs++;
+	statCounter.swap.outs++;
     }
     debug(20, 3) ("storeSwapOutFileClosed: %s:%d\n", __FILE__, __LINE__);
     mem->swapout.sio = NULL;

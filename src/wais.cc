@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.132 2000/03/06 16:23:36 wessels Exp $
+ * $Id: wais.cc,v 1.133 2000/06/27 22:06:05 hno Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -102,15 +102,15 @@ waisReadReply(int fd, void *data)
 #if DELAY_POOLS
     read_sz = delayBytesWanted(delay_id, 1, read_sz);
 #endif
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd, buf, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS
 	delayBytesIn(delay_id, len);
 #endif
-	kb_incr(&Counter.server.all.kbytes_in, len);
-	kb_incr(&Counter.server.other.kbytes_in, len);
+	kb_incr(&statCounter.server.all.kbytes_in, len);
+	kb_incr(&statCounter.server.other.kbytes_in, len);
     }
     debug(24, 5) ("waisReadReply: FD %d read len:%d\n", fd, len);
     if (len > 0) {
@@ -170,8 +170,8 @@ waisSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	fd, size, errflag);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.all.kbytes_out, size);
-	kb_incr(&Counter.server.other.kbytes_out, size);
+	kb_incr(&statCounter.server.all.kbytes_out, size);
+	kb_incr(&statCounter.server.other.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;
@@ -226,8 +226,8 @@ waisStart(FwdState * fwd)
     const char *url = storeUrl(entry);
     method_t method = request->method;
     debug(24, 3) ("waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
-    Counter.server.all.requests++;
-    Counter.server.other.requests++;
+    statCounter.server.all.requests++;
+    statCounter.server.other.requests++;
     waisState = xcalloc(1, sizeof(WaisStateData));
     cbdataAdd(waisState, cbdataXfree, 0);
     waisState->method = method;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.134 2000/06/06 19:34:31 hno Exp $
+ * $Id: fqdncache.cc,v 1.135 2000/06/27 22:06:01 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -333,7 +333,7 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na)
     cbdataFree(c);
     c = NULL;
     n = ++FqdncacheStats.replies;
-    statHistCount(&Counter.dns.svc_time,
+    statHistCount(&statCounter.dns.svc_time,
 	tvSubMsec(f->request_time, current_time));
 #if USE_DNSSERVERS
     x = fqdncacheParse(reply);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.15 2000/05/16 07:06:08 wessels Exp $
+ * $Id: wccp.cc,v 1.16 2000/06/27 22:06:05 hno Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -219,7 +219,7 @@ wccpHandleUdp(int sock, void *not_used)
     memset(&from, '\0', from_len);
     memset(&wccp_i_see_you, '\0', sizeof(wccp_i_see_you));
 
-    Counter.syscalls.sock.recvfroms++;
+    statCounter.syscalls.sock.recvfroms++;
 
     len = recvfrom(sock,
 	(void *) &wccp_i_see_you,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.149 2000/05/12 00:29:07 wessels Exp $
+ * $Id: disk.cc,v 1.150 2000/06/27 22:06:00 hno Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -65,7 +65,7 @@ file_open(const char *path, int mode)
     mode |= SQUID_NONBLOCK;
     errno = 0;
     fd = open(path, mode, 0644);
-    Counter.syscalls.disk.opens++;
+    statCounter.syscalls.disk.opens++;
     if (fd < 0) {
 	debug(50, 3) ("file_open: error opening file %s: %s\n", path,
 	    xstrerror());
@@ -118,7 +118,7 @@ file_close(int fd)
     debug(6, F->flags.close_request ? 2 : 5)
 	("file_close: FD %d, really closing\n", fd);
     fd_close(fd);
-    Counter.syscalls.disk.closes++;
+    statCounter.syscalls.disk.closes++;
 }
 
 /*
@@ -193,7 +193,7 @@ diskHandleWrite(int fd, void *notused)
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset);
     debug(6, 3) ("diskHandleWrite: FD %d len = %d\n", fd, len);
-    Counter.syscalls.disk.writes++;
+    statCounter.syscalls.disk.writes++;
     fd_bytes(fd, len, FD_WRITE);
     if (len < 0) {
 	if (!ignoreErrno(errno)) {
@@ -348,14 +348,14 @@ diskHandleRead(int fd, void *data)
 	debug(6, 3) ("diskHandleRead: FD %d seeking to offset %d\n",
 	    fd, (int) ctrl_dat->offset);
 	lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
-	Counter.syscalls.disk.seeks++;
+	statCounter.syscalls.disk.seeks++;
 	F->disk.offset = ctrl_dat->offset;
     }
     errno = 0;
     len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
     if (len > 0)
 	F->disk.offset += len;
-    Counter.syscalls.disk.reads++;
+    statCounter.syscalls.disk.reads++;
     fd_bytes(fd, len, FD_READ);
     if (len < 0) {
 	if (ignoreErrno(errno)) {

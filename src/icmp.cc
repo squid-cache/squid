@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.71 2000/05/16 07:06:05 wessels Exp $
+ * $Id: icmp.cc,v 1.72 2000/06/27 22:06:02 hno Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -73,7 +73,7 @@ icmpRecv(int unused1, void *unused2)
     static struct sockaddr_in F;
     commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
     memset(&preply, '\0', sizeof(pingerReplyData));
-    Counter.syscalls.sock.recvfroms++;
+    statCounter.syscalls.sock.recvfroms++;
     n = recv(icmp_sock,
 	(char *) &preply,
 	sizeof(pingerReplyData),
