@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.35 1999/05/04 21:58:19 wessels Exp $
+ * $Id: comm_select.cc,v 1.36 1999/06/30 05:49:40 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -35,6 +35,8 @@
 #include "squid.h"
 
 #if USE_ASYNC_IO
+#define MAX_POLL_TIME 10
+#elif USE_DISKD
 #define MAX_POLL_TIME 10
 #else
 #define MAX_POLL_TIME 1000
@@ -304,6 +306,9 @@ comm_poll(int msec)
 #endif
 #if USE_ASYNC_IO
 	aioCheckCallbacks();
+#endif
+#if USE_DISKD
+	storeDiskdReadQueue();
 #endif
 	if (commCheckICPIncoming)
 	    comm_poll_icp_incoming();
@@ -591,6 +596,9 @@ comm_select(int msec)
 #endif
 #if USE_ASYNC_IO
 	aioCheckCallbacks();
+#endif
+#if USE_DISKD
+	storeDiskdReadQueue();
 #endif
 	if (commCheckICPIncoming)
 	    comm_select_icp_incoming();
