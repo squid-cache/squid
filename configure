@@ -568,7 +568,7 @@ fi
 
 
 
-# From configure.in Revision: 1.138 
+# From configure.in Revision: 1.139 
 ac_aux_dir=
 for ac_dir in cfgaux $srcdir/cfgaux; do
   if test -f $ac_dir/install-sh; then
@@ -4347,6 +4347,7 @@ trap 'rm -fr `echo "\
 	$SNMP_MAKEFILE \
 	./icons/Makefile \
 	./errors/Makefile \
+	./auth_modules/NCSA/Makefile \
  include/autoconf.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -4474,6 +4475,7 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	$SNMP_MAKEFILE \
 	./icons/Makefile \
 	./errors/Makefile \
+	./auth_modules/NCSA/Makefile \
 "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
