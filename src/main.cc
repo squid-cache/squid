@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.351 2002/06/23 13:32:24 hno Exp $
+ * $Id: main.cc,v 1.352 2002/07/14 17:19:06 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -205,8 +205,13 @@ mainParseOptions(int argc, char *argv[])
 #endif
 	    }
 	case 's':
+#if HAVE_SYSLOG
 	    opt_syslog_enable = 1;
 	    break;
+#else
+	    fatal("Logging to syslog not available on this platform");
+	    /* NOTREACHED */
+#endif
 	case 'u':
 	    icpPortNumOverride = atoi(optarg);
 	    if (icpPortNumOverride < 0)
