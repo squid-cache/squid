@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.214 1998/03/28 20:29:49 wessels Exp $
+ * $Id: ftp.cc,v 1.215 1998/03/28 20:31:51 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1183,7 +1183,7 @@ ftpReadControlReply(int fd, void *data)
     ftpState->ctrl.last_reply = (*W)->key;
     safe_free(*W);
     ftpState->ctrl.offset = 0;
-    debug(9, 8) ("ftpReadControlReply: state=%d\n", ftpState->state);
+    debug(9, 8) ("ftpReadControlReply: state=%d, code=%d\n", ftpState->state, ftpState->ctrl.replycode);
     FTP_SM_FUNCS[ftpState->state] (ftpState);
 }
 
@@ -1573,6 +1573,11 @@ ftpReadPasv(FtpStateData * ftpState)
 	return;
     }
     port = ((p1 << 8) + p2);
+    if (0 == port) {
+	debug(9,1)("ftpReadPasv: Invalid PASV reply: %s\n", buf);
+	ftpSendPort(ftpState);
+	return;
+    }
     debug(9, 5) ("ftpReadPasv: connecting to %s, port %d\n", junk, port);
     ftpState->data.port = port;
     ftpState->data.host = xstrdup(junk);
