@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.252 2005/03/13 09:23:33 serassio Exp $
+ * $Id: tools.cc,v 1.253 2005/03/18 15:47:42 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -380,7 +380,7 @@ void
 sigusr2_handle(int sig)
 {
 #if defined(_SQUID_MSWIN_) && defined(_DEBUG)
-    do_debug = 1;
+    do_debug_trap = 1;
 #endif
 #if (defined(_SQUID_MSWIN_) && !defined(_DEBUG)) || !defined(_SQUID_MSWIN_)
 
