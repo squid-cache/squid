@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.451 2003/10/20 12:33:01 robertc Exp $
+ * $Id: cache_cf.cc,v 1.452 2003/11/06 16:55:24 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -689,6 +689,9 @@ parseBytesLine(size_t * bptr, const char *units)
         self_destruct();
 
     *bptr = static_cast<size_t>(m * d / u);
+
+    if (static_cast<double>(*bptr) != m * d / u)
+        self_destruct();
 }
 
 static size_t
