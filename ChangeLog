@@ -17,6 +17,7 @@ Changes to squid-1.1.beta4 ():
 	- Fixed cachemgr output for non-table browsers (Cord Beermann).
 	- Moved accept() for dnsserver into Squid.
 	- New config.site file now in contrib directory (Markus Gyger).
+	- Includes squid-1.0 changes up to 1.0.17.
 
 Changes to squid-1.1.beta3 (September 16, 1996):
 
