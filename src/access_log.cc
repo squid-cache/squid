@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.1 1997/06/21 02:36:47 wessels Exp $
+ * $Id: access_log.cc,v 1.2 1997/06/26 22:35:35 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -245,18 +245,18 @@ accessLogClose(void)
 void
 accessLogOpen(const char *fname)
 {
-	assert(fname);
-        xstrncpy(LogfileName, fname, SQUID_MAXPATHLEN);
-        LogfileFD = file_open(LogfileName, O_WRONLY | O_CREAT, NULL, NULL);  
-        if (LogfileFD == DISK_ERROR) {
-            debug(50, 0) ("%s: %s\n", LogfileName, xstrerror());
-            fatal("Cannot open logfile.");
-        }
-	LogfileStatus = LOG_ENABLE;
+    assert(fname);
+    xstrncpy(LogfileName, fname, SQUID_MAXPATHLEN);
+    LogfileFD = file_open(LogfileName, O_WRONLY | O_CREAT, NULL, NULL);
+    if (LogfileFD == DISK_ERROR) {
+	debug(50, 0) ("%s: %s\n", LogfileName, xstrerror());
+	fatal("Cannot open logfile.");
+    }
+    LogfileStatus = LOG_ENABLE;
 }
 
 void
-hierarchyNote(HierarchyLogEntry *hl,
+hierarchyNote(HierarchyLogEntry * hl,
     hier_code code,
     icp_ping_data * icpdata,
     const char *cache_host)

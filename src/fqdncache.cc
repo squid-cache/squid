@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.56 1997/06/17 04:54:09 wessels Exp $
+ * $Id: fqdncache.cc,v 1.57 1997/06/26 22:35:46 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -158,7 +158,7 @@ static void fqdncacheChangeKey _PARAMS((fqdncache_entry * i));
 static void fqdncacheLockEntry _PARAMS((fqdncache_entry * f));
 static void fqdncacheUnlockEntry _PARAMS((fqdncache_entry * f));
 
-static hash_table * fqdn_table = NULL;
+static hash_table *fqdn_table = NULL;
 static struct fqdncacheQueueData *fqdncacheQueueHead = NULL;
 static struct fqdncacheQueueData **fqdncacheQueueTailP = &fqdncacheQueueHead;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.174 1997/06/19 22:51:51 wessels Exp $
+ * $Id: http.cc,v 1.175 1997/06/26 22:35:49 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -750,9 +750,9 @@ httpBuildRequestHeader(request_t * request,
 	url = entry ? entry->url : urlCanonical(orig_request, NULL);
 	sprintf(ybuf, "Cache-control: Max-age=%d", (int) getMaxAge(url));
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
-if (request->urlpath) {
-	assert(strstr(url, request->urlpath));
-}
+	if (request->urlpath) {
+	    assert(strstr(url, request->urlpath));
+	}
     }
     httpAppendRequestHeader(hdr_out, null_string, &len, out_sz);
     put_free_4k_page(xbuf);

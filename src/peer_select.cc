@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.15 1997/06/21 02:38:13 wessels Exp $
+ * $Id: peer_select.cc,v 1.16 1997/06/26 22:35:56 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -181,7 +181,7 @@ peerSelectCallback(ps_state * psstate, peer * p)
 	entry->ping_status = PING_DONE;
     }
     if (cbdataValid(data))
-        psstate->callback(p, data);
+	psstate->callback(p, data);
     cbdataUnlock(data);
     peerSelectStateFree(psstate);
 }
@@ -197,7 +197,7 @@ peerSelectCallbackFail(ps_state * psstate)
     debug(44, 1) ("   never_direct = %d\n", psstate->never_direct);
     debug(44, 1) ("        timeout = %d\n", psstate->icp.timeout);
     if (cbdataValid(data))
-        psstate->fail_callback(NULL, data);
+	psstate->fail_callback(NULL, data);
     cbdataUnlock(data);
     peerSelectStateFree(psstate);
 }

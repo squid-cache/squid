@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.170 1997/06/20 05:26:08 wessels Exp $
+ * $Id: comm.cc,v 1.171 1997/06/26 22:35:43 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -278,7 +278,7 @@ comm_open(int sock_type,
 	return (COMM_ERROR);
     }
     /* update fdstat */
-    debug(5,5)("comm_open: FD %d is a new socket\n", new_socket);
+    debug(5, 5) ("comm_open: FD %d is a new socket\n", new_socket);
     fd_open(new_socket, FD_SOCKET, note);
     fde = &fd_table[new_socket];
     if (!BIT_TEST(flags, COMM_NOCLOEXEC))
@@ -365,7 +365,7 @@ commConnectCallback(ConnectStateData * cs, int status)
     comm_remove_close_handler(fd, commConnectFree, cs);
     commConnectFree(fd, cs);
     if (cbdataValid(data))
-        callback(fd, status, data);
+	callback(fd, status, data);
     cbdataUnlock(data);
 }
 
@@ -374,7 +374,7 @@ commConnectFree(int fdunused, void *data)
 {
     ConnectStateData *cs = data;
     if (cs->locks)
-       ipcacheUnregister(cs->host, cs);
+	ipcacheUnregister(cs->host, cs);
     safe_free(cs->host);
     cbdataFree(cs);
 }
@@ -475,7 +475,7 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     assert(ntohs(address->sin_port) != 0);
     /* Establish connection. */
     if (connect(sock, (struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
-	debug(5,9)("connect FD %d: %s\n", sock, xstrerror());
+	debug(5, 9) ("connect FD %d: %s\n", sock, xstrerror());
 	switch (errno) {
 	case EALREADY:
 #if EAGAIN != EWOULDBLOCK
@@ -1079,7 +1079,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t
     FD_ENTRY *fde;
     assert(fd >= 0);
     fde = &fd_table[fd];
-    debug(5,5)("commSetSelect: FD %d, handler=%p, data=%p\n", fd, handler, client_data);
+    debug(5, 5) ("commSetSelect: FD %d, handler=%p, data=%p\n", fd, handler, client_data);
     if (type & COMM_SELECT_READ) {
 	fde->read_handler = handler;
 	fde->read_data = client_data;
