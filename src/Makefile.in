@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.261 2002/10/25 03:48:56 robertc Exp $
+#  $Id: Makefile.in,v 1.262 2002/11/16 01:18:28 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -422,6 +422,12 @@ DEFAULT_HOSTS = @OPT_DEFAULT_HOSTS@
 
 DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
+
+# Don't automatically uninstall config files
+#	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
+#		echo "rm -f $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
+#		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
+#	fi
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
 	globals.c string_arrays.c repl_modules.cc auth_modules.cc store_modules.cc
 
@@ -1254,10 +1260,6 @@ uninstall-local:
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
 		echo "rm -f $(DESTDIR)$(DEFAULT_MIME_TABLE)"; \
 		$(RM) -f $(DESTDIR)$(DEFAULT_MIME_TABLE); \
-	fi
-	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
-		echo "rm -f $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
-		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 	fi
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
