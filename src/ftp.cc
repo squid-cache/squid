@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.135 1997/07/19 07:18:00 wessels Exp $
+ * $Id: ftp.cc,v 1.136 1997/07/28 06:40:55 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -49,6 +49,7 @@ enum {
 
 static const char *const crlf = "\r\n";
 static char cbuf[1024];
+static char auth_msg[AUTH_MSG_SZ];
 
 typedef enum {
     BEGIN,
@@ -106,6 +107,8 @@ typedef struct _Ftpdata {
 	size_t size;
 	off_t offset;
 	FREE *freefunc;
+	char *host;
+	u_short port;
     } data;
 } FtpStateData;
 
@@ -139,6 +142,7 @@ static void ftpRestOrList _PARAMS((FtpStateData * ftpState));
 static void ftpReadQuit _PARAMS((FtpStateData * ftpState));
 static void ftpDataTransferDone _PARAMS((FtpStateData * ftpState));
 static void ftpAppendSuccessHeader _PARAMS((FtpStateData * ftpState));
+static char *ftpAuthRequired _PARAMS((const request_t *, const char *));
 static STABH ftpAbort;
 
 static FTPSM ftpReadWelcome;
@@ -201,6 +205,7 @@ ftpStateFree(int fd, void *data)
     safe_free(ftpState->ctrl.last_message);
     safe_free(ftpState->title_url);
     safe_free(ftpState->filepath);
+    safe_free(ftpState->data.host);
     if (ftpState->data.fd > -1)
 	comm_close(ftpState->data.fd);
     cbdataFree(ftpState);
@@ -228,8 +233,16 @@ ftpTimeout(int fd, void *data)
 {
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
+    ErrorState *err;
     debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, entry->url);
-    storeAbort(entry, ERR_READ_TIMEOUT, NULL, 0);
+    if (entry->object_len == 0) {
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_READ_TIMEOUT;
+	err->http_status = HTTP_GATEWAY_TIMEOUT;
+	err->request = requestLink(ftpState->request);
+	errorAppendEntry(entry, err);
+    }
+    storeAbort(entry, 0);
     if (ftpState->data.fd >= 0) {
 	comm_close(ftpState->data.fd);
 	ftpState->data.fd = -1;
@@ -600,9 +613,10 @@ ftpReadData(int fd, void *data)
     int off;
     int bin;
     StoreEntry *entry = ftpState->entry;
+    ErrorState *err;
     assert(fd == ftpState->data.fd);
     if (protoAbortFetch(entry)) {
-	storeAbort(entry, ERR_CLIENT_ABORT, NULL, 0);
+	storeAbort(entry, 0);
 	ftpDataTransferDone(ftpState);
 	return;
     }
@@ -647,13 +661,25 @@ ftpReadData(int fd, void *data)
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, 0);
 	} else {
-	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
-	    storeReleaseRequest(entry);
-	    storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
+	    if (entry->object_len == 0) {
+		err = xcalloc(1, sizeof(ErrorState));
+		err->type = ERR_READ_ERROR;
+		err->errno = errno;
+		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+		err->request = requestLink(ftpState->request);
+		errorAppendEntry(entry, err);
+	    }
+	    storeAbort(entry, 0);
 	    ftpDataTransferDone(ftpState);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	storeAbort(entry, ERR_ZERO_SIZE_OBJECT, errno ? xstrerror() : NULL, 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_ZERO_SIZE_OBJECT;
+	err->errno = errno;
+	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err->request = requestLink(ftpState->request);
+	errorAppendEntry(entry, err);
+	storeAbort(entry, 0);
 	ftpDataTransferDone(ftpState);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -819,6 +845,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
     char *response;
     int fd;
+    ErrorState *err;
     cbdataAdd(ftpState);
     debug(9, 3) ("FtpStart: '%s'\n", entry->url);
     storeLockObject(entry);
@@ -836,7 +863,7 @@ ftpStart(request_t * request, StoreEntry * entry)
 	    sprintf(realm, "ftp %s port %d",
 		ftpState->user, request->port);
 	}
-	response = authorization_needed_msg(request, realm);
+	response = ftpAuthRequired(request, realm);
 	storeAppend(entry, response, strlen(response));
 	httpParseReplyHeaders(response, entry->mem_obj->reply);
 	storeComplete(entry);
@@ -856,7 +883,13 @@ ftpStart(request_t * request, StoreEntry * entry)
 	url);
     if (fd == COMM_ERROR) {
 	debug(9, 4) ("ftpStart: Failed because we're out of sockets.\n");
-	storeAbort(entry, ERR_NO_FDS, xstrerror(), 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_SOCKET_FAILURE;
+	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	err->errno = errno;
+	err->request = requestLink(ftpState->request);
+	errorAppendEntry(entry, err);
+	storeAbort(entry, 0);
 	return;
     }
     ftpState->ctrl.fd = fd;
@@ -875,13 +908,28 @@ ftpConnectDone(int fd, int status, void *data)
 {
     FtpStateData *ftpState = data;
     request_t *request = ftpState->request;
+    ErrorState *err;
     debug(9, 3) ("ftpConnectDone, status = %d\n", status);
     if (status == COMM_ERR_DNS) {
 	debug(9, 4) ("ftpConnectDone: Unknown host: %s\n", request->host);
-	storeAbort(ftpState->entry, ERR_DNS_FAIL, dns_error_message, 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_DNS_FAIL;
+	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err->dnsserver_msg = xstrdup(dns_error_message);
+	err->request = requestLink(request);
+	errorAppendEntry(ftpState->entry, err);
+	storeAbort(ftpState->entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-	storeAbort(ftpState->entry, ERR_CONNECT_FAIL, xstrerror(), 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_CONNECT_FAIL;
+	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err->errno = errno;
+	err->host = xstrdup(request->host);
+	err->port = request->port;
+	err->request = requestLink(request);
+	errorAppendEntry(ftpState->entry, err);
+	storeAbort(ftpState->entry, 0);
 	comm_close(fd);
     } else {
 	ftpState->state = BEGIN;
@@ -921,12 +969,19 @@ ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
 {
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
+    ErrorState *err;
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", size);
     if (errflag) {
 	debug(50, 1) ("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerror());
-	BIT_RESET(entry->flag, ENTRY_CACHABLE);
-	storeReleaseRequest(entry);
-	storeAbort(entry, ERR_WRITE_ERROR, xstrerror(), 0);
+	if (entry->object_len == 0) {
+	    err = xcalloc(1, sizeof(ErrorState));
+	    err->type = ERR_WRITE_ERROR;
+	    err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	    err->errno = errno;
+	    err->request = requestLink(ftpState->request);
+	    errorAppendEntry(entry, err);
+	}
+	storeAbort(entry, 0);
 	comm_close(fd);
     }
 }
@@ -977,6 +1032,7 @@ ftpReadControlReply(int fd, void *data)
     char *oldbuf;
     wordlist **W;
     int len;
+    ErrorState *err;
     debug(9, 5) ("ftpReadControlReply\n");
     assert(ftpState->ctrl.offset < ftpState->ctrl.size);
     len = read(fd,
@@ -995,9 +1051,15 @@ ftpReadControlReply(int fd, void *data)
 		ftpState,
 		0);
 	} else {
-	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
-	    storeReleaseRequest(entry);
-	    storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
+	    if (entry->object_len == 0) {
+		err = xcalloc(1, sizeof(ErrorState));
+		err->type = ERR_READ_ERROR;
+		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+		err->errno = errno;
+		err->request = requestLink(ftpState->request);
+		errorAppendEntry(entry, err);
+	    }
+	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
 	return;
@@ -1005,9 +1067,15 @@ ftpReadControlReply(int fd, void *data)
     if (len == 0) {
 	debug(9, 1) ("Read 0 bytes from FTP control socket?\n");
 	assert(len);
-	BIT_RESET(entry->flag, ENTRY_CACHABLE);
-	storeReleaseRequest(entry);
-	storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
+	if (entry->object_len == 0) {
+	    err = xcalloc(1, sizeof(ErrorState));
+	    err->type = ERR_READ_ERROR;
+	    err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	    err->errno = errno;
+	    err->request = requestLink(ftpState->request);
+	    errorAppendEntry(entry, err);
+	}
+	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
     }
@@ -1284,6 +1352,8 @@ ftpReadPasv(FtpStateData * ftpState)
     }
     port = ((p1 << 8) + p2);
     debug(9, 5) ("ftpReadPasv: connecting to %s, port %d\n", junk, port);
+    ftpState->data.port = port;
+    ftpState->data.host = xstrdup(junk);
     commConnectStart(fd, junk, port, ftpPasvCallback, ftpState);
 }
 
@@ -1291,9 +1361,19 @@ static void
 ftpPasvCallback(int fd, int status, void *data)
 {
     FtpStateData *ftpState = data;
+    request_t *request = ftpState->request;
+    ErrorState *err;
     debug(9, 3) ("ftpPasvCallback\n");
-    if (status == COMM_ERROR) {
-	storeAbort(ftpState->entry, ERR_CONNECT_FAIL, xstrerror(), 0);
+    if (status != COMM_OK) {
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_CONNECT_FAIL;
+	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err->errno = errno;
+	err->host = xstrdup(ftpState->data.host);
+	err->port = ftpState->data.port;
+	err->request = requestLink(request);
+	errorAppendEntry(ftpState->entry, err);
+	storeAbort(ftpState->entry, 0);
 	comm_close(fd);
 	return;
     }
@@ -1492,4 +1572,59 @@ ftpAbort(void *data)
 	ftpState->data.fd = -1;
     }
     comm_close(ftpState->ctrl.fd);
+}
+
+const char *ftpAuthText =
+"<HTML><HEAD><TITLE>Authorization needed</TITLE>\n"
+"</HEAD><BODY><H1>Authorization needed</H1>\n"
+"<P>Sorry, you have to authorize yourself to request:\n"
+"<PRE>    ftp://%s@%s%256.256s</PRE>\n"
+"<P>from this cache.  Please check with the\n"
+"<A HREF=\"mailto:%s\">cache administrator</A>\n"
+"if you believe this is incorrect.\n"
+
+"<P>\n"
+"%s\n"
+"<HR>\n"
+"<ADDRESS>\n"
+"Generated by %s/%s@%s\n"
+"</ADDRESS></BODY></HTML>\n"
+"\n";
+
+
+static char *
+ftpAuthRequired(const request_t * request, const char *realm)
+{
+    LOCAL_ARRAY(char, content, AUTH_MSG_SZ);
+    char *hdr;
+    int s = AUTH_MSG_SZ;
+    int l = 0;
+    /* Generate the reply body */
+    l += snprintf(content + l, s - l, ftpAuthText,
+	request->login,
+	request->host,
+	request->urlpath,
+	Config.adminEmail);
+    l += snprintf(content + l, s - l, "<P>\n%s\n",
+	Config.errHtmlText);
+    l += snprintf(content + l, s - l,
+	"<HR>\n<ADDRESS>\nGenerated by %s/%s@%s\n</ADDRESS></BODY></HTML>\n",
+	appname,
+	version_string,
+	getMyHostname());
+    /* Now generate reply headers with correct content length */
+    hdr = httpReplyHeader(1.0, HTTP_UNAUTHORIZED,
+	"text/html",
+	strlen(content),
+	squid_curtime,
+	squid_curtime + Config.negativeTtl);
+    /* Now stuff them together and add Authenticate header */
+    l = 0;
+    s = AUTH_MSG_SZ;
+    l += snprintf(auth_msg + l, s - l, "%s", hdr);
+    l += snprintf(auth_msg + l, s - l,
+	"WWW-Authenticate: Basic realm=\"%s\"\r\n",
+	realm);
+    l += snprintf(auth_msg + l, s - l, "\r\n%s", content);
+    return auth_msg;
 }

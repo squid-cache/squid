@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.59 1997/07/21 07:21:01 wessels Exp $
+ * $Id: tunnel.cc,v 1.60 1997/07/28 06:41:03 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -55,7 +55,7 @@ static void sslWriteServer _PARAMS((int fd, void *));
 static void sslWriteClient _PARAMS((int fd, void *));
 static void sslConnected _PARAMS((int fd, void *));
 static void sslProxyConnected _PARAMS((int fd, void *));
-static void sslErrorComplete _PARAMS((int, char *, int, int, void *));
+static ERCB sslErrorComplete;
 static void sslClose _PARAMS((SslStateData * sslState));
 static void sslClientClosed _PARAMS((int fd, void *));
 static void sslConnectDone _PARAMS((int fd, int status, void *data));
@@ -306,13 +306,9 @@ sslConnected(int fd, void *data)
 }
 
 static void
-sslErrorComplete(int fd, char *buf, int size, int errflag, void *sslState)
+sslErrorComplete(int fd, void *sslState, int size)
 {
-    safe_free(buf);
-    if (sslState == NULL) {
-	debug_trap("sslErrorComplete: NULL sslState\n");
-	return;
-    }
+    assert(sslState != NULL);
     sslClose(sslState);
 }
 
@@ -322,35 +318,29 @@ sslConnectDone(int fd, int status, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;
-    char *buf = NULL;
+    ErrorState *err = NULL;
     if (status == COMM_ERR_DNS) {
 	debug(26, 4) ("sslConnect: Unknown host: %s\n", sslState->host);
-	buf = squid_error_url(sslState->url,
-	    request->method,
-	    ERR_DNS_FAIL,
-	    fd_table[fd].ipaddr,
-	    500,
-	    dns_error_message);
-	comm_write(sslState->client.fd,
-	    xstrdup(buf),
-	    strlen(buf),
-	    sslErrorComplete,
-	    sslState,
-	    xfree);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_DNS_FAIL;
+	err->http_status = HTTP_NOT_FOUND;
+	err->request = requestLink(request);
+	err->dnsserver_msg = xstrdup(dns_error_message);
+	err->callback = sslErrorComplete;
+	err->callback_data = sslState;
+	errorSend(sslState->client.fd, err);
 	return;
     } else if (status != COMM_OK) {
-	buf = squid_error_url(sslState->url,
-	    sslState->request->method,
-	    ERR_CONNECT_FAIL,
-	    fd_table[fd].ipaddr,
-	    500,
-	    xstrerror());
-	comm_write(sslState->client.fd,
-	    xstrdup(buf),
-	    strlen(buf),
-	    sslErrorComplete,
-	    sslState,
-	    xfree);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_CONNECT_FAIL;
+	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err->errno = errno;
+	err->host = xstrdup(sslState->host);
+	err->port = sslState->port;
+	err->request = requestLink(request);
+	err->callback = sslErrorComplete;
+	err->callback_data = sslState;
+	errorSend(sslState->client.fd, err);
 	return;
     }
     if (sslState->proxying)
@@ -360,12 +350,12 @@ sslConnectDone(int fd, int status, void *data)
 }
 
 void
-sslStart(int fd, const char *url, request_t * request, size_t *size_ptr)
+sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
 {
     /* Create state structure. */
     SslStateData *sslState = NULL;
     int sock;
-    char *buf = NULL;
+    ErrorState *err = NULL;
     debug(26, 3) ("sslStart: '%s %s'\n",
 	RequestMethodStr[request->method], url);
     /* Create socket. */
@@ -377,18 +367,12 @@ sslStart(int fd, const char *url, request_t * request, size_t *size_ptr)
 	url);
     if (sock == COMM_ERROR) {
 	debug(26, 4) ("sslStart: Failed because we're out of sockets.\n");
-	buf = squid_error_url(url,
-	    request->method,
-	    ERR_NO_FDS,
-	    fd_table[fd].ipaddr,
-	    500,
-	    xstrerror());
-	comm_write(fd,
-	    xstrdup(buf),
-	    strlen(buf),
-	    NULL,
-	    NULL,
-	    xfree);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_SOCKET_FAILURE;
+	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	err->errno = errno;
+	err->request = requestLink(request);
+	errorSend(fd, err);
 	return;
     }
     sslState = xcalloc(1, sizeof(SslStateData));
@@ -469,6 +453,12 @@ static void
 sslPeerSelectFail(peer * p, void *data)
 {
     SslStateData *sslState = data;
-    squid_error_request(sslState->url, ERR_CANNOT_FETCH, 400);
-    sslClose(sslState);
+    ErrorState *err = xcalloc(1, sizeof(ErrorState));
+    err->type = ERR_CANNOT_FORWARD;
+    err->http_status = HTTP_SERVICE_UNAVAILABLE;
+    err->request = requestLink(sslState->request);
+    err->callback = sslErrorComplete;
+    err->callback_data = sslState;
+    errorSend(sslState->client.fd, err);
+
 }

@@ -201,11 +201,11 @@ struct _SquidConfig {
 	int query_icmp;
 	int icp_hit_stale;
 	int buffered_logs;
-        int source_ping;
-        int common_log;
-        int log_mime_hdrs;
-        int ident_lookup;
-        int single_parent_bypass;
+	int source_ping;
+	int common_log;
+	int log_mime_hdrs;
+	int ident_lookup;
+	int single_parent_bypass;
 	int log_fqdn;
 	int announce;
 	int accel_with_proxy;
@@ -237,6 +237,7 @@ struct _SquidConfig {
 	char *directory;
 	char *content_type;
     } icons;
+    char *errorDirectory;
 };
 
 struct _SquidConfig2 {
@@ -452,7 +453,7 @@ struct _clientHttpRequest {
     StoreEntry *entry;
     StoreEntry *old_entry;
     log_type log_type;
-    int http_code;
+    http_status http_code;
     int accel;
     struct timeval start;
     float http_ver;
@@ -731,8 +732,6 @@ struct _MemObject {
     int p_rtt;			/* parent's RTT to source */
     int e_swap_buf_len;
     unsigned char pending_list_size;
-    char *e_abort_msg;
-    log_type abort_code;
     int e_current_len;
     off_t e_lowest_offset;
     struct _store_client *clients;
@@ -832,4 +831,20 @@ struct _CommWriteStateData {
     CWCB *handler;
     void *handler_data;
     FREE *free;
+};
+
+struct _ErrorState {
+    err_type type;
+    http_status http_status;
+    request_t *request;
+    char *url;
+    int errno;
+    char *host;
+    u_short port;
+    char *dnsserver_msg;
+    time_t ttl;
+    struct in_addr src_addr;
+    char *redirect_url;
+    ERCB *callback;
+    void *callback_data;
 };

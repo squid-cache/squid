@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.83 1997/07/19 01:33:53 wessels Exp $
+#  $Id: Makefile.in,v 1.84 1997/07/28 06:40:50 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -42,6 +42,7 @@ DEFAULT_SWAP_DIR        = $(localstatedir)/cache
 DEFAULT_PINGER		= $(libexecdir)/pinger
 DEFAULT_UNLINKD		= $(libexecdir)/unlinkd
 DEFAULT_ICON_DIR	= $(sysconfdir)/icons
+DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
 
 CC		= @CC@
 MAKEDEPEND	= @MAKEDEPEND@
@@ -180,7 +181,8 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_STORE_LOG@%$(DEFAULT_STORE_LOG)%g;\
 	s%@DEFAULT_PID_FILE@%$(DEFAULT_PID_FILE)%g;\
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
-	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g" < cf.data.pre >$@
+	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
+	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g" < cf.data.pre >$@
 
 install-mkdirs:
 	-@if test ! -d $(prefix); then \

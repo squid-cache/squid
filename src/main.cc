@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.169 1997/07/26 04:48:32 wessels Exp $
+ * $Id: main.cc,v 1.170 1997/07/28 06:40:59 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -492,6 +492,7 @@ mainInitialize(void)
     dnsOpenServers();
     redirectOpenServers();
     useragentOpenLog();
+    errorInitialize();
 
 #if MALLOC_DBG
     malloc_debug(0, malloc_debug_level);
@@ -577,7 +578,6 @@ main(int argc, char **argv)
     memset(&no_addr, '\0', sizeof(struct in_addr));
     safe_inet_addr("255.255.255.255", &no_addr);
     squid_srandom(time(NULL));
-    errorInitialize();
 
     squid_starttime = getCurrentTime();
     failure_notify = fatal_dump;
