@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.83 1996/11/14 18:38:51 wessels Exp $
+ * $Id: tools.cc,v 1.84 1996/11/19 07:21:15 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -240,6 +240,27 @@ death(int sig)
 	fprintf(debug_log, "FATAL: Received Bus Error...dying.\n");
     else
 	fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
+
+#ifdef PRINT_STACK_TRACE
+#ifdef _SQUID_HPUX_
+    {
+	extern void U_STACK_TRACE(void);  /* link with -lcl */
+	fflush(debug_log);
+	dup2(fileno(debug_log), 2);
+	U_STACK_TRACE();
+    }
+#endif /* _SQUID_HPUX_ */
+#ifdef _SQUID_SOLARIS_
+    {   /* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
+	extern void opcom_stack_trace(void);  /* link with -lopcom_stack */
+	fflush(debug_log);
+	dup2(fileno(debug_log), fileno(stdout));
+	opcom_stack_trace();
+	fflush(stdout);
+    }
+#endif /* _SQUID_SOLARIS_ */
+#endif /* PRINT_STACK_TRACE */
+
 #if SA_RESETHAND == 0
     signal(SIGSEGV, SIG_DFL);
     signal(SIGBUS, SIG_DFL);
@@ -303,7 +324,7 @@ void
 normal_shutdown(void)
 {
     debug(21, 1, "Shutting down...\n");
-    if (Config.pidFilename) {
+    if (Config.pidFilename && strcmp(Config.pidFilename, "none")) {
 	enter_suid();
 	safeunlink(Config.pidFilename, 0);
 	leave_suid();
@@ -506,9 +527,9 @@ void
 writePidFile(void)
 {
     FILE *pid_fp = NULL;
-    char *f = NULL;
+    const char *f = NULL;
 
-    if ((f = Config.pidFilename) == NULL)
+    if ((f = Config.pidFilename) == NULL || !strcmp(Config.pidFilename, "none"))
 	return;
     enter_suid();
     pid_fp = fopen(f, "w");
@@ -527,11 +548,11 @@ pid_t
 readPidFile(void)
 {
     FILE *pid_fp = NULL;
-    char *f = NULL;
+    const char *f = NULL;
     pid_t pid = -1;
     int i;
 
-    if ((f = Config.pidFilename) == NULL) {
+    if ((f = Config.pidFilename) == NULL || !strcmp(Config.pidFilename, "none")) {
 	fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
 	exit(1);
     }

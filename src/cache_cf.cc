@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.141 1996/11/18 18:22:01 wessels Exp $
+ * $Id: cache_cf.cc,v 1.142 1996/11/19 07:21:13 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -174,7 +174,7 @@ struct SquidConfig Config;
 #define DefaultNeighborTimeout  2	/* 2 seconds */
 #define DefaultStallDelay	1	/* 1 seconds */
 #define DefaultSingleParentBypass 0	/* default off */
-#define DefaultPidFilename      (char *)NULL	/* default NONE */
+#define DefaultPidFilename      DEFAULT_PID_FILE
 #define DefaultVisibleHostname  (char *)NULL	/* default NONE */
 #define DefaultFtpUser		"squid@"	/* Default without domain */
 #define DefaultAnnounceHost	"sd.cache.nlanr.net"
