@@ -450,7 +450,10 @@ extern FREE *memBufFreeFunc(MemBuf * mb);
 extern void memBufReport(MemBuf * mb);
 
 extern char *mime_get_header(const char *mime, const char *header);
+#if OLD_CODE
 extern char *mime_headers_end(const char *mime);
+#endif
+extern size_t headersEnd(const char *, size_t);
 extern int mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt);
 extern const char *mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field);
 
@@ -854,6 +857,8 @@ extern void gb_flush(gb_t *);	/* internal, do not use this */
 #if USE_HTCP
 extern void htcpInit(void);
 extern void htcpQuery(StoreEntry * e, request_t * req, peer * p);
+void htcpSocketShutdown(void);
+void htcpSocketClose(void);
 #endif
 
 /* String */
