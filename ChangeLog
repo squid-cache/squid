@@ -11,9 +11,12 @@
 	- Rewrote shutdown code to use events instead of setting 
 	  FD timeouts.
 	- Fixed cachemgr 'objects' (statObjects()) by adding a check
-	  for READ_AHEAD_GAP.
-	- Modified storeExpireNow() to move expired entries to the
-	  tail of the LRU list.
+	  for READ_AHEAD_GAP, and calling storeCheckSwapout() in
+	  storeBufferFlush().  Otherwise, the read-past pages would
+	  never be freed.
+	- Modified storeHashInsert() to insert PRIVATE objects at
+	  the tail of the LRU list, and PUBLIC objects at the head.
+	  Thus, PRIVATE objects get kicked out quicker.
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
