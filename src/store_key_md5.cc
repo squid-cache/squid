@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.11 1998/07/22 20:54:02 wessels Exp $
+ * $Id: store_key_md5.cc,v 1.12 1998/08/26 19:08:57 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -134,6 +134,13 @@ storeKeyDup(const cache_key * key)
     xmemcpy(dup, key, MD5_DIGEST_CHARS);
     /* XXX account key */
     return dup;
+}
+
+cache_key *
+storeKeyCopy(cache_key * dst, const cache_key *src)
+{
+    xmemcpy(dst, src, MD5_DIGEST_CHARS);
+    return dst;
 }
 
 void

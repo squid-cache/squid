@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.302 1998/08/21 16:58:11 wessels Exp $
+ * $Id: cache_cf.cc,v 1.303 1998/08/26 19:08:54 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -714,7 +714,7 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
 	    p->host,
 	    neighborTypeStr(p),
 	    p->http_port,
-	    p->icp_port);
+	    p->icp.port);
 	dump_peer_options(entry, p);
 	for (d = p->pinglist; d; d = d->next) {
 	    storeAppendPrintf(entry, "cache_peer_domain %s %s%s\n",
@@ -746,7 +746,7 @@ parse_peer(peer ** head)
     const char *me = null_string;	/* XXX */
     p = xcalloc(1, sizeof(peer));
     p->http_port = CACHE_HTTP_PORT;
-    p->icp_port = CACHE_ICP_PORT;
+    p->icp.port = CACHE_ICP_PORT;
     p->weight = 1;
     p->stats.logged_state = PEER_ALIVE;
     if ((token = strtok(NULL, w_space)) == NULL)
@@ -758,13 +758,13 @@ parse_peer(peer ** head)
     GetInteger(i);
     p->http_port = (u_short) i;
     GetInteger(i);
-    p->icp_port = (u_short) i;
+    p->icp.port = (u_short) i;
     if (strcmp(p->host, me) == 0) {
 	for (u = Config.Port.http; u; u = u->next) {
 	    if (p->http_port != u->i)
 		continue;
 	    debug(15, 0) ("parse_peer: Peer looks like myself: %s %s/%d/%d\n",
-		p->type, p->host, p->http_port, p->icp_port);
+		p->type, p->host, p->http_port, p->icp.port);
 	    self_destruct();
 	}
     }
@@ -815,7 +815,7 @@ parse_peer(peer ** head)
     }
     if (p->weight < 1)
 	p->weight = 1;
-    p->icp_version = ICP_VERSION_CURRENT;
+    p->icp.version = ICP_VERSION_CURRENT;
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
 #if USE_CARP
     if (p->carp.load_factor) {
