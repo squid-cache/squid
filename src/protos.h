@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.375 2000/06/27 08:41:30 hno Exp $
+ * $Id: protos.h,v 1.376 2000/07/13 06:13:42 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1038,6 +1038,9 @@ extern void urlExtMethodConfigure();
 extern void useragentOpenLog(void);
 extern void useragentRotateLog(void);
 extern void logUserAgent(const char *, const char *);
+extern void refererOpenLog(void);
+extern void refererRotateLog(void);
+extern void logReferer(const char *, const char *, const char *);
 extern peer_t parseNeighborType(const char *s);
 
 extern void errorInitialize(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.491 2000/07/12 16:20:02 wessels Exp $
+ * $Id: client_side.cc,v 1.492 2000/07/13 06:13:42 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -810,7 +810,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     request_t *request = http->request;
     const HttpHeader *req_hdr = &request->header;
     int no_cache = 0;
-#if USE_USERAGENT_LOG
+#if defined(USE_USERAGENT_LOG) || defined(USE_REFERER_LOG)
     const char *str;
 #endif
     request->imslen = -1;
@@ -867,6 +867,11 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 #if USE_USERAGENT_LOG
     if ((str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT)))
 	logUserAgent(fqdnFromAddr(http->conn->peer.sin_addr), str);
+#endif
+#if USE_REFERER_LOG
+    if ((str = httpHeaderGetStr(req_hdr, HDR_REFERER)))
+	logReferer(fqdnFromAddr(http->conn->peer.sin_addr), str,
+	    http->log_uri);
 #endif
 #if FORW_VIA_DB
     if (httpHeaderHas(req_hdr, HDR_X_FORWARDED_FOR)) {

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.191 2000/06/26 04:57:16 wessels Exp $
+# $Id: cf.data.pre,v 1.192 2000/07/13 06:13:42 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -830,6 +830,20 @@ DOC_START
 	Squid will write the User-Agent field from HTTP requests
 	to the filename specified here.  By default useragent_log
 	is disabled.
+DOC_END
+
+
+NAME: referer_log
+TYPE: string
+LOC: Config.Log.referer
+DEFAULT: none
+DOC_START
+	If configured with the "--enable-referer_log" configure
+	option, Squid will write the Referer field from HTTP
+	requests to the filename specified here.  By default
+	referer_log is disabled.
+
+referer_log none
 DOC_END
 
 

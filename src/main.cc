@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.315 2000/06/27 22:06:03 hno Exp $
+ * $Id: main.cc,v 1.316 2000/07/13 06:13:42 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -390,6 +390,7 @@ mainRotate(void)
     storeLogRotate();		/* store.log */
     accessLogRotate();		/* access.log */
     useragentRotateLog();	/* useragent.log */
+    refererRotateLog();		/* referer.log */
     icmpOpen();
 #if USE_DNSSERVERS
     dnsInit();
@@ -486,6 +487,7 @@ mainInitialize(void)
     redirectInit();
     authenticateInit();
     useragentOpenLog();
+    refererOpenLog();
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
     httpReplyInitModule();	/* must go before accepting replies */
     errorInitialize();
