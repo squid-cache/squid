@@ -407,6 +407,7 @@ struct _icp_ping_data {
     int n_replies_expected;
     int timeout;
     int w_rtt;
+    int p_rtt;
 };
 
 struct _HierarchyLogEntry {
@@ -730,9 +731,6 @@ struct _store_client {
 struct _MemObject {
     mem_hdr *data;
     char *e_swap_buf;
-    int w_rtt;			/* weighted RTT in msec */
-    peer *e_pings_closest_parent;	/* parent with best RTT to source */
-    int p_rtt;			/* parent's RTT to source */
     int e_swap_buf_len;
     unsigned char pending_list_size;
     int e_current_len;

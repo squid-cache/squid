@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.217 1997/07/26 04:48:23 wessels Exp $
+ * $Id: cache_cf.cc,v 1.218 1997/08/25 02:17:45 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -523,6 +523,8 @@ parse_peer(peer ** head)
 	    p->options |= NEIGHBOR_MCAST_RESPONDER;
 	} else if (!strncasecmp(token, "weight=", 7)) {
 	    p->weight = atoi(token + 7);
+	} else if (!strncasecmp(token, "closest-only", 12)) {
+	    p->options |= NEIGHBOR_CLOSEST_ONLY;
 	} else if (!strncasecmp(token, "ttl=", 4)) {
 	    p->mcast.ttl = atoi(token + 4);
 	    if (p->mcast.ttl < 0)

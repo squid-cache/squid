@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.25 1997/08/24 00:37:05 wessels Exp $
+ * $Id: peer_select.cc,v 1.26 1997/08/25 02:17:48 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -68,8 +68,10 @@ static char *DirectStr[] =
 static void peerSelectFoo _PARAMS((ps_state *));
 static void peerPingTimeout _PARAMS((void *data));
 static void peerSelectCallbackFail _PARAMS((ps_state * psstate));
-static void peerHandleIcpReply _PARAMS((peer * p, peer_t type, icp_opcode op, void *data));
+static IRCB peerHandleIcpReply;
 static void peerSelectStateFree _PARAMS((ps_state * psstate));
+static void peerIcpParentMiss _PARAMS((peer *, icp_common_t *, ps_state *));
+static int peerCheckNetdbDirect _PARAMS((ps_state * psstate));
 
 static void
 peerSelectStateFree(ps_state * psstate)
@@ -208,6 +210,29 @@ peerSelectCallbackFail(ps_state * psstate)
     /* XXX When this happens, the client request just hangs */
 }
 
+static int
+peerCheckNetdbDirect(ps_state * psstate)
+{
+    peer *p = psstate->closest_parent_miss;
+    int myrtt;
+    int myhops;
+    if (p == NULL)
+	return 0;
+    myrtt = netdbHostRtt(psstate->request->host);
+debug(44, 3) ("peerCheckNetdbDirect: MY RTT = %d\n", myrtt);
+debug(44, 3) ("peerCheckNetdbDirect: closest_parent_miss RTT = %d\n",
+	psstate->icp.p_rtt);
+    if (myrtt && myrtt < psstate->icp.p_rtt)
+	return 1;
+    myhops = netdbHostHops(psstate->request->host);
+debug(44, 3) ("peerCheckNetdbDirect: MY hops = %d\n", myhops);
+debug(44, 3) ("peerCheckNetdbDirect: minimum_direct_hops = %d\n",
+	Config.minDirectHops);
+    if (myhops && myhops <= Config.minDirectHops)
+	return 1;
+    return 0;
+}
+
 static void
 peerSelectFoo(ps_state * psstate)
 {
@@ -274,7 +299,17 @@ peerSelectFoo(ps_state * psstate)
 	}
 	debug_trap("peerSelect: neighborsUdpPing returned 0");
     }
-    if ((p = psstate->first_parent_miss)) {
+    if (peerCheckNetdbDirect(psstate)) {
+	code = CLOSEST_DIRECT;
+	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
+	hierarchyNote(&request->hier, code, &psstate->icp, request->host);
+	peerSelectCallback(psstate, NULL);
+    } else if ((p = psstate->closest_parent_miss)) {
+	code = CLOSEST_PARENT_MISS;
+	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
+	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	peerSelectCallback(psstate, p);
+    } else if ((p = psstate->first_parent_miss)) {
 	code = FIRST_PARENT_MISS;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
@@ -314,25 +349,49 @@ peerSelectInit(void)
     memset(&PeerStats, '\0', sizeof(PeerStats));
 }
 
+static void
+peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
+{
+    int rtt;
+    int hops;
+    if (Config.onoff.query_icmp) {
+	if (BIT_TEST(header->flags, ICP_FLAG_SRC_RTT)) {
+	    rtt = header->pad & 0xFFFF;
+	    hops = (header->pad >> 16) & 0xFFFF;
+	    if (rtt > 0 && rtt < 0xFFFF)
+		netdbUpdatePeer(ps->request, p, rtt, hops);
+	    if (rtt && (ps->icp.p_rtt == 0 || rtt < ps->icp.p_rtt)) {
+		ps->closest_parent_miss = p;
+		ps->icp.p_rtt = rtt;
+	    }
+	}
+    }
+    /* if closest-only is set, the don't allow FIRST_PARENT_MISS */
+    if (BIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
+	return;
+    /* set FIRST_MISS if thre is no CLOSEST parent */
+    if (ps->closest_parent_miss != NULL)
+	return;
+    rtt = tvSubMsec(ps->icp.start, current_time) / p->weight;
+    if (ps->icp.w_rtt == 0 || rtt < ps->icp.w_rtt) {
+	ps->first_parent_miss = p;
+	ps->icp.w_rtt = rtt;
+    }
+}
 
 static void
-peerHandleIcpReply(peer * p, peer_t type, icp_opcode op, void *data)
+peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
 {
     ps_state *psstate = data;
-    int w_rtt;
+    icp_opcode op = header->opcode;
     request_t *request = psstate->request;
     debug(44, 3) ("peerHandleIcpReply: %s %s\n",
 	IcpOpcodeStr[op],
 	psstate->entry->url);
     psstate->icp.n_recv++;
     if (op == ICP_OP_MISS || op == ICP_OP_DECHO) {
-	if (type == PEER_PARENT) {
-	    w_rtt = tvSubMsec(psstate->icp.start, current_time) / p->weight;
-	    if (psstate->icp.w_rtt == 0 || w_rtt < psstate->icp.w_rtt) {
-		psstate->first_parent_miss = p;
-		psstate->icp.w_rtt = w_rtt;
-	    }
-	}
+	if (type == PEER_PARENT)
+	    peerIcpParentMiss(p, header, psstate);
     } else if (op == ICP_OP_HIT || op == ICP_OP_HIT_OBJ) {
 	hierarchyNote(&request->hier,
 	    type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT,

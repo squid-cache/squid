@@ -143,6 +143,7 @@ DOC_START
 		     default
 		     round-robin
 		     multicast-responder
+		     closest-only
 
 		     use 'proxy-only' to specify that objects fetched
 		     from this cache should not be saved locally.
@@ -174,6 +175,10 @@ DOC_START
 		     is a member of a multicast group.  ICP queries will
 		     not be sent directly to the peer, but ICP replies
 		     will be accepted from it.
+
+		     'closest-only' indicates that, for ICP_OP_MISS
+		     replies, we'll only forward CLOSEST_PARENT_MISSes
+		     and never FIRST_PARENT_MISSes.
 
 	NOTE: non-ICP neighbors must be specified as 'parent'.
 
