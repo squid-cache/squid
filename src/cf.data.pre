@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.380 2005/03/09 20:14:37 serassio Exp $
+# $Id: cf.data.pre,v 1.381 2005/03/18 15:36:07 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -197,6 +197,8 @@ DOC_START
 			    NO_DEFAULT_CA
 				Don't use the default CA list built in
 				to OpenSSL
+
+	   sslcontext=	SSL session ID context identifier.
 
 	   accel	Accelerator mode. Also set implicit by the other
 			accelerator directives
