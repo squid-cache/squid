@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.379 2000/10/04 02:18:49 wessels Exp $
+ * $Id: protos.h,v 1.380 2000/10/04 15:32:13 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -347,6 +347,7 @@ extern int httpHdrRangeIsComplex(const HttpHdrRange * range);
 extern int httpHdrRangeWillBeComplex(const HttpHdrRange * range);
 extern ssize_t httpHdrRangeFirstOffset(const HttpHdrRange * range);
 extern ssize_t httpHdrRangeLowestOffset(const HttpHdrRange * range, ssize_t);
+extern int httpHdrRangeOffsetLimit(HttpHdrRange *);
 
 
 /* Http Content Range Header Field */

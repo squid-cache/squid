@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.21 2000/03/06 16:23:28 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.22 2000/10/04 15:32:13 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -470,4 +470,23 @@ httpHdrRangeBoundaryStr(clientHttpRequest * http)
     key = storeKeyText(http->entry->key);
     stringAppend(&b, key, strlen(key));
     return b;
+}
+
+/*  
+ * Return true if the first range offset is larger than the configured
+ * limit.
+ */
+int
+httpHdrRangeOffsetLimit(HttpHdrRange * range)
+{
+    if (NULL == range)
+	/* not a range request */
+	return 0;
+    if (-1 == Config.rangeOffsetLimit)
+	/* disabled */
+	return 0;
+    if (Config.rangeOffsetLimit >= httpHdrRangeFirstOffset(range))
+	/* below the limit */
+	return 0;
+    return 1;
 }
