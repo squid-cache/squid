@@ -1,20 +1,25 @@
 /*
  * squid_ldap_auth: authentication via ldap for squid proxy server
  * 
- * Maintainer: Henrik Nordstrom <hno@squid-cache.org>
+ * Authors:
+ * Henrik Nordstrom
+ * hno@squid-cache.org
  *
- * Author: Glen Newton 
+ * Glen Newton 
  * glen.newton@nrc.ca
  * Advanced Services 
  * CISTI
  * National Research Council
+ *
+ * with contributions from others mentioned in the Changes section below
  * 
  * Usage: squid_ldap_auth -b basedn [-s searchscope]
  *                        [-f searchfilter] [-D binddn -w bindpasswd]
  *                        [-u attr] [-h host] [-p port] [-P] [-R] [ldap_server_name[:port]] ...
  * 
  * Dependencies: You need to get the OpenLDAP libraries
- * from http://www.openldap.org
+ * from http://www.openldap.org or another compatible LDAP C-API
+ * implementation.
  *
  * If you want to make a TLS enabled connection you will also need the
  * OpenSSL libraries linked into openldap. See http://www.openssl.org/
