@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.53 1996/10/28 07:44:20 wessels Exp $
+ * $Id: client_side.cc,v 1.54 1996/10/30 09:27:26 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -414,8 +414,8 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	/* We have an existing entry, but failed to validate it,
 	 * so send the old one anyway */
 	icpState->log_type = LOG_TCP_REFRESH_FAIL_HIT;
-	storeUnlockObject(entry);
 	storeUnregister(entry, fd);
+	storeUnlockObject(entry);
 	icpState->entry = icpState->old_entry;
 	icpState->entry->refcount++;
     } else if (mem->reply->code == 0) {
@@ -445,8 +445,8 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    oldentry->mem_obj->request = requestLink(mem->request);
 	    unlink_request = 1;
 	}
-	storeUnlockObject(entry);
 	storeUnregister(entry, fd);
+	storeUnlockObject(entry);
 	entry = icpState->entry = oldentry;
 	entry->timestamp = squid_curtime;
 	if (mime_headers_end(hbuf)) {
@@ -469,8 +469,8 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    icpState->old_entry->refcount++;
 	    icpState->log_type = LOG_TCP_REFRESH_HIT;
 	}
-	storeUnlockObject(icpState->old_entry);
 	storeUnregister(icpState->old_entry, fd);
+	storeUnlockObject(icpState->old_entry);
     }
     icpState->old_entry = NULL;	/* done with old_entry */
     icpSendMoreData(fd, icpState);	/* give data to the client */
