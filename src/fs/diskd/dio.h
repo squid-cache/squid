@@ -1,0 +1,36 @@
+/*
+ * dio.h
+ *
+ * Internal declarations for the diskd routines
+ */
+
+#ifndef __STORE_DIO_H__
+#define __STORE_DIO_H__
+
+typedef struct _diomsg diomsg;
+
+enum {
+    _MQD_NOP,
+    _MQD_OPEN,
+    _MQD_CREATE,
+    _MQD_CLOSE,
+    _MQD_READ,
+    _MQD_WRITE,
+    _MQD_UNLINK
+};
+
+struct _diomsg {
+    mtyp_t mtype;
+    int id;
+    int seq_no;
+    void * callback_data;
+    int size;
+    int offset;
+    int status;
+    bool newstyle;
+    int shm_offset;
+};
+
+static const int msg_snd_rcv_sz = sizeof(diomsg) - sizeof(mtyp_t);
+
+#endif
