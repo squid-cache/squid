@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.94 1998/03/28 23:24:47 wessels Exp $
+ * $Id: fqdncache.cc,v 1.95 1998/03/28 23:31:21 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -642,7 +642,7 @@ fqdncacheUnregister(struct in_addr addr, void *data)
     fqdncache_entry *f = NULL;
     fqdn_pending *p = NULL;
     int n = 0;
-    debug(35, 3) ("fqdncacheUnregister: FD %d, name '%s'\n", fd, name);
+    debug(35, 3) ("fqdncacheUnregister: name '%s'\n", name);
     if ((f = fqdncache_get(name)) == NULL)
 	return 0;
     if (f->status == FQDN_PENDING || f->status == FQDN_DISPATCHED) {
