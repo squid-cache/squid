@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.314 2000/03/09 04:50:14 wessels Exp $
+ * $Id: structs.h,v 1.315 2000/03/14 22:59:13 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -492,6 +492,12 @@ struct _SquidConfig {
 	size_t swapout_chunk_size;
 	int rebuild_chunk_percentage;
     } digest;
+#endif
+#if USE_DISKD
+    struct {
+	int magic1;
+	int magic2;
+    } diskd;
 #endif
 };
 
