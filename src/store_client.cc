@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.44 1998/09/19 20:51:20 wessels Exp $
+ * $Id: store_client.cc,v 1.45 1998/09/19 23:10:30 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -77,28 +77,31 @@ static store_client_t
 storeClientType(StoreEntry *e)
 {
     MemObject *mem = e->mem_obj;
-    /*
-     * If some data has been freed from memory, then we must swap in
-     */
     if (mem->inmem_lo)
 	return STORE_DISK_CLIENT;
-    /*
-     * If we're not transferring, we have the whole thing and there
-     * will be no delays delivering this to the client
-     */
-    else if (e->store_status != STORE_PENDING)
+    if (e->store_status == STORE_ABORTED) {
+	/* I don't think we should be adding clients to aborted entries */
+	debug(20,1)("storeClientType: adding to STORE_ABORTED entry\n");
 	return STORE_MEM_CLIENT;
+    }
+    if (e->store_status == STORE_OK) {
+	if (mem->inmem_lo == 0 && mem->inmem_hi > 0)
+	    return STORE_MEM_CLIENT;
+	else
+	    return STORE_DISK_CLIENT;
+    }
+    /* here and past, entry is STORE_PENDING */
     /*
      * If this is the first client, let it be the mem client
      */
-    else if (mem->nclients > 1)
-	return STORE_DISK_CLIENT;
+    else if (mem->nclients == 1)
+	return STORE_MEM_CLIENT;
     /*
      * otherwise, make subsequent clients read from disk so they
      * can not delay the first, and vice-versa.
      */
     else
-	return STORE_MEM_CLIENT;
+	return STORE_DISK_CLIENT;
 }
 
 /* add client with fd to client list */
