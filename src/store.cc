@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.145 1996/11/01 21:25:09 wessels Exp $
+ * $Id: store.cc,v 1.146 1996/11/02 00:17:58 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -262,8 +262,8 @@ static int storelog_fd = -1;
 
 /* key temp buffer */
 static char key_temp_buffer[MAX_URL + 100];
-static char swaplog_file[SQUID_MAXPATHLEN+1];
-static char tmp_filename[SQUID_MAXPATHLEN+1];
+static char swaplog_file[SQUID_MAXPATHLEN + 1];
+static char tmp_filename[SQUID_MAXPATHLEN + 1];
 
 /* patch cache_dir to accomodate multiple disk storage */
 static char **CacheDirs = NULL;
@@ -1065,7 +1065,7 @@ storeAddSwapDisk(char *path)
 {
     char **tmp = NULL;
     int i;
-    if (strlen(path) > (SQUID_MAXPATHLEN-32))
+    if (strlen(path) > (SQUID_MAXPATHLEN - 32))
 	fatal_dump("cache_dir pathname is too long");
     if (CacheDirs == NULL) {
 	CacheDirsAllocated = 4;
@@ -1095,7 +1095,7 @@ swappath(int n)
 static char *
 storeSwapFullPath(int fn, char *fullpath)
 {
-    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN+1);
+    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN + 1);
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
@@ -1251,7 +1251,7 @@ storeSwapLog(StoreEntry * e)
 static void
 storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 {
-    LOCAL_ARRAY(char, filename, SQUID_MAXPATHLEN+1);
+    LOCAL_ARRAY(char, filename, SQUID_MAXPATHLEN + 1);
     MemObject *mem = e->mem_obj;
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
@@ -1336,7 +1336,7 @@ storeSwapOutStart(StoreEntry * e)
 {
     int fd;
     int x;
-    LOCAL_ARRAY(char, swapfilename, SQUID_MAXPATHLEN+1);
+    LOCAL_ARRAY(char, swapfilename, SQUID_MAXPATHLEN + 1);
     MemObject *mem = e->mem_obj;
     /* Suggest a new swap file number */
     swapfileno = (swapfileno + 1) % (MAX_SWAP_FILE);
@@ -2481,7 +2481,7 @@ storeInit(void)
     storeSanityCheck();
     dir_created = storeVerifySwapDirs(opt_zap_disk_store);
     if (Config.Log.swap)
-        strncpy(swaplog_file, Config.Log.swap, SQUID_MAXPATHLEN);
+	strncpy(swaplog_file, Config.Log.swap, SQUID_MAXPATHLEN);
     else
 	sprintf(swaplog_file, "%s/log", swappath(0));
     swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT);

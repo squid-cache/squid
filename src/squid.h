@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.64 1996/11/01 21:25:05 wessels Exp $
+ * $Id: squid.h,v 1.65 1996/11/02 00:17:53 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -131,6 +131,9 @@
 #if USE_ASYNC_IO && HAVE_AIO_H
 #include <aio.h>
 #endif
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 
 #ifdef __STDC__
 #include <stdarg.h>
@@ -143,8 +146,7 @@
 #include <syslog.h>
 #endif
 
-/* Only enable shadow password suite if both header and library exist */
-#if HAVE_SHADOW_H && HAVE_LIBSHADOW
+#if HAVE_SHADOW_H
 #include <shadow.h>
 #endif
 
