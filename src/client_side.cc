@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.275 1998/04/12 06:10:05 rousskov Exp $
+ * $Id: client_side.cc,v 1.276 1998/04/12 06:13:56 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1419,7 +1419,11 @@ clientProcessRequest2(clientHttpRequest * http)
     } else if (EBIT_TEST(e->flag, ENTRY_SPECIAL)) {
 	/* ideally, special entries should be processed later, 
 	 * so we can use std processing routines for IMS and such */
-	if (EBIT_TEST(r->flags, REQ_IMS) && e->lastmod <= r->ims)
+/*
+ * temporary disabled to prevent coredumps on caches running old buggy code
+ * that could not handle 304 replies for Cache Digests
+ */
+	if (0 && EBIT_TEST(r->flags, REQ_IMS) && e->lastmod <= r->ims)
 	    return LOG_TCP_IMS_HIT;
 	else if (e->mem_status == IN_MEMORY)
 	    return LOG_TCP_MEM_HIT;
