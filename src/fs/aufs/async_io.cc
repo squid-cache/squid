@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.17 2002/11/10 02:29:58 hno Exp $
+ * $Id: async_io.cc,v 1.18 2002/11/10 03:40:34 hno Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -228,7 +228,7 @@ aioRead(int fd, int offset, int len, AIOCB * callback, void *callback_data)
     ctrlp->done_handler_data = cbdataReference(callback_data);
     ctrlp->operation = _AIO_READ;
     ctrlp->len = len;
-    ctrlp->bufp = squidaio_xmalloc(len);
+    ctrlp->bufp = (char *)squidaio_xmalloc(len);
     if (offset >= 0)
 	seekmode = SEEK_SET;
     else {
