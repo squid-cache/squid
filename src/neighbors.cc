@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.169 1997/11/20 06:25:28 wessels Exp $
+ * $Id: neighbors.cc,v 1.170 1998/01/02 21:59:47 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -668,8 +668,6 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
     } else if (opcode == ICP_MISS) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
-	} else if (ntype != PEER_PARENT) {
-	    (void) 0;		/* ignore MISS from non-parent */
 	} else {
 	    mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
 	}
