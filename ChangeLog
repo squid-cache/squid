@@ -1,3 +1,11 @@
+	- Squid-1.0 changes up to 1.0.4.
+	- Added 'tcp_recv_bufsize' option to config.
+	- Changed NEIGHBOR to SIBLING where appropriate.
+	- Split UDP_HIT_OBJ into {PARENT,SIBLING}_UDP_HIT_OBJ
+	- Misc casts and cleanup from running Insight.
+	- Replaced all get*() functions with direct references to
+	  Config structure.
+
 Changes to squid-1.1.alpha6:
 
 	- Changed storage manager to use a two level directory
