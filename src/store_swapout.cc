@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.51 1999/05/22 07:42:15 wessels Exp $
+ * $Id: store_swapout.cc,v 1.52 1999/05/26 03:08:12 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -78,7 +78,6 @@ storeSwapOut(StoreEntry * e)
     size_t swapout_size;
     char *swap_buf;
     ssize_t swap_buf_len;
-    int hdr_len = 0;
     if (mem == NULL)
 	return;
     /* should we swap something out to disk? */
@@ -124,17 +123,13 @@ storeSwapOut(StoreEntry * e)
     debug(20, 7) ("storeSwapOut: swapout_size = %d\n",
 	(int) swapout_size);
     if (swapout_size == 0) {
-#if OLD_CODE
-	if (e->store_status == STORE_OK) {
-	    debug(20, 1) ("storeSwapOut: nothing to write for STORE_OK\n");
+	if (e->store_status == STORE_OK)
 	    storeSwapOutFileClose(e);
-	}
-#endif
-	return;
+	return;			/* Nevermore! */
     }
     if (e->store_status == STORE_PENDING) {
 	/* wait for a full block to write */
-	if (swapout_size < VM_WINDOW_SZ)
+	if (swapout_size < DISK_PAGE_SIZE)
 	    return;
 	/*
 	 * Wait until we are below the disk FD limit, only if the
@@ -151,34 +146,39 @@ storeSwapOut(StoreEntry * e)
 	    storeSwapOutStart(e);
 	else
 	    return;
-	/* ENTRY_CACHABLE will be cleared and we'll never get
-	 * here again */
+	/* ENTRY_CACHABLE will be cleared and we'll never get here again */
     }
     assert(mem->swapout.sio != NULL);
-    if (swapout_size > STORE_SWAP_BUF)
-	swapout_size = STORE_SWAP_BUF;
-    swap_buf = memAllocate(MEM_DISK_BUF);
-    swap_buf_len = stmemCopy(&mem->data_hdr,
-	mem->swapout.queue_offset,
-	swap_buf,
-	swapout_size);
-    if (swap_buf_len < 0) {
-	debug(20, 1) ("stmemCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));
-	storeUnlink(e->swap_file_number);
-	storeDirMapBitReset(e->swap_file_number);
-	e->swap_file_number = -1;
-	e->swap_status = SWAPOUT_NONE;
-	memFree(swap_buf, MEM_DISK_BUF);
-	storeReleaseRequest(e);
-	storeSwapOutFileClose(e);
-	return;
-    }
-    debug(20, 3) ("storeSwapOut: swap_buf_len = %d\n", (int) swap_buf_len);
-    assert(swap_buf_len > 0);
-    debug(20, 3) ("storeSwapOut: swapping out %d bytes from %d\n",
-	swap_buf_len, (int) mem->swapout.queue_offset);
-    mem->swapout.queue_offset += swap_buf_len - hdr_len;
-    storeWrite(mem->swapout.sio, swap_buf, swap_buf_len, -1, memFreeDISK);
+    do {
+	if (swapout_size > DISK_PAGE_SIZE)
+	    swapout_size = DISK_PAGE_SIZE;
+	swap_buf = memAllocate(MEM_DISK_BUF);
+	swap_buf_len = stmemCopy(&mem->data_hdr,
+	    mem->swapout.queue_offset,
+	    swap_buf,
+	    swapout_size);
+	if (swap_buf_len < 0) {
+	    debug(20, 1) ("stmemCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));
+	    storeUnlink(e->swap_file_number);
+	    storeDirMapBitReset(e->swap_file_number);
+	    e->swap_file_number = -1;
+	    e->swap_status = SWAPOUT_NONE;
+	    memFree(swap_buf, MEM_DISK_BUF);
+	    storeReleaseRequest(e);
+	    storeSwapOutFileClose(e);
+	    return;
+	}
+	debug(20, 3) ("storeSwapOut: swap_buf_len = %d\n", (int) swap_buf_len);
+	assert(swap_buf_len > 0);
+	debug(20, 3) ("storeSwapOut: swapping out %d bytes from %d\n",
+	    swap_buf_len, (int) mem->swapout.queue_offset);
+	mem->swapout.queue_offset += swap_buf_len;
+	storeWrite(mem->swapout.sio, swap_buf, swap_buf_len, -1, memFreeDISK);
+	/* the storeWrite() call might generate an error */
+	if (e->swap_status != SWAPOUT_WRITING)
+	    break;
+	swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
+    } while (swapout_size >= DISK_PAGE_SIZE);
     if (e->store_status == STORE_OK)
 	if (mem->inmem_hi == mem->swapout.queue_offset)
 	    storeSwapOutFileClose(e);
