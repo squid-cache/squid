@@ -44,7 +44,7 @@
 
 int snmp_errno = 0;
 
-static char *api_errors[17] =
+static const char *api_errors[17] =
 {
     "Unknown Error",
     "Generic Error",
@@ -75,7 +75,7 @@ snmp_set_api_error(int x)
     snmp_errno = x;
 }
 
-char *
+const char *
 snmp_api_error(int err)
 {
     int foo = (err * -1);
@@ -92,7 +92,7 @@ snmp_api_errno(void)
     return (snmp_errno);
 }
 
-char *
+const char *
 api_errstring(int snmp_errnumber)
 {
     return (snmp_api_error(snmp_errnumber));

@@ -184,7 +184,7 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command)
 {
     struct variable_list *var, *newvar;
     struct snmp_pdu *newpdu;
-    int index;
+    int i;
     int copied = 0;
 
 #ifdef DEBUG_PDU
@@ -212,12 +212,12 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command)
     /* Loop through the variables, removing whatever isn't necessary */
 
     var = pdu->variables;
-    index = 1;
+    i = 1;
 
     /* skip first variable if necessary */
-    if (pdu->errindex == index) {
+    if (pdu->errindex == i) {
 	var = var->next_variable;
-	index++;
+	i++;
     }
     if (var != NULL) {
 
@@ -237,7 +237,7 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command)
 	while (var->next_variable) {
 
 	    /* Skip the item that was bad */
-	    if (++index == pdu->errindex) {
+	    if (++i == pdu->errindex) {
 		var = var->next_variable;
 		continue;
 	    }
@@ -255,7 +255,7 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command)
 	newvar->next_variable = NULL;
     }
     /* If we didn't copy anything, free the new pdu. */
-    if (index < pdu->errindex || copied == 0) {
+    if (i < pdu->errindex || copied == 0) {
 	snmp_free_pdu(newpdu);
 	snmp_set_api_error(SNMPERR_UNABLE_TO_FIX);
 	return (NULL);
@@ -628,7 +628,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
 }
 
 
-char *
+const char *
 snmp_pdu_type(struct snmp_pdu *PDU)
 {
     switch (PDU->command) {

@@ -154,7 +154,7 @@ int Line = 1;
 #define QUOTE       37
 
 struct tok {
-    char *name;			/* token name */
+    const char *name;			/* token name */
     int len;			/* length not counting nul */
     int token;			/* value */
     int hash;			/* hash of name */
@@ -217,10 +217,10 @@ struct tok tokens[] =
 static struct tok *buckets[HASHSIZE];
 
 static void
-hash_init()
+hash_init(void)
 {
     register struct tok *tp;
-    register char *cp;
+    register const char *cp;
     register int h;
     register int b;
 
@@ -241,8 +241,7 @@ hash_init()
 struct node *nbuckets[NHASHSIZE];
 
 static void
-init_node_hash(nodes)
-     struct node *nodes;
+init_node_hash(struct node *nodes)
 {
     register struct node *np, *nextp;
     register char *cp;
@@ -262,10 +261,7 @@ init_node_hash(nodes)
 
 
 static void
-print_error(string, token, type)
-     char *string;
-     char *token;
-     int type;
+print_error(const char *string, const char *token, int type)
 {
     assert(string != NULL);
     if (type == ENDOFFILE)
@@ -302,7 +298,7 @@ print_subtree(tree, count)
 int translation_table[40];
 
 static void
-build_translation_table()
+build_translation_table(void)
 {
     int count;
 
@@ -350,9 +346,7 @@ build_translation_table()
  * tree and out of the nodes list.
  */
 static void
-do_subtree(root, nodes)
-     struct snmp_mib_tree *root;
-     struct node **nodes;
+do_subtree(struct snmp_mib_tree *root, struct node **nodes)
 {
     register struct snmp_mib_tree *tp;
     struct snmp_mib_tree *peer = NULL;
@@ -435,8 +429,7 @@ do_subtree(root, nodes)
 static
 #endif
 struct snmp_mib_tree *
-build_tree(nodes)
-     struct node *nodes;
+build_tree(struct node *nodes)
 {
     struct node *np;
     struct snmp_mib_tree *tp;
@@ -487,9 +480,7 @@ build_tree(nodes)
 static char last = ' ';
 
 static int
-get_token(fp, token)
-     register FILE *fp;
-     register char *token;
+get_token(register FILE *fp, register char *token)
 {
     register int ch;
     register char *cp = token;
@@ -568,12 +559,11 @@ get_token(fp, token)
  * { iso org(3) dod(6) 1 }
  * and creates several nodes, one for each parent-child pair.
  * Returns NULL on error.
+ *   register struct subid *SubOid;	an array of subids
+ *   int length;			the length of the array
  */
 static int
-getoid(fp, SubOid, length)
-     register FILE *fp;
-     register struct subid *SubOid;	/* an array of subids */
-     int length;		/* the length of the array */
+getoid(register FILE *fp, register struct subid *SubOid, int length)
 {
     register int count;
     int type;
@@ -627,8 +617,7 @@ getoid(fp, SubOid, length)
 }
 
 static void
-free_node(np)
-     struct node *np;
+free_node(struct node *np)
 {
     struct enum_list *ep, *tep;
 
@@ -648,9 +637,7 @@ free_node(np)
  * Returns 0 on error.
  */
 static struct node *
-parse_objectid(fp, name)
-     FILE *fp;
-     char *name;
+parse_objectid(FILE *fp, char *name)
 {
     int type;
     char token[64];
@@ -737,8 +724,7 @@ parse_objectid(fp, name)
  * Returns NULL on error.
  */
 static int
-parse_asntype(fp)
-     FILE *fp;
+parse_asntype(FILE *fp)
 {
     int type;
     char token[64];
@@ -761,9 +747,7 @@ parse_asntype(fp)
  * Returns 0 on error.
  */
 static struct node *
-parse_objecttype(fp, name)
-     register FILE *fp;
-     char *name;
+parse_objecttype(register FILE *fp, char *name)
 {
     register int type;
     char token[64];
@@ -998,8 +982,7 @@ parse_objecttype(fp, name)
 static
 #endif
 struct node *
-parse(fp)
-     FILE *fp;
+parse(FILE *fp)
 {
     char token[64];
     char name[64];

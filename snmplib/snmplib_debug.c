@@ -25,7 +25,7 @@ void (*snmplib_debug_hook) (va_alist) = NULL;
 
 extern void
 #if STDC_HEADERS
-snmplib_debug(int lvl, char *fmt,...)
+snmplib_debug(int lvl, const char *fmt,...)
 {
     char buf[BUFSIZ];
     va_list args;

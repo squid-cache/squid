@@ -25,7 +25,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_pdu.h,v 1.5 2001/10/08 16:18:31 hno Exp $
+ * $Id: snmp_pdu.h,v 1.6 2001/10/17 19:05:37 hno Exp $
  * 
  **********************************************************************/
 
@@ -64,7 +64,7 @@ void snmp_pdu_free(struct snmp_pdu *);
 
 u_char *snmp_pdu_encode(u_char *, int *, struct snmp_pdu *);
 u_char *snmp_pdu_decode(u_char *, int *, struct snmp_pdu *);
-char *snmp_pdu_type(struct snmp_pdu *);
+const char *snmp_pdu_type(struct snmp_pdu *);
 
     /* Add a NULL Variable to a PDU */
 void snmp_add_null_var(struct snmp_pdu *, oid *, int);
