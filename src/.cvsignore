@@ -1,0 +1,13 @@
+.deps
+Makefile
+auth_modules.c
+cf.data
+cf_gen_defines.h
+cf_parser.c
+cf_parser.h
+globals.c
+repl_modules.c
+squid.conf
+squid.conf.default
+store_modules.c
+string_arrays.c
