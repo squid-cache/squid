@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.311 1997/10/24 04:41:56 wessels Exp $
+ * $Id: store.cc,v 1.312 1997/10/25 16:45:00 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1013,13 +1013,13 @@ storeCheckSwapOut(StoreEntry * e)
     assert(swap_buf_len > 0);
     debug(20, 3) ("storeCheckSwapOut: swapping out %d bytes from %d\n",
 	swap_buf_len, mem->swapout.queue_offset);
+    mem->swapout.queue_offset += swap_buf_len;
     x = file_write(mem->swapout.fd,
 	swap_buf,
 	swap_buf_len,
 	storeSwapOutHandle,
 	e,
 	put_free_8k_page);
-    mem->swapout.queue_offset += swap_buf_len;
     assert(x == DISK_OK);
 }
 
