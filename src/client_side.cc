@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.269 1998/04/09 02:51:43 wessels Exp $
+ * $Id: client_side.cc,v 1.270 1998/04/09 20:42:05 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -558,6 +558,7 @@ clientUpdateCounters(clientHttpRequest * http)
     i = &http->request->hier.icp;
     if (0 != i->stop.tv_sec && 0 != i->start.tv_sec)
 	statHistCount(&Counter.icp.query_svc_time, tvSubUsec(i->start, i->stop));
+
 #if SQUID_PEER_DIGEST
     H = &http->request->hier;
     if (H->peer_select_start.tv_sec && H->store_complete_stop.tv_sec)
@@ -576,12 +577,24 @@ clientUpdateCounters(clientHttpRequest * http)
     } else {
 	assert(H->alg == PEER_SA_NONE);
     }
+    /*
+     * account for outgoing digest traffic (this has nothing to do with
+     * SQUID_PEER_DIGEST, but counters are all in SQUID_PEER_DIGEST ifdefs)
+     */
+    if (http->internal && strStr(http->request->urlpath, StoreDigestUrlPath)) {
+	kb_incr(&Counter.cd.kbytes_sent, http->out.size);
+	Counter.cd.msgs_sent++;
+    }
+    /* @?@ split this ugly if-monster */
     if (/* we used ICP or CD for peer selecton */
 	H->alg != PEER_SA_NONE &&
 	/* a successful CD lookup was made */
 	H->cd_lookup != LOOKUP_NONE &&
 	/* it was not a CD miss (we go direct on CD MISSes) */
 	!(H->alg == PEER_SA_DIGEST && H->cd_lookup == LOOKUP_MISS) &&
+	/* request was cachable */
+	!EBIT_TEST(http->request->flags, REQ_NOCACHE) &&
+	EBIT_TEST(http->request->flags, REQ_CACHABLE) &&
 	/* paranoid: we have a reply pointer */
 	(reply = storeEntryReply(http->entry))) {
 	const char *x_cache_fld = httpHeaderGetLastStr(&reply->header, HDR_X_CACHE);

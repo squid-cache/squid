@@ -1205,6 +1205,8 @@ struct _StatCounters {
 	kb_t kbytes_sent;
 	kb_t kbytes_recv;
 	kb_t memory;
+	int msgs_sent;
+	int msgs_recv;
         cd_guess_stats guess;
 	StatHist client_svc_time;
 	StatHist server_svc_time;
