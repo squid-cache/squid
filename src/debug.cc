@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.60 1998/02/21 18:46:36 rousskov Exp $
+ * $Id: debug.cc,v 1.61 1998/02/21 19:28:12 rousskov Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -390,6 +390,8 @@ static Ctx_Valid_Level = -1;
 static Ctx_Current_Level = -1;
 /* saved descriptions (stack) */
 static const char *Ctx_Descrs[CTX_MAX_LEVEL+1];
+/* "safe" get secription */
+static const char *ctx_get_descr(Ctx ctx);
 
 
 Ctx
@@ -438,8 +440,16 @@ ctx_print()
 	Ctx_Reported_Level++;
 	Ctx_Valid_Level++;
 	_db_print("ctx: enter: %2d '%s'\n", Ctx_Reported_Level, 
-	    Ctx_Descrs[Ctx_Reported_Level] ? Ctx_Descrs[Ctx_Reported_Level] : "<null>");
+	    ctx_get_descr(Ctx_Reported_Level));
     }
     /* unlock */
     Ctx_Lock--;
+}
+
+/* checks for nulls and overflows */
+static const char *
+ctx_get_descr(Ctx ctx)
+{
+    if (ctx < 0 || ctx > CTX_MAX_LEVEL) return "<lost>";
+    return Ctx_Descrs[ctx] ? Ctx_Descrs[ctx] : "<null>";
 }
