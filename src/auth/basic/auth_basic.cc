@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.36 2005/01/06 13:16:39 serassio Exp $
+ * $Id: auth_basic.cc,v 1.37 2005/03/19 15:41:55 serassio Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -396,12 +396,16 @@ BasicUser::extractUsername()
      * Don't allow NL or CR in the credentials.
      * Oezguer Kesim <oec@codeblau.de>
      */
-    strtok(cleartext, "\r\n");
-
     debug(29, 9) ("authenticateBasicDecodeAuth: cleartext = '%s'\n", cleartext);
 
-    char * tempusername = xstrndup(cleartext, USER_IDENT_SZ);
-    xfree(cleartext);
+    if (strcspn(cleartext, "\r\n") != strlen(cleartext)) {
+        debug(29, 1) ("authenticateBasicDecodeAuth: bad characters in authorization header '%s'\n",
+                      httpAuthHeader);
+        xfree(cleartext);
+        return;
+    }
+
+    char * tempusername = cleartext;
     /* terminate the username string */
 
     if ((cleartext = strchr(tempusername, ':')) != NULL)
