@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.32 1997/01/21 16:42:04 wessels Exp $
+ * $Id: tunnel.cc,v 1.33 1997/01/31 21:34:53 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -492,12 +492,12 @@ sslSelectNeighbor(int fd, const ipcache_addrs * ia, void *data)
     int fw_ip_match = IP_ALLOW;
     if (ia && Config.firewall_ip_list)
 	fw_ip_match = ip_access_check(ia->in_addrs[ia->cur], Config.firewall_ip_list);
-    if ((e = Config.sslProxy)) {
-	hierarchyNote(request, HIER_SSL_PARENT, 0, e->host);
-    } else if (matchInsideFirewall(request->host)) {
+    if (matchInsideFirewall(request->host)) {
 	hierarchyNote(request, HIER_DIRECT, 0, request->host);
     } else if (fw_ip_match == IP_DENY) {
 	hierarchyNote(request, HIER_DIRECT, 0, request->host);
+    } else if ((e = Config.sslProxy)) {
+	hierarchyNote(request, HIER_SSL_PARENT, 0, e->host);
     } else if ((e = getDefaultParent(request))) {
 	hierarchyNote(request, HIER_DEFAULT_PARENT, 0, e->host);
     } else if ((e = getSingleParent(request))) {
