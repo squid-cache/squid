@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.47 2001/02/23 20:59:51 hno Exp $
+ * $Id: snmp_core.cc,v 1.48 2001/05/16 07:47:00 hno Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -97,6 +97,9 @@ snmpInit(void)
 
     snmplib_debug_hook = snmpSnmplibDebug;
 
+    /* XXX: This leaks memory due to snmpAddNode duplicating the passed
+     * oid node, and we are not freeing the one returned by snmpCreateOid
+     */
     mib_tree_head = snmpAddNode(snmpCreateOid(1, 1),
 	1, NULL, NULL, 1,
 	snmpAddNode(snmpCreateOid(2, 1, 3),
