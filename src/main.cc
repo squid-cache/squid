@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.135 1997/02/07 04:57:14 wessels Exp $
+ * $Id: main.cc,v 1.136 1997/02/26 20:49:10 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -455,6 +455,7 @@ serverConnectionsOpen(void)
     clientdbInit();
     icmpOpen();
     netdbInit();
+    peerSelectInit();
 }
 
 void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.91 1997/02/26 19:46:09 wessels Exp $
+ * $Id: client_side.cc,v 1.92 1997/02/26 20:49:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -183,7 +183,7 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
     if (checkAccelOnly(icpState)) {
 	answer = 0;
     } else {
-	answer = aclCheck(HTTPAccessList, ch);
+	answer = aclCheck(Config.accessList.HTTP, ch);
 	if (ch->state[ACL_DST_IP] == ACL_LOOKUP_NEED) {
 	    ch->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;		/* first */
 	    ipcache_nbgethostbyname(icpState->request->host,
@@ -227,7 +227,7 @@ clientAccessCheckDone(icpStateData * icpState, int answer)
 	redirectStart(fd, icpState, clientRedirectDone, icpState);
     } else {
 	debug(33, 5, "Access Denied: %s\n", icpState->url);
-	redirectUrl = aclGetDenyInfoUrl(&DenyInfoList, AclMatchedName);
+	redirectUrl = aclGetDenyInfoUrl(&Config.denyInfoList, AclMatchedName);
 	if (redirectUrl) {
 	    icpState->http_code = 302,
 		buf = access_denied_redirect(icpState->http_code,
@@ -443,7 +443,7 @@ icpProcessExpired(int fd, void *data)
     icpState->out_offset = 0;
     /* Register with storage manager to receive updates when data comes in. */
     storeRegister(entry, fd, icpHandleIMSReply, (void *) icpState);
-    protoDispatch(fd, url, icpState->entry, icpState->request);
+    protoDispatch(fd, icpState->entry, icpState->request);
 }
 
 static int
