@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.179 1996/12/15 03:17:46 wessels Exp $
+ * $Id: store.cc,v 1.180 1996/12/15 03:29:44 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1406,7 +1406,7 @@ storeDoRebuildFromDisk(void *data)
 		safeunlink(swapfile, 0);
 	    continue;
 	}
-	if (fileno < 0 || fileno >= MAX_SWAP_FILE)
+	if (sfileno < 0 || sfileno >= MAX_SWAP_FILE)
 	    continue;
 	timestamp = (time_t) scan1;
 	expires = (time_t) scan2;
