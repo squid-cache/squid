@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.89 1998/09/04 23:05:00 wessels Exp $
+ * $Id: ssl.cc,v 1.90 1998/09/14 22:40:11 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -465,7 +465,9 @@ sslProxyConnected(int fd, void *data)
     MemBuf mb;
     HttpHeader hdr_out;
     Packer p;
+    http_state_flags flags;
     debug(26, 3) ("sslProxyConnected: FD %d sslState=%p\n", fd, sslState);
+    memset(&flags, '\0', sizeof(flags));
     memBufDefInit(&mb);
     memBufPrintf(&mb, "CONNECT %s HTTP/1.0\r\n", sslState->url);
     httpBuildRequestHeader(sslState->request,
@@ -473,7 +475,7 @@ sslProxyConnected(int fd, void *data)
 	NULL,			/* StoreEntry */
 	&hdr_out,
 	sslState->client.fd,
-	0);			/* flags */
+	flags);			/* flags */
     packerToMemInit(&p, &mb);
     httpHeaderPackInto(&hdr_out, &p);
     httpHeaderClean(&hdr_out);
