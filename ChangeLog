@@ -25,6 +25,11 @@ Changes to squid-1.1.7 (February @@@, 1997):
 	- Fixed another diskHandleWrite coredump bug when freeing
 	  list of pending blocks.
 	- Added support for 'src' ACLs in cache_host_acl lines.
+	- Fixed ftpget bug when PASV connect times out.
+	- Fixed adding duplicate IP cache entry for failed BLOCKING lookups.
+	- Changed peer IP addresses (for ICP) to be refreshed every hour.
+	- Accomodated Solaris bug requiring suid privs for getrusage()
+	  (Arjan de Vet).
 
 Changes to squid-1.novm.6 (February 7, 1997):
 
