@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.179 1997/12/06 01:26:02 wessels Exp $
+ * $Id: ftp.cc,v 1.180 1997/12/06 05:16:56 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1816,6 +1816,8 @@ ftpUrlWith2f(const request_t * request)
     LOCAL_ARRAY(char, portbuf, 32);
     char *t;
     portbuf[0] = '\0';
+    if (request->protocol != PROTO_FTP)
+	return NULL;
     if (request->port != urlDefaultPort(request->protocol))
 	snprintf(portbuf, 32, ":%d", request->port);
     loginbuf[0] = '\0';

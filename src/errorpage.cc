@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.110 1997/12/03 09:00:16 wessels Exp $
+ * $Id: errorpage.cc,v 1.111 1997/12/06 05:16:55 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -236,7 +236,10 @@ errorConvert(char token, ErrorState * err)
 	snprintf(buf, CVT_BUF_SZ, "%d", err->xerrno);
 	break;
     case 'E':
+	if (err->xerrno)
 	snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->xerrno, strerror(err->xerrno));
+	else
+	    snprintf(buf, CVT_BUF_SZ, "(%d) -unknown-", err->xerrno);
 	break;
     case 'f':
 	/* FTP REQUEST LINE */

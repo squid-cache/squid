@@ -313,7 +313,9 @@ DOC_START
 source_ping off
 DOC_END
 
+#ifndef USE_URNS
 
+#endif /* USE_URNS */
 NAME: neighbor_timeout neighbour_timeout
 COMMENT: (seconds)
 DEFAULT: 2 seconds
@@ -750,7 +752,9 @@ DOC_START
 ftp_list_width 32
 DOC_END
 
+#ifndef USE_URNS
 
+#endif /* USE_URNS */
 NAME: cache_dns_program
 TYPE: string
 DEFAULT: @DEFAULT_DNSSERVER@
@@ -761,7 +765,9 @@ DOC_START
 cache_dns_program @DEFAULT_DNSSERVER@
 DOC_END
 
+#ifndef USE_URNS
 
+#endif /* USE_URNS */
 NAME: dns_children
 TYPE: int
 DEFAULT: 5
@@ -1041,6 +1047,18 @@ DOC_START
 connect_timeout 120 seconds
 DOC_END
 
+#ifdef USE_URNS
+NAME: siteselect_timeout
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.Timeout.siteSelect
+DEFAULT: 4 seconds
+DOC_START
+	For URN to multiple URL's URL selection
+
+siteselect_timeout 4 seconds
+DOC_END
+#endif /* USE_URNS */
 
 NAME: read_timeout
 COMMENT: time-units
@@ -2073,5 +2091,8 @@ DOC_START
 		snmp_agent_conf community public squid squid
 		snmp_agent_conf community readwrite all all
 DOC_END
+#ifdef USE_URNS
+
+#endif /* USE_URNS */
 
 EOF

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.107 1997/12/05 22:01:13 wessels Exp $
+#  $Id: Makefile.in,v 1.108 1997/12/06 05:16:52 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -127,6 +127,7 @@ OBJS	 	= \
 		tools.o \
 		unlinkd.o \
 		url.o \
+		urn.o \
 		useragent.o \
 		wais.o \
 		$(XTRA_OBJS)

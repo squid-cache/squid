@@ -167,6 +167,7 @@ struct _SquidConfig {
 	time_t connect;
 	time_t request;
 	time_t pconn;
+	time_t siteSelect;
     } Timeout;
     size_t maxRequestSize;
     struct {
@@ -508,8 +509,9 @@ struct _AccessLogEntry {
 struct _clientHttpRequest {
     ConnStateData *conn;
     request_t *request;		/* Parsed URL ... */
-    char *url;
-    char *log_url;
+    char *uri;
+    char *log_uri;
+    wordlist *urls;
     struct {
 	char *buf;
 	off_t offset;

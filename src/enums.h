@@ -41,6 +41,7 @@ typedef enum {
     ERR_ZERO_SIZE_OBJECT,
     ERR_FTP_DISABLED,
     ERR_FTP_FAILURE,
+    ERR_URN_RESOLVE,
     ERR_ACCESS_DENIED,
     ERR_MAX
 } err_type;
@@ -252,6 +253,7 @@ typedef enum {
     PROTO_WAIS,
     PROTO_CACHEOBJ,
     PROTO_ICP,
+    PROTO_URN,
     PROTO_MAX
 } protocol_t;
 

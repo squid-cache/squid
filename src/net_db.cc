@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.54 1997/12/03 01:33:15 wessels Exp $
+ * $Id: net_db.cc,v 1.55 1997/12/06 05:16:57 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -43,6 +43,7 @@ static void netdbHashDelete(const char *key);
 static void netdbHashLink(netdbEntry * n, const char *hostname);
 static void netdbHashUnlink(const char *key);
 static void netdbPurgeLRU(void);
+static netdbEntry *netdbLookupHost(const char *key);
 static net_db_peer *netdbPeerByName(const netdbEntry * n, const char *);
 static net_db_peer *netdbPeerAdd(netdbEntry * n, peer * e);
 static char *netdbPeerName(const char *name);
@@ -673,6 +674,7 @@ var_netdb_entry(struct variable * vp, oid * name, int *length, int exact, int *v
     static netdbEntry *n = NULL;
     static long long_return;
 	int cnt=1;
+    int result;
 
     debug(49, 3) ("snmp: var_netdb_entry called with magic=%d\n", vp->magic);
     debug(49, 3) ("snmp: var_netdb_entry with (%d,%d)\n", *length, *var_len);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.50 1997/12/02 00:17:40 wessels Exp $
+ * $Id: redirect.cc,v 1.51 1997/12/06 05:16:59 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -335,13 +335,13 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
 	fatal_dump("redirectStart: NULL clientHttpRequest");
     if (!handler)
 	fatal_dump("redirectStart: NULL handler");
-    debug(29, 5) ("redirectStart: '%s'\n", http->url);
+    debug(29, 5) ("redirectStart: '%s'\n", http->uri);
     if (Config.Program.redirect == NULL) {
 	handler(data, NULL);
 	return;
     }
     r = xcalloc(1, sizeof(redirectStateData));
-    r->orig_url = xstrdup(http->url);
+    r->orig_url = xstrdup(http->uri);
     r->client_addr = conn->log_addr;
     if (conn->ident.ident == NULL || *conn->ident.ident == '\0') {
 	r->client_ident = dash_str;
