@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.7 2003/02/05 10:36:48 robertc Exp $
+ * $Id: StoreClient.h,v 1.8 2003/02/06 09:57:36 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -56,6 +56,7 @@ public:
     void *operator new (size_t);
     void operator delete(void *);
     store_client(StoreEntry *);
+    ~store_client();
     bool memReaderHasLowerOffset(off_t) const;
     int getType() const;
     void fail();

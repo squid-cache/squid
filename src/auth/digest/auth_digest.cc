@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.19 2003/01/23 00:38:00 robertc Exp $
+ * $Id: auth_digest.cc,v 1.20 2003/02/06 09:57:40 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -129,7 +129,7 @@ authDigestNonceEncode(digest_nonce_h * nonce)
 static digest_nonce_h *
 authenticateDigestNonceNew(void)
 {
-    digest_nonce_h *newnonce = static_cast<digest_nonce_h *>(memPoolAlloc(digest_nonce_pool));
+    digest_nonce_h *newnonce = static_cast < digest_nonce_h * >(memPoolAlloc(digest_nonce_pool));
     digest_nonce_h *temp;
 
 /* NONCE CREATION - NOTES AND REASONING. RBC 20010108
@@ -183,7 +183,7 @@ authenticateDigestNonceNew(void)
      * loop until we get a unique nonce. The nonce creation must
      * have a random factor
      */
-    while ((temp = authenticateDigestNonceFindNonce((char const *)(newnonce->key)))) {
+    while ((temp = authenticateDigestNonceFindNonce((char const *) (newnonce->key)))) {
 	/* create a new nonce */
 	newnonce->noncedata.randomdata = squid_random();
 	authDigestNonceEncode(newnonce);
@@ -192,7 +192,7 @@ authenticateDigestNonceNew(void)
     /* the cache's link */
     authDigestNonceLink(newnonce);
     newnonce->flags.incache = 1;
-    debug(29, 5) ("authenticateDigestNonceNew: created nonce %p at %ld\n", newnonce, (long int)newnonce->noncedata.creationtime);
+    debug(29, 5) ("authenticateDigestNonceNew: created nonce %p at %ld\n", newnonce, (long int) newnonce->noncedata.creationtime);
     return newnonce;
 }
 
@@ -238,10 +238,11 @@ authenticateDigestNonceShutdown(void)
 	    authDigestNoncePurge(nonce);
 	}
     }
+#if DEBUGSHUTDOWN
     if (digest_nonce_pool) {
-	assert(memPoolInUseCount(digest_nonce_pool) == 0);
 	memPoolDestroy(&digest_nonce_pool);
     }
+#endif
     debug(29, 2) ("authenticateDigestNonceShutdown: Nonce cache shutdown\n");
 }
 
@@ -262,13 +263,13 @@ authenticateDigestNonceCacheCleanup(void *data)
     digest_nonce_h *nonce;
     debug(29, 3) ("authenticateDigestNonceCacheCleanup: Cleaning the nonce cache now\n");
     debug(29, 3) ("authenticateDigestNonceCacheCleanup: Current time: %ld\n",
-	(long int)current_time.tv_sec);
+	(long int) current_time.tv_sec);
     hash_first(digest_nonce_cache);
     while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
-	debug(29, 3) ("authenticateDigestNonceCacheCleanup: nonce entry  : %p '%s'\n", nonce, (char *)nonce->key);
-	debug(29, 4) ("authenticateDigestNonceCacheCleanup: Creation time: %ld\n", (long int)nonce->noncedata.creationtime);
+	debug(29, 3) ("authenticateDigestNonceCacheCleanup: nonce entry  : %p '%s'\n", nonce, (char *) nonce->key);
+	debug(29, 4) ("authenticateDigestNonceCacheCleanup: Creation time: %ld\n", (long int) nonce->noncedata.creationtime);
 	if (authDigestNonceIsStale(nonce)) {
-	    debug(29, 4) ("authenticateDigestNonceCacheCleanup: Removing nonce %s from cache due to timeout.\n", (char *)nonce->key);
+	    debug(29, 4) ("authenticateDigestNonceCacheCleanup: Removing nonce %s from cache due to timeout.\n", (char *) nonce->key);
 	    assert(nonce->flags.incache);
 	    /* invalidate nonce so future requests fail */
 	    nonce->flags.valid = 0;
@@ -319,7 +320,7 @@ authenticateDigestNonceNonceb64(digest_nonce_h * nonce)
 {
     if (!nonce)
 	return NULL;
-    return (char const *)nonce->key;
+    return (char const *) nonce->key;
 }
 
 static digest_nonce_h *
@@ -329,7 +330,7 @@ authenticateDigestNonceFindNonce(const char *nonceb64)
     if (nonceb64 == NULL)
 	return NULL;
     debug(29, 9) ("authDigestNonceFindNonce:looking for nonceb64 '%s' in the nonce cache.\n", nonceb64);
-    nonce = static_cast<digest_nonce_h *>(hash_lookup(digest_nonce_cache, nonceb64));
+    nonce = static_cast < digest_nonce_h * >(hash_lookup(digest_nonce_cache, nonceb64));
     if ((nonce == NULL) || (strcmp(authenticateDigestNonceNonceb64(nonce), nonceb64)))
 	return NULL;
     debug(29, 9) ("authDigestNonceFindNonce: Found nonce '%p'\n", nonce);
@@ -371,7 +372,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
 	return -1;
     /* has it's max duration expired? */
     if (nonce->noncedata.creationtime + digestConfig->noncemaxduration < current_time.tv_sec) {
-	debug(29, 4) ("authDigestNonceIsStale: Nonce is too old. %ld %d %ld\n", (long int)nonce->noncedata.creationtime, (int)digestConfig->noncemaxduration, (long int)current_time.tv_sec);
+	debug(29, 4) ("authDigestNonceIsStale: Nonce is too old. %ld %d %ld\n", (long int) nonce->noncedata.creationtime, (int) digestConfig->noncemaxduration, (long int) current_time.tv_sec);
 	nonce->flags.valid = 0;
 	return -1;
     }
@@ -389,7 +390,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
     return 0;
 }
 
-/* return -1 if the digest will be stale on the next request */
+  /* return -1 if the digest will be stale on the next request */
 static int
 authDigestNonceLastRequest(digest_nonce_h * nonce)
 {
@@ -420,7 +421,7 @@ authDigestNoncePurge(digest_nonce_h * nonce)
     authDigestNonceUnlink(nonce);
 }
 
-/* USER related functions */
+  /* USER related functions */
 
 
 #if NOT_USED
@@ -437,10 +438,10 @@ authDigestUserFindUsername(const char *username)
     auth_user_hash_pointer *usernamehash;
     auth_user_t *auth_user;
     debug(29, 9) ("authDigestUserFindUsername: Looking for user '%s'\n", username);
-    if (username && (usernamehash = static_cast<auth_user_hash_pointer *>(hash_lookup(proxy_auth_username_cache, username)))) {
+    if (username && (usernamehash = static_cast < auth_user_hash_pointer * >(hash_lookup(proxy_auth_username_cache, username)))) {
 	while ((authUserHashPointerUser(usernamehash)->auth_type != AUTH_DIGEST) &&
 	    (usernamehash->next))
-	    usernamehash = static_cast<auth_user_hash_pointer *>(usernamehash->next);
+	    usernamehash = static_cast < auth_user_hash_pointer * >(usernamehash->next);
 	auth_user = NULL;
 	if (authUserHashPointerUser(usernamehash)->auth_type == AUTH_DIGEST) {
 	    auth_user = authUserHashPointerUser(usernamehash);
@@ -453,7 +454,7 @@ authDigestUserFindUsername(const char *username)
 static digest_user_h *
 authDigestUserNew(void)
 {
-    return static_cast<digest_user_h *>(memPoolAlloc(digest_user_pool));
+    return static_cast < digest_user_h * >(memPoolAlloc(digest_user_pool));
 }
 
 static void
@@ -479,10 +480,11 @@ authDigestUserShutdown(void)
 	    /* it's digest */
 	    authenticateAuthUserUnlock(auth_user);
     }
+#if DEBUGSHUTDOWN
     if (digest_user_pool) {
-	assert(memPoolInUseCount(digest_user_pool) == 0);
 	memPoolDestroy(&digest_user_pool);
     }
+#endif
 }
 
 
@@ -519,14 +521,14 @@ static void
 authDigestAURequestFree(auth_user_request_t * auth_user_request)
 {
     if (auth_user_request->scheme_data != NULL)
-	authDigestRequestDelete(static_cast<digest_request_h *>( auth_user_request->scheme_data));
+	authDigestRequestDelete(static_cast < digest_request_h * >(auth_user_request->scheme_data));
 }
 
 static digest_request_h *
 authDigestRequestNew(void)
 {
     digest_request_h *tmp;
-    tmp = static_cast<digest_request_h *>(memPoolAlloc(digest_request_pool));
+    tmp = static_cast < digest_request_h * >(memPoolAlloc(digest_request_pool));
     assert(tmp != NULL);
     return tmp;
 }
@@ -542,10 +544,11 @@ static void
 authDigestRequestShutdown(void)
 {
     /* No requests should be in progress when we get here */
+#if DEBUGSHUTDOWN
     if (digest_request_pool) {
-	assert(memPoolInUseCount(digest_request_pool) == 0);
 	memPoolDestroy(&digest_request_pool);
     }
+#endif
 }
 
 
@@ -572,7 +575,7 @@ authDigestDone(void)
 static void
 authDigestCfgDump(StoreEntry * entry, const char *name, authScheme * scheme)
 {
-    auth_digest_config *config = static_cast<auth_digest_config *>(scheme->scheme_data);
+    auth_digest_config *config = static_cast < auth_digest_config * >(scheme->scheme_data);
     wordlist *list = config->authenticate;
     debug(29, 9) ("authDigestCfgDump: Dumping configuration\n");
     storeAppendPrintf(entry, "%s %s", name, "digest");
@@ -584,8 +587,8 @@ authDigestCfgDump(StoreEntry * entry, const char *name, authScheme * scheme)
 	name, "digest", config->digestAuthRealm,
 	name, "digest", config->authenticateChildren,
 	name, "digest", config->noncemaxuses,
-	name, "digest", (int)config->noncemaxduration,
-	name, "digest", (int)config->nonceGCInterval);
+	name, "digest", (int) config->noncemaxduration,
+	name, "digest", (int) config->nonceGCInterval);
 }
 
 void
@@ -635,7 +638,7 @@ authDigestConfigured(void)
 static int
 authDigestAuthenticated(auth_user_request_t * auth_user_request)
 {
-    digest_user_h *digest_user = static_cast<digest_user_h *>(auth_user_request->auth_user->scheme_data);
+    digest_user_h *digest_user = static_cast < digest_user_h * >(auth_user_request->auth_user->scheme_data);
     if (digest_user->flags.credentials_ok == 1)
 	return 1;
     else
@@ -659,14 +662,14 @@ authenticateDigestAuthenticateUser(auth_user_request_t * auth_user_request, requ
     auth_user = auth_user_request->auth_user;
 
     assert(auth_user->scheme_data != NULL);
-    digest_user = static_cast<digest_user_h *>(auth_user->scheme_data);
+    digest_user = static_cast < digest_user_h * >(auth_user->scheme_data);
 
     /* if the check has corrupted the user, just return */
     if (digest_user->flags.credentials_ok == 3) {
 	return;
     }
     assert(auth_user_request->scheme_data != NULL);
-    digest_request = static_cast<digest_request_h *>(auth_user_request->scheme_data);
+    digest_request = static_cast < digest_request_h * >(auth_user_request->scheme_data);
 
     /* do we have the HA1 */
     if (!digest_user->HA1created) {
@@ -716,13 +719,13 @@ static int
 authenticateDigestDirection(auth_user_request_t * auth_user_request)
 {
     digest_request_h *digest_request;
-    digest_user_h *digest_user = static_cast<digest_user_h *>(auth_user_request->auth_user->scheme_data);
+    digest_user_h *digest_user = static_cast < digest_user_h * >(auth_user_request->auth_user->scheme_data);
     /* null auth_user is checked for by authenticateDirection */
     switch (digest_user->flags.credentials_ok) {
     case 0:			/* not checked */
 	return -1;
     case 1:			/* checked & ok */
-	digest_request = static_cast<digest_request_h *>(auth_user_request->scheme_data);
+	digest_request = static_cast < digest_request_h * >(auth_user_request->scheme_data);
 	if (authDigestNonceIsStale(digest_request->nonce))
 	    /* send stale response to the client agent */
 	    return -2;
@@ -743,7 +746,7 @@ authDigestAddHeader(auth_user_request_t * auth_user_request, HttpReply * rep, in
     digest_request_h *digest_request;
     if (!auth_user_request)
 	return;
-    digest_request = static_cast<digest_request_h *>(auth_user_request->scheme_data);
+    digest_request = static_cast < digest_request_h * >(auth_user_request->scheme_data);
     /* don't add to authentication error pages */
     if ((!accel && rep->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED)
 	|| (accel && rep->sline.status == HTTP_UNAUTHORIZED))
@@ -772,7 +775,7 @@ authDigestAddTrailer(auth_user_request_t * auth_user_request, HttpReply * rep, i
     digest_request_h *digest_request;
     if (!auth_user_request)
 	return;
-    digest_request = static_cast<digest_request_h *>(auth_user_request->scheme_data);
+    digest_request = static_cast < digest_request_h * >(auth_user_request->scheme_data);
     /* has the header already been send? */
     if (digest_request->flags.authinfo_sent)
 	return;
@@ -797,7 +800,7 @@ authenticateDigestFixHeader(auth_user_request_t * auth_user_request, HttpReply *
     int stale = 0;
     digest_nonce_h *nonce = authenticateDigestNonceNew();
     if (auth_user_request && authDigestAuthenticated(auth_user_request) && auth_user_request->scheme_data) {
-	digest_request = static_cast<digest_request_h *>(auth_user_request->scheme_data);
+	digest_request = static_cast < digest_request_h * >(auth_user_request->scheme_data);
 	stale = authDigestNonceIsStale(digest_request->nonce);
     }
     if (digestConfig->authenticate) {
@@ -810,7 +813,7 @@ authenticateDigestFixHeader(auth_user_request_t * auth_user_request, HttpReply *
 static void
 authenticateDigestUserFree(auth_user_t * auth_user)
 {
-    digest_user_h *digest_user = static_cast<digest_user_h *>(auth_user->scheme_data);
+    digest_user_h *digest_user = static_cast < digest_user_h * >(auth_user->scheme_data);
     dlink_node *link, *tmplink;
     debug(29, 9) ("authenticateDigestFreeUser: Clearing Digest scheme data\n");
     if (!digest_user)
@@ -822,8 +825,8 @@ authenticateDigestUserFree(auth_user_t * auth_user)
 	tmplink = link;
 	link = link->next;
 	dlinkDelete(tmplink, &digest_user->nonces);
-	authDigestNoncePurge(static_cast<digest_nonce_h *>(tmplink->data));
-	authDigestNonceUnlink(static_cast<digest_nonce_h *>(tmplink->data));
+	authDigestNoncePurge(static_cast < digest_nonce_h * >(tmplink->data));
+	authDigestNonceUnlink(static_cast < digest_nonce_h * >(tmplink->data));
 	dlinkNodeDelete(tmplink);
     }
 
@@ -834,7 +837,7 @@ authenticateDigestUserFree(auth_user_t * auth_user)
 static void
 authenticateDigestHandleReply(void *data, char *reply)
 {
-    DigestAuthenticateStateData *r = static_cast<DigestAuthenticateStateData *>(data);
+    DigestAuthenticateStateData *r = static_cast < DigestAuthenticateStateData * >(data);
     auth_user_request_t *auth_user_request;
     digest_request_h *digest_request;
     digest_user_h *digest_user;
@@ -850,8 +853,8 @@ authenticateDigestHandleReply(void *data, char *reply)
     assert(r->auth_user_request != NULL);
     auth_user_request = r->auth_user_request;
     assert(auth_user_request->scheme_data != NULL);
-    digest_request = static_cast<digest_request_h *>(auth_user_request->scheme_data);
-    digest_user = static_cast<digest_user_h *>(auth_user_request->auth_user->scheme_data);
+    digest_request = static_cast < digest_request_h * >(auth_user_request->scheme_data);
+    digest_user = static_cast < digest_user_h * >(auth_user_request->auth_user->scheme_data);
     if (reply && (strncasecmp(reply, "ERR", 3) == 0))
 	digest_user->flags.credentials_ok = 3;
     else {
@@ -912,7 +915,7 @@ authDigestParse(authScheme * scheme, int n_configured, char *param_str)
 	/* this is the first param to be found */
 	scheme->scheme_data = xmalloc(sizeof(auth_digest_config));
 	memset(scheme->scheme_data, 0, sizeof(auth_digest_config));
-	digestConfig = static_cast<auth_digest_config *>(scheme->scheme_data);
+	digestConfig = static_cast < auth_digest_config * >(scheme->scheme_data);
 	digestConfig->authenticateChildren = 5;
 	/* 5 minutes */
 	digestConfig->nonceGCInterval = 5 * 60;
@@ -923,7 +926,7 @@ authDigestParse(authScheme * scheme, int n_configured, char *param_str)
 	/* strict nonce count behaviour */
 	digestConfig->NonceStrictness = 1;
     }
-    digestConfig = static_cast<auth_digest_config *>(scheme->scheme_data);
+    digestConfig = static_cast < auth_digest_config * >(scheme->scheme_data);
     if (strcasecmp(param_str, "program") == 0) {
 	if (digestConfig->authenticate)
 	    wordlistDestroy(&digestConfig->authenticate);
@@ -938,9 +941,9 @@ authDigestParse(authScheme * scheme, int n_configured, char *param_str)
     } else if (strcasecmp(param_str, "nonce_max_duration") == 0) {
 	parse_time_t(&digestConfig->noncemaxduration);
     } else if (strcasecmp(param_str, "nonce_max_count") == 0) {
-	parse_int((int *)&digestConfig->noncemaxuses);
+	parse_int((int *) &digestConfig->noncemaxuses);
     } else if (strcasecmp(param_str, "nonce_strictness") == 0) {
-        parse_onoff(&digestConfig->NonceStrictness);
+	parse_onoff(&digestConfig->NonceStrictness);
     } else {
 	debug(28, 0) ("unrecognised digest auth scheme parameter '%s'\n", param_str);
     }
@@ -965,7 +968,7 @@ authDigestNonceUserUnlink(digest_nonce_h * nonce)
 	return;
     if (!nonce->auth_user)
 	return;
-    digest_user = static_cast<digest_user_h *>(nonce->auth_user->scheme_data);
+    digest_user = static_cast < digest_user_h * >(nonce->auth_user->scheme_data);
     /* unlink from the user list. Yes we're crossing structures but this is the only 
      * time this code is needed
      */
@@ -975,7 +978,7 @@ authDigestNonceUserUnlink(digest_nonce_h * nonce)
 	link = link->next;
 	if (tmplink->data == nonce) {
 	    dlinkDelete(tmplink, &digest_user->nonces);
-	    authDigestNonceUnlink(static_cast<digest_nonce_h *>(tmplink->data));
+	    authDigestNonceUnlink(static_cast < digest_nonce_h * >(tmplink->data));
 	    dlinkNodeDelete(tmplink);
 	    link = NULL;
 	}
@@ -997,7 +1000,7 @@ authDigestUserLinkNonce(auth_user_t * auth_user, digest_nonce_h * nonce)
 	return;
     if (!auth_user->scheme_data)
 	return;
-    digest_user = static_cast<digest_user_h *>(auth_user->scheme_data);
+    digest_user = static_cast < digest_user_h * >(auth_user->scheme_data);
     node = digest_user->nonces.head;
     while (node && (node->data != nonce))
 	node = node->next;
@@ -1016,9 +1019,9 @@ authDigestUserLinkNonce(auth_user_t * auth_user, digest_nonce_h * nonce)
 
 /* authenticateDigestUsername: return a pointer to the username in the */
 static char const *
-authenticateDigestUsername(auth_user_t const * auth_user)
+authenticateDigestUsername(auth_user_t const *auth_user)
 {
-    digest_user_h *digest_user = static_cast<digest_user_h *>(auth_user->scheme_data);
+    digest_user_h *digest_user = static_cast < digest_user_h * >(auth_user->scheme_data);
     if (digest_user)
 	return digest_user->username;
     return NULL;
@@ -1084,7 +1087,7 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
     while (xisspace(*proxy_auth))
 	proxy_auth++;
 
-    String temp (proxy_auth);
+    String temp(proxy_auth);
     while (strListGetItem(&temp, ',', &item, &ilen, &pos)) {
 	if ((p = strchr(item, '=')) && (p - item < ilen))
 	    ilen = p++ - item;
@@ -1109,8 +1112,8 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	    while (xisspace(*p))
 		p++;
 	    if (*p == '\"')
-	        /* quote mark */
-	        p++;
+		/* quote mark */
+		p++;
 	    digest_request->qop = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}") + 1);
 	    debug(29, 9) ("authDigestDecodeAuth: Found qop '%s'\n", digest_request->qop);
 	} else if (!strncmp(item, "algorithm", ilen)) {
@@ -1118,9 +1121,9 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	    while (xisspace(*p))
 		p++;
 	    if (*p == '\"')
-	        /* quote mark */
-	        p++;
-	    digest_request->algorithm = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}")+1);
+		/* quote mark */
+		p++;
+	    digest_request->algorithm = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}") + 1);
 	    debug(29, 9) ("authDigestDecodeAuth: Found algorithm '%s'\n", digest_request->algorithm);
 	} else if (!strncmp(item, "uri", ilen)) {
 	    /* white space */
@@ -1260,7 +1263,7 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
     }
     /* check the algorithm is present and supported */
     if (!digest_request->algorithm)
-        digest_request->algorithm = xstrndup ("MD5", 4);
+	digest_request->algorithm = xstrndup("MD5", 4);
     else if (strcmp(digest_request->algorithm, "MD5")
 	&& strcmp(digest_request->algorithm, "MD5-sess")) {
 	debug(29, 4) ("authenticateDigestDecode: invalid algorithm specified!\n");
@@ -1303,7 +1306,7 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	authDigestUserLinkNonce(auth_user, nonce);
     } else {
 	debug(29, 9) ("authDigestDecodeAuth: Found user '%s' in the user cache as '%p'\n", username, auth_user);
-	digest_user = static_cast<digest_user_h *>(auth_user->scheme_data);
+	digest_user = static_cast < digest_user_h * >(auth_user->scheme_data);
 	xfree(username);
     }
     /*link the request and the user */
@@ -1336,8 +1339,8 @@ authenticateDigestStart(auth_user_request_t * auth_user_request, RH * handler, v
     assert(auth_user_request->auth_user->auth_type == AUTH_DIGEST);
     assert(auth_user_request->auth_user->scheme_data != NULL);
     assert(auth_user_request->scheme_data != NULL);
-    digest_request = static_cast<digest_request_h *>(auth_user_request->scheme_data);
-    digest_user = static_cast<digest_user_h *>(auth_user_request->auth_user->scheme_data);
+    digest_request = static_cast < digest_request_h * >(auth_user_request->scheme_data);
+    digest_user = static_cast < digest_user_h * >(auth_user_request->auth_user->scheme_data);
     debug(29, 9) ("authenticateStart: '\"%s\":\"%s\"'\n", digest_user->username,
 	digest_request->realm);
     if (digestConfig->authenticate == NULL) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.cc,v 1.1 2003/02/05 21:06:30 robertc Exp $
+ * $Id: DelayUser.cc,v 1.2 2003/02/06 09:57:36 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -159,12 +159,14 @@ DelayUserBucket::operator delete (void *address)
 
 DelayUserBucket::DelayUserBucket(AuthUser *aUser) : authUser (aUser)
 {
+    debug (77,3) ("DelayUserBucket::DelayUserBucket\n");
     authenticateAuthUserLock (authUser);
 }
 
 DelayUserBucket::~DelayUserBucket()
 {
     authenticateAuthUserUnlock(authUser);
+    debug (77,3) ("DelayUserBucket::~DelayUserBucket\n");
 }
 
 void
@@ -192,6 +194,7 @@ DelayUser::Id::Id(DelayUser::Pointer aDelayUser,AuthUser *aUser) : theUser(aDela
 
 DelayUser::Id::~Id()
 {
+    debug (77,3) ("DelayUser::Id::~Id\n");
 }
 
 int

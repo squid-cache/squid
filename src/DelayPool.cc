@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayPool.cc,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelayPool.cc,v 1.2 2003/02/06 09:57:35 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -52,7 +52,6 @@ DelayPool::DelayPool() : pool (NULL), access (NULL)
 
 DelayPool::~DelayPool()
 {
-    debug (0,0)("DelayPool::~DelayPool:\n");
     if (pool)
 	freeData();
     if (access)

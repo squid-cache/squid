@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.h,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelayVector.h,v 1.2 2003/02/06 09:57:36 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -58,6 +58,7 @@ private:
 	void operator delete (void *);
 	virtual void deleteSelf() const;
 	Id (DelayVector::Pointer,struct in_addr &src_addr, AuthUserRequest *);
+	~Id();
 	virtual int bytesWanted (int min, int max) const;
 	virtual void bytesIn(int qty);
       private:
