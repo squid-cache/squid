@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.14 2003/04/19 22:17:13 hno Exp $
+ * $Id: ssl_support.cc,v 1.15 2003/04/19 22:19:45 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -798,33 +798,6 @@ sslGetCAAttribute(SSL * ssl, const char *attribute_name)
 
     return ssl_get_attribute(name, attribute_name);
 }
-
-#if 0
-char *
-sslGetUserEmail(SSL * ssl)
-{
-    X509 *cert;
-    X509_NAME *name;
-
-    static char email[128];
-
-    if (!ssl)
-        return NULL;
-
-    cert = SSL_get_peer_certificate(ssl);
-
-    if (!cert)
-        return NULL;
-
-    name = X509_get_subject_name(cert);
-
-    if (X509_NAME_get_text_by_NID(name, NID_pkcs9_emailAddress, email, sizeof(email)) > 0)
-        return email;
-    else
-        return NULL;
-}
-
-#endif
 
 const char *
 sslGetUserEmail(SSL * ssl)
