@@ -1,3 +1,9 @@
+Changes to squid-1.1.beta25 ():
+
+	- Check for if we should delete behind when above LOW water mark.
+	- Merged request header parsing code from http.c and pass.c
+	  into httpBuildRequestHeader().
+
 Changes to squid-1.1.beta24 ():
 
 	- Added 'cache_stoplist_pattern' to squid.conf
