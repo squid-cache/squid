@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.64 1997/02/20 22:22:54 wessels Exp $
+#  $Id: Makefile.in,v 1.65 1997/02/20 23:54:13 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -13,11 +13,10 @@ DELAY_HACK      = # -DDELAY_HACK=1
 USERAGENT_OPT	= # -DUSE_USERAGENT_LOG=1
 KILL_PARENT_OPT	= # -DKILL_PARENT_OPT
 USE_POLL_OPT    = # -DUSE_POLL
-#
-# do NOT define both USE_SPLAY_TREE and USE_BIN_TREE, only 1 at a time!
-#
+# do NOT define both USE_SPLAY_TREE and USE_BIN_TREE at the same time!
 USE_SPLAY_TREE  = # -DUSE_SPLAY_TREE
 USE_BIN_TREE    = # -DUSE_BIN_TREE
+
 DEFINES         = $(HOST_OPT) $(AUTH_OPT) $(LOG_HDRS_OPT) \
                   $(ICMP_OPT) $(DELAY_HACK) $(USERAGENT_OPT) \
                   $(KILL_PARENT_OPT) $(USE_POLL_OPT) \
