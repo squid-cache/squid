@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.604 2002/10/21 14:00:01 adrian Exp $
+ * $Id: client_side.cc,v 1.605 2002/10/21 14:09:52 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -115,7 +115,7 @@ static FREE clientSocketContextFree;
 static clientSocketContext *clientSocketContextNew(clientHttpRequest *);
 /* other */
 static CWCB clientWriteComplete;
-static CWCB clientWriteBodyComplete;
+static IOWCB clientWriteBodyComplete;
 static IOCB clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
@@ -608,8 +608,8 @@ contextSendBody(clientSocketContext * context, HttpReply * rep, StoreIOBuffer bo
 {
     assert(rep == NULL);
     context->http->out.offset += bodyData.length;
-    comm_old_write(context->http->conn->fd, bodyData.data, bodyData.length,
-	clientWriteBodyComplete, context, NULL);
+    comm_write(context->http->conn->fd, bodyData.data, bodyData.length,
+	clientWriteBodyComplete, context);
     return;
 }
 
@@ -709,7 +709,7 @@ clientSocketDetach(clientStreamNode * node, clientHttpRequest * http)
 }
 
 static void
-clientWriteBodyComplete(int fd, char *buf, size_t size, comm_err_t errflag, void *data)
+clientWriteBodyComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     clientWriteComplete(fd, NULL, size, errflag, data);
 }
