@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.269 1999/01/19 23:16:05 wessels Exp $
+ * $Id: ftp.cc,v 1.270 1999/01/20 03:02:48 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1805,6 +1805,7 @@ ftpReadPort(FtpStateData * ftpState)
 	/* Fall back on using the same port as the control connection */
 	debug(9, 3) ("PORT not supported by remote end\n");
 	comm_close(ftpState->data.fd);
+	ftpState->data.fd = -1;
 	ftpOpenListenSocket(ftpState, 1);
     }
     ftpRestOrList(ftpState);
