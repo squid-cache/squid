@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.15 1998/11/13 20:36:51 glenn Exp $
+ * $Id: snmp_core.cc,v 1.16 1998/11/13 21:55:04 glenn Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -70,13 +70,16 @@ static void snmpUdpSend(int, const struct sockaddr_in *, void *, int);
 static void snmpUdpReply(int, void *);
 static void snmpAppendUdp(snmpUdpData *);
 
-
+#ifdef __STDC__
 static mib_tree_entry *snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...);
+static oid *snmpCreateOid(int length,...);
+#else 
+static mib_tree_entry *snmpAddNode();
+static oid *snmpCreateOid();
+#endif 
 static oid_ParseFn *snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen);
 static oid_ParseFn *snmpTreeGet(oid * Current, snint CurrentLen);
 static mib_tree_entry *snmpTreeEntry(oid entry, snint len, mib_tree_entry * current);
-
-static oid *snmpCreateOid(int length,...);
 static oid *snmpOidDup(oid * A, snint ALen);
 static void snmpSnmplibDebug(int lvl, char *buf);
 
@@ -750,12 +753,32 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
 /*
  * Adds a node to the MIB tree structure and adds the appropriate children
  */
+#ifdef __STDC__
 mib_tree_entry *
 snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...)
 {
     va_list args;
     int loop;
     mib_tree_entry *entry = NULL;
+    va_start(args, children);
+
+#else
+mib_tree_entry *
+snmpAddNode(va_alist)
+     va_dcl
+{
+    va_list args;
+    oid *name = NULL;
+    int len = 0, children = 0, loop;
+    oid_ParseFn *parsefunction = NULL;
+    mib_tree_entry *entry = NULL;
+
+    va_start(args);
+    name = va_arg(args, oid *);
+    len = va_arg(args, int);
+    parsefunction = va_arg(args, oid_ParseFn *);
+    children = va_arg(args, int);
+#endif
 
     debug(49, 6) ("snmpAddNode: Children : %d, Oid : \n", children);
     snmpDebugOid(6, name, len);
@@ -849,6 +872,7 @@ snmpAppendUdp(snmpUdpData * item)
 /* 
  * Returns the list of parameters in an oid[]
  */
+#ifdef __STDC__ 
 oid *
 snmpCreateOid(int length,...)
 {
@@ -857,6 +881,19 @@ snmpCreateOid(int length,...)
     int loop;
 
     va_start(args, length);
+#else
+oid *   
+snmpCreateOid(va_alist)
+     va_dcl
+{
+    va_list args;
+    int length = 0, loop;
+    oid *new_oid;
+    
+    va_start(args);
+    length va_arg(args, int);
+#endif
+    
     new_oid = xmalloc(sizeof(oid) * length);
 
     if (length > 0) {
