@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.18 1996/08/31 06:40:18 wessels Exp $
+ * $Id: dnsserver.cc,v 1.19 1996/09/11 22:39:50 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -223,42 +223,20 @@ extern int _dns_ttl_;		/* this is a really *dirty* hack - bne */
 int do_debug = 0;
 
 /* error messages from gethostbyname() */
-#define my_h_msgs(x) (\
-	((x) == HOST_NOT_FOUND) ? \
-		"Host not found (authoritative)" : \
-	((x) == TRY_AGAIN) ? \
-		"Host not found (non-authoritative)" : \
-	((x) == NO_RECOVERY) ? \
-		"Non recoverable errors" : \
-	((x) == NO_DATA) ? \
-		"Valid name, no data record of requested type" : \
-	((x) == NO_ADDRESS) ? \
-		"No address, look for MX record" : \
-		"Unknown DNS problem")
-
-/* 
- * Modified to use UNIX domain sockets between squid and the dnsservers to
- * save an FD per DNS server, Hong Mei, USC.
- * 
- * Before forking a dnsserver, squid creates listens on a UNIX domain
- * socket.  After the fork(), squid closes its end of the rendevouz socket
- * but then immediately connects to it to establish the connection to the
- * dnsserver process.  We use AF_UNIX to prevent other folks from
- * connecting to our little dnsservers after we fork but before we connect
- * to them.
- * 
- * Squid creates UNIX domain sockets named dns.PID.NN, e.g. dns.19215.11
- * 
- * In ipcache_init():
- *       . dnssocket = ipcache_opensocket(Config.Program.dnsserver)
- *       . dns_child_table[i]->inpipe = dnssocket
- *       . dns_child_table[i]->outpipe = dnssocket
- * 
- * The dnsserver inherits socket(socket_from_ipcache) from squid which it
- * uses to rendevouz with.  The child takes responsibility for cleaning up
- * the UNIX domain pathnames by setting a few signal handlers.
- * 
- */
+static char *my_h_msgs(x)
+	int x;
+{
+    if (x == HOST_NOT_FOUND)
+	return "Host not found (authoritative)";
+    else if (x == TRY_AGAIN)
+	return "Host not found (non-authoritative)";
+    else if (x == NO_RECOVERY)
+	return "Non recoverable errors";
+    else if (x == NO_DATA || x == NO_ADDRESS)
+	return "Valid name, no data record of requested type";
+    else
+	return "Unknown DNS problem";
+}
 
 int main(argc, argv)
      int argc;
@@ -276,7 +254,6 @@ int main(argc, argv)
     int addr_count = 0;
     int alias_count = 0;
     int i;
-    char *dnsServerPathname = NULL;
     int dnsServerTCP = 0;
     int c;
     extern char *optarg;
@@ -305,9 +282,6 @@ int main(argc, argv)
 	    if (!logfile)
 		fprintf(stderr, "Could not open dnsserver's log file\n");
 	    break;
-	case 'p':
-	    dnsServerPathname = xstrdup(optarg);
-	    break;
 	case 't':
 	    dnsServerTCP = 1;
 	    break;
@@ -321,16 +295,13 @@ int main(argc, argv)
     socket_from_cache = 3;
 
     /* accept DNS look up from ipcache */
-    if (dnsServerPathname || dnsServerTCP) {
+    if (dnsServerTCP) {
 	fd = accept(socket_from_cache, NULL, NULL);
-	if (dnsServerPathname)
-	    unlink(dnsServerPathname);
 	if (fd < 0) {
 	    fprintf(stderr, "dnsserver: accept: %s\n", xstrerror());
 	    exit(1);
 	}
 	close(socket_from_cache);
-
 	/* point stdout to fd */
 	dup2(fd, 1);
 	dup2(fd, 0);
