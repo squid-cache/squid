@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.157 1997/08/25 02:17:47 wessels Exp $
+ * $Id: neighbors.cc,v 1.158 1997/08/25 02:19:32 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -947,7 +947,7 @@ peerCountMcastPeersDone(void *data)
 }
 
 static void
-peerCountHandleIcpReply(peer * p, peer_t type, icp_common_t *hdr, void *data)
+peerCountHandleIcpReply(peer * p, peer_t type, icp_common_t * hdr, void *data)
 {
     ps_state *psstate = data;
     psstate->icp.n_recv++;
