@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.124 1997/08/25 16:37:18 wessels Exp $
+ * $Id: client_side.cc,v 1.125 1997/08/25 23:45:25 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -36,38 +36,6 @@ static STCB icpHandleIMSReply;
 static int clientGetsOldEntry _PARAMS((StoreEntry * new, StoreEntry * old, request_t * request));
 static int checkAccelOnly _PARAMS((clientHttpRequest *));
 
-#if USE_PROXY_AUTH
-/* ProxyAuth code by Jon Thackray <jrmt@uk.gdscorp.com> */
-/* return 1 if allowed, 0 if denied */
-static int
-clientProxyAuthCheck(clientHttpRequest * http)
-{
-    const char *proxy_user;
-
-    /* Check that the user is allowed to access via this proxy-cache
-     * don't restrict if they're accessing a local domain or
-     * an object of type cacheobj:// */
-    if (Config.proxyAuth.File == NULL)
-	return 1;
-    if (urlParseProtocol(http->url) == PROTO_CACHEOBJ)
-	return 1;
-
-    if (Config.proxyAuth.IgnoreDomains) {
-	if (aclMatchRegex(Config.proxyAuth.IgnoreDomains, http->request->host)) {
-	    debug(33, 2) ("clientProxyAuthCheck: host \"%s\" matched proxyAuthIgnoreDomains\n", http->request->host);
-	    return 1;
-	}
-    }
-    proxy_user = proxyAuthenticate(http->request_hdr);
-    xstrncpy(http->ident.ident, proxy_user, ICP_IDENT_SZ);
-    debug(33, 6) ("clientProxyAuthCheck: user = %s\n", http->ident.ident);
-
-    if (strcmp(http->ident.ident, dash_str) == 0)
-	return 0;
-    return 1;
-}
-#endif /* USE_PROXY_AUTH */
-
 static int
 checkAccelOnly(clientHttpRequest * http)
 {
@@ -94,22 +62,6 @@ clientAccessCheck(void *data)
 	identStart(-1, conn, clientAccessCheck);
 	return;
     }
-#if USE_PROXY_AUTH
-    if (clientProxyAuthCheck(http) == 0) {
-	char *wbuf = NULL;
-	int fd = conn->fd;
-	debug(33, 4) ("Proxy Denied: %s\n", http->url);
-	http->log_type = ERR_PROXY_DENIED;
-	http->http_code = 407;
-	wbuf = xstrdup(proxy_denied_msg(http->http_code,
-		http->request->method,
-		http->url,
-		fd_table[fd].ipaddr));
-	icpSendERROR(fd, http->log_type, wbuf, conn, http->http_code);
-	safe_free(http->aclChecklist);
-	return;
-    }
-#endif /* USE_PROXY_AUTH */
     if (checkAccelOnly(http)) {
 	clientAccessCheckDone(0, http);
 	return;
@@ -192,144 +144,6 @@ clientRedirectDone(void *data, char *result)
     fd_note(fd, http->url);
     icpProcessRequest(fd, http);
 }
-
-#if USE_PROXY_AUTH
-/* Check the modification time on the file that holds the proxy
- * passwords every 'n' seconds, and if it has changed, reload it
- */
-#define CHECK_PROXY_FILE_TIME 300
-
-const char *
-proxyAuthenticate(const char *headers)
-{
-    /* Keep the time measurements and the hash
-     * table of users and passwords handy */
-    static time_t last_time = 0;
-    static time_t change_time = 0;
-    static hash_table *validated = NULL;
-    static char *passwords = NULL;
-    LOCAL_ARRAY(char, sent_user, ICP_IDENT_SZ);
-
-    char *s = NULL;
-    char *sent_userandpw = NULL;
-    char *user = NULL;
-    char *passwd = NULL;
-    char *clear_userandpw = NULL;
-    struct stat buf;
-    int i;
-    hash_link *hashr = NULL;
-    FILE *f = NULL;
-
-    /* Look for Proxy-authorization: Basic in the
-     * headers sent by the client
-     */
-    if ((s = mime_get_header(headers, "Proxy-authorization:")) == NULL) {
-	debug(33, 5) ("proxyAuthenticate: Can't find authorization header\n");
-	return (dash_str);
-    }
-    /* Skip the 'Basic' part */
-    s += strlen(" Basic");
-    sent_userandpw = xstrdup(s);
-    strtok(sent_userandpw, "\n");	/* Trim trailing \n before decoding */
-    clear_userandpw = uudecode(sent_userandpw);
-    xfree(sent_userandpw);
-
-    xstrncpy(sent_user, clear_userandpw, ICP_IDENT_SZ);
-    strtok(sent_user, ":");	/* Remove :password */
-    debug(33, 5) ("proxyAuthenticate: user = %s\n", sent_user);
-
-    /* Look at the Last-modified time of the proxy.passwords
-     * file every five minutes, to see if it's been changed via
-     * a cgi-bin script, etc. If so, reload a fresh copy into memory
-     */
-
-    if ((squid_curtime - last_time) > CHECK_PROXY_FILE_TIME) {
-	debug(33, 5) ("proxyAuthenticate: checking password file %s hasn't changed\n", Config.proxyAuth.File);
-
-	if (stat(Config.proxyAuth.File, &buf) == 0) {
-	    if (buf.st_mtime != change_time) {
-		debug(33, 0) ("proxyAuthenticate: reloading changed proxy authentication password file %s \n", Config.proxyAuth.File);
-		change_time = buf.st_mtime;
-
-		if (validated != 0) {
-		    debug(33, 5) ("proxyAuthenticate: invalidating old entries\n");
-		    for (i = 0, hashr = hash_first(validated); hashr; hashr = hash_next(validated)) {
-			debug(33, 6) ("proxyAuthenticate: deleting %s\n", hashr->key);
-			hash_delete(validated, hashr->key);
-		    }
-		} else {
-		    /* First time around, 7921 should be big enough */
-		    if ((validated = hash_create(urlcmp, 7921, hash_string)) < 0) {
-			debug(33, 1) ("ERK: can't create hash table. Turning auth off");
-			xfree(Config.proxyAuth.File);
-			Config.proxyAuth.File = NULL;
-			return (dash_str);
-		    }
-		}
-
-		passwords = xmalloc((size_t) buf.st_size + 2);
-		f = fopen(Config.proxyAuth.File, "r");
-		fread(passwords, (size_t) buf.st_size, 1, f);
-		*(passwords + buf.st_size) = '\0';
-		strcat(passwords, "\n");
-		fclose(f);
-
-		user = strtok(passwords, ":");
-		passwd = strtok(NULL, "\n");
-
-		debug(33, 5) ("proxyAuthenticate: adding new passwords to hash table\n");
-		while (user != NULL) {
-		    if (strlen(user) > 1 && passwd && strlen(passwd) > 1) {
-			debug(33, 6) ("proxyAuthenticate: adding %s, %s to hash table\n", user, passwd);
-			hash_insert(validated, xstrdup(user), (void *) xstrdup(passwd));
-		    }
-		    user = strtok(NULL, ":");
-		    passwd = strtok(NULL, "\n");
-		}
-
-		xfree(passwords);
-	    }
-	} else {
-	    debug(33, 1) ("ERK: can't access proxy_auth file %s. Turning authentication off", Config.proxyAuth.File);
-	    xfree(Config.proxyAuth.File);
-	    Config.proxyAuth.File = NULL;
-	    return (dash_str);
-	}
-	last_time = squid_curtime;
-    }
-    hashr = hash_lookup(validated, sent_user);
-    if (hashr == NULL) {
-	/* User doesn't exist; deny them */
-	debug(33, 4) ("proxyAuthenticate: user %s doesn't exist\n", sent_user);
-	xfree(clear_userandpw);
-	return (dash_str);
-    }
-    passwd = strstr(clear_userandpw, ":");
-    passwd++;
-
-    /* See if we've already validated them */
-    passwd[0] |= 0x80;		/* check mutated password */
-    if (strcmp(hashr->item, passwd) == 0) {
-	debug(33, 5) ("proxyAuthenticate: user %s previously validated\n", sent_user);
-	xfree(clear_userandpw);
-	return sent_user;
-    }
-    passwd[0] &= ~(0x80);	/* check vs crypt */
-    if (strcmp(hashr->item, (char *) crypt(passwd, hashr->item))) {
-	/* Passwords differ, deny access */
-	debug(33, 4) ("proxyAuthenticate: authentication failed: user %s passwords differ\n", sent_user);
-	xfree(clear_userandpw);
-	return (dash_str);
-    }
-    passwd[0] |= 0x80;		/* store mutated password away */
-    debug(33, 5) ("proxyAuthenticate: user %s validated\n", sent_user);
-    hash_delete(validated, sent_user);
-    hash_insert(validated, xstrdup(sent_user), xstrdup(passwd));
-
-    xfree(clear_userandpw);
-    return (sent_user);
-}
-#endif /* USE_PROXY_AUTH */
 
 void
 icpProcessExpired(int fd, void *data)

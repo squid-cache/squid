@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.58 1997/07/26 04:48:28 wessels Exp $
+ * $Id: fqdncache.cc,v 1.59 1997/08/25 23:45:26 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -973,6 +973,7 @@ fqdncacheFreeMemory(void)
     }
     xfree(list);
     hashFreeMemory(fqdn_table);
+    fqdn_table = NULL;
 }
 
 static void

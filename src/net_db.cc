@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.47 1997/08/25 02:26:04 wessels Exp $
+ * $Id: net_db.cc,v 1.48 1997/08/25 23:45:29 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -526,6 +526,8 @@ netdbFreeMemory(void)
     xfree(L2);
     hashFreeMemory(addr_table);
     hashFreeMemory(host_table);
+    addr_table = NULL;
+    host_table = NULL;
     wordlistDestroy(&peer_names);
     peer_names = NULL;
     peer_names_tail = &peer_names;

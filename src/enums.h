@@ -60,6 +60,7 @@ typedef enum {
     ACL_PROTO,
     ACL_METHOD,
     ACL_BROWSER,
+    ACL_PROXY_AUTH,
     ACL_ENUM_MAX
 } squid_acl;
 
