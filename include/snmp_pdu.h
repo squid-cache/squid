@@ -1,5 +1,3 @@
-
-/* -*- c++ -*- */
 #ifndef _SNMP_PDU_H_
 #define _SNMP_PDU_H_
 
@@ -27,7 +25,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_pdu.h,v 1.3 2001/01/07 09:55:22 hno Exp $
+ * $Id: snmp_pdu.h,v 1.4 2001/01/07 10:57:14 hno Exp $
  * 
  **********************************************************************/
 
@@ -57,34 +55,26 @@ struct snmp_pdu {
     u_int time;			/* Uptime */
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct snmp_pdu *snmp_pdu_create(int);
+struct snmp_pdu *snmp_pdu_clone(struct snmp_pdu *);
+struct snmp_pdu *snmp_pdu_fix(struct snmp_pdu *, int);
+struct snmp_pdu *snmp_fix_pdu(struct snmp_pdu *, int);
+void snmp_free_pdu(struct snmp_pdu *);
+void snmp_pdu_free(struct snmp_pdu *);
 
-    struct snmp_pdu *snmp_pdu_create(int);
-    struct snmp_pdu *snmp_pdu_clone(struct snmp_pdu *);
-    struct snmp_pdu *snmp_pdu_fix(struct snmp_pdu *, int);
-    struct snmp_pdu *snmp_fix_pdu(struct snmp_pdu *, int);
-    void snmp_free_pdu(struct snmp_pdu *);
-    void snmp_pdu_free(struct snmp_pdu *);
-
-    u_char *snmp_pdu_encode(u_char *, int *, struct snmp_pdu *);
-    u_char *snmp_pdu_decode(u_char *, int *, struct snmp_pdu *);
-    char *snmp_pdu_type(struct snmp_pdu *);
+u_char *snmp_pdu_encode(u_char *, int *, struct snmp_pdu *);
+u_char *snmp_pdu_decode(u_char *, int *, struct snmp_pdu *);
+char *snmp_pdu_type(struct snmp_pdu *);
 
     /* Add a NULL Variable to a PDU */
-    void snmp_add_null_var(struct snmp_pdu *, oid *, int);
+void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 
-#ifdef __cplusplus
-}
-
-#endif				/*
-				 * * * RFC 1905: Protocol Operations for SNMPv2
-				 * * *
-				 * * * RFC 1157: A Simple Network Management Protocol (SNMP)
-				 * * *
-				 * * * PDU Types
-				 */
+/* RFC 1905: Protocol Operations for SNMPv2
+ *
+ * RFC 1157: A Simple Network Management Protocol (SNMP)
+ *
+ * PDU Types
+ */
 #define SNMP_PDU_GET	    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x0)
 #define SNMP_PDU_GETNEXT    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x1)
 #define SNMP_PDU_RESPONSE   (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x2)
@@ -98,13 +88,14 @@ extern "C" {
 #define SNMP_DEFAULT_ERRSTAT	    -1
 #define SNMP_DEFAULT_ERRINDEX	    -1
 #define SNMP_DEFAULT_ADDRESS	    0
-#define SNMP_DEFAULT_REQID	    0	/*
-					 * * * RFC 1907: Management Information Base for SNMPv2
-					 * * *
-					 * * * RFC 1157: A Simple Network Management Protocol (SNMP)
-					 * * *
-					 * * * Trap Types
-					 */
+#define SNMP_DEFAULT_REQID	    0
+
+/* RFC 1907: Management Information Base for SNMPv2
+ *
+ * RFC 1157: A Simple Network Management Protocol (SNMP)
+ *
+ * Trap Types
+ */
 #define SNMP_TRAP_COLDSTART             (0x0)
 #define SNMP_TRAP_WARMSTART             (0x1)
 #define SNMP_TRAP_LINKDOWN              (0x2)
@@ -112,4 +103,4 @@ extern "C" {
 #define SNMP_TRAP_AUTHENTICATIONFAILURE (0x4)
 #define SNMP_TRAP_EGPNEIGHBORLOSS       (0x5)
 #define SNMP_TRAP_ENTERPRISESPECIFIC    (0x6)
-#endif				/* _SNMP_PDU_H_ */
+#endif /* _SNMP_PDU_H_ */
