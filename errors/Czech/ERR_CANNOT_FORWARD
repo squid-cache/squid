@@ -1,0 +1,29 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2"> 
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+Při pokusu o přístup k:
+<A HREF="%U">%U</A>
+<P>
+se objevila následující chyba:
+<UL>
+<LI>
+<STRONG>
+Požadavek není možno přeměrovat.
+</STRONG>
+</UL>
+
+<P>
+Požadavek nemůže být přesměrován k dotazovanému serveru nebo nadřazeným
+cache serverům. Příčinou může být:
+<UL>
+<LI>
+Administrátor zakázal přímý přístup k dotazovaným serverům
+<LI>
+Všechny nadřazené cache servery jsou nedostupné
+</UL>
+</P>

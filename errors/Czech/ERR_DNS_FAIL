@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2"> 
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+Při pokusu o přístup k:
+<A HREF="%U">%U</A>
+<P>
+se objevila následující chyba:
+<BLOCKQUOTE>
+Jméno serveru není možno převést na IP adresu
+<I>%H</I>
+</BLOCKQUOTE>
+</UL>
+
+<P>
+DNS server odpověděl:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+To znamená že:
+<PRE>
+Cache server nebyl schopen získat adresu serveru uvedeného v URL.
+Zkontrolujte prosím adresu.
+</PRE>
+</P>
+

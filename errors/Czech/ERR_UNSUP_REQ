@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2"> 
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+Při pokusu o přístup k:
+<A HREF="%U">%U</A>
+<P>
+se objevila následující chyba:
+<UL>
+<LI>
+<STRONG>
+Unsupported Request Method and Protocol
+</STRONG>
+</UL>
+
+<P>
+Squid nepodporuje všechny typy metod u všech protokolů. Např. není možno
+použit metodu POST u služby GOPHER
+</P>
+

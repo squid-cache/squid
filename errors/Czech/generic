@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2"> 
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+Při pokusu o přístup k:
+<A HREF="%U">%U</A>
+<P>
+se objevila následující chyba:
+<UL>
+<LI>
+<STRONG>
+@SHORT_DESCRIPTION@
+</STRONG>
+</UL>
+
+<P>
+Systém odpověděl:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Což znamená že:
+<PRE>
+    @LONG_DESCRIPTION@
+</PRE>
+</P>
+
