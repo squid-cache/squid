@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.119 1996/12/15 22:39:39 wessels Exp $
+ * $Id: comm.cc,v 1.120 1996/12/17 04:13:55 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -621,13 +621,16 @@ static void
 comm_select_incoming(void)
 {
     int fd = 0;
-    int fds[3];
+    int fds[4];
     struct pollfd pfds[3];
-    int N = 0;
-    int i = 0;
+    unsigned long N = 0;
+    unsigned long i = 0;
+    int dopoll = 0;
     PF hdl = NULL;
     if (theInIcpConnection >= 0)
 	fds[N++] = theInIcpConnection;
+    if (theOutIcpConnection >= 0)
+	fds[N++] = theOutIcpConnection;
     if (theHttpConnection >= 0 && fdstat_are_n_free_fd(RESERVED_FD))
 	fds[N++] = theHttpConnection;
     fds[N++] = 0;
@@ -638,14 +641,18 @@ comm_select_incoming(void)
 	pfds[i].fd = fd;
 	if (fd_table[fd].read_handler) {
 	    pfds[i].events |= POLLRDNORM;
+	    dopoll++;
 	}
 	if (fd_table[fd].write_handler) {
 	    pfds[i].events |= POLLWRNORM;
+	    dopoll++;
 	}
 	if (pfds[i].events == 0)
 	    pfds[i].fd = -1;
     }
-    if (poll(pfds, (unsigned long) N, 0) < 1)
+    if (!dopoll)
+	return;
+    if (poll(pfds, N, 0) < 1)
 	return;
     getCurrentTime();
     for (i = 0; i < N; i++) {
@@ -675,7 +682,7 @@ comm_select_incoming(void)
     fd_set write_mask;
     int maxfd = 0;
     int fd = 0;
-    int fds[3];
+    int fds[4];
     int N = 0;
     int i = 0;
     PF hdl = NULL;
@@ -685,6 +692,8 @@ comm_select_incoming(void)
 	fds[N++] = theHttpConnection;
     if (theInIcpConnection >= 0)
 	fds[N++] = theInIcpConnection;
+    if (theOutIcpConnection >= 0)
+	fds[N++] = theOutIcpConnection;
     fds[N++] = 0;
     for (i = 0; i < N; i++) {
 	fd = fds[i];
@@ -731,7 +740,7 @@ comm_select(time_t sec)
     int fd;
     int i;
     int maxfd;
-    int nfds;
+    unsigned long nfds;
     int incnfd;
     int num;
     int httpindex;
@@ -796,7 +805,7 @@ comm_select(time_t sec)
 	    return COMM_SHUTDOWN;
 	for (;;) {
 	    poll_time = sec > 0 ? 1000 : 0;
-	    num = poll(pfds, (unsigned long) nfds, poll_time);
+	    num = poll(pfds, nfds, poll_time);
 	    getCurrentTime();
 	    if (num >= 0)
 		break;
@@ -841,7 +850,11 @@ comm_select(time_t sec)
 	     * Don't forget to keep the UDP acks coming and going.
 	     */
 	    comm_select_incoming();
-	    if ((fd == theInIcpConnection) || (fd == theHttpConnection))
+	    if (fd == theInIcpConnection)
+		continue;
+	    if (fd == theOutIcpConnection)
+		continue;
+	    if (fd == theHttpConnection)
 		continue;
 	    if (pfds[i].revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
 		debug(5, 6, "comm_select: FD %d ready for reading\n", fd);
@@ -849,6 +862,7 @@ comm_select(time_t sec)
 		    hdl = fd_table[fd].read_handler;
 		    fd_table[fd].read_handler = 0;
 		    hdl(fd, fd_table[fd].read_data);
+		    comm_select_incoming();
 		}
 	    }
 	    if (pfds[i].revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
@@ -857,6 +871,7 @@ comm_select(time_t sec)
 		    hdl = fd_table[fd].write_handler;
 		    fd_table[fd].write_handler = 0;
 		    hdl(fd, fd_table[fd].write_data);
+		    comm_select_incoming();
 		}
 	    }
 	    if (pfds[i].revents & POLLNVAL) {
@@ -1001,7 +1016,11 @@ comm_select(time_t sec)
 	     */
 	    comm_select_incoming();
 
-	    if ((fd == theInIcpConnection) || (fd == theHttpConnection))
+	    if (fd == theInIcpConnection)
+		continue;
+	    if (fd == theOutIcpConnection)
+		continue;
+	    if (fd == theHttpConnection)
 		continue;
 
 	    if (FD_ISSET(fd, &readfds)) {
@@ -1010,6 +1029,7 @@ comm_select(time_t sec)
 		    hdl = fd_table[fd].read_handler;
 		    fd_table[fd].read_handler = 0;
 		    hdl(fd, fd_table[fd].read_data);
+		    comm_select_incoming();
 		}
 	    }
 	    if (FD_ISSET(fd, &writefds)) {
@@ -1018,6 +1038,7 @@ comm_select(time_t sec)
 		    hdl = fd_table[fd].write_handler;
 		    fd_table[fd].write_handler = 0;
 		    hdl(fd, fd_table[fd].write_data);
+		    comm_select_incoming();
 		}
 	    }
 	}
