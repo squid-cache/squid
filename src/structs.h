@@ -616,10 +616,11 @@ struct _HierarchyLogEntry {
     hier_code code;
     char host[SQUIDHOSTNAMELEN];
     icp_ping_data icp;
-#if CACHE_DIGEST
-    int used_cd;
-    int used_icp;
-    int cd_hit;
+#if SQUID_PEER_DIGEST
+    peer_select_alg_t alg; /* peer selection algorithm */
+    lookup_t cd_lookup;    /* cd prediction: none, miss, hit */
+    int n_choices;         /* #peers we selected from (cd only) */
+    int n_ichoices;        /* #peers with known rtt we selected from (cd only) */
 #endif
 };
 
@@ -640,7 +641,6 @@ struct _AccessLogEntry {
 	int msec;
 	const char *ident;
     } cache;
-    struct _HierarchyLogEntry hier;
     struct {
 	char *request;
 	char *reply;
@@ -648,6 +648,7 @@ struct _AccessLogEntry {
     struct {
 	const char *method_str;
     } private;
+    struct _HierarchyLogEntry hier;
 };
 
 struct _clientHttpRequest {
@@ -775,6 +776,50 @@ struct _domain_type {
     struct _domain_type *next;
 };
 
+struct _Version {
+    short int current;   /* current version */
+    short int required;  /* minimal version that can safely handle current version */
+};
+
+/* digest control block; used for transmission and storage */
+struct _StoreDigestCBlock {
+    Version ver;
+    int capacity;
+    int count;
+    int del_count;
+    int mask_size;
+    int reserved[16-5];
+};
+
+struct _DigestFetchState {
+    peer *peer;
+    StoreEntry *entry;
+    StoreEntry *old_entry;
+    int offset;
+    int mask_offset;
+    time_t start_time;
+};
+
+/* statistics for cache digests and other hit "predictors" */
+struct _cd_guess_stats {
+    /* public, read-only */
+    int true_hits;
+    int false_hits;
+    int true_misses;
+    int false_misses;
+};
+
+struct _PeerDigest {
+    CacheDigest *cd;
+    int flags;        /* PD_ */
+    time_t last_fetch_resp_time;
+    time_t last_req_timestamp;
+    struct {
+	cd_guess_stats guess;
+	int used_count;
+    } stats;
+};
+
 struct _peer {
     char *host;
     peer_t type;
@@ -808,6 +853,7 @@ struct _peer {
 	u_num32 reqnum;
 	int flags;
     } mcast;
+    PeerDigest digest;
     int tcp_up;			/* 0 if a connect() fails */
     time_t last_fail_time;
     struct in_addr addresses[10];
@@ -1137,7 +1183,7 @@ struct _StatCounters {
 	kb_t kbytes_recv;
 	StatHist query_svc_time;
 	StatHist reply_svc_time;
-#if CACHE_DIGEST
+#if SQUID_PEER_DIGEST
 	StatHist client_svc_time;
 	int times_used;
 #endif
@@ -1148,16 +1194,13 @@ struct _StatCounters {
     struct {
 	StatHist svc_time;
     } dns;
-#if CACHE_DIGEST
+#if SQUID_PEER_DIGEST
     struct {
 	int times_used;
-	int true_hits;
-	int false_hits;
-	int true_misses;
-	int false_misses;
 	kb_t kbtes_sent;
 	kb_t kbtes_recv;
 	kb_t memory;
+        cd_guess_stats guess;
 	StatHist client_svc_time;
     } cd;
 #endif
@@ -1228,7 +1271,6 @@ struct _ClientInfo {
 	int n_denied;
     } cutoff;
 };
-
 
 struct _CacheDigest {
     /* public, read-only */
