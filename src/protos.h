@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.331 1999/05/25 06:53:44 wessels Exp $
+ * $Id: protos.h,v 1.332 1999/05/25 22:05:52 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -897,11 +897,8 @@ extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;
 
 /*
- * store_clean.c
+ * store_digest.c
  */
-extern EVH storeDirClean;
-
-/* store_digest.c */
 extern void storeDigestInit(void);
 extern void storeDigestNoteStoreReady(void);
 extern void storeDigestScheduleRebuild(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.92 1999/05/25 06:53:54 wessels Exp $
+ * $Id: typedefs.h,v 1.93 1999/05/25 22:05:59 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -218,7 +218,7 @@ typedef void STOBJCLOSE(storeIOState *);
 typedef void STOBJREAD(storeIOState *, char *, size_t, off_t, STRCB *, void *);
 typedef void STOBJWRITE(storeIOState *, char *, size_t, off_t, FREE *);
 typedef void STOBJUNLINK(sfileno);
-typedef void STOBJLOG(const StoreEntry *, int);
+typedef void STOBJLOG(const SwapDir *, const StoreEntry *, int);
 typedef void STLOGOPEN(SwapDir *);
 typedef void STLOGCLOSE(SwapDir *);
 typedef int STLOGCLEANOPEN(SwapDir *);
