@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.220 1997/04/25 21:43:59 wessels Exp $
+ * $Id: store.cc,v 1.221 1997/04/25 22:01:18 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -188,11 +188,11 @@ const char *swapStatusStr[] =
 struct storeRebuildState {
     struct _rebuild_dir {
 	int dirn;
-    	FILE *log;
+	FILE *log;
 	int speed;
 	int clean;
 	struct _rebuild_dir *next;
-    } *rebuild_dir;
+    }           *rebuild_dir;
     int objcount;		/* # objects successfully reloaded */
     int expcount;		/* # objects expired */
     int linecount;		/* # lines parsed from cache logfile */
@@ -884,9 +884,9 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     e->lastmod = lastmod;
     e->ping_status = PING_NONE;
     if (store_rebuilding == STORE_REBUILDING_CLEAN)
-        BIT_SET(e->flag, ENTRY_VALIDATED);
-    else 
-        BIT_RESET(e->flag, ENTRY_VALIDATED);
+	BIT_SET(e->flag, ENTRY_VALIDATED);
+    else
+	BIT_RESET(e->flag, ENTRY_VALIDATED);
     return e;
 }
 
@@ -1400,19 +1400,19 @@ storeDoRebuildFromDisk(void *data)
     struct _rebuild_dir **D;
     /* load a number of objects per invocation */
     if ((d = RB->rebuild_dir) == NULL) {
-	    storeRebuiltFromDisk(RB);
-	    return;
+	storeRebuiltFromDisk(RB);
+	return;
     }
     for (count = 0; count < d->speed; count++) {
 	if (fgets(RB->line_in, RB->line_in_sz, d->log) == NULL) {
-		debug(20,1,"Done reading Cache Dir #%d swap log\n", d->dirn);
-		fclose(d->log);
-		d->log = NULL;
-		storeDirCloseTmpSwapLog(d->dirn);
-		RB->rebuild_dir = d->next;
-		safe_free(d);
-    		eventAdd("storeRebuild", storeDoRebuildFromDisk, RB, 0);
-		return;
+	    debug(20, 1, "Done reading Cache Dir #%d swap log\n", d->dirn);
+	    fclose(d->log);
+	    d->log = NULL;
+	    storeDirCloseTmpSwapLog(d->dirn);
+	    RB->rebuild_dir = d->next;
+	    safe_free(d);
+	    eventAdd("storeRebuild", storeDoRebuildFromDisk, RB, 0);
+	    return;
 	}
 	if ((++RB->linecount & 0x3FFF) == 0)
 	    debug(20, 1, "  %7d Lines read so far.\n", RB->linecount);
@@ -1535,7 +1535,7 @@ storeCleanup(void *data)
     if ((validnum % 4096) == 0)
 	debug(20, 1, "  %7d Entries Validated so far.\n", validnum);
     if (!BIT_TEST(e->flag, ENTRY_VALIDATED))
-        storeValidate(e, storeCleanupComplete, e);
+	storeValidate(e, storeCleanupComplete, e);
     xfree(curr->key);
     xfree(curr);
     eventAdd("storeCleanup", storeCleanup, NULL, 0);
@@ -2563,20 +2563,20 @@ storeWriteCleanLogs(void)
     }
     debug(20, 1, "storeWriteCleanLogs: Starting...\n");
     start = getCurrentTime();
-    for (dirn = 0; dirn< ncache_dirs; dirn++) {
-        fd[dirn] = -1;
-    	cur[dirn] = xstrdup(storeDirSwapLogFile(dirn, NULL));
-    	new[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".clean"));
-    	cln[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".last-clean"));
-        safeunlink(new[dirn], 1);
-        safeunlink(cln[dirn], 1);
-        fd[dirn] = open(new[dirn], O_WRONLY | O_APPEND | O_CREAT | O_TRUNC, 0644);
-        if (fd[dirn] < 0) {
+    for (dirn = 0; dirn < ncache_dirs; dirn++) {
+	fd[dirn] = -1;
+	cur[dirn] = xstrdup(storeDirSwapLogFile(dirn, NULL));
+	new[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".clean"));
+	cln[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".last-clean"));
+	safeunlink(new[dirn], 1);
+	safeunlink(cln[dirn], 1);
+	fd[dirn] = open(new[dirn], O_WRONLY | O_APPEND | O_CREAT | O_TRUNC, 0644);
+	if (fd[dirn] < 0) {
 	    debug(50, 0, "storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
 	    continue;
 	}
 #if HAVE_FCHMOD
-        if (stat(cur[dirn], &sb) == 0)
+	if (stat(cur[dirn], &sb) == 0)
 	    fchmod(fd[dirn], sb.st_mode);
 #endif
     }
@@ -2619,13 +2619,13 @@ storeWriteCleanLogs(void)
 	}
     }
     safe_free(line);
-    for (dirn=0; dirn<ncache_dirs; dirn++) {
-        file_close(fd[dirn]);
-        fd[dirn] = -1;
-        if (rename(new[dirn], cur[dirn]) < 0) {
+    for (dirn = 0; dirn < ncache_dirs; dirn++) {
+	file_close(fd[dirn]);
+	fd[dirn] = -1;
+	if (rename(new[dirn], cur[dirn]) < 0) {
 	    debug(50, 0, "storeWriteCleanLogs: rename failed: %s\n",
-	        xstrerror());
-        }
+		xstrerror());
+	}
     }
     storeDirCloseSwapLogs();
     storeDirOpenSwapLogs();
@@ -2635,10 +2635,10 @@ storeWriteCleanLogs(void)
     debug(20, 1, "  Took %d seconds (%6.1lf lines/sec).\n",
 	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
     /* touch a timestamp file if we're not still validating */
-    for (dirn=0; dirn<ncache_dirs; dirn++) {
-        if (!store_validating)
+    for (dirn = 0; dirn < ncache_dirs; dirn++) {
+	if (!store_validating)
 	    file_close(file_open(cln[dirn], NULL,
-		O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL));
+		    O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL));
 	safe_free(cur[dirn]);
 	safe_free(new[dirn]);
 	safe_free(cln[dirn]);

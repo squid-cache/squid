@@ -69,7 +69,7 @@ storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
 	xfree(SwapDirs);
 	SwapDirs = tmp;
     }
-    tmp = SwapDirs+ncache_dirs;
+    tmp = SwapDirs + ncache_dirs;
     tmp->path = xstrdup(path);
     tmp->max_size = size;
     tmp->l1 = l1;
@@ -84,7 +84,7 @@ storeVerifyOrCreateDir(const char *path)
 {
     struct stat sb;
     if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode)) {
-	debug(20,3,"%s exists\n", path);
+	debug(20, 3, "%s exists\n", path);
 	return 0;
     }
     safeunlink(path, 1);
@@ -365,14 +365,14 @@ storeDirUpdateSwapSize(int fn, size_t size, int sign)
 }
 
 void
-storeDirStats(StoreEntry *sentry)
+storeDirStats(StoreEntry * sentry)
 {
     int i;
     SwapDir *SD;
     storeAppendPrintf(sentry, "Store Directory Statistics:\n");
     storeAppendPrintf(sentry, "Store Entries: %d\n", meta_data.store_entries);
     storeAppendPrintf(sentry, "Store Swap Size: %d KB\n", store_swap_size);
-    for (i = 0; i<ncache_dirs; i++) {
+    for (i = 0; i < ncache_dirs; i++) {
 	SD = &SwapDirs[i];
 	storeAppendPrintf(sentry, "\n");
 	storeAppendPrintf(sentry, "Store Directory #%d: %s\n", i, SD->path);
@@ -381,6 +381,6 @@ storeDirStats(StoreEntry *sentry)
 	storeAppendPrintf(sentry, "Maximum Size: %d KB\n", SD->max_size);
 	storeAppendPrintf(sentry, "Current Size: %d KB\n", SD->cur_size);
 	storeAppendPrintf(sentry, "Percent Used: %0.2f%%\n",
-		100.0 * SD->cur_size /  SD->max_size);
+	    100.0 * SD->cur_size / SD->max_size);
     }
 }
