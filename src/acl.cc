@@ -1,4 +1,4 @@
-#ident "$Id: acl.cc,v 1.4 1996/04/11 04:46:49 wessels Exp $"
+#ident "$Id: acl.cc,v 1.5 1996/04/11 17:27:17 wessels Exp $"
 
 /*
  * DEBUG: Section 28          acl
@@ -268,13 +268,19 @@ void aclParseAccessLine(line_in)
 	    t);
 	a = aclFindByName(t);
 	if (a == NULL) {
-	    debug(28, 1, "aclParseAccessLine: ACL name '%s' not found.\n", t);
+	    debug(28, 0, "aclParseAccessLine: ACL name '%s' not found.\n", t);
 	    xfree(L);
 	    continue;
 	}
 	L->acl = a;
 	*Tail = L;
 	Tail = &L->next;
+    }
+    if (A->acl_list == NULL) {
+	debug(28,0,"aclParseAccessLine: Access line contains no ACL's, skipping\n");
+	debug(28,0,"aclParseAccessLine: '%s'\n", line_in);
+	xfree(A);
+	return;
     }
     A->cfgline = xstrdup(line_in);
     *AccessListTail = A;
@@ -288,10 +294,15 @@ int aclMatchIp(data, c)
     struct in_addr h;
     while (data) {
 	h.s_addr = c.s_addr & data->mask1.s_addr;
-	if (h.s_addr == data->addr1.s_addr)
+	debug(28,1,"aclMatchIp: h     = %s\n", inet_ntoa(h));
+	debug(28,1,"aclMatchIp: addr1 = %s\n", inet_ntoa(data->addr1));
+	if (h.s_addr == data->addr1.s_addr) {
+	    debug(28,1,"aclMatchIp: returning 1\n");
 	    return 1;
+	}
 	data = data->next;
     }
+    debug(28,1,"aclMatchIp: returning 0\n");
     return 0;
 }
 
@@ -312,7 +323,9 @@ int aclMatchRegex(data, word)
      relist *data;
      char *word;
 {
+    debug(28, 1, "aclMatchRegex: looking for '%s'\n", word);
     while (data) {
+        debug(28, 1, "aclMatchRegex: checking '%s'\n", data->pattern);
 	if (regexec(&data->regex, word, 0, 0, 0) == 0)
 	    return 1;
 	data = data->next;
@@ -384,12 +397,15 @@ int aclMatchAclList(list, c, pr, h, po, r)
      int po;
      char *r;
 {
-    debug(28, 1, "aclMatchAclList: list=%p\n", list);
+    debug(28, 1, "aclMatchAclList: list=%p  op=%d\n", list, list->op);
     while (list) {
-	if (aclMatchAcl(list->acl, c, pr, h, po, r) != list->op)
+	if (aclMatchAcl(list->acl, c, pr, h, po, r) != list->op) {
+	    debug(28,1,"aclMatchAclList: returning 0\n");
 	    return 0;
+	}
 	list = list->next;
     }
+    debug(28,1,"aclMatchAclList: returning 1\n");
     return 1;
 }
 
