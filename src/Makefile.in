@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4s from Makefile.am.
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
 
 # Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
 # Free Software Foundation, Inc.
@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.208 2001/08/31 11:19:12 robertc Exp $
+#  $Id: Makefile.in,v 1.209 2001/09/03 22:59:26 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -910,13 +910,13 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
-store_modules.c: store_modules.sh
+store_modules.c: store_modules.sh Makefile
 	$(SHELL) $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.c
 
-repl_modules.c: repl_modules.sh 
+repl_modules.c: repl_modules.sh Makefile
 	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.c
 
-auth_modules.c: auth_modules.sh
+auth_modules.c: auth_modules.sh Makefile
 	@$(SHELL) $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.c
 
 install-data-local:
