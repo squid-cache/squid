@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.111 1998/05/27 22:51:56 rousskov Exp $
+ * $Id: net_db.cc,v 1.112 1998/05/28 04:15:20 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1021,6 +1021,7 @@ netdbBinaryExchange(StoreEntry * s)
     }
     assert(0 == i);
     storeBufferFlush(s);
+    memFree(MEM_4K_BUF, buf);
 #else
     httpReplyReset(reply);
     httpReplySetHeaders(reply, 1.0, HTTP_BAD_REQUEST, "Bad Request",
