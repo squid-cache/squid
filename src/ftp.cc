@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.209 1998/03/20 18:06:43 rousskov Exp $
+ * $Id: ftp.cc,v 1.210 1998/03/22 07:38:59 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -643,9 +643,11 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	    rfc1738_escape(parts->name),
 	    parts->showname,
 	    dots_fill(strlen(parts->showname)));
-	snprintf(link2, 2048, "<A HREF=\"%s\">%s</A>",
-	    rfc1738_escape(parts->link),
-	    parts->link);
+	/* sometimes there is an 'l' flag, but no "->" link */
+	if (parts->link)
+	    snprintf(link2, 2048, "<A HREF=\"%s\">%s</A>",
+		rfc1738_escape(parts->link),
+		parts->link);
 	snprintf(html, 8192, "%s %s  [%s] -> %s\n",
 	    icon,
 	    link,
