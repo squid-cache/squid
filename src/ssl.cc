@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.29 1996/11/30 23:09:56 wessels Exp $
+ * $Id: ssl.cc,v 1.30 1996/12/16 16:23:42 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -46,6 +46,7 @@ typedef struct {
     time_t timeout;
     int *size_ptr;		/* pointer to size in an icpStateData for logging */
     ConnectStateData connectState;
+    int proxying;
 } SslStateData;
 
 static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
@@ -64,7 +65,7 @@ static void sslClose _PARAMS((SslStateData * sslState));
 static void sslClientClosed _PARAMS((int fd, void *));
 static void sslConnectDone _PARAMS((int fd, int status, void *data));
 static void sslStateFree _PARAMS((int fd, void *data));
-static void sslSelectForwarding _PARAMS((int fd, const ipcache_addrs *, void *));
+static void sslSelectNeighbor _PARAMS((int fd, const ipcache_addrs *, void *));
 
 static void
 sslClose(SslStateData * sslState)
@@ -381,7 +382,7 @@ sslConnectDone(int fd, int status, void *data)
     }
     if (opt_no_ipcache)
 	ipcacheInvalidate(sslState->host);
-    if (Config.sslProxy && Config.sslProxy->host == sslState->host)
+    if (sslState->proxying)
 	sslProxyConnected(sslState->server.fd, sslState);
     else
 	sslConnected(sslState->server.fd, sslState);
@@ -444,7 +445,7 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
     if (Config.sslProxy) {
 	ipcache_nbgethostbyname(request->host,
 	    sslState->server.fd,
-	    sslSelectForwarding,
+	    sslSelectNeighbor,
 	    sslState);
     } else {
 	sslState->host = request->host;
@@ -477,44 +478,39 @@ sslProxyConnected(int fd, void *data)
 	(void *) sslState, 0);
 }
 
-static int
-sslCheckFirewallIP(const ipcache_addrs * ia)
-{
-    if (ia == NULL)
-	return IP_ALLOW;	/* no match */
-    if (Config.firewall_ip_list == NULL)
-	return IP_ALLOW;	/* no match */
-    return ip_access_check(ia->in_addrs[ia->cur], Config.firewall_ip_list);
-}
-
 static void
-sslSelectForwarding(int fd, const ipcache_addrs * ia, void *data)
+sslSelectNeighbor(int fd, const ipcache_addrs * ia, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;
     edge *e = NULL;
-    int go_direct = 1;
-    if (ia == NULL) {
-	/* unresolvable, must be outside the firewall */
-	go_direct = 0;
+    edge *g = NULL;
+    int fw_ip_match = IP_ALLOW;
+    if (ia && Config.firewall_ip_list)
+        fw_ip_match = ip_access_check(ia->in_addrs[ia->cur], Config.firewall_ip_list);
+    if ((e = Config.sslProxy)) {
+        hierarchyNote(request, HIER_SSL_PARENT, 0, e->host);
     } else if (matchInsideFirewall(request->host)) {
-	go_direct = 1;
-    } else if (sslCheckFirewallIP(ia) == IP_DENY) {
-	go_direct = 1;
-    } else {
-	go_direct = 0;
+        hierarchyNote(request, HIER_DIRECT, 0, request->host);
+    } else if (fw_ip_match == IP_DENY) {
+        hierarchyNote(request, HIER_DIRECT, 0, request->host);
+    } else if ((e = getDefaultParent(request))) {
+        hierarchyNote(request, HIER_DEFAULT_PARENT, 0, e->host);
+    } else if ((e = getSingleParent(request))) {
+        hierarchyNote(request, HIER_SINGLE_PARENT, 0, e->host);
+    } else if ((e = getFirstUpParent(request))) {
+        hierarchyNote(request, HIER_FIRSTUP_PARENT, 0, e->host);
     }
-    if (go_direct) {
-	sslState->host = request->host;
-	sslState->port = request->port;
+    sslState->proxying = e ? 1 : 0;
+    sslState->host = e ? e->host : request->host;
+    if (e == NULL) {
+        sslState->port = request->port;
+    } else if (e->http_port != 0) {
+        sslState->port = e->http_port;
+    } else if ((g = neighborFindByName(e->host))) {
+        sslState->port = g->http_port;
     } else {
-	sslState->host = Config.sslProxy->host;
-	if ((sslState->port = Config.sslProxy->http_port) == 0) {
-	    if ((e = neighborFindByName(Config.sslProxy->host)))
-		sslState->port = e->http_port;
-	    else
-		sslState->port = CACHE_HTTP_PORT;
-	}
+        sslState->port = CACHE_HTTP_PORT;
     }
     ipcache_nbgethostbyname(sslState->host,
 	sslState->server.fd,

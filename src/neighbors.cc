@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.96 1996/12/06 05:50:09 wessels Exp $
+ * $Id: neighbors.cc,v 1.97 1996/12/16 16:23:43 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -143,6 +143,7 @@ const char *hier_strings[] =
     "SIBLING_UDP_HIT_OBJ",
     "PARENT_UDP_HIT_OBJ",
     "PASSTHROUGH_PARENT",
+    "SSL_PARENT_MISS",
     "INVALID CODE"
 };
 
