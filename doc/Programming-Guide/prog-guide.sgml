@@ -668,20 +668,69 @@ another request from the client, or closes the client connection.
 
 <P>
 At the core of Squid is the <tt/select(2)/ system call.  Squid uses
-<tt/select()/ (or alternatively <tt/poll(2)/ in recent versions) to 
-process I/O on all open file descriptors.
-
-<sect1>Comm Handlers
+<tt/select()/ or <tt/poll(2)/ to process I/O on all open file descriptors.
+Hereafter we'll only use ``select'' to refer generically to either system call.
 
 <P>
-For every open file descriptor, there are N types of handler functions.
-<itemize>
-<item>Read
-<item>Write
-<item>Timeout
-<item>Lifetime
-<item>Close
-</itemize>
+The <tt/select()/ and <tt/poll()/ system calls work by waiting for
+I/O events on a set of file descriptors.  Squid only checks for
+<em/read/ and <em/write/ events. Squid knows that it should
+check for reading or writing when there
+is a read or write handler registered for a given file descriptor.  
+Handler functions are registered with the <tt/commSetSelect/ function.
+For example:
+<verb>
+	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
+</verb>
+In this example, <em/fd/ is a TCP socket to a client connection.
+When there is data to be read from the socket, then the select loop
+will execute
+<verb>
+	clientReadRequest(fd, conn);
+</verb>
+
+<P>
+The I/O handlers are reset every time they are called.  In other words,
+a handler function must re-register itself with <tt/commSetSelect/
+if it wants to continue reading or writing on a file descriptor.
+The I/O handler may be cancelled before being called by providing
+NULL arguments, e.g.:
+<verb>
+	commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+</verb>
+
+<P>
+These I/O handlers (and others) and their associated callback data
+pointers are saved in the <em/fde/ data structure:
+<verb>
+	struct _fde {
+		...
+		PF *read_handler;
+		void *read_data;
+		PF *write_handler;
+		void *write_data;
+		close_handler *close_handler;
+		DEFER *defer_check;
+		void *defer_data;
+	};
+</verb>
+<em/read_handler/ and <em/write_handler/ are called when the file
+descriptor is ready for reading or writing, respectively.  
+The <em/close_handler/ is called when the filedescriptor
+is closed.   The <em/close_handler/ is actually a linked list
+of callback functions to be called.
+
+<P>
+In some situations we want to defer reading from a filedescriptor,
+even though it has data for us to read.  This may be the case
+when data arrives from the server-side faster than it can 
+be written to the client-side.
+Before adding a filedescriptor to the ``read set'' for select,
+we call <em/defer_check/ (if it is non-NULL).  If <em/defer_check/
+returns 1, then we skip the filedescriptor for that time through
+the select loop.
+
+
 
 <P>
 These handlers are stored in the <em/FD_ENTRY/ structure as defined in
