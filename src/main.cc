@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.282 1998/12/16 06:04:16 wessels Exp $
+ * $Id: main.cc,v 1.283 1999/01/13 21:00:10 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -155,13 +155,13 @@ mainParseOptions(int argc, char *argv[])
 	    if (!strncmp(optarg, "reconfigure", strlen(optarg)))
 		opt_send_signal = SIGHUP;
 	    else if (!strncmp(optarg, "rotate", strlen(optarg)))
-#if (defined(_SQUID_LINUX_) && USE_ASYNC_IO)
+#ifdef _SQUID_LINUX_THREADS_
 		opt_send_signal = SIGQUIT;
 #else
 		opt_send_signal = SIGUSR1;
 #endif
 	    else if (!strncmp(optarg, "debug", strlen(optarg)))
-#if (defined(_SQUID_LINUX_) && USE_ASYNC_IO)
+#ifdef _SQUID_LINUX_THREADS_
 		opt_send_signal = SIGTRAP;
 #else
 		opt_send_signal = SIGUSR2;
@@ -453,7 +453,7 @@ mainInitialize(void)
     if (!configured_once)
 	writePidFile();		/* write PID file */
 
-#if (defined(_SQUID_LINUX_) && USE_ASYNC_IO)
+#ifdef _SQUID_LINUX_THREADS_
     squid_signal(SIGQUIT, rotate_logs, SA_RESTART);
     squid_signal(SIGTRAP, sigusr2_handle, SA_RESTART);
 #else
