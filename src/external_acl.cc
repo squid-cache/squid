@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.61 2005/03/19 19:43:39 serassio Exp $
+ * $Id: external_acl.cc,v 1.62 2005/03/30 23:08:19 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -113,7 +113,7 @@ public:
 
     dlink_list queue;
 
-    int require_auth;
+    bool require_auth;
 
     enum
     {
@@ -313,7 +313,7 @@ parse_externalAclHelper(external_acl ** list)
             }
         } else if (strcmp(token, "%LOGIN") == 0) {
             format->type = _external_acl_format::EXT_ACL_LOGIN;
-            a->require_auth = 1;
+            a->require_auth = true;
         }
 
 #if USE_IDENT
@@ -1087,7 +1087,7 @@ void
 ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callback, void *callback_data)
 {
     MemBuf buf;
-    external_acl_data *acl = static_cast<external_acl_data *>(me->data);
+    external_acl_data *acl = me->data;
     external_acl *def = acl->def;
     externalAclState *state;
     dlink_node *node;
@@ -1310,4 +1310,10 @@ bool
 ACLExternal::valid () const
 {
     return data != NULL;
+}
+
+bool
+ACLExternal::isProxyAuth() const
+{
+    return data->def->require_auth;
 }

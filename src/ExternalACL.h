@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACL.h,v 1.6 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ExternalACL.h,v 1.7 2005/03/30 23:08:19 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -77,8 +77,7 @@ public:
 
     /* when requiresRequest is made dynamic, review this too */
     //    virtual bool requiresReply() const {return true;}
-    /* This may need to be extant, to cause 407's if %LOGIN% is used. */
-    //    virtual bool isProxyAuth() const {return true;}
+    virtual bool isProxyAuth() const;
     virtual wordlist *dump() const;
     virtual bool valid () const;
 
