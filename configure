@@ -514,7 +514,7 @@ fi
 
 
 
-# From configure.in Revision: 1.63 
+# From configure.in Revision: 1.64 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
