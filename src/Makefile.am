@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.41 2002/10/25 03:13:51 robertc Exp $
+#  $Id: Makefile.am,v 1.42 2002/11/15 13:08:26 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -401,10 +401,12 @@ uninstall-local:
 		echo "rm -f $(DESTDIR)$(DEFAULT_MIME_TABLE)"; \
 		$(RM) -f $(DESTDIR)$(DEFAULT_MIME_TABLE); \
 	fi
-	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
-		echo "rm -f $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
-		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
-	fi
+
+# Don't automatically uninstall config files
+#	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
+#		echo "rm -f $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
+#		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
+#	fi
 
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
 	globals.c string_arrays.c repl_modules.cc auth_modules.cc store_modules.cc
