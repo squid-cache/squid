@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.195 1998/01/07 23:15:23 wessels Exp $
+ * $Id: client_side.cc,v 1.196 1998/01/09 01:18:12 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -546,7 +546,7 @@ httpRequestFree(void *data)
     if (http->acl_checklist)
 	aclChecklistFree(http->acl_checklist);
     if (request)
-        checkFailureRatio(request->err_type, http->al.hier.code);
+	checkFailureRatio(request->err_type, http->al.hier.code);
     safe_free(http->uri);
     safe_free(http->log_uri);
     safe_free(http->al.headers.reply);
@@ -943,9 +943,9 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    writelen = p - buf;
 	    /* force end */
 	    if (entry->store_status == STORE_PENDING)
-	        http->out.offset = entry->mem_obj->inmem_hi;
+		http->out.offset = entry->mem_obj->inmem_hi;
 	    else
-	        http->out.offset = entry->object_len;
+		http->out.offset = entry->object_len;
 	}
     }
     comm_write(fd, buf, writelen, clientWriteComplete, http, freefunc);
@@ -1426,9 +1426,29 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*status = 0;
 	return NULL;
     }
-    while (isspace(*t))
-	t++;
     req_hdr = t;
+    /*
+     * Skip whitespace at the end of the frist line, up to the
+     * first newline.
+     */
+    while (isspace(*req_hdr))
+	if (*(req_hdr++) == '\n')
+	    break;
+    if (end <= req_hdr) {
+	/* Invalid request */
+	debug(12, 3) ("parseHttpRequest: No request headers?\n");
+	http = xcalloc(1, sizeof(clientHttpRequest));
+	cbdataAdd(http);
+	http->conn = conn;
+	http->start = current_time;
+	http->req_sz = conn->in.offset;
+	http->uri = xstrdup("error:no-request-headers");
+	http->log_uri = xstrdup("error:no-request-headers");
+	*headers_sz_p = conn->in.offset;
+	*headers_p = inbuf;
+	*status = -1;
+	return http;
+    }
     header_sz = end - req_hdr;
     req_sz = end - inbuf;
 
