@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.364 2000/07/16 04:24:21 wessels Exp $
+ * $Id: http.cc,v 1.365 2000/07/16 05:31:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -669,7 +669,6 @@ httpBuildRequestHeader(request_t * request,
 	we_do_ranges = 0;
     else
 	we_do_ranges = 1;
-    debug(0, 0) ("%s:%d: we_do_ranges=%d\n", __FILE__, __LINE__, we_do_ranges);
     debug(11, 8) ("httpBuildRequestHeader: range specs: %p, cachable: %d; we_do_ranges: %d\n",
 	orig_request->range, orig_request->flags.cachable, we_do_ranges);
 
