@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.33 2000/11/02 16:30:10 wessels Exp $
+ * $Id: dns_internal.cc,v 1.34 2000/11/03 17:03:54 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -67,6 +67,7 @@ struct _ns {
     struct sockaddr_in S;
     int nqueries;
     int nreplies;
+    int large_pkts;
 };
 
 static ns *nameservers = NULL;
@@ -334,7 +335,7 @@ idnsRead(int fd, void *data)
     struct sockaddr_in from;
     socklen_t from_len;
     int max = INCOMING_DNS_MAX;
-    static char rbuf[512];
+    static char rbuf[SQUID_UDP_SO_RCVBUF];
     int ns;
     while (max--) {
 	from_len = sizeof(from);
@@ -375,6 +376,23 @@ idnsRead(int fd, void *data)
 		last_warning = squid_curtime;
 	    }
 	    continue;
+	}
+	if (len > 512) {
+	    /*
+	     * Check for non-conforming replies.  RFC 1035 says
+	     * DNS/UDP messages must be 512 octets or less.  If we
+	     * get one that is too large, we generate a warning
+	     * and then pretend that we only got 512 octets.  This
+	     * should prevent the rfc1035.c code from reading past
+	     * the end of our buffer.
+	     */
+	    static int other_large_pkts = 0;
+	    int x;
+	    x = (ns < 0) ? ++other_large_pkts : ++nameservers[ns].large_pkts;
+	    if (isPowTen(x))
+		debug(78, 1) ("WARNING: Got %d large DNS replies from %s\n",
+		    x, inet_ntoa(from.sin_addr));
+	    len = 512;
 	}
 	idnsGrokReply(rbuf, len);
     }
