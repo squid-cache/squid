@@ -2020,6 +2020,7 @@ DOC_START
 
 	NOTE: SNMP support requires use the --enable-snmp configure
 	command line option.
+snmp_port 3401
 DOC_END
 
 NAME: snmp_do_queueing
@@ -2032,6 +2033,7 @@ DOC_START
 	immediately. This could be useful when you want to monitor a
 	cache in trouble, but this could also make Squid block, slowing
 	connections and possibly worsening the cache status.
+snmp_do_queueing on
 DOC_END
 
 NAME: forward_snmpd_port
@@ -2052,6 +2054,7 @@ DOC_START
         WARNING: Because of Squid acting as a proxy snmpd for system  
         you have to do security checks on THIS snmpd for all objects.
         Check your snmp_config_file.
+forward_snmpd_port 0
 DOC_END
 
 NAME: snmp_mib_path
@@ -2061,6 +2064,7 @@ DEFAULT: @DEFAULT_MIB_PATH@
 IFDEF: SQUID_SNMP
 DOC_START
 	The location of Squid's mib.
+snmp_mib_path @DEFAULT_MIB_PATH@
 DOC_END
 
 NAME: trap_sink
@@ -2070,6 +2074,7 @@ DEFAULT: 127.0.0.1
 IFDEF: SQUID_SNMP
 DOC_START
 	Hostname or ip address of trap sink for snmp
+trap_sink 127.0.0.1
 DOC_END
 
 NAME: snmp_trap_community
@@ -2079,6 +2084,7 @@ DEFAULT: public
 IFDEF: SQUID_SNMP
 DOC_START
 	Community name for traps.
+snmp_trap_community public
 DOC_END
 
 NAME: snmp_enable_authen_traps
@@ -2088,6 +2094,7 @@ DEFAULT: off
 IFDEF: SQUID_SNMP
 DOC_START
 	Enable SNMP authenticated traps. Set to 'off' or 'on'.
+snmp_enable_authen_traps off
 DOC_END
 
 NAME: snmp_agent_conf
