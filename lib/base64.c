@@ -1,5 +1,5 @@
 /*
- * $Id: base64.c,v 1.15 1998/09/23 17:14:21 wessels Exp $
+ * $Id: base64.c,v 1.16 1998/10/14 02:40:25 wessels Exp $
  */
 
 #include "config.h"
@@ -14,7 +14,9 @@
 static void base64_init(void);
 
 static int base64_initialized = 0;
-int base64_value[256];
+#define BASE64_VALUE_SZ 256
+#define BASE64_RESULT_SZ 8192
+int base64_value[BASE64_VALUE_SZ];
 const char base64_code[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
@@ -23,7 +25,7 @@ base64_init(void)
 {
     int i;
 
-    for (i = 0; i < 256; i++)
+    for (i = 0; i < BASE64_VALUE_SZ; i++)
 	base64_value[i] = -1;
 
     for (i = 0; i < 64; i++)
@@ -36,42 +38,39 @@ base64_init(void)
 char *
 base64_decode(const char *p)
 {
-    static char result[8192];
+    static char result[BASE64_RESULT_SZ];
+    int j;
+    unsigned int k;
     int c;
     long val;
-    int i;
-    char *d;
-
     if (!p)
 	return NULL;
-
     if (!base64_initialized)
 	base64_init();
-
     val = c = 0;
-    d = result;
-    while (*p) {
-	i = base64_value[(int) *p++];
-	if (i >= 0) {
-	    val = val * 64 + i;
-	    c++;
-	}
-	if (c == 4) {		/* One quantum of four encoding characters/24 bit */
-	    *d++ = val >> 16;	/* High 8 bits */
-	    *d++ = (val >> 8) & 0xff;	/* Mid 8 bits */
-	    *d++ = val & 0xff;	/* Low 8 bits */
-	    val = c = 0;
-	}
+    for (j = 0; *p && j + 3 < BASE64_RESULT_SZ; p++) {
+	k = (int) *p % BASE64_VALUE_SZ;
+	if (base64_value[k] < 0)
+	    continue;
+	val <<= 6;
+	val += base64_value[k];
+	if (++c < 4)
+	    continue;
+	/* One quantum of four encoding characters/24 bit */
+	result[j++] = val >> 16;	/* High 8 bits */
+	result[j++] = (val >> 8) & 0xff;	/* Mid 8 bits */
+	result[j++] = val & 0xff;	/* Low 8 bits */
+	val = c = 0;
     }
-    *d = 0;
-    return *result ? result : NULL;
+    result[j] = 0;
+    return result;
 }
 
 /* adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c with adjustments */
 const char *
 base64_encode(const char *decoded_str)
 {
-    static char result[8192];
+    static char result[BASE64_RESULT_SZ];
     int bits = 0;
     int char_count = 0;
     int out_cnt = 0;
