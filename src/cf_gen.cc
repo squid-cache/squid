@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.22 1998/05/28 22:57:08 wessels Exp $
+ * $Id: cf_gen.cc,v 1.23 1998/05/28 23:00:05 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -132,7 +132,7 @@ main(int argc, char *argv[])
 	if (NULL == fgets(buff, MAX_LINE, fp))
 	    break;
 	linenum++;
-	if (t = strchr(buff, '\n'))
+	if ((t = strchr(buff, '\n')))
 	    *t = '\0';
 	switch (state) {
 	case sSTART:
