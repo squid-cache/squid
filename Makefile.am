@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.11 2002/07/06 20:18:18 hno Exp $
+# $Id: Makefile.am,v 1.12 2002/07/07 18:00:55 hno Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
@@ -35,4 +35,4 @@ EXTRA_DIST = \
 
 install-pinger:
 	chown root $(libexecdir)/pinger$(EXEEXT)
-	chmod 4700 $(libexecdir)/pinger$(EXEEXT)
+	chmod 4711 $(libexecdir)/pinger$(EXEEXT)
