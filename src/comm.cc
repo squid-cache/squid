@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.400 2005/02/13 15:49:50 serassio Exp $
+ * $Id: comm.cc,v 1.401 2005/03/10 21:49:19 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2679,6 +2679,6 @@ DeferredRead::markCancelled() {
 }
 
 ConnectionDetail::ConnectionDetail() {
-    bzero(&me, sizeof(me));
-    bzero(&peer, sizeof(peer));
+    memset(&me, 0, sizeof(me));
+    memset(&peer, 0, sizeof(peer));
 }

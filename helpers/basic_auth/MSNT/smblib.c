@@ -330,7 +330,7 @@ SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
 	    return (SMBlibE_BAD);	/* Should handle the error */
 
 	}
-	bzero(SMB_Hdr(pkt), SMB_ssetpLM_len);
+	memset(SMB_Hdr(pkt), 0, SMB_ssetpLM_len);
 	SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);	/* Plunk in IDF */
 	*(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBsesssetupX;
 	SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, Con_Handle->pid);
@@ -393,7 +393,7 @@ SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
 	    return (-1);	/* Should handle the error */
 
 	}
-	bzero(SMB_Hdr(pkt), SMB_ssetpNTLM_len);
+	memset(SMB_Hdr(pkt), 0, SMB_ssetpNTLM_len);
 	SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);	/* Plunk in IDF */
 	*(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBsesssetupX;
 	SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, Con_Handle->pid);
