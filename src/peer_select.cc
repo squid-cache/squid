@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.92 1998/12/05 00:54:35 wessels Exp $
+ * $Id: peer_select.cc,v 1.93 1998/12/05 07:17:36 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -88,7 +88,6 @@ static void peerGetSomeNeighbor(ps_state *);
 static void peerGetSomeNeighborReplies(ps_state *);
 static void peerGetSomeDirect(ps_state *);
 static void peerGetSomeParent(ps_state *);
-static void psstateFigureDirect(ps_state *);
 static void peerAddFwdServer(FwdServer **, peer *, hier_code);
 
 static void
@@ -224,71 +223,62 @@ peerCheckNetdbDirect(ps_state * psstate)
 }
 
 static void
-peerSelectFoo(ps_state * psstate)
+peerSelectFoo(ps_state * ps)
 {
-    StoreEntry *entry = psstate->entry;
-    request_t *request = psstate->request;
+    StoreEntry *entry = ps->entry;
+    request_t *request = ps->request;
     debug(44, 3) ("peerSelectFoo: '%s %s'\n",
 	RequestMethodStr[request->method],
 	request->host);
-    if (psstate->direct == DIRECT_UNKNOWN) {
-	psstateFigureDirect(psstate);
-	if (psstate->direct == DIRECT_UNKNOWN)
+    if (ps->direct == DIRECT_UNKNOWN) {
+	if (ps->always_direct == 0 && Config.accessList.AlwaysDirect) {
+	    ps->acl_checklist = aclChecklistCreate(
+		Config.accessList.AlwaysDirect,
+		request,
+		request->client_addr,
+		NULL,		/* user agent */
+		NULL);		/* ident */
+	    aclNBCheck(ps->acl_checklist,
+		peerCheckAlwaysDirectDone,
+		ps);
 	    return;
+	} else if (ps->always_direct > 0) {
+	    ps->direct = DIRECT_YES;
+	} else if (ps->never_direct == 0 && Config.accessList.NeverDirect) {
+	    ps->acl_checklist = aclChecklistCreate(
+		Config.accessList.NeverDirect,
+		request,
+		request->client_addr,
+		NULL,		/* user agent */
+		NULL);		/* ident */
+	    aclNBCheck(ps->acl_checklist,
+		peerCheckNeverDirectDone,
+		ps);
+	    return;
+	} else if (ps->never_direct > 0) {
+	    ps->direct = DIRECT_NO;
+	} else if (request->flags.loopdetect) {
+	    ps->direct = DIRECT_YES;
+	} else {
+	    ps->direct = DIRECT_MAYBE;
+	}
+	debug(44, 3) ("ps: direct = %s\n",
+	    DirectStr[ps->direct]);
     }
     if (entry->ping_status == PING_NONE) {
-	peerGetSomeNeighbor(psstate);
+	peerGetSomeNeighbor(ps);
 	if (entry->ping_status == PING_WAITING)
 	    return;
     } else if (entry->ping_status == PING_WAITING) {
-	peerGetSomeNeighborReplies(psstate);
+	peerGetSomeNeighborReplies(ps);
 	entry->ping_status = PING_DONE;
     }
     if (Config.onoff.prefer_direct)
-	peerGetSomeDirect(psstate);
-    peerGetSomeParent(psstate);
+	peerGetSomeDirect(ps);
+    peerGetSomeParent(ps);
     if (!Config.onoff.prefer_direct)
-	peerGetSomeDirect(psstate);
-    peerSelectCallback(psstate);
-}
-
-static void
-psstateFigureDirect(ps_state * psstate)
-{
-    request_t *request = psstate->request;
-    if (psstate->always_direct == 0 && Config.accessList.AlwaysDirect) {
-	psstate->acl_checklist = aclChecklistCreate(
-	    Config.accessList.AlwaysDirect,
-	    request,
-	    request->client_addr,
-	    NULL,		/* user agent */
-	    NULL);		/* ident */
-	aclNBCheck(psstate->acl_checklist,
-	    peerCheckAlwaysDirectDone,
-	    psstate);
-	return;
-    } else if (psstate->always_direct > 0) {
-	psstate->direct = DIRECT_YES;
-    } else if (psstate->never_direct == 0 && Config.accessList.NeverDirect) {
-	psstate->acl_checklist = aclChecklistCreate(
-	    Config.accessList.NeverDirect,
-	    request,
-	    request->client_addr,
-	    NULL,		/* user agent */
-	    NULL);		/* ident */
-	aclNBCheck(psstate->acl_checklist,
-	    peerCheckNeverDirectDone,
-	    psstate);
-	return;
-    } else if (psstate->never_direct > 0) {
-	psstate->direct = DIRECT_NO;
-    } else if (request->flags.loopdetect) {
-	psstate->direct = DIRECT_YES;
-    } else {
-	psstate->direct = DIRECT_MAYBE;
-    }
-    debug(44, 3) ("psstateFigureDirect: direct = %s\n",
-	DirectStr[psstate->direct]);
+	peerGetSomeDirect(ps);
+    peerSelectCallback(ps);
 }
 
 /*
