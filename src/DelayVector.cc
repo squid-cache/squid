@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.cc,v 1.4 2003/03/04 01:40:25 robertc Exp $
+ * $Id: DelayVector.cc,v 1.5 2003/03/10 20:12:43 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -164,17 +164,17 @@ DelayVector::Id::~Id()
 }
 
 int
-DelayVector::Id::bytesWanted (int min, int max) const
+DelayVector::Id::bytesWanted (int minimum, int maximum) const
 {
-    int nbytes = max;
+    int nbytes = maximum;
     const_iterator pos = ids.begin();
 
     while (pos != ids.end()) {
-        nbytes = XMIN (nbytes, (*pos)->bytesWanted(min, nbytes));
+        nbytes = min (nbytes, (*pos)->bytesWanted(minimum, nbytes));
         ++pos;
     }
 
-    nbytes = XMAX(min, nbytes);
+    nbytes = max(minimum, nbytes);
     return nbytes;
 }
 
