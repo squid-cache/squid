@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.52 1996/11/15 17:26:18 wessels Exp $
+ * $Id: errorpage.cc,v 1.53 1997/01/15 23:01:13 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -198,6 +198,8 @@ squid_error_url(const char *url, int method, int type, const char *address, int 
     *tmp_error_buf = '\0';
     if (type < ERR_MIN || type > ERR_MAX)
 	fatal_dump("squid_error_url: type out of range.");
+    if (!code)
+	code = 500;
     error_index = (int) (type - ERR_MIN);
     debug(4, 1, "%s: %s\n", ErrorData[error_index].tag, url);
     sprintf(tmp_error_buf, "HTTP/1.0 %d Cache Detected Error\r\nContent-type: text/html\r\n\r\n", code);
