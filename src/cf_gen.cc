@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.16 1997/12/01 22:45:50 wessels Exp $
+ * $Id: cf_gen.cc,v 1.17 1997/12/02 03:30:22 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -74,6 +74,7 @@ typedef struct Entry {
     char *default_value;
     char *default_if_none;
     char *comment;
+    char *ifdef;
     Line *doc;
     struct Entry *next;
 } Entry;
@@ -175,6 +176,12 @@ main(int argc, char *argv[])
 		    exit(1);
 		}
 		curr->type = strdup(ptr);
+	    } else if (!strncmp(buff, "IFDEF:", 6)) {
+		if ((ptr = strtok(buff + 6, WS)) == NULL) {
+		    printf("Error on line %d\n", linenum);
+		    exit(1);
+		}
+		curr->ifdef = strdup(ptr);
 	    } else if (!strcmp(buff, "DOC_START")) {
 		state = sDOC;
 	    } else if (!strcmp(buff, "DOC_NONE")) {
@@ -317,6 +324,8 @@ gen_default(Entry * head, FILE * fp)
 	    continue;
 	}
 	assert(entry->default_value);
+	if (entry->ifdef)
+	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
 	if (strcmp(entry->default_value, "none") == 0) {
 	    fprintf(fp, "\t/* No default for %s */\n", entry->name);
 	} else {
@@ -324,6 +333,8 @@ gen_default(Entry * head, FILE * fp)
 		entry->name,
 		entry->default_value);
 	}
+	if (entry->ifdef)
+	    fprintf(fp, "#endif\n");
     }
     fprintf(fp, "\tcfg_filename = NULL;\n");
     fprintf(fp, "}\n\n");
@@ -344,6 +355,8 @@ gen_default_if_none(Entry * head, FILE * fp)
 	assert(entry->loc);
 	if (entry->default_if_none == NULL)
 	    continue;
+	if (entry->ifdef)
+	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
 	fprintf(fp,
 	    "\tif (check_null_%s(%s))\n"
 	    "\t\tdefault_line(\"%s %s\");\n",
@@ -351,6 +364,8 @@ gen_default_if_none(Entry * head, FILE * fp)
 	    entry->loc,
 	    entry->name,
 	    entry->default_if_none);
+	if (entry->ifdef)
+	    fprintf(fp, "#endif\n");
     }
     fprintf(fp, "}\n\n");
 }
@@ -380,6 +395,8 @@ gen_parse(Entry * head, FILE * fp)
 	    entry->name
 	    );
 	assert(entry->loc);
+	if (entry->ifdef)
+	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
 	if (strcmp(entry->loc, "none") == 0) {
 	    fprintf(fp,
 		"\t\tparse_%s();\n",
@@ -391,6 +408,8 @@ gen_parse(Entry * head, FILE * fp)
 		entry->type, entry->loc
 		);
 	}
+	if (entry->ifdef)
+	    fprintf(fp, "#endif\n");
     }
 
     fprintf(fp,
@@ -417,10 +436,14 @@ gen_dump(Entry * head, FILE * fp)
 	    continue;
 	if (strcmp(entry->name, "comment") == 0)
 	    continue;
+	if (entry->ifdef)
+	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
 	fprintf(fp, "\tdump_%s(entry, \"%s\", %s);\n",
 	    entry->type,
 	    entry->name,
 	    entry->loc);
+	if (entry->ifdef)
+	    fprintf(fp, "#endif\n");
     }
     fprintf(fp, "}\n\n");
 }
@@ -440,7 +463,11 @@ gen_free(Entry * head, FILE * fp)
 	    continue;
 	if (strcmp(entry->name, "comment") == 0)
 	    continue;
+	if (entry->ifdef)
+	    fprintf(fp, "#ifdef %s\n", entry->ifdef);
 	fprintf(fp, "\tfree_%s(&%s);\n", entry->type, entry->loc);
+	if (entry->ifdef)
+	    fprintf(fp, "#endif\n");
     }
     fprintf(fp, "}\n\n");
 }

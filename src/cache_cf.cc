@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.236 1997/12/02 00:17:30 wessels Exp $
+ * $Id: cache_cf.cc,v 1.237 1997/12/02 03:30:21 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -30,8 +30,11 @@
  */
 
 #include "squid.h"
+
+#if SQUID_SNMP
 #include "snmp.h"
 #include "snmp_config.h"
+#endif
 
 static const char *const T_SECOND_STR = "second";
 static const char *const T_MINUTE_STR = "minute";
@@ -55,7 +58,9 @@ static void self_destruct(void);
 static void wordlistAdd(wordlist **, const char *);
 
 static void configDoConfigure(void);
+#if SQUID_SNMP
 static void parse_snmp_conf(snmpconf **);
+#endif
 static void parse_refreshpattern(refresh_t **);
 static int parseTimeUnits(const char *unit);
 static void parseTimeLine(time_t * tptr, const char *units);
@@ -362,6 +367,7 @@ dump_acl(StoreEntry * entry, const char *name, acl * acl)
     storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
+#if SQUID_SNMP
 static void
 parse_snmp_conf(snmpconf ** s)
 {
@@ -376,7 +382,6 @@ parse_snmp_conf(snmpconf ** s)
     p = strtok(NULL, null_string);
     strcpy(buff, p);
     tokenize(buff, tokens, 10);
-
     if (!strcmp("view", tokens[0])) {
 	if (create_view(tokens) < 0)
 	    debug(49, 5) ("snmp: parse_snmpconf(): error\n");
@@ -389,6 +394,24 @@ parse_snmp_conf(snmpconf ** s)
     } else
 	debug(49, 5) ("snmp: unknown directive %s\n", tokens[0]);
 }
+
+static void
+dump_snmp_conf(StoreEntry * entry, const char *name, snmpconf * head)
+{
+    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
+}
+
+static void
+free_snmp_conf(snmpconf ** head)
+{
+    snmpconf *t;
+    while ((t = *head) != NULL) {
+	*head = t->next;
+	safe_free(t->line);
+	safe_free(t);
+    }
+}
+#endif
 
 static void
 parse_acl(acl ** acl)
@@ -914,12 +937,6 @@ parse_onoff(int *var)
 #define free_eol free_string
 
 static void
-dump_snmp_conf(StoreEntry * entry, const char *name, snmpconf * head)
-{
-    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
-}
-
-static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 {
     storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
@@ -978,17 +995,6 @@ parse_refreshpattern(refresh_t ** head)
 	head = &(*head)->next;
     *head = t;
     safe_free(pattern);
-}
-
-static void
-free_snmp_conf(snmpconf ** head)
-{
-    snmpconf *t;
-    while ((t = *head) != NULL) {
-	*head = t->next;
-	safe_free(t->line);
-	safe_free(t);
-    }
 }
 
 static void
