@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.69 1997/05/02 21:34:19 wessels Exp $
+ * $Id: wais.cc,v 1.70 1997/05/15 23:38:02 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -298,7 +298,7 @@ waisSendRequest(int fd, void *data)
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }
 
-int
+void
 waisStart(method_t method, char *mime_hdr, StoreEntry * entry)
 {
     WaisStateData *waisState = NULL;
@@ -309,7 +309,7 @@ waisStart(method_t method, char *mime_hdr, StoreEntry * entry)
     if (!Config.Wais.relayHost) {
 	debug(24, 0, "waisStart: Failed because no relay host defined!\n");
 	squid_error_entry(entry, ERR_NO_RELAY, NULL);
-	return COMM_ERROR;
+	return;
     }
     fd = comm_open(SOCK_STREAM,
 	0,
@@ -320,7 +320,7 @@ waisStart(method_t method, char *mime_hdr, StoreEntry * entry)
     if (fd == COMM_ERROR) {
 	debug(24, 4, "waisStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
-	return COMM_ERROR;
+	return;
     }
     waisState = xcalloc(1, sizeof(WaisStateData));
     waisState->method = method;
@@ -334,13 +334,12 @@ waisStart(method_t method, char *mime_hdr, StoreEntry * entry)
 	waisStateFree,
 	waisState);
     commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
-    storeLockObject(entry, NULL, NULL);
+    storeLockObject(entry);
     waisState->ip_lookup_pending = 1;
     ipcache_nbgethostbyname(waisState->relayhost,
 	waisState->fd,
 	waisConnect,
 	waisState);
-    return COMM_OK;
 }
 
 static void

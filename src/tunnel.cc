@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.50 1997/05/15 06:55:49 wessels Exp $
+ * $Id: tunnel.cc,v 1.51 1997/05/15 23:38:02 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -381,7 +381,7 @@ sslConnectDone(int fd, int status, void *data)
 	sslConnected(sslState->server.fd, sslState);
 }
 
-int
+void
 sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size_ptr)
 {
     /* Create state structure. */
@@ -411,7 +411,7 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
 	    NULL,
 	    NULL,
 	    xfree);
-	return COMM_ERROR;
+	return;
     }
     sslState = xcalloc(1, sizeof(SslStateData));
     sslState->url = xstrdup(url);
@@ -438,7 +438,6 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
 	sslPeerSelectComplete,
 	sslPeerSelectFail,
 	sslState);
-    return COMM_OK;
 }
 
 static void
