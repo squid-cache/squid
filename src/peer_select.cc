@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.27 1997/08/25 02:19:33 wessels Exp $
+ * $Id: peer_select.cc,v 1.28 1997/10/22 19:23:45 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -330,7 +330,7 @@ peerSelectFoo(ps_state * psstate)
     }
 }
 
-void
+static void
 peerPingTimeout(void *data)
 {
     ps_state *psstate = data;
