@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.7 2001/10/17 12:41:52 hno Exp $
+ * $Id: auth_digest.cc,v 1.8 2001/10/17 17:09:08 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -42,6 +42,8 @@
 #include "rfc2617.h"
 #include "auth_digest.h"
 
+extern AUTHSSETUP authSchemeSetup_digest;
+
 static void
 authenticateStateFree(authenticateStateData * r)
 {
@@ -80,9 +82,9 @@ static hash_table *digest_nonce_cache;
 static auth_digest_config *digestConfig = NULL;
 
 static int authdigest_initialised = 0;
-MemPool *digest_user_pool = NULL;
-MemPool *digest_request_pool = NULL;
-MemPool *digest_nonce_pool = NULL;
+static MemPool *digest_user_pool = NULL;
+static MemPool *digest_request_pool = NULL;
+static MemPool *digest_nonce_pool = NULL;
 
 CBDATA_TYPE(authenticateStateData);
 
@@ -94,23 +96,25 @@ CBDATA_TYPE(authenticateStateData);
 
 static void authenticateDigestNonceCacheCleanup(void *data);
 static digest_nonce_h *authenticateDigestNonceFindNonce(const char *nonceb64);
-digest_nonce_h *authenticateDigestNonceNew();
-void authenticateDigestNonceDelete(digest_nonce_h * nonce);
-void authenticateDigestNonceSetup();
-void authenticateDigestNonceShutdown();
-void authenticateDigestNonceReconfigure();
-const char *authenticateDigestNonceNonceb64(digest_nonce_h * nonce);
-int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
-int authDigestNonceIsStale(digest_nonce_h * nonce);
-void authDigestNonceEncode(digest_nonce_h * nonce);
-int authDigestNonceLastRequest(digest_nonce_h * nonce);
-void authDigestNonceLink(digest_nonce_h * nonce);
-void authDigestNonceUnlink(digest_nonce_h * nonce);
-int authDigestNonceLinks(digest_nonce_h * nonce);
-void authDigestNonceUserUnlink(digest_nonce_h * nonce);
-void authDigestNoncePurge(digest_nonce_h * nonce);
+static digest_nonce_h *authenticateDigestNonceNew();
+static void authenticateDigestNonceDelete(digest_nonce_h * nonce);
+static void authenticateDigestNonceSetup();
+static void authenticateDigestNonceShutdown();
+static void authenticateDigestNonceReconfigure();
+static const char *authenticateDigestNonceNonceb64(digest_nonce_h * nonce);
+static int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
+static int authDigestNonceIsStale(digest_nonce_h * nonce);
+static void authDigestNonceEncode(digest_nonce_h * nonce);
+static int authDigestNonceLastRequest(digest_nonce_h * nonce);
+static void authDigestNonceLink(digest_nonce_h * nonce);
+static void authDigestNonceUnlink(digest_nonce_h * nonce);
+#if NOT_USED
+static int authDigestNonceLinks(digest_nonce_h * nonce);
+#endif
+static void authDigestNonceUserUnlink(digest_nonce_h * nonce);
+static void authDigestNoncePurge(digest_nonce_h * nonce);
 
-void
+static void
 authDigestNonceEncode(digest_nonce_h * nonce)
 {
     if (!nonce)
@@ -120,7 +124,7 @@ authDigestNonceEncode(digest_nonce_h * nonce)
     nonce->hash.key = xstrdup(base64_encode_bin((char *) &(nonce->noncedata), sizeof(digest_nonce_data)));
 }
 
-digest_nonce_h *
+static digest_nonce_h *
 authenticateDigestNonceNew()
 {
     digest_nonce_h *newnonce = memPoolAlloc(digest_nonce_pool);
@@ -190,7 +194,7 @@ authenticateDigestNonceNew()
     return newnonce;
 }
 
-void
+static void
 authenticateDigestNonceDelete(digest_nonce_h * nonce)
 {
     if (nonce) {
@@ -205,7 +209,7 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
     }
 }
 
-void
+static void
 authenticateDigestNonceSetup()
 {
     if (!digest_nonce_pool)
@@ -217,7 +221,7 @@ authenticateDigestNonceSetup()
     }
 }
 
-void
+static void
 authenticateDigestNonceShutdown()
 {
     /* 
@@ -240,12 +244,12 @@ authenticateDigestNonceShutdown()
     debug(29, 2) ("authenticateDigestNonceShutdown: Nonce cache shutdown\n");
 }
 
-void
+static void
 authenticateDigestNonceReconfigure()
 {
 }
 
-void
+static void
 authenticateDigestNonceCacheCleanup(void *data)
 {
     /*
@@ -277,7 +281,7 @@ authenticateDigestNonceCacheCleanup(void *data)
 	eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, digestConfig->nonceGCInterval, 1);
 }
 
-void
+static void
 authDigestNonceLink(digest_nonce_h * nonce)
 {
     assert(nonce != NULL);
@@ -285,15 +289,17 @@ authDigestNonceLink(digest_nonce_h * nonce)
     debug(29, 9) ("authDigestNonceLink: nonce '%d' now at '%d'.\n", nonce, nonce->references);
 }
 
-int
+#if NOT_USED
+static int
 authDigestNonceLinks(digest_nonce_h * nonce)
 {
     if (!nonce)
 	return -1;
     return nonce->references;
 }
+#endif
 
-void
+static void
 authDigestNonceUnlink(digest_nonce_h * nonce)
 {
     assert(nonce != NULL);
@@ -307,7 +313,7 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
 	authenticateDigestNonceDelete(nonce);
 }
 
-const char *
+static const char *
 authenticateDigestNonceNonceb64(digest_nonce_h * nonce)
 {
     if (!nonce)
@@ -315,7 +321,7 @@ authenticateDigestNonceNonceb64(digest_nonce_h * nonce)
     return nonce->hash.key;
 }
 
-digest_nonce_h *
+static digest_nonce_h *
 authenticateDigestNonceFindNonce(const char *nonceb64)
 {
     digest_nonce_h *nonce = NULL;
@@ -329,7 +335,7 @@ authenticateDigestNonceFindNonce(const char *nonceb64)
     return nonce;
 }
 
-int
+static int
 authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
 {
     int intnc;
@@ -351,7 +357,7 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
     return -1;
 }
 
-int
+static int
 authDigestNonceIsStale(digest_nonce_h * nonce)
 {
     /* do we have a nonce ? */
@@ -378,7 +384,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
 }
 
 /* return -1 if the digest will be stale on the next request */
-int
+static int
 authDigestNonceLastRequest(digest_nonce_h * nonce)
 {
     if (!nonce)
@@ -395,7 +401,7 @@ authDigestNonceLastRequest(digest_nonce_h * nonce)
     return 0;
 }
 
-void
+static void
 authDigestNoncePurge(digest_nonce_h * nonce)
 {
     if (!nonce)
@@ -411,13 +417,15 @@ authDigestNoncePurge(digest_nonce_h * nonce)
 /* USER related functions */
 
 
-int
+#if NOT_USED
+static int
 authDigestUsercmpname(digest_user_h * u1, digest_user_h * u2)
 {
     return strcmp(u1->username, u2->username);
 }
+#endif
 
-auth_user_t *
+static auth_user_t *
 authDigestUserFindUsername(const char *username)
 {
     auth_user_hash_pointer *usernamehash;
@@ -436,20 +444,20 @@ authDigestUserFindUsername(const char *username)
     return NULL;
 }
 
-digest_user_h *
+static digest_user_h *
 authDigestUserNew()
 {
     return memPoolAlloc(digest_user_pool);
 }
 
-void
+static void
 authDigestUserSetup()
 {
     if (!digest_user_pool)
 	digest_user_pool = memPoolCreate("Digest Scheme User Data", sizeof(digest_user_h));
 }
 
-void
+static void
 authDigestUserShutdown()
 {
     /*
@@ -476,7 +484,7 @@ authDigestUserShutdown()
 /* request related functions */
 
 /* delete the digest reuqest structure. Does NOT delete related structures */
-void
+static void
 authDigestRequestDelete(digest_request_h * digest_request)
 {
     if (digest_request->nonceb64)
@@ -502,14 +510,14 @@ authDigestRequestDelete(digest_request_h * digest_request)
     memPoolFree(digest_request_pool, digest_request);
 }
 
-void
+static void
 authDigestAURequestFree(auth_user_request_t * auth_user_request)
 {
     if (auth_user_request->scheme_data != NULL)
 	authDigestRequestDelete((digest_request_h *) auth_user_request->scheme_data);
 }
 
-digest_request_h *
+static digest_request_h *
 authDigestRequestNew()
 {
     digest_request_h *tmp;
@@ -518,14 +526,14 @@ authDigestRequestNew()
     return tmp;
 }
 
-void
+static void
 authDigestRequestSetup()
 {
     if (!digest_request_pool)
 	digest_request_pool = memPoolCreate("Digest Scheme Request Data", sizeof(digest_request_h));
 }
 
-void
+static void
 authDigestRequestShutdown()
 {
     /* No requests should be in progress when we get here */
@@ -537,7 +545,7 @@ authDigestRequestShutdown()
 }
 
 
-void
+static void
 authDigestDone(void)
 {
     if (digestauthenticators)
@@ -605,12 +613,12 @@ authSchemeSetup_digest(authscheme_entry_t * authscheme)
     authscheme->authConnLastHeader = NULL;
 }
 
-int
+static int
 authenticateDigestActive()
 {
     return (authdigest_initialised == 1) ? 1 : 0;
 }
-int
+static int
 authDigestConfigured()
 {
     if ((digestConfig != NULL) && (digestConfig->authenticate != NULL) &&
@@ -620,7 +628,7 @@ authDigestConfigured()
     return 0;
 }
 
-int
+static int
 authDigestAuthenticated(auth_user_request_t * auth_user_request)
 {
     digest_user_h *digest_user = auth_user_request->auth_user->scheme_data;
@@ -700,7 +708,7 @@ authenticateDigestAuthenticateUser(auth_user_request_t * auth_user_request, requ
     return;
 }
 
-int
+static int
 authenticateDigestDirection(auth_user_request_t * auth_user_request)
 {
     digest_request_h *digest_request;
@@ -724,7 +732,7 @@ authenticateDigestDirection(auth_user_request_t * auth_user_request)
 }
 
 /* add the [proxy]authorisation header */
-void
+static void
 authDigestAddHeader(auth_user_request_t * auth_user_request, HttpReply * rep, int accel)
 {
     int type;
@@ -753,7 +761,7 @@ authDigestAddHeader(auth_user_request_t * auth_user_request, HttpReply * rep, in
 
 #if WAITING_FOR_TE
 /* add the [proxy]authorisation header */
-void
+static void
 authDigestAddTrailer(auth_user_request_t * auth_user_request, HttpReply * rep, int accel)
 {
     int type;
@@ -795,7 +803,7 @@ authenticateDigestFixHeader(auth_user_request_t * auth_user_request, HttpReply *
     }
 }
 
-void
+static void
 authenticateDigestUserFree(auth_user_t * auth_user)
 {
     digest_user_h *digest_user = auth_user->scheme_data;
@@ -943,7 +951,7 @@ authenticateDigestStats(StoreEntry * sentry)
 
 /* NonceUserUnlink: remove the reference to auth_user and unlink the node from the list */
 
-void
+static void
 authDigestNonceUserUnlink(digest_nonce_h * nonce)
 {
     digest_user_h *digest_user;
@@ -975,7 +983,7 @@ authDigestNonceUserUnlink(digest_nonce_h * nonce)
 
 /* authDigestUserLinkNonce: add a nonce to a given user's struct */
 
-void
+static void
 authDigestUserLinkNonce(auth_user_t * auth_user, digest_nonce_h * nonce)
 {
     dlink_node *node;
@@ -1002,7 +1010,7 @@ authDigestUserLinkNonce(auth_user_t * auth_user, digest_nonce_h * nonce)
 }
 
 /* authenticateDigestUsername: return a pointer to the username in the */
-char *
+static char *
 authenticateDigestUsername(auth_user_t * auth_user)
 {
     digest_user_h *digest_user = auth_user->scheme_data;
@@ -1012,7 +1020,7 @@ authenticateDigestUsername(auth_user_t * auth_user)
 }
 
 /* setup the necessary info to log the username */
-void
+static void
 authDigestLogUsername(auth_user_request_t * auth_user_request, char *username)
 {
     auth_user_t *auth_user;
