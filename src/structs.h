@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.293 1999/05/25 22:18:20 wessels Exp $
+ * $Id: structs.h,v 1.294 1999/05/26 06:48:10 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1279,11 +1279,11 @@ struct _SwapDir {
 	STOBJREAD *read;
 	STOBJWRITE *write;
 	STOBJUNLINK *unlink;
-	STOBJLOG *log;
     } obj;
     struct {
 	STLOGOPEN *open;
 	STLOGCLOSE *close;
+	STLOGWRITE *write;
 	struct {
 	    STLOGCLEANOPEN *open;
 	    STLOGCLEANWRITE *write;
