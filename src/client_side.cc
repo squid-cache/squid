@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.601 2002/10/14 10:52:05 adrian Exp $
+ * $Id: client_side.cc,v 1.602 2002/10/15 01:00:22 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1791,6 +1791,11 @@ httpAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *peer
 #if USE_IDENT
     static aclCheck_t identChecklist;
 #endif
+
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
+
     /* kick off another one for later */
     comm_accept(sock, httpAccept, NULL);
 
@@ -1886,6 +1891,10 @@ httpsAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *pee
 #if USE_IDENT
     static aclCheck_t identChecklist;
 #endif
+
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
 
     if (flag != COMM_OK) {
 	errno = xerrno;

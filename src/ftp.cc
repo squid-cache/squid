@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.334 2002/10/14 11:09:26 adrian Exp $
+ * $Id: ftp.cc,v 1.335 2002/10/15 01:00:22 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1896,6 +1896,10 @@ ftpAcceptDataConnection(int fd, int newfd, struct sockaddr_in *me, struct sockad
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debug(9, 3) ("ftpAcceptDataConnection\n");
+
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
 
     if (EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED)) {
 	comm_close(ftpState->ctrl.fd);
