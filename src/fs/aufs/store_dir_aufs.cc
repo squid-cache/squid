@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.8 2000/10/13 06:35:05 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.9 2000/10/13 06:35:54 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -155,7 +155,7 @@ storeAufsDirMapBitReset(SwapDir * SD, int fn)
     /*
      * We have to test the bit before calling file_map_bit_reset.
      * file_map_bit_reset doesn't do bounds checking.  It assumes
-     * filn in a valid file number, but it might not be because
+     * filn is a valid file number, but it might not be because
      * the map is dynamic in size.  Also clearing an already clear
      * bit puts the map counter of-of-whack.
      */
