@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.27 1996/09/20 06:28:33 wessels Exp $
+ * $Id: debug.cc,v 1.28 1996/09/20 23:26:55 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -273,4 +273,18 @@ _db_rotate_log(void)
      * before HUP'ing us. */
     if (debug_log != stderr)
 	debugOpenLog(Config.Log.log);
+}
+
+char *
+accessLogTime(time_t t)
+{
+    struct tm *tm;
+    static char buf[128];
+    static time_t last_t = 0;
+    if (t != last_t) {
+	tm = localtime(&t);
+	strftime(buf, 127, "%y/%m/%d %T", tm);
+	last_t = t;
+    }
+    return buf;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.20 1996/09/20 06:28:18 wessels Exp $
+ * $Id: util.h,v 1.21 1996/09/20 23:26:52 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -107,6 +107,12 @@
 #include "config.h"
 #include <stdio.h>
 #include <time.h>
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 
 #if !defined(SQUIDHOSTNAMELEN)
 #include <sys/param.h>
@@ -124,18 +130,21 @@
 #if !HAVE_STRDUP
 extern char *strdup _PARAMS((char *));
 #endif
-extern char *xstrdup _PARAMS((char *));	/* Duplicate a string */
+extern char *xstrdup _PARAMS((char *));
 
 /* from xmalloc.c */
-void *xmalloc _PARAMS((size_t));	/* Wrapper for malloc(3) */
-void *xrealloc _PARAMS((void *, size_t));	/* Wrapper for realloc(3) */
-void *xcalloc _PARAMS((int, size_t));	/* Wrapper for calloc(3) */
-void xfree _PARAMS((void *));	/* Wrapper for free(3) */
-void xxfree _PARAMS((void *));	/* Wrapper for free(3) */
-char *xstrdup _PARAMS((char *));
-char *xstrerror _PARAMS((void));
-char *getfullhostname _PARAMS((void));
-void xmemcpy _PARAMS((void *, void *, int));
+extern void *xmalloc _PARAMS((size_t));
+extern void *xrealloc _PARAMS((void *, size_t));
+extern void *xcalloc _PARAMS((int, size_t));
+extern void xfree _PARAMS((void *));
+extern void xxfree _PARAMS((void *));
+extern char *xstrdup _PARAMS((char *));
+extern char *xstrerror _PARAMS((void));
+extern char *getfullhostname _PARAMS((void));
+extern void xmemcpy _PARAMS((void *, void *, int));
+
+extern int tvSubMsec _PARAMS((struct timeval, struct timeval));
+
 
 #if XMALLOC_STATISTICS
 void malloc_statistics _PARAMS((void (*)_PARAMS((int, int, void *)), void *));

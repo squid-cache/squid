@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.19 1996/09/20 06:28:22 wessels Exp $
+ * $Id: util.c,v 1.20 1996/09/20 23:26:53 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -478,4 +478,11 @@ Tolower(char *q)
 	*s = tolower((unsigned char) *s);
 	s++;
     }
+}
+
+int
+tvSubMsec(struct timeval t1, struct timeval t2)
+{
+    return (t2.tv_sec - t1.tv_sec) * 1000 +
+        (t2.tv_usec - t1.tv_usec) / 1000;
 }

@@ -13,8 +13,8 @@ static struct in_addr networkFromInaddr _PARAMS((struct in_addr a));
 void
 netdbInit(void)
 {
-    addr_table = hash_create(strcmp, 229, hash_string);
-    host_table = hash_create(strcmp, 467, hash_string);
+    addr_table = hash_create((int (*)_PARAMS((char *, char *))) strcmp, 229, hash_string);
+    host_table = hash_create((int (*)_PARAMS((char *, char *))) strcmp, 467, hash_string);
 }
 
 static void
