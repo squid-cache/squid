@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.90 1996/11/26 19:06:59 wessels Exp $
+ * $Id: neighbors.cc,v 1.91 1996/11/26 23:21:52 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -877,8 +877,9 @@ parseNeighborType(const char *s)
 int
 neighborUp(edge * e)
 {
-    if (squid_curtime - e->last_fail_time > (time_t) 60)
-	return 0;
+    if (e->last_fail_time)
+        if (squid_curtime - e->last_fail_time > (time_t) 60)
+	    return 0;
     if (e->stats.ack_deficit > HIER_MAX_DEFICIT)
 	return 0;
     return 1;
