@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.27 1997/10/25 17:22:54 wessels Exp $
+ * $Id: pinger.cc,v 1.28 1997/10/31 05:15:08 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -194,10 +194,9 @@ pingerRecv(void)
 #if HAVE_IP_HL
     iphdrlen = ip->ip_hl << 2;
 #else /* HAVE_IP_HL */
-#if BYTE_ORDER == BIG_ENDIAN
+#if WORDS_BIGENDIAN
     iphdrlen = (ip->ip_vhl >> 4) << 2;
-#endif
-#if BYTE_ORDER == LITTLE_ENDIAN
+#else
     iphdrlen = (ip->ip_vhl & 0xF) << 2;
 #endif
 #endif /* HAVE_IP_HL */
