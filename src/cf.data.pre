@@ -1907,16 +1907,6 @@ DOC_START
 	@DEFAULT_ICON_DIR@
 DOC_END
 
-NAME: icon_content_type
-TYPE: string
-LOC: Config.icons.content_type
-DEFAULT: image/gif
-DOC_START
-	The default Squid icons that come with Squid (and are used in
-	FTP and gopher listings) are in GIF format. If you want to
-	use JPG format icons you would have to change this. 
-DOC_END
-
 NAME: error_directory
 TYPE: string
 LOC: Config.errorDirectory
