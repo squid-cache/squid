@@ -9,17 +9,22 @@ It reads from the standard input the domain username and a list of groups
 and tries to match it against the groups membership of the specified
 username.
 
-For Winbindd configuration, look the Squid winbind authenticators
-instructions.
+Before compile or configure it, look at the Squid winbind authenticators
+instructions: http://www.squid-cache.org/Doc/FAQ/FAQ-23.html#ss23.5
+
+When used in Windows 2000 domains, permissions compatible with pre-Windows 
+2000 servers are required. See the Q257988 Microsoft KB article for more
+details.
 
 
 ==============
 Program Syntax
 ==============
 
-wb_group [-d][-h]
+wb_group [-c][-d][-h]
 
--d enable debug mode
+-c use case insensitive compare
+-d enable debugging
 -h this message
 
 
@@ -38,12 +43,22 @@ http_access deny all
 In the previous example all validated NT users member of ProxyUsers Global 
 domain group are allowed to use the cache.
 
-Groups with spaces in name must be quoted, for example "Domain Users"
+Groups with spaces in name, for example "Domain Users", must be quoted and
+the acl data ("Domain Users") must be placed into a separate file included
+by specifying "/path/to/file". The previous example will be:
 
-NOTE: the group name comparation is case sensitive, so group name
+acl ProxyUsers external NT_global_group "/usr/local/squid/etc/DomainUsers"
+
+and the DomainUsers files will contain only the following line:
+
+"Domain Users"
+
+
+NOTE: the standard group name comparation is case sensitive, so group name
 must be specified with same case as in the NT/2000 Domain.
-
-Refer to Squid documentation for the more details on squid.conf.
+It's possible to enable not case sensitive group name comparation (-c),
+but on on some non - English locales, the results can be unexpected. 
+For details see toupper man page, BUGS section.
 
 
 =======
@@ -62,6 +77,9 @@ Test that entering no details does not result in an OK or ERR message.
 Test that entering an invalid username and group results in an ERR message.
 Test that entering an valid username and group results in an OK message.
 
+To check winbind functionality use wbinfo provided with Samba, 
+try -t, -g and -r options.
+
 --
 Serassio Guido
-squidnt@serassio.it
+guido.serassio@acmeconsulting.it
