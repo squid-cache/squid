@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.293 2002/12/06 23:19:13 hno Exp $
+ * $Id: acl.cc,v 1.294 2002/12/11 11:57:38 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2078,6 +2078,24 @@ aclLookupExternalDone(void *data, void *result)
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
     aclCheck(checklist);
 }
+
+/*
+ * Any aclCheck_t created by aclChecklistCreate() must eventually be
+ * freed by aclChecklistFree().  There are two common cases:
+ *
+ * A) Using aclCheckFast():  The caller creates the aclCheck_t using
+ *    aclChecklistCreate(), checks it using aclCheckFast(), and frees it
+ *    using aclChecklistFree().
+ *
+ * B) Using aclNBCheck() and callbacks: The caller creates the
+ *    aclCheck_t using aclChecklistCreate(), and passes it to
+ *    aclNBCheck().  Control eventually passes to aclCheckCallback(),
+ *    which will invoke the callback function as requested by the
+ *    original caller of aclNBCheck().  This callback function must
+ *    *not* invoke aclChecklistFree().  After the callback function
+ *    returns, aclCheckCallback() will free the aclCheck_t using
+ *    aclChecklistFree().
+ */
 
 aclCheck_t *
 aclChecklistCreate(const acl_access * A, request_t * request, const char *ident)
