@@ -19,7 +19,7 @@ extern aclCheck_t *aclChecklistCreate(const struct _acl_access *,
 extern void aclNBCheck(aclCheck_t *, PF *, void *);
 extern int aclCheckFast(const struct _acl_access *A, aclCheck_t *);
 extern void aclChecklistFree(aclCheck_t *);
-extern int aclMatchAcl(struct _acl *, aclCheck_t *);
+extern int aclMatchAclList(const acl_list * list, aclCheck_t * checklist);
 extern void aclDestroyAccessList(struct _acl_access **list);
 extern void aclDestroyAcls(acl **);
 extern void aclParseAccessLine(struct _acl_access **);

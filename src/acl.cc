@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.164 1998/05/11 18:44:31 rousskov Exp $
+ * $Id: acl.cc,v 1.165 1998/05/28 20:47:52 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -42,7 +42,7 @@ static void aclDestroyAclList(acl_list * list);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyProxyAuth(acl_proxy_auth * p);
 static FREE aclFreeProxyAuthUser;
-static int aclMatchAclList(const acl_list *, aclCheck_t *);
+static int aclMatchAcl(struct _acl *, aclCheck_t *);
 static int aclMatchInteger(intlist * data, int i);
 static int aclMatchTime(acl_time_data * data, time_t when);
 static int aclMatchIdent(wordlist * data, const char *ident);
@@ -1226,7 +1226,7 @@ aclMatchTime(acl_time_data * data, time_t when)
     return data->weekbits & (1 << tm.tm_wday) ? 1 : 0;
 }
 
-int
+static int
 aclMatchAcl(acl * acl, aclCheck_t * checklist)
 {
     request_t *r = checklist->request;
@@ -1387,7 +1387,7 @@ aclMatchAcl(acl * acl, aclCheck_t * checklist)
     /* NOTREACHED */
 }
 
-static int
+int
 aclMatchAclList(const acl_list * list, aclCheck_t * checklist)
 {
     while (list) {
