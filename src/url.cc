@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.88 1998/04/24 04:52:40 wessels Exp $
+ * $Id: url.cc,v 1.89 1998/05/05 03:50:02 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -54,6 +54,7 @@ const char *ProtocolStr[] =
     "icp",
     "urn",
     "whois",
+    "internal",
     "TOTAL"
 };
 
@@ -175,6 +176,8 @@ urlParseProtocol(const char *s)
 	return PROTO_URN;
     if (strncasecmp(s, "whois", 5) == 0)
 	return PROTO_WHOIS;
+    if (strncasecmp(s, "internal", 8) == 0)
+	return PROTO_INTERNAL;
     return PROTO_NONE;
 }
 
@@ -192,6 +195,7 @@ urlDefaultPort(protocol_t p)
     case PROTO_WAIS:
 	return 210;
     case PROTO_CACHEOBJ:
+    case PROTO_INTERNAL:
 	return CACHE_HTTP_PORT;
     case PROTO_WHOIS:
 	return 43;
@@ -367,33 +371,6 @@ urlCanonicalClean(const request_t * request)
 	    break;
 	}
     return buf;
-}
-
-/* makes internal url with a given host and port (remote internal url) */
-char *
-urlRInternal(const char *host, u_short port, const char *dir, const char *name)
-{
-    LOCAL_ARRAY(char, buf, MAX_URL);
-    int k = 0;
-    static char lc_host[SQUIDHOSTNAMELEN];
-    assert(host && port && name);
-    xstrncpy(lc_host, host, SQUIDHOSTNAMELEN);
-    Tolower(lc_host);
-    k += snprintf(buf + k, MAX_URL - k, "http://%s", lc_host);
-    if (port != urlDefaultPort(PROTO_HTTP))
-	k += snprintf(buf + k, MAX_URL - k, ":%d", port);
-    k += snprintf(buf + k, MAX_URL - k, "/%s", "squid-internal");
-    if (NULL != dir && '\0' != *dir)
-	k += snprintf(buf + k, MAX_URL - k, "/%s", dir);
-    k += snprintf(buf + k, MAX_URL - k, "/%s", name);
-    return buf;
-}
-
-/* makes internal url with local host and port */
-char *
-urlInternal(const char *dir, const char *name)
-{
-    return urlRInternal(getMyHostname(), Config.Port.http->i, dir, name);
 }
 
 request_t *
