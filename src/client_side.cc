@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.495 2000/07/18 06:16:41 wessels Exp $
+ * $Id: client_side.cc,v 1.496 2000/08/03 21:27:54 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -302,6 +302,7 @@ clientRedirectDone(void *data, char *result)
 	    new_request->body_sz = old_request->body_sz;
 	}
 	new_request->content_length = old_request->content_length;
+	new_request->flags.proxy_keepalive = old_request->flags.proxy_keepalive;
 	requestUnlink(old_request);
 	http->request = requestLink(new_request);
     }
