@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.526 2001/02/11 20:06:15 hno Exp $
+ * $Id: client_side.cc,v 1.527 2001/02/13 21:45:48 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1695,6 +1695,33 @@ clientRequestBodyTooLarge(int clen)
     return 0;
 }
 
+
+/* Responses with no body will not have a content-type header, 
+ * which breaks the rep_mime_type acl, which
+ * coincidentally, is the most common acl for reply access lists.
+ * A better long term fix for this is to allow acl matchs on the various
+ * status codes, and then supply a default ruleset that puts these 
+ * codes before any user defines access entries. That way the user 
+ * can choose to block these responses where appropriate, but won't get
+ * mysterious breakages.
+ */
+static int
+clientAlwaysAllowResponse(http_status sline) {
+    switch (sline) {
+	case HTTP_CONTINUE:
+	case HTTP_SWITCHING_PROTOCOLS:
+	case HTTP_PROCESSING:
+	case HTTP_NO_CONTENT:
+	case HTTP_NOT_MODIFIED:
+	    return 1;
+	    /* unreached */
+	    break;
+	default:
+	    return 0;
+    }
+}
+
+
 /*
  * accepts chunk of a http message in buf, parses prefix, filters headers and
  * such, writes processed message to the client's socket
@@ -1776,10 +1803,10 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 		RequestMethodStr[http->request->method], http->uri,
 		rv ? "ALLOWED" : "DENIED",
 		AclMatchedName ? AclMatchedName : "NO ACL's");
-	    if (!rv && rep->sline.status!=HTTP_FORBIDDEN) {
-		/* the if above is slightly broken( 403 responses from upstream
-		 * will always be permitted, but AFAIK there is no way
-		 * to tell if this is a squid generated error page, or one from 
+	    if (!rv && rep->sline.status != HTTP_FORBIDDEN 
+		&& !clientAlwaysAllowResponse(rep->sline.status)) {
+		/* the if above is slightly broken, but there is no way
+		 * to tell if this is a squid generated error page, or one from
 		 * upstream at this point. */
 		ErrorState *err;
 		err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
