@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.167 1997/12/03 07:30:29 wessels Exp $
+ * $Id: client_side.cc,v 1.168 1997/12/03 08:24:07 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -169,6 +169,17 @@ static StoreEntry *
 clientCreateStoreEntry(clientHttpRequest * h, method_t m, int flags)
 {
     StoreEntry *e;
+    request_t *r;
+    /*
+     * For erroneous requests, we might not have a h->request,
+     * so make a fake one.
+     */
+    if (h->request == NULL) {
+	r = get_free_request_t();
+	r->method = m;
+	r->protocol = PROTO_NONE;
+	h->request = requestLink(r);
+    }
     e = storeCreateEntry(h->url, h->log_url, 0, m);
     storeClientListAdd(e, h);
     storeClientCopy(e, 0, 0, 4096, get_free_4k_page(), clientSendMoreData, h);
@@ -871,6 +882,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     int hack = 0;
     char C = '\0';
     assert(size <= SM_PAGE_SIZE);
+    assert(http->request != NULL);
     debug(12, 5) ("clientSendMoreData: FD %d '%s', out.offset=%d\n",
 	fd, storeUrl(entry), http->out.offset);
     if (conn->chr != http) {
@@ -890,7 +902,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	return;
     }
     writelen = size;
-    if (http->out.offset == 0 && http->request->protocol != PROTO_CACHEOBJ) {
+    if (http->out.offset == 0) {
 	if (Config.onoff.log_mime_hdrs) {
 	    if ((p = mime_headers_end(buf))) {
 		safe_free(http->al.headers.reply);
@@ -943,6 +955,9 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	}
     }
     http->out.offset += size;
+    /*
+     * ick, this is gross
+     */
     if (http->request->method == METHOD_HEAD) {
 	if ((p = mime_headers_end(buf))) {
 	    *p = '\0';
