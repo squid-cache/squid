@@ -1,4 +1,6 @@
-/* $Id: errorpage.cc,v 1.5 1996/03/29 01:07:35 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.6 1996/03/29 21:15:23 wessels Exp $ */
+
+/* DEBUG: Section 4             cached_error: Error printing routines */
 
 #include "squid.h"
 
