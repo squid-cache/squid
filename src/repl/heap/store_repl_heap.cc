@@ -1,10 +1,14 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.8 2001/10/17 19:43:41 hno Exp $
+ * $Id: store_repl_heap.cc,v 1.9 2002/04/08 08:48:47 hno Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
  *
+ * Based on the ideas of the HEAP policy implemented by John Dilley of
+ * Hewlett Packard. Rewritten from scratch when modularizing the removal
+ * policy implementation of Squid.
+ * 
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
