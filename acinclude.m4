@@ -13,8 +13,8 @@ changequote([, ])dnl
 AC_MSG_CHECKING(size of $1)
 AC_CACHE_VAL(AC_CV_NAME,
 [AC_TRY_RUN([#include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
