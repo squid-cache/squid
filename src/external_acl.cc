@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.13 2002/09/07 14:55:24 hno Exp $
+ * $Id: external_acl.cc,v 1.14 2002/09/29 19:01:31 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -501,7 +501,7 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 	    str = ch->rfc931;
 	    if (!str) {
 		ch->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
-		goto error;
+		return NULL;
 	    }
 	    break;
 #endif
@@ -559,8 +559,6 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 	first = 0;
     }
     return mb.buf;
-  error:
-    return NULL;
 }
 
 static int
