@@ -6,25 +6,25 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 {
     icp_common_t header;
     icp_common_t *reply;
-    icp_common_t *headerp = (icp_common_t *) (void *) buf;
     StoreEntry *entry = NULL;
     char *url = NULL;
     const cache_key *key;
     request_t *icp_request = NULL;
     int allow = 0;
     aclCheck_t checklist;
-
-    header.opcode = headerp->opcode;
-    header.version = headerp->version;
-    header.length = ntohs(headerp->length);
-    header.reqnum = ntohl(headerp->reqnum);
-    header.flags = ntohl(headerp->flags);
-    header.shostid = headerp->shostid;
+    xmemcpy(&header, buf, sizeof(icp_common_t));
+    /*
+     * Only these fields need to be converted
+     */
+    header.length = ntohs(header.length);
+    header.reqnum = ntohl(header.reqnum);
+    header.flags = ntohl(header.flags);
+    header.pad = ntohl(header.pad);
 
     switch (header.opcode) {
     case ICP_QUERY:
 	/* We have a valid packet */
-	url = buf + sizeof(header) + sizeof(u_num32);
+	url = buf + sizeof(icp_common_t) + sizeof(u_num32);
 	if ((icp_request = urlParse(METHOD_GET, url)) == NULL) {
 	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, PROTO_NONE);
@@ -85,7 +85,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    debug(12, 0) ("icpHandleIcpV3: Disabling use of private keys\n");
 	    neighbors_do_private_keys = 0;
 	}
-	url = buf + sizeof(header);
+	url = buf + sizeof(icp_common_t);
 	debug(12, 3) ("icpHandleIcpV3: %s from %s for '%s'\n",
 	    icp_opcode_str[header.opcode],
 	    inet_ntoa(from.sin_addr),

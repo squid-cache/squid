@@ -134,7 +134,6 @@ static void
 icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 {
     icp_common_t header;
-    icp_common_t *headerp = (icp_common_t *) (void *) buf;
     StoreEntry *entry = NULL;
     char *url = NULL;
     const cache_key *key;
@@ -144,18 +143,19 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     icp_common_t *reply;
     int src_rtt = 0;
     u_num32 flags = 0;
-    header.opcode = headerp->opcode;
-    header.version = headerp->version;
-    header.length = ntohs(headerp->length);
-    header.reqnum = ntohl(headerp->reqnum);
-    header.flags = ntohl(headerp->flags);
-    header.shostid = headerp->shostid;
-    header.pad = ntohl(headerp->pad);
+    xmemcpy(&header, buf, sizeof(icp_common_t));
+    /*
+     * Only these fields need to be converted
+     */
+    header.length = ntohs(header.length);
+    header.reqnum = ntohl(header.reqnum);
+    header.flags = ntohl(header.flags);
+    header.pad = ntohl(header.pad);
 
     switch (header.opcode) {
     case ICP_QUERY:
 	/* We have a valid packet */
-	url = buf + sizeof(header) + sizeof(u_num32);
+	url = buf + sizeof(icp_common_t) + sizeof(u_num32);
 	if ((icp_request = urlParse(METHOD_GET, url)) == NULL) {
 	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, PROTO_NONE);
@@ -223,7 +223,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    debug(12, 0) ("icpHandleIcpV2: Disabling use of private keys\n");
 	    neighbors_do_private_keys = 0;
 	}
-	url = buf + sizeof(header);
+	url = buf + sizeof(icp_common_t);
 	debug(12, 3) ("icpHandleIcpV2: %s from %s for '%s'\n",
 	    icp_opcode_str[header.opcode],
 	    inet_ntoa(from.sin_addr),
@@ -282,7 +282,6 @@ icpHandleUdp(int sock, void *datanotused)
     int from_len;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
     int len;
-    icp_common_t *headerp = NULL;
     int icp_version;
 
     commSetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
@@ -320,8 +319,8 @@ icpHandleUdp(int sock, void *datanotused)
 	debug(12, 4) ("icpHandleUdp: Ignoring too-small UDP packet\n");
 	return;
     }
-    headerp = (icp_common_t *) (void *) buf;
-    if ((icp_version = (int) headerp->version) == ICP_VERSION_2)
+    icp_version = (int) buf[1];	/* cheat! */
+    if (icp_version == ICP_VERSION_2)
 	icpHandleIcpV2(sock, from, buf, len);
     else if (icp_version == ICP_VERSION_3)
 	icpHandleIcpV3(sock, from, buf, len);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.32 1998/02/10 00:58:43 wessels Exp $
+ * $Id: pinger.cc,v 1.33 1998/03/05 20:07:44 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -175,11 +175,13 @@ pingerRecv(void)
     int iphdrlen = 20;
     struct iphdr *ip = NULL;
     struct icmphdr *icmp = NULL;
-    LOCAL_ARRAY(char, pkt, MAX_PKT_SZ);
+    static char *pkt = NULL;
     struct timeval now;
     icmpEchoData *echo;
     static pingerReplyData preply;
 
+    if (pkt == NULL)
+	pkt = xmalloc(MAX_PKT_SZ);
     fromlen = sizeof(from);
     n = recvfrom(icmp_sock,
 	pkt,
