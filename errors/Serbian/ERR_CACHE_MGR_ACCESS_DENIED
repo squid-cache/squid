@@ -1,0 +1,31 @@
+<HTML><HEAD><meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
+<TITLE>GREŠKA: Pristup proxy/cache server menadžeru nije dozvoljen </TITLE>
+</HEAD><BODY>
+<H1>GREŠKA</H1>
+<H2>Pristup proxy/cache server menadžeru nije dozvoljen/H2>
+<HR>
+<P>
+Tokom pokušaja da se dovuče strana sa sledećom adresom (URL):
+<A HREF="%U">%U</A>
+<P>
+dogodila se sledeća greška:
+<UL>
+<LI>
+<STRONG>
+Pristup proxy/cache server menadžeru nije dozvoljen
+</STRONG>
+</UL>
+</P>
+<P>Na žalost trenutno vam nije dozvoljeno da zahtevate:
+<PRE>    %U</PRE>
+iz ovog cache menadžera pre nego što se ne autentifikujete.
+</P>
+
+<P> Da bi to funkcionisalo potreban vam je Netscape verzija 2 i više ili 
+Microsoft Internet Explorer 3.0, ili browser koji podržava HTTP/1.1.
+Ukoliko budete imali problema oko autentifikacije molimo kontaktirajte 
+<A HREF="mailto:%w">proxy administratora</a> a ako vi <em>jeste</em> administrator,
+pročitajte dokumentaciju o cache menadžeru za Squid i proverite cache log
+za detaljnije opise grešaka.</P>
+
+

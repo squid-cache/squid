@@ -1,0 +1,34 @@
+<HTML><HEAD><meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
+<TITLE>GREŠKA: Tražena adresa (URL) ne može da se dovuče </TITLE>
+</HEAD><BODY>
+<H1>GREŠKA</H1>
+<H2>Tražena adresa (URL) ne može da se dovuče</H2>
+<HR>
+<P>
+Tokom pokušaja da se dovuče strana sa sledećom adresom (URL):
+<A HREF="%U">%U</A>
+<P>
+dogodila se sledeća greška:
+<UL>
+<LI>
+<STRONG>
+<BLOCKQUOTE>
+Nije moguće odrediti IP adresu iz imena računara za
+<I>%H</I>
+</BLOCKQUOTE>
+</STRONG>
+</UL>
+
+<P>
+DNS server je vratio informaciju:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+<P>
+što znači:
+<PRE>
+   Proksi server nije u stanju da identifikuje ime računara koje je upisano u 
+   adresi (URL). Proverite da li je adresa ispravna.
+</PRE>
+</P>
+<P>Vaš cache administrator je <A HREF="mailto:%w">%w</A>.
