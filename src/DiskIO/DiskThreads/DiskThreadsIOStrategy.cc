@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskThreadsIOStrategy.cc,v 1.2 2005/04/01 21:11:28 serassio Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -63,6 +63,8 @@ DiskThreadsIOStrategy::done(void)
 {
     if (!initialised)
         return;
+
+    squidaio_shutdown();
 
     delete squidaio_ctrl_pool;
 
@@ -154,9 +156,6 @@ DiskThreadsIOStrategy::callback()
         if (ctrlp->operation == _AIO_READ)
             squidaio_xfree(ctrlp->bufp, ctrlp->len);
 
-        if (ctrlp->operation == _AIO_CLOSE)
-            aioFDWasClosed(ctrlp->fd);
-
         squidaio_ctrl_pool->free(ctrlp);
     }
 
@@ -196,13 +195,6 @@ DiskThreadsIOStrategy::aioStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "unlink\t%d\t%d\n", squidaio_counts.unlink_start, squidaio_counts.unlink_finish);
     storeAppendPrintf(sentry, "check_callback\t%d\t-\n", squidaio_counts.check_callback);
     storeAppendPrintf(sentry, "queue\t%d\t-\n", squidaio_get_queue_len());
-}
-
-void
-DiskThreadsIOStrategy::aioFDWasClosed(int fd)
-{
-    if (fd_table[fd].flags.closing)
-        fd_close(fd);
 }
 
 DiskThreadsIOStrategy DiskThreadsIOStrategy::Instance;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.7 2004/08/30 05:12:31 robertc Exp $
+ * $Id: mem_node.h,v 1.8 2005/04/01 21:11:28 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -58,6 +58,7 @@ public:
     StoreIOBuffer nodeBuffer;
     /* Private */
     char data[SM_PAGE_SIZE];
+    int uses;
 };
 
 MEMPROXY_CLASS_INLINE(mem_node)

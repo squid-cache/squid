@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.h,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskThreadsIOStrategy.h,v 1.2 2005/04/01 21:11:28 serassio Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -67,7 +67,6 @@ public:
 
 private:
     static void aioStats(StoreEntry * sentry);
-    void aioFDWasClosed(int fd);
 };
 
 #endif

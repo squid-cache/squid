@@ -43,6 +43,7 @@ public:
     static inline void NotifyIOCompleted();
     static void ResetNotifications();
     static void Initialise();
+    static void NotifyIOClose();
 
 private:
     static void NULLFDHandler(int, void *);
