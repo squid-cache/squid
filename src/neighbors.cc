@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.100 1996/12/19 21:24:15 wessels Exp $
+ * $Id: neighbors.cc,v 1.101 1996/12/19 23:13:31 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -464,7 +464,7 @@ neighborsUdpPing(protodispatch_data * proto)
 
 	debug(15, 4, "neighborsUdpPing: pinging cache %s for '%s'\n",
 	    e->host, url);
-	reqnum = storeReqnum(entry, request);
+	reqnum = storeReqnum(entry, request->method);
 	debug(15, 3, "neighborsUdpPing: key = '%s'\n", entry->key);
 	debug(15, 3, "neighborsUdpPing: reqnum = %d\n", reqnum);
 
