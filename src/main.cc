@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.266 1998/08/05 06:05:02 wessels Exp $
+ * $Id: main.cc,v 1.267 1998/08/10 19:37:49 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -303,7 +303,7 @@ serverConnectionsClose(void)
 static void
 mainReconfigure(void)
 {
-    debug(1, 0) ("Restarting Squid Cache (version %s)...\n", version_string);
+    debug(1, 1) ("Restarting Squid Cache (version %s)...\n", version_string);
     reconfiguring = 1;
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
     serverConnectionsClose();
@@ -728,7 +728,7 @@ SquidShutdown(void *unused)
 #if MEM_GEN_TRACE
     log_trace_done();
 #endif
-    debug(1, 0) ("Squid Cache (Version %s): Exiting normally.\n",
+    debug(1, 1) ("Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     fclose(debug_log);
     exit(0);
