@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.26 1996/04/09 18:18:46 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.27 1996/04/09 18:20:26 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -135,8 +135,8 @@ static struct {
 #define DefaultFtpUser		"cached@"	/* Default without domain */
 #define DefaultAnnounceHost	"sd.cache.nlanr.net"
 #define DefaultAnnouncePort	3131
-#define DefaultAnnounceFile	(char *)NULL    /* default NONE */
-#define DefaultAnnounceRate	86400		/* every 24 hours */
+#define DefaultAnnounceFile	(char *)NULL	/* default NONE */
+#define DefaultAnnounceRate	86400	/* every 24 hours */
 
 extern char *config_file;
 
@@ -1533,7 +1533,6 @@ int parseConfigFile(file_name)
 	printf("         For this run, however, cached will use %d minutes for clean_rate.\n", (int) (getCleanRate() / 60));
 	fflush(stdout);		/* print message */
     }
-
     if (accel_ip_acl == NULL)
 	accel_ip_acl = proxy_ip_acl;
 
