@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.71 1998/10/10 14:57:42 wessels Exp $
+ * $Id: redirect.cc,v 1.72 1998/10/14 20:14:04 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -58,7 +58,7 @@ redirectHandleReply(void *data, char *reply)
     assert(cbdataValid(data));
     debug(29, 5) ("redirectHandleRead: {%s}\n", reply);
     if ((t = strchr(reply, ' ')))
-	t = '\0';
+	*t = '\0';
     if (*reply == '\0')
 	reply = NULL;
     valid = cbdataValid(r->data);
