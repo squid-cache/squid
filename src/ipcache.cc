@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.125 1997/06/26 22:35:53 wessels Exp $
+ * $Id: ipcache.cc,v 1.126 1997/07/14 22:32:03 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -213,8 +213,8 @@ ipcacheDequeue(void)
 	safe_free(old);
 	queue_length--;
     }
-    if (i && i->status != IP_PENDING)
-	debug_trap("ipcacheDequeue: status != IP_PENDING");
+    if (i != NULL)
+	assert(i->status == IP_PENDING);
     return i;
 }
 
@@ -376,8 +376,7 @@ ipcache_purgelru(void *unused)
 	ipcache_release(LRU_list[k]);
 	removed++;
     }
-    if (meta_data.ipcache_count > ipcache_low)
-	debug_trap("ipcache_purgelru: Couldn't reach the low water mark");
+    assert(meta_data.ipcache_count <= ipcache_low);
     debug(14, 3) ("ipcache_purgelru: removed %d entries\n", removed);
     safe_free(LRU_list);
 }
@@ -718,8 +717,7 @@ static void
 ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
 {
     char *buf = NULL;
-    if (!BIT_TEST(dns->flags, DNS_FLAG_ALIVE))
-	debug_trap("Dispatching a dead DNS server");
+    assert(BIT_TEST(dns->flags, DNS_FLAG_ALIVE));
     if (!ipcacheHasPending(i)) {
 	debug(14, 0) ("Skipping lookup of '%s' because client(s) disappeared.\n",
 	    i->name);
@@ -727,8 +725,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
 	ipcache_release(i);
 	return;
     }
-    if (i->status != IP_PENDING)
-	debug_trap("ipcache_dnsDispatch: status != IP_PENDING");
+    assert(i->status == IP_PENDING);
     buf = xcalloc(1, 256);
     sprintf(buf, "%1.254s\n", i->name);
     dns->flags |= DNS_FLAG_BUSY;
@@ -797,8 +794,7 @@ ipcacheUnregister(const char *name, void *data)
 	    n++;
 	}
     }
-    if (n == 0)
-	debug_trap("ipcacheUnregister: callback data not found");
+    assert(n > 0);
     debug(14, 3) ("ipcacheUnregister: unregistered %d handlers\n", n);
     return n;
 }
@@ -937,10 +933,7 @@ stat_ipcache_get(StoreEntry * sentry)
     N = 0;
     for (i = ipcache_GetFirst(); i; i = ipcache_GetNext()) {
 	*(list + N) = i;
-	if (++N > meta_data.ipcache_count) {
-	    debug_trap("stat_ipcache_get: meta_data.ipcache_count mismatch");
-	    break;
-	}
+	assert(++N <= meta_data.ipcache_count);
     }
     qsort((char *) list,
 	N,
@@ -1024,10 +1017,7 @@ ipcacheLockEntry(ipcache_entry * i)
 static void
 ipcacheUnlockEntry(ipcache_entry * i)
 {
-    if (i->locks == 0) {
-	debug_trap("ipcacheUnlockEntry: Entry has no locks");
-	return;
-    }
+    assert(i->locks > 0);
     i->locks--;
     if (ipcacheExpiredEntry(i))
 	ipcache_release(i);
@@ -1102,10 +1092,7 @@ ipcacheChangeKey(ipcache_entry * i)
 	debug(14, 0) ("ipcacheChangeKey: Could not find key '%s'\n", i->name);
 	return;
     }
-    if (i != (ipcache_entry *) table_entry) {
-	debug_trap("ipcacheChangeKey: i != table_entry!");
-	return;
-    }
+    assert(i == table_entry);
     if (hash_remove_link(ip_table, table_entry)) {
 	debug_trap("ipcacheChangeKey: hash_remove_link() failed\n");
 	return;
