@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.332 2001/01/30 10:06:50 hno Exp $
+ * $Id: main.cc,v 1.333 2001/01/31 00:25:59 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -422,17 +422,19 @@ setEffectiveUser(void)
 static void
 mainSetCwd(void)
 {
+    char *p;
     if (Config.coredump_dir) {
-	if (!chdir(Config.coredump_dir)) {
+	if (chdir(Config.coredump_dir) == 0) {
 	    debug(0, 1) ("Set Current Directory to %s\n", Config.coredump_dir);
 	    return;
 	} else {
 	    debug(50, 0) ("chdir: %s: %s\n", Config.coredump_dir, xstrerror());
 	}
     }
+    /* If we don't have coredump_dir or couldn't cd there, report current dir */
+    p = getcwd(NULL, 0);
     debug(0, 1) ("Current Directory is %s\n", p);
     xfree(p);
-    return;
 }
 
 static void
