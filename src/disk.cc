@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.124 1998/08/13 18:26:41 wessels Exp $
+ * $Id: disk.cc,v 1.125 1998/08/14 23:52:45 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -399,7 +399,10 @@ file_write(int fd,
     }
 }
 
-/* a wrapper around file_write to allow for MemBuf to be file_written in a snap */
+/*
+ * a wrapper around file_write to allow for MemBuf to be file_written
+ * in a snap
+ */
 void
 file_write_mbuf(int fd, off_t off, MemBuf mb, DWCB * handler, void *handler_data)
 {
@@ -415,16 +418,13 @@ diskHandleRead(int fd, void *data)
     fde *F = &fd_table[fd];
     int len;
 #endif
-    disk_ctrl_t *ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
-    ctrlp->fd = fd;
-    ctrlp->data = ctrl_dat;
 #if USE_ASYNC_IO
     aioRead(fd,
 	ctrl_dat->offset,
 	ctrl_dat->buf,
 	ctrl_dat->req_len,
 	diskHandleReadComplete,
-	ctrlp);
+	ctrl_dat);
 #else
     if (F->disk.offset != ctrl_dat->offset) {
 	debug(6, 3) ("diskHandleRead: FD %d seeking to offset %d\n",
@@ -435,16 +435,15 @@ diskHandleRead(int fd, void *data)
     len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
     if (len > 0)
         F->disk.offset += len;
-    diskHandleReadComplete(ctrlp, len, errno);
+    diskHandleReadComplete(ctrl_dat, len, errno);
 #endif
 }
 
 static void
 diskHandleReadComplete(void *data, int len, int errcode)
 {
-    disk_ctrl_t *ctrlp = data;
-    dread_ctrl *ctrl_dat = ctrlp->data;
-    int fd = ctrlp->fd;
+    dread_ctrl *ctrl_dat = data;
+    int fd = ctrl_dat->fd;
     int rc = DISK_OK;
     errno = errcode;
 
