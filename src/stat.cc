@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.65 1996/09/13 20:50:51 wessels Exp $
+ * $Id: stat.cc,v 1.66 1996/09/13 23:16:42 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -134,12 +134,40 @@ char *diskFileName();
 /* LOCALS */
 char *open_bracket = "{\n";
 char *close_bracket = "}\n";
+
+static void dummyhandler _PARAMS((cacheinfo *, StoreEntry *));
+static void info_get _PARAMS((cacheinfo *, StoreEntry *));
+static void info_get_mallstat _PARAMS((int, int, StoreEntry *));
+static void logReadEndHandler _PARAMS((int, int, log_read_data_t *));
+static void log_clear _PARAMS((cacheinfo *, StoreEntry *));
+static void log_disable _PARAMS((cacheinfo *, StoreEntry *));
+static void log_enable _PARAMS((cacheinfo *, StoreEntry *));
+static void log_get_start _PARAMS((cacheinfo *, StoreEntry *));
+static void log_status_get _PARAMS((cacheinfo *, StoreEntry *));
+static void parameter_get _PARAMS((cacheinfo *, StoreEntry *));
+static void proto_count _PARAMS((cacheinfo *, protocol_t, log_type));
+static void proto_newobj _PARAMS((cacheinfo *, protocol_t, int, int));
+static void proto_purgeobj _PARAMS((cacheinfo *, protocol_t, int));
+static void proto_touchobj _PARAMS((cacheinfo *, protocol_t, int));
+static void server_list _PARAMS((cacheinfo *, StoreEntry *));
+static void squidReadEndHandler _PARAMS((int, int, squid_read_data_t *));
+static void squid_get_start _PARAMS((cacheinfo *, StoreEntry *));
 static void statFiledescriptors _PARAMS((StoreEntry *));
+static void stat_get _PARAMS((cacheinfo *, char *req, StoreEntry *));
+static void stat_io_get _PARAMS((StoreEntry *));
+static void stat_obj _PARAMS((cacheinfo *, StoreEntry *, int vm_or_not));
+static void stat_utilization_get _PARAMS((cacheinfo *, StoreEntry *, char *desc));
+static int cache_size_get _PARAMS((cacheinfo *));
+static int logReadHandler _PARAMS((int, char *, int, log_read_data_t *));
+static int squidReadHandler _PARAMS((int, char *, int, squid_read_data_t *));
+static int memoryAccounted _PARAMS((void));
+static int mallinfoTotal _PARAMS((void));
 
 /* process utilization information */
-void stat_utilization_get(obj, sentry)
+static void stat_utilization_get(obj, sentry, desc)
      cacheinfo *obj;
      StoreEntry *sentry;
+     char *desc;
 {
     protocol_t proto_id;
     proto_stat *p = &obj->proto_stat_data[PROTO_MAX];
@@ -147,9 +175,7 @@ void stat_utilization_get(obj, sentry)
     int secs = 0;
 
     secs = (int) (squid_curtime - squid_starttime);
-
-    storeAppendPrintf(sentry, open_bracket);
-
+    storeAppendPrintf(sentry, "{ %s\n", desc);	/* } */
     strcpy(p->protoname, "TOTAL");
     p->object_count = 0;
     p->kb.max = 0;
@@ -160,12 +186,9 @@ void stat_utilization_get(obj, sentry)
     p->miss = 0;
     p->refcount = 0;
     p->transferbyte = 0;
-
-
     /* find the total */
     for (proto_id = PROTO_NONE; proto_id < PROTO_MAX; ++proto_id) {
 	q = &obj->proto_stat_data[proto_id];
-
 	p->object_count += q->object_count;
 	p->kb.max += q->kb.max;
 	p->kb.min += q->kb.min;
@@ -176,7 +199,6 @@ void stat_utilization_get(obj, sentry)
 	p->refcount += q->refcount;
 	p->transferbyte += q->transferbyte;
     }
-
     /* dump it */
     for (proto_id = PROTO_NONE; proto_id <= PROTO_MAX; ++proto_id) {
 	p = &obj->proto_stat_data[proto_id];
@@ -197,11 +219,10 @@ void stat_utilization_get(obj, sentry)
 	    p->refcount,
 	    p->transferbyte);
     }
-
     storeAppendPrintf(sentry, close_bracket);
 }
 
-void stat_io_get(sentry)
+static void stat_io_get(sentry)
      StoreEntry *sentry;
 {
     int i;
@@ -273,7 +294,7 @@ void stat_io_get(sentry)
 /* return total bytes of all registered and known objects.
  * may not reflect the retrieving object....
  * something need to be done here to get more accurate cache size */
-int cache_size_get(obj)
+static int cache_size_get(obj)
      cacheinfo *obj;
 {
     int size = 0;
@@ -285,7 +306,7 @@ int cache_size_get(obj)
 }
 
 /* process objects list */
-void stat_objects_get(obj, sentry, vm_or_not)
+static void stat_objects_get(obj, sentry, vm_or_not)
      cacheinfo *obj;
      StoreEntry *sentry;
      int vm_or_not;
@@ -330,7 +351,7 @@ void stat_objects_get(obj, sentry, vm_or_not)
 
 
 /* process a requested object into a manager format */
-void stat_get(obj, req, sentry)
+static void stat_get(obj, req, sentry)
      cacheinfo *obj;
      char *req;
      StoreEntry *sentry;
@@ -349,7 +370,8 @@ void stat_get(obj, req, sentry)
     } else if (strcmp(req, "redirector") == 0) {
 	redirectStats(sentry);
     } else if (strcmp(req, "utilization") == 0) {
-	stat_utilization_get(obj, sentry);
+	stat_utilization_get(HTTPCacheInfo, sentry, "HTTP");
+	stat_utilization_get(ICPCacheInfo, sentry, "ICP");
     } else if (strcmp(req, "io") == 0) {
 	stat_io_get(sentry);
     } else if (strcmp(req, "reply_headers") == 0) {
@@ -361,7 +383,7 @@ void stat_get(obj, req, sentry)
 
 
 /* generate logfile status information */
-void log_status_get(obj, sentry)
+static void log_status_get(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
@@ -377,7 +399,7 @@ void log_status_get(obj, sentry)
 
 /* log convert handler */
 /* call for each line in file, use fileWalk routine */
-int logReadHandler(fd_unused, buf, size_unused, data)
+static int logReadHandler(fd_unused, buf, size_unused, data)
      int fd_unused;
      char *buf;
      int size_unused;
@@ -389,7 +411,7 @@ int logReadHandler(fd_unused, buf, size_unused, data)
 
 /* log convert end handler */
 /* call when a walk is completed or error. */
-void logReadEndHandler(fd, errflag_unused, data)
+static void logReadEndHandler(fd, errflag_unused, data)
      int fd;
      int errflag_unused;
      log_read_data_t *data;
@@ -403,7 +425,7 @@ void logReadEndHandler(fd, errflag_unused, data)
 
 
 /* start converting logfile to processed format */
-void log_get_start(obj, sentry)
+static void log_get_start(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
@@ -436,7 +458,7 @@ void log_get_start(obj, sentry)
 
 /* squid convert handler */
 /* call for each line in file, use fileWalk routine */
-int squidReadHandler(fd_unused, buf, size_unused, data)
+static int squidReadHandler(fd_unused, buf, size_unused, data)
      int fd_unused;
      char *buf;
      int size_unused;
@@ -448,7 +470,7 @@ int squidReadHandler(fd_unused, buf, size_unused, data)
 
 /* squid convert end handler */
 /* call when a walk is completed or error. */
-void squidReadEndHandler(fd_unused, errflag_unused, data)
+static void squidReadEndHandler(fd_unused, errflag_unused, data)
      int fd_unused;
      int errflag_unused;
      squid_read_data_t *data;
@@ -461,7 +483,7 @@ void squidReadEndHandler(fd_unused, errflag_unused, data)
 
 
 /* start convert squid.conf file to processed format */
-void squid_get_start(obj, sentry)
+static void squid_get_start(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
@@ -476,14 +498,14 @@ void squid_get_start(obj, sentry)
 }
 
 
-void dummyhandler(obj, sentry)
+static void dummyhandler(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
     storeAppendPrintf(sentry, "{ \"Not_Implemented_yet.\"}\n");
 }
 
-void server_list(obj, sentry)
+static void server_list(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
@@ -541,7 +563,7 @@ void server_list(obj, sentry)
 }
 
 #if XMALLOC_STATISTICS
-void info_get_mallstat(size, number, sentry)
+static void info_get_mallstat(size, number, sentry)
      int size, number;
      StoreEntry *sentry;
 {
@@ -622,7 +644,7 @@ static void statFiledescriptors(sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-int memoryAccounted()
+static int memoryAccounted()
 {
     return (int)
 	meta_data.store_entries * sizeof(StoreEntry) +
@@ -637,7 +659,7 @@ int memoryAccounted()
 	meta_data.misc;
 }
 
-int mallinfoTotal()
+static int mallinfoTotal()
 {
     int total = 0;
 #if HAVE_MALLINFO
@@ -648,7 +670,7 @@ int mallinfoTotal()
     return total;
 }
 
-void info_get(obj, sentry)
+static void info_get(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
@@ -840,7 +862,7 @@ void info_get(obj, sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-void parameter_get(obj, sentry)
+static void parameter_get(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
@@ -975,9 +997,9 @@ char *log_quote(header)
 
 
 #if LOG_FULL_HEADERS
-void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData, request_hdr, reply_hdr)
+static void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData, request_hdr, reply_hdr)
 #else
-void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData)
+static void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData)
 #endif				/* LOG_FULL_HEADERS */
      cacheinfo *obj;
      char *url;
@@ -1074,7 +1096,7 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
     }
 }
 
-void log_enable(obj, sentry)
+static void log_enable(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
@@ -1094,7 +1116,7 @@ void log_enable(obj, sentry)
     storeAppendPrintf(sentry, " ");
 }
 
-void log_disable(obj, sentry)
+static void log_disable(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
@@ -1108,7 +1130,7 @@ void log_disable(obj, sentry)
 
 
 
-void log_clear(obj, sentry)
+static void log_clear(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
@@ -1130,7 +1152,7 @@ void log_clear(obj, sentry)
 
 
 
-void proto_newobject(obj, proto_id, size, restart)
+static void proto_newobject(obj, proto_id, size, restart)
      cacheinfo *obj;
      protocol_t proto_id;
      int size;
@@ -1150,7 +1172,7 @@ void proto_newobject(obj, proto_id, size, restart)
 }
 
 
-void proto_purgeobject(obj, proto_id, size)
+static void proto_purgeobject(obj, proto_id, size)
      cacheinfo *obj;
      protocol_t proto_id;
      int size;
@@ -1167,7 +1189,7 @@ void proto_purgeobject(obj, proto_id, size)
 }
 
 /* update stat for each particular protocol when an object is fetched */
-void proto_touchobject(obj, proto_id, size)
+static void proto_touchobject(obj, proto_id, size)
      cacheinfo *obj;
      protocol_t proto_id;
      int size;
@@ -1176,18 +1198,23 @@ void proto_touchobject(obj, proto_id, size)
     obj->proto_stat_data[proto_id].transferbyte += (1023 + size) >> 10;
 }
 
-void proto_hit(obj, proto_id)
+static void proto_count(obj, proto_id, type)
      cacheinfo *obj;
      protocol_t proto_id;
+     log_type type;
 {
-    obj->proto_stat_data[proto_id].hit++;
-}
-
-void proto_miss(obj, proto_id)
-     cacheinfo *obj;
-     protocol_t proto_id;
-{
-    obj->proto_stat_data[proto_id].miss++;
+    switch (type) {
+    case LOG_TCP_HIT:
+    case LOG_TCP_IMS_HIT:
+    case LOG_TCP_EXPIRED_HIT:
+    case LOG_UDP_HIT:
+    case LOG_UDP_HIT_OBJ:
+	obj->proto_stat_data[proto_id].hit++;
+	break;
+    default:
+	obj->proto_stat_data[proto_id].miss++;
+	break;
+    }
 }
 
 
@@ -1199,7 +1226,6 @@ void stat_init(object, logfilename)
     int i;
 
     debug(18, 5, "stat_init: Initializing...\n");
-
     obj = xcalloc(1, sizeof(cacheinfo));
     obj->stat_get = stat_get;
     obj->info_get = info_get;
@@ -1214,23 +1240,22 @@ void stat_init(object, logfilename)
     obj->squid_get_start = squid_get_start;
     obj->parameter_get = parameter_get;
     obj->server_list = server_list;
-
-    xmemcpy(obj->logfilename, logfilename, (int) (strlen(logfilename) + 1) % 256);
-    obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
-    if (obj->logfile_fd == DISK_ERROR) {
-	debug(18, 0, "%s: %s\n", obj->logfilename, xstrerror());
-	fatal("Cannot open logfile.");
+    if (logfilename) {
+	memset(obj->logfilename, '0', MAX_FILE_NAME_LEN);
+	strncpy(obj->logfilename, logfilename, MAX_FILE_NAME_LEN - 1);
+	obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
+	if (obj->logfile_fd == DISK_ERROR) {
+	    debug(18, 0, "%s: %s\n", obj->logfilename, xstrerror());
+	    fatal("Cannot open logfile.");
+	}
+	obj->logfile_access = file_write_lock(obj->logfile_fd);
     }
-    obj->logfile_access = file_write_lock(obj->logfile_fd);
-
     obj->proto_id = urlParseProtocol;
     obj->proto_newobject = proto_newobject;
     obj->proto_purgeobject = proto_purgeobject;
     obj->proto_touchobject = proto_touchobject;
-    obj->proto_hit = proto_hit;
-    obj->proto_miss = proto_miss;
+    obj->proto_count = proto_count;
     obj->NotImplement = dummyhandler;
-
     for (i = PROTO_NONE; i <= PROTO_MAX; i++) {
 	switch (i) {
 	case PROTO_HTTP:
@@ -1263,14 +1288,11 @@ void stat_init(object, logfilename)
 	obj->proto_stat_data[i].transferrate = 0;
 	obj->proto_stat_data[i].refcount = 0;
 	obj->proto_stat_data[i].transferbyte = 0;
-
 	obj->proto_stat_data[i].kb.max = 0;
 	obj->proto_stat_data[i].kb.min = 0;
 	obj->proto_stat_data[i].kb.avg = 0;
 	obj->proto_stat_data[i].kb.now = 0;
-
     }
-
     *object = obj;
 }
 
@@ -1388,7 +1410,7 @@ void stat_rotate_log()
     LOCAL_ARRAY(char, to, MAXPATHLEN);
     char *fname = NULL;
 
-    if ((fname = CacheInfo->logfilename) == NULL)
+    if ((fname = HTTPCacheInfo->logfilename) == NULL)
 	return;
 
     debug(18, 1, "stat_rotate_log: Rotating\n");
@@ -1407,17 +1429,17 @@ void stat_rotate_log()
     }
     /* Close and reopen the log.  It may have been renamed "manually"
      * before HUP'ing us. */
-    file_close(CacheInfo->logfile_fd);
-    CacheInfo->logfile_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
-    if (CacheInfo->logfile_fd == DISK_ERROR) {
+    file_close(HTTPCacheInfo->logfile_fd);
+    HTTPCacheInfo->logfile_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
+    if (HTTPCacheInfo->logfile_fd == DISK_ERROR) {
 	debug(18, 0, "stat_rotate_log: Cannot open logfile: %s\n", fname);
-	CacheInfo->logfile_status = LOG_DISABLE;
+	HTTPCacheInfo->logfile_status = LOG_DISABLE;
 	fatal("Cannot open logfile.");
     }
-    CacheInfo->logfile_access = file_write_lock(CacheInfo->logfile_fd);
+    HTTPCacheInfo->logfile_access = file_write_lock(HTTPCacheInfo->logfile_fd);
 }
 
 void statCloseLog()
 {
-    file_close(CacheInfo->logfile_fd);
+    file_close(HTTPCacheInfo->logfile_fd);
 }

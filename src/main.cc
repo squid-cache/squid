@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.71 1996/09/12 22:17:59 wessels Exp $
+ * $Id: main.cc,v 1.72 1996/09/13 23:16:39 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -481,7 +481,8 @@ static void mainInitialize()
     if (first_time) {
 	/* module initialization */
 	urlInitialize();
-	stat_init(&CacheInfo, Config.Log.access);
+	stat_init(&HTTPCacheInfo, Config.Log.access);
+	stat_init(&ICPCacheInfo, NULL);
 	storeInit();
 
 	if (Config.effectiveUser) {
