@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.23 2003/09/02 21:45:48 robertc Exp $
+ * $Id: splay.h,v 1.24 2003/09/02 22:57:00 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -44,7 +44,7 @@ public:
     typedef void SPLAYWALKEE(Value const & nodedata, void *state);
     static void DefaultFree (Value &aValue) {delete aValue;}
 
-    SplayNode<V> ();
+    SplayNode<V> (Value const &);
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
@@ -107,7 +107,8 @@ SQUIDCEXTERN void splay_walk(splayNode *, splayNode::SPLAYWALKEE *, void *caller
 
 /* inline methods */
 template<class V>
-SplayNode<V>::SplayNode () : data(NULL), left(NULL), right (NULL) {}
+SplayNode<V>::SplayNode (Value const &someData) : data(someData), left(NULL), right (NULL) {}
+
 template<class V>
 void
 SplayNode<V>::walk(SPLAYWALKEE * walkee, void *state)
@@ -196,8 +197,7 @@ SplayNode<V> *
 SplayNode<V>::insert(Value dataToInsert, SPLAYCMP * compare)
 {
     /* create node to insert */
-    SplayNode<V> *newNode = new SplayNode<V>;
-    newNode->data = dataToInsert;
+    SplayNode<V> *newNode = new SplayNode<V>(dataToInsert);
 
     if (this == NULL) {
         splayLastResult = -1;
@@ -234,7 +234,7 @@ SplayNode<V>::splay(Value const &dataToFind, SPLAYCMP * compare) const
         return NULL;
     }
 
-    SplayNode<V> N;
+    SplayNode<V> N(dataToFind);
     SplayNode<V> *l;
     SplayNode<V> *r;
     SplayNode<V> *y;
