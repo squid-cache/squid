@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: ipcache.cc,v 1.2 1996/02/23 07:07:24 wessels Exp $";
+static char rcsid[] = "$Id: ipcache.cc,v 1.3 1996/02/23 07:09:10 wessels Exp $";
 /* 
  *  File:         ipcache.c
  *  Description:  ip address cache. speed up gethostbyname()
@@ -108,6 +108,7 @@ static char rcsid[] = "$Id: ipcache.cc,v 1.2 1996/02/23 07:07:24 wessels Exp $";
 #include "autoconf.h"
 #include "stat.h"
 #include "hash.h"
+#include "disk.h"
 #include "util.h"
 
 struct hostent *gethostbyname();
@@ -191,7 +192,6 @@ extern time_t cached_curtime;
 extern int getMaxFD();
 extern int getDnsChildren();
 extern void fatal_dump _PARAMS((char *));
-extern int file_write_lock _PARAMS((int));
 extern int file_update_open _PARAMS((int, char *));
 
 void update_dns_child_alive()
