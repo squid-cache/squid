@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.5 2003/08/04 22:14:42 robertc Exp $
+ * $Id: mem_node.h,v 1.6 2003/09/22 08:50:51 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -64,5 +64,11 @@ private:
     static MemPool *pool;
 };
 
+inline std::ostream &
+operator << (std::ostream &os, mem_node &aNode)
+{
+    os << aNode.nodeBuffer.range();
+    return os;
+}
 
 #endif /* SQUID_MEM_NODE_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.5 2003/09/22 03:31:03 robertc Exp $
+ * $Id: stmem.h,v 1.6 2003/09/22 08:50:51 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -72,6 +72,7 @@ public:
     static SplayNode<mem_node *>::SPLAYCMP NodeCompare;
 
 private:
+    void debugDump() const;
     void unlink(mem_node *aNode);
     void makeAppendSpace();
     int appendToNode(mem_node *aNode, const char *data, int maxLength);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Generic.h,v 1.5 2003/07/14 10:36:41 robertc Exp $
+ * $Id: Generic.h,v 1.6 2003/09/22 08:50:51 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -71,6 +71,34 @@ T& for_each(Stack<E> const &collection, T& visitor)
         visitor(*(typename T::argument_type const *)collection.items[index]);
 
     return visitor;
+};
+
+template <class InputIterator , class Visitor>
+Visitor& for_each(InputIterator from, InputIterator to, Visitor& visitor)
+{
+    while (!(from == to)) {
+        typename InputIterator::value_type &value = *from;
+        ++from;
+        visitor(value);
+    }
+
+    return visitor;
+}
+
+/* generic ostream printer */
+template <class Pointer>
+
+struct PointerPrinter
+{
+    PointerPrinter(std::ostream &astream, std::string aDelimiter) : os(astream), delimiter (aDelimiter) {}
+
+    void operator () (Pointer aNode)
+    {
+        os << *aNode << delimiter;
+    }
+
+    std::ostream &os;
+    std::string delimiter;
 };
 
 #endif /* SQUID_GENERIC_H */

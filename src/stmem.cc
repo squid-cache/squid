@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.81 2003/09/06 12:47:35 robertc Exp $
+ * $Id: stmem.cc,v 1.82 2003/09/22 08:50:50 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #include "stmem.h"
 #include "mem_node.h"
 #include "MemObject.h"
+#include "Generic.h"
 
 int
 mem_hdr::lowestOffset () const
@@ -54,7 +55,7 @@ off_t
 mem_hdr::endOffset () const
 {
     off_t result = 0;
-    const SplayNode<mem_node *> *theEnd = nodes.end();
+    const SplayNode<mem_node *> *theEnd = nodes.finish();
 
     if (theEnd)
         result = theEnd->data->dataRange().end;
@@ -85,7 +86,7 @@ mem_hdr::freeDataUpto(int target_offset)
 
     SplayNode<mem_node*> const * theStart = nodes.start();
 
-    while (theStart && theStart != nodes.end() &&
+    while (theStart && theStart != nodes.finish() &&
             theStart->data->end() <= (size_t) target_offset ) {
         unlink(theStart->data);
         theStart = nodes.start();
@@ -142,10 +143,10 @@ mem_hdr::makeAppendSpace()
         return;
     }
 
-    if (!nodes.end()->data->space())
+    if (!nodes.finish()->data->space())
         appendNode (new mem_node (endOffset()));
 
-    assert (nodes.end()->data->space());
+    assert (nodes.finish()->data->space());
 }
 
 void
@@ -155,7 +156,7 @@ mem_hdr::internalAppend(const char *data, int len)
 
     while (len > 0) {
         makeAppendSpace();
-        int copied = appendToNode (nodes.end()->data, data, len);
+        int copied = appendToNode (nodes.finish()->data, data, len);
         assert (copied);
 
         len -= copied;
@@ -198,6 +199,15 @@ mem_hdr::copyAvailable(mem_node *aNode, size_t location, size_t amount, char *ta
     return copyLen;
 }
 
+void
+mem_hdr::debugDump() const
+{
+    std::ostringstream result;
+    PointerPrinter<mem_node *> foo(result, " - ");
+    for_each (getNodes().begin(), getNodes().end(), foo);
+    debugs (19, 1, "mem_hdr::debugDump: Current available data is: " << result.str() << ".");
+}
+
 /* FIXME: how do we deal with sparse results -
  * where we have (say)
  * 0-500 and 1000-1500, but are asked for 
@@ -211,8 +221,11 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
 
     debug(19, 6) ("memCopy: offset %ld: size %u\n", (long int) offset, size);
 
+    /* we shouldn't ever ask for absent offsets */
+
     if (nodes.size() == 0) {
-        /* we shouldn't ever ask for absent offsets */
+        debugs(19, 1, "mem_hdr::copy: No data to read");
+        debugDump();
         assert (0);
         return 0;
     }
@@ -225,6 +238,7 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
 
     if (!p) {
         debug(19, 1) ("memCopy: could not find offset %u in memory.\n", (size_t) offset);
+        debugDump();
         /* we shouldn't ever ask for absent offsets */
         assert (0);
         return 0;
@@ -377,7 +391,7 @@ void
 mem_hdr::dump() const
 {
     debug(20, 1) ("mem_hdr: %p nodes.start() %p\n", this, nodes.start());
-    debug(20, 1) ("mem_hdr: %p nodes.end() %p\n", this, nodes.end());
+    debug(20, 1) ("mem_hdr: %p nodes.finish() %p\n", this, nodes.finish());
 }
 
 size_t
@@ -395,4 +409,10 @@ mem_hdr::start() const
         return result->data;
 
     return NULL;
+}
+
+const Splay<mem_node *> &
+mem_hdr::getNodes() const
+{
+    return nodes;
 }

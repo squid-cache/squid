@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_hdr_test.cc,v 1.4 2003/09/22 03:31:02 robertc Exp $
+ * $Id: mem_hdr_test.cc,v 1.5 2003/09/22 08:50:51 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -95,16 +95,6 @@ testSplayOfNodes()
     aSplay.destroy(SplayNode<mem_node *>::DefaultFree);
 }
 
-struct mem_node_print
-{
-    mem_node_print(std::ostream &astream) : os(astream) {}
-
-    void operator () (mem_node *aNode)
-    {}
-
-    std::ostream &os;
-};
-
 void
 testHdrVisit()
 {
@@ -115,7 +105,14 @@ testHdrVisit()
     sampleData = xstrdup ("B");
     assert (aHeader.write (StoreIOBuffer(1, 102, sampleData)));
     safe_free (sampleData);
-    //for_each (aHeader.getNodes().begin(). aHeader.getNodes().end(), mem_node_print(std::cout));
+    std::ostringstream result;
+    PointerPrinter<mem_node *> foo(result, "\n");
+    for_each (aHeader.getNodes().end(), aHeader.getNodes().end(), foo);
+    for_each (aHeader.getNodes().begin(), aHeader.getNodes().begin(), foo);
+    for_each (aHeader.getNodes().begin(), aHeader.getNodes().end(), foo);
+    std::ostringstream expectedResult;
+    expectedResult << "[100,101)" << std::endl << "[102,103)" << std::endl;
+    assert (result.str() == expectedResult.str());
 }
 
 int
