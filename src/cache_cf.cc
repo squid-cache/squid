@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.443 2003/06/09 05:09:34 robertc Exp $
+ * $Id: cache_cf.cc,v 1.444 2003/07/01 20:42:27 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -471,9 +471,6 @@ configDoConfigure(void)
 
     safe_free(debug_options)
     debug_options = xstrdup(Config.debugOptions);
-
-    if (Config.retry.timeout < 5)
-        fatal("minimum_retry_timeout must be at least 5 seconds");
 
     if (Config.retry.maxtries > 10)
         fatal("maximum_single_addr_tries cannot be larger than 10");
