@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cc,v 1.27 2001/01/12 00:37:14 wessels Exp $
+ * $Id: MemBuf.cc,v 1.28 2001/04/20 21:26:22 hno Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -324,6 +324,10 @@ memBufGrow(MemBuf * mb, mb_size_t min_cap)
     case 32768:
 	mb->buf = memAllocate(MEM_32K_BUF);
 	mb->freefunc = &memFree32K;
+	break;
+    case 65536:
+	mb->buf = memAllocate(MEM_64K_BUF);
+	mb->freefunc = &memFree64K;
 	break;
     default:
 	/* recycle if old buffer was not "pool"ed */
