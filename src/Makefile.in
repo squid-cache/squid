@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.336 2005/01/04 01:10:45 hno Exp $
+#  $Id: Makefile.in,v 1.337 2005/02/07 01:10:57 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -864,6 +864,7 @@ ufsdump_SOURCES = debug.cc \
 	IPInterception.cc \
 	IPInterception.h \
 	$(LEAKFINDERSOURCE) \
+        list.cc \
 	logfile.cc \
 	mem.cc \
 	mem_node.cc \
@@ -1613,12 +1614,12 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	HttpHeaderTools.cc HttpBody.cc HttpMsg.cc HttpReply.cc \
 	HttpRequest.cc HttpRequest.h icmp.cc icp_v2.cc icp_v3.cc \
 	ACLIdent.cc ACLIdent.h ident.cc internal.cc ipc.cc ipcache.cc \
-	IPInterception.cc IPInterception.h leakfinder.cc logfile.cc \
-	mem.cc mem_node.cc mem_node.h Mem.h MemBuf.cc MemObject.cc \
-	MemObject.h mime.cc multicast.cc neighbors.cc net_db.cc \
-	Packer.cc Parsing.cc ProfStats.cc pconn.cc peer_digest.cc \
-	peer_select.cc protos.h redirect.cc referer.cc refresh.cc \
-	send-announce.cc snmp_core.cc snmp_agent.cc squid.h \
+	IPInterception.cc IPInterception.h leakfinder.cc list.cc \
+	logfile.cc mem.cc mem_node.cc mem_node.h Mem.h MemBuf.cc \
+	MemObject.cc MemObject.h mime.cc multicast.cc neighbors.cc \
+	net_db.cc Packer.cc Parsing.cc ProfStats.cc pconn.cc \
+	peer_digest.cc peer_select.cc protos.h redirect.cc referer.cc \
+	refresh.cc send-announce.cc snmp_core.cc snmp_agent.cc squid.h \
 	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
 	ACLCertificate.h ssl_support.cc ssl_support.h tunnel.cc \
 	SquidNew.cc stat.cc StatHist.cc String.cc stmem.cc store_io.cc \
@@ -1658,18 +1659,19 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
 	icp_v3.$(OBJEXT) $(am__objects_14) internal.$(OBJEXT) \
 	ipc.$(OBJEXT) ipcache.$(OBJEXT) IPInterception.$(OBJEXT) \
-	$(am__objects_15) logfile.$(OBJEXT) mem.$(OBJEXT) \
-	mem_node.$(OBJEXT) MemBuf.$(OBJEXT) MemObject.$(OBJEXT) \
-	mime.$(OBJEXT) multicast.$(OBJEXT) neighbors.$(OBJEXT) \
-	net_db.$(OBJEXT) Packer.$(OBJEXT) Parsing.$(OBJEXT) \
-	$(am__objects_16) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
-	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_17) \
-	$(am__objects_19) tunnel.$(OBJEXT) SquidNew.$(OBJEXT) \
-	stat.$(OBJEXT) StatHist.$(OBJEXT) String.$(OBJEXT) \
-	stmem.$(OBJEXT) store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
-	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	$(am__objects_15) list.$(OBJEXT) logfile.$(OBJEXT) \
+	mem.$(OBJEXT) mem_node.$(OBJEXT) MemBuf.$(OBJEXT) \
+	MemObject.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	Parsing.$(OBJEXT) $(am__objects_16) pconn.$(OBJEXT) \
+	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
+	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
+	$(am__objects_17) $(am__objects_19) tunnel.$(OBJEXT) \
+	SquidNew.$(OBJEXT) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	String.$(OBJEXT) stmem.$(OBJEXT) store_io.$(OBJEXT) \
+	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_20) \
