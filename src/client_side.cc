@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.372 1998/07/31 14:48:13 wessels Exp $
+ * $Id: client_side.cc,v 1.373 1998/08/03 19:30:28 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -40,8 +40,7 @@
 #endif
 
 static const char *const crlf = "\r\n";
-static const char *const proxy_auth_challenge =
-"Basic realm=\"Squid proxy-caching web server\"";
+static const char *const proxy_auth_challenge_fmt = "Basic realm=\"%s\"";
 
 #define REQUEST_BUF_SIZE 4096
 #define FAILURE_MODE_TIME 300
@@ -139,7 +138,7 @@ clientConstructProxyAuthReply(clientHttpRequest * http)
     rep = errorBuildReply(err);
     errorStateFree(err);
     /* add Authenticate header */
-    httpHeaderPutStr(&rep->header, HDR_PROXY_AUTHENTICATE, proxy_auth_challenge);
+    httpHeaderPutStrf(&rep->header, HDR_PROXY_AUTHENTICATE, proxy_auth_challenge_fmt, Config.proxyAuthRealm);
     return rep;
 }
 

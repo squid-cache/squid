@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.93 1998/07/31 00:15:36 wessels Exp $
+# $Id: cf.data.pre,v 1.94 1998/08/03 19:30:26 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1391,6 +1391,19 @@ DOC_START
 	ACL elements.  See the comments for 'http_access' below, or
 	the Squid FAQ (http://squid.nlanr.net/Squid/FAQ/FAQ-10.html).
 DOC_END
+
+NAME: proxy_auth_realm
+TYPE: eol
+DEFAULT: Squid proxy-caching web server
+LOC: Config.proxyAuthRealm
+DOC_START
+	Specifies the realm name which is to be reported to the client for
+	proxy authentication (part of the text the user will see when
+	prompted their username and password).
+
+proxy_auth_realm Squid proxy-caching web server
+DOC_END
+
 
 COMMENT_START
  ADMINISTRATIVE PARAMETERS
