@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.113 1997/02/07 04:57:15 wessels Exp $
+ * $Id: neighbors.cc,v 1.114 1997/02/19 17:09:03 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -404,10 +404,9 @@ neighbors_open(int fd)
 	if (e->type == PEER_MULTICAST)
 	    debug(15, 1, "    Multicast TTL = %d\n", e->mcast_ttl);
 	if ((ia = ipcache_gethostbyname(e->host, IP_BLOCKING_LOOKUP)) == NULL) {
-	    debug(0, 0, "WARNING!!: DNS lookup for '%s' failed!\n", e->host);
+	    debug(0, 0, "WARNING: DNS lookup for '%s' failed!\n", e->host);
 	    debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
-	    *E = next;		/* skip */
-	    safe_free(e);
+	    neighborRemove(e);
 	    continue;
 	}
 	e->n_addresses = 0;
@@ -416,10 +415,9 @@ neighbors_open(int fd)
 	    e->n_addresses++;
 	}
 	if (e->n_addresses < 1) {
-	    debug(0, 0, "WARNING!!: No IP address found for '%s'!\n", e->host);
+	    debug(0, 0, "WARNING: No IP address found for '%s'!\n", e->host);
 	    debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
-	    *E = next;		/* skip */
-	    safe_free(e);
+	    neighborRemove(e);
 	    continue;
 	}
 	for (j = 0; j < e->n_addresses; j++) {
@@ -705,7 +703,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	} else if (!opt_udp_hit_obj) {
 	    /* HIT_OBJ poses a security risk since we take the object 
 	     * data from the ICP message */
-	    debug(15, 0, "WARNING!: Received ICP_OP_HIT_OBJ from '%s' with HIT_OBJ disabled!\n");
+	    debug(15, 0, "WARNING: Received ICP_OP_HIT_OBJ from '%s' with HIT_OBJ disabled!\n");
 	    debug(15, 0, "--> URL '%s'\n", entry->url);
 	} else {
 	    if (e->options & NEIGHBOR_PROXY_ONLY)
