@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.138 1998/03/29 20:02:44 rousskov Exp $
+#  $Id: Makefile.in,v 1.139 1998/03/29 20:20:04 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -199,7 +199,7 @@ unlinkd: unlinkd-daemon.o
 unlinkd-daemon.o: unlinkd.c
 	$(CC) -c $(CFLAGS) -DUNLINK_DAEMON $(srcdir)/unlinkd.c -o $@
 
-cache_diff: cache_diff.o
+cache_diff: cache_diff.o debug.o globals.o hash.o store_key_md5.o
 	$(CC) -o $@ $(LDFLAGS) $@.o debug.o globals.o hash.o store_key_md5.o $(CACHE_DIFF_LIBS)
 
 cache_cf.o: cf_parser.c
