@@ -5,11 +5,11 @@
 /* mib stuff here */
 
 struct subtree {
-    oid name[16];               /* objid prefix of subtree */
-    u_char namelen;             /* number of subid's in name above */
-    struct variable *variables; /* pointer to variables array */
-    int variables_len;          /* number of entries in above array */
-    int variables_width;        /* sizeof each variable entry */
+    oid name[16];		/* objid prefix of subtree */
+    u_char namelen;		/* number of subid's in name above */
+    struct variable *variables;	/* pointer to variables array */
+    int variables_len;		/* number of entries in above array */
+    int variables_width;	/* sizeof each variable entry */
     struct subtree *next;
 };
 
@@ -28,38 +28,38 @@ struct subtree {
  * application.  The first 5 elements of the structure must remain constant.
  */
 struct variable2 {
-    u_char magic;               /* passed to function as a hint */
-    char type;                  /* type of variable */
-    u_short acl;                /* access control list for variable */
-    u_char *(*findVar) ();      /* function that finds variable */
-    u_char namelen;             /* length of name below */
-    oid name[2];                /* object identifier of variable */
+    u_char magic;		/* passed to function as a hint */
+    char type;			/* type of variable */
+    u_short acl;		/* access control list for variable */
+    u_char *(*findVar) ();	/* function that finds variable */
+    u_char namelen;		/* length of name below */
+    oid name[2];		/* object identifier of variable */
 };
 
 struct variable4 {
-    u_char magic;               /* passed to function as a hint */
-    char type;                  /* type of variable */
-    u_short acl;                /* access control list for variable */
-    u_char *(*findVar) ();      /* function that finds variable */
-    u_char namelen;             /* length of name below */
-    oid name[4];                /* object identifier of variable */
+    u_char magic;		/* passed to function as a hint */
+    char type;			/* type of variable */
+    u_short acl;		/* access control list for variable */
+    u_char *(*findVar) ();	/* function that finds variable */
+    u_char namelen;		/* length of name below */
+    oid name[4];		/* object identifier of variable */
 };
 
 struct variable7 {
-    u_char magic;               /* passed to function as a hint */
-    char type;                  /* type of variable */
-    u_short acl;                /* access control list for variable */
-    u_char *(*findVar) ();      /* function that finds variable */
-    u_char namelen;             /* length of name below */
-    oid name[7];                /* object identifier of variable */
+    u_char magic;		/* passed to function as a hint */
+    char type;			/* type of variable */
+    u_short acl;		/* access control list for variable */
+    u_char *(*findVar) ();	/* function that finds variable */
+    u_char namelen;		/* length of name below */
+    oid name[7];		/* object identifier of variable */
 };
 struct variable13 {
-    u_char magic;               /* passed to function as a hint */
-    char type;                  /* type of variable */
-    u_short acl;                /* access control list for variable */
-    u_char *(*findVar) ();      /* function that finds variable */
-    u_char namelen;             /* length of name below */
-    oid name[13];               /* object identifier of variable */
+    u_char magic;		/* passed to function as a hint */
+    char type;			/* type of variable */
+    u_short acl;		/* access control list for variable */
+    u_char *(*findVar) ();	/* function that finds variable */
+    u_char namelen;		/* length of name below */
+    oid name[13];		/* object identifier of variable */
 };
 
 #endif
@@ -91,6 +91,7 @@ enum {
     SYSVMSIZ,
     SYSSTOR
 };
+
 /* cacheConfig group */
 
 enum {
@@ -187,5 +188,6 @@ enum {
     PERF_PEERSTAT_KEEPAL_S,
     PERF_PEERSTAT_KEEPAL_R
 };
+
 #endif
 #endif

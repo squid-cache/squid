@@ -20,9 +20,6 @@ Our Todo List
 (3) request-range
 (3) hit metering
 (3) ETag support (makes metadata bigger--ack!)
-(3) AS # routing
-	- whois -h whois.ra.net '\!gAS194'
-	- Stevens V2 Ch.18
 (3) Efficient public peer access control *without ACLs*
     Bill Wichers <billw@unix0.waveform.net>
     Dave Zarzycki <zarzycki@ricochet.net>
@@ -32,7 +29,6 @@ Our Todo List
     #    x milliseconds, then deny.
     distant_peer_deny   200  75  10
 (3) Resource limits.
-(3) SIGHUP should reread error text files
 (3) Make swap.state binary with fixed-size cache keys
 (3) Make checkFailureRatio() work again.
 (3) LDAP support.  See http://miso.wwa.com/~donley/ and
@@ -77,3 +73,7 @@ DONE:
 (2) SNMP interface
 (5) convert ipcache/fqdncache to double-linked list
     and lose qsort() calls.
+(3) AS # routing
+	- whois -h whois.ra.net '\!gAS194'
+	- Stevens V2 Ch.18
+(3) SIGHUP should reread error text files
