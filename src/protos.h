@@ -630,6 +630,7 @@ extern OBJH dump_config;
 extern OBJH storeDirStats;
 extern OBJH pconnHistDump;
 extern void dump_peers(StoreEntry *, peer *);
+extern OBJH statCounters;
 extern OBJH statAvg5min;
 extern OBJH statAvg60min;
 

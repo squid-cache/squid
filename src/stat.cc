@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.195 1998/02/10 21:44:35 wessels Exp $
+ * $Id: stat.cc,v 1.196 1998/02/12 23:52:16 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -788,21 +788,19 @@ statAvgTick(void *notused)
 }
 
 void
+statCounters(StoreEntry * e)
+{
+    statCountersDump(e);
+}
+
+void
 statAvg5min(StoreEntry * e)
 {
-#if NOT_YET
-    statCountersDump(e);
-    storeAppendPrintf(e, "\n");
-#endif
     statAvgDump(e, 5);
 }
 
 void
 statAvg60min(StoreEntry * e)
 {
-#if NOT_YET
-    statCountersDump(e);
-    storeAppendPrintf(e, "\n");
-#endif
     statAvgDump(e, 60);
 }
