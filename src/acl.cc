@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.31 1996/09/11 22:41:10 wessels Exp $
+ * $Id: acl.cc,v 1.32 1996/09/12 03:24:00 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -942,7 +942,7 @@ void aclDestroyAcls()
     AclListTail = &AclList;
 }
 
-void aclDestroyAclList(list)
+static void aclDestroyAclList(list)
      struct _acl_list *list;
 {
     struct _acl_list *next = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.15 1996/09/04 22:03:23 wessels Exp $
+ * $Id: fqdncache.cc,v 1.16 1996/09/12 03:24:03 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -559,7 +559,7 @@ static int fqdncache_dnsHandleRead(fd, dnsData)
 	    dnsData->ip_inbuf[0] = '\0';
 	    f = dnsData->data;
 	    f->name_count = x->name_count;
-	    for (n = 0; n < f->name_count; n++)
+	    for (n = 0; n < (int) f->name_count; n++)
 		f->names[n] = x->names[n];
 	    f->error_message = x->error_message;
 	    f->status = x->status;

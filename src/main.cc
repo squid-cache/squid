@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.69 1996/08/30 22:39:30 wessels Exp $
+ * $Id: main.cc,v 1.70 1996/09/12 03:24:06 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -118,6 +118,7 @@ int opt_foreground_rebuild = 0;
 int opt_zap_disk_store = 0;
 int opt_syslog_enable = 0;	/* disabled by default */
 int opt_no_ipcache = 0;		/* use ipcache by default */
+static int opt_send_signal = -1;/* no signal to send */
 int vhost_mode = 0;
 int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
@@ -151,16 +152,19 @@ static void mainReinitialize _PARAMS((void));
 static time_t mainMaintenance _PARAMS((void));
 static void usage _PARAMS((void));
 static void mainParseOptions _PARAMS((int, char **));
+static void sendSignal _PARAMS((void));
 
 static void usage()
 {
     fprintf(stderr, "\
-Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port]\n\
+Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port] [-k signal]\n\
        -a port   Specify ASCII port number (default: %d).\n\
        -f file   Use given config-file instead of\n\
                  %s\n\
-       -i        Disable IP caching.\n\
        -h        Print help message.\n\
+       -i        Disable IP caching.\n\
+       -k reconfigure|rotate|shutdown|kill|debug|check\n\
+		 Send signal to running copy and exit.\n\
        -s        Enable logging to syslog.\n\
        -u port   Specify ICP port number (default: %d), disable with 0.\n\
        -v        Print version.\n\
@@ -183,7 +187,7 @@ static void mainParseOptions(argc, argv)
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFRUVYa:bf:him:su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFRUVYa:bf:hik:m:su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -222,6 +226,24 @@ static void mainParseOptions(argc, argv)
 	case 'i':
 	    opt_no_ipcache = 1;
 	    break;
+	case 'k':
+	    if (strlen(optarg) < 1)
+		usage();
+	    if (!strncmp(optarg, "reconfigure", strlen(optarg)))
+		opt_send_signal = SIGHUP;
+	    else if (!strncmp(optarg, "rotate", strlen(optarg)))
+		opt_send_signal = SIGUSR1;
+	    else if (!strncmp(optarg, "debug", strlen(optarg)))
+		opt_send_signal = SIGUSR2;
+	    else if (!strncmp(optarg, "shutdown", strlen(optarg)))
+		opt_send_signal = SIGTERM;
+	    else if (!strncmp(optarg, "kill", strlen(optarg)))
+		opt_send_signal = SIGKILL;
+	    else if (!strncmp(optarg, "check", strlen(optarg)))
+		opt_send_signal = 0;  /* SIGNULL */
+	    else
+		usage();
+	    break;
 	case 'm':
 #if MALLOC_DBG
 	    malloc_debug_level = atoi(optarg);
@@ -253,7 +275,7 @@ static void mainParseOptions(argc, argv)
     }
 }
 
-void rotate_logs(sig)
+static void rotate_logs(sig)
      int sig;
 {
     debug(21, 1, "rotate_logs: SIGUSR1 received.\n");
@@ -263,7 +285,7 @@ void rotate_logs(sig)
 #endif
 }
 
-void reconfigure(sig)
+static void reconfigure(sig)
      int sig;
 {
     debug(21, 1, "reconfigure: SIGHUP received\n");
@@ -315,7 +337,7 @@ void serverConnectionsOpen()
 	theHttpConnection);
 
     if (!httpd_accel_mode || Config.Accel.withProxy) {
-	if ((port = Config.Port.icp) > 0) {
+	if ((port = Config.Port.icp) > (u_short) 0) {
 	    theInIcpConnection = comm_open(COMM_NONBLOCKING | COMM_DGRAM,
 		Config.Addrs.udp_incoming,
 		port,
@@ -567,6 +589,12 @@ int main(argc, argv)
 
     mainParseOptions(argc, argv);
 
+    /* send signal to running copy and exit */
+    if (opt_send_signal != -1) {
+	sendSignal();
+	/* NOTREACHED */
+    }
+
     setMaxFD();
 
     if (opt_catch_signals)
@@ -644,3 +672,28 @@ int main(argc, argv)
     /* NOTREACHED */
     return 0;
 }
+
+static void sendSignal()
+{
+	int pid;
+	debug_log = stderr;
+	if (ConfigFile == NULL)
+	    ConfigFile = xstrdup(DefaultConfigFile);
+	parseConfigFile(ConfigFile);
+	pid = readPidFile();
+	if (pid > 1) {
+	    if (kill(pid, opt_send_signal) &&
+		/* ignore permissions if just running check */
+		!(opt_send_signal == 0 && errno == EPERM)) {
+		fprintf(stderr, "%s: ERROR: Could not send ", appname);
+		fprintf(stderr, "signal %d to process %d: %s\n",
+			opt_send_signal, pid, xstrerror());
+		exit(1);
+	    }
+	} else {
+	    fprintf(stderr, "%s: ERROR: No running copy\n", appname);
+	    exit(1);
+	}
+	/* signal successfully sent */
+	exit(0);
+    }
