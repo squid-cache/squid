@@ -8,6 +8,10 @@
   	  <jyjung@cosmos.kaist.ac.kr>.
 	- Unchanged protoUndispatch() calling squid_error_entry().
 	  Needs to be called on entries not yet dispatched.
+	- Rewrote ipcache_parsebuffer().
+	- Fixed stupid clientProxyAuthCheck() bug.
+	- Made IP cache size configurable.
+	- Fixed bug parsing 'cache_swap_low'
 
 Changes to squid-1.1.alpha12:
 
