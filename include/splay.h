@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.27 2004/08/30 05:12:29 robertc Exp $
+ * $Id: splay.h,v 1.28 2005/01/06 13:16:38 serassio Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -361,14 +361,14 @@ Splay<V>::size() const
 }
 
 template <class V>
-typename Splay<V>::const_iterator
+const SplayConstIterator<V>
 Splay<V>::begin() const
 {
     return const_iterator(head);
 }
 
 template <class V>
-typename Splay<V>::const_iterator
+const SplayConstIterator<V>
 Splay<V>::end() const
 {
     return const_iterator(NULL);

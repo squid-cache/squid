@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.442 2005/01/03 16:08:26 robertc Exp $
+ * $Id: http.cc,v 1.443 2005/01/06 13:16:39 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -801,7 +801,7 @@ no_cache:
             _peer->stats.n_keepalives_recv++;
 
     if (entry->getReply()->date > -1 && !_peer) {
-        int skew = abs(entry->getReply()->date - squid_curtime);
+        int skew = abs((int)(entry->getReply()->date - squid_curtime));
 
         if (skew > 86400)
             debug(11, 3) ("%s's clock is skewed by %d seconds!\n",

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.57 2005/01/03 16:08:27 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.58 2005/01/06 13:16:39 serassio Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -444,9 +444,10 @@ storeCossRebuildFromSwapLog(void *data)
 
             continue;
         } else {
-            x = log(++rb->counts.bad_log_op) / log(10.0);
+            x = log(static_cast<double>(++rb->counts.bad_log_op)) / log(10.0);
 
-            if (0.0 == x - (double) (int) x)
+            if (0.0 == x - (double)
+                    (int) x)
                 debug(47, 1) ("WARNING: %d invalid swap log entries found\n",
                               rb->counts.bad_log_op);
 
