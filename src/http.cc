@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.18 1996/04/01 03:49:30 wessels Exp $ */
+/* $Id: http.cc,v 1.19 1996/04/01 04:30:32 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -149,8 +149,11 @@ static void httpProcessReplyHeader(data, buf)
      HttpData *data;
      char *buf;			/* chunk just read by httpReadReply() */
 {
+    char *s = NULL;
     char *t = NULL;
     StoreEntry *entry = data->entry;
+    char *headers = NULL;
+    int l;
 
     if (data->reply_hdr == NULL) {
 	data->reply_hdr = get_free_8k_page();
@@ -169,14 +172,15 @@ static void httpProcessReplyHeader(data, buf)
 	}
     }
     if (data->reply_hdr_state == 1) {
-	char *headers = xstrdup(data->reply_hdr);
+	headers = xstrdup(data->reply_hdr);
 	data->reply_hdr_state++;
 	debug(11, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
 	    data->reply_hdr);
 	t = strtok(headers, "\n");
 	while (t) {
-	    while (t[strlen(t)] == '\r')
-		t[strlen(t)] = 0;
+	    s = t+strlen(t);
+	    while (*s == '\r')
+		*s-- = '\0';
 	    if (!strncasecmp(t, "HTTP", 4)) {
 		if ((t = strchr(t, ' '))) {
 		    t++;
@@ -196,9 +200,9 @@ static void httpProcessReplyHeader(data, buf)
 	    t = strtok(NULL, "\n");
 	}
 	if (data->http_code)
-	    debug(11, 1, "httpReadReply: HTTP CODE: %d\n", data->http_code);
+	    debug(11, 3, "httpReadReply: HTTP CODE: %d\n", data->http_code);
 	if (data->content_length)
-	    debug(11, 1, "httpReadReply: Content Length: %d\n", data->content_length);
+	    debug(11, 3, "httpReadReply: Content Length: %d\n", data->content_length);
 	/* If we know this is cachable we can unchange the key */
 	switch (data->http_code) {
 	case 200:		/* OK */
@@ -282,12 +286,10 @@ static void httpReadReply(fd, data)
 	debug(11, 2, "httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
 	if (errno == ECONNRESET) {
-	    /* Connection reset by peer */
-	    /* consider it as a EOF */
+	    /* Connection reset by peer, junk the object */
+	    /* XXX this line we add assumes HTML.  Should we lose it?  -DPW */
 	    sprintf(tmp_error_buf, "\n<p>Warning: The Remote Server sent RESET at the end of transmission.\n");
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
-	    /* The object is not cacheable */
-	    /* I am not sure if this is the right way to do it / Henrik */
 	    BIT_RESET(entry->flag, CACHABLE);
 	    BIT_SET(entry->flag, RELEASE_REQUEST);
 	    storeComplete(entry);
