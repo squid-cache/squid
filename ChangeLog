@@ -4,7 +4,7 @@ Changes to squid-1.2.beta10 (Jan 1, 1998):
 	  and HEAD requests (Henrik Nordstrom).
 	- Fixed errorAppendEntry() bug in gopherReadReply().
 	- Basic support for FTP URL typecodes (;type=X).
-	- Support for access controls based on ehternet MAC addresses
+	- Support for access controls based on ethernet MAC addresses
 	  (Dale).
 	- Initial URN support; see
 	  http://squid.nlanr.net/Squid/urn-support.html
