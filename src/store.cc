@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.561 2003/03/04 01:40:30 robertc Exp $
+ * $Id: store.cc,v 1.562 2003/03/04 05:56:02 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -174,16 +174,23 @@ StoreEntry::delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data
         assert (mem_obj);
         /* read ahead limit */
         /* Perhaps these two calls should both live in MemObject */
+#if DELAY_POOLS
 
         if (!mem_obj->readAheadPolicyCanRead()) {
+#endif
             mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, handler, data)));
             return;
+#if DELAY_POOLS
+
         }
 
         /* delay id limit */
         mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, handler, data)));
 
         return;
+
+#endif
+
     }
 
     comm_read(fd, buf, amountToRead, handler, data);
