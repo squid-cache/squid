@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.59 1997/08/25 23:45:26 wessels Exp $
+ * $Id: fqdncache.cc,v 1.60 1997/10/13 22:09:08 kostas Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -693,7 +693,7 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
     if (f->status != FQDN_PENDING)
 	debug_trap("fqdncache_dnsDispatch: status != FQDN_PENDING");
     buf = xcalloc(1, 256);
-    sprintf(buf, "%1.254s\n", f->name);
+    snprintf(buf, 256, "%1.254s\n", f->name);
     dns->flags |= DNS_FLAG_BUSY;
     dns->data = f;
     f->status = FQDN_DISPATCHED;
@@ -994,7 +994,7 @@ fqdncacheChangeKey(fqdncache_entry * f)
 	debug_trap("fqdncacheChangeKey: hash_remove_link() failed\n");
 	return;
     }
-    sprintf(new_key, "%d/", ++index);
+    snprintf(new_key, 256, "%d/", ++index);
     strncat(new_key, f->name, 128);
     debug(14, 1) ("fqdncacheChangeKey: from '%s' to '%s'\n", f->name, new_key);
     safe_free(f->name);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.125 1997/08/25 23:45:25 wessels Exp $
+ * $Id: client_side.cc,v 1.126 1997/10/13 22:09:05 kostas Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -332,12 +332,12 @@ clientConstructTraceEcho(clientHttpRequest * http)
     LOCAL_ARRAY(char, buf, 8192);
     size_t len;
     memset(buf, '\0', 8192);
-    sprintf(buf, "HTTP/1.0 200 OK\r\n");
-    sprintf(line, "Date: %s\r\n", mkrfc1123(squid_curtime));
+    snprintf(buf, 8192, "HTTP/1.0 200 OK\r\n");
+    snprintf(line, 256,  "Date: %s\r\n", mkrfc1123(squid_curtime));
     strcat(buf, line);
-    sprintf(line, "Server: Squid/%s\r\n", SQUID_VERSION);
+    snprintf(line, 256, "Server: Squid/%s\r\n", SQUID_VERSION);
     strcat(buf, line);
-    sprintf(line, "Content-Type: message/http\r\n");
+    snprintf(line, 256, "Content-Type: message/http\r\n");
     strcat(buf, line);
     strcat(buf, "\r\n");
     len = strlen(buf);

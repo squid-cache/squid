@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.40 1997/08/10 06:34:28 wessels Exp $
+ * $Id: dns.cc,v 1.41 1997/10/13 22:09:06 kostas Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -276,7 +276,7 @@ dnsOpenServers(void)
 		s++;
 	    else
 		s = prg;
-	    sprintf(fd_note_buf, "%s #%d", s, dns_child_table[k]->id);
+	    snprintf(fd_note_buf,FD_DESC_SZ, "%s #%d", s, dns_child_table[k]->id);
 	    fd_note(dns_child_table[k]->inpipe, fd_note_buf);
 	    commSetNonBlocking(dns_child_table[k]->inpipe);
 	    debug(34, 3) ("dnsOpenServers: 'dns_server' %d started\n", k);

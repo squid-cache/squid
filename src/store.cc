@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.284 1997/08/25 23:45:30 wessels Exp $
+ * $Id: store.cc,v 1.285 1997/10/13 22:09:22 kostas Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -494,7 +494,7 @@ storeLog(int tag, const StoreEntry * e)
 	mem->log_url = xstrdup(e->url);
     }
     reply = mem->reply;
-    sprintf(logmsg, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
+    snprintf(logmsg, MAX_URL<<1 , "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	storeLogTags[tag],
@@ -617,7 +617,7 @@ storeGeneratePrivateKey(const char *url, method_t method, int num)
     }
     debug(20, 3) ("storeGeneratePrivateKey: '%s'\n", url);
     key_temp_buffer[0] = '\0';
-    sprintf(key_temp_buffer, "%d/%s/%s",
+    snprintf(key_temp_buffer, MAX_URL+100, "%d/%s/%s",
 	num,
 	RequestMethodStr[method],
 	url);
@@ -638,7 +638,7 @@ storeGeneratePublicKey(const char *url, method_t method)
     case METHOD_HEAD:
     case METHOD_CONNECT:
     case METHOD_TRACE:
-	sprintf(key_temp_buffer, "/%s/%s", RequestMethodStr[method], url);
+	snprintf(key_temp_buffer,MAX_URL+100, "/%s/%s", RequestMethodStr[method], url);
 	return key_temp_buffer;
 	/* NOTREACHED */
 	break;
@@ -950,7 +950,7 @@ storeAppendPrintf(va_alist)
     fmt = va_arg(args, char *);
 #endif
     buf[0] = '\0';
-    vsprintf(buf, fmt, args);
+    vsnprintf(buf,4096, fmt, args);
     storeAppend(e, buf, strlen(buf));
     va_end(args);
 }
@@ -2450,7 +2450,7 @@ storeWriteCleanLogs(int reopen)
 	assert(dirn < Config.cacheSwap.n_configured);
 	if (fd[dirn] < 0)
 	    continue;
-	sprintf(line, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
+	snprintf(line, 16384, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
 	    (int) e->swap_file_number,
 	    (int) e->timestamp,
 	    (int) e->lastref,
@@ -2559,13 +2559,13 @@ storeRotateLog(void)
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
 	i--;
-	sprintf(from, "%s.%d", fname, i - 1);
-	sprintf(to, "%s.%d", fname, i);
+	snprintf(from,MAXPATHLEN, "%s.%d", fname, i - 1);
+	snprintf(to, MAXPATHLEN, "%s.%d", fname, i);
 	rename(from, to);
     }
     /* Rotate the current log to .0 */
     if (Config.Log.rotateNumber > 0) {
-	sprintf(to, "%s.%d", fname, 0);
+	snprintf(to,MAXPATHLEN, "%s.%d", fname, 0);
 	rename(fname, to);
     }
     storelog_fd = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL);

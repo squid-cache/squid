@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.69 1997/08/25 22:35:54 wessels Exp $
+ * $Id: errorpage.cc,v 1.70 1997/10/13 22:09:08 kostas Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -131,9 +131,16 @@ errorConvert(char token, ErrorState * err)
     case 'z':
 	p = err->dnsserver_msg;
 	break;
+    case 'e':
+	snprintf(buf, CVT_BUF_SZ, "%d", err->errno);
+	p=buf;
+	break;
+    case 'E':
+	snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->errno, xstrerror());
+	break;
 /*
- * e - errno
- * E - strerror()
+ * e - errno            			x
+ * E - strerror()				x
  * t - local time
  * T - UTC
  * c - Squid error code

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: client.cc,v 1.29 1997/08/25 23:45:24 wessels Exp $
+ * $Id: client.cc,v 1.30 1997/10/13 22:09:05 kostas Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -207,35 +207,35 @@ main(int argc, char *argv[])
 	    fprintf(stderr, "client: ERROR: Cannot connect to %s:%d: Host unknown.\n", hostname, port);
 	} else {
 	    char tbuf[BUFSIZ];
-	    sprintf(tbuf, "client: ERROR: Cannot connect to %s:%d",
+	    snprintf(tbuf, BUFSIZ, "client: ERROR: Cannot connect to %s:%d",
 		hostname, port);
 	    perror(tbuf);
 	}
 	exit(1);
     }
     /* Build the HTTP request */
-    sprintf(msg, "%s %s HTTP/1.0\r\n", method, url);
+    snprintf(msg, BUFSIZ, "%s %s HTTP/1.0\r\n", method, url);
     if (reload) {
-	sprintf(buf, "Pragma: no-cache\r\n");
+	snprintf(buf, BUFSIZ, "Pragma: no-cache\r\n");
 	strcat(msg, buf);
     }
     if (opt_noaccept == 0) {
-	sprintf(buf, "Accept: */*\r\n");
+	snprintf(buf, BUFSIZ, "Accept: */*\r\n");
 	strcat(msg, buf);
     }
     if (ims) {
-	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc1123(ims));
+	snprintf(buf, BUFSIZ, "If-Modified-Since: %s\r\n", mkrfc1123(ims));
 	strcat(msg, buf);
     }
     if (max_forwards > -1) {
-	sprintf(buf, "Max-Forwards: %d\r\n", max_forwards);
+	snprintf(buf, BUFSIZ, "Max-Forwards: %d\r\n", max_forwards);
 	strcat(msg, buf);
     }
     if (keep_alive) {
-	sprintf(buf, "Proxy-Connection: Keep-Alive\r\n");
+	snprintf(buf, BUFSIZ, "Proxy-Connection: Keep-Alive\r\n");
 	strcat(msg, buf);
     }
-    sprintf(buf, "\r\n");
+    snprintf(buf, BUFSIZ, "\r\n");
     strcat(msg, buf);
 
     /* Send the HTTP request */

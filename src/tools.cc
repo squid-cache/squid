@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.120 1997/08/25 22:36:03 wessels Exp $
+ * $Id: tools.cc,v 1.121 1997/10/13 22:09:24 kostas Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -149,7 +149,7 @@ static char *
 dead_msg(void)
 {
     LOCAL_ARRAY(char, msg, 1024);
-    sprintf(msg, DEAD_MSG, version_string, version_string);
+    snprintf(msg,1024, DEAD_MSG, version_string, version_string);
     return msg;
 }
 
@@ -167,7 +167,7 @@ mail_warranty(void)
     fprintf(fp, "To: %s\n", Config.adminEmail);
     fprintf(fp, "Subject: %s\n", dead_msg());
     fclose(fp);
-    sprintf(command, "mail %s < %s", Config.adminEmail, filename);
+    snprintf(command,256, "mail %s < %s", Config.adminEmail, filename);
     system(command);		/* XXX should avoid system(3) */
     unlink(filename);
 }
@@ -608,7 +608,7 @@ writePidFile(void)
 	debug_trap("Could not write pid file");
 	return;
     }
-    sprintf(buf, "%d\n", (int) getpid());
+    snprintf(buf,32, "%d\n", (int) getpid());
     write(fd, buf, strlen(buf));
     file_close(fd);
 }
@@ -658,6 +658,8 @@ setMaxFD(void)
 	if (rl.rlim_cur > rl.rlim_max)
 	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
+          /* NOTE: couldn't figure size of tmp_error_buf, thus didn't
+                change to snprintf()  ... yet */
 	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}
@@ -670,6 +672,8 @@ setMaxFD(void)
 	if (rl.rlim_cur > rl.rlim_max)
 	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
+          /* NOTE: couldn't figure size of tmp_error_buf, thus didn't
+                change to snprintf()  ... yet */
 	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_OFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}
@@ -685,6 +689,8 @@ setMaxFD(void)
     } else if (rl.rlim_max > rl.rlim_cur) {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_DATA, &rl) < 0) {
+          /* NOTE: couldn't figure size of tmp_error_buf, thus didn't
+                change to snprintf()  ... yet */
 	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_DATA: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}
@@ -696,6 +702,8 @@ setMaxFD(void)
     } else if (rl.rlim_max > rl.rlim_cur) {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
+          /* NOTE: couldn't figure size of tmp_error_buf, thus didn't
+                change to snprintf()  ... yet */
 	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_VMEM: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.60 1997/08/26 17:30:35 wessels Exp $
+ * $Id: cachemgr.cc,v 1.61 1997/10/13 22:09:04 kostas Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -199,6 +199,7 @@
 
 #include "ansiproto.h"
 #include "util.h"
+#include "snprintf.h"
 
 #define MAX_ENTRIES 10000
 
@@ -506,20 +507,20 @@ describeTimeSince(time_t then)
     if (then < 0)
 	return "NEVER";
     if (delta < ONE_MINUTE)
-	sprintf(buf, "%ds", (int) (delta / ONE_SECOND));
+	snprintf(buf, 128, "%ds", (int) (delta / ONE_SECOND));
     else if (delta < ONE_HOUR)
-	sprintf(buf, "%dm", (int) (delta / ONE_MINUTE));
+	snprintf(buf, 128, "%dm", (int) (delta / ONE_MINUTE));
     else if (delta < ONE_DAY)
-	sprintf(buf, "%dh", (int) (delta / ONE_HOUR));
+	snprintf(buf, 128, "%dh", (int) (delta / ONE_HOUR));
     else if (delta < ONE_WEEK)
-	sprintf(buf, "%dD", (int) (delta / ONE_DAY));
+	snprintf(buf, 128, "%dD", (int) (delta / ONE_DAY));
     else if (delta < ONE_MONTH)
-	sprintf(buf, "%dW", (int) (delta / ONE_WEEK));
+	snprintf(buf, 128, "%dW", (int) (delta / ONE_WEEK));
     else if (delta < ONE_YEAR)
-	sprintf(buf, "%dM", (int) (delta / ONE_MONTH));
+	snprintf(buf, 128, "%dM", (int) (delta / ONE_MONTH));
     else
-	sprintf(buf, "%dY", (int) (delta / ONE_YEAR));
-    sprintf(buf2, fmt, buf);
+	snprintf(buf, 128, "%dY", (int) (delta / ONE_YEAR));
+    snprintf(buf2,128, fmt, buf);
     return buf2;
 }
 
@@ -656,15 +657,16 @@ main(int argc, char *argv[])
 	/* convert hostname:portnum to host=hostname&port=portnum */
 	if (*s && !strchr(s, '=') && !strchr(s, '&')) {
 	    char *p;
-	    buffer = xmalloc(strlen(s) + sizeof "host=&port=");
+            int len_buff=strlen(s) + sizeof "host=&port=";
+	    buffer = xmalloc(len_buff);
 	    if ((p = strchr(s, ':')))
 		if (p != s) {
 		    *p = '\0';
-		    sprintf(buffer, "host=%s&port=%s", s, p + 1);
+		    snprintf(buffer, len_buff,"host=%s&port=%s", s, p + 1);
 		} else {
-		    sprintf(buffer, "port=%s", p + 1);
+		    snprintf(buffer, len_buff, "port=%s", p + 1);
 	    } else
-		sprintf(buffer, "host=%s", s);
+		snprintf(buffer, len_buff, "host=%s", s);
 	} else {
 	    buffer = xstrdup(s);
 	}
@@ -749,11 +751,11 @@ main(int argc, char *argv[])
     case STATS_NETDB:
     case PCONN:
     case SHUTDOWN:
-	sprintf(msg, "GET cache_object://%s/%s@%s HTTP/1.0\r\n\r\n",
+	snprintf(msg, 1024, "GET cache_object://%s/%s@%s HTTP/1.0\r\n\r\n",
 	    hostname, op_cmds[op], password);
 	break;
     case REFRESH:
-	sprintf(msg, "GET %s HTTP/1.0\r\nPragma: no-cache\r\nAccept: */*\r\n\r\n", url);
+	snprintf(msg, 1024, "GET %s HTTP/1.0\r\nPragma: no-cache\r\nAccept: */*\r\n\r\n", url);
 	break;
 #ifdef REMOVE_OBJECT
     case REMOVE:

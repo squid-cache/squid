@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.80 1997/07/28 06:41:07 wessels Exp $
+ * $Id: wais.cc,v 1.81 1997/10/13 22:09:26 kostas Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -284,10 +284,10 @@ waisSendRequest(int fd, void *data)
     buf = xcalloc(1, len + 1);
 
     if (waisState->request_hdr)
-	sprintf(buf, "%s %s %s\r\n", Method, waisState->request,
+	snprintf(buf, len+1, "%s %s %s\r\n", Method, waisState->request,
 	    waisState->request_hdr);
     else
-	sprintf(buf, "%s %s\r\n", Method, waisState->request);
+	snprintf(buf, len+1, "%s %s\r\n", Method, waisState->request);
     debug(24, 6) ("waisSendRequest: buf: %s\n", buf);
     comm_write(fd,
 	buf,

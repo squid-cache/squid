@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.45 1997/07/15 05:34:12 wessels Exp $
+ * $Id: redirect.cc,v 1.46 1997/10/13 22:09:18 kostas Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -305,7 +305,7 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
 	fqdn = dash_str;
     buf = get_free_8k_page();
-    sprintf(buf, "%s %s/%s %s %s\n",
+    snprintf(buf,8192, "%s %s/%s %s %s\n",
 	r->orig_url,
 	inet_ntoa(r->client_addr),
 	fqdn,
@@ -408,7 +408,7 @@ redirectOpenServers(void)
 		s++;
 	    else
 		s = prg;
-	    sprintf(fd_note_buf, "%s #%d",
+	    snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d",
 		s,
 		redirect_child_table[k]->index + 1);
 	    fd_note(redirect_child_table[k]->fd, fd_note_buf);
