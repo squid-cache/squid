@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.141 1999/01/11 16:50:30 wessels Exp $
+ * $Id: enums.h,v 1.142 1999/01/11 23:29:41 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -60,7 +60,7 @@ typedef enum {
     ERR_LIFETIME_EXP,
     ERR_READ_ERROR,
     ERR_WRITE_ERROR,
-    ERR_CLIENT_ABORT,
+    ERR_SHUTTING_DOWN,
     ERR_CONNECT_FAIL,
     ERR_INVALID_REQ,
     ERR_UNSUP_REQ,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.56 1998/12/05 00:54:29 wessels Exp $
+ * $Id: icp_v2.cc,v 1.57 1999/01/11 23:29:42 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -494,6 +494,7 @@ icpConnectionClose(void)
     if (theOutIcpConnection > -1) {
 	debug(12, 1) ("FD %d Closing ICP connection\n", theOutIcpConnection);
 	comm_close(theOutIcpConnection);
+	theOutIcpConnection = -1;
     }
 }
 
