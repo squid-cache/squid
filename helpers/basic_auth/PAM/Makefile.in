@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.7 2001/11/29 11:17:07 hno Exp $
+#  $Id: Makefile.in,v 1.8 2002/01/08 10:55:27 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -130,6 +130,7 @@ INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 		  -I$(top_srcdir)/src/
 
 
+man_MANS = pam_auth.8
 libexec_PROGRAMS = pam_auth
 LDADD = -lpam $(XTRA_LIBS)
 subdir = src/auth/basic/helpers/PAM
@@ -158,6 +159,9 @@ CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = pam_auth.c
+
+NROFF = nroff
+MANS = $(man_MANS)
 DIST_COMMON = Makefile.am Makefile.in
 SOURCES = pam_auth.c
 
@@ -224,6 +228,45 @@ distclean-depend:
 CCDEPMODE = @CCDEPMODE@
 uninstall-info-am:
 
+man8dir = $(mandir)/man8
+install-man8: $(man8_MANS) $(man_MANS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(man8dir)
+	@list='$(man8_MANS) $(dist_man8_MANS) $(nodist_man8_MANS)'; \
+	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
+	for i in $$l2; do \
+	  case "$$i" in \
+	    *.8*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
+	  else file=$$i; fi; \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man8dir)/$$inst"; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(man8dir)/$$inst; \
+	done
+uninstall-man8:
+	@$(NORMAL_UNINSTALL)
+	@list='$(man8_MANS) $(dist_man8_MANS) $(nodist_man8_MANS)'; \
+	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
+	for i in $$l2; do \
+	  case "$$i" in \
+	    *.8*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " rm -f $(DESTDIR)$(man8dir)/$$inst"; \
+	  rm -f $(DESTDIR)$(man8dir)/$$inst; \
+	done
+
 tags: TAGS
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -279,10 +322,10 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(PROGRAMS) $(MANS)
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(libexecdir)
+	$(mkinstalldirs) $(DESTDIR)$(libexecdir) $(DESTDIR)$(man8dir)
 
 install: install-am
 install-exec: install-exec-am
@@ -324,13 +367,13 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-man
 
 install-exec-am: install-libexecPROGRAMS
 
 install-info: install-info-am
 
-install-man:
+install-man: install-man8
 
 installcheck-am:
 
@@ -342,7 +385,9 @@ mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic
 
-uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS
+uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS uninstall-man
+
+uninstall-man: uninstall-man8
 
 .PHONY: GTAGS all all-am check check-am clean clean-generic \
 	clean-libexecPROGRAMS distclean distclean-compile \
@@ -350,10 +395,11 @@ uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS
 	dvi-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am install-info \
 	install-info-am install-libexecPROGRAMS install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic tags uninstall \
-	uninstall-am uninstall-info-am uninstall-libexecPROGRAMS
+	install-man8 install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic tags \
+	uninstall uninstall-am uninstall-info-am \
+	uninstall-libexecPROGRAMS uninstall-man uninstall-man8
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
