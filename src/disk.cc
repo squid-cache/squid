@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.20 1996/07/18 20:27:00 wessels Exp $
+ * $Id: disk.cc,v 1.21 1996/08/19 22:46:26 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -426,7 +426,8 @@ int diskHandleRead(fd, ctrl_dat)
     /* go to requested position. */
     lseek(fd, ctrl_dat->offset, SEEK_SET);
     file_table[fd].at_eof = NO;
-    len = read(fd, ctrl_dat->buf + ctrl_dat->cur_len,
+    len = read(fd,
+	ctrl_dat->buf + ctrl_dat->cur_len,
 	ctrl_dat->req_len - ctrl_dat->cur_len);
 
     if (len < 0)
@@ -465,9 +466,13 @@ int diskHandleRead(fd, ctrl_dat)
 	return DISK_OK;
     } else {
 	/* all data we need is here. */
-	/* calll handler */
-	ctrl_dat->handler(fd, ctrl_dat->buf, ctrl_dat->cur_len, DISK_OK,
-	    ctrl_dat->client_data, ctrl_dat->offset);
+	/* call handler */
+	ctrl_dat->handler(fd,
+	    ctrl_dat->buf,
+	    ctrl_dat->cur_len,
+	    DISK_OK,
+	    ctrl_dat->client_data,
+	    ctrl_dat->offset);
 	safe_free(ctrl_dat);
 	return DISK_OK;
     }
