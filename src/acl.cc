@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.220 2000/08/10 21:44:44 wessels Exp $
+ * $Id: acl.cc,v 1.221 2000/08/11 19:33:09 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -401,7 +401,7 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 
 
 #define SCAN_ACL1       "%[0123456789.]-%[0123456789.]/%[0123456789.]"
-#define SCAN_ACL2       "%[0123456789.]-%[0123456789.]"
+#define SCAN_ACL2       "%[0123456789.]-%[0123456789.]%c"
 #define SCAN_ACL3       "%[0123456789.]/%[0123456789.]"
 #define SCAN_ACL4       "%[0123456789.]%c"
 
@@ -426,7 +426,7 @@ aclParseIpData(const char *t)
     }
     if (sscanf(t, SCAN_ACL1, addr1, addr2, mask) == 3) {
 	(void) 0;
-    } else if (sscanf(t, SCAN_ACL2, addr1, addr2) == 2) {
+    } else if (sscanf(t, SCAN_ACL2, addr1, addr2, &c) == 2) {
 	mask[0] = '\0';
     } else if (sscanf(t, SCAN_ACL3, addr1, mask) == 2) {
 	addr2[0] = '\0';
