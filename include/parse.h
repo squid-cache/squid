@@ -1,3 +1,6 @@
+#ifndef _HAVE_PARSE_H_
+#define _HAVE_PARSE_H_
+
 /***********************************************************
 	Copyright 1989 by Carnegie Mellon University
 
@@ -19,55 +22,31 @@ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
-
 /*
  * parse.h
  */
-
-#ifndef _PARSE_H
-#define _PARSE_H
-
-#define MAXLABEL	64	/* maximum characters in a label */
-#define MAXTOKEN	64	/* maximum characters in a token */
-#define MAXQUOTESTR	512	/* maximum characters in a quoted string */
 
 /*
  * A linked list of tag-value pairs for enumerated integers.
  */
 struct enum_list {
     struct enum_list *next;
-    int value;
+    int	value;
     char *label;
-};
-
-/*
- * A linked list of nodes.
- */
-struct node {
-    struct node *next;
-    char label[MAXLABEL];	/* This node's (unique) textual name */
-    u_long subid;		/* This node's integer subidentifier */
-    char parent[MAXLABEL];	/* The parent's textual name */
-    int type;			/* The type of object this represents */
-    struct enum_list *enums;	/* (optional) list of enumerated integers
-				 * (otherwise NULL) */
-    char *description;		/* description (a quoted string) */
 };
 
 /*
  * A tree in the format of the tree structure of the MIB.
  */
-struct tree {
-    struct tree *child_list;	/* list of children of this node */
-    struct tree *next_peer;	/* Next node in list of peers */
-    struct tree *parent;
-    char label[MAXLABEL];	/* This node's textual name */
-    u_long subid;		/* This node's integer subidentifier */
+struct snmp_mib_tree {
+    struct snmp_mib_tree *child_list;	/* list of children of this node */
+    struct snmp_mib_tree *next_peer;	/* Next node in list of peers */
+    struct snmp_mib_tree *parent;
+    char label[64];		/* This node's textual name */
+    u_int subid;		/* This node's integer subidentifier */
     int type;			/* This node's object type */
-    struct enum_list *enums;	/* (optional) list of enumerated integers
-				 * (otherwise NULL) */
-    void (*printer) ();		/* Value printing function */
-    char *description;		/* description (a quoted string) */
+    struct enum_list *enums;	/* (optional) list of enumerated integers (otherwise NULL) */
+    void (*printer)();     /* Value printing function */
 };
 
 /* non-aggregate types for tree end nodes */
@@ -80,14 +59,42 @@ struct tree {
 #define TYPE_COUNTER	    6
 #define TYPE_GAUGE	    7
 #define TYPE_TIMETICKS	    8
-#define TYPE_OPAQUE	    9
+#define TYPE_OPAQUE	            9
 #define TYPE_NULL	    10
-#define TYPE_COUNTER64      11
-#define TYPE_BITSTRING      12
-#define TYPE_NSAPADDRESS    13
-#define TYPE_UINTEGER	    14
 
-struct tree *read_mib(const char *fname);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+void init_mib(char *);
+int read_objid(char *, oid *, int *);
+void  print_objid(oid *, int);
+void sprint_objid(char *, oid *, int);
+void print_variable(oid *, int, struct variable_list *);
+void sprint_variable(char *, oid *, int, struct variable_list *);
+void sprint_value(char *, oid *, int, struct variable_list *);
+void print_value(oid *, int, struct variable_list *);
+
+/*void print_variable_list(struct variable_list *);*/
+/*void print_variable_list_value(struct variable_list *);*/
+/*void print_type(struct variable_list *);*/
+void print_oid_nums(oid *, int);
+
+struct snmp_mib_tree *read_mib();
+
+#ifdef __cplusplus
+}
+#endif
+
+#ifndef _SNMP_H
+#ifndef SQUID_H
+#ifdef __STDC__
+void (*snmplib_debug) (int,char *,...); 
+#else
+void (*snmplib_debug) (va_alist));
+#endif
+#endif
 
 #endif
+
+#endif /* _HAVE_PARSE_H_ */
