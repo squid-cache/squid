@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.198 1997/01/20 18:47:53 wessels Exp $
+ * $Id: store.cc,v 1.199 1997/01/20 19:24:33 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2868,6 +2868,7 @@ storeFreeMemory(void)
 	destroy_StoreEntry(*(list + j));
     xfree(list);
     hashFreeMemory(store_table);
+    safe_free(MaintBucketsOrder);
 }
 
 int
