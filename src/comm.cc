@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.164 1997/06/18 00:19:52 wessels Exp $
+ * $Id: comm.cc,v 1.165 1997/06/18 01:43:42 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -385,6 +385,8 @@ commRetryConnect(int fd, ConnectStateData * cs)
 {
     int fd2;
     if (++cs->tries == 4)
+	return 0;
+    if (!cbdataValid(cs->data))
 	return 0;
     fd2 = socket(AF_INET, SOCK_STREAM, 0);
     if (fd2 < 0) {

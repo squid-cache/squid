@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.122 1997/06/16 22:01:45 wessels Exp $
+ * $Id: ftp.cc,v 1.123 1997/06/18 01:43:42 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -200,7 +200,7 @@ ftpStateFree(int fd, void *data)
     safe_free(ftpState->ctrl.last_message);
     safe_free(ftpState->title_url);
     safe_free(ftpState->filepath);
-    xfree(ftpState);
+    cbdataFree(ftpState);
 }
 
 static void
@@ -816,6 +816,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
     char *response;
     int fd;
+    cbdataAdd(ftpState);
     debug(9, 3) ("FtpStart: '%s'\n", entry->url);
     storeLockObject(entry);
     ftpState->entry = entry;

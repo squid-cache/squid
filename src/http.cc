@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.171 1997/06/18 00:19:53 wessels Exp $
+ * $Id: http.cc,v 1.172 1997/06/18 01:43:44 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -224,7 +224,9 @@ httpStateFree(int fd, void *data)
     }
     requestUnlink(httpState->request);
     requestUnlink(httpState->orig_request);
-    xfree(httpState);
+    httpState->request = NULL;
+    httpState->orig_request = NULL;
+    cbdataFree(httpState);
 }
 
 int
@@ -853,6 +855,7 @@ proxyhttpStart(request_t * orig_request,
     }
     storeLockObject(entry);
     httpState = xcalloc(1, sizeof(HttpStateData));
+    cbdataAdd(httpState);
     httpState->entry = entry;
     request = get_free_request_t();
     httpState->request = requestLink(request);
@@ -921,6 +924,7 @@ httpStart(request_t * request, StoreEntry * entry)
     }
     storeLockObject(entry);
     httpState = xcalloc(1, sizeof(HttpStateData));
+    cbdataAdd(httpState);
     httpState->entry = entry;
     httpState->request = requestLink(request);
     httpState->fd = fd;
