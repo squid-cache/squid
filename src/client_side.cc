@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.672 2004/09/26 21:40:29 hno Exp $
+ * $Id: client_side.cc,v 1.673 2004/10/18 12:16:22 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2431,8 +2431,14 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
 
     if (flag == COMM_OK) {
         if (size > 0) {
+            char *current_buf = conn->in.addressToReadInto();
             kb_incr(&statCounter.client_http.kbytes_in, size);
+
+            if (buf != current_buf)
+                xmemmove(current_buf, buf, size);
+
             conn->in.notYetUsed += size;
+
             conn->in.buf[conn->in.notYetUsed] = '\0';   /* Terminate the string */
         } else if (size == 0) {
             debug(33, 5) ("clientReadRequest: FD %d closed?\n", fd);
