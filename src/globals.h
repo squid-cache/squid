@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.21 1997/12/03 01:32:26 wessels Exp $
+ * $Id: globals.h,v 1.22 1997/12/21 11:21:11 kostas Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -102,6 +102,7 @@ extern time_t hit_only_mode_until;	/* 0 */
 extern StatCounters Counter;
 extern char *err_type_str[];
 extern char *icp_opcode_str[];
+extern struct radix_node_head *AS_tree_head;
 
 #ifdef HAVE_SYSLOG
 extern int _db_level;
