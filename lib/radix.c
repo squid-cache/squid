@@ -1,5 +1,5 @@
 /*
- * $Id: radix.c,v 1.17 2002/04/19 22:23:01 hno Exp $
+ * $Id: radix.c,v 1.18 2002/10/18 22:42:00 hno Exp $
  *
  * DEBUG: section 53     Radix tree data structure implementation
  * AUTHOR: NetBSD Derived
@@ -128,7 +128,7 @@ static char *rn_zeros, *rn_ones;
 #define rn_l rn_u.rn_node.rn_L
 #define rn_r rn_u.rn_node.rn_R
 #define rm_mask rm_rmu.rmu_mask
-#define rm_leaf rm_rmu.rmu_leaf /* extra field would make 32 bytes */
+#define rm_leaf rm_rmu.rmu_leaf	/* extra field would make 32 bytes */
 
 
 /* Helper macros */
@@ -259,7 +259,7 @@ squid_rn_lookup(void *v_arg, void *m_arg, struct squid_radix_node_head *head)
 }
 
 static int
-rn_satsifies_leaf (char *trial, register struct squid_radix_node *leaf, int skip)
+rn_satsifies_leaf(char *trial, register struct squid_radix_node *leaf, int skip)
 {
     register char *cp = trial, *cp2 = leaf->rn_key, *cp3 = leaf->rn_mask;
     char *cplim;
@@ -914,7 +914,7 @@ squid_rn_delete(void *v_arg, void *netmask_arg, struct squid_radix_node_head *he
 }
 
 int
-squid_rn_walktree(struct squid_radix_node_head *h, int (*f)(struct squid_radix_node *, void *), void *w)
+squid_rn_walktree(struct squid_radix_node_head *h, int (*f) (struct squid_radix_node *, void *), void *w)
 {
     int error;
     struct squid_radix_node *base, *next;
