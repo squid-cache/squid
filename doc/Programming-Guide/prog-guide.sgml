@@ -718,6 +718,14 @@ Squid consists of the following major components
 	<em/swap_file_number/ is the 32-bit swap file number for the
 	object, taken from the <em/StoreEntry/.
 
+	<em/offset/ represents the file (byte) offset after the
+	last operation completed.  For example, after a read operation,
+	<em/offset/ must be incremented by the number of bytes read.
+	The same goes for write operations.  This means that the
+	filesystem layer needs explicit (callback) notification
+	for writes.  It is wrong to increment <em/offset/ before
+	an I/O operation has been known to succeed.
+
 	Note that there are two callback functions.  The first,
 	<em/callback/, of type <em/STIOCB/ (store I/O callback),
 	is callback for the <em/storeIOState/ as a whole.  This
@@ -889,6 +897,15 @@ Squid consists of the following major components
 	placed into <em/buf/.  The <em/strcb/ function is only
 	called if the read operation is successful.  If it fails,
 	then the <em/STIOCB/ callback will be called instead.
+
+<sect2>Todo...
+
+	<P>
+	Note there is much work yet to be done in defining
+	this programming interface.  All of the code for
+	rebuilding the disk store at startup is still very
+	UFS-specific.  The configuration file and <em/SquidConfig/
+	data structures are still sort of specific to UFS.
 
 
 <!-- %%%% Chapter : FORWARDING SELECTION %%%% -->
