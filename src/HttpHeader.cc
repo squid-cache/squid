@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.13 1998/03/04 05:39:28 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.14 1998/03/05 00:01:07 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -62,16 +62,6 @@ struct _HttpHeaderExtField {
     char *value;		/* field-value from HTTP/1.1 */
 };
 
-/* possible types for fields */
-typedef enum {
-    ftInvalid = HDR_ENUM_END,	/* to catch nasty errors with hdr_id<->fld_type clashes */
-    ftInt,
-    ftPChar,
-    ftDate_1123,
-    ftPSCC,
-    ftPExtField
-} field_type;
-
 /*
  * HttpHeader entry 
  * ( the concrete type of entry.field is Headers[id].type )
@@ -82,18 +72,6 @@ struct _HttpHeaderEntry {
 };
 
 
-/* counters and size accumulators for stat objects */
-typedef int StatCount;
-typedef size_t StatSize;
-
-/* per field statistics */
-typedef struct {
-    StatCount aliveCount;	/* created but not destroyed (count) */
-    StatCount parsCount;	/* #parsing attempts */
-    StatCount errCount;		/* #pasring errors */
-    StatCount repCount;		/* #repetitons */
-} HttpHeaderFieldStat;
-
 /* per header statistics */
 typedef struct {
     const char *label;
@@ -102,15 +80,6 @@ typedef struct {
     StatHist ccTypeDistr;
 } HttpHeaderStat;
 
-
-/* constant attributes of fields */
-typedef struct {
-    const char *name;
-    http_hdr_type id;
-    field_type type;
-    int name_len;
-    HttpHeaderFieldStat stat;
-} field_attrs_t;
 
 /* use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;
@@ -155,19 +124,6 @@ static field_attrs_t Headers[] =
     {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftPChar},
     {"Proxy-Connection", HDR_PROXY_KEEPALIVE, ftInt},	/* true/false */
     {"Other:", HDR_OTHER, ftPExtField}	/* ':' will not allow matches */
-};
-
-/* this table is used for parsing server cache control header */
-static field_attrs_t SccAttrs[] =
-{
-    {"public", SCC_PUBLIC},
-    {"private", SCC_PRIVATE},
-    {"no-cache", SCC_NO_CACHE},
-    {"no-store", SCC_NO_STORE},
-    {"no-transform", SCC_NO_TRANSFORM},
-    {"must-revalidate", SCC_MUST_REVALIDATE},
-    {"proxy-revalidate", SCC_PROXY_REVALIDATE},
-    {"max-age", SCC_MAX_AGE}
 };
 
 /*
@@ -227,15 +183,14 @@ static HttpHeaderStat HttpHeaderStats[] =
 static int HttpHeaderStatCount = sizeof(HttpHeaderStats) / sizeof(*HttpHeaderStats);
 
 /* global counters */
-static StatCount HeaderParsedCount = 0;
-static StatCount CcPasredCount = 0;
-static StatCount HeaderEntryParsedCount = 0;
+static int HeaderParsedCount = 0;
+static int HeaderEntryParsedCount = 0;
 
 /* long strings accounting */
-static StatCount longStrAliveCount = 0;
-static StatCount longStrHighWaterCount = 0;
-static StatSize longStrAliveSize = 0;
-static StatSize longStrHighWaterSize = 0;
+static int longStrAliveCount = 0;
+static int longStrHighWaterCount = 0;
+static size_t longStrAliveSize = 0;
+static size_t longStrHighWaterSize = 0;
 
 
 /*
@@ -244,10 +199,6 @@ static StatSize longStrHighWaterSize = 0;
 
 #define assert_eid(id) assert((id) >= 0 && (id) < HDR_ENUM_END)
 
-static void httpHeaderInitAttrTable(field_attrs_t * table, int count);
-static int httpHeaderCalcMask(const int *enums, int count);
-static void httpHeaderStatInit(HttpHeaderStat * hs, const char *label);
-
 static HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos);
 static void httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos);
 static void httpHeaderAddParsedEntry(HttpHeader * hdr, HttpHeaderEntry * e);
@@ -255,7 +206,6 @@ static void httpHeaderAddNewEntry(HttpHeader * hdr, const HttpHeaderEntry * e);
 static field_store httpHeaderGet(const HttpHeader * hdr, http_hdr_type id);
 static void httpHeaderSet(HttpHeader * hdr, http_hdr_type id, const field_store value);
 static void httpHeaderSyncMasks(HttpHeader * hdr, const HttpHeaderEntry * e, int add);
-static int httpHeaderIdByName(const char *name, int name_len, const field_attrs_t * attrs, int end, int mask);
 static void httpHeaderGrow(HttpHeader * hdr);
 
 static void httpHeaderEntryInit(HttpHeaderEntry * e, http_hdr_type id, field_store field);
@@ -274,21 +224,23 @@ static void httpHeaderFieldInit(field_store * field);
 static field_store httpHeaderFieldDup(field_type type, field_store value);
 static field_store httpHeaderFieldBadValue(field_type type);
 
+#if 0
 static HttpScc *httpSccCreate();
 static HttpScc *httpSccParseCreate(const char *str);
 static void httpSccParseInit(HttpScc * scc, const char *str);
 static void httpSccDestroy(HttpScc * scc);
 static HttpScc *httpSccDup(HttpScc * scc);
 static void httpSccUpdateStats(const HttpScc * scc, StatHist * hist);
-
 static void httpSccPackValueInto(HttpScc * scc, Packer * p);
 static void httpSccJoinWith(HttpScc * scc, HttpScc * new_scc);
+#endif
 
 static HttpHeaderExtField *httpHeaderExtFieldCreate(const char *name, const char *value);
 static HttpHeaderExtField *httpHeaderExtFieldParseCreate(const char *field_start, const char *field_end);
 static void httpHeaderExtFieldDestroy(HttpHeaderExtField * f);
 static HttpHeaderExtField *httpHeaderExtFieldDup(HttpHeaderExtField * f);
 
+static void httpHeaderStatInit(HttpHeaderStat * hs, const char *label);
 static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
 static void shortStringStatDump(StoreEntry * e);
 
@@ -298,12 +250,11 @@ static char *appShortStr(char *str, const char *app_str);
 static char *allocShortBuf(size_t size);
 static void freeShortString(char *str);
 
+#if 0
 static int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
 static const char *getStringPrefix(const char *str);
+#endif
 
-
-/* delete this when everybody remembers that ':' is not a part of a name */
-#define conversion_period_name_check(name) assert(!strchr((name), ':'))
 
 /* handy to determine the #elements in a static array */
 #define countof(arr) (sizeof(arr)/sizeof(*arr))
@@ -328,7 +279,6 @@ httpHeaderInitModule()
     assert(sizeof(field_store) == sizeof(char *));
     /* have to force removal of const here */
     httpHeaderInitAttrTable((field_attrs_t *) Headers, countof(Headers));
-    httpHeaderInitAttrTable((field_attrs_t *) SccAttrs, countof(SccAttrs));
     /* create masks */
     ListHeadersMask = httpHeaderCalcMask((const int *) ListHeaders, countof(ListHeaders));
     ReplyHeadersMask = httpHeaderCalcMask((const int *) ReplyHeaders, countof(ReplyHeaders));
@@ -338,6 +288,7 @@ httpHeaderInitModule()
     /* init header stats */
     for (i = 0; i < HttpHeaderStatCount; i++)
 	httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
+    httpHdrCcInitModule();
     cachemgrRegister("http_headers",
 	"HTTP Header Statistics", httpHeaderStoreReport, 0);
 }
@@ -352,38 +303,6 @@ httpHeaderCleanModule()
 }
 
 static void
-httpHeaderInitAttrTable(field_attrs_t * table, int count)
-{
-    int i;
-    assert(table);
-    assert(count > 1);		/* to protect from buggy "countof" implementations */
-
-    /* reorder so that .id becomes an index */
-    for (i = 0; i < count;) {
-	const int id = table[i].id;
-	assert(id >= 0 && id < count);	/* sanity check */
-	assert(id >= i);	/* entries prior to i have been indexed already */
-	if (id != i) {		/* out of order */
-	    const field_attrs_t fa = table[id];
-	    assert(fa.id != id);	/* avoid endless loops */
-	    table[id] = table[i];	/* swap */
-	    table[i] = fa;
-	} else
-	    i++;		/* make progress */
-    }
-
-    /* calculate name lengths and init stats */
-    for (i = 0; i < count; ++i) {
-	assert(table[i].name);
-	table[i].name_len = strlen(table[i].name);
-	debug(55, 5) ("hdr table entry[%d]: %s (%d)\n", i, table[i].name, table[i].name_len);
-	assert(table[i].name_len);
-	/* init stats */
-	memset(&table[i].stat, 0, sizeof(table[i].stat));
-    }
-}
-
-static void
 httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
 {
     assert(hs);
@@ -391,26 +310,8 @@ httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
     hs->label = label;
     statHistEnumInit(&hs->hdrUCountDistr, 32);	/* not a real enum */
     statHistEnumInit(&hs->fieldTypeDistr, HDR_ENUM_END);
-    statHistEnumInit(&hs->ccTypeDistr, SCC_ENUM_END);
+    statHistEnumInit(&hs->ccTypeDistr, CC_ENUM_END);
 }
-
-/* calculates a bit mask of a given array (move this to lib/uitils) @?@ */
-static int
-httpHeaderCalcMask(const int *enums, int count)
-{
-    int i;
-    int mask = 0;
-    assert(enums);
-    assert(count < sizeof(int) * 8);	/* check for overflow */
-
-    for (i = 0; i < count; ++i) {
-	assert(enums[i] < sizeof(int) * 8);	/* check for overflow again */
-	assert(!EBIT_TEST(mask, enums[i]));	/* check for duplicates */
-	EBIT_SET(mask, enums[i]);
-    }
-    return mask;
-}
-
 
 /*
  * HttpHeader Implementation
@@ -448,7 +349,7 @@ httpHeaderClean(HttpHeader * hdr)
 	/* fix this (for scc too) for req headers @?@ */
 	statHistCount(&HttpHeaderStats[0].fieldTypeDistr, e->id);
 	if (e->id == HDR_CACHE_CONTROL)
-	    httpSccUpdateStats(e->field.v_pscc, &HttpHeaderStats[0].ccTypeDistr);
+	    httpHdrCcUpdateStats(e->field.v_pcc, &HttpHeaderStats[0].ccTypeDistr);
 	httpHeaderDelAt(hdr, pos);
     }
     xfree(hdr->entries);
@@ -883,10 +784,10 @@ httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id)
     return httpHeaderGet(hdr, id).v_time;
 }
 
-HttpScc *
-httpHeaderGetScc(const HttpHeader * hdr)
+HttpHdrCc *
+httpHeaderGetCc(const HttpHeader * hdr)
 {
-    return httpHeaderGet(hdr, HDR_CACHE_CONTROL).v_pscc;
+    return httpHeaderGet(hdr, HDR_CACHE_CONTROL).v_pcc;
 }
 
 /* updates header masks */
@@ -904,22 +805,6 @@ httpHeaderSyncMasks(HttpHeader * hdr, const HttpHeaderEntry * e, int add)
     add = add != 0;
     assert(isSet ^ add);
     add ? EBIT_SET(hdr->emask, e->id) : EBIT_CLR(hdr->emask, e->id);
-}
-
-static int
-httpHeaderIdByName(const char *name, int name_len, const field_attrs_t * attrs, int end, int mask)
-{
-    int i;
-    for (i = 0; i < end; ++i) {
-	if (mask < 0 || EBIT_TEST(mask, i)) {
-	    if (name_len >= 0 && name_len != attrs[i].name_len)
-		continue;
-	    if (!strncasecmp(name, attrs[i].name,
-		    name_len < 0 ? attrs[i].name_len + 1 : name_len))
-		return i;
-	}
-    }
-    return -1;
 }
 
 /* doubles the size of the fields index, starts with INIT_FIELDS_PER_HEADER */
@@ -971,8 +856,8 @@ httpHeaderEntryClean(HttpHeaderEntry * e)
 	freeShortString(e->field.v_pchar);
 	break;
     case ftPSCC:
-	if (e->field.v_pscc)
-	    httpSccDestroy(e->field.v_pscc);
+	if (e->field.v_pcc)
+	    httpHdrCcDestroy(e->field.v_pcc);
 	break;
     case ftPExtField:
 	if (e->field.v_pefield)
@@ -1101,8 +986,8 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtF
 	break;
 
     case ftPSCC:
-	field.v_pscc = httpSccParseCreate(f->value);
-	if (!field.v_pscc) {
+	field.v_pcc = httpHdrCcParseCreate(f->value);
+	if (!field.v_pcc) {
 	    debug(55, 0) ("failed to parse scc hdr: id: %d, field: '%s: %s'\n",
 		id, f->name, f->value);
 	    Headers[id].stat.errCount++;
@@ -1174,7 +1059,7 @@ httpHeaderEntryPackByType(const HttpHeaderEntry * e, Packer * p)
 	packerPrintf(p, "%s", mkrfc1123(e->field.v_time));
 	break;
     case ftPSCC:
-	httpSccPackValueInto(e->field.v_pscc, p);
+	httpHdrCcPackValueInto(e->field.v_pcc, p);
 	break;
     case ftPExtField:
 	packerPrintf(p, "%s", e->field.v_pefield->value);
@@ -1200,7 +1085,7 @@ httpHeaderEntryJoinWith(HttpHeaderEntry * e, const HttpHeaderEntry * newe)
 	e->field.v_pchar = appShortStr(e->field.v_pchar, newe->field.v_pchar);
 	break;
     case ftPSCC:
-	httpSccJoinWith(e->field.v_pscc, newe->field.v_pscc);
+	httpHdrCcJoinWith(e->field.v_pcc, newe->field.v_pcc);
 	break;
     default:
 	debug(55, 0) ("join for invalid/unknown type: id: %d, type: %d\n", e->id, type);
@@ -1227,7 +1112,7 @@ httpHeaderEntryIsValid(const HttpHeaderEntry * e)
     case ftDate_1123:
 	return e->field.v_time >= 0;
     case ftPSCC:
-	return e->field.v_pscc != NULL;
+	return e->field.v_pcc != NULL;
     case ftPExtField:
 	return e->field.v_pefield != NULL;
     default:
@@ -1268,7 +1153,7 @@ httpHeaderFieldDup(field_type type, field_store value)
     case ftPChar:
 	return ptrField(dupShortStr(value.v_pchar));
     case ftPSCC:
-	return ptrField(httpSccDup(value.v_pscc));
+	return ptrField(httpHdrCcDup(value.v_pcc));
     case ftPExtField:
 	return ptrField(httpHeaderExtFieldDup(value.v_pefield));
     default:
@@ -1299,6 +1184,8 @@ httpHeaderFieldBadValue(field_type type)
     }
     return ptrField(NULL);	/* not reached */
 }
+
+#if 0 /* moved to HttpHdrCC.c */
 
 /*
  * HttpScc (server cache control)
@@ -1426,6 +1313,8 @@ httpSccUpdateStats(const HttpScc * scc, StatHist * hist)
 	    statHistCount(hist, c);
 }
 
+#endif
+
 /*
  * HttpHeaderExtField
  */
@@ -1501,6 +1390,7 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size,
 	    id, name, count, xdiv(count, HeaderParsedCount));
 }
 
+#if 0
 static void
 httpHeaderCCStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
@@ -1511,7 +1401,7 @@ httpHeaderCCStatDumper(StoreEntry * sentry, int idx, double val, double size, in
 	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
 	    id, name, count, xdiv(count, CcPasredCount));
 }
-
+#endif
 
 static void
 httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size, int count)
@@ -1535,7 +1425,7 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "<h3>Cache-control directives distribution</h3>\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
 	"id", "name", "count", "#/cc_field");
-    statHistDump(&hs->ccTypeDistr, e, httpHeaderCCStatDumper);
+    statHistDump(&hs->ccTypeDistr, e, httpHdrCcStatDumper);
     storeAppendPrintf(e, "<h3>Number of fields per header distribution (init size: %d)</h3>\n",
 	INIT_FIELDS_PER_HEADER);
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
@@ -1655,6 +1545,7 @@ freeShortString(char *str)
     }
 }
 
+#if 0
 /*
  * other routines (move these into lib if you need them somewhere else?)
  */
@@ -1705,3 +1596,4 @@ getStringPrefix(const char *str)
     xstrncpy(buf, str, SHORT_PREFIX_SIZE);
     return buf;
 }
+#endif

@@ -209,3 +209,7 @@
 
 /* were to look for errors if config path fails */
 #define DEFAULT_SQUID_ERROR_DIR "/usr/local/squid/etc/errors"
+
+/* gb_type operations */
+#define gb_flush_limit (0x3FFFFFFF)
+#define gb_inc(gb, delta) { if ((gb)->bytes > gb_flush_limit || delta > gb_flush_limit) gb_flush(gb); (gb)->bytes += delta; (gb)->count++; }

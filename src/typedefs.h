@@ -9,6 +9,12 @@ typedef struct {
     size_t kb;
 } kb_t;
 
+typedef struct {
+    size_t count;
+    size_t bytes;
+    size_t gb;
+} gb_t;
+
 /*
  * grep '^struct' structs.h \
  * | perl -ne '($a,$b)=split;$c=$b;$c=~s/^_//; print "typedef struct $b $c;\n";'
@@ -42,19 +48,17 @@ typedef struct _fileMap fileMap;
 typedef struct _fqdncache_entry fqdncache_entry;
 typedef struct _hash_link hash_link;
 typedef struct _hash_table hash_table;
-#if 0				/* use new interfaces */
-typedef struct _http_reply http_reply;
-#else
 typedef struct _HttpReply http_reply;
 typedef struct _HttpStatusLine HttpStatusLine;
+typedef struct _field_attrs_t field_attrs_t;
 typedef struct _HttpHeader HttpHeader;
-typedef struct _HttpScc HttpScc;
+typedef struct _HttpHdrCc HttpHdrCc;
 typedef struct _HttpHeaderExtField HttpHeaderExtField;
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
-typedef union _field_store field_store;
+typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;
+typedef union  _field_store field_store;
 typedef struct _HttpBody HttpBody;
 typedef struct _HttpReply HttpReply;
-#endif
 typedef struct _HttpStateData HttpStateData;
 typedef struct _icpUdpData icpUdpData;
 typedef struct _clientHttpRequest clientHttpRequest;

@@ -257,6 +257,25 @@ extern void httpBodySet(HttpBody * body, const char *content, int size,
 extern void httpBodyPackInto(const HttpBody * body, Packer * p);
 
 
+/* Http Cache Control Header Field */
+extern void httpHdrCcInitModule();
+extern HttpHdrCc *httpHdrCcCreate();
+extern HttpHdrCc *httpHdrCcParseCreate(const char *str);
+extern void httpHdrCcParseInit(HttpHdrCc * scc, const char *str);
+extern void httpHdrCcDestroy(HttpHdrCc * scc);
+extern HttpHdrCc *httpHdrCcDup(HttpHdrCc * scc);
+extern void httpHdrCcPackValueInto(HttpHdrCc * scc, Packer * p);
+extern void httpHdrCcJoinWith(HttpHdrCc * scc, HttpHdrCc * new_scc);
+extern void httpHdrCcUpdateStats(const HttpHdrCc * scc, StatHist * hist);
+extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+
+/* Http Header Tools */
+extern int httpHeaderIdByName(const char *name, int name_len, const field_attrs_t * attrs, int end, int mask);
+extern void httpHeaderInitAttrTable(field_attrs_t * table, int count);
+extern int httpHeaderCalcMask(const int *enums, int count);
+extern int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
+extern const char *getStringPrefix(const char *str);
+
 /* Http Header */
 extern void httpHeaderInitModule();
 extern void httpHeaderCleanModule();
@@ -280,8 +299,8 @@ extern void httpHeaderSetAuth(HttpHeader * hdr, const char *authScheme, const ch
 extern void httpHeaderAddExt(HttpHeader * hdr, const char *name, const char *value);
 extern int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
 extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
+extern HttpHdrCc *httpHeaderGetCc(const HttpHeader * hdr);
 extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
-extern HttpScc *httpHeaderGetScc(const HttpHeader * hdr);
 int httpHeaderDelFields(HttpHeader * hdr, const char *name);
 /* store report about current header usage and other stats */
 extern void httpHeaderStoreReport(StoreEntry * e);
@@ -317,7 +336,7 @@ extern void httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep);
 extern int httpReplyContentLen(const HttpReply * rep);
 extern const char *httpReplyContentType(const HttpReply * rep);
 extern time_t httpReplyExpires(const HttpReply * rep);
-extern int httpReplyHasScc(const HttpReply * rep, http_scc_type type);
+extern int httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type);
 
 
 extern void icmpOpen(void);
@@ -787,6 +806,9 @@ extern void asnFreeMemory(void);
 extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
 extern void dlinkDelete(dlink_node * m, dlink_list * list);
 extern void kb_incr(kb_t *, size_t);
+extern double gb_to_double(const gb_t *);
+extern const char *gb_to_str(const gb_t *);
+extern void gb_flush(gb_t *); /* internal, do not use this */
 
 /*
  * prototypes for system functions missing from system includes

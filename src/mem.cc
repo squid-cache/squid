@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.9 1998/03/03 22:17:54 rousskov Exp $
+ * $Id: mem.cc,v 1.10 1998/03/05 00:01:11 rousskov Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -35,7 +35,7 @@
 
 static MemPool *MemPools[MEM_MAX];
 
-/* all pools share common memory chunks so it is probably better to ignore max_pages */
+/* we have a limit on _total_ amount of idle memory so we ignore max_pages for now */
 static void
 memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused)
 {
@@ -126,7 +126,7 @@ memInit(void)
 	sizeof(HierarchyLogEntry), 0);
     memDataInit(MEM_HTTPSTATEDATA, "HttpStateData", sizeof(HttpStateData), 0);
     memDataInit(MEM_HTTPREPLY, "http_reply", sizeof(http_reply), 0);
-    memDataInit(MEM_HTTP_SCC, "HttpScc", sizeof(HttpScc), 0);
+    memDataInit(MEM_HTTP_HDR_CC, "HttpHdrCc", sizeof(HttpHdrCc), 0);
     memDataInit(MEM_ICPUDPDATA, "icpUdpData", sizeof(icpUdpData), 0);
     memDataInit(MEM_ICP_COMMON_T, "icp_common_t", sizeof(icp_common_t), 0);
     memDataInit(MEM_ICP_PING_DATA, "icp_ping_data", sizeof(icp_ping_data), 0);

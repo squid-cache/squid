@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.244 1998/03/04 23:52:40 wessels Exp $
+ * $Id: http.cc,v 1.245 1998/03/05 00:01:11 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -435,14 +435,14 @@ static int
 httpCachableReply(HttpStateData * httpState)
 {
     HttpHeader *hdr = &httpState->entry->mem_obj->reply->hdr;
-    const HttpScc *scc = httpHeaderGetScc(hdr);
-    const int scc_mask = (scc) ? scc->mask : 0;
-    if (EBIT_TEST(scc_mask, SCC_PRIVATE))
+    const HttpHdrCc *cc = httpHeaderGetCc(hdr);
+    const int cc_mask = (cc) ? cc->mask : 0;
+    if (EBIT_TEST(cc_mask, CC_PRIVATE))
 	return 0;
-    if (EBIT_TEST(scc_mask, SCC_NO_CACHE))
+    if (EBIT_TEST(cc_mask, CC_NO_CACHE))
 	return 0;
     if (EBIT_TEST(httpState->request->flags, REQ_AUTH))
-	if (!EBIT_TEST(scc_mask, SCC_PROXY_REVALIDATE))
+	if (!EBIT_TEST(cc_mask, CC_PROXY_REVALIDATE))
 	    return 0;
     /*
      * Dealing with cookies is quite a bit more complicated
@@ -572,7 +572,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    assert(0);
 	    break;
 	}
-	if (httpReplyHasScc(reply, SCC_PROXY_REVALIDATE))
+	if (httpReplyHasCc(reply, CC_PROXY_REVALIDATE))
 	    EBIT_SET(entry->flag, ENTRY_REVALIDATE);
 	if (EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
 	    if (httpState->peer)
@@ -1159,7 +1159,7 @@ httpReplyHeaderStats(StoreEntry * entry)
 	storeAppendPrintf(entry, "%21.21s: %d\n",
 	    HttpHdrMiscStr[j],
 	    ReplyHeaderStats.misc[j]);
-    for (i = SCC_PUBLIC; i < SCC_ENUM_END; i++)
+    for (i = CC_PUBLIC; i < CC_ENUM_END; i++)
 	storeAppendPrintf(entry, "Cache-Control %s: %d\n",
 	    HttpServerCCStr[i],
 	    ReplyHeaderStats.cc[i]);
