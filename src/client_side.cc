@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.168 1997/12/03 08:24:07 wessels Exp $
+ * $Id: client_side.cc,v 1.169 1997/12/03 08:57:19 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -180,7 +180,7 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, int flags)
 	r->protocol = PROTO_NONE;
 	h->request = requestLink(r);
     }
-    e = storeCreateEntry(h->url, h->log_url, 0, m);
+    e = storeCreateEntry(h->url, h->log_url, flags, m);
     storeClientListAdd(e, h);
     storeClientCopy(e, 0, 0, 4096, get_free_4k_page(), clientSendMoreData, h);
     return e;
