@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.87 1998/04/09 02:25:24 wessels Exp $
+ * $Id: url.cc,v 1.88 1998/04/24 04:52:40 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -374,14 +374,18 @@ char *
 urlRInternal(const char *host, u_short port, const char *dir, const char *name)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
+    int k = 0;
     static char lc_host[SQUIDHOSTNAMELEN];
     assert(host && port && name);
     xstrncpy(lc_host, host, SQUIDHOSTNAMELEN);
     Tolower(lc_host);
-    if (!dir || !*dir)
-	snprintf(buf, MAX_URL, "http://%s:%d/squid-internal/%s", lc_host, port, name);
-    else
-	snprintf(buf, MAX_URL, "http://%s:%d/squid-internal/%s/%s", lc_host, port, dir, name);
+    k += snprintf(buf + k, MAX_URL - k, "http://%s", lc_host);
+    if (port != urlDefaultPort(PROTO_HTTP))
+	k += snprintf(buf + k, MAX_URL - k, ":%d", port);
+    k += snprintf(buf + k, MAX_URL - k, "/%s", "squid-internal");
+    if (NULL != dir && '\0' != *dir)
+	k += snprintf(buf + k, MAX_URL - k, "/%s", dir);
+    k += snprintf(buf + k, MAX_URL - k, "/%s", name);
     return buf;
 }
 
