@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.197 1998/04/21 16:40:50 wessels Exp $
+ * $Id: neighbors.cc,v 1.198 1998/04/22 16:24:15 rousskov Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -552,8 +552,9 @@ lookup_t
 peerDigestLookup(peer *p, request_t * request, StoreEntry * entry)
 {
 #if SQUID_PEER_DIGEST
-    const cache_key *key = storeKeyPublic(storeUrl(entry), request->method);
+    const cache_key *key = request ? storeKeyPublic(storeUrl(entry), request->method) : NULL;
     assert(p);
+    assert(request);
     debug(15, 5) ("neighborsDigestPeerLookup: peer %s\n", p->host);
  	/* does the peeer have a valid digest? */
     if (EBIT_TEST(p->digest.flags, PD_DISABLED)) {
