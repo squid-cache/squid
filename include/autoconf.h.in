@@ -280,6 +280,11 @@
  */
 #undef USE_DISKD
 
+/*
+ * message type for message queues
+ */
+#undef mtyp_t
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
