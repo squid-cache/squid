@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.207 1998/11/17 23:16:48 glenn Exp $
+ * $Id: ipcache.cc,v 1.208 1998/11/20 05:16:29 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -273,7 +273,7 @@ ipcacheParse(const char *inbuf)
 	return &i;
     }
     xstrncpy(buf, inbuf, DNS_INBUF_SZ);
-    debug(14, 5) ("ipcacheParse: parsing:%s\n", buf);
+    debug(14, 5) ("ipcacheParse: parsing: {%s}\n", buf);
     token = strtok(buf, w_space);
     if (NULL == token) {
 	debug(14, 1) ("ipcacheParse: Got <NULL>, expecting '$addr'\n");

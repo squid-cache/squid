@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.123 1998/11/17 23:16:47 glenn Exp $
+ * $Id: fqdncache.cc,v 1.124 1998/11/20 05:16:27 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -229,7 +229,7 @@ fqdncacheParse(const char *inbuf)
     static fqdncache_entry f;
     int ttl;
     xstrncpy(buf, inbuf, DNS_INBUF_SZ);
-    debug(35, 5) ("fqdncacheParse: parsing:\n%s", buf);
+    debug(35, 5) ("fqdncacheParse: parsing: {%s}\n", buf);
     memset(&f, '\0', sizeof(f));
     f.expires = squid_curtime;
     f.status = FQDN_NEGATIVE_CACHED;
