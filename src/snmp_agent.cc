@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.88 2003/05/02 09:57:54 hno Exp $
+ * $Id: snmp_agent.cc,v 1.89 2003/06/24 21:08:02 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -235,13 +235,13 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
     case MESH_PTBL_SENT:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       p->stats.pings_sent,
-                                      ASN_INTEGER);
+                                      SMI_COUNTER32);
         break;
 
     case MESH_PTBL_PACKED:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       p->stats.pings_acked,
-                                      ASN_INTEGER);
+                                      SMI_COUNTER32);
         break;
 
     case MESH_PTBL_FETCHES:
