@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.21 1996/04/11 04:47:21 wessels Exp $ */
+/* $Id: comm.cc,v 1.22 1996/04/12 21:14:39 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -893,12 +893,16 @@ static int examine_select(readfds, writefds, exceptfds)
      fd_set *readfds, *writefds, *exceptfds;
 {
     int fd = 0;
-    fd_set read_x, write_x, except_x;
+    fd_set read_x;
+    fd_set write_x;
+    fd_set except_x;
     int num;
+    int maxfd = getMaxFD();
     struct timeval tv;
+    int (*tmp) () = NULL;
 
     debug(5, 0, "examine_select: Examining open file descriptors...\n");
-    for (fd = 0; fd < getMaxFD(); ++fd) {
+    for (fd = 0; fd < maxfd; fd++) {
 	FD_ZERO(&read_x);
 	FD_ZERO(&write_x);
 	FD_ZERO(&except_x);
@@ -910,11 +914,20 @@ static int examine_select(readfds, writefds, exceptfds)
 	    num = select(FD_SETSIZE, &read_x, &read_x, &read_x, &tv);
 	    if (num < 0) {
 		debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
-		debug(5, 0, "Timeout handler:%x read:%x write:%x except:%x\n",
+		debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p expt:%p\n",
+		    fd_table[fd].lifetime_handler,
 		    fd_table[fd].timeout_handler,
 		    fd_table[fd].read_handler,
 		    fd_table[fd].write_handler,
 		    fd_table[fd].except_handler);
+		if ((tmp = fd_table[fd].lifetime_handler)) {
+		    debug(5,0,"examine_select: Calling Lifetime Handler\n");
+		    tmp(fd, fd_table[fd].lifetime_data);
+		} else if ((tmp = fd_table[fd].timeout_handler)) {
+		    debug(5,0,"examine_select: Calling Timeout Handler\n");
+		    tmp(fd, fd_table[fd].timeout_data);
+		}
+		fd_table[fd].lifetime_handler = 0;
 		fd_table[fd].timeout_handler = 0;
 		fd_table[fd].read_handler = 0;
 		fd_table[fd].write_handler = 0;
@@ -965,16 +978,15 @@ static void checkLifetimes()
     int fd;
     int max_fd = getMaxFD();
     time_t lft;
+    int (*tmp_local) () = NULL;
+    int use_lifetime_handler = 0;
+    int use_read = 0;
 
     /* scan for hardwired lifetime expires, do the timeouts first though */
     for (fd = 0; fd < max_fd; fd++) {
 	lft = comm_get_fd_lifetime(fd);
 	if ((lft != -1) && (lft < cached_curtime)) {
-	    int use_lifetime_handler = 0;
-	    int use_read = 0;
-	    int (*tmp_local) () = NULL;
-
-	    if (fd_table[fd].lifetime_handler != NULL) {
+            if (fd_table[fd].lifetime_handler != NULL) {
 		use_lifetime_handler = 1;
 		tmp_local = fd_table[fd].lifetime_handler;
 		fd_table[fd].lifetime_handler = 0;	/* reset it */
