@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.131 1996/11/06 22:14:04 wessels Exp $
+ * $Id: cache_cf.cc,v 1.132 1996/11/06 22:21:27 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1016,7 +1016,7 @@ parseStoplistPattern(int icase)
 {
     relist *r, **T;
     r = aclParseRegexList(icase);
-    for (T = &Config.cache_stop_relist; *T; T=&(*T)->next);
+    for (T = &Config.cache_stop_relist; *T; T = &(*T)->next);
     *T = r;
 }
 
