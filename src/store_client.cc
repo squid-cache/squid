@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.85 2000/03/25 05:14:04 wessels Exp $
+ * $Id: store_client.cc,v 1.86 2000/04/18 06:06:17 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -520,7 +520,7 @@ off_t
 storeLowestMemReaderOffset(const StoreEntry * entry)
 {
     const MemObject *mem = entry->mem_obj;
-    off_t lowest = mem->inmem_hi;
+    off_t lowest = mem->inmem_hi + 1;
     store_client *sc;
     store_client *nx = NULL;
     for (sc = mem->clients; sc; sc = nx) {
