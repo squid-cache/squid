@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.206 1998/05/11 18:44:42 rousskov Exp $
+ * $Id: neighbors.cc,v 1.207 1998/05/12 20:14:05 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -118,7 +118,7 @@ static void neighborAlive(peer *, const MemObject *, const icp_common_t *);
 static void neighborCountIgnored(peer *, icp_opcode op_unused);
 static void peerRefreshDNS(void *);
 static IPH peerDNSConfigure;
-static void peerCheckConnect(void *);
+static EVH peerCheckConnect;
 static IPH peerCheckConnect2;
 static CNCB peerCheckConnectDone;
 static void peerCountMcastPeersDone(void *data);
@@ -950,15 +950,15 @@ peerRefreshDNS(void *datanotused)
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 3600);
 }
 
+/*
+ * peerCheckConnect will NOT be called by eventRun if the peer/data
+ * pointer becomes invalid.
+ */
 static void
 peerCheckConnect(void *data)
 {
     peer *p = data;
     int fd;
-    int valid = cbdataValid(p);
-    cbdataUnlock(p);
-    if (!valid)
-	return;
     fd = comm_open(SOCK_STREAM, 0, Config.Addrs.tcp_outgoing,
 	0, COMM_NONBLOCKING, p->host);
     if (fd < 0)
@@ -987,7 +987,6 @@ peerCheckConnectDone(int fd, int status, void *data)
 	debug(15, 0) ("TCP connection to %s/%d succeeded\n",
 	    p->host, p->http_port);
     } else {
-	cbdataLock(p);
 	eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
     }
     comm_close(fd);
@@ -1002,7 +1001,6 @@ peerCheckConnectStart(peer * p)
     debug(15, 0) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
     p->tcp_up = 0;
     p->last_fail_time = squid_curtime;
-    cbdataLock(p);
     eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
 }
 
