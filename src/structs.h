@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.271 1999/01/24 02:44:13 wessels Exp $
+ * $Id: structs.h,v 1.272 1999/01/24 03:25:23 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -430,7 +430,7 @@ struct _SquidConfig {
 	char *encode_key;
     } mcast_miss;
 #endif
-    HttpHeaderMask http_header;
+    HttpHeaderMask anonymize_headers;
 };
 
 struct _SquidConfig2 {
