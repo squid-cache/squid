@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.186 1997/01/03 21:07:22 wessels Exp $
+ * $Id: store.cc,v 1.187 1997/01/03 22:45:51 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2243,8 +2243,8 @@ storeClientCopy(StoreEntry * e,
     int available_to_write = mem->e_current_len - stateoffset;
     if (stateoffset < mem->e_lowest_offset) {
 	debug_trap("storeClientCopy: requested offset < lowest offset");
-	debug(20,0, " --> %d < %d\n",
-		stateoffset, mem->e_lowest_offset);
+	debug(20, 0, " --> %d < %d\n",
+	    stateoffset, mem->e_lowest_offset);
 	debug(20, 0, "--> '%s'\n", e->url);
 	*size = 0;
 	return 0;
