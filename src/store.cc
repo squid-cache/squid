@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.50 1996/04/14 02:39:15 wessels Exp $ */
-#ident "$Id: store.cc,v 1.50 1996/04/14 02:39:15 wessels Exp $"
+/* $Id: store.cc,v 1.51 1996/04/14 03:03:46 wessels Exp $ */
+#ident "$Id: store.cc,v 1.51 1996/04/14 03:03:46 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -171,17 +171,6 @@ static void destroy_MemObjectData(m)
     m->e_current_len = 0;
 }
 
-/* Check if there is memory allocated for object in memory */
-int has_mem_obj(e)
-     StoreEntry *e;
-{
-    if (!e)
-	fatal_dump("has_mem_obj: NULL Entry");
-    if (e->mem_obj)
-	return 1;
-    return 0;
-}
-
 /* ----- INTERFACE BETWEEN STORAGE MANAGER AND HASH TABLE FUNCTIONS --------- */
 
 /*
@@ -265,15 +254,17 @@ void storeFreeEntry(e)
 
     debug(20, 3, "storeFreeEntry: Freeing %s\n", e->key);
 
-    if (has_mem_obj(e)) {
+    if (e->mem_obj) {
 	destroy_MemObjectData(e->mem_obj);
 	e->mem_obj->data = NULL;
     }
     meta_data.url_strings -= strlen(e->url);
     safe_free(e->url);
-    if (!(e->flag & KEY_URL))
+    if (BIT_TEST(e->flag, KEY_URL))
+	e->key = NULL;
+    else
 	safe_free(e->key);
-    if (has_mem_obj(e)) {
+    if (e->mem_obj) {
 	safe_free(e->mem_obj->mime_hdr);
 	/* Leave an unzeroed pointer to the abort msg for posterity */
 	safe_free(e->mem_obj->e_abort_msg);
@@ -352,7 +343,7 @@ void storePurgeMem(e)
      StoreEntry *e;
 {
     debug(20, 3, "storePurgeMem: Freeing memory-copy of %s\n", e->key);
-    if (!has_mem_obj(e))
+    if (e->mem_obj == NULL)
 	return;
 
     if (storeEntryLocked(e)) {
@@ -890,20 +881,19 @@ void storeStartDeleteBehind(e)
 }
 
 /* Append incoming data from a primary server to an entry. */
-int storeAppend(e, data, len)
+void storeAppend(e, data, len)
      StoreEntry *e;
      char *data;
      int len;
 {
     /* validity check -- sometimes it's called with bogus values */
-    if (e == NULL || !has_mem_obj(e) || e->mem_obj->data == NULL) {
-	debug(20, 0, "storeAppend (len = %d): Invalid StoreEntry, aborting...\n",
-	    len);
-	if (len < 512)
-	    fwrite(data, len, 1, debug_log);
-	debug(20, 0, "%s", storeToString(e));
-	fatal_dump(NULL);
-    }
+    if (e == NULL)
+	fatal_dump("storeAppend: NULL entry.");
+    if (e->mem_obj == NULL)
+	fatal_dump("storeAppend: NULL entry->mem_obj");
+    if (e->mem_obj->data == NULL)
+	fatal_dump("storeAppend: NULL entry->mem_obj->data");
+
     if (len) {
 	debug(20, 5, "storeAppend: appending %d bytes for '%s'\n", len, e->key);
 
@@ -921,8 +911,6 @@ int storeAppend(e, data, len)
     }
     if ((e->status != STORE_ABORTED) && !(e->flag & DELAY_SENDING))
 	InvokeHandlers(e);
-
-    return 0;
 }
 
 /* add directory to swap disk */
@@ -1040,7 +1028,7 @@ int storeSwapInStart(e)
     if ((e->swap_status != SWAP_OK) || (e->swap_file_number < 0)) {
 	debug(20, 0, "storeSwapInStart: <No filename:%d> ? <URL:%s>\n",
 	    e->swap_file_number, e->url);
-	if (has_mem_obj(e))
+	if (e->mem_obj)
 	    e->mem_obj->swap_fd = -1;
 	return -1;
     }
@@ -2251,16 +2239,17 @@ int storeClientCopy(e, stateoffset, maxSize, buf, size, fd)
     return *size;
 }
 
+#ifdef NOT_USED_CODE
 int storeGrep(e, string, nbytes)
      StoreEntry *e;
      char *string;
      int nbytes;
 {
-    if (e && has_mem_obj(e) && e->mem_obj->data && (nbytes > 0))
+    if (e && entry->mem_obj && e->mem_obj->data && (nbytes > 0))
 	return e->mem_obj->data->mem_grep(e->mem_obj->data, string, nbytes);
-
     return 0;
 }
+#endif
 
 
 int storeEntryValidToSend(e)
