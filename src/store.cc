@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.158 1996/11/08 00:02:24 wessels Exp $
+ * $Id: store.cc,v 1.159 1996/11/08 04:19:11 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1221,12 +1221,12 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 	e->swap_status = NO_SWAP;
 	put_free_8k_page(mem->e_swap_buf);
 	file_close(fd);
-	storeRelease(e);
 	if (e->swap_file_number != -1) {
 	    file_map_bit_reset(e->swap_file_number);
 	    safeunlink(filename, 0);	/* remove it */
 	    e->swap_file_number = -1;
 	}
+	storeRelease(e);
 	if (flag == DISK_NO_SPACE_LEFT) {
 	    /* reduce the swap_size limit to the current size. */
 	    Config.Swap.maxSize = store_swap_size;
