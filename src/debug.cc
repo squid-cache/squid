@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.30 1996/10/09 15:34:22 wessels Exp $
+ * $Id: debug.cc,v 1.31 1996/10/14 21:28:09 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -166,9 +166,9 @@ _db_print(va_alist)
 
 #if HAVE_SYSLOG
     /* level 0 go to syslog */
-    if ((level == 0) && opt_syslog_enable) {
+    if (level == 0 && opt_syslog_enable) {
 	tmpbuf[0] = '\0';
-	vsprintf(tmpbuf, f, args);
+	vsprintf(tmpbuf, format, args);
 	tmpbuf[1023] = '\0';
 	syslog(LOG_ERR, "%s", tmpbuf);
     }
