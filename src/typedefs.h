@@ -74,6 +74,9 @@ typedef struct _domain_ping domain_ping;
 typedef struct _domain_type domain_type;
 typedef struct _DynPool DynPool;
 typedef struct _Packer Packer;
+typedef struct _StoreDigestCBlock StoreDigestCBlock;
+typedef struct _DigestFetchState DigestFetchState;
+typedef struct _PeerDigest PeerDigest;
 typedef struct _peer peer;
 typedef struct _net_db_name net_db_name;
 typedef struct _net_db_peer net_db_peer;
@@ -111,7 +114,9 @@ typedef struct _MemMeter MemMeter;
 typedef struct _MemPoolMeter MemPoolMeter;
 typedef struct _MemPool MemPool;
 typedef struct _ClientInfo ClientInfo;
+typedef struct _cd_guess_stats cd_guess_stats;
 typedef struct _CacheDigest CacheDigest;
+typedef struct _Version Version;
 
 /* define AIOCB even without USE_ASYNC_IO */
 typedef void AIOCB(void *, int aio_return, int aio_errno);
