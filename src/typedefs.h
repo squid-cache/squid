@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.90 1999/05/19 22:36:45 wessels Exp $
+ * $Id: typedefs.h,v 1.91 1999/05/22 07:42:17 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -210,6 +210,12 @@ typedef void STVLDCB(void *, int, int);
 typedef void HLPCB(void *, char *buf);
 typedef void HLPCMDOPTS(int *argc, char **argv);
 typedef void IDNSCB(void *, rfc1035_rr *, int);
+
+typedef storeIOState *STOPEN(sfileno, mode_t, STIOCB *, void *);
+typedef void STCLOSE(storeIOState *);
+typedef void STREAD(storeIOState *, char *, size_t, off_t, STRCB *, void *);
+typedef void STWRITE(storeIOState *, char *, size_t, off_t, FREE *);
+typedef void STUNLINK(sfileno);
 
 typedef double hbase_f(double);
 typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.50 1999/05/22 02:31:20 wessels Exp $
+ * $Id: store_swapout.cc,v 1.51 1999/05/22 07:42:15 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -99,16 +99,7 @@ storeSwapOut(StoreEntry * e)
     if (mem->swapout.sio)
 	debug(20, 7) ("storeSwapOut: storeOffset() = %d\n",
 	    (int) storeOffset(mem->swapout.sio));
-#if USE_ASYNC_IO
-    if (mem->inmem_hi < mem->swapout.queue_offset) {
-	storeAbort(e);
-	assert(EBIT_TEST(e->flags, RELEASE_REQUEST));
-	storeSwapOutFileClose(e);
-	return;
-    }
-#else
     assert(mem->inmem_hi >= mem->swapout.queue_offset);
-#endif
     lowest_offset = storeLowestMemReaderOffset(e);
     debug(20, 7) ("storeSwapOut: lowest_offset = %d\n",
 	(int) lowest_offset);

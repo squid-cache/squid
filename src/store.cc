@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.500 1999/05/22 02:31:18 wessels Exp $
+ * $Id: store.cc,v 1.501 1999/05/22 07:42:07 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -135,11 +135,6 @@ destroy_MemObject(StoreEntry * e)
 	assert(mem->swapout.sio == NULL);
     stmemFree(&mem->data_hdr);
     mem->inmem_hi = 0;
-    /* XXX account log_url */
-#if USE_ASYNC_IO
-    while (mem->clients != NULL)
-	storeUnregister(e, mem->clients->callback_data);
-#endif
     /*
      * There is no way to abort FD-less clients, so they might
      * still have mem->clients set if mem->fd == -1
@@ -150,7 +145,7 @@ destroy_MemObject(StoreEntry * e)
     mem->request = NULL;
     ctx_exit(ctx);		/* must exit before we free mem->url */
     safe_free(mem->url);
-    safe_free(mem->log_url);
+    safe_free(mem->log_url);	/* XXX account log_url */
     memFree(mem, MEM_MEMOBJECT);
 }
 
@@ -505,10 +500,6 @@ storeCheckCachable(StoreEntry * e)
 	 * out the object yet.
 	 */
 	return 1;
-#if USE_ASYNC_IO
-    } else if (aio_overloaded()) {
-	debug(20, 2) ("storeCheckCachable: NO: Async-IO overloaded\n");
-#endif
     } else if (storeTooManyDiskFilesOpen()) {
 	debug(20, 2) ("storeCheckCachable: NO: too many disk files open\n");
 	store_check_cachable_hist.no.too_many_open_files++;
@@ -623,16 +614,7 @@ storeAbort(StoreEntry * e)
     InvokeHandlers(e);
     /* Do we need to close the swapout file? */
     /* Not if we never started swapping out */
-    /* But we may need to cancel an open/stat in progress if using ASYNC */
-#if USE_ASYNC_IO
-    aioCancel(-1, e);
-#endif
     if (e->swap_file_number > -1) {
-#if USE_ASYNC_IO
-	/* Need to cancel any pending ASYNC writes right now */
-	if (mem->swapout.fd >= 0)
-	    aioCancel(mem->swapout.fd, NULL);
-#endif
 	storeSwapOutFileClose(e);
     }
     storeUnlockObject(e);	/* unlock */
@@ -771,12 +753,6 @@ storeRelease(StoreEntry * e)
 	storeReleaseRequest(e);
 	return;
     }
-#if USE_ASYNC_IO
-    /*
-     * Make sure all forgotten async ops are cancelled
-     */
-    aioCancel(-1, e);
-#endif
     if (store_rebuilding) {
 	storeSetPrivateKey(e);
 	if (e->mem_obj) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.91 1999/05/04 19:22:29 wessels Exp $
+ * $Id: store_dir.cc,v 1.92 1999/05/22 07:42:11 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,12 @@
  */
 
 #include "squid.h"
+
+const char *SwapDirType[] =
+{
+    "ufs",
+    "!ERROR!"
+};
 
 void
 storeDirInit(void)
