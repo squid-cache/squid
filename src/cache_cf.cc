@@ -1,4 +1,6 @@
-/* $Id: cache_cf.cc,v 1.9 1996/03/27 20:21:41 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.10 1996/03/29 21:14:32 wessels Exp $ */
+
+/* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
 #include "squid.h"
 
@@ -60,6 +62,7 @@ static struct {
     char *appendDomain;
     char *debugOptions;
     char *pidFilename;
+    char *visibleHostname;
 } Config;
 
 #define DefaultMemMaxSize 	(16 << 20)	/* 16 MB */
@@ -117,6 +120,7 @@ static struct {
 #define DefaultStallDelay	3	/* 3 seconds */
 #define DefaultSingleParentBypass 0	/* default off */
 #define DefaultPidFilename      (char *)NULL	/* default NONE */
+#define DefaultVisibleHostname  (char *)NULL	/* default NONE */
 
 extern char *config_file;
 
@@ -143,12 +147,11 @@ char w_space[] = " \t\n";
 
 static void configSetFactoryDefaults();
 static void configDoConfigure();
+static char fatal_str[BUFSIZ];
 
 void self_destruct(in_string)
      char *in_string;
 {
-    char fatal_str[4096];
-
     sprintf(fatal_str, "Bungled cached.conf: %s", in_string);
     fatal(fatal_str);
 }
@@ -194,13 +197,13 @@ ip_access_check(address, list)
     c3 = ((int) naddr & 0x0000ff00) >> 8;
     c4 = ((int) naddr & 0x000000ff);
 
-    debug(0, 10, "ip_access_check: Using %d.%d.%d.%d\n", c1, c2, c3, c4);
+    debug(3, 10, "ip_access_check: Using %d.%d.%d.%d\n", c1, c2, c3, c4);
 
     if ((c1 == 127) && (c2 == 0) && (c3 == 0) && (c4 == 1))
 	return IP_ALLOW;	/* always allow localhost */
 
     for (p = list; p; p = p->next) {
-	debug(0, 10, "ip_access_check: %d.%d.%d.%d vs %d.%d.%d.%d\n",
+	debug(3, 10, "ip_access_check: %d.%d.%d.%d vs %d.%d.%d.%d\n",
 	    c1, c2, c3, c4, p->a1, p->a2, p->a3, p->a4);
 	if (ip_acl_match(c1, c2, c3, c4, p->a1, p->a2, p->a3, p->a4))
 	    return p->access;
@@ -860,7 +863,7 @@ static void parseBindAddressLine(line_in)
     token = strtok(NULL, w_space);
     if (token == (char *) NULL)
 	self_destruct(line_in);
-    debug(0, 1, "parseBindAddressLine: adding %s\n", token);
+    debug(3, 1, "parseBindAddressLine: adding %s\n", token);
     addToStopList(&bind_addr_list, token);
 }
 
@@ -954,6 +957,17 @@ static void parsePidFilenameLine(line_in)
     Config.pidFilename = xstrdup(token);
 }
 
+static void parseVisibleHostnameLine(line_in)
+     char *line_in;
+{
+    char *token;
+    token = strtok(NULL, w_space);
+    safe_free(Config.visibleHostname);
+    if (token == (char *) NULL)
+	self_destruct(line_in);
+    Config.visibleHostname = xstrdup(token);
+}
+
 int parseConfigFile(file_name)
      char *file_name;
 {
@@ -961,7 +975,6 @@ int parseConfigFile(file_name)
     char *token = NULL;
     static char tmp_line[BUFSIZ];
     static char line_in[BUFSIZ];
-    static char fatal_str[4096];
 
     /* Initialize a few global strings, in case they aren't user defined */
 
@@ -978,6 +991,7 @@ int parseConfigFile(file_name)
 
 	if (line_in[0] == '\n')
 	    continue;
+	debug(3, 5, "Processing: '%s'\n", line_in);
 	strcpy(tmp_line, line_in);
 	if ((token = strtok(tmp_line, w_space)) == NULL)
 	    continue;
@@ -1208,6 +1222,9 @@ int parseConfigFile(file_name)
 
 	else if (!strcmp(token, "pid_filename"))
 	    parsePidFilenameLine(line_in);
+
+	else if (!strcmp(token, "visible_hostname"))
+	    parseVisibleHostnameLine(line_in);
 
 	/* If unknown, treat as a comment line */
 	else {
@@ -1440,6 +1457,10 @@ char *getPidFilename()
 {
     return Config.pidFilename;
 }
+char *getVisibleHostname()
+{
+    return Config.visibleHostname;
+}
 
 int setAsciiPortNum(p)
      int p;
@@ -1520,6 +1541,7 @@ static void configSetFactoryDefaults()
     Config.Accel.port = DefaultAccelPort;
     Config.Accel.withProxy = DefaultAccelWithProxy;
     Config.pidFilename = safe_xstrdup(DefaultPidFilename);
+    Config.visibleHostname = safe_xstrdup(DefaultVisibleHostname);
 }
 
 static void configDoConfigure()
