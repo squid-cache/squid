@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.81 1998/09/14 21:58:52 wessels Exp $
+ * $Id: peer_select.cc,v 1.82 1998/09/18 17:13:42 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -95,6 +95,7 @@ peerSelectStateFree(ps_state * psstate)
     requestUnlink(psstate->request);
     psstate->request = NULL;
     if (psstate->entry) {
+	assert(psstate->entry->ping_status != PING_WAITING);
 	storeUnlockObject(psstate->entry);
 	psstate->entry = NULL;
     }
@@ -215,6 +216,8 @@ peerSelectCallbackFail(ps_state * psstate)
     request_t *request = psstate->request;
     void *data = psstate->callback_data;
     const char *url = psstate->entry ? storeUrl(psstate->entry) : urlCanonical(request);
+    if (psstate->entry)
+	psstate->entry->ping_status = PING_DONE;
     debug(44, 1) ("Failed to select source for '%s'\n", url);
     debug(44, 1) ("  always_direct = %d\n", psstate->always_direct);
     debug(44, 1) ("   never_direct = %d\n", psstate->never_direct);
@@ -223,7 +226,6 @@ peerSelectCallbackFail(ps_state * psstate)
 	psstate->fail_callback(NULL, data);
     cbdataUnlock(data);
     peerSelectStateFree(psstate);
-    /* XXX When this happens, the client request just hangs */
 }
 
 static int
