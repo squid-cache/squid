@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.18 2004/10/18 12:12:54 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.19 2004/11/07 23:29:50 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -280,8 +280,7 @@ ACLChecklist::operator new (size_t size)
     ACLChecklist *result = cbdataAlloc(ACLChecklist);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    cbdataReference(result);
-    return result;
+    return cbdataReference(result);
 }
 
 void

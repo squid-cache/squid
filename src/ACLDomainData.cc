@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.6 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLDomainData.cc,v 1.7 2004/11/07 23:29:50 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -69,6 +69,17 @@ splaystrcmp (T&l, T&r)
 /* general compare functions, these are used for tree search algorithms
  * so they return <0, 0 or >0 */
 
+/* compare a host and a domain */
+
+static int
+aclHostDomainCompare( char *const &a, char * const &b)
+{
+    const char *h = (const char *)a;
+    const char *d = (const char *)b;
+    return matchDomainName(h, d);
+}
+
+
 /* compare two domains */
 
 template<class T>
@@ -95,17 +106,6 @@ aclDomainCompare(T const &a, T const &b)
 
     return ret;
 }
-
-/* compare a host and a domain */
-
-static int
-aclHostDomainCompare( char *const &a, char * const &b)
-{
-    const char *h = (const char *)a;
-    const char *d = (const char *)b;
-    return matchDomainName(h, d);
-}
-
 
 bool
 ACLDomainData::match(char const *host)

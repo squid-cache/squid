@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.25 2004/11/07 14:03:18 hno Exp $
+ * $Id: store_io_ufs.cc,v 1.26 2004/11/07 23:29:51 hno Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -103,8 +103,7 @@ UFSFile::operator new (size_t)
     UFSFile *result = cbdataAlloc(UFSFile);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    cbdataReference(result);
-    return result;
+    return cbdataReference(result);
 }
 
 void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.238 2004/10/20 22:41:05 hno Exp $
+ * $Id: squid.h,v 1.239 2004/11/07 23:29:50 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -46,6 +46,7 @@
 #else
 #define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
 #endif
+extern void xassert(const char *, const char *, int);
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

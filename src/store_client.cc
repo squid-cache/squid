@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.135 2004/08/30 05:12:31 robertc Exp $
+ * $Id: store_client.cc,v 1.136 2004/11/07 23:29:50 hno Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -322,14 +322,14 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      * everything we got before the abort condition occurred.
      */
     /* Warning: doCopy may indirectly free itself in callbacks,
-     * hence the cbdata reference to keep it active for the duration of
+     * hence the lock to keep it active for the duration of
      * this function
      */
-    cbdataReference(sc);
+    cbdataInternalLock(sc);
     assert (sc->flags.store_copying == 0);
     sc->doCopy(e);
     assert (sc->flags.store_copying == 0);
-    cbdataReferenceDone(sc);
+    cbdataInternalUnlock(sc);
 }
 
 void

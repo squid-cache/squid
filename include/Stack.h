@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.h,v 1.15 2003/07/14 10:36:41 robertc Exp $
+ * $Id: Stack.h,v 1.16 2004/11/07 23:29:50 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -44,8 +44,9 @@ template <class S = void *>
 
 class Stack : public Vector<S>
 {
-
 public:
+    using Vector<S>::count;
+    using Vector<S>::items;
     typedef typename Vector<S>::value_type value_type;
     typedef typename Vector<S>::pointer pointer;
     value_type pop()
@@ -53,9 +54,9 @@ public:
         if (!count)
             return value_type();
 
-        value_type result = items[--count];
+        value_type result = items[count];
 
-        items[count] = value_type();
+        this->items[count] = value_type();
 
         return result;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.8 2003/04/06 08:23:10 robertc Exp $
+ * $Id: clientStream.cc,v 1.9 2004/11/07 23:29:50 hno Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -134,8 +134,7 @@ clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
 {
     clientStreamNode *temp = clientStreamNew(func, NULL, rdetach, readstatus,
                              readdata);
-    dlinkAdd(temp, &temp->node, list);
-    cbdataReference(temp);
+    dlinkAdd(cbdataReference(temp), &temp->node, list);
     temp->head = list;
     clientStreamInsertHead(list, NULL, callback, cdetach, NULL, callbackdata);
     temp = (clientStreamNode *)list->tail->data;
@@ -164,9 +163,7 @@ clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
     if (list->head->next)
         temp->readBuffer = ((clientStreamNode *)list->head->next->data)->readBuffer;
 
-    dlinkAddAfter(temp, &temp->node, list->head, list);
-
-    cbdataReference(temp);
+    dlinkAddAfter(cbdataReference(temp), &temp->node, list->head, list);
 }
 
 /*
