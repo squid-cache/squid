@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.326 2002/02/26 02:30:50 adrian Exp $
+ * $Id: comm.cc,v 1.327 2002/04/01 05:59:50 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -986,33 +986,32 @@ checkTimeouts(void)
     fde *F = NULL;
     PF *callback;
     for (fd = 0; fd <= Biggest_FD; fd++) {
-        F = &fd_table[fd];
-        if (!F->flags.open)
-            continue;
-        if (F->timeout == 0)
-            continue;
-        if (F->timeout > squid_curtime)
-            continue;
-        debug(5, 5) ("checkTimeouts: FD %d Expired\n", fd);
-        if (F->timeout_handler) {
-            debug(5, 5) ("checkTimeouts: FD %d: Call timeout handler\n", fd);
-            callback = F->timeout_handler;
-            F->timeout_handler = NULL;
-            callback(fd, F->timeout_data);
-        } else {
-            debug(5, 5) ("checkTimeouts: FD %d: Forcing comm_close()\n", fd);
-            comm_close(fd);
-        }
+	F = &fd_table[fd];
+	if (!F->flags.open)
+	    continue;
+	if (F->timeout == 0)
+	    continue;
+	if (F->timeout > squid_curtime)
+	    continue;
+	debug(5, 5) ("checkTimeouts: FD %d Expired\n", fd);
+	if (F->timeout_handler) {
+	    debug(5, 5) ("checkTimeouts: FD %d: Call timeout handler\n", fd);
+	    callback = F->timeout_handler;
+	    F->timeout_handler = NULL;
+	    callback(fd, F->timeout_data);
+	} else {
+	    debug(5, 5) ("checkTimeouts: FD %d: Forcing comm_close()\n", fd);
+	    comm_close(fd);
+	}
     }
 }
 
 
-int 
+int
 commDeferRead(int fd)
 {
     fde *F = &fd_table[fd];
     if (F->defer_check == NULL)
-        return 0;
+	return 0;
     return F->defer_check(fd, F->defer_data);
 }
-

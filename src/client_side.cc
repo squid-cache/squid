@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.565 2002/03/07 12:11:26 adrian Exp $
+ * $Id: client_side.cc,v 1.566 2002/04/01 05:59:50 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -212,7 +212,7 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
     /* h->reqbuf = h->norm_reqbuf; */
     assert(h->reqbuf == h->norm_reqbuf);
     storeClientCopy(h->sc, e, 0, HTTP_REQBUF_SZ, h->reqbuf,
-      clientSendMoreData, h);
+	clientSendMoreData, h);
     return e;
 }
 
@@ -480,9 +480,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	storeUnlockObject(entry);
 	entry = http->entry = http->old_entry;
 	http->sc = http->old_sc;
-        http->reqbuf = http->norm_reqbuf;
-        http->reqofs = http->old_reqofs;
-        http->reqsize = http->old_reqsize;
+	http->reqbuf = http->norm_reqbuf;
+	http->reqofs = http->old_reqofs;
+	http->reqsize = http->old_reqsize;
     } else if (STORE_PENDING == entry->store_status && 0 == status) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
 	if (size + http->reqofs >= HTTP_REQBUF_SZ) {
@@ -494,12 +494,12 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
 	    http->sc = http->old_sc;
-            http->reqbuf = http->norm_reqbuf;
-            http->reqofs = http->old_reqofs;
-            http->reqsize = http->old_reqsize;
+	    http->reqbuf = http->norm_reqbuf;
+	    http->reqofs = http->old_reqofs;
+	    http->reqsize = http->old_reqsize;
 	    /* continue */
 	} else {
-            http->reqofs += size;
+	    http->reqofs += size;
 	    storeClientCopy(http->sc, entry,
 		http->out.offset + http->reqofs,
 		HTTP_REQBUF_SZ - http->reqofs,
@@ -533,9 +533,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    requestUnlink(entry->mem_obj->request);
 	    entry->mem_obj->request = NULL;
 	}
-        http->reqbuf = http->norm_reqbuf;
-        http->reqofs = http->old_reqofs;
-        http->reqsize = http->old_reqsize;
+	http->reqbuf = http->norm_reqbuf;
+	http->reqofs = http->old_reqofs;
+	http->reqsize = http->old_reqsize;
     } else {
 	/* the client can handle this reply, whatever it is */
 	http->log_type = LOG_TCP_REFRESH_MISS;
@@ -626,7 +626,7 @@ clientPurgeRequest(clientHttpRequest * http)
 	    http->entry->mem_obj->method = http->request->method;
 	    http->sc = storeClientListAdd(http->entry, http);
 	    http->log_type = LOG_TCP_HIT;
-            http->reqofs = 0;
+	    http->reqofs = 0;
 	    storeClientCopy(http->sc, http->entry,
 		http->out.offset,
 		HTTP_REQBUF_SZ,
@@ -940,17 +940,17 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     }
     /* ignore range header in non-GETs */
     if (request->method == METHOD_GET) {
-       /*
-        * Since we're not doing ranges atm, just set the flag if
-        * the header exists, and then free the range header info
-        * -- adrian
-        */
-       request->range = httpHeaderGetRange(req_hdr);
-       if (request->range) {
-           request->flags.range = 1;
-           httpHdrRangeDestroy(request->range);
-           request->range = NULL;
-       }
+	/*
+	 * Since we're not doing ranges atm, just set the flag if
+	 * the header exists, and then free the range header info
+	 * -- adrian
+	 */
+	request->range = httpHeaderGetRange(req_hdr);
+	if (request->range) {
+	    request->flags.range = 1;
+	    httpHdrRangeDestroy(request->range);
+	    request->range = NULL;
+	}
     }
     if (httpHeaderHas(req_hdr, HDR_AUTHORIZATION))
 	request->flags.auth = 1;
@@ -1298,8 +1298,8 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    clientProcessMiss(http);
 	} else {
 	    debug(33, 3) ("clientCacheHit: waiting for HTTP reply headers\n");
-            http->reqofs += size;
-            assert(http->reqofs <= HTTP_REQBUF_SZ);
+	    http->reqofs += size;
+	    assert(http->reqofs <= HTTP_REQBUF_SZ);
 	    storeClientCopy(http->sc, e,
 		http->out.offset + http->reqofs,
 		HTTP_REQBUF_SZ,
@@ -1602,8 +1602,8 @@ clientSendMoreData(void *data, char *retbuf, ssize_t retsize)
 	    aclChecklistFree(ch);
 	} else if (size < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
 	    /* wait for more to arrive */
-            http->reqofs += retsize;
-            assert(http->reqofs <= HTTP_REQBUF_SZ);
+	    http->reqofs += retsize;
+	    assert(http->reqofs <= HTTP_REQBUF_SZ);
 	    storeClientCopy(http->sc, entry,
 		http->out.offset + http->reqofs,
 		HTTP_REQBUF_SZ - http->reqofs,
@@ -1613,12 +1613,12 @@ clientSendMoreData(void *data, char *retbuf, ssize_t retsize)
 	    return;
 	}
     } else {
-       /* Avoid copying to MemBuf if we know "rep" is NULL, and we only have a body */
-       http->out.offset += body_size;
-        assert(rep == NULL);
-       comm_write(fd, buf, size, clientWriteBodyComplete, http, NULL);
-       /* NULL because clientWriteBodyComplete frees it */
-       return;
+	/* Avoid copying to MemBuf if we know "rep" is NULL, and we only have a body */
+	http->out.offset += body_size;
+	assert(rep == NULL);
+	comm_write(fd, buf, size, clientWriteBodyComplete, http, NULL);
+	/* NULL because clientWriteBodyComplete frees it */
+	return;
     }
     if (http->request->method == METHOD_HEAD) {
 	if (rep) {
@@ -1720,7 +1720,7 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	if (0 == storeClientCopyPending(http->sc, entry, http)) {
 	    if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 		debug(33, 0) ("clientKeepaliveNextRequest: ENTRY_ABORTED\n");
-            http->reqofs = 0;
+	    http->reqofs = 0;
 	    storeClientCopy(http->sc, entry,
 		http->out.offset,
 		HTTP_REQBUF_SZ,
@@ -1779,7 +1779,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	 * storage manager. */
 	if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 	    debug(33, 0) ("clientWriteComplete 2: ENTRY_ABORTED\n");
-        http->reqofs = 0;
+	http->reqofs = 0;
 	storeClientCopy(http->sc, entry,
 	    http->out.offset,
 	    HTTP_REQBUF_SZ,
@@ -1878,8 +1878,8 @@ clientProcessRequest2(clientHttpRequest * http)
     }
     /* We don't cache any range requests (for now!) -- adrian */
     if (r->flags.range) {
-        http->entry = NULL;
-        return LOG_TCP_MISS;
+	http->entry = NULL;
+	return LOG_TCP_MISS;
     }
     debug(33, 3) ("clientProcessRequest2: default HIT\n");
     http->entry = e;
@@ -1936,8 +1936,8 @@ clientProcessRequest(clientHttpRequest * http)
 #if DELAY_POOLS
 	delaySetStoreClient(http->sc, delayClient(r));
 #endif
-        assert(http->log_type == LOG_TCP_HIT);
-        http->reqofs = 0;
+	assert(http->log_type == LOG_TCP_HIT);
+	http->reqofs = 0;
 	storeClientCopy(http->sc, http->entry,
 	    http->out.offset,
 	    HTTP_REQBUF_SZ,
