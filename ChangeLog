@@ -9,7 +9,7 @@ Changes to squid-1.2.beta17 (Mar 17, 1998):
 	- Changed icon handling to use the hostname and port of the squid
 	  server, instead of the special hostname "internal.squid".
 	- All icons are now configured in mime.conf. No hardcoded icons,
-	  including gohper icons.
+	  including gohper icons (Henrik Nordstrom).
 	- Fixed ICP bug when we send queries, but expect zero
 	  replies.
 	- Fixed alignment/casting bugs for ICP messages.
