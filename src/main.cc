@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.213 1998/02/04 23:50:26 wessels Exp $
+ * $Id: main.cc,v 1.214 1998/02/06 17:30:53 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -182,7 +182,7 @@ mainParseOptions(int argc, char *argv[])
 	    opt_no_daemon = 1;
 	    break;
 	case 'R':
-	    do_reuse = 0;
+	    opt_reuseaddr = 0;
 	    break;
 	case 'V':
 	    vhost_mode = 1;

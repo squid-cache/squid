@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.225 1998/02/05 20:33:58 wessels Exp $
+ * $Id: comm.cc,v 1.226 1998/02/06 17:30:51 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -261,7 +261,7 @@ comm_open(int sock_type,
 	commSetCloseOnExec(new_socket);
     if (port > (u_short) 0) {
 	commSetNoLinger(new_socket);
-	if (do_reuse)
+	if (opt_reuseaddr)
 	    commSetReuseAddr(new_socket);
     }
     if (addr.s_addr != no_addr.s_addr) {
