@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.47 1996/08/28 17:22:07 wessels Exp $
+ * $Id: ipcache.cc,v 1.48 1996/08/28 17:34:29 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -511,6 +511,9 @@ static ipcache_entry *ipcache_parsebuffer(inbuf, dnsData)
     int ipcount;
     int aliascount;
     debug(14, 5, "ipcache_parsebuffer: parsing:\n%s", inbuf);
+    memset(&i, '\0', sizeof(ipcache_entry));
+    i.expires = squid_curtime + Config.positiveDnsTtl;
+    i.status = IP_DISPATCHED;
     for (token = strtok(buf, w_space); token; token = strtok(NULL, w_space)) {
 	if (!strcmp(token, "$end")) {
 	    break;
@@ -519,6 +522,8 @@ static ipcache_entry *ipcache_parsebuffer(inbuf, dnsData)
 	} else if (!strcmp(token, "$fail")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $fail");
+	    i.expires = squid_curtime + Config.negativeDnsTtl;
+	    i.status = IP_NEGATIVE_CACHED;
 	} else if (!strcmp(token, "$message")) {
 	    if ((token = strtok(NULL, "\n")) == NULL)
 		fatal_dump("Invalid $message");
@@ -526,6 +531,7 @@ static ipcache_entry *ipcache_parsebuffer(inbuf, dnsData)
 	} else if (!strcmp(token, "$name")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $name");
+	    i.status = IP_CACHED;
 	} else if (!strcmp(token, "$h_name")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $h_name");
@@ -608,7 +614,9 @@ static int ipcache_dnsHandleRead(fd, dnsData)
     n = ++IpcacheStats.replies;
     dnsData->offset += len;
     dnsData->ip_inbuf[dnsData->offset] = '\0';
-
+    i = dnsData->data;
+    if (i->status != IP_DISPATCHED)
+	fatal_dump("ipcache_dnsHandleRead: bad status");
     if (strstr(dnsData->ip_inbuf, "$end\n")) {
 	/* end of record found */
 	svc_time = tvSubMsec(dnsData->dispatch_time, current_time);
@@ -626,6 +634,7 @@ static int ipcache_dnsHandleRead(fd, dnsData)
 	    i->alias_count = x->alias_count;
 	    i->entry = x->entry;
 	    i->error_message = x->error_message;
+	    i->status = x->status;
 	    ipcache_call_pending(i);
 	}
     }
