@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.261 2002/06/13 17:04:18 hno Exp $
+# $Id: cf.data.pre,v 1.262 2002/06/18 10:54:17 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2846,11 +2846,11 @@ TYPE: onoff
 DEFAULT: off
 LOC: Config.onoff.buffered_logs
 DOC_START
-	Some log files (cache.log, useragent.log) are written with
-	stdio functions, and as such they can be buffered or
-	unbuffered.  By default they will be unbuffered. Buffering them
-	can speed up the writing slightly (though you are unlikely to
-	need to worry).
+	cache.log log file is written with stdio functions, and as such
+	it can be buffered or unbuffered. By default it will be unbuffered.
+	Buffering it can speed up the writing slightly (though you are
+	unlikely to need to worry unless you run with tons of debugging
+	enabled in which case performance will suffer badly anyway..).
 DOC_END
 
 NAME: reload_into_ims
