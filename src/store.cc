@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.230 1997/05/08 07:22:08 wessels Exp $
+ * $Id: store.cc,v 1.231 1997/05/08 23:23:18 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -795,7 +795,6 @@ storeCreateEntry(const char *url,
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;
-    int i;
     debug(20, 3, "storeCreateEntry: '%s' icp flags=%x\n", url, flags);
 
     e = new_StoreEntry(WITH_MEMOBJ);
@@ -899,7 +898,7 @@ storeRegister(StoreEntry * e, int fd, STCB * handler, void *data)
     MemObject *mem = e->mem_obj;
     debug(20, 3, "storeRegister: FD %d '%s'\n", fd, e->key);
     if ((i = storeClientListSearch(mem, data)) < 0)
-	i = storeClientListAdd(e, fd, 0);
+	i = storeClientListAdd(e, data, 0);
     if (mem->clients[i].callback)
 	fatal_dump("storeRegister: handler already exists");
     mem->clients[i].callback = handler;
