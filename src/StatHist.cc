@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.20 1998/11/21 16:54:25 wessels Exp $
+ * $Id: StatHist.cc,v 1.21 1998/12/04 18:25:14 rousskov Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -72,13 +72,19 @@ statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, do
     H->scale = capacity / val_in(max - min);
     H->val_in = val_in;
     H->val_out = val_out;
+
+    /* HPUX users: If you get one of the assertions below, please send
+     * [at least] the values of all variables involved in the assertions
+     * when reporting a bug!
+     */
+
     /* check that functions are valid */
     /* a min value should go into bin[0] */
     assert(statHistBin(H, min) == 0);
     /* a max value should go into the last bin */
     assert(statHistBin(H, max) == H->capacity - 1);
     /* it is hard to test val_out, here is a crude test */
-    assert(((int) (0.99 + statHistVal(H, 0) - min)) == 0);
+    assert(((int) floor(0.99L + statHistVal(H, 0) - min)) == 0);
 }
 
 void
@@ -150,7 +156,7 @@ statHistBin(const StatHist * H, double v)
     v -= H->min;		/* offset */
     if (v <= 0.0)		/* too small */
 	return 0;
-    bin = (int) (H->scale * H->val_in(v) + 0.5);
+    bin = (int) floor(H->scale * H->val_in(v) + 0.5);
     if (bin < 0)		/* should not happen */
 	bin = 0;
     if (bin >= H->capacity)	/* too big */
@@ -203,7 +209,7 @@ statHistDeltaMedian(const StatHist * A, const StatHist * B)
     if (I >= J)
 	return 0.0;
     f = (h - a) / (b - a);
-    K = (int) (f * (double) (J - I) + I);
+    K = (int) floor(f * (double) (J - I) + I);
     return statHistVal(A, K);
 }
 
