@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.12 1997/10/24 04:56:35 wessels Exp $
+ * $Id: cf_gen.cc,v 1.13 1997/10/26 02:35:28 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -451,7 +451,7 @@ gen_conf(Entry * head, FILE * fp)
 	Line *line;
 
 	if (strcmp(entry->name, "arbtext"))
-		fprintf(fp, "#  TAG: %s", entry->name);
+	    fprintf(fp, "#  TAG: %s", entry->name);
 	if (entry->comment)
 	    fprintf(fp, "\t%s", entry->comment);
 	fprintf(fp, "\n");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.151 1997/10/26 02:33:16 wessels Exp $
+ * $Id: ftp.cc,v 1.152 1997/10/26 02:35:30 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -119,7 +119,7 @@ typedef struct {
     char *link;
 } ftpListParts;
 
-typedef void (FTPSM)(FtpStateData *);
+typedef void (FTPSM) (FtpStateData *);
 
 /* Local functions */
 static CNCB ftpConnectDone;

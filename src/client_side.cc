@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.133 1997/10/25 17:22:36 wessels Exp $
+ * $Id: client_side.cc,v 1.134 1997/10/26 02:35:29 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -375,13 +375,13 @@ clientPurgeRequest(clientHttpRequest * http)
 }
 
 int
-checkNegativeHit(StoreEntry *e)
+checkNegativeHit(StoreEntry * e)
 {
-	if (!BIT_TEST(e->flag, ENTRY_NEGCACHED))
-	    return 0;
-	if (e->expires <= squid_curtime)
-            return 0;
-	if (e->store_status != STORE_OK)
-	    return 0;
-	return 1;
+    if (!BIT_TEST(e->flag, ENTRY_NEGCACHED))
+	return 0;
+    if (e->expires <= squid_curtime)
+	return 0;
+    if (e->store_status != STORE_OK)
+	return 0;
+    return 1;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.104 1997/10/25 17:22:43 wessels Exp $
+ * $Id: gopher.cc,v 1.105 1997/10/26 02:35:31 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -652,7 +652,6 @@ gopherTimeout(int fd, void *data)
     ErrorState *err;
 
     debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, entry->url);
-    /* was assert */
     if (entry->mem_obj->inmem_hi == 0) {
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_READ_TIMEOUT;
@@ -719,7 +718,6 @@ gopherReadReply(int fd, void *data)
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
-	/* was assert */
 	ErrorState *err;
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_ZERO_SIZE_OBJECT;
@@ -763,7 +761,6 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
     debug(10, 5) ("gopherSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	/* was assert */
 	ErrorState *err;
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_CONNECT_FAIL;
@@ -857,7 +854,6 @@ gopherStart(StoreEntry * entry)
     /* Parse url. */
     if (gopher_url_parser(url, gopherState->host, &gopherState->port,
 	    &gopherState->type_id, gopherState->request)) {
-	/* was assert */
 	ErrorState *err;
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_INVALID_URL;
@@ -877,7 +873,6 @@ gopherStart(StoreEntry * entry)
 	url);
     if (fd == COMM_ERROR) {
 	debug(10, 4) ("gopherStart: Failed because we're out of sockets.\n");
-	/* was assert */
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_SOCKET_FAILURE;
 	err->xerrno = errno;
@@ -928,7 +923,6 @@ gopherConnectDone(int fd, int status, void *data)
     ErrorState *err;
     if (status == COMM_ERR_DNS) {
 	debug(10, 4) ("gopherConnectDone: Unknown host: %s\n", gopherState->host);
-	/* was assert */
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_DNS_FAIL;
 	err->dnsserver_msg = xstrdup(dns_error_message);
@@ -938,7 +932,6 @@ gopherConnectDone(int fd, int status, void *data)
 	storeAbort(gopherState->entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-	/* was assert */
 	ErrorState *err;
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_CONNECT_FAIL;

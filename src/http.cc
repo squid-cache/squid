@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.201 1997/10/25 17:22:44 wessels Exp $
+ * $Id: http.cc,v 1.202 1997/10/26 02:35:32 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -698,6 +698,8 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
     ErrorState *err;
     debug(11, 5) ("httpSendComplete: FD %d: size %d: errflag %d.\n",
 	fd, size, errflag);
+    if (errflag == COMM_ERR_CLOSING)
+	return;
     if (errflag) {
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_WRITE_ERROR;
