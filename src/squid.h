@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.153 1998/02/02 21:16:31 wessels Exp $
+ * $Id: squid.h,v 1.154 1998/02/03 01:17:05 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -169,6 +169,23 @@
 #define assert(X) ((void)0)
 #endif
 
+#if HAVE_DIRENT_H
+#include <dirent.h>
+#define NAMLEN(dirent) strlen((dirent)->d_name)
+#else /* HAVE_DIRENT_H */
+#define dirent direct
+#define NAMLEN(dirent) (dirent)->d_namlen
+#if HAVE_SYS_NDIR_H
+#include <sys/ndir.h>
+#endif /* HAVE_SYS_NDIR_H */
+#if HAVE_SYS_DIR_H
+#include <sys/dir.h>
+#endif /* HAVE_SYS_DIR_H */
+#if HAVE_NDIR_H
+#include <ndir.h>
+#endif /* HAVE_NDIR_H */
+#endif /* HAVE_DIRENT_H */
+
 #if defined(__QNX__)
 #include <unix.h>
 #endif
@@ -282,21 +299,7 @@ struct rusage {
 #include <regex.h>
 #endif
 
-#if STORE_KEY_SHA
-#undef STORE_KEY_URL
-#undef STORE_KEY_MD5
-#include "sha.h"
-#elif STORE_KEY_MD5
-#undef STORE_KEY_URL
-#undef STORE_KEY_SHA
 #include "md5.h"
-#else
-#undef STORE_KEY_SHA
-#undef STORE_KEY_MD5
-#define STORE_KEY_URL 1
-#define storeKeyHashCmp urlcmp
-#define storeKeyHashHash hash4
-#endif
 
 #ifdef SQUID_SNMP
 #include "snmp.h"

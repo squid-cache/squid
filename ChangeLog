@@ -68,6 +68,7 @@
 	  called after the fdset had been built which was wrong because
 	  the callbacks were changing the state of the read/write
 	  handlers prior to the poll/select() calls (SLF).
+	- Fixed ARP ACL memory leaks (Dale).
 
 Changes to squid-1.2.beta12 (Jan 30, 1998):
 

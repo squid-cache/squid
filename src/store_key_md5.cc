@@ -1,7 +1,5 @@
 #include "squid.h"
 
-#if STORE_KEY_MD5
-
 const char *
 storeKeyText(const unsigned char *key)
 {
@@ -120,5 +118,3 @@ storeKeyHashBuckets(int nobj)
 	return 0x8000;
     return 0x10000;
 }
-
-#endif /* STORE_KEY_MD5 */

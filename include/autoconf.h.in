@@ -74,18 +74,6 @@
  */
 #undef CACHEMGR_HOSTNAME
 
-/*
- * Normally Squid uses URLs as cache keys, and these are kept in memory.
- * For large caches, this can become a significant use of memory.  Define
- * one of the options below for alternatives.  SHA (Secure Hash Algorithm)
- * is a 20-byte cryptographic digest.  MD5 is a 16-byte cryptographic
- * digest.  Calculating SHA digests requires more CPU, and MD5 digests
- * are slighly more likely to have collisions.
- */
-#undef STORE_KEY_SHA
-#undef STORE_KEY_MD5
-#undef STORE_KEY_URL
-
 /* Define to do simple malloc debugging */
 #undef XMALLOC_DEBUG
 

@@ -450,12 +450,19 @@ typedef enum {
 } mem_type;
 
 enum {
-    SWAP_META_VOID,		/* should not come up */
-    SWAP_META_KEY_URL,		/* key w/ keytype */
-    SWAP_META_KEY_SHA,
-    SWAP_META_KEY_MD5,
-    SWAP_META_URL,		/* the url , if not in the header */
-    SWAP_META_STD,		/* standard metadata */
-    SWAP_META_HITMETERING,	/* reserved for hit metering */
-    SWAP_META_VALID
+    STORE_META_VOID,		/* should not come up */
+    STORE_META_KEY_URL,		/* key w/ keytype */
+    STORE_META_KEY_SHA,
+    STORE_META_KEY_MD5,
+    STORE_META_URL,		/* the url , if not in the header */
+    STORE_META_STD,		/* standard metadata */
+    STORE_META_HITMETERING,	/* reserved for hit metering */
+    STORE_META_VALID
+};
+
+enum {
+	STORE_LOG_CREATE,
+	STORE_LOG_SWAPIN,
+	STORE_LOG_SWAPOUT,
+	STORE_LOG_RELEASE
 };

@@ -105,13 +105,7 @@ typedef void STABH(void *);
 typedef void ERCB(int fd, void *, size_t);
 typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
+typedef void STVLDCB(void *, int, int);
 
-#if STORE_KEY_SHA
-typedef int cache_key;
-#endif
-#if STORE_KEY_MD5
+/* MD5 cache keys */
 typedef unsigned char cache_key;
-#endif
-#if STORE_KEY_URL
-typedef char cache_key;
-#endif
