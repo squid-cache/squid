@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.129 1998/05/02 06:41:58 wessels Exp $
+ * $Id: errorpage.cc,v 1.130 1998/05/08 22:35:06 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -255,6 +255,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     httpReplySwapOut(rep, entry);
     httpReplyDestroy(rep);
     mem->reply->sline.status = err->http_status;
+    mem->reply->content_length = -1;
     storeBufferFlush(entry);
     storeComplete(entry);
     storeNegativeCache(entry);
