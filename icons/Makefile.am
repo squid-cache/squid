@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.8 2003/05/21 07:19:29 hno Exp $
+# $Id: Makefile.am,v 1.9 2003/05/21 07:38:49 hno Exp $
 #
 
 ICON1	=	anthony-binhex.gif
@@ -42,7 +42,7 @@ $(ICON1):
 	@$(SHELL) "$(srcdir)/icons.shar"
 ##	@$(SHELL) -c "cd $(srcdir); $(SHELL) icons.shar"
 
-icons.shar:
+update-icons.shar:
 	shar --no-timestamp $(ICON1) $(ICON2) > $@ 2>/dev/null || \
 	shar $(ICON1) $(ICON2) > $@
 
