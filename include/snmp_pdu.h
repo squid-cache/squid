@@ -25,7 +25,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_pdu.h,v 1.7 2002/02/13 02:23:47 hno Exp $
+ * $Id: snmp_pdu.h,v 1.8 2002/02/13 02:34:37 hno Exp $
  * 
  **********************************************************************/
 
@@ -97,6 +97,7 @@ void snmp_add_null_var(struct snmp_pdu *, oid *, int);
  *
  * Trap Types
  */
+#if UNUSED_CODE
 #define SNMP_TRAP_COLDSTART             (0x0)
 #define SNMP_TRAP_WARMSTART             (0x1)
 #define SNMP_TRAP_LINKDOWN              (0x2)
@@ -104,5 +105,6 @@ void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 #define SNMP_TRAP_AUTHENTICATIONFAILURE (0x4)
 #define SNMP_TRAP_EGPNEIGHBORLOSS       (0x5)
 #define SNMP_TRAP_ENTERPRISESPECIFIC    (0x6)
+#endif
 
 #endif /* SQUID_SNMP_PDU_H */
