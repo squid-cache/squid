@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta8 (Dec 2, 1997):
+
 	- Fixed accessLogLog() to log ident from Proxy-Authorization
 	  request header (BoB Miorelli).
 	- Fixed #includes, prototypes, etc. in SNMP source files.
