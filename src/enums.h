@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.145 1999/01/29 21:28:11 wessels Exp $
+ * $Id: enums.h,v 1.146 1999/03/29 16:52:04 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -308,9 +308,9 @@ typedef enum {
     ICP_DATAEND,
     ICP_SECHO,
     ICP_DECHO,
-    ICP_UNUSED12,
-    ICP_UNUSED13,
-    ICP_UNUSED14,
+    ICP_NOTIFY,
+    ICP_INVALIDATE,
+    ICP_DELETE,
     ICP_UNUSED15,
     ICP_UNUSED16,
     ICP_UNUSED17,
