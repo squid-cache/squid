@@ -11,3 +11,8 @@ squid.conf
 squid.conf.default
 store_modules.c
 string_arrays.c
+cachemgr
+cf_gen
+squid
+squidclient
+unlinkd
