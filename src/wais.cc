@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.55 1996/11/14 18:38:52 wessels Exp $
+ * $Id: wais.cc,v 1.56 1996/11/14 19:02:24 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -360,7 +360,7 @@ waisStart(int unusedfd, const char *url, method_t method, char *mime_hdr, StoreE
     waisState->relayport = Config.Wais.relayPort;
     waisState->mime_hdr = mime_hdr;
     waisState->fd = fd;
-    strncpy(waisState->request, url, MAX_URL);
+    xstrncpy(waisState->request, url, MAX_URL);
     comm_add_close_handler(waisState->fd,
 	(PF) waisStateFree,
 	(void *) waisState);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.42 1996/11/06 23:14:23 wessels Exp $
+ * $Id: cachemgr.cc,v 1.43 1996/11/14 19:02:13 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -242,7 +242,7 @@ typedef enum {
     MAXOP
 } op_t;
 
-static char *op_cmds[] =
+static const char *const op_cmds[] =
 {
     "info",
     "squid.conf",
@@ -269,7 +269,7 @@ static char *op_cmds[] =
     "unknown"
 };
 
-static char *op_cmds_descr[] =
+static const char *const op_cmds_descr[] =
 {
     "Cache Information",
     "Cache Configuration File",
@@ -680,16 +680,16 @@ main(int argc, char *argv[])
 	    v = s;
 
 	if (!strcmp(s, "host")) {
-	    strncpy(hostname, v, sizeof hostname);
+	    xstrncpy(hostname, v, sizeof hostname);
 	    hostname[sizeof hostname - 1] = '\0';
 	} else if (!strcmp(s, "operation")) {
-	    strncpy(operation, v, sizeof operation);
+	    xstrncpy(operation, v, sizeof operation);
 	    operation[sizeof operation - 1] = '\0';
 	} else if (!strcmp(s, "password")) {
-	    strncpy(password, v, sizeof password);
+	    xstrncpy(password, v, sizeof password);
 	    password[sizeof password - 1] = '\0';
 	} else if (!strcmp(s, "url")) {
-	    strncpy(url, v, sizeof url);
+	    xstrncpy(url, v, sizeof url);
 	    url[sizeof url - 1] = '\0';
 	} else if (!strcmp(s, "port")) {
 	    portnum = atoi(v);

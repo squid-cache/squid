@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.81 1996/11/14 18:38:42 wessels Exp $
+ * $Id: ftp.cc,v 1.82 1996/11/14 19:02:16 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -471,7 +471,7 @@ ftpSendRequest(int fd, FtpStateData * data)
     strcat(buf, Config.Program.ftpget);
     strcat(buf, space);
 
-    strncpy(opts, Config.Program.ftpget_opts, BUFSIZ);
+    xstrncpy(opts, Config.Program.ftpget_opts, BUFSIZ);
     for (s = strtok(opts, w_space); s; s = strtok(NULL, w_space)) {
 	strcat(buf, s);
 	strcat(buf, space);

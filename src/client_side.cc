@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.64 1996/11/14 03:00:52 wessels Exp $
+ * $Id: client_side.cc,v 1.65 1996/11/14 19:02:13 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -91,10 +91,11 @@ clientProxyAuthCheck(icpStateData * icpState)
 	if (matchDomainName(Config.proxyAuthIgnoreDomain, icpState->request->host))
 	    return 1;
     proxy_user = proxyAuthenticate(icpState->request_hdr);
-    strncpy(icpState->ident, proxy_user, ICP_IDENT_SZ);
-    debug(33, 6, "jrmt: user = %s\n", icpState->ident);
+    xstrncpy(icpState->ident.ident, proxy_user, ICP_IDENT_SZ);
+    icpState->ident.ident[ICP_IDENT_SZ - 1] = '\0';
+    debug(33, 6, "jrmt: user = %s\n", icpState->ident.ident);
 
-    if (strcmp(icpState->ident, dash_str) == 0)
+    if (strcmp(icpState->ident.ident, dash_str) == 0)
 	return 0;
     return 1;
 }
@@ -119,7 +120,7 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
 	icpState->aclChecklist->request = requestLink(icpState->request);
 	browser = mime_get_header(icpState->request_hdr, "User-Agent");
 	if (browser != NULL) {
-	    strncpy(icpState->aclChecklist->browser, browser, BROWSERNAMELEN);
+	    xstrncpy(icpState->aclChecklist->browser, browser, BROWSERNAMELEN);
 	} else {
 	    icpState->aclChecklist->browser[0] = '\0';
 	}
@@ -273,7 +274,7 @@ proxyAuthenticate(const char *headers)
     clear_userandpw = uudecode(sent_userandpw);
     xfree(sent_userandpw);
 
-    strncpy(sent_user, clear_userandpw, ICP_IDENT_SZ);
+    xstrncpy(sent_user, clear_userandpw, ICP_IDENT_SZ);
     strtok(sent_user, ":");	/* Remove :password */
     debug(33, 5, "jrmt: user = %s\n", sent_user);
 

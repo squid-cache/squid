@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.164 1996/11/14 18:38:50 wessels Exp $
+ * $Id: store.cc,v 1.165 1996/11/14 19:02:23 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2437,7 +2437,7 @@ storeInit(void)
     storeSanityCheck();
     dir_created = storeVerifySwapDirs(opt_zap_disk_store);
     if (Config.Log.swap)
-	strncpy(swaplog_file, Config.Log.swap, SQUID_MAXPATHLEN);
+	xstrncpy(swaplog_file, Config.Log.swap, SQUID_MAXPATHLEN);
     else
 	sprintf(swaplog_file, "%s/log", swappath(0));
     swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT);

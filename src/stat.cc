@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.103 1996/11/14 18:38:49 wessels Exp $
+ * $Id: stat.cc,v 1.104 1996/11/14 19:02:22 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -976,7 +976,7 @@ parameter_get(const cacheinfo * obj, StoreEntry * sentry)
 }
 
 #if LOG_FULL_HEADERS
-static char c2x[] =
+static const char c2x[] =
 "000102030405060708090a0b0c0d0e0f"
 "101112131415161718191a1b1c1d1e1f"
 "202122232425262728292a2b2c2d2e2f"
@@ -997,10 +997,10 @@ static char c2x[] =
 /* log_quote -- URL-style encoding on MIME headers. */
 
 static char *
-log_quote(const unsigned char *header)
+log_quote(const char *header)
 {
     int c, i;
-    unsigned char *buf, *buf_cursor;
+    char *buf, *buf_cursor;
     if (header == NULL) {
 	buf = xcalloc(1, 1);
 	*buf = '\0';
@@ -1014,7 +1014,7 @@ log_quote(const unsigned char *header)
      * modulo the inclusion of space (x40) to make the raw logs a bit
      * more readable.
      */
-    while ((c = *header++)) {
+    while ((c = *(const unsigned char *) header++)) {
 	if (c <= 0x1F
 	    || c >= 0x7F
 	    || c == '"'
@@ -1280,7 +1280,7 @@ stat_init(cacheinfo ** object, const char *logfilename)
     obj->server_list = server_list;
     if (logfilename) {
 	memset(obj->logfilename, '0', SQUID_MAXPATHLEN);
-	strncpy(obj->logfilename, logfilename, SQUID_MAXPATHLEN - 1);
+	xstrncpy(obj->logfilename, logfilename, SQUID_MAXPATHLEN - 1);
 	obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
 	if (obj->logfile_fd == DISK_ERROR) {
 	    debug(50, 0, "%s: %s\n", obj->logfilename, xstrerror());
