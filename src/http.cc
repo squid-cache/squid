@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.123 1996/12/02 05:55:08 wessels Exp $
+ * $Id: http.cc,v 1.124 1996/12/03 17:00:11 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -618,7 +618,7 @@ httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max)
     if (n >= max)
 	return;
     debug(11, 5, "httpAppendRequestHeader: %s\n", line);
-    strcat(hdr + (*sz), line);
+    strcpy(hdr + (*sz), line);
     strcat(hdr + (*sz), crlf);
     *sz = n;
 }
