@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.155 1997/11/19 06:17:31 wessels Exp $
+ * $Id: client_side.cc,v 1.156 1997/11/21 17:51:46 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1626,6 +1626,7 @@ clientReadRequest(int fd, void *data)
 	    err = errorCon(ERR_INVALID_REQ, HTTP_BAD_REQUEST);
 	    err->callback = clientErrorComplete;
 	    err->callback_data = NULL;
+	    err->request_hdrs = xstrdup(conn->in.buf);
 	    errorSend(fd, err);
 	    return;
 	}
@@ -1662,7 +1663,7 @@ httpAcceptDefer(int fdnotused, void *notused)
     return !fdstat_are_n_free_fd(RESERVED_FD);
 }
 
-/* Handle a new connection on ascii input socket. */
+/* Handle a new connection on HTTP socket. */
 void
 httpAccept(int sock, void *notused)
 {
