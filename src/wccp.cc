@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.24 2002/08/26 09:27:53 adrian Exp $
+ * $Id: wccp.cc,v 1.25 2002/09/01 15:16:49 hno Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -243,7 +243,7 @@ wccpHandleUdp(int sock, void *not_used)
 	return;
     if (ntohl(wccp_i_see_you.type) != WCCP_I_SEE_YOU)
 	return;
-    if ((!change) && (number_caches == ntohl(wccp_i_see_you.number)) ) {
+    if ((!change) && (number_caches == ntohl(wccp_i_see_you.number))) {
 	change = wccp_i_see_you.change;
 	return;
     }
@@ -322,7 +322,7 @@ wccpAssignBuckets(void)
 	}
     }
     while (bucket < WCCP_BUCKETS) {
-        buckets[bucket++] = number_caches - 1;
+	buckets[bucket++] = number_caches - 1;
     }
     wccp_assign_bucket->type = htonl(WCCP_ASSIGN_BUCKET);
     wccp_assign_bucket->id = wccp_i_see_you.id;
