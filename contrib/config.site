@@ -1,0 +1,46 @@
+# This is file config.site.
+# Set environment variable CONFIG_SITE to this file
+# to get site specific defaults for configure
+# AUTHOR: Markus Gyger
+
+# HP ANSI/ISO C compiler
+: ${CC="cc -Ae"}
+: ${CFLAGS="-O -g"}
+: ${LDFLAGS="${CFLAGS}"}
+
+# Default installation directory layout based on prefix path
+case $prefix in
+/opt/*)  # AT&T SVR4, OSF/1 file system layout defaults
+#   prefix='/opt/<appname>'
+#   exec_prefix='${prefix}'
+#   bindir='${exec_prefix}/bin'
+#   sbindir='${exec_prefix}/sbin'
+    libexecdir='${exec_prefix}/lbin'
+#   datadir='${prefix}/share'
+    sysconfdir='/etc${prefix}'
+    sharedstatedir='/var/share${prefix}'
+    localstatedir='/var${prefix}'
+#   libdir='${exec_prefix}/lib'
+    includedir='${datadir}/include'
+#   oldincludedir='/usr/include'
+    infodir='${datadir}/info'
+    mandir='${datadir}/man'
+    ;;
+
+*)  # GNU, BSD file system directory layout defaults
+#   prefix=/usr/local
+#   exec_prefix='${prefix}'
+#   bindir='${exec_prefix}/bin'
+#   sbindir='${exec_prefix}/sbin'
+#   libexecdir='${exec_prefix}/libexec'
+#   datadir='${prefix}/share'
+#   sysconfdir='${prefix}/etc'
+#   sharedstatedir='${prefix}/com'
+#   localstatedir='${prefix}/var'
+#   libdir='${exec_prefix}/lib'
+#   includedir='${prefix}/include'
+#   oldincludedir='/usr/include'
+#   infodir='${prefix}/info'
+#   mandir='${prefix}/man'
+    ;;
+esac
