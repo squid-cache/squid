@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.42 1996/11/15 00:36:24 wessels Exp $
+ * $Id: url.cc,v 1.43 1996/11/15 17:26:23 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -201,7 +201,7 @@ urlParse(method_t method, char *url)
     int l;
     proto[0] = host[0] = urlpath[0] = login[0] = '\0';
 
-    if ((l = strlen(url)) > (MAX_URL-1)) {
+    if ((l = strlen(url)) > (MAX_URL - 1)) {
 	/* terminate so it doesn't overflow other buffers */
 	*(url + (MAX_URL >> 1)) = '\0';
 	debug(23, 0, "urlParse: URL too large (%d bytes)\n", l);

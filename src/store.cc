@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.166 1996/11/15 00:36:23 wessels Exp $
+ * $Id: store.cc,v 1.167 1996/11/15 17:26:22 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2833,7 +2833,7 @@ storeEntryValidToSend(StoreEntry * e)
 }
 
 int
-storeFirstClientFD(MemObject *mem)
+storeFirstClientFD(MemObject * mem)
 {
     int i;
     if (mem == NULL)

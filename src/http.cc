@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.108 1996/11/15 07:51:09 wessels Exp $
+ * $Id: http.cc,v 1.109 1996/11/15 17:26:21 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -211,8 +211,7 @@ httpLifetimeExpire(int fd, void *data)
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
     debug(11, 4, "httpLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
-    if (entry->store_status == STORE_PENDING)
-	squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
+    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     commSetSelect(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, NULL, NULL, 0);
     comm_close(fd);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.83 1996/11/15 07:51:08 wessels Exp $
+ * $Id: ftp.cc,v 1.84 1996/11/15 17:26:19 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -188,8 +188,7 @@ ftpLifetimeExpire(int fd, FtpStateData * data)
     StoreEntry *entry = NULL;
     entry = data->entry;
     debug(9, 4, "ftpLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
-    if (entry->store_status == STORE_PENDING)
-    	squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
+    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     comm_close(fd);
 }
 
@@ -409,10 +408,8 @@ ftpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	buf = NULL;
     }
     if (errflag) {
-	if (entry->store_status == STORE_PENDING) {
-	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(fd);
-	}
+	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	comm_close(fd);
 	return;
     }
     commSetSelect(ftpState->ftp_fd,
