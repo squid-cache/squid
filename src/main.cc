@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.31 1996/04/11 04:47:24 wessels Exp $ */
+/* $Id: main.cc,v 1.32 1996/04/15 18:01:04 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -173,6 +173,7 @@ static void mainReinitialize()
     neighborsDestroy();
 
     parseConfigFile(config_file);
+    _db_init(getCacheLogFile());
     neighbors_init();
     ipcacheOpenServers();
     serverConnectionsOpen();
@@ -184,6 +185,14 @@ static void mainReinitialize()
 static void mainInitialize()
 {
     static int first_time = 1;
+
+    if (catch_signals) {
+	signal(SIGSEGV, death);
+	signal(SIGBUS, death);
+    }
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGCHLD, sig_child);
+
     parseConfigFile(config_file);
 
     if (asciiPortNumOverride > 0)
@@ -223,6 +232,12 @@ static void mainInitialize()
     serverConnectionsOpen();
     if (theUdpConnection >= 0 && (!httpd_accel_mode || getAccelWithProxy()))
 	neighbors_open(theUdpConnection);
+
+    signal(SIGUSR1, rotate_logs);
+    signal(SIGHUP, reconfigure);
+    signal(SIGTERM, shut_down);
+    signal(SIGINT, shut_down);
+
     debug(1, 0, "Ready to serve requests.\n");
 }
 
@@ -280,17 +295,6 @@ int main(argc, argv)
     /* preinit for debug module */
     debug_log = stderr;
     hash_init(0);
-
-    if (catch_signals) {
-	signal(SIGSEGV, death);
-	signal(SIGBUS, death);
-    }
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGCHLD, sig_child);
-    signal(SIGUSR1, rotate_logs);
-    signal(SIGTERM, shut_down);
-    signal(SIGINT, shut_down);
-    signal(SIGHUP, reconfigure);
 
     mainInitialize();
 
