@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.8 1996/08/14 21:54:48 wessels Exp $
+ * $Id: fqdncache.cc,v 1.9 1996/08/21 05:48:02 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -1029,7 +1029,9 @@ char *fqdnFromAddr(addr)
      struct in_addr addr;
 {
     char *n;
+    static char buf[32];
     if ((n = fqdncache_gethostbyaddr(addr, 0)))
 	return n;
-    return inet_ntoa(addr);
+    strcpy(buf, inet_ntoa(addr));
+    return buf;
 }
