@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.11 1998/03/03 00:30:59 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.12 1998/03/03 22:17:50 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -69,7 +69,7 @@ typedef enum {
     ftPChar,
     ftDate_1123,
     ftPSCC,
-    ftPExtField,
+    ftPExtField
 } field_type;
 
 /*
@@ -561,7 +561,7 @@ httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
 {
     assert(hdr && pos);
     assert(*pos >= HttpHeaderInitPos && *pos < hdr->capacity);
-    tmp_debug(here) ("searching next e in hdr %p from %d\n", hdr, *pos);
+    debug(55,8) ("searching next e in hdr %p from %d\n", hdr, *pos);
     for ((*pos)++; *pos < hdr->ucount; (*pos)++) {
 	HttpHeaderEntry *e = hdr->entries + *pos;
 	if (httpHeaderEntryIsValid(e)) {
@@ -1439,8 +1439,6 @@ httpHeaderExtFieldParseCreate(const char *field_start, const char *field_end)
     if (!name_end || name_end <= field_start || name_end > field_end)
 	return NULL;
 
-    tmp_debug(here) ("got field len: %d\n", field_end - field_start);
-
     value_start = name_end + 1;	/* skip ':' */
     /* skip white space */
     while (value_start < field_end && isspace(*value_start))
@@ -1589,7 +1587,6 @@ dupShortBuf(const char *str, size_t len)
 {
     char *buf;
     assert(str);
-    assert(len >= 0);
     buf = allocShortBuf(len + 1);
     assert(buf);
     if (len)

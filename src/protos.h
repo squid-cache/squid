@@ -529,12 +529,13 @@ extern MemPool *memPoolCreate(const char *label, size_t obj_size);
 extern void memPoolDestroy(MemPool *pool);
 extern void *memPoolAlloc(MemPool *pool);
 extern void memPoolFree(MemPool *pool, void *obj);
-extern int memPoolWasNeverUsed(const MemPool *pool);
-extern int memPoolIsUsedNow(const MemPool *pool);
+extern int memPoolWasUsed(const MemPool *pool);
+extern int memPoolInUseCount(const MemPool *pool);
+extern size_t memPoolInUseSize(const MemPool *pool);
 extern int memPoolUsedCount(const MemPool *pool);
 extern void memPoolDescribe(const MemPool *pool);
 extern void memPoolReport(const MemPool *pool, StoreEntry *e);
-extern void memReportTotals(StoreEntry *e);
+extern void memReport(StoreEntry *e);
 
 extern int stmemFreeDataUpto(mem_hdr *, int);
 extern void stmemAppend(mem_hdr *, const char *, int);

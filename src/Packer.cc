@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.5 1998/02/26 18:00:34 wessels Exp $
+ * $Id: Packer.cc,v 1.6 1998/03/03 22:17:52 rousskov Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -158,7 +158,6 @@ packerPrintf(va_alist)
 #endif
     assert(p);
     assert(p->real_handler && p->vprintf);
-    tmp_debug(here) ("printf: fmt: '%s'\n", fmt);
     p->vprintf(p->real_handler, fmt, args);
     va_end(args);
 }

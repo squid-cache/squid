@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.388 1998/03/03 00:31:14 rousskov Exp $
+ * $Id: store.cc,v 1.389 1998/03/03 22:17:56 rousskov Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -456,7 +456,6 @@ storeAppend(StoreEntry * e, const char *buf, int len)
 	debug(20, 5) ("storeAppend: appending %d bytes for '%s'\n",
 	    len,
 	    storeKeyText(e->key));
-	tmp_debug(here) ("bytes: '%.20s'\n", buf);	/* @?@ @?@ */
 	storeGetMemSpace(len);
 	stmemAppend(mem->data, buf, len);
 	mem->inmem_hi += len;
