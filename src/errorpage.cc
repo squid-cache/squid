@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.103 1997/11/20 17:46:42 wessels Exp $
+ * $Id: errorpage.cc,v 1.104 1997/11/23 06:51:19 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -178,6 +178,7 @@ errorStateFree(ErrorState * err)
     safe_free(err->url);
     safe_free(err->host);
     safe_free(err->dnsserver_msg);
+    safe_free(err->request_hdrs);
     if (EBIT_TEST(err->flags, ERR_FLAG_CBDATA))
 	cbdataFree(err);
     else
@@ -200,6 +201,7 @@ errorStateFree(ErrorState * err)
  * M - Request Method                           x
  * p - URL port #                               x
  * P - Protocol                                 x
+ * R - Full HTTP Request                        x
  * t - local time                               x
  * T - UTC                                      x
  * w - cachemgr email address                   x
@@ -267,6 +269,9 @@ errorConvert(char token, ErrorState * err)
     case 'P':
 	p = r ? ProtocolStr[r->protocol] : "[unkown protocol]";
 	break;
+    case 'R':
+	p = err->request_hdrs ? err->request_hdrs : "[no request]";
+	break;
     case 't':
 	xstrncpy(buf, mkhttpdlogtime(&squid_curtime), 128);
 	break;
@@ -274,7 +279,7 @@ errorConvert(char token, ErrorState * err)
 	snprintf(buf, CVT_BUF_SZ, "%s", mkrfc1123(squid_curtime));
 	break;
     case 'U':
-	p = r ? urlCanonicalClean(r) : err->url;
+	p = r ? urlCanonicalClean(r) : err->url ? err->url : "[no URL]";
 	break;
     case 'w':
 	if (Config.adminEmail) {
