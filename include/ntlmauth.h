@@ -1,5 +1,5 @@
 /*
- * $Id: ntlmauth.h,v 1.10 2003/01/23 00:36:47 robertc Exp $
+ * $Id: ntlmauth.h,v 1.11 2003/05/12 18:49:11 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -140,7 +140,6 @@ typedef struct _ntlmhdr {
 typedef struct _ntlm_negotiate {
     char signature[8];		/* "NTLMSSP" */
     int32_t type;		/* LSWAP(0x1) */
-    ntlmhdr hdr;		/* NTLM header */
     u_int32_t flags;		/* Request flags */
     strhdr domain;		/* Domain we wish to authenticate in */
     strhdr workstation;		/* Client workstation name */
