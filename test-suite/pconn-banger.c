@@ -407,6 +407,7 @@ main(argc, argv)
 	}
     }
     signal(SIGINT, sig_intr);
+    signal(SIGPIPE, SIG_IGN);
     main_loop();
     return 0;
 }
