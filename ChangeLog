@@ -24,4 +24,9 @@
 	  size. Note we're only logging the client side. It might be
 	  useful to also log the server side to get really accurate
 	  numbers for the traffic comming into and out of the cache.
-
+	- Changed access log format (non-common) to include request
+	  method and sub-second timestamps.
+	- removed special case for ECONNRESET (and warning message)
+	- Significant change to storage manager.  Now only add objects
+	  to the hash table if they are public.  This means some 
+	  StoreEntry's will be around with null keys.
