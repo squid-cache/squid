@@ -1,8 +1,6 @@
-/* $Id: wais.cc,v 1.10 1996/03/27 18:15:58 wessels Exp $ */
+/* $Id: wais.cc,v 1.11 1996/03/28 05:22:53 wessels Exp $ */
 
 #include "squid.h"
-
-#if USE_WAIS_RELAY
 
 #define  WAIS_DELETE_GAP  (64*1024)
 
@@ -275,14 +273,3 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	(PF) waisSendRequest, (caddr_t) data);
     return COMM_OK;
 }
-#else
-int waisStart(unusedfd, url, type, mime_hdr, entry)
-     int unusedfd;
-     char *url;
-     char *type;
-     char *mime_hdr;
-     StoreEntry *entry;
-{
-    return 1;
-}
-#endif
