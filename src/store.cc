@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.222 1997/04/28 04:23:30 wessels Exp $
+ * $Id: store.cc,v 1.223 1997/04/28 05:11:47 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2577,14 +2577,14 @@ int
 storeWriteCleanLogs(void)
 {
     StoreEntry *e = NULL;
-    int fd[ncache_dirs];
+    int *fd;
     char *line;
     int n = 0;
     time_t start, stop, r;
     struct stat sb;
-    char *cur[ncache_dirs];
-    char *new[ncache_dirs];
-    char *cln[ncache_dirs];
+    char **cur;
+    char **new;
+    char **cln;
     int dirn;
     if (store_rebuilding) {
 	debug(20, 1, "Not currently OK to rewrite swap log.\n");
@@ -2593,6 +2593,10 @@ storeWriteCleanLogs(void)
     }
     debug(20, 1, "storeWriteCleanLogs: Starting...\n");
     start = getCurrentTime();
+    fd = xcalloc(ncache_dirs, sizeof(int));
+    cur = xcalloc(ncache_dirs, sizeof(char *));
+    new = xcalloc(ncache_dirs, sizeof(char *));
+    cln = xcalloc(ncache_dirs, sizeof(char *));
     for (dirn = 0; dirn < ncache_dirs; dirn++) {
 	fd[dirn] = -1;
 	cur[dirn] = xstrdup(storeDirSwapLogFile(dirn, NULL));
@@ -2673,6 +2677,10 @@ storeWriteCleanLogs(void)
 	safe_free(new[dirn]);
 	safe_free(cln[dirn]);
     }
+    safe_free(cur);
+    safe_free(new);
+    safe_free(cln);
+    safe_free(fd);
     return n;
 }
 
