@@ -263,10 +263,6 @@ extern void AppendUdp(icpUdpData *);
 extern PF icpUdpReply;
 extern void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
 extern int icpCheckUdpHit(StoreEntry *, request_t * request);
-#if USE_ICP_HIT_OBJ
-extern int icpCheckUdpHitObj(StoreEntry * e, request_t * r, icp_common_t * h, int len);
-extern void *icpCreateHitObjMessage(icp_opcode, int, const char *, int, int, StoreEntry *);
-#endif
 extern void icpConnectionsOpen(void);
 extern void icpConnectionsClose(void);
 
