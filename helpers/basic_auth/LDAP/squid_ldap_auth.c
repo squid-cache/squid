@@ -23,6 +23,10 @@
  * or (at your option) any later version.
  *
  * Changes:
+ * 2001-05-02: Henrik Nordstrom <hno@squid-cache.org>
+ *             - Support newer OpenLDAP 2.x libraries using the
+ *	         revised Internet Draft API which unfortunately
+ *               is not backwards compatible with RFC1823..
  * 2001-04-15: Henrik Nordstrom <hno@squid-cache.org>
  *             - Added command line option for basedn
  *             - Added the ability to search for the user DN
@@ -56,6 +60,42 @@ static int noreferrals = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
 
 static int checkLDAP(LDAP * ld, char *userid, char *password);
+
+/* Yuck.. we need to glue to different versions of the API */
+
+#if defined(LDAP_API_VERSION) && LDAP_API_VERSION > 1823
+int squid_ldap_errno(LDAP *ld)
+{
+    int err = 0;
+    ldap_get_option(ld, LDAP_OPT_ERROR_NUMBER, &err);
+    return err;
+}
+void squid_ldap_set_aliasderef(LDAP *ld, int deref)
+{
+    ldap_set_option(ld, LDAP_OPT_DEREF, &deref);
+}
+void squid_ldap_set_referrals(LDAP *ld, int referrals)
+{
+    int *value = referrals ? LDAP_OPT_ON : LDAP_OPT_OFF;
+    ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
+}
+#else
+int squid_ldap_errno(LDAP *ld)
+{
+    return ld->ld_errno;
+}
+void squid_ldap_set_aliasderef(LDAP *ld, int deref)
+{
+    ld->ld_deref = deref;
+}
+void squid_ldap_set_referrals(LDAP *ld, int referrals)
+{
+    if (referrals)
+	ld->ld_options |= ~LDAP_OPT_REFERRALS;
+    else
+	ld->ld_options &= ~LDAP_OPT_REFERRALS;
+}
+#endif
 
 int
 main(int argc, char **argv)
@@ -179,12 +219,11 @@ recover:
 		    ldapServer, LDAP_PORT);
 		exit(1);
 	    }
-	    if (noreferrals)
-		ld->ld_options &= ~LDAP_OPT_REFERRALS;
-	    ld->ld_deref = aliasderef;
+	    squid_ldap_set_referrals(ld, !noreferrals);
+	    squid_ldap_set_aliasderef(ld, aliasderef);
 	}
 	if (checkLDAP(ld, user, passwd) != 0) {
-	    if (tryagain && ld->ld_errno != LDAP_INVALID_CREDENTIALS) {
+	    if (tryagain && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS) {
 		tryagain = 0;
 		ldap_unbind(ld);
 		ld = NULL;
@@ -194,7 +233,7 @@ recover:
 	} else {
 	    printf("OK\n");
 	}
-	if (!persistent || (ld->ld_errno != LDAP_SUCCESS && ld->ld_errno != LDAP_INVALID_CREDENTIALS)) {
+	if (!persistent || (squid_ldap_errno(ld) != LDAP_SUCCESS && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS)) {
 	    ldap_unbind(ld);
 	    ld = NULL;
 	}
