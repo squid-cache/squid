@@ -24,7 +24,7 @@ SQUID Web Proxy Cache        http://www.squid-cache.org/
 Squid is derived from the ``cached'' software from the ARPA-funded
 Harvest research project.  
 
-Please use our mailing lists for questions, feedback and bug fixes
+Please use our mailing lists for questions, feedback and bug fixes:
 
         squid-users@squid-cache.org	# general questions, pubilc forum
         squid-bugs@squid-cache.org	# bugs and fixes

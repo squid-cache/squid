@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.36 2004/12/20 14:52:30 robertc Exp $
+ * $Id: auth_digest.cc,v 1.37 2004/12/20 15:39:56 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -1411,9 +1411,6 @@ AuthDigestUserRequest::~AuthDigestUserRequest()
 
     if (nonce)
         authDigestNonceUnlink(nonce);
-
-    if (user())
-        user()->unlock();
 }
 
 AuthConfig *
