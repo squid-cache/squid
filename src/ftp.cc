@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.351 2003/08/04 22:14:42 robertc Exp $
+ * $Id: ftp.cc,v 1.352 2003/08/07 13:16:30 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -352,6 +352,14 @@ static void
 ftpStateFree(int fdnotused, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
+    ftpState->ctrl.fd = -1;
+
+    if (ftpState->data.fd > -1) {
+        int fd = ftpState->data.fd;
+        ftpState->data.fd = -1;
+        comm_close(fd);
+    }
+
     delete ftpState;
 }
 
@@ -411,11 +419,6 @@ FtpStateData::~FtpStateData()
     safe_free(ftpState->filepath);
 
     safe_free(ftpState->data.host);
-
-    if (ftpState->data.fd > -1) {
-        comm_close(ftpState->data.fd);
-        ftpState->data.fd = -1;
-    }
 }
 
 static void
@@ -2142,7 +2145,7 @@ ftpSendPasv(FtpStateData * ftpState)
 
     /*
      * ugly hack for ftp servers like ftp.netscape.com that sometimes
-     * dont acknowledge PORT commands.
+     * dont acknowledge PASV commands.
      */
     commSetTimeout(ftpState->data.fd, 15, ftpTimeout, ftpState);
 }
