@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.267 2002/06/25 21:16:47 hno Exp $
+# $Id: cf.data.pre,v 1.268 2002/06/26 21:11:39 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1160,6 +1160,10 @@ DOC_START
 	Use this if you want to specify a list of DNS name servers
 	(IP addresses) to use instead of those given in your
 	/etc/resolv.conf file.
+	On Windows platforms, if no value is specified here or in
+	the /etc/resolv.conf file, the list of DNS name servers are
+	taken from the Windows registry, both static and dynamic DHCP
+	configurations are supported.
 
 	Example: dns_nameservers 10.0.0.1 192.172.0.4
 DOC_END
