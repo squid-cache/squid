@@ -17,7 +17,7 @@
 #
 #  Makefile for the wb_group external_acl helper
 #
-#  $Id: Makefile.in,v 1.29 2003/05/05 22:56:59 hno Exp $
+#  $Id: Makefile.in,v 1.30 2003/05/17 00:13:05 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -209,7 +209,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
 libexec_PROGRAMS = wb_group
-wb_group_SOURCES = wb_check_group.c wb_common.c wbntlm.h
+wb_group_SOURCES = wb_check_group.c wb_common.c wbntlm.h wb_common.h
 EXTRA_DIST = readme.txt
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
     -I$(top_srcdir)/src -I@SAMBASOURCES@
