@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.44 1996/08/27 05:19:09 wessels Exp $
+ * $Id: ipcache.cc,v 1.45 1996/08/27 20:10:52 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -722,6 +722,16 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 			    line_cur = line_cur->next;
 			    k++;
 			}
+		    }
+		    /* DNS TTL - bne@CareNet.hu */
+		    /* next line is either a $ttl ttl\n or a $end\n */
+		    if (strstr(line_cur->line, "$ttl")) {
+			tmp_ptr = line_cur->line;
+			/* skip the first token */
+			token = strtok(tmp_ptr, w_space);
+			tmp_ptr = NULL;
+			token = strtok(tmp_ptr, w_space);
+			i->expires = squid_curtime + atoi(token);
 		    }
 		    ipcache_call_pending(i);
 		    debug(14, 10, "ipcache_parsebuffer: $name succeeded.\n");
