@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.319 1998/09/14 22:17:57 wessels Exp $
+ * $Id: http.cc,v 1.320 1998/09/15 20:36:15 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -149,8 +149,8 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 	remove = 1;
 	break;
 #if WORK_IN_PROGRESS
-	case HTTP_UNAUTHORIZED
-	    remove = 1;
+    case HTTP_UNAUTHORIZED:
+	remove = 1;
 	break;
 #endif
     default:
