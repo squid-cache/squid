@@ -8,6 +8,8 @@
 	  http://squid.nlanr.net/Squid/urn-support.html
 	- Fixed client-side persistent connections for objects with
 	  bad content lengths (Henrik Nordstrom).
+	- Fixed bad call to storeDirUpdateSwapSize() for objects which
+	  never reach SWAPOUT_DONE state.
 
 Changes to squid-1.2.beta8 (Dec 2, 1997):
 
