@@ -29,6 +29,7 @@ struct _diskdinfo_t {
 	char *buf;
 	char *inuse_map;
 	int id;
+	int nbufs;
     } shm;
     int magic1;
     int magic2;
@@ -111,11 +112,6 @@ extern STOBJREAD storeDiskdRead;
 extern STOBJWRITE storeDiskdWrite;
 extern STOBJUNLINK storeDiskdUnlink;
 
-/*
- * SHMBUFS is the number of shared memory buffers to allocate for
- * Each SwapDir.
- */
-#define SHMBUFS 96
 #define SHMBUF_BLKSZ SM_PAGE_SIZE
 
 extern diskd_stats_t diskd_stats;
