@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.120 1998/07/22 20:37:38 wessels Exp $
+ * $Id: net_db.cc,v 1.121 1998/08/05 06:05:02 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -396,7 +396,7 @@ netdbSaveState(void *foo)
     }
     fclose(fp);
     getCurrentTime();
-    debug(37, 0) ("NETDB state saved; %d entries, %d msec\n",
+    debug(37, 1) ("NETDB state saved; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
     eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600.0, 1);
 }
@@ -462,7 +462,7 @@ netdbReloadState(void)
     memFree(MEM_4K_BUF, buf);
     fclose(fp);
     getCurrentTime();
-    debug(37, 0) ("NETDB state reloaded; %d entries, %d msec\n",
+    debug(37, 1) ("NETDB state reloaded; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
 }
 

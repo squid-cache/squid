@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.374 1998/08/04 06:01:38 wessels Exp $
+ * $Id: client_side.cc,v 1.375 1998/08/05 06:04:59 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1321,7 +1321,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	fd, storeUrl(entry), (int) http->out.offset);
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
-	debug(0, 0) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
+	debug(33, 1) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
 	memFree4K(buf);
 	return;
     } else if (entry && entry->store_status == STORE_ABORTED) {
