@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.102 1999/12/30 17:36:45 wessels Exp $
+ * $Id: peer_select.cc,v 1.103 2000/01/03 19:32:33 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -359,11 +359,10 @@ peerGetSomeNeighbor(ps_state * ps)
 static void
 peerGetSomeNeighborReplies(ps_state * ps)
 {
-    StoreEntry *entry = ps->entry;
     request_t *request = ps->request;
     peer *p = NULL;
     hier_code code = HIER_NONE;
-    assert(entry->ping_status == PING_WAITING);
+    assert(ps->entry->ping_status == PING_WAITING);
     assert(ps->direct != DIRECT_YES);
     if (peerCheckNetdbDirect(ps)) {
 	code = CLOSEST_DIRECT;
