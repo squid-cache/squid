@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.11 1996/03/28 22:37:54 wessels Exp $ */
+/* $Id: comm.cc,v 1.12 1996/03/29 01:07:36 wessels Exp $ */
 
 #include "squid.h"
 
@@ -296,7 +296,7 @@ int comm_connect_addr(sock, address)
     /* set the lifetime for this client */
     if (status == COMM_OK) {
 	lft = comm_set_fd_lifetime(sock, getClientLifetime());
-        strcpy(conn->ipaddr, inet_ntoa(address->sin_addr));
+	strcpy(conn->ipaddr, inet_ntoa(address->sin_addr));
 	conn->port = ntohs(address->sin_port);
 	debug(0, 10, "comm_connect_addr: FD %d (lifetime %d): connected to %s:%d.\n",
 	    sock, lft, conn->ipaddr, conn->port);

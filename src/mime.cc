@@ -1,5 +1,5 @@
 
-/* $Id: mime.cc,v 1.4 1996/03/27 01:46:13 wessels Exp $ */
+/* $Id: mime.cc,v 1.5 1996/03/29 01:07:37 wessels Exp $ */
 
 #include "squid.h"
 #include "mime_table.h"
@@ -8,6 +8,9 @@ int mime_refresh_request(mime)
      char *mime;
 {
     if (strstr(mime, "no-cache"))
+	return 1;
+
+    if (strstr(mime, "If-Modified-Since"))
 	return 1;
 
     return 0;
