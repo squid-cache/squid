@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.386 2003/08/04 22:14:41 robertc Exp $
+ * $Id: comm.cc,v 1.387 2003/08/15 13:06:34 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -158,6 +158,11 @@ public:
     dlink_list CommCallbackList;
 
     CommRead read;
+
+    bool hasIncompleteWrite();
+
+    template<class P>
+    bool findCallback(P predicate);
 
     CommWrite write;
 
@@ -769,14 +774,31 @@ requireOpenAndActive(int const fd)
  *
  * Assumptions: the fd is open (ie, its not closing)
  */
+
+struct FindReadCallback
+{
+    bool operator () (CommCallbackData *cd)
+    {
+        return cd->getType() == COMM_CB_READ;
+    }
+};
+
+
 int
 comm_has_pending_read_callback(int fd)
 {
-    dlink_node *node;
-    CommCallbackData *cd;
-
     requireOpenAndActive(fd);
 
+    if (fdc_table[fd].findCallback(FindReadCallback()))
+        return 1;
+
+    return 0;
+}
+
+template <class P>
+bool
+fdc_t::findCallback(P predicate)
+{
     /*
      * XXX I don't like having to walk the list!
      * Instead, if this routine is called often enough, we should
@@ -784,19 +806,17 @@ comm_has_pending_read_callback(int fd)
      * check if the list head a HEAD..
      * - adrian
      */
-    node = fdc_table[fd].CommCallbackList.head;
+    dlink_node *node = CommCallbackList.head;
 
     while (node != NULL) {
-        cd = (CommCallbackData *)node->data;
-
-        if (cd->getType() == COMM_CB_READ)
-            return 1;
+        if (predicate((CommCallbackData *)node->data))
+            return true;
 
         node = node->next;
     }
 
     /* Not found */
-    return 0;
+    return false;
 }
 
 /*
@@ -880,6 +900,32 @@ comm_udp_send(int s, const void *buf, size_t len, int flags)
 /*
  * The new-style comm_write magic
  */
+
+struct FindWriteCallback
+{
+    bool operator () (CommCallbackData *cd)
+    {
+        return dynamic_cast<CommWriteCallbackData *>(cd) != NULL;
+    }
+};
+
+bool
+comm_has_incomplete_write(int fd)
+{
+    requireOpenAndActive(fd);
+
+    if (fdc_table[fd].hasIncompleteWrite())
+        return true;
+
+    return (fdc_table[fd].findCallback(FindWriteCallback()));
+}
+
+bool
+fdc_t::hasIncompleteWrite()
+{
+    return write.handler != NULL;
+}
+
 /*
  * Attempt a write
  *
@@ -935,6 +981,9 @@ comm_write(int fd, const char *buf, size_t size, IOWCB *handler, void *handler_d
     assert(fdc_table[fd].active == 1);
     assert(fdc_table[fd].write.handler == NULL);
     assert(!fd_table[fd].flags.closing);
+
+    /* Can't queue a write with no callback */
+    assert(handler);
 
     /* Queue a read */
     fdc_table[fd].write.buf = buf;
