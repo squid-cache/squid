@@ -583,7 +583,6 @@ extern void writePidFile(void);
 extern void setSocketShutdownLifetimes(int);
 extern void setMaxFD(void);
 extern time_t getCurrentTime(void);
-extern void normal_shutdown(void);
 extern int percent(int, int);
 extern double dpercent(double, double);
 extern void squid_signal(int sig, SIGHDLR *, int flags);
