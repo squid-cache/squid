@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.411 2002/09/01 15:16:33 hno Exp $
+ * $Id: cache_cf.cc,v 1.412 2002/09/07 14:55:24 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -75,7 +75,6 @@ static int parseTimeUnits(const char *unit);
 static void parseTimeLine(time_t * tptr, const char *units);
 static void parse_ushort(u_short * var);
 static void parse_string(char **);
-void parse_wordlist(wordlist **);
 static void default_all(void);
 static void defaults_if_none(void);
 static int parse_line(char *);
@@ -2465,3 +2464,54 @@ requirePathnameExists(const char *name, const char *path)
     if (stat(path, &sb) < 0)
 	fatalf("%s: %s", path, xstrerror());
 }
+
+char *
+strtokFile(void)
+{
+    char *t, *fn;
+    LOCAL_ARRAY(char, buf, 256);
+
+  strtok_again:
+    if (!aclFromFile) {
+	t = (strtok(NULL, w_space));
+	if (!t || *t == '#') {
+	    return NULL;
+	} else if (*t == '\"' || *t == '\'') {
+	    /* quote found, start reading from file */
+	    fn = ++t;
+	    while (*t && *t != '\"' && *t != '\'')
+		t++;
+	    *t = '\0';
+	    if ((aclFile = fopen(fn, "r")) == NULL) {
+		debug(28, 0) ("strtokFile: %s not found\n", fn);
+		return (NULL);
+	    }
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+	    setmode(fileno(aclFile), O_TEXT);
+#endif
+	    aclFromFile = 1;
+	} else {
+	    return t;
+	}
+    }
+    /* aclFromFile */
+    if (fgets(buf, 256, aclFile) == NULL) {
+	/* stop reading from file */
+	fclose(aclFile);
+	aclFromFile = 0;
+	goto strtok_again;
+    } else {
+	t = buf;
+	/* skip leading and trailing white space */
+	t += strspn(buf, w_space);
+	t[strcspn(t, w_space)] = '\0';
+	/* skip comments */
+	if (*t == '#')
+	    goto strtok_again;
+	/* skip blank lines */
+	if (!*t)
+	    goto strtok_again;
+	return t;
+    }
+}
+

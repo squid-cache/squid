@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.442 2002/07/20 12:30:04 hno Exp $
+ * $Id: protos.h,v 1.443 2002/09/07 14:55:24 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1159,6 +1159,9 @@ extern int isPowTen(int);
 extern void parseEtcHosts(void);
 extern int getMyPort(void);
 
+static void strwordquote(MemBuf * mb, const char *str);
+void strwordquote(MemBuf * mb, const char *str);
+
 #if USE_HTCP
 extern void htcpInit(void);
 extern void htcpQuery(StoreEntry * e, request_t * req, peer * p);
@@ -1334,5 +1337,6 @@ typedef void EAH(void *data, void *result);
 extern void externalAclLookup(aclCheck_t * ch, void *acl_data, EAH * handler, void *data);
 extern void externalAclInit(void);
 extern void externalAclShutdown(void);
+extern char *strtokFile(void);
 
 #endif /* SQUID_PROTOS_H */

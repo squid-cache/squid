@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.12 2002/09/07 14:39:52 hno Exp $
+ * $Id: external_acl.cc,v 1.13 2002/09/07 14:55:24 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -56,9 +56,6 @@ static char *makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data);
 static void external_acl_cache_delete(external_acl * def, external_acl_entry * entry);
 static int external_acl_entry_expired(external_acl * def, external_acl_entry * entry);
 static void external_acl_cache_touch(external_acl * def, external_acl_entry * entry);
-
-extern char *strtokFile(void);
-static void strwordquote(MemBuf * mb, const char *str);
 
 /*******************************************************************
  * external_acl cache entry
@@ -652,73 +649,6 @@ free_externalAclState(void *data)
     safe_free(state->key);
     cbdataReferenceDone(state->callback_data);
     cbdataReferenceDone(state->def);
-}
-
-/* FIXME: This should be moved to tools.c */
-static char *
-strwordtok(char *buf, char **t)
-{
-    unsigned char *word = NULL;
-    unsigned char *p = (unsigned char *) buf;
-    unsigned char *d;
-    unsigned char ch;
-    int quoted = 0;
-    if (!p)
-	p = (unsigned char *) *t;
-    if (!p)
-	goto error;
-    while (*p && isspace(*p))
-	p++;
-    if (!*p)
-	goto error;
-    word = d = p;
-    while ((ch = *p)) {
-	switch (ch) {
-	case '\\':
-	    p++;
-	    *d++ = ch = *p;
-	    if (ch)
-		p++;
-	    break;
-	case '"':
-	    quoted = !quoted;
-	    p++;
-	default:
-	    if (!quoted && isspace(*p)) {
-		p++;
-		goto done;
-	    }
-	    *d++ = *p++;
-	    break;
-	}
-    }
-  done:
-    *d++ = '\0';
-  error:
-    *t = (char *) p;
-    return (char *) word;
-}
-
-static void
-strwordquote(MemBuf * mb, const char *str)
-{
-    int quoted = 0;
-    if (strchr(str, ' ')) {
-	quoted = 1;
-	memBufAppend(mb, "\"", 1);
-    }
-    while (*str) {
-	int l = strcspn(str, "\"\\");
-	memBufAppend(mb, str, l);
-	str += l;
-	while (*str == '"' || *str == '\\') {
-	    memBufAppend(mb, "\\", 1);
-	    memBufAppend(mb, str, 1);
-	    str++;
-	}
-    }
-    if (quoted)
-	memBufAppend(mb, "\"", 1);
 }
 
 /*
