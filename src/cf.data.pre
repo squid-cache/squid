@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.283 2002/09/04 13:33:13 hno Exp $
+# $Id: cf.data.pre,v 1.284 2002/09/10 09:54:52 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2660,6 +2660,18 @@ DOC_START
 	the error template files (found in the "errors" directory).
 	Wherever you want the 'err_html_text' line to appear,
 	insert a %L tag in the error template file.
+DOC_END
+
+NAME: email_err_data
+COMMENT: on|off
+TYPE: onoff
+LOC: Config.onoff.emailErrData
+DEFAULT: on
+DOC_START
+	If enabled, information about the occurred error will be
+	included in the mailto links of the ERR pages (if %W is set)
+	so that the email body then contains the data.
+	Syntax is <A HREF="mailto:%w%W">%w</A>
 DOC_END
 
 

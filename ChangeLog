@@ -10,6 +10,11 @@ Changes to squid-2.6 ():
 	  (Robert Cohren)
 	- Nuked num32 types, and made type detection more robust by the
 	  use of typedefs rather than #defines.
+	- the mailto links on Squid's ERR pages now contain data about the
+	  occurred error by default, so that the email will contain this data in
+	  its body. This feature can be disabled via the email_err_data directive.
+	  (Clemens Löser)
+
 
 Changes to squid-2.5 ():
 
