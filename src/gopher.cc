@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.82 1997/06/02 05:39:44 wessels Exp $
+ * $Id: gopher.cc,v 1.83 1997/06/02 19:56:02 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -191,8 +191,8 @@ gopherStateFree(int fd, void *data)
     if (gopherState == NULL)
 	return;
     if (gopherState->entry) {
-	storeUnlockObject(gopherState->entry);
 	storeUnregisterAbort(gopherState->entry);
+	storeUnlockObject(gopherState->entry);
     }
     put_free_4k_page(gopherState->buf);
     xfree(gopherState);

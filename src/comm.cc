@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.157 1997/06/02 01:06:10 wessels Exp $
+ * $Id: comm.cc,v 1.158 1997/06/02 19:55:59 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -129,12 +129,23 @@ struct _cwstate {
     void (*free) (void *);
 };
 
+typedef struct {
+    char *host;
+    u_short port;
+    struct sockaddr_in S;
+    CNCB *callback;
+    void *data;
+    int tries;
+    struct in_addr in_addr;
+    int locks;
+} ConnectStateData;
+
 /* GLOBAL */
 FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
 static int commBind _PARAMS((int s, struct in_addr, u_short port));
-#ifndef HAVE_POLL
+#if !HAVE_POLL
 static int examine_select _PARAMS((fd_set *, fd_set *));
 #endif
 static void checkTimeouts _PARAMS((void));
@@ -150,11 +161,12 @@ static void CommWriteStateCallbackAndFree _PARAMS((int fd, int code));
 static void commSetTcpNoDelay _PARAMS((int));
 #endif
 static void commSetTcpRcvbuf _PARAMS((int, int));
-static void commConnectFree _PARAMS((int fd, void *data));
+static PF commConnectFree;
 static void commConnectHandle _PARAMS((int fd, void *data));
 static void commHandleWrite _PARAMS((int fd, void *data));
 static int fdIsHttpOrIcp _PARAMS((int fd));
 static IPH commConnectDnsHandle;
+static void commConnectCallback _PARAMS((int fd, ConnectStateData *cs, int status));
 
 static struct timeval zero_tv;
 
@@ -321,6 +333,7 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
     cs->callback = callback;
     cs->data = data;
     comm_add_close_handler(fd, commConnectFree, cs);
+    cs->locks++;
     ipcache_nbgethostbyname(host, fd, commConnectDnsHandle, cs);
 }
 
@@ -328,9 +341,11 @@ static void
 commConnectDnsHandle(int fd, const ipcache_addrs * ia, void *data)
 {
     ConnectStateData *cs = data;
+    assert(cs->locks == 1);
+    cs->locks--;
     if (ia == NULL) {
 	debug(5, 3, "commConnectDnsHandle: Unknown host: %s\n", cs->host);
-	cs->callback(fd, COMM_ERR_DNS, cs->data);
+	commConnectCallback(fd, cs, COMM_ERR_DNS);
 	return;
     }
     cs->in_addr = ia->in_addrs[ia->cur];
@@ -338,18 +353,30 @@ commConnectDnsHandle(int fd, const ipcache_addrs * ia, void *data)
 }
 
 static void
+commConnectCallback(int fd, ConnectStateData *cs, int status)
+{
+        CNCB *callback = cs->callback;
+	void *data = cs->data;
+	comm_remove_close_handler(fd, commConnectFree, cs);
+	commConnectFree(fd, cs);
+	callback(fd, status, data);
+}
+
+static void
 commConnectFree(int fd, void *data)
 {
     ConnectStateData *cs = data;
+    if (cs->locks)
+	ipcacheUnregister(cs->host, cs);
     xfree(cs->host);
     xfree(cs);
 }
 
 static int
-commRetryConnect(int fd, ConnectStateData * connectState)
+commRetryConnect(int fd, ConnectStateData * cs)
 {
     int fd2;
-    if (++connectState->tries == 4)
+    if (++cs->tries == 4)
 	return 0;
     fd2 = socket(AF_INET, SOCK_STREAM, 0);
     if (fd2 < 0) {
@@ -369,41 +396,35 @@ commRetryConnect(int fd, ConnectStateData * connectState)
 static void
 commConnectHandle(int fd, void *data)
 {
-    ConnectStateData *connectState = data;
-    if (connectState->S.sin_addr.s_addr == 0) {
-	connectState->S.sin_family = AF_INET;
-	connectState->S.sin_addr = connectState->in_addr;
-	connectState->S.sin_port = htons(connectState->port);
+    ConnectStateData *cs = data;
+    if (cs->S.sin_addr.s_addr == 0) {
+	cs->S.sin_family = AF_INET;
+	cs->S.sin_addr = cs->in_addr;
+	cs->S.sin_port = htons(cs->port);
 	if (Config.Log.log_fqdn)
-	    fqdncache_gethostbyaddr(connectState->S.sin_addr, FQDN_LOOKUP_IF_MISS);
+	    fqdncache_gethostbyaddr(cs->S.sin_addr, FQDN_LOOKUP_IF_MISS);
     }
-    switch (comm_connect_addr(fd, &connectState->S)) {
+    switch (comm_connect_addr(fd, &cs->S)) {
     case COMM_INPROGRESS:
-	commSetSelect(fd,
-	    COMM_SELECT_WRITE,
-	    commConnectHandle,
-	    (void *) connectState,
-	    0);
+	commSetSelect(fd, COMM_SELECT_WRITE, commConnectHandle, cs, 0);
 	break;
     case COMM_OK:
 	if (vizSock > -1)
-	    vizHackSendPkt(&connectState->S, 2);
-	ipcacheCycleAddr(connectState->host);
-	connectState->callback(fd, COMM_OK, connectState->data);
+	    vizHackSendPkt(&cs->S, 2);
+	ipcacheCycleAddr(cs->host);
+	commConnectCallback(fd, cs, COMM_OK);
 	break;
     default:
-	if (commRetryConnect(fd, connectState)) {
-	    debug(5, 3, "Retrying connection to %s: %s\n",
-		connectState->host, xstrerror());
-	    connectState->S.sin_addr.s_addr = 0;
-	    ipcacheCycleAddr(connectState->host);
-	    ipcache_nbgethostbyname(connectState->host,
-		fd,
-		commConnectDnsHandle,
-		connectState);
+	if (commRetryConnect(fd, cs)) {
+	    debug(5, 1, "Retrying connection to %s: %s\n",
+		cs->host, xstrerror());
+	    cs->S.sin_addr.s_addr = 0;
+	    ipcacheCycleAddr(cs->host);
+	    cs->locks++;
+	    ipcache_nbgethostbyname(cs->host, fd, commConnectDnsHandle, cs);
 	} else {
-	    ipcacheRemoveBadAddr(connectState->host, connectState->S.sin_addr);
-	    connectState->callback(fd, COMM_ERR_CONNECT, connectState->data);
+	    ipcacheRemoveBadAddr(cs->host, cs->S.sin_addr);
+	    commConnectCallback(fd, cs, COMM_ERR_CONNECT);
 	}
 	break;
     }
@@ -632,7 +653,7 @@ comm_set_stall(int fd, int delta)
 }
 
 
-#ifdef HAVE_POLL
+#if HAVE_POLL
 
 /* poll() version by:
  * Stewart Forster <slf@connect.com.au>, and
@@ -779,7 +800,7 @@ fdIsHttpOrIcp(int fd)
     return 0;
 }
 
-#ifdef HAVE_POLL
+#if HAVE_POLL
 /* poll all sockets; call handlers for those that are ready. */
 int
 comm_poll(time_t sec)
@@ -1096,15 +1117,13 @@ comm_add_close_handler(int fd, PF * handler, void *data)
 void
 comm_remove_close_handler(int fd, PF * handler, void *data)
 {
-    struct close_handler *p, *last = NULL;
-
+    struct close_handler *p;
+    struct close_handler *last = NULL;
     /* Find handler in list */
     for (p = fd_table[fd].close_handler; p != NULL; last = p, p = p->next)
 	if (p->handler == handler && p->data == data)
 	    break;		/* This is our handler */
-    if (!p)
-	fatal_dump("comm_remove_close_handler: Handler not found!\n");
-
+    assert(p != NULL);
     /* Remove list entry */
     if (last)
 	last->next = p->next;
@@ -1239,7 +1258,7 @@ comm_init(void)
 }
 
 
-#ifndef HAVE_POLL
+#if !HAVE_POLL
 /*
  * examine_select - debug routine.
  *

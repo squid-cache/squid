@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.194 1997/06/01 04:23:09 wessels Exp $
+ * $Id: cache_cf.cc,v 1.195 1997/06/02 19:55:58 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1399,7 +1399,7 @@ configSetFactoryDefaults(void)
     Config.Ftp.icon_suffix = safe_xstrdup(DefaultFtpIconSuffix);
     Config.Ftp.list_width = DefaultFtpListWidth;
     Config.Ftp.list_wrap = DefaultFtpListWrap;
-    Config.Ftp.anon_user = DefaultFtpAnonUser;
+    Config.Ftp.anon_user = safe_xstrdup(DefaultFtpAnonUser);
 }
 
 static void
