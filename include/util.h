@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.65 2002/10/25 01:25:26 adrian Exp $
+ * $Id: util.h,v 1.66 2003/01/17 04:53:35 robertc Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -81,6 +81,24 @@ SQUIDCEXTERN void *xrealloc(void *, size_t);
 SQUIDCEXTERN void Tolower(char *);
 SQUIDCEXTERN void xfree(void *);
 SQUIDCEXTERN void xxfree(const void *);
+#ifdef __cplusplus
+inline void *operator new(size_t size)
+{
+    return xmalloc(size);
+}
+inline void operator delete (void *address)
+{
+    xfree (address);
+}
+inline void *operator new[] (size_t size)
+{
+    return xmalloc(size);
+}
+inline void operator delete[] (void *address)
+{
+    xfree (address);
+}
+#endif
 
 /* rfc1738.c */
 SQUIDCEXTERN char *rfc1738_escape(const char *);
