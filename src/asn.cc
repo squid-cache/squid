@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.64 2000/11/07 23:43:15 wessels Exp $
+ * $Id: asn.cc,v 1.65 2000/12/18 09:48:50 adrian Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -272,7 +272,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	    e,
 	    asState->seen,
 	    asState->offset,
-	    SM_PAGE_SIZE,
+	    4096,
 	    buf,
 	    asHandleReply,
 	    asState);
@@ -282,7 +282,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	    e,
 	    asState->seen,
 	    asState->offset,
-	    SM_PAGE_SIZE,
+	    4096,
 	    buf,
 	    asHandleReply,
 	    asState);
