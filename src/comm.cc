@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.353 2002/10/24 22:50:59 adrian Exp $
+ * $Id: comm.cc,v 1.354 2002/10/25 05:54:44 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1277,7 +1277,7 @@ _comm_close(int fd, char *file, int line)
 	return;
     assert(F->flags.open);
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
-    /* assert(fdc_table[fd].active == 1); */
+    assert(fdc_table[fd].active == 1); 
     assert(F->type != FD_FILE);
     PROF_start(comm_close);
     F->flags.closing = 1;
