@@ -71,6 +71,10 @@ SOFTWARE.
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
+#if HAVE_ASSERT_H
+#include <assert.h>
+#endif
+
 
 #include "asn1.h"
 #include "snmp_vars.h"
@@ -256,7 +260,9 @@ print_error(string, token, type)
     char *token;
     int type;
 {
-    if (type == ENDOFFILE && snmplib_debug)
+    assert(string != NULL);
+    assert(snmplib_debug != NULL);
+    if (type == ENDOFFILE)
 	snmplib_debug(0, "%s(EOF): On or around line %d\n", string, Line);
     else if (token)
 	snmplib_debug(0, "%s(%s): On or around line %d\n", string, token, Line);
