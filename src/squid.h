@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.138 1997/12/01 22:45:57 wessels Exp $
+ * $Id: squid.h,v 1.139 1997/12/02 03:33:08 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -264,6 +264,7 @@
 #define storeKeyHashCmp urlcmp
 #define storeKeyHashHash hash4
 #endif
+
 #ifdef SQUID_SNMP
 #include "snmp.h"
 #include "snmp_config.h"
