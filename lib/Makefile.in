@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.96 2004/09/04 14:43:22 hno Exp $
+#  $Id: Makefile.in,v 1.97 2004/10/21 00:10:37 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -349,10 +349,11 @@ DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = $(DEPDIR)/drand48.Po $(DEPDIR)/inet_ntoa.Po \
-@AMDEP_TRUE@	$(DEPDIR)/strerror.Po $(DEPDIR)/tempnam.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/GNUregex.Po ./$(DEPDIR)/MemPool.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/Profiler.Po ./$(DEPDIR)/Splay.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/base64.Po ./$(DEPDIR)/dlmalloc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/initgroups.Po $(DEPDIR)/strerror.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tempnam.Po ./$(DEPDIR)/GNUregex.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/MemPool.Po ./$(DEPDIR)/Profiler.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/Splay.Po ./$(DEPDIR)/base64.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dlmalloc.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/getfullhostname.Po ./$(DEPDIR)/hash.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/heap.Po ./$(DEPDIR)/html_quote.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/iso3307.Po ./$(DEPDIR)/md5.Po \
@@ -389,8 +390,8 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	all-recursive install-data-recursive install-exec-recursive \
 	installdirs-recursive install-recursive uninstall-recursive \
 	check-recursive installcheck-recursive
-DIST_COMMON = Makefile.am Makefile.in drand48.c inet_ntoa.c strerror.c \
-	tempnam.c
+DIST_COMMON = Makefile.am Makefile.in drand48.c inet_ntoa.c \
+	initgroups.c strerror.c tempnam.c
 SOURCES = $(libdlmalloc_a_SOURCES) $(libmiscutil_a_SOURCES) $(EXTRA_libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) $(libregex_a_SOURCES) $(tests_testAll_SOURCES)
 
 all: all-recursive
@@ -443,6 +444,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/drand48.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/inet_ntoa.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/initgroups.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strerror.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tempnam.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GNUregex.Po@am__quote@
