@@ -1,5 +1,5 @@
 /*
- * $Id: url.cc,v 1.22 1996/07/09 03:41:46 wessels Exp $
+ * $Id: url.cc,v 1.23 1996/07/15 23:13:34 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -94,6 +94,7 @@ void urlInitialize()
     unsigned int i;
     char *good =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./-_$";
+    debug(23, 5, "urlInitialize: Initializing...\n");
     for (i = 0; i < 256; i++)
 	url_acceptable[i] = 0;
     for (; *good; good++)
