@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.78 1997/02/01 00:28:07 wessels Exp $
+ * $Id: acl.cc,v 1.79 1997/02/03 18:43:16 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -597,7 +597,7 @@ aclParseAclLine(void)
     switch (A->type) {
     case ACL_SRC_IP:
     case ACL_DST_IP:
-	aclParseIpList(&(A->data));
+	aclParseIpList(&A->data);
 	break;
     case ACL_SRC_DOMAIN:
     case ACL_DST_DOMAIN:
