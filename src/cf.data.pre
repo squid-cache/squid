@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.113 1998/09/23 15:44:19 wessels Exp $
+# $Id: cf.data.pre,v 1.114 1998/09/23 15:56:53 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1766,6 +1766,10 @@ DOC_START
 	URL to your admin address, or maybe just a link to your
 	organizations Web page.
 
+	To include this in your error messages, you must rewrite
+	the error template files (found in the "errors" directory).
+	Wherever you want the 'err_html_text' line to appear,
+	insert a %L tag in the error template file.
 err_html_text
 DOC_END
 
