@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.3 1998/03/08 21:02:08 rousskov Exp $
+ * $Id: HttpHdrRange.cc,v 1.4 1998/03/11 21:10:57 rousskov Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -89,11 +89,11 @@ httpHdrRangeSpecParseCreate(const char *field, int flen)
 	    return NULL;
     } else
     /* must have a '-' somewhere in _this_ field */
-    if (!((p = strchr(field, '-')) && (p-field < flen))) {
-	debug(64, 2) ("ignoring invalid range-spec near: '%s'\n", field);
+    if (!((p = strchr(field, '-')) || (p-field >= flen))) {
+	debug(64, 2) ("ignoring invalid (missing '-') range-spec near: '%s'\n", field);
 	return NULL;
     } else {
-	if (!httpHeaderParseSize(field+1, &spec.offset))
+	if (!httpHeaderParseSize(field, &spec.offset))
 	    return NULL;
 	p++;
 	/* do we have last-pos ? */
@@ -101,12 +101,12 @@ httpHdrRangeSpecParseCreate(const char *field, int flen)
 	    size_t last_pos;
 	    if (!httpHeaderParseSize(p, &last_pos))
 	        return NULL;
-	    spec.length = size_diff(last_pos, spec.offset);
+	    spec.length = size_diff(last_pos+1, spec.offset);
 	}
     }
     /* we managed to parse, check if the result makes sence */
     if (known_spec(spec.length) && !spec.length) {
-	debug(64, 2) ("ignoring invalid range-spec near: '%s'\n", field);
+	debug(64, 2) ("ignoring invalid (zero length) range-spec near: '%s'\n", field);
 	return NULL;
     }
     return httpHdrRangeSpecDup(&spec);
@@ -193,6 +193,11 @@ httpHdrRangeParseInit(HttpHdrRange *range, const char *str)
     int ilen;
     assert(range && str);
     RangeParsedCount++;
+    debug(64, 8) ("parsing range field: '%s'\n", str);
+    /* check range type */
+    if (strncasecmp(str, "bytes=", 6))
+	return 0;
+    str += 6;
     /* iterate through comma separated list */
     while (strListGetItem(str, ',', &item, &ilen, &pos)) {
 	HttpHdrRangeSpec *spec = httpHdrRangeSpecParseCreate(item, ilen);
@@ -203,6 +208,7 @@ httpHdrRangeParseInit(HttpHdrRange *range, const char *str)
 	if (spec)
 	    stackPush(&range->specs, spec);
     }
+    debug(68, 8) ("parsed range range count: %d\n", range->specs.count);
     return range->specs.count;
 }
 
@@ -250,7 +256,7 @@ httpHdrRangeJoinWith(HttpHdrRange * range, const HttpHdrRange * new_range)
     HttpHdrRangeSpec spec;
     assert(range && new_range);
     stackPrePush(&range->specs, new_range->specs.count);
-    while (httpHdrRangeGetSpec(range, &spec, &pos))
+    while (httpHdrRangeGetSpec(new_range, &spec, &pos))
 	stackPush(&range->specs, httpHdrRangeSpecDup(&spec));
 }
 
