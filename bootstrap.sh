@@ -58,17 +58,29 @@ mkdir -p cfgaux
 amver=`find_version automake ${amversions}`
 acver=`find_version autoconf ${acversions}`
 
-# Bootstrap the autotool subsystems
-bootstrap aclocal$amver
-#workaround for Automake 1.5
-if grep m4_regex aclocal.m4 >/dev/null; then
-    perl -i.bak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
-fi
-bootstrap autoheader$acver
-bootstrap automake$amver --foreign --add-missing
-bootstrap autoconf$acver
+for dir in \
+	"" \
+	lib/libTrie
+do
+    if (
+	echo "Bootstrapping $dir"
+	cd ./$dir
+	# Bootstrap the autotool subsystems
+	bootstrap aclocal$amver
+	#workaround for Automake 1.5
+	if grep m4_regex aclocal.m4 >/dev/null; then
+	    perl -i.bak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
+	fi
+	bootstrap autoheader$acver
+	bootstrap automake$amver --foreign --add-missing
+	bootstrap autoconf$acver ); then
+	    : # OK
+	else
+	    exit 1
+	fi
+done
 
 echo "Autotool bootstrapping complete."
-echo "bootstrapping sub projects."
-cd lib/libTrie && ./bootstrap.sh
+#echo "bootstrapping sub projects."
+#cd lib/libTrie && ./bootstrap.sh
 
