@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.71 1996/12/05 21:23:53 wessels Exp $
+ * $Id: client_side.cc,v 1.72 1996/12/13 21:38:33 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@ static void clientRedirectDone _PARAMS((void *data, char *result));
 static void icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
 static void clientLookupDstIPDone _PARAMS((int fd, const ipcache_addrs *, void *data));
 static void clientLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
+static int clientGetsOldEntry _PARAMS((StoreEntry *new, StoreEntry *old, request_t *request));
 
 
 static void
@@ -405,6 +406,32 @@ icpProcessExpired(int fd, void *data)
     protoDispatch(fd, url, icpState->entry, icpState->request);
 }
 
+static int
+clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * request)
+{
+    /* If the reply is anything but "Not Modified" then
+     * we must forward it to the client */
+    if (new_entry->mem_obj->reply->code != 304) {
+	debug(33, 5, "clientGetsOldEntry: NO, reply=%d\n", new_entry->mem_obj->reply->code);
+	return 0;
+    }
+    /* If the client did not send IMS in the request, then it
+     * must get the old object, not this "Not Modified" reply */
+    if (!BIT_TEST(request->flags, REQ_IMS)) {
+	debug(33, 5, "clientGetsOldEntry: YES, no client IMS\n");
+	return 1;
+    }
+    /* If the client IMS time is prior to the entry LASTMOD time we
+     * need to send the old object */
+    if (modifiedSince(old_entry, request)) {
+	debug(33, 5, "clientGetsOldEntry: YES, modified since %d\n", request->ims);
+	return 1;
+    }
+    debug(33, 5, "clientGetsOldEntry: NO, new one is fine\n");
+    return 0;
+}
+
+
 
 static void
 icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
@@ -435,7 +462,10 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    icpHandleIMSReply,
 	    (void *) icpState);
 	return;
+#if OLD
     } else if (mem->reply->code == 304 && !BIT_TEST(icpState->request->flags, REQ_IMS)) {
+#endif
+    } else if (clientGetsOldEntry(entry, icpState->old_entry, icpState->request)) {
 	/* We initiated the IMS request, the client is not expecting
 	 * 304, so put the good one back.  First, make sure the old entry
 	 * headers have been loaded from disk. */
@@ -483,4 +513,35 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     }
     icpState->old_entry = NULL;	/* done with old_entry */
     icpSendMoreData(fd, icpState);	/* give data to the client */
+}
+
+int
+modifiedSince(StoreEntry *entry, request_t *request)
+{
+    int object_length;
+    MemObject *mem = entry->mem_obj;
+    debug(33, 3, "modifiedSince: '%s'\n", entry->url);
+    if (entry->lastmod < 0)
+	return 1;
+    /* Find size of the object */
+    if (mem->reply->content_length)
+	object_length = mem->reply->content_length;
+    else
+	object_length = entry->object_len - mem->reply->hdr_sz;
+    if (entry->lastmod > request->ims) {
+	debug(33, 3, "--> YES: entry newer than client\n");
+	return 1;
+    } else if (entry->lastmod < request->ims) {
+	debug(33, 3, "-->  NO: entry older than client\n");
+	return 0;
+    } else if (request->imslen < 0) {
+	debug(33, 3, "-->  NO: same LMT, no client length\n");
+	return 0;
+    } else if (request->imslen == object_length) {
+	debug(33, 3, "-->  NO: same LMT, same length\n");
+	return 0;
+    } else {
+	debug(33, 3, "--> YES: same LMT, different length\n");
+	return 1;
+    }
 }
