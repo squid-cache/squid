@@ -1,6 +1,6 @@
 /* if you have configure you can use this */
 #if defined(HAVE_CONFIG_H)
-#include config.h
+#include "config.h"
 #endif
 
 /* varargs declarations: */
