@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.3 1998/08/17 16:44:03 wessels Exp $
+ * $Id: delay_pools.cc,v 1.4 1998/08/20 22:29:56 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -422,7 +422,7 @@ delayMostBytesWanted(const MemObject * mem, int max)
 	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
 	i = delayBytesWanted(sc->delay_id, i, max);
-        found = 1;
+	found = 1;
     }
     return found ? i : max;
 }

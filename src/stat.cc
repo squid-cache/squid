@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.278 1998/08/16 06:35:17 wessels Exp $
+ * $Id: stat.cc,v 1.279 1998/08/20 22:30:02 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -831,7 +831,7 @@ statAvgTick(void *notused)
 	/* we have an hours worth of readings.  store previous hour */
 	StatCounters *t = &CountHourHist[0];
 	StatCounters *p = &CountHourHist[1];
-	StatCounters *c = &CountHist[N_COUNT_HIST-1];
+	StatCounters *c = &CountHist[N_COUNT_HIST - 1];
 	statCountersClean(CountHourHist + N_COUNT_HOUR_HIST - 1);
 	xmemmove(p, t, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
 	statCountersCopy(t, c);

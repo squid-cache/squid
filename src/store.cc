@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.446 1998/08/19 06:05:55 wessels Exp $
+ * $Id: store.cc,v 1.447 1998/08/20 22:30:04 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -135,7 +135,7 @@ destroy_MemObject(StoreEntry * e)
     debug(20, 3) ("destroy_MemObject: destroying %p\n", mem);
     e->mem_obj = NULL;
     if (!shutting_down)
-        assert(mem->swapout.fd == -1);
+	assert(mem->swapout.fd == -1);
     stmemFree(&mem->data_hdr);
     mem->inmem_hi = 0;
     /* XXX account log_url */
@@ -483,10 +483,10 @@ storeComplete(StoreEntry * e)
 }
 
 void
-storePPNR(StoreEntry *e)
+storePPNR(StoreEntry * e)
 {
-	assert(EBIT_TEST(e->flag, ENTRY_FWD_HDR_WAIT));
-	EBIT_CLR(e->flag, ENTRY_FWD_HDR_WAIT);
+    assert(EBIT_TEST(e->flag, ENTRY_FWD_HDR_WAIT));
+    EBIT_CLR(e->flag, ENTRY_FWD_HDR_WAIT);
 #endif /* PPNR_WIP */
 }
 

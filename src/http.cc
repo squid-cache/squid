@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.310 1998/08/20 22:21:02 wessels Exp $
+ * $Id: http.cc,v 1.311 1998/08/20 22:29:59 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -479,7 +479,7 @@ httpReadReply(int fd, void *data)
 	    httpProcessReplyHeader(httpState, buf, len);
 #ifdef PPNR_WIP
 	    if (httpState->reply_hdr_state == 2)
-	        storePPNR(entry);
+		storePPNR(entry);
 	}
 #endif /* PPNR_WIP */
 	storeAppend(entry, buf, len);
