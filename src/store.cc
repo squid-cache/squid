@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.133 1996/10/18 20:36:26 wessels Exp $
+ * $Id: store.cc,v 1.134 1996/10/24 05:12:43 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -561,10 +561,10 @@ storeLockObject(StoreEntry * e, SIH handler, void *data)
 void
 storeReleaseRequest(StoreEntry * e)
 {
-    if (e->flag & RELEASE_REQUEST)
+    if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	return;
     if (!storeEntryLocked(e)) {
-	debug_trap("Somebody called storeReleaseRequest on an unlocked entry");
+	debug_trap("Someone called storeReleaseRequest on an unlocked entry");
 	return;
     }
     debug(20, 3, "storeReleaseRequest: FOR '%s'\n", e->key ? e->key : e->url);
@@ -586,9 +586,9 @@ storeUnlockObject(StoreEntry * e)
 	debug_trap("storeUnlockObject: Someone unlocked STORE_PENDING object");
 	e->store_status = STORE_ABORTED;
     }
-    if (e->flag & RELEASE_REQUEST) {
+    if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
 	storeRelease(e);
-    } else if (e->flag & ABORT_MSG_PENDING) {
+    } else if (BIT_TEST(e->flag, ABORT_MSG_PENDING)) {
 	/* This is where the negative cache gets storeAppended */
 	/* Briefly lock to replace content with abort message */
 	e->lock_count++;
@@ -1011,7 +1011,7 @@ void
 storeStartDeleteBehind(StoreEntry * e)
 {
     debug(20, 2, "storeStartDeleteBehind: Object: %s\n", e->key);
-    if (e->flag & DELETE_BEHIND)
+    if (BIT_TEST(e->flag, DELETE_BEHIND))
 	return;
     debug(20, 2, "storeStartDeleteBehind:is now in delete behind mode.\n");
     /* change its key, so it can't be found by another client */
@@ -1044,7 +1044,7 @@ storeAppend(StoreEntry * e, char *data, int len)
 	(void) e->mem_obj->data->mem_append(e->mem_obj->data, data, len);
 	e->mem_obj->e_current_len += len;
     }
-    if (e->store_status != STORE_ABORTED && !(e->flag & DELAY_SENDING))
+    if (e->store_status != STORE_ABORTED && !BIT_TEST(e->flag, DELAY_SENDING))
 	InvokeHandlers(e);
 }
 
@@ -1182,7 +1182,7 @@ storeSwapInHandle(int fd_notused, char *buf, int len, int flag, StoreEntry * e, 
 	    mem->swapin_complete_data = NULL;
 	    handler(0, data);
 	}
-	if (e->flag & RELEASE_REQUEST)
+	if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	    storeRelease(e);
 	else {
 	    requestUnlink(mem->request);
@@ -1316,7 +1316,7 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 	    e->object_len,
 	    FALSE);
 	/* check if it's request to be released. */
-	if (e->flag & RELEASE_REQUEST)
+	if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	    storeRelease(e);
 	else if (storeShouldPurgeMem(e))
 	    storePurgeMem(e);
@@ -1665,7 +1665,6 @@ storeGetSwapSize(void)
 static int
 storeCheckSwapable(StoreEntry * e)
 {
-
     if (squid_curtime - e->expires > Config.expireAge) {
 	debug(20, 2, "storeCheckSwapable: NO: expires now\n");
     } else if (e->method != METHOD_GET) {
@@ -1702,7 +1701,7 @@ storeComplete(StoreEntry * e)
     storeSetMemStatus(e, IN_MEMORY);
     e->swap_status = NO_SWAP;
     safe_free(e->mem_obj->mime_hdr);
-    if (e->flag & RELEASE_REQUEST)
+    if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	storeRelease(e);
     else if (storeCheckSwapable(e))
 	storeSwapOutStart(e);
@@ -1749,11 +1748,6 @@ storeAbort(StoreEntry * e, char *msg)
     HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
 	mem->request ? mem->request->protocol : PROTO_NONE,
 	mem->e_current_len);
-    mk_mime_hdr(mime_hdr,
-	"text/html",
-	strlen(msg),
-	squid_curtime,
-	squid_curtime + Config.negativeTtl);
     if (msg) {
 	abort_msg = get_free_8k_page();
 	strcpy(abort_msg, "HTTP/1.0 400 Cache Detected Error\r\n");
@@ -1763,7 +1757,7 @@ storeAbort(StoreEntry * e, char *msg)
 	    (time_t) Config.negativeTtl,
 	    squid_curtime);
 	strcat(abort_msg, mime_hdr);
-	strcat(abort_msg, "\r\n\r\n");
+	strcat(abort_msg, "\r\n");
 	strncat(abort_msg, msg, 8191 - strlen(abort_msg));
 	storeAppend(e, abort_msg, strlen(abort_msg));
 	safe_free(mem->e_abort_msg);
@@ -2373,7 +2367,7 @@ storeClientCopy(StoreEntry * e, int stateoffset, int maxSize, char *buf, int *si
 	(void) mem->data->mem_copy(mem->data, stateoffset, buf, *size);
 
     /* see if we can get rid of some data if we are in "delete behind" mode . */
-    if (e->flag & DELETE_BEHIND) {
+    if (BIT_TEST(e->flag, DELETE_BEHIND)) {
 	/* call the handler to delete behind the lowest offset */
 	storeDeleteBehind(e);
     }
@@ -2515,26 +2509,22 @@ storeCreateSwapSubDirs(void)
 void
 storeInit(void)
 {
-    int dir_created;
+    int dir_created = 0;
     wordlist *w = NULL;
     char *fname = NULL;
-
+    file_map_create(MAX_SWAP_FILE);
+    storeCreateHashTable(urlcmp);
     if (strcmp((fname = Config.Log.store), "none") == 0)
 	storelog_fd = -1;
     else
 	storelog_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
     if (storelog_fd < 0)
 	debug(20, 1, "Store logging disabled\n");
-
     for (w = Config.cache_dirs; w; w = w->next)
 	storeAddSwapDisk(w->key);
     storeSanityCheck();
-    file_map_create(MAX_SWAP_FILE);
     dir_created = storeVerifySwapDirs(opt_zap_disk_store);
-    storeCreateHashTable(urlcmp);
-
     sprintf(swaplog_file, "%s/log", swappath(0));
-
     swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT);
     debug(20, 3, "swaplog_fd %d is now '%s'\n", swaplog_fd, swaplog_file);
     if (swaplog_fd < 0) {
@@ -2542,12 +2532,10 @@ storeInit(void)
 	fatal(tmp_error_buf);
     }
     swaplog_lock = file_write_lock(swaplog_fd);
-
     if (!opt_zap_disk_store)
 	storeStartRebuildFromDisk();
     else
 	store_rebuilding = STORE_NOT_REBUILDING;
-
     if (dir_created || opt_zap_disk_store)
 	storeCreateSwapSubDirs();
 }
