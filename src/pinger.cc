@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.38 1998/11/13 20:50:54 wessels Exp $
+ * $Id: pinger.cc,v 1.39 1998/11/21 16:54:28 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -76,8 +76,8 @@
 #define MAX_PKT_SZ 8192
 #define MAX_PAYLOAD (MAX_PKT_SZ - sizeof(struct icmphdr) - sizeof (char) - sizeof(struct timeval) - 1)
 #else
-#define MAX_PAYLOAD (sizeof(struct icmphdr) + sizeof (char) + sizeof(struct timeval) + 1)
-#define MAX_PKT_SZ MAX_PAYLOAD
+#define MAX_PAYLOAD SQUIDHOSTNAMELEN
+#define MAX_PKT_SZ (MAX_PAYLOAD + sizeof(struct timeval) + sizeof (char) + sizeof(struct icmphdr) + 1)
 #endif
 
 typedef struct {
@@ -293,7 +293,7 @@ pingerReadRequest(void)
     n = recv(0, (char *) &pecho, sizeof(pecho), 0);
     if (n < 0)
 	return n;
-    guess_size = n - (sizeof(pingerEchoData) - MAX_PKT_SZ);
+    guess_size = n - (sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ);
     if (guess_size != pecho.psize)
 	fprintf(stderr, "size mismatch, guess=%d psize=%d\n",
 	    guess_size, pecho.psize);

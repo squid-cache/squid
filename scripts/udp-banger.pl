@@ -10,12 +10,13 @@
 # URLs to request.  Run N of these at the same time to simulate a heavy
 # neighbor cache load.
 
-require 'getopts.pl';
-require 'fcntl.ph';
+use Fcntl;
+use Getopt::Std;
+use IO::Socket;
 
 $|=1;
 
-&Getopts('nr');
+getopts('qlnr');
 
 $host=(shift || 'localhost') ;
 $port=(shift || '3130') ;
@@ -49,24 +50,16 @@ $port=(shift || '3130') ;
     "ICP_END"
 );
 
-require 'sys/socket.ph';
-
-$sockaddr = 'S n a4 x8';
-($name, $aliases, $proto) = getprotobyname("udp");
-($fqdn, $aliases, $type, $len, $themaddr) = gethostbyname($host);
-$thissock = pack($sockaddr, &AF_INET, 0, "\0\0\0\0");
-$them = pack($sockaddr, &AF_INET, $port, $themaddr);
+$sock = IO::Socket::INET->new(PeerAddr => "$host:$port", Proto => 'udp');
+die "socket: $!\n" unless defined($sock);
 
 chop($me=`uname -a|cut -f2 -d' '`);
 $myip=(gethostbyname($me))[4];
 
-die "socket: $!\n" unless
-	socket (SOCK, &AF_INET, &SOCK_DGRAM, $proto);
-
-$flags = fcntl (SOCK, &F_GETFL, 0);
+$flags = fcntl ($sock, &F_GETFL, 0);
 $flags |= &O_NONBLOCK;
 die "fcntl O_NONBLOCK: $!\n" unless
-	fcntl (SOCK, &F_SETFL, $flags);
+	fcntl ($sock, &F_SETFL, $flags);
 
 $flags = 0;
 $flags |= 0x80000000;
@@ -77,6 +70,12 @@ $rn = 0;
 $start = time;
 while (<>) {
 	chop;
+
+	if ($opt_l) { # it's a Squid log file
+		@stuff = split(/\s+/, $_);
+		$_ = $stuff[6];
+	}
+
         $len = length($_) + 1;
         $request_template = sprintf 'CCnNNa4a4x4a%d', $len;
         $request = pack($request_template,
@@ -89,14 +88,15 @@ while (<>) {
                 $myip,          # a4 shostid
                 $_);            # a%d payload
 	die "send: $!\n" unless
-		send(SOCK, $request, 0, $them);
+		send($sock, $request, 0, $them);
 	$nsent++;
         $rin = '';
-        vec($rin,fileno(SOCK),1) = 1;
+        vec($rin,fileno($sock),1) = 1;
         ($nfound,$timeleft) = select($rout=$rin, undef, undef, 2.0);
 	next if ($nfound == 0);
 	while (1) {
-        	last unless ($theiraddr = recv(SOCK, $reply, 1024, 0));
+        	last unless ($theiraddr = recv($sock, $reply, 1024, 0));
+        	next if $opt_q; # quietly carry on
 		$nrecv++;
 		if ($opt_r) {
 			# only print send/receive rates

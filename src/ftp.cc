@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.254 1998/11/12 06:28:07 wessels Exp $
+ * $Id: ftp.cc,v 1.255 1998/11/21 16:54:27 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -905,7 +905,7 @@ ftpCheckUrlpath(FtpStateData * ftpState)
     if ((t = strRChr(request->urlpath, ';')) != NULL) {
 	if (strncasecmp(t + 1, "type=", 5) == 0) {
 	    ftpState->typecode = (char) toupper((int) *(t + 6));
-	    strSet(request->urlpath, t, '\0');
+	    strCutPtr(request->urlpath, t);
 	}
     }
     l = strLen(request->urlpath);
@@ -1201,7 +1201,7 @@ static void
 ftpHandleControlReply(FtpStateData * ftpState)
 {
     char *oldbuf;
-    wordlist **W;
+    wordlist **W, **T;
     int bytes_used = 0;
     wordlistDestroy(&ftpState->ctrl.message);
     ftpState->ctrl.message = ftpParseControlReply(ftpState->ctrl.buf,
@@ -1228,10 +1228,21 @@ ftpHandleControlReply(FtpStateData * ftpState)
 	xmemmove(ftpState->ctrl.buf, ftpState->ctrl.buf + bytes_used,
 	    ftpState->ctrl.offset);
     }
-    for (W = &ftpState->ctrl.message; *W && (*W)->next; W = &(*W)->next);
+    /* Extract reply message (last line) */
+    for (T = NULL, W = &ftpState->ctrl.message; *W && (*W)->next; W = &(*W)->next) {
+	/* Skip trailing blank lines */
+	if (strlen((*W)->key) == 0) {
+	    if (T == NULL)
+		T = W;
+	} else if ((*W)->next) {
+	    T = NULL;
+	}
+    }
     safe_free(ftpState->ctrl.last_reply);
     ftpState->ctrl.last_reply = (*W)->key;
     safe_free(*W);
+    if (T)
+	wordlistDestroy(T);
     debug(9, 8) ("ftpReadControlReply: state=%d, code=%d\n", ftpState->state,
 	ftpState->ctrl.replycode);
     FTP_SM_FUNCS[ftpState->state] (ftpState);
@@ -1247,9 +1258,14 @@ ftpReadWelcome(FtpStateData * ftpState)
     if (ftpState->flags.pasv_only)
 	ftpState->login_att++;
     if (code == 220) {
-	if (ftpState->ctrl.message)
+	if (ftpState->ctrl.message) {
 	    if (strstr(ftpState->ctrl.message->key, "NetWare"))
 		ftpState->flags.skip_whitespace = 1;
+	    if (ftpState->cwd_message)
+		wordlistDestroy(&ftpState->cwd_message);
+	    ftpState->cwd_message = ftpState->ctrl.message;
+	    ftpState->ctrl.message = NULL;
+	}
 	ftpSendUser(ftpState);
     } else if (code == 120) {
 	if (NULL != ftpState->ctrl.message)
@@ -1301,6 +1317,12 @@ ftpReadPass(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("ftpReadPass\n");
+    if (ftpState->ctrl.message) {
+	if (ftpState->cwd_message)
+	    wordlistDestroy(&ftpState->cwd_message);
+	ftpState->cwd_message = ftpState->ctrl.message;
+	ftpState->ctrl.message = NULL;
+    }
     if (code == 230) {
 	ftpSendType(ftpState);
     } else {
