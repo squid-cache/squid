@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.92 2002/04/10 22:12:31 hno Exp $
+ * $Id: cachemgr.cc,v 1.93 2002/04/11 17:04:02 hno Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -125,6 +125,8 @@
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+
+#include <assert.h>
 
 #include "util.h"
 #include "snprintf.h"
