@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.349 2000/08/10 21:44:44 wessels Exp $
+ * $Id: structs.h,v 1.350 2000/08/15 07:14:04 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -378,6 +378,7 @@ struct _SquidConfig {
 	size_t avgObjectSize;
 	size_t maxObjectSize;
 	size_t minObjectSize;
+	size_t maxInMemObjSize;
     } Store;
     struct {
 	int high;
