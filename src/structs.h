@@ -199,7 +199,7 @@ struct _SquidConfig {
     cache_peer *sslProxy;
     cache_peer *passProxy;
     struct {
-	size_t size;
+	int size;
 	int low;
 	int high;
     } ipcache;
