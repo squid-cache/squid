@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.21 1998/07/14 19:56:39 wessels Exp $
+ * $Id: refresh.cc,v 1.22 1998/07/14 21:25:51 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -45,12 +45,26 @@
 #define REFRESH_DEFAULT_PCT	0.20
 #define REFRESH_DEFAULT_MAX	(time_t)259200
 
+static const refresh_t * refreshLimits(const char *);
+static const refresh_t *refreshUncompiledPattern(const char *);
+
 static const refresh_t *
 refreshLimits(const char *url)
 {
     const refresh_t *R;
     for (R = Config.Refresh; R; R = R->next) {
 	if (!regexec(&(R->compiled_pattern), url, 0, 0, 0))
+	    return R;
+    }
+    return NULL;
+}
+
+static const refresh_t *
+refreshUncompiledPattern(const char *pat)
+{
+    const refresh_t *R;
+    for (R = Config.Refresh; R; R = R->next) {
+	if (0 == strcmp(R->pattern, pat))
 	    return R;
     }
     return NULL;
@@ -141,17 +155,21 @@ refreshWhen(const StoreEntry * entry)
     time_t max = REFRESH_DEFAULT_MAX;
     double pct = REFRESH_DEFAULT_PCT;
     const char *pattern = ".";
-    assert(entry->mem_obj);
-    assert(entry->mem_obj->url);
-    debug(22, 3) ("refreshWhen: key '%s'\n", storeKeyText(entry->key));
-    debug(22, 3) ("refreshWhen: url '%s'\n", entry->mem_obj->url);
-    if (EBIT_TEST(entry->flag, ENTRY_REVALIDATE)) {
-	debug(22, 3) ("refreshWhen: NOW: Required Authorization\n");
-	return refresh_time;
+    if (entry->mem_obj) {
+	assert(entry->mem_obj->url);
+	debug(22, 3) ("refreshWhen: key '%s'\n", storeKeyText(entry->key));
+	debug(22, 3) ("refreshWhen: url '%s'\n", entry->mem_obj->url);
+	if (EBIT_TEST(entry->flag, ENTRY_REVALIDATE)) {
+	    debug(22, 3) ("refreshWhen: NOW: Required Authorization\n");
+	    return refresh_time;
+	}
+	debug(22, 3) ("refreshWhen: entry: exp: %d, tstamp: %d, lmt: %d\n",
+	    entry->expires, entry->timestamp, entry->lastmod);
+	R = refreshLimits(entry->mem_obj->url);
+    } else {
+	R = refreshUncompiledPattern(".");
     }
-    debug(22, 3) ("refreshWhen: entry: exp: %d, tstamp: %d, lmt: %d\n",
-	entry->expires, entry->timestamp, entry->lastmod);
-    if ((R = refreshLimits(entry->mem_obj->url))) {
+    if (R != NULL) {
 	min = R->min;
 	max = R->max;
 	pct = R->pct;
