@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.395 1998/03/19 07:13:33 wessels Exp $
+ * $Id: store.cc,v 1.396 1998/03/20 18:06:47 rousskov Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -750,19 +750,17 @@ static int
 storeEntryValidLength(const StoreEntry * e)
 {
     int diff;
-    http_reply *reply;
-    int clen;
+    const HttpReply *reply;
     assert(e->mem_obj != NULL);
     reply = e->mem_obj->reply;
-    clen = httpReplyContentLen(reply);
     debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", storeKeyText(e->key));
     debug(20, 5) ("storeEntryValidLength:     object_len = %d\n",
 	objectLen(e));
     debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n",
 	reply->hdr_sz);
     debug(20, 5) ("storeEntryValidLength: content_length = %d\n",
-	clen);
-    if (clen < 0) {
+	reply->content_length);
+    if (reply->content_length < 0) {
 	debug(20, 5) ("storeEntryValidLength: Unspecified content length: %s\n",
 	    storeKeyText(e->key));
 	return 1;
@@ -781,7 +779,7 @@ storeEntryValidLength(const StoreEntry * e)
 	return 1;
     if (reply->sline.status == HTTP_NO_CONTENT)
 	return 1;
-    diff = reply->hdr_sz + clen - objectLen(e);
+    diff = reply->hdr_sz + reply->content_length - objectLen(e);
     if (diff == 0)
 	return 1;
     debug(20, 3) ("storeEntryValidLength: %d bytes too %s; '%s'\n",
@@ -972,11 +970,11 @@ storeTimestampsSet(StoreEntry * entry)
 {
     time_t served_date = -1;
     HttpReply *reply = entry->mem_obj->reply;
-    served_date = httpHeaderGetTime(&reply->hdr, HDR_DATE);
+    served_date = reply->date;
     if (served_date < 0)
 	served_date = squid_curtime;
-    entry->expires = httpReplyExpires(reply);
-    entry->lastmod = httpHeaderGetTime(&reply->hdr, HDR_LAST_MODIFIED);
+    entry->expires = reply->expires;
+    entry->lastmod = reply->last_modified;
     if (entry->lastmod < 0)
 	entry->lastmod = served_date;
     entry->timestamp = served_date;

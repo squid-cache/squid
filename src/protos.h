@@ -258,12 +258,6 @@ extern void httpBodySet(HttpBody * body, const char *content, int size,
 /* pack */
 extern void httpBodyPackInto(const HttpBody * body, Packer * p);
 
-/* Http Extention Header Field */
-extern HttpHdrExtField *httpHdrExtFieldCreate(const char *name, const char *value);
-extern HttpHdrExtField *httpHdrExtFieldParseCreate(const char *field_start, const char *field_end);
-extern void httpHdrExtFieldDestroy(HttpHdrExtField * f);
-extern HttpHdrExtField *httpHdrExtFieldDup(HttpHdrExtField * f);
-
 /* Http Cache Control Header Field */
 extern void httpHdrCcInitModule();
 extern void httpHdrCcCleanModule();
@@ -297,33 +291,31 @@ extern void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p
 /* Http Header Tools */
 extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
 extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
-extern int httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end, int mask);
-extern int httpHeaderCalcMask(const int *enums, int count);
+extern int httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end);
+extern void httpHeaderMaskInit(HttpHeaderMask *mask);
+extern void httpHeaderCalcMask(HttpHeaderMask *mask, const int *enums, int count);
 extern int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
-extern const char *getStringPrefix(const char *str);
+extern const char *getStringPrefix(const char *str, const char *end);
 extern int httpHeaderParseInt(const char *start, int *val);
 extern int httpHeaderParseSize(const char *start, size_t * sz);
 
 /* Http Header */
 extern void httpHeaderInitModule();
 extern void httpHeaderCleanModule();
-/* create/init/clean/destroy */
-extern HttpHeader *httpHeaderCreate();
+/* init/clean */
 extern void httpHeaderInit(HttpHeader * hdr);
 extern void httpHeaderClean(HttpHeader * hdr);
-extern void httpHeaderDestroy(HttpHeader * hdr);
 /* clone */
-void httpHeaderCopy(HttpHeader * dest, const HttpHeader * src);
+extern void httpHeaderUpdate(HttpHeader *old, const HttpHeader *fresh);
 /* parse/pack */
 extern int httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end);
 extern void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
 /* field manipulation */
 extern int httpHeaderHas(const HttpHeader * hdr, http_hdr_type type);
-extern HttpHeaderEntry *httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id, HttpHeaderPos * pos);
-extern void httpHeaderSetInt(HttpHeader * hdr, http_hdr_type type, int number);
-extern void httpHeaderSetTime(HttpHeader * hdr, http_hdr_type type, time_t time);
-extern void httpHeaderSetStr(HttpHeader * hdr, http_hdr_type type, const char *str);
-extern void httpHeaderSetAuth(HttpHeader * hdr, const char *authScheme, const char *realm);
+extern void httpHeaderPutInt(HttpHeader * hdr, http_hdr_type type, int number);
+extern void httpHeaderPutTime(HttpHeader * hdr, http_hdr_type type, time_t time);
+extern void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str);
+extern void httpHeaderPutAuth(HttpHeader * hdr, const char *authScheme, const char *realm);
 extern void httpHeaderAddExt(HttpHeader * hdr, const char *name, const char *value);
 extern int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
 extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
@@ -331,8 +323,9 @@ extern HttpHdrCc *httpHeaderGetCc(const HttpHeader * hdr);
 extern HttpHdrRange *httpHeaderGetRange(const HttpHeader * hdr);
 extern HttpHdrContRange *httpHeaderGetContRange(const HttpHeader * hdr);
 extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
+extern int httpHeaderDelByName(HttpHeader * hdr, const char *name);
+extern HttpHeaderEntry *httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id);
 extern void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
-int httpHeaderDelFields(HttpHeader * hdr, const char *name);
 /* store report about current header usage and other stats */
 extern void httpHeaderStoreReport(StoreEntry * e);
 
@@ -557,7 +550,8 @@ void statHistLogInit(StatHist * H, int capacity, double min, double max);
 void statHistEnumInit(StatHist * H, int last_enum);
 
 /* MemMeter */
-#define memMeterCheckHWater(m) { if ((m).hwater < (m).level) (m).hwater = (m).level; }
+extern void memMeterSyncHWater(MemMeter *m);
+#define memMeterCheckHWater(m) { if ((m).hwater_level < (m).level) memMeterSyncHWater(&(m)); }
 #define memMeterInc(m) { (m).level++; memMeterCheckHWater(m); }
 #define memMeterDec(m) { (m).level--; }
 #define memMeterAdd(m, sz) { (m).level += (sz); memMeterCheckHWater(m); }
@@ -590,6 +584,8 @@ extern size_t memPoolInUseSize(const MemPool * pool);
 extern int memPoolUsedCount(const MemPool * pool);
 extern void memPoolDescribe(const MemPool * pool);
 extern void memPoolReport(const MemPool * pool, StoreEntry * e);
+
+/* Mem */
 extern void memReport(StoreEntry * e);
 extern size_t memTotalAllocated(void);
 

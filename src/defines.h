@@ -134,9 +134,16 @@
 #define SM_PAGE_SIZE 4096
 #define DISK_PAGE_SIZE  8192
 
-#define EBIT_SET(flag, bit) 	((void)((flag) |= ((1<<bit))))
-#define EBIT_CLR(flag, bit) 	((void)((flag) &= ~((1<<bit))))
-#define EBIT_TEST(flag, bit) 	((flag) & ((1<<bit)))
+#define EBIT_SET(flag, bit) 	((void)((flag) |= ((1<<(bit)))))
+#define EBIT_CLR(flag, bit) 	((void)((flag) &= ~((1<<(bit)))))
+#define EBIT_TEST(flag, bit) 	((flag) & ((1<<(bit))))
+
+/* bit opearations on a char[] mask of unlimited length */
+#define CBIT_BIT(bit)           (1<<((bit)%8))
+#define CBIT_BIN(mask, bit)     (mask)[(bit)>>3]
+#define CBIT_SET(mask, bit) 	((void)(CBIT_BIN(mask, bit) |= CBIT_BIT(bit)))
+#define CBIT_CLR(mask, bit) 	((void)(CBIT_BIN(mask, bit) &= ~CBIT_BIT(bit)))
+#define CBIT_TEST(mask, bit) 	(CBIT_BIN(mask, bit) & CBIT_BIT(bit))
 
 #define MAX_FILES_PER_DIR (1<<20)
 

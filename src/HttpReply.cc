@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.12 1998/03/11 22:18:46 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.13 1998/03/20 18:06:39 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -29,9 +29,6 @@
  *  
  */
 
-/* tmp hack, delete it @?@ */
-#define Const
-
 #include "squid.h"
 
 
@@ -39,6 +36,8 @@
 
 /* local routines */
 static void httpReplyDoDestroy(HttpReply * rep);
+static void httpReplyHdrCacheInit(HttpReply * rep);
+static void httpReplyHdrCacheClean(HttpReply * rep);
 static int httpReplyParseStep(HttpReply * rep, const char *parse_start, int atEnd);
 static int httpReplyParseError(HttpReply * rep);
 static int httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end);
@@ -48,7 +47,7 @@ static int httpReplyIsolateHeaders(const char **parse_start, const char **blk_st
 HttpReply *
 httpReplyCreate()
 {
-    HttpReply *rep = memAllocate(MEM_HTTPREPLY);
+    HttpReply *rep = memAllocate(MEM_HTTP_REPLY);
     debug(58, 7) ("creating rep: %p\n", rep);
     httpReplyInit(rep);
     return rep;
@@ -61,7 +60,8 @@ httpReplyInit(HttpReply * rep)
     rep->hdr_sz = 0;
     rep->pstate = psReadyToParseStartLine;
     httpBodyInit(&rep->body);
-    httpHeaderInit(&rep->hdr);
+    httpHeaderInit(&rep->header);
+    httpReplyHdrCacheInit(rep);
     httpStatusLineInit(&rep->sline);
 }
 
@@ -70,7 +70,8 @@ httpReplyClean(HttpReply * rep)
 {
     assert(rep);
     httpBodyClean(&rep->body);
-    httpHeaderClean(&rep->hdr);
+    httpReplyHdrCacheClean(rep);
+    httpHeaderClean(&rep->header);
     httpStatusLineClean(&rep->sline);
 }
 
@@ -126,7 +127,7 @@ httpReplyPackInto(const HttpReply * rep, Packer * p)
 {
     assert(rep);
     httpStatusLinePackInto(&rep->sline, p);
-    httpHeaderPackInto(&rep->hdr, p);
+    httpHeaderPackInto(&rep->header, p);
     packerAppend(p, "\r\n", 2);
     httpBodyPackInto(&rep->body, p);
 }
@@ -184,7 +185,7 @@ httpPacked304Reply(const HttpReply * rep)
     packerToMemInit(&p, &mb);
     memBufPrintf(&mb, "%s", "HTTP/1.0 304 Not Modified\r\n");
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
-	if ((e = httpHeaderFindEntry(&rep->hdr, ImsEntries[t], NULL)))
+	if ((e = httpHeaderFindEntry(&rep->header, ImsEntries[t])))
 	    httpHeaderEntryPackInto(e, &p);
     memBufAppend(&mb, "\r\n", 2);
     packerClean(&p);
@@ -198,42 +199,31 @@ httpReplySetHeaders(HttpReply * reply, double ver, http_status status, const cha
     HttpHeader *hdr;
     assert(reply);
     httpStatusLineSet(&reply->sline, ver, status, reason);
-    hdr = &reply->hdr;
-    httpHeaderAddExt(hdr, "Server", full_appname_string);
-    httpHeaderAddExt(hdr, "MIME-Version", "1.0");	/* do we need this? @?@ */
-    httpHeaderSetTime(hdr, HDR_DATE, squid_curtime);
-    if (ctype)
-	httpHeaderSetStr(hdr, HDR_CONTENT_TYPE, ctype);
+    hdr = &reply->header;
+    httpHeaderPutStr(hdr, HDR_SERVER, full_appname_string);
+    httpHeaderPutStr(hdr, HDR_MIME_VERSION, "1.0");
+    httpHeaderPutTime(hdr, HDR_DATE, squid_curtime);
+    if (ctype) {
+	httpHeaderPutStr(hdr, HDR_CONTENT_TYPE, ctype);
+	stringInit(&reply->content_type, ctype);
+    } else
+	reply->content_type = StringNull;
     if (clen >= 0)
-	httpHeaderSetInt(hdr, HDR_CONTENT_LENGTH, clen);
+	httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, clen);
     if (expires >= 0)
-	httpHeaderSetTime(hdr, HDR_EXPIRES, expires);
+	httpHeaderPutTime(hdr, HDR_EXPIRES, expires);
     if (lmt > 0)		/* this used to be lmt != 0 @?@ */
-	httpHeaderSetTime(hdr, HDR_LAST_MODIFIED, lmt);
+	httpHeaderPutTime(hdr, HDR_LAST_MODIFIED, lmt);
+    reply->date = squid_curtime;
+    reply->content_length = clen;
+    reply->expires = expires;
+    reply->last_modified = lmt;
 }
-
-/*
- * header manipulation 
- *
- * never go to header directly if you can use these:
- *
- * our interpretation of headers often changes and you may get into trouble
- *    if you, for example, assume that HDR_EXPIRES contains expire info
- *
- * if you think about it, in most cases, you are not looking for the information
- *    in the header, but rather for current state of the reply, which may or may 
- *    not depend on headers. 
- *
- * For example, the _real_ question is
- *        "when does this object expire?" 
- *     not 
- *        "what is the value of the 'Expires:' header?"
- */
 
 void
 httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
 {
-#if 0 /* this is what we want: */
+#if OLD_CODE
     rep->cache_control = freshRep->cache_control;
     rep->misc_headers = freshRep->misc_headers;
     if (freshRep->date > -1)
@@ -243,68 +233,13 @@ httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
     if (freshRep->expires > -1)
 	rep->expires = freshRep->expires;
 #endif
-    time_t date;
-    time_t expires;
-    time_t lmt;
     assert(rep && freshRep);
-    /* save precious info */
-    date = httpHeaderGetTime(&rep->hdr, HDR_DATE);
-    expires = httpReplyExpires(rep);
-    lmt = httpHeaderGetTime(&rep->hdr, HDR_LAST_MODIFIED);
-    /* clean old headers */
-    httpHeaderClean(&rep->hdr);
-    httpHeaderInit(&rep->hdr);
-    /* copy */
-    httpHeaderCopy(&rep->hdr, &freshRep->hdr);
-    /* restore missing info if needed */
-    if (!httpHeaderHas(&rep->hdr, HDR_DATE))
-	httpHeaderSetTime(&rep->hdr, HDR_DATE, date);
-    if (!httpHeaderHas(&rep->hdr, HDR_EXPIRES))
-	httpHeaderSetTime(&rep->hdr, HDR_EXPIRES, expires);
-    if (!httpHeaderHas(&rep->hdr, HDR_LAST_MODIFIED))
-	httpHeaderSetTime(&rep->hdr, HDR_LAST_MODIFIED, lmt);
-}
-
-int
-httpReplyContentLen(const HttpReply * rep)
-{
-    assert(rep);
-    return httpHeaderGetInt(&rep->hdr, HDR_CONTENT_LENGTH);
-}
-
-/* should we return "" or NULL if no content-type? Return NULL for now @?@ */
-const char *
-httpReplyContentType(const HttpReply * rep)
-{
-    assert(rep);
-    return httpHeaderGetStr(&rep->hdr, HDR_CONTENT_TYPE);
-}
-
-time_t
-httpReplyExpires(const HttpReply * rep)
-{
-    HttpHdrCc *cc;
-    time_t exp = -1;
-    assert(rep);
-    /* The max-age directive takes priority over Expires, check it first */
-    cc = httpHeaderGetCc(&rep->hdr);
-    if (cc)
-	exp = cc->max_age;
-    if (exp < 0)
-	exp = httpHeaderGetTime(&rep->hdr, HDR_EXPIRES);
-    return exp;
-}
-
-int
-httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type)
-{
-    HttpHdrCc *cc;
-    assert(rep);
-    assert(type >= 0 && type < CC_ENUM_END);
-
-    cc = httpHeaderGetCc(&rep->hdr);
-    return cc &&		/* scc header is present */
-	EBIT_TEST(cc->mask, type);
+    /* clean cache */
+    httpReplyHdrCacheClean(rep);
+    /* update raw headers */
+    httpHeaderUpdate(&rep->header, &freshRep->header);
+    /* init cache */
+    httpReplyHdrCacheInit(rep);
 }
 
 
@@ -314,7 +249,50 @@ httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type)
 static void
 httpReplyDoDestroy(HttpReply * rep)
 {
-    memFree(MEM_HTTPREPLY, rep);
+    memFree(MEM_HTTP_REPLY, rep);
+}
+
+/* sync this routine when you update HttpReply struct */
+static void
+httpReplyHdrCacheInit(HttpReply * rep)
+{
+    const HttpHeader *hdr = &rep->header;
+    const char *str;
+    rep->content_length = httpHeaderGetInt(hdr, HDR_CONTENT_LENGTH);
+    rep->date = httpHeaderGetTime(hdr, HDR_DATE);
+    rep->last_modified = httpHeaderGetTime(hdr, HDR_LAST_MODIFIED);
+    rep->expires = httpHeaderGetTime(hdr, HDR_EXPIRES);
+    str = httpHeaderGetStr(hdr, HDR_CONTENT_TYPE);
+    if (str)
+	stringLimitInit(&rep->content_type, str, strcspn(str, ";\t "));
+    else
+	rep->content_type = StringNull;
+    rep->cache_control = httpHeaderGetCc(hdr);
+    rep->content_range = httpHeaderGetContRange(hdr);
+    str = httpHeaderGetStr(hdr, HDR_PROXY_CONNECTION);
+    rep->pconn_keep_alive = str && strcasecmp(str, "Keep-Alive");
+    /* final adjustments */
+    /* The max-age directive takes priority over Expires, check it first */
+    if (rep->cache_control && rep->cache_control->max_age >= 0)
+	rep->expires = squid_curtime + rep->cache_control->max_age;
+    else
+    /*
+     * The HTTP/1.0 specs says that robust implementations should consider bad
+     * or malformed Expires header as equivalent to "expires immediately."
+     */
+    if (rep->expires < 0 && httpHeaderHas(hdr, HDR_EXPIRES))
+	rep->expires = squid_curtime;
+}
+
+/* sync this routine when you update HttpReply struct */
+static void
+httpReplyHdrCacheClean(HttpReply * rep)
+{
+    stringClean(&rep->content_type);
+    if (rep->cache_control)
+	httpHdrCcDestroy(rep->cache_control);
+    if (rep->content_range)
+	httpHdrContRangeDestroy(rep->content_range);
 }
 
 /*
@@ -351,8 +329,10 @@ httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
 		blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
 	    else
 		return 0;
-	if (!httpHeaderParse(&rep->hdr, blk_start, blk_end))
+	if (!httpHeaderParse(&rep->header, blk_start, blk_end))
 	    return httpReplyParseError(rep);
+
+	httpReplyHdrCacheInit(rep);
 
 	*parse_end_ptr = parse_start;
 	rep->hdr_sz = *parse_end_ptr - buf;

@@ -481,7 +481,7 @@ struct _HttpHdrExtField {
 /* http cache control header field */
 struct _HttpHdrCc {
     int mask;
-    time_t max_age;
+    int max_age;
 };
 
 /* http byte-range-spec */
@@ -505,20 +505,10 @@ struct _HttpHdrContRange {
 };
 
 
-/* a storage for an entry of one of possible types (for lower level routines) */
-union _field_store {
-    int v_int;
-    time_t v_time;
-    String v_str;
-    const String *v_cpstr;
-    HttpHdrCc *v_pcc;
-    HttpHdrRange *v_prange;
-    HttpHdrContRange *v_pcont_range;
-};
-
 /* per field statistics */
 struct _HttpHeaderFieldStat {
     int aliveCount;		/* created but not destroyed (count) */
+    int seenCount;		/* #fields we've seen */
     int parsCount;		/* #parsing attempts */
     int errCount;		/* #pasring errors */
     int repCount;		/* #repetitons */
@@ -531,7 +521,7 @@ struct _HttpHeaderFieldAttrs {
     field_type type;
 };
 
-/* compiled version HttpHeaderFieldAttrs plus stats */
+/* compiled version of HttpHeaderFieldAttrs plus stats */
 struct _HttpHeaderFieldInfo {
     http_hdr_type id;
     String name;
@@ -539,28 +529,39 @@ struct _HttpHeaderFieldInfo {
     HttpHeaderFieldStat stat;
 };
 
-struct _HttpHeader {
-    /* public, read only */
-    int emask;			/* bits set for present entries */
-
-    /* protected, do not use these, use interface functions instead */
-    int capacity;		/* max #entries before we have to grow */
-    int ucount;			/* #entries used, including holes */
-    HttpHeaderEntry *entries;
+struct _HttpHeaderEntry {
+    http_hdr_type id;
+    String name;
+    String value;
 };
 
+struct _HttpHeader {
+    /* protected, do not use these, use interface functions instead */
+    Array entries;              /* parsed fields in raw format */
+    HttpHeaderMask mask;        /* bit set <=> entry present */
+};
 
 struct _HttpReply {
     /* unsupported, writable, may disappear/change in the future */
     int hdr_sz;			/* sums _stored_ status-line, headers, and <CRLF> */
+
+    /* public, readable; never update these or their .hdr equivalents directly */
+    int content_length;
+    time_t date;
+    time_t last_modified;
+    time_t expires;
+    String content_type; 
+    HttpHdrCc *cache_control;
+    HttpHdrContRange *content_range;
+    short int pconn_keep_alive;
 
     /* public, readable */
     HttpMsgParseState pstate;	/* the current parsing state */
 
     /* public, writable, but use httpReply* interfaces when possible */
     HttpStatusLine sline;
-    HttpHeader hdr;
-    HttpBody body;		/* used for small constant memory-resident text bodies only */
+    HttpHeader header;
+    HttpBody body;		/* for small constant memory-resident text bodies only */
 };
 
 
@@ -1009,6 +1010,7 @@ struct _request_t {
     String urlpath;
     int link_count;		/* free when zero */
     int flags;
+    HttpHdrCc *cache_control;   /* not used yet */
     time_t max_age;
     float http_ver;
     time_t ims;
@@ -1154,7 +1156,8 @@ struct _storeSwapLogData {
 /* object to track per-action memory usage (e.g. #idle objects) */
 struct _MemMeter {
     size_t level;		/* current level (count or volume) */
-    size_t hwater;		/* high water mark */
+    size_t hwater_level;	/* high water mark */
+    time_t hwater_stamp;	/* timestamp of last high water mark change */
 };
 
 /* object to track per-pool memory usage (alloc = inuse+idle) */

@@ -46,9 +46,10 @@ typedef enum {
     ERR_CACHE_ACCESS_DENIED,
     ERR_CACHE_MGR_ACCESS_DENIED,
     ERR_SQUID_SIGNATURE,	/* not really an error */
-    ERR_FTP_PUT_CREATED,	/* !error,a note that the file was created */
+    ERR_FTP_PUT_CREATED,	/* !error,a note that the file was created */    
     ERR_FTP_PUT_MODIFIED,	/* modified, !created */
     ERR_FTP_PUT_ERROR,
+    ERR_ONLY_IF_CACHED_MISS,    /* failure to satisfy only-if-cached request */
     ERR_MAX
 } err_type;
 
@@ -170,6 +171,9 @@ typedef enum {
 /* recognized or "known" header fields; @?@ add more! */
 typedef enum {
     HDR_ACCEPT,
+    HDR_ACCEPT_CHARSET,
+    HDR_ACCEPT_ENCODING,
+    HDR_ACCEPT_LANGUAGE,
     HDR_ACCEPT_RANGES,
     HDR_AGE,
     HDR_CACHE_CONTROL,
@@ -187,6 +191,7 @@ typedef enum {
     HDR_LAST_MODIFIED,
     HDR_LOCATION,
     HDR_MAX_FORWARDS,
+    HDR_MIME_VERSION,
     HDR_PROXY_AUTHENTICATE,
     HDR_PUBLIC,
     HDR_RANGE,
@@ -197,7 +202,7 @@ typedef enum {
     HDR_WARNING,
     HDR_WWW_AUTHENTICATE,
     HDR_X_CACHE,
-    HDR_PROXY_KEEPALIVE,
+    HDR_PROXY_CONNECTION,
     HDR_OTHER,
     HDR_ENUM_END
 } http_hdr_type;
@@ -212,6 +217,8 @@ typedef enum {
     CC_MUST_REVALIDATE,
     CC_PROXY_REVALIDATE,
     CC_MAX_AGE,
+    CC_ONLY_IF_CACHED,
+    CC_OTHER,
     CC_ENUM_END
 } http_hdr_cc_type;
 
@@ -224,7 +231,6 @@ typedef enum {
     ftPCc,
     ftPRange,
     ftPContRange,
-    ftPExtField
 } field_type;
 
 typedef enum {
@@ -479,7 +485,8 @@ typedef enum {
     MEM_FQDNCACHE_PENDING,
     MEM_HASH_LINK,
     MEM_HASH_TABLE,
-    MEM_HTTPREPLY,
+    MEM_HTTP_REPLY,
+    MEM_HTTP_HDR_ENTRY,
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_RANGE_SPEC,
     MEM_HTTP_HDR_RANGE,
