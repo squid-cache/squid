@@ -1,5 +1,12 @@
 Changes to squid-1.1.alpha4:
 
+	- Fixed Asynchronous Disk I/O routines to basically work.
+	- Fixed memory write bugs when using the redirector.
+	- Added support for non-anonymous FTP urls without needing a
+	  password in the URL.
+
+Changes to squid-1.1.alpha4:
+
 	- Changed cachemgr detailed filedescriptor info to be a separate item.
 	- 'no-cache' reload now discards bad IP cache entries too.
 	- Added 'echo request' URL hack:  http://cachehost:3128/echo
