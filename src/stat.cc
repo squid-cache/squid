@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.212 1998/03/05 00:10:30 wessels Exp $
+ * $Id: stat.cc,v 1.213 1998/03/05 00:40:54 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -899,6 +899,8 @@ statCountersDump(StoreEntry * sentry)
 	(int) f->client_http.kbytes_in.kb);
     storeAppendPrintf(sentry, "client_http.kbytes_out = %d\n",
 	(int) f->client_http.kbytes_out.kb);
+
+#if TOO_MUCH_OUTPUT
     storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
     statHistDump(&f->client_http.all_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "client_http.miss_svc_time histogram:\n");
@@ -907,6 +909,7 @@ statCountersDump(StoreEntry * sentry)
     statHistDump(&f->client_http.nm_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
     statHistDump(&f->client_http.hit_svc_time, sentry, NULL);
+#endif
 
     storeAppendPrintf(sentry, "server.all.requests = %d\n",
 	(int) f->server.all.requests);
@@ -952,13 +955,16 @@ statCountersDump(StoreEntry * sentry)
 	(int) f->icp.kbytes_sent.kb);
     storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
 	(int) f->icp.kbytes_recv.kb);
+
+#if TOO_MUCH_OUTPUT
     storeAppendPrintf(sentry, "icp.query_svc_time histogram:\n");
     statHistDump(&f->icp.query_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "icp.reply_svc_time histogram:\n");
     statHistDump(&f->icp.reply_svc_time, sentry, NULL);
-
     storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
     statHistDump(&f->dns.svc_time, sentry, NULL);
+#endif
+
     storeAppendPrintf(sentry, "unlink.requests = %d\n",
 	f->unlink.requests);
     storeAppendPrintf(sentry, "page_faults = %d\n",
