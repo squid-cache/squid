@@ -176,6 +176,9 @@
 /* Define to 1 if you have the `htole16' function. */
 #undef HAVE_HTOLE16
 
+/* Define to 1 if you have the `initgroups' function. */
+#undef HAVE_INITGROUPS
+
 /* int is defined in system headers */
 #undef HAVE_INT
 
