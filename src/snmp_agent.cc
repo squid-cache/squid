@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.68 1999/05/04 21:58:33 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.69 1999/06/11 22:40:34 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -61,7 +61,7 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = ASN_INTEGER;
-	*(Answer->val.integer) = store_mem_size;
+	*(Answer->val.integer) = store_mem_size >> 10;
 	break;
     case SYSSTOR:
 	Answer->val_len = sizeof(snint);
@@ -117,13 +117,13 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 	    Answer->val_len = sizeof(snint);
 	    Answer->val.integer = xmalloc(Answer->val_len);
 	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (snint) Config.memMaxSize;
+	    *(Answer->val.integer) = (snint) Config.memMaxSize >> 20;
 	    break;
 	case CONF_ST_SWMAXSZ:
 	    Answer->val_len = sizeof(snint);
 	    Answer->val.integer = xmalloc(Answer->val_len);
 	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (snint) Config.Swap.maxSize;
+	    *(Answer->val.integer) = (snint) Config.Swap.maxSize >> 10;
 	    break;
 	case CONF_ST_SWHIWM:
 	    Answer->val_len = sizeof(snint);
@@ -294,16 +294,17 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 	*(Answer->val.integer) = IOStats.Http.reads;
 	Answer->type = SMI_COUNTER32;
 	break;
-    case PERF_SYS_DEFR:	/* XXX unused, remove me */
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = 0;
-	break;
     case PERF_SYS_MEMUSAGE:
 	*(Answer->val.integer) = (snint) memTotalAllocated() >> 10;
 	break;
-    case PERF_SYS_CPUUSAGE:
+    case PERF_SYS_CPUTIME:
 	squid_getrusage(&rusage);
 	*(Answer->val.integer) = (snint) rusage_cputime(&rusage);
+	break;
+    case PERF_SYS_CPUUSAGE:
+	squid_getrusage(&rusage);
+	*(Answer->val.integer) = (snint)
+	    dpercent(rusage_cputime(&rusage), tvSubDsec(squid_start, current_time));
 	break;
     case PERF_SYS_MAXRESSZ:
 	squid_getrusage(&rusage);
