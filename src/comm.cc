@@ -1,5 +1,5 @@
 /*
- * $Id: comm.cc,v 1.184 1997/08/10 04:42:36 wessels Exp $
+ * $Id: comm.cc,v 1.185 1997/08/10 06:34:27 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -332,7 +332,7 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
     cs->port = port;
     cs->callback = callback;
     cs->data = data;
-    cbdataLock(data);
+    cbdataLock(cs->data);
     comm_add_close_handler(fd, commConnectFree, cs);
     cs->locks++;
     ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
@@ -363,7 +363,7 @@ commConnectCallback(ConnectStateData * cs, int status)
     commConnectFree(fd, cs);
     if (cbdataValid(data))
 	callback(fd, status, data);
-    cbdataUnlock(data);
+    cbdataUnlock(cs->data);
 }
 
 static void
@@ -579,13 +579,12 @@ comm_close(int fd)
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
-    if (!F->open) {
-	debug(5, 1) ("comm_close: FD %d is not open!\n", fd);
-	return;
-    }
+    assert(F->open);
     assert(F->type != FD_FILE);
     CommWriteStateCallbackAndFree(fd, COMM_ERROR);
     commCallCloseHandlers(fd);
+    if (F->uses)		/* assume persistent connect count */
+	pconnHistCount(1, F->uses);
     fd_close(fd);		/* update fdstat */
 #if USE_ASYNC_IO
     aioClose(fd);

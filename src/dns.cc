@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.39 1997/07/26 04:48:28 wessels Exp $
+ * $Id: dns.cc,v 1.40 1997/08/10 06:34:28 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -132,7 +132,7 @@ dnsOpenServer(const char *command)
 	0,
 	COMM_NOCLOEXEC,
 	"dnsserver listen socket");
-    if (cfd == COMM_ERROR) {
+    if (cfd < 0) {
 	debug(34, 0) ("dnsOpenServer: Failed to create dnsserver\n");
 	return -1;
     }

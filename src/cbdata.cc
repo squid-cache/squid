@@ -59,7 +59,7 @@ cbdataFree(void *p)
     c->valid = 0;
     if (c->locks) {
 	debug(45, 3) ("cbdataFree: %p has %d locks, not freeing\n",
-		p, c->locks);
+	    p, c->locks);
 	return;
     }
     hash_remove_link(htable, (hash_link *) c);

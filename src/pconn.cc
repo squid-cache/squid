@@ -133,6 +133,8 @@ pconnPop(const char *host, u_short port)
 	assert(p->nfds > 0);
 	fd = p->fds[0];
 	pconnRemoveFD(p, fd);
+	commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+	commSetTimeout(fd, -1, NULL, NULL);
     }
     xfree(key);
     return fd;

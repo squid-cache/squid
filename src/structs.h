@@ -302,6 +302,7 @@ struct _fde {
     int flags;
     int bytes_read;
     int bytes_written;
+    int uses;			/* ie # req's over persistent conn */
     struct _fde_disk {
 	DWCB *wrt_handle;
 	void *wrt_handle_data;
