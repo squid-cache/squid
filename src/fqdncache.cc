@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.97 1998/04/02 22:58:14 wessels Exp $
+ * $Id: fqdncache.cc,v 1.98 1998/04/03 06:27:06 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -131,7 +131,7 @@ static struct {
 static dlink_list lru_list;
 
 static void fqdncache_dnsHandleRead(int, void *);
-static fqdncache_entry *fqdncache_parsebuffer(const char *buf, dnsserver_t *);
+static fqdncache_entry *fqdncacheParse(const char *buf, dnsserver_t *);
 static void fqdncache_release(fqdncache_entry *);
 static fqdncache_entry *fqdncache_create(const char *name);
 static void fqdncache_call_pending(fqdncache_entry *);
@@ -339,70 +339,51 @@ fqdncache_call_pending(fqdncache_entry * f)
     fqdncacheUnlockEntry(f);
 }
 
+
 static fqdncache_entry *
-fqdncache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
+fqdncacheParse(const char *inbuf, dnsserver_t * dnsData)
 {
-    char *buf = xstrdup(inbuf);
+    LOCAL_ARRAY(char, buf, DNS_INBUF_SZ);
     char *token;
     static fqdncache_entry f;
-    int k;
-    int ipcount;
-    int aliascount;
-    debug(35, 5) ("fqdncache_parsebuffer: parsing:\n%s", inbuf);
-    memset(&f, '\0', sizeof(fqdncache_entry));
-    f.expires = squid_curtime + Config.positiveDnsTtl;
-    f.status = FQDN_DISPATCHED;
-    for (token = strtok(buf, w_space); token; token = strtok(NULL, w_space)) {
-	if (!strcmp(token, "$end")) {
-	    break;
-	} else if (!strcmp(token, "$alive")) {
-	    dnsData->answer = squid_curtime;
-	} else if (!strcmp(token, "$fail")) {
-	    if ((token = strtok(NULL, "\n")) == NULL)
-		fatal_dump("Invalid $fail");
-	    f.expires = squid_curtime + Config.negativeDnsTtl;
-	    f.status = FQDN_NEGATIVE_CACHED;
-	} else if (!strcmp(token, "$message")) {
-	    if ((token = strtok(NULL, "\n")) == NULL)
-		fatal_dump("Invalid $message");
-	    f.error_message = xstrdup(token);
-	} else if (!strcmp(token, "$name")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $name");
-	    f.status = FQDN_CACHED;
-	} else if (!strcmp(token, "$h_name")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $h_name");
-	    f.names[0] = xstrdup(token);
-	    f.name_count = 1;
-	} else if (!strcmp(token, "$h_len")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $h_len");
-	} else if (!strcmp(token, "$ipcount")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $ipcount");
-	    ipcount = atoi(token);
-	    for (k = 0; k < ipcount; k++) {
-		if ((token = strtok(NULL, w_space)) == NULL)
-		    fatal_dump("Invalid FQDN address");
-	    }
-	} else if (!strcmp(token, "$aliascount")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $aliascount");
-	    aliascount = atoi(token);
-	    for (k = 0; k < aliascount; k++) {
-		if ((token = strtok(NULL, w_space)) == NULL)
-		    fatal_dump("Invalid alias");
-	    }
-	} else if (!strcmp(token, "$ttl")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
-		fatal_dump("Invalid $ttl");
-	    f.expires = squid_curtime + atoi(token);
-	} else {
-	    fatal_dump("Invalid dnsserver output");
-	}
+    int ttl;
+    xstrncpy(buf, inbuf, DNS_INBUF_SZ);
+    debug(14, 5) ("fqdncacheParse: parsing:\n%s", buf);
+    memset(&f, '\0', sizeof(f));
+    f.expires = squid_curtime;
+    f.status = FQDN_NEGATIVE_CACHED;
+    token = strtok(buf, w_space);
+    if (NULL == token) {
+	debug(14, 1) ("fqdncacheParse: Got <NULL>, expecting '$name'\n");
+	return &f;
     }
-    xfree(buf);
+    if (0 == strcmp(token, "$fail")) {
+	f.expires = squid_curtime + Config.negativeDnsTtl;
+	token = strtok(NULL, "\n");
+	assert(NULL != token);
+	f.error_message = xstrdup(token);
+	return &f;
+    }
+    if (0 != strcmp(token, "$name")) {
+	debug(14, 1) ("fqdncacheParse: Got '%s', expecting '$name'\n", token);
+	return &f;
+    }
+    token = strtok(NULL, w_space);
+    if (NULL == token) {
+	debug(14, 1) ("fqdncacheParse: Got <NULL>, expecting TTL\n");
+	return &f;
+    }
+    f.status = FQDN_CACHED;
+    ttl = atoi(token);
+    if (ttl > 0)
+	f.expires = squid_curtime + ttl;
+    else
+	f.expires = squid_curtime + Config.positiveDnsTtl;
+    token = strtok(NULL, w_space);
+    if (NULL != token) {
+	f.names[0] = xstrdup(token);
+	f.name_count = 1;
+    }
     return &f;
 }
 
@@ -456,13 +437,13 @@ fqdncache_dnsHandleRead(int fd, void *data)
     f = dnsData->data;
     if (f->status != FQDN_DISPATCHED)
 	fatal_dump("fqdncache_dnsHandleRead: bad status");
-    if (strstr(dnsData->ip_inbuf, "$end\n")) {
+    if (strchr(dnsData->ip_inbuf, '\n')) {
 	/* end of record found */
 	DnsStats.replies++;
 	statHistCount(&Counter.dns.svc_time,
 	    tvSubMsec(dnsData->dispatch_time, current_time));
-	if ((x = fqdncache_parsebuffer(dnsData->ip_inbuf, dnsData)) == NULL) {
-	    debug(35, 0) ("fqdncache_dnsHandleRead: fqdncache_parsebuffer failed?!\n");
+	if ((x = fqdncacheParse(dnsData->ip_inbuf, dnsData)) == NULL) {
+	    debug(35, 0) ("fqdncache_dnsHandleRead: fqdncacheParse failed?!\n");
 	} else {
 	    dnsData->offset = 0;
 	    dnsData->ip_inbuf[0] = '\0';
