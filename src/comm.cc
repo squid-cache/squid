@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.264 1998/05/28 21:53:42 wessels Exp $
+ * $Id: comm.cc,v 1.265 1998/05/28 22:16:36 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -158,10 +158,6 @@ static int fdIsHttpOrIcp(int fd);
 static IPH commConnectDnsHandle;
 static void commConnectCallback(ConnectStateData * cs, int status);
 static int commDeferRead(int fd);
-#if UNUSED_CODE
-static void commSetConnectTimeout(int fd, time_t timeout);
-static time_t commBackoffTimeout(int);
-#endif
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
 
@@ -353,9 +349,6 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
     ipcacheCycleAddr(cs->host, NULL);
     cs->addrcount = ia->count;
     cs->connstart = squid_curtime;
-#if UNUSED_CODE
-    commSetConnectTimeout(cs->fd, commBackoffTimeout((int) ia->count));
-#endif
     commConnectHandle(cs->fd, cs);
 }
 
@@ -407,9 +400,6 @@ commResetFD(ConnectStateData * cs)
 	return 0;
     }
     close(fd2);
-#if UNUSED_CODE
-    commSetConnectTimeout(cs->fd, commBackoffTimeout((int) cs->addrcount));
-#endif
     commSetNonBlocking(cs->fd);
     return 1;
 }
@@ -423,31 +413,12 @@ commRetryConnect(ConnectStateData * cs)
 	    return 0;
 	if (squid_curtime - cs->connstart > Config.Timeout.connect)
 	    return 0;
-#if UNUSED_CODE
-	commSetConnectTimeout(cs->fd, commBackoffTimeout(100));
-#endif
     } else {
 	if (cs->tries > cs->addrcount)
 	    return 0;
     }
     return commResetFD(cs);
 }
-
-#if UNUSED_CODE
-/* Back off the socket timeout if there are several addresses available */
-static time_t
-commBackoffTimeout(int numaddrs)
-{
-    time_t timeout;
-    timeout = (time_t) Config.Timeout.connect;
-    if (numaddrs > 2) {
-	timeout = (time_t) (Config.Timeout.connect / numaddrs);
-	if (timeout < Config.retry.timeout)
-	    timeout = (time_t) Config.retry.timeout;
-    }
-    return timeout;
-}
-#endif
 
 /* Connect SOCK to specified DEST_PORT at DEST_HOST. */
 static void
@@ -1539,13 +1510,3 @@ ignoreErrno(int ierrno)
     }
     /* NOTREACHED */
 }
-
-#if UNUSED_CODE
-static void
-commSetConnectTimeout(int fd, time_t timeout)
-{
-    fde *F = &fd_table[fd];
-    F->connect_timeout = timeout;
-}
-
-#endif
