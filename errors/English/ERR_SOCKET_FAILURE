@@ -23,4 +23,4 @@ The system returned:
 <P>
 Squid is unable to create a TCP socket, presumably due to excessive load.
 Please retry your request.
-</P>
+<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
