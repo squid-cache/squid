@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.274 2002/08/11 01:09:41 hno Exp $
+# $Id: cf.data.pre,v 1.275 2002/08/13 05:11:26 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1309,37 +1309,41 @@ DOC_START
 	auth_param basic program @DEFAULT_PREFIX@/bin/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
 
 	"children" numberofchildren
-	The number of authenticator processes to spawn (no default). If you
-	start too few Squid will have to wait for them to process a backlog
-	of usercode/password verifications, slowing it down. When password
-	verifications are done via a (slow) network you are likely to need
-	lots of authenticator processes.
+	The number of authenticator processes to spawn (no default).
+	If you start too few Squid will have to wait for them to
+	process a backlog of usercode/password verifications, slowing
+	it down. When password verifications are done via a (slow)
+	network you are likely to need lots of authenticator
+	processes.
 	auth_param basic children 5
 
 	"realm" realmstring
-	Specifies the realm name which is to be reported to the client for
-	the basic proxy authentication scheme (part of the text the user will
-	see when prompted their username and password). Their is no default.
+	Specifies the realm name which is to be reported to the
+	client for the basic proxy authentication scheme (part of
+	the text the user will see when prompted their username and
+	password). There is no default.
 	auth_param basic realm Squid proxy-caching web server
 
 	"credentialsttl" timetolive
-	Specifies how long squid assumes an externally validated username:password
-	pair is valid for - in other words how often the helper program is called
-	for that user. Set this low to force revalidation with short lived passwords.
-	Note that setting this high does not impact your susceptability to replay
-	attacks unless you are using an one-time password system (such as SecureID).
-	If you are using such a system, you will be vulnerable to replay attacks
-	unless you also enable the IP ttl is strict option.
+	Specifies how long squid assumes an externally validated
+	username:password pair is valid for - in other words how
+	often the helper program is called for that user. Set this
+	low to force revalidation with short lived passwords.  Note
+	that setting this high does not impact your susceptability
+	to replay attacks unless you are using an one-time password
+	system (such as SecureID).  If you are using such a system,
+	you will be vulnerable to replay attacks unless you also
+	enable the IP ttl is strict option.
 
 	=== Parameters for the digest scheme follow ===
 
 	"program" cmdline
-	Specify the command for the external authenticator.  Such a
-	program reads a line containing "username":"realm" and replies
-	with the appropriate H(A1) value base64 encoded. See rfc 2616 for
-	the definition of H(A1).  If you use an authenticator,
-	make sure you have 1 acl of type proxy_auth.  By default,
-	authentication is not used.
+	Specify the command for the external authenticator.  Such
+	a program reads a line containing "username":"realm" and
+	replies with the appropriate H(A1) value base64 encoded.
+	See rfc 2616 for the definition of H(A1).  If you use an
+	authenticator, make sure you have 1 acl of type proxy_auth.
+	By default, authentication is not used.
 
 	If you want to use build an authenticator,
 	jump over to the ../digest_auth_modules directory and choose the
@@ -1353,66 +1357,72 @@ DOC_START
 
 
 	"children" numberofchildren
-	The number of authenticator processes to spawn (no default). If you
-	start too few Squid will have to wait for them to process a backlog
-	of H(A1) calculations, slowing it down. When the H(A1) calculations
-	are done via a (slow) network you are likely to need lots of
-	authenticator processes.
+	The number of authenticator processes to spawn (no default).
+	If you start too few Squid will have to wait for them to
+	process a backlog of H(A1) calculations, slowing it down.
+	When the H(A1) calculations are done via a (slow) network
+	you are likely to need lots of authenticator processes.
 	auth_param digest children 5
 
 	"realm" realmstring
-	Specifies the realm name which is to be reported to the client for
-	the digest proxy authentication scheme (part of the text the user will
-	see when prompted their username and password). There is no default.
+	Specifies the realm name which is to be reported to the
+	client for the digest proxy authentication scheme (part of
+	the text the user will see when prompted their username and
+	password). There is no default.
 	auth_param digest realm Squid proxy-caching web server
 
 	"nonce_garbage_interval" timeinterval
-	Specifies the interval that nonces that have been issued to client_agent's
-	are checked for validity.
+	Specifies the interval that nonces that have been issued
+	to client_agent's are checked for validity.
 
 	"nonce_max_duration" timeinterval
-	Specifies the maximum length of time a given nonce will be valid for.
+	Specifies the maximum length of time a given nonce will be
+	valid for.
 
 	"nonce_max_count" number
-	Specifies the maximum number of times a given nonce can be used.
+	Specifies the maximum number of times a given nonce can be
+	used.
 
 	"nonce_strictness" on|off
-	Determines if squid requires increment-by-1 behaviour for nonce counts 
-	(on - the default), or strictly incrementing (off - for use when useragents
-	generate nonce counts that occasionally miss 1 (ie, 1,2,4,6)).
+	Determines if squid requires increment-by-1 behaviour for
+	nonce counts (on - the default), or strictly incrementing
+	(off - for use when useragents generate nonce counts that
+	occasionally miss 1 (ie, 1,2,4,6)).
 
 	=== NTLM scheme options follow ===
 
 	"program" cmdline
-	Specify the command for the external ntlm authenticator.  Such a
-	program reads a line containing the uuencoded NEGOTIATE and replies
-	with the ntlm CHALLENGE, then waits for the response and answers with
-	"OK" or "ERR" in an endless loop.  If you use an ntlm authenticator,
-	make sure you have 1 acl of type proxy_auth.  By default, the
-	ntlm authenticator_program is not used.
+	Specify the command for the external ntlm authenticator.
+	Such a program reads a line containing the uuencoded NEGOTIATE
+	and replies with the ntlm CHALLENGE, then waits for the
+	response and answers with "OK" or "ERR" in an endless loop.
+	If you use an ntlm authenticator, make sure you have 1 acl
+	of type proxy_auth.  By default, the ntlm authenticator_program
+	is not used.
 
 	auth_param ntlm program @DEFAULT_PREFIX@/bin/ntlm_auth
 
 	"children" numberofchildren
-	The number of authenticator processes to spawn (no default). If you
-	start too few Squid will have to wait for them to process a backlog
-	of credential verifications, slowing it down. When crendential
-	verifications are done via a (slow) network you are likely to need
-	lots of authenticator processes.
+	The number of authenticator processes to spawn (no default).
+	If you start too few Squid will have to wait for them to
+	process a backlog of credential verifications, slowing it
+	down. When crendential verifications are done via a (slow)
+	network you are likely to need lots of authenticator
+	processes.
 	auth_param ntlm children 5
 
 	"max_challenge_reuses" number
-	The maximum number of times a challenge given by a ntlm authentication
-	helper can be reused. Increasing this number increases your exposure
-	to replay attacks on your network. 0 means use the challenge only once.
-	(disable challenge caching)
-	See max_ntlm_challenge_lifetime for more information.
+	The maximum number of times a challenge given by a ntlm
+	authentication helper can be reused. Increasing this number
+	increases your exposure to replay attacks on your network.
+	0 means use the challenge only once.  (disable challenge
+	caching) See max_ntlm_challenge_lifetime for more information.
 	auth_param ntlm max_challenge_reuses 0
 
 	"max_challenge_lifetime" timespan
-	The maximum time period that a ntlm challenge is reused over.
-	The actual period will be the minimum of this time AND the number of
-	reused challenges.
+	The maximum time period that a ntlm challenge is reused
+	over.  The actual period will be the minimum of this time
+	AND the number of reused challenges.
 	auth_param ntlm max_challenge_lifetime 2 minutes
 
 NOCOMMENT_START
@@ -1439,10 +1449,10 @@ TYPE: time_t
 DEFAULT: 1 hour
 LOC: Config.authenticateGCInterval
 DOC_START
-	The time period between garbage collection across the username cache.
-	This is a tradeoff between memory utilisation (long intervals - say
-	2 days) and CPU (short intervals - say 1 minute). Only change if
-	you have good reason to.
+	The time period between garbage collection across the
+	username cache.  This is a tradeoff between memory utilisation
+	(long intervals - say 2 days) and CPU (short intervals -
+	say 1 minute). Only change if you have good reason to.
 DOC_END
 
 NAME: authenticate_ttl
@@ -1450,9 +1460,10 @@ TYPE: time_t
 DEFAULT: 1 hour
 LOC: Config.authenticateTTL
 DOC_START
-	The time a user & their credentials stay in the logged in user cache
-	since their last request. When the garbage interval passes, all
-	user credentials that have passed their TTL are removed from memory.
+	The time a user & their credentials stay in the logged in
+	user cache since their last request. When the garbage
+	interval passes, all user credentials that have passed their
+	TTL are removed from memory.
 DOC_END
 
 NAME: authenticate_ip_ttl
@@ -1534,9 +1545,10 @@ DOC_START
 	  user=		The users name (login)
 	  error=	Error description (only defined for ERR results)
 
-	Keyword values need to be enclosed in quotes if they may contain
-	whitespace, or the whitespace escaped using \. Any quotes or \
-	characters within the keyword value must be \ escaped.
+	Keyword values need to be enclosed in quotes if they may
+	contain whitespace, or the whitespace escaped using \. Any
+	quotes or \ characters within the keyword value must be \
+	escaped.
 DOC_END
 
 COMMENT_START
