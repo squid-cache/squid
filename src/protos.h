@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.298 1999/01/11 16:50:37 wessels Exp $
+ * $Id: protos.h,v 1.299 1999/01/11 21:55:39 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -171,7 +171,7 @@ extern void packerToStoreInit(Packer * p, StoreEntry * e);
 extern void packerToMemInit(Packer * p, MemBuf * mb);
 extern void packerClean(Packer * p);
 extern void packerAppend(Packer * p, const char *buf, int size);
-#ifdef __STDC__
+#if STDC_HEADERS
 extern void packerPrintf(Packer * p, const char *fmt,...);
 #else
 extern void packerPrintf();
@@ -185,7 +185,7 @@ extern void ctx_exit(Ctx ctx);
 extern void _db_init(const char *logfile, const char *options);
 extern void _db_rotate_log(void);
 
-#ifdef __STDC__
+#if STDC_HEADERS
 extern void _db_print(const char *,...);
 #else
 extern void _db_print();
@@ -361,7 +361,7 @@ extern const char *getStringPrefix(const char *str, const char *end);
 extern int httpHeaderParseInt(const char *start, int *val);
 extern int httpHeaderParseSize(const char *start, size_t * sz);
 extern int httpHeaderReset(HttpHeader * hdr);
-#ifdef __STDC__
+#if STDC_HEADERS
 extern void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...);
 #else
 extern void
@@ -541,7 +541,7 @@ extern int memBufIsNull(MemBuf * mb);
 /* calls memcpy, appends exactly size bytes, extends buffer if needed */
 extern void memBufAppend(MemBuf * mb, const char *buf, mb_size_t size);
 /* calls snprintf, extends buffer if needed */
-#ifdef __STDC__
+#if STDC_HEADERS
 extern void memBufPrintf(MemBuf * mb, const char *fmt,...);
 #else
 extern void memBufPrintf();
@@ -800,7 +800,7 @@ extern void storeBuffer(StoreEntry *);
 extern void storeBufferFlush(StoreEntry *);
 extern void storeHashInsert(StoreEntry * e, const cache_key *);
 extern void storeSetMemStatus(StoreEntry * e, int);
-#ifdef __STDC__
+#if STDC_HEADERS
 extern void storeAppendPrintf(StoreEntry *, const char *,...);
 #else
 extern void storeAppendPrintf();
@@ -932,7 +932,7 @@ extern const char *uniqueHostname(void);
 extern void safeunlink(const char *path, int quiet);
 extern void death(int sig);
 extern void fatal(const char *message);
-#ifdef __STDC__
+#if STDC_HEADERS
 extern void fatalf(const char *fmt,...);
 #else
 extern void fatalf();

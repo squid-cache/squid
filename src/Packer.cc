@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.9 1998/07/22 20:36:53 wessels Exp $
+ * $Id: Packer.cc,v 1.10 1999/01/11 21:55:37 wessels Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -141,7 +141,7 @@ packerAppend(Packer * p, const char *buf, int sz)
     p->append(p->real_handler, buf, sz);
 }
 
-#ifdef __STDC__
+#if STDC_HEADERS
 void
 packerPrintf(Packer * p, const char *fmt,...)
 {

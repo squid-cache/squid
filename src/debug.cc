@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.73 1998/11/25 09:00:20 wessels Exp $
+ * $Id: debug.cc,v 1.74 1999/01/11 21:55:38 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -40,7 +40,7 @@ static int Ctx_Lock = 0;
 static const char *debugLogTime(time_t);
 static void ctx_print();
 
-#ifdef __STDC__
+#if STDC_HEADERS
 void
 _db_print(const char *format,...)
 {
@@ -61,7 +61,7 @@ _db_print(va_alist)
     LOCAL_ARRAY(char, tmpbuf, BUFSIZ);
 #endif
 
-#ifdef __STDC__
+#if STDC_HEADERS
     va_start(args, format);
 #if defined(__QNX__)
     va_start(eargs, format);

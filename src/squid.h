@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.182 1998/12/11 23:48:38 wessels Exp $
+ * $Id: squid.h,v 1.183 1999/01/11 21:55:41 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -70,7 +70,7 @@
 
 #if PURIFY
 #define assert(EX) ((void)0)
-#elif __STDC__
+#elif STDC_HEADERS
 #define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
 #else
 #define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
@@ -212,7 +212,7 @@
 #endif /* HAVE_POLL_H */
 #endif /* HAVE_POLL */
 
-#ifdef __STDC__
+#if STDC_HEADERS
 #include <stdarg.h>
 #else
 #include <varargs.h>
