@@ -15,6 +15,7 @@ Our Todo List
 		- An orderd list of siblings to try.  
 		- Hash function load balancing
 (2)	Track cache keys (MD5) in memory utilization
+(2)     Calculate Content-Length for multipart range replies (AR)
 
 (3)	hit metering
 (3)	ETag support (makes metadata bigger--ack!)

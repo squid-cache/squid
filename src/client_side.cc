@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.351 1998/07/15 23:59:07 wessels Exp $
+ * $Id: client_side.cc,v 1.352 1998/07/16 00:18:52 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1016,6 +1016,9 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 		"multipart/byteranges; boundary=\"%s\"",
 		strBuf(http->range_iter.boundary));
 	    /* no need for Content-Length in multipart responses */
+	    /* but we must delete the original one if we cannot (yet)
+	     * calculate the actual length */
+	    httpHeaderDelById(hdr, HDR_CONTENT_LENGTH);
 	}
     }
 }
