@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.17 1998/02/03 04:21:11 wessels Exp $
+ * $Id: asn.cc,v 1.18 1998/02/05 20:32:24 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -36,9 +36,9 @@
 
 typedef u_char m_int[1 + sizeof(unsigned int)];		/* int in memory with length */
 #define store_m_int(i, m) \
-    (i = htonl(i), m[0] = sizeof(m_int), memcpy(m+1, &i, sizeof(unsigned int)))
+    (i = htonl(i), m[0] = sizeof(m_int), xmemcpy(m+1, &i, sizeof(unsigned int)))
 #define get_m_int(i, m) \
-    (memcpy(&i, m+1, sizeof(unsigned int)), ntohl(i))
+    (xmemcpy(&i, m+1, sizeof(unsigned int)), ntohl(i))
 
 /* END of definitions for radix tree entries */
 
@@ -287,8 +287,8 @@ asnAddNet(char *as_string, int as_number)
 
     in_a.s_addr = addr;
     in_m.s_addr = mask;
-    strcpy(dbg1, inet_ntoa(in_a));
-    strcpy(dbg2, inet_ntoa(in_m));
+    xstrncpy(dbg1, inet_ntoa(in_a), 32);
+    xstrncpy(dbg2, inet_ntoa(in_m), 32);
     addr = ntohl(addr);
     mask = ntohl(mask);
     debug(53, 3) ("asnAddNet: called for %s/%s (%x/%x)\n", dbg1, dbg2, addr, mask);
