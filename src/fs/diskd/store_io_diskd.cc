@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.36 2003/08/04 22:14:53 robertc Exp $
+ * $Id: store_io_diskd.cc,v 1.37 2003/08/09 12:31:41 hno Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -492,7 +492,7 @@ DiskdFile::createDone(diomsg *M)
 void
 DiskdFile::write(char const *buf, size_t size, off_t offset, FREE *free_func)
 {
-    debug(79, 3) ("DiskdFile::write: this %p , buf %p, off %ld, len %d\n", this, buf, offset, size);
+    debugs(79, 3, "DiskdFile::write: this " << (void *)this << ", buf " << (void *)buf << ", off " << offset << ", len " << size);
     off_t shm_offset;
     char *sbuf = (char *)IO->shm.get(&shm_offset);
     xmemcpy(sbuf, buf, size);
