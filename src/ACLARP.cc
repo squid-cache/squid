@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.6 2004/10/17 22:13:03 hno Exp $
+ * $Id: ACLARP.cc,v 1.7 2004/11/06 21:57:53 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
  */
 
 #include "config.h"
+#include "squid.h"
 
 #ifdef _SQUID_SOLARIS_
 #include <sys/sockio.h>
@@ -49,14 +50,13 @@
 #endif
 #include <net/route.h>
 #include <net/if.h>
-#ifdef _SQUID_FREEBSD__
+#ifdef _SQUID_FREEBSD_
 #include <net/if_arp.h>
 #endif
 #if HAVE_NETINET_IF_ETHER_H
 #include <netinet/if_ether.h>
 #endif
 
-#include "squid.h"
 #include "ACLARP.h"
 
 #if !USE_ARP_ACL
@@ -375,14 +375,6 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c)
 
     struct sockaddr_in ipAddr;
 
-    unsigned char ifbuffer[sizeof(struct ifreq) * 64];
-
-    struct ifconf ifc;
-
-    struct ifreq *ifr;
-
-    int offset;
-
     SplayNode<acl_arp_data *> **Top = dataptr;
 
     /*
@@ -418,7 +410,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c)
                       arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
 
         /* Do lookup */
-        *Top = (*Top)->splay(&arpReq.arp_ha.sa_data, aclArpCompare);
+        *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
         debug(28, 3) ("aclMatchArp: '%s' %s\n",
                       inet_ntoa(c), splayLastResult ? "NOT found" : "found");
@@ -431,14 +423,6 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c)
     struct arpreq arpReq;
 
     struct sockaddr_in ipAddr;
-
-    unsigned char ifbuffer[sizeof(struct ifreq) * 64];
-
-    struct ifconf ifc;
-
-    struct ifreq *ifr;
-
-    int offset;
 
     SplayNode<acl_arp_data *> **Top = dataptr;
 
@@ -485,7 +469,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c)
         return 0;
     }
 
-    if ((buf = xmalloc(needed)) == NULL) {
+    if ((buf = (char *)xmalloc(needed)) == NULL) {
         debug(28, 0) ("Can't allocate temporary ARP table!\n");
         return 0;
     }
@@ -533,7 +517,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c)
                   arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
 
     /* Do lookup */
-    *Top = (*Top)->splay(&arpReq.arp_ha.sa_data, aclArpCompare);
+    *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
     debug(28, 3) ("aclMatchArp: '%s' %s\n",
                   inet_ntoa(c), splayLastResult ? "NOT found" : "found");
