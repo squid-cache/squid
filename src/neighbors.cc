@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.70 1996/10/19 07:25:16 wessels Exp $
+ * $Id: neighbors.cc,v 1.71 1996/10/24 05:15:26 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -564,6 +564,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
     int w_rtt;
     HttpStateData *httpState = NULL;
     neighbor_t ntype = EDGE_NONE;
+    char *opcode_d;
 
     debug(15, 6, "neighborsUdpAck: opcode %d '%s'\n",
 	(int) header->opcode, url);
@@ -571,8 +572,9 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	neighborAlive(e, mem, header);
     if ((icp_opcode) header->opcode > ICP_OP_END)
 	return;
+    opcode_d = IcpOpcodeStr[header->opcode];
     if (mem == NULL) {
-	debug(15, 1, "Ignoring ICP reply for missing mem_obj: %s\n", url);
+	debug(15, 1, "Ignoring %s for missing mem_obj: %s\n", opcode_d, url);
 	return;
     }
     /* check if someone is already fetching it */
@@ -581,17 +583,18 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	return;
     }
     if (entry->ping_status != PING_WAITING) {
-	debug(15, 5, "neighborsUdpAck: '%s' unexpected ICP reply.\n", url);
+	debug(15, 5, "neighborsUdpAck: Unexpected %s for %s\n", opcode_d, url);
 	return;
     }
     if (entry->lock_count == 0) {
-	debug(12, 3, "neighborsUdpAck: '%s has no locks.\n", url);
+	debug(12, 3, "neighborsUdpAck: '%s' has no locks\n", url);
 	return;
     }
     debug(15, 3, "neighborsUdpAck: %s for '%s' from %s \n",
-	IcpOpcodeStr[header->opcode], url, e ? e->host : "source");
+	opcode_d, url, e ? e->host : "source");
     mem->e_pings_n_acks++;
-    ntype = neighborType(e, entry->mem_obj->request);
+    if (e)
+    	ntype = neighborType(e, mem->request);
     if (header->opcode == ICP_OP_SECHO) {
 	/* Received source-ping reply */
 	if (e) {
@@ -686,8 +689,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	if (e)
 	    debug(15, 3, "neighborsUdpAck: %s is RELOADING\n", e->host);
     } else {
-	debug(15, 0, "neighborsUdpAck: Unexpected ICP reply: %s\n",
-	    IcpOpcodeStr[header->opcode]);
+	debug(15, 0, "neighborsUdpAck: Unexpected ICP reply: %s\n", opcode_d);
     }
     if (mem->e_pings_n_acks == mem->e_pings_n_pings) {
 	entry->ping_status = PING_DONE;
