@@ -1,5 +1,5 @@
 /*
- * $Id: ESIExcept.h,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id: ESIExcept.h,v 1.2 2003/07/15 23:12:02 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -42,8 +42,10 @@
 
 /* esiExcept */
 
-struct esiExcept : public esiSequence
+class esiExcept : public esiSequence
 {
+
+public:
     //    void *operator new (size_t byteCount);
     //    void operator delete (void *address);
     void deleteSelf() const;

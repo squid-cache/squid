@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.18 2003/03/04 01:40:57 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.19 2003/07/15 23:12:02 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -432,9 +432,9 @@ UFSStoreState::~UFSStoreState()
         delete qr;
     }
 
-    struct _queued_write *qw;
+    _queued_write *qw;
 
-    while ((qw = (struct _queued_write *)linklistShift(&pending_writes))) {
+    while ((qw = (_queued_write *)linklistShift(&pending_writes))) {
         if (qw->free_func)
             qw->free_func(const_cast<char *>(qw->buf));
         delete qw;
@@ -532,7 +532,7 @@ UFSStoreState::queueWrite(char const *buf, size_t size, off_t offset, FREE * fre
 {
     debug(79, 3) ("UFSStoreState::queueWrite: queuing write\n");
 
-    struct _queued_write *q;
+    _queued_write *q;
     q = new _queued_write;
     q->buf = buf;
     q->size = size;

@@ -368,7 +368,7 @@ ACLIP::~ACLIP()
 wordlist *
 ACLIP::dump() const
 {
-    wordlist *w (NULL);
+    wordlist *w = NULL;
     data->walk (DumpIpListWalkee, &w);
     return w;
 }
