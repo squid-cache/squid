@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.331 2000/06/26 06:37:08 wessels Exp $
+ * $Id: stat.cc,v 1.332 2000/06/26 06:40:02 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -915,10 +915,11 @@ statAvgTick(void *notused)
     if (Config.warnings.high_pf) {
 	int i = (CountHist[0].page_faults - CountHist[1].page_faults);
 	double dt = tvSubDsec(CountHist[0].timestamp, CountHist[1].timestamp);
-	if (i > 0 && dt > 0.0)
+	if (i > 0 && dt > 0.0) {
 	    i /= (int) dt;
-	if (Config.warnings.high_pf < i)
-	    debug(18, 0) ("WARNING: Page faults occuring at %d/sec\n", i);
+	    if (Config.warnings.high_pf < i)
+		debug(18, 0) ("WARNING: Page faults occuring at %d/sec\n", i);
+	}
     }
     if (Config.warnings.high_memory) {
 	int i = 0;
