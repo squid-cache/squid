@@ -1,3 +1,22 @@
+	- SNMP changes:
+	  1. renovated mib and added descriptions and comments
+	  2. added hit and byte counters to client_db , for cacheClientTable
+	  3. cacheClientTable, netdbTable, cachePeerTable, cacheConnTable
+	     now indexed by ip address. hash_lookup was enhanced
+	     to allow for subsequent hash_next's similar to hash_first, 
+	     to speed up getnext's in tables which refer to hash-table 
+	     structures.
+	  4. added generic (well, sorf of) table indexing functionality
+	  5. added makefile dependencies for snmplib and cache_snmp.h
+	  6. WaisHost, WaisPort, Timeouts removed
+	  7. FdTable split into FdTable and ConnTable. FdTable simplified
+	  8. PeerTable and PeerStat merged and put into new cacheMesh group 
+	  9. cacheClientTable added for client statistics and accounting 
+	     (cacheMesh 2)
+	 10. cacheSec and cacheAccounting groups removed 
+	 11. fixed acl bug when communities not defined
+	 12. snmp_acl now survives bad configuration
+
 Changes to squid-1.2.beta18 (Mar 23, 1998):
 
 	- Added v1.1 'test_reachability' option.

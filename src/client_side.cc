@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.233 1998/03/23 22:10:48 wessels Exp $
+ * $Id: client_side.cc,v 1.234 1998/03/25 09:21:44 kostas Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -558,7 +558,7 @@ httpRequestFree(void *data)
 	}
 	accessLogLog(&http->al);
 	clientUpdateCounters(http);
-	clientdbUpdate(conn->peer.sin_addr, http->log_type, PROTO_HTTP);
+	clientdbUpdate(conn->peer.sin_addr, http->log_type, PROTO_HTTP,http->out.size);
     }
     if (http->redirect_state == REDIRECT_PENDING)
 	redirectUnregister(http->uri, http);

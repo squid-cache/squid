@@ -20,7 +20,7 @@
 /* mib stuff here */
 
 #ifndef CURRENT_MIB_VERSION
-#define CURRENT_MIB_VERSION "v 1.12 1998/03/16 kostas@nlanr.net"
+#define CURRENT_MIB_VERSION "-- v 1.13 1998/03/22 kostas@nlanr.net"
 #endif
 
 /* MIB definitions
@@ -46,8 +46,8 @@
 #define LEN_SQ_PRF LEN_SQUIDMIB+1
 #define SQ_NET  SQUIDMIB, 4
 #define LEN_SQ_NET LEN_SQUIDMIB+1
-#define SQ_SEC  SQUIDMIB, 5
-#define LEN_SQ_SEC LEN_SQUIDMIB+1
+#define SQ_MESH  SQUIDMIB, 5
+#define LEN_SQ_MESH LEN_SQUIDMIB+1
 #define SQ_ACC  SQUIDMIB, 6
 #define LEN_SQ_ACC LEN_SQUIDMIB+1
 
@@ -70,6 +70,7 @@ enum {
     SYS_START,
     SYSVMSIZ,
     SYSSTOR,
+    SYSCONNTBL,
     SYSFDTBL,
     SYS_END
 };
@@ -79,13 +80,11 @@ enum {
 enum {
     CONF_START,
     CONF_ADMIN,
+    CONF_VERSION,
+    CONF_VERSION_ID,
     CONF_UPTIME,
-    CONF_WAIS_RHOST,
-    CONF_WAIS_RPORT,
-    CONF_LOG_LVL,
-    CONF_PTBL,
+    CONF_LOG_FAC,
     CONF_STORAGE,
-    CONF_TIO,
     CONF_END
 };
 
@@ -100,31 +99,51 @@ enum {
     CONF_ST_END
 };
 
-enum {
-    CONF_TIO_START,
-    CONF_TIO_RD,
-    CONF_TIO_CON,
-    CONF_TIO_REQ,
-    CONF_TIO_END
-};
+/* cacheMesh group */
 
 enum {
-    CONF_PTBL_START,
-    CONF_PTBL_ID,
-    CONF_PTBL_NAME,
-    CONF_PTBL_IP,
-    CONF_PTBL_HTTP,
-    CONF_PTBL_ICP,
-    CONF_PTBL_TYPE,
-    CONF_PTBL_STATE,
-    CONF_PTBL_END
+    MESH_START,
+    MESH_PTBL,
+    MESH_CTBL,
+    MESH_END
+};
+
+enum {	/* cachePeerTable */
+    MESH_PTBL_START,
+    MESH_PTBL_NAME,
+    MESH_PTBL_IP,
+    MESH_PTBL_HTTP,
+    MESH_PTBL_ICP,
+    MESH_PTBL_TYPE,
+    MESH_PTBL_STATE,
+    MESH_PTBL_SENT,
+    MESH_PTBL_PACKED,
+    MESH_PTBL_FETCHES,
+    MESH_PTBL_RTT,
+    MESH_PTBL_IGN,
+    MESH_PTBL_KEEPAL_S,
+    MESH_PTBL_KEEPAL_R,
+    MESH_PTBL_END
+};
+
+enum { /* cacheClientTable */
+	MESH_CTBL_START,
+	MESH_CTBL_ADDR,
+	MESH_CTBL_HTREQ,
+	MESH_CTBL_HTBYTES,
+	MESH_CTBL_HTHITS,
+	MESH_CTBL_HTHITBYTES,
+	MESH_CTBL_ICPREQ,
+	MESH_CTBL_ICPBYTES,
+	MESH_CTBL_ICPHITS,
+	MESH_CTBL_ICPHITBYTES,
+	MESH_CTBL_END
 };
 
 /* cacheNetwork group */
 
 enum {
     NETDB_START,
-    NETDB_ID,
     NETDB_NET,
     NETDB_PING_S,
     NETDB_PING_R,
@@ -245,26 +264,21 @@ enum {
 enum {
     SYS_FD_START,
     SYS_FD_NUMBER,
-    SYS_FD_TYPE,
-    SYS_FD_TOUT,
     SYS_FD_NREAD,
     SYS_FD_NWRITE,
-    SYS_FD_ADDR,
     SYS_FD_NAME,
     SYS_FD_END
 };
 
 enum {
-    PERF_PEERSTAT_START,
-    PERF_PEERSTAT_ID,
-    PERF_PEERSTAT_SENT,
-    PERF_PEERSTAT_PACKED,
-    PERF_PEERSTAT_FETCHES,
-    PERF_PEERSTAT_RTT,
-    PERF_PEERSTAT_IGN,
-    PERF_PEERSTAT_KEEPAL_S,
-    PERF_PEERSTAT_KEEPAL_R,
-    PERF_PEERSTAT_END
+    SYS_CONN_START,
+    SYS_CONN_FDNUM,
+    SYS_CONN_READ,
+    SYS_CONN_WRITE,
+    SYS_CONN_ADDR, 
+    SYS_CONN_NAME,
+    SYS_CONN_PORT,
+    SYS_CONN_END
 };
 
 /* First, we have a huge array of MIBs this agent knows about */
@@ -277,7 +291,8 @@ struct MIBListEntry {
 };
 
 variable_list *snmp_basicFn(variable_list *, snint *);
-variable_list *snmp_confPtblFn(variable_list *, snint *);
+variable_list *snmp_meshPtblFn(variable_list *, snint *);
+variable_list *snmp_meshCtblFn(variable_list *, snint *);
 variable_list *snmp_confFn(variable_list *, snint *);
 variable_list *snmp_sysFn(variable_list *, snint *);
 variable_list *snmp_prfSysFn(variable_list *, snint *);

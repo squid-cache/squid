@@ -69,7 +69,7 @@ extern int cbdataValid(const void *p);
 extern void cbdataDump(StoreEntry *);
 
 extern void clientdbInit(void);
-extern void clientdbUpdate(struct in_addr, log_type, protocol_t);
+extern void clientdbUpdate(struct in_addr, log_type, protocol_t,size_t);
 extern int clientdbCutoffDenied(struct in_addr);
 extern void clientdbDump(StoreEntry *);
 extern void clientdbFreeMemory(void);
@@ -388,6 +388,7 @@ extern DEFER httpAcceptDefer;
 #ifdef SQUID_SNMP
 extern PF snmpHandleUdp;
 extern void snmpInit(void);
+extern int snmpInitConfig(void);
 extern void snmpConnectionOpen(void);
 extern void snmpConnectionShutdown(void);
 extern void snmpConnectionClose(void);
