@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.13 1998/11/12 23:07:35 wessels Exp $
+ * $Id: ipc.cc,v 1.14 1998/11/17 01:28:56 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -207,9 +207,9 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
     /* child */
     no_suid();			/* give up extra priviliges */
     /* close shared socket with parent */
-    comm_close(prfd);
+    close(prfd);
     if (pwfd != prfd)
-	comm_close(pwfd);
+	close(pwfd);
     pwfd = prfd = -1;
 
     if (type == IPC_TCP_SOCKET) {
