@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.3 2003/02/08 17:43:18 hno Exp $
+ * $Id: MemObject.cc,v 1.4 2003/02/13 22:20:37 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -396,9 +396,17 @@ MemObject::mostBytesAllowed() const
     DelayId result;
     for (dlink_node *node = clients.head; node; node = node->next) {
 	store_client *sc = (store_client *) node->data;
+#if 0
+	/* This test is invalid because the client may be writing data
+	 * and thus will want data immediately.
+	 * If we include the test, there is a race condition when too much
+	 * data is read - if all sc's are writing when a read is scheduled.
+	 * XXX: fixme.
+	 */
 	if (!sc->callbackPending())
 	    /* not waiting for more data */
 	    continue;
+#endif
 	if (sc->getType() != STORE_MEM_CLIENT)
 	    /* reading off disk */
 	    continue;

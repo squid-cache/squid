@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayBucket.cc,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelayBucket.cc,v 1.2 2003/02/13 22:20:37 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -79,7 +79,8 @@ DelayBucket::update (DelaySpec const &rate, int incr)
 int
 DelayBucket::bytesWanted (int min, int max) const
 {
-    return XMAX(min, XMIN(max, level()));
+    int result = XMAX(min, XMIN(max, level()));
+    return result;
 }
 
 void
