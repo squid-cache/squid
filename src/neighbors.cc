@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.213 1998/05/21 03:22:43 wessels Exp $
+ * $Id: neighbors.cc,v 1.214 1998/05/21 06:41:55 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -386,7 +386,7 @@ neighbors_open(int fd)
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
 	debug(15, 1) ("getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
-    peerRefreshDNS(NULL);
+    peerRefreshDNS((void *)1);
     if (0 == echo_hdr.opcode) {
 	echo_hdr.opcode = ICP_SECHO;
 	echo_hdr.version = ICP_VERSION_CURRENT;
@@ -947,10 +947,10 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
 }
 
 static void
-peerRefreshDNS(void *datanotused)
+peerRefreshDNS(void *data)
 {
     peer *p = NULL;
-    if (0 == stat5minClientRequests()) {
+    if (!data && 0 == stat5minClientRequests()) {
 	/* no recent client traffic, wait a bit */
         eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 180.0, 1);
 	return;
