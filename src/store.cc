@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.259 1997/06/18 16:15:53 wessels Exp $
+ * $Id: store.cc,v 1.260 1997/06/19 22:51:55 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1659,58 +1659,42 @@ storeComplete(StoreEntry * e)
 }
 
 /*
- * Fetch aborted.  Tell all clients to go home.  Negatively cache
- * abort message, freeing the data for this object 
+ * Someone wants to abort this transfer.  Set the reason in the
+ * request structure, call the server-side callback and mark the
+ * entry for releasing 
  */
 void
-storeAbort(StoreEntry * e, const char *msg)
+storeAbort(StoreEntry * e, log_type abort_code, const char *msg, int cbflag)
 {
-    LOCAL_ARRAY(char, mime_hdr, 300);
-    char *abort_msg;
     MemObject *mem = e->mem_obj;
     assert(e->store_status == STORE_PENDING);
     assert(mem != NULL);
-    /*assert(ping_status != PING_WAITING); */
-    debug(20, 6) ("storeAbort: '%s'\n", e->key);
+    safe_free(mem->e_abort_msg);
+    mem->e_abort_msg = xstrdup(msg);
+    debug(20, 6) ("storeAbort: %s %s\n", log_tags[abort_code], e->key);
     storeNegativeCache(e);
+    storeReleaseRequest(e);
     e->store_status = STORE_ABORTED;
     storeSetMemStatus(e, IN_MEMORY);
     /* No DISK swap for negative cached object */
     e->swap_status = NO_SWAP;
     e->lastref = squid_curtime;
-    storeLockObject(e);
     /* Count bytes faulted through cache but not moved to disk */
     HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
 	mem->request ? mem->request->protocol : PROTO_NONE,
 	mem->e_current_len);
-    if (msg) {
-	abort_msg = get_free_8k_page();
-	strcpy(abort_msg, "HTTP/1.0 400 Cache Detected Error\r\n");
-	mk_mime_hdr(mime_hdr,
-	    "text/html",
-	    strlen(msg),
-	    (time_t) Config.negativeTtl,
-	    squid_curtime);
-	strcat(abort_msg, mime_hdr);
-	strcat(abort_msg, "\r\n");
-	strncat(abort_msg, msg, 8191 - strlen(abort_msg));
-	storeAppend(e, abort_msg, strlen(abort_msg));
-	safe_free(mem->e_abort_msg);
-	mem->e_abort_msg = xstrdup(abort_msg);
-	/* Set up object for negative caching */
-	BIT_SET(e->flag, ABORT_MSG_PENDING);
-	put_free_8k_page(abort_msg);
-    }
     /* We assign an object length here--The only other place we assign the
      * object length is in storeComplete() */
+    storeLockObject(e);
     e->object_len = mem->e_current_len;
-    if (mem->abort.callback) {
+    /* Notify the server side */
+    if (cbflag && mem->abort.callback) {
 	mem->abort.callback(mem->abort.data);
 	mem->abort.callback = NULL;
     }
+    /* Notify the client side */
     InvokeHandlers(e);
     storeUnlockObject(e);
-    return;
 }
 
 /* get the first in memory object entry in the storage */
@@ -2533,7 +2517,7 @@ storeWriteCleanLogs(void)
 static int
 swapInError(int fd_unused, StoreEntry * entry)
 {
-    squid_error_entry(entry, ERR_DISK_IO, xstrerror());
+    storeAbort(entry, ERR_DISK_IO, xstrerror(), 1);
     return 0;
 }
 

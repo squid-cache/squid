@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.124 1997/06/18 04:04:13 wessels Exp $
+ * $Id: ftp.cc,v 1.125 1997/06/19 22:51:50 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -226,7 +226,7 @@ ftpTimeout(int fd, void *data)
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
     debug(9, 4) ("ftpLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
-    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
+    storeAbort(entry, ERR_READ_TIMEOUT, NULL, 0);
     if (ftpState->data.fd >= 0)
 	comm_close(ftpState->data.fd);
     comm_close(ftpState->ctrl.fd);
@@ -601,7 +601,7 @@ ftpReadData(int fd, void *data)
     StoreEntry *entry = ftpState->entry;
     assert(fd == ftpState->data.fd);
     if (protoAbortFetch(entry)) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	storeAbort(entry, ERR_CLIENT_ABORT, NULL, 0);
 	ftpDataTransferDone(ftpState);
 	return;
     }
@@ -649,13 +649,11 @@ ftpReadData(int fd, void *data)
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
-	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
 	    ftpDataTransferDone(ftpState);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	squid_error_entry(entry,
-	    ERR_ZERO_SIZE_OBJECT,
-	    errno ? xstrerror() : NULL);
+	storeAbort(entry, ERR_ZERO_SIZE_OBJECT, errno ? xstrerror() : NULL, 0);
 	ftpDataTransferDone(ftpState);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -853,7 +851,7 @@ ftpStart(request_t * request, StoreEntry * entry)
 	url);
     if (fd == COMM_ERROR) {
 	debug(9, 4) ("ftpStart: Failed because we're out of sockets.\n");
-	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
+	storeAbort(entry, ERR_NO_FDS, xstrerror(), 0);
 	return;
     }
     ftpState->ctrl.fd = fd;
@@ -873,7 +871,7 @@ ftpConnectDone(int fd, int status, void *data)
     FtpStateData *ftpState = data;
     debug(9, 3) ("ftpConnectDone\n");
     if (status == COMM_ERROR) {
-	squid_error_entry(ftpState->entry, ERR_CONNECT_FAIL, xstrerror());
+	storeAbort(ftpState->entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	comm_close(fd);
 	return;
     }
@@ -917,7 +915,7 @@ ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
     if (errflag) {
 	BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(entry);
-	squid_error_entry(entry, ERR_WRITE_ERROR, xstrerror());
+	storeAbort(entry, ERR_WRITE_ERROR, xstrerror(), 0);
 	comm_close(fd);
     }
 }
@@ -988,7 +986,7 @@ ftpReadControlReply(int fd, void *data)
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
-	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
 	    comm_close(fd);
 	}
 	return;
@@ -997,7 +995,7 @@ ftpReadControlReply(int fd, void *data)
 	debug(9, 1) ("Read 0 bytes from FTP control socket?\n");
 	BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(entry);
-	squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
 	comm_close(fd);
 	return;
     }
@@ -1283,7 +1281,7 @@ ftpPasvCallback(int fd, int status, void *data)
     FtpStateData *ftpState = data;
     debug(9, 3) ("ftpPasvCallback\n");
     if (status == COMM_ERROR) {
-	squid_error_entry(ftpState->entry, ERR_CONNECT_FAIL, xstrerror());
+	storeAbort(ftpState->entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	comm_close(fd);
 	return;
     }

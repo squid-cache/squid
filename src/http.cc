@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.173 1997/06/18 04:04:14 wessels Exp $
+ * $Id: http.cc,v 1.174 1997/06/19 22:51:51 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -245,7 +245,7 @@ httpTimeout(int fd, void *data)
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, entry->url);
-    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
+    storeAbort(entry, ERR_READ_TIMEOUT, NULL, 0);
     comm_close(fd);
 }
 
@@ -531,7 +531,7 @@ httpReadReply(int fd, void *data)
     int clen;
     int off;
     if (protoAbortFetch(entry)) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	storeAbort(entry, ERR_CLIENT_ABORT, NULL, 0);
 	comm_close(fd);
 	return;
     }
@@ -580,16 +580,14 @@ httpReadReply(int fd, void *data)
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
-	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
 	    comm_close(fd);
 	}
 	debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
 	httpState->eof = 1;
-	squid_error_entry(entry,
-	    ERR_ZERO_SIZE_OBJECT,
-	    errno ? xstrerror() : NULL);
+	storeAbort(entry, ERR_ZERO_SIZE_OBJECT, errno ? xstrerror() : NULL, 0);
 	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -623,7 +621,7 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	fd, size, errflag);
 
     if (errflag) {
-	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	storeAbort(entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	comm_close(fd);
 	return;
     } else {
@@ -850,7 +848,7 @@ proxyhttpStart(request_t * orig_request,
 	entry->url);
     if (fd == COMM_ERROR) {
 	debug(11, 4) ("proxyhttpStart: Failed because we're out of sockets.\n");
-	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
+	storeAbort(entry, ERR_NO_FDS, xstrerror(), 0);
 	return;
     }
     storeLockObject(entry);
@@ -887,10 +885,10 @@ httpConnectDone(int fd, int status, void *data)
     StoreEntry *entry = httpState->entry;
     if (status == COMM_ERR_DNS) {
 	debug(11, 4) ("httpConnectDone: Unknown host: %s\n", request->host);
-	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
+	storeAbort(entry, ERR_DNS_FAIL, dns_error_message, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	storeAbort(entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	if (httpState->neighbor)
 	    peerCheckConnectStart(httpState->neighbor);
 	comm_close(fd);
@@ -918,7 +916,7 @@ httpStart(request_t * request, StoreEntry * entry)
 	entry->url);
     if (fd == COMM_ERROR) {
 	debug(11, 4) ("httpStart: Failed because we're out of sockets.\n");
-	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
+	storeAbort(entry, ERR_NO_FDS, xstrerror(), 0);
 	return;
     }
     storeLockObject(entry);
