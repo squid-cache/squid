@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.194 1997/10/23 05:13:40 wessels Exp $
+ * $Id: http.cc,v 1.195 1997/10/23 16:38:11 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -709,7 +709,7 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	    COMM_SELECT_READ,
 	    httpReadReply,
 	    httpState, 0);
-	commSetDefer(fd, protoCheckDeferRead);
+	commSetDefer(fd, protoCheckDeferRead, entry);
     }
 }
 

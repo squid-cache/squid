@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.190 1997/10/23 05:13:37 wessels Exp $
+ * $Id: comm.cc,v 1.191 1997/10/23 16:38:09 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -630,10 +630,11 @@ comm_udp_sendto(int fd,
 }
 
 void
-commSetDefer(int fd, DEFER * func)
+commSetDefer(int fd, DEFER * func, void *data)
 {
     fde *F = &fd_table[fd];
     F->defer_check = func;
+    F->defer_data = data;
 }
 
 static int
@@ -642,7 +643,7 @@ commDeferRead(int fd)
     fde *F = &fd_table[fd];
     if (F->defer_check == NULL)
 	return 0;
-    return F->defer_check(fd, F->read_data);
+    return F->defer_check(fd, F->defer_data);
 }
 
 #if HAVE_POLL

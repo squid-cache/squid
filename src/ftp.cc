@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.145 1997/10/23 05:13:39 wessels Exp $
+ * $Id: ftp.cc,v 1.146 1997/10/23 16:38:10 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1431,7 +1431,7 @@ ftpReadList(FtpStateData * ftpState)
 	    ftpReadData,
 	    ftpState,
 	    0);
-	commSetDefer(ftpState->data.fd, protoCheckDeferRead);
+	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
 	return;
     } else if (!EBIT_TEST(ftpState->flags, FTP_TRIED_NLST)) {
@@ -1458,7 +1458,7 @@ ftpReadRetr(FtpStateData * ftpState)
 	    ftpReadData,
 	    ftpState,
 	    0);
-	commSetDefer(ftpState->data.fd, protoCheckDeferRead);
+	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
     } else {
 	ftpFail(ftpState);

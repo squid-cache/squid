@@ -107,7 +107,7 @@ extern void comm_write _PARAMS((int fd,
 	FREE *));
 extern void commCallCloseHandlers _PARAMS((int fd));
 extern int commSetTimeout _PARAMS((int fd, int, PF *, void *));
-extern void commSetDefer(int fd, DEFER * func);
+extern void commSetDefer(int fd, DEFER * func, void *);
 
 extern void _db_init _PARAMS((const char *logfile, const char *options));
 extern void _db_rotate_log _PARAMS((void));

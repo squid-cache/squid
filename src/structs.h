@@ -327,6 +327,7 @@ struct _fde {
     void *lifetime_data;
     close_handler *close_handler;	/* linked list */
     DEFER *defer_check;		/* check if we should defer read */
+    void *defer_data;
     CommWriteStateData *rwstate;	/* State data for comm_write */
 };
 
