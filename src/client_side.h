@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.8 2003/08/10 11:00:42 robertc Exp $
+ * $Id: client_side.h,v 1.9 2003/08/14 12:15:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -117,6 +117,8 @@ private:
     void prepareReply(HttpReply * rep);
     void packRange(StoreIOBuffer const &, MemBuf * mb);
     void deRegisterWithConn();
+    void doClose();
+    void initiateClose();
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
 };
@@ -198,12 +200,34 @@ int readMoreRequests:
     void transparent(bool const);
     bool reading() const;
     void reading(bool const);
+    bool closing() const;
+    void closing(bool const);
 
 private:
     CBDATA_CLASS(ConnStateData);
     bool transparent_;
     bool reading_;
+    bool closing_;
     Pointer openReference;
+};
+
+/* convenience class while splitting up body handling */
+/* temporary existence only - on stack use expected */
+
+class ClientBody
+{
+
+public:
+    ClientBody (ConnStateData::Pointer &);
+    void process();
+    void preProcessing();
+    void processBuffer();
+
+private:
+    ConnStateData::Pointer conn;
+    char *buf;
+    CBCB *callback;
+    HttpRequest *request;
 };
 
 #endif /* SQUID_CLIENTSIDE_H */
