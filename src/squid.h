@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.219 2002/04/13 23:07:51 hno Exp $
+ * $Id: squid.h,v 1.220 2002/05/19 14:32:09 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -198,9 +198,6 @@
 #endif
 #if HAVE_BSTRING_H
 #include <bstring.h>
-#endif
-#ifdef HAVE_CRYPT_H
-#include <crypt.h>
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
