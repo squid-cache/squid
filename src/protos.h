@@ -698,7 +698,9 @@ extern EVH storeDirClean;
 
 /* store_digest.c */
 extern void storeDigestInit();
-extern void storeDigestRebuild();
+extern void storeDigestScheduleRebuild();
+extern void storeDigestRewriteStart(const char *initiator);
+extern void storeDigestRewriteContinue(const char *initiator);
 extern void storeDigestReport();
 
 
@@ -743,11 +745,9 @@ void storeSwapTLVFree(tlv * n);
  * store_rebuild.c
  */
 extern void storeDoRebuildFromSwapFiles(void *data);
-extern void storeCleanup(void *datanotused);
 extern void storeValidate(StoreEntry *, STVLDCB *, void *, void *);
 extern void storeValidateComplete(void *data, int retcode, int errcode);
 extern void storeRebuildStart(void);
-
 
 /*
  * store_swapin.c
@@ -902,6 +902,7 @@ extern int ipcCreate(int type,
 extern CacheDigest *cacheDigestCreate(int capacity);
 extern void cacheDigestDestroy(CacheDigest * cd);
 extern CacheDigest *cacheDigestClone(const CacheDigest * cd);
+extern void cacheDigestClear(CacheDigest * cd);
 extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
