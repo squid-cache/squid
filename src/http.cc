@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.323 1998/09/21 06:52:14 wessels Exp $
+ * $Id: http.cc,v 1.324 1998/09/23 20:13:51 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -411,11 +411,6 @@ httpReadReply(int fd, void *data)
 #if DELAY_POOLS
     delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
 #endif
-    if (fwdAbortFetch(entry)) {
-	storeAbort(entry, 0);
-	comm_close(fd);
-	return;
-    }
     /* check if we want to defer reading */
     errno = 0;
     read_sz = SQUID_TCP_SO_RCVBUF;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.120 1998/09/19 17:06:19 wessels Exp $
+ * $Id: wais.cc,v 1.121 1998/09/23 20:13:57 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -90,14 +90,6 @@ waisReadReply(int fd, void *data)
 #if DELAY_POOLS
     delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
 #endif
-    if (fwdAbortFetch(entry)) {
-	ErrorState *err;
-	err = errorCon(ERR_CLIENT_ABORT, HTTP_INTERNAL_SERVER_ERROR);
-	err->request = urlParse(METHOD_CONNECT, waisState->request);
-	errorAppendEntry(entry, err);
-	comm_close(fd);
-	return;
-    }
     errno = 0;
     read_sz = 4096;
 #if DELAY_POOLS
