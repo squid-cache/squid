@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.92 1996/10/19 07:25:13 wessels Exp $
+ * $Id: comm.cc,v 1.93 1996/10/28 20:26:48 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -648,7 +648,6 @@ comm_select_incoming(void)
 int
 comm_select(time_t sec)
 {
-    fd_set exceptfds;
     fd_set readfds;
     fd_set writefds;
     PF hdl = NULL;
@@ -672,7 +671,6 @@ comm_select(time_t sec)
 	    fatal_dump(NULL);
 	FD_ZERO(&readfds);
 	FD_ZERO(&writefds);
-	FD_ZERO(&exceptfds);
 
 	if (shutdown_pending || reread_pending) {
 	    serverConnectionsClose();
@@ -701,10 +699,6 @@ comm_select(time_t sec)
 		nfds++;
 		FD_SET(i, &writefds);
 	    }
-	    if (fd_table[i].except_handler) {
-		nfds++;
-		FD_SET(i, &exceptfds);
-	    }
 	}
 	if (!fdstat_are_n_free_fd(RESERVED_FD)) {
 	    FD_CLR(theHttpConnection, &readfds);
@@ -722,7 +716,7 @@ comm_select(time_t sec)
 	    poll_time.tv_sec = sec > 0 ? 1 : 0;
 	    poll_time.tv_usec = 0;
 #endif
-	    num = select(maxfd, &readfds, &writefds, &exceptfds, &poll_time);
+	    num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
 	    getCurrentTime();
 	    if (num >= 0)
 		break;
@@ -730,7 +724,7 @@ comm_select(time_t sec)
 		break;
 	    debug(5, 0, "comm_select: select failure: %s\n",
 		xstrerror());
-	    examine_select(&readfds, &writefds, &exceptfds);
+	    examine_select(&readfds, &writefds);
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
@@ -758,12 +752,9 @@ comm_select(time_t sec)
 
 	maxfd = fdstat_biggest_fd() + 1;
 	for (fd = 0; fd < maxfd && num > 0; fd++) {
-
-	    if (!(FD_ISSET(fd, &readfds) || FD_ISSET(fd, &writefds) ||
-		    FD_ISSET(fd, &exceptfds)))
+	    if (!FD_ISSET(fd, &readfds) && !FD_ISSET(fd, &writefds))
 		continue;
-	    else
-		--num;
+	    --num;
 
 	    /*
 	     * Admit more connections quickly until we hit the hard limit.
@@ -788,14 +779,6 @@ comm_select(time_t sec)
 		    hdl = fd_table[fd].write_handler;
 		    fd_table[fd].write_handler = 0;
 		    hdl(fd, fd_table[fd].write_data);
-		}
-	    }
-	    if (FD_ISSET(fd, &exceptfds)) {
-		debug(5, 5, "comm_select: FD %d has an exception\n", fd);
-		if (fd_table[fd].except_handler) {
-		    hdl = fd_table[fd].except_handler;
-		    fd_table[fd].except_handler = 0;
-		    hdl(fd, fd_table[fd].except_data);
 		}
 	    }
 	}
@@ -826,10 +809,6 @@ commSetSelect(int fd, unsigned int type, PF handler, void *client_data, time_t t
 	fd_table[fd].write_handler = handler;
 	fd_table[fd].write_data = client_data;
     }
-    if (type & COMM_SELECT_EXCEPT) {
-	fd_table[fd].except_handler = handler;
-	fd_table[fd].except_data = client_data;
-    }
     if (type & COMM_SELECT_LIFETIME) {
 	fd_table[fd].lifetime_handler = handler;
 	fd_table[fd].lifetime_data = client_data;
@@ -853,10 +832,6 @@ comm_get_select_handler(int fd,
     if (type & COMM_SELECT_WRITE) {
 	*handler_ptr = fd_table[fd].write_handler;
 	*client_data_ptr = fd_table[fd].write_data;
-    }
-    if (type & COMM_SELECT_EXCEPT) {
-	*handler_ptr = fd_table[fd].except_handler;
-	*client_data_ptr = fd_table[fd].except_data;
     }
     if (type & COMM_SELECT_LIFETIME) {
 	*handler_ptr = fd_table[fd].lifetime_handler;
@@ -1047,12 +1022,11 @@ comm_init(void)
  * Call this from where the select loop fails.
  */
 static int
-examine_select(fd_set * readfds, fd_set * writefds, fd_set * exceptfds)
+examine_select(fd_set * readfds, fd_set * writefds);
 {
     int fd = 0;
     fd_set read_x;
     fd_set write_x;
-    fd_set except_x;
     int num;
     struct timeval tv;
     struct close_handler *ch = NULL;
@@ -1063,17 +1037,14 @@ examine_select(fd_set * readfds, fd_set * writefds, fd_set * exceptfds)
     for (fd = 0; fd < FD_SETSIZE; fd++) {
 	FD_ZERO(&read_x);
 	FD_ZERO(&write_x);
-	FD_ZERO(&except_x);
 	tv.tv_sec = tv.tv_usec = 0;
 	if (FD_ISSET(fd, readfds))
 	    FD_SET(fd, &read_x);
 	else if (FD_ISSET(fd, writefds))
 	    FD_SET(fd, &write_x);
-	else if (FD_ISSET(fd, exceptfds))
-	    FD_SET(fd, &except_x);
 	else
 	    continue;
-	num = select(FD_SETSIZE, &read_x, &write_x, &except_x, &tv);
+	num = select(FD_SETSIZE, &read_x, &write_x, NULL, &tv);
 	if (num > -1) {
 	    debug(5, 5, "FD %d is valid.\n", fd);
 	    continue;
@@ -1082,12 +1053,11 @@ examine_select(fd_set * readfds, fd_set * writefds, fd_set * exceptfds)
 	debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
 	debug(5, 0, "FD %d is a %s\n", fd, fdstatTypeStr[fdstatGetType(fd)]);
 	debug(5, 0, "--> %s\n", fd_note(fd, NULL));
-	debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p expt:%p\n",
+	debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p\n",
 	    f->lifetime_handler,
 	    f->timeout_handler,
 	    f->read_handler,
-	    f->write_handler,
-	    f->except_handler);
+	    f->write_handler);
 	for (ch = f->close_handler; ch; ch = ch->next)
 	    debug(5, 0, " close handler: %p\n", ch->handler);
 	if (f->close_handler) {
@@ -1108,10 +1078,8 @@ examine_select(fd_set * readfds, fd_set * writefds, fd_set * exceptfds)
 	f->timeout_handler = NULL;
 	f->read_handler = NULL;
 	f->write_handler = NULL;
-	f->except_handler = NULL;
 	FD_CLR(fd, readfds);
 	FD_CLR(fd, writefds);
-	FD_CLR(fd, exceptfds);
     }
     return 0;
 }
