@@ -1,8 +1,8 @@
 
 /*
- * $Id: wccp.cc,v 1.10 1999/10/04 05:05:40 wessels Exp $
+ * $Id: wccp.cc,v 1.11 1999/12/11 15:56:11 wessels Exp $
  *
- * DEBUG: section 80     WCCP Support
+ * DEBUG: section 80	WCCP Support
  * AUTHOR: Glenn Chisholm
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
