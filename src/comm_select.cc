@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.46 2000/07/18 06:16:41 wessels Exp $
+ * $Id: comm_select.cc,v 1.47 2000/10/04 00:44:42 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -652,7 +652,6 @@ comm_select(int msec)
     struct timeval poll_time;
     double timeout = current_dtime + (msec / 1000.0);
     fde *F;
-    int i;
     do {
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
