@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.75 2002/04/07 00:41:54 hno Exp $
+ * $Id: HttpHeader.cc,v 1.76 2002/06/16 19:48:04 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -634,9 +634,7 @@ httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id)
 }
 
 /*
- * returns a pointer to a specified entry if any 
- * note that we return one entry so it does not make much sense to ask for
- * "list" headers
+ * Returns the value of the specified header.
  */
 String
 httpHeaderGetByName(const HttpHeader * hdr, const char *name)
