@@ -1,4 +1,4 @@
-/* $Id: errorpage.cc,v 1.3 1996/03/27 01:45:55 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.4 1996/03/28 05:42:48 wessels Exp $ */
 
 #include "squid.h"
 
@@ -73,14 +73,14 @@ error_data ErrorData[] =
 	"DNS name lookup failure",
 	"The named host probably does not exist."},
     {"ERR_NOT_IMPLEMENTED",
-	"",
-	""},
+	"Protocol Not Supported",
+	"The cache does not know about the requested protocol."},
     {"ERR_CANNOT_FETCH",
-	"",
-	""},
+	"Unable to Retrieve",
+	"The requested URL can not currently be retrieved."},
     {"ERR_NO_RELAY",
-	"",
-	""},
+	"No WAIS Relay",
+	"There is no WAIS relay host defined for this cache."},
     {"ERR_DISK_IO",
 	"Cache Disk I/O Failure",
 	"The system disk is out of space or failing."},
