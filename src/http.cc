@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.433 2004/10/10 03:06:17 hno Exp $
+ * $Id: http.cc,v 1.434 2004/11/06 22:20:47 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -330,47 +330,56 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
 }
 
 int
-cacheControlAllowsCaching(HttpHdrCc *cc)
-{
-    if (cc) {
-        const int cc_mask = cc->mask;
-
-        if (EBIT_TEST(cc_mask, CC_PRIVATE))
-            return 0;
-
-        if (EBIT_TEST(cc_mask, CC_NO_CACHE))
-            return 0;
-
-        if (EBIT_TEST(cc_mask, CC_NO_STORE))
-            return 0;
-    }
-
-    return 1;
-}
-
-int
 HttpStateData::cacheableReply()
 {
     HttpReply const *rep = entry->getReply();
     HttpHeader const *hdr = &rep->header;
     const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
     const char *v;
+#if HTTP_VIOLATIONS
+
+    const refresh_t *R = NULL;
+#endif
 
     if (surrogateNoStore)
         return 0;
 
-    if (!cacheControlAllowsCaching(rep->cache_control))
-        return 0;
-
     if (!ignoreCacheControl) {
-        if (EBIT_TEST(cc_mask, CC_PRIVATE))
-            return 0;
+        if (EBIT_TEST(cc_mask, CC_PRIVATE)) {
+#if HTTP_VIOLATIONS
 
-        if (EBIT_TEST(cc_mask, CC_NO_CACHE))
-            return 0;
+            if (!R)
+                R = refreshLimits(entry->mem_obj->url);
 
-        if (EBIT_TEST(cc_mask, CC_NO_STORE))
-            return 0;
+            if (R && !R->flags.ignore_private)
+#endif
+
+                return 0;
+        }
+
+        if (EBIT_TEST(cc_mask, CC_NO_CACHE)) {
+#if HTTP_VIOLATIONS
+
+            if (!R)
+                R = refreshLimits(entry->mem_obj->url);
+
+            if (R && !R->flags.ignore_no_cache)
+#endif
+
+                return 0;
+        }
+
+        if (EBIT_TEST(cc_mask, CC_NO_STORE)) {
+#if HTTP_VIOLATIONS
+
+            if (!R)
+                R = refreshLimits(entry->mem_obj->url);
+
+            if (R && !R->flags.ignore_no_store)
+#endif
+
+                return 0;
+        }
     }
 
     if (request->flags.auth) {
@@ -380,8 +389,17 @@ HttpStateData::cacheableReply()
          * RFC 2068, sec 14.9.4
          */
 
-        if (!EBIT_TEST(cc_mask, CC_PUBLIC))
-            return 0;
+        if (!EBIT_TEST(cc_mask, CC_PUBLIC)) {
+#if HTTP_VIOLATIONS
+
+            if (!R)
+                R = refreshLimits(entry->mem_obj->url);
+
+            if (R && !R->flags.ignore_auth)
+#endif
+
+                return 0;
+        }
     }
 
     /* Pragma: no-cache in _replies_ is not documented in HTTP,
@@ -391,8 +409,17 @@ HttpStateData::cacheableReply()
         const int no_cache = strListIsMember(&s, "no-cache", ',');
         s.clean();
 
-        if (no_cache)
-            return 0;
+        if (no_cache) {
+#if HTTP_VIOLATIONS
+
+            if (!R)
+                R = refreshLimits(entry->mem_obj->url);
+
+            if (R && !R->flags.ignore_no_cache)
+#endif
+
+                return 0;
+        }
     }
 
     /*
