@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.30 1996/10/10 18:48:52 wessels Exp $
+ * $Id: stmem.cc,v 1.31 1996/10/28 07:44:27 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -199,12 +199,11 @@ memFreeDataUpto(mem_ptr mem, int target_offset)
 	return current_offset;
     }
     if (current_offset != target_offset) {
-	debug(19, 1, "memFreeDataBehind: This shouldn't happen. Some odd condition.\n");
+	debug(19, 1, "memFreeDataUpto: This shouldn't happen. Some odd condition.\n");
 	debug(19, 1, "   Current offset: %d  Target offset: %d  p: %p\n",
 	    current_offset, target_offset, p);
     }
     return current_offset;
-
 }
 
 

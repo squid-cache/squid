@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.118 1996/10/27 07:11:51 wessels Exp $
+ * $Id: cache_cf.cc,v 1.119 1996/10/28 07:44:18 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -114,14 +114,6 @@ struct SquidConfig Config;
 #define DefaultSwapHighWaterMark 90	/* 90% */
 #define DefaultSwapLowWaterMark  75	/* 75% */
 
-#define DefaultFtpDefaultTtl	(3 * 24 * 60 * 60)	/* 3 days */
-#define DefaultFtpMaxObjSize	(4 << 20)	/* 4 MB */
-#define DefaultGopherDefaultTtl	(3 * 24 * 60 * 60)	/* 3 days */
-#define DefaultGopherMaxObjSize	(4 << 20)	/* 4 MB */
-#define DefaultHttpDefaultTtl	(3 * 24 * 60 * 60)	/* 3 days */
-#define DefaultHttpMaxObjSize	(4 << 20)	/* 4 MB */
-#define DefaultWaisDefaultTtl	(3 * 24 * 60 * 60)	/* 3 days */
-#define DefaultWaisMaxObjSize	(4 << 20)	/* 4 MB */
 #define DefaultWaisRelayHost	(char *)NULL
 #define DefaultWaisRelayPort	0
 
@@ -197,6 +189,9 @@ struct SquidConfig Config;
 #define DefaultIpcacheLow	90
 #define DefaultIpcacheHigh	95
 #define DefaultMinDirectHops	4
+#define DefaultMaxObjectSize	(4<<20)		/* 4Mb */
+#define DefaultAvgObjectSize	20	/* 20k */
+#define DefaultObjectsPerBucket	50
 
 int httpd_accel_mode = 0;	/* for fast access */
 char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -230,15 +225,12 @@ static void parseDebugOptionsLine _PARAMS((void));
 static void parseDnsProgramLine _PARAMS((void));
 static void parseEffectiveUserLine _PARAMS((void));
 static void parseErrHtmlLine _PARAMS((void));
-static void parseFtpLine _PARAMS((void));
 static void parseFtpOptionsLine _PARAMS((void));
 static void parseFtpProgramLine _PARAMS((void));
 static void parseFtpUserLine _PARAMS((void));
-static void parseGopherLine _PARAMS((void));
 static void parseWordlist _PARAMS((wordlist **));
 static void parseHostAclLine _PARAMS((void));
 static void parseHostDomainLine _PARAMS((void));
-static void parseHttpLine _PARAMS((void));
 static void parseHttpPortLine _PARAMS((void));
 static void parseHttpdAccelLine _PARAMS((void));
 static void parseIPLine _PARAMS((ip_acl ** list));
@@ -250,7 +242,7 @@ static void parseLogLine _PARAMS((void));
 static void parseMemLine _PARAMS((void));
 static void parseMgrLine _PARAMS((void));
 static void parsePidFilenameLine _PARAMS((void));
-static void parseRequestSizeLine _PARAMS((void));
+static void parseKilobytes _PARAMS((int *));
 static void parseStoreLogLine _PARAMS((void));
 static void parseSwapLine _PARAMS((void));
 static void parseRefreshPattern _PARAMS((int icase));
@@ -567,39 +559,6 @@ parseSwapLine(void)
 }
 
 static void
-parseHttpLine(void)
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.Http.maxObjSize = i << 20;
-    GetInteger(i);
-    Config.Http.defaultTtl = i * 60;
-}
-
-static void
-parseGopherLine(void)
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.Gopher.maxObjSize = i << 20;
-    GetInteger(i);
-    Config.Gopher.defaultTtl = i * 60;
-}
-
-static void
-parseFtpLine(void)
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.Ftp.maxObjSize = i << 20;
-    GetInteger(i);
-    Config.Ftp.defaultTtl = i * 60;
-}
-
-static void
 parseRefreshPattern(int icase)
 {
     char *token;
@@ -657,12 +616,12 @@ parseMinutesLine(int *iptr)
 }
 
 static void
-parseRequestSizeLine(void)
+parseKilobytes(int *val)
 {
     char *token;
     int i;
     GetInteger(i);
-    Config.maxRequestSize = i * 1024;
+    *val = i * 1024;
 }
 
 static void
@@ -833,8 +792,6 @@ parseWAISRelayLine(void)
     Config.Wais.relayHost = xstrdup(token);
     GetInteger(i);
     Config.Wais.relayPort = (u_short) i;
-    GetInteger(i);
-    Config.Wais.maxObjSize = i << 20;
 }
 
 static void
@@ -1191,15 +1148,6 @@ parseConfigFile(char *file_name)
 	    aclParseAccessLine(&DelayAccessList);
 #endif
 
-	else if (!strcmp(token, "gopher"))
-	    parseGopherLine();
-
-	else if (!strcmp(token, "http"))
-	    parseHttpLine();
-
-	else if (!strcmp(token, "ftp"))
-	    parseFtpLine();
-
 	else if (!strcmp(token, "refresh_pattern"))
 	    parseRefreshPattern(0);
 	else if (!strcmp(token, "refresh_pattern/i"))
@@ -1227,7 +1175,7 @@ parseConfigFile(char *file_name)
 	    parseIntegerValue(&Config.lifetimeShutdown);
 
 	else if (!strcmp(token, "request_size"))
-	    parseRequestSizeLine();
+	    parseKilobytes(&Config.maxRequestSize);
 
 	else if (!strcmp(token, "connect_timeout"))
 	    parseIntegerValue(&Config.connectTimeout);
@@ -1375,9 +1323,11 @@ parseConfigFile(char *file_name)
 	    parseIntegerValue(&Config.minDirectHops);
 
 	else if (!strcmp(token, "store_objects_per_bucket"))
-	    parseIntegerValue(&Config.storeHash.objectsPerBucket);
+	    parseIntegerValue(&Config.Store.objectsPerBucket);
 	else if (!strcmp(token, "store_avg_object_size"))
-	    parseIntegerValue(&Config.storeHash.avgObjectSize);
+	    parseIntegerValue(&Config.Store.avgObjectSize);
+	else if (!strcmp(token, "maximum_object_size"))
+	    parseKilobytes(&Config.Store.maxObjectSize);
 
 	/* If unknown, treat as a comment line */
 	else {
@@ -1502,14 +1452,6 @@ configSetFactoryDefaults(void)
     Config.Swap.highWaterMark = DefaultSwapHighWaterMark;
     Config.Swap.lowWaterMark = DefaultSwapLowWaterMark;
 
-    Config.Ftp.defaultTtl = DefaultFtpDefaultTtl;
-    Config.Ftp.maxObjSize = DefaultFtpMaxObjSize;
-    Config.Gopher.defaultTtl = DefaultGopherDefaultTtl;
-    Config.Gopher.maxObjSize = DefaultGopherMaxObjSize;
-    Config.Http.defaultTtl = DefaultHttpDefaultTtl;
-    Config.Http.maxObjSize = DefaultHttpMaxObjSize;
-    Config.Wais.defaultTtl = DefaultWaisDefaultTtl;
-    Config.Wais.maxObjSize = DefaultWaisMaxObjSize;
     Config.Wais.relayHost = safe_xstrdup(DefaultWaisRelayHost);
     Config.Wais.relayPort = DefaultWaisRelayPort;
 
@@ -1583,6 +1525,9 @@ configSetFactoryDefaults(void)
     Config.ipcache.low = DefaultIpcacheLow;
     Config.ipcache.high = DefaultIpcacheHigh;
     Config.minDirectHops = DefaultMinDirectHops;
+    Config.Store.maxObjectSize = DefaultMaxObjectSize;
+    Config.Store.avgObjectSize = DefaultAvgObjectSize;
+    Config.Store.objectsPerBucket = DefaultObjectsPerBucket;
 }
 
 static void

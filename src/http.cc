@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.88 1996/10/27 07:11:55 wessels Exp $
+ * $Id: http.cc,v 1.89 1996/10/28 07:44:22 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -327,7 +327,7 @@ httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
 	    httpState->reply_hdr);
 	/* Parse headers into reply structure */
 	httpParseHeaders(httpState->reply_hdr, reply);
-        timestampsSet(entry);
+	timestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	if (reply->code)
 	    debug(11, 3, "httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
@@ -494,19 +494,6 @@ httpReadReply(int fd, void *data)
 	storeAppend(entry, buf, len);	/* invoke handlers! */
 	storeComplete(entry);	/* deallocates mem_obj->request */
 	comm_close(fd);
-    } else if ((entry->mem_obj->e_current_len + len) > Config.Http.maxObjSize &&
-	!(entry->flag & DELETE_BEHIND)) {
-	/*  accept data, but start to delete behind it */
-	storeStartDeleteBehind(entry);
-	storeAppend(entry, buf, len);
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    httpReadReply,
-	    (void *) httpState, 0);
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    httpReadReplyTimeout,
-	    (void *) httpState, Config.readTimeout);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);

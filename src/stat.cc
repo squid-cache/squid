@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.94 1996/10/27 07:12:00 wessels Exp $
+ * $Id: stat.cc,v 1.95 1996/10/28 07:44:27 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -957,24 +957,6 @@ parameter_get(cacheinfo * obj, StoreEntry * sentry)
 	"{Swap-Low %d \"# Low water mark disk cache (%%)\"}\n",
 	Config.Swap.lowWaterMark);
     storeAppendPrintf(sentry,
-	"{HTTP-Max %d\"# Maximum size HTTP objects (KB)\"}\n",
-	Config.Http.maxObjSize / (1 << 10));
-    storeAppendPrintf(sentry,
-	"{HTTP-TTL %d \"# Http object default TTL (hrs)\"}\n",
-	Config.Http.defaultTtl / 3600);
-    storeAppendPrintf(sentry,
-	"{Gopher-Max %d \"# Maximum size gopher objects (KB)\"}\n",
-	Config.Gopher.maxObjSize / (1 << 10));
-    storeAppendPrintf(sentry,
-	"{Gopher-TTL %d \"# TTL for gopher objects (hrs)\"}\n",
-	Config.Gopher.defaultTtl / 3600);
-    storeAppendPrintf(sentry,
-	"{FTP-Max %d \"# Maximum size FTP objects (KB)\"}\n",
-	Config.Ftp.maxObjSize / (1 << 10));
-    storeAppendPrintf(sentry,
-	"{FTP-TTL %d \"# TTL for FTP objects (hrs)\"}\n",
-	Config.Ftp.defaultTtl / 3600);
-    storeAppendPrintf(sentry,
 	"{Neg-TTL %d \"# TTL for negative cache (s)\"}\n",
 	Config.negativeTtl);
     storeAppendPrintf(sentry,
@@ -1262,8 +1244,8 @@ proto_count(cacheinfo * obj, protocol_t proto_id, log_type type)
     switch (type) {
     case LOG_TCP_HIT:
     case LOG_TCP_IMS_HIT:
-    case LOG_TCP_EXPIRED_HIT:
-    case LOG_TCP_EXPIRED_FAIL_HIT:
+    case LOG_TCP_REFRESH_HIT:
+    case LOG_TCP_REFRESH_FAIL_HIT:
     case LOG_UDP_HIT:
     case LOG_UDP_HIT_OBJ:
 	obj->proto_stat_data[proto_id].hit++;

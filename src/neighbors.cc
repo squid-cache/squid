@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.73 1996/10/27 07:11:58 wessels Exp $
+ * $Id: neighbors.cc,v 1.74 1996/10/28 07:44:24 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -551,7 +551,7 @@ neighborAlive(edge * e, MemObject * mem, icp_common_t * header)
     }
 }
 
-static void 
+static void
 neighborCountIgnored(edge * e, icp_opcode op_unused)
 {
     if (e == NULL)

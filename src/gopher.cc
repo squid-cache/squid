@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.56 1996/10/27 07:11:55 wessels Exp $
+ * $Id: gopher.cc,v 1.57 1996/10/28 07:44:21 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -804,24 +804,6 @@ gopherReadReply(int fd, GopherStateData * data)
 	BIT_RESET(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
 	comm_close(fd);
-    } else if (((entry->mem_obj->e_current_len + len) > Config.Gopher.maxObjSize) &&
-	!(entry->flag & DELETE_BEHIND)) {
-	/*  accept data, but start to delete behind it */
-	storeStartDeleteBehind(entry);
-	if (data->conversion != NORMAL) {
-	    gopherToHTML(data, buf, len);
-	} else {
-	    storeAppend(entry, buf, len);
-	}
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    (PF) gopherReadReply,
-	    (void *) data, 0);
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    (PF) gopherReadReplyTimeout,
-	    (void *) data,
-	    Config.readTimeout);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we got */
 	if (data->conversion != NORMAL) {
