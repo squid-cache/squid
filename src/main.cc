@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.359 2002/11/15 13:29:20 hno Exp $
+ * $Id: main.cc,v 1.360 2003/01/02 08:44:17 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -563,7 +563,6 @@ main(int argc, char **argv)
 {
     int errcount = 0;
     int n;			/* # of GC'd objects */
-    int loop_delay;
     mode_t oldmask;
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     int WIN32_init_err;
@@ -716,7 +715,8 @@ main(int argc, char **argv)
 	    eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1);
 	}
 	eventRun();
-	if ((loop_delay = eventNextTime()) < 0)
+        int loop_delay = eventNextTime();
+	if (loop_delay < 0)
 	    loop_delay = 0;
         /* Attempt any pending storedir IO */
         storeDirCallback();
