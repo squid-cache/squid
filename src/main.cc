@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.117 1996/11/28 07:27:38 wessels Exp $
+ * $Id: main.cc,v 1.118 1996/11/29 03:28:52 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -562,7 +562,7 @@ main(int argc, char **argv)
     time_t loop_delay;
 
     /* call mallopt() before anything else */
-#if 0 && HAVE_MALLOPT
+#if HAVE_MALLOPT
 #ifdef M_GRAIN
     /* Round up all sizes to a multiple of this */
     mallopt(M_GRAIN, 16);
