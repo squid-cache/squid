@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.50 1996/07/26 17:18:26 wessels Exp $
+ * $Id: stat.cc,v 1.51 1996/07/27 07:07:46 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -868,7 +868,7 @@ void parameter_get(obj, sentry)
 }
 
 
-void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hier, neighbor)
+void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData)
      cacheinfo *obj;
      char *url;
      struct in_addr caddr;
@@ -878,13 +878,15 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
      int http_code;
      int msec;
      char *ident;
-     hier_code hier;
-     char *neighbor;
+     struct _hierarchyLogData *hierData;
 {
     LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
     int x;
     static char *dash = "-";
     char *client = NULL;
+    hier_code hier_code = HIER_NONE;
+    char *hier_host = dash;
+    int hier_timeout = 0;
 
     if (Config.Log.log_fqdn)
 	client = fqdncache_gethostbyaddr(caddr, 0);
@@ -899,8 +901,11 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 	url = dash;
     if (!ident || ident[0] == '\0')
 	ident = dash;
-    if (!neighbor)
-	neighbor = dash;
+    if (hierData) {
+	hier_code = hierData->code;
+	hier_host = hierData->host;
+	hier_timeout = hierData->timeout;
+    }
 
     if (obj->logfile_status == LOG_ENABLE) {
 	if (Config.commonLogFormat)
@@ -913,7 +918,7 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 		action,
 		size);
 	else
-	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s/%s\n",
+	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s%s/%s\n",
 		(int) current_time.tv_sec,
 		(int) current_time.tv_usec / 1000,
 		msec,
@@ -924,8 +929,9 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 		method,
 		url,
 		ident,
-		hier_strings[hier],
-		neighbor);
+		hier_timeout ? "TIMEOUT_" : "",
+		hier_strings[hier_code],
+		hier_host);
 	x = file_write(obj->logfile_fd,
 	    xstrdup(tmp),
 	    strlen(tmp),

@@ -1,3 +1,8 @@
+	- Removed all references to hierarchy.log.
+	- Changed hierarchy_log_append() to hierarchyNote() and added
+	  _hierarchyLogData structure.
+ 
+
 Changes to squid-1.1.alpha7:
 
 	- Added 'tcp_recv_bufsize' option to config.

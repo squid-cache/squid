@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.31 1996/07/22 16:40:19 wessels Exp $
+#  $Id: Makefile.in,v 1.32 1996/07/27 07:07:41 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -25,7 +25,6 @@ DEFAULT_FTPGET          = $(libexecdir)/ftpget
 DEFAULT_DNSSERVER       = $(libexecdir)/dnsserver
 DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
 DEFAULT_ACCESS_LOG      = $(localstatedir)/logs/access.log
-DEFAULT_HIERARCHY_LOG   = $(localstatedir)/logs/hierarchy.log
 DEFAULT_STORE_LOG       = $(localstatedir)/logs/store.log
 DEFAULT_SWAP_DIR        = $(localstatedir)/cache
 
@@ -70,7 +69,6 @@ DEFAULTS        = \
 	-DDEFAULT_DNSSERVER=\"$(DEFAULT_DNSSERVER)\" \
 	-DDEFAULT_CACHE_LOG=\"$(DEFAULT_CACHE_LOG)\" \
 	-DDEFAULT_ACCESS_LOG=\"$(DEFAULT_ACCESS_LOG)\" \
-	-DDEFAULT_HIERARCHY_LOG=\"$(DEFAULT_HIERARCHY_LOG)\" \
 	-DDEFAULT_STORE_LOG=\"$(DEFAULT_STORE_LOG)\" \
 	-DDEFAULT_SWAP_DIR=\"$(DEFAULT_SWAP_DIR)\"
 
@@ -101,7 +99,6 @@ squid.conf: squid.conf.pre
 	s%@DEFAULT_DNSSERVER@%$(DEFAULT_DNSSERVER)%g;\
 	s%@DEFAULT_CACHE_LOG@%$(DEFAULT_CACHE_LOG)%g;\
 	s%@DEFAULT_ACCESS_LOG@%$(DEFAULT_ACCESS_LOG)%g;\
-	s%@DEFAULT_HIERARCHY_LOG@%$(DEFAULT_HIERARCHY_LOG)%g;\
 	s%@DEFAULT_STORE_LOG@%$(DEFAULT_STORE_LOG)%g;\
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g" <$? >$@
 

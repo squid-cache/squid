@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.56 1996/07/26 21:09:36 wessels Exp $
+ * $Id: main.cc,v 1.57 1996/07/27 07:07:43 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -545,7 +545,6 @@ int main(argc, argv)
 	    _db_rotate_log();	/* cache.log */
 	    storeWriteCleanLog();
 	    storeRotateLog();	/* store.log */
-	    neighbors_rotate_log();	/* hierarchy.log */
 	    stat_rotate_log();	/* access.log */
 	    (void) ftpInitialize();
 	    rotate_pending = 0;

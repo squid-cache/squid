@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.66 1996/07/26 19:28:49 wessels Exp $
+ * $Id: cache_cf.cc,v 1.67 1996/07/27 07:07:41 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -144,7 +144,6 @@ struct SquidConfig Config;
 
 #define DefaultCacheLogFile	DEFAULT_CACHE_LOG
 #define DefaultAccessLogFile	DEFAULT_ACCESS_LOG
-#define DefaultHierarchyLogFile DEFAULT_HIERARCHY_LOG
 #define DefaultStoreLogFile	DEFAULT_STORE_LOG
 #define DefaultLogRotateNumber  10
 #define DefaultAdminEmail	"webmaster"
@@ -684,16 +683,6 @@ static void parseAccessLogLine()
     Config.Log.access = xstrdup(token);
 }
 
-static void parseHierachyLogLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.Log.hierarchy);
-    Config.Log.hierarchy = xstrdup(token);
-}
-
 static void parseStoreLogLine()
 {
     char *token;
@@ -1048,9 +1037,6 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "cache_access_log"))
 	    parseAccessLogLine();
 
-	else if (!strcmp(token, "cache_hierarchy_log"))
-	    parseHierachyLogLine();
-
 	else if (!strcmp(token, "cache_store_log"))
 	    parseStoreLogLine();
 
@@ -1337,7 +1323,6 @@ static void configFreeMemory()
     safe_free(Config.Wais.relayHost);
     safe_free(Config.Log.log);
     safe_free(Config.Log.access);
-    safe_free(Config.Log.hierarchy);
     safe_free(Config.Log.store);
     safe_free(Config.adminEmail);
     safe_free(Config.effectiveUser);
@@ -1413,7 +1398,6 @@ static void configSetFactoryDefaults()
     Config.Port.icp = DefaultIcpPortNum;
     Config.Log.log = safe_xstrdup(DefaultCacheLogFile);
     Config.Log.access = safe_xstrdup(DefaultAccessLogFile);
-    Config.Log.hierarchy = safe_xstrdup(DefaultHierarchyLogFile);
     Config.Log.store = safe_xstrdup(DefaultStoreLogFile);
     Config.Log.rotateNumber = DefaultLogRotateNumber;
     Config.Program.ftpget = safe_xstrdup(DefaultFtpgetProgram);
