@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.147 1996/11/04 18:13:09 wessels Exp $
+ * $Id: store.cc,v 1.148 1996/11/05 17:02:58 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -815,7 +815,7 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
 {
     StoreEntry *e = NULL;
 
-    debug(20, 5, "StoreAddDiskRestore: <URL:%s>: size %d: expires %d: file_number %d\n",
+    debug(20, 5, "StoreAddDiskRestore: '%s': size %d: expires %d: file_number %d\n",
 	url, size, expires, file_number);
 
     /* if you call this you'd better be sure file_number is not 
@@ -953,7 +953,7 @@ storeDeleteBehind(StoreEntry * e)
 }
 
 /* Call handlers waiting for  data to be appended to E. */
-static void
+void
 InvokeHandlers(StoreEntry * e)
 {
     int i;
@@ -1153,11 +1153,11 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
 	put_free_8k_page(mem->e_swap_buf);
 	file_close(mem->swapin_fd);
 	storeLog(STORE_LOG_SWAPIN, e);
-	debug(20, 5, "storeSwapInHandle: SwapIn complete: <URL:%s> from %s.\n",
+	debug(20, 5, "storeSwapInHandle: SwapIn complete: '%s' from %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
 	if (mem->e_current_len != e->object_len) {
 	    debug(20, 0, "storeSwapInHandle: WARNING! Object size mismatch.\n");
-	    debug(20, 0, "  --> <URL:%s>\n", e->url);
+	    debug(20, 0, "  --> '%s'\n", e->url);
 	    debug(20, 0, "  --> Expecting %d bytes from file: %s\n", e->object_len,
 		storeSwapFullPath(e->swap_file_number, NULL));
 	    debug(20, 0, "  --> Only read %d bytes\n",
@@ -1208,7 +1208,7 @@ storeSwapInStart(StoreEntry * e, SIH swapin_complete_handler, void *swapin_compl
 	return -1;
     }
     mem->swapin_fd = (short) fd;
-    debug(20, 5, "storeSwapInStart: initialized swap file '%s' for <URL:%s>\n",
+    debug(20, 5, "storeSwapInStart: initialized swap file '%s' for '%s'\n",
 	path, e->url);
     storeSetMemStatus(e, SWAPPING_IN);
     mem->data = new_MemObjectData();
@@ -1294,7 +1294,7 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 	e->swap_status = SWAP_OK;
 	file_close(mem->swapout_fd);
 	storeLog(STORE_LOG_SWAPOUT, e);
-	debug(20, 5, "storeSwapOutHandle: SwapOut complete: <URL:%s> to %s.\n",
+	debug(20, 5, "storeSwapOutHandle: SwapOut complete: '%s' to %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
 	put_free_8k_page(mem->e_swap_buf);
 	storeSwapLog(e);
@@ -1352,7 +1352,7 @@ storeSwapOutStart(StoreEntry * e)
 	return -1;
     }
     mem->swapout_fd = (short) fd;
-    debug(20, 5, "storeSwapOutStart: Begin SwapOut <URL:%s> to FD %d FILE %s.\n",
+    debug(20, 5, "storeSwapOutStart: Begin SwapOut '%s' to FD %d FILE %s.\n",
 	e->url, fd, swapfilename);
     e->swap_file_number = swapfileno;
     if ((mem->e_swap_access = file_write_lock(mem->swapout_fd)) < 0) {
@@ -1447,7 +1447,7 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 
 	if (store_rebuilding != STORE_REBUILDING_FAST) {
 	    if (stat(swapfile, &sb) < 0) {
-		debug(20, 3, "storeRebuildFromDisk: Swap file missing: <URL:%s>: %s: %s.\n", url, swapfile, xstrerror());
+		debug(20, 3, "storeRebuildFromDisk: Swap file missing: '%s': %s: %s.\n", url, swapfile, xstrerror());
 		if (opt_unlink_on_reload)
 		    safeunlink(swapfile, 1);
 		continue;
@@ -1476,7 +1476,7 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 #ifdef DONT_DO_THIS
 	    timestamp = sb.st_mtime;
 #endif
-	    debug(20, 9, "storeRebuildFromDisk: swap file exists: <URL:%s>: %s\n",
+	    debug(20, 9, "storeRebuildFromDisk: swap file exists: '%s': %s\n",
 		url, swapfile);
 	}
 	if ((e = storeGet(url))) {
@@ -1488,7 +1488,7 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 		data->dupcount++;
 		continue;
 	    }
-	    debug(20, 6, "storeRebuildFromDisk: Duplicate: <URL:%s>\n", url);
+	    debug(20, 6, "storeRebuildFromDisk: Duplicate: '%s'\n", url);
 	    storeRelease(e);
 	    data->objcount--;
 	    data->dupcount++;
@@ -1499,7 +1499,7 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 	    debug(20, 2, "storeRebuildFromDisk: Line %d Active clash: file #%d\n",
 		data->linecount,
 		sfileno);
-	    debug(20, 3, "storeRebuildFromDisk: --> <URL:%s>\n", url);
+	    debug(20, 3, "storeRebuildFromDisk: --> '%s'\n", url);
 	    /* don't unlink the file!  just skip this log entry */
 	    data->clashcount++;
 	    continue;
@@ -1743,8 +1743,10 @@ storeAbort(StoreEntry * e, const char *msg)
      * object length is in storeComplete() */
     e->object_len = mem->e_current_len;
 
+#ifdef DONT
     /* Call handlers so they can report error. */
     InvokeHandlers(e);
+#endif
 
     storeUnlockObject(e);
     return;
@@ -2107,7 +2109,7 @@ storeRelease(StoreEntry * e)
 	}
 	result = (StoreEntry *) hptr;
 	if (result != e) {
-	    debug(20, 0, "storeRelease: Duplicated entry? <URL:%s>\n",
+	    debug(20, 0, "storeRelease: Duplicated entry? '%s'\n",
 		result->url ? result->url : "NULL");
 	    debug(20, 0, "Dump of Entry 'e':\n%s", storeToString(e));
 	    debug(20, 0, "Dump of Entry 'result':\n%s", storeToString(result));
