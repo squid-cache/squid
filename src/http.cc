@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.150 1997/02/26 19:46:14 wessels Exp $
+ * $Id: http.cc,v 1.151 1997/02/27 02:57:09 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -160,7 +160,6 @@ typedef enum {
 
 typedef struct proxy_ctrl_t {
     int sock;
-    char *url;
     request_t *orig_request;
     StoreEntry *entry;
     peer *e;
@@ -248,7 +247,7 @@ httpStateFree(int fd, void *data)
 }
 
 int
-httpCachable(const char *url, int method)
+httpCachable(method_t method)
 {
     /* GET and HEAD are cachable. Others are not. */
     if (method != METHOD_GET && method != METHOD_HEAD)
@@ -893,15 +892,14 @@ httpSendRequest(int fd, void *data)
 }
 
 int
-proxyhttpStart(const char *url,
-    request_t * orig_request,
+proxyhttpStart(request_t * orig_request,
     StoreEntry * entry,
     peer * e)
 {
     proxy_ctrl_t *ctrlp;
     int sock;
     debug(11, 3, "proxyhttpStart: \"%s %s\"\n",
-	RequestMethodStr[orig_request->method], url);
+	RequestMethodStr[orig_request->method], entry->url);
     debug(11, 10, "proxyhttpStart: HTTP request header:\n%s\n",
 	entry->mem_obj->mime_hdr);
     if (e->options & NEIGHBOR_PROXY_ONLY)
@@ -912,7 +910,7 @@ proxyhttpStart(const char *url,
 	Config.Addrs.tcp_outgoing,
 	0,
 	COMM_NONBLOCKING,
-	url);
+	entry->url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
@@ -920,7 +918,6 @@ proxyhttpStart(const char *url,
     }
     ctrlp = xmalloc(sizeof(proxy_ctrl_t));
     ctrlp->sock = sock;
-    ctrlp->url = xstrdup(url);
     ctrlp->orig_request = orig_request;
     ctrlp->entry = entry;
     ctrlp->e = e;
@@ -932,25 +929,17 @@ proxyhttpStart(const char *url,
 static void
 proxyhttpStartComplete(void *data, int status)
 {
-    proxy_ctrl_t *ctrlp = (proxy_ctrl_t *) data;
-    int sock;
+    proxy_ctrl_t *ctrlp = data;
+    int sock = ctrlp->sock;
+    request_t *orig_request = ctrlp->orig_request;
+    StoreEntry *entry = ctrlp->entry;
+    peer *e = ctrlp->e;
+    char *url = entry->url;
     HttpStateData *httpState = NULL;
     request_t *request = NULL;
-    char *url;
-    request_t *orig_request;
-    StoreEntry *entry;
-    peer *e;
-
-    sock = ctrlp->sock;
-    url = ctrlp->url;
-    orig_request = ctrlp->orig_request;
-    entry = ctrlp->entry;
-    e = ctrlp->e;
     xfree(ctrlp);
-
     httpState = xcalloc(1, sizeof(HttpStateData));
     httpState->entry = entry;
-
     httpState->req_hdr = entry->mem_obj->mime_hdr;
     httpState->req_hdr_sz = entry->mem_obj->mime_hdr_sz;
     request = get_free_request_t();
@@ -1022,17 +1011,15 @@ httpConnectDone(int fd, int status, void *data)
 }
 
 int
-httpStart(char *url,
-    request_t * request,
+httpStart(request_t * request,
     char *req_hdr,
     int req_hdr_sz,
     StoreEntry * entry)
 {
     http_ctrl_t *ctrlp;
-    /* Create state structure. */
     int sock;
     debug(11, 3, "httpStart: \"%s %s\"\n",
-	RequestMethodStr[request->method], url);
+	RequestMethodStr[request->method], entry->url);
     debug(11, 10, "httpStart: req_hdr '%s'\n", req_hdr);
     /* Create socket. */
     sock = comm_open(SOCK_STREAM,
@@ -1040,7 +1027,7 @@ httpStart(char *url,
 	Config.Addrs.tcp_outgoing,
 	0,
 	COMM_NONBLOCKING,
-	url);
+	entry->url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "httpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());

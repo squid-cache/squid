@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.95 1997/02/26 19:46:13 wessels Exp $
+ * $Id: ftp.cc,v 1.96 1997/02/27 02:57:06 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -129,8 +129,6 @@ typedef struct _Ftpdata {
 } FtpStateData;
 
 typedef struct ftp_ctrl_t {
-    int unusedfd;
-    char *url;
     request_t *request;
     StoreEntry *entry;
 } ftp_ctrl_t;
@@ -553,17 +551,15 @@ ftpGetBasicAuth(const char *req_hdr)
 
 
 int
-ftpStart(int unusedfd, const char *url, request_t * request, StoreEntry * entry)
+ftpStart(request_t * request, StoreEntry * entry)
 {
     ftp_ctrl_t *ctrlp;
-    debug(9, 3, "FtpStart: FD %d '%s'\n", unusedfd, url);
+    debug(9, 3, "FtpStart: '%s'\n", entry->url);
     if (ftpget_server_write < 0) {
 	squid_error_entry(entry, ERR_FTP_DISABLED, NULL);
 	return COMM_ERROR;
     }
     ctrlp = xmalloc(sizeof(ftp_ctrl_t));
-    ctrlp->unusedfd = unusedfd;
-    ctrlp->url = xstrdup(url);
     ctrlp->request = request;
     ctrlp->entry = entry;
     storeLockObject(entry, ftpStartComplete, ctrlp);
@@ -573,24 +569,18 @@ ftpStart(int unusedfd, const char *url, request_t * request, StoreEntry * entry)
 static void
 ftpStartComplete(void *data, int status)
 {
-    ftp_ctrl_t *ctrlp = (ftp_ctrl_t *) data;
     LOCAL_ARRAY(char, realm, 8192);
-    int unusedfd;
-    char *url;
-    request_t *request;
-    StoreEntry *entry;
-    FtpStateData *ftpData;
+    ftp_ctrl_t *ctrlp = data;
+    request_t * request = ctrlp->request;
+    StoreEntry *entry = ctrlp->entry;
+    char *url = entry->url;
+    FtpStateData *ftpData = xcalloc(1, sizeof(FtpStateData));
     char *req_hdr;
     char *response;
     char *auth;
-    ftpData = xcalloc(1, sizeof(FtpStateData));
-    unusedfd = ctrlp->unusedfd;
-    url = ctrlp->url;
-    request = ctrlp->request;
-    entry = ctrlp->entry;
     ftpData->entry = entry;
     xfree(ctrlp);
-    req_hdr = ctrlp->entry->mem_obj->mime_hdr;
+    req_hdr = entry->mem_obj->mime_hdr;
     ftpData->request = requestLink(request);
     /* Parse login info. */
     if ((auth = ftpGetBasicAuth(req_hdr))) {
@@ -615,8 +605,8 @@ ftpStartComplete(void *data, int status)
 	    return;
 	}
     }
-    debug(9, 5, "FtpStart: FD %d, host=%s, path=%s, user=%s, passwd=%s\n",
-	unusedfd, ftpData->request->host, ftpData->request->urlpath,
+    debug(9, 5, "FtpStart: host=%s, path=%s, user=%s, passwd=%s\n",
+	ftpData->request->host, ftpData->request->urlpath,
 	ftpData->user, ftpData->password);
     ftpData->ftp_fd = comm_open(SOCK_STREAM,
 	0,
