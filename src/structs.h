@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.268 1999/01/22 19:07:06 glenn Exp $
+ * $Id: structs.h,v 1.269 1999/01/24 02:22:59 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -142,6 +142,7 @@ struct _aclCheck_t {
     const acl_access *access_list;
     struct in_addr src_addr;
     struct in_addr dst_addr;
+    ConnStateData *conn;	/* hack for ident */
     request_t *request;
     char ident[USER_IDENT_SZ];
     char browser[BROWSERNAMELEN];
@@ -226,6 +227,7 @@ struct _SquidConfig {
 	time_t deadPeer;
 	int icp_query;		/* msec */
 	int mcast_icp_query;	/* msec */
+	time_t ident;
     } Timeout;
     size_t maxRequestSize;
     struct {
@@ -822,13 +824,7 @@ struct _ConnStateData {
     struct sockaddr_in peer;
     struct sockaddr_in me;
     struct in_addr log_addr;
-    struct {
-	int fd;
-	char ident[USER_IDENT_SZ];
-	IDCB *callback;
-	int state;
-	void *callback_data;
-    } ident;
+    char ident[USER_IDENT_SZ];
     int nrequests;
     int persistent;
     struct {

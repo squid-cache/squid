@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.434 1999/01/21 23:58:43 wessels Exp $
+ * $Id: client_side.cc,v 1.435 1999/01/24 02:22:56 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -74,6 +74,7 @@ static RH clientRedirectDone;
 static STCB clientHandleIMSReply;
 static int clientGetsOldEntry(StoreEntry * new, StoreEntry * old, request_t * request);
 static int checkAccelOnly(clientHttpRequest *);
+static IDCB clientIdentDone;
 static int clientOnlyIfCached(clientHttpRequest * http);
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
@@ -105,15 +106,21 @@ checkAccelOnly(clientHttpRequest * http)
 }
 
 void
+clientIdentDone(const char *ident, void *data)
+{
+    ConnStateData *conn = data;
+    if (ident)
+	xstrncpy(conn->ident, ident, sizeof(conn->ident));
+    else
+	xstrncpy(conn->ident, "-", sizeof(conn->ident));
+}
+
+void
 clientAccessCheck(void *data)
 {
     clientHttpRequest *http = data;
     ConnStateData *conn = http->conn;
     const char *browser;
-    if (Config.onoff.ident_lookup && conn->ident.state == IDENT_NONE) {
-	identStart(-1, conn, clientAccessCheck, http);
-	return;
-    }
     if (checkAccelOnly(http)) {
 	clientAccessCheckDone(0, http);
 	return;
@@ -123,7 +130,12 @@ clientAccessCheck(void *data)
 	http->request,
 	conn->peer.sin_addr,
 	browser,
-	conn->ident.ident);
+	conn->ident);
+    /* hack for ident ACL. It needs to get full addresses, and a
+     * place to store the ident result on persistent connections...
+     */
+    http->acl_checklist->conn = conn;
+    cbdataLock(http->acl_checklist->conn);
     aclNBCheck(http->acl_checklist, clientAccessCheckDone, http);
 }
 
@@ -611,7 +623,7 @@ httpRequestFree(void *data)
 	if (request->user_ident[0])
 	    http->al.cache.ident = request->user_ident;
 	else
-	    http->al.cache.ident = conn->ident.ident;
+	    http->al.cache.ident = conn->ident;
 	if (request) {
 	    Packer p;
 	    MemBuf mb;
@@ -680,8 +692,6 @@ connStateFree(int fd, void *data)
 	assert(connState->chr != connState->chr->next);
 	httpRequestFree(http);
     }
-    if (connState->ident.fd > -1)
-	comm_close(connState->ident.fd);
     safe_free(connState->in.buf);
     /* XXX account connState->in.buf */
     pconnHistCount(0, connState->nrequests);
@@ -2411,7 +2421,6 @@ httpAccept(int sock, void *data)
 	connState->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
 	connState->me = me;
 	connState->fd = fd;
-	connState->ident.fd = -1;
 	connState->in.size = REQUEST_BUF_SIZE;
 	connState->in.buf = xcalloc(connState->in.size, 1);
 	cbdataAdd(connState, cbdataXfree, 0);
@@ -2420,6 +2429,8 @@ httpAccept(int sock, void *data)
 	if (Config.onoff.log_fqdn)
 	    fqdncache_gethostbyaddr(peer.sin_addr, FQDN_LOOKUP_IF_MISS);
 	commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
+	if (Config.onoff.ident_lookup)
+	    identStart(&me, &peer, clientIdentDone, connState);
 	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
 	commSetDefer(fd, clientReadDefer, connState);
 	(*N)++;

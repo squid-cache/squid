@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.84 1999/01/11 21:55:45 wessels Exp $
+ * $Id: typedefs.h,v 1.85 1999/01/24 02:23:00 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -180,7 +180,7 @@ typedef void PF(int, void *);
 typedef void DRCB(int fd, const char *buf, int size, int errflag, void *data);
 typedef void DWCB(int, int, size_t, void *);
 typedef void FQDNH(const char *, void *);
-typedef void IDCB(void *);
+typedef void IDCB(const char *ident, void *data);
 typedef void IPH(const ipcache_addrs *, void *);
 typedef void IRCB(peer *, peer_t, protocol_t, void *, void *data);
 typedef void PSC(FwdServer *, void *);
