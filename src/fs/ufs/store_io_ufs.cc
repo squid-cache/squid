@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.11 2002/08/08 20:12:46 hno Exp $
+ * $Id: store_io_ufs.cc,v 1.12 2002/10/12 09:45:58 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "store_ufs.h"
+#include "ufscommon.h"
 
 
 static DRCB storeUfsReadDone;
@@ -51,7 +52,7 @@ storeUfsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     STIOCB * callback, void *callback_data)
 {
     sfileno f = e->swap_filen;
-    char *path = storeUfsDirFullPath(SD, f, NULL);
+    char *path = commonUfsDirFullPath(SD, f, NULL);
     storeIOState *sio;
     struct stat sb;
     int fd;
@@ -91,16 +92,16 @@ storeUfsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * ca
     int fd;
     int mode = (O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
     char *path;
-    ufsinfo_t *ufsinfo = (ufsinfo_t *) SD->fsdata;
+    squidufsinfo_t *ufsinfo = (squidufsinfo_t *) SD->fsdata;
     sfileno filn;
     sdirno dirn;
 
     /* Allocate a number */
     dirn = SD->index;
-    filn = storeUfsDirMapBitAllocate(SD);
+    filn = commonUfsDirMapBitAllocate(SD);
     ufsinfo->suggest = filn + 1;
     /* Shouldn't we handle a 'bitmap full' error here? */
-    path = storeUfsDirFullPath(SD, filn, NULL);
+    path = commonUfsDirFullPath(SD, filn, NULL);
 
     debug(79, 3) ("storeUfsCreate: fileno %08X\n", filn);
     fd = file_open(path, mode);
@@ -126,7 +127,7 @@ storeUfsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * ca
     store_open_disk_fd++;
 
     /* now insert into the replacement policy */
-    storeUfsDirReplAdd(SD, e);
+    commonUfsDirReplAdd(SD, e);
     return sio;
 }
 
@@ -184,9 +185,9 @@ void
 storeUfsUnlink(SwapDir * SD, StoreEntry * e)
 {
     debug(79, 3) ("storeUfsUnlink: fileno %08X\n", e->swap_filen);
-    storeUfsDirReplRemove(e);
-    storeUfsDirMapBitReset(SD, e->swap_filen);
-    storeUfsDirUnlinkFile(SD, e->swap_filen);
+    commonUfsDirReplRemove(e);
+    commonUfsDirMapBitReset(SD, e->swap_filen);
+    commonUfsDirUnlinkFile(SD, e->swap_filen);
 }
 
 /*  === STATIC =========================================================== */

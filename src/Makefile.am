@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.34 2002/10/02 11:06:31 robertc Exp $
+#  $Id: Makefile.am,v 1.35 2002/10/12 09:45:55 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -217,6 +217,8 @@ squid_SOURCES = \
 	structs.h \
 	tools.c \
 	typedefs.h \
+	ufscommon.c \
+	ufscommon.h \
 	$(UNLINKDSOURCE) \
 	url.c \
 	urn.c \

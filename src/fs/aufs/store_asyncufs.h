@@ -78,14 +78,6 @@ int aioCheckCallbacks(SwapDir *);
 void aioSync(SwapDir *);
 int aioQueueSize(void);
 
-struct _squidaioinfo_t {
-    int swaplog_fd;
-    int l1;
-    int l2;
-    fileMap *map;
-    int suggest;
-};
-
 struct _squidaiostate_t {
     int fd;
     struct {
@@ -117,21 +109,12 @@ struct _queued_read {
     void *callback_data;
 };
 
-typedef struct _squidaioinfo_t squidaioinfo_t;
 typedef struct _squidaiostate_t squidaiostate_t;
 
 /* The squidaio_state memory pools */
 extern MemPool *squidaio_state_pool;
 extern MemPool *aufs_qread_pool;
 extern MemPool *aufs_qwrite_pool;
-
-extern void storeAufsDirMapBitReset(SwapDir *, sfileno);
-extern int storeAufsDirMapBitAllocate(SwapDir *);
-
-extern char *storeAufsDirFullPath(SwapDir * SD, sfileno filn, char *fullpath);
-extern void storeAufsDirUnlinkFile(SwapDir *, sfileno);
-extern void storeAufsDirReplAdd(SwapDir * SD, StoreEntry *);
-extern void storeAufsDirReplRemove(StoreEntry *);
 
 /*
  * Store IO stuff

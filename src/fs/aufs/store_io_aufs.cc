@@ -5,6 +5,7 @@
 
 #include "squid.h"
 #include "store_asyncufs.h"
+#include "ufscommon.h"
 
 #if ASYNC_READ
 static AIOCB storeAufsReadDone;
@@ -32,7 +33,7 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     STIOCB * callback, void *callback_data)
 {
     sfileno f = e->swap_filen;
-    char *path = storeAufsDirFullPath(SD, f, NULL);
+    char *path = commonUfsDirFullPath(SD, f, NULL);
     storeIOState *sio;
 #if !ASYNC_OPEN
     int fd;
@@ -87,8 +88,8 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
 
     /* Allocate a number */
     dirn = SD->index;
-    filn = storeAufsDirMapBitAllocate(SD);
-    path = storeAufsDirFullPath(SD, filn, NULL);
+    filn = commonUfsDirMapBitAllocate(SD);
+    path = commonUfsDirFullPath(SD, filn, NULL);
 
     debug(79, 3) ("storeAufsCreate: fileno %08X\n", filn);
     /*
@@ -125,7 +126,7 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
 #endif
 
     /* now insert into the replacement policy */
-    storeAufsDirReplAdd(SD, e);
+    commonUfsDirReplAdd(SD, e);
     return sio;
 
 }
@@ -229,9 +230,9 @@ void
 storeAufsUnlink(SwapDir * SD, StoreEntry * e)
 {
     debug(79, 3) ("storeAufsUnlink: dirno %d, fileno %08X\n", SD->index, e->swap_filen);
-    storeAufsDirReplRemove(e);
-    storeAufsDirMapBitReset(SD, e->swap_filen);
-    storeAufsDirUnlinkFile(SD, e->swap_filen);
+    commonUfsDirReplRemove(e);
+    commonUfsDirMapBitReset(SD, e->swap_filen);
+    commonUfsDirUnlinkFile(SD, e->swap_filen);
 }
 
 /*  === STATIC =========================================================== */
@@ -275,14 +276,14 @@ storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
     if (errflag || fd < 0) {
 	errno = errflag;
 	debug(79, 0) ("storeAufsOpenDone: %s\n", xstrerror());
-	debug(79, 1) ("\t%s\n", storeAufsDirFullPath(INDEXSD(sio->swap_dirn), sio->swap_filen, NULL));
+	debug(79, 1) ("\t%s\n", commonUfsDirFullPath(INDEXSD(sio->swap_dirn), sio->swap_filen, NULL));
 	storeAufsIOCallback(sio, DISK_ERROR);
 	return;
     }
     store_open_disk_fd++;
     aiostate->fd = fd;
     commSetCloseOnExec(fd);
-    fd_open(fd, FD_FILE, storeAufsDirFullPath(INDEXSD(sio->swap_dirn), sio->swap_filen, NULL));
+    fd_open(fd, FD_FILE, commonUfsDirFullPath(INDEXSD(sio->swap_dirn), sio->swap_filen, NULL));
     if (FILE_MODE(sio->mode) == O_WRONLY) {
 	if (storeAufsKickWriteQueue(sio))
 	    return;
