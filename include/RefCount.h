@@ -1,6 +1,6 @@
 
 /*
- * $Id: RefCount.h,v 1.5 2003/03/15 04:17:38 robertc Exp $
+ * $Id: RefCount.h,v 1.6 2003/06/23 11:14:52 robertc Exp $
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins
@@ -62,8 +62,7 @@ public:
         // This preserves semantics on self assignment
         C const *newP_ = p.p_;
         reference(p);
-        dereference();
-        p_ = newP_;
+        dereference(newP_);
         return *this;
     }
 
@@ -90,12 +89,16 @@ public:
     }
 
 private:
-    void dereference()
+    void dereference(C const *newP = NULL)
     {
-        if (p_ && p_->RefCountDereference() == 0)
-            p_->deleteSelf();
-
-        p_ = NULL;
+        /* Setting p_ first is important:
+	 * we may be freed ourselves as a result of
+	 * p_->deleteSelf();
+	 */
+        C const *tempP_ (p_);
+	p_ = newP;
+        if (tempP_ && tempP_->RefCountDereference() == 0)
+            tempP_->deleteSelf();
     }
 
     void reference (const RefCount& p)
