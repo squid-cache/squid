@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.289 1998/06/29 15:22:51 wessels Exp $
+ * $Id: http.cc,v 1.290 1998/06/29 19:29:01 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -127,7 +127,6 @@ static void httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, si
 static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
-static int httpSocketOpen(StoreEntry *, request_t *);
 static int httpCachableReply(HttpStateData *);
 
 static void
@@ -786,27 +785,6 @@ httpSendRequest(int fd, void *data)
 	httpState->flags);
     debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
     comm_write_mbuf(fd, mb, sendHeaderDone, httpState);
-}
-
-static int
-httpSocketOpen(StoreEntry * entry, request_t * request)
-{
-    int fd;
-    ErrorState *err;
-    fd = comm_open(SOCK_STREAM,
-	0,
-	Config.Addrs.tcp_outgoing,
-	0,
-	COMM_NONBLOCKING,
-	storeUrl(entry));
-    if (fd < 0) {
-	debug(50, 4) ("httpSocketOpen: %s\n", xstrerror());
-	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
-	err->xerrno = errno;
-	err->request = requestLink(request);
-	errorAppendEntry(entry, err);
-    }
-    return fd;
 }
 
 void
