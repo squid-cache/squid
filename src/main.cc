@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.264 1998/07/31 00:15:47 wessels Exp $
+ * $Id: main.cc,v 1.265 1998/07/31 02:40:29 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -434,7 +434,9 @@ mainInitialize(void)
 	pconnInit();
 	eventInit();
 	refreshInit();
+#if DELAY_POOLS
 	delayPoolsInit();
+#endif
     }
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.onoff.accel_with_proxy))
