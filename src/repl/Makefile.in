@@ -15,7 +15,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.39 2003/03/04 01:46:43 robertc Exp $
+#  $Id: Makefile.in,v 1.40 2003/03/11 22:14:25 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -106,6 +106,8 @@ RM = @RM@
 SAMBASOURCES = @SAMBASOURCES@
 SH = @SH@
 SNMPLIB = @SNMPLIB@
+SQUID_CFLAGS = @SQUID_CFLAGS@
+SQUID_CXXFLAGS = @SQUID_CXXFLAGS@
 SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
 STORE_MODULES = @STORE_MODULES@
@@ -122,8 +124,8 @@ install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
 AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = -Werror -Wall
-AM_CXXFLAGS = -Werror -Wall
+AM_CFLAGS = @SQUID_CFLAGS@
+AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 
 # No recursion is needed for the subdirs, we build from here. // @REPL_POLICIES@

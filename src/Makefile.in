@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.298 2003/03/10 05:05:48 robertc Exp $
+#  $Id: Makefile.in,v 1.299 2003/03/11 22:14:12 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -109,6 +109,8 @@ RM = @RM@
 SAMBASOURCES = @SAMBASOURCES@
 SH = @SH@
 SNMPLIB = @SNMPLIB@
+SQUID_CFLAGS = @SQUID_CFLAGS@
+SQUID_CXXFLAGS = @SQUID_CXXFLAGS@
 SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
 STORE_MODULES = @STORE_MODULES@
@@ -216,8 +218,8 @@ ESI_ALL_SOURCE = \
 @ENABLE_ARP_ACL_TRUE@ARP_ACL_SOURCE = ACLARP.cc ACLARP.h
 @ENABLE_ARP_ACL_FALSE@ARP_ACL_SOURCE = 
 
-AM_CFLAGS = -Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments
-AM_CXXFLAGS = -Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments
+AM_CFLAGS = @SQUID_CFLAGS@
+AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 SUBDIRS = fs repl auth
 
