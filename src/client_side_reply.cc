@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.80 2004/12/21 15:03:01 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.81 2005/03/06 21:08:13 serassio Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -2049,21 +2049,23 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         return;
     }
 
-    /* handle headers */
-    if (Config.onoff.log_mime_hdrs) {
-        size_t k;
-
-        if ((k = headersEnd(buf, reqofs))) {
-            safe_free(http->al.headers.reply);
-            http->al.headers.reply = (char *)xcalloc(k + 1, 1);
-            xstrncpy(http->al.headers.reply, buf, k);
-        }
-    }
-
     buildReply(buf, reqofs);
     ssize_t body_size = reqofs;
 
     if (holdingReply) {
+
+        /* handle headers */
+
+        if (Config.onoff.log_mime_hdrs) {
+            size_t k;
+
+            if ((k = headersEnd(buf, reqofs))) {
+                safe_free(http->al.headers.reply);
+                http->al.headers.reply = (char *)xcalloc(k + 1, 1);
+                xstrncpy(http->al.headers.reply, buf, k);
+            }
+        }
+
         holdingBuffer = result;
         processReplyAccess ();
         return;

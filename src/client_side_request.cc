@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.43 2004/12/21 17:28:29 robertc Exp $
+ * $Id: client_side_request.cc,v 1.44 2005/03/06 21:08:13 serassio Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -235,8 +235,10 @@ ClientHttpRequest::~ClientHttpRequest()
      * found the end of the body yet
      */
 
-    if (request && request->body_connection.getRaw() != NULL)
+    if (request && request->body_connection.getRaw() != NULL) {
         clientAbortBody(request);	/* abort body transter */
+        request->body_connection = NULL;
+    }
 
     /* the ICP check here was erroneous
      * - storeReleaseRequest was always called if entry was valid 
