@@ -1,4 +1,4 @@
-/* $Id: errorpage.cc,v 1.9 1996/04/02 00:51:52 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.10 1996/04/02 21:50:22 wessels Exp $ */
 
 /* DEBUG: Section 4             cached_error: Error printing routines */
 
@@ -162,6 +162,8 @@ char *cached_error_url(url, type, msg)
 	"0.0.0.0",
 	0,
 	ErrorData[index].tag,
-	"GET");
+	"GET",
+	0,
+	0);
     return tmp_error_buf;
 }

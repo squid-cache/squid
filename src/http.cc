@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.23 1996/04/02 00:51:54 wessels Exp $ */
+/* $Id: http.cc,v 1.24 1996/04/02 21:50:22 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -225,6 +225,7 @@ static void httpProcessReplyHeader(data, buf)
 	    storeAddEntry(entry);
 	    break;
 	}
+	entry->mem_obj->http_code = data->http_code;
     }
 }
 

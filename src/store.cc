@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.22 1996/04/02 01:00:31 wessels Exp $ */
+/* $Id: store.cc,v 1.23 1996/04/02 21:50:25 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -48,7 +48,7 @@
 #define STORE_MAINTAIN_RATE	(20)
 
 #define STORE_BUCKETS		(7921)
-#define STORE_IN_MEM_BUCKETS	(143)
+#define STORE_IN_MEM_BUCKETS		(143)
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -100,7 +100,7 @@ static MemObject *new_MemObject()
 }
 
 static StoreEntry *new_StoreEntry(mem_obj_flag)
-    int mem_obj_flag;
+     int mem_obj_flag;
 {
     StoreEntry *e = NULL;
 
@@ -229,7 +229,7 @@ void storeSetMemStatus(e, status)
 
     /* It is not an error to call this with a NULL e->key */
     if (e->key != NULL) {
-	if (e->mem_status == IN_MEMORY && status != IN_MEMORY) {
+	if (status != IN_MEMORY && e->mem_status == IN_MEMORY) {
 	    if ((ptr = hash_lookup(in_mem_table, e->key)))
 		hash_delete_link(in_mem_table, ptr);
 	} else if (status == IN_MEMORY && e->mem_status != IN_MEMORY) {
@@ -438,6 +438,7 @@ StoreEntry *storeCreateEntry(url, req_hdr, cachable, html_req, method)
     StoreEntry *e = NULL;
     MemObject *m = NULL;
     debug(20, 5, "storeCreateEntry: '%s'\n", url);
+    debug(20, 5, "storeCreateEntry: cachable=%d\n", cachable);
 
     if (meta_data.hot_vm > store_hotobj_high)
 	storeGetMemSpace(0, 1);
@@ -829,7 +830,7 @@ static void InvokeHandlers(e)
 void storeExpireNow(e)
      StoreEntry *e;
 {
-    debug(20, 3, "storeExpireNow: Object %s\n", e->key);
+    debug(20, 3, "storeExpireNow: Object %s\n", e->url);
     e->expires = cached_curtime;
 }
 
@@ -995,10 +996,12 @@ int storeSwapInStart(e)
      StoreEntry *e;
 {
     int fd;
+    char *path = NULL;
 
     /* sanity check! */
     if ((e->swap_status != SWAP_OK) || (e->swap_file_number < 0)) {
-	debug(20, 0, "storeSwapInStart: <No filename:%d> ? <URL:%s>\n", e->swap_file_number, e->url);
+	debug(20, 0, "storeSwapInStart: <No filename:%d> ? <URL:%s>\n",
+	    e->swap_file_number, e->url);
 	if (has_mem_obj(e))
 	    e->mem_obj->swap_fd = -1;
 	return -1;
@@ -1006,27 +1009,27 @@ int storeSwapInStart(e)
     /* create additional structure for object in memory */
     e->mem_obj = new_MemObject();
 
-    e->mem_obj->swap_fd = fd =
-	file_open(storeSwapFullPath(e->swap_file_number, NULL), NULL, O_RDONLY);
+    path = storeSwapFullPath(e->swap_file_number, NULL);
+    fd = e->mem_obj->swap_fd = file_open(path, NULL, O_RDONLY);
     if (fd < 0) {
-	debug(20, 0, "storeSwapInStart: Unable to open swapfile: %s for\n\t<URL:%s>\n",
-	    storeSwapFullPath(e->swap_file_number, NULL), e->url);
+	debug(20, 0, "storeSwapInStart: Unable to open swapfile: %s\n",
+	    path);
+	debug(20, 0, "storeSwapInStart: --> for <URL:%s>\n",
+	    e->url);
 	storeSetMemStatus(e, NOT_IN_MEMORY);
-	/* Invoke a store abort that should free the destroy_store_mem_obj(e); */
+	/* Invoke a store abort that should free the memory object */
 	return -1;
     }
     debug(20, 5, "storeSwapInStart: initialized swap file '%s' for <URL:%s>\n",
-	storeSwapFullPath(e->swap_file_number, NULL), e->url);
-
-    e->mem_obj->data = new_MemObjectData();
+	path, e->url);
 
     storeSetMemStatus(e, SWAPPING_IN);
+    e->mem_obj->data = new_MemObjectData();
     e->mem_obj->swap_offset = 0;
-
     e->mem_obj->e_swap_buf = get_free_8k_page();
 
     /* start swapping daemon */
-    file_read(e->mem_obj->swap_fd,
+    file_read(fd,
 	e->mem_obj->e_swap_buf,
 	SWAP_BUF,
 	e->mem_obj->swap_offset,
@@ -1382,6 +1385,7 @@ void storeComplete(e)
     debug(20, 5, "storeComplete: <URL:%s>\n", e->url);
 
     if (!e->key || e->flag & KEY_CHANGE) {
+	debug(20, 5, "storeComplete: No key, setting RELEASE_REQUEST\n");
 	/* Never cache private objects */
 	BIT_SET(e->flag, RELEASE_REQUEST);
 	BIT_RESET(e->flag, CACHABLE);
