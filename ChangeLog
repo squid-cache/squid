@@ -61,3 +61,4 @@
 	- Cleaned up FTP url parsing; support port.
 	- SIGHUP reconfigures the cache
 	- SIGUSR1 rotates logfiles.
+	- New ACLs
