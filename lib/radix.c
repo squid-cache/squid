@@ -1,5 +1,5 @@
 /*
- * $Id: radix.c,v 1.13 2001/02/07 19:04:08 hno Exp $
+ * $Id: radix.c,v 1.14 2001/08/03 16:55:21 wessels Exp $
  *
  * DEBUG: section 53     Radix tree data structure implementation
  * AUTHOR: NetBSD Derived
@@ -69,7 +69,6 @@
  */
 
 #include "config.h"
-#include "radix.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
