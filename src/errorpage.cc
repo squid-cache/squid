@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.65 1997/08/24 01:46:44 wessels Exp $
+ * $Id: errorpage.cc,v 1.66 1997/08/24 01:59:47 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -224,10 +224,13 @@ void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
     char *buf;
+    MemObject *mem = entry->mem_obj;
     int len;
     assert(entry->store_status == STORE_PENDING);
     buf = errorBuildBuf(err, &len);
     storeAppend(entry, buf, len);
+    if (mem)
+	mem->reply->code = err->http_status;
 }
 
 static void
