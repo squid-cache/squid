@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.13 2000/06/26 03:36:15 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.14 2000/06/26 07:17:55 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1591,7 +1591,10 @@ storeDiskdDirReplAdd(SwapDir * SD, StoreEntry * e)
 void
 storeDiskdDirReplRemove(StoreEntry * e)
 {
-    SwapDir *SD = INDEXSD(e->swap_dirn);
+    SwapDir *SD;
+    if (e->swap_dirn < 0)
+	return;
+    SD = INDEXSD(e->swap_dirn);
     debug(20, 4) ("storeDiskdDirReplRemove: remove node %p from dir %d\n", e,
 	SD->index);
     SD->repl->Remove(SD->repl, e, &e->repl);
