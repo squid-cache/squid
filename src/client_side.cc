@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.204 1998/02/04 07:22:16 wessels Exp $
+ * $Id: client_side.cc,v 1.205 1998/02/04 23:33:37 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -329,7 +329,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     const char *url = storeUrl(entry);
     int unlink_request = 0;
     StoreEntry *oldentry;
-    debug(33, 3) ("clientHandleIMSReply: %s\n", url);
+    debug(33, 3) ("clientHandleIMSReply: %s, %d bytes\n", url, (int) size);
     memFree(MEM_4K_BUF, buf);
     buf = NULL;
     /* unregister this handler */
@@ -535,7 +535,7 @@ httpRequestFree(void *data)
     StoreEntry *entry = http->entry;
     request_t *request = http->request;
     MemObject *mem = NULL;
-    debug(12, 3) ("httpRequestFree: %s\n", storeUrl(entry));
+    debug(33, 3) ("httpRequestFree: %s\n", storeUrl(entry));
     if (!clientCheckTransferDone(http)) {
 	if (entry)
 	    storeUnregister(entry, http);	/* unregister BEFORE abort */
@@ -611,7 +611,7 @@ connStateFree(int fd, void *data)
 {
     ConnStateData *connState = data;
     clientHttpRequest *http;
-    debug(12, 3) ("connStateFree: FD %d\n", fd);
+    debug(33, 3) ("connStateFree: FD %d\n", fd);
     assert(connState != NULL);
     while ((http = connState->chr) != NULL) {
 	assert(http->conn == connState);
@@ -665,9 +665,9 @@ clientParseRequestHeaders(clientHttpRequest * http)
     if ((t = mime_get_header(request_hdr, "Via")))
 	if (strstr(t, ThisCache)) {
 	    if (!http->accel) {
-		debug(12, 1) ("WARNING: Forwarding loop detected for '%s'\n",
+		debug(33, 1) ("WARNING: Forwarding loop detected for '%s'\n",
 		    http->uri);
-		debug(12, 1) ("--> %s\n", t);
+		debug(33, 1) ("--> %s\n", t);
 	    }
 	    EBIT_SET(request->flags, REQ_LOOPDETECT);
 	}
@@ -688,11 +688,11 @@ clientParseRequestHeaders(clientHttpRequest * http)
 	EBIT_SET(request->flags, REQ_CACHABLE);
     if (clientHierarchical(http))
 	EBIT_SET(request->flags, REQ_HIERARCHICAL);
-    debug(12, 5) ("clientParseRequestHeaders: REQ_NOCACHE = %s\n",
+    debug(33, 5) ("clientParseRequestHeaders: REQ_NOCACHE = %s\n",
 	EBIT_TEST(request->flags, REQ_NOCACHE) ? "SET" : "NOT SET");
-    debug(12, 5) ("clientParseRequestHeaders: REQ_CACHABLE = %s\n",
+    debug(33, 5) ("clientParseRequestHeaders: REQ_CACHABLE = %s\n",
 	EBIT_TEST(request->flags, REQ_CACHABLE) ? "SET" : "NOT SET");
-    debug(12, 5) ("clientParseRequestHeaders: REQ_HIERARCHICAL = %s\n",
+    debug(33, 5) ("clientParseRequestHeaders: REQ_HIERARCHICAL = %s\n",
 	EBIT_TEST(request->flags, REQ_HIERARCHICAL) ? "SET" : "NOT SET");
 }
 
@@ -809,7 +809,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
     size_t l;
     end = mime_headers_end(hdr_in);
     if (end == NULL) {
-	debug(12, 3) ("clientBuildReplyHeader: DIDN'T FIND END-OF-HEADERS\n");
+	debug(33, 3) ("clientBuildReplyHeader: DIDN'T FIND END-OF-HEADERS\n");
 	return 0;
     }
     xbuf = memAllocate(MEM_4K_BUF, 1);
@@ -854,7 +854,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	debug_trap("clientBuildReplyHeader: size mismatch");
 	len = l;
     }
-    debug(12, 3) ("clientBuildReplyHeader: OUTPUT:\n%s\n", hdr_out);
+    debug(33, 3) ("clientBuildReplyHeader: OUTPUT:\n%s\n", hdr_out);
     memFree(MEM_4K_BUF, xbuf);
     memFree(MEM_4K_BUF, ybuf);
     return len;
@@ -864,13 +864,14 @@ static void
 clientCacheHit(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
+    debug(33, 3) ("clientCacheHit: %s, %d bytes\n", http->uri, (int) size);
     if (size >= 0) {
 	clientSendMoreData(data, buf, size);
     } else if (http->entry == NULL) {
-	debug(12, 3) ("clientCacheHit: request aborted\n");
+	debug(33, 3) ("clientCacheHit: request aborted\n");
     } else {
 	/* swap in failure */
-	debug(12, 1) ("KARMA: clientCacheHit fail\n");
+	debug(33, 3) ("clientCacheHit: swapin failure for %s\n", http->uri);
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
 	if (http->entry)
 	    storeRelease(http->entry);
@@ -893,9 +894,10 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     FREE *freefunc = memFree4K;
     int hack = 0;
     char C = '\0';
+    debug(33, 5) ("clientSendMoreData: %s, %d bytes\n", http->uri, (int) size);
     assert(size <= SM_PAGE_SIZE);
     assert(http->request != NULL);
-    debug(12, 5) ("clientSendMoreData: FD %d '%s', out.offset=%d \n",
+    debug(33, 5) ("clientSendMoreData: FD %d '%s', out.offset=%d \n",
 	fd, storeUrl(entry), http->out.offset);
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
@@ -943,7 +945,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	     * hdrlen is the length of the old headers in buf
 	     * size - hdrlen is the amount of body in buf
 	     */
-	    debug(12, 3) ("clientSendMoreData: Appending %d bytes after headers\n",
+	    debug(33, 3) ("clientSendMoreData: Appending %d bytes after headers\n",
 		(int) (size - hdrlen));
 	    if (((size - hdrlen) + l) > 8192) {
 		debug(0, 0) ("Size, hdrlen, l %d, %d, %d\n", size, hdrlen, l);
@@ -997,7 +999,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     StoreEntry *entry = http->entry;
     int done;
     http->out.size += size;
-    debug(12, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
+    debug(33, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
 	fd, size, errflag, http->out.offset, entry->object_len);
     if (errflag) {
 	CheckQuickAbort(http);
@@ -1005,7 +1007,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     } else if (entry->store_status == STORE_ABORTED) {
 	comm_close(fd);
     } else if ((done = clientCheckTransferDone(http)) != 0 || size == 0) {
-	debug(12, 5) ("clientWriteComplete: FD %d transfer is DONE\n", fd);
+	debug(33, 5) ("clientWriteComplete: FD %d transfer is DONE\n", fd);
 	/* We're finished case */
 	if (http->entry->mem_obj->reply->content_length < 0 || !done ||
 	    EBIT_TEST(entry->flag, ENTRY_BAD_LENGTH)) {
@@ -1016,12 +1018,12 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	     */
 	    comm_close(fd);
 	} else if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
-	    debug(12, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
+	    debug(33, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
 	    conn = http->conn;
 	    conn->defer.until = 0;	/* Kick it to read a new request */
 	    httpRequestFree(http);
 	    if ((http = conn->chr) != NULL) {
-		debug(12, 1) ("clientWriteComplete: FD %d Sending next request\n", fd);
+		debug(33, 1) ("clientWriteComplete: FD %d Sending next request\n", fd);
 		if (!storeClientCopyPending(http->entry, http)) {
 		    if (entry->store_status == STORE_ABORTED)
 			debug(33, 0) ("clientWriteComplete: entry->swap_status == STORE_ABORTED\n");
@@ -1034,7 +1036,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 			http);
 		}
 	    } else {
-		debug(12, 5) ("clientWriteComplete: FD %d reading next request\n", fd);
+		debug(33, 5) ("clientWriteComplete: FD %d reading next request\n", fd);
 		fd_note(fd, "Reading next request");
 		/*
 		 * Set the timeout BEFORE calling clientReadRequest().
@@ -1070,11 +1072,13 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
     StoreEntry *entry = http->entry;
     MemObject *mem = entry->mem_obj;
     char *reply = NULL;
+    debug(33, 3) ("clientGetHeadersForIMS: %s, %d bytes\n",
+	http->uri, (int) size);
     assert(size <= SM_PAGE_SIZE);
     memFree(MEM_4K_BUF, buf);
     buf = NULL;
     if (size < 0 || entry->store_status == STORE_ABORTED) {
-	debug(12, 1) ("clientGetHeadersForIMS: storeClientCopy failed for '%s'\n",
+	debug(33, 1) ("clientGetHeadersForIMS: storeClientCopy failed for '%s'\n",
 	    storeKeyText(entry->key));
 	clientProcessMiss(http);
 	return;
@@ -1084,6 +1088,15 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	    clientProcessMiss(http);
 	    return;
 	}
+	if (size == SM_PAGE_SIZE && http->out.offset == 0) {
+	    /*
+	     * We can't get any more headers than this, so bail
+	     */
+	    debug(33, 1) ("clientGetHeadersForIMS: failed, forcing cache miss\n");
+	    clientProcessMiss(http);
+	    return;
+	}
+	debug(33, 3) ("clientGetHeadersForIMS: waiting for HTTP reply headers\n");
 	/* All headers are not yet available, wait for more data */
 	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientGetHeadersForIMS: entry->swap_status == STORE_ABORTED\n");
@@ -1112,7 +1125,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 #ifdef CHECK_REPLY_CODE_NOTEQUAL_200
     /* Only objects with statuscode==200 can be "Not modified" */
     if (mem->reply->code != 200) {
-	debug(12, 4) ("clientGetHeadersForIMS: Reply code %d!=200\n",
+	debug(33, 4) ("clientGetHeadersForIMS: Reply code %d!=200\n",
 	    mem->reply->code);
 	clientProcessMiss(http);
 	return;
@@ -1132,7 +1145,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	    http);
 	return;
     }
-    debug(12, 4) ("clientGetHeadersForIMS: Not modified '%s'\n", storeUrl(entry));
+    debug(33, 4) ("clientGetHeadersForIMS: Not modified '%s'\n", storeUrl(entry));
     reply = clientConstruct304reply(mem->reply);
     comm_write(http->conn->fd,
 	xstrdup(reply),
@@ -1147,7 +1160,7 @@ clientHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *d
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
-    debug(12, 5) ("clientHandleIMSComplete: Not Modified sent '%s'\n", storeUrl(entry));
+    debug(33, 5) ("clientHandleIMSComplete: Not Modified sent '%s'\n", storeUrl(entry));
     /* Set up everything for the logging */
     storeUnregister(entry, http);
     storeUnlockObject(entry);
@@ -1219,7 +1232,7 @@ clientProcessRequest(clientHttpRequest * http)
     request_t *r = http->request;
     int fd = http->conn->fd;
     char *hdr;
-    debug(12, 4) ("clientProcessRequest: %s '%s'\n",
+    debug(33, 4) ("clientProcessRequest: %s '%s'\n",
 	RequestMethodStr[r->method],
 	url);
     if (r->method == METHOD_CONNECT) {
@@ -1259,7 +1272,7 @@ clientProcessRequest(clientHttpRequest * http)
 	return;
     }
     http->log_type = clientProcessRequest2(http);
-    debug(12, 4) ("clientProcessRequest: %s for '%s'\n",
+    debug(33, 4) ("clientProcessRequest: %s for '%s'\n",
 	log_tags[http->log_type],
 	http->uri);
     if ((entry = http->entry) != NULL) {
@@ -1315,9 +1328,9 @@ clientProcessMiss(clientHttpRequest * http)
     aclCheck_t ch;
     int answer;
     ErrorState *err = NULL;
-    debug(12, 4) ("clientProcessMiss: '%s %s'\n",
+    debug(33, 4) ("clientProcessMiss: '%s %s'\n",
 	RequestMethodStr[r->method], url);
-    debug(12, 10) ("clientProcessMiss: request_hdr:\n%s\n", request_hdr);
+    debug(33, 10) ("clientProcessMiss: request_hdr:\n%s\n", request_hdr);
     /*
      * We might have a left-over StoreEntry from a failed cache hit
      * or IMS request.
@@ -1378,7 +1391,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 
     /* Make sure a complete line has been received */
     if (strchr(conn->in.buf, '\n') == NULL) {
-	debug(12, 5) ("Incomplete request line, waiting for more data\n");
+	debug(33, 5) ("Incomplete request line, waiting for more data\n");
 	*status = 0;
 	return NULL;
     }
@@ -1390,7 +1403,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 
     /* Look for request method */
     if ((mstr = strtok(inbuf, "\t ")) == NULL) {
-	debug(12, 1) ("parseHttpRequest: Can't get request method\n");
+	debug(33, 1) ("parseHttpRequest: Can't get request method\n");
 	http = xcalloc(1, sizeof(clientHttpRequest));
 	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
@@ -1406,7 +1419,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     }
     method = urlParseMethod(mstr);
     if (method == METHOD_NONE) {
-	debug(12, 1) ("parseHttpRequest: Unsupported method '%s'\n", mstr);
+	debug(33, 1) ("parseHttpRequest: Unsupported method '%s'\n", mstr);
 	http = xcalloc(1, sizeof(clientHttpRequest));
 	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
@@ -1420,12 +1433,12 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*status = -1;
 	return http;
     }
-    debug(12, 5) ("parseHttpRequest: Method is '%s'\n", mstr);
+    debug(33, 5) ("parseHttpRequest: Method is '%s'\n", mstr);
     *method_p = method;
 
     /* look for URL */
     if ((url = strtok(NULL, "\r\n\t ")) == NULL) {
-	debug(12, 1) ("parseHttpRequest: Missing URL\n");
+	debug(33, 1) ("parseHttpRequest: Missing URL\n");
 	http = xcalloc(1, sizeof(clientHttpRequest));
 	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
@@ -1438,12 +1451,12 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*status = -1;
 	return http;
     }
-    debug(12, 5) ("parseHttpRequest: Request is '%s'\n", url);
+    debug(33, 5) ("parseHttpRequest: Request is '%s'\n", url);
 
     token = strtok(NULL, null_string);
     for (t = token; t && *t && *t != '\n' && *t != '\r'; t++);
     if (t == NULL || *t == '\0' || t == token || strncmp(token, "HTTP/", 5)) {
-	debug(12, 3) ("parseHttpRequest: Missing HTTP identifier\n");
+	debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
 	http = xcalloc(1, sizeof(clientHttpRequest));
 	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
@@ -1474,7 +1487,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    break;
     if (end <= req_hdr) {
 	/* Invalid request */
-	debug(12, 3) ("parseHttpRequest: No request headers?\n");
+	debug(33, 3) ("parseHttpRequest: No request headers?\n");
 	http = xcalloc(1, sizeof(clientHttpRequest));
 	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
@@ -1502,7 +1515,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     xmemcpy(*headers_p, req_hdr, header_sz);
     *(*headers_p + header_sz) = '\0';
 
-    debug(12, 5) ("parseHttpRequest: Request Header is\n%s\n", *headers_p);
+    debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", *headers_p);
 
     /* Assign http->uri */
     if ((t = strchr(url, '\n')))	/* remove NL */
@@ -1539,7 +1552,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 		inet_ntoa(http->conn->me.sin_addr),
 		(int) Config.Accel.port,
 		url);
-	    debug(12, 5) ("VHOST REWRITE: '%s'\n", http->uri);
+	    debug(33, 5) ("VHOST REWRITE: '%s'\n", http->uri);
 	} else {
 	    url_sz = strlen(Config2.Accel.prefix) + strlen(url) +
 		Config.appendDomainLen + 1;
@@ -1555,7 +1568,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	http->accel = 0;
     }
     http->log_uri = xstrdup(http->uri);
-    debug(12, 5) ("parseHttpRequest: Complete request received\n");
+    debug(33, 5) ("parseHttpRequest: Complete request received\n");
     if (free_request)
 	safe_free(url);
     xfree(inbuf);
@@ -1586,7 +1599,7 @@ clientReadRequest(int fd, void *data)
     ErrorState *err = NULL;
     fde *F = &fd_table[fd];
     int len = conn->in.size - conn->in.offset - 1;
-    debug(12, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
+    debug(33, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
     size = read(fd, conn->in.buf + conn->in.offset, len);
     fd_bytes(fd, size, FD_READ);
     /*
@@ -1604,7 +1617,7 @@ clientReadRequest(int fd, void *data)
 	    return;
 	}
 	/* It might be half-closed, we can't tell */
-	debug(12, 5) ("clientReadRequest: FD %d closed?\n", fd);
+	debug(33, 5) ("clientReadRequest: FD %d closed?\n", fd);
 	EBIT_SET(F->flags, FD_SOCKET_EOF);
 	conn->defer.until = squid_curtime + 1;
 	conn->defer.n++;
@@ -1629,8 +1642,8 @@ clientReadRequest(int fd, void *data)
 	/* Limit the number of concurrent requests to 2 */
 	for (H = &conn->chr, nrequests = 0; *H; H = &(*H)->next, nrequests++);
 	if (nrequests >= 2) {
-	    debug(12, 2) ("clientReadRequest: FD %d max concurrent requests reached\n", fd);
-	    debug(12, 5) ("clientReadRequest: FD %d defering new request until one is done\n", fd);
+	    debug(33, 2) ("clientReadRequest: FD %d max concurrent requests reached\n", fd);
+	    debug(33, 5) ("clientReadRequest: FD %d defering new request until one is done\n", fd);
 	    conn->defer.until = squid_curtime + 100;	/* Reset when a request is complete */
 	    break;
 	}
@@ -1656,7 +1669,7 @@ clientReadRequest(int fd, void *data)
 	    conn->nrequests++;
 	    commSetTimeout(fd, Config.Timeout.lifetime, NULL, NULL);
 	    if (parser_return_code < 0) {
-		debug(12, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
+		debug(33, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
 		err = errorCon(ERR_INVALID_REQ, HTTP_BAD_REQUEST);
 		err->request_hdrs = xstrdup(conn->in.buf);
 		http->entry = clientCreateStoreEntry(http, method, 0);
@@ -1664,7 +1677,7 @@ clientReadRequest(int fd, void *data)
 		break;
 	    }
 	    if ((request = urlParse(method, http->uri)) == NULL) {
-		debug(12, 5) ("Invalid URL: %s\n", http->uri);
+		debug(33, 5) ("Invalid URL: %s\n", http->uri);
 		err = errorCon(ERR_INVALID_URL, HTTP_BAD_REQUEST);
 		err->src_addr = conn->peer.sin_addr;
 		err->url = xstrdup(http->uri);
@@ -1715,10 +1728,10 @@ clientReadRequest(int fd, void *data)
 	    if (k == 0) {
 		if (conn->in.offset >= Config.maxRequestSize) {
 		    /* The request is too large to handle */
-		    debug(12, 0) ("Request won't fit in buffer.\n");
-		    debug(12, 0) ("Config 'request_size'= %d bytes.\n",
+		    debug(33, 0) ("Request won't fit in buffer.\n");
+		    debug(33, 0) ("Config 'request_size'= %d bytes.\n",
 			Config.maxRequestSize);
-		    debug(12, 0) ("This request = %d bytes.\n",
+		    debug(33, 0) ("This request = %d bytes.\n",
 			conn->in.offset);
 		    err = errorCon(ERR_INVALID_REQ, HTTP_REQUEST_ENTITY_TOO_LARGE);
 		    http->entry = clientCreateStoreEntry(http, request->method, 0);
@@ -1729,7 +1742,7 @@ clientReadRequest(int fd, void *data)
 		conn->in.size += REQUEST_BUF_SIZE;
 		conn->in.buf = xrealloc(conn->in.buf, conn->in.size);
 		meta_data.misc += REQUEST_BUF_SIZE;
-		debug(12, 2) ("Handling a large request, offset=%d inbufsize=%d\n",
+		debug(33, 2) ("Handling a large request, offset=%d inbufsize=%d\n",
 		    conn->in.offset, conn->in.size);
 		k = conn->in.size - 1 - conn->in.offset;
 	    }
@@ -1744,7 +1757,7 @@ requestTimeout(int fd, void *data)
 {
     ConnStateData *conn = data;
     ErrorState *err;
-    debug(12, 2) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
+    debug(33, 2) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
     if (fd_table[fd].rwstate) {
 	/*
 	 * Some data has been sent to the client, just close the FD
@@ -1798,7 +1811,7 @@ httpAccept(int sock, void *notused)
 	    sock, xstrerror());
 	return;
     }
-    debug(12, 4) ("httpAccept: FD %d: accepted\n", fd);
+    debug(33, 4) ("httpAccept: FD %d: accepted\n", fd);
     connState = xcalloc(1, sizeof(ConnStateData));
     connState->peer = peer;
     connState->log_addr = peer.sin_addr;
@@ -1884,7 +1897,7 @@ CheckQuickAbort(clientHttpRequest * http)
 	return;
     if (CheckQuickAbort2(http) == 0)
 	return;
-    debug(12, 3) ("CheckQuickAbort: ABORTING %s\n", storeUrl(entry));
+    debug(33, 3) ("CheckQuickAbort: ABORTING %s\n", storeUrl(entry));
     storeAbort(entry, 1);
 }
 
@@ -2021,8 +2034,8 @@ checkFailureRatio(err_type etype, hier_code hcode)
 	return;
     if (request_failure_ratio < 1.0)
 	return;
-    debug(12, 0) ("Failure Ratio at %4.2f\n", request_failure_ratio);
-    debug(12, 0) ("Going into hit-only-mode for %d minutes...\n",
+    debug(33, 0) ("Failure Ratio at %4.2f\n", request_failure_ratio);
+    debug(33, 0) ("Going into hit-only-mode for %d minutes...\n",
 	FAILURE_MODE_TIME / 60);
     hit_only_mode_until = squid_curtime + FAILURE_MODE_TIME;
     request_failure_ratio = 0.8;	/* reset to something less than 1.0 */
