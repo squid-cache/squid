@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.169 1997/06/20 05:08:30 wessels Exp $
+ * $Id: comm.cc,v 1.170 1997/06/20 05:26:08 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -584,7 +584,7 @@ comm_close(int fd)
     fde = &fd_table[fd];
     if (!fde->open)
 	return;
-    assert(fd_table[fd].type =! FD_FILE);
+    assert(fde->type != FD_FILE);
     fde->open = 0;
     CommWriteStateCallbackAndFree(fd, COMM_ERROR);
     commCallCloseHandlers(fd);

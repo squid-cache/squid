@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.127 1997/06/20 02:22:11 wessels Exp $
+ * $Id: ftp.cc,v 1.128 1997/06/20 05:26:09 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -225,7 +225,8 @@ ftpTimeout(int fd, void *data)
 {
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
-    debug(9, 4) ("ftpLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
+    assert(cbdataValid(ftpState));
+    debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, entry->url);
     storeAbort(entry, ERR_READ_TIMEOUT, NULL, 0);
     if (ftpState->data.fd >= 0)
 	comm_close(ftpState->data.fd);
