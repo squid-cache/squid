@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.27 2003/03/11 22:14:25 robertc Exp $
+#  $Id: Makefile.in,v 1.28 2003/04/22 01:39:42 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -131,11 +131,11 @@ AM_CXXFLAGS = -Werror -Wall
 
 INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
 
-EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2
+EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
 
-TESTS = refcount splay mem_node_test http_range_test
+TESTS = rfc1738 refcount splay mem_node_test http_range_test
 
-check_PROGRAMS = refcount splay mem_node_test http_range_test
+check_PROGRAMS = rfc1738 refcount splay mem_node_test http_range_test
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
 mem_node_test_SOURCES = mem_node_test.cc
@@ -157,14 +157,16 @@ http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
 
 
 splay_SOURCES = splay.cc
+
+rfc1738_SOURCES = rfc1738.cc
 subdir = test-suite
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 EXTRA_PROGRAMS = mem_node_test$(EXEEXT) membanger$(EXEEXT) \
-	splay$(EXEEXT) tcp-banger2$(EXEEXT)
-check_PROGRAMS = refcount$(EXEEXT) splay$(EXEEXT) mem_node_test$(EXEEXT) \
-	http_range_test$(EXEEXT)
+	splay$(EXEEXT) tcp-banger2$(EXEEXT) rfc1738$(EXEEXT)
+check_PROGRAMS = rfc1738$(EXEEXT) refcount$(EXEEXT) splay$(EXEEXT) \
+	mem_node_test$(EXEEXT) http_range_test$(EXEEXT)
 am_http_range_test_OBJECTS = http_range_test.$(OBJEXT)
 http_range_test_OBJECTS = $(am_http_range_test_OBJECTS)
 http_range_test_DEPENDENCIES = $(top_builddir)/src/HttpHdrRange.o \
@@ -187,6 +189,11 @@ refcount_OBJECTS = $(am_refcount_OBJECTS)
 refcount_LDADD = $(LDADD)
 refcount_DEPENDENCIES =
 refcount_LDFLAGS =
+am_rfc1738_OBJECTS = rfc1738.$(OBJEXT)
+rfc1738_OBJECTS = $(am_rfc1738_OBJECTS)
+rfc1738_LDADD = $(LDADD)
+rfc1738_DEPENDENCIES =
+rfc1738_LDFLAGS =
 am_splay_OBJECTS = splay.$(OBJEXT)
 splay_OBJECTS = $(am_splay_OBJECTS)
 splay_LDADD = $(LDADD)
@@ -206,8 +213,8 @@ LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@DEP_FILES = $(DEPDIR)/http_range_test.Po \
 @AMDEP_TRUE@	$(DEPDIR)/mem_node_test.Po $(DEPDIR)/membanger.Po \
-@AMDEP_TRUE@	$(DEPDIR)/refcount.Po $(DEPDIR)/splay.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tcp-banger2.Po
+@AMDEP_TRUE@	$(DEPDIR)/refcount.Po $(DEPDIR)/rfc1738.Po \
+@AMDEP_TRUE@	$(DEPDIR)/splay.Po $(DEPDIR)/tcp-banger2.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -220,9 +227,10 @@ CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
 CXXFLAGS = @CXXFLAGS@
 DIST_SOURCES = $(http_range_test_SOURCES) $(mem_node_test_SOURCES) \
-	membanger.c $(refcount_SOURCES) $(splay_SOURCES) tcp-banger2.c
+	membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) \
+	$(splay_SOURCES) tcp-banger2.c
 DIST_COMMON = Makefile.am Makefile.in
-SOURCES = $(http_range_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(splay_SOURCES) tcp-banger2.c
+SOURCES = $(http_range_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) tcp-banger2.c
 
 all: all-am
 
@@ -250,6 +258,9 @@ membanger$(EXEEXT): $(membanger_OBJECTS) $(membanger_DEPENDENCIES)
 refcount$(EXEEXT): $(refcount_OBJECTS) $(refcount_DEPENDENCIES) 
 	@rm -f refcount$(EXEEXT)
 	$(CXXLINK) $(refcount_LDFLAGS) $(refcount_OBJECTS) $(refcount_LDADD) $(LIBS)
+rfc1738$(EXEEXT): $(rfc1738_OBJECTS) $(rfc1738_DEPENDENCIES) 
+	@rm -f rfc1738$(EXEEXT)
+	$(CXXLINK) $(rfc1738_LDFLAGS) $(rfc1738_OBJECTS) $(rfc1738_LDADD) $(LIBS)
 splay$(EXEEXT): $(splay_OBJECTS) $(splay_DEPENDENCIES) 
 	@rm -f splay$(EXEEXT)
 	$(CXXLINK) $(splay_LDFLAGS) $(splay_OBJECTS) $(splay_LDADD) $(LIBS)
@@ -267,6 +278,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mem_node_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/membanger.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/refcount.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rfc1738.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/splay.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tcp-banger2.Po@am__quote@
 
