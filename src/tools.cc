@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.230 2003/01/23 00:37:27 robertc Exp $
+ * $Id: tools.cc,v 1.231 2003/02/08 02:32:53 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -996,6 +996,7 @@ parseEtcHosts(void)
       skip:
 	wordlistDestroy(&hosts);
     }
+    fclose (fp);
 }
 
 int
