@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.42 2001/06/18 16:05:47 wessels Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.43 2001/06/18 16:32:35 wessels Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -80,7 +80,7 @@ Squid consists of the following major components
 	state information is held in a data structure called
 	<em/ConnStateData/.  Per-request state information is stored
 	in the <em/clientHttpRequest/ structure.
-    
+
 <sect1>Server Side
 
 	<P>
@@ -118,7 +118,7 @@ Squid consists of the following major components
 	this file number (sfilen) is converted to a disk pathname
 	by a simple modulo of L2 and L1, but other storage drivers may
 	map sfilen in other ways.  A cache swap file consists
-	of two parts: the cache metadata, and the object data. 
+	of two parts: the cache metadata, and the object data.
 	Note the object data includes the full HTTP reply---headers
 	and body.  The HTTP reply headers are not the same as the
 	cache metadata.
@@ -209,7 +209,7 @@ Squid consists of the following major components
 	This provides access to certain information needed by the
 	cache administrator.  A companion program, <em/cachemgr.cgi/
 	can be used to make this information available via a Web
-	browser.  Cache manager requests to Squid are made with a 
+	browser.  Cache manager requests to Squid are made with a
 	special URL of the form
 <verb>
 	cache_object://hostname/operation
@@ -228,7 +228,7 @@ Squid consists of the following major components
 	Squid cache will know if it, or one if its neighbors, is closest
 	to a given origin server.  The actual measurements are made
 	with the <em/pinger/ program, described below.  The measured
-	values are stored in a database indexed under two keys.  The 
+	values are stored in a database indexed under two keys.  The
 	primary index field is the /24 prefix of the origin server's
 	IP address.  Secondly, a hash table of fully-qualified host
 	names have have data structures with links to the appropriate
@@ -251,7 +251,7 @@ Squid consists of the following major components
 <sect1>Autonomous System Numbers
 
 	<P>
-	Squid supports Autonomous System (AS) numbers as another 
+	Squid supports Autonomous System (AS) numbers as another
 	access control element.  The routines in <tt/asn.c/
 	query databases which map AS numbers into lists of CIDR
 	prefixes.  These results are stored in a radix tree which
@@ -284,7 +284,7 @@ Squid consists of the following major components
 	is assigned a section and level.  Usually, every debug statement
 	in the same source file has the same section.  Levels are chosen
 	depending on how much output will be generated, or how useful the
-	provided information will be.  The <em/debug_options/ line 
+	provided information will be.  The <em/debug_options/ line
 	in the configuration file determines which debug statements will
 	be shown and which will not.  The <em/debug_options/ line
 	assigns a maximum level for every section.  If a given debug
@@ -336,9 +336,9 @@ Squid consists of the following major components
 <sect1>Internet Cache Protocol
 
 	<P>
-	Here we implement the Internet Cache Protocol.  This 
+	Here we implement the Internet Cache Protocol.  This
 	protocol is documented in the RFC 2186 and RFC 2187.
-	The bulk of code is in the <tt/icp_v2.c/ file.  The 
+	The bulk of code is in the <tt/icp_v2.c/ file.  The
 	other, <tt/icp_v3.c/ is a single function for handling
 	ICP queries from Netcache/Netapp caches; they use
 	a different version number and a slightly different message
@@ -366,7 +366,7 @@ Squid consists of the following major components
 
 	<P>
 	Currently, multicast is only used for ICP queries.   The
-	routines in this file implement joining a UDP 
+	routines in this file implement joining a UDP
 	socket to a multicast group (or groups), and setting
 	the multicast TTL value on outgoing packets.
 
@@ -691,7 +691,7 @@ Squid consists of the following major components
 	this file number (sfilen) is converted to a disk pathname
 	by a simple modulo of L2 and L1, but other storage drivers may
 	map sfilen in other ways.  A cache swap file consists
-	of two parts: the cache metadata, and the object data. 
+	of two parts: the cache metadata, and the object data.
 	Note the object data includes the full HTTP reply---headers
 	and body.  The HTTP reply headers are not the same as the
 	cache metadata.
@@ -793,7 +793,7 @@ Squid consists of the following major components
 <verb>
 	void
 	storeFsSetup_ufs(storefs_entry_t *storefs)
-	{   
+	{
 		assert(!ufs_initialised);
 		storefs->parsefunc = storeUfsDirParse;
 		storefs->reconfigurefunc = storeUfsDirReconfigure;
@@ -916,7 +916,7 @@ Squid consists of the following major components
 	<P>
 	Squid understands the concept of multiple diverse storage directories.
 	Each storage directory provides a caching object store, with object
-	storage, retrieval, indexing and replacement. 
+	storage, retrieval, indexing and replacement.
 
 	<P>
 	Each open object has associated with it a <em/storeIOState/ object. The
@@ -1054,7 +1054,7 @@ Squid consists of the following major components
 	<P>
 	Called periodically to replace objects. The active replacement policy
 	should be used to timeout unused objects in order to make room for
-	new objects. 
+	new objects.
 
 <sect2>callback
 
@@ -1254,7 +1254,7 @@ Squid consists of the following major components
 
 	<P>
 	<tt/storeCreate/ is called to store the given <em/StoreEntry/ in
-	a storage directory. 
+	a storage directory.
 
 	<P>
 	<tt/callback/ is a function that will be called either when
@@ -1903,7 +1903,7 @@ coupling between the storage layer and the replacement policy.
 	The IP cache usually doesn't block on a request except for
 	special cases where this is desired (see below).
 
-<sect1> Data Structures 
+<sect1> Data Structures
 
 	<P>
 	The data structure used for storing name-address mappings
@@ -1955,7 +1955,7 @@ coupling between the storage layer and the replacement policy.
 
 	</descrip>
 
-<sect1> Internal Operation 
+<sect1> Internal Operation
 
 	<P>
 	Internally, the execution flow is as follows: On a miss,
@@ -2023,8 +2023,34 @@ coupling between the storage layer and the replacement policy.
 
 <!-- %%%% Chapter : Authentication Framework %%%% -->
 <sect>Authentication Framework
-		
-<sect1>Definition of an auth scheme
+
+	<p>
+	Squid's authentication system is responsible for reading
+	authentication credentials from HTTP requests and deciding
+	whether or not those credentials are valid.  This functionality
+	resides in two separate components: Authentication Schemes
+	and Authentication Modules.
+
+	<p>
+	An Authentication Scheme describes how Squid gets the
+	credentials (i.e. username, password) from user requests.
+	Squid currently supports two authentication schemes: Basic
+	and NTLM.  Basic authentication uses the <em/WWW-Authenticate/
+	HTTP header.  The Authentication Scheme code is implemented
+	inside Squid itself.
+
+	<p>
+	An Authentication Module takes the credentials received
+	from a client's request and tells Squid if they are
+	are valid.  Authentication Modules are implemented
+	externally from Squid, as child helper processes.
+	Authentication Modules interface with various types
+	authentication databases, such as LDAP, PAM, NCSA-style
+	password files, and more.
+
+<sect1>Authentication Scheme API
+
+<sect2>Definition of an Authentication Scheme
 		
 	<P>An auth scheme in squid is the collection of functions required to
         manage the authentication process for a given HTTP authentication
@@ -2041,11 +2067,6 @@ coupling between the storage layer and the replacement policy.
         advanced caching access control functionality already. Future work in
         squid will allow a auth scheme helper to return group information for a
         user, to allow Squid to more seamlessly implement access control.
-		
-<sect1>Data types
-		
-	<P>The data types are presented in C for the simple reason that squid is
-        currently written exclusively in C.
 		
 	<sect2>Function typedefs
 	
@@ -2198,7 +2219,7 @@ coupling between the storage layer and the replacement policy.
 	<P>Functions of type AUTHSDIRECTION are used by squid to determine what
         the next step in performing authentication for a given scheme is. The
         following are the return codes:
-        
+
 	<itemize>
         <item>-2 = error in the auth module. Cannot determine request direction.
         <item>-1 = the auth module needs to send data to an external helper.
@@ -2260,11 +2281,11 @@ coupling between the storage layer and the replacement policy.
 
 	</descrip>
 
-	<sect2>Structures
+	<sect2>Data Structures
 		
-	<P>This is used to link auth_users into the username cache. Because some
-        schemes may link in aliases to a user, the link is not part of the
-        auth_user structure itself.
+	<P>This is used to link auth_users into the username cache.
+	Because some schemes may link in aliases to a user, the
+	link is not part of the auth_user structure itself.
 		
 	<verb>
 struct _auth_user_hash_pointer {
@@ -2328,7 +2349,7 @@ struct _auth_user_request_t {
     size_t references;
 };
 </verb>
-       
+
 	<p>
 	The authscheme_entry struct is used to store the runtime
 	registered functions that make up an auth scheme. An auth
@@ -2369,7 +2390,7 @@ struct _authscheme_entry {
 	and /src/auth/ntlm for a connection based stateful auth
 	module.
 	
-<sect1>How to add a new auth scheme
+<sect2>How to add a new Authentication Scheme
 		
 	<P>Copy the nearest existing auth scheme and modify to receive the
         appropriate scheme headers. Now step through the acl.c MatchAclProxyUser
@@ -2378,16 +2399,58 @@ struct _authscheme_entry {
         any backend existence it needs. Remember any blocking code must go in
         AUTHSSTART function(s) and _MUST_ use callbacks.
 		
-<sect1>How to ``hook in'' new functions to the API
-		
-	<P>Start of by figuring the code path that will result in the function
-        being called, and what data it will need. Then create a typedef for the
-        function, add and entry to the authscheme_entry struct. Add a wrapper
-        function to authenticate.c (or if appropriate cf_cache.c) that called the
-        scheme specific function if it exists. Test it. Test it again. Now
-        port to all the existing auth schemes, or at least add a setting
-        of NULL for the function for each scheme.
+<sect2>How to ``hook in'' new functions to the API
 
+	<P>Start of by figuring the code path that will result in
+	the function being called, and what data it will need. Then
+	create a typedef for the function, add and entry to the
+	authscheme_entry struct. Add a wrapper function to
+	authenticate.c (or if appropriate cf_cache.c) that called
+	the scheme specific function if it exists. Test it. Test
+	it again. Now port to all the existing auth schemes, or at
+	least add a setting of NULL for the function for each
+	scheme.
+
+<sect1>Authentication Module Interface
+
+<sect2>Basic Authentication Modules
+
+<p>
+Basic authentication provides a username and password.  These
+are written to the authentication module processes on a single
+line, separated by a space:
+<verb>
+<USERNAME> <PASSWORD>
+</verb>
+<p>
+The authentication module process reads username, password
+pairs on stdin and returns either ``OK'' or ``ERR'' for
+each line.
+
+<p>
+The following simple perl script demonstrates how the
+authentication module works.  This script allows any
+user named ``Dirk'' (without checking the password)
+and allows any user that uses the password ``Sekrit'':
+
+<verb>
+#!/usr/bin/perl -w
+$|=1;
+while (<>) {
+        chop;
+        ($u,$p) = split;
+        $ans = &check($u,$p);
+        print "$ans\n";
+}
+
+sub check {
+        local($u,$p) = @_;
+        return 'ERR' unless (defined $p && defined $u);
+        return 'OK' if ('Dirk' eq $u);
+        return 'OK' if ('Sekrit' eq $p);
+        return 'ERR';
+}
+</verb>
 
 <!-- %%%% Chapter : ICP %%%% -->
 <sect>ICP
@@ -2467,7 +2530,7 @@ struct _authscheme_entry {
 		callback_func(callback_data, ....);
 	cbdataUnlock(callback_data);
 </verb>
-	In this case, when <tt/cbdataFree/ is called before 
+	In this case, when <tt/cbdataFree/ is called before
 	<tt/cbdataUnlock/, the callback_data gets marked as invalid.  Before
 	executing the callback function, <tt/cbdataValid/ will return 0
 	and callback_func is never executed.  When <tt/cbdataUnlock/ gets
@@ -2496,8 +2559,8 @@ struct _authscheme_entry {
 </verb>
 
 	<P>
-	To add new global data types one have to add them to the 
-	cbdata_type enum in enums.h, and a corresponding 
+	To add new global data types one have to add them to the
+	cbdata_type enum in enums.h, and a corresponding
 	CREATE_CBDATA call in cbdata.c:cbdataInit(). Or alternatively
 	add a CBDATA_GLOBAL_TYPE definition to globals.h and use
 	CBDATA_INIT_TYPE as described above.
@@ -2525,7 +2588,7 @@ struct _authscheme_entry {
         <tt/HttpHdrRange.c/
 
 
-	<P> 
+	<P>
 	<tt/HttpHeader/ class encapsulates methods and data for HTTP header
 	manipulation.  <tt/HttpHeader/ can be viewed as a collection of HTTP
 	header-fields with such common operations as add, delete, and find.
@@ -2549,17 +2612,17 @@ struct _authscheme_entry {
 	rationale behind the later restriction is that Squid programmer should
 	operate on "known" fields only. If a new field is being added to
 	header processing, it must be given an id.
- 
+
 <sect1>Life cycle
 
-	<P> 
+	<P>
 	<tt/HttpHeader/ follows a common pattern for object initialization and
 	cleaning:
 
 <verb>
     /* declare */
     HttpHeader hdr;
-    
+
     /* initialize (as an HTTP Request header) */
     httpHeaderInit(&amp;hdr, hoRequest);
 
@@ -2570,7 +2633,7 @@ struct _authscheme_entry {
     httpHeaderClean(&amp;hdr);
 </verb>
 
-	<P> 
+	<P>
 	Prior to use, an <tt/HttpHeader/ must be initialized. A
 	programmer must specify if a header belongs to a request
 	or reply message. The "ownership" information is used mostly
@@ -2694,7 +2757,7 @@ struct _authscheme_entry {
 
 <sect1>Adding new header-field ids
 
-	<P> 
+	<P>
 	Adding new ids is simple. First add new HDR_ entry to the
 	http_hdr_type enumeration in enums.h. Then describe a new
 	header-field attributes in the HeadersAttrs array located
@@ -2808,7 +2871,7 @@ struct _storeSwapLogData {
 <tag/lastref/
 	The last time that a client requested this object.
 	Strictly speaking, this time is set whenver the StoreEntry
-	is locked (via <em/storeLockObject()/). 
+	is locked (via <em/storeLockObject()/).
 
 <tag/expires/
 	The value of the response's <em/Expires:/ header, if any.
