@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.500 2004/12/22 14:10:09 serassio Exp $
+ * $Id: structs.h,v 1.501 2004/12/22 15:10:37 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1896,6 +1896,7 @@ struct _helper
     int ipc_type;
     unsigned int concurrency;
     time_t last_queue_warn;
+    time_t last_restart;
 
     struct
     {
@@ -1922,6 +1923,7 @@ struct _helper_stateful
     HLPSAVAIL *IsAvailable;
     HLPSONEQ *OnEmptyQueue;
     time_t last_queue_warn;
+    time_t last_restart;
 
     struct
     {
