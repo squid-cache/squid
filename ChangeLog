@@ -1,3 +1,10 @@
+	- Another 'rm -rf' fix for store.c (Bernd Ernesti).
+	- Use of the Host: header for httpd_accel requests is now
+	  disabled unless 'httpd_accel_uses_host_header' is set.
+	- Have configure check for libgnumalloc.a.
+	- Added support for using poll() instead of select()
+	  (Stewart Forster, Anthony Baxter).
+
 Changes to squid-1.1.beta25 ():
 
 	- Check if we should delete-behind large objects when above LOW
