@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.11 2003/07/17 22:22:49 wessels Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.12 2003/08/05 08:52:36 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -72,7 +72,7 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
        <item>LDAP basic auth helper improvements (Henrik, David Begley, Christoph Lechleitner, Juerg Michel)
        <item>Digest auth helper improvements (Robert Collins, Sean Burford)
        <item>Digest authentication scheme bugfixs & improvements (Robert Collins)
-       <item>Merge of http(s)_port and accelerator directive updates from rproxy<itemize><item>The httpd_accel_* directives is now gone, replaced by http(s)_port options
+       <item>Merge of http(s)_port and accelerator directive updates from rproxy<itemize><item>The httpd_accel_* directives is now gone, replaced by http(s)_port options and cache_peer based request forwarding.
        <item>The http(s)_port options has a list of new options for controlling the type and mode of port created with respect to<itemize><item>transparent proxying
        <item>plain acceleration
        <item>host header based acceleration
@@ -150,7 +150,7 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
 <tag>ext_user acl</tag>this acl matches the username returned by external acl. ident can no longer be used for this purpose.
 <tag>access_log</tag>The access_log directive now optionally includes specifications on what log format to use and acls matching which requests to log. Can be specified multiple times to log different requests to different files.
 <tag>logformat</tag>new directive to define custom log formats
-<tag>httpd_accel_*</tag>These directives have been replaced by http(s)_port options. Note that you can no longer run proxy and acceleration mode on the same port. If you previously did this you now need to define two ports, one for acceleration, one for proxying.
+<tag>httpd_accel_*</tag>These directives have been replaced by http(s)_port options and cache_peer based request forwarding. Note that you can no longer run proxy and acceleration mode on the same port. If you previously did this you now need to define two ports, one for acceleration, one for proxying.
 
 </descrip>
 
