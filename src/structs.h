@@ -1007,6 +1007,7 @@ struct _store_client {
     struct {
     	int disk_io_pending:1;
 	int store_copying:1;
+	int copy_event_pending:1;
     } flags;
     store_client *next;
 };
