@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.480 2000/05/07 16:18:19 adrian Exp $
+ * $Id: client_side.cc,v 1.481 2000/05/11 03:05:23 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2684,6 +2684,7 @@ httpAccept(int sock, void *data)
 	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
 	commSetDefer(fd, clientReadDefer, connState);
 	clientdbEstablished(peer.sin_addr, 1);
+	assert(N);
 	(*N)++;
     }
 }
