@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.128 1997/01/13 23:09:47 wessels Exp $
+ * $Id: comm.cc,v 1.129 1997/01/15 05:48:26 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -127,7 +127,6 @@ struct _RWStateData {
     time_t time;		/* XXX Not used at present. */
     rw_complete_handler *handler;
     void *handler_data;
-    int handle_immed;
     void (*free) (void *);
 };
 
@@ -1438,88 +1437,6 @@ Reserve_More_FDs(void)
     }
 }
 
-/* Read from FD. */
-static int
-commHandleRead(int fd, RWStateData * state)
-{
-    int len;
-
-    len = read(fd, state->buf + state->offset, state->size - state->offset);
-    debug(5, 5, "commHandleRead: FD %d: read %d bytes\n", fd, len);
-
-    if (len <= 0) {
-	if (errno == EWOULDBLOCK || errno == EAGAIN) {
-	    /* reschedule self */
-	    commSetSelect(fd,
-		COMM_SELECT_READ,
-		(PF) commHandleRead,
-		state,
-		0);
-	    return COMM_OK;
-	} else {
-	    /* Len == 0 means connection closed; otherwise would not have been
-	     * called by comm_select(). */
-	    debug(50, 2, "commHandleRead: FD %d: read failure: %s\n",
-		fd,
-		len == 0 ? "connection closed" : xstrerror());
-	    RWStateCallbackAndFree(fd, COMM_ERROR);
-	    return COMM_ERROR;
-	}
-    }
-    state->offset += len;
-
-    /* Call handler if we have read enough */
-    if (state->offset >= state->size || state->handle_immed) {
-	RWStateCallbackAndFree(fd, COMM_OK);
-    } else {
-	/* Reschedule until we are done */
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    (PF) commHandleRead,
-	    state,
-	    0);
-    }
-    return COMM_OK;
-}
-
-/* Select for reading on FD, until SIZE bytes are received.  Call
- * HANDLER when complete. */
-void
-comm_read(int fd,
-    char *buf,
-    int size,
-    int timeout,
-    int immed,
-    rw_complete_handler * handler,
-    void *handler_data)
-{
-    RWStateData *state = NULL;
-
-    debug(5, 5, "comm_read: FD %d: sz %d: tout %d: hndl %p: data %p.\n",
-	fd, size, timeout, handler, handler_data);
-
-    if (fd_table[fd].rwstate) {
-	debug(5, 1, "comm_read: WARNING! FD %d: A comm_read/comm_write is already active.\n", fd);
-	RWStateCallbackAndFree(fd, COMM_ERROR);
-    }
-    state = xcalloc(1, sizeof(RWStateData));
-    state->buf = buf;
-    state->size = size;
-    state->offset = 0;
-    state->handler = handler;
-    state->timeout = timeout;
-    state->handle_immed = immed;
-    state->time = squid_curtime;
-    state->handler_data = handler_data;
-    state->free = NULL;
-    fd_table[fd].rwstate = state;
-    commSetSelect(fd,
-	COMM_SELECT_READ,
-	(PF) commHandleRead,
-	state,
-	0);
-}
-
 /* Write to FD. */
 static void
 commHandleWrite(int fd, RWStateData * state)
@@ -1583,7 +1500,7 @@ comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handl
 	fd, size, timeout, handler, handler_data);
 
     if (fd_table[fd].rwstate) {
-	debug(5, 1, "WARNING! FD %d: A comm_read/comm_write is already active.\n", fd);
+	debug(5, 1, "WARNING! FD %d: A comm_write is already active.\n", fd);
 	RWStateCallbackAndFree(fd, COMM_ERROR);
     }
     state = xcalloc(1, sizeof(RWStateData));
