@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.32 2005/01/23 12:39:45 serassio Exp $
+ * $Id: rfc1035.c,v 1.33 2005/01/23 14:53:23 serassio Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -554,10 +554,11 @@ rfc1035AnswersUnpack(const char *buf,
 	    return -rfc1035_unpack_error;
 	}
     }
-    if (hdr.ancount == 0)
+    i = (int) hdr.ancount;
+    if (i == 0)
 	return 0;
-    recs = calloc((int)hdr.ancount, sizeof(*recs));
-    for (i = 0; i < (int)hdr.ancount; i++) {
+    recs = calloc(i, sizeof(*recs));
+    while (i--) {
 	if (off >= sz) {	/* corrupt packet */
 	    RFC1035_UNPACK_DEBUG;
 	    break;
