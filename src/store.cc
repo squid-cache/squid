@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.228 1997/05/02 21:34:15 wessels Exp $
+ * $Id: store.cc,v 1.229 1997/05/05 03:43:49 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -596,13 +596,10 @@ storeReleaseRequest(StoreEntry * e)
 {
     if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	return;
-    if (!storeEntryLocked(e)) {
-	debug_trap("Someone called storeReleaseRequest on an unlocked entry");
-	debug(20, 0, "  --> '%s'\n", e->url ? e->url : "NULL URL");
-	return;
-    }
-    debug(20, 3, "storeReleaseRequest: FOR '%s'\n", e->key ? e->key : e->url);
-    e->flag |= RELEASE_REQUEST;
+    if (!storeEntryLocked(e))
+	fatal_dump("storeReleaseRequest: unlocked entry");
+    debug(20, 3, "storeReleaseRequest: '%s'\n", e->key);
+    BIT_SET(e->flag, RELEASE_REQUEST);
     storeSetPrivateKey(e);
 }
 
@@ -618,9 +615,13 @@ storeUnlockObject(StoreEntry * e)
     if (e->lock_count)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING) {
-	debug_trap("storeUnlockObject: Someone unlocked STORE_PENDING object");
-	debug(20, 1, "   --> Key '%s'\n", e->key);
-	e->store_status = STORE_ABORTED;
+	if (BIT_TEST(e->flag, ENTRY_DISPATCHED)) {
+	    debug_trap("storeUnlockObject: PENDING and DISPATCHED with 0 locks");
+	    debug(20, 1, "   --> Key '%s'\n", e->key);
+	    e->store_status = STORE_ABORTED;
+	} else {
+	    BIT_SET(e->flag, RELEASE_REQUEST);
+	}
     }
     if (storePendingNClients(e) > 0)
 	debug_trap("storeUnlockObject: unlocked entry with pending clients\n");
@@ -853,7 +854,7 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
 {
     StoreEntry *e = NULL;
 
-    debug(20, 5, "StoreAddDiskRestore: '%s': size %d: expires %d: file_number %d\n",
+    debug(20, 5, "StoreAddDiskRestore: '%s': size %d: expires %d: fileno=%08X\n",
 	url, size, expires, file_number);
 
     /* if you call this you'd better be sure file_number is not 
@@ -872,7 +873,6 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAP_OK;
     e->swap_file_number = file_number;
-    storeDirMapBitSet(file_number);
     e->object_len = size;
     e->lock_count = 0;
     BIT_RESET(e->flag, CLIENT_ABORT_REQUEST);
@@ -882,10 +882,14 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     e->expires = expires;
     e->lastmod = lastmod;
     e->ping_status = PING_NONE;
-    if (store_rebuilding == STORE_REBUILDING_CLEAN)
+    if (store_rebuilding == STORE_REBUILDING_CLEAN) {
 	BIT_SET(e->flag, ENTRY_VALIDATED);
-    else
+	/* Only set the file bit if we know its a valid entry */
+	/* otherwise, set it in the validation procedure */
+	storeDirMapBitSet(file_number);
+    } else {
 	BIT_RESET(e->flag, ENTRY_VALIDATED);
+    }
     return e;
 }
 
@@ -1098,6 +1102,8 @@ storeSwapInHandle(int u1, const char *buf, int len, int flag, void *data)
 	    e);
 	return;
     }
+    if (mem->e_current_len > e->object_len)
+	debug_trap("storeSwapInHandle: Too much data read!");
     /* complete swapping in */
     storeSetMemStatus(e, IN_MEMORY);
     put_free_8k_page(mem->e_swap_buf);
@@ -1106,7 +1112,7 @@ storeSwapInHandle(int u1, const char *buf, int len, int flag, void *data)
     debug(20, 5, "storeSwapInHandle: SwapIn complete: '%s' from %s.\n",
 	e->url, storeSwapFullPath(e->swap_file_number, NULL));
     if (mem->e_current_len != e->object_len) {
-	debug(20, 0, "storeSwapInHandle: WARNING: Object size mismatch.\n");
+	debug_trap("storeSwapInHandle: Object size mismatch");
 	debug(20, 0, "  --> '%s'\n", e->url);
 	debug(20, 0, "  --> Expecting %d bytes from file: %s\n", e->object_len,
 	    storeSwapFullPath(e->swap_file_number, NULL));
@@ -1230,7 +1236,6 @@ storeSwapOutHandle(int fd, int flag, void *data)
 	put_free_8k_page(mem->e_swap_buf);
 	file_close(fd);
 	if (e->swap_file_number != -1) {
-	    storeDirMapBitReset(e->swap_file_number);
 	    storePutUnusedFileno(e->swap_file_number);
 	    e->swap_file_number = -1;
 	}
@@ -1443,10 +1448,8 @@ storeDoRebuildFromDisk(void *data)
 	if (x < 1)
 	    continue;
 	storeSwapFullPath(sfileno, swapfile);
-	if (x != 6) {
-	    storePutUnusedFileno(sfileno);
+	if (x != 6)
 	    continue;
-	}
 	if (sfileno < 0)
 	    continue;
 	sfileno = storeDirProperFileno(d->dirn, sfileno);
@@ -1455,18 +1458,6 @@ storeDoRebuildFromDisk(void *data)
 	lastmod = (time_t) scan3;
 	size = (off_t) scan4;
 
-	if ((e = storeGet(url))) {
-	    if (e->timestamp > timestamp) {
-		/* already have a newer object in memory, throw old one away */
-		debug(20, 3, "storeRebuildFromDisk: Replaced: %s\n", url);
-		RB->dupcount++;
-		continue;
-	    }
-	    debug(20, 6, "storeRebuildFromDisk: Duplicate: '%s'\n", url);
-	    storeRelease(e);
-	    RB->objcount--;
-	    RB->dupcount++;
-	}
 	e = storeGet(url);
 	used = storeDirMapBitTest(sfileno);
 	/* If this URL already exists in the cache, does the swap log
@@ -1630,10 +1621,12 @@ storeValidateComplete(void *data, int retcode, int errcode)
 	path = storeSwapFullPath(e->swap_file_number, NULL);
 	retcode = stat(path, sb);
     }
-    if (retcode < 0 || sb->st_size == 0 || sb->st_size != e->object_len)
+    if (retcode < 0 || sb->st_size == 0 || sb->st_size != e->object_len) {
 	BIT_RESET(e->flag, ENTRY_VALIDATED);
-    else
+    } else {
 	BIT_SET(e->flag, ENTRY_VALIDATED);
+	storeDirMapBitSet(e->swap_file_number);
+    }
     errno = errcode;
     (ctrlp->callback) (ctrlp->callback_data, retcode);
     xfree(sb);
@@ -2191,9 +2184,9 @@ storeRelease(StoreEntry * e)
 	debug(20, 5, "storeRelease: Release anonymous object\n");
 
     if (e->swap_status == SWAP_OK && (e->swap_file_number > -1)) {
-	storePutUnusedFileno(e->swap_file_number);
+	if (BIT_TEST(e->flag, ENTRY_VALIDATED))
+	    storePutUnusedFileno(e->swap_file_number);
 	storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
-	storeDirMapBitReset(e->swap_file_number);
 	e->swap_file_number = -1;
 	HTTPCacheInfo->proto_purgeobject(HTTPCacheInfo,
 	    urlParseProtocol(e->url),
@@ -2601,9 +2594,9 @@ storeWriteCleanLogs(void)
 	safeunlink(new[dirn], 1);
 	safeunlink(cln[dirn], 1);
 	fd[dirn] = file_open(new[dirn],
-		O_WRONLY | O_CREAT | O_TRUNC,
-		NULL,
-		NULL);
+	    O_WRONLY | O_CREAT | O_TRUNC,
+	    NULL,
+	    NULL);
 	if (fd[dirn] < 0) {
 	    debug(50, 0, "storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
 	    continue;
@@ -2873,6 +2866,7 @@ storeFreeMemory(void)
     xfree(list);
     hashFreeMemory(store_table);
     safe_free(MaintBucketsOrder);
+    storeDirCloseSwapLogs();
 }
 
 int
@@ -2932,14 +2926,20 @@ int fileno_stack_count = 0;
 static int
 storeGetUnusedFileno(void)
 {
+    int fn;
     if (fileno_stack_count < 1)
 	return -1;
-    return fileno_stack[--fileno_stack_count];
+    fn = fileno_stack[--fileno_stack_count];
+    storeDirMapBitSet(fn);
+    return fn;
 }
 
 static void
 storePutUnusedFileno(int fileno)
 {
+    if (!storeDirMapBitTest(fileno))
+	fatal_dump("storePutUnusedFileno: fileno not in use");
+    storeDirMapBitReset(fileno);
     if (fileno_stack_count < FILENO_STACK_SIZE)
 	fileno_stack[fileno_stack_count++] = fileno;
     else

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.100 1997/05/02 04:28:34 wessels Exp $
+ * $Id: client_side.cc,v 1.101 1997/05/05 03:43:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -32,7 +32,7 @@
 #include "squid.h"
 
 static RH clientRedirectDone;
-static void icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
+static PIF icpHandleIMSReply;
 static int clientGetsOldEntry _PARAMS((StoreEntry * new, StoreEntry * old, request_t * request));
 static int checkAccelOnly _PARAMS((icpStateData * icpState));
 
@@ -189,13 +189,6 @@ clientRedirectDone(void *data, char *result)
     }
     icpParseRequestHeaders(icpState);
     fd_note(fd, icpState->url);
-    if (!BIT_TEST(icpState->request->flags, REQ_PROXY_KEEPALIVE)) {
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    icpDetectClientClose,
-	    icpState,
-	    0);
-    }
     icpProcessRequest(fd, icpState);
 }
 

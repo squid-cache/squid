@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.77 1997/04/30 18:30:52 wessels Exp $
+ * $Id: gopher.cc,v 1.78 1997/05/05 03:43:43 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -912,7 +912,7 @@ gopherStartComplete(void *datap, int status)
     StoreEntry *entry = datap;
     char *url = entry->url;
     GopherStateData *gopherState = CreateGopherStateData();
-    int sock;
+    int fd;
     gopherState->entry = entry;
     debug(10, 3, "gopherStart: url: %s\n", url);
     /* Parse url. */
@@ -923,19 +923,19 @@ gopherStartComplete(void *datap, int status)
 	return;
     }
     /* Create socket. */
-    sock = comm_open(SOCK_STREAM,
+    fd = comm_open(SOCK_STREAM,
 	0,
 	Config.Addrs.tcp_outgoing,
 	0,
 	COMM_NONBLOCKING,
 	url);
-    if (sock == COMM_ERROR) {
+    if (fd == COMM_ERROR) {
 	debug(10, 4, "gopherStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	gopherStateFree(-1, gopherState);
 	return;
     }
-    comm_add_close_handler(sock,
+    comm_add_close_handler(fd,
 	gopherStateFree,
 	gopherState);
     /* check if IP is already in cache. It must be. 
@@ -944,7 +944,7 @@ gopherStartComplete(void *datap, int status)
     if (!ipcache_gethostbyname(gopherState->host, 0)) {
 	debug(10, 4, "gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	comm_close(sock);
+	comm_close(fd);
 	return;
     }
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
@@ -964,11 +964,11 @@ gopherStartComplete(void *datap, int status)
 	}
 	gopherToHTML(gopherState, (char *) NULL, 0);
 	storeComplete(entry);
-	comm_close(sock);
+	comm_close(fd);
 	return;
     }
-    commSetTimeout(sock, Config.Timeout.connect, gopherTimeout, gopherState);
-    commConnectStart(sock,
+    commSetTimeout(fd, Config.Timeout.connect, gopherTimeout, gopherState);
+    commConnectStart(fd,
 	gopherState->host,
 	gopherState->port,
 	gopherConnectDone,

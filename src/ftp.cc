@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.103 1997/04/30 18:30:50 wessels Exp $
+ * $Id: ftp.cc,v 1.104 1997/05/05 03:43:42 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -133,18 +133,18 @@ typedef struct ftp_ctrl_t {
 } ftp_ctrl_t;
 
 /* Local functions */
-static const char *ftpTransferMode _PARAMS((const char *));
-static char *ftpGetBasicAuth _PARAMS((const char *));
-static void ftpStateFree _PARAMS((int, void *));
-static void ftpReadReply _PARAMS((int, void *));
-static void ftpStartComplete _PARAMS((void *, int));
-static void ftpConnectDone _PARAMS((int fd, int status, void *data));
+static CNCB ftpConnectDone;
+static CWCB ftpSendComplete;
+static PF ftpReadReply;
+static PF ftpSendRequest;
+static PF ftpServerClosed;
+static PF ftpStateFree;
 static PF ftpTimeout;
+static char *ftpGetBasicAuth _PARAMS((const char *));
+static const char *ftpTransferMode _PARAMS((const char *));
 static void ftpProcessReplyHeader _PARAMS((FtpStateData *, const char *, int));
-static void ftpSendComplete _PARAMS((int, char *, int, int, void *));
-static void ftpSendRequest _PARAMS((int, void *));
-static void ftpServerClosed _PARAMS((int, void *));
-static void ftp_login_parser _PARAMS((const char *, FtpStateData *));
+static void ftpStartComplete _PARAMS((void *, int));
+static void ftpLoginParser _PARAMS((const char *, FtpStateData *));
 
 /* External functions */
 extern char *base64_decode _PARAMS((const char *coded));
@@ -165,7 +165,7 @@ ftpStateFree(int fd, void *data)
 }
 
 static void
-ftp_login_parser(const char *login, FtpStateData * ftpState)
+ftpLoginParser(const char *login, FtpStateData * ftpState)
 {
     char *s = NULL;
     xstrncpy(ftpState->user, login, MAX_URL);
@@ -539,7 +539,7 @@ ftpCheckAuth(FtpStateData * ftpState, char *req_hdr)
 {
     char *orig_user;
     char *auth;
-    ftp_login_parser(ftpState->request->login, ftpState);
+    ftpLoginParser(ftpState->request->login, ftpState);
     if (ftpState->user[0] && ftpState->password[0])
 	return 1;		/* name and passwd both in URL */
     if (!ftpState->user[0] && !ftpState->password[0])
@@ -550,7 +550,7 @@ ftpCheckAuth(FtpStateData * ftpState, char *req_hdr)
     if ((auth = ftpGetBasicAuth(req_hdr)) == NULL)
 	return 0;		/* need auth header */
     orig_user = xstrdup(ftpState->user);
-    ftp_login_parser(auth, ftpState);
+    ftpLoginParser(auth, ftpState);
     if (!strcmp(orig_user, ftpState->user)) {
 	xfree(orig_user);
 	return 1;		/* same username */
