@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.437 1998/07/26 06:39:25 wessels Exp $
+ * $Id: store.cc,v 1.438 1998/07/26 07:01:18 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -176,7 +176,10 @@ storeHashInsert(StoreEntry * e, const cache_key * key)
 	e, storeKeyText(key));
     e->key = storeKeyDup(key);
     hash_join(store_table, (hash_link *) e);
-    dlinkAdd(e, &e->lru, &store_list);
+    if (EBIT_TEST(e->flag, KEY_PRIVATE))
+        dlinkAddTail(e, &e->lru, &store_list);
+    else
+        dlinkAdd(e, &e->lru, &store_list);
 }
 
 static void
@@ -361,8 +364,6 @@ storeExpireNow(StoreEntry * e)
 {
     debug(20, 3) ("storeExpireNow: '%s'\n", storeKeyText(e->key));
     e->expires = squid_curtime;
-    dlinkDelete(&e->lru, &store_list);
-    dlinkAddTail(e, &e->lru, &store_list);
 }
 
 /* Append incoming data from a primary server to an entry. */
@@ -1035,6 +1036,7 @@ storeBufferFlush(StoreEntry * e)
 {
     EBIT_CLR(e->flag, DELAY_SENDING);
     InvokeHandlers(e);
+    storeCheckSwapOut(e);
 }
 
 void
