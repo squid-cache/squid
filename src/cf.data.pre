@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.369 2004/12/23 22:17:20 hno Exp $
+# $Id: cf.data.pre,v 1.370 2004/12/24 08:05:29 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -4560,7 +4560,9 @@ DOC_START
         defaults to 60 seconds. In reverse proxy enorinments it
         might be desirable to honor shorter object lifetimes. It
         is most likely better to make your server return a
-        meaningful Last-Modified header however.
+        meaningful Last-Modified header however. In ESI environments
+	where page fragments often have short lifetimes, this will
+	often be best set to 0.
 DOC_END
 
 EOF
