@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.234 1998/03/06 23:22:29 wessels Exp $
+ * $Id: main.cc,v 1.235 1998/03/12 21:19:46 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -336,6 +336,9 @@ serverConnectionsOpen(void)
 {
     clientHttpConnectionsOpen();
     icpConnectionsOpen();
+#if USE_HTCP
+    htcpInit();
+#endif
 #ifdef SQUID_SNMP
     snmpConnectionOpen();
 #endif
