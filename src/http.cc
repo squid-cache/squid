@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.11 1996/03/27 18:15:46 wessels Exp $ */
+/* $Id: http.cc,v 1.12 1996/03/28 20:42:48 wessels Exp $ */
 
 #include "squid.h"
 
@@ -194,19 +194,20 @@ void httpReadReply(fd, data)
 	    sprintf(tmp_error_buf, "\n<p>Warning: The Remote Server sent RESET at the end of transmission.\n");
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
 	    storeComplete(entry);
-#ifdef POSSIBLE_FIX
+	    comm_close(fd);
+	    safe_free(data);
 	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
+	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
 		(PF) httpReadReply, (caddr_t) data);
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
 		(PF) httpReadReplyTimeout, (caddr_t) data, getReadTimeout());
-#endif
 	} else {
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    comm_close(fd);
+	    safe_free(data);
 	}
-	comm_close(fd);
-	safe_free(data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	if (!(entry->flag & DELETE_BEHIND))
