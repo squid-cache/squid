@@ -34,11 +34,13 @@ struct _acl_deny_info_list {
     struct _acl_deny_info_list *next;
 };
 
+#if SQUID_SNMP
 struct _snmpconf {
     char *line;
     int type;
     struct _snmpconf *next;
 };
+#endif
 
 struct _acl {
     char name[ACL_NAME_SZ];
@@ -131,8 +133,11 @@ struct _SquidConfig {
     struct {
 	ushortlist *http;
 	u_short icp;
+#if SQUID_SNMP
 	u_short snmp;
+#endif
     } Port;
+#if SQUID_SNMP
     struct {
 	char *configFile;
 	char *agentInfo;
@@ -147,6 +152,7 @@ struct _SquidConfig {
 	usecEntry *users;
 	communityEntry *communities;
     } Snmp;
+#endif
     struct {
 	char *log;
 	char *access;
@@ -362,20 +368,6 @@ struct _fileMap {
     unsigned long *file_map;
 };
 
-struct _fqdncache_entry {
-    /* first two items must be equivalent to hash_link in hash.h */
-    char *name;
-    struct _fqdncache_entry *next;
-    time_t lastref;
-    time_t expires;
-    unsigned char name_count;
-    char *names[FQDN_MAX_NAMES + 1];
-    struct _fqdn_pending *pending_head;
-    char *error_message;
-    unsigned char locks;
-    fqdncache_status_t status:3;
-};
-
 struct _hash_link {
     char *key;
     struct _hash_link *next;
@@ -555,6 +547,21 @@ struct _ipcache_entry {
     dlink_node lru;
     u_char locks;
     ipcache_status_t status:3;
+};
+
+struct _fqdncache_entry {
+    /* first two items must be equivalent to hash_link in hash.h */
+    char *name;
+    struct _fqdncache_entry *next;
+    time_t lastref;
+    time_t expires;
+    unsigned char name_count;
+    char *names[FQDN_MAX_NAMES + 1];
+    struct _fqdn_pending *pending_head;
+    char *error_message;
+    dlink_node lru;
+    unsigned char locks;
+    fqdncache_status_t status:3;
 };
 
 struct _domain_ping {

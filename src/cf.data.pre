@@ -1929,6 +1929,7 @@ NAME: snmp_port
 TYPE: ushort
 LOC: Config.Port.snmp
 DEFAULT: 3401
+IFDEF: SQUID_SNMP
 DOC_START
 	Port for snmp. <=0 to disable.
 DOC_END
@@ -1937,6 +1938,7 @@ NAME: snmp_config_file
 TYPE: string
 LOC: Config.Snmp.configFile
 DEFAULT: @DEFAULT_SNMP_CONF@
+IFDEF: SQUID_SNMP
 DOC_START
 	External snmp configuration file, CMU-snmpd style.
 DOC_END
@@ -1945,6 +1947,7 @@ NAME: snmp_do_queueing
 TYPE: onoff
 LOC: Config.Snmp.do_queueing
 DEFAULT: on
+IFDEF: SQUID_SNMP
 DOC_START
 	If disabled, snmp packets will not be queued but delivered 
 	immediately. This could be performant when you want to monitor
@@ -1955,6 +1958,7 @@ NAME: forward_snmpd_port
 TYPE: ushort
 LOC: Config.Snmp.localPort
 DEFAULT: 0
+IFDEF: SQUID_SNMP
 DOC_START
 	This configures whether we should be forwarding SNMP requests
 	to another snmpd. The reason for putting this piece of functionality
@@ -1974,6 +1978,7 @@ NAME: snmp_mib_path
 TYPE: string
 LOC: Config.Snmp.mibPath
 DEFAULT: @DEFAULT_MIB_PATH@
+IFDEF: SQUID_SNMP
 DOC_START
 	The location of squid's mib.
 DOC_END
@@ -1982,6 +1987,7 @@ NAME: snmp_port
 TYPE: ushort
 LOC: Config.Port.snmp
 DEFAULT: 3401
+IFDEF: SQUID_SNMP
 DOC_START
        Port for snmp. <=0 to disable.
 DOC_END
@@ -1990,6 +1996,7 @@ NAME: snmp_config_file
 TYPE: string
 LOC: Config.Snmp.configFile
 DEFAULT: @DEFAULT_SNMP_CONF@
+IFDEF: SQUID_SNMP
 DOC_START
        External snmp configuration file, CMU-snmpd style.
 DOC_END
@@ -1998,15 +2005,18 @@ NAME: snmp_do_queueing
 TYPE: onoff
 LOC: Config.Snmp.do_queueing
 DEFAULT: on
+IFDEF: SQUID_SNMP
 DOC_START
        If disabled, snmp packets will not be queued but delivered
        immediately. This could be performant when you want to monitor a
        cache in trouble, but this could also bring squid to block.
 DOC_END
+
 NAME: forward_snmpd_port
 TYPE: ushort
 LOC: Config.Snmp.localPort
 DEFAULT: 0
+IFDEF: SQUID_SNMP
 DOC_START
        This configures whether we should be forwarding SNMP requests to
        another snmpd. The reason for putting this piece of
@@ -2025,6 +2035,7 @@ NAME: trap_sink
 TYPE: string
 LOC: Config.Snmp.trap_sink
 DEFAULT: 127.0.0.1
+IFDEF: SQUID_SNMP
 DOC_START
 	Hostname or ip address of trap sink for snmp
 DOC_END
@@ -2033,6 +2044,7 @@ NAME: snmp_trap_community
 TYPE: string
 LOC: Config.Snmp.trap_community
 DEFAULT: public
+IFDEF: SQUID_SNMP
 DOC_START
 	Community name for traps
 DOC_END
@@ -2041,6 +2053,7 @@ NAME: snmp_enable_authen_traps
 TYPE: onoff
 LOC: Config.Snmp.conf_authtraps
 DEFAULT: off
+IFDEF: SQUID_SNMP
 DOC_START
 	Enable SNMP authenticated traps
 DOC_END
@@ -2049,6 +2062,7 @@ NAME: snmp_agent_conf
 TYPE: snmp_conf
 LOC: Config.Snmp.snmpconf
 DEFAULT: none
+IFDEF: SQUID_SNMP
 DOC_START
 	Define snmp views, users and communities 
 	Example:
