@@ -1,4 +1,4 @@
-$Id: CREDITS,v 1.5 1999/04/15 06:14:50 wessels Exp $
+$Id: CREDITS,v 1.6 2002/06/23 13:32:23 hno Exp $
 
 ==============================================================================
 
@@ -293,3 +293,12 @@ lib/inet_ntoa.c:
 static char sccsid[] = "@(#)inet_ntoa.c        5.6 (Berkeley) 2/24/91";
 
 ==============================================================================
+
+src/external_acl.c
+
+Copyright (C) 2002 MARA Systems AB, Sweden <info@marasystems.com>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.

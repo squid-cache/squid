@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.420 2002/06/21 12:58:20 hno Exp $
+ * $Id: structs.h,v 1.421 2002/06/23 13:32:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -290,6 +290,7 @@ struct _aclCheck_t {
 #endif
     PF *callback;
     void *callback_data;
+    external_acl_entry *extacl_entry;
 };
 
 struct _wordlist {
@@ -686,6 +687,7 @@ struct _SquidConfig {
     } warnings;
     char *store_dir_select_algorithm;
     int sleep_after_fork;	/* microseconds */
+    external_acl *externalAclHelperList;
 };
 
 struct _SquidConfig2 {

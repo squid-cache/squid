@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.133 2002/04/06 08:49:28 adrian Exp $
+ * $Id: typedefs.h,v 1.134 2002/06/23 13:32:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -350,5 +350,8 @@ typedef struct _htcpReplyData htcpReplyData;
 typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 
 typedef int STDIRSELECT(const StoreEntry *);
+
+typedef struct _external_acl external_acl;
+typedef struct _external_acl_entry external_acl_entry;
 
 #endif /* SQUID_TYPEDEFS_H */

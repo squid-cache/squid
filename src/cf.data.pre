@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.263 2002/06/21 12:58:20 hno Exp $
+# $Id: cf.data.pre,v 1.264 2002/06/23 13:32:24 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1445,6 +1445,52 @@ DOC_START
 	Squid versions.
 DOC_END
 
+NAME: external_acl_type
+TYPE: externalAclHelper
+LOC: Config.externalAclHelperList
+DEFAULT: none
+DOC_START
+	This option defines external acl classes using a helper program
+	to look up the status
+	
+	  external_acl_type name [options] FORMAT.. /path/to/helper [helper arguments..]
+	
+	Options:
+
+	  ttl=n		TTL in seconds for cached results (defaults to 3600
+	  		for 1 hour)
+	  negative_ttl=n
+	  		TTL for cached negative lookups (default same
+	  		as ttl)
+	  concurrenty=n	Concurrency level / number of processes spawn
+			to service external acl lookups of this type.
+	  cache=n	result cache size, 0 is unbounded (default)
+	
+	The helper receives lines per the FORMAT specification, and returns
+	OK or ERR indicating the validity of the request.
+
+	FORMAT specifications
+
+	  %LOGIN	Authenticated user login name
+	  %IDENT	Ident user name
+	  %SRC		Client IP
+	  %DST		Requested host
+	  %PROTO	Requested protocol
+	  %PORT		Requested port
+	  %METHOD	Request method
+	  %{Header}	HTTP request header
+	  %{Hdr:member}	HTTP request header list member
+	  %{Hdr:;member}
+	  		HTTP request header list member using ; as
+	  		list separator. ; can be any non-alphanumeric
+			character.
+
+	In addition, any string specified in the referencing acl will also be
+	included in the helper request line, after the specified formats
+	(see the acl directive)
+
+DOC_END
+
 COMMENT_START
  OPTIONS FOR TUNING THE CACHE
  -----------------------------------------------------------------------------
@@ -1979,6 +2025,9 @@ DOC_START
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
 
+	acl acl_name external class_name [arguments...]
+	  # external ACL lookup via a helper class defined by the
+	  # external_acl_type directive.
 
 Examples:
 acl myexample dst_as 1241

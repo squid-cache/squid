@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.23 2002/04/14 15:57:01 hno Exp $
+#  $Id: Makefile.am,v 1.24 2002/06/23 13:32:23 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -124,6 +124,7 @@ squid_SOURCES = \
 	errorpage.c \
 	ETag.c \
 	event.c \
+	external_acl.c \
 	fd.c \
 	filemap.c \
 	forward.c \

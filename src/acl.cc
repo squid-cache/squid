@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.279 2002/06/16 19:56:08 hno Exp $
+ * $Id: acl.cc,v 1.280 2002/06/23 13:32:23 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -80,6 +80,7 @@ static IPH aclLookupDstIPDone;
 static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
+static EAH aclLookupExternalDone;
 static wordlist *aclDumpIpList(void *);
 static wordlist *aclDumpDomainList(void *data);
 static wordlist *aclDumpTimeSpecList(acl_time_data *);
@@ -229,6 +230,8 @@ aclStrToType(const char *s)
 	return ACL_REP_MIME_TYPE;
     if (!strcmp(s, "max_user_ip"))
 	return ACL_MAX_USER_IP;
+    if (!strcmp(s, "external"))
+	return ACL_EXTERNAL;
     return ACL_NONE;
 }
 
@@ -301,6 +304,8 @@ aclTypeToStr(squid_acl type)
 	return "rep_mime_type";
     if (type == ACL_MAX_USER_IP)
 	return "max_user_ip";
+    if (type == ACL_EXTERNAL)
+	return "external";
     return "ERROR";
 }
 
@@ -858,6 +863,9 @@ because no authentication schemes are fully configured.\n", A->cfgline);
 	aclParseArpList(&A->data);
 	break;
 #endif
+    case ACL_EXTERNAL:
+	aclParseExternal(&A->data);
+	break;
     case ACL_NONE:
     case ACL_ENUM_MAX:
 	fatal("Bad ACL type");
@@ -1713,6 +1721,9 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	    header = "";
 	return aclMatchRegex(ae->data, header);
 	/* NOTREACHED */
+    case ACL_EXTERNAL:
+	return aclMatchExternal(ae->data, checklist);
+	/* NOTREACHED */
     case ACL_NONE:
     case ACL_ENUM_MAX:
 	break;
@@ -1739,6 +1750,15 @@ aclMatchAclList(const acl_list * list, aclCheck_t * checklist)
     return 1;
 }
 
+static void
+aclCheckCleanup(aclCheck_t * checklist)
+{
+    /* Cleanup temporary stuff used by the ACL checking */
+    if (checklist->extacl_entry) {
+	cbdataReferenceDone(checklist->extacl_entry);
+    }
+}
+
 int
 aclCheckFast(const acl_access * A, aclCheck_t * checklist)
 {
@@ -1746,11 +1766,14 @@ aclCheckFast(const acl_access * A, aclCheck_t * checklist)
     debug(28, 5) ("aclCheckFast: list: %p\n", A);
     while (A) {
 	allow = A->allow;
-	if (aclMatchAclList(A->acl_list, checklist))
+	if (aclMatchAclList(A->acl_list, checklist)) {
+	    aclCheckCleanup(checklist);
 	    return allow == ACCESS_ALLOWED;
+	}
 	A = A->next;
     }
     debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", allow == ACCESS_DENIED);
+    aclCheckCleanup(checklist);
     return allow == ACCESS_DENIED;
 }
 
@@ -1834,6 +1857,11 @@ aclCheck(aclCheck_t * checklist)
 	    }
 	}
 #endif
+	else if (checklist->state[ACL_EXTERNAL] == ACL_LOOKUP_NEEDED) {
+	    acl *acl = aclFindByName(AclMatchedName);
+	    externalAclLookup(checklist, acl->data, aclLookupExternalDone, checklist);
+	    return;
+	}
 	/*
 	 * We are done with this _acl_access entry.  Either the request
 	 * is allowed, denied, requires authentication, or we move on to
@@ -1862,6 +1890,7 @@ aclChecklistFree(aclCheck_t * checklist)
 	requestUnlink(checklist->request);
     checklist->request = NULL;
     cbdataReferenceDone(checklist->conn);
+    aclCheckCleanup(checklist);
     cbdataFree(checklist);
 }
 
@@ -1961,6 +1990,15 @@ aclLookupProxyAuthDone(void *data, char *result)
 	}
 	checklist->auth_user_request = NULL;
     }
+    aclCheck(checklist);
+}
+
+static void
+aclLookupExternalDone(void *data, void *result)
+{
+    aclCheck_t *checklist = data;
+    checklist->state[ACL_EXTERNAL] = ACL_LOOKUP_DONE;
+    checklist->extacl_entry = cbdataReference(result);
     aclCheck(checklist);
 }
 
@@ -2110,6 +2148,9 @@ aclDestroyAcls(acl ** head)
 	case ACL_URL_PORT:
 	case ACL_MY_PORT:
 	    aclDestroyIntRange(a->data);
+	    break;
+	case ACL_EXTERNAL:
+	    aclDestroyExternal(&a->data);
 	    break;
 	case ACL_NONE:
 	case ACL_ENUM_MAX:
@@ -2522,6 +2563,8 @@ aclDumpGeneric(const acl * a)
     case ACL_SRC_ARP:
 	return aclDumpArpList(a->data);
 #endif
+    case ACL_EXTERNAL:
+	return aclDumpExternal(a->data);
     case ACL_NONE:
     case ACL_ENUM_MAX:
 	break;
