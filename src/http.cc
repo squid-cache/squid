@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.127 1996/12/04 17:51:41 wessels Exp $
+ * $Id: http.cc,v 1.128 1996/12/04 18:22:11 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -665,6 +665,7 @@ httpBuildRequestHeader(request_t * request,
 	if (l > 4096)
 	    l = 4096;
 	xstrncpy(xbuf, t, l);
+	debug(0, 0, "httpBuildRequestHeader: %s\n", xbuf);
 	if (strncasecmp(xbuf, "Proxy-Connection:", 17) == 0)
 	    continue;
 	if (strncasecmp(xbuf, "Connection:", 11) == 0)
@@ -694,14 +695,14 @@ httpBuildRequestHeader(request_t * request,
 	    strcat(fwdbuf, ", ");
 	    continue;
 	}
-	if (strncasecmp(xbuf, "If-Modified-Since:", 18))
+	if (strncasecmp(xbuf, "If-Modified-Since:", 18) == 0)
 	    if (EBIT_TEST(hdr_flags, HDR_IMS))
 		continue;
 	httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512);
     }
     hdr_len = t - hdr_in;
     /* Append Via: */
-    sprintf(ybuf, "%3.1f %s" orig_request->http_ver, ThisCache);
+    sprintf(ybuf, "%3.1f %s", orig_request->http_ver, ThisCache);
     strcat(viabuf, ybuf);
     httpAppendRequestHeader(hdr_out, viabuf, &len, out_sz);
     /* Append to X-Forwarded-For: */
