@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.280 2003/02/08 16:16:14 hno Exp $
+#  $Id: Makefile.in,v 1.281 2003/02/08 17:08:39 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -771,11 +771,12 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	Packer.$(OBJEXT) $(am__objects_3) pconn.$(OBJEXT) \
 	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
 	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
-	$(am__objects_8) ssl.$(OBJEXT) $(am__objects_9) stat.$(OBJEXT) \
-	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
-	store.$(OBJEXT) store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
-	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	$(am__objects_8) tunnel.$(OBJEXT) $(am__objects_9) \
+	stat.$(OBJEXT) StatHist.$(OBJEXT) String.$(OBJEXT) \
+	stmem.$(OBJEXT) store.$(OBJEXT) store_io.$(OBJEXT) \
+	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
@@ -918,12 +919,12 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/store_swapmeta.Po \
 @AMDEP_TRUE@	$(DEPDIR)/store_swapout.Po \
 @AMDEP_TRUE@	$(DEPDIR)/string_arrays.Po $(DEPDIR)/tools.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ufscommon.Po $(DEPDIR)/ufsdump.Po \
-@AMDEP_TRUE@	$(DEPDIR)/unlinkd-unlinkd.Po $(DEPDIR)/unlinkd.Po \
-@AMDEP_TRUE@	$(DEPDIR)/url.Po $(DEPDIR)/urn.Po \
-@AMDEP_TRUE@	$(DEPDIR)/useragent.Po $(DEPDIR)/wais.Po \
-@AMDEP_TRUE@	$(DEPDIR)/wccp.Po $(DEPDIR)/whois.Po \
-@AMDEP_TRUE@	$(DEPDIR)/win32.Po
+@AMDEP_TRUE@	$(DEPDIR)/tunnel.Po $(DEPDIR)/ufscommon.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ufsdump.Po $(DEPDIR)/unlinkd-unlinkd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/unlinkd.Po $(DEPDIR)/url.Po \
+@AMDEP_TRUE@	$(DEPDIR)/urn.Po $(DEPDIR)/useragent.Po \
+@AMDEP_TRUE@	$(DEPDIR)/wais.Po $(DEPDIR)/wccp.Po \
+@AMDEP_TRUE@	$(DEPDIR)/whois.Po $(DEPDIR)/win32.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -1194,6 +1195,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_swapout.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/string_arrays.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tools.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tunnel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ufscommon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ufsdump.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unlinkd-unlinkd.Po@am__quote@
