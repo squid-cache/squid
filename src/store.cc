@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.137 1996/10/24 23:18:21 wessels Exp $
+ * $Id: store.cc,v 1.138 1996/10/25 00:22:25 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2862,7 +2862,6 @@ storeCheckPurgeMem(StoreEntry * e)
 static int
 storeCheckExpired(StoreEntry * e)
 {
-    int expired = 0;
     if (storeEntryLocked(e))
 	return 0;
     if (Config.referenceAge && squid_curtime - e->lastref > Config.referenceAge)
