@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.13 2003/07/12 12:39:56 robertc Exp $
+ * $Id: Array.h,v 1.14 2003/07/12 12:42:19 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -321,18 +321,6 @@ VectorIteratorBase<C> VectorIteratorBase<C>:: operator ++(int)
     VectorIteratorBase result(*this);
     ++*this;
     return result;
-}
-
-template<class C>
-typename C::value_type & VectorIteratorBase<C>::operator *() const
-{
-    return theVector->items[pos];
-}
-
-template<class C>
-typename C::value_type * VectorIteratorBase<C>::operator -> () const
-{
-    return &theVector->items[pos];
 }
 
 template<class C>
