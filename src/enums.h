@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.165 2000/05/02 20:58:30 hno Exp $
+ * $Id: enums.h,v 1.166 2000/05/02 21:38:12 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -121,6 +121,7 @@ typedef enum {
     ACL_SNMP_COMMUNITY,
     ACL_NETDB_SRC_RTT,
     ACL_MAXCONN,
+    ACL_REQ_MIME_TYPE,
     ACL_ENUM_MAX
 } squid_acl;
 

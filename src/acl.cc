@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.216 2000/05/02 21:35:24 hno Exp $
+ * $Id: acl.cc,v 1.217 2000/05/02 21:38:11 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -209,6 +209,8 @@ aclStrToType(const char *s)
     if (!strcmp(s, "arp"))
 	return ACL_SRC_ARP;
 #endif
+    if (!strcmp(s, "req_mime_type"))
+	return ACL_REQ_MIME_TYPE;
     return ACL_NONE;
 }
 
@@ -271,6 +273,8 @@ aclTypeToStr(squid_acl type)
     if (type == ACL_SRC_ARP)
 	return "arp";
 #endif
+    if (type == ACL_REQ_MIME_TYPE)
+	return "req_mime_type";
     return "ERROR";
 }
 
@@ -762,6 +766,9 @@ aclParseAclLine(acl ** head)
 	aclParseArpList(&A->data);
 	break;
 #endif
+    case ACL_REQ_MIME_TYPE:
+	aclParseWordList(&A->data);
+	break;
     case ACL_NONE:
     default:
 	fatal("Bad ACL type");
@@ -1526,6 +1533,13 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     case ACL_SRC_ARP:
 	return aclMatchArp(&ae->data, checklist->src_addr);
 #endif
+    case ACL_REQ_MIME_TYPE:
+	header = httpHeaderGetStr(&checklist->request->header,
+	    HDR_CONTENT_TYPE);
+	if (NULL == header)
+	    header = "";
+	return aclMatchRegex(ae->data, header);
+	/* NOTREACHED */
     case ACL_NONE:
     default:
 	debug(28, 0) ("aclMatchAcl: '%s' has bad type %d\n",

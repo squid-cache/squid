@@ -55,6 +55,8 @@ Changes to Squid-2.4.DEVEL3 ():
 	- Fixed a temporary memory leak on persistent POSTs
 	- Fixed a temporary memory leak when the server response headers
 	  includes NULL characters
+	- authenticate_ip_ttl_is_strict squid.conf option
+	- req_mime_type ACL type
 
 Changes to Squid-2.4.DEVEL2 ():
 
