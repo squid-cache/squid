@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.577 2002/04/21 21:23:15 hno Exp $
+ * $Id: client_side.cc,v 1.578 2002/04/21 21:54:03 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -388,12 +388,14 @@ clientProcessExpired(void *data)
     http->old_reqsize = http->reqsize;
     http->old_reqofs = http->reqofs;
     http->reqbuf = http->ims_reqbuf;
+#if STORE_CLIENT_LIST_DEBUG
     /*
      * Assert that 'http' is already a client of old_entry.  If 
      * it is not, then the beginning of the object data might get
      * freed from memory before we need to access it.
      */
-    assert(http->sc->callback_data == http);
+    assert(http->sc->owner == http);
+#endif
     entry = storeCreateEntry(url,
 	http->log_uri,
 	http->request->flags,
