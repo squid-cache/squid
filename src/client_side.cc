@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.373 1998/08/03 19:30:28 wessels Exp $
+ * $Id: client_side.cc,v 1.374 1998/08/04 06:01:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2191,10 +2191,10 @@ httpAccept(int sock, void *data)
     struct sockaddr_in peer;
     struct sockaddr_in me;
     int max = INCOMING_HTTP_MAX;
+    commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
     while (max-- && !httpAcceptDefer()) {
 	memset(&peer, '\0', sizeof(struct sockaddr_in));
 	memset(&me, '\0', sizeof(struct sockaddr_in));
-	commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
 	if ((fd = comm_accept(sock, &peer, &me)) < 0) {
 	    if (!ignoreErrno(errno))
 		debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
