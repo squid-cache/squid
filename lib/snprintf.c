@@ -54,7 +54,7 @@
  */
 
 
-#ifndef HAVE_SNPRINTF
+#if !HAVE_SNPRINTF || !HAVE_VSNPRINTF
 
 #include <stdio.h>
 #include <ctype.h>
@@ -903,29 +903,28 @@ strx_printv(int *ccp, char *buf, size_t len, const char *format,
     if (ccp)
 	*ccp = cc;
 }
+#endif
 
-
+#if !HAVE_SNPRINTF
 int 
 snprintf(char *buf, size_t len, const char *format,...)
 {
     int cc;
     va_list ap;
-
     va_start(ap, format);
     strx_printv(&cc, buf, (len - 1), format, ap);
     va_end(ap);
     return (cc);
 }
+#endif
 
-
+#if !HAVE_VSNPRINTF
 int 
 vsnprintf(char *buf, size_t len, const char *format,
     va_list ap)
 {
     int cc;
-
     strx_printv(&cc, buf, (len - 1), format, ap);
     return (cc);
 }
-
-#endif /* HAVE_SNPRINTF */
+#endif
