@@ -456,7 +456,7 @@ extern void storeNegativeCache(StoreEntry *);
 extern void storeFreeMemory(void);
 extern int expiresMoreThan(time_t, time_t);
 extern void storeClientListAdd(StoreEntry *, void *);
-extern void InvokeHandlers(const StoreEntry *);
+extern void InvokeHandlers(StoreEntry *);
 extern int storeEntryValidToSend(StoreEntry *);
 extern void storeTimestampsSet(StoreEntry *);
 extern unsigned int storeReqnum(StoreEntry * entry, method_t);
