@@ -1,5 +1,5 @@
 /*
- * $Id: HttpStatusLine.cc,v 1.8 1998/03/05 00:45:37 rousskov Exp $
+ * $Id: HttpStatusLine.cc,v 1.9 1998/04/09 10:50:45 rousskov Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -71,8 +71,7 @@ httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
     debug(57, 9) (HttpStatusLineFormat, sline->version, sline->status,
 	sline->reason ? sline->reason : httpStatusString(sline->status));
     packerPrintf(p, HttpStatusLineFormat,
-	sline->version, sline->status,
-	sline->reason ? sline->reason : httpStatusString(sline->status));
+	sline->version, sline->status, httpStatusLineReason(sline));
 }
 
 /* pack fields using Packer */
@@ -92,6 +91,13 @@ httpStatusLineParse(HttpStatusLine * sline, const char *start, const char *end)
     sline->status = atoi(++start);
     /* we ignore 'reason-phrase' */
     return 1;			/* success */
+}
+
+const char *
+httpStatusLineReason(const HttpStatusLine * sline)
+{
+    assert(sline);
+    return sline->reason ? sline->reason : httpStatusString(sline->status);
 }
 
 static const char *
