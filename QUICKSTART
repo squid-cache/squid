@@ -29,7 +29,7 @@ cache_mem
 cache_dir /usr/local/squid/cache 100 16 256
 
     Add here (first number, here 100) the amount of hard disk space 
-    (in megabytes) to devote to caching:
+    (in megabytes) to devote to caching.
 
 acl, http_access, icp_access
 
