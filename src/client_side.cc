@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.179 1997/12/30 02:47:39 wessels Exp $
+ * $Id: client_side.cc,v 1.180 1997/12/31 22:11:56 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1318,7 +1318,7 @@ clientProcessMiss(clientHttpRequest * http)
     answer = aclCheckFast(Config.accessList.miss, &ch);
     if (answer == 0) {
 	http->al.http.code = HTTP_FORBIDDEN;
-	err = errorCon(ERR_CANNOT_FORWARD, HTTP_FORBIDDEN);
+	err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(r);
 	err->src_addr = http->conn->peer.sin_addr;
 	http->entry = clientCreateStoreEntry(http, r->method, 0);
