@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.69 1998/07/20 17:19:53 wessels Exp $
+ * $Id: mime.cc,v 1.70 1998/07/20 22:42:23 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -320,16 +320,20 @@ mimeGetContentType(const char *fn)
     mimeEntry *m;
     char *name = xstrdup(fn);
     char *t;
-    if (mimeGetContentEncoding(name)) {
-	/* Assume we matched /\.\w$/ and cut off the last extension */
-	if ((t = strrchr(name, '.')))
-	    *t = '\0';
-    }
+try_again:
     for (m = MimeTable; m; m = m->next) {
 	if (m->content_type == NULL)
 	    continue;
 	if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)
 	    break;
+    }
+    if (!strcmp(m->content_type, dash_str)) {
+	/* Assume we matched /\.\w$/ and cut off the last extension */
+	if ((t = strrchr(name, '.'))) {
+	    *t = '\0';
+	    goto try_again;
+	}
+	/* What? A encoding without a extension? */
     }
     xfree(name);
     if (m == NULL)
