@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.176 2002/10/21 14:00:02 adrian Exp $
+ * $Id: gopher.cc,v 1.177 2002/10/21 15:31:44 adrian Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "comm.h"
 
 /* gopher type code from rfc. Anawat. */
 #define GOPHER_FILE         '0'
@@ -100,7 +101,7 @@ static void gopherEndHTML(GopherStateData *);
 static void gopherToHTML(GopherStateData *, char *inbuf, int len);
 static PF gopherTimeout;
 static IOCB gopherReadReply;
-static CWCB gopherSendComplete;
+static IOWCB gopherSendComplete;
 static PF gopherSendRequest;
 
 static char def_gopher_bin[] = "www/unknown";
@@ -710,7 +711,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
 /* This will be called when request write is complete. Schedule read of
  * reply. */
 static void
-gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, void *data)
+gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;
@@ -792,12 +793,11 @@ gopherSendRequest(int fd, void *data)
 	snprintf(buf, 4096, "%s\r\n", gopherState->request);
     }
     debug(10, 5) ("gopherSendRequest: FD %d\n", fd);
-    comm_old_write(fd,
+    comm_write(fd,
 	buf,
 	strlen(buf),
 	gopherSendComplete,
-	gopherState,
-	memFree4K);
+	gopherState);
     if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
 	storeSetPublicKey(gopherState->entry);	/* Make it public */
 }
