@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.195 1997/01/19 08:10:52 wessels Exp $
+ * $Id: store.cc,v 1.196 1997/01/19 08:32:14 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2793,7 +2793,7 @@ storeExpiredReferenceAge(void)
 	x = -1.0;
     else if (x > 1.0)
 	x = 1.0;
-    z = pow(724.0,(x + 1.0));	/* minutes [1:525600] */
+    z = pow(724.0, (x + 1.0));	/* minutes [1:525600] */
     age = (time_t) (z * 60.0);
     if (age < 60)
 	age = 60;

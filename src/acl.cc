@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.75 1997/01/14 19:50:05 wessels Exp $
+ * $Id: acl.cc,v 1.76 1997/01/19 08:32:09 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -501,16 +501,15 @@ aclParseAclLine(void)
 	debug(28, 0, "aclParseAclLine: Invalid ACL type '%s'\n", t);
 	return;
     }
-
     if ((A = aclFindByName(t)) == NULL) {
-        A = xcalloc(1, sizeof(struct _acl));
+	A = xcalloc(1, sizeof(struct _acl));
 	xstrncpy(A->name, aclname, ACL_NAME_SZ);
 	A->type = acltype;
-        A->cfgline = xstrdup(config_input_line);
-        *AclListTail = A;
-        AclListTail = &A->next;
+	A->cfgline = xstrdup(config_input_line);
+	*AclListTail = A;
+	AclListTail = &A->next;
     } else {
-        if (acltype != A->type) {
+	if (acltype != A->type) {
 	    debug(28, 0, "aclParseAclLine: ACL '%s' already exists with different type, skipping.\n", A->name);
 	    return;
 	}
