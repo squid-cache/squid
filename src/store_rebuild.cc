@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.30 1998/04/06 22:32:21 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.31 1998/04/07 06:24:44 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -206,7 +206,13 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    RebuildState.badflags++;
 	    continue;
 	}
-	if ((e = storeGet(key)) != NULL) {
+	e = storeGet(key);
+	if (e && e->lastref >= tmpe.lastref) {
+	    /* key already exists, current entry is newer */
+	    /* keep old, ignore new */
+	    RebuildState.dupcount++;
+	    continue;
+	} else if (NULL != e) {
 	    /* URL already exists, this swapfile not being used */
 	    /* junk old, load new */
 	    storeRelease(e);	/* release old entry */
@@ -236,7 +242,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
     size_t ss = sizeof(storeSwapLogData);
     int count;
     int used;			/* is swapfile already in use? */
-    int newer;			/* is the log entry newer than current entry? */
+    int disk_entry_newer;	/* is the log entry newer than current entry? */
     double x;
     assert(d != NULL);
     /* load a number of objects per invocation */
@@ -305,13 +311,14 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	/* If this URL already exists in the cache, does the swap log
 	 * appear to have a newer entry?  Compare 'lastref' from the
 	 * swap log to e->lastref. */
-	newer = e ? (s.lastref > e->lastref ? 1 : 0) : 0;
-	if (used && !newer) {
+	disk_entry_newer = e ? (s.lastref > e->lastref ? 1 : 0) : 0;
+	if (used && !disk_entry_newer) {
 	    /* log entry is old, ignore it */
 	    RebuildState.clashcount++;
 	    continue;
 	} else if (used && e && e->swap_file_number == s.swap_file_number) {
 	    /* swapfile taken, same URL, newer, update meta */
+	    /* XXX what if e->store_status != STORE_OK? */
 	    e->lastref = s.timestamp;
 	    e->timestamp = s.timestamp;
 	    e->expires = s.expires;
@@ -338,6 +345,11 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	     * and the validation procedure hasn't run. */
 	    assert(RebuildState.need_to_validate);
 	    RebuildState.clashcount++;
+	    continue;
+	} else if (e && !disk_entry_newer) {
+	    /* key already exists, current entry is newer */
+	    /* keep old, ignore new */
+	    RebuildState.dupcount++;
 	    continue;
 	} else if (e) {
 	    /* key already exists, this swapfile not being used */
