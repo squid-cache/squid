@@ -1,5 +1,5 @@
 /*
- * $Id: ESIElement.h,v 1.2 2003/07/14 14:15:56 robertc Exp $
+ * $Id: ESIElement.h,v 1.3 2003/07/14 20:29:28 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -63,8 +63,10 @@ typedef RefCount<esiTreeParent> esiTreeParentPtr;
 
 class ESIVarState;
 
-struct ESIElement : public esiTreeParent
+class ESIElement : public esiTreeParent
 {
+
+public:
     typedef RefCount<ESIElement> Pointer;
 
     /* the types we have */
