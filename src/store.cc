@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.512 2000/01/14 17:34:49 wessels Exp $
+ * $Id: store.cc,v 1.513 2000/02/01 05:17:58 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -969,6 +969,7 @@ storeRelease(StoreEntry * e)
 	 * we'll just call storeUnlockObject() on these.
 	 */
 	e->lock_count++;
+	EBIT_SET(e->flags, RELEASE_REQUEST);
 	stackPush(&LateReleaseStack, e);
 	return;
     }
