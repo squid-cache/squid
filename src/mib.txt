@@ -1,7 +1,6 @@
 -- File: SQUID.MIB
--- kostas@nlanr.net
--- Created    : 11/ 2/97 kostas@nlanr.net
--- Last Update:  2/21/98 kostas@nlanr.net
+-- Maintained by: kostas@nlanr.net
+-- $Id: mib.txt,v 1.8 1998/02/23 05:48:07 kostas Exp $
 
 -- SQUID-MIB DEFINITIONS ::= BEGIN
 -- 		IMPORTS
@@ -697,59 +696,60 @@
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 1 }
 
-	cacheICPpktsSent OBJECT-TYPE
+        cacheHttpHits OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 2 }
 
-	cacheICPpktsRecv OBJECT-TYPE
+        cacheHttpErrors OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 3 }
 
-	cacheCurrentSwapSize OBJECT-TYPE
+	cacheICPpktsSent OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 4 }
 
-        cacheHttpHits OBJECT-TYPE
+	cacheICPpktsRecv OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 5 }
 
-        cacheHttpErrors OBJECT-TYPE
+        cacheICPkbSent OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 6 }
 
-        cacheICPkbSent OBJECT-TYPE
+        cacheICPkbRecv OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 7 }
 
-        cacheICPkbRecv OBJECT-TYPE
+        cacheHttpInKb OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 8 }
 
-        cacheHttpInKb OBJECT-TYPE
+        cacheHttpOutKb OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 9 }
 
-        cacheHttpOutKb OBJECT-TYPE
+	cacheCurrentSwapSize OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 10 }
+
 
 	cacheHttpMedianSvcFiveMin OBJECT-TYPE
                 SYNTAX INTEGER
@@ -757,25 +757,25 @@
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 11 }
 
-        cacheHttpMedianSvcHour OBJECT-TYPE
+        cacheICPMedianSvcFiveMin OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 12 }
 
-        cacheICPMedianSvcFiveMin OBJECT-TYPE
+        cacheDNSMedianSvcFiveMin OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 13 }
 
-        cacheICPMedianSvcHour OBJECT-TYPE
+        cacheHttpMedianSvcHour OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 14 }
 
-        cacheDNSMedianSvcFiveMin OBJECT-TYPE
+        cacheICPMedianSvcHour OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
