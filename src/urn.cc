@@ -151,6 +151,8 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     int l;
     String *S;
     ErrorState *err;
+	double tmprtt;
+	StoreEntry *tmpentry;
 
     debug(50, 3) ("urnHandleReply: Called with size=%d.\n", size);
     if (urlres_e->store_status == STORE_ABORTED) {
@@ -203,8 +205,8 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	err->url = xstrdup(storeUrl(e));
 	errorAppendEntry(e, err);
 	return;
-    }
-    min_w = urnFindMinRtt(urls, urnState->request->method, NULL);
+    } 
+     min_w = urnFindMinRtt(urls, urnState->request->method, NULL);
     storeBuffer(e);
     S = stringCreate(1024);
     l = snprintf(line, 4096,
@@ -213,7 +215,15 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	"<UL>\n", storeUrl(e), storeUrl(e));
     stringAppend(S, line, l);
     for (w = urls; w; w = w->next) {
-	l = snprintf(line, 4096, "<LI><A HREF=\"%s\">%s</A>\n", w->key, w->key);
+	request_t *tmpr=urlParse(urnState->request->method, w->key);
+	const cache_key *tmpk=storeKeyPublic(w->key,urnState->request->method);
+	tmpentry=storeGet(tmpk);
+	l = snprintf(line, 4096, "<LI><A HREF=\"%s\">%s</A>", w->key, w->key);
+	if (tmpr && tmpr->host && (tmprtt=netdbHostRtt(tmpr->host)))
+	  l= snprintf(line, 4096, "<LI><A HREF=\"%s\">%s</A> %4.2f  %s\n",
+			w->key,w->key,tmprtt, tmpentry?"[cached]":" " );
+	else 
+	  l = snprintf(line, 4096, "<LI><A HREF=\"%s\">%s</A>", w->key, w->key);
         stringAppend(S, line, l);
     }
     l = snprintf(line, 4096,
