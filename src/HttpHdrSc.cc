@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrSc.cc,v 1.1 2003/03/10 04:56:36 robertc Exp $
+ * $Id: HttpHdrSc.cc,v 1.2 2003/06/09 05:27:03 robertc Exp $
  *
  * DEBUG: section 90    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -54,7 +54,8 @@ HttpHeaderFieldInfo *ScFieldsInfo = NULL;
 
 http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader)
 {
-    aHeader = (http_hdr_sc_type)(++(int)aHeader);
+    int tmp = (int)aHeader;
+    aHeader = (http_hdr_sc_type)(++tmp);
     return aHeader;
 }
 
