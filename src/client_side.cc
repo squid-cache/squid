@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.666 2003/10/21 12:23:53 robertc Exp $
+ * $Id: client_side.cc,v 1.667 2003/11/05 21:32:12 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1695,6 +1695,9 @@ prepareAcceleratedURL(ConnStateData::Pointer & conn, clientHttpRequest *http, ch
     http->flags.accel = 1;
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
+
+    if (strncasecmp(url, "cache_object://", 15) == 0)
+        return; /* already in good shape */
 
     if (*url != '/') {
         if (conn->port->vhost)
