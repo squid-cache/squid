@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.146 2000/10/05 03:20:40 wessels Exp $
+ * $Id: net_db.cc,v 1.147 2000/10/05 14:02:22 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -412,7 +412,6 @@ netdbSaveState(void *foo)
 	    t = wbuf;
 	    wl <<= 1;
 	    wbuf = xmalloc(wl);
-	    debug(0, 0) ("netdbSaveState: wbuf now %d bytes\n", wl);
 	    xmemcpy(wbuf, t, wo);
 	    xfree(t);
 	}
