@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.424 1998/12/05 00:54:18 wessels Exp $
+ * $Id: client_side.cc,v 1.425 1998/12/09 23:00:58 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -716,6 +716,7 @@ httpRequestFree(void *data)
     assert(*H != NULL);
     *H = http->next;
     http->next = NULL;
+    dlinkDelete(&http->active, &ClientActiveRequests);
     cbdataFree(http);
 }
 
@@ -1467,6 +1468,8 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     debug(33, 5) ("clientSendMoreData: %s, %d bytes\n", http->uri, (int) size);
     assert(size <= CLIENT_SOCK_SZ);
     assert(http->request != NULL);
+    dlinkDelete(&http->active, &ClientActiveRequests);
+    dlinkAdd(http, &http->active, &ClientActiveRequests);
     debug(33, 5) ("clientSendMoreData: FD %d '%s', out.offset=%d \n",
 	fd, storeUrl(entry), (int) http->out.offset);
     if (conn->chr != http) {
@@ -1897,6 +1900,7 @@ parseHttpRequestAbort(ConnStateData * conn, const char *uri)
     http->uri = xstrdup(uri);
     http->log_uri = xstrndup(uri, MAX_URL);
     http->range_iter.boundary = StringNull;
+    dlinkAdd(http, &http->active, &ClientActiveRequests);
     return http;
 }
 
@@ -2030,6 +2034,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     *prefix_p = xmalloc(prefix_sz + 1);
     xmemcpy(*prefix_p, conn->in.buf, prefix_sz);
     *(*prefix_p + prefix_sz) = '\0';
+    dlinkAdd(http, &http->active, &ClientActiveRequests);
 
     debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", (*prefix_p) + *req_line_sz_p);
     if ((t = strchr(url, '#')))	/* remove HTML anchors */
