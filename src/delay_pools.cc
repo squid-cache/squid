@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.19 2001/03/19 06:18:42 wessels Exp $
+ * $Id: delay_pools.cc,v 1.20 2002/01/06 00:44:13 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <david@luyer.net>
@@ -144,7 +144,7 @@ delayInitDelayData(unsigned short pools)
     if (!pools)
 	return;
     delay_data = xcalloc(pools, sizeof(*delay_data));
-    memory_used += sizeof(*delay_data);
+    memory_used += pools * sizeof(*delay_data);
     eventAdd("delayPoolsUpdate", delayPoolsUpdate, NULL, 1.0, 1);
     delay_id_ptr_hash = hash_create(delayIdPtrHashCmp, 256, delayIdPtrHash);
 }
@@ -160,10 +160,10 @@ delayIdZero(void *hlink)
 }
 
 void
-delayFreeDelayData(void)
+delayFreeDelayData(unsigned short pools)
 {
     safe_free(delay_data);
-    memory_used -= sizeof(*delay_data);
+    memory_used -= pools * sizeof(*delay_data);
     if (!delay_id_ptr_hash)
 	return;
     hashFreeItems(delay_id_ptr_hash, delayIdZero);
