@@ -1,5 +1,5 @@
 /*
- * $Id: initgroups.h,v 1.1 2004/10/20 22:41:03 hno Exp $
+ * $Id: initgroups.h,v 1.2 2004/11/06 22:09:19 hno Exp $
  */
 #ifndef SQUID_INITGROUPS_H
 #define SQUID_INITGROUPS_H
@@ -13,5 +13,5 @@
 #include <sys/types.h>
 #endif
 
-extern int initgroups(const char *user, gid_t group);
+SQUIDCEXTERN int initgroups(const char *user, gid_t group);
 #endif /* SQUID_INITGROPS_H */
