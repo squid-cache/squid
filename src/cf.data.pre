@@ -831,6 +831,20 @@ DOC_START
 dns_defnames off
 DOC_END
 
+NAME: dns_nameservers
+TYPE: wordlist
+DEFAULT: none
+LOC: Config.dns_nameservers
+DOC_START
+	Use this if you want to specify a list of DNS name servers
+	(IP addresses) to use instead of those given in your
+	/etc/resolv.conf file.
+
+	Example: dns_nameservers 10.0.0.1 192.172.0.4
+
+dns_nameservers none
+DOC_END
+
 
 NAME: unlinkd_program
 TYPE: string
