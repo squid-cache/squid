@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.91 1996/10/10 22:20:58 wessels Exp $
+ * $Id: main.cc,v 1.92 1996/10/11 23:11:16 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -339,10 +339,10 @@ serverConnectionsOpen(void)
     }
     fd_note(theHttpConnection, "HTTP socket");
     comm_listen(theHttpConnection);
-    comm_set_select_handler(theHttpConnection,
+    commSetSelect(theHttpConnection,
 	COMM_SELECT_READ,
 	asciiHandleConn,
-	0);
+	NULL, 0);
     debug(1, 1, "Accepting HTTP connections on FD %d.\n",
 	theHttpConnection);
 
@@ -359,10 +359,10 @@ serverConnectionsOpen(void)
 	    if (theInIcpConnection < 0)
 		fatal("Cannot open ICP Port");
 	    fd_note(theInIcpConnection, "ICP socket");
-	    comm_set_select_handler(theInIcpConnection,
+	    commSetSelect(theInIcpConnection,
 		COMM_SELECT_READ,
 		icpHandleUdp,
-		0);
+		NULL, 0);
 	    comm_join_mcast_groups(theInIcpConnection);
 	    debug(1, 1, "Accepting ICP connections on FD %d.\n",
 		theInIcpConnection);
@@ -378,10 +378,10 @@ serverConnectionsOpen(void)
 		leave_suid();
 		if (theOutIcpConnection < 0)
 		    fatal("Cannot open Outgoing ICP Port");
-		comm_set_select_handler(theOutIcpConnection,
+		commSetSelect(theOutIcpConnection,
 		    COMM_SELECT_READ,
 		    icpHandleUdp,
-		    0);
+		    NULL, 0);
 		debug(1, 1, "Accepting ICP connections on FD %d.\n",
 		    theOutIcpConnection);
 		fd_note(theOutIcpConnection, "Outgoing ICP socket");
@@ -406,10 +406,10 @@ serverConnectionsClose(void)
 	debug(21, 1, "FD %d Closing HTTP connection\n",
 	    theHttpConnection);
 	comm_close(theHttpConnection);
-	comm_set_select_handler(theHttpConnection,
+	commSetSelect(theHttpConnection,
 	    COMM_SELECT_READ,
 	    NULL,
-	    0);
+	    NULL, 0);
 	theHttpConnection = -1;
     }
     if (theInIcpConnection >= 0) {
@@ -419,15 +419,15 @@ serverConnectionsClose(void)
 	    theInIcpConnection);
 	if (theInIcpConnection != theOutIcpConnection)
 	    comm_close(theInIcpConnection);
-	comm_set_select_handler(theInIcpConnection,
+	commSetSelect(theInIcpConnection,
 	    COMM_SELECT_READ,
 	    NULL,
-	    0);
+	    NULL, 0);
 	if (theInIcpConnection != theOutIcpConnection)
-	    comm_set_select_handler(theOutIcpConnection,
+	    commSetSelect(theOutIcpConnection,
 		COMM_SELECT_READ,
 		NULL,
-		0);
+		NULL, 0);
 	theInIcpConnection = -1;
     }
 #if USE_ICMP

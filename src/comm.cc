@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.87 1996/10/09 22:49:29 wessels Exp $
+ * $Id: comm.cc,v 1.88 1996/10/11 23:11:07 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -330,10 +330,11 @@ comm_nbconnect(int fd, void *data)
     }
     switch (comm_connect_addr(fd, &connectState->S)) {
     case COMM_INPROGRESS:
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
 	    comm_nbconnect,
-	    (void *) connectState);
+	    (void *) connectState,
+	0);
 	break;
     case COMM_OK:
 	connectState->handler(fd, COMM_OK, connectState->data);
@@ -825,13 +826,7 @@ comm_select(time_t sec)
 }
 
 void
-comm_set_select_handler(int fd, unsigned int type, PF handler, void *client_data)
-{
-    comm_set_select_handler_plus_timeout(fd, type, handler, client_data, 0);
-}
-
-void
-comm_set_select_handler_plus_timeout(int fd, unsigned int type, PF handler, void *client_data, time_t timeout)
+commSetSelect(int fd, unsigned int type, PF handler, void *client_data, time_t timeout)
 {
     if (type & COMM_SELECT_TIMEOUT) {
 	fd_table[fd].timeout_time = (getCurrentTime() + timeout);
@@ -839,7 +834,7 @@ comm_set_select_handler_plus_timeout(int fd, unsigned int type, PF handler, void
 	fd_table[fd].timeout_handler = handler;
 	fd_table[fd].timeout_data = client_data;
 	if ((timeout <= 0) && handler) {
-	    debug(5, 2, "comm_set_select_handler_plus_timeout: Zero timeout doesn't make sense\n");
+	    debug(5, 2, "commSetSelect: Zero timeout doesn't make sense\n");
 	}
     }
     if (type & COMM_SELECT_READ) {
@@ -1243,10 +1238,11 @@ commHandleRead(int fd, RWStateData * state)
     if (len <= 0) {
 	if (errno == EWOULDBLOCK || errno == EAGAIN) {
 	    /* reschedule self */
-	    comm_set_select_handler(fd,
+	    commSetSelect(fd,
 		COMM_SELECT_READ,
 		(PF) commHandleRead,
-		state);
+		state,
+	0);
 	    return COMM_OK;
 	} else {
 	    /* Len == 0 means connection closed; otherwise would not have been
@@ -1266,10 +1262,11 @@ commHandleRead(int fd, RWStateData * state)
 	RWStateCallbackAndFree(fd, COMM_OK);
     } else {
 	/* Reschedule until we are done */
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) commHandleRead,
-	    state);
+	    state,
+	0);
     }
     return COMM_OK;
 }
@@ -1305,10 +1302,11 @@ comm_read(int fd,
     state->handler_data = handler_data;
     state->free = NULL;
     fd_table[fd].rwstate = state;
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_READ,
 	(PF) commHandleRead,
-	state);
+	state,
+	0);
 }
 
 /* Write to FD. */
@@ -1335,10 +1333,11 @@ commHandleWrite(int fd, RWStateData * state)
 	if (errno == EWOULDBLOCK || errno == EAGAIN) {
 	    debug(5, 10, "commHandleWrite: FD %d: write failure: %s.\n",
 		fd, xstrerror());
-	    comm_set_select_handler(fd,
+	    commSetSelect(fd,
 		COMM_SELECT_WRITE,
 		(PF) commHandleWrite,
-		state);
+		state,
+	0);
 	} else {
 	    debug(5, 2, "commHandleWrite: FD %d: write failure: %s.\n",
 		fd, xstrerror());
@@ -1349,10 +1348,11 @@ commHandleWrite(int fd, RWStateData * state)
 	state->offset += len;
 	if (state->offset < state->size) {
 	    /* Not done, reinstall the write handler and write some more */
-	    comm_set_select_handler(fd,
+	    commSetSelect(fd,
 		COMM_SELECT_WRITE,
 		(PF) commHandleWrite,
-		state);
+		state,
+	0);
 	} else {
 	    RWStateCallbackAndFree(fd, COMM_OK);
 	}
@@ -1385,10 +1385,11 @@ comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handl
     state->handler_data = handler_data;
     state->free = free_func;
     fd_table[fd].rwstate = state;
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	(PF) commHandleWrite,
-	fd_table[fd].rwstate);
+	fd_table[fd].rwstate,
+	0);
 }
 
 void

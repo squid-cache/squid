@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.45 1996/10/09 22:49:45 wessels Exp $
+ * $Id: wais.cc,v 1.46 1996/10/11 23:11:19 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -147,7 +147,7 @@ waisReadReplyTimeout(int fd, WaisStateData * waisState)
     entry = waisState->entry;
     debug(24, 4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
-    comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
+    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
     comm_close(fd);
 }
 
@@ -160,7 +160,7 @@ waisLifetimeExpire(int fd, WaisStateData * waisState)
     entry = waisState->entry;
     debug(24, 4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-    comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
+    commSetSelect(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, NULL, NULL, 0);
     comm_close(fd);
 }
 
@@ -200,16 +200,16 @@ waisReadReply(int fd, WaisStateData * waisState)
 	debug(24, 3, "                Current Gap: %d bytes\n", clen - off);
 	/* reschedule, so it will automatically reactivated
 	 * when Gap is big enough. */
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) waisReadReply,
-	    (void *) waisState);
+	    (void *) waisState, 0);
 	/* don't install read handler while we're above the gap */
-	comm_set_select_handler_plus_timeout(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
-	    (PF) NULL,
-	    (void *) NULL,
-	    (time_t) 0);
+	    NULL,
+	    NULL,
+	    0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
 	    comm_set_fd_lifetime(fd, 3600);	/* limit during deferring */
 	    BIT_SET(entry->flag, READ_DEFERRED);
@@ -233,9 +233,9 @@ waisReadReply(int fd, WaisStateData * waisState)
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
-	    comm_set_select_handler(fd, COMM_SELECT_READ,
-		(PF) waisReadReply, (void *) waisState);
-	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
+	    commSetSelect(fd, COMM_SELECT_READ,
+		(PF) waisReadReply, (void *) waisState, 0);
+	    commSetSelect(fd, COMM_SELECT_TIMEOUT,
 		(PF) waisReadReplyTimeout, (void *) waisState, Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
@@ -258,22 +258,22 @@ waisReadReply(int fd, WaisStateData * waisState)
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
 	storeAppend(entry, buf, len);
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) waisReadReply,
-	    (void *) waisState);
-	comm_set_select_handler_plus_timeout(fd,
+	    (void *) waisState, 0);
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) waisReadReplyTimeout,
 	    (void *) waisState,
 	    Config.readTimeout);
     } else {
 	storeAppend(entry, buf, len);
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) waisReadReply,
-	    (void *) waisState);
-	comm_set_select_handler_plus_timeout(fd,
+	    (void *) waisState, 0);
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) waisReadReplyTimeout,
 	    (void *) waisState,
@@ -296,11 +296,11 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	comm_close(fd);
     } else {
 	/* Schedule read reply. */
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) waisReadReply,
-	    (void *) waisState);
-	comm_set_select_handler_plus_timeout(fd,
+	    (void *) waisState, 0);
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) waisReadReplyTimeout,
 	    (void *) waisState,
@@ -415,12 +415,12 @@ waisConnectDone(int fd, int status, void *data)
     /* Install connection complete handler. */
     if (opt_no_ipcache)
 	ipcacheInvalidate(waisState->relayhost);
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_LIFETIME,
 	(PF) waisLifetimeExpire,
-	(void *) waisState);
-    comm_set_select_handler(fd,
+	(void *) waisState, 0);
+    commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	(PF) waisSendRequest,
-	(void *) waisState);
+	(void *) waisState, 0);
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.82 1996/10/09 22:49:33 wessels Exp $
+ * $Id: http.cc,v 1.83 1996/10/11 23:11:12 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -116,23 +116,24 @@ static struct {
     int ctype;
 } ReplyHeaderStats;
 
-static int httpStateFree _PARAMS((int fd, HttpStateData *));
-static void httpReadReplyTimeout _PARAMS((int fd, HttpStateData *));
-static void httpLifetimeExpire _PARAMS((int fd, HttpStateData *));
+static void httpStateFree _PARAMS((int fd, void *));
+static void httpReadReplyTimeout _PARAMS((int fd, void *));
+static void httpLifetimeExpire _PARAMS((int fd, void *));
 static void httpMakePublic _PARAMS((StoreEntry *));
 static void httpMakePrivate _PARAMS((StoreEntry *));
 static void httpCacheNegatively _PARAMS((StoreEntry *));
-static void httpReadReply _PARAMS((int fd, HttpStateData *));
+static void httpReadReply _PARAMS((int fd, void *));
 static void httpSendComplete _PARAMS((int fd, char *, int, int, void *));
-static void httpSendRequest _PARAMS((int fd, HttpStateData *));
+static void httpSendRequest _PARAMS((int fd, void *));
 static void httpConnect _PARAMS((int fd, ipcache_addrs *, void *));
 static void httpConnectDone _PARAMS((int fd, int status, void *data));
 
-static int
-httpStateFree(int fd, HttpStateData * httpState)
+static void
+httpStateFree(int fd, void *data)
 {
+    HttpStateData *httpState = data;
     if (httpState == NULL)
-	return 1;
+	return;
     storeUnlockObject(httpState->entry);
     if (httpState->reply_hdr) {
 	put_free_8k_page(httpState->reply_hdr);
@@ -140,7 +141,6 @@ httpStateFree(int fd, HttpStateData * httpState)
     }
     requestUnlink(httpState->request);
     xfree(httpState);
-    return 0;
 }
 
 int
@@ -155,28 +155,30 @@ httpCachable(char *url, int method)
 
 /* This will be called when timeout on read. */
 static void
-httpReadReplyTimeout(int fd, HttpStateData * httpState)
+httpReadReplyTimeout(int fd, void *data)
 {
+    HttpStateData *httpState = data;
     StoreEntry *entry = NULL;
 
     entry = httpState->entry;
     debug(11, 4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
-    comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
+    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
     comm_close(fd);
 }
 
 /* This will be called when socket lifetime is expired. */
 static void
-httpLifetimeExpire(int fd, HttpStateData * httpState)
+httpLifetimeExpire(int fd, void *data)
 {
+    HttpStateData *httpState = data;
     StoreEntry *entry = NULL;
 
     entry = httpState->entry;
     debug(11, 4, "httpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
 
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-    comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
+    commSetSelect(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, NULL, NULL, 0);
     comm_close(fd);
 }
 
@@ -397,8 +399,9 @@ httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
  * error or connection closed. */
 /* XXX this function is too long! */
 static void
-httpReadReply(int fd, HttpStateData * httpState)
+httpReadReply(int fd, void *data)
 {
+    HttpStateData *httpState = data;
     LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
     int len;
     int bin;
@@ -428,14 +431,14 @@ httpReadReply(int fd, HttpStateData * httpState)
 	debug(11, 3, "                Current Gap: %d bytes\n", clen - off);
 	/* reschedule, so it will be automatically reactivated
 	 * when Gap is big enough. */
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
-	    (PF) httpReadReply,
-	    (void *) httpState);
+	    httpReadReply,
+	    (void *) httpState, 0);
 	/* disable read timeout until we are below the GAP */
-	comm_set_select_handler_plus_timeout(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
-	    (PF) NULL,
+	    NULL,
 	    (void *) NULL,
 	    (time_t) 0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
@@ -464,10 +467,10 @@ httpReadReply(int fd, HttpStateData * httpState)
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
-	    comm_set_select_handler(fd, COMM_SELECT_READ,
-		(PF) httpReadReply, (void *) httpState);
-	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-		(PF) httpReadReplyTimeout, (void *) httpState, Config.readTimeout);
+	    commSetSelect(fd, COMM_SELECT_READ,
+		httpReadReply, (void *) httpState, 0);
+	    commSetSelect(fd, COMM_SELECT_TIMEOUT,
+		httpReadReplyTimeout, (void *) httpState, Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
@@ -488,13 +491,13 @@ httpReadReply(int fd, HttpStateData * httpState)
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
 	storeAppend(entry, buf, len);
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
-	    (PF) httpReadReply,
-	    (void *) httpState);
-	comm_set_select_handler_plus_timeout(fd,
+	    httpReadReply,
+	    (void *) httpState, 0);
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
-	    (PF) httpReadReplyTimeout,
+	    httpReadReplyTimeout,
 	    (void *) httpState, Config.readTimeout);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
@@ -505,13 +508,13 @@ httpReadReply(int fd, HttpStateData * httpState)
 	if (httpState->reply_hdr_state < 2 && len > 0)
 	    httpProcessReplyHeader(httpState, buf, len);
 	storeAppend(entry, buf, len);
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
-	    (PF) httpReadReply,
-	    (void *) httpState);
-	comm_set_select_handler_plus_timeout(fd,
+	    httpReadReply,
+	    (void *) httpState, 0);
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
-	    (PF) httpReadReplyTimeout,
+	    httpReadReplyTimeout,
 	    (void *) httpState,
 	    Config.readTimeout);
     }
@@ -535,13 +538,13 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	return;
     } else {
 	/* Schedule read reply. */
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
-	    (PF) httpReadReply,
-	    (void *) httpState);
-	comm_set_select_handler_plus_timeout(fd,
+	    httpReadReply,
+	    (void *) httpState, 0);
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
-	    (PF) httpReadReplyTimeout,
+	    httpReadReplyTimeout,
 	    (void *) httpState,
 	    Config.readTimeout);
 	comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
@@ -550,8 +553,9 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 
 /* This will be called when connect completes. Write request. */
 static void
-httpSendRequest(int fd, HttpStateData * httpState)
+httpSendRequest(int fd, void *data)
 {
+    HttpStateData *httpState = data;
     char *xbuf = NULL;
     char *ybuf = NULL;
     char *buf = NULL;
@@ -685,7 +689,7 @@ proxyhttpStart(edge * e, char *url, StoreEntry * entry)
     httpState->neighbor = e;
     /* register the handler to free HTTP state data when the FD closes */
     comm_add_close_handler(sock,
-	(PF) httpStateFree,
+	httpStateFree,
 	(void *) httpState);
     request->method = entry->method;
     strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
@@ -738,10 +742,10 @@ httpConnectDone(int fd, int status, void *data)
 	if (opt_no_ipcache)
 	    ipcacheInvalidate(request->host);
 	fd_note(fd, entry->url);
-	comm_set_select_handler(fd, COMM_SELECT_LIFETIME,
-	    (PF) httpLifetimeExpire, (void *) httpState);
-	comm_set_select_handler(fd, COMM_SELECT_WRITE,
-	    (PF) httpSendRequest, (void *) httpState);
+	commSetSelect(fd, COMM_SELECT_LIFETIME,
+	    httpLifetimeExpire, (void *) httpState, 0);
+	commSetSelect(fd, COMM_SELECT_WRITE,
+	    httpSendRequest, (void *) httpState, 0);
     }
 }
 
@@ -779,7 +783,7 @@ httpStart(int unusedfd,
     httpState->req_hdr_sz = req_hdr_sz;
     httpState->request = requestLink(request);
     comm_add_close_handler(sock,
-	(PF) httpStateFree,
+	httpStateFree,
 	(void *) httpState);
     ipcache_nbgethostbyname(request->host,
 	sock,

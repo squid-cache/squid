@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.33 1996/10/10 22:20:27 wessels Exp $
+ * $Id: disk.cc,v 1.34 1996/10/11 23:11:09 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -282,10 +282,11 @@ diskHandleWrite(int fd, FileEntry * entry)
 	if (len < 0) {
 	    if (errno == EAGAIN || errno == EWOULDBLOCK) {
 		/* just reschedule us, try again */
-		comm_set_select_handler(fd,
+		commSetSelect(fd,
 		    COMM_SELECT_WRITE,
 		    (PF) diskHandleWrite,
-		    (void *) entry);
+		    (void *) entry,
+	0);
 		entry->write_daemon = PRESENT;
 		return DISK_OK;
 	    } else {
@@ -383,10 +384,11 @@ file_write(int fd,
 	aioFileWriteComplete,
 	&file_table[fd]);
 #else
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	(PF) diskHandleWrite,
-	(void *) &file_table[fd]);
+	(void *) &file_table[fd],
+	0);
     return DISK_OK;
 #endif
 }
@@ -435,10 +437,11 @@ diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 
     /* reschedule if need more data. */
     if (ctrl_dat->cur_len < ctrl_dat->req_len) {
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) diskHandleRead,
-	    (void *) ctrl_dat);
+	    (void *) ctrl_dat,
+	0);
 	return DISK_OK;
     } else {
 	/* all data we need is here. */
@@ -477,10 +480,11 @@ file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void
 #if USE_ASYNC_IO
     return aioFileQueueRead(fd, aioFileReadComplete, ctrl_dat);
 #else
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_READ,
 	(PF) diskHandleRead,
-	(void *) ctrl_dat);
+	(void *) ctrl_dat,
+	0);
     return DISK_OK;
 #endif
 }
@@ -545,8 +549,9 @@ diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
     walk_dat->offset += used_bytes;
 
     /* reschedule it for next line. */
-    comm_set_select_handler(fd, COMM_SELECT_READ, (PF) diskHandleWalk,
-	(void *) walk_dat);
+    commSetSelect(fd, COMM_SELECT_READ, (PF) diskHandleWalk,
+	(void *) walk_dat,
+	0);
     return DISK_OK;
 }
 
@@ -574,8 +579,9 @@ file_walk(int fd,
     walk_dat->line_handler = line_handler;
     walk_dat->line_data = line_data;
 
-    comm_set_select_handler(fd, COMM_SELECT_READ, (PF) diskHandleWalk,
-	(void *) walk_dat);
+    commSetSelect(fd, COMM_SELECT_READ, (PF) diskHandleWalk,
+	(void *) walk_dat,
+	0);
     return DISK_OK;
 }
 
