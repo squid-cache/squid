@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.241 1998/04/20 21:41:22 wessels Exp $
+ * $Id: stat.cc,v 1.242 1998/04/22 05:41:11 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -133,7 +133,6 @@ static OBJH statDigestBlob;
 static OBJH statAvg5min;
 static OBJH statAvg60min;
 static OBJH statUtilization;
-static OBJH storeDebugFD;
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
@@ -366,24 +365,6 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	    debug(18, 3) ("statObjects:  Processed %d objects...\n", N);
 	}
 	statStoreEntry(sentry, entry);
-    }
-}
-
-static void
-storeDebugFD(StoreEntry *s)
-{
-    StoreEntry *entry = NULL;
-    StoreEntry *next = NULL;
-    MemObject *mem;
-    next = (StoreEntry *) hash_first(store_table);
-    while ((entry = next) != NULL) {
-	next = (StoreEntry *) hash_next(store_table);
-	mem = entry->mem_obj;
-	if (!mem)
-		continue;
-	if (mem->swapout.fd < 0)
-		continue;
-	statStoreEntry(s, entry);
     }
 }
 
@@ -835,9 +816,6 @@ statInit(void)
 	"Display cache metrics graphically",
 	statGraphDump, 0);
 #endif
-    cachemgrRegister("debug-openfd",
-        "Debugging Open Swapout FDs",
-        storeDebugFD, 0);
 }
 
 static void
