@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.101 1996/10/07 16:47:40 wessels Exp $
+ * $Id: cache_cf.cc,v 1.102 1996/10/07 17:14:52 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1072,6 +1072,7 @@ parseConfigFile(char *file_name)
     aclDestroyAcls();
     aclDestroyDenyInfoList(&DenyInfoList);
     aclDestroyAccessList(&HTTPAccessList);
+    aclDestroyAccessList(&MISSAccessList);
     aclDestroyAccessList(&ICPAccessList);
 #if DELAY_HACK
     aclDestroyAccessList(&DelayAccessList);
@@ -1166,6 +1167,9 @@ parseConfigFile(char *file_name)
 
 	else if (!strcmp(token, "http_access"))
 	    aclParseAccessLine(&HTTPAccessList);
+
+	else if (!strcmp(token, "miss_access"))
+	    aclParseAccessLine(&MISSAccessList);
 
 	else if (!strcmp(token, "icp_access"))
 	    aclParseAccessLine(&ICPAccessList);
