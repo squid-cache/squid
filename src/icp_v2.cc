@@ -460,7 +460,7 @@ icpConnectionsOpen(void)
 	NULL, 0);
     for (s = Config.mcast_group_list; s; s = s->next)
 	ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
-    debug(1, 1) ("Accepting ICP connections on port %d, FD %d.\n",
+    debug(1, 1) ("Accepting ICP messages on port %d, FD %d.\n",
 	(int) port, theInIcpConnection);
     if ((addr = Config.Addrs.udp_outgoing).s_addr != no_addr.s_addr) {
 	enter_suid();
@@ -477,8 +477,8 @@ icpConnectionsOpen(void)
 	    COMM_SELECT_READ,
 	    icpHandleUdp,
 	    NULL, 0);
-	debug(1, 1) ("Accepting ICP connections on port %d, FD %d.\n",
-	    (int) port, theInIcpConnection);
+	debug(1, 1) ("Outgoing ICP messages on port %d, FD %d.\n",
+	    (int) port, theOutIcpConnection);
 	fd_note(theOutIcpConnection, "Outgoing ICP socket");
 	fd_note(theInIcpConnection, "Incoming ICP socket");
     } else {
