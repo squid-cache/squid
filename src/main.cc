@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.252 1998/05/27 22:51:54 rousskov Exp $
+ * $Id: main.cc,v 1.253 1998/07/06 19:18:30 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -670,6 +670,7 @@ sendSignal(void)
     if (ConfigFile == NULL)
 	ConfigFile = xstrdup(DefaultConfigFile);
     cbdataInit();
+    memInit();
     parseConfigFile(ConfigFile);
     pid = readPidFile();
     if (pid > 1) {
