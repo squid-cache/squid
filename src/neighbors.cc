@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.38 1996/07/26 19:28:50 wessels Exp $
+ * $Id: neighbors.cc,v 1.39 1996/07/26 21:09:37 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -480,7 +480,6 @@ void neighbors_open(fd)
 int neighborsUdpPing(proto)
      protodispatch_data *proto;
 {
-    char *t = NULL;
     char *host = proto->request->host;
     char *url = proto->url;
     StoreEntry *entry = proto->entry;
@@ -489,6 +488,7 @@ int neighborsUdpPing(proto)
     edge *e = NULL;
     int i;
     MemObject *mem = entry->mem_obj;
+    int reqnum = 0;
 
     mem->e_pings_n_pings = 0;
     mem->e_pings_n_acks = 0;
@@ -521,27 +521,30 @@ int neighborsUdpPing(proto)
 	debug(15, 4, "neighborsUdpPing: pinging cache %s for <URL:%s>\n",
 	    e->host, url);
 
-	/* e->header.reqnum++; */
 	if (BIT_TEST(entry->flag, KEY_PRIVATE))
-	    e->header.reqnum = atoi(entry->key);
+	    reqnum = atoi(entry->key);
 	else
-	    e->header.reqnum = getKeyCounter();
+	    reqnum = getKeyCounter();
 	debug(15, 3, "neighborsUdpPing: key = '%s'\n", entry->key);
-	debug(15, 3, "neighborsUdpPing: reqnum = %d\n", e->header.reqnum);
+	debug(15, 3, "neighborsUdpPing: reqnum = %d\n", reqnum);
 
 	if (e->icp_port == echo_port) {
 	    debug(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
+	    echo_hdr.reqnum = reqnum;
 	    icpUdpSend(friends->fd,
 		url,
 		&echo_hdr,
 		&e->in_addr,
+		entry->flag,
 		ICP_OP_DECHO,
 		LOG_TAG_NONE);
 	} else {
+	    e->header.reqnum = reqnum;
 	    icpUdpSend(friends->fd,
 		url,
 		&e->header,
 		&e->in_addr,
+		entry->flag,
 		ICP_OP_QUERY,
 		LOG_TAG_NONE);
 	}
@@ -550,18 +553,16 @@ int neighborsUdpPing(proto)
 	e->stats.pings_sent++;
 
 	if (e->stats.ack_deficit < HIER_MAX_DEFICIT) {
-	    /* consider it's alive. count it */
+	    /* its alive, expect a reply from it */
 	    e->neighbor_up = 1;
 	    mem->e_pings_n_pings++;
 	} else {
-	    /* consider it's dead. send a ping but don't count it. */
+	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    e->neighbor_up = 0;
 	    if (e->stats.ack_deficit > (HIER_MAX_DEFICIT << 1))
 		/* do this to prevent wrap around but we still want it
 		 * to move a bit so we can debug it easier. */
 		e->stats.ack_deficit = HIER_MAX_DEFICIT + 1;
-	    debug(15, 6, "cache %s is considered dead but send PING anyway, hope it comes up soon.\n",
-		inet_ntoa(e->in_addr.sin_addr));
 	    /* log it once at the threshold */
 	    if ((e->stats.ack_deficit == HIER_MAX_DEFICIT)) {
 		debug(15, 0, "neighborsUdpPing: Detected DEAD %s: %s\n",
@@ -573,24 +574,29 @@ int neighborsUdpPing(proto)
     }
 
     /* only do source_ping if we have neighbors */
-    if (echo_hdr.opcode) {
-	if (proto->source_ping && (hep = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP))) {
-	    debug(15, 6, "neighborsUdpPing: Send to original host\n");
-	    debug(15, 6, "neighborsUdpPing: url=%s, host=%s, t=%d\n",
-		url, host, t);
+    if (friends->n) {
+	if (!proto->source_ping) {
+	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
+	} else if ((hep = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP))) {
+	    debug(15, 6, "neighborsUdpPing: Source Ping: to %s for '%s'\n",
+		host, url);
 	    to_addr.sin_family = AF_INET;
 	    xmemcpy(&to_addr.sin_addr, hep->h_addr, hep->h_length);
 	    to_addr.sin_port = htons(echo_port);
-	    echo_hdr.reqnum = squid_curtime;
-	    debug(15, 6, "neighborsUdpPing - url: %s to url-host %s \n",
-		url, inet_ntoa(to_addr.sin_addr));
-	    /* send to original site */
-	    icpUdpSend(friends->fd, url, &echo_hdr, &to_addr, ICP_OP_SECHO, LOG_TAG_NONE);
+	    echo_hdr.reqnum = reqnum;
+	    icpUdpSend(friends->fd,
+		url,
+		&echo_hdr,
+		&to_addr,
+		entry->flag,
+		ICP_OP_SECHO,
+		LOG_TAG_NONE);
 	} else {
-	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
+	    debug(15, 6, "neighborsUdpPing: Source Ping: unknown host: %s\n",
+		host);
 	}
     }
-    return (mem->e_pings_n_pings);
+    return mem->e_pings_n_pings;
 }
 
 
@@ -664,7 +670,7 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	    hierarchy_log_append(entry,
 		HIER_SOURCE_FASTEST,
 		0,
-		inet_ntoa(from->sin_addr));
+		fqdnFromAddr(from->sin_addr));
 	    BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	    entry->ping_status = PING_DONE;
 	    getFromCache(0, entry, NULL, entry->mem_obj->request);
@@ -738,6 +744,9 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 		neighborRemove(e);
 	    }
 	}
+    } else if (header->opcode == ICP_OP_RELOADING) {
+	if (e)
+	    debug(15, 3, "neighborsUdpAck: %s is RELOADING\n", e->host);
     } else {
 	debug(15, 0, "neighborsUdpAck: Unexpected ICP reply: %s\n",
 	    IcpOpcodeStr[header->opcode]);
