@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.227 1997/12/03 09:00:18 wessels Exp $
+ * $Id: http.cc,v 1.228 1997/12/04 23:07:52 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -570,33 +570,48 @@ httpPconnTransferDone(HttpStateData * httpState)
     MemObject *mem = httpState->entry->mem_obj;
     struct _http_reply *reply = mem->reply;
     debug(11, 3) ("httpPconnTransferDone: FD %d\n", httpState->fd);
+    /*
+     * If we didn't send a Keepalive request header, then this
+     * can not be a persistent connection.
+     */
     if (!EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
 	return 0;
     debug(11, 5) ("httpPconnTransferDone: content_length=%d\n",
 	reply->content_length);
     /*
-     * !200 replies maybe don't have content-length, so
-     * if we saw the end of the headers then try being persistent.
+     * Deal with gross HTTP stuff
+     *    - If we haven't seen the end of the reply headers, we can't
+     *      be persistent.
+     *    - For "200 OK" check the content-length in the next block.
+     *    - For other replies without a content-length, we're done.
+     *    - For "204 No Content" (even with content-length) we're done.
+     *    - For "304 Not Modified" (even with content-length) we're done.
+     *    - For HEAD requests with content-length we're done.
+     *    - For other replies with a content length, we continue...
      */
-    if (reply->code != 200)
-	if (reply->content_length < 0)
-	    if (httpState->reply_hdr_state > 1)
-		return 1;
+    if (httpState->reply_hdr_state < 2)
+	return 0;
+    else if (reply->code == HTTP_OK)
+	(void) 0;		/* continue */
+    else if (reply->content_length < 0)
+	return 1;
+    else if (reply->code == HTTP_NO_CONTENT)
+	return 1;
+    else if (reply->code == HTTP_NOT_MODIFIED)
+	return 1;
+    else if (httpState->request->method == METHOD_HEAD)
+	return 1;
     /*
-     * If there is no content-length, then we probably can't be persistent
+     * If there is no content-length, then we probably can't be
+     * persistent.  If there is a content length, then we must
+     * wait until we've seen the end of the body.
      */
     if (reply->content_length < 0)
 	return 0;
-    /*
-     * If there is a content_length, see if we've got all of it.  If so,
-     * then we can recycle this connection.
-     */
-    debug(11, 5) ("httpPconnTransferDone: hdr_sz=%d\n", reply->hdr_sz);
-    debug(11, 5) ("httpPconnTransferDone: inmem_hi=%d\n",
-	mem->inmem_hi);
-    if (mem->inmem_hi < reply->content_length + reply->hdr_sz)
+    else if (mem->inmem_hi < reply->content_length + reply->hdr_sz)
 	return 0;
-    return 1;
+    else
+        return 1;
 }
 
 /* This will be called when data is ready to be read from fd.  Read until

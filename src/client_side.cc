@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.172 1997/12/04 00:07:33 wessels Exp $
+ * $Id: client_side.cc,v 1.173 1997/12/04 23:07:51 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1822,40 +1822,68 @@ CheckQuickAbort(clientHttpRequest * http)
     storeAbort(entry, 1);
 }
 
+#define SENDING_BODY 0
+#define SENDING_HDRSONLY 1
 static int
 icpCheckTransferDone(clientHttpRequest * http)
 {
+    int sending = SENDING_BODY;
     StoreEntry *entry = http->entry;
-    MemObject *mem = NULL;
+    MemObject *mem;
+    http_reply *reply;
+    int sendlen;
     if (entry == NULL)
 	return 0;
-    if (entry->store_status != STORE_PENDING)
+    /*
+     * Handle STORE_OK and STORE_ABORTED objects.
+     * entry->object_len will be set proprely.
+     */
+    if (entry->store_status != STORE_PENDING) {
 	if (http->out.offset >= entry->object_len)
-	    return 1;
-    if ((mem = entry->mem_obj) == NULL)
-	return 0;
-    if (mem->reply->content_length < 0) {
-	/*
-	 * for 200 replies, we MUST have a content length,
-	 * or wait for EOF on the socket.
-	 */
-	if (mem->reply->code == 200)
-	    return 0;
-	/*
-	 * reply->hdr_sz will be set by httpParseReplyHeaders()
-	 * if we find the end of the headers.  If we find the end,
-	 * and there is no content length, stick a fork in us. 
-	 */
-	else if (mem->reply->hdr_sz == 0)
-	    return 0;
-	else if (http->out.offset >= mem->reply->hdr_sz)
 	    return 1;
 	else
 	    return 0;
     }
-    if (http->out.offset >= mem->reply->content_length + mem->reply->hdr_sz)
-	return 1;
-    return 0;
+    /*
+     * Now, handle STORE_PENDING objects
+     */
+    mem = entry->mem_obj;
+    assert(mem != NULL);
+    assert(http->request != NULL);
+    reply = mem->reply;
+    if (reply->hdr_sz == 0)
+	return 0;	/* haven't found end of headers yet */
+    else if (reply->code == HTTP_OK)
+        sending = SENDING_BODY;
+    else if (reply->content_length < 0)
+	sending = SENDING_HDRSONLY;
+    else if (reply->code == HTTP_NO_CONTENT)
+        sending = SENDING_HDRSONLY;
+    else if (reply->code == HTTP_NOT_MODIFIED)
+        sending = SENDING_HDRSONLY;
+    else if (http->request->method == METHOD_HEAD)
+        sending = SENDING_HDRSONLY;
+    else
+	sending = SENDING_BODY;
+    /*
+     * Figure out how much data we are supposed to send.
+     * If we are sending a body and we don't have a content-length,
+     * then we must wait for the object to become STORE_OK or
+     * STORE_ABORTED.
+     */
+    if (sending == SENDING_HDRSONLY)
+	sendlen = reply->hdr_sz;
+    else if (reply->content_length < 0)
+	return 0;
+    else
+	sendlen = reply->content_length + reply->hdr_sz;
+    /*
+     * Now that we have the expected length, did we send it all?
+     */
+    if (http->out.offset < sendlen)
+	return 0;
+    else
+        return 1;
 }
 
 static char *
