@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.360 2005/02/06 10:45:57 serassio Exp $
+ * $Id: ftp.cc,v 1.361 2005/03/05 14:51:52 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -763,7 +763,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 
         while (ct && *ct) {
             time_t t;
-            int l = strcspn(ct + 1, ",");
+            int l = strcspn(ct, ",");
             char *tmp;
 
             if (l < 1)
@@ -782,7 +782,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
             case 'm':
                 t = (time_t) strtol(ct + 1, &tmp, 0);
 
-                if (*tmp || (tmp == ct + 1))
+                if (tmp != ct + 1)
                     break;	/* not a valid integer */
 
                 p->date = xstrdup(ctime(&t));
@@ -2206,15 +2206,8 @@ ftpReadPasv(FtpStateData * ftpState)
     /*  ANSI sez [^0-9] is undefined, it breaks on Watcom cc */
     debug(9, 5) ("scanning: %s\n", ftpState->ctrl.last_reply);
 
-    buf = strstr(ftpState->ctrl.last_reply, "(");
+    buf = ftpState->ctrl.last_reply + strcspn(ftpState->ctrl.last_reply, "0123456789");
 
-    if (!buf) {
-        debug(9, 1) ("Unsafe PASV reply from %s: '%s'\n", fd_table[ftpState->ctrl.fd].ipaddr, ftpState->ctrl.last_reply);
-        ftpSendPort(ftpState);
-        return;
-    }
-
-    buf++;			/* skip ( */
     n = sscanf(buf, "%d,%d,%d,%d,%d,%d", &h1, &h2, &h3, &h4, &p1, &p2);
 
     if (n != 6 || p1 < 0 || p2 < 0 || p1 > 255 || p2 > 255) {
@@ -2240,12 +2233,6 @@ ftpReadPasv(FtpStateData * ftpState)
     }
 
     if (Config.Ftp.sanitycheck) {
-        if (strcmp(fd_table[ftpState->ctrl.fd].ipaddr, ipaddr) != 0) {
-            debug(9, 1) ("Unsafe PASV reply from %s: %s\n", fd_table[ftpState->ctrl.fd].ipaddr, ftpState->ctrl.last_reply);
-            ftpSendPort(ftpState);
-            return;
-        }
-
         if (port < 1024) {
             debug(9, 1) ("Unsafe PASV reply from %s: %s\n", fd_table[ftpState->ctrl.fd].ipaddr, ftpState->ctrl.last_reply);
             ftpSendPort(ftpState);
@@ -2253,12 +2240,21 @@ ftpReadPasv(FtpStateData * ftpState)
         }
     }
 
-    debug(9, 5) ("ftpReadPasv: connecting to %s, port %d\n", ipaddr, port);
     ftpState->data.port = port;
-    ftpState->data.host = xstrdup(ipaddr);
+
+    if (Config.Ftp.sanitycheck)
+        ftpState->data.host = xstrdup(fd_table[ftpState->ctrl.fd].ipaddr);
+    else
+        ftpState->data.host = xstrdup(ipaddr);
+
     safe_free(ftpState->ctrl.last_command);
+
     safe_free(ftpState->ctrl.last_reply);
+
     ftpState->ctrl.last_command = xstrdup("Connect to server data port");
+
+    debug(9, 5) ("ftpReadPasv: connecting to %s, port %d\n", ftpState->data.host, ftpState->data.port);
+
     commConnectStart(fd, ipaddr, port, ftpPasvCallback, ftpState);
 }
 
