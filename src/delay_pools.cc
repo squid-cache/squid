@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.28 2002/10/14 07:35:45 hno Exp $
+ * $Id: delay_pools.cc,v 1.29 2002/10/14 08:43:46 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <david@luyer.net>
@@ -38,6 +38,7 @@
 #if DELAY_POOLS
 #include "squid.h"
 #include "StoreClient.h"
+#include "Store.h"
 
 struct _class1DelayPool {
     int delay_class;
@@ -144,7 +145,7 @@ delayInitDelayData(unsigned short pools)
 {
     if (!pools)
 	return;
-    delay_data = xcalloc(pools, sizeof(*delay_data));
+    delay_data = (delayPool *)xcalloc(pools, sizeof(*delay_data));
     memory_used += pools * sizeof(*delay_data);
     eventAdd("delayPoolsUpdate", delayPoolsUpdate, NULL, 1.0, 1);
     delay_id_ptr_hash = hash_create(delayIdPtrHashCmp, 256, delayIdPtrHash);
@@ -153,7 +154,7 @@ delayInitDelayData(unsigned short pools)
 static void
 delayIdZero(void *hlink)
 {
-    hash_link *h = hlink;
+    hash_link *h = (hash_link *)hlink;
     delay_id *id = (delay_id *) h->key;
     *id = 0;
     xfree(h);
@@ -180,7 +181,7 @@ delayRegisterDelayIdPtr(delay_id * loc)
 	return;
     if (*loc == 0)
 	return;
-    lnk = xmalloc(sizeof(hash_link));
+    lnk = (hash_link *)xmalloc(sizeof(hash_link));
     memory_used += sizeof(hash_link);
     lnk->key = (char *) loc;
     hash_join(delay_id_ptr_hash, lnk);
@@ -199,7 +200,7 @@ delayUnregisterDelayIdPtr(delay_id * loc)
      */
     if (*loc == 0)
 	return;
-    lnk = hash_lookup(delay_id_ptr_hash, loc);
+    lnk = (hash_link *)hash_lookup(delay_id_ptr_hash, loc);
     assert(lnk);
     hash_remove_link(delay_id_ptr_hash, lnk);
     xxfree(lnk);
@@ -211,17 +212,17 @@ delayCreateDelayPool(unsigned short pool, u_char delay_class)
 {
     switch (delay_class) {
     case 1:
-	delay_data[pool].class1 = xmalloc(sizeof(class1DelayPool));
+	delay_data[pool].class1 = (class1DelayPool *)xmalloc(sizeof(class1DelayPool));
 	delay_data[pool].class1->delay_class = 1;
 	memory_used += sizeof(class1DelayPool);
 	break;
     case 2:
-	delay_data[pool].class2 = xmalloc(sizeof(class2DelayPool));
+	delay_data[pool].class2 = (class2DelayPool *)xmalloc(sizeof(class2DelayPool));
 	delay_data[pool].class1->delay_class = 2;
 	memory_used += sizeof(class2DelayPool);
 	break;
     case 3:
-	delay_data[pool].class3 = xmalloc(sizeof(class3DelayPool));
+	delay_data[pool].class3 = (class3DelayPool *)xmalloc(sizeof(class3DelayPool));
 	delay_data[pool].class1->delay_class = 3;
 	memory_used += sizeof(class3DelayPool);
 	break;
