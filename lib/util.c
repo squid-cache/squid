@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.78 2001/04/10 17:00:50 hno Exp $
+ * $Id: util.c,v 1.79 2001/06/29 14:48:06 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -487,8 +487,9 @@ xfree(void *s)
 
 /* xxfree() - like xfree(), but we already know s != NULL */
 void
-xxfree(void *s)
+xxfree(const void *s_const)
 {
+    void *s = (void *)s_const;
 #if XMALLOC_TRACE
     xmalloc_show_trace(s, -1);
 #endif

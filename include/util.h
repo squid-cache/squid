@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.59 2001/02/07 18:56:50 hno Exp $
+ * $Id: util.h,v 1.60 2001/06/29 14:48:07 hno Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -80,7 +80,7 @@ extern void *xmalloc(size_t);
 extern void *xrealloc(void *, size_t);
 extern void Tolower(char *);
 extern void xfree(void *);
-extern void xxfree(void *);
+extern void xxfree(const void *);
 
 /* rfc1738.c */
 extern char *rfc1738_escape(const char *);
