@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.424 2002/12/27 10:26:33 robertc Exp $
+ * $Id: cache_cf.cc,v 1.425 2003/01/09 11:49:04 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2534,9 +2534,14 @@ void
 requirePathnameExists(const char *name, const char *path)
 {
     struct stat sb;
+    char pathbuf[BUFSIZ];
     assert(path != NULL);
+    if (Config.chroot_dir) {
+	snprintf(pathbuf, BUFSIZ, "%s/%s", Config.chroot_dir, path);
+	path = pathbuf;
+    }
     if (stat(path, &sb) < 0)
-	fatalf("%s: %s", path, xstrerror());
+	fatalf("%s %s: %s", name, path, xstrerror());
 }
 
 char *
