@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.59 1999/02/09 22:26:54 wessels Exp $
+ * $Id: store_client.cc,v 1.60 1999/04/14 06:15:21 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -266,8 +266,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	    /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
 	    sc->callback = NULL;
 	    callback(sc->callback_data, sc->copy_buf, -1);
-	}
-	if (!sc->flags.disk_io_pending) {
+	} else if (!sc->flags.disk_io_pending) {
 	    sc->flags.disk_io_pending = 1;
 	    storeSwapInStart(e, storeClientFileOpened, sc);
 	} else {
