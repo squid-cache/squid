@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.34 1996/04/11 22:52:25 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.35 1996/04/11 22:53:40 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -1110,9 +1110,9 @@ int parseConfigFile(file_name)
     while (fgets(config_input_line, BUFSIZ, fp)) {
 	config_lineno++;
 	if ((token = strchr(config_input_line, '\n')))
-		*token = '\0';
+	    *token = '\0';
 	if (config_input_line[0] == '#')
-		continue;
+	    continue;
 	if (config_input_line[0] == '\0')
 	    continue;
 	debug(3, 5, "Processing: '%s'\n", config_input_line);
@@ -1379,7 +1379,7 @@ int parseConfigFile(file_name)
 
 	/* If unknown, treat as a comment line */
 	else {
-	    debug(3,0,"parseConfigFile: line %d unrecognized: '%s'\n",
+	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
 		config_lineno,
 		config_input_line);
 	}
