@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.98 1996/11/06 23:14:39 wessels Exp $
+ * $Id: http.cc,v 1.99 1996/11/07 18:53:15 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -107,6 +107,41 @@
 
 #define HTTP_DELETE_GAP   (1<<18)
 
+typedef enum {
+    SCC_PUBLIC,
+    SCC_PRIVATE,
+    SCC_NOCACHE,
+    SCC_NOSTORE,
+    SCC_NOTRANSFORM,
+    SCC_MUSTREVALIDATE,
+    SCC_PROXYREVALIDATE,
+    SCC_MAXAGE,
+    SCC_ENUM_END
+} http_server_cc_t;
+
+typedef enum {
+    CCC_NOCACHE,
+    CCC_NOSTORE,
+    CCC_MAXAGE,
+    CCC_MAXSTALE,
+    CCC_MINFRESH,
+    CCC_ONLYIFCACHED,
+    CCC_ENUM_END
+} http_client_cc_t;
+
+char *HttpServerCCStr[] =
+{
+    "public",
+    "private",
+    "no-cache",
+    "no-store",
+    "no-transform",
+    "must-revalidate",
+    "proxy-revalidate",
+    "max-age",
+    "NONE"
+};
+
 static struct {
     int parsed;
     int date;
@@ -114,11 +149,7 @@ static struct {
     int exp;
     int clen;
     int ctype;
-    struct {
-	int private;
-	int cachable;
-	int nocache;
-    } cc;
+    int cc[SCC_ENUM_END];
 } ReplyHeaderStats;
 
 static void httpStateFree _PARAMS((int fd, void *));
@@ -218,6 +249,7 @@ httpParseHeaders(const char *buf, struct _http_reply *reply)
     char *headers = NULL;
     char *t = NULL;
     char *s = NULL;
+    int delta;
 
     ReplyHeaderStats.parsed++;
     headers = xstrdup(buf);
@@ -264,15 +296,22 @@ httpParseHeaders(const char *buf, struct _http_reply *reply)
 	    }
 	} else if (!strncasecmp(t, "Cache-Control:", 14)) {
 	    if ((t = strtok(NULL, w_space))) {
-		if (!strncasecmp(t, "private", 7)) {
-		    reply->cache_control |= HTTP_CC_PRIVATE;
-		    ReplyHeaderStats.cc.private++;
-		} else if (!strncasecmp(t, "cachable", 8)) {
-		    reply->cache_control |= HTTP_CC_CACHABLE;
-		    ReplyHeaderStats.cc.cachable++;
+		if (!strncasecmp(t, "public", 6)) {
+		    EBIT_SET(reply->cache_control, SCC_PUBLIC);
+		    ReplyHeaderStats.cc[SCC_PUBLIC]++;
+		} else if (!strncasecmp(t, "private", 7)) {
+		    EBIT_SET(reply->cache_control, SCC_PRIVATE);
+		    ReplyHeaderStats.cc[SCC_PRIVATE]++;
 		} else if (!strncasecmp(t, "no-cache", 8)) {
-		    reply->cache_control |= HTTP_CC_NOCACHE;
-		    ReplyHeaderStats.cc.nocache++;
+		    EBIT_SET(reply->cache_control, SCC_NOCACHE);
+		    ReplyHeaderStats.cc[SCC_NOCACHE]++;
+		} else if (!strncasecmp(t, "max-age", 7)) {
+		    if ((t = strchr(t, '='))) {
+			delta = atoi(++t);
+			EBIT_SET(reply->cache_control, SCC_MAXAGE);
+			ReplyHeaderStats.cc[SCC_MAXAGE]++;
+			strcpy(reply->expires, mkrfc1123(squid_curtime + delta));
+		    }
 		}
 	    }
 	}
@@ -344,9 +383,9 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	case 301:		/* Moved Permanently */
 	case 410:		/* Gone */
 	    /* don't cache objects from neighbors w/o LMT, Date, or Expires */
-	    if (BIT_TEST(reply->cache_control, HTTP_CC_PRIVATE))
+	    if (EBIT_TEST(reply->cache_control, SCC_PRIVATE))
 		httpMakePrivate(entry);
-	    else if (BIT_TEST(reply->cache_control, HTTP_CC_NOCACHE))
+	    else if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
 		httpMakePrivate(entry);
 	    else if (*reply->date)
 		httpMakePublic(entry);
@@ -809,25 +848,24 @@ httpStart(int unusedfd,
 void
 httpReplyHeaderStats(StoreEntry * entry)
 {
+    http_server_cc_t i;
     storeAppendPrintf(entry, open_bracket);
-    storeAppendPrintf(entry, "{HTTP Reply Headers}\n");
-    storeAppendPrintf(entry, "{Headers parsed: %d}\n",
+    storeAppendPrintf(entry, "{HTTP Reply Headers:}\n");
+    storeAppendPrintf(entry, "{       Headers parsed: %d}\n",
 	ReplyHeaderStats.parsed);
-    storeAppendPrintf(entry, "{          Date: %d}\n",
+    storeAppendPrintf(entry, "{                 Date: %d}\n",
 	ReplyHeaderStats.date);
-    storeAppendPrintf(entry, "{ Last-Modified: %d}\n",
+    storeAppendPrintf(entry, "{        Last-Modified: %d}\n",
 	ReplyHeaderStats.lm);
-    storeAppendPrintf(entry, "{       Expires: %d}\n",
+    storeAppendPrintf(entry, "{              Expires: %d}\n",
 	ReplyHeaderStats.exp);
-    storeAppendPrintf(entry, "{  Content-Type: %d}\n",
+    storeAppendPrintf(entry, "{         Content-Type: %d}\n",
 	ReplyHeaderStats.ctype);
-    storeAppendPrintf(entry, "{Content-Length: %d}\n",
+    storeAppendPrintf(entry, "{       Content-Length: %d}\n",
 	ReplyHeaderStats.clen);
-    storeAppendPrintf(entry, "{Cache-Control Private: %d}\n",
-	ReplyHeaderStats.cc.private);
-    storeAppendPrintf(entry, "{Cache-Control Cachable: %d}\n",
-	ReplyHeaderStats.cc.cachable);
-    storeAppendPrintf(entry, "{Cache-Control Nocache: %d}\n",
-	ReplyHeaderStats.cc.nocache);
+    for (i = 0; i < SCC_ENUM_END; i++)
+	storeAppendPrintf(entry, "{Cache-Control %7.7s: %d}\n",
+	    HttpServerCCStr[i],
+	    ReplyHeaderStats.cc[i]);
     storeAppendPrintf(entry, close_bracket);
 }
