@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.4 1998/04/27 19:16:11 wessels Exp $
+ * $Id: snmp_core.cc,v 1.5 1998/05/30 19:43:17 rousskov Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Kostas Anagnostakis
@@ -640,8 +640,8 @@ snmpDebugOid(int lvl, oid * Name, snint Len)
     int x;
     objid[0] = '\0';
     for (x = 0; x < Len; x++) {
-	snprintf(mbuf, 16, ".%u", (unsigned char) Name[x]);
-	strcat(objid, mbuf);
+	snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned char) Name[x]);
+	strncat(objid, mbuf, sizeof(objid));
     }
     debug(49, lvl) ("   oid = %s\n", objid);
 }

@@ -60,7 +60,7 @@ extern void intlistDestroy(intlist **);
 extern int intlistFind(intlist * list, int i);
 extern void wordlistDestroy(wordlist **);
 extern void configFreeMemory(void);
-extern char *wordlistCat(const wordlist *);
+extern void wordlistCat(const wordlist *, MemBuf *mb);
 
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
@@ -153,6 +153,7 @@ extern void _db_print();
 extern int file_open(const char *path, int mode, FOCB *, void *callback_data, void *tag);
 extern void file_close(int fd);
 extern void file_write(int, off_t, void *, int len, DWCB *, void *, FREE *);
+extern void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
 extern int file_read(int, char *, int, off_t, DRCB *, void *);
 extern void disk_init(void);
 extern int diskWriteIsComplete(int);
@@ -465,8 +466,10 @@ extern int ipcacheUnregister(const char *name, void *data);
 extern void memBufInit(MemBuf * mb, mb_size_t szInit, mb_size_t szMax);
 /* init with defaults */
 extern void memBufDefInit(MemBuf * mb);
-/* cleans the mb; last function to call if you do not give .buf away */
+/* cleans mb; last function to call if you do not give .buf away */
 extern void memBufClean(MemBuf * mb);
+/* resets mb preserving (or initializing if needed) memory buffer */
+extern void memBufReset(MemBuf * mb);
 /* calls memcpy, appends exactly size bytes, extends buffer if needed */
 extern void memBufAppend(MemBuf * mb, const char *buf, mb_size_t size);
 /* calls snprintf, extends buffer if needed */
@@ -628,6 +631,7 @@ extern void *memAllocate(mem_type);
 extern void *memAllocBuf(size_t net_size, size_t * gross_size);
 extern void memFree(mem_type, void *);
 extern void memFreeBuf(size_t size, void *);
+extern void memFree2K(void *);
 extern void memFree4K(void *);
 extern void memFree8K(void *);
 extern void memFreeDISK(void *);
@@ -836,6 +840,11 @@ extern const char *getMyHostname(void);
 extern void safeunlink(const char *path, int quiet);
 extern void death(int sig);
 extern void fatal(const char *message);
+#ifdef __STDC__
+extern void fatalf(const char *fmt,...);
+#else
+extern void fatalf();
+#endif
 extern void fatal_dump(const char *message);
 extern void sigusr2_handle(int sig);
 extern void sig_child(int sig);

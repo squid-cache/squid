@@ -14,6 +14,9 @@
 	- Added while loop in icpHandleUdp().
 	- Fixed some small memory leaks.
 	- Fixed single-bit-int flag checks (Henrik Nordstrom).
+	- Replaced "complex" (offset accounting) calls to snprintf with MemBuf
+	- Do not send only-if-cached cc directive with requests 
+          for peer's digests.
 
 Changes to squid-1.2.beta21 (May 22, 1998):
 

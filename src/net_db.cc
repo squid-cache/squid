@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.113 1998/05/28 05:37:39 wessels Exp $
+ * $Id: net_db.cc,v 1.114 1998/05/30 19:43:15 rousskov Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -861,14 +861,14 @@ netdbGetRowFn(oid * New, oid * Oid)
 {
     netdbEntry *c = NULL;
     static struct in_addr maddr;
-    static char key[15];
 
 #if USE_ICMP
     if (!Oid[0] && !Oid[1] && !Oid[2] && !Oid[3]) {
 	hash_first(addr_table);
 	c = (netdbEntry *) hash_next(addr_table);
     } else {
-	snprintf(key, 15, "%d.%d.%d.%d", Oid[0], Oid[1], Oid[2], Oid[3]);
+	static char key[15];
+	snprintf(key, sizeof(key), "%d.%d.%d.%d", Oid[0], Oid[1], Oid[2], Oid[3]);
 	c = (netdbEntry *) hash_lookup(addr_table, key);
 	if (NULL != c) {
 	    debug(49, 8) ("netdbGetRowFn: [%s] found\n", key);
@@ -897,7 +897,7 @@ snmp_netdbFn(variable_list * Var, snint * ErrP)
 #if USE_ICMP
     struct in_addr addr;
 #endif
-    snprintf(key, 15, "%d.%d.%d.%d", Var->name[11], Var->name[12],
+    snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[11], Var->name[12],
 	Var->name[13], Var->name[14]);
 
     debug(49, 5) ("snmp_netdbFn: request with %d. (%s)!\n", Var->name[10], key);

@@ -40,19 +40,23 @@ internalStaticCheck(const char *urlpath)
 char *
 internalRemoteUri(const char *host, u_short port, const char *dir, const char *name)
 {
-    LOCAL_ARRAY(char, buf, MAX_URL);
-    int k = 0;
+    static MemBuf mb = MemBufNULL;
     static char lc_host[SQUIDHOSTNAMELEN];
     assert(host && port && name);
-    xstrncpy(lc_host, host, SQUIDHOSTNAMELEN);
+    /* convert host name to lower case */
+    xstrncpy(lc_host, host, sizeof(lc_host));
     Tolower(lc_host);
-    k += snprintf(buf + k, MAX_URL - k, "http://%s", lc_host);
+    /* build uri in mb */
+    memBufReset(&mb);
+    memBufPrintf(&mb, "http://%s", lc_host);
+    /* append port if not default */
     if (port != urlDefaultPort(PROTO_HTTP))
-	k += snprintf(buf + k, MAX_URL - k, ":%d", port);
+	memBufPrintf(&mb, ":%d", port);
     if (dir)
-	k += snprintf(buf + k, MAX_URL - k, "%s", dir);
-    k += snprintf(buf + k, MAX_URL - k, "%s", name);
-    return buf;
+	memBufPrintf(&mb, "%s", dir);
+    memBufPrintf(&mb, "%s", name);
+    /* return a pointer to a local static buffer */
+    return mb.buf;
 }
 
 /*

@@ -969,6 +969,7 @@ struct _iostats {
 };
 
 /* auto-growing memory-resident buffer with printf interface */
+/* note: when updating this struct, update MemBufNULL #define */
 struct _MemBuf {
     /* public, read-only */
     char *buf;

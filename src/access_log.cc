@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.31 1998/05/27 22:51:47 rousskov Exp $
+ * $Id: access_log.cc,v 1.32 1998/05/30 19:43:00 rousskov Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -35,8 +35,8 @@
 
 static void accessLogOpen(const char *fname);
 static char *log_quote(const char *header);
-static int accessLogSquid(AccessLogEntry * al);
-static int accessLogCommon(AccessLogEntry * al);
+static void accessLogSquid(AccessLogEntry * al, MemBuf *mb);
+static void accessLogCommon(AccessLogEntry * al, MemBuf *mb);
 
 const char *log_tags[] =
 {
@@ -83,7 +83,6 @@ static int LogfileStatus = LOG_DISABLE;
 static int LogfileFD = -1;
 static char LogfileName[SQUID_MAXPATHLEN];
 #define LOG_BUF_SZ (MAX_URL<<2)
-static char log_buf[LOG_BUF_SZ];
 
 static const char c2x[] =
 "000102030405060708090a0b0c0d0e0f"
@@ -154,16 +153,15 @@ log_quote(const char *header)
     return buf;
 }
 
-static int
-accessLogSquid(AccessLogEntry * al)
+static void
+accessLogSquid(AccessLogEntry * al, MemBuf *mb)
 {
     const char *client = NULL;
     if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
     if (client == NULL)
 	client = inet_ntoa(al->cache.caddr);
-    return snprintf(log_buf, LOG_BUF_SZ,
-	"%9d.%03d %6d %s %s/%03d %d %s %s %s %s%s/%s %s\n",
+    memBufPrintf(mb, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s%s/%s %s",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	al->cache.msec,
@@ -180,16 +178,15 @@ accessLogSquid(AccessLogEntry * al)
 	al->http.content_type);
 }
 
-static int
-accessLogCommon(AccessLogEntry * al)
+static void
+accessLogCommon(AccessLogEntry * al, MemBuf *mb)
 {
     const char *client = NULL;
     if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
     if (client == NULL)
 	client = inet_ntoa(al->cache.caddr);
-    return snprintf(log_buf, LOG_BUF_SZ,
-	"%s %s - [%s] \"%s %s\" %d %d %s:%s\n",
+    memBufPrintf(mb, "%s %s - [%s] \"%s %s\" %d %d %s:%s",
 	client,
 	al->cache.ident,
 	mkhttpdlogtime(&squid_curtime),
@@ -217,9 +214,10 @@ accessLogOpen(const char *fname)
 void
 accessLogLog(AccessLogEntry * al)
 {
-    int l;
+    MemBuf mb;
     char *t;
     char *xbuf = NULL;
+
     if (LogfileStatus != LOG_ENABLE)
 	return;
     if (al->url == NULL)
@@ -244,28 +242,23 @@ accessLogLog(AccessLogEntry * al)
 	al->private.method_str = RequestMethodStr[al->http.method];
     if (al->hier.host[0] == '\0')
 	xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
+
+    memBufDefInit(&mb);
+
     if (Config.onoff.common_log)
-	l = accessLogCommon(al);
+	accessLogCommon(al, &mb);
     else
-	l = accessLogSquid(al);
+	accessLogSquid(al, &mb);
     if (Config.onoff.log_mime_hdrs) {
 	char *ereq = log_quote(al->headers.request);
 	char *erep = log_quote(al->headers.reply);
-	if (LOG_BUF_SZ - l > 0) {
-	    l--;
-	    l += snprintf(log_buf + l, LOG_BUF_SZ - l, " [%s] [%s]\n",
-		ereq, erep);
-	}
+	memBufPrintf(&mb, " [%s] [%s]\n", ereq, erep);
 	safe_free(ereq);
 	safe_free(erep);
+    } else {
+	memBufPrintf(&mb, "\n");
     }
-    file_write(LogfileFD,
-	-1,
-	xstrdup(log_buf),
-	l,
-	NULL,
-	NULL,
-	xfree);
+    file_write_mbuf(LogfileFD, -1, mb, NULL, NULL);
     safe_free(xbuf);
 }
 

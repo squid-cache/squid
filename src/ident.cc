@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.40 1998/03/31 05:37:45 wessels Exp $
+ * $Id: ident.cc,v 1.41 1998/05/30 19:43:11 rousskov Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -89,16 +89,17 @@ static void
 identConnectDone(int fd, int status, void *data)
 {
     ConnStateData *connState = data;
-    LOCAL_ARRAY(char, reqbuf, BUFSIZ);
+    MemBuf mb;
     if (status != COMM_OK) {
 	comm_close(fd);
 	identCallback(connState);
 	return;
     }
-    snprintf(reqbuf, BUFSIZ, "%d, %d\r\n",
+    memBufDefInit(&mb);
+    memBufPrintf(&mb, "%d, %d\r\n",
 	ntohs(connState->peer.sin_port),
 	ntohs(connState->me.sin_port));
-    comm_write(fd, xstrdup(reqbuf), strlen(reqbuf), NULL, connState, xfree);
+    comm_write_mbuf(fd, mb, NULL, connState);
     commSetSelect(fd, COMM_SELECT_READ, identReadReply, connState, 0);
     commSetTimeout(fd, Config.Timeout.read, identTimeout, connState);
 }

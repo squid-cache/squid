@@ -275,7 +275,7 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     ssize_t pktlen;
     char vbuf[32];
     htcpStuff stuff;
-    snprintf(vbuf, 32, "%3.1f", req->http_ver);
+    snprintf(vbuf, sizeof(vbuf), "%3.1f", req->http_ver);
     stuff.op = HTCP_TST;
     stuff.rr = RR_REQUEST;
     stuff.f1 = 1;

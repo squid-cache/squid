@@ -14,7 +14,7 @@ static int storelog_fd = -1;
 void
 storeLog(int tag, const StoreEntry * e)
 {
-    LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
+    MemBuf mb;
     MemObject *mem = e->mem_obj;
     HttpReply *reply;
     if (storelog_fd < 0)
@@ -26,8 +26,9 @@ storeLog(int tag, const StoreEntry * e)
 	storeMemObjectDump(mem);
 	mem->log_url = xstrdup(mem->url);
     }
+    memBufDefInit(&mb);
     reply = mem->reply;
-    snprintf(logmsg, MAX_URL << 1, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
+    memBufPrintf(&mb, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	storeLogTags[tag],
@@ -41,13 +42,7 @@ storeLog(int tag, const StoreEntry * e)
 	(int) (mem->inmem_hi - mem->reply->hdr_sz),
 	RequestMethodStr[mem->method],
 	mem->log_url);
-    file_write(storelog_fd,
-	-1,
-	xstrdup(logmsg),
-	strlen(logmsg),
-	NULL,
-	NULL,
-	xfree);
+    file_write_mbuf(storelog_fd, -1, mb, NULL, NULL);
 }
 
 void

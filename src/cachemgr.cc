@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.78 1998/03/31 05:37:35 wessels Exp $
+ * $Id: cachemgr.cc,v 1.79 1998/05/30 19:43:03 rousskov Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -282,7 +282,7 @@ static char *
 menu_url(cachemgr_request * req, const char *action)
 {
     static char url[1024];
-    snprintf(url, 1024, "%s?host=%s&port=%d&user_name=%s&operation=%s&auth=%s",
+    snprintf(url, sizeof(url), "%s?host=%s&port=%d&user_name=%s&operation=%s&auth=%s",
 	script_name,
 	req->hostname,
 	req->port,
