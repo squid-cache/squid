@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.381 2003/07/06 14:37:45 hno Exp $
+ * $Id: main.cc,v 1.382 2003/07/06 15:29:35 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1123,7 +1123,7 @@ main(int argc, char **argv)
          */
         comm_calliocallback();
 
-        if (comm_iocallbackpendin())
+        if (comm_iocallbackpending())
             comm_calliocallback();
 
         switch (comm_select(loop_delay)) {
