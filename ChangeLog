@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta4 (Oct 30, 1997):
+
 	- Fixed DST bug in rfc1123.c
 	- Changed default http_accel_port to 80.
 	- added errorCon() as a ErrorState constructor function
