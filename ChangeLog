@@ -1,14 +1,22 @@
-	- Added basic support for Range requests. For most cachable requests,
-	  Squid replies with an "Accept-Ranges" header. Upon receiving a
-	  potentially cachable Range request for a not cached object, Squid
-	  requests the whole object from origin server and then replies with
-	  specified range(s) to the client. Multi-range requests are
-	  supported. Adjacent overlapping ranges are merged. If-Range requests
-	  are supported.  Limitations:  Multi-range requests with out of order
-	  ranges are not supported.
-	- Made md5.c use standard memcpy and memset if they are avaliable.
-	- Memory pools will now shrink if Squid is run-time reconfigured with
-	  smaller value of memory_pools_limit tag.
+	- Added basic support for Range requests. For most cachable
+	  requests, Squid replies with an "Accept-Ranges" header. Upon
+	  receiving a potentially cachable Range request for a not
+	  cached object, Squid requests the whole object from origin
+	  server and then replies with specified range(s) to the
+	  client. Multi-range requests are supported. Adjacent
+	  overlapping ranges are merged. If-Range requests are
+	  supported.  Limitations:  Multi-range requests with out of
+	  order ranges are not supported.
+	- Made md5.c use standard memcpy and memset if they are
+	  avaliable.
+	- Memory pools will now shrink if Squid is run-time
+	  reconfigured with smaller value of memory_pools_limit tag.
+	- Added counter for number of clients (Tomi Hakala).
+	- Changed neighbor UP/DOWN algorithm to require 10 failed TCP
+	  connections for UP->DOWN transition.
+	- Added 'unique_hostname' configuration option when its
+	  necessary to have multiple machines with the same visible
+	  hostname.
 
 Changes to squid-1.2.beta22 (June 1, 1998):
 
