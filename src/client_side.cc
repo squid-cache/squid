@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.457 1999/05/21 22:16:56 wessels Exp $
+ * $Id: client_side.cc,v 1.458 1999/06/24 20:20:01 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -320,6 +320,9 @@ clientProcessExpired(void *data)
     entry->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: lastmod %d\n", (int) entry->lastmod);
     entry->refcount++;		/* EXPIRED CASE */
+#if HEAP_REPLACEMENT
+    storeHeapPositionUpdate(entry);
+#endif
     http->entry = entry;
     http->out.offset = 0;
     fwdStart(http->conn->fd, http->entry, http->request,
@@ -405,6 +408,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	storeUnlockObject(entry);
 	entry = http->entry = http->old_entry;
 	entry->refcount++;
+#if HEAP_REPLACEMENT
+	storeHeapPositionUpdate(entry);
+#endif
     } else if (STORE_PENDING == entry->store_status && 0 == status) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
 	if (size >= CLIENT_SOCK_SZ) {
@@ -416,6 +422,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
 	    entry->refcount++;
+#if HEAP_REPLACEMENT
+	    storeHeapPositionUpdate(entry);
+#endif
 	    /* continue */
 	} else {
 	    storeClientCopy(entry,
@@ -459,6 +468,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 		mem->reply);
 	    storeTimestampsSet(http->old_entry);
 	    http->old_entry->refcount++;
+#if HEAP_REPLACEMENT
+	    storeHeapPositionUpdate(http->old_entry);
+#endif
 	    http->log_type = LOG_TCP_REFRESH_HIT;
 	}
 	storeUnregister(http->old_entry, http);
@@ -1913,6 +1925,9 @@ clientProcessRequest(clientHttpRequest * http)
 	delaySetStoreClient(http->entry, http, delayClient(r));
 #endif
 	http->entry->refcount++;
+#if HEAP_REPLACEMENT
+	storeHeapPositionUpdate(http->entry);
+#endif
 	storeClientCopy(http->entry,
 	    http->out.offset,
 	    http->out.offset,
@@ -1968,6 +1983,9 @@ clientProcessMiss(clientHttpRequest * http)
     assert(http->out.offset == 0);
     http->entry = clientCreateStoreEntry(http, r->method, r->flags);
     http->entry->refcount++;
+#if HEAP_REPLACEMENT
+    storeHeapPositionUpdate(http->entry);
+#endif
     if (http->redirect.status) {
 	HttpReply *rep = httpReplyCreate();
 	storeReleaseRequest(http->entry);

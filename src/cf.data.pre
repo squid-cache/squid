@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.157 1999/06/16 22:10:36 wessels Exp $
+# $Id: cf.data.pre,v 1.158 1999/06/24 20:19:58 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -514,12 +514,17 @@ TYPE: int
 DEFAULT: 95
 LOC: Config.Swap.highWaterMark
 DOC_START
-	The low- and high-water marks for cache LRU replacement.  LRU
-	replacement begins when the high-water mark is reached and ends
-	when enough objects have been removed and the low-water mark is
-	reached. Defaults are 90% and 95%. If you have a large cache, 5%
-	could be hundreds of MB. If this is the case you may wish to
-	set these numbers closer together.
+
+	The low- and high-water marks for cache object replacement.
+	Replacement begins when the swap (disk) usage is above the
+	low-water mark and attempts to maintain utilization near the
+	low-water mark.  As swap utilization gets close to high-water
+	mark object eviction becomes more aggressive.  If utilization is
+	close to the low-water mark less replacement is done each time.
+	
+	Defaults are 90% and 95%. If you have a large cache, 5% could be
+	hundreds of MB. If this is the case you may wish to set these
+	numbers closer together.
 
 cache_swap_low  90
 cache_swap_high 95
@@ -537,6 +542,10 @@ DOC_START
 	increase this (one 32 MB object hit counts for 3200 10KB
 	hits).  If you wish to increase speed more than your want to
 	save bandwidth you should leave this low.
+
+	NOTE: if using the LFUDA replacement policy you should increase
+	this value to maximize the byte hit rate improvement of LFUDA!
+	See replacement_policy below for a discussion of this policy.
 
 maximum_object_size 4096 KB
 DOC_END
@@ -1147,6 +1156,50 @@ NOCOMMENT_END
 DOC_END
 
 
+NAME: replacement_policy
+TYPE: string
+LOC: Config.replPolicy
+DEFAULT: LFUDA
+IFDEF: HEAP_REPLACEMENT
+DOC_START
+	The cache replacement policy parameter determines which
+	objects are evicted (replaced) when disk space is needed.
+	Squid used to have only a single replacement policy, LRU.
+	But when built with -DHEAP_REPLACEMENT you can choose
+	between two new, enhanced policies:
+
+		   GDSF: Greedy-Dual Size Frequency
+		   LFUDA: Least Frequently Used with Dynamic Aging
+
+	Both of these policies are frequency based rather than recency
+	based, and perform better than LRU.
+
+	The GDSF policy optimizes object hit rate by keeping smaller
+	popular objects in cache so it has a better chance of getting a
+	hit.  It achieves a lower byte hit rate than LFUDA though since
+	it evicts larger (possibly popular) objects.
+
+	The LFUDA policy keeps popular objects in cache regardless of
+	their size and thus optimizes byte hit rate at the expense of
+	hit rate since one large, popular object will prevent many
+	smaller, slightly less popular objects from being cached.
+
+	Both policies utilize a dynamic aging mechanism that prevents
+	cache pollution that can otherwise occur with frequency-based
+	replacement policies.
+
+	NOTE: if using the LFUDA replacement policy you should increase
+	the value of maximum_object_size above its default of 4096 KB to
+	to maximize the potential byte hit rate improvement of LFUDA.  
+
+	For more information about these cache replacement policies see
+	http://www.hpl.hp.com/personal/John_Dilley/caching/wcw.html and
+	http://fog.hpl.external.hp.com/techreports/98/HPL-98-173.html.
+
+replacement_policy LFUDA
+DOC_END
+
+
 NAME: reference_age
 TYPE: time_t
 LOC: Config.referenceAge
@@ -1168,6 +1221,9 @@ DOC_START
 		3.5 days
 		4 months
 		2.2 hours
+
+	NOTE: this parameter is not used when using the enhanced
+	replacement policies, GDSH or LFUDA.
 
 reference_age 1 year
 DOC_END

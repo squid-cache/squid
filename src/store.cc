@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.503 1999/05/26 04:36:55 wessels Exp $
+ * $Id: store.cc,v 1.504 1999/06/24 20:20:12 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -87,11 +87,21 @@ static int getKeyCounter(void);
 static int storeKeepInMemory(const StoreEntry *);
 static OBJH storeCheckCachableStats;
 static EVH storeLateRelease;
+static heap_key_func HeapKeyGen_StoreEntry_LFUDA;
+static heap_key_func HeapKeyGen_StoreEntry_GDSF;
+static heap_key_func HeapKeyGen_StoreEntry_LRU;
 
 /*
  * local variables
  */
+#if HEAP_REPLACEMENT
+/*
+ * The heap equivalent of inmem_list, inmem_heap, is in globals.c so other
+ * modules can access it when updating object metadata (e.g., refcount)
+ */
+#else
 static dlink_list inmem_list;
+#endif
 static int store_pages_max = 0;
 static int store_swap_high = 0;
 static int store_swap_low = 0;
@@ -171,14 +181,31 @@ storeHashInsert(StoreEntry * e, const cache_key * key)
 	e, storeKeyText(key));
     e->key = storeKeyDup(key);
     hash_join(store_table, (hash_link *) e);
+#if HEAP_REPLACEMENT
+    if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
+	debug(20, 4) ("storeHashInsert: not inserting special into store heap\n");
+    } else {
+	e->node = heap_insert(store_heap, e);
+	debug(20, 4) ("storeHashInsert: inserted node 0x%x\n", e->node);
+    }
+#else
     dlinkAdd(e, &e->lru, &store_list);
+#endif
 }
 
 static void
 storeHashDelete(StoreEntry * e)
 {
     hash_remove_link(store_table, (hash_link *) e);
+#if HEAP_REPLACEMENT
+    if (e->node) {
+	debug(20, 4) ("storeHashDelete: deleting node 0x%x\n", e->node);
+	heap_delete(store_heap, e->node);
+	e->node = NULL;
+    }
+#else
     dlinkDelete(&e->lru, &store_list);
+#endif
     storeKeyFree(e->key);
     e->key = NULL;
 }
@@ -205,8 +232,17 @@ void
 storeLockObject(StoreEntry * e)
 {
     if (e->lock_count++ == 0) {
+#if HEAP_REPLACEMENT
+	/* there is no reason to take any action here.
+	 * Squid by default is moving locked objects to the end of the LRU
+	 * list to keep them from getting bumped into by the replacement
+	 * algorithm.  We can't do that so we will just have to handle them.
+	 */
+	debug(20, 4) ("storeLockObject: just locked node 0x%x\n", e->node);
+#else
 	dlinkDelete(&e->lru, &store_list);
 	dlinkAdd(e, &e->lru, &store_list);
+#endif
     }
     debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
 	storeKeyText(e->key), (int) e->lock_count);
@@ -251,14 +287,22 @@ storeUnlockObject(StoreEntry * e)
     } else {
 	storePurgeMem(e);
 	if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
+#if HEAP_REPLACEMENT
+	    /*
+	     * Squid/LRU is moving things around in the linked list in order
+	     * to keep from bumping into them when purging from the LRU list.
+	     */
+	    debug(20, 4) ("storeUnlockObject: purged private node 0x%x\n", e->node);
+#else
 	    dlinkDelete(&e->lru, &store_list);
 	    dlinkAddTail(e, &e->lru, &store_list);
+#endif
 	}
     }
     return 0;
 }
 
-/* Lookup an object in the cache. 
+/* Lookup an object in the cache.
  * return just a reference to object, don't start swapping in yet. */
 StoreEntry *
 storeGet(const cache_key * key)
@@ -324,6 +368,10 @@ storeSetPublicKey(StoreEntry * e)
      * If RELEASE_REQUEST is set, then ENTRY_CACHABLE should not
      * be set, and storeSetPublicKey() should not be called.
      */
+#if HEAP_REPLACEMENT
+    if (EBIT_TEST(e->flags, RELEASE_REQUEST))
+	debug(20, 1) ("assertion failed: RELEASE key %s, url %s\n", e->key, mem->url);
+#endif
     assert(!EBIT_TEST(e->flags, RELEASE_REQUEST));
     newkey = storeKeyPublic(mem->url, mem->method);
     if ((e2 = (StoreEntry *) hash_lookup(store_table, newkey))) {
@@ -506,10 +554,17 @@ storeCheckCachable(StoreEntry * e)
     } else if (fdNFree() < RESERVED_FD) {
 	debug(20, 2) ("storeCheckCachable: NO: too many FD's open\n");
 	store_check_cachable_hist.no.too_many_open_fds++;
+#if HEAP_REPLACEMENT
+	/*
+	 * With the HEAP-based replacement policies a low reference age should not
+	 * prevent cacheability of an object.  We do not use LRU age at all.
+	 */
+#else
     } else if (storeExpiredReferenceAge() < 300) {
 	debug(20, 2) ("storeCheckCachable: NO: LRU Age = %d\n",
 	    storeExpiredReferenceAge());
 	store_check_cachable_hist.no.lru_age_too_low++;
+#endif
     } else {
 	store_check_cachable_hist.yes.Default++;
 	return 1;
@@ -580,7 +635,7 @@ storeComplete(StoreEntry * e)
 /*
  * Someone wants to abort this transfer.  Set the reason in the
  * request structure, call the server-side callback and mark the
- * entry for releasing 
+ * entry for releasing
  */
 void
 storeAbort(StoreEntry * e)
@@ -629,8 +684,16 @@ storeGetMemSpace(int size)
     static time_t last_check = 0;
     int pages_needed;
     dlink_node *m;
-    dlink_node *head;
     dlink_node *prev = NULL;
+    int locked = 0;
+#if !HEAP_REPLACEMENT
+    dlink_node *head;
+#else
+    heap *heap = inmem_heap;
+    heap_key age, min_age = 0.0;
+    dlink_list locked_entries;
+    locked_entries.head = locked_entries.tail = NULL;
+#endif
     if (squid_curtime == last_check)
 	return;
     last_check = squid_curtime;
@@ -640,6 +703,39 @@ storeGetMemSpace(int size)
     if (store_dirs_rebuilding)
 	return;
     debug(20, 2) ("storeGetMemSpace: Starting, need %d pages\n", pages_needed);
+#if HEAP_REPLACEMENT
+    while (heap_nodes(heap) > 0) {
+	age = heap_peepminkey(heap);
+	e = heap_extractmin(heap);
+	e->mem_obj->node = NULL;	/* no longer in the heap */
+	if (storeEntryLocked(e)) {
+	    locked++;
+	    debug(20, 5) ("storeGetMemSpace: locked key %s\n", storeKeyText(e->key));
+	    dlinkAdd(e, &e->lock_list, &locked_entries);
+	    continue;
+	}
+	released++;
+	debug(20, 3) ("Released memory object with key %f size %d refs %d url %s\n",
+	    age, e->swap_file_sz, e->refcount, e->mem_obj->url);
+	min_age = age;
+	storePurgeMem(e);
+	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_max)
+	    break;
+    }
+    /*
+     * Increase the heap age factor.
+     */
+    if (min_age > 0)
+	heap->age = min_age;
+    /*
+     * Reinsert all bumped locked entries back into heap...
+     */
+    for (m = locked_entries.tail; m; m = prev) {
+	prev = m->prev;
+	e = m->data;
+	e->mem_obj->node = heap_insert(inmem_heap, e);
+    }
+#else
     head = inmem_list.head;
     for (m = inmem_list.tail; m; m = prev) {
 	if (m == head)
@@ -647,6 +743,7 @@ storeGetMemSpace(int size)
 	prev = m->prev;
 	e = m->data;
 	if (storeEntryLocked(e)) {
+	    locked++;
 	    dlinkDelete(m, &inmem_list);
 	    dlinkAdd(e, m, &inmem_list);
 	    continue;
@@ -656,6 +753,9 @@ storeGetMemSpace(int size)
 	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_max)
 	    break;
     }
+#endif
+    debug(20, 3) ("storeGetMemSpace: released %d/%d locked %d\n",
+	released, hot_obj_count, locked);
     debug(20, 3) ("storeGetMemSpace stats:\n");
     debug(20, 3) ("  %6d HOT objects\n", hot_obj_count);
     debug(20, 3) ("  %6d were released\n", released);
@@ -665,7 +765,7 @@ storeGetMemSpace(int size)
 #define MAINTAIN_MAX_SCAN	1024
 #define MAINTAIN_MAX_REMOVE	64
 
-/* 
+/*
  * This routine is to be called by main loop in main.c.
  * It removes expired objects on only one bucket for each time called.
  * returns the number of objects removed
@@ -685,6 +785,17 @@ storeMaintainSwapSpace(void *datanotused)
     int max_remove;
     double f;
     static time_t last_warn_time = 0;
+#if HEAP_REPLACEMENT
+    heap *heap = store_heap;
+    heap_key age, min_age = 0.0;
+    dlink_list locked_entries;
+    locked_entries.head = locked_entries.tail = NULL;
+#if HEAP_REPLACEMENT_DEBUG
+    if (!verify_heap_property(store_heap)) {
+	debug(20, 1) ("Heap property violated!\n");
+    }
+#endif
+#endif
     /* We can't delete objects while rebuilding swap */
     if (store_dirs_rebuilding) {
 	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
@@ -698,6 +809,64 @@ storeMaintainSwapSpace(void *datanotused)
     }
     debug(20, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n",
 	f, max_scan, max_remove);
+#if HEAP_REPLACEMENT
+    while (heap_nodes(heap) > 0) {
+	age = heap_peepminkey(heap);
+	e = heap_extractmin(heap);
+	e->node = NULL;		/* no longer in the heap */
+	scanned++;
+	if (storeEntryLocked(e)) {
+	    /*
+	     * Entry is in use ... put it in a linked list to ignore it.
+	     */
+	    if (!EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
+		/*
+		 * If this was a "SPECIAL" do not add it back into the heap.
+		 * It will always be "SPECIAL" and therefore never removed.
+		 */
+		debug(20, 4) ("storeMaintainSwapSpace: locked url %s\n",
+		    (e->mem_obj && e->mem_obj->url) ? e->mem_obj->url : storeKeyText(e->key));
+		dlinkAdd(e, &e->lock_list, &locked_entries);
+	    }
+	    locked++;
+	    continue;
+	} else if (storeCheckExpired(e)) {
+	    /*
+	     * Note: This will not check the reference age ifdef HEAP_REPLACEMENT,
+	     * but it does some other useful checks...
+	     */
+	    expired++;
+	    debug(20, 3) ("Released store object age %f size %d refs %d key %s\n",
+		age, e->swap_file_sz, e->refcount, storeKeyText(e->key));
+	    min_age = age;
+	    storeRelease(e);
+	} else {
+	    /*
+	     * Did not expire the object so we need to add it back into the heap!
+	     */
+	    debug(20, 5) ("storeMaintainSwapSpace: non-expired %s\n", storeKeyText(e->key));
+	    dlinkAdd(e, &e->lock_list, &locked_entries);
+	    continue;
+	}
+	if ((store_swap_size < store_swap_low)
+	    || (expired >= max_remove)
+	    || (scanned >= max_scan))
+	    break;
+    }
+    /*
+     * Bump the heap age factor.
+     */
+    if (min_age > 0)
+	heap->age = min_age;
+    /*
+     * Reinsert all bumped locked entries back into heap...
+     */
+    for (m = locked_entries.tail; m; m = prev) {
+	prev = m->prev;
+	e = m->data;
+	e->node = heap_insert(store_heap, e);
+    }
+#else
     for (m = store_list.tail; m; m = prev) {
 	prev = m->prev;
 	e = m->data;
@@ -724,6 +893,9 @@ storeMaintainSwapSpace(void *datanotused)
 	if (scanned >= max_scan)
 	    break;
     }
+#endif
+    debug(20, (expired ? 2 : 3)) ("storeMaintainSwapSpace: scanned %d/%d removed %d/%d locked %d f=%.03f\n",
+	scanned, max_scan, expired, max_remove, locked, f);
     debug(20, 3) ("storeMaintainSwapSpace stats:\n");
     debug(20, 3) ("  %6d objects\n", memInUse(MEM_STOREENTRY));
     debug(20, 3) ("  %6d were scanned\n", scanned);
@@ -884,6 +1056,72 @@ storeInitHashValues(void)
     debug(20, 1) ("Max Swap size: %d KB\n", Config.Swap.maxSize);
 }
 
+#if HEAP_REPLACEMENT
+
+/*
+ * For a description of these cache replacement policies see --
+ *  http://www.hpl.hp.com/personal/John_Dilley/caching/wcw.html
+ */
+
+/*
+ * Key generation function to implement the LFU-DA policy (Least
+ * Frequently Used with Dynamic Aging).  Similar to classical LFU
+ * but with aging to handle turnover of the popular document set.
+ * Maximizes byte hit rate by keeping more currently popular objects
+ * in cache regardless of size.  Achieves lower hit rate than GDS
+ * because there are more large objects in cache (so less room for
+ * smaller popular objects).
+ * 
+ * This version implements a tie-breaker based upon recency
+ * (e->lastref): for objects that have the same reference count
+ * the most recent object wins (gets a higher key value).
+ */
+static heap_key
+HeapKeyGen_StoreEntry_LFUDA(void *entry, double age)
+{
+    StoreEntry *e = entry;
+    double tie = (e->lastref > 1) ? (1.0 / e->lastref) : 1;
+    return age + e->refcount - tie;
+}
+
+
+/*
+ * Key generation function to implement the GDS-Frequency policy.
+ * Similar to Greedy Dual-Size Hits policy, but adds aging of
+ * documents to prevent pollution.  Maximizes object hit rate by
+ * keeping more small, popular objects in cache.  Achieves lower
+ * byte hit rate than LFUDA because there are fewer large objects
+ * in cache.
+ * 
+ * This version implements a tie-breaker based upon recency
+ * (e->lastref): for objects that have the same reference count
+ * the most recent object wins (gets a higher key value).
+ */
+static heap_key
+HeapKeyGen_StoreEntry_GDSF(void *entry, double age)
+{
+    StoreEntry *e = entry;
+    double size = e->swap_file_sz ? e->swap_file_sz : 1.0;
+    double tie = (e->lastref > 1) ? (1.0 / e->lastref) : 1;
+    return age + ((double) e->refcount / size) - tie;
+}
+
+/* 
+ * Key generation function to implement the LRU policy.  Normally
+ * one would not do this with a heap -- use the linked list instead.
+ * For testing and performance characterization it was useful.
+ * Don't use it unless you are trying to compare performance among
+ * heap-based replacement policies...
+ */
+static heap_key
+HeapKeyGen_StoreEntry_LRU(void *entry, double age)
+{
+    StoreEntry *e = entry;
+    return (heap_key) e->lastref;
+}
+
+#endif
+
 void
 storeInit(void)
 {
@@ -893,8 +1131,39 @@ storeInit(void)
 	store_hash_buckets, storeKeyHashHash);
     storeDigestInit();
     storeLogOpen();
+#if HEAP_REPLACEMENT
+    /*
+     * Create new heaps with cache replacement policies attached to them.
+     * The cache replacement policy is specified as either GDSF or LFUDA in
+     * the squid.conf configuration file.  Note that the replacement policy
+     * applies only to the disk replacement algorithm.  Memory replacement
+     * always uses GDSF since we want to maximize object hit rate.
+     */
+    inmem_heap = new_heap(1000, HeapKeyGen_StoreEntry_GDSF);
+    if (Config.replPolicy) {
+	if (tolower(Config.replPolicy[0]) == 'g') {
+	    debug(20, 1) ("Using GDSF disk replacement policy\n");
+	    store_heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
+	} else if (tolower(Config.replPolicy[0]) == 'l') {
+	    if (tolower(Config.replPolicy[1]) == 'f') {
+		debug(20, 1) ("Using LFUDA disk replacement policy\n");
+		store_heap = new_heap(10000, HeapKeyGen_StoreEntry_LFUDA);
+	    } else if (tolower(Config.replPolicy[1]) == 'r') {
+		debug(20, 1) ("Using LRU heap disk replacement policy\n");
+		store_heap = new_heap(10000, HeapKeyGen_StoreEntry_LRU);
+	    }
+	} else {
+	    debug(20, 1) ("Unrecognized replacement_policy; using GDSF\n");
+	    store_heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
+	}
+    } else {
+	debug(20, 1) ("Using default disk replacement policy (GDSF)\n");
+	store_heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
+    }
+#else
     store_list.head = store_list.tail = NULL;
     inmem_list.head = inmem_list.tail = NULL;
+#endif
     stackInit(&LateReleaseStack);
     eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
     storeDirInit();
@@ -938,12 +1207,25 @@ storeCheckExpired(const StoreEntry * e)
 	return 1;
     if (EBIT_TEST(e->flags, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
 	return 1;
+#if HEAP_REPLACEMENT
+    /*
+     * With HEAP_REPLACEMENT we are not using the LRU reference age, the heap
+     * controls the replacement of objects.
+     */
+    return 1;
+#else
     if (squid_curtime - e->lastref > storeExpiredReferenceAge())
 	return 1;
     return 0;
+#endif
 }
 
-/* 
+#if HEAP_REPLACEMENT
+/*
+ * The non-LRU cache replacement policies do not use LRU referenceAge
+ */
+#else
+/*
  * storeExpiredReferenceAge
  *
  * The LRU age is scaled exponentially between 1 minute and
@@ -970,6 +1252,7 @@ storeExpiredReferenceAge(void)
 	age = 31536000;
     return age;
 }
+#endif
 
 void
 storeNegativeCache(StoreEntry * e)
@@ -1103,10 +1386,33 @@ storeSetMemStatus(StoreEntry * e, int new_status)
     assert(mem != NULL);
     if (new_status == IN_MEMORY) {
 	assert(mem->inmem_lo == 0);
+#if HEAP_REPLACEMENT
+	if (mem->node == NULL) {
+	    if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
+		debug(20, 4) ("storeSetMemStatus: not inserting special %s\n", mem->url);
+	    } else {
+		mem->node = heap_insert(inmem_heap, e);
+		debug(20, 4) ("storeSetMemStatus: inserted mem node 0x%x\n", mem->node);
+	    }
+	}
+#else
 	dlinkAdd(e, &mem->lru, &inmem_list);
+#endif
 	hot_obj_count++;
     } else {
+#if HEAP_REPLACEMENT
+	/*
+	 * It's being removed from the memory heap; is it already gone?
+	 */
+	if (mem->node) {
+	    heap_delete(inmem_heap, mem->node);
+	    debug(20, 4) ("storeSetMemStatus: deleted mem node 0x%x\n",
+		mem->node);
+	    mem->node = NULL;
+	}
+#else
 	dlinkDelete(&mem->lru, &inmem_list);
+#endif
 	hot_obj_count--;
     }
     e->mem_status = new_status;
@@ -1182,4 +1488,14 @@ storeEntryReset(StoreEntry * e)
     mem->inmem_hi = mem->inmem_lo = 0;
     httpReplyDestroy(mem->reply);
     mem->reply = httpReplyCreate();
+}
+
+void
+storeHeapPositionUpdate(StoreEntry * e)
+{
+    if (e->node)
+	heap_update(store_heap, e->node, e);
+    assert(e->mem_obj);
+    if (e->mem_obj->node)
+	heap_update(inmem_heap, e->mem_obj->node, e);
 }

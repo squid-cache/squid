@@ -1,5 +1,5 @@
 #
-#  $Id: Makefile.in,v 1.43 1999/05/04 21:01:04 wessels Exp $
+#  $Id: Makefile.in,v 1.44 1999/06/24 20:19:55 wessels Exp $
 #
 prefix		= @prefix@
 top_srcdir	= @top_srcdir@
@@ -38,6 +38,7 @@ UTILOBJS	= rfc1123.o \
 		  Array.o \
 		  Stack.o \
 		  hash.o \
+		  heap.o \
 		  $(LIBOBJS)
 REGEXOBJS	= GNUregex.o
 DLMALLOCOBJS	= dlmalloc.o
