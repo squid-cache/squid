@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.27 1996/12/13 20:35:27 wessels Exp $
+ * $Id: send-announce.cc,v 1.28 1997/02/04 17:50:46 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -76,6 +76,7 @@ send_announce(void *unused)
 	if (fd > -1 && (n = read(fd, sndbuf + l, BUFSIZ - l - 1)) > 0) {
 	    l += n;
 	    sndbuf[l] = '\0';
+	    file_close(fd);
 	} else {
 	    debug(50, 1, "send_announce: %s: %s\n", file, xstrerror());
 	}
