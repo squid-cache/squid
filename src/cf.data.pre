@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.316 2003/05/21 00:50:09 hno Exp $
+# $Id: cf.data.pre,v 1.317 2003/05/21 02:58:11 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1770,6 +1770,8 @@ DOC_START
 
 	  user=		The users name (login)
 	  error=	Error description (only defined for ERR results)
+	  tag=		Apply a tag to a request (for both ERR and OK results)
+	  		  Only sets a tag, does not alter existing tags.
 
 	Keyword values need to be enclosed in quotes if they may
 	contain whitespace, or the whitespace escaped using \. Any
@@ -3552,9 +3554,9 @@ Example:
 				in advance - by forcing authentication in your
 				http_access rules.
 
-		class 5		Requests are grouped according their tag (see
+		class 5		Requests are grouped according their tag (see 
 				external_acl's tag= reply).
-	
+
 	NOTE: If an IP address is a.b.c.d
 		-> bits 25 through 32 are "d"
 		-> bits 17 through 24 are "c"
@@ -3607,9 +3609,9 @@ delay_parameters pool aggregate network individual
 delay_parameters pool aggregate network individual user
 
 	For a class 5 delay pool:
-    
+
 delay_parameters pool tag
-	
+
 	The variables here are:
 
 		pool		a pool number - ie, a number between 1 and the
@@ -3630,7 +3632,7 @@ delay_parameters pool tag
 
 		tag		the delay parameters for the tag buckets
 				(class 5).
-	
+
 	A pair of delay parameters is written restore/maximum, where restore is
 	the number of bytes (not bits - modem and network speeds are usually
 	quoted in bits) per second placed into the bucket, and maximum is the

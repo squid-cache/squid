@@ -1,6 +1,6 @@
 
 /*
- * $Id: http_range_test.cc,v 1.5 2003/03/10 04:57:29 robertc Exp $
+ * $Id: http_range_test.cc,v 1.6 2003/05/21 02:58:10 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -60,7 +60,7 @@ SQUIDCEXTERN void storeAppendPrintf()
     fatal ("dummy function\n");
 }
 
-SQUIDCEXTERN void eventAdd(const char *name, EVH * func, void *arg, double when, int)
+SQUIDCEXTERN void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool)
 {
     fatal ("dummy function\n");
 }
