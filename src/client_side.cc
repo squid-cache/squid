@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.267 1998/04/09 00:17:56 wessels Exp $
+ * $Id: client_side.cc,v 1.268 1998/04/09 02:25:20 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1341,6 +1341,8 @@ clientProcessRequest2(clientHttpRequest * http)
     StoreEntry *e;
     if ((e = http->entry = storeGet(key)) == NULL) {
 	/* this object isn't in the cache */
+	if (http->internal)
+	    debug_trap("TCP_MISS for internal object");
 	return LOG_TCP_MISS;
     } else if (EBIT_TEST(e->flag, ENTRY_SPECIAL)) {
 	/* ideally, special entries should be processed later, 
