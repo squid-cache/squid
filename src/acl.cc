@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.229 2001/01/04 03:42:34 wessels Exp $
+ * $Id: acl.cc,v 1.230 2001/01/04 04:01:17 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1055,6 +1055,9 @@ aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *b
     debug(28, 6) ("aclDecodeProxyAuth: cleartext = '%s'\n", cleartext);
     xstrncpy(buf, cleartext, bufsize);
     xfree(cleartext);
+    /* Trim leading whitespace after decoding */
+    while (xisspace(*buf))
+	buf++;
     *user = buf;
     if ((*password = strchr(*user, ':')) != NULL)
 	*(*password)++ = '\0';
