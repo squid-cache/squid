@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.255 2002/04/07 03:35:30 hno Exp $
+# $Id: cf.data.pre,v 1.256 2002/04/13 22:30:53 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1482,9 +1482,6 @@ NAME: refresh_pattern
 TYPE: refreshpattern
 LOC: Config.Refresh
 DEFAULT: none
-DEFAULT_IF_NONE:	^ftp:		1440	20%	10080
-DEFAULT_IF_NONE:	^gopher:	1440	0%	1440
-DEFAULT_IF_NONE: 	.		0	20%	4320
 DOC_START
 	usage: refresh_pattern [-i] regex min percent max [options]
 
@@ -1544,6 +1541,13 @@ DOC_START
 	Note, you must uncomment all the default lines if you want
 	to change one. The default setting is only active if none is
 	used.
+
+Suggested default:
+NOCOMMENT_START
+refresh_pattern ^ftp:		1440	20%	10080
+refresh_pattern ^gopher:	1440	0%	1440
+refresh_pattern .		0	20%	4320
+NOCOMMENT_END
 DOC_END
 
 NAME: reference_age

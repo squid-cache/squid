@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.405 2002/04/13 22:25:19 hno Exp $
+ * $Id: cache_cf.cc,v 1.406 2002/04/13 22:30:53 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1899,11 +1899,13 @@ parse_refreshpattern(refresh_t ** head)
     safe_free(pattern);
 }
 
+#if UNUSED_CODE
 static int
 check_null_refreshpattern(refresh_t * data)
 {
     return data == NULL;
 }
+#endif
 
 static void
 free_refreshpattern(refresh_t ** head)
