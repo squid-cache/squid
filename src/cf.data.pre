@@ -330,11 +330,14 @@ DOC_START
 	immediately removed from the cache.  In other words, use this
 	to force certain objects to never be cached.
 
+	Even though it seems strange, you must use the word 'ALLOW'
+	to indicate the ACL names which should NOT be cached.
+
 	There is no default.  We recommend you uncomment the following
 	two lines.
 
 acl QUERY urlpath_regex cgi-bin \?
-no_cache QUERY
+no_cache allow QUERY
 DOC_END
 
 NAME: cache_stoplist_pattern
