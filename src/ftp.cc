@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.28 1996/04/10 00:24:00 wessels Exp $ */
+/* $Id: ftp.cc,v 1.29 1996/04/10 03:52:23 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -20,6 +20,7 @@ typedef struct _Ftpdata {
     char request[MAX_URL];
     char user[MAX_URL];
     char password[MAX_URL];
+    int port;
     char *reply_hdr;
     int ftp_fd;
     char *icp_page_ptr;		/* Used to send proxy-http request: 
@@ -53,14 +54,13 @@ static void ftpCloseAndFree(fd, data)
     xfree(data);
 }
 
-/* XXX: this does not support FTP on a different port! */
 int ftp_url_parser(url, data)
      char *url;
      FtpData *data;
 {
-    static char atypebuf[MAX_URL];
+    static char proto[MAX_URL];
     static char hostbuf[MAX_URL];
-    char *tmp = NULL;
+    char *s = NULL;
     int t;
     char *host = data->host;
     char *request = data->request;
@@ -68,43 +68,55 @@ int ftp_url_parser(url, data)
     char *password = data->password;
 
     /* initialize everything */
-    atypebuf[0] = hostbuf[0] = '\0';
+    proto[0] = hostbuf[0] = '\0';
     request[0] = host[0] = user[0] = password[0] = '\0';
 
-    t = sscanf(url, "%[a-zA-Z]://%[^/]%s", atypebuf, hostbuf, request);
-    if ((t < 2) ||
-	!(!strcasecmp(atypebuf, "ftp") || !strcasecmp(atypebuf, "file"))) {
+    t = sscanf(url, "%[a-zA-Z]://%[^/]%s", proto, hostbuf, request);
+    if (t < 2) 
 	return -1;
-    } else if (t == 2) {	/* no request */
+    if (strcasecmp(proto, "ftp") && strcasecmp(proto, "file"))
+	return -1;
+    if (t == 2)			/* no request */
 	strcpy(request, "/");
-    } else {
-	tmp = url_convert_hex(request);		/* convert %xx to char */
-	strncpy(request, tmp, MAX_URL);
-	safe_free(tmp);
+    (void) url_convert_hex(request, 0);		/* convert %xx to char */
+
+    /* hostbuf is of the format  userid:password@host:port  */
+
+    /* separate into user-part and host-part */
+    if ((s = strchr(hostbuf, '@'))) {
+	*s = '\0';
+	strcpy(user, hostbuf);
+	strcpy(hostbuf, s+1);
     }
 
-    /* url address format is something like this:
-     * [ userid [ : password ] @ ] host 
-     * or possibly even
-     * [ [ userid ] [ : [ password ] ] @ ] host
-     * 
-     * So we must try to make sense of it.  */
+    /* separate into user and password */
+    if ((s = strchr(user, ':'))) {
+        *s = '\0';
+	strcpy(password, s+1);
+    }
 
-    /* XXX: this only support [user:passwd@]host */
-    t = sscanf(hostbuf, "%[^:]:%[^@]@%s", user, password, host);
-    if (t < 3) {
-	strcpy(host, user);	/* no login/passwd information */
+    /* separate into host and port */
+    if ((s = strchr(hostbuf, ':'))) {
+	*s = '\0';
+	data->port = atoi(s+1);
+    }
+
+    strncpy(host, hostbuf, SQUIDHOSTNAMELEN);
+    if (*user == '\0')
 	strcpy(user, "anonymous");
+    if (*password == '\0')
 	strcpy(password, getFtpUser());
-    }
-    /* we need to convert user and password for URL encodings */
-    tmp = url_convert_hex(user);
-    strcpy(user, tmp);
-    safe_free(tmp);
 
-    tmp = url_convert_hex(password);
-    strcpy(password, tmp);
-    safe_free(tmp);
+    /* we need to convert user and password for URL encodings */
+    (void) url_convert_hex(user, 0);
+
+    (void) url_convert_hex(password, 0);
+
+    debug(9,1,"ftp_url_parser: proto = %s\n", proto);
+    debug(9,1,"ftp_url_parser:  user = %s\n", data->user);
+    debug(9,1,"ftp_url_parser:  pass = %s\n", data->password);
+    debug(9,1,"ftp_url_parser:  host = %s\n", data->host);
+    debug(9,1,"ftp_url_parser:  port = %d\n", data->port);
 
     return 0;
 }
@@ -490,6 +502,10 @@ void ftpSendRequest(fd, data)
 	sprintf(tbuf, "-n %d ", getNegativeTTL());
 	strcat(buf, tbuf);
     }
+    if (data->port) {
+	sprintf(tbuf, "-P %d ", data->port);
+	strcat(buf, tbuf);
+    }
     strcat(buf, "-h ");		/* httpify */
     strcat(buf, "- ");		/* stdout */
     strcat(buf, data->host);
@@ -616,7 +632,7 @@ int ftpInitialize()
     int pid;
     int fd;
     int p[2];
-    static char pbuf[128];
+    char pbuf[128];
     char *ftpget = getFtpProgram();
 
     if (pipe(p) < 0) {
