@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.141 1997/11/05 05:29:20 wessels Exp $
+ * $Id: client_side.cc,v 1.142 1997/11/05 19:52:22 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -748,7 +748,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
     return len;
 }
 
-void
+static void
 clientCacheHit(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
@@ -763,7 +763,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     }
 }
 
-void
+static void
 clientSendMoreData(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
@@ -1029,7 +1029,7 @@ icpHandleIMSComplete(int fd, char *bufnotused, int size, int errflag, void *data
  * Below, we check whether the object is a hit or a miss.  If it's a hit,
  * we check whether the object is still valid or whether it is a MISS_TTL.
  */
-void
+static void
 icpProcessRequest(int fd, clientHttpRequest * http)
 {
     char *url = http->url;
