@@ -1,3 +1,4 @@
+	- Added Turkish error pages by Tural KAPTAN.
 	- Added basic support for Range requests. For most cachable
 	  requests, Squid replies with an "Accept-Ranges" header. Upon
 	  receiving a potentially cachable Range request for a not
@@ -31,6 +32,16 @@
 	- Moved 'miss_access' ACL check from client_side.c to forward.c
 	- Fixed logging of usernames for requests which require
 	  proxy-authentication.
+	- Fixed HTTP request parser to accept lowercase HTTP identifier
+	  (Oskar Pearson).
+	- Fixed FTP listings to always include links to the parent
+	  directory (Henrik Nordstrom).
+	- Fixed FTP to show an "empty" listing instead of showing
+	  a "document contains no data" error (Henrik Nordstrom).
+	- Fixed refreshCheck() bug.  Often it was checking the
+	  refresh patterns against the string "[null_mem_obj]"
+	  because we moved URLs to MemObject.
+	- Added CARP support by Eric Stern.
 	- Fixed select-spin bug when an ICP reply actually gets queued
 	  and we failed to execute the write callback.
 	- Fixed a storeCheckSwapOut bug.  We were freeing up to
