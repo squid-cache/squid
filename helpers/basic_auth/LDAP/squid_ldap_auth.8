@@ -4,9 +4,9 @@
 squid_ldap_auth - Squid LDAP authentication helper
 .
 .SH SYNOPSIS
-squid_ldap_auth -b "base DN" [-u attribute] [options] ldap_server_name
+squid_ldap_auth -b "base DN" [-u attribute] [options] [ldap_server_name[:port]]...]
 .P
-squid_ldap_auth -b "base DN" -f "LDAP search filter" [options] ldap_server_name
+squid_ldap_auth -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]...]
 .
 .SH DESCRIPTION
 This helper allows Squid to connect to a LDAP directory to
@@ -92,6 +92,9 @@ or only to
 .B find
 the base object
 .
+.TP
+.BI -h " ldapserver"
+Specify the LDAP server to connect to
 .TP
 .BI -p " ldapport"
 Specify an alternate TCP port where the ldap server is listening if

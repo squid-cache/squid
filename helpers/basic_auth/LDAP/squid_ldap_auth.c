@@ -11,7 +11,7 @@
  * 
  * Usage: squid_ldap_auth -b basedn [-s searchscope]
  *                        [-f searchfilter] [-D binddn -w bindpasswd]
- *                        [-u attr] [-p] [-R] <ldap_server_name>
+ *                        [-u attr] [-h host] [-p port] [-P] [-R] [ldap_server_name[:port]] ...
  * 
  * Dependencies: You need to get the OpenLDAP libraries
  * from http://www.openldap.org
@@ -24,8 +24,11 @@
  * Changes:
  * 2001-10-04: Henrik Nordstrom <hno@squid-cache.org>
  *             - Be consistent with the other helpers in how
- *		 spaces are managed. If there is space characters
- *		 then these are assumed to be part of the password
+ *               spaces are managed. If there is space characters
+ *               then these are assumed to be part of the password
+ * 2001-09-05: Henrik Nordstrom <hno@squid-cache.org>
+ *             - Added ability to specify another default LDAP port to
+ *               connect to. Persistent connections moved to -P
  * 2001-05-02: Henrik Nordstrom <hno@squid-cache.org>
  *             - Support newer OpenLDAP 2.x libraries using the
  *               revised Internet Draft API which unfortunately
@@ -112,14 +115,14 @@ main(int argc, char **argv)
 {
     char buf[256];
     char *user, *passwd;
-    char *ldapServer;
+    char *ldapServer = NULL;
     LDAP *ld = NULL;
     int tryagain;
     int port = LDAP_PORT;
 
     setbuf(stdout, NULL);
 
-    while (argc > 2 && argv[1][0] == '-') {
+    while (argc > 1 && argv[1][0] == '-') {
 	char *value = "";
 	char option = argv[1][1];
 	switch (option) {
@@ -127,7 +130,7 @@ main(int argc, char **argv)
 	case 'R':
 	    break;
 	default:
-	    if (strlen(argv[1]) > 2) {
+	    if (strlen(argv[1]) > 2 || argc <= 2) {
 		value = argv[1] + 2;
 	    } else {
 		value = argv[2];
@@ -139,6 +142,17 @@ main(int argc, char **argv)
 	argv++;
 	argc--;
 	switch (option) {
+	case 'h':
+	    if (ldapServer) {
+		int len = strlen(ldapServer) + 1 + strlen(value) + 1;
+		char *newhost = malloc(len);
+		snprintf(newhost, len, "%s %s", ldapServer, value);
+		free(ldapServer);
+		ldapServer = newhost;
+	    } else {
+		ldapServer = strdup(value);
+	    }
+	    break;
 	case 'b':
 	    basedn = value;
 	    break;
@@ -195,15 +209,34 @@ main(int argc, char **argv)
 	}
     }
 
-    if (!basedn || argc != 2) {
-	fprintf(stderr, "Usage: squid_ldap_auth [options] ldap_server_name\n\n");
+    while (argc > 1 && argv[1][0] == '-') {
+	char *value = argv[1];
+	if (ldapServer) {
+	    int len = strlen(ldapServer) + 1 + strlen(value) + 1;
+	    char *newhost = malloc(len);
+	    snprintf(newhost, len, "%s %s", ldapServer, value);
+	    free(ldapServer);
+	    ldapServer = newhost;
+	} else {
+	    ldapServer = strdup(value);
+	}
+	argc--;
+	argv++;
+    }
+    if (!ldapServer)
+	ldapServer = "localhost";
+
+    if (!basedn) {
+	fprintf(stderr, "Usage: squid_ldap_auth -b basedn [options] [ldap_server_name[:port]]...\n\n");
 	fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under which to search\n");
 	fprintf(stderr, "\t-f filter\t\tsearch filter to locate user DN\n");
 	fprintf(stderr, "\t-u userattr\t\tusername DN attribute\n");
 	fprintf(stderr, "\t-s base|one|sub\t\tsearch scope\n");
 	fprintf(stderr, "\t-D binddn\t\tDN to bind as to perform searches\n");
 	fprintf(stderr, "\t-w bindpasswd\t\tpassword for binddn\n");
-	fprintf(stderr, "\t-p\t\t\tpersistent LDAP connection\n");
+	fprintf(stderr, "\t-h server\t\tLDAP server (defaults to localhost)\n");
+	fprintf(stderr, "\t-p port\t\tLDAP server port\n");
+	fprintf(stderr, "\t-P\t\t\tpersistent LDAP connection\n");
 	fprintf(stderr, "\t-R\t\t\tdo not follow referrals\n");
 	fprintf(stderr, "\t-a never|always|search|find\n\t\t\t\twhen to dereference aliases\n");
 	fprintf(stderr, "\n");
@@ -211,7 +244,6 @@ main(int argc, char **argv)
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd options\n\n");
 	exit(1);
     }
-    ldapServer = (char *) argv[1];
 
     while (fgets(buf, 256, stdin) != NULL) {
 	user = strtok(buf, " \r\n");
