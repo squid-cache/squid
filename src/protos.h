@@ -28,20 +28,6 @@ extern void aclDestroyRegexList(struct _relist *data);
 extern int aclMatchRegex(relist * data, const char *word);
 extern void aclParseRegexList(void *curlist);
 
-#if USE_ARP_ACL
-extern int checkARP(u_long ip, char *eth);
-extern int decode_eth(const char *asc, char *eth);
-extern int aclMatchArp(void *dataptr, struct in_addr c);
-#if USE_SPLAY_TREE
-extern int aclArpNetworkCompare(const void *, splayNode *);
-extern void aclParseArpList(void *curlist);
-#elif USE_BIN_TREE
-extern int bintreeArpNetworkCompare(void *, void *);
-extern void aclParseArpList(void **curtree);
-#endif
-extern void aclParseArpList(void *curlist);
-#endif
-
 extern int aio_cancel(aio_result_t *);
 extern int aio_open(const char *, int, mode_t, aio_result_t *);
 extern int aio_read(int, char *, int, off_t, int, aio_result_t *);
