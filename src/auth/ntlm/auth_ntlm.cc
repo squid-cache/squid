@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.14 2001/10/17 17:09:08 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.15 2001/10/24 05:26:16 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -151,7 +151,7 @@ authNTLMCfgDump(StoreEntry * entry, const char *name, authScheme * scheme)
     storeAppendPrintf(entry, "\n%s %s children %d\n%s %s max_challenge_reuses %d\n%s %s max_challenge_lifetime %d seconds\n",
 	name, "ntlm", config->authenticateChildren,
 	name, "ntlm", config->challengeuses,
-	name, "ntlm", config->challengelifetime);
+	name, "ntlm", (int)config->challengelifetime);
 
 }
 
@@ -285,7 +285,7 @@ authenticateNTLMDirection(auth_user_request_t * auth_user_request)
     switch (ntlm_request->auth_state) {
     case AUTHENTICATE_STATE_NONE:	/* no progress at all. */
 	if (ntlm_request->flags.credentials_ok != 2)
-	    debug(29, 1) ("authenticateNTLMDirection: called before NTLM Authenticate!. Report a bug to squid-dev. au %x\n", auth_user_request);
+	    debug(29, 1) ("authenticateNTLMDirection: called before NTLM Authenticate!. Report a bug to squid-dev. au %p\n", auth_user_request);
 	return -2;
     case AUTHENTICATE_STATE_NEGOTIATE:		/* send to helper */
     case AUTHENTICATE_STATE_RESPONSE:	/*send to helper */
@@ -355,7 +355,7 @@ authNTLMRequestFree(ntlm_request_t * ntlm_request)
     if (ntlm_request->ntlmauthenticate)
 	xfree(ntlm_request->ntlmauthenticate);
     if (ntlm_request->authserver != NULL && ntlm_request->authserver_deferred) {
-	debug(29, 9) ("authenticateNTLMRequestFree: releasing server '%d'\n", ntlm_request->authserver);
+	debug(29, 9) ("authenticateNTLMRequestFree: releasing server '%p'\n", ntlm_request->authserver);
 	helperStatefulReleaseServer(ntlm_request->authserver);
 	ntlm_request->authserver = NULL;
     }
@@ -383,7 +383,7 @@ authenticateNTLMFreeUser(auth_user_t * auth_user)
     /* were they linked in by one or more proxy-authenticate headers */
     link = ntlm_user->proxy_auth_list.head;
     while (link) {
-	debug(29, 9) ("authenticateFreeProxyAuthUser: removing proxy_auth hash entry '%d'\n", link->data);
+	debug(29, 9) ("authenticateFreeProxyAuthUser: removing proxy_auth hash entry '%p'\n", link->data);
 	proxy_auth_hash = link->data;
 	tmplink = link;
 	link = link->next;
@@ -432,10 +432,10 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     auth_user_t *auth_user;
     ntlm_user_t *ntlm_user;
     ntlm_request_t *ntlm_request;
-    debug(29, 9) ("authenticateNTLMHandleReply: Helper: '%d' {%s}\n", lastserver, reply ? reply : "<NULL>");
+    debug(29, 9) ("authenticateNTLMHandleReply: Helper: '%p' {%s}\n", lastserver, reply ? reply : "<NULL>");
     valid = cbdataValid(r->data);
     if (!valid) {
-	debug(29, 1) ("AuthenticateNTLMHandleReply: invalid callback data. Releasing helper '%d'.\n", lastserver);
+	debug(29, 1) ("AuthenticateNTLMHandleReply: invalid callback data. Releasing helper '%p'.\n", lastserver);
 	cbdataUnlock(r->data);
 	authenticateStateFree(r);
 	debug(29, 9) ("NTLM HandleReply, telling stateful helper : %d\n", S_HELPER_RELEASE);
@@ -466,7 +466,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	result = S_HELPER_DEFER;
 	/* reserve the server for future authentication */
 	ntlm_request->authserver_deferred = 1;
-	debug(29, 9) ("authenticateNTLMHandleReply: helper '%d'\n", lastserver);
+	debug(29, 9) ("authenticateNTLMHandleReply: helper '%p'\n", lastserver);
 	assert(ntlm_request->auth_state == AUTHENTICATE_STATE_NEGOTIATE);
 	ntlm_request->authserver = lastserver;
 	ntlm_request->authchallenge = xstrndup(reply, NTLM_CHALLENGE_SZ + 5);
@@ -565,7 +565,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	    /* The helper broke on YR. It automatically
 	     * resets */
 	    ntlm_request->flags.credentials_ok = 3;	/* cannot process */
-	    debug(29, 1) ("authenticateNTLMHandleReply: Error obtaining challenge from helper: %d. Error returned '%s'\n", lastserver, reply);
+	    debug(29, 1) ("authenticateNTLMHandleReply: Error obtaining challenge from helper: %p. Error returned '%s'\n", lastserver, reply);
 	    /* mark it for starving */
 	    helperstate->starve = 1;
 	    /* resubmit the request. This helper is currently busy, so we will get
@@ -646,7 +646,7 @@ authenticateNTLMChangeChallenge_p(ntlm_helper_state_t * helperstate)
 	return 1;
     }
     if (helperstate->renewed + ntlmConfig->challengelifetime < squid_curtime) {
-	debug(29, 4) ("authenticateNTLMChangeChallenge_p: Challenge exceeded max lifetime by %d seconds\n", squid_curtime - (helperstate->renewed + ntlmConfig->challengelifetime));
+	debug(29, 4) ("authenticateNTLMChangeChallenge_p: Challenge exceeded max lifetime by %d seconds\n", (int) (squid_curtime - (helperstate->renewed + ntlmConfig->challengelifetime)));
 	return 1;
     }
     debug(29, 9) ("Challenge is to be reused\n");
@@ -683,7 +683,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
     case AUTHENTICATE_STATE_RESPONSE:
 	sent_string = xstrdup(ntlm_request->ntlmauthenticate);
 	assert(ntlm_request->authserver);
-	debug(29, 9) ("authenticateNTLMStart: Asking NTLMauthenticator '%d'.\n", ntlm_request->authserver);
+	debug(29, 9) ("authenticateNTLMStart: Asking NTLMauthenticator '%p'.\n", ntlm_request->authserver);
 	break;
     default:
 	fatal("Invalid authenticate state for NTLMStart");
@@ -727,7 +727,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
 
 	ntlm_request->authserver = server;
 	/* tell the log what helper we have been given */
-	debug(29, 9) ("authenticateNTLMStart: helper '%d' assigned\n", server);
+	debug(29, 9) ("authenticateNTLMStart: helper '%p' assigned\n", server);
 	/* server and valid challenge? */
 	if ((server == NULL) || !authenticateNTLMValidChallenge(helperstate)) {
 	    /* No server, or server with invalid challenge */
@@ -819,7 +819,7 @@ authenticateNTLMReleaseServer(auth_user_request_t * auth_user_request)
     assert(auth_user_request->auth_user->auth_type == AUTH_NTLM);
     assert(auth_user_request->scheme_data != NULL);
     ntlm_request = auth_user_request->scheme_data;
-    debug(29, 9) ("authenticateNTLMReleaseServer: releasing server '%d'\n", ntlm_request->authserver);
+    debug(29, 9) ("authenticateNTLMReleaseServer: releasing server '%p'\n", ntlm_request->authserver);
     helperStatefulReleaseServer(ntlm_request->authserver);
     ntlm_request->authserver = NULL;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.13 2001/10/17 19:43:40 hno Exp $
+ * $Id: auth_basic.cc,v 1.14 2001/10/24 05:26:12 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -308,7 +308,7 @@ authBasicCfgDump(StoreEntry * entry, const char *name, authScheme * scheme)
     storeAppendPrintf(entry, "\n%s %s realm %s\n%s %s children %d\n%s %s credentialsttl %d seconds\n",
 	name, "basic", config->basicAuthRealm,
 	name, "basic", config->authenticateChildren,
-	name, "basic", config->credentialsTTL);
+	name, "basic", (int)config->credentialsTTL);
 
 }
 
@@ -505,7 +505,7 @@ authenticateBasicDecodeAuth(auth_user_request_t * auth_user_request, const char 
 	/* store user in hash */
 	authenticateUserNameCacheAdd(auth_user);
     } else {
-	debug(29, 9) ("authBasicDecodeAuth: Found user '%s' in the user cache as '%d'\n", local_basic.username, auth_user);
+	debug(29, 9) ("authBasicDecodeAuth: Found user '%s' in the user cache as '%p'\n", local_basic.username, auth_user);
 	xfree(local_basic.username);
 	basic_auth = auth_user->scheme_data;
 	if (strcmp(local_basic.passwd, basic_auth->passwd)) {

@@ -136,7 +136,7 @@ snmp_msg_Encode(u_char * Buffer, int *BufLenP,
     u_char *MsgPtr;
     int FakeArg = 1024;
 
-    snmplib_debug(4, "Buffer=%x BufLenP=%x, buflen=%d\n", Buffer, BufLenP,
+    snmplib_debug(4, "Buffer=%p BufLenP=%p, buflen=%d\n", Buffer, BufLenP,
 	*BufLenP);
     /* Header for the entire thing, with a false, large length */
     bufp = asn_build_header(Buffer, BufLenP,
@@ -176,7 +176,7 @@ snmp_msg_Encode(u_char * Buffer, int *BufLenP,
     /* A nice header for this PDU. 
      * Encoded with the wrong length.  We'll fix it later.
      */
-    snmplib_debug(8, "snmp_msg_Encode:Encoding PDU Header at 0x%x (fake len %d) (%d bytes so far)\n",
+    snmplib_debug(8, "snmp_msg_Encode:Encoding PDU Header at 0x%p (fake len %d) (%d bytes so far)\n",
 	bufp, *BufLenP, *BufLenP);
     PDUHeaderPtr = bufp;
     bufp = asn_build_header(bufp, BufLenP,
