@@ -502,7 +502,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                        " Number of UDCP connections since start-up "
+                        " Number of UDP connections since start-up "
                 ::= { cacheNetwork 5 }
 
 	cacheInThroughput OBJECT-TYPE
