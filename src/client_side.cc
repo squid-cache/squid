@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.286 1998/04/23 20:25:51 rousskov Exp $
+ * $Id: client_side.cc,v 1.287 1998/04/23 22:04:47 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -345,12 +345,13 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	if (size >= 4096) {
 	    /* will not get any bigger than that */
 	    debug(33, 3) ("clientHandleIMSReply: Reply is too large '%s', using old entry\n", url);
-	    /* use old entry, this repeats the code above */
+	    /* use old entry, this repeats the code abovez */
 	    http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
 	    storeUnregister(entry, http);
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
 	    entry->refcount++;
+	    /* continue */
 	} else {
 	    storeClientCopy(entry,
 		http->out.offset + size,
@@ -359,8 +360,8 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 		memAllocate(MEM_4K_BUF),
 		clientHandleIMSReply,
 		http);
+	    return;
 	}
-	return;
     } else if (clientGetsOldEntry(entry, http->old_entry, http->request)) {
 	/* We initiated the IMS request, the client is not expecting
 	 * 304, so put the good one back.  First, make sure the old entry
