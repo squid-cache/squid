@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.51 1998/01/06 22:55:42 wessels Exp $
+ * $Id: icmp.cc,v 1.52 1998/01/06 22:58:08 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -294,7 +294,7 @@ icmpClose(void)
     icmpQueueData *queue;
     if (icmp_sock < 0)
 	return;
-    debug(29, 0) ("Closing ICMP socket on FD %d\n", icmp_sock);
+    debug(29, 0) ("Closing Pinger socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
     icmp_sock = -1;
     while ((queue = IcmpQueueHead)) {
