@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.351 1997/11/29 08:03:21 wessels Exp $
+ * $Id: store.cc,v 1.352 1997/11/29 08:07:35 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1746,7 +1746,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	debug(20, 3) ("storeClientCopy2: Need to open swap in file\n");
 	assert(sc->type == STORE_DISK_CLIENT);
 	/* gotta open the swapin file */
-	assert(sc->copy_offset == 0);
+	/* assert(sc->copy_offset == 0); */
 	storeSwapInStart(e, storeClientCopyFileOpened, sc);
     } else {
 	debug(20, 3) ("storeClientCopy: reading from disk FD %d\n",
