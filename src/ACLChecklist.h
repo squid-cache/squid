@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.5 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.6 2003/02/21 12:02:30 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -127,6 +127,9 @@ private:
     AsyncState *state_;
     bool destinationDomainChecked_;
     bool sourceDomainChecked_;
+    bool checking_;
+    bool checking() const;
+    void checking (bool const);
 };
 
 SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
