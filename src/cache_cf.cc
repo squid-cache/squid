@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.122 1996/11/01 21:25:00 wessels Exp $
+ * $Id: cache_cf.cc,v 1.123 1996/11/01 21:31:03 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1512,4 +1512,6 @@ configDoConfigure(void)
 	safe_free(Config.Program.ftpget);
 	Config.Program.ftpget = xstrdup("none");
     }
+    if (httpd_accel_mode && !strcmp(Config.Accel.host, "virtual"))
+	vhost_mode = 1;
 }
