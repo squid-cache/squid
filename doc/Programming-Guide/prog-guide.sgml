@@ -742,7 +742,6 @@ Squid consists of the following major components
 <sect3><tt/storeOpen()/
 
 	<P>
-	Prototype:
 <verb>
 	storeIOState *
 	storeOpen(sfileno f, mode_t mode, STIOCB *callback, void *callback_data)
@@ -765,7 +764,6 @@ Squid consists of the following major components
 <sect3><tt/storeClose()/
 
 	<P>
-	Prototype:
 <verb>
 	void
 	storeClose(storeIOState *sio)
@@ -782,7 +780,6 @@ Squid consists of the following major components
 <sect3><tt/storeRead()/
 
 	<P>
-	Prototype:
 <verb>
 	void
 	storeRead(storeIOState *sio, char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data)
@@ -804,7 +801,6 @@ Squid consists of the following major components
 <sect3><tt/storeWrite()/
 
 	<P>
-	Prototype:
 <verb>
 	void
 	storeWrite(storeIOState *sio, char *buf, size_t size, off_t offset, FREE *free_func)
@@ -827,7 +823,6 @@ Squid consists of the following major components
 <sect3><tt/storeUnlink()/
 
 	<P>
-	Prototype:
 <verb>
 	void
 	storeUnlink(sfileno f)
@@ -842,7 +837,6 @@ Squid consists of the following major components
 <sect3><tt/storeOffset()/
 
 	<P>
-	Prototype:
 <verb>
 	off_t
 	storeOffset(storeIOState *sio)
@@ -855,7 +849,6 @@ Squid consists of the following major components
 <sect3><em/STIOCB/ callback
 
 	<P>
-	Prototype:
 <verb>
 	void
 	stiocb(void *data, int errorflag, storeIOState *sio)
@@ -883,7 +876,6 @@ Squid consists of the following major components
 <sect3><em/STRCB/ callback
 
 	<P>
-	Prototype:
 <verb>
 	void
 	strcb(void *data, const char *buf, size_t len)
