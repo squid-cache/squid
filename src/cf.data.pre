@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.353 2004/08/04 16:22:39 wessels Exp $
+# $Id: cf.data.pre,v 1.354 2004/08/14 21:15:15 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1918,6 +1918,7 @@ DOC_START
 	  grace=n	Percentage remaining of TTL where a refresh of a
 			cached entry should be initiated without needing to
 			wait for a new reply. (default 0 for no grace period)
+	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
 
 	FORMAT specifications
 
@@ -1948,7 +1949,8 @@ DOC_START
 	The helper receives lines per the above format specification,
 	and returns lines starting with OK or ERR indicating the validity
 	of the request and optionally followed by additional keywords with
-	more details.
+	more details. To protect from odd characters the data is URL
+	escaped.
 
 	General result syntax:
 
@@ -1965,10 +1967,11 @@ DOC_START
 	  log=		String to be logged in access.log. Available as
 	  		%ea in logformat specifications
 
-	Keyword values need to be enclosed in quotes if they may
-	contain whitespace, or the whitespace escaped using \. Any
-	quotes or \ characters within the keyword value must be \
-	escaped.
+	Keyword values need to be URL escaped if they may contain
+	contain whitespace or quotes.
+
+	In Squid-2.5 compatibility mode quoting using " and \ is used
+	instead of URL escaping.
 DOC_END
 
 COMMENT_START

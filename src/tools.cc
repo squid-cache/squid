@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.240 2003/09/29 10:24:02 robertc Exp $
+ * $Id: tools.cc,v 1.241 2004/08/14 21:15:16 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1292,7 +1292,27 @@ strwordtok(char *buf, char **t)
 
         case '\\':
             p++;
-            *d++ = ch = *p;
+
+            switch (*p) {
+
+            case 'n':
+                ch = '\n';
+
+                break;
+
+            case 'r':
+                ch = '\r';
+
+                break;
+
+            default:
+                ch = *p;
+
+                break;
+
+            }
+
+            *d++ = ch;
 
             if (ch)
                 p++;
@@ -1339,14 +1359,30 @@ strwordquote(MemBuf * mb, const char *str)
     }
 
     while (*str) {
-        int l = strcspn(str, "\"\\");
+        int l = strcspn(str, "\"\\\n\r");
         memBufAppend(mb, str, l);
         str += l;
 
-        while (*str == '"' || *str == '\\') {
+        switch(*str) {
+
+        case '\n':
+            memBufAppend(mb, "\\n", 2);
+            str++;
+            break;
+
+        case '\r':
+            memBufAppend(mb, "\\r", 2);
+            str++;
+            break;
+
+        case '\0':
+            break;
+
+        default:
             memBufAppend(mb, "\\", 1);
             memBufAppend(mb, str, 1);
             str++;
+            break;
         }
     }
 
