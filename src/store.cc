@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.298 1997/10/20 22:59:48 wessels Exp $
+ * $Id: store.cc,v 1.299 1997/10/21 16:13:51 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1119,7 +1119,7 @@ storeSwapInFileOpened(void *data, int fd)
     StoreEntry *e = ctrlp->e;
     assert(e->mem_obj != NULL);
     assert(e->mem_status == NOT_IN_MEMORY);
-    assert(e->swap_status == SWAPOUT_DONE);
+    assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
     if (fd < 0) {
 	debug(20, 0) ("storeSwapInStartComplete: Failed for '%s'\n", e->url);
 	/* Invoke a store abort that should free the memory object */
