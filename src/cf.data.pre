@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.236 2001/10/20 09:32:51 hno Exp $
+# $Id: cf.data.pre,v 1.237 2001/10/20 11:12:37 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -129,6 +129,7 @@ DOC_START
 DOC_END
 
 NAME: ssl_unclean_shutdown
+IFDEF: USE_SSL
 TYPE: onoff
 DEFAULT: off
 LOC: Config.SSL.unclean_shutdown
