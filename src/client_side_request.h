@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.11 2003/06/20 01:01:00 robertc Exp $
+ * $Id: client_side_request.h,v 1.12 2003/06/20 12:36:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -146,6 +146,7 @@ SQUIDCEXTERN void redirectStart(clientHttpRequest *, RH *, void *);
 SQUIDCEXTERN void sslStart(clientHttpRequest *, size_t *, int *);
 
 #ifdef _USE_INLINE_
+#include "Store.h"
 #include "client_side_request.cci"
 #endif
 
