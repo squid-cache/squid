@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.214 1999/04/19 05:13:41 wessels Exp $
+ * $Id: ipcache.cc,v 1.215 1999/04/19 05:15:54 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -262,8 +262,8 @@ ipcache_call_pending(ipcache_entry * i)
     ipcacheUnlockEntry(i);
 }
 
-#if USE_DNSSERVERS
 static ipcache_entry *
+#if USE_DNSSERVERS
 ipcacheParse(const char *inbuf)
 {
     LOCAL_ARRAY(char, buf, DNS_INBUF_SZ);
@@ -333,7 +333,6 @@ ipcacheParse(const char *inbuf)
     return &i;
 }
 #else
-static ipcache_entry *
 ipcacheParse(rfc1035_rr * answers, int nr)
 {
     static ipcache_entry i;
