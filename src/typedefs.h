@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.143 2002/12/06 23:19:16 hno Exp $
+ * $Id: typedefs.h,v 1.144 2002/12/27 10:26:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -137,7 +137,7 @@ typedef struct _mem_hdr mem_hdr;
 typedef struct _store_client store_client;
 typedef struct _MemObject MemObject;
 typedef struct _StoreEntry StoreEntry;
-typedef struct _SwapDir SwapDir;
+class SwapDir;
 typedef struct _helper_flags helper_flags;
 typedef struct _helper_stateful_flags helper_stateful_flags;
 typedef struct _http_state_flags http_state_flags;
@@ -171,9 +171,7 @@ typedef struct _helper_stateful_server helper_stateful_server;
 typedef struct _helper_request helper_request;
 typedef struct _helper_stateful_request helper_stateful_request;
 typedef struct _generic_cbdata generic_cbdata;
-typedef struct _storeIOState storeIOState;
-typedef struct _queued_read queued_read;
-typedef struct _queued_write queued_write;
+class storeIOState;
 typedef struct _link_list link_list;
 typedef struct _storefs_entry storefs_entry_t;
 typedef struct _storerepl_entry storerepl_entry_t;
@@ -248,42 +246,8 @@ typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);
 typedef void IDNSCB(void *, rfc1035_rr *, int);
 
-typedef void STINIT(SwapDir *);
-typedef void STNEWFS(SwapDir *);
-typedef void STDUMP(StoreEntry *, SwapDir *);
-typedef void STFREE(SwapDir *);
-typedef int STDBLCHECK(SwapDir *, StoreEntry *);
-typedef void STSTATFS(SwapDir *, StoreEntry *);
-typedef void STMAINTAINFS(SwapDir *);
-typedef int STCHECKOBJ(SwapDir *, const StoreEntry *);
-typedef void STREFOBJ(SwapDir *, StoreEntry *);
-typedef void STUNREFOBJ(SwapDir *, StoreEntry *);
-typedef void STSETUP(storefs_entry_t *);
-typedef void STDONE(void);
-typedef int STCALLBACK(SwapDir *);
-typedef void STSYNC(SwapDir *);
-
-typedef storeIOState *STOBJCREATE(SwapDir *, StoreEntry *, STFNCB *, STIOCB *, void *);
-typedef storeIOState *STOBJOPEN(SwapDir *, StoreEntry *, STFNCB *, STIOCB *, void *);
-typedef void STOBJCLOSE(SwapDir *, storeIOState *);
-typedef void STOBJREAD(SwapDir *, storeIOState *, char *, size_t, off_t, STRCB *, void *);
-typedef void STOBJWRITE(SwapDir *, storeIOState *, char *, size_t, off_t, FREE *);
-typedef void STOBJUNLINK(SwapDir *, StoreEntry *);
-
-typedef void STLOGOPEN(SwapDir *);
-typedef void STLOGCLOSE(SwapDir *);
-typedef void STLOGWRITE(const SwapDir *, const StoreEntry *, int);
-typedef int STLOGCLEANSTART(SwapDir *);
-typedef const StoreEntry *STLOGCLEANNEXTENTRY(SwapDir *);
-typedef void STLOGCLEANWRITE(SwapDir *, const StoreEntry *);
-typedef void STLOGCLEANDONE(SwapDir *);
-
-/* Store dir configuration routines */
-/* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */
-typedef void STFSPARSE(SwapDir *, int, char *);
-typedef void STFSRECONFIGURE(SwapDir *, int, char *);
-typedef void STFSSTARTUP(void);
 typedef void STFSSHUTDOWN(void);
+typedef SwapDir *STFSNEW(void);
 
 typedef double hbase_f(double);
 typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.78 2002/10/13 20:35:05 robertc Exp $
+ * $Id: store_rebuild.cc,v 1.79 2002/12/27 10:26:33 robertc Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "SwapDir.h"
 
 static struct _store_rebuild_data counts;
 static struct timeval rebuild_start;
@@ -52,8 +53,8 @@ static store_rebuild_progress *RebuildProgress = NULL;
 static int
 storeCleanupDoubleCheck(StoreEntry * e)
 {
-    SwapDir *SD = &Config.cacheSwap.swapDirs[e->swap_dirn];
-    return (SD->dblcheck(SD, e));
+    SwapDir *SD = INDEXSD(e->swap_dirn);
+    return (SD->doubleCheck(*e));
 }
 
 static void
@@ -100,7 +101,7 @@ storeCleanup(void *datanotused)
 	     * Only set the file bit if we know its a valid entry
 	     * otherwise, set it in the validation procedure
 	     */
-	    storeDirUpdateSwapSize(&Config.cacheSwap.swapDirs[e->swap_dirn], e->swap_file_sz, 1);
+	    storeDirUpdateSwapSize(INDEXSD(e->swap_dirn), e->swap_file_sz, 1);
 	    if ((++validnum & 0x3FFFF) == 0)
 		debug(20, 1) ("  %7d Entries Validated so far.\n", validnum);
 	}

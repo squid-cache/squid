@@ -1,6 +1,6 @@
 #include "squid.h"
 #include "Store.h"
-
+#include "SwapDir.h"
 
 static struct {
     struct {
@@ -19,13 +19,13 @@ OBJH storeIOStats;
  * to what will be stored in this object, to allow the filesystem
  * to select different polices depending on object size or type.
  */
-storeIOState *
+StoreIOState::Pointer
 storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, void *callback_data)
 {
+    assert (e);
     ssize_t objsize;
     sdirno dirn;
     SwapDir *SD;
-    storeIOState *sio;
 
     store_io_stats.create.calls++;
     /* This is just done for logging purposes */
@@ -44,64 +44,53 @@ storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, voi
 	return NULL;
     }
     debug(20, 2) ("storeCreate: Selected dir '%d' for obj size '%ld'\n", dirn, (long int) objsize);
-    SD = &Config.cacheSwap.swapDirs[dirn];
+    SD = INDEXSD(dirn);
 
     /* Now that we have a fs to use, call its storeCreate function */
-    sio = SD->obj.create(SD, e, file_callback, close_callback, callback_data);
-    if (NULL == sio)
+    StoreIOState::Pointer sio = SD->createStoreIO(*e, file_callback, close_callback, callback_data);
+    if (sio == NULL)
 	store_io_stats.create.create_fail++;
     else
 	store_io_stats.create.success++;
     return sio;
 }
 
-
 /*
  * storeOpen() is purely for reading ..
  */
-storeIOState *
+StoreIOState::Pointer
 storeOpen(StoreEntry * e, STFNCB * file_callback, STIOCB * callback,
     void *callback_data)
 {
-    SwapDir *SD = &Config.cacheSwap.swapDirs[e->swap_dirn];
-    return SD->obj.open(SD, e, file_callback, callback, callback_data);
+    return INDEXSD(e->swap_dirn)->openStoreIO(*e, file_callback, callback, callback_data);
 }
 
 void
-storeClose(storeIOState * sio)
+storeClose(StoreIOState::Pointer sio)
 {
-    SwapDir *SD = &Config.cacheSwap.swapDirs[sio->swap_dirn];
     if (sio->flags.closing)
 	return;
     sio->flags.closing = 1;
-    SD->obj.close(SD, sio);
+    sio->close();
 }
 
 void
-storeRead(storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data)
+storeRead(StoreIOState::Pointer sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data)
 {
-    SwapDir *SD = &Config.cacheSwap.swapDirs[sio->swap_dirn];
-    SD->obj.read(SD, sio, buf, size, offset, callback, callback_data);
+    sio->read_(buf, size, offset, callback, callback_data);
 }
 
 void
-storeWrite(storeIOState * sio, char *buf, size_t size, off_t offset, FREE * free_func)
+storeWrite(StoreIOState::Pointer sio, char *buf, size_t size, off_t offset, FREE * free_func)
 {
-    SwapDir *SD = &Config.cacheSwap.swapDirs[sio->swap_dirn];
-    SD->obj.write(SD, sio, buf, size, offset, free_func);
+    sio->write(buf,size,offset,free_func);
 }
 
 void
 storeUnlink(StoreEntry * e)
 {
-    SwapDir *SD = INDEXSD(e->swap_dirn);
-    SD->obj.unlink(SD, e);
-}
-
-off_t
-storeOffset(storeIOState * sio)
-{
-    return sio->offset;
+    assert (e);
+    INDEXSD(e->swap_dirn)->unlink(*e);
 }
 
 /*

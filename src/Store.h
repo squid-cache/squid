@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.3 2002/10/15 08:03:29 robertc Exp $
+ * $Id: Store.h,v 1.4 2002/12/27 10:26:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -149,6 +149,7 @@ SQUIDCEXTERN void storeHeapPositionUpdate(StoreEntry *, SwapDir *);
 SQUIDCEXTERN void storeSwapFileNumberSet(StoreEntry * e, sfileno filn);
 SQUIDCEXTERN void storeFsInit(void);
 SQUIDCEXTERN void storeFsDone(void);
+typedef void STSETUP(storefs_entry_t *);
 SQUIDCEXTERN void storeFsAdd(const char *, STSETUP *);
 SQUIDCEXTERN void storeReplAdd(const char *, REMOVALPOLICYCREATE *);
 

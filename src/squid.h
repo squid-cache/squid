@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.227 2002/11/10 02:04:39 hno Exp $
+ * $Id: squid.h,v 1.228 2002/12/27 10:26:33 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -412,7 +412,7 @@ extern "C" {
 /*
  * I'm sick of having to keep doing this ..
  */
-#define INDEXSD(i)   (&Config.cacheSwap.swapDirs[(i)])
+#define INDEXSD(i)   (Config.cacheSwap.swapDirs[(i)])
 
 #define FD_READ_METHOD(fd, buf, len) (*fd_table[fd].read_method)(fd, buf, len)
 #define FD_WRITE_METHOD(fd, buf, len) (*fd_table[fd].write_method)(fd, buf, len)

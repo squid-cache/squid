@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.90 2002/10/15 08:03:31 robertc Exp $
+ * $Id: store_swapout.cc,v 1.91 2002/12/27 10:26:33 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "SwapDir.h"
 
 static off_t storeSwapOutObjectBytesOnDisk(const MemObject *);
 static void storeSwapOutStart(StoreEntry * e);
@@ -51,7 +52,7 @@ storeSwapOutStart(StoreEntry * e)
     int swap_hdr_sz = 0;
     tlv *tlv_list;
     char *buf;
-    storeIOState *sio;
+    StoreIOState::Pointer sio;
     assert(mem);
     /* Build the swap metadata, so the filesystem will know how much
      * metadata there is to store
@@ -67,8 +68,8 @@ storeSwapOutStart(StoreEntry * e)
     c = cbdataAlloc(generic_cbdata);
     c->data = e;
     sio = storeCreate(e, storeSwapOutFileNotify, storeSwapOutFileClosed, c);
-    mem->swapout.sio = cbdataReference(sio);
-    if (NULL == mem->swapout.sio) {
+    mem->swapout.sio = sio;
+    if (mem->swapout.sio == NULL) {
 	e->swap_status = SWAPOUT_NONE;
 	cbdataFree(c);
 	xfree(buf);
@@ -128,9 +129,9 @@ storeSwapOut(StoreEntry * e)
 	(int) mem->inmem_hi);
     debug(20, 7) ("storeSwapOut: swapout.queue_offset = %d\n",
 	(int) mem->swapout.queue_offset);
-    if (mem->swapout.sio)
-	debug(20, 7) ("storeSwapOut: storeOffset() = %d\n",
-	    (int) storeOffset(mem->swapout.sio));
+    if (mem->swapout.sio.getRaw())
+	debug(20, 7) ("storeSwapOut: offset() = %d\n",
+	    (int) mem->swapout.sio->offset());
     assert(mem->inmem_hi >= mem->swapout.queue_offset);
     lowest_offset = storeLowestMemReaderOffset(e);
     debug(20, 7) ("storeSwapOut: lowest_offset = %d\n",
@@ -227,7 +228,7 @@ storeSwapOut(StoreEntry * e)
 	    return;
 	/* ENTRY_CACHABLE will be cleared and we'll never get here again */
     }
-    if (NULL == mem->swapout.sio)
+    if (mem->swapout.sio == NULL)
 	return;
     do {
 	/*
@@ -268,7 +269,7 @@ storeSwapOut(StoreEntry * e)
 	    if (swapout_size < SM_PAGE_SIZE)
 		break;
     } while (swapout_size > 0);
-    if (NULL == mem->swapout.sio)
+    if (mem->swapout.sio == NULL)
 	/* oops, we're not swapping out any more */
 	return;
     if (e->store_status == STORE_OK) {
@@ -288,7 +289,7 @@ storeSwapOutFileClose(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     assert(mem != NULL);
     debug(20, 3) ("storeSwapOutFileClose: %s\n", e->getMD5Text());
-    debug(20, 3) ("storeSwapOutFileClose: sio = %p\n", mem->swapout.sio);
+    debug(20, 3) ("storeSwapOutFileClose: sio = %p\n", mem->swapout.sio.getRaw());
     if (mem->swapout.sio == NULL)
 	return;
     storeClose(mem->swapout.sio);
@@ -322,7 +323,7 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
 	    storeUrl(e), e->swap_dirn, e->swap_filen);
 	e->swap_file_sz = objectLen(e) + mem->swap_hdr_sz;
 	e->swap_status = SWAPOUT_DONE;
-	storeDirUpdateSwapSize(&Config.cacheSwap.swapDirs[e->swap_dirn], e->swap_file_sz, 1);
+	storeDirUpdateSwapSize(INDEXSD(e->swap_dirn), e->swap_file_sz, 1);
 	if (storeCheckCachable(e)) {
 	    storeLog(STORE_LOG_SWAPOUT, e);
 	    storeDirSwapLog(e, SWAP_LOG_ADD);
@@ -330,7 +331,7 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
 	statCounter.swap.outs++;
     }
     debug(20, 3) ("storeSwapOutFileClosed: %s:%d\n", __FILE__, __LINE__);
-    cbdataReferenceDone(mem->swapout.sio);
+    mem->swapout.sio = NULL;
     storeUnlockObject(e);
 }
 
@@ -341,7 +342,7 @@ static off_t
 storeSwapOutObjectBytesOnDisk(const MemObject * mem)
 {
     /*
-     * NOTE: storeOffset() represents the disk file size,
+     * NOTE: offset() represents the disk file size,
      * not the amount of object data on disk.
      * 
      * If we don't have at least 'swap_hdr_sz' bytes
@@ -351,10 +352,9 @@ storeSwapOutObjectBytesOnDisk(const MemObject * mem)
      * meaning we haven't even opened the swapout file
      * yet.
      */
-    off_t nwritten;
     if (mem->swapout.sio == NULL)
 	return 0;
-    nwritten = storeOffset(mem->swapout.sio);
+    off_t nwritten = mem->swapout.sio->offset();
     if (nwritten <= (off_t)mem->swap_hdr_sz)
 	return 0;
     return nwritten - mem->swap_hdr_sz;
@@ -367,7 +367,7 @@ int
 storeSwapOutAble(const StoreEntry * e)
 {
     dlink_node *node;
-    if (e->mem_obj->swapout.sio != NULL)
+    if (e->mem_obj->swapout.sio.getRaw() != NULL)
 	return 1;
     if (e->mem_obj->inmem_lo > 0)
 	return 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.457 2002/11/15 13:29:20 hno Exp $
+ * $Id: protos.h,v 1.458 2002/12/27 10:26:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -103,7 +103,7 @@ SQUIDCEXTERN void parse_wordlist(wordlist ** list);
 SQUIDCEXTERN void requirePathnameExists(const char *name, const char *path);
 SQUIDCEXTERN void parse_time_t(time_t * var);
 SQUIDCEXTERN void parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int reconfiguring);
-SQUIDCEXTERN void dump_cachedir_options(StoreEntry * e, struct cache_dir_option *options, SwapDir * sd);
+SQUIDCEXTERN void dump_cachedir_options(StoreEntry * e, struct cache_dir_option *options, SwapDir const * sd);
 SQUIDCEXTERN void parse_sockaddr_in_list_token(sockaddr_in_list **, char *);
 
 
@@ -852,13 +852,12 @@ SQUIDCEXTERN void storeFsSetup(void);
 SQUIDCEXTERN void storeReplSetup(void);
 
 /* store_io.c */
-SQUIDCEXTERN storeIOState *storeCreate(StoreEntry *, STFNCB *, STIOCB *, void *);
-SQUIDCEXTERN storeIOState *storeOpen(StoreEntry *, STFNCB *, STIOCB *, void *);
-SQUIDCEXTERN void storeClose(storeIOState *);
-SQUIDCEXTERN void storeRead(storeIOState *, char *, size_t, off_t, STRCB *, void *);
-SQUIDCEXTERN void storeWrite(storeIOState *, char *, size_t, off_t, FREE *);
+SQUIDCEXTERN StoreIOState::Pointer storeCreate(StoreEntry *, STFNCB *, STIOCB *, void *);
+SQUIDCEXTERN StoreIOState::Pointer storeOpen(StoreEntry *, STFNCB *, STIOCB *, void *);
+SQUIDCEXTERN void storeClose(StoreIOState::Pointer);
+SQUIDCEXTERN void storeRead(StoreIOState::Pointer, char *, size_t, off_t, STRCB *, void *);
+SQUIDCEXTERN void storeWrite(StoreIOState::Pointer, char *, size_t, off_t, FREE *);
 SQUIDCEXTERN void storeUnlink(StoreEntry *);
-SQUIDCEXTERN off_t storeOffset(storeIOState *);
 
 /*
  * store_log.c

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.26 2002/11/15 14:18:30 hno Exp $
+ * $Id: client_side_reply.cc,v 1.27 2002/12/27 10:26:33 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -540,7 +540,15 @@ clientCacheHit(void *data, StoreIOBuffer result)
 	clientProcessMiss(context);
 	return;
     }
-    assert(result.length > 0);
+    if (result.length == 0) {
+	/* the store couldn't get enough data from the file for us to id the
+	 * object
+	 */
+	/* treat as a miss */
+	http->logType = LOG_TCP_MISS;
+	clientProcessMiss(context);
+	return;
+    }
     mem = e->mem_obj;
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
     /* update size of the request */
