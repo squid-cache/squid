@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.493 2000/07/16 04:24:21 wessels Exp $
+ * $Id: client_side.cc,v 1.494 2000/07/16 05:29:43 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2028,7 +2028,9 @@ clientProcessRequest2(clientHttpRequest * http)
 	ipcacheReleaseInvalid(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
     }
-    if (r->range && httpHdrRangeWillBeComplex(r->range)) {
+    if (NULL == r->range) {
+	(void) 0;
+    } else if (httpHdrRangeWillBeComplex(r->range)) {
 	/*
 	 * Some clients break if we return "200 OK" for a Range
 	 * request.  We would have to return "200 OK" for a _complex_
