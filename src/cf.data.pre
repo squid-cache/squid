@@ -2154,30 +2154,4 @@ DOC_START
 	WHOIS server to query for AS numbers.  NOTE: AS numbers are
 	queried only when Squid starts up, not for every request.
 DOC_END
-
-NAME: incoming_min_rate
-TYPE: int
-LOC: Config.incoming_rate.min
-DEFAULT: 16
-DOC_NONE
-
-NAME: incoming_max_rate
-TYPE: int
-LOC: Config.incoming_rate.max
-DEFAULT: 2
-DOC_START
-	These specify how often the "incoming" sockets should be
-	checked, compared with established connections.  Note, the
-	"incoming" sockets are where we accept new HTTP connections and
-	where we process ICP queries.
-
-	If there was just activity on an incoming socket, then we will
-	check the incoming sockets again after processing the next
-	'incoming_max_rate' I/O events.  If there was not any recent
-	incoming activity, we check incoming sockets again after
-	processing the next 'incoming_min_rate' I/O events.
-
-incoming_min_rate 16
-incoming_max_rate 2
-DOC_END
 EOF
