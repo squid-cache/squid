@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.193 2003/09/07 10:11:07 hno Exp $
+ * $Id: errorpage.cc,v 1.194 2004/01/06 03:44:13 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -572,7 +572,8 @@ errorDump(ErrorState * err, MemBuf * mb)
  * I - server IP address                        x
  * L - HREF link for more info/contact          x
  * M - Request Method                           x
- * m - Error message returned by external Auth. x 
+ * m - Error message returned by auth helper    x 
+ * o - Message returned external acl helper     x
  * p - URL port #                               x
  * P - Protocol                                 x
  * R - Full HTTP Request                        x
