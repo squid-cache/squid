@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.39 2001/03/20 01:10:25 hno Exp $
+ * $Id: cbdata.cc,v 1.40 2001/04/04 00:42:36 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -136,6 +136,7 @@ cbdataInit(void)
     CREATE_CBDATA(aclCheck_t);
     CREATE_CBDATA(clientHttpRequest);
     CREATE_CBDATA(ConnStateData);
+    CREATE_CBDATA(DigestFetchState);
     CREATE_CBDATA(ErrorState);
     CREATE_CBDATA(FwdState);
     CREATE_CBDATA(generic_cbdata);
