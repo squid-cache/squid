@@ -180,7 +180,7 @@
 /*
  * Cache Array Routing Protocol
  */
-#undef USE_CARP
+#define USE_CARP 1
 
 /* Define if NTLM is allowed to fail gracefully when a helper has problems */
 #undef NTLM_FAIL_OPEN
