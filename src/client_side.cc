@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.227 1998/03/16 17:03:25 wessels Exp $
+ * $Id: client_side.cc,v 1.228 1998/03/16 21:59:55 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1364,7 +1364,7 @@ clientProcessMiss(clientHttpRequest * http)
     ch.src_addr = http->conn->peer.sin_addr;
     ch.request = r;
     answer = aclCheckFast(Config.accessList.miss, &ch);
-    if (answer == 0) {
+    if (answer == 0 || http->internal) {
 	http->al.http.code = HTTP_FORBIDDEN;
 	err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(r);
@@ -1542,8 +1542,17 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if ((t = strchr(url, '#')))	/* remove HTML anchors */
 	*t = '\0';
 
+    /* handle internal objects */
+    if (*url == '/' && strncmp(url, "/squid-internal/", 16) == 0) {
+	/* prepend our name & port */
+	url_sz = 7 + strlen(getMyHostname()) + 6 + strlen(url) + 1;
+	http->uri = xcalloc(url_sz, 1);
+	snprintf(http->uri, url_sz, "http://%s:%d%s",
+	    getMyHostname(), Config.Port.http->i, url);
+	http->internal = 1;
+    }
     /* see if we running in Config2.Accel.on, if so got to convert it to URL */
-    if (Config2.Accel.on && *url == '/') {
+    else if (Config2.Accel.on && *url == '/') {
 	/* prepend the accel prefix */
 	if (opt_accel_uses_host && (t = mime_get_header(req_hdr, "Host"))) {
 	    /* If a Host: header was specified, use it to build the URL 

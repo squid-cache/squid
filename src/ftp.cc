@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.207 1998/03/16 18:21:41 wessels Exp $
+ * $Id: ftp.cc,v 1.208 1998/03/16 21:59:58 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -575,10 +575,9 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
     }
     /* check .. as special case */
     if (!strcmp(parts->name, "..")) {
-	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s%s\" ALT=\"%-6s\">",
-	    "http://internal.squid/icons/",
-	    ICON_DIRUP,
-	    "[DIR]");
+	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s\" ALT=\"%-6s\">",
+	    mimeGetIconURL("internal-dirup"),
+	    "[DIRUP]");
 	if (!EBIT_TEST(flags, FTP_NO_DOTDOT) && !EBIT_TEST(flags, FTP_ROOT_DIR)) {
 	    /* Normal directory */
 	    snprintf(link, 2048, "<A HREF=\"%s\">%s</A>",
@@ -624,9 +623,8 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
     }
     switch (parts->type) {
     case 'd':
-	snprintf(icon, 2048, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
-	    "http://internal.squid/icons/",
-	    ICON_MENU,
+	snprintf(icon, 2048, "<IMG SRC=\"%s\" ALT=\"%-6s\">",
+	    mimeGetIconURL("internal-dir"),
 	    "[DIR]");
 	snprintf(link, 2048, "<A HREF=\"%s/\">%s</A>%s",
 	    rfc1738_escape(parts->name),
@@ -638,9 +636,8 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	    parts->date);
 	break;
     case 'l':
-	snprintf(icon, 2048, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
-	    "http://internal.squid/icons/",
-	    ICON_LINK,
+	snprintf(icon, 2048, "<IMG SRC=\"%s\" ALT=\"%-6s\">",
+	    mimeGetIconURL("internal-link"),
 	    "[LINK]");
 	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>%s",
 	    rfc1738_escape(parts->name),
@@ -656,9 +653,8 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	    link2);
 	break;
     case '\0':
-	snprintf(icon, 2048, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
-	    "http://internal.squid/icons/",
-	    mimeGetIcon(parts->name),
+	snprintf(icon, 2048, "<IMG SRC=\"%s\" ALT=\"%-6s\">",
+	    mimeGetIconURL(parts->name),
 	    "[UNKNOWN]");
 	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>",
 	    rfc1738_escape(parts->name),
@@ -672,9 +668,8 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	break;
     case '-':
     default:
-	snprintf(icon, 2048, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
-	    "http://internal.squid/icons/",
-	    mimeGetIcon(parts->name),
+	snprintf(icon, 2048, "<IMG SRC=\"%s\" ALT=\"%-6s\">",
+	    mimeGetIconURL(parts->name),
 	    "[FILE]");
 	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>%s",
 	    rfc1738_escape(parts->name),
@@ -750,8 +745,8 @@ ftpReadComplete(FtpStateData * ftpState)
     if (EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
 	ftpListingFinish(ftpState);
     if (!EBIT_TEST(ftpState->flags, FTP_PUT)) {
-    	storeTimestampsSet(ftpState->entry);
-    	storeComplete(ftpState->entry);
+	storeTimestampsSet(ftpState->entry);
+	storeComplete(ftpState->entry);
     }
     /* expect the "transfer complete" message on the control socket */
     commSetSelect(ftpState->ctrl.fd,
@@ -936,7 +931,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     EBIT_SET(ftpState->flags, FTP_PASV_SUPPORTED);
     EBIT_SET(ftpState->flags, FTP_REST_SUPPORTED);
     if (ftpState->request->method == METHOD_PUT)
-    	EBIT_SET(ftpState->flags, FTP_PUT);
+	EBIT_SET(ftpState->flags, FTP_PUT);
     if (!ftpCheckAuth(ftpState, request->headers)) {
 	/* This request is not fully authenticated */
 	if (request->port == 21) {
@@ -1185,7 +1180,7 @@ ftpReadControlReply(int fd, void *data)
     ftpState->ctrl.last_reply = (*W)->key;
     safe_free(*W);
     ftpState->ctrl.offset = 0;
-    debug(9,8)("ftpReadControlReply: state=%d\n",ftpState->state);
+    debug(9, 8) ("ftpReadControlReply: state=%d\n", ftpState->state);
     FTP_SM_FUNCS[ftpState->state] (ftpState);
 }
 
@@ -1378,39 +1373,40 @@ ftpReadCwd(FtpStateData * ftpState)
 	ftpTraverseDirectory(ftpState);
     } else {
 	/* CWD FAILED */
-	if (!EBIT_TEST(ftpState->flags, FTP_PUT)) 
-		ftpFail(ftpState);
+	if (!EBIT_TEST(ftpState->flags, FTP_PUT))
+	    ftpFail(ftpState);
 	else
-		ftpTryMkdir(ftpState);
+	    ftpTryMkdir(ftpState);
     }
 }
 
 static void
-ftpTryMkdir(FtpStateData *ftpState)
+ftpTryMkdir(FtpStateData * ftpState)
 {
-	char *path=ftpState->filepath;
-	debug(9,3)("ftpTryMkdir: with path=%s\n",path);
-    	snprintf(cbuf, 1024, "MKD %s\r\n", path);
-    	ftpWriteCommand(cbuf, ftpState);
-    	ftpState->state = SENT_MKDIR;
+    char *path = ftpState->filepath;
+    debug(9, 3) ("ftpTryMkdir: with path=%s\n", path);
+    snprintf(cbuf, 1024, "MKD %s\r\n", path);
+    ftpWriteCommand(cbuf, ftpState);
+    ftpState->state = SENT_MKDIR;
 }
 
 static void
-ftpReadMkdir(FtpStateData *ftpState)
+ftpReadMkdir(FtpStateData * ftpState)
 {
-	char *path=ftpState->filepath;
-    	int code = ftpState->ctrl.replycode;
-	
-	debug(9,3)("Here, with code %d\n",path,code);
-	if (code==257) { /* success */
-		ftpSendCwd(ftpState);	
-	} else if (code==550) { /* dir exists */
-		if (EBIT_TEST(ftpState->flags, FTP_PUT_MKDIR)) { 
-		  	EBIT_SET(ftpState->flags, FTP_PUT_MKDIR);
-			ftpSendCwd(ftpState);
-		} else 
-			ftpSendReply(ftpState);
-	} else ftpSendReply(ftpState);
+    char *path = ftpState->filepath;
+    int code = ftpState->ctrl.replycode;
+
+    debug(9, 3) ("Here, with code %d\n", path, code);
+    if (code == 257) {		/* success */
+	ftpSendCwd(ftpState);
+    } else if (code == 550) {	/* dir exists */
+	if (EBIT_TEST(ftpState->flags, FTP_PUT_MKDIR)) {
+	    EBIT_SET(ftpState->flags, FTP_PUT_MKDIR);
+	    ftpSendCwd(ftpState);
+	} else
+	    ftpSendReply(ftpState);
+    } else
+	ftpSendReply(ftpState);
 }
 
 static void
@@ -1713,7 +1709,7 @@ ftpRestOrList(FtpStateData * ftpState)
 
     debug(9, 3) ("This is ftpRestOrList\n");
     if (EBIT_TEST(ftpState->flags, FTP_PUT)) {
-        debug(9,3)("ftpRestOrList: Sending STOR request...\n");
+	debug(9, 3) ("ftpRestOrList: Sending STOR request...\n");
 	ftpSendStor(ftpState);
     } else if (ftpState->typecode == 'D') {
 	/* XXX This should NOT be here */
@@ -2013,17 +2009,17 @@ static void
 ftpPutStart(FtpStateData * ftpState)
 {
     debug(9, 3) ("ftpPutStart\n");
-    pumpStart(ftpState->data.fd, ftpState->entry , 
-		ftpState->request, ftpPutTransferDone, ftpState);
+    pumpStart(ftpState->data.fd, ftpState->entry,
+	ftpState->request, ftpPutTransferDone, ftpState);
 }
 
-static void 
+static void
 ftpPutTransferDone(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
-    FtpStateData * ftpState=(FtpStateData *)data;
+    FtpStateData *ftpState = (FtpStateData *) data;
     if (ftpState->data.fd >= 0) {
-        comm_close(ftpState->data.fd);
-        ftpState->data.fd = -1;
+	comm_close(ftpState->data.fd);
+	ftpState->data.fd = -1;
     }
     ftpReadComplete(ftpState);
 }

@@ -654,6 +654,7 @@ struct _clientHttpRequest {
     log_type log_type;
     http_status http_code;
     int accel;
+    int internal;		/* Set to true on /squid-internal/ request, to prevent looping */
     struct timeval start;
     float http_ver;
     int redirect_state;

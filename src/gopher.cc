@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.122 1998/03/05 00:42:53 wessels Exp $
+ * $Id: gopher.cc,v 1.123 1998/03/16 21:59:58 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -357,7 +357,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     char *host = NULL;
     char *port = NULL;
     char *escaped_selector = NULL;
-    char *icon_type = NULL;
+    char *icon_url = NULL;
     char gtype;
     StoreEntry *entry = NULL;
 
@@ -509,39 +509,39 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
 			switch (gtype) {
 			case GOPHER_DIRECTORY:
-			    icon_type = "internal-gopher-menu";
+			    icon_url = mimeGetIconURL("internal-menu");
 			    break;
 			case GOPHER_FILE:
-			    icon_type = "internal-gopher-text";
+			    icon_url = mimeGetIconURL("internal-text");
 			    break;
 			case GOPHER_INDEX:
 			case GOPHER_CSO:
-			    icon_type = "internal-gopher-index";
+			    icon_url = mimeGetIconURL("internal-index");
 			    break;
 			case GOPHER_IMAGE:
 			case GOPHER_GIF:
 			case GOPHER_PLUS_IMAGE:
-			    icon_type = "internal-gopher-image";
+			    icon_url = mimeGetIconURL("internal-image");
 			    break;
 			case GOPHER_SOUND:
 			case GOPHER_PLUS_SOUND:
-			    icon_type = "internal-gopher-sound";
+			    icon_url = mimeGetIconURL("internal-sound");
 			    break;
 			case GOPHER_PLUS_MOVIE:
-			    icon_type = "internal-gopher-movie";
+			    icon_url = mimeGetIconURL("internal-movie");
 			    break;
 			case GOPHER_TELNET:
 			case GOPHER_3270:
-			    icon_type = "internal-gopher-telnet";
+			    icon_url = mimeGetIconURL("internal-telnet");
 			    break;
 			case GOPHER_BIN:
 			case GOPHER_MACBINHEX:
 			case GOPHER_DOSBIN:
 			case GOPHER_UUENCODED:
-			    icon_type = "internal-gopher-binary";
+			    icon_url = mimeGetIconURL("internal-binary");
 			    break;
 			default:
-			    icon_type = "internal-gopher-unknown";
+			    icon_url = mimeGetIconURL("internal-unknown");
 			    break;
 			}
 
@@ -550,14 +550,14 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
 			    if (strlen(escaped_selector) != 0)
 				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s@%s/\">%s</A>\n",
-				    icon_type, escaped_selector, host, name);
+				    icon_url, escaped_selector, host, name);
 			    else
 				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s/\">%s</A>\n",
-				    icon_type, host, name);
+				    icon_url, host, name);
 
 			} else {
 			    snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
-				icon_type, host, gtype, escaped_selector, name);
+				icon_url, host, gtype, escaped_selector, name);
 			}
 			safe_free(escaped_selector);
 			strcat(outbuf, tmpbuf);
