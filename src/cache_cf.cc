@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.387 2001/07/28 09:21:31 hno Exp $
+ * $Id: cache_cf.cc,v 1.388 2001/08/16 00:16:15 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1870,15 +1870,15 @@ parse_b_size_t(size_t * var)
     parseBytesLine(var, B_BYTES_STR);
 }
 
-CBDATA_TYPE (body_size);
+CBDATA_TYPE(body_size);
 
 static void
-parse_body_size_t(dlink_list *bodylist)
+parse_body_size_t(dlink_list * bodylist)
 {
     body_size *bs;
-    CBDATA_INIT_TYPE (body_size);
+    CBDATA_INIT_TYPE(body_size);
     bs = cbdataAlloc(body_size);
-    parse_size_t (&bs->maxsize);
+    parse_size_t(&bs->maxsize);
     aclParseAccessLine(&bs->access_list);
 
     dlinkAddTail(bs, &bs->node, bodylist);
@@ -1890,34 +1890,34 @@ dump_body_size_t(StoreEntry * entry, const char *name, dlink_list bodylist)
     body_size *bs;
     bs = (body_size *) bodylist.head;
     while (bs) {
-        acl_list *l;
+	acl_list *l;
 	acl_access *head = bs->access_list;
 	while (head != NULL) {
-            storeAppendPrintf(entry, "%s %d %s", name, bs->maxsize, 
+	    storeAppendPrintf(entry, "%s %d %s", name, bs->maxsize,
 		head->allow ? "Allow" : "Deny");
 	    for (l = head->acl_list; l != NULL; l = l->next) {
-	        storeAppendPrintf(entry, " %s%s",
+		storeAppendPrintf(entry, " %s%s",
 		    l->op ? null_string : "!",
 		    l->acl->name);
 	    }
 	    storeAppendPrintf(entry, "\n");
 	    head = head->next;
-	}	    
+	}
 	bs = (body_size *) bs->node.next;
     }
 }
 
 static void
-free_body_size_t(dlink_list * bodylist) //acl_access ** head)
-{
+free_body_size_t(dlink_list * bodylist)		//acl_access ** head)
+ {
     body_size *bs, *tempnode;
     bs = (body_size *) bodylist->head;
     while (bs) {
-        bs->maxsize = 0;
+	bs->maxsize = 0;
 	aclDestroyAccessList(&bs->access_list);
 	tempnode = (body_size *) bs->node.next;
-	dlinkDelete (&bs->node, bodylist);
-	cbdataFree (bs);
+	dlinkDelete(&bs->node, bodylist);
+	cbdataFree(bs);
 	bs = tempnode;
     }
 }

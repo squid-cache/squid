@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.318 2001/04/14 00:03:22 hno Exp $
+ * $Id: comm.cc,v 1.319 2001/08/16 00:16:16 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -35,6 +35,9 @@
 
 #include "squid.h"
 
+#if defined(_SQUID_CYGWIN_)
+#include <sys/ioctl.h>
+#endif
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
 #endif

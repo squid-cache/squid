@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.39 2001/05/05 17:49:54 hno Exp $
+ * $Id: dns_internal.cc,v 1.40 2001/08/16 00:16:16 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -159,7 +159,7 @@ idnsParseResolvConf(void)
 	debug(78, 1) ("%s: %s\n", _PATH_RESOLV_CONF, xstrerror());
 	return;
     }
-#if defined(_SQUID_CYGWIN_)
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     setmode(fileno(fp), O_TEXT);
 #endif
     while (fgets(buf, 512, fp)) {
@@ -227,6 +227,7 @@ idnsParseWIN32Registry(void)
 	}
 	break;
     case _WIN_OS_WIN2K:
+    case _WIN_OS_WINXP:
 	/* get nameservers from the Windows 2000 registry */
 	/* search all interfaces for DNS server addresses */
 	if (RegOpenKey(HKEY_LOCAL_MACHINE,

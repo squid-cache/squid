@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.339 2001/05/20 00:09:25 hno Exp $
+ * $Id: main.cc,v 1.340 2001/08/16 00:16:16 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -998,9 +998,5 @@ SquidShutdown(void *unused)
 	version_string);
     if (debug_log)
 	fclose(debug_log);
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
-    WIN32_Exit(0);
-#else
     exit(0);
-#endif
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: win32.cc,v 1.1 2001/05/06 14:25:21 hno Exp $
+ * $Id: win32.cc,v 1.2 2001/08/16 00:16:19 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -28,7 +28,6 @@
 #include <windows.h>
 
 static unsigned int GetOSVersion();
-void WIN32_svcstatusupdate(DWORD);
 
 /* ====================================================================== */
 /* LOCAL FUNCTIONS */
@@ -39,37 +38,40 @@ GetOSVersion()
 {
     OSVERSIONINFO osvi;
 
+    safe_free(WIN32_OS_string);
     memset(&osvi, '\0', sizeof(OSVERSIONINFO));
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx((OSVERSIONINFO *) & osvi);
     switch (osvi.dwPlatformId) {
     case VER_PLATFORM_WIN32_NT:
 	if (osvi.dwMajorVersion <= 4) {
-	    strcpy(WIN32_OS_string, "Windows NT");
+	    WIN32_OS_string = xstrdup("Windows NT");
 	    return _WIN_OS_WINNT;
 	}
-	if (osvi.dwMajorVersion == 5) {
-	    strcpy(WIN32_OS_string, "Windows 2000");
-	    return _WIN_OS_WIN2K;
+	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 1)) {
+	    WIN32_OS_string = xstrdup("Windows XP");
+	    return _WIN_OS_WINXP;
 	}
+	WIN32_OS_string = xstrdup("Windows 2000");
+	return _WIN_OS_WIN2K;
 	break;
     case VER_PLATFORM_WIN32_WINDOWS:
 	if ((osvi.dwMajorVersion > 4) ||
 	    ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion > 0))) {
-	    strcpy(WIN32_OS_string, "Windows 98");
+	    WIN32_OS_string = xstrdup("Windows 98");
 	    return _WIN_OS_WIN98;
 	}
-	strcpy(WIN32_OS_string, "Windows 95");
+	WIN32_OS_string = xstrdup("Windows 95");
 	return _WIN_OS_WIN95;
 	break;
     case VER_PLATFORM_WIN32s:
-	strcpy(WIN32_OS_string, "Windows 3.1 with WIN32S");
+	WIN32_OS_string = xstrdup("Windows 3.1 with WIN32S");
 	return _WIN_OS_WIN32S;
 	break;
     default:
 	return _WIN_OS_UNKNOWN;
     }
-    strcpy(WIN32_OS_string, "Unknown");
+    WIN32_OS_string = xstrdup("Unknown");
     return _WIN_OS_UNKNOWN;
 }
 
@@ -77,16 +79,20 @@ GetOSVersion()
 /* PUBLIC FUNCTIONS */
 /* ====================================================================== */
 
-VOID
-WIN32_Exit(int ExitStatus)
+void
+WIN32_Exit()
 {
-    exit(0);
+    _exit(0);
 }
 
 int
 WIN32_Subsystem_Init()
 {
     WIN32_OS_version = GetOSVersion();
+    if ((WIN32_OS_version == _WIN_OS_UNKNOWN) || (WIN32_OS_version == _WIN_OS_WIN32S))
+	return 1;
+    if (atexit(WIN32_Exit) != 0)
+	return 1;
     return 0;
 }
 #endif

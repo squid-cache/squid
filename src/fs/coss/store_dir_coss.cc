@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.28 2001/08/12 22:18:35 adrian Exp $
+ * $Id: store_dir_coss.cc,v 1.29 2001/08/16 00:16:20 hno Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -160,8 +160,8 @@ storeCossDirInit(SwapDir * sd)
     storeCossDirRebuild(sd);
     cs->fd = file_open(sd->path, O_RDWR | O_CREAT);
     if (cs->fd < 0) {
-        debug(81, 1) ("%s: %s\n", sd->path, xstrerror());
-        fatal("storeCossDirInit: Failed to open a COSS directory.");
+	debug(81, 1) ("%s: %s\n", sd->path, xstrerror());
+	fatal("storeCossDirInit: Failed to open a COSS directory.");
     }
     n_coss_dirs++;
     (void) storeDirGetBlkSize(sd->path, &sd->fs.blksize);
@@ -657,7 +657,7 @@ storeCossDirShutdown(SwapDir * SD)
 {
     CossInfo *cs = (CossInfo *) SD->fsdata;
 
-    storeCossSync(SD); /* This'll call a_file_syncqueue() */
+    storeCossSync(SD);		/* This'll call a_file_syncqueue() */
     a_file_closequeue(&cs->aq);
     file_close(cs->fd);
     cs->fd = -1;
@@ -698,7 +698,7 @@ storeCossDirCheckObj(SwapDir * SD, const StoreEntry * e)
  * storeCossDirCallback - do the IO completions
  */
 static int
-storeCossDirCallback(SwapDir *SD)
+storeCossDirCallback(SwapDir * SD)
 {
     CossInfo *cs = (CossInfo *) SD->fsdata;
 
