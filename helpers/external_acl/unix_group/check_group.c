@@ -1,5 +1,5 @@
 /*
- * $Id: check_group.c,v 1.1 2002/08/12 13:56:35 hno Exp $
+ * $Id: check_group.c,v 1.2 2002/10/22 09:45:16 hno Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Rodrigo Albani de Campos (rodrigo@geekbunker.org)
@@ -96,6 +96,7 @@ strwordtok(char *buf, char **t)
 	case '"':
 	    quoted = !quoted;
 	    p++;
+	    break;
 	default:
 	    if (!quoted && isspace(*p)) {
 		p++;
