@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.118 2001/01/02 01:41:31 wessels Exp $
+ * $Id: store_dir.cc,v 1.119 2001/01/04 07:32:08 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,12 @@
  */
 
 #include "squid.h"
+
+#if HAVE_STATVFS
+#if HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
+#endif
+#endif
 
 static int storeDirValidSwapDirSize(int, ssize_t);
 static STDIRSELECT storeDirSelectSwapDirRoundRobin;
