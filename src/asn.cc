@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.83 2002/10/14 08:16:58 robertc Exp $
+ * $Id: asn.cc,v 1.84 2002/10/14 08:43:24 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -92,7 +92,7 @@ static int asnAddNet(char *, int);
 static void asnCacheStart(int as);
 static STCB asHandleReply;
 static int destroyRadixNode(struct squid_radix_node *rn, void *w);
-static int printRadixNode(struct squid_radix_node *rn, StoreEntry *);
+static int printRadixNode(struct squid_radix_node *rn, void *sentry);
 static void asnAclInitialize(acl * acls);
 static void asStateFree(void *data);
 static void destroyRadixNodeInfo(as_info *);
@@ -452,8 +452,9 @@ mask_len(u_long mask)
 }
 
 static int
-printRadixNode(struct squid_radix_node *rn, StoreEntry *sentry)
+printRadixNode(struct squid_radix_node *rn, void *_sentry)
 {
+    StoreEntry *sentry = (StoreEntry *)_sentry;
     rtentry *e = (rtentry *) rn;
     intlist *q;
     as_info *asinfo;
