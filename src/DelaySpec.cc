@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelaySpec.cc,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelaySpec.cc,v 1.3 2005/01/04 10:35:09 serassio Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -43,6 +43,7 @@
 #include "squid.h"
 #include "DelaySpec.h"
 #include "Store.h"
+#include "Parsing.h"
 
 DelaySpec::DelaySpec() : restore_bps(-1), max_bytes (-1)
 {}
