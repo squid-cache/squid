@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.69 2000/05/31 04:26:32 wessels Exp $
+ * $Id: store_swapout.cc,v 1.70 2000/06/02 17:30:48 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -192,14 +192,6 @@ storeSwapOut(StoreEntry * e)
 	 */
 	if (storeTooManyDiskFilesOpen() && !fwdCheckDeferRead(-1, e))
 	    return;
-    }
-    /*
-     * Don't start swapping out until its either all in memory, or bigger
-     * than the maximum object size (so we pick a -1 maxobjsize fs)
-     */
-    if ((e->store_status != STORE_OK) && (swapout_size < store_maxobjsize)) {
-	debug(20, 5) ("storeSwapOut: Deferring starting swapping out\n");
-	return;
     }
     /* Ok, we have stuff to swap out.  Is there a swapout.sio open? */
     if (e->swap_status == SWAPOUT_NONE) {
