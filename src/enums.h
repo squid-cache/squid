@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.176 2000/11/10 09:04:50 adrian Exp $
+ * $Id: enums.h,v 1.177 2000/12/09 01:47:18 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -675,12 +675,3 @@ enum {
     NETDB_EX_RTT,
     NETDB_EX_HOPS
 };
-
-/*
- * These are used for the store double-check code
- */
-typedef enum {
-    DBLCHECK_NONE,
-    DBLCHECK_REPORTONLY,
-    DBLCHECK_FORCE
-} dblcheck_t;
