@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.113 1997/05/15 06:55:49 wessels Exp $
+ * $Id: squid.h,v 1.114 1997/05/15 23:43:12 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -356,17 +356,16 @@ extern char ThisCache[];	/* main.c */
 #define  CONNECT_PORT        443
 
 extern void start_announce _PARAMS((void *unused));
-extern int sslStart _PARAMS((int fd, const char *, request_t *, char *, int *sz));
-extern int waisStart _PARAMS((method_t, char *, StoreEntry *));
+extern void sslStart _PARAMS((int fd, const char *, request_t *, char *, int *sz));
+extern void waisStart _PARAMS((method_t, char *, StoreEntry *));
 extern void storeDirClean _PARAMS((void *unused));
-extern int passStart _PARAMS((int fd,
+extern void passStart _PARAMS((int fd,
 	const char *url,
 	request_t * request,
 	char *buf,
 	int buflen,
 	int *size_ptr));
-extern void identStart _PARAMS((int, ConnStateData *,
-	void       (*callback) _PARAMS((void *))));
+extern void identStart _PARAMS((int, ConnStateData *, IDCB * callback));
 extern int httpAnonAllowed _PARAMS((const char *line));
 extern int httpAnonDenied _PARAMS((const char *line));
 
