@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.313 2003/07/14 15:14:48 robertc Exp $
+#  $Id: Makefile.in,v 1.314 2003/07/15 12:29:40 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -506,6 +506,7 @@ squid_SOURCES = \
 	globals.h \
 	gopher.cc \
 	helper.cc \
+	helper.h \
 	$(HTCPSOURCE) \
 	http.cc \
 	http.h \
@@ -599,6 +600,8 @@ squid_SOURCES = \
 	StoreMetaURL.h \
 	StoreMetaVary.cc \
 	StoreMetaVary.h \
+	StoreSwapLogData.cc \
+	StoreSwapLogData.h \
 	structs.h \
 	SwapDir.cc \
 	SwapDir.h \
@@ -1008,8 +1011,8 @@ am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
 	external_acl.cc ExternalACL.h ExternalACLEntry.cc \
 	ExternalACLEntry.h fd.cc fde.cc fde.h filemap.cc forward.cc \
 	fqdncache.cc ftp.cc Generic.h globals.h gopher.cc helper.cc \
-	htcp.cc htcp.h http.cc http.h HttpStatusLine.cc HttpHdrCc.cc \
-	HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
+	helper.h htcp.cc htcp.h http.cc http.h HttpStatusLine.cc \
+	HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
 	HttpHdrContRange.cc HttpHdrContRange.h HttpHeader.cc \
 	HttpHeader.h HttpHeaderRange.h HttpHeaderTools.cc HttpBody.cc \
 	HttpMsg.cc HttpReply.cc HttpReply.h HttpRequest.cc \
@@ -1030,10 +1033,11 @@ am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
 	store_swapmeta.cc store_swapout.cc StoreMeta.cc StoreMeta.h \
 	StoreMetaMD5.cc StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
 	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
-	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h structs.h \
-	SwapDir.cc SwapDir.h tools.cc typedefs.h ufscommon.cc \
-	ufscommon.h unlinkd.cc url.cc urn.cc useragent.cc wais.cc \
-	wccp.cc whois.cc win32.cc
+	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h \
+	StoreSwapLogData.cc StoreSwapLogData.h structs.h SwapDir.cc \
+	SwapDir.h tools.cc typedefs.h ufscommon.cc ufscommon.h \
+	unlinkd.cc url.cc urn.cc useragent.cc wais.cc wccp.cc whois.cc \
+	win32.cc
 am__objects_1 = ACLARP.$(OBJEXT)
 @ENABLE_ARP_ACL_TRUE@am__objects_2 = $(am__objects_1)
 @ENABLE_ARP_ACL_FALSE@am__objects_2 =
@@ -1124,9 +1128,9 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	SwapDir.$(OBJEXT) tools.$(OBJEXT) ufscommon.$(OBJEXT) \
-	$(am__objects_17) url.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) SwapDir.$(OBJEXT) tools.$(OBJEXT) \
+	ufscommon.$(OBJEXT) $(am__objects_17) url.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
 	whois.$(OBJEXT) $(am__objects_18)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	store_modules.$(OBJEXT) globals.$(OBJEXT) \
@@ -1325,10 +1329,11 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/StoreMetaSTD.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/StoreMetaURL.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/StoreMetaUnpacker.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/StoreMetaVary.Po ./$(DEPDIR)/String.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/SwapDir.Po ./$(DEPDIR)/access_log.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/acl.Po ./$(DEPDIR)/asn.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/auth_modules.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreMetaVary.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreSwapLogData.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/String.Po ./$(DEPDIR)/SwapDir.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/access_log.Po ./$(DEPDIR)/acl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/asn.Po ./$(DEPDIR)/auth_modules.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/authenticate.Po ./$(DEPDIR)/cache_cf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/cache_manager.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/cachemgr.Po ./$(DEPDIR)/carp.Po \
@@ -1618,6 +1623,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaURL.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaUnpacker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaVary.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreSwapLogData.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/String.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SwapDir.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/access_log.Po@am__quote@
