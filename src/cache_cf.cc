@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.320 1999/01/22 19:07:02 glenn Exp $
+ * $Id: cache_cf.cc,v 1.321 1999/01/24 02:26:21 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -76,7 +76,7 @@ static void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
 static void dump_http_header(StoreEntry * entry, const char *name, HttpHeaderMask header);
 static void parse_http_header(HttpHeaderMask * header);
-static void free_http_header(HttpHeaderMask *header);
+static void free_http_header(HttpHeaderMask * header);
 
 static void
 self_destruct(void)
@@ -517,10 +517,10 @@ free_address(struct in_addr *addr)
 
 static void
 dump_http_header(StoreEntry * entry, const char *name, HttpHeaderMask header)
-{    
+{
     storeAppendPrintf(entry, "%s\n", name);
 }
-    
+
 static void
 parse_http_header(HttpHeaderMask * header)
 {
@@ -544,12 +544,11 @@ parse_http_header(HttpHeaderMask * header)
 	return;
     }
 
-    if(!http_header_first){
+    if (!http_header_first) {
 	http_header_first = 1;
 	if (allowed)
 	    httpHeaderMaskInit(header, 0xFF);
     }
-
     while ((t = strtok(NULL, w_space))) {
 	if ((id = httpHeaderIdByNameDef(t, strlen(t))) == -1)
 	    id = HDR_OTHER;
@@ -559,10 +558,10 @@ parse_http_header(HttpHeaderMask * header)
 	    CBIT_SET(*header, id);
     }
 }
-     
+
 static void
-free_http_header(HttpHeaderMask *header)
-{    
+free_http_header(HttpHeaderMask * header)
+{
     httpHeaderMaskInit(header, 0);
 }
 

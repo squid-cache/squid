@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.277 1999/01/22 04:29:01 wessels Exp $
+ * $Id: ftp.cc,v 1.278 1999/01/24 02:26:23 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -319,12 +319,12 @@ ftpTimeout(int fd, void *data)
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
     debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
-    if (entry->store_status == STORE_PENDING) { 
-        if (entry->mem_obj->inmem_hi == 0) {
-            fwdFail(ftpState->fwd,
-                errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
-        }   
-    }   
+    if (entry->store_status == STORE_PENDING) {
+	if (entry->mem_obj->inmem_hi == 0) {
+	    fwdFail(ftpState->fwd,
+		errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+	}
+    }
     if (ftpState->data.fd > -1) {
 	comm_close(ftpState->data.fd);
 	ftpState->data.fd = -1;
@@ -2321,7 +2321,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     if (ftpState->restarted_offset) {
 	/* Partial reply */
 	HttpHdrRangeSpec range_spec;
- 	range_spec.offset = ftpState->restarted_offset;
+	range_spec.offset = ftpState->restarted_offset;
 	range_spec.length = ftpState->size - ftpState->restarted_offset;
 	httpReplySetHeaders(reply, 1.0, HTTP_PARTIAL_CONTENT, "Gatewaying",
 	    mime_type, ftpState->size - ftpState->restarted_offset, ftpState->mdtm, -2);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.60 1999/01/22 19:06:58 glenn Exp $
+ * $Id: HttpHeader.cc,v 1.61 1999/01/24 02:26:19 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -234,8 +234,8 @@ httpHeaderInitModule()
     assert(8 * sizeof(HttpHeaderMask) >= HDR_ENUM_END);
     /* all headers must be described */
     assert(countof(HeadersAttrs) == HDR_ENUM_END);
-    if(!Headers)
-        Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+    if (!Headers)
+	Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
     /* create masks */
     httpHeaderMaskInit(&ListHeadersMask, 0);
     httpHeaderCalcMask(&ListHeadersMask, (const int *) ListHeadersArr, countof(ListHeadersArr));
@@ -1068,11 +1068,11 @@ httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * i
 {
     int i;
     for (i = 0; i < end; ++i) {
-        if (name_len >= 0 && name_len != strLen(info[i].name))
-            continue;
-        if (!strncasecmp(name, strBuf(info[i].name),
-                name_len < 0 ? strLen(info[i].name) + 1 : name_len))
-            return i;
+	if (name_len >= 0 && name_len != strLen(info[i].name))
+	    continue;
+	if (!strncasecmp(name, strBuf(info[i].name),
+		name_len < 0 ? strLen(info[i].name) + 1 : name_len))
+	    return i;
     }
     return -1;
 }
@@ -1080,8 +1080,7 @@ httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * i
 int
 httpHeaderIdByNameDef(const char *name, int name_len)
 {
-   if (!Headers)
-       Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
-   return httpHeaderIdByName(name, name_len, Headers, HDR_ENUM_END);
+    if (!Headers)
+	Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+    return httpHeaderIdByName(name, name_len, Headers, HDR_ENUM_END);
 }
-

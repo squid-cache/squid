@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.55 1999/01/21 21:10:37 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.56 1999/01/24 02:26:25 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -155,7 +155,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    continue;
 	}
 	file_close(fd);
-	    store_open_disk_fd--;
+	store_open_disk_fd--;
 	fd = -1;
 	swap_hdr_len = 0;
 #if USE_TRUNCATE_NOT_UNLINK
