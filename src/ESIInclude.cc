@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ESIInclude.cc,v 1.5 2004/12/21 17:28:29 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -233,10 +233,6 @@ ESIStreamContext::operator new(size_t byteCount)
     assert (byteCount == sizeof (ESIStreamContext));
     CBDATA_INIT_TYPE(ESIStreamContext);
     ESIStreamContext *result = cbdataAlloc(ESIStreamContext);
-    /* Mark result as being owned - we want the refcounter to do the
-     * delete call
-     */
-    cbdataReference(result);
     return result;
 }
 
@@ -245,8 +241,6 @@ ESIStreamContext::operator delete (void *address)
 {
     ESIStreamContext *t = static_cast<ESIStreamContext *>(address);
     cbdataFree(t);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (address);
 }
 
 ESIStreamContext *

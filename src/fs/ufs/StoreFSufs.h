@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFSufs.h,v 1.3 2004/12/20 16:30:45 robertc Exp $
+ * $Id: StoreFSufs.h,v 1.4 2004/12/21 17:28:29 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -36,8 +36,8 @@
 
 #include "squid.h"
 #include "ufscommon.h"
+#include "DiskIO/DiskIOModule.h"
 
-class DiskIOModule;
 
 template <class TheSwapDir>
 

@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.4 2004/12/21 15:16:18 robertc Exp $
+# $Id: Makefile.in,v 1.5 2004/12/21 17:28:28 robertc Exp $
 #
 
 SOURCES = $(libcppunit_la_SOURCES)

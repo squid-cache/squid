@@ -1,7 +1,7 @@
 #include "config.h"
 
-#include "testAuth.h"
 #include "squid.h"
+#include "testAuth.h"
 #include "authenticate.h"
 #include "AuthUserRequest.h"
 #include "AuthScheme.h"

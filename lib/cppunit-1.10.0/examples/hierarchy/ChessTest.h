@@ -16,7 +16,7 @@ public:
   
   void testNumberOfPieces()
   { 
-    CPPUNIT_ASSERT( m_game->getNumberOfPieces () == 32 );
+    CPPUNIT_ASSERT( this->m_game->getNumberOfPieces () == 32 );
   }
 };
 

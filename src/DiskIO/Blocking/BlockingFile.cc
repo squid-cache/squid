@@ -1,6 +1,6 @@
 
 /*
- * $Id: BlockingFile.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: BlockingFile.cc,v 1.2 2004/12/21 17:28:29 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -47,7 +47,6 @@ BlockingFile::operator new (size_t)
     BlockingFile *result = cbdataAlloc(BlockingFile);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    cbdataReference(result);
     return result;
 }
 
@@ -55,9 +54,7 @@ void
 BlockingFile::operator delete (void *address)
 {
     BlockingFile *t = static_cast<BlockingFile *>(address);
-    cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (t);
+    cbdataFree(t);
 }
 
 BlockingFile::BlockingFile (char const *aPath) : fd (-1), closed (true), error_(false)

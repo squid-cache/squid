@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.11 2004/12/20 16:30:32 robertc Exp $
+ * $Id: ESI.cc,v 1.12 2004/12/21 17:28:28 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -291,10 +291,6 @@ ESIContext::operator new(size_t byteCount)
     assert (byteCount == sizeof (ESIContext));
     CBDATA_INIT_TYPE(ESIContext);
     ESIContext *result = cbdataAlloc(ESIContext);
-    /* Mark result as being owned - we want the refcounter to do the
-     * delete call
-     */
-    cbdataReference(result);
     return result;
 }
 
@@ -303,8 +299,6 @@ ESIContext::operator delete (void *address)
 {
     ESIContext *t = static_cast<ESIContext *>(address);
     cbdataFree(t);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (address);
 }
 
 void
@@ -637,7 +631,7 @@ ESIContext::send ()
     /* TODO: skip data until pos == next->readoff; */
     assert (thisNode->data == this);
     clientStreamNode *next = thisNode->next();
-    cbdataReference (this);
+    ESIContext *templock = cbdataReference (this);
     size_t len = 0;
 
     if (outbound.getRaw())
@@ -687,9 +681,8 @@ ESIContext::send ()
     if (len == 0)
         len = 1; /* tell the caller we sent something (because we sent headers */
 
-    ESIContext *temp = this;
 
-    cbdataReferenceDone (temp);
+    cbdataReferenceDone (templock);
 
     debug (86,5)("ESIContext::send: this=%p sent %d\n",this,len);
 

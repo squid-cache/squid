@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.100 2004/12/20 18:14:31 robertc Exp $
+#  $Id: Makefile.am,v 1.101 2004/12/21 17:28:29 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -937,7 +937,8 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 tests_testAuth_LDADD= \
 	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
 	-L../lib -lmiscutil \
-	@SQUID_CPPUNIT_LA@
+	@SQUID_CPPUNIT_LA@ \
+	@SSLLIB@
 tests_testAuth_LDFLAGS = $(LIBADD_DL)
 tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@AUTH_LINKOBJS@ \
