@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.29 1996/09/04 22:03:18 wessels Exp $
+ * $Id: acl.cc,v 1.30 1996/09/11 22:31:04 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -30,7 +30,11 @@
 
 #include "squid.h"
 
-/* These two should never be referenced directly in this file! */
+/* Global */
+char *AclMatchedName = NULL;
+
+/* These three should never be referenced directly in this file! */
+struct _acl_deny_info_list *DenyInfoList = NULL;
 struct _acl_access *HTTPAccessList = NULL;
 struct _acl_access *ICPAccessList = NULL;
 
@@ -472,6 +476,81 @@ void aclParseAclLine()
     AclListTail = &A->next;
 }
 
+/* maex@space.net (06.09.96)
+ *	get (if any) the URL from deny_info for a certain acl
+ */
+char *aclGetDenyInfoUrl(head, name)
+    struct _acl_deny_info_list **head;
+    char *name;
+{
+    struct _acl_deny_info_list *A = NULL;
+    struct _acl_name_list *L = NULL;
+
+    A = *head;
+    if (NULL == *head)		/* empty list */
+	return (NULL);
+    while (A) {
+	L = A->acl_list;
+	if (NULL == L)		/* empty list should never happen, but in case */
+	    continue;
+	while (L) {
+	    if (!strcmp(name, L->name))
+		return (A->url);
+	    L = L->next;
+	}
+	A = A->next;
+    }
+    return (NULL);
+}
+/* maex@space.net (05.09.96)
+ *	get the info for redirecting "access denied" to info pages
+ *	TODO (probably ;-)
+ *	currently there is no optimization for
+ *	- more than one deny_info line with the same url
+ *	- a check, whether the given acl really is defined
+ *	- a check, whether an acl is added more than once for the same url
+ */
+void aclParseDenyInfoLine(head)
+    struct _acl_deny_info_list **head;
+{
+    char *t = NULL;
+    struct _acl_deny_info_list *A = NULL;
+    struct _acl_deny_info_list *B = NULL;
+    struct _acl_deny_info_list **T = NULL;
+    struct _acl_name_list *L = NULL;
+    struct _acl_name_list **Tail = NULL;
+
+    /* first expect an url */
+    if ((t = strtok(NULL, w_space)) == NULL) {
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(28, 0, "aclParseDenyInfoLine: missing 'url' parameter.\n");
+	return;
+    }
+    A = xcalloc(1, sizeof(struct _acl_deny_info_list));
+    strncpy(A->url, t, MAX_URL);
+    A->url[MAX_URL] = '\0';	/* just in case strlen(t) >= MAX_URL */
+    A->next = (struct _acl_deny_info_list *) NULL;
+    /* next expect a list of ACL names */
+    Tail = &A->acl_list;
+    while ((t = strtok(NULL, w_space))) {
+	L = xcalloc(1, sizeof(struct _acl_name_list));
+	strncpy(L->name, t, ACL_NAME_SZ);
+	L->name[ACL_NAME_SZ] = '\0';	/* just in case strlen(t) >= ACL_NAME_SZ */
+	*Tail = L;
+	Tail = &L->next;
+    }
+    if (A->acl_list == NULL) {
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(28, 0, "aclParseDenyInfoLine: deny_info line contains no ACL's, skipping\n");
+	xfree(A);
+	return;
+    }
+    for (B = *head, T = head; B; T = &B->next, B = B->next);	/* find the tail */
+    *T = A;
+}
+
 void aclParseAccessLine(head)
      struct _acl_access **head;
 {
@@ -759,6 +838,7 @@ static int aclMatchAclList(list, checklist)
      aclCheck_t *checklist;
 {
     while (list) {
+	AclMatchedName = list->acl->name;
 	debug(28, 3, "aclMatchAclList: checking %s%s\n",
 	    list->op ? "" : "!", list->acl->name);
 	if (aclMatchAcl(list->acl, checklist) != list->op) {
@@ -886,4 +966,25 @@ void aclDestroyAccessList(list)
 	safe_free(l);
     }
     *list = NULL;
+}
+
+/* maex@space.net (06.09.1996)
+ *	destroy an _acl_deny_info_list
+ */
+void aclDestroyDenyInfoList(list)
+     struct _acl_deny_info_list **list;
+{
+    struct _acl_deny_info_list *a = NULL;
+    struct _acl_deny_info_list *a_next = NULL;
+    struct _acl_name_list *l = NULL;
+    struct _acl_name_list *l_next = NULL;
+
+    for (a = *list; a; a = a_next) {
+	for (l = a->acl_list; l; l = l_next) {
+	    l_next = l->next;
+	    safe_free(l);
+	}
+	a_next = a->next;
+	safe_free(a);
+    }
 }

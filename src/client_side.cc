@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.16 1996/09/05 16:59:49 wessels Exp $
+ * $Id: client_side.cc,v 1.17 1996/09/11 22:31:07 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -169,17 +169,29 @@ void clientAccessCheckDone(icpState, answer)
 {
     int fd = icpState->fd;
     char *buf = NULL;
+    char *redirectUrl = NULL;
     debug(33, 5, "clientAccessCheckDone: '%s' answer=%d\n", icpState->url, answer);
     if (answer) {
 	urlCanonical(icpState->request, icpState->url);
 	redirectStart(fd, icpState, clientRedirectDone, icpState);
     } else {
 	debug(33, 5, "Access Denied: %s\n", icpState->url);
-	buf = access_denied_msg(icpState->http_code = 400,
-	    icpState->method,
-	    icpState->url,
-	    fd_table[fd].ipaddr);
-	icpSendERROR(fd, LOG_TCP_DENIED, buf, icpState, 403);
+	redirectUrl = aclGetDenyInfoUrl(&DenyInfoList, AclMatchedName);
+	if (redirectUrl) {
+	    icpState->http_code = 302,
+	    buf = access_denied_redirect(icpState->http_code,
+		icpState->method,
+		icpState->url,
+		fd_table[fd].ipaddr,
+		redirectUrl);
+	} else {
+	    icpState->http_code = 400;
+	    buf = access_denied_msg(icpState->http_code,
+	        icpState->method,
+	        icpState->url,
+	        fd_table[fd].ipaddr);
+	}
+	icpSendERROR(fd, LOG_TCP_DENIED, buf, icpState, icpState->http_code);
     }
 }
 
@@ -388,6 +400,7 @@ int icpHandleIMSReply(fd, entry, data)
     MemObject *mem = entry->mem_obj;
     LOCAL_ARRAY(char, hbuf, 8192);
     int len;
+    int unlink_request = 0;
     debug(33, 0, "icpHandleIMSReply: FD %d '%s'\n", fd, entry->url);
     /* unregister this handler */
     storeUnregister(entry, fd);
@@ -405,8 +418,10 @@ int icpHandleIMSReply(fd, entry, data)
 	icpState->log_type = LOG_TCP_EXPIRED_HIT;
 	/* We initiated the IMS request, the client is not expecting
 	 * 304, so put the good one back */
-	if (icpState->old_entry->mem_obj->request == NULL)
+	if (icpState->old_entry->mem_obj->request == NULL) {
 	    icpState->old_entry->mem_obj->request = requestLink(mem->request);
+	    unlink_request = 1;
+	}
 	storeUnlockObject(entry);
 	entry = icpState->entry = icpState->old_entry;
 	/* Extend the TTL
@@ -417,7 +432,8 @@ int icpHandleIMSReply(fd, entry, data)
 	    fatal_dump("icpHandleIMSReply: failed to load headers, lost race");
 	httpParseHeaders(hbuf, entry->mem_obj->reply);
 	ttlSet(entry);
-	requestUnlink(entry->mem_obj->request);
+	if (unlink_request)
+	    requestUnlink(entry->mem_obj->request);
     } else {
 	/* the client can handle this reply, whatever it is */
 	icpState->log_type = LOG_TCP_EXPIRED_MISS;
