@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.46 2002/10/14 08:26:30 robertc Exp $
+ * $Id: cbdata.cc,v 1.47 2002/10/24 22:53:44 adrian Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -162,6 +162,7 @@ cbdataInternalAlloc(cbdata_type type)
 
 #if CBDATA_DEBUG
     dlinkAdd(p, &p->link, &cbdataEntries);
+    debug(45, 3) ("cbdataAlloc: %p %s:%d\n", &p->data, file, line);
 #endif
     return (void *) &p->data;
 }
@@ -175,12 +176,12 @@ cbdataInternalFree(void *p)
 {
     cbdata *c;
     FREE *free_func;
+    c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
 #if CBDATA_DEBUG
     debug(45, 3) ("cbdataFree: %p %s:%d\n", p, file, line);
 #else
     debug(45, 3) ("cbdataFree: %p\n", p);
 #endif
-    c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
     CBDATA_CHECK(c);
     c->valid = 0;
     if (c->locks) {
