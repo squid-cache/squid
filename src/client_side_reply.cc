@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.23 2002/10/26 04:51:01 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.24 2002/10/26 04:57:29 adrian Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1062,7 +1062,6 @@ clientGotNotEnough(clientHttpRequest const *http)
 {
     int cl =
     httpReplyBodySize(http->request->method, http->entry->mem_obj->reply);
-    int hs = http->entry->mem_obj->reply->hdr_sz;
     assert(cl >= 0);
     if (http->out.offset < cl)
 	return 1;
