@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.67 1997/10/30 03:31:26 wessels Exp $
+ * $Id: tunnel.cc,v 1.68 1997/11/04 18:43:29 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -48,20 +48,20 @@ typedef struct {
 
 static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
 
+static CNCB sslConnectDone;
+static ERCB sslErrorComplete;
+static PF sslClientClosed;
+static PF sslReadClient;
+static PF sslReadServer;
+static PF sslStateFree;
 static PF sslTimeout;
-static void sslReadServer(int fd, void *);
-static void sslReadClient(int fd, void *);
-static void sslWriteServer(int fd, void *);
-static void sslWriteClient(int fd, void *);
+static PF sslWriteClient;
+static PF sslWriteServer;
+static PSC sslPeerSelectComplete;
+static PSC sslPeerSelectFail;
+static void sslClose(SslStateData * sslState);
 static void sslConnected(int fd, void *);
 static void sslProxyConnected(int fd, void *);
-static ERCB sslErrorComplete;
-static void sslClose(SslStateData * sslState);
-static void sslClientClosed(int fd, void *);
-static CNCB sslConnectDone;
-static void sslStateFree(int fd, void *data);
-static void sslPeerSelectComplete(peer * p, void *data);
-static void sslPeerSelectFail(peer * p, void *data);
 
 static void
 sslClose(SslStateData * sslState)
@@ -291,7 +291,7 @@ sslConnected(int fd, void *data)
 {
     SslStateData *sslState = data;
     debug(26, 3) ("sslConnected: FD %d sslState=%p\n", fd, sslState);
-    strcpy(sslState->server.buf, conn_established);
+    xstrncpy(sslState->server.buf, conn_established, SQUID_TCP_SO_RCVBUF);
     sslState->server.len = strlen(conn_established);
     sslState->server.offset = 0;
     commSetTimeout(sslState->server.fd, Config.Timeout.read, NULL, NULL);
@@ -403,8 +403,9 @@ sslProxyConnected(int fd, void *data)
 {
     SslStateData *sslState = data;
     debug(26, 3) ("sslProxyConnected: FD %d sslState=%p\n", fd, sslState);
-    snprintf(sslState->client.buf, sslState->client.len, "CONNECT %s HTTP/1.0\r\n\r\n", sslState->url);
-    debug(26, 3) ("sslProxyConnected: Sending 'CONNECT %s HTTP/1.0'\n", sslState->url);
+    snprintf(sslState->client.buf, SQUID_TCP_SO_RCVBUF,
+	"CONNECT %s HTTP/1.0\r\n\r\n", sslState->url);
+    debug(26, 3) ("sslProxyConnected: Sending '%s'\n", sslState->client.buf);
     sslState->client.len = strlen(sslState->client.buf);
     sslState->client.offset = 0;
     commSetSelect(sslState->server.fd,
