@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.5 2000/06/26 03:36:13 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.6 2000/06/27 08:33:53 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1392,7 +1392,11 @@ storeAufsDirUnlinkFile(SwapDir * SD, sfileno f)
 {
     debug(79, 3) ("storeAufsDirUnlinkFile: unlinking fileno %08X\n", f);
     /* storeAufsDirMapBitReset(SD, f); */
+#if USE_TRUNCATE_NOT_UNLINK
+    aioTruncate(storeAufsDirFullPath(SD, f, NULL), NULL, NULL);
+#else
     aioUnlink(storeAufsDirFullPath(SD, f, NULL), NULL, NULL);
+#endif
 }
 
 /*
