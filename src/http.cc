@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.398 2002/10/14 08:47:47 hno Exp $
+ * $Id: http.cc,v 1.399 2002/10/14 09:34:29 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -66,7 +66,8 @@ httpStateFree(int fd, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
 #if DELAY_POOLS
-    delayClearNoDelay(fd);
+    if (fd >= 0)
+	delayClearNoDelay(fd);
 #endif
     if (httpState == NULL)
 	return;
@@ -558,6 +559,7 @@ static void
 httpReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno,void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
+    assert (fd == httpState->fd);
     httpState->readReply (fd, buf, len, flag, xerrno, data);
 }
 
