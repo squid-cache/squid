@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.287 1997/10/17 00:00:47 wessels Exp $
+ * $Id: store.cc,v 1.288 1997/10/17 04:00:12 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -516,6 +516,8 @@ storeUnlockObject(StoreEntry * e)
     if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	storeRelease(e);
     else if (storeKeepInMemory(e)) {
+	debug(0,0)("storeUnlockObject: %s has %d bytes in memory\n",
+		e->url, (int) (e->mem_obj->inmem_hi - e->mem_obj->inmem_lo));
 	storeSetMemStatus(e, IN_MEMORY);
 	requestUnlink(e->mem_obj->request);
 	e->mem_obj->request = NULL;
@@ -948,7 +950,7 @@ storeCheckSwapOut(StoreEntry * e)
     assert(mem->inmem_lo <= mem->swapout.offset);
     lowest_offset = storeLowestMemReaderOffset(e);
     debug(20, 3) ("storeCheckSwapOut: lowest_offset = %d\n", (int) lowest_offset);
-    copy_size = (size_t) (mem->swapout.offset - mem->inmem_lo);
+    copy_size = (size_t) (lowest_offset - mem->inmem_lo);
     debug(20, 3) ("storeCheckSwapOut: copy_size = %d\n", (int) copy_size);
     assert(copy_size >= 0);
     if (copy_size == 0)
@@ -2698,6 +2700,7 @@ storeInMemAdd(StoreEntry * e)
 {
     struct _mem_entry *m = xmalloc(sizeof(struct _mem_entry));
     debug(0, 0) ("storeInMemAdd: %s\n", e->url);
+    assert(e->mem_obj->inmem_lo == 0);
     m->e = e;
     m->prev = NULL;
     m->next = inmem_head;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.75 1997/10/17 00:00:35 wessels Exp $
+ * $Id: errorpage.cc,v 1.76 1997/10/17 04:00:11 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -34,7 +34,6 @@
 const char *err_string[] =
 {
     "ERR_NONE",
-    "ERR_NO_CLIENTS",
     "ERR_READ_TIMEOUT",
     "ERR_LIFETIME_EXP",
     "ERR_READ_ERROR",
