@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.77 1996/09/16 21:20:48 wessels Exp $
+ * $Id: main.cc,v 1.78 1996/09/16 21:50:25 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -379,7 +379,9 @@ serverConnectionsOpen()
 	    }
 	}
     }
+#if USE_ICMP
     icmpOpen();
+#endif
 }
 
 void
@@ -415,7 +417,9 @@ serverConnectionsClose()
 		0);
 	theInIcpConnection = -1;
     }
+#if USE_ICMP
     icmpClose();
+#endif
 }
 
 static void
