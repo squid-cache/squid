@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.368 2003/03/04 01:40:27 robertc Exp $
+ * $Id: comm.cc,v 1.369 2003/03/04 07:55:04 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2451,8 +2451,10 @@ DeferredReadManager::kickReads(int const count)
 {
     /* if we had List::size() we could consolidate this and flushReads */
 
-    if (count < 1)
+    if (count < 1) {
         flushReads();
+        return;
+    }
 
     size_t remaining = count;
 
