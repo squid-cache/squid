@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.72 1996/11/08 00:02:22 wessels Exp $
+ * $Id: squid.h,v 1.73 1996/11/08 00:46:46 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -314,13 +314,14 @@ extern const char *storeToString _PARAMS((const StoreEntry *));
 extern void timestampsSet _PARAMS((StoreEntry *));
 extern int waisStart _PARAMS((int, const char *, method_t, char *, StoreEntry *));
 extern void storeDirClean _PARAMS((void));
-int
-passStart _PARAMS((int fd,
+extern int passStart _PARAMS((int fd,
 	const char *url,
 	request_t * request,
 	char *buf,
 	int buflen,
 	int *size_ptr));
+extern void identStart _PARAMS((int, icpStateData *,
+	void (*callback) _PARAMS((void *))));
 
 extern const char *const dash_str;
 extern const char *const null_string;

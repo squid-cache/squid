@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.28 1996/11/06 23:14:52 wessels Exp $
+ * $Id: redirect.cc,v 1.29 1996/11/08 00:46:46 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -320,10 +320,10 @@ redirectStart(int cfd, icpStateData * icpState, RH handler, void *data)
     r->fd = cfd;
     r->orig_url = icpState->url;
     r->client_addr = icpState->log_addr;
-    if (icpState->ident == NULL || *icpState->ident == '\0') {
+    if (icpState->ident.ident == NULL || *icpState->ident.ident == '\0') {
 	r->client_ident = dash_str;
     } else {
-	r->client_ident = icpState->ident;
+	r->client_ident = icpState->ident.ident;
     }
     r->method_s = RequestMethodStr[icpState->request->method];
     r->handler = handler;

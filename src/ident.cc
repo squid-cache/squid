@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.20 1996/11/06 23:14:43 wessels Exp $
+ * $Id: ident.cc,v 1.21 1996/11/08 00:46:45 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -36,17 +36,20 @@ static void identRequestComplete _PARAMS((int, char *, int, int, void *));
 static void identReadReply _PARAMS((int, icpStateData *));
 static void identClose _PARAMS((int, icpStateData *));
 static void identConnectDone _PARAMS((int fd, int status, void *data));
+static void identCallback _PARAMS((icpStateData *icpState));
 
 static void
 identClose(int fd, icpStateData * icpState)
 {
-    icpState->ident_fd = -1;
+    icpState->ident.fd = -1;
 }
 
 /* start a TCP connection to the peer host on port 113 */
 void
-identStart(int fd, icpStateData * icpState)
+identStart(int fd, icpStateData * icpState, void (*callback) _PARAMS((void *)))
 {
+    icpState->ident.callback = callback;
+    icpState->ident.state = IDENT_PENDING;
     if (fd < 0) {
 	fd = comm_open(SOCK_STREAM,
 	    0,
@@ -54,10 +57,12 @@ identStart(int fd, icpStateData * icpState)
 	    0,
 	    COMM_NONBLOCKING,
 	    "ident");
-	if (fd == COMM_ERROR)
+	if (fd == COMM_ERROR) {
+	    identCallback(icpState);
 	    return;
+	}
     }
-    icpState->ident_fd = fd;
+    icpState->ident.fd = fd;
     comm_add_close_handler(fd,
 	(PF) identClose,
 	(void *) icpState);
@@ -76,7 +81,8 @@ identConnectDone(int fd, int status, void *data)
     LOCAL_ARRAY(char, reqbuf, BUFSIZ);
     if (status == COMM_ERROR) {
 	comm_close(fd);
-	return;			/* die silently */
+	identCallback(icpState);
+	return;
     }
     sprintf(reqbuf, "%d, %d\r\n",
 	ntohs(icpState->peer.sin_port),
@@ -118,9 +124,18 @@ identReadReply(int fd, icpStateData * icpState)
 	if (strstr(buf, "USERID")) {
 	    if ((t = strrchr(buf, ':'))) {
 		while (isspace(*++t));
-		strncpy(icpState->ident, t, ICP_IDENT_SZ);
+		strncpy(icpState->ident.ident, t, ICP_IDENT_SZ);
 	    }
 	}
     }
     comm_close(fd);
+    identCallback(icpState);
+}
+
+static void
+identCallback(icpStateData * icpState)
+{
+    icpState->ident.state = IDENT_DONE;
+    if (icpState->ident.callback)
+	icpState->ident.callback(icpState);
 }
