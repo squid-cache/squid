@@ -1,5 +1,5 @@
 /*
- * $Id: cache_snmp.h,v 1.17 1998/09/23 21:31:29 glenn Exp $
+ * $Id: cache_snmp.h,v 1.18 1998/11/11 20:10:00 glenn Exp $
  */
 
 #ifdef SQUID_SNMP
@@ -20,18 +20,8 @@
 #include "snmp_impl.h"
 #include "asn1.h"
 #include "snmp_api.h"
-#if 0
-#include "snmp_client.h"
-#include "mib.h"
-#endif
+
 #include "snmp_vars.h"
-#include "snmp_oidlist.h"
-
-/* mib stuff here */
-
-#ifndef CURRENT_MIB_VERSION
-#define CURRENT_MIB_VERSION "-- v 1.16 1998/09/22 glenn@ircache.net"
-#endif
 
 /* MIB definitions
  * SQUID-MIB
@@ -244,73 +234,6 @@ enum {
     PERF_MEDIAN_DNS,
     PERF_MEDIAN_END
 };
-
-/* First, we have a huge array of MIBs this agent knows about */
-
-struct MIBListEntry {
-    oid Name[10];		/* This needs to be fixed, a static is ugly */
-    snint NameLen;
-    oid_GetFn *GetFn;
-    oid_GetNextFn *GetNextFn;
-};
-
-variable_list *snmp_basicFn(variable_list *, snint *);
-variable_list *snmp_confFn(variable_list *, snint *);
-variable_list *snmp_sysFn(variable_list *, snint *);
-variable_list *snmp_prfSysFn(variable_list *, snint *);
-variable_list *snmp_prfProtoFn(variable_list *, snint *);
-variable_list *snmp_prfPeerFn(variable_list *, snint *);
-variable_list *snmp_netIpFn(variable_list *, snint *);
-variable_list *snmp_netFqdnFn(variable_list *, snint *);
-variable_list *snmp_netDnsFn(variable_list *, snint *);
-variable_list *snmp_meshPtblFn(variable_list *, snint *);
-variable_list *snmp_meshCtblFn(variable_list *, snint *);
-
-
-extern int snmpInitAgentAuth();
-extern void snmpAgentParse(void *);
-extern int snmpDefaultAuth();
-extern int get_median_svc(int, int);
-extern void snmpAgentParseDone(int, void *);
-extern int meshCtblGetRowFn(oid *, oid *);
-extern struct snmp_pdu *snmpAgentResponse(struct snmp_pdu *PDU);
-extern void snmpAclCheckStart(void *);
-extern struct snmp_session *Session;
-extern oid_ParseFn *genericGetNextFn(oid * Src, snint SrcLen, oid ** Dest, snint * DestLen,
-    oid * MIBRoot, int MIBRootLen, oid_GetRowFn * getRowFn, int tblen, oid * MIBTail,
-    oid_ParseFn * mygetFn, int MIBTailLen, int MIB_ACTION_INDEX);
-
-extern int oidcmp(oid * A, snint ALen, oid * B, snint BLen);
-extern int oidncmp(oid * A, snint ALen, oid * B, snint BLen, snint CompLen);
-extern oid *oiddup(oid * A, snint ALen);
-
-
-/* group handler definition */
-
-extern oid_ParseFn *sysGetFn(oid *, snint);
-extern oid_ParseFn *sysGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *confGetFn(oid *, snint);
-extern oid_ParseFn *confGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *confStGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *prfSysGetFn(oid *, snint);
-extern oid_ParseFn *prfSysGetFn(oid *, snint);
-extern oid_ParseFn *prfSysGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *prfProtoGetFn(oid *, snint);
-extern oid_ParseFn *prfProtoGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *netIpGetFn(oid *, snint);
-extern oid_ParseFn *netDnsGetFn(oid *, snint);
-extern oid_ParseFn *netFqdnGetFn(oid *, snint);
-extern oid_ParseFn *netFqdnGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *netIpGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *netDnsGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *meshGetFn(oid *, snint);
-extern oid_ParseFn *meshPtblGetNextFn(oid *, snint, oid **, snint *);
-extern oid_ParseFn *meshCtblGetNextFn(oid *, snint, oid **, snint *);
-extern int meshPtblGetRowFn(oid *, oid *);
-extern int sysConnGetRowFn(oid *, oid *);
-extern int meshCtblGetRowFn(oid *, oid *);
-
-extern struct in_addr *gen_getMax();
 
 #endif
 #endif
