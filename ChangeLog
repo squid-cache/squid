@@ -1,4 +1,4 @@
-Changes to squid-1.1.6 (February @@@, 1997):
+Changes to squid-1.1.7 (February @@@, 1997):
 
 	- Fixed urlParse to leave trailing slashes on FTP URLs.  Although
 	  stripping the slashes offers a slight hit rate increase, it
@@ -12,6 +12,9 @@ Changes to squid-1.1.6 (February @@@, 1997):
 	- Added WARNING if blocking gethostbyname() gets called.
 	- Fixed calling commSetSelect() with FD < 0 bug in ssl.c and
 	  pass.c.
+	- Moved 'append_domain' operation to urlParse().
+	- Fixed too many arguments bug in diskHandleWrite, caused
+	  coredumps when write fails (due to full disk).
 
 Changes to squid-1.novm.6 (February 7, 1997):
 
