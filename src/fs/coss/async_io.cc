@@ -11,7 +11,7 @@
  * supports are read/write, and since COSS works on a single file
  * per storedir it should work just fine.
  *
- * $Id: async_io.cc,v 1.6 2001/08/16 00:16:20 hno Exp $
+ * $Id: async_io.cc,v 1.7 2001/08/24 13:48:31 hno Exp $
  */
 
 #include "squid.h"
@@ -219,8 +219,6 @@ a_file_callback(async_queue_t * q)
 void
 a_file_setupqueue(async_queue_t * q)
 {
-    int i;
-
     /* Make sure the queue isn't setup */
     assert(q->aq_state == AQ_STATE_NONE);
 
@@ -228,7 +226,6 @@ a_file_setupqueue(async_queue_t * q)
 
     /* Done */
     q->aq_state = AQ_STATE_SETUP;
-
 }
 
 
