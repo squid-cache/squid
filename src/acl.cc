@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.94 1997/05/02 04:28:32 wessels Exp $
+ * $Id: acl.cc,v 1.95 1997/05/15 01:18:41 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -43,7 +43,6 @@ const char *AclMatchedName = NULL;
 
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
-static const char *const w_space = " \t\n\r";	/* Jasper sez so */
 static int aclFromFile = 0;
 static FILE *aclFile;
 

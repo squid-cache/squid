@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.34 1997/04/30 20:06:33 wessels Exp $
+ * $Id: net_db.cc,v 1.35 1997/05/15 01:18:47 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -56,7 +56,6 @@ static IPH netdbSendPing;
  * linked list */
 static wordlist *peer_names = NULL;
 static wordlist **peer_names_tail = &peer_names;
-static const char *const w_space = " \t\n\r";
 
 static void
 netdbHashInsert(netdbEntry * n, struct in_addr addr)
