@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.82 1997/10/21 16:35:50 kostas Exp $
+ * $Id: errorpage.cc,v 1.83 1997/10/21 17:21:32 kostas Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -153,8 +153,11 @@ errorConvert(char token, ErrorState * err)
 	p = buf;
 	break;
     case 'L':
-	snprintf(buf, CVT_BUF_SZ, "%s", Config.errHtmlText);
-	p = buf;
+	if (Config.errHtmlText) {
+	    snprintf(buf, CVT_BUF_SZ, "%s", Config.errHtmlText);
+	    p = buf;
+	} else
+	    p = "[not available]";
 	break;
     case 'i':
 	snprintf(buf, CVT_BUF_SZ, "%s", inet_ntoa(err->src_addr));
@@ -167,17 +170,19 @@ errorConvert(char token, ErrorState * err)
 	} else
 	    p = "unknown\n";
 	break;
-
-
+    case 'T':
+	snprintf(buf, CVT_BUF_SZ, "%s", mkrfc1123(squid_curtime));
+	p = buf;
+	break;
 /*
  * e - errno                                    x
  * E - strerror()                               x
  * t - local time                               x
- * T - UTC
+ * T - UTC                                      x
  * c - Squid error code
- * I - server IP address
- * i - client IP address
- * L - HREF link for more info/contact
+ * I - server IP address                        x
+ * i - client IP address                        x
+ * L - HREF link for more info/contact          x
  * w - cachemgr email address                   x
  * h - cache hostname                           x
  * d - seconds elapsed since request received
