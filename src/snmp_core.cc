@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.44 2000/06/27 22:06:04 hno Exp $
+ * $Id: snmp_core.cc,v 1.45 2000/08/13 21:18:09 hno Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -512,7 +512,8 @@ snmpDecodePacket(snmp_request_t * rq)
     checklist.src_addr = rq->from.sin_addr;
     checklist.snmp_community = (char *) Community;
 
-    allow = aclCheckFast(Config.accessList.snmp, &checklist);
+    if (Community)
+	allow = aclCheckFast(Config.accessList.snmp, &checklist);
     if ((snmp_coexist_V2toV1(PDU)) && (Community) && (allow)) {
 	rq->community = Community;
 	rq->PDU = PDU;
