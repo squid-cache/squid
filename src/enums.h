@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.169 2000/07/18 06:16:41 wessels Exp $
+ * $Id: enums.h,v 1.170 2000/07/21 06:06:22 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -636,7 +636,8 @@ enum {
     STORE_LOG_CREATE,
     STORE_LOG_SWAPIN,
     STORE_LOG_SWAPOUT,
-    STORE_LOG_RELEASE
+    STORE_LOG_RELEASE,
+    STORE_LOG_SWAPOUTFAIL
 };
 
 typedef enum {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.73 2000/06/27 22:06:05 hno Exp $
+ * $Id: store_swapout.cc,v 1.74 2000/07/21 06:06:22 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -69,6 +69,7 @@ storeSwapOutStart(StoreEntry * e)
 	e->swap_status = SWAPOUT_NONE;
 	cbdataFree(c);
 	xfree(buf);
+	storeLog(STORE_LOG_SWAPOUTFAIL, e);
 	return;
     }
     storeLockObject(e);		/* Don't lock until after create, or the replacement

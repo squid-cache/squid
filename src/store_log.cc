@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.17 2000/06/25 22:28:43 wessels Exp $
+ * $Id: store_log.cc,v 1.18 2000/07/21 06:06:22 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -40,7 +40,8 @@ static char *storeLogTags[] =
     "CREATE",
     "SWAPIN",
     "SWAPOUT",
-    "RELEASE"
+    "RELEASE",
+    "SO_FAIL",
 };
 
 static Logfile *storelog = NULL;
