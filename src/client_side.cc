@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.266 1998/04/09 00:11:31 rousskov Exp $
+ * $Id: client_side.cc,v 1.267 1998/04/09 00:17:56 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -577,20 +577,20 @@ clientUpdateCounters(clientHttpRequest * http)
 	assert(H->alg == PEER_SA_NONE);
     }
     if (/* we used ICP or CD for peer selecton */
-	http->request->hier.alg != PEER_SA_NONE &&
+	H->alg != PEER_SA_NONE &&
 	/* a successful CD lookup was made */
-	http->request->hier.cd_lookup != LOOKUP_NONE &&
+	H->cd_lookup != LOOKUP_NONE &&
 	/* it was not a CD miss (we go direct on CD MISSes) */
-	!(http->request->hier.alg == PEER_SA_DIGEST && http->request->hier.cd_lookup == LOOKUP_MISS) &&
+	!(H->alg == PEER_SA_DIGEST && H->cd_lookup == LOOKUP_MISS) &&
 	/* paranoid: we have a reply pointer */
 	(reply = storeEntryReply(http->entry))) {
 	const char *x_cache_fld = httpHeaderGetLastStr(&reply->header, HDR_X_CACHE);
 	const int real_hit = x_cache_fld && !strncmp(x_cache_fld, "HIT", 3);
-	const int guess_hit = LOOKUP_HIT == http->request->hier.cd_lookup;
-	peer *peer = peerFindByName(http->request->hier.cd_host);
+	const int guess_hit = LOOKUP_HIT == H->cd_lookup;
+	peer *peer = peerFindByName(H->cd_host);
 
 	debug(33,2) ("clientUpdateCounters: peer %s real/guess: %d/%d for %s!\n",
-	    http->request->hier.cd_host, real_hit, guess_hit, http->request->host);
+	    H->cd_host, real_hit, guess_hit, http->request->host);
 	cacheDigestGuessStatsUpdate(&Counter.cd.guess, real_hit, guess_hit);
 	if (peer)
 	    cacheDigestGuessStatsUpdate(&peer->digest.stats.guess,
@@ -600,7 +600,7 @@ clientUpdateCounters(clientHttpRequest * http)
 	    static int max_count = 200;
 	    if (max_count > 0) {
 		debug(33,1) ("clientUpdateCounters: lost peer %s for %s! (%d)\n", 
-		    http->request->hier.cd_host, http->request->host, max_count);
+		    H->cd_host, http->request->host, max_count);
 		max_count--;
 	    }
 	}
