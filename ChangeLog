@@ -13,7 +13,7 @@ TODO LIST before official squid-1.1:
 	- Write Perl script to convert squid-1.0 store to squid-1.1
 	  structure.
 
-Changes to squid-1.1.beta7 ():
+Changes to squid-1.1.beta7 (October 14, 1996):
 
 	- Combined and renamed comm_set_select_handler() functions.
 	- Fixed netdbPingSite() not checking n->next_ping_time.
@@ -21,6 +21,10 @@ Changes to squid-1.1.beta7 ():
 	  isn't initialized while reading config file.
 	- Linked ftpget with debug.o and removed lib/debug.c,
 	  lib/log.c.
+	- Fixed matchDomainName() coredump for late ICP packets.
+	- Removed date string from syslog messages.
+	- Fixed ftpget BASE HREF.
+	- Fixed pinger to check squid socket every 10 seconds.
 
 Changes to squid-1.1.beta6 ():
 
