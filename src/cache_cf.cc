@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.442 2003/05/21 02:58:11 robertc Exp $
+ * $Id: cache_cf.cc,v 1.443 2003/06/09 05:09:34 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -273,6 +273,19 @@ update_maxobjsize(void)
     store_maxobjsize = ms;
 }
 
+static void
+SetConfigFilename(char const *file_name, bool is_pipe)
+{
+    cfg_filename = file_name;
+
+    char const *token;
+
+    if (is_pipe)
+        cfg_filename = file_name + 1;
+    else if ((token = strrchr(cfg_filename, '/')))
+        cfg_filename = token + 1;
+}
+
 int
 parseConfigFile(const char *file_name)
 {
@@ -301,12 +314,7 @@ parseConfigFile(const char *file_name)
 
 #endif
 
-    cfg_filename = file_name;
-
-    if (is_pipe)
-        cfg_filename = file_name + 1;
-    else if ((token = strrchr(cfg_filename, '/')))
-        cfg_filename = token + 1;
+    SetConfigFilename(file_name, bool(is_pipe));
 
     memset(config_input_line, '\0', BUFSIZ);
 
@@ -344,8 +352,7 @@ parseConfigFile(const char *file_name)
 
 #if PROBABLY_NOT_WANTED_HERE
 
-                if ((token = strrchr(cfg_filename, '/')))
-                    cfg_filename = token + 1;
+                SetConfigFilename(cfg_filename, false);
 
 #endif
 
