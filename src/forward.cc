@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.99 2003/02/25 12:24:35 robertc Exp $
+ * $Id: forward.cc,v 1.100 2003/03/02 23:13:49 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -339,7 +339,7 @@ fwdInitiateSSL(FwdState * fwdState)
 #endif
 
 static void
-fwdConnectDone(int server_fd, comm_err_t status, void *data)
+fwdConnectDone(int server_fd, comm_err_t status, int xerrno, void *data)
 {
     FwdState *fwdState = (FwdState *)data;
     FwdServer *fs = fwdState->servers;
@@ -375,7 +375,7 @@ fwdConnectDone(int server_fd, comm_err_t status, void *data)
     } else if (status != COMM_OK) {
         assert(fs);
         err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
-        err->xerrno = errno;
+        err->xerrno = xerrno;
 
         if (fs->_peer) {
             err->host = xstrdup(fs->_peer->host);

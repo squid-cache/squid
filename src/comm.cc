@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.366 2003/02/21 22:50:07 robertc Exp $
+ * $Id: comm.cc,v 1.367 2003/03/02 23:13:49 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -85,7 +85,7 @@ static PF commConnectFree;
 static PF commConnectHandle;
 static PF commHandleWrite;
 static IPH commConnectDnsHandle;
-static void commConnectCallback(ConnectStateData * cs, comm_err_t status);
+static void commConnectCallback(ConnectStateData * cs, comm_err_t status, int xerrno);
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
 CBDATA_TYPE(ConnectStateData);
@@ -429,7 +429,7 @@ comm_calliocallback(void)
  * Queue a callback
  */
 static void
-comm_read_callback(int fd, int retval, comm_err_t errcode, int xerrno)
+comm_read_callback(int fd, size_t retval, comm_err_t errcode, int xerrno)
 {
     fdc_t *Fc = &fdc_table[fd];
 
@@ -465,7 +465,7 @@ comm_read_try(int fd, void *data)
 
     if (retval < 0 && !ignoreErrno(errno)) {
         debug(5, 3) ("comm_read_try: scheduling COMM_ERROR\n");
-        comm_read_callback(fd, -1, COMM_ERROR, errno);
+        comm_read_callback(fd, 0, COMM_ERROR, errno);
         return;
     };
 
@@ -1083,7 +1083,7 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
         }
 
         assert(dns_error_message != NULL);
-        commConnectCallback(cs, COMM_ERR_DNS);
+        commConnectCallback(cs, COMM_ERR_DNS, 0);
         return;
     }
 
@@ -1096,7 +1096,7 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
 }
 
 static void
-commConnectCallback(ConnectStateData * cs, comm_err_t status)
+commConnectCallback(ConnectStateData * cs, comm_err_t status, int xerrno)
 {
     CNCB *callback = cs->callback;
     void *cbdata = cs->data;
@@ -1109,7 +1109,7 @@ commConnectCallback(ConnectStateData * cs, comm_err_t status)
     commConnectFree(fd, cs);
 
     if (cbdataReferenceValid(cbdata))
-        callback(fd, status, cbdata);
+        callback(fd, status, xerrno, cbdata);
 
     cbdataReferenceDone(cbdata);
 }
@@ -1244,7 +1244,7 @@ commConnectHandle(int fd, void *data)
 
     case COMM_OK:
         ipcacheMarkGoodAddr(cs->host, cs->S.sin_addr);
-        commConnectCallback(cs, COMM_OK);
+        commConnectCallback(cs, COMM_OK, 0);
         break;
 
     default:
@@ -1258,7 +1258,7 @@ commConnectHandle(int fd, void *data)
             cs->locks++;
             ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
         } else {
-            commConnectCallback(cs, COMM_ERR_CONNECT);
+            commConnectCallback(cs, COMM_ERR_CONNECT, errno);
         }
 
         break;
