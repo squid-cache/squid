@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.27 2000/03/06 16:23:28 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.28 2001/01/04 21:09:00 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -390,4 +390,40 @@ httpHeaderStrCmp(const char *h1, const char *h2, int len)
     }
     /* NOTREACHED */
     return 0;
+}
+
+/*
+ * httpHdrMangle checks the anonymizer (header_access) configuration.
+ * Returns 1 if the header is allowed.
+ */
+int
+httpHdrMangle(HttpHeaderEntry * e, request_t * request)
+{
+    /* check with anonymizer tables */
+    header_mangler *hm;
+    aclCheck_t *checklist;
+    assert(e);
+    hm = &Config.header_access[e->id];
+    checklist = aclChecklistCreate(hm->access_list,
+	request, NULL);
+    /* aclCheckFast returns 1 for allow. */
+    if (1 == aclCheckFast(hm->access_list, checklist))
+	return 1;
+    /* It was denied; Do we replace it with something else? */
+    if (NULL == hm->replacement)
+	return 0;
+    /* yes, we do */
+    stringReset(&e->value, hm->replacement);
+    return 1;
+}
+
+/* Mangles headers for a list of headers. */
+void
+httpHdrMangleList(HttpHeader * l, request_t * request)
+{
+    HttpHeaderEntry *e;
+    HttpHeaderPos p = HttpHeaderInitPos;
+    while ((e = httpHeaderGetEntry(l, &p)))
+	if (0 == httpHdrMangle(e, request))
+	    httpHeaderDelAt(l, p);
 }

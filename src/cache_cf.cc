@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.363 2001/01/04 03:42:34 wessels Exp $
+ * $Id: cache_cf.cc,v 1.364 2001/01/04 21:09:00 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -55,8 +55,6 @@ static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
-static int http_header_first;
-static int http_header_allowed = 0;
 
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
@@ -74,9 +72,15 @@ static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 static void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
-static void dump_http_header(StoreEntry * entry, const char *name, HttpHeaderMask header);
-static void parse_http_header(HttpHeaderMask * header);
-static void free_http_header(HttpHeaderMask * header);
+static void dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[]);
+static void parse_http_header_access(header_mangler header[]);
+static void free_http_header_access(header_mangler header[]);
+static void dump_http_header_replace(StoreEntry * entry, const char *name, header_mangler header[]);
+static void parse_http_header_replace(header_mangler * header);
+static void free_http_header_replace(header_mangler * header);
+static void parse_denyinfo(acl_deny_info_list ** var);
+static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var);
+static void free_denyinfo(acl_deny_info_list ** var);
 static void parse_sockaddr_in_list(sockaddr_in_list **);
 static void dump_sockaddr_in_list(StoreEntry *, const char *, const sockaddr_in_list *);
 static void free_sockaddr_in_list(sockaddr_in_list **);
@@ -226,7 +230,6 @@ parseConfigFile(const char *file_name)
 	cfg_filename = token + 1;
     memset(config_input_line, '\0', BUFSIZ);
     config_lineno = 0;
-    http_header_first = 0;
     while (fgets(config_input_line, BUFSIZ, fp)) {
 	config_lineno++;
 	if ((token = strchr(config_input_line, '\n')))
@@ -778,62 +781,124 @@ parse_delay_pool_access(delayConfig * cfg)
 #endif
 
 static void
-dump_http_header(StoreEntry * entry, const char *name, HttpHeaderMask header)
+dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[])
 {
     int i;
-    for (i = 0; i < HDR_OTHER; i++) {
-	if (http_header_allowed && !CBIT_TEST(header, i))
-	    storeAppendPrintf(entry, "%s allow %s\n", name, httpHeaderNameById(i));
-	else if (!http_header_allowed && CBIT_TEST(header, i))
-	    storeAppendPrintf(entry, "%s deny %s\n", name, httpHeaderNameById(i));
+    storeAppendPrintf(entry, "%s:", name);
+    for (i = 0; i < HDR_ENUM_END; i++) {
+	if (header[i].access_list != NULL) {
+	    storeAppendPrintf(entry, "\t");
+	    dump_acl_access(entry, httpHeaderNameById(i),
+		header[i].access_list);
+	}
     }
 }
 
 static void
-parse_http_header(HttpHeaderMask * header)
+parse_http_header_access(header_mangler header[])
 {
-    int allowed, id;
+    int id, i;
     char *t = NULL;
     if ((t = strtok(NULL, w_space)) == NULL) {
 	debug(3, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(3, 0) ("parse_http_header: missing 'allow' or 'deny'.\n");
+	debug(3, 0) ("parse_http_header_access: missing header name.\n");
 	return;
     }
-    if (!strcmp(t, "allow"))
-	allowed = 1;
-    else if (!strcmp(t, "deny"))
-	allowed = 0;
-    else {
+    /* Now lookup index of header. */
+    id = httpHeaderIdByNameDef(t, strlen(t));
+    if (strcmp(t, "All") == 0)
+	id = HDR_ENUM_END;
+    else if (strcmp(t, "Other") == 0)
+	id = HDR_OTHER;
+    else if (id == -1) {
 	debug(3, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(3, 0) ("parse_http_header: expecting 'allow' or 'deny', got '%s'.\n", t);
+	debug(3, 0) ("parse_http_header_access: unknown header name %s.\n", t);
 	return;
     }
-    if (!http_header_first) {
-	http_header_first = 1;
-	if (allowed) {
-	    http_header_allowed = 1;
-	    httpHeaderMaskInit(header, 0xFF);
-	} else {
-	    http_header_allowed = 0;
-	    httpHeaderMaskInit(header, 0);
+    if (id != HDR_ENUM_END) {
+	parse_acl_access(&header[id].access_list);
+    } else {
+	char *next_string = t + strlen(t);
+	*next_string = ' ';
+	for (i = 0; i < HDR_ENUM_END; i++) {
+	    char *new_string = xstrdup(next_string);
+	    strtok(new_string, " ");
+	    parse_acl_access(&header[i].access_list);
+	    safe_free(new_string);
 	}
-    }
-    while ((t = strtok(NULL, w_space))) {
-	if ((id = httpHeaderIdByNameDef(t, strlen(t))) == -1)
-	    debug(3, 0) ("parse_http_header: Ignoring unknown header '%s'\n", t);
-	else if (allowed)
-	    CBIT_CLR(*header, id);
-	else
-	    CBIT_SET(*header, id);
     }
 }
 
 static void
-free_http_header(HttpHeaderMask * header)
+free_http_header_access(header_mangler header[])
 {
-    httpHeaderMaskInit(header, 0);
+    int i;
+    for (i = 0; i < HDR_ENUM_END; i++) {
+	free_acl_access(&header[i].access_list);
+    }
+}
+
+static void
+dump_http_header_replace(StoreEntry * entry, const char *name, header_mangler
+    header[])
+{
+    int i;
+    storeAppendPrintf(entry, "%s:", name);
+    for (i = 0; i < HDR_ENUM_END; i++) {
+	if (NULL == header[i].replacement)
+	    continue;
+	storeAppendPrintf(entry, "\t%s: %s", httpHeaderNameById(i),
+	    header[i].replacement);
+    }
+}
+
+static void
+parse_http_header_replace(header_mangler header[])
+{
+    int id, i;
+    char *t = NULL;
+    if ((t = strtok(NULL, w_space)) == NULL) {
+	debug(3, 0) ("%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(3, 0) ("parse_http_header_replace: missing header name.\n");
+	return;
+    }
+    /* Now lookup index of header. */
+    id = httpHeaderIdByNameDef(t, strlen(t));
+    if (strcmp(t, "All") == 0)
+	id = HDR_ENUM_END;
+    else if (strcmp(t, "Other") == 0)
+	id = HDR_OTHER;
+    else if (id == -1) {
+	debug(3, 0) ("%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(3, 0) ("parse_http_header_replace: unknown header name %s.\n",
+	    t);
+	return;
+    }
+    if (id != HDR_ENUM_END) {
+	if (header[id].replacement != NULL)
+	    safe_free(header[id].replacement);
+	header[id].replacement = xstrdup(t + strlen(t) + 1);
+    } else {
+	for (i = 0; i < HDR_ENUM_END; i++) {
+	    if (header[i].replacement != NULL)
+		safe_free(header[i].replacement);
+	    header[i].replacement = xstrdup(t + strlen(t) + 1);
+	}
+    }
+}
+
+static void
+free_http_header_replace(header_mangler header[])
+{
+    int i;
+    for (i = 0; i < HDR_ENUM_END; i++) {
+	if (header[i].replacement != NULL)
+	    safe_free(header[i].replacement);
+    }
 }
 
 static void

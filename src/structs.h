@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.370 2001/01/02 01:41:31 wessels Exp $
+ * $Id: structs.h,v 1.371 2001/01/04 21:09:02 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -92,6 +92,11 @@ struct _String {
     unsigned short int size;	/* buffer size; 64K limit */
     unsigned short int len;	/* current length  */
     char *buf;
+};
+
+struct _header_mangler {
+    acl_access *access_list;
+    char *replacement;
 };
 
 struct _http_version_t {
@@ -466,7 +471,6 @@ struct _SquidConfig {
 	int n_allocated;
 	int n_configured;
     } cacheSwap;
-    char *fake_ua;
     struct {
 	char *directory;
     } icons;
@@ -500,7 +504,7 @@ struct _SquidConfig {
 	char *encode_key;
     } mcast_miss;
 #endif
-    HttpHeaderMask anonymize_headers;
+    header_mangler header_access[HDR_ENUM_END];
     char *coredump_dir;
     char *chroot_dir;
 #if USE_CACHE_DIGESTS
