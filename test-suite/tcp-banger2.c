@@ -94,6 +94,7 @@ static char *progname;
 static int reqpersec;
 static int nrequests;
 static int opt_ims = 0;
+static int opt_range = 0;
 static int max_connections = 64;
 static time_t lifetime = 60;
 static struct timeval now;
@@ -181,7 +182,6 @@ read_reply(int fd, void *data)
     struct _request *r = data;
     static unsigned char buf[READ_BUF_SZ];
     int len;
-    char *p;
     if ((len=read(fd, buf, READ_BUF_SZ)) <= 0) {
 	fd_close(fd);
 	reqpersec++;
@@ -243,6 +243,8 @@ void
 reply_done(int fd, void *data)
 {
     struct _request *r = data;
+    if (opt_range)
+	; /* skip size checks for now */
     if (r->bodysize != r->content_length)
 	fprintf(stderr,"ERROR: %s expected %d bytes got %d\n",
 		r->url, r->content_length, r->bodysize);
@@ -325,6 +327,30 @@ request(char *urlin)
 	sprintf(buf,"Content-Length: %d\r\n", st.st_size);
 	strcat(msg,buf);
     }
+    if (opt_range && (lrand48() & 0x03) == 0) {
+	int len;
+	int count = 0;
+	strcat(msg, "Range: bytes=");
+	while (((len = (int)lrand48()) & 0x03) == 0 || !count) {
+	    const int offset = (int) lrand48();
+	    if (count)
+		strcat(msg, ",");
+	    switch (lrand48() & 0x03) {
+		case 0:
+		    sprintf(buf, "-%d", len);
+		    break;
+		case 1:
+		    sprintf(buf, "%d-", offset);
+		    break;
+		default:
+		    sprintf(buf, "%d-%d", offset, offset+len);
+		    break;
+	    }
+	    strcat(msg,buf);
+	    count++;
+	}
+	strcat(msg,"\r\n");
+    }
     strcat(msg, "\r\n");
     len = strlen(msg);
     if ((len2=write(s, msg, len)) != len) {
@@ -362,7 +388,6 @@ read_url(int fd, void *junk)
     struct _request *r;
     static char buf[8192];
     char *t;
-    int s;
     if (fgets(buf, 8191, stdin) == NULL) {
 	printf("Done Reading URLS\n");
 	fd_close(0);
@@ -383,7 +408,7 @@ read_url(int fd, void *junk)
 void
 usage(void)
 {
-    fprintf(stderr, "usage: %s: -p port -h host -n max\n", progname);
+    fprintf(stderr, "usage: %s: [-cir] -p port -h host -n max\n", progname);
 }
 
 int
@@ -404,7 +429,7 @@ main(argc, argv)
     progname = strdup(argv[0]);
     gettimeofday(&now, NULL);
     start = last = now;
-    while ((c = getopt(argc, argv, "p:h:n:icl:")) != -1) {
+    while ((c = getopt(argc, argv, "p:h:n:icrl:")) != -1) {
 	switch (c) {
 	case 'p':
 	    proxy_port = atoi(optarg);
@@ -423,6 +448,9 @@ main(argc, argv)
 	    break;
 	case 'c':
 	    opt_checksum = 1;
+	    break;
+	case 'r':
+	    opt_range = 1;
 	    break;
 	default:
 	    usage();
