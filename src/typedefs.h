@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.105 2000/06/25 22:28:43 wessels Exp $
+ * $Id: typedefs.h,v 1.106 2000/06/26 04:57:17 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -309,4 +309,7 @@ typedef struct _htcpReplyData htcpReplyData;
 #endif
 
 typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
+
+typedef int STDIRSELECT(const StoreEntry *);
+
 #endif /* _TYPEDEFS_H_ */

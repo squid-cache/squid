@@ -1,5 +1,15 @@
 #include "squid.h"
 
+static struct {
+    struct {
+	int calls;
+	int select_fail;
+	int create_fail;
+	int success;
+    } create;
+} store_io_stats;
+
+OBJH storeIOStats;
 
 /*
  * submit a request to create a cache object for writing.
@@ -13,7 +23,9 @@ storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, voi
     size_t objsize;
     sdirno dirn;
     SwapDir *SD;
+    storeIOState *sio;
 
+    store_io_stats.create.calls++;
     /* This is just done for logging purposes */
     objsize = objectLen(e);
     if (objsize != -1)
@@ -26,15 +38,19 @@ storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, voi
     dirn = storeDirSelectSwapDir(e);
     if (dirn == -1) {
 	debug(20, 2) ("storeCreate: no valid swapdirs for this object\n");
+	store_io_stats.create.select_fail++;
 	return NULL;
     }
     debug(20, 2) ("storeCreate: Selected dir '%d' for obj size '%d'\n", dirn, objsize);
     SD = &Config.cacheSwap.swapDirs[dirn];
 
     /* Now that we have a fs to use, call its storeCreate function */
-    return (SD->obj.create(SD, e, file_callback, close_callback, callback_data));
-
-    /* Done */
+    sio = SD->obj.create(SD, e, file_callback, close_callback, callback_data);
+    if (NULL == sio)
+	store_io_stats.create.create_fail++;
+    else
+	store_io_stats.create.success++;
+    return sio;
 }
 
 
@@ -84,4 +100,18 @@ off_t
 storeOffset(storeIOState * sio)
 {
     return sio->offset;
+}
+
+/*
+ * Make this non-static so we can register
+ * it from storeInit();
+ */
+void
+storeIOStats(StoreEntry * sentry)
+{
+    storeAppendPrintf(sentry, "Store IO Interface Stats\n");
+    storeAppendPrintf(sentry, "create.calls %d\n", store_io_stats.create.calls);
+    storeAppendPrintf(sentry, "create.select_fail %d\n", store_io_stats.create.select_fail);
+    storeAppendPrintf(sentry, "create.create_fail %d\n", store_io_stats.create.create_fail);
+    storeAppendPrintf(sentry, "create.success %d\n", store_io_stats.create.success);
 }

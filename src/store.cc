@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.526 2000/06/25 22:28:43 wessels Exp $
+ * $Id: store.cc,v 1.527 2000/06/26 04:57:16 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -70,6 +70,8 @@ typedef struct lock_ctrl_t {
     void *callback_data;
     StoreEntry *e;
 } lock_ctrl_t;
+
+extern OBJH storeIOStats;
 
 /*
  * local function prototypes
@@ -938,6 +940,9 @@ storeInit(void)
     cachemgrRegister("store_check_cachable_stats",
 	"storeCheckCachable() Stats",
 	storeCheckCachableStats, 0, 1);
+    cachemgrRegister("store_io",
+	"Store IO Interface Stats",
+	storeIOStats, 0, 1);
 }
 
 void
