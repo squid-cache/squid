@@ -13,6 +13,8 @@ Changes to squid-1.1.1 ():
 	  really large POST requests (Takahiro Yugawa).
 	- Fixed 'passthrough_proxy' to pick up port number from list of
 	  neighbors.
+	- Ensure pid file is world-readable if umask is set otherwise
+	  (Doug Urner).
 
 Changes to squid-1.1.0 (December 6, 1996):
 
