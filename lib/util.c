@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.8 1996/07/09 03:41:14 wessels Exp $
+ * $Id: util.c,v 1.9 1996/07/12 17:38:11 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -171,8 +171,8 @@ void malloc_statistics(func, data)
 
 
 #if XMALLOC_DEBUG
-#define DBG_ARRY_SZ (2<<8)
-#define DBG_ARRY_BKTS (2<<8)
+#define DBG_ARRY_SZ (1<<10)
+#define DBG_ARRY_BKTS (1<<8)
 static void *malloc_ptrs[DBG_ARRY_BKTS][DBG_ARRY_SZ];
 static int malloc_size[DBG_ARRY_BKTS][DBG_ARRY_SZ];
 static int dbg_initd = 0;
@@ -183,7 +183,7 @@ static void *Q;
 
 static void check_init()
 {
-    for (B = 0; B < DBG_ARRY_SZ; B++) {
+    for (B = 0; B < DBG_ARRY_BKTS; B++) {
 	for (I = 0; I < DBG_ARRY_SZ; I++) {
 	    malloc_ptrs[B][I] = NULL;
 	    malloc_size[B][I] = 0;
@@ -238,6 +238,24 @@ static void check_malloc(p, sz)
 }
 #endif
 
+#ifdef XMALLOC_COUNT
+static void xmalloc_count(p, sign)
+	void *p;
+	int sign;
+{
+	size_t sz;
+	static size_t total = 0;
+	int memoryAccounted();
+	int mallinfoTotal();
+	sz = mallocblksize(p) * sign;
+	total += sz;
+	fprintf(stderr, "xmalloc_count=%9d  accounted=%9d  mallinfo=%9d\n",
+		(int) total,
+		memoryAccounted(),
+		mallinfoTotal());
+}
+#endif /* XMALLOC_COUNT */
+
 /*
  *  xmalloc() - same as malloc(3).  Used for portability.
  *  Never returns NULL; fatal on error.
@@ -265,6 +283,9 @@ void *xmalloc(sz)
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
 #endif
+#if XMALLOC_COUNT
+    xmalloc_count(p, 1);
+#endif
     return (p);
 }
 
@@ -277,6 +298,9 @@ void xfree(s)
 #if XMALLOC_DEBUG
     check_free(s);
 #endif
+#if XMALLOC_COUNT
+    xmalloc_count(s, -1);
+#endif
     if (s != NULL)
 	free(s);
 }
@@ -287,6 +311,9 @@ void xxfree(s)
 {
 #if XMALLOC_DEBUG
     check_free(s);
+#endif
+#if XMALLOC_COUNT
+    xmalloc_count(s, -1);
 #endif
     free(s);
 }
@@ -300,6 +327,10 @@ void *xrealloc(s, sz)
      size_t sz;
 {
     static void *p;
+
+#if XMALLOC_COUNT
+    xmalloc_count(s, -1);
+#endif
 
     if (sz < 1)
 	sz = 1;
@@ -318,6 +349,9 @@ void *xrealloc(s, sz)
 #endif
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
+#endif
+#if XMALLOC_COUNT
+    xmalloc_count(p, 1);
 #endif
     return (p);
 }
@@ -351,6 +385,9 @@ void *xcalloc(n, sz)
 #endif
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
+#endif
+#if XMALLOC_COUNT
+    xmalloc_count(p, 1);
 #endif
     return (p);
 }
