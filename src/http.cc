@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.389 2002/09/01 13:46:56 hno Exp $
+ * $Id: http.cc,v 1.390 2002/09/07 22:51:41 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -346,7 +346,7 @@ httpMakeVaryMark(request_t * request, HttpReply * reply)
 	safe_free(name);
 	value = strBuf(hdr);
 	if (value) {
-	    value = rfc1738_escape(value);
+	    value = rfc1738_escape_part(value);
 	    stringAppend(&vstr, "=\"", 2);
 	    stringAppend(&vstr, value, strlen(value));
 	    stringAppend(&vstr, "\"", 1);
@@ -365,7 +365,7 @@ httpMakeVaryMark(request_t * request, HttpReply * reply)
 	safe_free(name);
 	value = strBuf(hdr);
 	if (value) {
-	    value = rfc1738_escape(value);
+	    value = rfc1738_escape_part(value);
 	    stringAppend(&vstr, "=\"", 2);
 	    stringAppend(&vstr, value, strlen(value));
 	    stringAppend(&vstr, "\"", 1);
