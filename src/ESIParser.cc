@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIParser.cc,v 1.6 2005/03/28 21:44:12 hno Exp $
+ * $Id: ESIParser.cc,v 1.7 2005/03/29 17:55:42 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -38,6 +38,7 @@
 
 char *ESIParser::Type = NULL;
 ESIParser::Register *ESIParser::Parsers = NULL;
+ESIParser::Register *ESIParser::Parser = NULL;
 
 ESIParser::Pointer
 ESIParser::NewParser(ESIParserClient *aClient)
