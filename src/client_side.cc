@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.451 1999/05/04 21:08:40 wessels Exp $
+ * $Id: client_side.cc,v 1.452 1999/05/10 19:33:22 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -92,6 +92,7 @@ static int clientHierarchical(clientHttpRequest * http);
 static int clientCheckContentLength(request_t * r);
 static int httpAcceptDefer(void);
 static log_type clientProcessRequest2(clientHttpRequest * http);
+static int clientReplyBodyTooLarge(int clen);
 
 static int
 checkAccelOnly(clientHttpRequest * http)
@@ -1513,6 +1514,18 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
     return i->debt_size > 0;
 }
 
+static int
+clientReplyBodyTooLarge(int clen)
+{
+    if (0 == Config.maxReplyBodySize)
+	return 0;		/* disabled */
+    if (clen < 0)
+	return 0;		/* unknown */
+    if (clen > Config.maxReplyBodySize)
+	return 1;		/* too large */
+    return 0;
+}
+
 /*
  * accepts chunk of a http message in buf, parses prefix, filters headers and
  * such, writes processed message to the client's socket
@@ -1567,7 +1580,16 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    }
 	}
 	rep = clientBuildReply(http, buf, size);
-	if (rep) {
+	if (clientReplyBodyTooLarge(rep->content_length)) {
+	    ErrorState *err = errorCon(ERR_TOO_BIG, HTTP_FORBIDDEN);
+	    err->request = requestLink(http->request);
+	    storeUnregister(http->entry, http);
+	    storeUnlockObject(http->entry);
+	    http->entry = clientCreateStoreEntry(http, http->request->method,
+		null_request_flags);
+	    errorAppendEntry(http->entry, err);
+	    return;
+	} else if (rep) {
 	    body_size = size - rep->hdr_sz;
 	    assert(body_size >= 0);
 	    body_buf = buf + rep->hdr_sz;
@@ -1722,6 +1744,8 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	} else {
 	    comm_close(fd);
 	}
+    } else if (clientReplyBodyTooLarge((int) http->out.offset)) {
+	comm_close(fd);
     } else {
 	/* More data will be coming from primary server; register with 
 	 * storage manager. */
@@ -2368,7 +2392,7 @@ clientReadRequest(int fd, void *data)
 		break;
 	    }
 	    if (0 == clientCheckContentLength(request)) {
-		err = errorCon(ERR_INVALID_REQ, HTTP_LENGTH_REQUIRED);
+		err = errorCon(ERR_TOO_BIG, HTTP_LENGTH_REQUIRED);
 		err->src_addr = conn->peer.sin_addr;
 		err->request = requestLink(request);
 		http->al.http.code = err->http_status;
@@ -2407,6 +2431,15 @@ clientReadRequest(int fd, void *data)
 		 */
 		if (request->body_sz < cont_len)
 		    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+		if (cont_len > Config.maxRequestBodySize) {
+		    err = errorCon(ERR_INVALID_REQ,
+			HTTP_REQUEST_ENTITY_TOO_LARGE);
+		    err->request = requestLink(request);
+		    http->entry = clientCreateStoreEntry(http,
+			METHOD_NONE, null_request_flags);
+		    errorAppendEntry(http->entry, err);
+		    break;
+		}
 	    }
 	    clientAccessCheck(http);
 	    continue;		/* while offset > 0 */
@@ -2417,11 +2450,11 @@ clientReadRequest(int fd, void *data)
 	     */
 	    k = conn->in.size - 1 - conn->in.offset;
 	    if (k == 0) {
-		if (conn->in.offset >= Config.maxRequestSize) {
+		if (conn->in.offset >= Config.maxRequestHeaderSize) {
 		    /* The request is too large to handle */
 		    debug(33, 0) ("Request won't fit in buffer.\n");
-		    debug(33, 0) ("Config 'request_size'= %d bytes.\n",
-			Config.maxRequestSize);
+		    debug(33, 0) ("Config 'request_header_max_size'= %d bytes.\n",
+			Config.maxRequestHeaderSize);
 		    debug(33, 0) ("This request = %d bytes.\n",
 			(int) conn->in.offset);
 		    err = errorCon(ERR_INVALID_REQ, HTTP_REQUEST_ENTITY_TOO_LARGE);

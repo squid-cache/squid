@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.150 1999/05/03 21:55:01 wessels Exp $
+ * $Id: enums.h,v 1.151 1999/05/10 19:33:23 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -85,6 +85,7 @@ typedef enum {
     ERR_FTP_FORBIDDEN,
     ERR_FTP_UNAVAILABLE,
     ERR_ONLY_IF_CACHED_MISS,	/* failure to satisfy only-if-cached request */
+    ERR_TOO_BIG,
     ERR_MAX
 } err_type;
 

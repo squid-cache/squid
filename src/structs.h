@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.288 1999/05/04 20:49:39 wessels Exp $
+ * $Id: structs.h,v 1.289 1999/05/10 19:33:25 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -251,7 +251,9 @@ struct _SquidConfig {
 	time_t ident;
 #endif
     } Timeout;
-    size_t maxRequestSize;
+    size_t maxRequestHeaderSize;
+    size_t maxRequestBodySize;
+    size_t maxReplyBodySize;
     struct {
 	ushortlist *http;
 	u_short icp;
