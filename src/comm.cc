@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.218 1998/01/02 16:30:14 wessels Exp $
+ * $Id: comm.cc,v 1.219 1998/01/05 00:45:45 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -722,6 +722,9 @@ comm_poll_incoming(void)
     }
     if (!nfds)
 	return;
+#if !ALARM_UPDATES_TIME
+    getCurrentTime();
+#endif
     polledinc = poll(pfds, nfds, 0);
     if (polledinc < 1) {
 	polledinc = 0;
@@ -789,6 +792,9 @@ comm_select_incoming(void)
     }
     if (maxfd++ == 0)
 	return;
+#if !ALARM_UPDATES_TIME
+    getCurrentTime();
+#endif
     polledinc = select(maxfd, &read_mask, &write_mask, NULL, &zero_tv);
     if (polledinc < 1) {
 	polledinc = 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.240 1998/01/02 19:55:28 wessels Exp $
+ * $Id: cache_cf.cc,v 1.241 1998/01/05 00:45:43 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -595,6 +595,7 @@ parse_peer(peer ** head)
     p->http_port = CACHE_HTTP_PORT;
     p->icp_port = CACHE_ICP_PORT;
     p->weight = 1;
+    p->stats.logged_state = PEER_ALIVE;
     if ((token = strtok(NULL, w_space)) == NULL)
 	self_destruct();
     p->host = xstrdup(token);
