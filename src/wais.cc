@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.64 1997/04/28 05:32:52 wessels Exp $
+ * $Id: wais.cc,v 1.65 1997/04/29 22:13:12 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -119,35 +119,34 @@ typedef struct {
     int ip_lookup_pending;
 } WaisStateData;
 
-static int waisStateFree _PARAMS((int, WaisStateData *));
+static PF waisStateFree;
 static void waisStartComplete _PARAMS((void *, int));
-static void waisReadReplyTimeout _PARAMS((int, WaisStateData *));
-static void waisLifetimeExpire _PARAMS((int, WaisStateData *));
-static void waisReadReply _PARAMS((int, WaisStateData *));
+static PF waisReadReplyTimeout;
+static PF waisLifetimeExpire;
+static PF waisReadReply;
 static void waisSendComplete _PARAMS((int, char *, int, int, void *));
-static void waisSendRequest _PARAMS((int, WaisStateData *));
+static PF waisSendRequest;
 static void waisConnect _PARAMS((int, const ipcache_addrs *, void *));
-static void waisConnectDone _PARAMS((int fd, int status, void *data));
+static CCH waisConnectDone;
 
-static int
-waisStateFree(int fd, WaisStateData * waisState)
+static void
+waisStateFree(int fd, void *data)
 {
+    WaisStateData *waisState = data;
     if (waisState == NULL)
-	return 1;
+	return;
     storeUnlockObject(waisState->entry);
     if (waisState->ip_lookup_pending)
 	ipcache_unregister(waisState->relayhost, waisState->fd);
     xfree(waisState);
-    return 0;
 }
 
 /* This will be called when timeout on read. */
 static void
-waisReadReplyTimeout(int fd, WaisStateData * waisState)
+waisReadReplyTimeout(int fd, void *data)
 {
-    StoreEntry *entry = NULL;
-
-    entry = waisState->entry;
+    WaisStateData *waisState = data;
+    StoreEntry *entry = waisState->entry;
     debug(24, 4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
@@ -156,11 +155,10 @@ waisReadReplyTimeout(int fd, WaisStateData * waisState)
 
 /* This will be called when socket lifetime is expired. */
 static void
-waisLifetimeExpire(int fd, WaisStateData * waisState)
+waisLifetimeExpire(int fd, void *data)
 {
-    StoreEntry *entry = NULL;
-
-    entry = waisState->entry;
+    WaisStateData *waisState = data;
+    StoreEntry *entry = waisState->entry;
     debug(24, 4, "waisLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     commSetSelect(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, NULL, NULL, 0);
@@ -172,16 +170,16 @@ waisLifetimeExpire(int fd, WaisStateData * waisState)
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
 static void
-waisReadReply(int fd, WaisStateData * waisState)
+waisReadReply(int fd, void *data)
 {
+    WaisStateData *waisState = data;
     LOCAL_ARRAY(char, buf, 4096);
     int len;
-    StoreEntry *entry = NULL;
+    StoreEntry *entry = waisState->entry;
     int clen;
     int off;
     int bin;
 
-    entry = waisState->entry;
     if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
 	/* we can terminate connection right now */
 	squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
@@ -275,9 +273,8 @@ waisReadReply(int fd, WaisStateData * waisState)
 static void
 waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
-    StoreEntry *entry = NULL;
     WaisStateData *waisState = data;
-    entry = waisState->entry;
+    StoreEntry *entry = waisState->entry;
     debug(24, 5, "waisSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
@@ -299,8 +296,9 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 
 /* This will be called when connect completes. Write request. */
 static void
-waisSendRequest(int fd, WaisStateData * waisState)
+waisSendRequest(int fd, void *data)
 {
+    WaisStateData *waisState = data;
     int len = strlen(waisState->request) + 4;
     char *buf = NULL;
     const char *Method = RequestMethodStr[waisState->method];
@@ -371,7 +369,7 @@ waisStart(method_t method, char *mime_hdr, StoreEntry * entry)
 static void
 waisStartComplete(void *data, int status)
 {
-    WaisStateData *waisState = (WaisStateData *) data;
+    WaisStateData *waisState = data;
 
     comm_add_close_handler(waisState->fd,
 	waisStateFree,

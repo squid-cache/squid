@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.36 1997/04/28 05:32:48 wessels Exp $
+ * $Id: redirect.cc,v 1.37 1997/04/29 22:13:06 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -41,7 +41,7 @@ typedef struct {
     struct in_addr client_addr;
     const char *client_ident;
     const char *method_s;
-    RH handler;
+    RH *handler;
 } redirectStateData;
 
 typedef struct _redirector {
@@ -73,7 +73,7 @@ struct redirectQueueData {
 
 static redirector_t *GetFirstAvailable _PARAMS((void));
 static int redirectCreateRedirector _PARAMS((const char *command));
-static int redirectHandleRead _PARAMS((int, redirector_t *));
+static PF redirectHandleRead;
 static redirectStateData *Dequeue _PARAMS((void));
 static void Enqueue _PARAMS((redirectStateData *));
 static void redirectDispatch _PARAMS((redirector_t *, redirectStateData *));
@@ -160,9 +160,10 @@ redirectCreateRedirector(const char *command)
     return 0;
 }
 
-static int
-redirectHandleRead(int fd, redirector_t * redirector)
+static void
+redirectHandleRead(int fd, void *data)
 {
+    redirector_t *redirector = data;
     int len;
     redirectStateData *r = redirector->redirectState;
     char *t = NULL;
@@ -186,7 +187,7 @@ redirectHandleRead(int fd, redirector_t * redirector)
 	comm_close(fd);
 	if (--NRedirectorsOpen == 0 && !shutdown_pending && !reread_pending)
 	    fatal_dump("All redirectors have exited!");
-	return 0;
+	return;
     }
     if (len != 1)
 	RedirectStats.rewrites[redirector->index]++;
@@ -232,7 +233,6 @@ redirectHandleRead(int fd, redirector_t * redirector)
     }
     while ((redirector = GetFirstAvailable()) && (r = Dequeue()))
 	redirectDispatch(redirector, r);
-    return 0;
 }
 
 static void
@@ -322,7 +322,7 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
 
 
 void
-redirectStart(int cfd, icpStateData * icpState, RH handler, void *data)
+redirectStart(int cfd, icpStateData * icpState, RH * handler, void *data)
 {
     redirectStateData *r = NULL;
     redirector_t *redirector = NULL;

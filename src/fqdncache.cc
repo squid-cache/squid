@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.48 1997/04/28 04:23:07 wessels Exp $
+ * $Id: fqdncache.cc,v 1.49 1997/04/29 22:12:54 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -114,7 +114,7 @@
 
 struct _fqdn_pending {
     int fd;
-    FQDNH handler;
+    FQDNH *handler;
     void *handlerData;
     struct _fqdn_pending *next;
 };
@@ -151,7 +151,7 @@ static int fqdncacheHasPending _PARAMS((const fqdncache_entry *));
 static fqdncache_entry *fqdncache_get _PARAMS((const char *));
 static void dummy_handler _PARAMS((int, const char *, void *));
 static int fqdncacheExpiredEntry _PARAMS((const fqdncache_entry *));
-static void fqdncacheAddPending _PARAMS((fqdncache_entry *, int fd, FQDNH, void *));
+static void fqdncacheAddPending _PARAMS((fqdncache_entry *, int fd, FQDNH *, void *));
 static void fqdncacheEnqueue _PARAMS((fqdncache_entry *));
 static void *fqdncacheDequeue _PARAMS((void));
 static void fqdncache_dnsDispatch _PARAMS((dnsserver_t *, fqdncache_entry *));
@@ -344,7 +344,7 @@ fqdncache_purgelru(void)
     qsort((char *) LRU_list,
 	LRU_list_count,
 	sizeof(fqdncache_entry *),
-	(QS) fqdncache_compareLastRef);
+	(QS *) fqdncache_compareLastRef);
     for (k = 0; k < LRU_list_count; k++) {
 	if (meta_data.fqdncache_count < fqdncache_low)
 	    break;
@@ -598,7 +598,7 @@ fqdncache_dnsHandleRead(int fd, void *data)
 }
 
 static void
-fqdncacheAddPending(fqdncache_entry * f, int fd, FQDNH handler, void *handlerData)
+fqdncacheAddPending(fqdncache_entry * f, int fd, FQDNH * handler, void *handlerData)
 {
     struct _fqdn_pending *pending = xcalloc(1, sizeof(struct _fqdn_pending));
     struct _fqdn_pending **I = NULL;
@@ -613,7 +613,7 @@ fqdncacheAddPending(fqdncache_entry * f, int fd, FQDNH handler, void *handlerDat
 }
 
 void
-fqdncache_nbgethostbyaddr(struct in_addr addr, int fd, FQDNH handler, void *handlerData)
+fqdncache_nbgethostbyaddr(struct in_addr addr, int fd, FQDNH * handler, void *handlerData)
 {
     fqdncache_entry *f = NULL;
     dnsserver_t *dnsData = NULL;

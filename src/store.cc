@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.224 1997/04/28 05:32:51 wessels Exp $
+ * $Id: store.cc,v 1.225 1997/04/29 22:13:09 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -226,12 +226,12 @@ typedef struct valid_ctrl_t {
 typedef struct swapin_ctrl_t {
     StoreEntry *e;
     char *path;
-    SIH callback;
+    SIH *callback;
     void *callback_data;
 } swapin_ctrl_t;
 
 typedef struct lock_ctrl_t {
-    SIH callback;
+    SIH *callback;
     void *callback_data;
     StoreEntry *e;
 } lock_ctrl_t;
@@ -262,12 +262,8 @@ static int storeEntryValidLength _PARAMS((const StoreEntry *));
 static void storeGetMemSpace _PARAMS((int));
 static int storeHashDelete _PARAMS((StoreEntry *));
 static int storeShouldPurgeMem _PARAMS((const StoreEntry *));
-static int storeSwapInHandle _PARAMS((int,
-	const char *,
-	int,
-	int,
-	StoreEntry *));
-static int storeSwapInStart _PARAMS((StoreEntry *, SIH, void *));
+static FILE_READ_HD storeSwapInHandle;
+static int storeSwapInStart _PARAMS((StoreEntry *, SIH *, void *));
 static void storeSwapInValidateComplete _PARAMS((void *, int));
 static void storeSwapInStartComplete _PARAMS((void *, int));
 static int swapInError _PARAMS((int, StoreEntry *));
@@ -292,7 +288,7 @@ static void storeSetMemStatus _PARAMS((StoreEntry *, mem_status_t));
 static void storeStartRebuildFromDisk _PARAMS((void));
 static void storeSwapOutStart _PARAMS((StoreEntry * e));
 static void storeSwapOutStartComplete _PARAMS((void *, int));
-static void storeSwapOutHandle _PARAMS((int, int, StoreEntry *));
+static FILE_WRITE_HD storeSwapOutHandle;
 static void storeHashMemInsert _PARAMS((StoreEntry *));
 static void storeHashMemDelete _PARAMS((StoreEntry *));
 static void storeSetPrivateKey _PARAMS((StoreEntry *));
@@ -553,7 +549,7 @@ storePurgeMem(StoreEntry * e)
  * {http,ftp,gopher,wais}Start()
  */
 void
-storeLockObject(StoreEntry * e, SIH callback, void *callback_data)
+storeLockObject(StoreEntry * e, SIH * callback, void *callback_data)
 {
     lock_ctrl_t *ctrlp;
     e->lock_count++;
@@ -897,7 +893,7 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
 
 /* Register interest in an object currently being retrieved. */
 int
-storeRegister(StoreEntry * e, int fd, PIF handler, void *data)
+storeRegister(StoreEntry * e, int fd, PIF * handler, void *data)
 {
     int i;
     MemObject *mem = e->mem_obj;
@@ -967,7 +963,7 @@ InvokeHandlers(StoreEntry * e)
 {
     int i;
     MemObject *mem = e->mem_obj;
-    PIF handler = NULL;
+    PIF *handler = NULL;
     void *data = NULL;
     struct _store_client *sc;
     if (mem->clients == NULL && mem->nclients) {
@@ -1071,9 +1067,10 @@ storeAppendPrintf(va_alist)
 }
 
 /* swapping in handle */
-static int
-storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry * e)
+static void
+storeSwapInHandle(int u1, const char *buf, int len, int flag, void *data)
 {
+    StoreEntry *e = data;
     MemObject *mem = e->mem_obj;
     debug(20, 2, "storeSwapInHandle: '%s'\n", e->key);
     if ((flag < 0) && (flag != DISK_EOF)) {
@@ -1082,7 +1079,7 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
 	storeSetMemStatus(e, NOT_IN_MEMORY);
 	file_close(mem->swapin_fd);
 	swapInError(-1, e);	/* Invokes storeAbort() and completes the I/O */
-	return -1;
+	return;
     }
     debug(20, 5, "storeSwapInHandle: e->swap_offset   = %d\n", mem->swap_offset);
     debug(20, 5, "storeSwapInHandle: e->e_current_len = %d\n", mem->e_current_len);
@@ -1101,7 +1098,7 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
 	    mem->swap_offset,
 	    storeSwapInHandle,
 	    e);
-	return 0;
+	return;
     }
     /* complete swapping in */
     storeSetMemStatus(e, IN_MEMORY);
@@ -1127,12 +1124,11 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
 	requestUnlink(mem->request);
 	mem->request = NULL;
     }
-    return 0;
 }
 
 /* start swapping in */
 static int
-storeSwapInStart(StoreEntry * e, SIH callback, void *callback_data)
+storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 {
     swapin_ctrl_t *ctrlp;
     /* sanity check! */
@@ -1219,8 +1215,9 @@ storeSwapInStartComplete(void *data, int fd)
 }
 
 static void
-storeSwapOutHandle(int fd, int flag, StoreEntry * e)
+storeSwapOutHandle(int fd, int flag, void *data)
 {
+    StoreEntry *e = data;
     MemObject *mem = e->mem_obj;
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
     if (mem == NULL) {
@@ -1930,7 +1927,7 @@ storeGetMemSpace(int size)
     qsort((char *) list,
 	list_count,
 	sizeof(StoreEntry *),
-	(QS) compareSize);
+	(QS *) compareSize);
 
     /* Kick LRU out until we have enough memory space */
     for (i = 0; i < list_count; i++) {
@@ -2076,7 +2073,7 @@ storeGetSwapSpace(int size)
 	qsort((char *) LRU_list,
 	    list_count,
 	    sizeof(StoreEntry *),
-	    (QS) compareLastRef);
+	    (QS *) compareLastRef);
 	if (list_count > SWAP_LRU_REMOVE_COUNT)
 	    list_count = SWAP_LRU_REMOVE_COUNT;		/* chop list */
 	if (scan_count > SWAP_LRUSCAN_COUNT)
@@ -2419,7 +2416,7 @@ storeRandomizeBuckets(void)
     qsort((char *) MaintBucketsOrder,
 	store_buckets,
 	sizeof(struct _bucketOrder),
-	             (QS) compareBucketOrder);
+	             (QS *) compareBucketOrder);
 }
 
 static void

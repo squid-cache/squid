@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.9 1997/04/28 04:23:21 wessels Exp $
+ * $Id: peer_select.cc,v 1.10 1997/04/29 22:13:04 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -121,8 +121,8 @@ peerGetSomeParent(request_t * request, hier_code * code)
 void
 peerSelect(request_t * request,
     StoreEntry * entry,
-    PSC callback,
-    PSC fail_callback,
+    PSC * callback,
+    PSC * fail_callback,
     void *callback_data)
 {
     ps_state *psstate = xcalloc(1, sizeof(ps_state));

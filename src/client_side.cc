@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.97 1997/04/28 05:32:40 wessels Exp $
+ * $Id: client_side.cc,v 1.98 1997/04/29 22:12:49 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -31,7 +31,7 @@
 
 #include "squid.h"
 
-static void clientRedirectDone _PARAMS((void *data, char *result));
+static RH clientRedirectDone;
 static void icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
 static int clientGetsOldEntry _PARAMS((StoreEntry * new, StoreEntry * old, request_t * request));
 static int checkAccelOnly _PARAMS((icpStateData * icpState));

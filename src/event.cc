@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.5 1997/02/27 06:29:11 wessels Exp $
+ * $Id: event.cc,v 1.6 1997/04/29 22:12:53 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -33,7 +33,7 @@
 
 /* The list of event processes */
 struct ev_entry {
-    EVH func;
+    EVH *func;
     void *arg;
     const char *name;
     time_t when;
@@ -43,7 +43,7 @@ struct ev_entry {
 static struct ev_entry *tasks = NULL;
 
 void
-eventAdd(const char *name, EVH func, void *arg, time_t when)
+eventAdd(const char *name, EVH * func, void *arg, time_t when)
 {
     struct ev_entry *event = xcalloc(1, sizeof(struct ev_entry));
     struct ev_entry **E;
@@ -62,7 +62,7 @@ eventAdd(const char *name, EVH func, void *arg, time_t when)
 }
 
 void
-eventDelete(EVH func, void *arg)
+eventDelete(EVH * func, void *arg)
 {
     struct ev_entry **E;
     struct ev_entry *event;
@@ -82,7 +82,7 @@ void
 eventRun(void)
 {
     struct ev_entry *event = NULL;
-    EVH func;
+    EVH *func;
     void *arg;
     if ((event = tasks) == NULL)
 	return;
