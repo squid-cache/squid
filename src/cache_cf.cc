@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.133 1996/11/06 23:14:22 wessels Exp $
+ * $Id: cache_cf.cc,v 1.134 1996/11/08 00:02:16 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -136,6 +136,7 @@ struct SquidConfig Config;
 
 #define DefaultCacheLogFile	DEFAULT_CACHE_LOG
 #define DefaultAccessLogFile	DEFAULT_ACCESS_LOG
+#define DefaultUseragentLogFile	(char *)NULL    /* default NONE */
 #define DefaultStoreLogFile	DEFAULT_STORE_LOG
 #define DefaultSwapLogFile	(char *)NULL	/* default swappath(0) */
 #if USE_PROXY_AUTH
@@ -205,6 +206,7 @@ const char *cfg_filename = NULL;	/* just the last part */
 char ForwardedBy[256] = "";
 
 const char *const w_space = " \t\n";
+const char *const list_sep = ", \t\n";
 char config_input_line[BUFSIZ];
 int config_lineno = 0;
 
@@ -234,6 +236,7 @@ static void parseFtpUserLine _PARAMS((void));
 static void parseWordlist _PARAMS((wordlist **));
 static void parseHostAclLine _PARAMS((void));
 static void parseHostDomainLine _PARAMS((void));
+static void parseHostDomainTypeLine _PARAMS((void));
 static void parseHttpPortLine _PARAMS((void));
 static void parseHttpdAccelLine _PARAMS((void));
 static void parseIPLine _PARAMS((ip_acl ** list));
@@ -496,22 +499,8 @@ parseCacheHostLine(void)
     }
     if (weight < 1)
 	weight = 1;
-    neighbors_cf_add(hostname, type, http_port, icp_port, options,
+    neighborAdd(hostname, type, http_port, icp_port, options,
 	weight, mcast_ttl);
-}
-
-static neighbor_t
-parseNeighborType(const char *token)
-{
-    if (!strcasecmp(token, "parent"))
-	return EDGE_PARENT;
-    if (!strcasecmp(token, "neighbor"))
-	return EDGE_SIBLING;
-    if (!strcasecmp(token, "neighbour"))
-	return EDGE_SIBLING;
-    if (!strcasecmp(token, "sibling"))
-	return EDGE_SIBLING;
-    return EDGE_NONE;
 }
 
 
@@ -520,17 +509,24 @@ parseHostDomainLine(void)
 {
     char *host = NULL;
     char *domain = NULL;
-    neighbor_t type = EDGE_NONE;
-    neighbor_t t;
     if (!(host = strtok(NULL, w_space)))
 	self_destruct();
-    while ((domain = strtok(NULL, ", \t\n"))) {
-	if ((t = parseNeighborType(domain)) != EDGE_NONE) {
-	    type = t;
-	    continue;
-	}
-	neighbors_cf_domain(host, domain, type);
-    }
+    while ((domain = strtok(NULL, list_sep)))
+	neighborAddDomainPing(host, domain);
+}
+
+static void
+parseHostDomainTypeLine(void)
+{
+    char *host = NULL;
+    char *type = NULL;
+    char *domain = NULL;
+    if (!(host = strtok(NULL, w_space)))
+	self_destruct();
+    if (!(type = strtok(NULL, w_space)))
+	self_destruct();
+    while ((domain = strtok(NULL, list_sep)))
+	neighborAddDomainType(host, domain, type);
 }
 
 static void
@@ -540,8 +536,8 @@ parseHostAclLine(void)
     char *aclname = NULL;
     if (!(host = strtok(NULL, w_space)))
 	self_destruct();
-    while ((aclname = strtok(NULL, ", \t\n")))
-	neighbors_cf_acl(host, aclname);
+    while ((aclname = strtok(NULL, list_sep)))
+	neighborAddAcl(host, aclname);
 }
 
 static void
@@ -1070,6 +1066,8 @@ parseConfigFile(const char *file_name)
 	    parseHostDomainLine();
 	else if (!strcmp(token, "cache_host_acl"))
 	    parseHostAclLine();
+	else if (!strcmp(token, "neighbor_type_domain"))
+	    parseHostDomainTypeLine();
 
 	else if (!strcmp(token, "neighbor_timeout"))
 	    parseIntegerValue(&Config.neighborTimeout);
@@ -1090,6 +1088,11 @@ parseConfigFile(const char *file_name)
 
 	else if (!strcmp(token, "cache_swap_log"))
 	    parsePathname(&Config.Log.swap);
+
+#if USE_USERAGENT_LOG
+	else if (!strcmp(token, "useragent_log"))
+	    parsePathname(&Config.Log.swap);
+#endif
 
 	else if (!strcmp(token, "logfile_rotate"))
 	    parseIntegerValue(&Config.Log.rotateNumber);
@@ -1511,6 +1514,9 @@ configSetFactoryDefaults(void)
     Config.Log.access = safe_xstrdup(DefaultAccessLogFile);
     Config.Log.store = safe_xstrdup(DefaultStoreLogFile);
     Config.Log.swap = safe_xstrdup(DefaultSwapLogFile);
+#if USE_USERAGENT_LOG
+    Config.Log.useragent = safe_xstrdup(DefaultUseragentLogFile);
+#endif
     Config.Log.rotateNumber = DefaultLogRotateNumber;
     Config.Program.ftpget = safe_xstrdup(DefaultFtpgetProgram);
     Config.Program.ftpget_opts = safe_xstrdup(DefaultFtpgetOptions);

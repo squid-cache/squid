@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.100 1996/11/06 23:14:57 wessels Exp $
+ * $Id: stat.cc,v 1.101 1996/11/08 00:02:23 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -552,7 +552,7 @@ static void
 server_list(const cacheinfo * obj, StoreEntry * sentry)
 {
     edge *e = NULL;
-    dom_list *d = NULL;
+    struct _domain_ping *d = NULL;
     icp_opcode op;
 
     storeAppendPrintf(sentry, open_bracket);
@@ -596,7 +596,7 @@ server_list(const cacheinfo * obj, StoreEntry * sentry)
 		mkhttpdlogtime(&(e->last_fail_time)));
 	}
 	storeAppendPrintf(sentry, "{DOMAIN LIST: ");
-	for (d = e->domains; d; d = d->next) {
+	for (d = e->pinglist; d; d = d->next) {
 	    if (d->do_ping)
 		storeAppendPrintf(sentry, "%s ", d->domain);
 	    else

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.81 1996/11/06 23:14:47 wessels Exp $
+ * $Id: neighbors.cc,v 1.82 1996/11/08 00:02:20 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -110,9 +110,9 @@ static void neighborRemove _PARAMS((edge *));
 static edge *whichEdge _PARAMS((const struct sockaddr_in * from));
 static void neighborAlive _PARAMS((edge *, const MemObject *, const icp_common_t *));
 static void neighborCountIgnored _PARAMS((edge * e, icp_opcode op_unused));
+static neighbor_t parseNeighborType _PARAMS((const char *s));
 
 static neighbors *friends = NULL;
-static struct neighbor_cf *Neighbor_cf = NULL;
 static icp_common_t echo_hdr;
 static u_short echo_port;
 
@@ -167,11 +167,11 @@ hierarchyNote(request_t * request, hier_code code, int timeout, const char *cach
 static neighbor_t
 neighborType(const edge * e, const request_t * request)
 {
-    const dom_list *d = NULL;
-    for (d = e->domains; d; d = d->next) {
+    const struct _domain_type *d = NULL;
+    for (d = e->typelist; d; d = d->next) {
 	if (matchDomainName(d->domain, request->host))
-	    if (d->neighbor_type != EDGE_NONE)
-		return d->neighbor_type;
+	    if (d->type != EDGE_NONE)
+		return d->type;
     }
     return e->type;
 }
@@ -179,7 +179,7 @@ neighborType(const edge * e, const request_t * request)
 static int
 edgeWouldBePinged(const edge * e, request_t * request)
 {
-    const dom_list *d = NULL;
+    const struct _domain_ping *d = NULL;
     int do_ping = 1;
     const struct _acl_list *a = NULL;
     aclCheck_t checklist;
@@ -187,10 +187,10 @@ edgeWouldBePinged(const edge * e, request_t * request)
     if (BIT_TEST(request->flags, REQ_NOCACHE))
 	if (neighborType(e, request) == EDGE_SIBLING)
 	    return 0;
-    if (e->domains == NULL && e->acls == NULL)
+    if (e->pinglist == NULL && e->acls == NULL)
 	return do_ping;
     do_ping = 0;
-    for (d = e->domains; d; d = d->next) {
+    for (d = e->pinglist; d; d = d->next) {
 	if (matchDomainName(d->domain, request->host))
 	    return d->do_ping;
 	do_ping = !d->do_ping;
@@ -719,70 +719,99 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 }
 
 void
-neighbors_cf_add(const char *host, const char *type, int http_port, int icp_port, int options, int weight, int mcast_ttl)
+neighborAdd(const char *host,
+	const char *type,
+	int http_port,
+	int icp_port,
+	int options,
+	int weight,
+	int mcast_ttl)
 {
-    struct neighbor_cf *t, *u;
+	edge *e = NULL;
+        const char *me = getMyHostname();
+	if (!strcmp(host, me) && http_port == Config.Port.http) {
+	    debug(15, 0, "neighbors_init: skipping cache_host %s %s/%d/%d\n",
+		type, host, http_port, icp_port);
+	    return;
+	}
+	e = xcalloc(1, sizeof(edge));
+	e->http_port = http_port;
+	e->icp_port = icp_port;
+	e->mcast_ttl = mcast_ttl;
+	e->options = options;
+	e->weight = weight;
+	e->host = xstrdup(host);
+	e->pinglist = NULL;
+	e->typelist = NULL;
+	e->acls = NULL;
+	e->neighbor_up = 0;
+	e->icp_version = ICP_VERSION_CURRENT;
+	e->type = parseNeighborType(type);
+	if (e->type == EDGE_PARENT)
+	    friends->n_parent++;
+	else if (e->type == EDGE_SIBLING)
+	    friends->n_sibling++;
 
-    t = xcalloc(1, sizeof(struct neighbor_cf));
-    t->host = xstrdup(host);
-    t->type = xstrdup(type);
-    t->http_port = http_port;
-    t->icp_port = icp_port;
-    t->options = options;
-    t->weight = weight;
-    t->mcast_ttl = mcast_ttl;
-    t->next = (struct neighbor_cf *) NULL;
-
-    if (Neighbor_cf == (struct neighbor_cf *) NULL) {
-	Neighbor_cf = t;
-    } else {
-	for (u = Neighbor_cf; u->next; u = u->next);
-	u->next = t;
-    }
+	/* Append edge */
+	if (!friends->edges_head)
+	    friends->edges_head = e;
+	if (friends->edges_tail)
+	    friends->edges_tail->next = e;
+	friends->edges_tail = e;
+	friends->n++;
 }
 
 void
-neighbors_cf_domain(const char *host, const char *domain, neighbor_t type)
+neighborAddDomainPing(const char *host, const char *domain)
 {
-    struct neighbor_cf *t = NULL;
-    dom_list *l = NULL;
-    dom_list **L = NULL;
-
-    for (t = Neighbor_cf; t; t = t->next) {
-	if (strcmp(t->host, host) == 0)
-	    break;
-    }
-    if (t == NULL) {
+    struct _domain_ping *l = NULL;
+    struct _domain_ping **L = NULL;
+    edge *e;
+    if ((e = neighborFindByName(host)) == NULL) {
 	debug(15, 0, "%s, line %d: No cache_host '%s'\n",
 	    cfg_filename, config_lineno, host);
 	return;
     }
-    l = xmalloc(sizeof(dom_list));
+    l = xmalloc(sizeof(struct _domain_ping));
     l->do_ping = 1;
     if (*domain == '!') {	/* check for !.edu */
 	l->do_ping = 0;
 	domain++;
     }
     l->domain = xstrdup(domain);
-    l->neighbor_type = type;
     l->next = NULL;
-    for (L = &(t->domains); *L; L = &((*L)->next));
+    for (L = &(e->pinglist); *L; L = &((*L)->next));
     *L = l;
 }
 
 void
-neighbors_cf_acl(const char *host, const char *aclname)
+neighborAddDomainType(const char *host, const char *domain, const char *type)
 {
-    struct neighbor_cf *t = NULL;
+    struct _domain_type *l = NULL;
+    struct _domain_type **L = NULL;
+    edge *e;
+    if ((e = neighborFindByName(host)) == NULL) {
+	debug(15, 0, "%s, line %d: No cache_host '%s'\n",
+	    cfg_filename, config_lineno, host);
+	return;
+    }
+    l = xmalloc(sizeof(struct _domain_type));
+    l->type = parseNeighborType(type);
+    l->domain = xstrdup(domain);
+    l->next = NULL;
+    for (L = &(e->typelist); *L; L = &((*L)->next));
+    *L = l;
+}
+
+void
+neighborAddAcl(const char *host, const char *aclname)
+{
+    edge *e;
     struct _acl_list *L = NULL;
     struct _acl_list **Tail = NULL;
     struct _acl *a = NULL;
 
-    for (t = Neighbor_cf; t; t = t->next) {
-	if (strcmp(t->host, host) == 0)
-	    break;
-    }
-    if (t == NULL) {
+    if ((e = neighborFindByName(host)) == NULL) {
 	debug(15, 0, "%s, line %d: No cache_host '%s'\n",
 	    cfg_filename, config_lineno, host);
 	return;
@@ -793,81 +822,33 @@ neighbors_cf_acl(const char *host, const char *aclname)
 	L->op = 0;
 	aclname++;
     }
-    debug(15, 3, "neighbors_cf_acl: looking for ACL name '%s'\n", aclname);
+    debug(15, 3, "neighborAddAcl: looking for ACL name '%s'\n", aclname);
     a = aclFindByName(aclname);
     if (a == NULL) {
 	debug(15, 0, "%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(15, 0, "neighbors_cf_acl: ACL name '%s' not found.\n", aclname);
+	debug(15, 0, "neighborAddAcl: ACL name '%s' not found.\n", aclname);
 	xfree(L);
 	return;
     }
     if (a->type == ACL_SRC_IP) {
 	debug(15, 0, "%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(15, 0, "neighbors_cf_acl: 'src' ALC's not supported for 'cache_host_acl'\n");
+	debug(15, 0, "neighborAddAcl: 'src' ALC's not supported for 'cache_host_acl'\n");
 	xfree(L);
 	return;
     }
     L->acl = a;
-    for (Tail = &(t->acls); *Tail; Tail = &((*Tail)->next));
+    for (Tail = &(e->acls); *Tail; Tail = &((*Tail)->next));
     *Tail = L;
 }
 
 void
 neighbors_init(void)
 {
-    struct neighbor_cf *t = NULL;
-    struct neighbor_cf *next = NULL;
-    const char *me = getMyHostname();
-    edge *e = NULL;
-
     debug(15, 1, "neighbors_init: Initializing Neighbors...\n");
-
     if (friends == NULL)
 	friends = xcalloc(1, sizeof(neighbors));
-
-    for (t = Neighbor_cf; t; t = next) {
-	next = t->next;
-	if (!strcmp(t->host, me) && t->http_port == Config.Port.http) {
-	    debug(15, 0, "neighbors_init: skipping cache_host %s %s %d %d\n",
-		t->type, t->host, t->http_port, t->icp_port);
-	    continue;
-	}
-	debug(15, 1, "Adding a %s: %s/%d/%d\n",
-	    t->type, t->host, t->http_port, t->icp_port);
-
-	e = xcalloc(1, sizeof(edge));
-	e->http_port = t->http_port;
-	e->icp_port = t->icp_port;
-	e->mcast_ttl = t->mcast_ttl;
-	e->options = t->options;
-	e->weight = t->weight;
-	e->host = t->host;
-	e->domains = t->domains;
-	e->acls = t->acls;
-	e->neighbor_up = 1;
-	e->icp_version = ICP_VERSION_CURRENT;
-	if (!strcmp(t->type, "parent")) {
-	    friends->n_parent++;
-	    e->type = EDGE_PARENT;
-	} else {
-	    friends->n_neighbor++;
-	    e->type = EDGE_SIBLING;
-	}
-	safe_free(t->type);
-
-	/* Append edge */
-	if (!friends->edges_head)
-	    friends->edges_head = e;
-	if (friends->edges_tail)
-	    friends->edges_tail->next = e;
-	friends->edges_tail = e;
-	friends->n++;
-
-	safe_free(t);
-    }
-    Neighbor_cf = NULL;
     any_addr.s_addr = inet_addr("0.0.0.0");
 }
 
@@ -880,4 +861,19 @@ neighborFindByName(const char *name)
 	    break;
     }
     return e;
+}
+
+static neighbor_t
+parseNeighborType(const char *s)
+{
+	if (!strcasecmp(s, "parent"))
+		return EDGE_PARENT;
+	if (!strcasecmp(s, "neighbor"))
+		return EDGE_SIBLING;
+	if (!strcasecmp(s, "neighbour"))
+		return EDGE_SIBLING;
+	if (!strcasecmp(s, "sibling"))
+		return EDGE_SIBLING;
+	debug(15,0,"WARNING: Unknown neighbor type: %s\n", s);
+	return EDGE_SIBLING;
 }

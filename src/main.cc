@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.107 1996/11/06 23:14:45 wessels Exp $
+ * $Id: main.cc,v 1.108 1996/11/08 00:02:19 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -498,7 +498,7 @@ mainInitialize(void)
     fqdncache_init();
     dnsOpenServers();
     redirectOpenServers();
-    neighbors_init();
+    useragentOpenLog();
     (void) ftpInitialize();
 
 #if MALLOC_DBG
@@ -642,6 +642,7 @@ main(int argc, char **argv)
     /* preinit for debug module */
     debug_log = stderr;
     hash_init(0);
+    neighbors_init();
 
     mainInitialize();
 
@@ -654,6 +655,7 @@ main(int argc, char **argv)
 	    storeWriteCleanLog();
 	    storeRotateLog();	/* store.log */
 	    stat_rotate_log();	/* access.log */
+	    useragentRotateLog();	/* useragent.log */
 	    (void) ftpInitialize();
 	    icmpOpen();
 	    rotate_pending = 0;
