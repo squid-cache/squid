@@ -6,8 +6,16 @@
 #include "squid.h"
 #include "store_asyncufs.h"
 
+#if ASYNC_READ
 static AIOCB storeAufsReadDone;
+#else
+static DRCB storeAufsReadDone;
+#endif
+#if ASYNC_WRITE
 static AIOCB storeAufsWriteDone;
+#else
+static DWCB storeAufsWriteDone;
+#endif
 static void storeAufsIOCallback(storeIOState * sio, int errflag);
 static AIOCB storeAufsOpenDone;
 static int storeAufsSomethingPending(storeIOState *);
@@ -24,13 +32,25 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     sfileno f = e->swap_filen;
     char *path = storeAufsDirFullPath(SD, f, NULL);
     storeIOState *sio;
+#if !ASYNC_OPEN
+    int fd;
+#endif
     debug(78, 3) ("storeAufsOpen: fileno %08X\n", f);
     /*
      * we should detect some 'too many files open' condition and return
      * NULL here.
      */
-    while (aioQueueSize() > MAGIC1)
+#ifdef MAGIC2
+    if (aioQueueSize() > MAGIC2)
 	return NULL;
+#endif
+#if !ASYNC_OPEN
+    fd = file_open(path, O_RDONLY);
+    if (fd < 0) {
+	debug(78, 3) ("storeAufsOpen: got failude (%d)\n", errno);
+	return NULL;
+    }
+#endif
     sio = memAllocate(MEM_STORE_IO);
     cbdataAdd(sio, storeAufsIOFreeEntry, MEM_STORE_IO);
     sio->fsstate = memPoolAlloc(aio_state_pool);
@@ -43,8 +63,12 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     sio->callback_data = callback_data;
     sio->e = e;
     cbdataLock(callback_data);
-    aioOpen(path, O_RDONLY, 0644, storeAufsOpenDone, sio);
     Opening_FD++;
+#if ASYNC_OPEN
+    aioOpen(path, O_RDONLY, 0644, storeAufsOpenDone, sio);
+#else
+    storeAufsOpenDone(fd, sio, fd, 0);
+#endif
     store_open_disk_fd++;
     return sio;
 }
@@ -57,6 +81,9 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
     storeIOState *sio;
     sfileno filn;
     sdirno dirn;
+#if !ASYNC_CREATE
+    int fd;
+#endif
 
     /* Allocate a number */
     dirn = SD->index;
@@ -68,8 +95,17 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
      * we should detect some 'too many files open' condition and return
      * NULL here.
      */
-    while (aioQueueSize() > MAGIC1)
+#ifdef MAGIC2
+    if (aioQueueSize() > MAGIC2)
 	return NULL;
+#endif
+#if !ASYNC_CREATE
+    fd = file_open(path, O_WRONLY | O_CREAT | O_TRUNC);
+    if (fd < 0) {
+	debug(78, 3) ("storeAufsCreate: got failude (%d)\n", errno);
+	return NULL;
+    }
+#endif
     sio = memAllocate(MEM_STORE_IO);
     cbdataAdd(sio, storeAufsIOFreeEntry, MEM_STORE_IO);
     sio->fsstate = memPoolAlloc(aio_state_pool);
@@ -82,8 +118,12 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
     sio->callback_data = callback_data;
     sio->e = (StoreEntry *) e;
     cbdataLock(callback_data);
-    aioOpen(path, O_WRONLY | O_CREAT | O_TRUNC, 0644, storeAufsOpenDone, sio);
     Opening_FD++;
+#if ASYNC_CREATE
+    aioOpen(path, O_WRONLY | O_CREAT | O_TRUNC, 0644, storeAufsOpenDone, sio);
+#else
+    storeAufsOpenDone(fd, sio, fd, 0);
+#endif
     store_open_disk_fd++;
 
     /* now insert into the replacement policy */
@@ -105,7 +145,7 @@ storeAufsClose(SwapDir * SD, storeIOState * sio)
 	aiostate->flags.close_request = 1;
 	return;
     }
-    storeAufsIOCallback(sio, 0);
+    storeAufsIOCallback(sio, DISK_OK);
 }
 
 
@@ -139,7 +179,11 @@ storeAufsRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t of
 	sio->swap_dirn, sio->swap_filen, aiostate->fd);
     sio->offset = offset;
     aiostate->flags.reading = 1;
+#if ASYNC_READ
     aioRead(aiostate->fd, offset, buf, size, storeAufsReadDone, sio);
+#else
+    file_read(aiostate->fd, offset, buf, size, storeAufsReadDone, sio);
+#endif
 }
 
 
@@ -162,6 +206,7 @@ storeAufsWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
 	linklistPush(&(aiostate->pending_writes), q);
 	return;
     }
+#if ASYNC_WRITE
     if (aiostate->flags.writing) {
 	struct _queued_write *q;
 	debug(78, 3) ("storeAufsWrite: queuing write\n");
@@ -178,9 +223,15 @@ storeAufsWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
      * XXX it might be nice if aioWrite() gave is immediate
      * feedback here about EWOULDBLOCK instead of in the
      * callback function
+     * XXX Should never give EWOULDBLOCK under normal operations
+     * if it does then the MAGIC1/2 tuning is wrong.
      */
     aioWrite(aiostate->fd, offset, buf, size, storeAufsWriteDone, sio,
 	free_func);
+#else
+    file_write(aiostate->fd, offset, buf, size, storeAufsWriteDone, sio,
+	free_func);
+#endif
 }
 
 /* Unlink */
@@ -235,7 +286,7 @@ storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
 	errno = errflag;
 	debug(78, 0) ("storeAufsOpenDone: %s\n", xstrerror());
 	debug(78, 1) ("\t%s\n", storeAufsDirFullPath(INDEXSD(sio->swap_dirn), sio->swap_filen, NULL));
-	storeAufsIOCallback(sio, errflag);
+	storeAufsIOCallback(sio, DISK_ERROR);
 	return;
     }
     aiostate->fd = fd;
@@ -248,8 +299,20 @@ storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
     debug(78, 3) ("storeAufsOpenDone: exiting\n");
 }
 
+/*
+ * XXX TODO
+ * if errflag == EWOULDBLOCK, then we'll need to re-queue the
+ * chunk at the beginning of the write_pending list and try
+ * again later.
+ * XXX Should not normally happen. 
+ */
+#if ASYNC_READ
 static void
 storeAufsReadDone(int fd, void *my_data, int len, int errflag)
+#else
+static void
+storeAufsReadDone(int fd, int errflag, size_t len, void *my_data)
+#endif
 {
     storeIOState *sio = my_data;
     aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
@@ -258,6 +321,7 @@ storeAufsReadDone(int fd, void *my_data, int len, int errflag)
     ssize_t rlen;
     debug(78, 3) ("storeAufsReadDone: dirno %d, fileno %08X, FD %d, len %d\n",
 	sio->swap_dirn, sio->swap_filen, fd, len);
+    aiostate->flags.inreaddone = 1;
     aiostate->flags.reading = 0;
     if (errflag) {
 	debug(78, 3) ("storeAufsReadDone: got failure (%d)\n", errflag);
@@ -266,6 +330,17 @@ storeAufsReadDone(int fd, void *my_data, int len, int errflag)
 	rlen = (ssize_t) len;
 	sio->offset += len;
     }
+#if ASYNC_READ
+    /* translate errflag from errno to Squid disk error */
+    errno = errflag;
+    if (errflag)
+	errflag = DISK_ERROR;
+    else
+	errflag = DISK_OK;
+#else
+    if (errflag == DISK_EOF)
+	errflag = DISK_OK; /* EOF is signalled by len == 0, not errors... */
+#endif
     assert(callback);
     assert(their_data);
     sio->read.callback = NULL;
@@ -273,13 +348,9 @@ storeAufsReadDone(int fd, void *my_data, int len, int errflag)
     if (cbdataValid(their_data))
 	callback(their_data, aiostate->read_buf, rlen);
     cbdataUnlock(their_data);
-    /* 
-     * XXX is this safe?  The above callback may have caused sio
-     * to be freed/closed already? Philip Guenther <guenther@gac.edu>
-     * says it fixes his FD leaks, with no side effects.
-     */
+    aiostate->flags.inreaddone = 0;
     if (aiostate->flags.close_request)
-	storeAufsIOCallback(sio, DISK_OK);
+	storeAufsIOCallback(sio, errflag);
 }
 
 /*
@@ -287,15 +358,29 @@ storeAufsReadDone(int fd, void *my_data, int len, int errflag)
  * if errflag == EWOULDBLOCK, then we'll need to re-queue the
  * chunk at the beginning of the write_pending list and try
  * again later.
+ * XXX Should not normally happen. 
  */
+#if ASYNC_WRITE
 static void
 storeAufsWriteDone(int fd, void *my_data, int len, int errflag)
+#else
+static void
+storeAufsWriteDone(int fd, int errflag, size_t len, void *my_data)
+#endif
 {
     static int loop_detect = 0;
     storeIOState *sio = my_data;
     aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
-    debug(78, 3) ("storeAufsWriteDone: dirno %d, fileno %08X, FD %d, len %d\n",
-	sio->swap_dirn, sio->swap_filen, fd, len);
+    debug(78, 3) ("storeAufsWriteDone: dirno %d, fileno %08X, FD %d, len %d, err=%d\n",
+	sio->swap_dirn, sio->swap_filen, fd, len, errflag);
+#if ASYNC_WRITE
+    /* Translate from errno to Squid disk error */
+    errno = errflag;
+    if (errflag)
+	errflag = errno == ENOSP ? DISK_NO_SPACE_LEFT : DISK_ERROR;
+    else
+	errflag = DISK_OK;
+#endif
     assert(++loop_detect < 10);
     aiostate->flags.writing = 0;
     if (errflag) {
@@ -305,10 +390,21 @@ storeAufsWriteDone(int fd, void *my_data, int len, int errflag)
 	return;
     }
     sio->offset += len;
-    if (storeAufsKickWriteQueue(sio))
-	(void) 0;
+#if ASYNC_WRITE
+    if (!storeAufsKickWriteQueue(sio))
+	0;
     else if (aiostate->flags.close_request)
 	storeAufsIOCallback(sio, errflag);
+#else
+    if (!aiostate->flags.write_kicking) {
+	aiostate->flags.write_kicking = 1;
+	while (storeAufsKickWriteQueue(sio))
+	    (void) 0;
+	aiostate->flags.write_kicking = 0;
+	if (aiostate->flags.close_request)
+	    storeAufsIOCallback(sio, errflag);
+    }
+#endif
     loop_detect--;
 }
 
@@ -349,6 +445,8 @@ storeAufsSomethingPending(storeIOState * sio)
     if (aiostate->flags.writing)
 	return 1;
     if (aiostate->flags.opening)
+	return 1;
+    if (aiostate->flags.inreaddone)
 	return 1;
     return 0;
 }

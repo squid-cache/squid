@@ -10,14 +10,26 @@
 #ifdef ASYNC_IO_THREADS
 #define NUMTHREADS ASYNC_IO_THREADS
 #else
-#define NUMTHREADS 16
+#define NUMTHREADS (Config.cacheSwap.n_configured*16)
 #endif
 
-#define MAGIC1 (NUMTHREADS/Config.cacheSwap.n_configured/2)
+/* Queue limit where swapouts are deferred (load calculation) */
+#define MAGIC1 (NUMTHREADS*Config.cacheSwap.n_configured*5)
+/* Queue limit where swapins are deferred (open/create fails) */
+#define MAGIC2 (NUMTHREADS*Config.cacheSwap.n_configured*20)
+
+/* Which operations to run async */
+#define ASYNC_OPEN 1
+#define ASYNC_CLOSE 0
+#define ASYNC_CREATE 1
+#define ASYNC_WRITE 0
+#define ASYNC_READ 1
 
 struct _aio_result_t {
     int aio_return;
     int aio_errno;
+    void *_data; /* Internal housekeeping */
+    void *data; /* Available to the caller */
 };
 
 typedef struct _aio_result_t aio_result_t;
@@ -35,7 +47,6 @@ int aio_truncate(const char *, off_t length, aio_result_t *);
 int aio_opendir(const char *, aio_result_t *);
 aio_result_t *aio_poll_done(void);
 int aio_operations_pending(void);
-int aio_overloaded(void);
 int aio_sync(void);
 int aio_get_queue_len(void);
 
@@ -68,6 +79,9 @@ struct _aiostate_t {
 	unsigned int reading:1;
 	unsigned int writing:1;
 	unsigned int opening:1;
+	unsigned int write_kicking:1;
+	unsigned int read_kicking:1;
+	unsigned int inreaddone:1;
     } flags;
     const char *read_buf;
     link_list *pending_writes;
