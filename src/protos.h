@@ -268,6 +268,7 @@ extern void icpProcessRequest _PARAMS((int, clientHttpRequest *));
 extern PF icpUdpReply;
 extern ERCB icpErrorComplete;
 extern STCB icpSendMoreData;
+extern STCB clientCacheHit;
 
 
 extern void ipcache_nbgethostbyname _PARAMS((const char *name,
