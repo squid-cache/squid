@@ -17,6 +17,9 @@
 	- Added 'unique_hostname' configuration option when its
 	  necessary to have multiple machines with the same visible
 	  hostname.
+	- We can now cache HTTP replies with Set-Cookie.  These evil
+	  headers are now filtered out for cache hits on the client
+	  side.
 
 Changes to squid-1.2.beta22 (June 1, 1998):
 
