@@ -1,3 +1,9 @@
+Changes to squid-1.2.beta3 (Oct 29, 1997):
+
+	- Initialize _res.options to RES_DEFAULT in dnsserver.c.
+	- Fix assertions which assumed 4-byte pointers.
+	- Fix missing % in fqdncache.c snprintf().
+	
 Changes to squid-1.2.beta2 (Oct 28, 1997):
 
 	- Fixed aiops.c and async_iu.c so that they actually compile
