@@ -11,6 +11,13 @@ TODO LIST before official squid-1.1:
 		  do refresh time calculation when object is requested.
 		- lose 'max_expire_age' business?
 
+Changes to squid-1.1.beta9 (October 21, 1996):
+
+	- Added 'make depend' target to Makefiles.
+	- Fixed changing the wrong instance of 'opt_catch_signals'
+	  in tools.c for beta8tools.c for beta8.
+	- Fixed xmemcpy macros in include/config.h (Ed Knowles).
+
 Changes to squid-1.1.beta8 ():
 
 	- Added client_db.c; keeps stats on clients, use cachemgr
