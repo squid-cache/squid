@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.106 1997/11/30 03:08:37 wessels Exp $
+ * $Id: errorpage.cc,v 1.107 1997/12/02 00:17:33 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -188,7 +188,7 @@ errorStateFree(ErrorState * err)
 #define CVT_BUF_SZ 512
 
 /*
- * B - URL with FTP %2f hack			x
+ * B - URL with FTP %2f hack                  x
  * c - Squid error code
  * d - seconds elapsed since request received
  * e - errno                                    x

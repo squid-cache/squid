@@ -1,5 +1,6 @@
+
 /*
- * $Id: fd.cc,v 1.15 1997/11/02 03:21:59 wessels Exp $
+ * $Id: fd.cc,v 1.16 1997/12/02 00:17:34 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels

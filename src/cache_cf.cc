@@ -1,5 +1,6 @@
+
 /*
- * $Id: cache_cf.cc,v 1.235 1997/12/01 22:45:49 wessels Exp $
+ * $Id: cache_cf.cc,v 1.236 1997/12/02 00:17:30 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -68,11 +69,11 @@ static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 static void requirePathnameExists(const char *name, const char *path);
 /*
-extern int create_view ( char **);
-extern int create_user ( char **);
-extern int create_community (char **);
-extern void tokenize ( char *, char **, int );
-*/
+ * extern int create_view ( char **);
+ * extern int create_user ( char **);
+ * extern int create_community (char **);
+ * extern void tokenize ( char *, char **, int );
+ */
 extern struct tree *Mib;
 
 static void
@@ -362,32 +363,31 @@ dump_acl(StoreEntry * entry, const char *name, acl * acl)
 }
 
 static void
-parse_snmp_conf(snmpconf **s)
+parse_snmp_conf(snmpconf ** s)
 {
-	static char buff[256];
-	static char *tokens[10], *p;
-	if (Mib==NULL)
-	{
-		if (Config.Snmp.mibPath) 
-			init_mib(Config.Snmp.mibPath) ;
-		else
-			fatal("snmp_mib_path should be defined before any snmp_agent_conf\n");
-	}
-	p=strtok(NULL, null_string);
-	strcpy(buff,p);
-	tokenize(buff, tokens, 10 );
+    static char buff[256];
+    static char *tokens[10], *p;
+    if (Mib == NULL) {
+	if (Config.Snmp.mibPath)
+	    init_mib(Config.Snmp.mibPath);
+	else
+	    fatal("snmp_mib_path should be defined before any snmp_agent_conf\n");
+    }
+    p = strtok(NULL, null_string);
+    strcpy(buff, p);
+    tokenize(buff, tokens, 10);
 
-	if ( !strcmp("view", tokens[0]) ) {
-		if (create_view(tokens) < 0 ) 
-			debug(49,5)("snmp: parse_snmpconf(): error\n");
-	} else if ( !strcmp("user", tokens[0])) {
-		if (create_user(tokens) < 0 )
-			debug(49,5)("snmp: parse_snmpconf(): error\n");
-	} else if ( !strcmp("community", tokens[0] )) { 
-		if ( create_community(tokens) < 0 ) 
-			debug(49,5)("snmp: parse_snmpconf(): error\n");
-	} else 
-		debug(49,5)("snmp: unknown directive %s\n",tokens[0]);
+    if (!strcmp("view", tokens[0])) {
+	if (create_view(tokens) < 0)
+	    debug(49, 5) ("snmp: parse_snmpconf(): error\n");
+    } else if (!strcmp("user", tokens[0])) {
+	if (create_user(tokens) < 0)
+	    debug(49, 5) ("snmp: parse_snmpconf(): error\n");
+    } else if (!strcmp("community", tokens[0])) {
+	if (create_community(tokens) < 0)
+	    debug(49, 5) ("snmp: parse_snmpconf(): error\n");
+    } else
+	debug(49, 5) ("snmp: unknown directive %s\n", tokens[0]);
 }
 
 static void
@@ -497,15 +497,15 @@ parse_cachedir(struct _cacheSwap *swap)
 	if (!strcmp(path, tmp->path)) {
 	    /* just reconfigure it */
 	    if (size == tmp->max_size)
-		debug(3,1)("Cache dir '%s' size remains unchanged at %d MB\n",
-			path, size);
+		debug(3, 1) ("Cache dir '%s' size remains unchanged at %d MB\n",
+		    path, size);
 	    else
-		debug(3,1)("Cache dir '%s' size changed to %d MB\n",
-			path, size);
+		debug(3, 1) ("Cache dir '%s' size changed to %d MB\n",
+		    path, size);
 	    tmp->max_size = size;
 	    if (tmp->read_only != readonly)
-		debug(3,1)("Cache dir '%s' now %s\n",
-			readonly ? "Read-Only" : "Read-Write");
+		debug(3, 1) ("Cache dir '%s' now %s\n",
+		    readonly ? "Read-Only" : "Read-Write");
 	    tmp->read_only = readonly;
 	    return;
 	}
@@ -914,9 +914,9 @@ parse_onoff(int *var)
 #define free_eol free_string
 
 static void
-dump_snmp_conf(StoreEntry *entry, const char *name, snmpconf *head) 
+dump_snmp_conf(StoreEntry * entry, const char *name, snmpconf * head)
 {
-	storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
+    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
@@ -981,14 +981,14 @@ parse_refreshpattern(refresh_t ** head)
 }
 
 static void
-free_snmp_conf(snmpconf **head)
+free_snmp_conf(snmpconf ** head)
 {
-	snmpconf *t;
-	while (( t= *head ) != NULL ) { 
-	*head=t->next;
+    snmpconf *t;
+    while ((t = *head) != NULL) {
+	*head = t->next;
 	safe_free(t->line);
 	safe_free(t);
-	}
+    }
 }
 
 static void

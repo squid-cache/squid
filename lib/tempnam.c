@@ -1,3 +1,4 @@
+
 /* A reasonably functional tmpnam. */
 
 /* Originally by Tom Hageman, tom@basil.icce.rug.nl */

@@ -1393,7 +1393,7 @@ parse_moduleIdentity(fp, name)
     return np;
 }
 
-int 
+int
 parse_mib_header(fp, name)
      FILE *fp;
      char *name;

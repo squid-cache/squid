@@ -1,5 +1,6 @@
+
 /*
- * $Id: redirect.cc,v 1.49 1997/11/12 00:09:03 wessels Exp $
+ * $Id: redirect.cc,v 1.50 1997/12/02 00:17:40 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels

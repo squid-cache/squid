@@ -90,32 +90,32 @@ SOFTWARE.
 /* from snmp.c */
 extern u_char sid[];		/* size SID_MAX_LEN */
 
-extern u_char *snmp_parse_var_op (u_char * data,
-	oid * var_name,
-	int *var_name_len,
-	u_char * var_val_type,
-	int *var_val_len,
-	u_char ** var_val,
-	int *listlength);
+extern u_char *snmp_parse_var_op(u_char * data,
+    oid * var_name,
+    int *var_name_len,
+    u_char * var_val_type,
+    int *var_val_len,
+    u_char ** var_val,
+    int *listlength);
 
-extern u_char *snmp_build_var_op (u_char * data,
-	oid * var_name,
-	int *var_name_len,
-	u_char var_val_type,
-	int var_val_len,
-	u_char * var_val,
-	int *listlength);
+extern u_char *snmp_build_var_op(u_char * data,
+    oid * var_name,
+    int *var_name_len,
+    u_char var_val_type,
+    int var_val_len,
+    u_char * var_val,
+    int *listlength);
 
-extern u_char *snmp_auth_parse (u_char * data,
-	int *length,
-	u_char * sid,
-	int *slen,
-	long *version);
+extern u_char *snmp_auth_parse(u_char * data,
+    int *length,
+    u_char * sid,
+    int *slen,
+    long *version);
 
-extern u_char *snmp_auth_build (u_char * data,
-	int *length,
-	struct snmp_session * session,
-	int is_agent,
-	int messagelen);
+extern u_char *snmp_auth_build(u_char * data,
+    int *length,
+    struct snmp_session *session,
+    int is_agent,
+    int messagelen);
 
 #endif
