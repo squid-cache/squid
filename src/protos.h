@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.299 1999/01/11 21:55:39 wessels Exp $
+ * $Id: protos.h,v 1.300 1999/01/11 22:54:20 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -55,7 +55,7 @@ extern void aclDestroyAccessList(struct _acl_access **list);
 extern void aclDestroyAcls(acl **);
 extern void aclParseAccessLine(struct _acl_access **);
 extern void aclParseAclLine(acl **);
-extern struct _acl *aclFindByName(const char *name);
+extern int aclIsProxyAuth(const char *name);
 extern int aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
 extern void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 extern void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
