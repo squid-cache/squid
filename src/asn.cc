@@ -44,38 +44,25 @@ typedef u_char m_int[1 + sizeof(unsigned int)];		/* int in memory with length */
 /* Head for ip to asn radix tree */
 struct radix_node_head *AS_tree_head;
 
-#ifdef ASN_DIRECT
-/* passed to asnLoadStart when reading configuration options */
-struct _asnLoadData {
-    int as;
-    char *buf;
-    size_t bufsz;
-    off_t offset;
-};
-
-#endif
-
 struct _whoisState {
-    char *buf;
     StoreEntry *entry;
     request_t *request;
-    size_t bufsz;
-    off_t offset;
 };
 
-/* structure for as number information. it could be simply 
+/*
+ * Structure for as number information. it could be simply 
  * an intlist but it's coded as a structure for future
- * enhancements (e.g. expires)                                  */
+ * enhancements (e.g. expires)
+ */
 struct _as_info {
+    void *x;
     intlist *as_number;
-    int expires;
+    time_t expires;
 };
 
 struct _ASState {
     StoreEntry *entry;
-    StoreEntry *asres_e;
     request_t *request;
-    int flags;
     int as_number;
 };
 
@@ -93,18 +80,13 @@ struct _rtentry {
 
 typedef struct _rtentry rtentry;
 
-static int asndbAddNet(char *, int);
-#ifdef ASN_DIRECT
-static CNCB asnLoadConnected;
-static PF asnLoadRead;
-static void asnLoadStart(int as);
-static PF asnLoadClose;
-#endif
+static int asnAddNet(char *, int);
 static void asnCacheStart(int as);
 static PF whoisClose;
 static CNCB whoisConnectDone;
 static PF whoisReadReply;
 static STCB asHandleReply;
+static int destroyRadixNode(struct radix_node *rn, void *w);
 
 static void destroyRadixNodeInfo(as_info *);
 
@@ -121,7 +103,8 @@ asnMatchIp(void *data, struct in_addr addr)
     struct radix_node *rn;
     as_info *e;
     m_int m_addr;
-    intlist *a = NULL, *b = NULL;
+    intlist *a = NULL;
+    intlist *b = NULL;
     lh = ntohl(addr.s_addr);
     debug(53, 4) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
 
@@ -154,14 +137,33 @@ asnAclInitialize(acl * acls)
     for (a = acls; a; a = a->next) {
 	if (a->type != ACL_DST_ASN && a->type != ACL_SRC_ASN)
 	    continue;
-	for (i = a->data; i; i = i->next) {
-#ifdef ASN_DIRECT
-	    asnLoadStart(i->i);
-#else
+	for (i = a->data; i; i = i->next)
 	    asnCacheStart(i->i);
-#endif
-	}
     }
+}
+
+/* initialize the radix tree structure */
+
+void
+asnInit(void)
+{
+    extern int max_keylen;
+    max_keylen = 40;
+    rn_init();
+    rn_inithead((void **) &AS_tree_head, 8);
+}
+
+void
+asnFreeMemory(void)
+{
+    debug(0, 0) ("asnFreeMemory: Write me!\n");
+}
+
+void
+asnCleanup()
+{
+    rn_walktree(AS_tree_head, destroyRadixNode, AS_tree_head);
+    destroyRadixNode((struct radix_node *) 0, (void *) AS_tree_head);
 }
 
 /* PRIVATE */
@@ -172,34 +174,24 @@ asnCacheStart(int as)
 {
     LOCAL_ARRAY(char, asres, 4096);
     const cache_key *k;
-    StoreEntry *asres_e;
-    ASState *asState;
-    request_t *asres_r;
+    StoreEntry *e;
+    ASState *asState = xcalloc(1, sizeof(ASState));
+    cbdataAdd(asState);
+    debug(53, 3) ("asnCacheStart: AS %d\n", as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     k = storeKeyPublic(asres, METHOD_GET);
-    asState = xcalloc(1, sizeof(asState));
-    cbdataAdd(asState);
-    asres_r = urlParse(METHOD_GET, asres);
     asState->as_number = as;
-    asState->request = asres_r;
-
-    if ((asres_e = storeGet(k)) == NULL) {
-	asres_e = storeCreateEntry(asres, asres, 0, METHOD_GET);
-	asState->asres_e = asres_e;
-	storeClientListAdd(asres_e, asState);
-	protoDispatch(0, asres_e, asres_r);
+    asState->request = urlParse(METHOD_GET, asres);
+    if ((e = storeGet(k)) == NULL) {
+	e = storeCreateEntry(asres, asres, 0, METHOD_GET);
+	storeClientListAdd(e, asState);
+	protoDispatch(0, e, asState->request);
     } else {
-	storeLockObject(asres_e);
-	asState->asres_e = asres_e;
-	storeClientListAdd(asres_e, asState);
+	storeLockObject(e);
+	storeClientListAdd(e, asState);
     }
-    storeClientCopy(asres_e,
-	0,
-	0,
-	4096,
-	get_free_4k_page(),
-	asHandleReply,
-	asState);
+    asState->entry = e;
+    storeClientCopy(e, 0, 0, 4096, get_free_4k_page(), asHandleReply, asState);
 }
 
 static void
@@ -207,11 +199,11 @@ asHandleReply(void *data, char *buf, ssize_t size)
 {
 
     ASState *asState = data;
-    StoreEntry *asres_e = asState->asres_e;
-    char *s, *t;
-
+    StoreEntry *e = asState->entry;
+    char *s;
+    char *t;
     debug(50, 3) ("asHandleReply: Called with size=%d.\n", size);
-    if (asres_e->store_status == STORE_ABORTED) {
+    if (e->store_status == STORE_ABORTED) {
 	put_free_4k_page(buf);
 	return;
     }
@@ -222,8 +214,8 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	put_free_4k_page(buf);
 	return;
     }
-    if (asres_e->store_status == STORE_PENDING) {
-	storeClientCopy(asres_e,
+    if (e->store_status == STORE_PENDING) {
+	storeClientCopy(e,
 	    size,
 	    0,
 	    SM_PAGE_SIZE,
@@ -245,159 +237,31 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	}
 	*t = '\0';
 	debug(53, 4) ("asHandleReply: AS# %s (%d) '\n", s, asState->as_number);
-	asndbAddNet(s, asState->as_number);
+	asnAddNet(s, asState->as_number);
 	s = t + 1;
 	while (*s && isspace(*s))
 	    s++;
     }
-
-    assert(asres_e->mem_obj->reply);
-    storeUnregister(asres_e, asState);
-    storeUnlockObject(asres_e);
+    assert(e->mem_obj->reply);
+    storeUnregister(e, asState);
+    storeUnlockObject(e);
     requestUnlink(asState->request);
-/* XXX this dumps core, don't know why */
-#if 0
     cbdataFree(asState);
-#endif
 }
 
-
-#ifdef ASN_DIRECT
-
-/* connects to whois server to find out networks belonging to 
- * a certain AS */
-
-static void
-asnLoadStart(int as)
-{
-    int fd;
-    struct _asnLoadData *p = xcalloc(1, sizeof(struct _asnLoadData));
-    cbdataAdd(p);
-    debug(53, 1) ("asnLoadStart: AS# %d\n", as);
-    p->as = as;
-    fd = comm_open(SOCK_STREAM, 0, any_addr, 0, COMM_NONBLOCKING, "asnLoad");
-    if (fd == COMM_ERROR) {
-	debug(53, 0) ("asnLoadStart: failed to open a socket\n");
-	return;
-    }
-    comm_add_close_handler(fd, asnLoadClose, p);
-    commConnectStart(fd, Config.as_whois_server, WHOIS_PORT, asnLoadConnected, p);
-}
-
-
-/* we're finished, so we close the connection and add the
- * network numbers to the database */
-
-static void
-asnLoadClose(int fdnotused, void *data)
-{
-    struct _asnLoadData *p = data;
-    debug(53, 6) ("asnLoadClose: called\n");
-    cbdataFree(p);
-}
-
-
-/* we're connected to the whois server, so we send out the request ! */
-static void
-asnLoadConnected(int fd, int status, void *data)
-{
-    struct _asnLoadData *p = data;
-    char buf[128];
-    if (status != COMM_OK) {
-	debug(53, 0) ("asnLoadConnected: connection failed\n");
-	comm_close(fd);
-	return;
-    }
-    snprintf(buf, 128, "!gAS%d\n", p->as);
-    p->offset = 0;
-    p->bufsz = 4096;
-    p->buf = get_free_4k_page();
-    debug(53, 1) ("asnLoadConnected: FD %d, '%s'\n", fd, buf);
-    comm_write(fd, xstrdup(buf), strlen(buf), NULL, p, xfree);
-    commSetSelect(fd, COMM_SELECT_READ, asnLoadRead, p, Config.Timeout.read);
-}
-
-/* we got reply data waiting, copy it to our buffer structure 
- * to parse it later */
-
-static void
-asnLoadRead(int fd, void *data)
-{
-    struct _asnLoadData *p = data;
-    char *t;
-    char *s;
-    size_t readsz;
-    int len;
-
-    readsz = p->bufsz - p->offset;
-    readsz--;
-    debug(53, 6) ("asnLoadRead: offset = %d\n", p->offset);
-    s = p->buf + p->offset;
-    len = read(fd, s, readsz);
-    debug(53, 6) ("asnLoadRead: read %d bytes\n", len);
-    if (len <= 0) {
-	debug(53, 5) ("asnLoadRead: got EOF\n");
-	comm_close(fd);
-	return;
-    }
-    fd_bytes(fd, len, FD_READ);
-    p->offset += len;
-    *(s + len) = '\0';
-    s = p->buf;
-    while (*s) {
-	for (t = s; *t; t++) {
-	    if (isspace(*t))
-		break;
-	}
-	if (*t == '\0') {
-	    /* oof, word should continue on next block */
-	    break;
-	}
-	*t = '\0';
-	debug(53, 4) ("asnLoadRead: AS# %d '%s'\n", p->as, s);
-	asndbAddNet(s, p->as);
-	s = t + 1;
-	while (*s && isspace(*s))
-	    s++;
-    }
-    if (*s) {
-	/* expect more */
-	debug(53, 6) ("asnLoadRead: AS# %d expecting more\n", p->as);
-	xstrncpy(p->buf, s, p->bufsz);
-	p->offset = strlen(p->buf);
-	debug(53, 6) ("asnLoadRead: p->buf = '%s'\n", p->buf);
-    } else {
-	p->offset = 0;
-    }
-    commSetSelect(fd, COMM_SELECT_READ, asnLoadRead, p, Config.Timeout.read);
-}
-
-#endif
-
-/* initialize the radix tree structure */
-
-void
-asndbInit()
-{
-    extern int max_keylen;
-    max_keylen = 40;
-    rn_init();
-    rn_inithead((void **) &AS_tree_head, 8);
-
-}
 
 /* add a network (addr, mask) to the radix tree, with matching AS
  * number */
 
 static int
-asndbAddNet(char *as_string, int as_number)
+asnAddNet(char *as_string, int as_number)
 {
     rtentry *e = xmalloc(sizeof(rtentry));
     struct radix_node *rn;
     char dbg1[32], dbg2[32];
     intlist **Tail = NULL;
     intlist *q = NULL;
-    as_info *info = NULL;
+    as_info *as_info = NULL;
     struct in_addr in_a, in_m;
     long mask, addr;
     char *t;
@@ -405,7 +269,7 @@ asndbAddNet(char *as_string, int as_number)
 
     t = index(as_string, '/');
     if (t == NULL) {
-	debug(53, 3) ("asndbAddNet: failed, invalid response from whois server.\n");
+	debug(53, 3) ("asnAddNet: failed, invalid response from whois server.\n");
 	return 0;
     }
     *t = '\0';
@@ -419,39 +283,37 @@ asndbAddNet(char *as_string, int as_number)
     strcpy(dbg2, inet_ntoa(in_m));
     addr = ntohl(addr);
     mask = ntohl(mask);
-    debug(53, 3) ("asndbAddNet: called for %s/%s (%x/%x)\n", dbg1, dbg2, addr, mask);
+    debug(53, 3) ("asnAddNet: called for %s/%s (%x/%x)\n", dbg1, dbg2, addr, mask);
     memset(e, '\0', sizeof(rtentry));
     store_m_int(addr, e->e_addr);
     store_m_int(mask, e->e_mask);
     rn = rn_lookup(e->e_addr, e->e_mask, AS_tree_head);
     if (rn != 0) {
-	debug(53, 3) ("asndbAddNet: warning: Found a network with multiple AS numbers!\n");
-	info = ((rtentry *) rn)->e_info;
-	for (Tail = &(info->as_number); *Tail; Tail = &((*Tail)->next));
+	debug(53, 3) ("asnAddNet: warning: Found a network with multiple AS numbers!\n");
+	as_info = ((rtentry *) rn)->e_info;
+	for (Tail = &(as_info->as_number); *Tail; Tail = &((*Tail)->next));
 	q = xcalloc(1, sizeof(intlist));
 	q->i = as_number;
 	*(Tail) = q;
-	e->e_info = info;
+	e->e_info = as_info;
     } else {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = as_number;
 	/* *(Tail) = q;         */
-	info = xmalloc(sizeof(as_info));
-	info->as_number = q;
+	as_info = xmalloc(sizeof(as_info));
+	as_info->as_number = q;
 	rn = rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
 	rn = rn_match(e->e_addr, AS_tree_head);
-	if (rn == NULL)
-	    fatal_dump("cannot add entry...\n");
-	e->e_info = info;
-
+	assert(rn != NULL);
+	e->e_info = as_info;
     }
     if (rn == 0) {
 	xfree(e);
-	debug(53, 3) ("asndbAddNet: Could not add entry.\n");
+	debug(53, 3) ("asnAddNet: Could not add entry.\n");
 	return 0;
     }
-    e->e_info = info;
-    debug(53, 3) ("asndbAddNet: added successfully.\n");
+    e->e_info = as_info;
+    debug(53, 3) ("asnAddNet: added successfully.\n");
     return 1;
 }
 
@@ -469,13 +331,6 @@ destroyRadixNode(struct radix_node *rn, void *w)
 	xfree(rn);
     }
     return 1;
-}
-
-void
-asnCleanup()
-{
-    rn_walktree(AS_tree_head, destroyRadixNode, AS_tree_head);
-    destroyRadixNode((struct radix_node *) 0, (void *) AS_tree_head);
 }
 
 static void
@@ -523,9 +378,6 @@ whoisConnectDone(int fd, int status, void *data)
 	return;
     }
     snprintf(buf, 128, "%s\r\n", p->request->urlpath + 1);
-    p->offset = 0;
-    p->bufsz = 4096;
-    p->buf = get_free_4k_page();
     debug(53, 1) ("whoisConnectDone: FD %d, '%s'\n", fd, p->request->urlpath + 1);
     comm_write(fd, xstrdup(buf), strlen(buf), NULL, p, xfree);
     commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
@@ -536,43 +388,27 @@ whoisReadReply(int fd, void *data)
 {
     whoisState *p = data;
     StoreEntry *entry = p->entry;
-    char *s;
-    size_t readsz;
+    char *buf = get_free_4k_page();
     int len;
 
-    readsz = p->bufsz - p->offset;
-    readsz--;
-    debug(53, 6) ("whoisReadReply: offset = %d\n", p->offset);
-    s = p->buf + p->offset;
-    len = read(fd, s, readsz);
-    debug(53, 6) ("whoisReadReply: read %d bytes\n", len);
+    len = read(fd, buf, 4096);
+    debug(53, 6) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
     if (len <= 0) {
-	debug(53, 5) ("whoisReadReply: got EOF (%s)\n", p->buf);
+	storeComplete(entry);
 	comm_close(fd);
 	return;
     }
-    storeAppend(entry, s, len);
+    storeAppend(entry, buf, len);
     fd_bytes(fd, len, FD_READ);
-    p->offset += len;
-    *(s + len) = '\0';
-    if (*s) {
-	/* expect more */
-	debug(53, 6) ("whoisReadReply: expecting more\n");
-	xstrncpy(p->buf, s, p->bufsz);
-	p->offset = strlen(p->buf);
-	debug(53, 6) ("whoisReadReply: p->buf = '%s'\n", p->buf);
-    } else {
-	p->offset = 0;
-    }
     commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
 }
 
 static void
-whoisClose(int fdnotused, void *data)
+whoisClose(int fd, void *data)
 {
     whoisState *p = data;
     StoreEntry *entry = p->entry;
-    debug(53, 6) ("whoisClose called\n");
+    debug(53, 6) ("whoisClose: FD %d\n", fd);
     storeComplete(entry);
     /* XXX free up whoisState */
     cbdataFree(p);
