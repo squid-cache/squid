@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.142 2000/10/31 23:48:13 wessels Exp $
+ * $Id: fqdncache.cc,v 1.143 2000/11/30 20:28:32 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -206,6 +206,7 @@ fqdncacheParse(const char *inbuf)
     char *token;
     static fqdncache_entry f;
     int ttl;
+    memset(&f, '\0', sizeof(f));
     f.expires = squid_curtime;
     f.flags.negcached = 1;
     if (inbuf == NULL) {
