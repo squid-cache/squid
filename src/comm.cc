@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.167 1997/06/18 16:00:09 wessels Exp $
+ * $Id: comm.cc,v 1.168 1997/06/20 00:00:11 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1329,7 +1329,7 @@ commHandleWrite(int fd, void *data)
 	/* Note we even call write if nleft == 0 */
 	/* We're done */
 	if (nleft != 0)
-	    debug(5, 2) ("commHandleWrite: FD %d: write failure: connection closed with %d bytes remaining.\n", fd, nleft);
+	    debug(5, 1) ("commHandleWrite: FD %d: write failure: connection closed with %d bytes remaining.\n", fd, nleft);
 	CommWriteStateCallbackAndFree(fd, nleft ? COMM_ERROR : COMM_OK);
     } else if (len < 0) {
 	/* An error */

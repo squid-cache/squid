@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.260 1997/06/19 22:51:55 wessels Exp $
+ * $Id: store.cc,v 1.261 1997/06/20 00:00:16 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -879,7 +879,7 @@ InvokeHandlers(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     STCB *callback = NULL;
     struct _store_client *sc;
-    size_t size;
+    ssize_t size;
     if (mem->clients == NULL && mem->nclients) {
 	debug_trap("InvokeHandlers: NULL mem->clients");
 	return;
@@ -1670,7 +1670,8 @@ storeAbort(StoreEntry * e, log_type abort_code, const char *msg, int cbflag)
     assert(e->store_status == STORE_PENDING);
     assert(mem != NULL);
     safe_free(mem->e_abort_msg);
-    mem->e_abort_msg = xstrdup(msg);
+    if (msg)
+        mem->e_abort_msg = xstrdup(msg);
     debug(20, 6) ("storeAbort: %s %s\n", log_tags[abort_code], e->key);
     storeNegativeCache(e);
     storeReleaseRequest(e);

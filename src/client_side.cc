@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.112 1997/06/17 04:54:08 wessels Exp $
+ * $Id: client_side.cc,v 1.113 1997/06/20 00:00:10 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -389,7 +389,7 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
 
 
 static void
-icpHandleIMSReply(void *data, char *buf, size_t size)
+icpHandleIMSReply(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
     int fd = http->conn->fd;

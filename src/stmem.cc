@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.43 1997/06/04 06:16:10 wessels Exp $
+ * $Id: stmem.cc,v 1.44 1997/06/20 00:00:15 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -246,7 +246,7 @@ memAppend(mem_ptr mem, const char *data, int len)
     }
 }
 
-size_t
+ssize_t
 memCopy(const mem_ptr mem, off_t offset, char *buf, size_t size)
 {
     mem_node p = mem->head;
