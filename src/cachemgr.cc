@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.104 2003/02/21 22:50:07 robertc Exp $
+ * $Id: cachemgr.cc,v 1.105 2003/08/11 13:07:56 robertc Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -542,8 +542,9 @@ read_reply(int s, cachemgr_request * req)
     }
 
 #ifdef _SQUID_MSWIN_
-    while ((reply=recv(s,buf,sizeof(buf),0))>0)
-        fwrite(buf,1,reply,fp);
+
+    while ((reply=recv(s, buf , sizeof(buf), 0)) > 0)
+        fwrite(buf, 1, reply, fp);
 
     rewind(fp);
 
@@ -770,6 +771,10 @@ main(int argc, char *argv[])
 #ifdef _SQUID_MSWIN_
 
     Win32SockInit();
+
+    _setmode( _fileno( stdin ), _O_BINARY );
+    _setmode( _fileno( stdout ), _O_BINARY );
+    _fmode = _O_BINARY;
 
     if ((s = strrchr(argv[0], '\\')))
 #else
