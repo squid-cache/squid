@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.4 2002/10/27 13:06:49 adrian Exp $
+ * $Id: comm_kqueue.cc,v 1.5 2002/10/27 13:45:06 adrian Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -225,62 +225,60 @@ comm_select(int msec)
     static struct kevent ke[KE_LENGTH];
     struct timespec poll_time;
 
-    do {
-        /*
-         * remember we are doing NANOseconds here, not micro/milli. God knows
-         * why jlemon used a timespec, but hey, he wrote the interface, not I
-         *   -- Adrian
-         */
-        poll_time.tv_sec = msec / 1000;
-        poll_time.tv_nsec = (msec % 1000) * 1000000;
-        for (;;) {
-            num = kevent(kq, kqlst, kqoff, ke, KE_LENGTH, &poll_time);
-            statCounter.select_loops++;
-            kqoff = 0;
-            if (num >= 0)
-                break;
-            if (ignoreErrno(errno))
-                break;
-            getCurrentTime();
-            return COMM_ERROR;
-            /* NOTREACHED */
-        }
-
+    /*
+     * remember we are doing NANOseconds here, not micro/milli. God knows
+     * why jlemon used a timespec, but hey, he wrote the interface, not I
+     *   -- Adrian
+     */
+    poll_time.tv_sec = msec / 1000;
+    poll_time.tv_nsec = (msec % 1000) * 1000000;
+    for (;;) {
+        num = kevent(kq, kqlst, kqoff, ke, KE_LENGTH, &poll_time);
+        statCounter.select_loops++;
+        kqoff = 0;
+        if (num >= 0)
+            break;
+        if (ignoreErrno(errno))
+            break;
         getCurrentTime();
-        if (num == 0)
-            continue;
+        return COMM_ERROR;
+        /* NOTREACHED */
+    }
 
-        for (i = 0; i < num; i++) {
-            int fd = (int) ke[i].ident;
-            PF *hdl = NULL;
-            fde *F = &fd_table[fd];
+    getCurrentTime();
+    if (num == 0)
+        continue;
 
-            if (ke[i].flags & EV_ERROR) {
-                errno = ke[i].data;
-                /* XXX error == bad! -- adrian */
-                continue;        /* XXX! */
-            }
-            switch (ke[i].filter) {
+    for (i = 0; i < num; i++) {
+        int fd = (int) ke[i].ident;
+        PF *hdl = NULL;
+        fde *F = &fd_table[fd];
+
+        if (ke[i].flags & EV_ERROR) {
+            errno = ke[i].data;
+            /* XXX error == bad! -- adrian */
+            continue;        /* XXX! */
+        }
+        switch (ke[i].filter) {
             case EVFILT_READ:
                 if ((hdl = F->read_handler) != NULL) {
                     F->read_handler = NULL;
                     hdl(fd, F->read_data);
                 }
+		break;
             case EVFILT_WRITE:
                 if ((hdl = F->write_handler) != NULL) {
                     F->write_handler = NULL;
                     hdl(fd, F->write_data);
                 }
+		break;
             default:
                 /* Bad! -- adrian */
+		debug(5, 1) ("comm_select: kevent returned %d!\n", fe[i].filter);
                 break;
-            }
         }
-        return COMM_OK;
     }
-    while (0);                        /* XXX should rip this out! -- adrian */
-    /* XXX Get here, we broke! */
-    return 0;
+    return COMM_OK;
 }
 
 #endif /* USE_KQUEUE */
