@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.400 2002/10/15 08:03:29 robertc Exp $
+ * $Id: http.cc,v 1.401 2002/10/15 13:36:47 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -568,7 +568,6 @@ HttpStateData::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xe
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     StoreEntry *entry = httpState->entry;
-    const request_t *request = httpState->request;
     int bin;
     int clen;
     read_sz = SQUID_TCP_SO_RCVBUF;
@@ -584,7 +583,7 @@ HttpStateData::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xe
 #endif
 
 
-    assert(buf == httpState->buf);
+    assert(buf == this->buf);
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
 */
@@ -592,8 +591,6 @@ HttpStateData::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xe
         return;
     }
 
-
-    
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	maybeReadData();
 	return;
@@ -617,7 +614,7 @@ HttpStateData::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xe
 	    clen >>= 1;
 	IOStats.Http.read_hist[bin]++;
     }
-    if (!httpState->reply_hdr && flag == COMM_OK && len > 0) {
+    if (!reply_hdr && flag == COMM_OK && len > 0) {
 	/* Skip whitespace */
 	while (len > 0 && xisspace(*buf))
 	    xmemmove(buf, buf + 1, len--);
@@ -638,7 +635,7 @@ HttpStateData::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xe
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->request = requestLink((request_t *) request);
 	    err->xerrno = errno;
-	    fwdFail(httpState->fwd, err);
+	    fwdFail(fwd, err);
 	    do_next_read = 0;
 	    comm_close(fd);
 	} else {
@@ -650,14 +647,14 @@ HttpStateData::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xe
 	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->request = requestLink((request_t *) request);
-	fwdFail(httpState->fwd, err);
-	httpState->eof = 1;
+	fwdFail(fwd, err);
+	eof = 1;
 	do_next_read = 0;
 	comm_close(fd);
     } else if (flag == COMM_OK && len == 0) {
 	/* Connection closed; retrieval done. */
-	httpState->eof = 1;
-	if (httpState->reply_hdr_state < 2)
+	eof = 1;
+	if (reply_hdr_state < 2)
 	    /*
 	     * Yes Henrik, there is a point to doing this.  When we
 	     * called httpProcessReplyHeader() before, we didn't find
@@ -665,19 +662,19 @@ HttpStateData::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xe
 	     * we want to process the reply headers.
 	     */
 	    /* doesn't return */
-	    httpState->processReplyHeader(buf, len);
+	    processReplyHeader(buf, len);
 	else {
-	    fwdComplete(httpState->fwd);
+	    fwdComplete(fwd);
 	    do_next_read = 0;
 	    comm_close(fd);
 	}
     } else {
-	if (httpState->reply_hdr_state < 2) {
-	    httpState->processReplyHeader(buf, len);
-	    if (httpState->reply_hdr_state == 2) {
+	if (reply_hdr_state < 2) {
+	    processReplyHeader(buf, len);
+	    if (reply_hdr_state == 2) {
 		http_status s = entry->mem_obj->reply->sline.status;
 #if WIP_FWD_LOG
-		fwdStatus(httpState->fwd, s);
+		fwdStatus(fwd, s);
 #endif
 		/*
 		 * If its not a reply that we will re-forward, then
@@ -687,7 +684,7 @@ HttpStateData::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xe
 		    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 	    }
 	}
-	httpState->processReplyData(buf, len);
+	processReplyData(buf, len);
     }
 }
 
