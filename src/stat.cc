@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.312 1999/04/15 06:16:10 wessels Exp $
+ * $Id: stat.cc,v 1.313 1999/04/16 01:00:52 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -936,6 +936,7 @@ statCountersInitSpecial(StatCounters * C)
      */
     statHistEnumInit(&C->cd.on_xition_count, CacheDigestHashFuncCount);
     statHistEnumInit(&C->comm_icp_incoming, INCOMING_ICP_MAX);
+    statHistEnumInit(&C->comm_dns_incoming, INCOMING_DNS_MAX);
     statHistEnumInit(&C->comm_http_incoming, INCOMING_HTTP_MAX);
     statHistIntInit(&C->select_fds_hist, SQUID_MAXFD);
 }

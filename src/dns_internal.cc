@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.3 1999/04/15 06:03:48 wessels Exp $
+ * $Id: dns_internal.cc,v 1.4 1999/04/16 01:00:51 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -51,7 +51,6 @@ struct _ns {
 static ns *nameservers = NULL;
 static int nns = 0;
 static int nns_alloc = 0;
-static int domain_socket = -1;
 static dlink_list lru_list;
 static int event_queued = 0;
 
@@ -135,8 +134,8 @@ idnsStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "------ ---- ----- --------\n");
     for (n = lru_list.head; n; n = n->next) {
 	q = n->data;
-	storeAppendPrintf(sentry, "%#06hx %4d %5d %8.3f\n",
-	    q->id, q->sz, q->nsends,
+	storeAppendPrintf(sentry, "%#06x %4d %5d %8.3f\n",
+	    (int) q->id, q->sz, q->nsends,
 	    tvSubDsec(q->start_t, current_time));
     }
     storeAppendPrintf(sentry, "\nNameservers:\n");
@@ -154,12 +153,13 @@ static void
 idnsSendQuery(idns_query * q)
 {
     int x;
-    int ns = 0;
+    int ns;
     /* XXX Select nameserver */
     assert(nns > 0);
     assert(q->lru.next == NULL);
     assert(q->lru.prev == NULL);
-    x = comm_udp_sendto(domain_socket,
+    ns = q->nsends % nns;
+    x = comm_udp_sendto(DnsSocket,
 	&nameservers[ns].S,
 	sizeof(nameservers[ns].S),
 	q->buf,
@@ -239,6 +239,7 @@ idnsGrokReply(const char *buf, size_t sz)
 static void
 idnsRead(int fd, void *data)
 {
+    int *N = data;
     ssize_t len;
     struct sockaddr_in from;
     socklen_t from_len;
@@ -267,6 +268,7 @@ idnsRead(int fd, void *data)
 		    fd, xstrerror());
 	    break;
 	}
+	(*N)++;
 	debug(78, 3) ("idnsRead: FD %d: received %d bytes from %s.\n",
 	    fd,
 	    len,
@@ -305,17 +307,17 @@ void
 idnsInit(void)
 {
     static int init = 0;
-    if (domain_socket < 0) {
-	domain_socket = comm_open(SOCK_DGRAM,
+    if (DnsSocket < 0) {
+	DnsSocket = comm_open(SOCK_DGRAM,
 	    0,
 	    Config.Addrs.udp_outgoing,
 	    0,
 	    COMM_NONBLOCKING,
 	    "DNS Socket");
-	if (domain_socket < 0)
+	if (DnsSocket < 0)
 	    fatal("Could not create a DNS socket");
-	debug(78, 1) ("DNS Socket created on FD %d\n", domain_socket);
-	commSetSelect(domain_socket, COMM_SELECT_READ, idnsRead, NULL, 0);
+	debug(78, 1) ("DNS Socket created on FD %d\n", DnsSocket);
+	commSetSelect(DnsSocket, COMM_SELECT_READ, idnsRead, NULL, 0);
     }
     if (nns == 0)
 	idnsParseResolvConf();
@@ -330,10 +332,10 @@ idnsInit(void)
 void
 idnsShutdown(void)
 {
-    if (domain_socket < 0)
+    if (DnsSocket < 0)
 	return;
-    comm_close(domain_socket);
-    domain_socket = -1;
+    comm_close(DnsSocket);
+    DnsSocket = -1;
 }
 
 void
