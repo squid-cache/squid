@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.14 2002/10/12 10:50:55 hno Exp $
+ * $Id: client_side_reply.cc,v 1.15 2002/10/12 13:08:09 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1090,9 +1090,9 @@ clientAlwaysAllowResponse(http_status sline)
  * adds Squid specific entries
  */
 static void
-clientBuildReplyHeader(clientReplyContext *context, HttpReply * rep)
+clientBuildReplyHeader(clientReplyContext * context, HttpReply * rep)
 {
-    clientHttpRequest * http = context->http;
+    clientHttpRequest *http = context->http;
     HttpHeader *hdr = &rep->header;
     int is_hit = logTypeIsATcpHit(http->logType);
     request_t *request = http->request;
@@ -1208,7 +1208,7 @@ clientBuildReplyHeader(clientReplyContext *context, HttpReply * rep)
 
 
 static HttpReply *
-clientBuildReply(clientReplyContext *context, const char *buf, size_t size)
+clientBuildReply(clientReplyContext * context, const char *buf, size_t size)
 {
     HttpReply *rep = httpReplyCreate();
     size_t k = headersEnd(buf, size);
@@ -1226,9 +1226,9 @@ clientBuildReply(clientReplyContext *context, const char *buf, size_t size)
 }
 
 static log_type
-clientIdentifyStoreObject(clientReplyContext *context)
+clientIdentifyStoreObject(clientReplyContext * context)
 {
-    clientHttpRequest * http = context->http;
+    clientHttpRequest *http = context->http;
     request_t *r = http->request;
     StoreEntry *e;
     if (r->flags.cachable || r->flags.internal)
@@ -1416,18 +1416,18 @@ clientSendMoreData(void *data, StoreIOBuffer result)
      */
     assert(context->reqofs == 0 || context->flags.storelogiccomplete);
 
-#if THIS_DOES_NOT_WORK
-    /* XXX What is the purpose of this code? It overwrites the
-     * previous "packet" completely messing up header processing
-     * when headers are received in more than one chunk..
-     */
-    if (buf != result.data) {
+    if (context->flags.headersSent && buf != result.data) {
 	/* we've got to copy some data */
 	assert(result.length <= next->readBuffer.length);
 	xmemcpy(buf, result.data, result.length);
 	body_buf = buf;
+    } else if (!context->flags.headersSent &&
+	buf + context->reqofs != result.data) {
+	/* we've got to copy some data */
+	assert(result.length + context->reqofs <= next->readBuffer.length);
+	xmemcpy(buf + context->reqofs, result.data, result.length);
+	body_buf = buf;
     }
-#endif
     /* We've got the final data to start pushing... */
     context->flags.storelogiccomplete = 1;
 
