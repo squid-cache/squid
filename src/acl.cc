@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.62 1996/11/14 19:02:12 wessels Exp $
+ * $Id: acl.cc,v 1.63 1996/11/15 00:36:12 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -279,11 +279,11 @@ aclParseIpList(void)
 	    memset(mask, 0, 256);
 
 	    /* Split the adress in addr1-addr2/mask */
-	    xstrncpy(addr1, p, strcspn(p, "-/"));
+	    strncpy(addr1, p, strcspn(p, "-/"));
 	    p += strcspn(p, "-/");
 	    if (*p == '-') {
 		p++;
-		xstrncpy(addr2, p, strcspn(p, "/"));
+		strncpy(addr2, p, strcspn(p, "/"));
 		p += strcspn(p, "/");
 	    }
 	    if (*p == '/') {
@@ -588,14 +588,12 @@ aclParseDenyInfoLine(struct _acl_deny_info_list **head)
     }
     A = xcalloc(1, sizeof(struct _acl_deny_info_list));
     xstrncpy(A->url, t, MAX_URL);
-    A->url[MAX_URL] = '\0';	/* just in case strlen(t) >= MAX_URL */
     A->next = (struct _acl_deny_info_list *) NULL;
     /* next expect a list of ACL names */
     Tail = &A->acl_list;
     while ((t = strtok(NULL, w_space))) {
 	L = xcalloc(1, sizeof(struct _acl_name_list));
 	xstrncpy(L->name, t, ACL_NAME_SZ);
-	L->name[ACL_NAME_SZ] = '\0';	/* just in case strlen(t) >= ACL_NAME_SZ */
 	*Tail = L;
 	Tail = &L->next;
     }

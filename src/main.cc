@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.113 1996/11/14 18:38:45 wessels Exp $
+ * $Id: main.cc,v 1.114 1996/11/15 00:36:21 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -483,9 +483,9 @@ mainInitialize(void)
 #endif
 
     if (httpPortNumOverride != 1)
-	setHttpPortNum((u_short) httpPortNumOverride);
+	Config.Port.http = (u_short) httpPortNumOverride;
     if (icpPortNumOverride != 1)
-	setIcpPortNum((u_short) icpPortNumOverride);
+	Config.Port.icp = (u_short) icpPortNumOverride;
 
     _db_init(Config.Log.log, Config.debugOptions);
     fdstat_open(fileno(debug_log), FD_LOG);

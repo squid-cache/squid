@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.41 1996/11/14 19:02:24 wessels Exp $
+ * $Id: url.cc,v 1.42 1996/11/15 00:36:24 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -190,10 +190,10 @@ urlDefaultPort(protocol_t p)
 request_t *
 urlParse(method_t method, char *url)
 {
-    LOCAL_ARRAY(char, proto, MAX_URL + 1);
-    LOCAL_ARRAY(char, login, MAX_URL + 1);
-    LOCAL_ARRAY(char, host, MAX_URL + 1);
-    LOCAL_ARRAY(char, urlpath, MAX_URL + 1);
+    LOCAL_ARRAY(char, proto, MAX_URL);
+    LOCAL_ARRAY(char, login, MAX_URL);
+    LOCAL_ARRAY(char, host, MAX_URL);
+    LOCAL_ARRAY(char, urlpath, MAX_URL);
     request_t *request = NULL;
     char *t = NULL;
     int port;
@@ -201,7 +201,7 @@ urlParse(method_t method, char *url)
     int l;
     proto[0] = host[0] = urlpath[0] = login[0] = '\0';
 
-    if ((l = strlen(url)) > MAX_URL) {
+    if ((l = strlen(url)) > (MAX_URL-1)) {
 	/* terminate so it doesn't overflow other buffers */
 	*(url + (MAX_URL >> 1)) = '\0';
 	debug(23, 0, "urlParse: URL too large (%d bytes)\n", l);
@@ -252,7 +252,7 @@ urlParse(method_t method, char *url)
 char *
 urlCanonical(const request_t * request, char *buf)
 {
-    LOCAL_ARRAY(char, urlbuf, MAX_URL + 1);
+    LOCAL_ARRAY(char, urlbuf, MAX_URL);
     LOCAL_ARRAY(char, portbuf, 32);
     if (buf == NULL)
 	buf = urlbuf;

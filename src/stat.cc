@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.104 1996/11/14 19:02:22 wessels Exp $
+ * $Id: stat.cc,v 1.105 1996/11/15 00:36:22 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1280,7 +1280,7 @@ stat_init(cacheinfo ** object, const char *logfilename)
     obj->server_list = server_list;
     if (logfilename) {
 	memset(obj->logfilename, '0', SQUID_MAXPATHLEN);
-	xstrncpy(obj->logfilename, logfilename, SQUID_MAXPATHLEN - 1);
+	xstrncpy(obj->logfilename, logfilename, SQUID_MAXPATHLEN);
 	obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
 	if (obj->logfile_fd == DISK_ERROR) {
 	    debug(50, 0, "%s: %s\n", obj->logfilename, xstrerror());
