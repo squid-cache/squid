@@ -11,6 +11,8 @@ Changes to squid-1.1.alpha12:
 	- Added patch from srb@cuci.nl (Stephen R. van den Berg) for
 		- ttl_force_pattern
 		- quick_abort min pct max
+	- Added a proxy authentication patch from Jon Thackray
+	  <jrmt@uk.gdscorp.com>.  Must add -DUSE_PROXY_AUTH=1 to src/Makefile.
 
 Changes to squid-1.1.alpha11:
 
