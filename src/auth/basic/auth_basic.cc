@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.17 2002/04/13 23:07:53 hno Exp $
+ * $Id: auth_basic.cc,v 1.18 2002/08/12 01:11:58 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -558,6 +558,7 @@ authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, vo
 {
     authenticateStateData *r = NULL;
     char buf[8192];
+    char user[1024], pass[1024];
     basic_data *basic_auth;
     assert(auth_user_request);
     assert(handler);
@@ -590,7 +591,9 @@ authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, vo
 	r->auth_user_request = auth_user_request;
 	/* mark the user as haveing verification in progress */
 	basic_auth->flags.credentials_ok = 2;
-	snprintf(buf, 8192, "%s %s\n", basic_auth->username, basic_auth->passwd);
+	xstrncpy(user, rfc1738_escape(basic_auth->username), sizeof(user));
+	xstrncpy(pass, rfc1738_escape(basic_auth->passwd), sizeof(pass));
+	snprintf(buf, sizeof(buf), "%s %s\n", user, pass);
 	helperSubmit(basicauthenticators, buf, authenticateBasicHandleReply, r);
     }
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: smb_auth.pl,v 1.2 2001/05/21 04:50:58 hno Exp $
+# $Id: smb_auth.pl,v 1.3 2002/08/12 01:11:57 hno Exp $
 
 #if you define this, debugging output will be printed to STDERR.
 #$debug=1;
@@ -38,13 +38,16 @@ use Authen::Smb;
 
 $|=1;
 while (<>) {
-	if (! m;([^\\]+)(\\|/)(\S+)\s(.*); ) { #parse the line
+	if (! m;([^\\]+)(\\|/|%2f|%5c)(\S+)\s(.*); ) { #parse the line
 		print "ERR\n";
 		next;
 	}
-	$domain=$1;
+        $domain=$1;
 	$user=$3;
 	$pass=$4;
+	$domain =~ s/%([0-9a-f][0-9a-f])/pack("H2",$1)/gie;
+        $user =~ s/%([0-9a-f][0-9a-f])/pack("H2",$1)/gie;
+        $pass =~ s/%([0-9a-f][0-9a-f])/pack("H2",$1)/gie;
 	print STDERR "domain: $domain, user: $user, pass=$pass\n" 
 		if (defined ($debug));
 	# check out that we know the PDC address

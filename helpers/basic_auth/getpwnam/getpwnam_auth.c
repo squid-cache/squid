@@ -40,6 +40,7 @@
 #include <pwd.h>
 #endif
 
+#include "util.h"
 
 #define ERR    "ERR\n"
 #define OK     "OK\n"
@@ -65,6 +66,8 @@ main()
 	    printf(ERR);
 	    continue;
 	}
+	rfc1738_unescape(user);
+	rfc1738_unescape(passwd);
 	pwd = getpwnam(user);
 	if (pwd == NULL) {
 	    printf(ERR);

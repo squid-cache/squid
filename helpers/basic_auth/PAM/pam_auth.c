@@ -1,5 +1,5 @@
 /*
- * $Id: pam_auth.c,v 1.7 2002/01/07 03:29:10 hno Exp $
+ * $Id: pam_auth.c,v 1.8 2002/08/12 01:11:50 hno Exp $
  *
  * PAM authenticator module for Squid.
  * Copyright (C) 1999,2002 Henrik Nordstrom <hno@squid-cache.org>
@@ -191,6 +191,8 @@ start:
 	    goto error;
 	}
 	*password++ = '\0';
+	rfc1738_unescape(user);
+	rfc1738_unescape(password);
 	conv.appdata_ptr = (char *) password;	/* from buf above. not allocated */
 
 	if (ttl == 0) {
