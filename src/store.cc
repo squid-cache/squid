@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.83 1996/08/19 22:45:31 wessels Exp $
+ * $Id: store.cc,v 1.84 1996/08/19 23:09:25 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -689,7 +689,7 @@ void storeSetPrivateKey(e)
 	fatal_dump("Private key already exists.");
     }
     if (e->key)
-	storeHashDelete((hash_link *) e);
+	storeHashDelete(e);
     if (e->key && !BIT_TEST(e->flag, KEY_URL))
 	safe_free(e->key);
     e->key = xstrdup(newkey);
@@ -721,7 +721,7 @@ void storeSetPublicKey(e)
 	newkey = storeGeneratePublicKey(e->url, e->method);
     }
     if (e->key)
-	storeHashDelete((hash_link *) e);
+	storeHashDelete(e);
     if (e->key && !BIT_TEST(e->flag, KEY_URL))
 	safe_free(e->key);
     if (e->method == METHOD_GET) {
