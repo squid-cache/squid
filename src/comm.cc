@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.355 2002/10/27 14:01:29 adrian Exp $
+ * $Id: comm.cc,v 1.356 2002/10/27 14:13:35 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -82,6 +82,7 @@ static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
 CBDATA_TYPE(ConnectStateData);
 
+static PF comm_accept_try;
 
 struct _fdc_t {
 	int active;
@@ -708,6 +709,50 @@ comm_write(int fd, const char *buf, size_t size, IOWCB *handler, void *handler_d
 #endif
 }
 
+/*
+ * New-style accept stuff
+ */
+
+/*
+ * Set the check delay on accept()ing when we're out of FDs
+ *
+ * The premise behind this is that we can hit a situation where
+ * we've hit our reserved filedescriptor limit and we don't want
+ * to accept any more connections until some others have closed.
+ *
+ * This code will set the period which we register an event to check
+ * to see whether we _have_ enough open FDs to re-register for IO.
+ */
+void
+comm_accept_setcheckperiod(int fd, int mdelay)
+{
+	assert(fdc_table[fd].active == 1);
+	assert(mdelay != 0);
+	fdc_table[fd].accept.check_delay = mdelay;
+}
+
+/*
+ * Our periodic accept() suitability checker..
+ */
+static void
+comm_accept_check_event(void *data)
+{
+	static time_t last_warn = 0;
+	int fd = ((fdc_t *)(data))->fd;
+
+	if (fdNFree() >= RESERVED_FD) {
+		commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
+		return;
+	}
+	if (last_warn + 15 < squid_curtime) {
+		debug(33, 0) ("WARNING! Your cache is running out of filedescriptors\n");
+		last_warn = squid_curtime;
+	}
+	eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
+	    1000.0 / (double)(fdc_table[fd].accept.check_delay), 1);
+}
+
+
 
 /* Older stuff */
 
@@ -1300,6 +1345,11 @@ _comm_close(int fd, char *file, int line)
     commSetTimeout(fd, -1, NULL, NULL);
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
 
+    /* Delete any accept check */
+    if (eventFind(comm_accept_check_event, &fdc_table[fd])) {
+        eventDelete(comm_accept_check_event, &fdc_table[fd]);
+    }
+
     /* Do callbacks for read/accept/fill routines, if any */
     if (fdc_table[fd].read.handler) {
         fdc_table[fd].read.handler(fd, fdc_table[fd].read.buf, 0,
@@ -1766,6 +1816,13 @@ comm_accept_try(int fd, void *data)
 	Fc = &(fdc_table[fd]);
 
 	for (count = 0; count < MAX_ACCEPT_PER_LOOP; count++) {
+		/* If we're out of fds, register an event and return now */
+		if (fdNFree() >= RESERVED_FD) {
+			debug(5, 3) ("comm_accept_try: we're out of fds - deferring io!\n");
+			eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
+			    1000.0 / (double)(fdc_table[fd].accept.check_delay), 1);
+			return;
+		}
 		/* Accept a new connection */
 		newfd = comm_old_accept(fd, &Fc->accept.pn, &Fc->accept.me);
 		/* Check for errors */
@@ -1794,23 +1851,6 @@ comm_accept_try(int fd, void *data)
 	}
 }
 
-
-/*
- * Set the check delay on accept()ing when we're out of FDs
- *
- * The premise behind this is that we can hit a situation where
- * we've hit our reserved filedescriptor limit and we don't want
- * to accept any more connections until some others have closed.
- *
- * This code will set the period which we register an event to check
- * to see whether we _have_ enough open FDs to re-register for IO.
- */
-void
-comm_accept_setcheckperiod(int fd, int mdelay)
-{
-	assert(fdc_table[fd].active == 1);
-	fdc_table[fd].accept.check_delay = mdelay;
-}
 
 /*
  * Notes:
