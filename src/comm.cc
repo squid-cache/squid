@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.117 1996/12/06 05:44:41 wessels Exp $
+ * $Id: comm.cc,v 1.118 1996/12/13 20:32:32 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1288,7 +1288,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	    continue;
 	}
 	f = &fd_table[fd];
-	debug(5, 0, "FD %d: %s\n", xstrerror());
+	debug(5, 0, "FD %d: %s\n", fd, xstrerror());
 	debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
 	debug(5, 0, "FD %d is a %s called '%s'\n",
 	    fd,
