@@ -232,6 +232,10 @@ struct _SquidConfig {
 	int n_configured;
     } cacheSwap;
     char *fake_ua;
+    struct {
+	char *directory;
+	char *content_type;
+    } icons;
 };
 
 struct _SquidConfig2 {
