@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.116 1997/05/15 23:40:15 wessels Exp $
+ * $Id: ipcache.cc,v 1.117 1997/05/16 07:45:06 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -182,11 +182,22 @@ extern int _dns_ttl_;
 static void
 ipcacheEnqueue(ipcache_entry * i)
 {
+    static time_t last_warning = 0;
     struct ipcacheQueueData *new = xcalloc(1, sizeof(struct ipcacheQueueData));
     new->i = i;
     *ipcacheQueueTailP = new;
     ipcacheQueueTailP = &new->next;
     queue_length++;
+    if (queue_length < NDnsServersAlloc)
+	return;
+    if (squid_curtime - last_warning < 600)
+	return;
+    last_warning = squid_curtime;
+    debug(14, 1, "ipcacheEnqueue: WARNING: All dnsservers are busy.\n");
+    debug(14, 1, "ipcacheEnqueue: WARNING: %d DNS lookups queued\n", queue_length);
+    if (Config.dnsChildren >= DefaultDnsChildrenMax)
+	return;
+    debug(14, 1, "ipcacheEnqueue: Consider increasing 'dns_children' in your config file.\n");
 }
 
 static void *
