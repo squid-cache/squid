@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.6 1998/04/08 22:52:38 rousskov Exp $
+ * $Id: store_digest.cc,v 1.7 1998/04/14 15:16:26 rousskov Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -55,6 +55,8 @@ static const time_t StoreDigestRewritePeriod = 60 * 60;
 static const int StoreDigestSwapOutChunkSize = SM_PAGE_SIZE;
 /* portion (0,1] of a hash table to be rescanned at a time */
 static const double StoreDigestRebuildChunkPercent = 0.10;
+/* Fudge Factor for sizing the digest */
+static const double StoreDigestFudgeFactor = 1.5;
 
 /* local vars */
 static StoreDigestState sd_state;
@@ -67,22 +69,19 @@ static void storeDigestRewrite();
 static void storeDigestRewriteFinish(StoreEntry * e);
 static void storeDigestSwapOutStep(StoreEntry * e);
 static void storeDigestCBlockSwapOut(StoreEntry * e);
+static int storeDigestCalcCap();
+static int storeDigestResize();
 
 
 void
 storeDigestInit()
 {
-    /*
-     * To-Do: Bloom proved that the optimal filter utilization is 50% (half of
-     * the bits are off). However, we do not have a formula to calculate the 
-     * number of _entries_ we want to pre-allocate for.
-     * Use 1.5*max#entries because 2*max#entries gives about 40% utilization.
-     */
 #if SQUID_MAINTAIN_CACHE_DIGEST
-    const int cap = (int) (1.5 * Config.Swap.maxSize / Config.Store.avgObjectSize);
+    const int cap = storeDigestCalcCap();
     store_digest = cacheDigestCreate(cap);
-    debug(71, 1) ("Using %d byte cache digest; rebuild/rewrite every %d/%d sec\n",
-	store_digest->mask_size, StoreDigestRebuildPeriod, StoreDigestRewritePeriod);
+    debug(71, 1) ("Using %d byte cache digest (%d entries); rebuild/rewrite every %d/%d sec\n",
+	store_digest->mask_size, store_digest->capacity,
+	StoreDigestRebuildPeriod, StoreDigestRewritePeriod);
 #else
     store_digest = NULL;
     debug(71, 1) ("Local cache digest is 'off'\n");
@@ -138,8 +137,9 @@ storeDigestRebuild(void *datanotused)
     }
     sd_state.rebuild_lock = 1;
     sd_state.rebuild_offset = 0;
-    /* not clean()! */
-    cacheDigestClear(store_digest);
+    /* resize or clear */
+    if (!storeDigestResize())
+	cacheDigestClear(store_digest); /* not clean()! */
     debug(71, 2) ("storeDigestRebuild: start rebuild #%d\n", sd_state.rebuild_count + 1);
     storeDigestRebuildStep(NULL);
 }
@@ -284,6 +284,48 @@ storeDigestCBlockSwapOut(StoreEntry * e)
     sd_state.cblock.del_count = htonl(store_digest->del_count);
     sd_state.cblock.mask_size = htonl(store_digest->mask_size);
     storeAppend(e, (char*) &sd_state.cblock, sizeof(sd_state.cblock));
+}
+
+/* calculates digest capacity */
+static int
+storeDigestCalcCap()
+{
+    /*
+     * To-Do: Bloom proved that the optimal filter utilization is 50% (half of
+     * the bits are off). However, we do not have a formula to calculate the 
+     * number of _entries_ we want to pre-allocate for.
+     */
+    const int hi_cap = store_table->size;
+    const int lo_cap = hi_cap/5;
+    int cap = (int) (1.5 * memInUse(MEM_STOREENTRY));
+    if (cap < lo_cap)
+	cap = lo_cap;
+    if (cap > hi_cap)
+	cap = hi_cap;
+    cap = 1 + (int) (StoreDigestFudgeFactor * cap);
+    return cap;
+}
+
+/* returns true if we actually resized the digest */
+static int
+storeDigestResize()
+{
+    const int cap = storeDigestCalcCap();
+    int diff;
+    assert(store_digest);
+    diff = abs(cap - store_digest->capacity);
+    debug(71, 2) ("storeDigestResize: %d -> %d; change: %d (%d%%)\n",
+	store_digest->capacity, cap, diff,
+	xpercentInt(diff, store_digest->capacity));
+    /* avoid minor adjustments */
+    if (diff <= store_digest->capacity/10) {
+	debug(71, 1) ("storeDigestResize: small change, will not resize.\n");
+	return 0; /* at most 10% change */
+    } else {
+	debug(71, 1) ("storeDigestResize: big change, resizing.\n");
+	cacheDigestChangeCap(store_digest, cap);
+	return 1;
+    }
 }
 
 void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.13 1998/04/12 06:10:06 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.14 1998/04/14 15:16:25 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -58,7 +58,7 @@ static int peerDigestSetCBlock(peer *p, const char *buf);
 #define StoreDigestCBlockSize sizeof(StoreDigestCBlock)
 
 /* min interval for requesting digests from the same peer */
-static const time_t PeerDigestRequestMinGap   = 10 * 60; /* seconds */
+static const time_t PeerDigestRequestMinGap   = 15 * 60; /* seconds */
 
 /* min interval for requesting digests at start */
 static const time_t GlobalDigestRequestMinGap =  1 * 60; /* seconds */
@@ -526,7 +526,8 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	/* release buggy entry */
 	storeReleaseRequest(fetch->entry);
     } else {
-	if (fetch->entry->store_status == STORE_OK) {
+	/* ugly condition, but how? @?@ @?@ */
+	if (fetch->entry->mem_obj->reply->sline.status == HTTP_NOT_MODIFIED) {
 	   debug(72, 2) ("re-used old digest from %s\n", peer->host);
 	} else {
 	   debug(72, 2) ("received valid digest from %s\n", peer->host);
@@ -538,8 +539,8 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	peerDigestDelay(peer, 0,
 	    max_delay(peerDigestExpiresDelay(peer, fetch->entry), 0));
     }
-    /* note: outgoing numbers are not precise! @?@ */
     /* update global stats */
+    /* note: outgoing numbers are not precise! @?@ */
     kb_incr(&Counter.cd.kbytes_sent, req->headers_sz);
     kb_incr(&Counter.cd.kbytes_recv, (size_t)b_read);
     Counter.cd.msgs_sent++;

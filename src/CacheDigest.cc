@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.11 1998/04/07 23:23:36 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.12 1998/04/14 15:16:23 rousskov Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -41,6 +41,7 @@ typedef struct {
 
 /* local functions */
 static void cacheDigestHashKey(const CacheDigest *cd, const cache_key *key);
+static size_t cacheDigestCalcMaskSize(int cap);
 
 /* configuration params */
 static const int BitsPerEntry = 4;
@@ -52,7 +53,7 @@ static u_num32 hashed_keys[4];
 CacheDigest *
 cacheDigestCreate(int capacity)
 {
-    const size_t mask_size = (size_t) (capacity * BitsPerEntry + 7) / 8;
+    const size_t mask_size = cacheDigestCalcMaskSize(capacity);
     CacheDigest *cd = cacheDigestSizedCreate(mask_size, capacity);
     return cd;
 }
@@ -95,6 +96,17 @@ cacheDigestClear(CacheDigest * cd)
     assert(cd);
     cd->count = cd->del_count = 0;
     memset(cd->mask, 0, cd->mask_size);
+}
+
+void
+cacheDigestChangeCap(CacheDigest * cd, int new_cap)
+{
+    assert(cd);
+    /* have to clear because capacity changes hash functions */
+    cacheDigestClear(cd);
+    cd->capacity = new_cap;
+    cd->mask_size = cacheDigestCalcMaskSize(new_cap);
+    cd->mask = xrealloc(cd->mask, cd->mask_size);
 }
 
 /* returns true if the key belongs to the digest */
@@ -236,6 +248,12 @@ cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e)
 	stats.bseq_count,
 	xdiv(stats.bseq_len_sum, stats.bseq_count)
 	);
+}
+
+static size_t
+cacheDigestCalcMaskSize(int cap)
+{
+    return (size_t) (cap * BitsPerEntry + 7) / 8;
 }
 
 static void

@@ -913,6 +913,7 @@ extern CacheDigest *cacheDigestSizedCreate(size_t size, int capacity);
 extern void cacheDigestDestroy(CacheDigest * cd);
 extern CacheDigest *cacheDigestClone(const CacheDigest * cd);
 extern void cacheDigestClear(CacheDigest * cd);
+extern void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
 extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
