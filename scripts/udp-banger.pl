@@ -39,7 +39,7 @@ $port=(shift || '3130') ;
     "ICP_OP_UNUSED6",
     "ICP_OP_UNUSED7",
     "ICP_OP_UNUSED8",
-    "ICP_OP_UNUSED9",
+    "UDP_RELOADING",
     "UDP_DENIED",
     "UDP_HIT_OBJ",
     "ICP_END"
@@ -62,7 +62,7 @@ die "socket: $!\n" unless
 while (<>) {
 	chop;
 	$request_template = 'CCnx4Nx4x4a4a' . length;
-	$request = pack($request_template, 1, 1, 24 + length, ~0, $myip, $_);
+	$request = pack($request_template, 1, 2, 24 + length, ~0, $myip, $_);
 	die "send: $!\n" unless
 		send(SOCK, $request, 0, $them);
 	die "recv: $!\n" unless
