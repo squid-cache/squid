@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.516 2000/12/09 00:09:04 wessels Exp $
+ * $Id: client_side.cc,v 1.517 2000/12/16 16:52:32 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -62,6 +62,9 @@
 #endif
 #endif
 
+#if LINUX_NETFILTER
+#include <linux/netfilter_ipv4.h>
+#endif
 
 
 #if LINGERING_CLOSE
@@ -2275,6 +2278,9 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     static int siocgnatl_cmd = SIOCGNATL & 0xff;
     int x;
 #endif
+#if LINUX_NETFILTER
+    size_t sock_sz = sizeof(conn->me);
+#endif
 
     if ((req_sz = headersEnd(conn->in.buf, conn->in.offset)) == 0) {
 	debug(33, 5) ("Incomplete request, waiting for end of headers\n");
@@ -2467,6 +2473,11 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 		    inet_ntoa(natLookup.nl_realip),
 		    vport, url);
 #else
+#if LINUX_NETFILTER
+	  /* If the call fails the address structure will be unchanged */
+	  getsockopt(conn->fd, SOL_IP, SO_ORIGINAL_DST, &conn->me, &sock_sz );
+	    debug(33, 5) ("parseHttpRequest: addr = %s", inet_ntoa(conn->me.sin_addr) );
+#endif
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
 		inet_ntoa(http->conn->me.sin_addr),
 		vport, url);

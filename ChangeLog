@@ -7,6 +7,10 @@ Changes to squid-2.5
 	  objects if it needs appending. This fixes weirdnesses where
 	  a machine can think it is "foo.bar.com", and "foo" is requested.
 	  (Brian Degenhardt)
+	- Added support for netfilter in linux-2.4. This allows transparent
+	  proxy connections to function correctly in the absence of a Host:
+	  header. This requires --enable-linux-netfilter to be passed through
+	  to configure. (Evan Jones)
 
 Changes to Squid-2.4.DEVEL4 ():
 
