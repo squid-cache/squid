@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.31 1998/04/25 07:07:42 wessels Exp $
+ * $Id: asn.cc,v 1.32 1998/05/01 17:37:12 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -64,6 +64,8 @@ struct _ASState {
     StoreEntry *entry;
     request_t *request;
     int as_number;
+    off_t seen;
+    off_t offset;
 };
 
 typedef struct _ASState ASState;
@@ -193,7 +195,15 @@ asnCacheStart(int as)
 	storeClientListAdd(e, asState);
     }
     asState->entry = e;
-    storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF), asHandleReply, asState);
+    asState->seen = 0;
+    asState->offset = 0;
+    storeClientCopy(e,
+	asState->seen,
+	asState->offset,
+	4096,
+	memAllocate(MEM_4K_BUF),
+	asHandleReply,
+	asState);
 }
 
 static void
@@ -204,7 +214,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
     StoreEntry *e = asState->entry;
     char *s;
     char *t;
-    debug(53, 3) ("asHandleReply: Called with size=%d.\n", size);
+    debug(53, 3) ("asHandleReply: Called with size=%d\n", size);
     if (e->store_status == STORE_ABORTED) {
 	memFree(MEM_4K_BUF, buf);
 	return;
@@ -213,23 +223,14 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	memFree(MEM_4K_BUF, buf);
 	return;
     } else if (size < 0) {
-	debug(53, 1) ("asHandleReply: Called with size=%d.\n", size);
+	debug(53, 1) ("asHandleReply: Called with size=%d\n", size);
 	memFree(MEM_4K_BUF, buf);
 	return;
     }
-    if (e->store_status == STORE_PENDING) {
-	storeClientCopy(e,
-	    size,
-	    0,
-	    SM_PAGE_SIZE,
-	    buf,
-	    asHandleReply,
-	    asState);
-	return;
-    }
-    debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
     s = buf;
     while (s - buf < size && *s != '\0') {
+	while (*s && isspace(*s))
+	    s++;
 	for (t = s; *t; t++) {
 	    if (isspace(*t))
 		break;
@@ -239,17 +240,30 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	    break;
 	}
 	*t = '\0';
-	debug(53, 4) ("asHandleReply: AS# %s (%d) '\n", s, asState->as_number);
+	debug(53, 3) ("asHandleReply: AS# %s (%d)\n", s, asState->as_number);
 	asnAddNet(s, asState->as_number);
 	s = t + 1;
-	while (*s && isspace(*s))
-	    s++;
     }
-    memFree(MEM_4K_BUF, buf);
-    storeUnregister(e, asState);
-    storeUnlockObject(e);
-    requestUnlink(asState->request);
-    cbdataFree(asState);
+    asState->seen = asState->offset + size;
+    asState->offset += (s - buf);
+    debug(53, 3) ("asState->seen = %d, asState->offset = %d\n",
+	asState->seen, asState->offset);
+    if (e->store_status == STORE_PENDING) {
+	storeClientCopy(e,
+	    asState->seen,
+	    asState->offset,
+	    SM_PAGE_SIZE,
+	    buf,
+	    asHandleReply,
+	    asState);
+    } else {
+	debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
+	memFree(MEM_4K_BUF, buf);
+	storeUnregister(e, asState);
+	storeUnlockObject(e);
+	requestUnlink(asState->request);
+	cbdataFree(asState);
+    }
 }
 
 
@@ -278,7 +292,15 @@ asnAddNet(char *as_string, int as_number)
     *t = '\0';
     addr = inet_addr(as_string);
     bitl = atoi(t + 1);
+#if 0
     mask = (1 << bitl) - 1;
+#else
+    if (bitl < 0)
+	bitl = 0;
+    if (bitl > 32)
+	bitl = 32;
+    mask = bitl ? 0xfffffffful << (32 - bitl) : 0;
+#endif
 
     in_a.s_addr = addr;
     in_m.s_addr = mask;
@@ -291,18 +313,22 @@ asnAddNet(char *as_string, int as_number)
     store_m_int(addr, e->e_addr);
     store_m_int(mask, e->e_mask);
     rn = rn_lookup(e->e_addr, e->e_mask, AS_tree_head);
-    if (rn != 0) {
-	debug(53, 3) ("asnAddNet: warning: Found a network with multiple AS numbers!\n");
+    if (rn != NULL) {
 	as_info = ((rtentry *) rn)->e_info;
-	for (Tail = &(as_info->as_number); *Tail; Tail = &((*Tail)->next));
-	q = xcalloc(1, sizeof(intlist));
-	q->i = as_number;
-	*(Tail) = q;
-	e->e_info = as_info;
+	if (intlistFind(as_info->as_number, as_number)) {
+	    debug(53, 3) ("asnAddNet: Ignoring repeated network '%s/%d' for AS %d\n",
+		dbg1, bitl, as_number);
+	} else {
+	    debug(53, 3) ("asnAddNet: Warning: Found a network with multiple AS numbers!\n");
+	    for (Tail = &as_info->as_number; *Tail; Tail = &(*Tail)->next);
+	    q = xcalloc(1, sizeof(intlist));
+	    q->i = as_number;
+	    *(Tail) = q;
+	    e->e_info = as_info;
+	}
     } else {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = as_number;
-	/* *(Tail) = q;         */
 	as_info = xmalloc(sizeof(as_info));
 	as_info->as_number = q;
 	rn = rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
@@ -316,7 +342,6 @@ asnAddNet(char *as_string, int as_number)
 	return 0;
     }
     e->e_info = as_info;
-    debug(53, 3) ("asnAddNet: added successfully.\n");
     return 1;
 }
 
@@ -403,8 +428,10 @@ whoisReadReply(int fd, void *data)
     char *buf = memAllocate(MEM_4K_BUF);
     int len;
 
-    len = read(fd, buf, 4096);
+    len = read(fd, buf, 4095);
+    buf[len] = '\0';
     debug(53, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
+    debug(53, 5) ("{%s}\n", buf);
     if (len <= 0) {
 	storeComplete(entry);
 	debug(53, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));

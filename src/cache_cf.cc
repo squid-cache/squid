@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.279 1998/04/23 19:27:23 wessels Exp $
+ * $Id: cache_cf.cc,v 1.280 1998/05/01 17:37:13 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -137,12 +137,21 @@ intlistDestroy(intlist ** list)
 {
     intlist *w = NULL;
     intlist *n = NULL;
-
     for (w = *list; w; w = n) {
 	n = w->next;
 	safe_free(w);
     }
     *list = NULL;
+}
+
+int
+intlistFind(intlist * list, int i)
+{
+    intlist *w = NULL;
+    for (w = list; w; w = w->next)
+	if (w->i == i)
+	    return 1;
+    return 0;
 }
 
 
