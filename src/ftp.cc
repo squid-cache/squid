@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.160 1997/10/30 03:31:21 wessels Exp $
+ * $Id: ftp.cc,v 1.161 1997/10/30 06:18:55 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -248,7 +248,7 @@ ftpTimeout(int fd, void *data)
 	ftpState->data.fd = -1;
     }
     comm_close(ftpState->ctrl.fd);
-    ftpState->ctrl.fd = -1;
+    /* don't modify ftpState here, it has been freed */
 }
 
 static void
