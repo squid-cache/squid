@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.85 1996/10/17 11:14:45 wessels Exp $
+ * $Id: http.cc,v 1.86 1996/10/24 20:58:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -313,7 +313,7 @@ httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
 	}
 	t = httpState->reply_hdr + hdr_len;
 	/* headers can be incomplete only if object still arriving */
-	if (entry->store_status == STORE_PENDING)
+	if (!httpState->eof)
 	    if ((t = mime_headers_end(httpState->reply_hdr)) == NULL)
 		return;		/* headers not complete */
 	*t = '\0';
@@ -481,12 +481,14 @@ httpReadReply(int fd, void *data)
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
+	httpState->eof = 1;
 	squid_error_entry(entry,
 	    ERR_ZERO_SIZE_OBJECT,
 	    errno ? xstrerror() : NULL);
 	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
+	httpState->eof = 1;
 	if (httpState->reply_hdr_state < 2)
 	    httpProcessReplyHeader(httpState, buf, len);
 	storeAppend(entry, buf, len);	/* invoke handlers! */
