@@ -538,9 +538,8 @@ extern void redirectFreeMemory(void);
 
 extern void refreshAddToList(const char *, int, time_t, int, time_t);
 extern int refreshCheck(const StoreEntry *, const request_t *, time_t delta);
+extern time_t refreshWhen(const StoreEntry * entry);
 extern time_t getMaxAge(const char *url);
-
-
 
 extern void serverConnectionsClose(void);
 extern void shut_down(int);
@@ -707,10 +706,11 @@ extern EVH storeDirClean;
 
 /* store_digest.c */
 extern void storeDigestInit();
+extern void storeDigestNoteStoreReady();
 extern void storeDigestScheduleRebuild();
-extern void storeDigestRewriteStart();
+extern void storeDigestAdd(const StoreEntry * entry);
+extern void storeDigestDel(const StoreEntry * entry);
 extern void storeDigestReport();
-
 
 /*
  * store_dir.c
@@ -911,8 +911,7 @@ extern int ipcCreate(int type,
     int *wfd);
 
 /* CacheDigest */
-extern CacheDigest *cacheDigestCreate(int capacity);
-extern CacheDigest *cacheDigestSizedCreate(size_t size, int capacity);
+extern CacheDigest *cacheDigestCreate(int capacity, int bpe);
 extern void cacheDigestDestroy(CacheDigest * cd);
 extern CacheDigest *cacheDigestClone(const CacheDigest * cd);
 extern void cacheDigestClear(CacheDigest * cd);
@@ -920,6 +919,8 @@ extern void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
 extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
+extern size_t cacheDigestCalcMaskSize(int cap, int bpe);
+extern int cacheDigestBitUtil(const CacheDigest * cd);
 extern void cacheDigestGuessStatsUpdate(cd_guess_stats * stats, int real_hit, int guess_hit);
 extern void cacheDigestGuessStatsReport(const cd_guess_stats * stats, StoreEntry * sentry, const char *label);
 extern void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
