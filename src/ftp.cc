@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.273 1999/01/21 05:26:14 wessels Exp $
+ * $Id: ftp.cc,v 1.274 1999/01/22 03:36:55 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2296,6 +2296,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	return;
     ftpState->flags.http_header_sent = 1;
     assert(e->mem_obj->inmem_hi == 0);
+    EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
     filename = (t = strRChr(urlpath, '/')) ? t + 1 : strBuf(urlpath);
     if (ftpState->flags.isdir) {
 	mime_type = "text/html";
