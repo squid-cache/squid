@@ -74,12 +74,17 @@ Changes to Squid-2.2 ():
 	  list.
 	- Rewrote the anonymizer.
 	- Removed the http_anonymizer option.
-	- Added the anonymize_headers option to allow individual referencing of
-	  headers for addition or removal. See 'anonymize_headers' in squid.conf
-	  for additional configuration.
+	- Added the anonymize_headers option to allow individual
+	  referencing of headers for addition or removal. See
+	  'anonymize_headers' in squid.conf for additional
+	  configuration.
 	- Fixed config file parser's handing of optional directives.
 	  Some people might get new warnings about unknown config
 	  directives.
+	- Added 'myip' ACL type.  This is the local IP address for
+	  connected sockets (Luyer).
+	- Fixed parsing of FTP DOS directory listings with spaces
+	  (Nordstrom).
 
 Changes to Squid-2.1 (November 16, 1998):
 
