@@ -1,5 +1,5 @@
 /*
- * $Id: parse.h,v 1.8 1998/09/23 17:19:59 wessels Exp $
+ * $Id: parse.h,v 1.9 2001/05/10 07:17:34 hno Exp $
  */
 
 #ifndef _HAVE_PARSE_H_
@@ -84,7 +84,7 @@ extern "C" {
 /*void print_type(struct variable_list *); */
     void print_oid_nums(oid *, int);
 
-    struct snmp_mib_tree *read_mib();
+    struct snmp_mib_tree *read_mib(char *);
 
 #ifdef __cplusplus
 }
