@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.56 2002/10/21 05:45:30 adrian Exp $
+ * $Id: snmp_core.cc,v 1.57 2002/10/21 06:34:04 adrian Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -544,7 +544,7 @@ snmpConstructReponse(snmp_request_t * rq)
 	Session.community = rq->community;
 	Session.community_len = strlen((char *) rq->community);
 	snmp_build(&Session, RespPDU, rq->outbuf, &rq->outlen);
-	sendto(rq->sock, rq->outbuf, rq->outlen, 0, (struct sockaddr *) &rq->from, sizeof(rq->from));
+	comm_udp_sendto(rq->sock, &rq->from, sizeof(rq->from), rq->outbuf, rq->outlen);
 	snmp_free_pdu(RespPDU);
     }
 }
