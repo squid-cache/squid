@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.56 1998/09/24 20:20:22 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.57 1998/09/29 16:33:40 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -103,7 +103,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Public", HDR_PUBLIC, ftStr},
     {"Range", HDR_RANGE, ftPRange},
     {"Referer", HDR_REFERER, ftStr},
-    {"Request-Range", HDR_REQUEST_RANGE, ftPRange}, /* usually matches HDR_RANGE */
+    {"Request-Range", HDR_REQUEST_RANGE, ftPRange},	/* usually matches HDR_RANGE */
     {"Retry-After", HDR_RETRY_AFTER, ftStr},	/* for now (ftDate_1123 or ftInt!) */
     {"Server", HDR_SERVER, ftStr},
     {"Set-Cookie", HDR_SET_COOKIE, ftStr},
@@ -187,7 +187,7 @@ static http_hdr_type RequestHeadersArr[] =
 {
     HDR_AUTHORIZATION, HDR_FROM, HDR_HOST, HDR_IF_MODIFIED_SINCE,
     HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
-    HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE, 
+    HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
     HDR_USER_AGENT, HDR_X_FORWARDED_FOR
 };
 

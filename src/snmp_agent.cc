@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.57 1998/09/23 23:15:53 glenn Exp $
+ * $Id: snmp_agent.cc,v 1.58 1998/09/29 16:33:49 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -78,11 +78,11 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
 	*(Answer->val.integer) = store_swap_size;
 	break;
     case SYS_UPTIME:
-        Answer->val_len = sizeof(snint);
-        Answer->val.integer = xmalloc(Answer->val_len);
-        Answer->type = SMI_TIMETICKS;
-        *(Answer->val.integer) = tvSubDsec(squid_start, current_time)*100;
-        break;
+	Answer->val_len = sizeof(snint);
+	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->type = SMI_TIMETICKS;
+	*(Answer->val.integer) = tvSubDsec(squid_start, current_time) * 100;
+	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	snmp_var_free(Answer);
@@ -338,7 +338,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 	break;
     case PERF_SYS_CURLRUEXP:
 	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (snint) (storeExpiredReferenceAge()*100);
+	*(Answer->val.integer) = (snint) (storeExpiredReferenceAge() * 100);
 	break;
     case PERF_SYS_CURUNLREQ:
 	*(Answer->val.integer) = (snint) Counter.unlink.requests;

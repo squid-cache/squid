@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.40 1998/09/23 21:22:50 glenn Exp $
+ * $Id: client_db.cc,v 1.41 1998/09/29 16:33:42 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -246,7 +246,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	snmp_var_free(Answer);
 	return (NULL);
     }
-    switch (Var->name[LEN_SQ_NET+2]) {
+    switch (Var->name[LEN_SQ_NET + 2]) {
     case MESH_CTBL_ADDR:
 	Answer->type = SMI_IPADDRESS;
 	Answer->val_len = sizeof(snint);
@@ -316,4 +316,4 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     return Answer;
 }
 
-#endif /*SQUID_SNMP*/
+#endif /*SQUID_SNMP */

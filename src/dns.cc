@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.65 1998/09/23 21:23:33 glenn Exp $
+ * $Id: dns.cc,v 1.66 1998/09/29 16:33:44 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -288,8 +288,8 @@ dnsShutdownRead(int fd, void *data)
 
 #ifdef SQUID_SNMP
 /*
-        The function to return the DNS via SNMP
-*/
+ * The function to return the DNS via SNMP
+ */
 
 variable_list *
 snmp_netDnsFn(variable_list * Var, snint * ErrP)
@@ -297,7 +297,7 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
     variable_list *Answer;
 
     debug(49, 5) ("snmp_netDnsFn: Processing request:\n", Var->name[LEN_SQ_NET +
- 1]);
+	    1]);
     snmpDebugOid(5, Var->name, Var->name_length);
 
     Answer = snmp_var_new(Var->name, Var->name_length);
@@ -306,22 +306,22 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
     Answer->val.integer = xmalloc(Answer->val_len);
     Answer->type = SMI_COUNTER32;
 
-    switch (Var->name[LEN_SQ_NET+1]) {
+    switch (Var->name[LEN_SQ_NET + 1]) {
     case DNS_REQ:
-        *(Answer->val.integer) = DnsStats.requests;
-        break;
+	*(Answer->val.integer) = DnsStats.requests;
+	break;
     case DNS_REP:
-        *(Answer->val.integer) = DnsStats.replies;
-        break;
+	*(Answer->val.integer) = DnsStats.replies;
+	break;
     case DNS_SERVERS:
-        *(Answer->val.integer) = NDnsServersAlloc;
-        break;
+	*(Answer->val.integer) = NDnsServersAlloc;
+	break;
     default:
-        *ErrP = SNMP_ERR_NOSUCHNAME;
-        snmp_var_free(Answer);
-        return (NULL);
+	*ErrP = SNMP_ERR_NOSUCHNAME;
+	snmp_var_free(Answer);
+	return (NULL);
     }
     return Answer;
 }
 
-#endif /*SQUID_SNMP*/
+#endif /*SQUID_SNMP */
