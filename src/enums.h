@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.151 1999/05/10 19:33:23 wessels Exp $
+ * $Id: enums.h,v 1.152 1999/05/19 19:57:42 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -335,7 +335,6 @@ enum {
 enum {
     PING_NONE,
     PING_WAITING,
-    PING_TIMEOUT,
     PING_DONE
 };
 

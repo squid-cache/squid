@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.498 1999/05/04 21:58:40 wessels Exp $
+ * $Id: store.cc,v 1.499 1999/05/19 19:57:53 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -49,7 +49,6 @@ const char *pingStatusStr[] =
 {
     "PING_NONE",
     "PING_WAITING",
-    "PING_TIMEOUT",
     "PING_DONE"
 };
 

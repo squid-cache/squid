@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.9 1999/05/04 21:58:20 wessels Exp $
+ * $Id: delay_pools.cc,v 1.10 1999/05/19 19:57:41 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -164,6 +164,8 @@ delayRegisterDelayIdPtr(delay_id * loc)
 {
     hash_link *lnk;
     if (!delay_id_ptr_hash)
+	return;
+    if (*loc == 0)
 	return;
     lnk = xmalloc(sizeof(hash_link));
     lnk->key = (char *) loc;
@@ -627,6 +629,7 @@ delaySetStoreClient(StoreEntry * e, void *data, delay_id delay_id)
     store_client *sc = storeClientListSearch(e->mem_obj, data);
     assert(sc != NULL);
     sc->delay_id = delay_id;
+    delayRegisterDelayIdPtr(&sc->delay_id);
 }
 
 static void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.59 1999/05/04 20:58:31 wessels Exp $
+ * $Id: forward.cc,v 1.60 1999/05/19 19:57:43 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -462,10 +462,12 @@ fwdCheckDeferRead(int fd, void *data)
     if (mem == NULL)
 	return 0;
 #if DELAY_POOLS
-    if (fd > -1)
-	if (!delayIsNoDelay(fd))
-	    if (delayMostBytesWanted(mem, 1) == 0)
-		return 1;
+    if (fd < 0)
+	(void) 0;
+    else if (delayIsNoDelay(fd))
+	(void) 0;
+    else if (delayMostBytesWanted(mem, 1) == 0)
+	return 1;
 #endif
     if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT))
 	return 0;

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.154 1999/05/12 16:35:57 wessels Exp $
+# $Id: cf.data.pre,v 1.155 1999/05/19 19:57:36 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2514,7 +2514,7 @@ DOC_END
 
 NAME: snmp_incoming_address
 TYPE: address
-LOC: Config.Addrs.snmp_outgoing
+LOC: Config.Addrs.snmp_incoming
 DEFAULT: 0.0.0.0
 IFDEF: SQUID_SNMP
 DOC_NONE

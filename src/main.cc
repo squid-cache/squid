@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.298 1999/05/04 21:58:25 wessels Exp $
+ * $Id: main.cc,v 1.299 1999/05/19 19:57:47 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -724,7 +724,9 @@ watch_child(char *argv[])
 #endif
     for (i = 0; i < Squid_MaxFD; i++)
 	close(i);
+#if NOT_NEEDED
     umask(0);
+#endif
     for (;;) {
 	if ((pid = fork()) == 0) {
 	    /* child */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.284 1999/05/11 20:14:14 wessels Exp $
+ * $Id: ftp.cc,v 1.285 1999/05/19 19:57:45 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -60,24 +60,24 @@ typedef enum {
 } ftp_state_t;
 
 struct _ftp_flags {
-    int isdir:1;
-    int pasv_supported:1;
-    int skip_whitespace:1;
-    int rest_supported:1;
-    int pasv_only:1;
-    int authenticated:1;
-    int http_header_sent:1;
-    int tried_nlst:1;
-    int use_base:1;
-    int root_dir:1;
-    int no_dotdot:1;
-    int html_header_sent:1;
-    int binary:1;
-    int try_slash_hack:1;
-    int put:1;
-    int put_mkdir:1;
-    int listformat_unknown:1;
-    int datachannel_hack:1;
+    unsigned int isdir:1;
+    unsigned int pasv_supported:1;
+    unsigned int skip_whitespace:1;
+    unsigned int rest_supported:1;
+    unsigned int pasv_only:1;
+    unsigned int authenticated:1;
+    unsigned int http_header_sent:1;
+    unsigned int tried_nlst:1;
+    unsigned int use_base:1;
+    unsigned int root_dir:1;
+    unsigned int no_dotdot:1;
+    unsigned int html_header_sent:1;
+    unsigned int binary:1;
+    unsigned int try_slash_hack:1;
+    unsigned int put:1;
+    unsigned int put_mkdir:1;
+    unsigned int listformat_unknown:1;
+    unsigned int datachannel_hack:1;
 };
 
 typedef struct _Ftpdata {
@@ -265,13 +265,23 @@ ftpStateFree(int fdnotused, void *data)
     storeUnlockObject(ftpState->entry);
     if (ftpState->reply_hdr) {
 	memFree(ftpState->reply_hdr, MEM_8K_BUF);
+	/* this seems unnecessary, but people report SEGV's
+	 * when freeing memory in this function */
 	ftpState->reply_hdr = NULL;
     }
     requestUnlink(ftpState->request);
-    if (ftpState->ctrl.buf)
+    if (ftpState->ctrl.buf) {
 	ftpState->ctrl.freefunc(ftpState->ctrl.buf);
-    if (ftpState->data.buf)
+	/* this seems unnecessary, but people report SEGV's
+	 * when freeing memory in this function */
+	ftpState->ctrl.buf = NULL;
+    }
+    if (ftpState->data.buf) {
 	ftpState->data.freefunc(ftpState->data.buf);
+	/* this seems unnecessary, but people report SEGV's
+	 * when freeing memory in this function */
+	ftpState->data.buf = NULL;
+    }
     if (ftpState->pathcomps)
 	wordlistDestroy(&ftpState->pathcomps);
     if (ftpState->ctrl.message)
