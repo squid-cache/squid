@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.420 2003/07/15 06:50:42 robertc Exp $
+ * $Id: http.cc,v 1.421 2003/07/15 20:20:33 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1294,6 +1294,11 @@ httpBuildRequestHeader(request_t * request,
                 assert(strstr(url, request->urlpath.buf()));
         }
 
+        /* Set no-cache if determined needed but not found */
+        if (orig_request->flags.nocache && !httpHeaderHas(hdr_in, HDR_PRAGMA))
+            EBIT_SET(cc->mask, CC_NO_CACHE);
+
+        /* Enforce sibling relations */
         if (flags.only_if_cached)
             EBIT_SET(cc->mask, CC_ONLY_IF_CACHED);
 
