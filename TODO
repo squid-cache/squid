@@ -37,7 +37,6 @@ Our Todo List
 	distant_peer_deny   200  75  10
 (3)	Resource limits.
 (3) **	Make swap.state binary with fixed-size cache keys (AR)
-(3) **	Make checkFailureRatio() work again.  (DW)
 (3)	LDAP support.  See http://miso.wwa.com/~donley/ and
 	Clayton Donley <qa1049@ilms04.cig.mot.com>
 (3) **  Store cache key and other metadata in swap files (KA)
@@ -86,3 +85,4 @@ DONE:
 	that they are sorted in order of last reference?  Then upon
 	restart we won't have to worry about the list being unsorted
 	and causing problems with the LRU magic value.
+(3) **	Make checkFailureRatio() work again.  (DW)
