@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.13 1996/04/01 18:24:30 wessels Exp $ */
+/* $Id: stat.cc,v 1.14 1996/04/02 21:50:24 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -748,13 +748,15 @@ void parameter_get(obj, sentry)
 }
 
 
-void log_append(obj, url, id, size, action, method)
+void log_append(obj, url, id, size, action, method, http_code, msec)
      cacheinfo *obj;
      char *url;
      char *id;
      int size;
      char *action;
      char *method;
+     int http_code;
+     int msec;
 {
     static char tmp[6000];	/* MAX_URL is 4096 */
     char *buf = NULL;
@@ -785,11 +787,13 @@ void log_append(obj, url, id, size, action, method)
 	    sprintf(tmp, "%s - - [%s] \"%s %s\" %s %d\n",
 		id, mkhttpdlogtime(&cached_curtime), method, url, action, size);
 	else
-	    sprintf(tmp, "%9d.%06d %s %s %d %s %s\n",
+	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s\n",
 		(int) current_time.tv_sec,
-		(int) current_time.tv_usec,
+		(int) current_time.tv_usec / 1000,
+		msec,
 		id,
 		action,
+		http_code,
 		size,
 		method,
 		url);
