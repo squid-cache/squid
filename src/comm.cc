@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.263 1998/05/28 21:50:17 wessels Exp $
+ * $Id: comm.cc,v 1.264 1998/05/28 21:53:42 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1320,7 +1320,7 @@ commSetTcpNoDelay(int fd)
 }
 #endif
 
-int
+void
 comm_init(void)
 {
     fd_table = xcalloc(Squid_MaxFD, sizeof(fde));
@@ -1331,7 +1331,6 @@ comm_init(void)
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
-    return 0;
 }
 
 
