@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.47 1998/12/15 17:33:33 wessels Exp $
+ * $Id: access_log.cc,v 1.48 1999/01/15 06:36:35 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -279,6 +279,8 @@ accessLogLog(AccessLogEntry * al)
 	size_t isize;
 	xstrncpy((char *) ibuf, al->url, 364 * sizeof(int));
 	isize = ((strlen(al->url) + 8) / 8) * 2;
+	if (isize > 364)
+	    isize = 364;
 	mcast_encode((unsigned int *) ibuf, isize,
 	    (const unsigned int *) Config.mcast_miss.encode_key);
 	comm_udp_sendto(mcast_miss_fd,
