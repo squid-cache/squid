@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.38 1997/11/14 04:55:09 wessels Exp $
+ * $Id: store_dir.cc,v 1.39 1998/01/06 07:11:56 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -36,6 +36,12 @@
 #define DefaultLevelOneDirs     16
 #define DefaultLevelTwoDirs     256
 
+static char *storeSwapSubDir(int dirn, int subdirn);
+static int storeMostFreeSwapDir(void);
+static int storeVerifyDirectory(const char *path);
+static void storeCreateDirectory(const char *path, int lvl);
+static void storeCreateSwapSubDirs(int j);
+
 /* return full name to swapfile */
 char *
 storeSwapFullPath(int fn, char *fullpath)
@@ -54,7 +60,20 @@ storeSwapFullPath(int fn, char *fullpath)
     return fullpath;
 }
 
-/* return full name to swapfile */
+static char *
+storeSwapSubDir(int dirn, int subdirn)
+{
+    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
+    SwapDir *SD;
+    assert(0 <= dirn && dirn < Config.cacheSwap.n_configured);
+    SD = &Config.cacheSwap.swapDirs[dirn];
+    assert(0 <= subdirn && subdirn < SD->l1);
+    snprintf(fullfilename, SQUID_MAXPATHLEN, "%s/%02X",
+	Config.cacheSwap.swapDirs[dirn].path,
+	subdirn);
+    return fullfilename;
+}
+
 char *
 storeSwapSubSubDir(int fn, char *fullpath)
 {
@@ -71,49 +90,77 @@ storeSwapSubSubDir(int fn, char *fullpath)
     return fullpath;
 }
 
-static int
-storeVerifyOrCreateDir(const char *path)
+static void
+storeCreateDirectory(const char *path, int lvl)
 {
-    struct stat sb;
-    if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode)) {
-	debug(47, 3) ("%s exists\n", path);
-	return 0;
-    }
-    safeunlink(path, 1);
-    if (mkdir(path, 0777) < 0) {
-	if (errno != EEXIST) {
-	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
-		"Failed to create swap directory %s: %s",
-		path,
-		xstrerror());
-	    fatal(tmp_error_buf);
-	}
-    }
-    debug(47, 1) ("Created directory %s\n", path);
-    if (stat(path, &sb) < 0 || !S_ISDIR(sb.st_mode)) {
+    struct stat st;
+    if (stat(path, &st) == 0 && S_ISDIR(st.st_mode)) {
+	debug(20, lvl) ("%s exists\n", path);
+    } else if (mkdir(path, 0755) == 0) {
+	debug(20, lvl) ("%s created\n", path);
+    } else if (errno == EEXIST) {
+	debug(20, lvl) ("%s exists\n", path);
+    } else {
 	snprintf(tmp_error_buf, ERROR_BUF_SZ,
-	    "Failed to create directory %s: %s", path, xstrerror());
+	    "Failed to make swap directory %s: %s",
+	    path, xstrerror());
 	fatal(tmp_error_buf);
     }
-    return 1;
 }
 
+static int
+storeVerifyDirectory(const char *path)
+{
+    struct stat sb;
+    if (stat(path, &sb) < 0) {
+	debug(20, 0) ("%s: %s\n", path, xstrerror());
+	return -1;
+    }
+    if (S_ISDIR(sb.st_mode) == 0) {
+	debug(20, 0) ("%s is not a directory\n", path);
+	return -1;
+    }
+    return 0;
+}
+
+/*
+ * This function is called by storeInit().  If this returns < 0,
+ * then Squid exits, complains about swap directories not
+ * existing, and instructs the admin to run 'squid -z'
+ */
 int
-storeVerifySwapDirs(void)
+storeVerifyCacheDirs(void)
 {
     int i;
-    const char *path = NULL;
-    int directory_created = 0;
+    int j;
+    const char *path;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	path = Config.cacheSwap.swapDirs[i].path;
-	debug(47, 3) ("storeVerifySwapDirs: Creating swap space in %s\n", path);
-	storeVerifyOrCreateDir(path);
-	storeCreateSwapSubDirs(i);
+	if (storeVerifyDirectory(path) < 0)
+	    return -1;
+	for (j = 0; j < Config.cacheSwap.swapDirs[i].l1; j++) {
+	    path = storeSwapSubDir(i, j);
+	    if (storeVerifyDirectory(path) < 0)
+		return -1;
+	}
     }
-    return directory_created;
+    return 0;
 }
 
 void
+storeCreateSwapDirectories(void)
+{
+    int i;
+    const char *path = NULL;
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	path = Config.cacheSwap.swapDirs[i].path;
+	debug(47, 3) ("Creating swap space in %s\n", path);
+	storeCreateDirectory(path, 0);
+	storeCreateSwapSubDirs(i);
+    }
+}
+
+static void
 storeCreateSwapSubDirs(int j)
 {
     int i, k;
@@ -121,17 +168,16 @@ storeCreateSwapSubDirs(int j)
     LOCAL_ARRAY(char, name, MAXPATHLEN);
     for (i = 0; i < SD->l1; i++) {
 	snprintf(name, MAXPATHLEN, "%s/%02X", SD->path, i);
-	if (storeVerifyOrCreateDir(name) == 0)
-	    continue;
+	storeCreateDirectory(name, 0);
 	debug(47, 1) ("Making directories in %s\n", name);
 	for (k = 0; k < SD->l2; k++) {
 	    snprintf(name, MAXPATHLEN, "%s/%02X/%02X", SD->path, i, k);
-	    storeVerifyOrCreateDir(name);
+	    storeCreateDirectory(name, 2);
 	}
     }
 }
 
-int
+static int
 storeMostFreeSwapDir(void)
 {
     double least_used = 1.0;

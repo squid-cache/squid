@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.202 1998/01/05 20:49:11 wessels Exp $
+ * $Id: main.cc,v 1.203 1998/01/06 07:11:53 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -130,6 +130,8 @@ static void mainParseOptions(int, char **);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
 static void watch_child(char **);
+static void setEffectiveUser(void);
+
 static void
 usage(void)
 {
@@ -145,7 +147,7 @@ usage(void)
 	"       -s        Enable logging to syslog.\n"
 	"       -u port   Specify ICP port number (default: %d), disable with 0.\n"
 	"       -v        Print version.\n"
-	"       -z        Zap disk storage -- deletes all objects in disk cache.\n"
+	"       -z        Create swap directories\n"
 	"       -C        Do not catch fatal signals.\n"
 	"       -D        Disable initial DNS tests.\n"
 	"       -F        Foreground fast store rebuild.\n"
@@ -246,7 +248,7 @@ mainParseOptions(int argc, char *argv[])
 	    exit(0);
 	    /* NOTREACHED */
 	case 'z':
-	    opt_zap_disk_store = 1;
+	    opt_create_swap_dirs = 1;
 	    break;
 	case '?':
 	default:
@@ -411,6 +413,19 @@ mainReconfigure(void)
     debug(1, 0) ("Ready to serve requests.\n");
 }
 
+static void 
+setEffectiveUser(void)
+{
+    leave_suid();		/* Run as non privilegied user */
+    if (geteuid() == 0) {
+	debug(0, 0) ("Squid is not safe to run as root!  If you must\n");
+	debug(0, 0) ("start Squid as root, then you must configure\n");
+	debug(0, 0) ("it to run as a non-priveledged user with the\n");
+	debug(0, 0) ("'cache_effective_user' option in the config file.\n");
+	fatal("Don't run Squid as root, set 'cache_effective_user'!");
+    }
+}
+
 static void
 mainInitialize(void)
 {
@@ -427,14 +442,7 @@ mainInitialize(void)
 	ConfigFile = xstrdup(DefaultConfigFile);
     parseConfigFile(ConfigFile);
 
-    leave_suid();		/* Run as non privilegied user */
-    if (geteuid() == 0) {
-	debug(0, 0) ("Squid is not safe to run as root!  If you must\n");
-	debug(0, 0) ("start Squid as root, then you must configure\n");
-	debug(0, 0) ("it to run as a non-priveledged user with the\n");
-	debug(0, 0) ("'cache_effective_user' option in the config file.\n");
-	fatal("Don't run Squid as root, set 'cache_effective_user'!");
-    }
+    setEffectiveUser();
     assert(Config.Port.http);
     if (httpPortNumOverride != 1)
 	Config.Port.http->i = (u_short) httpPortNumOverride;
@@ -566,6 +574,16 @@ main(int argc, char **argv)
 	sendSignal();
 	/* NOTREACHED */
     }
+    if (opt_create_swap_dirs) {
+        if (ConfigFile == NULL)
+            ConfigFile = xstrdup(DefaultConfigFile);
+        cbdataInit();
+        parseConfigFile(ConfigFile);
+        setEffectiveUser();
+        debug(0, 0)("Creating Swap Directories\n");
+        storeCreateSwapDirectories();
+        return 0;
+    }   
     if (!opt_no_daemon)
 	watch_child(argv);
     setMaxFD();

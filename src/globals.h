@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.23 1998/01/06 05:12:09 wessels Exp $
+ * $Id: globals.h,v 1.24 1998/01/06 07:11:53 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -64,7 +64,7 @@ extern int opt_mem_pools;	/* 1 */
 extern int opt_reload_hit_only;	/* 0 */
 extern int opt_syslog_enable;	/* 0 */
 extern int opt_udp_hit_obj;	/* 0 */
-extern int opt_zap_disk_store;	/* 0 */
+extern int opt_create_swap_dirs;	/* 0 */
 extern int syslog_enable;	/* 0 */
 extern int theInIcpConnection;	/* -1 */
 extern int theOutIcpConnection;	/* -1 */
