@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.493 2004/10/18 12:20:10 hno Exp $
+ * $Id: structs.h,v 1.494 2004/11/06 22:20:48 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1515,6 +1515,18 @@ unsigned int reload_into_ims:
         1;
 
 unsigned int ignore_reload:
+        1;
+
+unsigned int ignore_no_cache:
+        1;
+
+unsigned int ignore_no_store:
+        1;
+
+unsigned int ignore_private:
+        1;
+
+unsigned int ignore_auth:
         1;
 #endif
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.496 2004/10/18 12:20:10 hno Exp $
+ * $Id: protos.h,v 1.497 2004/11/06 22:20:47 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -623,6 +623,7 @@ extern int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
 extern int refreshCheckDigest(const StoreEntry *, time_t delta);
 extern time_t getMaxAge(const char *url);
 extern void refreshInit(void);
+extern const refresh_t *refreshLimits(const char *url);
 
 extern void serverConnectionsClose(void);
 extern void shut_down(int);

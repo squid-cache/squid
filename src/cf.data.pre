@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.361 2004/10/20 22:41:04 hno Exp $
+# $Id: cf.data.pre,v 1.362 2004/11/06 22:20:47 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2067,6 +2067,10 @@ DOC_START
 		 override-lastmod
 		 reload-into-ims
 		 ignore-reload
+		 ignore-no-cache
+		 ignore-no-store
+		 ignore-private
+		 ignore-auth
 
 		override-expire enforces min age even if the server
 		sent a Expires: header. Doing this VIOLATES the HTTP
@@ -2085,6 +2089,28 @@ DOC_START
 		header. Doing this VIOLATES the HTTP standard. Enabling
 		this feature could make you liable for problems which
 		it causes.
+
+                ignore-no-cache ignores any ``Pragma: no-cache'' and
+                ``Cache-control: no-cache'' headers received from a server.
+                The HTTP RFC never allows the use of this (Pragma) header
+                from a server, only a client, though plenty of servers
+                send it anyway.
+
+                ignore-no-store ignores any ``Cache-control: no-store''
+                headers received from a server. Doing this VIOLATES
+                the HTTP standard. Enabling this feature could make you
+                liable for problems which it causes.
+
+                ignore-private ignores any ``Cache-control: private''
+                headers received from a server. Doing this VIOLATES
+                the HTTP standard. Enabling this feature could make you
+                liable for problems which it causes.
+
+                ignore-auth caches responses to requests with authorization,
+                irrespective of ``Cache-control'' headers received from
+                a server. Doing this VIOLATES the HTTP standard. Enabling
+                this feature could make you liable for problems which
+                it causes.
 
 	Basically a cached object is:
 

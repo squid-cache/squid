@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.455 2004/10/15 21:10:44 hno Exp $
+ * $Id: cache_cf.cc,v 1.456 2004/11/06 22:20:47 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -521,6 +521,66 @@ configDoConfigure(void)
                 continue;
 
             debug(22, 1) ("WARNING: use of 'override-lastmod' in 'refresh_pattern' violates HTTP\n");
+
+            break;
+        }
+
+        for (R = Config.Refresh; R; R = R->next)
+        {
+            if (!R->flags.reload_into_ims)
+                continue;
+
+            debug(22, 1) ("WARNING: use of 'reload-into-ims' in 'refresh_pattern' violates HTTP\n");
+
+            break;
+        }
+
+        for (R = Config.Refresh; R; R = R->next)
+        {
+            if (!R->flags.ignore_reload)
+                continue;
+
+            debug(22, 1) ("WARNING: use of 'ignore-reload' in 'refresh_pattern' violates HTTP\n");
+
+            break;
+        }
+
+        for (R = Config.Refresh; R; R = R->next)
+        {
+            if (!R->flags.ignore_no_cache)
+                continue;
+
+            debug(22, 1) ("WARNING: use of 'ignore-no-cache' in 'refresh_pattern' violates HTTP\n");
+
+            break;
+        }
+
+        for (R = Config.Refresh; R; R = R->next)
+        {
+            if (!R->flags.ignore_no_store)
+                continue;
+
+            debug(22, 1) ("WARNING: use of 'ignore-no-store' in 'refresh_pattern' violates HTTP\n");
+
+            break;
+        }
+
+        for (R = Config.Refresh; R; R = R->next)
+        {
+            if (!R->flags.ignore_private)
+                continue;
+
+            debug(22, 1) ("WARNING: use of 'ignore-private' in 'refresh_pattern' violates HTTP\n");
+
+            break;
+        }
+
+        for (R = Config.Refresh; R; R = R->next)
+        {
+            if (!R->flags.ignore_auth)
+                continue;
+
+            debug(22, 1) ("WARNING: use of 'ignore-auth' in 'refresh_pattern' violates HTTP\n");
 
             break;
         }
@@ -2019,6 +2079,18 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
         if (head->flags.ignore_reload)
             storeAppendPrintf(entry, " ignore-reload");
 
+        if (head->flags.ignore_no_cache)
+            storeAppendPrintf(entry, " ignore-no-cache");
+
+        if (head->flags.ignore_no_store)
+            storeAppendPrintf(entry, " ignore-no-store");
+
+        if (head->flags.ignore_private)
+            storeAppendPrintf(entry, " ignore-private");
+
+        if (head->flags.ignore_auth)
+            storeAppendPrintf(entry, " ignore-auth");
+
 #endif
 
         storeAppendPrintf(entry, "\n");
@@ -2041,6 +2113,10 @@ parse_refreshpattern(refresh_t ** head)
     int override_lastmod = 0;
     int reload_into_ims = 0;
     int ignore_reload = 0;
+    int ignore_no_cache = 0;
+    int ignore_no_store = 0;
+    int ignore_private = 0;
+    int ignore_auth = 0;
 #endif
 
     int i;
@@ -2085,6 +2161,14 @@ parse_refreshpattern(refresh_t ** head)
             override_expire = 1;
         else if (!strcmp(token, "override-lastmod"))
             override_lastmod = 1;
+        else if (!strcmp(token, "ignore-no-cache"))
+            ignore_no_cache = 1;
+        else if (!strcmp(token, "ignore-no-store"))
+            ignore_no_store = 1;
+        else if (!strcmp(token, "ignore-private"))
+            ignore_private = 1;
+        else if (!strcmp(token, "ignore-auth"))
+            ignore_auth = 1;
         else if (!strcmp(token, "reload-into-ims")) {
             reload_into_ims = 1;
             refresh_nocache_hack = 1;
@@ -2135,6 +2219,18 @@ parse_refreshpattern(refresh_t ** head)
 
     if (ignore_reload)
         t->flags.ignore_reload = 1;
+
+    if (ignore_no_cache)
+        t->flags.ignore_no_cache = 1;
+
+    if (ignore_no_store)
+        t->flags.ignore_no_store = 1;
+
+    if (ignore_private)
+        t->flags.ignore_private = 1;
+
+    if (ignore_auth)
+        t->flags.ignore_auth = 1;
 
 #endif
 
