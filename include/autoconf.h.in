@@ -130,6 +130,9 @@
 /* Define if you have the strdup function.  */
 #undef HAVE_STRDUP
 
+/* Define if you have the strerror function.  */
+#undef HAVE_STRERROR
+
 /* Define if you have the sysconf function.  */
 #undef HAVE_SYSCONF
 
