@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.129 1999/01/19 02:24:36 wessels Exp $
+ * $Id: wais.cc,v 1.130 1999/01/20 19:27:12 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -67,12 +67,14 @@ static void
 waisTimeout(int fd, void *data)
 {
     WaisStateData *waisState = data;
-    ErrorState *err;
     StoreEntry *entry = waisState->entry;
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
-    err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
-    err->request = requestLink(waisState->request);
-    errorAppendEntry(entry, err);
+    if (entry->store_status == STORE_PENDING) { 
+        if (entry->mem_obj->inmem_hi == 0) {
+            fwdFail(waisState->fwd,
+                errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+        }   
+    }   
     comm_close(fd);
 }
 
