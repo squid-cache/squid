@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.22 2000/10/04 15:32:13 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.23 2000/10/31 23:48:12 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -467,7 +467,7 @@ httpHdrRangeBoundaryStr(clientHttpRequest * http)
     assert(http);
     stringAppend(&b, full_appname_string, strlen(full_appname_string));
     stringAppend(&b, ":", 1);
-    key = storeKeyText(http->entry->key);
+    key = storeKeyText(http->entry->hash.key);
     stringAppend(&b, key, strlen(key));
     return b;
 }

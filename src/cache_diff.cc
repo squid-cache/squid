@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_diff.cc,v 1.12 2000/06/06 19:34:31 hno Exp $
+ * $Id: cache_diff.cc,v 1.13 2000/10/31 23:48:13 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -172,7 +172,7 @@ cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file)
 		idx->bad_add_count++;
 	    } else {
 		CacheEntry *e = cacheEntryCreate(&s);
-		hash_join(idx->hash, (hash_link *) e);
+		hash_join(idx->hash, &e->hash);
 		idx->count++;
 	    }
 	} else if (s.op == SWAP_LOG_DEL) {

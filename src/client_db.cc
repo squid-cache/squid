@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.50 2000/06/27 22:05:58 hno Exp $
+ * $Id: client_db.cc,v 1.51 2000/10/31 23:48:13 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -44,9 +44,9 @@ clientdbAdd(struct in_addr addr)
 {
     ClientInfo *c;
     c = memAllocate(MEM_CLIENT_INFO);
-    c->key = xstrdup(inet_ntoa(addr));
+    c->hash.key = xstrdup(inet_ntoa(addr));
     c->addr = addr;
-    hash_join(client_table, (hash_link *) c);
+    hash_join(client_table, &c->hash);
     statCounter.client_http.clients++;
     return c;
 }
@@ -169,7 +169,7 @@ clientdbDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Cache Clients:\n");
     hash_first(client_table);
     while ((c = (ClientInfo *) hash_next(client_table))) {
-	storeAppendPrintf(sentry, "Address: %s\n", c->key);
+	storeAppendPrintf(sentry, "Address: %s\n", hashKeyStr(&c->hash));
 	storeAppendPrintf(sentry, "Name: %s\n", fqdnFromAddr(c->addr));
 	storeAppendPrintf(sentry, "Currently established connections: %d\n",
 	    c->n_established);
@@ -214,7 +214,7 @@ static void
 clientdbFreeItem(void *data)
 {
     ClientInfo *c = data;
-    safe_free(c->key);
+    safe_free(c->hash.key);
     memFree(c, MEM_CLIENT_INFO);
 }
 
@@ -236,7 +236,7 @@ client_entry(struct in_addr *current)
 	key = inet_ntoa(*current);
 	hash_first(client_table);
 	while ((c = (ClientInfo *) hash_next(client_table))) {
-	    if (!strcmp(key, c->key))
+	    if (!strcmp(key, hashKeyStr(&c->hash)))
 		break;
 	}
 	c = (ClientInfo *) hash_next(client_table);

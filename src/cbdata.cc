@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.30 2000/10/17 08:06:02 adrian Exp $
+ * $Id: cbdata.cc,v 1.31 2000/10/31 23:48:13 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -71,8 +71,7 @@ static hash_table *htable = NULL;
 static int cbdataCount = 0;
 
 typedef struct _cbdata {
-    const void *key;
-    struct _cbdata *next;
+    hash_link hash;		/* must be first */
     int valid;
     int locks;
     CBDUNL *unlock_func;
@@ -128,7 +127,7 @@ cbdataAdd(const void *p, CBDUNL * unlock_func, int id)
     assert(htable != NULL);
     assert(hash_lookup(htable, p) == NULL);
     c = memPoolAlloc(cbdata_pool);
-    c->key = p;
+    c->hash.key = (void *) p;
     c->valid = 1;
     c->unlock_func = unlock_func;
     c->id = id;
@@ -136,7 +135,7 @@ cbdataAdd(const void *p, CBDUNL * unlock_func, int id)
     c->file = file;
     c->line = line;
 #endif
-    hash_join(htable, (hash_link *) c);
+    hash_join(htable, &c->hash);
     cbdataCount++;
 }
 
@@ -144,11 +143,11 @@ static void
 cbdataReallyFree(cbdata * c)
 {
     CBDUNL *unlock_func = c->unlock_func;
-    void *p = (void *) c->key;
+    void *p = c->hash.key;
     int id = c->id;
     hash_remove_link(htable, (hash_link *) c);
     cbdataCount--;
-    memPoolFree(cbdata_pool,c);
+    memPoolFree(cbdata_pool, c);
     debug(45, 3) ("cbdataReallyFree: Freeing %p\n", p);
     if (unlock_func)
 	unlock_func(p, id);
@@ -246,13 +245,13 @@ cbdataDump(StoreEntry * sentry)
 	c = (cbdata *) hptr;
 #if CBDATA_DEBUG
 	storeAppendPrintf(sentry, "%20p %10s %d locks %s:%d\n",
-	    c->key,
+	    c->hash.key,
 	    c->valid ? "VALID" : "NOT VALID",
 	    c->locks,
 	    c->file, c->line);
 #else
 	storeAppendPrintf(sentry, "%20p %10s %d locks\n",
-	    c->key,
+	    c->hash.key,
 	    c->valid ? "VALID" : "NOT VALID",
 	    c->locks);
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.226 2000/10/17 08:06:03 adrian Exp $
+ * $Id: ipcache.cc,v 1.227 2000/10/31 23:48:13 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -38,9 +38,7 @@
 typedef struct _ipcache_entry ipcache_entry;
 
 struct _ipcache_entry {
-    /* first two items must be equivalent to hash_link */
-    char *name;
-    ipcache_entry *next;
+    hash_link hash;		/* must be first */
     time_t lastref;
     time_t expires;
     ipcache_addrs addrs;
@@ -171,7 +169,7 @@ ipcacheCreateEntry(const char *name)
 {
     static ipcache_entry *i;
     i = memAllocate(MEM_IPCACHE_ENTRY);
-    i->name = xstrdup(name);
+    i->hash.key = xstrdup(name);
     i->expires = squid_curtime + Config.negativeDnsTtl;
     return i;
 }
@@ -179,13 +177,13 @@ ipcacheCreateEntry(const char *name)
 static void
 ipcacheAddEntry(ipcache_entry * i)
 {
-    hash_link *e = hash_lookup(ip_table, i->name);
+    hash_link *e = hash_lookup(ip_table, i->hash.key);
     if (NULL != e) {
 	/* avoid colission */
 	ipcache_entry *q = (ipcache_entry *) e;
 	ipcacheRelease(q);
     }
-    hash_join(ip_table, (hash_link *) i);
+    hash_join(ip_table, &i->hash);
     dlinkAdd(i, &i->lru, &lru_list);
     i->lastref = squid_curtime;
 }
@@ -417,9 +415,9 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     c->data = i;
     cbdataAdd(c, memFree, MEM_GEN_CBDATA);
 #if USE_DNSSERVERS
-    dnsSubmit(i->name, ipcacheHandleReply, c);
+    dnsSubmit(hashKeyStr(&i->hash), ipcacheHandleReply, c);
 #else
-    idnsALookup(i->name, ipcacheHandleReply, c);
+    idnsALookup(hashKeyStr(&i->hash), ipcacheHandleReply, c);
 #endif
 }
 
@@ -490,7 +488,7 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 {
     int k;
     storeAppendPrintf(sentry, " %-32.32s  %c %6d %6d %2d(%2d)",
-	i->name,
+	hashKeyStr(&i->hash),
 	i->flags.negcached ? 'N' : ' ',
 	(int) (squid_curtime - i->lastref),
 	(int) (i->expires - squid_curtime),
@@ -675,7 +673,7 @@ ipcacheFreeEntry(void *data)
     ipcache_entry *i = data;
     safe_free(i->addrs.in_addrs);
     safe_free(i->addrs.bad_mask);
-    safe_free(i->name);
+    safe_free(i->hash.key);
     safe_free(i->error_message);
     memFree(i, MEM_IPCACHE_ENTRY);
 }

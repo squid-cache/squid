@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.530 2000/07/20 16:10:41 wessels Exp $
+ * $Id: store.cc,v 1.531 2000/10/31 23:48:14 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -178,7 +178,7 @@ destroy_StoreEntry(void *data)
     if (e->mem_obj)
 	destroy_MemObject(e);
     storeHashDelete(e);
-    assert(e->key == NULL);
+    assert(e->hash.key == NULL);
     memFree(e, MEM_STOREENTRY);
 }
 
@@ -189,16 +189,16 @@ storeHashInsert(StoreEntry * e, const cache_key * key)
 {
     debug(20, 3) ("storeHashInsert: Inserting Entry %p key '%s'\n",
 	e, storeKeyText(key));
-    e->key = storeKeyDup(key);
-    hash_join(store_table, (hash_link *) e);
+    e->hash.key = storeKeyDup(key);
+    hash_join(store_table, &e->hash);
 }
 
 static void
 storeHashDelete(StoreEntry * e)
 {
-    hash_remove_link(store_table, (hash_link *) e);
-    storeKeyFree(e->key);
-    e->key = NULL;
+    hash_remove_link(store_table, &e->hash);
+    storeKeyFree(e->hash.key);
+    e->hash.key = NULL;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -212,7 +212,7 @@ storePurgeMem(StoreEntry * e)
     if (e->mem_obj == NULL)
 	return;
     debug(20, 3) ("storePurgeMem: Freeing memory-copy of %s\n",
-	storeKeyText(e->key));
+	storeKeyText(e->hash.key));
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_MemObject(e);
     if (e->swap_status != SWAPOUT_DONE)
@@ -260,7 +260,7 @@ storeLockObject(StoreEntry * e)
 {
     e->lock_count++;
     debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
-	storeKeyText(e->key), (int) e->lock_count);
+	storeKeyText(e->hash.key), (int) e->lock_count);
     e->lastref = squid_curtime;
     storeEntryReferenced(e);
 }
@@ -270,7 +270,7 @@ storeReleaseRequest(StoreEntry * e)
 {
     if (EBIT_TEST(e->flags, RELEASE_REQUEST))
 	return;
-    debug(20, 3) ("storeReleaseRequest: '%s'\n", storeKeyText(e->key));
+    debug(20, 3) ("storeReleaseRequest: '%s'\n", storeKeyText(e->hash.key));
     EBIT_SET(e->flags, RELEASE_REQUEST);
     /*
      * Clear cachable flag here because we might get called before
@@ -288,7 +288,7 @@ storeUnlockObject(StoreEntry * e)
 {
     e->lock_count--;
     debug(20, 3) ("storeUnlockObject: key '%s' count=%d\n",
-	storeKeyText(e->key), e->lock_count);
+	storeKeyText(e->hash.key), e->lock_count);
     if (e->lock_count)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING)
@@ -339,9 +339,9 @@ storeSetPrivateKey(StoreEntry * e)
 {
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (e->key && EBIT_TEST(e->flags, KEY_PRIVATE))
+    if (e->hash.key && EBIT_TEST(e->flags, KEY_PRIVATE))
 	return;			/* is already private */
-    if (e->key) {
+    if (e->hash.key) {
 	if (e->swap_filen > -1)
 	    storeDirSwapLog(e, SWAP_LOG_DEL);
 	storeHashDelete(e);
@@ -363,7 +363,7 @@ storeSetPublicKey(StoreEntry * e)
     StoreEntry *e2 = NULL;
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (e->key && !EBIT_TEST(e->flags, KEY_PRIVATE))
+    if (e->hash.key && !EBIT_TEST(e->flags, KEY_PRIVATE))
 	return;			/* is already public */
     assert(mem);
     /*
@@ -379,7 +379,7 @@ storeSetPublicKey(StoreEntry * e)
 #if MORE_DEBUG_OUTPUT
     if (EBIT_TEST(e->flags, RELEASE_REQUEST))
 	debug(20, 1) ("assertion failed: RELEASE key %s, url %s\n",
-	    e->key, mem->url);
+	    e->hash.key, mem->url);
 #endif
     assert(!EBIT_TEST(e->flags, RELEASE_REQUEST));
     newkey = storeKeyPublic(mem->url, mem->method);
@@ -389,7 +389,7 @@ storeSetPublicKey(StoreEntry * e)
 	storeRelease(e2);
 	newkey = storeKeyPublic(mem->url, mem->method);
     }
-    if (e->key)
+    if (e->hash.key)
 	storeHashDelete(e);
     EBIT_CLR(e->flags, KEY_PRIVATE);
     storeHashInsert(e, newkey);
@@ -436,7 +436,7 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
 void
 storeExpireNow(StoreEntry * e)
 {
-    debug(20, 3) ("storeExpireNow: '%s'\n", storeKeyText(e->key));
+    debug(20, 3) ("storeExpireNow: '%s'\n", storeKeyText(e->hash.key));
     e->expires = squid_curtime;
 }
 
@@ -451,7 +451,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
     if (len) {
 	debug(20, 5) ("storeAppend: appending %d bytes for '%s'\n",
 	    len,
-	    storeKeyText(e->key));
+	    storeKeyText(e->hash.key));
 	storeGetMemSpace(len);
 	stmemAppend(&mem->data_hdr, buf, len);
 	mem->inmem_hi += len;
@@ -629,7 +629,7 @@ storeCheckCachableStats(StoreEntry * sentry)
 void
 storeComplete(StoreEntry * e)
 {
-    debug(20, 3) ("storeComplete: '%s'\n", storeKeyText(e->key));
+    debug(20, 3) ("storeComplete: '%s'\n", storeKeyText(e->hash.key));
     if (e->store_status != STORE_PENDING) {
 	/*
 	 * if we're not STORE_PENDING, then probably we got aborted
@@ -671,7 +671,7 @@ storeAbort(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     assert(e->store_status == STORE_PENDING);
     assert(mem != NULL);
-    debug(20, 6) ("storeAbort: %s\n", storeKeyText(e->key));
+    debug(20, 6) ("storeAbort: %s\n", storeKeyText(e->hash.key));
     storeLockObject(e);		/* lock while aborting */
     storeNegativeCache(e);
     storeReleaseRequest(e);
@@ -774,7 +774,7 @@ storeMaintainSwapSpace(void *datanotused)
 void
 storeRelease(StoreEntry * e)
 {
-    debug(20, 3) ("storeRelease: Releasing: '%s'\n", storeKeyText(e->key));
+    debug(20, 3) ("storeRelease: Releasing: '%s'\n", storeKeyText(e->hash.key));
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
     if (storeEntryLocked(e)) {
@@ -868,7 +868,7 @@ storeEntryValidLength(const StoreEntry * e)
     const HttpReply *reply;
     assert(e->mem_obj != NULL);
     reply = e->mem_obj->reply;
-    debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", storeKeyText(e->key));
+    debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", storeKeyText(e->hash.key));
     debug(20, 5) ("storeEntryValidLength:     object_len = %d\n",
 	objectLen(e));
     debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n",
@@ -877,17 +877,17 @@ storeEntryValidLength(const StoreEntry * e)
 	reply->content_length);
     if (reply->content_length < 0) {
 	debug(20, 5) ("storeEntryValidLength: Unspecified content length: %s\n",
-	    storeKeyText(e->key));
+	    storeKeyText(e->hash.key));
 	return 1;
     }
     if (reply->hdr_sz == 0) {
 	debug(20, 5) ("storeEntryValidLength: Zero header size: %s\n",
-	    storeKeyText(e->key));
+	    storeKeyText(e->hash.key));
 	return 1;
     }
     if (e->mem_obj->method == METHOD_HEAD) {
 	debug(20, 5) ("storeEntryValidLength: HEAD request: %s\n",
-	    storeKeyText(e->key));
+	    storeKeyText(e->hash.key));
 	return 1;
     }
     if (reply->sline.status == HTTP_NOT_MODIFIED)
@@ -900,7 +900,7 @@ storeEntryValidLength(const StoreEntry * e)
     debug(20, 3) ("storeEntryValidLength: %d bytes too %s; '%s'\n",
 	diff < 0 ? -diff : diff,
 	diff < 0 ? "big" : "small",
-	storeKeyText(e->key));
+	storeKeyText(e->hash.key));
     return 0;
 }
 
@@ -1087,8 +1087,8 @@ storeMemObjectDump(MemObject * mem)
 void
 storeEntryDump(const StoreEntry * e, int l)
 {
-    debug(20, l) ("StoreEntry->key: %s\n", storeKeyText(e->key));
-    debug(20, l) ("StoreEntry->next: %p\n", e->next);
+    debug(20, l) ("StoreEntry->key: %s\n", storeKeyText(e->hash.key));
+    debug(20, l) ("StoreEntry->next: %p\n", e->hash.next);
     debug(20, l) ("StoreEntry->mem_obj: %p\n", e->mem_obj);
     debug(20, l) ("StoreEntry->timestamp: %d\n", (int) e->timestamp);
     debug(20, l) ("StoreEntry->lastref: %d\n", (int) e->lastref);
@@ -1292,7 +1292,7 @@ createRemovalPolicy(RemovalPolicySettings * settings)
 	if (strcmp(r->typestr, settings->type) == 0)
 	    return r->create(settings->args);
     }
-    debug(20,1)("Unknown policy %s\n", settings->type);
+    debug(20, 1) ("Unknown policy %s\n", settings->type);
     return NULL;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.367 2000/10/04 15:32:13 wessels Exp $
+ * $Id: http.cc,v 1.368 2000/10/31 23:48:13 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -325,7 +325,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     HttpReply *reply = entry->mem_obj->reply;
     Ctx ctx;
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
-	storeKeyText(entry->key));
+	storeKeyText(entry->hash.key));
     if (httpState->reply_hdr == NULL)
 	httpState->reply_hdr = memAllocate(MEM_8K_BUF);
     assert(httpState->reply_hdr_state == 0);

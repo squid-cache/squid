@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.53 2000/06/27 22:06:02 hno Exp $
+ * $Id: ident.cc,v 1.54 2000/10/31 23:48:13 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -47,8 +47,7 @@ typedef struct _IdentClient {
 } IdentClient;
 
 typedef struct _IdentStateData {
-    char *key;
-    struct _IdentStateData *next;
+    hash_link hash;		/* must be first */
     int fd;			/* IDENT fd */
     struct sockaddr_in me;
     struct sockaddr_in my_peer;
@@ -216,12 +215,12 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
     }
     state = xcalloc(1, sizeof(IdentStateData));
     cbdataAdd(state, cbdataXfree, 0);
-    state->key = xstrdup(key);
+    state->hash.key = xstrdup(key);
     state->fd = fd;
     state->me = *me;
     state->my_peer = *my_peer;
     identClientAdd(state, callback, data);
-    hash_join(ident_hash, (hash_link *) state);
+    hash_join(ident_hash, &state->hash);
     comm_add_close_handler(fd,
 	identClose,
 	state);

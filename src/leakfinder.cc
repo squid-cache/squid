@@ -1,6 +1,6 @@
 
 /*
- * $Id: leakfinder.cc,v 1.3 2000/03/06 16:23:32 wessels Exp $
+ * $Id: leakfinder.cc,v 1.4 2000/10/31 23:48:14 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -44,6 +44,7 @@ static hash_table *htable = NULL;
 static int leakCount = 0;
 
 typedef struct _ptr {
+    hash_link hash;		/* must be first */
     void *key;
     struct _ptr *next;
     const char *file;
@@ -79,7 +80,7 @@ leakAddFL(void *p, const char *file, int line)
     c->file = file;
     c->line = line;
     c->when = squid_curtime;
-    hash_join(htable, (hash_link *) c);
+    hash_join(htable, &c->hash);
     leakCount++;
     return p;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.150 2000/10/26 07:09:23 wessels Exp $
+ * $Id: net_db.cc,v 1.151 2000/10/31 23:48:14 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -81,9 +81,9 @@ static void
 netdbHashInsert(netdbEntry * n, struct in_addr addr)
 {
     xstrncpy(n->network, inet_ntoa(networkFromInaddr(addr)), 16);
-    n->key = n->network;
+    n->hash.key = n->network;
     assert(hash_lookup(addr_table, n->network) == NULL);
-    hash_join(addr_table, (hash_link *) n);
+    hash_join(addr_table, &n->hash);
 }
 
 static void
@@ -101,12 +101,12 @@ static void
 netdbHostInsert(netdbEntry * n, const char *hostname)
 {
     net_db_name *x = memAllocate(MEM_NET_DB_NAME);
-    x->name = xstrdup(hostname);
+    x->hash.key = xstrdup(hostname);
     x->next = n->hosts;
     n->hosts = x;
     x->net_db_entry = n;
     assert(hash_lookup(host_table, hostname) == NULL);
-    hash_join(host_table, (hash_link *) x);
+    hash_join(host_table, &x->hash);
     n->link_count++;
 }
 
@@ -126,7 +126,7 @@ netdbHostDelete(const net_db_name * x)
 	}
     }
     hash_remove_link(host_table, (hash_link *) x);
-    xfree(x->name);
+    xfree(x->hash.key);
     memFree((void *) x, MEM_NET_DB_NAME);
 }
 
@@ -402,7 +402,7 @@ netdbSaveState(void *foo)
 	    (int) n->next_ping_time,
 	    (int) n->last_use_time);
 	for (x = n->hosts; x; x = x->next)
-	    logfilePrintf(lf, " %s", x->name);
+	    logfilePrintf(lf, " %s", hashKeyStr(&x->hash));
 	logfilePrintf(lf, "\n");
 	count++;
 #undef RBUF_SZ
@@ -520,7 +520,7 @@ static void
 netdbFreeNameEntry(void *data)
 {
     net_db_name *x = data;
-    xfree(x->name);
+    xfree(x->hash.key);
     memFree(x, MEM_NET_DB_NAME);
 }
 
@@ -779,7 +779,7 @@ netdbDump(StoreEntry * sentry)
 	    n->rtt,
 	    n->hops);
 	for (x = n->hosts; x; x = x->next)
-	    storeAppendPrintf(sentry, " %s", x->name);
+	    storeAppendPrintf(sentry, " %s", hashKeyStr(&x->hash));
 	storeAppendPrintf(sentry, "\n");
 	p = n->peers;
 	for (j = 0; j < n->n_peers; j++, p++) {

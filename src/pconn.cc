@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.28 2000/10/17 08:06:04 adrian Exp $
+ * $Id: pconn.cc,v 1.29 2000/10/31 23:48:14 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -36,14 +36,13 @@
 #include "squid.h"
 
 struct _pconn {
-    char *key;
-    struct _pconn *next;
+    hash_link hash;		/* must be first */
     int *fds;
     int nfds_alloc;
     int nfds;
 };
 
-#define PCONN_FDS_SZ	8		/* pconn set size, increase for better memcache hit rate */
+#define PCONN_FDS_SZ	8	/* pconn set size, increase for better memcache hit rate */
 #define PCONN_HIST_SZ (1<<16)
 int client_pconn_hist[PCONN_HIST_SZ];
 int server_pconn_hist[PCONN_HIST_SZ];
@@ -71,24 +70,24 @@ static struct _pconn *
 pconnNew(const char *key)
 {
     struct _pconn *p = memPoolAlloc(pconn_data_pool);
-    p->key = xstrdup(key);
+    p->hash.key = xstrdup(key);
     p->nfds_alloc = PCONN_FDS_SZ;
     p->fds = memPoolAlloc(pconn_fds_pool);
-    debug(48, 3) ("pconnNew: adding %s\n", p->key);
-    hash_join(table, (hash_link *) p);
+    debug(48, 3) ("pconnNew: adding %s\n", hashKeyStr(&p->hash));
+    hash_join(table, &p->hash);
     return p;
 }
 
 static void
 pconnDelete(struct _pconn *p)
 {
-    debug(48, 3) ("pconnDelete: deleting %s\n", p->key);
+    debug(48, 3) ("pconnDelete: deleting %s\n", hashKeyStr(&p->hash));
     hash_remove_link(table, (hash_link *) p);
     if (p->nfds_alloc == PCONN_FDS_SZ)
-	memPoolFree(pconn_fds_pool,p->fds);
+	memPoolFree(pconn_fds_pool, p->fds);
     else
 	xfree(p->fds);
-    xfree(p->key);
+    xfree(p->hash.key);
     memPoolFree(pconn_data_pool, p);
 }
 
@@ -113,7 +112,7 @@ pconnTimeout(int fd, void *data)
 {
     struct _pconn *p = data;
     assert(table != NULL);
-    debug(48, 3) ("pconnTimeout: FD %d %s\n", fd, p->key);
+    debug(48, 3) ("pconnTimeout: FD %d %s\n", fd, hashKeyStr(&p->hash));
     pconnRemoveFD(p, fd);
     comm_close(fd);
 }
@@ -127,7 +126,8 @@ pconnRead(int fd, void *data)
     assert(table != NULL);
     statCounter.syscalls.sock.reads++;
     n = read(fd, buf, 256);
-    debug(48, 3) ("pconnRead: %d bytes from FD %d, %s\n", n, fd, p->key);
+    debug(48, 3) ("pconnRead: %d bytes from FD %d, %s\n", n, fd,
+	hashKeyStr(&p->hash));
     pconnRemoveFD(p, fd);
     comm_close(fd);
 }
@@ -210,7 +210,7 @@ pconnPush(int fd, const char *host, u_short port)
 	p->fds = xmalloc(p->nfds_alloc * sizeof(int));
 	xmemcpy(p->fds, old, p->nfds * sizeof(int));
 	if (p->nfds == PCONN_FDS_SZ)
-	    memPoolFree(pconn_fds_pool,old);
+	    memPoolFree(pconn_fds_pool, old);
 	else
 	    xfree(old);
     }

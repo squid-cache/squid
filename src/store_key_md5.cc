@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.23 2000/03/06 16:23:35 wessels Exp $
+ * $Id: store_key_md5.cc,v 1.24 2000/10/31 23:48:15 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -120,7 +120,7 @@ storeKeyPublic(const char *url, const method_t method)
     return digest;
 }
 
-const cache_key *
+cache_key *
 storeKeyDup(const cache_key * key)
 {
     cache_key *dup = memAllocate(MEM_MD5_DIGEST);

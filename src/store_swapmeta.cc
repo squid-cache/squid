@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.12 2000/10/17 08:06:04 adrian Exp $
+ * $Id: store_swapmeta.cc,v 1.13 2000/10/31 23:48:15 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -71,7 +71,7 @@ storeSwapMetaBuild(StoreEntry * e)
     assert(e->swap_status == SWAPOUT_WRITING);
     url = storeUrl(e);
     debug(20, 3) ("storeSwapMetaBuild: %s\n", url);
-    T = storeSwapTLVAdd(STORE_META_KEY, e->key, MD5_DIGEST_CHARS, T);
+    T = storeSwapTLVAdd(STORE_META_KEY, e->hash.key, MD5_DIGEST_CHARS, T);
     T = storeSwapTLVAdd(STORE_META_STD, &e->timestamp, STORE_HDR_METASIZE, T);
     T = storeSwapTLVAdd(STORE_META_URL, url, strlen(url) + 1, T);
     return TLV;

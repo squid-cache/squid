@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.5 2000/10/18 04:00:23 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.6 2000/10/31 23:48:17 wessels Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -523,7 +523,7 @@ storeCossDirWriteCleanEntry(SwapDir *sd, const StoreEntry * e)
     s.swap_file_sz = e->swap_file_sz;
     s.refcount = e->refcount;
     s.flags = e->flags;
-    xmemcpy(&s.key, e->key, MD5_DIGEST_CHARS);
+    xmemcpy(&s.key, e->hash.key, MD5_DIGEST_CHARS);
     xmemcpy(state->outbuf + state->outbuf_offset, &s, ss);
     state->outbuf_offset += ss;
     /* buffered write */
@@ -614,7 +614,7 @@ storeCossDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
     s->swap_file_sz = e->swap_file_sz;
     s->refcount = e->refcount;
     s->flags = e->flags;
-    xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
+    xmemcpy(s->key, e->hash.key, MD5_DIGEST_CHARS);
     file_write(cs->swaplog_fd,
 	-1,
 	s,
