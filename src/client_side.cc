@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.350 1998/07/14 22:36:46 wessels Exp $
+ * $Id: client_side.cc,v 1.351 1998/07/15 23:59:07 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1354,6 +1354,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     const char *body_buf = buf;
     ssize_t body_size = size;
     MemBuf mb;
+    ssize_t check_size = 0;
     debug(33, 5) ("clientSendMoreData: %s, %d bytes\n", http->uri, (int) size);
     assert(size <= SM_PAGE_SIZE);
     assert(http->request != NULL);
@@ -1411,7 +1412,6 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	/* reset range iterator */
 	http->range_iter.pos = HttpHdrRangeInitPos;
     }
-    http->out.offset += size;
     if (http->request->method == METHOD_HEAD) {
 	if (rep) {
 	    /* do not forward body for HEAD replies */
@@ -1429,6 +1429,8 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     /* init mb; put status line and headers if any */
     if (rep) {
 	mb = httpReplyPack(rep);
+	http->out.offset += rep->hdr_sz;
+	check_size += rep->hdr_sz;
 	httpReplyDestroy(rep);
 	rep = NULL;
     } else {
@@ -1438,18 +1440,20 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     /* append body if any */
     if (body_buf && body_size) {
 	if (http->request->range) {
-	    assert(http->request->method == METHOD_PUT);
-	    /* Returning out.offset its physical meaning; Argh! @?@ @?@ */
-	    http->out.offset -= size;
-	    if (!http->out.offset)
-		http->out.offset += http->range_iter.prefix_size;
+	    /* Only GET requests should have ranges */
+	    assert(http->request->method == METHOD_GET);
+	    /* clientPackMoreRanges() updates http->out.offset */
 	    /* force the end of the transfer if we are done */
 	    if (!clientPackMoreRanges(http, body_buf, body_size, &mb))
 		http->flags.done_copying = 1;
 	} else {
+	    http->out.offset += body_size;
+	    check_size += body_size;
 	    memBufAppend(&mb, body_buf, body_size);
 	}
     }
+    if (!http->request->range)
+	assert(check_size == size);
     /* write */
     comm_write_mbuf(fd, mb, clientWriteComplete, http);
     /* if we don't do it, who will? */
