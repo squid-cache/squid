@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.358 1997/12/30 02:47:45 wessels Exp $
+ * $Id: store.cc,v 1.359 1997/12/30 23:09:45 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -634,7 +634,7 @@ storeAddDiskRestore(const cache_key * key,
 	/* Only set the file bit if we know its a valid entry */
 	/* otherwise, set it in the validation procedure */
 	storeDirMapBitSet(file_number);
-	storeDirUpdateSwapSize(e->swap_file_number, size, 1);
+	storeDirUpdateSwapSize(e->swap_file_number, e->object_len, 1);
     } else {
 	EBIT_CLR(e->flag, ENTRY_VALIDATED);
     }
@@ -786,7 +786,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 	debug(20, 1) ("storeSwapOutHandle: SwapOut failure (err code = %d).\n",
 	    flag);
 	e->swap_status = SWAPOUT_NONE;
-	if (e->swap_file_number != -1) {
+	if (e->swap_file_number > -1) {
 	    storePutUnusedFileno(e->swap_file_number);
 	    e->swap_file_number = -1;
 	}
@@ -808,7 +808,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
     debug(20, 5) ("storeSwapOutHandle: SwapOut complete: '%s' to %s.\n",
 	mem->url, storeSwapFullPath(e->swap_file_number, NULL));
     e->swap_status = SWAPOUT_DONE;
-    storeDirUpdateSwapSize(e->swap_file_number, mem->swapout.done_offset, 1);
+    storeDirUpdateSwapSize(e->swap_file_number, e->object_len, 1);
     HTTPCacheInfo->proto_newobject(HTTPCacheInfo,
 	mem->request->protocol,
 	e->object_len,
@@ -1610,14 +1610,15 @@ storeRelease(StoreEntry * e)
 	EBIT_SET(e->flag, RELEASE_REQUEST);
 	return 0;
     }
+    storeLog(STORE_LOG_RELEASE, e);
     if (e->swap_file_number > -1) {
 	if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
 	    storePutUnusedFileno(e->swap_file_number);
-	storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
+	if (e->swap_status == SWAPOUT_DONE)
+	    storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
 	e->swap_file_number = -1;
     }
     storeSetMemStatus(e, NOT_IN_MEMORY);
-    storeLog(STORE_LOG_RELEASE, e);
     destroy_StoreEntry(e);
     return 1;
 }
@@ -2245,6 +2246,7 @@ storeGetUnusedFileno(void)
     if (fileno_stack_count < 1)
 	return -1;
     fn = fileno_stack[--fileno_stack_count];
+    assert(!storeDirMapBitTest(fn));
     storeDirMapBitSet(fn);
     return fn;
 }
