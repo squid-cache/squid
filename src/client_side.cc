@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.381 1998/08/17 18:48:59 wessels Exp $
+ * $Id: client_side.cc,v 1.382 1998/08/17 19:19:33 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -683,7 +683,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	    if (!Config.onoff.reload_into_ims)
 		EBIT_SET(request->flags, REQ_NOCACHE);
 	    else
-		EBIT_SET(request->flags, REQ_NOCACHE_HACK);
+		EBIT_SET(request->flags, REQ_NOCACHE_IMS);
 	}
 	stringClean(&s);
     }

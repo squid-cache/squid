@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.29 1998/08/11 19:18:37 wessels Exp $
+ * $Id: refresh.cc,v 1.30 1998/08/17 19:19:35 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -112,6 +112,11 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
     refreshCounts.total++;
     if (EBIT_TEST(entry->flag, ENTRY_REVALIDATE)) {
 	debug(22, 3) ("refreshCheck: YES: Required Authorization\n");
+	refreshCounts.revalidate_stale++;
+	return 1;
+    }
+    if (EBIT_TEST(request->flags, REQ_NOCACHE_IMS)) {
+	debug(22, 3) ("refreshCheck: YES: Reload into IMS\n");
 	refreshCounts.revalidate_stale++;
 	return 1;
     }
