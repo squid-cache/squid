@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.171 1997/02/06 18:44:23 wessels Exp $
+ * $Id: cache_cf.cc,v 1.172 1997/02/19 17:05:21 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1598,4 +1598,8 @@ configDoConfigure(void)
 	SQUID_VERSION);
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
 	Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
+    if (Config.appendDomain)
+	Config.appendDomainLen = strlen(Config.appendDomain);
+    else
+	Config.appendDomainLen = 0;
 }
