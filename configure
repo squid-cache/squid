@@ -5399,6 +5399,26 @@ fi
 
 rm -f core 
 
+FS_MAKEFILES=""
+for fs in $STORE_MODULES none; do
+	if test $fs != none; then
+	    FS_MAKEFILES="$FS_MAKEFILES ./src/fs/$fs/Makefile"
+	fi
+done
+REPL_MAKEFILES=""
+for repl in $REPL_POLICIES none; do
+	if test $repl != none; then
+	    REPL_MAKEFILES="$REPL_MAKEFILES ./src/repl/$repl/Makefile"
+	fi
+done
+
+AUTH_MAKEFILES=""
+for module in $srcdir/auth_modules/*; do
+	if test -f $module/Makefile.in; then
+	    AUTH_MAKEFILES="$AUTH_MAKEFILES ./auth_modules/`basename $module`/Makefile"
+	fi
+done
+
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -5509,24 +5529,15 @@ trap 'rm -fr `echo "\
 	./scripts/RunAccel \
 	./src/Makefile \
 	./src/fs/Makefile \
-	./src/fs/ufs/Makefile \
-	./src/fs/aufs/Makefile \
-	./src/fs/coss/Makefile \
+	$FS_MAKEFILES \
 	./src/repl/Makefile \
-	./src/repl/lru/Makefile \
-	./src/repl/heap/Makefile \
-	./src/fs/diskd/Makefile \
+	$REPL_MAKEFILES \
 	./contrib/Makefile \
 	$SNMP_MAKEFILE \
 	./icons/Makefile \
 	./errors/Makefile \
 	./auth_modules/Makefile \
-	./auth_modules/NCSA/Makefile \
-	./auth_modules/PAM/Makefile \
-	./auth_modules/SMB/Makefile \
-	./auth_modules/MSNT/Makefile \
-	./auth_modules/getpwnam/Makefile \
-	./auth_modules/LDAP/Makefile \
+	$AUTH_MAKEFILES \
  include/autoconf.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -5664,24 +5675,15 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	./scripts/RunAccel \
 	./src/Makefile \
 	./src/fs/Makefile \
-	./src/fs/ufs/Makefile \
-	./src/fs/aufs/Makefile \
-	./src/fs/coss/Makefile \
+	$FS_MAKEFILES \
 	./src/repl/Makefile \
-	./src/repl/lru/Makefile \
-	./src/repl/heap/Makefile \
-	./src/fs/diskd/Makefile \
+	$REPL_MAKEFILES \
 	./contrib/Makefile \
 	$SNMP_MAKEFILE \
 	./icons/Makefile \
 	./errors/Makefile \
 	./auth_modules/Makefile \
-	./auth_modules/NCSA/Makefile \
-	./auth_modules/PAM/Makefile \
-	./auth_modules/SMB/Makefile \
-	./auth_modules/MSNT/Makefile \
-	./auth_modules/getpwnam/Makefile \
-	./auth_modules/LDAP/Makefile \
+	$AUTH_MAKEFILES \
 "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
