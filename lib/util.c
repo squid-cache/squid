@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.30 1997/07/16 20:31:55 wessels Exp $
+ * $Id: util.c,v 1.31 1997/10/15 22:06:44 kostas Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -442,6 +442,19 @@ xstrerror(void)
 	return ("Unknown");
     sprintf(xstrerror_buf, "(%d) %s", errno, strerror(errno));
     return xstrerror_buf;
+}
+
+/*
+ * xbstrerror with argument for late notification */
+
+const char *
+xbstrerror(int err)
+{
+    static char xbstrerror_buf[BUFSIZ];
+    if (err < 0 || err >= sys_nerr)
+        return ("Unknown");
+    sprintf(xbstrerror_buf, "(%d) %s", err, strerror(err));
+    return xbstrerror_buf;
 }
 
 void
