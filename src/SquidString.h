@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.3 2003/03/06 06:21:37 robertc Exp $
+ * $Id: SquidString.h,v 1.4 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -35,6 +35,43 @@
 
 #ifndef SQUID_STRING_H
 #define SQUID_STRING_H
+
+#define DEBUGSTRINGS 0
+#if DEBUGSTRINGS
+#include "splay.h"
+
+class String;
+
+class StringRegistry
+{
+
+public:
+    StringRegistry() : registered(false) {}
+
+    static StringRegistry &Instance();
+
+    void add
+        (String const *);
+
+    void remove
+        (String const *);
+
+private:
+    static OBJH Stat;
+
+    static StringRegistry Instance_;
+
+    static SplayNode<String const *>::SPLAYWALKEE Stater;
+
+    Splay<String const *> entries;
+
+    bool registered;
+
+    void registerMe();
+};
+
+class StoreEntry;
+#endif
 
 class String
 {
@@ -74,6 +111,12 @@ public:
     _SQUID_INLINE_ void cut (size_t newLength);
 
     _SQUID_INLINE_ void cutPointer (char const *loc);
+
+#if DEBUGSTRINGS
+
+    void stat (StoreEntry *) const;
+
+#endif
 
 private:
     /* never reference these directly! */

@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.17 2003/03/04 01:40:22 robertc Exp $
+ * $Id: splay.h,v 1.18 2003/03/06 11:51:55 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -51,9 +51,12 @@ class Splay {
   public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
-    Splay():head(NULL){}
+    Splay():head(NULL), elements (0){}
     mutable SplayNode<V> * head;
     Value const *find (Value const &, SPLAYCMP *compare) const;
+    void insert(Value const &, SPLAYCMP *compare);
+    void remove(Value const &, SPLAYCMP *compare);
+    size_t elements;
 };
 
 
@@ -124,6 +127,7 @@ SplayNode<V>::insert(Value data, SPLAYCMP * compare)
     SplayNode<V> *newNode = new SplayNode<V>;
     newNode->data = data;
     if (this == NULL) {
+	splayLastResult = -1;
 	newNode->left = newNode->right = NULL;
 	return newNode;
     }
@@ -212,6 +216,24 @@ Splay<V>::find (Value const &value, SPLAYCMP *compare) const
     if (splayLastResult != 0)
 	return NULL;
     return &head->data;
+}
+
+template <class V>
+void
+Splay<V>::insert(Value const &value, SPLAYCMP *compare)
+{
+    assert (!find (value, compare));
+    head = head->insert(value, compare);
+    ++elements;
+}
+
+template <class V>
+void
+Splay<V>::remove(Value const &value, SPLAYCMP *compare)
+{
+    assert (find (value, compare));
+    head = head->remove(value, compare);
+    --elements;
 }
 
 #endif

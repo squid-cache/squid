@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.14 2003/03/06 06:21:37 robertc Exp $
+ * $Id: String.cc,v 1.15 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -34,11 +34,12 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 void
 String::initBuf(size_t sz)
 {
-    buf_ = (char *)memAllocString(sz, &sz);
+    buf((char *)memAllocString(sz, &sz));
     assert(sz < 65536);
     size_ = sz;
 }
@@ -57,6 +58,7 @@ String::init(char const *str)
 String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
 {
     init (aString);
+    StringRegistry::Instance().add(this);
 }
 
 String &
@@ -73,7 +75,7 @@ String::operator = (String const &old)
     clean ();
 
     if (old.len_)
-        limitInit (old.buf_, old.len_);
+        limitInit (old.buf(), old.len_);
 
     return *this;
 }
@@ -90,7 +92,8 @@ String::limitInit(const char *str, int len)
 
 String::String (String const &old) : size_(0), len_(0), buf_(NULL)
 {
-    init (old.buf_);
+    init (old.buf());
+    StringRegistry::Instance().add(this);
 }
 
 void
@@ -98,7 +101,7 @@ String::clean()
 {
     assert(this);
 
-    if (buf_)
+    if (buf())
         memFreeString(size_, buf_);
 
     len_ = 0;
@@ -111,6 +114,7 @@ String::clean()
 String::~String()
 {
     clean();
+    StringRegistry::Instance().remove(this);
 }
 
 void
@@ -135,7 +139,7 @@ String::append(const char *str, int len)
         snew.initBuf(snew.len_ + 1);
 
         if (buf_)
-            xmemcpy(snew.buf_, buf_, len_);
+            xmemcpy(snew.buf_, buf(), len_);
 
         if (len)
             xmemcpy(snew.buf_ + len_, str, len);
@@ -156,7 +160,7 @@ String::append(char const *str)
 void
 String::append(String const &old)
 {
-    append (old.buf_, old.len_);
+    append (old.buf(), old.len_);
 }
 
 void
@@ -164,7 +168,7 @@ String::absorb(String &old)
 {
     clean();
     size_ = old.size_;
-    buf_ = old.buf_;
+    buf (old.buf_);
     len_ = old.len_;
     old.size_ = 0;
     old.buf_ = NULL;
@@ -177,6 +181,73 @@ String::buf(char *newBuf)
     assert (buf_ == NULL);
     buf_ = newBuf;
 }
+
+#if DEBUGSTRINGS
+void
+String::stat(StoreEntry *entry) const
+{
+    storeAppendPrintf(entry, "%p : %d/%d \"%s\"\n",this,len_, size_, buf());
+}
+
+StringRegistry &
+StringRegistry::Instance()
+{
+    return Instance_;
+}
+
+template <class C>
+int
+ptrcmp(C const &lhs, C const &rhs)
+{
+    return lhs - rhs;
+}
+
+void
+StringRegistry::registerMe()
+{
+    registered = true;
+    cachemgrRegister("strings",
+                     "Strings in use in squid", Stat, 0, 1);
+}
+
+void
+
+StringRegistry::add
+    (String const *entry)
+{
+    if (!registered)
+        registerMe();
+
+    entries.insert(entry, ptrcmp);
+}
+
+void
+
+StringRegistry::remove
+    (String const *entry)
+{
+    entries.remove(entry, ptrcmp);
+}
+
+StringRegistry StringRegistry::Instance_;
+
+extern size_t memStringCount();
+
+void
+StringRegistry::Stat(StoreEntry *entry)
+{
+    storeAppendPrintf(entry, "%lu entries, %lu reported from MemPool\n", (unsigned long) Instance().entries.elements, (unsigned long) memStringCount());
+    Instance().entries.head->walk(Stater, entry);
+}
+
+void
+StringRegistry::Stater(String const * const & nodedata, void *state)
+{
+    StoreEntry *entry = (StoreEntry *) state;
+    nodedata->stat(entry);
+}
+
+#endif
 
 #ifndef _USE_INLINE_
 #include "String.cci"

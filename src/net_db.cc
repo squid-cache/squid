@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.169 2003/02/21 22:50:10 robertc Exp $
+ * $Id: net_db.cc,v 1.170 2003/03/06 11:51:56 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1186,7 +1186,7 @@ netdbDeleteAddrNetwork(struct in_addr addr)
 void
 netdbBinaryExchange(StoreEntry * s)
 {
-    http_reply *reply = httpReplyCreate();
+    HttpReply *reply = httpReplyCreate();
     http_version_t version;
 #if USE_ICMP
 

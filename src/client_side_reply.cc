@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.43 2003/03/04 01:40:26 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.44 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1233,7 +1233,7 @@ clientReplyContext::storeNotOKTransferDone() const
     assert(mem != NULL);
     assert(http->request != NULL);
     /* mem->reply was wrong because it uses the UPSTREAM header length!!! */
-    http_reply const *reply = mem->getReply();
+    HttpReply const *reply = mem->getReply();
 
     if (headers_sz == 0)
         /* haven't found end of headers yet */

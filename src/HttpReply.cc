@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.55 2003/03/06 06:21:37 robertc Exp $
+ * $Id: HttpReply.cc,v 1.56 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -82,7 +82,7 @@ httpReplyInitModule(void)
 HttpReply *
 httpReplyCreate(void)
 {
-    HttpReply *rep = (HttpReply *)memAllocate(MEM_HTTP_REPLY);
+    HttpReply *rep = new HttpReply;
     debug(58, 7) ("creating rep: %p\n", rep);
     httpReplyInit(rep);
     return rep;
@@ -392,7 +392,7 @@ httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply const * freshRep)
 static void
 httpReplyDoDestroy(HttpReply * rep)
 {
-    memFree(rep, MEM_HTTP_REPLY);
+    delete rep;
 }
 
 static time_t
@@ -620,4 +620,23 @@ httpReplyBodyBuildSize(request_t * request, HttpReply * reply, dlink_list * body
 
         delete checklist;
     }
+}
+
+MemPool *HttpReply::Pool(NULL);
+void *
+HttpReply::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (HttpReply));
+
+    if (!Pool)
+        Pool = memPoolCreate("HttpReply", sizeof (HttpReply));
+
+    return memPoolAlloc(Pool);
+}
+
+void
+HttpReply::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
 }

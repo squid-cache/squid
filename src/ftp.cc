@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.347 2003/03/06 06:21:37 robertc Exp $
+ * $Id: ftp.cc,v 1.348 2003/03/06 11:51:56 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -129,8 +129,14 @@ unsigned int datachannel_hack:
     1;
 };
 
-typedef struct _Ftpdata
+class FtpStateData
 {
+
+public:
+    void *operator new (size_t);
+    void operator delete (void *);
+    void deleteSelf() const;
+    ~FtpStateData();
     StoreEntry *entry;
     request_t *request;
     char user[MAX_URL];
@@ -186,9 +192,33 @@ typedef struct _Ftpdata
 
     struct _ftp_flags flags;
     FwdState *fwd;
+
+private:
+    CBDATA_CLASS(FtpStateData);
+};
+
+CBDATA_CLASS_INIT(FtpStateData);
+
+void *
+FtpStateData::operator new (size_t)
+{
+    CBDATA_INIT_TYPE(FtpStateData);
+    FtpStateData *result = cbdataAlloc(FtpStateData);
+    return result;
 }
 
-FtpStateData;
+void
+FtpStateData::operator delete (void *address)
+{
+    FtpStateData *t = static_cast<FtpStateData *>(address);
+    cbdataFree(t);
+}
+
+void
+FtpStateData::deleteSelf () const
+{
+    delete this;
+}
 
 typedef struct
 {
@@ -328,13 +358,12 @@ static void
 ftpStateFree(int fdnotused, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
-    cbdataFree(ftpState);
+    ftpState->deleteSelf();
 }
 
-static void
-ftpStateFreed(void *data)
+FtpStateData::~FtpStateData()
 {
-    FtpStateData *ftpState = (FtpStateData *)data;
+    FtpStateData *ftpState = this;
 
     if (ftpState == NULL)
         return;
@@ -1317,7 +1346,6 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
     ftpState->base_href.append("/");
 }
 
-CBDATA_TYPE(FtpStateData);
 void
 ftpStart(FwdState * fwd)
 {
@@ -1329,8 +1357,7 @@ ftpStart(FwdState * fwd)
     FtpStateData *ftpState;
     HttpReply *reply;
 
-    CBDATA_INIT_TYPE_FREECB(FtpStateData, ftpStateFreed);
-    ftpState = cbdataAlloc(FtpStateData);
+    ftpState = new FtpStateData;
     debug(9, 3) ("ftpStart: '%s'\n", url);
     statCounter.server.all.requests++;
     statCounter.server.ftp.requests++;
@@ -3021,7 +3048,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     const char *filename = NULL;
     const char *t = NULL;
     StoreEntry *e = ftpState->entry;
-    http_reply *reply = httpReplyCreate ();
+    HttpReply *reply = httpReplyCreate ();
     http_version_t version;
 
     if (ftpState->flags.http_header_sent)

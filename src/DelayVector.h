@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.h,v 1.4 2003/03/04 01:40:25 robertc Exp $
+ * $Id: DelayVector.h,v 1.5 2003/03/06 11:51:55 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -77,6 +77,8 @@ class Id:public DelayIdComposite
         typedef Vector<DelayIdComposite::Pointer>::iterator iterator;
         typedef Vector<DelayIdComposite::Pointer>::const_iterator const_iterator;
     };
+
+    friend class Id;
 
     Vector<CompositePoolNode::Pointer> pools;
     typedef Vector<CompositePoolNode::Pointer>::iterator iterator;

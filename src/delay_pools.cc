@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.36 2003/03/04 06:22:12 robertc Exp $
+ * $Id: delay_pools.cc,v 1.37 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -261,6 +261,10 @@ protected:
 
     DelaySpec spec;
     VectorMap<unsigned char, ClassCBucket> buckets;
+
+    class Id;
+
+    friend class ClassCHostPool::Id;
 
 class Id:public DelayIdComposite
     {

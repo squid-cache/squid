@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrExtField.cc,v 1.11 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpHdrExtField.cc,v 1.12 2003/03/06 11:51:55 robertc Exp $
  *
  * DEBUG: section 69    HTTP Header: Extension Field
  * AUTHOR: Alex Rousskov
@@ -45,7 +45,7 @@ static HttpHdrExtField *
 httpHdrExtFieldDoCreate(const char *name, int name_len,
                         const char *value, int value_len)
 {
-    HttpHdrExtField *f = xcalloc(1, sizeof(HttpHdrExtField));
+    HttpHdrExtField *f = new HttpHdrExtField;
     stringLimitInit(&f->name, name, name_len);
     stringLimitInit(&f->value, value, value_len);
     return f;
@@ -88,7 +88,7 @@ httpHdrExtFieldDestroy(HttpHdrExtField * f)
     assert(f);
     f->name.clean();
     f->value.clean();
-    xfree(f);
+    delete f;
 }
 
 HttpHdrExtField *

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.95 2003/02/21 22:50:10 robertc Exp $
+ * $Id: peer_digest.cc,v 1.96 2003/03/06 11:51:56 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -105,7 +105,28 @@ peerDigestClean(PeerDigest * pd)
     pd->host.clean();
 }
 
-CBDATA_TYPE(PeerDigest);
+CBDATA_CLASS_INIT(PeerDigest);
+
+void *
+PeerDigest::operator new (size_t)
+{
+    CBDATA_INIT_TYPE(PeerDigest);
+    PeerDigest *result = cbdataAlloc(PeerDigest);
+    return result;
+}
+
+void
+PeerDigest::operator delete (void *address)
+{
+    PeerDigest *t = static_cast<PeerDigest *>(address);
+    cbdataFree(t);
+}
+
+void
+PeerDigest::deleteSelf () const
+{
+    delete this;
+}
 
 /* allocate new peer digest, call Init, and lock everything */
 PeerDigest *
@@ -114,8 +135,7 @@ peerDigestCreate(peer * p)
     PeerDigest *pd;
     assert(p);
 
-    CBDATA_INIT_TYPE(PeerDigest);
-    pd = cbdataAlloc(PeerDigest);
+    pd = new PeerDigest;
     peerDigestInit(pd, p);
 
     /* XXX This does not look right, and the same thing again in the caller */
@@ -136,7 +156,7 @@ peerDigestDestroy(PeerDigest * pd)
 
     peerDigestClean(pd);
 
-    cbdataFree(pd);
+    pd->deleteSelf();
 }
 
 /* called by peer to indicate that somebody actually needs this digest */

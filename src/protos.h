@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.470 2003/03/04 01:40:29 robertc Exp $
+ * $Id: protos.h,v 1.471 2003/03/06 11:51:57 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -286,7 +286,7 @@ SQUIDCEXTERN void whoisStart(FwdState *);
 /* http.c */
 SQUIDCEXTERN int httpCachable(method_t);
 SQUIDCEXTERN void httpStart(FwdState *);
-SQUIDCEXTERN void httpParseReplyHeaders(const char *, http_reply *);
+SQUIDCEXTERN void httpParseReplyHeaders(const char *, HttpReply *);
 SQUIDCEXTERN mb_size_t httpBuildRequestPrefix(request_t * request,
         request_t * orig_request,
         StoreEntry * entry,
