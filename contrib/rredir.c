@@ -1,3 +1,5 @@
+/* $Id: rredir.c,v 1.2 1996/09/12 22:14:03 wessels Exp $ */
+
 #ifdef MAIL_HEADERS
 From:    richard@hekkihek.hacom.nl (Richard Huveneers)
 To:      squid-users@nlanr.net
