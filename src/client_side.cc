@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.593 2002/09/24 10:46:43 robertc Exp $
+ * $Id: client_side.cc,v 1.594 2002/09/24 11:31:19 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -171,6 +171,10 @@ static void connNoteUseOfBuffer(ConnStateData * conn, int byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData * conn);
 static void connCancelIncompleteRequests(ConnStateData * conn);
 static ConnStateData *connStateCreate(struct sockaddr_in peer, struct sockaddr_in me, int fd);
+static clientStreamNode * getClientReplyContext(clientSocketContext * context);
+static int connAreAllContextsForThisConnection(ConnStateData * connState);
+static void connFreeAllContexts(ConnStateData * connState);
+static void clientPullData(clientSocketContext * context);
 
 clientStreamNode *
 getTail(clientSocketContext * context)
