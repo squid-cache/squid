@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.82 1997/02/04 23:18:33 wessels Exp $
+ * $Id: acl.cc,v 1.83 1997/02/06 19:59:53 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,7 +35,6 @@ const char *AclMatchedName = NULL;
 
 /* for reading ACL's from files */
 int aclFromFile = 0;
-int aclCompIpResult = 0;
 FILE *aclFile;
 
 /* These three should never be referenced directly in this file! */
@@ -51,15 +50,26 @@ static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
 static const char *const w_space = " \t\n\r";	/* Jasper sez so */
 
+
+#ifdef USE_SPLAY_TREE
+int aclCompIpResult = 0;
+static struct _acl_ip_data *aclSplayInsertIp
+             _PARAMS((struct _acl_ip_data *, struct _acl_ip_data *));
+static struct _acl_ip_data *aclSplayIp
+             _PARAMS((struct in_addr, struct _acl_ip_data *));
+static int aclSplayIpCompare
+    _PARAMS((struct in_addr addr, struct _acl_ip_data * data));
+static int aclMatchIp _PARAMS((void *dataptr, struct in_addr c));
+#else
+static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
+#endif /* USE_SPLAY_TREE */
+
 static void aclDestroyAclList _PARAMS((struct _acl_list * list));
 static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
-static struct _acl_ip_data *aclSplayInsertIp _PARAMS((struct _acl_ip_data *, struct _acl_ip_data *));
-static struct _acl_ip_data *aclSplayIp _PARAMS((struct in_addr, struct _acl_ip_data *));
 static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
 static int aclMatchDomainList _PARAMS((wordlist *, const char *));
 static int aclMatchAclList _PARAMS((const struct _acl_list *, aclCheck_t *));
 static int aclMatchInteger _PARAMS((intlist * data, int i));
-static int aclMatchIp _PARAMS((void *dataptr, struct in_addr c));
 static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
 static int aclMatchIdent _PARAMS((wordlist * data, const char *ident));
 static squid_acl aclType _PARAMS((const char *s));
@@ -71,7 +81,6 @@ static void aclParseWordList _PARAMS((void *curlist));
 static void aclParseProtoList _PARAMS((void *curlist));
 static void aclParseMethodList _PARAMS((void *curlist));
 static void aclParseTimeSpec _PARAMS((void *curlist));
-static int aclSplayIpCompare _PARAMS((struct in_addr addr, struct _acl_ip_data *data));
 
 char *
 strtokFile(void)
@@ -198,7 +207,7 @@ aclParseMethodList(void *curlist)
 	q = xcalloc(1, sizeof(intlist));
 	q->i = (int) urlParseMethod(t);
 	if (q->i == METHOD_PURGE)
-		Config.Options.enable_purge = 1;
+	    Config.Options.enable_purge = 1;
 	*(Tail) = q;
 	Tail = &q->next;
     }
@@ -320,6 +329,8 @@ aclParseIpData(const char *t)
     return q;
 }
 
+#ifdef USE_SPLAY_TREE
+
 static void
 aclParseIpList(void *curlist)
 {
@@ -331,14 +342,33 @@ aclParseIpList(void *curlist)
 	    continue;
 	*ip_data = aclSplayInsertIp(q, *ip_data);
     }
-
 }
 
+#else
+
+static void
+aclParseIpList(void *curlist)
+{
+    char *t = NULL;
+    struct _acl_ip_data **Tail;
+    struct _acl_ip_data *q = NULL;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
+    while ((t = strtokFile())) {
+	if ((q = aclParseIpData(t)) == NULL)
+	    continue;
+	*(Tail) = q;
+	Tail = &q->next;
+    }
+}
+
+#endif
+
+#ifdef USE_SPLAY_TREE
 static int
 aclSplayIpCompare(struct in_addr addr, struct _acl_ip_data *data)
 {
     int rc = 0;
-    addr.s_addr &= data->mask.s_addr;		/* apply netmask */
+    addr.s_addr &= data->mask.s_addr;	/* apply netmask */
     if (data->addr2.s_addr == 0) {	/* single address check */
 	if (addr.s_addr > data->addr1.s_addr)
 	    rc = 1;
@@ -358,7 +388,7 @@ aclSplayIpCompare(struct in_addr addr, struct _acl_ip_data *data)
 }
 
 static struct _acl_ip_data *
-aclSplayInsertIp(struct _acl_ip_data *q, struct _acl_ip_data * t)
+aclSplayInsertIp(struct _acl_ip_data *q, struct _acl_ip_data *t)
 {
     struct _acl_ip_data *new;
     new = xmalloc(sizeof(struct _acl_ip_data));
@@ -388,7 +418,7 @@ aclSplayInsertIp(struct _acl_ip_data *q, struct _acl_ip_data * t)
 }
 
 static struct _acl_ip_data *
-aclSplayIp(struct in_addr addr1, struct _acl_ip_data * t)
+aclSplayIp(struct in_addr addr1, struct _acl_ip_data *t)
 {
     struct _acl_ip_data N;
     struct _acl_ip_data *l;
@@ -439,6 +469,7 @@ aclSplayIp(struct in_addr addr1, struct _acl_ip_data * t)
     t->right = N.left;
     return t;
 }
+#endif /* USE_SPLAY_TREE */
 
 static void
 aclParseTimeSpec(void *curlist)
@@ -610,7 +641,7 @@ aclParseAclLine(void)
 	return;
     }
     if ((A = aclFindByName(aclname)) == NULL) {
-       debug(28, 3, "aclParseAclLine: Creating ACL '%s'\n", aclname);
+	debug(28, 3, "aclParseAclLine: Creating ACL '%s'\n", aclname);
 	A = xcalloc(1, sizeof(struct _acl));
 	xstrncpy(A->name, aclname, ACL_NAME_SZ);
 	A->type = acltype;
@@ -803,11 +834,56 @@ aclParseAccessLine(struct _acl_access **head)
 }
 
 static int
+#ifndef USE_SPLAY_TREE
+aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
+#else
 aclMatchIp(void *dataptr, struct in_addr c)
+#endif				/* USE_SPLAY_TREE */
 {
+#ifndef USE_SPLAY_TREE
+    struct in_addr h;
+    unsigned long lh, la1, la2;
+    struct _acl_ip_data *first, *prev;
+
+    first = data;		/* remember first element, this will never be moved */
+    prev = NULL;		/* previous element in the list */
+    while (data) {
+	h.s_addr = c.s_addr & data->mask.s_addr;
+	debug(28, 3, "aclMatchIp: h     = %s\n", inet_ntoa(h));
+	debug(28, 3, "aclMatchIp: addr1 = %s\n", inet_ntoa(data->addr1));
+	debug(28, 3, "aclMatchIp: addr2 = %s\n", inet_ntoa(data->addr2));
+	if (!data->addr2.s_addr) {
+	    if (h.s_addr == data->addr1.s_addr) {
+		debug(28, 3, "aclMatchIp: returning 1\n");
+		if (prev != NULL) {
+		    /* shift the element just found to the second position
+		     * in the list */
+		    prev->next = data->next;
+		    data->next = first->next;
+		    first->next = data;
+		}
+		return 1;
+	    }
+	} else {
+	    /* This is a range check */
+	    lh = ntohl(h.s_addr);
+	    la1 = ntohl(data->addr1.s_addr);
+	    la2 = ntohl(data->addr2.s_addr);
+	    if (lh >= la1 && lh <= la2) {
+		debug(28, 3, "aclMatchIp: returning 1\n");
+		return 1;
+	    }
+	}
+	prev = data;
+	data = data->next;
+    }
+    debug(28, 3, "aclMatchIp: returning 0\n");
+    return 0;
+#else
     struct _acl_ip_data **data = dataptr;
     *data = aclSplayIp(c, *data);
     return !aclCompIpResult;
+#endif /* USE_SPLAY_TREE */
 }
 
 static int
@@ -936,14 +1012,22 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
     debug(28, 3, "aclMatchAcl: checking '%s'\n", acl->cfgline);
     switch (acl->type) {
     case ACL_SRC_IP:
+#ifndef USE_SPLAY_TREE
+	return aclMatchIp(acl->data, checklist->src_addr);
+#else
 	return aclMatchIp(&acl->data, checklist->src_addr);
+#endif /* USE_SPLAY_TREE */
 	/* NOTREACHED */
     case ACL_DST_IP:
 	ia = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
 	if (ia) {
 	    for (k = 0; k < (int) ia->count; k++) {
 		checklist->dst_addr = ia->in_addrs[k];
+#ifndef USE_SPLAY_TREE
+		if (aclMatchIp(acl->data, checklist->dst_addr))
+#else
 		if (aclMatchIp(&acl->data, checklist->dst_addr))
+#endif /* USE_SPLAY_TREE */
 		    return 1;
 	    }
 	    return 0;
@@ -953,7 +1037,11 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_NEED;
 	    return 0;
 	} else {
+#ifndef USE_SPLAY_TREE
+	    return aclMatchIp(acl->data, no_addr);
+#else
 	    return aclMatchIp(&acl->data, no_addr);
+#endif /* USE_SPLAY_TREE */
 	}
 	/* NOTREACHED */
     case ACL_DST_DOMAIN:
@@ -1052,8 +1140,9 @@ aclCheck(const struct _acl_access *A, aclCheck_t * checklist)
     return !allow;
 }
 
+#ifdef USE_SPLAY_TREE
 static void
-aclDestroyIpList(struct _acl_ip_data * data)
+aclDestroyIpList(struct _acl_ip_data *data)
 {
     if (data == NULL)
 	return;
@@ -1061,6 +1150,19 @@ aclDestroyIpList(struct _acl_ip_data * data)
     aclDestroyIpList(data->right);
     safe_free(data);
 }
+
+#else
+
+static void
+aclDestroyIpList(struct _acl_ip_data *data)
+{
+    struct _acl_ip_data *next = NULL;
+    for (; data; data = next) {
+	next = data->next;
+	safe_free(data);
+    }
+}
+#endif
 
 static void
 aclDestroyTimeList(struct _acl_time_data *data)
