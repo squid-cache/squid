@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.97 1996/09/04 23:42:02 wessels Exp $
+ * $Id: store.cc,v 1.98 1996/09/05 19:02:59 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1440,7 +1440,7 @@ static int storeDoRebuildFromDisk(data)
 
 	if (store_rebuilding != STORE_REBUILDING_FAST) {
 	    if (stat(swapfile, &sb) < 0) {
-		if (expires < squid_curtime) {
+		if (squid_curtime - expires > Config.expireAge) {
 		    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
 		    if (opt_unlink_on_reload)
 			safeunlink(swapfile, 1);
@@ -1489,7 +1489,7 @@ static int storeDoRebuildFromDisk(data)
 	    data->objcount--;
 	    data->dupcount++;
 	}
-	if (expires < squid_curtime) {
+	if (squid_curtime - expires > Config.expireAge) {
 	    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
 	    if (opt_unlink_on_reload)
 		safeunlink(swapfile, 1);
@@ -1646,7 +1646,7 @@ static int storeCheckSwapable(e)
      StoreEntry *e;
 {
 
-    if (e->expires <= squid_curtime) {
+    if (squid_curtime - e->expires > Config.expireAge) {
 	debug(20, 2, "storeCheckSwapable: NO: expires now\n");
     } else if (e->method != METHOD_GET) {
 	debug(20, 2, "storeCheckSwapable: NO: non-GET method\n");
@@ -1656,8 +1656,8 @@ static int storeCheckSwapable(e)
 	debug(20, 2, "storeCheckSwapable: NO: release requested\n");
     } else if (!storeEntryValidLength(e)) {
 	debug(20, 2, "storeCheckSwapable: NO: wrong content-length\n");
-    } else if (e->expires <= squid_curtime + Config.negativeTtl) {
-	debug(20, 2, "storeCheckSwapable: NO: expires soon\n");
+    } else if (BIT_TEST(e->flag, ENTRY_NEGCACHED)) {
+	debug(20, 2, "storeCheckSwapable: NO: negative cached\n");
 	return 0;		/* avoid release call below */
     } else
 	return 1;
@@ -1706,7 +1706,7 @@ int storeAbort(e, msg)
 	fatal_dump("storeAbort: null mem");
 
     debug(20, 6, "storeAbort: '%s'\n", e->key);
-    e->expires = squid_curtime + Config.negativeTtl;
+    storeNegativeCache(e);
     e->store_status = STORE_ABORTED;
     storeSetMemStatus(e, IN_MEMORY);
     /* No DISK swap for negative cached object */
@@ -1998,38 +1998,27 @@ int storeGetSwapSpace(size)
     /* remove expired objects until recover enough space or no expired objects */
     for (i = 0; i < STORE_BUCKETS; i++) {
 	int expired_in_one_bucket = 0;
-
 	link_ptr = hash_get_bucket(store_table, storeGetBucketNum());
 	if (link_ptr == NULL)
 	    continue;
 	/* this while loop handles one bucket of hash table */
 	expired_in_one_bucket = 0;
-	while (link_ptr) {
+	for (; link_ptr; link_ptr = next) {
 	    scanned++;
 	    next = link_ptr->next;
 	    e = (StoreEntry *) link_ptr;
-
-	    /* Identify objects that aren't locked, for replacement */
-	    if (!storeEntryLocked(e)) {
-		if (squid_curtime > e->expires) {
-		    debug(20, 2, "storeGetSwapSpace: Expired: <URL:%s>\n", e->url);
-		    /* just call release. don't have to check for lock status.
-		     * storeRelease will take care of that and set a pending flag
-		     * if it's still locked. */
-		    ++expired_in_one_bucket;
-		    storeRelease(e);
-		} else {
-		    /* Prepare to do LRU replacement */
-		    insert_dynamic_array(LRU_list, e);
-		    ++scan_in_objs;
-		}
+	    if (storeCheckExpired(e)) {
+                debug(20, 2, "storeGetSwapSpace: Expired: <URL:%s>\n", e->url);
+                ++expired_in_one_bucket;
+                storeRelease(e);
+	    } else if (!storeEntryLocked(e)) {
+                insert_dynamic_array(LRU_list, e);
+                ++scan_in_objs;
 	    } else {
-		locked++;
-		locked_size += e->mem_obj->e_current_len;
+                locked++;
+                locked_size += e->mem_obj->e_current_len;
 	    }
-	    link_ptr = next;
 	}			/* while, end of one bucket of hash table */
-
 	expired += expired_in_one_bucket;
 	if (expired_in_one_bucket &&
 	    ((!fReduceSwap && (store_swap_size + kb_size <= store_swap_high)) ||
@@ -2643,33 +2632,27 @@ int storeMaintainSwapSpace()
     if (store_rebuilding == STORE_REBUILDING_FAST)
 	return -1;
 
-    /* Scan row of hash table each second and free storage if we're
-     * over the high-water mark */
-    storeGetSwapSpace(0);
-
     /* Purges expired objects, check one bucket on each calling */
     if (squid_curtime - last_time >= STORE_MAINTAIN_RATE) {
 	last_time = squid_curtime;
 	if (bucket >= STORE_BUCKETS)
 	    bucket = 0;
 	link_ptr = hash_get_bucket(store_table, bucket++);
-	while (link_ptr) {
+	for (;link_ptr; link_ptr = next) {
 	    next = link_ptr->next;
 	    e = (StoreEntry *) link_ptr;
-	    if ((squid_curtime > e->expires) &&
-		(e->swap_status == SWAP_OK)) {
-		debug(20, 2, "storeMaintainSwapSpace: Expired: <TTL:%d> <URL:%s>\n",
-		    e->expires - squid_curtime, e->url);
-		/* just call release. don't have to check for lock status.
-		 * storeRelease will take care of that and set a pending flag
-		 * if it's still locked. */
-		storeRelease(e);
-		++rm_obj;
-	    }
-	    link_ptr = next;
+	    if (!storeCheckExpired(e))
+		continue;
+	    storeRelease(e);
+	    ++rm_obj;
 	}
     }
     debug(20, rm_obj ? 2 : 3, "Removed %d expired objects\n", rm_obj);
+
+    /* Scan row of hash table each second and free storage if we're
+     * over the high-water mark */
+    storeGetSwapSpace(0);
+
     return rm_obj;
 }
 
@@ -2847,7 +2830,7 @@ static int storeCheckExpired(e)
 {
     if (storeEntryLocked(e))
 	return 0;
-    if (squid_curtime < e->expires)
+    if (squid_curtime - e->expires < Config.expireAge)
 	return 0;
     return 1;
 }
@@ -2870,4 +2853,11 @@ void storeCloseLog()
 {
     file_close(swaplog_fd);
     file_close(storelog_fd);
+}
+
+void storeNegativeCache(e)
+     StoreEntry *e;
+{
+	e->expires = squid_curtime + Config.negativeTtl;
+	BIT_SET(e->flag, ENTRY_NEGCACHED);
 }

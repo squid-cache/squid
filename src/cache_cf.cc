@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.82 1996/09/04 23:42:01 wessels Exp $
+ * $Id: cache_cf.cc,v 1.83 1996/09/05 19:02:51 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -125,6 +125,7 @@ struct SquidConfig Config;
 #define DefaultWaisRelayHost	(char *)NULL
 #define DefaultWaisRelayPort	0
 
+#define DefaultExpireAge	(86400 * 7)	/* 1 week */
 #define DefaultNegativeTtl	(5 * 60)	/* 5 min */
 #define DefaultNegativeDnsTtl	(2 * 60)	/* 2 min */
 #define DefaultPositiveDnsTtl	(360 * 60)	/* 6 hours */
@@ -217,7 +218,6 @@ static void parseAnnounceToLine _PARAMS((void));
 static void parseAppendDomainLine _PARAMS((void));
 static void parseCacheAnnounceLine _PARAMS((void));
 static void parseCacheHostLine _PARAMS((void));
-static void parseCleanRateLine _PARAMS((void));
 static void parseDebugOptionsLine _PARAMS((void));
 static void parseDirLine _PARAMS((void));
 static void parseDnsProgramLine _PARAMS((void));
@@ -239,23 +239,19 @@ static void parseHttpdAccelLine _PARAMS((void));
 static void parseIPLine _PARAMS((ip_acl ** list));
 static void parseIcpPortLine _PARAMS((void));
 static void parseInsideFirewallLine _PARAMS((void));
-static void parseLifetimeLine _PARAMS((void));
 static void parseLocalDomainFile _PARAMS((char *fname));
 static void parseLocalDomainLine _PARAMS((void));
 static void parseLogLine _PARAMS((void));
 static void parseMemLine _PARAMS((void));
 static void parseMgrLine _PARAMS((void));
-static void parseNegativeDnsLine _PARAMS((void));
-static void parseNegativeLine _PARAMS((void));
 static void parsePidFilenameLine _PARAMS((void));
-static void parsePositiveDnsLine _PARAMS((void));
-static void parseReadTimeoutLine _PARAMS((void));
 static void parseRequestSizeLine _PARAMS((void));
 static void parseStoreLogLine _PARAMS((void));
 static void parseSwapLine _PARAMS((void));
 static void parseTTLPattern _PARAMS((int icase, int force));
 static void parseVisibleHostnameLine _PARAMS((void));
 static void parseWAISRelayLine _PARAMS((void));
+static void parseMinutesLine _PARAMS((int *));
 
 void self_destruct()
 {
@@ -632,52 +628,13 @@ static void parseQuickAbort()
     }
 }
 
-static void parseNegativeLine()
+static void parseMinutesLine(iptr)
+     int *iptr;
 {
     char *token;
     int i;
     GetInteger(i);
-    Config.negativeTtl = i * 60;
-}
-
-static void parseNegativeDnsLine()
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.negativeDnsTtl = i * 60;
-}
-
-static void parsePositiveDnsLine()
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.positiveDnsTtl = i * 60;
-}
-
-static void parseReadTimeoutLine()
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.readTimeout = i * 60;
-}
-
-static void parseLifetimeLine()
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.lifetimeDefault = i * 60;
-}
-
-static void parseCleanRateLine()
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.cleanRate = i * 60;
+    *iptr = i * 60;
 }
 
 static void parseRequestSizeLine()
@@ -1212,22 +1169,19 @@ int parseConfigFile(file_name)
 	    parseQuickAbort();
 
 	else if (!strcmp(token, "negative_ttl"))
-	    parseNegativeLine();
-
+	    parseMinutesLine(&Config.negativeTtl);
 	else if (!strcmp(token, "negative_dns_ttl"))
-	    parseNegativeDnsLine();
-
+	    parseMinutesLine(&Config.negativeDnsTtl);
 	else if (!strcmp(token, "positive_dns_ttl"))
-	    parsePositiveDnsLine();
-
+	    parseMinutesLine(&Config.positiveDnsTtl);
 	else if (!strcmp(token, "read_timeout"))
-	    parseReadTimeoutLine();
-
+	    parseMinutesLine(&Config.readTimeout);
 	else if (!strcmp(token, "clean_rate"))
-	    parseCleanRateLine();
-
+	    parseMinutesLine(&Config.cleanRate);
 	else if (!strcmp(token, "client_lifetime"))
-	    parseLifetimeLine();
+	    parseMinutesLine(&Config.lifetimeDefault);
+	else if (!strcmp(token, "expire_age"))
+	    parseMinutesLine(&Config.expireAge);
 
 	else if (!strcmp(token, "shutdown_lifetime"))
 	    parseIntegerValue(&Config.lifetimeShutdown);
@@ -1485,6 +1439,7 @@ static void configSetFactoryDefaults()
     Config.Wais.relayHost = safe_xstrdup(DefaultWaisRelayHost);
     Config.Wais.relayPort = DefaultWaisRelayPort;
 
+    Config.expireAge = DefaultExpireAge;
     Config.negativeTtl = DefaultNegativeTtl;
     Config.negativeDnsTtl = DefaultNegativeDnsTtl;
     Config.positiveDnsTtl = DefaultPositiveDnsTtl;
