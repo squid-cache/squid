@@ -1,5 +1,6 @@
+
 /*
- * $Id: tools.cc,v 1.43 1996/07/09 03:41:45 wessels Exp $
+ * $Id: tools.cc,v 1.44 1996/07/15 23:48:38 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -527,7 +528,7 @@ void setMaxFD()
 
 time_t getCurrentTime()
 {
-#if defined(_SQUID_MOTOROLA_)
+#if GETTIMEOFDAY_NO_TZP
     gettimeofday(&current_time);
 #else
     gettimeofday(&current_time, NULL);

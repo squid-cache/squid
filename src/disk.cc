@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.17 1996/07/09 23:01:16 wessels Exp $
+ * $Id: disk.cc,v 1.18 1996/07/15 23:48:32 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -436,7 +436,7 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
     /* got to start write routine for this fd */
 #if USE_ASYNC_IO
     return aioFileQueueWrite(fd,
-	file_aio_write_complete,
+	aioFileWriteComplete,
 	&file_table[fd]);
 #else
     comm_set_select_handler(fd,
@@ -532,7 +532,7 @@ int file_read(fd, buf, req_len, offset, handler, client_data)
     ctrl_dat->client_data = client_data;
 
 #if USE_ASYNC_IO
-    return aioFileQueueRead(fd, file_aio_read_complete, ctrl_dat);
+    return aioFileQueueRead(fd, aioFileReadComplete, ctrl_dat);
 #else
     comm_set_select_handler(fd,
 	COMM_SELECT_READ,

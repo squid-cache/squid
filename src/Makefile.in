@@ -1,12 +1,14 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.28 1996/07/11 17:42:34 wessels Exp $
+#  $Id: Makefile.in,v 1.29 1996/07/15 23:48:27 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
 HOST_OPT	= # -DCACHEMGR_HOSTNAME="getfullhostname()"
-DEFINES         = $(HOST_OPT)
+AIO_OPT		= # -DUSE_ASYNC_IO=1
+AIO_LIB		= # -labi
+DEFINES         = $(HOST_OPT) $(AIO_OPT)
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -37,7 +39,7 @@ PERL            = @PERL@
 CRYPT_LIB	= @CRYPT_LIB@
 AC_CFLAGS	= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
-XTRA_LIBS	= @XTRA_LIBS@
+XTRA_LIBS	= @XTRA_LIBS@ $(AIO_LIB)
 XTRA_OBJS 	= @XTRA_OBJS@
 MV		= @MV@
 RM		= @RM@
