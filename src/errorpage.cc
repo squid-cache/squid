@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.66 1997/08/24 01:59:47 wessels Exp $
+ * $Id: errorpage.cc,v 1.67 1997/08/25 02:19:32 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -116,10 +116,10 @@ errorConvert(char token, ErrorState * err)
 	break;
     case 'p':
 	if (r) {
-		snprintf(buf, CVT_BUF_SZ, "%d", (int) r->port);
-		p = buf;
+	    snprintf(buf, CVT_BUF_SZ, "%d", (int) r->port);
+	    p = buf;
 	} else {
-		p = "[unknown port]";
+	    p = "[unknown port]";
 	}
 	break;
     case 'P':
@@ -132,26 +132,26 @@ errorConvert(char token, ErrorState * err)
 	p = err->dnsserver_msg;
 	break;
 /*
-	e - errno
-	E - strerror()
-	t - local time
-	T - UTC
-	c - Squid error code
-	I - server IP address
-	i - client IP address
-	L - HREF link for more info/contact
-	w - cachemgr email address
-	h - cache hostname
-	d - seconds elapsed since request received
-	p - URL port #
-*/
+ * e - errno
+ * E - strerror()
+ * t - local time
+ * T - UTC
+ * c - Squid error code
+ * I - server IP address
+ * i - client IP address
+ * L - HREF link for more info/contact
+ * w - cachemgr email address
+ * h - cache hostname
+ * d - seconds elapsed since request received
+ * p - URL port #
+ */
     default:
 	p = "%UNKNOWN%";
 	break;
     }
     if (p == NULL)
 	p = "<NULL>";
-    debug(4, 1)("errorConvert: %%%c --> '%s'\n", token, p);
+    debug(4, 1) ("errorConvert: %%%c --> '%s'\n", token, p);
     return p;
 }
 
@@ -199,7 +199,7 @@ errorBuildBuf(ErrorState * err, int *len)
 	err->http_status,
 	"text/html",
 	clen,
-	0,		/* no LMT for error pages */
+	0,			/* no LMT for error pages */
 	squid_curtime);
     tlen = snprintf(buf, ERROR_BUF_SZ, "%s\r\n%s", hdr, content);
     if (len)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.122 1997/08/24 23:13:26 wessels Exp $
+ * $Id: client_side.cc,v 1.123 1997/08/25 02:19:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -151,7 +151,7 @@ clientAccessCheckDone(int answer, void *data)
 	    err->redirect_url = xstrdup(redirectUrl);
 	} else {
 	    /* NOTE: don't use HTTP_UNAUTHORIZED because then the
-	       stupid browser wants us to authenticate */
+	     * stupid browser wants us to authenticate */
 	    err->http_status = HTTP_FORBIDDEN;
 	}
 	errorSend(fd, err);
