@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.409 1998/10/09 17:52:56 wessels Exp $
+ * $Id: client_side.cc,v 1.410 1998/10/11 23:19:47 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -861,8 +861,6 @@ clientHierarchical(clientHttpRequest * http)
     if (method == METHOD_TRACE)
 	return 1;
     if (method != METHOD_GET)
-	return 0;
-    if (method != METHOD_CONNECT)
 	return 0;
     /* scan hierarchy_stoplist */
     for (p = Config.hierarchy_stoplist; p; p = p->next)
