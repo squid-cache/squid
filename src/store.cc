@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.124 1996/10/07 14:40:09 wessels Exp $
+ * $Id: store.cc,v 1.125 1996/10/08 14:48:37 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -724,7 +724,11 @@ storeSetPublicKey(StoreEntry * e)
 }
 
 StoreEntry *
-storeCreateEntry(char *url, char *req_hdr, int flags, method_t method)
+storeCreateEntry(char *url,
+    char *req_hdr,
+    int req_hdr_sz,
+    int flags,
+    method_t method)
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;
@@ -736,8 +740,12 @@ storeCreateEntry(char *url, char *req_hdr, int flags, method_t method)
     e->url = xstrdup(url);
     meta_data.url_strings += strlen(url);
     e->method = method;
-    if (req_hdr)
-	mem->mime_hdr = xstrdup(req_hdr);
+    if (req_hdr) {
+	mem->mime_hdr_sz = req_hdr_sz;
+	mem->mime_hdr = xmalloc(req_hdr_sz + 1);
+	xmemcpy(mem->mime_hdr, req_hdr, req_hdr_sz);
+	*(mem->mime_hdr + req_hdr_sz) = '\0';
+    }
     if (BIT_TEST(flags, REQ_CACHABLE)) {
 	BIT_SET(e->flag, ENTRY_CACHABLE);
 	BIT_RESET(e->flag, RELEASE_REQUEST);
