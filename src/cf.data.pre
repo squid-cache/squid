@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.340 2003/08/27 21:19:32 wessels Exp $
+# $Id: cf.data.pre,v 1.341 2003/08/31 21:20:08 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1323,7 +1323,7 @@ DOC_END
 
 
 NAME: debug_options
-TYPE: eol
+TYPE: debug
 DEFAULT: ALL,1
 LOC: Config.debugOptions
 DOC_START
