@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.21 1998/03/16 20:11:50 wessels Exp $
+ * $Id: cf_gen.cc,v 1.22 1998/05/28 22:57:08 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -128,10 +128,12 @@ main(int argc, char *argv[])
     state = sSTART;
     while (feof(fp) == 0 && state != sEXIT) {
 	char buff[MAX_LINE];
-
-	fgets(buff, MAX_LINE, fp);
+	char *t;
+	if (NULL == fgets(buff, MAX_LINE, fp))
+	    break;
 	linenum++;
-	*(strchr(buff, '\n')) = '\0';
+	if (t = strchr(buff, '\n'))
+	    *t = '\0';
 	switch (state) {
 	case sSTART:
 	    if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
@@ -155,6 +157,7 @@ main(int argc, char *argv[])
 		state = sDOC;
 	    } else {
 		printf("Error on line %d\n", linenum);
+		printf("--> %d bytes, %s\n", strlen(buff), buff);
 		exit(1);
 	    }
 	    break;
