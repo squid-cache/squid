@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.52 1996/04/16 23:06:26 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.53 1996/04/17 23:46:17 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -25,6 +25,7 @@ static struct {
     int positiveDnsTtl;
     int readTimeout;
     int lifetimeDefault;
+    int lifetimeShutdown;
     int connectTimeout;
     int ageMaxDefault;
     int cleanRate;
@@ -80,6 +81,7 @@ static struct {
     wordlist *bind_addr_list;
     wordlist *local_domain_list;
     wordlist *inside_firewall_list;
+    wordlist *dns_testname_list;
 } Config;
 
 #define DefaultMemMaxSize 	(16 << 20)	/* 16 MB */
@@ -105,6 +107,7 @@ static struct {
 #define DefaultPositiveDnsTtl	(360 * 60)	/* 6 hours */
 #define DefaultReadTimeout	(15 * 60)	/* 15 min */
 #define DefaultLifetimeDefault	(200 * 60)	/* 3+ hours */
+#define DefaultLifetimeShutdown	30		/* 30 seconds */
 #define DefaultConnectTimeout	(2 * 60)	/* 2 min */
 #define DefaultDefaultAgeMax	(3600 * 24 * 30)	/* 30 days */
 #define DefaultCleanRate	-1	/* disabled */
@@ -650,6 +653,14 @@ static void parseLifetimeLine()
     Config.lifetimeDefault = i * 60;
 }
 
+static void parseShutdownLifetimeLine()
+{
+    char *token;
+    int i;
+    GetInteger(i);
+    Config.lifetimeShutdown = i;
+}
+
 static void parseConnectTimeout()
 {
     char *token;
@@ -929,6 +940,14 @@ static void parseInsideFirewallLine()
     char *token;
     while ((token = strtok(NULL, w_space))) {
 	wordlistAdd(&Config.inside_firewall_list, token);
+    }
+}
+
+static void parseDnsTestnameLine()
+{
+    char *token;
+    while ((token = strtok(NULL, w_space))) {
+	wordlistAdd(&Config.dns_testname_list, token);
     }
 }
 
@@ -1232,6 +1251,10 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "client_lifetime"))
 	    parseLifetimeLine();
 
+	/* Parse a client_lifetime line */
+	else if (!strcmp(token, "shutdown_lifetime"))
+	    parseShutdownLifetimeLine();
+
 	/* Parse a request_size line */
 	else if (!strcmp(token, "request_size"))
 	    parseRequestSizeLine();
@@ -1296,6 +1319,9 @@ int parseConfigFile(file_name)
 
 	else if (!strcmp(token, "inside_firewall"))
 	    parseInsideFirewallLine();
+
+	else if (!strcmp(token, "dns_testnames"))
+	    parseDnsTestnameLine();
 
 	else if (!strcmp(token, "single_parent_bypass"))
 	    parseSingleParentBypassLine();
@@ -1461,6 +1487,10 @@ int getClientLifetime()
 {
     return Config.lifetimeDefault;
 }
+int getShutdownLifetime()
+{
+    return Config.lifetimeShutdown;
+}
 int getMaxRequestSize()
 {
     return Config.maxRequestSize;
@@ -1609,6 +1639,10 @@ wordlist *getInsideFirewallList()
 {
     return Config.inside_firewall_list;
 }
+wordlist *getDnsTestnameList()
+{
+    return Config.dns_testname_list;
+}
 wordlist *getBindAddrList()
 {
     return Config.bind_addr_list;
@@ -1666,6 +1700,7 @@ static void configFreeMemory()
     wordlistDestroy(&Config.bind_addr_list);
     wordlistDestroy(&Config.local_domain_list);
     wordlistDestroy(&Config.inside_firewall_list);
+    wordlistDestroy(&Config.dns_testname_list);
 }
 
 
@@ -1694,6 +1729,7 @@ static void configSetFactoryDefaults()
     Config.positiveDnsTtl = DefaultPositiveDnsTtl;
     Config.readTimeout = DefaultReadTimeout;
     Config.lifetimeDefault = DefaultLifetimeDefault;
+    Config.lifetimeShutdown = DefaultLifetimeShutdown;
     Config.maxRequestSize = DefaultMaxRequestSize;
     Config.connectTimeout = DefaultConnectTimeout;
     Config.ageMaxDefault = DefaultDefaultAgeMax;
