@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.10 1996/03/29 21:19:25 wessels Exp $ */
+/* $Id: stat.cc,v 1.11 1996/04/01 04:16:11 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -173,7 +173,7 @@ void stat_objects_get(obj, sentry, vm_or_not)
 	    elapsed_time(entry, (int) entry->timestamp, space),
 	    flags_describe(entry),
 	    elapsed_time(entry, (int) entry->lastref, space2),
-	    ttl_describe(entry, (int) entry->expires),
+	    ttl_describe(entry),
 	    npend,
 	    (int) entry->refcount,
 	    mem_describe(entry),
@@ -1107,9 +1107,8 @@ char *mem_describe(entry)
 }
 
 
-char *ttl_describe(entry, expires)
+char *ttl_describe(entry)
      StoreEntry *entry;
-     int expires;
 {
     int hh, mm, ss;
     static char TTL[60];
@@ -1117,7 +1116,7 @@ char *ttl_describe(entry, expires)
 
     TTL[0] = '\0';
     strcpy(TTL, "UNKNOWN");	/* sometimes the TTL isn't set below */
-    ttl = expires - cached_curtime;
+    ttl = entry->expires - cached_curtime;
     if (ttl < 0)
 	strcpy(TTL, "EXPIRED");
     else {
