@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.37 2003/05/06 00:20:03 hno Exp $
+ * $Id: external_acl.cc,v 1.38 2003/05/06 20:11:50 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -534,7 +534,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
     if (!entry || entry->result == -1) {
         debug(82, 2) ("aclMatchExternal: %s(\"%s\") = lookup needed\n", acl->def->name, key);
 
-        if (acl->def->helper->stats.queue_size >= acl->def->helper->n_running)
+        if (acl->def->theHelper->stats.queue_size >= acl->def->theHelper->n_running)
             debug(82, 1) ("aclMatchExternal: '%s' queue overload. Request rejected.\n", acl->def->name);
         else
             ch->changeState (ExternalACLLookup::Instance());
