@@ -71,6 +71,7 @@ Our Todo List
 (5)	REST for failed ftp transfers.
 (5)	Customizable access logging.
 (5)	Inline DNS queries with native resolver calls.
+(5)	MD5 acl type
 
 
 DONE:
