@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.24 2001/09/27 21:59:22 hno Exp $
+ * $Id: ipc.cc,v 1.25 2001/10/17 19:43:39 hno Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -56,7 +56,7 @@ ipcCloseAllFD(int prfd, int pwfd, int crfd, int cwfd)
 }
 
 int
-ipcCreate(int type, const char *prog, char *const args[], const char *name, int *rfd, int *wfd)
+ipcCreate(int type, const char *prog, const char *const args[], const char *name, int *rfd, int *wfd)
 {
     pid_t pid;
     struct sockaddr_in CS;

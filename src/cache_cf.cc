@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.392 2001/10/17 13:43:06 hno Exp $
+ * $Id: cache_cf.cc,v 1.393 2001/10/17 19:43:39 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2136,7 +2136,7 @@ parse_uri_whitespace(int *var)
 static void
 dump_uri_whitespace(StoreEntry * entry, const char *name, int var)
 {
-    char *s;
+    const char *s;
     if (var == URI_WHITESPACE_ALLOW)
 	s = "allow";
     else if (var == URI_WHITESPACE_ENCODE)

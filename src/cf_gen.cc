@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.42 2001/08/23 13:20:46 robertc Exp $
+ * $Id: cf_gen.cc,v 1.43 2001/10/17 19:43:39 hno Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -116,7 +116,7 @@ static void gen_conf(Entry *, FILE *);
 static void gen_default_if_none(Entry *, FILE *);
 
 static void
-lineAdd(Line ** L, char *str)
+lineAdd(Line ** L, const char *str)
 {
     while (*L)
 	L = &(*L)->next;
@@ -129,8 +129,8 @@ main(int argc, char *argv[])
 {
     FILE *fp;
     char *input_filename = argv[1];
-    char *output_filename = _PATH_PARSER;
-    char *conf_filename = _PATH_SQUID_CONF;
+    const char *output_filename = _PATH_PARSER;
+    const char *conf_filename = _PATH_SQUID_CONF;
     int linenum = 0;
     Entry *entries = NULL;
     Entry *curr = NULL;
