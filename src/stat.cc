@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.12 1996/04/01 04:31:11 wessels Exp $ */
+/* $Id: stat.cc,v 1.13 1996/04/01 18:24:30 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -159,7 +159,7 @@ void stat_objects_get(obj, sentry, vm_or_not)
 	    (entry->swap_status == SWAP_OK))
 	    continue;
 	if ((++N & 0xFF) == 0) {
-	    cached_curtime = time(NULL);
+	    getCurrentTime();
 	    debug(18, 3, "stat_objects_get:  Processed %d objects...\n", N);
 	}
 	obj_size = entry->object_len;
@@ -757,10 +757,9 @@ void log_append(obj, url, id, size, action, method)
      char *method;
 {
     static char tmp[6000];	/* MAX_URL is 4096 */
-    time_t t;
-    char *buf;
+    char *buf = NULL;
 
-    t = cached_curtime = time(NULL);
+    getCurrentTime();
 
 #ifdef LOG_FQDN
     /* ENABLE THIS IF YOU WANT A *SLOW* CACHE, OR
@@ -778,12 +777,22 @@ void log_append(obj, url, id, size, action, method)
     }
 #endif
 
+    if (!method)
+	method = "-";
+
     if (obj->logfile_status == LOG_ENABLE) {
 	if (emulate_httpd_log)
 	    sprintf(tmp, "%s - - [%s] \"%s %s\" %s %d\n",
-		id, mkhttpdlogtime(&t), method, url, action, size);
+		id, mkhttpdlogtime(&cached_curtime), method, url, action, size);
 	else
-	    sprintf(tmp, "%d %s %s %d %s\n", (int) t, url, id, size, action);
+	    sprintf(tmp, "%9d.%06d %s %s %d %s %s\n",
+		(int) current_time.tv_sec,
+		(int) current_time.tv_usec,
+		id,
+		action,
+		size,
+		method,
+		url);
 
 
 	if (file_write(obj->logfile_fd, buf = xstrdup(tmp), strlen(tmp),
