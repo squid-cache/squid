@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.94 1996/09/03 19:24:06 wessels Exp $
+ * $Id: store.cc,v 1.95 1996/09/04 22:03:31 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -209,6 +209,7 @@ static MemObject *new_MemObject _PARAMS((void));
 static mem_ptr new_MemObjectData _PARAMS((void));
 static StoreEntry *new_StoreEntry _PARAMS((int mem_obj_flag));
 static int storeCheckPurgeMem _PARAMS((StoreEntry * e));
+static int storeCheckExpired _PARAMS((StoreEntry * e));
 static void storeSwapLog _PARAMS((StoreEntry *));
 static int storeHashDelete _PARAMS((StoreEntry *));
 static char *storeDescribeStatus _PARAMS((StoreEntry *));
@@ -476,17 +477,13 @@ static void storeLog(tag, e)
 
 
 /* get rid of memory copy of the object */
+/* Only call this if storeCheckPurgeMem(e) returns 1 */
 void storePurgeMem(e)
      StoreEntry *e;
 {
     debug(20, 3, "storePurgeMem: Freeing memory-copy of %s\n", e->key);
     if (e->mem_obj == NULL)
 	return;
-    if (storeEntryLocked(e)) {
-	debug(20, 0, "storePurgeMem: someone is purging a locked object?\n");
-	debug(20, 0, "%s", storeToString(e));
-	fatal_dump(NULL);
-    }
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_MemObject(e->mem_obj);
     e->mem_obj = NULL;
@@ -494,7 +491,7 @@ void storePurgeMem(e)
 
 /* lock the object for reading, start swapping in if necessary */
 /* Called by:
- * icp_hit_or_miss()
+ * icpProcessRequest()
  * storeAbort()
  * {http,ftp,gopher,wais}Start()
  */
@@ -1819,17 +1816,12 @@ StoreEntry *storeGetNext()
     return ((StoreEntry *) storeFindNext(store_table));
 }
 
-
-
-/* walk through every single entry in the storage and invoke a given routine */
-int storeWalkThrough(proc, data)
-     int (*proc) _PARAMS((StoreEntry * e, void *data));
-     void *data;
+/* free up all ttl-expired objects */
+int storePurgeOld()
 {
     StoreEntry *e = NULL;
-    int count = 0;
     int n = 0;
-
+    int count = 0;
     for (e = storeGetFirst(); e; e = storeGetNext()) {
 	if ((++n & 0xFF) == 0) {
 	    getCurrentTime();
@@ -1838,44 +1830,11 @@ int storeWalkThrough(proc, data)
 	}
 	if ((n & 0xFFF) == 0)
 	    debug(20, 2, "storeWalkThrough: %7d objects so far.\n", n);
-	count += proc(e, data);
+	if (storeCheckExpired(e))
+	    if (storeRelease(e) == 0)
+		count++;
     }
     return count;
-}
-
-
-/* compare an object timestamp and see if ttl is expired. Free it if so. */
-/* return 1 if it expired, 0 if not */
-int removeOldEntry(e, data)
-     StoreEntry *e;
-     void *data;
-{
-    time_t curtime = *((time_t *) data);
-
-    debug(20, 5, "removeOldEntry: Checking: %s\n", e->url);
-    debug(20, 6, "removeOldEntry:   *       curtime: %8ld\n", curtime);
-    debug(20, 6, "removeOldEntry:   *  e->timestamp: %8ld\n", e->timestamp);
-    debug(20, 6, "removeOldEntry:   * time in cache: %8ld\n",
-	curtime - e->timestamp);
-    debug(20, 6, "removeOldEntry:   *  time-to-live: %8ld\n",
-	e->expires - squid_curtime);
-
-    if ((squid_curtime > e->expires) && (e->store_status != STORE_PENDING)) {
-	return (storeRelease(e) == 0 ? 1 : 0);
-    }
-    return 0;
-}
-
-
-/* free up all ttl-expired objects */
-int storePurgeOld()
-{
-    int n;
-
-    debug(20, 0, "Performing Garbage Collection...\n");
-    n = storeWalkThrough(removeOldEntry, (void *) &squid_curtime);
-    debug(20, 0, "Done.  %d objects removed\n", n);
-    return n;
 }
 
 
@@ -1908,11 +1867,11 @@ int storeGetMemSpace(size, check_vm_number)
     for (e = storeGetInMemFirst(); e; e = storeGetInMemNext()) {
 	if (list_count == meta_data.store_in_mem_objects)
 	    break;
-	if (storeEntryLocked(e)) {
+	if (!storeCheckPurgeMem(e)) {
 	    n_locked++;
 	    continue;
 	}
-	if (squid_curtime > e->expires) {
+	if (storeCheckExpired(e)) {
 	    debug(20, 2, "storeGetMemSpace: Expired: %s\n", e->url);
 	    n_expired++;
 	    storeRelease(e);
@@ -2895,6 +2854,16 @@ static int storeCheckPurgeMem(e)
     if (e->swap_status != SWAP_OK)
 	return 0;
     if (store_hotobj_high)
+	return 0;
+    return 1;
+}
+
+static int storeCheckExpired(e)
+     StoreEntry *e;
+{
+    if (storeEntryLocked(e))
+	return 0;
+    if (squid_curtime < e->expires)
 	return 0;
     return 1;
 }

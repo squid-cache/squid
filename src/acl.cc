@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.28 1996/08/26 19:57:02 wessels Exp $
+ * $Id: acl.cc,v 1.29 1996/09/04 22:03:18 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,6 +41,7 @@ static void aclDestroyAclList _PARAMS((struct _acl_list * list));
 static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
 static void aclDestroyRegexList _PARAMS((struct _relist * data));
 static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
+static int aclMatchDomainList _PARAMS((wordlist *, char *));
 static int aclMatchAclList _PARAMS((struct _acl_list *, aclCheck_t *));
 static int aclMatchInteger _PARAMS((intlist * data, int i));
 static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));

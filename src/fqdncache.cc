@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.14 1996/09/03 18:50:37 wessels Exp $
+ * $Id: fqdncache.cc,v 1.15 1996/09/04 22:03:23 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -458,7 +458,7 @@ static fqdncache_entry *fqdncache_parsebuffer(inbuf, dnsData)
     debug(35, 5, "fqdncache_parsebuffer: parsing:\n%s", inbuf);
     memset(&f, '\0', sizeof(fqdncache_entry));
     f.expires = squid_curtime + Config.positiveDnsTtl;
-    f.status = IP_DISPATCHED;
+    f.status = FQDN_DISPATCHED;
     for (token = strtok(buf, w_space); token; token = strtok(NULL, w_space)) {
 	if (!strcmp(token, "$end")) {
 	    break;
@@ -468,7 +468,7 @@ static fqdncache_entry *fqdncache_parsebuffer(inbuf, dnsData)
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $fail");
 	    f.expires = squid_curtime + Config.negativeDnsTtl;
-	    f.status = IP_NEGATIVE_CACHED;
+	    f.status = FQDN_NEGATIVE_CACHED;
 	} else if (!strcmp(token, "$message")) {
 	    if ((token = strtok(NULL, "\n")) == NULL)
 		fatal_dump("Invalid $message");
@@ -476,7 +476,7 @@ static fqdncache_entry *fqdncache_parsebuffer(inbuf, dnsData)
 	} else if (!strcmp(token, "$name")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $name");
-	    f.status = IP_CACHED;
+	    f.status = FQDN_CACHED;
 	} else if (!strcmp(token, "$h_name")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $h_name");
@@ -491,7 +491,7 @@ static fqdncache_entry *fqdncache_parsebuffer(inbuf, dnsData)
 	    ipcount = atoi(token);
 	    for (k = 0; k < ipcount; k++) {
 		if ((token = strtok(NULL, w_space)) == NULL)
-		    fatal_dump("Invalid IP address");
+		    fatal_dump("Invalid FQDN address");
 	    }
 	} else if (!strcmp(token, "$aliascount")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)

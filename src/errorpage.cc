@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.35 1996/08/30 23:23:28 wessels Exp $
+ * $Id: errorpage.cc,v 1.36 1996/09/04 22:03:22 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -150,7 +150,7 @@ void errorInitialize()
 
 void squid_error_entry(entry, type, msg)
      StoreEntry *entry;
-     int type;
+     log_type type;
      char *msg;
 {
     int index;
