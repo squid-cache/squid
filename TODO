@@ -3,6 +3,7 @@
 + request-range
 + hit metering
 + we don't properly handle the HTTP/1.1 'Connection' header
++ single linked list for disk LRU replacement
 + ETag support (makes metadata bigger--ack!)
 + Incorporate Pelletier's latest retry patch for 1.1
 + FTP PUT
