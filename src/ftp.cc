@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.113 1997/06/01 04:23:11 wessels Exp $
+ * $Id: ftp.cc,v 1.114 1997/06/01 18:19:52 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -823,19 +823,17 @@ ftpStart(request_t * request, StoreEntry * entry)
     LOCAL_ARRAY(char, realm, 8192);
     char *url = entry->url;
     FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
-    char *req_hdr;
     char *response;
     int fd;
     debug(9, 3, "FtpStart: '%s'\n", entry->url);
     storeLockObject(entry);
     ftpState->entry = entry;
-    req_hdr = entry->mem_obj->request_hdr;
     ftpState->request = requestLink(request);
     ftpState->ctrl.fd = -1;
     ftpState->data.fd = -1;
     EBIT_SET(ftpState->flags, FTP_PASV_SUPPORTED);
     EBIT_SET(ftpState->flags, FTP_REST_SUPPORTED);
-    if (!ftpCheckAuth(ftpState, req_hdr)) {
+    if (!ftpCheckAuth(ftpState, request->headers)) {
 	/* This request is not fully authenticated */
 	if (request->port == 21) {
 	    sprintf(realm, "ftp %s", ftpState->user);
