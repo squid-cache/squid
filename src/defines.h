@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.72 1999/04/15 06:15:52 wessels Exp $
+ * $Id: defines.h,v 1.73 1999/04/16 01:00:50 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -245,6 +245,10 @@
  * Max number of ICP messages to receive per call to icpHandleUdp
  */
 #define INCOMING_ICP_MAX 15
+/*
+ * Max number of DNS messages to receive per call to DNS read handler
+ */
+#define INCOMING_DNS_MAX 15
 /*
  * Max number of HTTP connections to accept per call to httpAccept
  * and PER HTTP PORT

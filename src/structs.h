@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.280 1999/04/15 06:16:13 wessels Exp $
+ * $Id: structs.h,v 1.281 1999/04/16 01:00:54 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -424,8 +424,10 @@ struct _SquidConfig {
 #endif
     struct {
 	int icp_average;
+	int dns_average;
 	int http_average;
 	int icp_min_poll;
+	int dns_min_poll;
 	int http_min_poll;
     } comm_incoming;
     int max_open_disk_fds;
@@ -1462,6 +1464,7 @@ struct _StatCounters {
     double cputime;
     struct timeval timestamp;
     StatHist comm_icp_incoming;
+    StatHist comm_dns_incoming;
     StatHist comm_http_incoming;
     StatHist select_fds_hist;
     struct {
