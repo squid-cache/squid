@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm_select.cc,v 1.10 1998/09/15 06:25:17 wessels Exp $
+ * $Id: comm_select.cc,v 1.11 1998/09/15 19:37:46 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -218,7 +218,7 @@ comm_poll_icp_incoming(void)
     nevents = comm_check_incoming_poll_handlers(nfds, fds);
     incoming_icp_interval += Config.comm_incoming.icp_average - nevents;
     if (incoming_icp_interval < Config.comm_incoming.icp_min_poll)
-       incoming_icp_interval = Config.comm_incoming.icp_min_poll;
+	incoming_icp_interval = Config.comm_incoming.icp_min_poll;
     if (incoming_icp_interval > MAX_INCOMING_INTERVAL)
 	incoming_icp_interval = MAX_INCOMING_INTERVAL;
     if (nevents > INCOMING_ICP_MAX)
@@ -245,7 +245,7 @@ comm_poll_http_incoming(void)
     incoming_http_interval = incoming_http_interval
 	+ Config.comm_incoming.http_average - nevents;
     if (incoming_http_interval < Config.comm_incoming.http_min_poll)
-       incoming_http_interval = Config.comm_incoming.http_min_poll;
+	incoming_http_interval = Config.comm_incoming.http_min_poll;
     if (incoming_http_interval > MAX_INCOMING_INTERVAL)
 	incoming_http_interval = MAX_INCOMING_INTERVAL;
     if (nevents > INCOMING_HTTP_MAX)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.182 1998/09/14 22:27:57 wessels Exp $
+ * $Id: acl.cc,v 1.183 1998/09/15 19:37:43 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -271,9 +271,9 @@ aclParseIntRange(void *curlist)
 	q->i = atoi(t);
 	t = strchr(t, '-');
 	if (t && *(++t))
-		q->j = atoi(t);
+	    q->j = atoi(t);
 	else
-		q->j = q->i;
+	    q->j = q->i;
 	*(Tail) = q;
 	Tail = &q->next;
     }
@@ -1111,9 +1111,9 @@ aclMatchIntegerRange(intrange * data, int i)
     prev = NULL;
     while (data) {
 	if (i < data->i) {
-		(void) 0;
+	    (void) 0;
 	} else if (i > data->j) {
-		(void) 0;
+	    (void) 0;
 	} else {
 	    /* matched */
 	    if (prev != NULL) {
@@ -1698,13 +1698,13 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 }
 
 static void
-aclDestroyIntRange(intrange *list)
+aclDestroyIntRange(intrange * list)
 {
     intrange *w = NULL;
     intrange *n = NULL;
     for (w = list; w; w = n) {
-        n = w->next;
-        safe_free(w);
+	n = w->next;
+	safe_free(w);
     }
 }
 

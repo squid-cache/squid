@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.76 1998/09/14 21:28:14 wessels Exp $
+ * $Id: store_dir.cc,v 1.77 1998/09/15 19:38:02 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -799,20 +799,20 @@ storeDirConfigure(void)
     fileMap *fm;
     Config.Swap.maxSize = 0;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        SD = &Config.cacheSwap.swapDirs[i];;
-        Config.Swap.maxSize += SD->max_size;
-        n = 2 * SD->max_size / Config.Store.avgObjectSize;
-        if (NULL == SD->map) {
-            /* first time */
-            SD->map = file_map_create(n);
-        } else if (n > SD->map->max_n_files) {
-            /* it grew, need to expand */
-            fm = file_map_create(n);
-            filemapCopy(SD->map, fm);
-            filemapFreeMemory(SD->map);
-            SD->map = fm;
-        }
-        /* else it shrunk, and we leave the old one in place */
+	SD = &Config.cacheSwap.swapDirs[i];;
+	Config.Swap.maxSize += SD->max_size;
+	n = 2 * SD->max_size / Config.Store.avgObjectSize;
+	if (NULL == SD->map) {
+	    /* first time */
+	    SD->map = file_map_create(n);
+	} else if (n > SD->map->max_n_files) {
+	    /* it grew, need to expand */
+	    fm = file_map_create(n);
+	    filemapCopy(SD->map, fm);
+	    filemapFreeMemory(SD->map);
+	    SD->map = fm;
+	}
+	/* else it shrunk, and we leave the old one in place */
     }
 }
 
@@ -823,6 +823,6 @@ storeDirDiskFull(int fn)
     SwapDir *SD = &Config.cacheSwap.swapDirs[dirn];
     assert(0 <= dirn && dirn < Config.cacheSwap.n_configured);
     SD->max_size = SD->cur_size;
-    debug(20, 1)("WARNING: Shrinking cache_dir #%d to %d KB\n",
+    debug(20, 1) ("WARNING: Shrinking cache_dir #%d to %d KB\n",
 	dirn, SD->cur_size);
 }

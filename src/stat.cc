@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.288 1998/09/14 22:18:01 wessels Exp $
+ * $Id: stat.cc,v 1.289 1998/09/15 19:37:58 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -745,7 +745,7 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     storeAppendPrintf(sentry, "select_fds = %f/sec\n",
 	XAVG(select_fds));
     storeAppendPrintf(sentry, "average_select_fd_period = %f/fd\n",
-        f->select_fds > l->select_fds ?
+	f->select_fds > l->select_fds ?
 	(f->select_time - l->select_time) / (f->select_fds - l->select_fds)
 	: 0.0);
     x = statHistDeltaMedian(&l->select_fds_hist, &f->select_fds_hist);

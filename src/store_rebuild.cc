@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.49 1998/09/14 23:42:37 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.50 1998/09/15 19:38:03 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -315,15 +315,15 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	} else if (used && e && e->swap_file_number == s.swap_file_number) {
 	    /* swapfile taken, same URL, newer, update meta */
 	    if (e->store_status == STORE_OK) {
-	        e->lastref = s.timestamp;
-	        e->timestamp = s.timestamp;
-	        e->expires = s.expires;
-	        e->lastmod = s.lastmod;
-	        e->flags = s.flags;
-	        e->refcount += s.refcount;
+		e->lastref = s.timestamp;
+		e->timestamp = s.timestamp;
+		e->expires = s.expires;
+		e->lastmod = s.lastmod;
+		e->flags = s.flags;
+		e->refcount += s.refcount;
 	    } else {
 		debug_trap("storeRebuildFromSwapLog: bad condition");
-		debug(20,1)("\tSee %s:%d\n", __FILE__, __LINE__);
+		debug(20, 1) ("\tSee %s:%d\n", __FILE__, __LINE__);
 	    }
 	    continue;
 	} else if (used) {

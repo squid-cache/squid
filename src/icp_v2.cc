@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.51 1998/09/11 17:07:43 wessels Exp $
+ * $Id: icp_v2.cc,v 1.52 1998/09/15 19:37:49 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -537,7 +537,7 @@ icpCount(void *buf, int which, size_t len, int delay)
 static cache_key queried_keys[N_QUERIED_KEYS][MD5_DIGEST_CHARS];
 
 int
-icpSetCacheKey(const cache_key *key)
+icpSetCacheKey(const cache_key * key)
 {
     static int reqnum = 0;
     if (++reqnum < 0)
