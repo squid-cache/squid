@@ -1,0 +1,20 @@
+--- samba-HEAD/source/nsswitch/winbind_nss_config.h	Wed Sep  5 10:11:16 2001
++++ squid-ntlm/src/auth/ntlm/helpers/winbind/winbind_nss_config.h	Sat Nov 24 00:32:05 2001
+@@ -27,7 +27,7 @@
+ 
+ /* Include header files from data in config.h file */
+ 
+-#include <config.h>
++#include "config.h"
+ 
+ #include <stdio.h>
+ 
+@@ -63,7 +63,7 @@
+ #include <sys/stat.h>
+ #include <errno.h>
+ #include <pwd.h>
+-#include "nsswitch/nss.h"
++#include "samba_nss.h"
+ 
+ /* Declarations for functions in winbind_nss.c
+    needed in winbind_nss_solaris.c (solaris wrapper to nss) */
