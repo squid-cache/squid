@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.232 1998/06/30 23:10:16 wessels Exp $
+ * $Id: ftp.cc,v 1.233 1998/07/02 16:53:39 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -292,9 +292,11 @@ ftpLoginParser(const char *login, FtpStateData * ftpState)
     if ((s = strchr(ftpState->user, ':'))) {
 	*s = 0;
 	xstrncpy(ftpState->password, s + 1, MAX_URL);
+        rfc1738_unescape(ftpState->password);
     } else {
 	xstrncpy(ftpState->password, null_string, MAX_URL);
     }
+    rfc1738_unescape(ftpState->user);
     if (ftpState->user[0] || ftpState->password[0])
 	return;
     xstrncpy(ftpState->user, "anonymous", MAX_URL);
