@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.9 1996/03/25 19:05:49 wessels Exp $ */
+/* $Id: ftp.cc,v 1.10 1996/03/25 21:25:51 wessels Exp $ */
 
 #include "config.h"
 #include <stdio.h>
@@ -21,14 +21,13 @@
 #include "cache_cf.h"
 #include "ttl.h"
 #include "util.h"
-#include "ftp.h"
 #include "icp.h"
 #include "cached_error.h"
 
 #define FTP_DELETE_GAP  (64*1024)
-
-ftpget_thread *FtpgetThread = NULL;
-ftpget_thread **FtpgetThreadTailP = &FtpgetThread;
+#define READBUFSIZ	4096
+#define MAGIC_MARKER    "\004\004\004"	/* No doubt this should be more configurable */
+#define MAGIC_MARKER_SZ 3
 
 static char ftpASCII[] = "A";
 static char ftpBinary[] = "I";
@@ -42,7 +41,6 @@ typedef struct _Ftpdata {
     char password[MAX_URL];
     char *type;
     char *mime_hdr;
-    int cpid;
     int ftp_fd;
     char *icp_page_ptr;		/* Used to send proxy-http request: 
 				 * put_free_8k_page(me) if the lifetime
@@ -50,6 +48,7 @@ typedef struct _Ftpdata {
     char *icp_rwd_ptr;		/* When a lifetime expires during the
 				 * middle of an icpwrite, don't lose the
 				 * icpReadWriteData */
+    int got_marker;		/* denotes end of successful request */
 } FtpData;
 
 extern char *tmp_error_buf;
@@ -144,7 +143,6 @@ void ftpLifetimeExpire(fd, data)
     }
     safe_free(data->icp_rwd_ptr);
     cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-    /* ftp_close_pipe(data->ftp_fd, data->cpid); */
     comm_close(fd);
     safe_free(data);
 }
@@ -157,7 +155,7 @@ int ftpReadReply(fd, data)
      int fd;
      FtpData *data;
 {
-    static char buf[4096];
+    static char buf[READBUFSIZ];
     int len;
     int clen;
     int off;
@@ -170,11 +168,8 @@ int ftpReadReply(fd, data)
 	    clen = entry->mem_obj->e_current_len;
 	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > FTP_DELETE_GAP) {
-		debug(3, "ftpReadReply: Read deferred for Object: %s\n",
-		    entry->key);
-		debug(3, "                Current Gap: %d bytes\n",
-		    clen - off);
-
+		debug(3, "ftpReadReply: Read deferred for Object: %s\n", entry->key);
+		debug(3, "--> Current Gap: %d bytes\n", clen - off);
 		/* reschedule, so it will automatically be reactivated when
 		 * Gap is big enough. */
 		comm_set_select_handler(fd,
@@ -186,35 +181,31 @@ int ftpReadReply(fd, data)
 	} else {
 	    /* we can terminate connection right now */
 	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
-	    /* ftp_close_pipe(data->ftp_fd, data->cpid); */
 	    comm_close(fd);
 	    safe_free(data);
 	    return 0;
 	}
     }
-    len = read(fd, buf, 4096);
-    debug(5, "ftpReadReply FD %d, Read %d bytes\n", fd, len);
+    errno = 0;
+    len = read(fd, buf, READBUFSIZ);
+    debug(5, "ftpReadReply: FD %d, Read %d bytes\n", fd, len);
 
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	if (len < 0)
-	    debug(1, "ftpReadReply - error reading: %s\n", xstrerror());
+	    debug(1, "ftpReadReply: read error: %s\n", xstrerror());
 	cached_error_entry(entry, ERR_READ_ERROR, NULL);
-	/* ftp_close_pipe(data->ftp_fd, data->cpid); */
 	comm_close(fd);
 	safe_free(data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
-	/* If ftpget failed, arrange so the object gets ejected and
-	 * doesn't get to disk. */
-	/* XXX REALLY NEED TO THINK ABOUT THIS */
-#ifdef OLD_CODE
-	if (ftp_close_pipe(data->ftp_fd, data->cpid) != 0) {
+	if (!data->got_marker) {
+	    /* If we didn't see the magic marker, assume the transfer failed and arrange
+	     * so the object gets ejected and never gets to disk. */
+	    debug(1, "ftpReadReply: Didn't see magic marker, purging <URL:%s>.\n", entry->url);
 	    entry->expires = cached_curtime + getNegativeTTL();
 	    BIT_RESET(entry->flag, CACHABLE);
 	    BIT_SET(entry->flag, RELEASE_REQUEST);
-	} else
-#endif
-	if (!(entry->flag & DELETE_BEHIND)) {
+	} else if (!(entry->flag & DELETE_BEHIND)) {
 	    entry->expires = cached_curtime + ttlSet(entry);
 	}
 	/* update fdstat and fdtable */
@@ -225,21 +216,25 @@ int ftpReadReply(fd, data)
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
-
 	storeAppend(entry, buf, len);
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
 	    (caddr_t) data);
-
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
 	cached_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	/* ftp_close_pipe(data->ftp_fd, data->cpid); */
 	comm_close(fd);
 	safe_free(data);
     } else {
+	/* check for a magic marker at the end of the read */
+	if (len >= MAGIC_MARKER_SZ) {
+	    if (!memcmp(MAGIC_MARKER, buf + len - MAGIC_MARKER_SZ, MAGIC_MARKER_SZ)) {
+		data->got_marker = 1;
+		len -= MAGIC_MARKER_SZ;
+	    }
+	}
 	storeAppend(entry, buf, len);
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
@@ -410,7 +405,6 @@ void ftpConnInProgress(fd, data)
 	(PF) ftpSendRequest,
 	(caddr_t) data);
 }
-
 
 
 int ftpStart(unusedfd, url, entry)
