@@ -7,14 +7,12 @@ Our Todo List
 (1)	A customizable cache replacement policy.  Ugh, this could be
 	interesting since we just optimized the LRU replacement with a 
 	doubly-linked list.
-(1) **	Send full HTTP requests in ICP messages (DW)
 
 (2)	be more persistent in forwarding requests; return fewer error pages
 (2)	Fix some problems with peer-selection.
 		- Allow for 'backup' parents 
 		- An orderd list of siblings to try.  
 		- Hash function load balancing
-(2)	Track cache keys (MD5) in memory utilization
 (2)     Calculate Content-Length for multipart range replies (AR)
 
 (3)	hit metering
@@ -27,26 +25,18 @@ Our Todo List
 	#    or if more than y% of pings to the client exceed
 	#    x milliseconds, then deny.
 	distant_peer_deny   200  75  10
-(3)	Resource limits.
 (3)     deny/allow tags for HTTP header fields (AR)
 (3)	LDAP support.  See http://miso.wwa.com/~donley/ and
 	Clayton Donley <qa1049@ilms04.cig.mot.com>
 (3)	What to do about ACL's and URL escaping?
-(3)	Arjan's external proxy auth patch is at
-	http://www.iae.nl/users/devet/squid/proxy_auth/
 (3)	Review RFC 2068 and RFC 2109 for header handing, especially
 	Cache-Control.
-(3)	In some situations, a private-key reply needs to eject a
-	public-key cached object.  For example when an object is
-	first cachable, but later becomes uncachable.
 
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
 	stoplist_pattern, refresh_pattern, ...  (DW)
 (4)	Refresh based on content types.  This means we'll need an enum of
 	known content types added to StoreEntry.  Unknown types will lose.
 (4)	Write binary headers as metadata?
-(4)	Configurable proxy-auth realm
-(4)	Configurable FQDN cache size
 (4)	HTML-escape special characters in errorConvert().
 
 (5)	X-Proxy-hops header?
@@ -115,3 +105,13 @@ DONE:
 (3)	'no_cache' access list for specifing objects which should not
 	be cached.
 (3)	Full request headers for CONNECT requests.
+(1) **	Send full HTTP requests in ICP messages (DW)
+(2)	Track cache keys (MD5) in memory utilization
+(3)	Resource limits.
+(3)	Arjan's external proxy auth patch is at
+	http://www.iae.nl/users/devet/squid/proxy_auth/
+(3)	In some situations, a private-key reply needs to eject a
+	public-key cached object.  For example when an object is
+	first cachable, but later becomes uncachable.
+(4)	Configurable proxy-auth realm
+(4)	Configurable FQDN cache size
