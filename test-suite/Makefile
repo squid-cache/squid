@@ -1,15 +1,23 @@
 CC	= gcc
-CFLAGS	= -O2
-OBJS	= membanger.o hash.o
-LIB	= -lmylib
+CFLAGS	= -g -DWITH_LIB
+OBJS	= membanger.o hash.o SizeToPool.o
+LIB	= -L. -lMem
+TARGLIB = libMem.a
+LIBOBJS = Mem.o \
+          Stack.o
+AR_R      = /usr/bin/ar r
+RM      = rm
+XTRA_LIBS = -lm  -lmalloc
 
-all: membanger
+all:  membanger
 
-
-membanger: $(OBJS)
-	gcc -o membanger $(OBJS)
+membanger: $(OBJS) $(TARGLIB)
+	gcc -o membanger $(OBJS) $(LIB)
 
 $(OBJS): Makefile
 
-clean: membanger
-	rm $(OBJS) 
+$(TARGLIB): $(LIBOBJS)
+	$(AR_R) $(TARGLIB) $(LIBOBJS)
+
+clean: 
+	rm $(OBJS) $(TARGLIB) $(LIBOBJS)

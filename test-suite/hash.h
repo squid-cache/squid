@@ -38,4 +38,3 @@ void hashFreeMemory(hash_table *);
 HASHHASH hash_string;
 HASHHASH hash_url;
 HASHHASH hash4;
-void assert(int);
