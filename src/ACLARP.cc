@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.9 2004/12/20 16:30:32 robertc Exp $
+ * $Id: ACLARP.cc,v 1.10 2004/12/21 19:40:16 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -492,7 +492,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c)
 #define ROUNDUP(a) \
         ((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
 
-        (char *) sdl = (char *) sin + ROUNDUP(sin->sin_len);
+        sdl = (struct sockaddr_dl *)((char *) sin + ROUNDUP(sin->sin_len));
 
         if (c.s_addr == sin->sin_addr.s_addr) {
             if (sdl->sdl_alen) {
