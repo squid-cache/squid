@@ -1,6 +1,6 @@
 Squid-2.5:
 
-  - WCCP fixes
+  - WCCP fixes (done)
   - Run a polygraph test of aufs
   - Write release notes
   - HTML tidyups from "PsychoTekk / C.L."
