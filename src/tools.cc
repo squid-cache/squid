@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.244 2004/10/20 22:41:05 hno Exp $
+ * $Id: tools.cc,v 1.245 2004/11/07 14:49:44 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -388,7 +388,7 @@ sigusr2_handle(int sig)
 
     if (state == 0) {
 #ifndef MEM_GEN_TRACE
-        _db_init(Config.Log.log, "ALL,10");
+        Debug::parseOptions("ALL,10");
 #else
 
         log_trace_done();
@@ -397,7 +397,7 @@ sigusr2_handle(int sig)
         state = 1;
     } else {
 #ifndef MEM_GEN_TRACE
-        _db_init(Config.Log.log, Config.debugOptions);
+        Debug::parseOptions(Config.debugOptions);
 #else
 
         log_trace_init("/tmp/squid.alloc");
