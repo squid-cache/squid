@@ -79,7 +79,8 @@ SOFTWARE.
 #define NSAP        (ASN_APPLICATION | 5)
 #define COUNTER64   (ASN_APPLICATION | 6)
 #define UINTEGER    (ASN_APPLICATION | 7)
-#define DEBUG
+
+#undef DEBUG
 #ifdef DEBUG
 #define ERROR(string)	fprintf(stderr,"%s(%d): ERROR %s\n",__FILE__, __LINE__, string);
 #else

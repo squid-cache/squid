@@ -22,29 +22,58 @@
 /*
  * snmp_api.c - API for access to snmp.
  */
-#define DEBUG_SNMPTRACE		0	/* set to 1 to print all SNMP actions */
-#define DEBUG_SNMPFULLDUMP	0	/* set to 1 to dump all SNMP packets */
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#ifdef linux
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <string.h>
+#include "config.h"
+
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+#if HAVE_GNUMALLOC_H
+#include <gnumalloc.h>
+#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#include <malloc.h>
+#endif
+#if HAVE_MEMORY_H
+#include <memory.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#if HAVE_BSTRING_H
+#include <bstring.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
 
+#define DEBUG_SNMPTRACE		0	/* set to 1 to print all SNMP actions */
+#define DEBUG_SNMPFULLDUMP	0	/* set to 1 to dump all SNMP packets */
 
 #include "asn1.h"
 #include "snmp.h"
 #include "snmp_impl.h"
 #include "snmp_api.h"
 #include "snmp_client.h"
+
+#include "util.h"
 
 #define PACKET_LENGTH	4500
 
@@ -109,6 +138,7 @@ int snmp_synch_response();
 void md5Digest();
 
 
+#if NO_PRINTFS
 static char *
 api_errstring(snmp_errnumber)
      int snmp_errnumber;
@@ -119,6 +149,7 @@ api_errstring(snmp_errnumber)
 	return "Unknown Error";
     }
 }
+#endif
 
 #if UNUSED_CODE
 /*
@@ -150,12 +181,14 @@ snmp_print_packet(packet, length, addr, code)
     if (length < 0) {
 	return;
     }
+#if NO_PRINTFS
     if (code <= 0) {		/* received */
 	printf("\nReceived %4d bytes from ", length);
     } else {			/* sending */
 	printf("\nSending  %4d bytes to   ", length);
     }
     printf("%s:", inet_ntoa(addr.sin_addr));
+#endif
 #if DEBUG_SNMPFULLDUMP
     for (count = 0; count < length; count++) {
 	if ((count & 15) == 0) {
@@ -164,7 +197,9 @@ snmp_print_packet(packet, length, addr, code)
 	printf("%02X ", (int) (packet[count] & 255));
     }
 #endif
+#if NO_PRINTFS
     fflush(stdout);
+#endif
 }
 
 #if DEBUG_SNMPTRACE
@@ -226,11 +261,11 @@ snmp_open(session)
     extern int check_received_pkt();
 
     /* Copy session structure and link into list */
-    slp = (struct session_list *) calloc(1, sizeof(struct session_list));
-    slp->internal = isp = (struct snmp_internal_session *) calloc(1, sizeof(struct snmp_internal_session));
-    bzero((char *) isp, sizeof(struct snmp_internal_session));
+    slp = xcalloc(1, sizeof(struct session_list));
+    slp->internal = isp = xcalloc(1, sizeof(struct snmp_internal_session));
+    memset(isp, '\0', sizeof(struct snmp_internal_session));
     slp->internal->sd = -1;	/* mark it not set */
-    slp->session = (struct snmp_session *) calloc(1, sizeof(struct snmp_session));
+    slp->session = xcalloc(1, sizeof(struct snmp_session));
     bcopy((char *) session, (char *) slp->session, sizeof(struct snmp_session));
     session = slp->session;
     /* now link it in. */
@@ -244,7 +279,7 @@ snmp_open(session)
      */
 
     if (session->peername != NULL) {
-	cp = (u_char *) calloc(1, (unsigned) strlen(session->peername) + 1);
+	cp = xcalloc(1, (unsigned) strlen(session->peername) + 1);
 	strcpy((char *) cp, session->peername);
 	session->peername = (char *) cp;
     }
@@ -261,19 +296,19 @@ snmp_open(session)
     if (session->community_len != SNMP_DEFAULT_COMMUNITY_LEN) {
 	if (*session->community == '+') {
 	    session->community_len--;
-	    cp = (u_char *) calloc(1, (unsigned) session->community_len);
+	    cp = xcalloc(1, (unsigned) session->community_len);
 	    bcopy((char *) session->community + 1, (char *) cp,
 		session->community_len);
 	    session->version = SNMP_VERSION_2C;
 	} else {
-	    cp = (u_char *) calloc(1, (unsigned) session->community_len);
+	    cp = xcalloc(1, (unsigned) session->community_len);
 	    bcopy((char *) session->community, (char *) cp,
 		session->community_len);
 	}
 
     } else {
 	session->community_len = strlen(DEFAULT_COMMUNITY);
-	cp = (u_char *) calloc(1, (unsigned) session->community_len);
+	cp = xcalloc(1, (unsigned) session->community_len);
 	bcopy((char *) DEFAULT_COMMUNITY, (char *) cp, session->community_len);
     }
 
@@ -283,7 +318,9 @@ snmp_open(session)
 	perror("socket");
 	snmp_errno = SNMPERR_GENERR;
 	if (!snmp_close(session)) {
+#if NO_PRINTFS
 	    fprintf(stderr, "Couldn't abort session: %s. Exiting\n", api_errstring(snmp_errno));
+#endif
 	    exit(1);
 	}
 	return 0;
@@ -296,10 +333,14 @@ snmp_open(session)
 	} else {
 	    hp = gethostbyname(session->peername);
 	    if (hp == NULL) {
+#if NO_PRINTFS
 		fprintf(stderr, "unknown host: %s\n", session->peername);
+#endif
 		snmp_errno = SNMPERR_BAD_ADDRESS;
 		if (!snmp_close(session)) {
+#if NO_PRINTFS
 		    fprintf(stderr, "Couldn't abort session: %s. Exiting\n", api_errstring(snmp_errno));
+#endif
 		    exit(2);
 		}
 		return 0;
@@ -330,8 +371,10 @@ snmp_open(session)
 	perror("bind");
 	snmp_errno = SNMPERR_BAD_LOCPORT;
 	if (!snmp_close(session)) {
+#if NO_PRINTFS
 	    fprintf(stderr, "Couldn't abort session: %s. Exiting\n",
 		api_errstring(snmp_errno));
+#endif
 	    exit(3);
 	}
 	return 0;
@@ -373,11 +416,13 @@ sync_with_agent(session)
 	session->agentClock = response->params.agentTime - time(NULL);
 
     } else {
+#if NO_PRINTFS
 	if (status == STAT_TIMEOUT) {
 	    printf("No Response from %s\n", session->peername);
 	} else {		/* status == STAT_ERROR */
 	    printf("An error occurred, Quitting\n");
 	}
+#endif
 	exit(-1);
     }
 
@@ -626,7 +671,9 @@ snmp_parse(session, pdu, data, length)
 	return -1;
 
     if (version != SNMP_VERSION_1 && version != SNMP_VERSION_2C && version != SNMP_VERSION_2) {
+#if NO_PRINTFS
 	fprintf(stderr, "Wrong version: %ld\n", version);
+#endif
 	return -1;
     }
     save_data = data;
@@ -657,7 +704,7 @@ snmp_parse(session, pdu, data, length)
 	data = asn_parse_objid(data, &length, &type, objid, &pdu->enterprise_length);
 	if (data == NULL)
 	    return -1;
-	pdu->enterprise = (oid *) calloc(1, pdu->enterprise_length * sizeof(oid));
+	pdu->enterprise = xcalloc(1, pdu->enterprise_length * sizeof(oid));
 	bcopy((char *) objid, (char *) pdu->enterprise, pdu->enterprise_length * sizeof(oid));
 
 	four = 4;
@@ -681,9 +728,9 @@ snmp_parse(session, pdu, data, length)
 	return -1;
     while ((int) length > 0) {
 	if (pdu->variables == NULL) {
-	    pdu->variables = vp = (struct variable_list *) calloc(1, sizeof(struct variable_list));
+	    pdu->variables = vp = xcalloc(1, sizeof(struct variable_list));
 	} else {
-	    vp->next_variable = (struct variable_list *) calloc(1, sizeof(struct variable_list));
+	    vp->next_variable = xcalloc(1, sizeof(struct variable_list));
 	    vp = vp->next_variable;
 	}
 	vp->next_variable = NULL;
@@ -693,14 +740,14 @@ snmp_parse(session, pdu, data, length)
 	data = snmp_parse_var_op(data, objid, &vp->name_length, &vp->type, &vp->val_len, &var_val, (int *) &length);
 	if (data == NULL)
 	    return -1;
-	op = (oid *) calloc(1, (unsigned) vp->name_length * sizeof(oid));
+	op = xcalloc(1, (unsigned) vp->name_length * sizeof(oid));
 	bcopy((char *) objid, (char *) op, vp->name_length * sizeof(oid));
 	vp->name = op;
 
 	len = PACKET_LENGTH;
 	switch ((short) vp->type) {
 	case ASN_INTEGER:
-	    vp->val.integer = (long *) calloc(1, sizeof(long));
+	    vp->val.integer = xcalloc(1, sizeof(long));
 	    vp->val_len = sizeof(long);
 	    asn_parse_int(var_val, &len, &vp->type, (long *) vp->val.integer, sizeof(vp->val.integer));
 	    break;
@@ -708,12 +755,12 @@ snmp_parse(session, pdu, data, length)
 	case GAUGE:
 	case TIMETICKS:
 	case UINTEGER:
-	    vp->val.integer = (long *) calloc(1, sizeof(unsigned long));
+	    vp->val.integer = xcalloc(1, sizeof(unsigned long));
 	    vp->val_len = sizeof(unsigned long);
 	    asn_parse_unsigned_int(var_val, &len, &vp->type, (unsigned long *) vp->val.integer, sizeof(vp->val.integer));
 	    break;
 	case COUNTER64:
-	    vp->val.counter64 = (struct counter64 *) calloc(1, sizeof(struct counter64));
+	    vp->val.counter64 = xcalloc(1, sizeof(struct counter64));
 	    vp->val_len = sizeof(struct counter64);
 	    asn_parse_unsigned_int64(var_val, &len, &vp->type,
 		(struct counter64 *) vp->val.counter64,
@@ -723,14 +770,14 @@ snmp_parse(session, pdu, data, length)
 	case IPADDRESS:
 	case OPAQUE:
 	case NSAP:
-	    vp->val.string = (u_char *) calloc(1, (unsigned) vp->val_len);
+	    vp->val.string = xcalloc(1, (unsigned) vp->val_len);
 	    asn_parse_string(var_val, &len, &vp->type, vp->val.string, &vp->val_len);
 	    break;
 	case ASN_OBJECT_ID:
 	    vp->val_len = MAX_NAME_LEN;
 	    asn_parse_objid(var_val, &len, &vp->type, objid, &vp->val_len);
 	    vp->val_len *= sizeof(oid);
-	    vp->val.objid = (oid *) calloc(1, (unsigned) vp->val_len);
+	    vp->val.objid = xcalloc(1, (unsigned) vp->val_len);
 	    bcopy((char *) objid, (char *) vp->val.objid, vp->val_len);
 	    break;
 	case SNMP_NOSUCHOBJECT:
@@ -739,7 +786,9 @@ snmp_parse(session, pdu, data, length)
 	case ASN_NULL:
 	    break;
 	default:
+#if NO_PRINTFS
 	    fprintf(stderr, "bad type returned (%x)\n", vp->type);
+#endif
 	    break;
 	}
     }
@@ -795,7 +844,7 @@ snmp_send(session, pdu)
 	/* fill in trap defaults */
 	pdu->reqid = 1;		/* give a bogus non-error reqid for traps */
 	if (pdu->enterprise_length == SNMP_DEFAULT_ENTERPRISE_LENGTH) {
-	    pdu->enterprise = (oid *) calloc(1, sizeof(DEFAULT_ENTERPRISE));
+	    pdu->enterprise = xcalloc(1, sizeof(DEFAULT_ENTERPRISE));
 	    bcopy((char *) DEFAULT_ENTERPRISE, (char *) pdu->enterprise, sizeof(DEFAULT_ENTERPRISE));
 	    pdu->enterprise_length = sizeof(DEFAULT_ENTERPRISE) / sizeof(oid);
 	}
@@ -806,13 +855,17 @@ snmp_send(session, pdu)
 	if (isp->addr.sin_addr.s_addr != SNMP_DEFAULT_ADDRESS) {
 	    bcopy((char *) &isp->addr, (char *) &pdu->address, sizeof(pdu->address));
 	} else {
+#if NO_PRINTFS
 	    fprintf(stderr, "No remote IP address specified\n");
+#endif
 	    snmp_errno = SNMPERR_BAD_ADDRESS;
 	    return 0;
 	}
     }
     if (snmp_build(session, pdu, packet, &length, 0) < 0) {
+#if NO_PRINTFS
 	fprintf(stderr, "Error building packet\n");
+#endif
 	snmp_errno = SNMPERR_GENERR;
 	return 0;
     }
@@ -828,13 +881,15 @@ snmp_send(session, pdu)
     if (pdu->command == GET_REQ_MSG || pdu->command == GETNEXT_REQ_MSG
 	|| pdu->command == SET_REQ_MSG || pdu->command == GETBULK_REQ_MSG) {
 	/* set up to expect a response */
-	rp = (struct request_list *) calloc(1, sizeof(struct request_list));
+	rp = xcalloc(1, sizeof(struct request_list));
 
+#if NOT_NEEDED
 	if (!rp) {
 	    fprintf(stderr, "Out of memory!\n");
 	    snmp_errno = SNMPERR_GENERR;
 	    return 0;
 	}
+#endif
 	rp->next_request = isp->requests;
 	isp->requests = rp;
 	rp->pdu = pdu;
@@ -917,20 +972,23 @@ snmp_read(fdset)
 	    if (snmp_dump_packet) {
 		snmp_print_packet(packet, length, from, 0);
 	    }
-	    pdu = (struct snmp_pdu *) calloc(1, sizeof(struct snmp_pdu));
-
+	    pdu = xcalloc(1, sizeof(struct snmp_pdu));
+#if NOT_NEEDED
 	    if (!pdu) {
 		fprintf(stderr, "Out of memory!\n");
 		snmp_errno = SNMPERR_GENERR;
 		return;
 	    }
+#endif
 	    pdu->address = from;
 	    pdu->reqid = 0;
 	    pdu->variables = NULL;
 	    pdu->enterprise = NULL;
 	    pdu->enterprise_length = 0;
 	    if (snmp_parse(sp, pdu, packet, length) < 0) {
+#if NO_PRINTFS
 		fprintf(stderr, "Mangled packet\n");
+#endif
 		snmp_free_pdu(pdu);
 		return;
 	    }
@@ -1095,7 +1153,9 @@ snmp_timeout()
 		    rp->retries++;
 		    rp->timeout <<= 1;
 		    if (snmp_build(sp, rp->pdu, packet, &length, 0) < 0) {
+#if NO_PRINTFS
 			fprintf(stderr, "Error building packet\n");
+#endif
 		    }
 		    if (snmp_dump_packet) {
 			snmp_print_packet(packet, length, rp->pdu->address, 1);

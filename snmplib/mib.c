@@ -28,6 +28,22 @@ SOFTWARE.
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#if HAVE_BSTRING_H
+#include <bstring.h>
+#endif
+
 
 #include "asn1.h"
 #include "snmp.h"
@@ -768,7 +784,7 @@ read_objid(input, output, out_len)
     oid *op = output;
     char buf[512];
 
-    bzero(buf, sizeof(buf));
+    memset(buf, '\0', sizeof(buf));
 
     if (*input == '.')
 	input++;

@@ -31,7 +31,7 @@ SOFTWARE.
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#if HAVE_STDLIB>H
+#if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #if HAVE_STRING_H
@@ -44,6 +44,8 @@ SOFTWARE.
 #endif
 
 #include "parse.h"
+
+#include "util.h"
 
 /* A quoted string value-- too long for a general "token" */
 char *quoted_string_buffer;
@@ -231,7 +233,7 @@ hash_init()
     int h;
     int b;
 
-    bzero((char *) buckets, sizeof(buckets));
+    memset(buckets, '\0', sizeof(buckets));
     for (tp = tokens; tp->name; tp++) {
 	for (h = 0, cp = tp->name; *cp; cp++)
 	    h += *cp;
@@ -255,7 +257,7 @@ init_node_hash(nodes)
     char *cp;
     int hash;
 
-    bzero((char *) nbuckets, sizeof(nbuckets));
+    memset(nbuckets, '\0', sizeof(nbuckets));
     for (np = nodes; np;) {
 	nextp = np->next;
 	hash = 0;
@@ -275,7 +277,7 @@ Malloc(num)
      * library malloc */
     if (num < 16)
 	num = 16;
-    return (char *) calloc(1, num);
+    return xcalloc(1, num);
 }
 
 static void
@@ -644,7 +646,7 @@ parse_objectid(fp, name)
     }
     if ((length = getoid(fp, oid, 32)) != 0) {
 	np = root = (struct node *) Malloc(sizeof(struct node));
-	bzero((char *) np, sizeof(struct node));
+	memset(np, '\0', sizeof(struct node));
 	/*
 	 * For each parent-child subid pair in the subid array,
 	 * create a node and link it into the node list.
@@ -662,7 +664,7 @@ parse_objectid(fp, name)
 		np->enums = 0;
 		/* set up next entry */
 		np->next = (struct node *) Malloc(sizeof(*np->next));
-		bzero((char *) np->next, sizeof(struct node));
+		memset(np->next, '\0', sizeof(struct node));
 		oldnp = np;
 		np = np->next;
 	    }
@@ -1099,7 +1101,7 @@ parse_objecttype(fp, name)
 	    printf("Description== \"%.50s\"\n", quoted_string_buffer);
 #endif
 	    np->description = quoted_string_buffer;
-	    quoted_string_buffer = (char *) calloc(1, MAXQUOTESTR);
+	    quoted_string_buffer = xcalloc(1, MAXQUOTESTR);
 	    break;
 
 	case REFERENCE:
@@ -1193,7 +1195,7 @@ parse_objectgroup(fp, name)
 	    printf("Description== \"%.50s\"\n", quoted_string_buffer);
 #endif
 	    np->description = quoted_string_buffer;
-	    quoted_string_buffer = (char *) calloc(1, MAXQUOTESTR);
+	    quoted_string_buffer = xcalloc(1, MAXQUOTESTR);
 	    break;
 
 	default:
@@ -1260,7 +1262,7 @@ parse_notificationDefinition(fp, name)
 	    printf("Description== \"%.50s\"\n", quoted_string_buffer);
 #endif
 	    np->description = quoted_string_buffer;
-	    quoted_string_buffer = (char *) calloc(1, MAXQUOTESTR);
+	    quoted_string_buffer = xcalloc(1, MAXQUOTESTR);
 	    break;
 
 	default:
@@ -1431,8 +1433,8 @@ parse(fp)
     struct node *np = 0, *root = NULL;
 
     hash_init();
-    quoted_string_buffer = (char *) calloc(1, MAXQUOTESTR);	/* free this later */
-    bzero(tclist, 64 * sizeof(struct tc));
+    quoted_string_buffer = xcalloc(1, MAXQUOTESTR);	/* free this later */
+    memset(tclist, '\0', 64 * sizeof(struct tc));
 
     while (type != ENDOFFILE) {
 	type = get_token(fp, token);
