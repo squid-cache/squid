@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.109 1997/12/31 04:11:56 wessels Exp $
+#  $Id: Makefile.in,v 1.110 1997/12/31 05:06:23 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -48,6 +48,7 @@ LN_S		= @LN_S@
 PERL            = @PERL@
 CRYPTLIB	= @CRYPTLIB@
 REGEXLIB	= @REGEXLIB@
+PTHREADLIB	= @PTHREADLIB@
 AC_CFLAGS	= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
@@ -59,7 +60,8 @@ SHELL		= /bin/sh
 
 INCLUDE		= -I. -I../include -I$(srcdir)/../include
 CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
-SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) -lmiscutil $(XTRA_LIBS)
+SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) $(PTHREADLIB) \
+		  -lmiscutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
