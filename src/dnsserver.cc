@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.64 2003/02/21 22:50:08 robertc Exp $
+ * $Id: dnsserver.cc,v 1.65 2004/10/15 21:12:47 hno Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -175,15 +175,15 @@ static char *
 my_h_msgs(int x)
 {
     if (x == HOST_NOT_FOUND)
-        return "Host not found (authoritative)";
+        return (char *)"Host not found (authoritative)";
     else if (x == TRY_AGAIN)
-        return "Host not found (non-authoritative)";
+        return (char *)"Host not found (non-authoritative)";
     else if (x == NO_RECOVERY)
-        return "Non recoverable errors";
+        return (char *)"Non recoverable errors";
     else if (x == NO_DATA || x == NO_ADDRESS)
-        return "Valid name, no data record of requested type";
+        return (char *)"Valid name, no data record of requested type";
     else
-        return "Unknown DNS problem";
+        return (char *)"Unknown DNS problem";
 }
 
 #define REQ_SZ 512
