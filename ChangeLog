@@ -1,3 +1,6 @@
+	- Fixed ENTRY_DISPATCHED bug.  ENTRY_DISPATCHED was not always getting
+	  set (e.g. for requests matching hierarchy_stoplist).  This caused
+	  multiple calls to storeAbort() for the same entry.
 	- Fixed 'quick_abort' parsing bug
 	- NULL terminate too-long URL strings in urlParse().
 	- Added shadow password patch from John Saunders
@@ -12,6 +15,11 @@
 	- Fixed stupid clientProxyAuthCheck() bug.
 	- Made IP cache size configurable.
 	- Fixed bug parsing 'cache_swap_low'
+	- Added -b option to ftpget to limit data transfer rate.
+	- misc filedescriptor management cleanup
+	- renamed getFromCache() to protoStart().
+	- Added delays when forking dnsservers, redirectors, and
+	  ftpget.
 
 Changes to squid-1.1.alpha12:
 
