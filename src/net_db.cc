@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.143 2000/05/02 20:41:23 hno Exp $
+ * $Id: net_db.cc,v 1.144 2000/05/07 16:18:19 adrian Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@
 typedef struct {
     peer *p;
     StoreEntry *e;
+    store_client *sc;
     request_t *r;
     off_t seen;
     off_t used;
@@ -591,11 +592,11 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 	netdbExchangeDone(ex);
     } else if (ex->e->store_status == STORE_PENDING) {
 	debug(38, 3) ("netdbExchangeHandleReply: STORE_PENDING\n");
-	storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
+	storeClientCopy(ex->sc, ex->e, ex->seen, ex->used, ex->buf_sz,
 	    ex->buf, netdbExchangeHandleReply, ex);
     } else if (ex->seen < ex->e->mem_obj->inmem_hi) {
 	debug(38, 3) ("netdbExchangeHandleReply: ex->e->mem_obj->inmem_hi\n");
-	storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
+	storeClientCopy(ex->sc, ex->e, ex->seen, ex->used, ex->buf_sz,
 	    ex->buf, netdbExchangeHandleReply, ex);
     } else {
 	debug(38, 3) ("netdbExchangeHandleReply: Done\n");
@@ -610,7 +611,7 @@ netdbExchangeDone(void *data)
     debug(38, 3) ("netdbExchangeDone: %s\n", storeUrl(ex->e));
     memFree(ex->buf, MEM_4K_BUF);
     requestUnlink(ex->r);
-    storeUnregister(ex->e, ex);
+    storeUnregister(ex->sc, ex->e, ex);
     storeUnlockObject(ex->e);
     cbdataUnlock(ex->p);
     cbdataFree(ex);
@@ -968,8 +969,8 @@ netdbExchangeStart(void *data)
     ex->buf_sz = 4096;;
     ex->buf = memAllocate(MEM_4K_BUF);
     assert(NULL != ex->e);
-    storeClientListAdd(ex->e, ex);
-    storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
+    ex->sc = storeClientListAdd(ex->e, ex);
+    storeClientCopy(ex->sc, ex->e, ex->seen, ex->used, ex->buf_sz,
 	ex->buf, netdbExchangeHandleReply, ex);
     ex->r->flags.loopdetect = 1;	/* cheat! -- force direct */
     if (p->login)

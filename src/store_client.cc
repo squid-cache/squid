@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.87 2000/05/03 17:15:43 adrian Exp $
+ * $Id: store_client.cc,v 1.88 2000/05/07 16:18:20 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -56,24 +56,30 @@ int
 storeClientWaiting(const StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
+    dlink_node *node;
     store_client *sc;
-    for (sc = mem->clients; sc; sc = sc->next) {
+    for (node = mem->clients.head; node; node = node->next) {
+        sc = (store_client *)node->data;
 	if (sc->callback_data != NULL)
 	    return 1;
     }
     return 0;
 }
 
+#if STORE_CLIENT_LIST_DEBUG
 store_client *
 storeClientListSearch(const MemObject * mem, void *data)
 {
-    store_client *sc;
-    for (sc = mem->clients; sc; sc = sc->next) {
+    dlink_node *node;
+    store_client *sc = NULL;
+    for (node = mem->clients.head; node; node = node->next) {
+        sc = (store_client *)node->data;
 	if (sc->callback_data == data)
-	    break;
+	    return sc;
     }
-    return sc;
+    return NULL;
 }
+#endif
 
 static store_client_t
 storeClientType(StoreEntry * e)
@@ -115,15 +121,16 @@ storeClientType(StoreEntry * e)
 }
 
 /* add client with fd to client list */
-void
+store_client *
 storeClientListAdd(StoreEntry * e, void *data)
 {
     MemObject *mem = e->mem_obj;
-    store_client **T;
     store_client *sc;
     assert(mem);
+#if STORE_CLIENT_LIST_DEBUG
     if (storeClientListSearch(mem, data) != NULL)
-	return;
+	assert(1==0); /* XXX die! */
+#endif
     e->refcount++;
     mem->nclients++;
     sc = memAllocate(MEM_STORE_CLIENT);
@@ -139,11 +146,11 @@ storeClientListAdd(StoreEntry * e, void *data)
 	/* assert we'll be able to get the data we want */
 	/* maybe we should open swapin_fd here */
 	assert(e->swap_filen > -1 || storeSwapOutAble(e));
-    for (T = &mem->clients; *T; T = &(*T)->next);
-    *T = sc;
+    dlinkAdd(sc, &sc->node, &mem->clients);
 #if DELAY_POOLS
     sc->delay_id = 0;
 #endif
+    return sc;
 }
 
 static void
@@ -171,7 +178,8 @@ storeClientCopyEvent(void *data)
 
 /* copy bytes requested by the client */
 void
-storeClientCopy(StoreEntry * e,
+storeClientCopy(store_client *sc,
+    StoreEntry * e,
     off_t seen_offset,
     off_t copy_offset,
     size_t size,
@@ -179,7 +187,6 @@ storeClientCopy(StoreEntry * e,
     STCB * callback,
     void *data)
 {
-    store_client *sc;
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
     debug(20, 3) ("storeClientCopy: %s, seen %d, want %d, size %d, cb %p, cbdata %p\n",
 	storeKeyText(e->key),
@@ -188,9 +195,12 @@ storeClientCopy(StoreEntry * e,
 	(int) size,
 	callback,
 	data);
-    sc = storeClientListSearch(e->mem_obj, data);
     assert(sc != NULL);
+#if STORE_CLIENT_LIST_DEBUG
+    assert(sc == storeClientListSearch(e->mem_obj, data));
+#endif
     assert(sc->callback == NULL);
+    assert(sc->entry == e);
     sc->copy_offset = copy_offset;
     sc->seen_offset = seen_offset;
     sc->callback = callback;
@@ -457,10 +467,12 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 }
 
 int
-storeClientCopyPending(StoreEntry * e, void *data)
+storeClientCopyPending(store_client *sc, StoreEntry * e, void *data)
 {
-    /* return 1 if there is a callback registered for this client */
-    store_client *sc = storeClientListSearch(e->mem_obj, data);
+#if STORE_CLIENT_LIST_DEBUG
+    assert(sc == storeClientListSearch(e->mem_obj, data));
+#endif
+    assert(sc->entry == e);
     if (sc == NULL)
 	return 0;
     if (sc->callback == NULL)
@@ -468,52 +480,55 @@ storeClientCopyPending(StoreEntry * e, void *data)
     return 1;
 }
 
+/*
+ * This routine hasn't been optimised to take advantage of the
+ * passed sc. Yet.
+ */
 int
-storeUnregister(StoreEntry * e, void *data)
+storeUnregister(store_client *sc, StoreEntry * e, void *data)
 {
     MemObject *mem = e->mem_obj;
-    store_client *sc;
-    store_client **S;
+#if STORE_CLIENT_LIST_DEBUG
+    assert(sc == storeClientListSearch(e->mem_obj, data));
+#endif
     if (mem == NULL)
-	return 0;
+        return 0;
     debug(20, 3) ("storeUnregister: called for '%s'\n", storeKeyText(e->key));
-    for (S = &mem->clients; (sc = *S) != NULL; S = &(*S)->next) {
-	if (sc->callback_data == data)
-	    break;
-    }
     if (sc == NULL)
-	return 0;
-    if (sc == mem->clients) {
-	/*
-	 * If we are unregistering the _first_ client for this
-	 * entry, then we have to reset the client FD to -1.
-	 */
-	mem->fd = -1;
+        return 0;
+    if (mem->clients.head == NULL)
+        return 0;
+    if (sc == (store_client *)mem->clients.head->data) {
+        /*
+         * If we are unregistering the _first_ client for this
+         * entry, then we have to reset the client FD to -1.
+         */
+        mem->fd = -1;
     }
-    *S = sc->next;
+    dlinkDelete(&sc->node, &mem->clients);
     mem->nclients--;
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
-	storeSwapOut(e);
+        storeSwapOut(e);
     if (sc->swapin_sio) {
-	storeClose(sc->swapin_sio);
-	cbdataUnlock(sc->swapin_sio);
-	sc->swapin_sio = NULL;
+        storeClose(sc->swapin_sio);
+        cbdataUnlock(sc->swapin_sio);
+        sc->swapin_sio = NULL;
     }
     if (NULL != sc->callback) {
-	/* callback with ssize = -1 to indicate unexpected termination */
-	debug(20, 3) ("storeUnregister: store_client for %s has a callback\n",
-	    mem->url);
-	storeClientCallback(sc, -1);
+        /* callback with ssize = -1 to indicate unexpected termination */
+        debug(20, 3) ("storeUnregister: store_client for %s has a callback\n",
+            mem->url);
+        storeClientCallback(sc, -1);
     }
 #if DELAY_POOLS
     delayUnregisterDelayIdPtr(&sc->delay_id);
 #endif
-    cbdataUnlock(sc->callback_data);	/* we're done with it now */
+    cbdataUnlock(sc->callback_data);    /* we're done with it now */
     /*assert(!sc->flags.disk_io_pending); */
     cbdataFree(sc);
     assert(e->lock_count > 0);
     if (mem->nclients == 0)
-	CheckQuickAbort(e);
+        CheckQuickAbort(e);
     return 1;
 }
 
@@ -523,9 +538,12 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
     const MemObject *mem = entry->mem_obj;
     off_t lowest = mem->inmem_hi + 1;
     store_client *sc;
-    store_client *nx = NULL;
-    for (sc = mem->clients; sc; sc = nx) {
-	nx = sc->next;
+    dlink_node *nx = NULL;
+    dlink_node *node;
+
+    for (node = mem->clients.head; node; node = nx) {
+        sc = (store_client *)node->data;
+	nx = node->next;
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
@@ -546,12 +564,14 @@ InvokeHandlers(StoreEntry * e)
     int i = 0;
     MemObject *mem = e->mem_obj;
     store_client *sc;
-    store_client *nx = NULL;
-    assert(mem->clients != NULL || mem->nclients == 0);
+    dlink_node *nx = NULL;
+    dlink_node *node;
+
     debug(20, 3) ("InvokeHandlers: %s\n", storeKeyText(e->key));
     /* walk the entire list looking for valid callbacks */
-    for (sc = mem->clients; sc; sc = nx) {
-	nx = sc->next;
+    for (node = mem->clients.head; node; node = nx) {
+        sc = (store_client *)node->data;
+	nx = node->next;
 	debug(20, 3) ("InvokeHandlers: checking client #%d\n", i++);
 	if (sc->callback_data == NULL)
 	    continue;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.73 2000/03/06 16:23:33 wessels Exp $
+ * $Id: peer_digest.cc,v 1.74 2000/05/07 16:18:19 adrian Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -312,11 +312,11 @@ peerDigestRequest(PeerDigest * pd)
 	debug(72, 5) ("peerDigestRequest: found old entry\n");
 	storeLockObject(old_e);
 	storeCreateMemObject(old_e, url, url);
-	storeClientListAdd(old_e, fetch);
+	fetch->old_sc = storeClientListAdd(old_e, fetch);
     }
     e = fetch->entry = storeCreateEntry(url, url, req->flags, req->method);
     assert(EBIT_TEST(e->flags, KEY_PRIVATE));
-    storeClientListAdd(e, fetch);
+    fetch->sc = storeClientListAdd(e, fetch);
     /* set lastmod to trigger IMS request if possible */
     if (old_e)
 	e->lastmod = old_e->lastmod;
@@ -326,7 +326,7 @@ peerDigestRequest(PeerDigest * pd)
     fwdStart(-1, e, req);
     cbdataLock(fetch);
     cbdataLock(fetch->pd);
-    storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF),
+    storeClientCopy(fetch->sc, e, 0, 0, 4096, memAllocate(MEM_4K_BUF),
 	peerDigestFetchReply, fetch);
 }
 
@@ -365,7 +365,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	    httpReplyUpdateOnNotModified(fetch->old_entry->mem_obj->reply, reply);
 	    storeTimestampsSet(fetch->old_entry);
 	    /* get rid of 304 reply */
-	    storeUnregister(fetch->entry, fetch);
+	    storeUnregister(fetch->sc, fetch->entry, fetch);
 	    storeUnlockObject(fetch->entry);
 	    fetch->entry = fetch->old_entry;
 	    fetch->old_entry = NULL;
@@ -376,7 +376,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	    /* get rid of old entry if any */
 	    if (fetch->old_entry) {
 		debug(72, 3) ("peerDigestFetchReply: got new digest, releasing old one\n");
-		storeUnregister(fetch->old_entry, fetch);
+		storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
 		storeReleaseRequest(fetch->old_entry);
 		storeUnlockObject(fetch->old_entry);
 		fetch->old_entry = NULL;
@@ -391,14 +391,14 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	if (status == HTTP_NOT_MODIFIED && fetch->pd->cd)
 	    peerDigestFetchStop(fetch, buf, "Not modified");
 	else
-	    storeClientCopy(fetch->entry,	/* have to swap in */
+	    storeClientCopy(fetch->sc, fetch->entry,	/* have to swap in */
 		0, 0, SM_PAGE_SIZE, buf, peerDigestSwapInHeaders, fetch);
     } else {
 	/* need more data, do we have space? */
 	if (size >= SM_PAGE_SIZE)
 	    peerDigestFetchAbort(fetch, buf, "reply header too big");
 	else
-	    storeClientCopy(fetch->entry, size, 0, SM_PAGE_SIZE, buf,
+	    storeClientCopy(fetch->sc, fetch->entry, size, 0, SM_PAGE_SIZE, buf,
 		peerDigestFetchReply, fetch);
     }
 }
@@ -425,7 +425,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 	    return;
 	}
 	fetch->offset += hdr_size;
-	storeClientCopy(fetch->entry, size, fetch->offset,
+	storeClientCopy(fetch->sc, fetch->entry, size, fetch->offset,
 	    SM_PAGE_SIZE, buf,
 	    peerDigestSwapInCBlock, fetch);
     } else {
@@ -433,7 +433,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 	if (size >= SM_PAGE_SIZE)
 	    peerDigestFetchAbort(fetch, buf, "stored header too big");
 	else
-	    storeClientCopy(fetch->entry, size, 0, SM_PAGE_SIZE, buf,
+	    storeClientCopy(fetch->sc, fetch->entry, size, 0, SM_PAGE_SIZE, buf,
 		peerDigestSwapInHeaders, fetch);
     }
 }
@@ -459,7 +459,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
 	    memFree(buf, MEM_4K_BUF);
 	    buf = NULL;
 	    assert(pd->cd->mask);
-	    storeClientCopy(fetch->entry,
+	    storeClientCopy(fetch->sc, fetch->entry,
 		seen,
 		fetch->offset,
 		pd->cd->mask_size,
@@ -473,7 +473,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
 	if (size >= SM_PAGE_SIZE)
 	    peerDigestFetchAbort(fetch, buf, "digest cblock too big");
 	else
-	    storeClientCopy(fetch->entry, size, 0, SM_PAGE_SIZE, buf,
+	    storeClientCopy(fetch->sc, fetch->entry, size, 0, SM_PAGE_SIZE, buf,
 		peerDigestSwapInCBlock, fetch);
     }
 }
@@ -501,7 +501,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
     } else {
 	const size_t buf_sz = pd->cd->mask_size - fetch->mask_offset;
 	assert(buf_sz > 0);
-	storeClientCopy(fetch->entry,
+	storeClientCopy(fetch->sc, fetch->entry,
 	    fetch->offset,
 	    fetch->offset,
 	    buf_sz,
@@ -684,7 +684,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
 
     if (fetch->old_entry) {
 	debug(72, 2) ("peerDigestFetchFinish: deleting old entry\n");
-	storeUnregister(fetch->old_entry, fetch);
+	storeUnregister(fetch->sc, fetch->old_entry, fetch);
 	storeReleaseRequest(fetch->old_entry);
 	storeUnlockObject(fetch->old_entry);
 	fetch->old_entry = NULL;
@@ -696,7 +696,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     Counter.cd.msgs_recv += fetch->recv.msg;
 
     /* unlock everything */
-    storeUnregister(fetch->entry, fetch);
+    storeUnregister(fetch->sc, fetch->entry, fetch);
     storeUnlockObject(fetch->entry);
     requestUnlink(fetch->request);
     fetch->entry = NULL;

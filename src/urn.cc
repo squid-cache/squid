@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.58 2000/03/06 16:23:36 wessels Exp $
+ * $Id: urn.cc,v 1.59 2000/05/07 16:18:20 adrian Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -38,6 +38,7 @@
 
 typedef struct {
     StoreEntry *entry;
+    store_client *sc;
     StoreEntry *urlres_e;
     request_t *request;
     request_t *urlres_r;
@@ -137,15 +138,15 @@ urnStart(request_t * r, StoreEntry * e)
     httpHeaderPutStr(&urlres_r->header, HDR_ACCEPT, "text/plain");
     if ((urlres_e = storeGetPublic(urlres, METHOD_GET)) == NULL) {
 	urlres_e = storeCreateEntry(urlres, urlres, null_request_flags, METHOD_GET);
-	storeClientListAdd(urlres_e, urnState);
+	urnState->sc = storeClientListAdd(urlres_e, urnState);
 	fwdStart(-1, urlres_e, urlres_r);
     } else {
 	storeLockObject(urlres_e);
-	storeClientListAdd(urlres_e, urnState);
+	urnState->sc = storeClientListAdd(urlres_e, urnState);
     }
     urnState->urlres_e = urlres_e;
     urnState->urlres_r = requestLink(urlres_r);
-    storeClientCopy(urlres_e,
+    storeClientCopy(urnState->sc, urlres_e,
 	0,
 	0,
 	4096,
@@ -199,7 +200,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	return;
     }
     if (urlres_e->store_status == STORE_PENDING && size < SM_PAGE_SIZE) {
-	storeClientCopy(urlres_e,
+	storeClientCopy(urnState->sc, urlres_e,
 	    size,
 	    0,
 	    SM_PAGE_SIZE,
@@ -289,7 +290,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     }
     safe_free(urls);
     /* mb was absorbed in httpBodySet call, so we must not clean it */
-    storeUnregister(urlres_e, urnState);
+    storeUnregister(urnState->sc, urlres_e, urnState);
     storeUnlockObject(urlres_e);
     storeUnlockObject(urnState->entry);
     requestUnlink(urnState->request);

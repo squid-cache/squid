@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.363 2000/05/03 17:15:42 adrian Exp $
+ * $Id: protos.h,v 1.364 2000/05/07 16:18:19 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -807,14 +807,6 @@ extern void storeAppend(StoreEntry *, const char *, int);
 extern void storeLockObject(StoreEntry *);
 extern void storeRelease(StoreEntry *);
 extern int storeUnlockObject(StoreEntry *);
-extern int storeUnregister(StoreEntry *, void *);
-extern void storeClientCopy(StoreEntry * e,
-    off_t seen_offset,
-    off_t copy_offset,
-    size_t size,
-    char *buf,
-    STCB * callback,
-    void *data);
 extern int storePendingNClients(const StoreEntry *);
 extern EVH storeMaintainSwapSpace;
 extern void storeExpireNow(StoreEntry *);
@@ -824,7 +816,6 @@ extern void storeConfigure(void);
 extern void storeNegativeCache(StoreEntry *);
 extern void storeFreeMemory(void);
 extern int expiresMoreThan(time_t, time_t);
-extern int storeClientCopyPending(StoreEntry *, void *);
 extern void InvokeHandlers(StoreEntry *);
 extern int storeEntryValidToSend(StoreEntry *);
 extern void storeTimestampsSet(StoreEntry *);
@@ -966,11 +957,13 @@ extern int storeSwapOutAble(const StoreEntry * e);
 /*
  * store_client.c
  */
+#if STORE_CLIENT_LIST_DEBUG
 extern store_client *storeClientListSearch(const MemObject * mem, void *data);
-extern void storeClientListAdd(StoreEntry * e, void *data);
-extern void storeClientCopy(StoreEntry *, off_t, off_t, size_t, char *, STCB *, void *);
-extern int storeClientCopyPending(StoreEntry * e, void *data);
-extern int storeUnregister(StoreEntry * e, void *data);
+#endif
+extern store_client *storeClientListAdd(StoreEntry * e, void *data);
+extern void storeClientCopy(store_client *, StoreEntry *, off_t, off_t, size_t, char *, STCB *, void *);
+extern int storeClientCopyPending(store_client *, StoreEntry * e, void *data);
+extern int storeUnregister(store_client *sc, StoreEntry * e, void *data);
 extern off_t storeLowestMemReaderOffset(const StoreEntry * entry);
 extern void InvokeHandlers(StoreEntry * e);
 extern int storePendingNClients(const StoreEntry * e);
@@ -1158,7 +1151,7 @@ extern int delayBytesWanted(delay_id d, int min, int max);
 extern void delayBytesIn(delay_id, int qty);
 extern int delayMostBytesWanted(const MemObject * mem, int max);
 extern delay_id delayMostBytesAllowed(const MemObject * mem);
-extern void delaySetStoreClient(StoreEntry * e, void *data, delay_id delay_id);
+extern void delaySetStoreClient(store_client *sc, delay_id delay_id);
 extern void delayRegisterDelayIdPtr(delay_id * loc);
 extern void delayUnregisterDelayIdPtr(delay_id * loc);
 #endif

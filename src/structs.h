@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.329 2000/05/03 17:15:44 adrian Exp $
+ * $Id: structs.h,v 1.330 2000/05/07 16:18:20 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -850,6 +850,7 @@ struct _AccessLogEntry {
 struct _clientHttpRequest {
     ConnStateData *conn;
     request_t *request;		/* Parsed URL ... */
+    store_client *sc;		/* The store_client we're using */
     char *uri;
     char *log_uri;
     struct {
@@ -989,6 +990,8 @@ struct _DigestFetchState {
     PeerDigest *pd;
     StoreEntry *entry;
     StoreEntry *old_entry;
+    store_client *sc;
+    store_client *old_sc;
     request_t *request;
     int offset;
     int mask_offset;
@@ -1259,10 +1262,10 @@ struct _store_client {
 	unsigned int store_copying:1;
 	unsigned int copy_event_pending:1;
     } flags;
-    store_client *next;
 #if DELAY_POOLS
     delay_id delay_id;
 #endif
+    dlink_node node;
 };
 
 
@@ -1273,7 +1276,7 @@ struct _MemObject {
     mem_hdr data_hdr;
     off_t inmem_hi;
     off_t inmem_lo;
-    store_client *clients;
+    dlink_list clients;
     int nclients;
     struct {
 	off_t queue_offset;	/* relative to in-mem data */
