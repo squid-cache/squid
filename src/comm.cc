@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.279 1998/07/25 00:16:23 wessels Exp $
+ * $Id: comm.cc,v 1.280 1998/07/25 00:18:08 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -384,11 +384,6 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 	F->timeout_handler = NULL;
 	F->timeout_data = NULL;
 	return F->timeout = 0;
-    }
-    if (shutting_down) {
-	/* don't increase the timeout if something pending */
-	if (F->timeout > 0 && (int) (F->timeout - squid_curtime) < timeout)
-	    return F->timeout;
     }
     assert(handler || F->timeout_handler);
     if (handler || data) {
