@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.32 2003/01/28 01:29:34 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.33 2003/01/28 10:01:19 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -397,6 +397,13 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry,
 	debug(88, 5) ("clientGetsOldEntry: NO, reply=%d\n", status);
 	return 0;
     }
+    /* If the client did not send IMS in the request, then it
+     * must get the old object, not this "Not Modified" reply 
+     * REGARDLESS of validation */
+    if (!request->flags.ims) {
+	debug(88, 5) ("clientGetsOldEntry: YES, no client IMS\n");
+	return 1;
+    }
     /* If key metadata in the reply are not consistent with the
      * old entry, we must use the new reply.
      * Note: this means that the server is sending garbage replies 
@@ -407,15 +414,9 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry,
      */
     if (!httpReplyValidatorsMatch(new_entry->getReply(),
                                  old_entry->getReply())) {
-       debug(88, 5) ("clientGetsOldEntry: NO, Old object has invalidated"
+       debug(88, 5) ("clientGetsOldEntry: NO, Old object has been invalidated"
                      "by the new one\n");
        return 0;
-    }
-    /* If the client did not send IMS in the request, then it
-     * must get the old object, not this "Not Modified" reply */
-    if (!request->flags.ims) {
-	debug(88, 5) ("clientGetsOldEntry: YES, no client IMS\n");
-	return 1;
     }
     /* If the client IMS time is prior to the entry LASTMOD time we
      * need to send the old object */
@@ -509,21 +510,24 @@ clientHandleIMSReply(void *data, StoreIOBuffer result)
 	StoreIOBuffer tempresult;
 	oldentry = http->old_entry;
 	http->logType = LOG_TCP_REFRESH_HIT;
-	if (oldentry->mem_obj->request == NULL) {
-	    oldentry->mem_obj->request = requestLink(entry->mem_obj->request);
-	    unlink_request = 1;
-	}
-	/* Don't memcpy() the whole reply structure here.  For example,
-	 * www.thegist.com (Netscape/1.13) returns a content-length for
-	 * 304's which seems to be the length of the 304 HEADERS!!! and
-	 * not the body they refer to.  */
-	httpReplyUpdateOnNotModified((HttpReply *)oldentry->getReply(), entry->getReply());
-	storeTimestampsSet(oldentry);
-	clientRemoveStoreReference(context, &context->sc, &entry);
-	oldentry->timestamp = squid_curtime;
-	if (unlink_request) {
-	    requestUnlink(oldentry->mem_obj->request);
-	    oldentry->mem_obj->request = NULL;
+	if (httpReplyValidatorsMatch(entry->getReply(),
+				      http->old_entry->getReply())) {
+	    if (oldentry->mem_obj->request == NULL) {
+		oldentry->mem_obj->request = requestLink(entry->mem_obj->request);
+		unlink_request = 1;
+	    }
+	    /* Don't memcpy() the whole reply structure here.  For example,
+	     * www.thegist.com (Netscape/1.13) returns a content-length for
+	     * 304's which seems to be the length of the 304 HEADERS!!! and
+	     * not the body they refer to.  */
+	    httpReplyUpdateOnNotModified((HttpReply *)oldentry->getReply(), entry->getReply());
+	    storeTimestampsSet(oldentry);
+	    clientRemoveStoreReference(context, &context->sc, &entry);
+	    oldentry->timestamp = squid_curtime;
+	    if (unlink_request) {
+		requestUnlink(oldentry->mem_obj->request);
+		oldentry->mem_obj->request = NULL;
+	    }
 	}
 	/* Get the old request back */
 	context->restoreState(http);
