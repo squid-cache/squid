@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.31 1998/05/20 21:07:30 wessels Exp $
+ * $Id: peer_digest.cc,v 1.32 1998/05/26 23:45:32 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -255,7 +255,6 @@ peerDigestRequest(peer * p)
 	MemBuf mb;
 	memBufDefInit(&mb);
 	memBufPrintf(&mb, "Accept: %s,text/html\r\n", StoreDigestMimeStr);
-	memBufPrintf(&mb, "Cache-control: only-if-cached\r\n");
 	httpRequestSetHeaders(req, METHOD_GET, url, mb.buf);
 	memBufClean(&mb);
     }
