@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.192 1999/01/11 22:54:15 wessels Exp $
+ * $Id: acl.cc,v 1.193 1999/01/12 23:38:35 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -711,9 +711,9 @@ aclParseAclLine(acl ** head)
 	break;
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
-        aclParseWordList(&A->data);
+	aclParseWordList(&A->data);
 	break;
-#endif  
+#endif
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
 	aclParseArpList(&A->data);
@@ -767,7 +767,7 @@ int
 aclIsProxyAuth(const char *name)
 {
     acl *a = aclFindByName(name);
-    if (a) 
+    if (a)
 	return a->type == ACL_PROXY_AUTH;
     return 0;
 }
@@ -1009,7 +1009,7 @@ aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *b
  */
 
 static int
-aclMatchProxyAuth(wordlist * data, const char * proxy_auth, acl_proxy_auth_user * auth_user, aclCheck_t * checklist)
+aclMatchProxyAuth(wordlist * data, const char *proxy_auth, acl_proxy_auth_user * auth_user, aclCheck_t * checklist)
 {
     /* checklist is used to register user name when identified, nothing else */
     LOCAL_ARRAY(char, login_buf, USER_IDENT_SZ);
@@ -1028,7 +1028,7 @@ aclMatchProxyAuth(wordlist * data, const char * proxy_auth, acl_proxy_auth_user 
 	 * be restricted the functions that deal with the authenticator.
 	 */
 	assert(auth_user == checklist->auth_user);
-	checklist->auth_user = NULL; /* get rid of that special reference */
+	checklist->auth_user = NULL;	/* get rid of that special reference */
 	/* Check result from external validation */
 	if (auth_user->passwd_ok != 1) {
 	    /* password was checked but did not match */
@@ -1050,7 +1050,6 @@ aclMatchProxyAuth(wordlist * data, const char * proxy_auth, acl_proxy_auth_user 
 	    /* Continue checking below, as normal */
 	}
     }
-
     /* see if we already know this user */
     auth_user = hash_lookup(proxy_auth_cache, user);
 
@@ -1059,7 +1058,7 @@ aclMatchProxyAuth(wordlist * data, const char * proxy_auth, acl_proxy_auth_user 
 	debug(28, 4) ("aclMatchProxyAuth: user '%s' not yet known\n", user);
 	return -1;
     } else if ((0 == strcmp(auth_user->passwd, password)) &&
-	    (auth_user->expiretime > current_time.tv_sec)) {
+	(auth_user->expiretime > current_time.tv_sec)) {
 	/* user already known and valid */
 	debug(28, 5) ("aclMatchProxyAuth: user '%s' previously validated\n",
 	    user);
@@ -1325,16 +1324,16 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	if (!r->flags.accelerated) {
 	    /* Proxy authorization on proxy requests */
 	    header = httpHeaderGetStr(&checklist->request->header,
-		    HDR_PROXY_AUTHORIZATION);
+		HDR_PROXY_AUTHORIZATION);
 	} else if (r->flags.internal) {
 	    /* WWW authorization on accelerated internal requests */
 	    header = httpHeaderGetStr(&checklist->request->header,
-		    HDR_AUTHORIZATION);
+		HDR_AUTHORIZATION);
 	} else {
 #if AUTH_ON_ACCELERATION
 	    /* WWW authorization on accelerated requests */
 	    header = httpHeaderGetStr(&checklist->request->header,
-		    HDR_AUTHORIZATION);
+		HDR_AUTHORIZATION);
 #else
 	    debug(28, 1) ("aclMatchAcl: proxy_auth %s not applicable on accelerated requests.\n", ae->name);
 	    return -1;
@@ -1346,10 +1345,10 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	 */
 	r->flags.used_proxy_auth = 1;
 	/* Check the password */
-	switch (aclMatchProxyAuth(ae->data, 
-		    header,
-		    checklist->auth_user,
-		    checklist)) {
+	switch (aclMatchProxyAuth(ae->data,
+		header,
+		checklist->auth_user,
+		checklist)) {
 	case 0:
 	    /* Correct password, but was not allowed in this ACL */
 	    return 0;
