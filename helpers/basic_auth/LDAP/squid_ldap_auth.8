@@ -1,4 +1,4 @@
-.TH squid_ldap_auth 8 "17 July 2004" "Squid LDAP Auth"
+.TH squid_ldap_auth 8 "14 January 2005" "Squid LDAP Auth"
 .
 .SH NAME
 squid_ldap_auth - Squid LDAP authentication helper
@@ -13,6 +13,16 @@ squid_ldap_auth - Squid LDAP authentication helper
 .SH DESCRIPTION
 This helper allows Squid to connect to a LDAP directory to
 validate the user name and password of Basic HTTP authentication.
+LDAP options are specified as parameters on the command line,
+while the username(s) and password(s) to be checked against the
+LDAP directory are specified on subsequent lines of input to the
+helper, one username/password pair per line separated by a space.
+.P
+As expected by the basic authentication construct of Squid, after
+specifying a username and password followed by a new line, this
+helper will produce either OK or ERR on the following line
+to show if the specified credentials are correct according to
+the LDAP directory.
 .P
 The program has two major modes of operation. In the default mode
 of operation the users DN is constructed using the base DN and
@@ -133,6 +143,10 @@ on the command line.
 Specify an alternate TCP port where the ldap server is listening if
 other than the default LDAP port 389. Can also be specified within the
 server specificiation by using servername:port syntax.
+.
+.TP
+.BI -v " 2|3"
+LDAP protocol version. Defaults to 2 if not specified.
 .
 .TP
 .BI -Z
