@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.9 2003/01/23 00:37:18 robertc Exp $
+ * $Id: client_side_request.cc,v 1.10 2003/01/28 01:29:34 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -54,7 +54,7 @@
 static const char *const crlf = "\r\n";
 
 typedef struct _clientRequestContext {
-    aclCheck_t *acl_checklist;	/* need ptr back so we can unreg if needed */
+    ACLChecklist *acl_checklist;	/* need ptr back so we can unreg if needed */
     int redirect_state;
     clientHttpRequest *http;
 } clientRequestContext;
@@ -649,20 +649,28 @@ clientCheckNoCache(clientRequestContext * context)
     if (Config.accessList.noCache && http->request->flags.cachable) {
 	context->acl_checklist =
 	    clientAclChecklistCreate(Config.accessList.noCache, http);
-	aclNBCheck(context->acl_checklist, clientCheckNoCacheDone, context);
+	aclNBCheck(context->acl_checklist, clientCheckNoCacheDone, cbdataReference(context));
     } else {
-	clientCheckNoCacheDone(http->request->flags.cachable, context);
+	clientCheckNoCacheDone(http->request->flags.cachable, cbdataReference(context));
     }
 }
 
 void
 clientCheckNoCacheDone(int answer, void *data)
 {
-    clientRequestContext *context = (clientRequestContext *)data;
-    clientHttpRequest *http = context->http;
-    http->request->flags.cachable = answer;
+    void *temp;
+    bool valid = cbdataReferenceValidDone(data, &temp);
+    assert (valid);
+    clientRequestContext *context = (clientRequestContext *)temp;
+    
     context->acl_checklist = NULL;
+    clientHttpRequest *http = context->http;
     cbdataFree(context);
+
+    if (!cbdataReferenceValid (http))
+	return;
+    
+    http->request->flags.cachable = answer;
     clientProcessRequest(http);
 }
 

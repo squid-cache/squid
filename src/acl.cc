@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.296 2003/01/24 09:07:19 robertc Exp $
+ * $Id: acl.cc,v 1.297 2003/01/28 01:29:33 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "ACLChecklist.h"
 #include "splay.h"
 #include "HttpRequest.h"
 #include "authenticate.h"
@@ -51,10 +52,10 @@ static void aclParseTimeSpec(void *curlist);
 static void aclParseIntRange(void *curlist);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyIntRange(intrange *);
-static void aclLookupProxyAuthStart(aclCheck_t * checklist);
+static void aclLookupProxyAuthStart(ACLChecklist * checklist);
 static void aclLookupProxyAuthDone(void *data, char *result);
 static struct _acl *aclFindByName(const char *name);
-static int aclMatchAcl(struct _acl *, aclCheck_t *);
+static int aclMatchAcl(struct _acl *, ACLChecklist *);
 static int aclMatchTime(acl_time_data * data, time_t when);
 static int aclMatchUser(void *proxyauth_acl, char const *user);
 static int aclMatchIp(void *dataptr, struct in_addr c);
@@ -69,8 +70,7 @@ static wordlist *aclDumpUserMaxIP(void *data);
 static int aclMatchUserMaxIP(void *, auth_user_request_t *, struct in_addr);
 static squid_acl aclStrToType(const char *s);
 static int decode_addr(const char *, struct in_addr *, struct in_addr *);
-static void aclCheck(aclCheck_t * checklist);
-static void aclCheckCallback(aclCheck_t * checklist, allow_t answer);
+static void aclCheck(ACLChecklist * checklist);
 #if USE_IDENT
 static IDCB aclLookupIdentDone;
 #endif
@@ -106,8 +106,8 @@ static SPLAYWALKEE aclDumpArpListWalkee;
 static int aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data, char const *MatchParam);
 #if USE_SSL
 static void aclParseCertList(void *curlist);
-static int aclMatchUserCert(void *data, aclCheck_t *);
-static int aclMatchCACert(void *data, aclCheck_t *);
+static int aclMatchUserCert(void *data, ACLChecklist *);
+static int aclMatchCACert(void *data, ACLChecklist *);
 static wordlist *aclDumpCertList(void *data);
 static void aclDestroyCertList(void *data);
 #endif
@@ -717,7 +717,7 @@ aclParseCertList(void *curlist)
 }
 
 static int
-aclMatchUserCert(void *data, aclCheck_t * checklist)
+aclMatchUserCert(void *data, ACLChecklist * checklist)
 {
     acl_cert_data *cert_data = (acl_cert_data *)data;
     const char *value;
@@ -733,7 +733,7 @@ aclMatchUserCert(void *data, aclCheck_t * checklist)
 }
 
 static int
-aclMatchCACert(void *data, aclCheck_t * checklist)
+aclMatchCACert(void *data, ACLChecklist * checklist)
 {
     acl_cert_data *cert_data = (acl_cert_data *)data;
     const char *value;
@@ -1285,7 +1285,7 @@ aclCacheMatchFlush(dlink_list * cache)
  */
 static int
 aclMatchProxyAuth(void *data, auth_user_request_t * auth_user_request,
-    aclCheck_t * checklist, squid_acl acltype)
+    ACLChecklist * checklist, squid_acl acltype)
 {
     /* checklist is used to register user name when identified, nothing else */
     /* General program flow in proxy_auth acls
@@ -1402,7 +1402,7 @@ aclMatchUserMaxIP(void *data, auth_user_request_t * auth_user_request,
 }
 
 static void
-aclLookupProxyAuthStart(aclCheck_t * checklist)
+aclLookupProxyAuthStart(ACLChecklist * checklist)
 {
     auth_user_request_t *auth_user_request;
     /* make sure someone created auth_user_request for us */
@@ -1500,7 +1500,7 @@ aclMatchWordList(wordlist * w, const char *word)
 #endif
 
 int
-aclAuthenticated(aclCheck_t * checklist)
+aclAuthenticated(ACLChecklist * checklist)
 {
     request_t *r = checklist->request;
     http_hdr_type headertype;
@@ -1545,7 +1545,7 @@ aclAuthenticated(aclCheck_t * checklist)
 }
 
 static int
-aclMatchAcl(acl * ae, aclCheck_t * checklist)
+aclMatchAcl(acl * ae, ACLChecklist * checklist)
 {
     request_t *r = checklist->request;
     const ipcache_addrs *ia = NULL;
@@ -1806,7 +1806,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 }
 
 int
-aclMatchAclList(const acl_list * list, aclCheck_t * checklist)
+aclMatchAclList(const acl_list * list, ACLChecklist * checklist)
 {
     PROF_start(aclMatchAclList);
     while (list) {
@@ -1826,7 +1826,7 @@ aclMatchAclList(const acl_list * list, aclCheck_t * checklist)
 }
 
 static void
-aclCheckCleanup(aclCheck_t * checklist)
+aclCheckCleanup(ACLChecklist * checklist)
 {
     /* Cleanup temporary stuff used by the ACL checking */
     if (checklist->extacl_entry) {
@@ -1834,8 +1834,11 @@ aclCheckCleanup(aclCheck_t * checklist)
     }
 }
 
+/* Warning: do not cbdata lock checklist here - it 
+ * may be static or on the stack
+ */
 int
-aclCheckFast(const acl_access * A, aclCheck_t * checklist)
+aclCheckFast(const acl_access * A, ACLChecklist * checklist)
 {
     allow_t allow = ACCESS_DENIED;
     PROF_start(aclCheckFast);
@@ -1856,7 +1859,7 @@ aclCheckFast(const acl_access * A, aclCheck_t * checklist)
 }
 
 static void
-aclCheck(aclCheck_t * checklist)
+aclCheck(ACLChecklist * checklist)
 {
     allow_t allow = ACCESS_DENIED;
     const acl_access *A;
@@ -1948,7 +1951,7 @@ aclCheck(aclCheck_t * checklist)
 	if (match) {
 	    debug(28, 3) ("aclCheck: match found, returning %d\n", allow);
 	    cbdataReferenceDone(checklist->accessList);		/* A */
-	    aclCheckCallback(checklist, allow);
+	    checklist->checkCallback(allow);
 	    return;
 	}
 	/*
@@ -1958,11 +1961,11 @@ aclCheck(aclCheck_t * checklist)
 	cbdataReferenceDone(A);
     }
     debug(28, 3) ("aclCheck: NO match found, returning %d\n", allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
-    aclCheckCallback(checklist, allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
+    checklist->checkCallback(allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
 }
 
 void
-aclChecklistFree(aclCheck_t * checklist)
+aclChecklistFree(ACLChecklist * checklist)
 {
     if (checklist->request)
 	requestUnlink(checklist->request);
@@ -1970,37 +1973,38 @@ aclChecklistFree(aclCheck_t * checklist)
     cbdataReferenceDone(checklist->conn);
     cbdataReferenceDone(checklist->accessList);
     aclCheckCleanup(checklist);
-    cbdataFree(checklist);
+    delete checklist;
 }
 
-static void
-aclCheckCallback(aclCheck_t * checklist, allow_t answer)
+void
+ACLChecklist::checkCallback(allow_t answer)
 {
-    PF *callback;
-    void *cbdata;
-    debug(28, 3) ("aclCheckCallback: answer=%d\n", answer);
-    /* During reconfigure, we can end up not finishing call sequences into the auth code */
-    if (checklist->auth_user_request) {
+    PF *callback_;
+    void *cbdata_;
+    debug(28, 3) ("ACLChecklist::checkCallback: answer=%d\n", answer);
+    /* During reconfigure, we can end up not finishing call
+     * sequences into the auth code */
+    if (auth_user_request) {
 	/* the checklist lock */
-	authenticateAuthUserRequestUnlock(checklist->auth_user_request);
+	authenticateAuthUserRequestUnlock(auth_user_request);
 	/* it might have been connection based */
-	assert(checklist->conn);
-	checklist->conn->auth_user_request = NULL;
-	checklist->conn->auth_type = AUTH_BROKEN;
-	checklist->auth_user_request = NULL;
+	assert(conn);
+	conn->auth_user_request = NULL;
+	conn->auth_type = AUTH_BROKEN;
+	auth_user_request = NULL;
     }
-    callback = checklist->callback;
-    checklist->callback = NULL;
-    if (cbdataReferenceValidDone(checklist->callback_data, &cbdata))
-	callback(answer, cbdata);
-    aclChecklistFree(checklist);
+    callback_ = callback;
+    callback = NULL;
+    if (cbdataReferenceValidDone(callback_data, &cbdata_))
+	callback_(answer, cbdata_);
+    aclChecklistFree(this);
 }
 
 #if USE_IDENT
 static void
 aclLookupIdentDone(const char *ident, void *data)
 {
-    aclCheck_t *checklist = (aclCheck_t *)data;
+    ACLChecklist *checklist = (ACLChecklist *)data;
     if (ident) {
 	xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
 #if DONT
@@ -2022,7 +2026,7 @@ aclLookupIdentDone(const char *ident, void *data)
 static void
 aclLookupDstIPDone(const ipcache_addrs * ia, void *data)
 {
-    aclCheck_t *checklist = (aclCheck_t *)data;
+    ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -2030,7 +2034,7 @@ aclLookupDstIPDone(const ipcache_addrs * ia, void *data)
 static void
 aclLookupDstIPforASNDone(const ipcache_addrs * ia, void *data)
 {
-    aclCheck_t *checklist = (aclCheck_t *)data;
+    ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_DST_ASN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -2038,7 +2042,7 @@ aclLookupDstIPforASNDone(const ipcache_addrs * ia, void *data)
 static void
 aclLookupSrcFQDNDone(const char *fqdn, void *data)
 {
-    aclCheck_t *checklist = (aclCheck_t *)data;
+    ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -2046,7 +2050,7 @@ aclLookupSrcFQDNDone(const char *fqdn, void *data)
 static void
 aclLookupDstFQDNDone(const char *fqdn, void *data)
 {
-    aclCheck_t *checklist = (aclCheck_t *)data;
+    ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -2054,7 +2058,7 @@ aclLookupDstFQDNDone(const char *fqdn, void *data)
 static void
 aclLookupProxyAuthDone(void *data, char *result)
 {
-    aclCheck_t *checklist = (aclCheck_t *)data;
+    ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_DONE;
     if (result != NULL)
 	fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
@@ -2075,36 +2079,87 @@ aclLookupProxyAuthDone(void *data, char *result)
 static void
 aclLookupExternalDone(void *data, void *result)
 {
-    aclCheck_t *checklist = (aclCheck_t *)data;
+    ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_EXTERNAL] = ACL_LOOKUP_DONE;
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
     aclCheck(checklist);
 }
 
+CBDATA_CLASS_INIT(ACLChecklist);
+
+void *
+ACLChecklist::operator new (size_t size)
+{
+    assert (size == sizeof(ACLChecklist));
+    CBDATA_INIT_TYPE(ACLChecklist);
+    ACLChecklist *result = cbdataAlloc(ACLChecklist);
+    /* Mark result as being owned - we want the refcounter to do the delete
+     * call */
+    cbdataReference(result);
+    return result;
+}
+ 
+void
+ACLChecklist::operator delete (void *address)
+{
+    ACLChecklist *t = static_cast<ACLChecklist *>(address);
+    cbdataFree(address);
+    /* And allow the memory to be freed */
+    cbdataReferenceDone (t);
+}
+
+void
+ACLChecklist::deleteSelf() const
+{
+    delete this;
+}
+
+ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
+  reply (NULL),
+  conn (NULL),
+  auth_user_request (NULL)
+#if SQUID_SNMP
+    ,snmp_community(NULL)
+#endif
+  , callback (NULL),
+  callback_data (NULL),
+  extacl_entry (NULL)
+{
+    memset (&src_addr, '\0', sizeof (struct in_addr));
+    memset (&dst_addr, '\0', sizeof (struct in_addr));
+    memset (&my_addr, '\0', sizeof (struct in_addr));
+    rfc931[0] = '\0';
+    memset (&state, '\0', sizeof (state));
+}
+
+ACLChecklist::~ACLChecklist()
+{
+}
+
 /*
- * Any aclCheck_t created by aclChecklistCreate() must eventually be
+ * Any ACLChecklist created by aclChecklistCreate() must eventually be
  * freed by aclChecklistFree().  There are two common cases:
  *
- * A) Using aclCheckFast():  The caller creates the aclCheck_t using
+ * A) Using aclCheckFast():  The caller creates the ACLChecklist using
  *    aclChecklistCreate(), checks it using aclCheckFast(), and frees it
  *    using aclChecklistFree().
  *
  * B) Using aclNBCheck() and callbacks: The caller creates the
- *    aclCheck_t using aclChecklistCreate(), and passes it to
- *    aclNBCheck().  Control eventually passes to aclCheckCallback(),
+ *    ACLChecklist using aclChecklistCreate(), and passes it to
+ *    aclNBCheck().  Control eventually passes to ACLChecklist::checkCallback(),
  *    which will invoke the callback function as requested by the
  *    original caller of aclNBCheck().  This callback function must
  *    *not* invoke aclChecklistFree().  After the callback function
- *    returns, aclCheckCallback() will free the aclCheck_t using
+ *    returns, ACLChecklist::checkCallback() will free the ACLChecklist using
  *    aclChecklistFree().
  */
 
-aclCheck_t *
+
+ACLChecklist *
 aclChecklistCreate(const acl_access * A, request_t * request, const char *ident)
 {
     int i;
-    aclCheck_t *checklist;
-    checklist = cbdataAlloc(aclCheck_t);
+    ACLChecklist *checklist = new ACLChecklist;
     checklist->accessList = cbdataReference(A);
     if (request != NULL) {
 	checklist->request = requestLink(request);
@@ -2123,7 +2178,7 @@ aclChecklistCreate(const acl_access * A, request_t * request, const char *ident)
 }
 
 void
-aclNBCheck(aclCheck_t * checklist, PF * callback, void *callback_data)
+aclNBCheck(ACLChecklist * checklist, PF * callback, void *callback_data)
 {
     checklist->callback = callback;
     checklist->callback_data = cbdataReference(callback_data);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.23 2003/01/24 09:07:19 robertc Exp $
+ * $Id: external_acl.cc,v 1.24 2003/01/28 01:29:34 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -44,6 +44,7 @@
 #include "authenticate.h"
 #include "Store.h"
 #include "fde.h"
+#include "ACLChecklist.h"
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60
@@ -55,7 +56,7 @@
 typedef struct _external_acl_format external_acl_format;
 typedef struct _external_acl_data external_acl_data;
 
-static char *makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data);
+static char *makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data);
 static void external_acl_cache_delete(external_acl * def, external_acl_entry * entry);
 static int external_acl_entry_expired(external_acl * def, external_acl_entry * entry);
 static void external_acl_cache_touch(external_acl * def, external_acl_entry * entry);
@@ -425,7 +426,7 @@ aclDestroyExternal(void **dataptr)
 }
 
 int
-aclMatchExternal(void *data, aclCheck_t * ch)
+aclMatchExternal(void *data, ACLChecklist * ch)
 {
     int result;
     external_acl_entry *entry;
@@ -509,7 +510,7 @@ external_acl_cache_touch(external_acl * def, external_acl_entry * entry)
 }
 
 static char *
-makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
+makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 {
     static MemBuf mb = MemBufNULL;
     char buf[256];
@@ -780,7 +781,7 @@ externalAclHandleReply(void *data, char *reply)
 }
 
 void
-externalAclLookup(aclCheck_t * ch, void *acl_data, EAH * callback, void *callback_data)
+externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * callback, void *callback_data)
 {
     MemBuf buf;
     external_acl_data *acl = static_cast<external_acl_data *>(acl_data);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.91 2003/01/23 00:37:20 robertc Exp $
+ * $Id: forward.cc,v 1.92 2003/01/28 01:29:34 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -39,6 +39,7 @@
 #include "HttpRequest.h"
 #include "fde.h"
 #include "MemObject.h"
+#include "ACLChecklist.h"
 
 static PSC fwdStartComplete;
 static void fwdDispatch(FwdState *);
@@ -358,7 +359,7 @@ fwdConnectTimeout(int fd, void *data)
 }
 
 static struct in_addr
-aclMapAddr(acl_address * head, aclCheck_t * ch)
+aclMapAddr(acl_address * head, ACLChecklist * ch)
 {
     acl_address *l;
     struct in_addr addr;
@@ -371,7 +372,7 @@ aclMapAddr(acl_address * head, aclCheck_t * ch)
 }
 
 static int
-aclMapTOS(acl_tos * head, aclCheck_t * ch)
+aclMapTOS(acl_tos * head, ACLChecklist * ch)
 {
     acl_tos *l;
     for (l = head; l; l = l->next) {
@@ -384,8 +385,7 @@ aclMapTOS(acl_tos * head, aclCheck_t * ch)
 struct in_addr
 getOutgoingAddr(request_t * request)
 {
-    aclCheck_t ch;
-    memset(&ch, '\0', sizeof(aclCheck_t));
+    ACLChecklist ch;
     if (request) {
 	ch.src_addr = request->client_addr;
 	ch.my_addr = request->my_addr;
@@ -398,8 +398,7 @@ getOutgoingAddr(request_t * request)
 unsigned long
 getOutgoingTOS(request_t * request)
 {
-    aclCheck_t ch;
-    memset(&ch, '\0', sizeof(aclCheck_t));
+    ACLChecklist ch;
     if (request) {
 	ch.src_addr = request->client_addr;
 	ch.my_addr = request->my_addr;
@@ -656,7 +655,7 @@ void
 fwdStart(int fd, StoreEntry * e, request_t * r)
 {
     FwdState *fwdState;
-    aclCheck_t ch;
+    ACLChecklist ch;
     int answer;
     ErrorState *err;
     /*
@@ -668,7 +667,6 @@ fwdStart(int fd, StoreEntry * e, request_t * r)
 	/*      
 	 * Check if this host is allowed to fetch MISSES from us (miss_access)
 	 */
-	memset(&ch, '\0', sizeof(aclCheck_t));
 	ch.src_addr = r->client_addr;
 	ch.my_addr = r->my_addr;
 	ch.my_port = r->my_port;

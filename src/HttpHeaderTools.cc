@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.35 2003/01/23 00:37:12 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.36 2003/01/28 01:29:32 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -411,7 +411,7 @@ httpHdrMangle(HttpHeaderEntry * e, request_t * request)
 
     /* check with anonymizer tables */
     header_mangler *hm;
-    aclCheck_t *checklist;
+    ACLChecklist *checklist;
     assert(e);
     hm = &Config.header_access[e->id];
     checklist = aclChecklistCreate(hm->access_list, request, NULL);

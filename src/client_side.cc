@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.614 2003/01/27 08:36:22 hno Exp $
+ * $Id: client_side.cc,v 1.615 2003/01/28 01:29:33 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -66,6 +66,7 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "client_side_request.h"
+#include "ACLChecklist.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -2222,7 +2223,7 @@ httpAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *peer
     int *N = &incoming_sockets_accepted;
     ConnStateData *connState = NULL;
 #if USE_IDENT
-    static aclCheck_t identChecklist;
+    static ACLChecklist identChecklist;
 #endif
 
     if (flag == COMM_ERR_CLOSING) {
@@ -2326,7 +2327,7 @@ httpsAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *pee
     SSL *ssl;
     int ssl_error;
 #if USE_IDENT
-    static aclCheck_t identChecklist;
+    static ACLChecklist identChecklist;
 #endif
 
     if (flag == COMM_ERR_CLOSING) {
@@ -2525,10 +2526,10 @@ varyEvaluateMatch(StoreEntry * entry, request_t * request)
     }
 }
 
-aclCheck_t *
+ACLChecklist *
 clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http)
 {
-    aclCheck_t *ch;
+    ACLChecklist *ch;
     ConnStateData *conn = http->conn;
     ch = aclChecklistCreate(acl, http->request, conn ? conn->rfc931 : dash_str);
 
@@ -2544,7 +2545,7 @@ clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http)
      * the server end.
      */
     if (conn)
-	ch->conn = cbdataReference(conn);	/* unreferenced in acl.c */
+	ch->conn = cbdataReference(conn);	/* unreferenced in acl.cc */
 
     return ch;
 }

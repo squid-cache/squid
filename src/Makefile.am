@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.51 2003/01/27 08:28:29 robertc Exp $
+#  $Id: Makefile.am,v 1.52 2003/01/28 01:29:32 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -122,6 +122,7 @@ EXTRA_squid_SOURCES = \
 squid_SOURCES = \
 	access_log.cc \
 	acl.cc \
+	ACLChecklist.h \
 	asn.cc \
 	authenticate.cc \
 	authenticate.h \
@@ -392,6 +393,7 @@ ufsdump_SOURCES = debug.cc \
 	mem.cc \
 	mem_node.cc \
 	mem_node.h \
+	Mem.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemObject.h \

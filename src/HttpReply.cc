@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.51 2003/01/23 00:37:13 robertc Exp $
+ * $Id: HttpReply.cc,v 1.52 2003/01/28 01:29:32 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -38,7 +38,7 @@
 #include "Store.h"
 #include "HttpHeader.h"
 #include "HttpHdrContRange.h"
-
+#include "ACLChecklist.h"
 
 /* local constants */
 
@@ -550,7 +550,7 @@ void
 httpReplyBodyBuildSize(request_t * request, HttpReply * reply, dlink_list * bodylist)
 {
     body_size *bs;
-    aclCheck_t *checklist;
+    ACLChecklist *checklist;
     bs = (body_size *) bodylist->head;
     while (bs) {
 	checklist = aclChecklistCreate(bs->access_list, request, NULL);
