@@ -46,11 +46,14 @@ typedef struct _hash_table hash_table;
 typedef struct _http_reply http_reply;
 #else
 typedef struct _HttpReply http_reply;
+typedef struct _HttpStatusLine HttpStatusLine;
 typedef struct _HttpHeader HttpHeader;
 typedef struct _HttpScc HttpScc;
 typedef struct _HttpHeaderExtField HttpHeaderExtField;
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
 typedef union _field_store field_store;
+typedef struct _HttpBody HttpBody;
+typedef struct _HttpReply HttpReply;
 #endif
 typedef struct _HttpStateData HttpStateData;
 typedef struct _icpUdpData icpUdpData;
@@ -60,6 +63,7 @@ typedef struct _ipcache_addrs ipcache_addrs;
 typedef struct _ipcache_entry ipcache_entry;
 typedef struct _domain_ping domain_ping;
 typedef struct _domain_type domain_type;
+typedef struct _Packer Packer;
 typedef struct _peer peer;
 typedef struct _net_db_name net_db_name;
 typedef struct _net_db_peer net_db_peer;
@@ -125,6 +129,15 @@ typedef void STVLDCB(void *, int, int);
 
 typedef double (*hbase_f)(double);
 typedef void (*StatHistBinDumper)(StoreEntry *, int idx, double val, double size, int count);
+
+/* append/vprintf's for Packer */
+typedef void (*append_f)(void *, const char *buf, int size);
+#ifdef __STDC__
+typedef void (*vprintf_f)(void *, const char *fmt, ...);
+#else
+typedef void (*vprintf_f)();
+#endif
+
 /* MD5 cache keys */
 typedef unsigned char cache_key;
 
