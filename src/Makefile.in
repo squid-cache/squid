@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.156 1998/07/25 03:53:32 wessels Exp $
+#  $Id: Makefile.in,v 1.157 1998/07/31 00:15:31 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -92,6 +92,7 @@ OBJS	 	= \
 		comm.o \
 		comm_select.o \
 		debug.o \
+		@DELAY_OBJS@ \
 		disk.o \
 		dns.o \
 		errorpage.o \
@@ -176,6 +177,8 @@ SNMP_OBJS	= \
 		snmp_auth.o
 
 HTCP_OBJS	= htcp.o
+
+DELAY_OBJS	= delay_pools.o
 
 ASYNC_OBJS	= \
 		aiops.o \

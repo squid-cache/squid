@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.370 1998/07/30 21:52:01 rousskov Exp $
+ * $Id: client_side.cc,v 1.371 1998/07/31 00:15:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -723,6 +723,12 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	EBIT_SET(request->flags, REQ_CACHABLE);
     if (clientHierarchical(http))
 	EBIT_SET(request->flags, REQ_HIERARCHICAL);
+#if DELAY_POOLS
+    if (delayClient(http)) {
+	debug(33, 5) ("clientInterpretRequestHeaders: delay request class %d position %d\n",
+	    request->delay.class, request->delay.position);
+    }
+#endif
     debug(33, 5) ("clientInterpretRequestHeaders: REQ_NOCACHE = %s\n",
 	EBIT_TEST(request->flags, REQ_NOCACHE) ? "SET" : "NOT SET");
     debug(33, 5) ("clientInterpretRequestHeaders: REQ_CACHABLE = %s\n",

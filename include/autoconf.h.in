@@ -104,9 +104,9 @@
 #undef USE_ICMP
 
 /*
- * David Luyer's Delay hack
+ * Traffic management via "delay pools".
  */
-#undef DELAY_HACK
+#undef DELAY_POOLS
 
 /*
  * If you want to log User-Agent request header values, define this.

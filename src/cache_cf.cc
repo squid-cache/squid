@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.293 1998/07/30 22:39:40 wessels Exp $
+ * $Id: cache_cf.cc,v 1.294 1998/07/31 00:15:35 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -793,6 +793,10 @@ parse_peer(peer ** head)
 		debug(3, 0) ("parse_peer: Ignoring carp-load-factor for non-parent %s/%d\n", p->host, p->http_port);
 	    else
 		p->carp.load_factor = atof(token + 17);
+#endif
+#if DELAY_POOLS
+	} else if (!strcasecmp(token, "no-delay")) {
+	    EBIT_SET(p->options, NEIGHBOR_NO_DELAY);
 #endif
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);

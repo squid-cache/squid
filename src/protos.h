@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.243 1998/07/25 04:47:29 wessels Exp $
+ * $Id: protos.h,v 1.244 1998/07/31 00:15:51 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -186,6 +186,9 @@ extern void _db_print(const char *,...);
 #else
 extern void _db_print();
 #endif
+
+/* packs, then prints an object using debug() */
+extern void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
 
 
 extern int file_open(const char *path, int mode, FOCB *, void *callback_data, void *tag);
@@ -1054,8 +1057,11 @@ extern void carpInit(void);
 extern peer *carpSelectParent(request_t *);
 #endif
 
-/* packs, then prints an object using debug() */
-extern void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
+#if DELAY_POOLS
+extern int delayClient(clientHttpRequest *);
+extern void delayPoolsInit(void);
+void delayPoolsUpdate(int);
+#endif
 
 /*
  * prototypes for system functions missing from system includes

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.112 1998/07/30 22:05:42 wessels Exp $
+ * $Id: enums.h,v 1.113 1998/07/31 00:15:42 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -495,6 +495,9 @@ enum {
     NEIGHBOR_HTCP,
 #endif
     NEIGHBOR_NO_NETDB_EXCHANGE,
+#if DELAY_POOLS
+    NEIGHBOR_NO_DELAY,
+#endif
     NEIGHBOR_END
 };
 
