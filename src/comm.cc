@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.226 1998/02/06 17:30:51 wessels Exp $
+ * $Id: comm.cc,v 1.227 1998/02/10 21:44:31 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -961,7 +961,7 @@ comm_poll(time_t sec)
 		close_handler *ch;
 		fde *F = &fd_table[fd];
 		debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
-		debug(5, 0) ("FD %d is a %s\n", fd, fdstatTypeStr[fd_table[fd].type]);
+		debug(5, 0) ("FD %d is a %s\n", fd, fdTypeStr[fd_table[fd].type]);
 		debug(5, 0) ("--> %s\n", fd_table[fd].desc);
 		debug(5, 0) ("tmout:%p read:%p write:%p\n",
 		    F->timeout_handler,
@@ -1302,7 +1302,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
 	debug(5, 0) ("FD %d is a %s called '%s'\n",
 	    fd,
-	    fdstatTypeStr[fd_table[fd].type],
+	    fdTypeStr[fd_table[fd].type],
 	    F->desc);
 	debug(5, 0) ("tmout:%p read:%p write:%p\n",
 	    F->timeout_handler,

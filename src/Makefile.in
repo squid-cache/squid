@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.120 1998/02/05 21:37:49 wessels Exp $
+#  $Id: Makefile.in,v 1.121 1998/02/10 21:44:30 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -81,7 +81,6 @@ OBJS	 	= \
 		errorpage.o \
 		event.o \
 		fd.o \
-		fdstat.o \
 		filemap.o \
 		fqdncache.o \
 		ftp.o \

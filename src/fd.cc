@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.19 1998/02/02 21:16:24 wessels Exp $
+ * $Id: fd.cc,v 1.20 1998/02/10 21:44:33 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -30,6 +30,16 @@
  */
 
 #include "squid.h"
+
+const char *fdTypeStr[] =
+{
+    "None",
+    "Log",
+    "File",
+    "Socket",
+    "Pipe",
+    "Unknown"
+};
 
 static void fdUpdateBiggest(int fd, unsigned int status);
 
@@ -123,4 +133,10 @@ fdDumpOpen(void)
 	    continue;
 	debug(51, 1) ("Open FD %4d %s\n", i, F->desc);
     }
+}
+
+int
+fdNFree(void)
+{
+    return Squid_MaxFD - Number_FD;
 }

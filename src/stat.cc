@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.194 1998/02/07 08:13:41 wessels Exp $
+ * $Id: stat.cc,v 1.195 1998/02/10 21:44:35 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -429,7 +429,7 @@ statFiledescriptors(StoreEntry * sentry)
 	    continue;
 	storeAppendPrintf(sentry, "%4d %-6.6s %4d %7d %7d %-21s %s\n",
 	    i,
-	    fdstatTypeStr[f->type],
+	    fdTypeStr[f->type],
 	    f->timeout_handler ? (f->timeout - squid_curtime) / 60 : 0,
 	    f->bytes_read,
 	    f->bytes_written,
