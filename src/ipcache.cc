@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.80 1996/10/30 18:43:22 wessels Exp $
+ * $Id: ipcache.cc,v 1.81 1996/11/01 18:19:08 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -819,9 +819,9 @@ ipcache_gethostbyname(char *name, int flags)
 	    return &i->addrs;
 	}
     }
-    IpcacheStats.misses++;
     if ((addrs = ipcacheCheckNumeric(name)))
 	return addrs;
+    IpcacheStats.misses++;
     if (BIT_TEST(flags, IP_BLOCKING_LOOKUP)) {
 	IpcacheStats.ghbn_calls++;
 	debug(14, 3, "ipcache_gethostbyname: blocking on gethostbyname() for '%s'\n", name);
