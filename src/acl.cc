@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.201 1999/04/23 02:57:17 wessels Exp $
+ * $Id: acl.cc,v 1.202 1999/04/26 21:04:39 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1810,7 +1810,7 @@ aclDestroyAcls(acl ** head)
 	    break;
 	case ACL_NONE:
 	default:
-	    debug(28,1)("aclDestroyAcls: no case for ACL type %d\n", a->type);
+	    debug(28, 1) ("aclDestroyAcls: no case for ACL type %d\n", a->type);
 	    break;
 	}
 	safe_free(a->cfgline);
