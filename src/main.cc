@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.258 1998/07/22 20:37:33 wessels Exp $
+ * $Id: main.cc,v 1.259 1998/07/23 03:13:24 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -68,6 +68,7 @@ static void normal_shutdown(void);
 extern void log_trace_done();
 extern void log_trace_init(char *);
 #endif
+static EVH force_shutdown;
 
 static void
 usage(void)
@@ -546,12 +547,14 @@ main(int argc, char **argv)
 	    mainRotate();
 	    do_rotate = 0;
 	} else if (do_shutdown) {
+	    time_t wait = do_shutdown > 0 ? (int) Config.shutdownLifetime : 0;
 	    debug(1, 1) ("Preparing for shutdown after %d requests\n",
 		Counter.client_http.requests);
 	    debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
-		do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
+		wait);
 	    do_shutdown = 0;
 	    shutting_down = 1;
+	    eventAdd("force_shutdown", force_shutdown, (double) (wait+1), 1);
 	}
 	eventRun();
 	if ((loop_delay = eventNextTime()) < 0)
@@ -721,4 +724,11 @@ normal_shutdown(void)
 	version_string);
     fclose(debug_log);
     exit(0);
+}
+
+static void
+force_shutdown(void *unused)
+{
+    fdDumpOpen();
+    fatal_dump("Shutdown procedure failed");
 }
