@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.168 2000/03/14 22:59:13 wessels Exp $
+# $Id: cf.data.pre,v 1.169 2000/05/02 18:35:09 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -3030,19 +3030,42 @@ DOC_START
 	encrypted.  This is the encryption key.
 DOC_END
 
+NAME: nonhierarchical_direct
+TYPE: onoff
+LOC: Config.onoff.nonhierarchical_direct
+DEFAULT: on
+DOC_START
+	By default, Squid will send any non-hierarchical requests
+	(matching hierarchy_stoplist or not cachable request type) direct
+	to origin servers.
+
+	If you set this to off, then Squid will prefer to send these
+	requests to parents.
+
+	Note that in most configurations, by turning this off you will only
+	add latency to these request without any improvement in global hit
+	ratio.
+
+	If you are inside an firewall then see never_direct instead of
+	this directive.
+
+nonhierarchical_direct on
+DOC_END
+
 NAME: prefer_direct
 TYPE: onoff
 LOC: Config.onoff.prefer_direct
-DEFAULT: on
+DEFAULT: off
 DOC_START
-	By default, if the ICP, HTCP, Cache Digest, etc. techniques
-	do not yield a parent cache, Squid gives higher preference
-	to forwarding the request direct to origin servers, rather
-	than selecting a parent cache anyway.
+	Normally Squid tries to use parents for most requests. If you by some
+	reason like it to first try going direct and only use a parent if
+	going direct fails then set this to off.
 
-	If you want Squid to give higher precedence to a parent
-	cache, instead of going direct, then turn this option off.
-prefer_direct on
+	By combining nonhierarchical_direct off and prefer_direct on you
+	can set up Squid to use a parent as a backup path if going direct
+	fails.
+
+prefer_direct off
 DOC_END
 
 NAME: strip_query_terms

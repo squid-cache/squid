@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.318 2000/05/02 18:32:41 hno Exp $
+ * $Id: structs.h,v 1.319 2000/05/02 18:35:09 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -407,6 +407,7 @@ struct _SquidConfig {
 	int offline;
 	int redir_rewrites_host;
 	int prefer_direct;
+	int nonhierarchical_direct;
 	int strip_query_terms;
 	int redirector_bypass;
 	int ignore_unknown_nameservers;
