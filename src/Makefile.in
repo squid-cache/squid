@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.73 1997/06/01 04:23:08 wessels Exp $
+#  $Id: Makefile.in,v 1.74 1997/06/04 05:50:26 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -75,6 +75,8 @@ SUID_UTILS	= pinger
 CGIPROGS	= cachemgr.cgi
 OBJS	 	= \
 		acl.o \
+		aiops.o \
+		async_io.o \
 		cache_cf.o \
 		client_db.o \
 		client_side.o \
