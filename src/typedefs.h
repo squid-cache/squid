@@ -79,6 +79,7 @@ typedef struct _StatCounters StatCounters;
 typedef struct _tlv tlv;
 typedef struct _storeSwapLogData storeSwapLogData;
 typedef struct _cacheSwap cacheSwap;
+typedef struct _StatLogHist StatLogHist;
 
 /* define AIOCB even without USE_ASYNC_IO */
 typedef void AIOCB(void *, int aio_return, int aio_errno);
@@ -100,6 +101,8 @@ typedef void PSC(peer *, void *);
 typedef void RH(void *data, char *);
 typedef void UH(void *data, wordlist *);
 typedef int DEFER(int fd, void *data);
+typedef int DTOI(double);
+typedef double DTOD(double);
 
 typedef void SIH(int fd, void *);	/* swap in */
 typedef int QS(const void *, const void *);	/* qsort */

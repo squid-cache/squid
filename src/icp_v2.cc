@@ -50,8 +50,11 @@ icpUdpReply(int fd, void *data)
 	    kb_incr(&Counter.icp.kbytes_sent, (size_t) x);
 	}
 	UdpQueueHead = queue->next;
-	if (queue->logcode)
+	if (queue->logcode) {
 	    icpLogIcp(queue);
+	    statLogHistCount(&Counter.icp.svc_time,
+		tvSubUsec(queue->start, current_time));
+	}
 	safe_free(queue->msg);
 	safe_free(queue);
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.208 1998/02/17 18:15:22 wessels Exp $
+ * $Id: client_side.cc,v 1.209 1998/02/18 09:38:14 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -524,6 +524,8 @@ clientUpdateCounters(clientHttpRequest * http)
     }
     if (http->request->err_type != ERR_NONE)
 	Counter.client_http.errors++;
+    statLogHistCount(&Counter.client_http.svc_time,
+	tvSubMsec(http->start, current_time));
 }
 
 static void
