@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.16 1996/04/04 18:41:22 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.17 1996/04/04 18:50:11 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -194,14 +194,13 @@ ip_access_type ip_access_check(address, list)
     if (naddr.s_addr == localhost.s_addr)
 	return IP_ALLOW;
 
-    debug(3, 1, "IP access check using: %s\n", inet_ntoa(naddr));
+    debug(3, 5, "ip_access_check: using %s\n", inet_ntoa(naddr));
 
     for (p = list; p; p = p->next) {
-	sprintf(buf, "%s", inet_ntoa(naddr));
-	sprintf(&buf[strlen(buf)], " vs %s", inet_ntoa(p->addr));
-	sprintf(&buf[strlen(buf)], "/%s", inet_ntoa(p->mask));
-	debug(3, 1, "IP access check  %s\n", buf);
-
+	debug(3, 5, "ip_access_check: %s vs %s/%s\n",
+	    inet_ntoa(naddr),
+	    inet_ntoa(p->addr),
+	    inet_ntoa(p->mask));
 	if (ip_acl_match(naddr, p))
 	    return p->access;
     }
