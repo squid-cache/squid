@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.443 1999/04/15 06:15:50 wessels Exp $
+ * $Id: client_side.cc,v 1.444 1999/04/23 23:01:23 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -451,7 +451,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	/* the client can handle this reply, whatever it is */
 	http->log_type = LOG_TCP_REFRESH_MISS;
 	if (HTTP_NOT_MODIFIED == mem->reply->sline.status) {
-	    http->old_entry->timestamp = squid_curtime;
+	    httpReplyUpdateOnNotModified(http->old_entry->mem_obj->reply,
+		mem->reply);
+	    storeTimestampsSet(http->old_entry);
 	    http->old_entry->refcount++;
 	    http->log_type = LOG_TCP_REFRESH_HIT;
 	}
