@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.46 1997/07/14 03:33:40 wessels Exp $
+ * $Id: stmem.cc,v 1.47 1997/07/15 23:23:33 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -137,7 +137,7 @@ memFree(mem_hdr * mem)
 	    safe_free(p);
 	}
     }
-    memset(mem, '\0', sizeof(mem_hdr *));		/* nuke in case ref'ed again */
+    memset(mem, '\0', sizeof(mem_hdr *));	/* nuke in case ref'ed again */
     safe_free(mem);
 }
 
@@ -291,7 +291,7 @@ memCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
 mem_hdr *
 memInit(void)
 {
-    mem_hdr * new = xcalloc(1, sizeof(mem_hdr));
+    mem_hdr *new = xcalloc(1, sizeof(mem_hdr));
     new->tail = new->head = NULL;
     return new;
 }

@@ -1,5 +1,6 @@
+
 /*
- * $Id: main.cc,v 1.162 1997/07/15 05:34:11 wessels Exp $
+ * $Id: main.cc,v 1.163 1997/07/15 23:23:28 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -311,7 +312,7 @@ serverConnectionsOpen(void)
     int x;
     int fd;
     wordlist *s;
-    for (u = Config.Port.http; u; u=u->next) {
+    for (u = Config.Port.http; u; u = u->next) {
 	enter_suid();
 	fd = comm_open(SOCK_STREAM,
 	    0,

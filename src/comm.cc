@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.178 1997/07/15 04:03:09 wessels Exp $
+ * $Id: comm.cc,v 1.179 1997/07/15 23:23:21 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -576,7 +576,7 @@ comm_close(int fd)
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
     if (!F->open) {
-	debug(5,1)("comm_close: FD %d is not open!\n", fd);
+	debug(5, 1) ("comm_close: FD %d is not open!\n", fd);
 	return;
     }
     assert(F->type != FD_FILE);

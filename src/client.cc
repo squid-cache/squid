@@ -1,7 +1,8 @@
 
 
+
 /*
- * $Id: client.cc,v 1.18 1997/06/26 22:35:40 wessels Exp $
+ * $Id: client.cc,v 1.19 1997/07/15 23:23:18 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived

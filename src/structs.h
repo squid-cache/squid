@@ -241,9 +241,9 @@ struct _SquidConfig {
     } Ftp;
     refresh_t *Refresh;
     struct _cacheSwap {
-        SwapDir *swapDirs;
-        int n_allocated;
-        int n_configured;
+	SwapDir *swapDirs;
+	int n_allocated;
+	int n_configured;
     } cacheSwap;
 };
 
