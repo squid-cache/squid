@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.4 1998/03/11 21:10:57 rousskov Exp $
+ * $Id: HttpHdrRange.cc,v 1.5 1998/03/11 21:11:47 rousskov Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -247,17 +247,6 @@ httpHdrRangePackInto(const HttpHdrRange * range, Packer * p)
 	    packerAppend(p, ",", 1);
 	httpHdrRangeSpecPackInto(&spec, p);
     }
-}
-
-void
-httpHdrRangeJoinWith(HttpHdrRange * range, const HttpHdrRange * new_range)
-{
-    HttpHdrRangePos pos = HttpHdrRangeInitPos;
-    HttpHdrRangeSpec spec;
-    assert(range && new_range);
-    stackPrePush(&range->specs, new_range->specs.count);
-    while (httpHdrRangeGetSpec(new_range, &spec, &pos))
-	stackPush(&range->specs, httpHdrRangeSpecDup(&spec));
 }
 
 /*
