@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.300 1998/07/22 20:37:27 wessels Exp $
+ * $Id: http.cc,v 1.301 1998/07/30 22:04:46 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -366,7 +366,6 @@ httpReadReply(int fd, void *data)
 	return;
     }
     /* check if we want to defer reading */
-    clen = entry->mem_obj->inmem_hi;
     errno = 0;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, len);
