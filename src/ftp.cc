@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.60 1996/09/20 06:28:43 wessels Exp $
+ * $Id: ftp.cc,v 1.61 1996/09/20 19:29:25 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -132,6 +132,7 @@ static void ftpProcessReplyHeader _PARAMS((FtpData * data, char *buf, int size))
 static void ftpServerClosed _PARAMS((int fd, void *nodata));
 static void ftp_login_parser _PARAMS((char *login, FtpData * data));
 static char *ftpTransferMode _PARAMS((char *urlpath));
+static char *ftpGetBasicAuth _PARAMS((char *req_hdr));
 
 /* Global functions not declared in ftp.h */
 void ftpLifetimeExpire(int fd, FtpData * data);
@@ -566,6 +567,24 @@ ftpConnInProgress(int fd, FtpData * data)
 	ipcacheInvalidate(data->request->host);
 }
 
+static char *
+ftpGetBasicAuth(char *req_hdr)
+{
+    char *auth_hdr;
+    char *t;
+    if (req_hdr == NULL)
+	return NULL;
+    if ((auth_hdr = mime_get_header(req_hdr, "Authorization")) == NULL)
+	return NULL;
+    if ((t = strtok(auth_hdr, " \t")) == NULL)
+	return NULL;
+    if (strcasecmp(t, "Basic") != 0)
+	return NULL;
+    if ((t = strtok(NULL, " \t")) == NULL)
+	return NULL;
+    return base64_decode(t);
+}
+
 
 int
 ftpStart(int unusedfd, char *url, request_t * request, StoreEntry * entry)
@@ -573,7 +592,6 @@ ftpStart(int unusedfd, char *url, request_t * request, StoreEntry * entry)
     LOCAL_ARRAY(char, realm, 8192);
     FtpData *data = NULL;
     char *req_hdr = entry->mem_obj->mime_hdr;
-    char *auth_hdr;
     char *response;
     char *auth;
 
@@ -585,15 +603,8 @@ ftpStart(int unusedfd, char *url, request_t * request, StoreEntry * entry)
     storeLockObject(data->entry = entry, NULL, NULL);
     data->request = requestLink(request);
 
-    auth_hdr = mime_get_header(req_hdr, "Authorization");
-    auth = NULL;
-    if (auth_hdr) {
-	if (strcasecmp(strtok(auth_hdr, " \t"), "Basic") == 0) {
-	    auth = base64_decode(strtok(NULL, " \t"));
-	}
-    }
     /* Parse login info. */
-    if (auth) {
+    if ((auth = ftpGetBasicAuth(req_hdr))) {
 	ftp_login_parser(auth, data);
 	data->authenticated = 1;
     } else {
