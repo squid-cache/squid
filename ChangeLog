@@ -2,6 +2,7 @@ Changes to squid-1.1.alpha11:
 
 	- Fixed sscanf() bug in storeDirClean()
 	- Fixed coredump in squid_error_entry() on Config.errHtmlText.
+	- Added redirector stats entry to cachemgr.cgi.
 	- Call ipcache_purgelru() during an idle timeout.
 	- Changed fqdnFromAddr() to copy inet_ntoa() result into a 
 	  static buffer.
