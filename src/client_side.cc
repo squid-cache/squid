@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.543 2001/08/24 15:02:43 hno Exp $
+ * $Id: client_side.cc,v 1.544 2001/08/26 22:17:23 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -3208,8 +3208,10 @@ clientNegotiateSSL(int fd, void *data)
 	    return;
 	}
 	ret = ERR_get_error();
-	debug(81, 1) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s\n",
-	    fd, ERR_error_string(ret, NULL));
+	if (ret) {
+	    debug(81, 1) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s\n",
+		fd, ERR_error_string(ret, NULL));
+	}
 	comm_close(fd);
 	return;
     }
