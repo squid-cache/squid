@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.116 1996/10/24 23:29:37 wessels Exp $
+ * $Id: cache_cf.cc,v 1.117 1996/10/25 16:51:02 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1507,6 +1507,7 @@ configFreeMemory(void)
 static void
 configSetFactoryDefaults(void)
 {
+    memset((char *) &Config, '\0', sizeof(Config));
     Config.Mem.maxSize = DefaultMemMaxSize;
     Config.Mem.highWaterMark = DefaultMemHighWaterMark;
     Config.Mem.lowWaterMark = DefaultMemLowWaterMark;
