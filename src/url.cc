@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.86 1998/04/06 05:43:27 rousskov Exp $
+ * $Id: url.cc,v 1.87 1998/04/09 02:25:24 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -371,14 +371,17 @@ urlCanonicalClean(const request_t * request)
 
 /* makes internal url with a given host and port (remote internal url) */
 char *
-urlRInternal(const char *host, int port, const char *dir, const char *name)
+urlRInternal(const char *host, u_short port, const char *dir, const char *name)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
+    static char lc_host[SQUIDHOSTNAMELEN];
     assert(host && port && name);
+    xstrncpy(lc_host, host, SQUIDHOSTNAMELEN);
+    Tolower(lc_host);
     if (!dir || !*dir)
-	snprintf(buf, MAX_URL, "http://%s:%d/squid-internal/%s", host, port, name);
+	snprintf(buf, MAX_URL, "http://%s:%d/squid-internal/%s", lc_host, port, name);
     else
-	snprintf(buf, MAX_URL, "http://%s:%d/squid-internal/%s/%s", host, port, dir, name);
+	snprintf(buf, MAX_URL, "http://%s:%d/squid-internal/%s/%s", lc_host, port, dir, name);
     return buf;
 }
 
@@ -386,10 +389,7 @@ urlRInternal(const char *host, int port, const char *dir, const char *name)
 char *
 urlInternal(const char *dir, const char *name)
 {
-    static char host[SQUIDHOSTNAMELEN];
-    xstrncpy(host, getMyHostname(), SQUIDHOSTNAMELEN);
-    Tolower(host);
-    return urlRInternal(host, Config.Port.http->i, dir, name);
+    return urlRInternal(getMyHostname(), Config.Port.http->i, dir, name);
 }
 
 request_t *

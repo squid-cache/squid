@@ -829,7 +829,7 @@ extern method_t urlParseMethod(const char *);
 extern void urlInitialize(void);
 extern request_t *urlParse(method_t, char *);
 extern char *urlCanonical(const request_t *, char *);
-extern char *urlRInternal(const char *host, int port, const char *dir, const char *name);
+extern char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
 extern char *urlInternal(const char *dir, const char *name);
 extern request_t *requestLink(request_t *);
 extern void requestUnlink(request_t *);
