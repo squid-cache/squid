@@ -700,7 +700,7 @@ fi
 
 
 
-# From configure.in Revision
+# From configure.in Revision: 1.225 
 ac_aux_dir=
 for ac_dir in cfgaux $srcdir/cfgaux; do
   if test -f $ac_dir/install-sh; then
@@ -5785,12 +5785,12 @@ EOF
 		;;
 esac
 
-# Remove optimization for GCC 2.95.[12]
+# Remove optimization for GCC 2.95.[123]
 # gcc -O[2] on *BSD and Linux (x86) causes pointers to magically become NULL
 if test "$GCC" = "yes"; then
 	GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
 	case "$GCCVER" in
-	2.95.[12])
+	2.95.[123])
 		echo "Removing -O for gcc on $host with GCC $GCCVER"
 		CFLAGS="`echo $CFLAGS | sed -e 's/-O[0-9]*//'`"
 		;;
