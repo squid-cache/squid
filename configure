@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.33 
+# From configure.in Revision: 1.34 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -2164,8 +2164,8 @@ for ac_func in \
 	getdtablesize \
 	getrusage \
 	lrand48 \
-	mallocblksize \
 	mallinfo \
+	mallocblksize \
 	mallopt \
 	memmove \
 	mktime \
@@ -2181,6 +2181,7 @@ for ac_func in \
 	sigaction \
 	srand48 \
 	strdup \
+	strerror \
 	sysconf \
 	syslog \
 	tempnam \
@@ -2192,7 +2193,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2196 "configure"
+#line 2197 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -2242,7 +2243,7 @@ if test "$cross_compiling" = yes; then
   SQUID_FD_SETSIZE=256
 else
 cat > conftest.$ac_ext <<EOF
-#line 2246 "configure"
+#line 2247 "configure"
 #include "confdefs.h"
 
 #include <unistd.h>
@@ -2312,7 +2313,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2316 "configure"
+#line 2317 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2348,7 +2349,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2352 "configure"
+#line 2353 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2384,7 +2385,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2388 "configure"
+#line 2389 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2420,7 +2421,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2424 "configure"
+#line 2425 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2453,7 +2454,7 @@ EOF
 
 echo $ac_n "checking if sys_errlist is already defined""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2457 "configure"
+#line 2458 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 int main() { return 0; }
@@ -2477,7 +2478,7 @@ rm -f conftest*
 
 echo $ac_n "checking for libresolv _dns_ttl_ hack""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2481 "configure"
+#line 2482 "configure"
 #include "confdefs.h"
 extern int _dns_ttl_;
 int main() { return 0; }
