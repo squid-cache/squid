@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.5 1996/03/22 06:38:28 wessels Exp $ */
+/* $Id: http.cc,v 1.6 1996/03/23 00:03:02 wessels Exp $ */
 
 #include "config.h"
 #include <sys/errno.h>
@@ -16,6 +16,7 @@
 #include "ttl.h"
 #include "icp.h"
 #include "util.h"
+#include "cached_error.h"
 
 #define HTTP_PORT         80
 #define HTTP_DELETE_GAP   (64*1024)
@@ -107,33 +108,15 @@ void httpReadReplyTimeout(fd, data)
 
     entry = data->entry;
     debug(4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
-    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	entry->url,
-	entry->url,
-	"HTTP",
-	103,
-	"Read timeout",
-	"The Network/Remote site may be down.  Try again later.",
-	SQUID_VERSION,
-	comm_hostname());
-
+    cached_error(entry, ERR_READ_TIMEOUT);
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
     if (data->icp_page_ptr) {
 	put_free_8k_page(data->icp_page_ptr);
 	data->icp_page_ptr = NULL;
     }
-    storeAbort(entry, tmp_error_buf);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
     comm_close(fd);
-#ifdef LOG_ERRORS
-    CacheInfo->log_append(CacheInfo,
-	entry->url,
-	"0.0.0.0",
-	entry->mem_obj->e_current_len,
-	"ERR_103",		/* HTTP READ TIMEOUT */
-	data->type ? data->type : "NULL");
-#endif
     safe_free(data);
 }
 
@@ -147,33 +130,15 @@ void httpLifetimeExpire(fd, data)
     entry = data->entry;
     debug(4, "httpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
 
-    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	entry->url,
-	entry->url,
-	"HTTP",
-	110,
-	"Transaction Timeout",
-	"The Network/Remote site may be down or too slow.  Try again later.",
-	SQUID_VERSION,
-	comm_hostname());
-
+    cached_error(entry, ERR_LIFETIME_EXP);
     if (data->icp_page_ptr) {
 	put_free_8k_page(data->icp_page_ptr);
 	data->icp_page_ptr = NULL;
     }
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
-    storeAbort(entry, tmp_error_buf);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
     comm_close(fd);
-#ifdef LOG_ERRORS
-    CacheInfo->log_append(CacheInfo,
-	entry->url,
-	"0.0.0.0",
-	entry->mem_obj->e_current_len,
-	"ERR_110",		/* HTTP LIFETIME EXPIRE */
-	data->type ? data->type : "NULL");
-#endif
     safe_free(data);
 }
 
@@ -228,25 +193,8 @@ void httpReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-		entry->url,
-		entry->url,
-		"HTTP",
-		119,
-		"No Client",
-		"All Clients went away before tranmission is complete and object is too big to cache.",
-		SQUID_VERSION,
-		comm_hostname());
-	    storeAbort(entry, tmp_error_buf);
+	    cached_error(entry, ERR_NO_CLIENTS_BIG_OBJ);
 	    comm_close(fd);
-#ifdef LOG_ERRORS
-	    CacheInfo->log_append(CacheInfo,
-		entry->url,
-		"0.0.0.0",
-		entry->mem_obj->e_current_len,
-		"ERR_119",	/* HTTP NO CLIENTS, BIG OBJ */
-		data->type ? data->type : "NULL");
-#endif
 	    safe_free(data);
 	    return;
 	}
@@ -267,26 +215,9 @@ void httpReadReply(fd, data)
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
 	    storeComplete(entry);
 	} else {
-	    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-		entry->url,
-		entry->url,
-		"HTTP",
-		105,
-		"Read error",
-		"Network/Remote site is down.  Try again later.",
-		SQUID_VERSION,
-		comm_hostname());
-	    storeAbort(entry, tmp_error_buf);
+	    cached_error(entry, ERR_READ_ERROR);
 	}
 	comm_close(fd);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_105",		/* HTTP READ ERROR */
-	    data->type ? data->type : "NULL");
-#endif
 	safe_free(data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -309,25 +240,8 @@ void httpReadReply(fd, data)
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "HTTP",
-	    107,
-	    "Client Aborted",
-	    "Client(s) dropped connection before transmission is complete.\nObject fetching is aborted.\n",
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
+	cached_error(entry, ERR_CLIENT_ABORT);
 	comm_close(fd);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_107",		/* HTTP CLIENT ABORT */
-	    data->type ? data->type : "NULL");
-#endif
 	safe_free(data);
     } else {
 	storeAppend(entry, buf, len);
@@ -361,25 +275,8 @@ void httpSendComplete(fd, buf, size, errflag, data)
     data->icp_rwd_ptr = NULL;	/* Don't double free in lifetimeexpire */
 
     if (errflag) {
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "HTTP",
-	    101,
-	    "Cannot connect to the original site",
-	    "The remote site may be down.",
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
+	cached_error(entry, ERR_CONNECT_FAIL);
 	comm_close(fd);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_101",		/* HTTP CONNECT FAIL */
-	    data->type ? data->type : "NULL");
-#endif
 	safe_free(data);
 	return;
     } else {
@@ -485,24 +382,7 @@ void httpConnInProgress(fd, data)
 	    break;		/* cool, we're connected */
 	default:
 	    comm_close(fd);
-	    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-		entry->url,
-		entry->url,
-		"HTTP",
-		104,
-		"Cannot connect to the original site",
-		"The remote site may be down.",
-		SQUID_VERSION,
-		comm_hostname());
-	    storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	    CacheInfo->log_append(CacheInfo,
-		entry->url,
-		"0.0.0.0",
-		entry->mem_obj->e_current_len,
-		"ERR_104",	/* HTTP CONNECT FAIL */
-		data->type ? data->type : "NULL");
-#endif
+	    cached_error(entry, ERR_CONNECT_FAIL);
 	    safe_free(data);
 	    return;
 	}
@@ -541,24 +421,7 @@ int proxyhttpStart(e, url, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(4, "proxyhttpStart: Failed because we're out of sockets.\n");
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "HTTP",
-	    111,
-	    "Cached short of file-descriptors, sorry",
-	    "",
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_111",		/* HTTP NO FD'S */
-	    data->type ? data->type : "NULL");
-#endif
+	cached_error(entry, ERR_NO_FDS);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -568,24 +431,7 @@ int proxyhttpStart(e, url, entry)
     if (!ipcache_gethostbyname(data->host)) {
 	debug(4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	comm_close(sock);
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "HTTP",
-	    102,
-	    "DNS name lookup failure",
-	    dns_error_message,
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_102",		/* HTTP DNS FAIL */
-	    data->type ? data->type : "NULL");
-#endif
+	cached_error(entry, ERR_DNS_FAIL, dns_error_message);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -593,24 +439,7 @@ int proxyhttpStart(e, url, entry)
     if ((status = comm_connect(sock, data->host, data->port))) {
 	if (status != EINPROGRESS) {
 	    comm_close(sock);
-	    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-		entry->url,
-		entry->url,
-		"HTTP",
-		104,
-		"Cannot connect to the original site",
-		"The remote site may be down.",
-		SQUID_VERSION,
-		comm_hostname());
-	    storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	    CacheInfo->log_append(CacheInfo,
-		entry->url,
-		"0.0.0.0",
-		entry->mem_obj->e_current_len,
-		"ERR_104",	/* HTTP CONNECT FAIL */
-		data->type ? data->type : "NULL");
-#endif
+	    cached_error(entry, ERR_CONNECT_FAIL);
 	    safe_free(data);
 	    e->last_fail_time = cached_curtime;
 	    e->neighbor_up = 0;
@@ -655,24 +484,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 
     /* Parse url. */
     if (http_url_parser(url, data->host, &data->port, data->request)) {
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "HTTP",
-	    110,
-	    "Invalid URL syntax:  Cannot parse.",
-	    "Contact your system administrator for further help.",
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_110",		/* HTTP INVALID URL */
-	    data->type ? data->type : "NULL");
-#endif
+	cached_error(entry, ERR_INVALID_URL);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -680,24 +492,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(4, "httpStart: Failed because we're out of sockets.\n");
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "HTTP",
-	    111,
-	    "Cached short of file-descriptors, sorry",
-	    "",
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_111",		/* HTTP NO FD'S */
-	    data->type ? data->type : "NULL");
-#endif
+	cached_error(entry, ERR_NO_FDS);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -707,24 +502,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
     if (!ipcache_gethostbyname(data->host)) {
 	debug(4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	comm_close(sock);
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "HTTP",
-	    108,
-	    "DNS name lookup failure",
-	    dns_error_message,
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_108",		/* HTTP DNS FAIL */
-	    data->type ? data->type : "NULL");
-#endif
+	cached_error(entry, ERR_DNS_FAIL, dns_error_message);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -732,24 +510,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
     if ((status = comm_connect(sock, data->host, data->port))) {
 	if (status != EINPROGRESS) {
 	    comm_close(sock);
-	    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-		entry->url,
-		entry->url,
-		"HTTP",
-		109,
-		"Cannot connect to the original site",
-		"The remote site may be down.",
-		SQUID_VERSION,
-		comm_hostname());
-	    storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	    CacheInfo->log_append(CacheInfo,
-		entry->url,
-		"0.0.0.0",
-		entry->mem_obj->e_current_len,
-		"ERR_109",	/* HTTP CONNECT FAIL */
-		data->type ? data->type : "NULL");
-#endif
+	    cached_error(entry, ERR_CONNECT_FAIL);
 	    safe_free(data);
 	    return COMM_ERROR;
 	} else {

@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.5 1996/03/22 06:38:29 wessels Exp $ */
+/* $Id: wais.cc,v 1.6 1996/03/23 00:03:05 wessels Exp $ */
 
 #include "config.h"
 #if USE_WAIS_RELAY
@@ -15,6 +15,7 @@
 #include "ipcache.h"
 #include "cache_cf.h"
 #include "util.h"
+#include "cached_error.h"
 
 #define  WAIS_DELETE_GAP  (64*1024)
 
@@ -54,26 +55,9 @@ void waisReadReplyTimeout(fd, data)
 
     entry = data->entry;
     debug(4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
-    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	entry->url,
-	entry->url,
-	"WAIS",
-	403,
-	"Read timeout",
-	"The Network/Remote site may be down.  Try again later.",
-	SQUID_VERSION,
-	comm_hostname());
-    storeAbort(entry, tmp_error_buf);
+    cached_error(entry, ERR_READ_TIMEOUT);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
     comm_close(fd);
-#ifdef LOG_ERRORS
-    CacheInfo->log_append(CacheInfo,
-	entry->url,
-	"0.0.0.0",
-	entry->mem_obj->e_current_len,
-	"ERR_403",		/* WAIS READ TIMEOUT */
-	"GET");
-#endif
     safe_free(data);
 }
 
@@ -86,26 +70,9 @@ void waisLifetimeExpire(fd, data)
 
     entry = data->entry;
     debug(4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
-    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	entry->url,
-	entry->url,
-	"WAIS",
-	410,
-	"Transaction Timeout",
-	"The Network/Remote site may be down or too slow.  Try again later.",
-	SQUID_VERSION,
-	comm_hostname());
-    storeAbort(entry, tmp_error_buf);
+    cached_error(entry, ERR_LIFETIME_EXP);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
     comm_close(fd);
-#ifdef LOG_ERRORS
-    CacheInfo->log_append(CacheInfo,
-	entry->url,
-	"0.0.0.0",
-	entry->mem_obj->e_current_len,
-	"ERR_410",		/* WAIS LIFETIME EXPIRE */
-	"GET");
-#endif
     safe_free(data);
 }
 
@@ -141,25 +108,8 @@ void waisReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-		entry->url,
-		entry->url,
-		"WAIS",
-		419,
-		"No Client",
-		"All Clients went away before tranmission is complete and object is too big to cache.",
-		SQUID_VERSION,
-		comm_hostname());
-	    storeAbort(entry, tmp_error_buf);
+	    cached_error(entry, ERR_NO_CLIENTS_BIG_OBJ);
 	    comm_close(fd);
-#ifdef LOG_ERRORS
-	    CacheInfo->log_append(CacheInfo,
-		entry->url,
-		"0.0.0.0",
-		entry->mem_obj->e_current_len,
-		"ERR_419",	/* WAIS NO CLIENTS, BIG OBJECT */
-		"GET");
-#endif
 	    safe_free(data);
 	    return;
 	}
@@ -179,26 +129,9 @@ void waisReadReply(fd, data)
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
 	    storeComplete(entry);
 	} else {
-	    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-		entry->url,
-		entry->url,
-		"WAIS",
-		405,
-		"Read error",
-		"Network/Remote site is down.  Try again later.",
-		SQUID_VERSION,
-		comm_hostname());
-	    storeAbort(entry, tmp_error_buf);
+	    cached_error(entry, ERR_READ_ERROR);
 	}
 	comm_close(fd);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_405",		/* WAIS READ ERROR */
-	    "GET");
-#endif
 	safe_free(data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -238,25 +171,8 @@ void waisSendComplete(fd, buf, size, errflag, data)
     debug(5, "waisSendComplete - fd: %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "WAIS",
-	    401,
-	    "Cannot connect to the original site",
-	    "The remote site may be down.",
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
+	cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_401",		/* WAIS CONNECT FAILURE */
-	    "GET");
-#endif
 	safe_free(data);
     } else {
 	/* Schedule read reply. */
@@ -314,25 +230,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 
     if (!getWaisRelayHost()) {
 	debug(0, "waisStart: Failed because no relay host defined!\n");
-	sprintf(tmp_error_buf,
-	    CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "WAIS",
-	    412,
-	    "Configuration error.  No WAIS relay host is defined.",
-	    "",
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_412",		/* WAIS NO RELAY */
-	    "GET");
-#endif
+	cached_error(entry, ERR_NO_RELAY);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -345,24 +243,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(4, "waisStart: Failed because we're out of sockets.\n");
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "WAIS",
-	    411,
-	    "Cached short of file-descriptors, sorry",
-	    "",
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_411",		/* WAIS NO FD'S */
-	    "GET");
-#endif
+	cached_error(entry, ERR_NO_FDS);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -372,24 +253,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     if (!ipcache_gethostbyname(data->host)) {
 	debug(4, "waisstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	comm_close(sock);
-	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-	    entry->url,
-	    entry->url,
-	    "WAIS",
-	    402,
-	    "DNS name lookup failure",
-	    dns_error_message,
-	    SQUID_VERSION,
-	    comm_hostname());
-	storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	CacheInfo->log_append(CacheInfo,
-	    entry->url,
-	    "0.0.0.0",
-	    entry->mem_obj->e_current_len,
-	    "ERR_402",		/* WAIS DNS FAILURE */
-	    "GET");
-#endif
+	cached_error(entry, ERR_DNS_FAIL, dns_error_message);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -397,24 +261,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     if ((status = comm_connect(sock, data->host, data->port))) {
 	if (status != EINPROGRESS) {
 	    comm_close(sock);
-	    sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
-		entry->url,
-		entry->url,
-		"WAIS",
-		401,
-		"Cannot connect to the original site",
-		"The remote site may be down.",
-		SQUID_VERSION,
-		comm_hostname());
-	    storeAbort(entry, tmp_error_buf);
-#ifdef LOG_ERRORS
-	    CacheInfo->log_append(CacheInfo,
-		entry->url,
-		"0.0.0.0",
-		entry->mem_obj->e_current_len,
-		"ERR_401",	/* WAIS CONNECT FAIL */
-		"GET");
-#endif
+	    cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
 	    safe_free(data);
 	    return COMM_ERROR;
 	} else {
