@@ -1,4 +1,4 @@
-#ident "$Id: acl.cc,v 1.1 1996/04/11 02:40:30 wessels Exp $"
+#ident "$Id: acl.cc,v 1.2 1996/04/11 03:09:13 wessels Exp $"
 
 #include "squid.h"
 
@@ -28,13 +28,13 @@ static acl_t aclType(s)
 }
 
 struct _acl *aclFindByName(name)
-	char *name;
+     char *name;
 {
-	struct _acl *a;
-	for (a = AclList; a; a=a->next)
-		if (!strcasecmp(a->name, name))
-			return a;
-	return NULL;
+    struct _acl *a;
+    for (a = AclList; a; a = a->next)
+	if (!strcasecmp(a->name, name))
+	    return a;
+    return NULL;
 }
 
 
@@ -62,8 +62,8 @@ intlist *aclParseProtoList()
     while ((t = strtok(NULL, w_space))) {
 	q = (intlist *) xcalloc(1, sizeof(intlist));
 	q->i = proto_url_to_id(t);
-        *(Tail) = q;
-        Tail = &q->next;
+	*(Tail) = q;
+	Tail = &q->next;
     }
     return head;
 }
@@ -119,8 +119,8 @@ struct _acl_ip_data *aclParseIpList()
 	}
 	q->addr1.s_addr = htonl(a1 * 0x1000000 + a2 * 0x10000 + a3 * 0x100 + a4);
 	q->mask1.s_addr = lmask.s_addr;
-        *(Tail) = q;
-        Tail = &q->next;
+	*(Tail) = q;
+	Tail = &q->next;
     }
     return head;
 }
@@ -136,11 +136,18 @@ struct _relist *aclParseRegexList()
     relist **Tail = &head;
     relist *q = NULL;
     char *t = NULL;
+    regex_t comp;
     while ((t = strtok(NULL, w_space))) {
+	if (regcomp(&comp, t, REG_EXTENDED) != REG_NOERROR) {
+	    debug(28, 0, "aclParseRegexList: Invalid regular expression: %s\n",
+		t);
+	    continue;
+	}
 	q = (relist *) xcalloc(1, sizeof(relist));
-	q->compiled_pattern = re_comp
-        *(Tail) = q;
-        Tail = &q->next;
+	q->pattern = xstrdup(t);
+	q->regex = comp;
+	*(Tail) = q;
+	Tail = &q->next;
     }
     return head;
 }
@@ -154,8 +161,8 @@ wordlist *aclParseWordList()
     while ((t = strtok(NULL, w_space))) {
 	q = (wordlist *) xcalloc(1, sizeof(wordlist));
 	q->key = xstrdup(t);
-        *(Tail) = q;
-        Tail = &q->next;
+	*(Tail) = q;
+	Tail = &q->next;
     }
     return head;
 }
@@ -242,18 +249,18 @@ void aclParseAccessLine()
     /* next expect a list of ACL names, possibly preceeded
      * by '!' for negation */
     while ((t = strtok(NULL, w_space))) {
-	L = (struct _acl_list *) xcalloc (1, sizeof(struct _acl_list));
-	L->op = 1;	/* defaults to non-negated */
+	L = (struct _acl_list *) xcalloc(1, sizeof(struct _acl_list));
+	L->op = 1;		/* defaults to non-negated */
 	if (*t == '!') {
-		/* negated ACL */
-		L->op = 0;
-		t++;
+	    /* negated ACL */
+	    L->op = 0;
+	    t++;
 	}
 	a = aclFindByName(t);
 	if (a == NULL) {
-		debug(28, 1, "aclParseAccessLine: ACL name '%s' not found.\n", t);
-		xfree(L);
-		continue;
+	    debug(28, 1, "aclParseAccessLine: ACL name '%s' not found.\n", t);
+	    xfree(L);
+	    continue;
 	}
 	L->acl = a;
 	*Tail = L;
@@ -263,11 +270,80 @@ void aclParseAccessLine()
     AccessListTail = &A->next;
 }
 
-
-    if (regcomp(&comp, pattern, REG_EXTENDED) != REG_NOERROR) {
-	debug(22, 0, "ttlAddToList: Invalid regular expression: %s\n",
-	    pattern);
-	return;
+int aclMatchAcl(acl, c, pr, h, po, r)
+     struct _acl *acl;
+     in_addr c;
+     prototype_t pr;
+     char *h;
+     int po;
+     char *r;
+{
+    if (!acl)
+	return 0;
+    switch (acl->type) {
+    case ACL_SRC_IP:
+	return aclMatchIp(acl->data, c);
+	break;
+    case ACL_DST_DOMAIN:
+	return aclMatchWord(acl->data, h);
+	break;
+    case ACL_TIME:
+	debug(28, 0, "aclMatchAcl: ACL_TIME unimplemented\n");
+	return 0;
+	break;
+    case ACL_URL_REGEX:
+	return aclMatchRegex(acl->data, r);
+	break;
+    case ACL_URL_PORT:
+	return aclMatchInteger(acl->data, po);
+	break;
+    case ACL_USER:
+	debug(28, 0, "aclMatchAcl: ACL_USER unimplemented\n");
+	return 0;
+	break;
+    case ACL_PROTO:
+	return aclMatchInteger(acl->data, pr);
+	break;
+    case ACL_NONE:
+    default:
+	debug(28, 0, "aclMatchAcl: '%s' has bad type %d\n",
+	    acl->name, acl->type);
+	return 0;
     }
-    pct_age = pct_age < 0 ? 0 : pct_age > 100 ? 100 : pct_age;
-    age_max = age_max < 0 ? 0 : age_max;
+    fatal_dump("aclMatchAcl: This should never happen.");
+    return 0;
+}
+
+int aclMatchAclList(list, c, pr, h, po, r)
+     struct _acl_list *list;
+     in_addr c;
+     prototype_t pr;
+     char *h;
+     int po;
+     char *r;
+{
+    struct _acl *a = NULL;
+    while (list) {
+	if (aclMatchAcl(list->acl, c, pr, h, po, r) != list->op)
+		return 0;
+    }
+    return 1;
+}
+
+int aclCheck(cli_addr, proto, host, port, request)
+     in_addr cli_addr;
+     prototype_t proto;
+     char *host;
+     int port;
+     char *request;
+{
+    struct _acl_access *A = NULL;
+    int allow = 0;
+
+    for (A = AccessList; A; A = A->next) {
+	allow = A->allow;
+	if (aclMatchAclList(A->acl_list, cli_addr, proto, host, port, request))
+	    return allow;
+    }
+    return !allow;
+}
