@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.13 1998/07/22 20:36:45 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.14 1998/09/24 20:16:24 rousskov Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -173,6 +173,8 @@ static int
 httpHdrRangeSpecMergeWith(HttpHdrRangeSpec * recep, const HttpHdrRangeSpec * donor)
 {
     int merged = 0;
+#if MERGING_BREAKS_NOTHING
+    /* Note: this code works, but some clients may not like its effects */
     size_t rhs = recep->offset + recep->length;		/* no -1 ! */
     const size_t donor_rhs = donor->offset + donor->length;	/* no -1 ! */
     assert(known_spec(recep->offset));
@@ -198,6 +200,7 @@ httpHdrRangeSpecMergeWith(HttpHdrRangeSpec * recep, const HttpHdrRangeSpec * don
 	merged =
 	    recep->offset <= donor->offset && donor->offset < rhs;
     }
+#endif
     return merged;
 }
 
@@ -323,9 +326,10 @@ httpHdrRangeCanonize(HttpHdrRange * range, size_t clen)
     /* reset old array */
     stackClean(&range->specs);
     stackInit(&range->specs);
+    spec = NULL;
     /* merge specs:
-     * take one spec for "goods" and merge specs from "range->specs"
-     * with it until (no "range->specs" specs exist or no overlap) */
+     * take one spec from "goods" and merge it with specs from 
+     * "range->specs" (if any) until there is no overlap */
     for (i = 0; i < goods.count;) {
 	HttpHdrRangeSpec *prev_spec = stackTop(&range->specs);
 	spec = goods.items[i];
@@ -338,13 +342,16 @@ httpHdrRangeCanonize(HttpHdrRange * range, size_t clen)
 	    }
 	}
 	stackPush(&range->specs, spec);
+	spec = NULL;
 	i++;			/* progress */
     }
-    debug(64, 3) ("httpHdrRangeCanonize: merged %d specs\n",
-	goods.count - range->specs.count);
-    stackClean(&goods);
+    if (spec) /* last "merge" may not be pushed yet */
+	stackPush(&range->specs, spec);
+    debug(64, 3) ("httpHdrRangeCanonize: had %d specs, merged %d specs\n",
+	goods.count, goods.count - range->specs.count);
     debug(64, 3) ("httpHdrRangeCanonize: finished with %d specs\n",
 	range->specs.count);
+    stackClean(&goods);
     return range->specs.count > 0;
 }
 
@@ -362,6 +369,7 @@ httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangePos * pos)
 }
 
 /* hack: returns true if range specs are too "complex" for Squid to handle */
+/* requires that specs are "canonized" first! */
 int
 httpHdrRangeIsComplex(const HttpHdrRange * range)
 {
@@ -374,6 +382,29 @@ httpHdrRangeIsComplex(const HttpHdrRange * range)
 	if (spec->offset < offset)
 	    return 1;
 	offset = spec->offset + spec->length;
+    }
+    return 0;
+}
+
+/* hack: returns true if range specs may be too "complex" when "canonized" */
+/* see also: httpHdrRangeIsComplex */
+int
+httpHdrRangeWillBeComplex(const HttpHdrRange * range)
+{
+    HttpHdrRangePos pos = HttpHdrRangeInitPos;
+    const HttpHdrRangeSpec *spec;
+    size_t offset = 0;
+    assert(range);
+    /* check that all rangers are in "strong" order, */
+    /* as far as we can tell without the content length */
+    while ((spec = httpHdrRangeGetSpec(range, &pos))) {
+	if (!known_spec(spec->offset)) /* ignore unknowns */
+	    continue;
+	if (spec->offset < offset)
+	    return 1;
+	offset = spec->offset;
+	if (known_spec(spec->length))  /* avoid  unknowns */
+	    offset += spec->length;
     }
     return 0;
 }
