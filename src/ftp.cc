@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.206 1998/03/15 17:19:57 wessels Exp $
+ * $Id: ftp.cc,v 1.207 1998/03/16 18:21:41 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -818,7 +818,7 @@ ftpDataRead(int fd, void *data)
 	    assert(ftpState->data.offset == 0);
 	    storeAppend(entry, ftpState->data.buf, len);
 	}
-	if (ftpState->size && mem->inmem_hi >= ftpState->size + mem->reply->hdr_sz)
+	if (ftpState->size > 0 && mem->inmem_hi >= ftpState->size + mem->reply->hdr_sz)
 	    ftpReadComplete(ftpState);
 	else
 	    commSetSelect(fd,
