@@ -1,4 +1,4 @@
-/* $Id: errorpage.cc,v 1.20 1996/04/16 05:05:20 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.21 1996/05/01 22:36:28 wessels Exp $ */
 
 /* DEBUG: Section 4             errorpage: Error printing routines */
 
@@ -86,15 +86,9 @@ error_data ErrorData[] =
     {"ERR_DISK_IO",
 	"Cache Disk I/O Failure",
 	"The system disk is out of space or failing."},
-    {"ERR_URL_BLOCKED",
-	"Access Denied",
-	"You are not allowed to access this URL."},
     {"ERR_ZERO_SIZE_OBJECT",
 	"No Object Data",
-	"The remote server closed the connection before sending any data."},
-    {"ERR_MAX"
-	"",
-	""}
+	"The remote server closed the connection before sending any data."}
 };
 
 /* GLOBAL */
@@ -154,7 +148,7 @@ char *squid_error_url(url, method, type, address, code, msg)
     int index;
 
     *tmp_error_buf = '\0';
-    if (type == ERR_MIN || type > ERR_MAX)
+    if (type < ERR_MIN || type > ERR_MAX)
 	fatal_dump("squid_error_url: type out of range.");
     index = (int) (type - ERR_MIN);
     sprintf(tmp_error_buf, "HTTP/1.0 %d Cache Detected Error\r\nContent-type: text/html\r\n\r\n", code);
@@ -200,7 +194,7 @@ char *squid_error_request(request, type, address, code)
     int index;
 
     *tmp_error_buf = '\0';
-    if (type == ERR_MIN || type > ERR_MAX)
+    if (type < ERR_MIN || type > ERR_MAX)
 	fatal_dump("squid_error_url: type out of range.");
     index = (int) (type - ERR_MIN);
 

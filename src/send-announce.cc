@@ -1,4 +1,4 @@
-/* $Id: send-announce.cc,v 1.10 1996/04/16 16:35:30 wessels Exp $ */
+/* $Id: send-announce.cc,v 1.11 1996/05/01 22:36:36 wessels Exp $ */
 
 /*
  * DEBUG: Section 27          send-announce
@@ -20,21 +20,6 @@ void send_announce()
     int l;
     int n;
 
-    sndbuf[0] = '\0';
-
-    sprintf(tbuf, "cache_version SQUID/%s\n", version_string);
-    strcat(sndbuf, tbuf);
-    sprintf(tbuf, "Running on %s %d %d\n",
-	getMyHostname(),
-	getAsciiPortNum(),
-	getUdpPortNum());
-    strcat(sndbuf, tbuf);
-    sprintf(tbuf, "generated %d [%s]\n",
-	(int) squid_curtime,
-	mkhttpdlogtime(&squid_curtime));
-    strcat(sndbuf, tbuf);
-    l = strlen(sndbuf);
-
     host = getAnnounceHost();
     port = getAnnouncePort();
 
@@ -42,8 +27,25 @@ void send_announce()
 	debug(27, 1, "send_announce: Unknown host '%s'\n", host);
 	return;
     }
+    sndbuf[0] = '\0';
+    sprintf(tbuf, "cache_version SQUID/%s\n", version_string);
+    strcat(sndbuf, tbuf);
+    sprintf(tbuf, "Running on %s %d %d\n",
+	getMyHostname(),
+	getAsciiPortNum(),
+	getUdpPortNum());
+    strcat(sndbuf, tbuf);
+    if (getAdminEmail()) {
+	sprintf(tbuf, "cache_admin: %s\n", getAdminEmail());
+	strcat(sndbuf, tbuf);
+    }
+    sprintf(tbuf, "generated %d [%s]\n",
+	(int) squid_curtime,
+	mkhttpdlogtime(&squid_curtime));
+    strcat(sndbuf, tbuf);
+    l = strlen(sndbuf);
+
     if ((file = getAnnounceFile())) {
-	/* XXX could block */
 	fd = file_open(file, NULL, O_RDONLY);
 	if (fd > -1 && (n = read(fd, sndbuf + l, BUFSIZ - l - 1)) > 0) {
 	    l += n;

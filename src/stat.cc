@@ -1,13 +1,13 @@
-/* $Id: stat.cc,v 1.30 1996/04/18 20:28:55 wessels Exp $ */
+/* $Id: stat.cc,v 1.31 1996/05/01 22:36:38 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
  */
 
+
 #include "squid.h"
 
 #ifdef _SQUID_HPUX_
-#include <sys/syscall.h>
 #define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
 #define getpagesize( )   sysconf(_SC_PAGE_SIZE)
 #endif /* _SQUID_HPUX_ */
@@ -53,6 +53,7 @@ void stat_utilization_get(obj, sentry)
 
     storeAppendPrintf(sentry, "{\n");
 
+    strcpy(p->protoname, "TOTAL");
     p->object_count = 0;
     p->kb.max = 0;
     p->kb.min = 0;
@@ -383,25 +384,22 @@ void info_get(obj, sentry)
 
     /* -------------------------------------------------- */
 
-    sprintf(line, "{Connection information for %s:}\n", appname);
-    storeAppend(sentry, line, strlen(line));
-
-    sprintf(line, "{\tNumber of TCP connections:\t%lu}\n", ntcpconn);
-    storeAppend(sentry, line, strlen(line));
-
-    sprintf(line, "{\tNumber of UDP connections:\t%lu}\n", ndupconn);
-    storeAppend(sentry, line, strlen(line));
+    storeAppendPrintf(sentry, "{Connection information for %s:}\n",
+	appname);
+    storeAppendPrintf(sentry, "{\tNumber of TCP connections:\t%lu}\n",
+	ntcpconn);
+    storeAppendPrintf(sentry, "{\tNumber of UDP connections:\t%lu}\n",
+	nudpconn);
 
     {
 	float f;
 	f = squid_curtime - squid_starttime;
-	storeAppendPrintf(sentry, "{\tConnections per hour:\t%.1f}\n", f == 0.0 ? 0.0 :
-	    (nconn / (f / 3600)));
+	storeAppendPrintf(sentry, "{\tConnections per hour:\t%.1f}\n",
+		f == 0.0 ? 0.0 :
+	    ((ntcpconn + nudpconn) / (f / 3600)));
     }
 
     /* -------------------------------------------------- */
-
-
 
     storeAppendPrintf(sentry, "{Cache information for %s:}\n", appname);
 
@@ -874,8 +872,7 @@ void stat_init(object, logfilename)
     memcpy(obj->logfilename, logfilename, (int) (strlen(logfilename) + 1) % 256);
     obj->logfile_fd = file_open(obj->logfilename, NULL, O_RDWR | O_CREAT);
     if (obj->logfile_fd == DISK_ERROR) {
-	debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
-	obj->logfile_status = LOG_DISABLE;
+	debug(18, 0, "%s: %s\n", obj->logfilename, xstrerror());
 	fatal("Cannot open logfile.");
     }
     obj->logfile_access = file_write_lock(obj->logfile_fd);
@@ -888,7 +885,7 @@ void stat_init(object, logfilename)
     obj->proto_miss = proto_miss;
     obj->NotImplement = dummyhandler;
 
-    for (i = 0; i < PROTO_MAX; i++) {
+    for (i = 0; i <= PROTO_MAX; i++) {
 	switch (i) {
 	case PROTO_HTTP:
 	    strcpy(obj->proto_stat_data[i].protoname, "HTTP");
@@ -898,6 +895,9 @@ void stat_init(object, logfilename)
 	    break;
 	case PROTO_FTP:
 	    strcpy(obj->proto_stat_data[i].protoname, "FTP");
+	    break;
+	case PROTO_WAIS:
+	    strcpy(obj->proto_stat_data[i].protoname, "WAIS");
 	    break;
 	case PROTO_CACHEOBJ:
 	    strcpy(obj->proto_stat_data[i].protoname, "CACHE_OBJ");
@@ -934,7 +934,7 @@ char *stat_describe(entry)
     static char state[256];
 
     state[0] = '\0';
-    switch (entry->status) {
+    switch (entry->store_status) {
     case STORE_OK:
 	strncat(state, "STORE-OK", sizeof(state));
 	break;

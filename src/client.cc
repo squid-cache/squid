@@ -1,5 +1,5 @@
 
-/* $Id: client.cc,v 1.4 1996/03/27 01:45:56 wessels Exp $ */
+/* $Id: client.cc,v 1.5 1996/05/01 22:36:25 wessels Exp $ */
 
 #include "squid.h"
 
@@ -21,6 +21,7 @@ Options:\n\
     -s         Silent.  Do not print data to stdout.\n\
     -h host    Retrieve URL from cache on hostname.  Default is localhost.\n\
     -p port    Port number of cache.  Default is %d.\n\
+    -m method  Request method, default is GET\n\
 ", progname, CACHE_HTTP_PORT);
     exit(1);
 }
@@ -32,7 +33,9 @@ int main(argc, argv)
     int conn, c, len, bytesWritten;
     int port, to_stdout, reload;
     char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ], hostname[BUFSIZ];
+    char *method = "GET";
     extern char *optarg;
+    time_t ims = 0;
 
     /* set the defaults */
     strcpy(hostname, "localhost");
@@ -46,7 +49,7 @@ int main(argc, argv)
 	strcpy(url, argv[argc - 1]);
 	if (url[0] == '-')
 	    usage(argv[0]);
-	while ((c = getopt(argc, argv, "fsrnp:c:h:?")) != -1)
+	while ((c = getopt(argc, argv, "fsrnp:c:h:i:m:?")) != -1)
 	    switch (c) {
 	    case 'h':		/* host:arg */
 	    case 'c':		/* backward compat */
@@ -64,6 +67,12 @@ int main(argc, argv)
 		sscanf(optarg, "%d", &port);
 		if (port < 1)
 		    port = CACHE_HTTP_PORT;	/* default */
+		break;
+	    case 'i':		/* IMS */
+		ims = (time_t) atoi(optarg);
+		break;
+	    case 'm':
+		method = xstrdup(optarg);
 		break;
 	    case '?':		/* usage */
 	    default:
@@ -88,11 +97,19 @@ int main(argc, argv)
 	exit(1);
     }
     /* Build the HTTP request */
+    sprintf(msg, "%s %s HTTP/1.0\r\n", method, url);
     if (reload) {
-	sprintf(msg, "GET %s HTTP/1.0\r\nPragma: no-cache\r\nAccept: */*\r\n\r\n", url);
-    } else {
-	sprintf(msg, "GET %s HTTP/1.0\r\nAccept: */*\r\n\r\n", url);
+	sprintf(buf, "Pragma: no-cache\r\n");
+	strcat(msg, buf);
     }
+    sprintf(buf, "Accept: */*\r\n");
+    strcat(msg, buf);
+    if (ims) {
+	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&ims));
+	strcat(msg, buf);
+    }
+    sprintf(buf, "\r\n");
+    strcat(msg, buf);
 
     /* Send the HTTP request */
     bytesWritten = write(conn, msg, strlen(msg));

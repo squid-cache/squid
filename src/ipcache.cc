@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.26 1996/04/17 23:48:23 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.27 1996/05/01 22:36:33 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -106,7 +106,7 @@ int ipcache_create_dnsserver(command)
     int pid;
     struct sockaddr_un addr;
     static int n_dnsserver = 0;
-    char socketname[256];
+    char *socketname = NULL;
     int cfd;			/* socket for child (dnsserver) */
     int sfd;			/* socket for server (squid) */
     int fd;
@@ -119,13 +119,15 @@ int ipcache_create_dnsserver(command)
     fd_note(cfd, "socket to dnsserver");
     memset(&addr, '\0', sizeof(addr));
     addr.sun_family = AF_UNIX;
-    sprintf(socketname, "dns/dns%d.%d", (int) getpid(), n_dnsserver++);
+    socketname = tempnam(NULL, "dns");
+    /* sprintf(socketname, "dns/dns%d.%d", (int) getpid(), n_dnsserver++); */
     strcpy(addr.sun_path, socketname);
     debug(14, 4, "ipcache_create_dnsserver: path is %s\n", addr.sun_path);
 
     if (bind(cfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 	close(cfd);
 	debug(14, 0, "ipcache_create_dnsserver: bind: %s\n", xstrerror());
+	xfree(socketname);
 	return -1;
     }
     debug(14, 4, "ipcache_create_dnsserver: bind to local host.\n");
@@ -134,6 +136,7 @@ int ipcache_create_dnsserver(command)
     if ((pid = fork()) < 0) {
 	debug(14, 0, "ipcache_create_dnsserver: fork: %s\n", xstrerror());
 	close(cfd);
+	xfree(socketname);
 	return -1;
     }
     if (pid > 0) {		/* parent */
@@ -142,12 +145,14 @@ int ipcache_create_dnsserver(command)
 	/* open new socket for parent process */
 	if ((sfd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
 	    debug(14, 0, "ipcache_create_dnsserver: socket: %s\n", xstrerror());
+	    xfree(socketname);
 	    return -1;
 	}
 	fcntl(sfd, F_SETFD, 1);	/* set close-on-exec */
 	memset(&addr, '\0', sizeof(addr));
 	addr.sun_family = AF_UNIX;
 	strcpy(addr.sun_path, socketname);
+	xfree(socketname);
 	if (connect(sfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 	    close(sfd);
 	    debug(14, 0, "ipcache_create_dnsserver: connect: %s\n", xstrerror());
@@ -159,13 +164,17 @@ int ipcache_create_dnsserver(command)
     }
     /* child */
 
+    /* give up extra priviliges */
+    no_suid();
+
+    /* setup filedescriptors */
     dup2(cfd, 3);
     for (fd = getMaxFD(); fd > 3; fd--) {
 	(void) close(fd);
     }
 
     execlp(command, "(dnsserver)", "-p", socketname, NULL);
-    perror(command);
+    debug(14, 0, "ipcache_create_dnsserver: %s: %s\n", command, xstrerror());
     _exit(1);
     return (0);			/* NOTREACHED */
 }
@@ -1055,9 +1064,6 @@ void ipcacheOpenServers()
     int i;
     int dnssocket;
     static char fd_note_buf[FD_ASCII_NOTE_SZ];
-
-    if (mkdir("dns", 0755) < 0 && errno != EEXIST)
-	debug(14, 0, "ipcacheOpenServers: mkdir %s\n", xstrerror());
 
     /* start up companion process */
     safe_free(dns_child_table);

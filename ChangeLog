@@ -1,107 +1,122 @@
-Changes from version Harvest cached-1.4.pl3
+Changes to squid-1.0.beta1 (Apr 19, 1996) from Harvest cached-1.4.pl3:
 
-	- Added squid_error_*() functions for error handling instead
-	  of using CACHED_RETRIEVE_ERROR_MSG everywhere.
-	- Fixed discrepancy with setting "fd_note" for dnsservers.
-	- Fixed bug where cache process would "spin" on large objects
-	  being deferred.
 	- Added a "server mode" to ftpget.  Now the (much smaller)
 	  ftpget process forks for each FTP request.
-	- Removed the command line -d (debug) option.
-
-	# config file changes
+	- Added support for If-Modified-Since GET requests.
+	- Added support for SSL and https objects.
+	- Added background processing for rebuilding the disk store
+	  while serving requests.  Cache can now serve requests immediately.
+	- Added a 'reconfigure' feature activated by SIGHUP.  The config
+	  file is re-read and most changes will take effect.
+	- Added an internal flag for using private keys with ICP queries
+	  to neighbors.  If any neighbor returns a reqnum field of zero,
+	  then disable using private keys.  But still use private
+	  keys for things with bypass the ICP query step (such as POST
+	  and IMS-GET).
+	- Added a function to verify content-lengths.  Objects with
+	  mismatched (but non-zero) content lenghts will be ejected.
+	- Added clean shutdown mode.  On SIGTERM the incoming HTTP socket
+	  is closed.  Active clients are given a lifetime of 30 seconds
+	  (configurable).  Process exits when all sockets are closed.
+	- Added support for large POST objects.
+	- Added "store.log" which logs RELEASE/SWAPIN/SWAPOUT events.
+	- Added announce feature to squid; no longer external program.
+	  If enabled, a running cache will announce itself every 24 hrs.
+	- Added support for FTP URLs with non-default ports.
+	- Added new Access Control List scheme.
+	- Added Forwarded: header to proxy HTTP requests (HTTP/1.1 feature).
+	- Added weights neighbors.
+	- Added urlParse() which strips off default ports and 
+	  makes hostnames all lowercase.
 	- Added (section,level) debugging and 'debug_options' config line.
 	- Added 'pid_filename' to configuration file.
-	- Added 'visible_hostname' config option.
-
+	- Added 'visible_hostname' to configuration file.
+	- added 'ftp_user' to configuration file.
+	- added 'dns_positive_ttl' to configuration file.
+	- added 'dns_negative_ttl' to configuration file.
+	- Added 'shutdown_lifetime' to configuration file.
+	- Fixed bug where cache process would "spin" on large objects
+	  being deferred.
+	- Fixed byte order conversion bug on setting echo port.
 	- Changed meaning of command line -b (buffered logs) option.
 	  Now the default behaviour is unbuffered logs, use -b to make
 	  them buffered.
-	- Fixed byte order conversion bug on setting echo port.
-	- Removed all code and references to binary port.
 	- Changed WAIS code to always be fully compiled in.
-	- Added the notion of private and public keys.  Requests
-	  are now private until the reply headers have been read.
-	- Added support for If-Modified-Since GET requests.
-	- Added urlParse() which strips off default ports and 
-	  makes hostnames all lowercase.
-
-	- Fixed logging:  Now logging to "access.log" occurs when the
-	  client data structure gets destroyed. This should mean that
-	  every client connection results in a log entry. The
-	  ``TCP_DONE'' tag is no longer used. Instead ``TCP_MISS'' is
-	  logged with a valid size. ``TCP_MISS_TTL'' has been changed
-	  to ``TCP_EXPIRED.'' Because logging occurs when the client
-	  connection is closed all connections should have a valid
-	  size. Note we're only logging the client side. It might be
-	  useful to also log the server side to get really accurate
-	  numbers for the traffic comming into and out of the cache.
+	- Changed the storage manager to use the notion of private and
+	  public keys.  Requests are now private until the reply headers
+	  have been read.
+	- Changed access logging significantly.  Entries to "access.log"
+	  are written when the client connection closes.  Every connection
+	  is logged exactly once, always with a valid size.
 	- Changed access log format (non-common) to include request
 	  method and sub-second timestamps.
-	- removed special case for ECONNRESET (and warning message)
-	- Significant change to storage manager.  Now only add objects
-	  to the hash table if they are public.  This means some 
-	  StoreEntry's will be around with null keys.
-	- Had to add a flag for using private keys with ICP queries to
-	  neighbors.  If any neighbor returns a reqnum field of zero,
-	  then disable using private keys.  But still use private
-	  keys for things with bypass the ICP query step (such as
-	  POST and IMS-GET).
-	- eliminated dual logging to stderr/debug_log
-	- added 'ftp_user' to config
-	- added improved IP ACL routines; now handles netmasks.
-	- Added storeEntryValidLength().  Objects with invalid 
-	  content lengths will be ejected.
-	- Added clean shutdown mode.  On SIGTERM, close incoming and 
-	  dnsserver sockets.  When no sockets left in select loop
-	  return and exit.
-	- Added support for shttp and CONNECT urls.
-	- Added support for large POST objects.
-	- Started arranging for HUP to re-read config file.
-	- Created struct _http_reply to hold reply fields.
-	  Elmininates need for storeMatchMime() in ttl.c.
-	- fixed use of storeSetPublicKey() in ftp/gopher/wais.  Now
-	  call at end of *SendRequest().
-	- Fixed converting gopher to HTML bug, removed html_request
-	  field of gopherData;
-	- Open server sockets _after_ storeRebuild() so many incoming
-	  connections don't stack up on the listen queue.
-	- Created "store.log" which logs RELEASE/SWAPIN/SWAPOUT events.
-	- Added announce to squid; no longer external program.
-	- Added ftpProcessReplyHeader() (a twin of the one in http.c).
-	- Fixed bad free() in ipcacheShtudownServers()
-	- Cleaned up FTP url parsing; support port.
-	- SIGHUP reconfigures the cache
-	- SIGUSR1 rotates logfiles.
-	- New ACLs
-	- added dns_positive_ttl
-	- Added Forwarded: header to proxy HTTP requests
-	- Fixed reqnum bug (was using ntohs instead of ntohl).
-	- Fixed double free() bug caused by setting flag=0 in
-	  storeAddFromDisk().
-	- Fixed memory leaks.
-	- Check specifically for tm_gmtoff and set HAVE_TM_GMTOFF
-	- Fixed memory problem for colon but no port ("http://foo.com:/")
-	- Added support for weighted neighbors.
-	- fixed SSL/CONNECT
-	- Added background processing for rebuilding store
-	- Removed check for "\r\n" in icpRead, use 'immed' flag instead
-	- Invented request_t struct and urlParse to avoid sscanf'ing
-	  the URL string too often.
-
-alpha19
-	- Fixed problem with free()'ing config_file.
-	- use negative TTL value as UDP_HIT threshold so we never return
-	  HIT on neg-cache objects
-	- Fixed swaplog lock bug
-	- change ftpget to use select(2) on I/O for timeouts.  ftpget
+	- Changed handing of ECONNRESET (connection reset) errors.
+	  Now treated like any other read error.
+	- Changed 'rotate logs' to be activated by SIGUSR1.
+	- Changed configure script to look specifically for tm_gmtoff
+	  and set HAVE_TM_GMTOFF.
+	- Changed configure script to look specifically extended mallinfo
+	  structure and set HAVE_EXT_MALLINFO
+	- Changed ICP reply code to use negative TTL value as UDP_HIT
+	  threshold so we never return a HIT on neg-cached objects.
+	- Changed ftpget to use select(2) on I/O for timeouts.  ftpget
 	  now exits immediately if stdin goes away.
-	- note # connections in shutdown message
-	- Added close handler to be called from comm_close().  Now
-	  all the *CloseAndFree() calls have been changed back to
-	  comm_close() which calls *StateFree, etc.
-	- Fixed comm_select to actually get to select() during background
-	  processing.
-	- Fixed rebuild bug which unlinked swap files of already-in-use
-	  file numbers.
-	- Added configurable shutdown lifetime (30 sec default)
+	- Changed handling of '-z' option.  Now only execute 'rm -rf ...' if
+	  -U option also given.
+	- Removed the command line -d (debug) option.  Use 'debug_options'
+	  in config file.
+	- Removed all code and references to binary port.
+	- Removed dual logging to stderr/cache.log.
+	- Removed old IP access controls ('proxy_allow', etc.)
+
+Changes to 1.0.beta2:
+
+	- Fixed /bin/csh "$#argv" leftover in RunCache.
+	- Fixed ACL day-of-week bitmask bug.
+	- Fixed missing checks for WAIS in some places.
+	- Fixed chdir(swappath(0)) bug; do chdir() after storeInit().
+	- Changed enumerated structure members to be defined outside
+	  of the structure itself (for AIX).
+	- Changed ftpget to fork before reading the request and make
+	  sure the entire request is read.
+
+Changes to 1.0.beta3:
+
+	- Added ftpget '-C minport:maxport' option
+	- Fixed PROTO_MAX fencepost bug in stat_init().
+	- Fixed Fixed CheckQuickAbort() coredump.
+	- Fixed disabling store.log and hierarchy.log when set to "none"
+	- Fixed numerous problems related to setuid().
+	- Fixed 'check_cache.pl' to use new swaplog format (without "FILE").
+	- Fixed ACL coredumps when checking NULL words.
+	- Changed pid_filename to be written and unlinked as root.
+	- Added "-i seconds" option to 'client' for testing IMS GET.
+	- Fixed a bug where an IMS request caused the valid object to
+	  get ejected from the cache.
+	- Fixed continual DEAD_PARENT/REVIVE bug
+	- Fixed ERR_INVALID_URL bug for URLs with a password field.
+	- Added to Release-Notes info about converting 'cache/log' and
+	  difference between stoplists and ttl_pattern.
+
+Changes to squid-1.0.beta4:
+
+	- Added a handler to restart the ftpget server.
+	- Fixed access checks for ICP by parsing the requested URL.
+	- Added "magic marker" to ftpget-generated errors so they can
+	  be negative-cached.
+	- Added a small run-time check to configure to see if signal
+	  handlers should be restarted after invocation (ala SYSV).
+	- Determine Maximum filedescriptors in configure and change
+	  FD_SETSIZE if needed.
+	- Changed read stall algorithm for HTTP.  No don't wait until
+	  the object is in DELETE_BEHIND mode to stall the server read
+	  and wait for the client to catch up.  Also changed from 4k to
+	  16k read buffer.
+	- Fixed HTTP request parsing to check for blank line at the
+	  end of all requests.  Symptoms were "connection reset"
+	  messages.
+
+Changes to squid-1.0.beta5:
+
+	- Fixed cachemgr to send 'HTTP/1.0' on request so it works
+	  with beta4 fixes to icp.c.

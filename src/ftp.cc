@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.37 1996/04/17 18:06:24 wessels Exp $ */
+/* $Id: ftp.cc,v 1.38 1996/05/01 22:36:29 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -11,8 +11,10 @@
 #define MAGIC_MARKER    "\004\004\004"	/* No doubt this should be more configurable */
 #define MAGIC_MARKER_SZ 3
 
-static char *ftpASCII = "A";
-static char *ftpBinary = "I";
+static char ftpASCII[] = "A";
+static char ftpBinary[] = "I";
+static char localhost[] = "127.0.0.1";
+static int ftpget_server_pipe = -1;
 
 typedef struct _Ftpdata {
     StoreEntry *entry;
@@ -252,14 +254,14 @@ static void ftpProcessReplyHeader(data, buf, size)
 	case 410:		/* Gone */
 	    /* These can be cached for a long time, make the key public */
 	    entry->expires = squid_curtime + ttlSet(entry);
-	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
+	    if (BIT_TEST(entry->flag, CACHABLE))
 		storeSetPublicKey(entry);
 	    break;
+	case 304:		/* Not Modified */
 	case 401:		/* Unauthorized */
 	case 407:		/* Proxy Authentication Required */
 	    /* These should never be cached at all */
-	    if (BIT_TEST(entry->flag, ENTRY_PRIVATE))
-		storeSetPrivateKey(entry);
+	    storeSetPrivateKey(entry);
 	    storeExpireNow(entry);
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
@@ -267,7 +269,7 @@ static void ftpProcessReplyHeader(data, buf, size)
 	default:
 	    /* These can be negative cached, make key public */
 	    entry->expires = squid_curtime + getNegativeTTL();
-	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
+	    if (BIT_TEST(entry->flag, CACHABLE))
 		storeSetPublicKey(entry);
 	    break;
 	}
@@ -506,14 +508,14 @@ void ftpSendRequest(fd, data)
     strcat(buf, "- ");		/* stdout */
     strcat(buf, data->host);
     strcat(buf, space);
-    strcat(buf, path);
+    strcat(buf, *path ? path : "\"\"");
     strcat(buf, space);
     strcat(buf, mode);		/* A or I */
     strcat(buf, space);
-    strcat(buf, data->user);
+    strcat(buf, *data->user ? data->user : "\"\"");
     strcat(buf, space);
-    strcat(buf, data->password);
-    strcat(buf, space);
+    strcat(buf, *data->password ? data->password : "\"\"");
+    strcat(buf, "\n");
     debug(9, 5, "ftpSendRequest: FD %d: buf '%s'\n", fd, buf);
     data->icp_rwd_ptr = icpWrite(fd,
 	buf,
@@ -521,8 +523,6 @@ void ftpSendRequest(fd, data)
 	30,
 	ftpSendComplete,
 	(void *) data);
-    if (!BIT_TEST(data->entry->flag, ENTRY_PRIVATE))
-	storeSetPublicKey(data->entry);		/* Make it public */
 }
 
 void ftpConnInProgress(fd, data)
@@ -533,7 +533,7 @@ void ftpConnInProgress(fd, data)
 
     debug(9, 5, "ftpConnInProgress: FD %d\n", fd);
 
-    if (comm_connect(fd, "localhost", CACHE_FTP_PORT) != COMM_OK)
+    if (comm_connect(fd, localhost, CACHE_FTP_PORT) != COMM_OK)
 	switch (errno) {
 	case EINPROGRESS:
 	case EALREADY:
@@ -596,7 +596,7 @@ int ftpStart(unusedfd, url, entry)
 	(void *) data);
 
     /* Now connect ... */
-    if ((status = comm_connect(data->ftp_fd, "localhost", CACHE_FTP_PORT))) {
+    if ((status = comm_connect(data->ftp_fd, localhost, CACHE_FTP_PORT))) {
 	if (status != EINPROGRESS) {
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    comm_close(data->ftp_fd);
@@ -629,6 +629,37 @@ int ftpStart(unusedfd, url, entry)
     return COMM_OK;
 }
 
+static void ftpServerClosed(fd, nodata)
+     int fd;
+     void *nodata;
+{
+    static time_t last_restart = 0;
+    comm_close(fd);
+    if (squid_curtime - last_restart < 2) {
+	debug(9, 0, "ftpget server failing too rapidly\n");
+	debug(9, 0, "WARNING: FTP access is disabled!\n");
+	return;
+    }
+    last_restart = squid_curtime;
+    debug(9, 1, "Restarting ftpget server...\n");
+    (void) ftpInitialize();
+}
+
+void ftpServerClose()
+{
+    if (ftpget_server_pipe < 0)
+	return;
+
+    comm_set_select_handler(ftpget_server_pipe,
+	COMM_SELECT_EXCEPT,
+	(PF) NULL,
+	(void *) NULL);
+    fdstat_close(ftpget_server_pipe);
+    close(ftpget_server_pipe);
+    ftpget_server_pipe = -1;
+}
+
+
 int ftpInitialize()
 {
     int pid;
@@ -650,9 +681,18 @@ int ftpInitialize()
 	fdstat_open(p[1], Pipe);
 	fd_note(p[1], "ftpget -S");
 	fcntl(p[1], F_SETFD, 1);	/* set close-on-exec */
+	/* if ftpget -S goes away, this handler should get called */
+	comm_set_select_handler(p[1],
+	    COMM_SELECT_EXCEPT,
+	    (PF) ftpServerClosed,
+	    (void *) NULL);
+	ftpget_server_pipe = p[1];
 	return 0;
     }
     /* child */
+    /* give up all extra priviligies */
+    no_suid();
+    /* set up stdin,stdout */
     dup2(p[0], 0);
     dup2(fileno(debug_log), 2);
     close(p[0]);

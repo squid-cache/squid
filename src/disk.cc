@@ -1,4 +1,4 @@
-/* $Id: disk.cc,v 1.11 1996/04/17 17:15:23 wessels Exp $ */
+/* $Id: disk.cc,v 1.12 1996/05/01 22:36:27 wessels Exp $ */
 
 /* DEBUG: Section 6             disk: disk I/O routines */
 
@@ -474,7 +474,9 @@ int diskHandleRead(fd, ctrl_dat)
 
     /* reschedule if need more data. */
     if (ctrl_dat->cur_len < ctrl_dat->req_len) {
-	comm_set_select_handler(fd, COMM_SELECT_READ, (PF) diskHandleRead,
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) diskHandleRead,
 	    (void *) ctrl_dat);
 	return DISK_OK;
     } else {
@@ -513,7 +515,9 @@ int file_read(fd, buf, req_len, offset, handler, client_data)
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = client_data;
 
-    comm_set_select_handler(fd, COMM_SELECT_READ, (PF) diskHandleRead,
+    comm_set_select_handler(fd,
+	COMM_SELECT_READ,
+	(PF) diskHandleRead,
 	(void *) ctrl_dat);
 
     return DISK_OK;

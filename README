@@ -1,25 +1,10 @@
-This is a special distribution that contains only the Harvest object
-cache.  The cache is an element of the Harvest Information Discovery and
-Access System, offering high performance proxy caching for Mosaic,
-Netscape, Lynx, and other World Wide Web clients.  It supports URLs via
-HTTP, FTP, and Gopher.
 
-The Harvest cache outperforms other popular Internet caches (such as the
-CERN cache) by a factor of 10-100, because the Harvest cache never
-forks, is implemented with non-blocking I/O, keeps meta data and
-especially hot objects cached in RAM, caches DNS lookups, supports
-non-blocking DNS lookups, and implements negative caching both of
-objects and of DNS lookups.  A technical paper discussing the Harvest
-cache and providing performance comparisions is available from
-ftp://ftp.cs.colorado.edu/pub/cs/techreports/schwartz/HarvestCache.ps.Z
+This is the Squid Internet Object Cache developed by the National
+Laboratory for Applied Networking Research (NLANR) and Internet
+volunteers.  This software is freely available for anyone to use.
+The Squid home page is http://www.nlanr.net/Squid/.
 
-The Harvest cache may also be run as an ``accelerator'' for HTTP servers, as
-described in http://harvest.cs.colorado.edu/harvest/httpd_accel.html
+This software is based on the Harvest Object Cache developed by
+the University of Colorado and the University of Southern California.
+The Harvest home page is http://harvest.cs.colorado.edu/.
 
-You can learn more about the overall Harvest system starting from the
-Harvest Home Page at http://harvest.cs.colorado.edu/
-
-Harvest documentation is on-line at
-http://harvest.cs.colorado.edu/harvest/doc.html
-
-For further assistance, see http://harvest.cs.colorado.edu/support.html.

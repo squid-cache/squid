@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.22 1996/04/16 20:53:32 wessels Exp $
+#  $Id: Makefile.in,v 1.23 1996/05/01 22:36:23 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -14,6 +14,8 @@ exec_prefix	= @exec_prefix@
 top_srcdir	= @top_srcdir@
 bindir		= @bindir@
 sysconfdir	= @sysconfdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 CC		= @CC@
 INSTALL		= @INSTALL@
@@ -31,7 +33,7 @@ XTRA_OBJS 	= @XTRA_OBJS@
 SHELL		= /bin/sh
 
 
-INCLUDE		= -I. -I../include	# MUST use -I. first
+INCLUDE		= -I. -I../include -I$(srcdir)/../include
 CFLAGS 		= $(STD_CFLAGS) $(XTRA_CFLAGS) $(INCLUDE) $(DEFINES)
 LDFLAGS         = $(STD_LDFLAGS)
 LIBS		= -L../lib -lregex -lutil $(XTRA_LIBS)
@@ -65,7 +67,7 @@ squid:	$(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(CRYPT_LIB) $(LIBS)
 
 cache_cf.o: cache_cf.c
-	$(CC) -c cache_cf.c $(CFLAGS) $(DEFAULTS)
+	$(CC) -c $< $(CFLAGS) $(DEFAULTS)
 
 client:	client.o
 	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)

@@ -1,8 +1,12 @@
 
-/* $Id: squid.h,v 1.19 1996/04/16 05:13:37 wessels Exp $ */
+/* $Id: squid.h,v 1.20 1996/05/01 22:36:37 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
+
+#if SQUID_FD_SETSIZE > 256
+#define FD_SETSIZE SQUID_FD_SETSIZE
+#endif
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -25,9 +29,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>
-#include <sys/syscall.h>
 #include <sys/un.h>
 #include <sys/wait.h>
+
+#ifdef HAVE_SYS_SYSCALL_H
+#include <sys/syscall.h>
+#endif
 
 #ifdef HAVE_STRING_H
 #include <string.h>

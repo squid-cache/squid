@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.44 1996/04/17 21:39:55 wessels Exp $ */
+/* $Id: main.cc,v 1.45 1996/05/01 22:36:34 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -107,6 +107,10 @@ static void mainParseOptions(argc, argv)
 
 void serverConnectionsOpen()
 {
+    /* Get our real priviliges */
+    get_suid();
+
+    /* Open server ports */
     theAsciiConnection = comm_open(COMM_NONBLOCKING,
 	getAsciiPortNum(),
 	0,
@@ -140,6 +144,8 @@ void serverConnectionsOpen()
 		theUdpConnection);
 	}
     }
+    /* And restore our priviliges to normal */
+    check_suid();
 }
 
 void serverConnectionsClose()
@@ -179,6 +185,7 @@ static void mainReinitialize()
     neighbors_init();
     ipcacheOpenServers();
     serverConnectionsOpen();
+    (void) ftpInitialize();
     if (theUdpConnection >= 0 && (!httpd_accel_mode || getAccelWithProxy()))
 	neighbors_open(theUdpConnection);
     debug(1, 0, "Ready to serve requests.\n");
@@ -209,20 +216,21 @@ static void mainInitialize()
     fd_note(fileno(debug_log), getCacheLogFile());
 
     debug(1, 0, "Starting Squid Cache (version %s)...\n", version_string);
+    debug(1, 1, "With %d file descriptors available\n", getMaxFD());
 
     if (first_time) {
-	disk_init();	/* disk_init must go before ipcache_init() */
+	disk_init();		/* disk_init must go before ipcache_init() */
+	writePidFile();		/* write PID file before setuid() */
     }
-
     ipcache_init();
     neighbors_init();
-    ftpInitialize();
+    (void) ftpInitialize();
 
 #if defined(MALLOC_DBG)
     malloc_debug(0, malloc_debug_level);
 #endif
 
-    /* do suid checking here */
+    /* do suid checking */
     check_suid();
 
     if (first_time) {
@@ -232,8 +240,15 @@ static void mainInitialize()
 	stat_init(&CacheInfo, getAccessLogFile());
 	storeInit();
 	stmemInit();
-	writePidFile();
 
+	if (getEffectiveUser()) {
+	    /* we were probably started as root, so cd to a swap
+	     * directory in case we dump core */
+	    if (chdir(swappath(0)) < 0) {
+		debug(1, 0, "%s: %s\n", swappath(0), xstrerror());
+		fatal_dump("Cannot cd to swap directory?");
+	    }
+	}
 	/* after this point we want to see the mallinfo() output */
 	do_mallinfo = 1;
     }
@@ -319,11 +334,11 @@ int main(argc, argv)
 	    loop_delay = (time_t) 0;
 	switch (comm_select(loop_delay, next_cleaning)) {
 	case COMM_OK:
-	    /* do nothing */
+	    errcount = 0;	/* reset if successful */
 	    break;
 	case COMM_ERROR:
 	    errcount++;
-	    debug(1, 0, "Select loop Error. Retry. %d\n", errcount);
+	    debug(1, 0, "Select loop Error. Retry %d\n", errcount);
 	    if (errcount == 10)
 		fatal_dump("Select Loop failed!");
 	    break;

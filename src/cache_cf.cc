@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.53 1996/04/17 23:46:17 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.54 1996/05/01 22:36:24 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -86,10 +86,10 @@ static struct {
 
 #define DefaultMemMaxSize 	(16 << 20)	/* 16 MB */
 #define DefaultMemHighWatherMark 90	/* 90% */
-#define DefaultMemLowWatherMark  60	/* 60% */
+#define DefaultMemLowWatherMark  75	/* 75% */
 #define DefaultSwapMaxSize	(100 << 10)	/* 100 MB (100*1024 kbytes) */
 #define DefaultSwapHighWaterMark 90	/* 90% */
-#define DefaultSwapLowWaterMark  60	/* 60% */
+#define DefaultSwapLowWaterMark  75	/* 75% */
 
 #define DefaultFtpDefaultTtl	(7 * 24 * 60 * 60)	/* 1 week */
 #define DefaultFtpMaxObjSize	(4 << 20)	/* 4 MB */
@@ -107,13 +107,13 @@ static struct {
 #define DefaultPositiveDnsTtl	(360 * 60)	/* 6 hours */
 #define DefaultReadTimeout	(15 * 60)	/* 15 min */
 #define DefaultLifetimeDefault	(200 * 60)	/* 3+ hours */
-#define DefaultLifetimeShutdown	30		/* 30 seconds */
+#define DefaultLifetimeShutdown	30	/* 30 seconds */
 #define DefaultConnectTimeout	(2 * 60)	/* 2 min */
 #define DefaultDefaultAgeMax	(3600 * 24 * 30)	/* 30 days */
 #define DefaultCleanRate	-1	/* disabled */
 #define DefaultDnsChildren	5	/* 3 processes */
 #define DefaultDnsChildrenMax	32	/* 32 processes */
-#define DefaultMaxRequestSize	(102400)	/* 100Kb */
+#define DefaultMaxRequestSize	(100 << 10)	/* 100Kb */
 #define DefaultHotVmFactor	0.0	/* disabled */
 
 #define DefaultAsciiPortNum	CACHE_HTTP_PORT
@@ -141,7 +141,7 @@ static struct {
 #define DefaultCommonLogFormat	1	/* default on */
 #define DefaultQuickAbort	0	/* default off */
 #define DefaultNeighborTimeout  2	/* 2 seconds */
-#define DefaultStallDelay	3	/* 3 seconds */
+#define DefaultStallDelay	1	/* 1 seconds */
 #define DefaultSingleParentBypass 0	/* default off */
 #define DefaultPidFilename      (char *)NULL	/* default NONE */
 #define DefaultVisibleHostname  (char *)NULL	/* default NONE */
@@ -150,20 +150,6 @@ static struct {
 #define DefaultAnnouncePort	3131
 #define DefaultAnnounceFile	(char *)NULL	/* default NONE */
 #define DefaultAnnounceRate	86400	/* every 24 hours */
-
- /* default CONNECT ports */
-intlist snews =
-{
-    563,
-    NULL
-};
-intlist https =
-{
-    443,
-    &snews
-};
-intlist *connect_port_list = &https;
-
 
 ip_acl *local_ip_list = NULL;
 
@@ -371,29 +357,6 @@ void intlistDestroy(list)
     *list = NULL;
 }
 
-static void intlistAdd(list, str)
-     intlist **list;
-     char *str;
-{
-    intlist *p = NULL;
-    intlist *q = NULL;
-
-    if (!(*list)) {
-	/* empty list */
-	*list = (intlist *) xcalloc(1, sizeof(intlist));
-	(*list)->i = atoi(str);
-	(*list)->next = NULL;
-    } else {
-	p = *list;
-	while (p->next)
-	    p = p->next;
-	q = (intlist *) xcalloc(1, sizeof(intlist));
-	q->i = atoi(str);
-	q->next = NULL;
-	p->next = q;
-    }
-}
-
 
 /* Use this #define in all the parse*() functions.  Assumes 
  * ** char *token is defined
@@ -435,6 +398,8 @@ static void parseCacheHostLine()
 	    self_destruct();
 	}
     }
+    if (weight < 1)
+	weight = 1;
     neighbors_cf_add(hostname, type, ascii_port, udp_port, proxy_only, weight);
 }
 
@@ -1027,19 +992,6 @@ static void parseFtpUserLine()
     Config.ftpUser = xstrdup(token);
 }
 
-static void parseConnectPortsLine()
-{
-    char *token;
-    static char origPortList = 1;
-    if (origPortList) {
-	connect_port_list = NULL;
-	origPortList = 0;
-    }
-    while ((token = strtok(NULL, w_space))) {
-	intlistAdd(&connect_port_list, token);
-    }
-}
-
 static void parseCacheAnnounceLine()
 {
     char *token;
@@ -1084,7 +1036,8 @@ int parseConfigFile(file_name)
     aclDestroyAccessList(&ICPAccessList);
 
     if ((fp = fopen(file_name, "r")) == NULL) {
-	sprintf(fatal_str, "Unable to open configuration file: %s", file_name);
+	sprintf(fatal_str, "Unable to open configuration file: %s: %s",
+	    file_name, xstrerror());
 	fatal(fatal_str);
     }
     cfg_filename = file_name;
@@ -1337,9 +1290,6 @@ int parseConfigFile(file_name)
 
 	else if (!strcmp(token, "ftp_user"))
 	    parseFtpUserLine();
-
-	else if (!strcmp(token, "connect_ports"))
-	    parseConnectPortsLine();
 
 	else if (!strcmp(token, "cache_announce"))
 	    parseCacheAnnounceLine();

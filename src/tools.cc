@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.41 1996/04/18 20:28:56 wessels Exp $ */
+/* $Id: tools.cc,v 1.42 1996/05/01 22:36:41 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -19,7 +19,7 @@ The Squid Cache (version %s) died.\n\
 You've encountered a fatal error in the Squid Cache version %s.\n\
 If a core file was created (possibly in the swap directory),\n\
 please execute 'gdb squid core' or 'dbx squid core', then type 'where',\n\
-and report the trace back to squid@nlanr.net.\n\
+and report the trace back to squid-bugs@nlanr.net.\n\
 \n\
 Thanks!\n"
 
@@ -146,7 +146,7 @@ void rotate_logs(sig)
     neighbors_rotate_log();
     stat_rotate_log();
     _db_rotate_log();
-#if defined(_SQUID_SYSV_SIGNALS_)
+#if RESET_SIGNAL_HANDLER
     signal(sig, rotate_logs);
 #endif
 }
@@ -154,8 +154,11 @@ void rotate_logs(sig)
 void normal_shutdown()
 {
     debug(21, 1, "Shutting down...\n");
-    if (getPidFilename())
+    if (getPidFilename()) {
+	get_suid();
 	safeunlink(getPidFilename(), 0);
+	check_suid();
+    }
     storeWriteCleanLog();
     PrintRusage(NULL, debug_log);
     debug(21, 0, "Squid Cache (Version %s): Exiting normally.\n",
@@ -168,9 +171,11 @@ void shut_down(sig)
     int i;
     int lft = getShutdownLifetime();
     FD_ENTRY *f;
-    debug(21, 1, "Preparing for shutdown after %d connections\n", ntcpconn);
+    debug(21, 1, "Preparing for shutdown after %d connections\n",
+	ntcpconn + nudpconn);
     serverConnectionsClose();
     ipcacheShutdownServers();
+    ftpServerClose();
     for (i = fdstat_biggest_fd(); i >= 0; i--) {
 	f = &fd_table[i];
 	if (f->read_handler || f->write_handler || f->except_handler)
@@ -237,11 +242,12 @@ void sig_child(sig)
     if ((pid = waitpid(-1, &status, WNOHANG)) > 0)
 	debug(21, 3, "sig_child: Ate pid %d\n", pid);
 
-#if defined(_SQUID_SYSV_SIGNALS_)
+#if RESET_SIGNAL_HANDLER
     signal(sig, sig_child);
 #endif
 }
 
+#ifdef OLD_CODE
 /*
  *  getMaxFD - returns the file descriptor table size
  */
@@ -250,9 +256,9 @@ int getMaxFD()
     static int i = -1;
 
     if (i == -1) {
-#if defined(HAVE_SYSCONF) && defined(_SC_OPEN_MAX)
+#if HAVE_SYSCONF && defined(_SC_OPEN_MAX)
 	i = sysconf(_SC_OPEN_MAX);	/* prefered method */
-#elif defined(HAVE_GETDTABLESIZE)
+#elif HAVE_GETDTABLESIZE
 	i = getdtablesize();	/* the BSD way */
 #elif defined(OPEN_MAX)
 	i = OPEN_MAX;
@@ -267,6 +273,12 @@ int getMaxFD()
     }
     return (i);
 }
+#else
+int getMaxFD()
+{
+    return FD_SETSIZE;
+}
+#endif
 
 char *getMyHostname()
 {
@@ -340,17 +352,40 @@ void check_suid()
 	return;
     if ((pwd = getpwnam(getEffectiveUser())) == NULL)
 	return;
-    /* change current directory to swap space so we can get core */
-    if (chdir(swappath(0)) < 0) {
-	debug(21, 0, "%s: %s\n", swappath(0), xstrerror());
-	fatal_dump("Cannot cd to swap directory?");
-    }
     if (getEffectiveGroup() && (grp = getgrnam(getEffectiveGroup()))) {
 	setgid(grp->gr_gid);
     } else {
 	setgid(pwd->pw_gid);
     }
+#if HAVE_SETRESUID
+    setresuid(pwd->pw_uid, pwd->pw_uid, 0);
+#elif HAVE_SETEUID
+    seteuid(pwd->pw_uid);
+#else
     setuid(pwd->pw_uid);
+#endif
+}
+
+void get_suid()
+{
+#if HAVE_SETRESUID
+    setresuid(-1, 0, -1);
+#else
+    setuid(0);
+#endif
+}
+
+void no_suid()
+{
+    uid_t uid;
+    check_suid();
+    uid = geteuid();
+#if HAVE_SETRESUID
+    setresuid(uid, uid, uid);
+#else
+    setuid(0);
+    setuid(uid);
+#endif
 }
 
 void writePidFile()
@@ -372,30 +407,31 @@ void writePidFile()
 
 void setMaxFD()
 {
-#if defined(HAVE_SETRLIMIT)
+#if HAVE_SETRLIMIT
     /* try to use as many file descriptors as possible */
     /* System V uses RLIMIT_NOFILE and BSD uses RLIMIT_OFILE */
     struct rlimit rl;
 #if defined(RLIMIT_NOFILE)
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-	perror("getrlimit: RLIMIT_NOFILE");
+	debug(21, 0, "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
     } else {
-	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
+	rl.rlim_cur = FD_SETSIZE;
 	if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
-	    perror("setrlimit: RLIMIT_NOFILE");
+	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
+	    fatal_dump(tmp_error_buf);
 	}
     }
 #elif defined(RLIMIT_OFILE)
     if (getrlimit(RLIMIT_OFILE, &rl) < 0) {
-	perror("getrlimit: RLIMIT_OFILE");
+	debug(21, 0, "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
     } else {
-	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
+	rl.rlim_cur = FD_SETSIZE;
 	if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
-	    perror("setrlimit: RLIMIT_OFILE");
+	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_OFILE: %s", xstrerror());
+	    fatal_dump(tmp_error_buf);
 	}
     }
 #endif
-    debug(21, 1, "setMaxFD: Using %d file descriptors\n", rl.rlim_max);
 #else /* HAVE_SETRLIMIT */
     debug(21, 1, "setMaxFD: Cannot increase: setrlimit() not supported on this system");
 #endif
@@ -417,6 +453,7 @@ void reconfigure(sig)
     debug(21, 1, "reconfigure: SIGHUP received.\n");
     serverConnectionsClose();
     ipcacheShutdownServers();
+    ftpServerClose();
     reread_pending = 1;
     for (i = fdstat_biggest_fd(); i >= 0; i--) {
 	f = &fd_table[i];
@@ -424,7 +461,7 @@ void reconfigure(sig)
 	    if (fdstatGetType(i) == Socket)
 		comm_set_fd_lifetime(i, lft);
     }
-#if defined(_SQUID_SYSV_SIGNALS_)
+#if RESET_SIGNAL_HANDLER
     signal(sig, reconfigure);
 #endif
 }
