@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.17 1996/04/01 03:34:42 wessels Exp $ */
+/* $Id: http.cc,v 1.18 1996/04/01 03:49:30 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -160,20 +160,23 @@ static void httpProcessReplyHeader(data, buf)
 	strncat(data->reply_hdr, buf, 8191 - strlen(data->reply_hdr));
 	if ((t = strstr(data->reply_hdr, "\r\n\r\n"))) {
 	    data->reply_hdr_state++;
-	    t += 2;
+	    t += 4;
 	    *t = '\0';
 	} else if ((t = strstr(data->reply_hdr, "\n\n"))) {
 	    data->reply_hdr_state++;
-	    t++;
+	    t += 2;
 	    *t = '\0';
 	}
     }
     if (data->reply_hdr_state == 1) {
+	char *headers = xstrdup(data->reply_hdr);
 	data->reply_hdr_state++;
 	debug(11, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
 	    data->reply_hdr);
-	t = strtok(data->reply_hdr, "\r\n");
+	t = strtok(headers, "\n");
 	while (t) {
+	    while (t[strlen(t)] == '\r')
+		t[strlen(t)] = 0;
 	    if (!strncasecmp(t, "HTTP", 4)) {
 		if ((t = strchr(t, ' '))) {
 		    t++;
@@ -190,12 +193,12 @@ static void httpProcessReplyHeader(data, buf)
 		    data->content_length = atoi(t);
 		}
 	    }
-	    t = strtok(NULL, "\r\n");
+	    t = strtok(NULL, "\n");
 	}
 	if (data->http_code)
-	    debug(11, 0, "httpReadReply: HTTP CODE: %d\n", data->http_code);
+	    debug(11, 1, "httpReadReply: HTTP CODE: %d\n", data->http_code);
 	if (data->content_length)
-	    debug(11, 0, "httpReadReply: Content Length: %d\n", data->content_length);
+	    debug(11, 1, "httpReadReply: Content Length: %d\n", data->content_length);
 	/* If we know this is cachable we can unchange the key */
 	switch (data->http_code) {
 	case 200:		/* OK */
@@ -213,6 +216,8 @@ static void httpProcessReplyHeader(data, buf)
 	    break;
 	}
     }
+    /* Calculate expiry time */
+    entry->expires = cached_curtime + ttlSet(entry);
 }
 
 
@@ -279,10 +284,12 @@ static void httpReadReply(fd, data)
 	if (errno == ECONNRESET) {
 	    /* Connection reset by peer */
 	    /* consider it as a EOF */
-	    if (!(entry->flag & DELETE_BEHIND))
-		entry->expires = cached_curtime + ttlSet(entry);
 	    sprintf(tmp_error_buf, "\n<p>Warning: The Remote Server sent RESET at the end of transmission.\n");
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
+	    /* The object is not cacheable */
+	    /* I am not sure if this is the right way to do it / Henrik */
+	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_SET(entry->flag, RELEASE_REQUEST);
 	    storeComplete(entry);
 	    httpCloseAndFree(fd, data);
 	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -298,8 +305,6 @@ static void httpReadReply(fd, data)
 	}
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
-	if (!(entry->flag & DELETE_BEHIND))
-	    entry->expires = cached_curtime + ttlSet(entry);
 	storeComplete(entry);
 	httpCloseAndFree(fd, data);
     } else if (((entry->mem_obj->e_current_len + len) > getHttpMax()) &&
