@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.222 1997/11/14 17:21:20 wessels Exp $
+ * $Id: http.cc,v 1.223 1997/11/20 17:48:37 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -553,6 +553,9 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	}
 	if (EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
 	    EBIT_SET(entry->flag, ENTRY_REVALIDATE);
+	if (EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
+	    if (httpState->peer)
+		httpState->peer->stats.n_keepalives_sent++;
 	if (EBIT_TEST(reply->misc_headers, HDR_PROXY_KEEPALIVE))
 	    if (httpState->peer)
 		httpState->peer->stats.n_keepalives_recv++;
@@ -570,6 +573,7 @@ httpPconnTransferDone(HttpStateData * httpState)
 	return 0;
     debug(11, 5) ("httpPconnTransferDone: content_length=%d\n",
 	reply->content_length);
+#if DONT_THINK_THIS_MATTERS
     /*
      * !200 replies maybe don't have content-length, so
      * if we saw the end of the headers then try being persistent.
@@ -577,6 +581,7 @@ httpPconnTransferDone(HttpStateData * httpState)
     if (reply->code != 200)
 	if (httpState->reply_hdr_state > 1)
 	    return 1;
+#endif
     /*
      * If there is no content-length, then we probably can't be persistent
      */
@@ -879,7 +884,6 @@ httpSendRequest(int fd, void *data)
     StoreEntry *entry = httpState->entry;
     int cfd;
     peer *p = httpState->peer;
-    double d;
 
     debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     buflen = strlen(req->urlpath);
@@ -908,14 +912,12 @@ httpSendRequest(int fd, void *data)
     if (p != NULL)
 	EBIT_SET(httpState->flags, HTTP_PROXYING);
     if (req->method == METHOD_GET) {
-	if (p) {
-	    d = (double) p->stats.n_keepalives_recv /
-		(double) ++p->stats.n_keepalives_sent;
-	    if (d > 0.50 || p->stats.n_keepalives_sent < 10)
-		EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
-	} else {
+	if (p == NULL)
 	    EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
-	}
+	else if (p->stats.n_keepalives_sent < 10)
+	    EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
+	else if ((double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent > 0.50)
+	    EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
     }
     len = httpBuildRequestHeader(req,
 	httpState->orig_request,
