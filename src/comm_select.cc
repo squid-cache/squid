@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.20 1998/10/18 23:06:47 wessels Exp $
+ * $Id: comm_select.cc,v 1.21 1998/10/19 22:36:58 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -637,7 +637,7 @@ comm_select(int msec)
 		/* Found a set bit */
 		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
 #if DEBUG_FDBITS
-	        debug(5,9)("FD %d bit set for reading\n", fd);
+		debug(5, 9) ("FD %d bit set for reading\n", fd);
 		assert(FD_ISSET(fd, &readfds));
 #endif
 		if (fdIsIcp(fd)) {
@@ -675,7 +675,7 @@ comm_select(int msec)
 		/* Found a set bit */
 		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
 #if DEBUG_FDBITS
-	        debug(5,9)("FD %d bit set for writing\n", fd);
+		debug(5, 9) ("FD %d bit set for writing\n", fd);
 		assert(FD_ISSET(fd, &writefds));
 #endif
 		if (fdIsIcp(fd)) {

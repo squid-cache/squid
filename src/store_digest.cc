@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.29 1998/10/17 04:34:12 rousskov Exp $
+ * $Id: store_digest.cc,v 1.30 1998/10/19 22:37:04 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -192,7 +192,7 @@ storeDigestAdd(const StoreEntry * entry)
 	/* if expires too soon, ignore */
 	/* Note: We should use the time of the next rebuild, not (cur_time+period) */
 	if (refreshCheckDigest(entry, StoreDigestRebuildPeriod)) {
-	    debug(71, 6) ("storeDigestAdd: entry expires within %d secs, ignoring\n", 
+	    debug(71, 6) ("storeDigestAdd: entry expires within %d secs, ignoring\n",
 		StoreDigestRebuildPeriod);
 	} else {
 	    good_entry = 1;

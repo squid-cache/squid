@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.70 1998/10/19 17:48:26 wessels Exp $
+ * $Id: dns.cc,v 1.71 1998/10/19 22:36:59 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -52,7 +52,7 @@ dnsInit(void)
     if (!Config.Program.dnsserver)
 	return;
     if (dnsservers == NULL)
-    	dnsservers = helperCreate("dnsserver");
+	dnsservers = helperCreate("dnsserver");
     dnsservers->n_to_start = Config.dnsChildren;
     dnsservers->ipc_type = IPC_TCP_SOCKET;
     assert(dnsservers->cmdline == NULL);
