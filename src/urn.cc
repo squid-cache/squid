@@ -245,8 +245,8 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	"</ADDRESS>\n",
 	appname, version_string, getMyHostname());
     stringAppend(S, line, l);
-#if 0 /* use new interface */ 
-   hdr = httpReplyHeader(1.0,
+#if 0				/* use new interface */
+    hdr = httpReplyHeader(1.0,
 	HTTP_MOVED_TEMPORARILY,
 	"text/html",
 	stringLength(S),
@@ -269,11 +269,10 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	"text/html", stringLength(S), 0, squid_curtime);
     if (EBIT_TEST(urnState->flags, URN_FORCE_MENU)) {
 	debug(51, 3) ("urnHandleReply: forcing menu\n");
-    } else
-    if (min_w) {
+    } else if (min_w) {
 	httpHeaderSetStr(&rep->hdr, HDR_LOCATION, min_w->key);
     }
-    httpBodySet(&rep->body, S->buf, stringLength(S)+1, NULL);
+    httpBodySet(&rep->body, S->buf, stringLength(S) + 1, NULL);
     httpReplySwapOut(rep, e);
 #endif
     storeComplete(e);

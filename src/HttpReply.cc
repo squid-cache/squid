@@ -1,5 +1,6 @@
+
 /*
- * $Id: HttpReply.cc,v 1.5 1998/02/26 08:10:54 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.6 1998/02/26 18:00:31 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -37,9 +38,9 @@
 /* local constants */
 
 /* local routines */
-static void httpReplyDoDestroy(HttpReply *rep);
-static int httpReplyParseStep(HttpReply *rep, const char *parse_start, int atEnd);
-static int httpReplyParseError(HttpReply *rep);
+static void httpReplyDoDestroy(HttpReply * rep);
+static int httpReplyParseStep(HttpReply * rep, const char *parse_start, int atEnd);
+static int httpReplyParseError(HttpReply * rep);
 static int httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end);
 static int httpReplyIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);
 
@@ -54,7 +55,7 @@ httpReplyCreate()
 }
 
 void
-httpReplyInit(HttpReply *rep)
+httpReplyInit(HttpReply * rep)
 {
     assert(rep);
     rep->hdr_sz = 0;
@@ -65,7 +66,7 @@ httpReplyInit(HttpReply *rep)
 }
 
 void
-httpReplyClean(HttpReply *rep)
+httpReplyClean(HttpReply * rep)
 {
     assert(rep);
     httpBodyClean(&rep->body);
@@ -74,7 +75,7 @@ httpReplyClean(HttpReply *rep)
 }
 
 void
-httpReplyDestroy(HttpReply *rep)
+httpReplyDestroy(HttpReply * rep)
 {
     assert(rep);
     tmp_debug(here) ("destroying rep: %p\n", rep);
@@ -83,7 +84,7 @@ httpReplyDestroy(HttpReply *rep)
 }
 
 void
-httpReplyReset(HttpReply *rep)
+httpReplyReset(HttpReply * rep)
 {
     httpReplyClean(rep);
     httpReplyInit(rep);
@@ -91,7 +92,7 @@ httpReplyReset(HttpReply *rep)
 
 /* absorb: copy the contents of a new reply to the old one, destroy new one */
 void
-httpReplyAbsorb(HttpReply *rep, HttpReply *new_rep)
+httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep)
 {
     assert(rep && new_rep);
     httpReplyClean(rep);
@@ -102,7 +103,7 @@ httpReplyAbsorb(HttpReply *rep, HttpReply *new_rep)
 
 /* parses a buffer that may not be 0-terminated */
 int
-httpReplyParse(HttpReply *rep, const char *buf)
+httpReplyParse(HttpReply * rep, const char *buf)
 {
     /*
      * this extra buffer/copy will be eliminated when headers become meta-data
@@ -121,7 +122,7 @@ httpReplyParse(HttpReply *rep, const char *buf)
 }
 
 void
-httpReplyPackInto(const HttpReply *rep, Packer *p)
+httpReplyPackInto(const HttpReply * rep, Packer * p)
 {
     assert(rep);
     httpStatusLinePackInto(&rep->sline, p);
@@ -132,7 +133,7 @@ httpReplyPackInto(const HttpReply *rep, Packer *p)
 
 /* create memBuf, create mem-based packer,  pack, destroy packer, return MemBuf */
 MemBuf
-httpReplyPack(const HttpReply *rep)
+httpReplyPack(const HttpReply * rep)
 {
     MemBuf mb;
     Packer p;
@@ -147,7 +148,7 @@ httpReplyPack(const HttpReply *rep)
 
 /* swap: create swap-based packer, pack, destroy packer */
 void
-httpReplySwapOut(const HttpReply *rep, StoreEntry *e)
+httpReplySwapOut(const HttpReply * rep, StoreEntry * e)
 {
     Packer p;
     assert(rep && e);
@@ -170,7 +171,7 @@ httpPackedReply(double ver, http_status status, const char *ctype,
 }
 
 MemBuf
-httpPacked304Reply(const HttpReply *rep)
+httpPacked304Reply(const HttpReply * rep)
 {
     MemBuf mb;
     assert(rep);
@@ -180,7 +181,7 @@ httpPacked304Reply(const HttpReply *rep)
 
     if (httpHeaderHas(&rep->hdr, HDR_DATE))
 	memBufPrintf(&mb, "Date: %s\r\n", mkrfc1123(
-	    httpHeaderGetTime(&rep->hdr, HDR_DATE)));
+		httpHeaderGetTime(&rep->hdr, HDR_DATE)));
 
     if (httpHeaderHas(&rep->hdr, HDR_CONTENT_TYPE))
 	memBufPrintf(&mb, "Content-type: %s\r\n",
@@ -192,18 +193,18 @@ httpPacked304Reply(const HttpReply *rep)
 
     if (httpHeaderHas(&rep->hdr, HDR_EXPIRES))
 	memBufPrintf(&mb, "Expires: %s\r\n", mkrfc1123(
-	    httpHeaderGetTime(&rep->hdr, HDR_EXPIRES)));
+		httpHeaderGetTime(&rep->hdr, HDR_EXPIRES)));
 
     if (httpHeaderHas(&rep->hdr, HDR_LAST_MODIFIED))
 	memBufPrintf(&mb, "Last-modified: %s\r\n", mkrfc1123(
-	    httpHeaderGetTime(&rep->hdr, HDR_LAST_MODIFIED)));
+		httpHeaderGetTime(&rep->hdr, HDR_LAST_MODIFIED)));
 
     memBufAppend(&mb, "\r\n", 2);
     return mb;
 }
 
 void
-httpReplySetHeaders(HttpReply *reply, double ver, http_status status, const char *reason,
+httpReplySetHeaders(HttpReply * reply, double ver, http_status status, const char *reason,
     const char *ctype, int clen, time_t lmt, time_t expires)
 {
     HttpHeader *hdr;
@@ -211,7 +212,7 @@ httpReplySetHeaders(HttpReply *reply, double ver, http_status status, const char
     httpStatusLineSet(&reply->sline, ver, status, reason);
     hdr = &reply->hdr;
     httpHeaderAddExt(hdr, "Server", full_appname_string);
-    httpHeaderAddExt(hdr, "MIME-Version", "1.0"); /* do we need this? @?@ */
+    httpHeaderAddExt(hdr, "MIME-Version", "1.0");	/* do we need this? @?@ */
     httpHeaderSetTime(hdr, HDR_DATE, squid_curtime);
     if (ctype)
 	httpHeaderSetStr(hdr, HDR_CONTENT_TYPE, ctype);
@@ -219,8 +220,8 @@ httpReplySetHeaders(HttpReply *reply, double ver, http_status status, const char
 	httpHeaderSetInt(hdr, HDR_CONTENT_LENGTH, clen);
     if (expires >= 0)
 	httpHeaderSetTime(hdr, HDR_EXPIRES, expires);
-    if (lmt > 0) /* this used to be lmt != 0 @?@ */
-  	httpHeaderSetTime(hdr, HDR_LAST_MODIFIED, lmt);
+    if (lmt > 0)		/* this used to be lmt != 0 @?@ */
+	httpHeaderSetTime(hdr, HDR_LAST_MODIFIED, lmt);
 }
 
 /*
@@ -242,9 +243,9 @@ httpReplySetHeaders(HttpReply *reply, double ver, http_status status, const char
  */
 
 void
-httpReplyUpdateOnNotModified(HttpReply *rep, HttpReply *freshRep)
+httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
 {
-#if 0 /* this is what we want: */
+#if 0				/* this is what we want: */
     rep->cache_control = freshRep->cache_control;
     rep->misc_headers = freshRep->misc_headers;
     if (freshRep->date > -1)
@@ -260,7 +261,7 @@ httpReplyUpdateOnNotModified(HttpReply *rep, HttpReply *freshRep)
     assert(rep && freshRep);
     /* save precious info */
     date = httpHeaderGetTime(&rep->hdr, HDR_DATE);
-    expires= httpReplyExpires(rep);
+    expires = httpReplyExpires(rep);
     lmt = httpHeaderGetTime(&rep->hdr, HDR_LAST_MODIFIED);
     /* clean old headers */
     httpHeaderClean(&rep->hdr);
@@ -276,21 +277,23 @@ httpReplyUpdateOnNotModified(HttpReply *rep, HttpReply *freshRep)
 }
 
 int
-httpReplyContentLen(const HttpReply *rep) {
+httpReplyContentLen(const HttpReply * rep)
+{
     assert(rep);
     return httpHeaderGet(&rep->hdr, HDR_CONTENT_LENGTH).v_int;
 }
 
 /* should we return "" or NULL if no content-type? Return NULL for now @?@ */
 const char *
-httpReplyContentType(const HttpReply *rep) {
+httpReplyContentType(const HttpReply * rep)
+{
     assert(rep);
     return httpHeaderGetStr(&rep->hdr, HDR_CONTENT_TYPE);
 }
 
 /* does it make sense to cache these computations ? @?@ */
 time_t
-httpReplyExpires(const HttpReply *rep)
+httpReplyExpires(const HttpReply * rep)
 {
     HttpScc *scc;
     time_t exp = -1;
@@ -298,21 +301,21 @@ httpReplyExpires(const HttpReply *rep)
     /* The max-age directive takes priority over Expires, check it first */
     scc = httpHeaderGetScc(&rep->hdr);
     if (scc)
-	exp = scc -> max_age;
+	exp = scc->max_age;
     if (exp < 0)
 	exp = httpHeaderGetTime(&rep->hdr, HDR_EXPIRES);
     return exp;
 }
 
 int
-httpReplyHasScc(const HttpReply *rep, http_scc_type type)
+httpReplyHasScc(const HttpReply * rep, http_scc_type type)
 {
     HttpScc *scc;
     assert(rep);
     assert(type >= 0 && type < SCC_ENUM_END);
 
     scc = httpHeaderGetScc(&rep->hdr);
-    return scc && /* scc header is present */
+    return scc &&		/* scc header is present */
 	EBIT_TEST(scc->mask, type);
 }
 
@@ -321,7 +324,8 @@ httpReplyHasScc(const HttpReply *rep, http_scc_type type)
 
 /* internal function used by Destroy and Absorb */
 static void
-httpReplyDoDestroy(HttpReply *rep) {
+httpReplyDoDestroy(HttpReply * rep)
+{
     memFree(MEM_HTTPREPLY, rep);
 }
 
@@ -333,7 +337,7 @@ httpReplyDoDestroy(HttpReply *rep) {
  *      -1 -- parse error
  */
 static int
-httpReplyParseStep(HttpReply *rep, const char *buf, int atEnd)
+httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
 {
     const char *parse_start = buf;
     const char *blk_start, *blk_end;
@@ -351,9 +355,8 @@ httpReplyParseStep(HttpReply *rep, const char *buf, int atEnd)
 
 	*parse_end_ptr = parse_start;
 	rep->hdr_sz = *parse_end_ptr - buf;
-        rep->pstate++;
+	rep->pstate++;
     }
-    
     if (rep->pstate == psReadyToParseHeaders) {
 	if (!httpReplyIsolateHeaders(&parse_start, &blk_start, &blk_end))
 	    if (atEnd)
@@ -367,7 +370,6 @@ httpReplyParseStep(HttpReply *rep, const char *buf, int atEnd)
 	rep->hdr_sz = *parse_end_ptr - buf;
 	rep->pstate++;
     }
-
     /* could check here for a _small_ body that we could parse right away?? @?@ */
 
     return 1;
@@ -376,7 +378,7 @@ httpReplyParseStep(HttpReply *rep, const char *buf, int atEnd)
 
 /* handy: resets and returns -1 */
 static int
-httpReplyParseError(HttpReply *rep)
+httpReplyParseError(HttpReply * rep)
 {
     assert(rep);
     /* reset */
@@ -391,14 +393,14 @@ static int
 httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end)
 {
     int slen = strcspn(*parse_start, "\r\n");
-    if (!(*parse_start)[slen]) /* no CRLF found */
+    if (!(*parse_start)[slen])	/* no CRLF found */
 	return 0;
 
     *blk_start = *parse_start;
     *blk_end = *blk_start + slen;
-    if (**blk_end == '\r') /* CR */
+    if (**blk_end == '\r')	/* CR */
 	(*blk_end)++;
-    if (**blk_end == '\n') /* LF */
+    if (**blk_end == '\n')	/* LF */
 	(*blk_end)++;
 
     *parse_start = *blk_end;
@@ -415,12 +417,12 @@ httpReplyIsolateHeaders(const char **parse_start, const char **blk_start, const 
     const char *end = NULL;
 
     if (p1 && p2)
-        end = p1 < p2 ? p1 : p2;
+	end = p1 < p2 ? p1 : p2;
     else
-        end = p1 ? p1 : p2;
+	end = p1 ? p1 : p2;
 
     if (end) {
-        *blk_start = *parse_start;
+	*blk_start = *parse_start;
 	*blk_end = end + 1;
 	*parse_start = end + (end == p1 ? 3 : 2);
     }

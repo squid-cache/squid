@@ -17,13 +17,13 @@ enum {
 
 void snmpAclCheckDone(int answer, void *);
 static struct snmp_pdu *snmp_agent_response(struct snmp_pdu *PDU);
-static int community_check(char *b, oid *name, int namelen);
+static int community_check(char *b, oid * name, int namelen);
 struct snmp_session *Session;
 extern int get_median_svc(int, int);
 extern StatCounters *snmpStatGet(int);
 extern void snmp_agent_parse_done(int, snmp_request_t *);
 
-void snmpAclCheckStart(snmp_request_t *rq);
+void snmpAclCheckStart(snmp_request_t * rq);
 
 
 /* returns: 
@@ -32,93 +32,92 @@ void snmpAclCheckStart(snmp_request_t *rq);
  * 0: failed */
 
 void
-snmp_agent_parse(snmp_request_t *rq)
+snmp_agent_parse(snmp_request_t * rq)
 {
     long this_reqid;
-    u_char *buf=rq->buf;
-    int len=rq->len;
-    
+    u_char *buf = rq->buf;
+    int len = rq->len;
+
     struct snmp_pdu *PDU;
     u_char *Community;
 
     /* Now that we have the data, turn it into a PDU */
-    cbdataAdd(rq,MEM_NONE);
+    cbdataAdd(rq, MEM_NONE);
     PDU = snmp_pdu_create(0);
     Community = snmp_parse(Session, PDU, buf, len);
-    rq->community=Community;
-    rq->PDU=PDU;
-    this_reqid=PDU->reqid;
+    rq->community = Community;
+    rq->PDU = PDU;
+    this_reqid = PDU->reqid;
     debug(49, 5) ("snmp_agent_parse: reqid=%d\n", PDU->reqid);
 
     if (Community == NULL) {
 	debug(49, 8) ("snmp_agent_parse: Community == NULL\n");
 
 	snmp_free_pdu(PDU);
-    	snmp_agent_parse_done(0, rq);
+	snmp_agent_parse_done(0, rq);
 	return;
     }
     snmpAclCheckStart(rq);
 }
 
 void
-snmpAclCheckStart(snmp_request_t *rq)
+snmpAclCheckStart(snmp_request_t * rq)
 {
-	communityEntry *cp;
-	for (cp=Config.Snmp.communities;cp!=NULL;cp=cp->next) 
-		if (!strcmp(rq->community, cp->name) && cp->acls) {
-        		rq->acl_checklist= aclChecklistCreate(cp->acls,
-        			NULL,rq->from.sin_addr, NULL, NULL);
-			aclNBCheck(rq->acl_checklist,snmpAclCheckDone, rq);
-			return;
-		}
-	snmpAclCheckDone(ACCESS_ALLOWED, rq);
+    communityEntry *cp;
+    for (cp = Config.Snmp.communities; cp != NULL; cp = cp->next)
+	if (!strcmp(rq->community, cp->name) && cp->acls) {
+	    rq->acl_checklist = aclChecklistCreate(cp->acls,
+		NULL, rq->from.sin_addr, NULL, NULL);
+	    aclNBCheck(rq->acl_checklist, snmpAclCheckDone, rq);
+	    return;
+	}
+    snmpAclCheckDone(ACCESS_ALLOWED, rq);
 }
 
 void
 snmpAclCheckDone(int answer, void *data)
 {
-    snmp_request_t *rq=data;
-    u_char *outbuf=rq->outbuf;
-    
+    snmp_request_t *rq = data;
+    u_char *outbuf = rq->outbuf;
+
     struct snmp_pdu *PDU, *RespPDU;
     u_char *Community;
     variable_list *VarPtr;
     variable_list **VarPtrP;
     int ret;
-   
-    debug(49,5)("snmpAclCheckDone: called with answer=%d.\n",answer);
+
+    debug(49, 5) ("snmpAclCheckDone: called with answer=%d.\n", answer);
     rq->acl_checklist = NULL;
-    PDU=rq->PDU;
-    Community=rq->community;
+    PDU = rq->PDU;
+    Community = rq->community;
 
-    if (answer==ACCESS_DENIED) {
-		debug(49,5)("snmpAclCheckDone: failed on acl.\n");
-    		snmp_agent_parse_done(0, rq);
-		return;
+    if (answer == ACCESS_DENIED) {
+	debug(49, 5) ("snmpAclCheckDone: failed on acl.\n");
+	snmp_agent_parse_done(0, rq);
+	return;
     }
-
     for (VarPtrP = &(PDU->variables);
-        *VarPtrP;
-        VarPtrP = &((*VarPtrP)->next_variable)) {
-        VarPtr = *VarPtrP;
+	*VarPtrP;
+	VarPtrP = &((*VarPtrP)->next_variable)) {
+	VarPtr = *VarPtrP;
 
-	debug(49,5)("snmpAclCheckDone: checking.\n");
+	debug(49, 5) ("snmpAclCheckDone: checking.\n");
 	/* access check for each variable */
 
-    	if (!community_check(Community, VarPtr->name, VarPtr->name_length)) {
-		debug(49,5)("snmpAclCheckDone: failed on community_check.\n");
-    		snmp_agent_parse_done(0, rq);
-		return;
-    	}
+	if (!community_check(Community, VarPtr->name, VarPtr->name_length)) {
+	    debug(49, 5) ("snmpAclCheckDone: failed on community_check.\n");
+	    snmp_agent_parse_done(0, rq);
+	    return;
+	}
     }
-    Session->community=xstrdup(Community);
-    Session->community_len=strlen(Community);
+    Session->community = xstrdup(Community);
+    Session->community_len = strlen(Community);
     RespPDU = snmp_agent_response(PDU);
     snmp_free_pdu(PDU);
     if (RespPDU == NULL) {
 	debug(49, 8) ("snmpAclCheckDone: RespPDU == NULL. Returning code 2.\n");
-	debug(49,5)("snmpAclCheckDone: failed on RespPDU==NULL.\n");
-    	snmp_agent_parse_done(2, rq);
+	debug(49, 5) ("snmpAclCheckDone: failed on RespPDU==NULL.\n");
+	snmp_agent_parse_done(2, rq);
 	return;
     }
     debug(49, 8) ("snmpAclCheckDone: Response pdu (%x) errstat=%d reqid=%d.\n",
@@ -128,8 +127,8 @@ snmpAclCheckDone(int answer, void *data)
     ret = snmp_build(Session, RespPDU, outbuf, &rq->outlen);
     /* XXXXX Handle failure */
     snmp_free_pdu(RespPDU);
-	/* XXX maybe here */
-    debug(49,5)("snmpAclCheckDone: ok!\n");
+    /* XXX maybe here */
+    debug(49, 5) ("snmpAclCheckDone: ok!\n");
     snmp_agent_parse_done(1, rq);
 }
 
@@ -225,7 +224,6 @@ snmp_agent_response(struct snmp_pdu *PDU)
 	/* Done.  Return this PDU */
 	return (Answer);
     }				/* end SNMP_PDU_GETNEXT */
-
     debug(49, 9) ("snmp_agent_response: Ignoring PDU %d\n", PDU->command);
     snmp_free_pdu(Answer);
     return (NULL);
@@ -236,43 +234,43 @@ in_view(oid * name, int namelen, int viewIndex)
 {
     viewEntry *vwp, *savedvwp = NULL;
 
-    debug(49,8)("in_view: called with index=%d\n",viewIndex);
+    debug(49, 8) ("in_view: called with index=%d\n", viewIndex);
     for (vwp = Config.Snmp.views; vwp; vwp = vwp->next) {
-        if (vwp->viewIndex != viewIndex)
-            continue;
-	debug(49,8)("in_view: found view for subtree:\n");
+	if (vwp->viewIndex != viewIndex)
+	    continue;
+	debug(49, 8) ("in_view: found view for subtree:\n");
 	print_oid(vwp->viewSubtree, vwp->viewSubtreeLen);
-        if (vwp->viewSubtreeLen > namelen
-            || memcmp(vwp->viewSubtree, name, vwp->viewSubtreeLen * sizeof(oid)))
-            continue;
-        /* no wildcards here yet */
-        if (!savedvwp) { 
-            savedvwp = vwp; 
-        } else {
-            if (vwp->viewSubtreeLen > savedvwp->viewSubtreeLen)
-                savedvwp = vwp; 
-        }
+	if (vwp->viewSubtreeLen > namelen
+	    || memcmp(vwp->viewSubtree, name, vwp->viewSubtreeLen * sizeof(oid)))
+	    continue;
+	/* no wildcards here yet */
+	if (!savedvwp) {
+	    savedvwp = vwp;
+	} else {
+	    if (vwp->viewSubtreeLen > savedvwp->viewSubtreeLen)
+		savedvwp = vwp;
+	}
     }
     if (!savedvwp)
-        return FALSE;
+	return FALSE;
     if (savedvwp->viewType == VIEWINCLUDED)
-        return TRUE;
+	return TRUE;
     return FALSE;
 }
 
 
 static int
-community_check(char *b, oid *name, int namelen)
+community_check(char *b, oid * name, int namelen)
 {
     communityEntry *cp;
-    debug(49,8)("community_check: %s against:\n",b);
-    print_oid(name,namelen);
-    for (cp = Config.Snmp.communities; cp; cp = cp->next) 
-        if (!strcmp(b, cp->name)) {
+    debug(49, 8) ("community_check: %s against:\n", b);
+    print_oid(name, namelen);
+    for (cp = Config.Snmp.communities; cp; cp = cp->next)
+	if (!strcmp(b, cp->name)) {
 #if 0
-	    debug(49,6)("community_check: found %s, comparing with\n",cp->name);
+	    debug(49, 6) ("community_check: found %s, comparing with\n", cp->name);
 #endif
-            return in_view(name, namelen, cp->readView);
+	    return in_view(name, namelen, cp->readView);
 	}
     return 0;
 }
@@ -778,8 +776,8 @@ variable_list *
 snmp_prfProtoFn(variable_list * Var, long *ErrP)
 {
     variable_list *Answer;
-    static StatCounters *f=NULL;
-    static StatCounters *l=NULL;
+    static StatCounters *f = NULL;
+    static StatCounters *l = NULL;
     double x;
     int minutes;
 
@@ -788,8 +786,8 @@ snmp_prfProtoFn(variable_list * Var, long *ErrP)
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 
-    switch(Var->name[9]) { 
-    case PERF_PROTOSTAT_AGGR: 	/* cacheProtoAggregateStats */
+    switch (Var->name[9]) {
+    case PERF_PROTOSTAT_AGGR:	/* cacheProtoAggregateStats */
 	Answer->type = SMI_COUNTER32;
 	Answer->val_len = sizeof(long);
 	Answer->val.integer = xmalloc(Answer->val_len);
@@ -803,12 +801,12 @@ snmp_prfProtoFn(variable_list * Var, long *ErrP)
 	case PERF_PROTOSTAT_AGGR_HTTP_ERRORS:
 	    *(Answer->val.integer) = (long) Counter.client_http.errors;
 	    break;
-        case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_IN:
-            *(Answer->val.integer) = (long) Counter.client_http.kbytes_in.kb;
-            break;
-        case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_OUT:
-            *(Answer->val.integer) = (long) Counter.client_http.kbytes_out.kb;
-            break;
+	case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_IN:
+	    *(Answer->val.integer) = (long) Counter.client_http.kbytes_in.kb;
+	    break;
+	case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_OUT:
+	    *(Answer->val.integer) = (long) Counter.client_http.kbytes_out.kb;
+	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_S:
 	    *(Answer->val.integer) = (long) Counter.icp.pkts_sent;
 	    break;
@@ -820,13 +818,13 @@ snmp_prfProtoFn(variable_list * Var, long *ErrP)
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_RKB:
 	    *(Answer->val.integer) = (long) Counter.icp.kbytes_recv.kb;
-	    break; 
-        case PERF_PROTOSTAT_AGGR_REQ:
-            *(Answer->val.integer) = (long) Counter.server.requests;
-            break;
-        case PERF_PROTOSTAT_AGGR_ERRORS:
-            *(Answer->val.integer) = (long) Counter.server.errors;
-            break;
+	    break;
+	case PERF_PROTOSTAT_AGGR_REQ:
+	    *(Answer->val.integer) = (long) Counter.server.requests;
+	    break;
+	case PERF_PROTOSTAT_AGGR_ERRORS:
+	    *(Answer->val.integer) = (long) Counter.server.errors;
+	    break;
 	case PERF_PROTOSTAT_AGGR_KBYTES_IN:
 	    *(Answer->val.integer) = (long) Counter.server.kbytes_in.kb;
 	    break;
@@ -844,60 +842,60 @@ snmp_prfProtoFn(variable_list * Var, long *ErrP)
 	    snmp_var_free(Answer);
 	    return (NULL);
 	}
-    	return Answer;
+	return Answer;
     case PERF_PROTOSTAT_MEDIAN:
-	
-	minutes= Var->name[12];
 
-	f= snmpStatGet(0);
-        l= snmpStatGet(minutes);
+	minutes = Var->name[12];
 
-	debug(49,8)("median: min= %d, %d l= %x , f = %x\n",minutes, 
-			Var->name[11], l, f);
+	f = snmpStatGet(0);
+	l = snmpStatGet(minutes);
+
+	debug(49, 8) ("median: min= %d, %d l= %x , f = %x\n", minutes,
+	    Var->name[11], l, f);
 	Answer->type = SMI_INTEGER;
 	Answer->val_len = sizeof(long);
 	Answer->val.integer = xmalloc(Answer->val_len);
 
-	debug(49,8)("median: l= %x , f = %x\n",l, f);
+	debug(49, 8) ("median: l= %x , f = %x\n", l, f);
 	switch (Var->name[11]) {
-		case PERF_MEDIAN_TIME:
-			x= minutes;
-			break;
-		case PERF_MEDIAN_HTTP_ALL:
-			x = statHistDeltaMedian(&l->client_http.all_svc_time,
-        			&f->client_http.all_svc_time);
-			break;
-		case PERF_MEDIAN_HTTP_MISS:
-	    		x = statHistDeltaMedian(&l->client_http.miss_svc_time,
-        			&f->client_http.miss_svc_time);
-			break;
-		case PERF_MEDIAN_HTTP_NM:
-			x = statHistDeltaMedian(&l->client_http.nm_svc_time,
-        			&f->client_http.nm_svc_time);
-			break;
-		case PERF_MEDIAN_HTTP_HIT:
-			x = statHistDeltaMedian(&l->client_http.hit_svc_time,
-				&f->client_http.hit_svc_time);
-			break;
-		case PERF_MEDIAN_ICP_QUERY:
-			x = statHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
-			break;
-		case PERF_MEDIAN_ICP_REPLY:
-			x = statHistDeltaMedian(&l->icp.reply_svc_time, &f->icp.reply_svc_time);
-			break;
-		case PERF_MEDIAN_DNS:
-			x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
-			break;
-		default:
+	case PERF_MEDIAN_TIME:
+	    x = minutes;
+	    break;
+	case PERF_MEDIAN_HTTP_ALL:
+	    x = statHistDeltaMedian(&l->client_http.all_svc_time,
+		&f->client_http.all_svc_time);
+	    break;
+	case PERF_MEDIAN_HTTP_MISS:
+	    x = statHistDeltaMedian(&l->client_http.miss_svc_time,
+		&f->client_http.miss_svc_time);
+	    break;
+	case PERF_MEDIAN_HTTP_NM:
+	    x = statHistDeltaMedian(&l->client_http.nm_svc_time,
+		&f->client_http.nm_svc_time);
+	    break;
+	case PERF_MEDIAN_HTTP_HIT:
+	    x = statHistDeltaMedian(&l->client_http.hit_svc_time,
+		&f->client_http.hit_svc_time);
+	    break;
+	case PERF_MEDIAN_ICP_QUERY:
+	    x = statHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
+	    break;
+	case PERF_MEDIAN_ICP_REPLY:
+	    x = statHistDeltaMedian(&l->icp.reply_svc_time, &f->icp.reply_svc_time);
+	    break;
+	case PERF_MEDIAN_DNS:
+	    x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
+	    break;
+	default:
 #if 0
-	    		xfree(Answer->val.integer);
+	    xfree(Answer->val.integer);
 #endif
-        		*ErrP = SNMP_ERR_NOSUCHNAME;
-		        snmp_var_free(Answer);
-		        return (NULL);
+	    *ErrP = SNMP_ERR_NOSUCHNAME;
+	    snmp_var_free(Answer);
+	    return (NULL);
 	}
 	*(Answer->val.integer) = (long) x;
-    	return Answer;
+	return Answer;
     }
     *ErrP = SNMP_ERR_NOSUCHNAME;
     snmp_var_free(Answer);

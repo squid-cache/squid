@@ -1,5 +1,5 @@
 /*
- * $Id: HttpStatusLine.cc,v 1.4 1998/02/26 08:10:55 rousskov Exp $
+ * $Id: HttpStatusLine.cc,v 1.5 1998/02/26 18:00:32 wessels Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -40,17 +40,21 @@ static const char *httpStatusString(http_status status);
 
 
 void
-httpStatusLineInit(HttpStatusLine *sline) {
+httpStatusLineInit(HttpStatusLine * sline)
+{
     httpStatusLineSet(sline, 0.0, 0, NULL);
 }
 
 void
-httpStatusLineClean(HttpStatusLine *sline) {
+httpStatusLineClean(HttpStatusLine * sline)
+{
     httpStatusLineSet(sline, 0.0, 500, NULL);
 }
 
 /* set values */
-void httpStatusLineSet(HttpStatusLine *sline, double version, http_status status, const char *reason) {
+void
+httpStatusLineSet(HttpStatusLine * sline, double version, http_status status, const char *reason)
+{
     assert(sline);
     sline->version = version;
     sline->status = status;
@@ -60,22 +64,23 @@ void httpStatusLineSet(HttpStatusLine *sline, double version, http_status status
 
 /* parse a 0-terminating buffer and fill internal structires; returns true on success */
 void
-httpStatusLinePackInto(const HttpStatusLine *sline, Packer *p)
+httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
 {
     assert(sline && p);
     tmp_debug(here) ("packing sline %p using %p:\n", sline, p);
     tmp_debug(here) (HttpStatusLineFormat, sline->version, sline->status,
 	sline->reason ? sline->reason : httpStatusString(sline->status));
     packerPrintf(p, HttpStatusLineFormat,
-	sline->version, sline->status, 
+	sline->version, sline->status,
 	sline->reason ? sline->reason : httpStatusString(sline->status));
 }
 
 /* pack fields using Packer */
 int
-httpStatusLineParse(HttpStatusLine *sline, const char *start, const char *end) {
+httpStatusLineParse(HttpStatusLine * sline, const char *start, const char *end)
+{
     assert(sline);
-    sline->status = HTTP_INVALID_HEADER; /* Squid header parsing error */
+    sline->status = HTTP_INVALID_HEADER;	/* Squid header parsing error */
     if (strncasecmp(start, "HTTP/", 5))
 	return 0;
     start += 5;
@@ -86,7 +91,7 @@ httpStatusLineParse(HttpStatusLine *sline, const char *start, const char *end) {
 	return 0;
     sline->status = atoi(++start);
     /* we ignore 'reason-phrase' */
-    return 1; /* success */
+    return 1;			/* success */
 }
 
 static const char *
@@ -96,7 +101,7 @@ httpStatusString(http_status status)
     const char *p = NULL;
     switch (status) {
     case 0:
-	p = "Init";  /* we init .status with code 0 */
+	p = "Init";		/* we init .status with code 0 */
 	break;
     case 100:
 	p = "Continue";

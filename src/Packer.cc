@@ -1,5 +1,6 @@
+
 /*
- * $Id: Packer.cc,v 1.4 1998/02/26 08:10:55 rousskov Exp $
+ * $Id: Packer.cc,v 1.5 1998/02/26 18:00:34 wessels Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -29,36 +30,36 @@
  */
 
 /*
-    Rationale:
-    ----------
-
-    OK, we have to major interfaces comm.c and store.c.
-
-    Store.c has a nice storeAppend[Printf] capability which makes "storing"
-    things easy and painless. 
-
-    Comm.c lacks commAppend[Printf] because comm does not handle its own
-    buffers (no mem_obj equivalent for comm.c).
-
-    Thus, if one wants to be able to store _and_ comm_write an object, s/he
-    has to implement two almost identical functions.
-
-    Packer
-    ------
-
-    Packer provides for a more uniform interface to store and comm modules.
-    Packer has its own append and printf routines that "know" where to send
-    incoming data. In case of store interface, Packer sends data to
-    storeAppend.  Otherwise, Packer uses a MemBuf that can be flushed later to
-    comm_write.
-
-    Thus, one can write just one function that will either "pack" things for
-    comm_write or "append" things to store, depending on actual packer
-    supplied.
-
-    It is amasing how much work a tiny object can save. :)
-
-*/
+ * Rationale:
+ * ----------
+ * 
+ * OK, we have to major interfaces comm.c and store.c.
+ * 
+ * Store.c has a nice storeAppend[Printf] capability which makes "storing"
+ * things easy and painless. 
+ * 
+ * Comm.c lacks commAppend[Printf] because comm does not handle its own
+ * buffers (no mem_obj equivalent for comm.c).
+ * 
+ * Thus, if one wants to be able to store _and_ comm_write an object, s/he
+ * has to implement two almost identical functions.
+ * 
+ * Packer
+ * ------
+ * 
+ * Packer provides for a more uniform interface to store and comm modules.
+ * Packer has its own append and printf routines that "know" where to send
+ * incoming data. In case of store interface, Packer sends data to
+ * storeAppend.  Otherwise, Packer uses a MemBuf that can be flushed later to
+ * comm_write.
+ * 
+ * Thus, one can write just one function that will either "pack" things for
+ * comm_write or "append" things to store, depending on actual packer
+ * supplied.
+ * 
+ * It is amasing how much work a tiny object can save. :)
+ * 
+ */
 
 
 /*
@@ -87,49 +88,49 @@
  */
 
 /* append()'s */
-static void (*const store_append)(StoreEntry *, const char *, int) = &storeAppend;
-static void (*const memBuf_append)(MemBuf *, const char *, mb_size_t) = &memBufAppend;
+static void (*const store_append) (StoreEntry *, const char *, int) = &storeAppend;
+static void (*const memBuf_append) (MemBuf *, const char *, mb_size_t) = &memBufAppend;
 
 /* vprintf()'s */
-static void (*const store_vprintf)(StoreEntry *, const char *, va_list ap) = &storeAppendVPrintf;
-static void (*const memBuf_vprintf)(MemBuf *, const char *, va_list ap) = &memBufVPrintf;
+static void (*const store_vprintf) (StoreEntry *, const char *, va_list ap) = &storeAppendVPrintf;
+static void (*const memBuf_vprintf) (MemBuf *, const char *, va_list ap) = &memBufVPrintf;
 
 
 /* init/clean */
 
 /* init with this to forward data to StoreEntry */
 void
-packerToStoreInit(Packer *p, StoreEntry *e)
+packerToStoreInit(Packer * p, StoreEntry * e)
 {
     assert(p && e);
-    p->append = (append_f)store_append;
-    p->vprintf = (vprintf_f)storeAppendVPrintf;
+    p->append = (append_f) store_append;
+    p->vprintf = (vprintf_f) storeAppendVPrintf;
     p->real_handler = e;
 }
 
 /* init with this to accumulate data in MemBuf */
 void
-packerToMemInit(Packer *p, MemBuf *mb)
+packerToMemInit(Packer * p, MemBuf * mb)
 {
     assert(p && mb);
-    p->append = (append_f)memBuf_append;
-    p->vprintf = (vprintf_f)memBuf_vprintf;
+    p->append = (append_f) memBuf_append;
+    p->vprintf = (vprintf_f) memBuf_vprintf;
     p->real_handler = mb;
 }
 
 /* call this when you are done */
 void
-packerClean(Packer *p)
+packerClean(Packer * p)
 {
-   assert(p);
-   /* it is not really necessary to do this, but, just in case... */
-   p->append = NULL;
-   p->vprintf = NULL;
-   p->real_handler = NULL;
+    assert(p);
+    /* it is not really necessary to do this, but, just in case... */
+    p->append = NULL;
+    p->vprintf = NULL;
+    p->real_handler = NULL;
 }
 
 void
-packerAppend(Packer *p, const char *buf, int sz)
+packerAppend(Packer * p, const char *buf, int sz)
 {
     assert(p);
     assert(p->real_handler && p->append);
@@ -138,7 +139,7 @@ packerAppend(Packer *p, const char *buf, int sz)
 
 #ifdef __STDC__
 void
-packerPrintf(Packer *p, const char *fmt, ...)
+packerPrintf(Packer * p, const char *fmt,...)
 {
     va_list args;
     va_start(args, fmt);

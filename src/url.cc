@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.80 1998/02/25 07:12:18 wessels Exp $
+ * $Id: url.cc,v 1.81 1998/02/26 18:00:59 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -60,18 +60,18 @@ const char *ProtocolStr[] =
 static int url_ok[256];
 static const char *const hex = "0123456789abcdef";
 static request_t *urnParse(method_t method, char *urn);
-static const char *const valid_hostname_chars = 
+static const char *const valid_hostname_chars =
 #if ALLOW_HOSTNAME_UNDERSCORES
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz"
-        "0123456789-._";
+"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+"abcdefghijklmnopqrstuvwxyz"
+"0123456789-._";
 #else
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz"
-        "0123456789-.";
+"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+"abcdefghijklmnopqrstuvwxyz"
+"0123456789-.";
 #endif
-static const char *const valid_url_chars = 
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./-_$";
+static const char *const valid_url_chars =
+"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./-_$";
 
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
@@ -107,9 +107,9 @@ urlInitialize(void)
     int i;
     debug(23, 5) ("urlInitialize: Initializing...\n");
     assert(sizeof(ProtocolStr) == (PROTO_MAX + 1) * sizeof(char *));
-    for (i=0; i<256; i++)
+    for (i = 0; i < 256; i++)
 	url_ok[i] = strchr(valid_url_chars, (char) i) ? 1 : 0;
-	
+
 }
 
 /* Encode prohibited char in string */
@@ -247,8 +247,8 @@ urlParse(method_t method, char *url)
     for (t = host; *t; t++)
 	*t = tolower(*t);
     if (strspn(host, valid_hostname_chars) != strlen(host)) {
-        debug(23, 1)("urlParse: Illegal character in hostname '%s'\n", host);
-        return NULL;
+	debug(23, 1) ("urlParse: Illegal character in hostname '%s'\n", host);
+	return NULL;
     }
     /* remove trailing dots from hostnames */
     while ((l = strlen(host)) > 0 && host[--l] == '.')

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.209 1998/02/26 09:01:16 kostas Exp $
+ * $Id: stat.cc,v 1.210 1998/02/26 18:00:53 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -116,7 +116,7 @@ static void statAvgDump(StoreEntry *, int minutes);
 static void statCountersInit(StatCounters *);
 static void statCountersInitSpecial(StatCounters *);
 static void statCountersClean(StatCounters *);
-static void statCountersCopy(StatCounters *dest, const StatCounters *orig);
+static void statCountersCopy(StatCounters * dest, const StatCounters * orig);
 static void statCountersDump(StoreEntry * sentry);
 static OBJH stat_io_get;
 static OBJH stat_objects_get;
@@ -134,9 +134,9 @@ static void info_get_mallstat(int, int, StoreEntry *);
 /*
  * An hour's worth, plus the 'current' counter
  */
-#if 0 /* moved to defines.h to get from snmp_oidlist.c */
+#if 0				/* moved to defines.h to get from snmp_oidlist.c */
 #define N_COUNT_HIST 61
-#endif 
+#endif
 StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
 
@@ -656,7 +656,7 @@ statInit(void)
 {
     int i;
     debug(18, 5) ("statInit: Initializing...\n");
-#if 0 /* we do it in statCountersInit */
+#if 0				/* we do it in statCountersInit */
     memset(CountHist, '\0', N_COUNT_HIST * sizeof(StatCounters));
 #endif
     for (i = 0; i < N_COUNT_HIST; i++)
@@ -702,7 +702,7 @@ statAvgTick(void *notused)
     c->cputime = rusage_cputime(&rusage);
     c->timestamp = current_time;
     /* even if NCountHist is small, we already Init()ed the tail */
-    statCountersClean(CountHist+N_COUNT_HIST-1);
+    statCountersClean(CountHist + N_COUNT_HIST - 1);
     xmemmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
 #if 0
     memcpy(t, c, sizeof(StatCounters));
@@ -712,7 +712,7 @@ statAvgTick(void *notused)
 }
 
 static void
-statCountersInit(StatCounters *C)
+statCountersInit(StatCounters * C)
 {
     assert(C);
     memset(C, 0, sizeof(*C));
@@ -723,7 +723,7 @@ statCountersInit(StatCounters *C)
 
 /* add special cases here as they arrive */
 static void
-statCountersInitSpecial(StatCounters *C)
+statCountersInitSpecial(StatCounters * C)
 {
     /*
      * HTTP svc_time hist is kept in milli-seconds; max of 3 hours.
@@ -745,7 +745,7 @@ statCountersInitSpecial(StatCounters *C)
 
 /* add special cases here as they arrive */
 void
-statCountersClean(StatCounters *C)
+statCountersClean(StatCounters * C)
 {
     assert(C);
     statHistClean(&C->client_http.all_svc_time);
@@ -759,7 +759,7 @@ statCountersClean(StatCounters *C)
 
 /* add special cases here as they arrive */
 void
-statCountersCopy(StatCounters *dest, const StatCounters *orig)
+statCountersCopy(StatCounters * dest, const StatCounters * orig)
 {
     assert(dest && orig);
     /* this should take care of all the fields, but "special" ones */
@@ -897,5 +897,5 @@ get_median_svc(int interval, int which)
 StatCounters *
 snmpStatGet(int minutes)
 {
-  return &CountHist[minutes];
+    return &CountHist[minutes];
 }

@@ -108,18 +108,18 @@ extern void comm_write(int fd,
     CWCB * handler,
     void *handler_data,
     FREE *);
-extern void comm_write_mbuf(int fd, MemBuf mb, CWCB *handler, void *handler_data);
+extern void comm_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data);
 extern void commCallCloseHandlers(int fd);
 extern int commSetTimeout(int fd, int, PF *, void *);
 extern void commSetDefer(int fd, DEFER * func, void *);
 extern int ignoreErrno(int);
 
-extern void packerToStoreInit(Packer *p, StoreEntry *e);
-extern void packerToMemInit(Packer *p, MemBuf *mb);
-extern void packerClean(Packer *p);
-extern void packerAppend(Packer *p, const char *buf, int size);
+extern void packerToStoreInit(Packer * p, StoreEntry * e);
+extern void packerToMemInit(Packer * p, MemBuf * mb);
+extern void packerClean(Packer * p);
+extern void packerAppend(Packer * p, const char *buf, int size);
 #ifdef __STDC__
-extern void packerPrintf(Packer *p, const char *fmt, ...);
+extern void packerPrintf(Packer * p, const char *fmt,...);
 #else
 extern void packerPrintf();
 #endif
@@ -231,92 +231,92 @@ extern void httpInit(void);
 
 /* Http Status Line */
 /* init/clean */
-extern void httpStatusLineInit(HttpStatusLine *sline);
-extern void httpStatusLineClean(HttpStatusLine *sline);
+extern void httpStatusLineInit(HttpStatusLine * sline);
+extern void httpStatusLineClean(HttpStatusLine * sline);
 /* set values */
-extern void httpStatusLineSet(HttpStatusLine *sline, double version, 
+extern void httpStatusLineSet(HttpStatusLine * sline, double version,
     http_status status, const char *reason);
 /* parse/pack */
 /* parse a 0-terminating buffer and fill internal structires; returns true on success */
-extern int httpStatusLineParse(HttpStatusLine *sline, const char *start,
+extern int httpStatusLineParse(HttpStatusLine * sline, const char *start,
     const char *end);
 /* pack fields using Packer */
-extern void httpStatusLinePackInto(const HttpStatusLine *sline, Packer *p);
+extern void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
 
 /* Http Body */
 /* init/clean */
-extern void httpBodyInit(HttpBody *body);
-extern void httpBodyClean(HttpBody *body);
+extern void httpBodyInit(HttpBody * body);
+extern void httpBodyClean(HttpBody * body);
 /* get body ptr (always use this) */
-extern const char *httpBodyPtr(const HttpBody *body);
+extern const char *httpBodyPtr(const HttpBody * body);
 /* set body, if freefunc is NULL the content will be copied, otherwise not */
-extern void httpBodySet(HttpBody *body, const char *content, int size,
-    FREE *freefunc);
+extern void httpBodySet(HttpBody * body, const char *content, int size,
+    FREE * freefunc);
 
 /* pack */
-extern void httpBodyPackInto(const HttpBody *body, Packer *p);
+extern void httpBodyPackInto(const HttpBody * body, Packer * p);
 
 
 /* Http Header */
 extern void httpHeaderInitModule();
 /* create/init/clean/destroy */
 extern HttpHeader *httpHeaderCreate();
-extern void httpHeaderInit(HttpHeader *hdr);
-extern void httpHeaderClean(HttpHeader *hdr);
-extern void httpHeaderDestroy(HttpHeader *hdr);
+extern void httpHeaderInit(HttpHeader * hdr);
+extern void httpHeaderClean(HttpHeader * hdr);
+extern void httpHeaderDestroy(HttpHeader * hdr);
 /* clone */
-HttpHeader *httpHeaderClone(HttpHeader *hdr);
+HttpHeader *httpHeaderClone(HttpHeader * hdr);
 /* parse/pack */
-extern int httpHeaderParse(HttpHeader *hdr, const char *header_start, const char *header_end);
-extern void httpHeaderPackInto(const HttpHeader *hdr, Packer *p);
+extern int httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end);
+extern void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
 /* field manipulation */
-extern int httpHeaderHas(const HttpHeader *hdr, http_hdr_type type);
-extern void httpHeaderDel(HttpHeader *hdr, http_hdr_type id);
-extern void httpHeaderSetInt(HttpHeader *hdr, http_hdr_type type, int number);
-extern void httpHeaderSetTime(HttpHeader *hdr, http_hdr_type type, time_t time);
-extern void httpHeaderSetStr(HttpHeader *hdr, http_hdr_type type, const char *str);
-extern void httpHeaderSetAuth(HttpHeader *hdr, const char *authScheme, const char *realm);
-extern void httpHeaderAddExt(HttpHeader *hdr, const char *name, const char* value);
-extern const char *httpHeaderGetStr(const HttpHeader *hdr, http_hdr_type id);
-extern time_t httpHeaderGetTime(const HttpHeader *hdr, http_hdr_type id);
-extern HttpScc *httpHeaderGetScc(const HttpHeader *hdr);
-extern field_store httpHeaderGet(const HttpHeader *hdr, http_hdr_type id);
-int httpHeaderDelFields(HttpHeader *hdr, const char *name);
+extern int httpHeaderHas(const HttpHeader * hdr, http_hdr_type type);
+extern void httpHeaderDel(HttpHeader * hdr, http_hdr_type id);
+extern void httpHeaderSetInt(HttpHeader * hdr, http_hdr_type type, int number);
+extern void httpHeaderSetTime(HttpHeader * hdr, http_hdr_type type, time_t time);
+extern void httpHeaderSetStr(HttpHeader * hdr, http_hdr_type type, const char *str);
+extern void httpHeaderSetAuth(HttpHeader * hdr, const char *authScheme, const char *realm);
+extern void httpHeaderAddExt(HttpHeader * hdr, const char *name, const char *value);
+extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
+extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
+extern HttpScc *httpHeaderGetScc(const HttpHeader * hdr);
+extern field_store httpHeaderGet(const HttpHeader * hdr, http_hdr_type id);
+int httpHeaderDelFields(HttpHeader * hdr, const char *name);
 /* store report about current header usage and other stats */
-extern void httpHeaderStoreReport(StoreEntry *e);
+extern void httpHeaderStoreReport(StoreEntry * e);
 
 /* Http Reply */
 extern HttpReply *httpReplyCreate();
-extern void httpReplyInit(HttpReply *rep);
-extern void httpReplyClean(HttpReply *rep);
-extern void httpReplyDestroy(HttpReply *rep);
+extern void httpReplyInit(HttpReply * rep);
+extern void httpReplyClean(HttpReply * rep);
+extern void httpReplyDestroy(HttpReply * rep);
 /* reset: clean, then init */
-void httpReplyReset(HttpReply *rep);
+void httpReplyReset(HttpReply * rep);
 /* absorb: copy the contents of a new reply to the old one, destroy new one */
-void httpReplyAbsorb(HttpReply *rep, HttpReply *new_rep);
+void httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep);
 /* parse returns -1,0,+1 on error,need-more-data,success */
-extern int httpReplyParse(HttpReply *rep, const char *buf); /*, int atEnd); */
-extern void httpReplyPackInto(const HttpReply *rep, Packer *p);
+extern int httpReplyParse(HttpReply * rep, const char *buf);	/*, int atEnd); */
+extern void httpReplyPackInto(const HttpReply * rep, Packer * p);
 /* ez-routines */
 /* mem-pack: returns a ready to use mem buffer with a packed reply */
-extern MemBuf httpReplyPack(const HttpReply *rep);
+extern MemBuf httpReplyPack(const HttpReply * rep);
 /* swap: create swap-based packer, pack, destroy packer */
-extern void httpReplySwapOut(const HttpReply *rep, StoreEntry *e);
+extern void httpReplySwapOut(const HttpReply * rep, StoreEntry * e);
 /* set commonly used info with one call */
-extern void httpReplySetHeaders(HttpReply *rep, double ver, http_status status,
+extern void httpReplySetHeaders(HttpReply * rep, double ver, http_status status,
     const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
 /* do everything in one call: init, set, pack, clean, return MemBuf */
-extern MemBuf httpPackedReply(double ver, http_status status, const char *ctype, 
+extern MemBuf httpPackedReply(double ver, http_status status, const char *ctype,
     int clen, time_t lmt, time_t expires);
 /* construct 304 reply and pack it into MemBuf, return MemBuf */
-extern MemBuf httpPacked304Reply(const HttpReply *rep);
+extern MemBuf httpPacked304Reply(const HttpReply * rep);
 /* update when 304 reply is received for a cached object */
-extern void httpReplyUpdateOnNotModified(HttpReply *rep, HttpReply *freshRep);
+extern void httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep);
 /* header manipulation, see HttpReply.c for caveats */
-extern int httpReplyContentLen(const HttpReply *rep);
-extern const char *httpReplyContentType(const HttpReply *rep);
-extern time_t httpReplyExpires(const HttpReply *rep);
-extern int httpReplyHasScc(const HttpReply *rep, http_scc_type type);
+extern int httpReplyContentLen(const HttpReply * rep);
+extern const char *httpReplyContentType(const HttpReply * rep);
+extern time_t httpReplyExpires(const HttpReply * rep);
+extern int httpReplyHasScc(const HttpReply * rep, http_scc_type type);
 
 
 extern void icmpOpen(void);
@@ -381,25 +381,25 @@ extern int ipcacheUnregister(const char *name, void *data);
 
 /* MemBuf */
 /* init with specific sizes */
-extern void memBufInit(MemBuf *mb, mb_size_t szInit, mb_size_t szMax);
+extern void memBufInit(MemBuf * mb, mb_size_t szInit, mb_size_t szMax);
 /* init with defaults */
-extern void memBufDefInit(MemBuf *mb);
+extern void memBufDefInit(MemBuf * mb);
 /* cleans the mb; last function to call if you do not give .buf away */
-extern void memBufClean(MemBuf *mb);
+extern void memBufClean(MemBuf * mb);
 /* calls memcpy, appends exactly size bytes, extends buffer if needed */
-extern void memBufAppend(MemBuf *mb, const char *buf, mb_size_t size);
+extern void memBufAppend(MemBuf * mb, const char *buf, mb_size_t size);
 /* calls snprintf, extends buffer if needed */
 #ifdef __STDC__
-extern void memBufPrintf(MemBuf *mb, const char *fmt, ...);
+extern void memBufPrintf(MemBuf * mb, const char *fmt,...);
 #else
 extern void memBufPrintf();
 #endif
 /* vprintf for other printf()'s to use */
-extern void memBufVPrintf(MemBuf *mb, const char *fmt, va_list ap);
+extern void memBufVPrintf(MemBuf * mb, const char *fmt, va_list ap);
 /* returns free() function to be used, _freezes_ the object! */
-extern FREE *memBufFreeFunc(MemBuf *mb);
+extern FREE *memBufFreeFunc(MemBuf * mb);
 /* puts report on MemBuf _module_ usage into mb */
-extern void memBufReport(MemBuf *mb);
+extern void memBufReport(MemBuf * mb);
 
 extern char *mime_get_header(const char *mime, const char *header);
 extern char *mime_headers_end(const char *mime);
@@ -453,7 +453,7 @@ extern int netdbHostHops(const char *host);
 extern int netdbHostRtt(const char *host);
 extern void netdbUpdatePeer(request_t *, peer * e, int rtt, int hops);
 
-extern void cachemgrStart(int fd, request_t *request, StoreEntry * entry);
+extern void cachemgrStart(int fd, request_t * request, StoreEntry * entry);
 extern void cachemgrRegister(const char *, const char *, OBJH *, int);
 extern void cachemgrInit(void);
 

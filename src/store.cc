@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.386 1998/02/21 18:56:48 rousskov Exp $
+ * $Id: store.cc,v 1.387 1998/02/26 18:00:55 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -214,7 +214,7 @@ destroy_MemObject(StoreEntry * e)
     httpReplyDestroy(mem->reply);
     requestUnlink(mem->request);
     mem->request = NULL;
-    ctx_exit(ctx); /* must exit before we free mem->url */
+    ctx_exit(ctx);		/* must exit before we free mem->url */
     safe_free(mem->url);
     safe_free(mem->log_url);
     memFree(MEM_MEMOBJECT, mem);
@@ -456,7 +456,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
 	debug(20, 5) ("storeAppend: appending %d bytes for '%s'\n",
 	    len,
 	    storeKeyText(e->key));
-	tmp_debug(here) ("bytes: '%.20s'\n", buf); /* @?@ @?@ */
+	tmp_debug(here) ("bytes: '%.20s'\n", buf);	/* @?@ @?@ */
 	storeGetMemSpace(len);
 	stmemAppend(mem->data, buf, len);
 	mem->inmem_hi += len;
@@ -974,7 +974,7 @@ storeTimestampsSet(StoreEntry * entry)
 {
     time_t served_date = -1;
     HttpReply *reply = entry->mem_obj->reply;
-#if 0 /* new interface */
+#if 0				/* new interface */
     served_date = reply->date > -1 ? reply->date : squid_curtime;
     entry->expires = reply->expires;
     if (reply->last_modified > -1)
@@ -1098,7 +1098,7 @@ storeCreateMemObject(StoreEntry * e, const char *url, const char *log_url)
     e->mem_obj = new_MemObject(url, log_url);
 }
 
-#if 0 /* moved to HttpReply.c (has nothing to do with store.c) */
+#if 0				/* moved to HttpReply.c (has nothing to do with store.c) */
 void
 storeCopyNotModifiedReplyHeaders(MemObject * oldmem, MemObject * newmem)
 {

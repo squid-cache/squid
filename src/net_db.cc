@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.69 1998/02/26 09:01:14 kostas Exp $
+ * $Id: net_db.cc,v 1.70 1998/02/26 18:00:47 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -699,7 +699,7 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
 }
 
 #ifdef SQUID_SNMP
-int 
+int
 netdb_getMax()
 {
     int i = 0;
@@ -778,11 +778,11 @@ snmp_netdbFn(variable_list * Var, long *ErrP)
 	break;
     case NETDB_PINGTIME:
 	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (long) n->next_ping_time-squid_curtime;
+	*(Answer->val.integer) = (long) n->next_ping_time - squid_curtime;
 	break;
     case NETDB_LASTUSE:
 	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (long) squid_curtime-n->last_use_time;
+	*(Answer->val.integer) = (long) squid_curtime - n->last_use_time;
 	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;

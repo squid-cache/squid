@@ -1,5 +1,6 @@
+
 /*
- * $Id: StatHist.cc,v 1.2 1998/02/25 16:40:06 wessels Exp $
+ * $Id: StatHist.cc,v 1.3 1998/02/26 18:00:35 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -87,14 +88,14 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
     assert(Dest->scale == Orig->scale);
     assert(Dest->val_in == Orig->val_in && Dest->val_out == Orig->val_out);
     /* actual copy */
-    xmemcpy(Dest->bins, Orig->bins, Dest->capacity*sizeof(*Dest->bins));
+    xmemcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));
 }
 
 void
 statHistCount(StatHist * H, double val)
 {
     const int bin = statHistBin(H, val);
-    assert(H->bins);	/* make sure it got initialized */
+    assert(H->bins);		/* make sure it got initialized */
     assert(0 <= bin && bin < H->capacity);
     H->bins[bin]++;
 }
@@ -103,13 +104,13 @@ static int
 statHistBin(const StatHist * H, double v)
 {
     int bin;
-    v -= H->min; /* offset */
-    if (v < 0.0) /* too small */
+    v -= H->min;		/* offset */
+    if (v < 0.0)		/* too small */
 	return 0;
     bin = (int) (H->scale * H->val_in(v) + 0.5);
-    if (bin < 0) /* should not happen */
+    if (bin < 0)		/* should not happen */
 	bin = 0;
-    if (bin >= H->capacity) /* too big */
+    if (bin >= H->capacity)	/* too big */
 	bin = H->capacity - 1;
     return bin;
 }
@@ -168,7 +169,7 @@ statHistBinDumper(StoreEntry * sentry, int idx, double val, double size, int cou
 {
     if (count)
 	storeAppendPrintf(sentry, "\t%3d/%f\t%d\t%f\n",
-	    idx, val, count, count/size);
+	    idx, val, count, count / size);
 }
 
 void
@@ -179,7 +180,7 @@ statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd)
     if (!bd)
 	bd = statHistBinDumper;
     for (i = 0; i < H->capacity; i++) {
-	const double right_border = statHistVal(H, i+1);
+	const double right_border = statHistVal(H, i + 1);
 	assert(right_border - left_border > 0.0);
 	bd(sentry, i, left_border, right_border - left_border, H->bins[i]);
 	left_border = right_border;
@@ -187,8 +188,16 @@ statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd)
 }
 
 /* log based histogram */
-static double Log(double x) { return log(x+1); }
-static double Exp(double x) { return exp(x)-1; }
+static double
+Log(double x)
+{
+    return log(x + 1);
+}
+static double
+Exp(double x)
+{
+    return exp(x) - 1;
+}
 void
 statHistLogInit(StatHist * H, int capacity, double min, double max)
 {
@@ -197,9 +206,13 @@ statHistLogInit(StatHist * H, int capacity, double min, double max)
 
 /* linear histogram for enums */
 /* we want to be have [-1,last_enum+1] range to track out of range enums */
-static double Null(double x) { return x; }
+static double
+Null(double x)
+{
+    return x;
+}
 void
 statHistEnumInit(StatHist * H, int last_enum)
 {
-    statHistInit(H, last_enum+3, &Null, &Null, -1, last_enum+1+1);
+    statHistInit(H, last_enum + 3, &Null, &Null, -1, last_enum + 1 + 1);
 }

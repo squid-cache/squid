@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.51 1998/02/22 07:45:20 rousskov Exp $
+ * $Id: mime.cc,v 1.52 1998/02/26 18:00:47 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -241,12 +241,14 @@ mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field)
 {
     char *auth_hdr;
     char *t;
-    if (auth_field) *auth_field = NULL;
+    if (auth_field)
+	*auth_field = NULL;
     if (hdr == NULL)
 	return NULL;
     if ((auth_hdr = mime_get_header(hdr, "Authorization")) == NULL)
 	return NULL;
-    if (auth_field) *auth_field = auth_hdr;
+    if (auth_field)
+	*auth_field = auth_hdr;
     if ((t = strtok(auth_hdr, " \t")) == NULL)
 	return NULL;
     if (strcasecmp(t, auth_scheme) != 0)
@@ -451,7 +453,7 @@ mimeLoadIconFile(const char *icon)
 	METHOD_GET);
     assert(e != NULL);
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
-#if 0 /* use new interface */
+#if 0				/* use new interface */
     buf = memAllocate(MEM_4K_BUF, 1);
     l = 0;
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "HTTP/1.0 200 OK\r\n");
@@ -466,7 +468,7 @@ mimeLoadIconFile(const char *icon)
     storeAppend(e, buf, l);
 #else
     httpReplyReset(e->mem_obj->reply);
-    httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, NULL, 
+    httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, NULL,
 	type, (int) sb.st_size, sb.st_mtime, squid_curtime + 86400);
     httpReplySwapOut(e->mem_obj->reply, e);
     /* read the file into the buffer and append it to store */

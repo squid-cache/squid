@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.6 1998/02/23 13:03:01 rousskov Exp $
+ * $Id: cache_manager.cc,v 1.7 1998/02/26 18:00:37 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -48,17 +48,17 @@ typedef struct _action_table {
     struct _action_table *next;
 } action_table;
 
-static action_table * cachemgrFindAction(const char *action);
+static action_table *cachemgrFindAction(const char *action);
 #if 0
 static cachemgrStateData *cachemgrParse(const char *url);
 #else
 static cachemgrStateData *cachemgrParseUrl(const char *url);
 #endif
-static void cachemgrParseHeaders(cachemgrStateData *mgr, const request_t *request);
+static void cachemgrParseHeaders(cachemgrStateData * mgr, const request_t * request);
 static int cachemgrCheckPassword(cachemgrStateData *);
-static void cachemgrStateFree(cachemgrStateData *mgr);
+static void cachemgrStateFree(cachemgrStateData * mgr);
 static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
-static const char *cachemgrActionProtection(const action_table *at);
+static const char *cachemgrActionProtection(const action_table * at);
 static OBJH cachemgrShutdown;
 static OBJH cachemgrMenu;
 
@@ -70,7 +70,7 @@ cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_re
     action_table *a;
     action_table **A;
     if (cachemgrFindAction(action) != NULL) {
-	debug(16, 3)("cachemgrRegister: Duplicate '%s'\n", action);
+	debug(16, 3) ("cachemgrRegister: Duplicate '%s'\n", action);
 	return;
     }
     a = xcalloc(1, sizeof(action_table));
@@ -80,7 +80,7 @@ cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_re
     a->pw_req_flag = pw_req_flag;
     for (A = &ActionTable; *A; A = &(*A)->next);
     *A = a;
-    debug(16, 3)("cachemgrRegister: registered %s\n", action);
+    debug(16, 3) ("cachemgrRegister: registered %s\n", action);
 }
 
 static action_table *
@@ -111,7 +111,7 @@ cachemgrParseUrl(const char *url)
 	debug(16, 0) ("cachemgrParseUrl: action '%s' not found\n", request);
 	return NULL;
     } else {
-    	prot = cachemgrActionProtection(a);
+	prot = cachemgrActionProtection(a);
 	if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
 	    debug(16, 0) ("cachemgrParseUrl: action '%s' is %s\n", request, prot);
 	    return NULL;
@@ -126,15 +126,15 @@ cachemgrParseUrl(const char *url)
 }
 
 static void
-cachemgrParseHeaders(cachemgrStateData *mgr, const request_t *request)
+cachemgrParseHeaders(cachemgrStateData * mgr, const request_t * request)
 {
-    const char *basic_cookie; /* base 64 _decoded_ user:passwd pair */
+    const char *basic_cookie;	/* base 64 _decoded_ user:passwd pair */
     const char *authField;
     const char *passwd_del;
     assert(mgr && request);
     /* this parsing will go away when hdrs are added to request_t @?@ */
     basic_cookie = mime_get_auth(request->headers, "Basic", &authField);
-    debug(16,9) ("cachemgrParseHeaders: got auth: '%s'\n", authField ? authField:"<none>");
+    debug(16, 9) ("cachemgrParseHeaders: got auth: '%s'\n", authField ? authField : "<none>");
     if (!authField)
 	return;
     if (!basic_cookie) {
@@ -148,11 +148,11 @@ cachemgrParseHeaders(cachemgrStateData *mgr, const request_t *request)
     /* found user:password pair, reset old values */
     safe_free(mgr->user_name);
     safe_free(mgr->passwd);
-    mgr->user_name = xstrdup(basic_cookie); 
+    mgr->user_name = xstrdup(basic_cookie);
     mgr->user_name[passwd_del - basic_cookie] = '\0';
-    mgr->passwd = xstrdup(passwd_del+1);
+    mgr->passwd = xstrdup(passwd_del + 1);
     /* warning: this prints decoded password which maybe not what you want to do @?@ @?@ */
-    debug(16,9) ("cachemgrParseHeaders: got user: '%s' passwd: '%s'\n", mgr->user_name, mgr->passwd);
+    debug(16, 9) ("cachemgrParseHeaders: got user: '%s' passwd: '%s'\n", mgr->user_name, mgr->passwd);
 }
 
 /*
@@ -176,16 +176,16 @@ cachemgrCheckPassword(cachemgrStateData * mgr)
 }
 
 static void
-cachemgrStateFree(cachemgrStateData *mgr)
+cachemgrStateFree(cachemgrStateData * mgr)
 {
-	safe_free(mgr->action);
-	safe_free(mgr->user_name);
-	safe_free(mgr->passwd);
-	xfree(mgr);
+    safe_free(mgr->action);
+    safe_free(mgr->user_name);
+    safe_free(mgr->passwd);
+    xfree(mgr);
 }
 
 void
-cachemgrStart(int fd, request_t *request, StoreEntry * entry)
+cachemgrStart(int fd, request_t * request, StoreEntry * entry)
 {
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;
@@ -206,13 +206,13 @@ cachemgrStart(int fd, request_t *request, StoreEntry * entry)
     cachemgrParseHeaders(mgr, request);
     if (mgr->user_name && strlen(mgr->user_name))
 	debug(16, 1) ("CACHEMGR: %s@%s requesting '%s'\n",
-	      mgr->user_name, fd_table[fd].ipaddr, mgr->action);
+	    mgr->user_name, fd_table[fd].ipaddr, mgr->action);
     else
 	debug(16, 1) ("CACHEMGR: %s requesting '%s'\n",
-	      fd_table[fd].ipaddr, mgr->action);
+	    fd_table[fd].ipaddr, mgr->action);
     /* Check password */
     if (cachemgrCheckPassword(mgr) != 0) {
-#if 0 /* old response, we ask for authentication now */
+#if 0				/* old response, we ask for authentication now */
 	cachemgrStateFree(mgr);
 	debug(16, 1) ("WARNING: Incorrect Cachemgr Password!\n");
 	err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND);
@@ -224,11 +224,11 @@ cachemgrStart(int fd, request_t *request, StoreEntry * entry)
 	/* warn if user specified incorrect password */
 	if (mgr->passwd)
 	    debug(16, 1) ("WARNING: CACHEMGR: Incorrect Password (user: %s, action: %s)!\n",
-	        mgr->user_name ? mgr->user_name : "<unknown>", mgr->action);
+		mgr->user_name ? mgr->user_name : "<unknown>", mgr->action);
 	else
 	    debug(16, 3) ("CACHEMGR: requesting authentication for action: '%s'.\n",
 		mgr->action);
-        err->request = requestLink(request);
+	err->request = requestLink(request);
 	rep = errorBuildReply(err);
 	errorStateFree(err);
 	/* add Authenticate header, use 'action' as a realm because password depends on action */
@@ -250,7 +250,7 @@ cachemgrStart(int fd, request_t *request, StoreEntry * entry)
     {
 	HttpReply *rep = httpReplyCreate();
 	httpReplySetHeaders(rep, (double) 1.0, HTTP_OK, NULL,
-	    "text/plain", -1 /* C-Len */, squid_curtime /* LMT */, squid_curtime);
+	    "text/plain", -1 /* C-Len */ , squid_curtime /* LMT */ , squid_curtime);
 	httpReplySwapOut(rep, entry);
 	httpReplyDestroy(rep);
     }
@@ -278,7 +278,7 @@ cachemgrShutdown(StoreEntry * entryunused)
 }
 
 static const char *
-cachemgrActionProtection(const action_table *at)
+cachemgrActionProtection(const action_table * at)
 {
     char *pwd;
     assert(at);
@@ -293,7 +293,7 @@ cachemgrActionProtection(const action_table *at)
 }
 
 static void
-cachemgrMenu(StoreEntry *sentry)
+cachemgrMenu(StoreEntry * sentry)
 {
     action_table *a;
     for (a = ActionTable; a != NULL; a = a->next) {

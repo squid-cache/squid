@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.86 1998/02/26 09:01:12 kostas Exp $
+ * $Id: fqdncache.cc,v 1.87 1998/02/26 18:00:43 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -956,13 +956,13 @@ snmp_fqdncacheFn(variable_list * Var, long *ErrP)
 	Answer->type = SMI_TIMETICKS;
 	Answer->val_len = sizeof(long);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	*(Answer->val.integer) = squid_curtime-fq->lastref;
+	*(Answer->val.integer) = squid_curtime - fq->lastref;
 	break;
     case NET_FQDN_EXPIRES:
 	Answer->type = SMI_TIMETICKS;
 	Answer->val_len = sizeof(long);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	*(Answer->val.integer) = fq->expires-squid_curtime;
+	*(Answer->val.integer) = fq->expires - squid_curtime;
 	break;
     case NET_FQDN_STATE:
 	Answer->type = ASN_INTEGER;
