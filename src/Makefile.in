@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.204 2001/08/19 09:34:36 robertc Exp $
+#  $Id: Makefile.in,v 1.205 2001/08/22 09:25:41 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -401,12 +401,12 @@ install: all install-mkdirs
 		$(INSTALL_FILE) squid.conf.default $(sysconfdir)/squid.conf; \
 	fi
 
-	$(INSTALL_FILE) $(srcdir)/mime.conf $(sysconfdir)/mime.conf.default
+	$(INSTALL_FILE) $(srcdir)/mime.conf.default $(sysconfdir)
 	@if test -f $(sysconfdir)/mime.conf ; then \
 		echo "$@ will not overwrite existing $(sysconfdir)/mime.conf" ; \
 	else \
-		echo "$(INSTALL_FILE) $(srcdir)/mime.conf $(sysconfdir)"; \
-		$(INSTALL_FILE) $(srcdir)/mime.conf $(sysconfdir); \
+		echo "$(INSTALL_FILE) $(srcdir)/mime.conf.default $(sysconfdir)/mime.conf"; \
+		$(INSTALL_FILE) $(srcdir)/mime.conf.default $(sysconfdir)/mime.conf; \
 	fi
 
 install-pinger:

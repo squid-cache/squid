@@ -1,0 +1,135 @@
+# This file associates filename extensions (for servers or services
+# that don't automatically include them - like ftp) with a mime type
+# and a graphical icon.
+#
+#
+# This file has the format :
+# regex content-type icon content-encoding transfer-mode
+#-----------------------------------------------------------------------------------
+#
+#
+# Content-Encodings are taken from section 3.1 of RFC2068 (HTTP/1.1)
+#
+#
+#
+# regexp	content-type			icon		encoding	mode
+#-----------------------------------------------------------------------------------
+\.gif$			image/gif		anthony-image.gif	-	image
+\.mime$			www/mime		anthony-text.gif	-	ascii	+download
+^internal-dirup$	-			anthony-dirup.gif	-	ascii
+^internal-dir$		-			anthony-dir.gif		-	ascii
+^internal-link$		-			anthony-link.gif	-	ascii
+^internal-menu$		-			anthony-dir.gif		-	ascii
+^internal-text$		-			anthony-text.gif	-	ascii
+^internal-index$	-			anthony-dir.gif		-	ascii
+^internal-image$	-			anthony-image.gif	-	ascii
+^internal-sound$	-			anthony-sound.gif	-	ascii
+^internal-movie$	-			anthony-movie.gif	-	ascii
+^internal-telnet$	-			anthony-portal.gif	-	ascii
+^internal-binary$	-			anthony-box.gif		-	ascii
+^internal-unknown$	-			anthony-unknown.gif	-	ascii
+^internal-view$		-			anthony-text.gif	-	ascii
+^internal-download$	-			anthony-box.gif		-	ascii
+\.bin$		application/macbinary		anthony-unknown.gif	-	image
+\.oda$		application/oda			anthony-unknown.gif	-	image
+\.exe$		application/octet-stream	anthony-unknown.gif	-	image
+\.pdf$		application/pdf			anthony-unknown.gif	-	image
+\.ai$		application/postscript		anthony-ps.gif		-	ascii	+download
+\.eps$		application/postscript		anthony-ps.gif		-	ascii	+download
+\.ps$		application/postscript		anthony-ps.gif		-	ascii	+download +view
+\.rtf$		application/x-rtf		anthony-unknown.gif	-	image
+\.Z$		-				anthony-compressed.gif	compress image
+\.gz$		-				anthony-unknown.gif	gzip	image
+\.tgz$		application/x-tar		anthony-tar.gif		gzip	image
+\.csh$		application/x-csh		anthony-script.gif	-	ascii
+\.dvi$		application/x-dvi		anthony-dvi.gif		-	image
+\.hdf$		application/x-hdf		anthony-unknown.gif	-	image
+\.latex$	application/x-latex		anthony-tex.gif		-	ascii
+\.lsm$		text/plain			anthony-text.gif	-	ascii
+\.nc$		application/x-netcdf		anthony-unknown.gif	-	image
+\.cdf$		application/x-netcdf		anthony-unknown.gif	-	ascii	+download
+\.sh$		application/x-sh		anthony-script.gif	-	ascii
+\.tcl$		application/x-tcl		anthony-script.gif	-	ascii	+view
+\.tex$		application/x-tex		anthony-tex.gif		-	ascii
+\.texi$		application/x-texinfo		anthony-tex.gif		-	ascii
+\.texinfo$	application/x-texinfo		anthony-tex.gif		-	ascii
+\.t$		application/x-troff		anthony-text.gif	-	ascii
+\.roff$		application/x-troff		anthony-text.gif	-	ascii
+\.tr$		application/x-troff		anthony-text.gif	-	ascii
+\.man$		application/x-troff-man		anthony-text.gif	-	ascii
+\.me$		application/x-troff-me		anthony-text.gif	-	ascii
+\.ms$		application/x-troff-ms		anthony-text.gif	-	ascii
+\.src$		application/x-wais-source	anthony-text.gif	-	ascii	+download
+\.zip$		application/x-zip-compressed	anthony-compressed.gif	-	image
+\.bcpio$	application/x-bcpio		anthony-unknown.gif	-	image
+\.cpio$		application/x-cpio		anthony-unknown.gif	-	image
+\.gtar$		application/x-gtar		anthony-tar.gif		-	image
+\.rpm$		application/x-rpm		anthony-unknown.gif	-	image
+\.shar$		application/x-shar		anthony-script.gif	-	image	+download +view
+\.sv4cpio$	application/x-sv4cpio		anthony-unknown.gif	-	image
+\.sv4crc$	application/x-sv4crc		anthony-unknown.gif	-	image
+\.tar$		application/x-tar		anthony-tar.gif		-	image
+\.ustar$	application/x-ustar		anthony-tar.gif		-	image
+\.au$		audio/basic			anthony-sound.gif	-	image
+\.snd$		audio/basic			anthony-sound.gif	-	image
+\.mp2$		audio/basic			anthony-sound.gif	-	image
+\.mp3$		audio/basic			anthony-sound.gif	-	image
+\.aif$		audio/x-aiff			anthony-sound.gif	-	image
+\.aiff$		audio/x-aiff			anthony-sound.gif	-	image
+\.aifc$		audio/x-aiff			anthony-sound.gif	-	image
+\.wav$		audio/x-wav			anthony-sound.gif	-	image
+\.ief$		image/ief			anthony-image.gif	-	image
+\.jpeg$		image/jpeg			anthony-image.gif	-	image
+\.jpg$		image/jpeg			anthony-image.gif	-	image
+\.jpe$		image/jpeg			anthony-image.gif	-	image
+\.tiff$		image/tiff			anthony-image.gif	-	image
+\.tif$		image/tiff			anthony-image.gif	-	image
+\.ras$		image/cmu-raster		anthony-image.gif	-	image
+\.pnm$		image/x-portable-anymap		anthony-image.gif	-	image
+\.pbm$		image/x-portable-bitmap		anthony-image.gif	-	image
+\.pgm$		image/x-portable-graymap	anthony-image.gif	-	image
+\.ppm$		image/x-portable-pixmap		anthony-image.gif	-	image
+\.rgb$		image/x-rgb			anthony-image.gif	-	image
+\.xbm$		image/x-xbitmap			anthony-xbm.gif		-	image
+\.xpm$		image/x-xpixmap			anthony-xpm.gif		-	image
+\.xwd$		image/x-xwindowdump		anthony-image.gif	-	image
+\.html$		text/html			anthony-text.gif	-	ascii
+\.htm$		text/html			anthony-text.gif	-	ascii
+\.c$		text/plain			anthony-c.gif		-	ascii
+\.h$		text/plain			anthony-c.gif		-	ascii
+\.cc$		text/plain			anthony-c.gif		-	ascii
+\.hh$		text/plain			anthony-c.gif		-	ascii
+\.m$		text/plain			anthony-text.gif	-	ascii
+\.f90$		text/plain			anthony-text.gif	-	ascii
+\.txt$		text/plain			anthony-text.gif	-	ascii
+\.rtx$		text/richtext			anthony-text.gif	-	ascii	+download
+\.tsv$		text/tab-separated-values	anthony-text.gif	-	ascii	+download
+\.etx$		text/x-setext			anthony-text.gif	-	ascii	+download
+\.mpeg$		video/mpeg			anthony-movie.gif	-	image
+\.mpg$		video/mpeg			anthony-movie.gif	-	image
+\.mpe$		video/mpeg			anthony-movie.gif	-	image
+\.qt$		video/quicktime			anthony-movie.gif	-	image
+\.mov$		video/quicktime			anthony-movie.gif	-	image
+\.avi$		video/x-msvideo			anthony-movie.gif	-	image
+\.movie$	video/x-sgi-movie		anthony-movie.gif	-	image
+\.hqx$		application/mac-binhex40	anthony-binhex.gif	-	image
+\.mwrt$		application/macwriteii		anthony-unknown.gif	-	image
+\.msw$		application/msword		anthony-unknown.gif	-	image
+\.doc$		application/msword		anthony-unknown.gif	-	image	+view
+\.xls$		application/msexcel		anthony-unknown.gif	-	image
+\.wk[s1234]$	application/vnd.lotus-1-2-3	anthony-unknown.gif	-	image
+\.mif$		application/x-mif		anthony-unknown.gif	-	image
+\.sit$		application/stuffit		anthony-unknown.gif	-	image
+\.pict$		application/pict		anthony-image.gif	-	image
+\.pic$		application/pict		anthony-image.gif	-	image
+\.arj$		application/x-arj-compressed	anthony-compressed.gif	-	image
+\.lzh$		application/x-lha-compressed	anthony-compressed.gif	-	image
+\.lha$		application/x-lha-compressed	anthony-compressed.gif	-	image
+\.zlib$		application/x-deflate		anthony-compressed.gif	deflate	image
+README		text/plain			anthony-text.gif	-	ascii	+download
+^core$		application/octet-stream	anthony-bomb.gif	-	image
+\.core$		application/octet-stream	anthony-bomb.gif	-	image
+\.png$		image/png			anthony-image.gif	-	image
+\.cab$		application/octet-stream	anthony-compressed.gif	-	image	+view
+# the default
+.		text/plain			anthony-unknown.gif	-	image	+view +download
