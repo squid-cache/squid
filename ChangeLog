@@ -4,6 +4,8 @@
 	- Fixed PUT/POST bugs in client (Henrik Nordstrom).
 	- Deny forwarding loops in httpd accel mode (Henrik Nordstrom).
 	- Fixed eventRun "spin" bug when event delta time == 0.
+	- Fixed setting Last Modified time on cached entries when
+	  receiving a 304 reply.
 
 Changes to squid-1.2.beta21 (May 22, 1998):
 
