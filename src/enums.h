@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.128 1998/09/14 21:58:47 wessels Exp $
+ * $Id: enums.h,v 1.129 1998/09/14 22:17:56 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -427,19 +427,6 @@ typedef enum {
     HTTP_HTTP_VERSION_NOT_SUPPORTED = 505,
     HTTP_INVALID_HEADER = 600	/* Squid header parsing error */
 } http_status;
-
-typedef enum {
-    PD_INITED,			/* initialized */
-    PD_USABLE,			/* ready to use */
-    PD_REQUESTED,		/* we are in the process of receiving a [fresh] digest */
-    PD_DISABLED,		/* do not use/validate the digest */
-    PD_INIT_PENDING
-} peer_cd_t;
-
-enum {
-    HTTP_PROXYING,
-    HTTP_KEEPALIVE
-};
 
 enum {
     ERR_FLAG_CBDATA

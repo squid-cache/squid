@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.49 1998/09/14 21:58:52 wessels Exp $
+ * $Id: peer_digest.cc,v 1.50 1998/09/14 22:17:59 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -84,8 +84,8 @@ peerDigestInit(void *data)
 	cbdataLock(p);
 	peerDigestValidate(p);
     }
-    EBIT_SET(p->digest.flags, PD_INITED);
-    EBIT_CLR(p->digest.flags, PD_INIT_PENDING);
+    p->digest.flags.inited = 1;
+    p->digest.flags.init_pending = 0;
 }
 
 /* no pending events or requests should exist when you call this */
@@ -95,7 +95,7 @@ peerDigestClean(peer * p)
     if (!cbdataValid(p))
 	debug(72, 2) ("peerDigest: note: peer '%s' was reset or deleted\n",
 	    p->host ? p->host : "<null>");
-    assert(!EBIT_TEST(p->digest.flags, PD_REQUESTED));
+    assert(!p->digest.flags.requested);
     peerDigestDisable(p);
     cbdataUnlock(p);
 }
@@ -136,7 +136,7 @@ peerDigestDelay(peer * p, int disable, time_t delay)
 {
     assert(p);
     if (disable) {
-	EBIT_SET(p->digest.flags, PD_DISABLED);
+	p->digest.flags.disabled = 1;
 	p->digest.last_dis_delay = delay;
     }
     if (delay >= 0) {
@@ -151,7 +151,7 @@ peerDigestDelay(peer * p, int disable, time_t delay)
 	debug(72, 2) ("peerDigestDisable: disabling peer %s for good\n",
 	    p->host ? p->host : "<null>");
 	/* just in case, will not need it anymore */
-	EBIT_CLR(p->digest.flags, PD_USABLE);
+	p->digest.flags.usable = 0;
     }
 }
 
@@ -170,7 +170,7 @@ peerDigestValidate(void *data)
 	return;
     }
     debug(72, 3) ("current GMT time: %s\n", mkrfc1123(squid_curtime));
-    assert(!EBIT_TEST(p->digest.flags, PD_REQUESTED));
+    assert(!p->digest.flags.requested);
     debug(72, 3) ("peerDigestValidate: %s was %s disabled\n",
 	p->host, p->digest.last_dis_delay ? "" : "not");
     if (1 /* p->digest.cd */ ) {
@@ -200,7 +200,7 @@ peerDigestValidate(void *data)
 	req_time = p->digest.last_req_timestamp + PeerDigestRequestMinGap;
     }
     /* at start, do not request too often from all peers */
-    if (!EBIT_TEST(p->digest.flags, PD_INITED) &&
+    if (!p->digest.flags.inited &&
 	req_time - global_last_req_timestamp < GlobalDigestRequestMinGap) {
 	if (do_request) {
 	    debug(72, 2) ("peerDigestValidate: %s, avoiding too close requests (%d secs).\n",
@@ -240,7 +240,7 @@ peerDigestRequest(peer * p)
     request_t *req;
     DigestFetchState *fetch = NULL;
     assert(p);
-    EBIT_SET(p->digest.flags, PD_REQUESTED);
+    p->digest.flags.requested = 1;
     /* compute future request components */
     url = internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", StoreDigestUrlPath);
     key = storeKeyPublic(url, METHOD_GET);
@@ -533,7 +533,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
 	    peer->digest.cd = NULL;
 	}
 	/* disable for a while */
-	EBIT_CLR(peer->digest.flags, PD_USABLE);
+	peer->digest.flags.usable = 0;
 	peerDigestDelay(peer, 1,
 	    max_delay(
 		peerDigestExpiresDelay(peer, fetch->entry),
@@ -547,8 +547,8 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
 	} else {
 	    debug(72, 2) ("received valid digest from %s\n", peer->host);
 	}
-	EBIT_SET(peer->digest.flags, PD_USABLE);
-	EBIT_CLR(peer->digest.flags, PD_DISABLED);
+	peer->digest.flags.usable = 1;
+	peer->digest.flags.disabled = 0;
 	peer->digest.last_dis_delay = 0;
 	peerDigestDelay(peer, 0,
 	    max_delay(peerDigestExpiresDelay(peer, fetch->entry), 0));
@@ -578,7 +578,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
     /* set it here and in peerDigestRequest to protect against long downloads */
     peer->digest.last_req_timestamp = squid_curtime;
     peer->digest.last_fetch_resp_time = fetch_resp_time;
-    EBIT_CLR(peer->digest.flags, PD_REQUESTED);
+    peer->digest.flags.requested = 0;
     debug(72, 2) ("peerDigestFetchFinish: %s done; took: %d secs; expires: %s\n",
 	peer->host, fetch_resp_time, mkrfc1123(expires));
 }

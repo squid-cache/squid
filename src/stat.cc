@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.287 1998/09/14 21:28:10 wessels Exp $
+ * $Id: stat.cc,v 1.288 1998/09/14 22:18:01 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1126,10 +1126,10 @@ statPeerSelect(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "peer.local_memory = %d\n",
 	    peer->digest.cd ? peer->digest.cd->mask_size / 1024 : 0);
 	storeAppendPrintf(sentry, "digest state: inited: %d, disabled: %d usable: %d requested: %d\n",
-	    0 < EBIT_TEST(peer->digest.flags, PD_INITED),
-	    0 < EBIT_TEST(peer->digest.flags, PD_DISABLED),
-	    0 < EBIT_TEST(peer->digest.flags, PD_USABLE),
-	    0 < EBIT_TEST(peer->digest.flags, PD_REQUESTED)
+	    0 < peer->digest.flags.inited,
+	    0 < peer->digest.flags.disabled,
+	    0 < peer->digest.flags.usable,
+	    0 < peer->digest.flags.requested
 	    );
 	if (peer->digest.cd)
 	    cacheDigestReport(peer->digest.cd, peer->host, sentry);

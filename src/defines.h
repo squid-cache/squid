@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.65 1998/08/25 04:11:36 wessels Exp $
+ * $Id: defines.h,v 1.66 1998/09/14 22:18:45 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -166,10 +166,6 @@
 
 #define PEER_MAX_ADDRESSES 10
 #define RTT_AV_FACTOR      50
-
-/* flags for peer->mcast.flags */
-#define PEER_COUNT_EVENT_PENDING 1
-#define PEER_COUNTING		 2
 
 #define PEER_DEAD 0
 #define PEER_ALIVE 1
