@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.329 1997/10/30 20:37:56 wessels Exp $
+ * $Id: store.cc,v 1.330 1997/10/30 22:40:39 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1216,12 +1216,9 @@ storeDoRebuildFromDisk(void *data)
 	e = storeGet(url);
 	used = storeDirMapBitTest(sfileno);
 	/* If this URL already exists in the cache, does the swap log
-	 * appear to have a newer entry?  Compare 'timestamp' from the
-	 * swap log to e->lastref.  Note, we can't compare e->timestamp
-	 * because it is the Date: header from the HTTP reply and
-	 * doesn't really tell us when the object was added to the
-	 * cache. */
-	newer = e ? (timestamp > e->lastref ? 1 : 0) : 0;
+	 * appear to have a newer entry?  Compare 'lastref' from the
+	 * swap log to e->lastref. */
+	newer = e ? (lastref > e->lastref ? 1 : 0) : 0;
 	if (used && !newer) {
 	    /* log entry is old, ignore it */
 	    RB->clashcount++;
