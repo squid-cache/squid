@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.188 1998/01/03 05:27:17 wessels Exp $
+ * $Id: client_side.cc,v 1.189 1998/01/04 06:57:27 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1614,7 +1614,7 @@ clientReadRequest(int fd, void *data)
 	     * data to the beginning
 	     */
 	    if (conn->in.offset > 0)
-		memmove(conn->in.buf, conn->in.buf + http->req_sz, conn->in.size);
+		memmove(conn->in.buf, conn->in.buf + http->req_sz, conn->in.offset);
 	    /* add to the client request queue */
 	    for (H = &conn->chr; *H; H = &(*H)->next);
 	    *H = http;
