@@ -1,5 +1,6 @@
+
 /*
- * $Id: rfc1123.c,v 1.9 1997/10/30 02:01:41 wessels Exp $
+ * $Id: rfc1123.c,v 1.10 1997/12/30 02:50:36 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived

@@ -34,14 +34,14 @@ static wordlist *urnParseReply(const char *inbuf);
 static const char *const crlf = "\r\n";
 
 enum {
-	URN_FORCE_MENU
+    URN_FORCE_MENU
 };
 
 typedef struct {
-	StoreEntry *entry;
-	StoreEntry *urlres_e;
-	request_t *request;
-	int flags;
+    StoreEntry *entry;
+    StoreEntry *urlres_e;
+    request_t *request;
+    int flags;
 } UrnState;
 
 wordlist *
@@ -68,9 +68,9 @@ urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
 	}
 	debug(50, 3) ("%s rtt=%d\n", r->host, rtt);
 	if (rtt == 0)
-		continue;
+	    continue;
 	if (rtt > min_rtt && min_rtt != 0)
-		continue;
+	    continue;
 	min_rtt = rtt;
 	min_w = w;
 	put_free_request_t(r);
@@ -84,7 +84,7 @@ urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
 }
 
 void
-urnStart(request_t *r, StoreEntry *e)
+urnStart(request_t * r, StoreEntry * e)
 {
     LOCAL_ARRAY(char, urlres, 4096);
     request_t *urlres_r = NULL;
@@ -106,9 +106,9 @@ urnStart(request_t *r, StoreEntry *e)
 	xfree(t);
     }
     if ((t = strchr(r->urlpath, ':')) != NULL) {
-    	*t = '\0';
-    	host = xstrdup(r->urlpath);
-    	*t = ':';
+	*t = '\0';
+	host = xstrdup(r->urlpath);
+	*t = ':';
     } else {
 	host = xstrdup(r->urlpath);
     }
@@ -123,8 +123,8 @@ urnStart(request_t *r, StoreEntry *e)
 	storeClientListAdd(urlres_e, urnState);
 	protoDispatch(0, urlres_e, urlres_r);
     } else {
-        storeLockObject(urlres_e);
-        storeClientListAdd(urlres_e, urnState);
+	storeLockObject(urlres_e);
+	storeClientListAdd(urlres_e, urnState);
     }
     urnState->urlres_e = urlres_e;
     storeClientCopy(urlres_e,
@@ -151,8 +151,8 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     int l;
     String *S;
     ErrorState *err;
-	double tmprtt;
-	StoreEntry *tmpentry;
+    double tmprtt;
+    StoreEntry *tmpentry;
 
     debug(50, 3) ("urnHandleReply: Called with size=%d.\n", size);
     if (urlres_e->store_status == STORE_ABORTED) {
@@ -198,15 +198,15 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     while (isspace(*s))
 	s++;
     urls = urnParseReply(s);
-    if (urls == NULL) {	/* unkown URN error */
+    if (urls == NULL) {		/* unkown URN error */
 	debug(50, 3) ("urnTranslateDone: unknown URN %s\n", storeUrl(e));
 	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
 	err->request = requestLink(urnState->request);
 	err->url = xstrdup(storeUrl(e));
 	errorAppendEntry(e, err);
 	return;
-    } 
-     min_w = urnFindMinRtt(urls, urnState->request->method, NULL);
+    }
+    min_w = urnFindMinRtt(urls, urnState->request->method, NULL);
     storeBuffer(e);
     S = stringCreate(1024);
     l = snprintf(line, 4096,
@@ -215,15 +215,15 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	"<TABLE BORDER=0 WIDTH=\"100%%\">\n", storeUrl(e), storeUrl(e));
     stringAppend(S, line, l);
     for (w = urls; w; w = w->next) {
-	request_t *tmpr=urlParse(urnState->request->method, w->key);
-	const cache_key *tmpk=storeKeyPublic(w->key,urnState->request->method);
-	tmpentry=storeGet(tmpk);
-	if (tmpr && tmpr->host && (tmprtt=netdbHostRtt(tmpr->host)))
-	  l= snprintf(line, 4096, "<TR><TD><A HREF=\"%s\">%s</A></TD><TD align=right>%4.0f </it>ms</it></TD><TD>%s</TD></TR>\n",
-			w->key,w->key,tmprtt, tmpentry?"    [cached]":" " );
-	else 
-	  l = snprintf(line, 4096, "<TR><TD><A HREF=\"%s\">%s</A></TD></TR>", w->key, w->key);
-        stringAppend(S, line, l);
+	request_t *tmpr = urlParse(urnState->request->method, w->key);
+	const cache_key *tmpk = storeKeyPublic(w->key, urnState->request->method);
+	tmpentry = storeGet(tmpk);
+	if (tmpr && tmpr->host && (tmprtt = netdbHostRtt(tmpr->host)))
+	    l = snprintf(line, 4096, "<TR><TD><A HREF=\"%s\">%s</A></TD><TD align=right>%4.0f </it>ms</it></TD><TD>%s</TD></TR>\n",
+		w->key, w->key, tmprtt, tmpentry ? "    [cached]" : " ");
+	else
+	    l = snprintf(line, 4096, "<TR><TD><A HREF=\"%s\">%s</A></TD></TR>", w->key, w->key);
+	stringAppend(S, line, l);
     }
     l = snprintf(line, 4096,
 	"</TABLE>"
@@ -242,10 +242,10 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     storeAppend(e, hdr, strlen(hdr));
     httpParseReplyHeaders(hdr, e->mem_obj->reply);
     if (EBIT_TEST(urnState->flags, URN_FORCE_MENU)) {
-	debug(51,3)("urnHandleReply: forcing menu\n");
+	debug(51, 3) ("urnHandleReply: forcing menu\n");
     } else if (min_w) {
 	l = snprintf(line, 4096, "Location: %s\r\n", min_w->key);
-        storeAppend(e, line, l);
+	storeAppend(e, line, l);
     }
     storeAppend(e, "\r\n", 2);
     storeAppend(e, S->buf, stringLength(S));

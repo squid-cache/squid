@@ -22,11 +22,11 @@ storeKeyScan(const char *buf)
     int i;
     int j = 0;
     unsigned char t[3];
-    for (i=0; i<MD5_DIGEST_CHARS; i++) {
-	t[0] = *(buf+(j++));
-	t[1] = *(buf+(j++));
+    for (i = 0; i < MD5_DIGEST_CHARS; i++) {
+	t[0] = *(buf + (j++));
+	t[1] = *(buf + (j++));
 	t[2] = '\0';
-	*(digest+i) = (unsigned char) strtol(t, NULL, 16);
+	*(digest + i) = (unsigned char) strtol(t, NULL, 16);
     }
     return digest;
 }
@@ -52,9 +52,9 @@ storeKeyHashHash(const void *key, unsigned int n)
     /* note, n must be a power of 2! */
     const unsigned char *digest = key;
     unsigned int i = digest[0]
-	| digest[1] << 8
-	| digest[2] <<16 
-	| digest[3] <<24;
+    | digest[1] << 8
+    | digest[2] << 16
+    | digest[3] << 24;
     return (i & (--n));
 }
 

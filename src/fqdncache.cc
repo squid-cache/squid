@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.74 1997/12/03 01:31:59 wessels Exp $
+ * $Id: fqdncache.cc,v 1.75 1997/12/30 02:47:41 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -906,7 +906,7 @@ fqdncache_restart(void)
 
 #ifdef SQUID_SNMP
 u_char *
-var_fqdn_entry(struct variable * vp, oid * name, int *length, int exact, int
+var_fqdn_entry(struct variable *vp, oid * name, int *length, int exact, int
     *var_len,
     SNMPWM ** write_method)
 {
@@ -933,48 +933,49 @@ var_fqdn_entry(struct variable * vp, oid * name, int *length, int exact, int
     fq = NULL;
     i = 0;
     while (fq != NULL) {
-        newname[vp->namelen] = i + 1;
-        result = compare(name, *length, newname, (int) vp->namelen + 1);
-        if ((exact && (result == 0)) || (!exact && (result < 0))) {
-            debug(49, 5) ("snmp var_fqdn_entry: yup, a match.\n");
-            break;
-        }
-        i++;
-        fq = NULL;
+	newname[vp->namelen] = i + 1;
+	result = compare(name, *length, newname, (int) vp->namelen + 1);
+	if ((exact && (result == 0)) || (!exact && (result < 0))) {
+	    debug(49, 5) ("snmp var_fqdn_entry: yup, a match.\n");
+	    break;
+	}
+	i++;
+	fq = NULL;
     }
     if (fq == NULL)
-        return NULL;
+	return NULL;
 
     debug(49, 5) ("hey, matched.\n");
-    memcpy((char *) name, (char *) newname, ((int) vp->namelen + 1) * sizeof(oid));    *length = vp->namelen + 1;
+    memcpy((char *) name, (char *) newname, ((int) vp->namelen + 1) * sizeof(oid));
+    *length = vp->namelen + 1;
     *write_method = 0;
-    *var_len = sizeof(long);    /* default length */
+    *var_len = sizeof(long);	/* default length */
     sprint_objid(snbuf, newname, *length);
     debug(49, 5) ("snmp var_fqdn_entry  request for %s (%d)\n", snbuf, current);
 
     switch (vp->magic) {
     case NET_FQDN_ID:
-        long_return = (long) i;
-        return (u_char *) & long_return;
+	long_return = (long) i;
+	return (u_char *) & long_return;
     case NET_FQDN_NAME:
-        cp = fq->names[0];
-        *var_len = strlen(cp);
-        return (u_char *) cp;
+	cp = fq->names[0];
+	*var_len = strlen(cp);
+	return (u_char *) cp;
     case NET_FQDN_IP:
-        safe_inet_addr(fq->name, &fqaddr);
-        long_return = (long) fqaddr.s_addr;
-        return (u_char *) & long_return;
+	safe_inet_addr(fq->name, &fqaddr);
+	long_return = (long) fqaddr.s_addr;
+	return (u_char *) & long_return;
     case NET_FQDN_LASTREF:
-        long_return = fq->lastref;
-        return (u_char *) & long_return;
+	long_return = fq->lastref;
+	return (u_char *) & long_return;
     case NET_FQDN_EXPIRES:
-        long_return = fq->expires;
-        return (u_char *) & long_return;
+	long_return = fq->expires;
+	return (u_char *) & long_return;
     case NET_FQDN_STATE:
-        long_return = fq->status;
-        return (u_char *) & long_return;
+	long_return = fq->status;
+	return (u_char *) & long_return;
     default:
-        return NULL;
+	return NULL;
     }
 }
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.150 1997/12/02 17:59:34 kostas Exp $
+ * $Id: ipcache.cc,v 1.151 1997/12/30 02:47:42 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1071,7 +1071,7 @@ ipcache_restart(void)
 #ifdef SQUID_SNMP
 
 u_char *
-var_ipcache_entry(struct variable * vp, oid * name, int *length, int exact, int *var_len,
+var_ipcache_entry(struct variable *vp, oid * name, int *length, int exact, int *var_len,
     SNMPWM ** write_method)
 {
     static char snbuf[256], *cp;
@@ -1081,7 +1081,7 @@ var_ipcache_entry(struct variable * vp, oid * name, int *length, int exact, int 
     int result;
     dlink_node *m = NULL;
     ipcache_entry *IPc;
-	int cnt=1;
+    int cnt = 1;
 
     debug(49, 3) ("snmp: var_ipcache_entry called with magic=%d\n", vp->magic);
     debug(49, 3) ("snmp: var_ipcache_entry with (%d,%d)\n", *length, *var_len);
@@ -1094,37 +1094,37 @@ var_ipcache_entry(struct variable * vp, oid * name, int *length, int exact, int 
     debug(49, 5) ("snmp var_ipcache_entry: hey, here we are.\n");
 
 
-        for (m = lru_list.head; m; m = m->next, cnt++) {
-        newname[vp->namelen] = cnt;
-        result = compare(name, *length, newname, (int) vp->namelen + 1);
-        if ((exact && (result == 0)) || (!exact && (result < 0))) {
-            debug(49, 5) ("snmp var_ipcache_entry: yup, a match.\n");
-            break;
-         }
+    for (m = lru_list.head; m; m = m->next, cnt++) {
+	newname[vp->namelen] = cnt;
+	result = compare(name, *length, newname, (int) vp->namelen + 1);
+	if ((exact && (result == 0)) || (!exact && (result < 0))) {
+	    debug(49, 5) ("snmp var_ipcache_entry: yup, a match.\n");
+	    break;
 	}
-	
+    }
+
     if (m == NULL)
-        return NULL;
+	return NULL;
     if ((IPc = m->data) == NULL)
-        return NULL;
+	return NULL;
 
     current++;
     switch (vp->magic) {
     case NET_IPC_ID:
-        long_return = (int) cnt;
-        return (u_char *) & long_return;
+	long_return = (int) cnt;
+	return (u_char *) & long_return;
     case NET_IPC_NAME:
-        cp = IPc->name;
-        *var_len = strlen(cp);
-        return (u_char *) cp;
+	cp = IPc->name;
+	*var_len = strlen(cp);
+	return (u_char *) cp;
     case NET_IPC_IP:
-        long_return = IPc->addrs.in_addrs[0].s_addr;    /* first one only */
-        return (u_char *) & long_return;
+	long_return = IPc->addrs.in_addrs[0].s_addr;	/* first one only */
+	return (u_char *) & long_return;
     case NET_IPC_STATE:
-        long_return = IPc->status;
-        return (u_char *) & long_return;
+	long_return = IPc->status;
+	return (u_char *) & long_return;
     default:
-        return NULL;
+	return NULL;
     }
 }
 #endif

@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.36 1997/12/06 19:03:12 wessels Exp $
+ * $Id: util.h,v 1.37 1997/12/30 02:50:32 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -160,10 +160,10 @@ extern time_t parse_iso3307_time(const char *buf);
 extern char *base64_decode(const char *coded);
 
 typedef struct _String {
-        char *buf;
-        off_t off;
-        size_t len;
-        int refcount;
+    char *buf;
+    off_t off;
+    size_t len;
+    int refcount;
 } String;
 
 extern String *stringCreate(size_t);
