@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_basic.cc,v 1.2 2001/01/10 00:24:39 hno Exp $
+ * $Id: auth_basic.cc,v 1.3 2001/01/11 00:01:53 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -87,9 +87,14 @@ authBasicDone(void)
     authbasic_initialised = 0;
     if (!shutting_down)
 	return;
-    helperFree(basicauthenticators);
+    if (basicauthenticators)
+	helperFree(basicauthenticators);
     basicauthenticators = NULL;
-    memPoolDestroy(basic_data_pool);
+    if (basic_data_pool) {
+	memPoolDestroy(basic_data_pool);
+	basic_data_pool = NULL;
+    }
+    debug(29, 2) ("authBasicDone: Basic authentication Shutdown.\n");
 }
 
 void
@@ -162,7 +167,6 @@ authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, reque
 	debug(29, 4) ("authBasicAuthenticate: credentials expired - rechecking\n");
 	return;
     }
-
     /* we have been through the external helper, and the credentials haven't expired */
     debug(29, 9) ("authenticateBasicAuthenticateuser: user '%s' authenticated\n",
 	basic_auth->username);
@@ -258,16 +262,16 @@ authenticateBasicHandleReply(void *data, char *reply)
 	auth_user->flags.credentials_ok = 3;
     basic_auth->credentials_checkedtime = squid_curtime;
     valid = cbdataValid(r->data);
-    cbdataUnlock(r->data);
     if (valid)
 	r->handler(r->data, NULL);
+    cbdataUnlock(r->data);
     node = basic_auth->auth_queue;
     while (node) {
 	tmpnode = node->next;
 	valid = cbdataValid(node->data);
-	cbdataUnlock(node->data);
 	if (valid)
 	    node->handler(node->data, NULL);
+	cbdataUnlock(node->data);
 	xfree(node);
 	node = tmpnode;
     }
