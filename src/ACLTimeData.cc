@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.5 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLTimeData.cc,v 1.6 2004/11/06 22:22:16 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -125,16 +125,12 @@ void
 ACLTimeData::parse()
 {
     ACLTimeData **Tail;
+    long weekbits = 0;
 
     for (Tail = &next; *Tail; Tail = &((*Tail)->next))
 
         ;
     ACLTimeData *q = NULL;
-
-    if (Tail == &next)
-        q = new ACLTimeData;
-    else
-        q = this;
 
     int h1, m1, h2, m2;
 
@@ -148,35 +144,35 @@ ACLTimeData::parse()
                 switch (*t++) {
 
                 case 'S':
-                    q->weekbits |= ACL_SUNDAY;
+                    weekbits |= ACL_SUNDAY;
                     break;
 
                 case 'M':
-                    q->weekbits |= ACL_MONDAY;
+                    weekbits |= ACL_MONDAY;
                     break;
 
                 case 'T':
-                    q->weekbits |= ACL_TUESDAY;
+                    weekbits |= ACL_TUESDAY;
                     break;
 
                 case 'W':
-                    q->weekbits |= ACL_WEDNESDAY;
+                    weekbits |= ACL_WEDNESDAY;
                     break;
 
                 case 'H':
-                    q->weekbits |= ACL_THURSDAY;
+                    weekbits |= ACL_THURSDAY;
                     break;
 
                 case 'F':
-                    q->weekbits |= ACL_FRIDAY;
+                    weekbits |= ACL_FRIDAY;
                     break;
 
                 case 'A':
-                    q->weekbits |= ACL_SATURDAY;
+                    weekbits |= ACL_SATURDAY;
                     break;
 
                 case 'D':
-                    q->weekbits |= ACL_WEEKDAYS;
+                    weekbits |= ACL_WEEKDAYS;
                     break;
 
                 case '-':
@@ -204,8 +200,18 @@ ACLTimeData::parse()
                 return;
             }
 
+            if ((weekbits == 0) && (start == 0) && (stop == 0))
+                q = this;
+            else
+                q = new ACLTimeData;
+
             q->start = h1 * 60 + m1;
+
             q->stop = h2 * 60 + m2;
+
+            q->weekbits = weekbits;
+
+            weekbits = 0;
 
             if (q->start > q->stop) {
                 debug(28, 0) ("%s line %d: %s\n",
@@ -217,17 +223,35 @@ ACLTimeData::parse()
 
                 return;
             }
+
+            if (q->weekbits == 0)
+                q->weekbits = ACL_ALLWEEK;
+
+            if (q != this) {
+                *(Tail) = q;
+                Tail = &q->next;
+            }
         }
     }
 
-    if (q->start == 0 && q->stop == 0)
-        q->stop = 23 * 60 + 59;
+    if (weekbits) {
 
-    if (q->weekbits == 0)
-        q->weekbits = ACL_ALLWEEK;
+        if ((weekbits == 0) && (start == 0) && (stop == 0))
+            q = this;
+        else
+            q = new ACLTimeData;
 
-    if (q != this)
-        *(Tail) = q;
+        q->start = 0 * 60 + 0;
+
+        q->stop =  24 * 60 + 0;
+
+        q->weekbits = weekbits;
+
+        if (q != this) {
+            *(Tail) = q;
+            Tail = &q->next;
+        }
+    }
 }
 
 
