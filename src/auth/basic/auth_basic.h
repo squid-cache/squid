@@ -6,6 +6,9 @@
 #ifndef __AUTH_BASIC_H__
 #define __AUTH_BASIC_H__
 #include "authenticate.h"
+#include "AuthUser.h"
+#include "AuthUserRequest.h"
+#include "AuthConfig.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
@@ -32,11 +35,27 @@ public:
     void *data;
 };
 
-class basic_data
+class AuthBasicUserRequest;
+
+class BasicUser : public AuthUser
 {
 
 public:
-    char *username;
+    virtual void deleteSelf() const;
+    void *operator new(size_t);
+    void operator delete (void *);
+    BasicUser(AuthConfig *);
+    ~BasicUser();
+    bool authenticated() const;
+    void queueRequest(auth_user_request_t * auth_user_request, RH * handler, void *data);
+    void submitRequest (auth_user_request_t * auth_user_request, RH * handler, void *data);
+    void decode(char const *credentials, AuthUserRequest *);
+    char *getCleartext() {return cleartext;}
+
+    bool valid() const;
+    void makeLoggingInstance(AuthBasicUserRequest *auth_user_request);
+    AuthUser * makeCachedFrom();
+    void updateCached(BasicUser *from);
     char *passwd;
     time_t credentials_checkedtime;
 
@@ -49,14 +68,61 @@ unsigned int credentials_ok:
 
     flags;
     BasicAuthQueueNode *auth_queue;
+
+private:
+    static MemPool *Pool;
+    void decodeCleartext();
+    void extractUsername();
+    void extractPassword();
+    char *cleartext;
+    AuthUserRequest *currentRequest;
+    char const *httpAuthHeader;
+};
+
+typedef class BasicUser basic_data;
+
+/* follows the http request around */
+
+class AuthBasicUserRequest : public AuthUserRequest
+{
+
+public:
+    void *operator new (size_t);
+    void operator delete (void *);
+    AuthBasicUserRequest();
+    virtual ~AuthBasicUserRequest();
+
+    virtual int authenticated() const;
+    virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type);
+    virtual int module_direction();
+    virtual void module_start(RH *, void *);
+    virtual AuthUser *user() {return _theUser;}
+
+    virtual const AuthUser *user() const {return _theUser;}
+
+    virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<BasicUser *>(aUser);}
+
+private:
+    static MemPool *Pool;
+    BasicUser *_theUser;
 };
 
 /* configuration runtime data */
 
-class auth_basic_config
+class AuthBasicConfig : public AuthConfig
 {
 
 public:
+    AuthBasicConfig::AuthBasicConfig();
+    virtual bool active() const;
+    virtual bool configured() const;
+    virtual AuthUserRequest *decode(char const *proxy_auth);
+    virtual void done();
+    virtual void dump(StoreEntry *, const char *, AuthConfig *);
+    virtual void fixHeader(auth_user_request_t *, HttpReply *, http_hdr_type, HttpRequest *);
+    virtual void init(AuthConfig *);
+    virtual void parse(AuthConfig *, int, char *);
+    virtual const char * type() const;
     int authenticateChildren;
     int authenticateConcurrency;
     char *basicAuthRealm;

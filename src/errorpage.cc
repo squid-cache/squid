@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.195 2004/08/05 20:09:59 hno Exp $
+ * $Id: errorpage.cc,v 1.196 2004/08/30 03:28:59 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -41,7 +41,7 @@
  */
 
 #include "squid.h"
-#include "authenticate.h"
+#include "AuthUserRequest.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -470,7 +470,7 @@ errorStateFree(ErrorState * err)
     safe_free(err->ftp.reply);
 
     if (err->auth_user_request)
-        authenticateAuthUserRequestUnlock(err->auth_user_request);
+        err->auth_user_request->unlock();
 
     err->auth_user_request = NULL;
 
@@ -501,9 +501,8 @@ errorDump(ErrorState * err, MemBuf * mb)
         memBufPrintf(&str, "Err: [none]\r\n");
     }
 
-    if (authenticateAuthUserRequestMessage(err->auth_user_request)) {
-        memBufPrintf(&str, "extAuth ErrMsg: %s\r\n", authenticateAuthUserRequestMessage(err->auth_user_request));
-    }
+    if (err->auth_user_request->denyMessage())
+        memBufPrintf(&str, "Auth ErrMsg: %s\r\n", err->auth_user_request->denyMessage());
 
     if (err->dnsserver_msg) {
         memBufPrintf(&str, "DNS Server ErrMsg: %s\r\n", err->dnsserver_msg);
@@ -679,7 +678,7 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'm':
-        p = authenticateAuthUserRequestMessage(err->auth_user_request) ? authenticateAuthUserRequestMessage(err->auth_user_request) : "[not available]";
+        p = err->auth_user_request->denyMessage("[not available]");
 
         break;
 

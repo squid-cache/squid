@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node_test.cc,v 1.5 2003/08/04 22:14:57 robertc Exp $
+ * $Id: mem_node_test.cc,v 1.6 2004/08/30 03:29:03 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -44,8 +44,6 @@ xassert(const char *msg, const char *file, int line)
     std::cout << "Assertion failed: (" << msg << ") at " << file << ":" << line << std::endl;
     exit (1);
 }
-
-time_t squid_curtime = 0;
 
 int
 main (int argc, char *argv)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.cc,v 1.6 2003/08/04 22:14:40 robertc Exp $
+ * $Id: DelayUser.cc,v 1.7 2004/08/30 03:28:56 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -40,7 +40,8 @@
 #if DELAY_POOLS
 #include "squid.h"
 #include "DelayUser.h"
-#include "authenticate.h"
+#include "AuthUserRequest.h"
+#include "AuthUser.h"
 #include "NullDelayId.h"
 #include "Store.h"
 
@@ -150,7 +151,7 @@ DelayUser::id(CompositePoolNode::CompositeSelectionDetails &details)
     if (!details.user)
         return new NullDelayId;
 
-    return new Id(this, details.user->auth_user);
+    return new Id(this, details.user->user());
 }
 
 void *
@@ -184,12 +185,15 @@ DelayUserBucket::operator delete (void *address)
 DelayUserBucket::DelayUserBucket(AuthUser *aUser) : authUser (aUser)
 {
     debug (77,3) ("DelayUserBucket::DelayUserBucket\n");
-    authenticateAuthUserLock (authUser);
+
+    authUser->lock()
+
+    ;
 }
 
 DelayUserBucket::~DelayUserBucket()
 {
-    authenticateAuthUserUnlock(authUser);
+    authUser->unlock();
     debug (77,3) ("DelayUserBucket::~DelayUserBucket\n");
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.487 2004/04/04 23:17:48 hno Exp $
+ * $Id: structs.h,v 1.488 2004/08/30 03:28:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -205,13 +205,6 @@ struct _https_port_list
 #if DELAY_POOLS
 #include "DelayConfig.h"
 #endif
-
-struct _authConfig
-{
-    authScheme *schemes;
-    int n_allocated;
-    int n_configured;
-};
 
 struct _RemovalPolicySettings
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.174 2004/04/10 13:10:17 hno Exp $
+ * $Id: typedefs.h,v 1.175 2004/08/30 03:28:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -67,9 +67,11 @@ typedef struct AuthUserIP auth_user_ip_t;
 
 typedef struct _acl_proxy_auth_match_cache acl_proxy_auth_match_cache;
 
-typedef struct _authscheme_entry authscheme_entry_t;
+/* temporary: once Config is fully hidden, this shouldn't be needed */
+#include "Array.h"
 
-typedef struct _authScheme authScheme;
+class AuthConfig;
+typedef Vector<AuthConfig *> authConfig;
 
 typedef struct _acl_snmp_comm acl_snmp_comm;
 
@@ -208,8 +210,6 @@ typedef struct _dlink_list dlink_list;
 typedef struct _StatCounters StatCounters;
 
 typedef struct _storeSwapLogData storeSwapLogData;
-
-typedef struct _authConfig authConfig;
 
 typedef struct _cacheSwap cacheSwap;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: MemPoolTest.cc,v 1.1 2003/06/22 08:04:28 robertc Exp $
+ * $Id: MemPoolTest.cc,v 1.2 2004/08/30 03:29:03 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -43,7 +43,6 @@ xassert(const char *msg, const char *file, int line)
     std::cout << "Assertion failed: (" << msg << ") at " << file << ":" << line << std::endl;
     exit (1);
 }
-time_t squid_curtime = 0;
 
 class MemPoolTest {
 public:

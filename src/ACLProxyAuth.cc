@@ -42,6 +42,8 @@
 #include "ACLRegexData.h"
 #include "client_side.h"
 #include "HttpRequest.h"
+#include "AuthUser.h"
+#include "AuthUserRequest.h"
 
 MemPool (*ACLProxyAuth::Pool)(NULL);
 void *
@@ -158,7 +160,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *checklist)const
     auth_user_request = checklist->auth_user_request;
 
     assert(authenticateValidateUser(auth_user_request));
-    authenticateStart(auth_user_request, LookupDone, checklist);
+    auth_user_request->start(LookupDone, checklist);
 }
 
 void
@@ -174,7 +176,7 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
         /* credentials could not be checked either way
          * restart the whole process */
         /* OR the connection was closed, there's no way to continue */
-        authenticateAuthUserRequestUnlock(checklist->auth_user_request);
+        checklist->auth_user_request->unlock();
 
         if (checklist->conn().getRaw() != NULL) {
             checklist->conn()->auth_user_request = NULL;
@@ -216,7 +218,8 @@ ACLProxyAuth::clone() const
 int
 ACLProxyAuth::matchForCache(ACLChecklist *checklist)
 {
-    return data->match(authenticateUserRequestUsername(checklist->auth_user_request));
+    assert (checklist->auth_user_request);
+    return data->match(checklist->auth_user_request->username());
 }
 
 /* aclMatchProxyAuth can return two exit codes:
@@ -228,7 +231,7 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *checklist)
 {
     checkAuthForCaching(checklist);
     /* check to see if we have matched the user-acl before */
-    int result = cacheMatchAcl(&checklist->auth_user_request->auth_user->
+    int result = cacheMatchAcl(&checklist->auth_user_request->user()->
                                proxy_match_cache, checklist);
     checklist->auth_user_request = NULL;
     return result;
@@ -238,10 +241,14 @@ void
 ACLProxyAuth::checkAuthForCaching(ACLChecklist *checklist)const
 {
     /* for completeness */
-    authenticateAuthUserRequestLock(checklist->auth_user_request);
+
+    checklist->auth_user_request->lock()
+
+    ;
     /* consistent parameters ? */
     assert(authenticateUserAuthenticated(checklist->auth_user_request));
+
     /* this check completed */
-    authenticateAuthUserRequestUnlock(checklist->auth_user_request);
+    checklist->auth_user_request->unlock();
 }
 

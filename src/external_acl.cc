@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.56 2004/08/14 21:15:16 hno Exp $
+ * $Id: external_acl.cc,v 1.57 2004/08/30 03:28:59 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -43,7 +43,7 @@
 #include "squid.h"
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
-#include "authenticate.h"
+#include "AuthUserRequest.h"
 #include "Store.h"
 #include "fde.h"
 #include "ACLChecklist.h"
@@ -710,7 +710,8 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
         switch (format->type) {
 
         case _external_acl_format::EXT_ACL_LOGIN:
-            str = authenticateUserRequestUsername(ch->auth_user_request);
+            assert (ch->auth_user_request);
+            str = ch->auth_user_request->username();
             break;
 #if USE_IDENT
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.241 2004/08/14 21:15:16 hno Exp $
+ * $Id: tools.cc,v 1.242 2004/08/30 03:28:59 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1070,12 +1070,6 @@ debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm)
     memBufClean(&mb);
 }
 
-int
-stringHasWhitespace(const char *s)
-{
-    return strpbrk(s, w_space) != NULL;
-}
-
 void
 linklistPush(link_list ** L, void *p)
 {
@@ -1132,22 +1126,6 @@ xrename(const char *from, const char *to)
                                         from, to, xstrerror());
 
     return -1;
-}
-
-int
-stringHasCntl(const char *s)
-{
-    unsigned char c;
-
-    while ((c = (unsigned char) *s++) != '\0') {
-        if (c <= 0x1f)
-            return 1;
-
-        if (c >= 0x7f && c <= 0x9f)
-            return 1;
-    }
-
-    return 0;
 }
 
 void
@@ -1260,90 +1238,6 @@ getMyPort(void)
     return 0;			/* NOT REACHED */
 }
 
-/*
- * Similar to strtok, but has some rudimentary knowledge
- * of quoting
- */
-char *
-strwordtok(char *buf, char **t)
-{
-    unsigned char *word = NULL;
-    unsigned char *p = (unsigned char *) buf;
-    unsigned char *d;
-    unsigned char ch;
-    int quoted = 0;
-
-    if (!p)
-        p = (unsigned char *) *t;
-
-    if (!p)
-        goto error;
-
-    while (*p && isspace(*p))
-        p++;
-
-    if (!*p)
-        goto error;
-
-    word = d = p;
-
-    while ((ch = *p)) {
-        switch (ch) {
-
-        case '\\':
-            p++;
-
-            switch (*p) {
-
-            case 'n':
-                ch = '\n';
-
-                break;
-
-            case 'r':
-                ch = '\r';
-
-                break;
-
-            default:
-                ch = *p;
-
-                break;
-
-            }
-
-            *d++ = ch;
-
-            if (ch)
-                p++;
-
-            break;
-
-        case '"':
-            quoted = !quoted;
-
-            p++;
-
-            break;
-
-        default:
-            if (!quoted && isspace(*p)) {
-                p++;
-                goto done;
-            }
-
-            *d++ = *p++;
-            break;
-        }
-    }
-
-done:
-    *d++ = '\0';
-
-error:
-    *t = (char *) p;
-    return (char *) word;
-}
 
 /*
  * Inverse of strwordtok. Quotes a word if needed

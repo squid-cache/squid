@@ -76,8 +76,9 @@ do
 	    perl -i.bak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
 	fi
 	bootstrap autoheader$acver
+	bootstrap libtoolize --automake
 	bootstrap automake$amver --foreign --add-missing
-	bootstrap autoconf$acver ); then
+	bootstrap autoconf$acver); then
 	    : # OK
 	else
 	    exit 1

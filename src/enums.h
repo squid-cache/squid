@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.234 2003/07/15 20:45:45 wessels Exp $
+ * $Id: enums.h,v 1.235 2004/08/30 03:28:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -661,7 +661,6 @@ typedef enum {
     CBDATA_helper_server,
     CBDATA_statefulhelper,
     CBDATA_helper_stateful_server,
-    CBDATA_peer,
     CBDATA_ps_state,
     CBDATA_RemovalPolicy,
     CBDATA_RemovalPolicyWalker,

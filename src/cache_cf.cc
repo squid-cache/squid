@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.453 2004/04/29 23:54:54 hno Exp $
+ * $Id: cache_cf.cc,v 1.454 2004/08/30 03:28:58 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -35,6 +35,8 @@
 
 #include "squid.h"
 #include "authenticate.h"
+#include "AuthConfig.h"
+#include "AuthScheme.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "ConfigParser.h"
@@ -47,6 +49,8 @@
 #if ESI
 #include "ESIParser.h"
 #endif
+
+CBDATA_TYPE(peer);
 
 static const char *const T_SECOND_STR = "second";
 static const char *const T_MINUTE_STR = "minute";
@@ -535,6 +539,8 @@ configDoConfigure(void)
     if (Config.Wais.relayHost) {
         if (Config.Wais._peer)
             cbdataFree(Config.Wais._peer);
+
+        CBDATA_INIT_TYPE_FREECB(peer, peerDestroy);
 
         Config.Wais._peer = cbdataAlloc(peer);
 
@@ -1227,30 +1233,10 @@ check_null_string(char *s)
 }
 
 static void
-allocate_new_authScheme(authConfig * cfg)
-{
-    if (cfg->schemes == NULL) {
-        cfg->n_allocated = 4;
-        cfg->schemes = static_cast<authScheme *>(xcalloc(cfg->n_allocated, sizeof(authScheme)));
-    }
-
-    if (cfg->n_allocated == cfg->n_configured) {
-        authScheme *tmp;
-        cfg->n_allocated <<= 1;
-        tmp = static_cast<authScheme *>(xcalloc(cfg->n_allocated, sizeof(authScheme)));
-        xmemcpy(tmp, cfg->schemes, cfg->n_configured * sizeof(authScheme));
-        xfree(cfg->schemes);
-        cfg->schemes = tmp;
-    }
-}
-
-static void
 parse_authparam(authConfig * config)
 {
     char *type_str;
     char *param_str;
-    authScheme *scheme = NULL;
-    int type, i;
 
     if ((type_str = strtok(NULL, w_space)) == NULL)
         self_destruct();
@@ -1258,59 +1244,46 @@ parse_authparam(authConfig * config)
     if ((param_str = strtok(NULL, w_space)) == NULL)
         self_destruct();
 
-    if ((type = authenticateAuthSchemeId(type_str)) == -1) {
-        debug(3, 0) ("Parsing Config File: Unknown authentication scheme '%s'.\n", type_str);
-        return;
-    }
-
-    for (i = 0; i < config->n_configured; i++) {
-        if (config->schemes[i].Id == type) {
-            scheme = config->schemes + i;
-        }
-    }
+    /* find a configuration for the scheme */
+    AuthConfig *scheme = AuthConfig::Find (type_str);
 
     if (scheme == NULL) {
-        allocate_new_authScheme(config);
-        scheme = config->schemes + config->n_configured;
-        config->n_configured++;
-        scheme->Id = type;
-        scheme->typestr = authscheme_list[type].typestr;
+        /* Create a configuration */
+        AuthScheme *theScheme;
+
+        if ((theScheme = AuthScheme::Find(type_str)) == NULL) {
+            debug(3, 0) ("Parsing Config File: Unknown authentication scheme '%s'.\n", type_str);
+            return;
+        }
+
+        config->push_back(theScheme->createConfig());
+        scheme = config->back();
+        assert (scheme);
     }
 
-    authscheme_list[type].parse(scheme, config->n_configured, param_str);
+    scheme->parse(scheme, config->size(), param_str);
 }
 
 static void
 free_authparam(authConfig * cfg)
 {
-    authScheme *scheme;
-    int i;
+    AuthConfig *scheme;
     /* DON'T FREE THESE FOR RECONFIGURE */
 
     if (reconfiguring)
         return;
 
-    for (i = 0; i < cfg->n_configured; i++) {
-        scheme = cfg->schemes + i;
-        authscheme_list[scheme->Id].freeconfig(scheme);
+    while (cfg->size()) {
+        scheme = cfg->pop_back();
+        scheme->done();
     }
-
-    safe_free(cfg->schemes);
-    cfg->schemes = NULL;
-    cfg->n_allocated = 0;
-    cfg->n_configured = 0;
 }
 
 static void
 dump_authparam(StoreEntry * entry, const char *name, authConfig cfg)
 {
-    authScheme *scheme;
-    int i;
-
-    for (i = 0; i < cfg.n_configured; i++) {
-        scheme = cfg.schemes + i;
-        authscheme_list[scheme->Id].dump(entry, name, scheme);
-    }
+    for (authConfig::iterator  i = cfg.begin(); i != cfg.end(); ++i)
+        (*i)->dump(entry, name, (*i));
 }
 
 void
@@ -1501,6 +1474,7 @@ parse_peer(peer ** head)
     char *token = NULL;
     peer *p;
     int i;
+    CBDATA_INIT_TYPE_FREECB(peer, peerDestroy);
     p = cbdataAlloc(peer);
     p->http_port = CACHE_HTTP_PORT;
     p->icp.port = CACHE_ICP_PORT;
