@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.13 1996/09/14 16:14:25 wessels Exp $
+ * $Id: util.h,v 1.14 1996/09/14 16:54:48 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -124,14 +124,14 @@
 #if !HAVE_STRDUP
 extern char *strdup(char *);
 #endif
-extern char *xstrdup (char *);		/* Duplicate a string */
+extern char *xstrdup(char *);	/* Duplicate a string */
 
 /* from xmalloc.c */
-void *xmalloc (size_t);	/* Wrapper for malloc(3) */
-void *xrealloc (void *, size_t);	/* Wrapper for realloc(3) */
-void *xcalloc (int, size_t);	/* Wrapper for calloc(3) */
-void xfree (void *);	/* Wrapper for free(3) */
-void xxfree (void *);	/* Wrapper for free(3) */
+void *xmalloc(size_t);		/* Wrapper for malloc(3) */
+void *xrealloc(void *, size_t);	/* Wrapper for realloc(3) */
+void *xcalloc(int, size_t);	/* Wrapper for calloc(3) */
+void xfree(void *);		/* Wrapper for free(3) */
+void xxfree(void *);		/* Wrapper for free(3) */
 char *xstrdup(char *);
 char *xstrerror(void);
 char *getfullhostname(void);

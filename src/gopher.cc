@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.44 1996/09/14 16:05:43 wessels Exp $
+ * $Id: gopher.cc,v 1.45 1996/09/14 16:54:53 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -161,21 +161,21 @@ typedef struct gopher_ds {
 static int gopherStateFree(int fd, GopherStateData *);
 static void gopher_mime_content(char *buf, char *name, char *def);
 static void gopherMimeCreate(GopherStateData *);
-static int gopher_url_parser (char *url,
-	char *host,
-	int *port,
-	char *type_id,
-	char *request);
+static int gopher_url_parser(char *url,
+    char *host,
+    int *port,
+    char *type_id,
+    char *request);
 static void gopherEndHTML(GopherStateData *);
 static void gopherToHTML(GopherStateData *, char *inbuf, int len);
 static int gopherReadReplyTimeout(int fd, GopherStateData *);
 static void gopherLifetimeExpire(int fd, GopherStateData *);
 static void gopherReadReply(int fd, GopherStateData *);
-static void gopherSendComplete (int fd,
-	char *buf,
-	int size,
-	int errflag,
-	void *data);
+static void gopherSendComplete(int fd,
+    char *buf,
+    int size,
+    int errflag,
+    void *data);
 static void gopherSendRequest(int fd, GopherStateData *);
 static GopherStateData *CreateGopherStateData(void);
 
