@@ -4,5 +4,6 @@
 + make USE_PROXY_AUTH standard
 + Incorporate Pelletier's latest retry patch for 1.1
 + FTP PUT
++ s/sprintf/snprintf/g
 
 + be more persistent in forwarding requests; return fewer error pages
