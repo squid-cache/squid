@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.8 2000/05/29 00:34:39 wessels Exp $
+ * $Id: store_io_diskd.cc,v 1.9 2000/05/29 00:36:39 wessels Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -86,8 +86,7 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     diskdstate->id = diskd_stats.sio_id++;
 
     buf = storeDiskdShmGet(SD, &shm_offset);
-    /* XXX WRONG!!! :) */
-    strcpy(buf, storeDiskdDirFullPath(SD, f, NULL));
+    xstrncpy(buf, storeDiskdDirFullPath(SD, f, NULL), SHMBUF_BLKSZ);
     x = storeDiskdSend(_MQD_OPEN,
 	SD,
 	diskdstate->id,
