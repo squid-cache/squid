@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.57 1999/05/03 21:55:11 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.58 1999/05/03 22:41:14 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -506,7 +506,7 @@ storeGetNextFile(rebuild_dir * d, int *sfileno, int *size)
 		    d->entry->d_name);
 		continue;
 	    }
-	    if (!storeFilenoBelongsHere(d->fn, d->dirn, d->curlvl1, d->curlvl2)) {
+	    if (!storeUfsFilenoBelongsHere(d->fn, d->dirn, d->curlvl1, d->curlvl2)) {
 		debug(20, 3) ("storeGetNextFile: %08X does not belong in %d/%d/%d\n",
 		    d->fn, d->dirn, d->curlvl1, d->curlvl2);
 		continue;
@@ -693,7 +693,7 @@ storeRebuildStart(void)
 	 * use storeRebuildFromDirectory() to open up each file
 	 * and suck in the meta data.
 	 */
-	fp = storeDirOpenTmpSwapLog(i, &clean, &zero);
+	fp = storeUfsDirOpenTmpSwapLog(i, &clean, &zero);
 	if (fp == NULL || zero) {
 	    if (fp != NULL)
 		fclose(fp);

@@ -1,7 +1,7 @@
 
 /*
- * $Id: squid.h,v 1.190 1999/04/26 21:52:39 glenn Exp $
- * $Id: squid.h,v 1.190 1999/04/26 21:52:39 glenn Exp $
+ * $Id: squid.h,v 1.191 1999/05/03 22:41:11 wessels Exp $
+ * $Id: squid.h,v 1.191 1999/05/03 22:41:11 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -396,5 +396,8 @@ struct rusage {
 #else
 #define SQUID_NONBLOCK O_NDELAY
 #endif
+
+#define SWAP_DIR_SHIFT 24
+#define SWAP_FILE_MASK 0x00FFFFFF
 
 #endif /* SQUID_H */
