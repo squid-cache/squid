@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.129 2001/03/28 14:45:40 wessels Exp $
+ * $Id: store_dir.cc,v 1.130 2001/03/28 16:33:56 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -493,7 +493,7 @@ storeDirGetBlkSize(const char *path, int *blksize)
     /*
      * Sanity check; make sure we have a meaningful value.
      */
-    if (*blksize > 512)
+    if (*blksize < 512)
 	*blksize = 2048;
     return 0;
 }
