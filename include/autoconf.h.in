@@ -107,6 +107,12 @@
 /* Define to have malloc statistics */
 #undef XMALLOC_STATISTICS
 
+/* Define to have a detailed trace of memory allocations */
+#undef XMALLOC_COUNT
+
+/* Define to use async disk I/O operations */
+#undef USE_ASYNC_IO
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 

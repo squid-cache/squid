@@ -3,6 +3,12 @@
 	  better performance under low load (Stewart Forster).
 	- Changed storeWriteCleanLogs() to write objects in the LRU
 	  list order instead of the random hash table order.
+	- Fixed FTP bug when data socket connections fail or timeout.
+	- Reuse FTP data connection when possible (Henrik Nordstrom).
+	- Added configure options (Henrik Nordstrom)
+		--enable-store-key=sha|md5
+		--enable-xmalloc-statistics
+		--enable-xmalloc-debug
 
 Changes to squid-1.2.beta10 (Dec 30, 1997):
 
