@@ -622,3 +622,13 @@ enum {
     SENT,
     RECV
 };
+
+/*
+ * These are field indicators for raw cache-cache netdb transfers
+ */
+enum {
+	NETDB_NONE,
+	NETDB_NETWORK,
+	NETDB_RTT,
+	NETDB_HOPS
+};
