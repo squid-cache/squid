@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.23 2003/02/21 22:50:29 robertc Exp $
+ * $Id: aiops.cc,v 1.24 2003/06/19 16:42:40 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -31,6 +31,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#ifndef _REENTRANT
+#error "_REENTRANT MUST be defined to build squid async io support."
+#endif
 
 #include "squid.h"
 #include "store_asyncufs.h"
