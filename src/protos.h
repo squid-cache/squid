@@ -184,6 +184,8 @@ extern void gopherStart(StoreEntry *);
 extern int gopherCachable(const char *);
 
 
+extern void whoisStart(request_t * req, StoreEntry *);
+
 /* init */
 extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
 extern void hash_insert(hash_table *, const char *, void *);
@@ -560,6 +562,7 @@ extern peer_t parseNeighborType(const char *s);
 extern void errorSend(int fd, ErrorState *);
 extern void errorAppendEntry(StoreEntry *, ErrorState *);
 extern void errorInitialize(void);
+extern void errorFree(void);
 extern ErrorState *errorCon(err_type, http_status);
 
 extern OBJH stat_io_get;
@@ -582,6 +585,7 @@ extern int pconnPop(const char *host, u_short port);
 extern void pconnInit(void);
 
 extern int asnMatchIp(void *, struct in_addr);
+extern void asnCleanup();
 extern void asnAclInitialize(acl *);
 extern void asndbInit();
 extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
