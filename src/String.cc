@@ -1,5 +1,5 @@
 /*
- * $Id: String.cc,v 1.1 1998/03/08 07:53:13 rousskov Exp $
+ * $Id: String.cc,v 1.2 1998/03/08 08:16:43 rousskov Exp $
  *
  * DEBUG: section 61    String
  * AUTHOR: Duane Wessels
@@ -30,6 +30,13 @@
 
 #include "squid.h"
 
+static void
+stringInitBuf(String *s, size_t sz)
+{
+    s->buf = memAllocBuf(sz, &sz);
+    assert(sz < 65536);
+    s->size = sz;
+}
 
 void
 stringInit(String *s, const char *str)
@@ -44,12 +51,9 @@ stringInit(String *s, const char *str)
 void
 stringLimitInit(String *s, const char *str, int len)
 {
-    size_t sz = len+1;
     assert(s && str);
+    stringInitBuf(s, len+1);
     s->len = len;
-    s->buf = memAllocBuf(sz, &sz);
-    assert(sz < 65536);
-    s->size = sz;
     xmemcpy(s->buf, str, len);
     s->buf[len] = '\0';
 }
@@ -77,4 +81,23 @@ stringReset(String *s, const char *str)
 {
     stringClean(s);
     stringInit(s, str);
+}
+
+void
+stringAppend(String *s, const char *str, int len)
+{
+    assert(s && s->buf);
+    if (s->len + len < s->size) {
+	strncat(s->buf, str, len);
+	s->len += len;
+    } else {
+	String snew = StringNull;
+	snew.len = s->len + len;
+	stringInitBuf(&snew, snew.len + 1);
+	xmemcpy(snew.buf, s->buf, s->len);
+	xmemcpy(snew.buf+s->len, str, len);
+	snew.buf[snew.len] = '\0';
+	stringClean(s);
+	*s = snew;
+    }
 }
