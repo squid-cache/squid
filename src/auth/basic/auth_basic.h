@@ -130,6 +130,7 @@ public:
     char *basicAuthRealm;
     wordlist *authenticate;
     time_t credentialsTTL;
+    int casesensitive;
 };
 
 #endif
