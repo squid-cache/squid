@@ -1,5 +1,6 @@
 Changes to squid-1.1.beta2 ():
 
+	- Switched to ANSI style coding.
 	- Fixed UDP_HIT_OBJ objects ignoring 'proxy-only' setting.
 	- Added setting cachemgr.cgi fields from query string
 	  (Neil Murray).
@@ -12,13 +13,11 @@ Changes to squid-1.1.beta2 ():
 	- Placed call to proto_count() just after log_append()
 	  so we only need it in one place.
 	- Made a lot of proto.c functions static and added prototypes.
-	- Switched to ANSI style coding.
 	- Fixed icpProcessRequest() bug.  Need to check EXPIRED
 	  before IMS.
 	- Fixed aclDestroyDenyInfoList() to NULL free'd lists.
 	- Fixed storeDirClean() to unlink files which should be
 	  directories (Cord Beerman).
-	- Fixed QUERY_STRING stuff in cachemgr.c (Neil Murray).
 
 Changes to squid-1.1.beta1 (September 12, 1996):
 
