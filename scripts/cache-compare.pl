@@ -8,12 +8,12 @@
 # from a number of different caches.
 #
 # stdin is a list of URLs.  Set the @getfrom array to a list of caches
-# to fetch each URL from.  Include 'SOURCE' is @getfrom to fetch from
+# to fetch each URL from.  Include 'SOURCE' in @getfrom to fetch from
 # the source host also.  For each URL, print the byte count, elapsed
 # time and average data rate.  At the end print out some averages.
 #
 # NOTE: uses the Perl function syscall() to implement gettimeofday(2).
-# Assumes # that gettimeofday is syscall #116 on the system
+# Assumes that gettimeofday is syscall #116 on the system
 # (see /usr/include/sys/syscall.h).
 #
 # BUGS:
