@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.70 2000/05/02 18:32:41 hno Exp $
+ * $Id: forward.cc,v 1.71 2000/05/02 19:35:23 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -193,6 +193,12 @@ fwdConnectDone(int server_fd, int status, void *data)
 	comm_close(server_fd);
     } else {
 	debug(17, 3) ("fwdConnectDone: FD %d: '%s'\n", server_fd, storeUrl(fwdState->entry));
+	if (fs->peer)
+	    hierarchyNote(&fwdState->request->hier, fs->code, fs->peer->host);
+	else if (Config.onoff.log_ip_on_direct)
+	    hierarchyNote(&fwdState->request->hier, fs->code, fd_table[server_fd].ipaddr);
+	else
+	    hierarchyNote(&fwdState->request->hier, fs->code, request->host);
 	fd_note(server_fd, storeUrl(fwdState->entry));
 	fd_table[server_fd].uses++;
 	if (fs->peer)
@@ -249,7 +255,6 @@ fwdConnectStart(void *data)
 	port = fwdState->request->port;
 	ctimeout = Config.Timeout.connect;
     }
-    hierarchyNote(&fwdState->request->hier, fs->code, host);
     if ((fd = pconnPop(host, port)) >= 0) {
 	debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
 	fwdState->server_fd = fd;

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.170 2000/05/02 18:51:51 hno Exp $
+# $Id: cf.data.pre,v 1.171 2000/05/02 19:35:23 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -741,6 +741,18 @@ DOC_START
 emulate_httpd_log off
 DOC_END
 
+NAME: log_ip_on_direct
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.log_ip_on_direct
+DOC_START
+	Log the destination IP address in the hierarchy log tag when going
+	direct. Earlier Squid versions logged the hostname here. If you
+	prefer the old way set this to off.
+
+log_ip_on_direct on
+DOC_END
 
 NAME: mime_table
 TYPE: string
