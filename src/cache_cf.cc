@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.123 1996/11/01 21:31:03 wessels Exp $
+ * $Id: cache_cf.cc,v 1.124 1996/11/02 00:17:43 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -239,7 +239,6 @@ static void parseLocalDomainLine _PARAMS((void));
 static void parseMcastGroupLine _PARAMS((void));
 static void parseMemLine _PARAMS((void));
 static void parseMgrLine _PARAMS((void));
-static void parsePidFilenameLine _PARAMS((void));
 static void parseKilobytes _PARAMS((int *));
 static void parseSwapLine _PARAMS((void));
 static void parseRefreshPattern _PARAMS((int icase));
