@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.10 2002/09/05 21:09:24 hno Exp $
+ * $Id: external_acl.cc,v 1.11 2002/09/06 20:11:44 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -58,6 +58,7 @@ static int external_acl_entry_expired(external_acl * def, external_acl_entry * e
 static void external_acl_cache_touch(external_acl * def, external_acl_entry * entry);
 
 extern char *strtokFile(void);
+static void strwordquote(MemBuf * mb, const char *str);
 
 /*******************************************************************
  * external_acl cache entry
@@ -549,28 +550,16 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 		str = NULL;
 	if (!str)
 	    str = "-";
-	if (first) {
-	    char *s = log_quote(str);
-	    memBufPrintf(&mb, "%s", s);
-	    safe_free(s);
-	} else {
-	    char *s = log_quote(str);
-	    memBufPrintf(&mb, " %s", s);
-	    safe_free(s);
-	}
+	if (!first)
+	    memBufAppend(&mb, " ", 1);
+	strwordquote(&mb, str);
 	stringClean(&sb);
 	first = 0;
     }
     for (arg = acl_data->arguments; arg; arg = arg->next) {
-	if (first) {
-	    char *s = log_quote(arg->key);
-	    memBufPrintf(&mb, "%s", s);
-	    safe_free(s);
-	} else {
-	    char *s = log_quote(arg->key);
-	    memBufPrintf(&mb, " %s", s);
-	    safe_free(s);
-	}
+	if (!first)
+	    memBufAppend(&mb, " ", 1);
+	strwordquote(&mb, arg->key);
 	first = 0;
     }
     return mb.buf;
@@ -709,6 +698,28 @@ strwordtok(char *buf, char **t)
   error:
     *t = (char *) p;
     return (char *) word;
+}
+
+static void
+strwordquote(MemBuf * mb, const char *str)
+{
+    int quoted = 0;
+    if (strchr(str, ' ')) {
+	quoted = 1;
+	memBufAppend(mb, "\"", 1);
+    }
+    while (*str) {
+	int l = strcspn(str, "\"\\");
+	memBufAppend(mb, str, l);
+	str += l;
+	while (*str == '"' || *str == '\\') {
+	    memBufAppend(mb, "\\", 1);
+	    memBufAppend(mb, str, 1);
+	    str++;
+	}
+    }
+    if (quoted)
+	memBufAppend(mb, "\"", 1);
 }
 
 /*
