@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.90 1996/09/17 02:29:50 wessels Exp $
+ * $Id: cache_cf.cc,v 1.91 1996/09/17 16:32:32 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -190,7 +190,7 @@ struct SquidConfig Config;
 #define DefaultTcpOutgoingAddr	INADDR_NONE
 #define DefaultUdpIncomingAddr	INADDR_ANY
 #define DefaultUdpOutgoingAddr	INADDR_NONE
-#define DefaultClientNetmask	0xFFFFFFFF
+#define DefaultClientNetmask    0xFFFFFFFFul
 #define DefaultSslProxyPort	0
 #define DefaultSslProxyHost	(char *)NULL
 #define DefaultIpcacheSize	1024
@@ -351,15 +351,15 @@ addToIPACL(ip_acl ** list, char *ip_str, ip_access_type access)
 	switch (c) {
 	case 4:
 	    if (a1 == 0 && a2 == 0 && a3 == 0 && a4 == 0)	/* world   */
-		lmask.s_addr = 0x00000000;
+		lmask.s_addr = 0x00000000ul;
 	    else if (a2 == 0 && a3 == 0 && a4 == 0)	/* class A */
-		lmask.s_addr = htonl(0xff000000);
+		lmask.s_addr = htonl(0xff000000ul);
 	    else if (a3 == 0 && a4 == 0)	/* class B */
-		lmask.s_addr = htonl(0xffff0000);
+		lmask.s_addr = htonl(0xffff0000ul);
 	    else if (a4 == 0)	/* class C */
-		lmask.s_addr = htonl(0xffffff00);
+		lmask.s_addr = htonl(0xffffff00ul);
 	    else
-		lmask.s_addr = 0xffffffff;
+		lmask.s_addr = 0xfffffffful;
 	    break;
 
 	case 5:
@@ -368,7 +368,7 @@ addToIPACL(ip_acl ** list, char *ip_str, ip_access_type access)
 		    ip_str);
 		return;
 	    }
-	    lmask.s_addr = htonl(0xffffffff << (32 - m1));
+	    lmask.s_addr = htonl(0xfffffffful << (32 - m1));
 	    break;
 
 	case 8:

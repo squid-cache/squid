@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.40 1996/09/17 02:29:48 wessels Exp $
+ * $Id: acl.cc,v 1.41 1996/09/17 16:32:31 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -173,7 +173,7 @@ decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 	break;
     case 1:			/* a significant bits value for a mask */
 	if (a1 >= 0 && a1 < 33) {
-	    addr->s_addr = htonl(0xffffffff << (32 - a1));
+	    addr->s_addr = htonl(0xfffffffful << (32 - a1));
 	    break;
 	}
     default:
@@ -192,16 +192,16 @@ decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 
 	/* Guess netmask */
 	a = ntohl(addr->s_addr);
-	if (!(a & 0xFFFFFFFF))
-	    mask->s_addr = htonl(0x00000000);
+	if (!(a & 0xFFFFFFFFul))
+	    mask->s_addr = htonl(0x00000000ul);
 	else if (!(a & 0x00FFFFFF))
-	    mask->s_addr = htonl(0xFF000000);
+	    mask->s_addr = htonl(0xFF000000ul);
 	else if (!(a & 0x0000FFFF))
-	    mask->s_addr = htonl(0xFFFF0000);
+	    mask->s_addr = htonl(0xFFFF0000ul);
 	else if (!(a & 0x000000FF))
-	    mask->s_addr = htonl(0xFFFFFF00);
+	    mask->s_addr = htonl(0xFFFFFF00ul);
 	else
-	    mask->s_addr = htonl(0xFFFFFFFF);
+	    mask->s_addr = htonl(0xFFFFFFFFul);
 	addr->s_addr &= mask->s_addr;
 	/* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
     }

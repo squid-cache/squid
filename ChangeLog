@@ -1,3 +1,8 @@
+Changes to squid-1.1.beta3 ():
+
+	- s/()/(void)/
+	- Fixed 8k page leak in icmpRecv().
+
 Changes to squid-1.1.beta2 (September 16, 1996):
 
 	- Switched to ANSI style coding.

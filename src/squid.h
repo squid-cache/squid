@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.49 1996/09/16 21:11:14 wessels Exp $
+ * $Id: squid.h,v 1.50 1996/09/17 16:32:45 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -152,7 +152,7 @@
 #endif
 
 #ifndef INADDR_NONE
-#define INADDR_NONE -1
+#define INADDR_NONE ((unsigned long) -1)
 #endif
 
 #if !defined(HAVE_RUSAGE) && defined(_SQUID_HPUX_)
@@ -264,8 +264,8 @@ extern int do_reuse;		/* main.c */
 extern int theHttpConnection;	/* main.c */
 extern int theInIcpConnection;	/* main.c */
 extern int theOutIcpConnection;	/* main.c */
-extern int shutdown_pending;	/* main.c */
-extern int reread_pending;	/* main.c */
+extern volatile int shutdown_pending;   /* main.c */
+extern volatile int reread_pending;     /* main.c */
 extern int opt_unlink_on_reload;	/* main.c */
 extern int opt_reload_hit_only;	/* main.c */
 extern int opt_dns_tests;	/* main.c */

@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.24 1996/09/17 02:29:52 wessels Exp $
+ * $Id: debug.cc,v 1.25 1996/09/17 16:32:36 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -105,8 +105,8 @@
 
 #include "squid.h"
 
-char *_db_file = __FILE__;
-int _db_line = 0;
+char *volatile _db_file = __FILE__;
+volatile int _db_line = 0;
 
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;

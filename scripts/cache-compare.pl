@@ -19,10 +19,10 @@
 # BUGS:
 # Should probably cache the gethostbyname() calls.
 
-@getfrom = ('SOURCE', 'localhost:3128');
+@getfrom = ('SOURCE', 'localhost:3128', 'bo:3128');
 
 require 'sys/socket.ph';
-$gettimeofday = 116;    	# cheating, should use require syscall.ph
+$gettimeofday = 1128;    	# cheating, should use require syscall.ph
 
 while (<>) {
 	chop ($url = $_);
