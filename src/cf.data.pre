@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.346 2004/04/04 13:57:30 hno Exp $
+# $Id: cf.data.pre,v 1.347 2004/04/04 15:05:13 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1441,6 +1441,23 @@ DOC_START
 	For security and stability reasons Squid by default checks
 	hostnames for Internet standard RFC compliance. If you do not want
 	Squid to perform these checks then turn this directive off.
+DOC_END
+
+NAME: ftp_telnet_protocol
+TYPE: onoff
+DEFAULT: on
+LOC: Config.Ftp.telnet
+DOC_START
+The FTP protocol is officially defined to use the telnet protocol
+as transport channel for the control connection. However, many
+implemenations are broken and does not respect this aspect of
+the FTP protocol.
+
+If you have trouble accessing files with ASCII code 255 in the
+path or similar problems involving this ASCII code then you can
+try setting this directive to off. If that helps report to the
+operator of the FTP server in question that their FTP server
+is broken and does not follow the FTP standard.
 DOC_END
 
 NAME: cache_dns_program

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.485 2004/04/03 14:07:39 hno Exp $
+ * $Id: structs.h,v 1.486 2004/04/04 15:05:13 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -604,6 +604,7 @@ struct _SquidConfig
         char *anon_user;
         int passive;
         int sanitycheck;
+        int telnet;
     }
 
     Ftp;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.356 2004/04/04 14:47:06 hno Exp $
+ * $Id: ftp.cc,v 1.357 2004/04/04 15:05:13 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1429,18 +1429,55 @@ ftpStart(FwdState * fwd)
 
 /* ====================================================================== */
 
+static char *
+escapeIAC(const char *buf)
+{
+    int n;
+    char *ret;
+    unsigned const char *p;
+    unsigned char *r;
+
+    for (p = (unsigned const char *)buf, n = 1; *p; n++, p++)
+        if (*p == 255)
+            n++;
+
+    ret = (char *)xmalloc(n);
+
+    for (p = (unsigned const char *)buf, r=(unsigned char *)ret; *p; p++) {
+        *r++ = *p;
+
+        if (*p == 255)
+            *r++ = 255;
+    }
+
+    *r++ = '\0';
+    assert((r - (unsigned char *)ret) == n );
+    return ret;
+}
+
 static void
 ftpWriteCommand(const char *buf, FtpStateData * ftpState)
 {
+    char *ebuf;
     debug(9, 5) ("ftpWriteCommand: %s\n", buf);
+
+    if (Config.Ftp.telnet)
+        ebuf = escapeIAC(buf);
+    else
+        ebuf = xstrdup(buf);
+
     safe_free(ftpState->ctrl.last_command);
+
     safe_free(ftpState->ctrl.last_reply);
-    ftpState->ctrl.last_command = xstrdup(buf);
+
+    ftpState->ctrl.last_command = ebuf;
+
     comm_write(ftpState->ctrl.fd,
                ftpState->ctrl.last_command,
                strlen(ftpState->ctrl.last_command),
                ftpWriteCommandCallback,
                ftpState);
+
     ftpScheduleReadControlReply(ftpState, 0);
 }
 
