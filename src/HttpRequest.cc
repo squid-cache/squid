@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.37 2003/06/27 22:32:31 hno Exp $
+ * $Id: HttpRequest.cc,v 1.38 2003/07/09 14:14:57 hno Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -95,6 +95,8 @@ requestDestroy(request_t * req)
     req->extacl_user.clean();
 
     req->extacl_passwd.clean();
+
+    req->extacl_log.clean();
 
     memFree(req, MEM_REQUEST_T);
 }

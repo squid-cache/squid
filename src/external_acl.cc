@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.47 2003/07/06 21:43:36 hno Exp $
+ * $Id: external_acl.cc,v 1.48 2003/07/09 14:14:58 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -570,6 +570,8 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
         }
     }
 
+    external_acl_message = "MISSING REQUIRED INFORMATION";
+
     if (!entry) {
         if (acl->def->require_auth) {
             int ti;
@@ -601,6 +603,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
             } else {
                 if (!entry) {
                     debug(82, 1) ("aclMatchExternal: '%s' queue overload. Request rejected '%s'.\n", acl->def->name, key);
+                    external_acl_message = "SYSTEM TOO BUSY, TRY AGAIN LATER";
                     return -1;
                 } else {
                     debug(82, 1) ("aclMatchExternal: '%s' queue overload. Using stale result. '%s'.\n", acl->def->name, key);
@@ -612,6 +615,8 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
 
     external_acl_cache_touch(acl->def, entry);
     result = entry->result;
+    external_acl_message = entry->message.buf();
+
     debug(82, 2) ("aclMatchExternal: %s = %d\n", acl->def->name, result);
 
     if (ch->request) {
@@ -623,6 +628,9 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
 
         if (!ch->request->tag.size())
             ch->request->tag = entry->tag;
+
+        if (entry->log.size())
+            ch->request->extacl_log = entry->log;
     }
 
     return result;
@@ -912,11 +920,12 @@ free_externalAclState(void *data)
  *
  * Keywords:
  *
- *   user=        The users name (login)
- *   message=     Message describing the reason
- *   tag= 	  A string tag to be applied to the request that triggered the acl match.
- *   			applies to both OK and ERR responses.
- *   			Won't override existing request tags.
+ *   user=      The users name (login)
+ *   message=   Message describing the reason
+ *   tag= 	A string tag to be applied to the request that triggered the acl match.
+ *   		applies to both OK and ERR responses.
+ *   		Won't override existing request tags.
+ *   log=	A string to be used in access logging
  *
  * Other keywords may be added to the protocol later
  *
@@ -960,6 +969,8 @@ externalAclHandleReply(void *data, char *reply)
                     entryData.message = value;
                 else if (strcmp(token, "tag") == 0)
                     entryData.tag = value;
+                else if (strcmp(token, "log") == 0)
+                    entryData.log = value;
                 else if (strcmp(token, "password") == 0)
                     entryData.password = value;
                 else if (strcmp(token, "passwd") == 0)
