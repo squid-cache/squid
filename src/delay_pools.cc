@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.40 2003/06/19 13:12:05 robertc Exp $
+ * $Id: delay_pools.cc,v 1.41 2003/08/03 09:03:49 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -92,13 +92,13 @@ class AggregateId:public DelayIdComposite
         void *operator new(size_t);
         void operator delete (void *);
         virtual void deleteSelf() const;
-        AggregateId (Aggregate::Pointer);
+        AggregateId (RefCount<Aggregate>);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
         virtual void delayRead(DeferredRead const &);
 
     private:
-        Aggregate::Pointer theAggregate;
+        RefCount<Aggregate> theAggregate;
     };
 
     friend class AggregateId;
@@ -162,12 +162,12 @@ class Id:public DelayIdComposite
         void *operator new(size_t);
         void operator delete (void *);
         virtual void deleteSelf() const;
-        Id (VectorPool::Pointer, int);
+        Id (RefCount<VectorPool>, int);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
 
     private:
-        VectorPool::Pointer theVector;
+        RefCount<VectorPool> theVector;
         int theIndex;
     };
 };
@@ -259,12 +259,12 @@ class Id:public DelayIdComposite
         void *operator new(size_t);
         void operator delete (void *);
         virtual void deleteSelf() const;
-        Id (ClassCHostPool::Pointer, unsigned char, unsigned char);
+        Id (RefCount<ClassCHostPool>, unsigned char, unsigned char);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
 
     private:
-        ClassCHostPool::Pointer theClassCHost;
+        RefCount<ClassCHostPool> theClassCHost;
         unsigned char theNet;
         unsigned char theHost;
     };
@@ -542,7 +542,7 @@ Aggregate::AggregateId::deleteSelf() const
     delete this;
 }
 
-Aggregate::AggregateId::AggregateId(Aggregate::Pointer anAggregate) : theAggregate(anAggregate)
+Aggregate::AggregateId::AggregateId(RefCount<Aggregate> anAggregate) : theAggregate(anAggregate)
 {}
 
 int
