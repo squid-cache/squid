@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.177 1997/12/03 09:00:17 wessels Exp $
+ * $Id: ftp.cc,v 1.178 1997/12/05 07:42:57 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -92,6 +92,7 @@ typedef struct _Ftpdata {
     wordlist *cwd_message;
     char *old_request;
     char *old_reply;
+    char typecode;
     struct {
 	int fd;
 	char *buf;
@@ -724,7 +725,7 @@ ftpReadData(int fd, void *data)
 		err->request = requestLink(ftpState->request);
 		errorAppendEntry(entry, err);
 	    } else {
-	        storeAbort(entry, 0);
+		storeAbort(entry, 0);
 	    }
 	    ftpDataTransferDone(ftpState);
 	}
@@ -809,6 +810,7 @@ ftpCheckUrlpath(FtpStateData * ftpState)
 {
     request_t *request = ftpState->request;
     int l;
+    char *t;
     l = strlen(request->urlpath);
     EBIT_SET(ftpState->flags, FTP_USE_BASE);
     /* check for null path */
@@ -824,6 +826,12 @@ ftpCheckUrlpath(FtpStateData * ftpState)
 	EBIT_CLR(ftpState->flags, FTP_USE_BASE);
 	if (l == 1)
 	    EBIT_SET(ftpState->flags, FTP_ROOT_DIR);
+    }
+    if ((t = strrchr(request->urlpath, ';')) != NULL) {
+	if (strncasecmp(t + 1, "type=", 5) == 0) {
+	    ftpState->typecode = (char) toupper((int) *(t + 6));
+	    *t = NULL;
+	}
     }
 }
 
@@ -1180,10 +1188,22 @@ ftpSendType(FtpStateData * ftpState)
     char *t;
     char *filename;
     char mode;
-
-    t = strrchr(ftpState->request->urlpath, '/');
-    filename = t ? t + 1 : ftpState->request->urlpath;
-    mode = mimeGetTransferMode(filename);
+    /*
+     * Ref section 3.2.2 of RFC 1738
+     */
+    switch (mode = ftpState->typecode) {
+    case 'D':
+	mode = 'A';
+	break;
+    case 'A':
+    case 'I':
+	break;
+    default:
+	t = strrchr(ftpState->request->urlpath, '/');
+	filename = t ? t + 1 : ftpState->request->urlpath;
+	mode = mimeGetTransferMode(filename);
+	break;
+    }
     if (mode == 'I')
 	EBIT_SET(ftpState->flags, FTP_BINARY);
     snprintf(cbuf, 1024, "TYPE %c\r\n", mode);
@@ -1450,7 +1470,10 @@ static void
 ftpRestOrList(FtpStateData * ftpState)
 {
     debug(9, 3) ("This is ftpRestOrList\n");
-    if (EBIT_TEST(ftpState->flags, FTP_ISDIR))
+    if (ftpState->typecode == 'D') {
+	ftpSendNlst(ftpState);	/* sec 3.2.2 of RFC 1738 */
+	EBIT_SET(ftpState->flags, FTP_ISDIR);
+    } else if (EBIT_TEST(ftpState->flags, FTP_ISDIR))
 	ftpSendList(ftpState);
     else if (ftpState->restart_offset > 0)
 	ftpSendRest(ftpState);
@@ -1521,7 +1544,10 @@ static void
 ftpSendNlst(FtpStateData * ftpState)
 {
     EBIT_SET(ftpState->flags, FTP_TRIED_NLST);
-    snprintf(cbuf, 1024, "NLST\r\n");
+    if (ftpState->filepath)
+	snprintf(cbuf, 1024, "NLST %s\r\n", ftpState->filepath);
+    else
+	snprintf(cbuf, 1024, "NLST\r\n");
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_NLST;
 }
