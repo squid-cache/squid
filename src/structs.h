@@ -48,8 +48,8 @@ struct _acl_arp_data {
 
 struct _String {
     /* never reference these directly! */
-    unsigned short int size; /* buffer size; 64K limit */
-    unsigned short int len;  /* current length  */
+    unsigned short int size;	/* buffer size; 64K limit */
+    unsigned short int len;	/* current length  */
     char *buf;
 };
 
@@ -480,8 +480,8 @@ struct _HttpBody {
 
 /* http header extention field */
 struct _HttpHdrExtField {
-    String name;  /* field-name  from HTTP/1.1 (no column after name) */
-    String value; /* field-value from HTTP/1.1 */
+    String name;		/* field-name  from HTTP/1.1 (no column after name) */
+    String value;		/* field-value from HTTP/1.1 */
 };
 
 /* http cache control header field */
@@ -507,7 +507,7 @@ struct _HttpHdrRange {
 /* http content-range header field */
 struct _HttpHdrContRange {
     HttpHdrRangeSpec spec;
-    size_t elength; /* entity length, not content length */
+    size_t elength;		/* entity length, not content length */
 };
 
 
@@ -848,6 +848,7 @@ struct _ps_state {
     void *callback_data;
     peer *first_parent_miss;
     peer *closest_parent_miss;
+    peer *single_parent;
     icp_ping_data icp;
     aclCheck_t *acl_checklist;
 };
@@ -1009,7 +1010,7 @@ struct _request_t {
     char login[MAX_LOGIN_SZ];
     char host[SQUIDHOSTNAMELEN + 1];
     u_short port;
-#if 0 /* trying new interface */
+#if 0				/* trying new interface */
     char urlpath[MAX_URL];
 #else
     String urlpath;

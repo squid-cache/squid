@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.254 1998/03/16 20:11:51 wessels Exp $
+ * $Id: http.cc,v 1.255 1998/03/16 21:45:01 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -836,7 +836,7 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
     Counter.server.all.requests++;
     Counter.server.http.requests++;
     if (e) {
-	if (e->options & NEIGHBOR_PROXY_ONLY)
+	if (EBIT_TEST(e->options, NEIGHBOR_PROXY_ONLY))
 	    storeReleaseRequest(entry);
 	if ((fd = pconnPop(e->host, e->http_port)) >= 0) {
 	    debug(11, 3) ("httpStart: reusing pconn FD %d\n", fd);
