@@ -160,7 +160,7 @@ fd_close(int fd)
 }
 
 void
-fd_open(int fd, CB * cb, void *data, CB *ccb)
+fd_open(int fd, CB * cb, void *data, CB * ccb)
 {
     FD[fd].cb = cb;
     FD[fd].ccb = ccb;
@@ -186,45 +186,45 @@ read_reply(int fd, void *data)
     struct _request *r = data;
     static unsigned char buf[READ_BUF_SZ];
     int len;
-    if ((len=read(fd, buf, READ_BUF_SZ)) <= 0) {
+    if ((len = read(fd, buf, READ_BUF_SZ)) <= 0) {
 	fd_close(fd);
 	reqpersec++;
 	nrequests++;
     } else {
-	int used=0;
-	total_bytes_read+=len;
+	int used = 0;
+	total_bytes_read += len;
 	if (r->headfound < 2) {
-	    char *p,*header = NULL;
+	    char *p, *header = NULL;
 	    int oldlen = strlen(r->buf);
 	    int newlen = oldlen + len;
 	    assert(oldlen <= READ_BUF_SZ);
-	    memcpy(r->buf+oldlen, buf, len);
-	    r->buf[newlen+1]='\0';
-	    for(p=r->buf; r->headfound < 2 && used<newlen; p++,used++) {
-		switch(*p) {
+	    memcpy(r->buf + oldlen, buf, len);
+	    r->buf[newlen + 1] = '\0';
+	    for (p = r->buf; r->headfound < 2 && used < newlen; p++, used++) {
+		switch (*p) {
 		case '\n':
 		    r->headfound++;
 		    if (header) {
 			/* Decode header */
-			if (strncasecmp(header,"Content-Length:",15)==0)
-			    r->content_length = atoi(header+15);
-			if (strncasecmp(header,"X-Request-URI:",14)==0) {
+			if (strncasecmp(header, "Content-Length:", 15) == 0)
+			    r->content_length = atoi(header + 15);
+			if (strncasecmp(header, "X-Request-URI:", 14) == 0) {
 			    /* Check URI */
-			    if (strncmp(r->url, header+15, strcspn(header+15,"\r\n"))) {
+			    if (strncmp(r->url, header + 15, strcspn(header + 15, "\r\n"))) {
 				char url[8192];
-				strncpy(url, header+15, strcspn(header+15,"\r\n"));
-				url[strcspn(header+15, "\r\n")]='\n';
-				fprintf(stderr,"ERROR: Sent %s received %s\n",
-					r->url, url);
+				strncpy(url, header + 15, strcspn(header + 15, "\r\n"));
+				url[strcspn(header + 15, "\r\n")] = '\n';
+				fprintf(stderr, "ERROR: Sent %s received %s\n",
+				    r->url, url);
 			    }
 			}
-			header=NULL;
+			header = NULL;
 		    }
 		    break;
 		case '\r':
 		    break;
 		default:
-		    r->headfound=0;
+		    r->headfound = 0;
 		    if (!header)
 			header = p;
 		    break;
@@ -233,10 +233,12 @@ read_reply(int fd, void *data)
 	    if (header) {
 		memmove(r->buf, header, newlen - (header - r->buf) + 1);
 	    }
+	    assert(used >= oldlen);
+	    used -= oldlen;
 	}
-	r->bodysize+=len-used;
+	r->bodysize += len - used;
 	if (opt_checksum) {
-	    for (; used<len ; used++) {
+	    for (; used < len; used++) {
 		r->sum += buf[used];
 	    }
 	}
@@ -247,22 +249,21 @@ void
 reply_done(int fd, void *data)
 {
     struct _request *r = data;
-    if (opt_range)
-	; /* skip size checks for now */
+    if (opt_range);		/* skip size checks for now */
     else if (r->bodysize != r->content_length && r->content_length >= 0)
-	fprintf(stderr,"ERROR: %s got %d of %d bytes\n",
-		r->url, r->bodysize, r->content_length);
+	fprintf(stderr, "ERROR: %s got %d of %d bytes\n",
+	    r->url, r->bodysize, r->content_length);
     else if (r->validsize >= 0) {
 	if (r->validsize != r->bodysize)
-	    fprintf(stderr,"WARNING: %s size mismatch wanted %d bytes got %d\n",
-		    r->url, r->validsize, r->bodysize);
+	    fprintf(stderr, "WARNING: %s size mismatch wanted %d bytes got %d\n",
+		r->url, r->validsize, r->bodysize);
 	else if (opt_checksum && r->validsum != r->sum)
-	    fprintf(stderr,"WARNING: %s invalid checksum wanted 0x%lx got 0x%lx\n",
-		    r->url, r->validsum, r->sum);
+	    fprintf(stderr, "WARNING: %s invalid checksum wanted 0x%lx got 0x%lx\n",
+		r->url, r->validsum, r->sum);
     }
     if (trace_file) {
-	fprintf(trace_file,"%s %s %s %d 0x%lx\n",
-		r->method, r->url, r->requestbodyfile, r->bodysize, r->sum);
+	fprintf(trace_file, "%s %s %s %d 0x%lx\n",
+	    r->method, r->url, r->requestbodyfile, r->bodysize, r->sum);
     }
     free(r);
 }
@@ -270,12 +271,12 @@ reply_done(int fd, void *data)
 struct _request *
 request(char *urlin)
 {
-    int s=-1,f=-1;
+    int s = -1, f = -1;
     char buf[4096];
     char msg[8192];
     char *method, *url, *file, *size, *checksum;
     char urlbuf[8192];
-    int len,len2;
+    int len, len2;
     time_t w;
     struct stat st;
     struct sockaddr_in S;
@@ -293,89 +294,89 @@ request(char *urlin)
 	perror("connect");
 	return NULL;
     }
-    strcpy(urlbuf,urlin);
-    method=strtok(urlbuf," ");
-    url=strtok(NULL," ");
-    file=strtok(NULL," ");
-    size=strtok(NULL," ");
-    checksum=strtok(NULL," ");
+    strcpy(urlbuf, urlin);
+    method = strtok(urlbuf, " ");
+    url = strtok(NULL, " ");
+    file = strtok(NULL, " ");
+    size = strtok(NULL, " ");
+    checksum = strtok(NULL, " ");
     if (!url) {
-	url=method;
-	method="GET";
+	url = method;
+	method = "GET";
     }
     if (!file)
-	file="-";
+	file = "-";
     if (!size)
-	size="-";
+	size = "-";
     if (!checksum)
-	checksum="-";
-    r=calloc(1,sizeof *r);
-    assert(r!=NULL);
+	checksum = "-";
+    r = calloc(1, sizeof *r);
+    assert(r != NULL);
     strcpy(r->url, url);
     strcpy(r->method, method);
     strcpy(r->requestbodyfile, file);
     r->fd = s;
-    if (size && strcmp(size,"-")!=0)
-	r->validsize=atoi(size);
+    if (size && strcmp(size, "-") != 0)
+	r->validsize = atoi(size);
     else
-	r->validsize=-1; /* Unknown */
-    if (checksum && strcmp(checksum,"-")!=0)
-	r->validsum=strtoul(checksum,NULL,0);
-    r->content_length=-1; /* Unknown */
+	r->validsize = -1;	/* Unknown */
+    if (checksum && strcmp(checksum, "-") != 0)
+	r->validsum = strtoul(checksum, NULL, 0);
+    r->content_length = -1;	/* Unknown */
     msg[0] = '\0';
-    sprintf(buf,"%s %s HTTP/1.0\r\n", method, url);
+    sprintf(buf, "%s %s HTTP/1.0\r\n", method, url);
     strcat(msg, buf);
     strcat(msg, "Accept: */*\r\n");
     if (opt_ims && (lrand48() & 0x03) == 0) {
 	w = time(NULL) - (lrand48() & 0x3FFFF);
 	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&w));
-	strcat(msg,buf);
+	strcat(msg, buf);
     }
-    if (file && strcmp(file, "-")!=0) {
-	f = open(file,O_RDONLY);
+    if (file && strcmp(file, "-") != 0) {
+	f = open(file, O_RDONLY);
 	if (f < 0) {
 	    perror("open file");
 	    exit(1);
 	}
 	fstat(f, &st);
-	sprintf(buf,"Content-Length: %d\r\n", (int)st.st_size);
-	strcat(msg,buf);
+	sprintf(buf, "Content-Length: %d\r\n", (int) st.st_size);
+	strcat(msg, buf);
     }
     if (opt_range && (lrand48() & 0x03) == 0) {
 	int len;
 	int count = 0;
 	strcat(msg, "Range: bytes=");
-	while (((len = (int)lrand48()) & 0x03) == 0 || !count) {
+	while (((len = (int) lrand48()) & 0x03) == 0 || !count) {
 	    const int offset = (int) lrand48();
 	    if (count)
 		strcat(msg, ",");
 	    switch (lrand48() & 0x03) {
-		case 0:
-		    sprintf(buf, "-%d", len);
-		    break;
-		case 1:
-		    sprintf(buf, "%d-", offset);
-		    break;
-		default:
-		    sprintf(buf, "%d-%d", offset, offset+len);
-		    break;
+	    case 0:
+		sprintf(buf, "-%d", len);
+		break;
+	    case 1:
+		sprintf(buf, "%d-", offset);
+		break;
+	    default:
+		sprintf(buf, "%d-%d", offset, offset + len);
+		break;
 	    }
-	    strcat(msg,buf);
+	    strcat(msg, buf);
 	    count++;
 	}
-	strcat(msg,"\r\n");
+	strcat(msg, "\r\n");
     }
     strcat(msg, "\r\n");
     len = strlen(msg);
-    if ((len2=write(s, msg, len)) != len) {
+    if ((len2 = write(s, msg, len)) != len) {
 	close(s);
 	perror("write request");
 	free(r);
 	return NULL;
     } else
 	total_bytes_written += len2;
-    if (f>=0) {
-	while ((len = read(f, buf, sizeof(buf)))>0) {
+    if (f >= 0) {
+	while ((len = read(f, buf, sizeof(buf))) > 0) {
 	    len2 = write(s, buf, len);
 	    if (len2 < 0) {
 		perror("write body");
@@ -388,7 +389,6 @@ request(char *urlin)
 	    exit(1);
 	}
     }
-
 /*
  * if (fcntl(s, F_SETFL, O_NDELAY) < 0)
  * perror("fcntl O_NDELAY");
@@ -438,7 +438,7 @@ main(argc, argv)
     int c;
     int dt;
     int j;
-    fd_set R,R2;
+    fd_set R, R2;
     struct timeval start;
     struct timeval last;
     struct timeval to;
@@ -471,8 +471,8 @@ main(argc, argv)
 	    opt_checksum = 1;
 	    break;
 	case 't':
-	    opt_checksum = 1; /* Tracing requires checksums */
-	    trace_file = fopen(optarg,"w");
+	    opt_checksum = 1;	/* Tracing requires checksums */
+	    trace_file = fopen(optarg, "w");
 	    assert(trace_file);
 	    break;
 	case 'r':
@@ -515,12 +515,12 @@ main(argc, argv)
 	    if (!FD_ISSET(i, &R))
 		continue;
 	    FD[i].cb(i, FD[i].data);
-            if (nfds < max_connections && FD[0].cb) {
-		j=0;
-		FD_SET(0,&R2);
-		to.tv_sec=0;
-		to.tv_usec=0;
-		if(select(1,&R2,NULL,NULL,&to) == 1)
+	    if (nfds < max_connections && FD[0].cb) {
+		j = 0;
+		FD_SET(0, &R2);
+		to.tv_sec = 0;
+		to.tv_usec = 0;
+		if (select(1, &R2, NULL, NULL, &to) == 1)
 		    FD[0].cb(0, FD[0].data);
 	    }
 	}
@@ -533,8 +533,8 @@ main(argc, argv)
 		reqpersec,
 		nfds,
 		(int) (nrequests / dt),
-		(int)total_bytes_read / 1024 / 1024,
-		(int)total_bytes_read / 1024 / dt);
+		(int) total_bytes_read / 1024 / 1024,
+		(int) total_bytes_read / 1024 / dt);
 	    reqpersec = 0;
 	    if (dt > process_lifetime)
 		exit(0);
